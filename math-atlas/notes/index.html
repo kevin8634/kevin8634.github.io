@@ -73,7 +73,7 @@
       .x-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
       @media print {
         .nav, .links, .btn, .x-toast, .foot nav, .badge { display: none !important; }
-        #bee, #secret, #chord, #cat { break-before: page; page-break-before: always; }
+        #nim, #bee, #secret, #chord, #cat { break-before: page; page-break-before: always; }
         .x-formulas li, .x-must li, .cards > div { break-inside: avoid; }
       }
     </style>
@@ -94,8 +94,8 @@
           </div>
           <aside class="callout" aria-label="建议顺序">
             <p class="callout__head"><span class="hark-mark" data-size="16"></span> 建议顺序</p>
-            <p class="callout__lead"><strong>蜜蜂 → 密码 → 和弦 → 猫</strong></p>
-            <a class="btn" href="#bee">从蜜蜂开始</a>
+            <p class="callout__lead"><strong>松果 → 蜜蜂 → 密码 → 和弦 → 猫</strong></p>
+            <a class="btn" href="#nim">从松果开始</a>
           </aside>
         </section>
 
@@ -118,6 +118,14 @@
                 </tr>
               </thead>
               <tbody>
+                <tr>
+                  <th scope="row"><a class="link" href="#nim">先拿的人一定赢吗</a> <small><a class="link" href="../nim/" target="_top">去玩 →</a></small></th>
+                  <td class="num">★☆☆ 入门</td>
+                  <td>小学一年级起能玩通</td>
+                  <td>小学三年级能完全理解</td>
+                  <td>数到20、加减</td>
+                  <td class="muted">两堆 Nim 的二进制解法留作彩蛋</td>
+                </tr>
                 <tr>
                   <th scope="row"><a class="link" href="#bee">为什么蜜蜂选六边形</a> <small><a class="link" href="../bee/" target="_top">去玩 →</a></small></th>
                   <td class="num">★☆☆ 入门</td>
@@ -153,7 +161,59 @@
               </tbody>
             </table>
           </div>
-          <p class="fineprint">按中国学段估算;成人任何任务都可玩。建议顺序:蜜蜂 → 密码 → 和弦 → 猫。</p>
+          <p class="fineprint">按中国学段估算;成人任何任务都可玩。建议顺序:松果 → 蜜蜂 → 密码 → 和弦 → 猫。</p>
+        </section>
+
+        <section class="section" id="nim" data-nav="松果">
+          <div class="head">
+            <p class="head__eyebrow">任务5 · ★☆☆ 入门</p>
+            <h2>先拿的人一定赢吗? (取松果 · 组合博弈)</h2>
+          </div>
+          <div class="links">
+            <button class="btn x-press" type="button" data-copy="nim">一键复制笔记</button>
+            <a class="btn" href="../nim/" target="_top">去玩这个任务 →</a>
+          </div>
+          <div class="x-notes">
+            <div class="x-block">
+              <h3>必须掌握</h3>
+              <ol class="x-must">
+                <li>必胜位置与必败位置:轮到你时一定会输的局面叫必败位置。</li>
+                <li>逆推(倒着想):从结局 0 往回推,每个位置看它能走到哪里。</li>
+                <li>每次拿 1~m 颗:必败位置是 (m+1) 的倍数;先手第一步拿 N ÷ (m+1) 的余数颗。</li>
+                <li>配对策略:对手拿 k,你拿 (m+1−k),每轮凑成 m+1。</li>
+                <li>说理与反例:说明为什么对;一个反例就能推翻一个说法。</li>
+                <li>镜像策略:两堆一样多时,后手照镜子拿必胜。</li>
+              </ol>
+            </div>
+            <div class="x-block">
+              <h3>公式</h3>
+              <ul class="x-formulas">
+                <li><span class="x-f__name">先手必胜<span class="x-sr">:</span></span><span class="x-f__math">⇔ N mod (m+1) ≠ 0</span></li>
+                <li><span class="x-f__name">先手第一步<span class="x-sr">:</span></span><span class="x-f__math">拿 N mod (m+1) 颗</span></li>
+                <li><span class="x-f__name">两堆 Nim<span class="x-sr">:</span></span><span class="x-f__math">先手必胜 ⇔ 两堆不一样多(一般情形:各堆数的二进制异或 ≠ 0)</span></li>
+              </ul>
+            </div>
+            <div class="cards">
+              <div class="x-block">
+                <h3>经典文献与历史</h3>
+                <ul>
+                  <li>Charles L. Bouton, "Nim, a Game with a Complete Mathematical Theory", Annals of Mathematics, 1901–1902</li>
+                  <li>R. Sprague (1935)、P. M. Grundy (1939):Sprague–Grundy 定理,把所有公平组合游戏化为 Nim</li>
+                  <li>Berlekamp, Conway, Guy《Winning Ways for Your Mathematical Plays》, 1982</li>
+                  <li>中国民间游戏「抢30」、巴什博弈(Bash Game)</li>
+                </ul>
+              </div>
+              <div class="x-block">
+                <h3>领域应用与案例</h3>
+                <ul>
+                  <li>博弈论与经济学中的策略分析</li>
+                  <li>电脑下棋:博弈树搜索、逆推(国际象棋残局库)</li>
+                  <li>编程:动态规划、递推</li>
+                  <li>数学竞赛中的取石子问题</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section class="section" id="bee" data-nav="蜜蜂">
