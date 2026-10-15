@@ -1,0 +1,1376 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>星图任务 · 为什么蜜蜂选六边形</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <link rel="stylesheet" href="hark-charts.css" />
+    <style>
+      /* x- classes: the game shell. Tokens only. */
+      .x-bar {
+        position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 30;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+        padding: 8px 12px; border-radius: var(--r-pill);
+        background: var(--mat-agent); -webkit-backdrop-filter: var(--hark-blur); backdrop-filter: var(--hark-blur);
+        border: 1px solid var(--stroke-primary); box-shadow: var(--hark-shadow);
+      }
+      .x-brand { font: var(--type-label); margin-right: auto; white-space: nowrap; }
+      .x-meter { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-primary); }
+      .x-meter b { font-weight: var(--weight-bold); }
+      .x-toggle {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap);
+        padding: 4px 12px; border: 1px solid var(--stroke-primary); border-radius: var(--r-pill);
+        background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-tag); cursor: pointer;
+      }
+      .x-toggle[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-vol { width: 86px; accent-color: var(--fill-primary); }
+      .x-map { position: relative; padding: 8px 0 4px; }
+      .x-path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      .x-nodes { position: relative; display: grid; gap: 10px; }
+      .x-node {
+        display: grid; grid-template-columns: 46px 1fr auto; align-items: center; gap: 12px;
+        width: min(100%, 560px); padding: 10px 14px; border-radius: var(--r-l);
+        border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-body); text-align: left; cursor: pointer;
+        transition: box-shadow var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
+      }
+      .x-node:nth-child(even) { justify-self: end; }
+      .x-node:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--hark-shadow); }
+      .x-node:disabled { opacity: 0.55; cursor: not-allowed; }
+      .x-node__num { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-tertiary); font: var(--type-heading); }
+      .x-node.is-open .x-node__num { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-node__t { display: block; font: var(--type-body-strong); }
+      .x-node__s { display: block; font: var(--type-caption); color: var(--text-secondary); }
+      .x-stars { font-size: 15px; letter-spacing: 1px; white-space: nowrap; }
+      .x-panel { padding: 16px; border-radius: var(--r-l); background: var(--fill-tertiary); display: grid; gap: 14px; }
+      .x-cat { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: start; }
+      .x-cat__face { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-primary-on); font-size: 24px; border: 1px solid var(--stroke-primary); }
+      .x-bubble { position: relative; padding: 10px 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-primary); font: var(--type-body); }
+      .x-bubble small { display: block; margin-top: 4px; font: var(--type-caption); color: var(--text-secondary); }
+      .x-opts { display: flex; flex-wrap: wrap; gap: 10px; }
+      .x-opt { padding: 8px; border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); cursor: pointer; display: grid; gap: 6px; justify-items: center; font: var(--type-tag); color: var(--text-primary); }
+      .x-opt svg { width: 48px; height: 48px; display: block; }
+      .x-opt.is-sel { box-shadow: inset 0 0 0 2px var(--fill-primary); }
+      .x-opt.good { border-color: var(--fill-system-green); }
+      .x-opt.bad { border-color: var(--fill-system-red); }
+      .x-qopt { text-align: left; font: var(--type-small); }
+      .x-qopt.good { border-color: var(--fill-system-green); box-shadow: inset 0 0 0 1px var(--fill-system-green); }
+      .x-qopt.bad { border-color: var(--fill-system-red); opacity: 0.6; }
+      .x-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+      .x-btn {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 6px 16px;
+        border-radius: var(--r-s); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-label); cursor: pointer;
+      }
+      .x-btn--go, .x-btn[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .x-yn .x-btn { min-width: var(--tap); justify-content: center; padding: 6px 10px; }
+      .x-toasts { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; display: grid; gap: 8px; justify-items: center; pointer-events: none; }
+      .x-toast { padding: 10px 16px; border-radius: var(--r-pill); background: var(--fill-primary); color: var(--text-primary-on); font: var(--type-tag); box-shadow: var(--hark-shadow); animation: x-pop 320ms var(--ease-out); }
+      @keyframes x-pop { from { opacity: 0; transform: translateY(10px); } }
+      .x-shelf { display: flex; flex-wrap: wrap; gap: 8px; }
+      .x-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-secondary); }
+      .x-badge.got { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-end { display: grid; gap: 12px; padding: 16px; border-radius: var(--r-l); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); }
+      .x-end h3 { font: var(--type-heading); }
+      .x-end dl { display: grid; gap: 8px; margin: 0; }
+      .x-end dt { font: var(--type-body-strong); }
+      .x-end dd { margin: 0; font: var(--type-small); color: var(--text-secondary); }
+      .x-starid { font: var(--weight-regular) 12px/1.3 "Geist Mono", monospace; }
+      .x-flash { animation: x-shake 320ms var(--ease-out); }
+      @keyframes x-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+      #stage [hidden] { display: none; }
+      /* level 1: floor, vertex lens */
+      .x-split { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); align-items: start; }
+      .x-cap { font: var(--type-caption); color: var(--text-secondary); margin-bottom: 6px; }
+      .x-floor, .x-lens { border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); overflow: hidden; }
+      .x-floor svg, .x-lens svg { display: block; width: 100%; height: auto; }
+      .x-lens { width: min(100%, 260px); }
+      .x-eq { font: var(--weight-regular) 13px/1.5 "Geist Mono", monospace; padding: 8px 12px; margin-top: 8px; border-radius: var(--r-s); background: var(--fill-primary-on); border: 1px solid var(--stroke-secondary); }
+      .x-tile { animation: x-in 280ms var(--ease-out) both; transform-box: fill-box; transform-origin: center; }
+      @keyframes x-in { from { opacity: 0; transform: scale(0.3); } }
+      .x-gapflash { animation: x-blink 600ms steps(2) 5; }
+      @keyframes x-blink { 50% { opacity: 0.3; } }
+      .x-spark { animation: x-sp 1000ms var(--ease-out) both; transform-box: fill-box; transform-origin: center; }
+      @keyframes x-sp { 0% { opacity: 0; transform: scale(0.2); } 40% { opacity: 1; transform: scale(1.3); } 100% { opacity: 0; transform: scale(0.8); } }
+      .x-lens text { font: var(--type-caption); fill: var(--text-primary); text-anchor: middle; dominant-baseline: central; }
+      /* level 3: ranking rows, wax-coin bars */
+      .x-rank { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+      .x-rank li { display: grid; grid-template-columns: 84px 1fr auto; align-items: center; gap: 10px; padding: 8px 12px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-secondary); font: var(--type-body); }
+      .x-rank li.good { border-color: var(--fill-system-green); }
+      .x-rank li.bad { border-color: var(--fill-system-red); }
+      .x-wax { height: 24px; border-radius: var(--r-pill); background: var(--fill-tertiary); overflow: hidden; }
+      .x-wax i { display: flex; align-items: center; justify-content: flex-end; height: 100%; width: 0; padding-right: 8px; box-sizing: border-box; background: var(--chart-5, var(--fill-system-orange)); font: var(--type-tag); font-style: normal; color: var(--text-primary); white-space: nowrap; transition: width var(--dur-draw) var(--ease-out); }
+      @media (prefers-reduced-motion: reduce) { .x-wax i { transition: none; } }
+      @media (prefers-reduced-motion: reduce) { .x-toast, .x-flash, .x-tile, .x-gapflash { animation: none; } .x-spark { animation: none; opacity: 1; } }
+      @media (max-width: 599px) { .x-brand { width: 100%; } .x-vol { width: 70px; } }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <main class="main">
+        <div class="x-bar" role="toolbar" aria-label="游戏状态">
+          <span class="x-brand">星图任务 · 为什么蜜蜂选六边形</span>
+          <span class="x-meter">XP <b id="xp">0</b></span>
+          <span class="x-meter">⭐ <b id="stars">0</b>/15</span>
+          <button class="x-toggle" id="sfx" aria-pressed="true">🔊 音效</button>
+          <button class="x-toggle" id="music" aria-pressed="false">🎵 专注音乐</button>
+          <select class="x-toggle" id="track" aria-label="选择曲目">
+            <option value="-1" selected>随机轮播</option><option value="0">星空 Lo-fi</option><option value="1">雨夜书房</option><option value="2">晨光</option>
+          </select>
+          <span class="x-meter" id="nowplaying">正在播放:—</span>
+          <input class="x-vol" id="vol" type="range" min="0" max="100" value="30" aria-label="音乐音量" />
+        </div>
+
+        <section class="section" id="map" data-nav="星图">
+          <div class="head">
+            <p class="head__eyebrow">五关任务</p>
+            <h2>从铺地砖开始，弄明白蜜蜂为什么选六边形。</h2>
+            <p class="head__sub">每关得 1–3 颗星，拿到 1 颗星就解锁下一关。</p>
+          </div>
+          <div class="x-map">
+            <svg class="x-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M18 8 L82 30 L18 52 L82 74 L18 94" fill="none" style="stroke: var(--stroke-primary)" stroke-width="0.6" stroke-dasharray="2 2" />
+            </svg>
+            <div class="x-nodes" id="nodes"></div>
+          </div>
+        </section>
+
+        <section class="section" id="play" data-nav="关卡">
+          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">蜂博士在星图上等你。</p></div>
+          <div id="stage" class="x-panel">
+            <div class="x-cat">
+              <div class="x-cat__face">🐝</div>
+              <div class="x-bubble">点开第 1 关「哪些形状能铺满地面」。先猜，再试：哪些正多边形能把地面铺得一条缝都没有？<small>蜂博士只问问题，不直接给答案。</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="shelf" data-nav="徽章">
+          <div class="head"><h2>徽章架</h2><p class="head__sub">做到了才会亮起来。</p></div>
+          <div class="x-shelf" id="badges"></div>
+        </section>
+      </main>
+      <footer class="foot">
+        <p>声音全部由 Web Audio 实时合成，不读取任何外部文件。</p>
+        <nav aria-label="回到各部分" data-auto></nav>
+        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"><span class="hark-mark"></span><span>built by hark</span></a>
+      </footer>
+    </div>
+    <div class="x-toasts" id="toasts" aria-live="polite"></div>
+    <script src="hark.js"></script>
+    <script>
+      /* ---------- audio ---------- */
+      const Audio_ = (() => {
+        let ctx = null, master = null, musicGain = null, sfxOn = true, musicOn = false, vol = 0.3, started = false;
+        function ensure() {
+          if (ctx) return ctx;
+          const AC = window.AudioContext || window.webkitAudioContext;
+          ctx = new AC();
+          master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+          musicGain = ctx.createGain(); musicGain.gain.value = 0; musicGain.connect(master);
+          return ctx;
+        }
+        function unlock() { ensure(); if (ctx.state === "suspended") ctx.resume(); started = true; }
+        function env(node, t, a, d, peak) {
+          const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(peak, t + a);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+          node.connect(g); g.connect(master); return g;
+        }
+        function tone(freq, t, dur, type, peak) {
+          const o = ctx.createOscillator(); o.type = type || "sine"; o.frequency.setValueAtTime(freq, t);
+          env(o, t, 0.012, dur, peak || 0.18); o.start(t); o.stop(t + dur + 0.08); return o;
+        }
+        const sfx = {
+          click() { const t = ctx.currentTime; tone(880, t, 0.05, "triangle", 0.08); },
+          correct() { const t = ctx.currentTime; [523.25, 659.25, 783.99].forEach((f, i) => tone(f, t + i * 0.07, 0.22, "sine", 0.14)); },
+          wrong() { const t = ctx.currentTime; tone(150, t, 0.22, "sine", 0.16); tone(110, t + 0.06, 0.26, "sine", 0.12); },
+          star() { const t = ctx.currentTime; [784, 1047, 1319, 1568, 2093].forEach((f, i) => tone(f, t + i * 0.055, 0.3, "triangle", 0.09)); },
+          fanfare() { const t = ctx.currentTime; [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.3]].forEach(([f, d]) => { tone(f, t + d, 0.4, "sawtooth", 0.07); tone(f * 2, t + d, 0.3, "sine", 0.05); }); },
+          buzz() {
+            const t = ctx.currentTime, o = ctx.createOscillator(), f = ctx.createBiquadFilter(), l = ctx.createOscillator(), lg = ctx.createGain();
+            o.type = "sawtooth"; f.type = "lowpass"; f.frequency.setValueAtTime(1500, t); f.Q.value = 3;
+            o.frequency.setValueAtTime(210, t); o.frequency.linearRampToValueAtTime(250, t + 0.15); o.frequency.linearRampToValueAtTime(200, t + 0.34);
+            l.frequency.value = 11; lg.gain.value = 22; l.connect(lg); lg.connect(o.frequency);
+            const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.08, t + 0.04); g.gain.setValueAtTime(0.08, t + 0.26); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.36);
+            o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t + 0.4); l.start(t); l.stop(t + 0.4);
+          },
+          bonk() {
+            const t = ctx.currentTime, o = ctx.createOscillator();
+            o.type = "square"; o.frequency.setValueAtTime(180, t); o.frequency.exponentialRampToValueAtTime(60, t + 0.18);
+            env(o, t, 0.005, 0.22, 0.12); o.start(t); o.stop(t + 0.3); tone(95, t + 0.02, 0.2, "sine", 0.18);
+          },
+          tick(f) { tone(f || 600, ctx.currentTime, 0.06, "sine", 0.07); },
+          pop(f) { const t = ctx.currentTime; tone(f || 200 + Math.random() * 500, t, 0.18, "triangle", 0.05); },
+          chord() { const t = ctx.currentTime; [523.25, 659.25, 783.99, 987.77, 1318.5].forEach((f, i) => tone(f, t + i * 0.012, 0.55, "triangle", 0.06)); },
+        };
+        /* buzzing swarm bed under the BOSS rounds */
+        let sw = null;
+        function swarm(on) {
+          if (on) {
+            if (sw || !sfxOn || !started) return; ensure();
+            const t = ctx.currentTime, g = ctx.createGain(), f = ctx.createBiquadFilter(), nodes = [];
+            f.type = "bandpass"; f.frequency.value = 650; f.Q.value = 1.2;
+            g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.028, t + 1.5); f.connect(g); g.connect(master);
+            [196, 203, 247, 252].forEach((fr, i) => {
+              const o = ctx.createOscillator(), l = ctx.createOscillator(), lg = ctx.createGain();
+              o.type = "sawtooth"; o.frequency.value = fr; l.frequency.value = 5 + i * 1.7; lg.gain.value = 9;
+              l.connect(lg); lg.connect(o.frequency); o.connect(f); o.start(t); l.start(t); nodes.push(o, l);
+            });
+            sw = { g, nodes };
+          } else if (sw) {
+            const t = ctx.currentTime, s = sw; sw = null;
+            s.g.gain.cancelScheduledValues(t); s.g.gain.setValueAtTime(s.g.gain.value, t); s.g.gain.linearRampToValueAtTime(0.0001, t + 0.8);
+            setTimeout(() => { s.nodes.forEach((n) => n.stop()); s.g.disconnect(); }, 900);
+          }
+        }
+        function play(name, arg) { if (!sfxOn || !started) return; ensure(); if (ctx.state === "suspended") ctx.resume(); duckMusic(); (sfx[name] || sfx.click)(arg); }
+        /* ---------- 专注音乐: generative engine, lookahead scheduler (25ms tick, 0.1s ahead) ---------- */
+        const PENTA = [0, 2, 4, 7, 9];
+        const CH = { I: [0, 4, 7, 11], ii: [2, 5, 9, 12], iii: [4, 7, 11, 14], IV: [5, 9, 12, 16], V: [7, 11, 14, 17], vi: [9, 12, 16, 19] };
+        const P = (s) => s.split(" ").map((n) => CH[n]);
+        const TRACKS = [
+          { id: "lofi", name: "星空 Lo-fi", bpm: 72, swing: 0.2, key: 57, cb: 1, wet: 0.3, progs: [P("ii V I vi"), P("IV iii ii I"), P("vi IV I V")] },
+          { id: "rain", name: "雨夜书房", bpm: 60, swing: 0, key: 50, cb: 2, wet: 0.4, progs: [P("I iii vi IV"), P("vi ii V I"), P("IV I ii vi")] },
+          { id: "dawn", name: "晨光", bpm: 90, swing: 0.08, key: 60, cb: 1, wet: 0.25, progs: [P("I V vi IV"), P("IV I V vi"), P("I ii IV V")] },
+        ];
+        let comp = null, duck = null, bus = null, echo = null, noiseBuf = null, players = [], timer = null, offT = null, mode = -1;
+        const rnd = (n) => (Math.random() * n) | 0;
+        const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+        const newMotif = () => [0, 0, 0, 0].map(() => rnd(8));
+        function mutate(m) { const c = m.slice(); for (let i = 0, n = 1 + rnd(2); i < n; i++) { const j = rnd(4); c[j] = Math.max(0, Math.min(9, c[j] + [-2, -1, 1, 2][rnd(4)])); } return c; }
+        function graph() {
+          if (bus) return; ensure();
+          comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 4; comp.attack.value = 0.01; comp.release.value = 0.3;
+          duck = ctx.createGain(); bus = ctx.createGain(); echo = ctx.createDelay(1.5);
+          const fb = ctx.createGain(), lp = ctx.createBiquadFilter(); fb.gain.value = 0.32; lp.type = "lowpass"; lp.frequency.value = 1800;
+          echo.connect(lp); lp.connect(fb); fb.connect(echo); lp.connect(bus);
+          bus.connect(comp); comp.connect(duck); duck.connect(musicGain);
+          const len = ctx.sampleRate * 2; noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+          const d = noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        }
+        function note(p, m, t, dur, type, peak, a, wet) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = mtof(m);
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          o.connect(g); g.connect(p.out); if (wet) g.connect(p.wet); o.start(t); o.stop(t + dur + 0.05);
+        }
+        function hit(p, t, dur, peak, ftype, freq) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+          s.buffer = noiseBuf; f.type = ftype; f.frequency.value = freq;
+          g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(t, Math.random() * 1.5); s.stop(t + dur + 0.02);
+        }
+        function kick(p, t) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.2);
+          g.gain.setValueAtTime(0.28, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+          o.connect(g); g.connect(p.out); o.start(t); o.stop(t + 0.35); hit(p, t, 0.05, 0.05, "lowpass", 400);
+        }
+        function ep(p, ch, t, dur) {
+          const tr = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain(), env = ctx.createGain();
+          tr.gain.value = 0.75; lfo.frequency.value = 3.8; dep.gain.value = 0.22; lfo.connect(dep); dep.connect(tr.gain);
+          env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(1, t + 0.02); env.gain.exponentialRampToValueAtTime(0.35, t + 0.9); env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [["sine", 0.045], ["triangle", 0.01]].forEach(([ty, v]) => {
+            const o = ctx.createOscillator(), g = ctx.createGain(); o.type = ty; o.frequency.value = mtof(m); o.detune.value = rnd(7) - 3; g.gain.value = v;
+            o.connect(g); g.connect(tr); o.start(t); o.stop(t + dur + 0.05);
+          }));
+          tr.connect(env); env.connect(p.out); env.connect(p.wet); lfo.start(t); lfo.stop(t + dur + 0.05);
+        }
+        function pad(p, ch, t, dur, type, peak, lo, hi) {
+          const f = ctx.createBiquadFilter(), env = ctx.createGain(); f.type = "lowpass";
+          f.frequency.setValueAtTime(lo, t); f.frequency.linearRampToValueAtTime(hi, t + dur * 0.5); f.frequency.linearRampToValueAtTime(lo, t + dur);
+          env.gain.setValueAtTime(0.0001, t); env.gain.linearRampToValueAtTime(peak, t + dur * 0.35); env.gain.linearRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [-7, 7].forEach((dt) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = mtof(m); o.detune.value = dt; o.connect(f); o.start(t); o.stop(t + dur + 0.05); }));
+          f.connect(env); env.connect(p.out); env.connect(p.wet);
+        }
+        function rain(p) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain();
+          s.buffer = noiseBuf; s.loop = true; f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 0.5; g.gain.value = 0.05;
+          lfo.frequency.value = 0.07; dep.gain.value = 0.02; lfo.connect(dep); dep.connect(g.gain);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(); lfo.start(); p.nodes.push(s, lfo);
+        }
+        function section(p) {
+          let n; do n = rnd(3); while (n === p.prog); p.prog = n;
+          if (Math.random() < 0.25) p.key = p.t.key + [0, 2, -2, 5, -3][rnd(5)];
+          p.drums = Math.random() > 0.3;
+          if (Math.random() < 0.4) p.motif = newMotif();
+        }
+        function step(p, t) {
+          const T = p.t, s = p.step % 16, bar = (p.step / 16) | 0, beat = 60 / T.bpm;
+          if (s === 0) {
+            if (bar && bar % 8 === 0) section(p);
+            p.cur = bar % 4 === 2 ? mutate(p.motif) : bar % 4 === 0 ? p.motif : p.cur;
+          }
+          const ch = T.progs[p.prog][((bar / T.cb) | 0) % 4].map((x) => p.key + x);
+          const mel = (d) => p.key + 12 + PENTA[d % 5] + 12 * ((d / 5) | 0);
+          if (T.id === "lofi") {
+            if (s === 0) { ep(p, ch, t, beat * 4); note(p, ch[0] - 24, t, beat * 1.8, "sine", 0.16, 0.02); }
+            if (s === 10) note(p, ch[0] - 24, t, beat * 1.2, "sine", 0.12, 0.02);
+            if (p.drums) {
+              if (s === 0 || s === 10 || (s === 7 && Math.random() < 0.3)) kick(p, t);
+              if (s === 4 || s === 12) hit(p, t, 0.16, 0.07, "bandpass", 1800);
+              if (s % 2 === 0 || Math.random() < 0.15) hit(p, t, 0.04, s % 4 === 2 ? 0.03 : 0.018, "highpass", 7000);
+            }
+            if (bar % 2 === 1 && s % 4 === 0 && Math.random() > 0.28) note(p, mel(p.cur[s / 4]), t, beat * 1.3, "sine", 0.035, 0.01, true);
+          } else if (T.id === "rain") {
+            if (s === 0 && bar % 2 === 0) pad(p, ch, t, beat * 8 + 1, "sawtooth", 0.022, 280, 1300);
+            if (s % 8 === 0 && Math.random() < 0.45) { const m = mel(p.cur[(bar * 2 + s / 8) % 4]) - 12; note(p, m, t, 3.5, "triangle", 0.045, 0.005, true); note(p, m, t, 2.5, "sine", 0.03, 0.005); }
+          } else {
+            if (s === 0) pad(p, ch.map((m) => m + 12), t, beat * 4 + 0.6, "sine", 0.014, 2500, 5000);
+            if (s % 2 === 0 && Math.random() > 0.18) { const m = mel(p.cur[(s / 2) % 4] + (s >= 8 ? 1 : 0)); note(p, m, t, 0.55, "sine", 0.05, 0.004, true); note(p, m + 28, t, 0.08, "sine", 0.008, 0.002); }
+            if (p.drums) hit(p, t, 0.05, s % 2 ? 0.022 : 0.01, "highpass", 6000);
+          }
+        }
+        function sched() {
+          const now = ctx.currentTime;
+          players.forEach((p) => {
+            if (p.next < now - 0.05) p.next = now + 0.02; /* tab was throttled: skip, don't burst */
+            while (p.next < now + 0.1) { const sx = 60 / p.t.bpm / 4; step(p, p.next + (p.step % 2 ? p.t.swing * sx : 0)); p.step++; p.next += sx; }
+          });
+          const live = players.find((p) => !p.dead);
+          if (mode < 0 && live && now - live.born > 180) switchTo((live.i + 1 + rnd(2)) % 3);
+        }
+        function label(i) { const n = document.getElementById("nowplaying"); if (n) n.textContent = "正在播放:" + (i == null ? "—" : TRACKS[i].name); }
+        function kill(p) { p.nodes.forEach((n) => { try { n.stop(); } catch (e) {} }); p.out.disconnect(); p.wet.disconnect(); players = players.filter((x) => x !== p); }
+        function switchTo(i) {
+          const now = ctx.currentTime;
+          players.filter((p) => !p.dead).forEach((p) => {
+            p.dead = true; p.out.gain.cancelScheduledValues(now); p.out.gain.setValueAtTime(p.out.gain.value, now);
+            p.out.gain.linearRampToValueAtTime(0.0001, now + 2); setTimeout(() => kill(p), 2300);
+          });
+          const T = TRACKS[i], p = { t: T, i, step: 0, next: now + 0.1, born: now, key: T.key, prog: 0, drums: true, motif: newMotif(), out: ctx.createGain(), wet: ctx.createGain(), nodes: [] };
+          p.cur = p.motif; p.out.gain.setValueAtTime(0.0001, now); p.out.gain.linearRampToValueAtTime(1, now + 2);
+          p.out.connect(bus); p.wet.gain.value = T.wet; p.wet.connect(echo);
+          echo.delayTime.setTargetAtTime((60 / T.bpm) * 0.75, now, 0.5);
+          if (T.id === "rain") rain(p);
+          players.push(p); label(i);
+        }
+        function fadeTo(v) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(v, n + 2); }
+        function startMusic() {
+          graph(); if (ctx.state === "suspended") ctx.resume();
+          clearTimeout(offT); if (!timer) timer = setInterval(sched, 25);
+          if (!players.some((p) => !p.dead)) switchTo(mode < 0 ? rnd(3) : mode);
+          fadeTo(vol);
+        }
+        function stopMusic() {
+          if (!bus) return; fadeTo(0.0001);
+          offT = setTimeout(() => { clearInterval(timer); timer = null; players.slice().forEach(kill); label(null); }, 2100);
+        }
+        function setTrack(v) {
+          mode = v; if (!musicOn || !bus) return;
+          const live = players.find((p) => !p.dead);
+          if (mode >= 0 && (!live || live.i !== mode)) switchTo(mode); else if (live) live.born = ctx.currentTime;
+        }
+        function duckMusic() {
+          if (!musicOn || !duck) return; const t = ctx.currentTime, g = duck.gain;
+          g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.45, t + 0.05);
+          g.setValueAtTime(0.45, t + 0.35); g.linearRampToValueAtTime(1, t + 1);
+        }
+        return {
+          unlock, play, swarm,
+          setSfx(v) { sfxOn = v; if (!v) swarm(false); }, isSfx: () => sfxOn,
+          setMusic(v) { musicOn = v; v ? startMusic() : stopMusic(); }, isMusic: () => musicOn,
+          setVol(v) { vol = v; if (ctx && timer && musicOn) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(vol, n + 0.3); } },
+          setTrack,
+        };
+      })();
+      /* ---------- state ---------- */
+      const State = { xp: 0, stars: 0, perLevel: {}, badges: {}, unlocked: 1 };
+      const BADGES = [
+        { id: "tiler", name: "铺满大师", hint: "完成第 1 关「哪些形状能铺满地面」" },
+        { id: "angler", name: "角度猎人", hint: "完成第 2 关「绕一圈是多少度」" },
+        { id: "waxer", name: "省蜡专家", hint: "完成第 3 关「同样的蜜，谁的墙最省」" },
+        { id: "bubbler", name: "泡泡魔法师", hint: "完成第 4 关「泡泡自己会排队」" },
+        { id: "builder", name: "蜂巢建造者", hint: "完成第 5 关「BOSS 蜂巢建造者」" },
+      ];
+      const LEVELS_META = [
+        { id: 1, title: "哪些形状能铺满地面", sub: "密铺与正多边形的内角" },
+        { id: 2, title: "绕一圈是多少度", sub: "周角 360°" },
+        { id: 3, title: "同样的蜜，谁的墙最省", sub: "周长与面积" },
+        { id: 4, title: "泡泡自己会排队", sub: "自然里的六边形" },
+        { id: 5, title: "BOSS 蜂巢建造者", sub: "BOSS 关" },
+      ];
+
+      const $ = (s) => document.querySelector(s);
+      function toast(msg) {
+        const el = document.createElement("div"); el.className = "x-toast"; el.textContent = msg;
+        $("#toasts").appendChild(el); setTimeout(() => el.remove(), 3200);
+      }
+      function award(id) {
+        if (State.badges[id]) return;
+        State.badges[id] = true;
+        const b = BADGES.find((x) => x.id === id);
+        Audio_.play("star"); toast("🏅 获得徽章:" + b.name); renderBadges();
+      }
+      function renderBadges() {
+        $("#badges").innerHTML = BADGES.map((b) =>
+          `<span class="x-badge ${State.badges[b.id] ? "got" : ""}">${State.badges[b.id] ? "🏅" : "🔒"} ${b.name}<small style="opacity:.75"> · ${b.hint}</small></span>`
+        ).join("");
+      }
+      function renderBar() { $("#xp").textContent = State.xp; $("#stars").textContent = State.stars; }
+      function starStr(n) { return n ? "⭐".repeat(n) + "☆".repeat(3 - n) : "☆☆☆"; }
+      function renderMap() {
+        $("#nodes").innerHTML = LEVELS_META.map((m) => {
+          const open = m.id <= State.unlocked && !!getLevel(m.id);
+          const got = State.perLevel[m.id] || 0;
+          const note = getLevel(m.id) ? (open ? m.sub : "完成上一关解锁") : "即将开放";
+          return `<button class="x-node ${open ? "is-open" : ""}" data-level="${m.id}" ${open ? "" : "disabled"}>
+            <span class="x-node__num">${m.id}</span>
+            <span><span class="x-node__t">${m.title}</span><span class="x-node__s">${note}</span></span>
+            <span class="x-stars">${starStr(got)}</span></button>`;
+        }).join("");
+        $("#nodes").querySelectorAll("button[data-level]").forEach((b) =>
+          b.addEventListener("click", () => { Audio_.play("click"); openLevel(+b.dataset.level); }));
+      }
+      function finishLevel(id, stars, xp) {
+        const prev = State.perLevel[id] || 0;
+        if (stars > prev) { State.stars += stars - prev; State.perLevel[id] = stars; }
+        State.xp += xp;
+        if (stars >= 1 && State.unlocked < id + 1) State.unlocked = id + 1;
+        renderBar(); renderMap(); Audio_.play("fanfare");
+        toast(`第 ${id} 关完成 · ${starStr(stars)} · +${xp} XP`);
+      }
+      function openLevel(id) {
+        const lv = getLevel(id); if (!lv) return;
+        $("#play-title").textContent = `第 ${id} 关 · ${lv.title}`;
+        $("#play-sub").textContent = LEVELS_META[id - 1].sub;
+        const stage = $("#stage"); stage.innerHTML = ""; Audio_.swarm(false);
+        lv.init(stage, (stars, xp) => finishLevel(id, stars, xp));
+        $("#play").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+      }
+      /* guide bubble helper */
+      function guide(container, text, sub) {
+        const wrap = document.createElement("div"); wrap.className = "x-cat";
+        wrap.innerHTML = `<div class="x-cat__face">🐝</div><div class="x-bubble" aria-live="polite"></div>`;
+        const b = wrap.querySelector(".x-bubble");
+        const set = (t, s) => { b.innerHTML = ""; b.append(t); if (s) { const el = document.createElement("small"); el.textContent = s; b.append(el); } Audio_.play("buzz"); };
+        set(text, sub); container.append(wrap);
+        return set;
+      }
+      function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+      /* end-card helper: stars, headline, [[term, meaning]], star-map ids */
+      function endCard(stars, head, math, starIds) {
+        return el("div", "x-end", `<h3>${starStr(stars)} ${head}</h3>
+          <div><p style="font:var(--type-body-strong)">你刚刚用到的数学</p>
+          <dl>${math.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join("")}</dl></div>
+          <div><p style="font:var(--type-body-strong)">星图点亮</p><p class="x-starid">${starIds}</p></div>`);
+      }
+      const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const taskList = (T, got) => T.map(([k, t, s]) => `<li class="${got[k] ? "is-done" : ""}"><span class="checklist__item">${t} <small>${s}</small></span><span class="chip ${got[k] ? "" : "chip--solid"}">${got[k] ? "完成 ⭐" : "进行中"}</span></li>`).join("");
+
+      /* ---------- geometry ---------- */
+      const rad = (d) => (d * Math.PI) / 180;
+      /* regular n-gon around (cx, cy), circumradius R, first vertex at rot degrees (y down) */
+      const ngon = (cx, cy, R, n, rot) => Array.from({ length: n }, (_, k) => [cx + R * Math.cos(rad(rot + (k * 360) / n)), cy + R * Math.sin(rad(rot + (k * 360) / n))]);
+      const pts = (P) => P.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+      const W = 400, H = 260;
+      function tiling(n) {
+        const T = [];
+        if (n === 3) {
+          const a = 50, h = (a * Math.sqrt(3)) / 2;
+          for (let j = 0; j * h < H; j++) for (let k = -1; k * a < W + a; k++) {
+            const y = j * h, x = k * a - (j % 2) * (a / 2);
+            T.push([[x, y + h], [x + a, y + h], [x + a / 2, y]], [[x + a / 2, y], [x + 1.5 * a, y], [x + a, y + h]]);
+          }
+        } else if (n === 4) {
+          for (let j = 0; j * 40 < H; j++) for (let i = 0; i * 40 < W; i++) T.push(ngon(i * 40 + 20, j * 40 + 20, 20 * Math.SQRT2, 4, 45));
+        } else if (n === 6) {
+          const R = 28, w = Math.sqrt(3) * R;
+          for (let j = -1; j * 1.5 * R < H + R; j++) for (let i = -1; i * w < W + w; i++) T.push(ngon(i * w + (j & 1 ? w / 2 : 0), j * 1.5 * R, R, 6, 30));
+        } else if (n === 5) {
+          const R = 30, sx = 2 * R * Math.sin(rad(72)), sy = R + R * Math.cos(rad(36));
+          for (let j = 0; j * sy < H + R; j++) for (let i = -1; i * sx < W + sx; i++) T.push(ngon(i * sx + (j & 1 ? sx / 2 : 0) + 14, j * sy + 22, R, 5, -90));
+        } else {
+          const R = 30, s = 2 * R * Math.cos(rad(22.5));
+          for (let j = 0; j * s < H + s; j++) for (let i = 0; i * s < W + s; i++) T.push(ngon(i * s + 14, j * s + 14, R, 8, 22.5));
+        }
+        const c = (P) => P.reduce((a, p) => a + p[0] + p[1], 0) / P.length;
+        return T.sort((a, b) => c(a) - c(b));
+      }
+      /* one regular polygon with a vertex at the origin, edges leaving at math angles th and th + interior angle */
+      function cornerPoly(n, s, th) {
+        const P = [[0, 0]]; let x = 0, y = 0;
+        for (let k = 0; k < n - 1; k++) { const d = rad(th + (k * 360) / n); x += s * Math.cos(d); y += s * Math.sin(d); P.push([x, -y]); }
+        return P;
+      }
+      const arcPt = (r, a) => (r * Math.cos(rad(a))).toFixed(1) + " " + (-r * Math.sin(rad(a))).toFixed(1);
+      const sector = (r, a1, a2) => `M0 0 L${arcPt(r, a1)} A${r} ${r} 0 ${a2 - a1 > 180 ? 1 : 0} 0 ${arcPt(r, a2)} Z`;
+
+      /* ---------- levels ---------- */
+      const LEVELS = [];
+      const getLevel = (id) => LEVELS.find((l) => l.id === id);
+
+      LEVELS.push({
+        id: 1,
+        title: "哪些形状能铺满地面",
+        init(root, done) {
+          const SH = [
+            { n: 3, name: "正三角形", a: 60, c: 1 },
+            { n: 4, name: "正方形", a: 90, c: 2 },
+            { n: 5, name: "正五边形", a: 108, c: 3 },
+            { n: 6, name: "正六边形", a: 120, c: 4 },
+            { n: 8, name: "正八边形", a: 135, c: 5 },
+          ].map((s) => ({ ...s, k: Math.floor(360 / s.a), ok: 360 % s.a === 0, guess: null, tested: false }));
+          let cur = SH[0], busy = false, qTries = 0, finished = false;
+          const got = { all: false, pred: false, q: false };
+          const say = guide(root, "地面要铺得一条缝都没有，也不能叠在一起。先选一个形状，在猜想表里猜:它能铺满吗?", "先猜 ✔ 或 ✘，猜完才能点「试一试」。");
+
+          /* palette */
+          const icon = (s) => `<svg viewBox="-1.15 -1.15 2.3 2.3" aria-hidden="true"><polygon points="${pts(ngon(0, 0.08, 1, s.n, 90 - 180 / s.n))}" style="fill:var(--chart-${s.c});stroke:var(--text-primary)" stroke-width="0.05"/></svg>`;
+          const pal = el("div"); pal.append(el("p", "x-cap", "形状调色板 · 点一个形状"));
+          const opts = el("div", "x-opts"); pal.append(opts); root.append(pal);
+          SH.forEach((s) => {
+            s.btn = el("button", "x-opt", icon(s) + s.name); s.btn.type = "button";
+            s.btn.addEventListener("click", () => { Audio_.play("click"); select(s); });
+            opts.append(s.btn);
+          });
+
+          /* guess table */
+          const tw = el("div", "table-wrap", `<table><caption>猜想表 · 能铺满吗?</caption><thead><tr><th scope="col">形状</th><th scope="col">你的猜想</th><th scope="col">内角</th><th scope="col">结果</th></tr></thead><tbody></tbody></table>`);
+          const tb = tw.querySelector("tbody");
+          SH.forEach((s) => {
+            const tr = el("tr", "", `<th scope="row">${s.name}<small>${s.n} 条边</small></th><td data-label="你的猜想"><span class="x-row x-yn"></span></td><td data-label="内角" class="num">?</td><td data-label="结果" class="muted">还没试</td>`);
+            s.tr = tr; const yn = tr.querySelector(".x-yn");
+            s.yes = el("button", "x-btn", "✔"); s.no = el("button", "x-btn", "✘");
+            [[s.yes, true], [s.no, false]].forEach(([b, v]) => {
+              b.type = "button"; b.setAttribute("aria-pressed", "false"); b.setAttribute("aria-label", `${s.name}${v ? "能" : "不能"}铺满`);
+              b.addEventListener("click", () => { if (s.tested) return; s.guess = v; Audio_.play("tick", v ? 760 : 420); s.yes.setAttribute("aria-pressed", String(v)); s.no.setAttribute("aria-pressed", String(!v)); select(s, true); });
+              yn.append(b);
+            });
+            tb.append(tr);
+          });
+          root.append(tw);
+
+          /* floor + lens */
+          const split = el("div", "x-split"); root.append(split);
+          const fw = el("div"); fw.append(el("p", "x-cap", "地面 · 试铺"));
+          const floor = el("div", "x-floor"); fw.append(floor);
+          const row = el("div", "x-row"); row.style.marginTop = "10px";
+          const tryB = el("button", "x-btn x-btn--go", "试一试"); tryB.type = "button"; row.append(tryB); fw.append(row);
+          const lw = el("div"); lw.append(el("p", "x-cap", "顶点放大镜 · 一个顶点周围的角"));
+          const lens = el("div", "x-lens"); lw.append(lens); const eq = el("p", "x-eq", "试铺一个形状后，这里会放大它的一个顶点。"); lw.append(eq);
+          split.append(fw, lw);
+          floor.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="一块空地面"><rect width="${W}" height="${H}" style="fill:var(--fill-primary-on)"/></svg>`;
+          lens.innerHTML = `<svg viewBox="-110 -110 220 220" aria-hidden="true"><circle r="100" style="fill:var(--fill-tertiary)"/></svg>`;
+
+          /* tasks + question */
+          const tasks = el("ul", "checklist"); root.append(tasks);
+          const T = [["all", "1★ 把 5 种形状都试一遍", "每种先猜再试"], ["pred", "2★ 至少猜对 4 个", "试之前的猜想才算数"], ["q", "3★ 回答蜂博士的问题", "为什么五边形不行?"]];
+          const renderTasks = () => (tasks.innerHTML = taskList(T, got));
+          renderTasks();
+          const qBox = el("div"); qBox.hidden = true; root.append(qBox);
+          const endRow = el("div", "x-row"); endRow.hidden = true; root.append(endRow);
+          const fin = el("button", "x-btn x-btn--go", "完成第 1 关"); fin.type = "button"; endRow.append(fin);
+
+          function select(s, quiet) {
+            cur = s;
+            SH.forEach((x) => { x.btn.classList.toggle("is-sel", x === s); x.tr.classList.toggle("is-highlight", x === s); });
+            tryB.textContent = `试一试 · ${s.name}`;
+            if (!quiet && !s.tested) say(`${s.name}:你猜它能把地面铺满吗?`, "在猜想表里点 ✔ 或 ✘。");
+          }
+          function drawLens(s) {
+            let g = `<circle r="100" style="fill:var(--fill-tertiary)"/>`;
+            for (let i = 0; i < s.k; i++) {
+              g += `<polygon points="${pts(cornerPoly(s.n, 70, i * s.a))}" style="fill:var(--chart-${s.c});stroke:var(--fill-primary-on)" stroke-width="2"/>`;
+              g += `<path d="M${arcPt(24, i * s.a)} A24 24 0 0 0 ${arcPt(24, (i + 1) * s.a)}" fill="none" style="stroke:var(--text-primary)" stroke-width="1.5"/>`;
+              g += `<text x="${(42 * Math.cos(rad((i + 0.5) * s.a))).toFixed(1)}" y="${(-42 * Math.sin(rad((i + 0.5) * s.a))).toFixed(1)}">${s.a}°</text>`;
+            }
+            const sum = s.k * s.a;
+            if (sum < 360) {
+              g += `<path class="x-gapflash" d="${sector(100, sum, 360)}" style="fill:var(--fill-system-red)" fill-opacity="0.75"/>`;
+              const m = (sum + 360) / 2;
+              g += `<text x="${(60 * Math.cos(rad(m))).toFixed(1)}" y="${(-60 * Math.sin(rad(m))).toFixed(1)}">差 ${360 - sum}°</text>`;
+            }
+            g += `<circle r="4" style="fill:var(--text-primary)"/><circle r="100" fill="none" style="stroke:var(--stroke-primary)" stroke-width="3"/>`;
+            lens.innerHTML = `<svg viewBox="-110 -110 220 220" role="img" aria-label="${s.name}的顶点:${s.a}° × ${s.k} = ${sum}°">${g}</svg>`;
+            eq.textContent = s.ok ? `${s.a}° × ${s.k} = 360° ✔ 正好一圈` : `${s.a}° × ${s.k} = ${sum}° 不够 360°;× ${s.k + 1} = ${sum + s.a}° 太多 ✘`;
+          }
+          function test() {
+            const s = cur;
+            if (busy) return;
+            if (s.guess == null) { Audio_.play("wrong"); tryB.classList.remove("x-flash"); void tryB.offsetWidth; tryB.classList.add("x-flash"); say(`先在猜想表里猜一下:${s.name}能铺满吗?`, "科学家也是先猜，再做实验。"); return; }
+            busy = true; tryB.disabled = true;
+            const tiles = tiling(s.n), step = reduced() ? 0 : Math.min(26, 1300 / tiles.length);
+            let g = `<defs><clipPath id="x-fc"><rect width="${W}" height="${H}"/></clipPath></defs><g clip-path="url(#x-fc)"><rect id="x-ground" width="${W}" height="${H}" style="fill:var(--fill-primary-on)"/>`;
+            tiles.forEach((P, i) => (g += `<polygon class="x-tile" style="animation-delay:${(i * step) | 0}ms;fill:var(--chart-${s.c});stroke:var(--text-primary)" stroke-opacity="0.35" stroke-width="1" stroke-linejoin="round" points="${pts(P)}"/>`));
+            g += `<g id="x-sparks"></g></g>`;
+            floor.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="用${s.name}铺地面">${g}</svg>`;
+            const ticks = reduced() ? 0 : 6;
+            for (let t = 0; t < ticks; t++) setTimeout(() => Audio_.play("tick", 500 + t * 60), (t * tiles.length * step) / ticks);
+            setTimeout(() => result(s), tiles.length * step + 320);
+          }
+          function result(s) {
+            const first = !s.tested; s.tested = true; busy = false; tryB.disabled = false;
+            const svg = floor.querySelector("svg");
+            if (s.ok) {
+              Audio_.play("correct");
+              const sp = svg.querySelector("#x-sparks");
+              for (let i = 0; i < 9; i++) sp.innerHTML += `<text class="x-spark" style="animation-delay:${i * 90}ms" x="${30 + Math.random() * 340}" y="${30 + Math.random() * 200}" font-size="26" text-anchor="middle" dominant-baseline="central">✨</text>`;
+              svg.setAttribute("aria-label", `${s.name}把地面铺满了，没有缝`);
+            } else {
+              Audio_.play("bonk");
+              const gr = svg.querySelector("#x-ground"); gr.style.fill = "var(--fill-system-red)"; gr.classList.add("x-gapflash");
+              floor.classList.remove("x-flash"); void floor.offsetWidth; floor.classList.add("x-flash");
+              svg.setAttribute("aria-label", `${s.name}铺不满，留下红色的缝`);
+            }
+            drawLens(s);
+            s.btn.classList.add(s.ok ? "good" : "bad");
+            s.yes.disabled = s.no.disabled = true;
+            const right = s.guess === s.ok;
+            s.tr.cells[1].textContent = "你猜 " + (s.guess ? "✔" : "✘");
+            s.tr.cells[2].textContent = s.a + "°";
+            s.tr.cells[3].textContent = (s.ok ? "✔ 铺满" : "✘ 有缝") + (right ? " · 猜对了" : " · 猜错了");
+            s.tr.cells[3].className = right ? "" : "muted";
+            const rest = SH.filter((x) => !x.tested);
+            say(s.ok ? `铺满了!看放大镜:${s.a}° 的角拼 ${s.k} 个，正好 360°。` : `出现了红色的缝!看放大镜:${s.a}° 的角拼一圈，凑不出 360°。`,
+              (right ? "你猜对了。" : "这次猜错了，没关系，实验说了算。") + (rest.length ? ` 还剩 ${rest.length} 个:${rest.map((x) => x.name).join("、")}。` : ""));
+            if (!first) return;
+            const nRight = SH.filter((x) => x.tested && x.guess === x.ok).length;
+            if (!got.pred && nRight >= 4) { got.pred = true; Audio_.play("star"); toast("⭐ 猜对 4 个!"); }
+            if (!rest.length && !got.all) { got.all = true; Audio_.play("star"); toast("⭐ 5 种形状全部试过!"); setTimeout(ask, 900); }
+            renderTasks();
+          }
+          function ask() {
+            qBox.hidden = false;
+            qBox.innerHTML = `<p style="font:var(--type-body-strong);margin-bottom:8px">🐝 蜂博士的问题:为什么五边形不行?</p>`;
+            const ch = [
+              ["108° × 3 = 324° 不够，× 4 = 432° 太多", true],
+              ["五边形的边太多了", false],
+              ["五边形不够对称", false],
+              ["五边形的角太小，挤不进去", false],
+            ].sort(() => Math.random() - 0.5);
+            const box = el("div", "x-opts"); qBox.append(box);
+            say("最后一个问题:为什么正五边形铺不满地面?", "想想放大镜里，一个顶点周围的角。");
+            ch.forEach(([t, ok]) => {
+              const b = el("button", "x-opt x-qopt", t); b.type = "button"; box.append(b);
+              b.addEventListener("click", () => {
+                if (got.q || qTries >= 2 || b.classList.contains("bad")) return;
+                qTries++;
+                if (ok) {
+                  b.classList.add("good"); got.q = true; Audio_.play("star"); toast("⭐ 答对了!");
+                  say("对!一个顶点周围必须正好 360°。108° 放 3 个只有 324°，放 4 个就叠到 432° 了。", "所以只有内角能整除 360° 的正多边形才能铺满。");
+                } else {
+                  b.classList.add("bad"); Audio_.play("wrong");
+                  if (qTries < 2) say("再想想:一个顶点周围的角加起来，必须正好是多少度?", "提示:正五边形的内角是 108°。");
+                  else { box.querySelectorAll(".x-qopt").forEach((x) => x.textContent.startsWith("108") && x.classList.add("good")); say("答案是:108° × 3 = 324° 不够，× 4 = 432° 太多。凑不出 360°。", "这颗星这次没拿到，下次再来!"); }
+                }
+                renderTasks(); if (got.q || qTries >= 2) endRow.hidden = false;
+              });
+            });
+          }
+          tryB.addEventListener("click", test);
+          fin.addEventListener("click", () => {
+            if (finished) return; finished = true; fin.disabled = true;
+            const stars = [got.all, got.pred, got.q].filter(Boolean).length;
+            done(stars, 40 + stars * 20);
+            award("tiler");
+            say("蜜蜂选六边形，第一个理由找到了:六边形能把平面铺满，一点空间都不浪费。", "下一站:绕一圈是多少度。");
+            root.append(endCard(stars, "铺满大师", [
+              ["密铺", "正多边形能密铺 ⇔ 内角整除 360°,只有正三角形(3)、正方形(4)、正六边形(6)。"],
+              ["正多边形的内角", "正 n 边形内角 = (n − 2) × 180° ÷ n:60°、90°、108°、120°、135°。"],
+              ["周角", "一个顶点周围的角拼起来必须正好 360°:60°×6、90°×4、120°×3。"],
+            ], "g01 平面图形 · g04 角 · g06 对称"));
+          });
+          select(SH[0], true);
+        },
+      });
+
+      LEVELS.push({
+        id: 2,
+        title: "绕一圈是多少度",
+        init(root, done) {
+          const SH = [[3, 1], [4, 2], [5, 3], [6, 4], [8, 5], [12, 6]].map(([n, c]) => ({ n, c, a: ((n - 2) * 180) / n }));
+          const SINGLE = ["3×6", "4×4", "6×3"];
+          let placed = [], found = [], qTries = 0, busy = false, finished = false;
+          const got = { single: false, mixed: false, many: false };
+          const say = guide(root, "开始之前，蜂博士先考你一个问题:一个点周围一圈是多少度?", "答对了，再去拼角。");
+
+          /* question first */
+          const qBox = el("div"); root.append(qBox);
+          qBox.append(el("p", "", `<span style="font:var(--type-body-strong)">🐝 蜂博士的问题:一个点周围一圈是多少度?</span>`));
+          const qOpts = el("div", "x-opts"); qBox.append(qOpts);
+          const game = el("div"); game.hidden = true; game.style.gap = "14px"; root.append(game);
+          const open = () => { game.hidden = false; game.style.display = "grid"; say("从调色板里点角，把它们拼在中心点周围，凑满 360°。", "点一下已经拼上的角，就能把它拿掉。"); };
+          [["360°", true], ["180°", false], ["90°", false], ["270°", false]].sort(() => Math.random() - 0.5).forEach(([t, ok]) => {
+            const b = el("button", "x-opt x-qopt", t); b.type = "button"; qOpts.append(b);
+            b.addEventListener("click", () => {
+              if (!game.hidden || b.classList.contains("bad")) return;
+              qTries++;
+              if (ok) { b.classList.add("good"); Audio_.play("correct"); say("对!转一整圈是 360°,这叫周角。", ""); setTimeout(open, 900); }
+              else {
+                b.classList.add("bad"); Audio_.play("wrong");
+                if (qTries < 2) say("再想想:半圈(一条直线)是 180°,那一整圈呢?", "");
+                else { qOpts.querySelectorAll(".x-qopt").forEach((x) => x.textContent === "360°" && x.classList.add("good")); setTimeout(open, 1400); }
+              }
+            });
+          });
+
+          /* palette + formula */
+          const icon = (s) => `<svg viewBox="-1.15 -1.15 2.3 2.3" aria-hidden="true"><polygon points="${pts(ngon(0, 0.08, 1, s.n, 90 - 180 / s.n))}" style="fill:var(--chart-${s.c});stroke:var(--text-primary)" stroke-width="0.05"/></svg>`;
+          const pal = el("div"); pal.append(el("p", "x-cap", "角的调色板 · 点一个角，拼到中心点周围"));
+          const opts = el("div", "x-opts"); pal.append(opts);
+          const formula = el("p", "x-eq", "内角 = (n − 2) × 180° ÷ n"); pal.append(formula);
+          SH.forEach((s) => {
+            const b = el("button", "x-opt", `${icon(s)}${s.n} 边 · ${s.a}°`); b.type = "button";
+            b.setAttribute("aria-label", `添加正${s.n}边形的内角 ${s.a}°`);
+            b.addEventListener("click", () => add(s)); opts.append(b);
+          });
+          game.append(pal);
+
+          /* vertex + ring meter */
+          const split = el("div", "x-split"); game.append(split);
+          const lw = el("div"); lw.append(el("p", "x-cap", "中心点 · 点已拼的角可以拿掉"));
+          const lens = el("div", "x-lens"); lw.append(lens);
+          const eq = el("p", "x-eq", "0° / 360°"); lw.append(eq);
+          const fw = el("div"); fw.append(el("p", "x-cap", "收藏夹 · 拼满一圈的组合"));
+          const shelf = el("div", "x-shelf"); shelf.innerHTML = `<span class="pill">还没有，先拼满一圈</span>`; fw.append(shelf);
+          const clr = el("button", "x-btn", "清空"); clr.type = "button"; clr.style.marginTop = "10px";
+          clr.addEventListener("click", () => { Audio_.play("click"); placed = []; draw(); }); fw.append(clr);
+          split.append(lw, fw);
+
+          const tasks = el("ul", "checklist"); game.append(tasks);
+          const T = [["single", "1★ 找到 3 种单一形状的组合", "只用一种角拼满一圈"], ["mixed", "2★ 再找到 2 种混搭组合", "两种以上的角一起拼"], ["many", "3★ 收藏至少 7 种组合", "任何加起来 360° 的都算"]];
+          const renderTasks = () => (tasks.innerHTML = taskList(T, got));
+          renderTasks();
+          const endRow = el("div", "x-row"); endRow.hidden = true; game.append(endRow);
+          const fin = el("button", "x-btn x-btn--go", "完成第 2 关"); fin.type = "button"; endRow.append(fin);
+
+          const sum = () => placed.reduce((t, s) => t + s.a, 0);
+          const key = () => {
+            const c = {}; placed.forEach((s) => (c[s.n] = (c[s.n] || 0) + 1));
+            return Object.keys(c).map(Number).sort((a, b) => a - b).map((n) => (c[n] > 1 ? `${n}×${c[n]}` : `${n}`)).join("+");
+          };
+          function draw() {
+            const S = sum();
+            let g = `<circle r="100" style="fill:var(--fill-tertiary)"/>`, a0 = 0;
+            placed.forEach((s, i) => {
+              const m = a0 + s.a / 2;
+              g += `<g class="x-wedge" data-i="${i}" tabindex="0" role="button" aria-label="拿掉 ${s.a}° 的角" style="cursor:pointer"><path d="${sector(88, a0, a0 + s.a)}" style="fill:var(--chart-${s.c});stroke:var(--fill-primary-on)" stroke-width="2"/>`;
+              g += `<text x="${(58 * Math.cos(rad(m))).toFixed(1)}" y="${(-58 * Math.sin(rad(m))).toFixed(1)}">${s.a}°</text></g>`;
+              a0 += s.a;
+            });
+            const C = 2 * Math.PI * 97;
+            g += `<circle r="97" fill="none" style="stroke:var(--stroke-secondary)" stroke-width="6"/>`;
+            g += `<circle r="97" fill="none" style="stroke:var(${S === 360 ? "--fill-system-green" : "--text-primary"});transition:stroke-dashoffset var(--dur-quick) var(--ease-out)" stroke-width="6" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${(C * (1 - S / 360)).toFixed(1)}" transform="scale(1,-1)"/>`;
+            g += `<circle r="4" style="fill:var(--text-primary)"/>`;
+            lens.innerHTML = `<svg viewBox="-110 -110 220 220" role="img" aria-label="中心点周围已拼 ${S}°,目标 360°">${g}</svg>`;
+            lens.querySelectorAll(".x-wedge").forEach((w) => {
+              const rm = () => { if (busy) return; Audio_.play("pop"); placed.splice(+w.dataset.i, 1); draw(); };
+              w.addEventListener("click", rm);
+              w.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), rm()));
+            });
+            eq.textContent = placed.length ? `${placed.map((s) => s.a + "°").join(" + ")} = ${S}° / 360°` + (S < 360 ? ` · 还差 ${360 - S}°` : "") : "0° / 360°";
+          }
+          function shake(n) { n.classList.remove("x-flash"); void n.offsetWidth; n.classList.add("x-flash"); }
+          function add(s) {
+            if (busy) return;
+            formula.textContent = `内角 = (n − 2) × 180° ÷ n · n = ${s.n}:(${s.n} − 2) × 180° ÷ ${s.n} = ${s.a}°`;
+            if (sum() + s.a > 360) {
+              Audio_.play("bonk"); shake(lens);
+              say(`放不下!${sum()}° + ${s.a}° = ${sum() + s.a}°,超过 360° 就叠在一起了。`, `还差 ${360 - sum()}°,换个小一点的角，或者拿掉一个。`);
+              return;
+            }
+            Audio_.play("tick", 400 + s.a * 3); placed.push(s); draw();
+            if (sum() === 360) win();
+          }
+          function win() {
+            const k = key(); busy = true;
+            Audio_.play("correct");
+            if (found.includes(k)) { say(`正好 360°!不过 ${k} 已经在收藏夹里了。`, "试试别的组合。"); }
+            else {
+              found.push(k);
+              shelf.innerHTML = found.map((f) => `<span class="pill">${f}</span>`).join("");
+              say(`正好 360°!收藏:${k}。`, `收藏夹里已有 ${found.length} 种组合。`);
+              const singles = SINGLE.every((x) => found.includes(x)), mixed = found.filter((x) => x.includes("+")).length;
+              if (!got.single && singles) { got.single = true; Audio_.play("star"); toast("⭐ 3 种单一形状都找到了!"); }
+              if (got.single && !got.mixed && mixed >= 2) { got.mixed = true; Audio_.play("star"); toast("⭐ 找到 2 种混搭组合!"); }
+              if (got.mixed && !got.many && found.length >= 7) { got.many = true; Audio_.play("star"); toast("⭐ 收藏了 7 种组合!"); }
+              renderTasks(); if (got.single) endRow.hidden = false;
+            }
+            setTimeout(() => { busy = false; placed = []; draw(); }, 1300);
+          }
+          fin.addEventListener("click", () => {
+            if (finished) return; finished = true; fin.disabled = true;
+            const stars = [got.single, got.mixed, got.many].filter(Boolean).length;
+            done(stars, 40 + stars * 20);
+            award("angler");
+            say("一个点周围的角必须正好拼成 360°,这就是能铺满的秘密。", "下一站:同样的蜜，谁的墙最省。");
+            game.append(endCard(stars, "角度猎人", [
+              ["内角公式", "正 n 边形内角 = (n − 2) × 180° ÷ n:60°、90°、108°、120°、135°、150°。"],
+              ["周角", "一个点周围一圈是 360°。"],
+              ["半正则密铺", `能拼满一圈的不同正多边形组合叫半正则密铺，比如 3×2+6×2、4+8×2、3+12×2。你收藏了 ${found.length} 种。`],
+            ], "g04 角 · g09 三角形 · n04 乘法"));
+          });
+          draw();
+        },
+      });
+
+      LEVELS.push({
+        id: 3,
+        title: "同样的蜜，谁的墙最省",
+        init(root, done) {
+          const col = (n) => `var(--chart-${n}, var(--fill-tertiary))`;
+          const SIDE = { 3: Math.sqrt(4 / Math.sqrt(3)), 4: 1, 6: Math.sqrt(2 / (3 * Math.sqrt(3))) };
+          const SH = [
+            { k: "tri", name: "三角形", n: 3, p: 4.56, c: 1, lim: "≈2.28" },
+            { k: "sq", name: "正方形", n: 4, p: 4.0, c: 2, lim: "2.00" },
+            { k: "hex", name: "六边形", n: 6, p: 3.72, c: 4, lim: "≈1.86" },
+            { k: "cir", name: "圆", n: 0, p: 3.54, c: 6 },
+          ];
+          const pStr = (s) => (s.k === "sq" ? "4.00" : "≈" + s.p.toFixed(2));
+          const got = { order: false, circle: false, wall: false };
+          let order = SH.slice().sort(() => Math.random() - 0.5), revealed = false, finished = false, qTries = 0, pred = null;
+          if (order.every((s, i) => s === SH[i])) order.reverse();
+          const say = guide(root, "蜜蜂造墙要花蜡币，墙越长越贵。下面 4 个形状面积都是 1,装的蜜一样多。谁的墙最费蜡?", "先排队:从最费蜡排到最省蜡，再点「揭晓」。");
+          const shake = (n) => { n.classList.remove("x-flash"); void n.offsetWidth; n.classList.add("x-flash"); };
+
+          /* game 1: rank */
+          const g1 = el("div"); g1.style.cssText = "display:grid;gap:10px"; root.append(g1);
+          g1.append(el("p", "x-cap", "游戏 1 · 排排队 · 面积都是 1"));
+          const fig = el("div", "x-floor"); g1.append(fig);
+          function drawShapes() {
+            const K = 60;
+            fig.innerHTML = `<svg viewBox="0 0 400 150" role="img" aria-label="面积都是 1 的三角形、正方形、六边形和圆${revealed ? ",周长 4.56、4.00、3.72、3.54" : ""}">${SH.map((s, i) => {
+              const cx = 50 + i * 100, st = `style="fill:${col(s.c)};stroke:var(--text-primary)" stroke-width="1.5" stroke-linejoin="round"`;
+              let g;
+              if (!s.n) g = `<circle cx="${cx}" cy="62" r="${(K / Math.sqrt(Math.PI)).toFixed(1)}" ${st}/>`;
+              else { const R = SIDE[s.n] / (2 * Math.sin(Math.PI / s.n)); g = `<polygon points="${pts(ngon(cx, 62 + (s.n === 3 ? (R * K) / 4 : 0), R * K, s.n, s.n === 3 ? -90 : s.n === 4 ? 45 : 30))}" ${st}/>`; }
+              return g + `<text x="${cx}" y="136" text-anchor="middle" style="font:var(--type-caption);fill:var(--text-primary)">${s.name} · 周长 ${revealed ? pStr(s) : "?"}</text>`;
+            }).join("")}</svg>`;
+          }
+          const list = el("ol", "x-rank"); list.setAttribute("aria-label", "从最费蜡到最省蜡"); g1.append(list);
+          const revRow = el("div", "x-row"); const revB = el("button", "x-btn x-btn--go", "揭晓"); revB.type = "button"; revRow.append(revB); g1.append(revRow);
+          function renderList() {
+            list.innerHTML = "";
+            order.forEach((s, i) => {
+              const li = el("li", "", `<span><b>${i + 1}</b> · ${s.name}</span><span class="x-wax"><i></i></span><span class="x-row"></span>`);
+              s.li = li;
+              if (!revealed) [["↑", -1, "往上"], ["↓", 1, "往下"]].forEach(([t, d, lab], bi) => {
+                const b = el("button", "x-btn", t); b.type = "button"; b.setAttribute("aria-label", `${s.name}${lab}移`);
+                b.disabled = i + d < 0 || i + d >= order.length;
+                b.addEventListener("click", () => {
+                  Audio_.play("tick", 480 + i * 90); [order[i], order[i + d]] = [order[i + d], order[i]]; renderList();
+                  const nb = s.li.querySelectorAll("button")[bi]; (nb && !nb.disabled ? nb : s.li.querySelector("button:not(:disabled)")).focus();
+                });
+                li.lastChild.append(b);
+              });
+              list.append(li);
+            });
+          }
+          revB.addEventListener("click", () => {
+            if (revealed) return; revealed = true; revB.disabled = true;
+            renderList(); drawShapes();
+            const ok = order.every((s, i) => s === SH[i]);
+            order.forEach((s, i) => {
+              s.li.lastChild.textContent = s === SH[i] ? "✔" : "✘"; s.li.classList.add(s === SH[i] ? "good" : "bad");
+              setTimeout(() => { const bar = s.li.querySelector(".x-wax i"); bar.style.width = ((s.p / 4.56) * 100).toFixed(1) + "%"; bar.textContent = "🪙 " + pStr(s); Audio_.play("tick", 1100 - s.p * 150); }, reduced() ? 0 : 80 + i * 380);
+            });
+            got.order = ok; renderTasks();
+            setTimeout(() => {
+              if (ok) { Audio_.play("star"); toast("⭐ 排对了!"); } else Audio_.play("wrong");
+              say(ok ? "全对!面积一样，边越多越接近圆，墙就越短。" : "顺序不太对。正确顺序:三角形 4.56 > 正方形 4.00 > 六边形 3.72 > 圆 3.54。", "圆的墙最短。那蜜蜂为什么不用圆?去游戏 2 看看。");
+              g2.hidden = false; g2.style.display = "grid";
+            }, reduced() ? 300 : 1800);
+          });
+
+          /* game 2: circles leave gaps */
+          const g2 = el("div"); g2.hidden = true; g2.style.gap = "10px"; root.append(g2);
+          g2.append(el("p", "x-cap", "游戏 2 · 圆最省，为什么不用圆?"));
+          const pack = el("div", "x-floor"); g2.append(pack);
+          pack.innerHTML = `<svg viewBox="0 0 400 200" role="img" aria-label="一块空地"><rect width="400" height="200" style="fill:var(--fill-primary-on)"/></svg>`;
+          const pRow = el("div", "x-row"); const packB = el("button", "x-btn x-btn--go", "把圆排起来"); packB.type = "button"; pRow.append(packB); g2.append(pRow);
+          const waste = el("p", "x-eq", "浪费空间 0%"); g2.append(waste);
+          const qBox = el("div"); qBox.hidden = true; g2.append(qBox);
+          packB.addEventListener("click", () => {
+            packB.disabled = true;
+            const r = 20, dy = Math.sqrt(3) * r, step = reduced() ? 0 : 22; let c = "", n = 0;
+            for (let j = 0; j * dy < 200 + r; j++) for (let i = -1; i * 2 * r < 400 + r; i++) c += `<circle class="x-tile" style="animation-delay:${n++ * step}ms;fill:${col(6)};stroke:var(--text-primary)" stroke-opacity="0.4" cx="${i * 2 * r + (j & 1 ? r : 0) + r}" cy="${j * dy + r}" r="${r}"/>`;
+            pack.innerHTML = `<svg viewBox="0 0 400 200" role="img" aria-label="圆排得最紧，中间仍有黄色缝隙"><defs><clipPath id="x-pc"><rect width="400" height="200"/></clipPath></defs><g clip-path="url(#x-pc)"><rect id="x-gap" width="400" height="200" style="fill:var(--fill-primary-on)"/>${c}</g></svg>`;
+            setTimeout(() => {
+              const gr = pack.querySelector("#x-gap"); gr.style.fill = "var(--chart-5, var(--fill-system-orange))"; gr.classList.add("x-gapflash"); Audio_.play("bonk");
+              let v = 0; const tick = () => { v = Math.min(9.3, v + 0.3); waste.textContent = `浪费空间 ≈ ${v.toFixed(1)}%`; if (v < 9.3) requestAnimationFrame(tick); else ask(); };
+              reduced() ? ((waste.textContent = "浪费空间 ≈ 9.3%"), ask()) : tick();
+            }, n * step + 300);
+          });
+          function ask() {
+            qBox.hidden = false;
+            qBox.innerHTML = `<p style="font:var(--type-body-strong);margin-bottom:8px">🐝 蜂博士的问题:圆的墙最短，蜜蜂为什么不用圆?</p>`;
+            const box = el("div", "x-opts"); qBox.append(box);
+            say("看见黄色的缝了吗?圆排得再紧，也有约 9.3% 的空间空着。", "回答蜂博士的问题。");
+            [["圆铺不满，会有缝隙浪费空间和蜡", true], ["圆的墙其实更费蜡", false], ["圆太难画了", false], ["圆装不下蜂蜜", false]].sort(() => Math.random() - 0.5).forEach(([t, ok]) => {
+              const b = el("button", "x-opt x-qopt", t); b.type = "button"; box.append(b);
+              b.addEventListener("click", () => {
+                if (got.circle || qTries >= 2 || b.classList.contains("bad")) return;
+                qTries++;
+                if (ok) { b.classList.add("good"); got.circle = true; Audio_.play("star"); toast("⭐ 答对了!"); say("对!圆和圆之间总有缝，缝里还得再补蜡。", "能铺满的形状里，谁最省?去游戏 3。"); }
+                else {
+                  b.classList.add("bad"); Audio_.play("wrong");
+                  if (qTries < 2) say("再看看那些黄色的地方:它们是什么?", "提示:第 1 关说过，蜂巢要一条缝都没有。");
+                  else { box.querySelectorAll(".x-qopt").forEach((x) => x.textContent.startsWith("圆铺不满") && x.classList.add("good")); say("答案是:圆铺不满，会有缝隙浪费空间和蜡。", "这颗星这次没拿到，去游戏 3 吧。"); }
+                }
+                renderTasks(); if (got.circle || qTries >= 2) { g3.hidden = false; g3.style.display = "grid"; }
+              });
+            });
+          }
+
+          /* game 3: shared walls */
+          const g3 = el("div"); g3.hidden = true; g3.style.gap = "10px"; root.append(g3);
+          g3.append(el("p", "x-cap", "游戏 3 · 共用墙 · 先猜:哪种 4×4 蜂巢每格最省蜡?"));
+          const TL = SH.slice(0, 3), seen = new Set();
+          const pOpts = el("div", "x-opts"); g3.append(pOpts);
+          const tRow = el("div", "x-row"); tRow.hidden = true; g3.append(tRow);
+          const hive = el("div", "x-floor"); hive.hidden = true; g3.append(hive);
+          const read = el("p", "x-eq"); read.hidden = true; g3.append(read);
+          TL.forEach((s) => {
+            const b = el("button", "x-opt", `${s.name}格`); b.type = "button"; pOpts.append(b);
+            b.addEventListener("click", () => {
+              if (pred) return; pred = s; b.classList.add("is-sel"); Audio_.play("click");
+              pOpts.querySelectorAll("button").forEach((x) => (x.disabled = true));
+              tRow.hidden = hive.hidden = read.hidden = false;
+              say(`你猜${s.name}格最省。现在切换三种格子，自己算一算。`, "两格中间的墙是共用的，只算一次。");
+            });
+            s.tb = el("button", "x-btn", s.name); s.tb.type = "button"; s.tb.setAttribute("aria-pressed", "false"); tRow.append(s.tb);
+            s.tb.addEventListener("click", () => build(s));
+          });
+          function colony(s) {
+            const P = [], a = SIDE[s.n];
+            for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) {
+              if (s.n === 4) P.push([[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]]);
+              else if (s.n === 6) { const w = Math.sqrt(3) * a; P.push(ngon(i * w + (j & 1 ? w / 2 : 0), j * 1.5 * a, a, 6, 30)); }
+              else { const h = (a * Math.sqrt(3)) / 2, x = (i * a) / 2, y = j * h; P.push((i + j) % 2 ? [[x, y], [x + a, y], [x + a / 2, y + h]] : [[x, y + h], [x + a, y + h], [x + a / 2, y]]); }
+            }
+            const E = new Map(), R = (v) => Math.round(v * 1000);
+            P.forEach((Q) => Q.forEach((p, i) => {
+              const q = Q[(i + 1) % Q.length], key = R((p[0] + q[0]) / 2) + "," + R((p[1] + q[1]) / 2), e = E.get(key);
+              if (e) e.n++; else E.set(key, { p, q, n: 1, len: Math.hypot(q[0] - p[0], q[1] - p[1]) });
+            }));
+            return { P, E: [...E.values()] };
+          }
+          function build(s) {
+            Audio_.play("tick", 520 + s.n * 60);
+            TL.forEach((x) => x.tb.setAttribute("aria-pressed", String(x === s)));
+            const { P, E } = colony(s), K = 40, all = P.flat();
+            const mnx = Math.min(...all.map((p) => p[0])), mny = Math.min(...all.map((p) => p[1]));
+            const vw = (Math.max(...all.map((p) => p[0])) - mnx) * K + 12, vh = (Math.max(...all.map((p) => p[1])) - mny) * K + 12;
+            const T = (p) => [(p[0] - mnx) * K + 6, (p[1] - mny) * K + 6];
+            const tot = E.reduce((t, e) => t + e.len, 0), sh = E.filter((e) => e.n > 1).length;
+            let g = P.map((Q, i) => `<polygon class="x-tile" style="animation-delay:${reduced() ? 0 : i * 25}ms;fill:${col(s.c)}" points="${pts(Q.map(T))}"/>`).join("");
+            g += E.map((e) => { const [a, b] = [T(e.p), T(e.q)]; return `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" style="stroke:var(${e.n > 1 ? "--fill-system-green" : "--text-primary"})" stroke-width="${e.n > 1 ? 3 : 1.5}" stroke-linecap="round"/>`; }).join("");
+            hive.innerHTML = `<svg viewBox="0 0 ${vw.toFixed(0)} ${vh.toFixed(0)}" style="max-height:260px" role="img" aria-label="${s.name}格的 4×4 蜂巢，绿色是共用墙">${g}</svg>`;
+            read.innerHTML = `${s.name} · 16 格 · ${E.length} 段墙(绿色 ${sh} 段共用，只算一次)· 总长 ${tot.toFixed(2)}<br>这个小蜂巢每格 ${(tot / 16).toFixed(2)} · 大蜂巢时每格平均用蜡 ${s.lim}`;
+            seen.add(s);
+            if (seen.size < 3) { say(`${s.name}格:大蜂巢时每格约 ${s.lim}。`, `还有 ${3 - seen.size} 种没看。`); return; }
+            if (got.wall || !endRow.hidden) return;
+            got.wall = pred.k === "hex"; renderTasks();
+            if (got.wall) { Audio_.play("star"); toast("⭐ 猜中了!"); } else Audio_.play("wrong");
+            say(`${got.wall ? "猜中了!" : "这次没猜中。"}大蜂巢时每格用蜡:六边形 ≈1.86 < 正方形 2.00 < 三角形 ≈2.28。`, "能铺满的形状里，六边形墙最短。点「完成第 3 关」。");
+            endRow.hidden = false;
+          }
+
+          const tasks = el("ul", "checklist"); root.append(tasks);
+          const T = [["order", "1★ 排排队", "从最费蜡排到最省蜡，一次排对"], ["circle", "2★ 圆最省，为什么不用圆?", "回答蜂博士的问题"], ["wall", "3★ 猜中最省蜡的蜂巢", "先猜，再切换三种格子"]];
+          const renderTasks = () => (tasks.innerHTML = taskList(T, got));
+          const endRow = el("div", "x-row"); endRow.hidden = true; root.append(endRow);
+          const fin = el("button", "x-btn x-btn--go", "完成第 3 关"); fin.type = "button"; endRow.append(fin);
+          fin.addEventListener("click", () => {
+            if (finished) return; finished = true; fin.disabled = true;
+            const stars = [got.order, got.circle, got.wall].filter(Boolean).length;
+            done(stars, 40 + stars * 20);
+            award("waxer");
+            say("这就是蜂巢猜想:平面分成等面积小格，六边形墙最短。直到1999年才由数学家 Thomas Hales 证明。", "下一站:泡泡自己会排队。");
+            root.append(endCard(stars, "省蜡专家", [
+              ["周长与面积", "面积一样，周长可以不一样:三角形 ≈4.56、正方形 4.00、六边形 ≈3.72、圆 ≈3.54。"],
+              ["等周问题", "面积相同的图形里，圆的周长最短;边越多的正多边形越接近圆。"],
+              ["能铺满的形状里六边形最省墙", "共用墙只算一次，大蜂巢时每格用蜡:六边形 ≈1.86、正方形 2.00、三角形 ≈2.28。"],
+            ], "g05 周长与面积 · g16 圆与π · c07 极值与最优"));
+          });
+          drawShapes(); renderList(); renderTasks();
+        },
+      });
+
+      LEVELS.push({
+        id: 4,
+        title: "泡泡自己会排队",
+        init(root, done) {
+          const CW = 400, CH = 280, N = 30, EPS = 0.5, TH = 4;
+          const got = { pred: false, hex: false, q: false };
+          let P = [], cells = [], steps = 0, wall0 = 0, pred = null, revealed = false, asked = false, timer = null, qTries = 0, finished = false;
+          const say = guide(root, "盒子里挤着 30 个泡泡，每个泡泡占住离自己最近的地盘。先猜一猜:一直放松下去，中间的格子最后多数是几边形?", "猜完才能开始放松。");
+
+          /* Voronoi by clipping the box with each perpendicular bisector */
+          function clip(poly, a, b) {
+            const nx = b[0] - a[0], ny = b[1] - a[1], c = (b[0] * b[0] + b[1] * b[1] - a[0] * a[0] - a[1] * a[1]) / 2, f = (p) => p[0] * nx + p[1] * ny - c, out = [];
+            poly.forEach((p, i) => {
+              const q = poly[(i + 1) % poly.length], fp = f(p), fq = f(q);
+              if (fp <= 0) out.push(p);
+              if ((fp < 0 && fq > 0) || (fp > 0 && fq < 0)) { const t = fp / (fp - fq); out.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]); }
+            });
+            return out;
+          }
+          const edgeX = (v, M) => v < EPS || v > M - EPS;
+          function voronoi() {
+            cells = P.map((a, i) => {
+              let poly = [[0, 0], [CW, 0], [CW, CH], [0, CH]];
+              P.forEach((b, j) => { if (j !== i && poly.length) poly = clip(poly, a, b); });
+              let A = 0, cx = 0, cy = 0, sides = 0, walls = 0;
+              poly.forEach((p, k) => {
+                const q = poly[(k + 1) % poly.length], cr = p[0] * q[1] - q[0] * p[1], len = Math.hypot(q[0] - p[0], q[1] - p[1]);
+                A += cr; cx += (p[0] + q[0]) * cr; cy += (p[1] + q[1]) * cr;
+                const box = (Math.abs(p[0] - q[0]) < EPS && edgeX(p[0], CW)) || (Math.abs(p[1] - q[1]) < EPS && edgeX(p[1], CH));
+                if (!box) { walls += len; if (len > TH) sides++; }
+              });
+              A /= 2;
+              return { poly, sides, walls, c: A ? [cx / (6 * A), cy / (6 * A)] : a, inner: !poly.some((p) => edgeX(p[0], CW) || edgeX(p[1], CH)) };
+            });
+          }
+          const stats = () => {
+            const I = cells.filter((c) => c.inner), hx = I.filter((c) => c.sides === 6).length;
+            return { n: I.length, hx, share: I.length ? hx / I.length : 0, avg: I.length ? I.reduce((t, c) => t + c.sides, 0) / I.length : 0, wall: cells.reduce((t, c) => t + c.walls, 0) / 2 };
+          };
+
+          /* prediction */
+          const pBox = el("div"); root.append(pBox);
+          pBox.append(el("p", "", `<span style="font:var(--type-body-strong)">🔮 先预测:中间的格子最后多数是几边形?</span>`));
+          const pOpts = el("div", "x-opts"); pBox.append(pOpts);
+          [4, 5, 6, 8].forEach((n) => {
+            const b = el("button", "x-opt x-qopt", `${n} 边形`); b.type = "button"; pOpts.append(b);
+            b.addEventListener("click", () => {
+              if (pred) return; pred = n; b.classList.add("is-sel"); Audio_.play("click");
+              pOpts.querySelectorAll("button").forEach((x) => (x.disabled = true));
+              [relaxB, autoB].forEach((x) => (x.disabled = false));
+              say(`你猜 ${n} 边形。点「放松一步」:每个泡泡挪到自己格子的重心。`, "看看格子的边数和墙的总长怎么变。");
+            });
+          });
+
+          /* canvas + controls + meter */
+          const box = el("div", "x-floor"); root.append(box);
+          const cv = document.createElement("canvas"); cv.style.cssText = "display:block;width:100%;height:auto";
+          cv.setAttribute("role", "img"); box.append(cv);
+          const probe = el("span"); probe.hidden = true; root.append(probe);
+          const css = (v) => { probe.style.color = ""; probe.style.color = v; return getComputedStyle(probe).color; };
+          const row = el("div", "x-row"); root.append(row);
+          const mk = (t, go) => { const b = el("button", "x-btn" + (go ? " x-btn--go" : ""), t); b.type = "button"; row.append(b); return b; };
+          const shakeB = mk("摇一摇"), relaxB = mk("放松一步", true), autoB = mk("自动放松 ▶");
+          relaxB.disabled = autoB.disabled = true; autoB.setAttribute("aria-pressed", "false");
+          const meter = el("section", "stats"); root.append(meter);
+
+          function draw() {
+            if (!cv.isConnected && cv.width) return;
+            const dpr = Math.min(2, window.devicePixelRatio || 1);
+            if (cv.width !== CW * dpr) { cv.width = CW * dpr; cv.height = CH * dpr; }
+            const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+            const honey = css("var(--chart-5, var(--fill-system-orange))"), pale = css("var(--fill-tertiary)"), ink = css("var(--text-primary)");
+            g.fillStyle = css("var(--fill-primary-on)"); g.fillRect(0, 0, CW, CH);
+            g.lineJoin = "round"; g.font = "12px Geist, sans-serif"; g.textAlign = "center"; g.textBaseline = "middle";
+            cells.forEach((c, i) => {
+              g.beginPath(); c.poly.forEach((p, k) => (k ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]))); g.closePath();
+              g.globalAlpha = c.inner ? 1 : 0.55; g.fillStyle = c.sides === 6 ? honey : pale; g.fill();
+              g.globalAlpha = 1; g.strokeStyle = ink; g.lineWidth = 1.2; g.stroke();
+              g.fillStyle = ink;
+              if (c.inner) g.fillText(String(c.sides), P[i][0], P[i][1]);
+              else { g.beginPath(); g.arc(P[i][0], P[i][1], 2, 0, 7); g.fill(); }
+            });
+            const s = stats();
+            cv.setAttribute("aria-label", `30 个泡泡的维诺图，第 ${steps} 步，中间 ${s.n} 格里有 ${s.hx} 个六边形`);
+            meter.innerHTML = `<div class="stat"><span class="stat__fig">${s.avg.toFixed(2)}</span><span class="stat__label">平均边数(中间格子)</span></div>
+              <div class="stat"><span class="stat__fig">${Math.round(s.wall)}</span><span class="stat__label">总墙长 · 开始时 ${Math.round(wall0)}</span></div>
+              <div class="stat"><span class="stat__fig">${Math.round(s.share * 100)}%</span><span class="stat__label">六边形 ${s.hx}/${s.n} · 第 ${steps} 步</span></div>`;
+          }
+          new MutationObserver((m, o) => (cv.isConnected ? draw() : o.disconnect())).observe(document.documentElement, { attributes: true });
+
+          function shake() {
+            P = Array.from({ length: N }, () => [10 + Math.random() * (CW - 20), 10 + Math.random() * (CH - 20)]);
+            steps = 0; voronoi(); wall0 = stats().wall; draw();
+          }
+          function relax() {
+            const before = P; P = cells.map((c) => c.c); steps++;
+            const moved = Math.max(...P.map((p, i) => Math.hypot(p[0] - before[i][0], p[1] - before[i][1])));
+            voronoi(); draw();
+            const s = stats(); Audio_.play("pop", 380 + s.share * 500);
+            check(s);
+            if (moved < 0.15) {
+              stopAuto();
+              if (!got.hex) say("泡泡几乎不动了，可还卡着几个不是六边形的格子。", "点「摇一摇」重新开始，再放松一次。");
+            }
+          }
+          function check(s) {
+            if (!got.hex && s.share >= 0.6) { got.hex = true; Audio_.play("star"); toast("⭐ 中间六成都是六边形!"); say(`第 ${steps} 步:中间 ${s.n} 格里有 ${s.hx} 个六边形。总墙长从 ${Math.round(wall0)} 缩到 ${Math.round(s.wall)}。`, "没有谁去修，它们自己变成了六边形。"); }
+            if (!revealed && (got.hex || steps >= 8)) {
+              revealed = true; got.pred = pred === 6;
+              if (got.pred) { Audio_.play("star"); toast("⭐ 预测对了:六边形!"); }
+              setTimeout(() => say(got.pred ? "你的预测对了:中间的格子多数变成了六边形。" : `你猜的是 ${pred} 边形，看看画面:多数格子是 6 条边。`, got.hex ? "" : "继续放松，让六成的中间格子变成六边形。"), got.hex ? 1600 : 0);
+            }
+            renderTasks();
+            if (!asked && revealed && (got.hex || steps >= 25)) { asked = true; setTimeout(ask, 1200); }
+          }
+          function stopAuto() { clearInterval(timer); timer = null; autoB.setAttribute("aria-pressed", "false"); autoB.textContent = "自动放松 ▶"; }
+          shakeB.addEventListener("click", () => { Audio_.play("pop"); shake(); if (pred) say("重新摇乱了。再放松看看。", ""); });
+          relaxB.addEventListener("click", relax);
+          autoB.addEventListener("click", () => {
+            if (timer) return stopAuto();
+            autoB.setAttribute("aria-pressed", "true"); autoB.textContent = "暂停 ⏸";
+            timer = setInterval(() => (cv.isConnected ? relax() : stopAuto()), reduced() ? 700 : 400);
+          });
+
+          /* tasks + question */
+          const tasks = el("ul", "checklist"); root.append(tasks);
+          const T = [["pred", "1★ 放松之前先预测", "中间的格子最后多数是几边形?"], ["hex", "2★ 中间格子六成是六边形", "不碰边框的格子里，六边形 ≥ 60%"], ["q", "3★ 回答蜂博士的问题", "没有谁设计，为什么会变成六边形?"]];
+          const renderTasks = () => (tasks.innerHTML = taskList(T, got));
+          const qBox = el("div"); qBox.hidden = true; root.append(qBox);
+          const endRow = el("div", "x-row"); endRow.hidden = true; root.append(endRow);
+          const fin = el("button", "x-btn x-btn--go", "完成第 4 关"); fin.type = "button"; endRow.append(fin);
+          const RIGHT = "每个泡泡都想用最短的墙装下自己的空间，互相挤压就成了六边形";
+          function ask() {
+            qBox.hidden = false;
+            qBox.innerHTML = `<p style="font:var(--type-body-strong);margin-bottom:8px">🐝 蜂博士的问题:没有谁设计，为什么会变成六边形?</p>`;
+            const opts = el("div", "x-opts"); qBox.append(opts);
+            say("最后一个问题:没有谁画图纸，泡泡为什么会排成六边形?", "想想总墙长是怎么变的。");
+            [[RIGHT, true], ["有人偷偷把它们修成了六边形", false], ["泡泡天生就是六边形的", false], ["盒子的形状决定的", false]].sort(() => Math.random() - 0.5).forEach(([t, ok]) => {
+              const b = el("button", "x-opt x-qopt", t); b.type = "button"; opts.append(b);
+              b.addEventListener("click", () => {
+                if (got.q || qTries >= 2 || b.classList.contains("bad")) return;
+                qTries++;
+                if (ok) { b.classList.add("good"); got.q = true; Audio_.play("star"); toast("⭐ 答对了!"); say("对!每个泡泡只顾自己省一点墙，大家一挤，整体就成了六边形。", "这叫自然界的最优化。"); }
+                else {
+                  b.classList.add("bad"); Audio_.play("wrong");
+                  if (qTries < 2) say("再想想:放松的时候，总墙长是变长还是变短?", "每个泡泡都在「省力」。");
+                  else { opts.querySelectorAll(".x-qopt").forEach((x) => x.textContent === RIGHT && x.classList.add("good")); say(`答案是:${RIGHT}。`, "这颗星这次没拿到，下次再来!"); }
+                }
+                renderTasks(); if (got.q || qTries >= 2) endRow.hidden = false;
+              });
+            });
+          }
+          fin.addEventListener("click", () => {
+            if (finished) return; finished = true; fin.disabled = true; stopAuto();
+            const stars = [got.pred, got.hex, got.q].filter(Boolean).length;
+            done(stars, 40 + stars * 20);
+            award("bubbler");
+            say("泡泡、肥皂沫、蜂巢:每一份都只想省一点，合起来就是六边形。", "下一站:BOSS 蜂巢建造者。");
+            root.append(endCard(stars, "泡泡魔法师", [
+              ["自然界的最优化", "局部的「省力」汇成整体的六边形:每个泡泡只想用最短的墙装下自己，挤在一起就排成了蜂巢。"],
+              ["维诺图(Voronoi)", "每个点占住离自己最近的地盘;两块地盘之间的墙，在两点连线的垂直平分线上。"],
+              ["重心", "「放松一步」= 把每个点挪到自己格子的重心。一步步重复，总墙长越来越短，格子越来越像正六边形。"],
+            ], "g06 对称 · m06 最优化与极值 · c07 极值与最优"));
+          });
+          shake(); renderTasks();
+        },
+      });
+
+      /* ---------- level 5: equal-area lattices (every cell holds 4 蜜), wax = wall length × K ---------- */
+      const HV = { W: 400, H: 280, A: 400, K: 0.04 }, hiveCache = {};
+      function hiveLattice(s) {
+        if (hiveCache[s]) return hiveCache[s];
+        const { W: w0, H: h0, A } = HV, C = [];
+        if (s === 6) { const R = Math.sqrt((2 * A) / (3 * Math.sqrt(3))), w = Math.sqrt(3) * R; for (let j = 0; j * 1.5 * R < h0 + R; j++) for (let i = 0; i * w < w0 + w; i++) C.push({ p: ngon(i * w + (j & 1 ? w / 2 : 0), j * 1.5 * R + R / 2, R, 6, 30) }); }
+        else if (s === 4) { const a = Math.sqrt(A); for (let j = 0; j * a < h0; j++) for (let i = 0; i * a < w0; i++) C.push({ p: ngon(i * a + a / 2, j * a + a / 2, a / Math.SQRT2, 4, 45) }); }
+        else if (s === 3) { const a = Math.sqrt((4 * A) / Math.sqrt(3)), h = (a * Math.sqrt(3)) / 2; for (let j = 0; j * h < h0; j++) for (let k = -1; k * a < w0 + a; k++) { const y = j * h, x = k * a - (j % 2) * (a / 2); C.push({ p: [[x, y + h], [x + a, y + h], [x + a / 2, y]] }, { p: [[x + a / 2, y], [x + 1.5 * a, y], [x + a, y + h]] }); } }
+        else { const r = Math.sqrt(A / Math.PI); for (let j = 0; j * Math.sqrt(3) * r < h0 + r; j++) for (let i = 0; i * 2 * r < w0 + 2 * r; i++) C.push({ o: [i * 2 * r + (j & 1 ? r : 0), j * Math.sqrt(3) * r + r], r }); }
+        C.forEach((c) => { if (!c.p) return; c.o = [0, 1].map((k) => c.p.reduce((t, q) => t + q[k], 0) / c.p.length); c.e = c.p.map((q, i) => { const n = c.p[(i + 1) % c.p.length]; return { m: [(q[0] + n[0]) / 2, (q[1] + n[1]) / 2], l: Math.hypot(n[0] - q[0], n[1] - q[1]) }; }); });
+        const L = C.filter((c) => c.o[0] > 0 && c.o[0] < w0 && c.o[1] > 0 && c.o[1] < h0);
+        L.forEach((c) => { if (c.e) c.e.forEach((e) => (e.n = L.findIndex((d) => d !== c && d.e.some((f) => Math.hypot(f.m[0] - e.m[0], f.m[1] - e.m[1]) < 1)))); else c.nb = L.map((_, j) => j).filter((j) => L[j] !== c && Math.abs(Math.hypot(L[j].o[0] - c.o[0], L[j].o[1] - c.o[1]) - 2 * c.r) < 1); });
+        return (hiveCache[s] = L);
+      }
+      const inPoly = (P, x, y) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) if ((P[i][1] > y) !== (P[j][1] > y) && x < ((P[j][0] - P[i][0]) * (y - P[i][1])) / (P[j][1] - P[i][1]) + P[i][0]) c = !c; return c; };
+      const inCell = (c, x, y) => (c.p ? inPoly(c.p, x, y) : Math.hypot(x - c.o[0], y - c.o[1]) < c.r);
+
+      LEVELS.push({
+        id: 5,
+        title: "BOSS 蜂巢建造者",
+        init(root, done) {
+          const { W: CW, H: CH, K } = HV, BUDGET = 100, TARGET = 1.62, GAP = ((Math.sqrt(3) - Math.PI / 2) * HV.A) / Math.PI / 100;
+          const SH = [[3, "三角形"], [4, "正方形"], [6, "六边形"], [0, "圆"]];
+          const blobR = (t) => 60 * (1 + 0.18 * Math.sin(3 * t + 0.5) + 0.1 * Math.cos(5 * t));
+          const inBlob = (x, y) => Math.hypot(x - 200, y - 140) < blobR(Math.atan2(y - 140, x - 200));
+          const S = []; for (let x = 2; x < CW; x += 4) for (let y = 2; y < CH; y += 4) if (inBlob(x, y)) S.push([x, y]);
+          const got = [false, false, false];
+          let wave = 0, shape = 6, L = hiveLattice(6), on = new Set(), drag = null, last = -1, doc = 0, busy = false, finished = false;
+          const say = guide(root, "你是蜂后的建筑师。每一波只有 100 枚蜡币，要装下尽量多的蜜。", "选格子形状，点画布放格子，再点一下拆掉，按住拖动能连着放。");
+          const head = el("p", "", ""); head.style.font = "var(--type-body-strong)"; root.append(head);
+          const opts = el("div", "x-opts"); root.append(opts);
+          SH.forEach(([n, t]) => {
+            const shp = n ? `<polygon points="${pts(ngon(0, 0, 21, n, n === 4 ? 45 : -90))}"` : `<circle r="19"`;
+            const b = el("button", "x-opt" + (n === shape ? " is-sel" : ""), `<svg viewBox="-24 -24 48 48" aria-hidden="true">${shp} style="fill:var(--chart-5);stroke:var(--text-primary)" stroke-width="1.5"/></svg>${t}`);
+            b.type = "button"; opts.append(b);
+            b.addEventListener("click", () => {
+              if (shape === n || busy) return; shape = n; L = hiveLattice(n); on = new Set(); Audio_.play("click");
+              opts.querySelectorAll(".x-opt").forEach((x) => x.classList.toggle("is-sel", x === b)); draw();
+              say(`换成${t}，蜂巢清空重建。`, n ? "每面和邻居共用的墙只收一半蜡。" : "圆和圆只碰一个点，墙没法共用，中间还会漏蜜。");
+            });
+          });
+          const box = el("div", "x-floor"); root.append(box);
+          const cv = document.createElement("canvas"); cv.style.cssText = "display:block;width:100%;height:auto;touch-action:none;cursor:pointer";
+          cv.setAttribute("role", "img"); box.append(cv);
+          const probe = el("span"); probe.hidden = true; root.append(probe);
+          const css = (v) => { probe.style.color = ""; probe.style.color = v; return getComputedStyle(probe).color; };
+          const meter = el("section", "stats"); root.append(meter);
+          const row = el("div", "x-row"); root.append(row);
+          const mk = (t, go) => { const b = el("button", "x-btn" + (go ? " x-btn--go" : ""), t); b.type = "button"; row.append(b); return b; };
+          const clearB = mk("清空重建"), goB = mk("提交这一波", true), skipB = mk("跳过这一波");
+          const tasks = el("ul", "checklist"); root.append(tasks);
+          const T = [["0", "★ 第 1 波 · 自由建造", `效率(蜜/蜡)≥ ${TARGET}`], ["1", "★ 第 2 波 · 风暴来了", "填满不规则的风暴区 ≥ 80%"], ["2", "★ 第 3 波 · 挑战蜂博士", "同样 100 蜡币，存蜜比他多"]];
+          const renderTasks = () => (tasks.innerHTML = taskList(T, got));
+
+          /* wax is order-free: a wall pays full alone, 0.75 per side when shared (so a neighbour adds half); storm edge cells ×1.5 */
+          const edgy = (c) => (c.p ? c.p.some((q) => !inBlob(q[0], q[1])) : [0, 1, 2, 3].some((k) => !inBlob(c.o[0] + c.r * Math.cos(k * 1.571), c.o[1] + c.r * Math.sin(k * 1.571))));
+          const own = (c, set) => (c.e ? c.e.reduce((t, e) => t + e.l * (set.has(e.n) ? 0.75 : 1), 0) : 2 * Math.PI * c.r) * K * (wave === 1 && edgy(c) ? 1.5 : 1);
+          const wax = (set) => [...set].reduce((t, i) => t + own(L[i], set), 0);
+          const shared = (c, set) => (c.e ? c.e.filter((e) => set.has(e.n)).length : 0);
+          function leaks() {
+            const G = []; if (shape) return G;
+            on.forEach((i) => L[i].nb.forEach((j) => { if (j > i && on.has(j)) L[i].nb.forEach((k) => { if (k > j && on.has(k) && L[j].nb.includes(k)) G.push([L[i].o, L[j].o, L[k].o]); }); }));
+            return G;
+          }
+          const fill = () => S.filter(([x, y]) => [...on].some((i) => inCell(L[i], x, y))).length / S.length;
+          /* 蜂博士: greedy squares, most shared walls first, then nearest the middle */
+          function docBuild() {
+            const Q = hiveLattice(4), set = new Set(), own4 = (c, s) => c.e.reduce((t, e) => t + e.l * (s.has(e.n) ? 0.75 : 1), 0) * K;
+            for (;;) {
+              let best = -1, bs = -1e9;
+              Q.forEach((c, i) => { if (set.has(i)) return; const nx = new Set(set).add(i); if ([...nx].reduce((t, j) => t + own4(Q[j], nx), 0) > BUDGET) return; const sc = shared(c, set) * 1000 - Math.hypot(c.o[0] - 200, c.o[1] - 140); if (sc > bs) { bs = sc; best = i; } });
+              if (best < 0) return set.size * 4; set.add(best);
+            }
+          }
+          function nums() { const G = leaks(), w = wax(on), h = on.size * 4 - G.length * GAP; return { G, w, h, eff: w ? h / w : 0, f: wave === 1 ? fill() : 0 }; }
+
+          function draw() {
+            if (!cv.isConnected && cv.width) return;
+            const dpr = Math.min(2, window.devicePixelRatio || 1);
+            if (cv.width !== CW * dpr) { cv.width = CW * dpr; cv.height = CH * dpr; }
+            const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+            const honey = css("var(--chart-5)"), ink = css("var(--text-primary)"), faint = css("var(--stroke-secondary)"), n = nums();
+            const path = (c) => { g.beginPath(); if (c.p) c.p.forEach((p, k) => (k ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]))); else g.arc(c.o[0], c.o[1], c.r, 0, 7); g.closePath(); };
+            g.fillStyle = css("var(--fill-primary-on)"); g.fillRect(0, 0, CW, CH);
+            g.globalAlpha = 0.3; g.fillStyle = honey; g.fillRect(0, 0, CW, CH); g.globalAlpha = 1;
+            if (wave === 1) {
+              g.fillStyle = css("var(--fill-tertiary)"); g.fillRect(0, 0, CW, CH);
+              g.beginPath(); for (let a = 0; a <= 360; a += 4) { const t = rad(a), r = blobR(t); g.lineTo(200 + r * Math.cos(t), 140 + r * Math.sin(t)); }
+              g.globalAlpha = 0.35; g.fillStyle = honey; g.fill(); g.globalAlpha = 1;
+              g.setLineDash([4, 4]); g.strokeStyle = ink; g.lineWidth = 1.5; g.stroke(); g.setLineDash([]);
+            }
+            g.strokeStyle = faint; g.lineWidth = 1; L.forEach((c) => { path(c); g.stroke(); });
+            /* leaked honey: the triangle between three touching circles, drawn first so only the gap stays visible */
+            g.fillStyle = css("var(--fill-system-orange)");
+            n.G.forEach((P) => { g.beginPath(); P.forEach((p, k) => (k ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]))); g.closePath(); g.fill(); });
+            on.forEach((i) => { path(L[i]); g.fillStyle = honey; g.fill(); g.strokeStyle = ink; g.lineWidth = 1.5; g.stroke(); });
+            cv.setAttribute("aria-label", `蜂巢画布，第 ${wave + 1} 波，${on.size} 个格子，存蜜 ${n.h.toFixed(1)}，用蜡 ${n.w.toFixed(1)}`);
+            const goal = [[TARGET.toFixed(2), "目标效率"], [Math.round(n.f * 100) + "%", "风暴区填满 · 目标 80%"], [doc, "蜂博士的存蜜 · 正方形"]][wave];
+            meter.innerHTML = `<div class="stat"><span class="stat__fig">${(BUDGET - n.w).toFixed(1)}</span><span class="stat__label">蜡剩余 / ${BUDGET}</span></div>
+              <div class="stat"><span class="stat__fig">${n.h.toFixed(1)}</span><span class="stat__label">存蜜量(总面积)${n.G.length ? ` · 漏掉 ${(n.G.length * GAP).toFixed(1)}` : ""}</span></div>
+              <div class="stat"><span class="stat__fig">${n.eff.toFixed(2)}</span><span class="stat__label">效率 = 蜜/蜡</span></div>
+              <div class="stat"><span class="stat__fig">${goal[0]}</span><span class="stat__label">${goal[1]}</span></div>`;
+          }
+          new MutationObserver((m, o) => (cv.isConnected ? draw() : (o.disconnect(), Audio_.swarm(false)))).observe(document.documentElement, { attributes: true });
+
+          function act(x, y, mode) {
+            const i = L.findIndex((c) => inCell(c, x, y)); if (i < 0 || i === last) return; last = i;
+            if (mode === "rm") { if (on.delete(i)) { Audio_.play("tick", 420); draw(); } return; }
+            if (on.has(i)) return;
+            if (wave === 1 && !inBlob(L[i].o[0], L[i].o[1])) { Audio_.play("bonk"); return say("风暴区外面不能建。", "只在虚线圈里放格子。"); }
+            const nx = new Set(on).add(i);
+            if (wax(nx) > BUDGET + 1e-9) { Audio_.play("bonk"); return toast("🕯️ 蜡不够了"); }
+            const sh = shared(L[i], on); on = nx;
+            if (sh >= 3) Audio_.play("chord"); else Audio_.play("pop", 300 + sh * 120);
+            draw();
+          }
+          const at = (e) => { const r = cv.getBoundingClientRect(); return [((e.clientX - r.left) / r.width) * CW, ((e.clientY - r.top) / r.height) * CH]; };
+          cv.addEventListener("pointerdown", (e) => {
+            if (busy || finished) return; const [x, y] = at(e), i = L.findIndex((c) => inCell(c, x, y));
+            drag = i >= 0 && on.has(i) ? "rm" : "add"; last = -1; cv.setPointerCapture(e.pointerId); act(x, y, drag);
+          });
+          cv.addEventListener("pointermove", (e) => { if (drag) act(...at(e), drag); });
+          ["pointerup", "pointercancel"].forEach((t) => cv.addEventListener(t, () => (drag = null)));
+
+          function startWave(w) {
+            wave = w; on = new Set(); busy = false;
+            if (w === 2) doc = docBuild();
+            head.textContent = ["第 1 波 · 自由建造", "第 2 波 · 风暴来了", "第 3 波 · 挑战蜂博士"][w];
+            [() => say(`自由建造:效率达到 ${TARGET} 就拿星。`, "哪种格子墙最短，又能和最多邻居共用墙?"),
+             () => say("风暴来了!只能在虚线圈里建，压到边界的格子要多花一半蜡。", "把风暴区填满 80% 就拿星。"),
+             () => say(`蜂博士用正方形、同样 100 蜡币，存了 ${doc} 蜜。比他多就赢!`, "他的格子挤得很紧，你得更聪明。")][w]();
+            Audio_.swarm(true); renderTasks(); draw();
+          }
+          function next() { if (wave < 2) startWave(wave + 1); else finish(); }
+          clearB.addEventListener("click", () => { if (busy || finished) return; on = new Set(); Audio_.play("click"); draw(); });
+          skipB.addEventListener("click", () => { if (busy || finished) return; Audio_.play("click"); next(); });
+          goB.addEventListener("click", () => {
+            if (busy || finished) return; const n = nums();
+            const ok = [n.eff >= TARGET, n.f >= 0.8, n.h > doc][wave];
+            if (ok) {
+              got[wave] = true; busy = true; Audio_.swarm(false); Audio_.play("fanfare"); toast(`⭐ 第 ${wave + 1} 波通过!`); renderTasks();
+              say(["效率达标!挤紧的六边形，墙最短、共墙最多。", `风暴区填满 ${Math.round(n.f * 100)}%!`, `你存了 ${n.h.toFixed(1)} 蜜，赢了蜂博士的 ${doc}!`][wave], wave < 2 ? "下一波马上来……" : "");
+              return setTimeout(next, 1800);
+            }
+            Audio_.play("wrong");
+            if (wave === 1) return say(`现在填满 ${Math.round(n.f * 100)}%，还差一点。`, "边上的格子贵，先铺满中间，再补边。");
+            say(shape !== 6 ? "还不够。试试六边形:同样大的格子，它的墙最短，还能和 6 个邻居共墙。" : "还不够。把六边形挤成一整团，别留缺口，也别拉成长条。",
+              wave ? `你 ${n.h.toFixed(1)} 蜜，蜂博士 ${doc} 蜜。` : `现在效率 ${n.eff.toFixed(2)}，目标 ${TARGET}。`);
+          });
+          function finish() {
+            finished = true; Audio_.swarm(false); [clearB, goB, skipB].forEach((b) => (b.disabled = true));
+            const stars = got.filter(Boolean).length;
+            done(stars, 60 + stars * 25); award("builder");
+            say("在限制下找最好:这就是蜜蜂几千万年来一直在做的事。", stars ? "星图全部点亮，看看你的任务成绩!" : "拿到 1 颗星就能完成整个任务，再来一次吧。");
+            root.append(endCard(stars, "蜂巢建造者", [
+              ["最优化", "在限制下找最好:蜡币有限，就要让每一枚蜡装下最多的蜜。"],
+              ["为什么是六边形", "六边形 = 能铺满 + 墙最短。三角形、正方形也能铺满但墙更长;圆的墙最短，却铺不满，会漏蜜。"],
+            ], "m05 线性规划 · m06 最优化与极值 · g05 周长与面积"));
+            if (stars) setTimeout(() => missionComplete(root), 1800);
+          }
+          startWave(0);
+        },
+      });
+
+      /* ---------- mission complete ---------- */
+      function missionComplete(root) {
+        const R = 15, w = Math.sqrt(3) * R; let burst = "";
+        for (let q = -3; q <= 3; q++) for (let r = -3; r <= 3; r++) {
+          const d = Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r)); if (d > 3) continue;
+          burst += `<polygon class="x-tile" style="animation-delay:${d * 140}ms;fill:${d % 2 ? "var(--fill-tertiary)" : "var(--chart-5)"};stroke:var(--text-primary)" stroke-width="1" points="${pts(ngon(w * (q + r / 2), 1.5 * R * r, R - 1, 6, 30))}"/>`;
+        }
+        const nb = BADGES.filter((b) => State.badges[b.id]);
+        const card = el("div", "x-end", `<h3>🎉 任务完成 · 为什么蜜蜂选六边形</h3>
+          <svg viewBox="-110 -95 220 190" style="width:min(100%,260px);justify-self:center" role="img" aria-label="蜂巢从中心一圈圈绽开">${burst}</svg>
+          <section class="stats"><div class="stat"><span class="stat__fig">${State.stars}/15</span><span class="stat__label">总星数 ⭐</span></div>
+            <div class="stat"><span class="stat__fig">${State.xp}</span><span class="stat__label">总 XP</span></div>
+            <div class="stat"><span class="stat__fig">${nb.length}/${BADGES.length}</span><span class="stat__label">徽章</span></div></section>
+          <div class="x-shelf">${nb.map((b) => `<span class="x-badge got">🏅 ${b.name}</span>`).join("")}</div>
+          <div><p style="font:var(--type-body-strong)">点亮的星星</p><p class="x-starid">g01 · g04 · g06 · g09 · n04 · g05 · g16 · c07 · m06 · m05</p></div>
+          <p style="font:var(--type-body-strong)">从一块地砖到一整座蜂巢,你自己发现了蜂巢定理——数学家 Thomas Hales 在1999年才证明它。</p>`);
+        const again = el("button", "x-btn x-btn--go", "再玩一次"); again.type = "button"; card.append(el("div", "x-row")); card.lastChild.append(again);
+        root.append(card); Audio_.play("fanfare"); setTimeout(() => Audio_.play("star"), 600);
+        card.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+        again.addEventListener("click", () => {
+          Object.assign(State, { xp: 0, stars: 0, perLevel: {}, badges: {}, unlocked: 1 });
+          renderBar(); renderBadges(); renderMap(); Audio_.play("click");
+          $("#play-title").textContent = "选一关开始"; $("#play-sub").textContent = "蜂博士在星图上等你。";
+          $("#stage").innerHTML = ""; guide($("#stage"), "新的一轮开始了!点开第 1 关「哪些形状能铺满地面」。", "蜂博士只问问题，不直接给答案。");
+          $("#map").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+        });
+      }
+
+      /* ---------- boot ---------- */
+      renderBar(); renderBadges(); renderMap();
+      const once = () => { Audio_.unlock(); window.removeEventListener("pointerdown", once); window.removeEventListener("keydown", once); };
+      window.addEventListener("pointerdown", once); window.addEventListener("keydown", once);
+      $("#sfx").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.setSfx(on); if (on) Audio_.play("click");
+      });
+      $("#music").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.unlock(); Audio_.setMusic(on); Audio_.play("click");
+      });
+      $("#vol").addEventListener("input", (e) => Audio_.setVol(+e.target.value / 100));
+      $("#track").addEventListener("change", (e) => Audio_.setTrack(+e.target.value));
+    </script>
+  </body>
+</html>
