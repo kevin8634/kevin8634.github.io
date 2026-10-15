@@ -1,302 +1,497 @@
 <!doctype html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>星图 Math Atlas · 大厅</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
-    />
-    <link rel="stylesheet" href="hark.css" />
-    <link rel="stylesheet" href="hark-hero.css" />
-    <style>
-      .x-sky {
-        position: absolute;
-        inset: 0;
-        z-index: -2;
-        pointer-events: none;
-        background:
-          radial-gradient(ellipse 70% 60% at 80% 0%, var(--hero-glass-faint), transparent 70%),
-          radial-gradient(ellipse 60% 50% at 10% 100%, var(--hero-scrim-strong), transparent 70%),
-          var(--hero-surface);
-      }
-      .x-sky span {
-        position: absolute;
-        width: 3px;
-        height: 3px;
-        border-radius: var(--r-pill);
-        background: var(--hero-text);
-        box-shadow: 0 0 6px 1px var(--hero-text-muted);
-        animation: x-twinkle 3.2s var(--ease-out) infinite alternate;
-      }
-      .x-sky span:nth-child(3n) { width: 2px; height: 2px; animation-duration: 2.4s; }
-      .x-sky span:nth-child(4n) { width: 4px; height: 4px; animation-duration: 4.1s; }
-      .x-sky span:nth-child(1) { top: 12%; left: 62%; animation-delay: 0s; }
-      .x-sky span:nth-child(2) { top: 22%; left: 84%; animation-delay: 0.8s; }
-      .x-sky span:nth-child(3) { top: 8%; left: 38%; animation-delay: 1.6s; }
-      .x-sky span:nth-child(4) { top: 34%; left: 72%; animation-delay: 0.4s; }
-      .x-sky span:nth-child(5) { top: 16%; left: 92%; animation-delay: 2.2s; }
-      .x-sky span:nth-child(6) { top: 44%; left: 88%; animation-delay: 1.1s; }
-      .x-sky span:nth-child(7) { top: 6%; left: 14%; animation-delay: 2.7s; }
-      .x-sky span:nth-child(8) { top: 28%; left: 52%; animation-delay: 1.9s; }
-      .x-sky span:nth-child(9) { top: 58%; left: 94%; animation-delay: 0.6s; }
-      .x-sky span:nth-child(10) { top: 18%; left: 26%; animation-delay: 3s; }
-      .x-sky span:nth-child(11) { top: 66%; left: 78%; animation-delay: 1.4s; }
-      .x-sky span:nth-child(12) { top: 40%; left: 60%; animation-delay: 2.5s; }
-      @keyframes x-twinkle {
-        from { opacity: 0.2; transform: scale(0.7); }
-        to { opacity: 1; transform: scale(1.15); }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .x-sky span { animation: none; opacity: 0.8; }
-      }
-      .x-card { position: relative; transition: box-shadow var(--dur-quick) var(--ease-out); }
-      .x-card:hover { box-shadow: inset 0 0 0 1px var(--stroke-primary); }
-      .x-card .x-cover::after { content: ""; position: absolute; inset: 0; border-radius: var(--r-m); }
-      .x-card .x-note { position: relative; z-index: 1; }
-      .x-age { font: var(--type-small); color: var(--text-secondary); margin-bottom: 10px; }
-    </style>
-  </head>
-  <body>
-    <div class="page" id="top">
-      <header class="nav glass" data-auto></header>
-      <main class="main">
-        <section class="hero">
-          <div class="x-sky" aria-hidden="true">
-            <span></span><span></span><span></span><span></span><span></span><span></span>
-            <span></span><span></span><span></span><span></span><span></span><span></span>
-          </div>
-          <div class="hero__copy">
-            <p class="hero__eyebrow">星图 Math Atlas · 大厅</p>
-            <h1>问题先行的数学星图</h1>
-            <p class="hero__sub">无年级、问题先行的数学学习平台测试版。选一个问题开始；或者先打开知识星图看全貌。</p>
-            <p class="hero__meta">7 个任务 · 197 颗知识星 · 测试版</p>
-          </div>
-          <aside class="callout" aria-label="测试版">
-            <p class="callout__head"><span class="hark-mark" data-size="16"></span> 测试版</p>
-            <p class="callout__lead"><strong>欢迎试玩并反馈。</strong>先看全貌，再挑一个问题出发。</p>
-            <a class="btn" href="./atlas/" target="_top">打开知识星图</a>
-          </aside>
-        </section>
+<html lang="zh-CN" data-ma-task="home" data-ma-lite>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>星图 Math Atlas · 问题先行的数学星图</title>
+<meta name="description" content="无年级、问题先行的数学学习平台：从小学到大学，用游戏、声音和图像走进数学。" />
+<link rel="stylesheet" href="./ma.css" />
+<style>
+  :root { --ink: #eef1ff; --mute: #9aa4cf; --line: rgb(160 185 255 / .18); --glass: rgb(12 17 42 / .58);
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: #03050f; color: var(--ink); font: 400 15px/1.55 var(--sans); overflow-x: hidden; }
+  a { color: inherit; }
+  #galaxy { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; z-index: 0; }
+  .vignette { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 55%, transparent 45%, rgb(2 3 10 / .75) 100%); }
+  main { position: relative; z-index: 2; }
 
-        <section class="section" id="atlas" data-nav="星图">
-          <div class="head">
-            <p class="head__eyebrow">知识星图</p>
-            <h2>点一颗星，看清它从哪来、通向哪。</h2>
-            <p class="head__sub">每颗星都有前置路径、“看见方式”和能解锁的后续。</p>
-          </div>
-          <section class="stats">
-            <div class="stat"><span class="stat__fig">197</span><span class="stat__label">颗知识星</span></div>
-            <div class="stat"><span class="stat__fig">9</span><span class="stat__label">个星座</span></div>
-            <div class="stat"><span class="stat__fig">5</span><span class="stat__label">层深度</span></div>
-          </section>
-          <div class="links">
-            <a class="btn" href="./atlas/" target="_top">打开知识星图</a>
-          </div>
-        </section>
+  /* 顶栏 */
+  .top { position: fixed; z-index: 20; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 10px;
+    padding: calc(env(safe-area-inset-top, 0px) + 14px) clamp(14px, 3vw, 32px) 10px; pointer-events: none; }
+  .top > * { pointer-events: auto; }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 600; letter-spacing: .08em; text-decoration: none; margin-right: auto; font-size: 14px; }
+  .logo i { width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 12px #9fd8ff, 0 0 30px #7b8cff; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 100px; border: 1px solid var(--line);
+    background: rgb(10 14 36 / .55); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); color: var(--ink);
+    font: 500 13px/1 var(--sans); cursor: pointer; text-decoration: none; white-space: nowrap; transition: background .2s, box-shadow .2s; }
+  .pill:hover { background: rgb(40 50 110 / .6); box-shadow: 0 0 20px rgb(120 150 255 / .25); }
+  .eq { display: inline-flex; gap: 2px; align-items: flex-end; height: 12px; }
+  .eq s { width: 2px; background: #9fd8ff; border-radius: 1px; height: 30%; }
+  .music-on .eq s { animation: eq 1.1s ease-in-out infinite; }
+  .eq s:nth-child(2) { animation-delay: -.3s !important; } .eq s:nth-child(3) { animation-delay: -.6s !important; } .eq s:nth-child(4) { animation-delay: -.9s !important; }
+  @keyframes eq { 0%,100% { height: 25%; } 50% { height: 100%; } }
+  .navlinks { display: flex; gap: 6px; }
+  @media (max-width: 700px) { .navlinks { display: none; } }
 
-        <section class="section" id="guide" data-nav="难度">
-          <div class="head">
-            <p class="head__eyebrow">难度引导</p>
-            <h2>难度引导 · 从哪个开始？</h2>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">任务</th>
-                  <th scope="col">难度</th>
-                  <th scope="col">能玩通</th>
-                  <th scope="col">能完全理解</th>
-                  <th scope="col">前置</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr class="is-highlight">
-                  <th scope="row">先拿的人一定赢吗 <small>两堆 Nim 的二进制解法留作彩蛋</small></th>
-                  <td>★☆☆ 入门</td>
-                  <td>小学一年级起</td>
-                  <td>小学三年级</td>
-                  <td class="muted">数到20、加减</td>
-                </tr>
-                <tr>
-                  <th scope="row">为什么蜜蜂选六边形</th>
-                  <td>★☆☆ 入门</td>
-                  <td>小学4年级起</td>
-                  <td>小学6年级–初一</td>
-                  <td class="muted">角度、周长、面积</td>
-                </tr>
-                <tr>
-                  <th scope="row">导航怎么找到最短的路 <small>旅行商问题至今无快速完美算法（彩蛋）</small></th>
-                  <td>★★☆ 进阶</td>
-                  <td>小学四年级起</td>
-                  <td>初一</td>
-                  <td class="muted">加法、比较大小</td>
-                </tr>
-                <tr>
-                  <th scope="row">怎样把秘密藏进数字里</th>
-                  <td>★★☆ 进阶</td>
-                  <td>小学5–6年级起</td>
-                  <td>初二–高中</td>
-                  <td class="muted">除法与余数、乘法表</td>
-                </tr>
-                <tr>
-                  <th scope="row">为什么有的和弦好听</th>
-                  <td>★★☆ 进阶</td>
-                  <td>小学6年级起</td>
-                  <td>高一以上</td>
-                  <td class="muted">分数与比</td>
-                </tr>
-                <tr>
-                  <th scope="row">让AI认出一只猫</th>
-                  <td>★★★ 挑战</td>
-                  <td>初一–初二起</td>
-                  <td>高中–大学</td>
-                  <td class="muted">坐标系、一次函数</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="fineprint">建议顺序：松果 → 蜜蜂 → 导航 → 密码 → 和弦 → 猫 → 赌场。按中国学段估算，成人任何任务都可玩。</p>
-          <div class="links">
-            <a class="btn" href="./notes/" target="_top">查看全部知识笔记（公式·论文·应用）</a>
-          </div>
-        </section>
+  /* 开场 */
+  .intro { min-height: 100vh; min-height: 100svh; display: grid; place-items: center; text-align: center; padding: 90px 20px 60px; }
+  .aurora-wrap { position: relative; }
+  .aurora-wrap::before { content: ""; position: absolute; left: 50%; top: 50%; width: min(900px, 120vw); height: 260px; transform: translate(-50%, -60%);
+    background: conic-gradient(from 180deg at 50% 50%, #3cf0c855, #6a7dff66, #c86bff55, #3cc8f055, #3cf0c855);
+    filter: blur(60px); opacity: .55; border-radius: 50%; animation: aur 14s linear infinite; z-index: -1; }
+  @keyframes aur { to { transform: translate(-50%, -60%) rotate(360deg); } }
+  .kicker { font: 500 12px/1 var(--sans); letter-spacing: .5em; color: var(--mute); text-transform: uppercase; margin: 0 0 22px; padding-left: .5em; }
+  .title { margin: 0; font-weight: 200; font-size: clamp(64px, 14vw, 168px); line-height: 1; letter-spacing: .14em; padding-left: .14em;
+    background: linear-gradient(100deg, #ffffff 10%, #8ff5d8 30%, #8ea2ff 48%, #e3a6ff 64%, #ffffff 85%);
+    background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: flow 10s ease-in-out infinite; filter: drop-shadow(0 0 30px rgb(120 160 255 / .35)); }
+  @keyframes flow { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+  .title-en { margin: 16px 0 0; font-weight: 300; letter-spacing: .6em; padding-left: .6em; font-size: clamp(12px, 1.6vw, 16px); color: #c9d2ff; }
+  .intro { text-shadow: 0 2px 18px rgb(3 5 15 / .9); }
+  .lede { margin: 34px auto 0; max-width: 520px; color: #c4cbec; font-size: clamp(15px, 1.8vw, 18px); }
+  .cta { margin-top: 34px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 24px; border-radius: 100px; text-decoration: none; cursor: pointer;
+    font: 600 15px/1 var(--sans); border: 0; transition: transform .2s, box-shadow .25s; }
+  .btn.main { color: #071027; background: linear-gradient(135deg, #ffffff, #cfe0ff 55%, #b6f2e4); box-shadow: 0 0 28px rgb(150 190 255 / .45); }
+  .btn.main:hover { transform: translateY(-2px); box-shadow: 0 0 44px rgb(170 210 255 / .7); }
+  .btn.ghost { color: var(--ink); background: rgb(255 255 255 / .04); border: 1px solid rgb(200 215 255 / .3); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .btn.ghost:hover { background: rgb(255 255 255 / .1); transform: translateY(-2px); }
+  .meta { margin-top: 30px; font: 400 12px/1.6 var(--sans); color: var(--mute); letter-spacing: .08em; }
+  .meta b { color: #d8defc; font-weight: 500; }
+  .scrollhint { margin-top: 46px; color: var(--mute); font-size: 12px; letter-spacing: .3em; }
+  .scrollhint i { display: block; width: 1px; height: 46px; margin: 12px auto 0; background: linear-gradient(#fff, transparent); animation: drop 2.2s ease-in-out infinite; }
+  @keyframes drop { 0% { transform: scaleY(0); transform-origin: top; } 50% { transform: scaleY(1); transform-origin: top; } 51% { transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
 
-        <section class="section" id="missions" data-nav="任务">
-          <div class="head">
-            <p class="head__eyebrow">六个任务</p>
-            <h2>选一个让你好奇的问题，直接开始。</h2>
-          </div>
-          <div class="cards">
-            <div class="x-card">
-              <h3>先拿的人一定赢吗？</h3>
-              <p><span class="chip chip--solid">★☆☆ 入门</span> <span class="pill">5 关</span> <span class="pill">点亮 4 颗星</span></p>
-              <p class="x-age">适合：小学一~三年级；前置：数到20、会加减</p>
-              <p class="quote">和松鼠博士抢松果：找规律、倒着想、余数、配对说理，最后用“照镜子”打败松鼠大王。</p>
-              <div class="links"><a class="btn x-cover" href="./nim/" target="_top">开始任务</a> <a class="link x-note" href="./notes/#nim" target="_top">知识笔记 →</a></div>
-            </div>
-            <div class="x-card">
-              <h3>为什么蜜蜂选六边形</h3>
-              <p><span class="chip">★☆☆ 入门</span> <span class="pill">5 关</span> <span class="pill">点亮 10 颗星</span></p>
-              <p class="x-age">适合：小学4年级起（约10岁+）</p>
-              <p class="quote">密铺、360° 拼角、等面积周长、泡泡自己排队，最后建造蜂巢。</p>
-              <p>蜂巢猜想由 Hales 于 1999 年证明。</p>
-              <div class="links"><a class="btn x-cover" href="./bee/" target="_top">开始任务</a> <a class="link x-note" href="./notes/#bee" target="_top">知识笔记 →</a></div>
-            </div>
-            <div class="x-card">
-              <h3>导航怎么找到最短的路？</h3>
-              <p><span class="chip">★★☆ 进阶</span> <span class="pill">5 关</span> <span class="pill">点亮 6 颗星</span></p>
-              <p class="x-age">适合：小学五年级~初一；前置：加法、比较大小</p>
-              <p class="quote">把地图变成点和线，走柯尼斯堡七桥，亲手跑 Dijkstra 水波算法，和贪心小蚂蚁比送货。</p>
-              <div class="links"><a class="btn x-cover" href="./nav/" target="_top">开始任务</a> <a class="link x-note" href="./notes/#nav" target="_top">知识笔记 →</a></div>
-            </div>
-            <div class="x-card">
-              <h3>怎样把秘密藏进数字里</h3>
-              <p><span class="chip">★★☆ 进阶</span> <span class="pill">6 关</span> <span class="pill">点亮 14 颗星</span></p>
-              <p class="x-age">适合：小学5–6年级起（约11岁+）；第5–6关初二以上更顺</p>
-              <p class="quote">凯撒密码→字母频率→钟表算术→质数→RSA，BOSS 关截获情报。</p>
-              <div class="links"><a class="btn x-cover" href="./secret/" target="_top">开始任务</a> <a class="link x-note" href="./notes/#secret" target="_top">知识笔记 →</a></div>
-            </div>
-            <div class="x-card">
-              <h3>为什么有的和弦好听？</h3>
-              <p><span class="chip">★★☆ 进阶</span> <span class="pill">7 关</span></p>
-              <p class="x-age">适合：小学6年级起（约12岁+）；对数、傅里叶以听和看为主</p>
-              <p class="quote">从分数一路走到傅里叶，全程用耳朵和眼睛。</p>
-              <p>涉及：比与分数、周期、对数与平均律、傅里叶级数</p>
-              <div class="links"><a class="btn x-cover" href="./chord/" target="_top">开始任务</a> <a class="link x-note" href="./notes/#chord" target="_top">知识笔记 →</a></div>
-            </div>
-            <div class="x-card">
-              <h3>让 AI 认出一只猫</h3>
-              <p><span class="chip">★★★ 挑战</span> <span class="pill">7 关</span> <span class="pill">点亮 14 颗星</span></p>
-              <p class="x-age">适合：初一–初二起（约13岁+）；梯度下降、神经网络以体验为主</p>
-              <p class="quote">像素→坐标→直线分类→梯度下降→神经网络，最后亲手画猫给 AI 认。</p>
-              <div class="links"><a class="btn x-cover" href="./cat/" target="_top">开始任务</a> <a class="link x-note" href="./notes/#cat" target="_top">知识笔记 →</a></div>
-            </div>
-            <div class="x-card">
-              <h3>赌场为什么总赢？</h3>
-              <p><span class="chip">★★★ 挑战</span> <span class="pill">5 关</span> <span class="pill">点亮 7 颗星</span></p>
-              <p class="x-age">适合：初一~初三；前置：分数、百分数</p>
-              <p class="quote">和浣熊博士抛硬币、掷骰子、转轮盘：频率与概率、期望值、大数定律，最后用蒙特卡洛看清赌徒的末路。</p>
-              <div class="links"><a class="btn x-cover" href="./casino/" target="_top">开始任务</a> <a class="link x-note" href="./notes/#casino" target="_top">知识笔记 →</a></div>
-            </div>
-          </div>
-          <p class="fineprint">更多任务开发中：传染病怎样传开 · 火箭登月 · 魔方为什么能复原（从小学到大学）</p>
-        </section>
+  /* 一镜到底：星座段 */
+  .flight { position: relative; }
+  .stage { height: 90vh; display: flex; align-items: center; padding: 0 clamp(20px, 7vw, 110px); }
+  .stage:nth-child(even) { justify-content: flex-end; }
+  .cons { max-width: 360px; opacity: 0; transform: translateY(30px); transition: opacity .8s, transform .8s; }
+  .cons.on { opacity: 1; transform: none; }
+  .cons .idx { font: 300 13px/1 var(--sans); letter-spacing: .3em; color: var(--c); }
+  .cons h2 { margin: 12px 0 8px; font-weight: 300; font-size: clamp(30px, 4.6vw, 48px); letter-spacing: .08em; text-shadow: 0 0 30px var(--c); }
+  .cons p { margin: 0; color: #c4cbec; }
+  .cons .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+  .cons .chips span { padding: 4px 10px; border-radius: 100px; font-size: 12px; border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); background: color-mix(in srgb, var(--c) 12%, transparent); }
+  .cons .bar { margin-top: 14px; height: 3px; border-radius: 3px; background: rgb(255 255 255 / .1); overflow: hidden; width: 200px; }
+  .cons .bar i { display: block; height: 100%; background: var(--c); box-shadow: 0 0 10px var(--c); }
 
-        <section class="section" id="how" data-nav="玩法">
-          <div class="head">
-            <p class="head__eyebrow">怎么玩</p>
-            <h2>四步上手，向导只提问，不给答案。</h2>
-          </div>
-          <div class="steps">
-            <article class="step">
-              <div class="step__intro"><p class="step__num">01</p><p class="step__eyebrow">开始</p></div>
-              <div>
-                <h3>点开任务，先点一下屏幕</h3>
-                <p>轻点一下即可开启音效。</p>
-              </div>
-            </article>
-            <article class="step">
-              <div class="step__intro"><p class="step__num">02</p><p class="step__eyebrow">音乐</p></div>
-              <div>
-                <h3>右上角开关专注音乐</h3>
-                <p>共有三首，可轮播。</p>
-              </div>
-            </article>
-            <article class="step">
-              <div class="step__intro"><p class="step__num">03</p><p class="step__eyebrow">闯关</p></div>
-              <div>
-                <h3>每关拿 1★ 解锁下一关</h3>
-                <p>向导只提问，不给答案。</p>
-              </div>
-            </article>
-            <article class="step">
-              <div class="step__intro"><p class="step__num">04</p><p class="step__eyebrow">笔记</p></div>
-              <div>
-                <h3>通关后在结束页查看「知识笔记」</h3>
-                <p>一键复制公式、经典论文和应用案例。</p>
-              </div>
-            </article>
-          </div>
-        </section>
+  /* 内容区 */
+  .sec { padding: 110px clamp(16px, 4vw, 40px); max-width: 1180px; margin: 0 auto; }
+  .sec-head { text-align: center; margin-bottom: 44px; }
+  .sec-head .kicker { margin-bottom: 14px; }
+  .sec-head h2 { margin: 0; font-weight: 300; font-size: clamp(28px, 4vw, 42px); letter-spacing: .06em; }
+  .sec-head p { color: var(--mute); margin: 12px auto 0; max-width: 560px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+  .task { position: relative; display: flex; flex-direction: column; padding: 22px; border-radius: 24px; text-decoration: none; overflow: hidden;
+    background: linear-gradient(160deg, rgb(28 36 84 / .62), rgb(8 12 32 / .62)); border: 1px solid var(--line);
+    -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3);
+    transition: transform .35s cubic-bezier(.2,.9,.3,1), box-shadow .35s, border-color .35s; transform-style: preserve-3d; }
+  .task::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none; opacity: 0; transition: opacity .35s;
+    background: linear-gradient(135deg, var(--c), transparent 40%, transparent 60%, var(--c)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .task:hover { box-shadow: 0 20px 60px rgb(0 0 0 / .5), 0 0 40px color-mix(in srgb, var(--c) 30%, transparent); }
+  .task:hover::before { opacity: 1; }
+  .task .orb { position: absolute; right: -40px; top: -40px; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--c) 55%, transparent), transparent 70%); opacity: .5; }
+  .task .em { font-size: 34px; line-height: 1; filter: drop-shadow(0 0 12px color-mix(in srgb, var(--c) 70%, transparent)); }
+  .task .no { position: absolute; right: 20px; top: 22px; font: 300 12px/1 var(--sans); letter-spacing: .2em; color: var(--mute); }
+  .task h3 { margin: 16px 0 6px; font-size: 20px; font-weight: 600; }
+  .task .q { margin: 0; color: #c4cbec; font-size: 14px; flex: 1; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; }
+  .tags span { padding: 3px 9px; border-radius: 100px; font-size: 12px; background: rgb(255 255 255 / .06); border: 1px solid var(--line); color: #d6dbf7; }
+  .tags .lv { color: #ffd98a; border-color: rgb(255 217 138 / .35); }
+  .prog { margin-top: 16px; display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--mute); }
+  .prog .track { flex: 1; height: 4px; border-radius: 4px; background: rgb(255 255 255 / .08); overflow: hidden; }
+  .prog .track i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--c), #fff); box-shadow: 0 0 10px var(--c); transition: width 1s; }
+  .task .go { margin-top: 14px; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 16px; border-radius: 100px;
+    font-weight: 600; font-size: 14px; color: #071027; background: linear-gradient(135deg, #fff, color-mix(in srgb, var(--c) 45%, #fff)); }
+  .task.done .go { background: linear-gradient(135deg, #b6f2d0, #fff); }
+  .task.soon { opacity: .55; pointer-events: none; }
+  .task.soon .go { background: rgb(255 255 255 / .12); color: var(--ink); }
 
-        <section class="section" id="notes" data-nav="须知">
-          <div class="head">
-            <p class="head__eyebrow">测试须知</p>
-            <h2>帮我们试一试，顺手说说感受。</h2>
-          </div>
-          <div class="cards">
-            <div>
-              <h3>进度</h3>
-              <p class="fineprint">进度只保存在当前页面，刷新会重置。</p>
-            </div>
-            <div>
-              <h3>设备</h3>
-              <p class="fineprint">建议用手机竖屏和电脑各试一次。</p>
-            </div>
-            <div>
-              <h3>重点帮忙看</h3>
-              <ul>
-                <li>触摸拖拽是否顺手</li>
-                <li>难度是否合适</li>
-                <li>音乐音量是否舒服</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-      </main>
-      <footer class="foot">
-        <p>星图 Math Atlas 测试版 · 2026</p>
-        <nav aria-label="返回各部分" data-auto></nav>
-        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"
-          ><span class="hark-mark"></span><span>built by hark</span></a
-        >
-      </footer>
+  /* 难度路线 */
+  .path { display: flex; gap: 0; overflow-x: auto; padding: 10px 4px 20px; scroll-snap-type: x mandatory; }
+  .step { flex: 0 0 150px; scroll-snap-align: start; text-align: center; position: relative; padding-top: 34px; }
+  .step::before { content: ""; position: absolute; top: 14px; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--line), transparent); }
+  .step .dot { position: absolute; top: 6px; left: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: var(--c); box-shadow: 0 0 16px var(--c); }
+  .step b { display: block; font-size: 14px; font-weight: 600; }
+  .step small { color: var(--mute); font-size: 12px; }
+  .how { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 30px; }
+  .how div { padding: 18px; border-radius: 18px; background: var(--glass); border: 1px solid var(--line); }
+  .how b { display: block; font-size: 15px; margin-bottom: 4px; }
+  .how span { color: var(--mute); font-size: 13px; }
+  .fb { text-align: center; padding: 40px 22px; border-radius: 28px; background: linear-gradient(160deg, rgb(40 46 120 / .5), rgb(10 14 36 / .5)); border: 1px solid var(--line); }
+  .fb h2 { margin: 0 0 8px; font-weight: 300; font-size: clamp(24px, 3.4vw, 34px); }
+  .fb p { color: var(--mute); margin: 0 0 22px; }
+  footer { position: relative; z-index: 2; text-align: center; padding: 30px 16px 60px; color: var(--mute); font-size: 12px; line-height: 1.8; }
+  footer b { color: #d8defc; font-weight: 500; }
+  .unmute { position: fixed; z-index: 30; left: 50%; bottom: 22px; transform: translateX(-50%); }
+  .unmute[hidden] { display: none; }
+  @media (prefers-reduced-motion: reduce) { .title, .aurora-wrap::before { animation: none; } }
+</style>
+</head>
+<body>
+<canvas id="galaxy" aria-hidden="true"></canvas>
+<div class="vignette"></div>
+
+<header class="top">
+  <a class="logo" href="#top"><i></i>星图 MATH ATLAS</a>
+  <nav class="navlinks">
+    <a class="pill" href="#missions">任务</a>
+    <a class="pill" href="./atlas/">知识星图</a>
+    <a class="pill" href="./notes/">知识笔记</a>
+    <button class="pill" type="button" onclick="MA_feedback()">反馈</button>
+  </nav>
+  <button class="pill" id="music" type="button" aria-pressed="false" title="背景音乐"><span class="eq"><s></s><s></s><s></s><s></s></span><span id="musiclabel">音乐</span></button>
+</header>
+
+<main id="top">
+  <section class="intro">
+    <div>
+      <div class="aurora-wrap">
+        <p class="kicker">Problem-first mathematics</p>
+        <h1 class="title">星图</h1>
+        <p class="title-en">MATH ATLAS</p>
+      </div>
+      <p class="lede">无年级、问题先行。每一个问题都是一颗星——从抢松果到赌徒破产，用游戏、声音和图像，走进真正的数学。</p>
+      <div class="cta">
+        <a class="btn main" href="#flight">开始穿越 ✦</a>
+        <a class="btn ghost" href="#missions">直接选任务</a>
+      </div>
+      <p class="meta"><b id="m-tasks">7</b> 个任务 · <b>197</b> 颗知识星 · 已点亮 <b id="m-lit">0</b> 颗 · 最近更新 <b id="m-date"></b></p>
+      <p class="scrollhint">向下滚动<i></i></p>
     </div>
-    <script src="hark.js"></script>
-  </body>
+  </section>
+
+  <section class="flight" id="flight"></section>
+
+  <section class="sec" id="missions">
+    <div class="sec-head">
+      <p class="kicker">Missions</p>
+      <h2>选一个问题出发</h2>
+      <p>进度会自动保存在这台设备上，下次回来接着玩。</p>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section class="sec" id="guide">
+    <div class="sec-head">
+      <p class="kicker">Route</p>
+      <h2>由浅入深的路线</h2>
+      <p>年级为按中国学段的估算；成人任何任务都可以玩。</p>
+    </div>
+    <div class="path" id="path"></div>
+    <div class="how">
+      <div><b>🎧 戴上耳机</b><span>音效和专注音乐都是浏览器实时合成的。</span></div>
+      <div><b>🤔 向导只提问</b><span>每位博士都不直接给答案，卡住时看提示。</span></div>
+      <div><b>⭐ 1 颗星解锁下一关</b><span>想拿 3 星？少犯错、自己想明白。</span></div>
+      <div><b>📒 通关看笔记</b><span>每个任务都有一页知识笔记，可一键复制。</span></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="fb">
+      <h2>你的意见会变成下一颗星</h2>
+      <p>哪里好玩、哪里卡住、想学什么问题，都可以告诉我们。</p>
+      <button class="btn main" type="button" onclick="MA_feedback()">💬 写反馈</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  星图 Math Atlas 测试版 · 最近更新 <b id="f-date"></b><br />
+  年级与难度为估算，仅供参考 · 进度只保存在你的浏览器里
+</footer>
+
+<button class="pill unmute" id="unmute" type="button" hidden>🔊 点一下，开启星空音乐</button>
+
+<script>
+var UPDATED = "2026-10-15";
+var DATA = {"c":["数与运算","代数与结构","几何与空间","变化与极限","随机与数据","离散与算法","数论","模型与最优化","证明与基础"],"s":[["n01","计数与一一对应",0,1,[]],["n02","位值与十进制",0,1,["n01"]],["n03","加法与减法",0,1,["n01"]],["n04","乘法",0,1,["n03"]],["n05","除法与余数",0,1,["n04"]],["n06","分数",0,2,["n05"]],["n07","小数",0,2,["n02","n06"]],["n08","百分数",0,2,["n07"]],["n09","比与比例",0,2,["n06"]],["n10","负数",0,2,["n03"]],["n11","运算律",0,2,["n04","n10"]],["n12","乘方与指数",0,2,["n04"]],["n13","平方根",0,3,["n12"]],["n14","无理数",0,3,["n13","n09"]],["n15","实数与数轴",0,3,["n14","n07"]],["n16","科学记数法与数量级",0,2,["n12"]],["n17","估算与近似",0,2,["n07"]],["n18","复数",0,4,["n15","a07"]],["n19","模运算(时钟算术)",0,3,["n05"]],["n20","二进制与进制",0,2,["n02"]],["n21","无穷与可数性",0,4,["n15","l04"]],["n22","p进数",0,5,["n19","n15"]],["n23","四元数",0,5,["n18","a20"]],["a01","模式与规律",1,1,[]],["a02","用字母表示数",1,2,["a01","n04"]],["a03","代数式与化简",1,2,["a02","n11"]],["a04","一元一次方程",1,2,["a03"]],["a05","不等式",1,3,["a04","n10"]],["a06","二元一次方程组",1,3,["a04","g11"]],["a07","一元二次方程",1,3,["a04","n13"]],["a08","多项式",1,3,["a03"]],["a09","因式分解",1,3,["a08"]],["a10","函数概念",1,3,["a02","g11"]],["a11","一次函数",1,3,["a10"]],["a12","二次函数",1,3,["a10","a07"]],["a13","指数函数",1,3,["a10","n12"]],["a14","对数",1,3,["a13"]],["a15","反比例函数",1,3,["a10","n09"]],["a16","函数图像变换",1,3,["a10","g07"]],["a17","数列",1,3,["a01","a10"]],["a18","等差与等比数列",1,3,["a17"]],["a19","向量空间",1,4,["g15","a06"]],["a20","矩阵与线性变换",1,4,["a19"]],["a21","行列式",1,4,["a20"]],["a22","特征值与特征向量",1,4,["a21"]],["a23","群",1,4,["g06","a20"]],["a24","环与域",1,4,["a23","n19"]],["a25","伽罗瓦理论",1,5,["a24","a08"]],["a26","表示论",1,5,["a23","a20"]],["a27","范畴论",1,5,["a23","l05"]],["a28","线性方程组与消元",1,4,["a06","a20"]],["a29","奇异值分解",1,5,["a22"]],["a30","张量",1,5,["a20"]],["g01","平面图形",2,1,[]],["g02","立体图形",2,1,["g01"]],["g03","长度与测量",2,1,["n01"]],["g04","角",2,2,["g01"]],["g05","周长与面积",2,2,["g03","n04"]],["g06","对称",2,2,["g01"]],["g07","平移旋转与反射",2,2,["g06"]],["g08","体积",2,2,["g05","g02"]],["g09","三角形",2,2,["g04"]],["g10","平行与垂直",2,2,["g04"]],["g11","坐标系",2,2,["n10","g10"]],["g12","全等",2,3,["g09","g07"]],["g13","相似",2,3,["g12","n09"]],["g14","勾股定理",2,3,["g09","n13"]],["g15","向量",2,3,["g11","n15"]],["g16","圆与π",2,3,["g05"]],["g17","三角比",2,3,["g13","g14"]],["g18","三角函数",2,4,["g17","a10"]],["g19","尺规作图",2,3,["g12","g16"]],["g20","解析几何",2,3,["g11","a11"]],["g21","圆锥曲线",2,4,["g20","a12"]],["g22","空间几何",2,3,["g02","g15"]],["g23","三视图与投影",2,3,["g22"]],["g24","非欧几何",2,5,["g19","g17"]],["g25","分形",2,4,["a17","g13"]],["g26","拓扑初步",2,4,["g02"]],["g27","曲线与曲率",2,5,["c05","g15"]],["g28","微分几何",2,5,["g27","c13"]],["g29","流形",2,5,["g28","g26"]],["g30","代数拓扑",2,5,["g26","a23"]],["g31","极坐标",2,3,["g17","g11"]],["g32","四维空间",2,4,["g22","a19"]],["c01","变化率",3,2,["n09"]],["c02","斜率",3,3,["c01","a11"]],["c03","数列极限",3,4,["a17","n15"]],["c04","函数极限与连续",3,4,["c03","a10"]],["c05","导数",3,4,["c04","c02"]],["c06","求导法则",3,4,["c05"]],["c07","极值与最优",3,4,["c06"]],["c08","积分与面积",3,4,["c05","g05"]],["c09","微积分基本定理",3,4,["c08"]],["c10","级数",3,4,["c03"]],["c11","泰勒展开",3,5,["c10","c06"]],["c12","多元函数与偏导",3,5,["c06","g22"]],["c13","多重积分",3,5,["c12","c08"]],["c14","向量场、散度与旋度",3,5,["c12","g15"]],["c15","常微分方程",3,4,["c09"]],["c16","偏微分方程",3,5,["c15","c12"]],["c17","傅里叶级数",3,4,["g18","c10"]],["c18","傅里叶变换",3,5,["c17","c13"]],["c19","实分析",3,5,["c04","l06"]],["c20","测度论",3,5,["c19"]],["c21","复分析",3,5,["n18","c05"]],["c22","泛函分析",3,5,["c19","a19"]],["c23","变分法",3,5,["c07","c13"]],["c24","动力系统与混沌",3,5,["c15"]],["c25","e与自然增长",3,4,["a13","c05"]],["p01","分类与计数统计",4,1,["n01"]],["p02","统计图表",4,2,["p01"]],["p03","平均数、中位数、众数",4,2,["p02","n06"]],["p04","可能性",4,2,["p01","n06"]],["p05","古典概率",4,3,["p04","d03"]],["p06","条件概率",4,3,["p05"]],["p07","贝叶斯思想",4,4,["p06"]],["p08","随机变量与期望",4,4,["p05","a10"]],["p09","方差与离散程度",4,3,["p03"]],["p10","二项分布",4,4,["p08","d04"]],["p11","正态分布",4,4,["p10","c08"]],["p12","大数定律",4,4,["p08","c03"]],["p13","中心极限定理",4,5,["p11","p12"]],["p14","抽样与估计",4,4,["p11"]],["p15","假设检验",4,4,["p14"]],["p16","相关与回归",4,4,["p09","a11"]],["p17","随机游走",4,4,["p08"]],["p18","马尔可夫链",4,5,["p17","a20"]],["p19","信息熵",4,5,["p08","a14"]],["p20","统计学习",4,5,["p16","m07"]],["p21","实验设计与因果",4,4,["p15"]],["p22","蒙特卡洛方法",4,4,["p12"]],["d01","分类与排序",5,1,[]],["d02","规律与递推",5,2,["a01"]],["d03","加法与乘法原理",5,2,["n04"]],["d04","排列组合",5,3,["d03"]],["d05","杨辉三角与二项式",5,3,["d04","a08"]],["d06","鸽巢原理",5,3,["d03"]],["d07","图论初步",5,3,["d03"]],["d08","树与网络",5,4,["d07"]],["d09","最短路径",5,4,["d08"]],["d10","算法与流程",5,2,["d01"]],["d11","递归",5,3,["d02","d10"]],["d12","算法复杂度",5,4,["d11","c03"]],["d13","容斥原理",5,3,["d03"]],["d14","生成函数",5,5,["d05","c10"]],["d15","图着色与平面图",5,4,["d07"]],["d16","布尔代数与电路",5,3,["l02","n20"]],["d17","密码学",5,4,["t08","d12"]],["d18","纠错码",5,5,["a28","d17"]],["d19","组合博弈",5,4,["d11"]],["d20","网络科学",5,5,["d08","p10"]],["t01","奇数与偶数",6,1,["n04"]],["t02","倍数与因数",6,2,["n05"]],["t03","质数",6,2,["t02"]],["t04","质因数分解",6,2,["t03"]],["t05","最大公约数与最小公倍数",6,2,["t04"]],["t06","辗转相除法",6,3,["t05","d10"]],["t07","同余",6,3,["n19","t05"]],["t08","费马小定理与欧拉定理",6,4,["t07","a23"]],["t09","不定方程",6,4,["t06","a06"]],["t10","质数分布",6,4,["t03","c25"]],["t11","二次剩余",6,5,["t07"]],["t12","黎曼ζ函数",6,5,["t10","c21"]],["t13","代数数论",6,5,["t11","a24"]],["t14","椭圆曲线",6,5,["t13","g21"]],["t15","连分数",6,4,["t06","n14"]],["m01","量与单位",7,1,["g03"]],["m02","比例模型",7,2,["n09"]],["m03","线性模型",7,3,["a11","m02"]],["m04","指数模型",7,3,["a13"]],["m05","线性规划",7,4,["a05","a06"]],["m06","最优化与极值",7,4,["c07"]],["m07","梯度下降",7,5,["c12","m06"]],["m08","凸优化",7,5,["m07","g20"]],["m09","博弈论",7,4,["p08"]],["m10","动态规划",7,4,["d11"]],["m11","数值方法",7,4,["c05"]],["m12","微分方程建模",7,5,["c15","m04"]],["m13","神经网络",7,5,["m07","a20","p20"]],["m14","控制论",7,5,["c15","m06"]],["m15","运筹与调度",7,4,["d09","m05"]],["m16","数学建模全流程",7,3,["m03","p02"]],["l01","说理与举例",8,1,[]],["l02","命题与逻辑联结词",8,3,["l01"]],["l03","量词",8,3,["l02"]],["l04","集合",8,2,["l01"]],["l05","映射与关系",8,3,["l04","a10"]],["l06","直接证明与反证法",8,3,["l02"]],["l07","数学归纳法",8,3,["l06","a17"]],["l08","公理化思想",8,4,["l06","g19"]],["l09","可计算性",8,5,["l08","d12"]],["l10","哥德尔不完备定理",8,5,["l09"]],["l11","形式化证明(Lean)",8,4,["l06","l03"]],["l12","公理集合论与选择公理",8,5,["l08","n21"]],["l13","类型论",8,5,["l11","l05"]],["l14","数学写作与表达",8,3,["l06"]]]};
+var COLORS = ["#ffd36e", "#7fb0ff", "#6ff0c8", "#ff8fb1", "#c79bff", "#5fd7ff", "#ffb36b", "#9cf07a", "#e8e8ff"];
+var BLURB = [
+  "数数、位值、分数、小数——一切数学的地基。",
+  "从未知数到方程、函数与结构，用符号描述规律。",
+  "形状、角度、对称、坐标与空间。",
+  "速度、斜率、极限与微积分：理解“变化”。",
+  "可能性、统计与期望，看懂不确定的世界。",
+  "图、递归、算法与博弈：会思考的步骤。",
+  "质数、余数与同余，藏着密码的秘密。",
+  "建模、最优化与机器学习：用数学做决定。",
+  "说理、证明、逻辑与集合，数学的骨架。"
+];
+var TASKS = [
+  { id: "nim", em: "🐿️", c: "#9cf07a", t: "先拿的人一定赢吗？", q: "和松鼠博士抢松果：倒着想、找余数、照镜子。", lv: 1, g: "小学 1–3 年级", n: 5, stars: ["n05","d02","l01","d19"] },
+  { id: "bee", em: "🐝", c: "#ffd36e", t: "为什么蜜蜂选六边形？", q: "密铺、360° 拼角、等面积比周长，最后建造蜂巢。", lv: 1, g: "小学 4 年级起", n: 5, stars: ["m06","g06","g05","g04","c07","n04","m05","g16","g09","g01"] },
+  { id: "nav", em: "🐜", c: "#5fd7ff", t: "导航怎么找到最短的路？", q: "七座桥、水波算法、贪心小蚂蚁：图论与算法。", lv: 2, g: "小学 5 年级–初一", n: 5, stars: ["d07","d08","d09","d10","d12","l01"] },
+  { id: "secret", em: "🦉", c: "#ffb36b", t: "怎样把秘密藏进数字里？", q: "凯撒密码、字母侦探、质数工厂，一路破解到 RSA。", lv: 2, g: "小学 5–6 年级起", n: 6, stars: ["n05","n19","p01","p02","p04","t07","t02","t01","t03","t04","t05","t06","t08","d17"] },
+  { id: "chord", em: "🎹", c: "#ff8fb1", t: "为什么有的和弦好听？", q: "从分数一路走到傅里叶，全程用耳朵和眼睛。", lv: 2, g: "小学 6 年级起", n: 7, stars: ["n09","n14","a14","g18","c17","t05"] },
+  { id: "cat", em: "🐱", c: "#c79bff", t: "让 AI 认出一只猫", q: "像素→坐标→梯度下降→神经网络，亲手画猫给 AI 认。", lv: 3, g: "初一–初二起", n: 7, stars: ["m07","p20","g15","a20","p16","n20","m13","g22","g20","g11","c12","c05","a21","a11"] },
+  { id: "casino", em: "🦝", c: "#ff6b8a", t: "赌场为什么总赢？", q: "硬币、骰子、轮盘与 1000 个赌徒：概率、期望与大数定律。", lv: 3, g: "初一–初三", n: 5, stars: ["p04","p02","p05","p08","p12","p17","p22"] },
+  { soon: 1, em: "🦠", c: "#6ff0c8", t: "传染病怎样传开？", q: "SIR 模型、指数增长与群体免疫。", lv: 4, g: "初三–高一", n: 5 },
+  { soon: 1, em: "🚀", c: "#7fb0ff", t: "火箭怎样飞上月球？", q: "速度、加速度与微积分的第一课。", lv: 4, g: "高中", n: 5 },
+  { soon: 1, em: "🧊", c: "#e8e8ff", t: "魔方为什么能复原？", q: "置换、群与对称：大学数学的入口。", lv: 5, g: "大学", n: 5 }
+];
+</script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (s) { return document.querySelector(s); };
+  function ls(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  $("#m-date").textContent = UPDATED; $("#f-date").textContent = UPDATED;
+  $("#m-tasks").textContent = TASKS.filter(function (t) { return !t.soon; }).length;
+
+  /* ---------- 进度 → 已点亮的星 ---------- */
+  var sum = ls("ma:v1:summary") || {};
+  var LIT = {};
+  TASKS.forEach(function (t) {
+    if (t.soon) return;
+    var s = sum[t.id]; if (!s || !s.done) return;
+    var k = Math.ceil(t.stars.length * Math.min(1, s.done / (s.total || t.n)));
+    t.stars.slice(0, k).forEach(function (id) { LIT[id] = 1; });
+  });
+  $("#m-lit").textContent = Object.keys(LIT).length;
+
+  /* ---------- 任务卡 ---------- */
+  var grid = $("#grid");
+  TASKS.forEach(function (t, i) {
+    var s = t.soon ? null : sum[t.id];
+    var done = s ? s.done : 0, total = (s && s.total) || t.n, all = done >= total && done > 0;
+    var a = document.createElement(t.soon ? "div" : "a");
+    a.className = "task" + (t.soon ? " soon" : "") + (all ? " done" : "");
+    if (!t.soon) a.href = "./" + t.id + "/";
+    a.style.setProperty("--c", t.c);
+    a.innerHTML = '<span class="orb"></span><span class="no">' + (i < 9 ? "0" : "") + (i + 1) + '</span><span class="em">' + t.em + "</span>" +
+      "<h3>" + t.t + '</h3><p class="q">' + t.q + "</p>" +
+      '<div class="tags"><span class="lv">' + "★★★★★".slice(0, t.lv) + "☆☆☆☆☆".slice(0, 5 - t.lv) + "</span><span>" + t.g + "</span><span>" + t.n + " 关</span>" + (t.stars ? "<span>" + t.stars.length + " 颗星</span>" : "") + "</div>" +
+      (t.soon ? "" : '<div class="prog"><span class="track"><i style="width:' + Math.round(100 * done / total) + '%"></i></span>' + done + " / " + total + " 关</div>") +
+      '<span class="go">' + (t.soon ? "即将上线" : all ? "✓ 已通关 · 再玩" : done ? "继续任务 →" : "开始任务 →") + "</span>";
+    if (!t.soon) {
+      a.addEventListener("mousemove", function (e) {
+        var r = a.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+        a.style.transform = "perspective(800px) rotateX(" + (-y * 6) + "deg) rotateY(" + (x * 8) + "deg) translateY(-4px)";
+      });
+      a.addEventListener("mouseleave", function () { a.style.transform = ""; });
+      a.addEventListener("click", function () { Music.tap(); });
+    }
+    grid.appendChild(a);
+  });
+  var path = $("#path");
+  TASKS.forEach(function (t) {
+    var d = document.createElement("div"); d.className = "step"; d.style.setProperty("--c", t.c);
+    d.innerHTML = '<span class="dot"></span><b>' + t.em + " " + t.t.replace(/[？?]$/, "") + "</b><small>" + t.g + "</small>";
+    path.appendChild(d);
+  });
+
+  /* ---------- 星座段落 ---------- */
+  var flight = $("#flight"), NC = DATA.c.length;
+  var counts = DATA.c.map(function () { return 0; }), litC = DATA.c.map(function () { return 0; });
+  DATA.s.forEach(function (s) { counts[s[2]]++; if (LIT[s[0]]) litC[s[2]]++; });
+  DATA.c.forEach(function (name, i) {
+    var st = document.createElement("div"); st.className = "stage";
+    var picks = DATA.s.filter(function (s) { return s[2] === i; }).sort(function (a, b) { return a[3] - b[3]; });
+    var sample = [picks[0], picks[Math.floor(picks.length / 3)], picks[Math.floor(picks.length * 2 / 3)], picks[picks.length - 1]];
+    st.innerHTML = '<div class="cons" style="--c:' + COLORS[i] + '"><span class="idx">星座 0' + (i + 1) + " / 0" + NC + "</span><h2>" + name + "</h2><p>" + BLURB[i] + "</p>" +
+      '<div class="chips">' + sample.map(function (s) { return "<span>" + s[1] + "</span>"; }).join("") + "</div>" +
+      '<div class="bar"><i style="width:' + Math.round(100 * litC[i] / counts[i]) + '%"></i></div><p style="font-size:12px;margin-top:6px;color:#9aa4cf">' + counts[i] + " 颗星 · 已点亮 " + litC[i] + "</p></div>";
+    flight.appendChild(st);
+  });
+  var io = new IntersectionObserver(function (es) { es.forEach(function (e) { e.target.classList.toggle("on", e.isIntersecting); }); }, { threshold: 0.45 });
+  document.querySelectorAll(".cons").forEach(function (el) { io.observe(el); });
+
+  /* ---------- 3D 星系 ---------- */
+  var cv = $("#galaxy"), g = cv.getContext("2d"), W, H, DPR = Math.min(2, window.devicePixelRatio || 1);
+  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var GAP = 900, Z0 = 700;
+  function centerOf(i) { return { x: Math.sin(i * 1.7) * 260, y: Math.cos(i * 1.3) * 150, z: Z0 + i * GAP }; }
+  function rnd(seed) { var x = Math.sin(seed * 9301 + 49297) * 233280; return x - Math.floor(x); }
+  var nodes = [], byId = {};
+  DATA.s.forEach(function (s, k) {
+    var c = centerOf(s[2]), a = rnd(k) * Math.PI * 2, r = 60 + s[3] * 46 + rnd(k + 7) * 30;
+    var n = { id: s[0], name: s[1], ci: s[2], d: s[3], pre: s[4], x: c.x + Math.cos(a) * r, y: c.y + Math.sin(a) * r * 0.75, z: c.z + (rnd(k + 3) - .5) * 260, lit: !!LIT[s[0]], ph: rnd(k + 11) * 6.28 };
+    nodes.push(n); byId[n.id] = n;
+  });
+  var links = [];
+  nodes.forEach(function (n) { n.pre.forEach(function (p) { if (byId[p]) links.push([byId[p], n]); }); });
+  var dust = [], RANGE = Z0 + NC * GAP + 9000;
+  for (var i = 0; i < 1600; i++) dust.push({ x: (Math.random() - .5) * 4200, y: (Math.random() - .5) * 2600, z: Math.random() * (Z0 + NC * GAP + 9000) - 2200, b: Math.random() });
+  var sprites = COLORS.map(function (col) {
+    var c = document.createElement("canvas"); c.width = c.height = 64; var x = c.getContext("2d");
+    var gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, "#ffffff"); gr.addColorStop(0.12, col); gr.addColorStop(0.4, col + "55"); gr.addColorStop(1, col + "00");
+    x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return c;
+  });
+  var gold = (function () { var c = document.createElement("canvas"); c.width = c.height = 96; var x = c.getContext("2d"); var gr = x.createRadialGradient(48, 48, 0, 48, 48, 48);
+    gr.addColorStop(0, "#fff"); gr.addColorStop(.1, "#fff3c4"); gr.addColorStop(.35, "#ffcf5a88"); gr.addColorStop(1, "#ffcf5a00"); x.fillStyle = gr; x.fillRect(0, 0, 96, 96); return c; })();
+  function resize() { W = cv.width = innerWidth * DPR; H = cv.height = innerHeight * DPR; }
+  resize(); addEventListener("resize", resize);
+  var mx = 0, my = 0, tmx = 0, tmy = 0;
+  addEventListener("pointermove", function (e) { tmx = e.clientX / innerWidth - .5; tmy = e.clientY / innerHeight - .5; });
+  var camZ = 0, camX = 0, camY = 0;
+  function targetCam() {
+    var fl = flight.getBoundingClientRect(), fh = flight.offsetHeight;
+    var p = (innerHeight * 0.5 - fl.top) / fh; // 0..1 inside flight
+    var zEnd = Z0 + (NC - 1) * GAP;
+    var z, x, y;
+    if (p <= 0) z = Z0 - GAP * 1.9 + Math.max(-1, p) * 300;
+    else if (p < 1) z = Z0 - GAP * 1.9 + p * (zEnd - Z0 + GAP * 1.9 + 200);
+    else z = zEnd + 200 + (p - 1) * 2200 + (performance.now() / 1000) * 25;
+    var fi = (z - Z0) / GAP; fi = Math.max(0, Math.min(NC - 1, fi));
+    var a = Math.floor(fi), f = fi - a, c1 = centerOf(a), c2 = centerOf(Math.min(NC - 1, a + 1));
+    var side = (Math.round(fi) % 2 === 0) ? 1 : -1;
+    x = c1.x + (c2.x - c1.x) * f - side * 120 * (p > 0 && p < 1 ? 1 : 0); y = c1.y + (c2.y - c1.y) * f;
+    return { z: z, x: x, y: y, p: p };
+  }
+  var t0 = performance.now(), focal = 0; (function () { var c0 = targetCam(); camZ = c0.z; camX = c0.x; camY = c0.y; })();
+  function frame(now) {
+    var t = (now - t0) / 1000, tc = targetCam();
+    camZ += (tc.z - camZ) * 0.06; camX += (tc.x - camX) * 0.05; camY += (tc.y - camY) * 0.05;
+    mx += (tmx - mx) * 0.05; my += (tmy - my) * 0.05;
+    var drift = tc.p >= 1 ? t * 0.05 : 0;
+    var cx = camX + mx * 120, cy = camY + my * 80;
+    focal = Math.min(W, H) * 0.9;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.fillStyle = "#03050f"; g.fillRect(0, 0, W, H);
+    var neb = g.createRadialGradient(W * .3, H * .3, 0, W * .3, H * .3, W * .8);
+    neb.addColorStop(0, "rgba(70,60,170,0.16)"); neb.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = neb; g.fillRect(0, 0, W, H);
+    var cosr = Math.cos(drift), sinr = Math.sin(drift);
+    function proj(px, py, pz) {
+      var x = px - cx, y = py - cy, z = pz - camZ;
+      if (drift) { var x2 = x * cosr - (pz - camZ - 1800) * sinr * 0; x = x2; }
+      if (z < 20) return null;
+      var s = focal / z; return { x: W / 2 + x * s, y: H / 2 + y * s, s: s, z: z };
+    }
+    // 星尘
+    g.globalCompositeOperation = "lighter";
+    for (var i = 0; i < dust.length; i++) {
+      var d = dust[i]; if (d.z < camZ - 100) d.z += RANGE; else if (d.z > camZ + RANGE - 100) d.z -= RANGE;
+      var dx = d.x * cosr - 0 * sinr;
+      var pr = proj(dx, d.y, d.z); if (!pr || pr.z > 5000) continue;
+      if (pr.x < -10 || pr.x > W + 10 || pr.y < -10 || pr.y > H + 10) continue;
+      var al = Math.min(1, 900 / pr.z) * (0.3 + 0.5 * d.b);
+      g.fillStyle = "rgba(220,230,255," + al.toFixed(3) + ")";
+      var sz = Math.max(0.6, Math.min(3, pr.s * 2.2)) * DPR * 0.6;
+      g.fillRect(pr.x, pr.y, sz, sz);
+    }
+    // 前置连线
+    g.lineWidth = 1 * DPR;
+    for (var j = 0; j < links.length; j++) {
+      var A = proj(links[j][0].x, links[j][0].y, links[j][0].z), B = proj(links[j][1].x, links[j][1].y, links[j][1].z);
+      if (!A || !B || A.z > 4200) continue;
+      var same = links[j][0].ci === links[j][1].ci; if (!same && (A.z > 2400 || B.z > 2400)) continue;
+      var la = Math.min(0.3, 420 / Math.max(A.z, B.z)) * (links[j][0].lit && links[j][1].lit ? 2.2 : 1) * (same ? 1 : 0.22) * Math.min(1, Math.min(A.z, B.z) / 260);
+      g.strokeStyle = (links[j][0].lit && links[j][1].lit) ? "rgba(255,215,120," + la + ")" : "rgba(150,175,255," + la + ")";
+      g.beginPath(); g.moveTo(A.x, A.y); g.lineTo(B.x, B.y); g.stroke();
+    }
+    // 节点
+    var labels = [];
+    for (var k = 0; k < nodes.length; k++) {
+      var n = nodes[k], P = proj(n.x, n.y, n.z); if (!P || P.z > 5200) continue;
+      var tw = 0.75 + 0.25 * Math.sin(t * 2 + n.ph);
+      var r = (6 + (6 - n.d) * 2.2) * P.s * DPR * 1.6 * tw;
+      r = Math.max(1.6 * DPR, Math.min(r, 22 * DPR));
+      var spr = n.lit ? gold : sprites[n.ci];
+      var rr = n.lit ? r * 2.2 : r * 1.6;
+      g.globalAlpha = Math.min(1, 2400 / P.z) * Math.min(1, (P.z - 20) / 220) * (tc.p <= 0.02 ? 0.6 : 1);
+      g.drawImage(spr, P.x - rr, P.y - rr, rr * 2, rr * 2);
+      if (n.lit) { g.strokeStyle = "rgba(255,220,140," + (0.5 + 0.4 * Math.sin(t * 3 + n.ph)) + ")"; g.lineWidth = 1.2 * DPR; g.beginPath(); g.arc(P.x, P.y, r * 1.1 + 4 * DPR, 0, 6.283); g.stroke(); }
+      if (P.z < (W < 800 * DPR ? 600 : 900) && P.z > 60) labels.push([P, n]);
+    }
+    g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
+    g.textAlign = "center"; g.font = (12 * DPR) + "px -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif";
+    labels.forEach(function (L) {
+      var P = L[0], n = L[1], a = Math.min(1, (900 - P.z) / 400) * Math.min(1, (P.z - 60) / 120);
+      g.fillStyle = n.lit ? "rgba(255,226,150," + a + ")" : "rgba(230,236,255," + (a * .85) + ")";
+      g.fillText(n.name, P.x, P.y + 14 * DPR + Math.min(30 * DPR, P.s * 14 * DPR));
+    });
+    if (!reduce || !frame.once) { frame.once = 1; requestAnimationFrame(frame); }
+  }
+  requestAnimationFrame(frame);
+  addEventListener("scroll", function () { if (reduce) requestAnimationFrame(frame); }, { passive: true });
+
+  /* ---------- 背景音乐：实时合成的星空氛围 ---------- */
+  var Music = (function () {
+    var ac, master, verb, delay, on = false, timer, step = 0;
+    var CH = [[48, 55, 59, 64, 71], [45, 52, 57, 60, 67], [41, 48, 53, 57, 64], [43, 50, 55, 59, 62]];
+    var SC = [60, 62, 64, 67, 69, 72, 74, 76, 79, 81];
+    function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+    function build() {
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      master = ac.createGain(); master.gain.value = 0; master.connect(ac.destination);
+      verb = ac.createConvolver(); var len = ac.sampleRate * 5, buf = ac.createBuffer(2, len, ac.sampleRate);
+      for (var ch = 0; ch < 2; ch++) { var d = buf.getChannelData(ch); for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
+      verb.buffer = buf; var wet = ac.createGain(); wet.gain.value = 0.7; verb.connect(wet); wet.connect(master);
+      delay = ac.createDelay(2); delay.delayTime.value = 0.62; var fbk = ac.createGain(); fbk.gain.value = 0.38; delay.connect(fbk); fbk.connect(delay); delay.connect(verb);
+    }
+    function pad(notes, t, dur) {
+      var lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 700; lp.Q.value = 0.3;
+      lp.frequency.setValueAtTime(500, t); lp.frequency.linearRampToValueAtTime(1100, t + dur * .5); lp.frequency.linearRampToValueAtTime(500, t + dur);
+      var gn = ac.createGain(); gn.gain.setValueAtTime(0, t); gn.gain.linearRampToValueAtTime(0.05, t + 3); gn.gain.setValueAtTime(0.05, t + dur - 3); gn.gain.linearRampToValueAtTime(0, t + dur + 1);
+      lp.connect(gn); gn.connect(verb); gn.connect(master);
+      notes.forEach(function (m) {
+        [-6, 6].forEach(function (det) {
+          var o = ac.createOscillator(); o.type = "triangle"; o.frequency.value = hz(m); o.detune.value = det;
+          o.connect(lp); o.start(t); o.stop(t + dur + 1.2);
+        });
+      });
+    }
+    function bell(t) {
+      var m = SC[Math.floor(Math.random() * SC.length)] + (Math.random() < .3 ? 12 : 0);
+      var o = ac.createOscillator(), o2 = ac.createOscillator(), gn = ac.createGain();
+      o.type = "sine"; o.frequency.value = hz(m); o2.type = "sine"; o2.frequency.value = hz(m) * 2.01;
+      var g2 = ac.createGain(); g2.gain.value = 0.25; o2.connect(g2); g2.connect(gn); o.connect(gn);
+      gn.gain.setValueAtTime(0, t); gn.gain.linearRampToValueAtTime(0.035, t + 0.02); gn.gain.exponentialRampToValueAtTime(0.0001, t + 3.5);
+      gn.connect(delay); gn.connect(verb);
+      o.start(t); o2.start(t); o.stop(t + 3.6); o2.stop(t + 3.6);
+    }
+    function loop() {
+      if (!on) return;
+      var t = ac.currentTime + 0.1, dur = 9;
+      pad(CH[step % CH.length], t, dur);
+      var nb = 2 + Math.floor(Math.random() * 3);
+      for (var i = 0; i < nb; i++) bell(t + 1 + Math.random() * (dur - 2));
+      step++; timer = setTimeout(loop, (dur - 1) * 1000);
+    }
+    function start() {
+      if (!ac) build();
+      return (ac.resume ? ac.resume() : Promise.resolve()).then(function () {
+        if (ac.state !== "running") throw 0;
+        if (!on) { on = true; master.gain.cancelScheduledValues(ac.currentTime); master.gain.setTargetAtTime(0.9, ac.currentTime, 1.5); loop(); }
+        ui();
+      });
+    }
+    function stop() { on = false; clearTimeout(timer); if (ac) master.gain.setTargetAtTime(0, ac.currentTime, 0.4); ui(); }
+    function ui() {
+      var b = $("#music"); b.setAttribute("aria-pressed", on); b.classList.toggle("music-on", on);
+      $("#musiclabel").textContent = on ? "音乐 开" : "音乐 关";
+      if (on) $("#unmute").hidden = true;
+    }
+    function tap() { if (on && ac) { var t = ac.currentTime; bell(t); } }
+    return { start: start, stop: stop, on: function () { return on; }, tap: tap, ui: ui };
+  })();
+  window.Music = Music;
+  var pref = ls("ma:music");
+  $("#music").onclick = function () {
+    if (Music.on()) { Music.stop(); lsSet("ma:music", "off"); }
+    else { lsSet("ma:music", "on"); Music.start().catch(function () {}); }
+  };
+  Music.ui();
+  if (pref !== "off") {
+    Music.start().catch(function () {
+      $("#unmute").hidden = false;
+      var go = function (e) {
+        if (e.target && e.target.closest && e.target.closest("#music")) return;
+        Music.start().then(function () { ["pointerdown", "keydown", "touchend"].forEach(function (ev) { removeEventListener(ev, go, true); }); }).catch(function () {});
+      };
+      ["pointerdown", "keydown", "touchend"].forEach(function (ev) { addEventListener(ev, go, true); });
+    });
+  }
+  $("#unmute").onclick = function () { Music.start().catch(function () {}); };
+})();
+</script>
+<script src="./ma.js"></script>
+</body>
 </html>
