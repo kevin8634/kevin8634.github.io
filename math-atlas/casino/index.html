@@ -1,0 +1,1712 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>星图任务 · 赌场为什么总是赢？</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <link rel="stylesheet" href="hark-charts.css" />
+    <style>
+      /* x- classes: the game shell. Tokens only. */
+      .x-bar {
+        position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 30;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+        padding: 8px 12px; border-radius: var(--r-pill);
+        background: var(--mat-agent); -webkit-backdrop-filter: var(--hark-blur); backdrop-filter: var(--hark-blur);
+        border: 1px solid var(--stroke-primary); box-shadow: var(--hark-shadow);
+      }
+      .x-brand { font: var(--type-label); margin-right: auto; white-space: nowrap; }
+      .x-meter { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-primary); }
+      .x-meter b { font-weight: var(--weight-bold); }
+      .x-toggle {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap);
+        padding: 4px 12px; border: 1px solid var(--stroke-primary); border-radius: var(--r-pill);
+        background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-tag); cursor: pointer;
+      }
+      .x-toggle[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-vol { width: 86px; min-height: var(--tap); accent-color: var(--fill-primary); }
+      .x-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+      .x-map { position: relative; padding: 8px 0 4px; }
+      .x-path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      .x-nodes { position: relative; display: grid; gap: 10px; }
+      .x-node {
+        display: grid; grid-template-columns: 46px 1fr auto; align-items: center; gap: 12px;
+        width: min(100%, 560px); padding: 10px 14px; border-radius: var(--r-l);
+        border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-body); text-align: left; cursor: pointer;
+        transition: box-shadow var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
+      }
+      .x-node:nth-child(even) { justify-self: end; }
+      .x-node:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--hark-shadow); }
+      .x-node:disabled { opacity: 0.55; cursor: not-allowed; }
+      .x-node__num { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-tertiary); font: var(--type-heading); }
+      .x-node.is-open .x-node__num { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-node__t { display: block; font: var(--type-body-strong); }
+      .x-node__s { display: block; font: var(--type-caption); color: var(--text-secondary); }
+      .x-stars { font-size: 15px; letter-spacing: 1px; white-space: nowrap; }
+      .x-panel { padding: 16px; border-radius: var(--r-l); background: var(--fill-tertiary); display: grid; gap: 14px; }
+      .x-cat { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: start; }
+      .x-cat__face { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-primary-on); font-size: 24px; border: 1px solid var(--stroke-primary); }
+      .x-bubble { position: relative; padding: 10px 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-primary); font: var(--type-body); }
+      .x-bubble small { display: block; margin-top: 4px; font: var(--type-caption); color: var(--text-secondary); }
+      .x-opts { display: flex; flex-wrap: wrap; gap: 10px; }
+      .x-qopt { min-height: var(--tap); padding: 8px 14px; border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); color: var(--text-primary); cursor: pointer; text-align: left; font: var(--type-small); }
+      .x-qopt.good { border-color: var(--fill-system-green); box-shadow: inset 0 0 0 1px var(--fill-system-green); }
+      .x-qopt.bad { border-color: var(--fill-system-red); opacity: 0.6; }
+      .x-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+      .x-btn {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 6px 16px;
+        border-radius: var(--r-s); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-label); cursor: pointer;
+      }
+      .x-btn--go, .x-btn[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .x-toasts { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; display: grid; gap: 8px; justify-items: center; pointer-events: none; }
+      .x-toast { padding: 10px 16px; border-radius: var(--r-pill); background: var(--fill-primary); color: var(--text-primary-on); font: var(--type-tag); box-shadow: var(--hark-shadow); animation: x-pop 320ms var(--ease-out); }
+      @keyframes x-pop { from { opacity: 0; transform: translateY(10px); } }
+      .x-shelf { display: flex; flex-wrap: wrap; gap: 8px; }
+      .x-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-secondary); }
+      .x-badge.got { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-end { display: grid; gap: 12px; padding: 16px; border-radius: var(--r-l); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); }
+      .x-end h3 { font: var(--type-heading); }
+      .x-end dl { display: grid; gap: 8px; margin: 0; }
+      .x-end dt { font: var(--type-body-strong); }
+      .x-end dd { margin: 0; font: var(--type-small); color: var(--text-secondary); }
+      .x-starid { font: var(--weight-regular) 12px/1.3 "Geist Mono", monospace; }
+      .x-flash { animation: x-shake 320ms var(--ease-out); }
+      @keyframes x-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+      #stage [hidden] { display: none; }
+      /* mission parts */
+      .x-part { display: grid; gap: 12px; padding: 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-secondary); }
+      .x-part h3 { font: var(--type-body-strong); }
+      .x-part .chart { margin: 0; }
+      .x-slide { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+      .x-slide input { width: 100%; min-height: var(--tap); accent-color: var(--fill-primary); }
+      .x-slide output { font: var(--type-figure); min-width: 2.5ch; text-align: center; }
+      .x-coinwrap { display: grid; justify-items: center; gap: 8px; perspective: 600px; }
+      .x-coin {
+        width: 128px; height: 128px; border-radius: 50%; cursor: pointer;
+        border: 6px double var(--stroke-primary); background: var(--fill-tertiary); color: var(--text-primary);
+        font: var(--type-display); display: grid; place-items: center; box-shadow: var(--hark-shadow);
+      }
+      .x-coin:disabled { cursor: wait; }
+      .x-coin.is-spin { animation: x-spin 560ms var(--ease-out); }
+      @keyframes x-spin { 0% { transform: rotateY(0) translateY(0); } 50% { transform: rotateY(900deg) translateY(-36px); } 100% { transform: rotateY(1800deg) translateY(0); } }
+      .x-tally { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+      .x-mini { display: flex; flex-wrap: wrap; gap: 3px; max-width: 100%; }
+      .x-mini i { width: 14px; height: 14px; border-radius: 50%; font: var(--weight-medium) 9px/14px var(--sans); font-style: normal; text-align: center; background: var(--fill-tertiary); color: var(--text-secondary); }
+      .x-mini i.h { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-suspects { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+      .x-suspect { display: grid; gap: 8px; padding: 12px; border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); }
+      .x-suspect.bad { border-color: var(--fill-system-red); }
+      .x-suspect.good { border-color: var(--fill-system-green); box-shadow: inset 0 0 0 1px var(--fill-system-green); }
+      .x-suspect h4 { font: var(--type-body-strong); }
+      .x-gauge { position: relative; height: 24px; border-radius: var(--r-pill); background: var(--fill-tertiary); overflow: hidden; }
+      .x-gauge i { display: block; height: 100%; width: 0; background: var(--chart-2); transition: width var(--dur-draw) var(--ease-out); }
+      .x-gauge::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px dashed var(--text-secondary); }
+      .x-num { font: var(--type-small); color: var(--text-secondary); }
+      .x-num b { color: var(--text-primary); font-weight: var(--weight-bold); }
+      .x-final { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+      .x-final li { display: flex; align-items: center; gap: 10px; min-height: var(--tap); padding: 8px 12px; border-radius: var(--r-m); background: var(--fill-tertiary); font: var(--type-small); color: var(--text-secondary); }
+      .x-final li.lit { background: var(--fill-primary); color: var(--text-primary-on); }
+      /* 知识笔记 */
+      .x-dialog { width: min(680px, calc(100vw - 24px)); max-height: calc(100vh - 48px); padding: 0; border: 1px solid var(--stroke-primary); border-radius: var(--r-l); background: var(--fill-primary-on); color: var(--text-primary); box-shadow: var(--hark-shadow); }
+      .x-dialog::backdrop { background: rgb(0 0 0 / 0.4); }
+      .x-dialog__head { position: sticky; top: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 16px; background: var(--mat-regular); -webkit-backdrop-filter: var(--hark-blur); backdrop-filter: var(--hark-blur); border-bottom: 1px solid var(--stroke-secondary); }
+      .x-dialog__head h2 { font: var(--type-heading); margin-right: auto; }
+      .x-notes { padding: 16px; display: grid; gap: 16px; font: var(--type-body); }
+      .x-notes h3 { font: var(--type-body-strong); margin-bottom: 6px; }
+      .x-notes ol, .x-notes ul { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; }
+      .x-warn { font: var(--type-small); color: var(--text-secondary); }
+      /* level 2: dice, sum pad, 6×6 grid */
+      .x-part { --x-red: var(--fill-system-red); --x-blue: color-mix(in oklab, var(--chart-1), var(--text-primary) 45%); }
+      .x-dice { display: flex; gap: 16px; justify-content: center; }
+      .x-die { width: 72px; height: 72px; padding: 10px; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); gap: 4px; border-radius: var(--r-s); border: 3px solid currentColor; background: var(--fill-primary-on); box-shadow: var(--hark-shadow); }
+      .x-die--r { color: var(--x-red); } .x-die--b { color: var(--x-blue); }
+      .x-die i { border-radius: 50%; } .x-die i.on { background: currentColor; }
+      .x-die.is-roll { animation: x-roll 560ms var(--ease-out); }
+      @keyframes x-roll { 30% { transform: rotate(-28deg) translateY(-20px); } 65% { transform: rotate(18deg) translateY(-6px); } }
+      .x-sums { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 8px; }
+      .x-sum { min-height: 52px; border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-heading); cursor: pointer; }
+      .x-sum[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-sum:disabled { opacity: 0.45; cursor: not-allowed; }
+      .x-grid { display: grid; grid-template-columns: 34px repeat(6, minmax(34px, 1fr)); gap: 4px; max-width: 440px; }
+      .x-grid > * { min-height: var(--tap); display: grid; place-items: center; border-radius: var(--r-s); font: var(--type-label); }
+      .x-hr { color: var(--x-red); } .x-hc { color: var(--x-blue); }
+      .x-cell { border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); color: var(--text-secondary); cursor: pointer; transition: background var(--dur-quick) var(--ease-out); }
+      .x-cell.sel { box-shadow: inset 0 0 0 2px var(--fill-primary); }
+      .x-cell.ok { background: var(--fill-tertiary); color: var(--text-primary); }
+      .x-cell.bad { border-color: var(--fill-system-red); }
+      .x-cell.hl { background: var(--fill-primary); color: var(--text-primary-on); }
+      /* level 3: spinner, fill-in equation, fair-game dial */
+      .x-wheelwrap { position: relative; width: 220px; height: 220px; margin: 8px auto 0; }
+      .x-wheel { width: 100%; height: 100%; border-radius: 50%; position: relative; border: 1px solid var(--stroke-primary); box-shadow: var(--hark-shadow);
+        background: conic-gradient(var(--fill-tertiary) 0 50%, var(--chart-1) 0 83.333%, var(--chart-2) 0); transition: transform 2.2s cubic-bezier(0.15, 0.8, 0.2, 1); }
+      .x-wheel span { position: absolute; transform: translate(-50%, -50%); padding: 2px 8px; border-radius: var(--r-pill); background: var(--fill-primary-on); font: var(--type-tag); white-space: nowrap; }
+      .x-pointer { position: absolute; left: 50%; top: -6px; z-index: 2; transform: translateX(-50%); border: 10px solid transparent; border-top: 16px solid var(--fill-primary); border-bottom: 0; }
+      .x-eq { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font: var(--type-heading); }
+      .x-slot { min-width: 96px; min-height: var(--tap); padding: 4px 10px; border-radius: var(--r-s); border: 1px dashed var(--stroke-primary); background: var(--fill-primary-on); color: var(--text-secondary); font: var(--type-label); cursor: pointer; }
+      .x-slot.sel { border-style: solid; box-shadow: inset 0 0 0 2px var(--fill-primary); }
+      .x-slot.ok { border: 1px solid var(--fill-system-green); color: var(--text-primary); cursor: default; }
+      .x-fair { display: grid; gap: 10px; justify-items: center; padding: 14px; border-radius: var(--r-m); background: var(--fill-tertiary); transition: box-shadow var(--dur-quick) var(--ease-out); }
+      .x-fair.is-fair { box-shadow: 0 0 0 2px var(--fill-system-green), 0 0 22px var(--fill-system-green); }
+      .x-fair output { font: var(--type-figure); min-width: 4ch; text-align: center; }
+      /* level 4: European roulette */
+      .x-rwrap { position: relative; width: 260px; height: 260px; margin: 8px auto 0; }
+      .x-rwheel, .x-ballring { position: absolute; inset: 0; border-radius: 50%; transition: transform 3s cubic-bezier(0.15, 0.8, 0.2, 1); }
+      .x-rwheel { border: 6px solid var(--fill-tertiary); box-shadow: var(--hark-shadow); }
+      .x-rwheel::after { content: ""; position: absolute; inset: 30%; border-radius: 50%; background: var(--fill-tertiary); border: 1px solid var(--stroke-primary); }
+      .x-rwheel span { position: absolute; left: 50%; top: 50%; width: 20px; height: 16px; margin: -8px 0 0 -10px; text-align: center; font: var(--type-tag); color: var(--text-primary-on); }
+      .x-rwheel span.hl { outline: 2px solid var(--fill-system-green); outline-offset: 2px; border-radius: 4px; background: var(--fill-system-green); }
+      .x-ballring { transition-timing-function: cubic-bezier(0.2, 0.7, 0.25, 1); pointer-events: none; z-index: 2; }
+      .x-ball { position: absolute; left: 50%; top: 1px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--fill-primary-on); box-shadow: 0 0 0 1px var(--text-secondary), var(--hark-shadow); }
+      /* level 5: number line, mission complete */
+      .x-qopt[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-line { position: relative; height: 64px; margin: 0 22px; }
+      .x-line::before { content: ""; position: absolute; left: 0; right: 0; top: 34px; border-top: 2px solid var(--stroke-primary); }
+      .x-line span { position: absolute; top: 42px; transform: translateX(-50%); font: var(--type-caption); color: var(--text-secondary); white-space: nowrap; }
+      .x-line b { position: absolute; top: 4px; transform: translateX(-50%); font-size: 26px; line-height: 1; transition: left 40ms linear; }
+      .x-end ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; font: var(--type-small); }
+      .x-end .stats { margin: 0; }
+      .x-moral { font: var(--type-heading); }
+      @media (prefers-reduced-motion: reduce) { .x-wheel, .x-fair, .x-rwheel, .x-ballring, .x-line b { transition: none; } }
+      @media (prefers-reduced-motion: reduce) { .x-toast, .x-flash, .x-coin.is-spin, .x-die.is-roll { animation: none; } .x-gauge i, .x-cell { transition: none; } }
+      @media (max-width: 599px) { .x-brand { width: 100%; } .x-vol { width: 70px; } }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <main class="main">
+        <div class="x-bar" role="toolbar" aria-label="游戏状态">
+          <span class="x-brand">星图任务 · 赌场为什么总是赢？</span>
+          <span class="x-meter">XP <b id="xp">0</b></span>
+          <span class="x-meter">🪙 筹码 <b id="chips">0</b></span>
+          <span class="x-meter">⭐ <b id="stars">0</b>/15</span>
+          <button class="x-toggle" id="sfx" aria-pressed="true">🔊 音效</button>
+          <button class="x-toggle" id="music" aria-pressed="false">🎵 专注音乐</button>
+          <select class="x-toggle" id="track" aria-label="选择曲目">
+            <option value="-1" selected>随机轮播</option><option value="0">星空 Lo-fi</option><option value="1">雨夜书房</option><option value="2">晨光</option>
+          </select>
+          <span class="x-meter" id="nowplaying">正在播放:—</span>
+          <input class="x-vol" id="vol" type="range" min="0" max="100" value="30" aria-label="音乐音量" />
+          <button class="x-toggle" id="notes-open">📒 知识笔记</button>
+        </div>
+
+        <section class="hero">
+          <div class="hero__copy">
+            <p class="hero__eyebrow">星图任务 · 概率与期望</p>
+            <h1>赌场为什么总是赢？</h1>
+            <p class="hero__sub">拉斯维加斯的灯从来不灭——赌场靠什么稳赚？跟着浣熊博士，用硬币、骰子和轮盘找出答案。</p>
+            <div class="x-tags">
+              <span class="chip chip--solid">难度 ★★★ 中阶</span>
+              <span class="pill">适合 初一~初三</span>
+              <span class="pill">前置 分数、小数、百分数</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="map" data-nav="星图">
+          <div class="head">
+            <p class="head__eyebrow">五关任务</p>
+            <h2>从一枚硬币开始，一路算到赌徒的末路。</h2>
+            <p class="head__sub">每关得 1–3 颗星，拿到 1 颗星就解锁下一关。所有游戏只用 🪙 筹码，不涉及真钱。</p>
+          </div>
+          <div class="x-map">
+            <svg class="x-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M18 8 L82 30 L18 52 L82 74 L18 94" fill="none" style="stroke: var(--stroke-primary)" stroke-width="0.6" stroke-dasharray="2 2" />
+            </svg>
+            <div class="x-nodes" id="nodes"></div>
+          </div>
+        </section>
+
+        <section class="section" id="play" data-nav="关卡">
+          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">浣熊博士在星图上等你。</p></div>
+          <div id="stage" class="x-panel">
+            <div class="x-cat">
+              <div class="x-cat__face">🦝</div>
+              <div class="x-bubble">嘿，我以前在赌场上班，知道他们的小秘密。先点开第 1 关「硬币公平吗」：抛一枚硬币，正面和反面真的一样容易吗？<small>浣熊博士只问问题，不直接给答案。</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="shelf" data-nav="徽章">
+          <div class="head"><h2>徽章架</h2><p class="head__sub">做到了才会亮起来。</p></div>
+          <div class="x-shelf" id="badges"></div>
+        </section>
+
+        <section class="section" id="final" data-nav="终点">
+          <div class="head">
+            <p class="head__eyebrow">终点星图</p>
+            <h2>走完五关，这七颗星会全部点亮。</h2>
+            <p class="head__sub">现在亮着的，是你已经亲手用过的数学。</p>
+          </div>
+          <ul class="x-final" id="final-stars"></ul>
+        </section>
+      </main>
+      <footer class="foot">
+        <p>本任务用于理解概率，提醒：赌博有害，长期必输。声音由 Web Audio 实时合成。</p>
+        <nav aria-label="回到各部分" data-auto></nav>
+        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"><span class="hark-mark"></span><span>built by hark</span></a>
+      </footer>
+    </div>
+
+    <dialog class="x-dialog" id="notes" aria-labelledby="notes-title">
+      <div class="x-dialog__head">
+        <h2 id="notes-title">📒 知识笔记</h2>
+        <button class="x-btn" id="notes-copy">一键复制</button>
+        <button class="x-btn" id="notes-close" aria-label="关闭">关闭</button>
+      </div>
+      <p class="x-warn" id="notes-status" aria-live="polite" style="padding: 8px 16px 0"></p>
+      <div class="x-notes" id="notes-body">
+        <div>
+          <h3>必须掌握</h3>
+          <ol>
+            <li>概率 = 某结果出现的可能性大小，频率 = 实际试验中出现的比例。</li>
+            <li>古典概率：等可能结果中，P = 有利结果数 ÷ 全部结果数。</li>
+            <li>两颗骰子和为 7 的概率最大（6/36）。</li>
+            <li>期望值 = Σ(结果 × 概率)，代表“玩很多次平均每次得多少”。</li>
+            <li>大数定律：次数越多，平均结果越接近期望。</li>
+            <li>庄家优势：每局期望略小于 0，长期必然亏。</li>
+            <li>赌徒破产：本钱有限的一方，长期玩下去几乎必然输光。</li>
+          </ol>
+        </div>
+        <div>
+          <h3>公式</h3>
+          <ul>
+            <li>P(A) = 有利结果数 / 全部结果数</li>
+            <li>E = Σ xᵢ·pᵢ</li>
+            <li>欧式轮盘押红：E = 18/37 × (+1) + 19/37 × (−1) = −1/37 ≈ −2.7%</li>
+            <li>公平游戏中从 a 元出发、对手 b 元，输光概率 = b/(a+b)</li>
+          </ul>
+        </div>
+        <div>
+          <h3>经典文献</h3>
+          <ul>
+            <li>帕斯卡与费马 1654 年通信（赌金分配问题，概率论诞生）</li>
+            <li>Christiaan Huygens《论赌博中的计算》1657</li>
+            <li>Jacob Bernoulli《猜度术》1713（大数定律）</li>
+            <li>Pierre-Simon Laplace《概率的分析理论》1812</li>
+            <li>Edward O. Thorp《Beat the Dealer》1962</li>
+          </ul>
+        </div>
+        <div>
+          <h3>领域应用</h3>
+          <ul>
+            <li>保险定价与精算</li>
+            <li>彩票与赌场的庄家优势</li>
+            <li>天气预报中的降水概率</li>
+            <li>医学临床试验</li>
+            <li>股票与风险管理</li>
+            <li>蒙特卡洛模拟</li>
+          </ul>
+        </div>
+        <p class="x-warn">本任务用于理解概率，提醒：赌博有害，长期必输。</p>
+      </div>
+    </dialog>
+
+    <div class="x-toasts" id="toasts" aria-live="polite"></div>
+    <script src="hark.js"></script>
+    <script src="chart.js"></script>
+    <script src="datalabels.js"></script>
+    <script src="hark-charts.js"></script>
+    <script>
+      /* ---------- audio ---------- */
+      const Audio_ = (() => {
+        let ctx = null, master = null, musicGain = null, sfxOn = true, musicOn = false, vol = 0.3, started = false, nbuf = null;
+        function ensure() {
+          if (ctx) return ctx;
+          const AC = window.AudioContext || window.webkitAudioContext;
+          ctx = new AC();
+          master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+          musicGain = ctx.createGain(); musicGain.gain.value = 0; musicGain.connect(master);
+          return ctx;
+        }
+        function unlock() { ensure(); if (ctx.state === "suspended") ctx.resume(); started = true; }
+        function env(node, t, a, d, peak) {
+          const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(peak, t + a);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+          node.connect(g); g.connect(master); return g;
+        }
+        function tone(freq, t, dur, type, peak) {
+          const o = ctx.createOscillator(); o.type = type || "sine"; o.frequency.setValueAtTime(freq, t);
+          env(o, t, 0.012, dur, peak || 0.18); o.start(t); o.stop(t + dur + 0.08); return o;
+        }
+        function noise() {
+          if (nbuf) return nbuf; const len = ctx.sampleRate; nbuf = ctx.createBuffer(1, len, ctx.sampleRate);
+          const d = nbuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1; return nbuf;
+        }
+        function burst(t, dur, peak, ftype, f0, f1, q) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+          s.buffer = noise(); f.type = ftype; f.Q.value = q || 1; f.frequency.setValueAtTime(f0, t); if (f1) f.frequency.exponentialRampToValueAtTime(f1, t + dur);
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + Math.min(0.03, dur / 3)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          s.connect(f); f.connect(g); g.connect(master); s.start(t, Math.random() * 0.5); s.stop(t + dur + 0.02);
+        }
+        const sfx = {
+          click() { const t = ctx.currentTime; tone(880, t, 0.05, "triangle", 0.08); },
+          correct() { const t = ctx.currentTime; [523.25, 659.25, 783.99].forEach((f, i) => tone(f, t + i * 0.07, 0.22, "sine", 0.14)); },
+          wrong() { const t = ctx.currentTime; tone(150, t, 0.22, "sine", 0.16); tone(110, t + 0.06, 0.26, "sine", 0.12); },
+          star() { const t = ctx.currentTime; [784, 1047, 1319, 1568, 2093].forEach((f, i) => tone(f, t + i * 0.055, 0.3, "triangle", 0.09)); },
+          fanfare() { const t = ctx.currentTime; [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.3]].forEach(([f, d]) => { tone(f, t + d, 0.4, "sawtooth", 0.07); tone(f * 2, t + d, 0.3, "sine", 0.05); }); },
+          /* raccoon voice: two quick upward chirps */
+          chirp() {
+            const t = ctx.currentTime;
+            [0, 0.09].forEach((d, i) => {
+              const o = ctx.createOscillator(); o.type = "triangle";
+              o.frequency.setValueAtTime(900 + i * 150, t + d); o.frequency.exponentialRampToValueAtTime(1700 + i * 250, t + d + 0.06);
+              env(o, t + d, 0.008, 0.07, 0.07); o.start(t + d); o.stop(t + d + 0.12);
+            });
+          },
+          /* coin toss: a rising airy whoosh with a spinning shimmer, then a ting */
+          whoosh() {
+            const t = ctx.currentTime; burst(t, 0.42, 0.12, "bandpass", 500, 3200, 1.4);
+            for (let i = 0; i < 6; i++) tone(2600 + i * 90, t + i * 0.05, 0.03, "sine", 0.02);
+            tone(2400, t + 0.5, 0.25, "sine", 0.06); tone(3600, t + 0.5, 0.18, "sine", 0.03);
+          },
+          /* dice in a cup */
+          rattle() {
+            const t = ctx.currentTime;
+            for (let i = 0; i < 9; i++) { const d = i * 0.035 + Math.random() * 0.02; burst(t + d, 0.04, 0.12, "bandpass", 1800 + Math.random() * 1600, 0, 4); tone(500 + Math.random() * 400, t + d, 0.03, "square", 0.015); }
+          },
+          /* chips stacking */
+          clink() {
+            const t = ctx.currentTime;
+            [0, 0.06, 0.1].forEach((d, i) => { tone(3100 - i * 260, t + d, 0.09, "sine", 0.06); tone(4700 - i * 300, t + d, 0.05, "sine", 0.025); burst(t + d, 0.02, 0.05, "highpass", 5000); });
+          },
+          tick(f) { tone(f || 600, ctx.currentTime, 0.06, "sine", 0.07); },
+        };
+        function play(name, arg) { if (!sfxOn || !started) return; ensure(); if (ctx.state === "suspended") ctx.resume(); duckMusic(); (sfx[name] || sfx.click)(arg); }
+        /* ---------- 专注音乐: generative engine, lookahead scheduler (25ms tick, 0.1s ahead) ---------- */
+        const PENTA = [0, 2, 4, 7, 9];
+        const CH = { I: [0, 4, 7, 11], ii: [2, 5, 9, 12], iii: [4, 7, 11, 14], IV: [5, 9, 12, 16], V: [7, 11, 14, 17], vi: [9, 12, 16, 19] };
+        const P = (s) => s.split(" ").map((n) => CH[n]);
+        const TRACKS = [
+          { id: "lofi", name: "星空 Lo-fi", bpm: 72, swing: 0.2, key: 57, cb: 1, wet: 0.3, progs: [P("ii V I vi"), P("IV iii ii I"), P("vi IV I V")] },
+          { id: "rain", name: "雨夜书房", bpm: 60, swing: 0, key: 50, cb: 2, wet: 0.4, progs: [P("I iii vi IV"), P("vi ii V I"), P("IV I ii vi")] },
+          { id: "dawn", name: "晨光", bpm: 90, swing: 0.08, key: 60, cb: 1, wet: 0.25, progs: [P("I V vi IV"), P("IV I V vi"), P("I ii IV V")] },
+        ];
+        let comp = null, duck = null, bus = null, echo = null, noiseBuf = null, players = [], timer = null, offT = null, mode = -1;
+        const rnd = (n) => (Math.random() * n) | 0;
+        const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+        const newMotif = () => [0, 0, 0, 0].map(() => rnd(8));
+        function mutate(m) { const c = m.slice(); for (let i = 0, n = 1 + rnd(2); i < n; i++) { const j = rnd(4); c[j] = Math.max(0, Math.min(9, c[j] + [-2, -1, 1, 2][rnd(4)])); } return c; }
+        function graph() {
+          if (bus) return; ensure();
+          comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 4; comp.attack.value = 0.01; comp.release.value = 0.3;
+          duck = ctx.createGain(); bus = ctx.createGain(); echo = ctx.createDelay(1.5);
+          const fb = ctx.createGain(), lp = ctx.createBiquadFilter(); fb.gain.value = 0.32; lp.type = "lowpass"; lp.frequency.value = 1800;
+          echo.connect(lp); lp.connect(fb); fb.connect(echo); lp.connect(bus);
+          bus.connect(comp); comp.connect(duck); duck.connect(musicGain);
+          const len = ctx.sampleRate * 2; noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+          const d = noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        }
+        function note(p, m, t, dur, type, peak, a, wet) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = mtof(m);
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          o.connect(g); g.connect(p.out); if (wet) g.connect(p.wet); o.start(t); o.stop(t + dur + 0.05);
+        }
+        function hit(p, t, dur, peak, ftype, freq) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+          s.buffer = noiseBuf; f.type = ftype; f.frequency.value = freq;
+          g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(t, Math.random() * 1.5); s.stop(t + dur + 0.02);
+        }
+        function kick(p, t) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.2);
+          g.gain.setValueAtTime(0.28, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+          o.connect(g); g.connect(p.out); o.start(t); o.stop(t + 0.35); hit(p, t, 0.05, 0.05, "lowpass", 400);
+        }
+        function ep(p, ch, t, dur) {
+          const tr = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain(), env = ctx.createGain();
+          tr.gain.value = 0.75; lfo.frequency.value = 3.8; dep.gain.value = 0.22; lfo.connect(dep); dep.connect(tr.gain);
+          env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(1, t + 0.02); env.gain.exponentialRampToValueAtTime(0.35, t + 0.9); env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [["sine", 0.045], ["triangle", 0.01]].forEach(([ty, v]) => {
+            const o = ctx.createOscillator(), g = ctx.createGain(); o.type = ty; o.frequency.value = mtof(m); o.detune.value = rnd(7) - 3; g.gain.value = v;
+            o.connect(g); g.connect(tr); o.start(t); o.stop(t + dur + 0.05);
+          }));
+          tr.connect(env); env.connect(p.out); env.connect(p.wet); lfo.start(t); lfo.stop(t + dur + 0.05);
+        }
+        function pad(p, ch, t, dur, type, peak, lo, hi) {
+          const f = ctx.createBiquadFilter(), env = ctx.createGain(); f.type = "lowpass";
+          f.frequency.setValueAtTime(lo, t); f.frequency.linearRampToValueAtTime(hi, t + dur * 0.5); f.frequency.linearRampToValueAtTime(lo, t + dur);
+          env.gain.setValueAtTime(0.0001, t); env.gain.linearRampToValueAtTime(peak, t + dur * 0.35); env.gain.linearRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [-7, 7].forEach((dt) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = mtof(m); o.detune.value = dt; o.connect(f); o.start(t); o.stop(t + dur + 0.05); }));
+          f.connect(env); env.connect(p.out); env.connect(p.wet);
+        }
+        function rain(p) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain();
+          s.buffer = noiseBuf; s.loop = true; f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 0.5; g.gain.value = 0.05;
+          lfo.frequency.value = 0.07; dep.gain.value = 0.02; lfo.connect(dep); dep.connect(g.gain);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(); lfo.start(); p.nodes.push(s, lfo);
+        }
+        function section(p) {
+          let n; do n = rnd(3); while (n === p.prog); p.prog = n;
+          if (Math.random() < 0.25) p.key = p.t.key + [0, 2, -2, 5, -3][rnd(5)];
+          p.drums = Math.random() > 0.3;
+          if (Math.random() < 0.4) p.motif = newMotif();
+        }
+        function step(p, t) {
+          const T = p.t, s = p.step % 16, bar = (p.step / 16) | 0, beat = 60 / T.bpm;
+          if (s === 0) {
+            if (bar && bar % 8 === 0) section(p);
+            p.cur = bar % 4 === 2 ? mutate(p.motif) : bar % 4 === 0 ? p.motif : p.cur;
+          }
+          const ch = T.progs[p.prog][((bar / T.cb) | 0) % 4].map((x) => p.key + x);
+          const mel = (d) => p.key + 12 + PENTA[d % 5] + 12 * ((d / 5) | 0);
+          if (T.id === "lofi") {
+            if (s === 0) { ep(p, ch, t, beat * 4); note(p, ch[0] - 24, t, beat * 1.8, "sine", 0.16, 0.02); }
+            if (s === 10) note(p, ch[0] - 24, t, beat * 1.2, "sine", 0.12, 0.02);
+            if (p.drums) {
+              if (s === 0 || s === 10 || (s === 7 && Math.random() < 0.3)) kick(p, t);
+              if (s === 4 || s === 12) hit(p, t, 0.16, 0.07, "bandpass", 1800);
+              if (s % 2 === 0 || Math.random() < 0.15) hit(p, t, 0.04, s % 4 === 2 ? 0.03 : 0.018, "highpass", 7000);
+            }
+            if (bar % 2 === 1 && s % 4 === 0 && Math.random() > 0.28) note(p, mel(p.cur[s / 4]), t, beat * 1.3, "sine", 0.035, 0.01, true);
+          } else if (T.id === "rain") {
+            if (s === 0 && bar % 2 === 0) pad(p, ch, t, beat * 8 + 1, "sawtooth", 0.022, 280, 1300);
+            if (s % 8 === 0 && Math.random() < 0.45) { const m = mel(p.cur[(bar * 2 + s / 8) % 4]) - 12; note(p, m, t, 3.5, "triangle", 0.045, 0.005, true); note(p, m, t, 2.5, "sine", 0.03, 0.005); }
+          } else {
+            if (s === 0) pad(p, ch.map((m) => m + 12), t, beat * 4 + 0.6, "sine", 0.014, 2500, 5000);
+            if (s % 2 === 0 && Math.random() > 0.18) { const m = mel(p.cur[(s / 2) % 4] + (s >= 8 ? 1 : 0)); note(p, m, t, 0.55, "sine", 0.05, 0.004, true); note(p, m + 28, t, 0.08, "sine", 0.008, 0.002); }
+            if (p.drums) hit(p, t, 0.05, s % 2 ? 0.022 : 0.01, "highpass", 6000);
+          }
+        }
+        function sched() {
+          const now = ctx.currentTime;
+          players.forEach((p) => {
+            if (p.next < now - 0.05) p.next = now + 0.02; /* tab was throttled: skip, don't burst */
+            while (p.next < now + 0.1) { const sx = 60 / p.t.bpm / 4; step(p, p.next + (p.step % 2 ? p.t.swing * sx : 0)); p.step++; p.next += sx; }
+          });
+          const live = players.find((p) => !p.dead);
+          if (mode < 0 && live && now - live.born > 180) switchTo((live.i + 1 + rnd(2)) % 3);
+        }
+        function label(i) { const n = document.getElementById("nowplaying"); if (n) n.textContent = "正在播放:" + (i == null ? "—" : TRACKS[i].name); }
+        function kill(p) { p.nodes.forEach((n) => { try { n.stop(); } catch (e) {} }); p.out.disconnect(); p.wet.disconnect(); players = players.filter((x) => x !== p); }
+        function switchTo(i) {
+          const now = ctx.currentTime;
+          players.filter((p) => !p.dead).forEach((p) => {
+            p.dead = true; p.out.gain.cancelScheduledValues(now); p.out.gain.setValueAtTime(p.out.gain.value, now);
+            p.out.gain.linearRampToValueAtTime(0.0001, now + 2); setTimeout(() => kill(p), 2300);
+          });
+          const T = TRACKS[i], p = { t: T, i, step: 0, next: now + 0.1, born: now, key: T.key, prog: 0, drums: true, motif: newMotif(), out: ctx.createGain(), wet: ctx.createGain(), nodes: [] };
+          p.cur = p.motif; p.out.gain.setValueAtTime(0.0001, now); p.out.gain.linearRampToValueAtTime(1, now + 2);
+          p.out.connect(bus); p.wet.gain.value = T.wet; p.wet.connect(echo);
+          echo.delayTime.setTargetAtTime((60 / T.bpm) * 0.75, now, 0.5);
+          if (T.id === "rain") rain(p);
+          players.push(p); label(i);
+        }
+        function fadeTo(v) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(v, n + 2); }
+        function startMusic() {
+          graph(); if (ctx.state === "suspended") ctx.resume();
+          clearTimeout(offT); if (!timer) timer = setInterval(sched, 25);
+          if (!players.some((p) => !p.dead)) switchTo(mode < 0 ? rnd(3) : mode);
+          fadeTo(vol);
+        }
+        function stopMusic() {
+          if (!bus) return; fadeTo(0.0001);
+          offT = setTimeout(() => { clearInterval(timer); timer = null; players.slice().forEach(kill); label(null); }, 2100);
+        }
+        function setTrack(v) {
+          mode = v; if (!musicOn || !bus) return;
+          const live = players.find((p) => !p.dead);
+          if (mode >= 0 && (!live || live.i !== mode)) switchTo(mode); else if (live) live.born = ctx.currentTime;
+        }
+        function duckMusic() {
+          if (!musicOn || !duck) return; const t = ctx.currentTime, g = duck.gain;
+          g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.45, t + 0.05);
+          g.setValueAtTime(0.45, t + 0.35); g.linearRampToValueAtTime(1, t + 1);
+        }
+        return {
+          unlock, play,
+          setSfx(v) { sfxOn = v; }, isSfx: () => sfxOn,
+          setMusic(v) { musicOn = v; v ? startMusic() : stopMusic(); }, isMusic: () => musicOn,
+          setVol(v) { vol = v; if (ctx && timer && musicOn) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(vol, n + 0.3); } },
+          setTrack,
+        };
+      })();
+    </script>
+    <script>
+      /* ---------- state ---------- */
+      const State = { xp: 0, chips: 0, stars: 0, perLevel: {}, badges: {}, unlocked: 1, lit: {} };
+      const BADGES = [
+        { id: "coin", name: "硬币侦探", hint: "完成第 1 关「硬币公平吗」" },
+        { id: "dice", name: "骰子数学家", hint: "完成第 2 关「两颗骰子的秘密」" },
+        { id: "worth", name: "期望计算师", hint: "完成第 3 关「这个游戏值得玩吗」" },
+        { id: "zero", name: "看穿轮盘", hint: "完成第 4 关「轮盘上的绿色 0」" },
+        { id: "ruin", name: "破产定理大师", hint: "完成第 5 关「BOSS 赌徒的末路」" },
+      ];
+      const LEVELS_META = [
+        { id: 1, title: "硬币公平吗", sub: "可能性与频率" },
+        { id: 2, title: "两颗骰子的秘密", sub: "古典概率" },
+        { id: 3, title: "这个游戏值得玩吗", sub: "期望值" },
+        { id: 4, title: "轮盘上的绿色 0", sub: "庄家优势" },
+        { id: 5, title: "BOSS 赌徒的末路", sub: "BOSS 关 · 赌徒破产" },
+      ];
+      const FINAL_STARS = [
+        ["p04", "可能性"], ["p02", "统计图表"], ["p05", "古典概率"], ["p08", "随机变量与期望"],
+        ["p12", "大数定律"], ["p17", "随机游走"], ["p22", "蒙特卡洛方法"],
+      ];
+
+      const $ = (s) => document.querySelector(s);
+      function toast(msg) {
+        const el = document.createElement("div"); el.className = "x-toast"; el.textContent = msg;
+        $("#toasts").appendChild(el); setTimeout(() => el.remove(), 3200);
+      }
+      function gain(xp, chips) {
+        State.xp += xp || 0; State.chips += chips || 0; renderBar();
+        if (chips) { Audio_.play("clink"); toast(`+${chips} 🪙 筹码 · +${xp} XP`); }
+      }
+      function award(id) {
+        if (State.badges[id]) return;
+        State.badges[id] = true;
+        const b = BADGES.find((x) => x.id === id);
+        Audio_.play("star"); toast("🏅 获得徽章:" + b.name); renderBadges();
+      }
+      function renderBadges() {
+        $("#badges").innerHTML = BADGES.map((b) =>
+          `<span class="x-badge ${State.badges[b.id] ? "got" : ""}">${State.badges[b.id] ? "🏅" : "🔒"} ${b.name}<small style="opacity:.75"> · ${b.hint}</small></span>`
+        ).join("");
+      }
+      function renderFinal() {
+        $("#final-stars").innerHTML = FINAL_STARS.map(([id, n]) =>
+          `<li class="${State.lit[id] ? "lit" : ""}"><span aria-hidden="true">${State.lit[id] ? "★" : "☆"}</span><span class="x-starid">${id}</span> ${n}</li>`).join("");
+      }
+      function light(ids) { ids.forEach((i) => (State.lit[i] = true)); renderFinal(); }
+      function renderBar() { $("#xp").textContent = State.xp; $("#chips").textContent = State.chips; $("#stars").textContent = State.stars; }
+      function starStr(n) { return n ? "⭐".repeat(n) + "☆".repeat(3 - n) : "☆☆☆"; }
+      function renderMap() {
+        $("#nodes").innerHTML = LEVELS_META.map((m) => {
+          const open = m.id <= State.unlocked && !!getLevel(m.id);
+          const got = State.perLevel[m.id] || 0;
+          const note = getLevel(m.id) ? (open ? m.sub : "完成上一关解锁") : "🔒 即将开放";
+          return `<button class="x-node ${open ? "is-open" : ""}" data-level="${m.id}" ${open ? "" : "disabled"}>
+            <span class="x-node__num">${m.id}</span>
+            <span><span class="x-node__t">${m.title}</span><span class="x-node__s">${note}</span></span>
+            <span class="x-stars">${starStr(got)}</span></button>`;
+        }).join("");
+        $("#nodes").querySelectorAll("button[data-level]").forEach((b) =>
+          b.addEventListener("click", () => { Audio_.play("click"); openLevel(+b.dataset.level); }));
+      }
+      function finishLevel(id, stars, xp) {
+        const prev = State.perLevel[id] || 0;
+        if (stars > prev) { State.stars += stars - prev; State.perLevel[id] = stars; }
+        State.xp += xp;
+        if (stars >= 1 && State.unlocked < id + 1) State.unlocked = id + 1;
+        renderBar(); renderMap(); Audio_.play("fanfare");
+        toast(`第 ${id} 关完成 · ${starStr(stars)} · +${xp} XP`);
+      }
+      let charts = [];
+      function mkChart(canvas, cfg) { const c = new Chart(canvas, cfg); charts.push(c); return c; }
+      function openLevel(id) {
+        const lv = getLevel(id); if (!lv) return;
+        $("#play-title").textContent = `第 ${id} 关 · ${lv.title}`;
+        $("#play-sub").textContent = LEVELS_META[id - 1].sub;
+        charts.forEach((c) => c.destroy()); charts = [];
+        const stage = $("#stage"); stage.innerHTML = "";
+        lv.init(stage, (stars, xp) => finishLevel(id, stars, xp));
+        $("#play").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+      }
+      /* guide bubble helper: 浣熊博士 */
+      function guide(container, text, sub) {
+        const wrap = document.createElement("div"); wrap.className = "x-cat";
+        wrap.innerHTML = `<div class="x-cat__face">🦝</div><div class="x-bubble" aria-live="polite"></div>`;
+        const b = wrap.querySelector(".x-bubble");
+        const set = (t, s) => { b.innerHTML = ""; b.append(t); if (s) { const el = document.createElement("small"); el.textContent = s; b.append(el); } Audio_.play("chirp"); };
+        set(text, sub); container.append(wrap);
+        return set;
+      }
+      function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+      /* Socratic multiple choice: hint after 1st wrong, nudge after 2nd, never the answer */
+      function ask(host, say, opts, right, hints, onRight) {
+        const box = el("div", "x-opts"); let wrong = 0, done = false;
+        opts.forEach((t, i) => {
+          const b = el("button", "x-qopt"); b.textContent = t;
+          b.addEventListener("click", () => {
+            if (done || b.classList.contains("bad")) return;
+            if (i === right) { done = true; b.classList.add("good"); Audio_.play("correct"); onRight(wrong); }
+            else { wrong++; b.classList.add("bad", "x-flash"); Audio_.play("wrong"); say(wrong >= 2 ? hints[1] : hints[0], wrong >= 2 ? "提示来了，再想一步。" : "再想想？"); }
+          });
+          box.append(b);
+        });
+        host.append(box); return box;
+      }
+      /* end-card helper: stars, headline, [[term, meaning]], star-map ids */
+      function endCard(stars, head, math, starIds) {
+        return el("div", "x-end", `<h3>${starStr(stars)} ${head}</h3>
+          <div><p style="font:var(--type-body-strong)">你刚刚用到的数学</p>
+          <dl>${math.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join("")}</dl></div>
+          <div><p style="font:var(--type-body-strong)">星图点亮</p><p class="x-starid">${starIds}</p></div>`);
+      }
+      const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const flip = (p) => (Math.random() < (p == null ? 0.5 : p) ? 1 : 0);
+      const LEVELS = [];
+      const getLevel = (id) => LEVELS.find((l) => l.id === id);
+      /* ===== LEVEL 1 · 硬币公平吗 ===== */
+      LEVELS.push({
+        id: 1, title: "硬币公平吗",
+        init(root, done) {
+          const say = guide(root, "我在赌场时，老板最爱说一句话：「硬币是公平的。」可是，什么叫公平？我们先猜，再亲手试。", "第 1 关有 4 步：先猜 → 亲手抛 → 快进 → 抓作弊硬币。");
+          const scrollTo = (n) => n.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "nearest" });
+          const ctx = { bH: 0, bN: 0 };
+
+          /* ---------- Part A 先猜 ---------- */
+          const A = el("div", "x-part", `<h3>A ·「先猜」</h3>
+            <p>抛 10 次硬币，正面最可能出现几次？</p>
+            <div class="x-slide"><input type="range" min="0" max="10" step="1" value="0" aria-label="正面次数" /><output aria-live="polite">0</output></div>
+            <div class="x-row"><button class="x-btn x-btn--go">就猜这个</button></div>`);
+          root.append(A);
+          const rng = A.querySelector("input"), out = A.querySelector("output"), goA = A.querySelector("button");
+          let wrongA = 0;
+          rng.addEventListener("input", () => { out.textContent = rng.value; Audio_.play("tick", 400 + rng.value * 60); });
+          goA.addEventListener("click", () => {
+            const v = +rng.value;
+            if (v !== 5) {
+              wrongA++; Audio_.play("wrong"); A.classList.remove("x-flash"); void A.offsetWidth; A.classList.add("x-flash");
+              if (wrongA >= 2) say("正面和反面的机会一样大的话，10 次应该怎么「分」才最公平？", "提示来了，再想一步。");
+              else say(`${v} 次？硬币只有两面。正面会比反面更容易出现，还是更难？`, "再想想？");
+              return;
+            }
+            goA.disabled = true; rng.disabled = true; Audio_.play("correct"); gain(10, 5);
+            say("最可能是 5 次，因为正反机会各一半。追问一句：");
+            const q = el("div", "", `<p>一定是 5 次吗？</p>`); A.append(q);
+            ask(q, say, ["是，一定是 5 次", "不是，可能多也可能少"], 1, [
+              "你自己抛过 10 次硬币吗？有没有出现过 6 次或者 4 次？",
+              "硬币没有记忆，也不会数数。每一次都重新碰运气，10 次加起来非得刚好凑成 5 吗？",
+            ], () => {
+              gain(10, 5);
+              say("对！「最可能」不等于「一定」。光说没用，亲手抛 20 次看看会怎样。");
+              startB();
+            });
+          });
+
+          /* ---------- Part B 亲手抛 ---------- */
+          function startB() {
+            const B = el("div", "x-part", `<h3>B ·「亲手抛」</h3>
+              <p>点硬币抛 20 次。看看正面频率（正面次数 ÷ 总次数）怎么变。</p>
+              <div class="x-coinwrap">
+                <button class="x-coin" aria-label="抛硬币">🪙</button>
+                <div class="x-tally" aria-live="polite">
+                  <span class="pill" data-k="n">第 0 / 20 次</span><span class="pill" data-k="h">正面 0</span><span class="pill" data-k="t">反面 0</span><span class="pill" data-k="f">正面频率 —</span>
+                </div>
+                <div class="x-mini" aria-hidden="true"></div>
+              </div>
+              <div class="pair">
+                <figure class="chart"><figcaption class="chart__cap">正面和反面各几次<small>次数</small></figcaption>
+                  <div class="chart__canvas"><canvas role="img" aria-label="正面和反面的次数柱状图"></canvas></div></figure>
+                <figure class="chart"><figcaption class="chart__cap">正面频率一路怎么变<small>第 1–20 次，正面次数 ÷ 总次数</small></figcaption>
+                  <div class="chart__canvas"><canvas role="img" aria-label="正面频率随抛掷次数变化的折线"></canvas></div></figure>
+              </div>`);
+            root.append(B); scrollTo(B);
+            const coin = B.querySelector(".x-coin"), mini = B.querySelector(".x-mini"), cv = B.querySelectorAll("canvas");
+            const pillOf = (k) => B.querySelector(`[data-k="${k}"]`);
+            const bar = mkChart(cv[0], {
+              type: "bar",
+              data: { labels: ["正面", "反面"], datasets: [{ label: "次数", data: [0, 0], backgroundColor: ["var(--chart-1)", "var(--chart-2)"] }] },
+              options: { scales: { y: { suggestedMax: 12, ticks: { stepSize: 2 } } }, plugins: { legend: { display: false }, datalabels: Hark.labels.values } },
+            });
+            const labels = Array.from({ length: 20 }, (_, i) => String(i + 1));
+            const line = mkChart(cv[1], {
+              type: "line",
+              data: { labels, datasets: [
+                { label: "正面频率", data: [], fill: true, pointRadius: 3 },
+                { label: "一半 0.5", data: labels.map(() => 0.5), borderColor: "var(--chart-reference)", borderDash: [3, 4], borderWidth: 1, pointRadius: 0 },
+              ] },
+              options: { scales: { y: { min: 0, max: 1 } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `正面频率 ${(+c.raw).toFixed(2)}` } } } },
+            });
+            let h = 0, n = 0, busy = false;
+            coin.addEventListener("click", () => {
+              if (busy || n >= 20) return;
+              busy = true; coin.disabled = true; Audio_.play("whoosh");
+              coin.classList.remove("is-spin"); void coin.offsetWidth; coin.classList.add("is-spin");
+              const r = flip();
+              setTimeout(() => {
+                n++; h += r; coin.textContent = r ? "正" : "反";
+                const i = el("i", r ? "h" : ""); i.textContent = r ? "正" : "反"; mini.append(i);
+                pillOf("n").textContent = `第 ${n} / 20 次`; pillOf("h").textContent = `正面 ${h}`; pillOf("t").textContent = `反面 ${n - h}`;
+                pillOf("f").textContent = `正面频率 ${h}/${n} = ${(h / n).toFixed(2)}`;
+                bar.data.datasets[0].data = [h, n - h]; bar.update();
+                line.data.datasets[0].data.push(h / n); line.update();
+                busy = false; coin.disabled = n >= 20;
+                if (n === 5) say(`5 次里正面 ${h} 次，频率 ${(h / n).toFixed(1)}。这能说明硬币偏心吗？继续抛。`);
+                if (n === 20) {
+                  ctx.bH = h; ctx.bN = n; gain(15, 10);
+                  say(`抛完了：正面 ${h} 次，频率 ${(h / 20).toFixed(2)}。正好是 0.5 吗？看看折线，前几次是不是跳得最厉害？如果抛一万次呢？`);
+                  const nx = el("div", "x-row", `<button class="x-btn x-btn--go">去快进 ⏩</button>`); B.append(nx);
+                  nx.querySelector("button").addEventListener("click", (e) => { e.currentTarget.disabled = true; Audio_.play("click"); startC(); });
+                }
+              }, reduced() ? 120 : 560);
+            });
+          }
+          /* ---------- Part C 快进 ---------- */
+          function startC() {
+            const C = el("div", "x-part", `<h3>C ·「快进」</h3>
+              <p>手抛太慢，让电脑从第 1 次开始替你抛，可以连点几次。频率线会怎么走？</p>
+              <div class="x-row">
+                <button class="x-btn" data-k="100">×100</button><button class="x-btn" data-k="1000">×1000</button><button class="x-btn" data-k="10000">×10000</button>
+                <span class="x-num" aria-live="polite">已抛 <b data-r="n">0</b> 次 · 正面 <b data-r="h">0</b> · 频率 <b data-r="f">—</b></span>
+              </div>
+              <figure class="chart"><figcaption class="chart__cap">抛得越多，正面频率越贴近一半<small>横轴为抛掷次数（压缩刻度：1、10、100、1000…），纵轴为正面频率</small></figcaption>
+                <div class="chart__canvas chart__canvas--tall"><canvas role="img" aria-label="正面频率开始时上下乱跳，次数越多越贴近 0.5"></canvas></div></figure>
+              <div data-hist hidden>
+                <p style="font:var(--type-body-strong)">新实验：抛 10 次算一组，做 500 组，每组正面几次？</p>
+                <div class="x-row"><button class="x-btn x-btn--go" data-run>🎲 做 500 组</button><span class="x-num" data-hr aria-live="polite"></span></div>
+                <figure class="chart"><figcaption class="chart__cap">500 组里，每组出现几次正面<small>每组抛 10 次，纵轴为组数</small></figcaption>
+                  <div class="chart__canvas"><canvas role="img" aria-label="每组正面次数的柱状图，中间高两边低，5 次最多"></canvas></div></figure>
+                <div data-q></div>
+              </div>`);
+            root.append(C); scrollTo(C);
+            const cv = C.querySelectorAll("canvas"), R = (k) => C.querySelector(`[data-r="${k}"]`);
+            let n = 0, h = 0, nextRec = 1, running = false, histShown = false;
+            const pts = [];
+            const rec = () => { pts.push({ x: n, y: h / n }); nextRec = n < 100 ? n + 1 : Math.ceil(n * 1.03); };
+            const fmt = (v) => (v >= 1000 ? v / 1000 + "k" : String(v));
+            const fl = mkChart(cv[0], {
+              type: "line",
+              data: { datasets: [
+                { label: "正面频率", data: pts, pointRadius: 0, tension: 0 },
+                { label: "一半 0.5", data: [{ x: 1, y: 0.5 }, { x: 20, y: 0.5 }], borderColor: "var(--chart-reference)", borderDash: [3, 4], borderWidth: 1, pointRadius: 0 },
+              ] },
+              options: {
+                parsing: true, animation: false,
+                scales: {
+                  x: { type: "logarithmic", min: 1, max: 100, ticks: { autoSkip: false, callback: (v) => ([1, 10, 100, 1000, 10000, 100000, 1000000].includes(v) ? fmt(v) : "") } },
+                  y: { min: 0, max: 1 },
+                },
+                plugins: { legend: { display: false }, tooltip: { callbacks: { title: (it) => `第 ${it[0].raw.x} 次`, label: (c) => `正面频率 ${c.raw.y.toFixed(4)}` } } },
+              },
+            });
+            function draw() {
+              R("n").textContent = n.toLocaleString(); R("h").textContent = h.toLocaleString(); R("f").textContent = n ? (h / n).toFixed(4) : "—";
+              const mx = Math.pow(10, Math.max(2, Math.ceil(Math.log10(Math.max(n, 2)))));
+              fl.options.scales.x.max = mx; fl.data.datasets[1].data[1].x = mx; fl.update("none");
+            }
+            C.querySelectorAll("[data-k]").forEach((b) => b.addEventListener("click", () => {
+              if (running) return; running = true; Audio_.play("whoosh");
+              C.querySelectorAll("[data-k]").forEach((x) => (x.disabled = true));
+              let left = +b.dataset.k; const per = Math.ceil(left / 40);
+              (function frame() {
+                const k = Math.min(per, left);
+                for (let i = 0; i < k; i++) { n++; h += flip(); if (n >= nextRec) rec(); }
+                left -= k; draw();
+                if (left > 0) return reduced() ? frame() : requestAnimationFrame(frame);
+                if (pts[pts.length - 1].x !== n) rec();
+                draw(); running = false; C.querySelectorAll("[data-k]").forEach((x) => (x.disabled = false)); Audio_.play("tick", 900);
+                afterRun();
+              })();
+            }));
+            function afterRun() {
+              const f = (h / n).toFixed(3);
+              if (n < 1000) say(`抛了 ${n} 次，频率 ${f}。线在开头是不是像过山车？再多抛一些，它还会这么晃吗？`);
+              else if (n < 10000) say(`${n.toLocaleString()} 次，频率 ${f}。线变平了一点。如果抛到一万次以上呢？`);
+              else say(`${n.toLocaleString()} 次，频率 ${f}。线越往右越贴着 0.5 那条虚线。下面换个实验：每 10 次算一组。`);
+              if (n >= 1000 && !histShown) { histShown = true; const H = C.querySelector("[data-hist]"); H.hidden = false; gain(10, 5); }
+            }
+            /* histogram: 500 groups of 10 */
+            const counts = Array(11).fill(0);
+            const hist = mkChart(cv[1], {
+              type: "bar",
+              data: { labels: counts.map((_, i) => String(i)), datasets: [{ label: "组数", data: counts.slice() }] },
+              options: { scales: { x: { title: { display: true, text: "每组正面次数" } }, y: { suggestedMax: 140 } }, plugins: { legend: { display: false }, datalabels: Hark.labels.values } },
+            });
+            const runB = C.querySelector("[data-run]"), hr = C.querySelector("[data-hr]");
+            runB.addEventListener("click", () => {
+              runB.disabled = true; Audio_.play("rattle"); let g = 0;
+              (function frame() {
+                for (let j = 0; j < 25 && g < 500; j++, g++) { let s = 0; for (let i = 0; i < 10; i++) s += flip(); counts[s]++; }
+                hist.data.datasets[0].data = counts.slice(); hist.update("none");
+                hr.textContent = `已做 ${g} / 500 组 · 正好 5 次正面：${counts[5]} 组`;
+                if (g % 100 === 0 && g < 500) Audio_.play("rattle");
+                if (g < 500) return reduced() ? frame() : setTimeout(frame, 60);
+                hr.textContent = `500 组做完 · 正好 5 次正面：${counts[5]} 组（${((counts[5] / 500) * 100).toFixed(0)}%）`;
+                histQs();
+              })();
+            });
+            function histQs() {
+              const Q = C.querySelector("[data-q]");
+              say("中间高、两边低，像一口钟。问你：10 次里正好 5 次正面的组多吗？");
+              Q.append(el("p", "", "10 次里正好 5 次正面的组多吗？"));
+              ask(Q, say, ["几乎每组都是 5 次", "5 次的组最多，但只占大约四分之一", "5 次的组很少，几乎没有"], 1, [
+                "数一数「5」那根柱子有多高，再和 500 比一比。",
+                "「5」最高没错，可 4 和 6 的柱子也不矮。最高的那根占 500 组的几分之几？",
+              ], () => {
+                gain(10, 5);
+                say("没错，最可能的结果，也常常不出现。再追问：为什么抛得越多，频率越接近一半？");
+                Q.append(el("p", "", "为什么抛得越多，频率越接近一半？"));
+                ask(Q, say, ["硬币会记住之前的结果，正面多了就自动多出反面", "每次都是一半机会，偶然多出的几次，被越来越大的总次数冲淡了", "抛多了硬币会磨损，变得更公平"], 1, [
+                  "硬币有脑子吗？它知道上一次是正面还是反面吗？",
+                  "假设一开始多出了 3 次正面。总共抛 10 次，多出的 3 次占多少？抛 10000 次呢？",
+                ], () => {
+                  gain(15, 10);
+                  say("这就是赌场的底气：一局输赢靠运气，一万局就只看概率。现在用这招去抓一枚作弊硬币！");
+                  const nx = el("div", "x-row", `<button class="x-btn x-btn--go">去抓作弊硬币 🔍</button>`); Q.append(nx);
+                  nx.querySelector("button").addEventListener("click", (e) => { e.currentTarget.disabled = true; Audio_.play("click"); startD(); });
+                });
+              });
+            }
+          }
+
+          /* ---------- Part D 抓作弊硬币 ---------- */
+          function startD() {
+            const cheat = (Math.random() * 3) | 0, MAX = 50;
+            const coins = [0, 1, 2].map((i) => ({ name: "ABC"[i], p: i === cheat ? 0.7 : 0.5, h: 0, n: 0, out: false }));
+            let total = 0, wrong = 0, solved = false;
+            const D = el("div", "x-part", `<h3>D ·「抓作弊硬币」</h3>
+              <p>三枚神秘硬币里，有一枚被动过手脚：它有 70% 会出正面。每枚最多抛 ${MAX} 次，想好了就指认。</p>
+              <p class="x-num">已用 <b data-total>0</b> 次 · 3⭐：总共不超过 60 次抓到，且没猜错；2⭐：最多猜错 1 次。</p>
+              <div class="x-suspects"></div>`);
+            root.append(D); scrollTo(D);
+            say("先别急。只抛 5 次，你分得出哪枚在作弊吗？公平硬币抛 5 次出 4 次正面，稀奇吗？");
+            const grid = D.querySelector(".x-suspects"), totEl = D.querySelector("[data-total]");
+            coins.forEach((c) => {
+              const card = el("div", "x-suspect", `<h4>🪙 神秘硬币 ${c.name}</h4>
+                <p class="x-num" aria-live="polite">正面 <b data-h>0</b> / 共 <b data-n>0</b> 次 · 频率 <b data-f>—</b></p>
+                <div class="x-gauge" role="img" aria-label="正面频率条，中间虚线为 0.5"><i></i></div>
+                <div class="x-mini" aria-hidden="true"></div>
+                <div class="x-row"><button class="x-btn" data-one>抛 1 次</button><button class="x-btn" data-ten>快进 ×10</button></div>
+                <button class="x-btn x-btn--go" data-pick>就是它！</button>`);
+              c.card = card; grid.append(card);
+              const upd = () => {
+                card.querySelector("[data-h]").textContent = c.h; card.querySelector("[data-n]").textContent = c.n;
+                card.querySelector("[data-f]").textContent = c.n ? (c.h / c.n).toFixed(2) : "—";
+                card.querySelector(".x-gauge i").style.width = (c.n ? (c.h / c.n) * 100 : 0) + "%";
+                totEl.textContent = total;
+                const full = c.n >= MAX || solved; card.querySelector("[data-one]").disabled = full; card.querySelector("[data-ten]").disabled = full;
+              };
+              const go = (k) => {
+                k = Math.min(k, MAX - c.n); const mini = card.querySelector(".x-mini");
+                for (let i = 0; i < k; i++) { const r = flip(c.p); c.h += r; c.n++; total++; const d = el("i", r ? "h" : ""); d.textContent = r ? "正" : "反"; mini.append(d); }
+                upd(); nudge();
+              };
+              card.querySelector("[data-one]").addEventListener("click", () => { Audio_.play("whoosh"); go(1); });
+              card.querySelector("[data-ten]").addEventListener("click", () => { Audio_.play("rattle"); go(10); });
+              card.querySelector("[data-pick]").addEventListener("click", () => pick(c));
+            });
+            let saidFew = false, said60 = false;
+            function nudge() {
+              if (!saidFew && total >= 12) { saidFew = true; say("有哪枚看起来正面偏多？它抛了几次？次数少的时候，频率线在 C 步里是不是跳得很厉害？"); }
+              if (!said60 && total > 60) { said60 = true; say("已经超过 60 次了，不过别慌：多抛几次换来更有把握的判断，这很值。", "3⭐ 要求不超过 60 次。"); }
+            }
+            function pick(c) {
+              if (solved || c.out) return;
+              if (c.p === 0.5) {
+                wrong++; c.out = true; c.card.classList.add("bad", "x-flash"); c.card.querySelector("[data-pick]").disabled = true; Audio_.play("wrong");
+                say(wrong >= 2
+                  ? "比一比剩下的硬币：抛了很多次之后，谁的频率条还稳稳停在中间虚线的右边？"
+                  : `硬币 ${c.name} 是清白的。它才抛了 ${c.n} 次，正面 ${c.h} 次——这么少的次数，公平硬币会不会也碰巧偏一点？`, wrong >= 2 ? "提示来了，再想一步。" : "再想想？");
+                return;
+              }
+              solved = true; Audio_.play("correct"); c.card.classList.add("good");
+              coins.forEach((x) => { x.card.querySelectorAll("button").forEach((b) => (b.disabled = true)); x.card.querySelector("h4").textContent += x.p === 0.7 ? " · 作弊币 70%" : " · 公平 50%"; });
+              const stars = wrong === 0 && total <= 60 ? 3 : wrong <= 1 ? 2 : 1;
+              say(c.n < 15
+                ? `抓到了！不过硬币 ${c.name} 只抛了 ${c.n} 次，这一次运气也帮了忙。下次多抛几次，才算真有把握。`
+                : `抓到了！硬币 ${c.name} 抛了 ${c.n} 次，正面频率 ${(c.h / c.n).toFixed(2)}，明显离开了 0.5。少量试验看不出，大量试验藏不住。`);
+              gain(20, 15);
+              const end = endCard(stars, `硬币侦探出师 · 共抛 ${total} 次 · 猜错 ${wrong} 次`, [
+                ["可能性（概率）", "一件事发生的可能性大小。公平硬币正面是 1/2，作弊币是 0.7，这是硬币本身的性质。"],
+                ["频率", "实际试验里出现的比例 = 正面次数 ÷ 总次数，每次做实验都可能不一样。"],
+                ["试验次数越多，频率越稳定地接近概率", "抛 10 次看不出，抛很多次就藏不住。赌场每天开几万局，靠的就是这一条。"],
+              ], "p04 可能性 · p02 统计图表");
+              const row = el("div", "x-row", `<button class="x-btn x-btn--go" data-next>去第 2 关 🎲</button><button class="x-btn" data-again>再玩一次</button><button class="x-btn" data-notes>📒 看知识笔记</button>`);
+              end.append(row); root.append(end); scrollTo(end);
+              row.querySelector("[data-next]").addEventListener("click", () => { Audio_.play("click"); openLevel(2); });
+              row.querySelector("[data-again]").addEventListener("click", () => { Audio_.play("click"); openLevel(1); });
+              row.querySelector("[data-notes]").addEventListener("click", () => $("#notes-open").click());
+              light(["p04", "p02"]); award("coin");
+              done(stars, 40 + stars * 20);
+            }
+          }
+        },
+      });
+      /* ===== LEVEL 2 · 两颗骰子的秘密 ===== */
+      LEVELS.push({
+        id: 2, title: "两颗骰子的秘密",
+        init(root, done) {
+          const say = guide(root, "赌场里最热闹的是骰子桌。两颗骰子一起掷，和从 2 到 12。每个和的机会一样吗？先押一把！", "第 2 关有 3 步：押一个和 → 6×6 方格 → 验证。");
+          const scrollTo = (n) => n.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "nearest" });
+          const SUMS = Array.from({ length: 11 }, (_, i) => i + 2), WAYS = SUMS.map((s) => 6 - Math.abs(s - 7));
+          const d6 = () => 1 + ((Math.random() * 6) | 0);
+          const PIPS = [[4], [0, 8], [0, 4, 8], [0, 2, 6, 8], [0, 2, 4, 6, 8], [0, 2, 3, 5, 6, 8]];
+          const die = (n) => Array.from({ length: 9 }, (_, i) => `<i class="${PIPS[n - 1].includes(i) ? "on" : ""}"></i>`).join("");
+          const pad = () => SUMS.map((s) => `<button class="x-sum" data-s="${s}" aria-pressed="false">${s}</button>`).join("");
+          const flash = (n) => { n.classList.remove("x-flash"); void n.offsetWidth; n.classList.add("x-flash"); };
+          const nextBtn = (host, label, fn) => { const r = el("div", "x-row", `<button class="x-btn x-btn--go">${label}</button>`); host.append(r);
+            r.querySelector("button").addEventListener("click", (e) => { e.currentTarget.disabled = true; Audio_.play("click"); fn(); }); };
+          let miss = 0;
+          /* quiz with one or more right answers; every wrong pick is a mistake */
+          function quiz(host, q, opts, rights, hints, onRight) {
+            host.append(el("p", "", q)); const box = el("div", "x-opts"); let w = 0, fin = false;
+            opts.forEach((t, i) => {
+              const b = el("button", "x-qopt"); b.textContent = t;
+              b.addEventListener("click", () => {
+                if (fin || b.classList.contains("bad")) return;
+                if (rights.includes(i)) { fin = true; b.classList.add("good"); Audio_.play("correct"); onRight(i); return; }
+                w++; miss++; b.classList.add("bad", "x-flash"); Audio_.play("wrong");
+                say(hints[Math.min(w, 2) - 1], w >= 2 ? "提示来了，再想一步。" : "再想想？");
+              });
+              box.append(b);
+            });
+            host.append(box);
+          }
+
+          /* ---------- Part A 押一个和 ---------- */
+          const A = el("div", "x-part", `<h3>A ·「押一个和」</h3>
+            <p>每把押 🪙10 猜两颗骰子的和，押中赔 🪙20。一共掷 10 把，每把可以换号。</p>
+            <div class="x-sums" role="group" aria-label="押哪个和">${pad()}</div>
+            <div class="x-dice"><div class="x-die x-die--r" role="img" aria-label="红骰">${die(1)}</div><div class="x-die x-die--b" role="img" aria-label="蓝骰">${die(1)}</div></div>
+            <div class="x-tally" aria-live="polite"><span class="pill" data-k="n">第 0 / 10 把</span><span class="pill" data-k="bal">🪙 余额 100</span><span class="pill" data-k="bet">押：—</span></div>
+            <div class="x-row" style="justify-content:center"><button class="x-btn x-btn--go" data-roll disabled>🎲 掷骰子</button></div>
+            <p class="x-num" data-hist></p>`);
+          root.append(A);
+          const K = (k) => A.querySelector(`[data-k="${k}"]`), dice = A.querySelectorAll(".x-die"), rollB = A.querySelector("[data-roll]"), histEl = A.querySelector("[data-hist]");
+          let bet = 0, n = 0, bal = 100, hits = 0, busy = false; const hist = [];
+          A.querySelectorAll(".x-sum").forEach((b) => b.addEventListener("click", () => {
+            if (n >= 10) return; bet = +b.dataset.s;
+            A.querySelectorAll(".x-sum").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+            K("bet").textContent = `押：和为 ${bet}`; rollB.disabled = busy; Audio_.play("tick", 400 + bet * 50);
+          }));
+          rollB.addEventListener("click", () => {
+            if (!bet || busy || n >= 10) return;
+            busy = true; rollB.disabled = true; Audio_.play("rattle"); bal -= 10; K("bal").textContent = `🪙 余额 ${bal}`;
+            const r = d6(), b = d6(), my = bet;
+            dice.forEach((d) => { d.classList.remove("is-roll"); void d.offsetWidth; d.classList.add("is-roll"); });
+            const spin = setInterval(() => { dice[0].innerHTML = die(d6()); dice[1].innerHTML = die(d6()); }, 80);
+            setTimeout(() => {
+              clearInterval(spin); dice[0].innerHTML = die(r); dice[1].innerHTML = die(b);
+              dice[0].setAttribute("aria-label", `红骰 ${r} 点`); dice[1].setAttribute("aria-label", `蓝骰 ${b} 点`);
+              const s = r + b, hit = s === my; n++;
+              if (hit) { bal += 20; hits++; Audio_.play("clink"); } else Audio_.play("tick", 300);
+              hist.push(s); histEl.textContent = "掷出的和：" + hist.join(" · ");
+              K("n").textContent = `第 ${n} / 10 把`; K("bal").textContent = `🪙 余额 ${bal}`;
+              const msg = `红 ${r} + 蓝 ${b} = ${s}，` + (hit ? "押中了！赢回 🪙20。" : `没中你押的 ${my}。`);
+              if (n === 1) say(msg, "你为什么押这个数？哪个和最容易出现？"); else if (n < 10) say(msg);
+              busy = false; rollB.disabled = n >= 10;
+              if (n === 10) {
+                A.querySelectorAll(".x-sum").forEach((x) => (x.disabled = true));
+                const top = SUMS.reduce((m, x) => (hist.filter((y) => y === x).length > hist.filter((y) => y === m).length ? x : m), 2);
+                gain(10, 5);
+                say(`10 把打完：押中 ${hits} 把，余额 🪙${bal}。这 10 把里和为 ${top} 出现得最多。是运气，还是有原因？把所有可能都列出来就知道了。`);
+                nextBtn(A, "去画 6×6 方格 ▦", startB);
+              }
+            }, reduced() ? 120 : 560);
+          });
+
+          /* ---------- Part B 6×6 方格 ---------- */
+          function startB() {
+            const one6 = [1, 2, 3, 4, 5, 6];
+            const B = el("div", "x-part", `<h3>B ·「6×6 方格」</h3>
+              <p>左边是红骰（行），上面是蓝骰（列）。点一个格子，再点下面的数字，填上两颗骰子的和。填对一整行后，可以点「自动填」。</p>
+              <div class="x-grid"><span></span>${one6.map((c) => `<span class="x-hc">蓝${c}</span>`).join("")}${one6.map((r) => `<span class="x-hr">红${r}</span>` +
+                one6.map((c) => `<button class="x-cell" data-r="${r}" data-c="${c}" aria-label="红 ${r} 蓝 ${c}">?</button>`).join("")).join("")}</div>
+              <div class="x-sums" role="group" aria-label="填入的和">${pad()}</div>
+              <div class="x-row"><button class="x-btn" data-auto disabled>自动填</button><span class="x-num" data-info aria-live="polite">已填 <b>0</b> / 36 格</span></div>
+              <figure class="chart"><figcaption class="chart__cap">每个和占几格<small>6×6 方格里，各个和的格数</small></figcaption>
+                <div class="chart__canvas"><canvas role="img" aria-label="和为 2 到 12 的格数依次是 1、2、3、4、5、6、5、4、3、2、1，7 最多"></canvas></div></figure>
+              <div data-q></div>`);
+            root.append(B); scrollTo(B);
+            say("36 个格子，就是两颗骰子所有可能的结果。先选左上角那格：红 1 + 蓝 1 是几？");
+            const cells = [...B.querySelectorAll(".x-cell")], info = B.querySelector("[data-info]"), autoB = B.querySelector("[data-auto]");
+            const keys = [...B.querySelectorAll(".x-sum")], cnt = SUMS.map(() => 0);
+            let sel = cells[0], filled = 0, mode = "fill", asked = false, rowOk = false; sel.classList.add("sel");
+            const chart = mkChart(B.querySelector("canvas"), {
+              type: "bar",
+              data: { labels: SUMS.map(String), datasets: [{ label: "格数", data: cnt.slice() }] },
+              options: { scales: { x: { title: { display: true, text: "两颗骰子的和" } }, y: { suggestedMax: 6, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false }, datalabels: Hark.labels.values } },
+            });
+            const sumOf = (c) => +c.dataset.r + +c.dataset.c;
+            const select = (c) => { if (sel) sel.classList.remove("sel"); sel = c; if (c) c.classList.add("sel"); };
+            const put = (c) => { const s = sumOf(c); c.textContent = s; c.classList.remove("bad", "sel"); c.classList.add("ok"); c.dataset.done = 1; filled++; cnt[s - 2]++; };
+            const redraw = () => { chart.data.datasets[0].data = cnt.slice(); chart.update(); info.innerHTML = `已填 <b>${filled}</b> / 36 格`; };
+            cells.forEach((c) => c.addEventListener("click", () => {
+              if (mode !== "fill" || c.dataset.done) return; Audio_.play("click"); select(c);
+            }));
+            keys.forEach((k) => k.addEventListener("click", () => {
+              const s = +k.dataset.s;
+              if (mode === "hl") return highlight(s, k);
+              if (!sel) return say("先点一个还空着的格子。");
+              if (s !== sumOf(sel)) {
+                miss++; Audio_.play("wrong"); sel.classList.add("bad"); flash(sel);
+                return say(`红 ${sel.dataset.r} 点加蓝 ${sel.dataset.c} 点，等于 ${s} 吗？再数一遍。`, "填错也没关系，再试一次。");
+              }
+              Audio_.play("tick", 400 + s * 50); const row = sel.dataset.r; put(sel); redraw();
+              const rest = cells.filter((x) => !x.dataset.done);
+              select(rest.find((x) => x.dataset.r === row) || rest[0] || null);
+              if (!rowOk && one6.some((r) => cells.filter((x) => x.dataset.r == r && x.dataset.done).length === 6)) {
+                rowOk = true; autoB.disabled = false; say("一整行填对了！发现规律了吗？往右一格加 1，往下一格也加 1。剩下的可以点「自动填」。");
+              }
+              if (filled === 36) enterHL();
+            }));
+            autoB.addEventListener("click", () => {
+              autoB.disabled = true; select(null); Audio_.play("rattle");
+              const rest = cells.filter((x) => !x.dataset.done);
+              rest.forEach((c, i) => setTimeout(() => { put(c); redraw(); if (i % 4 === 0) Audio_.play("tick", 500 + i * 15); if (filled === 36) enterHL(); }, reduced() ? 0 : i * 40));
+            });
+            function enterHL() {
+              if (mode === "hl") return; mode = "hl"; autoB.disabled = true; select(null); gain(15, 10);
+              info.innerHTML = "36 格都填好了 · 点上面的一个和，看它占几格";
+              say("36 格填满了！现在点上面的一个和，把它的格子都亮出来。哪个和占的格子最多？");
+            }
+            function highlight(s, k) {
+              Audio_.play("tick", 400 + s * 50);
+              keys.forEach((x) => x.setAttribute("aria-pressed", String(x === k)));
+              cells.forEach((c) => c.classList.toggle("hl", sumOf(c) === s));
+              info.innerHTML = `和为 <b>${s}</b> → <b>${WAYS[s - 2]}</b> 格`;
+              chart.data.datasets[0].backgroundColor = SUMS.map((x) => (x === s ? "var(--chart-ink)" : "var(--chart-muted)")); chart.update();
+              if (!asked) { asked = true; setTimeout(quizzes, 300); }
+            }
+            function quizzes() {
+              const Q = B.querySelector("[data-q]");
+              say("每一格都是一种等可能的结果。用格子数一数，算一个概率。");
+              quiz(Q, "和为 7 的概率是多少？", ["1/11", "6/36", "1/6", "7/36"], [1, 2], [
+                "和为 7 占了几格？整个方格一共有几格？",
+                "1/11 是把 11 个和当成一样容易，可是 2 只有 1 格，7 有 6 格。用「格数 ÷ 36」算算看。",
+              ], (i) => {
+                gain(10, 5);
+                say(`${i === 1 ? "6/36" : "1/6"}，对！6/36 约分就是 1/6，两个写法是同一个数。下一问：`);
+                quiz(Q, "和为 2 和和为 7，哪个更容易？差几倍？", ["一样容易", "和为 2 更容易", "和为 7 更容易，是 7 倍", "和为 7 更容易，是 6 倍"], [3], [
+                  "数一数：和为 2 亮几格？和为 7 亮几格？",
+                  "6 格是 1 格的几倍？别把「和是 7」当成「有 7 格」。",
+                ], () => {
+                  gain(15, 10);
+                  say("和为 7 是 6/36，和为 2 只有 1/36，差 6 倍！押 7 的人赢得多，可这只是方格算出来的。真掷骰子也会这样吗？");
+                  nextBtn(Q, "去验证 ⏩", startC);
+                });
+              });
+            }
+          }
+
+          /* ---------- Part C 验证 ---------- */
+          function startC() {
+            const C = el("div", "x-part", `<h3>C ·「验证」</h3>
+              <p>方格算出来的是理论概率。让电脑快进真掷骰子，看实际频率（出现次数 ÷ 总次数）贴不贴得上。</p>
+              <div class="x-row"><button class="x-btn x-btn--go" data-go>快进 ×1000 🎲</button><span class="x-num" data-r aria-live="polite">已掷 <b>0</b> 次</span></div>
+              <figure class="chart"><figcaption class="chart__cap">实际频率和理论概率叠在一起<small>宽灰柱：理论概率（格数 ÷ 36）；细黑柱：实际频率</small></figcaption>
+                <div class="chart__canvas chart__canvas--tall"><canvas role="img" aria-label="掷 1000 次后，各个和的实际频率与理论概率非常接近，7 最高，2 和 12 最低"></canvas></div></figure>`);
+            root.append(C); scrollTo(C);
+            say("你猜：掷 1000 次，和为 7 大约会出现多少次？");
+            const go = C.querySelector("[data-go]"), rEl = C.querySelector("[data-r]"), obs = SUMS.map(() => 0);
+            let n = 0, finished = false;
+            const pct = (v) => (v * 100).toFixed(1) + "%";
+            const ch = mkChart(C.querySelector("canvas"), {
+              type: "bar",
+              data: { labels: SUMS.map(String), datasets: [
+                { label: "实际频率", data: obs.slice(), grouped: false, barPercentage: 0.4 },
+                { label: "理论概率", data: WAYS.map((w) => w / 36), backgroundColor: "var(--chart-muted)", grouped: false, barPercentage: 0.9 },
+              ] },
+              options: { animation: false, scales: { y: { suggestedMax: 0.2, ticks: { callback: (v) => Math.round(v * 100) + "%" } } },
+                plugins: { tooltip: { callbacks: { label: (c) => `${c.dataset.label} ${pct(c.raw)}` } } } },
+            });
+            go.addEventListener("click", () => {
+              go.disabled = true; Audio_.play("rattle"); let left = 1000;
+              (function frame() {
+                for (let i = 0; i < 25 && left > 0; i++, left--) { obs[d6() + d6() - 2]++; n++; }
+                ch.data.datasets[0].data = obs.map((x) => x / n); ch.update("none");
+                rEl.innerHTML = `已掷 <b>${n.toLocaleString()}</b> 次 · 和为 7：<b>${obs[5]}</b> 次`;
+                if (left % 250 === 0 && left > 0) Audio_.play("rattle");
+                if (left > 0) return reduced() ? frame() : setTimeout(frame, 30);
+                go.disabled = false; go.textContent = "再快进 ×1000 🎲"; Audio_.play("tick", 900);
+                const gap = Math.max(...obs.map((x, i) => Math.abs(x / n - WAYS[i] / 36))) * 100;
+                say(`掷了 ${n.toLocaleString()} 次：和为 7 出现 ${obs[5]} 次，频率 ${pct(obs[5] / n)}，理论 6/36 ≈ 16.7%。细柱和宽柱最大只差 ${gap.toFixed(1)} 个百分点。方格没骗人！`);
+                if (!finished) { finished = true; finish(); }
+              })();
+            });
+            function finish() {
+              const stars = miss <= 1 ? 3 : miss <= 3 ? 2 : 1;
+              gain(20, 15);
+              const end = endCard(stars, `骰子数学家出师 · 出错 ${miss} 次`, [
+                ["古典概率", "P = 有利结果数 ÷ 所有等可能结果数。两颗骰子有 6×6 = 36 种等可能结果。"],
+                ["样本空间", "把所有可能的结果列全：6×6 方格的 36 格。和为 7 占 6 格，概率 6/36 = 1/6；和为 2 只占 1 格，是 1/36。"],
+                ["频率验证概率", "掷得越多，实际频率越贴近方格算出的理论概率。"],
+              ], "p05 古典概率");
+              const row = el("div", "x-row", `<button class="x-btn x-btn--go" data-next>去第 3 关 🎡</button><button class="x-btn" data-again>再玩一次</button><button class="x-btn" data-notes>📒 看知识笔记</button>`);
+              end.append(row); root.append(end); scrollTo(end);
+              row.querySelector("[data-next]").addEventListener("click", () => { Audio_.play("click"); openLevel(3); });
+              row.querySelector("[data-again]").addEventListener("click", () => { Audio_.play("click"); openLevel(2); });
+              row.querySelector("[data-notes]").addEventListener("click", () => $("#notes-open").click());
+              light(["p05"]); award("dice");
+              done(stars, 40 + stars * 20);
+            }
+          }
+        },
+      });
+      /* ===== LEVEL 3 · 这个游戏值得玩吗 ===== */
+      LEVELS.push({
+        id: 3, title: "这个游戏值得玩吗",
+        init(root, done) {
+          const say = guide(root, "庙会上有个转盘摊：🪙3 转一次，转中大奖拿 🪙6！听起来挺划算？我们先猜，再亲手转。", "第 3 关有 4 步：摊主的转盘 → 平均每次赢多少 → 设计公平游戏 → 快问。");
+          const scrollTo = (n) => n.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "nearest" });
+          const flash = (n) => { n.classList.remove("x-flash"); void n.offsetWidth; n.classList.add("x-flash"); };
+          const nextBtn = (host, label, fn) => { const r = el("div", "x-row", `<button class="x-btn x-btn--go">${label}</button>`); host.append(r);
+            r.querySelector("button").addEventListener("click", (e) => { e.currentTarget.disabled = true; Audio_.play("click"); fn(); }); };
+          const prize = (r) => (r < 1 / 2 ? 0 : r < 5 / 6 ? 2 : 6);
+          let miss = 0, pred = "", won = 0;
+          function quiz(host, q, opts, right, hints, onRight) {
+            host.append(el("p", "", q)); const box = el("div", "x-opts"); let w = 0, fin = false;
+            opts.forEach((t, i) => {
+              const b = el("button", "x-qopt"); b.textContent = t; box.append(b);
+              b.addEventListener("click", () => {
+                if (fin || b.classList.contains("bad")) return;
+                if (i === right) { fin = true; b.classList.add("good"); Audio_.play("correct"); return onRight(); }
+                w++; miss++; b.classList.add("bad", "x-flash"); Audio_.play("wrong");
+                say(hints[Math.min(w, 2) - 1], w >= 2 ? "提示来了，再想一步。" : "再想想？");
+              });
+            });
+            host.append(box);
+          }
+
+          /* ---------- Part A 摊主的转盘 ---------- */
+          const A = el("div", "x-part", `<h3>A ·「摊主的转盘」</h3>
+            <p>转盘的一半面积是「谢谢参与 🪙0」，1/3 是「小奖 🪙2」，1/6 是「大奖 🪙6」。转一次票价 🪙3。</p>
+            <p>先预测：这个游戏值得玩吗？</p><div data-pred class="x-opts"></div><div data-spin hidden>
+            <div class="x-wheelwrap"><span class="x-pointer" aria-hidden="true"></span>
+              <div class="x-wheel" role="img" aria-label="转盘：谢谢参与占一半，小奖占三分之一，大奖占六分之一">
+                <span style="left:83%;top:50%">谢谢参与 🪙0</span><span style="left:21%;top:66%">小奖 🪙2</span><span style="left:34%;top:22%">大奖 🪙6</span></div></div>
+            <div class="x-tally" aria-live="polite"><span class="pill" data-k="n">第 0 / 20 次</span><span class="pill" data-k="bal">🪙 余额 60</span><span class="pill" data-k="w">赢回 🪙0</span></div>
+            <div class="x-row" style="justify-content:center"><button class="x-btn x-btn--go" data-go>🎡 转一次（🪙3）</button><button class="x-btn" data-auto disabled>⏩ 转完剩下的</button></div>
+            <p class="x-num" data-hist></p></div>`);
+          root.append(A);
+          ["值得", "不值得", "不知道"].forEach((t) => {
+            const b = el("button", "x-qopt"); b.textContent = t; A.querySelector("[data-pred]").append(b);
+            b.addEventListener("click", () => {
+              if (pred) return; pred = t; b.classList.add("good"); Audio_.play("click");
+              A.querySelectorAll("[data-pred] button").forEach((x) => (x.disabled = true));
+              A.querySelector("[data-spin]").hidden = false;
+              say(`你押「${t}」。口袋里有 🪙60，正好转 20 次。转转看，余额会怎么变？`, "指针停在哪块，就拿哪块的奖。面积越大，越容易停到。");
+            });
+          });
+          const wheel = A.querySelector(".x-wheel"), goB = A.querySelector("[data-go]"), autoB = A.querySelector("[data-auto]"), K = (k) => A.querySelector(`[data-k="${k}"]`);
+          let n = 0, bal = 60, rot = 0, busy = false; const hist = [];
+          function spin(fast, cb) {
+            busy = true; goB.disabled = autoB.disabled = true; bal -= 3; K("bal").textContent = `🪙 余额 ${bal}`; Audio_.play("whoosh");
+            const r = Math.random(), p = prize(r), ms = reduced() ? 80 : fast ? 650 : 2200;
+            rot += 1440 + ((((-r * 360 - rot) % 360) + 360) % 360);
+            wheel.style.transitionDuration = ms + "ms"; wheel.style.transform = `rotate(${rot}deg)`;
+            setTimeout(() => {
+              n++; bal += p; won += p; hist.push(p);
+              Audio_.play(p ? "clink" : "tick", 300);
+              K("n").textContent = `第 ${n} / 20 次`; K("bal").textContent = `🪙 余额 ${bal}`; K("w").textContent = `赢回 🪙${won}`;
+              A.querySelector("[data-hist]").textContent = "转到：" + hist.map((x) => "🪙" + x).join(" · ");
+              busy = false; goB.disabled = n >= 20; autoB.disabled = n < 5 || n >= 20;
+              if (n < 20 && !fast) say(p === 6 ? "大奖 🪙6！这一把净赚 🪙3。" : p === 2 ? "小奖 🪙2，这一把还是亏 🪙1。" : "谢谢参与……这 🪙3 白花了。", n === 5 ? "可以点「转完剩下的」快进。" : "");
+              if (n === 20) afterA(); else if (cb) cb();
+            }, ms);
+          }
+          goB.addEventListener("click", () => { if (!busy && n < 20) spin(false); });
+          autoB.addEventListener("click", () => { if (busy) return; const loop = () => n < 20 && spin(true, loop); loop(); });
+          function afterA() {
+            const net = won - 60; gain(10, 5);
+            say(`20 次转完：花了 🪙60，赢回 🪙${won}，${net < 0 ? `亏了 🪙${-net}` : net > 0 ? `赚了 🪙${net}` : "刚好打平"}。你预测「${pred}」。可 20 次也有运气成分——到底值不值，得算一算「平均每次赢多少」。`);
+            nextBtn(A, "去算平均 🧮", startB);
+          }
+
+          /* ---------- Part B 平均每次赢多少 ---------- */
+          function startB() {
+            const POOL = ["8", "1", "2/3 ≈ 0.67", "5/3 ≈ 1.67", "3", "4/3 ≈ 1.33", "8/3 ≈ 2.67"], ANS = ["5/3 ≈ 1.67", "4/3 ≈ 1.33"];
+            const B = el("div", "x-part", `<h3>B ·「平均每次赢多少」</h3>
+              <p>每个奖 × 它的概率（面积），再加起来。点空格，再点下面的数填进去。</p>
+              <div class="x-eq">0 × 1/2 + 2 × 1/3 + 6 × 1/6 = <button class="x-slot sel" data-i="0">?</button></div>
+              <div class="x-eq">票价 3 − 平均拿回 → 每次平均亏 <button class="x-slot" data-i="1">?</button></div>
+              <div class="x-opts" data-pool>${POOL.map((t) => `<button class="x-qopt">${t}</button>`).join("")}</div><div data-q></div>`);
+            root.append(B); scrollTo(B);
+            say("先别看运气，看面积。转很多很多次的话，有一半会停在 🪙0，1/3 停在 🪙2，1/6 停在 🪙6。平均下来每次拿回多少？");
+            const slots = [...B.querySelectorAll(".x-slot")]; let cur = 0;
+            const pick = (i) => { if (slots[i].classList.contains("ok")) return; cur = i; slots.forEach((s, j) => s.classList.toggle("sel", j === i)); };
+            slots.forEach((s, i) => s.addEventListener("click", () => { Audio_.play("click"); pick(i); }));
+            B.querySelectorAll("[data-pool] button").forEach((b) => b.addEventListener("click", () => {
+              const v = b.textContent, s = slots[cur]; if (s.classList.contains("ok")) return;
+              if (v !== ANS[cur]) {
+                miss++; Audio_.play("wrong"); flash(s);
+                return say(cur === 0
+                  ? (v === "8" ? "8 是把 0 + 2 + 6 直接加起来了。可大奖只占 1/6 面积，每个奖要先乘它的概率。" : "一项一项算：2 × 1/3 是多少？6 × 1/6 呢？再加起来。")
+                  : "票价是 3 = 9/3，平均拿回 5/3。两个相减是多少？", "填错也没关系，再试一次。");
+              }
+              s.textContent = v; s.classList.remove("sel"); s.classList.add("ok"); Audio_.play("correct");
+              if (cur === 0) { pick(1); say("平均每次拿回 2/3 + 1 = 5/3 ≈ 🪙1.67。可每次要付 🪙3，那每次平均亏多少？"); return; }
+              gain(15, 10);
+              const avg = (won / 20).toFixed(2);
+              B.querySelector("[data-q]").append(el("div", "prose", `<p><strong>期望值 E = Σ 结果 × 概率</strong>，意思是「玩很多很多次后，平均每次得到多少」。这个转盘 E = 5/3 ≈ 1.67，比票价 3 少，所以每次平均亏 ≈ 1.33。</p>`));
+              say(`你在 A 步的 20 次里平均每次赢回 🪙${won}/20 ≈ ${avg}，和 E ≈ 1.67 比，近不近？次数越多会越近。那么，大奖要设成多少，这个游戏才公平？`);
+              nextBtn(B.querySelector("[data-q]"), "去设计公平游戏 ⚖️", startC);
+            }));
+          }
+
+          /* ---------- Part C 设计公平游戏 ---------- */
+          function startC() {
+            let X = 6, fair = false, fin = false;
+            const C = el("div", "x-part", `<h3>C ·「设计公平游戏」</h3>
+              <p>谢谢参与 1/2、小奖 🪙2 占 1/3 都不变。把大奖调到多少，平均拿回的 E 正好等于票价 🪙3？</p>
+              <div class="x-fair"><div class="x-row"><button class="x-btn" data-d="-1" aria-label="大奖减 1">−</button><output aria-live="polite">🪙6</output><button class="x-btn" data-d="1" aria-label="大奖加 1">+</button></div>
+                <p class="x-num" data-e></p><span class="chip" data-tag>不公平</span></div><div data-q></div>`);
+            root.append(C); scrollTo(C);
+            say("用 − 和 + 调大奖。看着 E 变：大奖每加 🪙1，E 加多少？");
+            const box = C.querySelector(".x-fair"), out = C.querySelector("output"), eEl = C.querySelector("[data-e]"), tag = C.querySelector("[data-tag]"), Q = C.querySelector("[data-q]");
+            const E = () => (4 + X) / 6;
+            function draw() {
+              const e = E(), f = X === 14;
+              out.textContent = "🪙" + X;
+              eEl.innerHTML = `E = 0×1/2 + 2×1/3 + <b>${X}</b>×1/6 = <b>${4 + X}/6 ≈ ${e.toFixed(2)}</b> · 票价 <b>3</b>`;
+              box.classList.toggle("is-fair", f); tag.className = f ? "chip chip--solid" : "chip";
+              tag.textContent = f ? "公平 ✓ E = 票价" : e < 3 ? "摊主占便宜" : "玩家占便宜";
+            }
+            C.querySelectorAll("[data-d]").forEach((b) => b.addEventListener("click", () => {
+              if (fin) return; X = Math.max(0, Math.min(30, X + +b.dataset.d)); Audio_.play("tick", 300 + X * 30); draw();
+              if (X === 14 && !fair) {
+                fair = true; Audio_.play("star"); gain(15, 10);
+                say("大奖 🪙14 时 E = 18/6 = 3，正好等于票价：公平游戏！可是……如果你是摊主呢？");
+                Q.append(el("p", "", "如果你是摊主，你会把大奖设成多少？调好后点「就定这个」。"));
+                nextBtn(Q, "就定这个 🏷️", house);
+              }
+            }));
+            draw();
+            function house() {
+              const e = E();
+              if (X >= 14) {
+                miss++; Audio_.play("wrong"); flash(box);
+                say(X === 14 ? "公平的话，摊主平均一分不赚，白忙一天。想赚钱，E 要比票价大还是小？" : `E ≈ ${e.toFixed(2)}，比票价 3 还大——每转一次摊主平均倒贴！`, "再调一调，然后再点一次。");
+                nextBtn(Q, "就定这个 🏷️", house); return;
+              }
+              fin = true; C.querySelectorAll("[data-d]").forEach((b) => (b.disabled = true)); Audio_.play("correct"); gain(15, 10);
+              const edge = ((3 - e) / 3) * 100;
+              Q.append(el("p", "x-num", `庄家优势 = (票价 − E) ÷ 票价 = (3 − ${e.toFixed(2)}) ÷ 3 ≈ <b>${edge.toFixed(1)}%</b>`));
+              say(`大奖 🪙${X}：每收 🪙100 票钱，摊主平均留下约 🪙${edge.toFixed(0)}。只要大奖小于 🪙14，摊主就稳赚，这就是「庄家优势」。原来的 🪙6，优势高达 44.4%！`);
+              nextBtn(Q, "去快问 ❓", startD);
+            }
+          }
+
+          /* ---------- Part D 快问 ---------- */
+          function startD() {
+            const D = el("div", "x-part", `<h3>D · 快问</h3>`); root.append(D); scrollTo(D);
+            say("最后两问，回到原来的转盘（大奖 🪙6，E ≈ 1.67 < 3）。");
+            quiz(D, "期望为负的游戏，玩 1 次一定亏吗？", ["一定亏", "不一定"], 1, [
+              "回想 A 步：你有没有转到过大奖？那一次亏了吗？",
+              "期望是很多次的平均。单独一次转到 🪙6，就净赚 🪙3。",
+            ], () => {
+              gain(10, 5); say("对，一次靠运气，转到大奖就赚。那玩很多次呢？");
+              quiz(D, "玩 1000 次呢？", ["还是一半一半，看运气", "几乎一定亏", "一定能赚回来"], 1, [
+                "第 1 关里，抛得越多，频率怎么变？",
+                "次数越多，平均每次的结果越贴近 E ≈ 1.67，可每次要付 3。",
+              ], () => {
+                let w = 0; for (let i = 0; i < 1000; i++) w += prize(Math.random());
+                gain(15, 10); Audio_.play("rattle");
+                say(`电脑替你玩了 1000 次：花 🪙3000，赢回 🪙${w}，净 ${w - 3000 >= 0 ? "+" : "−"}🪙${Math.abs(w - 3000)}，平均每次亏 ≈ ${((3000 - w) / 1000).toFixed(2)}，几乎就是算出来的 1.33。`);
+                finish();
+              });
+            });
+          }
+          function finish() {
+            const stars = miss <= 1 ? 3 : miss <= 3 ? 2 : 1;
+            gain(20, 15);
+            const end = endCard(stars, `期望计算师出师 · 出错 ${miss} 次`, [
+              ["期望值 E = Σ xᵢ·pᵢ", "每个结果 × 它的概率，再加起来：玩很多很多次后，平均每次得到多少。"],
+              ["庄家优势", "(票价 − E) ÷ 票价。转盘大奖 🪙6 时 E = 5/3，优势约 44%；大奖 🪙14 才公平。"],
+              ["一次 vs. 很多次", "一次输赢靠运气，玩得越多，平均结果越贴近期望。"],
+            ], "p08 随机变量与期望");
+            end.insertBefore(el("p", "", "<strong>期望值 E = Σ xᵢ·pᵢ。期望小于票价的游戏，玩得越多，亏得越稳。赌场的每个游戏都是这样设计的。</strong>"), end.children[1]);
+            const row = el("div", "x-row", `<button class="x-btn x-btn--go" data-next>去第 4 关 🎰</button><button class="x-btn" data-again>再玩一次</button><button class="x-btn" data-notes>📒 看知识笔记</button>`);
+            end.append(row); root.append(end); scrollTo(end);
+            row.querySelector("[data-next]").addEventListener("click", () => { Audio_.play("click"); openLevel(4); });
+            row.querySelector("[data-again]").addEventListener("click", () => { Audio_.play("click"); openLevel(3); });
+            row.querySelector("[data-notes]").addEventListener("click", () => $("#notes-open").click());
+            light(["p08"]); award("worth");
+            done(stars, 40 + stars * 20);
+          }
+        },
+      });
+      /* ===== LEVEL 4 · 轮盘上的绿色 0 ===== */
+      LEVELS.push({
+        id: 4, title: "轮盘上的绿色 0",
+        init(root, done) {
+          const say = guide(root, "这是赌场里最有名的游戏：欧式轮盘。押红或押黑，猜中就 1 赔 1。红黑各一半，听起来很公平？", "第 4 关有 3 步：亲手转 10 次 → 算庄家优势 → 大数定律。");
+          const scrollTo = (n) => n.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "nearest" });
+          const nextBtn = (host, label, fn) => { const r = el("div", "x-row", `<button class="x-btn x-btn--go">${label}</button>`); host.append(r);
+            r.querySelector("button").addEventListener("click", (e) => { e.currentTarget.disabled = true; Audio_.play("click"); fn(); }); };
+          const ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+          const REDS = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]);
+          const col = (n) => (n === 0 ? "绿" : REDS.has(n) ? "红" : "黑"), S = 360 / 37;
+          const fillOf = (n) => (n === 0 ? "var(--fill-system-green)" : REDS.has(n) ? "var(--fill-system-red)" : "var(--fill-primary)");
+          const bet1 = () => (Math.random() * 37 < 18 ? 1 : -1); /* 押红 🪙1 的一局 */
+          let miss = 0;
+
+          /* ---------- Part A 欧式轮盘 ---------- */
+          const A = el("div", "x-part", `<h3>A ·「欧式轮盘」</h3>
+            <p>37 个格子：绿色 0，1–36 红黑相间。每次押 🪙1 在红或黑，开中赢 🪙1，没中输掉 🪙1。亲手转 10 次。</p>
+            <div class="x-rwrap"><div class="x-rwheel" role="img" aria-label="欧式轮盘：1 个绿色 0，18 个红格，18 个黑格"
+              style="background:conic-gradient(${ORDER.map((n, i) => `${fillOf(n)} ${(i * S).toFixed(3)}deg ${((i + 1) * S).toFixed(3)}deg`).join(",")})">
+              ${ORDER.map((n, i) => `<span data-n="${n}" style="transform:rotate(${((i + 0.5) * S).toFixed(2)}deg) translateY(-104px)">${n}</span>`).join("")}</div>
+              <div class="x-ballring" aria-hidden="true"><i class="x-ball"></i></div></div>
+            <div class="x-tally" aria-live="polite"><span class="pill" data-k="n">第 0 / 10 次</span><span class="pill" data-k="bal">🪙 余额 10</span><span class="pill" data-k="last">开出 —</span></div>
+            <div class="x-row" style="justify-content:center"><button class="x-btn" data-bet="红" aria-pressed="true">🔴 押红</button><button class="x-btn" data-bet="黑" aria-pressed="false">⚫ 押黑</button><button class="x-btn x-btn--go" data-go>🎰 转（🪙1）</button></div>
+            <p class="x-num" data-hist></p><div data-q></div>`);
+          root.append(A);
+          const wheel = A.querySelector(".x-rwheel"), ring = A.querySelector(".x-ballring"), goB = A.querySelector("[data-go]"), K = (k) => A.querySelector(`[data-k="${k}"]`);
+          let side = "红", n = 0, bal = 10, rotW = 0, rotB = 0, busy = false; const hist = [];
+          A.querySelectorAll("[data-bet]").forEach((b) => b.addEventListener("click", () => {
+            if (busy) return; side = b.dataset.bet; Audio_.play("click");
+            A.querySelectorAll("[data-bet]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+          }));
+          goB.addEventListener("click", () => {
+            if (busy || n >= 10) return; busy = true; goB.disabled = true; bal--; K("bal").textContent = `🪙 余额 ${bal}`;
+            const i = (Math.random() * 37) | 0, num = ORDER[i], ms = reduced() ? 80 : 3000;
+            rotW += 1080 + ((((-(i + 0.5) * S - rotW) % 360) + 360) % 360);
+            rotB -= 1800 + (((rotB % 360) + 360) % 360);
+            [wheel, ring].forEach((x) => (x.style.transitionDuration = ms + "ms"));
+            wheel.style.transform = `rotate(${rotW}deg)`; ring.style.transform = `rotate(${rotB}deg)`;
+            Audio_.play("whoosh");
+            if (!reduced()) for (let k = 1; k <= 22; k++) setTimeout(() => Audio_.play("tick", 1500 + Math.random() * 700), ms * (k / 23) ** 2);
+            setTimeout(() => {
+              const c = col(num), win = c === side; n++; if (win) bal += 2; hist.push((c === "红" ? "🔴" : c === "黑" ? "⚫" : "🟢") + num);
+              Audio_.play(win ? "clink" : "tick", 220);
+              K("n").textContent = `第 ${n} / 10 次`; K("bal").textContent = `🪙 余额 ${bal}`; K("last").textContent = `开出 ${num} ${c}`;
+              A.querySelector("[data-hist]").textContent = "开出：" + hist.join(" · ");
+              busy = false; goB.disabled = n >= 10;
+              if (n < 10) say(num === 0 ? "绿色 0！押红押黑的人全输，筹码都归赌场。" : win ? `开出 ${num} ${c}，你押${side}，赢 🪙1！` : `开出 ${num} ${c}，你押${side}，输 🪙1。`);
+              else afterA();
+            }, ms);
+          });
+          function afterA() {
+            gain(10, 5); wheel.querySelector('[data-n="0"]').classList.add("hl");
+            say(`10 次转完，余额 🪙${bal}（开始是 🪙10）。红和黑一样多，为什么赌场还会赚？看看轮盘上那个绿色的格子。`, "我把绿色 0 圈出来了。");
+            const Q = A.querySelector("[data-q]"); Q.append(el("p", "", "红和黑一样多，为什么赌场还会赚？"));
+            ask(Q, say, ["轮盘被做了手脚", "红格比黑格少", "因为有绿色 0：开出 0 时押红押黑都输"], 2, [
+              "数一数：红 18 格，黑 18 格，一共 37 格。多出来的那一格是什么颜色？",
+              "开出绿色 0 时，押红的人赢了吗？押黑的呢？筹码去了哪里？",
+            ], (w) => { miss += w; gain(10, 5); say("就是它！37 格里只有 18 格能让押红的人赢。这 1 格绿色 0 就是赌场的饭碗。"); nextBtn(Q, "去算庄家优势 🧮", startB); });
+          }
+
+          /* ---------- Part B 算庄家优势 ---------- */
+          function startB() {
+            const POOL = ["1/2", "18/36", "18/37", "19/37", "+1/37", "−1/37", "0", "+2.7%", "−2.7%", "−5.3%"], ANS = ["18/37", "19/37", "−1/37", "−2.7%"];
+            const HINT = ["红格有 18 个，可全部格子有几个？别忘了绿色 0。", "不中红 = 黑 18 格 + 绿 1 格，一共几格？", "18/37 − 19/37 等于多少？是正还是负？", "1 ÷ 37 ≈ 0.027，写成百分数是多少？前面的正负号呢？"];
+            const B = el("div", "x-part", `<h3>B ·「算庄家优势」</h3>
+              <p>点空格，再点下面的数填进去。</p>
+              <div class="x-eq">P(红) = 红格数 ÷ 全部格数 = <button class="x-slot sel">?</button></div>
+              <div class="x-eq">P(不中) = (黑 18 + 绿 1) ÷ 37 = <button class="x-slot">?</button></div>
+              <div class="x-eq">E(押红 🪙1) = 1 × 18/37 + (−1) × 19/37 = <button class="x-slot">?</button> ≈ <button class="x-slot">?</button></div>
+              <div class="x-opts" data-pool>${POOL.map((t) => `<button class="x-qopt">${t}</button>`).join("")}</div><div data-q></div>`);
+            root.append(B); scrollTo(B);
+            say("先算押红的概率。37 个格子一样容易开出，红格有几个？");
+            const slots = [...B.querySelectorAll(".x-slot")]; let cur = 0;
+            const pick = (i) => { if (slots[i].classList.contains("ok")) return; cur = i; slots.forEach((s, j) => s.classList.toggle("sel", j === i)); };
+            slots.forEach((s, i) => s.addEventListener("click", () => { Audio_.play("click"); pick(i); }));
+            B.querySelectorAll("[data-pool] button").forEach((b) => b.addEventListener("click", () => {
+              const v = b.textContent, s = slots[cur]; if (s.classList.contains("ok")) return;
+              if (v !== ANS[cur]) { miss++; Audio_.play("wrong"); s.classList.remove("x-flash"); void s.offsetWidth; s.classList.add("x-flash"); return say(HINT[cur], "填错也没关系，再试一次。"); }
+              s.textContent = v; s.classList.remove("sel"); s.classList.add("ok"); Audio_.play("correct");
+              const left = slots.findIndex((x) => !x.classList.contains("ok"));
+              if (left >= 0) { pick(left); return say(["P(红) = 18/37，比 1/2 少一点点。那不中的概率呢？", "18/37 + 19/37 = 1，加起来正好是全部。现在算期望：赢 +1、输 −1，各乘它的概率。", "E = −1/37，是负数！换成百分数大约是多少？"][left - 1]); }
+              gain(15, 10);
+              B.querySelector("[data-q]").append(el("div", "prose", `<p><strong>庄家优势 = 1/37 ≈ 2.7%。</strong>每押 100 元，平均留下 2.7 元给赌场。押黑也一样：绿色 0 永远站在赌场那边。</p>`));
+              say("每一注只少 2.7%，看起来不多。可一个人会转多少次？赌场一天又有多少人在转？");
+              nextBtn(B.querySelector("[data-q]"), "去看大数定律 📈", startC);
+            }));
+          }
+
+          /* ---------- Part C 大数定律 ---------- */
+          function startC() {
+            const E = -1 / 37, ref = (x0, x1, y) => ({ label: "", data: [{ x: x0, y }, { x: x1, y }], borderColor: "var(--chart-reference)", borderDash: [3, 4], borderWidth: 1, pointRadius: 0 });
+            const C = el("div", "x-part", `<h3>C ·「大数定律」</h3>
+              <p>电脑替一个赌客一直押红 🪙1。看他「平均每注赢多少」随次数怎么变。</p>
+              <div class="x-row"><button class="x-btn" data-n="100">×100</button><button class="x-btn" data-n="1000">×1000</button><button class="x-btn" data-n="10000">×10000</button><button class="x-btn" data-house aria-pressed="false" disabled>🏦 赌场视角</button></div>
+              <figure class="chart"><figcaption class="chart__cap">一个赌客的平均每注输赢<small>横轴：下注次数；纵轴：平均每注 🪙；虚线：期望 −0.027</small></figcaption>
+                <div class="chart__canvas"><canvas role="img" aria-label="平均每注输赢一开始上下乱跳，次数越多越贴近 −0.027 的虚线"></canvas></div></figure>
+              <figure class="chart" data-hfig hidden><figcaption class="chart__cap">1000 个赌客各押 100 次，赌场的总利润<small>横轴：第几个赌客；纵轴：赌场累计利润 🪙；虚线：期望每人 🪙2.7</small></figcaption>
+                <div class="chart__canvas"><canvas role="img" aria-label="赌场的累计利润几乎沿着一条直线稳定上升"></canvas></div></figure>
+              <div data-q></div>`);
+            root.append(C); scrollTo(C);
+            say("先点 ×100，再点 ×1000、×10000。你猜：次数越多，这条线会怎样？");
+            const [cv1, cv2] = C.querySelectorAll("canvas"), hB = C.querySelector("[data-house]"), Q = C.querySelector("[data-q]");
+            let ran = false, seen = false, hc = null;
+            const pc = mkChart(cv1, {
+              type: "line", data: { datasets: [{ label: "平均每注", data: [] }, ref(1, 100, E)] },
+              options: { animation: false, scales: { x: { type: "linear", min: 1, max: 100 }, y: { min: -0.4, max: 0.4, ticks: { callback: (v) => v.toFixed(1) } } },
+                plugins: { legend: { display: false }, tooltip: { callbacks: { title: (c) => `第 ${c[0].raw.x.toLocaleString()} 注`, label: (c) => `平均每注 🪙${c.raw.y.toFixed(3)}` } } } },
+            });
+            C.querySelectorAll("[data-n]").forEach((b) => b.addEventListener("click", () => {
+              const N = +b.dataset.n, step = Math.max(1, Math.round(N / 500)), pts = []; let s = 0, at100 = 0;
+              for (let i = 1; i <= N; i++) { s += bet1(); if (i === 100) at100 = s / 100; if (i <= 60 || i % step === 0) pts.push({ x: i, y: s / i }); }
+              pc.data.datasets[0].data = pts; pc.data.datasets[1] = ref(1, N, E); pc.options.scales.x.max = N; pc.update();
+              Audio_.play("rattle");
+              say(`${N.toLocaleString()} 次：最后平均每注 🪙${(s / N).toFixed(3)}${N > 100 ? `（第 100 次时还是 ${at100.toFixed(3)}）` : ""}。期望是 −0.027。${N >= 10000 ? "线一开始乱跳，后来几乎贴在虚线上。" : "再试更多次？"}`, ran ? "" : "试过之后，点「赌场视角」。");
+              if (!ran) { ran = true; hB.disabled = false; }
+            }));
+            hB.addEventListener("click", () => {
+              const on = hB.getAttribute("aria-pressed") !== "true"; hB.setAttribute("aria-pressed", String(on)); C.querySelector("[data-hfig]").hidden = !on; Audio_.play("click");
+              if (!on || hc) return;
+              const pts = []; let tot = 0, winners = 0;
+              for (let p = 1; p <= 1000; p++) { let me = 0; for (let k = 0; k < 100; k++) me += bet1(); tot -= me; if (me > 0) winners++; pts.push({ x: p, y: tot }); }
+              hc = mkChart(cv2, {
+                type: "line", data: { datasets: [{ label: "赌场利润", data: pts, fill: true }, { ...ref(1, 1000, 0), data: [{ x: 1, y: 100 / 37 }, { x: 1000, y: 100000 / 37 }] }] },
+                options: { animation: false, scales: { x: { type: "linear", min: 1, max: 1000 } },
+                  plugins: { legend: { display: false }, tooltip: { callbacks: { title: (c) => `前 ${c[0].raw.x} 个赌客`, label: (c) => `赌场累计 🪙${Math.round(c.raw.y).toLocaleString()}` } } } },
+              });
+              Audio_.play("clink");
+              say(`1000 个赌客里有 ${winners} 人赢钱离场，可赌场一共赚了 🪙${tot.toLocaleString()}（期望 🪙2,703）。单个人的线乱跳，赌场的线却稳稳往上爬。`);
+              if (!seen) { seen = true; quiz(); }
+            });
+            function quiz() {
+              Q.append(el("p", "", "刚刚连开了 5 次黑，下一次开红的概率？"));
+              ask(Q, say, ["更大，该轮到红了", "更小，黑正在走运", "还是 18/37"], 2, [
+                "轮盘记得上一次开了什么吗？小球每次落进哪格，和前面有关系吗？",
+                "每一次转，37 个格子还是一样容易开出。红格还是 18 个。",
+              ], (w) => {
+                miss += w; gain(15, 10);
+                Q.append(el("div", "prose", `<p><strong>赌徒谬误：</strong>轮盘没有记忆，每一次都是新的 18/37。大数定律说的是「很多次的平均」会接近期望，不是「输多了就会补回来」。</p>`));
+                finish();
+              });
+            }
+          }
+          function finish() {
+            const stars = miss <= 1 ? 3 : miss <= 3 ? 2 : 1;
+            gain(20, 15);
+            const end = endCard(stars, `看穿轮盘 · 出错 ${miss} 次`, [
+              ["庄家优势", "欧式轮盘押红：E = 18/37 × 1 + 19/37 × (−1) = −1/37 ≈ −2.7%。多出来的绿色 0 就是赌场的利润。"],
+              ["大数定律", "次数越多，平均结果越接近期望值：一个赌客的线先乱跳，后来贴住 −0.027。"],
+              ["赌徒谬误", "每次转都是独立的，连开 5 次黑，下一次开红还是 18/37。"],
+            ], "p12 大数定律");
+            end.insertBefore(el("p", "", "<strong>大数定律：试验次数越多，平均结果越接近期望值。单个赌客可能赢，但成千上万次下注后，赌场几乎一定赚到那 2.7%。</strong>"), end.children[1]);
+            const row = el("div", "x-row", `<button class="x-btn x-btn--go" data-next>⚔️ 挑战第 5 关 BOSS</button><button class="x-btn" data-again>再玩一次</button><button class="x-btn" data-notes>📒 看知识笔记</button>`);
+            end.append(row); root.append(end); scrollTo(end);
+            row.querySelector("[data-next]").addEventListener("click", () => { Audio_.play("click"); openLevel(5); });
+            row.querySelector("[data-again]").addEventListener("click", () => { Audio_.play("click"); openLevel(4); });
+            row.querySelector("[data-notes]").addEventListener("click", () => $("#notes-open").click());
+            light(["p12"]); award("zero");
+            done(stars, 40 + stars * 20);
+          }
+        },
+      });
+      /* ===== LEVEL 5 · BOSS 赌徒的末路 ===== */
+      LEVELS.push({
+        id: 5, title: "BOSS「赌徒的末路」",
+        init(root, done) {
+          const say = guide(root, "最后一关！一位赌徒带着 🪙20 走进赌场，每局押 🪙1 在红上（赢的概率 18/37）。他发誓：翻倍到 🪙40 就走，输光就回家。", "第 5 关有 3 步：一个赌徒 → 蒙特卡洛 → BOSS 选择。");
+          const scrollTo = (n) => n.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "nearest" });
+          const nextBtn = (host, label, fn) => { const r = el("div", "x-row", `<button class="x-btn x-btn--go">${label}</button>`); host.append(r);
+            r.querySelector("button").addEventListener("click", (e) => { e.currentTarget.disabled = true; Audio_.play("click"); fn(); }); };
+          const PR = 18 / 37;
+          /* one gambler from 🪙20, betting `bet` each round until 0 or 40; path if keep, else final money */
+          const walk = (p, bet, keep) => { let m = 20; const path = [m]; while (m > 0 && m < 40) { m += Math.random() < p ? bet : -bet; if (keep) path.push(m); } return keep ? path : m; };
+          const sim = (p, bet) => { let w = 0; for (let i = 0; i < 1000; i++) if (walk(p, bet) >= 40) w++; return w; };
+          const ref = (label, y, x1) => ({ label, data: [{ x: 0, y }, { x: x1, y }], borderColor: "var(--chart-reference)", borderDash: [3, 4], borderWidth: 1, pointRadius: 0 });
+          const GUESS = ["约 50%", "约 30%", "约 10%"];
+          let miss = 0, guess = "";
+
+          /* ---------- Part A 一个赌徒 ---------- */
+          const A = el("div", "x-part", `<h3>A ·「一个赌徒」</h3>
+            <p>每局赢了 +1，输了 −1，就像在数轴上随机向左或向右走一步，这叫<strong>随机游走</strong>。走到 40 算翻倍，走到 0 算输光。</p>
+            <p>先猜：他翻倍的机会有多大？</p>
+            <div class="x-opts" data-guess>${GUESS.map((g) => `<button class="x-qopt" aria-pressed="false">${g}</button>`).join("")}</div>
+            <div data-run hidden>
+              <div class="x-line" role="img" aria-label="数轴 0 到 40 上赌徒的位置"><span style="left:0">0 输光</span><span style="left:25%">10</span><span style="left:50%">20 起点</span><span style="left:75%">30</span><span style="left:100%">40 翻倍</span><b style="left:50%">🧑</b></div>
+              <div class="x-tally" aria-live="polite"><span class="pill" data-k="r">第 0 局</span><span class="pill" data-k="m">🪙 20</span></div>
+              <div class="x-row" style="justify-content:center"><button class="x-btn x-btn--go" data-go>▶ 开始走</button><button class="x-btn" data-fast disabled>⏩ 快进到结束</button></div>
+              <figure class="chart"><figcaption class="chart__cap">这个赌徒的筹码，一局一局地变<small>横轴：第几局；纵轴：筹码 🪙；虚线：目标 🪙40</small></figcaption>
+                <div class="chart__canvas"><canvas role="img" aria-label="筹码从 20 出发上下乱走，直到碰到 0 或 40"></canvas></div></figure>
+            </div>`);
+          root.append(A);
+          const run = A.querySelector("[data-run]"), tok = A.querySelector(".x-line b"), goA = A.querySelector("[data-go]"), fast = A.querySelector("[data-fast]"), K = (k) => A.querySelector(`[data-k="${k}"]`);
+          A.querySelectorAll("[data-guess] button").forEach((b, i) => b.addEventListener("click", () => {
+            guess = GUESS[i]; Audio_.play("click");
+            A.querySelectorAll("[data-guess] button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+            if (run.hidden) { run.hidden = false; gain(10, 5); say(`你猜「${guess}」。猜错也不扣分，我们让他真的走一遍。点「开始走」。`); scrollTo(run); }
+          }));
+          let ch = null, timer = null, walks = 0;
+          goA.addEventListener("click", () => {
+            if (timer) return;
+            const path = walk(PR, 1, true); let i = 0;
+            if (!ch) ch = mkChart(A.querySelector("canvas"), {
+              type: "line", data: { datasets: [{ label: "筹码", data: [], fill: true }, ref("目标 40", 40, 50)] },
+              options: { animation: false, scales: { x: { type: "linear", min: 0, max: 50 }, y: { min: 0, max: 40 } },
+                plugins: { legend: { display: false }, tooltip: { callbacks: { title: (c) => `第 ${c[0].raw.x} 局`, label: (c) => `🪙${c.raw.y}` } } } },
+            });
+            const setMax = (n) => { const m = Math.max(50, Math.ceil(n / 50) * 50); ch.options.scales.x.max = m; ch.data.datasets[1] = ref("目标 40", 40, m); };
+            const show = (k) => { tok.style.left = (path[k] / 40) * 100 + "%"; K("r").textContent = `第 ${k} 局`; K("m").textContent = `🪙 ${path[k]}`; };
+            ch.data.datasets[0].data = [{ x: 0, y: 20 }]; setMax(50); ch.update();
+            goA.disabled = true; fast.disabled = false; Audio_.play("click");
+            const end = () => {
+              clearInterval(timer); timer = null; const n = path.length - 1, win = path[n] >= 40;
+              ch.data.datasets[0].data = path.map((y, x) => ({ x, y })); setMax(n); ch.update(); show(n);
+              goA.disabled = false; goA.textContent = "↻ 再走一次"; fast.disabled = true; walks++;
+              Audio_.play(win ? "fanfare" : "wrong");
+              say(win ? `走了 ${n} 局，他到了 🪙40，翻倍！这次运气不错。` : `走了 ${n} 局，他碰到了 0，输光了。`, "一个赌徒只能告诉你一个结果。想知道「机会有多大」，得看很多很多个赌徒。");
+              if (walks === 1) { gain(10, 5); nextBtn(A, "模拟 1000 个赌徒 🎲", startB); }
+            };
+            fast.onclick = end;
+            if (reduced()) return end();
+            timer = setInterval(() => {
+              if (!A.isConnected) { clearInterval(timer); timer = null; return; }
+              if (++i >= path.length) return end();
+              ch.data.datasets[0].data.push({ x: i, y: path[i] }); if (i > ch.options.scales.x.max) setMax(i * 1.5);
+              ch.update("none"); show(i); if (i % 3 === 0) Audio_.play("tick", 300 + path[i] * 25);
+            }, 30);
+          });
+
+          /* ---------- Part B 蒙特卡洛 ---------- */
+          function startB() {
+            const B = el("div", "x-part", `<h3>B ·「蒙特卡洛：模拟 1000 个赌徒」</h3>
+              <p>让电脑派出 1000 个一模一样的赌徒，各自从 🪙20 走到 40 或 0，数一数有几个人翻倍。</p>
+              <div class="x-row"><button class="x-btn" data-p="house" aria-pressed="true">🎰 轮盘押红 p = 18/37</button><button class="x-btn" data-p="fair" aria-pressed="false">🪙 公平硬币 p = 1/2</button><button class="x-btn x-btn--go" data-go>🎲 模拟 1000 个赌徒</button></div>
+              <div class="x-tally" aria-live="polite"><span class="pill" data-k="w">翻倍 — 人</span><span class="pill" data-k="l">输光 — 人</span><span class="pill" data-k="r">翻倍率 —</span></div>
+              <figure class="chart"><figcaption class="chart__cap">其中 40 个赌徒的筹码路线<small>横轴：第几局；纵轴：筹码 🪙；绿线翻倍，灰线输光</small></figcaption>
+                <div class="chart__canvas chart__canvas--tall"><canvas role="img" aria-label="许多条随机路线从 20 出发，各自走到 0 或 40"></canvas></div></figure>
+              <div data-q></div>`);
+            root.append(B); scrollTo(B);
+            say("先用真正的轮盘（p = 18/37）模拟，再切到公平硬币（p = 1/2）比一比。");
+            let mode = "house", bc = null; const ran = {}, KB = (k) => B.querySelector(`[data-k="${k}"]`);
+            B.querySelectorAll("[data-p]").forEach((b) => b.addEventListener("click", () => {
+              mode = b.dataset.p; Audio_.play("click");
+              B.querySelectorAll("[data-p]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+            }));
+            B.querySelector("[data-go]").addEventListener("click", () => {
+              const p = mode === "house" ? PR : 0.5, shown = []; let w = 0, xmax = 0;
+              for (let i = 0; i < 1000; i++) { const path = walk(p, 1, true), win = path[path.length - 1] >= 40; if (win) w++; if (i < 40) { shown.push([path, win]); xmax = Math.max(xmax, path.length); } }
+              const sets = shown.map(([path, win]) => { const k = Math.ceil(path.length / 200);
+                return { label: "", data: path.map((y, x) => ({ x, y })).filter((d) => d.x % k === 0 || d.x === path.length - 1), borderColor: win ? "var(--chart-good)" : "var(--chart-muted)", borderWidth: 1, pointRadius: 0 }; });
+              if (!bc) bc = mkChart(B.querySelector("canvas"), { type: "line", data: { datasets: sets },
+                options: { animation: false, scales: { x: { type: "linear", min: 0, max: xmax }, y: { min: 0, max: 40 } }, plugins: { legend: { display: false }, tooltip: { enabled: false } } } });
+              else { bc.data.datasets = sets; bc.options.scales.x.max = xmax; bc.update(); }
+              KB("w").textContent = `翻倍 ${w} 人`; KB("l").textContent = `输光 ${1000 - w} 人`; KB("r").textContent = `翻倍率 ${(w / 10).toFixed(1)}%`;
+              Audio_.play("rattle");
+              say(mode === "house" ? `轮盘：翻倍 ${w} 人，输光 ${1000 - w} 人，翻倍率 ≈ ${(w / 10).toFixed(1)}%。你猜的是「${guess}」。理论值约 25%，远远不到一半！` : `公平硬币：翻倍 ${w} 人，≈ ${(w / 10).toFixed(1)}%，接近 50%（理论正好 50%）。`,
+                ran.house && ran.fair ? "" : mode === "house" ? "现在切到「公平硬币」再模拟一次。" : "也用「轮盘押红」模拟一次。");
+              ran[mode] = true;
+              if (ran.house && ran.fair && !ran.both) {
+                ran.both = true; gain(15, 10); const Q = B.querySelector("[data-q]");
+                Q.append(el("div", "prose", `<p><strong>蒙特卡洛方法 = 用大量随机模拟来估计概率。</strong>不会算、不好算的时候，就让电脑把实验做上千次，用频率去估计概率。它的名字就来自摩纳哥的蒙特卡洛赌场。</p>
+                  <p>每一局只差一点点（18/37 对 1/2），可几百局累积下来，翻倍的机会就从约 50% 掉到约 25%。</p>`));
+                nextBtn(Q, "迎战 BOSS 🦝", startC);
+              }
+            });
+          }
+
+          /* ---------- Part C BOSS 选择 ---------- */
+          function startC() {
+            const ST = [["① 每次押 🪙1 慢慢来", 1, "要押好几百局"], ["② 每次押 🪙5", 5, "大约押十几局"], ["③ 一把押 🪙20 全下", 20, "只押 1 局"]];
+            const C = el("div", "x-part", `<h3>C ·「BOSS 选择」</h3>
+              <div class="x-bubble">🦝 浣熊博士：「你有 🪙20，想变成 🪙40，在赌场里怎么做成功率最高？」<small>每种办法都押红，各模拟 1000 个玩家。虚线是 50%。</small></div>
+              <div class="x-suspects">${ST.map(([n, , d], i) => `<div class="x-suspect"><h4>${n}</h4><p class="x-num">${d}</p><div class="x-gauge"><i></i></div><p class="x-num" data-res aria-live="polite">还没模拟</p><button class="x-btn" data-s="${i}">🎲 模拟 1000 人</button></div>`).join("")}</div>
+              <div data-q></div>`);
+            root.append(C); scrollTo(C);
+            say("BOSS 出题了！三种办法各模拟一次，看看谁的成功率最高。");
+            const Q = C.querySelector("[data-q]"), seen = new Set();
+            C.querySelectorAll("[data-s]").forEach((b) => b.addEventListener("click", () => {
+              const i = +b.dataset.s, card = b.closest(".x-suspect"), w = sim(PR, ST[i][1]);
+              card.querySelector(".x-gauge i").style.width = w / 10 + "%";
+              card.querySelector("[data-res]").innerHTML = `成功 <b>${w}</b> / 1000 人 ≈ <b>${(w / 10).toFixed(1)}%</b>`;
+              Audio_.play("rattle"); seen.add(i);
+              if (seen.size < 3) return say(`${ST[i][0]}：成功率 ≈ ${(w / 10).toFixed(1)}%。其他办法呢？`);
+              if (seen.size === 3 && !Q.childElementCount) quiz1();
+            }));
+            function quiz1() {
+              say("三种都试过了。现在回答 BOSS：");
+              Q.append(el("p", "", "哪种办法成功率最高？"));
+              ask(Q, say, ST.map((s) => s[0]), 2, [
+                "看看你刚刚模拟出来的三个成功率，哪根条最长？",
+                "每押一局，赌场就抽走 2.7%。押的局数越多，被抽走得越多还是越少？",
+              ], (w) => {
+                miss += w; gain(15, 10);
+                Q.append(el("div", "prose", `<p><strong>一把全下最好：</strong>每次押 🪙1 约 25%，每次押 🪙5 约 45%，一把全下 = 18/37 ≈ 48.6%。押的局数越少，庄家优势起作用的次数就越少。但即使全下也不到 50%：没有哪种押法能把负的期望变成正的。</p>`));
+                quiz2();
+              });
+            }
+            function quiz2() {
+              Q.append(el("p", "", "长期一直玩下去，赌徒最终会？"));
+              ask(Q, say, ["越赢越多", "不输不赢", "几乎一定输光"], 2, [
+                "每一注的期望是多少？是正数还是负数？",
+                "赌徒的钱有限，赌场的钱几乎无限。随机游走一旦碰到 0，还能接着走吗？",
+              ], (w) => {
+                miss += w; gain(15, 10);
+                Q.append(el("div", "prose", `<p><strong>赌徒破产：</strong>每注期望为负（−2.7%），路线总体往下漂；赌徒本钱有限，庄家资金几乎无限，赌徒没有「赢光对方」的终点。只要一直玩下去，迟早会碰到 0，几乎一定输光。</p>`));
+                finish();
+              });
+            }
+          }
+
+          function finish() {
+            const stars = miss <= 1 ? 3 : miss <= 3 ? 2 : 1;
+            gain(25, 20);
+            const end = endCard(stars, `击败 BOSS · 出错 ${miss} 次`, [
+              ["随机游走", "每局 +1 或 −1，筹码在数轴上随机走；p = 18/37 时，从 20 走到 40 的机会只有约 25%。"],
+              ["蒙特卡洛模拟", "用 1000 次随机模拟估计概率：轮盘约 25%，公平硬币约 50%。"],
+              ["赌徒破产", "期望为负 + 庄家资金无限：一直玩下去，赌徒几乎一定输光。"],
+            ], "p17 随机游走 · p22 蒙特卡洛");
+            const row = el("div", "x-row", `<button class="x-btn" data-again>再挑战一次</button>`);
+            end.append(row); root.append(end);
+            row.querySelector("[data-again]").addEventListener("click", () => { Audio_.play("click"); openLevel(5); });
+            light(["p17", "p22"]); award("ruin");
+            done(stars, 50 + stars * 25);
+            /* mission complete */
+            const NOTE = "必须掌握：频率与概率、古典概率(36种结果)、期望值 E=Σxp、庄家优势(-1/37≈-2.7%)、大数定律、赌徒谬误、随机游走与赌徒破产、蒙特卡洛模拟。\n应用：保险定价、彩票、游戏抽卡、天气预报、金融风险。\n文献：Pascal–Fermat 通信(1654)、Bernoulli《猜度术》(1713)大数定律、Feller《概率论及其应用》。";
+            const nb = BADGES.filter((b) => State.badges[b.id]).length;
+            const M = el("div", "x-end", `<h3>🏁 任务完成 · 赌场为什么总是赢？</h3>
+              <section class="stats"><div class="stat"><span class="stat__fig">${State.stars}/15</span><span class="stat__label">总星数 ⭐</span></div><div class="stat"><span class="stat__fig">${nb}/5</span><span class="stat__label">徽章</span></div><div class="stat"><span class="stat__fig">${State.xp}</span><span class="stat__label">XP</span></div></section>
+              <div class="x-shelf">${BADGES.map((b) => `<span class="x-badge ${State.badges[b.id] ? "got" : ""}">${State.badges[b.id] ? "🏅" : "🔒"} ${b.name}</span>`).join("")}</div>
+              <div><p style="font:var(--type-body-strong)">星图点亮</p><ul class="x-final">${FINAL_STARS.map(([id, n]) => `<li class="${State.lit[id] ? "lit" : ""}"><span aria-hidden="true">${State.lit[id] ? "★" : "☆"}</span><span class="x-starid">${id}</span> ${n}</li>`).join("")}</ul></div>
+              <div><p style="font:var(--type-body-strong)">五关回顾</p><ol>
+                <li>硬币公平吗：「最可能」不等于「一定」，抛得越多，频率越接近 1/2。</li>
+                <li>两颗骰子的秘密：36 种等可能结果，和为 7 最常见（6/36）。</li>
+                <li>这个游戏值得玩吗：用期望值 E = Σxp 判断一个游戏划不划算。</li>
+                <li>轮盘上的绿色 0：庄家优势 −1/37 ≈ −2.7%，大数定律让赌场稳赚。</li>
+                <li>赌徒的末路：随机游走 + 蒙特卡洛，负期望下一直玩几乎一定输光。</li></ol></div>
+              <div class="x-part"><h3>📒 知识笔记</h3><div class="x-num" style="white-space:pre-line">${NOTE}</div>
+                <div class="x-row"><button class="x-btn" data-copy>一键复制</button><a class="btn" href="../notes/#casino">打开知识笔记本</a></div><p class="x-warn" aria-live="polite" data-st></p></div>
+              <p class="x-moral">赌场不靠运气赢——它靠数学。真正赢的办法：不进赌场。</p>`);
+            root.append(M); scrollTo(end);
+            M.querySelector("[data-copy]").addEventListener("click", () => {
+              const st = M.querySelector("[data-st]"), ok = () => { Audio_.play("clink"); st.textContent = "📒 已复制到剪贴板。"; };
+              let c = false;
+              try { const ta = el("textarea"); ta.value = NOTE; ta.readOnly = true; ta.style.cssText = "position:fixed;opacity:0"; M.append(ta); ta.select(); c = document.execCommand("copy"); ta.remove(); } catch (e) {}
+              if (c) return ok();
+              st.textContent = "请长按选中上面的文字复制。";
+              if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(NOTE).then(ok, () => {});
+            });
+            say("你打败了 BOSS！赌场不靠运气赢——它靠数学。", "往下看任务总结和知识笔记。");
+          }
+        },
+      });
+      /* ---------- boot ---------- */
+      renderBar(); renderBadges(); renderMap(); renderFinal();
+      const once = () => { Audio_.unlock(); window.removeEventListener("pointerdown", once); window.removeEventListener("keydown", once); };
+      window.addEventListener("pointerdown", once); window.addEventListener("keydown", once);
+      $("#sfx").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.setSfx(on); if (on) Audio_.play("click");
+      });
+      $("#music").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.unlock(); Audio_.setMusic(on); Audio_.play("click");
+      });
+      $("#vol").addEventListener("input", (e) => Audio_.setVol(+e.target.value / 100));
+      $("#track").addEventListener("change", (e) => Audio_.setTrack(+e.target.value));
+      /* 知识笔记 modal */
+      const dlg = $("#notes");
+      $("#notes-open").addEventListener("click", () => { Audio_.play("click"); if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", ""); });
+      $("#notes-close").addEventListener("click", () => { if (dlg.close) dlg.close(); else dlg.removeAttribute("open"); });
+      dlg.addEventListener("click", (e) => { if (e.target === dlg && dlg.close) dlg.close(); });
+      function selectNotes() {
+        const r = document.createRange(); r.selectNodeContents($("#notes-body"));
+        const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      }
+      $("#notes-copy").addEventListener("click", (e) => {
+        const btn = e.currentTarget, text = $("#notes-body").innerText, st = $("#notes-status");
+        const show = (msg, label) => { st.textContent = msg; btn.textContent = label; clearTimeout(btn._t); btn._t = setTimeout(() => (btn.textContent = "一键复制"), 2500); };
+        const ok = () => { Audio_.play("clink"); show("📒 已复制到剪贴板，可以粘贴到笔记本里。", "已复制 ✓"); };
+        const fallback = () => { selectNotes(); show("已帮你选中全部笔记，请按 Ctrl+C（手机长按）复制。", "已选中"); };
+        let copied = false;
+        try {
+          const ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+          dlg.append(ta); ta.select(); copied = document.execCommand("copy"); ta.remove();
+        } catch (err) {}
+        if (copied) { ok(); return; }
+        fallback();
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, () => {});
+      });
+    </script>
+  </body>
+</html>
