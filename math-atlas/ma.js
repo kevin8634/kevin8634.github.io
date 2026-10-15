@@ -355,6 +355,26 @@
     var r = el.querySelector(".ma-reset"); if (r) r.onclick = reset;
   }
 
+
+  /* ---------- 页面转场 ---------- */
+  (function () {
+    var warp = document.createElement("div"); warp.className = "ma-warp"; warp.setAttribute("aria-hidden", "true");
+    function mount() { if (!warp.parentNode) document.body.appendChild(warp); }
+    if (document.body) mount(); else document.addEventListener("DOMContentLoaded", mount);
+    addEventListener("pageshow", function () { document.documentElement.classList.remove("ma-leaving"); });
+    document.addEventListener("click", function (e) {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      var a = e.target.closest && e.target.closest("a[href]"); if (!a || a.target === "_blank" || a.hasAttribute("download")) return;
+      var u; try { u = new URL(a.href, location.href); } catch (er) { return; }
+      if (u.origin !== location.origin || u.protocol.indexOf("http") !== 0) return;
+      if (u.pathname === location.pathname && u.search === location.search) return;
+      if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      e.preventDefault(); mount(); store.set("ma:mpos", store.get("ma:mpos"));
+      document.documentElement.classList.add("ma-leaving");
+      setTimeout(function () { location.href = u.href; }, 280);
+    });
+  })();
+
   function init() {
     if (!LITE) {
       sky(); dock();
