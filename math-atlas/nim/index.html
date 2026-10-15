@@ -1,0 +1,1790 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>星图任务 · 先拿的人一定赢吗？</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <link rel="stylesheet" href="hark-charts.css" />
+    <style>
+      /* x- classes: the game shell. Tokens only. */
+      .x-bar {
+        position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 30;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+        padding: 8px 12px; border-radius: var(--r-pill);
+        background: var(--mat-agent); -webkit-backdrop-filter: var(--hark-blur); backdrop-filter: var(--hark-blur);
+        border: 1px solid var(--stroke-primary); box-shadow: var(--hark-shadow);
+      }
+      .x-brand { font: var(--type-label); margin-right: auto; white-space: nowrap; }
+      .x-meter { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-primary); }
+      .x-meter b { font-weight: var(--weight-bold); }
+      .x-toggle {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap);
+        padding: 4px 12px; border: 1px solid var(--stroke-primary); border-radius: var(--r-pill);
+        background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-tag); cursor: pointer;
+      }
+      .x-toggle[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-vol { width: 86px; min-height: var(--tap); accent-color: var(--fill-primary); }
+      .x-map { position: relative; padding: 8px 0 4px; }
+      .x-path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      .x-nodes { position: relative; display: grid; gap: 10px; }
+      .x-node {
+        display: grid; grid-template-columns: 46px 1fr auto; align-items: center; gap: 12px;
+        width: min(100%, 560px); padding: 10px 14px; border-radius: var(--r-l);
+        border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-body); text-align: left; cursor: pointer;
+        transition: box-shadow var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
+      }
+      .x-node:nth-child(even) { justify-self: end; }
+      .x-node:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--hark-shadow); }
+      .x-node:disabled { opacity: 0.55; cursor: not-allowed; }
+      .x-node__num { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-tertiary); font: var(--type-heading); }
+      .x-node.is-open .x-node__num { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-node__t { display: block; font: var(--type-body-strong); }
+      .x-node__s { display: block; font: var(--type-caption); color: var(--text-secondary); }
+      .x-stars { font-size: 15px; letter-spacing: 1px; white-space: nowrap; }
+      .x-panel { padding: 16px; border-radius: var(--r-l); background: var(--fill-tertiary); display: grid; gap: 14px; }
+      .x-cat { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: start; }
+      .x-cat__face { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-primary-on); font-size: 24px; border: 1px solid var(--stroke-primary); }
+      .x-bubble { position: relative; padding: 10px 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-primary); font: var(--type-body); }
+      .x-bubble small { display: block; margin-top: 4px; font: var(--type-caption); color: var(--text-secondary); }
+      .x-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+      .x-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: var(--tap); padding: 6px 16px;
+        border-radius: var(--r-s); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-label); cursor: pointer;
+      }
+      .x-btn--go, .x-btn[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-btn--big { min-height: 56px; min-width: 120px; font: var(--type-heading); border-radius: var(--r-m); }
+      .x-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .x-btn.good { border-color: var(--fill-system-green); box-shadow: inset 0 0 0 1px var(--fill-system-green); }
+      .x-btn.bad { border-color: var(--fill-system-red); opacity: 0.6; }
+      .x-toasts { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; display: grid; gap: 8px; justify-items: center; pointer-events: none; }
+      .x-toast { padding: 10px 16px; border-radius: var(--r-pill); background: var(--fill-primary); color: var(--text-primary-on); font: var(--type-tag); box-shadow: var(--hark-shadow); animation: x-pop 320ms var(--ease-out); }
+      @keyframes x-pop { from { opacity: 0; transform: translateY(10px); } }
+      .x-shelf { display: flex; flex-wrap: wrap; gap: 8px; }
+      .x-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-secondary); }
+      .x-badge.got { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-end { display: grid; gap: 12px; padding: 16px; border-radius: var(--r-l); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); }
+      .x-end h3 { font: var(--type-heading); }
+      .x-end dl { display: grid; gap: 8px; margin: 0; }
+      .x-end dt { font: var(--type-body-strong); }
+      .x-end dd { margin: 0; font: var(--type-small); color: var(--text-secondary); }
+      .x-starid { font: var(--weight-regular) 12px/1.3 "Geist Mono", monospace; }
+      .x-flash { animation: x-shake 320ms var(--ease-out); }
+      @keyframes x-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+      #stage [hidden] { display: none; }
+
+      /* level 1: pinecone pile, scoreboard, notebook */
+      .x-score { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-secondary); font: var(--type-label); }
+      .x-score b { font: var(--type-heading); }
+      .x-score__turn { margin-left: auto; font: var(--type-tag); color: var(--text-secondary); }
+      .x-left { font: var(--type-label); color: var(--text-secondary); }
+      .x-left b { font: var(--type-figure); color: var(--text-primary); }
+      .x-pile { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+      @media (min-width: 600px) { .x-pile { grid-template-columns: repeat(10, 1fr); } }
+      .x-cone {
+        position: relative; display: grid; justify-items: center; align-content: start; gap: 2px;
+        min-height: 76px; padding: 6px 2px; border-radius: var(--r-s); border: 1px solid var(--stroke-secondary);
+        background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-caption); cursor: pointer;
+      }
+      .x-cone svg { width: 100%; max-width: 40px; height: 52px; display: block; }
+      .x-cone__n { color: var(--text-secondary); }
+      .x-cone.is-gone { background: transparent; border-style: dashed; cursor: default; }
+      .x-cone.is-gone svg { opacity: 0.18; }
+      .x-cone.is-hop svg { animation: x-hop 520ms var(--ease-out); }
+      @keyframes x-hop { 0% { transform: none; } 40% { transform: translateY(-22px) rotate(-12deg) scale(1.1); } 100% { transform: translateY(0); opacity: 0.18; } }
+      .x-cone.is-sq { border-color: var(--chart-bad); }
+      .x-note { padding: 12px 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-primary); display: grid; gap: 6px; }
+      .x-note h3 { font: var(--type-body-strong); }
+      .x-note ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; font: var(--type-small); }
+      .x-note .x-seq { font: var(--weight-regular) 14px/1.5 "Geist Mono", monospace; }
+      .x-note mark { background: var(--fill-system-green); color: var(--text-primary-on); border-radius: 4px; padding: 0 3px; }
+      .x-quiz { display: grid; gap: 10px; padding: 12px 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-primary); }
+      .x-quiz p { font: var(--type-body-strong); }
+
+      /* level 2: pinecone staircase */
+      .x-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font: var(--type-small); color: var(--text-secondary); }
+      .x-stairs { position: relative; display: grid; gap: 6px; padding-left: 50px; }
+      .x-arrows { position: absolute; left: 0; top: 0; width: 50px; height: 100%; overflow: visible; pointer-events: none; }
+      .x-stairrow { display: flex; align-items: center; gap: 6px; min-height: var(--tap); }
+      .x-step {
+        width: calc(100px + (12 - var(--n)) * min(12px, 1.2vw)); min-height: var(--tap);
+        display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 8px; padding: 4px 10px;
+        border-radius: var(--r-s); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-label); text-align: left; cursor: pointer;
+        transition: box-shadow var(--dur-quick) var(--ease-out), opacity var(--dur-quick) var(--ease-out);
+      }
+      .x-step b { font: var(--type-heading); min-width: 1.3em; }
+      .x-step small { grid-column: 1 / -1; font: var(--type-caption); color: var(--text-secondary); }
+      .x-step:disabled { cursor: default; }
+      .x-step.is-locked { opacity: 0.4; border-style: dashed; }
+      .x-step.is-active { box-shadow: 0 0 0 2px var(--fill-primary); }
+      .x-step.is-red { background: color-mix(in srgb, var(--fill-system-red) 16%, var(--fill-primary-on)); border-color: var(--fill-system-red); }
+      .x-step.is-green { background: color-mix(in srgb, var(--fill-system-green) 16%, var(--fill-primary-on)); border-color: var(--fill-system-green); }
+      .x-step.is-pending { border-style: dashed; }
+      .x-step.is-target { outline: 2px dashed var(--stroke-primary); outline-offset: 2px; }
+      .x-step.is-blink { animation: x-blink 700ms var(--ease-out) 3 both; }
+      @keyframes x-blink { 50% { transform: scale(1.05); box-shadow: 0 0 0 6px color-mix(in srgb, var(--fill-system-red) 40%, transparent); } }
+
+      /* level 3: rule lab */
+      .x-sub { font: var(--type-heading); }
+      .x-labwrap { display: grid; gap: 14px; }
+      .x-lab { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+      .x-slide { display: grid; gap: 4px; padding: 10px 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-secondary); font: var(--type-label); }
+      .x-slide b { font: var(--type-heading); }
+      .x-slide input { width: 100%; min-height: var(--tap); accent-color: var(--fill-primary); }
+      .x-slide input:disabled { opacity: 0.45; }
+      .x-mini { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px; }
+      .x-mini span {
+        width: 30px; height: calc(30px + var(--i) * 1.6px); display: grid; place-items: end center; padding-bottom: 4px;
+        border-radius: calc(var(--r-s) / 2) calc(var(--r-s) / 2) 4px 4px; border: 1px solid var(--stroke-secondary);
+        background: var(--fill-primary-on); font: var(--type-caption); color: var(--text-primary);
+        transition: background var(--dur-quick) var(--ease-out);
+      }
+      .x-mini .is-red { background: color-mix(in srgb, var(--fill-system-red) 22%, var(--fill-primary-on)); border-color: var(--fill-system-red); }
+      .x-mini .is-green { background: color-mix(in srgb, var(--fill-system-green) 16%, var(--fill-primary-on)); border-color: var(--fill-system-green); }
+      .x-mini .is-start { box-shadow: 0 0 0 2px var(--fill-primary); font-weight: var(--weight-bold); }
+      .x-eq { font: var(--weight-regular) 20px/1.4 "Geist Mono", monospace; }
+      .x-note ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; font: var(--type-small); }
+      .x-note li.is-on { font-weight: var(--weight-bold); color: var(--text-primary); }
+
+      /* level 4: pairs, fill-in reasons, counterexample cards */
+      .x-cone.is-static { cursor: default; }
+      .x-pairs { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(156px, 1fr)); }
+      .x-pair { display: grid; gap: 6px; justify-items: center; padding: 10px; border: 2px dashed var(--stroke-primary); border-radius: var(--r-m); background: var(--fill-primary-on); transition: border-color var(--dur-quick) var(--ease-out), background var(--dur-quick) var(--ease-out); }
+      .x-pair.is-wait { opacity: 0.5; }
+      .x-pair.is-now { box-shadow: 0 0 0 2px var(--fill-primary); }
+      .x-pair.is-done { border-color: var(--fill-system-green); background: color-mix(in srgb, var(--fill-system-green) 10%, var(--fill-primary-on)); }
+      .x-pair__cones { display: flex; gap: 2px; }
+      .x-pair__sum { font: var(--weight-regular) 14px/1.4 "Geist Mono", monospace; }
+      .x-mc { display: grid; justify-items: center; width: 30px; font: var(--type-caption); color: var(--text-secondary); }
+      .x-mc svg { width: 24px; height: 31px; display: block; }
+      .x-mc.is-empty svg { opacity: 0.18; }
+      .x-mc.is-fox { color: var(--text-primary); }
+      .x-quiz .x-reason { font: var(--type-body); line-height: 2.6; }
+      .x-blank {
+        min-height: var(--tap); min-width: 64px; padding: 2px 12px; margin: 0 4px; vertical-align: middle;
+        border: 0; border-bottom: 2px dashed var(--stroke-primary); border-radius: var(--r-s) var(--r-s) 4px 4px;
+        background: var(--fill-tertiary); color: var(--text-primary); font: var(--type-heading); cursor: pointer;
+      }
+      .x-blank.is-active { box-shadow: 0 0 0 2px var(--fill-primary); }
+      .x-blank.is-filled { border-bottom: 2px solid var(--fill-system-green); background: color-mix(in srgb, var(--fill-system-green) 16%, var(--fill-primary-on)); cursor: default; }
+      .x-picks { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+      .x-pick { min-height: var(--tap); padding: 12px 14px; border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-body); text-align: left; cursor: pointer; }
+      .x-pick:disabled { cursor: default; }
+      .x-pick.good { border-color: var(--fill-system-green); box-shadow: inset 0 0 0 1px var(--fill-system-green); }
+      .x-pick.bad { border-color: var(--fill-system-red); opacity: 0.6; }
+
+      /* level 5: the king, two trees, mission complete */
+      .x-cat--king { grid-template-columns: 60px 1fr; }
+      .x-cat--king .x-cat__face { position: relative; width: 60px; height: 60px; font-size: 34px; margin-top: 10px; }
+      .x-crown { position: absolute; top: -16px; left: 50%; transform: translateX(-50%) rotate(-8deg); font-size: 22px; }
+      .x-trees { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .x-tree { display: grid; gap: 8px; justify-items: center; align-content: end; padding: 12px 8px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-secondary); }
+      .x-tree__h { font: var(--type-label); color: var(--text-secondary); text-align: center; }
+      .x-tree__h b { font: var(--type-figure); color: var(--text-primary); }
+      .x-stack { display: flex; flex-direction: column-reverse; justify-content: flex-start; gap: 6px; width: min(100%, 132px); min-height: calc(var(--max, 3) * 58px - 6px); }
+      .x-trunk { width: min(100%, 132px); height: 10px; border-radius: var(--r-pill); background: var(--chart-2); opacity: 0.5; }
+      .x-tc {
+        display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 4px 10px;
+        border-radius: var(--r-s); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on);
+        color: var(--text-secondary); font: var(--type-caption); cursor: pointer;
+        transition: background var(--dur-quick) var(--ease-out), box-shadow var(--dur-quick) var(--ease-out);
+      }
+      .x-tc svg { width: 26px; height: 34px; display: block; }
+      .x-tc:disabled { cursor: default; }
+      .x-tc:enabled:hover, .x-tc:enabled:hover ~ .x-tc, .x-tc:enabled:active, .x-tc:enabled:active ~ .x-tc { background: color-mix(in srgb, var(--fill-system-orange) 12%, var(--fill-primary-on)); }
+      .x-tc.is-sel { background: color-mix(in srgb, var(--fill-system-orange) 24%, var(--fill-primary-on)); border-color: var(--fill-system-orange); box-shadow: inset 0 0 0 1px var(--fill-system-orange); color: var(--text-primary); }
+      .x-tc.is-tip { outline: 2px dashed var(--fill-system-green); outline-offset: 2px; }
+      .x-tc.is-hop svg { animation: x-hop 520ms var(--ease-out); }
+      .x-btn.is-tip { outline: 2px dashed var(--fill-system-green); outline-offset: 3px; }
+      .x-selinfo { font: var(--type-label); color: var(--text-secondary); }
+      .x-selinfo b { color: var(--text-primary); }
+      .x-done-h { animation: x-pop 600ms var(--ease-out); }
+      .x-notecard { padding: 16px; border-radius: var(--r-l); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); }
+      .x-notecard summary { display: flex; align-items: center; min-height: var(--tap); font: var(--type-heading); cursor: pointer; }
+      .x-notecard__in { display: grid; gap: 14px; margin-top: 8px; }
+
+      /* knowledge notes modal */
+      .x-modal { width: min(92vw, 600px); max-height: 86vh; padding: 0; border: 1px solid var(--stroke-primary); border-radius: var(--r-l); background: var(--fill-primary-on); color: var(--text-primary); box-shadow: var(--hark-shadow); }
+      .x-modal::backdrop { background: var(--mat-thin); -webkit-backdrop-filter: var(--hark-blur); backdrop-filter: var(--hark-blur); }
+      .x-modal__in { display: grid; gap: 14px; padding: 20px; }
+      .x-modal__in h2 { font: var(--type-title); }
+      .x-modal__body { display: grid; gap: 12px; font: var(--type-body); user-select: text; -webkit-user-select: text; }
+      .x-modal__body h3 { font: var(--type-body-strong); }
+      .x-modal__body ol, .x-modal__body ul { margin: 4px 0 0; padding-left: 20px; display: grid; gap: 4px; font: var(--type-small); }
+      @media (prefers-reduced-motion: reduce) { .x-toast, .x-flash, .x-cone.is-hop svg, .x-step.is-blink, .x-tc.is-hop svg, .x-done-h { animation: none; } }
+      @media (max-width: 599px) { .x-brand { width: 100%; } .x-vol { width: 70px; } }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <main class="main">
+        <div class="x-bar" role="toolbar" aria-label="游戏状态">
+          <span class="x-brand">星图任务 · 先拿的人一定赢吗？</span>
+          <span class="x-meter">XP <b id="xp">0</b></span>
+          <span class="x-meter">⭐ <b id="stars">0</b>/15</span>
+          <button class="x-toggle" id="sfx" aria-pressed="true">🔊 音效</button>
+          <button class="x-toggle" id="music" aria-pressed="false">🎵 专注音乐</button>
+          <select class="x-toggle" id="track" aria-label="选择曲目">
+            <option value="-1" selected>随机轮播</option><option value="0">星空 Lo-fi</option><option value="1">雨夜书房</option><option value="2">晨光</option>
+          </select>
+          <span class="x-meter" id="nowplaying">正在播放:—</span>
+          <input class="x-vol" id="vol" type="range" min="0" max="100" value="30" aria-label="音乐音量" />
+          <button class="x-toggle" id="notes-open">📒 知识笔记</button>
+        </div>
+
+        <section class="hero">
+          <div class="hero__copy">
+            <p class="hero__eyebrow">星图任务 · 🐿 松鼠博士</p>
+            <h1>先拿的人一定赢吗？</h1>
+            <p class="hero__sub">秋天到了，森林里有一堆松果。松鼠博士和你玩“抢松果”：轮流拿，拿到最后一颗的人赢。可松鼠博士总是赢，它有什么秘密？</p>
+            <p class="hero__meta"><span class="pill">难度 ★☆☆ 入门</span> <span class="pill">适合 小学一~三年级</span> <span class="pill">前置 数到20、加减</span></p>
+          </div>
+          <aside class="callout" aria-label="开始">
+            <p class="callout__head"><span class="hark-mark" data-size="16"></span> 第一站</p>
+            <p class="callout__lead"><strong>第 1 关「抢10颗松果」已开放。</strong>和松鼠博士比一比！拿到 1 颗星，就能解锁第 2 关「倒着想」。</p>
+            <a class="btn" href="#play" id="start">开始任务</a>
+          </aside>
+        </section>
+
+        <section class="section" id="map" data-nav="星图">
+          <div class="head">
+            <p class="head__eyebrow">五关任务</p>
+            <h2>从抢松果开始，找出“先拿”的秘密。</h2>
+            <p class="head__sub">每关得 1–3 颗星。全部 5 关已开放：上一关拿到 1 颗星，下一关就解锁。第 5 关是 BOSS 关！</p>
+          </div>
+          <div class="x-map">
+            <svg class="x-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M18 8 L82 30 L18 52 L82 74 L18 94" fill="none" style="stroke: var(--stroke-primary)" stroke-width="0.6" stroke-dasharray="2 2" />
+            </svg>
+            <div class="x-nodes" id="nodes"></div>
+          </div>
+        </section>
+
+        <section class="section" id="play" data-nav="关卡">
+          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">松鼠博士在星图上等你。</p></div>
+          <div id="stage" class="x-panel">
+            <div class="x-cat">
+              <div class="x-cat__face">🐿</div>
+              <div class="x-bubble">点开第 1 关「抢10颗松果」。你先拿，我后拿，看谁拿到最后一颗！<small>松鼠博士只问问题，不直接给答案。</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="shelf" data-nav="徽章">
+          <div class="head"><h2>徽章架</h2><p class="head__sub">做到了才会亮起来。</p></div>
+          <div class="x-shelf" id="badges"></div>
+        </section>
+
+        <section class="section" id="finish" data-nav="终点">
+          <div id="finish-body">
+          <div class="head">
+            <p class="head__eyebrow">任务完成后</p>
+            <h2>通过全部 5 关，点亮这 4 颗星。</h2>
+            <p class="head__sub">打败第 5 关的松鼠大王，这里就会亮起来。</p>
+          </div>
+          <div class="x-end">
+            <h3>🔒 任务完成画面 · 打败松鼠大王后开放</h3>
+            <dl>
+              <dt><span class="x-starid">n05</span> 除法与余数</dt><dd>10 ÷ 3 = 3 余 1，先拿掉余数。</dd>
+              <dt><span class="x-starid">d02</span> 规律与递推</dt><dd>9、6、3、0：每次少 3。</dd>
+              <dt><span class="x-starid">l01</span> 说理与举例</dt><dd>说清楚为什么总能赢。</dd>
+              <dt><span class="x-starid">d19</span> 组合博弈</dt><dd>必胜位置与必败位置。</dd>
+            </dl>
+          </div>
+          </div>
+        </section>
+      </main>
+      <footer class="foot">
+        <p>声音全部由 Web Audio 实时合成，不读取任何外部文件。进度不会被保存。</p>
+        <nav aria-label="回到各部分" data-auto></nav>
+        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"><span class="hark-mark"></span><span>built by hark</span></a>
+      </footer>
+    </div>
+
+    <dialog class="x-modal" id="notes" aria-labelledby="notes-title">
+      <div class="x-modal__in">
+        <h2 id="notes-title">📒 知识笔记</h2>
+        <div class="x-modal__body" id="notes-text">
+          <div>
+            <h3>必须掌握</h3>
+            <ol>
+              <li>必胜位置与必败位置：轮到你时一定会输的局面叫必败位置。</li>
+              <li>逆推（倒着想）：从结局 0 往回推，每个位置看它能走到哪里。</li>
+              <li>每次拿 1~m 颗：必败位置是 (m+1) 的倍数；先手第一步拿 N ÷ (m+1) 的余数颗。</li>
+              <li>配对策略：对手拿 k，你拿 (m+1−k)，每轮凑成 m+1。</li>
+              <li>说理与反例：说明为什么对；一个反例就能推翻一个说法。</li>
+              <li>镜像策略：两堆一样多时，后手照镜子拿必胜。</li>
+            </ol>
+          </div>
+          <div>
+            <h3>公式</h3>
+            <ul>
+              <li>先手必胜 ⇔ N mod (m+1) ≠ 0</li>
+              <li>先手第一步拿 N mod (m+1) 颗</li>
+              <li>两堆 Nim：先手必胜 ⇔ 两堆不一样多（一般情形：各堆数的二进制异或 ≠ 0）</li>
+            </ul>
+          </div>
+          <div>
+            <h3>经典文献与历史</h3>
+            <ul>
+              <li>Charles L. Bouton, “Nim, a Game with a Complete Mathematical Theory”, Annals of Mathematics, 1901–1902</li>
+              <li>R. Sprague (1935)、P. M. Grundy (1939)：Sprague–Grundy 定理，把所有公平组合游戏化为 Nim</li>
+              <li>Berlekamp, Conway, Guy《Winning Ways for Your Mathematical Plays》, 1982</li>
+              <li>中国民间游戏「抢30」、巴什博弈（Bash Game）</li>
+            </ul>
+          </div>
+          <div>
+            <h3>领域应用与案例</h3>
+            <ul>
+              <li>博弈论与经济学中的策略分析</li>
+              <li>电脑下棋：博弈树搜索、逆推（国际象棋残局库）</li>
+              <li>编程：动态规划、递推</li>
+              <li>数学竞赛中的取石子问题</li>
+            </ul>
+          </div>
+        </div>
+        <div class="x-row">
+          <button class="x-btn x-btn--go" id="notes-copy">一键复制</button>
+          <button class="x-btn" id="notes-close">关闭</button>
+        </div>
+        <p class="fineprint" id="notes-status" aria-live="polite"></p>
+      </div>
+    </dialog>
+
+    <div class="x-toasts" id="toasts" aria-live="polite"></div>
+    <script src="hark.js"></script>
+    <script>
+      /* ---------- audio ---------- */
+      const Audio_ = (() => {
+        let ctx = null, master = null, musicGain = null, sfxOn = true, musicOn = false, vol = 0.3, started = false;
+        function ensure() {
+          if (ctx) return ctx;
+          const AC = window.AudioContext || window.webkitAudioContext;
+          ctx = new AC();
+          master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+          musicGain = ctx.createGain(); musicGain.gain.value = 0; musicGain.connect(master);
+          return ctx;
+        }
+        function unlock() { ensure(); if (ctx.state === "suspended") ctx.resume(); started = true; }
+        function env(node, t, a, d, peak) {
+          const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(peak, t + a);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+          node.connect(g); g.connect(master); return g;
+        }
+        function tone(freq, t, dur, type, peak) {
+          const o = ctx.createOscillator(); o.type = type || "sine"; o.frequency.setValueAtTime(freq, t);
+          env(o, t, 0.012, dur, peak || 0.18); o.start(t); o.stop(t + dur + 0.08); return o;
+        }
+        const sfx = {
+          click() { const t = ctx.currentTime; tone(880, t, 0.05, "triangle", 0.08); },
+          correct() { const t = ctx.currentTime; [523.25, 659.25, 783.99].forEach((f, i) => tone(f, t + i * 0.07, 0.22, "sine", 0.14)); },
+          wrong() { const t = ctx.currentTime; tone(150, t, 0.22, "sine", 0.16); tone(110, t + 0.06, 0.26, "sine", 0.12); },
+          star() { const t = ctx.currentTime; [784, 1047, 1319, 1568, 2093].forEach((f, i) => tone(f, t + i * 0.055, 0.3, "triangle", 0.09)); },
+          fanfare() { const t = ctx.currentTime; [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.3]].forEach(([f, d]) => { tone(f, t + d, 0.4, "sawtooth", 0.07); tone(f * 2, t + d, 0.3, "sine", 0.05); }); },
+          /* squirrel chatter: three quick rising chirps */
+          squeak() {
+            const t = ctx.currentTime;
+            [0, 0.09, 0.18].forEach((d, i) => {
+              const o = ctx.createOscillator(); o.type = "sine";
+              o.frequency.setValueAtTime(1400 + i * 120, t + d); o.frequency.exponentialRampToValueAtTime(2300 + i * 150, t + d + 0.06);
+              env(o, t + d, 0.006, 0.07, 0.05); o.start(t + d); o.stop(t + d + 0.12);
+            });
+          },
+          /* a pinecone hopping off the pile: up-sweep then a wooden knock */
+          hop() {
+            const t = ctx.currentTime, o = ctx.createOscillator(); o.type = "triangle";
+            o.frequency.setValueAtTime(320, t); o.frequency.exponentialRampToValueAtTime(760, t + 0.12);
+            env(o, t, 0.005, 0.14, 0.1); o.start(t); o.stop(t + 0.2);
+            tone(190, t + 0.2, 0.08, "square", 0.05); tone(120, t + 0.2, 0.12, "sine", 0.14);
+          },
+          tick(f) { tone(f || 600, ctx.currentTime, 0.06, "sine", 0.07); },
+          chord() { const t = ctx.currentTime; [523.25, 659.25, 783.99, 987.77, 1318.5].forEach((f, i) => tone(f, t + i * 0.012, 0.55, "triangle", 0.06)); },
+        };
+        function play(name, arg) { if (!sfxOn || !started) return; ensure(); if (ctx.state === "suspended") ctx.resume(); duckMusic(); (sfx[name] || sfx.click)(arg); }
+        /* ---------- 专注音乐: generative engine, lookahead scheduler (25ms tick, 0.1s ahead) ---------- */
+        const PENTA = [0, 2, 4, 7, 9];
+        const CH = { I: [0, 4, 7, 11], ii: [2, 5, 9, 12], iii: [4, 7, 11, 14], IV: [5, 9, 12, 16], V: [7, 11, 14, 17], vi: [9, 12, 16, 19] };
+        const P = (s) => s.split(" ").map((n) => CH[n]);
+        const TRACKS = [
+          { id: "lofi", name: "星空 Lo-fi", bpm: 72, swing: 0.2, key: 57, cb: 1, wet: 0.3, progs: [P("ii V I vi"), P("IV iii ii I"), P("vi IV I V")] },
+          { id: "rain", name: "雨夜书房", bpm: 60, swing: 0, key: 50, cb: 2, wet: 0.4, progs: [P("I iii vi IV"), P("vi ii V I"), P("IV I ii vi")] },
+          { id: "dawn", name: "晨光", bpm: 90, swing: 0.08, key: 60, cb: 1, wet: 0.25, progs: [P("I V vi IV"), P("IV I V vi"), P("I ii IV V")] },
+        ];
+        let comp = null, duck = null, bus = null, echo = null, noiseBuf = null, players = [], timer = null, offT = null, mode = -1;
+        const rnd = (n) => (Math.random() * n) | 0;
+        const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+        const newMotif = () => [0, 0, 0, 0].map(() => rnd(8));
+        function mutate(m) { const c = m.slice(); for (let i = 0, n = 1 + rnd(2); i < n; i++) { const j = rnd(4); c[j] = Math.max(0, Math.min(9, c[j] + [-2, -1, 1, 2][rnd(4)])); } return c; }
+        function graph() {
+          if (bus) return; ensure();
+          comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 4; comp.attack.value = 0.01; comp.release.value = 0.3;
+          duck = ctx.createGain(); bus = ctx.createGain(); echo = ctx.createDelay(1.5);
+          const fb = ctx.createGain(), lp = ctx.createBiquadFilter(); fb.gain.value = 0.32; lp.type = "lowpass"; lp.frequency.value = 1800;
+          echo.connect(lp); lp.connect(fb); fb.connect(echo); lp.connect(bus);
+          bus.connect(comp); comp.connect(duck); duck.connect(musicGain);
+          const len = ctx.sampleRate * 2; noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+          const d = noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        }
+        function note(p, m, t, dur, type, peak, a, wet) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = mtof(m);
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          o.connect(g); g.connect(p.out); if (wet) g.connect(p.wet); o.start(t); o.stop(t + dur + 0.05);
+        }
+        function hit(p, t, dur, peak, ftype, freq) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+          s.buffer = noiseBuf; f.type = ftype; f.frequency.value = freq;
+          g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(t, Math.random() * 1.5); s.stop(t + dur + 0.02);
+        }
+        function kick(p, t) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.2);
+          g.gain.setValueAtTime(0.28, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+          o.connect(g); g.connect(p.out); o.start(t); o.stop(t + 0.35); hit(p, t, 0.05, 0.05, "lowpass", 400);
+        }
+        function ep(p, ch, t, dur) {
+          const tr = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain(), env = ctx.createGain();
+          tr.gain.value = 0.75; lfo.frequency.value = 3.8; dep.gain.value = 0.22; lfo.connect(dep); dep.connect(tr.gain);
+          env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(1, t + 0.02); env.gain.exponentialRampToValueAtTime(0.35, t + 0.9); env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [["sine", 0.045], ["triangle", 0.01]].forEach(([ty, v]) => {
+            const o = ctx.createOscillator(), g = ctx.createGain(); o.type = ty; o.frequency.value = mtof(m); o.detune.value = rnd(7) - 3; g.gain.value = v;
+            o.connect(g); g.connect(tr); o.start(t); o.stop(t + dur + 0.05);
+          }));
+          tr.connect(env); env.connect(p.out); env.connect(p.wet); lfo.start(t); lfo.stop(t + dur + 0.05);
+        }
+        function pad(p, ch, t, dur, type, peak, lo, hi) {
+          const f = ctx.createBiquadFilter(), env = ctx.createGain(); f.type = "lowpass";
+          f.frequency.setValueAtTime(lo, t); f.frequency.linearRampToValueAtTime(hi, t + dur * 0.5); f.frequency.linearRampToValueAtTime(lo, t + dur);
+          env.gain.setValueAtTime(0.0001, t); env.gain.linearRampToValueAtTime(peak, t + dur * 0.35); env.gain.linearRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [-7, 7].forEach((dt) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = mtof(m); o.detune.value = dt; o.connect(f); o.start(t); o.stop(t + dur + 0.05); }));
+          f.connect(env); env.connect(p.out); env.connect(p.wet);
+        }
+        function rain(p) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain();
+          s.buffer = noiseBuf; s.loop = true; f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 0.5; g.gain.value = 0.05;
+          lfo.frequency.value = 0.07; dep.gain.value = 0.02; lfo.connect(dep); dep.connect(g.gain);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(); lfo.start(); p.nodes.push(s, lfo);
+        }
+        function section(p) {
+          let n; do n = rnd(3); while (n === p.prog); p.prog = n;
+          if (Math.random() < 0.25) p.key = p.t.key + [0, 2, -2, 5, -3][rnd(5)];
+          p.drums = Math.random() > 0.3;
+          if (Math.random() < 0.4) p.motif = newMotif();
+        }
+        function step(p, t) {
+          const T = p.t, s = p.step % 16, bar = (p.step / 16) | 0, beat = 60 / T.bpm;
+          if (s === 0) {
+            if (bar && bar % 8 === 0) section(p);
+            p.cur = bar % 4 === 2 ? mutate(p.motif) : bar % 4 === 0 ? p.motif : p.cur;
+          }
+          const ch = T.progs[p.prog][((bar / T.cb) | 0) % 4].map((x) => p.key + x);
+          const mel = (d) => p.key + 12 + PENTA[d % 5] + 12 * ((d / 5) | 0);
+          if (T.id === "lofi") {
+            if (s === 0) { ep(p, ch, t, beat * 4); note(p, ch[0] - 24, t, beat * 1.8, "sine", 0.16, 0.02); }
+            if (s === 10) note(p, ch[0] - 24, t, beat * 1.2, "sine", 0.12, 0.02);
+            if (p.drums) {
+              if (s === 0 || s === 10 || (s === 7 && Math.random() < 0.3)) kick(p, t);
+              if (s === 4 || s === 12) hit(p, t, 0.16, 0.07, "bandpass", 1800);
+              if (s % 2 === 0 || Math.random() < 0.15) hit(p, t, 0.04, s % 4 === 2 ? 0.03 : 0.018, "highpass", 7000);
+            }
+            if (bar % 2 === 1 && s % 4 === 0 && Math.random() > 0.28) note(p, mel(p.cur[s / 4]), t, beat * 1.3, "sine", 0.035, 0.01, true);
+          } else if (T.id === "rain") {
+            if (s === 0 && bar % 2 === 0) pad(p, ch, t, beat * 8 + 1, "sawtooth", 0.022, 280, 1300);
+            if (s % 8 === 0 && Math.random() < 0.45) { const m = mel(p.cur[(bar * 2 + s / 8) % 4]) - 12; note(p, m, t, 3.5, "triangle", 0.045, 0.005, true); note(p, m, t, 2.5, "sine", 0.03, 0.005); }
+          } else {
+            if (s === 0) pad(p, ch.map((m) => m + 12), t, beat * 4 + 0.6, "sine", 0.014, 2500, 5000);
+            if (s % 2 === 0 && Math.random() > 0.18) { const m = mel(p.cur[(s / 2) % 4] + (s >= 8 ? 1 : 0)); note(p, m, t, 0.55, "sine", 0.05, 0.004, true); note(p, m + 28, t, 0.08, "sine", 0.008, 0.002); }
+            if (p.drums) hit(p, t, 0.05, s % 2 ? 0.022 : 0.01, "highpass", 6000);
+          }
+        }
+        function sched() {
+          const now = ctx.currentTime;
+          players.forEach((p) => {
+            if (p.next < now - 0.05) p.next = now + 0.02; /* tab was throttled: skip, don't burst */
+            while (p.next < now + 0.1) { const sx = 60 / p.t.bpm / 4; step(p, p.next + (p.step % 2 ? p.t.swing * sx : 0)); p.step++; p.next += sx; }
+          });
+          const live = players.find((p) => !p.dead);
+          if (mode < 0 && live && now - live.born > 180) switchTo((live.i + 1 + rnd(2)) % 3);
+        }
+        function label(i) { const n = document.getElementById("nowplaying"); if (n) n.textContent = "正在播放:" + (i == null ? "—" : TRACKS[i].name); }
+        function kill(p) { p.nodes.forEach((n) => { try { n.stop(); } catch (e) {} }); p.out.disconnect(); p.wet.disconnect(); players = players.filter((x) => x !== p); }
+        function switchTo(i) {
+          const now = ctx.currentTime;
+          players.filter((p) => !p.dead).forEach((p) => {
+            p.dead = true; p.out.gain.cancelScheduledValues(now); p.out.gain.setValueAtTime(p.out.gain.value, now);
+            p.out.gain.linearRampToValueAtTime(0.0001, now + 2); setTimeout(() => kill(p), 2300);
+          });
+          const T = TRACKS[i], p = { t: T, i, step: 0, next: now + 0.1, born: now, key: T.key, prog: 0, drums: true, motif: newMotif(), out: ctx.createGain(), wet: ctx.createGain(), nodes: [] };
+          p.cur = p.motif; p.out.gain.setValueAtTime(0.0001, now); p.out.gain.linearRampToValueAtTime(1, now + 2);
+          p.out.connect(bus); p.wet.gain.value = T.wet; p.wet.connect(echo);
+          echo.delayTime.setTargetAtTime((60 / T.bpm) * 0.75, now, 0.5);
+          if (T.id === "rain") rain(p);
+          players.push(p); label(i);
+        }
+        function fadeTo(v) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(v, n + 2); }
+        function startMusic() {
+          graph(); if (ctx.state === "suspended") ctx.resume();
+          clearTimeout(offT); if (!timer) timer = setInterval(sched, 25);
+          if (!players.some((p) => !p.dead)) switchTo(mode < 0 ? rnd(3) : mode);
+          fadeTo(vol);
+        }
+        function stopMusic() {
+          if (!bus) return; fadeTo(0.0001);
+          offT = setTimeout(() => { clearInterval(timer); timer = null; players.slice().forEach(kill); label(null); }, 2100);
+        }
+        function setTrack(v) {
+          mode = v; if (!musicOn || !bus) return;
+          const live = players.find((p) => !p.dead);
+          if (mode >= 0 && (!live || live.i !== mode)) switchTo(mode); else if (live) live.born = ctx.currentTime;
+        }
+        function duckMusic() {
+          if (!musicOn || !duck) return; const t = ctx.currentTime, g = duck.gain;
+          g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.45, t + 0.05);
+          g.setValueAtTime(0.45, t + 0.35); g.linearRampToValueAtTime(1, t + 1);
+        }
+        return {
+          unlock, play,
+          setSfx(v) { sfxOn = v; }, isSfx: () => sfxOn,
+          setMusic(v) { musicOn = v; v ? startMusic() : stopMusic(); }, isMusic: () => musicOn,
+          setVol(v) { vol = v; if (ctx && timer && musicOn) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(vol, n + 0.3); } },
+          setTrack,
+        };
+      })();
+      /* ---------- state (in memory only, nothing is saved) ---------- */
+      const State = { xp: 0, stars: 0, perLevel: {}, badges: {}, unlocked: 1 };
+      const BADGES = [
+        { id: "detective", name: "小侦探", hint: "完成第 1 关「抢10颗松果」" },
+        { id: "backward", name: "倒推小能手", hint: "完成第 2 关「倒着想」" },
+        { id: "rules", name: "规则破解者", hint: "完成第 3 关「换个规则」" },
+        { id: "reason", name: "小小说理家", hint: "完成第 4 关「为什么总能赢」" },
+        { id: "king", name: "松鼠大王的克星", hint: "完成第 5 关「BOSS 松鼠大王的挑战」" },
+      ];
+      const LEVELS_META = [
+        { id: 1, title: "抢10颗松果", sub: "每次拿1或2颗，拿到最后一颗的赢" },
+        { id: 2, title: "倒着想", sub: "从最后一颗往回推" },
+        { id: 3, title: "换个规则", sub: "每次能拿更多颗时怎么办" },
+        { id: 4, title: "为什么总能赢", sub: "把秘密说清楚" },
+        { id: 5, title: "BOSS 松鼠大王的挑战", sub: "两堆松果，像照镜子一样拿" },
+      ];
+
+      const $ = (s) => document.querySelector(s);
+      function toast(msg) {
+        const el = document.createElement("div"); el.className = "x-toast"; el.textContent = msg;
+        $("#toasts").appendChild(el); setTimeout(() => el.remove(), 3200);
+      }
+      function award(id) {
+        if (State.badges[id]) return;
+        State.badges[id] = true;
+        const b = BADGES.find((x) => x.id === id);
+        Audio_.play("star"); toast("🏅 获得徽章:" + b.name); renderBadges();
+      }
+      function renderBadges() {
+        $("#badges").innerHTML = BADGES.map((b) =>
+          `<span class="x-badge ${State.badges[b.id] ? "got" : ""}">${State.badges[b.id] ? "🏅" : "🔒"} ${b.name}<small style="opacity:.75"> · ${b.hint}</small></span>`
+        ).join("");
+      }
+      function renderBar() { $("#xp").textContent = State.xp; $("#stars").textContent = State.stars; }
+      function starStr(n) { return n ? "⭐".repeat(n) + "☆".repeat(3 - n) : "☆☆☆"; }
+      function renderMap() {
+        $("#nodes").innerHTML = LEVELS_META.map((m) => {
+          const open = m.id <= State.unlocked && !!getLevel(m.id);
+          const got = State.perLevel[m.id] || 0;
+          const note = getLevel(m.id) ? (open ? m.sub : `第 ${m.id - 1} 关得 1 颗星解锁`) : "🔒 即将开放";
+          return `<button class="x-node ${open ? "is-open" : ""}" data-level="${m.id}" ${open ? "" : "disabled"}>
+            <span class="x-node__num">${m.id}</span>
+            <span><span class="x-node__t">${m.title}</span><span class="x-node__s">${note}</span></span>
+            <span class="x-stars">${starStr(got)}</span></button>`;
+        }).join("");
+        $("#nodes").querySelectorAll("button[data-level]").forEach((b) =>
+          b.addEventListener("click", () => { Audio_.play("click"); openLevel(+b.dataset.level); }));
+      }
+      function finishLevel(id, stars, xp) {
+        const prev = State.perLevel[id] || 0;
+        if (stars > prev) { State.stars += stars - prev; State.perLevel[id] = stars; }
+        State.xp += xp;
+        if (stars >= 1 && State.unlocked < id + 1) State.unlocked = id + 1;
+        renderBar(); renderMap(); Audio_.play("fanfare");
+        toast(`第 ${id} 关完成 · ${starStr(stars)} · +${xp} XP`);
+      }
+      function openLevel(id) {
+        const lv = getLevel(id); if (!lv) return;
+        $("#play-title").textContent = `第 ${id} 关 · ${LEVELS_META[id - 1].title}`;
+        $("#play-sub").textContent = LEVELS_META[id - 1].sub;
+        const stage = $("#stage"); stage.innerHTML = "";
+        lv.init(stage, (stars, xp) => finishLevel(id, stars, xp));
+        $("#play").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+      }
+      /* guide bubble helper */
+      function guide(container, text, sub) {
+        const wrap = document.createElement("div"); wrap.className = "x-cat";
+        wrap.innerHTML = `<div class="x-cat__face" aria-hidden="true">🐿</div><div class="x-bubble" aria-live="polite"></div>`;
+        const b = wrap.querySelector(".x-bubble");
+        const set = (t, s, quiet) => { b.innerHTML = ""; b.append(t); if (s) { const el = document.createElement("small"); el.textContent = s; b.append(el); } if (!quiet) Audio_.play("squeak"); };
+        set(text, sub, true); container.append(wrap);
+        return set;
+      }
+      function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+      const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const LEVELS = [];
+      const getLevel = (id) => LEVELS.find((l) => l.id === id);
+
+      /* ===== LEVEL 1 · 抢10颗松果 ===== */
+      const CONE = `<svg viewBox="0 0 40 52" aria-hidden="true">
+        <path d="M20 6 L20 1" style="stroke:var(--chart-2)" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M20 5 C30 10 34 22 32 34 C30 44 25 49 20 49 C15 49 10 44 8 34 C6 22 10 10 20 5Z" style="fill:var(--chart-3);stroke:var(--chart-bad)" stroke-width="1.5"/>
+        <g fill="none" style="stroke:var(--chart-bad)" stroke-width="1.2" stroke-linecap="round">
+          <path d="M11 18 Q20 24 29 18"/><path d="M9 27 Q20 34 31 27"/><path d="M10 36 Q20 43 30 36"/>
+          <path d="M15 11 L25 46"/><path d="M25 11 L15 46"/>
+        </g></svg>`;
+      LEVELS.push({
+        id: 1,
+        init(root, done) {
+          const TOTAL = 10, MAX_ROUNDS = 5;
+          const HINTS = [
+            ["如果只剩3颗，轮到你拿，你能赢吗？", "提示 1/3 · 先想一想"],
+            ["试试让松鼠博士面对 3 颗、6 颗、9 颗。", "提示 2/3 · 推你一把"],
+            ["先拿1颗，留下9颗！", "提示 3/3 · 直接告诉你"],
+          ];
+          const S = { n: TOTAL, owners: [], turn: "you", busy: false, over: true, round: 0, set: 1, you: 0, sq: 0, hints: 0, winHints: null, quizHints: null, cleared: 0, xpGiven: 0, logs: [] };
+
+          const say = guide(root, "你先拿，我后拿。每次拿1颗或2颗，拿到最后一颗松果的人赢！", "点“拿1颗”“拿2颗”，或直接点最右边的松果。");
+
+          const score = el("div", "x-score");
+          const left = el("p", "x-left");
+          const pile = el("div", "x-pile"); pile.setAttribute("aria-label", "松果堆");
+          const ctrls = el("div", "x-row");
+          const b1 = el("button", "x-btn x-btn--big x-btn--go", "拿1颗");
+          const b2 = el("button", "x-btn x-btn--big x-btn--go", "拿2颗");
+          const hintBtn = el("button", "x-btn", "💡 提示");
+          const nextBtn = el("button", "x-btn", "下一局 ▶"); nextBtn.hidden = true;
+          ctrls.append(b1, b2, hintBtn, nextBtn);
+          const note = el("div", "x-note", `<h3>🔍 侦探笔记本 <small style="font:var(--type-caption);color:var(--text-secondary)">· 松鼠博士拿完后，剩下几颗？</small></h3><ol></ol>`);
+          const quiz = el("div", "x-quiz"); quiz.hidden = true;
+          quiz.innerHTML = `<p>🕵️ 侦探问题：松鼠博士每次都让剩下的松果数变成几的倍数？</p><div class="x-row x-yn"></div>`;
+          const endWrap = el("div");
+          root.append(score, left, pile, ctrls, note, quiz, endWrap);
+
+          /* pile of pinecones */
+          const cones = [];
+          for (let i = 0; i < TOTAL; i++) {
+            const c = el("button", "x-cone", `${CONE}<span class="x-cone__n">${i + 1}</span>`);
+            c.addEventListener("click", () => tapCone(i, c));
+            cones.push(c); pile.append(c);
+          }
+
+          function render() {
+            score.innerHTML = `<span>你 <b>${S.you}</b></span><span>:</span><span><b>${S.sq}</b> 🐿 松鼠博士</span>
+              <span class="x-score__turn">第 ${Math.min(S.round, MAX_ROUNDS) || 1} / ${MAX_ROUNDS} 局 · ${S.over ? "本局结束" : S.turn === "you" ? "轮到：你" : "轮到：松鼠博士…"}</span>`;
+            left.innerHTML = `还剩 <b>${S.n}</b> 颗松果`;
+            cones.forEach((c, i) => {
+              const gone = i >= S.n, who = S.owners[i];
+              c.classList.toggle("is-gone", gone);
+              c.classList.toggle("is-sq", gone && who === "sq");
+              c.querySelector(".x-cone__n").textContent = gone ? (who === "sq" ? "🐿拿" : "你拿") : String(i + 1);
+              c.setAttribute("aria-label", gone ? `第 ${i + 1} 颗，已被${who === "sq" ? "松鼠博士" : "你"}拿走` : `第 ${i + 1} 颗松果`);
+            });
+            const mine = !S.over && !S.busy && S.turn === "you";
+            b1.disabled = !mine || S.n < 1; b2.disabled = !mine || S.n < 2;
+            hintBtn.textContent = `💡 提示 ${Math.min(S.hints, 3)}/3`;
+            note.querySelector("ol").innerHTML = S.logs.map((l) => {
+              const seq = l.left.length ? l.left.map((x) => (S.cleared && x % 3 === 0 ? `<mark>${x}</mark>` : x)).join(" → ") : "（松鼠博士还没拿）";
+              return `<li>第 ${l.round} 局 <span class="x-seq">10 ⋯ ${seq}</span>${l.winner ? ` · ${l.winner === "you" ? "你赢 🎉" : "松鼠博士赢"}` : ""}</li>`;
+            }).join("") || `<li style="list-style:none;margin-left:-20px;color:var(--text-secondary)">开始第一局后，这里会记下数字。</li>`;
+          }
+
+          function startRound() {
+            if (S.round >= MAX_ROUNDS) { S.round = 0; S.you = 0; S.sq = 0; S.set++; toast("新的一轮 5 局开始！笔记本留着。"); }
+            S.round++; S.n = TOTAL; S.owners = []; S.turn = "you"; S.over = false; S.busy = false;
+            S.logs.push({ round: S.set > 1 ? `${S.set}-${S.round}` : S.round, left: [], winner: null });
+            nextBtn.hidden = true; render();
+          }
+
+          function take(k, who) {
+            S.busy = true;
+            for (let j = 0; j < k; j++) {
+              const idx = S.n - 1 - j, c = cones[idx];
+              S.owners[idx] = who;
+              c.classList.remove("is-hop"); void c.offsetWidth; c.classList.add("is-hop");
+              setTimeout(() => Audio_.play("hop"), j * 140);
+            }
+            S.n -= k;
+            const wait = reduced() ? 150 : 560 + (k - 1) * 140;
+            render();
+            setTimeout(() => {
+              S.busy = false;
+              cones.forEach((c) => c.classList.remove("is-hop"));
+              if (who === "sq") S.logs[S.logs.length - 1].left.push(S.n);
+              if (S.n === 0) return endRound(who);
+              if (who === "you") { S.turn = "sq"; render(); setTimeout(squirrelMove, reduced() ? 300 : 800); }
+              else { S.turn = "you"; render(); say(`我拿了 ${k} 颗，现在剩 ${S.n} 颗。轮到你啦！`, S.n <= 2 ? "剩得不多了，想清楚再拿哦。" : ""); }
+            }, wait);
+          }
+
+          function squirrelMove() {
+            if (S.over) return;
+            const k = S.n % 3 || 1; /* perfect play: leave a multiple of 3 when possible */
+            take(k, "sq");
+          }
+
+          function playerTake(k) {
+            if (S.over || S.busy || S.turn !== "you" || k > S.n) return;
+            take(k, "you");
+          }
+          function tapCone(i, c) {
+            if (S.over || i >= S.n) return;
+            if (S.busy || S.turn !== "you") { say("等一等，现在是松鼠博士在拿哦。"); return; }
+            const k = S.n - i;
+            if (k === 1 || k === 2) return playerTake(k);
+            c.classList.remove("x-flash"); void c.offsetWidth; c.classList.add("x-flash"); Audio_.play("wrong");
+            say("每次只能拿1颗或2颗哦。从最右边拿，点最右边的一颗或两颗。");
+          }
+
+          function endRound(winner) {
+            S.over = true;
+            S.logs[S.logs.length - 1].winner = winner;
+            if (winner === "you") {
+              S.you++; Audio_.play("correct");
+              if (S.winHints === null || S.hints < S.winHints) S.winHints = S.hints;
+              say("你拿到了最后一颗，你赢了！你是怎么做到的？", "说说看：你每次拿完以后，给我留下了几颗？");
+            } else {
+              S.sq++; Audio_.play("wrong");
+              say("我拿到最后一颗啦！松鼠博士拿完后，剩下几颗？你发现了什么？", "看看侦探笔记本里的数字。");
+            }
+            quiz.hidden = false;
+            nextBtn.hidden = false;
+            nextBtn.textContent = S.round >= MAX_ROUNDS ? "再比 5 局 ▶" : "下一局 ▶";
+            render(); checkClear();
+          }
+
+          /* quiz */
+          const WRONG = {
+            2: "看笔记本里的 9：9 颗能两颗两颗地分完吗？",
+            5: "9、6、3 能五颗五颗地数完吗？再看看。",
+          };
+          const yn = quiz.querySelector(".x-yn");
+          [2, 3, 5].forEach((v) => {
+            const b = el("button", "x-btn x-btn--big", String(v));
+            b.addEventListener("click", () => {
+              if (S.quizHints !== null) return;
+              if (v === 3) {
+                b.classList.add("good"); Audio_.play("correct");
+                S.quizHints = S.hints;
+                yn.querySelectorAll("button").forEach((x) => (x.disabled = x !== b));
+                say("对啦！9、6、3、0 都是 3 的倍数。轮到你拿时，能不能也让我面对 3 的倍数？", "下一局试试看！");
+                checkClear();
+              } else {
+                b.classList.add("bad"); b.disabled = true; Audio_.play("wrong");
+                b.classList.remove("x-flash"); void b.offsetWidth; b.classList.add("x-flash");
+                say(WRONG[v], "再选一次。");
+              }
+            });
+            yn.append(b);
+          });
+
+          /* hint ladder: question, nudge, show */
+          hintBtn.addEventListener("click", () => {
+            S.hints++;
+            const h = HINTS[Math.min(S.hints, 3) - 1];
+            say(h[0], h[1]); render();
+          });
+          b1.addEventListener("click", () => playerTake(1));
+          b2.addEventListener("click", () => playerTake(2));
+          nextBtn.addEventListener("click", () => { Audio_.play("click"); startRound(); say("新的一局！还是你先拿。", S.cleared ? "" : "这次想好第一步再拿。"); });
+
+          /* stars: 3 = won with no hints; 2 = won or quiz with ≤1 hint; 1 otherwise */
+          function computeStars() {
+            let s = 0;
+            if (S.winHints !== null) s = Math.max(s, S.winHints === 0 ? 3 : S.winHints <= 1 ? 2 : 1);
+            if (S.quizHints !== null) s = Math.max(s, S.quizHints <= 1 ? 2 : 1);
+            return s;
+          }
+          function checkClear() {
+            const s = computeStars();
+            if (s <= S.cleared) return;
+            const first = !S.cleared;
+            S.cleared = s;
+            const xp = 20 + s * 10, delta = xp - S.xpGiven; S.xpGiven = xp;
+            done(s, delta);
+            if (first) award("detective");
+            endWrap.innerHTML = "";
+            endWrap.append(el("div", "x-end", `<h3>${starStr(s)} 第 1 关通过！</h3>
+              <p style="font:var(--type-body-strong)">你发现了：让对手面对 3 的倍数，你就赢！</p>
+              <dl><dt>为什么先拿 1 颗？</dt><dd>10 ÷ 3 = 3 余 1。先拿掉余下的 1 颗，留下 9 颗；之后松鼠博士拿 1，你就拿 2；它拿 2，你就拿 1。每轮一共拿走 3 颗：9 → 6 → 3 → 0。</dd></dl>
+              <div class="x-row"><span class="x-meter">⭐ ${s} 颗星</span><span class="x-meter">XP <b>+${xp}</b></span><span class="x-meter">🏅 小侦探</span></div>
+              ${s < 3 ? `<p class="fineprint">想拿 3 颗星？不看提示，赢松鼠博士一局！</p>` : ""}
+              <div class="x-row"><button class="x-btn x-btn--go" data-go2>第 2 关「倒着想」已解锁 ▶</button></div>`));
+            endWrap.querySelector("[data-go2]").addEventListener("click", () => { Audio_.play("click"); openLevel(2); });
+            render();
+          }
+
+          startRound();
+        },
+      });
+
+      /* ===== LEVEL 2 · 倒着想 ===== */
+      let L2xpGiven = 0;
+      LEVELS.push({
+        id: 2,
+        init(root, done) {
+          const TOP = 12, NS = "http://www.w3.org/2000/svg";
+          const col = Array(TOP + 1).fill(null); col[0] = "red";
+          const S = { active: 1, pending: null, mistakes: 0, stepMiss: 0, phase: "climb", blink: false };
+          const truth = (n) => (col[n - 1] === "red" || (n >= 2 && col[n - 2] === "red") ? "green" : "red");
+          const cname = (c) => (c === "red" ? "红色" : c === "green" ? "绿色" : "还没涂");
+          const flash = (b) => { b.classList.remove("x-flash"); void b.offsetWidth; b.classList.add("x-flash"); };
+
+          const say = guide(root, "倒着想！从最下面开始。第 0 级没有松果了：轮到谁，谁就输，所以它是红色。", "点亮着的台阶换颜色（未知→红→绿），想好了再点“✓ 确认”。一级一级往上涂。");
+          const legend = el("p", "x-legend", `<span>🔴 红 = 轮到你就会输（必败）</span><span>🟢 绿 = 轮到你能赢（必胜）</span><span>台阶上的数字 = 还剩几颗松果</span>`);
+          const score = el("div", "x-score");
+          const stairs = el("div", "x-stairs"); stairs.setAttribute("aria-label", "松果楼梯");
+          const svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "x-arrows"); svg.setAttribute("aria-hidden", "true");
+          stairs.append(svg);
+          const rows = [], steps = [];
+          for (let n = TOP; n >= 0; n--) {
+            const row = el("div", "x-stairrow");
+            const b = el("button", "x-step"); b.style.setProperty("--n", n); b.style.animationDelay = `${n * 60}ms`;
+            b.addEventListener("click", () => tapStep(n));
+            row.append(b); stairs.append(row); rows[n] = row; steps[n] = b;
+          }
+          const confirm = el("button", "x-btn x-btn--go", "✓ 确认");
+          confirm.addEventListener("click", check);
+          const quiz1 = el("div", "x-quiz", `<p>🔎 红色台阶有什么规律？</p><div class="x-row"></div>`); quiz1.hidden = true;
+          const quiz2 = el("div", "x-quiz", `<p>🤔 如果一开始有 15 颗松果，你先拿，你能赢吗？</p><div class="x-row"></div>`); quiz2.hidden = true;
+          const endWrap = el("div");
+          root.append(legend, score, stairs, quiz1, quiz2, endWrap);
+
+          function render() {
+            const painted = col.filter(Boolean).length;
+            score.innerHTML = `<span>已涂 <b>${painted}</b> / ${TOP + 1} 级</span><span>失误 <b>${S.mistakes}</b> 次</span>
+              <span class="x-score__turn">${S.phase === "climb" ? `正在想：第 ${S.active} 级` : "楼梯涂完啦"}</span>`;
+            for (let n = 0; n <= TOP; n++) {
+              const b = steps[n], c = col[n], act = S.phase === "climb" && n === S.active;
+              const shown = c || (act ? S.pending : null);
+              b.className = "x-step" + (shown === "red" ? " is-red" : shown === "green" ? " is-green" : "") +
+                (act ? " is-active" : "") + (act && S.pending ? " is-pending" : "") + (!c && !act ? " is-locked" : "") +
+                (S.phase === "climb" && (n === S.active - 1 || n === S.active - 2) ? " is-target" : "") +
+                (S.blink && c === "red" ? " is-blink" : "");
+              b.disabled = !act;
+              const label = shown === "red" ? "🔴 必败" : shown === "green" ? "🟢 必胜" : "？ 未知";
+              b.innerHTML = `<b>${n}</b><span>${label}</span>${n === 0 ? "<small>没有松果可拿了=输</small>" : ""}`;
+              b.setAttribute("aria-label", `第 ${n} 级，${shown ? cname(shown) : "未知"}${act ? "，点一下换颜色" : ""}`);
+              if (act) rows[n].append(confirm);
+            }
+            confirm.disabled = !S.pending;
+            if (S.phase !== "climb") confirm.remove();
+            drawArrows();
+          }
+
+          /* little arrows from the active step to n−1 and n−2 */
+          function drawArrows() {
+            requestAnimationFrame(() => {
+              svg.innerHTML = "";
+              if (S.phase !== "climb" || !stairs.isConnected) return;
+              const n = S.active, top = stairs.getBoundingClientRect().top;
+              const cy = (k) => { const r = steps[k].getBoundingClientRect(); return r.top - top + r.height / 2; };
+              const y0 = cy(n), x = 48;
+              [[1, 20, "−1"], [2, 44, "−2"]].forEach(([d, depth, txt]) => {
+                const k = n - d; if (k < 0) return;
+                const y1 = cy(k), xm = x - depth;
+                svg.insertAdjacentHTML("beforeend",
+                  `<path d="M${x} ${y0} C${xm} ${y0}, ${xm} ${y1}, ${x - 6} ${y1}" fill="none" style="stroke:var(--text-primary)" stroke-width="1.5" stroke-linecap="round"/>
+                   <path d="M${x} ${y1} L${x - 8} ${y1 - 4} L${x - 8} ${y1 + 4} Z" style="fill:var(--text-primary)"/>
+                   <text x="${x - depth * 0.75 + 4}" y="${(y0 + y1) / 2 + 4}" style="font:var(--type-caption);fill:var(--text-secondary)">${txt}</text>`);
+              });
+            });
+          }
+          addEventListener("resize", drawArrows);
+
+          function tapStep(n) {
+            if (S.phase !== "climb" || n !== S.active) return;
+            S.pending = S.pending === null ? "red" : S.pending === "red" ? "green" : null;
+            Audio_.play("tick", S.pending === "red" ? 440 : S.pending === "green" ? 660 : 520);
+            render();
+          }
+
+          function check() {
+            const n = S.active; if (S.phase !== "climb" || !S.pending) return;
+            const want = truth(n);
+            if (S.pending === want) {
+              col[n] = want; S.pending = null; S.stepMiss = 0; Audio_.play("correct");
+              if (want === "green") {
+                const k = col[n - 1] === "red" ? 1 : 2;
+                say(`对！第 ${n} 级是绿色：拿 ${k} 颗，就把松鼠博士送到红色的第 ${n - k} 级。`, n < TOP ? `接着想第 ${n + 1} 级。` : "");
+              } else {
+                say(`对！第 ${n} 级是红色：拿1颗到第 ${n - 1} 级，拿2颗到第 ${n - 2} 级，都是绿色，好位置全让给了松鼠博士。`, n < TOP ? `接着想第 ${n + 1} 级。` : "");
+              }
+              if (n === TOP) return finale();
+              S.active++; render();
+            } else {
+              S.mistakes++; S.stepMiss++; S.pending = null; Audio_.play("wrong");
+              const sub = n === 1 ? "从第 1 级只能拿1颗，会到第 0 级。那里是什么颜色？"
+                : S.stepMiss >= 2 ? `拿1颗→第 ${n - 1} 级（${cname(col[n - 1])}），拿2颗→第 ${n - 2} 级（${cname(col[n - 2])}）。能把松鼠博士送到红色吗？能，就是绿色。`
+                : "看看箭头指向的两级台阶。";
+              say("从这一级，拿1颗会到第几级？拿2颗呢？那里是什么颜色？", sub);
+              render(); flash(steps[n]);
+            }
+          }
+
+          function finale() {
+            S.phase = "pattern"; S.blink = true; render();
+            Audio_.play("chord");
+            [0, 3, 6, 9, 12].forEach((k, i) => setTimeout(() => Audio_.play("tick", 500 + i * 120), 300 + i * 180));
+            say("整座楼梯涂完啦！看，红色的台阶在闪：0、3、6、9、12。", "它们有什么共同点？");
+            setTimeout(() => { S.blink = false; render(); }, reduced() ? 0 : 3000);
+            quiz1.hidden = false;
+          }
+
+          function makeQuiz(box, opts, right, wrongMsg, onRight) {
+            const row = box.querySelector(".x-row"); let solved = false;
+            opts.forEach((o) => {
+              const b = el("button", "x-btn x-btn--big", o);
+              b.addEventListener("click", () => {
+                if (solved) return;
+                if (o === right) {
+                  solved = true; b.classList.add("good"); Audio_.play("correct");
+                  row.querySelectorAll("button").forEach((x) => (x.disabled = x !== b));
+                  onRight();
+                } else {
+                  S.mistakes++; b.classList.add("bad"); b.disabled = true; Audio_.play("wrong"); flash(b);
+                  say(wrongMsg[o], "再选一次。"); render();
+                }
+              });
+              row.append(b);
+            });
+          }
+          makeQuiz(quiz1, ["都是双数", "都是3的倍数", "都比5大"], "都是3的倍数",
+            { "都是双数": "3 和 9 是双数吗？再看看闪的数字。", "都比5大": "0 和 3 比 5 大吗？再看看。" },
+            () => { say("对！红色台阶都是 3 的倍数：0、3、6、9、12，再往上是 15。", "最后一个问题。"); quiz2.hidden = false; });
+          makeQuiz(quiz2, ["能", "不能"], "不能",
+            { "能": "15 ÷ 3 = 5，没有余数。15 站在红色台阶上，还是绿色台阶上？" },
+            () => {
+              say("对！15 是 3 的倍数，是红色台阶：轮到你就会输。你先拿，不管拿1还是2，松鼠博士都能把你送回红色：12、9、6、3、0。",
+                "所以要客气地说：“松鼠博士，你先请！”让它站上红色台阶。");
+              finish();
+            });
+
+          function finish() {
+            S.phase = "done"; render();
+            const s = S.mistakes <= 1 ? 3 : S.mistakes <= 4 ? 2 : 1;
+            const xp = 20 + s * 10, delta = Math.max(0, xp - L2xpGiven); L2xpGiven = Math.max(L2xpGiven, xp);
+            done(s, delta);
+            award("backward");
+            endWrap.innerHTML = "";
+            endWrap.append(el("div", "x-end", `<h3>${starStr(s)} 第 2 关通过！</h3>
+              <p style="font:var(--type-body-strong)">你学会了「倒着想」：从结局往回推，数学家叫它『逆推』。红色台阶 = 必败位置。</p>
+              <dl><dt>红色台阶</dt><dd>0、3、6、9、12、15……都是 3 的倍数。</dd>
+                <dt>怎么赢？</dt><dd>每次都让松鼠博士站上红色台阶。开局就在红色上？请它先拿。</dd></dl>
+              <div class="x-row"><span class="x-meter">⭐ ${s} 颗星</span><span class="x-meter">失误 ${S.mistakes} 次</span><span class="x-meter">XP <b>+${delta}</b></span><span class="x-meter">🏅 倒推小能手</span></div>
+              ${s < 3 ? `<p class="fineprint">想拿 3 颗星？整关最多错 1 次。</p>` : ""}
+              <div class="x-row"><button class="x-btn" data-again>再爬一次楼梯</button><button class="x-btn x-btn--go" data-go3>第 3 关「换个规则」已解锁 ▶</button></div>`));
+            endWrap.querySelector("[data-again]").addEventListener("click", () => { Audio_.play("click"); openLevel(2); });
+            endWrap.querySelector("[data-go3]").addEventListener("click", () => { Audio_.play("click"); openLevel(3); });
+          }
+
+          render();
+        },
+      });
+
+      /* ===== LEVEL 3 · 换个规则 ===== */
+      let L3xpGiven = 0;
+      LEVELS.push({
+        id: 3,
+        init(root, done) {
+          const TOTAL = 20, M = 3, MAX_TRIES = 5;
+          const HINTS = [
+            ["这次每次最多拿3颗。还记得楼梯吗？红色台阶会是哪些？", "提示 1/3 · 先想一想"],
+            ["试试 4、8、12、16……", "提示 2/3 · 推你一把"],
+            ["20 是 4 的倍数，让松鼠先拿！", "提示 3/3 · 直接告诉你"],
+          ];
+          const S = { n: TOTAL, owners: [], turn: null, busy: false, over: true, tries: 0, hints: 0, wonAt: 0, aDone: false, logs: [], pre: "",
+            setups: [], idx: 0, right: 0, answered: false, N: 12, m: 2, free: false, finished: false };
+          const flash = (b) => { b.classList.remove("x-flash"); void b.offsetWidth; b.classList.add("x-flash"); };
+
+          const say = guide(root, "新规则：20 颗松果，每次可以拿 1 颗、2 颗或 3 颗。拿到最后一颗的人赢！", "开局前先选：你先拿，还是让松鼠博士先拿？");
+
+          /* ---- Round A ---- */
+          const headA = el("h3", "x-sub", "Ⓐ 抢20颗松果 · 每次拿 1~3 颗");
+          const score = el("div", "x-score");
+          const choose = el("div", "x-quiz", `<p>这局谁先拿？</p><div class="x-row"></div>`);
+          const youFirst = el("button", "x-btn x-btn--big", "你先");
+          const sqFirst = el("button", "x-btn x-btn--big", "松鼠先");
+          choose.querySelector(".x-row").append(youFirst, sqFirst);
+          const left = el("p", "x-left");
+          const pile = el("div", "x-pile"); pile.setAttribute("aria-label", "松果堆");
+          const ctrls = el("div", "x-row");
+          const tb = [1, 2, 3].map((k) => { const b = el("button", "x-btn x-btn--big x-btn--go", `拿${k}颗`); b.addEventListener("click", () => playerTake(k)); return b; });
+          const hintBtn = el("button", "x-btn", "💡 提示");
+          const nextBtn = el("button", "x-btn", "再试一次 ▶"); nextBtn.hidden = true;
+          ctrls.append(...tb, hintBtn, nextBtn);
+          const note = el("div", "x-note", `<h3>🔍 侦探笔记本 <small style="font:var(--type-caption);color:var(--text-secondary)">· 松鼠博士拿完后，剩下几颗？</small></h3><ol></ol>`);
+          const toB = el("div", "x-row"); toB.hidden = true;
+          const toBBtn = el("button", "x-btn x-btn--go", "进入 Ⓑ「规则实验室」▶"); toB.append(toBBtn);
+
+          /* ---- Round B ---- */
+          const lab = el("div", "x-labwrap"); lab.hidden = true;
+          const headB = el("h3", "x-sub", "Ⓑ 规则实验室 · 改一改规则");
+          const sliders = el("div", "x-lab");
+          const sN = el("label", "x-slide", `<span>松果总数 N <b data-v></b></span><input type="range" min="5" max="30" step="1" />`);
+          const sM = el("label", "x-slide", `<span>每次最多拿 m 颗 <b data-v></b></span><input type="range" min="1" max="5" step="1" />`);
+          sliders.append(sN, sM);
+          const inN = sN.querySelector("input"), inM = sM.querySelector("input");
+          const legend = el("p", "x-legend", `<span>🔴 红 = 轮到你就会输</span><span>🟢 绿 = 轮到你能赢</span><span>黑框 = 开局的松果数</span>`);
+          const mini = el("div", "x-mini"); mini.setAttribute("aria-label", "迷你楼梯");
+          const ask = el("div", "x-quiz", `<p data-q></p><div class="x-row" data-yn></div><p data-q2 hidden>第一步拿几颗？</p><div class="x-row" data-k hidden></div>`);
+          const yes = el("button", "x-btn x-btn--big", "能"), no = el("button", "x-btn x-btn--big", "不能");
+          ask.querySelector("[data-yn]").append(yes, no);
+          const eq = el("div", "x-note"); eq.hidden = true;
+          const labCtrls = el("div", "x-row");
+          const nextQ = el("button", "x-btn x-btn--go", "下一题 ▶"); nextQ.hidden = true;
+          labCtrls.append(nextQ);
+          lab.append(headB, sliders, legend, mini, ask, eq, labCtrls);
+          const endWrap = el("div");
+          root.append(headA, score, choose, left, pile, ctrls, note, toB, lab, endWrap);
+
+          const cones = [];
+          for (let i = 0; i < TOTAL; i++) {
+            const c = el("button", "x-cone", `${CONE}<span class="x-cone__n">${i + 1}</span>`);
+            c.addEventListener("click", () => tapCone(i, c));
+            cones.push(c); pile.append(c);
+          }
+
+          function renderA() {
+            const st = S.aDone ? (S.wonAt ? "你赢啦 🎉" : "Ⓐ 结束") : S.turn === null ? "先选谁先拿" : S.over ? "本局结束" : S.turn === "you" ? "轮到：你" : "轮到：松鼠博士…";
+            score.innerHTML = `<span>第 <b>${Math.max(S.tries, 1)}</b> / ${MAX_TRIES} 次</span><span class="x-score__turn">${st}</span>`;
+            left.innerHTML = `还剩 <b>${S.n}</b> 颗松果`;
+            choose.hidden = S.aDone || S.turn !== null;
+            cones.forEach((c, i) => {
+              const gone = i >= S.n, who = S.owners[i];
+              c.classList.toggle("is-gone", gone);
+              c.classList.toggle("is-sq", gone && who === "sq");
+              c.querySelector(".x-cone__n").textContent = gone ? (who === "sq" ? "🐿拿" : "你拿") : String(i + 1);
+              c.setAttribute("aria-label", gone ? `第 ${i + 1} 颗，已被${who === "sq" ? "松鼠博士" : "你"}拿走` : `第 ${i + 1} 颗松果`);
+            });
+            const mine = !S.over && !S.busy && S.turn === "you";
+            tb.forEach((b, j) => (b.disabled = !mine || S.n < j + 1));
+            hintBtn.textContent = `💡 提示 ${Math.min(S.hints, 3)}/3`;
+            hintBtn.disabled = S.aDone;
+            note.querySelector("ol").innerHTML = S.logs.map((l) => {
+              const seq = l.left.length ? l.left.map((x) => (S.aDone && x % 4 === 0 ? `<mark>${x}</mark>` : x)).join(" → ") : "（松鼠博士还没拿）";
+              return `<li>第 ${l.t} 次 · ${l.first === "you" ? "你先" : "松鼠先"} <span class="x-seq">20 ⋯ ${seq}</span>${l.winner ? ` · ${l.winner === "you" ? "你赢 🎉" : "松鼠博士赢"}` : ""}</li>`;
+            }).join("") || `<li style="list-style:none;margin-left:-20px;color:var(--text-secondary)">开始后，这里会记下数字。</li>`;
+          }
+
+          function newTry() {
+            S.n = TOTAL; S.owners = []; S.turn = null; S.over = true; S.busy = false; S.pre = "";
+            nextBtn.hidden = true; renderA();
+          }
+          function pickFirst(who) {
+            if (S.aDone || S.turn !== null) return;
+            S.tries++; S.over = false;
+            S.logs.push({ t: S.tries, first: who, left: [], winner: null });
+            if (who === "you") {
+              Audio_.play("click"); S.turn = "you"; renderA();
+              say("好，你先拿。想一想：20 颗松果，站在哪种台阶上呢？", "点“拿1颗”“拿2颗”“拿3颗”，或点最右边的松果。");
+            } else {
+              Audio_.play("correct"); S.turn = "sq"; S.pre = "好眼光！你为什么要让我先拿呢？";
+              renderA(); setTimeout(squirrelMove, reduced() ? 300 : 800);
+            }
+          }
+          function take(k, who) {
+            S.busy = true;
+            for (let j = 0; j < k; j++) {
+              const idx = S.n - 1 - j, c = cones[idx];
+              S.owners[idx] = who;
+              c.classList.remove("is-hop"); void c.offsetWidth; c.classList.add("is-hop");
+              setTimeout(() => Audio_.play("hop"), j * 140);
+            }
+            S.n -= k;
+            const wait = reduced() ? 150 : 560 + (k - 1) * 140;
+            renderA();
+            setTimeout(() => {
+              S.busy = false;
+              cones.forEach((c) => c.classList.remove("is-hop"));
+              if (who === "sq") S.logs[S.logs.length - 1].left.push(S.n);
+              if (S.n === 0) return endTry(who);
+              if (who === "you") { S.turn = "sq"; renderA(); setTimeout(squirrelMove, reduced() ? 300 : 800); }
+              else {
+                S.turn = "you"; renderA();
+                say(`${S.pre}我拿了 ${k} 颗，现在剩 ${S.n} 颗。轮到你啦！`, S.n <= 3 ? "剩得不多了，想清楚再拿哦。" : "");
+                S.pre = "";
+              }
+            }, wait);
+          }
+          function squirrelMove() {
+            if (S.over) return;
+            take(S.n % (M + 1) || 1, "sq"); /* perfect play: leave a multiple of 4 when it can */
+          }
+          function playerTake(k) {
+            if (S.over || S.busy || S.turn !== "you" || k > S.n) return;
+            take(k, "you");
+          }
+          function tapCone(i, c) {
+            if (S.over || i >= S.n) return;
+            if (S.busy || S.turn !== "you") { say("等一等，现在不是你拿哦。"); return; }
+            const k = S.n - i;
+            if (k >= 1 && k <= M) return playerTake(k);
+            flash(c); Audio_.play("wrong");
+            say("每次最多拿3颗哦。从最右边拿，点最右边的一到三颗。");
+          }
+          function endTry(winner) {
+            S.over = true;
+            S.logs[S.logs.length - 1].winner = winner;
+            const first = S.logs[S.logs.length - 1].first;
+            if (winner === "you") {
+              S.wonAt = S.tries; S.aDone = true; Audio_.play("correct");
+              say("你拿到了最后一颗，你赢了！为什么这次要让我先拿？", "20 ÷ 4 = 5，余数是几？去规则实验室看看总规律！");
+              toB.hidden = false;
+            } else {
+              Audio_.play("wrong");
+              if (S.tries >= MAX_TRIES) {
+                S.aDone = true;
+                say("5 次用完啦。想一想：20 ÷ 4 = 5，没有余数。20 站在红色台阶上，谁先拿谁就……？", "答案：让松鼠先拿！去规则实验室，看看总规律。");
+                toB.hidden = false;
+              } else if (first === "you") {
+                say("我拿到最后一颗啦！你先拿的时候，20 颗站在红色台阶还是绿色台阶上？", "看看笔记本：我每次给你留下几颗？");
+              } else {
+                say("我拿到最后一颗啦！我先拿以后，你每次给我留下了几颗？", "看看笔记本里的数字，它们有什么共同点？");
+              }
+              if (!S.aDone) { nextBtn.hidden = false; nextBtn.textContent = `再试一次 ▶（还剩 ${MAX_TRIES - S.tries} 次）`; }
+            }
+            renderA();
+          }
+
+          youFirst.addEventListener("click", () => pickFirst("you"));
+          sqFirst.addEventListener("click", () => pickFirst("sq"));
+          hintBtn.addEventListener("click", () => {
+            S.hints++;
+            const h = HINTS[Math.min(S.hints, 3) - 1];
+            say(h[0], h[1]); renderA();
+          });
+          nextBtn.addEventListener("click", () => { Audio_.play("click"); newTry(); say("再来一次！先选：谁先拿？", "想好再选。"); });
+          toBBtn.addEventListener("click", () => {
+            Audio_.play("click"); toB.hidden = true; lab.hidden = false;
+            S.setups = makeSetups(); S.idx = 0; S.right = 0; showQ();
+            lab.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+          });
+
+          /* ---- Round B logic ---- */
+          const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+          function makeSetups() {
+            const out = [], has = (N, m) => out.some((s) => s.N === N && s.m === m);
+            let m = rnd(1, 5); out.push({ N: (m + 1) * rnd(Math.ceil(5 / (m + 1)), Math.floor(30 / (m + 1))), m }); /* first player loses */
+            let N; do { m = rnd(1, 5); N = rnd(5, 30); } while (N % (m + 1) === 0 || has(N, m)); out.push({ N, m }); /* first player wins */
+            do { m = rnd(1, 5); N = rnd(5, 30); } while (has(N, m)); out.push({ N, m });
+            for (let i = out.length - 1; i > 0; i--) { const j = rnd(0, i); [out[i], out[j]] = [out[j], out[i]]; }
+            return out;
+          }
+          function renderLab() {
+            const { N, m } = S, reveal = S.free || S.answered;
+            inN.value = N; inM.value = m;
+            sN.querySelector("[data-v]").textContent = N; sM.querySelector("[data-v]").textContent = m;
+            inN.disabled = inM.disabled = !S.free;
+            mini.innerHTML = Array.from({ length: N + 1 }, (_, i) => {
+              const c = reveal ? (i % (m + 1) === 0 ? "is-red" : "is-green") : "";
+              return `<span class="${c}${i === N ? " is-start" : ""}" style="--i:${i}">${i}</span>`;
+            }).join("");
+            eq.hidden = !reveal;
+            if (reveal) {
+              const q = Math.floor(N / (m + 1)), r = N % (m + 1);
+              eq.innerHTML = `<h3>🧮 算式卡</h3><p class="x-eq">${N} ÷ (${m}+1) = ${q} … ${r}</p>
+                <ul><li class="${r ? "is-on" : ""}">余数 ≠ 0 → 先拿余数颗就赢</li><li class="${r ? "" : "is-on"}">余数 = 0 → 让对方先</li></ul>
+                <p style="font:var(--type-small);color:var(--text-secondary)">${r ? `先拿 ${r} 颗，留下 ${N - r} 颗（${m + 1} 的倍数）给对方。` : `${N} 是 ${m + 1} 的倍数：先拿的人会输，请对方先拿。`}</p>`;
+            }
+          }
+          function showQ() {
+            const st = S.setups[S.idx]; S.N = st.N; S.m = st.m; S.answered = false;
+            ask.hidden = false; nextQ.hidden = true;
+            ask.querySelector("[data-q]").textContent = `第 ${S.idx + 1} / 3 题 · ${st.N} 颗松果，每次拿 1~${st.m} 颗。先拿的人能赢吗？`;
+            [yes, no].forEach((b) => { b.disabled = false; b.className = "x-btn x-btn--big"; });
+            const kRow = ask.querySelector("[data-k]"); kRow.innerHTML = ""; kRow.hidden = true; ask.querySelector("[data-q2]").hidden = true;
+            for (let k = 1; k <= st.m; k++) {
+              const b = el("button", "x-btn x-btn--big", String(k));
+              b.addEventListener("click", () => pickK(k, b)); kRow.append(b);
+            }
+            say(`规则变了：${st.N} 颗，每次最多拿 ${st.m} 颗。先别看颜色，你觉得哪些台阶是红色？`, "先预测，再揭晓！");
+            renderLab();
+          }
+          function settle(ok, msg, sub) {
+            S.answered = true; if (ok) S.right++;
+            Audio_.play(ok ? "correct" : "wrong");
+            [yes, no].forEach((b) => (b.disabled = true));
+            ask.querySelectorAll("[data-k] button").forEach((b) => (b.disabled = true));
+            say(msg, sub); renderLab();
+            if (S.idx < 2) nextQ.hidden = false; else finish();
+          }
+          yes.addEventListener("click", () => {
+            if (S.answered) return;
+            const r = S.N % (S.m + 1);
+            if (!r) { yes.classList.add("bad"); flash(yes); return settle(false, `${S.N} 站在红色台阶上还是绿色台阶上？看看揭晓的楼梯。`, `${S.N} ÷ ${S.m + 1} 的余数是几？`); }
+            yes.classList.add("good"); yes.disabled = no.disabled = true; Audio_.play("click");
+            ask.querySelector("[data-q2]").hidden = false; ask.querySelector("[data-k]").hidden = false;
+            say("你说能赢。那第一步拿几颗，才能让对方站上红色台阶？", "想一想再点。");
+          });
+          no.addEventListener("click", () => {
+            if (S.answered) return;
+            const r = S.N % (S.m + 1);
+            if (!r) { no.classList.add("good"); return settle(true, `对！${S.N} 是 ${S.m + 1} 的倍数，站在红色台阶上。先拿的人怎么拿，对方都能送你回红色。`, "所以要说：“你先请！”"); }
+            no.classList.add("bad"); flash(no);
+            settle(false, `${S.N} 站在红色台阶上吗？看看揭晓的楼梯：从 ${S.N} 能不能一步跳到红色台阶？`, `${S.N} ÷ ${S.m + 1} 的余数是几？`);
+          });
+          function pickK(k, b) {
+            if (S.answered) return;
+            const r = S.N % (S.m + 1);
+            if (k === r) { b.classList.add("good"); return settle(true, `对！拿 ${k} 颗，留下 ${S.N - k} 颗，正好是 ${S.m + 1} 的倍数。`, "余数是几，就先拿几颗。"); }
+            b.classList.add("bad"); flash(b);
+            settle(false, `拿 ${k} 颗后剩 ${S.N - k} 颗，它是红色台阶吗？`, `看算式卡：${S.N} ÷ ${S.m + 1} 的余数是几？`);
+          }
+          nextQ.addEventListener("click", () => { Audio_.play("click"); S.idx++; showQ(); });
+          inN.addEventListener("input", () => { if (!S.free) return; S.N = +inN.value; Audio_.play("tick", 400 + S.N * 12); renderLab(); });
+          inM.addEventListener("input", () => { if (!S.free) return; S.m = +inM.value; Audio_.play("tick", 500 + S.m * 60); renderLab(); });
+
+          function finish() {
+            S.finished = true;
+            const won = S.wonAt > 0;
+            const s = won && S.wonAt <= 2 && S.right === 3 ? 3 : won && S.right >= 2 ? 2 : 1;
+            const xp = 20 + s * 10, delta = Math.max(0, xp - L3xpGiven); L3xpGiven = Math.max(L3xpGiven, xp);
+            done(s, delta);
+            award("rules");
+            setTimeout(() => {
+              S.free = true; renderLab();
+              say("实验室现在归你啦！拖一拖滑块，看看红色台阶怎么跟着变。", "红色台阶总是隔几级出现一次？");
+            }, reduced() ? 0 : 1600);
+            endWrap.innerHTML = "";
+            endWrap.append(el("div", "x-end", `<h3>${starStr(s)} 第 3 关通过！</h3>
+              <p style="font:var(--type-body-strong)">你发现了总规律：每次最多拿 m 颗，就看 N 除以 (m+1) 的余数！这就是『除法与余数』的威力。</p>
+              <dl><dt>Ⓐ 抢20颗松果</dt><dd>${won ? `第 ${S.wonAt} 次赢了松鼠博士。` : "这次没赢到，下次让松鼠先拿！"}20 ÷ 4 = 5 余 0，请松鼠先拿。</dd>
+                <dt>Ⓑ 规则实验室</dt><dd>预测对了 ${S.right} / 3 题。</dd></dl>
+              <div class="x-row"><span class="x-meter">⭐ ${s} 颗星</span><span class="x-meter">XP <b>+${delta}</b></span><span class="x-meter">🏅 规则破解者</span></div>
+              ${s < 3 ? `<p class="fineprint">想拿 3 颗星？2 次之内赢下Ⓐ，Ⓑ 的 3 题全对。</p>` : ""}
+              <div class="x-row"><button class="x-btn" data-again>再玩一次第 3 关</button><button class="x-btn x-btn--go" data-go4>第 4 关「为什么总能赢」已解锁 ▶</button></div>`));
+            endWrap.querySelector("[data-again]").addEventListener("click", () => { Audio_.play("click"); openLevel(3); });
+            endWrap.querySelector("[data-go4]").addEventListener("click", () => { Audio_.play("click"); openLevel(4); });
+          }
+
+          newTry();
+        },
+      });
+
+      /* ===== LEVEL 4 · 为什么总能赢 ===== */
+      let L4xpGiven = 0;
+      LEVELS.push({
+        id: 4,
+        init(root, done) {
+          const GAMES = [12, 16], M = 3;
+          const S = { g: 0, n: GAMES[0], pairs: [], turn: null, busy: false, mistakes: 0, blank: 0, filled: [null, null, null], bDone: false, cDone: false };
+          const flash = (b) => { b.classList.remove("x-flash"); void b.offsetWidth; b.classList.add("x-flash"); };
+          const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+          const wait = (ms) => (reduced() ? 150 : ms);
+          const foxGuide = (text, sub) => { const box = el("div"); const set = guide(box, text, sub); box.querySelector(".x-cat__face").textContent = "🦊"; return [box, set]; };
+
+          const say = guide(root, "这关换你来当“松鼠博士”！小狐狸先拿，每次拿 1~3 颗。", "小狐狸拿完，轮到你：让你们俩这一轮拿的加起来正好是 4，凑成“一对”。");
+
+          /* ---- Part A ---- */
+          const headA = el("h3", "x-sub", "Ⓐ 凑成一对 · 每次拿 1~3 颗");
+          const [foxBox, fox] = foxGuide("我是小狐狸，这次我先拿！", "");
+          const score = el("div", "x-score");
+          const left = el("p", "x-left");
+          const pile = el("div", "x-pile"); pile.setAttribute("aria-label", "松果堆");
+          const pairsBox = el("div", "x-pairs"); pairsBox.setAttribute("aria-label", "一对一对的松果");
+          const ctrls = el("div", "x-row");
+          const tb = [1, 2, 3].map((k) => { const b = el("button", "x-btn x-btn--big x-btn--go", `拿${k}颗`); b.addEventListener("click", () => pick(k, b)); return b; });
+          const nextBtn = el("button", "x-btn x-btn--go", ""); nextBtn.hidden = true;
+          ctrls.append(...tb, nextBtn);
+
+          /* ---- Part B ---- */
+          const partB = el("div", "x-labwrap"); partB.hidden = true;
+          const headB = el("h3", "x-sub", "Ⓑ 补全理由 · 点空格，再选答案");
+          const card = el("div", "x-quiz", `<p class="x-reason">每次对手拿 k 颗（k 是 1、2 或 3），我就拿<button class="x-blank" data-b="0" aria-label="第 1 个空">？</button>颗。这样每一轮一共拿走<button class="x-blank" data-b="1" aria-label="第 2 个空">？</button>颗。松果总数是 4 的倍数，所以一对一对拿完后，最后一颗一定是<button class="x-blank" data-b="2" aria-label="第 3 个空">？</button>拿的。</p><div class="x-row" data-opts></div>`);
+          const blanks = [...card.querySelectorAll(".x-blank")], opts = card.querySelector("[data-opts]");
+          const toC = el("div", "x-row"); toC.hidden = true;
+          const toCBtn = el("button", "x-btn x-btn--go", "进入 Ⓒ「挑错」▶"); toC.append(toCBtn);
+          partB.append(headB, card, toC);
+
+          /* ---- Part C ---- */
+          const partC = el("div", "x-labwrap"); partC.hidden = true;
+          const headC = el("h3", "x-sub", "Ⓒ 挑错 · 小狐狸说得对吗？");
+          const [foxCBox, foxC] = foxGuide("我发现：只要每次都拿 3 颗就一定赢！", "哪一张卡片能证明小狐狸说错了？");
+          const picks = el("div", "x-picks");
+          partC.append(headC, foxCBox, picks);
+
+          const endWrap = el("div");
+          root.append(headA, foxBox, score, left, pile, pairsBox, ctrls, partB, partC, endWrap);
+
+          /* ---- Part A logic ---- */
+          const mc = (cls, label) => `<span class="x-mc ${cls}">${CONE}<small>${label}</small></span>`;
+          function renderA() {
+            const N = GAMES[S.g];
+            score.innerHTML = `<span>第 <b>${S.g + 1}</b> / 2 局</span><span>${N} 颗 · 凑 ${N / 4} 对</span>
+              <span class="x-score__turn">${S.turn === null ? "本局结束" : S.turn === "you" ? "轮到：你" : "轮到：小狐狸…"}</span>`;
+            left.innerHTML = `还剩 <b>${S.n}</b> 颗松果`;
+            pile.innerHTML = Array.from({ length: S.n }, (_, i) => `<span class="x-cone is-static" role="img" aria-label="第 ${i + 1} 颗松果">${CONE}<span class="x-cone__n">${i + 1}</span></span>`).join("");
+            pairsBox.innerHTML = Array.from({ length: N / 4 }, (_, i) => {
+              const p = S.pairs[i];
+              if (!p) return `<div class="x-pair is-wait" role="group" aria-label="第 ${i + 1} 对，还没开始"><div class="x-pair__cones">${mc("is-empty", "&nbsp;").repeat(4)}</div><p class="x-pair__sum">第 ${i + 1} 对 = 4</p></div>`;
+              const cones = mc("is-fox", "🦊").repeat(p.k) + (p.me ? mc("", "你").repeat(p.me) : mc("is-empty", "？").repeat(4 - p.k));
+              return `<div class="x-pair ${p.me ? "is-done" : "is-now"}" role="group" aria-label="第 ${i + 1} 对：小狐狸 ${p.k} 颗，你 ${p.me || "还没拿"}"><div class="x-pair__cones">${cones}</div><p class="x-pair__sum">🦊${p.k} + 你${p.me || "？"} = 4</p></div>`;
+            }).join("");
+            const mine = S.turn === "you" && !S.busy;
+            tb.forEach((b) => (b.disabled = !mine));
+          }
+          function hop(k) {
+            const kids = pile.children;
+            for (let j = 0; j < k; j++) { const c = kids[S.n - 1 - j]; if (c) c.classList.add("is-hop"); setTimeout(() => Audio_.play("hop"), j * 140); }
+            return wait(560 + (k - 1) * 140);
+          }
+          function startGame() {
+            S.n = GAMES[S.g]; S.pairs = []; S.turn = "fox"; S.busy = true; nextBtn.hidden = true;
+            renderA(); setTimeout(foxMove, wait(900));
+          }
+          function foxMove() {
+            if (S.turn !== "fox") return;
+            const k = rnd(1, Math.min(M, S.n)); S.busy = true; renderA();
+            setTimeout(() => {
+              S.n -= k; S.pairs.push({ k, me: 0 }); S.turn = "you"; S.busy = false; renderA();
+              fox(`我拿了 ${k} 颗！还剩 ${S.n} 颗，看你的。`, "", true);
+              if (S.pairs.length === 1 && S.g === 0) say(`小狐狸拿了 ${k} 颗。你拿几颗，这一对才凑成 4？`, "看虚线框：还空着几个位置？");
+            }, hop(k));
+          }
+          function pick(j, b) {
+            if (S.turn !== "you" || S.busy) return;
+            const p = S.pairs[S.pairs.length - 1], need = 4 - p.k;
+            if (j !== need) {
+              S.mistakes++; flash(b); flash(pairsBox.children[S.pairs.length - 1]); Audio_.play("wrong");
+              say(`狐狸拿了 ${p.k} 颗，你拿几颗，这一对才凑成 4？`, `你选的是 ${j} 颗：${p.k} + ${j} = ${p.k + j}，不是 4。`);
+              return;
+            }
+            S.busy = true; renderA();
+            setTimeout(() => {
+              S.n -= j; p.me = j; S.busy = false; Audio_.play("correct");
+              if (S.n === 0) { S.turn = null; renderA(); return endGame(); }
+              S.turn = "fox"; renderA();
+              say(`对！${p.k} + ${j} = 4，凑成第 ${S.pairs.length} 对。`, `还剩 ${S.n} 颗，轮到小狐狸。`, true);
+              setTimeout(foxMove, wait(800));
+            }, hop(j));
+          }
+          function endGame() {
+            nextBtn.hidden = false;
+            if (S.g === 0) {
+              fox("哼，我不信！再来一局！", "", true);
+              say("12 颗正好凑成 3 对，最后一颗是你拿的！", "再来一局：16 颗，能凑几对？");
+              nextBtn.textContent = "第 2 局：16 颗 ▶";
+            } else {
+              fox("怎么又输了……我明明每次都换着拿！", "", true);
+              say("16 颗 = 4 对，你又拿到了最后一颗！小狐狸怎么拿都没用。", "为什么？我们把理由说清楚。");
+              nextBtn.textContent = "进入 Ⓑ「补全理由」▶";
+            }
+          }
+          nextBtn.addEventListener("click", () => {
+            Audio_.play("click");
+            if (S.g === 0) { S.g = 1; startGame(); say("第 2 局：16 颗。还是小狐狸先拿。", "每一对都凑成 4。"); return; }
+            nextBtn.hidden = true; partB.hidden = false; renderB();
+            say("把你的秘诀写成一段理由。点一个空格，再选答案。", "说理要说清楚：每一步为什么成立。");
+            partB.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+          });
+
+          /* ---- Part B logic ---- */
+          const BL = [
+            { opts: ["k", "3", "4−k", "4", "5"], right: "4−k", wrong: {
+              k: "对手拿 1 颗，你也拿 1 颗，这一对只有 2 颗，凑不成 4。",
+              "3": "对手拿 3 颗时你也拿 3 颗？一对就是 6 颗了。你拿的颗数要跟着 k 变。",
+              "4": "规则是每次最多拿 3 颗，拿不了 4 颗哦。",
+              "5": "规则是每次最多拿 3 颗，拿不了 5 颗哦。" } },
+            { opts: ["k", "3", "4−k", "4", "5"], right: "4", wrong: {
+              k: "k 颗只是对手拿的。再加上你拿的 4−k 颗，一共几颗？",
+              "3": "k + (4−k) = ？ 想想Ⓐ 里虚线框上写的数。",
+              "4−k": "4−k 颗是你拿的。再加上对手的 k 颗，一共几颗？",
+              "5": "k + (4−k) = ？ 想想Ⓐ 里虚线框上写的数。" } },
+            { opts: ["我", "对手"], right: "我", wrong: {
+              "对手": "每一对都是对手先拿、我后拿。最后一对里，最后一颗是谁拿的？" } },
+          ];
+          function renderB() {
+            blanks.forEach((b, i) => {
+              const f = S.filled[i];
+              b.textContent = f || "？";
+              b.classList.toggle("is-filled", !!f); b.classList.toggle("is-active", !f && i === S.blank);
+              b.disabled = !!f;
+            });
+            opts.innerHTML = "";
+            if (S.bDone) return;
+            BL[S.blank].opts.forEach((o) => {
+              const b = el("button", "x-btn x-btn--big", o);
+              b.addEventListener("click", () => choose(o, b)); opts.append(b);
+            });
+          }
+          blanks.forEach((b, i) => b.addEventListener("click", () => { if (S.filled[i] || S.bDone) return; Audio_.play("click"); S.blank = i; renderB(); }));
+          function choose(o, b) {
+            const bl = BL[S.blank];
+            if (o !== bl.right) {
+              S.mistakes++; b.classList.add("bad"); b.disabled = true; flash(b); Audio_.play("wrong");
+              say(bl.wrong[o], "再选一次。"); return;
+            }
+            Audio_.play("correct"); S.filled[S.blank] = o;
+            const nxt = S.filled.findIndex((f) => !f);
+            if (nxt < 0) {
+              S.bDone = true; renderB(); toC.hidden = false;
+              say("说得好！这就是『配对策略』：对手拿 k 颗，我就拿 4−k 颗，每一对都是 4 颗。", "小狐狸好像又有新发现了……");
+            } else { S.blank = nxt; renderB(); say("填对了！下一个空格。", ""); }
+          }
+          toCBtn.addEventListener("click", () => {
+            Audio_.play("click"); toC.hidden = true; partC.hidden = false;
+            say("小狐狸的说法对吗？找一个例子推翻它。", "这样的例子叫『反例』。");
+            partC.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+          });
+
+          /* ---- Part C logic ---- */
+          const CARDS = [
+            { t: "剩 4 颗时你拿 3 颗，对手拿 1 颗就赢了。", ok: true },
+            { t: "12 颗时你拿 3 颗，对手拿 1 颗，还剩 8 颗。", msg: "还剩 8 颗，游戏还没结束，看不出谁输谁赢。反例要能说明：拿 3 颗也会输。" },
+            { t: "剩 3 颗时你拿 3 颗，你就赢了。", msg: "这个例子里拿 3 颗赢了，它在帮小狐狸说话，不是反例。" },
+          ];
+          for (let i = CARDS.length - 1; i > 0; i--) { const j = rnd(0, i); [CARDS[i], CARDS[j]] = [CARDS[j], CARDS[i]]; }
+          CARDS.forEach((c) => {
+            const b = el("button", "x-pick"); b.textContent = c.t;
+            b.addEventListener("click", () => {
+              if (S.cDone) return;
+              if (c.ok) {
+                S.cDone = true; b.classList.add("good"); Audio_.play("correct");
+                picks.querySelectorAll("button").forEach((x) => (x.disabled = true));
+                foxC("哎呀，还真是……剩 4 颗时拿 3 颗就输了。", "", true);
+                say("举一个反例就能推翻一个说法——数学家就是这样说理的。", "");
+                finish();
+              } else {
+                S.mistakes++; b.classList.add("bad"); b.disabled = true; flash(b); Audio_.play("wrong");
+                say(c.msg, "再选一次。");
+              }
+            });
+            picks.append(b);
+          });
+
+          function finish() {
+            const s = S.mistakes <= 1 ? 3 : S.mistakes <= 3 ? 2 : 1;
+            const xp = 20 + s * 10, delta = Math.max(0, xp - L4xpGiven); L4xpGiven = Math.max(L4xpGiven, xp);
+            done(s, delta);
+            award("reason");
+            endWrap.innerHTML = "";
+            endWrap.append(el("div", "x-end", `<h3>${starStr(s)} 第 4 关通过！</h3>
+              <p style="font:var(--type-body-strong)">你不仅会赢，还能说出为什么赢：配对策略。会说理，才是真的懂。</p>
+              <dl><dt>Ⓐ 凑成一对</dt><dd>12 颗 = 3 对，16 颗 = 4 对：对手拿 k 颗，你拿 4−k 颗。</dd>
+                <dt>Ⓑ 补全理由</dt><dd>每一轮拿走 4 颗，总数是 4 的倍数，最后一颗一定是我拿的。</dd>
+                <dt>Ⓒ 挑错</dt><dd>一个反例（剩 4 颗时拿 3 颗）就推翻了“每次拿 3 颗必赢”。</dd></dl>
+              <div class="x-row"><span class="x-meter">⭐ ${s} 颗星</span><span class="x-meter">失误 ${S.mistakes} 次</span><span class="x-meter">XP <b>+${delta}</b></span><span class="x-meter">🏅 小小说理家</span></div>
+              ${s < 3 ? `<p class="fineprint">想拿 3 颗星？整关最多错 1 次。</p>` : ""}
+              <div class="x-row"><button class="x-btn x-btn--go" data-go5>👑 第 5 关「BOSS 松鼠大王的挑战」已解锁 ▶</button><button class="x-btn" data-again>再玩一次第 4 关</button></div>`));
+            endWrap.querySelector("[data-again]").addEventListener("click", () => { Audio_.play("click"); openLevel(4); });
+            endWrap.querySelector("[data-go5]").addEventListener("click", () => { Audio_.play("click"); openLevel(5); });
+          }
+
+          startGame();
+        },
+      });
+
+      /* ===== LEVEL 5 · BOSS 松鼠大王的挑战 (two-pile Nim, mirror strategy) ===== */
+      let L5xpGiven = 0;
+      LEVELS.push({
+        id: 5,
+        init(root, done) {
+          const STAGES = [
+            { p: [3, 3], first: "choose", name: "热身赛", king: "热身赛：两棵树都是 3 颗。谁先拿，你来决定！" },
+            { p: [5, 3], first: "you", name: "第二场", king: "第二场：5 颗和 3 颗，这次你先拿！" },
+            { p: [7, 4], first: "choose", name: "决战", king: "决战！7 颗和 4 颗。谁先拿，你再来选一次。" },
+          ];
+          const HINTS = [
+            ["如果两堆一样多，轮到对手拿，他拿完后两堆还一样吗？", "提示 1/3 · 先想一想"],
+            ["对手在一边拿几颗，你就在另一边拿几颗——像照镜子。", "提示 2/3 · 推你一把"],
+            ["先把两堆变成一样多！", "提示 3/3 · 直接告诉你"],
+          ];
+          const SIDE = ["左边", "右边"];
+          const S = { st: 0, piles: [3, 3], turn: null, busy: false, sel: null, tries: 1, extra: 0, firstTry: [], triesUsed: [], hint: 0, log: [], over: false, won: false, quizDone: false };
+          const wait = (ms) => (reduced() ? 150 : ms);
+          const flash = (b) => { b.classList.remove("x-flash"); void b.offsetWidth; b.classList.add("x-flash"); };
+          const guided = () => S.tries > 3;
+
+          const say = guide(root, "松鼠大王来了！这次有两棵树，每棵树上一堆松果。轮到你时，选一棵树，从上面拿任意颗（至少 1 颗）。拿到最后一颗的人赢！", "点一颗松果：它和它上面的松果都会被选中，再按“拿走”。");
+          const kingBox = el("div"); const king = guide(kingBox, "我是松鼠大王！三场比赛，你能赢我吗？", "");
+          kingBox.firstChild.classList.add("x-cat--king");
+          kingBox.querySelector(".x-cat__face").innerHTML = `<span class="x-crown">👑</span>🐿`;
+
+          const score = el("div", "x-score");
+          const chooseRow = el("div", "x-row"); chooseRow.hidden = true;
+          const meFirst = el("button", "x-btn x-btn--big", "我先拿");
+          const kingFirst = el("button", "x-btn x-btn--big", "让大王先拿 👑");
+          chooseRow.append(meFirst, kingFirst);
+          const trees = el("div", "x-trees");
+          const stacks = [0, 1].map((i) => {
+            const t = el("div", "x-tree"); t.setAttribute("role", "group"); t.setAttribute("aria-label", `${SIDE[i]}的树`);
+            const h = el("p", "x-tree__h"), st = el("div", "x-stack"), trunk = el("div", "x-trunk");
+            t.append(h, st, trunk); trees.append(t);
+            return { h, st };
+          });
+          const selInfo = el("p", "x-selinfo");
+          const ctrls = el("div", "x-row");
+          const takeBtn = el("button", "x-btn x-btn--big x-btn--go", "拿走");
+          const cancelBtn = el("button", "x-btn", "取消选择");
+          const hintBtn = el("button", "x-btn", "💡 提示");
+          const nextBtn = el("button", "x-btn x-btn--go", ""); nextBtn.hidden = true;
+          ctrls.append(takeBtn, cancelBtn, hintBtn, nextBtn);
+          const note = el("div", "x-note", `<h3>🪞 镜子笔记本 <small style="font:var(--type-caption);color:var(--text-secondary)">· 每次拿完，两堆各剩几颗？</small></h3><ol></ol>`);
+          const quiz = el("div", "x-quiz"); quiz.hidden = true;
+          quiz.innerHTML = `<p>🤔 为什么『两堆一样多』时，后拿的人能赢？</p><div class="x-picks"></div>`;
+          const endWrap = el("div");
+          root.append(kingBox, score, chooseRow, trees, selInfo, ctrls, note, quiz, endWrap);
+
+          function tip() {
+            if (!guided() || S.turn !== "you" || S.busy) return null;
+            const [a, b] = S.piles; if (a === b) return null;
+            const L = a > b ? 0 : 1; return { pile: L, from: S.piles[L] - Math.abs(a - b) };
+          }
+          function render() {
+            const stg = STAGES[S.st], max = Math.max(...stg.p);
+            const turnTxt = S.over ? "本场结束" : S.turn === "choose" ? "请选：谁先拿" : S.turn === "you" ? "轮到：你" : "轮到：松鼠大王…";
+            score.innerHTML = `<span>第 <b>${S.st + 1}</b> / 3 场 · ${stg.name}</span><span>${guided() ? "带路模式" : `第 ${S.tries} / 3 次尝试`}</span><span class="x-score__turn">${turnTxt}</span>`;
+            const t = tip(), mine = S.turn === "you" && !S.busy && !S.over;
+            stacks.forEach((s, i) => {
+              s.st.style.setProperty("--max", max);
+              s.h.innerHTML = `🌳 ${SIDE[i]}的树<br />剩 <b>${S.piles[i]}</b> 颗`;
+              s.st.innerHTML = "";
+              for (let j = 0; j < S.piles[i]; j++) {
+                const k = S.piles[i] - j;
+                const c = el("button", "x-tc", `${CONE}<span>${j + 1}</span>`);
+                c.setAttribute("aria-label", `${SIDE[i]}的树第 ${j + 1} 颗：点它，拿走它和上面一共 ${k} 颗`);
+                c.disabled = !mine;
+                if (S.sel && S.sel.pile === i && j >= S.sel.from) c.classList.add("is-sel");
+                if (t && t.pile === i && j >= t.from) c.classList.add("is-tip");
+                c.addEventListener("click", () => tapCone(i, j));
+                s.st.append(c);
+              }
+            });
+            const k = S.sel ? S.piles[S.sel.pile] - S.sel.from : 0;
+            selInfo.innerHTML = S.sel ? `已选：<b>${SIDE[S.sel.pile]}的树，拿 ${k} 颗</b>` : mine ? "点一颗松果来选：它和它上面的都会被拿走。" : "";
+            takeBtn.textContent = S.sel ? `拿走 ${k} 颗` : "拿走";
+            takeBtn.disabled = !mine || !S.sel; cancelBtn.disabled = !mine || !S.sel;
+            hintBtn.textContent = `💡 提示 ${S.hint}/3`;
+            kingFirst.classList.toggle("is-tip", guided() && S.turn === "choose");
+            note.querySelector("ol").innerHTML = S.log.map((l) => `<li>${l.who === "king" ? "👑 大王" : "你"}：${SIDE[l.pile]}拿 ${l.k} 颗 <span class="x-seq">→ (${l.a}, ${l.b})</span>${l.a === l.b && l.a ? " · 一样多 🪞" : ""}</li>`).join("")
+              || `<li style="list-style:none;margin-left:-20px;color:var(--text-secondary)">开局 (${stg.p[0]}, ${stg.p[1]})。拿完后这里会记下两堆的数。</li>`;
+          }
+
+          function startStage() {
+            const stg = STAGES[S.st];
+            S.piles = stg.p.slice(); S.log = []; S.sel = null; S.over = false; S.won = false; S.busy = false;
+            S.turn = stg.first === "choose" ? "choose" : "you";
+            chooseRow.hidden = stg.first !== "choose"; meFirst.disabled = kingFirst.disabled = false;
+            nextBtn.hidden = true;
+            king(stg.king, guided() ? "（带路模式：绿色虚线告诉你该怎么走。）" : "", true);
+            render();
+          }
+          function choose(who) {
+            if (S.turn !== "choose") return;
+            Audio_.play("click"); chooseRow.hidden = true;
+            if (who === "you") { S.turn = "you"; render(); say("好，你先拿。选一棵树吧。", ""); }
+            else { S.turn = "king"; render(); king("哈哈，那我先拿！", "", true); setTimeout(kingMove, wait(900)); }
+          }
+          meFirst.addEventListener("click", () => choose("you"));
+          kingFirst.addEventListener("click", () => choose("king"));
+
+          function tapCone(i, j) {
+            if (S.turn !== "you" || S.busy || S.over) return;
+            Audio_.play("tick", 500 + (S.piles[i] - j) * 80);
+            S.sel = { pile: i, from: j }; render();
+          }
+          cancelBtn.addEventListener("click", () => { S.sel = null; Audio_.play("click"); render(); });
+          takeBtn.addEventListener("click", () => {
+            if (!S.sel || S.turn !== "you" || S.busy) return;
+            const { pile, from } = S.sel; move("you", pile, S.piles[pile] - from);
+          });
+
+          function move(who, i, k) {
+            S.busy = true; S.sel = null; render();
+            const kids = stacks[i].st.children;
+            for (let j = 0; j < k; j++) { const c = kids[S.piles[i] - 1 - j]; if (c) c.classList.add("is-hop"); setTimeout(() => Audio_.play("hop"), j * 120); }
+            setTimeout(() => {
+              S.piles[i] -= k; S.busy = false;
+              S.log.push({ who, pile: i, k, a: S.piles[0], b: S.piles[1] });
+              if (S.piles[0] + S.piles[1] === 0) return endTry(who);
+              if (who === "you") { S.turn = "king"; render(); setTimeout(kingMove, wait(850)); }
+              else {
+                S.turn = "you"; render();
+                const [a, b] = S.piles;
+                king(a === b ? `我在${SIDE[i]}拿了 ${k} 颗。嘿嘿，两堆又一样多了！` : `我在${SIDE[i]}拿了 ${k} 颗。轮到你！`, `现在是 (${a}, ${b})。`, true);
+              }
+            }, wait(560 + (k - 1) * 120));
+          }
+          function kingMove() {
+            if (S.over || S.turn !== "king") return;
+            const [a, b] = S.piles;
+            if (a !== b) { const L = a > b ? 0 : 1; move("king", L, Math.abs(a - b)); }
+            else { const L = Math.random() < 0.5 ? 0 : 1; move("king", L, 1); }
+          }
+
+          function endTry(winner) {
+            S.over = true; S.turn = null; render();
+            if (winner === "you") {
+              S.won = true; Audio_.play("correct");
+              S.firstTry[S.st] = S.tries === 1; S.triesUsed[S.st] = S.tries;
+              const WIN = [
+                "你让大王先拿，然后照镜子：他在一边拿几颗，你就在另一边拿几颗！",
+                "先拿 2 颗，把 5 和 3 变成 3 和 3，再照镜子！",
+                "你先拿 3 颗，把 7 和 4 变成 4 和 4，大王只能看着你照镜子！",
+              ];
+              king(["哼，热身而已！", "怎么又输了？！", "不可能……我是松鼠大王啊！"][S.st], "", true);
+              say(WIN[S.st], S.st < 2 ? "下一场更难哦。" : "最后一个问题，说说为什么。");
+              if (S.st < 2) { nextBtn.hidden = false; nextBtn.textContent = `下一场：${STAGES[S.st + 1].name} ▶`; }
+              else { quiz.hidden = false; quiz.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "center" }); }
+            } else {
+              Audio_.play("wrong"); S.extra++; S.tries++;
+              const h = HINTS[Math.min(S.tries - 1, 3) - 1]; S.hint = Math.max(S.hint, Math.min(S.tries - 1, 3));
+              king("最后一颗是我的！再来呀！", "", true);
+              say(h[0], guided() ? "这次绿色虚线会给你带路。" : h[1]);
+              nextBtn.hidden = false; nextBtn.textContent = guided() ? "跟着带路再来 ▶" : `再试一次（第 ${S.tries} / 3 次）▶`;
+              render();
+            }
+          }
+          nextBtn.addEventListener("click", () => {
+            Audio_.play("click");
+            if (S.won) { S.st++; S.tries = 1; S.hint = 0; }
+            startStage();
+          });
+          hintBtn.addEventListener("click", () => {
+            S.hint = Math.min(S.hint + 1, 3);
+            const h = HINTS[S.hint - 1]; say(h[0], h[1]); render();
+          });
+
+          /* quiz */
+          const QOPTS = [
+            { t: "A. 因为可以照镜子，对手每拿一次，我都能让两堆重新一样多，最后一颗一定是我的", ok: true },
+            { t: "B. 因为运气好", msg: "运气好可赢不了三场！想想：对手每拿一次，你都做了什么？" },
+            { t: "C. 因为先拿的人拿得太多", msg: "先拿的人拿多拿少都没用——你每次都能让两堆重新一样多。" },
+          ];
+          const qbox = quiz.querySelector(".x-picks");
+          QOPTS.forEach((o) => {
+            const b = el("button", "x-pick"); b.textContent = o.t;
+            b.addEventListener("click", () => {
+              if (S.quizDone) return;
+              if (o.ok) {
+                S.quizDone = true; b.classList.add("good"); Audio_.play("correct");
+                qbox.querySelectorAll("button").forEach((x) => (x.disabled = true));
+                say("完全正确！两堆一样多时，对手动哪一堆，你就在另一堆拿同样多——这叫『镜像策略』。", "");
+                finish();
+              } else { b.classList.add("bad"); b.disabled = true; flash(b); Audio_.play("wrong"); say(o.msg, "再选一次。"); }
+            });
+            qbox.append(b);
+          });
+
+          function finish() {
+            const s = S.firstTry.every(Boolean) && S.firstTry.length === 3 ? 3 : S.extra <= 2 ? 2 : 1;
+            const xp = 30 + s * 10, delta = Math.max(0, xp - L5xpGiven); L5xpGiven = Math.max(L5xpGiven, xp);
+            done(s, delta);
+            award("king");
+            endWrap.innerHTML = "";
+            endWrap.append(el("div", "x-end", `<h3>${starStr(s)} BOSS 关通过！你打败了松鼠大王！</h3>
+              <p style="font:var(--type-body-strong)">两堆一样多时，后拿的人照镜子就能赢；两堆不一样多时，先拿的人先把它们变成一样多。</p>
+              <dl><dt>热身赛 · 3 和 3</dt><dd>让大王先拿，再照镜子。用了 ${S.triesUsed[0]} 次。</dd>
+                <dt>第二场 · 5 和 3</dt><dd>先拿 2 颗变成 3 和 3，再照镜子。用了 ${S.triesUsed[1]} 次。</dd>
+                <dt>决战 · 7 和 4</dt><dd>自己先拿，拿 3 颗变成 4 和 4。用了 ${S.triesUsed[2]} 次。</dd></dl>
+              <div class="x-row"><span class="x-meter">⭐ ${s} 颗星</span><span class="x-meter">多试 ${S.extra} 次</span><span class="x-meter">XP <b>+${delta}</b></span><span class="x-meter">🏅 松鼠大王的克星</span></div>
+              ${s < 3 ? `<p class="fineprint">想拿 3 颗星？三场都第一次就赢。</p>` : ""}
+              <div class="aside"><h3>🔭 下一个谜题</h3><p class="fineprint">三堆、四堆怎么办？1901 年，数学家布顿用『二进制』找到了所有情况的必胜法——这叫 Nim 游戏。等你学了二进制再来挑战！</p></div>
+              <div class="x-row"><button class="x-btn x-btn--go" data-complete>🎉 查看任务完成画面</button><button class="x-btn" data-again>再玩一次第 5 关</button></div>`));
+            endWrap.querySelector("[data-again]").addEventListener("click", () => { Audio_.play("click"); openLevel(5); });
+            endWrap.querySelector("[data-complete]").addEventListener("click", () => showComplete(true));
+            showComplete(false);
+          }
+
+          startStage();
+        },
+      });
+
+      /* ---------- mission complete ---------- */
+      function showComplete(go) {
+        const box = $("#finish-body");
+        const got = BADGES.filter((b) => State.badges[b.id]).length;
+        box.innerHTML = `<div class="head"><p class="head__eyebrow">任务完成</p><h2 class="x-done-h">🎉 你打败了松鼠大王，星图任务完成！</h2><p class="head__sub">难度 ★☆☆ 入门 · 适合 小学一~三年级</p></div>
+          <div class="x-labwrap">
+            <div class="stats">
+              <div class="stat"><span class="stat__fig">${State.stars}/15</span><span class="stat__label">总星数 ⭐</span></div>
+              <div class="stat"><span class="stat__fig">${State.xp}</span><span class="stat__label">总 XP</span></div>
+              <div class="stat"><span class="stat__fig">${got}/${BADGES.length}</span><span class="stat__label">徽章 🏅</span></div>
+            </div>
+            <div class="x-end">
+              <h3>🏅 你的徽章</h3>
+              <div class="x-shelf">${BADGES.map((b) => `<span class="x-badge ${State.badges[b.id] ? "got" : ""}">${State.badges[b.id] ? "🏅" : "🔒"} ${b.name}</span>`).join("")}</div>
+              <div class="x-row">${LEVELS_META.map((m) => `<span class="x-meter">第 ${m.id} 关 ${starStr(State.perLevel[m.id] || 0)}</span>`).join("")}</div>
+              <p style="font:var(--type-body-strong)">你点亮了 4 颗星：n05 除法与余数 · d02 规律与递推 · l01 说理与举例 · d19 组合博弈</p>
+              <dl>
+                <dt><span class="x-starid">n05</span> 除法与余数</dt><dd>10 ÷ 3 = 3 余 1，先拿掉余数。</dd>
+                <dt><span class="x-starid">d02</span> 规律与递推</dt><dd>9、6、3、0：每次少 3。</dd>
+                <dt><span class="x-starid">l01</span> 说理与举例</dt><dd>说清楚为什么总能赢；一个反例推翻一个说法。</dd>
+                <dt><span class="x-starid">d19</span> 组合博弈</dt><dd>必胜与必败位置、配对策略、镜像策略。</dd>
+              </dl>
+            </div>
+            <details class="x-notecard" open>
+              <summary>📒 知识笔记</summary>
+              <div class="x-notecard__in">
+                <div class="x-modal__body" id="done-notes">${$("#notes-text").innerHTML}</div>
+                <div class="x-row">
+                  <button class="x-btn x-btn--go" id="done-copy">一键复制</button>
+                  <a class="link" href="../notes/#nim" target="_top">完整笔记与其他任务 →</a>
+                </div>
+                <p class="fineprint" id="done-status" aria-live="polite"></p>
+              </div>
+            </details>
+            <div class="links"><a class="btn" href="../" target="_top">返回星图大厅</a></div>
+          </div>`;
+        $("#done-copy").addEventListener("click", () => copyNotes($("#done-notes"), $("#done-copy"), $("#done-status")));
+        if (go) {
+          Audio_.play("fanfare"); setTimeout(() => Audio_.play("chord"), 520); setTimeout(() => Audio_.play("star"), 1000);
+          $("#finish").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+        }
+      }
+
+      /* ---------- boot ---------- */
+      renderBar(); renderBadges(); renderMap();
+      const once = () => { Audio_.unlock(); window.removeEventListener("pointerdown", once); window.removeEventListener("keydown", once); };
+      window.addEventListener("pointerdown", once); window.addEventListener("keydown", once);
+      $("#start").addEventListener("click", (e) => { e.preventDefault(); Audio_.unlock(); Audio_.play("click"); openLevel(1); });
+      $("#sfx").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.setSfx(on); if (on) Audio_.play("click");
+      });
+      $("#music").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.unlock(); Audio_.setMusic(on); Audio_.play("click");
+      });
+      $("#vol").addEventListener("input", (e) => Audio_.setVol(+e.target.value / 100));
+      $("#track").addEventListener("change", (e) => Audio_.setTrack(+e.target.value));
+
+      /* ---------- 知识笔记 modal + copy ---------- */
+      const dlg = $("#notes");
+      $("#notes-open").addEventListener("click", () => {
+        Audio_.play("click");
+        if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+      });
+      $("#notes-close").addEventListener("click", () => { if (dlg.close) dlg.close(); else dlg.removeAttribute("open"); });
+      dlg.addEventListener("click", (e) => { if (e.target === dlg && dlg.close) dlg.close(); });
+      function copyNotes(textEl, btn, status) {
+        const select = () => { const r = document.createRange(); r.selectNodeContents(textEl); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+        const copied = (ok) => {
+          if (ok) { Audio_.play("correct"); btn.textContent = "已复制 ✓"; status.textContent = "📋 知识笔记已复制，可以粘贴到任何地方。"; }
+          else { select(); btn.textContent = "请手动复制"; status.textContent = "文字已选中，请按 Ctrl+C（手机上长按选中文字）手动复制。"; }
+          setTimeout(() => { btn.textContent = "一键复制"; }, 2500);
+        };
+        const manual = () => { select(); let ok = false; try { ok = document.execCommand("copy"); } catch (e) {} copied(ok); };
+        status.textContent = "正在复制…";
+        if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(textEl.innerText).then(() => copied(true), manual);
+        else manual();
+      }
+      $("#notes-copy").addEventListener("click", () => copyNotes($("#notes-text"), $("#notes-copy"), $("#notes-status")));
+    </script>
+  </body>
+</html>
