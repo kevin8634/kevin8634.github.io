@@ -1,0 +1,2094 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>星图任务 · 导航怎么找到最短的路？</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <link rel="stylesheet" href="hark-charts.css" />
+    <style>
+      /* x- classes: the game shell. Tokens only. */
+      .x-bar {
+        position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 30;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+        padding: 8px 12px; border-radius: var(--r-pill);
+        background: var(--mat-agent); -webkit-backdrop-filter: var(--hark-blur); backdrop-filter: var(--hark-blur);
+        border: 1px solid var(--stroke-primary); box-shadow: var(--hark-shadow);
+      }
+      .x-brand { font: var(--type-label); margin-right: auto; white-space: nowrap; }
+      .x-meter { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-primary); }
+      .x-meter b { font-weight: var(--weight-bold); }
+      .x-toggle {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap);
+        padding: 4px 12px; border: 1px solid var(--stroke-primary); border-radius: var(--r-pill);
+        background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-tag); cursor: pointer;
+      }
+      .x-toggle[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-vol { width: 86px; min-height: var(--tap); accent-color: var(--fill-primary); }
+      .x-map { position: relative; padding: 8px 0 4px; }
+      .x-path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      .x-nodes { position: relative; display: grid; gap: 10px; }
+      .x-node {
+        display: grid; grid-template-columns: 46px 1fr auto; align-items: center; gap: 12px;
+        width: min(100%, 560px); padding: 10px 14px; border-radius: var(--r-l);
+        border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-body); text-align: left; cursor: pointer;
+        transition: box-shadow var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
+      }
+      .x-node:nth-child(even) { justify-self: end; }
+      .x-node:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--hark-shadow); }
+      .x-node:disabled { opacity: 0.55; cursor: not-allowed; }
+      .x-node__num { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-tertiary); font: var(--type-heading); }
+      .x-node.is-open .x-node__num { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-node__t { display: block; font: var(--type-body-strong); }
+      .x-node__s { display: block; font: var(--type-caption); color: var(--text-secondary); }
+      .x-stars { font-size: 15px; letter-spacing: 1px; white-space: nowrap; }
+      .x-panel { padding: 16px; border-radius: var(--r-l); background: var(--fill-tertiary); display: grid; gap: 14px; }
+      .x-cat { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: start; }
+      .x-cat__face { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-primary-on); font-size: 24px; border: 1px solid var(--stroke-primary); }
+      .x-bubble { position: relative; padding: 10px 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-primary); font: var(--type-body); }
+      .x-bubble small { display: block; margin-top: 4px; font: var(--type-caption); color: var(--text-secondary); }
+      .x-opts { display: flex; flex-wrap: wrap; gap: 10px; }
+      .x-opt { padding: 8px; border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); cursor: pointer; display: grid; gap: 6px; justify-items: center; font: var(--type-tag); color: var(--text-primary); min-height: var(--tap); }
+      .x-opt.is-sel { box-shadow: inset 0 0 0 2px var(--fill-primary); }
+      .x-opt.good { border-color: var(--fill-system-green); box-shadow: inset 0 0 0 2px var(--fill-system-green); }
+      .x-opt.bad { border-color: var(--fill-system-red); opacity: 0.6; }
+      .x-qopt { text-align: left; font: var(--type-small); }
+      .x-qopt.good { border-color: var(--fill-system-green); box-shadow: inset 0 0 0 1px var(--fill-system-green); }
+      .x-qopt.bad { border-color: var(--fill-system-red); opacity: 0.6; }
+      .x-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+      .x-btn {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 6px 16px;
+        border-radius: var(--r-s); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-label); cursor: pointer;
+      }
+      .x-btn--go, .x-btn[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .x-num { width: 92px; min-height: var(--tap); padding: 6px 12px; border-radius: var(--r-s); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-body); }
+      .x-toasts { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; display: grid; gap: 8px; justify-items: center; pointer-events: none; }
+      .x-toast { padding: 10px 16px; border-radius: var(--r-pill); background: var(--fill-primary); color: var(--text-primary-on); font: var(--type-tag); box-shadow: var(--hark-shadow); animation: x-pop 320ms var(--ease-out); }
+      @keyframes x-pop { from { opacity: 0; transform: translateY(10px); } }
+      .x-shelf { display: flex; flex-wrap: wrap; gap: 8px; }
+      .x-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-secondary); }
+      .x-badge.got { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-end { display: grid; gap: 12px; padding: 16px; border-radius: var(--r-l); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); }
+      .x-end h3 { font: var(--type-heading); }
+      .x-end dl { display: grid; gap: 8px; margin: 0; }
+      .x-end dt { font: var(--type-body-strong); }
+      .x-end dd { margin: 0; font: var(--type-small); color: var(--text-secondary); }
+      .x-starid { font: var(--weight-regular) 12px/1.3 "Geist Mono", monospace; }
+      .x-flash { animation: x-shake 320ms var(--ease-out); }
+      @keyframes x-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+      #stage [hidden] { display: none; }
+      /* level 1: town map + graph */
+      .x-town { display: block; width: 100%; max-width: 560px; margin: 0 auto; border-radius: var(--r-l); background: var(--fill-primary-on); border: 1px solid var(--stroke-secondary); user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+      .x-town.is-drawing { touch-action: none; }
+      .x-town text { font-family: var(--sans); }
+      .x-layer { transition: opacity 1.4s var(--ease-out); }
+      .x-layer.is-gone { opacity: 0; pointer-events: none; }
+      .x-place { cursor: pointer; outline: none; }
+      .x-place:focus-visible .x-ring { stroke: var(--text-primary); stroke-width: 2; }
+      .x-dot { fill: var(--fill-primary); stroke: var(--fill-primary-on); stroke-width: 2.5; }
+      .x-dot.is-sel { fill: var(--fill-system-orange); }
+      .x-dot-in { animation: x-drop 360ms var(--ease-out); transform-box: fill-box; transform-origin: center; }
+      @keyframes x-drop { from { transform: scale(0.2); opacity: 0; } }
+      .x-edge { stroke: var(--text-primary); stroke-width: 3; stroke-linecap: round; }
+      .x-edge.is-pending { stroke-dasharray: 5 6; stroke: var(--text-secondary); }
+      .x-edge.is-hot { stroke: var(--fill-system-orange); stroke-width: 6; }
+      .x-wbox { fill: var(--fill-primary-on); stroke: var(--text-primary); stroke-width: 1.5; }
+      .x-wtxt { fill: var(--text-primary); font-size: 13px; font-weight: 600; }
+      .x-entry { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-primary); font: var(--type-body); }
+      .x-concept { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+      .x-concept div { padding: 12px 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-secondary); }
+      .x-concept b { display: block; font: var(--type-body-strong); }
+      .x-concept span { font: var(--type-small); color: var(--text-secondary); }
+      .x-gopts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+      .x-gopt svg, .x-gtarget svg { display: block; width: 100%; height: auto; }
+      .x-gtarget { max-width: 240px; padding: 8px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-primary); }
+      .x-gtarget p { font: var(--type-tag); color: var(--text-secondary); text-align: center; }
+      .x-mini circle { fill: var(--fill-primary-on); stroke: var(--text-primary); stroke-width: 1.6; }
+      .x-mini text { fill: var(--text-primary); font: 600 10px var(--sans); }
+      .x-mini path { fill: none; stroke: var(--text-primary); stroke-width: 2; stroke-linecap: round; }
+      .x-routes { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; font: var(--type-body); }
+      .x-routes li.is-now { font-weight: var(--weight-bold); }
+      /* level 2: trace and degree graphs */
+      .x-gcap { font: var(--type-body-strong); text-align: center; }
+      .x-trace { display: block; width: 100%; max-width: 300px; margin: 0 auto; border-radius: var(--r-l); background: var(--fill-primary-on); border: 1px solid var(--stroke-secondary); user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+      .x-trace line { stroke: var(--text-primary); stroke-width: 2.5; stroke-linecap: round; transition: stroke var(--dur-quick) var(--ease-out); }
+      .x-trace line.is-used { stroke: var(--chart-5); stroke-width: 6; }
+      .x-tdot { cursor: pointer; outline: none; }
+      .x-tdot .hit { fill: transparent; }
+      .x-tdot .v { fill: var(--fill-primary-on); stroke: var(--text-primary); stroke-width: 2; }
+      .x-tdot:focus-visible .v { stroke-width: 3.5; }
+      .x-tdot.is-cur .v { fill: var(--chart-5); }
+      .x-tdot.is-lock .v { stroke: var(--fill-system-green); stroke-width: 3; }
+      .x-tdot.is-odd .v { fill: var(--fill-system-orange); filter: drop-shadow(0 0 4px var(--fill-system-orange)); }
+      .x-tdot text { font: 600 10px var(--sans); fill: var(--text-primary); pointer-events: none; }
+      /* level 2 part C: Königsberg */
+      .x-ksb { max-width: 520px; }
+      .x-ksb .x-land { fill: var(--fill-tertiary); }
+      .x-ksb .x-river { fill: var(--chart-1); }
+      .x-tland, .x-br { cursor: pointer; outline: none; }
+      .x-tland:focus-visible .x-land { stroke: var(--text-primary); stroke-width: 1.5; }
+      .x-ksb .x-lbl { font: 600 9px var(--sans); fill: var(--text-primary); pointer-events: none; }
+      .x-br .hit { stroke: transparent; stroke-width: 18; }
+      .x-br .deck { stroke: var(--text-secondary); stroke-width: 7; stroke-linecap: butt; transition: stroke var(--dur-quick) var(--ease-out); }
+      .x-br:focus-visible .deck { stroke: var(--text-primary); }
+      .x-br.is-used .deck { stroke: var(--chart-5); }
+      .x-kedge { fill: none; stroke: var(--text-primary); stroke-width: 2.5; stroke-linecap: round; }
+      .x-kedge.is-new { stroke: var(--fill-system-orange); stroke-dasharray: 5 5; }
+      .x-kedge.is-used { stroke: var(--chart-5); stroke-width: 5; stroke-dasharray: none; }
+      .x-ksb .x-tdot.is-cur .v { fill: var(--chart-5); stroke-width: 4; }
+      .x-walker { fill: var(--fill-system-orange); stroke: var(--fill-primary-on); stroke-width: 1.5; pointer-events: none; }
+      .x-win { animation: x-win 900ms var(--ease-out) 2; }
+      @keyframes x-win { 50% { transform: scale(1.03); box-shadow: 0 0 0 6px var(--chart-5); } }
+      @media (prefers-reduced-motion: reduce) { .x-win { animation: none; box-shadow: 0 0 0 4px var(--chart-5); } }
+      /* level 3: weighted graph, Dijkstra */
+      .x-wg .x-hit { stroke: transparent; stroke-width: 24; }
+      .x-wg [role="button"] { cursor: pointer; outline: none; }
+      .x-we:focus-visible .x-edge, .x-wn:focus-visible circle.b { stroke-width: 5; }
+      .x-edge.is-todo { stroke: var(--fill-system-orange); stroke-dasharray: 7 6; }
+      .x-edge.is-path { stroke: var(--chart-5); stroke-width: 8; }
+      .x-wn circle.b { fill: var(--fill-primary-on); stroke: var(--text-primary); stroke-width: 2; transition: fill var(--dur-draw) var(--ease-out); }
+      .x-wn.is-cur circle.b { stroke: var(--fill-system-orange); stroke-width: 4; }
+      .x-wn.is-done circle.b { stroke: var(--fill-system-green); stroke-width: 4; }
+      .x-wl rect { fill: var(--fill-primary-on); stroke: var(--text-primary); stroke-width: 1.2; }
+      .x-wl text { fill: var(--text-primary); font: 600 13px var(--sans); }
+      .x-wn.is-done .x-wl rect { fill: var(--fill-primary); stroke: none; }
+      .x-wn.is-done .x-wl text { fill: var(--text-primary-on); }
+      .x-arrow { stroke: var(--text-primary); stroke-width: 2.5; }
+      .x-ripple { fill: none; stroke: var(--chart-1); stroke-width: 3; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: x-ripple 1.2s var(--ease-out) forwards; }
+      @keyframes x-ripple { from { transform: scale(1); opacity: 0.9; } to { transform: scale(5); opacity: 0; } }
+      @media (prefers-reduced-motion: reduce) { .x-ripple { animation: none; opacity: 0; } }
+      /* level 4: grid routes, delivery map */
+      .x-grid4 { max-width: 300px; }
+      .x-grid4 .x-blk { fill: var(--fill-tertiary); }
+      .x-grid4 .x-edge:not(.is-hot) { stroke: var(--stroke-primary); stroke-width: 4; }
+      .x-gn { cursor: pointer; outline: none; }
+      .x-gn .hit { fill: transparent; }
+      .x-gn .v { fill: var(--fill-primary-on); stroke: var(--text-primary); stroke-width: 2; }
+      .x-gn.on .v { fill: var(--fill-system-orange); }
+      .x-gn:focus-visible .v { stroke-width: 4; }
+      .x-gn text { pointer-events: none; }
+      .x-glbl { fill: var(--text-primary); font: 600 13px var(--sans); }
+      .x-greedy.is-dim { opacity: 0.35; }
+      .x-antm { pointer-events: none; transition: transform 700ms var(--ease-out); }
+      .x-range { width: min(240px, 100%); min-height: var(--tap); accent-color: var(--fill-primary); }
+      @media (prefers-reduced-motion: reduce) { .x-antm { transition: none; } }
+      /* level 5: jams, shortest-path tree, mission complete */
+      .x-we.is-jam .x-edge:not(.is-hot):not(.is-path) { stroke: var(--fill-system-red); stroke-width: 5; }
+      .x-we.is-jam .x-wbox { stroke: var(--fill-system-red); stroke-width: 2.5; }
+      .x-tree .x-edge:not(.is-path) { opacity: 0.2; }
+      .x-notes summary { display: flex; align-items: center; min-height: var(--tap); font: var(--type-heading); cursor: pointer; }
+      .x-notes__body { display: grid; gap: 14px; padding-top: 8px; }
+      .x-notes__body h3 { font: var(--type-body-strong); margin-bottom: 6px; }
+      .x-notes__body ol, .x-notes__body ul { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; font: var(--type-small); }
+      /* notes modal */
+      .x-modal { width: min(680px, calc(100vw - 24px)); max-height: calc(100vh - 32px); padding: 0; border: 1px solid var(--stroke-primary); border-radius: var(--r-l); background: var(--fill-primary-on); color: var(--text-primary); box-shadow: var(--hark-shadow); }
+      .x-modal::backdrop { background: rgba(0, 0, 0, 0.35); }
+      .x-modal__head { position: sticky; top: 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 12px 16px; background: var(--mat-agent); -webkit-backdrop-filter: var(--hark-blur); backdrop-filter: var(--hark-blur); border-bottom: 1px solid var(--stroke-secondary); }
+      .x-modal__head h2 { font: var(--type-heading); margin-right: auto; }
+      .x-modal__body { padding: 16px; display: grid; gap: 16px; }
+      .x-modal__body h3 { font: var(--type-body-strong); margin-bottom: 6px; }
+      .x-modal__body ol, .x-modal__body ul { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; font: var(--type-small); }
+      .x-copybox { width: 100%; min-height: 160px; padding: 10px; border-radius: var(--r-s); border: 1px solid var(--stroke-primary); background: var(--fill-tertiary); color: var(--text-primary); font: var(--type-small); }
+      @media (prefers-reduced-motion: reduce) { .x-toast, .x-flash, .x-dot-in { animation: none; } .x-layer { transition: none; } }
+      @media (max-width: 599px) { .x-brand { width: 100%; } .x-vol { width: 70px; } .x-gopts { gap: 6px; } }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <main class="main">
+        <div class="x-bar" role="toolbar" aria-label="游戏状态">
+          <span class="x-brand">星图任务 · 导航怎么找到最短的路？</span>
+          <span class="x-meter">XP <b id="xp">0</b></span>
+          <span class="x-meter">⭐ <b id="stars">0</b>/15</span>
+          <button class="x-toggle" id="sfx" aria-pressed="true">🔊 音效</button>
+          <button class="x-toggle" id="music" aria-pressed="false">🎵 专注音乐</button>
+          <select class="x-toggle" id="track" aria-label="选择曲目">
+            <option value="-1" selected>随机轮播</option><option value="0">星空 Lo-fi</option><option value="1">雨夜书房</option><option value="2">晨光</option>
+          </select>
+          <span class="x-meter" id="nowplaying">正在播放:—</span>
+          <input class="x-vol" id="vol" type="range" min="0" max="100" value="30" aria-label="音乐音量" />
+          <button class="x-toggle" id="notes-btn">📒 知识笔记</button>
+        </div>
+
+        <section class="hero">
+          <div class="hero__copy">
+            <p class="hero__eyebrow">难度 ★★☆ 进阶 · 适合 小学五年级~初一 · 前置 加法、比较大小</p>
+            <h1>导航怎么找到最短的路？</h1>
+            <p class="hero__sub">手机导航一秒就算出最短路线——它是怎么做到的？跟着蚁博士 🐜 一起找答案。蚂蚁真的会找短路哦。</p>
+            <p class="hero__meta">5 关任务 · 第 1 关已开放 · 每关 1–3 颗星</p>
+          </div>
+        </section>
+
+        <section class="section" id="map" data-nav="关卡地图">
+          <div class="head">
+            <p class="head__eyebrow">五关任务</p>
+            <h2>先把地图变成点和线，再一步步找到最短的路。</h2>
+            <p class="head__sub">5 关全部开放：每关得 1–3 颗星，拿到 1 颗星就解锁下一关，第 5 关是 BOSS。</p>
+          </div>
+          <div class="x-map">
+            <svg class="x-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M18 8 L82 30 L18 52 L82 74 L18 94" fill="none" style="stroke: var(--stroke-primary)" stroke-width="0.6" stroke-dasharray="2 2" />
+            </svg>
+            <div class="x-nodes" id="nodes"></div>
+          </div>
+        </section>
+
+        <section class="section" id="play" data-nav="关卡">
+          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">蚁博士在星图上等你。</p></div>
+          <div id="stage" class="x-panel">
+            <div class="x-cat">
+              <div class="x-cat__face">🐜</div>
+              <div class="x-bubble">点开第 1 关「地图变成点和线」。导航看到的地图，和你看到的一样吗？<small>蚁博士只问问题，不直接给答案。</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="shelf" data-nav="徽章">
+          <div class="head"><h2>徽章架</h2><p class="head__sub">做到了才会亮起来。</p></div>
+          <div class="x-shelf" id="badges"></div>
+        </section>
+
+        <section class="section" id="sky" data-nav="星图">
+          <div class="head"><h2>这次任务要点亮的星</h2><p class="head__sub">通关对应的关卡，星星就会亮起来。</p></div>
+          <div class="x-shelf" id="skylist"></div>
+        </section>
+      </main>
+      <footer class="foot">
+        <p>声音全部由 Web Audio 实时合成，不读取任何外部文件。</p>
+        <nav aria-label="回到各部分" data-auto></nav>
+        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"><span class="hark-mark"></span><span>built by hark</span></a>
+      </footer>
+    </div>
+
+    <dialog class="x-modal" id="notes" aria-labelledby="notes-title">
+      <div class="x-modal__head">
+        <h2 id="notes-title">📒 知识笔记</h2>
+        <button class="x-btn x-btn--go" id="copy-btn">一键复制</button>
+        <button class="x-btn" id="notes-close">关闭</button>
+      </div>
+      <div class="x-modal__body" id="notes-body"></div>
+    </dialog>
+    <div class="x-toasts" id="toasts" aria-live="polite"></div>
+    <script type="application/json" id="l4-data">
+      [{"n":1,"routes":2,"dijkstra":4},{"n":2,"routes":6,"dijkstra":9},{"n":3,"routes":20,"dijkstra":16},{"n":4,"routes":70,"dijkstra":25},{"n":5,"routes":252,"dijkstra":36},{"n":6,"routes":924,"dijkstra":49},{"n":7,"routes":3432,"dijkstra":64},{"n":8,"routes":12870,"dijkstra":81},{"n":9,"routes":48620,"dijkstra":100},{"n":10,"routes":184756,"dijkstra":121}]
+    </script>
+    <script src="hark.js"></script>
+    <script src="chart.js"></script>
+    <script src="datalabels.js"></script>
+    <script src="hark-charts.js"></script>
+    <script>
+      /* ---------- audio ---------- */
+      const Audio_ = (() => {
+        let ctx = null, master = null, musicGain = null, sfxOn = true, musicOn = false, vol = 0.3, started = false;
+        function ensure() {
+          if (ctx) return ctx;
+          const AC = window.AudioContext || window.webkitAudioContext;
+          ctx = new AC();
+          master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+          musicGain = ctx.createGain(); musicGain.gain.value = 0; musicGain.connect(master);
+          return ctx;
+        }
+        function unlock() { ensure(); if (ctx.state === "suspended") ctx.resume(); started = true; }
+        function env(node, t, a, d, peak) {
+          const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(peak, t + a);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+          node.connect(g); g.connect(master); return g;
+        }
+        function tone(freq, t, dur, type, peak) {
+          const o = ctx.createOscillator(); o.type = type || "sine"; o.frequency.setValueAtTime(freq, t);
+          env(o, t, 0.012, dur, peak || 0.18); o.start(t); o.stop(t + dur + 0.08); return o;
+        }
+        const sfx = {
+          click() { const t = ctx.currentTime; tone(880, t, 0.05, "triangle", 0.08); },
+          correct() { const t = ctx.currentTime; [523.25, 659.25, 783.99].forEach((f, i) => tone(f, t + i * 0.07, 0.22, "sine", 0.14)); },
+          wrong() { const t = ctx.currentTime; tone(150, t, 0.22, "sine", 0.16); tone(110, t + 0.06, 0.26, "sine", 0.12); },
+          star() { const t = ctx.currentTime; [784, 1047, 1319, 1568, 2093].forEach((f, i) => tone(f, t + i * 0.055, 0.3, "triangle", 0.09)); },
+          fanfare() { const t = ctx.currentTime; [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.3]].forEach(([f, d]) => { tone(f, t + d, 0.4, "sawtooth", 0.07); tone(f * 2, t + d, 0.3, "sine", 0.05); }); },
+          /* 蚁博士的声音: tiny high "tick-tick" */
+          ant() {
+            const t = ctx.currentTime;
+            [0, 0.075, 0.2, 0.26].slice(0, Math.random() < 0.5 ? 2 : 4).forEach((d, i) => {
+              const o = ctx.createOscillator(); o.type = "square"; o.frequency.setValueAtTime(i % 2 ? 3300 : 2900, t + d);
+              const f = ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 2200; o.connect(f);
+              env(f, t + d, 0.002, 0.025, 0.035); o.start(t + d); o.stop(t + d + 0.05);
+            });
+          },
+          bonk() {
+            const t = ctx.currentTime, o = ctx.createOscillator();
+            o.type = "square"; o.frequency.setValueAtTime(180, t); o.frequency.exponentialRampToValueAtTime(60, t + 0.18);
+            env(o, t, 0.005, 0.22, 0.12); o.start(t); o.stop(t + 0.3); tone(95, t + 0.02, 0.2, "sine", 0.18);
+          },
+          tick(f) { tone(f || 600, ctx.currentTime, 0.06, "sine", 0.07); },
+          pop(f) { const t = ctx.currentTime; tone(f || 200 + Math.random() * 500, t, 0.18, "triangle", 0.05); },
+          chord() { const t = ctx.currentTime; [523.25, 659.25, 783.99, 987.77, 1318.5].forEach((f, i) => tone(f, t + i * 0.012, 0.55, "triangle", 0.06)); },
+        };
+        function play(name, arg) { if (!sfxOn || !started) return; ensure(); if (ctx.state === "suspended") ctx.resume(); duckMusic(); (sfx[name] || sfx.click)(arg); }
+        /* ---------- 专注音乐: generative engine, lookahead scheduler (25ms tick, 0.1s ahead) ---------- */
+        const PENTA = [0, 2, 4, 7, 9];
+        const CH = { I: [0, 4, 7, 11], ii: [2, 5, 9, 12], iii: [4, 7, 11, 14], IV: [5, 9, 12, 16], V: [7, 11, 14, 17], vi: [9, 12, 16, 19] };
+        const P = (s) => s.split(" ").map((n) => CH[n]);
+        const TRACKS = [
+          { id: "lofi", name: "星空 Lo-fi", bpm: 72, swing: 0.2, key: 57, cb: 1, wet: 0.3, progs: [P("ii V I vi"), P("IV iii ii I"), P("vi IV I V")] },
+          { id: "rain", name: "雨夜书房", bpm: 60, swing: 0, key: 50, cb: 2, wet: 0.4, progs: [P("I iii vi IV"), P("vi ii V I"), P("IV I ii vi")] },
+          { id: "dawn", name: "晨光", bpm: 90, swing: 0.08, key: 60, cb: 1, wet: 0.25, progs: [P("I V vi IV"), P("IV I V vi"), P("I ii IV V")] },
+        ];
+        let comp = null, duck = null, bus = null, echo = null, noiseBuf = null, players = [], timer = null, offT = null, mode = -1;
+        const rnd = (n) => (Math.random() * n) | 0;
+        const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+        const newMotif = () => [0, 0, 0, 0].map(() => rnd(8));
+        function mutate(m) { const c = m.slice(); for (let i = 0, n = 1 + rnd(2); i < n; i++) { const j = rnd(4); c[j] = Math.max(0, Math.min(9, c[j] + [-2, -1, 1, 2][rnd(4)])); } return c; }
+        function graph() {
+          if (bus) return; ensure();
+          comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 4; comp.attack.value = 0.01; comp.release.value = 0.3;
+          duck = ctx.createGain(); bus = ctx.createGain(); echo = ctx.createDelay(1.5);
+          const fb = ctx.createGain(), lp = ctx.createBiquadFilter(); fb.gain.value = 0.32; lp.type = "lowpass"; lp.frequency.value = 1800;
+          echo.connect(lp); lp.connect(fb); fb.connect(echo); lp.connect(bus);
+          bus.connect(comp); comp.connect(duck); duck.connect(musicGain);
+          const len = ctx.sampleRate * 2; noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+          const d = noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        }
+        function note(p, m, t, dur, type, peak, a, wet) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = mtof(m);
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          o.connect(g); g.connect(p.out); if (wet) g.connect(p.wet); o.start(t); o.stop(t + dur + 0.05);
+        }
+        function hit(p, t, dur, peak, ftype, freq) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+          s.buffer = noiseBuf; f.type = ftype; f.frequency.value = freq;
+          g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(t, Math.random() * 1.5); s.stop(t + dur + 0.02);
+        }
+        function kick(p, t) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.2);
+          g.gain.setValueAtTime(0.28, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+          o.connect(g); g.connect(p.out); o.start(t); o.stop(t + 0.35); hit(p, t, 0.05, 0.05, "lowpass", 400);
+        }
+        function ep(p, ch, t, dur) {
+          const tr = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain(), env = ctx.createGain();
+          tr.gain.value = 0.75; lfo.frequency.value = 3.8; dep.gain.value = 0.22; lfo.connect(dep); dep.connect(tr.gain);
+          env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(1, t + 0.02); env.gain.exponentialRampToValueAtTime(0.35, t + 0.9); env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [["sine", 0.045], ["triangle", 0.01]].forEach(([ty, v]) => {
+            const o = ctx.createOscillator(), g = ctx.createGain(); o.type = ty; o.frequency.value = mtof(m); o.detune.value = rnd(7) - 3; g.gain.value = v;
+            o.connect(g); g.connect(tr); o.start(t); o.stop(t + dur + 0.05);
+          }));
+          tr.connect(env); env.connect(p.out); env.connect(p.wet); lfo.start(t); lfo.stop(t + dur + 0.05);
+        }
+        function pad(p, ch, t, dur, type, peak, lo, hi) {
+          const f = ctx.createBiquadFilter(), env = ctx.createGain(); f.type = "lowpass";
+          f.frequency.setValueAtTime(lo, t); f.frequency.linearRampToValueAtTime(hi, t + dur * 0.5); f.frequency.linearRampToValueAtTime(lo, t + dur);
+          env.gain.setValueAtTime(0.0001, t); env.gain.linearRampToValueAtTime(peak, t + dur * 0.35); env.gain.linearRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [-7, 7].forEach((dt) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = mtof(m); o.detune.value = dt; o.connect(f); o.start(t); o.stop(t + dur + 0.05); }));
+          f.connect(env); env.connect(p.out); env.connect(p.wet);
+        }
+        function rain(p) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain();
+          s.buffer = noiseBuf; s.loop = true; f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 0.5; g.gain.value = 0.05;
+          lfo.frequency.value = 0.07; dep.gain.value = 0.02; lfo.connect(dep); dep.connect(g.gain);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(); lfo.start(); p.nodes.push(s, lfo);
+        }
+        function section(p) {
+          let n; do n = rnd(3); while (n === p.prog); p.prog = n;
+          if (Math.random() < 0.25) p.key = p.t.key + [0, 2, -2, 5, -3][rnd(5)];
+          p.drums = Math.random() > 0.3;
+          if (Math.random() < 0.4) p.motif = newMotif();
+        }
+        function step(p, t) {
+          const T = p.t, s = p.step % 16, bar = (p.step / 16) | 0, beat = 60 / T.bpm;
+          if (s === 0) {
+            if (bar && bar % 8 === 0) section(p);
+            p.cur = bar % 4 === 2 ? mutate(p.motif) : bar % 4 === 0 ? p.motif : p.cur;
+          }
+          const ch = T.progs[p.prog][((bar / T.cb) | 0) % 4].map((x) => p.key + x);
+          const mel = (d) => p.key + 12 + PENTA[d % 5] + 12 * ((d / 5) | 0);
+          if (T.id === "lofi") {
+            if (s === 0) { ep(p, ch, t, beat * 4); note(p, ch[0] - 24, t, beat * 1.8, "sine", 0.16, 0.02); }
+            if (s === 10) note(p, ch[0] - 24, t, beat * 1.2, "sine", 0.12, 0.02);
+            if (p.drums) {
+              if (s === 0 || s === 10 || (s === 7 && Math.random() < 0.3)) kick(p, t);
+              if (s === 4 || s === 12) hit(p, t, 0.16, 0.07, "bandpass", 1800);
+              if (s % 2 === 0 || Math.random() < 0.15) hit(p, t, 0.04, s % 4 === 2 ? 0.03 : 0.018, "highpass", 7000);
+            }
+            if (bar % 2 === 1 && s % 4 === 0 && Math.random() > 0.28) note(p, mel(p.cur[s / 4]), t, beat * 1.3, "sine", 0.035, 0.01, true);
+          } else if (T.id === "rain") {
+            if (s === 0 && bar % 2 === 0) pad(p, ch, t, beat * 8 + 1, "sawtooth", 0.022, 280, 1300);
+            if (s % 8 === 0 && Math.random() < 0.45) { const m = mel(p.cur[(bar * 2 + s / 8) % 4]) - 12; note(p, m, t, 3.5, "triangle", 0.045, 0.005, true); note(p, m, t, 2.5, "sine", 0.03, 0.005); }
+          } else {
+            if (s === 0) pad(p, ch.map((m) => m + 12), t, beat * 4 + 0.6, "sine", 0.014, 2500, 5000);
+            if (s % 2 === 0 && Math.random() > 0.18) { const m = mel(p.cur[(s / 2) % 4] + (s >= 8 ? 1 : 0)); note(p, m, t, 0.55, "sine", 0.05, 0.004, true); note(p, m + 28, t, 0.08, "sine", 0.008, 0.002); }
+            if (p.drums) hit(p, t, 0.05, s % 2 ? 0.022 : 0.01, "highpass", 6000);
+          }
+        }
+        function sched() {
+          const now = ctx.currentTime;
+          players.forEach((p) => {
+            if (p.next < now - 0.05) p.next = now + 0.02;
+            while (p.next < now + 0.1) { const sx = 60 / p.t.bpm / 4; step(p, p.next + (p.step % 2 ? p.t.swing * sx : 0)); p.step++; p.next += sx; }
+          });
+          const live = players.find((p) => !p.dead);
+          if (mode < 0 && live && now - live.born > 180) switchTo((live.i + 1 + rnd(2)) % 3);
+        }
+        function label(i) { const n = document.getElementById("nowplaying"); if (n) n.textContent = "正在播放:" + (i == null ? "—" : TRACKS[i].name); }
+        function kill(p) { p.nodes.forEach((n) => { try { n.stop(); } catch (e) {} }); p.out.disconnect(); p.wet.disconnect(); players = players.filter((x) => x !== p); }
+        function switchTo(i) {
+          const now = ctx.currentTime;
+          players.filter((p) => !p.dead).forEach((p) => {
+            p.dead = true; p.out.gain.cancelScheduledValues(now); p.out.gain.setValueAtTime(p.out.gain.value, now);
+            p.out.gain.linearRampToValueAtTime(0.0001, now + 2); setTimeout(() => kill(p), 2300);
+          });
+          const T = TRACKS[i], p = { t: T, i, step: 0, next: now + 0.1, born: now, key: T.key, prog: 0, drums: true, motif: newMotif(), out: ctx.createGain(), wet: ctx.createGain(), nodes: [] };
+          p.cur = p.motif; p.out.gain.setValueAtTime(0.0001, now); p.out.gain.linearRampToValueAtTime(1, now + 2);
+          p.out.connect(bus); p.wet.gain.value = T.wet; p.wet.connect(echo);
+          echo.delayTime.setTargetAtTime((60 / T.bpm) * 0.75, now, 0.5);
+          if (T.id === "rain") rain(p);
+          players.push(p); label(i);
+        }
+        function fadeTo(v) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(v, n + 2); }
+        function startMusic() {
+          graph(); if (ctx.state === "suspended") ctx.resume();
+          clearTimeout(offT); if (!timer) timer = setInterval(sched, 25);
+          if (!players.some((p) => !p.dead)) switchTo(mode < 0 ? rnd(3) : mode);
+          fadeTo(vol);
+        }
+        function stopMusic() {
+          if (!bus) return; fadeTo(0.0001);
+          offT = setTimeout(() => { clearInterval(timer); timer = null; players.slice().forEach(kill); label(null); }, 2100);
+        }
+        function setTrack(v) {
+          mode = v; if (!musicOn || !bus) return;
+          const live = players.find((p) => !p.dead);
+          if (mode >= 0 && (!live || live.i !== mode)) switchTo(mode); else if (live) live.born = ctx.currentTime;
+        }
+        function duckMusic() {
+          if (!musicOn || !duck) return; const t = ctx.currentTime, g = duck.gain;
+          g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.45, t + 0.05);
+          g.setValueAtTime(0.45, t + 0.35); g.linearRampToValueAtTime(1, t + 1);
+        }
+        return {
+          unlock, play,
+          setSfx(v) { sfxOn = v; }, isSfx: () => sfxOn,
+          setMusic(v) { musicOn = v; v ? startMusic() : stopMusic(); }, isMusic: () => musicOn,
+          setVol(v) { vol = v; if (ctx && timer && musicOn) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(vol, n + 0.3); } },
+          setTrack,
+        };
+      })();
+      /* ---------- state ---------- */
+      const State = { xp: 0, stars: 0, perLevel: {}, badges: {}, unlocked: 1, lit: {} };
+      const BADGES = [
+        { id: "mapper", name: "地图抽象师", hint: "完成第 1 关「地图变成点和线」" },
+        { id: "bridger", name: "欧拉的徒弟", hint: "完成第 2 关「七座桥能一笔走完吗」" },
+        { id: "waver", name: "水波导航员", hint: "完成第 3 关「水波找最短路」" },
+        { id: "racer", name: "算法裁判", hint: "完成第 4 关「算法比快慢」" },
+        { id: "courier", name: "金牌快递员", hint: "完成第 5 关「BOSS 快递小蚂蚁」" },
+      ];
+      const LEVELS_META = [
+        { id: 1, title: "地图变成点和线", sub: "d07 图论初步 · 点、边、权重" },
+        { id: 2, title: "七座桥能一笔走完吗", sub: "欧拉路径 · 一笔画" },
+        { id: 3, title: "水波找最短路", sub: "Dijkstra 算法" },
+        { id: 4, title: "算法比快慢", sub: "算法复杂度" },
+        { id: 5, title: "BOSS 快递小蚂蚁", sub: "BOSS 关 · 图 + Dijkstra + 树与网络" },
+      ];
+      const SKY = [
+        ["d07", "图论初步"], ["d08", "树与网络"], ["d09", "最短路径"], ["d10", "算法与流程"], ["d12", "算法复杂度"], ["l01", "说理与举例"],
+      ];
+
+      const $ = (s) => document.querySelector(s);
+      function toast(msg) {
+        const el = document.createElement("div"); el.className = "x-toast"; el.textContent = msg;
+        $("#toasts").appendChild(el); setTimeout(() => el.remove(), 3200);
+      }
+      function award(id) {
+        if (State.badges[id]) return;
+        State.badges[id] = true;
+        const b = BADGES.find((x) => x.id === id);
+        Audio_.play("star"); toast("🏅 获得徽章:" + b.name); renderBadges();
+      }
+      function renderBadges() {
+        $("#badges").innerHTML = BADGES.map((b) =>
+          `<span class="x-badge ${State.badges[b.id] ? "got" : ""}">${State.badges[b.id] ? "🏅" : "🔒"} ${b.name}<small style="opacity:.75"> · ${b.hint}</small></span>`
+        ).join("");
+      }
+      function renderSky() {
+        $("#skylist").innerHTML = SKY.map(([id, n]) =>
+          `<span class="x-badge ${State.lit[id] ? "got" : ""}">${State.lit[id] ? "🌟" : "☆"} <span class="x-starid">${id}</span> ${n}</span>`
+        ).join("");
+      }
+      function renderBar() { $("#xp").textContent = State.xp; $("#stars").textContent = State.stars; }
+      function addXP(n) { State.xp += n; renderBar(); }
+      function starStr(n) { return n ? "⭐".repeat(n) + "☆".repeat(3 - n) : "☆☆☆"; }
+      function renderMap() {
+        $("#nodes").innerHTML = LEVELS_META.map((m) => {
+          const open = m.id <= State.unlocked && !!getLevel(m.id);
+          const got = State.perLevel[m.id] || 0;
+          const note = getLevel(m.id) ? (open ? m.sub : "完成上一关解锁") : "即将开放";
+          return `<button class="x-node ${open ? "is-open" : ""}" data-level="${m.id}" ${open ? "" : "disabled"}>
+            <span class="x-node__num">${m.id}</span>
+            <span><span class="x-node__t">${m.title}</span><span class="x-node__s">${note}</span></span>
+            <span class="x-stars">${open || got ? starStr(got) : "🔒"}</span></button>`;
+        }).join("");
+        $("#nodes").querySelectorAll("button[data-level]").forEach((b) =>
+          b.addEventListener("click", () => { Audio_.play("click"); openLevel(+b.dataset.level); }));
+      }
+      function finishLevel(id, stars, xp) {
+        const prev = State.perLevel[id] || 0;
+        if (stars > prev) { State.stars += stars - prev; State.perLevel[id] = stars; }
+        State.xp += xp;
+        if (stars >= 1 && State.unlocked < id + 1) State.unlocked = id + 1;
+        renderBar(); renderMap(); Audio_.play("fanfare");
+        toast(`第 ${id} 关完成 · ${starStr(stars)} · +${xp} XP`);
+      }
+      let levelTimers = [];
+      function later(fn, ms) { const t = setTimeout(fn, ms); levelTimers.push(t); return t; }
+      function openLevel(id) {
+        const lv = getLevel(id); if (!lv) return;
+        levelTimers.forEach(clearTimeout); levelTimers = [];
+        $("#play-title").textContent = `第 ${id} 关 · ${lv.title}`;
+        $("#play-sub").textContent = LEVELS_META[id - 1].sub;
+        const stage = $("#stage"); stage.innerHTML = "";
+        lv.init(stage, (stars, xp) => finishLevel(id, stars, xp));
+        $("#play").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+      }
+      /* guide bubble helper */
+      function guide(container, text, sub) {
+        const wrap = document.createElement("div"); wrap.className = "x-cat";
+        wrap.innerHTML = `<div class="x-cat__face">🐜</div><div class="x-bubble" aria-live="polite"></div>`;
+        const b = wrap.querySelector(".x-bubble");
+        const set = (t, s) => { b.innerHTML = ""; b.append(t); if (s) { const el = document.createElement("small"); el.textContent = s; b.append(el); } Audio_.play("ant"); };
+        set(text, sub); container.append(wrap);
+        return set;
+      }
+      function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+      function endCard(stars, head, math, starIds) {
+        return el("div", "x-end", `<h3>${starStr(stars)} ${head}</h3>
+          <div><p style="font:var(--type-body-strong)">你刚刚用到的数学</p>
+          <dl>${math.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join("")}</dl></div>
+          <div><p style="font:var(--type-body-strong)">星图点亮</p><p class="x-starid">${starIds}</p></div>`);
+      }
+      const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const taskList = (T, got) => T.map(([k, t, s]) => `<li class="${got[k] ? "is-done" : ""}"><span class="checklist__item">${t} <small>${s}</small></span><span class="chip ${got[k] ? "" : "chip--solid"}">${got[k] ? "完成 ⭐" : "进行中"}</span></li>`).join("");
+
+      const LEVELS = [];
+      const getLevel = (id) => LEVELS.find((l) => l.id === id);
+      /* ===== LEVEL 1 · 地图变成点和线 ===== */
+      const NS = "http://www.w3.org/2000/svg";
+      function svgEl(tag, attrs, text) {
+        const n = document.createElementNS(NS, tag);
+        for (const k in attrs) n.setAttribute(k, attrs[k]);
+        if (text != null) n.textContent = text;
+        return n;
+      }
+      const TOWN = {
+        nodes: {
+          H: { e: "🏠", n: "家", x: 80, y: 80 },
+          S: { e: "🏪", n: "商店", x: 300, y: 60 },
+          P: { e: "🌳", n: "公园", x: 150, y: 210 },
+          L: { e: "📚", n: "图书馆", x: 330, y: 230 },
+          Y: { e: "🏥", n: "医院", x: 470, y: 120 },
+          X: { e: "🏫", n: "学校", x: 430, y: 360 },
+        },
+        /* [from, to, minutes, wiggle] */
+        edges: [["H", "P", 6, 30], ["H", "S", 3, -26], ["P", "S", 2, 24], ["P", "L", 5, -28], ["S", "Y", 7, 26], ["L", "Y", 2, -24], ["L", "X", 3, 26], ["Y", "X", 4, -30]],
+      };
+      const ekey = (a, b) => [a, b].sort().join("-");
+      const edgeOf = (a, b) => TOWN.edges.find((e) => ekey(e[0], e[1]) === ekey(a, b));
+      const TN = (k) => TOWN.nodes[k];
+      /* every route from 🏠 to 🏫 that never visits a place twice */
+      function allRoutes(from, to) {
+        const adj = {}; TOWN.edges.forEach(([a, b, w]) => { (adj[a] = adj[a] || []).push([b, w]); (adj[b] = adj[b] || []).push([a, w]); });
+        const out = [];
+        (function dfs(path, ws) {
+          const u = path[path.length - 1];
+          if (u === to) { out.push({ path, ws, total: ws.reduce((s, x) => s + x, 0) }); return; }
+          adj[u].forEach(([v, w]) => { if (!path.includes(v)) dfs(path.concat(v), ws.concat(w)); });
+        })([from], []);
+        return out.sort((p, q) => p.path.length - q.path.length || p.total - q.total);
+      }
+      function roadPath(a, b, k) {
+        const A = TN(a), B = TN(b), dx = B.x - A.x, dy = B.y - A.y, L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L;
+        const c1 = [A.x + dx / 3 + nx * k, A.y + dy / 3 + ny * k], c2 = [A.x + (2 * dx) / 3 - nx * k * 0.35, A.y + (2 * dy) / 3 - ny * k * 0.35];
+        const m = [(A.x + 3 * c1[0] + 3 * c2[0] + B.x) / 8, (A.y + 3 * c1[1] + 3 * c2[1] + B.y) / 8];
+        return { d: `M${A.x} ${A.y} C${c1[0]} ${c1[1]} ${c2[0]} ${c2[1]} ${B.x} ${B.y}`, m };
+      }
+      /* weighted line with its number, for the graph layer */
+      function drawEdge(g, a, b, w, cls) {
+        const A = TN(a), B = TN(b), mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2;
+        const grp = svgEl("g", { "data-e": ekey(a, b) });
+        grp.append(svgEl("line", { x1: A.x, y1: A.y, x2: B.x, y2: B.y, class: "x-edge " + (cls || "") }));
+        if (w != null) {
+          grp.append(svgEl("circle", { cx: mx, cy: my, r: 13, class: "x-wbox" }));
+          grp.append(svgEl("text", { x: mx, y: my + 1, class: "x-wtxt", "text-anchor": "middle", "dominant-baseline": "central" }, w));
+        }
+        g.append(grp); return grp;
+      }
+      /* static town graph (Part C) */
+      function townGraph() {
+        const svg = svgEl("svg", { class: "x-town", viewBox: "0 0 560 420", role: "img", "aria-label": "小镇的图：6 个点、8 条带分钟数的边" });
+        const ge = svgEl("g", {}), gd = svgEl("g", {});
+        TOWN.edges.forEach(([a, b, w]) => drawEdge(ge, a, b, w));
+        Object.entries(TOWN.nodes).forEach(([k, n]) => {
+          gd.append(svgEl("circle", { cx: n.x, cy: n.y, r: 10, class: "x-dot" }));
+          gd.append(svgEl("text", { x: n.x, y: n.y - 28, "text-anchor": "middle", "dominant-baseline": "central", "font-size": 22 }, n.e));
+        });
+        svg.append(ge, gd);
+        svg.hot = (path) => {
+          const on = new Set(); if (path) for (let i = 1; i < path.length; i++) on.add(ekey(path[i - 1], path[i]));
+          ge.querySelectorAll("g[data-e]").forEach((g) => g.querySelector("line").classList.toggle("is-hot", on.has(g.dataset.e)));
+        };
+        return svg;
+      }
+      /* small graph drawing for Part B */
+      function mini(g, labels) {
+        const P = g.pos;
+        const edges = g.edges.map(([a, b, bend]) => {
+          const [x1, y1] = P[a], [x2, y2] = P[b], dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1;
+          const cx = (x1 + x2) / 2 - (dy / L) * (bend || 0), cy = (y1 + y2) / 2 + (dx / L) * (bend || 0);
+          return `<path d="M${x1} ${y1} Q${cx} ${cy} ${x2} ${y2}"/>`;
+        }).join("");
+        const nodes = Object.entries(P).map(([k, [x, y]]) => labels
+          ? `<circle cx="${x}" cy="${y}" r="12"/><text x="${x}" y="${y + 1}" text-anchor="middle" dominant-baseline="central" font-size="13">${labels[k]}</text>`
+          : `<circle cx="${x}" cy="${y}" r="7" style="fill:var(--fill-primary)"/>`).join("");
+        return `<svg class="x-mini" viewBox="0 0 120 120" aria-hidden="true">${edges}${nodes}</svg>`;
+      }
+      const ROUNDS = [
+        {
+          ask: "这张图里，🏠、🌳、🏪、🏫 谁连着谁？下面哪一张和它的连接完全一样？",
+          labels: { H: "🏠", P: "🌳", S: "🏪", X: "🏫" },
+          target: { pos: { H: [20, 60], P: [60, 20], X: [100, 60], S: [60, 100] }, edges: [["H", "P"], ["P", "X"], ["X", "S"], ["S", "H"]] },
+          ok: { pos: { H: [22, 22], X: [98, 22], P: [98, 98], S: [22, 98] }, edges: [["H", "P"], ["P", "X", 14], ["X", "S"], ["S", "H", -14]] },
+          bad: [
+            { pos: { H: [20, 60], P: [60, 20], S: [100, 60], X: [60, 100] }, edges: [["H", "P"], ["P", "S"], ["S", "X"], ["X", "H"]] },
+            { pos: { H: [20, 60], P: [60, 20], X: [100, 60], S: [60, 100] }, edges: [["H", "P", 10], ["P", "X", -12], ["X", "S", 10], ["H", "X"]] },
+          ],
+          hints: ["长得像不代表一样。目标图里🌳连着谁？在每张候选图里，🌳也连着它们吗？", "别管点放在哪、线弯不弯，一条一条对：🏪连着🏠和🏫，🌳连着🏠和🏫。哪张图每条都对得上？"],
+        },
+        {
+          ask: "五个地方，五条路。哪一张和目标图的连接一样？",
+          labels: { A: "🏥", B: "📚", C: "🏪", D: "🌳", E: "🏠" },
+          target: { pos: { B: [60, 60], A: [20, 20], C: [100, 20], D: [100, 100], E: [20, 100] }, edges: [["B", "A"], ["B", "C"], ["B", "D"], ["B", "E"], ["A", "C"]] },
+          ok: { pos: { B: [100, 62], A: [22, 98], C: [62, 104], D: [24, 22], E: [66, 16] }, edges: [["B", "A", 10], ["B", "C"], ["B", "D", -14], ["B", "E"], ["A", "C", 12]] },
+          bad: [
+            { pos: { D: [60, 60], A: [20, 20], C: [100, 20], B: [100, 100], E: [20, 100] }, edges: [["D", "A"], ["D", "C"], ["D", "B"], ["D", "E"], ["A", "C"]] },
+            { pos: { B: [100, 62], A: [22, 98], C: [62, 104], D: [24, 22], E: [66, 16] }, edges: [["B", "A", 10], ["B", "C"], ["B", "D", -14], ["B", "E"], ["D", "E", 12]] },
+          ],
+          hints: ["目标图里，📚 连了几条线？在候选图里找找 📚，它也连了这么多吗？", "📚 连着其他四个地方，另外还有一条 🏥—🏪。哪张图里这五条线一条不多、一条不少？"],
+        },
+        {
+          ask: "这次点没有名字了！哪一张和目标图其实是同一个图？",
+          labels: null,
+          target: { pos: { a: [22, 22], b: [22, 98], c: [60, 60], d: [98, 40], e: [100, 100] }, edges: [["a", "b"], ["b", "c"], ["c", "a"], ["c", "d"], ["d", "e"]] },
+          ok: { pos: { e: [18, 18], d: [60, 22], c: [100, 50], a: [96, 102], b: [44, 92] }, edges: [["a", "b", 10], ["b", "c", -10], ["c", "a"], ["c", "d", 12], ["d", "e"]] },
+          bad: [
+            { pos: { a: [60, 16], b: [102, 48], c: [86, 102], d: [34, 102], e: [18, 48] }, edges: [["a", "b", 8], ["b", "c"], ["c", "d", -10], ["d", "e"], ["e", "a", 8]] },
+            { pos: { a: [22, 22], b: [22, 98], c: [62, 60], d: [100, 40], e: [64, 104] }, edges: [["a", "b"], ["b", "c"], ["c", "a"], ["c", "d"], ["b", "e"]] },
+          ],
+          hints: ["点和线的个数都一样，怎么分辨？试试数一数：每个点各连了几条线？", "目标图里只有一个点连了 3 条线，也只有一个点只连 1 条线。哪张候选图也是这样？它们是不是还挨在一起？"],
+        },
+      ];
+
+      LEVELS.push({
+        id: 1, title: "地图变成点和线",
+        init(root, done) {
+          let miss = 0;
+          const got = {};
+          const TASKS = [["A", "A · 把地图画成点和线", "6 个点、8 条线"], ["B", "B · 哪些图是一样的", "3 轮"], ["C", "C · 数一数", "从 🏠 到 🏫"]];
+          const say = guide(root, "手机导航看到的，真是我们看到的这张彩色地图吗？先动手试试：点一下每个地方，放下一个点。", "提示：点地图上的 🏫🏠🌳🏪🏥📚。");
+          const tasks = el("ul", "checklist"); root.append(tasks);
+          const work = el("div"); work.style.display = "grid"; work.style.gap = "14px"; root.append(work);
+          const renderTasks = () => (tasks.innerHTML = taskList(TASKS, got));
+          renderTasks();
+          const oops = (node) => { miss++; Audio_.play("wrong"); if (node) { node.classList.remove("x-flash"); void node.offsetWidth; node.classList.add("x-flash"); } };
+
+          /* ---------- Part A ---------- */
+          function partA() {
+            work.innerHTML = "";
+            const status = el("p", "fineprint"); status.setAttribute("aria-live", "polite");
+            const svg = svgEl("svg", { class: "x-town", viewBox: "0 0 560 420", role: "group", "aria-label": "小镇地图：点地方放点，从一个点拖到另一个点画线" });
+            const layer = svgEl("g", { class: "x-layer" });
+            layer.innerHTML = `
+              <rect x="0" y="0" width="560" height="420" rx="24" style="fill:var(--chart-2)" opacity="0.14"/>
+              <ellipse cx="215" cy="335" rx="70" ry="38" style="fill:var(--chart-1)" opacity="0.7"/>
+              <ellipse cx="200" cy="325" rx="22" ry="6" style="fill:var(--fill-primary-on)" opacity="0.6"/>
+              <text x="40" y="370" font-size="22">🌲</text><text x="70" y="395" font-size="18">🌲</text><text x="505" y="40" font-size="20">🌲</text>
+              <text x="520" y="250" font-size="20">🌳</text><text x="40" y="250" font-size="16">🌼</text><text x="300" y="400" font-size="16">🌼</text>
+              <text x="380" y="30" font-size="16">☁️</text><text x="210" y="130" font-size="14">🌼</text>`;
+            const roads = svgEl("g", {}), signs = svgEl("g", {}), names = svgEl("g", {});
+            TOWN.edges.forEach(([a, b, w, k]) => {
+              const r = roadPath(a, b, k);
+              roads.append(svgEl("path", { d: r.d, fill: "none", style: "stroke:var(--chart-3)", "stroke-width": 16, "stroke-linecap": "round" }));
+              roads.append(svgEl("path", { d: r.d, fill: "none", style: "stroke:var(--fill-primary-on)", "stroke-width": 2, "stroke-dasharray": "6 8" }));
+              signs.append(svgEl("rect", { x: r.m[0] - 22, y: r.m[1] - 12, width: 44, height: 24, rx: 8, style: "fill:var(--fill-primary-on);stroke:var(--stroke-primary)" }));
+              signs.append(svgEl("text", { x: r.m[0], y: r.m[1] + 1, "text-anchor": "middle", "dominant-baseline": "central", "font-size": 13, "font-weight": 600, style: "fill:var(--text-primary)" }, w + "分"));
+            });
+            Object.values(TOWN.nodes).forEach((n) => {
+              names.append(svgEl("circle", { cx: n.x, cy: n.y, r: 26, class: "x-ring", style: "fill:var(--fill-primary-on);stroke:var(--stroke-primary)" }));
+              names.append(svgEl("text", { x: n.x, y: n.y + 42, "text-anchor": "middle", "font-size": 13, "font-weight": 600, style: "fill:var(--text-primary)" }, n.n));
+            });
+            layer.append(roads, names, signs);
+            const gLines = svgEl("g", {}), gDots = svgEl("g", {});
+            const tmp = svgEl("line", { class: "x-edge is-pending", visibility: "hidden" });
+            const gEmo = svgEl("g", {});
+            svg.append(layer, gLines, tmp, gDots, gEmo);
+            const dots = {}, lines = {}, emo = {}, wrongPer = {};
+            Object.entries(TOWN.nodes).forEach(([k, n]) => {
+              const g = svgEl("g", { class: "x-place", tabindex: 0, role: "button", "aria-label": n.n, "data-k": k, style: "touch-action:none" });
+              g.append(svgEl("circle", { cx: n.x, cy: n.y, r: 40, fill: "transparent" }));
+              const t = svgEl("text", { x: n.x, y: n.y + 1, "text-anchor": "middle", "dominant-baseline": "central", "font-size": 28, style: "transition:transform var(--dur-draw) var(--ease-out)" }, n.e);
+              g.append(t); emo[k] = t; gEmo.append(g);
+              g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); dots[k] ? tap(k) : drop(k); } });
+            });
+            const entry = el("div", "x-entry"); entry.hidden = true;
+            work.append(svg, status, entry);
+            let sel = null, drag = null, pending = null;
+            const upd = () => (status.textContent = `点 ${Object.keys(dots).length}/6 · 路 ${Object.keys(lines).length}/8 · 点一下地方放点；从一个点拖到另一个点画线（也可以先后点两个点）`);
+            upd();
+            const pt = (e) => { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); };
+            const nearest = (p) => { let best = null, bd = 44; for (const k in TOWN.nodes) { const n = TN(k), d = Math.hypot(n.x - p.x, n.y - p.y); if (d < bd) { bd = d; best = k; } } return best; };
+            function drop(k) {
+              const n = TN(k);
+              dots[k] = svgEl("circle", { cx: n.x, cy: n.y, r: 10, class: "x-dot x-dot-in" }); gDots.append(dots[k]);
+              emo[k].style.transformBox = "fill-box"; emo[k].style.transformOrigin = "center";
+              emo[k].style.transform = "translateY(-28px) scale(0.78)";
+              Audio_.play("pop", 500 + Object.keys(dots).length * 80); upd();
+              const c = Object.keys(dots).length;
+              if (c === 1) say("一个地方 → 一个点。剩下的地方也都放上点吧。");
+              if (c === 6) say("6 个点都放好了！现在沿着每条路，从一个点拖到另一个点，画一条直线。路是弯的，线却是直的——这样行吗？我们待会儿再想。", "一共 8 条路。也可以先点一个点，再点另一个点。");
+            }
+            function tap(k) {
+              if (sel === null) { sel = k; dots[k].classList.add("is-sel"); Audio_.play("tick", 900); return; }
+              const a = sel; dots[a].classList.remove("is-sel"); sel = null;
+              if (a !== k) tryConnect(a, k);
+            }
+            function tryConnect(a, b) {
+              const e = edgeOf(a, b);
+              if (!e) { Audio_.play("bonk"); say(`从 ${TN(a).e} 到 ${TN(b).e} 有一条直接的路吗？沿着路走走看，中间是不是要先经过别的地方？`); return; }
+              const key = ekey(a, b);
+              if (lines[key]) { toast("这条路已经画好了"); return; }
+              if (pending) pending.g.remove();
+              pending = { a, b, e, key, g: drawEdge(gLines, a, b, null, "is-pending") };
+              Audio_.play("tick", 760);
+              entry.hidden = false;
+              entry.innerHTML = `<span>${TN(a).e} ${TN(a).n} — ${TN(b).e} ${TN(b).n}：这条路要走几分钟？</span>
+                <input class="x-num" type="number" inputmode="numeric" min="0" aria-label="分钟数" />
+                <button class="x-btn x-btn--go">确认</button><button class="x-btn">取消</button>`;
+              const inp = entry.querySelector("input"), [ok, cancel] = entry.querySelectorAll("button");
+              const submit = () => {
+                if (inp.value === "") { inp.focus(); return; }
+                if (+inp.value === e[2]) {
+                  pending.g.remove(); lines[key] = drawEdge(gLines, a, b, e[2]);
+                  pending = null; entry.hidden = true; Audio_.play("correct"); addXP(5); upd();
+                  const c = Object.keys(lines).length;
+                  if (c === 8) finishA();
+                  else if (c === 1) say("第一条线画好了，数字也记在线上。继续！还有 7 条。");
+                } else {
+                  wrongPer[key] = (wrongPer[key] || 0) + 1;
+                  if (wrongPer[key] === 1) oops(entry); else { Audio_.play("wrong"); entry.classList.remove("x-flash"); void entry.offsetWidth; entry.classList.add("x-flash"); }
+                  say(wrongPer[key] >= 2 ? "沿着这条弯弯的路找一找，路中间的小牌子上写着几分？" : "再看看地图：这条路旁边的牌子写的是多少？");
+                  inp.select();
+                }
+              };
+              ok.addEventListener("click", submit);
+              inp.addEventListener("keydown", (ev) => { if (ev.key === "Enter") submit(); });
+              cancel.addEventListener("click", () => { pending.g.remove(); pending = null; entry.hidden = true; });
+              setTimeout(() => inp.focus({ preventScroll: true }), 30);
+            }
+            svg.addEventListener("pointerdown", (e) => {
+              const p = pt(e), k = nearest(p); if (!k) return;
+              e.preventDefault();
+              if (!dots[k]) { drop(k); return; }
+              drag = { from: k, x: p.x, y: p.y, moved: false };
+              try { svg.setPointerCapture(e.pointerId); } catch (_) {}
+              svg.classList.add("is-drawing");
+              const n = TN(k); tmp.setAttribute("x1", n.x); tmp.setAttribute("y1", n.y); tmp.setAttribute("x2", n.x); tmp.setAttribute("y2", n.y);
+            });
+            svg.addEventListener("pointermove", (e) => {
+              if (!drag) return; const p = pt(e);
+              if (!drag.moved && Math.hypot(p.x - drag.x, p.y - drag.y) > 14) { drag.moved = true; tmp.setAttribute("visibility", "visible"); }
+              if (drag.moved) { tmp.setAttribute("x2", p.x); tmp.setAttribute("y2", p.y); }
+            });
+            const end = (e) => {
+              if (!drag) return; const d = drag; drag = null;
+              tmp.setAttribute("visibility", "hidden"); svg.classList.remove("is-drawing");
+              if (!d.moved) { tap(d.from); return; }
+              const k2 = nearest(pt(e));
+              if (sel) { dots[sel].classList.remove("is-sel"); sel = null; }
+              if (k2 && k2 !== d.from && dots[k2]) tryConnect(d.from, k2);
+              else if (k2 && !dots[k2]) say(`${TN(k2).e} 那里还没有点哦，先点一下放个点。`);
+            };
+            svg.addEventListener("pointerup", end);
+            svg.addEventListener("pointercancel", () => { drag = null; tmp.setAttribute("visibility", "hidden"); svg.classList.remove("is-drawing"); });
+            function finishA() {
+              Audio_.play("chord");
+              say("看——彩色地图慢慢消失了……");
+              later(() => {
+                layer.classList.add("is-gone");
+                svg.setAttribute("aria-label", "只剩点和线的图：6 个点、8 条带分钟数的线");
+                status.textContent = "点 6/6 · 路 8/8 · 地图消失了，只剩下点和线。";
+              }, 500);
+              later(askWhy, reduced() ? 600 : 2000);
+            }
+            function askWhy() {
+              say("弯弯曲曲的路变成了直线，还能用吗？什么信息不能丢？");
+              const box = el("div", "x-opts");
+              const OPTS = [["路弯弯曲曲的形状", false], ["哪两个地方连着，走要几分钟", true], ["地图上的树和池塘", false]];
+              let wrong = 0;
+              OPTS.forEach(([t, right]) => {
+                const b = el("button", "x-btn x-qopt", t);
+                b.addEventListener("click", () => {
+                  if (b.disabled) return;
+                  if (right) {
+                    b.classList.add("good"); box.querySelectorAll("button").forEach((x) => (x.disabled = true));
+                    Audio_.play("correct"); addXP(15); concept(); return;
+                  }
+                  b.classList.add("bad"); b.disabled = true; wrong++; oops(b);
+                  say(wrong >= 2
+                    ? "想想你刚才画每条线时，都输入了什么？要是把它丢掉，还能比出哪条路快吗？"
+                    : "如果你只想知道从🏠到🏫最快要几分钟，路弯成什么样，会改变答案吗？");
+                });
+                box.append(b);
+              });
+              work.append(box);
+            }
+            function concept() {
+              say("对！导航只需要“谁连着谁”和“要多久”。数学家把这样的东西叫做——图。", "点 = 顶点，线 = 边，线上的数字 = 权重。");
+              const c = el("div", "x-concept", `
+                <div><b>● 点（顶点）</b><span>一个地方：家、学校、商店……</span></div>
+                <div><b>— 线（边）</b><span>两个地方之间有一条路</span></div>
+                <div><b>6 数字（权重）</b><span>走这条路要几分钟</span></div>`);
+              const go = el("button", "x-btn x-btn--go", "下一步：哪些图是一样的 →");
+              go.addEventListener("click", () => { Audio_.play("click"); partB(); });
+              work.append(c, go);
+              got.A = true; renderTasks();
+            }
+          }
+
+          /* ---------- Part B ---------- */
+          function partB() {
+            let r = 0;
+            say("同一张图可以画成很多样子。点挪个位置、线弯一弯，它还是同一张图吗？", "3 轮：找出和目标图连接完全一样的那一张。");
+            function round() {
+              work.innerHTML = "";
+              const R = ROUNDS[r];
+              if (r > 0) say(R.ask, `第 ${r + 1} 轮 / 共 3 轮`);
+              const head = el("p", "", `<b>第 ${r + 1} 轮</b> · ${R.ask}`); head.style.font = "var(--type-body)";
+              const tgt = el("div", "x-gtarget", mini(R.target, R.labels) + "<p>目标图</p>");
+              const opts = [{ g: R.ok, right: true }, ...R.bad.map((g) => ({ g, right: false }))].sort(() => Math.random() - 0.5);
+              const grid = el("div", "x-gopts");
+              let wrong = 0;
+              opts.forEach((o, i) => {
+                const b = el("button", "x-opt x-gopt", mini(o.g, R.labels) + `<span>候选 ${"甲乙丙"[i]}</span>`);
+                b.setAttribute("aria-label", `候选 ${"甲乙丙"[i]}`);
+                b.addEventListener("click", () => {
+                  if (b.disabled) return;
+                  if (o.right) {
+                    b.classList.add("good"); grid.querySelectorAll("button").forEach((x) => (x.disabled = true));
+                    Audio_.play("correct"); addXP(15);
+                    say(["没错！点换了位置、线交叉了，可连接一条没变。", "对！📚 还是连着四个地方，🏥—🏪 也还在。形状不重要。", "厉害！没有名字也能比：数每个点连几条线，再看它们怎么挨着。"][r]);
+                    const next = el("button", "x-btn x-btn--go", r < 2 ? "下一轮 →" : "下一步：数一数 →");
+                    next.addEventListener("click", () => { Audio_.play("click"); r++; if (r < 3) round(); else { got.B = true; renderTasks(); partC(); } });
+                    work.append(next);
+                  } else {
+                    b.classList.add("bad"); b.disabled = true; wrong++; oops(b);
+                    say(R.hints[Math.min(wrong, 2) - 1]);
+                  }
+                });
+                grid.append(b);
+              });
+              work.append(head, tgt, grid);
+            }
+            round();
+          }
+
+          /* ---------- Part C ---------- */
+          function partC() {
+            work.innerHTML = "";
+            const routes = allRoutes("H", "X"), best = Math.min(...routes.map((x) => x.total));
+            const g = townGraph();
+            const q = el("div", "x-entry");
+            const list = el("ol", "x-routes"); list.hidden = true;
+            work.append(g, q, list);
+            say("回到小镇的图。从 🏠 到 🏫，不走回头路（同一个地方不去两次），一共有几条不同的路线？", "先自己在图上用手指走一走。");
+            const fmt = (rt) => rt.path.map((k) => TN(k).e).join(" → ");
+            function ask(label, answer, hints, onRight) {
+              let wrong = 0;
+              q.innerHTML = `<span>${label}</span><input class="x-num" type="number" inputmode="numeric" min="0" aria-label="${label}" /><button class="x-btn x-btn--go">确认</button>`;
+              const inp = q.querySelector("input"), btn = q.querySelector("button");
+              const submit = () => {
+                if (inp.value === "") { inp.focus(); return; }
+                if (+inp.value === answer) { inp.disabled = btn.disabled = true; Audio_.play("correct"); addXP(20); onRight(); return; }
+                wrong++; oops(q); inp.select();
+                say(hints[Math.min(wrong, hints.length) - 1]);
+                if (wrong === 3 && hints.walk) hints.walk();
+              };
+              btn.addEventListener("click", submit);
+              inp.addEventListener("keydown", (e) => { if (e.key === "Enter") submit(); });
+            }
+            function show(i, withSum, then) {
+              if (i === 0) { list.innerHTML = ""; list.hidden = false; }
+              if (i >= routes.length) { g.hot(null); list.querySelectorAll("li").forEach((x) => x.classList.remove("is-now")); then && then(); return; }
+              const rt = routes[i];
+              list.querySelectorAll("li").forEach((x) => x.classList.remove("is-now"));
+              const li = el("li", "is-now", `${fmt(rt)} <span class="pill">${rt.ws.join(" + ")}</span>`);
+              list.append(li); g.hot(rt.path); Audio_.play("tick", 700 + i * 60);
+              later(() => show(i + 1, withSum, then), reduced() ? 300 : 1100);
+            }
+            const countHints = [
+              "从 🏠 出发，第一步能去哪几个地方？按第一步分成两堆，一堆一堆地数。",
+              "把路线写下来：🏠→🏪→… 别漏了先绕到别处再往前走的路线；只要同一个地方不去两次，就算一条。",
+              "我们一起在图上一条条走一遍，数数亮了几次，再填一次答案。",
+            ];
+            let walked = false;
+            countHints.walk = () => { if (walked) return; walked = true; show(0, false); };
+            ask("从 🏠 到 🏫 一共有几条路线？", routes.length, countHints, () => {
+              say(`对，一共 ${routes.length} 条！看它们一条一条亮起来。`, "每条旁边是这条路线上每段路的分钟数。");
+              const step2 = () => {
+                say("导航要挑最快的那条。把每条路线的分钟加起来，比一比：最短的是几分钟？");
+                ask("最短的路线要几分钟？", best, [
+                  "把每条路线小牌子里的数加起来，写在旁边，再比一比谁最小。",
+                  "经过的地方最少的路线，一定最快吗？绕一下的路线也加一加试试。",
+                ], () => {
+                  const win = routes.find((x) => x.total === best);
+                  g.hot(win.path);
+                  list.querySelectorAll("li").forEach((li, i) => li.classList.toggle("is-now", routes[i].total === best));
+                  say(`没错，${best} 分钟：${fmt(win)}。经过的地方多，反而更快！`, `${routes.length} 条路线一条条加，小镇还算得过来；城市里有上万个点，导航得有更聪明的办法——后面几关见。`);
+                  got.C = true; renderTasks();
+                  later(clear, reduced() ? 400 : 1600);
+                });
+              };
+              if (walked) step2(); else show(0, true, step2);
+            });
+          }
+
+          /* ---------- clear ---------- */
+          function clear() {
+            const stars = miss <= 1 ? 3 : miss <= 3 ? 2 : 1;
+            State.lit.d07 = true; renderSky();
+            done(stars, 40 + stars * 20);
+            award("mapper");
+            const card = endCard(stars, `第 1 关通关 · 出错 ${miss} 次`, [
+              ["图 = 点 + 边", "把地方变成点、把路变成边，弯弯的路也能画成直线，因为只要知道“谁连着谁”。"],
+              ["带权重的图", "边上的数字就是权重（分钟、距离、费用）。带权重的图可以表示地图、地铁、网络。"],
+            ], "星图点亮 d07 图论初步");
+            const row = el("div", "x-row");
+            const again = el("button", "x-btn", "再玩一次");
+            again.addEventListener("click", () => { Audio_.play("click"); openLevel(1); });
+            const back = el("a", "x-btn x-btn--go", "回到关卡地图"); back.href = "#map";
+            const notes = el("button", "x-btn", "📒 看知识笔记");
+            notes.addEventListener("click", () => $("#notes-btn").click());
+            const next = el("button", "x-btn x-btn--go", "进入第 2 关 →");
+            next.addEventListener("click", () => { Audio_.play("click"); openLevel(2); });
+            row.append(next, back, again, notes); card.append(row);
+            work.append(card);
+            say("你把一张地图变成了数学家的“图”。🏅 地图抽象师，到手！", "第 2 关已解锁，第 3–5 关即将开放。");
+            card.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "center" });
+          }
+
+          partA();
+        },
+      });
+      /* ===== LEVEL 2 · 七座桥能一笔走完吗 ===== */
+      const EG = [
+        { n: "信封", pos: { a: [25, 105], b: [95, 105], c: [95, 55], d: [25, 55], e: [60, 16] }, edges: [["a", "b"], ["b", "c"], ["c", "d"], ["d", "a"], ["a", "c"], ["b", "d"], ["d", "e"], ["c", "e"]], ok: true },
+        { n: "正方形加两条对角线", pos: { a: [25, 95], b: [95, 95], c: [95, 25], d: [25, 25] }, edges: [["a", "b"], ["b", "c"], ["c", "d"], ["d", "a"], ["a", "c"], ["b", "d"]], ok: false },
+        { n: "五角星", pos: { a: [60, 16], b: [104, 48], c: [87, 99], d: [33, 99], e: [16, 48] }, edges: [["a", "c"], ["c", "e"], ["e", "b"], ["b", "d"], ["d", "a"]], ok: true },
+        { n: "三角形", pos: { a: [60, 18], b: [100, 98], c: [20, 98] }, edges: [["a", "b"], ["b", "c"], ["c", "a"]], ok: true },
+      ];
+      const deg = (g, k) => g.edges.filter((e) => e.includes(k)).length;
+      function gsvg(g, nums) {
+        const svg = svgEl("svg", { class: "x-trace", viewBox: "0 0 120 120", role: "group", "aria-label": g.n });
+        const lines = g.edges.map(([a, b]) => { const l = svgEl("line", { x1: g.pos[a][0], y1: g.pos[a][1], x2: g.pos[b][0], y2: g.pos[b][1] }); svg.append(l); return l; });
+        const dots = {};
+        Object.entries(g.pos).forEach(([k, [x, y]]) => {
+          const d = svgEl("g", { class: "x-tdot", tabindex: 0, role: "button", "aria-label": "点 " + k.toUpperCase() });
+          d.append(svgEl("circle", { cx: x, cy: y, r: 17, class: "hit" }), svgEl("circle", { cx: x, cy: y, r: 9, class: "v" }), svgEl("text", { x, y: y + 0.5, "text-anchor": "middle", "dominant-baseline": "central" }, nums ? "?" : ""));
+          const go = () => svg.onTap && svg.onTap(k);
+          d.addEventListener("click", go);
+          d.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+          svg.append(d); dots[k] = d;
+        });
+        return { svg, lines, dots };
+      }
+      LEVELS.push({
+        id: 2, title: "七座桥能一笔走完吗",
+        init(root, done) {
+          let miss = 0;
+          const got = {};
+          const TASKS = [["A", "A · 一笔画", "4 张图"], ["B", "B · 数度", "数每个点连几条线"], ["C", "C · 柯尼斯堡七桥", "走桥、数度、架新桥"]];
+          const say = guide(root, "一笔画：笔不离开纸，每条线正好画一次。点一个点出发，再一个接一个点相邻的点。", "用过的线会变金色，不能再走。");
+          const tasks = el("ul", "checklist"); root.append(tasks);
+          const work = el("div"); work.style.display = "grid"; work.style.gap = "14px"; root.append(work);
+          const renderTasks = () => (tasks.innerHTML = taskList(TASKS, got));
+          renderTasks();
+          const oops = (node) => { miss++; Audio_.play("wrong"); if (node) { node.classList.remove("x-flash"); void node.offsetWidth; node.classList.add("x-flash"); } };
+          const ASK = "从一个点出发又回来，要用掉几条线？";
+
+          /* ---------- Part A · 一笔画 ---------- */
+          function partA(i) {
+            if (i >= EG.length) { got.A = true; renderTasks(); return partB(0); }
+            const g = EG[i], G = gsvg(g);
+            work.innerHTML = "";
+            const status = el("p", "fineprint"); status.setAttribute("aria-live", "polite");
+            const row = el("div", "x-row");
+            const reset = el("button", "x-btn", "↺ 重来"), no = el("button", "x-btn", "我觉得画不出来");
+            row.append(reset, no);
+            work.append(el("p", "x-gcap", `${i + 1} / ${EG.length} · ${g.n}`), G.svg, status, row);
+            let cur = null, used = new Set(), dead = false, stuck = 0, over = false;
+            const mark = (k) => Object.entries(G.dots).forEach(([j, d]) => d.classList.toggle("is-cur", j === k));
+            const restart = () => { cur = null; used = new Set(); dead = false; G.lines.forEach((l) => l.classList.remove("is-used")); mark(null); status.textContent = "点一个点开始。"; };
+            restart();
+            if (i > 0) say(`第 ${i + 1} 张：${g.n}。能一笔画出来吗？`, "画不出来的话，就按「我觉得画不出来」。");
+            reset.addEventListener("click", () => { Audio_.play("click"); restart(); });
+            G.svg.onTap = (k) => {
+              if (over) return;
+              if (dead) { Audio_.play("bonk"); status.textContent = "走不动啦，点「重来」再试一次。"; return; }
+              if (cur === null) { cur = k; mark(k); Audio_.play("tick"); status.textContent = "好，接着点一个连着它的点。"; return; }
+              const j = g.edges.findIndex(([a, b], n) => !used.has(n) && ((a === cur && b === k) || (a === k && b === cur)));
+              if (j < 0) { Audio_.play("bonk"); status.textContent = "这两个点之间没有还没用过的线。"; return; }
+              used.add(j); G.lines[j].classList.add("is-used"); cur = k; mark(k); Audio_.play("tick", 500 + used.size * 60);
+              if (used.size === g.edges.length) {
+                over = true; Audio_.play("chord"); addXP(15);
+                status.textContent = "全部画完！"; say(`漂亮，${g.n}一笔画成！`);
+                later(() => partA(i + 1), reduced() ? 500 : 1500); return;
+              }
+              if (!g.edges.some(([a, b], n) => !used.has(n) && (a === cur || b === cur))) {
+                dead = true; stuck++; Audio_.play("bonk");
+                status.textContent = `卡住了：这个点的线都用完了，还剩 ${g.edges.length - used.size} 条没画。`;
+                if (stuck === 1) say(ASK, "想一想：路过一个点，是进来一条、出去一条。");
+                else if (!g.ok) say("每个点都连着 3 条线……进来、出去总是成对用掉，单出来的那条怎么办？", "会不会这张图根本画不出来？");
+                else say("那起点和终点有什么特别？哪个点连的线条数和别人不一样？", "试试从那里出发。");
+              }
+            };
+            no.addEventListener("click", () => {
+              if (over) return;
+              if (!g.ok) {
+                over = true; Audio_.play("chord"); addXP(25); no.classList.add("x-btn--go");
+                say("对！这张图怎么画都会剩线。为什么？下一部分我们来数一数。");
+                later(() => partA(i + 1), reduced() ? 500 : 1600);
+              } else { oops(no); say("其实它能画出来哦。换一个起点试试？", ASK); }
+            });
+          }
+
+          /* ---------- Part B · 数度 ---------- */
+          let tbody;
+          function partB(i) {
+            if (i === 0) {
+              work.innerHTML = "";
+              const tw = el("div", "table-wrap", `<table><caption>数完一张，填一行</caption><thead><tr><th scope="col">图</th><th scope="col">奇点个数</th><th scope="col">能否一笔画</th></tr></thead><tbody></tbody></table>`);
+              tbody = tw.querySelector("tbody");
+              work.append(el("div"), tw);
+              say("一个点连着几条线，就叫它的“度”。点一下点，数字会 0→6 地换；对好了按「检查」。", "度是单数的点叫“奇点”，它会亮橙色。");
+            }
+            if (i >= EG.length) { got.B = true; renderTasks(); return quiz(); }
+            const g = EG[i], G = gsvg(g, true), area = work.firstChild;
+            area.innerHTML = ""; area.style.display = "grid"; area.style.gap = "12px";
+            const status = el("p", "fineprint"); status.setAttribute("aria-live", "polite");
+            const check = el("button", "x-btn x-btn--go", "检查");
+            const row = el("div", "x-row"); row.append(check);
+            area.append(el("p", "x-gcap", `${i + 1} / ${EG.length} · ${g.n}`), G.svg, status, row);
+            if (i > 0) say(`下一张：${g.n}。每个点连着几条线？`);
+            const vals = {}, lock = {};
+            G.svg.onTap = (k) => {
+              if (lock[k]) return;
+              vals[k] = vals[k] == null ? 0 : (vals[k] + 1) % 7;
+              G.dots[k].querySelector("text").textContent = vals[k]; Audio_.play("tick", 500 + vals[k] * 80);
+            };
+            check.addEventListener("click", () => {
+              const keys = Object.keys(g.pos);
+              if (keys.some((k) => !lock[k] && vals[k] == null)) { status.textContent = "还有点是“?”，先把每个点都填上。"; Audio_.play("bonk"); return; }
+              let wrong = 0;
+              keys.forEach((k) => {
+                if (lock[k]) return;
+                if (vals[k] === deg(g, k)) { lock[k] = true; G.dots[k].classList.add("is-lock"); if (vals[k] % 2) G.dots[k].classList.add("is-odd"); }
+                else wrong++;
+              });
+              if (wrong) { oops(check); status.textContent = `${wrong} 个点还不对，绿圈的已经锁定。`; say("用手指从那个点出发，沿每条线摸一下，数一数伸出去几条。"); return; }
+              const odd = keys.filter((k) => deg(g, k) % 2).length;
+              Audio_.play("correct"); addXP(15); check.disabled = true;
+              status.textContent = `全对！奇点 ${odd} 个。`;
+              const tr = el("tr", "", `<th scope="row">${g.n}</th><td class="num" data-label="奇点个数">${odd}</td><td data-label="能否一笔画">${g.ok ? "能" : "不能"}</td>`);
+              tbody.append(tr);
+              later(() => partB(i + 1), reduced() ? 500 : 1400);
+            });
+          }
+          function quiz() {
+            work.firstChild.innerHTML = "";
+            say("看看表格：能一笔画的图，奇点个数是？", ASK);
+            const q = el("div", "x-row");
+            [["0 或 2", true], ["越少越好", false], ["一定是双数个线", false]].forEach(([t, ok]) => {
+              const b = el("button", "x-btn x-qopt", t);
+              b.addEventListener("click", () => {
+                if (q.dataset.done) return;
+                if (ok) {
+                  q.dataset.done = 1; b.classList.add("good"); Audio_.play("correct"); addXP(20);
+                  say("对！中途经过的点，线都是进一条、出一条，成对用掉；只有起点和终点可以单出一条。所以奇点只能有 0 个或 2 个。", "0 个：从哪出发就回到哪；2 个：从一个奇点出发，到另一个奇点结束。");
+                  later(partC, reduced() ? 600 : 2200);
+                } else {
+                  b.classList.add("bad"); oops(b);
+                  say(ok === false && t === "越少越好" ? "正方形加对角线有 4 个奇点，画不出来；那 1 个、3 个奇点呢？表格里能画的图都是几个？" : "正方形加对角线有 6 条线，是双数，它能画吗？要看的不是线，是奇点。", ASK);
+                }
+              });
+              q.append(b);
+            });
+            work.firstChild.append(el("p", "x-gcap", "能一笔画的图，奇点个数是？"), q);
+          }
+
+          /* ---------- Part C · 柯尼斯堡七桥 ---------- */
+          const KL = { A: [102, 80], B: [120, 26], C: [120, 134], D: [178, 80] };
+          const KG = { A: [50, 80], B: [130, 24], C: [130, 136], D: [205, 80] };
+          const KB = [["A", "B", 70, 68, 70, 47, -18], ["A", "B", 100, 67, 100, 47, 18], ["A", "C", 70, 92, 70, 113, 18], ["A", "C", 100, 93, 100, 113, -18], ["A", "D", 116, 80, 146, 80, 0], ["B", "D", 185, 47, 185, 67, 0], ["C", "D", 185, 113, 185, 93, 0]];
+          const NAME = { A: "A 克奈普霍夫岛", B: "B 北岸", C: "C 南岸", D: "D 东岛" };
+          const kc = (p, q, bend) => { const dx = q[0] - p[0], dy = q[1] - p[1], L = Math.hypot(dx, dy); return [(p[0] + q[0]) / 2 - (dy / L) * bend, (p[1] + q[1]) / 2 + (dx / L) * bend]; };
+          const lerp = (p, q, t) => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
+          const qpt = (a, c, b, t) => lerp(lerp(a, c, t), lerp(c, b, t), t);
+          function tween(ms, f, end) {
+            if (reduced()) { f(1); if (end) end(); return; }
+            const t0 = performance.now();
+            const step = (n) => { const t = Math.min(1, (n - t0) / ms); f(t < 0.5 ? 2 * t * t : 1 - (2 - 2 * t) ** 2 / 2); if (t < 1) requestAnimationFrame(step); else if (end) end(); };
+            requestAnimationFrame(step);
+          }
+          function partC() {
+            work.innerHTML = "";
+            const tap = (node, label, fn) => {
+              node.setAttribute("tabindex", 0); node.setAttribute("role", "button"); node.setAttribute("aria-label", label);
+              node.addEventListener("click", fn);
+              node.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } });
+              return node;
+            };
+            const svg = svgEl("svg", { class: "x-trace x-ksb", viewBox: "0 0 240 160", role: "group", "aria-label": "1736 年的柯尼斯堡：一条河、两座岛、七座桥" });
+            const map = svgEl("g", { class: "x-layer" }), gl = svgEl("g", { class: "x-layer is-gone" }), wk = svgEl("circle", { r: 5, cx: -20, cy: -20, class: "x-walker" });
+            const SH = { B: ["rect", { x: 0, y: 0, width: 240, height: 56 }], C: ["rect", { x: 0, y: 104, width: 240, height: 56 }], A: ["ellipse", { cx: 85, cy: 80, rx: 32, ry: 13 }], D: ["path", { d: "M146 80 Q150 66 172 66 H240 V94 H172 Q150 94 146 80Z" }] };
+            const land = (k) => { const g = svgEl("g", { class: "x-tland" }); g.append(svgEl(SH[k][0], { ...SH[k][1], class: "x-land" })); return tap(g, NAME[k], () => onLand(k)); };
+            map.append(land("B"), land("C"), svgEl("path", { class: "x-river", d: "M0 52 C80 46 160 54 240 50 V110 C160 114 80 106 0 108Z" }), land("A"), land("D"));
+            [["B 北岸", 8, 18, "start"], ["C 南岸", 8, 146, "start"], ["A", 76, 80, "middle"], ["D 东岛", 214, 80, "middle"]].forEach(([t, x, y, a]) => map.append(svgEl("text", { x, y, class: "x-lbl", "text-anchor": a, "dominant-baseline": "central" }, t)));
+            const bridges = KB.map(([a, b, ax, ay, bx, by], j) => {
+              const g = svgEl("g", { class: "x-br" });
+              g.append(svgEl("line", { x1: ax, y1: ay, x2: bx, y2: by, class: "hit" }), svgEl("line", { x1: ax, y1: ay, x2: bx, y2: by, class: "deck" }));
+              map.append(g); return tap(g, `第 ${j + 1} 座桥：${a}–${b}`, () => onBridge(j));
+            });
+            /* graph layer: same bridges as edges, morphing from the map */
+            const E = KB.map(([a, b, ax, ay, bx, by, bend]) => { const m = [(ax + bx) / 2, (ay + by) / 2], h = lerp(KL[a], KL[b], 0.5); return { a, b, c0: [2 * m[0] - h[0], 2 * m[1] - h[1]], c1: kc(KG[a], KG[b], bend), p: svgEl("path", { class: "x-kedge" }) }; });
+            E.forEach((e) => gl.append(e.p));
+            const draw = (t) => E.forEach((e) => e.p.setAttribute("d", `M${lerp(KL[e.a], KG[e.a], t)} Q${lerp(e.c0, e.c1, t)} ${lerp(KL[e.b], KG[e.b], t)}`));
+            const dots = {}, txt = {}, OFF = { A: [-20, 0], B: [0, -17], C: [0, 17], D: [20, 0] };
+            Object.keys(KG).forEach((k) => {
+              const [x, y] = KG[k], d = svgEl("g", { class: "x-tdot" });
+              txt[k] = svgEl("text", { x, y: y + 0.5, "text-anchor": "middle", "dominant-baseline": "central" }, "?");
+              d.append(svgEl("circle", { cx: x, cy: y, r: 17, class: "hit" }), svgEl("circle", { cx: x, cy: y, r: 10, class: "v" }), txt[k], svgEl("text", { x: x + OFF[k][0], y: y + OFF[k][1], class: "x-lbl", "text-anchor": "middle", "dominant-baseline": "central" }, k));
+              gl.append(tap(d, "点 " + k, () => onDot(k))); dots[k] = d;
+            });
+            draw(0); svg.append(map, gl, wk);
+            const cap = el("p", "x-gcap", "1736 年的柯尼斯堡 · 七座桥");
+            const status = el("p", "fineprint"); status.setAttribute("aria-live", "polite");
+            const row = el("div", "x-row"), reset = el("button", "x-btn", "↺ 重来"), quit = el("button", "x-btn", "放弃");
+            row.append(reset, quit);
+            work.append(cap, svg, el("p", "fineprint", "A 克奈普霍夫岛 · B 北岸 · C 南岸 · D 东岛。每座桥正好走一次，能把七座桥都走完吗？"), status, row);
+            let phase = "walk", cur = null, used = new Set(), busy = false, fails = 0, sel = null, qbox;
+            const put = (p) => { wk.setAttribute("cx", p[0]); wk.setAttribute("cy", p[1]); };
+            const restart = () => { if (phase !== "walk" || busy) return; cur = null; used = new Set(); bridges.forEach((b) => b.classList.remove("is-used")); put([-20, -20]); status.textContent = "先点一块陆地，选好出发点。"; };
+            restart();
+            say("1736 年，柯尼斯堡的人想知道：能不能每座桥正好走一次，把七座桥都走完？", "先点一块陆地出发，再一座一座点桥。走过的桥变金色，不能再走。");
+            reset.addEventListener("click", () => { Audio_.play("click"); restart(); });
+            quit.addEventListener("click", () => { Audio_.play("click"); morph(); });
+            function onLand(k) {
+              if (phase !== "walk" || busy) return;
+              if (cur === null) { cur = k; put(KL[k]); Audio_.play("tick"); status.textContent = `从 ${NAME[k]} 出发。点一座连着这里的桥。`; }
+              else status.textContent = `你在 ${NAME[cur]}，点一座桥过河。`;
+            }
+            function onBridge(j) {
+              if (phase !== "walk" || busy) return;
+              const [a, b, ax, ay, bx, by] = KB[j];
+              if (cur === null) { Audio_.play("bonk"); status.textContent = "先点一块陆地，选好出发点。"; return; }
+              if (used.has(j)) { Audio_.play("bonk"); status.textContent = "这座桥走过了，不能再走。"; return; }
+              if (a !== cur && b !== cur) { Audio_.play("bonk"); status.textContent = `你在 ${NAME[cur]}，这座桥不连着这里。`; return; }
+              const fwd = a === cur, w = fwd ? b : a, P = fwd ? [KL[a], [ax, ay], [bx, by], KL[b]] : [KL[b], [bx, by], [ax, ay], KL[a]];
+              used.add(j); bridges[j].classList.add("is-used"); busy = true; Audio_.play("tick", 500 + used.size * 60);
+              tween(700, (t) => { const s = Math.min(2, Math.floor(t * 3)); put(lerp(P[s], P[s + 1], t * 3 - s)); }, () => {
+                busy = false; cur = w;
+                if (used.size === KB.length) { status.textContent = "七座桥全部走完！"; return morph(); }
+                if (KB.some((e, n) => !used.has(n) && (e[0] === w || e[1] === w))) { status.textContent = `到了 ${NAME[w]}，已走 ${used.size} / 7 座桥。`; return; }
+                fails++; Audio_.play("bonk");
+                status.textContent = `卡住了：${NAME[w]} 的桥都走过了，还剩 ${7 - used.size} 座没走。（第 ${fails} 次）`;
+                if (fails >= 3) { say("试了 3 次都剩桥……也许不是你不够努力，而是根本走不完？", "我们把地图变简单一点看看。"); later(morph, reduced() ? 600 : 1800); }
+                else say(fails === 1 ? "点「重来」，换个出发点试试？" : "每到一块陆地，都是进来一座桥、出去一座桥……每块陆地连着几座桥？", "也可以点「放弃」，看看数学家的办法。");
+              });
+            }
+            function morph() {
+              if (phase !== "walk") return;
+              phase = "morph"; busy = true; row.remove(); put([-20, -20]); status.textContent = "";
+              map.classList.add("is-gone"); gl.classList.remove("is-gone");
+              cap.textContent = "陆地 → 点，桥 → 边";
+              say("把每块陆地缩成一个点，每座桥变成一条边——地图变成了一张图。", "4 个点、7 条边。形状不重要，只看谁连着谁。");
+              tween(1400, (t) => { draw(t); Object.keys(dots).forEach((k) => { const [x, y] = lerp(KL[k], KG[k], t); dots[k].setAttribute("transform", `translate(${x - KG[k][0]} ${y - KG[k][1]})`); }); }, () => later(degrees, reduced() ? 300 : 600));
+            }
+            const kdeg = (k) => E.filter((e) => e.a === k || e.b === k).length;
+            const vals = {}, lock = {};
+            function onDot(k) {
+              if (phase === "deg" && !lock[k]) { vals[k] = vals[k] == null ? 0 : (vals[k] + 1) % 7; txt[k].textContent = vals[k]; Audio_.play("tick", 500 + vals[k] * 80); }
+              else if (phase === "bonus") bonusTap(k);
+            }
+            function degrees() {
+              phase = "deg";
+              say("像 B 部分一样数度：点一个点，数字 0→6 地换；对好了按「检查」。", "一个点连着几条边，它的度就是几。");
+              const check = el("button", "x-btn x-btn--go", "检查"), r = el("div", "x-row"); r.append(check); work.append(r);
+              status.textContent = "4 个点都填好再检查。";
+              check.addEventListener("click", () => {
+                const keys = Object.keys(KG);
+                if (keys.some((k) => !lock[k] && vals[k] == null)) { status.textContent = "还有点是“?”，先把每个点都填上。"; Audio_.play("bonk"); return; }
+                let wrong = 0;
+                keys.forEach((k) => { if (lock[k]) return; if (vals[k] === kdeg(k)) { lock[k] = true; dots[k].classList.add("is-lock"); if (vals[k] % 2) dots[k].classList.add("is-odd"); } else wrong++; });
+                if (wrong) { oops(check); status.textContent = `${wrong} 个点还不对，绿圈的已经锁定。`; say("从那个点出发，沿每条边摸一下，数一数伸出去几条。A 和 B 之间有两条哦。"); return; }
+                Audio_.play("correct"); addXP(20); r.remove();
+                status.textContent = "A=5，B=3，C=3，D=3：4 个都是奇点。度数加起来 14 = 2 × 7 条边。";
+                quizC();
+              });
+            }
+            function quizC() {
+              phase = "quiz";
+              say("4 个奇点。能一笔走完吗？", ASK);
+              const q = el("div", "x-row");
+              [["能", false], ["不能", true]].forEach(([t, ok]) => {
+                const b = el("button", "x-btn x-qopt", t);
+                b.addEventListener("click", () => {
+                  if (q.dataset.done) return;
+                  if (!ok) { b.classList.add("bad"); oops(b); say("能一笔画的图，奇点只能有 0 个或 2 个。这里有几个？", "中途路过的陆地，桥总是一进一出、成对用掉。"); return; }
+                  q.dataset.done = 1; b.classList.add("good"); Audio_.play("correct"); addXP(20);
+                  say("对，不能！4 个奇点，起点和终点最多只能“消化”2 个。1736 年，欧拉就是这样证明的——他因此发明了图论。", "他没有试遍所有走法，而是讲清了“为什么不可能”。");
+                  later(bonus, reduced() ? 800 : 3200);
+                });
+                q.append(b);
+              });
+              qbox = el("div"); qbox.style.display = "grid"; qbox.style.gap = "10px";
+              qbox.append(el("p", "x-gcap", "能一笔走完吗？"), q); work.append(qbox);
+            }
+            function bonus() {
+              phase = "bonus"; qbox.remove();
+              cap.textContent = "加分题 · 加一座新桥，让它能一笔走完";
+              say("加一座新桥，让它能一笔走完！", "依次点两个点，就在它们之间架一座桥。");
+              status.textContent = "点第一个点。";
+            }
+            function bonusTap(k) {
+              if (sel === null) { sel = k; dots[k].classList.add("is-cur"); Audio_.play("tick", 900); status.textContent = `从 ${k} 架桥到……点第二个点。`; return; }
+              dots[sel].classList.remove("is-cur");
+              const a = sel; sel = null;
+              if (k === a) { status.textContent = "点第一个点。"; return; }
+              if (kdeg(a) % 2 === 0 || kdeg(k) % 2 === 0) { Audio_.play("bonk"); say("这样会多出新的奇点。要让两个奇点一起变成偶点。"); return; }
+              phase = "win";
+              const n = E.filter((e) => (e.a === a && e.b === k) || (e.a === k && e.b === a)).length;
+              const ne = { a, b: k, c1: kc(KG[a], KG[k], n === 1 ? 22 : 0), p: svgEl("path", { class: "x-kedge is-new" }) };
+              ne.p.setAttribute("d", `M${KG[a]} Q${ne.c1} ${KG[k]}`); gl.insertBefore(ne.p, gl.firstChild); E.push(ne);
+              [a, k].forEach((j) => { txt[j].textContent = kdeg(j); dots[j].classList.remove("is-odd"); });
+              const odd = Object.keys(KG).filter((j) => kdeg(j) % 2);
+              Audio_.play("chord"); addXP(30);
+              status.textContent = `新桥 ${a}–${k}！现在只剩 2 个奇点：${odd.join(" 和 ")}。`;
+              say(`对！${a} 和 ${k} 都变成偶点，只剩 ${odd.join("、")} 两个奇点。看蚂蚁从 ${odd[0]} 出发，一笔走完 8 座桥！`);
+              const u = new Set(), path = [];
+              const go = (v) => path.length === E.length || E.some((e, i) => { if (u.has(i) || (e.a !== v && e.b !== v)) return false; u.add(i); path.push([i, v]); if (go(e.a === v ? e.b : e.a)) return true; u.delete(i); path.pop(); return false; });
+              go(odd[0]);
+              const run = (s) => {
+                if (s === path.length) {
+                  svg.classList.add("x-win"); Audio_.play("star"); got.C = true; renderTasks();
+                  status.textContent = "8 座桥，一笔走完！🎉";
+                  const fin = el("button", "x-btn x-btn--go", "领取通关卡 →");
+                  fin.addEventListener("click", () => { Audio_.play("click"); fin.disabled = true; clear(); });
+                  work.append(fin); return;
+                }
+                const [i, v] = path[s], e = E[i];
+                tween(550, (t) => put(qpt(KG[e.a], e.c1, KG[e.b], e.a === v ? t : 1 - t)), () => { e.p.classList.add("is-used"); Audio_.play("tick", 500 + s * 60); run(s + 1); });
+              };
+              put(KG[odd[0]]); later(() => run(0), reduced() ? 300 : 900);
+            }
+          }
+
+          function clear() {
+            const stars = miss <= 1 ? 3 : miss <= 3 ? 2 : 1;
+            State.lit.d07 = State.lit.l01 = true; renderSky();
+            done(stars, 40 + stars * 20);
+            award("bridger");
+            const card = endCard(stars, `第 2 关通关 · 出错 ${miss} 次`, [
+              ["一笔画 ⇔ 连通且奇点个数为 0 或 2；度数之和 = 2 × 边数。", "你像欧拉一样，用说理证明了『不可能』。"],
+            ], "d07 图论初步 · l01 说理与举例");
+            const row = el("div", "x-row");
+            const again = el("button", "x-btn", "再玩一次");
+            again.addEventListener("click", () => { Audio_.play("click"); openLevel(2); });
+            const back = el("a", "x-btn x-btn--go", "回到关卡地图"); back.href = "#map";
+            const notes = el("button", "x-btn", "📒 看知识笔记");
+            notes.addEventListener("click", () => $("#notes-btn").click());
+            const next = el("button", "x-btn x-btn--go", "进入第 3 关 →");
+            next.addEventListener("click", () => { Audio_.play("click"); openLevel(3); });
+            row.append(next, back, again, notes); card.append(row);
+            work.append(card);
+            say("🏅 欧拉的徒弟，到手！", "第 3 关已解锁，第 4–5 关即将开放。");
+            card.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "center" });
+          }
+
+          partA(0);
+        },
+      });
+      /* ===== LEVEL 3 · 水波找最短路 ===== */
+      const N3 = { H: { e: "🏠", n: "家", x: 50, y: 190 }, T: { e: "🌳", n: "公园", x: 180, y: 70 }, S: { e: "🏪", n: "商店", x: 180, y: 310 }, Y: { e: "🏥", n: "医院", x: 300, y: 190 }, B: { e: "📚", n: "图书馆", x: 420, y: 70 }, W: { e: "🏊", n: "游泳馆", x: 420, y: 310 }, X: { e: "🏫", n: "学校", x: 520, y: 190 } };
+      /* fewest roads 🏠→🏥→🏫 = 19 min; fastest 🏠→🌳→📚→🏫 = 10 min */
+      const E3 = [["H", "T", 2], ["H", "S", 6], ["H", "Y", 9], ["T", "Y", 3], ["T", "B", 5], ["S", "Y", 2], ["S", "W", 6], ["Y", "X", 10], ["B", "X", 3], ["W", "X", 4], ["Y", "W", 3]];
+      const nbrs = (E, k) => E.filter((e) => e[0] === k || e[1] === k).map((e) => [e[0] === k ? e[1] : e[0], e[2]]);
+      const shuf = (a) => a.map((x) => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map((x) => x[1]);
+      function wgraph(N, E, o) {
+        const svg = svgEl("svg", { class: "x-town x-wg", viewBox: "0 0 560 380", role: "group", "aria-label": o.label });
+        svg.innerHTML = `<defs><marker id="x-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--text-primary)"/></marker></defs>`;
+        const ge = svgEl("g", {}), ga = svgEl("g", {}), gn = svgEl("g", {}), eg = {}, ng = {};
+        const btn = (g, label, fn) => {
+          g.setAttribute("tabindex", 0); g.setAttribute("role", "button"); g.setAttribute("aria-label", label);
+          g.addEventListener("click", fn); g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } });
+        };
+        E.forEach(([a, b, w]) => {
+          const A = N[a], B = N[b], mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2, xy = { x1: A.x, y1: A.y, x2: B.x, y2: B.y };
+          const g = svgEl("g", { class: "x-we" }); g.line = svgEl("line", { ...xy, class: "x-edge" });
+          g.append(svgEl("line", { ...xy, class: "x-hit" }), g.line, svgEl("circle", { cx: mx, cy: my, r: 12, class: "x-wbox" }), svgEl("text", { x: mx, y: my + 1, class: "x-wtxt", "text-anchor": "middle", "dominant-baseline": "central" }, w));
+          if (o.onEdge) btn(g, `${A.e}—${B.e} ${w} 分钟`, () => o.onEdge(a, b, w));
+          ge.append(g); eg[ekey(a, b)] = g;
+        });
+        Object.entries(N).forEach(([k, n]) => {
+          const g = svgEl("g", { class: "x-wn" });
+          g.append(svgEl("circle", { cx: n.x, cy: n.y, r: 22, class: "b" }), svgEl("text", { x: n.x, y: n.y + 1, "text-anchor": "middle", "dominant-baseline": "central", "font-size": o.small ? 18 : 22 }, n.e));
+          if (o.labels !== false) {
+            const l = svgEl("g", { class: "x-wl" }); g.lab = svgEl("text", { x: n.x, y: n.y - 36, "text-anchor": "middle", "dominant-baseline": "central" }, "?");
+            l.append(svgEl("rect", { x: n.x - 28, y: n.y - 47, width: 56, height: 22, rx: 8 }), g.lab); g.append(l);
+          }
+          if (o.onNode) btn(g, n.n || n.e, () => o.onNode(k));
+          gn.append(g); ng[k] = g;
+        });
+        svg.append(ge, ga, gn);
+        return {
+          svg, eg, ng, edge: (a, b) => eg[ekey(a, b)].line,
+          ripple(k) { const n = N[k], c = svgEl("circle", { cx: n.x, cy: n.y, r: 22, class: "x-ripple" }); svg.insertBefore(c, gn); setTimeout(() => c.remove(), 1300); },
+          arrow(a, b) { const A = N[a], B = N[b], L = Math.hypot(B.x - A.x, B.y - A.y), ux = (B.x - A.x) / L, uy = (B.y - A.y) / L;
+            ga.append(svgEl("line", { x1: A.x + ux * 26, y1: A.y + uy * 26, x2: B.x - ux * 28, y2: B.y - uy * 28, class: "x-arrow", "marker-end": "url(#x-arr)" })); },
+        };
+      }
+      function genCity() {
+        const pool = shuf(["🌳", "🏪", "🏥", "📚", "🏊", "🏦", "⛲", "🎡", "🍦", "🏟️"]), N = {}, r = (a) => Math.round((Math.random() * 2 - 1) * a);
+        for (let i = 0; i < 12; i++) N[i] = { x: 70 + (i % 4) * 140 + r(22), y: 70 + ((i / 4) | 0) * 120 + r(16), e: i === 0 ? "🏠" : i === 11 ? "🏫" : pool.pop() };
+        let E = [];
+        for (let i = 0; i < 12; i++) {
+          const c = i % 4, rw = (i / 4) | 0;
+          if (c < 3) E.push([i, i + 1]); if (rw < 2) E.push([i, i + 4]);
+          if (c < 3 && rw < 2 && Math.random() < 0.6) E.push(Math.random() < 0.5 ? [i, i + 5] : [i + 1, i + 4]);
+        }
+        const conn = (es) => { const seen = new Set([0]), q = [0]; while (q.length) { const u = q.pop(); es.forEach(([a, b]) => { const v = a === u ? b : b === u ? a : -1; if (v >= 0 && !seen.has(v)) { seen.add(v); q.push(v); } }); } return seen.size === 12; };
+        shuf(E.slice()).forEach((e) => { if (E.length > 18) { const rest = E.filter((x) => x !== e); if (conn(rest)) E = rest; } });
+        return { N, E: E.map(([a, b]) => [String(a), String(b), 1 + ((Math.random() * 9) | 0)]) };
+      }
+      LEVELS.push({
+        id: 3, title: "水波找最短路",
+        init(root, done) {
+          let miss = 0;
+          const got = {};
+          const TASKS = [["A", "A · 猜一猜", "找最快的路线，试 3 次"], ["B", "B · 水波扩散", "一步步算出最短路"], ["C", "C · 自动模式", "12 个点的大地图"]];
+          const say = guide(root, "从 🏠 到 🏫，哪条路线最快？从 🏠 出发，一个接一个点相邻的地方，一直走到 🏫。", "路上的数字是分钟。点走过的点可以退回去。");
+          const tasks = el("ul", "checklist"); root.append(tasks);
+          const work = el("div"); work.style.display = "grid"; work.style.gap = "14px"; root.append(work);
+          const renderTasks = () => (tasks.innerHTML = taskList(TASKS, got));
+          renderTasks();
+          const shake = (n) => { n.classList.remove("x-flash"); void n.offsetWidth; n.classList.add("x-flash"); };
+          const oops = (n) => { miss++; Audio_.play("bonk"); shake(n); };
+          const W = (a, b) => (E3.find((e) => ekey(e[0], e[1]) === ekey(a, b)) || [])[2];
+          const route = (p) => p.map((k) => N3[k].e).join(" → ");
+          const nextBtn = (t, fn) => { const b = el("button", "x-btn x-btn--go", t); b.addEventListener("click", () => { Audio_.play("click"); b.disabled = true; fn(); }); work.append(b); };
+
+          /* ---------- Part A · 猜一猜 ---------- */
+          function partA() {
+            let path = ["H"], tries = 0, best = null, locked = false;
+            const G = wgraph(N3, E3, { label: "7 个地方、11 条路的图，点地方走出一条路线", labels: false, onNode: tap });
+            const status = el("p", "x-entry"); status.setAttribute("aria-live", "polite");
+            work.append(G.svg, status);
+            const tot = () => path.slice(1).reduce((s, k, i) => s + W(path[i], k), 0);
+            function draw() {
+              Object.values(G.eg).forEach((g) => g.line.classList.remove("is-hot"));
+              path.slice(1).forEach((k, i) => G.edge(path[i], k).classList.add("is-hot"));
+              Object.entries(G.ng).forEach(([k, g]) => g.classList.toggle("is-cur", k === path[path.length - 1]));
+              status.innerHTML = `<span>${route(path)}</span><span class="pill">${tot()} 分钟</span><span class="pill">已走到 ${tries}/3 次</span><span class="pill">最好成绩 ${best == null ? "—" : best + " 分钟"}</span>`;
+            }
+            function tap(k) {
+              if (locked) return;
+              if (path[path.length - 1] === "X") path = ["H"];
+              const u = path[path.length - 1], i = path.indexOf(k);
+              if (i >= 0) { path = path.slice(0, i + 1); Audio_.play("tick", 500); return draw(); }
+              if (!W(u, k)) { Audio_.play("bonk"); shake(G.ng[k]); return say(`${N3[u].e} 和 ${N3[k].e} 之间有直接的路吗？只能走到和 ${N3[u].e} 相连的地方。`); }
+              path.push(k); Audio_.play("tick", 600 + path.length * 60); draw();
+              if (k !== "X") return;
+              const t = tot(); tries++; best = best == null ? t : Math.min(best, t); Audio_.play("correct"); addXP(5); draw();
+              if (tries < 3) return say(`到了！走了 ${path.length - 1} 条路，一共 ${t} 分钟。还能更快吗？再点一个地方，重新找一条。`, `第 ${tries}/3 次`);
+              locked = true; got.A = true; renderTasks();
+              say("真的是最快吗？我们需要一个『一定能找到』的方法。", `你的最好成绩：${best} 分钟。路最少的 🏠 → 🏥 → 🏫 只走 2 条路，却要 19 分钟。`);
+              nextBtn("下一步：水波扩散 →", partB);
+            }
+            draw();
+          }
+
+          /* ---------- Part B · 水波扩散 ---------- */
+          function partB() {
+            work.innerHTML = "";
+            const dist = { H: 0 }, from = {}, fin = {};
+            let u = null, todo = [], open = false;
+            const G = wgraph(N3, E3, { label: "Dijkstra 水波：点数字最小的点确定它，再点它的路更新邻居", onNode: pick, onEdge: road });
+            const tbl = el("div", "table-wrap"), pair = el("div", "pair"), ask = el("div", "x-entry");
+            ask.hidden = true; ask.setAttribute("aria-live", "polite");
+            pair.append(G.svg, tbl); work.append(pair, ask);
+            const show = (k) => (dist[k] == null ? "?" : dist[k]);
+            function render() {
+              Object.entries(G.ng).forEach(([k, g]) => { g.lab.textContent = fin[k] ? `${dist[k]} 确定` : show(k); g.classList.toggle("is-done", !!fin[k]); g.classList.toggle("is-cur", k === u); });
+              tbl.innerHTML = `<table><thead><tr><th scope="col">点</th><th scope="col">当前最短</th><th scope="col">来自哪</th></tr></thead><tbody>${Object.entries(N3).map(([k, n]) =>
+                `<tr class="${k === u ? "is-highlight" : ""}"><th scope="row">${n.e} ${n.n}</th><td class="num">${show(k)}${fin[k] ? " ✓" : ""}</td><td>${from[k] ? "← " + N3[from[k]].e : "—"}</td></tr>`).join("")}</tbody></table>`;
+            }
+            say("像往池塘扔一颗石子：水波从 🏠 一圈圈往外。🏠 到自己是 0 分钟，别的点还不知道（?）。所有没确定的点里，谁的数字最小？点它。", "“?” 比任何数字都大。");
+            render();
+            function pick(k) {
+              if (open) return say("先决定：更新还是不更新？");
+              if (u) return say(`先处理完 ${N3[u].e} 的路：点一条橙色虚线。`);
+              if (fin[k]) return say(`${N3[k].e} 已经确定了，数字不会再变。`);
+              const min = Math.min(...Object.keys(dist).filter((j) => !fin[j]).map((j) => dist[j]));
+              if (dist[k] !== min) { oops(G.ng[k]); return say("现在所有没确定的点里，谁的数字最小？", "看看旁边的表：“?” 比任何数字都大。"); }
+              u = k; fin[k] = true; G.ripple(k); Audio_.play("chord"); addXP(5);
+              if (k === "X") { u = null; render(); return finishB(); }
+              todo = nbrs(E3, k).filter(([v]) => !fin[v]).map(([v]) => v);
+              todo.forEach((v) => G.edge(k, v).classList.add("is-todo")); render();
+              if (!todo.length) { u = null; render(); return say(`${N3[k].e} 确定了！它的邻居都已确定。再找下一个数字最小的点。`); }
+              say(`${N3[k].e} 确定：${dist[k]} 分钟，再也不会变了。点从它出发的橙色虚线，看看邻居能不能更近。`, `还剩 ${todo.length} 条`);
+            }
+            function road(a, b, w) {
+              if (open) return say("先决定：更新还是不更新？");
+              const v = a === u ? b : b === u ? a : null;
+              if (!u || !todo.includes(v)) { Audio_.play("bonk"); return say(u ? `要处理的是从 ${N3[u].e} 出发的橙色虚线。` : "先确定一个点：没确定的点里，谁的数字最小？"); }
+              const c = dist[u] + w, line = G.edge(u, v); open = true; line.classList.add("is-hot");
+              ask.hidden = false;
+              ask.innerHTML = `<span>${N3[v].e} 现在是 <b>${show(v)}</b>；经过 ${N3[u].e}：${dist[u]} + ${w} = <b>${c}</b></span><button class="x-btn x-btn--go">更新</button><button class="x-btn">不更新</button>`;
+              say(`算出 ${c}。要不要把 ${N3[v].e} 的数字换成它？`);
+              const [yes, no] = ask.querySelectorAll("button");
+              const decide = (up) => {
+                const right = dist[v] == null || c < dist[v];
+                if (up !== right) { oops(ask); return say("新算出来的比原来小吗？", dist[v] == null ? "“?” 表示还没有路到过它，任何数字都比它小。" : `比一比 ${c} 和 ${dist[v]}。`); }
+                if (up) { dist[v] = c; from[v] = u; Audio_.play("pop", 700); } else Audio_.play("tick", 500);
+                line.classList.remove("is-hot", "is-todo"); todo = todo.filter((x) => x !== v); open = false; ask.hidden = true; addXP(3);
+                const msg = up ? `更新！${N3[v].e} 变成 ${c}，来自 ${N3[u].e}。` : `不更新，${N3[v].e} 原来的 ${dist[v]} 更近。`;
+                if (!todo.length) u = null;
+                render();
+                say(todo.length ? msg : msg + " 这一圈处理完了。所有没确定的点里，谁的数字最小？", todo.length ? `还剩 ${todo.length} 条橙色虚线` : undefined);
+              };
+              yes.addEventListener("click", () => decide(true)); no.addEventListener("click", () => decide(false));
+            }
+            function finishB() {
+              got.B = true; renderTasks();
+              const p = ["X"]; while (from[p[0]]) p.unshift(from[p[0]]);
+              say(`🏫 确定了：${dist.X} 分钟！顺着“来自哪”的箭头往回走，就是最短路线。`);
+              p.slice(1).reverse().forEach((k, i) => later(() => {
+                const f = from[k]; G.edge(f, k).classList.add("is-path"); G.arrow(k, f); Audio_.play("tick", 900 - i * 80);
+              }, (reduced() ? 150 : 700) * (i + 1)));
+              later(() => {
+                say(`最短路线：${route(p)}，${p.slice(1).map((k, i) => W(p[i], k)).join(" + ")} = ${dist.X} 分钟。`, `水波扩散里出错 ${miss} 次。`);
+                nextBtn("下一步：自动模式 →", partC);
+              }, (reduced() ? 150 : 700) * p.length + 200);
+            }
+          }
+
+          /* ---------- Part C · 自动模式 ---------- */
+          function partC() {
+            work.innerHTML = "";
+            say("城市里的点多得多，一步步点太慢了。让算法自己跑：水波从 🏠 一圈圈扩散。", "颜色越深，离 🏠 越近。");
+            const box = el("div"), status = el("p", "fineprint"), row = el("div", "x-row");
+            const runB = el("button", "x-btn x-btn--go", "▶ 让算法自己跑"), newB = el("button", "x-btn", "🔀 换一张地图");
+            status.setAttribute("aria-live", "polite"); row.append(runB, newB); work.append(box, status, row);
+            let city, G, finShown = false;
+            const draw = () => { G = wgraph(city.N, city.E, { label: "12 个点的随机城市地图", small: true }); box.innerHTML = ""; box.append(G.svg); };
+            const fresh = () => { city = genCity(); draw(); status.textContent = `12 个点、${city.E.length} 条路，从 🏠 到 🏫。`; };
+            function run() {
+              draw(); runB.disabled = newB.disabled = true;
+              const { E } = city, dist = { 0: 0 }, from = {}, fin = {}, ev = [];
+              for (;;) {
+                const u = Object.keys(dist).filter((k) => !fin[k]).sort((a, b) => dist[a] - dist[b])[0];
+                fin[u] = true; ev.push(["s", u]); if (u === "11") break;
+                nbrs(E, u).forEach(([v, w]) => { if (!fin[v] && (dist[v] == null || dist[u] + w < dist[v])) { dist[v] = dist[u] + w; from[v] = u; ev.push(["u", v, u, dist[v]]); } });
+              }
+              const max = dist[11] || 1, step = 6000 / ev.length;
+              ev.forEach(([t, v, f, d], i) => later(() => {
+                const g = G.ng[v];
+                if (t === "s") {
+                  g.classList.add("is-done"); g.lab.textContent = dist[v];
+                  g.querySelector("circle.b").style.fill = `color-mix(in srgb, var(--chart-1) ${Math.round(85 - 55 * (dist[v] / max))}%, var(--fill-primary-on))`;
+                  G.ripple(v); Audio_.play("tick", 400 + (dist[v] / max) * 700);
+                } else {
+                  const l = G.edge(f, v); l.classList.add("is-hot"); g.lab.textContent = d;
+                  later(() => l.classList.remove("is-hot"), Math.max(step * 1.5, 200));
+                }
+              }, i * step));
+              later(() => {
+                const p = ["11"]; while (from[p[0]]) p.unshift(from[p[0]]);
+                p.slice(1).forEach((k, i) => G.edge(p[i], k).classList.add("is-path"));
+                G.ng[11].lab.textContent = dist[11];
+                Audio_.play("chord"); runB.disabled = newB.disabled = false;
+                status.textContent = `最短路线：${p.map((k) => city.N[k].e).join(" → ")}，${dist[11]} 分钟。水波确定了 ${Object.keys(fin).length} 个点就找到了它。`;
+                if (!finShown) { finShown = true; got.C = true; renderTasks(); addXP(10); say("6 秒，一圈圈扩散，最短路就出来了。换一张地图再跑一次？", "点数再多，这个方法也一定能找到最短路。"); nextBtn("领取通关卡 →", clear); }
+              }, 6000 + 300);
+            }
+            runB.addEventListener("click", () => { Audio_.play("click"); run(); });
+            newB.addEventListener("click", () => { Audio_.play("click"); fresh(); });
+            fresh();
+          }
+
+          function clear() {
+            const stars = miss <= 1 ? 3 : miss <= 4 ? 2 : 1;
+            State.lit.d09 = State.lit.d10 = true; renderSky();
+            done(stars, 40 + stars * 20);
+            award("waver");
+            const card = endCard(stars, `第 3 关通关 · 水波扩散出错 ${miss} 次`, [
+              ["Dijkstra 算法（1959）", "每次确定一个离起点最近的点，再用它更新邻居：dist(v) = min(dist(v), dist(u) + w(u,v))。手机导航用的就是它和它的升级版 A*。"],
+            ], "星图点亮 d09 最短路径 · d10 算法与流程");
+            const row = el("div", "x-row");
+            const again = el("button", "x-btn", "再玩一次");
+            again.addEventListener("click", () => { Audio_.play("click"); openLevel(3); });
+            const back = el("a", "x-btn x-btn--go", "回到关卡地图"); back.href = "#map";
+            const notes = el("button", "x-btn", "📒 看知识笔记");
+            notes.addEventListener("click", () => $("#notes-btn").click());
+            const next = el("button", "x-btn x-btn--go", "进入第 4 关 →");
+            next.addEventListener("click", () => { Audio_.play("click"); openLevel(4); });
+            row.append(next, back, again, notes); card.append(row);
+            work.append(card);
+            say("🏅 水波导航员，到手！", "第 4 关「算法比快慢」已开放，冲向 BOSS 吧！");
+            card.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "center" });
+          }
+
+          partA();
+        },
+      });
+      /* ===== LEVEL 4 · 算法比快慢 ===== */
+      const C2 = (n) => { let r = 1; for (let i = 1; i <= n; i++) r = (r * (n + i)) / i; return Math.round(r); };
+      const P4 = [[280, 330], [501, 186], [194, 55], [403, 307], [328, 146], [187, 281]]; /* 0 = 仓库 */
+      const BEST4 = [3, 1, 4, 2, 5]; /* precomputed from all 120 orders: 23.8 km (greedy 30.2 km) */
+      const d4 = (a, b) => Math.hypot(P4[a][0] - P4[b][0], P4[a][1] - P4[b][1]) / 40;
+      const part4 = (o, closed) => { const s = [0, ...o, ...(closed ? [0] : [])]; return s.slice(1).reduce((t, k, i) => t + d4(s[i], k), 0); };
+      const fmtT = (s) => (s < 60 ? `${s} 秒` : s < 3600 ? `${(s / 60).toFixed(1)} 分钟` : s < 86400 ? `${(s / 3600).toFixed(1)} 小时` : `${(s / 86400).toFixed(1)} 天`);
+      const tapable = (g, label, fn) => {
+        g.setAttribute("tabindex", 0); g.setAttribute("role", "button"); g.setAttribute("aria-label", label);
+        g.addEventListener("click", fn); g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } });
+      };
+      LEVELS.push({
+        id: 4, title: "算法比快慢",
+        init(root, done) {
+          let predOK = false, beat = false;
+          const got = {};
+          const TASKS = [["A", "A · 数路线会爆炸", "预测、拖滑块、比一比"], ["B", "B · 贪心陷阱", "规划送货路线，3 次机会"]];
+          const say = guide(root, "", "");
+          const tasks = el("ul", "checklist"); root.append(tasks);
+          const work = el("div"); work.style.display = "grid"; work.style.gap = "14px"; root.append(work);
+          const renderTasks = () => (tasks.innerHTML = taskList(TASKS, got));
+          renderTasks();
+          const shake = (n) => { n.classList.remove("x-flash"); void n.offsetWidth; n.classList.add("x-flash"); };
+          const nextBtn = (t, fn) => { const b = el("button", "x-btn x-btn--go", t); b.addEventListener("click", () => { Audio_.play("click"); b.disabled = true; fn(); }); work.append(b); };
+          const D = Hark.data("l4-data");
+
+          /* ---------- Part A1 · 数一数 3×3 ---------- */
+          function partA() {
+            say("一座 3×3 的街区，只能往右 → 或往下 ↓ 走。从 🏠 到 🏫，最短路线一共有几条？先点路口数一数，再填你的答案。", "点右边或下边相邻的路口，走到 🏫 就记下一条。⭐ 第一次就答对、赢过贪心小蚂蚁，各多一颗星。");
+            const S = 70, O = 30, lines = {}, nodes = {}, k = (p) => p.join(",");
+            const svg = svgEl("svg", { class: "x-town x-grid4", viewBox: "0 0 270 270", role: "group", "aria-label": "3×3 街区，点路口走出路线" });
+            for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) svg.append(svgEl("rect", { x: O + i * S + 9, y: O + j * S + 9, width: S - 18, height: S - 18, rx: 8, class: "x-blk" }));
+            for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) {
+              const x = O + i * S, y = O + j * S;
+              if (i < 3) svg.append((lines[`${i},${j}>${i + 1},${j}`] = svgEl("line", { x1: x, y1: y, x2: x + S, y2: y, class: "x-edge" })));
+              if (j < 3) svg.append((lines[`${i},${j}>${i},${j + 1}`] = svgEl("line", { x1: x, y1: y, x2: x, y2: y + S, class: "x-edge" })));
+            }
+            for (let j = 0; j < 4; j++) for (let i = 0; i < 4; i++) {
+              const x = O + i * S, y = O + j * S, end = (!i && !j) || (i === 3 && j === 3), g = svgEl("g", { class: "x-gn" });
+              g.append(svgEl("circle", { cx: x, cy: y, r: 24, class: "hit" }), svgEl("circle", { cx: x, cy: y, r: end ? 16 : 9, class: "v" }));
+              if (end) g.append(svgEl("text", { x, y: y + 1, "text-anchor": "middle", "dominant-baseline": "central", "font-size": 16 }, i ? "🏫" : "🏠"));
+              tapable(g, i === 3 && j === 3 ? "学校" : !i && !j ? "家" : `路口 第 ${j + 1} 行第 ${i + 1} 列`, () => tap(i, j));
+              svg.append(g); nodes[`${i},${j}`] = g;
+            }
+            const cnt = el("p", "x-entry"); cnt.setAttribute("aria-live", "polite");
+            const ent = el("div", "x-entry", `<label for="x-pred">3×3 一共有几条最短路线？</label><input id="x-pred" class="x-num" type="number" min="1" inputmode="numeric" /><button class="x-btn x-btn--go">提交答案</button>`);
+            work.append(svg, cnt, ent);
+            let path = [[0, 0]], busy = false;
+            const found = new Set();
+            function draw() {
+              Object.values(lines).forEach((l) => l.classList.remove("is-hot"));
+              path.slice(1).forEach((p, i) => lines[`${k(path[i])}>${k(p)}`].classList.add("is-hot"));
+              Object.entries(nodes).forEach(([key, g]) => g.classList.toggle("on", path.some((p) => k(p) === key)));
+              cnt.innerHTML = `<span>已找到 <b>${found.size}</b> 条不同路线</span>${[...found].map((r) => `<span class="pill">${r}</span>`).join("")}`;
+            }
+            function tap(i, j) {
+              if (busy) return;
+              const idx = path.findIndex((p) => p[0] === i && p[1] === j);
+              if (idx >= 0) { path = path.slice(0, idx + 1); Audio_.play("tick", 500); return draw(); }
+              const [a, b] = path[path.length - 1];
+              if (!((i === a + 1 && j === b) || (i === a && j === b + 1))) { Audio_.play("bonk"); shake(nodes[`${i},${j}`]); return say("只能往右 → 或往下 ↓ 走一格哦。", "点走过的路口可以退回去。"); }
+              path.push([i, j]); Audio_.play("tick", 500 + path.length * 60); draw();
+              if (i !== 3 || j !== 3) return;
+              const r = path.slice(1).map((p, n) => (p[0] > path[n][0] ? "→" : "↓")).join("");
+              if (found.has(r)) { Audio_.play("bonk"); say("这条已经找过了，换一条试试。"); }
+              else { found.add(r); Audio_.play("correct"); addXP(2); say(`新路线：${r}`, `已找到 ${found.size} 条。有没有办法不用一条条数？`); }
+              busy = true; later(() => { busy = false; path = [[0, 0]]; draw(); }, 700);
+            }
+            draw();
+            const inp = ent.querySelector("input"), sub = ent.querySelector("button");
+            sub.addEventListener("click", () => {
+              const v = parseInt(inp.value, 10);
+              if (!v) { shake(inp); return say("先填一个数字。"); }
+              predOK = v === 20; inp.disabled = sub.disabled = true;
+              const why = "每条路线都是 3 个 → 和 3 个 ↓ 排成一排，一共 6 步。从 6 步里挑 3 步往右：C(6, 3) = 20。";
+              if (predOK) { Audio_.play("correct"); addXP(20); say("对，20 条！", why); }
+              else { Audio_.play("wrong"); say(`你填了 ${v}，答案是 20 条。`, why); }
+              nextBtn("下一步：城市变大 →", partA2);
+            });
+          }
+
+          /* ---------- Part A2 · 路线数爆炸 ---------- */
+          function partA2() {
+            work.innerHTML = "";
+            say("城市越大，路线有多少条？拖动滑块看看。", "每多一行一列，路线数就接近翻 4 倍。");
+            let n = 3;
+            const box = el("div", "", `<div class="x-entry"><label for="x-n">城市大小</label><input id="x-n" class="x-range" type="range" min="1" max="10" value="3" /><b id="x-nl"></b></div>
+              <div class="stats"><div class="stat"><span class="stat__fig" id="x-r"></span><span class="stat__label">条最短路线</span></div><div class="stat"><span class="stat__fig" id="x-t"></span><span class="stat__label">如果每秒检查 1 条要多久</span></div></div>
+              <figure class="chart"><figcaption class="chart__cap">从 1×1 的 2 条，涨到 10×10 的 184,756 条<small>最短路线条数 C(2n, n)；纵轴每一格 ×10</small></figcaption>
+              <div class="chart__canvas"><canvas id="x-c1" role="img" aria-label="路线数从 1×1 的 2 条涨到 10×10 的 184,756 条"></canvas></div></figure>
+              <p class="fineprint">20×20 的城市有 137,846,528,820 条，每秒查 1 条要 4 千多年。</p>`);
+            box.style.display = "grid"; box.style.gap = "14px"; work.append(box);
+            const c1 = new Chart(box.querySelector("#x-c1"), {
+              type: "bar",
+              data: { labels: D.map((d) => `${d.n}×${d.n}`), datasets: [{ label: "路线数", data: D.map((d) => d.routes), backgroundColor: (c) => (c.dataIndex === n - 1 ? "var(--chart-ink)" : "var(--chart-muted)") }] },
+              options: {
+                scales: { y: { type: "logarithmic", min: 1, ticks: { callback: (v) => ([1, 10, 100, 1e3, 1e4, 1e5, 1e6].includes(v) ? v.toLocaleString() : "") } } },
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.raw.toLocaleString()} 条` } }, datalabels: { ...Hark.labels.values, display: (c) => c.dataIndex === n - 1 } },
+              },
+            });
+            const upd = () => {
+              const r = C2(n);
+              box.querySelector("#x-nl").textContent = `${n}×${n}`;
+              box.querySelector("#x-r").textContent = r.toLocaleString();
+              box.querySelector("#x-t").textContent = fmtT(r);
+              c1.update();
+            };
+            box.querySelector("#x-n").addEventListener("input", (e) => { n = +e.target.value; Audio_.play("tick", 300 + n * 80); upd(); });
+            upd();
+            nextBtn("下一步：穷举 vs Dijkstra →", partA3);
+          }
+
+          /* ---------- Part A3 · 穷举 vs Dijkstra ---------- */
+          function partA3() {
+            work.innerHTML = "";
+            say("穷举要把每条路线都试一遍；Dijkstra 只要把每个路口确定一次，n×n 的城市大约 (n+1)² 个路口。看看两条线。");
+            const fig = el("figure", "chart", `<figcaption class="chart__cap">10×10 时，穷举要查 184,756 条路线，Dijkstra 只要确定 121 个路口<small>城市从 1×1 到 10×10，要检查的次数</small></figcaption>
+              <div class="chart__canvas"><canvas id="x-c2" role="img" aria-label="穷举从 2 次涨到 184,756 次，Dijkstra 从 4 次涨到 121 次，几乎贴着底"></canvas></div>`);
+            work.append(fig);
+            new Chart(fig.querySelector("canvas"), {
+              type: "line",
+              data: { labels: D.map((d) => `${d.n}×${d.n}`), datasets: [{ label: "穷举", data: D.map((d) => d.routes) }, { label: "Dijkstra", data: D.map((d) => d.dijkstra) }] },
+              options: { plugins: { legend: { display: false }, datalabels: Hark.labels.ends, tooltip: { callbacks: { label: (c) => `${c.dataset.label}：${c.raw.toLocaleString()} 次` } } } },
+            });
+            const q = el("div", "x-row");
+            [["穷举：把路线全试一遍", false], ["Dijkstra：水波一圈圈确定", true], ["两种一样快", false]].forEach(([t, ok]) => {
+              const b = el("button", "x-btn x-qopt", t);
+              b.addEventListener("click", () => {
+                if (q.dataset.done) return;
+                if (!ok) { b.classList.add("bad"); Audio_.play("bonk"); shake(b); return say(t.startsWith("穷举") ? "看黑线：城市才 10×10，它已经冲上天了。再大 10 倍呢？" : "两条线的差距越来越大，还一样快吗？"); }
+                q.dataset.done = 1; b.classList.add("good"); Audio_.play("correct"); addXP(20); got.A = true; renderTasks();
+                say("对！100×100 的城市，穷举要查约 9×10⁵⁸ 条路线，从宇宙诞生算到现在都查不完；Dijkstra 只要确定 10,201 个路口，手机一眨眼就算完。", "好算法和笨办法的差别，城市越大越明显。");
+                nextBtn("下一步：贪心陷阱 →", partB);
+              });
+              q.append(b);
+            });
+            work.append(el("p", "x-gcap", "城市变大 10 倍，哪种方法还能用？"), q);
+          }
+
+          /* ---------- Part B · 贪心陷阱 ---------- */
+          function partB() {
+            work.innerHTML = "";
+            const L = ["🏬", "A", "B", "C", "D", "E"], fmt = (v) => v.toFixed(1) + " km";
+            const route = (o) => ["🏬", ...o.map((k) => L[k]), "🏬"].join(" → ");
+            const svg = svgEl("svg", { class: "x-town", viewBox: "0 0 560 380", role: "group", "aria-label": "仓库和 5 个送货点的地图，按顺序点送货点规划路线" });
+            const gB = svgEl("g", {}), gG = svgEl("g", { class: "x-greedy" }), gU = svgEl("g", {}), gN = svgEl("g", {}), nodes = [];
+            svg.append(gB, gG, gU, gN);
+            P4.forEach(([x, y], i) => {
+              const g = svgEl("g", { class: "x-gn" });
+              g.append(svgEl("circle", { cx: x, cy: y, r: 26, class: "hit" }), svgEl("circle", { cx: x, cy: y, r: i ? 18 : 22, class: "v" }), svgEl("text", { x, y: y + 1, "text-anchor": "middle", "dominant-baseline": "central", "font-size": 20 }, i ? "📦" : "🏬"));
+              if (i) g.append(svgEl("text", { x, y: y - 30, "text-anchor": "middle", class: "x-glbl" }, L[i]));
+              tapable(g, i ? `送货点 ${L[i]}` : "仓库", () => tap(i));
+              gN.append(g); nodes.push(g);
+            });
+            const ant = svgEl("text", { class: "x-antm", "text-anchor": "middle", "dominant-baseline": "central", "font-size": 22 }, "🐜");
+            svg.append(ant);
+            const moveAnt = (k) => (ant.style.transform = `translate(${P4[k][0] + 22}px, ${P4[k][1] - 20}px)`);
+            const seg = (gp, a, b, cls) => gp.append(svgEl("line", { x1: P4[a][0], y1: P4[a][1], x2: P4[b][0], y2: P4[b][1], class: "x-edge " + cls }));
+            const greedy = [];
+            for (let c = 0, un = [1, 2, 3, 4, 5]; un.length; greedy.push(c)) { un.sort((a, b) => d4(c, a) - d4(c, b)); c = un.shift(); }
+            const gLen = part4(greedy, true), bLen = part4(BEST4, true);
+            const status = el("p", "x-entry"), row = el("div", "x-row"), goB = el("button", "x-btn x-btn--go", "▶ 贪心小蚂蚁出发");
+            status.setAttribute("aria-live", "polite"); row.append(goB); work.append(svg, status, row);
+            let phase = "intro", mine = [], tries = 0, myBest = null, run = 0;
+            function stat() {
+              const plan = phase === "plan" || phase === "done";
+              status.innerHTML = `<span class="pill">贪心 ${plan ? fmt(gLen) : run ? fmt(run) : "—"}</span>` + (plan
+                ? `<span>${route(mine).replace(/ → 🏬$/, mine.length === 5 ? " → 🏬" : "")}</span><span class="pill">你的 ${mine.length ? fmt(part4(mine, mine.length === 5)) : "—"}</span><span class="pill">已完成 ${tries}/3 次</span><span class="pill">最好 ${myBest == null ? "—" : fmt(myBest)}</span>` : "");
+            }
+            say("贪心小蚂蚁的规则很简单：每一步都去离自己最近、还没去过的送货点，送完回仓库。看它跑一遍。", "每一步都最近，总路程就最短吗？");
+            moveAnt(0); stat();
+            goB.addEventListener("click", () => {
+              Audio_.play("click"); goB.disabled = true; phase = "ant";
+              const seq = [0, ...greedy, 0], st = reduced() ? 200 : 900;
+              seq.slice(1).forEach((k, i) => later(() => { seg(gG, seq[i], k, "is-hot"); moveAnt(k); run += d4(seq[i], k); Audio_.play("tick", 500 + i * 80); stat(); }, st * (i + 1)));
+              later(() => {
+                phase = "plan"; gG.classList.add("is-dim"); goB.remove(); Audio_.play("chord"); addXP(5); stat();
+                say(`贪心小蚂蚁跑完了：${route(greedy)}，一共 ${fmt(gLen)}。轮到你：从 🏬 出发，按顺序点 5 个 📦，送完自动回仓库。能比它更短吗？`, "3 次机会。点走过的点可以退回去，点 🏬 清空重来。");
+              }, st * seq.length + 200);
+            });
+            function drawMine() {
+              gU.innerHTML = "";
+              const s = [0, ...mine, ...(mine.length === 5 ? [0] : [])];
+              s.slice(1).forEach((k, i) => seg(gU, s[i], k, ""));
+              nodes.forEach((g, k) => g.classList.toggle("on", mine.includes(k)));
+              moveAnt(mine.length === 5 || !mine.length ? 0 : mine[mine.length - 1]); stat();
+            }
+            function tap(k) {
+              if (phase === "intro") return say("先点「贪心小蚂蚁出发」，看它跑一遍。");
+              if (phase !== "plan") return;
+              if (mine.length === 5) mine = [];
+              if (!k) { mine = []; Audio_.play("tick", 400); return drawMine(); }
+              const i = mine.indexOf(k);
+              if (i >= 0) { mine = mine.slice(0, i + 1); Audio_.play("tick", 500); return drawMine(); }
+              mine.push(k); Audio_.play("tick", 500 + mine.length * 80); drawMine();
+              if (mine.length < 5) return;
+              const t = part4(mine, true); tries++; myBest = myBest == null ? t : Math.min(myBest, t); addXP(5); stat();
+              if (t < gLen - 0.05) {
+                beat = true; Audio_.play("fanfare"); toast("🎉 你赢了贪心小蚂蚁！");
+                svg.classList.remove("x-win"); void svg.offsetWidth; svg.classList.add("x-win");
+                return reveal(`🎉 ${fmt(t)}，比贪心小蚂蚁短 ${fmt(gLen - t)}！${Math.abs(t - bLen) < 0.05 ? "而且这就是最短路线！" : "看看最短路线是哪条："}`);
+              }
+              Audio_.play("pop", 300);
+              const cmp = t > gLen + 0.05 ? `比贪心小蚂蚁长 ${fmt(t - gLen)}` : "和贪心小蚂蚁一样长";
+              if (tries < 3) return say(`${route(mine)}：${fmt(t)}，${cmp}。再试一次？点任意 📦 重新开始。`, `已完成 ${tries}/3 次。提示：先去最近的点，后面可能要绕远路。`);
+              reveal(`${fmt(t)}，${cmp}。3 次没赢也没关系，贪心小蚂蚁其实不笨。看看最短路线：`);
+            }
+            function reveal(msg) {
+              phase = "done"; got.B = true; renderTasks(); stat();
+              const s = [0, ...BEST4, 0];
+              s.slice(1).forEach((k, i) => later(() => { seg(gB, s[i], k, "is-path"); Audio_.play("tick", 900 - i * 80); }, (reduced() ? 100 : 400) * (i + 1)));
+              say(msg, `最短路线 ${route(BEST4)}：${fmt(bLen)}（试遍全部路线算出来的）。贪心小蚂蚁：${fmt(gLen)}。`);
+              work.append(el("p", "x-entry", "<span><b>每一步最近 ≠ 总路程最短。</b>n 个点的路线有 (n−1)!/2 种——这就是著名的旅行商问题，至今没有已知的快速完美算法。这里 6 个点：5!/2 = 60 种。</span>"));
+              nextBtn("领取通关卡 →", clear);
+            }
+          }
+
+          function clear() {
+            const stars = 1 + (predOK ? 1 : 0) + (beat ? 1 : 0);
+            State.lit.d12 = State.lit.d10 = true; renderSky();
+            done(stars, 40 + stars * 20);
+            award("racer");
+            const card = endCard(stars, `第 4 关通关 · 预测 20 ${predOK ? "✓" : "✗"} · 赢过贪心 ${beat ? "✓" : "✗"}`, [
+              ["好算法 vs 笨办法", "穷举随规模爆炸增长，Dijkstra 增长温和。贪心快，但不一定最好。"],
+              ["组合数 C(2n, n)", "n×n 街区要走 n 步 → 和 n 步 ↓，从 2n 步里挑 n 步往右：3×3 有 C(6, 3) = 20 条。"],
+              ["旅行商问题", "n 个点的路线有 (n−1)!/2 种。Karp 在 1972 年证明它是 NP 完全问题。"],
+            ], "星图点亮 d12 算法复杂度 · d10 算法与流程");
+            const row = el("div", "x-row");
+            const back = el("a", "x-btn x-btn--go", "回到关卡地图"); back.href = "#map";
+            const again = el("button", "x-btn", "再玩一次");
+            again.addEventListener("click", () => { Audio_.play("click"); openLevel(4); });
+            const notes = el("button", "x-btn", "📒 看知识笔记");
+            notes.addEventListener("click", () => $("#notes-btn").click());
+            const next = el("button", "x-btn x-btn--go", "进入第 5 关 BOSS →");
+            next.addEventListener("click", () => { Audio_.play("click"); openLevel(5); });
+            row.append(next, back, again, notes); card.append(row);
+            work.append(card);
+            say("🏅 算法裁判，到手！", "第 5 关「BOSS 快递小蚂蚁」已开放。");
+            card.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "center" });
+          }
+
+          partA();
+        },
+      });
+      /* ===== LEVEL 5 · BOSS 快递小蚂蚁 ===== */
+      const N5 = {}, L5 = "ABCDEFGHIJKLMNOPQR";
+      for (let i = 0; i < 20; i++) N5[i] = { x: 55 + (i % 5) * 112, y: 75 + ((i / 5) | 0) * 92, e: i ? (i === 19 ? "📦" : L5[i - 1]) : "🐜", n: i ? (i === 19 ? "客户 📦" : "路口 " + L5[i - 1]) : "蚁窝 🐜🏠" };
+      /* 5×4 grid, 29 roads. Optimum 🐜🏠→📦 = 17 min (unique); after the jam ×3 = 22 min, the old route 25 min */
+      const E5 = [[0, 1, 2], [1, 2, 6], [2, 3, 3], [3, 4, 4], [5, 6, 5], [6, 7, 2], [7, 8, 2], [8, 9, 7], [10, 11, 3], [11, 12, 4], [12, 13, 6], [15, 16, 6], [16, 17, 3], [17, 18, 2], [18, 19, 3],
+        [0, 5, 3], [1, 6, 2], [2, 7, 5], [3, 8, 6], [4, 9, 4], [5, 10, 4], [6, 11, 6], [8, 13, 2], [9, 14, 5], [10, 15, 2], [11, 16, 7], [12, 17, 3], [13, 18, 4], [14, 19, 2]].map(([a, b, w]) => [String(a), String(b), w]);
+      const JAM5 = [["7", "8"], ["8", "13"], ["16", "17"]].map(([a, b]) => ekey(a, b));
+      const E5j = E5.map(([a, b, w]) => [a, b, JAM5.includes(ekey(a, b)) ? w * 3 : w]);
+      function dijk(E, s, t) {
+        const dist = { [s]: 0 }, from = {}, fin = {}, order = [];
+        for (;;) {
+          const u = Object.keys(dist).filter((k) => !fin[k]).sort((a, b) => dist[a] - dist[b])[0];
+          if (u == null) break; fin[u] = true; order.push(u); if (u === t) break;
+          nbrs(E, u).forEach(([v, w]) => { if (!fin[v] && (dist[v] == null || dist[u] + w < dist[v])) { dist[v] = dist[u] + w; from[v] = u; } });
+        }
+        return { dist, from, order };
+      }
+      LEVELS.push({
+        id: 5, title: "BOSS 快递小蚂蚁",
+        init(root, done) {
+          let retries = 0, reveals = 0, quizOK = true, last = null;
+          const got = {};
+          const TASKS = [["A", "第 1 波 · 最快送达", "🐜🏠 → 📦，和算法一样快"], ["B", "第 2 波 · 堵车了", "3 条路变红，分钟 ×3"], ["C", "第 3 波 · 最短路树", "到每个路口的最短路"]];
+          const say = guide(root, "BOSS 关！城里 20 个路口、29 条路，路上的数字是堵车后的分钟数。从蚁窝 🐜🏠 出发，一个个点相邻的路口，把包裹送到 📦。", "你的路线要和算法算出的最快路线一样快。点走过的路口可以退回去。");
+          const tasks = el("ul", "checklist"); root.append(tasks);
+          const work = el("div"); work.style.display = "grid"; work.style.gap = "14px"; root.append(work);
+          const renderTasks = () => (tasks.innerHTML = taskList(TASKS, got));
+          renderTasks();
+          const nextBtn = (t, fn) => { const b = el("button", "x-btn x-btn--go", t); b.addEventListener("click", () => { Audio_.play("click"); b.disabled = true; fn(); }); work.append(b); };
+          const route = (p) => p.map((k) => (k === "0" ? "🐜🏠" : N5[k].e)).join(" → ");
+          const wOf = (E) => (a, b) => (E.find((e) => ekey(e[0], e[1]) === ekey(a, b)) || [])[2];
+          const sum = (E, p) => p.slice(1).reduce((s, k, i) => s + wOf(E)(p[i], k), 0);
+          const jamIt = (G, E) => { if (E === E5j) JAM5.forEach((k) => G.eg[k].classList.add("is-jam")); };
+
+          /* one delivery wave: tap a route, check it against Dijkstra */
+          function wave(E, key, after) {
+            work.innerHTML = "";
+            const W = wOf(E), opt = dijk(E, "0", "19"), best = opt.dist["19"];
+            let path = ["0"], tries = 0, locked = false;
+            const G = wgraph(N5, E, { label: "20 个路口的城市路网：从蚁窝点相邻路口走到客户 📦", labels: false, small: true, onNode: tap });
+            jamIt(G, E);
+            const status = el("p", "x-entry"), row = el("div", "x-row"), help = el("button", "x-btn", "🔍 让算法帮我看看（少 1 颗星）");
+            status.setAttribute("aria-live", "polite"); row.append(help); work.append(G.svg, status, row);
+            function draw() {
+              Object.values(G.eg).forEach((g) => g.line.classList.remove("is-hot"));
+              path.slice(1).forEach((k, i) => G.edge(path[i], k).classList.add("is-hot"));
+              Object.entries(G.ng).forEach(([k, g]) => g.classList.toggle("is-cur", k === path[path.length - 1]));
+              status.innerHTML = `<span>${route(path)}</span><span class="pill">${sum(E, path)} 分钟</span><span class="pill">送达 ${tries} 次</span>`;
+            }
+            function win(p, msg, sub) {
+              locked = true; help.disabled = true; last = p; got[key] = true; renderTasks();
+              Object.values(G.eg).forEach((g) => g.line.classList.remove("is-hot"));
+              p.slice(1).forEach((k, i) => G.edge(p[i], k).classList.add("is-path"));
+              say(msg, sub); after(p);
+            }
+            function tap(k) {
+              if (locked) return;
+              if (path[path.length - 1] === "19") path = ["0"];
+              const u = path[path.length - 1], i = path.indexOf(k);
+              if (i >= 0) { path = path.slice(0, i + 1); Audio_.play("tick", 500); return draw(); }
+              if (!W(u, k)) { Audio_.play("bonk"); return say(`${N5[u].e} 和 ${N5[k].e} 之间有直接的路吗？只能走到和 ${N5[u].e} 相连的路口。`); }
+              path.push(k); Audio_.play("tick", 500 + path.length * 40); draw();
+              if (k !== "19") return;
+              const t = sum(E, path); tries++; draw();
+              if (t === best) {
+                Audio_.play("correct"); addXP(tries === 1 ? 20 : 10);
+                G.svg.classList.remove("x-win"); void G.svg.offsetWidth; G.svg.classList.add("x-win");
+                return win(path.slice(), `🎉 送达！你的 ${t} 分钟 = 算法的最优 ${best} 分钟。`, tries === 1 ? "一次就找到了最优路线！" : `第 ${tries} 次找到最优路线。`);
+              }
+              retries++; Audio_.play("pop", 300);
+              say(`送达用了 ${t} 分钟，最优是 ${best} 分钟，多了 ${t - best} 分钟。还能更快吗？点任意路口重新出发。`, "路口少的路线不一定最快，比一比路上的分钟数。");
+            }
+            help.addEventListener("click", () => {
+              if (locked) return;
+              locked = true; help.disabled = true; reveals++; path = ["0"]; draw(); Audio_.play("click");
+              say("算法出发：水波从 🐜🏠 一圈圈扩散，每次确定离蚁窝最近的路口……");
+              const st = reduced() ? 80 : 320;
+              opt.order.forEach((k, i) => later(() => { G.ng[k].classList.add("is-done"); G.ripple(k); Audio_.play("tick", 400 + i * 40); }, st * (i + 1)));
+              later(() => {
+                const p = ["19"]; while (opt.from[p[0]]) p.unshift(opt.from[p[0]]);
+                Audio_.play("chord");
+                locked = false; win(p, `算法找到的最快路线：${route(p)}，${best} 分钟。`, "求助算法 1 次：这一关最多拿 2 颗星。");
+              }, st * (opt.order.length + 1) + 200);
+            });
+            draw();
+          }
+
+          function wave1() {
+            wave(E5, "A", () => nextBtn("下一波：堵车了 →", wave2));
+          }
+          function wave2() {
+            const old = last;
+            wave(E5j, "B", (p) => {
+              say("旧答案不对了！路况一变，路上的分钟数就变，最短路也跟着变。所以导航要不停地重新计算。", `新路线 ${route(p)}：${sum(E5j, p)} 分钟。`);
+              nextBtn("下一波：最短路树 →", wave3);
+            });
+            say("路况变了，旧答案还对吗？导航为什么要不停地重新计算？", `红色的 3 条路堵车了，分钟数 ×3。你刚才的路线（原来 ${sum(E5, old)} 分钟）现在要 ${sum(E5j, old)} 分钟。重新规划一条吧。`);
+          }
+
+          function wave3() {
+            work.innerHTML = "";
+            const r = dijk(E5j, "0", null);
+            const G = wgraph(N5, E5j, { label: "从蚁窝到每个路口的最短路，每个点画出『来自哪』箭头", small: true });
+            jamIt(G, E5j);
+            const row = el("div", "x-row"), runB = el("button", "x-btn x-btn--go", "▶ 让算法跑完所有路口");
+            row.append(runB); work.append(G.svg, row);
+            say("这一次不只送一个客户：同时算出 🐜🏠 到每一个路口的最短路。每个路口都记下『来自哪』，画成一根箭头。", "路况还是堵车后的样子。");
+            runB.addEventListener("click", () => {
+              Audio_.play("click"); runB.disabled = true;
+              const st = reduced() ? 60 : 300;
+              r.order.forEach((k, i) => later(() => {
+                const g = G.ng[k]; g.classList.add("is-done"); g.lab.textContent = r.dist[k]; G.ripple(k);
+                if (r.from[k]) { G.edge(r.from[k], k).classList.add("is-path"); G.arrow(k, r.from[k]); }
+                Audio_.play("tick", 400 + i * 30);
+              }, st * (i + 1)));
+              later(() => { row.remove(); G.svg.classList.add("x-tree"); Audio_.play("chord"); quiz(); }, st * (r.order.length + 1) + 300);
+            });
+          }
+          function quiz() {
+            say("20 个路口都有了最短路。只看箭头：这些箭头有没有绕成圈？", "顺着任意一个路口的箭头一直走，会转回原地吗？");
+            const q = el("div", "x-row");
+            [["有，绕成了圈", false], ["没有，一个圈都没有", true]].forEach(([t, ok]) => {
+              const b = el("button", "x-btn x-qopt", t);
+              b.addEventListener("click", () => {
+                if (q.dataset.done) return;
+                if (!ok) { quizOK = false; b.classList.add("bad"); Audio_.play("bonk"); return say("顺着一个路口的箭头一直走，最后会走到哪里？", "每根箭头都指向离 🐜🏠 更近的路口。"); }
+                q.dataset.done = "1"; b.classList.add("good"); Audio_.play("correct"); addXP(10); concept();
+              });
+              q.append(b);
+            });
+            work.append(q);
+          }
+          function concept() {
+            say("没有圈！每根箭头都指向离蚁窝更近的路口，一路走下去只会回到 🐜🏠。连通、又没有圈的图，叫做『树』。");
+            work.append(el("div", "x-concept", `<div><b>树</b><span>连通，而且没有圈</span></div><div><b>根</b><span>🐜🏠 是这棵树的根</span></div><div><b>最短路树</b><span>所有『来自哪』箭头合在一起</span></div>`));
+            const ent = el("div", "x-entry", `<label for="x-tree-n">这棵树有 20 个点。数一数：它有几条边（箭头）？</label><input id="x-tree-n" class="x-num" type="number" min="0" inputmode="numeric" /><button class="x-btn x-btn--go">确认</button>`);
+            work.append(ent);
+            const inp = ent.querySelector("input"), ok = ent.querySelector("button");
+            const check = () => {
+              if (ok.disabled) return;
+              if (+inp.value !== 19) { Audio_.play("bonk"); ent.classList.remove("x-flash"); void ent.offsetWidth; ent.classList.add("x-flash"); return say("每根箭头都从一个路口出发。有没有哪个点没有箭头？", "提示：除了根 🐜🏠，每个路口正好一根『来自哪』箭头。"); }
+              ok.disabled = inp.disabled = true; Audio_.play("chord"); addXP(10); got.C = true; renderTasks();
+              say("19 条！除了根，每个点正好一根箭头：20 − 1 = 19。", "n 个点的树有 n − 1 条边。");
+              work.append(el("p", "x-entry", "<span><b>树 = 连通且没有圈；n 个点的树有 n − 1 条边。</b>再加一条边就会出现圈，去掉一条边就不再连通。</span>"));
+              nextBtn("领取通关卡 →", clear);
+            };
+            ok.addEventListener("click", check);
+            inp.addEventListener("keydown", (e) => { if (e.key === "Enter") check(); });
+          }
+
+          function clear() {
+            const miss = retries + reveals + (quizOK ? 0 : 1), stars = miss === 0 ? 3 : miss <= 2 ? 2 : 1;
+            State.lit.d08 = State.lit.d09 = true; renderSky();
+            done(stars, 60 + stars * 25);
+            award("courier");
+            const card = endCard(stars, `BOSS 通关 · 重试 ${retries} 次 · 求助算法 ${reveals} 次 · 圈的问题 ${quizOK ? "✓" : "✗"}`, [
+              ["图论建模", "路口是点，道路是边，分钟数是权重。"],
+              ["Dijkstra 与重新计算", "路况一变，权重就变，最短路也可能变，所以导航要不停地重算。"],
+              ["树（d08 树与网络）", "连通且没有圈；n 个点的树有 n − 1 条边。最短路的『来自哪』箭头组成一棵最短路树。"],
+            ], "星图点亮 d08 树与网络 · d09 最短路径");
+            const row = el("div", "x-row");
+            const fin = el("button", "x-btn x-btn--go", "🎉 任务完成 →");
+            fin.addEventListener("click", () => { Audio_.play("click"); missionComplete(); });
+            const again = el("button", "x-btn", "再玩一次");
+            again.addEventListener("click", () => { Audio_.play("click"); openLevel(5); });
+            const notes = el("button", "x-btn", "📒 看知识笔记");
+            notes.addEventListener("click", () => $("#notes-btn").click());
+            row.append(fin, again, notes); card.append(row);
+            work.append(card);
+            say("🏅 金牌快递员，到手！", "点「任务完成」看看你的整趟旅程。");
+            card.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "center" });
+          }
+
+          wave1();
+        },
+      });
+      /* ---------- MISSION COMPLETE ---------- */
+      function missionComplete() {
+        levelTimers.forEach(clearTimeout); levelTimers = [];
+        SKY.forEach(([id]) => (State.lit[id] = true)); renderSky();
+        $("#play-title").textContent = "🎉 MISSION COMPLETE · 任务完成";
+        $("#play-sub").textContent = "星图任务 · 导航怎么找到最短的路？";
+        const stage = $("#stage"); stage.innerHTML = "";
+        Audio_.play("fanfare"); later(() => Audio_.play("fanfare"), 450); later(() => Audio_.play("chord"), 1000);
+        guide(stage, "MISSION COMPLETE！从一张彩色地图，到一棵最短路树，导航的秘密你全都找到了。", "蚁博士为你骄傲 🐜");
+        const gotB = BADGES.filter((b) => State.badges[b.id]);
+        stage.append(el("section", "stats", `<div class="stat"><span class="stat__fig">${State.stars}/15</span><span class="stat__label">星星</span></div><div class="stat"><span class="stat__fig">${State.xp}</span><span class="stat__label">XP</span></div><div class="stat"><span class="stat__fig">${gotB.length}/${BADGES.length}</span><span class="stat__label">徽章</span></div>`));
+        stage.append(el("div", "x-end", `<h3>五关成绩</h3>
+          <div class="x-shelf">${LEVELS_META.map((m) => `<span class="x-badge">第 ${m.id} 关 · ${m.title} ${starStr(State.perLevel[m.id] || 0)}</span>`).join("")}</div>
+          <div class="x-shelf">${gotB.map((b) => `<span class="x-badge got">🏅 ${b.name}</span>`).join("")}</div>
+          <p>你点亮了 6 颗星：<span class="x-starid">d07 图论初步 · l01 说理与举例 · d08 树与网络 · d09 最短路径 · d10 算法与流程 · d12 算法复杂度</span></p>
+          <p class="fineprint">难度 ★★☆ 进阶 · 适合 小学五年级~初一</p>`));
+        const card = el("div", "x-end", `<details class="x-notes" open><summary>📒 知识笔记</summary><div class="x-notes__body">${notesHTML()}</div></details>`);
+        const row = el("div", "x-row"), copy = el("button", "x-btn x-btn--go", "一键复制");
+        copy.addEventListener("click", () => {
+          const t = notesText(); Audio_.play("click");
+          if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(() => { toast("📋 已复制到剪贴板"); copy.textContent = "已复制 ✓"; }, () => $("#copy-btn").click());
+          else $("#copy-btn").click();
+        });
+        const more = el("a", "x-btn", "完整笔记与其他任务 →"); more.href = "../notes/#nav"; more.target = "_top";
+        const home = el("a", "x-btn", "返回星图大厅"); home.href = "../"; home.target = "_top";
+        row.append(copy, more, home); card.append(row); stage.append(card);
+        $("#play").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+      }
+      /* ---------- 📒 知识笔记 ---------- */
+      const NOTES = [
+        ["必须掌握", "ol", [
+          "图 = 顶点 + 边，边可以带权重（距离 / 时间 / 费用）",
+          "只保留“谁连着谁”，形状不重要",
+          "欧拉路径：一笔画的条件是奇点个数为 0 或 2",
+          "Dijkstra 算法：从起点像水波一样向外，每次确定一个最近的点",
+          "算法复杂度：穷举所有路线会爆炸式增长，好算法快得多",
+          "贪心与最优：每次走最近的一步不一定得到最短总路（旅行商问题）",
+          "树：连通且没有圈，n 个点有 n−1 条边；最短路的『来自哪』箭头组成一棵树。",
+        ]],
+        ["公式", "ul", [
+          "一笔画 ⇔ 连通且奇度顶点数 ∈ {0, 2}",
+          "所有顶点度数之和 = 2 × 边数",
+          "Dijkstra：dist(v) = min(dist(v), dist(u) + w(u,v))",
+          "n 个城市的旅行路线数 = (n−1)!/2",
+          "树的边数 = 顶点数 − 1；n×n 网格最短路线数 = C(2n, n)",
+        ]],
+        ["经典文献", "ul", [
+          "Euler, “Solutio problematis ad geometriam situs pertinentis”, 1736（柯尼斯堡七桥）",
+          "E. W. Dijkstra, “A note on two problems in connexion with graphs”, Numerische Mathematik, 1959",
+          "Hart, Nilsson, Raphael, A* 算法, 1968",
+          "Karp, 1972, 旅行商问题的 NP 完全性",
+          "Dorigo, 蚁群算法, 1992",
+        ]],
+        ["领域应用", "ul", [
+          "手机导航与网约车派单", "快递与外卖路径规划", "互联网路由（OSPF 用 Dijkstra）",
+          "地铁换乘查询", "游戏 AI 寻路（A*）", "社交网络分析",
+        ]],
+      ];
+      const notesText = () => "星图任务 · 导航怎么找到最短的路？ 知识笔记\n\n" + NOTES.map(([h, t, items]) =>
+        `【${h}】\n` + items.map((x, i) => (t === "ol" ? `${i + 1}. ` : "· ") + x).join("\n")).join("\n\n");
+      const notesHTML = () => NOTES.map(([h, t, items]) => `<div><h3>${h}</h3><${t}>${items.map((x) => `<li>${x}</li>`).join("")}</${t}></div>`).join("");
+      $("#notes-body").innerHTML = notesHTML();
+      $("#notes-btn").addEventListener("click", () => {
+        Audio_.play("click"); const d = $("#notes");
+        if (d.showModal) d.showModal(); else d.setAttribute("open", "");
+      });
+      $("#notes-close").addEventListener("click", () => { const d = $("#notes"); d.close ? d.close() : d.removeAttribute("open"); });
+      $("#notes").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
+      function copyFallback(text) {
+        let box = $("#copybox");
+        if (!box) {
+          box = el("textarea", "x-copybox"); box.id = "copybox"; box.readOnly = true; box.setAttribute("aria-label", "笔记全文");
+          const tip = el("p", "fineprint", "已帮你选中全部文字：电脑按 Ctrl+C（Mac 按 ⌘+C），手机长按选中的文字点“复制”。");
+          $("#notes-body").prepend(box); $("#notes-body").prepend(tip);
+        }
+        box.value = text; box.focus(); box.select(); box.setSelectionRange(0, text.length);
+        let ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+        toast(ok ? "📋 已复制到剪贴板" : "已选中全部文字，请手动复制");
+        if (!ok) $("#copy-btn").textContent = "已选中，请手动复制";
+      }
+      $("#copy-btn").addEventListener("click", () => {
+        const text = notesText(), btn = $("#copy-btn"); Audio_.play("click");
+        const d = $("#notes"); if (!d.open) { if (d.showModal) d.showModal(); else d.setAttribute("open", ""); }
+        btn.textContent = "已复制 ✓";
+        setTimeout(() => (btn.textContent = "一键复制"), 2000);
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).then(() => toast("📋 已复制到剪贴板"), () => copyFallback(text));
+        } else copyFallback(text);
+      });
+      /* ---------- boot ---------- */
+      renderBar(); renderBadges(); renderMap(); renderSky();
+      const once = () => { Audio_.unlock(); window.removeEventListener("pointerdown", once); window.removeEventListener("keydown", once); };
+      window.addEventListener("pointerdown", once); window.addEventListener("keydown", once);
+      $("#sfx").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.setSfx(on); if (on) Audio_.play("click");
+      });
+      $("#music").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.unlock(); Audio_.setMusic(on); Audio_.play("click");
+      });
+      $("#vol").addEventListener("input", (e) => Audio_.setVol(+e.target.value / 100));
+      $("#track").addEventListener("change", (e) => Audio_.setTrack(+e.target.value));
+    </script>
+  </body>
+</html>
