@@ -193,3 +193,9 @@ html.ma-leaving .ma-warp { opacity: 1; }
 :root.ma-skin[data-theme="dark"] .pill, :root.ma-skin[data-theme="dark"] .chip { background: rgb(255 255 255 / .06); border: 1px solid rgb(160 185 255 / .2); color: #dfe5ff; }
 :root.ma-skin[data-theme="dark"] h2 { color: #f2f4ff; letter-spacing: .01em; }
 :root.ma-skin[data-theme="dark"] .foot { color: #8f99c6; }
+
+.ma-math { color: color-mix(in srgb, var(--ma-acc, #8ea2ff) 70%, #fff) !important; opacity: .85; line-height: 1.4; }
+.ma-pop__s { margin: 10px 4px 2px; font-size: 11px; letter-spacing: .14em; color: #8f99c6; }
+.ma-chk { display: flex; align-items: center; gap: 8px; margin: 4px 6px 2px; font-size: 12px; color: #c9d0f2; cursor: pointer; }
+.ma-chk input { accent-color: var(--ma-acc, #8ea2ff); }
+.ma-pop { max-height: min(78vh, 640px); overflow-y: auto; }
