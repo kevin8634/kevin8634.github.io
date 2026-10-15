@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>星图任务 为什么有的和弦好听</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-charts.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <style>
+      .x-sky { position: relative; overflow: hidden; border-radius: var(--r-xl); background-color: #0b1130; background-image: radial-gradient(120% 90% at 70% 0%, #1d2b5a 0%, #0b1130 55%, #05081a 100%); color: #f4f6ff; padding: 72px 32px 56px; min-height: 300px; display: grid; align-content: end; }
+      .x-sky canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+      .x-sky > div { position: relative; display: grid; gap: 12px; max-width: 46ch; }
+      .x-sky .x-eyebrow { font: var(--type-tag); letter-spacing: .08em; color: #c9d2ff; }
+      .x-sky h1 { font: var(--type-display); margin: 0; }
+      .x-sky p { font: var(--type-body); color: #dfe4ff; margin: 0; }
+      .x-bar { position: sticky; top: 8px; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 10px 14px; margin-top: 12px; border-radius: var(--r-l); background: var(--mat-regular); backdrop-filter: var(--hark-blur); -webkit-backdrop-filter: var(--hark-blur); box-shadow: var(--hark-shadow); border: 1px solid var(--stroke-secondary); }
+      .x-bar label { display: inline-flex; align-items: center; gap: 8px; font: var(--type-tag); color: var(--text-secondary); }
+      .x-bar input[type=range] { width: 96px; accent-color: var(--fill-primary); }
+      .x-stars { display: flex; flex-wrap: wrap; gap: 2px; margin-left: auto; }
+      .x-star { display: grid; justify-items: center; min-width: var(--tap); min-height: var(--tap); padding: 2px 4px; background: none; border: 0; color: var(--text-secondary); font: var(--type-caption); cursor: pointer; border-radius: var(--r-s); }
+      .x-star span:first-child { font-size: 18px; line-height: 1.1; color: var(--text-secondary); transition: color var(--dur-quick), text-shadow var(--dur-quick); }
+      .x-star.is-lit span:first-child { color: #f6c945; text-shadow: 0 0 8px #f6c945, 0 0 18px rgba(246,201,69,.6); }
+      .x-star.is-lit { color: var(--text-primary); }
+      .x-panel { display: grid; gap: 16px; padding: 20px; border-radius: var(--r-l); background: var(--fill-tertiary); }
+      .x-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+      .x-opt { min-height: var(--tap); padding: 6px 14px; border-radius: var(--r-s); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-tag); cursor: pointer; }
+      .x-opt:hover { border-color: var(--text-secondary); }
+      .x-opt[aria-pressed=true] { background: var(--fill-primary); color: var(--text-primary-on); border-color: var(--fill-primary); }
+      .x-opt:disabled { opacity: .4; cursor: default; }
+      .x-kbwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      @media (max-width: 899px) { .x-kb { min-width: 1050px; } }
+      .x-kb { position: relative; height: 160px; user-select: none; touch-action: manipulation; }
+      .x-kb button { position: absolute; top: 0; border: 1px solid var(--stroke-primary); cursor: pointer; padding: 0 0 8px; display: flex; align-items: flex-end; justify-content: center; font: var(--type-caption); }
+      .x-kb .w { height: 100%; background: var(--fill-primary-on); color: var(--text-secondary); border-radius: 0 0 8px 8px; }
+      .x-kb .b { height: 60%; background: var(--fill-primary); color: var(--text-primary-on); z-index: 2; border-radius: 0 0 6px 6px; font-size: 0; }
+      .x-kb button.on { background: #f6c945; color: #111; }
+      .x-out { font: var(--type-label); color: var(--text-primary); min-height: 1.4em; }
+      .x-log { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font: var(--type-small); }
+      .x-log li { padding: 8px 12px; border-radius: var(--r-s); background: var(--fill-primary-on); }
+      .x-log:empty::before { content: "还没有记录。"; color: var(--text-secondary); }
+      .x-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+      .x-choice { text-align: left; display: grid; gap: 6px; padding: 20px; border-radius: var(--r-l); background: var(--fill-tertiary); border: 2px solid transparent; color: var(--text-primary); font: var(--type-body); cursor: pointer; }
+      .x-choice b { font: var(--type-heading); }
+      .x-choice[aria-pressed=true] { border-color: var(--fill-primary); }
+      .x-cv { width: 100%; display: block; border-radius: var(--r-m); background: var(--fill-primary-on); touch-action: none; }
+      .x-hide { display: none; }
+      .x-range { flex: 1; min-width: 160px; min-height: var(--tap); accent-color: var(--fill-primary); }
+      .x-panel > * { min-width: 0; }
+      .x-harms { display: grid; grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); gap: 12px 4px; }
+      .x-harms label { display: grid; justify-items: center; gap: 4px; font: var(--type-caption); color: var(--text-secondary); }
+      .x-harms input { writing-mode: vertical-lr; direction: rtl; width: var(--tap); height: 140px; accent-color: var(--fill-primary); }
+      .x-seqwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .x-seq { display: grid; grid-template-columns: 36px repeat(16, minmax(44px, 1fr)); gap: 3px; min-width: 780px; }
+      .x-seq span { font: var(--type-caption); color: var(--text-secondary); align-self: center; }
+      .x-seq button { height: var(--tap); padding: 0; border-radius: 8px; border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); cursor: pointer; }
+      .x-seq button.q { border-color: var(--stroke-primary); }
+      .x-seq button.on { background: var(--fill-primary); border-color: var(--fill-primary); }
+      .x-seq button.now { box-shadow: 0 0 0 2px #f6c945; }
+      .x-night { background: #0b1130; }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <header class="x-sky">
+        <canvas id="sky" aria-hidden="true"></canvas>
+        <div>
+          <p class="x-eyebrow">星图任务 · 7 颗星</p>
+          <h1>星图任务 · 为什么有的和弦好听?</h1>
+          <p>不需要任何基础。你将从“分数”一路走到“傅里叶分析”。全程用耳朵和眼睛。</p>
+        </div>
+      </header>
+
+      <div class="x-bar" role="toolbar" aria-label="声音与进度">
+        <button class="btn" id="sound">点击开启声音</button>
+        <label>音量 <input type="range" id="vol" min="0" max="1" step="0.01" value="0.6" /></label>
+        <button class="btn" id="stopall">全部停止</button>
+        <nav class="x-stars" id="stars" aria-label="任务进度"></nav>
+      </div>
+
+      <main class="main">
+        <!-- STAGE 1 -->
+        <section class="section" id="stage-1" data-nav="好奇">
+          <div class="head">
+            <p class="head__eyebrow">第 1 颗星 · 好奇</p>
+            <h2>随便按两个音。有的组合舒服,有的难受。为什么?</h2>
+            <p class="head__sub">先别查答案。</p>
+          </div>
+          <aside class="callout" aria-label="AI导师">
+            <p class="callout__head">AI导师</p>
+            <p class="callout__lead"><strong>你能找到一对让你皱眉的音吗?</strong> 再找一对让你放松的。它们在键盘上相隔多远?</p>
+          </aside>
+          <div class="x-panel">
+            <div class="x-row" role="group" aria-label="模式">
+              <button class="x-opt" data-mode="1" aria-pressed="false">单音</button>
+              <button class="x-opt" data-mode="2" aria-pressed="true">双音</button>
+            </div>
+            <div class="x-kbwrap"><div class="x-kb" id="kb" aria-label="键盘 C4–B5"></div></div>
+            <p class="x-out" id="pick">选两个键,它们会一起响。</p>
+            <div class="x-row" id="rate1">
+              <button class="x-opt" data-r="好听" disabled>好听</button>
+              <button class="x-opt" data-r="一般" disabled>一般</button>
+              <button class="x-opt" data-r="刺耳" disabled>刺耳</button>
+              <button class="x-opt" id="replay1" disabled>再听一次</button>
+            </div>
+            <div>
+              <p class="head__eyebrow">你的听感记录</p>
+              <ul class="x-log" id="log"></ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- STAGE 2 -->
+        <section class="section" id="stage-2" data-nav="猜想">
+          <div class="head">
+            <p class="head__eyebrow">第 2 颗星 · 猜想</p>
+            <h2>先下注:是什么决定了两个音好不好听?</h2>
+          </div>
+          <aside class="callout" aria-label="AI导师">
+            <p class="callout__head">AI导师</p>
+            <p class="callout__lead"><strong>回看你的听感记录。</strong> 好听的那些组合,有什么共同点?</p>
+          </aside>
+          <div class="x-choices" id="guess">
+            <button class="x-choice" data-g="A" aria-pressed="false"><b>A</b>两个音越近越好听</button>
+            <button class="x-choice" data-g="B" aria-pressed="false"><b>B</b>两个音越远越好听</button>
+            <button class="x-choice" data-g="C" aria-pressed="false"><b>C</b>和音高之间的某种‘比例’有关</button>
+          </div>
+          <p class="x-out x-hide" id="guess-msg">记住你的答案,我们用实验揭晓。</p>
+        </section>
+
+        <!-- STAGE 3 -->
+        <section class="section" id="stage-3" data-nav="比与分数">
+          <div class="head">
+            <p class="head__eyebrow">第 3 颗星 · 比与分数</p>
+            <h2>拖动琴码,把弦截成分数,听两根弦一起响。</h2>
+            <p class="head__sub">上面一根是 220 Hz 的空弦;下面一根被琴码截短,频率 = 220 ÷ 分数。</p>
+          </div>
+          <aside class="callout" aria-label="AI导师">
+            <p class="callout__head">AI导师</p>
+            <p class="callout__lead"><strong>把弦缩到1/2,频率会变成多少?</strong> 先猜,再听。</p>
+            <button class="btn" id="reveal3">揭晓</button>
+            <p class="fineprint x-hide" id="reveal3-a">440 Hz。弦长减半,振动快一倍:频率与弦长成反比。</p>
+          </aside>
+          <div class="x-panel">
+            <canvas class="x-cv" id="string" height="200" aria-label="可拖动琴码的弦"></canvas>
+            <p class="x-out" id="ratio3"></p>
+            <div class="x-row">
+              <button class="x-opt" id="play3">▶ 弹奏</button>
+              <span class="fineprint">给这个音程打分:</span>
+              <button class="x-opt" data-s="3">好听</button>
+              <button class="x-opt" data-s="2">一般</button>
+              <button class="x-opt" data-s="1">刺耳</button>
+            </div>
+          </div>
+          <figure class="chart">
+            <figcaption class="chart__cap">好听地图<small>你给每个音程的评分:3 好听 · 2 一般 · 1 刺耳</small></figcaption>
+            <div class="chart__canvas"><canvas id="map" role="img" aria-label="你给七个音程的评分,按分数从简单到复杂排列"></canvas></div>
+          </figure>
+          <aside class="callout x-hide" id="concl3" aria-label="发现">
+            <p class="callout__head">发现</p>
+            <p class="callout__lead"><strong>越简单的分数越和谐——毕达哥拉斯2500年前就发现了。</strong> 回看你的猜想:答案是 C。<span id="yours"></span></p>
+          </aside>
+        </section>
+
+        <!-- STAGE 4 -->
+        <section class="section" id="stage-4" data-nav="周期">
+          <div class="head">
+            <p class="head__eyebrow">第 4 颗星 · 周期</p>
+            <h2>比越简单,合成波重复得越快,大脑越容易‘看懂’——这就是和谐。</h2>
+            <p class="head__sub">细线是两个音,粗线是它们叠加后的合成波,虚线标出合成波重新开始的地方。</p>
+          </div>
+          <aside class="callout" aria-label="AI导师">
+            <p class="callout__head">AI导师</p>
+            <p class="callout__lead"><strong>为什么15:16要等那么久才重复?</strong></p>
+            <button class="btn" id="reveal4">提示</button>
+            <p class="fineprint x-hide" id="reveal4-a">15 和 16 没有公因数。低音要走完 15 个周期、高音走完 16 个,两者才同时回到起点。</p>
+          </aside>
+          <div class="x-panel">
+            <div class="x-row" id="ratios4"></div>
+            <canvas class="x-cv" id="waves" height="300" aria-label="两个正弦波与合成波"></canvas>
+            <p class="x-out" id="rep4"></p>
+            <div class="x-row"><button class="x-opt" id="play4">▶ 听这个比</button></div>
+          </div>
+        </section>
+
+        <div id="stages-5-7">
+          <!-- STAGE 5 -->
+          <section class="section" id="stage-5" data-nav="平均律">
+            <div class="head">
+              <p class="head__eyebrow">第 5 颗星 · 对数与十二平均律</p>
+              <h2>把八度平均切成 12 份,每一步都乘同一个数。</h2>
+              <p class="head__sub">只用完美分数,换个调弹同一首曲子就会走调。人类的办法:把八度平均分成12份,每一步频率都乘同一个数 r,且 r¹² = 2。</p>
+            </div>
+            <aside class="callout" aria-label="AI导师">
+              <p class="callout__head">AI导师</p>
+              <p class="callout__lead"><strong>为什么一定是12份?</strong> 想象分成7份会怎样?</p>
+              <button class="btn" id="reveal5">提示</button>
+              <p class="fineprint x-hide" id="reveal5-a">分 7 份时每步乘 2^(1/7) ≈ 1.104。离 3/2 最近的是 2^(4/7) ≈ 1.486,差 16 音分;大三度差 43 音分。12 份的五度只差 2 音分:12 是能把五度、四度都逼近得这么好的最小份数。</p>
+            </aside>
+            <div class="x-panel">
+              <div class="x-row">
+                <label class="x-out" for="n5r">n = <b id="n5">0</b></label>
+                <input class="x-range" type="range" id="n5r" min="0" max="12" step="1" value="0" />
+              </div>
+              <p class="x-out" id="f5"></p>
+              <canvas class="x-cv" id="spiral" height="320" role="img" aria-label="音高螺旋:每转一圈 12 个点,频率翻倍"></canvas>
+              <p class="fineprint">音高螺旋:转过的角度对应对数,离中心的距离对应频率。每走一个点乘一次 r,转满一圈正好 ×2。</p>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th scope="col">音程</th><th scope="col">纯律(完美分数)</th><th scope="col">十二平均律</th><th scope="col">偏差</th></tr>
+                </thead>
+                <tbody>
+                  <tr><th scope="row">纯五度 <small>3:2</small></th><td class="num">1.5</td><td>2^(7/12) = 1.4983</td><td class="num">−2 音分</td></tr>
+                  <tr><th scope="row">纯四度 <small>4:3</small></th><td class="num">1.3333</td><td>2^(5/12) = 1.3348</td><td class="num">+2 音分</td></tr>
+                  <tr class="is-highlight"><th scope="row">大三度 <small>5:4</small></th><td class="num">1.25</td><td>2^(4/12) = 1.2599</td><td class="num">+14 音分</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="fineprint">1 音分 = 1/100 个半音。</p>
+            <div class="x-panel">
+              <p class="x-out">A/B 对比大三度(基音 220 Hz),听听差别:</p>
+              <div class="x-row">
+                <button class="x-opt" data-ab="275">A · 纯律 220 + 275 Hz</button>
+                <button class="x-opt" data-ab="277.18">B · 平均律 220 + 277.18 Hz</button>
+              </div>
+            </div>
+            <div class="prose"><p>r = 2^(1/12) ≈ 1.0595 是无理数。为了能自由转调,人类接受了一点点不完美——你刚刚用到了指数和对数。</p></div>
+          </section>
+
+          <!-- STAGE 6 -->
+          <section class="section" id="stage-6" data-nav="傅里叶">
+            <div class="head">
+              <p class="head__eyebrow">第 6 颗星 · 傅里叶</p>
+              <h2>任何声音都能拆成一组正弦波。</h2>
+              <p class="head__sub">8 个滑块是 220 Hz 的第 1–8 次谐波。推一推,看波形和频谱怎么变。</p>
+            </div>
+            <aside class="callout" aria-label="AI导师">
+              <p class="callout__head">AI导师</p>
+              <p class="callout__lead"><strong>只用奇数次谐波,波形会变成什么样?</strong> 试试“类单簧管”和“方波近似”。</p>
+              <button class="btn" id="reveal6">提示</button>
+              <p class="fineprint x-hide" id="reveal6-a">后半个周期正好是前半个周期上下翻转。按 1/n 取奇次谐波,波形越来越接近方波;单簧管听起来“空”,就是缺了偶次谐波。</p>
+            </aside>
+            <div class="x-panel">
+              <div class="x-row" id="pre6" role="group" aria-label="音色预设"></div>
+              <div class="x-harms" id="harms"></div>
+              <canvas class="x-cv" id="four" height="300" role="img" aria-label="各次谐波(细线)、合成波形(粗线)与频谱柱"></canvas>
+              <div class="x-row">
+                <button class="x-opt" id="play6">▶ 听一下</button>
+                <button class="x-opt" id="hold6" aria-pressed="false">持续播放</button>
+              </div>
+              <canvas class="x-cv" id="epi" height="200" role="img" aria-label="本轮:半径等于各谐波振幅的圆一个套一个,笔尖画出波形"></canvas>
+              <p class="fineprint">本轮:每个圆的半径是一次谐波的振幅,转速是它的倍数。笔尖的高度,就是合成波。</p>
+            </div>
+            <div class="prose"><p>任何声音都能拆成一组正弦波——这就是傅里叶分析,也是MP3、手机信号和AI语音的基础。音色不同,只是‘积木’配比不同。</p></div>
+          </section>
+
+          <!-- STAGE 7 -->
+          <section class="section" id="stage-7" data-nav="创造">
+            <div class="head">
+              <p class="head__eyebrow">第 7 颗星 · 创造</p>
+              <h2>用你学到的数学做一段音乐。</h2>
+              <p class="head__sub">用你学到的数学做一段音乐,然后讲给朋友听:为什么这几个音放在一起好听?讲得出来,才算真懂。</p>
+            </div>
+            <div class="x-panel">
+              <div class="x-row">
+                <button class="x-opt" id="play7" aria-pressed="false">▶ 播放</button>
+                <button class="x-opt" id="rand7">随机生成和谐旋律</button>
+                <button class="x-opt" id="clear7">清空</button>
+              </div>
+              <div class="x-row">
+                <label class="x-out" for="bpm">速度 <b id="bpmv">100</b> BPM</label>
+                <input class="x-range" type="range" id="bpm" min="60" max="160" step="1" value="100" />
+              </div>
+              <div class="x-row" id="tim7" role="group" aria-label="音色"></div>
+              <div class="x-seqwrap"><div class="x-seq" id="seq" aria-label="16 步音序器,C4–C5 C 大调"></div></div>
+              <p class="x-out" id="why7">点格子写旋律,或者让数学帮你生成一段。</p>
+            </div>
+          </section>
+
+          <!-- END -->
+          <section class="section" id="end" data-nav="星图">
+            <div class="head">
+              <p class="head__eyebrow">终点</p>
+              <h2>你点亮了这些星</h2>
+              <p class="head__sub" id="count7"></p>
+            </div>
+            <canvas class="x-cv x-night" id="const" height="260" role="img" aria-label="七颗星组成的星座,按你的进度点亮"></canvas>
+            <p class="x-row" id="tags"></p>
+            <div class="prose"><p>在传统课程里,这些分散在小学到大学的十几年里。今天,一个问题把它们串在了一起。</p></div>
+          </section>
+        </div>
+      </main>
+      <footer class="foot">
+        <p>星图 Math Atlas 原型 v0.1</p>
+        <nav aria-label="Back to sections" data-auto></nav>
+      </footer>
+    </div>
+    <script src="hark.js"></script>
+    <script src="chart.js"></script>
+    <script src="datalabels.js"></script>
+    <script src="hark-charts.js"></script>
+    <script>
+      const $ = (s) => document.querySelector(s), $$ = (s) => [...document.querySelectorAll(s)];
+      const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+      /* ---------- 声音 ---------- */
+      let ac, master, vol = 0.6, live = [];
+      function ensureAudio() {
+        if (!ac) { ac = new (window.AudioContext || window.webkitAudioContext)(); master = ac.createGain(); master.gain.value = vol; master.connect(ac.destination); }
+        if (ac.state === "suspended") ac.resume();
+        $("#sound").textContent = "声音已开启";
+        return ac;
+      }
+      function playTones(freqs, duration = 1.5) {
+        ensureAudio();
+        const t = ac.currentTime, g = ac.createGain(), peak = 0.3 / freqs.length;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(peak, t + 0.03);
+        g.gain.setValueAtTime(peak, t + Math.max(0.05, duration - 0.4));
+        g.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+        g.connect(master);
+        freqs.forEach((f) => [[1, 1], [2, 0.3], [3, 0.12]].forEach(([h, a]) => {
+          const o = ac.createOscillator(), og = ac.createGain();
+          o.type = "sine"; o.frequency.value = f * h; og.gain.value = a;
+          o.connect(og).connect(g); o.start(t); o.stop(t + duration + 0.05);
+          live.push(o); o.onended = () => (live = live.filter((x) => x !== o));
+        }));
+      }
+      function stopAll() { live.forEach((o) => { try { o.stop(); } catch (e) {} }); live = []; }
+      window.playTones = playTones; window.stopAll = stopAll;
+      $("#sound").onclick = ensureAudio;
+      $("#stopall").onclick = stopAll;
+      $("#vol").oninput = (e) => { vol = +e.target.value; if (master) master.gain.setTargetAtTime(vol, ac.currentTime, 0.02); };
+
+      /* ---------- 星星进度 ---------- */
+      const starNames = ["好奇", "猜想", "比与分数", "周期", "对数与平均律", "傅里叶", "创造"];
+      starNames.forEach((n, i) => {
+        const b = document.createElement("button");
+        b.className = "x-star"; b.title = `第 ${i + 1} 关:${n}`;
+        b.innerHTML = `<span>★</span><span>${n}</span>`;
+        b.onclick = () => { const s = document.getElementById("stage-" + (i + 1)); if (s) s.scrollIntoView({ behavior: "smooth" }); };
+        $("#stars").appendChild(b);
+      });
+      function lightStar(i) { const b = $$(".x-star")[i - 1]; if (b) { b.classList.add("is-lit"); b.setAttribute("aria-label", starNames[i - 1] + " 已完成"); } }
+      window.lightStar = lightStar;
+
+      /* ---------- 星空 ---------- */
+      (() => {
+        const c = $("#sky"), x = c.getContext("2d");
+        const pts = Array.from({ length: 140 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * 1.3 + 0.3, p: Math.random() * 6 }));
+        const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        function draw(t) {
+          const w = (c.width = c.offsetWidth * devicePixelRatio), h = (c.height = c.offsetHeight * devicePixelRatio);
+          pts.forEach((s) => { x.globalAlpha = 0.35 + 0.65 * Math.abs(Math.sin(s.p + t / 1400)); x.fillStyle = "#fff"; x.beginPath(); x.arc(s.x * w, s.y * h, s.r * devicePixelRatio, 0, 7); x.fill(); });
+          if (!reduce) requestAnimationFrame(draw);
+        }
+        requestAnimationFrame(draw);
+      })();
+
+      /* ---------- 第 1 关:键盘 ---------- */
+      const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+      const freqOf = (n) => 261.63 * Math.pow(2, n / 12);
+      let mode = 2, sel = [], rated1 = false;
+      (() => {
+        const kb = $("#kb"), ww = 100 / 14; let wi = 0;
+        for (let n = 0; n < 24; n++) {
+          const nm = names[n % 12] + (4 + Math.floor(n / 12)), black = nm.includes("#"), b = document.createElement("button");
+          b.className = black ? "b" : "w"; b.textContent = nm; b.dataset.n = n; b.setAttribute("aria-label", nm);
+          if (black) { b.style.left = `calc(${wi * ww}% - ${ww * 0.3}%)`; b.style.width = ww * 0.6 + "%"; }
+          else { b.style.left = wi * ww + "%"; b.style.width = ww + "%"; wi++; }
+          b.onclick = () => pressKey(n);
+          kb.appendChild(b);
+        }
+      })();
+      const keyName = (n) => names[n % 12] + (4 + Math.floor(n / 12));
+      function markKeys() { $$("#kb button").forEach((b) => b.classList.toggle("on", sel.includes(+b.dataset.n))); }
+      function pressKey(n) {
+        if (mode === 1) { sel = [n]; markKeys(); playTones([freqOf(n)], 1); $("#pick").textContent = keyName(n); setTimeout(() => { sel = []; markKeys(); }, 400); return; }
+        if (sel.length >= 2) sel = [];
+        if (sel.includes(n)) return;
+        sel.push(n); markKeys();
+        if (sel.length === 1) { playTones([freqOf(n)], 0.8); $("#pick").textContent = `已选 ${keyName(n)},再选一个。`; }
+        else { playTones(sel.map(freqOf)); $("#pick").textContent = `${keyName(sel[0])} + ${keyName(sel[1])}:它听起来怎么样?`; }
+        $$("#rate1 button").forEach((b) => (b.disabled = sel.length < 2));
+      }
+      $$("[data-mode]").forEach((b) => (b.onclick = () => {
+        mode = +b.dataset.mode; sel = []; markKeys();
+        $$("[data-mode]").forEach((x) => x.setAttribute("aria-pressed", x === b));
+        $$("#rate1 button").forEach((x) => (x.disabled = true));
+        $("#pick").textContent = mode === 2 ? "选两个键,它们会一起响。" : "单音模式:每个键单独响。";
+      }));
+      $("#replay1").onclick = () => sel.length === 2 && playTones(sel.map(freqOf));
+      $$("#rate1 [data-r]").forEach((b) => (b.onclick = () => {
+        if (sel.length < 2) return;
+        const [a, c] = [...sel].sort((x, y) => x - y), li = document.createElement("li");
+        li.textContent = `${keyName(a)} + ${keyName(c)} · 相差 ${c - a} 个半音 · ${b.dataset.r}`;
+        $("#log").prepend(li);
+        sel = []; markKeys(); $$("#rate1 button").forEach((x) => (x.disabled = true));
+        $("#pick").textContent = "已记录。再试一对?";
+        if (!rated1) { rated1 = true; lightStar(1); }
+      }));
+
+      /* ---------- 第 2 关:猜想 ---------- */
+      let guess = null;
+      $$("#guess .x-choice").forEach((b) => (b.onclick = () => {
+        guess = b.dataset.g;
+        $$("#guess .x-choice").forEach((x) => x.setAttribute("aria-pressed", x === b));
+        $("#guess-msg").classList.remove("x-hide"); lightStar(2);
+      }));
+    </script>
+    <script>
+      /* ---------- 第 3 关:弦与分数 ---------- */
+      const fracs = [
+        { f: 1 / 2, t: "1/2", r: "2:1", n: "八度" }, { f: 2 / 3, t: "2/3", r: "3:2", n: "纯五度" },
+        { f: 3 / 4, t: "3/4", r: "4:3", n: "纯四度" }, { f: 4 / 5, t: "4/5", r: "5:4", n: "大三度" },
+        { f: 5 / 6, t: "5/6", r: "6:5", n: "小三度" }, { f: 8 / 9, t: "8/9", r: "9:8", n: "大二度" },
+        { f: 15 / 16, t: "15/16", r: "16:15", n: "小二度" },
+      ];
+      let cur = 1, vibeUntil = 0, dragging = false;
+      const scores = fracs.map(() => 0);
+      const sc = $("#string"), sx = sc.getContext("2d");
+      const geo = () => { const w = sc.clientWidth; return { w, x0: 40, L: w - 80 }; };
+      function bridgeX() { const { x0, L } = geo(); return x0 + fracs[cur].f * L; }
+      function updateRatio3() {
+        const fr = fracs[cur];
+        $("#ratio3").textContent = `弦长 ${fr.t} → ${(220 / fr.f).toFixed(1)} Hz · 频率比 ${fr.r} · ${fr.n}` + (scores[cur] ? ` · 你的评分:${["", "刺耳", "一般", "好听"][scores[cur]]}` : "");
+      }
+      function drawString(t) {
+        const dpr = devicePixelRatio, { w, x0, L } = geo(), h = 200;
+        sc.width = w * dpr; sc.height = h * dpr; sx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const ink = css("--text-primary"), ink2 = css("--text-secondary"), vib = t < vibeUntil, amp = vib ? 14 * (vibeUntil - t) / 1500 : 0;
+        const wave = (y, len, speed, label) => {
+          sx.strokeStyle = ink; sx.lineWidth = 2; sx.beginPath();
+          for (let i = 0; i <= 80; i++) { const px = x0 + (len * i) / 80; sx.lineTo(px, y + amp * Math.sin((Math.PI * i) / 80) * Math.sin(t * speed)); }
+          sx.stroke(); sx.fillStyle = ink2; sx.font = "12px Geist, sans-serif"; sx.fillText(label, x0, y - 22);
+        };
+        wave(55, L, 0.022, "空弦 · 220 Hz");
+        const bx = bridgeX();
+        sx.strokeStyle = ink2; sx.lineWidth = 1; sx.setLineDash([3, 4]); sx.beginPath(); sx.moveTo(bx, 140); sx.lineTo(x0 + L, 140); sx.stroke(); sx.setLineDash([]);
+        wave(140, bx - x0, 0.022 / fracs[cur].f, `截短 · ${(220 / fracs[cur].f).toFixed(1)} Hz`);
+        fracs.forEach((fr, i) => { const px = x0 + fr.f * L; sx.fillStyle = i === cur ? ink : ink2; sx.fillRect(px - 0.5, 166, 1, 6); sx.fillText(fr.t, px - 8, 188); });
+        [x0, x0 + L].forEach((px) => { sx.fillStyle = ink; sx.fillRect(px - 3, 30, 6, 130); });
+        sx.fillStyle = "#f6c945"; sx.beginPath(); sx.moveTo(bx, 130); sx.lineTo(bx - 10, 158); sx.lineTo(bx + 10, 158); sx.fill();
+        requestAnimationFrame(drawString);
+      }
+      function snapTo(clientX) {
+        const { x0, L } = geo(), r = sc.getBoundingClientRect(), f = (clientX - r.left - x0) / L;
+        let best = 0; fracs.forEach((fr, i) => { if (Math.abs(fr.f - f) < Math.abs(fracs[best].f - f)) best = i; });
+        if (best !== cur) { cur = best; updateRatio3(); }
+      }
+      sc.addEventListener("pointerdown", (e) => { dragging = true; sc.setPointerCapture(e.pointerId); snapTo(e.clientX); });
+      sc.addEventListener("pointermove", (e) => dragging && snapTo(e.clientX));
+      sc.addEventListener("pointerup", () => { dragging = false; });
+      $("#play3").onclick = () => { playTones([220, 220 / fracs[cur].f]); vibeUntil = performance.now() + 1500; };
+      $("#reveal3").onclick = () => $("#reveal3-a").classList.remove("x-hide");
+      updateRatio3(); requestAnimationFrame(drawString);
+
+      const mapChart = new Chart($("#map"), {
+        type: "bar",
+        data: { labels: fracs.map((f) => `${f.n} ${f.r}`), datasets: [{ label: "评分", data: scores, backgroundColor: (c) => ["var(--chart-muted)", "var(--chart-bad)", "var(--chart-muted)", "var(--chart-good)"][c.raw || 0] }] },
+        options: { scales: { y: { min: 0, max: 3, ticks: { stepSize: 1, callback: (v) => ["", "刺耳", "一般", "好听"][v] } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => ["未评分", "刺耳", "一般", "好听"][c.raw] } } } },
+      });
+      $$("[data-s]").forEach((b) => (b.onclick = () => {
+        scores[cur] = +b.dataset.s; mapChart.update(); updateRatio3();
+        if (scores.filter(Boolean).length >= 3 && $("#concl3").classList.contains("x-hide")) {
+          $("#yours").textContent = guess ? ` 你当时选的是 ${guess}${guess === "C" ? ",猜对了!" : "。"}` : "";
+          $("#concl3").classList.remove("x-hide"); lightStar(3);
+        }
+      }));
+
+      /* ---------- 第 4 关:周期 ---------- */
+      const ratios = [[1, 2], [2, 3], [3, 4], [4, 5], [8, 9], [15, 16], [1, Math.SQRT2]];
+      let rI = 1; const tried = new Set([1]);
+      ratios.forEach(([p, q], i) => {
+        const b = document.createElement("button");
+        b.className = "x-opt"; b.textContent = q === Math.SQRT2 ? "1:√2" : `${p}:${q}`; b.setAttribute("aria-pressed", i === rI);
+        b.onclick = () => { rI = i; $$("#ratios4 button").forEach((x, j) => x.setAttribute("aria-pressed", j === i)); tried.add(i); updateRep(); if (tried.size >= 3) lightStar(4); };
+        $("#ratios4").appendChild(b);
+      });
+      function updateRep() {
+        const [p, q] = ratios[rI];
+        $("#rep4").textContent = q === Math.SQRT2 ? "1:√2 是无理数比:合成波永不重复。" : `合成波每隔 ${p} 个(低音)周期重复一次。`;
+      }
+      const wc = $("#waves"), wx = wc.getContext("2d");
+      function drawWaves(t) {
+        const dpr = devicePixelRatio, w = wc.clientWidth, h = 300;
+        wc.width = w * dpr; wc.height = h * dpr; wx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const [p, q] = ratios[rI], irr = q === Math.SQRT2, shown = irr ? 8 : Math.max(4, Math.min(2 * p, 16));
+        const T = w / shown, k = q / p, off = matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : (t / 40) % (irr ? 1e9 : p * T);
+        const ink = css("--text-primary"), ink2 = css("--text-secondary");
+        const line = (y, a, fn, lw, col) => { wx.strokeStyle = col; wx.lineWidth = lw; wx.beginPath(); for (let x = 0; x <= w; x += 1) wx.lineTo(x, y - a * fn((x + off) / T)); wx.stroke(); };
+        line(45, 22, (u) => Math.sin(2 * Math.PI * u), 1.2, ink2);
+        line(115, 22, (u) => Math.sin(2 * Math.PI * u * k), 1.2, ink2);
+        line(215, 34, (u) => Math.sin(2 * Math.PI * u) + Math.sin(2 * Math.PI * u * k), 2.5, ink);
+        wx.fillStyle = ink2; wx.font = "12px Geist, sans-serif";
+        wx.fillText("低音", 6, 14); wx.fillText("高音", 6, 84); wx.fillText("合成波", 6, 160);
+        if (!irr) {
+          wx.strokeStyle = "#e0a800"; wx.lineWidth = 1; wx.setLineDash([4, 4]);
+          for (let x = p * T - off; x <= w; x += p * T) if (x >= 0) { wx.beginPath(); wx.moveTo(x, 150); wx.lineTo(x, 285); wx.stroke(); }
+          wx.setLineDash([]);
+        }
+        requestAnimationFrame(drawWaves);
+      }
+      $("#play4").onclick = () => { const [p, q] = ratios[rI]; playTones([220, (220 * q) / p], 2); };
+      $("#reveal4").onclick = () => $("#reveal4-a").classList.remove("x-hide");
+      updateRep(); requestAnimationFrame(drawWaves);
+    </script>
+    <script>
+      (() => {
+        const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches, GOLD = "#f6c945";
+        const fit = (c, h) => { const d = devicePixelRatio, w = c.clientWidth, x = c.getContext("2d"); c.width = w * d; c.height = h * d; x.setTransform(d, 0, 0, d, 0, 0); x.font = "12px Geist, sans-serif"; return { x, w }; };
+        const dot = (x, px, py, r, fill, stroke) => { x.beginPath(); x.arc(px, py, r, 0, 7); x.fillStyle = fill; x.fill(); if (stroke) { x.strokeStyle = stroke; x.lineWidth = 1.5; x.stroke(); } };
+
+        /* ---------- 音色合成 ---------- */
+        const wave = (a) => { const im = new Float32Array(9); a.forEach((v, k) => (im[k + 1] = v)); return ac.createPeriodicWave(new Float32Array(9), im); };
+        function playWave(f, dur, a, t0, peak = 0.22) {
+          if (!a.some((v) => v > 0)) return; ensureAudio();
+          const t = t0 ?? ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+          o.setPeriodicWave(wave(a)); o.frequency.value = f;
+          g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + 0.02);
+          g.gain.setValueAtTime(peak, t + Math.max(0.03, dur - 0.15)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          o.connect(g).connect(master); o.start(t); o.stop(t + dur + 0.05);
+          live.push(o); o.onended = () => { const i = live.indexOf(o); if (i >= 0) live.splice(i, 1); };
+        }
+
+        /* ---------- 第 5 关:十二平均律 ---------- */
+        const n12 = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"];
+        const nName = (n) => n12[n % 12] + (3 + Math.floor((n + 9) / 12));
+        let n5 = 0; const ab = new Set();
+        const upd5 = () => { $("#n5").textContent = n5; $("#f5").textContent = `220 × 2^(${n5}/12) = ${(220 * 2 ** (n5 / 12)).toFixed(2)} Hz · ${nName(n5)}`; };
+        $("#n5r").oninput = (e) => { n5 = +e.target.value; upd5(); playTones([220 * 2 ** (n5 / 12)], 0.7); };
+        $$("[data-ab]").forEach((b) => (b.onclick = () => { playTones([220, +b.dataset.ab], 2); ab.add(b.dataset.ab); if (ab.size === 2) lightStar(5); }));
+        $("#reveal5").onclick = () => $("#reveal5-a").classList.remove("x-hide");
+        upd5();
+        function drawSpiral() {
+          const c = $("#spiral"), { x, w } = fit(c, 320), cx = w / 2, cy = 160, R0 = 62, ink = css("--text-primary"), ink2 = css("--text-secondary");
+          const P = (t, add = 0) => { const a = -Math.PI / 2 + (2 * Math.PI * t) / 12, r = R0 * 2 ** (t / 12) + add; return [cx + r * Math.cos(a), cy + r * Math.sin(a)]; };
+          x.strokeStyle = ink2; x.lineWidth = 1; x.setLineDash([3, 4]); x.beginPath(); x.moveTo(...P(0)); x.lineTo(...P(12)); x.stroke(); x.setLineDash([]);
+          x.fillStyle = ink2; x.fillText("×2", P(0)[0] + 6, cy - R0 * 1.5);
+          x.strokeStyle = ink; x.lineWidth = 1.5; x.beginPath(); for (let t = 0; t <= 12.001; t += 0.05) x.lineTo(...P(t)); x.stroke();
+          for (let n = 0; n <= 12; n++) {
+            const [px, py] = P(n), [lx, ly] = P(n, n === 0 ? -16 : 18);
+            dot(x, px, py, n === n5 ? 8 : 3.5, n === n5 ? GOLD : ink, n === n5 ? ink : null);
+            x.fillStyle = n === n5 ? ink : ink2; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(nName(n), lx, ly);
+          }
+          x.fillStyle = ink2; x.fillText("每步 ×1.0595", cx, cy);
+        }
+
+        /* ---------- 第 6 关:傅里叶 ---------- */
+        const presets = {
+          "纯正弦": [1, 0, 0, 0, 0, 0, 0, 0], "类长笛": [1, 0.5, 0.12, 0.06, 0.03, 0, 0, 0],
+          "类单簧管": [1, 0, 0.33, 0, 0.2, 0, 0.14, 0], "方波近似": [1, 0, 1 / 3, 0, 1 / 5, 0, 1 / 7, 0],
+          "锯齿波近似": [1, 1 / 2, 1 / 3, 1 / 4, 1 / 5, 1 / 6, 1 / 7, 1 / 8], "类小提琴": [1, 0.8, 0.65, 0.5, 0.4, 0.3, 0.22, 0.15],
+        };
+        const amps = [...presets["纯正弦"]]; window.harmonicMix = amps;
+        let hold = null, touched = 0, heard = false;
+        const check6 = () => { if (touched >= 2 && heard) lightStar(6); };
+        const sliders = amps.map((a, k) => {
+          const l = document.createElement("label"), i = document.createElement("input");
+          Object.assign(i, { type: "range", min: 0, max: 1, step: 0.01, value: a }); i.setAttribute("aria-label", `第 ${k + 1} 次谐波 ${220 * (k + 1)} Hz`);
+          i.oninput = () => { amps[k] = +i.value; touched++; mark6(null); live6(); check6(); };
+          l.append(i, `${k + 1}×`); $("#harms").appendChild(l); return i;
+        });
+        const mark6 = (name) => $$("#pre6 button").forEach((b) => b.setAttribute("aria-pressed", b.textContent === name));
+        Object.keys(presets).forEach((name) => {
+          const b = document.createElement("button"); b.className = "x-opt"; b.textContent = name;
+          b.onclick = () => { presets[name].forEach((v, k) => { amps[k] = v; sliders[k].value = v; }); touched++; mark6(name); live6(); if (!hold) playWave(220, 1.2, amps); heard = true; check6(); };
+          $("#pre6").appendChild(b);
+        });
+        mark6("纯正弦");
+        function live6() { if (!hold) return; const on = amps.some((v) => v > 0); if (on) hold.o.setPeriodicWave(wave(amps)); hold.g.gain.setTargetAtTime(on ? 0.22 : 0, ac.currentTime, 0.03); }
+        function holdOff() { if (!hold) return; hold.g.gain.setTargetAtTime(0, ac.currentTime, 0.03); hold.o.stop(ac.currentTime + 0.2); hold = null; $("#hold6").setAttribute("aria-pressed", false); }
+        $("#hold6").onclick = () => {
+          if (hold) return holdOff(); ensureAudio();
+          const o = ac.createOscillator(), g = ac.createGain(); o.frequency.value = 220; g.gain.value = 0;
+          o.connect(g).connect(master); o.start(); hold = { o, g }; live6();
+          $("#hold6").setAttribute("aria-pressed", true); heard = true; check6();
+        };
+        $("#play6").onclick = () => { playWave(220, 1.5, amps); heard = true; check6(); };
+        $("#reveal6").onclick = () => $("#reveal6-a").classList.remove("x-hide");
+        const sum = (u) => amps.reduce((s, a, k) => s + a * Math.sin(2 * Math.PI * (k + 1) * u), 0);
+        function drawFour() {
+          const { x, w } = fit($("#four"), 300), ink = css("--text-primary"), ink2 = css("--text-secondary"), top = 110;
+          let mx = 0; for (let i = 0; i <= w; i += 2) mx = Math.max(mx, Math.abs(sum((2 * i) / w)));
+          const k_ = mx ? 80 / mx : 0;
+          x.strokeStyle = css("--stroke-secondary"); x.lineWidth = 1; x.beginPath(); x.moveTo(0, top); x.lineTo(w, top); x.stroke();
+          x.strokeStyle = ink2; x.globalAlpha = 0.45;
+          amps.forEach((a, k) => { if (!a) return; x.beginPath(); for (let i = 0; i <= w; i += 2) x.lineTo(i, top - k_ * a * Math.sin(2 * Math.PI * (k + 1) * ((2 * i) / w))); x.stroke(); });
+          x.globalAlpha = 1; x.strokeStyle = ink; x.lineWidth = 2.5; x.beginPath(); for (let i = 0; i <= w; i += 2) x.lineTo(i, top - k_ * sum((2 * i) / w)); x.stroke();
+          x.fillStyle = ink2; x.fillText("粗线:合成波 · 细线:各次谐波(两个周期)", 6, 14); x.fillText("频谱", 6, 222);
+          const bw = (w - 60) / 8;
+          amps.forEach((a, k) => { const bx = 50 + k * bw; x.fillStyle = ink; x.fillRect(bx + bw * 0.2, 278 - a * 50, bw * 0.6, a * 50); x.fillStyle = ink2; x.textAlign = "center"; x.fillText(k + 1, bx + bw / 2, 292); x.textAlign = "left"; });
+        }
+        let ph = 0;
+        function drawEpi() {
+          const { x, w } = fit($("#epi"), 200), ink = css("--text-primary"), ink2 = css("--text-secondary"), cy = 100, tot = amps.reduce((a, b) => a + b, 0) || 1, s = 70 / tot, x0 = 180;
+          let px = 90, py = cy;
+          amps.forEach((a, k) => {
+            if (!a) return; const r = a * s, nx = px + r * Math.cos((k + 1) * ph), ny = py - r * Math.sin((k + 1) * ph);
+            x.strokeStyle = ink2; x.lineWidth = 1; x.beginPath(); x.arc(px, py, r, 0, 7); x.stroke();
+            x.strokeStyle = ink; x.beginPath(); x.moveTo(px, py); x.lineTo(nx, ny); x.stroke(); px = nx; py = ny;
+          });
+          x.strokeStyle = ink2; x.setLineDash([3, 4]); x.beginPath(); x.moveTo(px, py); x.lineTo(x0, py); x.stroke(); x.setLineDash([]);
+          x.strokeStyle = ink; x.lineWidth = 2; x.beginPath();
+          for (let i = 0; x0 + i <= w; i++) { const f = ph - i * 0.03; x.lineTo(x0 + i, cy - s * amps.reduce((v, a, k) => v + a * Math.sin((k + 1) * f), 0)); }
+          x.stroke(); dot(x, px, py, 4, GOLD, ink);
+          if (!reduce) ph += 0.03;
+        }
+
+        /* ---------- 第 7 关:音序器 ---------- */
+        const scale = [0, 2, 4, 5, 7, 9, 11, 12], sN = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"];
+        const grid = scale.map(() => Array(16).fill(false)), cells = [];
+        const iv = { 0: "同音", 1: "小二度", 2: "大二度", 3: "小三度 6:5", 4: "大三度 5:4", 5: "纯四度 4:3", 6: "三全音", 7: "纯五度 3:2", 8: "小六度", 9: "大六度", 10: "小七度", 11: "大七度", 12: "八度 2:1" };
+        for (let r = 7; r >= 0; r--) {
+          const lab = document.createElement("span"); lab.textContent = sN[r]; $("#seq").appendChild(lab); cells[r] = [];
+          for (let c = 0; c < 16; c++) {
+            const b = document.createElement("button"); b.className = c % 4 === 0 ? "q" : ""; b.setAttribute("aria-label", `${sN[r]} 第 ${c + 1} 步`); b.setAttribute("aria-pressed", false);
+            b.onclick = () => { grid[r][c] = !grid[r][c]; if (grid[r][c]) playWave(261.63 * 2 ** (scale[r] / 12), 0.3, tim()); paint(); };
+            $("#seq").appendChild(b); cells[r][c] = b;
+          }
+        }
+        function paint() {
+          cells.forEach((row, r) => row.forEach((b, c) => { b.classList.toggle("on", grid[r][c]); b.setAttribute("aria-pressed", grid[r][c]); }));
+          const mel = []; for (let c = 0; c < 16; c++) { const r = scale.findIndex((_, i) => grid[7 - i][c]); if (r >= 0) mel.push(7 - r); }
+          const steps = mel.slice(1).map((r, i) => `${sN[mel[i]]}→${sN[r]} ${iv[Math.abs(scale[r] - scale[mel[i]])]}`);
+          $("#why7").textContent = steps.length ? "相邻音的关系(每步取最高音):" + steps.join(" · ") : "点格子写旋律,或者让数学帮你生成一段。";
+        }
+        let timK = "第6关音色";
+        const tim = () => (timK === "第6关音色" ? window.harmonicMix : presets[timK]);
+        ["第6关音色", ...Object.keys(presets)].forEach((k) => {
+          const b = document.createElement("button"); b.className = "x-opt"; b.textContent = k; b.setAttribute("aria-pressed", k === timK);
+          b.onclick = () => { timK = k; $$("#tim7 button").forEach((x) => x.setAttribute("aria-pressed", x === b)); };
+          $("#tim7").appendChild(b);
+        });
+        let bpm = 100, timer = null, step = 0, nextT = 0;
+        $("#bpm").oninput = (e) => { bpm = +e.target.value; $("#bpmv").textContent = bpm; };
+        const col = (s) => cells.forEach((row) => row.forEach((b, c) => b.classList.toggle("now", c === s)));
+        function tick() {
+          while (nextT < ac.currentTime + 0.1) {
+            const s = step, d = 60 / bpm / 2;
+            grid.forEach((row, r) => row[s] && playWave(261.63 * 2 ** (scale[r] / 12), d * 0.95, tim(), nextT, 0.18));
+            setTimeout(() => timer && col(s), Math.max(0, (nextT - ac.currentTime) * 1000));
+            nextT += d; step = (step + 1) % 16;
+          }
+        }
+        function seqStop() { clearInterval(timer); timer = null; col(-1); $("#play7").textContent = "▶ 播放"; $("#play7").setAttribute("aria-pressed", false); }
+        $("#play7").onclick = () => {
+          if (timer) return seqStop(); ensureAudio(); step = 0; nextT = ac.currentTime + 0.05; timer = setInterval(tick, 25); tick();
+          $("#play7").textContent = "■ 停止"; $("#play7").setAttribute("aria-pressed", true);
+          if (grid.flat().filter(Boolean).length >= 4) lightStar(7);
+        };
+        $("#rand7").onclick = () => {
+          grid.forEach((row) => row.fill(false));
+          let r = [0, 2, 4][Math.floor(Math.random() * 3)];
+          for (let c = 0; c < 16; c++) {
+            grid[r][c] = true;
+            const ok = scale.map((_, j) => j).filter((j) => j !== r && [12, 7, 5, 4, 3].includes(Math.abs(scale[j] - scale[r])));
+            r = ok[Math.floor(Math.random() * ok.length)];
+          }
+          paint();
+        };
+        $("#clear7").onclick = () => { grid.forEach((row) => row.fill(false)); paint(); };
+
+        /* ---------- 全部停止 ---------- */
+        const stopBase = stopAll;
+        window.stopAll = () => { stopBase(); holdOff(); seqStop(); };
+        $("#stopall").onclick = window.stopAll;
+
+        /* ---------- 终点:星座 ---------- */
+        const pos = [[0.08, 0.68], [0.22, 0.48], [0.36, 0.56], [0.5, 0.4], [0.64, 0.3], [0.78, 0.5], [0.92, 0.22]];
+        const tags = [["比与分数", 3], ["最小公倍数与周期", 4], ["正弦函数", 4], ["无理数", 5], ["指数与对数", 5], ["傅里叶级数", 6]];
+        const lit = () => $$(".x-star").map((b) => b.classList.contains("is-lit"));
+        function drawConst(t) {
+          const { x, w } = fit($("#const"), 260), L = lit(), P = pos.map(([a, b]) => [a * w, b * 260]);
+          for (let i = 1; i < 7; i++) { x.strokeStyle = L[i] && L[i - 1] ? "rgba(246,201,69,.8)" : "rgba(201,210,255,.25)"; x.lineWidth = 1.5; x.beginPath(); x.moveTo(...P[i - 1]); x.lineTo(...P[i]); x.stroke(); }
+          P.forEach(([px, py], i) => {
+            if (L[i]) { x.globalAlpha = reduce ? 1 : 0.75 + 0.25 * Math.sin(t / 500 + i); x.shadowColor = GOLD; x.shadowBlur = 16; }
+            dot(x, px, py, L[i] ? 7 : 4, L[i] ? GOLD : "rgba(201,210,255,.5)"); x.shadowBlur = 0; x.globalAlpha = 1;
+            x.fillStyle = L[i] ? "#f4f6ff" : "#a9b3e0"; x.textAlign = "center"; x.fillText(starNames[i], px, py + 24);
+          });
+        }
+        let lastL = "";
+        function upEnd() {
+          const L = lit(), k = L.join(); if (k === lastL) return; lastL = k;
+          $("#count7").textContent = `已点亮 ${L.filter(Boolean).length} / 7 颗星。`;
+          $("#tags").innerHTML = tags.map(([n, s]) => `<span class="pill">${L[s - 1] ? "★" : "☆"} ${n}</span>`).join(" ");
+        }
+
+        function loop(t) { drawSpiral(); drawFour(); drawEpi(); drawConst(t); upEnd(); requestAnimationFrame(loop); }
+        requestAnimationFrame(loop);
+      })();
+    </script>
+  </body>
+</html>
