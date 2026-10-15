@@ -22,6 +22,12 @@
       .x-src { margin-bottom: 12px; }
       .x-src ul { margin: 8px 0; padding-left: 18px; }
       .x-map { position: relative; height: min(78vh, 760px); min-height: 440px; border-radius: var(--r-l); overflow: hidden; background: #05070f; }
+      .x-go { margin-top: 16px; display: grid; gap: 8px; }
+      .x-go small { color: var(--text-secondary); font: var(--type-caption); }
+      .x-task { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 14px; text-decoration: none; color: inherit;
+        background: linear-gradient(135deg, color-mix(in srgb, var(--c) 22%, transparent), transparent); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); transition: transform .15s; }
+      .x-task:hover { transform: translateX(3px); }
+      .x-task span { font-size: 20px; } .x-task b { font-weight: 600; font-size: 14px; } .x-task em { font-style: normal; font-size: 12px; color: var(--c); white-space: nowrap; }
       .x-home { position: absolute; left: 12px; bottom: 12px; z-index: 2; height: 32px; padding: 0 12px; border-radius: 100px; border: 1px solid rgb(160 185 255 / .3); background: rgb(10 14 36 / .6); color: #eef1ff; font: 500 12px/1 -apple-system, "PingFang SC", sans-serif; cursor: pointer; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
       .x-home:hover { background: rgb(40 50 110 / .7); }
       .x-map canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
@@ -320,7 +326,7 @@
         const DL = ["", "入门", "基础", "进阶", "深入", "高阶与前沿"];
         const COL = ["#7cc4ff", "#ffb86b", "#8fe39a", "#ff8fa3", "#c9a7ff", "#5ee0d0", "#ffe07a", "#a3b8ff", "#ff9f7a"];
         const CONS = [...new Set(S.map((s) => s.constellation))];
-        document.getElementById("statsLine").textContent = `${S.length} 颗星 · ${CONS.length} 个星座 · ${new Set(S.map((s) => s.depth)).size} 层深度`;
+        
         const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
         const hash = (t) => { let x = 2166136261; for (const c of t) { x ^= c.charCodeAt(0); x = Math.imul(x, 16777619); } return (x >>> 0) / 4294967296; };
 
@@ -344,16 +350,19 @@
         const $ = (i) => document.getElementById(i);
 
         // Missions, filters, sound
-        const CHORD = "为什么有的和弦好听", CAT = "让AI认出一只猫";
+        const TASKS = [{"id": "nim", "em": "🐿️", "c": "#9cf07a", "t": "先拿的人一定赢吗？", "n": 5, "stars": ["n05", "d02", "l01", "d19"]}, {"id": "bee", "em": "🐝", "c": "#ffd36e", "t": "为什么蜜蜂选六边形？", "n": 5, "stars": ["m06", "g06", "g05", "g04", "c07", "n04", "m05", "g16", "g09", "g01"]}, {"id": "nav", "em": "🐜", "c": "#5fd7ff", "t": "导航怎么找到最短的路？", "n": 5, "stars": ["d07", "d08", "d09", "d10", "d12", "l01"]}, {"id": "secret", "em": "🦉", "c": "#ffb36b", "t": "怎样把秘密藏进数字里？", "n": 6, "stars": ["n05", "n19", "p01", "p02", "p04", "t07", "t02", "t01", "t03", "t04", "t05", "t06", "t08", "d17"]}, {"id": "chord", "em": "🎹", "c": "#ff8fb1", "t": "为什么有的和弦好听？", "n": 7, "stars": ["n09", "n14", "a14", "g18", "c17", "t05"]}, {"id": "cat", "em": "🐱", "c": "#c79bff", "t": "让 AI 认出一只猫", "n": 7, "stars": ["m07", "p20", "g15", "a20", "p16", "n20", "m13", "g22", "g20", "g11", "c12", "c05", "a21", "a11"]}, {"id": "casino", "em": "🦝", "c": "#ff6b8a", "t": "赌场为什么总赢？", "n": 5, "stars": ["p04", "p02", "p05", "p08", "p12", "p17", "p22"]}];
+        const SUM = (() => { try { return JSON.parse(localStorage.getItem("ma:v1:summary")) || {}; } catch (e) { return {}; } })();
+        const LIT = new Set();
+        TASKS.forEach((t) => {
+          t.stars = t.stars.filter((i) => byId[i]);
+          const m = SUM[t.id]; t.done = m ? m.done || 0 : 0; t.total = (m && m.total) || t.n;
+          if (t.done) t.stars.slice(0, Math.ceil(t.stars.length * Math.min(1, t.done / t.total))).forEach((i) => LIT.add(i));
+        });
+        S.forEach((s) => { s.lit = LIT.has(s.id); s.tasks = TASKS.filter((t) => t.stars.includes(s.id)); });
         const byDI = (a, b) => a.depth - b.depth || (a.id < b.id ? -1 : 1);
-        S.forEach((s) => (s.missions = s.missions || []));
-        const CAT_IDS = "g15 n20 g11 g15 a11 g20 c05 c12 m07 p16 p20 a20 a21 g22 m13".split(" ").filter((i) => byId[i]);
-        CAT_IDS.forEach((i) => byId[i].missions.includes(CAT) || byId[i].missions.push(CAT));
-        const MIS = [
-          { name: "🎵 " + CHORD, col: "#ff7ad9", path: S.filter((s) => s.missions.includes(CHORD)).sort(byDI).map((s) => s.id) },
-          { name: "🐱 " + CAT, col: "#5effc8", path: CAT_IDS },
-        ];
+        const MIS = TASKS.map((t) => ({ id: t.id, name: t.em + " " + t.t.replace(/[？?]$/, ""), col: t.c, path: t.stars.map((i) => byId[i]).sort(byDI).map((x) => x.id), t }));
         MIS.forEach((m) => (m.set = new Set(m.path)));
+        document.getElementById("statsLine").textContent = `${S.length} 颗星 · ${CONS.length} 个星座 · ${TASKS.length} 个任务 · 你已点亮 ${LIT.size} 颗`;
         const fC = new Set(), fD = new Set();
         const vis = (s) => (!fC.size || fC.has(s.constellation)) && (!fD.size || fD.has(s.depth));
         let mOn = false, plan = null, cur = null, tourT = null, looping = false, AC = null, snd = false;
@@ -475,13 +484,16 @@
             const p = s.p, inC = !chain || chain.has(s.id);
             let a = (inC ? 1 : 0.14) * (vis(s) ? 1 : 0.1) * (hn && !hn.has(s.id) ? 0.3 : 1) * Math.min(1, 3200 / p.z);
             const tw = RM ? 1 : 0.82 + 0.18 * Math.sin(t * 1.7 + hash(s.id) * 30), r = rad(s);
-            const col = chain && anc.has(s.id) ? "#ffce54" : s.col;
+            const col = s.lit ? "#ffd46b" : chain && anc.has(s.id) ? "#ffce54" : s.col;
             const inM = mOn && MIS.some((m) => m.set.has(s.id));
             ctx.globalAlpha = a * tw; const g = r * (inM || s === sel || s === hov ? 3.8 : 2.7) * Math.min(1, 0.55 + 0.45 / Math.max(0.5, p.f));
             ctx.drawImage(spr(col), p.x - g, p.y - g, g * 2, g * 2);
             ctx.globalAlpha = a; ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.8, r * 0.42), 0, 7); ctx.fill();
           });
           ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+          // 已点亮的星：金色呼吸光环
+          ord.forEach((s) => { if (!s.lit || !vis(s)) return; const r = rad(s) + 3.5 + (RM ? 0 : Math.sin(t * 2.4 + hash(s.id) * 9)); ctx.globalAlpha = (!chain || chain.has(s.id) ? 0.75 : 0.2) * Math.min(1, 3200 / s.p.z); ctx.strokeStyle = "#ffd46b"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(s.p.x, s.p.y, r, 0, 7); ctx.stroke(); });
+          ctx.globalAlpha = 1;
           // 选中 / 悬停 / 飞览 的光圈
           [sel, hov, cur].forEach((s, k) => {
             if (!s || !s.p) return; const r = rad(s) + 6 + (RM ? 0 : Math.sin(t * 4) * 1.5);
@@ -566,7 +578,7 @@
             <dt>前置知识</dt><dd>${list(s.prereqs)}</dd>
             <dt>后续可达</dt><dd>${list(kids[s.id])}</dd>
             <dt>可解锁 · 共 ${succ.length} 颗</dt><dd>${list(succ.slice(0, 8))}${succ.length > 8 ? `<span class="fineprint">… 另有 ${succ.length - 8} 颗</span>` : ""}</dd>
-            ${s.missions && s.missions.length ? `<dt>任务</dt><dd>${s.missions.map((m) => `<span class="chip">${esc(m)}</span>`).join("")}</dd>` : ""}</dl>
+            </dl>${s.tasks.length ? `<div class="x-go"><small>${s.lit ? "⭐ 你已点亮这颗星" : "在这些任务里点亮它"}</small>${s.tasks.map((t) => `<a class="x-task" href="../${t.id}/" style="--c:${t.c}"><span>${t.em}</span><b>${esc(t.t)}</b><em>${t.done >= t.total ? "✓ 已通关" : t.done ? `进行中 ${t.done}/${t.total}` : "开始 →"}</em></a>`).join("")}</div>` : `<p class="fineprint" style="margin-top:12px">还没有任务覆盖这颗星，后续版本会补上。</p>`}
             <div class="links" style="margin-top:16px">${mine ? '<button class="btn" data-clear>清除路径</button>' : '<button class="btn" data-plan>规划到这颗星的路径</button>'}</div>
             ${mine ? `<p class="x-n" style="margin-top:14px">学习路径 · 共 <b>${plan.ids.length}</b> 步</p><ol class="x-steps">${plan.ids.map((i) => `<li><a class="link" href="#map" data-id="${i}">${esc(byId[i].name)}</a> <small class="fineprint">深度 ${byId[i].depth}</small></li>`).join("")}</ol>` : ""}`;
           panel.hidden = false; panel.scrollTop = 0;
@@ -639,7 +651,7 @@
         // Missions: toggle, legend, fly-through
         const legend = $("legend"), tourEl = $("tour");
         legend.innerHTML = MIS.map((m, k) => `<div><h3><i style="background:${m.col};box-shadow:0 0 8px ${m.col}"></i>${esc(m.name)}</h3>
-          <p>${m.set.size} 颗星 · 路径 ${m.path.length} 站</p><button class="btn" data-m="${k}">按顺序飞览</button></div>`).join("");
+          <p>${m.set.size} 颗星 · ${m.t.done >= m.t.total ? "已通关" : m.t.done ? `进行中 ${m.t.done}/${m.t.total}` : "未开始"}</p><div class="links"><button class="btn" data-m="${k}">按顺序飞览</button><a class="btn btn--ghost" href="../${m.id}/">进入任务</a></div></div>`).join("");
         function stopTour() { clearTimeout(tourT); tourT = null; cur = null; tourEl.hidden = true; }
         $("mBtn").addEventListener("click", (e) => {
           mOn = !mOn; e.currentTarget.setAttribute("aria-pressed", String(mOn)); legend.hidden = !mOn;
@@ -651,7 +663,7 @@
           stopTour(); select(null); wrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
           const step = () => {
             if (i >= m.path.length) return stopTour();
-            cur = byId[m.path[i]]; tourEl.textContent = `${m.name.slice(0, 2)} ${i + 1}/${m.path.length} · ${cur.name}`; tourEl.hidden = false;
+            cur = byId[m.path[i]]; tourEl.textContent = `${m.t.em} ${i + 1}/${m.path.length} · ${cur.name}`; tourEl.hidden = false;
             fly(cur, 1000, true); i++; tourT = setTimeout(step, 1200);
           };
           step();
