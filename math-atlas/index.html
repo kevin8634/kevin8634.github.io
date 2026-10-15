@@ -53,6 +53,11 @@
       @media (prefers-reduced-motion: reduce) {
         .x-sky span { animation: none; opacity: 0.8; }
       }
+      .x-card { position: relative; transition: box-shadow var(--dur-quick) var(--ease-out); }
+      .x-card:hover { box-shadow: inset 0 0 0 1px var(--stroke-primary); }
+      .x-card .x-cover::after { content: ""; position: absolute; inset: 0; border-radius: var(--r-m); }
+      .x-card .x-note { position: relative; z-index: 1; }
+      .x-age { font: var(--type-small); color: var(--text-secondary); margin-bottom: 10px; }
     </style>
   </head>
   <body>
@@ -93,37 +98,95 @@
           </div>
         </section>
 
+        <section class="section" id="guide" data-nav="难度">
+          <div class="head">
+            <p class="head__eyebrow">难度引导</p>
+            <h2>难度引导 · 从哪个开始？</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">任务</th>
+                  <th scope="col">难度</th>
+                  <th scope="col">能玩通</th>
+                  <th scope="col">能完全理解</th>
+                  <th scope="col">前置</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="is-highlight">
+                  <th scope="row">为什么蜜蜂选六边形</th>
+                  <td>★☆☆ 入门</td>
+                  <td>小学4年级起</td>
+                  <td>小学6年级–初一</td>
+                  <td class="muted">角度、周长、面积</td>
+                </tr>
+                <tr>
+                  <th scope="row">怎样把秘密藏进数字里</th>
+                  <td>★★☆ 进阶</td>
+                  <td>小学5–6年级起</td>
+                  <td>初二–高中</td>
+                  <td class="muted">除法与余数、乘法表</td>
+                </tr>
+                <tr>
+                  <th scope="row">为什么有的和弦好听</th>
+                  <td>★★☆ 进阶</td>
+                  <td>小学6年级起</td>
+                  <td>高一以上</td>
+                  <td class="muted">分数与比</td>
+                </tr>
+                <tr>
+                  <th scope="row">让AI认出一只猫</th>
+                  <td>★★★ 挑战</td>
+                  <td>初一–初二起</td>
+                  <td>高中–大学</td>
+                  <td class="muted">坐标系、一次函数</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="fineprint">建议顺序：蜜蜂 → 密码 → 和弦 → 猫。按中国学段估算，成人任何任务都可玩。</p>
+          <div class="links">
+            <a class="btn" href="./notes/" target="_top">查看全部知识笔记（公式·论文·应用）</a>
+          </div>
+        </section>
+
         <section class="section" id="missions" data-nav="任务">
           <div class="head">
             <p class="head__eyebrow">四个任务</p>
             <h2>选一个让你好奇的问题，直接开始。</h2>
           </div>
           <div class="cards">
-            <div>
-              <h3>为什么有的和弦好听？</h3>
-              <p><span class="pill">7 关</span></p>
-              <p class="quote">从分数一路走到傅里叶，全程用耳朵和眼睛。</p>
-              <p>涉及：比与分数、周期、对数与平均律、傅里叶级数</p>
-              <div class="links"><a class="btn" href="./chord/" target="_top">开始任务</a></div>
-            </div>
-            <div>
-              <h3>让 AI 认出一只猫</h3>
-              <p><span class="pill">7 关</span> <span class="pill">点亮 14 颗星</span></p>
-              <p class="quote">像素→坐标→直线分类→梯度下降→神经网络，最后亲手画猫给 AI 认。</p>
-              <div class="links"><a class="btn" href="./cat/" target="_top">开始任务</a></div>
-            </div>
-            <div>
+            <div class="x-card">
               <h3>为什么蜜蜂选六边形</h3>
-              <p><span class="pill">5 关</span> <span class="pill">点亮 10 颗星</span></p>
+              <p><span class="chip chip--solid">★☆☆ 入门</span> <span class="pill">5 关</span> <span class="pill">点亮 10 颗星</span></p>
+              <p class="x-age">适合：小学4年级起（约10岁+）</p>
               <p class="quote">密铺、360° 拼角、等面积周长、泡泡自己排队，最后建造蜂巢。</p>
               <p>蜂巢猜想由 Hales 于 1999 年证明。</p>
-              <div class="links"><a class="btn" href="./bee/" target="_top">开始任务</a></div>
+              <div class="links"><a class="btn x-cover" href="./bee/" target="_top">开始任务</a> <a class="link x-note" href="./notes/#bee" target="_top">知识笔记 →</a></div>
             </div>
-            <div>
+            <div class="x-card">
               <h3>怎样把秘密藏进数字里</h3>
-              <p><span class="pill">6 关</span> <span class="pill">点亮 14 颗星</span></p>
+              <p><span class="chip">★★☆ 进阶</span> <span class="pill">6 关</span> <span class="pill">点亮 14 颗星</span></p>
+              <p class="x-age">适合：小学5–6年级起（约11岁+）；第5–6关初二以上更顺</p>
               <p class="quote">凯撒密码→字母频率→钟表算术→质数→RSA，BOSS 关截获情报。</p>
-              <div class="links"><a class="btn" href="./secret/" target="_top">开始任务</a></div>
+              <div class="links"><a class="btn x-cover" href="./secret/" target="_top">开始任务</a> <a class="link x-note" href="./notes/#secret" target="_top">知识笔记 →</a></div>
+            </div>
+            <div class="x-card">
+              <h3>为什么有的和弦好听？</h3>
+              <p><span class="chip">★★☆ 进阶</span> <span class="pill">7 关</span></p>
+              <p class="x-age">适合：小学6年级起（约12岁+）；对数、傅里叶以听和看为主</p>
+              <p class="quote">从分数一路走到傅里叶，全程用耳朵和眼睛。</p>
+              <p>涉及：比与分数、周期、对数与平均律、傅里叶级数</p>
+              <div class="links"><a class="btn x-cover" href="./chord/" target="_top">开始任务</a> <a class="link x-note" href="./notes/#chord" target="_top">知识笔记 →</a></div>
+            </div>
+            <div class="x-card">
+              <h3>让 AI 认出一只猫</h3>
+              <p><span class="chip">★★★ 挑战</span> <span class="pill">7 关</span> <span class="pill">点亮 14 颗星</span></p>
+              <p class="x-age">适合：初一–初二起（约13岁+）；梯度下降、神经网络以体验为主</p>
+              <p class="quote">像素→坐标→直线分类→梯度下降→神经网络，最后亲手画猫给 AI 认。</p>
+              <div class="links"><a class="btn x-cover" href="./cat/" target="_top">开始任务</a> <a class="link x-note" href="./notes/#cat" target="_top">知识笔记 →</a></div>
             </div>
           </div>
         </section>
@@ -131,7 +194,7 @@
         <section class="section" id="how" data-nav="玩法">
           <div class="head">
             <p class="head__eyebrow">怎么玩</p>
-            <h2>三步上手，向导只提问，不给答案。</h2>
+            <h2>四步上手，向导只提问，不给答案。</h2>
           </div>
           <div class="steps">
             <article class="step">
@@ -153,6 +216,13 @@
               <div>
                 <h3>每关拿 1★ 解锁下一关</h3>
                 <p>向导只提问，不给答案。</p>
+              </div>
+            </article>
+            <article class="step">
+              <div class="step__intro"><p class="step__num">04</p><p class="step__eyebrow">笔记</p></div>
+              <div>
+                <h3>通关后在结束页查看「知识笔记」</h3>
+                <p>一键复制公式、经典论文和应用案例。</p>
               </div>
             </article>
           </div>
