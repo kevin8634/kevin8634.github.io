@@ -64,6 +64,13 @@
       .x-seq button.on { background: var(--fill-primary); border-color: var(--fill-primary); }
       .x-seq button.now { box-shadow: 0 0 0 2px #f6c945; }
       .x-night { background: #0b1130; }
+      .x-notes { display: grid; gap: 16px; padding: 20px; border-radius: var(--r-l); background: var(--fill-tertiary); scroll-margin-top: 96px; }
+      .x-notes summary { font: var(--type-heading); cursor: pointer; min-height: var(--tap); display: flex; align-items: center; }
+      .x-notes h3 { font: var(--type-label); margin: 16px 0 6px; }
+      .x-notes h4 { font: var(--type-label); color: var(--text-secondary); margin: 16px 0 6px; }
+      .x-notes ol, .x-notes ul { margin: 0; padding-left: 1.4em; font: var(--type-small); display: grid; gap: 4px; }
+      .x-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); padding: 10px 18px; border-radius: var(--r-pill); background: var(--fill-primary); color: var(--text-primary-on); font: var(--type-tag); opacity: 0; pointer-events: none; transition: opacity var(--dur-quick); z-index: 50; }
+      .x-toast.on { opacity: 1; }
     </style>
   </head>
   <body>
@@ -74,6 +81,7 @@
           <p class="x-eyebrow">星图任务 · 7 颗星</p>
           <h1>星图任务 · 为什么有的和弦好听?</h1>
           <p>不需要任何基础。你将从“分数”一路走到“傅里叶分析”。全程用耳朵和眼睛。</p>
+          <p class="x-eyebrow">难度 ★★☆ 进阶 · 适合小学6年级起(约12岁+) · 对数是高一内容、傅里叶是大学内容,以听和看为主</p>
         </div>
       </header>
 
@@ -81,6 +89,7 @@
         <button class="btn" id="sound">点击开启声音</button>
         <label>音量 <input type="range" id="vol" min="0" max="1" step="0.01" value="0.6" /></label>
         <button class="btn" id="stopall">全部停止</button>
+        <a class="btn" href="#notes" onclick="document.getElementById('notes').open=true">📒 知识笔记</a>
         <nav class="x-stars" id="stars" aria-label="任务进度"></nav>
       </div>
 
@@ -295,6 +304,53 @@
             <canvas class="x-cv x-night" id="const" height="260" role="img" aria-label="七颗星组成的星座,按你的进度点亮"></canvas>
             <p class="x-row" id="tags"></p>
             <div class="prose"><p>在传统课程里,这些分散在小学到大学的十几年里。今天,一个问题把它们串在了一起。</p></div>
+            <details class="x-notes" id="notes" open>
+              <summary>📒 知识笔记</summary>
+              <div id="notes-body">
+                <h3>任务1 为什么有的和弦好听</h3>
+                <h4>必须掌握</h4>
+                <ol>
+                  <li>音高由频率决定(单位 Hz),标准音 A4 = 440 Hz。</li>
+                  <li>弦长与频率成反比:弦长减半,频率翻倍,升高一个八度。</li>
+                  <li>频率比越简单越协和:八度 2:1、纯五度 3:2、纯四度 4:3、大三度 5:4、小三度 6:5;小二度 16:15 刺耳。</li>
+                  <li>两音的合成波按"最小公倍数"重复:比越简单,重复越快,大脑越容易"看懂"。</li>
+                  <li>人耳对音高的感受是对数的:频率每乘 2,听起来升高一样多。</li>
+                  <li>任何周期声音都能拆成一组正弦波(基频 + 泛音),泛音的强弱决定音色。</li>
+                </ol>
+                <h4>公式</h4>
+                <ul>
+                  <li>梅森弦振动定律:f = (1/2L)·√(T/μ)(L 弦长,T 张力,μ 线密度)</li>
+                  <li>十二平均律:半音比 r = 2^(1/12) ≈ 1.05946;第 n 个半音 f = f₀·2^(n/12)</li>
+                  <li>平均律五度 2^(7/12) ≈ 1.4983,纯五度 1.5,差约 2 音分</li>
+                  <li>音分:cents = 1200·log₂(f₂/f₁)</li>
+                  <li>拍频:f_beat = |f₁ − f₂|</li>
+                  <li>傅里叶级数:f(t) = a₀ + Σ [aₙcos(nωt) + bₙsin(nωt)];方波只含奇次谐波,振幅 ∝ 1/n</li>
+                </ul>
+                <h4>经典文献与历史</h4>
+                <ul>
+                  <li>毕达哥拉斯学派(约公元前6世纪):弦长比与和谐的传说</li>
+                  <li>朱载堉《律学新说》(1584):最早精确计算十二平均律</li>
+                  <li>梅森《Harmonie universelle》(1636):弦振动定律</li>
+                  <li>傅里叶《热的解析理论》(1822):函数可展开为三角级数</li>
+                  <li>亥姆霍兹《论音感》(1863):用泛音和"拍"解释协和</li>
+                  <li>Plomp &amp; Levelt (1965) "Tonal consonance and critical bandwidth", JASA 38:548–560</li>
+                  <li>Avery Wang (2003) "An Industrial-Strength Audio Search Algorithm"(Shazam 听歌识曲)</li>
+                </ul>
+                <h4>领域应用与案例</h4>
+                <ul>
+                  <li>手机调音器、听歌识曲:实时频谱分析(FFT)</li>
+                  <li>MP3/AAC 音频压缩:在频域里丢掉人耳听不到的部分</li>
+                  <li>降噪耳机:生成相位相反的声波抵消噪音</li>
+                  <li>医院 MRI 成像、地震波分析:都靠傅里叶变换</li>
+                  <li>钢琴调律:采用十二平均律,任何调都能弹</li>
+                </ul>
+              </div>
+              <div class="links">
+                <button class="btn" id="copy-notes" type="button">一键复制笔记</button>
+                <a class="btn" href="../notes/#chord" target="_top">完整笔记与其他任务 →</a>
+              </div>
+            </details>
+            <div class="x-toast" id="toast" role="status" aria-live="polite">已复制</div>
           </section>
         </div>
       </main>
@@ -696,6 +752,29 @@
 
         function loop(t) { drawSpiral(); drawFour(); drawEpi(); drawConst(t); upEnd(); requestAnimationFrame(loop); }
         requestAnimationFrame(loop);
+      })();
+    </script>
+    <script>
+      (function () {
+        const body = document.getElementById("notes-body"), toast = document.getElementById("toast");
+        const text = () => Array.from(body.children).map((el) => {
+          if (el.tagName === "OL") return Array.from(el.children).map((li, i) => `${i + 1}. ${li.textContent}`).join("\n");
+          if (el.tagName === "UL") return Array.from(el.children).map((li) => `- ${li.textContent}`).join("\n");
+          return (el.tagName === "H3" ? "## " : "### ") + el.textContent;
+        }).join("\n");
+        const done = () => { toast.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => toast.classList.remove("on"), 1600); };
+        const selectText = () => { const r = document.createRange(); r.selectNodeContents(body); const s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+        const fallback = (t) => {
+          const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", ""); ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+          document.body.appendChild(ta); ta.select(); let ok = false;
+          try { ok = document.execCommand("copy"); } catch (e) {}
+          ta.remove(); ok ? done() : selectText();
+        };
+        document.getElementById("copy-notes").onclick = () => {
+          const t = text();
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, () => fallback(t));
+          else fallback(t);
+        };
       })();
     </script>
   </body>
