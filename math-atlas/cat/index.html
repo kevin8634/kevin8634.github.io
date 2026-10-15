@@ -1,0 +1,1728 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>星图任务 · 让AI认出一只猫</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <link rel="stylesheet" href="hark-charts.css" />
+    <style>
+      /* x- classes: the game shell. Tokens only. */
+      .x-bar {
+        position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 30;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+        padding: 8px 12px; border-radius: var(--r-pill);
+        background: var(--mat-agent); -webkit-backdrop-filter: var(--hark-blur); backdrop-filter: var(--hark-blur);
+        border: 1px solid var(--stroke-primary); box-shadow: var(--hark-shadow);
+      }
+      .x-brand { font: var(--type-label); margin-right: auto; white-space: nowrap; }
+      .x-meter { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-primary); }
+      .x-meter b { font-weight: var(--weight-bold); }
+      .x-toggle {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap);
+        padding: 4px 12px; border: 1px solid var(--stroke-primary); border-radius: var(--r-pill);
+        background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-tag); cursor: pointer;
+      }
+      .x-toggle[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-vol { width: 86px; accent-color: var(--fill-primary); }
+      .x-map { position: relative; padding: 8px 0 4px; }
+      .x-path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      .x-nodes { position: relative; display: grid; gap: 10px; }
+      .x-node {
+        display: grid; grid-template-columns: 46px 1fr auto; align-items: center; gap: 12px;
+        width: min(100%, 560px); padding: 10px 14px; border-radius: var(--r-l);
+        border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-body); text-align: left; cursor: pointer;
+        transition: box-shadow var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
+      }
+      .x-node:nth-child(even) { justify-self: end; }
+      .x-node:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--hark-shadow); }
+      .x-node:disabled { opacity: 0.55; cursor: not-allowed; }
+      .x-node__num {
+        width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%;
+        background: var(--fill-tertiary); font: var(--type-heading);
+      }
+      .x-node.is-open .x-node__num { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-node__t { display: block; font: var(--type-body-strong); }
+      .x-node__s { display: block; font: var(--type-caption); color: var(--text-secondary); }
+      .x-stars { font-size: 15px; letter-spacing: 1px; white-space: nowrap; }
+      .x-panel { padding: 16px; border-radius: var(--r-l); background: var(--fill-tertiary); display: grid; gap: 14px; }
+      .x-cat { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: start; }
+      .x-cat__face { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-primary-on); font-size: 24px; border: 1px solid var(--stroke-primary); }
+      .x-bubble { position: relative; padding: 10px 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-primary); font: var(--type-body); }
+      .x-bubble small { display: block; margin-top: 4px; font: var(--type-caption); color: var(--text-secondary); }
+      .x-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; width: min(100%, 288px); touch-action: none; }
+      .x-px { aspect-ratio: 1; border-radius: 3px; display: grid; place-items: center; font: var(--weight-regular) 11px/1 "Geist Mono", monospace; background: var(--fill-primary-on); color: var(--text-secondary); border: 1px solid var(--stroke-secondary); }
+      .x-px.on { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-px.num { font-size: clamp(9px, 2.4vw, 11px); }
+      .x-pad .x-px { cursor: pointer; }
+      .x-vec { font: var(--weight-regular) 12px/1.5 "Geist Mono", monospace; color: var(--text-secondary); word-break: break-all; background: var(--fill-primary-on); border: 1px solid var(--stroke-secondary); border-radius: var(--r-s); padding: 10px; max-height: 120px; overflow: auto; }
+      .x-opts { display: flex; flex-wrap: wrap; gap: 10px; }
+      .x-opt { padding: 8px; border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); cursor: pointer; display: grid; gap: 6px; justify-items: center; font: var(--type-tag); color: var(--text-primary); }
+      .x-opt canvas { display: block; width: 72px; height: 72px; image-rendering: pixelated; border-radius: var(--r-s); }
+      .x-opt.good { border-color: var(--fill-system-green); box-shadow: inset 0 0 0 1px var(--fill-system-green); }
+      .x-opt.bad { border-color: var(--fill-system-red); opacity: 0.6; }
+      .x-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+      .x-btn {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 6px 16px;
+        border-radius: var(--r-s); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-label); cursor: pointer;
+      }
+      .x-btn--go { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .x-toasts { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; display: grid; gap: 8px; justify-items: center; pointer-events: none; }
+      .x-toast {
+        padding: 10px 16px; border-radius: var(--r-pill); background: var(--fill-primary); color: var(--text-primary-on);
+        font: var(--type-tag); box-shadow: var(--hark-shadow); animation: x-pop 320ms var(--ease-out);
+      }
+      @keyframes x-pop { from { opacity: 0; transform: translateY(10px); } }
+      .x-shelf { display: flex; flex-wrap: wrap; gap: 8px; }
+      .x-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-secondary); }
+      .x-badge.got { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-end { display: grid; gap: 12px; padding: 16px; border-radius: var(--r-l); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); }
+      .x-end h3 { font: var(--type-heading); }
+      .x-end dl { display: grid; gap: 8px; margin: 0; }
+      .x-end dt { font: var(--type-body-strong); }
+      .x-end dd { margin: 0; font: var(--type-small); color: var(--text-secondary); }
+      .x-starid { font: var(--weight-regular) 12px/1.3 "Geist Mono", monospace; }
+      .x-flash { animation: x-shake 320ms var(--ease-out); }
+      @keyframes x-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+      /* levels 2–3: coordinate plane, cards, handles */
+      .x-split { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: start; }
+      .x-axes { font: var(--type-caption); color: var(--text-secondary); margin-bottom: 6px; }
+      .x-plane { position: relative; width: min(100%, 420px); aspect-ratio: 1; border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); user-select: none; -webkit-user-select: none; }
+      .x-plane svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+      .x-tick { position: absolute; transform: translate(-50%, -50%); font: var(--weight-regular) 12px/1 "Geist Mono", monospace; color: var(--text-secondary); pointer-events: none; }
+      .x-dot { position: absolute; width: 24px; height: 24px; margin: -12px 0 0 -12px; display: grid; place-items: center; border-radius: 50%; font-size: 16px; line-height: 1; pointer-events: none; transition: left var(--dur-quick) var(--ease-out), top var(--dur-quick) var(--ease-out); }
+      .x-dot.mis { box-shadow: 0 0 0 2px var(--fill-system-red); animation: x-pulse 1.1s var(--ease-out) infinite; }
+      @keyframes x-pulse { 50% { box-shadow: 0 0 0 2px var(--fill-system-red), 0 0 0 7px transparent; transform: scale(1.15); } }
+      .x-zone { position: absolute; transform: translate(-50%, -50%); padding: 2px 8px; border-radius: var(--r-pill); background: var(--fill-primary-on); font: var(--type-tag); color: var(--text-primary); pointer-events: none; white-space: nowrap; }
+      .x-handle { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; padding: 0; border-radius: 50%; border: 3px solid var(--fill-primary-on); background: var(--fill-primary); box-shadow: var(--hark-shadow); cursor: grab; touch-action: none; }
+      .x-handle::before { content: ""; position: absolute; inset: -9px; border-radius: 50%; }
+      .x-deck { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .x-card {
+        position: relative; display: flex; align-items: center; gap: 8px; min-height: var(--tap); padding: 8px 10px;
+        border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-tag); text-align: left; cursor: grab; touch-action: none;
+      }
+      .x-card > span:first-child { font-size: 22px; line-height: 1; }
+      .x-card b { display: block; font: var(--type-label); }
+      .x-card small { display: block; font: var(--type-caption); color: var(--text-secondary); }
+      .x-card.is-sel { box-shadow: inset 0 0 0 2px var(--fill-primary); }
+      .x-card.is-drag { z-index: 40; box-shadow: var(--hark-shadow); cursor: grabbing; }
+      .x-card.is-done { border-color: var(--fill-system-green); cursor: default; }
+      .x-card.is-done small { color: var(--text-primary); font-family: "Geist Mono", monospace; }
+      .x-eq { font: var(--weight-regular) 13px/1.5 "Geist Mono", monospace; padding: 8px 12px; border-radius: var(--r-s); background: var(--fill-primary-on); border: 1px solid var(--stroke-secondary); }
+      /* levels 4–5: fog canvas, sliders, training */
+      #stage [hidden] { display: none; }
+      .x-fog { position: relative; width: 100%; max-width: 680px; aspect-ratio: 16 / 9; border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); overflow: hidden; }
+      .x-fog canvas { display: block; width: 100%; height: 100%; }
+      .x-lbl { display: inline-flex; align-items: center; gap: 8px; min-height: var(--tap); font: var(--type-tag); color: var(--text-primary); }
+      .x-lbl output { min-width: 2.5em; font: var(--type-label); }
+      .x-range { width: 130px; accent-color: var(--fill-primary); }
+      .x-plane.is-pick { cursor: crosshair; box-shadow: inset 0 0 0 2px var(--fill-primary); }
+      .x-dot.hit { animation: x-hit 520ms var(--ease-out); }
+      @keyframes x-hit { 35% { transform: scale(1.6); box-shadow: 0 0 0 4px var(--fill-system-orange); } }
+      @media (prefers-reduced-motion: reduce) { .x-dot.hit { animation: none; box-shadow: 0 0 0 3px var(--fill-system-orange); } }
+      @media (prefers-reduced-motion: reduce) { .x-dot.mis { animation: none; } .x-dot { transition: none; } }
+      @media (prefers-reduced-motion: reduce) { .x-toast, .x-flash { animation: none; } }
+      /* levels 6–7 and the finale: square canvas, matrix, network, confidence bar, fireworks */
+      #stage { position: relative; }
+      .x-cv { position: relative; width: min(100%, 440px); aspect-ratio: 1; border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); overflow: hidden; }
+      .x-cv canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+      .x-cv canvas:focus-visible { outline: 2px solid var(--fill-primary); outline-offset: -2px; }
+      .x-mat { display: grid; grid-template-columns: repeat(2, auto); gap: 0 12px; justify-content: start; padding: 2px 12px; border-left: 2px solid var(--text-primary); border-right: 2px solid var(--text-primary); border-radius: var(--r-s); }
+      .x-mat .x-range { width: 84px; }
+      .x-net { width: 100%; max-width: 360px; height: auto; display: block; }
+      .x-net text { font: var(--type-caption); fill: var(--text-primary); text-anchor: middle; dominant-baseline: central; }
+      .x-net circle { transition: fill-opacity var(--dur-quick) var(--ease-out); }
+      .x-boss { display: grid; gap: 12px; padding: 16px; border-radius: var(--r-l); border: 1px dashed var(--stroke-primary); background: var(--fill-primary-on); }
+      .x-boss h3 { font: var(--type-heading); }
+      .x-thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+      .x-thumbs .x-opt canvas { width: 48px; height: 48px; }
+      .x-conf { height: 12px; width: min(100%, 320px); border-radius: var(--r-pill); background: var(--fill-tertiary); overflow: hidden; }
+      .x-conf span { display: block; height: 100%; border-radius: inherit; background: var(--fill-primary); transition: width 600ms var(--ease-out); }
+      .x-fw { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; border-radius: inherit; z-index: 2; }
+      .x-recap { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; list-style: none; margin: 0; padding: 0; }
+      .x-recap li { display: inline-flex; align-items: center; gap: 6px; font: var(--weight-regular) 12px/1.3 "Geist Mono", monospace; }
+      .x-recap li + li::before { content: "→"; color: var(--text-secondary); }
+      .x-big { font: var(--type-title); }
+      @media (prefers-reduced-motion: reduce) { .x-conf span, .x-net circle { transition: none; } }
+      @media (max-width: 599px) { .x-brand { width: 100%; } .x-vol { width: 70px; } }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <main class="main">
+        <div class="x-bar" role="toolbar" aria-label="游戏状态">
+          <span class="x-brand">星图任务 · 让AI认出一只猫</span>
+          <span class="x-meter">XP <b id="xp">0</b></span>
+          <span class="x-meter">⭐ <b id="stars">0</b>/21</span>
+          <button class="x-toggle" id="sfx" aria-pressed="true">🔊 音效</button>
+          <button class="x-toggle" id="music" aria-pressed="false">🎵 专注音乐</button>
+          <select class="x-toggle" id="track" aria-label="选择曲目">
+            <option value="-1" selected>随机轮播</option><option value="0">星空 Lo-fi</option><option value="1">雨夜书房</option><option value="2">晨光</option>
+          </select>
+          <span class="x-meter" id="nowplaying">正在播放:—</span>
+          <input class="x-vol" id="vol" type="range" min="0" max="100" value="30" aria-label="音乐音量" />
+        </div>
+
+        <section class="section" id="map" data-nav="星图">
+          <div class="head">
+            <p class="head__eyebrow">七关任务</p>
+            <h2>从一个像素开始，教会机器认出一只猫。</h2>
+            <p class="head__sub">每关得 1–3 颗星，拿到 1 颗星就解锁下一关。</p>
+          </div>
+          <div class="x-map">
+            <svg class="x-path" id="path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M18 6 L82 20 L18 34 L82 48 L18 62 L82 76 L18 92" fill="none"
+                stroke="var(--stroke-primary)" stroke-width="0.6" stroke-dasharray="2 2" />
+            </svg>
+            <div class="x-nodes" id="nodes"></div>
+          </div>
+        </section>
+
+        <section class="section" id="play" data-nav="关卡">
+          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">喵博士在星图上等你。</p></div>
+          <div id="stage" class="x-panel">
+            <div class="x-cat">
+              <div class="x-cat__face">🐱</div>
+              <div class="x-bubble">点开第 1 关「像素就是数字」，我们先搞清楚：机器眼里的一张图，到底长什么样？<small>喵博士只问问题，不直接给答案。</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="shelf" data-nav="徽章">
+          <div class="head"><h2>徽章架</h2><p class="head__sub">做到了才会亮起来。</p></div>
+          <div class="x-shelf" id="badges"></div>
+        </section>
+      </main>
+      <footer class="foot">
+        <p>声音全部由 Web Audio 实时合成，不读取任何外部文件。</p>
+        <nav aria-label="回到各部分" data-auto></nav>
+        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"><span class="hark-mark"></span><span>built by hark</span></a>
+      </footer>
+    </div>
+    <div class="x-toasts" id="toasts" aria-live="polite"></div>
+    <script src="hark.js"></script>
+    <script src="chart.js"></script>
+    <script src="datalabels.js"></script>
+    <script src="hark-charts.js"></script>
+    <script>
+      /* ---------- audio ---------- */
+      const Audio_ = (() => {
+        let ctx = null, master = null, musicGain = null, sfxOn = true, musicOn = false, vol = 0.3, loopTimer = null, started = false;
+        function ensure() {
+          if (ctx) return ctx;
+          const AC = window.AudioContext || window.webkitAudioContext;
+          ctx = new AC();
+          master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+          musicGain = ctx.createGain(); musicGain.gain.value = 0; musicGain.connect(master);
+          return ctx;
+        }
+        function unlock() { ensure(); if (ctx.state === "suspended") ctx.resume(); started = true; }
+        function env(node, t, a, d, peak) {
+          const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(peak, t + a);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+          node.connect(g); g.connect(master); return g;
+        }
+        function tone(freq, t, dur, type, peak) {
+          const o = ctx.createOscillator(); o.type = type || "sine"; o.frequency.setValueAtTime(freq, t);
+          env(o, t, 0.012, dur, peak || 0.18); o.start(t); o.stop(t + dur + 0.08); return o;
+        }
+        const sfx = {
+          click() { const t = ctx.currentTime; tone(880, t, 0.05, "triangle", 0.08); },
+          correct() { const t = ctx.currentTime; [523.25, 659.25, 783.99].forEach((f, i) => tone(f, t + i * 0.07, 0.22, "sine", 0.14)); },
+          wrong() { const t = ctx.currentTime; tone(150, t, 0.22, "sine", 0.16); tone(110, t + 0.06, 0.26, "sine", 0.12); },
+          star() { const t = ctx.currentTime; [784, 1047, 1319, 1568, 2093].forEach((f, i) => tone(f, t + i * 0.055, 0.3, "triangle", 0.09)); },
+          fanfare() { const t = ctx.currentTime; [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.3]].forEach(([f, d]) => { tone(f, t + d, 0.4, "sawtooth", 0.07); tone(f * 2, t + d, 0.3, "sine", 0.05); }); },
+          meow() {
+            const t = ctx.currentTime, o = ctx.createOscillator(), f = ctx.createBiquadFilter();
+            o.type = "sawtooth"; f.type = "lowpass"; f.frequency.setValueAtTime(1800, t);
+            o.frequency.setValueAtTime(520, t); o.frequency.exponentialRampToValueAtTime(860, t + 0.12);
+            o.frequency.exponentialRampToValueAtTime(400, t + 0.42);
+            const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.12, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+            o.connect(f); f.connect(g); g.connect(master); o.start(t); o.stop(t + 0.5);
+          },
+          boing() {
+            const t = ctx.currentTime, o = ctx.createOscillator(), l = ctx.createOscillator(), lg = ctx.createGain();
+            o.type = "triangle"; o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(540, t + 0.09); o.frequency.exponentialRampToValueAtTime(170, t + 0.5);
+            l.frequency.value = 14; lg.gain.value = 45; l.connect(lg); lg.connect(o.frequency);
+            env(o, t, 0.01, 0.5, 0.16); o.start(t); o.stop(t + 0.6); l.start(t); l.stop(t + 0.6);
+          },
+          tick(f) { tone(f || 600, ctx.currentTime, 0.06, "sine", 0.07); },
+          wah() {
+            const t = ctx.currentTime;
+            [0, 0.3, 0.6].forEach((d, i) => {
+              const o = ctx.createOscillator(), f = ctx.createBiquadFilter(), s = t + d, len = i === 2 ? 0.7 : 0.26;
+              o.type = "sawtooth"; f.type = "lowpass"; f.Q.value = 7;
+              o.frequency.setValueAtTime(311 - i * 18, s); o.frequency.linearRampToValueAtTime(277 - i * 40, s + len);
+              f.frequency.setValueAtTime(380, s); f.frequency.exponentialRampToValueAtTime(1500, s + 0.1); f.frequency.exponentialRampToValueAtTime(320, s + len);
+              o.connect(f); env(f, s, 0.03, len, 0.12); o.start(s); o.stop(s + len + 0.1);
+            });
+          },
+          finale() {
+            const t = ctx.currentTime;
+            [[523, 0], [659, 0.12], [784, 0.24], [1047, 0.36], [784, 0.6], [1047, 0.72]].forEach(([f, d]) => { tone(f, t + d, 0.35, "sawtooth", 0.06); tone(f / 2, t + d, 0.35, "triangle", 0.08); });
+            [523, 659, 784, 1047, 1319].forEach((f) => tone(f, t + 0.96, 1.4, "sine", 0.07));
+          },
+          pop() { const t = ctx.currentTime; tone(200 + Math.random() * 500, t, 0.18, "triangle", 0.05); },
+        };
+        function play(name, arg) { if (!sfxOn || !started) return; ensure(); if (ctx.state === "suspended") ctx.resume(); duckMusic(); (sfx[name] || sfx.click)(arg); }
+        /* ---------- 专注音乐: generative engine, lookahead scheduler (25ms tick, 0.1s ahead) ---------- */
+        const PENTA = [0, 2, 4, 7, 9];
+        const CH = { I: [0, 4, 7, 11], ii: [2, 5, 9, 12], iii: [4, 7, 11, 14], IV: [5, 9, 12, 16], V: [7, 11, 14, 17], vi: [9, 12, 16, 19] };
+        const P = (s) => s.split(" ").map((n) => CH[n]);
+        const TRACKS = [
+          { id: "lofi", name: "星空 Lo-fi", bpm: 72, swing: 0.2, key: 57, cb: 1, wet: 0.3, progs: [P("ii V I vi"), P("IV iii ii I"), P("vi IV I V")] },
+          { id: "rain", name: "雨夜书房", bpm: 60, swing: 0, key: 50, cb: 2, wet: 0.4, progs: [P("I iii vi IV"), P("vi ii V I"), P("IV I ii vi")] },
+          { id: "dawn", name: "晨光", bpm: 90, swing: 0.08, key: 60, cb: 1, wet: 0.25, progs: [P("I V vi IV"), P("IV I V vi"), P("I ii IV V")] },
+        ];
+        let comp = null, duck = null, bus = null, echo = null, noiseBuf = null, players = [], timer = null, offT = null, mode = -1;
+        const rnd = (n) => (Math.random() * n) | 0;
+        const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+        const newMotif = () => [0, 0, 0, 0].map(() => rnd(8));
+        function mutate(m) { const c = m.slice(); for (let i = 0, n = 1 + rnd(2); i < n; i++) { const j = rnd(4); c[j] = Math.max(0, Math.min(9, c[j] + [-2, -1, 1, 2][rnd(4)])); } return c; }
+        function graph() {
+          if (bus) return; ensure();
+          comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 4; comp.attack.value = 0.01; comp.release.value = 0.3;
+          duck = ctx.createGain(); bus = ctx.createGain(); echo = ctx.createDelay(1.5);
+          const fb = ctx.createGain(), lp = ctx.createBiquadFilter(); fb.gain.value = 0.32; lp.type = "lowpass"; lp.frequency.value = 1800;
+          echo.connect(lp); lp.connect(fb); fb.connect(echo); lp.connect(bus);
+          bus.connect(comp); comp.connect(duck); duck.connect(musicGain);
+          const len = ctx.sampleRate * 2; noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+          const d = noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        }
+        function note(p, m, t, dur, type, peak, a, wet) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = mtof(m);
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          o.connect(g); g.connect(p.out); if (wet) g.connect(p.wet); o.start(t); o.stop(t + dur + 0.05);
+        }
+        function hit(p, t, dur, peak, ftype, freq) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+          s.buffer = noiseBuf; f.type = ftype; f.frequency.value = freq;
+          g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(t, Math.random() * 1.5); s.stop(t + dur + 0.02);
+        }
+        function kick(p, t) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.2);
+          g.gain.setValueAtTime(0.28, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+          o.connect(g); g.connect(p.out); o.start(t); o.stop(t + 0.35); hit(p, t, 0.05, 0.05, "lowpass", 400);
+        }
+        function ep(p, ch, t, dur) {
+          const tr = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain(), env = ctx.createGain();
+          tr.gain.value = 0.75; lfo.frequency.value = 3.8; dep.gain.value = 0.22; lfo.connect(dep); dep.connect(tr.gain);
+          env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(1, t + 0.02); env.gain.exponentialRampToValueAtTime(0.35, t + 0.9); env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [["sine", 0.045], ["triangle", 0.01]].forEach(([ty, v]) => {
+            const o = ctx.createOscillator(), g = ctx.createGain(); o.type = ty; o.frequency.value = mtof(m); o.detune.value = rnd(7) - 3; g.gain.value = v;
+            o.connect(g); g.connect(tr); o.start(t); o.stop(t + dur + 0.05);
+          }));
+          tr.connect(env); env.connect(p.out); env.connect(p.wet); lfo.start(t); lfo.stop(t + dur + 0.05);
+        }
+        function pad(p, ch, t, dur, type, peak, lo, hi) {
+          const f = ctx.createBiquadFilter(), env = ctx.createGain(); f.type = "lowpass";
+          f.frequency.setValueAtTime(lo, t); f.frequency.linearRampToValueAtTime(hi, t + dur * 0.5); f.frequency.linearRampToValueAtTime(lo, t + dur);
+          env.gain.setValueAtTime(0.0001, t); env.gain.linearRampToValueAtTime(peak, t + dur * 0.35); env.gain.linearRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [-7, 7].forEach((dt) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = mtof(m); o.detune.value = dt; o.connect(f); o.start(t); o.stop(t + dur + 0.05); }));
+          f.connect(env); env.connect(p.out); env.connect(p.wet);
+        }
+        function rain(p) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain();
+          s.buffer = noiseBuf; s.loop = true; f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 0.5; g.gain.value = 0.05;
+          lfo.frequency.value = 0.07; dep.gain.value = 0.02; lfo.connect(dep); dep.connect(g.gain);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(); lfo.start(); p.nodes.push(s, lfo);
+        }
+        function section(p) {
+          let n; do n = rnd(3); while (n === p.prog); p.prog = n;
+          if (Math.random() < 0.25) p.key = p.t.key + [0, 2, -2, 5, -3][rnd(5)];
+          p.drums = Math.random() > 0.3;
+          if (Math.random() < 0.4) p.motif = newMotif();
+        }
+        function step(p, t) {
+          const T = p.t, s = p.step % 16, bar = (p.step / 16) | 0, beat = 60 / T.bpm;
+          if (s === 0) {
+            if (bar && bar % 8 === 0) section(p);
+            p.cur = bar % 4 === 2 ? mutate(p.motif) : bar % 4 === 0 ? p.motif : p.cur;
+          }
+          const ch = T.progs[p.prog][((bar / T.cb) | 0) % 4].map((x) => p.key + x);
+          const mel = (d) => p.key + 12 + PENTA[d % 5] + 12 * ((d / 5) | 0);
+          if (T.id === "lofi") {
+            if (s === 0) { ep(p, ch, t, beat * 4); note(p, ch[0] - 24, t, beat * 1.8, "sine", 0.16, 0.02); }
+            if (s === 10) note(p, ch[0] - 24, t, beat * 1.2, "sine", 0.12, 0.02);
+            if (p.drums) {
+              if (s === 0 || s === 10 || (s === 7 && Math.random() < 0.3)) kick(p, t);
+              if (s === 4 || s === 12) hit(p, t, 0.16, 0.07, "bandpass", 1800);
+              if (s % 2 === 0 || Math.random() < 0.15) hit(p, t, 0.04, s % 4 === 2 ? 0.03 : 0.018, "highpass", 7000);
+            }
+            if (bar % 2 === 1 && s % 4 === 0 && Math.random() > 0.28) note(p, mel(p.cur[s / 4]), t, beat * 1.3, "sine", 0.035, 0.01, true);
+          } else if (T.id === "rain") {
+            if (s === 0 && bar % 2 === 0) pad(p, ch, t, beat * 8 + 1, "sawtooth", 0.022, 280, 1300);
+            if (s % 8 === 0 && Math.random() < 0.45) { const m = mel(p.cur[(bar * 2 + s / 8) % 4]) - 12; note(p, m, t, 3.5, "triangle", 0.045, 0.005, true); note(p, m, t, 2.5, "sine", 0.03, 0.005); }
+          } else {
+            if (s === 0) pad(p, ch.map((m) => m + 12), t, beat * 4 + 0.6, "sine", 0.014, 2500, 5000);
+            if (s % 2 === 0 && Math.random() > 0.18) { const m = mel(p.cur[(s / 2) % 4] + (s >= 8 ? 1 : 0)); note(p, m, t, 0.55, "sine", 0.05, 0.004, true); note(p, m + 28, t, 0.08, "sine", 0.008, 0.002); }
+            if (p.drums) hit(p, t, 0.05, s % 2 ? 0.022 : 0.01, "highpass", 6000);
+          }
+        }
+        function sched() {
+          const now = ctx.currentTime;
+          players.forEach((p) => {
+            if (p.next < now - 0.05) p.next = now + 0.02; /* tab was throttled: skip, don't burst */
+            while (p.next < now + 0.1) { const sx = 60 / p.t.bpm / 4; step(p, p.next + (p.step % 2 ? p.t.swing * sx : 0)); p.step++; p.next += sx; }
+          });
+          const live = players.find((p) => !p.dead);
+          if (mode < 0 && live && now - live.born > 180) switchTo((live.i + 1 + rnd(2)) % 3);
+        }
+        function label(i) { const n = document.getElementById("nowplaying"); if (n) n.textContent = "正在播放:" + (i == null ? "—" : TRACKS[i].name); }
+        function kill(p) { p.nodes.forEach((n) => { try { n.stop(); } catch (e) {} }); p.out.disconnect(); p.wet.disconnect(); players = players.filter((x) => x !== p); }
+        function switchTo(i) {
+          const now = ctx.currentTime;
+          players.filter((p) => !p.dead).forEach((p) => {
+            p.dead = true; p.out.gain.cancelScheduledValues(now); p.out.gain.setValueAtTime(p.out.gain.value, now);
+            p.out.gain.linearRampToValueAtTime(0.0001, now + 2); setTimeout(() => kill(p), 2300);
+          });
+          const T = TRACKS[i], p = { t: T, i, step: 0, next: now + 0.1, born: now, key: T.key, prog: 0, drums: true, motif: newMotif(), out: ctx.createGain(), wet: ctx.createGain(), nodes: [] };
+          p.cur = p.motif; p.out.gain.setValueAtTime(0.0001, now); p.out.gain.linearRampToValueAtTime(1, now + 2);
+          p.out.connect(bus); p.wet.gain.value = T.wet; p.wet.connect(echo);
+          echo.delayTime.setTargetAtTime((60 / T.bpm) * 0.75, now, 0.5);
+          if (T.id === "rain") rain(p);
+          players.push(p); label(i);
+        }
+        function fadeTo(v) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(v, n + 2); }
+        function startMusic() {
+          graph(); if (ctx.state === "suspended") ctx.resume();
+          clearTimeout(offT); if (!timer) timer = setInterval(sched, 25);
+          if (!players.some((p) => !p.dead)) switchTo(mode < 0 ? rnd(3) : mode);
+          fadeTo(vol);
+        }
+        function stopMusic() {
+          if (!bus) return; fadeTo(0.0001);
+          offT = setTimeout(() => { clearInterval(timer); timer = null; players.slice().forEach(kill); label(null); }, 2100);
+        }
+        function setTrack(v) {
+          mode = v; if (!musicOn || !bus) return;
+          const live = players.find((p) => !p.dead);
+          if (mode >= 0 && (!live || live.i !== mode)) switchTo(mode); else if (live) live.born = ctx.currentTime;
+        }
+        function duckMusic() {
+          if (!musicOn || !duck) return; const t = ctx.currentTime, g = duck.gain;
+          g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.45, t + 0.05);
+          g.setValueAtTime(0.45, t + 0.35); g.linearRampToValueAtTime(1, t + 1);
+        }
+        return {
+          unlock, play,
+          setSfx(v) { sfxOn = v; }, isSfx: () => sfxOn,
+          setMusic(v) { musicOn = v; v ? startMusic() : stopMusic(); }, isMusic: () => musicOn,
+          setVol(v) { vol = v; if (ctx && timer && musicOn) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(vol, n + 0.3); } },
+          setTrack,
+        };
+      })();
+
+      /* ---------- state ---------- */
+      const State = { xp: 0, stars: 0, perLevel: {}, badges: {}, unlocked: 1 };
+      const BADGES = [
+        { id: "first-pixel", name: "初见像素", hint: "看懂第一张数字图" },
+        { id: "no-fear", name: "不怕失败", hint: "失败 3 次后成功" },
+        { id: "coord", name: "坐标达人", hint: "第 2 关零失误放好 8 张卡" },
+        { id: "perfect-line", name: "完美分界", hint: "第 3 关任一轮 100% 分对" },
+        { id: "valley", name: "一步到谷底", hint: "第 4 关第 1 轮 ≤ 3 步到谷底" },
+        { id: "trainer", name: "训练师", hint: "第 5 关完成全部 3 个任务" },
+        { id: "space", name: "空间魔术师", hint: "第 6 关加一个特征，把猫狗 100% 分开" },
+        { id: "brain", name: "造脑者", hint: "第 7 关 AI 认出你画的图" },
+      ];
+      const LEVELS_META = [
+        { id: 1, title: "像素就是数字", sub: "图片在机器眼里是一串数" },
+        { id: 2, title: "给猫画像", sub: "特征：挑出有用的几个数" },
+        { id: 3, title: "一条线分开猫狗", sub: "分类与决策边界" },
+        { id: 4, title: "蒙眼下山", sub: "梯度下降" },
+        { id: 5, title: "让线自己学会", sub: "训练一个线性模型" },
+        { id: 6, title: "扭一扭空间", sub: "非线性变换" },
+        { id: 7, title: "造一个神经元大脑", sub: "BOSS 关 · 神经网络" },
+      ];
+
+      const $ = (s) => document.querySelector(s);
+      function toast(msg) {
+        const el = document.createElement("div"); el.className = "x-toast"; el.textContent = msg;
+        $("#toasts").appendChild(el); setTimeout(() => el.remove(), 3200);
+      }
+      function award(id) {
+        if (State.badges[id]) return;
+        State.badges[id] = true;
+        const b = BADGES.find((x) => x.id === id);
+        Audio_.play("star"); toast("🏅 获得徽章：" + b.name); renderBadges();
+      }
+      function renderBadges() {
+        $("#badges").innerHTML = BADGES.map((b) =>
+          `<span class="x-badge ${State.badges[b.id] ? "got" : ""}">${State.badges[b.id] ? "🏅" : "🔒"} ${b.name}<small style="opacity:.75"> · ${b.hint}</small></span>`
+        ).join("");
+      }
+      function renderBar() { $("#xp").textContent = State.xp; $("#stars").textContent = State.stars; }
+      function starStr(n) { return n ? "⭐".repeat(n) + "☆".repeat(3 - n) : "☆☆☆"; }
+      function renderMap() {
+        $("#nodes").innerHTML = LEVELS_META.map((m) => {
+          const open = m.id <= State.unlocked && !!getLevel(m.id);
+          const got = State.perLevel[m.id] || 0;
+          const note = getLevel(m.id) ? (open ? m.sub : "完成上一关解锁") : "即将开放";
+          return `<button class="x-node ${open ? "is-open" : ""}" data-level="${m.id}" ${open ? "" : "disabled"}>
+            <span class="x-node__num">${m.id}</span>
+            <span><span class="x-node__t">${m.title}</span><span class="x-node__s">${note}</span></span>
+            <span class="x-stars">${starStr(got)}</span></button>`;
+        }).join("");
+        $("#nodes").querySelectorAll("button[data-level]").forEach((b) =>
+          b.addEventListener("click", () => { Audio_.play("click"); openLevel(+b.dataset.level); }));
+      }
+      function finishLevel(id, stars, xp) {
+        const prev = State.perLevel[id] || 0;
+        if (stars > prev) { State.stars += stars - prev; State.perLevel[id] = stars; }
+        State.xp += xp;
+        if (stars >= 1 && State.unlocked < id + 1) State.unlocked = id + 1;
+        renderBar(); renderMap(); Audio_.play("fanfare");
+        toast(`第 ${id} 关完成 · ${starStr(stars)} · +${xp} XP`);
+      }
+      function openLevel(id) {
+        const lv = getLevel(id); if (!lv) return;
+        $("#play-title").textContent = `第 ${id} 关 · ${lv.title}`;
+        $("#play-sub").textContent = LEVELS_META[id - 1].sub;
+        const stage = $("#stage"); stage.innerHTML = "";
+        lv.init(stage, (stars, xp) => finishLevel(id, stars, xp));
+        $("#play").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      /* guide bubble helper */
+      function guide(container, text, sub) {
+        const wrap = document.createElement("div"); wrap.className = "x-cat";
+        wrap.innerHTML = `<div class="x-cat__face">🐱</div><div class="x-bubble"></div>`;
+        const b = wrap.querySelector(".x-bubble");
+        const set = (t, s) => { b.innerHTML = ""; b.append(t); if (s) { const el = document.createElement("small"); el.textContent = s; b.append(el); } Audio_.play("meow"); };
+        set(text, sub); container.append(wrap);
+        return set;
+      }
+      function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+      /* end-card helper: stars, headline, [[term, meaning]], star-map ids */
+      function endCard(stars, head, math, starIds) {
+        return el("div", "x-end", `<h3>${starStr(stars)} ${head}</h3>
+          <div><p style="font:var(--type-body-strong)">你刚刚用到的数学</p>
+          <dl>${math.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join("")}</dl></div>
+          <div><p style="font:var(--type-body-strong)">星图点亮</p><p class="x-starid">${starIds}</p></div>`);
+      }
+      /* coordinate plane 0–10 × 0–10; plot area 10–96% across, 4–90% down */
+      function plane(container) {
+        container.append(el("p", "x-axes", "横轴 x：耳朵尖度 (0–10) · 竖轴 y：胡须长度 (0–10)"));
+        const box = el("div", "x-plane"), NS = "http://www.w3.org/2000/svg";
+        const X = (x) => 10 + x * 8.6, Y = (y) => 90 - y * 8.6;
+        let g = `<defs><clipPath id="x-clip"><rect x="10" y="4" width="86" height="86"/></clipPath></defs><g id="x-fill" clip-path="url(#x-clip)"></g>`;
+        for (let i = 0; i <= 10; i++) {
+          const s = i ? "var(--stroke-secondary)" : "var(--text-secondary)";
+          g += `<line x1="${X(i)}" y1="4" x2="${X(i)}" y2="90" stroke="${s}" vector-effect="non-scaling-stroke"/><line x1="10" y1="${Y(i)}" x2="96" y2="${Y(i)}" stroke="${s}" vector-effect="non-scaling-stroke"/>`;
+        }
+        box.innerHTML = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${g}</svg>`;
+        for (let i = 0; i <= 10; i += 2) {
+          box.append(el("span", "x-tick", i)); box.lastChild.style.cssText = `left:${X(i)}%;top:95%`;
+          if (i) { box.append(el("span", "x-tick", i)); box.lastChild.style.cssText = `left:5%;top:${Y(i)}%`; }
+        }
+        container.append(box);
+        const at = (n, x, y) => { n.style.left = X(x) + "%"; n.style.top = Y(y) + "%"; return n; };
+        return {
+          box, X, Y, at, fill: box.querySelector("#x-fill"),
+          dot(emoji, x, y, title) { const d = at(el("span", "x-dot", emoji), x, y); d.title = title || ""; box.append(d); return d; },
+          from(cx, cy) {
+            const r = box.getBoundingClientRect(), c = (v) => Math.max(0, Math.min(10, v));
+            return { x: c((((cx - r.left) / r.width) * 100 - 10) / 8.6), y: c((90 - ((cy - r.top) / r.height) * 100) / 8.6), inside: cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom };
+          },
+        };
+      }
+
+      /* ---------- pixel art 8x8 ---------- */
+      const ART = {
+        cat: ["10000001", "11000011", "10111101", "11011011", "11111111", "10111101", "11000011", "01111110"],
+        dog: ["11000000", "11100000", "11111110", "11011011", "11111111", "11111111", "10111101", "01000010"],
+        fish: ["00000110", "00011111", "00111111", "11111111", "11111111", "00111110", "00011110", "00000100"],
+      };
+      const toRows = (a) => a.map((r) => r.split("").map(Number));
+      /* level 3 round 2 scatter, reused by level 5 */
+      const CATDOG2 = {
+        c: [[6, 5], [5, 6.5], [7, 4.5], [6.5, 6], [8, 4.8], [5.5, 7], [7.5, 5.5], [4.5, 7.5], [6, 7.5], [8, 6]],
+        d: [[4, 4], [5, 3.5], [3, 5], [5.5, 3.5], [4.5, 5], [3.5, 4.5], [6, 3], [2.5, 6], [4, 2.5], [3, 3.5]],
+      };
+      /* resolve a design token to a concrete value for canvas drawing */
+      const tok = (v, prop = "color") => {
+        const p = tok.p || (tok.p = document.body.appendChild(el("span"))); p.hidden = true;
+        p.style[prop] = `var(${v})`; return getComputedStyle(p)[prop];
+      };
+      const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+      /* shade a plane into cat/dog halves for f(x, y) > 0 = cat, and draw the line f = 0 */
+      function drawSplit(P, f) {
+        const sq = [[0, 0], [10, 0], [10, 10], [0, 10]], cut = [];
+        const half = (s) => {
+          const out = [];
+          sq.forEach((a, i) => {
+            const b = sq[(i + 1) % 4], fa = s * f(...a), fb = s * f(...b);
+            if (fa >= 0) out.push(a);
+            if (fa >= 0 !== fb >= 0) { const t = fa / (fa - fb), q = [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])]; out.push(q); if (s > 0) cut.push(q); }
+          });
+          return out;
+        };
+        const cat = half(1), dog = half(-1), pp = (poly) => poly.map((p) => P.X(p[0]) + "," + P.Y(p[1])).join(" ");
+        P.fill.innerHTML = `<polygon points="${pp(cat)}" fill="var(--chart-1)" fill-opacity="0.4"/><polygon points="${pp(dog)}" fill="var(--chart-2)" fill-opacity="0.2"/>` +
+          (cut.length >= 2 ? `<line x1="${P.X(cut[0][0])}" y1="${P.Y(cut[0][1])}" x2="${P.X(cut[1][0])}" y2="${P.Y(cut[1][1])}" stroke="var(--text-primary)" stroke-width="2" vector-effect="non-scaling-stroke"/>` : "");
+        return { cat, dog };
+      }
+      const centroid = (poly) => [poly.reduce((s, p) => s + p[0], 0) / poly.length, poly.reduce((s, p) => s + p[1], 0) / poly.length];
+      function drawArt(canvas, rows, size) {
+        const c = canvas.getContext("2d"), px = canvas.width / 8;
+        const cs = getComputedStyle(canvas.parentElement);
+        c.fillStyle = cs.backgroundColor || "#fff";
+        c.fillRect(0, 0, canvas.width, canvas.height);
+        c.fillStyle = cs.color;
+        rows.forEach((row, y) => row.forEach((v, x) => { if (v) c.fillRect(x * px, y * px, px, px); }));
+      }
+
+      /* ---------- levels ---------- */
+      /* Each level: {id, title, init(container, done)}. Add levels 2–7 here. */
+      const LEVELS = [];
+      const getLevel = (id) => LEVELS.find((l) => l.id === id);
+
+      LEVELS.push({
+        id: 1,
+        title: "像素就是数字",
+        init(root, done) {
+          let fails = 0, correct = 0, round = 0, wrongInRound = 0;
+          const say = guide(root, "先看一眼：这张猫脸由 8×8 = 64 个小方块拼成。你觉得，机器要怎么把「黑」和「白」记下来？", "提示：它只会记数字。");
+
+          /* demo grid */
+          const demo = el("div"); demo.append(el("p", "", "<span class=\"pill\">示范</span> 8×8 像素猫脸"));
+          const grid = el("div", "x-grid"); demo.append(grid);
+          const rowsCat = toRows(ART.cat);
+          const cells = [];
+          rowsCat.forEach((r, y) => r.forEach((v, x) => {
+            const c = el("div", "x-px" + (v ? " on" : "")); c.dataset.v = v; grid.append(c); cells.push(c);
+          }));
+          const vecBox = el("div", "x-vec"); vecBox.hidden = true;
+          vecBox.textContent = "[" + rowsCat.flat().join(", ") + "]";
+          const toggle = el("button", "x-btn", "显示数字");
+          let showing = false;
+          toggle.addEventListener("click", () => {
+            showing = !showing; Audio_.play("click");
+            toggle.textContent = showing ? "隐藏数字" : "显示数字";
+            cells.forEach((c) => { c.classList.toggle("num", showing); c.textContent = showing ? c.dataset.v : ""; });
+            vecBox.hidden = !showing;
+            if (showing) { award("first-pixel"); say("看到了吗？亮 = 1，暗 = 0。下面那一长串 64 个数，就是这张图的「向量」。", "顺序不能乱——换了顺序就是另一张图。"); }
+          });
+          demo.append(el("div", "x-row")); demo.lastChild.append(toggle);
+          demo.append(vecBox);
+          root.append(demo);
+
+          /* rounds */
+          const quiz = el("div"); root.append(quiz);
+          const order = ["cat", "dog", "fish"];
+          const names = { cat: "猫", dog: "狗", fish: "鱼" };
+          function shuffle(a) { return a.slice().sort(() => Math.random() - 0.5); }
+          const answers = shuffle(order);
+
+          function renderRound() {
+            quiz.innerHTML = ""; wrongInRound = 0;
+            if (round >= 3) return drawPad();
+            const key = answers[round], rows = toRows(ART[key]);
+            quiz.append(el("p", "", `<span class="chip chip--solid">第 ${round + 1} / 3 题</span> 只给你数字，猜猜它是谁？`));
+            const g = el("div", "x-grid");
+            rows.flat().forEach((v) => { const c = el("div", "x-px num"); c.textContent = v; g.append(c); });
+            quiz.append(g);
+            const opts = el("div", "x-opts");
+            shuffle(order).forEach((k) => {
+              const b = el("button", "x-opt");
+              const cv = document.createElement("canvas"); cv.width = 64; cv.height = 64; cv.setAttribute("aria-hidden", "true");
+              b.append(cv, document.createTextNode(names[k]));
+              drawArt(cv, toRows(ART[k]));
+              b.addEventListener("click", () => {
+                if (b.classList.contains("bad") || b.disabled) return;
+                if (k === key) {
+                  b.classList.add("good"); Audio_.play("correct"); correct++;
+                  if (fails >= 3) award("no-fear");
+                  say("对了，这串数字确实画出了" + names[k] + "。", "机器比对的只是数，不是「长相」。");
+                  setTimeout(() => { round++; renderRound(); }, 800);
+                } else {
+                  b.classList.add("bad"); fails++; wrongInRound++;
+                  Audio_.play("wrong"); g.classList.add("x-flash"); setTimeout(() => g.classList.remove("x-flash"), 340);
+                  if (wrongInRound >= 2) say("试试这样找：先看最上面两行，1 都挤在哪一边？再看最下面一行有没有尖角。", "耳朵、嘴巴、尾鳍，都会在数字里留下形状。");
+                  else say("再看看轮廓——1 连成的形状像什么？", "一行一行读，比一个一个读快。");
+                }
+              });
+              opts.append(b);
+            });
+            quiz.append(opts);
+          }
+
+          function drawPad() {
+            const stars = correct;
+            const pad = el("div");
+            pad.append(el("p", "", "答完了！最后玩一下：自己画一张 8×8，下面那串数会跟着变。画好点「完成」看成绩。"));
+            const pg = el("div", "x-grid x-pad");
+            const my = Array.from({ length: 64 }, () => 0), pc = [];
+            const vec = el("div", "x-vec"); 
+            const upd = () => { vec.textContent = "[" + my.join(", ") + "]"; };
+            let painting = false, paintVal = 1;
+            for (let i = 0; i < 64; i++) {
+              const c = el("div", "x-px"); c.dataset.i = i; pg.append(c); pc.push(c);
+            }
+            const setCell = (i, v) => { my[i] = v; pc[i].classList.toggle("on", !!v); upd(); };
+            const idxFrom = (t) => (t && t.dataset && t.dataset.i != null ? +t.dataset.i : -1);
+            pg.addEventListener("pointerdown", (e) => {
+              const i = idxFrom(e.target); if (i < 0) return;
+              painting = true; paintVal = my[i] ? 0 : 1; setCell(i, paintVal); Audio_.play("click"); e.preventDefault();
+            });
+            pg.addEventListener("pointermove", (e) => {
+              if (!painting) return;
+              const t = document.elementFromPoint(e.clientX, e.clientY), i = idxFrom(t);
+              if (i >= 0 && my[i] !== paintVal) setCell(i, paintVal);
+            });
+            window.addEventListener("pointerup", () => { painting = false; });
+            upd();
+            pad.append(pg, vec);
+            const row = el("div", "x-row");
+            const fin = el("button", "x-btn x-btn--go", "完成");
+            fin.addEventListener("click", () => {
+              fin.disabled = true;
+              quiz.append(endCard(stars, `答对 ${correct} / 3`, [
+                ["向量", "一串有顺序的数。顺序变了，表示的东西就变了。"],
+                ["二进制", "只用 0 和 1 两个符号记录信息，一个像素亮不亮就是 1 位。"],
+              ], "g15 向量 · n20 二进制与进制"));
+              say("画得不错。记住：你画的其实是 64 个数——接下来机器要从这些数里找规律。", "第 2 关「给猫画像」等你。");
+              done(stars, 60 + correct * 20);
+            });
+            row.append(fin);
+            pad.append(row);
+            quiz.append(pad);
+          }
+
+          const start = el("div", "x-row");
+          const go = el("button", "x-btn x-btn--go", "开始 3 道题");
+          go.addEventListener("click", () => { Audio_.play("click"); go.parentElement.remove(); renderRound(); });
+          start.append(go); root.append(start);
+        },
+      });
+
+      LEVELS.push({
+        id: 2,
+        title: "给猫画像",
+        init(root, done) {
+          let mistakes = 0, placed = 0, sel = null;
+          const say = guide(root, "64 个数太多了！我们只挑 2 个特征：耳朵有多尖 (x)、胡须有多长 (y)。把每张卡拖到坐标图上它的位置。", "也可以先点一张卡，再点坐标图。");
+          const A = [["🐱", "橘猫", 8, 9], ["🐱", "黑猫", 9, 6], ["🐱", "布偶猫", 6, 8], ["🐱", "狸花猫", 10, 8],
+            ["🐶", "柯基", 6, 3], ["🐶", "金毛", 1, 4], ["🐶", "柴犬", 7, 2], ["🐶", "比格犬", 2, 2]].sort(() => Math.random() - 0.5);
+          const split = el("div", "x-split"), deck = el("div", "x-deck"), right = el("div");
+          split.append(deck, right); root.append(split);
+          const P = plane(right);
+          function place(c, pt) {
+            const [e, n, x, y] = c._a;
+            if (Math.hypot(pt.x - x, pt.y - y) <= 0.9) {
+              P.dot(e, x, y, `${n} (${x}, ${y})`); Audio_.play("correct");
+              c.classList.remove("is-sel"); c.classList.add("is-done"); c.disabled = true;
+              c.querySelector("small").textContent = `(${x}, ${y})`;
+              if (sel === c) sel = null;
+              if (++placed === 8) finish();
+            } else {
+              mistakes++; Audio_.play("wrong");
+              c.classList.add("x-flash"); setTimeout(() => c.classList.remove("x-flash"), 340);
+              const xOk = Math.abs(pt.x - x) <= 0.6;
+              if (xOk) say("横轴对了！再沿竖轴往上数胡须长度。", `${n} 的胡须长度是 ${y}。`);
+              else say("先找横轴上的数", `横轴是耳朵尖度：从 0 往右数到 ${x}，再往上数到 ${y}。`);
+            }
+          }
+          A.forEach((a) => {
+            const c = el("button", "x-card", `<span aria-hidden="true">${a[0]}</span><span><b>${a[1]}</b><small>耳朵 ${a[2]} · 胡须 ${a[3]}</small></span>`);
+            c._a = a; deck.append(c);
+            let sx = 0, sy = 0, drag = false, moved = false;
+            const reset = () => { drag = false; c.classList.remove("is-drag"); c.style.transform = ""; };
+            c.addEventListener("pointerdown", (e) => { sx = e.clientX; sy = e.clientY; drag = true; moved = false; c.setPointerCapture(e.pointerId); });
+            c.addEventListener("pointermove", (e) => {
+              if (!drag) return;
+              const dx = e.clientX - sx, dy = e.clientY - sy;
+              if (!moved && Math.hypot(dx, dy) < 6) return;
+              moved = true; c.classList.add("is-drag"); c.style.transform = `translate(${dx}px, ${dy}px)`;
+            });
+            c.addEventListener("pointerup", (e) => {
+              if (!drag) return; reset();
+              if (moved) { const pt = P.from(e.clientX, e.clientY); if (pt.inside) place(c, pt); }
+            });
+            c.addEventListener("pointercancel", reset);
+            c.addEventListener("click", () => {
+              if (moved) { moved = false; return; }
+              Audio_.play("click"); if (sel) sel.classList.remove("is-sel");
+              sel = sel === c ? null : c; if (sel) c.classList.add("is-sel");
+            });
+          });
+          P.box.addEventListener("click", (e) => { if (sel) place(sel, P.from(e.clientX, e.clientY)); });
+          function finish() {
+            const stars = mistakes <= 1 ? 3 : mistakes <= 4 ? 2 : 1;
+            if (mistakes === 0) award("coord");
+            say("8 只都到位了。发现没有？猫都挤在上面，狗都在下面。", "同类的东西在坐标图上会扎堆——第 3 关我们画一条线把它们分开。");
+            root.append(endCard(stars, `失误 ${mistakes} 次`, [
+              ["坐标", "用一对数表示位置：先看横轴 x，再看竖轴 y。"],
+              ["向量", "每只动物就是一个向量 (x, y)——从 64 个数缩成了 2 个。"],
+            ], "g11 坐标系 · g15 向量"));
+            done(stars, 60 + stars * 20);
+          }
+        },
+      });
+
+      LEVELS.push({
+        id: 3,
+        title: "一条线分开猫狗",
+        init(root, done) {
+          const ROUNDS = [
+            { th: 95, tip: ["第 1 轮：两堆隔得很远。拖动两个黑色圆点，让线从中间穿过去。", "目标准确率 ≥ 95%。"],
+              c: [[7, 8], [8, 9], [9, 7], [7.5, 6.5], [8.5, 8], [9, 9.5], [6.5, 8.5], [8, 6], [9.5, 8.5], [7, 7]],
+              d: [[1, 2], [2, 1], [3, 3], [1.5, 4], [2.5, 2.5], [4, 1.5], [0.5, 0.5], [3.5, 4], [2, 3.5], [1, 1]] },
+            { th: 90, tip: ["第 2 轮：两堆靠近了，线得斜着放才分得开。", "目标准确率 ≥ 90%。"],
+              ...CATDOG2 },
+            { th: 85, tip: ["第 3 轮：有一两只「怪家伙」混进了对方的地盘。分对大多数就很棒。", "目标准确率 ≥ 85%，不必追求 100%。"],
+              c: [[6, 5], [5, 6], [7, 4.5], [5.5, 6.5], [7.5, 5], [4.5, 7], [6.5, 6.5], [8, 4], [6, 7.5], [2, 2.5, "折耳猫"]],
+              d: [[4, 4.5], [5, 4], [3.5, 5.5], [6, 4], [4.5, 5], [3, 4], [5.5, 3], [2.5, 6], [4, 3], [8, 7.5, "长须德牧"]] },
+          ];
+          let r = 0, passed = 0, pts = [], dots = [], hp, ok = 0, locked = false;
+          const say = guide(root, "猫和狗在图上分成了两堆。摆一条直线，让猫都在猫区、狗都在狗区。", "红圈闪烁的是被分错的。达标后点「提交」。");
+          const split = el("div", "x-split"), left = el("div"), side = el("div");
+          side.style.cssText = "display:grid;gap:12px;align-content:start";
+          split.append(left, side); root.append(split);
+          const P = plane(left);
+          const zc = el("span", "x-zone", "猫区"), zd = el("span", "x-zone", "狗区"); P.box.append(zc, zd);
+          const clamp = (v) => Math.max(0, Math.min(10, v));
+          const H = [0, 1].map((i) => {
+            const b = el("button", "x-handle"); b.setAttribute("aria-label", `直线端点 ${i + 1}，可用方向键移动`);
+            b.addEventListener("pointerdown", (e) => { if (locked) return; b._d = true; b.setPointerCapture(e.pointerId); e.preventDefault(); });
+            b.addEventListener("pointermove", (e) => { if (!b._d) return; const p = P.from(e.clientX, e.clientY); hp[i] = [p.x, p.y]; update(); });
+            b.addEventListener("pointerup", () => { b._d = false; });
+            b.addEventListener("keydown", (e) => {
+              const m = { ArrowLeft: [-0.25, 0], ArrowRight: [0.25, 0], ArrowUp: [0, 0.25], ArrowDown: [0, -0.25] }[e.key];
+              if (!m || locked) return; e.preventDefault();
+              hp[i] = [clamp(hp[i][0] + m[0]), clamp(hp[i][1] + m[1])]; update();
+            });
+            return b;
+          });
+          const head = el("p"), meter = el("div", "x-row"), eq = el("div", "x-eq");
+          const note = el("p", "fineprint", "w₁、w₂ 决定线的方向，b 决定线的位置。把一只动物的 (x, y) 代进去：结果 &gt; 0 判为猫，&lt; 0 判为狗。");
+          const row = el("div", "x-row"), sub = el("button", "x-btn x-btn--go", "提交");
+          row.append(sub); side.append(head, meter, eq, note, row);
+          const clip = (poly, f) => {
+            const out = [];
+            poly.forEach((a, i) => {
+              const b = poly[(i + 1) % poly.length], fa = f(a), fb = f(b);
+              if (fa >= 0) out.push(a);
+              if (fa >= 0 !== fb >= 0) { const t = fa / (fa - fb); out.push([a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])]); }
+            });
+            return out;
+          };
+          const r1 = (v) => { const k = Math.round(v * 10) / 10; return k === 0 ? 0 : k; };
+          const sg = (v) => (r1(v) < 0 ? "−" : "+");
+          function update() {
+            hp.forEach((p, i) => P.at(H[i], p[0], p[1]));
+            const [[x1, y1], [x2, y2]] = hp;
+            let w1 = y1 - y2, w2 = x2 - x1;
+            const n = Math.hypot(w1, w2);
+            if (n < 0.05) { w1 = 0; w2 = 1; } else { w1 /= n; w2 /= n; }
+            let b = -(w1 * x1 + w2 * y1);
+            const f = (x, y) => w1 * x + w2 * y + b, isCat = (p) => f(p[1], p[2]) > 0;
+            ok = pts.filter((p) => isCat(p) === (p[0] === "c")).length;
+            if (ok < pts.length - ok) { w1 = -w1; w2 = -w2; b = -b; ok = pts.length - ok; }
+            dots.forEach((d, j) => d.classList.toggle("mis", isCat(pts[j]) !== (pts[j][0] === "c")));
+            const sq = [[0, 0], [10, 0], [10, 10], [0, 10]];
+            const cat = clip(sq, (p) => f(p[0], p[1])), dog = clip(sq, (p) => -f(p[0], p[1]));
+            const pp = (poly) => poly.map((p) => P.X(p[0]) + "," + P.Y(p[1])).join(" ");
+            const dx = -w2 * 30, dy = w1 * 30;
+            P.fill.innerHTML = `<polygon points="${pp(cat)}" fill="var(--chart-1)" fill-opacity="0.4"/><polygon points="${pp(dog)}" fill="var(--chart-2)" fill-opacity="0.2"/>
+              <line x1="${P.X(x1 - dx)}" y1="${P.Y(y1 - dy)}" x2="${P.X(x1 + dx)}" y2="${P.Y(y1 + dy)}" stroke="var(--text-primary)" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+            [[zc, cat], [zd, dog]].forEach(([z, poly]) => {
+              z.hidden = poly.length < 3; if (z.hidden) return;
+              P.at(z, poly.reduce((s, p) => s + p[0], 0) / poly.length, poly.reduce((s, p) => s + p[1], 0) / poly.length);
+            });
+            const th = ROUNDS[r].th, acc = Math.round((ok / pts.length) * 100), good = ok * 100 >= th * pts.length;
+            meter.innerHTML = `<span class="x-meter">准确率 <b>${acc}%</b></span><span class="pill">${ok} / ${pts.length} 分对</span><span class="chip ${good ? "chip--solid" : ""}">${good ? "达标" : "目标 ≥ " + th + "%"}</span>`;
+            eq.textContent = `${r1(w1).toFixed(1)}·x ${sg(w2)} ${Math.abs(r1(w2)).toFixed(1)}·y ${sg(b)} ${Math.abs(r1(b)).toFixed(1)} = 0`;
+          }
+          function startRound() {
+            const R = ROUNDS[r];
+            pts = [...R.c.map((p) => ["c", ...p]), ...R.d.map((p) => ["d", ...p])];
+            dots.forEach((d) => d.remove());
+            dots = pts.map((p) => P.dot(p[0] === "c" ? "🐱" : "🐶", p[1], p[2], `${p[3] || (p[0] === "c" ? "猫" : "狗")} (${p[1]}, ${p[2]})`));
+            P.box.append(zc, zd, ...H);
+            hp = [[0.5, 7], [3, 9.5]]; locked = false; sub.disabled = false;
+            head.innerHTML = `<span class="chip chip--solid">第 ${r + 1} / 3 轮</span> <span class="pill">已通过 ${passed} 轮</span>`;
+            say(...R.tip); update();
+          }
+          sub.addEventListener("click", () => {
+            if (locked) return;
+            locked = true; sub.disabled = true;
+            const th = ROUNDS[r].th, pass = ok * 100 >= th * pts.length;
+            if (pass) {
+              passed++; Audio_.play("correct");
+              if (ok === pts.length) award("perfect-line");
+              if (r === 2) say("过关！那只折耳猫耳朵不尖，长须德牧胡子很长——只靠两个特征，一条直线总会错一点。", "这很正常：真实数据里总有例外。");
+              else say(ok === pts.length ? "一只都没分错，漂亮！" : "达标了！", "下一轮会更难一点。");
+            } else {
+              Audio_.play("wrong"); P.box.classList.add("x-flash"); setTimeout(() => P.box.classList.remove("x-flash"), 340);
+              say(`还差一点，准确率没到 ${th}%，这一轮不得星。`, "先让线穿过两堆中间的空地，再慢慢转方向。");
+            }
+            setTimeout(() => { r++; if (r < 3) startRound(); else finish(); }, 1800);
+          });
+          function finish() {
+            head.innerHTML = `<span class="chip">三轮结束</span>`;
+            root.append(endCard(passed, `通过 ${passed} / 3 轮`, [
+              ["直线方程", "w·x + b = 0 是一个最简单的分类器：w = (w₁, w₂) 定方向，b 定位置，x 就是动物的向量 (x, y)。"],
+              ["一次函数", "把 w₁·x + w₂·y + b = 0 改写成 y = kx + m，就是你熟悉的一次函数图像。"],
+            ], "a11 一次函数 · g20 解析几何"));
+            done(passed, 60 + passed * 25);
+          }
+          startRound();
+        },
+      });
+
+      LEVELS.push({
+        id: 4,
+        title: "蒙眼下山",
+        init(root, done) {
+          const LR = [0.05, 0.2, 0.6], LRN = ["小", "中", "大"], MAX = 12, TH = 0.05;
+          const rnd = (a, b) => a + Math.random() * (b - a), pm = (a, b) => (Math.random() < 0.5 ? -1 : 1) * rnd(a, b);
+          const ROUNDS = [
+            { k: 1, f: (x) => x * x, g: ([x]) => [2 * x], ys: [-0.6, 9.6], dom: [[-3, 3]], x0: () => [pm(1.6, 2.9)],
+              tip: ["雾很大，你只感觉得到脚下的坡度。箭头指向上坡，反着走就是下山。", "目标：12 步内让 |坡度| < 0.05。这一轮 ≤ 8 步可冲 3 星。"] },
+            { k: 1, f: (x) => 0.1 * x ** 4 - 0.8 * x * x + 0.4 * x, g: ([x]) => [0.4 * x ** 3 - 1.6 * x + 0.4], ys: [-2.8, 2.6], dom: [[-3, 3]], x0: () => [rnd(0.8, 2.9)], local: true,
+              tip: ["第 2 轮：这座山的形状更怪。还是只看脚下，一步一步往下走。", "坡度变平了，就一定是最低点吗？"] },
+            { k: 2, two: true, f: (x, y) => 0.5 * x * x + y * y, g: ([x, y]) => [x, 2 * y], dom: [[-3.2, 3.2], [-1.8, 1.8]], x0: () => [pm(1.5, 3), pm(0.7, 1.5)],
+              tip: ["第 3 轮：从天上往下看，这是一张等高线地图，越往里越低。箭头是梯度：最陡的上坡方向。", "现在坡度有两个方向 (x 和 y)，拼成一个箭头。"] },
+          ];
+          let r = 0, R, p, trail, steps, over, busy, fogA, hop, bounced, passed = 0, r1 = 99, clouds = [];
+          const norm = (v) => Math.hypot(...v), fmt = (v) => (v < 0 ? "−" : "+") + Math.abs(v).toFixed(2);
+          const say = guide(root, ...ROUNDS[0].tip);
+          const head = el("p"), wrap = el("div", "x-fog"), cv = document.createElement("canvas"), fc = document.createElement("canvas");
+          cv.setAttribute("role", "img"); cv.setAttribute("aria-label", "被雾遮住的山坡，只看得见小球附近");
+          wrap.append(cv);
+          const meter = el("div", "x-row"), ctrl = el("div", "x-row"), stuckRow = el("div", "x-row"), nextRow = el("div", "x-row");
+          const lbl = el("label", "x-lbl", "步子"), rng = el("input", "x-range"), out = el("output");
+          Object.assign(rng, { type: "range", min: 0, max: 2, step: 1, value: 1 });
+          const syncR = () => { out.textContent = LRN[+rng.value]; rng.setAttribute("aria-valuetext", LRN[+rng.value]); };
+          rng.addEventListener("input", () => { syncR(); Audio_.play("click"); }); syncR();
+          lbl.append(rng, out);
+          const go = el("button", "x-btn x-btn--go", "走一步"), stay = el("button", "x-btn", "就是这里"), hopB = el("button", "x-btn", "换个起点"), next = el("button", "x-btn x-btn--go", "下一轮");
+          ctrl.append(lbl, go); stuckRow.append(stay, hopB); nextRow.append(next);
+          root.append(head, wrap, meter, ctrl, stuckRow, nextRow);
+
+          function scr(W, H) {
+            if (R.two) { const s = W / 6.4; return { X: (x) => W / 2 + x * s, Y: (y) => H / 2 - y * s, s }; }
+            const pd = 18, kx = (W - 2 * pd) / 6, ky = (H - 2 * pd) / (R.ys[1] - R.ys[0]);
+            return { X: (x) => pd + (x + 3) * kx, Y: (v) => H - pd - (v - R.ys[0]) * ky, kx, ky };
+          }
+          function render() {
+            if (!cv.isConnected) return;
+            const dpr = devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+            if (!W) return;
+            if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = fc.width = Math.round(W * dpr); cv.height = fc.height = Math.round(H * dpr); }
+            const c = cv.getContext("2d"), M = scr(W, H);
+            const ink = tok("--text-primary"), line = tok("--stroke-primary"), tint = tok("--fill-tertiary"), bg = tok("--fill-primary-on"), hot = tok("--fill-system-orange");
+            c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H); c.lineCap = c.lineJoin = "round";
+            let bx, by;
+            if (R.two) {
+              [8.2, 6.5, 5, 3.7, 2.6, 1.7, 1, 0.5, 0.15].forEach((lv) => {
+                c.beginPath(); c.ellipse(M.X(0), M.Y(0), Math.sqrt(2 * lv) * M.s, Math.sqrt(lv) * M.s, 0, 0, 2 * Math.PI);
+                c.globalAlpha = 0.45; c.fillStyle = tint; c.fill(); c.globalAlpha = 1; c.strokeStyle = line; c.lineWidth = 1; c.stroke();
+              });
+              bx = M.X(p[0]); by = M.Y(p[1]) - hop;
+            } else {
+              c.beginPath();
+              for (let i = 0; i <= 240; i++) { const x = -3 + (6 * i) / 240; c.lineTo(M.X(x), M.Y(R.f(x))); }
+              c.strokeStyle = ink; c.lineWidth = 2; c.stroke();
+              c.lineTo(M.X(3), H); c.lineTo(M.X(-3), H); c.closePath(); c.fillStyle = tint; c.fill();
+              bx = M.X(p[0]); by = M.Y(R.f(p[0])) - 9 - hop;
+            }
+            /* trail */
+            c.fillStyle = c.strokeStyle = ink; c.globalAlpha = 0.4; c.lineWidth = 1; c.setLineDash([3, 3]); c.beginPath();
+            trail.forEach((q) => c.lineTo(M.X(q[0]), R.two ? M.Y(q[1]) : M.Y(R.f(q[0])) - 9));
+            c.lineTo(bx, by + hop); c.stroke(); c.setLineDash([]);
+            trail.forEach((q) => { c.beginPath(); c.arc(M.X(q[0]), R.two ? M.Y(q[1]) : M.Y(R.f(q[0])) - 9, 2.5, 0, 7); c.fill(); });
+            c.globalAlpha = 1;
+            /* fog: a solid layer with a soft window cut around the ball */
+            if (fogA > 0) {
+              const f = fc.getContext("2d"); f.setTransform(dpr, 0, 0, dpr, 0, 0);
+              f.globalCompositeOperation = "source-over"; f.fillStyle = bg; f.fillRect(0, 0, W, H);
+              f.fillStyle = tint; f.fillRect(0, 0, W, H); f.fillStyle = bg; f.globalAlpha = 0.5;
+              clouds.forEach(([x, y, rr]) => { f.beginPath(); f.arc(x * W, y * H, rr * W, 0, 7); f.fill(); });
+              f.globalAlpha = 1; f.globalCompositeOperation = "destination-out";
+              const rad = Math.min(W, H) * 0.24, gr = f.createRadialGradient(bx, by, 0, bx, by, rad);
+              gr.addColorStop(0, "rgba(0,0,0,1)"); gr.addColorStop(0.55, "rgba(0,0,0,1)"); gr.addColorStop(1, "rgba(0,0,0,0)");
+              f.fillStyle = gr; f.fillRect(0, 0, W, H); f.globalCompositeOperation = "source-over";
+              c.globalAlpha = fogA; c.drawImage(fc, 0, 0, W, H); c.globalAlpha = 1;
+            }
+            /* slope arrow (uphill) and its value */
+            const g = R.g(p), gn = norm(g);
+            let ux = R.two ? g[0] : M.kx * Math.sign(g[0]), uy = R.two ? -g[1] : -M.ky * g[0] * Math.sign(g[0]);
+            const um = Math.hypot(ux, uy);
+            if (gn >= TH && um) {
+              ux /= um; uy /= um; const L = 20 + Math.min(R.two ? 60 : 46, gn * 14), ex = bx + ux * L, ey = by + uy * L;
+              c.strokeStyle = c.fillStyle = hot; c.lineWidth = 2.5; c.beginPath(); c.moveTo(bx, by); c.lineTo(ex, ey); c.stroke();
+              c.beginPath(); c.moveTo(ex + ux * 6, ey + uy * 6); c.lineTo(ex - uy * 5 - ux * 3, ey + ux * 5 - uy * 3); c.lineTo(ex + uy * 5 - ux * 3, ey - ux * 5 - uy * 3); c.closePath(); c.fill();
+            }
+            c.beginPath(); c.arc(bx, by, 9, 0, 7); c.fillStyle = ink; c.fill(); c.lineWidth = 2; c.strokeStyle = bg; c.stroke();
+            c.font = tok("--type-tag", "font") || "500 12px sans-serif"; c.textAlign = "center";
+            const txt = R.two ? `梯度 (${fmt(g[0])}, ${fmt(g[1])})` : `坡度 ${fmt(g[0])}`, tx = Math.max(70, Math.min(W - 70, bx)), ty = by > 40 ? by - 20 : by + 30;
+            c.lineWidth = 4; c.strokeStyle = bg; c.strokeText(txt, tx, ty); c.fillStyle = ink; c.fillText(txt, tx, ty);
+          }
+          function anim(dur, frame, cb) {
+            const t0 = performance.now(); if (reduced()) dur = 1;
+            const fr = (now) => { if (!cv.isConnected) return; const t = Math.min(1, (now - t0) / dur); frame(t); render(); t < 1 ? requestAnimationFrame(fr) : cb && cb(); };
+            requestAnimationFrame(fr);
+          }
+          function readout() {
+            const gn = norm(R.g(p));
+            meter.innerHTML = `<span class="x-meter">${R.two ? "梯度长度" : "|坡度|"} <b>${gn.toFixed(2)}</b></span><span class="pill">步数 ${steps} / ${MAX}</span><span class="chip ${gn < TH ? "chip--solid" : ""}">目标 &lt; ${TH}</span>`;
+          }
+          function step() {
+            if (busy || over) return; busy = true; Audio_.play("click"); steps++;
+            const g = R.g(p), lr = LR[+rng.value] * R.k, from = p.slice(); let wall = false;
+            const to = p.map((v, i) => { const [lo, hi] = R.dom[i], nv = v - lr * g[i]; if (nv < lo || nv > hi) wall = true; return Math.max(lo, Math.min(hi, nv)); });
+            anim(560, (t) => { const e = 1 - (1 - t) ** 3; p = from.map((v, i) => v + (to[i] - v) * e); }, () => {
+              trail.push(from);
+              const g2 = R.g(p), boing = wall || (g[0] * g2[0] + (g[1] || 0) * (g2[1] || 0) < 0 && norm(g2) >= TH);
+              const after = () => { hop = 0; busy = false; check(boing); };
+              if (boing) { Audio_.play("boing"); anim(460, (t) => { hop = 16 * Math.abs(Math.sin(t * 2 * Math.PI)) * (1 - t); }, after); } else after();
+            });
+          }
+          function check(boing) {
+            readout(); render();
+            if (norm(R.g(p)) < TH) return R.local && p[0] > 0 ? stuck() : pass();
+            if (steps >= MAX) return fail(`${MAX} 步用完了。雾散了：谷底在这里。`, ["步子太小，一直走不到。", "差一点点，再快几步就到了。", "步子太大，一直在两边弹来弹去。"][+rng.value]);
+            if (boing && !bounced) { bounced = true; say("Boing！冲过头，弹到对面去了。", "坡度的正负号变了，说明你跨过了谷底。步子要不要调一调？"); }
+            else if (r === 0 && steps === 5 && +rng.value === 0) say("走得好慢……", "越接近谷底坡度越小，每一步也跟着变小。换个大点的步子试试？");
+          }
+          function stuck() {
+            go.disabled = true; stuckRow.hidden = false;
+            say("你确定这里是最低点吗？", "坡度 ≈ 0 只说明脚下是平的。雾外面会不会还有更低的谷？");
+          }
+          stay.addEventListener("click", () => fail("雾散了：左边还有一个更深的谷！你停在了「局部最低点」。", "梯度下降只看脚下，所以会被小坑困住。"));
+          hopB.addEventListener("click", () => {
+            if (steps >= MAX) return fail("步数用完了。雾散了：左边那个才是真正的谷底。", "换起点是对的思路，只是要早一点换。");
+            Audio_.play("click"); steps++; stuckRow.hidden = true; go.disabled = false;
+            do { p = [rnd(-3, 3)]; } while (Math.abs(p[0] - 1.86) < 0.6);
+            trail = []; readout(); render();
+            say("换个地方，重新下山。", "多试几个起点，是找全局最低点的常用办法。换起点也算 1 步。");
+          });
+          function lift() { go.disabled = true; stuckRow.hidden = true; anim(900, (t) => { fogA = 1 - t; }); nextRow.hidden = false; next.textContent = r < 2 ? "下一轮" : "看成绩"; }
+          function pass() {
+            over = true; passed++; Audio_.play("correct");
+            if (r === 0) { r1 = steps; if (steps <= 3) award("valley"); }
+            const msg = [[`${steps} 步到谷底！雾散了：原来是个碗。`, steps <= 8 ? "坡度越小，步子也自动越小，所以会稳稳停下。" : "过关了。≤ 8 步才有第 3 颗星，大一点的步子会更快。"],
+              [`${steps} 步，找到了真正的谷底！`, "看右边那个小坑：差点让人以为已经到底了。"],
+              [`${steps} 步走到地图中心！`, "梯度的两个分量就是 x 方向和 y 方向的偏导数。"]][r];
+            say(...msg); lift();
+          }
+          function fail(t, s) { over = true; Audio_.play("wrong"); say(t, s); lift(); }
+          function startRound() {
+            R = ROUNDS[r]; p = R.x0(); trail = []; steps = 0; over = busy = bounced = false; fogA = 1; hop = 0;
+            clouds = Array.from({ length: 14 }, () => [Math.random(), Math.random(), 0.04 + Math.random() * 0.08]);
+            head.innerHTML = `<span class="chip chip--solid">第 ${r + 1} / 3 轮</span> <span class="pill">已通过 ${passed} 轮</span>`;
+            cv.setAttribute("aria-label", R.two ? "被雾遮住的等高线地图，箭头是梯度" : "被雾遮住的山坡曲线，箭头指向上坡");
+            go.disabled = false; stuckRow.hidden = nextRow.hidden = true;
+            if (r) say(...R.tip);
+            readout(); render();
+          }
+          go.addEventListener("click", step);
+          next.addEventListener("click", () => { Audio_.play("click"); r++; if (r < 3) startRound(); else finish(); });
+          function finish() {
+            nextRow.hidden = true; ctrl.hidden = true;
+            const stars = passed === 3 && r1 > 8 ? 2 : passed;
+            head.innerHTML = `<span class="chip">三轮结束</span>`;
+            say("下山的诀窍就三个词：坡度、方向、步子。", "第 5 关，我们让机器自己用这个办法学会画线。");
+            root.append(endCard(stars, `通过 ${passed} / 3 轮`, [
+              ["导数", "= 坡度：曲线在这一点有多陡、往哪边升高。"],
+              ["梯度", "= 最陡上坡方向，反着走就下山。它由每个方向的偏导数拼成。"],
+              ["学习率", "= 每步走多远。太小走不到，太大会来回弹。"],
+            ], "c05 导数 · c12 多元函数与偏导 · m07 梯度下降"));
+            done(stars, 60 + stars * 25);
+          }
+          window.addEventListener("resize", render);
+          new MutationObserver(render).observe(document.documentElement, { attributes: true });
+          startRound();
+        },
+      });
+
+      LEVELS.push({
+        id: 5,
+        title: "让线自己学会",
+        init(root, done) {
+          const pts = [...CATDOG2.c.map((q) => [1, ...q]), ...CATDOG2.d.map((q) => [-1, ...q])], n = pts.length;
+          const F = pts.map(([, x, y]) => [(x - 5) / 2.5, (y - 5) / 2.5, 1]), dt = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+          let L = 1, v = [1, 1, 1];
+          for (let k = 0; k < 80; k++) { const h = [0, 0, 0]; F.forEach((f) => { const s = dt(f, v); f.forEach((q, i) => (h[i] += (2 / n) * s * q)); }); L = Math.hypot(...h); v = h.map((q) => q / L); }
+          const LRS = [[0.1, "很小"], [0.3, "小"], [0.7, "中"], [1, "大"], [2.3, "太大"]], SPD = [700, 450, 280, 160, 80], W0 = [0.2, -0.6, 0.3];
+          let w = W0.slice(), steps = 0, hist = [], timer = null, blown = false, zig = false, answered = false, fixRun = 0, finished = false, picking = false, paw = null, guesses = [];
+          const got = { a: 0, b: 0, c: 0 };
+          const say = guide(root, "这回你不用拖线。按「学一步」，机器会看哪里分错了，自己把线挪一点。", "红圈 = 分错的点；橙色一闪 = 这一步正在被纠正的点。");
+          const split = el("div", "x-split"), left = el("div"), side = el("div");
+          side.style.cssText = "display:grid;gap:12px;align-content:start";
+          split.append(left, side); root.append(split);
+          const P = plane(left), zc = el("span", "x-zone", "猫区"), zd = el("span", "x-zone", "狗区");
+          const dots = pts.map((q) => P.dot(q[0] > 0 ? "🐱" : "🐶", q[1], q[2], `${q[0] > 0 ? "猫" : "狗"} (${q[1]}, ${q[2]})`));
+          P.box.append(zc, zd);
+          const fp = (x, y) => w[0] * (x - 5) / 2.5 + w[1] * (y - 5) / 2.5 + w[2];
+          const meter = el("div", "x-row"), eq = el("div", "x-eq");
+          const btns = el("div", "x-row"), learnB = el("button", "x-btn x-btn--go", "学一步"), autoB = el("button", "x-btn", "自动学习 ▶"), resetB = el("button", "x-btn", "重置");
+          btns.append(learnB, autoB, resetB);
+          const slider = (name, max, val, txt) => {
+            const l = el("label", "x-lbl", name), i = el("input", "x-range"), o = el("output");
+            Object.assign(i, { type: "range", min: 0, max, step: 1, value: val });
+            const s = () => { o.textContent = txt(+i.value); i.setAttribute("aria-valuetext", o.textContent); };
+            i.addEventListener("input", () => { s(); Audio_.play("click"); }); s(); l.append(i, o); return [l, i];
+          };
+          const [lrL, lrI] = slider("学习率", 4, 2, (k) => LRS[k][1]), [spL, spI] = slider("速度", 4, 2, (k) => ["慢", "稍慢", "中", "快", "飞快"][k]);
+          const sliders = el("div", "x-row"); sliders.append(lrL, spL);
+          const qa = el("div", "x-row"); qa.hidden = true;
+          const pawRow = el("div", "x-row"), pawB = el("button", "x-btn", "放一只神秘动物 🐾"), gCat = el("button", "x-btn", "我猜：猫"), gDog = el("button", "x-btn", "我猜：狗"), gScore = el("span", "pill");
+          pawB.disabled = true; gCat.hidden = gDog.hidden = true; pawRow.append(pawB, gCat, gDog, gScore);
+          const fig = el("figure", "chart", `<figcaption class="chart__cap">误差随学习步数下降<small>平均平方误差，每步一个点</small></figcaption><div class="chart__canvas"><canvas role="img" aria-label="误差随训练步数变化的曲线"></canvas></div>`);
+          const tasks = el("ul", "checklist"), endRow = el("div", "x-row"), endB = el("button", "x-btn", "结束本关");
+          endRow.append(endB);
+          side.append(meter, eq, btns, sliders, qa, pawRow, fig, tasks, endRow);
+          const stats = () => { let l = 0, ok = 0; F.forEach((f, i) => { const s = dt(w, f), t = pts[i][0]; l += (s - t) ** 2; if (Math.sign(s) === t) ok++; }); return { loss: l / n, ok }; };
+          const chart = typeof Chart === "undefined" ? null : new Chart(fig.querySelector("canvas"), {
+            type: "line",
+            data: { labels: [], datasets: [{ label: "误差", data: [], fill: true }] },
+            options: { animation: false, scales: { x: { ticks: { maxTicksLimit: 6 } } },
+              plugins: { legend: { display: false }, tooltip: { callbacks: { title: (i) => `第 ${i[0].label} 步`, label: (c) => `误差 ${c.raw.toFixed(3)}` } } } },
+          });
+          const r1 = (x) => (Math.abs(x) < 0.05 ? 0 : x), sg = (x) => (r1(x) < 0 ? "−" : "+");
+          function draw() {
+            const { cat, dog } = drawSplit(P, fp), s = stats();
+            [[zc, cat], [zd, dog]].forEach(([z, poly]) => { z.hidden = poly.length < 3; if (!z.hidden) P.at(z, ...centroid(poly)); });
+            dots.forEach((d, i) => d.classList.toggle("mis", Math.sign(fp(pts[i][1], pts[i][2])) !== pts[i][0]));
+            meter.innerHTML = `<span class="x-meter">准确率 <b>${Math.round((s.ok / n) * 100)}%</b></span><span class="pill">分错 ${n - s.ok} 只</span><span class="pill">第 ${steps} 步</span>`;
+            const a = w[0] / 2.5, b = w[1] / 2.5, c = w[2] - 2 * (w[0] + w[1]);
+            eq.textContent = `${r1(a).toFixed(2)}·x ${sg(b)} ${Math.abs(r1(b)).toFixed(2)}·y ${sg(c)} ${Math.abs(r1(c)).toFixed(2)} = 0`;
+            return s;
+          }
+          function plot(reset) {
+            if (reset) hist = [];
+            hist.push(stats().loss);
+            if (chart) { chart.data.labels = hist.map((_, i) => i); chart.data.datasets[0].data = hist.slice(); chart.update("none"); }
+          }
+          function renderTasks() {
+            const T = [["a", "让机器 100% 分对", "不用动手，只按「学一步」"], ["b", "学习率调成「太大」，看它乱跳，再修好", "修好 = 调小后误差连降 3 步"], ["c", "神秘动物：先猜猫还是狗，再看线怎么判", "一组 3 只，3/3 猜对"]];
+            tasks.innerHTML = T.map(([k, t, s]) => `<li class="${got[k] ? "is-done" : ""}"><span class="checklist__item">${t} <small>${s}</small></span><span class="chip ${got[k] ? "" : "chip--solid"}">${got[k] ? "完成 ⭐" : "进行中"}</span></li>`).join("");
+          }
+          const total = () => got.a + got.b + got.c;
+          function win(k, t, s) {
+            if (got[k] || finished) return; got[k] = 1; Audio_.play("star"); toast(`⭐ 任务完成 · ${total()} / 3`); renderTasks(); say(t, s);
+            if (k === "a") pawB.disabled = false;
+            if (total() === 3) setTimeout(finish, 1200);
+          }
+          function learn() {
+            if (finished) return;
+            if (blown) { Audio_.play("wrong"); P.box.classList.add("x-flash"); setTimeout(() => P.box.classList.remove("x-flash"), 340); return say("误差已经爆炸了，线在乱跳。", "先点「重置」，再把学习率调小。"); }
+            const before = stats().loss, lri = +lrI.value;
+            let worst = -1, wm = 0;
+            F.forEach((f, i) => { const m = dt(w, f) * pts[i][0]; if (m <= 0 && (worst < 0 || m < wm)) { worst = i; wm = m; } });
+            const g = [0, 0, 0];
+            F.forEach((f, i) => { const e = dt(w, f) - pts[i][0]; f.forEach((q, j) => (g[j] += (2 / n) * e * q)); });
+            w = w.map((q, j) => q - (LRS[lri][0] / L) * g[j]); steps++;
+            const s = draw(); plot();
+            Audio_.play("tick", 330 + (s.ok / n) * 660);
+            if (worst >= 0) { const d = dots[worst]; d.classList.remove("hit"); void d.offsetWidth; d.classList.add("hit"); setTimeout(() => d.classList.remove("hit"), 560); }
+            if (s.ok === n) win("a", "100%！机器自己找到了分界线。", "你一下都没拖：是误差在推着 w 和 b 走。现在可以放神秘动物了。");
+            if (lri === 4 && s.loss > before) { zig = true; if (!answered && qa.hidden) ask(); }
+            if (zig && answered && lri <= 3) { fixRun = s.loss < before ? fixRun + 1 : 0; if (fixRun >= 3) win("b", "修好了！误差又一路往下走了。", "学习率合适，每一步都落在更低的地方。"); }
+            if (s.loss > 30) { blown = true; stopAuto(); say("误差爆炸了！线已经甩飞了。", "点「重置」，再把学习率调小。"); }
+            else if (timer && Math.abs(before - s.loss) < 1e-4) { stopAuto(); say("误差几乎不再下降了，线停住了。", "这就叫「收敛」。"); }
+          }
+          function ask() {
+            stopAuto(); qa.hidden = false; qa.innerHTML = "";
+            say("它为什么会来回跳？", "误差曲线时高时低，线左右甩。选一个答案。");
+            [["步子太大，每次都跨过了谷底", 1], ["数据里有几只分错的动物", 0], ["机器学累了", 0]].forEach(([t, ok]) => {
+              const b = el("button", "x-btn", t);
+              b.addEventListener("click", () => {
+                if (ok) { answered = true; qa.hidden = true; Audio_.play("correct"); say("对！学习率太大，w 每次都冲过最低点又被拽回来，越弹越远。", "把学习率调回「大」或更小，再学几步（误差太大就先重置）。"); }
+                else { Audio_.play("wrong"); b.disabled = true; say("再想想第 4 关的小球。", "它为什么会 Boing 一下弹到对面？"); }
+              });
+              qa.append(b);
+            });
+          }
+          function stopAuto() { clearTimeout(timer); timer = null; autoB.textContent = "自动学习 ▶"; }
+          function loop() { if (!root.isConnected || !timer) return stopAuto(); learn(); if (timer) timer = setTimeout(loop, SPD[+spI.value]); }
+          learnB.addEventListener("click", () => { stopAuto(); learn(); });
+          autoB.addEventListener("click", () => { if (timer) return stopAuto(); if (finished) return; autoB.textContent = "暂停 ⏸"; timer = setTimeout(loop, 10); });
+          resetB.addEventListener("click", () => { stopAuto(); Audio_.play("click"); w = W0.slice(); steps = 0; blown = false; fixRun = 0; draw(); plot(true); });
+          pawB.addEventListener("click", () => {
+            stopAuto(); Audio_.play("click"); picking = true; P.box.classList.add("is-pick"); gCat.hidden = gDog.hidden = true;
+            if (paw) { paw.remove(); paw = null; }
+            say("在坐标图上任意点一下，放一只神秘动物。", "放在线附近会更难猜。");
+          });
+          P.box.addEventListener("click", (e) => {
+            if (!picking) return;
+            const q = P.from(e.clientX, e.clientY); picking = false; P.box.classList.remove("is-pick");
+            paw = P.dot("🐾", q.x, q.y, "神秘动物"); paw._q = q; Audio_.play("click");
+            gCat.hidden = gDog.hidden = false; pawB.disabled = true;
+            say(`它的耳朵 ${q.x.toFixed(1)}、胡须 ${q.y.toFixed(1)}。你猜线会判它是猫还是狗？`, "先猜，再看答案。");
+          });
+          const guess = (cat) => {
+            const ans = fp(paw._q.x, paw._q.y) > 0, right = ans === cat;
+            paw.textContent = ans ? "🐱" : "🐶"; guesses.push(right);
+            gCat.hidden = gDog.hidden = true; pawB.disabled = false;
+            Audio_.play(right ? "correct" : "wrong");
+            gScore.textContent = `这组 ${guesses.filter(Boolean).length} / ${guesses.length}`;
+            if (guesses.length < 3) return say(`线说：${ans ? "猫" : "狗"}。${right ? "你猜对了！" : "和你想的不一样。"}`, "看它落在线的哪一边。再放一只。");
+            const all = guesses.every(Boolean); guesses = [];
+            if (all) win("c", "3 / 3 全猜对！你已经能「读」懂这条线了。", "线一边是猫区，一边是狗区：代入 (x, y) 看正负就行。");
+            else say(`线说：${ans ? "猫" : "狗"}。这组没有全对。`, "再来一组 3 只：先看它在线的哪一边。");
+          };
+          gCat.addEventListener("click", () => guess(true)); gDog.addEventListener("click", () => guess(false));
+          endB.addEventListener("click", finish);
+          function finish() {
+            if (finished) return; finished = true; stopAuto(); endB.disabled = true;
+            const stars = total(); if (stars === 3) award("trainer");
+            say("线是机器自己挪的：每一步都沿着误差下降最快的方向。", "这就是第 4 关的下山，只不过山变成了「误差」。");
+            root.append(endCard(stars, `完成 ${stars} / 3 个任务`, [
+              ["机器学习", "= 用数据自动调整 w 和 b，让误差下降。"],
+              ["误差（损失）", "每只动物「算出来的值」和「正确答案」差多少，平方后取平均。"],
+              ["学习率", "每一步沿下坡方向走多远。太大就会来回跳，甚至越跳越远。"],
+            ], "m07 梯度下降 · p16 相关与回归 · p20 统计学习"));
+            done(stars, 60 + stars * 25);
+          }
+          renderTasks(); draw(); plot(true);
+        },
+      });
+
+      /* ---------- shared helpers for levels 6–7 ---------- */
+      const rng = (s) => () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
+      /* [x, y, t]: t = 1 cat, 0 dog; world range about −3…3 */
+      function donutData() {
+        const r = rng(7), P = [];
+        for (let i = 0; i < 12; i++) { const a = r() * 6.283, d = Math.sqrt(r()) * 0.9; P.push([d * Math.cos(a), d * Math.sin(a), 1]); }
+        for (let i = 0; i < 20; i++) { const a = ((i + r() * 0.6) / 20) * 6.283, d = 2 + r() * 0.6; P.push([d * Math.cos(a), d * Math.sin(a), 0]); }
+        return P;
+      }
+      function moonsData() {
+        const r = rng(11), P = [], j = () => (r() - 0.5) * 0.35;
+        for (let i = 0; i < 20; i++) { const t = (Math.PI * i) / 19; P.push([(Math.cos(t) - 0.5) * 1.8 + j(), (Math.sin(t) - 0.25) * 1.8 + j(), 1]); }
+        for (let i = 0; i < 20; i++) { const t = (Math.PI * i) / 19; P.push([(0.5 - Math.cos(t)) * 1.8 + j(), (0.25 - Math.sin(t)) * 1.8 + j(), 0]); }
+        return P;
+      }
+      function canvasBox(container, label) {
+        const wrap = el("div", "x-cv"), cv = document.createElement("canvas");
+        cv.setAttribute("role", "img"); cv.setAttribute("aria-label", label); cv.tabIndex = 0;
+        wrap.append(cv); container.append(wrap);
+        return {
+          wrap, cv,
+          begin() {
+            const dpr = devicePixelRatio || 1, W = cv.clientWidth || 400, H = cv.clientHeight || 400;
+            if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+            const c = cv.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H); c.globalAlpha = 1;
+            return { c, W, H };
+          },
+          at(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top, r.width]; },
+        };
+      }
+      function rangeCtl(name, min, max, step, val, fmt, on) {
+        const l = el("label", "x-lbl", name), i = el("input", "x-range"), o = el("output");
+        Object.assign(i, { type: "range", min, max, step, value: val });
+        const s = () => { o.textContent = fmt(+i.value); i.setAttribute("aria-valuetext", o.textContent); };
+        i.addEventListener("input", () => { s(); on && on(+i.value); }); s(); l.append(i, o);
+        return { l, i, set(v) { i.value = v; s(); } };
+      }
+      const taskList = (T, got) => T.map(([k, t, s]) => `<li class="${got[k] ? "is-done" : ""}"><span class="checklist__item">${t} <small>${s}</small></span><span class="chip ${got[k] ? "" : "chip--solid"}">${got[k] ? "完成 ⭐" : "进行中"}</span></li>`).join("");
+      function emoji(c, e, x, y, size) {
+        c.globalAlpha = 1; c.font = `${size || 16}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+        c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(e, x, y);
+      }
+      const palette = () => ({ ink: tok("--text-primary"), sub: tok("--text-secondary"), grid: tok("--stroke-secondary"), axis: tok("--stroke-primary"), bg: tok("--fill-primary-on"), cat: tok("--chart-1"), dog: tok("--chart-2"), pl: tok("--chart-3") });
+      function rafLoop(root, frame) { const f = () => { if (!root.isConnected) return; frame(); requestAnimationFrame(f); }; requestAnimationFrame(f); }
+      function tween(dur, frame, cb) {
+        const t0 = performance.now(); if (reduced()) dur = 1;
+        const f = (now) => { const t = Math.min(1, (now - t0) / dur); frame(1 - (1 - t) ** 3); t < 1 ? requestAnimationFrame(f) : cb && cb(); };
+        requestAnimationFrame(f);
+      }
+      /* 8×8 draw pad: tap or drag to paint */
+      function pad8(container) {
+        const g = el("div", "x-grid x-pad"), v = Array(64).fill(0), cells = [];
+        let painting = false, val = 1;
+        for (let i = 0; i < 64; i++) { const c = el("div", "x-px"); c.dataset.i = i; g.append(c); cells.push(c); }
+        const set = (i, x) => { v[i] = x; cells[i].classList.toggle("on", !!x); };
+        const idx = (t) => (t && t.dataset && t.dataset.i != null && g.contains(t) ? +t.dataset.i : -1);
+        g.addEventListener("pointerdown", (e) => { const i = idx(e.target); if (i < 0) return; e.preventDefault(); painting = true; val = v[i] ? 0 : 1; set(i, val); Audio_.play("tick", 500 + val * 300); });
+        g.addEventListener("pointermove", (e) => { if (!painting) return; const i = idx(document.elementFromPoint(e.clientX, e.clientY)); if (i >= 0 && v[i] !== val) set(i, val); });
+        window.addEventListener("pointerup", () => (painting = false));
+        g.setAttribute("role", "group"); g.setAttribute("aria-label", "8×8 画板，点按或拖动涂黑方块");
+        container.append(g);
+        return { v, rows: () => [0, 1, 2, 3, 4, 5, 6, 7].map((r) => v.slice(r * 8, r * 8 + 8)), clear() { for (let i = 0; i < 64; i++) set(i, 0); }, empty: () => !v.some(Boolean) };
+      }
+
+      LEVELS.push({
+        id: 6,
+        title: "扭一扭空间",
+        init(root, done) {
+          const pts = donutData(), n = pts.length, got = { a: 0, b: 0, c: 0 }, shown = {};
+          let mode = "line", hp = [[-2.6, -1.4], [2.6, 0.8]], drag = -1, rot = null, best = 0, tries = 0;
+          let M = [1, 0, 0, 1], S = [1, 0, 0, 1], lift = 0, yaw = 0.7, pitch = 0.6, h = 7.5, dirty = true, finished = false;
+          const say = guide(root, "看：猫挤在中间，狗围成一圈。试试用一条直线分开它们？", "拖动两个黑色圆点摆线；选中画布后也能用方向键转动、平移。");
+          const split = el("div", "x-split"), left = el("div"), side = el("div");
+          split.append(left, side); root.append(split);
+          const cap = el("p", "x-axes", "横轴 x · 竖轴 y，原点在正中"); left.append(cap);
+          const B = canvasBox(left, "猫在中间、狗围成一圈的散点图");
+          const meter = el("div", "x-row"), eq = el("div", "x-eq");
+          const pLine = el("div", "x-row"), giveUp = el("button", "x-btn x-btn--go", "就这样了，提交"); pLine.append(giveUp);
+          const pMat = el("div", "x-panel"); pMat.hidden = true; pMat.style.background = "var(--fill-primary-on)";
+          const mat = el("div", "x-mat"), r1 = (v) => Math.round(v * 10) / 10;
+          const K = ["a", "b", "c", "d"].map((nm, i) => rangeCtl(nm, -2, 2, 0.1, M[i], (v) => v.toFixed(1), (v) => { M[i] = r1(v); dirty = true; Audio_.play("tick", 440 + v * 120); checkM(); }));
+          mat.setAttribute("aria-label", "矩阵 [[a, b], [c, d]]"); mat.append(...K.map((k) => k.l));
+          const mBtns = el("div", "x-row"), resetM = el("button", "x-btn", "复位成 I"), liftB = el("button", "x-btn x-btn--go", "加一个新特征 z = x²+y²");
+          mBtns.append(resetM, liftB);
+          pMat.append(el("p", "", "<b>矩阵 [[a, b], [c, d]]</b> 把每个点 (x, y) 搬到 (ax + by, cx + dy)。"), mat,
+            el("p", "fineprint", "旋转 θ 角的矩阵：[[cos θ, −sin θ], [sin θ, cos θ]]。"), mBtns);
+          const p3 = el("div", "x-row"); p3.hidden = true;
+          const Hc = rangeCtl("平面高度 z", 0, 8, 0.1, h, (v) => v.toFixed(1), (v) => { h = v; dirty = true; Audio_.play("tick", 300 + v * 80); check3(); });
+          const back = el("button", "x-btn", "回到平面"); p3.append(Hc.l, back, el("p", "fineprint", "拖动画布可转动 3D 视角。"));
+          const tasks = el("ul", "checklist"), endRow = el("div", "x-row"), endB = el("button", "x-btn", "结束本关");
+          endB.disabled = true; endRow.append(endB);
+          side.append(meter, eq, pLine, pMat, p3, tasks, endRow);
+          const T = [["a", "让 det = 0，看平面被压成一条线", "面积缩放倍数 = 0"], ["b", "找一个旋转矩阵，让猫箭头指向正上方", "只转不拉伸"], ["c", "加特征 z = x²+y²，用一个水平面把猫狗 100% 分开", "拖平面高度"]];
+          const renderTasks = () => (tasks.innerHTML = taskList(T, got));
+          const total = () => got.a + got.b + got.c;
+          function win(k, t, s) {
+            if (got[k] || finished) return; got[k] = 1; Audio_.play("star"); toast(`⭐ 任务完成 · ${total()} / 3`); renderTasks(); say(t, s);
+            if (k === "c") award("space");
+            if (total() === 3) setTimeout(finish, 1600);
+          }
+          const lineFn = () => {
+            const [[x1, y1], [x2, y2]] = hp, w1 = y1 - y2, w2 = x2 - x1, b = -(w1 * x1 + w2 * y1);
+            let ok = 0; pts.forEach(([x, y, t]) => { if (w1 * x + w2 * y + b > 0 === !!t) ok++; });
+            const sgn = ok >= n - ok ? 1 : -1;
+            return { ok: Math.max(ok, n - ok), f: (x, y) => sgn * (w1 * x + w2 * y + b) };
+          };
+          const pct = (k) => Math.round((k / n) * 100);
+          function readout() {
+            if (mode === "line") {
+              const { ok } = lineFn(); best = Math.max(best, ok);
+              meter.innerHTML = `<span class="x-meter">准确率 <b>${pct(ok)}%</b></span><span class="pill">最好 ${pct(best)}%</span><span class="pill">分错 ${n - ok} 只</span>`;
+              eq.hidden = true;
+            } else if (mode === "mat") {
+              const D = M[0] * M[3] - M[1] * M[2];
+              meter.innerHTML = `<span class="x-meter">面积缩放倍数 <b>×${Math.abs(D).toFixed(2)}</b></span>${D < -0.005 ? '<span class="pill">翻面了</span>' : ""}`;
+              eq.hidden = false; eq.textContent = `det = ad − bc = ${M[0].toFixed(1)}·${M[3].toFixed(1)} − ${M[1].toFixed(1)}·${M[2].toFixed(1)} = ${(Math.abs(D) < 0.005 ? 0 : D).toFixed(2)}`;
+            } else {
+              const ok = pts.filter(([x, y, t]) => x * x + y * y < h === !!t).length;
+              meter.innerHTML = `<span class="x-meter">准确率 <b>${pct(ok)}%</b></span><span class="pill">平面下 = 猫 · 平面上 = 狗</span>`;
+              eq.hidden = false; eq.textContent = `z = x² + y² ${ok === n ? "<" : "?"} ${h.toFixed(1)}`;
+            }
+          }
+          function checkM() {
+            readout();
+            const D = M[0] * M[3] - M[1] * M[2], near = (v, t) => Math.abs(v - t) < 0.051;
+            if (Math.abs(D) < 0.005) win("a", "整个平面被压扁成了一条线！面积 × 0。", "det = 0：有的猫和狗被压到同一个位置，信息丢了，再也分不开。");
+            if (near(M[0], 0) && near(M[3], 0) && near(M[2], 1) && near(M[1], -1)) win("b", "猫箭头转到正上方了！这就是「旋转 90°」的矩阵。", "[[0, −1], [1, 0]]：det = 1，只转不拉伸，面积不变。");
+            else if (!got.b && !shown.up && near(M[0], 0) && M[2] > 0.3) { shown.up = 1; say("箭头朝上了！可是整张网格被拉歪了。", "旋转不会改变形状：试试让 b = −c、d = a。"); }
+          }
+          function check3() {
+            readout();
+            if (lift === 1 && pts.every(([x, y, t]) => x * x + y * y < h === !!t)) win("c", "100% 分开了！猫都在平面下，狗都在平面上。", "回到原来的平面看：这个水平面切出来的，正好是一个圆。");
+          }
+          /* drawing */
+          function draw2(c, W, H, K) {
+            const s = W / 6.4, X = (x) => W / 2 + x * s, Y = (y) => H / 2 - y * s, Tm = (x, y) => [S[0] * x + S[1] * y, S[2] * x + S[3] * y];
+            const seg = (p, q, st, w) => { c.strokeStyle = st; c.lineWidth = w || 1; c.beginPath(); c.moveTo(X(p[0]), Y(p[1])); c.lineTo(X(q[0]), Y(q[1])); c.stroke(); };
+            if (mode === "line") {
+              const { f } = lineFn(), [[x1, y1], [x2, y2]] = hp, L = Math.hypot(x2 - x1, y2 - y1) || 1, d = [(x2 - x1) / L, (y2 - y1) / L], m = [(x1 + x2) / 2, (y1 + y2) / 2];
+              let nn = [-d[1], d[0]]; if (f(m[0] + nn[0], m[1] + nn[1]) < 0) nn = [-nn[0], -nn[1]];
+              [[1, K.cat, 0.35], [-1, K.dog, 0.2]].forEach(([sg, col, al]) => {
+                const q = [[m[0] - d[0] * 20, m[1] - d[1] * 20], [m[0] + d[0] * 20, m[1] + d[1] * 20]];
+                c.globalAlpha = al; c.fillStyle = col; c.beginPath(); c.moveTo(X(q[0][0]), Y(q[0][1])); c.lineTo(X(q[1][0]), Y(q[1][1]));
+                c.lineTo(X(q[1][0] + sg * nn[0] * 20), Y(q[1][1] + sg * nn[1] * 20)); c.lineTo(X(q[0][0] + sg * nn[0] * 20), Y(q[0][1] + sg * nn[1] * 20)); c.fill();
+              });
+              c.globalAlpha = 1;
+            }
+            for (let k = -10; k <= 10; k++) { seg(Tm(k, -10), Tm(k, 10), k ? K.grid : K.axis, k ? 1 : 1.5); seg(Tm(-10, k), Tm(10, k), k ? K.grid : K.axis, k ? 1 : 1.5); }
+            if (mode === "mat") {
+              const q = [Tm(0, 0), Tm(1, 0), Tm(1, 1), Tm(0, 1)];
+              c.globalAlpha = 0.55; c.fillStyle = K.pl; c.beginPath(); q.forEach((p, i) => (i ? c.lineTo : c.moveTo).call(c, X(p[0]), Y(p[1]))); c.fill(); c.globalAlpha = 1;
+            }
+            pts.forEach(([x, y, t]) => { const p = Tm(x, y); emoji(c, t ? "🐱" : "🐶", X(p[0]), Y(p[1]), 15); });
+            if (mode === "line") {
+              seg([hp[0][0] - (hp[1][0] - hp[0][0]) * 4, hp[0][1] - (hp[1][1] - hp[0][1]) * 4], [hp[0][0] + (hp[1][0] - hp[0][0]) * 5, hp[0][1] + (hp[1][1] - hp[0][1]) * 5], K.ink, 2);
+              hp.forEach(([x, y]) => { c.fillStyle = K.ink; c.strokeStyle = K.bg; c.lineWidth = 3; c.beginPath(); c.arc(X(x), Y(y), 10, 0, 7); c.fill(); c.stroke(); });
+            } else {
+              const tip = Tm(1.6, 0), a = Math.atan2(-(Y(tip[1]) - Y(0)), X(tip[0]) - X(0)), ex = X(tip[0]), ey = Y(tip[1]);
+              seg([0, 0], tip, K.ink, 3);
+              if (Math.hypot(ex - X(0), ey - Y(0)) > 4) {
+                c.fillStyle = K.ink; c.beginPath(); c.moveTo(ex, ey);
+                c.lineTo(ex - 12 * Math.cos(a - 0.45), ey + 12 * Math.sin(a - 0.45)); c.lineTo(ex - 12 * Math.cos(a + 0.45), ey + 12 * Math.sin(a + 0.45)); c.fill();
+              }
+              emoji(c, "🐱", ex + 16 * Math.cos(a), ey - 16 * Math.sin(a), 20);
+            }
+          }
+          function draw3(c, W, H, K) {
+            const s = W / 9, cx = W / 2, cy = H * 0.64, cw = Math.cos(yaw), sw = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch), ZS = 0.42;
+            const P3 = (x, y, z) => { const xr = x * cw - y * sw, yr = x * sw + y * cw; return [cx + xr * s, cy + yr * sp * s - z * ZS * cp * s, yr]; };
+            const line = (p, q, st, w) => { c.strokeStyle = st; c.lineWidth = w || 1; c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(q[0], q[1]); c.stroke(); };
+            for (let k = -3; k <= 3; k++) { line(P3(k, -3, 0), P3(k, 3, 0), k ? K.grid : K.axis); line(P3(-3, k, 0), P3(3, k, 0), k ? K.grid : K.axis); }
+            line(P3(0, 0, 0), P3(0, 0, 8), K.axis, 1.5); c.fillStyle = K.sub; c.font = "12px Geist, sans-serif"; const zt = P3(0, 0, 8.3); c.fillText("z", zt[0], zt[1]);
+            const items = pts.map(([x, y, t]) => { const z = lift * (x * x + y * y); return { t, z, g: P3(x, y, 0), p: P3(x, y, z) }; }).sort((a, b) => a.p[2] - b.p[2]);
+            const dot = (it) => { line(it.g, it.p, K.grid, 1); emoji(c, it.t ? "🐱" : "🐶", it.p[0], it.p[1], 15); };
+            items.filter((it) => it.z < h).forEach(dot);
+            const q = [P3(-3, -3, h), P3(3, -3, h), P3(3, 3, h), P3(-3, 3, h)];
+            c.globalAlpha = 0.4; c.fillStyle = K.pl; c.beginPath(); q.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.closePath(); c.fill();
+            c.globalAlpha = 1; c.strokeStyle = K.ink; c.lineWidth = 1; c.stroke();
+            items.filter((it) => it.z >= h).forEach(dot);
+          }
+          let K0 = null;
+          rafLoop(root, () => {
+            if (!reduced()) { const dS = S.map((v, i) => M[i] - v); if (dS.some((v) => Math.abs(v) > 1e-3)) { S = S.map((v, i) => v + dS[i] * 0.18); dirty = true; } else S = M.slice(); } else S = M.slice();
+            if (!dirty) return; dirty = false;
+            const { c, W, H } = B.begin(), K = K0 || (K0 = palette());
+            mode === "3d" ? draw3(c, W, H, K) : draw2(c, W, H, K);
+          });
+          new MutationObserver(() => { K0 = null; dirty = true; }).observe(document.documentElement, { attributes: true });
+          addEventListener("resize", () => (dirty = true));
+          /* input */
+          const toW = (e) => { const [px, py, w] = B.at(e), s = w / 6.4, cl = (v) => Math.max(-3.1, Math.min(3.1, v)); return [cl((px - w / 2) / s), cl((w / 2 - py) / s)]; };
+          B.cv.addEventListener("pointerdown", (e) => {
+            if (mode === "line") {
+              const p = toW(e), d = hp.map((q) => Math.hypot(q[0] - p[0], q[1] - p[1]));
+              drag = d[0] < d[1] ? 0 : 1; if (d[drag] > 0.7) { drag = -1; return; }
+            } else if (mode === "3d") rot = { x: e.clientX, y: e.clientY, yaw, pitch };
+            else return;
+            B.cv.setPointerCapture(e.pointerId); B.cv.style.cursor = "grabbing";
+          });
+          B.cv.addEventListener("pointermove", (e) => {
+            if (mode === "line" && drag >= 0) { hp[drag] = toW(e); dirty = true; readout(); }
+            else if (mode === "3d" && rot) { yaw = rot.yaw + (e.clientX - rot.x) * 0.01; pitch = Math.max(0.1, Math.min(1.45, rot.pitch + (e.clientY - rot.y) * 0.008)); dirty = true; }
+          });
+          const up = () => {
+            B.cv.style.cursor = "";
+            if (mode === "line" && drag >= 0) { drag = -1; afterTry(); }
+            rot = null;
+          };
+          B.cv.addEventListener("pointerup", up); B.cv.addEventListener("pointercancel", up);
+          B.cv.addEventListener("keydown", (e) => {
+            const k = e.key; if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(k)) return; e.preventDefault();
+            if (mode === "line") {
+              const m = [(hp[0][0] + hp[1][0]) / 2, (hp[0][1] + hp[1][1]) / 2];
+              if (k === "ArrowLeft" || k === "ArrowRight") { const a = k === "ArrowLeft" ? 0.087 : -0.087, ca = Math.cos(a), sa = Math.sin(a); hp = hp.map(([x, y]) => [m[0] + (x - m[0]) * ca - (y - m[1]) * sa, m[1] + (x - m[0]) * sa + (y - m[1]) * ca]); }
+              else { const dy = k === "ArrowUp" ? 0.15 : -0.15; hp = hp.map(([x, y]) => [x, y + dy]); }
+              readout(); afterTry();
+            } else if (mode === "3d") { if (k === "ArrowLeft") yaw -= 0.1; if (k === "ArrowRight") yaw += 0.1; if (k === "ArrowUp") pitch = Math.max(0.1, pitch - 0.08); if (k === "ArrowDown") pitch = Math.min(1.45, pitch + 0.08); }
+            dirty = true;
+          });
+          function afterTry() {
+            tries++; Audio_.play("tick", 300 + pct(lineFn().ok) * 6);
+            if (tries === 6) say("怎么摆都差一截？", "猫被狗围在中间：直线一边是猫区，就总会把一些狗也划进去。觉得够了就点「提交」。");
+          }
+          giveUp.addEventListener("click", () => {
+            Audio_.play("wah"); B.wrap.classList.add("x-flash"); setTimeout(() => B.wrap.classList.remove("x-flash"), 340);
+            say(`哇～哇～哇～ 直线最多 ${pct(best)}%，任务失败（但这在意料之中）。`, "猫被围在圈里，任何直线都分不开。那就换个思路：先把整个空间扭一扭？");
+            mode = "mat"; pLine.hidden = true; pMat.hidden = false; endB.disabled = false; cap.textContent = "网格跟着矩阵一起变形；黄色方块 = 原来的 1×1 小方块";
+            B.cv.setAttribute("aria-label", "随矩阵变形的网格、猫狗散点和一支猫箭头"); dirty = true; readout(); renderTasks();
+          });
+          resetM.addEventListener("click", () => { M = [1, 0, 0, 1]; K.forEach((k, i) => k.set(M[i])); Audio_.play("click"); dirty = true; readout(); });
+          liftB.addEventListener("click", () => {
+            mode = "3d"; pMat.hidden = true; p3.hidden = false; lift = 0; dirty = true; Audio_.play("boing");
+            cap.textContent = "3D：高度 z = x² + y²（离中心越远越高）"; B.cv.setAttribute("aria-label", "把点按 z = x² + y² 抬到 3D：猫在低处，狗在高处，中间有一个水平面");
+            say("看！每个点被抬高了 x² + y²：离中心越近越低。", "拖「平面高度」，找一个能把猫和狗一刀切开的高度。");
+            tween(1100, (t) => { lift = t; dirty = true; }, () => { lift = 1; check3(); });
+            readout();
+          });
+          back.addEventListener("click", () => { mode = "mat"; pMat.hidden = false; p3.hidden = true; dirty = true; Audio_.play("click"); cap.textContent = "网格跟着矩阵一起变形；黄色方块 = 原来的 1×1 小方块"; readout(); });
+          endB.addEventListener("click", finish);
+          function finish() {
+            if (finished) return; finished = true; endB.disabled = true;
+            const stars = total();
+            say("矩阵会扭动整个空间；加一个特征，等于从新的角度看数据。", "第 7 关会把这些「扭一扭」交给神经网络自己学。");
+            root.append(endCard(stars, `完成 ${stars} / 3 个任务`, [
+              ["矩阵", "= 对空间的变换：[[a, b], [c, d]] 把每个点 (x, y) 搬到 (ax + by, cx + dy)。"],
+              ["行列式 det = ad − bc", "面积缩放倍数。det = 0 时平面被压成一条线；负数表示翻了个面。"],
+              ["加特征", "换个角度（加特征 z = x² + y²）就能把分不开的变成分得开。"],
+            ], "a20 矩阵与线性变换 · a21 行列式 · g22 空间几何"));
+            done(stars, 80 + stars * 30);
+          }
+          renderTasks(); readout();
+        },
+      });
+
+      LEVELS.push({
+        id: 7,
+        title: "造一个神经元大脑",
+        init(root, done) {
+          const DIRS = [90, 210, 330].map((a) => (a * Math.PI) / 180);
+          const fresh = () => ({ W: DIRS.map((a) => [2 * Math.cos(a), 2 * Math.sin(a)]), b: [0, 0, 0], v: [-2, -2, -2], c: 0 });
+          const SETS = { donut: donutData(), moons: moonsData() }, got = { a: 0, b: 0, c: 0 };
+          let set = "donut", P = SETS.donut, net = fresh(), training = false, steps = 0, hist = [], probe = [0, 0], dirty = true, finished = false;
+          const sig = (z) => 1 / (1 + Math.exp(-z));
+          const fwd = (x, y) => { const h = net.W.map((w, j) => Math.tanh(w[0] * x + w[1] * y + net.b[j])); return { h, o: sig(h.reduce((s, q, j) => s + q * net.v[j], net.c)) }; };
+          const stats = () => { let L = 0, ok = 0; P.forEach(([x, y, t]) => { const o = fwd(x, y).o; L -= Math.log(t ? o + 1e-9 : 1 - o + 1e-9); if (o > 0.5 === !!t) ok++; }); return { L: L / P.length, acc: ok / P.length }; };
+          function gd(lr) {
+            const g = { W: [[0, 0], [0, 0], [0, 0]], b: [0, 0, 0], v: [0, 0, 0], c: 0 }, m = P.length;
+            P.forEach(([x, y, t]) => {
+              const { h, o } = fwd(x, y), e = o - t; g.c += e;
+              h.forEach((q, j) => { g.v[j] += e * q; const d = e * net.v[j] * (1 - q * q); g.b[j] += d; g.W[j][0] += d * x; g.W[j][1] += d * y; });
+            });
+            net.c -= (lr * g.c) / m;
+            for (let j = 0; j < 3; j++) { net.v[j] -= (lr * g.v[j]) / m; net.b[j] -= (lr * g.b[j]) / m; net.W[j][0] -= (lr * g.W[j][0]) / m; net.W[j][1] -= (lr * g.W[j][1]) / m; }
+          }
+          const say = guide(root, "BOSS 关！这是一个小小的神经网络：2 个输入 → 3 个隐藏神经元 → 1 个输出。", "每个隐藏神经元就是第 3 关的一条直线。背景颜色 = 网络此刻的判断：蓝 = 猫，绿 = 狗。");
+          const split = el("div", "x-split"), left = el("div"), side = el("div");
+          split.append(left, side); root.append(split);
+          const dataRow = el("div", "x-row"), dD = el("button", "x-toggle", "数据：甜甜圈"), dM = el("button", "x-toggle", "数据：双月");
+          dD.setAttribute("aria-pressed", "true"); dM.setAttribute("aria-pressed", "false"); dataRow.append(dD, dM);
+          left.append(dataRow);
+          const B = canvasBox(left, "神经网络的判断热力图，叠着猫和狗的散点");
+          const probeTxt = el("p", "fineprint", "把指针移到图上：右边的神经元会按这个位置亮起来。"); left.append(probeTxt);
+          /* network diagram */
+          const NX = { i: 40, h: 160, o: 290 }, IY = [65, 135], HY = [30, 100, 170], OY = 100;
+          let svg = `<svg class="x-net" viewBox="0 0 330 200" role="img" aria-label="神经网络：x、y 两个输入连到 3 个隐藏神经元，再连到 1 个输出。线越粗权重越大，深色为正、红色为负。">`;
+          HY.forEach((hy, j) => IY.forEach((iy, i) => (svg += `<line data-e="w${j}${i}" x1="${NX.i}" y1="${iy}" x2="${NX.h}" y2="${hy}"/>`)));
+          HY.forEach((hy, j) => (svg += `<line data-e="v${j}" x1="${NX.h}" y1="${hy}" x2="${NX.o}" y2="${OY}"/>`));
+          const node = (id, x, y, t) => `<circle data-g="${id}" cx="${x}" cy="${y}" r="25" fill="var(--chart-1)" fill-opacity="0"/><circle data-n="${id}" cx="${x}" cy="${y}" r="17" fill="var(--chart-1)" stroke="var(--text-primary)" stroke-width="1.5"/><text x="${x}" y="${y}">${t}</text>`;
+          IY.forEach((y, i) => (svg += node("i" + i, NX.i, y, ["x", "y"][i])));
+          HY.forEach((y, j) => (svg += node("h" + j, NX.h, y, ["h₁", "h₂", "h₃"][j])));
+          svg += node("o", NX.o, OY, "猫?") + "</svg>";
+          const netBox = el("div", "", svg);
+          const meter = el("div", "x-row");
+          const hand = el("div", "x-row"), knobs = [0, 1, 2].map((j) => rangeCtl(`b${"₁₂₃"[j]}`, -6, 6, 0.1, 0, (v) => v.toFixed(1), (v) => { net.b[j] = v; tuned(); }));
+          const kc = rangeCtl("输出门槛 c", -8, 8, 0.1, 0, (v) => v.toFixed(1), (v) => { net.c = v; tuned(); });
+          hand.append(...knobs.map((k) => k.l), kc.l);
+          const btns = el("div", "x-row"), trainB = el("button", "x-btn x-btn--go", "训练 ▶"), resetB = el("button", "x-btn", "重置");
+          btns.append(trainB, resetB);
+          const fig = el("figure", "chart", `<figcaption class="chart__cap">训练时误差一路下降<small>交叉熵误差，每步一个点</small></figcaption><div class="chart__canvas"><canvas role="img" aria-label="误差随训练步数下降的曲线"></canvas></div>`);
+          const tasks = el("ul", "checklist"), endRow = el("div", "x-row"), endB = el("button", "x-btn", "结束本关");
+          endRow.append(endB);
+          side.append(netBox, meter, el("p", "fineprint", "手动调：b 移动每个神经元那条线的位置，c 是输出层判「猫」的门槛。"), hand, btns, fig, tasks);
+          const boss = el("div", "x-boss"); boss.hidden = true;
+          root.append(boss, endRow);
+          const chart = typeof Chart === "undefined" ? null : new Chart(fig.querySelector("canvas"), {
+            type: "line",
+            data: { labels: [], datasets: [{ label: "误差", data: [], fill: true }] },
+            options: { animation: false, scales: { x: { ticks: { maxTicksLimit: 6 } } },
+              plugins: { legend: { display: false }, tooltip: { callbacks: { title: (i) => `第 ${i[0].label} 步`, label: (c) => `误差 ${c.raw.toFixed(3)}` } } } },
+          });
+          const T = [["a", "手动调滑块，准确率超过 80%", "甜甜圈数据，先别按训练"], ["b", "按「训练 ▶」，让梯度下降把准确率推到 ≥ 95%", "看热力图怎么变形"], ["c", "BOSS：教 AI 认出你画的猫", "AI 对你的新图猜得和你说的一样"]];
+          const renderTasks = () => (tasks.innerHTML = taskList(T, got));
+          const total = () => got.a + got.b + got.c;
+          function win(k, t, s) {
+            if (got[k] || finished) return; got[k] = 1; Audio_.play("star"); toast(`⭐ 任务完成 · ${total()} / 3`); renderTasks(); say(t, s);
+            if (k === "b" || (k === "a" && got.b)) showBoss();
+            if (k === "c") award("brain");
+            if (total() === 3) setTimeout(finish, 1800);
+          }
+          function readout() {
+            const s = stats();
+            meter.innerHTML = `<span class="x-meter">准确率 <b>${Math.round(s.acc * 100)}%</b></span><span class="pill">误差 ${s.L.toFixed(3)}</span><span class="pill">第 ${steps} 步</span>`;
+            return s;
+          }
+          function plot(reset) {
+            if (reset) hist = [];
+            hist.push(stats().L);
+            if (chart) { chart.data.labels = hist.map((_, i) => i); chart.data.datasets[0].data = hist.slice(); chart.update("none"); }
+          }
+          function sync() { knobs.forEach((k, j) => k.set(Math.max(-6, Math.min(6, net.b[j])))); kc.set(Math.max(-8, Math.min(8, net.c))); }
+          function tuned() {
+            dirty = true; const s = readout(); Audio_.play("tick", 300 + s.acc * 600);
+            if (s.acc > 0.8 && set === "donut") win("a", `${Math.round(s.acc * 100)}%！你亲手调出了一个「三角形」猫区。`, "三条直线各管一边，叠起来围住了中间的猫。现在按「训练 ▶」，看机器自己调。");
+          }
+          /* render: heatmap + points + network */
+          let K0 = null;
+          function render() {
+            const { c, W, H } = B.begin(), K = K0 || (K0 = palette()), s = W / 6.4, N = 48, cell = W / N;
+            for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+              const x = ((i + 0.5) * cell - W / 2) / s, y = (H / 2 - (j + 0.5) * cell) / s, o = fwd(x, y).o;
+              c.globalAlpha = 0.08 + Math.abs(o - 0.5) * 0.9; c.fillStyle = o > 0.5 ? K.cat : K.dog; c.fillRect(i * cell, j * cell, cell + 0.6, cell + 0.6);
+            }
+            c.globalAlpha = 1;
+            P.forEach(([x, y, t]) => { const ok = fwd(x, y).o > 0.5 === !!t; if (!ok) { c.strokeStyle = tok("--fill-system-red"); c.lineWidth = 2; c.beginPath(); c.arc(W / 2 + x * s, H / 2 - y * s, 11, 0, 7); c.stroke(); } emoji(c, t ? "🐱" : "🐶", W / 2 + x * s, H / 2 - y * s, 15); });
+            c.strokeStyle = K.ink; c.lineWidth = 1.5; c.beginPath(); c.arc(W / 2 + probe[0] * s, H / 2 - probe[1] * s, 6, 0, 7); c.stroke();
+            const { h, o } = fwd(...probe), q = (sel) => netBox.querySelector(sel);
+            [Math.abs(probe[0]) / 3, Math.abs(probe[1]) / 3].forEach((a, i) => { q(`[data-n="i${i}"]`).setAttribute("fill-opacity", (0.15 + a * 0.85).toFixed(2)); });
+            h.forEach((a, j) => { const g = (a + 1) / 2; q(`[data-n="h${j}"]`).setAttribute("fill-opacity", g.toFixed(2)); q(`[data-g="h${j}"]`).setAttribute("fill-opacity", (g * 0.45).toFixed(2)); });
+            q('[data-n="o"]').setAttribute("fill-opacity", o.toFixed(2)); q('[data-g="o"]').setAttribute("fill-opacity", (o * 0.45).toFixed(2));
+            const edge = (id, w) => { const e = q(`[data-e="${id}"]`); e.setAttribute("stroke", w >= 0 ? "var(--chart-ink)" : "var(--chart-bad)"); e.setAttribute("stroke-width", (0.6 + Math.min(7, Math.abs(w) * 1.1)).toFixed(1)); e.setAttribute("stroke-opacity", "0.8"); };
+            net.W.forEach((w, j) => w.forEach((v, i) => edge(`w${j}${i}`, v))); net.v.forEach((v, j) => edge(`v${j}`, v));
+            probeTxt.textContent = `指针处 (${probe[0].toFixed(1)}, ${probe[1].toFixed(1)})：网络认为是猫的概率 ${Math.round(o * 100)}%。`;
+          }
+          rafLoop(root, () => {
+            if (training) {
+              gd(0.5); steps++; if (steps % 2 === 0) plot(); sync(); const s = readout(); dirty = true;
+              if (steps % 6 === 0) Audio_.play("tick", 300 + s.acc * 700);
+              if (s.acc >= 0.95) win("b", `≥ 95%！梯度下降把 13 个权重一起调好了。`, set === "donut" ? "再切到「双月」数据，按训练试试，看热力图弯成月牙。" : "三条直线叠起来，弯出了月牙形的边界。");
+              if ((s.acc === 1 && s.L < 0.08) || steps >= 1500) { stop(); say(s.acc === 1 ? "全部分对，误差也很小了，训练自动停下。" : "训练了很久，先停一停。", "可以换一组数据，或者重置再来。"); }
+            }
+            if (!dirty) return; dirty = false; render();
+          });
+          new MutationObserver(() => { K0 = null; dirty = true; }).observe(document.documentElement, { attributes: true });
+          addEventListener("resize", () => (dirty = true));
+          B.cv.addEventListener("pointermove", (e) => { const [px, py, w] = B.at(e), s = w / 6.4; probe = [(px - w / 2) / s, (w / 2 - py) / s]; dirty = true; });
+          B.cv.addEventListener("pointerdown", (e) => { const [px, py, w] = B.at(e), s = w / 6.4; probe = [(px - w / 2) / s, (w / 2 - py) / s]; dirty = true; });
+          function stop() { training = false; trainB.textContent = "训练 ▶"; }
+          trainB.addEventListener("click", () => {
+            if (training) return stop();
+            Audio_.play("click"); training = true; trainB.textContent = "暂停 ⏸";
+            if (!steps) plot(true);
+          });
+          function reset(k) {
+            stop(); if (k) { set = k; P = SETS[k]; dD.setAttribute("aria-pressed", String(k === "donut")); dM.setAttribute("aria-pressed", String(k === "moons")); }
+            net = fresh(); steps = 0; sync(); plot(true); readout(); dirty = true; Audio_.play("click");
+          }
+          resetB.addEventListener("click", () => reset());
+          dD.addEventListener("click", () => { reset("donut"); say("回到甜甜圈：猫在中间，狗在外圈。"); });
+          dM.addEventListener("click", () => { reset("moons"); say("双月：两弯月牙互相咬在一起，一条直线肯定不够。", "按「训练 ▶」，看网络能不能弯出一条曲线。"); });
+          /* BOSS: draw, train logistic regression on 64 numbers, guess */
+          let shownBoss = false;
+          function showBoss() {
+            if (shownBoss) return; shownBoss = true; boss.hidden = false;
+            const ex = [], Wl = Array(65).fill(0);
+            let trained = false;
+            boss.append(el("h3", "", "BOSS：教 AI 认出你画的猫"),
+              el("p", "", "第 1 关的 8×8 画板回来了！画 3 张「猫脸」和 3 张「不是猫」，再训练一个小分类器：它读的就是这 64 个数。"));
+            const wrap = el("div", "x-split"), lp = el("div"), rp = el("div");
+            wrap.append(lp, rp); boss.append(wrap);
+            const pad = pad8(lp);
+            const saveRow = el("div", "x-row"), sCat = el("button", "x-btn", "存为「猫脸」0/3"), sNot = el("button", "x-btn", "存为「不是猫」0/3"), clr = el("button", "x-btn", "清空");
+            saveRow.append(sCat, sNot, clr);
+            const thumbs = el("div", "x-thumbs"), trainRow = el("div", "x-row"), fit = el("button", "x-btn x-btn--go", "训练小分类器"), fitInfo = el("span", "pill", "还差 6 张");
+            fit.disabled = true; trainRow.append(fit, fitInfo);
+            const testRow = el("div", "x-row"), tCat = el("button", "x-btn", "我画的是猫，让 AI 猜"), tNot = el("button", "x-btn", "我画的不是猫，让 AI 猜");
+            testRow.hidden = true; testRow.append(tCat, tNot);
+            const result = el("div"); result.hidden = true;
+            rp.append(saveRow, thumbs, trainRow, testRow, result);
+            const cnt = (y) => ex.filter((e) => e.y === y).length;
+            const feat = (v) => [...v, 1];
+            const predict = (v) => sig(feat(v).reduce((s, q, i) => s + q * Wl[i], 0));
+            function refresh() {
+              const a = cnt(1), b = cnt(0);
+              sCat.textContent = `存为「猫脸」${a}/3`; sNot.textContent = `存为「不是猫」${b}/3`;
+              fit.disabled = a < 3 || b < 3; fitInfo.textContent = fit.disabled ? `还差 ${Math.max(0, 3 - a) + Math.max(0, 3 - b)} 张` : trained ? "已训练" : "可以训练了";
+            }
+            function save(y) {
+              if (pad.empty()) { Audio_.play("wrong"); return say("画板是空的。", "先涂几个方块再存。"); }
+              ex.push({ v: pad.v.slice(), y });
+              const t = el("span", "x-opt"), cv = document.createElement("canvas"); cv.width = 48; cv.height = 48; cv.setAttribute("aria-hidden", "true");
+              t.append(cv, document.createTextNode(y ? "猫" : "不是猫")); thumbs.append(t); drawArt(cv, pad.rows());
+              pad.clear(); Audio_.play("correct");
+              if (trained) train(); else refresh();
+              if (cnt(1) >= 3 && cnt(0) >= 3 && !trained) say("示范够了！按「训练小分类器」。", "它会给 64 个方块各配一个权重：像猫的方块权重为正。");
+            }
+            function train() {
+              Wl.fill(0);
+              for (let k = 0; k < 400; k++) {
+                const g = Array(65).fill(0);
+                ex.forEach(({ v, y }) => { const e = predict(v) - y; feat(v).forEach((q, i) => (g[i] += e * q)); });
+                for (let i = 0; i < 65; i++) Wl[i] -= 0.5 * (g[i] / ex.length + (i < 64 ? 0.01 * Wl[i] : 0));
+              }
+              trained = true; refresh(); testRow.hidden = false;
+              const ok = ex.filter(({ v, y }) => predict(v) > 0.5 === !!y).length;
+              fitInfo.textContent = `已训练 · 示范分对 ${ok}/${ex.length}`;
+            }
+            fit.addEventListener("click", () => {
+              fit.disabled = true; let i = 0;
+              const blip = setInterval(() => { Audio_.play("tick", 400 + i * 60); if (++i > 8) { clearInterval(blip); train(); Audio_.play("correct"); say("训练完成！现在画一张新图，告诉 AI 你画的是什么，看它猜不猜得对。", "这是逻辑回归：64 个数乘上权重再相加，越大越像猫。"); } }, 70);
+            });
+            function test(isCat) {
+              if (pad.empty()) { Audio_.play("wrong"); return say("先在画板上画一张新图。"); }
+              const p = predict(pad.v), guessCat = p > 0.5, conf = Math.round((guessCat ? p : 1 - p) * 100), right = guessCat === isCat;
+              result.hidden = false;
+              result.innerHTML = `<p class="x-big">AI：${guessCat ? "猫 🐱" : "不是猫"}</p><p class="fineprint">把握 ${conf}%</p><div class="x-conf" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${conf}" aria-label="AI 的把握"><span style="width:0%"></span></div>`;
+              requestAnimationFrame(() => requestAnimationFrame(() => (result.querySelector(".x-conf span").style.width = conf + "%")));
+              if (right) {
+                if (got.c) { Audio_.play("correct"); say("喵～！又认对了！", `把握 ${conf}%。`); }
+                else win("c", "喵～！它认出来了！", `你说「${isCat ? "猫" : "不是猫"}」，AI 也这么说（把握 ${conf}%）。你刚刚从零教会了一台机器。`);
+              } else { Audio_.play("wrong"); setTimeout(() => say("喵？它猜错了。", "多存几张示范（会自动重新训练），或者画得更像你的示范，再试一次。"), 250); }
+            }
+            sCat.addEventListener("click", () => save(1)); sNot.addEventListener("click", () => save(0));
+            clr.addEventListener("click", () => { pad.clear(); Audio_.play("click"); });
+            tCat.addEventListener("click", () => test(true)); tNot.addEventListener("click", () => test(false));
+            refresh();
+            setTimeout(() => boss.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" }), 900);
+          }
+          endB.addEventListener("click", finish);
+          function finish() {
+            if (finished) return; finished = true; stop(); endB.disabled = true;
+            const stars = total();
+            say("神经网络没有魔法：就是很多条小直线，叠起来，再一起下山。", stars ? "星图全部点亮，去看看你的任务总结吧。" : "拿到 1 颗星就能看到任务总结。");
+            const card = endCard(stars, `完成 ${stars} / 3 个任务`, [
+              ["神经网络", "= 很多个「小直线分类器」叠起来，再用梯度下降一起训练。"],
+              ["隐藏神经元", "每个都是一条直线（第 3 关），tanh 把它变成柔和的开关；三条叠起来就能围出曲线边界。"],
+              ["训练", "误差对 13 个权重求梯度，一起往下坡走（第 4、5 关）。BOSS 里的逻辑回归也是这样学会 64 个权重的。"],
+            ], "m13 神经网络 · a20 矩阵与线性变换 · m07 梯度下降 · p20 统计学习");
+            root.append(card);
+            done(stars, 120 + stars * 40);
+            if (stars) { const r = el("div", "x-row"), b = el("button", "x-btn x-btn--go", "查看任务总结 🎆"); r.append(b); card.append(r); b.addEventListener("click", missionComplete); }
+          }
+          renderTasks(); readout(); plot(true);
+        },
+      });
+
+      /* ---------- mission complete ---------- */
+      const STAR_PATH = ["g15", "n20", "g11", "a11", "g20", "c05", "c12", "m07", "p16", "p20", "a20", "a21", "g22", "m13"];
+      function fireworks(cv) {
+        if (reduced()) return;
+        const c = cv.getContext("2d"), dpr = devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight, cols = [1, 2, 3, 4, 5, 6, 7].map((i) => tok(`--chart-${i}`));
+        cv.width = W * dpr; cv.height = H * dpr; c.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const parts = [], t0 = performance.now(); let last = 0;
+        const burst = () => {
+          const x = W * (0.15 + Math.random() * 0.7), y = H * (0.1 + Math.random() * 0.35), col = cols[(Math.random() * 7) | 0];
+          for (let i = 0; i < 46; i++) { const a = (i / 46) * 6.283, v = 1.5 + Math.random() * 2.5; parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 1, col }); }
+          Audio_.play("pop");
+        };
+        const f = (now) => {
+          if (!cv.isConnected) return;
+          const t = now - t0;
+          if (t < 4200 && t - last > 380) { last = t; burst(); }
+          c.clearRect(0, 0, W, H);
+          parts.forEach((p) => { p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.vx *= 0.985; p.life -= 0.012; if (p.life > 0) { c.globalAlpha = p.life; c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, 2.4, 0, 7); c.fill(); } });
+          for (let i = parts.length - 1; i >= 0; i--) if (parts[i].life <= 0) parts.splice(i, 1);
+          if (t < 4200 || parts.length) requestAnimationFrame(f); else c.clearRect(0, 0, W, H);
+        };
+        requestAnimationFrame(f);
+      }
+      function missionComplete() {
+        $("#play-title").textContent = "任务完成！";
+        $("#play-sub").textContent = "七关全部走完，星图已点亮。";
+        const stage = $("#stage"); stage.innerHTML = "";
+        const fw = document.createElement("canvas"); fw.className = "x-fw"; fw.setAttribute("aria-hidden", "true"); stage.append(fw);
+        guide(stage, "你刚刚从像素一路走到了神经网络。", "喵博士给你放烟花！");
+        const earned = BADGES.filter((b) => State.badges[b.id]);
+        stage.append(el("section", "stats", `<div class="stat"><span class="stat__fig">${State.stars}/21</span><span class="stat__label">⭐ 星星</span></div>
+          <div class="stat"><span class="stat__fig">${State.xp}</span><span class="stat__label">XP</span></div>
+          <div class="stat"><span class="stat__fig">${earned.length}/${BADGES.length}</span><span class="stat__label">徽章</span></div>`));
+        stage.append(el("div", "", `<p style="font:var(--type-body-strong);margin-bottom:8px">获得的徽章</p><div class="x-shelf">${earned.length ? earned.map((b) => `<span class="x-badge got">🏅 ${b.name}</span>`).join("") : '<span class="x-badge">这次还没有徽章，再玩一次试试</span>'}</div>`));
+        stage.append(el("div", "", `<p style="font:var(--type-body-strong);margin-bottom:8px">点亮的星：你的路线</p><ol class="x-recap">${STAR_PATH.map((s) => `<li><span class="pill">${s}</span></li>`).join("")}</ol>`));
+        stage.append(el("p", "x-big", "你刚刚从像素一路走到了神经网络。"));
+        const row = el("div", "x-row"), again = el("button", "x-btn x-btn--go", "再玩一次"); row.append(again); stage.append(row);
+        again.addEventListener("click", () => {
+          Object.assign(State, { xp: 0, stars: 0, perLevel: {}, badges: {}, unlocked: 1 });
+          renderBar(); renderBadges(); renderMap(); Audio_.play("click");
+          $("#play-title").textContent = "选一关开始"; $("#play-sub").textContent = "喵博士在星图上等你。";
+          stage.innerHTML = ""; guide(stage, "新的一轮！点开第 1 关「像素就是数字」，我们从一个像素重新开始。");
+          $("#map").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+        });
+        Audio_.play("finale"); setTimeout(() => Audio_.play("meow"), 1600);
+        $("#play").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+        setTimeout(() => fireworks(fw), 60);
+      }
+
+      /* ---------- boot ---------- */
+      renderBar(); renderBadges(); renderMap();
+      const once = () => { Audio_.unlock(); window.removeEventListener("pointerdown", once); window.removeEventListener("keydown", once); };
+      window.addEventListener("pointerdown", once); window.addEventListener("keydown", once);
+      $("#sfx").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.setSfx(on); if (on) Audio_.play("click");
+      });
+      $("#music").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.unlock(); Audio_.setMusic(on); Audio_.play("click");
+      });
+      $("#vol").addEventListener("input", (e) => Audio_.setVol(+e.target.value / 100));
+      $("#track").addEventListener("change", (e) => Audio_.setTrack(+e.target.value));
+    </script>
+  </body>
+</html>
