@@ -166,10 +166,18 @@
                   <td>坐标系、一次函数</td>
                   <td class="muted">梯度下降、神经网络是高中/大学内容,以体验和直觉为主</td>
                 </tr>
+                <tr>
+                  <th scope="row"><a class="link" href="#casino">赌场为什么总赢</a> <small><a class="link" href="../casino/" target="_top">去玩 →</a></small></th>
+                  <td class="num">★★★ 挑战</td>
+                  <td>初一~初三</td>
+                  <td>高中–大学</td>
+                  <td>分数、百分数</td>
+                  <td class="muted">随机游走、赌徒破产、蒙特卡洛是高中/大学内容,以模拟体验为主</td>
+                </tr>
               </tbody>
             </table>
           </div>
-          <p class="fineprint">按中国学段估算;成人任何任务都可玩。建议顺序:松果 → 蜜蜂 → 导航 → 密码 → 和弦 → 猫。</p>
+          <p class="fineprint">按中国学段估算;成人任何任务都可玩。建议顺序:松果 → 蜜蜂 → 导航 → 密码 → 和弦 → 猫 → 赌场。</p>
         </section>
 
         <section class="section" id="nim" data-nav="松果">
@@ -519,6 +527,60 @@
                   <li>医学影像辅助诊断(肺结节、眼底病变)</li>
                   <li>自动驾驶识别行人和红绿灯</li>
                   <li>垃圾邮件过滤、拍照识物、拍照搜题</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="section" id="casino" data-nav="赌场">
+          <div class="head">
+            <p class="head__eyebrow">任务7 · ★★★ 挑战</p>
+            <h2>赌场为什么总赢? (概率 · 统计)</h2>
+          </div>
+          <div class="links">
+            <button class="btn x-press" type="button" data-copy="casino">一键复制笔记</button>
+            <a class="btn" href="../casino/" target="_top">去玩这个任务 →</a>
+          </div>
+          <div class="x-notes">
+            <div class="x-block">
+              <h3>必须掌握</h3>
+              <ol class="x-must">
+                <li>频率与概率:抛得越多,频率越接近概率;少量试验会有很大波动。</li>
+                <li>古典概率:两颗骰子有 6×6 = 36 种等可能结果,和为 7 有 6 种,最常见。</li>
+                <li>期望值:玩很多很多次后,平均每次得到多少。</li>
+                <li>庄家优势:欧式轮盘押红,期望 −1/37 ≈ −2.7%,绿色 0 就是赌场的利润。</li>
+                <li>大数定律:次数越多,平均结果越贴近期望值。</li>
+                <li>赌徒谬误:连开 5 次黑,下一次开红的概率还是 18/37。</li>
+                <li>随机游走与赌徒破产:期望为负、对手资金无限,一直玩下去几乎一定输光。</li>
+                <li>蒙特卡洛模拟:用大量随机试验估计难算的概率。</li>
+              </ol>
+            </div>
+            <div class="x-block">
+              <h3>公式</h3>
+              <ul class="x-formulas">
+                <li><span class="x-f__name">古典概率<span class="x-sr">:</span></span><span class="x-f__math">P = 有利结果数 ÷ 所有等可能结果数</span></li>
+                <li><span class="x-f__name">期望值<span class="x-sr">:</span></span><span class="x-f__math">E = Σ xᵢ·pᵢ</span></li>
+                <li><span class="x-f__name">押红 1 元<span class="x-sr">:</span></span><span class="x-f__math">E = 1×18/37 − 1×19/37 = −1/37</span></li>
+                <li><span class="x-f__name">庄家优势<span class="x-sr">:</span></span><span class="x-f__math">= (票价 − E) ÷ 票价</span></li>
+                <li><span class="x-f__name">赌徒破产(从 i 到 N,r = q/p)<span class="x-sr">:</span></span><span class="x-f__math">P(成功) = (1 − rⁱ) ÷ (1 − rᴺ)</span></li>
+              </ul>
+            </div>
+            <div class="cards">
+              <div class="x-block">
+                <h3>经典文献与历史</h3>
+                <ul>
+                  <li>Pascal 与 Fermat 通信, 1654(点数分配问题)</li>
+                  <li>Jakob Bernoulli,《猜度术》Ars Conjectandi, 1713(大数定律)</li>
+                  <li>W. Feller,《概率论及其应用》, 1950</li>
+                </ul>
+              </div>
+              <div class="x-block">
+                <h3>领域应用与案例</h3>
+                <ul>
+                  <li>保险定价</li>
+                  <li>彩票与游戏抽卡</li>
+                  <li>天气预报</li>
+                  <li>金融风险管理</li>
                 </ul>
               </div>
             </div>
