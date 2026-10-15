@@ -1,672 +1,193 @@
 <!doctype html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>星图任务 · 难度引导与知识笔记</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
-    />
-    <link rel="stylesheet" href="hark.css" />
-    <link rel="stylesheet" href="hark-hero.css" />
-    <style>
-      .x-press { cursor: pointer; }
-      .x-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-      .x-notes { display: grid; gap: clamp(28px, 3.4vw, 40px); }
-      .x-block h3 { font: var(--type-heading); margin-bottom: 14px; }
-      .x-must { list-style: none; margin: 0; padding: 0; counter-reset: must; display: grid; }
-      .x-must li {
-        counter-increment: must;
-        display: grid;
-        grid-template-columns: 32px minmax(0, 1fr);
-        gap: 12px;
-        padding: 12px 0;
-        border-bottom: 1px solid var(--stroke-secondary);
-        font-size: var(--size-prose);
-        line-height: 1.6;
-      }
-      .x-must li:last-child { border-bottom: 0; }
-      .x-must li::before {
-        content: counter(must);
-        display: inline-grid;
-        place-items: center;
-        width: 28px;
-        height: 28px;
-        border-radius: var(--r-pill);
-        background: var(--fill-tertiary);
-        font: var(--type-tag);
-        color: var(--text-primary);
-      }
-      .x-formulas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; list-style: none; margin: 0; padding: 0; }
-      .x-formulas li {
-        display: grid;
-        align-content: start;
-        gap: 6px;
-        padding: 16px 18px;
-        border-radius: var(--r-s);
-        background: var(--fill-tertiary);
-        overflow-wrap: anywhere;
-      }
-      .x-f__name { font: var(--type-label); color: var(--text-secondary); }
-      .x-f__math { font-size: var(--size-prose); line-height: 1.6; font-variant-numeric: tabular-nums; }
-      .x-notes .cards li { line-height: 1.55; }
-      .x-toast {
-        position: fixed;
-        left: 50%;
-        bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-        transform: translate(-50%, 12px);
-        z-index: 50;
-        max-width: calc(100vw - 2 * var(--gutter));
-        padding: 12px 18px;
-        border-radius: var(--r-pill);
-        background: var(--fill-primary);
-        color: var(--text-primary-on);
-        font: var(--type-label);
-        box-shadow: var(--hark-shadow);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
-      }
-      .x-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
-      @media print {
-        .nav, .links, .btn, .x-toast, .foot nav, .badge { display: none !important; }
-        #nim, #bee, #nav, #secret, #chord, #cat { break-before: page; page-break-before: always; }
-        .x-formulas li, .x-must li, .cards > div { break-inside: avoid; }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="page" id="top">
-      <header class="nav glass" data-auto></header>
-      <main class="main">
-        <section class="hero">
-          <div class="hero__copy">
-            <p class="hero__eyebrow">星图 Math Atlas · v1, 2026-10-15</p>
-            <h1>星图任务 · 难度引导与知识笔记</h1>
-            <p class="hero__sub">先看哪个任务适合你,玩完后把知识点记下来。</p>
-            <div class="links">
-              <a class="btn" href="../" target="_top">← 返回大厅</a>
-              <button class="btn x-press" type="button" onclick="setTimeout(function () { window.print(); }, 0)">打印/存为PDF</button>
-            </div>
-          </div>
-          <aside class="callout" aria-label="建议顺序">
-            <p class="callout__head"><span class="hark-mark" data-size="16"></span> 建议顺序</p>
-            <p class="callout__lead"><strong>松果 → 蜜蜂 → 导航 → 密码 → 和弦 → 猫</strong></p>
-            <a class="btn" href="#nim">从松果开始</a>
-          </aside>
-        </section>
+<html lang="zh-CN" data-ma-task="notes" data-ma-lite>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>星图知识笔记</title>
+<link rel="stylesheet" href="../ma.css" />
+<style>
+  :root { --ink: #eef1ff; --mute: #9aa4cf; --line: rgb(160 185 255 / .18);
+    --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--ink); font: 400 15px/1.6 var(--sans); min-height: 100vh;
+    background: radial-gradient(1000px 500px at 10% -10%, rgb(70 56 170 / .35), transparent 60%), radial-gradient(800px 500px at 100% 0%, rgb(20 130 170 / .22), transparent 60%), #050817; background-attachment: fixed; }
+  #sky { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
+  .wrap { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 0 clamp(14px, 3vw, 28px) 120px; }
+  .top { display: flex; align-items: center; gap: 8px; padding: calc(env(safe-area-inset-top, 0px) + 16px) 0 0; }
+  .top a, .top button { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border-radius: 100px; border: 1px solid var(--line);
+    background: rgb(10 14 36 / .5); color: var(--ink); text-decoration: none; font: 500 13px/1 var(--sans); cursor: pointer; }
+  .top a:hover, .top button:hover { background: rgb(40 50 110 / .6); }
+  .top .sp { flex: 1; }
+  header.hero { text-align: center; padding: 56px 0 26px; }
+  .hero p.k { margin: 0 0 12px; letter-spacing: .5em; font-size: 12px; color: var(--mute); }
+  .hero h1 { margin: 0; font-weight: 200; font-size: clamp(40px, 7vw, 72px); letter-spacing: .12em;
+    background: linear-gradient(100deg, #fff 10%, #8ff5d8 32%, #8ea2ff 50%, #e3a6ff 66%, #fff 88%); background-size: 260% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent; animation: flow 10s ease-in-out infinite; }
+  @keyframes flow { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+  .hero p.s { color: var(--mute); margin: 12px 0 0; }
+  /* 任务切换 */
+  .tabs { position: sticky; top: 8px; z-index: 5; display: flex; gap: 6px; overflow-x: auto; padding: 6px; margin: 0 -6px 22px; border-radius: 100px;
+    background: rgb(8 12 32 / .7); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); border: 1px solid var(--line); scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 16px; border-radius: 100px; border: 0; background: transparent;
+    color: #c4cbec; font: 500 14px/1 var(--sans); cursor: pointer; white-space: nowrap; transition: background .2s, color .2s; }
+  .tab:hover { background: rgb(255 255 255 / .07); }
+  .tab.on { color: #071027; background: linear-gradient(135deg, #fff, color-mix(in srgb, var(--c) 55%, #fff)); box-shadow: 0 0 20px color-mix(in srgb, var(--c) 45%, transparent); }
+  /* 任务头卡 */
+  .head { position: relative; overflow: hidden; display: grid; grid-template-columns: auto 1fr auto; gap: 18px; align-items: center; padding: 24px; border-radius: 26px;
+    background: linear-gradient(140deg, color-mix(in srgb, var(--c) 20%, rgb(20 26 66 / .7)), rgb(8 12 32 / .7)); border: 1px solid var(--line); }
+  .head .em { font-size: 52px; line-height: 1; filter: drop-shadow(0 0 18px var(--c)); }
+  .head h2 { margin: 0 0 8px; font-size: clamp(20px, 3vw, 28px); font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips span { padding: 3px 10px; border-radius: 100px; font-size: 12px; background: rgb(255 255 255 / .07); border: 1px solid var(--line); }
+  .chips .lv { color: #ffd98a; border-color: rgb(255 217 138 / .35); }
+  .acts { display: flex; flex-direction: column; gap: 8px; }
+  .b { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 42px; padding: 0 18px; border-radius: 100px; border: 0; cursor: pointer; text-decoration: none;
+    font: 600 14px/1 var(--sans); color: #071027; background: linear-gradient(135deg, #fff, color-mix(in srgb, var(--c) 45%, #fff)); white-space: nowrap; }
+  .b.g { background: rgb(255 255 255 / .06); color: var(--ink); border: 1px solid var(--line); }
+  @media (max-width: 640px) { .head { grid-template-columns: auto 1fr; } .acts { grid-column: 1 / -1; flex-direction: row; } .acts .b { flex: 1; } }
+  /* 区块 */
+  .blk { margin-top: 34px; }
+  .blk > h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; font-size: 13px; font-weight: 500; letter-spacing: .3em; color: var(--mute); }
+  .blk > h3::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, var(--line), transparent); }
+  .blk > h3 i { font-style: normal; font-size: 18px; letter-spacing: 0; }
+  .must { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .m { position: relative; padding: 16px 16px 16px 54px; border-radius: 18px; background: rgb(14 20 50 / .62); border: 1px solid var(--line); cursor: pointer;
+    transition: transform .25s, border-color .25s, box-shadow .25s; }
+  .m:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--c) 50%, transparent); box-shadow: 0 10px 30px rgb(0 0 0 / .35); }
+  .m .n { position: absolute; left: 14px; top: 14px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 600;
+    color: #071027; background: var(--c); box-shadow: 0 0 14px var(--c); }
+  .m.ok .n { background: #8fe3b8; box-shadow: 0 0 14px #8fe3b8; }
+  .m.ok .n::after { content: "✓"; }
+  .m.ok .n span { display: none; }
+  .m b { display: block; font-size: 15px; margin-bottom: 4px; }
+  .m p { margin: 0; color: #c4cbec; font-size: 14px; }
+  .hint { font-size: 12px; color: var(--mute); margin: 10px 0 0; }
+  .forms { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .f { padding: 16px 18px; border-radius: 18px; background: linear-gradient(160deg, rgb(20 28 70 / .7), rgb(8 12 32 / .7)); border: 1px solid var(--line); }
+  .f small { display: block; color: var(--mute); font-size: 12px; margin-bottom: 6px; }
+  .f code { display: block; font: 500 16px/1.5 "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; color: #fff; text-shadow: 0 0 14px color-mix(in srgb, var(--c) 60%, transparent); word-break: break-word; }
+  .two { display: grid; grid-template-columns: 1.2fr 1fr; gap: 22px; }
+  @media (max-width: 760px) { .two { grid-template-columns: 1fr; } }
+  .tl { list-style: none; margin: 0; padding: 0 0 0 18px; border-left: 1px solid var(--line); }
+  .tl li { position: relative; padding: 0 0 14px 6px; color: #d6dbf7; font-size: 14px; }
+  .tl li::before { content: ""; position: absolute; left: -24px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--c); box-shadow: 0 0 10px var(--c); }
+  .tl li em { font-style: normal; color: var(--c); font-weight: 600; margin-right: 6px; }
+  .apps { display: flex; flex-wrap: wrap; gap: 8px; }
+  .apps span { padding: 8px 14px; border-radius: 14px; background: rgb(255 255 255 / .05); border: 1px solid var(--line); font-size: 14px; }
+  /* 难度路线 */
+  .route { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .route button { text-align: left; padding: 12px; border-radius: 16px; border: 1px solid var(--line); background: rgb(14 20 50 / .5); color: var(--ink); cursor: pointer; font: inherit; }
+  .route button:hover { border-color: var(--c); }
+  .route b { display: block; font-size: 13px; } .route small { color: var(--mute); font-size: 12px; }
+  .view { animation: in .45s cubic-bezier(.2,.9,.3,1); }
+  @keyframes in { from { opacity: 0; transform: translateY(12px); } }
+  footer { text-align: center; color: var(--mute); font-size: 12px; margin-top: 60px; }
+</style>
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas>
+<div class="wrap">
+  <div class="top">
+    <a href="../">🏠 主页</a><a href="../atlas/">✦ 知识星图</a><span class="sp"></span><button type="button" onclick="MA_feedback()">💬 反馈</button>
+  </div>
+  <header class="hero">
+    <p class="k">KNOWLEDGE NOTES</p>
+    <h1>知识笔记</h1>
+    <p class="s">每个任务一页：先看必须掌握，再记公式。点一下卡片，标记“我懂了”。</p>
+  </header>
+  <nav class="tabs" id="tabs" aria-label="选择任务"></nav>
+  <main id="view"></main>
+  <footer>星图 Math Atlas 测试版 · 最近更新 2026-10-15 · 年级与难度为估算</footer>
+</div>
+<script>
+var NOTES = [{"id": "nim", "nav": "松果", "eyebrow": "任务5 · ★☆☆ 入门", "title": "先拿的人一定赢吗? (取松果 · 组合博弈)", "must": ["必胜位置与必败位置:轮到你时一定会输的局面叫必败位置。", "逆推(倒着想):从结局 0 往回推,每个位置看它能走到哪里。", "每次拿 1~m 颗:必败位置是 (m+1) 的倍数;先手第一步拿 N ÷ (m+1) 的余数颗。", "配对策略:对手拿 k,你拿 (m+1−k),每轮凑成 m+1。", "说理与反例:说明为什么对;一个反例就能推翻一个说法。", "镜像策略:两堆一样多时,后手照镜子拿必胜。"], "formulas": [["先手必胜", "⇔ N mod (m+1) ≠ 0"], ["先手第一步", "拿 N mod (m+1) 颗"], ["两堆 Nim", "先手必胜 ⇔ 两堆不一样多(一般情形:各堆数的二进制异或 ≠ 0)"]], "lit": ["Charles L. Bouton, \"Nim, a Game with a Complete Mathematical Theory\", Annals of Mathematics, 1901–1902", "R. Sprague (1935)、P. M. Grundy (1939):Sprague–Grundy 定理,把所有公平组合游戏化为 Nim", "Berlekamp, Conway, Guy《Winning Ways for Your Mathematical Plays》, 1982", "中国民间游戏「抢30」、巴什博弈(Bash Game)"], "apps": ["博弈论与经济学中的策略分析", "电脑下棋:博弈树搜索、逆推(国际象棋残局库)", "编程:动态规划、递推", "数学竞赛中的取石子问题"]}, {"id": "bee", "nav": "蜜蜂", "eyebrow": "任务3 · ★☆☆ 入门", "title": "为什么蜜蜂选六边形", "must": ["正 n 边形每个内角 = (n−2)×180°/n:三角形 60°,正方形 90°,正六边形 120°。", "一个顶点周围的角必须拼成 360°,所以能单独铺满平面的正多边形只有 3 种:正三角形、正方形、正六边形。", "面积相同时,边越多越接近圆,周长越短;圆最省但不能密铺。", "蜂巢猜想:把平面分成等面积的格子,正六边形网格的总周长最短(1999 年被证明)。", "Voronoi 图:每个点归离它最近的\"种子\";反复把种子移到自己区域的中心(Lloyd 松弛),格子会自己趋向六边形。", "大自然常常在做\"最优化\":用最少的材料完成任务。"], "formulas": [["内角", "(n−2)×180°/n;多边形内角和 (n−2)×180°"], ["密铺条件", "360° ÷ 内角 必须是整数"], ["等面积 A 时周长", "正三角形 ≈ 4.559√A,正方形 = 4√A,正六边形 ≈ 3.722√A,圆 ≈ 3.545√A"], ["等周不等式", "L² ≥ 4πA(圆取等号)"], ["正六边形面积", "A = (3√3/2)·a²"], ["质心", "x̄ = 区域内所有点 x 坐标的平均"]], "lit": ["瓦罗(Varro,公元前36年)最早提出蜂巢猜想", "帕普斯(约公元4世纪)《数学汇编》称赞蜜蜂的\"几何远见\"", "开普勒《论六角雪花》(1611)", "开尔文勋爵(1887)三维泡沫问题;Weaire & Phelan(1993)找到更优结构", "Lloyd (1982) \"Least squares quantization in PCM\", IEEE Trans. Information Theory", "Thomas C. Hales (2001) \"The Honeycomb Conjecture\", Discrete & Computational Geometry 25:1–22(1999 年发布)", "Karihaloo et al. (2013) J. R. Soc. Interface:蜂蜡受热流动,圆形巢室变成圆角六边形"], "apps": ["北京奥运\"水立方\"外墙:Weaire–Phelan 泡沫结构", "石墨烯、碳纳米管:碳原子的六边形晶格", "飞机和高铁的蜂窝夹层板:又轻又硬", "手机\"蜂窝网络\"基站覆盖规划", "Uber H3 六边形地图网格、外卖配送分区(Voronoi)"]}, {"id": "nav", "nav": "导航", "eyebrow": "任务6 · ★★☆ 进阶", "title": "导航怎么找到最短的路? (图论 · 算法)", "must": ["图 = 顶点 + 边,边可以带权重(距离/时间/费用)。", "只保留\"谁连着谁\",形状不重要。", "欧拉路径:一笔画的条件是奇点个数为 0 或 2。", "Dijkstra 算法:从起点像水波一样向外,每次确定一个最近的点。", "算法复杂度:穷举所有路线会爆炸式增长,好算法快得多。", "贪心与最优:每次走最近的一步不一定得到最短总路(旅行商问题)。", "树:连通且没有圈,n 个点有 n−1 条边;最短路的\"来自哪\"箭头组成一棵树。"], "formulas": [["一笔画", "⇔ 连通且奇度顶点数 ∈ {0, 2}"], ["所有顶点度数之和", "= 2 × 边数"], ["Dijkstra", "dist(v) = min(dist(v), dist(u) + w(u,v))"], ["n 个城市的旅行路线数", "= (n−1)!/2"], ["树的边数", "= 顶点数 − 1;n×n 网格最短路线数 = C(2n, n)"]], "lit": ["Euler, \"Solutio problematis ad geometriam situs pertinentis\", 1736(柯尼斯堡七桥)", "E. W. Dijkstra, \"A note on two problems in connexion with graphs\", Numerische Mathematik, 1959", "Hart, Nilsson, Raphael, A* 算法, 1968", "Karp, 1972, 旅行商问题的 NP 完全性", "Dorigo, 蚁群算法, 1992"], "apps": ["手机导航与网约车派单", "快递与外卖路径规划", "互联网路由(OSPF 用 Dijkstra)", "地铁换乘查询", "游戏 AI 寻路(A*)", "社交网络分析"]}, {"id": "secret", "nav": "密码", "eyebrow": "任务4 · ★★☆ 进阶", "title": "怎样把秘密藏进数字里", "must": ["模运算就是\"取余数\",像时钟一样绕圈:a ≡ b (mod n) 表示 a、b 除以 n 余数相同。", "凯撒密码只有 25 种密钥,可以全部试一遍(暴力破解)。", "频率分析:英文里 E、T、A、O 最常见;但样本太短时统计会骗人。", "乘法密码要求 a 与 26 互质,否则无法解密;解密要用乘法逆元。", "每个大于 1 的整数都能唯一分解成质数之积(算术基本定理)。", "两个大质数相乘很容易,把乘积分解回去极难——这是现代密码的地基。", "公钥可以公开给所有人加密,只有私钥能解密。", "安全思维:算法公开,只有钥匙保密(柯克霍夫原则)。"], "formulas": [["凯撒", "C = (P + k) mod 26;P = (C − k) mod 26"], ["乘法密码", "C = a·P mod 26,要求 gcd(a, 26) = 1;例:3 × 9 = 27 ≡ 1,故 3 的逆元是 9"], ["辗转相除", "gcd(a, b) = gcd(b, a mod b)"], ["RSA", "n = p·q;φ(n) = (p−1)(q−1);选 e 与 φ(n) 互质;d ≡ e⁻¹ (mod φ(n))"], ["", "加密 c = mᵉ mod n;解密 m = cᵈ mod n"], ["第5关", "p=5,q=11,n=55,φ=40,e=3,d=27(3×27=81≡1 mod 40)"], ["BOSS", "n=91=7×13,φ=72,e=5,d=29(5×29=145≡1 mod 72)"], ["欧拉定理", "gcd(m,n)=1 时 m^φ(n) ≡ 1 (mod n)——RSA 能解回原文的原因"]], "lit": ["苏维托尼乌斯《罗马十二帝王传》记载凯撒用移位密码", "阿尔·肯迪(9世纪)《破译密码信息手稿》:最早的频率分析", "图灵与布莱切利园破译 Enigma(二战)", "Shannon (1949) \"Communication Theory of Secrecy Systems\"", "Diffie & Hellman (1976) \"New Directions in Cryptography\":公钥思想", "Rivest, Shamir & Adleman (1978) CACM \"A Method for Obtaining Digital Signatures and Public-Key Cryptosystems\"", "Shor (1994):量子计算机可快速分解大数 → 后量子密码(NIST 2024 发布 FIPS 203)"], "apps": ["浏览器地址栏的\"小锁\"(HTTPS/TLS)", "微信、支付宝支付与数字证书", "数字签名:证明文件确实是你发的", "银行卡和身份证芯片、区块链钱包", "中国商用密码标准:SM2(公钥)、SM4(分组密码)"]}, {"id": "chord", "nav": "和弦", "eyebrow": "任务1 · ★★☆ 进阶", "title": "为什么有的和弦好听", "must": ["音高由频率决定(单位 Hz),标准音 A4 = 440 Hz。", "弦长与频率成反比:弦长减半,频率翻倍,升高一个八度。", "频率比越简单越协和:八度 2:1、纯五度 3:2、纯四度 4:3、大三度 5:4、小三度 6:5;小二度 16:15 刺耳。", "两音的合成波按\"最小公倍数\"重复:比越简单,重复越快,大脑越容易\"看懂\"。", "人耳对音高的感受是对数的:频率每乘 2,听起来升高一样多。", "任何周期声音都能拆成一组正弦波(基频 + 泛音),泛音的强弱决定音色。"], "formulas": [["梅森弦振动定律", "f = (1/2L)·√(T/μ)(L 弦长,T 张力,μ 线密度)"], ["十二平均律", "半音比 r = 2^(1/12) ≈ 1.05946;第 n 个半音 f = f₀·2^(n/12)"], ["", "平均律五度 2^(7/12) ≈ 1.4983,纯五度 1.5,差约 2 音分"], ["音分", "cents = 1200·log₂(f₂/f₁)"], ["拍频", "f_beat = |f₁ − f₂|"], ["傅里叶级数", "f(t) = a₀ + Σ [aₙcos(nωt) + bₙsin(nωt)];方波只含奇次谐波,振幅 ∝ 1/n"]], "lit": ["毕达哥拉斯学派(约公元前6世纪):弦长比与和谐的传说", "朱载堉《律学新说》(1584):最早精确计算十二平均律", "梅森《Harmonie universelle》(1636):弦振动定律", "傅里叶《热的解析理论》(1822):函数可展开为三角级数", "亥姆霍兹《论音感》(1863):用泛音和\"拍\"解释协和", "Plomp & Levelt (1965) \"Tonal consonance and critical bandwidth\", JASA 38:548–560", "Avery Wang (2003) \"An Industrial-Strength Audio Search Algorithm\"(Shazam 听歌识曲)"], "apps": ["手机调音器、听歌识曲:实时频谱分析(FFT)", "MP3/AAC 音频压缩:在频域里丢掉人耳听不到的部分", "降噪耳机:生成相位相反的声波抵消噪音", "医院 MRI 成像、地震波分析:都靠傅里叶变换", "钢琴调律:采用十二平均律,任何调都能弹"]}, {"id": "cat", "nav": "猫", "eyebrow": "任务2 · ★★★ 挑战", "title": "让AI认出一只猫", "must": ["图片就是数字:灰度像素 0–255,彩色是 RGB 三层;28×28 的图就是 784 个数的向量。", "每个样本是空间里的一个点,特征就是坐标。", "线性分类器用一条线(高维里是\"超平面\")把两类分开。", "损失函数衡量\"错了多少\",学习就是让损失变小。", "梯度下降:沿着最陡的下坡方向走一小步,反复走。学习率太大会来回震荡,太小走得慢。", "一条直线分不开时,可以\"升维\"或叠加多层神经元。", "神经网络 = 很多\"加权求和 + 激活函数\"叠在一起;反向传播就是链式法则。", "数据有偏,模型就有偏:AI 只会学到你喂给它的东西。"], "formulas": [["分界线", "w₁x₁ + w₂x₂ + b = 0;> 0 判为猫,< 0 判为狗"], ["均方误差", "L = (1/n)·Σ(ŷᵢ − yᵢ)²"], ["梯度下降", "θ ← θ − η·∇L(η 为学习率)"], ["感知机规则", "分错时 w ← w + η·y·x"], ["升维示例", "(x₁, x₂) → (x₁, x₂, x₁² + x₂²),圆圈数据变得可用平面分开"], ["神经元", "a = σ(w·x + b);Sigmoid σ(z) = 1/(1+e^(−z));ReLU(z) = max(0, z)"]], "lit": ["McCulloch & Pitts (1943) \"A Logical Calculus of the Ideas Immanent in Nervous Activity\"", "Rosenblatt (1958) \"The Perceptron\"", "Minsky & Papert (1969)《Perceptrons》:单层感知机解不了异或", "Rumelhart, Hinton & Williams (1986) Nature \"Learning representations by back-propagating errors\"", "Cybenko (1989):通用逼近定理", "Cortes & Vapnik (1995) 支持向量机(核技巧 = 升维思想)", "LeCun et al. (1998) \"Gradient-based learning applied to document recognition\"(LeNet、MNIST 手写数字)", "Le et al. (2012) Google Brain \"Building high-level features using large scale unsupervised learning\":从 YouTube 视频中自己学出\"猫脸神经元\"", "Krizhevsky, Sutskever & Hinton (2012) AlexNet:深度学习赢下 ImageNet"], "apps": ["手机人脸解锁、相册按人物/宠物自动分类", "医学影像辅助诊断(肺结节、眼底病变)", "自动驾驶识别行人和红绿灯", "垃圾邮件过滤、拍照识物、拍照搜题"]}, {"id": "casino", "nav": "赌场", "eyebrow": "任务7 · ★★★ 挑战", "title": "赌场为什么总赢? (概率 · 统计)", "must": ["频率与概率:抛得越多,频率越接近概率;少量试验会有很大波动。", "古典概率:两颗骰子有 6×6 = 36 种等可能结果,和为 7 有 6 种,最常见。", "期望值:玩很多很多次后,平均每次得到多少。", "庄家优势:欧式轮盘押红,期望 −1/37 ≈ −2.7%,绿色 0 就是赌场的利润。", "大数定律:次数越多,平均结果越贴近期望值。", "赌徒谬误:连开 5 次黑,下一次开红的概率还是 18/37。", "随机游走与赌徒破产:期望为负、对手资金无限,一直玩下去几乎一定输光。", "蒙特卡洛模拟:用大量随机试验估计难算的概率。"], "formulas": [["古典概率", "P = 有利结果数 ÷ 所有等可能结果数"], ["期望值", "E = Σ xᵢ·pᵢ"], ["押红 1 元", "E = 1×18/37 − 1×19/37 = −1/37"], ["庄家优势", "= (票价 − E) ÷ 票价"], ["赌徒破产(从 i 到 N,r = q/p)", "P(成功) = (1 − rⁱ) ÷ (1 − rᴺ)"]], "lit": ["Pascal 与 Fermat 通信, 1654(点数分配问题)", "Jakob Bernoulli,《猜度术》Ars Conjectandi, 1713(大数定律)", "W. Feller,《概率论及其应用》, 1950"], "apps": ["保险定价", "彩票与游戏抽卡", "天气预报", "金融风险管理"]}];
+var META = {
+  nim: { em: "🐿️", c: "#9cf07a", g: "小学 1–3 年级", pre: "数到 20、会加减" },
+  bee: { em: "🐝", c: "#ffd36e", g: "小学 4 年级起", pre: "认识多边形" },
+  nav: { em: "🐜", c: "#5fd7ff", g: "小学 5 年级–初一", pre: "加法、比较大小" },
+  secret: { em: "🦉", c: "#ffb36b", g: "小学 5–6 年级起", pre: "乘除法、余数" },
+  chord: { em: "🎹", c: "#ff8fb1", g: "小学 6 年级起", pre: "分数与比" },
+  cat: { em: "🐱", c: "#c79bff", g: "初一–初二起", pre: "坐标系、一次函数" },
+  casino: { em: "🦝", c: "#ff6b8a", g: "初一–初三", pre: "分数、百分数" }
+};
+var ORDER = ["nim", "bee", "nav", "secret", "chord", "cat", "casino"];
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var byId = {}; NOTES.forEach(function (n) { byId[n.id] = n; });
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function ls(k) { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  function split(t) { var m = t.match(/^(.{2,22}?)[:：](.+)$/); return m ? [m[1], m[2]] : ["", t]; }
+  function clean(t) { return t.replace(/\s*\(.*?\)\s*$/, "").replace(/[?？]$/, ""); }
+  var tabs = $("#tabs");
+  ORDER.forEach(function (id) {
+    var n = byId[id]; if (!n) return; var m = META[id];
+    var b = document.createElement("button"); b.className = "tab"; b.type = "button"; b.dataset.id = id; b.style.setProperty("--c", m.c);
+    b.innerHTML = m.em + " " + esc(n.nav); b.onclick = function () { location.hash = id; };
+    tabs.appendChild(b);
+  });
+  var r = document.createElement("button"); r.className = "tab"; r.type = "button"; r.dataset.id = "route"; r.style.setProperty("--c", "#e8e8ff");
+  r.innerHTML = "🧭 路线"; r.onclick = function () { location.hash = "route"; }; tabs.appendChild(r);
 
-        <section class="section" id="guide" data-nav="难度">
-          <div class="head">
-            <p class="head__eyebrow">难度引导</p>
-            <h2>先找一个适合你的任务。</h2>
-            <p class="head__sub">估算,按中国学段;成人任何任务都可玩</p>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">任务</th>
-                  <th scope="col">难度</th>
-                  <th scope="col">能玩通</th>
-                  <th scope="col">能完全理解</th>
-                  <th scope="col">前置</th>
-                  <th scope="col">备注</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row"><a class="link" href="#nim">先拿的人一定赢吗</a> <small><a class="link" href="../nim/" target="_top">去玩 →</a></small></th>
-                  <td class="num">★☆☆ 入门</td>
-                  <td>小学一年级起能玩通</td>
-                  <td>小学三年级能完全理解</td>
-                  <td>数到20、加减</td>
-                  <td class="muted">两堆 Nim 的二进制解法留作彩蛋</td>
-                </tr>
-                <tr>
-                  <th scope="row"><a class="link" href="#bee">为什么蜜蜂选六边形</a> <small><a class="link" href="../bee/" target="_top">去玩 →</a></small></th>
-                  <td class="num">★☆☆ 入门</td>
-                  <td>小学4年级起(约10岁+)</td>
-                  <td>小学6年级–初一</td>
-                  <td>角度、周长、面积</td>
-                  <td class="muted">第3关蜂巢猜想、第4关泡泡排队以体验为主</td>
-                </tr>
-                <tr>
-                  <th scope="row"><a class="link" href="#nav">导航怎么找到最短的路</a> <small><a class="link" href="../nav/" target="_top">去玩 →</a></small></th>
-                  <td class="num">★★☆ 进阶</td>
-                  <td>小学四年级起能玩通</td>
-                  <td>初一能完全理解</td>
-                  <td>加法、比较大小</td>
-                  <td class="muted">旅行商问题至今无快速完美算法(彩蛋)</td>
-                </tr>
-                <tr>
-                  <th scope="row"><a class="link" href="#secret">怎样把秘密藏进数字里</a> <small><a class="link" href="../secret/" target="_top">去玩 →</a></small></th>
-                  <td class="num">★★☆ 进阶</td>
-                  <td>小学5–6年级起(约11岁+)</td>
-                  <td>初二–高中</td>
-                  <td>除法与余数、乘法表</td>
-                  <td class="muted">小学生可先玩到第4关;第5–6关RSA初二以上更顺</td>
-                </tr>
-                <tr>
-                  <th scope="row"><a class="link" href="#chord">为什么有的和弦好听</a> <small><a class="link" href="../chord/" target="_top">去玩 →</a></small></th>
-                  <td class="num">★★☆ 进阶</td>
-                  <td>小学6年级起(约12岁+)</td>
-                  <td>高一以上</td>
-                  <td>分数与比</td>
-                  <td class="muted">第3关对数/平均律是高一内容,第4关傅里叶是大学内容,以听和看为主</td>
-                </tr>
-                <tr>
-                  <th scope="row"><a class="link" href="#cat">让AI认出一只猫</a> <small><a class="link" href="../cat/" target="_top">去玩 →</a></small></th>
-                  <td class="num">★★★ 挑战</td>
-                  <td>初一–初二起(约13岁+)</td>
-                  <td>高中–大学</td>
-                  <td>坐标系、一次函数</td>
-                  <td class="muted">梯度下降、神经网络是高中/大学内容,以体验和直觉为主</td>
-                </tr>
-                <tr>
-                  <th scope="row"><a class="link" href="#casino">赌场为什么总赢</a> <small><a class="link" href="../casino/" target="_top">去玩 →</a></small></th>
-                  <td class="num">★★★ 挑战</td>
-                  <td>初一~初三</td>
-                  <td>高中–大学</td>
-                  <td>分数、百分数</td>
-                  <td class="muted">随机游走、赌徒破产、蒙特卡洛是高中/大学内容,以模拟体验为主</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="fineprint">按中国学段估算;成人任何任务都可玩。建议顺序:松果 → 蜜蜂 → 导航 → 密码 → 和弦 → 猫 → 赌场。</p>
-        </section>
-
-        <section class="section" id="nim" data-nav="松果">
-          <div class="head">
-            <p class="head__eyebrow">任务5 · ★☆☆ 入门</p>
-            <h2>先拿的人一定赢吗? (取松果 · 组合博弈)</h2>
-          </div>
-          <div class="links">
-            <button class="btn x-press" type="button" data-copy="nim">一键复制笔记</button>
-            <a class="btn" href="../nim/" target="_top">去玩这个任务 →</a>
-          </div>
-          <div class="x-notes">
-            <div class="x-block">
-              <h3>必须掌握</h3>
-              <ol class="x-must">
-                <li>必胜位置与必败位置:轮到你时一定会输的局面叫必败位置。</li>
-                <li>逆推(倒着想):从结局 0 往回推,每个位置看它能走到哪里。</li>
-                <li>每次拿 1~m 颗:必败位置是 (m+1) 的倍数;先手第一步拿 N ÷ (m+1) 的余数颗。</li>
-                <li>配对策略:对手拿 k,你拿 (m+1−k),每轮凑成 m+1。</li>
-                <li>说理与反例:说明为什么对;一个反例就能推翻一个说法。</li>
-                <li>镜像策略:两堆一样多时,后手照镜子拿必胜。</li>
-              </ol>
-            </div>
-            <div class="x-block">
-              <h3>公式</h3>
-              <ul class="x-formulas">
-                <li><span class="x-f__name">先手必胜<span class="x-sr">:</span></span><span class="x-f__math">⇔ N mod (m+1) ≠ 0</span></li>
-                <li><span class="x-f__name">先手第一步<span class="x-sr">:</span></span><span class="x-f__math">拿 N mod (m+1) 颗</span></li>
-                <li><span class="x-f__name">两堆 Nim<span class="x-sr">:</span></span><span class="x-f__math">先手必胜 ⇔ 两堆不一样多(一般情形:各堆数的二进制异或 ≠ 0)</span></li>
-              </ul>
-            </div>
-            <div class="cards">
-              <div class="x-block">
-                <h3>经典文献与历史</h3>
-                <ul>
-                  <li>Charles L. Bouton, "Nim, a Game with a Complete Mathematical Theory", Annals of Mathematics, 1901–1902</li>
-                  <li>R. Sprague (1935)、P. M. Grundy (1939):Sprague–Grundy 定理,把所有公平组合游戏化为 Nim</li>
-                  <li>Berlekamp, Conway, Guy《Winning Ways for Your Mathematical Plays》, 1982</li>
-                  <li>中国民间游戏「抢30」、巴什博弈(Bash Game)</li>
-                </ul>
-              </div>
-              <div class="x-block">
-                <h3>领域应用与案例</h3>
-                <ul>
-                  <li>博弈论与经济学中的策略分析</li>
-                  <li>电脑下棋:博弈树搜索、逆推(国际象棋残局库)</li>
-                  <li>编程:动态规划、递推</li>
-                  <li>数学竞赛中的取石子问题</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="section" id="bee" data-nav="蜜蜂">
-          <div class="head">
-            <p class="head__eyebrow">任务3 · ★☆☆ 入门</p>
-            <h2>为什么蜜蜂选六边形</h2>
-          </div>
-          <div class="links">
-            <button class="btn x-press" type="button" data-copy="bee">一键复制笔记</button>
-            <a class="btn" href="../bee/" target="_top">去玩这个任务 →</a>
-          </div>
-          <div class="x-notes">
-            <div class="x-block">
-              <h3>必须掌握</h3>
-              <ol class="x-must">
-                <li>正 n 边形每个内角 = (n−2)×180°/n:三角形 60°,正方形 90°,正六边形 120°。</li>
-                <li>一个顶点周围的角必须拼成 360°,所以能单独铺满平面的正多边形只有 3 种:正三角形、正方形、正六边形。</li>
-                <li>面积相同时,边越多越接近圆,周长越短;圆最省但不能密铺。</li>
-                <li>蜂巢猜想:把平面分成等面积的格子,正六边形网格的总周长最短(1999 年被证明)。</li>
-                <li>Voronoi 图:每个点归离它最近的"种子";反复把种子移到自己区域的中心(Lloyd 松弛),格子会自己趋向六边形。</li>
-                <li>大自然常常在做"最优化":用最少的材料完成任务。</li>
-              </ol>
-            </div>
-            <div class="x-block">
-              <h3>公式</h3>
-              <ul class="x-formulas">
-                <li><span class="x-f__name">内角<span class="x-sr">:</span></span><span class="x-f__math">(n−2)×180°/n;多边形内角和 (n−2)×180°</span></li>
-                <li><span class="x-f__name">密铺条件<span class="x-sr">:</span></span><span class="x-f__math">360° ÷ 内角 必须是整数</span></li>
-                <li><span class="x-f__name">等面积 A 时周长<span class="x-sr">:</span></span><span class="x-f__math">正三角形 ≈ 4.559√A,正方形 = 4√A,正六边形 ≈ 3.722√A,圆 ≈ 3.545√A</span></li>
-                <li><span class="x-f__name">等周不等式<span class="x-sr">:</span></span><span class="x-f__math">L² ≥ 4πA(圆取等号)</span></li>
-                <li><span class="x-f__name">正六边形面积<span class="x-sr">:</span></span><span class="x-f__math">A = (3√3/2)·a²</span></li>
-                <li><span class="x-f__name">质心<span class="x-sr">:</span></span><span class="x-f__math">x̄ = 区域内所有点 x 坐标的平均</span></li>
-              </ul>
-            </div>
-            <div class="cards">
-              <div class="x-block">
-                <h3>经典文献与历史</h3>
-                <ul>
-                  <li>瓦罗(Varro,公元前36年)最早提出蜂巢猜想</li>
-                  <li>帕普斯(约公元4世纪)《数学汇编》称赞蜜蜂的"几何远见"</li>
-                  <li>开普勒《论六角雪花》(1611)</li>
-                  <li>开尔文勋爵(1887)三维泡沫问题;Weaire & Phelan(1993)找到更优结构</li>
-                  <li>Lloyd (1982) "Least squares quantization in PCM", IEEE Trans. Information Theory</li>
-                  <li>Thomas C. Hales (2001) "The Honeycomb Conjecture", Discrete & Computational Geometry 25:1–22(1999 年发布)</li>
-                  <li>Karihaloo et al. (2013) J. R. Soc. Interface:蜂蜡受热流动,圆形巢室变成圆角六边形</li>
-                </ul>
-              </div>
-              <div class="x-block">
-                <h3>领域应用与案例</h3>
-                <ul>
-                  <li>北京奥运"水立方"外墙:Weaire–Phelan 泡沫结构</li>
-                  <li>石墨烯、碳纳米管:碳原子的六边形晶格</li>
-                  <li>飞机和高铁的蜂窝夹层板:又轻又硬</li>
-                  <li>手机"蜂窝网络"基站覆盖规划</li>
-                  <li>Uber H3 六边形地图网格、外卖配送分区(Voronoi)</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="section" id="nav" data-nav="导航">
-          <div class="head">
-            <p class="head__eyebrow">任务6 · ★★☆ 进阶</p>
-            <h2>导航怎么找到最短的路? (图论 · 算法)</h2>
-          </div>
-          <div class="links">
-            <button class="btn x-press" type="button" data-copy="nav">一键复制笔记</button>
-            <a class="btn" href="../nav/" target="_top">去玩这个任务 →</a>
-          </div>
-          <div class="x-notes">
-            <div class="x-block">
-              <h3>必须掌握</h3>
-              <ol class="x-must">
-                <li>图 = 顶点 + 边,边可以带权重(距离/时间/费用)。</li>
-                <li>只保留"谁连着谁",形状不重要。</li>
-                <li>欧拉路径:一笔画的条件是奇点个数为 0 或 2。</li>
-                <li>Dijkstra 算法:从起点像水波一样向外,每次确定一个最近的点。</li>
-                <li>算法复杂度:穷举所有路线会爆炸式增长,好算法快得多。</li>
-                <li>贪心与最优:每次走最近的一步不一定得到最短总路(旅行商问题)。</li>
-                <li>树:连通且没有圈,n 个点有 n−1 条边;最短路的"来自哪"箭头组成一棵树。</li>
-              </ol>
-            </div>
-            <div class="x-block">
-              <h3>公式</h3>
-              <ul class="x-formulas">
-                <li><span class="x-f__name">一笔画<span class="x-sr">:</span></span><span class="x-f__math">⇔ 连通且奇度顶点数 ∈ {0, 2}</span></li>
-                <li><span class="x-f__name">所有顶点度数之和<span class="x-sr">:</span></span><span class="x-f__math">= 2 × 边数</span></li>
-                <li><span class="x-f__name">Dijkstra<span class="x-sr">:</span></span><span class="x-f__math">dist(v) = min(dist(v), dist(u) + w(u,v))</span></li>
-                <li><span class="x-f__name">n 个城市的旅行路线数<span class="x-sr">:</span></span><span class="x-f__math">= (n−1)!/2</span></li>
-                <li><span class="x-f__name">树的边数<span class="x-sr">:</span></span><span class="x-f__math">= 顶点数 − 1;n×n 网格最短路线数 = C(2n, n)</span></li>
-              </ul>
-            </div>
-            <div class="cards">
-              <div class="x-block">
-                <h3>经典文献与历史</h3>
-                <ul>
-                  <li>Euler, "Solutio problematis ad geometriam situs pertinentis", 1736(柯尼斯堡七桥)</li>
-                  <li>E. W. Dijkstra, "A note on two problems in connexion with graphs", Numerische Mathematik, 1959</li>
-                  <li>Hart, Nilsson, Raphael, A* 算法, 1968</li>
-                  <li>Karp, 1972, 旅行商问题的 NP 完全性</li>
-                  <li>Dorigo, 蚁群算法, 1992</li>
-                </ul>
-              </div>
-              <div class="x-block">
-                <h3>领域应用与案例</h3>
-                <ul>
-                  <li>手机导航与网约车派单</li>
-                  <li>快递与外卖路径规划</li>
-                  <li>互联网路由(OSPF 用 Dijkstra)</li>
-                  <li>地铁换乘查询</li>
-                  <li>游戏 AI 寻路(A*)</li>
-                  <li>社交网络分析</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="section" id="secret" data-nav="密码">
-          <div class="head">
-            <p class="head__eyebrow">任务4 · ★★☆ 进阶</p>
-            <h2>怎样把秘密藏进数字里</h2>
-          </div>
-          <div class="links">
-            <button class="btn x-press" type="button" data-copy="secret">一键复制笔记</button>
-            <a class="btn" href="../secret/" target="_top">去玩这个任务 →</a>
-          </div>
-          <div class="x-notes">
-            <div class="x-block">
-              <h3>必须掌握</h3>
-              <ol class="x-must">
-                <li>模运算就是"取余数",像时钟一样绕圈:a ≡ b (mod n) 表示 a、b 除以 n 余数相同。</li>
-                <li>凯撒密码只有 25 种密钥,可以全部试一遍(暴力破解)。</li>
-                <li>频率分析:英文里 E、T、A、O 最常见;但样本太短时统计会骗人。</li>
-                <li>乘法密码要求 a 与 26 互质,否则无法解密;解密要用乘法逆元。</li>
-                <li>每个大于 1 的整数都能唯一分解成质数之积(算术基本定理)。</li>
-                <li>两个大质数相乘很容易,把乘积分解回去极难——这是现代密码的地基。</li>
-                <li>公钥可以公开给所有人加密,只有私钥能解密。</li>
-                <li>安全思维:算法公开,只有钥匙保密(柯克霍夫原则)。</li>
-              </ol>
-            </div>
-            <div class="x-block">
-              <h3>公式</h3>
-              <ul class="x-formulas">
-                <li><span class="x-f__name">凯撒<span class="x-sr">:</span></span><span class="x-f__math">C = (P + k) mod 26;P = (C − k) mod 26</span></li>
-                <li><span class="x-f__name">乘法密码<span class="x-sr">:</span></span><span class="x-f__math">C = a·P mod 26,要求 gcd(a, 26) = 1;例:3 × 9 = 27 ≡ 1,故 3 的逆元是 9</span></li>
-                <li><span class="x-f__name">辗转相除<span class="x-sr">:</span></span><span class="x-f__math">gcd(a, b) = gcd(b, a mod b)</span></li>
-                <li><span class="x-f__name">RSA<span class="x-sr">:</span></span><span class="x-f__math">n = p·q;φ(n) = (p−1)(q−1);选 e 与 φ(n) 互质;d ≡ e⁻¹ (mod φ(n))</span></li>
-                <li><span class="x-f__math">加密 c = mᵉ mod n;解密 m = cᵈ mod n</span></li>
-                <li><span class="x-f__name">第5关<span class="x-sr">:</span></span><span class="x-f__math">p=5,q=11,n=55,φ=40,e=3,d=27(3×27=81≡1 mod 40)</span></li>
-                <li><span class="x-f__name">BOSS<span class="x-sr">:</span></span><span class="x-f__math">n=91=7×13,φ=72,e=5,d=29(5×29=145≡1 mod 72)</span></li>
-                <li><span class="x-f__name">欧拉定理<span class="x-sr">:</span></span><span class="x-f__math">gcd(m,n)=1 时 m^φ(n) ≡ 1 (mod n)——RSA 能解回原文的原因</span></li>
-              </ul>
-            </div>
-            <div class="cards">
-              <div class="x-block">
-                <h3>经典文献与历史</h3>
-                <ul>
-                  <li>苏维托尼乌斯《罗马十二帝王传》记载凯撒用移位密码</li>
-                  <li>阿尔·肯迪(9世纪)《破译密码信息手稿》:最早的频率分析</li>
-                  <li>图灵与布莱切利园破译 Enigma(二战)</li>
-                  <li>Shannon (1949) "Communication Theory of Secrecy Systems"</li>
-                  <li>Diffie & Hellman (1976) "New Directions in Cryptography":公钥思想</li>
-                  <li>Rivest, Shamir & Adleman (1978) CACM "A Method for Obtaining Digital Signatures and Public-Key Cryptosystems"</li>
-                  <li>Shor (1994):量子计算机可快速分解大数 → 后量子密码(NIST 2024 发布 FIPS 203)</li>
-                </ul>
-              </div>
-              <div class="x-block">
-                <h3>领域应用与案例</h3>
-                <ul>
-                  <li>浏览器地址栏的"小锁"(HTTPS/TLS)</li>
-                  <li>微信、支付宝支付与数字证书</li>
-                  <li>数字签名:证明文件确实是你发的</li>
-                  <li>银行卡和身份证芯片、区块链钱包</li>
-                  <li>中国商用密码标准:SM2(公钥)、SM4(分组密码)</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="section" id="chord" data-nav="和弦">
-          <div class="head">
-            <p class="head__eyebrow">任务1 · ★★☆ 进阶</p>
-            <h2>为什么有的和弦好听</h2>
-          </div>
-          <div class="links">
-            <button class="btn x-press" type="button" data-copy="chord">一键复制笔记</button>
-            <a class="btn" href="../chord/" target="_top">去玩这个任务 →</a>
-          </div>
-          <div class="x-notes">
-            <div class="x-block">
-              <h3>必须掌握</h3>
-              <ol class="x-must">
-                <li>音高由频率决定(单位 Hz),标准音 A4 = 440 Hz。</li>
-                <li>弦长与频率成反比:弦长减半,频率翻倍,升高一个八度。</li>
-                <li>频率比越简单越协和:八度 2:1、纯五度 3:2、纯四度 4:3、大三度 5:4、小三度 6:5;小二度 16:15 刺耳。</li>
-                <li>两音的合成波按"最小公倍数"重复:比越简单,重复越快,大脑越容易"看懂"。</li>
-                <li>人耳对音高的感受是对数的:频率每乘 2,听起来升高一样多。</li>
-                <li>任何周期声音都能拆成一组正弦波(基频 + 泛音),泛音的强弱决定音色。</li>
-              </ol>
-            </div>
-            <div class="x-block">
-              <h3>公式</h3>
-              <ul class="x-formulas">
-                <li><span class="x-f__name">梅森弦振动定律<span class="x-sr">:</span></span><span class="x-f__math">f = (1/2L)·√(T/μ)(L 弦长,T 张力,μ 线密度)</span></li>
-                <li><span class="x-f__name">十二平均律<span class="x-sr">:</span></span><span class="x-f__math">半音比 r = 2^(1/12) ≈ 1.05946;第 n 个半音 f = f₀·2^(n/12)</span></li>
-                <li><span class="x-f__math">平均律五度 2^(7/12) ≈ 1.4983,纯五度 1.5,差约 2 音分</span></li>
-                <li><span class="x-f__name">音分<span class="x-sr">:</span></span><span class="x-f__math">cents = 1200·log₂(f₂/f₁)</span></li>
-                <li><span class="x-f__name">拍频<span class="x-sr">:</span></span><span class="x-f__math">f_beat = |f₁ − f₂|</span></li>
-                <li><span class="x-f__name">傅里叶级数<span class="x-sr">:</span></span><span class="x-f__math">f(t) = a₀ + Σ [aₙcos(nωt) + bₙsin(nωt)];方波只含奇次谐波,振幅 ∝ 1/n</span></li>
-              </ul>
-            </div>
-            <div class="cards">
-              <div class="x-block">
-                <h3>经典文献与历史</h3>
-                <ul>
-                  <li>毕达哥拉斯学派(约公元前6世纪):弦长比与和谐的传说</li>
-                  <li>朱载堉《律学新说》(1584):最早精确计算十二平均律</li>
-                  <li>梅森《Harmonie universelle》(1636):弦振动定律</li>
-                  <li>傅里叶《热的解析理论》(1822):函数可展开为三角级数</li>
-                  <li>亥姆霍兹《论音感》(1863):用泛音和"拍"解释协和</li>
-                  <li>Plomp & Levelt (1965) "Tonal consonance and critical bandwidth", JASA 38:548–560</li>
-                  <li>Avery Wang (2003) "An Industrial-Strength Audio Search Algorithm"(Shazam 听歌识曲)</li>
-                </ul>
-              </div>
-              <div class="x-block">
-                <h3>领域应用与案例</h3>
-                <ul>
-                  <li>手机调音器、听歌识曲:实时频谱分析(FFT)</li>
-                  <li>MP3/AAC 音频压缩:在频域里丢掉人耳听不到的部分</li>
-                  <li>降噪耳机:生成相位相反的声波抵消噪音</li>
-                  <li>医院 MRI 成像、地震波分析:都靠傅里叶变换</li>
-                  <li>钢琴调律:采用十二平均律,任何调都能弹</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="section" id="cat" data-nav="猫">
-          <div class="head">
-            <p class="head__eyebrow">任务2 · ★★★ 挑战</p>
-            <h2>让AI认出一只猫</h2>
-          </div>
-          <div class="links">
-            <button class="btn x-press" type="button" data-copy="cat">一键复制笔记</button>
-            <a class="btn" href="../cat/" target="_top">去玩这个任务 →</a>
-          </div>
-          <div class="x-notes">
-            <div class="x-block">
-              <h3>必须掌握</h3>
-              <ol class="x-must">
-                <li>图片就是数字:灰度像素 0–255,彩色是 RGB 三层;28×28 的图就是 784 个数的向量。</li>
-                <li>每个样本是空间里的一个点,特征就是坐标。</li>
-                <li>线性分类器用一条线(高维里是"超平面")把两类分开。</li>
-                <li>损失函数衡量"错了多少",学习就是让损失变小。</li>
-                <li>梯度下降:沿着最陡的下坡方向走一小步,反复走。学习率太大会来回震荡,太小走得慢。</li>
-                <li>一条直线分不开时,可以"升维"或叠加多层神经元。</li>
-                <li>神经网络 = 很多"加权求和 + 激活函数"叠在一起;反向传播就是链式法则。</li>
-                <li>数据有偏,模型就有偏:AI 只会学到你喂给它的东西。</li>
-              </ol>
-            </div>
-            <div class="x-block">
-              <h3>公式</h3>
-              <ul class="x-formulas">
-                <li><span class="x-f__name">分界线<span class="x-sr">:</span></span><span class="x-f__math">w₁x₁ + w₂x₂ + b = 0;&gt; 0 判为猫,&lt; 0 判为狗</span></li>
-                <li><span class="x-f__name">均方误差<span class="x-sr">:</span></span><span class="x-f__math">L = (1/n)·Σ(ŷᵢ − yᵢ)²</span></li>
-                <li><span class="x-f__name">梯度下降<span class="x-sr">:</span></span><span class="x-f__math">θ ← θ − η·∇L(η 为学习率)</span></li>
-                <li><span class="x-f__name">感知机规则<span class="x-sr">:</span></span><span class="x-f__math">分错时 w ← w + η·y·x</span></li>
-                <li><span class="x-f__name">升维示例<span class="x-sr">:</span></span><span class="x-f__math">(x₁, x₂) → (x₁, x₂, x₁² + x₂²),圆圈数据变得可用平面分开</span></li>
-                <li><span class="x-f__name">神经元<span class="x-sr">:</span></span><span class="x-f__math">a = σ(w·x + b);Sigmoid σ(z) = 1/(1+e^(−z));ReLU(z) = max(0, z)</span></li>
-              </ul>
-            </div>
-            <div class="cards">
-              <div class="x-block">
-                <h3>经典文献与历史</h3>
-                <ul>
-                  <li>McCulloch & Pitts (1943) "A Logical Calculus of the Ideas Immanent in Nervous Activity"</li>
-                  <li>Rosenblatt (1958) "The Perceptron"</li>
-                  <li>Minsky & Papert (1969)《Perceptrons》:单层感知机解不了异或</li>
-                  <li>Rumelhart, Hinton & Williams (1986) Nature "Learning representations by back-propagating errors"</li>
-                  <li>Cybenko (1989):通用逼近定理</li>
-                  <li>Cortes & Vapnik (1995) 支持向量机(核技巧 = 升维思想)</li>
-                  <li>LeCun et al. (1998) "Gradient-based learning applied to document recognition"(LeNet、MNIST 手写数字)</li>
-                  <li>Le et al. (2012) Google Brain "Building high-level features using large scale unsupervised learning":从 YouTube 视频中自己学出"猫脸神经元"</li>
-                  <li>Krizhevsky, Sutskever & Hinton (2012) AlexNet:深度学习赢下 ImageNet</li>
-                </ul>
-              </div>
-              <div class="x-block">
-                <h3>领域应用与案例</h3>
-                <ul>
-                  <li>手机人脸解锁、相册按人物/宠物自动分类</li>
-                  <li>医学影像辅助诊断(肺结节、眼底病变)</li>
-                  <li>自动驾驶识别行人和红绿灯</li>
-                  <li>垃圾邮件过滤、拍照识物、拍照搜题</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-        <section class="section" id="casino" data-nav="赌场">
-          <div class="head">
-            <p class="head__eyebrow">任务7 · ★★★ 挑战</p>
-            <h2>赌场为什么总赢? (概率 · 统计)</h2>
-          </div>
-          <div class="links">
-            <button class="btn x-press" type="button" data-copy="casino">一键复制笔记</button>
-            <a class="btn" href="../casino/" target="_top">去玩这个任务 →</a>
-          </div>
-          <div class="x-notes">
-            <div class="x-block">
-              <h3>必须掌握</h3>
-              <ol class="x-must">
-                <li>频率与概率:抛得越多,频率越接近概率;少量试验会有很大波动。</li>
-                <li>古典概率:两颗骰子有 6×6 = 36 种等可能结果,和为 7 有 6 种,最常见。</li>
-                <li>期望值:玩很多很多次后,平均每次得到多少。</li>
-                <li>庄家优势:欧式轮盘押红,期望 −1/37 ≈ −2.7%,绿色 0 就是赌场的利润。</li>
-                <li>大数定律:次数越多,平均结果越贴近期望值。</li>
-                <li>赌徒谬误:连开 5 次黑,下一次开红的概率还是 18/37。</li>
-                <li>随机游走与赌徒破产:期望为负、对手资金无限,一直玩下去几乎一定输光。</li>
-                <li>蒙特卡洛模拟:用大量随机试验估计难算的概率。</li>
-              </ol>
-            </div>
-            <div class="x-block">
-              <h3>公式</h3>
-              <ul class="x-formulas">
-                <li><span class="x-f__name">古典概率<span class="x-sr">:</span></span><span class="x-f__math">P = 有利结果数 ÷ 所有等可能结果数</span></li>
-                <li><span class="x-f__name">期望值<span class="x-sr">:</span></span><span class="x-f__math">E = Σ xᵢ·pᵢ</span></li>
-                <li><span class="x-f__name">押红 1 元<span class="x-sr">:</span></span><span class="x-f__math">E = 1×18/37 − 1×19/37 = −1/37</span></li>
-                <li><span class="x-f__name">庄家优势<span class="x-sr">:</span></span><span class="x-f__math">= (票价 − E) ÷ 票价</span></li>
-                <li><span class="x-f__name">赌徒破产(从 i 到 N,r = q/p)<span class="x-sr">:</span></span><span class="x-f__math">P(成功) = (1 − rⁱ) ÷ (1 − rᴺ)</span></li>
-              </ul>
-            </div>
-            <div class="cards">
-              <div class="x-block">
-                <h3>经典文献与历史</h3>
-                <ul>
-                  <li>Pascal 与 Fermat 通信, 1654(点数分配问题)</li>
-                  <li>Jakob Bernoulli,《猜度术》Ars Conjectandi, 1713(大数定律)</li>
-                  <li>W. Feller,《概率论及其应用》, 1950</li>
-                </ul>
-              </div>
-              <div class="x-block">
-                <h3>领域应用与案例</h3>
-                <ul>
-                  <li>保险定价</li>
-                  <li>彩票与游戏抽卡</li>
-                  <li>天气预报</li>
-                  <li>金融风险管理</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-      <footer class="foot">
-        <p>星图 Math Atlas 测试版 · 2026 · 年级与难度为估算,仅供参考。</p>
-        <nav aria-label="返回各部分" data-auto></nav>
-        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"
-          ><span class="hark-mark"></span><span>built by hark</span></a
-        >
-      </footer>
-    </div>
-    <div class="x-toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="hark.js"></script>
-    <script>
-      (function () {
-        var toast = document.getElementById("toast");
-        var timer;
-        function say(msg) {
-          toast.textContent = msg;
-          toast.classList.add("is-on");
-          clearTimeout(timer);
-          timer = setTimeout(function () { toast.classList.remove("is-on"); }, 2400);
-        }
-        function notesText(section) {
-          var lines = [];
-          var eyebrow = section.querySelector(".head__eyebrow");
-          var task = eyebrow ? eyebrow.textContent.split("·")[0].trim() : "";
-          lines.push((task ? task + " " : "") + section.querySelector("h2").textContent.trim());
-          section.querySelectorAll(".x-block").forEach(function (block) {
-            lines.push("");
-            lines.push(block.querySelector("h3").textContent.trim());
-            var ordered = block.querySelector("ol");
-            block.querySelectorAll("li").forEach(function (li, i) {
-              var t = li.textContent.replace(/\s+/g, " ").trim();
-              lines.push((ordered ? i + 1 + ". " : "- ") + t);
-            });
-          });
-          return lines.join("\n");
-        }
-        function legacyCopy(text) {
-          var ta = document.createElement("textarea");
-          ta.value = text;
-          ta.setAttribute("readonly", "");
-          ta.style.position = "fixed";
-          ta.style.top = "0";
-          ta.style.left = "-9999px";
-          ta.style.opacity = "0";
-          document.body.appendChild(ta);
-          ta.select();
-          ta.setSelectionRange(0, text.length);
-          var ok = false;
-          try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
-          document.body.removeChild(ta);
-          return ok;
-        }
-        function selectNotes(section) {
-          try {
-            var sel = window.getSelection();
-            var range = document.createRange();
-            range.selectNodeContents(section.querySelector(".x-notes"));
-            sel.removeAllRanges();
-            sel.addRange(range);
-          } catch (e) {}
-          say("已选中笔记,请按 Ctrl/⌘+C 复制");
-        }
-        function done() { say("已复制,去粘贴到你的笔记吧"); }
-        document.querySelectorAll("[data-copy]").forEach(function (btn) {
-          btn.addEventListener("click", function () {
-            var section = document.getElementById(btn.getAttribute("data-copy"));
-            var text = notesText(section);
-            function fallback() { if (legacyCopy(text)) done(); else selectNotes(section); }
-            try {
-              if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
-                navigator.clipboard.writeText(text).then(done, fallback);
-              } else {
-                fallback();
-              }
-            } catch (e) {
-              fallback();
-            }
-          });
-        });
-      })();
-    </script>
-  </body>
+  function copyText(n) {
+    var L = [n.title, "", "【必须掌握】"]; n.must.forEach(function (x, i) { L.push((i + 1) + ". " + x); });
+    if (n.formulas.length) { L.push("", "【公式】"); n.formulas.forEach(function (f) { L.push("- " + (f[0] ? f[0] + "：" : "") + f[1]); }); }
+    if (n.lit.length) { L.push("", "【经典文献与历史】"); n.lit.forEach(function (x) { L.push("- " + x); }); }
+    if (n.apps.length) { L.push("", "【应用】"); n.apps.forEach(function (x) { L.push("- " + x); }); }
+    return L.join("\n");
+  }
+  function toast(t) { var e = document.createElement("div"); e.className = "ma-note on"; e.textContent = t; document.body.appendChild(e); setTimeout(function () { e.remove(); }, 2000); }
+  function render(id) {
+    var v = $("#view");
+    tabs.querySelectorAll(".tab").forEach(function (b) { b.classList.toggle("on", b.dataset.id === id); if (b.dataset.id === id) b.scrollIntoView({ inline: "center", block: "nearest" }); });
+    if (id === "route") {
+      v.innerHTML = '<div class="view"><div class="blk" style="margin-top:0"><h3><i>🧭</i>推荐顺序 · 由浅入深</h3><div class="route">' +
+        ORDER.map(function (k, i) { var m = META[k]; return '<button style="--c:' + m.c + '" data-go="' + k + '"><b>' + (i + 1) + ". " + m.em + " " + esc(clean(byId[k].title)) + "</b><small>" + m.g + " · 前置：" + m.pre + "</small></button>"; }).join("") +
+        '</div><p class="hint">按中国学段估算；成人任何任务都可以玩。</p></div></div>';
+      v.querySelectorAll("[data-go]").forEach(function (b) { b.onclick = function () { location.hash = b.dataset.go; }; });
+      return;
+    }
+    var n = byId[id], m = META[id]; if (!n) return render("nim");
+    document.documentElement.style.setProperty("--c", m.c); v.style.setProperty("--c", m.c);
+    var lv = (n.eyebrow.match(/[★☆]+.*$/) || [""])[0];
+    var known = ls("ma:v1:notes-known")[id] || {};
+    var h = '<div class="view"><section class="head"><span class="em">' + m.em + '</span><div><h2>' + esc(n.title) + '</h2><div class="chips"><span class="lv">' + esc(lv) + "</span><span>" + m.g + "</span><span>前置：" + m.pre + "</span></div></div>" +
+      '<div class="acts"><a class="b" href="../' + id + '/">去玩这个任务 →</a><button class="b g" type="button" id="cp">📋 一键复制</button></div></section>';
+    h += '<section class="blk"><h3><i>🎯</i>必须掌握 · ' + n.must.length + ' 条</h3><div class="must">' + n.must.map(function (t, i) {
+      var p = split(t); return '<div class="m' + (known[i] ? " ok" : "") + '" data-i="' + i + '" role="button" tabindex="0"><span class="n"><span>' + (i + 1) + "</span></span>" + (p[0] ? "<b>" + esc(p[0]) + "</b><p>" + esc(p[1]) + "</p>" : "<p style='color:#eef1ff'>" + esc(p[1]) + "</p>") + "</div>";
+    }).join("") + '</div><p class="hint" id="kn"></p></section>';
+    if (n.formulas.length) h += '<section class="blk"><h3><i>∑</i>公式</h3><div class="forms">' + n.formulas.map(function (f) { return '<div class="f"><small>' + esc(f[0] || "公式") + "</small><code>" + esc(f[1]) + "</code></div>"; }).join("") + "</div></section>";
+    h += '<div class="two">';
+    if (n.lit.length) h += '<section class="blk"><h3><i>📜</i>经典文献与历史</h3><ul class="tl">' + n.lit.map(function (x) {
+      var y = x.match(/(1[0-9]{3}|20[0-9]{2})/); return "<li>" + (y ? "<em>" + y[1] + "</em>" : "") + esc(x) + "</li>"; }).join("") + "</ul></section>";
+    if (n.apps.length) h += '<section class="blk"><h3><i>🌍</i>生活里的应用</h3><div class="apps">' + n.apps.map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + "</div></section>";
+    h += "</div></div>";
+    v.innerHTML = h;
+    function count() { var k = Object.keys(known).filter(function (x) { return known[x]; }).length; $("#kn").textContent = "已掌握 " + k + " / " + n.must.length + (k === n.must.length ? " 🎉 全部搞懂！" : " · 点卡片标记“我懂了”"); }
+    count();
+    v.querySelectorAll(".m").forEach(function (c) {
+      var tog = function () { var i = c.dataset.i; known[i] = !known[i]; c.classList.toggle("ok", !!known[i]); var all = ls("ma:v1:notes-known"); all[id] = known; lsSet("ma:v1:notes-known", all); count(); };
+      c.onclick = tog; c.onkeydown = function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tog(); } };
+    });
+    $("#cp").onclick = function () {
+      var t = copyText(n);
+      (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { toast("已复制到剪贴板"); }, function () {
+        var ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast("已复制到剪贴板"); } catch (e) {} ta.remove();
+      });
+    };
+  }
+  function route() { var id = (location.hash || "#nim").slice(1); render(byId[id] || id === "route" ? id : "nim"); }
+  addEventListener("hashchange", function () { route(); scrollTo({ top: 0, behavior: "smooth" }); });
+  route();
+  /* 星空 */
+  var c = $("#sky"), x = c.getContext("2d"), d = Math.min(2, devicePixelRatio || 1), P = [];
+  for (var i = 0; i < 140; i++) P.push([Math.random(), Math.random(), Math.random() * 1.2 + .3, Math.random() * 6]);
+  function sz() { c.width = innerWidth * d; c.height = innerHeight * d; } sz(); addEventListener("resize", sz);
+  var rm = matchMedia("(prefers-reduced-motion: reduce)").matches, last = 0;
+  (function f(t) { if (t - last > 60) { last = t; x.clearRect(0, 0, c.width, c.height); P.forEach(function (p) { x.globalAlpha = .25 + .6 * Math.abs(Math.sin(p[3] + t / 1500)); x.fillStyle = "#fff"; x.beginPath(); x.arc(p[0] * c.width, p[1] * c.height, p[2] * d, 0, 6.3); x.fill(); }); } if (!rm) requestAnimationFrame(f); })(0);
+})();
+</script>
+<script src="../ma.js"></script>
+</body>
 </html>
