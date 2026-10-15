@@ -155,6 +155,15 @@
       .x-recap li + li::before { content: "→"; color: var(--text-secondary); }
       .x-big { font: var(--type-title); }
       @media (prefers-reduced-motion: reduce) { .x-conf span, .x-net circle { transition: none; } }
+      .x-notes { border-radius: var(--r-l); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); padding: 16px; }
+      .x-notes summary { font: var(--type-heading); cursor: pointer; min-height: var(--tap); display: flex; align-items: center; }
+      .x-notes__body { display: grid; gap: 8px; margin-top: 8px; }
+      .x-notes h4 { font: var(--type-label); font-weight: var(--weight-bold); margin-top: 8px; }
+      .x-notes ol, .x-notes ul { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; font: var(--type-body); }
+      .x-notes .x-row { margin-top: 12px; }
+      .x-dlg { width: min(92vw, 720px); max-height: 86vh; padding: 0; border: 0; border-radius: var(--r-l); background: transparent; color: var(--text-primary); }
+      .x-dlg::backdrop { background: rgba(0, 0, 0, 0.45); }
+      .x-dlg .x-close { position: absolute; top: 12px; right: 12px; }
       @media (max-width: 599px) { .x-brand { width: 100%; } .x-vol { width: 70px; } }
     </style>
   </head>
@@ -172,6 +181,7 @@
           </select>
           <span class="x-meter" id="nowplaying">正在播放:—</span>
           <input class="x-vol" id="vol" type="range" min="0" max="100" value="30" aria-label="音乐音量" />
+          <button class="x-toggle" id="notes-open">📒 知识笔记</button>
         </div>
 
         <section class="section" id="map" data-nav="星图">
@@ -179,6 +189,7 @@
             <p class="head__eyebrow">七关任务</p>
             <h2>从一个像素开始，教会机器认出一只猫。</h2>
             <p class="head__sub">每关得 1–3 颗星，拿到 1 颗星就解锁下一关。</p>
+            <p class="fineprint">难度 ★★★ 挑战 · 适合初一–初二起(约13岁+) · 梯度下降、神经网络以体验和直觉为主</p>
           </div>
           <div class="x-map">
             <svg class="x-path" id="path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -211,6 +222,58 @@
       </footer>
     </div>
     <div class="x-toasts" id="toasts" aria-live="polite"></div>
+    <template id="notes-tpl">
+      <details class="x-notes" open>
+        <summary>📒 知识笔记</summary>
+        <div class="x-notes__body">
+          <h4>任务2 让AI认出一只猫</h4>
+          <h4>必须掌握</h4>
+          <ol>
+            <li>图片就是数字:灰度像素 0–255,彩色是 RGB 三层;28×28 的图就是 784 个数的向量。</li>
+            <li>每个样本是空间里的一个点,特征就是坐标。</li>
+            <li>线性分类器用一条线(高维里是"超平面")把两类分开。</li>
+            <li>损失函数衡量"错了多少",学习就是让损失变小。</li>
+            <li>梯度下降:沿着最陡的下坡方向走一小步,反复走。学习率太大会来回震荡,太小走得慢。</li>
+            <li>一条直线分不开时,可以"升维"或叠加多层神经元。</li>
+            <li>神经网络 = 很多"加权求和 + 激活函数"叠在一起;反向传播就是链式法则。</li>
+            <li>数据有偏,模型就有偏:AI 只会学到你喂给它的东西。</li>
+          </ol>
+          <h4>公式</h4>
+          <ul>
+            <li>分界线:w₁x₁ + w₂x₂ + b = 0;&gt; 0 判为猫,&lt; 0 判为狗</li>
+            <li>均方误差:L = (1/n)·Σ(ŷᵢ − yᵢ)²</li>
+            <li>梯度下降:θ ← θ − η·∇L(η 为学习率)</li>
+            <li>感知机规则:分错时 w ← w + η·y·x</li>
+            <li>升维示例:(x₁, x₂) → (x₁, x₂, x₁² + x₂²),圆圈数据变得可用平面分开</li>
+            <li>神经元:a = σ(w·x + b);Sigmoid σ(z) = 1/(1+e^(−z));ReLU(z) = max(0, z)</li>
+          </ul>
+          <h4>经典文献与历史</h4>
+          <ul>
+            <li>McCulloch &amp; Pitts (1943) "A Logical Calculus of the Ideas Immanent in Nervous Activity"</li>
+            <li>Rosenblatt (1958) "The Perceptron"</li>
+            <li>Minsky &amp; Papert (1969)《Perceptrons》:单层感知机解不了异或</li>
+            <li>Rumelhart, Hinton &amp; Williams (1986) Nature "Learning representations by back-propagating errors"</li>
+            <li>Cybenko (1989):通用逼近定理</li>
+            <li>Cortes &amp; Vapnik (1995) 支持向量机(核技巧 = 升维思想)</li>
+            <li>LeCun et al. (1998) "Gradient-based learning applied to document recognition"(LeNet、MNIST 手写数字)</li>
+            <li>Le et al. (2012) Google Brain "Building high-level features using large scale unsupervised learning":从 YouTube 视频中自己学出"猫脸神经元"</li>
+            <li>Krizhevsky, Sutskever &amp; Hinton (2012) AlexNet:深度学习赢下 ImageNet</li>
+          </ul>
+          <h4>领域应用与案例</h4>
+          <ul>
+            <li>手机人脸解锁、相册按人物/宠物自动分类</li>
+            <li>医学影像辅助诊断(肺结节、眼底病变)</li>
+            <li>自动驾驶识别行人和红绿灯</li>
+            <li>垃圾邮件过滤、拍照识物、拍照搜题</li>
+          </ul>
+        </div>
+        <div class="x-row">
+          <button class="x-btn x-btn--go" data-copy-notes>一键复制笔记</button>
+          <a class="btn" href="../notes/#cat" target="_top">完整笔记与其他任务 →</a>
+        </div>
+      </details>
+    </template>
+    <dialog class="x-dlg" id="notes-dlg" aria-label="知识笔记"><button class="x-btn x-close" data-close-notes aria-label="关闭">✕</button></dialog>
     <script src="hark.js"></script>
     <script src="chart.js"></script>
     <script src="datalabels.js"></script>
@@ -1696,6 +1759,7 @@
         stage.append(el("div", "", `<p style="font:var(--type-body-strong);margin-bottom:8px">获得的徽章</p><div class="x-shelf">${earned.length ? earned.map((b) => `<span class="x-badge got">🏅 ${b.name}</span>`).join("") : '<span class="x-badge">这次还没有徽章，再玩一次试试</span>'}</div>`));
         stage.append(el("div", "", `<p style="font:var(--type-body-strong);margin-bottom:8px">点亮的星：你的路线</p><ol class="x-recap">${STAR_PATH.map((s) => `<li><span class="pill">${s}</span></li>`).join("")}</ol>`));
         stage.append(el("p", "x-big", "你刚刚从像素一路走到了神经网络。"));
+        stage.append(notesCard());
         const row = el("div", "x-row"), again = el("button", "x-btn x-btn--go", "再玩一次"); row.append(again); stage.append(row);
         again.addEventListener("click", () => {
           Object.assign(State, { xp: 0, stars: 0, perLevel: {}, badges: {}, unlocked: 1 });
@@ -1708,6 +1772,36 @@
         $("#play").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
         setTimeout(() => fireworks(fw), 60);
       }
+
+      /* ---------- knowledge notes ---------- */
+      const notesCard = () => $("#notes-tpl").content.firstElementChild.cloneNode(true);
+      function notesText(card) {
+        return [...card.querySelectorAll(".x-notes__body > *")].map((n) =>
+          n.tagName === "H4" ? "【" + n.textContent.trim() + "】"
+            : [...n.children].map((li, i) => (n.tagName === "OL" ? i + 1 + ". " : "- ") + li.textContent.trim()).join("\n")
+        ).join("\n");
+      }
+      function copyNotes(card) {
+        const txt = notesText(card), done = () => toast("已复制");
+        const fallback = () => {
+          const ta = document.createElement("textarea"); ta.value = txt; ta.setAttribute("readonly", "");
+          ta.style.cssText = "position:fixed;left:-9999px;opacity:0"; document.body.append(ta); ta.select();
+          let ok = false; try { ok = document.execCommand("copy"); } catch (e) {} ta.remove();
+          if (ok) return done();
+          const r = document.createRange(); r.selectNodeContents(card.querySelector(".x-notes__body"));
+          const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("已选中笔记,请按 Ctrl/⌘+C 复制");
+        };
+        if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(done, fallback); else fallback();
+      }
+      document.addEventListener("click", (e) => {
+        const b = e.target.closest("[data-copy-notes]"); if (b) copyNotes(b.closest(".x-notes"));
+        if (e.target.closest("[data-close-notes]")) $("#notes-dlg").close();
+      });
+      $("#notes-open").addEventListener("click", () => {
+        const d = $("#notes-dlg"); if (!d.querySelector(".x-notes")) d.append(notesCard());
+        d.showModal ? d.showModal() : d.setAttribute("open", "");
+      });
+      $("#notes-dlg").addEventListener("click", (e) => { if (e.target === e.currentTarget) e.currentTarget.close(); });
 
       /* ---------- boot ---------- */
       renderBar(); renderBadges(); renderMap();
