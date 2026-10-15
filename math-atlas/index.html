@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>星图 Math Atlas · 大厅</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <style>
+      .x-sky {
+        position: absolute;
+        inset: 0;
+        z-index: -2;
+        pointer-events: none;
+        background:
+          radial-gradient(ellipse 70% 60% at 80% 0%, var(--hero-glass-faint), transparent 70%),
+          radial-gradient(ellipse 60% 50% at 10% 100%, var(--hero-scrim-strong), transparent 70%),
+          var(--hero-surface);
+      }
+      .x-sky span {
+        position: absolute;
+        width: 3px;
+        height: 3px;
+        border-radius: var(--r-pill);
+        background: var(--hero-text);
+        box-shadow: 0 0 6px 1px var(--hero-text-muted);
+        animation: x-twinkle 3.2s var(--ease-out) infinite alternate;
+      }
+      .x-sky span:nth-child(3n) { width: 2px; height: 2px; animation-duration: 2.4s; }
+      .x-sky span:nth-child(4n) { width: 4px; height: 4px; animation-duration: 4.1s; }
+      .x-sky span:nth-child(1) { top: 12%; left: 62%; animation-delay: 0s; }
+      .x-sky span:nth-child(2) { top: 22%; left: 84%; animation-delay: 0.8s; }
+      .x-sky span:nth-child(3) { top: 8%; left: 38%; animation-delay: 1.6s; }
+      .x-sky span:nth-child(4) { top: 34%; left: 72%; animation-delay: 0.4s; }
+      .x-sky span:nth-child(5) { top: 16%; left: 92%; animation-delay: 2.2s; }
+      .x-sky span:nth-child(6) { top: 44%; left: 88%; animation-delay: 1.1s; }
+      .x-sky span:nth-child(7) { top: 6%; left: 14%; animation-delay: 2.7s; }
+      .x-sky span:nth-child(8) { top: 28%; left: 52%; animation-delay: 1.9s; }
+      .x-sky span:nth-child(9) { top: 58%; left: 94%; animation-delay: 0.6s; }
+      .x-sky span:nth-child(10) { top: 18%; left: 26%; animation-delay: 3s; }
+      .x-sky span:nth-child(11) { top: 66%; left: 78%; animation-delay: 1.4s; }
+      .x-sky span:nth-child(12) { top: 40%; left: 60%; animation-delay: 2.5s; }
+      @keyframes x-twinkle {
+        from { opacity: 0.2; transform: scale(0.7); }
+        to { opacity: 1; transform: scale(1.15); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .x-sky span { animation: none; opacity: 0.8; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <header class="nav glass" data-auto></header>
+      <main class="main">
+        <section class="hero">
+          <div class="x-sky" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div class="hero__copy">
+            <p class="hero__eyebrow">星图 Math Atlas · 大厅</p>
+            <h1>问题先行的数学星图</h1>
+            <p class="hero__sub">无年级、问题先行的数学学习平台测试版。选一个问题开始；或者先打开知识星图看全貌。</p>
+            <p class="hero__meta">4 个任务 · 197 颗知识星 · 测试版</p>
+          </div>
+          <aside class="callout" aria-label="测试版">
+            <p class="callout__head"><span class="hark-mark" data-size="16"></span> 测试版</p>
+            <p class="callout__lead"><strong>欢迎试玩并反馈。</strong>先看全貌，再挑一个问题出发。</p>
+            <a class="btn" href="./atlas/" target="_top">打开知识星图</a>
+          </aside>
+        </section>
+
+        <section class="section" id="atlas" data-nav="星图">
+          <div class="head">
+            <p class="head__eyebrow">知识星图</p>
+            <h2>点一颗星，看清它从哪来、通向哪。</h2>
+            <p class="head__sub">每颗星都有前置路径、“看见方式”和能解锁的后续。</p>
+          </div>
+          <section class="stats">
+            <div class="stat"><span class="stat__fig">197</span><span class="stat__label">颗知识星</span></div>
+            <div class="stat"><span class="stat__fig">9</span><span class="stat__label">个星座</span></div>
+            <div class="stat"><span class="stat__fig">5</span><span class="stat__label">层深度</span></div>
+          </section>
+          <div class="links">
+            <a class="btn" href="./atlas/" target="_top">打开知识星图</a>
+          </div>
+        </section>
+
+        <section class="section" id="missions" data-nav="任务">
+          <div class="head">
+            <p class="head__eyebrow">四个任务</p>
+            <h2>选一个让你好奇的问题，直接开始。</h2>
+          </div>
+          <div class="cards">
+            <div>
+              <h3>为什么有的和弦好听？</h3>
+              <p><span class="pill">7 关</span></p>
+              <p class="quote">从分数一路走到傅里叶，全程用耳朵和眼睛。</p>
+              <p>涉及：比与分数、周期、对数与平均律、傅里叶级数</p>
+              <div class="links"><a class="btn" href="./chord/" target="_top">开始任务</a></div>
+            </div>
+            <div>
+              <h3>让 AI 认出一只猫</h3>
+              <p><span class="pill">7 关</span> <span class="pill">点亮 14 颗星</span></p>
+              <p class="quote">像素→坐标→直线分类→梯度下降→神经网络，最后亲手画猫给 AI 认。</p>
+              <div class="links"><a class="btn" href="./cat/" target="_top">开始任务</a></div>
+            </div>
+            <div>
+              <h3>为什么蜜蜂选六边形</h3>
+              <p><span class="pill">5 关</span> <span class="pill">点亮 10 颗星</span></p>
+              <p class="quote">密铺、360° 拼角、等面积周长、泡泡自己排队，最后建造蜂巢。</p>
+              <p>蜂巢猜想由 Hales 于 1999 年证明。</p>
+              <div class="links"><a class="btn" href="./bee/" target="_top">开始任务</a></div>
+            </div>
+            <div>
+              <h3>怎样把秘密藏进数字里</h3>
+              <p><span class="pill">6 关</span> <span class="pill">点亮 14 颗星</span></p>
+              <p class="quote">凯撒密码→字母频率→钟表算术→质数→RSA，BOSS 关截获情报。</p>
+              <div class="links"><a class="btn" href="./secret/" target="_top">开始任务</a></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="how" data-nav="玩法">
+          <div class="head">
+            <p class="head__eyebrow">怎么玩</p>
+            <h2>三步上手，向导只提问，不给答案。</h2>
+          </div>
+          <div class="steps">
+            <article class="step">
+              <div class="step__intro"><p class="step__num">01</p><p class="step__eyebrow">开始</p></div>
+              <div>
+                <h3>点开任务，先点一下屏幕</h3>
+                <p>轻点一下即可开启音效。</p>
+              </div>
+            </article>
+            <article class="step">
+              <div class="step__intro"><p class="step__num">02</p><p class="step__eyebrow">音乐</p></div>
+              <div>
+                <h3>右上角开关专注音乐</h3>
+                <p>共有三首，可轮播。</p>
+              </div>
+            </article>
+            <article class="step">
+              <div class="step__intro"><p class="step__num">03</p><p class="step__eyebrow">闯关</p></div>
+              <div>
+                <h3>每关拿 1★ 解锁下一关</h3>
+                <p>向导只提问，不给答案。</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="section" id="notes" data-nav="须知">
+          <div class="head">
+            <p class="head__eyebrow">测试须知</p>
+            <h2>帮我们试一试，顺手说说感受。</h2>
+          </div>
+          <div class="cards">
+            <div>
+              <h3>进度</h3>
+              <p class="fineprint">进度只保存在当前页面，刷新会重置。</p>
+            </div>
+            <div>
+              <h3>设备</h3>
+              <p class="fineprint">建议用手机竖屏和电脑各试一次。</p>
+            </div>
+            <div>
+              <h3>重点帮忙看</h3>
+              <ul>
+                <li>触摸拖拽是否顺手</li>
+                <li>难度是否合适</li>
+                <li>音乐音量是否舒服</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </main>
+      <footer class="foot">
+        <p>星图 Math Atlas 测试版 · 2026</p>
+        <nav aria-label="返回各部分" data-auto></nav>
+        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"
+          ><span class="hark-mark"></span><span>built by hark</span></a
+        >
+      </footer>
+    </div>
+    <script src="hark.js"></script>
+  </body>
+</html>
