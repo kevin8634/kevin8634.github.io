@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>星图 Math Atlas · 知识骨架 v0.1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <style>
+      .x-bar { display: flex; gap: 8px; align-items: center; position: relative; margin-bottom: 12px; }
+      .x-bar input { flex: 1; min-width: 0; height: var(--tap); padding: 0 16px; font: var(--type-body); color: var(--text-primary);
+        background: var(--fill-tertiary); border: 1px solid var(--stroke-secondary); border-radius: var(--r-pill); }
+      .x-bar button { height: var(--tap); padding: 0 16px; font: var(--type-label); color: var(--text-primary); background: none;
+        border: 1px solid var(--stroke-primary); border-radius: var(--r-pill); cursor: pointer; white-space: nowrap; }
+      .x-res { position: absolute; z-index: 5; top: calc(var(--tap) + 6px); left: 0; right: 0; margin: 0; padding: 6px; list-style: none;
+        background: var(--fill-primary-on); border: 1px solid var(--stroke-secondary); border-radius: var(--r-m); box-shadow: var(--hark-shadow); }
+      .x-res:empty { display: none; }
+      .x-res button { display: flex; justify-content: space-between; gap: 12px; width: 100%; min-height: var(--tap); padding: 0 12px;
+        font: var(--type-body); color: var(--text-primary); background: none; border: 0; border-radius: var(--r-s); cursor: pointer; text-align: left; }
+      .x-res button:hover { background: var(--fill-tertiary); }
+      .x-res small { font: var(--type-caption); color: var(--text-secondary); }
+      .x-src { margin-bottom: 12px; }
+      .x-src ul { margin: 8px 0; padding-left: 18px; }
+      .x-map { position: relative; height: min(78vh, 760px); min-height: 440px; border-radius: var(--r-l); overflow: hidden; background: #05070f; }
+      .x-map canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+      .x-hint { position: absolute; left: 12px; top: 10px; margin: 0; font: var(--type-caption); color: rgb(255 255 255 / 0.6); pointer-events: none; }
+      .x-panel { position: absolute; left: 8px; right: 8px; bottom: 8px; max-height: 58%; overflow: auto; padding: 18px;
+        background: var(--fill-primary-on); color: var(--text-primary); border-radius: var(--r-l); box-shadow: var(--hark-shadow); }
+      .x-panel[hidden] { display: none; }
+      @media (min-width: 760px) { .x-panel { left: auto; top: 8px; width: 340px; max-height: none; } }
+      .x-panel h3 { margin: 4px 40px 8px 0; font: var(--type-heading); }
+      .x-close { position: absolute; top: 6px; right: 6px; width: var(--tap); height: var(--tap); font-size: 22px; color: var(--text-secondary);
+        background: none; border: 0; cursor: pointer; }
+      .x-con { margin: 0; font: var(--type-small); color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+      .x-con i { width: 10px; height: 10px; border-radius: 50%; }
+      .x-see { margin: 14px 0; padding: 12px 14px; background: var(--fill-tertiary); border-radius: var(--r-m); }
+      .x-see small { font: var(--type-caption); color: var(--text-secondary); }
+      .x-see p { margin: 4px 0 0; font: var(--type-heading); }
+      .x-n { font: var(--type-label); }
+      .x-panel dl { margin: 0; }
+      .x-panel dt { margin-top: 12px; font: var(--type-caption); color: var(--text-secondary); }
+      .x-panel dd { margin: 4px 0 0; font: var(--type-body); display: flex; flex-wrap: wrap; gap: 6px; }
+      .x-panel .btn { cursor: pointer; }
+      .x-flt { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; }
+      .x-flt > span { font: var(--type-caption); color: var(--text-secondary); margin-right: 4px; min-width: 3em; }
+      .x-chip { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 0 12px 0 10px; font: var(--type-tag);
+        color: var(--text-secondary); background: var(--fill-tertiary); border: 0; border-radius: var(--r-pill); cursor: pointer; }
+      .x-chip i { width: 8px; height: 8px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px currentColor; }
+      .x-chip[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-chip[aria-pressed="true"] i { box-shadow: none; background: var(--c, var(--fill-system-green)); }
+      .x-legend { margin-top: 16px; }
+      .x-legend[hidden] { display: none; }
+      .x-legend h3 { display: flex; align-items: center; gap: 8px; }
+      .x-legend h3 i { width: 12px; height: 12px; border-radius: 50%; }
+      .x-legend .btn { cursor: pointer; margin-top: 12px; }
+      .x-tour { position: absolute; left: 50%; top: 40px; transform: translateX(-50%); margin: 0; padding: 8px 16px; font: var(--type-label);
+        color: #fff; background: rgb(0 0 0 / 0.55); border-radius: var(--r-pill); pointer-events: none; white-space: nowrap; }
+      .x-tour[hidden] { display: none; }
+      .x-steps { margin: 6px 0 0; padding-left: 22px; font: var(--type-small); }
+      .x-steps li { padding: 3px 0; }
+      .x-steps a { color: var(--text-primary); }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <main class="main">
+        <section class="hero">
+          <div class="hero__copy">
+            <p class="hero__eyebrow">知识骨架 v0.1</p>
+            <h1>星图 Math Atlas</h1>
+            <p class="hero__sub">无年级的数学宇宙:每颗星是一个概念,连线是前置关系,越往外越深。点一颗星看它怎么被‘看见’。</p>
+            <p class="hero__meta" id="statsLine">197 颗星 · 9 个星座 · 5 层深度</p>
+          </div>
+        </section>
+
+        <section class="section" id="map">
+          <div class="x-bar">
+            <input id="q" type="search" placeholder="搜索概念,如“函数”" aria-label="搜索星星" autocomplete="off" />
+            <button id="srcBtn" aria-expanded="false" aria-controls="src">ⓘ 数据来源</button>
+            <ul class="x-res" id="res"></ul>
+          </div>
+          <div class="aside x-src" id="src" hidden>
+            <h3>数据来源</h3>
+            <ul id="srcList"></ul>
+            <p class="fineprint" id="srcNote"></p>
+            <p class="fineprint">深度1–2对标义务教育课标,3对标初高中课标,4对标高中选修与大学低年级,5对标大学高年级与研究前沿(MSC2020)。v0.2 计划扩充到约300颗星,并请专家复核。</p>
+          </div>
+          <div class="x-flt" id="fCons" role="group" aria-label="星座筛选"><span>星座</span></div>
+          <div class="x-flt" id="fDep" role="group" aria-label="深度筛选"><span>深度</span></div>
+          <div class="x-flt"><span>模式</span>
+            <button class="x-chip" id="mBtn" aria-pressed="false"><i></i>显示任务</button>
+            <button class="x-chip" id="sndBtn" aria-pressed="false"><i></i>🔊 音效</button>
+          </div>
+          <div class="x-map" id="wrap">
+            <canvas id="sky" role="img" aria-label="数学概念星图:9 个星座环形排列,点击星星查看详情"></canvas>
+            <p class="x-hint">拖动平移 · 滚轮或双指缩放 · 点星查看</p>
+            <p class="x-tour" id="tour" hidden aria-live="polite"></p>
+            <aside class="x-panel" id="panel" hidden aria-live="polite"></aside>
+          </div>
+          <div class="cards x-legend" id="legend" hidden></div>
+        </section>
+      </main>
+      <footer class="foot">
+        <p>星图 Math Atlas 知识骨架 v0.1 · MSC 代码为近似对标,待专家复核。</p>
+        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"><span class="hark-mark"></span><span>built by hark</span></a>
+      </footer>
+    </div>
+    <script type="application/json" id="stars-data">
+{"meta":{"name":"星图 Math Atlas 知识骨架","version":"0.1","date":"2026-10-14","count":197,"sources":["MSC2020(美国数学会《数学评论》与zbMATH Open联合维护,63个二位大类;CC BY-NC-SA,仅借用结构)","教育部《义务教育数学课程标准(2022年版)》","教育部《普通高中数学课程标准(2017年版2020年修订)》","MIT OpenCourseWare 18.xx 核心数学课程(深度参照)","Lean社区 mathlib 本科数学清单(Apache-2.0)"],"note":"深度分级与\"看见方式\"由星图团队原创设计;MSC代码为近似对标,待专家复核。"},"stars":[
+{"id":"n01","name":"计数与一一对应","constellation":"数与运算","depth":1,"prereqs":[],"msc":"05A","see":"数手指、配对小球","benchmark":"入门(对标:义务教育课标2022·第一、二学段)","missions":[]},
+{"id":"n02","name":"位值与十进制","constellation":"数与运算","depth":1,"prereqs":["n01"],"msc":"11A","see":"算盘与千格积木","benchmark":"入门(对标:义务教育课标2022·第一、二学段)","missions":[]},
+{"id":"n03","name":"加法与减法","constellation":"数与运算","depth":1,"prereqs":["n01"],"msc":"","see":"数轴上跳跃","benchmark":"入门(对标:义务教育课标2022·第一、二学段)","missions":[]},
+{"id":"n04","name":"乘法","constellation":"数与运算","depth":1,"prereqs":["n03"],"msc":"","see":"面积阵列","benchmark":"入门(对标:义务教育课标2022·第一、二学段)","missions":[]},
+{"id":"n05","name":"除法与余数","constellation":"数与运算","depth":1,"prereqs":["n04"],"msc":"","see":"平均分糖果","benchmark":"入门(对标:义务教育课标2022·第一、二学段)","missions":[]},
+{"id":"n06","name":"分数","constellation":"数与运算","depth":2,"prereqs":["n05"],"msc":"","see":"分数条与披萨","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"n07","name":"小数","constellation":"数与运算","depth":2,"prereqs":["n02","n06"],"msc":"","see":"无限放大的数轴放大镜","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"n08","name":"百分数","constellation":"数与运算","depth":2,"prereqs":["n07"],"msc":"","see":"百格涂色","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"n09","name":"比与比例","constellation":"数与运算","depth":2,"prereqs":["n06"],"msc":"","see":"琴弦长度、配方缩放","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":["为什么有的和弦好听"]},
+{"id":"n10","name":"负数","constellation":"数与运算","depth":2,"prereqs":["n03"],"msc":"","see":"温度计与电梯","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"n11","name":"运算律","constellation":"数与运算","depth":2,"prereqs":["n04","n10"],"msc":"","see":"翻转与交换的箭头","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"n12","name":"乘方与指数","constellation":"数与运算","depth":2,"prereqs":["n04"],"msc":"","see":"折纸对折次数","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"n13","name":"平方根","constellation":"数与运算","depth":3,"prereqs":["n12"],"msc":"","see":"由正方形面积求边长","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"n14","name":"无理数","constellation":"数与运算","depth":3,"prereqs":["n13","n09"],"msc":"11J","see":"听见√2永不重复的和声","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":["为什么有的和弦好听"]},
+{"id":"n15","name":"实数与数轴","constellation":"数与运算","depth":3,"prereqs":["n14","n07"],"msc":"26A","see":"无限放大的数轴","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"n16","name":"科学记数法与数量级","constellation":"数与运算","depth":2,"prereqs":["n12"],"msc":"","see":"从原子到宇宙的尺度缩放","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"n17","name":"估算与近似","constellation":"数与运算","depth":2,"prereqs":["n07"],"msc":"","see":"弹珠罐猜数","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"n18","name":"复数","constellation":"数与运算","depth":4,"prereqs":["n15","a07"],"msc":"30A","see":"复平面上的旋转","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"n19","name":"模运算(时钟算术)","constellation":"数与运算","depth":3,"prereqs":["n05"],"msc":"11A","see":"时钟表盘","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"n20","name":"二进制与进制","constellation":"数与运算","depth":2,"prereqs":["n02"],"msc":"68P","see":"一排灯泡开关","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"n21","name":"无穷与可数性","constellation":"数与运算","depth":4,"prereqs":["n15","l04"],"msc":"03E","see":"希尔伯特旅馆","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"n22","name":"p进数","constellation":"数与运算","depth":5,"prereqs":["n19","n15"],"msc":"11S","see":"树状的\"距离\"","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"n23","name":"四元数","constellation":"数与运算","depth":5,"prereqs":["n18","a20"],"msc":"11R","see":"三维旋转的陀螺","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"a01","name":"模式与规律","constellation":"代数与结构","depth":1,"prereqs":[],"msc":"","see":"彩色串珠","benchmark":"入门(对标:义务教育课标2022·第一、二学段)","missions":[]},
+{"id":"a02","name":"用字母表示数","constellation":"代数与结构","depth":2,"prereqs":["a01","n04"],"msc":"","see":"神秘盒子","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"a03","name":"代数式与化简","constellation":"代数与结构","depth":2,"prereqs":["a02","n11"],"msc":"","see":"代数砖块","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"a04","name":"一元一次方程","constellation":"代数与结构","depth":2,"prereqs":["a03"],"msc":"","see":"天平保持平衡","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"a05","name":"不等式","constellation":"代数与结构","depth":3,"prereqs":["a04","n10"],"msc":"","see":"跷跷板","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"a06","name":"二元一次方程组","constellation":"代数与结构","depth":3,"prereqs":["a04","g11"],"msc":"","see":"两条直线的交点","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"a07","name":"一元二次方程","constellation":"代数与结构","depth":3,"prereqs":["a04","n13"],"msc":"","see":"配方拼成正方形","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"a08","name":"多项式","constellation":"代数与结构","depth":3,"prereqs":["a03"],"msc":"12D","see":"拖动根看曲线变形","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"a09","name":"因式分解","constellation":"代数与结构","depth":3,"prereqs":["a08"],"msc":"","see":"矩形切分","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"a10","name":"函数概念","constellation":"代数与结构","depth":3,"prereqs":["a02","g11"],"msc":"","see":"输入输出机器","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"a11","name":"一次函数","constellation":"代数与结构","depth":3,"prereqs":["a10"],"msc":"","see":"斜坡与匀速","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"a12","name":"二次函数","constellation":"代数与结构","depth":3,"prereqs":["a10","a07"],"msc":"","see":"抛物线喷泉","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"a13","name":"指数函数","constellation":"代数与结构","depth":3,"prereqs":["a10","n12"],"msc":"","see":"细菌分裂动画","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"a14","name":"对数","constellation":"代数与结构","depth":3,"prereqs":["a13"],"msc":"","see":"音高螺旋、地震震级","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":["为什么有的和弦好听"]},
+{"id":"a15","name":"反比例函数","constellation":"代数与结构","depth":3,"prereqs":["a10","n09"],"msc":"","see":"杠杆力臂","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"a16","name":"函数图像变换","constellation":"代数与结构","depth":3,"prereqs":["a10","g07"],"msc":"","see":"拖动平移与伸缩","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"a17","name":"数列","constellation":"代数与结构","depth":3,"prereqs":["a01","a10"],"msc":"40A","see":"台阶","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"a18","name":"等差与等比数列","constellation":"代数与结构","depth":3,"prereqs":["a17"],"msc":"","see":"楼梯与复利","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"a19","name":"向量空间","constellation":"代数与结构","depth":4,"prereqs":["g15","a06"],"msc":"15A","see":"网格被拉伸","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"a20","name":"矩阵与线性变换","constellation":"代数与结构","depth":4,"prereqs":["a19"],"msc":"15A","see":"网格变形动画","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"a21","name":"行列式","constellation":"代数与结构","depth":4,"prereqs":["a20"],"msc":"15A","see":"面积缩放倍数","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"a22","name":"特征值与特征向量","constellation":"代数与结构","depth":4,"prereqs":["a21"],"msc":"15A","see":"变换中不转向的箭头","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"a23","name":"群","constellation":"代数与结构","depth":4,"prereqs":["g06","a20"],"msc":"20A","see":"魔方与舞步","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"a24","name":"环与域","constellation":"代数与结构","depth":4,"prereqs":["a23","n19"],"msc":"13A","see":"时钟与多项式","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"a25","name":"伽罗瓦理论","constellation":"代数与结构","depth":5,"prereqs":["a24","a08"],"msc":"12F","see":"根的对称置换","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"a26","name":"表示论","constellation":"代数与结构","depth":5,"prereqs":["a23","a20"],"msc":"20C","see":"对称体的矩阵影子","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"a27","name":"范畴论","constellation":"代数与结构","depth":5,"prereqs":["a23","l05"],"msc":"18A","see":"只看箭头的世界","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"a28","name":"线性方程组与消元","constellation":"代数与结构","depth":4,"prereqs":["a06","a20"],"msc":"15A","see":"三维中平面相交","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"a29","name":"奇异值分解","constellation":"代数与结构","depth":5,"prereqs":["a22"],"msc":"15A","see":"图片压缩","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"a30","name":"张量","constellation":"代数与结构","depth":5,"prereqs":["a20"],"msc":"15A","see":"多维数组魔方","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"g01","name":"平面图形","constellation":"几何与空间","depth":1,"prereqs":[],"msc":"","see":"七巧板","benchmark":"入门(对标:义务教育课标2022·第一、二学段)","missions":[]},
+{"id":"g02","name":"立体图形","constellation":"几何与空间","depth":1,"prereqs":["g01"],"msc":"","see":"展开图折叠","benchmark":"入门(对标:义务教育课标2022·第一、二学段)","missions":[]},
+{"id":"g03","name":"长度与测量","constellation":"几何与空间","depth":1,"prereqs":["n01"],"msc":"","see":"身体尺","benchmark":"入门(对标:义务教育课标2022·第一、二学段)","missions":[]},
+{"id":"g04","name":"角","constellation":"几何与空间","depth":2,"prereqs":["g01"],"msc":"","see":"时针扫过","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"g05","name":"周长与面积","constellation":"几何与空间","depth":2,"prereqs":["g03","n04"],"msc":"","see":"方格纸铺砖","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"g06","name":"对称","constellation":"几何与空间","depth":2,"prereqs":["g01"],"msc":"","see":"镜子与剪纸","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"g07","name":"平移旋转与反射","constellation":"几何与空间","depth":2,"prereqs":["g06"],"msc":"","see":"拖动描图纸","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"g08","name":"体积","constellation":"几何与空间","depth":2,"prereqs":["g05","g02"],"msc":"","see":"积木填箱子","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"g09","name":"三角形","constellation":"几何与空间","depth":2,"prereqs":["g04"],"msc":"","see":"撕下三个角拼成平角","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"g10","name":"平行与垂直","constellation":"几何与空间","depth":2,"prereqs":["g04"],"msc":"","see":"铁轨","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"g11","name":"坐标系","constellation":"几何与空间","depth":2,"prereqs":["n10","g10"],"msc":"","see":"寻宝地图","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"g12","name":"全等","constellation":"几何与空间","depth":3,"prereqs":["g09","g07"],"msc":"","see":"重叠动画","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"g13","name":"相似","constellation":"几何与空间","depth":3,"prereqs":["g12","n09"],"msc":"","see":"用影子测楼高","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"g14","name":"勾股定理","constellation":"几何与空间","depth":3,"prereqs":["g09","n13"],"msc":"51M","see":"拼图证明","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"g15","name":"向量","constellation":"几何与空间","depth":3,"prereqs":["g11","n15"],"msc":"","see":"风力箭头","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"g16","name":"圆与π","constellation":"几何与空间","depth":3,"prereqs":["g05"],"msc":"","see":"滚动的圆","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"g17","name":"三角比","constellation":"几何与空间","depth":3,"prereqs":["g13","g14"],"msc":"","see":"单位圆上的影子","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"g18","name":"三角函数","constellation":"几何与空间","depth":4,"prereqs":["g17","a10"],"msc":"","see":"摩天轮高度","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":["为什么有的和弦好听"]},
+{"id":"g19","name":"尺规作图","constellation":"几何与空间","depth":3,"prereqs":["g12","g16"],"msc":"","see":"交互圆规","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"g20","name":"解析几何","constellation":"几何与空间","depth":3,"prereqs":["g11","a11"],"msc":"","see":"方程即图像","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"g21","name":"圆锥曲线","constellation":"几何与空间","depth":4,"prereqs":["g20","a12"],"msc":"","see":"手电筒照墙","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"g22","name":"空间几何","constellation":"几何与空间","depth":3,"prereqs":["g02","g15"],"msc":"","see":"VR中切立方体","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"g23","name":"三视图与投影","constellation":"几何与空间","depth":3,"prereqs":["g22"],"msc":"","see":"转盘看物体","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"g24","name":"非欧几何","constellation":"几何与空间","depth":5,"prereqs":["g19","g17"],"msc":"51M","see":"球面三角形内角和大于180°","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"g25","name":"分形","constellation":"几何与空间","depth":4,"prereqs":["a17","g13"],"msc":"28A","see":"无限放大的雪花","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"g26","name":"拓扑初步","constellation":"几何与空间","depth":4,"prereqs":["g02"],"msc":"54A","see":"甜甜圈=咖啡杯","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"g27","name":"曲线与曲率","constellation":"几何与空间","depth":5,"prereqs":["c05","g15"],"msc":"53A","see":"开车时方向盘的转角","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"g28","name":"微分几何","constellation":"几何与空间","depth":5,"prereqs":["g27","c13"],"msc":"53A","see":"曲面上的蚂蚁","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"g29","name":"流形","constellation":"几何与空间","depth":5,"prereqs":["g28","g26"],"msc":"57N","see":"地球仪与地图册","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"g30","name":"代数拓扑","constellation":"几何与空间","depth":5,"prereqs":["g26","a23"],"msc":"55N","see":"绕洞的绳圈","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"g31","name":"极坐标","constellation":"几何与空间","depth":3,"prereqs":["g17","g11"],"msc":"","see":"雷达扫描","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"g32","name":"四维空间","constellation":"几何与空间","depth":4,"prereqs":["g22","a19"],"msc":"","see":"超立方体旋转投影","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"c01","name":"变化率","constellation":"变化与极限","depth":2,"prereqs":["n09"],"msc":"","see":"速度表","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"c02","name":"斜率","constellation":"变化与极限","depth":3,"prereqs":["c01","a11"],"msc":"","see":"坡道","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"c03","name":"数列极限","constellation":"变化与极限","depth":4,"prereqs":["a17","n15"],"msc":"40A","see":"芝诺追乌龟","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"c04","name":"函数极限与连续","constellation":"变化与极限","depth":4,"prereqs":["c03","a10"],"msc":"26A","see":"不断的绳","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"c05","name":"导数","constellation":"变化与极限","depth":4,"prereqs":["c04","c02"],"msc":"26A","see":"割线滑成切线","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"c06","name":"求导法则","constellation":"变化与极限","depth":4,"prereqs":["c05"],"msc":"","see":"拼积木的变化","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"c07","name":"极值与最优","constellation":"变化与极限","depth":4,"prereqs":["c06"],"msc":"","see":"小球滚到谷底","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"c08","name":"积分与面积","constellation":"变化与极限","depth":4,"prereqs":["c05","g05"],"msc":"26A","see":"细长矩形累加","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"c09","name":"微积分基本定理","constellation":"变化与极限","depth":4,"prereqs":["c08"],"msc":"","see":"速度图与里程表联动","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"c10","name":"级数","constellation":"变化与极限","depth":4,"prereqs":["c03"],"msc":"40A","see":"半块巧克力无穷分下去","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"c11","name":"泰勒展开","constellation":"变化与极限","depth":5,"prereqs":["c10","c06"],"msc":"41A","see":"多项式一层层贴合曲线","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"c12","name":"多元函数与偏导","constellation":"变化与极限","depth":5,"prereqs":["c06","g22"],"msc":"26B","see":"山地地形图","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"c13","name":"多重积分","constellation":"变化与极限","depth":5,"prereqs":["c12","c08"],"msc":"26B","see":"三维体积切片","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"c14","name":"向量场、散度与旋度","constellation":"变化与极限","depth":5,"prereqs":["c12","g15"],"msc":"26B","see":"流水与漩涡","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"c15","name":"常微分方程","constellation":"变化与极限","depth":4,"prereqs":["c09"],"msc":"34A","see":"方向场里放小船","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"c16","name":"偏微分方程","constellation":"变化与极限","depth":5,"prereqs":["c15","c12"],"msc":"35K","see":"热量扩散动画","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"c17","name":"傅里叶级数","constellation":"变化与极限","depth":4,"prereqs":["g18","c10"],"msc":"42A","see":"本轮画图、和弦拆解","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":["为什么有的和弦好听"]},
+{"id":"c18","name":"傅里叶变换","constellation":"变化与极限","depth":5,"prereqs":["c17","c13"],"msc":"42A","see":"声音频谱","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"c19","name":"实分析","constellation":"变化与极限","depth":5,"prereqs":["c04","l06"],"msc":"26A","see":"ε-δ瞄准游戏","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"c20","name":"测度论","constellation":"变化与极限","depth":5,"prereqs":["c19"],"msc":"28A","see":"撒沙测面积","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"c21","name":"复分析","constellation":"变化与极限","depth":5,"prereqs":["n18","c05"],"msc":"30A","see":"颜色域着色","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"c22","name":"泛函分析","constellation":"变化与极限","depth":5,"prereqs":["c19","a19"],"msc":"46B","see":"函数也是向量","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"c23","name":"变分法","constellation":"变化与极限","depth":5,"prereqs":["c07","c13"],"msc":"49K","see":"肥皂膜的最小面积","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"c24","name":"动力系统与混沌","constellation":"变化与极限","depth":5,"prereqs":["c15"],"msc":"37D","see":"双摆","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"c25","name":"e与自然增长","constellation":"变化与极限","depth":4,"prereqs":["a13","c05"],"msc":"","see":"复利的极限动画","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"p01","name":"分类与计数统计","constellation":"随机与数据","depth":1,"prereqs":["n01"],"msc":"","see":"贴纸分类","benchmark":"入门(对标:义务教育课标2022·第一、二学段)","missions":[]},
+{"id":"p02","name":"统计图表","constellation":"随机与数据","depth":2,"prereqs":["p01"],"msc":"","see":"动态柱状图","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"p03","name":"平均数、中位数、众数","constellation":"随机与数据","depth":2,"prereqs":["p02","n06"],"msc":"","see":"天平平衡点","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"p04","name":"可能性","constellation":"随机与数据","depth":2,"prereqs":["p01","n06"],"msc":"","see":"转盘","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"p05","name":"古典概率","constellation":"随机与数据","depth":3,"prereqs":["p04","d03"],"msc":"60A","see":"掷骰子模拟","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"p06","name":"条件概率","constellation":"随机与数据","depth":3,"prereqs":["p05"],"msc":"","see":"树状图分流","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"p07","name":"贝叶斯思想","constellation":"随机与数据","depth":4,"prereqs":["p06"],"msc":"62F","see":"医学检测网格","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"p08","name":"随机变量与期望","constellation":"随机与数据","depth":4,"prereqs":["p05","a10"],"msc":"60A","see":"长期平均线","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"p09","name":"方差与离散程度","constellation":"随机与数据","depth":3,"prereqs":["p03"],"msc":"","see":"散点抖动","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"p10","name":"二项分布","constellation":"随机与数据","depth":4,"prereqs":["p08","d04"],"msc":"60E","see":"高尔顿板","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"p11","name":"正态分布","constellation":"随机与数据","depth":4,"prereqs":["p10","c08"],"msc":"60E","see":"钟形曲线生长","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"p12","name":"大数定律","constellation":"随机与数据","depth":4,"prereqs":["p08","c03"],"msc":"60F","see":"硬币频率收敛","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"p13","name":"中心极限定理","constellation":"随机与数据","depth":5,"prereqs":["p11","p12"],"msc":"60F","see":"任意分布求和变钟形","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"p14","name":"抽样与估计","constellation":"随机与数据","depth":4,"prereqs":["p11"],"msc":"62D","see":"抽样罐","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"p15","name":"假设检验","constellation":"随机与数据","depth":4,"prereqs":["p14"],"msc":"62F","see":"法庭类比","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"p16","name":"相关与回归","constellation":"随机与数据","depth":4,"prereqs":["p09","a11"],"msc":"62J","see":"拖动数据点看拟合线","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"p17","name":"随机游走","constellation":"随机与数据","depth":4,"prereqs":["p08"],"msc":"60G","see":"醉汉走路","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"p18","name":"马尔可夫链","constellation":"随机与数据","depth":5,"prereqs":["p17","a20"],"msc":"60J","see":"天气状态转移","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"p19","name":"信息熵","constellation":"随机与数据","depth":5,"prereqs":["p08","a14"],"msc":"94A","see":"猜数游戏要问几次","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"p20","name":"统计学习","constellation":"随机与数据","depth":5,"prereqs":["p16","m07"],"msc":"68T","see":"分类边界动画","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"p21","name":"实验设计与因果","constellation":"随机与数据","depth":4,"prereqs":["p15"],"msc":"62K","see":"随机分组模拟","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"p22","name":"蒙特卡洛方法","constellation":"随机与数据","depth":4,"prereqs":["p12"],"msc":"65C","see":"投针估π","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"d01","name":"分类与排序","constellation":"离散与算法","depth":1,"prereqs":[],"msc":"","see":"按大小排卡片","benchmark":"入门(对标:义务教育课标2022·第一、二学段)","missions":[]},
+{"id":"d02","name":"规律与递推","constellation":"离散与算法","depth":2,"prereqs":["a01"],"msc":"","see":"斐波那契兔子","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"d03","name":"加法与乘法原理","constellation":"离散与算法","depth":2,"prereqs":["n04"],"msc":"05A","see":"衣服搭配树","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"d04","name":"排列组合","constellation":"离散与算法","depth":3,"prereqs":["d03"],"msc":"05A","see":"座位重排动画","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"d05","name":"杨辉三角与二项式","constellation":"离散与算法","depth":3,"prereqs":["d04","a08"],"msc":"05A","see":"奇偶上色出分形","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"d06","name":"鸽巢原理","constellation":"离散与算法","depth":3,"prereqs":["d03"],"msc":"05D","see":"鸽子进笼","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"d07","name":"图论初步","constellation":"离散与算法","depth":3,"prereqs":["d03"],"msc":"05C","see":"七桥问题","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"d08","name":"树与网络","constellation":"离散与算法","depth":4,"prereqs":["d07"],"msc":"05C","see":"家谱与路由","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"d09","name":"最短路径","constellation":"离散与算法","depth":4,"prereqs":["d08"],"msc":"90C","see":"地铁导航","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"d10","name":"算法与流程","constellation":"离散与算法","depth":2,"prereqs":["d01"],"msc":"68W","see":"积木编程","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"d11","name":"递归","constellation":"离散与算法","depth":3,"prereqs":["d02","d10"],"msc":"68W","see":"汉诺塔","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"d12","name":"算法复杂度","constellation":"离散与算法","depth":4,"prereqs":["d11","c03"],"msc":"68Q","see":"排序算法竞速","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"d13","name":"容斥原理","constellation":"离散与算法","depth":3,"prereqs":["d03"],"msc":"05A","see":"维恩图","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"d14","name":"生成函数","constellation":"离散与算法","depth":5,"prereqs":["d05","c10"],"msc":"05A","see":"把计数装进多项式","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"d15","name":"图着色与平面图","constellation":"离散与算法","depth":4,"prereqs":["d07"],"msc":"05C","see":"地图四色","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"d16","name":"布尔代数与电路","constellation":"离散与算法","depth":3,"prereqs":["l02","n20"],"msc":"06E","see":"开关灯电路","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"d17","name":"密码学","constellation":"离散与算法","depth":4,"prereqs":["t08","d12"],"msc":"94A","see":"加密信封","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"d18","name":"纠错码","constellation":"离散与算法","depth":5,"prereqs":["a28","d17"],"msc":"94B","see":"破损二维码仍可读","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"d19","name":"组合博弈","constellation":"离散与算法","depth":4,"prereqs":["d11"],"msc":"91A","see":"拿石子游戏","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"d20","name":"网络科学","constellation":"离散与算法","depth":5,"prereqs":["d08","p10"],"msc":"05C","see":"社交网络生长","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"t01","name":"奇数与偶数","constellation":"数论","depth":1,"prereqs":["n04"],"msc":"","see":"两两配对","benchmark":"入门(对标:义务教育课标2022·第一、二学段)","missions":[]},
+{"id":"t02","name":"倍数与因数","constellation":"数论","depth":2,"prereqs":["n05"],"msc":"","see":"矩形排列","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"t03","name":"质数","constellation":"数论","depth":2,"prereqs":["t02"],"msc":"11A","see":"筛子动画","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"t04","name":"质因数分解","constellation":"数论","depth":2,"prereqs":["t03"],"msc":"11A","see":"因数树","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"t05","name":"最大公约数与最小公倍数","constellation":"数论","depth":2,"prereqs":["t04"],"msc":"11A","see":"两个齿轮啮合","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":["为什么有的和弦好听"]},
+{"id":"t06","name":"辗转相除法","constellation":"数论","depth":3,"prereqs":["t05","d10"],"msc":"11A","see":"长方形切正方形","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"t07","name":"同余","constellation":"数论","depth":3,"prereqs":["n19","t05"],"msc":"11A","see":"时钟上色","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"t08","name":"费马小定理与欧拉定理","constellation":"数论","depth":4,"prereqs":["t07","a23"],"msc":"11A","see":"项链计数","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"t09","name":"不定方程","constellation":"数论","depth":4,"prereqs":["t06","a06"],"msc":"11D","see":"格点上的直线","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"t10","name":"质数分布","constellation":"数论","depth":4,"prereqs":["t03","c25"],"msc":"11N","see":"质数螺旋","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"t11","name":"二次剩余","constellation":"数论","depth":5,"prereqs":["t07"],"msc":"11A","see":"模平方的对称图","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"t12","name":"黎曼ζ函数","constellation":"数论","depth":5,"prereqs":["t10","c21"],"msc":"11M","see":"复平面上的波","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"t13","name":"代数数论","constellation":"数论","depth":5,"prereqs":["t11","a24"],"msc":"11R","see":"高斯整数格点","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"t14","name":"椭圆曲线","constellation":"数论","depth":5,"prereqs":["t13","g21"],"msc":"11G","see":"曲线上的点相加","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"t15","name":"连分数","constellation":"数论","depth":4,"prereqs":["t06","n14"],"msc":"11A","see":"黄金矩形切割","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"m01","name":"量与单位","constellation":"模型与最优化","depth":1,"prereqs":["g03"],"msc":"","see":"厨房量杯","benchmark":"入门(对标:义务教育课标2022·第一、二学段)","missions":[]},
+{"id":"m02","name":"比例模型","constellation":"模型与最优化","depth":2,"prereqs":["n09"],"msc":"","see":"地图比例尺","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"m03","name":"线性模型","constellation":"模型与最优化","depth":3,"prereqs":["a11","m02"],"msc":"","see":"出租车计价","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"m04","name":"指数模型","constellation":"模型与最优化","depth":3,"prereqs":["a13"],"msc":"","see":"传染病传播模拟","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"m05","name":"线性规划","constellation":"模型与最优化","depth":4,"prereqs":["a05","a06"],"msc":"90C","see":"拖动可行域","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"m06","name":"最优化与极值","constellation":"模型与最优化","depth":4,"prereqs":["c07"],"msc":"49K","see":"包装盒最省材料","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"m07","name":"梯度下降","constellation":"模型与最优化","depth":5,"prereqs":["c12","m06"],"msc":"90C","see":"蒙眼下山","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"m08","name":"凸优化","constellation":"模型与最优化","depth":5,"prereqs":["m07","g20"],"msc":"90C","see":"碗形曲面","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"m09","name":"博弈论","constellation":"模型与最优化","depth":4,"prereqs":["p08"],"msc":"91A","see":"囚徒困境多人游戏","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"m10","name":"动态规划","constellation":"模型与最优化","depth":4,"prereqs":["d11"],"msc":"90C","see":"背包装宝","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"m11","name":"数值方法","constellation":"模型与最优化","depth":4,"prereqs":["c05"],"msc":"65H","see":"牛顿法切线逼近","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"m12","name":"微分方程建模","constellation":"模型与最优化","depth":5,"prereqs":["c15","m04"],"msc":"34C","see":"捕食者与猎物","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"m13","name":"神经网络","constellation":"模型与最优化","depth":5,"prereqs":["m07","a20","p20"],"msc":"68T","see":"可视化神经元","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"m14","name":"控制论","constellation":"模型与最优化","depth":5,"prereqs":["c15","m06"],"msc":"93C","see":"平衡车","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"m15","name":"运筹与调度","constellation":"模型与最优化","depth":4,"prereqs":["d09","m05"],"msc":"90B","see":"排课挑战","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"m16","name":"数学建模全流程","constellation":"模型与最优化","depth":3,"prereqs":["m03","p02"],"msc":"00A","see":"真实问题工作坊","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"l01","name":"说理与举例","constellation":"证明与基础","depth":1,"prereqs":[],"msc":"","see":"\"为什么\"游戏","benchmark":"入门(对标:义务教育课标2022·第一、二学段)","missions":[]},
+{"id":"l02","name":"命题与逻辑联结词","constellation":"证明与基础","depth":3,"prereqs":["l01"],"msc":"03B","see":"真假开关电路","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"l03","name":"量词","constellation":"证明与基础","depth":3,"prereqs":["l02"],"msc":"03B","see":"\"所有\"与\"存在\"寻宝","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"l04","name":"集合","constellation":"证明与基础","depth":2,"prereqs":["l01"],"msc":"03E","see":"维恩图分类","benchmark":"基础(对标:义务教育课标2022·第二、三学段)","missions":[]},
+{"id":"l05","name":"映射与关系","constellation":"证明与基础","depth":3,"prereqs":["l04","a10"],"msc":"03E","see":"连线配对","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"l06","name":"直接证明与反证法","constellation":"证明与基础","depth":3,"prereqs":["l02"],"msc":"","see":"√2是无理数的反证动画","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"l07","name":"数学归纳法","constellation":"证明与基础","depth":3,"prereqs":["l06","a17"],"msc":"","see":"多米诺骨牌","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]},
+{"id":"l08","name":"公理化思想","constellation":"证明与基础","depth":4,"prereqs":["l06","g19"],"msc":"03B","see":"欧几里得的五条规则","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"l09","name":"可计算性","constellation":"证明与基础","depth":5,"prereqs":["l08","d12"],"msc":"03D","see":"图灵机模拟器","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"l10","name":"哥德尔不完备定理","constellation":"证明与基础","depth":5,"prereqs":["l09"],"msc":"03F","see":"自指悖论卡片","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"l11","name":"形式化证明(Lean)","constellation":"证明与基础","depth":4,"prereqs":["l06","l03"],"msc":"68V","see":"证明积木游戏","benchmark":"深入(对标:高中选修与大学低年级,如MIT OCW 18.01–18.06)","missions":[]},
+{"id":"l12","name":"公理集合论与选择公理","constellation":"证明与基础","depth":5,"prereqs":["l08","n21"],"msc":"03E","see":"无穷多个抽屉的选择","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"l13","name":"类型论","constellation":"证明与基础","depth":5,"prereqs":["l11","l05"],"msc":"03B","see":"积木形状匹配","benchmark":"高阶与前沿(对标:大学高年级/研究生,MSC2020)","missions":[]},
+{"id":"l14","name":"数学写作与表达","constellation":"证明与基础","depth":3,"prereqs":["l06"],"msc":"","see":"讲给同伴听","benchmark":"进阶(对标:义务教育课标第四学段/普通高中课标2017版2020修订)","missions":[]}
+]}
+    </script>
+    <script src="hark.js"></script>
+    <script>
+      (function () {
+        const D = JSON.parse(document.getElementById("stars-data").textContent);
+        const S = D.stars, byId = {}, kids = {};
+        S.forEach((s) => (byId[s.id] = s));
+        S.forEach((s) => s.prereqs.forEach((p) => (kids[p] = kids[p] || []).push(s.id)));
+        const DL = ["", "入门", "基础", "进阶", "深入", "高阶与前沿"];
+        const COL = ["#7cc4ff", "#ffb86b", "#8fe39a", "#ff8fa3", "#c9a7ff", "#5ee0d0", "#ffe07a", "#a3b8ff", "#ff9f7a"];
+        const CONS = [...new Set(S.map((s) => s.constellation))];
+        document.getElementById("statsLine").textContent = `${S.length} 颗星 · ${CONS.length} 个星座 · ${new Set(S.map((s) => s.depth)).size} 层深度`;
+        const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+        const hash = (t) => { let x = 2166136261; for (const c of t) { x ^= c.charCodeAt(0); x = Math.imul(x, 16777619); } return (x >>> 0) / 4294967296; };
+
+        // Layout: clusters on a ring, depth = distance from cluster center
+        const RING = 950, cl = {};
+        CONS.forEach((c, i) => {
+          const a = -Math.PI / 2 + (i * 2 * Math.PI) / CONS.length;
+          cl[c] = { x: RING * Math.cos(a), y: RING * Math.sin(a), a, col: COL[i % COL.length] };
+          for (let d = 1; d <= 5; d++) {
+            const g = S.filter((s) => s.constellation === c && s.depth === d), off = hash(c + d) * 6.283;
+            g.forEach((s, j) => {
+              const ang = off + (j * 2 * Math.PI) / g.length + ((hash(s.id) - 0.5) * Math.PI) / g.length * 0.7;
+              const r = 30 + (d - 1) * 62 + (hash(s.id + "r") - 0.5) * 22;
+              s.x = cl[c].x + r * Math.cos(ang); s.y = cl[c].y + r * Math.sin(ang);
+              s.r = 2.5 + d * 1.5; s.col = cl[c].col;
+            });
+          }
+        });
+        const bg = Array.from({ length: 260 }, (_, i) => [hash("x" + i), hash("y" + i), hash("z" + i)]);
+        const $ = (i) => document.getElementById(i);
+
+        // Missions, filters, sound
+        const CHORD = "为什么有的和弦好听", CAT = "让AI认出一只猫";
+        const byDI = (a, b) => a.depth - b.depth || (a.id < b.id ? -1 : 1);
+        S.forEach((s) => (s.missions = s.missions || []));
+        const CAT_IDS = "g15 n20 g11 g15 a11 g20 c05 c12 m07 p16 p20 a20 a21 g22 m13".split(" ").filter((i) => byId[i]);
+        CAT_IDS.forEach((i) => byId[i].missions.includes(CAT) || byId[i].missions.push(CAT));
+        const MIS = [
+          { name: "🎵 " + CHORD, col: "#ff7ad9", path: S.filter((s) => s.missions.includes(CHORD)).sort(byDI).map((s) => s.id) },
+          { name: "🐱 " + CAT, col: "#5effc8", path: CAT_IDS },
+        ];
+        MIS.forEach((m) => (m.set = new Set(m.path)));
+        const fC = new Set(), fD = new Set();
+        const vis = (s) => (!fC.size || fC.has(s.constellation)) && (!fD.size || fD.has(s.depth));
+        let mOn = false, plan = null, cur = null, tourT = null, looping = false, AC = null, snd = false;
+        const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const chipBar = (el, items, key, conv, set) => {
+          el.insertAdjacentHTML("beforeend", items.map(([v, t, c]) => `<button class="x-chip" aria-pressed="false" data-v="${esc(v)}"${c ? ` style="--c:${c}"` : ""}><i></i>${esc(t)}</button>`).join(""));
+          el.addEventListener("click", (e) => {
+            const b = e.target.closest("button"); if (!b) return;
+            const v = conv(b.dataset.v); set.has(v) ? set.delete(v) : set.add(v);
+            b.setAttribute("aria-pressed", String(set.has(v))); draw();
+          });
+        };
+        chipBar($("fCons"), CONS.map((c) => [c, c, cl[c].col]), "c", String, fC);
+        chipBar($("fDep"), [1, 2, 3, 4, 5].map((d) => [d, `${d} · ${DL[d]}`]), "d", Number, fD);
+        function tone(f, t0, dur, vol) {
+          const o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = f;
+          g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+          o.connect(g).connect(AC.destination); o.start(t0); o.stop(t0 + dur + 0.05);
+        }
+        const chime = () => { if (!snd || !AC) return; const t = AC.currentTime; tone(1046.5, t, 0.6, 0.05); tone(1568, t + 0.05, 0.5, 0.03); };
+        function whoosh(d) {
+          if (!snd || !AC) return;
+          const t = AC.currentTime, n = Math.floor(AC.sampleRate * d), b = AC.createBuffer(1, n, AC.sampleRate), x = b.getChannelData(0);
+          for (let i = 0; i < n; i++) x[i] = Math.random() * 2 - 1;
+          const src = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain(); src.buffer = b; f.type = "bandpass"; f.Q.value = 1.2;
+          f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(2000, t + d * 0.5); f.frequency.exponentialRampToValueAtTime(400, t + d);
+          g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05, t + d * 0.4); g.gain.linearRampToValueAtTime(0.0001, t + d);
+          src.connect(f).connect(g).connect(AC.destination); src.start(t);
+        }
+        $("sndBtn").addEventListener("click", (e) => {
+          snd = !snd; e.currentTarget.setAttribute("aria-pressed", String(snd));
+          if (snd && !AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+          if (AC && AC.state === "suspended") AC.resume(); chime();
+        });
+
+        const cv = document.getElementById("sky"), ctx = cv.getContext("2d"), wrap = document.getElementById("wrap");
+        const panel = document.getElementById("panel");
+        let W = 0, H = 0, cam = { x: 0, y: 0 }, scale = 0.3, sel = null, anc = new Set(), anim = null, queued = false;
+
+        function resize() {
+          const dpr = window.devicePixelRatio || 1, first = !W;
+          W = wrap.clientWidth; H = wrap.clientHeight;
+          cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          if (first) scale = Math.min(W, H) / 2650;
+          draw();
+        }
+        const sx = (x) => (x - cam.x) * scale + W / 2, sy = (y) => (y - cam.y) * scale + H / 2;
+        const rad = (s) => Math.max(1.3, s.r * Math.pow(scale, 0.6));
+        function draw() { if (!queued) { queued = true; requestAnimationFrame(render); } }
+
+        function render() {
+          queued = false;
+          ctx.fillStyle = "#05070f"; ctx.fillRect(0, 0, W, H);
+          bg.forEach(([a, b, c]) => { ctx.fillStyle = `rgba(255,255,255,${0.15 + c * 0.35})`; ctx.fillRect(a * W, b * H, c > 0.85 ? 1.5 : 1, c > 0.85 ? 1.5 : 1); });
+          const chain = sel ? new Set([...anc, sel.id]) : null;
+          ctx.lineWidth = 1;
+          S.forEach((s) => s.prereqs.forEach((p) => {
+            const q = byId[p], gold = chain && chain.has(s.id) && chain.has(p);
+            ctx.strokeStyle = gold ? "rgba(255,206,84,0.9)" : chain ? "rgba(255,255,255,0.04)" : "rgba(170,190,255,0.13)";
+            ctx.lineWidth = gold ? 1.6 : 1; ctx.globalAlpha = vis(s) && vis(q) ? 1 : 0.15;
+            ctx.beginPath(); ctx.moveTo(sx(q.x), sy(q.y)); ctx.lineTo(sx(s.x), sy(s.y)); ctx.stroke();
+          }));
+          ctx.globalAlpha = 1;
+          const dashT = RM ? 0 : (performance.now() / 40) % 12;
+          const path = (ids, col) => {
+            ctx.save(); ctx.strokeStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 12; ctx.lineWidth = 2.2;
+            ctx.setLineDash([7, 5]); ctx.lineDashOffset = -dashT; ctx.beginPath();
+            ids.forEach((i, k) => { const s = byId[i]; k ? ctx.lineTo(sx(s.x), sy(s.y)) : ctx.moveTo(sx(s.x), sy(s.y)); });
+            ctx.stroke(); ctx.restore();
+          };
+          if (mOn) MIS.forEach((m) => {
+            path(m.path, m.col);
+            ctx.save(); ctx.fillStyle = m.col; ctx.shadowColor = m.col; ctx.shadowBlur = 16; ctx.globalAlpha = 0.45;
+            m.set.forEach((i) => { const s = byId[i]; ctx.beginPath(); ctx.arc(sx(s.x), sy(s.y), rad(s) + 5, 0, 7); ctx.fill(); });
+            ctx.restore();
+          });
+          if (plan) path(plan.ids, "#7cf0ff");
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          CONS.forEach((c) => {
+            const k = cl[c], d = 345;
+            ctx.font = "600 14px Geist, sans-serif"; ctx.fillStyle = k.col; ctx.globalAlpha = (chain ? 0.45 : 0.95) * (!fC.size || fC.has(c) ? 1 : 0.15);
+            ctx.fillText(c, sx(k.x + d * Math.cos(k.a)), sy(k.y + d * Math.sin(k.a)));
+          });
+          const showNames = scale > 0.55;
+          S.forEach((s) => {
+            const inC = !chain || chain.has(s.id), x = sx(s.x), y = sy(s.y), r = rad(s);
+            if (x < -40 || y < -40 || x > W + 40 || y > H + 40) return;
+            const inM = mOn && MIS.some((m) => m.set.has(s.id));
+            ctx.globalAlpha = (inC ? 1 : 0.18) * (vis(s) ? 1 : 0.15);
+            ctx.fillStyle = chain && anc.has(s.id) ? "#ffce54" : s.col;
+            ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
+            if (s === sel || s === cur) { ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r + 4, 0, 7); ctx.stroke(); }
+            if ((showNames && inC) || (chain && chain.has(s.id) && scale > 0.25) || (inM && scale > 0.3) || s === cur) {
+              ctx.font = (s === sel ? "600 " : "") + "12px Geist, sans-serif";
+              ctx.fillStyle = "rgba(255,255,255,0.88)"; ctx.fillText(s.name, x, y + r + 10);
+            }
+          });
+          ctx.globalAlpha = 1;
+          if (plan) plan.ids.forEach((i, k) => {
+            const s = byId[i], r = rad(s), x = sx(s.x) + r + 7, y = sy(s.y) - r - 7;
+            ctx.fillStyle = "#7cf0ff"; ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fill();
+            ctx.fillStyle = "#05070f"; ctx.font = "600 12px Geist, sans-serif"; ctx.fillText(k + 1, x, y + 0.5);
+          });
+        }
+        function kick() {
+          draw();
+          if (looping || RM) return; looping = true;
+          const loop = () => { if (mOn || plan) { draw(); requestAnimationFrame(loop); } else looping = false; };
+          requestAnimationFrame(loop);
+        }
+
+        function zoomAt(px, py, f) {
+          const wx = (px - W / 2) / scale + cam.x, wy = (py - H / 2) / scale + cam.y;
+          scale = Math.min(4, Math.max(0.08, scale * f));
+          cam.x = wx - (px - W / 2) / scale; cam.y = wy - (py - H / 2) / scale; draw();
+        }
+        function fly(s, dur = 650, center = false) {
+          const ts = Math.max(scale, 1.2), wide = W >= 760, k = center ? 0 : 1;
+          const to = { x: s.x + (wide ? 180 : 0) * k / ts, y: s.y + (wide ? 0 : H * 0.24) * k / ts, s: ts };
+          const from = { x: cam.x, y: cam.y, s: scale }, t0 = performance.now();
+          whoosh(dur / 1000 + 0.15);
+          anim = (now) => {
+            if (anim === null) return;
+            const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3);
+            cam.x = from.x + (to.x - from.x) * e; cam.y = from.y + (to.y - from.y) * e; scale = from.s + (to.s - from.s) * e;
+            render(); if (t < 1 && anim) requestAnimationFrame(anim);
+          };
+          requestAnimationFrame(anim);
+        }
+
+        function ancestors(s) {
+          const out = new Set(), st = [...s.prereqs];
+          while (st.length) { const p = st.pop(); if (!out.has(p)) { out.add(p); st.push(...byId[p].prereqs); } }
+          return out;
+        }
+        function descendants(s) {
+          const out = new Set(), st = [...(kids[s.id] || [])];
+          while (st.length) { const c = st.pop(); if (!out.has(c)) { out.add(c); st.push(...(kids[c] || [])); } }
+          return out;
+        }
+        function topo(set) {
+          const out = [], done = new Set(), rest = [...set].map((i) => byId[i]).sort(byDI);
+          while (rest.length) {
+            const k = rest.findIndex((s) => s.prereqs.every((p) => !set.has(p) || done.has(p)));
+            const s = rest.splice(Math.max(0, k), 1)[0]; done.add(s.id); out.push(s.id);
+          }
+          return out;
+        }
+        const list = (ids) => ids && ids.length ? ids.map((i) => `<a class="btn" href="#map" data-id="${i}">${esc(byId[i].name)}</a>`).join("") : '<span class="fineprint">无</span>';
+        function select(s, doFly) {
+          sel = s;
+          if (!s) { anc = new Set(); panel.hidden = true; draw(); return; }
+          anc = ancestors(s);
+          const succ = [...descendants(s)].map((i) => byId[i]).sort(byDI).map((x) => x.id), mine = plan && plan.target === s.id;
+          panel.innerHTML = `<button class="x-close" aria-label="关闭">×</button>
+            <p class="x-con"><i style="background:${s.col}"></i>${esc(s.constellation)}</p>
+            <h3>${esc(s.name)}</h3>
+            <p><span class="pill">深度 ${s.depth} · ${DL[s.depth]}</span>${s.msc ? ` <span class="pill">MSC2020 ${esc(s.msc)}</span>` : ""}</p>
+            <div class="x-see"><small>看见方式</small><p>${esc(s.see)}</p></div>
+            <p class="x-n">要点亮它,共需 <b>${anc.size}</b> 颗前置星</p>
+            <dl><dt>对标</dt><dd>${esc(s.benchmark)}</dd>
+            <dt>前置知识</dt><dd>${list(s.prereqs)}</dd>
+            <dt>后续可达</dt><dd>${list(kids[s.id])}</dd>
+            <dt>可解锁 · 共 ${succ.length} 颗</dt><dd>${list(succ.slice(0, 8))}${succ.length > 8 ? `<span class="fineprint">… 另有 ${succ.length - 8} 颗</span>` : ""}</dd>
+            ${s.missions && s.missions.length ? `<dt>任务</dt><dd>${s.missions.map((m) => `<span class="chip">${esc(m)}</span>`).join("")}</dd>` : ""}</dl>
+            <div class="links" style="margin-top:16px">${mine ? '<button class="btn" data-clear>清除路径</button>' : '<button class="btn" data-plan>规划到这颗星的路径</button>'}</div>
+            ${mine ? `<p class="x-n" style="margin-top:14px">学习路径 · 共 <b>${plan.ids.length}</b> 步</p><ol class="x-steps">${plan.ids.map((i) => `<li><a class="link" href="#map" data-id="${i}">${esc(byId[i].name)}</a> <small class="fineprint">深度 ${byId[i].depth}</small></li>`).join("")}</ol>` : ""}`;
+          panel.hidden = false; panel.scrollTop = 0;
+          if (doFly) fly(s); else draw();
+        }
+        panel.addEventListener("click", (e) => {
+          if (e.target.closest(".x-close")) return select(null);
+          if (e.target.closest("[data-plan]")) { plan = { target: sel.id, ids: topo(new Set([...anc, sel.id])) }; select(sel, false); return kick(); }
+          if (e.target.closest("[data-clear]")) { plan = null; return select(sel, false); }
+          const a = e.target.closest("[data-id]");
+          if (a) { e.preventDefault(); select(byId[a.dataset.id], true); }
+        });
+
+        // Pointer: drag, pinch, tap
+        const P = new Map(); let moved = 0, pinch = null;
+        const pos = (e) => { const b = cv.getBoundingClientRect(); return { x: e.clientX - b.left, y: e.clientY - b.top }; };
+        const pinfo = () => { const [a, b] = [...P.values()]; return { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; };
+        cv.addEventListener("pointerdown", (e) => {
+          cv.setPointerCapture(e.pointerId); P.set(e.pointerId, pos(e)); anim = null; stopTour();
+          if (P.size === 1) moved = 0; if (P.size === 2) { pinch = pinfo(); moved = 99; }
+        });
+        cv.addEventListener("pointermove", (e) => {
+          if (!P.has(e.pointerId)) return;
+          const p = P.get(e.pointerId), n = pos(e);
+          if (P.size === 1) { cam.x -= (n.x - p.x) / scale; cam.y -= (n.y - p.y) / scale; moved += Math.abs(n.x - p.x) + Math.abs(n.y - p.y); P.set(e.pointerId, n); draw(); }
+          else if (P.size === 2) {
+            P.set(e.pointerId, n); const q = pinfo();
+            cam.x -= (q.x - pinch.x) / scale; cam.y -= (q.y - pinch.y) / scale; zoomAt(q.x, q.y, q.d / pinch.d); pinch = q;
+          }
+        });
+        function up(e) {
+          if (!P.has(e.pointerId)) return;
+          if (P.size === 1 && moved < 8 && e.type === "pointerup") tap(pos(e));
+          P.delete(e.pointerId); pinch = P.size === 2 ? pinfo() : null;
+        }
+        cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+        cv.addEventListener("wheel", (e) => { e.preventDefault(); anim = null; const p = pos(e); zoomAt(p.x, p.y, Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
+        function tap(p) {
+          let best = null, bd = Infinity;
+          S.forEach((s) => { const d = Math.hypot(sx(s.x) - p.x, sy(s.y) - p.y); if (d < Math.max(16, rad(s) + 8) && d < bd) { bd = d; best = s; } });
+          if (best) chime();
+          select(best, false);
+        }
+
+        // Missions: toggle, legend, fly-through
+        const legend = $("legend"), tourEl = $("tour");
+        legend.innerHTML = MIS.map((m, k) => `<div><h3><i style="background:${m.col};box-shadow:0 0 8px ${m.col}"></i>${esc(m.name)}</h3>
+          <p>${m.set.size} 颗星 · 路径 ${m.path.length} 站</p><button class="btn" data-m="${k}">按顺序飞览</button></div>`).join("");
+        function stopTour() { clearTimeout(tourT); tourT = null; cur = null; tourEl.hidden = true; }
+        $("mBtn").addEventListener("click", (e) => {
+          mOn = !mOn; e.currentTarget.setAttribute("aria-pressed", String(mOn)); legend.hidden = !mOn;
+          if (!mOn) stopTour(); kick();
+        });
+        legend.addEventListener("click", (e) => {
+          const b = e.target.closest("[data-m]"); if (!b) return;
+          const m = MIS[+b.dataset.m]; let i = 0;
+          stopTour(); select(null); wrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          const step = () => {
+            if (i >= m.path.length) return stopTour();
+            cur = byId[m.path[i]]; tourEl.textContent = `${m.name.slice(0, 2)} ${i + 1}/${m.path.length} · ${cur.name}`; tourEl.hidden = false;
+            fly(cur, 1000, true); i++; tourT = setTimeout(step, 1200);
+          };
+          step();
+        });
+
+        // Search
+        const q = document.getElementById("q"), res = document.getElementById("res");
+        q.addEventListener("input", () => {
+          const t = q.value.trim();
+          res.innerHTML = !t ? "" : S.filter((s) => s.name.includes(t)).slice(0, 8)
+            .map((s) => `<li><button data-id="${s.id}">${esc(s.name)}<small>${esc(s.constellation)} · ${DL[s.depth]}</small></button></li>`).join("") || '<li class="fineprint" style="padding:10px 12px">没有匹配的星</li>';
+        });
+        res.addEventListener("click", (e) => {
+          const b = e.target.closest("[data-id]"); if (!b) return;
+          res.innerHTML = ""; q.value = ""; q.blur(); select(byId[b.dataset.id], true);
+          wrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        });
+
+        // Sources
+        const srcBtn = document.getElementById("srcBtn"), src = document.getElementById("src");
+        document.getElementById("srcList").innerHTML = D.meta.sources.map((s) => `<li>${esc(s)}</li>`).join("");
+        document.getElementById("srcNote").textContent = D.meta.note;
+        srcBtn.addEventListener("click", () => { src.hidden = !src.hidden; srcBtn.setAttribute("aria-expanded", String(!src.hidden)); });
+
+        new ResizeObserver(resize).observe(wrap);
+        resize();
+      })();
+    </script>
+  </body>
+</html>
