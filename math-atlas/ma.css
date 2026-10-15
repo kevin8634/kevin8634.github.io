@@ -141,9 +141,10 @@
 /* ---------- 页面转场：星光淡入淡出 ---------- */
 html { background: #05070f; }
 html[data-theme="light"] { background: #f6f7fb; }
-@keyframes ma-in { from { opacity: 0; transform: scale(1.012); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
-body { animation: ma-in .55s cubic-bezier(.2,.7,.2,1) both; }
-html.ma-leaving body { opacity: 0; transform: scale(.985); filter: blur(6px); transition: opacity .28s ease, transform .28s ease, filter .28s ease; }
+/* 只动 opacity：body 上的 transform/filter 会让 position:fixed 的主页星系画布跟着滚走（v0.5 一镜到底失效的原因） */
+@keyframes ma-in { from { opacity: 0; } to { opacity: 1; } }
+body { animation: ma-in .55s cubic-bezier(.2,.7,.2,1) backwards; }
+html.ma-leaving body { opacity: 0; transition: opacity .28s ease; }
 .ma-warp { position: fixed; inset: 0; z-index: 100; pointer-events: none; opacity: 0; transition: opacity .28s ease;
   background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--ma-acc, #8ea2ff) 30%, transparent), transparent 55%), var(--ma-base, #05070f); }
 html.ma-leaving .ma-warp { opacity: 1; }
