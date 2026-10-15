@@ -22,6 +22,8 @@
       .x-src { margin-bottom: 12px; }
       .x-src ul { margin: 8px 0; padding-left: 18px; }
       .x-map { position: relative; height: min(78vh, 760px); min-height: 440px; border-radius: var(--r-l); overflow: hidden; background: #05070f; }
+      .x-home { position: absolute; left: 12px; bottom: 12px; z-index: 2; height: 32px; padding: 0 12px; border-radius: 100px; border: 1px solid rgb(160 185 255 / .3); background: rgb(10 14 36 / .6); color: #eef1ff; font: 500 12px/1 -apple-system, "PingFang SC", sans-serif; cursor: pointer; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+      .x-home:hover { background: rgb(40 50 110 / .7); }
       .x-map canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
       .x-hint { position: absolute; left: 12px; top: 10px; margin: 0; font: var(--type-caption); color: rgb(255 255 255 / 0.6); pointer-events: none; }
       .x-panel { position: absolute; left: 8px; right: 8px; bottom: 8px; max-height: 58%; overflow: auto; padding: 18px;
@@ -93,8 +95,9 @@
             <button class="x-chip" id="sndBtn" aria-pressed="false"><i></i>🔊 音效</button>
           </div>
           <div class="x-map" id="wrap">
-            <canvas id="sky" role="img" aria-label="数学概念星图:9 个星座环形排列,点击星星查看详情"></canvas>
-            <p class="x-hint">拖动平移 · 滚轮或双指缩放 · 点星查看</p>
+            <canvas id="sky" role="img" aria-label="数学概念 3D 星图:9 个星座分布在球面上,可拖动旋转,点击星星查看详情"></canvas>
+            <p class="x-hint">拖动旋转 · 右键或 Shift 拖动平移 · 滚轮 / 双指缩放 · 点星查看 · 双击回到全景</p>
+            <button class="x-home" id="homeBtn" type="button" title="回到全景">⟲ 全景</button>
             <p class="x-tour" id="tour" hidden aria-live="polite"></p>
             <aside class="x-panel" id="panel" hidden aria-live="polite"></aside>
           </div>
@@ -321,22 +324,23 @@
         const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
         const hash = (t) => { let x = 2166136261; for (const c of t) { x ^= c.charCodeAt(0); x = Math.imul(x, 16777619); } return (x >>> 0) / 4294967296; };
 
-        // Layout: clusters on a ring, depth = distance from cluster center
-        const RING = 950, cl = {};
+        // Layout 3D：9 个星座分布在一个球面上，每个星座是一团小星云，越深的星离团心越远
+        const RING = 900, cl = {}, NCONS = CONS.length;
         CONS.forEach((c, i) => {
-          const a = -Math.PI / 2 + (i * 2 * Math.PI) / CONS.length;
-          cl[c] = { x: RING * Math.cos(a), y: RING * Math.sin(a), a, col: COL[i % COL.length] };
-          for (let d = 1; d <= 5; d++) {
-            const g = S.filter((s) => s.constellation === c && s.depth === d), off = hash(c + d) * 6.283;
-            g.forEach((s, j) => {
-              const ang = off + (j * 2 * Math.PI) / g.length + ((hash(s.id) - 0.5) * Math.PI) / g.length * 0.7;
-              const r = 30 + (d - 1) * 62 + (hash(s.id + "r") - 0.5) * 22;
-              s.x = cl[c].x + r * Math.cos(ang); s.y = cl[c].y + r * Math.sin(ang);
-              s.r = 2.5 + d * 1.5; s.col = cl[c].col;
-            });
-          }
+          const u = 1 - ((i + 0.5) / NCONS) * 2, q = Math.sqrt(1 - u * u), th = i * 2.39996;
+          const cx = RING * q * Math.cos(th), cy = RING * u * 0.72, cz = RING * q * Math.sin(th);
+          cl[c] = { x: cx, y: cy, z: cz, col: COL[i % COL.length] };
+          S.filter((s) => s.constellation === c).forEach((s) => {
+            const v = hash(s.id) * 2 - 1, ph = hash(s.id + "p") * 6.283, w = Math.sqrt(1 - v * v);
+            const r = 40 + (s.depth - 1) * 66 + (hash(s.id + "r") - 0.5) * 34;
+            s.x = cx + r * w * Math.cos(ph); s.y = cy + r * v * 0.8; s.z = cz + r * w * Math.sin(ph);
+            s.r = 2.5 + s.depth * 1.5; s.col = cl[c].col;
+          });
         });
-        const bg = Array.from({ length: 260 }, (_, i) => [hash("x" + i), hash("y" + i), hash("z" + i)]);
+        const bg = Array.from({ length: 700 }, (_, i) => {
+          const v = hash("u" + i) * 2 - 1, ph = hash("p" + i) * 6.283, w = Math.sqrt(1 - v * v);
+          return [w * Math.cos(ph), v, w * Math.sin(ph), hash("b" + i)];
+        });
         const $ = (i) => document.getElementById(i);
 
         // Missions, filters, sound
@@ -387,99 +391,147 @@
 
         const cv = document.getElementById("sky"), ctx = cv.getContext("2d"), wrap = document.getElementById("wrap");
         const panel = document.getElementById("panel");
-        let W = 0, H = 0, cam = { x: 0, y: 0 }, scale = 0.3, sel = null, anc = new Set(), anim = null, queued = false;
-
+        let W = 0, H = 0, sel = null, anc = new Set(), anim = null, hov = null, lastInt = 0, onScreen = true;
+        const cam = { tx: 0, ty: 0, tz: 0, yaw: 0.5, pitch: -0.32, dist: 2900 };
+        const HOME = { tx: 0, ty: 0, tz: 0, yaw: 0.5, pitch: -0.32, dist: 2900 };
+        const SPR = {};
+        function spr(col) {
+          if (SPR[col]) return SPR[col];
+          const c = document.createElement("canvas"); c.width = c.height = 64; const x = c.getContext("2d");
+          const g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+          g.addColorStop(0, "#ffffff"); g.addColorStop(0.14, col); g.addColorStop(0.42, col + "55"); g.addColorStop(1, col + "00");
+          x.fillStyle = g; x.fillRect(0, 0, 64, 64); return (SPR[col] = c);
+        }
+        const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
         function resize() {
-          const dpr = window.devicePixelRatio || 1, first = !W;
+          const dpr = Math.min(2, window.devicePixelRatio || 1);
           W = wrap.clientWidth; H = wrap.clientHeight;
           cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-          if (first) scale = Math.min(W, H) / 2650;
-          draw();
         }
-        const sx = (x) => (x - cam.x) * scale + W / 2, sy = (y) => (y - cam.y) * scale + H / 2;
-        const rad = (s) => Math.max(1.3, s.r * Math.pow(scale, 0.6));
-        function draw() { if (!queued) { queued = true; requestAnimationFrame(render); } }
+        let cY, sY, cP, sP, focal, ox = 0;
+        function setup() {
+          cY = Math.cos(cam.yaw); sY = Math.sin(cam.yaw); cP = Math.cos(cam.pitch); sP = Math.sin(cam.pitch);
+          focal = Math.min(W, H) * 1.15; ox = !panel.hidden && W >= 760 ? -170 : 0;
+        }
+        function proj(x, y, z) {
+          const X = x - cam.tx, Y = y - cam.ty, Z = z - cam.tz;
+          const x1 = X * cY - Z * sY, z1 = X * sY + Z * cY, y2 = Y * cP - z1 * sP, z2 = Y * sP + z1 * cP;
+          const zz = z2 + cam.dist; if (zz < 40) return null;
+          const f = focal / zz; return { x: W / 2 + ox + x1 * f, y: H / 2 + y2 * f, f, z: zz };
+        }
+        const rad = (s) => (s.p ? Math.max(1.4, Math.min(7 + s.depth, s.r * s.p.f * 1.7)) : 0);
+        function draw() {} function kick() {}
 
-        function render() {
-          queued = false;
-          ctx.fillStyle = "#05070f"; ctx.fillRect(0, 0, W, H);
-          bg.forEach(([a, b, c]) => { ctx.fillStyle = `rgba(255,255,255,${0.15 + c * 0.35})`; ctx.fillRect(a * W, b * H, c > 0.85 ? 1.5 : 1, c > 0.85 ? 1.5 : 1); });
+        function render(now) {
+          setup(); ctx.clearRect(0, 0, W, H);
+          const t = now / 1000;
+          // 远处的星空背景（只随视角旋转）
+          for (const [a, b, c, br] of bg) {
+            const x1 = a * cY - c * sY, z1 = a * sY + c * cY, y2 = b * cP - z1 * sP, z2 = b * sP + z1 * cP;
+            if (z2 < 0.2) continue;
+            const X = W / 2 + (x1 / z2) * focal * 0.55, Y = H / 2 + (y2 / z2) * focal * 0.55;
+            if (X < 0 || Y < 0 || X > W || Y > H) continue;
+            ctx.fillStyle = `rgba(255,255,255,${(0.1 + br * 0.4) * (RM ? 1 : 0.75 + 0.25 * Math.sin(t * 1.3 + br * 40))})`;
+            const z = br > 0.92 ? 1.7 : 1; ctx.fillRect(X, Y, z, z);
+          }
+          S.forEach((s) => (s.p = proj(s.x, s.y, s.z)));
           const chain = sel ? new Set([...anc, sel.id]) : null;
-          ctx.lineWidth = 1;
-          S.forEach((s) => s.prereqs.forEach((p) => {
-            const q = byId[p], gold = chain && chain.has(s.id) && chain.has(p);
-            ctx.strokeStyle = gold ? "rgba(255,206,84,0.9)" : chain ? "rgba(255,255,255,0.04)" : "rgba(170,190,255,0.13)";
-            ctx.lineWidth = gold ? 1.6 : 1; ctx.globalAlpha = vis(s) && vis(q) ? 1 : 0.15;
-            ctx.beginPath(); ctx.moveTo(sx(q.x), sy(q.y)); ctx.lineTo(sx(s.x), sy(s.y)); ctx.stroke();
+          const hn = hov && !sel ? new Set([hov.id, ...hov.prereqs, ...(kids[hov.id] || [])]) : null;
+          ctx.globalCompositeOperation = "lighter";
+          // 连线（突触）
+          S.forEach((s) => s.prereqs.forEach((pid) => {
+            const q = byId[pid], a = s.p, b = q.p; if (!a || !b) return;
+            const gold = chain && chain.has(s.id) && chain.has(pid), hl = hn && (s === hov || q === hov);
+            const fog = Math.min(1, 2400 / Math.max(a.z, b.z));
+            let al = gold ? 0.85 : hl ? 0.75 : chain || hn ? 0.025 : 0.17 * fog;
+            al *= vis(s) && vis(q) ? 1 : 0.12;
+            ctx.strokeStyle = gold ? `rgba(255,206,84,${al})` : hl ? rgba(s.col, al) : `rgba(160,185,255,${al})`;
+            ctx.lineWidth = gold || hl ? 1.7 : 0.8;
+            ctx.beginPath(); ctx.moveTo(b.x, b.y); ctx.lineTo(a.x, a.y); ctx.stroke();
+          }));
+          // 沿前置关系流动的信号脉冲
+          if (!RM) S.forEach((s) => s.prereqs.forEach((pid) => {
+            const on = chain ? chain.has(s.id) && chain.has(pid) : hn ? s === hov || byId[pid] === hov : hash(s.id + pid) < 0.28;
+            if (!on || !vis(s)) return;
+            const a = byId[pid].p, b = s.p; if (!a || !b) return;
+            const u = (t * (chain || hn ? 0.55 : 0.28) + hash(pid + s.id) * 7) % 1, x = a.x + (b.x - a.x) * u, y = a.y + (b.y - a.y) * u;
+            ctx.globalAlpha = Math.sin(u * Math.PI) * (chain ? 1 : 0.7);
+            ctx.fillStyle = chain ? "#ffe39a" : hn ? hov.col : "#cfe0ff";
+            const z = chain || hn ? 2.6 : 1.8; ctx.fillRect(x - z / 2, y - z / 2, z, z);
           }));
           ctx.globalAlpha = 1;
-          const dashT = RM ? 0 : (performance.now() / 40) % 12;
+          const dashT = RM ? 0 : (now / 40) % 12;
           const path = (ids, col) => {
-            ctx.save(); ctx.strokeStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 12; ctx.lineWidth = 2.2;
-            ctx.setLineDash([7, 5]); ctx.lineDashOffset = -dashT; ctx.beginPath();
-            ids.forEach((i, k) => { const s = byId[i]; k ? ctx.lineTo(sx(s.x), sy(s.y)) : ctx.moveTo(sx(s.x), sy(s.y)); });
+            ctx.save(); ctx.globalCompositeOperation = "source-over"; ctx.strokeStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 12; ctx.lineWidth = 2.2;
+            ctx.setLineDash([7, 5]); ctx.lineDashOffset = -dashT; ctx.beginPath(); let started = false;
+            ids.forEach((i) => { const p = byId[i].p; if (!p) return; started ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); started = true; });
             ctx.stroke(); ctx.restore();
           };
-          if (mOn) MIS.forEach((m) => {
-            path(m.path, m.col);
-            ctx.save(); ctx.fillStyle = m.col; ctx.shadowColor = m.col; ctx.shadowBlur = 16; ctx.globalAlpha = 0.45;
-            m.set.forEach((i) => { const s = byId[i]; ctx.beginPath(); ctx.arc(sx(s.x), sy(s.y), rad(s) + 5, 0, 7); ctx.fill(); });
-            ctx.restore();
-          });
+          if (mOn) MIS.forEach((m) => path(m.path, m.col));
           if (plan) path(plan.ids, "#7cf0ff");
+          // 星（远的先画）
+          const ord = S.filter((s) => s.p).sort((a, b) => b.p.z - a.p.z);
+          ord.forEach((s) => {
+            const p = s.p, inC = !chain || chain.has(s.id);
+            let a = (inC ? 1 : 0.14) * (vis(s) ? 1 : 0.1) * (hn && !hn.has(s.id) ? 0.3 : 1) * Math.min(1, 3200 / p.z);
+            const tw = RM ? 1 : 0.82 + 0.18 * Math.sin(t * 1.7 + hash(s.id) * 30), r = rad(s);
+            const col = chain && anc.has(s.id) ? "#ffce54" : s.col;
+            const inM = mOn && MIS.some((m) => m.set.has(s.id));
+            ctx.globalAlpha = a * tw; const g = r * (inM || s === sel || s === hov ? 3.8 : 2.7) * Math.min(1, 0.55 + 0.45 / Math.max(0.5, p.f));
+            ctx.drawImage(spr(col), p.x - g, p.y - g, g * 2, g * 2);
+            ctx.globalAlpha = a; ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.8, r * 0.42), 0, 7); ctx.fill();
+          });
+          ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+          // 选中 / 悬停 / 飞览 的光圈
+          [sel, hov, cur].forEach((s, k) => {
+            if (!s || !s.p) return; const r = rad(s) + 6 + (RM ? 0 : Math.sin(t * 4) * 1.5);
+            ctx.strokeStyle = k === 0 ? "#fff" : "rgba(255,255,255,.6)"; ctx.lineWidth = k === 0 ? 2 : 1.2;
+            ctx.beginPath(); ctx.arc(s.p.x, s.p.y, r, 0, 7); ctx.stroke();
+          });
+          // 星座名
           ctx.textAlign = "center"; ctx.textBaseline = "middle";
           CONS.forEach((c) => {
-            const k = cl[c], d = 345;
-            ctx.font = "600 14px Geist, sans-serif"; ctx.fillStyle = k.col; ctx.globalAlpha = (chain ? 0.45 : 0.95) * (!fC.size || fC.has(c) ? 1 : 0.15);
-            ctx.fillText(c, sx(k.x + d * Math.cos(k.a)), sy(k.y + d * Math.sin(k.a)));
+            const k = cl[c], n = Math.hypot(k.x, k.y, k.z) || 1, d = 1 + 400 / n;
+            const p = proj(k.x * d, k.y * d, k.z * d); if (!p) return;
+            const sz = Math.max(11, Math.min(22, 15 * p.f * 2.4));
+            ctx.font = `600 ${sz}px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif`; ctx.fillStyle = k.col;
+            ctx.globalAlpha = (chain || hn ? 0.4 : 0.95) * (!fC.size || fC.has(c) ? 1 : 0.15) * Math.min(1, 3400 / p.z);
+            ctx.shadowColor = k.col; ctx.shadowBlur = 10; ctx.fillText(c, p.x, p.y); ctx.shadowBlur = 0;
           });
-          const showNames = scale > 0.55;
-          S.forEach((s) => {
-            const inC = !chain || chain.has(s.id), x = sx(s.x), y = sy(s.y), r = rad(s);
-            if (x < -40 || y < -40 || x > W + 40 || y > H + 40) return;
-            const inM = mOn && MIS.some((m) => m.set.has(s.id));
-            ctx.globalAlpha = (inC ? 1 : 0.18) * (vis(s) ? 1 : 0.15);
-            ctx.fillStyle = chain && anc.has(s.id) ? "#ffce54" : s.col;
-            ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill();
-            if (s === sel || s === cur) { ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r + 4, 0, 7); ctx.stroke(); }
-            if ((showNames && inC) || (chain && chain.has(s.id) && scale > 0.25) || (inM && scale > 0.3) || s === cur) {
-              ctx.font = (s === sel ? "600 " : "") + "12px Geist, sans-serif";
-              ctx.fillStyle = "rgba(255,255,255,0.88)"; ctx.fillText(s.name, x, y + r + 10);
-            }
-          });
+          // 星名
           ctx.globalAlpha = 1;
+          ord.slice().reverse().forEach((s) => {
+            const p = s.p, inC = !chain || chain.has(s.id), inM = mOn && MIS.some((m) => m.set.has(s.id));
+            const show = s === sel || s === cur || s === hov || (hn && hn.has(s.id) && p.f > 0.25) || (chain && chain.has(s.id) && p.f > 0.25) || (p.f > 1.1 && inC && vis(s)) || (inM && p.f > 0.4);
+            if (!show) return;
+            ctx.font = (s === sel || s === hov ? "600 13px " : "12px ") + '-apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+            ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.fillText(s.name, p.x + 1, p.y + rad(s) + 12);
+            ctx.fillStyle = s === sel ? "#fff" : "rgba(235,240,255,.9)"; ctx.fillText(s.name, p.x, p.y + rad(s) + 11);
+          });
           if (plan) plan.ids.forEach((i, k) => {
-            const s = byId[i], r = rad(s), x = sx(s.x) + r + 7, y = sy(s.y) - r - 7;
+            const s = byId[i]; if (!s.p) return; const r = rad(s), x = s.p.x + r + 7, y = s.p.y - r - 7;
             ctx.fillStyle = "#7cf0ff"; ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fill();
-            ctx.fillStyle = "#05070f"; ctx.font = "600 12px Geist, sans-serif"; ctx.fillText(k + 1, x, y + 0.5);
+            ctx.fillStyle = "#05070f"; ctx.font = "600 12px sans-serif"; ctx.fillText(k + 1, x, y + 0.5);
           });
         }
-        function kick() {
-          draw();
-          if (looping || RM) return; looping = true;
-          const loop = () => { if (mOn || plan) { draw(); requestAnimationFrame(loop); } else looping = false; };
+        function loop(now) {
+          if (anim) anim(now);
+          else if (!RM && !PT.size && now - lastInt > 3500) cam.yaw += sel ? 0.0004 : 0.0011;
+          if (onScreen && !document.hidden) render(now);
           requestAnimationFrame(loop);
         }
+        new IntersectionObserver((es) => { onScreen = es[0].isIntersecting; }).observe(wrap);
 
-        function zoomAt(px, py, f) {
-          const wx = (px - W / 2) / scale + cam.x, wy = (py - H / 2) / scale + cam.y;
-          scale = Math.min(4, Math.max(0.08, scale * f));
-          cam.x = wx - (px - W / 2) / scale; cam.y = wy - (py - H / 2) / scale; draw();
-        }
-        function fly(s, dur = 650, center = false) {
-          const ts = Math.max(scale, 1.2), wide = W >= 760, k = center ? 0 : 1;
-          const to = { x: s.x + (wide ? 180 : 0) * k / ts, y: s.y + (wide ? 0 : H * 0.24) * k / ts, s: ts };
-          const from = { x: cam.x, y: cam.y, s: scale }, t0 = performance.now();
-          whoosh(dur / 1000 + 0.15);
+        function fly(s, dur = 900, center, dist) {
+          const from = { tx: cam.tx, ty: cam.ty, tz: cam.tz, dist: cam.dist };
+          const to = s === HOME ? { tx: 0, ty: 0, tz: 0, dist: HOME.dist } : { tx: s.x, ty: s.y, tz: s.z, dist: dist || Math.min(Math.max(cam.dist, 800), 1100) };
+          const t0 = performance.now(); lastInt = t0; whoosh(dur / 1000 + 0.15);
           anim = (now) => {
-            if (anim === null) return;
             const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3);
-            cam.x = from.x + (to.x - from.x) * e; cam.y = from.y + (to.y - from.y) * e; scale = from.s + (to.s - from.s) * e;
-            render(); if (t < 1 && anim) requestAnimationFrame(anim);
+            for (const k in to) cam[k] = from[k] + (to[k] - from[k]) * e;
+            if (t >= 1) anim = null;
           };
-          requestAnimationFrame(anim);
         }
-
         function ancestors(s) {
           const out = new Set(), st = [...s.prereqs];
           while (st.length) { const p = st.pop(); if (!out.has(p)) { out.add(p); st.push(...byId[p].prereqs); } }
@@ -528,36 +580,61 @@
           if (a) { e.preventDefault(); select(byId[a.dataset.id], true); }
         });
 
-        // Pointer: drag, pinch, tap
-        const P = new Map(); let moved = 0, pinch = null;
+        // Pointer：左键拖动旋转，右键 / Shift / 双指拖动平移，滚轮 / 双指缩放，点星查看，双击回到全景
+        const PT = new Map(); let moved = 0, pinch = null, mode = "rot";
         const pos = (e) => { const b = cv.getBoundingClientRect(); return { x: e.clientX - b.left, y: e.clientY - b.top }; };
-        const pinfo = () => { const [a, b] = [...P.values()]; return { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; };
+        const pinfo = () => { const [a, b] = [...PT.values()]; return { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; };
+        function pan(dx, dy) {
+          const k = cam.dist / focal;
+          cam.tx -= (dx * cY - dy * sP * sY) * k; cam.ty -= dy * cP * k; cam.tz -= (-dx * sY - dy * sP * cY) * k;
+        }
+        function pick(p) {
+          let best = null, bd = Infinity;
+          S.forEach((s) => {
+            if (!s.p || !vis(s)) return; const d = Math.hypot(s.p.x - p.x, s.p.y - p.y);
+            if (d < Math.max(14, rad(s) + 8)) { const score = d + s.p.z * 0.004; if (score < bd) { bd = score; best = s; } }
+          });
+          return best;
+        }
+        cv.addEventListener("contextmenu", (e) => e.preventDefault());
         cv.addEventListener("pointerdown", (e) => {
-          cv.setPointerCapture(e.pointerId); P.set(e.pointerId, pos(e)); anim = null; stopTour();
-          if (P.size === 1) moved = 0; if (P.size === 2) { pinch = pinfo(); moved = 99; }
+          cv.setPointerCapture(e.pointerId); PT.set(e.pointerId, pos(e)); anim = null; stopTour(); lastInt = performance.now();
+          if (PT.size === 1) { moved = 0; mode = e.button === 2 || e.button === 1 || e.shiftKey ? "pan" : "rot"; cv.style.cursor = "grabbing"; }
+          if (PT.size === 2) { pinch = pinfo(); moved = 99; }
         });
         cv.addEventListener("pointermove", (e) => {
-          if (!P.has(e.pointerId)) return;
-          const p = P.get(e.pointerId), n = pos(e);
-          if (P.size === 1) { cam.x -= (n.x - p.x) / scale; cam.y -= (n.y - p.y) / scale; moved += Math.abs(n.x - p.x) + Math.abs(n.y - p.y); P.set(e.pointerId, n); draw(); }
-          else if (P.size === 2) {
-            P.set(e.pointerId, n); const q = pinfo();
-            cam.x -= (q.x - pinch.x) / scale; cam.y -= (q.y - pinch.y) / scale; zoomAt(q.x, q.y, q.d / pinch.d); pinch = q;
+          const n = pos(e);
+          if (!PT.has(e.pointerId)) {
+            if (e.pointerType === "mouse") { const h = pick(n); if (h !== hov) { hov = h; cv.style.cursor = h ? "pointer" : "grab"; } }
+            return;
+          }
+          lastInt = performance.now();
+          const p = PT.get(e.pointerId);
+          if (PT.size === 1) {
+            const dx = n.x - p.x, dy = n.y - p.y; moved += Math.abs(dx) + Math.abs(dy); PT.set(e.pointerId, n);
+            if (mode === "rot") { cam.yaw += dx * 0.006; cam.pitch = Math.max(-1.45, Math.min(1.45, cam.pitch + dy * 0.005)); }
+            else pan(dx, dy);
+          } else if (PT.size === 2) {
+            PT.set(e.pointerId, n); const q = pinfo();
+            pan(q.x - pinch.x, q.y - pinch.y); cam.dist = Math.max(160, Math.min(6000, cam.dist * (pinch.d / q.d))); pinch = q;
           }
         });
         function up(e) {
-          if (!P.has(e.pointerId)) return;
-          if (P.size === 1 && moved < 8 && e.type === "pointerup") tap(pos(e));
-          P.delete(e.pointerId); pinch = P.size === 2 ? pinfo() : null;
+          if (!PT.has(e.pointerId)) return;
+          if (PT.size === 1 && moved < 6 && e.type === "pointerup") tap(pos(e));
+          PT.delete(e.pointerId); pinch = PT.size === 2 ? pinfo() : null; cv.style.cursor = hov ? "pointer" : "grab";
         }
         cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
-        cv.addEventListener("wheel", (e) => { e.preventDefault(); anim = null; const p = pos(e); zoomAt(p.x, p.y, Math.exp(-e.deltaY * 0.0015)); }, { passive: false });
+        cv.addEventListener("pointerleave", () => { if (!PT.size) hov = null; });
+        cv.addEventListener("wheel", (e) => { e.preventDefault(); anim = null; lastInt = performance.now(); cam.dist = Math.max(160, Math.min(6000, cam.dist * Math.exp(e.deltaY * 0.0012))); }, { passive: false });
+        cv.addEventListener("dblclick", () => { select(null); fly(HOME, 1100); });
         function tap(p) {
-          let best = null, bd = Infinity;
-          S.forEach((s) => { const d = Math.hypot(sx(s.x) - p.x, sy(s.y) - p.y); if (d < Math.max(16, rad(s) + 8) && d < bd) { bd = d; best = s; } });
+          const best = pick(p);
           if (best) chime();
-          select(best, false);
+          select(best, !!best);
         }
+        $("homeBtn").addEventListener("click", () => { select(null); stopTour(); fly(HOME, 1100); });
+        requestAnimationFrame(loop);
 
         // Missions: toggle, legend, fly-through
         const legend = $("legend"), tourEl = $("tour");
