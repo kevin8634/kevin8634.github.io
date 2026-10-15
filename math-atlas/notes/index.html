@@ -73,7 +73,7 @@
       .x-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
       @media print {
         .nav, .links, .btn, .x-toast, .foot nav, .badge { display: none !important; }
-        #nim, #bee, #secret, #chord, #cat { break-before: page; page-break-before: always; }
+        #nim, #bee, #nav, #secret, #chord, #cat { break-before: page; page-break-before: always; }
         .x-formulas li, .x-must li, .cards > div { break-inside: avoid; }
       }
     </style>
@@ -94,7 +94,7 @@
           </div>
           <aside class="callout" aria-label="建议顺序">
             <p class="callout__head"><span class="hark-mark" data-size="16"></span> 建议顺序</p>
-            <p class="callout__lead"><strong>松果 → 蜜蜂 → 密码 → 和弦 → 猫</strong></p>
+            <p class="callout__lead"><strong>松果 → 蜜蜂 → 导航 → 密码 → 和弦 → 猫</strong></p>
             <a class="btn" href="#nim">从松果开始</a>
           </aside>
         </section>
@@ -135,6 +135,14 @@
                   <td class="muted">第3关蜂巢猜想、第4关泡泡排队以体验为主</td>
                 </tr>
                 <tr>
+                  <th scope="row"><a class="link" href="#nav">导航怎么找到最短的路</a> <small><a class="link" href="../nav/" target="_top">去玩 →</a></small></th>
+                  <td class="num">★★☆ 进阶</td>
+                  <td>小学四年级起能玩通</td>
+                  <td>初一能完全理解</td>
+                  <td>加法、比较大小</td>
+                  <td class="muted">旅行商问题至今无快速完美算法(彩蛋)</td>
+                </tr>
+                <tr>
                   <th scope="row"><a class="link" href="#secret">怎样把秘密藏进数字里</a> <small><a class="link" href="../secret/" target="_top">去玩 →</a></small></th>
                   <td class="num">★★☆ 进阶</td>
                   <td>小学5–6年级起(约11岁+)</td>
@@ -161,7 +169,7 @@
               </tbody>
             </table>
           </div>
-          <p class="fineprint">按中国学段估算;成人任何任务都可玩。建议顺序:松果 → 蜜蜂 → 密码 → 和弦 → 猫。</p>
+          <p class="fineprint">按中国学段估算;成人任何任务都可玩。建议顺序:松果 → 蜜蜂 → 导航 → 密码 → 和弦 → 猫。</p>
         </section>
 
         <section class="section" id="nim" data-nav="松果">
@@ -274,6 +282,65 @@
             </div>
           </div>
         </section>
+
+        <section class="section" id="nav" data-nav="导航">
+          <div class="head">
+            <p class="head__eyebrow">任务6 · ★★☆ 进阶</p>
+            <h2>导航怎么找到最短的路? (图论 · 算法)</h2>
+          </div>
+          <div class="links">
+            <button class="btn x-press" type="button" data-copy="nav">一键复制笔记</button>
+            <a class="btn" href="../nav/" target="_top">去玩这个任务 →</a>
+          </div>
+          <div class="x-notes">
+            <div class="x-block">
+              <h3>必须掌握</h3>
+              <ol class="x-must">
+                <li>图 = 顶点 + 边,边可以带权重(距离/时间/费用)。</li>
+                <li>只保留"谁连着谁",形状不重要。</li>
+                <li>欧拉路径:一笔画的条件是奇点个数为 0 或 2。</li>
+                <li>Dijkstra 算法:从起点像水波一样向外,每次确定一个最近的点。</li>
+                <li>算法复杂度:穷举所有路线会爆炸式增长,好算法快得多。</li>
+                <li>贪心与最优:每次走最近的一步不一定得到最短总路(旅行商问题)。</li>
+                <li>树:连通且没有圈,n 个点有 n−1 条边;最短路的"来自哪"箭头组成一棵树。</li>
+              </ol>
+            </div>
+            <div class="x-block">
+              <h3>公式</h3>
+              <ul class="x-formulas">
+                <li><span class="x-f__name">一笔画<span class="x-sr">:</span></span><span class="x-f__math">⇔ 连通且奇度顶点数 ∈ {0, 2}</span></li>
+                <li><span class="x-f__name">所有顶点度数之和<span class="x-sr">:</span></span><span class="x-f__math">= 2 × 边数</span></li>
+                <li><span class="x-f__name">Dijkstra<span class="x-sr">:</span></span><span class="x-f__math">dist(v) = min(dist(v), dist(u) + w(u,v))</span></li>
+                <li><span class="x-f__name">n 个城市的旅行路线数<span class="x-sr">:</span></span><span class="x-f__math">= (n−1)!/2</span></li>
+                <li><span class="x-f__name">树的边数<span class="x-sr">:</span></span><span class="x-f__math">= 顶点数 − 1;n×n 网格最短路线数 = C(2n, n)</span></li>
+              </ul>
+            </div>
+            <div class="cards">
+              <div class="x-block">
+                <h3>经典文献与历史</h3>
+                <ul>
+                  <li>Euler, "Solutio problematis ad geometriam situs pertinentis", 1736(柯尼斯堡七桥)</li>
+                  <li>E. W. Dijkstra, "A note on two problems in connexion with graphs", Numerische Mathematik, 1959</li>
+                  <li>Hart, Nilsson, Raphael, A* 算法, 1968</li>
+                  <li>Karp, 1972, 旅行商问题的 NP 完全性</li>
+                  <li>Dorigo, 蚁群算法, 1992</li>
+                </ul>
+              </div>
+              <div class="x-block">
+                <h3>领域应用与案例</h3>
+                <ul>
+                  <li>手机导航与网约车派单</li>
+                  <li>快递与外卖路径规划</li>
+                  <li>互联网路由(OSPF 用 Dijkstra)</li>
+                  <li>地铁换乘查询</li>
+                  <li>游戏 AI 寻路(A*)</li>
+                  <li>社交网络分析</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section class="section" id="secret" data-nav="密码">
           <div class="head">
             <p class="head__eyebrow">任务4 · ★★☆ 进阶</p>
