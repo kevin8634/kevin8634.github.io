@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>星图任务 · 难度引导与知识笔记</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
+    />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <style>
+      .x-press { cursor: pointer; }
+      .x-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+      .x-notes { display: grid; gap: clamp(28px, 3.4vw, 40px); }
+      .x-block h3 { font: var(--type-heading); margin-bottom: 14px; }
+      .x-must { list-style: none; margin: 0; padding: 0; counter-reset: must; display: grid; }
+      .x-must li {
+        counter-increment: must;
+        display: grid;
+        grid-template-columns: 32px minmax(0, 1fr);
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--stroke-secondary);
+        font-size: var(--size-prose);
+        line-height: 1.6;
+      }
+      .x-must li:last-child { border-bottom: 0; }
+      .x-must li::before {
+        content: counter(must);
+        display: inline-grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: var(--r-pill);
+        background: var(--fill-tertiary);
+        font: var(--type-tag);
+        color: var(--text-primary);
+      }
+      .x-formulas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px; list-style: none; margin: 0; padding: 0; }
+      .x-formulas li {
+        display: grid;
+        align-content: start;
+        gap: 6px;
+        padding: 16px 18px;
+        border-radius: var(--r-s);
+        background: var(--fill-tertiary);
+        overflow-wrap: anywhere;
+      }
+      .x-f__name { font: var(--type-label); color: var(--text-secondary); }
+      .x-f__math { font-size: var(--size-prose); line-height: 1.6; font-variant-numeric: tabular-nums; }
+      .x-notes .cards li { line-height: 1.55; }
+      .x-toast {
+        position: fixed;
+        left: 50%;
+        bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+        transform: translate(-50%, 12px);
+        z-index: 50;
+        max-width: calc(100vw - 2 * var(--gutter));
+        padding: 12px 18px;
+        border-radius: var(--r-pill);
+        background: var(--fill-primary);
+        color: var(--text-primary-on);
+        font: var(--type-label);
+        box-shadow: var(--hark-shadow);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
+      }
+      .x-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+      @media print {
+        .nav, .links, .btn, .x-toast, .foot nav, .badge { display: none !important; }
+        #bee, #secret, #chord, #cat { break-before: page; page-break-before: always; }
+        .x-formulas li, .x-must li, .cards > div { break-inside: avoid; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page" id="top">
+      <header class="nav glass" data-auto></header>
+      <main class="main">
+        <section class="hero">
+          <div class="hero__copy">
+            <p class="hero__eyebrow">星图 Math Atlas · v1, 2026-10-15</p>
+            <h1>星图任务 · 难度引导与知识笔记</h1>
+            <p class="hero__sub">先看哪个任务适合你,玩完后把知识点记下来。</p>
+            <div class="links">
+              <a class="btn" href="../" target="_top">← 返回大厅</a>
+              <button class="btn x-press" type="button" onclick="setTimeout(function () { window.print(); }, 0)">打印/存为PDF</button>
+            </div>
+          </div>
+          <aside class="callout" aria-label="建议顺序">
+            <p class="callout__head"><span class="hark-mark" data-size="16"></span> 建议顺序</p>
+            <p class="callout__lead"><strong>蜜蜂 → 密码 → 和弦 → 猫</strong></p>
+            <a class="btn" href="#bee">从蜜蜂开始</a>
+          </aside>
+        </section>
+
+        <section class="section" id="guide" data-nav="难度">
+          <div class="head">
+            <p class="head__eyebrow">难度引导</p>
+            <h2>先找一个适合你的任务。</h2>
+            <p class="head__sub">估算,按中国学段;成人任何任务都可玩</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">任务</th>
+                  <th scope="col">难度</th>
+                  <th scope="col">能玩通</th>
+                  <th scope="col">能完全理解</th>
+                  <th scope="col">前置</th>
+                  <th scope="col">备注</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><a class="link" href="#bee">为什么蜜蜂选六边形</a> <small><a class="link" href="../bee/" target="_top">去玩 →</a></small></th>
+                  <td class="num">★☆☆ 入门</td>
+                  <td>小学4年级起(约10岁+)</td>
+                  <td>小学6年级–初一</td>
+                  <td>角度、周长、面积</td>
+                  <td class="muted">第3关蜂巢猜想、第4关泡泡排队以体验为主</td>
+                </tr>
+                <tr>
+                  <th scope="row"><a class="link" href="#secret">怎样把秘密藏进数字里</a> <small><a class="link" href="../secret/" target="_top">去玩 →</a></small></th>
+                  <td class="num">★★☆ 进阶</td>
+                  <td>小学5–6年级起(约11岁+)</td>
+                  <td>初二–高中</td>
+                  <td>除法与余数、乘法表</td>
+                  <td class="muted">小学生可先玩到第4关;第5–6关RSA初二以上更顺</td>
+                </tr>
+                <tr>
+                  <th scope="row"><a class="link" href="#chord">为什么有的和弦好听</a> <small><a class="link" href="../chord/" target="_top">去玩 →</a></small></th>
+                  <td class="num">★★☆ 进阶</td>
+                  <td>小学6年级起(约12岁+)</td>
+                  <td>高一以上</td>
+                  <td>分数与比</td>
+                  <td class="muted">第3关对数/平均律是高一内容,第4关傅里叶是大学内容,以听和看为主</td>
+                </tr>
+                <tr>
+                  <th scope="row"><a class="link" href="#cat">让AI认出一只猫</a> <small><a class="link" href="../cat/" target="_top">去玩 →</a></small></th>
+                  <td class="num">★★★ 挑战</td>
+                  <td>初一–初二起(约13岁+)</td>
+                  <td>高中–大学</td>
+                  <td>坐标系、一次函数</td>
+                  <td class="muted">梯度下降、神经网络是高中/大学内容,以体验和直觉为主</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="fineprint">按中国学段估算;成人任何任务都可玩。建议顺序:蜜蜂 → 密码 → 和弦 → 猫。</p>
+        </section>
+
+        <section class="section" id="bee" data-nav="蜜蜂">
+          <div class="head">
+            <p class="head__eyebrow">任务3 · ★☆☆ 入门</p>
+            <h2>为什么蜜蜂选六边形</h2>
+          </div>
+          <div class="links">
+            <button class="btn x-press" type="button" data-copy="bee">一键复制笔记</button>
+            <a class="btn" href="../bee/" target="_top">去玩这个任务 →</a>
+          </div>
+          <div class="x-notes">
+            <div class="x-block">
+              <h3>必须掌握</h3>
+              <ol class="x-must">
+                <li>正 n 边形每个内角 = (n−2)×180°/n:三角形 60°,正方形 90°,正六边形 120°。</li>
+                <li>一个顶点周围的角必须拼成 360°,所以能单独铺满平面的正多边形只有 3 种:正三角形、正方形、正六边形。</li>
+                <li>面积相同时,边越多越接近圆,周长越短;圆最省但不能密铺。</li>
+                <li>蜂巢猜想:把平面分成等面积的格子,正六边形网格的总周长最短(1999 年被证明)。</li>
+                <li>Voronoi 图:每个点归离它最近的"种子";反复把种子移到自己区域的中心(Lloyd 松弛),格子会自己趋向六边形。</li>
+                <li>大自然常常在做"最优化":用最少的材料完成任务。</li>
+              </ol>
+            </div>
+            <div class="x-block">
+              <h3>公式</h3>
+              <ul class="x-formulas">
+                <li><span class="x-f__name">内角<span class="x-sr">:</span></span><span class="x-f__math">(n−2)×180°/n;多边形内角和 (n−2)×180°</span></li>
+                <li><span class="x-f__name">密铺条件<span class="x-sr">:</span></span><span class="x-f__math">360° ÷ 内角 必须是整数</span></li>
+                <li><span class="x-f__name">等面积 A 时周长<span class="x-sr">:</span></span><span class="x-f__math">正三角形 ≈ 4.559√A,正方形 = 4√A,正六边形 ≈ 3.722√A,圆 ≈ 3.545√A</span></li>
+                <li><span class="x-f__name">等周不等式<span class="x-sr">:</span></span><span class="x-f__math">L² ≥ 4πA(圆取等号)</span></li>
+                <li><span class="x-f__name">正六边形面积<span class="x-sr">:</span></span><span class="x-f__math">A = (3√3/2)·a²</span></li>
+                <li><span class="x-f__name">质心<span class="x-sr">:</span></span><span class="x-f__math">x̄ = 区域内所有点 x 坐标的平均</span></li>
+              </ul>
+            </div>
+            <div class="cards">
+              <div class="x-block">
+                <h3>经典文献与历史</h3>
+                <ul>
+                  <li>瓦罗(Varro,公元前36年)最早提出蜂巢猜想</li>
+                  <li>帕普斯(约公元4世纪)《数学汇编》称赞蜜蜂的"几何远见"</li>
+                  <li>开普勒《论六角雪花》(1611)</li>
+                  <li>开尔文勋爵(1887)三维泡沫问题;Weaire & Phelan(1993)找到更优结构</li>
+                  <li>Lloyd (1982) "Least squares quantization in PCM", IEEE Trans. Information Theory</li>
+                  <li>Thomas C. Hales (2001) "The Honeycomb Conjecture", Discrete & Computational Geometry 25:1–22(1999 年发布)</li>
+                  <li>Karihaloo et al. (2013) J. R. Soc. Interface:蜂蜡受热流动,圆形巢室变成圆角六边形</li>
+                </ul>
+              </div>
+              <div class="x-block">
+                <h3>领域应用与案例</h3>
+                <ul>
+                  <li>北京奥运"水立方"外墙:Weaire–Phelan 泡沫结构</li>
+                  <li>石墨烯、碳纳米管:碳原子的六边形晶格</li>
+                  <li>飞机和高铁的蜂窝夹层板:又轻又硬</li>
+                  <li>手机"蜂窝网络"基站覆盖规划</li>
+                  <li>Uber H3 六边形地图网格、外卖配送分区(Voronoi)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="section" id="secret" data-nav="密码">
+          <div class="head">
+            <p class="head__eyebrow">任务4 · ★★☆ 进阶</p>
+            <h2>怎样把秘密藏进数字里</h2>
+          </div>
+          <div class="links">
+            <button class="btn x-press" type="button" data-copy="secret">一键复制笔记</button>
+            <a class="btn" href="../secret/" target="_top">去玩这个任务 →</a>
+          </div>
+          <div class="x-notes">
+            <div class="x-block">
+              <h3>必须掌握</h3>
+              <ol class="x-must">
+                <li>模运算就是"取余数",像时钟一样绕圈:a ≡ b (mod n) 表示 a、b 除以 n 余数相同。</li>
+                <li>凯撒密码只有 25 种密钥,可以全部试一遍(暴力破解)。</li>
+                <li>频率分析:英文里 E、T、A、O 最常见;但样本太短时统计会骗人。</li>
+                <li>乘法密码要求 a 与 26 互质,否则无法解密;解密要用乘法逆元。</li>
+                <li>每个大于 1 的整数都能唯一分解成质数之积(算术基本定理)。</li>
+                <li>两个大质数相乘很容易,把乘积分解回去极难——这是现代密码的地基。</li>
+                <li>公钥可以公开给所有人加密,只有私钥能解密。</li>
+                <li>安全思维:算法公开,只有钥匙保密(柯克霍夫原则)。</li>
+              </ol>
+            </div>
+            <div class="x-block">
+              <h3>公式</h3>
+              <ul class="x-formulas">
+                <li><span class="x-f__name">凯撒<span class="x-sr">:</span></span><span class="x-f__math">C = (P + k) mod 26;P = (C − k) mod 26</span></li>
+                <li><span class="x-f__name">乘法密码<span class="x-sr">:</span></span><span class="x-f__math">C = a·P mod 26,要求 gcd(a, 26) = 1;例:3 × 9 = 27 ≡ 1,故 3 的逆元是 9</span></li>
+                <li><span class="x-f__name">辗转相除<span class="x-sr">:</span></span><span class="x-f__math">gcd(a, b) = gcd(b, a mod b)</span></li>
+                <li><span class="x-f__name">RSA<span class="x-sr">:</span></span><span class="x-f__math">n = p·q;φ(n) = (p−1)(q−1);选 e 与 φ(n) 互质;d ≡ e⁻¹ (mod φ(n))</span></li>
+                <li><span class="x-f__math">加密 c = mᵉ mod n;解密 m = cᵈ mod n</span></li>
+                <li><span class="x-f__name">第5关<span class="x-sr">:</span></span><span class="x-f__math">p=5,q=11,n=55,φ=40,e=3,d=27(3×27=81≡1 mod 40)</span></li>
+                <li><span class="x-f__name">BOSS<span class="x-sr">:</span></span><span class="x-f__math">n=91=7×13,φ=72,e=5,d=29(5×29=145≡1 mod 72)</span></li>
+                <li><span class="x-f__name">欧拉定理<span class="x-sr">:</span></span><span class="x-f__math">gcd(m,n)=1 时 m^φ(n) ≡ 1 (mod n)——RSA 能解回原文的原因</span></li>
+              </ul>
+            </div>
+            <div class="cards">
+              <div class="x-block">
+                <h3>经典文献与历史</h3>
+                <ul>
+                  <li>苏维托尼乌斯《罗马十二帝王传》记载凯撒用移位密码</li>
+                  <li>阿尔·肯迪(9世纪)《破译密码信息手稿》:最早的频率分析</li>
+                  <li>图灵与布莱切利园破译 Enigma(二战)</li>
+                  <li>Shannon (1949) "Communication Theory of Secrecy Systems"</li>
+                  <li>Diffie & Hellman (1976) "New Directions in Cryptography":公钥思想</li>
+                  <li>Rivest, Shamir & Adleman (1978) CACM "A Method for Obtaining Digital Signatures and Public-Key Cryptosystems"</li>
+                  <li>Shor (1994):量子计算机可快速分解大数 → 后量子密码(NIST 2024 发布 FIPS 203)</li>
+                </ul>
+              </div>
+              <div class="x-block">
+                <h3>领域应用与案例</h3>
+                <ul>
+                  <li>浏览器地址栏的"小锁"(HTTPS/TLS)</li>
+                  <li>微信、支付宝支付与数字证书</li>
+                  <li>数字签名:证明文件确实是你发的</li>
+                  <li>银行卡和身份证芯片、区块链钱包</li>
+                  <li>中国商用密码标准:SM2(公钥)、SM4(分组密码)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="chord" data-nav="和弦">
+          <div class="head">
+            <p class="head__eyebrow">任务1 · ★★☆ 进阶</p>
+            <h2>为什么有的和弦好听</h2>
+          </div>
+          <div class="links">
+            <button class="btn x-press" type="button" data-copy="chord">一键复制笔记</button>
+            <a class="btn" href="../chord/" target="_top">去玩这个任务 →</a>
+          </div>
+          <div class="x-notes">
+            <div class="x-block">
+              <h3>必须掌握</h3>
+              <ol class="x-must">
+                <li>音高由频率决定(单位 Hz),标准音 A4 = 440 Hz。</li>
+                <li>弦长与频率成反比:弦长减半,频率翻倍,升高一个八度。</li>
+                <li>频率比越简单越协和:八度 2:1、纯五度 3:2、纯四度 4:3、大三度 5:4、小三度 6:5;小二度 16:15 刺耳。</li>
+                <li>两音的合成波按"最小公倍数"重复:比越简单,重复越快,大脑越容易"看懂"。</li>
+                <li>人耳对音高的感受是对数的:频率每乘 2,听起来升高一样多。</li>
+                <li>任何周期声音都能拆成一组正弦波(基频 + 泛音),泛音的强弱决定音色。</li>
+              </ol>
+            </div>
+            <div class="x-block">
+              <h3>公式</h3>
+              <ul class="x-formulas">
+                <li><span class="x-f__name">梅森弦振动定律<span class="x-sr">:</span></span><span class="x-f__math">f = (1/2L)·√(T/μ)(L 弦长,T 张力,μ 线密度)</span></li>
+                <li><span class="x-f__name">十二平均律<span class="x-sr">:</span></span><span class="x-f__math">半音比 r = 2^(1/12) ≈ 1.05946;第 n 个半音 f = f₀·2^(n/12)</span></li>
+                <li><span class="x-f__math">平均律五度 2^(7/12) ≈ 1.4983,纯五度 1.5,差约 2 音分</span></li>
+                <li><span class="x-f__name">音分<span class="x-sr">:</span></span><span class="x-f__math">cents = 1200·log₂(f₂/f₁)</span></li>
+                <li><span class="x-f__name">拍频<span class="x-sr">:</span></span><span class="x-f__math">f_beat = |f₁ − f₂|</span></li>
+                <li><span class="x-f__name">傅里叶级数<span class="x-sr">:</span></span><span class="x-f__math">f(t) = a₀ + Σ [aₙcos(nωt) + bₙsin(nωt)];方波只含奇次谐波,振幅 ∝ 1/n</span></li>
+              </ul>
+            </div>
+            <div class="cards">
+              <div class="x-block">
+                <h3>经典文献与历史</h3>
+                <ul>
+                  <li>毕达哥拉斯学派(约公元前6世纪):弦长比与和谐的传说</li>
+                  <li>朱载堉《律学新说》(1584):最早精确计算十二平均律</li>
+                  <li>梅森《Harmonie universelle》(1636):弦振动定律</li>
+                  <li>傅里叶《热的解析理论》(1822):函数可展开为三角级数</li>
+                  <li>亥姆霍兹《论音感》(1863):用泛音和"拍"解释协和</li>
+                  <li>Plomp & Levelt (1965) "Tonal consonance and critical bandwidth", JASA 38:548–560</li>
+                  <li>Avery Wang (2003) "An Industrial-Strength Audio Search Algorithm"(Shazam 听歌识曲)</li>
+                </ul>
+              </div>
+              <div class="x-block">
+                <h3>领域应用与案例</h3>
+                <ul>
+                  <li>手机调音器、听歌识曲:实时频谱分析(FFT)</li>
+                  <li>MP3/AAC 音频压缩:在频域里丢掉人耳听不到的部分</li>
+                  <li>降噪耳机:生成相位相反的声波抵消噪音</li>
+                  <li>医院 MRI 成像、地震波分析:都靠傅里叶变换</li>
+                  <li>钢琴调律:采用十二平均律,任何调都能弹</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="cat" data-nav="猫">
+          <div class="head">
+            <p class="head__eyebrow">任务2 · ★★★ 挑战</p>
+            <h2>让AI认出一只猫</h2>
+          </div>
+          <div class="links">
+            <button class="btn x-press" type="button" data-copy="cat">一键复制笔记</button>
+            <a class="btn" href="../cat/" target="_top">去玩这个任务 →</a>
+          </div>
+          <div class="x-notes">
+            <div class="x-block">
+              <h3>必须掌握</h3>
+              <ol class="x-must">
+                <li>图片就是数字:灰度像素 0–255,彩色是 RGB 三层;28×28 的图就是 784 个数的向量。</li>
+                <li>每个样本是空间里的一个点,特征就是坐标。</li>
+                <li>线性分类器用一条线(高维里是"超平面")把两类分开。</li>
+                <li>损失函数衡量"错了多少",学习就是让损失变小。</li>
+                <li>梯度下降:沿着最陡的下坡方向走一小步,反复走。学习率太大会来回震荡,太小走得慢。</li>
+                <li>一条直线分不开时,可以"升维"或叠加多层神经元。</li>
+                <li>神经网络 = 很多"加权求和 + 激活函数"叠在一起;反向传播就是链式法则。</li>
+                <li>数据有偏,模型就有偏:AI 只会学到你喂给它的东西。</li>
+              </ol>
+            </div>
+            <div class="x-block">
+              <h3>公式</h3>
+              <ul class="x-formulas">
+                <li><span class="x-f__name">分界线<span class="x-sr">:</span></span><span class="x-f__math">w₁x₁ + w₂x₂ + b = 0;&gt; 0 判为猫,&lt; 0 判为狗</span></li>
+                <li><span class="x-f__name">均方误差<span class="x-sr">:</span></span><span class="x-f__math">L = (1/n)·Σ(ŷᵢ − yᵢ)²</span></li>
+                <li><span class="x-f__name">梯度下降<span class="x-sr">:</span></span><span class="x-f__math">θ ← θ − η·∇L(η 为学习率)</span></li>
+                <li><span class="x-f__name">感知机规则<span class="x-sr">:</span></span><span class="x-f__math">分错时 w ← w + η·y·x</span></li>
+                <li><span class="x-f__name">升维示例<span class="x-sr">:</span></span><span class="x-f__math">(x₁, x₂) → (x₁, x₂, x₁² + x₂²),圆圈数据变得可用平面分开</span></li>
+                <li><span class="x-f__name">神经元<span class="x-sr">:</span></span><span class="x-f__math">a = σ(w·x + b);Sigmoid σ(z) = 1/(1+e^(−z));ReLU(z) = max(0, z)</span></li>
+              </ul>
+            </div>
+            <div class="cards">
+              <div class="x-block">
+                <h3>经典文献与历史</h3>
+                <ul>
+                  <li>McCulloch & Pitts (1943) "A Logical Calculus of the Ideas Immanent in Nervous Activity"</li>
+                  <li>Rosenblatt (1958) "The Perceptron"</li>
+                  <li>Minsky & Papert (1969)《Perceptrons》:单层感知机解不了异或</li>
+                  <li>Rumelhart, Hinton & Williams (1986) Nature "Learning representations by back-propagating errors"</li>
+                  <li>Cybenko (1989):通用逼近定理</li>
+                  <li>Cortes & Vapnik (1995) 支持向量机(核技巧 = 升维思想)</li>
+                  <li>LeCun et al. (1998) "Gradient-based learning applied to document recognition"(LeNet、MNIST 手写数字)</li>
+                  <li>Le et al. (2012) Google Brain "Building high-level features using large scale unsupervised learning":从 YouTube 视频中自己学出"猫脸神经元"</li>
+                  <li>Krizhevsky, Sutskever & Hinton (2012) AlexNet:深度学习赢下 ImageNet</li>
+                </ul>
+              </div>
+              <div class="x-block">
+                <h3>领域应用与案例</h3>
+                <ul>
+                  <li>手机人脸解锁、相册按人物/宠物自动分类</li>
+                  <li>医学影像辅助诊断(肺结节、眼底病变)</li>
+                  <li>自动驾驶识别行人和红绿灯</li>
+                  <li>垃圾邮件过滤、拍照识物、拍照搜题</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+      <footer class="foot">
+        <p>星图 Math Atlas 测试版 · 2026 · 年级与难度为估算,仅供参考。</p>
+        <nav aria-label="返回各部分" data-auto></nav>
+        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"
+          ><span class="hark-mark"></span><span>built by hark</span></a
+        >
+      </footer>
+    </div>
+    <div class="x-toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="hark.js"></script>
+    <script>
+      (function () {
+        var toast = document.getElementById("toast");
+        var timer;
+        function say(msg) {
+          toast.textContent = msg;
+          toast.classList.add("is-on");
+          clearTimeout(timer);
+          timer = setTimeout(function () { toast.classList.remove("is-on"); }, 2400);
+        }
+        function notesText(section) {
+          var lines = [];
+          var eyebrow = section.querySelector(".head__eyebrow");
+          var task = eyebrow ? eyebrow.textContent.split("·")[0].trim() : "";
+          lines.push((task ? task + " " : "") + section.querySelector("h2").textContent.trim());
+          section.querySelectorAll(".x-block").forEach(function (block) {
+            lines.push("");
+            lines.push(block.querySelector("h3").textContent.trim());
+            var ordered = block.querySelector("ol");
+            block.querySelectorAll("li").forEach(function (li, i) {
+              var t = li.textContent.replace(/\s+/g, " ").trim();
+              lines.push((ordered ? i + 1 + ". " : "- ") + t);
+            });
+          });
+          return lines.join("\n");
+        }
+        function legacyCopy(text) {
+          var ta = document.createElement("textarea");
+          ta.value = text;
+          ta.setAttribute("readonly", "");
+          ta.style.position = "fixed";
+          ta.style.top = "0";
+          ta.style.left = "-9999px";
+          ta.style.opacity = "0";
+          document.body.appendChild(ta);
+          ta.select();
+          ta.setSelectionRange(0, text.length);
+          var ok = false;
+          try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+          document.body.removeChild(ta);
+          return ok;
+        }
+        function selectNotes(section) {
+          try {
+            var sel = window.getSelection();
+            var range = document.createRange();
+            range.selectNodeContents(section.querySelector(".x-notes"));
+            sel.removeAllRanges();
+            sel.addRange(range);
+          } catch (e) {}
+          say("已选中笔记,请按 Ctrl/⌘+C 复制");
+        }
+        function done() { say("已复制,去粘贴到你的笔记吧"); }
+        document.querySelectorAll("[data-copy]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var section = document.getElementById(btn.getAttribute("data-copy"));
+            var text = notesText(section);
+            function fallback() { if (legacyCopy(text)) done(); else selectNotes(section); }
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(done, fallback);
+              } else {
+                fallback();
+              }
+            } catch (e) {
+              fallback();
+            }
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
