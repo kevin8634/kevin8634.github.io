@@ -4,12 +4,6 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>星图任务 · 先拿的人一定赢吗？</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap"
-    />
     <link rel="stylesheet" href="hark.css" />
     <link rel="stylesheet" href="hark-hero.css" />
     <link rel="stylesheet" href="hark-charts.css" />
@@ -224,6 +218,7 @@
       @media (prefers-reduced-motion: reduce) { .x-toast, .x-flash, .x-cone.is-hop svg, .x-step.is-blink, .x-tc.is-hop svg, .x-done-h { animation: none; } }
       @media (max-width: 599px) { .x-brand { width: 100%; } .x-vol { width: 70px; } }
     </style>
+      <link rel="stylesheet" href="../ma.css" />
   </head>
   <body>
     <div class="page" id="top">
@@ -1786,5 +1781,6 @@
       }
       $("#notes-copy").addEventListener("click", () => copyNotes($("#notes-text"), $("#notes-copy"), $("#notes-status")));
     </script>
+      <script src="../ma.js"></script>
   </body>
 </html>
