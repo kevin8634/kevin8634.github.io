@@ -112,6 +112,16 @@
       @media (prefers-reduced-motion: reduce) { .x-wax i { transition: none; } }
       @media (prefers-reduced-motion: reduce) { .x-toast, .x-flash, .x-tile, .x-gapflash { animation: none; } .x-spark { animation: none; opacity: 1; } }
       @media (max-width: 599px) { .x-brand { width: 100%; } .x-vol { width: 70px; } }
+      /* knowledge notes card + modal */
+      .x-level { font: var(--type-tag); color: var(--text-secondary); margin-top: 6px; }
+      .x-notes { border: 1px solid var(--stroke-primary); border-radius: var(--r-m); background: var(--fill-tertiary); padding: 4px 14px 12px; text-align: left; }
+      .x-notes summary { min-height: var(--tap); display: flex; align-items: center; font: var(--type-body-strong); cursor: pointer; }
+      .x-notes h4 { font: var(--type-label); margin: 12px 0 4px; }
+      .x-notes ol, .x-notes ul { margin: 0; padding-left: 20px; font: var(--type-small); display: grid; gap: 4px; }
+      .x-notes .x-row { margin-top: 12px; }
+      .x-modal { width: min(92vw, 640px); max-height: 86vh; padding: 16px; border: 1px solid var(--stroke-primary); border-radius: var(--r-l); background: var(--fill-primary-on); color: var(--text-primary); box-shadow: var(--hark-shadow); }
+      .x-modal::backdrop { background: rgba(0, 0, 0, 0.4); }
+      .x-modal .x-row:first-child { justify-content: flex-end; margin-bottom: 8px; }
     </style>
   </head>
   <body>
@@ -128,6 +138,7 @@
           </select>
           <span class="x-meter" id="nowplaying">正在播放:—</span>
           <input class="x-vol" id="vol" type="range" min="0" max="100" value="30" aria-label="音乐音量" />
+          <button class="x-toggle" id="notes-btn" type="button">📒 知识笔记</button>
         </div>
 
         <section class="section" id="map" data-nav="星图">
@@ -135,6 +146,7 @@
             <p class="head__eyebrow">五关任务</p>
             <h2>从铺地砖开始，弄明白蜜蜂为什么选六边形。</h2>
             <p class="head__sub">每关得 1–3 颗星，拿到 1 颗星就解锁下一关。</p>
+            <p class="x-level">难度 ★☆☆ 入门 · 适合小学4年级起(约10岁+) · 前置:角度、周长、面积</p>
           </div>
           <div class="x-map">
             <svg class="x-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -166,6 +178,76 @@
       </footer>
     </div>
     <div class="x-toasts" id="toasts" aria-live="polite"></div>
+    <dialog class="x-modal" id="notes-dlg" aria-label="知识笔记"><div class="x-row"><button class="x-btn" type="button" id="notes-close">关闭 ✕</button></div></dialog>
+    <script type="text/plain" id="bee-notes">任务3 为什么蜜蜂选六边形
+### 必须掌握
+1. 正 n 边形每个内角 = (n−2)×180°/n:三角形 60°,正方形 90°,正六边形 120°。
+2. 一个顶点周围的角必须拼成 360°,所以能单独铺满平面的正多边形只有 3 种:正三角形、正方形、正六边形。
+3. 面积相同时,边越多越接近圆,周长越短;圆最省但不能密铺。
+4. 蜂巢猜想:把平面分成等面积的格子,正六边形网格的总周长最短(1999 年被证明)。
+5. Voronoi 图:每个点归离它最近的"种子";反复把种子移到自己区域的中心(Lloyd 松弛),格子会自己趋向六边形。
+6. 大自然常常在做"最优化":用最少的材料完成任务。
+### 公式
+- 内角:(n−2)×180°/n;多边形内角和 (n−2)×180°
+- 密铺条件:360° ÷ 内角 必须是整数
+- 等面积 A 时周长:正三角形 ≈ 4.559√A,正方形 = 4√A,正六边形 ≈ 3.722√A,圆 ≈ 3.545√A
+- 等周不等式:L² ≥ 4πA(圆取等号)
+- 正六边形面积:A = (3√3/2)·a²
+- 质心:x̄ = 区域内所有点 x 坐标的平均
+### 经典文献与历史
+- 瓦罗(Varro,公元前36年)最早提出蜂巢猜想
+- 帕普斯(约公元4世纪)《数学汇编》称赞蜜蜂的"几何远见"
+- 开普勒《论六角雪花》(1611)
+- 开尔文勋爵(1887)三维泡沫问题;Weaire & Phelan(1993)找到更优结构
+- Lloyd (1982) "Least squares quantization in PCM", IEEE Trans. Information Theory
+- Thomas C. Hales (2001) "The Honeycomb Conjecture", Discrete & Computational Geometry 25:1–22(1999 年发布)
+- Karihaloo et al. (2013) J. R. Soc. Interface:蜂蜡受热流动,圆形巢室变成圆角六边形
+### 领域应用与案例
+- 北京奥运"水立方"外墙:Weaire–Phelan 泡沫结构
+- 石墨烯、碳纳米管:碳原子的六边形晶格
+- 飞机和高铁的蜂窝夹层板:又轻又硬
+- 手机"蜂窝网络"基站覆盖规划
+- Uber H3 六边形地图网格、外卖配送分区(Voronoi)</script>
+    <script>
+      /* knowledge notes: card builder, copy, modal (independent of game logic) */
+      const NOTES_MD = document.getElementById("bee-notes").textContent.trim();
+      const NOTES_TXT = NOTES_MD.replace(/^### /gm, "\n");
+      function notesCard() {
+        const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[c]);
+        let html = "", list = "";
+        const close = () => { if (list) { html += `</${list}>`; list = ""; } };
+        NOTES_MD.split("\n").slice(1).forEach((ln) => {
+          const m = ln.match(/^(\d+)\. (.*)$/), b = ln.match(/^- (.*)$/);
+          if (ln.startsWith("### ")) { close(); html += `<h4>${esc(ln.slice(4))}</h4>`; }
+          else if (m || b) { const t = m ? "ol" : "ul"; if (list !== t) { close(); html += `<${t}>`; list = t; } html += `<li>${esc((m ? m[2] : b[1]))}</li>`; }
+        });
+        close();
+        const d = document.createElement("details"); d.className = "x-notes"; d.open = true;
+        d.innerHTML = `<summary>📒 知识笔记 · 任务3 为什么蜜蜂选六边形</summary><div class="x-notes__body">${html}</div>
+          <div class="x-row"><button class="x-btn x-btn--go" type="button">一键复制笔记</button><a class="x-btn" href="../notes/#bee" target="_top">完整笔记与其他任务 →</a></div>`;
+        d.querySelector("button").addEventListener("click", () => copyNotes(d.querySelector(".x-notes__body")));
+        return d;
+      }
+      function copyNotes(body) {
+        const done = () => toast("已复制");
+        const fallback = () => {
+          const ta = document.createElement("textarea"); ta.value = NOTES_TXT; ta.setAttribute("readonly", "");
+          ta.style.cssText = "position:fixed;left:-9999px;opacity:0"; document.body.append(ta); ta.select();
+          let ok = false; try { ok = document.execCommand("copy"); } catch (e) {} ta.remove();
+          if (ok) return done();
+          const r = document.createRange(); r.selectNodeContents(body); const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+          toast("请按 Ctrl/⌘+C 复制已选中的笔记");
+        };
+        if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(NOTES_TXT).then(done, fallback); else fallback();
+      }
+      document.addEventListener("DOMContentLoaded", () => {
+        const dlg = document.getElementById("notes-dlg");
+        dlg.append(notesCard());
+        document.getElementById("notes-btn").addEventListener("click", () => (dlg.showModal ? dlg.showModal() : dlg.setAttribute("open", "")));
+        document.getElementById("notes-close").addEventListener("click", () => (dlg.close ? dlg.close() : dlg.removeAttribute("open")));
+        dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+      });
+    </script>
     <script src="hark.js"></script>
     <script>
       /* ---------- audio ---------- */
@@ -1345,7 +1427,7 @@
           <div class="x-shelf">${nb.map((b) => `<span class="x-badge got">🏅 ${b.name}</span>`).join("")}</div>
           <div><p style="font:var(--type-body-strong)">点亮的星星</p><p class="x-starid">g01 · g04 · g06 · g09 · n04 · g05 · g16 · c07 · m06 · m05</p></div>
           <p style="font:var(--type-body-strong)">从一块地砖到一整座蜂巢,你自己发现了蜂巢定理——数学家 Thomas Hales 在1999年才证明它。</p>`);
-        const again = el("button", "x-btn x-btn--go", "再玩一次"); again.type = "button"; card.append(el("div", "x-row")); card.lastChild.append(again);
+        const again = el("button", "x-btn x-btn--go", "再玩一次"); again.type = "button"; card.append(notesCard(), el("div", "x-row")); card.lastChild.append(again);
         root.append(card); Audio_.play("fanfare"); setTimeout(() => Audio_.play("star"), 600);
         card.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
         again.addEventListener("click", () => {
