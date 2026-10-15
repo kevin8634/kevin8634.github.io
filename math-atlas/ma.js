@@ -173,65 +173,270 @@
   }
   window.MA_feedback = feedback;
 
-  /* ---------- 全站背景音乐：实时合成，多曲目，跨页面接着放 ---------- */
+  /* ---------- 全站背景音乐 v2：步进音序器 + 多种合成乐器，每首藏一个数学彩蛋 ---------- */
   var Music = (function () {
-    var TR = [
-      { name: "星海漫游", d: "温柔和弦 · 远处的钟声", ch: [[48, 55, 59, 64, 71], [45, 52, 57, 60, 67], [41, 48, 53, 57, 64], [43, 50, 55, 59, 62]], sc: [60, 62, 64, 67, 69, 72, 74, 76, 79, 81], wave: "triangle", lp: [500, 1100], dur: 9, bells: [2, 4], bg: 0.035, pg: 0.05, ratio: 2.01 },
-      { name: "极光", d: "明亮长音 · 缓慢闪烁", ch: [[50, 57, 64, 66, 73], [47, 54, 61, 64, 71], [52, 59, 66, 68, 75], [45, 52, 59, 64, 68]], sc: [62, 64, 66, 69, 71, 73, 76, 78, 81, 83], wave: "sine", lp: [900, 2400], dur: 11, bells: [3, 6], bg: 0.026, pg: 0.055, ratio: 2.76 },
-      { name: "深空引力", d: "低沉的长波 · 适合专注", ch: [[36, 43, 50, 55], [34, 41, 48, 53], [31, 38, 45, 50], [33, 40, 47, 52]], sc: [55, 60, 62, 67, 72], wave: "sawtooth", lp: [160, 420], dur: 14, bells: [1, 2], bg: 0.03, pg: 0.045, ratio: 2.76 },
-      { name: "星云摇篮", d: "八音盒般的星光", ch: [[48, 55, 64], [45, 52, 60], [41, 48, 57], [43, 50, 59]], sc: [72, 74, 76, 79, 81, 84, 86, 88], wave: "sine", lp: [400, 800], dur: 8, bells: [6, 10], bg: 0.028, pg: 0.04, ratio: 5.4 }
-    ];
-    var ac, master, verb, dly, on = false, timer, step = 0, blocked = false, subs = [];
-    var trk = store.get("ma:track"); if (trk === null || trk === undefined) trk = 0;
-    var vol = store.get("ma:vol"); if (typeof vol !== "number") vol = 0.7;
-    var cur = trk < 0 ? 0 : trk;
-    var pos = store.get("ma:mpos");
-    if (pos && Date.now() - pos.at < 15 * 60 * 1000) { step = pos.step || 0; if (trk < 0) cur = pos.cur || 0; }
+    var PHI = (1 + Math.sqrt(5)) / 2;
+    var PI_D = "31415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491";
+    var MODE = {
+      ion: [0, 2, 4, 5, 7, 9, 11], dor: [0, 2, 3, 5, 7, 9, 10], lyd: [0, 2, 4, 6, 7, 9, 11],
+      mix: [0, 2, 4, 5, 7, 9, 10], aeo: [0, 2, 3, 5, 7, 8, 10], hmin: [0, 2, 3, 5, 7, 8, 11]
+    };
+    var ac, out, master, verb, dly, noiseBuf, ksCache = {}, on = false, timer = null, blocked = false, subs = [];
+    var step = 0, nextT = 0, LOOK = 0.3, mem = {};
     function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+    function deg(T, d, oct) { var L = T.mode.length, o = Math.floor(d / L), i = ((d % L) + L) % L; return T.root + 12 * (o + (oct || 0)) + T.mode[i]; }
+    function chord(T, d, n, oct) { var r = []; for (var i = 0; i < (n || 4); i++) r.push(deg(T, d + i * 2, oct)); return r; }
+    function primeQ(n) { if (n < 2) return false; for (var i = 2; i * i <= n; i++) if (n % i === 0) return false; return true; }
+    function euclid(k, n, i) { return ((i * k) % n) < k; }
+    function sturm(n) { return Math.floor((n + 2) / PHI) - Math.floor((n + 1) / PHI) === 1; }
+
+    /* ---- 乐器（全部实时合成） ---- */
+    function env(g, t, a, peak, d) { g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); }
+    function osc(type, f, t, stop) { var o = ac.createOscillator(); o.type = type; o.frequency.value = f; o.start(t); o.stop(stop); return o; }
+    function send(node, dry, wet, echo) {
+      if (dry) { var a = ac.createGain(); a.gain.value = dry; node.connect(a); a.connect(master); }
+      if (wet) { var b = ac.createGain(); b.gain.value = wet; node.connect(b); b.connect(verb); }
+      if (echo) { var c = ac.createGain(); c.gain.value = echo; node.connect(c); c.connect(dly); }
+    }
+    var I = {
+      kick: function (t, v) { var o = osc("sine", 150, t, t + 0.5), g = ac.createGain(); o.frequency.exponentialRampToValueAtTime(42, t + 0.12); env(g, t, 0.003, 0.9 * v, 0.38); o.connect(g); send(g, 1, 0.05); },
+      noise: function (t, dur, type, f, q, v, wet) {
+        var s = ac.createBufferSource(); s.buffer = noiseBuf; var fl = ac.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q || 1;
+        var g = ac.createGain(); env(g, t, 0.002, v, dur); s.connect(fl); fl.connect(g); send(g, 1, wet || 0.1); s.start(t, Math.random() * 1.5); s.stop(t + dur + 0.05); return fl;
+      },
+      snare: function (t, v) { I.noise(t, 0.18, "bandpass", 1800, 0.8, 0.35 * v, 0.25); var o = osc("triangle", 190, t, t + 0.12), g = ac.createGain(); env(g, t, 0.002, 0.25 * v, 0.1); o.connect(g); send(g, 1, 0.1); },
+      clap: function (t, v) { for (var i = 0; i < 3; i++) I.noise(t + i * 0.011, 0.09 + i * 0.03, "bandpass", 1300, 1.2, 0.3 * v, 0.3); },
+      hat: function (t, v, open) { I.noise(t, open ? 0.28 : 0.045, "highpass", 7500, 0.7, 0.16 * v, 0.06); },
+      shaker: function (t, v) { I.noise(t, 0.07, "bandpass", 6000, 2, 0.12 * v, 0.1); },
+      ride: function (t, v) { I.noise(t, 0.5, "highpass", 5200, 1.5, 0.08 * v, 0.2); var o = osc("square", 3110, t, t + 0.4), g = ac.createGain(); env(g, t, 0.002, 0.012 * v, 0.35); o.connect(g); send(g, 1, 0.2); },
+      tick: function (t, v) { I.noise(t, 0.02, "highpass", 4000, 3, 0.2 * v, 0.15); },
+      bass: function (t, m, dur, v, type) {
+        var o = osc(type || "sine", hz(m), t, t + dur + 0.1), o2 = osc("triangle", hz(m), t, t + dur + 0.1), lp = ac.createBiquadFilter(), g = ac.createGain();
+        lp.type = "lowpass"; lp.frequency.setValueAtTime(type === "sawtooth" ? 1400 : 600, t); lp.frequency.exponentialRampToValueAtTime(type === "sawtooth" ? 260 : 300, t + dur);
+        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.42 * v, t + 0.01); g.gain.setTargetAtTime(0.0001, t + dur * 0.7, dur * 0.15);
+        o.connect(lp); o2.connect(lp); lp.connect(g); send(g, 1, 0.04);
+      },
+      epiano: function (t, m, dur, v) {
+        var f = hz(m), c = osc("sine", f, t, t + dur + 1.2), mo = osc("sine", f, t, t + dur + 1.2), mg = ac.createGain(), g = ac.createGain();
+        mg.gain.setValueAtTime(f * 2.2, t); mg.gain.exponentialRampToValueAtTime(f * 0.15, t + 0.6); mo.connect(mg); mg.connect(c.frequency);
+        var tr = osc("sine", 5.2, t, t + dur + 1.2), tg = ac.createGain(); tg.gain.value = 0.25; tr.connect(tg);
+        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.12 * v, t + 0.006); g.gain.exponentialRampToValueAtTime(0.05 * v, t + 0.5); g.gain.setTargetAtTime(0.0001, t + dur, 0.25);
+        c.connect(g); send(g, 0.8, 0.35, 0.1);
+      },
+      pluck: function (t, m, v, bright) {
+        var key = m + ":" + (bright || 0), b = ksCache[key];
+        if (!b) {
+          var sr = ac.sampleRate, N = Math.round(sr / hz(m)), len = Math.floor(sr * 1.6); b = ac.createBuffer(1, len, sr); var d = b.getChannelData(0), buf = new Float32Array(N);
+          for (var i = 0; i < N; i++) buf[i] = Math.random() * 2 - 1; var damp = bright ? 0.4985 : 0.496;
+          for (var j = 0; j < len; j++) { var k = j % N, nx = (k + 1) % N; d[j] = buf[k]; buf[k] = damp * (buf[k] + buf[nx]); }
+          ksCache[key] = b;
+        }
+        var s = ac.createBufferSource(), g = ac.createGain(); s.buffer = b; g.gain.value = 0.32 * v; s.connect(g); send(g, 0.8, 0.3, 0.18); s.start(t); s.stop(t + 1.6);
+      },
+      box: function (t, m, v) {
+        var f = hz(m), g = ac.createGain(); [[1, 1, 1.6], [3.02, 0.25, 0.35], [5.4, 0.12, 0.18], [8.9, 0.05, 0.08]].forEach(function (p) {
+          var o = osc("sine", f * p[0], t, t + p[2] + 0.1), gg = ac.createGain(); env(gg, t, 0.002, p[1], p[2]); o.connect(gg); gg.connect(g);
+        }); g.gain.value = 0.6 * v; send(g, 0.8, 0.45, 0.12);
+      },
+      marimba: function (t, m, v) {
+        var f = hz(m), g = ac.createGain(); [[1, 1, 0.5], [3.93, 0.35, 0.12], [9.4, 0.08, 0.04]].forEach(function (p) {
+          var o = osc("sine", f * p[0], t, t + p[2] + 0.1), gg = ac.createGain(); env(gg, t, 0.002, p[1], p[2]); o.connect(gg); gg.connect(g);
+        }); g.gain.value = 0.16 * v; send(g, 0.9, 0.2, 0.08);
+      },
+      bell: function (t, m, v, ratio) {
+        var f = hz(m), o = osc("sine", f, t, t + 4), o2 = osc("sine", f * (ratio || 2.76), t, t + 4), g = ac.createGain(), g2 = ac.createGain(); g2.gain.value = 0.25;
+        o2.connect(g2); g2.connect(g); o.connect(g); env(g, t, 0.01, 0.06 * v, 3.6); send(g, 0.4, 0.8, 0.35);
+      },
+      lead: function (t, m, dur, v, type) {
+        var o = osc(type || "square", hz(m), t, t + dur + 0.4), lp = ac.createBiquadFilter(), g = ac.createGain(); lp.type = "lowpass"; lp.frequency.setValueAtTime(2600, t); lp.frequency.exponentialRampToValueAtTime(700, t + dur);
+        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05 * v, t + 0.01); g.gain.setTargetAtTime(0.0001, t + dur, 0.08); o.connect(lp); lp.connect(g); send(g, 0.8, 0.25, 0.25);
+      },
+      padF: function (t, freqs, dur, v, type, lpA, lpB) {
+        var lp = ac.createBiquadFilter(), g = ac.createGain(); lp.type = "lowpass"; lp.Q.value = 0.4;
+        lp.frequency.setValueAtTime(lpA || 500, t); lp.frequency.linearRampToValueAtTime(lpB || 1400, t + dur * 0.5); lp.frequency.linearRampToValueAtTime(lpA || 500, t + dur);
+        var a = Math.min(1.5, dur * 0.3); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.045 * v, t + a); g.gain.setValueAtTime(0.045 * v, t + dur - a); g.gain.linearRampToValueAtTime(0.0001, t + dur + 0.6);
+        lp.connect(g); send(g, 0.7, 0.6);
+        freqs.forEach(function (f) { [-7, 7].forEach(function (dt) { var o = osc(type || "sawtooth", f, t, t + dur + 0.8); o.detune.value = dt; o.connect(lp); }); });
+      },
+      pad: function (t, ms, dur, v, type, lpA, lpB) { I.padF(t, ms.map(hz), dur, v, type, lpA, lpB); },
+      drone: function (t, m, dur, v) {
+        var o = osc("sine", hz(m), t, t + dur + 1), o2 = osc("sawtooth", hz(m + 7), t, t + dur + 1), lp = ac.createBiquadFilter(), g = ac.createGain(), l = osc("sine", 0.11, t, t + dur + 1), lg = ac.createGain();
+        lp.type = "lowpass"; lp.frequency.value = 220; lg.gain.value = 120; l.connect(lg); lg.connect(lp.frequency);
+        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.16 * v, t + 2); g.gain.setValueAtTime(0.16 * v, t + dur - 1.5); g.gain.linearRampToValueAtTime(0.0001, t + dur + 0.8);
+        o.connect(g); o2.connect(lp); lp.connect(g); send(g, 0.8, 0.5);
+      },
+      heart: function (t, v) { [0, 0.22].forEach(function (d, i) { var o = osc("sine", 62, t + d, t + d + 0.3), g = ac.createGain(); o.frequency.exponentialRampToValueAtTime(38, t + d + 0.18); env(g, t + d, 0.01, (i ? 0.28 : 0.4) * v, 0.22); o.connect(g); send(g, 1, 0.15); }); },
+      wind: function (t, dur, v) {
+        var s = ac.createBufferSource(); s.buffer = noiseBuf; s.loop = true; var bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 3;
+        bp.frequency.setValueAtTime(300, t); bp.frequency.exponentialRampToValueAtTime(1600, t + dur * 0.5); bp.frequency.exponentialRampToValueAtTime(260, t + dur);
+        var g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05 * v, t + dur * 0.4); g.gain.linearRampToValueAtTime(0.0001, t + dur);
+        s.connect(bp); bp.connect(g); send(g, 0.7, 0.6); s.start(t); s.stop(t + dur + 0.1);
+      },
+      buzz: function (t, m, dur, v) {
+        var o = osc("sawtooth", hz(m), t, t + dur + 0.5), vib = osc("sine", 23, t, t + dur + 0.5), vg = ac.createGain(), bp = ac.createBiquadFilter(), g = ac.createGain();
+        vg.gain.value = 6; vib.connect(vg); vg.connect(o.detune); bp.type = "bandpass"; bp.frequency.value = 650; bp.Q.value = 4;
+        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05 * v, t + 0.8); g.gain.setValueAtTime(0.05 * v, t + dur - 0.6); g.gain.linearRampToValueAtTime(0.0001, t + dur + 0.3);
+        o.connect(bp); bp.connect(g); send(g, 0.6, 0.3);
+      },
+      crackle: function (t, dur) { for (var i = 0; i < 6; i++) if (Math.random() < 0.5) I.noise(t + Math.random() * dur, 0.004, "highpass", 3000, 1, 0.05 + Math.random() * 0.05, 0); }
+    };
+
+    /* ---- 曲目：每首一套骨架 + 一个数学彩蛋 ---- */
+    function bar(T, s) { return Math.floor(s / T.meter); }
+    function voss(key, n) { var r = mem[key] || (mem[key] = [0, 0, 0, 0].map(function () { return Math.random(); })); var c = n, k = 0; while (c > 0 && (c & 1) === 0 && k < 3) { c >>= 1; k++; } r[k] = Math.random(); return (r[0] + r[1] + r[2] + r[3]) / 4; }
+    var TR = [
+      { id: "voyage", name: "星海漫游", d: "Lo-fi · 慢鼓点与电钢琴", math: "旋律音高 = 斐波那契数列 mod 7，16 个音后正好循环（皮萨诺周期）", bpm: 78, meter: 16, swing: 0.28, root: 50, mode: MODE.dor, prog: [0, 3, 1, 4],
+        play: function (T, s, t, sd) {
+          var i = s % 16, b = bar(T, s), c = T.prog[b % 4];
+          if (i === 0 || i === 10 || (i === 7 && b % 2)) I.kick(t, i === 0 ? 1 : 0.7);
+          if (i === 4 || i === 12) I.snare(t, 0.7);
+          if (i % 2 === 0) I.hat(t, 0.6 + Math.random() * 0.4);
+          if (i === 0) { I.bass(t, deg(T, c, -1), sd * 6, 1); chord(T, c, 4, 0).forEach(function (m, k) { I.epiano(t + k * 0.012, m, sd * 9, 0.55); }); I.crackle(t, sd * 16); }
+          if (i === 10) I.bass(t, deg(T, c + 4, -1), sd * 4, 0.8);
+          if (i === 6 && b % 2) chord(T, c, 3, 0).forEach(function (m) { I.epiano(t, m, sd * 2, 0.5); });
+          if ([0, 3, 6, 8, 11, 14].indexOf(i) >= 0 && (b % 4 > 0) && Math.random() < 0.75) {
+            var fa = mem.fa || [0, 1], f = (fa[0] + fa[1]) % 7; mem.fa = [fa[1], f]; I.epiano(t, deg(T, f, 1), sd * 2.5, 0.75);
+          }
+        } },
+      { id: "aurora", name: "极光", d: "闪烁琶音 · 明亮长音", math: "重音按黄金比例 φ 撒落（斐波那契词），节奏永远不会完全重复", bpm: 112, meter: 16, root: 53, mode: MODE.lyd, prog: [0, 1, 5, 4],
+        play: function (T, s, t, sd) {
+          var i = s % 16, b = bar(T, s), c = T.prog[b % 4], ch = chord(T, c, 4, 0).concat(chord(T, c, 4, 1)), ord = [0, 1, 2, 3, 4, 5, 6, 7, 6, 5, 4, 3, 2, 1, 2, 3];
+          if (i === 0) { I.pad(t, chord(T, c, 4, 0), sd * 16, 0.9, "triangle", 900, 2600); I.bass(t, deg(T, c, -2), sd * 7, 0.8, "sine"); }
+          if (i === 8) I.bass(t, deg(T, c, -1), sd * 6, 0.6, "sine");
+          I.pluck(t, ch[ord[i]], sturm(s) ? 0.9 : 0.4, 1);
+          if (i === 12 && b % 2 === 1) I.bell(t, deg(T, c + 4, 2), 0.8, 2.76);
+          if (sturm(s) && i % 4 === 2) I.shaker(t, 0.6);
+        } },
+      { id: "gravity", name: "深空引力", d: "无鼓氛围 · 心跳与风 · 适合专注", math: "零星的钟声由 1/f 粉红噪声（Voss 算法）生成，像海岸线一样自相似", bpm: 60, meter: 16, root: 38, mode: MODE.aeo, prog: [0, 5, 3, 4],
+        play: function (T, s, t, sd) {
+          var i = s % 16, b = bar(T, s), c = T.prog[Math.floor(b / 2) % 4];
+          if (i === 0 && b % 2 === 0) { I.drone(t, deg(T, c, 0), sd * 32, 1.8); I.pad(t, chord(T, c, 3, 1), sd * 32, 1.3, "sawtooth", 180, 520); }
+          if (i === 0 && b % 4 === 0) I.wind(t, sd * 40, 1.6);
+          if (i === 0 || i === 8) I.heart(t, 0.55);
+          if (i % 4 === 0 && Math.random() < 0.4) I.bell(t + Math.random() * sd, deg(T, 14 + Math.round(voss("g", s >> 2) * 9), 0), 2.2, 2.76);
+        } },
+      { id: "cradle", name: "星云摇篮", d: "八音盒华尔兹 · 3/4 拍", math: "主旋律依次读圆周率 π 的数字 3.14159…，每个数字对应五声音阶上的一个音", bpm: 92, meter: 12, root: 60, mode: MODE.ion, prog: [0, 5, 3, 4],
+        play: function (T, s, t, sd) {
+          var i = s % 12, b = bar(T, s), c = T.prog[b % 4], P = [0, 1, 2, 4, 5];
+          if (i === 0) { I.pluck(t, deg(T, c, -2), 0.8); I.pad(t, chord(T, c, 3, -1), sd * 12, 0.45, "sine", 600, 900); }
+          if (i === 4 || i === 8) chord(T, c, 3, 0).forEach(function (m) { I.box(t, m, 0.35); });
+          if (i % 4 === 0 || (i === 6 && b % 2)) { var k = mem.pi || 0, dg = +PI_D[k % PI_D.length]; mem.pi = k + 1; I.box(t, deg(T, P[dg % 5] + 7 * Math.floor(dg / 5), 1), 1); }
+          if (i === 10 && b % 4 === 3) I.box(t, deg(T, c + 7, 2), 0.5);
+        } },
+      /* —— 任务专属曲 —— */
+      { id: "nim", task: "nim", name: "松果蹦蹦", d: "🐿️ 轻快木琴 · 松鼠的游戏", math: "拍手只落在第 2、3、5、7、11、13 个八分拍上，全是质数", bpm: 124, meter: 16, root: 55, mode: MODE.ion, prog: [0, 4, 5, 3],
+        play: function (T, s, t, sd) {
+          var i = s % 16, b = bar(T, s), c = T.prog[b % 4], e = (s % 32) / 2;
+          if (i === 0 || i === 8) I.kick(t, 0.9);
+          if (s % 2 === 0 && primeQ(e)) I.clap(t, 0.8);
+          if (i % 2 === 0) I.shaker(t, 0.5);
+          if (i % 2 === 0) I.bass(t, deg(T, c, i % 4 ? -1 : -2), sd * 1.4, 0.8, "triangle");
+          var pat = [0, 2, 4, 2, 7, 4, 2, 4]; if (i % 2 === 0 && !(b % 4 === 3 && i > 10)) I.marimba(t, deg(T, c + pat[(i / 2) % 8], 1), 0.9);
+          if (i === 14 && b % 2) I.marimba(t, deg(T, c + 9, 1), 0.7);
+        } },
+      { id: "bee", task: "bee", name: "蜂巢圆舞", d: "🐝 6/8 拍 · 嗡嗡的和声", math: "6 拍一组，6 个和弦像蜂巢的 6 条边，转一圈回到原点", bpm: 132, meter: 12, root: 57, mode: MODE.mix, prog: [0, 4, 1, 5, 2, 3],
+        play: function (T, s, t, sd) {
+          var i = s % 12, b = bar(T, s), c = T.prog[b % 6], pat = [0, 2, 4, 7, 4, 2];
+          if (i === 0) { I.buzz(t, deg(T, c, 0), sd * 12, 0.9); I.bass(t, deg(T, c, -1), sd * 5, 0.9, "sine"); }
+          if (i === 0 || i === 6) I.kick(t, i ? 0.6 : 0.85);
+          if (i % 2 === 0) { I.shaker(t, i % 6 ? 0.4 : 0.7); I.marimba(t, deg(T, c + pat[i / 2], 1), 0.8); }
+          if (i === 9 && b % 2) I.bell(t, deg(T, c + 4, 2), 0.5, 3.0);
+        } },
+      { id: "nav", task: "nav", name: "蚂蚁行军", d: "🐜 推进的鼓与琶音", math: "鼓点用欧几里得算法（就是求最大公约数那个）把 5 拍尽量均匀地撒进 16 格", bpm: 116, meter: 16, root: 52, mode: MODE.dor, prog: [0, 0, 5, 6],
+        play: function (T, s, t, sd) {
+          var i = s % 16, b = bar(T, s), c = T.prog[b % 4];
+          if (euclid(5, 16, i)) I.kick(t, i === 0 ? 1 : 0.7);
+          if (i === 4 || i === 12) I.snare(t, 0.5);
+          if (euclid(7, 16, (i + 2) % 16)) I.tick(t, 0.8);
+          if (euclid(3, 8, i % 8)) I.bass(t, deg(T, c, -1), sd * 1.6, 0.85, "sawtooth");
+          I.pluck(t, deg(T, c + [0, 2, 4, 6, 7, 4][s % 6], 0), euclid(7, 16, i) ? 0.75 : 0.35, 1);
+          if (i === 0) I.pad(t, chord(T, c, 3, 0), sd * 16, 0.5, "sawtooth", 400, 1100);
+        } },
+      { id: "secret", task: "secret", name: "密室时钟", d: "🦉 神秘小调 · 滴答作响", math: "主旋律是把 MATH ATLAS 用凯撒密码右移 3 位，再 mod 7 变成音阶", bpm: 84, meter: 16, root: 45, mode: MODE.hmin, prog: [0, 5, 3, 4],
+        play: function (T, s, t, sd) {
+          var i = s % 16, b = bar(T, s), c = T.prog[b % 4], W = "MATHATLAS";
+          if (i % 4 === 0) I.tick(t, i ? 0.6 : 1);
+          if (i === 0) { I.pad(t, chord(T, c, 3, 0), sd * 16, 0.45, "sawtooth", 260, 800); I.bass(t, deg(T, c, -1), sd * 7, 0.8); I.kick(t, 0.6); }
+          if (i === 8) I.heart(t, 0.35);
+          if (i % 2 === 0) I.pluck(t, deg(T, c + [0, 4, 2, 4][(i / 2) % 4], 0), 0.8);
+          if (b % 2 === 1 && i % 4 === 0) { var k = mem.cz || 0, L = W.charCodeAt(k % W.length) - 65, n = (L + 3) % 26 % 7; mem.cz = k + 1; I.bell(t, deg(T, n, 2), 0.7, 3.5); }
+        } },
+      { id: "chord", task: "chord", name: "纯律之歌", d: "🎹 温暖电钢琴 · 整数比和声", math: "和弦频率按 4:5:6 的整数比调准（纯律），比钢琴的十二平均律更「纯」", bpm: 72, meter: 16, root: 48, mode: MODE.ion, prog: [0, 3, 4, 0],
+        play: function (T, s, t, sd) {
+          var i = s % 16, b = bar(T, s), R = [0, 5, 7, -3][b % 4], minor = b % 4 === 3, f0 = hz(T.root + R), rat = minor ? [10, 12, 15, 20] : [4, 5, 6, 8], fs = rat.map(function (r) { return f0 * r / rat[0]; });
+          if (i === 0) { I.padF(t, fs, sd * 16, 0.9, "triangle", 700, 1800); I.bass(t, T.root + R - 12, sd * 8, 0.8); I.kick(t, 0.45); }
+          if (i === 8) I.bass(t, T.root + R - 5, sd * 6, 0.6);
+          if (i === 4 || i === 12) I.hat(t, 0.4);
+          if (i % 4 === 2) { var f = fs[(s >> 2) % 4] * 2; I.box(t, 69 + 12 * Math.log2(f / 440), 0.6); }
+        } },
+      { id: "cat", task: "cat", name: "神经脉冲", d: "🐱 电子节拍 · 合成器琶音", math: "反拍踩镲在用二进制计数：第 n 小节的 4 个反拍正好打出 n 的 4 位二进制", bpm: 120, meter: 16, root: 50, mode: MODE.aeo, prog: [0, 5, 2, 6],
+        play: function (T, s, t, sd) {
+          var i = s % 16, b = bar(T, s), c = T.prog[b % 4], n = b % 16;
+          if (i % 4 === 0) I.kick(t, 0.9);
+          if (i === 4 || i === 12) I.clap(t, 0.6);
+          if (i % 4 === 2) { if ((n >> (3 - (i >> 2))) & 1) I.hat(t, 1, true); else I.hat(t, 0.35); }
+          if (i % 2 === 1) I.bass(t, deg(T, c, -1), sd * 0.9, 0.75, "sawtooth");
+          if (i % 2 === 0) I.lead(t, deg(T, c + [0, 2, 4, 7][(i / 2) % 4], 1), sd * 0.8, 0.8, "square");
+          if (i === 0) I.pad(t, chord(T, c, 3, 0), sd * 16, 0.45, "sawtooth", 300, 1500);
+        } },
+      { id: "casino", task: "casino", name: "浣熊爵士", d: "🦝 摇摆节奏 · 行走低音", math: "低音每拍随机向上或向下走一步，这就是随机游走（BOSS 关同款）", bpm: 100, meter: 16, swing: 0.33, root: 53, mode: MODE.ion, prog: [1, 4, 0, 5],
+        play: function (T, s, t, sd) {
+          var i = s % 16, b = bar(T, s), c = T.prog[b % 4];
+          if (i % 4 === 0 || i % 8 === 6) I.ride(t, i % 4 ? 0.6 : 1);
+          if (i === 4 || i === 12) I.noise(t, 0.12, "bandpass", 2500, 0.6, 0.08, 0.3);
+          if (i % 4 === 0) { var w = i === 0 ? c : (mem.walk === undefined ? c : mem.walk) + (Math.random() < 0.5 ? -1 : 1); mem.walk = w; I.bass(t, deg(T, w, -1), sd * 3.6, 0.9, "triangle"); }
+          if ((i === 6 || i === 10 || i === 14) && Math.random() < 0.45) chord(T, c, 4, 0).forEach(function (m) { I.epiano(t, m, sd * 1.5, 0.6); });
+          if (i === 0 && b % 2 === 0) chord(T, c, 4, 0).forEach(function (m) { I.epiano(t, m, sd * 3, 0.7); });
+          if (i % 4 === 2 && Math.random() < 0.5) { var v = (mem.vib === undefined ? 4 : mem.vib) + (Math.random() < 0.5 ? -1 : 1); v = Math.max(0, Math.min(9, v)); mem.vib = v; I.box(t, deg(T, v, 1), 0.7); }
+        } }
+    ];
+    var GLOBAL = 4, BYTASK = {}; TR.forEach(function (T, k) { if (T.task) BYTASK[T.task] = k; });
+
+    var trk = store.get("ma:track"); if (trk === null || trk === undefined || trk >= GLOBAL) trk = 0;
+    var auto = store.get("ma:mauto") !== "off";
+    var vol = store.get("ma:vol"); if (typeof vol !== "number") vol = 0.7;
+    function pick() { return auto && BYTASK[TASK] !== undefined ? BYTASK[TASK] : (trk < 0 ? (mem.rot || 0) : trk); }
+    var cur = pick(), pos = store.get("ma:mpos");
+    if (pos && Date.now() - pos.at < 15 * 60 * 1000 && pos.id === TR[cur].id) step = pos.step || 0;
+    if (pos && trk < 0 && pos.rot !== undefined) { mem.rot = pos.rot; cur = pick(); }
     function emit() { subs.forEach(function (f) { try { f(); } catch (e) {} }); }
-    function build() {
-      ac = new (window.AudioContext || window.webkitAudioContext)();
-      master = ac.createGain(); master.gain.value = 0; master.connect(ac.destination);
-      verb = ac.createConvolver(); var len = ac.sampleRate * 5, buf = ac.createBuffer(2, len, ac.sampleRate);
-      for (var ch = 0; ch < 2; ch++) { var d = buf.getChannelData(ch); for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3); }
-      verb.buffer = buf; var wet = ac.createGain(); wet.gain.value = 0.7; verb.connect(wet); wet.connect(master);
-      dly = ac.createDelay(2); dly.delayTime.value = 0.62; var fb = ac.createGain(); fb.gain.value = 0.36; dly.connect(fb); fb.connect(dly); dly.connect(verb);
+    function build(ctx) {
+      ac = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      var comp = ac.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3; comp.attack.value = 0.01; comp.release.value = 0.25; comp.connect(ac.destination);
+      out = ac.createGain(); out.gain.value = 0; out.connect(comp);
+      master = ac.createGain(); master.gain.value = 0.8; master.connect(out);
+      var len = ac.sampleRate * 3.5, rb = ac.createBuffer(2, len, ac.sampleRate);
+      for (var ch = 0; ch < 2; ch++) { var d = rb.getChannelData(ch); for (var i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
+      verb = ac.createConvolver(); verb.buffer = rb; var vg = ac.createGain(); vg.gain.value = 0.55; verb.connect(vg); vg.connect(master);
+      dly = ac.createDelay(2); var fb = ac.createGain(); fb.gain.value = 0.32; var dlp = ac.createBiquadFilter(); dlp.type = "lowpass"; dlp.frequency.value = 2400;
+      dly.connect(dlp); dlp.connect(fb); fb.connect(dly); dlp.connect(verb);
+      noiseBuf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate); var nd = noiseBuf.getChannelData(0); for (var k = 0; k < nd.length; k++) nd[k] = Math.random() * 2 - 1;
     }
-    function pad(T, notes, t, dur) {
-      var lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.Q.value = 0.3;
-      lp.frequency.setValueAtTime(T.lp[0], t); lp.frequency.linearRampToValueAtTime(T.lp[1], t + dur * 0.5); lp.frequency.linearRampToValueAtTime(T.lp[0], t + dur);
-      var g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(T.pg, t + 3); g.gain.setValueAtTime(T.pg, t + dur - 3); g.gain.linearRampToValueAtTime(0, t + dur + 1);
-      lp.connect(g); g.connect(verb); g.connect(master);
-      notes.forEach(function (m) {
-        [-6, 6].forEach(function (det) {
-          var o = ac.createOscillator(); o.type = T.wave; o.frequency.value = hz(m); o.detune.value = det;
-          o.connect(lp); o.start(t); o.stop(t + dur + 1.2);
-        });
-      });
-    }
-    function bell(T, t, m, gain) {
-      m = m || T.sc[Math.floor(Math.random() * T.sc.length)] + (Math.random() < 0.3 ? 12 : 0);
-      var o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(), g2 = ac.createGain();
-      o.type = o2.type = "sine"; o.frequency.value = hz(m); o2.frequency.value = hz(m) * T.ratio; g2.gain.value = 0.22;
-      o2.connect(g2); g2.connect(g); o.connect(g);
-      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(gain || T.bg, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + 3.5);
-      g.connect(dly); g.connect(verb);
-      o.start(t); o2.start(t); o.stop(t + 3.6); o2.stop(t + 3.6);
-    }
-    function loop() {
+    function tick() {
       if (!on) return;
-      if (trk < 0 && step > 0 && step % 4 === 0) { cur = (cur + 1) % TR.length; emit(); }
-      var T = TR[cur], t = ac.currentTime + 0.1, dur = T.dur;
-      pad(T, T.ch[step % T.ch.length], t, dur);
-      var nb = T.bells[0] + Math.floor(Math.random() * (T.bells[1] - T.bells[0] + 1));
-      for (var i = 0; i < nb; i++) bell(T, t + 0.8 + Math.random() * (dur - 2));
-      step++; store.set("ma:mpos", { step: step, cur: cur, at: Date.now() });
-      timer = setTimeout(loop, (dur - 1) * 1000);
+      var T = TR[cur], sd = 60 / T.bpm / 4; dly.delayTime.setTargetAtTime(sd * 3, ac.currentTime, 0.1);
+      while (nextT < ac.currentTime + LOOK) {
+        var sw = (T.swing && step % 4 === 2) ? T.swing * sd : 0;
+        try { T.play(T, step, nextT + sw, sd); } catch (e) {}
+        step++; nextT += sd;
+        if (step % T.meter === 0) {
+          store.set("ma:mpos", { id: T.id, step: step, rot: mem.rot, at: Date.now() });
+          if (trk < 0 && !(auto && BYTASK[TASK] !== undefined) && step >= T.meter * 16) { mem.rot = ((mem.rot || 0) + 1) % GLOBAL; switchTo(pick()); return; }
+        }
+      }
+    }
+    function run() { clearInterval(timer); nextT = ac.currentTime + 0.12; timer = setInterval(tick, 40); tick(); }
+    document.addEventListener("visibilitychange", function () { LOOK = document.hidden ? 1.6 : 0.3; });
+    function switchTo(k) {
+      cur = k; step = 0; mem = { rot: mem.rot }; emit();
+      if (!on) return; clearInterval(timer);
+      out.gain.setTargetAtTime(0, ac.currentTime, 0.25);
+      setTimeout(function () { if (on) { out.gain.setTargetAtTime(vol, ac.currentTime, 0.6); run(); } }, 900);
     }
     function begin() {
       if (ac.state !== "running") return false;
       blocked = false;
-      if (!on) { on = true; master.gain.cancelScheduledValues(ac.currentTime); master.gain.setTargetAtTime(vol, ac.currentTime, 0.8); loop(); }
+      if (!on) { on = true; out.gain.cancelScheduledValues(ac.currentTime); out.gain.setValueAtTime(0, ac.currentTime); out.gain.setTargetAtTime(vol, ac.currentTime, 0.9); run(); }
       emit(); return true;
     }
     function start() {
@@ -243,20 +448,31 @@
         setTimeout(function () { if (ac.state !== "running") rej(0); }, 450);
       });
     }
-    function stop() { on = false; clearTimeout(timer); if (ac) master.gain.setTargetAtTime(0, ac.currentTime, 0.3); emit(); }
+    function stop() { on = false; clearInterval(timer); if (ac) out.gain.setTargetAtTime(0, ac.currentTime, 0.3); emit(); }
     function setTrack(i) {
-      trk = i; store.set("ma:track", i); cur = i < 0 ? cur : i; step = 0;
-      if (on) { clearTimeout(timer); master.gain.setTargetAtTime(0, ac.currentTime, 0.4); setTimeout(function () { if (on) { master.gain.setTargetAtTime(vol, ac.currentTime, 0.8); loop(); } }, 900); }
-      store.set("ma:music", "on"); if (!on) start().catch(function () {});
+      if (i >= GLOBAL) { auto = true; store.set("ma:mauto", "on"); }
+      else { trk = i; store.set("ma:track", i); if (BYTASK[TASK] !== undefined) { auto = false; store.set("ma:mauto", "off"); } }
+      store.set("ma:music", "on");
+      var k = pick(); if (k !== cur || !on) switchTo(k);
+      if (!on) start().catch(function () {});
       emit();
     }
-    function setVol(v) { vol = v; store.set("ma:vol", v); if (ac && on) master.gain.setTargetAtTime(v, ac.currentTime, 0.1); }
-    function tap() { if (on && ac) bell(TR[cur], ac.currentTime, null, TR[cur].bg * 1.2); }
+    function setAuto(a) { auto = a; store.set("ma:mauto", a ? "on" : "off"); var k = pick(); if (k !== cur) switchTo(k); emit(); }
+    function setVol(v) { vol = v; store.set("ma:vol", v); if (ac && on) out.gain.setTargetAtTime(v, ac.currentTime, 0.1); }
+    function tap() { if (on && ac) { var T = TR[cur]; I.bell(ac.currentTime + 0.02, deg(T, 7 + Math.floor(Math.random() * 7), 1), 0.6, 2.76); } }
     return {
-      TR: TR, start: start, stop: stop, tap: tap, setTrack: setTrack, setVol: setVol,
-      on: function () { return on; }, blocked: function () { return blocked; }, setBlocked: function (b) { blocked = b; emit(); },
+      TR: TR, GLOBAL: GLOBAL, taskTrack: function () { return BYTASK[TASK]; }, start: start, stop: stop, tap: tap, setTrack: setTrack, setVol: setVol, setAuto: setAuto,
+      auto: function () { return auto; }, on: function () { return on; }, blocked: function () { return blocked; }, setBlocked: function (b) { blocked = b; emit(); },
       track: function () { return trk; }, cur: function () { return cur; }, vol: function () { return vol; },
-      name: function () { return TR[cur].name; }, sub: function (f) { subs.push(f); }
+      name: function () { return TR[cur].name; }, sub: function (f) { subs.push(f); },
+      _offline: function (k, secs) {
+        var save = [ac, out, master, verb, dly, noiseBuf, ksCache, mem], sr = 44100;
+        ksCache = {}; mem = {}; build(new OfflineAudioContext(2, sr * secs, sr)); out.gain.value = 0.7;
+        var T = TR[k], sd = 60 / T.bpm / 4, tt = 0.05, n = 0;
+        while (tt < secs - 0.5) { T.play(T, n, tt + ((T.swing && n % 4 === 2) ? T.swing * sd : 0), sd); n++; tt += sd; }
+        var oc = ac; ac = save[0]; out = save[1]; master = save[2]; verb = save[3]; dly = save[4]; noiseBuf = save[5]; ksCache = save[6]; mem = save[7];
+        return oc.startRendering();
+      }
     };
   })();
   window.MA_Music = Music;
@@ -294,14 +510,20 @@
   document.addEventListener("keydown", function (e) { if (e.key === "Escape") closePop(); });
 
   function musicHTML() {
-    var t = Music.track(), on = Music.on();
-    return '<div class="ma-pop__h"><b>🎵 背景音乐</b><button type="button" class="ma-sw' + (on ? " on" : "") + '" data-tg aria-pressed="' + on + '"><i></i></button></div>' +
-      Music.TR.map(function (T, i) {
-        return '<button type="button" class="ma-it' + (t === i ? " on" : "") + '" data-tr="' + i + '"><span class="ma-it__e">' + (t === i && on ? '<span class="ma-eq"><s></s><s></s><s></s></span>' : "♪") + "</span><span><b>" + T.name + "</b><small>" + T.d + "</small></span></button>";
-      }).join("") +
-      '<button type="button" class="ma-it' + (t < 0 ? " on" : "") + '" data-tr="-1"><span class="ma-it__e">🔀</span><span><b>轮播全部</b><small>每隔约半分钟换一首' + (t < 0 && on ? " · 正在放「" + Music.name() + "」" : "") + "</small></span></button>" +
+    var t = Music.track(), on = Music.on(), cur = Music.cur(), tt = Music.taskTrack(), au = Music.auto();
+    function item(T, i, sel) {
+      return '<button type="button" class="ma-it' + (sel ? " on" : "") + '" data-tr="' + i + '"><span class="ma-it__e">' + (cur === i && on ? '<span class="ma-eq"><s></s><s></s><s></s></span>' : "♪") + "</span><span><b>" + T.name + "</b><small>" + T.d + '</small><small class="ma-math">🔢 ' + T.math + "</small></span></button>";
+    }
+    var h = '<div class="ma-pop__h"><b>🎵 背景音乐</b><button type="button" class="ma-sw' + (on ? " on" : "") + '" data-tg aria-pressed="' + on + '"><i></i></button></div>';
+    if (tt !== undefined) {
+      h += '<p class="ma-pop__s">本任务主题曲</p>' + item(Music.TR[tt], tt, au) +
+        '<label class="ma-chk"><input type="checkbox" data-auto' + (au ? " checked" : "") + '> 进入任务时自动换成专属曲</label><p class="ma-pop__s">星空曲目</p>';
+    }
+    h += Music.TR.slice(0, Music.GLOBAL).map(function (T, i) { return item(T, i, !(tt !== undefined && au) && t === i); }).join("") +
+      '<button type="button" class="ma-it' + (t < 0 && !(tt !== undefined && au) ? " on" : "") + '" data-tr="-1"><span class="ma-it__e">🔀</span><span><b>轮播全部</b><small>每首放 16 小节后换下一首' + (t < 0 && on && cur < Music.GLOBAL ? " · 正在放「" + Music.name() + "」" : "") + "</small></span></button>" +
       '<label class="ma-vol">🔈<input type="range" min="0" max="1" step="0.05" value="' + Music.vol() + '" aria-label="音量">🔊</label>' +
-      '<p class="ma-pop__f">换页面会接着放。浏览器不允许网页自己出声，换页后如果没声音，点一下页面就好。</p>';
+      '<p class="ma-pop__f">每首曲子都藏着一个数学规律，听出来了吗？换页面会接着放；如果换页后没声音，点一下页面就好。</p>';
+    return h;
   }
   function openMusic(anchor) {
     openPop(anchor, musicHTML(), function (p) {
@@ -310,6 +532,7 @@
         p.querySelector("[data-tg]").onclick = function () { toggleMusic(); setTimeout(re, 60); };
         p.querySelectorAll("[data-tr]").forEach(function (b) { b.onclick = function () { Music.setTrack(+b.dataset.tr); setTimeout(re, 80); }; });
         p.querySelector(".ma-vol input").oninput = function () { Music.setVol(+this.value); };
+        var ck = p.querySelector("[data-auto]"); if (ck) ck.onchange = function () { Music.setAuto(this.checked); setTimeout(re, 80); };
       }
       bind();
     });
