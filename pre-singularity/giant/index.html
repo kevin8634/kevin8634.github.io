@@ -81,9 +81,9 @@ const CORPUS=`小猫喜欢晒太阳。小猫喜欢吃鱼。小狗喜欢啃骨头
 const TAB={}; for(let i=0;i+2<CORPUS.length;i++){ const k=CORPUS.slice(i,i+2), c=CORPUS[i+2]; (TAB[k]=TAB[k]||{})[c]=(TAB[k][c]||0)+1; }
 const NENT=Object.values(TAB).reduce((s,o)=>s+Object.keys(o).length,0);
 $('m0').textContent=`读过 ${CORPUS.length} 个字 · 计数表 ${NENT} 条 · 在你的电脑上`;
-function glass(prompt){ let ctx=null; const m=prompt.match(/[“"]([^”"]{2,})[”"]/); const seed=m?m[1]:prompt;
-  for(let i=seed.length-2;i>=0;i--){ if(TAB[seed.slice(i,i+2)]){ ctx=seed.slice(i,i+2); break; } }
-  let s=ctx||CORPUS.slice(0,2), out=s;
+function glass(prompt){ let ctx=null, pre=''; const m=prompt.match(/[“"]([^”"]{2,})[”"]/); const seed=m?m[1]:prompt;
+  for(let i=seed.length-2;i>=0;i--){ if(TAB[seed.slice(i,i+2)]){ ctx=seed.slice(i,i+2); pre=seed.slice(0,i); break; } }
+  let s=ctx||CORPUS.slice(0,2), out=pre+s;
   for(let n=0;n<60;n++){ const o=TAB[s.slice(-2)]; if(!o) break; const tot=Object.values(o).reduce((a,b)=>a+b,0); let r=Math.random()*tot, c;
     for(const k in o){ r-=o[k]; if(r<=0){ c=k; break; } } out+=c; s+=c; if(c==='。'&&n>8) break; }
   return {out, hit:!!ctx}; }
