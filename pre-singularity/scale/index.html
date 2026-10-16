@@ -1,0 +1,71 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>把 AI 放大会怎样 · 奇点前夜</title><link rel="stylesheet" href="../ps.css?v=6"></head>
+<body data-mission="scale"><div class="wrap">
+<header class="top"></header>
+<h1>把 AI 放大会怎样?</h1>
+<p class="sub">更多数据、更聪明的结构、更大的模型——这三样东西把 AI 从"认一只猫"推到了"和你聊天"。它们各自改变了什么?</p>
+<div id="levels" class="levels"></div>
+<div id="guide"></div>
+<div id="goal" class="goal"></div>
+<div class="grid g2" style="margin-top:12px"><div class="card" id="stage"></div><div class="card" id="panel"></div></div>
+<div id="next" style="display:none;margin-top:14px"></div>
+</div>
+<script src="../ps.js?v=6"></script>
+<script>
+const $=id=>document.getElementById(id), S=$('stage'), P=$('panel');
+/* ---------- 第 1 关:数据的力量(最近邻) ---------- */
+function moons(n,noise=.26){ const a=[]; for(let i=0;i<n;i++){ const y=i%2, t=Math.random()*Math.PI; let x0=y? 1-Math.cos(t) : Math.cos(t), x1=y? .5-Math.sin(t) : Math.sin(t);
+  x0+= (Math.random()-.5)*2*noise; x1+=(Math.random()-.5)*2*noise; a.push({x:[(x0-.5)/1.4,(x1-.25)/1.1],y}); } return a; }
+function nn(D,p){ let b=1e9,y=0; for(const d of D){ const e=(d.x[0]-p[0])**2+(d.x[1]-p[1])**2; if(e<b){ b=e; y=d.y; } } return y; }
+function dataLevel(){ const TEST=moons(400), tried={};
+  S.innerHTML=`<canvas id="cv" width="440" height="440"></canvas><div class="muted" id="ax" style="margin-top:6px">背景色 = 萤的判断 · 圆点 = 它见过的例子</div>`;
+  P.innerHTML=`<h3>给萤看多少个例子?</h3><p class="muted">萤用最笨的办法:遇到新东西,就找"见过的里面最像它的那个",照抄答案。两种星星(青色、金色)缠成两道月牙。</p>
+   <div class="row">${[4,16,64,256].map(n=>`<button class="btn" data-n="${n}">${n} 个</button>`).join('')}</div>
+   <div style="margin-top:12px">在 400 颗没见过的新星星上,正确率:<b id="A">—</b></div><div id="hist" class="muted" style="margin-top:8px"></div>`;
+  const cv=$('cv'), g=cv.getContext('2d'), Wd=cv.width, px=v=>(v+1.1)/2.2*Wd;
+  function run(n){ const D=moons(n); g.clearRect(0,0,Wd,Wd); const s=10;
+    for(let i=0;i<Wd;i+=s) for(let j=0;j<Wd;j+=s){ const y=nn(D,[i/Wd*2.2-1.1, 1.1-j/Wd*2.2]); g.fillStyle=y?'rgba(255,190,92,.18)':'rgba(63,224,255,.16)'; g.fillRect(i,j,s,s); }
+    for(const d of TEST){ g.fillStyle=d.y?'rgba(255,190,92,.25)':'rgba(63,224,255,.25)'; g.fillRect(px(d.x[0])-1,Wd-px(d.x[1])-1,2,2); }
+    for(const d of D){ g.fillStyle=d.y?'#ffbe5c':'#3fe0ff'; g.beginPath(); g.arc(px(d.x[0]),Wd-px(d.x[1]),n>100?3:5,0,7); g.fill(); }
+    const a=TEST.filter(d=>nn(D,d.x)===d.y).length/TEST.length; tried[n]=a; $('A').textContent=Math.round(a*100)+'%';
+    $('hist').innerHTML=Object.entries(tried).map(([k,v])=>`${k} 个例子 → <b>${Math.round(v*100)}%</b>`).join('<br>');
+    PS.lossChord(1-a);
+    if(Object.keys(tried).length>=3 && Math.max(...Object.values(tried))>=.9) PS.pass('同一个笨办法,例子多了就变聪明。大模型读过的文字以万亿计,这是它"懂"那么多的第一原因。'); }
+  document.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{ PS.click(); document.querySelectorAll('[data-n]').forEach(x=>x.classList.toggle('sel',x===b)); run(+b.dataset.n); }); }
+/* ---------- 第 2 关:卷积 ---------- */
+const IMG=['000000000','011111110','000010000','000010000','000010000','000010000','000010000','000010000','000000000'].map(r=>[...r].map(Number));
+function convLevel(){ let Kk=[[0,0,0],[0,1,0],[0,0,0]];
+  S.innerHTML=`<div class="row" style="gap:18px;align-items:flex-start;flex-wrap:wrap"><div><div class="muted">原图(9×9)</div><canvas id="im" width="180" height="180" style="width:180px"></canvas></div>
+    <div><div class="muted">特征图:小窗口扫过每个位置的得分</div><canvas id="fm" width="180" height="180" style="width:180px"></canvas></div></div>
+    <p class="muted" id="fb" style="margin-top:10px"></p>`;
+  P.innerHTML=`<h3>设计一个 3×3 小窗口</h3><p class="muted">点格子在 −1 / 0 / +1 之间切换。窗口在图上一格格滑过,把对应位置相乘再相加,就是那里的得分。青色 = 正,粉色 = 负。</p>
+    <div class="kern" id="kern"></div><div class="row" style="margin-top:10px"><button class="btn" data-pre="blur">试试:模糊</button><button class="btn" data-pre="hor">试试:横线探测器</button><button class="btn" data-pre="id">复原</button></div>`;
+  const PRE={blur:[[1,1,1],[1,1,1],[1,1,1]], hor:[[-1,-1,-1],[1,1,1],[-1,-1,-1]], id:[[0,0,0],[0,1,0],[0,0,0]]};
+  function grid(cv,M,mx){ const g=cv.getContext('2d'), n=M.length, c=cv.width/n; g.clearRect(0,0,cv.width,cv.height);
+    M.forEach((r,i)=>r.forEach((v,j)=>{ const t=v/mx; g.fillStyle= t>0?`rgba(63,224,255,${Math.min(1,t)})` : t<0?`rgba(255,111,168,${Math.min(1,-t)})`:'rgba(255,255,255,.03)'; g.fillRect(j*c+1,i*c+1,c-2,c-2); })); }
+  function upd(){ $('kern').innerHTML=Kk.map((r,i)=>r.map((v,j)=>`<button class="kc v${v+1}" data-i="${i}" data-j="${j}">${v>0?'+1':v<0?'−1':'0'}</button>`).join('')).join('');
+    document.querySelectorAll('.kc').forEach(b=>b.onclick=()=>{ const i=+b.dataset.i,j=+b.dataset.j; Kk[i][j]=Kk[i][j]===1?-1:Kk[i][j]+1; PS.sfx('hover',i*3+j); upd(); });
+    const F=[]; for(let i=0;i<7;i++){ F.push([]); for(let j=0;j<7;j++){ let s=0; for(let a=0;a<3;a++) for(let b=0;b<3;b++) s+=IMG[i+a][j+b]*Kk[a][b]; F[i].push(s); } }
+    grid($('im'),IMG,1); grid($('fm'),F,3);
+    const stem=Math.max(...[2,3,4,5,6].map(i=>F[i-1][3])), bar=Math.max(...[0,1,2,4,5,6].map(j=>F[0][j]));
+    $('fb').innerHTML=`竖笔画上的最高分 <b>${stem}</b> · 横笔画上的最高分 <b>${bar}</b>`;
+    if(stem>=2 && bar<=0) PS.pass('你造了一个"竖线探测器"!图像模型的第一层就有成百上千个这样的小窗口,各找一种花纹,一层层组合成眼睛、耳朵、整只猫。'); }
+  document.querySelectorAll('[data-pre]').forEach(b=>b.onclick=()=>{ Kk=PRE[b.dataset.pre].map(r=>r.slice()); PS.click(); upd(); });
+  upd(); }
+/* ---------- 第 3 关:专用与通用 ---------- */
+const SYS=[['AlphaGo 围棋程序',0],['手机人脸解锁',0],['天气预报 AI',0],['聊天大模型',1],['扫地机器人',0],['机器翻译',0],['能看图、写代码、聊天的多模态大模型',1],['短视频推荐算法',0]];
+function genLevel(){ const pick=SYS.map(()=>-1);
+  S.innerHTML=`<h3>把它们放到光谱上</h3><div id="cards"></div>`;
+  P.innerHTML=`<h3>智能光谱</h3><div class="spec"><span>专用</span><span>更通用</span><span class="fut">通用人工智能<br><small>尚未实现</small></span><span class="fut">超级智能 SI<br><small>尚未实现</small></span></div>
+    <p class="muted" style="margin-top:12px">专用:只会一件事,可能做得比人好得多。更通用:一个模型能做很多不同的事,但仍会犯低级错误。</p><p id="fb"></p>`;
+  function upd(){ $('cards').innerHTML=SYS.map(([n],i)=>`<div class="row sysrow"><span style="flex:1">${n}</span><button class="btn ${pick[i]===0?'sel':''}" data-c="${i}" data-v="0">专用</button><button class="btn ${pick[i]===1?'sel':''}" data-c="${i}" data-v="1">更通用</button></div>`).join('');
+    document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ pick[+b.dataset.c]=+b.dataset.v; PS.click(); upd(); });
+    if(pick.every(v=>v>=0)){ const ok=pick.filter((v,i)=>v===SYS[i][1]).length; $('fb').innerHTML=`对了 <b>${ok}</b> / ${SYS.length}`+(ok<SYS.length?'。提示:能不能换一件完全不同的事来做?':'');
+      if(ok===SYS.length) PS.pass('只有大模型站到了"更通用"。可它离通用人工智能还远,离超级智能更远——今天谁也说不准要走多久。'); else PS.fail(); } }
+  upd(); }
+PS.mission({ id:'scale', guide:'ying', levels:[
+ { name:'数据的力量', goal:'试至少三种样本数量,让萤在新星星上的正确率达到 90%。', guide:{q:'我的办法很笨:看到新东西,就去找见过的最像的那个。笨办法能变聪明吗?', hints:['先试 6 个,再试 320 个。','看背景的分界线,例子越多越贴合月牙。','大模型就是"见得极多"的那一类。']}, enter(){ dataLevel(); } },
+ { name:'卷积', goal:'设计一个 3×3 小窗口,让"T"的竖笔画亮起来(≥ 2 分),横笔画不亮(≤ 0 分)。', guide:{q:'看图的 AI 不是一眼看全图,而是拿很多小窗口一格格扫。每个小窗口只认一种花纹。你能造一个只认竖线的窗口吗?', hints:['先试"横线探测器",看看它亮在哪里。','横线探测器是"上下为负、中间为正"。竖线呢?','把它旋转 90 度。']}, enter(){ convLevel(); } },
+ { name:'专用与通用', goal:'把 8 个 AI 系统放到"专用"或"更通用"。全部放对。', guide:{q:'我们常听到"通用人工智能""超级智能"。今天的 AI 到底在光谱的哪里?', hints:['问自己:它能不能换一件完全不同的事来做?','围棋程序不会下象棋以外的……其实连象棋都不会。','只有两个是"更通用"的。']}, enter(){ genLevel(); } }
+]});
+</script></body></html>
