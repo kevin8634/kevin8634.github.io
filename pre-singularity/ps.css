@@ -132,7 +132,7 @@ body.skin-horizon .hud{background:rgba(20,14,8,.62)}
    ===================================================================== */
 :root{--fg:#e4f3ff;--dim:#a3c6dc;--acc:#3fe0ff;--glass:rgba(10,30,52,.55);--edge:rgba(63,224,255,.28)}
 body[data-mission=cat]{--acc:#3fe0ff} body[data-mission=write]{--acc:#b39bff} body[data-mission=panda]{--acc:#ff6fa8}
-body[data-mission=robot]{--acc:#a6ff6b} body[data-mission=truth]{--acc:#ffbe5c} body[data-music=giant]{--acc:#8fb4ff}
+body[data-mission=robot]{--acc:#a6ff6b} body[data-mission=truth]{--acc:#ffbe5c} body[data-music=giant]{--acc:#8fb4ff} body[data-mission=attn]{--acc:#ffd27a} body[data-mission=scale]{--acc:#5ce1c6} body[data-mission=ask]{--acc:#c9a7ff} body[data-mission=together]{--acc:#ffa77a}
 body.skin-horizon{--fg:#f6ecdc;--dim:#d6c3a2;--glass:rgba(30,20,10,.55);--edge:rgba(255,207,122,.28)}
 .mono{font-family:"SF Mono","JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
 body:not(.lobby){background:
@@ -250,3 +250,31 @@ select.btn{padding:7px 10px} select.btn option{background:#081626;color:#e4f3ff}
 .arena .st{font-size:10.5px;color:var(--acc);margin-top:10px;letter-spacing:1px}
 .tk{display:inline-block;padding:0 3px;margin:1px;border-radius:3px;font-size:14px;line-height:1.5;white-space:pre}
 .tk.t0{background:rgba(63,224,255,.22)} .tk.t1{background:rgba(255,190,92,.24)} .tk.t2{background:rgba(179,155,255,.26)} .tk.t3{background:rgba(110,255,180,.2)}
+/* v0.5 注意力 */
+.toks{display:flex;flex-wrap:wrap;gap:4px}
+.tok{padding:6px 9px;border:1px solid var(--edge);border-radius:4px;cursor:pointer;font-size:18px;transition:background .3s}
+.tok.q{border-color:var(--gold);color:var(--gold);cursor:default;box-shadow:0 0 12px rgba(255,210,122,.4)}
+.kvrow{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin:10px 0}
+.kv{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:44px;padding:6px 4px;border:1px solid var(--edge);border-radius:4px;position:relative}
+.kv b{font-size:22px;font-weight:400} .kv span{font-family:ui-monospace,Menlo,monospace;color:var(--acc)}
+.kv i{display:block;width:14px;background:linear-gradient(0deg,var(--cy2),var(--gold));border-radius:2px;transition:height .3s;min-height:1px}
+.kv em{font-style:normal;font-size:10px;color:var(--dim)}
+.kv.hit{border-color:var(--gold)} .kv.qq{border-style:dashed;border-color:var(--gold);color:var(--gold)}
+.kern{display:grid;grid-template-columns:repeat(3,56px);gap:6px}
+.kc{height:56px;border:1px solid var(--edge);border-radius:4px;color:var(--fg);font:600 16px ui-monospace,Menlo,monospace;cursor:pointer;background:rgba(255,255,255,.04)}
+.kc.v2{background:rgba(63,224,255,.45)} .kc.v0{background:rgba(255,111,168,.45)}
+.spec{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center;font-size:13px}
+.spec span{padding:10px 4px;border:1px solid var(--edge);border-radius:4px;background:linear-gradient(180deg,rgba(63,224,255,.12),transparent)}
+.spec .fut{border-style:dashed;color:var(--dim)} .spec small{font-size:10px}
+.sysrow{padding:6px 0;border-bottom:1px solid var(--edge)}
+.chat{border-bottom:1px solid var(--edge);padding:8px 0}
+.chat .cq{font-size:12px;color:var(--dim)} .chat .ca{margin:4px 0 6px;line-height:1.7}
+.gates{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.gate4{position:relative;height:130px;border:1px solid var(--edge);border-radius:6px;background:radial-gradient(circle at 50% 40%,rgba(63,224,255,.25),rgba(4,14,26,.9) 65%);color:var(--fg);cursor:pointer;overflow:hidden;font:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:.2s}
+.gate4:hover:not(:disabled){box-shadow:0 0 22px rgba(63,224,255,.4);transform:translateY(-2px)} .gate4 b{font-size:28px;font-weight:300} .gate4 small{font-size:11px;color:var(--dim)}
+.gate4 i{position:absolute;left:0;bottom:0;height:4px;background:var(--gold)} .gate4:disabled{opacity:.5;cursor:default}
+.neu{border:1px solid var(--edge);border-radius:4px;padding:6px} .neu.off{opacity:.35} .neu canvas{width:110px;height:110px}
+@media(max-width:800px){.gates{grid-template-columns:1fr 1fr}}
+.prin{margin:4px 4px 0 0}
+.note{padding:7px 0;border-bottom:1px solid var(--edge);font-size:14px} .note a{color:var(--fg);text-decoration:none} .note.lit a b{color:var(--gold)} .note.future,.note.lock{opacity:.55}
+.note div{color:var(--dim);font-size:13px;margin-top:2px}
