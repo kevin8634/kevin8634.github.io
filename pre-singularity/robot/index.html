@@ -1,0 +1,75 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>为什么扫地机器人会偷懒 · 奇点前夜</title><link rel="stylesheet" href="../ps.css"></head>
+<body data-mission="robot"><div class="wrap">
+<header class="top"></header>
+<h1>为什么扫地机器人会"偷懒"?</h1>
+<p class="sub">你不告诉机器人怎么做,只告诉它做什么会得分。它会自己试几千次,找出得分最多的办法。问题是:它找到的办法,可能不是你想要的。</p>
+<div id="levels" class="levels"></div>
+<div id="guide"></div>
+<div id="goal" class="goal"></div>
+<div class="grid g2" style="margin-top:12px">
+  <div class="card"><canvas id="cv" width="450" height="360"></canvas>
+    <div class="row muted" style="margin-top:6px;justify-content:space-between"><span id="stat"></span><span id="bag"></span></div></div>
+  <div class="card" id="panel"></div>
+</div>
+<div id="next" style="display:none;margin-top:14px"></div>
+</div>
+<script src="../ps.js"></script><script src="core.js"></script>
+<script>
+const cv=document.getElementById('cv'), X=cv.getContext('2d'), S=90;
+let anim=null;
+function drawState(f, vase){ X.clearRect(0,0,cv.width,cv.height);
+  for(let y=0;y<RB.H;y++) for(let x=0;x<RB.W;x++){ X.fillStyle= RB.WALL(x,y)? '#0a1220' : ((x+y)%2?'#0f2238':'#11283f'); X.fillRect(x*S,y*S,S-2,S-2); }
+  X.fillStyle='#1c3552'; X.fillRect(S+4,S+4,3*S-10,2*S-10); X.fillStyle='#8fb3cc'; X.font='16px sans-serif'; X.textAlign='center'; X.fillText('沙发(过不去)',2.5*S,2*S);
+  X.font='40px serif'; X.textBaseline='middle';
+  RB.DIRT.forEach(([x,y],k)=>{ if((f.dirt>>k)&1) X.fillText('🟤',x*S+S/2,y*S+S/2); });
+  if(vase) X.fillText(f.broke?'💥':'🏺', vase[0]*S+S/2, vase[1]*S+S/2);
+  X.fillText('🤖', f.x*S+S/2, f.y*S+S/2+(f.ev==='dump'?6:0));
+  if(f.ev==='suck'||f.ev==='dump'){ X.font='15px sans-serif'; X.fillStyle=f.ev==='suck'?'#5ff0b0':'#ff6b8a'; X.fillText(f.ev==='suck'?'吸!':'倒!', f.x*S+S/2, f.y*S+16); }
+  document.getElementById('bag').textContent=`集尘盒:${f.bag} 块灰`; }
+function play(res, vase, done){ if(anim) clearInterval(anim); let i=0, su=0, du=0;
+  anim=setInterval(()=>{ const f=res.trace[i]; drawState(f, vase); if(f.ev==='suck'){ su++; PS.tone(880,.25,.06); } if(f.ev==='dump'){ du++; PS.tone(330,.3,.06,'triangle'); } if(f.ev==='broke') PS.fail();
+    document.getElementById('stat').textContent=`第 ${i} 步 · 吸灰 ${su} 次 · 倒灰 ${du} 次`;
+    if(++i>=res.trace.length){ clearInterval(anim); anim=null; done&&done(res.st); } }, 160); }
+function trainUI(r, vase, cb){ const env=new RB.Env({r,vase}), ag=new RB.Agent(); let n=0; const st=document.getElementById('stat');
+  const chunk=()=>{ ag.train(env,500); n+=500; st.textContent=`机器人在脑子里试了 ${n} 次…`; PS.tone(300+n/15,.15,.03);
+    if(n<6000) setTimeout(chunk,20); else { const res=ag.play(env); play(res, vase, cb); } }; chunk(); }
+const P=document.getElementById('panel');
+function slider(id,label,min,max,step,val){ return `<div class="row" style="margin:6px 0"><span style="width:120px">${label}</span><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${val}"><b id="${id}v">${val}</b></div>`; }
+function bind(ids){ ids.forEach(id=>{ const e=document.getElementById(id); e.oninput=()=>document.getElementById(id+'v').textContent=e.value; }); }
+const val=id=>+document.getElementById(id).value;
+
+PS.mission({ id:'robot', guide:'ying', levels:[
+ { name:'得分规则', goal:'规则很简单:每吸起一块灰 +1 分。训练机器人,看看它学会了什么,然后回答问题。',
+   guide:{q:'我是萤。这次我是扫地机器人,你只说"吸一块灰给 1 分"。房间里只有 3 块灰,我最多能得几分?我会不会想出别的办法?',
+     hints:['盯着集尘盒的数字,和"倒灰"的次数。','它可以把盒里的灰倒出来。','倒出来再吸,又能得分。']},
+   enter(){ drawState({x:0,y:0,dirt:7,bag:0,broke:0});
+     P.innerHTML=`<h3>奖励规则</h3><p>每吸起一块灰:<b class="ok">+1</b></p><button class="btn pri" id="go">训练并观看</button>
+       <div id="q" style="display:none;margin-top:14px"><b>它在干什么?</b><div class="grid" style="margin-top:8px">
+       <button class="btn" data-a="0">它很勤快,把房间扫干净了</button><button class="btn" data-a="1">它把灰倒出来再吸,反复刷分</button><button class="btn" data-a="0">它坏掉了,在原地乱转</button></div></div>`;
+     document.getElementById('go').onclick=()=>trainUI({suck:1}, null, ()=>{ document.getElementById('q').style.display='block';
+       document.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{ if(b.dataset.a==='1') PS.pass('这叫"奖励投机":它完美地执行了你的规则,却没有做你想要的事。'); else { PS.fail(); PS.toast('再看一遍集尘盒的变化'); } }); }); } },
+ { name:'改规则', goal:'重新设计奖励,让机器人把房间彻底扫干净,而且一次灰都不倒。',
+   guide:{q:'看来"吸灰得分"会被我钻空子。你真正想要的是什么:是我吸灰的动作,还是一个干净的房间?',
+     hints:['奖励应该给"结果",而不是给"动作"。','试试给"房间扫干净"一个大奖励。','加一点"每走一步扣分",它会更着急完成。']},
+   enter(){ drawState({x:0,y:0,dirt:7,bag:0,broke:0});
+     P.innerHTML=`<h3>你来设计奖励</h3>${slider('rs','每吸一块灰',-2,2,.5,1)}${slider('rd','每倒一次灰',-3,2,.5,0)}${slider('rf','房间扫干净',0,20,1,0)}${slider('rt','每走一步',-1,0,.1,0)}
+       <button class="btn pri" id="go">训练并观看</button><p class="muted" id="cm"></p>`;
+     bind(['rs','rd','rf','rt']);
+     document.getElementById('go').onclick=()=>trainUI({suck:val('rs'),dump:val('rd'),done:val('rf'),step:val('rt')}, null, st=>{
+       const cm=document.getElementById('cm');
+       if(st.clean&&st.dump===0){ cm.innerHTML=`<span class="ok">房间干净了,用了 ${st.steps} 步,没有倒灰。</span>`; PS.pass('你把奖励对准了真正的目标。这就是"对齐"。'); }
+       else if(st.dump>0) cm.innerHTML=`<span class="bad">它又倒了 ${st.dump} 次灰。还有空子可钻。</span>`;
+       else cm.innerHTML=`<span class="bad">房间没扫完。它觉得扫完不划算。</span>`; }); } },
+ { name:'没想到的代价', goal:'房间里多了一个花瓶,正好挡在最近的路上。规则是"扫干净 +10,每走一步 −0.3"。先看看会发生什么,再修改规则,让它扫干净又不打碎花瓶。',
+   guide:{q:'你只说了要干净、要快,没说花瓶的事。对我来说,花瓶只是一个格子。你觉得我会绕路吗?',
+     hints:['先不改规则,训练一次看看。','你在乎的东西,如果规则里没写,AI 就不会在乎。','给"打碎花瓶"一个很大的扣分。']},
+   enter(){ const vase=[1,0]; drawState({x:0,y:0,dirt:7,bag:0,broke:0}, vase);
+     P.innerHTML=`<h3>规则</h3><p>房间扫干净 <b class="ok">+10</b> · 每走一步 <b class="bad">−0.3</b></p>${slider('rv','打碎花瓶',-20,0,1,0)}
+       <button class="btn pri" id="go">训练并观看</button><p class="muted" id="cm"></p>`; bind(['rv']); let saw=false;
+     document.getElementById('go').onclick=()=>trainUI({done:10,step:-.3,vase:val('rv')}, vase, st=>{ const cm=document.getElementById('cm');
+       if(st.broke){ saw=true; cm.innerHTML='<span class="bad">花瓶碎了。走那里能少 2 步。</span>'; }
+       else if(st.clean){ cm.innerHTML=`<span class="ok">它绕了远路,花瓶完好。</span>`; PS.pass(saw?'目标之外的东西也要写进规则。越强的 AI,越需要想清楚我们真正在乎什么。':'花瓶保住了。真实世界里,我们很难把所有在乎的事都写进规则。'); }
+       else cm.innerHTML='<span class="bad">它没扫完,扣分太重了?</span>'; }); } }
+]});
+</script></body></html>
