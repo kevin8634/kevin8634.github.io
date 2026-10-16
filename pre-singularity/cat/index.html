@@ -1,0 +1,118 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>让 AI 认出一只猫 · 奇点前夜</title><link rel="stylesheet" href="../ps.css"></head>
+<body data-mission="cat"><div class="wrap">
+<header class="top"></header>
+<h1>让 AI 认出一只猫</h1>
+<p class="sub">你是这只小 AI 的老师。它一开始什么都不懂,只会看你给它的数字。</p>
+<div id="levels" class="levels"></div>
+<div id="guide"></div>
+<div id="goal" class="goal"></div>
+<div class="grid g2" style="margin-top:12px">
+  <div class="card"><canvas id="cv" width="440" height="440"></canvas>
+    <div class="muted" id="axis" style="margin-top:6px"></div></div>
+  <div class="card" id="panel"></div>
+</div>
+<div id="next" style="display:none;margin-top:14px"></div>
+</div>
+<script src="../ps.js"></script>
+<script>
+const FEATS = ['耳朵有多尖','胡须有多长','体重','叫声有多高'];
+function rnd(){ return (Math.random()+Math.random()+Math.random()-1.5)/1.5; } // 近似正态
+function animals(n){ const a=[]; for(let i=0;i<n;i++){ const cat=i%2===0;
+  a.push({y:cat?1:0, f:[ cat? .55+rnd()*.3 : -.45+rnd()*.35, cat? .5+rnd()*.3 : -.35+rnd()*.35, rnd()*.6 + (cat?-.1:.1), cat? .2+rnd()*.5 : -.15+rnd()*.5 ]}); } return a; }
+/* 环形数据:猫在中间(第3关) */
+function ring(n, noise=0){ const a=[]; for(let i=0;i<n;i++){ const cat=i%2===0; const r = cat? Math.random()*.38 : .58+Math.random()*.35; const t=Math.random()*6.283;
+  let y = cat?1:0; if(Math.random()<noise) y=1-y; a.push({y, p:[r*Math.cos(t), r*Math.sin(t)]}); } return a; }
+
+/* 小型神经网络:2 → h(tanh) → 1(sigmoid);h=0 时就是逻辑回归 */
+function Net(h){ const R=()=>(Math.random()-.5)*1.6; this.h=h;
+  if(h){ this.W1=Array.from({length:h},()=>[R(),R()]); this.b1=Array(h).fill(0).map(R); this.W2=Array(h).fill(0).map(R); }
+  else { this.W2=[R(),R()]; } this.b2=0; }
+Net.prototype.fwd=function(x){ if(!this.h){ const z=this.W2[0]*x[0]+this.W2[1]*x[1]+this.b2; return {o:1/(1+Math.exp(-z)), a:x}; }
+  const a=this.W1.map((w,j)=>Math.tanh(w[0]*x[0]+w[1]*x[1]+this.b1[j])); let z=this.b2; a.forEach((v,j)=>z+=v*this.W2[j]); return {o:1/(1+Math.exp(-z)), a}; };
+Net.prototype.step=function(D,lr){ const n=D.length; const gW2=this.W2.map(()=>0); let gb2=0; const gW1=this.h?this.W1.map(()=>[0,0]):null, gb1=this.h?this.b1.map(()=>0):null; let L=0;
+  for(const d of D){ const {o,a}=this.fwd(d.x); const e=o-d.y; L+= -(d.y*Math.log(o+1e-9)+(1-d.y)*Math.log(1-o+1e-9));
+    a.forEach((v,j)=>gW2[j]+=e*v); gb2+=e;
+    if(this.h) a.forEach((v,j)=>{ const g=e*this.W2[j]*(1-v*v); gW1[j][0]+=g*d.x[0]; gW1[j][1]+=g*d.x[1]; gb1[j]+=g; }); }
+  this.W2=this.W2.map((w,j)=>w-lr*gW2[j]/n); this.b2-=lr*gb2/n;
+  if(this.h){ this.W1=this.W1.map((w,j)=>[w[0]-lr*gW1[j][0]/n, w[1]-lr*gW1[j][1]/n]); this.b1=this.b1.map((b,j)=>b-lr*gb1[j]/n); }
+  return L/n; };
+const acc=(net,D)=>D.filter(d=>(net.fwd(d.x).o>.5)===(d.y===1)).length/D.length;
+
+const cv=document.getElementById('cv'), X=cv.getContext('2d'), W=cv.width;
+const toPx=v=>(v+1.1)/2.2*W;
+function draw(D, net, test){
+  X.clearRect(0,0,W,W);
+  if(net){ const s=11; for(let i=0;i<W;i+=s) for(let j=0;j<W;j+=s){ const x=i/W*2.2-1.1, y=1.1-j/W*2.2; const o=net.fwd([x,y]).o;
+    X.fillStyle = `rgba(${Math.round(255*o)},${Math.round(120+60*o)},${Math.round(255*(1-o))},.22)`; X.fillRect(i,j,s,s);} }
+  X.strokeStyle='#1c3552'; X.beginPath(); X.moveTo(W/2,0); X.lineTo(W/2,W); X.moveTo(0,W/2); X.lineTo(W,W/2); X.stroke();
+  X.font='18px serif'; X.textAlign='center'; X.textBaseline='middle';
+  for(const d of D){ X.globalAlpha=1; X.fillText(d.y?'🐱':'🐶', toPx(d.x[0]), W-toPx(d.x[1])); }
+  if(test){ X.globalAlpha=.45; for(const d of test) X.fillText(d.y?'🐱':'🐶', toPx(d.x[0]), W-toPx(d.x[1])); X.globalAlpha=1; }
+}
+const P=document.getElementById('panel'), AX=document.getElementById('axis');
+let timer=null; const stop=()=>{ if(timer){ clearInterval(timer); timer=null; } };
+
+/* 训练控制面板(第2-4关共用) */
+function trainer(opt){
+  stop(); let net=new Net(opt.h), steps=0, loss=1;
+  P.innerHTML = `<h3>${opt.title}</h3>
+    ${opt.hidden? `<div class="row" style="margin:6px 0">隐藏神经元: ${[0,1,2,4,8].map(k=>`<button class="btn hb ${k===opt.h?'sel':''}" data-k="${k}">${k}</button>`).join('')}</div>`:''}
+    <div class="row" style="margin:6px 0">学习速度 <input type="range" id="lr" min="0.05" max="3" step="0.05" value="${opt.lr||.8}"><span id="lrv"></span></div>
+    <div class="row"><button class="btn" id="s1">训练 1 步</button><button class="btn pri" id="auto">自动训练</button><button class="btn" id="rs">重新开始</button>${opt.more?'<button class="btn" id="more">多收集数据</button>':''}</div>
+    <div style="margin-top:12px">损失(错得有多离谱):<b id="L">—</b></div>
+    <div>训练集正确率:<b id="A">—</b> ${opt.test?' · 新动物(没见过)正确率:<b id="T">—</b>':''}</div>
+    <div class="muted">已训练 <span id="S">0</span> 步。听:错得越少,和弦越和谐。</div>
+    <div class="geek muted" id="wt" style="margin-top:8px;font-family:monospace;font-size:12px;white-space:pre-wrap"></div>`;
+  const lr=document.getElementById('lr'), lrv=document.getElementById('lrv'); lrv.textContent=lr.value; lr.oninput=()=>lrv.textContent=lr.value;
+  function show(){ const a=acc(net,opt.D); document.getElementById('L').textContent=loss.toFixed(3); document.getElementById('A').textContent=Math.round(a*100)+'%';
+    let t=null; if(opt.test){ t=acc(net,opt.test); document.getElementById('T').textContent=Math.round(t*100)+'%'; }
+    document.getElementById('S').textContent=steps; draw(opt.D, net, opt.test);
+    document.getElementById('wt').textContent = '发烧视图 · 权重\n' + (net.h? net.W1.map((w,j)=>`h${j}: [${w.map(v=>v.toFixed(2)).join(', ')}] → ${net.W2[j].toFixed(2)}`).join('\n') : `w = [${net.W2.map(v=>v.toFixed(2)).join(', ')}], b = ${net.b2.toFixed(2)}`);
+    opt.check && opt.check({loss, a, t, steps, net}); }
+  function one(n=1){ for(let i=0;i<n;i++){ loss=net.step(opt.D, +lr.value); steps++; } show(); if(steps%5===0||n===1) PS.lossChord(Math.min(1,loss)); }
+  document.getElementById('s1').onclick=()=>one(1);
+  document.getElementById('auto').onclick=(e)=>{ if(timer){ stop(); e.target.textContent='自动训练'; } else { e.target.textContent='暂停'; timer=setInterval(()=>{ one(5); if(steps>=(opt.max||3000)){ stop(); e.target.textContent='自动训练'; } },60);} };
+  document.getElementById('rs').onclick=()=>trainer(opt);
+  if(opt.more) document.getElementById('more').onclick=()=>{ opt.D = opt.D.concat(opt.more()); trainer(opt); PS.toast('新收集了 40 只动物'); };
+  document.querySelectorAll('.hb').forEach(b=>b.onclick=()=>{ opt.h=+b.dataset.k; trainer(opt); });
+  show();
+}
+
+const BASE = animals(60);
+PS.mission({ id:'cat', guide:'ying', levels:[
+ { name:'挑特征', goal:'选两个"线索"作为横轴和纵轴,让猫和狗在图上自己分成两堆。',
+   guide:{q:'我是萤,一个刚出生的小 AI。我看不见照片,只能看到数字。如果你只能告诉我关于这只动物的两件事,哪两件最能分清猫和狗?',
+     hints:['试试换不同的组合,看哪种组合让 🐱 和 🐶 分得最开。','体重这条线索,猫和狗重叠得很厉害。','耳朵和胡须,猫的特征最明显。']},
+   enter(){ stop(); let fx=2, fy=3;
+     P.innerHTML = `<h3>你给萤的两条线索</h3><div>横轴:</div><div class="row" id="bx"></div><div style="margin-top:8px">纵轴:</div><div class="row" id="by"></div><p class="muted" id="sep" style="margin-top:12px"></p>`;
+     function upd(){ const D=BASE.map(a=>({y:a.y, x:[a.f[fx], a.f[fy]]})); draw(D);
+       AX.textContent = `横轴:${FEATS[fx]} · 纵轴:${FEATS[fy]}`;
+       document.getElementById('bx').innerHTML=FEATS.map((f,i)=>`<button class="btn ${i===fx?'sel':''}" data-x="${i}">${f}</button>`).join('');
+       document.getElementById('by').innerHTML=FEATS.map((f,i)=>`<button class="btn ${i===fy?'sel':''}" data-y="${i}">${f}</button>`).join('');
+       document.querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{ PS.click(); fx=+b.dataset.x; upd(); });
+       document.querySelectorAll('[data-y]').forEach(b=>b.onclick=()=>{ PS.click(); fy=+b.dataset.y; upd(); });
+       if(fx===fy){ document.getElementById('sep').textContent='两条线索一样,等于只给了一条。'; return; }
+       const n=new Net(0); for(let i=0;i<400;i++) n.step(D,1); const a=acc(n,D); draw(D,n);
+       document.getElementById('sep').innerHTML = `用这两条线索,一条直线最多能分对 <b>${Math.round(a*100)}%</b>。`;
+       if(a>=.95) PS.pass('你找到了好特征。选对线索,是机器学习的第一步。'); }
+     upd(); } },
+ { name:'训练', goal:'让萤自己学会画出分界线:训练集正确率到 95% 以上,并且损失低于 0.25。',
+   guide:{q:'现在由我自己来学。我会先乱猜一条分界线,每猜错一次就往对的方向挪一点点。你觉得"学习速度"调得越快越好吗?',
+     hints:['点"训练 1 步",看背景的颜色怎么变。','学习速度太大,分界线会来回乱跳;太小,又要学很久。','自动训练一会儿,看损失降到多少。']},
+   enter(){ const D=BASE.map(a=>({y:a.y, x:[a.f[0],a.f[1]]})); AX.textContent='横轴:耳朵有多尖 · 纵轴:胡须有多长';
+     trainer({title:'训练萤(一个神经元)', h:0, D, lr:.5, check:({loss,a})=>{ if(a>=.95&&loss<.25) { stop(); PS.pass('萤学会了!你刚才看到的就是"梯度下降"。'); } }}); } },
+ { name:'加一层', goal:'这次猫都待在中间,一条直线分不开。给萤加几个"隐藏神经元",让正确率超过 92%。',
+   guide:{q:'糟糕,这批数据里猫被狗围在中间。一条直线怎么画都不对。如果我能同时画好几条线再组合起来,会怎样?',
+     hints:['先用 0 个隐藏神经元训练,看它卡在多少。','神经元越多,我能画的边界就越弯。','试试 4 个或 8 个,再把学习速度调到 1 以上。']},
+   enter(){ const D=ring(120).map(a=>({y:a.y,x:a.p})); AX.textContent='横轴、纵轴:两条组合线索(猫在中间)';
+     trainer({title:'神经网络:输入 → 隐藏层 → 输出', h:0, hidden:true, D, lr:1.2, max:4000, check:({a,net})=>{ if(net.h>0&&a>=.92){ stop(); PS.pass('多一层神经元,就能画出弯曲的边界。这就是"深度"的起点。'); } }}); } },
+ { name:'死记硬背', goal:'只给萤 12 只动物(还有几只标错了),它会"背答案"。先看它背,再想办法让它认对没见过的新动物(新动物正确率 ≥ 85%)。',
+   guide:{q:'我在训练集上拿了满分,可遇到新动物就认错。我是真学会了,还是只是背下了答案?你有什么办法让我学到真正的规律?',
+     hints:['半透明的是我没见过的新动物,它们决定我是不是真学会了。','神经元太多、数据太少,我就会去记每一只的位置。','试试"多收集数据",或者减少隐藏神经元。']},
+   enter(){ const D=ring(12,.17).map(a=>({y:a.y,x:a.p})); const T=ring(80).map(a=>({y:a.y,x:a.p})); let sawOver=false, moreData=false; AX.textContent='实心:训练用的动物 · 半透明:没见过的新动物';
+     trainer({title:'当心过拟合', h:8, hidden:true, D, test:T, lr:1.5, max:5000, more:()=>{ moreData=true; return ring(40,.05).map(a=>({y:a.y,x:a.p})); },
+       check:({a,t,steps})=>{ if(a>=.99&&t<.85&&!sawOver){ sawOver=true; PS.fail(); PS.toast('训练满分,新动物却不及格:这就是过拟合'); }
+         if(t>=.85&&steps>50&&(sawOver||moreData)){ stop(); PS.pass('你让我学到了规律,而不是答案。更多数据、更简单的模型,都能对抗过拟合。'); } }}); } }
+]});
+</script></body></html>
