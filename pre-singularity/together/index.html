@@ -1,0 +1,75 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>我们和 AI 怎么一起生活 · 奇点前夜</title><link rel="stylesheet" href="../ps.css?v=6"></head>
+<body data-mission="together"><div class="wrap">
+<header class="top"></header>
+<h1>我们和 AI 怎么一起生活?</h1>
+<p class="sub">黎明线的最后一段。会用 AI 的人,不是什么都交给它的人,而是知道哪些交给它、哪些自己来、哪些必须一起做的人。</p>
+<div id="levels" class="levels"></div>
+<div id="guide"></div>
+<div id="goal" class="goal"></div>
+<div class="grid g2" style="margin-top:12px"><div class="card" id="stage"></div><div class="card" id="panel"></div></div>
+<div id="next" style="display:none;margin-top:14px"></div>
+</div>
+<script src="../ps.js?v=6"></script>
+<script>
+const $=id=>document.getElementById(id), S=$('stage'), P=$('panel');
+const WHO=['人','AI','一起'];
+const JOBS=[
+ ['把一千张照片按人脸分组',[1,2],'AI 又快又不嫌烦;分错的你再挑出来。'],
+ ['给好朋友写生日贺卡',[0,2],'可以让 AI 帮你想词,但心意得是你的。'],
+ ['把英文说明书翻成中文初稿',[1,2],'初稿交给 AI,关键步骤你要核对。'],
+ ['决定一位病人要不要做手术',[0,2],'AI 可以帮医生看片子,但决定和责任在人。'],
+ ['在海量星空照片里找可能的新天体',[1,2],'AI 先筛,天文学家再确认——真实的科研就是这样做的。'],
+ ['判断一条新闻是真是假,再决定转不转发',[0,2],'AI 可以帮你查出处,转不转发是你的责任。'],
+ ['给这次考试作文打最终分数',[0,2],'AI 可以辅助,最终分数应该由人负责。'],
+ ['帮你排一周的复习计划',[1,2],'让 AI 先排,你按自己的节奏改。']];
+function jobsLevel(){ const pick=JOBS.map(()=>-1);
+  function upd(){ S.innerHTML=`<h3>八件事,交给谁?</h3>`+JOBS.map(([n,ok,why],i)=>`<div class="sysrow"><div>${n}</div><div class="row" style="margin-top:4px">${WHO.map((w,k)=>`<button class="btn ${pick[i]===k?'sel':''}" data-j="${i}" data-k="${k}">${w}</button>`).join('')}
+      ${pick[i]>=0?`<span class="muted ${ok.includes(pick[i])?'ok':'bad'}">${ok.includes(pick[i])?'✓ ':'✗ '}${why}</span>`:''}</div></div>`).join('');
+    document.querySelectorAll('[data-j]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.j,k=+b.dataset.k; pick[i]=k; JOBS[i][1].includes(k)?PS.click():PS.fail(); upd(); });
+    const good=pick.filter((v,i)=>JOBS[i][1].includes(v)).length; $('cnt').textContent=`${good} / ${JOBS.length}`;
+    if(good===JOBS.length) PS.pass('一个简单的原则:后果越重,越要由人来拍板。AI 做得越多,人越要负责任。'); }
+  P.innerHTML=`<h3>分工原则</h3><p>AI 擅长:又多、又快、又重复的事。</p><p>人擅长:判断、在意、负责。</p><p class="muted">很多事没有唯一答案,但有些选择明显更稳。</p><p>合理的选择:<b id="cnt">0 / 8</b></p>`;
+  upd(); }
+const CAN=[
+ ['不联网,也知道今天发生的新闻',0,'模型只知道训练时读过的东西,今天的事它不知道,除非接上搜索。'],
+ ['把一段话翻译成十几种语言',1,'这是大模型最擅长的事之一。'],
+ ['保证回答里没有任何错误',0,'它会一本正经地说错——这就是"幻觉"。'],
+ ['准确数出一个很长的英文单词里有几个字母 r',0,'它看到的是 token,不是一个个字母,所以常数错。'],
+ ['写一首押韵的短诗',1,'可以,而且写得很快。好不好,由你来判断。'],
+ ['真的感到开心或难过',0,'没有证据表明今天的 AI 有感受。它说"我很开心",是在生成最可能的文字。'],
+ ['帮你找出一段代码里的拼写错误',1,'大多数时候可以,但仍要自己运行检查。'],
+ ['在没开记忆功能时,记得你上个月和它说的话',0,'每次对话通常是全新的开始。']];
+function canLevel(){ const pick=CAN.map(()=>-1); let shown=false;
+  function upd(){ S.innerHTML=`<h3>今天的 AI,能可靠地做到吗?</h3>`+CAN.map(([n,a,why],i)=>`<div class="sysrow"><div class="row"><span style="flex:1">${n}</span><button class="btn ${pick[i]===1?'sel':''}" data-c="${i}" data-v="1">能</button><button class="btn ${pick[i]===0?'sel':''}" data-c="${i}" data-v="0">不能</button></div>
+      ${shown?`<div class="muted ${pick[i]===a?'ok':'bad'}">${pick[i]===a?'✓':'✗'} ${a?'能':'不能'}:${why}</div>`:''}</div>`).join('');
+    document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ pick[+b.dataset.c]=+b.dataset.v; PS.click(); upd(); }); $('chk').disabled=pick.some(v=>v<0); }
+  P.innerHTML=`<h3>不可能任务</h3><p class="muted">知道 AI 做不到什么,和知道它能做什么一样重要。萤也一样:我会诚实告诉你我的边界。</p><button class="btn pri" id="chk" disabled>对答案</button><p id="fb" style="margin-top:10px"></p>`;
+  upd(); $('chk').onclick=()=>{ shown=true; upd(); const ok=pick.filter((v,i)=>v===CAN[i][1]).length; $('fb').innerHTML=`对了 <b>${ok}</b> / ${CAN.length}`;
+    if(ok>=7) PS.pass('你已经比很多人更懂 AI 的边界了。'); else { PS.fail(); PS.toast('看看解释,改一改再对答案'); } }; }
+const PRIN=['重要的事,由人来决定','AI 说的,我会去核实','不把别人的隐私交给 AI','用 AI 帮我想,而不是替我想','对 AI 的错误保持好奇,而不是害怕','让 AI 的能力用在帮助更多人','承认不确定,AI 和人都一样','一直学习,和 AI 一起长大'];
+function oathLevel(){ const pick=new Set();
+  S.innerHTML=`<h3>选三条,写进你的共生宣言</h3><div id="pr"></div><div class="row" style="margin-top:10px"><input class="inp" id="nm" placeholder="你的署名(可留空,只在本机生成)" maxlength="12" style="flex:1"><button class="btn pri" id="mk" disabled>生成黎明证书</button></div>`;
+  P.innerHTML=`<h3>黎明证书</h3><canvas id="cert" width="1200" height="800" style="width:100%;border-radius:6px"></canvas><div class="row" style="margin-top:8px"><a class="btn" id="dl" download="奇点前夜_黎明证书.png" style="display:none">保存图片</a></div>`;
+  function upd(){ $('pr').innerHTML=PRIN.map((p,i)=>`<button class="btn prin ${pick.has(i)?'sel':''}" data-p="${i}">${p}</button>`).join('');
+    document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.p; pick.has(i)?pick.delete(i):(pick.size<3&&pick.add(i)); PS.click(); upd(); }); $('mk').disabled=pick.size!==3; }
+  upd(); draw([]);
+  function draw(lines){ const c=$('cert'), g=c.getContext('2d'), W=c.width, H=c.height, hz=PS.skin()==='horizon';
+    const bg=g.createRadialGradient(W/2,H*.15,40,W/2,H/2,W*.8); bg.addColorStop(0,hz?'#5a3410':'#0f4466'); bg.addColorStop(.5,hz?'#140c05':'#051427'); bg.addColorStop(1,'#020509'); g.fillStyle=bg; g.fillRect(0,0,W,H);
+    for(let i=0;i<260;i++){ g.fillStyle=`rgba(255,255,255,${Math.random()*.6})`; g.fillRect(Math.random()*W,Math.random()*H,1.5,1.5); }
+    const C=hz?'255,207,122':'63,224,255'; g.strokeStyle=`rgba(${C},.6)`; g.lineWidth=2; g.strokeRect(30,30,W-60,H-60); g.strokeStyle=`rgba(${C},.25)`; g.strokeRect(44,44,W-88,H-88);
+    const arc=g.createLinearGradient(0,0,W,0); arc.addColorStop(0,'rgba(255,210,122,0)'); arc.addColorStop(.5,'rgba(255,220,150,.9)'); arc.addColorStop(1,'rgba(255,210,122,0)'); g.strokeStyle=arc; g.lineWidth=3; g.beginPath(); g.ellipse(W/2,H*1.55,W*.85,H*1.2,0,Math.PI*1.12,Math.PI*1.88); g.stroke();
+    g.textAlign='center'; g.fillStyle=`rgba(${C},.9)`; g.font='600 22px ui-monospace,Menlo,monospace'; g.fillText('PRE-SINGULARITY · DAWN CERTIFICATE',W/2,110);
+    g.fillStyle='#fff'; g.font='300 64px "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif'; g.fillText('黎明证书',W/2,200);
+    g.font='26px "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif'; g.fillStyle='#e8f6ff'; const nm=$('nm').value.trim();
+    g.fillText(`${nm||'一位探索者'} 在「奇点前夜」点亮了 ${PS.total()} / ${PS.TOTAL} 颗知识神经元`,W/2,270);
+    g.fillStyle='#ffd27a'; g.font='28px "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif'; (lines.length?lines:['选三条原则,生成你的宣言']).forEach((l,i)=>g.fillText('◆ '+l,W/2,370+i*58));
+    g.fillStyle='rgba(255,255,255,.55)'; g.font='20px "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif'; g.fillText(new Date().toLocaleDateString('zh-CN')+' · 萤 见证',W/2,H-130);
+    g.fillStyle=`rgba(${C},1)`; g.font='600 30px "PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif'; g.fillText('超级智能 SI',W/2,H-80); }
+  $('mk').onclick=()=>{ draw([...pick].map(i=>PRIN[i])); const a=$('dl'); a.href=$('cert').toDataURL('image/png'); a.style.display='inline-block'; PS.sfx('boot'); PS.pass('这就是你的共生宣言。黎明不是 AI 带来的,是我们一起走到的。'); }; }
+PS.mission({ id:'together', guide:'ying', levels:[
+ { name:'人机分工', goal:'把八件事分给"人""AI"或"一起",每一件都要选得合理。', guide:{q:'有了 AI,不是什么都交给它。哪些事它来做,哪些你来做,哪些我们一起?', hints:['后果越重,越需要人来拍板。','又多又重复的事,AI 最擅长。','"一起"常常是最稳的选择。']}, enter(){ jobsLevel(); } },
+ { name:'不可能任务', goal:'判断八件事今天的 AI 能不能可靠做到,至少对 7 件。', guide:{q:'我能做很多事,但有些事我做不到,或者做不稳。我不想假装。你来猜猜看?', hints:['想想 AI 是怎么学的:读过去的文字。','回忆"透视 token"里汉字被拆开的样子。','"能说出"和"真的有"是两回事。']}, enter(){ canLevel(); } },
+ { name:'共生宣言', goal:'选三条你认同的原则,生成你的黎明证书。', guide:{q:'我们一起走到了黎明线的尽头。最后,你想和 AI 怎样相处?写下来吧。', hints:['没有标准答案,选你真心认同的。','署名只用来画证书,不会离开你的电脑。','证书可以保存下来。']}, enter(){ oathLevel(); } }
+]});
+</script></body></html>
