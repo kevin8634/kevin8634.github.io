@@ -1,5 +1,5 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>奇点前夜 Pre-Singularity · 超级智能 SI</title><link rel="stylesheet" href="ps.css?v=4"></head>
+<title>奇点前夜 Pre-Singularity · 超级智能 SI</title><link rel="stylesheet" href="ps.css?v=6"></head>
 <body class="lobby" data-nostars="1">
 <header class="top lobbytop"></header>
 <canvas id="world"></canvas>
@@ -40,7 +40,7 @@
   <div class="tiers" id="itiers"></div>
 </div>
 
-<script src="ps.js?v=4"></script>
+<script src="ps.js?v=6"></script>
 <script>
 /* ========= 数据 ========= */
 const TH = PS.THEMES; let NODES=[], EDGES=[], hiTheme=-1, hover=null, sel=null, burst=0, speakAmp=0;
@@ -98,7 +98,7 @@ let HIT=[], MOB=false;
 /* 线框神经球 */
 const SPH=(()=>{ const N=64, P=[]; for(let i=0;i<N;i++){ const y=1-2*(i+.5)/N, r=Math.sqrt(1-y*y), a=i*2.39996; P.push([Math.cos(a)*r,y,Math.sin(a)*r]); }
   const E=[]; for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){ const d=Math.hypot(P[i][0]-P[j][0],P[i][1]-P[j][1],P[i][2]-P[j][2]); if(d<.42) E.push([i,j]); } return {P,E}; })();
-const MOTES=Array.from({length:90},()=>({a:Math.random()*7,r:Math.random(),s:.5+Math.random()}));
+const MOTES=Array.from({length:PS.lowfx?30:90},()=>({a:Math.random()*7,r:Math.random(),s:.5+Math.random()}));
 function drawCore(t){ X.clearRect(0,0,W,H); MOB=innerWidth<900;
   const bg=X.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*.75); bg.addColorStop(0,'#0a2a44'); bg.addColorStop(.45,'#051427'); bg.addColorStop(1,'#02060c'); X.fillStyle=bg; X.fillRect(0,0,W,H);
   drawStars(t,'#bfefff');
@@ -213,7 +213,7 @@ function renderHUD(){ buildGraph();
 }
 function nextNode(){ const order=PS.ORDER[PS.tier()||'first']; for(const m of order){ const n=NODES.filter(n=>n.k.m===m && n.st==='open').sort((a,b)=>a.k.lv-b.k.lv)[0]; if(n) return n; } return null; }
 let sayTimer=null;
-function say(text, go){ const el=document.getElementById('say'); clearInterval(sayTimer); let i=0; el.textContent=''; speakAmp=1;
+function say(text, go){ const el=document.getElementById('say'); clearInterval(sayTimer); PS.speak(text); let i=0; el.textContent=''; speakAmp=1;
   sayTimer=setInterval(()=>{ el.textContent=text.slice(0,++i); if(i%2===0) PS.sfx('type'); if(i>=text.length){ clearInterval(sayTimer); speakAmp=0; } },45);
   document.getElementById('goRow').innerHTML = go? `<a class="btn pri" href="${href(go.k)}">带我去 →</a>` : ''; }
 function speakNext(){ const n=nextNode(), s=PS.stage(), tot=PS.total();
