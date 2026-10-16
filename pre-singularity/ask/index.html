@@ -1,0 +1,75 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI 会思考吗 · 奇点前夜</title><link rel="stylesheet" href="../ps.css?v=6"></head>
+<body data-mission="ask"><div class="wrap">
+<header class="top"></header>
+<h1>AI 会思考吗?</h1>
+<p class="sub">这个问题没有标准答案。但我们可以换几个能动手的问题:你能分辨 AI 吗?它怎样在"试新的"和"选稳的"之间做决定?它脑子里面,能不能打开看?</p>
+<div id="levels" class="levels"></div>
+<div id="guide"></div>
+<div id="goal" class="goal"></div>
+<div class="grid g2" style="margin-top:12px"><div class="card" id="stage"></div><div class="card" id="panel"></div></div>
+<div id="next" style="display:none;margin-top:14px"></div>
+</div>
+<script src="../ps.js?v=6"></script>
+<script>
+const $=id=>document.getElementById(id), S=$('stage'), P=$('panel');
+/* ---------- 第 1 关:图灵测试 ---------- */
+const TT=[
+ ['周末你一般干嘛?','睡到自然醒,然后在楼下那家面馆吃碗牛肉面,下午随便逛逛。没什么特别的,哈哈。'],
+ ['你怕黑吗?','小时候怕得要命,晚上上厕所都得开着走廊的灯。现在好多了,但一个人走夜路还是会加快脚步。'],
+ ['推荐一本书?','这个问题很好!我推荐《小王子》。它篇幅短小、语言优美,探讨了友谊、责任与成长等主题,适合各个年龄段的读者。'],
+ ['1+1 为什么等于 2?','呃……因为定义就是这么定的?你要真问到底,得去翻数学家写的几百页证明了。'],
+ ['你今天心情怎么样?','作为一个……嗯,其实还行,就是有点困,昨晚想事情想到很晚。'],
+ ['下雨天适合做什么?','下雨天适合做以下几件事:1. 在家读书;2. 看一部电影;3. 泡一杯热茶;4. 整理房间。希望对你有帮助!']];
+function turingLevel(){ const lab=TT.map(()=>null); let shown=false;
+  function upd(){ S.innerHTML=`<h3>六段聊天记录</h3>`+TT.map(([q,a],i)=>`<div class="chat"><div class="cq">问:${q}</div><div class="ca">${a}</div>
+      <div class="row"><button class="btn ${lab[i]===0?'sel':''}" data-i="${i}" data-v="0">像人</button><button class="btn ${lab[i]===1?'sel':''}" data-i="${i}" data-v="1">像 AI</button>${shown?'<span class="pill" style="color:var(--gold)">AI 写的</span>':''}</div></div>`).join('');
+    document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{ lab[+b.dataset.i]=+b.dataset.v; PS.click(); upd(); }); 
+    const all=lab.every(v=>v!==null); $('rev').disabled=!all; }
+  P.innerHTML=`<h3>模仿游戏</h3><p>1950 年,图灵提出:如果一台机器在文字聊天里让人分不清它是不是人,我们就该认真考虑"它在思考"这件事。</p>
+    <p class="muted">给每段回答贴标签:像人,还是像 AI?</p><button class="btn pri" id="rev" disabled>揭晓答案</button><p id="fb" style="margin-top:10px"></p>`;
+  upd(); $('rev').onclick=()=>{ shown=true; upd(); const h=lab.filter(v=>v===0).length;
+    $('fb').innerHTML=`你觉得有 <b>${h}</b> 段像人。<br><span class="ok">真相:六段全是 AI 写的。</span>其中几段被故意写成了"AI 腔"(列清单、夸问题好),另外几段模仿了人的口气。<br><span class="muted">能模仿,不等于在想。图灵测试测的是"像不像",不是"懂不懂"。</span>`;
+    PS.sfx('open'); PS.pass('骗过你的是"风格",不是"思考"。今天判断一段话靠不靠谱,要看内容能不能核实,而不是它像不像人。'); }; }
+/* ---------- 第 2 关:探索与利用 ---------- */
+function banditLevel(){ const PR=[.2,.4,.55,.75].sort(()=>Math.random()-.5); let pulls=0, score=0; const cnt=[0,0,0,0], win=[0,0,0,0]; const N=30;
+  function upd(){ S.innerHTML=`<h3>四座星门 · 还剩 ${N-pulls} 次</h3><div class="gates">${PR.map((p,i)=>`<button class="gate4" data-g="${i}" ${pulls>=N?'disabled':''}><b>${'ⅠⅡⅢⅣ'[i]}</b><small>开过 ${cnt[i]} 次 · 出星 ${win[i]}</small><i style="width:${cnt[i]?win[i]/cnt[i]*100:0}%"></i></button>`).join('')}</div>
+      <p style="margin-top:12px">你的星星:<b style="color:var(--gold)">${score}</b> ★</p>`;
+    document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.g; pulls++; cnt[i]++; const w=Math.random()<PR[i]; if(w){ win[i]++; score++; PS.sfx('win'); } else PS.sfx('click'); upd(); if(pulls>=N) done(); }); }
+  function sim(policy,games=400){ let tot=0; for(let g=0;g<games;g++){ const pr=PR.slice().sort(()=>Math.random()-.5), c=[0,0,0,0], w=[0,0,0,0]; for(let t=0;t<N;t++){ const i=policy(c,w,t); c[i]++; if(Math.random()<pr[i]){ w[i]++; tot++; } } } return tot/games; }
+  const best=(c,w)=>{ let b=0,bv=-1; for(let i=0;i<4;i++){ const v=c[i]?w[i]/c[i]:.5; if(v>bv){ bv=v; b=i; } } return b; };
+  function done(){ $('ai').disabled=false; $('fb').innerHTML=`你拿到 <b>${score}</b> 颗星。真实出星率:${PR.map((p,i)=>'ⅠⅡⅢⅣ'[i]+' '+Math.round(p*100)+'%').join(' · ')}`; }
+  P.innerHTML=`<h3>试新的,还是选稳的?</h3><p class="muted">每座星门出星的机会不同,但你不知道。30 次机会,尽量多拿星星。</p><button class="btn pri" id="ai" disabled>看三种 AI 策略各玩 400 局</button><p id="fb" style="margin-top:10px"></p><div id="cmp"></div>`;
+  $('ai').onclick=()=>{ PS.click(); const r=[['只挑当前最好的(贪心)',sim((c,w,t)=>t<4?t:best(c,w))],['十次里有一次随便试(ε-贪心)',sim((c,w,t)=>t<4?t:(Math.random()<.1?Math.random()*4|0:best(c,w)))],['完全随便选',sim(()=>Math.random()*4|0)]];
+    const mx=Math.max(...r.map(x=>x[1]),score); $('cmp').innerHTML=[...r,['你',score]].map(([n,v])=>`<div class="row" style="margin:4px 0"><span style="width:180px">${n}</span><div class="bar"><i style="width:${v/mx*100}%"></i></div><b class="mono">${v.toFixed?v.toFixed(1):v}</b></div>`).join('');
+    PS.pass('一直选眼前最好的,可能错过更好的;一直乱试,又浪费机会。会"偶尔探索"的策略通常最稳。下棋 AI、推荐算法、扫地机器人都在做这道题。'); };
+  upd(); }
+/* ---------- 第 3 关:可解释性 ---------- */
+function ring(n){ const a=[]; for(let i=0;i<n;i++){ const y=i%2, r=y? Math.random()*.38 : .58+Math.random()*.35, t=Math.random()*6.283; a.push({x:[r*Math.cos(t),r*Math.sin(t)],y}); } return a; }
+function Net(h){ const R=()=>(Math.random()-.5)*2; this.h=h; this.W1=[...Array(h)].map(()=>[R(),R()]); this.b1=[...Array(h)].map(R); this.W2=[...Array(h)].map(R); this.b2=0; this.off=Array(h).fill(false); }
+Net.prototype.hid=function(x){ return this.W1.map((w,j)=>this.off[j]?0:Math.tanh(w[0]*x[0]+w[1]*x[1]+this.b1[j])); };
+Net.prototype.out=function(x){ const a=this.hid(x); let z=this.b2; a.forEach((v,j)=>z+=v*this.W2[j]); return 1/(1+Math.exp(-z)); };
+Net.prototype.step=function(D,lr){ const gW1=this.W1.map(()=>[0,0]), gb1=this.b1.map(()=>0), gW2=this.W2.map(()=>0); let gb2=0;
+  for(const d of D){ const a=this.hid(d.x); let z=this.b2; a.forEach((v,j)=>z+=v*this.W2[j]); const o=1/(1+Math.exp(-z)), e=o-d.y; gb2+=e; a.forEach((v,j)=>{ gW2[j]+=e*v; const g=e*this.W2[j]*(1-v*v); gW1[j][0]+=g*d.x[0]; gW1[j][1]+=g*d.x[1]; gb1[j]+=g; }); }
+  const n=D.length; this.W1=this.W1.map((w,j)=>[w[0]-lr*gW1[j][0]/n,w[1]-lr*gW1[j][1]/n]); this.b1=this.b1.map((b,j)=>b-lr*gb1[j]/n); this.W2=this.W2.map((w,j)=>w-lr*gW2[j]/n); this.b2-=lr*gb2/n; };
+const accN=(net,D)=>D.filter(d=>(net.out(d.x)>.5)===(d.y===1)).length/D.length;
+function interpLevel(){ const D=ring(200), T=ring(300); let net; for(let tries=0;tries<8;tries++){ net=new Net(4); for(let i=0;i<2500;i++) net.step(D,1.5); if(accN(net,T)>.93) break; }
+  const drop=[0,1,2,3].map(j=>{ net.off=net.off.map((_,k)=>k===j); const a=accN(net,T); net.off=net.off.map(()=>false); return a; }), full=accN(net,T), worst=drop.indexOf(Math.min(...drop));
+  S.innerHTML=`<h3>萤的大脑:4 个隐藏神经元</h3><div class="row" style="gap:10px;flex-wrap:wrap" id="neu"></div><div style="margin-top:10px"><div class="muted">整体判断(猫在中间)</div><canvas id="all" width="220" height="220" style="width:220px"></canvas></div>`;
+  P.innerHTML=`<h3>打开黑箱</h3><p class="muted">这个小网络已经学会了"猫在中间"。每个小图显示一个神经元对平面上每个位置有多兴奋。点"关掉"可以暂时拿掉它。</p>
+    <p>正确率:<b id="A">—</b></p><p>哪个神经元最关键?</p><div class="row">${[0,1,2,3].map(j=>`<button class="btn" data-guess="${j}">h${j+1}</button>`).join('')}</div><p id="fb" style="margin-top:8px"></p>`;
+  function map(cv,f,sz){ const g=cv.getContext('2d'), s=sz/22; for(let i=0;i<22;i++) for(let j=0;j<22;j++){ const v=f([i/22*2.2-1.1+.05, 1.1-j/22*2.2-.05]); g.fillStyle= v>=0?`rgba(63,224,255,${Math.min(1,Math.abs(v))})`:`rgba(255,111,168,${Math.min(1,Math.abs(v))})`; g.clearRect(i*s,j*s,s,s); g.fillRect(i*s,j*s,s+.5,s+.5); } }
+  function upd(){ $('neu').innerHTML=[0,1,2,3].map(j=>`<div class="neu ${net.off[j]?'off':''}"><canvas id="n${j}" width="110" height="110"></canvas><div class="row" style="justify-content:space-between"><b class="mono">h${j+1}</b><button class="btn" data-off="${j}" style="padding:2px 8px;font-size:12px">${net.off[j]?'打开':'关掉'}</button></div></div>`).join('');
+    [0,1,2,3].forEach(j=>{ const o=net.off[j]; net.off[j]=false; map($('n'+j),x=>net.hid(x)[j],110); net.off[j]=o; });
+    map($('all'),x=>(net.out(x)-.5)*2,220); $('A').textContent=Math.round(accN(net,T)*100)+'%';
+    document.querySelectorAll('[data-off]').forEach(b=>b.onclick=()=>{ const j=+b.dataset.off; net.off[j]=!net.off[j]; PS.sfx('hover',j); upd(); }); }
+  document.querySelectorAll('[data-guess]').forEach(b=>b.onclick=()=>{ const j=+b.dataset.guess; PS.click();
+    if(drop[j]-drop[worst]<=.02){ $('fb').innerHTML=`<span class="ok">对。关掉 h${j+1},正确率从 ${Math.round(full*100)}% 掉到 ${Math.round(drop[j]*100)}%。</span>`; PS.pass('一个一个神经元地关掉、观察,就是"可解释性"研究的起点。大模型有几十亿个神经元,科学家们才刚刚开始看懂其中一小部分。'); }
+    else { $('fb').innerHTML=`<span class="bad">关掉 h${j+1} 后还有 ${Math.round(drop[j]*100)}%,它不是最关键的。先挨个关掉试试。</span>`; PS.fail(); } });
+  upd(); }
+PS.mission({ id:'ask', guide:'ying', levels:[
+ { name:'图灵测试', goal:'给六段回答贴上"像人"或"像 AI"的标签,然后揭晓。', guide:{q:'有人说,如果你分不清屏幕那头是人还是机器,那机器就算"会思考"了。我们来玩一次模仿游戏。', hints:['列清单、夸"好问题",是常见的 AI 腔。','可是 AI 也能故意不用 AI 腔……','揭晓之后,想想"像人"说明了什么。']}, enter(){ turingLevel(); } },
+ { name:'探索与利用', goal:'用完 30 次开门机会,再看看三种 AI 策略谁拿的星星多。', guide:{q:'每次都开眼下最好的门,还是偶尔冒险试试别的?这是所有会学习的 AI 都要面对的难题。', hints:['前几次可以每扇门都试一下。','一扇门开两次就下结论,可能是运气。','留意你的策略更像三种 AI 里的哪一种。']}, enter(){ banditLevel(); } },
+ { name:'可解释性', goal:'关掉不同的神经元,找出对判断最关键的那一个。', guide:{q:'大家都说 AI 是"黑箱"。可它的每个神经元都是能看见的数字。我们打开一个小黑箱看看。', hints:['挨个点"关掉",看正确率掉多少。','整体判断图变化最大的那次,就是答案。','关键神经元的图,往往画出了圆圈的一段边。']}, enter(){ interpLevel(); } }
+]});
+</script></body></html>
