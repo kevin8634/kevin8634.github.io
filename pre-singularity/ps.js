@@ -132,7 +132,7 @@ PS.mission = (cfg) => {
 /* 顶栏 */
 PS.header = (title) => {
   const h = document.querySelector('header.top'); if(!h) return;
-  h.innerHTML = `<a class="brand" href="${(document.querySelector('script[src$="ps.js"]').getAttribute('src').replace('ps.js',''))||'./'}">奇点前夜 <b>Pre-Singularity</b><small>超级智能 SI</small></a>
+  h.innerHTML = `<a class="brand" href="${(document.querySelector('script[src*="ps.js"]').getAttribute('src').replace(/ps\.js.*$/,''))||'./'}">奇点前夜 <b>Pre-Singularity</b><small>超级智能 SI</small></a>
     <div class="row"><span class="pill" id="tierpill"></span><button class="btn hb" id="skinb" title="切换皮肤">◐ ${PS.SKINS[PS.skin()]}</button><button class="btn hb" id="ambb" title="专注音">${PS.ambOn()?'🎧 专注音开':'🎧 专注音'}</button><button class="btn hb" id="mute" title="音效">${PS.muted()?'🔇':'🔊'}</button></div>`;
   const t = PS.tier(); document.getElementById('tierpill').textContent = t ? ('程度:' + PS.TIERS[t].name) : '未选程度';
   document.getElementById('mute').onclick = (e)=>{ PS.set('mute', !PS.muted()); e.target.textContent = PS.muted()?'🔇':'🔊'; };
