@@ -238,3 +238,15 @@ footer{font-family:"SF Mono",ui-monospace,Menlo,monospace;letter-spacing:1px}
 body.skin-horizon .lobbytop{background:linear-gradient(180deg,rgba(14,9,4,.85),transparent)}
 #info{border-radius:4px} #info h2{font-weight:400;letter-spacing:2px}
 .tier{color:var(--fg)} .tier .t{color:#fff;letter-spacing:2px} body.skin-horizon .tier .t{color:#fff4e0}
+/* v0.4 巨人页 */
+.sec{font-size:13px;letter-spacing:4px;color:var(--acc);font-weight:500}
+.inp{background:rgba(4,14,26,.8);color:var(--fg);border:1px solid var(--edge);border-radius:3px;padding:7px 10px;font:inherit;font-size:14px;min-width:0}
+select.btn{padding:7px 10px} select.btn option{background:#081626;color:#e4f3ff}
+.door .tag{letter-spacing:2px;font-size:10.5px}
+.arena .col{display:flex;flex-direction:column;min-height:260px}
+.arena .ch{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--edge);padding-bottom:8px;margin-bottom:10px}
+.arena .ch b{font-size:13px;letter-spacing:3px;color:var(--fg);font-weight:600} .arena .ch span{font-size:10.5px;color:var(--dim);letter-spacing:.5px}
+.arena .out{flex:1;white-space:pre-wrap;line-height:1.8;font-size:15px;color:var(--fg)}
+.arena .st{font-size:10.5px;color:var(--acc);margin-top:10px;letter-spacing:1px}
+.tk{display:inline-block;padding:0 3px;margin:1px;border-radius:3px;font-size:14px;line-height:1.5;white-space:pre}
+.tk.t0{background:rgba(63,224,255,.22)} .tk.t1{background:rgba(255,190,92,.24)} .tk.t2{background:rgba(179,155,255,.26)} .tk.t3{background:rgba(110,255,180,.2)}
