@@ -1,0 +1,96 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>怎样让 AI 把熊猫认成长臂猿 · 奇点前夜</title><link rel="stylesheet" href="../ps.css"></head>
+<body data-mission="panda"><div class="wrap">
+<header class="top"></header>
+<h1>怎样让 AI 把熊猫认成长臂猿?</h1>
+<p class="sub">2014 年,科学家给一张熊猫照片加了一层人眼几乎看不见的"噪点",顶尖的 AI 就以 99% 的把握把它认成了长臂猿。我们用一个小模型重现这个实验。</p>
+<div id="levels" class="levels"></div>
+<div id="guide"></div>
+<div id="goal" class="goal"></div>
+<div class="grid g2" style="margin-top:12px">
+  <div class="card"><div class="row" style="gap:14px;align-items:flex-start">
+    <div><div class="muted">原图</div><canvas id="c0" width="168" height="168"></canvas></div>
+    <div><div class="muted">噪点(放大 10 倍显示)</div><canvas id="c1" width="168" height="168"></canvas></div>
+    <div><div class="muted">原图 + 噪点</div><canvas id="c2" width="168" height="168"></canvas></div></div>
+    <div id="verdict" style="margin-top:10px;font-size:18px"></div></div>
+  <div class="card" id="panel"></div>
+</div>
+<div id="next" style="display:none;margin-top:14px"></div>
+<p class="muted" style="margin-top:14px">说明:这里的实验只用于理解 AI 的局限,不涉及任何真实系统。</p>
+</div>
+<script src="../ps.js"></script>
+<script>
+const N=24, D=N*N;
+const R=(a,b)=>a+Math.random()*(b-a);
+function face(kind){ const img=new Float32Array(D); const cx=12+R(-1.5,1.5), cy=13+R(-1.5,1.5), r=R(7.5,9);
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){ const i=y*N+x; const dx=x-cx, dy=y-cy, d=Math.hypot(dx,dy); let v=.15;
+    if(kind===1){ /* 熊猫:白脸、黑眼圈、黑耳朵 */
+      if(d<r) v=.92; if(Math.hypot(x-(cx-r*.75),y-(cy-r*.8))<r*.35) v=.08; if(Math.hypot(x-(cx+r*.75),y-(cy-r*.8))<r*.35) v=.08;
+      for(const s of [-1,1]){ const ex=(x-(cx+s*r*.38))/(r*.26), ey=(y-(cy-r*.05))/(r*.36); if(ex*ex+ey*ey<1) v=.1; }
+      if(Math.hypot(x-cx,y-(cy+r*.35))<r*.15) v=.15; }
+    else { /* 长臂猿:深色脸、浅色脸环、浅色口鼻 */
+      if(d<r) v=.25; if(d<r && d>r*.78) v=.85; if(Math.hypot(x-cx,y-(cy+r*.3))<r*.3) v=.6;
+      for(const s of [-1,1]) if(Math.hypot(x-(cx+s*r*.35),y-(cy-r*.15))<r*.12) v=.05; }
+    img[i]=Math.min(1,Math.max(0,v+R(-.06,.06))); }
+  return img; }
+function set(n){ const a=[]; for(let i=0;i<n;i++){ const y=i%2; a.push({x:face(y),y}); } return a; }
+/* 线性分类器:p(熊猫)=sigmoid(w·x+b) */
+let w=new Float32Array(D), b=0;
+const z=x=>{ let s=b; for(let i=0;i<D;i++) s+=w[i]*x[i]; return s; };
+const pr=x=>1/(1+Math.exp(-z(x)));
+function train(S, epochs=60, lr=.05, l2=.002){ for(let e=0;e<epochs;e++){ const g=new Float32Array(D); let gb=0;
+  for(const d of S){ const er=pr(d.x)-d.y; for(let i=0;i<D;i++) g[i]+=er*d.x[i]; gb+=er; }
+  for(let i=0;i<D;i++) w[i]-=lr*(g[i]/S.length+l2*w[i]); b-=lr*gb/S.length; } }
+const accOn=S=>S.filter(d=>(pr(d.x)>.5)===(d.y===1)).length/S.length;
+/* FGSM:沿让"熊猫"概率下降最快的方向,每个像素挪 eps */
+function attack(x, eps, random){ const n=new Float32Array(D), a=new Float32Array(D); for(let i=0;i<D;i++){ n[i]= random? (Math.random()<.5?-eps:eps) : -Math.sign(w[i])*eps; a[i]=Math.min(1,Math.max(0,x[i]+n[i])); } return {n,a}; }
+function paint(cv, img, mode){ const X=cv.getContext('2d'), s=cv.width/N; let mx=0; if(mode==='noise') for(const v of img) mx=Math.max(mx,Math.abs(v));
+  for(let i=0;i<D;i++){ let v=img[i], c; if(mode==='noise'){ const t=mx? v/mx:0; c=`rgb(${128+Math.round(t*120)},128,${128-Math.round(t*120)})`; }
+    else if(mode==='w'){ const t=Math.tanh(v*6); c= t>0? `rgb(${Math.round(255*t)},${Math.round(200*t)},60)` : `rgb(30,${Math.round(-120*t)},${Math.round(-255*t)})`; }
+    else { const g=Math.round(v*255); c=`rgb(${g},${g},${g})`; }
+    X.fillStyle=c; X.fillRect((i%N)*s,Math.floor(i/N)*s,s+.5,s+.5); } }
+const C0=document.getElementById('c0'), C1=document.getElementById('c1'), C2=document.getElementById('c2'), V=document.getElementById('verdict'), P=document.getElementById('panel');
+function verdict(x){ const p=pr(x); const panda=p>.5; V.innerHTML=`模型说:<b class="${panda?'ok':'bad'}">${panda?'🐼 熊猫':'🐒 长臂猿'}</b> <span class="muted">把握 ${Math.round((panda?p:1-p)*100)}%</span>`; return panda; }
+let TRAIN=set(200), TEST=set(80), trained=false;
+const PANDA=()=>{ let x; do{ x=face(1); } while(pr(x)<.8 && trained); return x; };
+function minEps(x){ for(let e=.005;e<=.5;e+=.005){ if(pr(attack(x,e).a)<.5) return e; } return .5; }
+
+PS.mission({ id:'panda', guide:'raven', levels:[
+ { name:'先教会它', goal:'训练模型认熊猫和长臂猿,让它在没见过的图片上正确率 ≥ 95%。顺便看看它"盯着"哪些像素。',
+   guide:{who:'raven', q:'先造一个会认熊猫的 AI。训练完,看右下角那张"注意力图",它看的地方和你看的一样吗?',
+     hints:['点几次训练,看正确率怎么变。','注意力图里黄色像素越亮越像熊猫,蓝色越亮越像长臂猿。','它没有"眼圈"的概念,只是给每个像素一个分数。']},
+   enter(){ P.innerHTML=`<h3>训练模型</h3><div class="row"><button class="btn pri" id="t">训练一轮</button><button class="btn" id="s">换一张图</button></div>
+       <p>新图片正确率:<b id="a">—</b></p><div class="muted">它盯着哪里(注意力图):</div><canvas id="cw" width="168" height="168"></canvas>`;
+     let x=face(1); const show=()=>{ paint(C0,x); paint(C1,new Float32Array(D),'noise'); paint(C2,x); verdict(x); paint(document.getElementById('cw'),w,'w'); };
+     document.getElementById('t').onclick=()=>{ train(TRAIN,40); trained=true; const a=accOn(TEST); document.getElementById('a').textContent=Math.round(a*100)+'%'; PS.lossChord(1-a); show(); if(a>=.95) PS.pass('模型学会了。可它真的"懂"熊猫吗?'); };
+     document.getElementById('s').onclick=()=>{ x=face(Math.random()<.5?1:0); show(); }; show(); } },
+ { name:'看不见的噪点', goal:'用"随机噪点"和"针对性噪点"各试一次。找到一个噪点强度,让针对性噪点骗过模型,而同样强度的随机噪点骗不过。',
+   guide:{who:'raven', q:'人眼里一张熊猫,加一点点雪花点还是熊猫。可模型呢?如果噪点不是随机撒的,而是专门朝模型"最敏感"的方向推,会怎样?',
+     hints:['从很小的强度开始,慢慢往上调。','针对性噪点 = 每个像素都朝"让模型更不像熊猫"的方向推一点点。','很多像素各推一点点,加在一起就是一大步。']},
+   enter(){ if(!trained){ train(TRAIN,200); trained=true; } let x=PANDA(), okT=false, okR=false;
+     P.innerHTML=`<h3>噪点实验</h3><div class="row">强度 <input type="range" id="e" min="0" max="0.3" step="0.005" value="0.02"><b id="ev">0.020</b></div>
+       <div class="row" style="margin-top:8px"><button class="btn" id="rn">随机噪点</button><button class="btn pri" id="tn">针对性噪点</button><button class="btn" id="s">换一只熊猫</button></div><p class="muted" id="cm"></p>`;
+     const E=document.getElementById('e'); E.oninput=()=>document.getElementById('ev').textContent=(+E.value).toFixed(3);
+     const run=(rand)=>{ const eps=+E.value; const {n,a}=attack(x,eps,rand); paint(C0,x); paint(C1,n,'noise'); paint(C2,a); const p=verdict(a);
+       const fooled=!p; if(rand){ okR = okR || (!fooled && eps>0); } else if(fooled) okT={eps};
+       document.getElementById('cm').textContent = fooled? `每个像素只改了 ${Math.round(eps*100)}%,人眼看还是熊猫,模型却认错了。` : (rand? '随机噪点:模型没被骗。' : '强度还不够,再调大一点。');
+       if(fooled) PS.fail(); else PS.click();
+       if(okT && okR) PS.pass('针对性噪点能骗过模型,随机噪点不能。这叫"对抗样本"。'); };
+     document.getElementById('rn').onclick=()=>run(true); document.getElementById('tn').onclick=()=>run(false);
+     document.getElementById('s').onclick=()=>{ x=PANDA(); paint(C0,x); paint(C2,x); verdict(x); };
+     paint(C0,x); paint(C1,new Float32Array(D),'noise'); paint(C2,x); verdict(x); } },
+ { name:'让它更结实', goal:'用骗人的图片重新训练模型("对抗训练"),让骗过它所需的最小噪点强度提高三成以上。',
+   guide:{who:'raven', q:'既然这些噪点能骗过它,能不能把骗人的图片也拿来教它?教完之后,它会变得刀枪不入吗?',
+     hints:['先测一次"最小骗过强度",记住这个数。','点对抗训练几次,再测一次。','它会更结实,但永远不会完美。这是今天 AI 安全研究的难题之一。']},
+   enter(){ if(!trained){ train(TRAIN,200); trained=true; } const xs=Array.from({length:10},()=>PANDA()); let base=null;
+     P.innerHTML=`<h3>对抗训练</h3><div class="row"><button class="btn" id="m">测最小骗过强度</button><button class="btn pri" id="at">对抗训练一轮</button></div>
+       <p>开始时:<b id="b0">—</b> · 现在:<b id="b1">—</b></p><p class="muted">测量用 10 只熊猫的平均值。</p>`;
+     const meas=()=>xs.reduce((s,x)=>s+minEps(x),0)/xs.length;
+     document.getElementById('m').onclick=()=>{ const m=meas(); if(base===null){ base=m; document.getElementById('b0').textContent=m.toFixed(3); } document.getElementById('b1').textContent=m.toFixed(3);
+       const {n,a}=attack(xs[0],m); paint(C0,xs[0]); paint(C1,n,'noise'); paint(C2,a); verdict(a); PS.click();
+       if(base!==null && m>=base*1.3) PS.pass('模型更结实了,但更强的噪点仍能骗过它。理解局限,才能用好 AI。'); };
+     document.getElementById('at').onclick=()=>{ if(base===null){ PS.toast('先测一次开始时的强度'); return; } const adv=TRAIN.map(d=>{ const eps=.06+Math.random()*.06; const {a}=attack(d.x, d.y? eps : -eps); return {x:a,y:d.y}; });
+       train(TRAIN.concat(adv),40,.05,.0005); PS.toast('用 200 张骗人的图片又训练了一轮'); PS.tone(660,.6,.08); };
+     paint(C0,xs[0]); paint(C1,new Float32Array(D),'noise'); paint(C2,xs[0]); verdict(xs[0]); } }
+]});
+</script></body></html>
