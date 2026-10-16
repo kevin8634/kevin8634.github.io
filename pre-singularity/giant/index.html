@@ -1,27 +1,56 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>接入巨人 · 奇点前夜</title><link rel="stylesheet" href="../ps.css?v=3"></head>
+<title>接入巨人 · 奇点前夜</title><link rel="stylesheet" href="../ps.css?v=4"></head>
 <body data-music="giant"><div class="wrap">
 <header class="top"></header>
-<div class="mcode mono"><span>MISSION 06</span><span>// GIANT LINK</span><span class="sig"></span><span>接入大模型</span></div>
+<div class="mcode mono"><span>MISSION 06</span><span>// GIANT LINK</span><span class="sig"></span><span>三个巨人 · 一道题</span></div>
 <h1>接入巨人</h1>
-<p class="sub">任务里的小模型是你亲手造的"玻璃脑",每一步都看得见。真正的大模型读过的文字以万亿计。想让它也来做同样的实验?怎么接入由你决定。</p>
+<p class="sub">你在任务里亲手造的"玻璃脑"只读过几百个字。真正的语言模型读过的文字以万亿计。把同一个问题同时问给它们,看看"大"到底改变了什么,又有什么没变。</p>
+<div class="guide"><canvas class="ying" id="yg" width="160" height="160"></canvas><div class="bubble"><div class="who mono"><b class="live"></b>COMM · 萤 YING</div>
+<div id="ysay">我也是一个语言模型,只是比你的玻璃脑大得多。大,不等于什么都对。等会儿你可以亲眼看看:巨人看到的不是"字",是一块块的 token。</div></div></div>
+
+<h2 style="margin-top:24px" class="sec mono">01 · 选择你的巨人</h2>
 <div class="grid g3">
- <div class="card"><h2>① 离线巨人</h2><p class="tag">免费 · 不联网 · 即将开放</p>
-  <p>直接在你的浏览器里运行一个真实的小型语言模型。断网也能对话,你输入的每个字都不离开这台设备。</p>
-  <p class="muted">需要支持 WebGPU 的浏览器,首次下载几百 MB。</p><p id="gpu" class="muted"></p></div>
- <div class="card"><h2>② 自带钥匙</h2><p class="tag">用户自付 · 即将开放</p>
-  <p>在国内大模型平台(如 DeepSeek、通义千问、Kimi、豆包)申请自己的 API 钥匙,填进来即可。钥匙只存在你的浏览器里,本站不经手、不保存。</p>
-  <p class="muted">未成年人请在家长陪同下使用。</p></div>
- <div class="card"><h2>③ 场外巨人</h2><p class="tag">零配置 · 现在就能用</p>
-  <p>不接任何东西。复制下面的实验卡,粘贴到你常用的国产 AI App 里,再把结果和你的"玻璃脑"对比。</p></div>
+ <div class="card door" id="d1"><h3>离线巨人</h3><p class="tag mono">QWEN2.5-0.5B · 在你的电脑上运行</p>
+  <p>一个真实的 5 亿参数语言模型,下载一次后断网也能对话。你输入的每个字都不离开这台设备。</p>
+  <p class="muted" id="gpu">正在检查 WebGPU…</p>
+  <div class="row"><button class="btn pri" id="dl" disabled>下载并唤醒</button></div>
+  <div class="bar" style="margin-top:10px;display:none" id="dlbar"><i style="width:0"></i></div>
+  <p class="muted mono" id="dlst"></p></div>
+ <div class="card door" id="d2"><h3>自带钥匙</h3><p class="tag mono">BYOK · 你的浏览器直连厂商</p>
+  <p>用你自己在国内大模型平台申请的 API 钥匙。钥匙只存在这台设备的浏览器里,请求从你的浏览器直接发给厂商,本站没有服务器,碰不到它。</p>
+  <label class="muted"><input type="checkbox" id="adult"> 我已满 18 岁,或有家长陪同</label>
+  <div id="keyform" style="display:none;margin-top:8px">
+   <div class="row"><select id="prov" class="btn"></select><input id="model" class="inp" placeholder="模型名"></div>
+   <div class="row" style="margin-top:6px"><input id="key" class="inp" type="password" placeholder="粘贴 API Key(只存本机)" style="flex:1"></div>
+   <div class="row" style="margin-top:6px"><button class="btn" id="ksave">保存在本机</button><button class="btn" id="kdel">忘掉钥匙</button><a id="kget" class="muted" target="_blank" rel="noopener">去哪申请?</a></div>
+   <p class="muted mono" id="kst"></p></div></div>
+ <div class="card door" id="d3"><h3>场外巨人</h3><p class="tag mono">零配置 · 现在就能用</p>
+  <p>不接任何东西。复制下方的实验卡,粘贴到你常用的国产 AI App 里,再回来和你的玻璃脑对比。未成年人推荐这一条。</p>
+  <div class="row"><a class="btn" href="#cardsec">去拿实验卡 ↓</a></div></div>
 </div>
-<h2 style="margin-top:22px">场外实验卡</h2>
+
+<h2 style="margin-top:28px" class="sec mono">02 · 同题对照</h2>
+<div class="card">
+ <div class="row" id="presets"></div>
+ <textarea id="q" style="margin-top:8px" placeholder="写下你的问题,或点上面的实验">用"我喜欢"开头,写一句话。</textarea>
+ <div class="row" style="margin-top:8px;justify-content:space-between"><div class="row"><button class="btn pri" id="ask">同时发问</button><label class="muted"><input type="checkbox" id="tokv"> 透视 token</label></div>
+ <span class="muted">没准备好的巨人会自动跳过</span></div>
+</div>
+<div class="grid g3 arena" style="margin-top:12px">
+ <div class="card col"><div class="ch mono"><b>玻璃脑</b><span id="m0"></span></div><div class="out" id="o0"></div><div class="st mono" id="s0"></div></div>
+ <div class="card col"><div class="ch mono"><b>离线巨人</b><span>5 亿参数 · 读过约 18 万亿 token · 在你的电脑上</span></div><div class="out" id="o1"><span class="muted">还没唤醒,先在上面下载。</span></div><div class="st mono" id="s1"></div></div>
+ <div class="card col"><div class="ch mono"><b>钥匙巨人</b><span id="m2">参数通常在百亿到千亿级 · 在厂商的服务器上</span></div><div class="out" id="o2"><span class="muted">还没填钥匙。</span></div><div class="st mono" id="s2"></div></div>
+</div>
+<div class="card" style="margin-top:12px" id="think"><h3>想一想</h3><p class="muted" id="thinkq">三个回答,哪一个最像"懂了"?玻璃脑只会照抄它读过的字的顺序,巨人呢?它们有没有说错的地方?</p></div>
+
+<h2 style="margin-top:28px" class="sec mono" id="cardsec">03 · 场外实验卡</h2>
 <div class="grid g2" id="cards"></div>
-<footer>请不要在任何 AI 里输入你的姓名、电话、住址等个人信息。</footer>
+<footer>不要在任何 AI 里输入你的姓名、电话、住址等个人信息。离线巨人的模型文件来自开源社区(Qwen2.5,Apache-2.0 许可),下载后缓存在你的浏览器里。</footer>
 </div>
-<script src="../ps.js?v=3"></script>
+<script src="../ps.js?v=4"></script>
 <script>
-document.getElementById('gpu').textContent = navigator.gpu ? '✓ 你的浏览器支持 WebGPU。' : '你的浏览器暂不支持 WebGPU,可以先用 ③。';
+const $=id=>document.getElementById(id);
+const SYS='你是科普网站「奇点前夜」里的 AI,正在和学习者做实验。用简洁的中文回答,不超过 200 字。不确定的地方要直说。';
 const CARDS=[
  ['AI 是怎么"写作文"的?','请你用"我喜欢"开头写一句话,每写一个字,就列出你考虑过的前 5 个候选字和大概的可能性。','对比:巨人的候选字和你的小模型有什么不同?'],
  ['这段话是 AI 写的吗?','请写一段关于月球的小知识,其中故意藏两句错误的事实,先不要告诉我是哪两句。','你能找出来吗?再让它换成"不故意藏错",它还会出错吗?'],
@@ -29,7 +58,95 @@ const CARDS=[
  ['为什么扫地机器人会"偷懒"?','如果我给扫地机器人的奖励是"每吸起一块灰得 1 分",它可能会钻什么空子?请列出 3 种。','它想到了你看到的"倒灰再吸"吗?'],
  ['怎样让 AI 把熊猫认成长臂猿?','请用十岁孩子能懂的话解释"对抗样本",并说说它为什么对自动驾驶很重要。','它的解释和你亲手做的实验一致吗?']
 ];
-document.getElementById('cards').innerHTML=CARDS.map(([t,p,c],i)=>`<div class="card"><h3>${t}</h3><textarea id="p${i}" readonly>${p}</textarea>
+$('cards').innerHTML=CARDS.map(([t,p,c],i)=>`<div class="card"><h3>${t}</h3><textarea id="p${i}" readonly>${p}</textarea>
   <div class="row" style="margin-top:6px;justify-content:space-between"><span class="muted">${c}</span><button class="btn" data-i="${i}">复制</button></div></div>`).join('');
-document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{ const t=document.getElementById('p'+b.dataset.i); t.select(); try{ navigator.clipboard.writeText(t.value); }catch(e){ document.execCommand('copy'); } PS.toast('已复制,去你的 AI App 里粘贴吧'); });
+document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{ const t=$('p'+b.dataset.i); t.select(); try{ navigator.clipboard.writeText(t.value); }catch(e){ document.execCommand('copy'); } PS.click(); PS.toast('已复制,去你的 AI App 里粘贴吧'); });
+$('presets').innerHTML=[['写一句话','用"我喜欢"开头,写一句话。'],...CARDS.map(c=>[c[0],c[1]])].map(([t,p],i)=>`<button class="btn" data-p="${i}">${t}</button>`).join('');
+const PRE=[['','用"我喜欢"开头,写一句话。'],...CARDS.map(c=>[c[0],c[1]])];
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ $('q').value=PRE[+b.dataset.p][1]; PS.click(); });
+
+/* ---------- 萤 ---------- */
+
+/* ---------- 玻璃脑:三字计数表(和"AI 写作文"任务同一份课文) ---------- */
+const CORPUS=`小猫喜欢晒太阳。小猫喜欢吃鱼。小狗喜欢啃骨头。小狗喜欢在草地上跑。
+夜晚的天空有很多星星。星星在天空里眨眼睛。月亮在天空里慢慢地走。
+太阳从东边升起来。太阳是一颗很大的星星。地球绕着太阳转。月亮绕着地球转。
+我喜欢在夜晚看星星。我喜欢和小猫一起晒太阳。我们一起看月亮。
+科学家用望远镜看星星。科学家发现了一颗新的星星。望远镜可以看到很远的地方。
+机器可以学习。机器从数据里学习规律。机器学会了认出小猫。机器学会了写句子。
+写句子的机器只会猜下一个字。它猜得很快,但是它不知道句子是不是真的。
+春天的花开了。夏天的雨很大。秋天的叶子变黄了。冬天的雪是白色的。
+小猫在雪地里跑。小狗在雨里跳。孩子们在花园里看花。孩子们在夜晚看星星。
+大海很大很深。大海里有很多鱼。鲸鱼是大海里最大的动物。小鱼在大海里游来游去。`.replace(/\n/g,'');
+const TAB={}; for(let i=0;i+2<CORPUS.length;i++){ const k=CORPUS.slice(i,i+2), c=CORPUS[i+2]; (TAB[k]=TAB[k]||{})[c]=(TAB[k][c]||0)+1; }
+const NENT=Object.values(TAB).reduce((s,o)=>s+Object.keys(o).length,0);
+$('m0').textContent=`读过 ${CORPUS.length} 个字 · 计数表 ${NENT} 条 · 在你的电脑上`;
+function glass(prompt){ let ctx=null; const m=prompt.match(/[“"]([^”"]{2,})[”"]/); const seed=m?m[1]:prompt;
+  for(let i=seed.length-2;i>=0;i--){ if(TAB[seed.slice(i,i+2)]){ ctx=seed.slice(i,i+2); break; } }
+  let s=ctx||CORPUS.slice(0,2), out=s;
+  for(let n=0;n<60;n++){ const o=TAB[s.slice(-2)]; if(!o) break; const tot=Object.values(o).reduce((a,b)=>a+b,0); let r=Math.random()*tot, c;
+    for(const k in o){ r-=o[k]; if(r<=0){ c=k; break; } } out+=c; s+=c; if(c==='。'&&n>8) break; }
+  return {out, hit:!!ctx}; }
+
+/* ---------- 输出与 token 透视 ---------- */
+const TOK=[[],[],[]], TXT=['','',''];
+function render(i){ const el=$('o'+i); if($('tokv').checked && TOK[i].length){ el.innerHTML=TOK[i].map((s,k)=>`<span class="tk t${k%4}">${s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'↵')||'·'}</span>`).join(''); }
+  else el.textContent=TXT[i]; }
+$('tokv').onchange=()=>{ [0,1,2].forEach(render); PS.click(); if($('tokv').checked) $('ysay').textContent='彩色的每一块就是一个 token。玻璃脑一块是一个字;巨人的一块可能是半个字、一个字或一个词。出现 � 的地方,是一个汉字被拆成了两块。'; };
+
+/* ---------- 离线巨人 ---------- */
+let worker=null, ready=false, dtype='q4f16', busy1=false;
+(async()=>{ const g=$('gpu'); if(!navigator.gpu){ g.textContent='你的浏览器暂不支持 WebGPU。请用新版 Chrome 或 Edge 电脑版,或改用 ② ③。'; return; }
+  try{ const ad=await navigator.gpu.requestAdapter(); if(!ad) throw 0; const f16=ad.features.has('shader-f16'); dtype=f16?'q4f16':'q4';
+    g.textContent=`✓ 支持 WebGPU。首次需下载约 ${f16?480:790} MB,之后从浏览器缓存载入。`; $('dl').disabled=false; }
+  catch(e){ g.textContent='检测到 WebGPU,但没有可用的显卡适配器。可以改用 ② ③。'; } })();
+$('dl').onclick=()=>{ PS.sfx('boot'); $('dl').disabled=true; $('dlbar').style.display='block'; const files={};
+  worker=new Worker('./llm-worker.js',{type:'module'});
+  worker.onmessage=e=>{ const d=e.data;
+    if(d.t==='prog'){ const p=d.p; if(p.status==='progress'&&p.total){ files[p.file]=[p.loaded,p.total]; let a=0,b=0; for(const k in files){ a+=files[k][0]; b+=files[k][1]; }
+        $('dlbar').firstElementChild.style.width=(a/b*100).toFixed(1)+'%'; $('dlst').textContent=`${(a/1e6).toFixed(0)} / ${(b/1e6).toFixed(0)} MB`; } }
+    else if(d.t==='info') $('dlst').textContent=d.m;
+    else if(d.t==='warn') console.warn(d.m);
+    else if(d.t==='ready'){ ready=true; $('dlst').textContent='已唤醒 · 现在断网也能用'; $('dl').textContent='已就绪'; $('o1').innerHTML='<span class="muted">准备好了,去下面发问吧。</span>'; PS.win(); $('ysay').textContent='离线巨人醒了。它就住在你的显卡里,你问它什么,都不会离开这台电脑。'; }
+    else if(d.t==='txt'){ TXT[1]+=d.s; render(1); }
+    else if(d.t==='tok'){ TOK[1].push(d.s); if($('tokv').checked) render(1); }
+    else if(d.t==='done'){ busy1=false; $('s1').textContent=`${d.n} token · ${(d.n/(d.ms/1000)).toFixed(1)} token/秒`; }
+    else if(d.t==='err'){ busy1=false; $('dlst').textContent=d.m; $('dl').disabled=false; $('dl').textContent='重试'; PS.fail(); } };
+  worker.postMessage({t:'load',dtype}); };
+
+/* ---------- 钥匙巨人(OpenAI 兼容接口,浏览器直连) ---------- */
+const PROV={
+ deepseek:{n:'DeepSeek',url:'https://api.deepseek.com/chat/completions',model:'deepseek-chat',get:'https://platform.deepseek.com/api_keys'},
+ kimi:{n:'Kimi 月之暗面',url:'https://api.moonshot.cn/v1/chat/completions',model:'moonshot-v1-8k',get:'https://platform.moonshot.cn/console/api-keys'},
+ qwen:{n:'通义千问 阿里云百炼',url:'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions',model:'qwen-plus',get:'https://bailian.console.aliyun.com/'},
+ doubao:{n:'豆包 火山方舟',url:'https://ark.cn-beijing.volces.com/api/v3/chat/completions',model:'',get:'https://console.volcengine.com/ark',ph:'填你的模型或接入点 ID'},
+ silicon:{n:'硅基流动',url:'https://api.siliconflow.cn/v1/chat/completions',model:'Qwen/Qwen2.5-7B-Instruct',get:'https://cloud.siliconflow.cn/account/ak'}};
+$('prov').innerHTML=Object.entries(PROV).map(([k,p])=>`<option value="${k}">${p.n}</option>`).join('');
+$('prov').value=PS.get('prov','deepseek');
+function provUI(){ const k=$('prov').value, p=PROV[k]; $('model').value=PS.get('model:'+k,p.model); $('model').placeholder=p.ph||'模型名'; $('kget').href=p.get;
+  const has=!!localStorage.getItem('gn:ps:key:'+k); $('key').value=''; $('key').placeholder=has?'已保存在本机 ✓(重新粘贴可替换)':'粘贴 API Key(只存本机)'; $('kst').textContent=has?'钥匙已就绪':'';
+  $('m2').textContent=`${p.n} · 在厂商的服务器上`; if(has) $('o2').innerHTML='<span class="muted">钥匙已就绪,去下面发问吧。</span>'; }
+$('prov').onchange=()=>{ PS.set('prov',$('prov').value); provUI(); PS.click(); };
+$('adult').onchange=()=>{ $('keyform').style.display=$('adult').checked?'block':'none'; if($('adult').checked) provUI(); };
+$('ksave').onclick=()=>{ const k=$('prov').value, v=$('key').value.trim(); if(v) localStorage.setItem('gn:ps:key:'+k,v); PS.set('model:'+k,$('model').value.trim()); provUI(); PS.click(); PS.toast('已保存在这台设备的浏览器里'); };
+$('kdel').onclick=()=>{ localStorage.removeItem('gn:ps:key:'+$('prov').value); provUI(); PS.click(); PS.toast('钥匙已从本机删除'); };
+async function askKey(q){ const k=$('prov').value, key=localStorage.getItem('gn:ps:key:'+k), model=PS.get('model:'+k,PROV[k].model)||$('model').value.trim();
+  if(!$('adult').checked || !key){ return; } if(!model){ $('o2').textContent='请先填模型名。'; return; }
+  TXT[2]=''; TOK[2]=[]; $('o2').innerHTML='<span class="muted">正在连线…</span>'; const t0=performance.now(); let first=0, n=0;
+  try{ const res=await fetch(PROV[k].url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model,messages:[{role:'system',content:SYS},{role:'user',content:q}],stream:true,max_tokens:500,temperature:.7})});
+    if(!res.ok){ const t=await res.text(); throw new Error(res.status+(res.status===401?' 钥匙无效或已过期':res.status===402?' 账户余额不足':'')+' '+t.slice(0,120)); }
+    const rd=res.body.getReader(), dec=new TextDecoder(); let buf='';
+    for(;;){ const {done,value}=await rd.read(); if(done) break; buf+=dec.decode(value,{stream:true}); let i;
+      while((i=buf.indexOf('\n'))>=0){ const line=buf.slice(0,i).trim(); buf=buf.slice(i+1); if(!line.startsWith('data:')) continue; const d=line.slice(5).trim(); if(d==='[DONE]') continue;
+        try{ const c=JSON.parse(d).choices?.[0]?.delta?.content; if(c){ if(!first) first=performance.now()-t0; n++; TXT[2]+=c; TOK[2].push(c); render(2); } }catch(e){} } }
+    $('s2').textContent=`首字 ${(first/1000).toFixed(1)} 秒 · 共 ${((performance.now()-t0)/1000).toFixed(1)} 秒 · 云端不公开 token 细节`;
+  }catch(e){ $('o2').textContent='连线失败:'+e.message; PS.fail(); } }
+
+/* ---------- 同时发问 ---------- */
+$('ask').onclick=()=>{ const q=$('q').value.trim(); if(!q) return; PS.sfx('open');
+  const g=glass(q); TXT[0]=g.out; TOK[0]=[...g.out]; render(0); $('s0').textContent=g.hit?'从你给的词接着往下"抄"':'没读过你的词,只好从课文开头抄起';
+  if(ready && !busy1){ busy1=true; TXT[1]=''; TOK[1]=[]; $('o1').innerHTML='<span class="muted">思考中…</span>'; $('s1').textContent=''; worker.postMessage({t:'gen',messages:[{role:'system',content:SYS},{role:'user',content:q}],max:220}); }
+  askKey(q);
+  $('ysay').textContent=ready||localStorage.getItem('gn:ps:key:'+$('prov').value)?'看它们怎么回答同一个问题。勾上"透视 token",你会看到巨人眼里的文字长什么样。':'现在只有玻璃脑在答。唤醒离线巨人,或者填一把钥匙,就能三栏对照了。'; };
 </script></body></html>
