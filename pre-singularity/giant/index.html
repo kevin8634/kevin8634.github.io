@@ -1,0 +1,34 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>接入巨人 · 奇点前夜</title><link rel="stylesheet" href="../ps.css"></head>
+<body><div class="wrap">
+<header class="top"></header>
+<h1>🌌 接入巨人</h1>
+<p class="sub">任务里的小模型是你亲手造的"玻璃脑",每一步都看得见。真正的大模型读过的文字以万亿计。想让它也来做同样的实验?怎么接入由你决定。</p>
+<div class="grid g3">
+ <div class="card"><h2>① 离线巨人</h2><p class="tag">免费 · 不联网 · 即将开放</p>
+  <p>直接在你的浏览器里运行一个真实的小型语言模型。断网也能对话,你输入的每个字都不离开这台设备。</p>
+  <p class="muted">需要支持 WebGPU 的浏览器,首次下载几百 MB。</p><p id="gpu" class="muted"></p></div>
+ <div class="card"><h2>② 自带钥匙</h2><p class="tag">用户自付 · 即将开放</p>
+  <p>在国内大模型平台(如 DeepSeek、通义千问、Kimi、豆包)申请自己的 API 钥匙,填进来即可。钥匙只存在你的浏览器里,本站不经手、不保存。</p>
+  <p class="muted">未成年人请在家长陪同下使用。</p></div>
+ <div class="card"><h2>③ 场外巨人</h2><p class="tag">零配置 · 现在就能用</p>
+  <p>不接任何东西。复制下面的实验卡,粘贴到你常用的国产 AI App 里,再把结果和你的"玻璃脑"对比。</p></div>
+</div>
+<h2 style="margin-top:22px">场外实验卡</h2>
+<div class="grid g2" id="cards"></div>
+<footer>请不要在任何 AI 里输入你的姓名、电话、住址等个人信息。</footer>
+</div>
+<script src="../ps.js"></script>
+<script>
+document.getElementById('gpu').textContent = navigator.gpu ? '✓ 你的浏览器支持 WebGPU。' : '你的浏览器暂不支持 WebGPU,可以先用 ③。';
+const CARDS=[
+ ['AI 是怎么"写作文"的?','请你用"我喜欢"开头写一句话,每写一个字,就列出你考虑过的前 5 个候选字和大概的可能性。','对比:巨人的候选字和你的小模型有什么不同?'],
+ ['这段话是 AI 写的吗?','请写一段关于月球的小知识,其中故意藏两句错误的事实,先不要告诉我是哪两句。','你能找出来吗?再让它换成"不故意藏错",它还会出错吗?'],
+ ['让 AI 认出一只猫','如果只能用两个可以测量的特征来区分猫和狗,你会选哪两个?为什么?','和你在第 1 关的选择一样吗?'],
+ ['为什么扫地机器人会"偷懒"?','如果我给扫地机器人的奖励是"每吸起一块灰得 1 分",它可能会钻什么空子?请列出 3 种。','它想到了你看到的"倒灰再吸"吗?'],
+ ['怎样让 AI 把熊猫认成长臂猿?','请用十岁孩子能懂的话解释"对抗样本",并说说它为什么对自动驾驶很重要。','它的解释和你亲手做的实验一致吗?']
+];
+document.getElementById('cards').innerHTML=CARDS.map(([t,p,c],i)=>`<div class="card"><h3>${t}</h3><textarea id="p${i}" readonly>${p}</textarea>
+  <div class="row" style="margin-top:6px;justify-content:space-between"><span class="muted">${c}</span><button class="btn" data-i="${i}">复制</button></div></div>`).join('');
+document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{ const t=document.getElementById('p'+b.dataset.i); t.select(); try{ navigator.clipboard.writeText(t.value); }catch(e){ document.execCommand('copy'); } PS.toast('已复制,去你的 AI App 里粘贴吧'); });
+</script></body></html>
