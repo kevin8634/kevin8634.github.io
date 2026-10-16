@@ -237,3 +237,4 @@ footer{font-family:"SF Mono",ui-monospace,Menlo,monospace;letter-spacing:1px}
 .lobbytop{border-bottom:0;background:linear-gradient(180deg,rgba(2,8,16,.85),transparent)}
 body.skin-horizon .lobbytop{background:linear-gradient(180deg,rgba(14,9,4,.85),transparent)}
 #info{border-radius:4px} #info h2{font-weight:400;letter-spacing:2px}
+.tier{color:var(--fg)} .tier .t{color:#fff;letter-spacing:2px} body.skin-horizon .tier .t{color:#fff4e0}
