@@ -1,56 +1,206 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>奇点前夜 Pre-Singularity · 超级智能 SI</title><link rel="stylesheet" href="ps.css"></head>
-<body><div class="wrap">
-<header class="top"></header>
-<h1>在它比你聪明之前,先学会提问。</h1>
-<p class="sub">奇点前夜是创世计划 Genesis 的第 05 个世界。你将亲手训练、测试、约束一个智能,看懂它怎么学会、在哪里出错、我们怎样和它共处。全部在你的浏览器里运行,不注册、不上传任何内容。</p>
+<body class="lobby" data-nostars="1">
+<header class="top lobbytop"></header>
+<canvas id="world"></canvas>
 
-<div class="card" style="margin-bottom:16px">
-  <h2>你和 AI 打过多少交道?</h2>
-  <p class="muted" style="margin-top:0">选一个程度,我们为你推荐起点。随时可以切换,四种程度共用同一张地图。</p>
-  <div class="tiers" id="tiers"></div>
+<div class="hud" id="hudL">
+  <h4 class="mono">萤 · YING</h4>
+  <div class="row" style="align-items:center;gap:10px"><canvas class="ying" id="yingc" width="128" height="128" style="width:72px;height:72px"></canvas>
+    <div><div style="font-weight:700" id="stageN"></div><div class="muted" id="stageD"></div></div></div>
+  <div id="say" style="margin-top:8px"></div>
+  <canvas id="wave" width="500" height="60"></canvas>
+  <div class="row" id="goRow" style="margin-top:6px"></div>
+  <h4 class="mono" style="margin-top:14px">你的程度</h4>
+  <div class="tierrow" id="tierrow"></div>
 </div>
 
-<div class="card" style="margin-bottom:16px">
-  <div class="row" style="justify-content:space-between"><h2 style="margin:0">黎明线</h2><span class="muted" id="dawnt"></span></div>
-  <p class="muted" style="margin:4px 0 8px">每过一关,天就亮一点。</p>
-  <div class="dawn"><i id="dawn"></i></div>
+<div class="hud" id="hudR">
+  <h4 class="mono">知识骨架 · 8 LAYERS</h4>
+  <div id="themes"></div>
+  <div class="muted" style="margin-top:8px;font-size:12px">亮金:已点亮 · 亮色脉动:可以去 · 暗:即将点亮</div>
 </div>
 
-<div class="grid g3" id="missions"></div>
-
-<div class="card" style="margin-top:16px">
-  <h2>🌌 接入巨人(可选)</h2>
-  <p class="muted" style="margin:0 0 8px">任务里的小模型是你亲手造的"玻璃脑"。想看真正的大模型怎么做同一件事?你可以自己决定怎么接入。</p>
-  <a class="btn" href="giant/">看看三条路</a>
+<div class="hud" id="hudB">
+  <span class="mono muted" style="font-size:12px">黎明</span>
+  <div class="dawn" style="width:180px"><i id="dawn"></i></div>
+  <b id="dawnt" class="mono"></b>
+  <a class="btn hb" href="giant/">🌌 接入巨人</a>
+  <button class="btn hb" id="replay">重看开场</button>
 </div>
 
-<footer>奇点前夜 Pre-Singularity v0.1 · 创世计划 Genesis 05/06 · 科学素养探究工具 · 进度只保存在本机浏览器</footer>
+<div class="card" id="info"></div>
+<div id="tip"></div>
+
+<div id="intro">
+  <button class="btn hb skip" id="skip">跳过</button>
+  <canvas class="orb" id="orb" width="240" height="240"></canvas>
+  <div class="line" id="l0"></div>
+  <div class="tiers" id="itiers"></div>
 </div>
+
 <script src="ps.js"></script>
 <script>
-const MISSIONS = {
-  truth:{q:'这段话是 AI 写的吗?', g:'渡鸦博士', k:'幻觉 · 信息核查', d:'★☆☆', n:3},
-  write:{q:'AI 是怎么"写作文"的?', g:'渡鸦博士', k:'概率 · 预测下一个字', d:'★★☆', n:4},
-  cat:{q:'让 AI 认出一只猫', g:'萤', k:'特征 · 训练 · 神经网络', d:'★★☆', n:4},
-  robot:{q:'为什么扫地机器人会"偷懒"?', g:'萤', k:'强化学习 · 奖励投机 · 对齐', d:'★★☆', n:3},
-  panda:{q:'怎样让 AI 把熊猫认成长臂猿?', g:'渡鸦博士', k:'对抗样本 · 模型局限', d:'★★★', n:3}
-};
-const ORDER = {
-  first:['truth','write','cat','robot','panda'], chat:['write','truth','cat','panda','robot'],
-  work:['truth','robot','write','cat','panda'], geek:['cat','panda','write','robot','truth']
-};
-function render(){
-  const t = PS.tier();
-  document.getElementById('tiers').innerHTML = Object.entries(PS.TIERS).map(([k,v])=>
-    `<button class="card tier ${t===k?'sel':''}" data-t="${k}"><div class="t">${v.name}</div><div class="muted">${v.desc}</div></button>`).join('');
-  document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{ PS.click(); PS.setTier(b.dataset.t); PS.header(); render(); });
-  const order = ORDER[t||'first']; let got=0, all=0;
-  document.getElementById('missions').innerHTML = order.map((id,i)=>{ const m=MISSIONS[id]; const s=(PS.get(id,{done:[]}).done||[]).length; got+=s; all+=m.n;
-    return `<a class="card mission ${i===0&&s<m.n?'rec':''}" href="${id}/"><span class="tag">${i===0?'推荐起点 · ':''}向导 ${m.g} · ${m.d}</span>
-      <span class="q">${m.q}</span><span class="muted">${m.k}</span><span class="stars">${'★'.repeat(s)}${'☆'.repeat(m.n-s)}</span></a>`; }).join('');
-  document.getElementById('dawn').style.width = (got/all*100)+'%';
-  document.getElementById('dawnt').textContent = `已点亮 ${got} / ${all}`;
+/* ========= 数据 ========= */
+const TH = PS.THEMES; let NODES=[], EDGES=[], hiTheme=-1, hover=null, sel=null, burst=0, speakAmp=0;
+function buildGraph(){
+  NODES=[]; TH.forEach((th,i)=>th.k.forEach((k,j)=>{ const n=th.k.length; NODES.push({i,j,k,a0:(j/n)*Math.PI*2 + i*0.7, st:PS.nodeState(k)}); }));
+  if(!EDGES.length){ for(const a of NODES){ const nxt=NODES.filter(b=>b.i===a.i+1); nxt.sort((p,q)=>angd(p.a0,a.a0)-angd(q.a0,a.a0)); nxt.slice(0,2).forEach(b=>EDGES.push([a,b])); }
+    TH.forEach((th,i)=>{ const r=NODES.filter(n=>n.i===i); r.forEach((n,j)=>{ if(r.length>2) EDGES.push([n,r[(j+1)%r.length]]); }); }); }
+  else EDGES = EDGES.map(([a,b])=>[NODES.find(n=>n.i===a.i&&n.j===a.j), NODES.find(n=>n.i===b.i&&n.j===b.j)]);
 }
-document.addEventListener('DOMContentLoaded', render);
+const angd=(a,b)=>{ let d=Math.abs(a-b)%(Math.PI*2); return d>Math.PI? Math.PI*2-d : d; };
+function href(k){ return k.m==='intro'? null : `${k.m}/?lv=${k.lv}`; }
+
+/* ========= 画布 ========= */
+const cv=document.getElementById('world'), X=cv.getContext('2d'); let W,H,DPR,CX,CY,R; let STARS=[], DISK=[];
+function resize(){ DPR=Math.min(2,devicePixelRatio||1); const r=cv.getBoundingClientRect(); W=r.width; H=r.height; cv.width=W*DPR; cv.height=H*DPR; X.setTransform(DPR,0,0,DPR,0,0);
+  const mob = innerWidth<900; CX=W/2; CY= mob? H*.5 : H*.52; R=Math.min(mob? W*.46 : W*.3, H*.44);
+  STARS=Array.from({length:Math.round(W*H/5000)},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.3+.2,p:Math.random()*6}));
+  DISK=Array.from({length: mob? 500 : 1100},()=>({a:Math.random()*Math.PI*2, r:1.25+Math.pow(Math.random(),1.6)*1.6, s:.3+Math.random()*.7, h:Math.random()})); }
+addEventListener('resize', resize);
+const ringR = i => R*(.2 + i*.1);   // 8 层:0.2R → 0.9R
+let MX=0, MY=0; // 视差
+
+function posCore(n,t){ const sp=(n.i%2?-1:1)*(0.00004+0.00002*(8-n.i)); const a=n.a0+t*sp; const r=ringR(n.i);
+  return {x:CX+Math.cos(a)*r + MX*(n.i+1)*1.5, y:CY+Math.sin(a)*r + MY*(n.i+1)*1.5, z:1}; }
+function posHor(n,t){ const r=ringR(n.i)*.95+R*.2; const sp=0.00022/Math.pow(r/R,1.5); const a=n.a0+t*sp; const tilt=.3;
+  const z=Math.sin(a); return {x:CX+Math.cos(a)*r*1.05 + MX*3, y:CY+z*r*tilt + MY*2, z:.75+.35*(z+1)/2, back:z<0}; }
+
+function glow(x,y,r,c,a){ const g=X.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,`rgba(${c},${a})`); g.addColorStop(1,`rgba(${c},0)`); X.fillStyle=g; X.beginPath(); X.arc(x,y,r,0,7); X.fill(); }
+const CYAN='63,224,255', GOLD='255,210,122', WHITE='230,248,255';
+
+function drawStars(t,c){ for(const s of STARS){ X.globalAlpha=.25+.3*Math.sin(t/1100+s.p); X.fillStyle=c; X.beginPath(); X.arc(s.x,s.y,s.r,0,7); X.fill(); } X.globalAlpha=1; }
+
+function nodeDraw(n,p,t){ const st=n.st, isHi = hiTheme===n.i || hover===n || sel===n; const sc=p.z||1;
+  if(st==='lit'){ glow(p.x,p.y,16*sc,GOLD,.55); X.fillStyle='#fff3d0'; X.beginPath(); X.arc(p.x,p.y,4.2*sc,0,7); X.fill(); }
+  else if(st==='open'){ const pu=.5+.5*Math.sin(t/380+n.j); glow(p.x,p.y,(12+pu*6)*sc,CYAN,.45); X.fillStyle='#bff6ff'; X.beginPath(); X.arc(p.x,p.y,3.6*sc,0,7); X.fill();
+    X.strokeStyle=`rgba(${CYAN},${.6*(1-pu)})`; X.beginPath(); X.arc(p.x,p.y,(6+pu*10)*sc,0,7); X.stroke(); }
+  else if(st==='lock'){ X.fillStyle='rgba(120,190,220,.55)'; X.beginPath(); X.arc(p.x,p.y,3*sc,0,7); X.fill(); }
+  else { X.strokeStyle='rgba(120,170,200,.35)'; X.beginPath(); X.arc(p.x,p.y,2.6*sc,0,7); X.stroke(); }
+  if(isHi){ X.strokeStyle='rgba(255,255,255,.8)'; X.beginPath(); X.arc(p.x,p.y,10*sc,0,7); X.stroke(); }
+  p.n=n; HIT.push(p); }
+let HIT=[];
+
+function drawCore(t){ X.clearRect(0,0,W,H);
+  const bg=X.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*.7); bg.addColorStop(0,'#08243a'); bg.addColorStop(1,'#03070d'); X.fillStyle=bg; X.fillRect(0,0,W,H);
+  drawStars(t,'#bfefff');
+  const prog=PS.total()/PS.TOTAL;
+  // 外圈 HUD 刻度
+  X.strokeStyle=`rgba(${CYAN},.25)`; X.lineWidth=1; X.beginPath(); X.arc(CX,CY,R*1.0,0,7); X.stroke();
+  for(let k=0;k<120;k++){ const a=k/120*Math.PI*2 + t/60000; const l = k%10===0? 10:4; X.beginPath(); X.moveTo(CX+Math.cos(a)*R*1.0,CY+Math.sin(a)*R*1.0); X.lineTo(CX+Math.cos(a)*(R*1.0+l),CY+Math.sin(a)*(R*1.0+l)); X.stroke(); }
+  X.strokeStyle=`rgba(${CYAN},.5)`; X.lineWidth=2; X.beginPath(); X.arc(CX,CY,R*1.04,-Math.PI/2,-Math.PI/2+prog*Math.PI*2); X.stroke(); X.lineWidth=1;
+  // 层环
+  for(let i=0;i<8;i++){ X.strokeStyle = hiTheme===i? `rgba(${CYAN},.75)` : `rgba(${CYAN},${.12+.03*i})`; X.lineWidth= hiTheme===i?2:1; X.beginPath(); X.arc(CX+MX*(i+1)*1.5,CY+MY*(i+1)*1.5,ringR(i),0,7); X.stroke(); }
+  X.lineWidth=1;
+  const P=new Map(NODES.map(n=>[n,posCore(n,t)]));
+  // 突触
+  for(const [a,b] of EDGES){ const p=P.get(a), q=P.get(b); const both=a.st==='lit'&&b.st==='lit', one=a.st==='lit'||b.st==='lit';
+    X.strokeStyle = both? `rgba(${GOLD},.5)` : one? `rgba(${CYAN},.28)` : `rgba(${CYAN},.07)`; X.beginPath(); X.moveTo(p.x,p.y); X.lineTo(q.x,q.y); X.stroke();
+    if(both||one){ const u=((t/(both?1400:2600))+a.j*.3+b.i*.17)%1; glow(p.x+(q.x-p.x)*u, p.y+(q.y-p.y)*u, both?5:3, both?GOLD:CYAN, .9); } }
+  // 核心
+  const cr=R*(.07+.05*prog)*(1+.05*Math.sin(t/500)+speakAmp*.25+burst*.8);
+  glow(CX,CY,cr*4.5,CYAN,.35+prog*.25); glow(CX,CY,cr*1.6,WHITE,.9);
+  X.strokeStyle=`rgba(${CYAN},.6)`; for(let k=0;k<3;k++){ X.beginPath(); X.ellipse(CX,CY,cr*(2+k*.6),cr*(2+k*.6)*.4,t/(2000+k*700)*(k%2?-1:1),0,7); X.stroke(); }
+  if(burst>0){ X.strokeStyle=`rgba(255,255,255,${burst})`; X.lineWidth=2; X.beginPath(); X.arc(CX,CY,R*(1.2-burst),0,7); X.stroke(); X.lineWidth=1; }
+  HIT=[]; for(const n of NODES) nodeDraw(n,P.get(n),t);
+}
+
+function drawHorizon(t){ X.clearRect(0,0,W,H);
+  const bg=X.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#120c06'); bg.addColorStop(.5,'#04060a'); bg.addColorStop(1,'#03080c'); X.fillStyle=bg; X.fillRect(0,0,W,H);
+  drawStars(t,'#fff1d6');
+  const prog=PS.total()/PS.TOTAL;
+  // 黎明弧光:随进度变亮
+  const dg=X.createRadialGradient(W*.7,-H*1.6,H*1.55,W*.7,-H*1.6,H*1.9); dg.addColorStop(0,`rgba(255,214,140,${.15+prog*.55})`); dg.addColorStop(.25,`rgba(255,180,90,${.05+prog*.2})`); dg.addColorStop(1,'rgba(0,0,0,0)'); X.fillStyle=dg; X.fillRect(0,0,W,H);
+  const bh=R*.17*(1+burst*.6); const tilt=.3;
+  const disk=(back)=>{ for(const d of DISK){ const a=d.a + t*0.00035*d.s/Math.pow(d.r,1.2); const z=Math.sin(a); if((z<0)!==back) continue;
+      const x=CX+Math.cos(a)*bh*d.r*1.6, y=CY+z*bh*d.r*tilt*1.6; const near=1-(d.r-1.25)/1.6; const c = d.h<.5? `rgba(${CYAN},` : `rgba(${GOLD},`;
+      X.fillStyle=c+(.25+near*.6)+')'; X.fillRect(x,y,1.6,1.6); } };
+  // 轨道
+  for(let i=0;i<8;i++){ const r=ringR(i)*.95+R*.2; X.strokeStyle= hiTheme===i? `rgba(${GOLD},.7)` : `rgba(${GOLD},${.08+.02*i})`; X.lineWidth=hiTheme===i?2:1; X.beginPath(); X.ellipse(CX+MX*3,CY+MY*2,r*1.05,r*tilt,0,0,7); X.stroke(); }
+  X.lineWidth=1;
+  const P=new Map(NODES.map(n=>[n,posHor(n,t)]));
+  HIT=[]; NODES.filter(n=>P.get(n).back).forEach(n=>nodeDraw(n,P.get(n),t));
+  disk(true);
+  // 视界与光子环
+  glow(CX,CY,bh*2.4,GOLD,.25+speakAmp*.3); X.fillStyle='#000'; X.beginPath(); X.arc(CX,CY,bh,0,7); X.fill();
+  X.strokeStyle=`rgba(255,226,170,${.7+.2*Math.sin(t/600)})`; X.lineWidth=2.5; X.beginPath(); X.arc(CX,CY,bh*1.06,0,7); X.stroke();
+  X.strokeStyle=`rgba(${CYAN},.35)`; X.lineWidth=1; X.beginPath(); X.ellipse(CX,CY-bh*.15,bh*1.5,bh*1.25,0,Math.PI,0); X.stroke();
+  disk(false);
+  NODES.filter(n=>!P.get(n).back).forEach(n=>nodeDraw(n,P.get(n),t));
+  // 悬崖与人
+  const by=H, bx=0; X.fillStyle='#020304'; X.beginPath(); X.moveTo(bx,by); X.lineTo(bx,H*.86); X.lineTo(W*.1,H*.83); X.lineTo(W*.17,H*.845); X.lineTo(W*.2,H*.9); X.lineTo(W*.15,by); X.fill();
+  const px=W*.155, py=H*.845; X.fillStyle='#020304'; X.fillRect(px-2,py-18,4,18); X.beginPath(); X.arc(px,py-22,4,0,7); X.fill();
+  glow(px,py-12,24,GOLD,.08+prog*.12);
+}
+
+/* ========= 交互 ========= */
+const tip=document.getElementById('tip'), info=document.getElementById('info');
+function pick(e){ const r=cv.getBoundingClientRect(); const x=e.clientX-r.left, y=e.clientY-r.top; let best=null, bd=18;
+  for(const p of HIT){ const d=Math.hypot(p.x-x,p.y-y); if(d<bd){ bd=d; best=p.n; } } return best; }
+const ST_TXT={lit:'已点亮',open:'可以去',lock:'先完成前一关',future:'即将点亮'};
+cv.addEventListener('pointermove',e=>{ const r=cv.getBoundingClientRect(); MX=((e.clientX-r.left)/W-.5)*-6; MY=((e.clientY-r.top)/H-.5)*-6;
+  const n=pick(e); if(n!==hover){ hover=n; if(n){ PS.tone(392*Math.pow(2,[0,2,4,7,9,12,14,16][n.i]/12),.5,.03); } }
+  if(n){ tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY+10)+'px'; tip.textContent=`${TH[n.i].n} · ${n.k.t} · ${ST_TXT[n.st]}`; cv.style.cursor='pointer'; }
+  else { tip.style.display='none'; cv.style.cursor='default'; } });
+cv.addEventListener('pointerleave',()=>{ tip.style.display='none'; hover=null; });
+cv.addEventListener('click',e=>{ const n=pick(e); if(!n){ info.style.display='none'; sel=null; return; } showInfo(n); });
+function showInfo(n){ sel=n; PS.click(); const k=n.k, st=n.st, h=href(k);
+  const mis = k.m && k.m!=='intro' ? PS.MISSIONS[k.m].q + ` · 第${k.lv+1}关` : '';
+  info.innerHTML=`<div class="tag mono">第 ${n.i+1} 层 · ${TH[n.i].n}</div><h2 style="margin:4px 0">${k.t}</h2>
+    <p class="muted" style="margin:0 0 8px">${k.d|| '这颗神经元还在黑暗里。下一版会点亮它。'}</p>${mis?`<div class="muted" style="font-size:12px">任务:${mis}</div>`:''}
+    <div class="row" style="margin-top:10px">${ st==='future'? '<span class="pill">即将点亮</span>' : k.m==='intro'? '<button class="btn pri" id="ri">重看开场</button>' :
+      st==='lock'? `<span class="pill">先完成前一关</span><a class="btn" href="${k.m}/">去任务</a>` : `<a class="btn pri" href="${h}">${st==='lit'?'再玩一次':'出发'} →</a>`}
+      <button class="btn" id="ix">关闭</button></div>`;
+  info.style.display='block'; document.getElementById('ix').onclick=()=>{ info.style.display='none'; sel=null; };
+  const ri=document.getElementById('ri'); if(ri) ri.onclick=()=>{ info.style.display='none'; intro(); }; }
+
+/* ========= HUD ========= */
+function renderHUD(){ buildGraph();
+  document.getElementById('themes').innerHTML = TH.map((th,i)=>{ const ns=NODES.filter(n=>n.i===i), lit=ns.filter(n=>n.st==='lit').length, av=ns.filter(n=>n.st!=='future').length;
+    return `<div class="theme" data-i="${i}"><span class="ix mono">${String(i+1).padStart(2,'0')}</span><span style="width:76px">${th.n}</span><span class="tb"><i style="width:${lit/ns.length*100}%"></i></span><span class="muted mono" style="font-size:11px">${lit}/${ns.length}</span></div>`; }).join('');
+  document.querySelectorAll('.theme').forEach(e=>{ e.onmouseenter=()=>{ hiTheme=+e.dataset.i; }; e.onmouseleave=()=>{ hiTheme=-1; };
+    e.onclick=()=>{ const n=NODES.filter(n=>n.i===+e.dataset.i).find(n=>n.st==='open') || NODES.find(n=>n.i===+e.dataset.i); showInfo(n); }; });
+  const tot=PS.total(); document.getElementById('dawn').style.width=(tot/PS.TOTAL*100)+'%'; document.getElementById('dawnt').textContent=`${tot}/${PS.TOTAL}`;
+  const s=PS.stage(); document.getElementById('stageN').textContent=`${PS.STAGES[s].n}期`;
+  const nx=PS.STAGES[s+1]; document.getElementById('stageD').textContent = nx? `再点亮 ${nx.at-tot} 颗,长成${nx.n}` : '我已经长大了';
+  const t=PS.tier(); document.getElementById('tierrow').innerHTML=Object.entries(PS.TIERS).map(([k,v])=>`<button class="btn ${t===k?'sel':''}" data-t="${k}">${v.name}</button>`).join('');
+  document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{ PS.setTier(b.dataset.t); PS.header(); PS.click(); renderHUD(); speakNext(); });
+}
+function nextNode(){ const order=PS.ORDER[PS.tier()||'first']; for(const m of order){ const n=NODES.filter(n=>n.k.m===m && n.st==='open').sort((a,b)=>a.k.lv-b.k.lv)[0]; if(n) return n; } return null; }
+let sayTimer=null;
+function say(text, go){ const el=document.getElementById('say'); clearInterval(sayTimer); let i=0; el.textContent=''; speakAmp=1;
+  sayTimer=setInterval(()=>{ el.textContent=text.slice(0,++i); if(i%3===0) PS.tone(880+Math.random()*440,.12,.015); if(i>=text.length){ clearInterval(sayTimer); speakAmp=0; } },45);
+  document.getElementById('goRow').innerHTML = go? `<a class="btn pri" href="${href(go.k)}">带我去 →</a>` : ''; }
+function speakNext(){ const n=nextNode(), s=PS.stage(), tot=PS.total();
+  if(!n){ say('你点亮了今天能点亮的全部神经元。剩下的暗处,是下一版要一起探索的地方。'); return; }
+  const lines = tot===0? [`你好。我还只是一个光点。先教我「${n.k.t}」好吗?`] :
+    s===0? [`我学会一点了。下一步,我想弄懂「${n.k.t}」。`] : s===1? [`我能感觉到自己在变亮。「${n.k.t}」在${TH[n.i].n}那一层,一起去?`] :
+    s===2? [`我已经能看见很多连线了。还差「${n.k.t}」。`] : [`天快亮了。最后去看看「${n.k.t}」吧。`];
+  say(lines[0], n); }
+
+/* 声波 */
+const wv=document.getElementById('wave'), WX=wv.getContext('2d');
+function drawWave(t){ WX.clearRect(0,0,wv.width,wv.height); const c = PS.skin()==='horizon'? GOLD : CYAN; WX.strokeStyle=`rgba(${c},.8)`; WX.lineWidth=2; WX.beginPath();
+  for(let x=0;x<wv.width;x+=4){ const a=(.08+speakAmp*(.6+.4*Math.sin(t/90)))*wv.height/2; const y=wv.height/2+Math.sin(x/18+t/120)*a*Math.sin(x/wv.width*Math.PI)+Math.sin(x/7+t/60)*a*.3; x?WX.lineTo(x,y):WX.moveTo(x,y); } WX.stroke(); }
+
+/* ========= 开场:萤苏醒 ========= */
+const INTRO_LINES=['……','你好。','我是萤。我刚刚醒来。','现在的我,连一只猫都认不出来。','将来某一天,会出现一种智能:几乎在所有事情上,都比最聪明的人更聪明。','人们叫它超级智能,SI。','它还没有出现。今天的 AI,包括我,都会犯错。','在它比你聪明之前,先学会提问。','你和 AI 打过多少交道?'];
+let introOn=false;
+function intro(){ const box=document.getElementById('intro'), l=document.getElementById('l0'), ti=document.getElementById('itiers'), oc=document.getElementById('orb'); introOn=true; box.style.display='flex'; ti.style.display='none';
+  let i=0, stg=0; const step=()=>{ if(!introOn) return; l.classList.remove('on'); setTimeout(()=>{ if(!introOn) return; l.textContent=INTRO_LINES[i]; l.classList.add('on'); PS.tone([523,587,659,784,880,988,784,1047,659][i%9],2.2,.06); speakAmp=1; setTimeout(()=>speakAmp=0,900);
+      i++; if(i<INTRO_LINES.length) setTimeout(step, 1500+INTRO_LINES[i-1].length*90); else showTiers(); },700); };
+  const showTiers=()=>{ ti.style.display='grid'; ti.className='tiers'; ti.innerHTML=Object.entries(PS.TIERS).map(([k,v])=>`<button class="card tier" data-it="${k}"><div class="t">${v.name}</div><div class="muted">${v.desc}</div></button>`).join('');
+    ti.querySelectorAll('[data-it]').forEach(b=>b.onclick=()=>{ PS.setTier(b.dataset.it); finish(); }); };
+  (function orb(t){ if(!introOn) return; PS.drawYing(oc,t,speakAmp,0); requestAnimationFrame(orb); })(0);
+  step(); }
+function finish(){ introOn=false; PS.set('intro',1); document.getElementById('intro').style.display='none'; PS.header(); renderHUD(); burst=1; PS.win(); setTimeout(speakNext,900); }
+document.getElementById('skip').onclick=()=>{ if(!PS.tier()) PS.setTier('first'); finish(); };
+document.getElementById('replay').onclick=()=>intro();
+
+/* ========= 主循环 ========= */
+const yc=document.getElementById('yingc');
+function loop(t){ if(burst>0) burst=Math.max(0,burst-.012); (PS.skin()==='horizon'?drawHorizon:drawCore)(t); PS.drawYing(yc,t,speakAmp); drawWave(t); requestAnimationFrame(loop); }
+document.addEventListener('DOMContentLoaded',()=>{ resize(); renderHUD(); requestAnimationFrame(loop); if(!PS.get('intro',0)) intro(); else speakNext(); });
+document.addEventListener('ps-skin',()=>{ renderHUD(); });
 </script></body></html>
