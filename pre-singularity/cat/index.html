@@ -1,5 +1,5 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>让 AI 认出一只猫 · 奇点前夜</title><link rel="stylesheet" href="../ps.css?v=4"></head>
+<title>让 AI 认出一只猫 · 奇点前夜</title><link rel="stylesheet" href="../ps.css?v=6"></head>
 <body data-mission="cat"><div class="wrap">
 <header class="top"></header>
 <h1>让 AI 认出一只猫</h1>
@@ -14,7 +14,7 @@
 </div>
 <div id="next" style="display:none;margin-top:14px"></div>
 </div>
-<script src="../ps.js?v=4"></script>
+<script src="../ps.js?v=6"></script>
 <script>
 const FEATS = ['耳朵有多尖','胡须有多长','体重','叫声有多高'];
 function rnd(){ return (Math.random()+Math.random()+Math.random()-1.5)/1.5; } // 近似正态
@@ -63,13 +63,24 @@ function trainer(opt){
     <div style="margin-top:12px">损失(错得有多离谱):<b id="L">—</b></div>
     <div>训练集正确率:<b id="A">—</b> ${opt.test?' · 新动物(没见过)正确率:<b id="T">—</b>':''}</div>
     <div class="muted">已训练 <span id="S">0</span> 步。听:错得越少,和弦越和谐。</div>
+    ${opt.land?'<div style="margin-top:10px"><div class="muted">损失地形:颜色越亮错得越多,白线是萤一路走下山的脚印(横:耳朵权重 · 纵:胡须权重)</div><canvas id="land" width="240" height="240" style="width:240px;height:240px;margin-top:6px"></canvas></div>':''}
     <div class="geek muted" id="wt" style="margin-top:8px;font-family:monospace;font-size:12px;white-space:pre-wrap"></div>`;
   const lr=document.getElementById('lr'), lrv=document.getElementById('lrv'); lrv.textContent=lr.value; lr.oninput=()=>lrv.textContent=lr.value;
   function show(){ const a=acc(net,opt.D); document.getElementById('L').textContent=loss.toFixed(3); document.getElementById('A').textContent=Math.round(a*100)+'%';
     let t=null; if(opt.test){ t=acc(net,opt.test); document.getElementById('T').textContent=Math.round(t*100)+'%'; }
     document.getElementById('S').textContent=steps; draw(opt.D, net, opt.test);
     document.getElementById('wt').textContent = '发烧视图 · 权重\n' + (net.h? net.W1.map((w,j)=>`h${j}: [${w.map(v=>v.toFixed(2)).join(', ')}] → ${net.W2[j].toFixed(2)}`).join('\n') : `w = [${net.W2.map(v=>v.toFixed(2)).join(', ')}], b = ${net.b2.toFixed(2)}`);
-    opt.check && opt.check({loss, a, t, steps, net}); }
+    if(opt.land) land(); opt.check && opt.check({loss, a, t, steps, net}); }
+  const path=[], LC=opt.land&&document.getElementById('land'); let grid=null, gb=null;
+  function land(){ if(!LC) return; const g=LC.getContext('2d'), N=48, S=LC.width, R=8, toW=v=>(v/N*2-1)*R;
+    path.push([net.W2[0],net.W2[1]]); if(path.length>400) path.shift();
+    if(!grid || Math.abs(gb-net.b2)>.3){ gb=net.b2; grid=[]; let mx=0, mn=1e9;
+      for(let i=0;i<N;i++) for(let j=0;j<N;j++){ const w0=toW(i+.5), w1=toW(N-j-.5); let L=0; for(const d of opt.D){ const o=1/(1+Math.exp(-(w0*d.x[0]+w1*d.x[1]+gb))); L-= d.y?Math.log(o+1e-9):Math.log(1-o+1e-9); } L=Math.log(1+L/opt.D.length); grid.push(L); mx=Math.max(mx,L); mn=Math.min(mn,L); }
+      grid=grid.map(v=>(v-mn)/(mx-mn+1e-9)); }
+    const c=S/N; for(let i=0;i<N;i++) for(let j=0;j<N;j++){ const v=grid[i*N+j]; g.fillStyle=`hsl(${200-170*v},85%,${12+48*v}%)`; g.fillRect(i*c,j*c,c+1,c+1); }
+    g.strokeStyle='rgba(255,255,255,.12)'; for(let k=1;k<8;k++){ g.beginPath(); g.moveTo(k*S/8,0); g.lineTo(k*S/8,S); g.moveTo(0,k*S/8); g.lineTo(S,k*S/8); g.stroke(); }
+    const px=w=>(w/R+1)/2*S; g.strokeStyle='#fff'; g.lineWidth=1.6; g.beginPath(); path.forEach((p,k)=>{ const x=px(p[0]), y=S-px(p[1]); k?g.lineTo(x,y):g.moveTo(x,y); }); g.stroke(); g.lineWidth=1;
+    const p=path[path.length-1]; g.fillStyle='#fff'; g.beginPath(); g.arc(px(p[0]),S-px(p[1]),4,0,7); g.fill(); }
   function one(n=1){ for(let i=0;i<n;i++){ loss=net.step(opt.D, +lr.value); steps++; } show(); if(steps%5===0||n===1) PS.lossChord(Math.min(1,loss)); }
   document.getElementById('s1').onclick=()=>one(1);
   document.getElementById('auto').onclick=(e)=>{ if(timer){ stop(); e.target.textContent='自动训练'; } else { e.target.textContent='暂停'; timer=setInterval(()=>{ one(5); if(steps>=(opt.max||3000)){ stop(); e.target.textContent='自动训练'; } },60);} };
@@ -101,7 +112,7 @@ PS.mission({ id:'cat', guide:'ying', levels:[
    guide:{q:'现在由我自己来学。我会先乱猜一条分界线,每猜错一次就往对的方向挪一点点。你觉得"学习速度"调得越快越好吗?',
      hints:['点"训练 1 步",看背景的颜色怎么变。','学习速度太大,分界线会来回乱跳;太小,又要学很久。','自动训练一会儿,看损失降到多少。']},
    enter(){ const D=BASE.map(a=>({y:a.y, x:[a.f[0],a.f[1]]})); AX.textContent='横轴:耳朵有多尖 · 纵轴:胡须有多长';
-     trainer({title:'训练萤(一个神经元)', h:0, D, lr:.5, check:({loss,a})=>{ if(a>=.95&&loss<.25) { stop(); PS.pass('萤学会了!你刚才看到的就是"梯度下降"。'); } }}); } },
+     trainer({title:'训练萤(一个神经元)', h:0, D, lr:.5, land:true, check:({loss,a})=>{ if(a>=.95&&loss<.25) { stop(); PS.pass('萤学会了!你刚才看到的就是"梯度下降"。'); } }}); } },
  { name:'加一层', goal:'这次猫都待在中间,一条直线分不开。给萤加几个"隐藏神经元",让正确率超过 92%。',
    guide:{q:'糟糕,这批数据里猫被狗围在中间。一条直线怎么画都不对。如果我能同时画好几条线再组合起来,会怎样?',
      hints:['先用 0 个隐藏神经元训练,看它卡在多少。','神经元越多,我能画的边界就越弯。','试试 4 个或 8 个,再把学习速度调到 1 以上。']},
