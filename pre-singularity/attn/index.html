@@ -1,0 +1,108 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI 在"看"哪里 · 奇点前夜</title><link rel="stylesheet" href="../ps.css?v=6"></head>
+<body data-mission="attn"><div class="wrap">
+<header class="top"></header>
+<h1>AI 在"看"哪里?</h1>
+<p class="sub">今天所有大语言模型的心脏,叫"注意力"。读到每一个字时,它都要决定:前面那么多字,该重点看哪几个?</p>
+<div id="levels" class="levels"></div>
+<div id="guide"></div>
+<div id="goal" class="goal"></div>
+<div class="grid g2" style="margin-top:12px">
+  <div class="card" id="stage"></div>
+  <div class="card" id="panel"></div>
+</div>
+<div id="next" style="display:none;margin-top:14px"></div>
+</div>
+<script src="../ps.js?v=6"></script>
+<script>
+const $=id=>document.getElementById(id), S=$('stage'), P=$('panel');
+let timer=null; const stop=()=>{ if(timer){ clearInterval(timer); timer=null; } };
+/* ---------- 第 1 关:你来当注意力 ---------- */
+const SENT=[
+ {w:['小猫','追','老鼠',',','因为','它','饿','了','。'], ans:0, why:'饿了才去追——"它"看向小猫。'},
+ {w:['小猫','没','追上','老鼠',',','因为','它','跑','得','太快','了','。'], ans:3, why:'跑得快才逃掉——"它"看向老鼠。'},
+ {w:['奖杯','放不进','箱子',',','因为','它','太大','了','。'], ans:0, why:'太大放不进——"它"是奖杯。'},
+ {w:['奖杯','放不进','箱子',',','因为','它','太小','了','。'], ans:2, why:'太小装不下——"它"是箱子。只改了一个字,注意力就整个转向。'}];
+function attnSentence(){ let k=0, got=new Set();
+  function show(){ const s=SENT[k], it=s.w.indexOf('它');
+    S.innerHTML=`<h3>句子 ${k+1} / ${SENT.length}</h3><div class="sentwrap" style="position:relative;padding-top:70px"><canvas id="arc" style="position:absolute;left:0;top:0;width:100%;height:80px;border:0;background:transparent!important"></canvas>
+      <div class="toks" id="toks">${s.w.map((w,i)=>`<span class="tok ${i===it?'q':''}" data-i="${i}">${w}</span>`).join('')}</div></div>
+      <p class="muted" id="fb" style="margin-top:14px">读到金色的"它"时,它应该把注意力放在哪个词上?点那个词。</p>
+      <div class="row"><button class="btn" id="prev">← 上一句</button><button class="btn" id="nx">下一句 →</button></div>`;
+    const cv=$('arc'), wrap=cv.parentElement; cv.width=wrap.clientWidth*2; cv.height=160; const g=cv.getContext('2d'); g.scale(2,2);
+    const toks=[...document.querySelectorAll('.tok')]; let wts=s.w.map((_,i)=>i===it?0:1/(s.w.length-1)), target=wts.slice(), raf;
+    function pos(el){ const a=el.getBoundingClientRect(), b=wrap.getBoundingClientRect(); return a.left-b.left+a.width/2; }
+    function draw(){ g.clearRect(0,0,cv.width,80); const x0=pos(toks[it]); for(let i=0;i<toks.length;i++){ if(i===it) continue; wts[i]+=(target[i]-wts[i])*.12; const x1=pos(toks[i]), h=Math.min(68,14+Math.abs(x1-x0)*.35);
+        g.strokeStyle=`rgba(255,207,122,${.15+wts[i]*.85})`; g.lineWidth=.5+wts[i]*7; g.beginPath(); g.moveTo(x0,78); g.bezierCurveTo(x0,78-h,x1,78-h,x1,78); g.stroke();
+        toks[i].style.background=`rgba(63,224,255,${wts[i]*.55})`; } raf=requestAnimationFrame(draw); }
+    cancelAnimationFrame(window._raf); draw(); window._raf=raf;
+    toks.forEach((el,i)=>el.onclick=()=>{ if(i===it) return; target=s.w.map((_,j)=>j===it?0:(j===i?.82:.18/(s.w.length-2))); PS.click();
+      if(i===s.ans){ got.add(k); $('fb').innerHTML=`<span class="ok">✓ ${s.why}</span>`; PS.sfx('open'); if(got.size===SENT.length) PS.pass('同一个"它",上下文不同,注意力就看向不同的地方。这就是注意力机制。'); }
+      else { $('fb').innerHTML='<span class="bad">再想想:把这个词代进去,句子讲得通吗?</span>'; PS.fail(); } });
+    $('prev').onclick=()=>{ k=(k+SENT.length-1)%SENT.length; show(); }; $('nx').onclick=()=>{ k=(k+1)%SENT.length; show(); }; }
+  P.innerHTML=`<h3>注意力是什么</h3><p>大模型读到一个字时,会给前面每个字打一个"该看多少"的分数,分数加起来是 100%。</p><p>金色线越粗,表示越"在意"那个词。</p><p class="muted">真实的模型有几十层、每层几十个"注意力头",各自盯着不同的关系:谁指代谁、谁修饰谁、哪句话和哪句话押韵……</p>`;
+  show(); }
+
+/* ---------- 第 2/3 关:亲手训练一个注意力头(键值查找) ---------- */
+const GLY=['★','▲','●','■','◆','✚','♥','♣','♠','☾','☀','⚡'], VAL='ABCDEFGHIJKL';
+function Task(K,P){ this.K=K; this.P=P; }
+Task.prototype.sample=function(){ const keys=[...Array(this.K).keys()].sort(()=>Math.random()-.5).slice(0,this.P); const vals=keys.map(()=>Math.random()*this.K|0); const qi=Math.random()*this.P|0; return {keys,vals,q:keys[qi],ans:vals[qi],qi}; };
+function Head(T,r){ const R=()=>(Math.random()-.5)*.2; this.T=T; this.r=r; this.A=[...Array(T.K)].map(()=>[...Array(r)].map(R)); this.B=[...Array(T.K)].map(()=>[...Array(r)].map(R)); this.steps=0; }
+Head.prototype.W=function(i,j){ let s=0; for(let k=0;k<this.r;k++) s+=this.A[i][k]*this.B[j][k]; return s; };
+Head.prototype.fwd=function(x){ const s=x.keys.map(k=>this.W(x.q,k)), m=Math.max(...s), e=s.map(v=>Math.exp(v-m)), z=e.reduce((a,b)=>a+b), a=e.map(v=>v/z), pv=Array(this.T.K).fill(0); a.forEach((w,j)=>pv[x.vals[j]]+=w); return {a,pv}; };
+Head.prototype.step=function(n,lr){ const K=this.T.K, dA=this.A.map(r=>r.map(()=>0)), dB=this.B.map(r=>r.map(()=>0)); let L=0;
+  for(let t=0;t<n;t++){ const x=this.T.sample(), {a,pv}=this.fwd(x), p=pv[x.ans]+1e-9; L-=Math.log(p);
+    x.keys.forEach((k,j)=>{ const g=-a[j]*((x.vals[j]===x.ans?1:0)-p)/p; for(let d=0;d<this.r;d++){ dA[x.q][d]+=g*this.B[k][d]; dB[k][d]+=g*this.A[x.q][d]; } }); }
+  for(let i=0;i<K;i++) for(let d=0;d<this.r;d++){ this.A[i][d]-=lr*dA[i][d]/n; this.B[i][d]-=lr*dB[i][d]/n; } this.steps++; return L/n; };
+Head.prototype.acc=function(n=300){ let c=0; for(let t=0;t<n;t++){ const x=this.T.sample(), {pv}=this.fwd(x); if(pv.indexOf(Math.max(...pv))===x.ans) c++; } return c/n; };
+function seqHTML(h,x){ const {a,pv}=h.fwd(x), pred=pv.indexOf(Math.max(...pv));
+  return `<div class="kvrow">${x.keys.map((k,j)=>`<div class="kv ${j===x.qi?'hit':''}"><b>${GLY[k]}</b><span>${VAL[x.vals[j]]}</span><i style="height:${Math.round(a[j]*60)}px"></i><em class="mono">${Math.round(a[j]*100)}%</em></div>`).join('')}
+    <div class="kv qq"><b>${GLY[x.q]}</b><span>?</span></div></div>
+    <p class="muted">问:<b style="color:var(--gold)">${GLY[x.q]}</b> 对应哪个字母?模型答 <b class="${pred===x.ans?'ok':'bad'}">${VAL[pred]}</b>(正确答案 ${VAL[x.ans]})。柱子 = 注意力。</p>`; }
+function heat(cv,h){ const K=h.T.K, g=cv.getContext('2d'), c=cv.width/K; let mx=1e-6; const M=[]; for(let i=0;i<K;i++) for(let j=0;j<K;j++){ const v=h.W(i,j); M.push(v); mx=Math.max(mx,Math.abs(v)); }
+  g.clearRect(0,0,cv.width,cv.height); g.font=`${Math.round(c*.5)}px sans-serif`; g.textAlign='center'; g.textBaseline='middle';
+  M.forEach((v,k)=>{ const i=k/K|0, j=k%K, t=v/mx; g.fillStyle=t>0?`rgba(63,224,255,${t})`:`rgba(255,111,168,${-t})`; g.fillRect(j*c+1,i*c+1,c-2,c-2); }); }
+function trainLevel(){ const T=new Task(8,4); let h=new Head(T,8), x=T.sample(), loss=Math.log(4);
+  S.innerHTML=`<h3>一道查找题</h3><div id="seq"></div><button class="btn" id="nq">换一道题</button>`;
+  P.innerHTML=`<h3>训练一个注意力头</h3><p class="muted">它要学会:看到问号前的符号,就把注意力放到前面<b>同一个符号</b>上,再读出它后面的字母。一开始它谁也不偏爱。</p>
+    <div class="row">学习速度 <input type="range" id="lr" min=".1" max="3" step=".1" value=".6"><span id="lrv">.6</span></div>
+    <div class="row" style="margin-top:6px"><button class="btn" id="s1">训练 1 步</button><button class="btn pri" id="auto">自动训练</button><button class="btn" id="rs">重新开始</button></div>
+    <div style="margin-top:10px">损失:<b id="L">—</b> · 正确率:<b id="A">—</b> · 已训练 <span id="S">0</span> 步</div>
+    <div class="muted" style="margin-top:10px">注意力矩阵(行:问的符号 · 列:前面的符号)。学会之后,对角线会亮起来。</div><canvas id="hm" width="240" height="240" style="width:200px;height:200px;margin-top:6px"></canvas>`;
+  $('lr').oninput=()=>$('lrv').textContent=$('lr').value;
+  function show(){ const a=h.acc(200); $('L').textContent=loss.toFixed(3); $('A').textContent=Math.round(a*100)+'%'; $('S').textContent=h.steps; $('seq').innerHTML=seqHTML(h,x); heat($('hm'),h);
+    if(a>=.95&&h.steps>5){ stop(); $('auto').textContent='自动训练'; PS.pass('注意力不是写死的,是被错误一点点教会的。大模型里的几千个注意力头,都是这样学出来的。'); } }
+  function one(n){ for(let i=0;i<n;i++) loss=h.step(32,+$('lr').value); show(); PS.lossChord(Math.min(1,loss/1.4)); }
+  $('s1').onclick=()=>one(1); $('nq').onclick=()=>{ x=T.sample(); show(); PS.click(); };
+  $('auto').onclick=e=>{ if(timer){ stop(); e.target.textContent='自动训练'; } else { e.target.textContent='暂停'; timer=setInterval(()=>{ one(3); if(h.steps>3000){ stop(); e.target.textContent='自动训练'; } },90); } };
+  $('rs').onclick=()=>{ stop(); trainLevel(); }; show(); }
+function scaleLevel(){ const T=new Task(12,6), runs={}; let busy=false;
+  S.innerHTML=`<h3>学习曲线</h3><canvas id="cv" width="520" height="320" style="width:100%"></canvas><p class="muted">横轴:训练步数 · 纵轴:正确率。每条线是一次训练。</p>`;
+  P.innerHTML=`<h3>给注意力头多大的"脑容量"?</h3><p class="muted">这次有 12 个符号、每题 6 对。"维度"是这个注意力头用来记住每个符号的数字个数——可以理解为它的规模。</p>
+    <div class="row" id="rb">${[1,2,3,4,6].map(r=>`<button class="btn" data-r="${r}">维度 ${r}</button>`).join('')}</div>
+    <div id="res" class="muted" style="margin-top:10px">点一个维度,训练 900 步。多试几个。</div>`;
+  const cv=$('cv'), g=cv.getContext('2d'), C=['#ff6fa8','#ffbe5c','#a6ff6b','#3fe0ff','#b39bff'];
+  function plot(){ const Wd=cv.width, Ht=cv.height; g.clearRect(0,0,Wd,Ht); g.strokeStyle='rgba(255,255,255,.12)'; g.fillStyle='rgba(255,255,255,.5)'; g.font='12px sans-serif';
+    [0,.25,.5,.75,1].forEach(v=>{ const y=Ht-20-v*(Ht-40); g.beginPath(); g.moveTo(36,y); g.lineTo(Wd-8,y); g.stroke(); g.fillText(Math.round(v*100)+'%',2,y+4); });
+    Object.entries(runs).forEach(([r,pts])=>{ const c=C[[1,2,3,4,6].indexOf(+r)]; g.strokeStyle=c; g.lineWidth=2.2; g.beginPath(); pts.forEach((v,k)=>{ const X=36+k/30*(Wd-50), Y=Ht-20-v*(Ht-40); k?g.lineTo(X,Y):g.moveTo(X,Y); }); g.stroke(); g.lineWidth=1;
+      const v=pts[pts.length-1]; g.fillStyle=c; g.fillText('维度 '+r, 36+(pts.length-1)/30*(Wd-50)-40, Ht-26-v*(Ht-40)); }); }
+  document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{ if(busy) return; busy=true; PS.click(); const r=+b.dataset.r, h=new Head(T,r); runs[r]=[h.acc(150)]; let k=0;
+    const it=setInterval(()=>{ for(let i=0;i<30;i++) h.step(32,1); runs[r].push(h.acc(150)); plot(); PS.tone(300+runs[r][runs[r].length-1]*600,.15,.03);
+      if(++k>=30){ clearInterval(it); busy=false; const f=runs[r][runs[r].length-1]; b.classList.add('sel');
+        const lo=Object.values(runs).some(p=>p[p.length-1]<.6), hi=Object.values(runs).some(p=>p[p.length-1]>=.95);
+        $('res').innerHTML=`维度 ${r}:最终正确率 <b>${Math.round(f*100)}%</b>。`+(lo&&hi?'':' 再试一个'+(hi?'更小':'更大')+'的维度。');
+        if(lo&&hi) PS.pass('规模太小,怎么练都卡在半路;一旦够大,能力像台阶一样突然出现,而且学得更快。大模型的"涌现"也有点像这样——但没人能保证再放大就一定出现新能力。'); } },60); });
+  plot(); }
+
+PS.mission({ id:'attn', guide:'ying', levels:[
+ { name:'你来当注意力', goal:'读到"它"时,把注意力放到它真正指代的那个词上。四句都要对。',
+   guide:{q:'我读句子时,每个字都会回头看前面的字。可是"它"到底指谁?同一个"它",换个上下文,答案就变了。你来当我的注意力吧。', hints:['把你选的词代进"它"的位置,读一遍。','第 3、4 句只差一个字:太大、太小。','这种句子叫"威诺格拉德句",曾经难倒过很多 AI。']},
+   enter(){ stop(); attnSentence(); } },
+ { name:'训练注意力', goal:'从零训练一个注意力头,让它学会"找到同一个符号、读出后面的字母",正确率 ≥ 95%。',
+   guide:{q:'在大模型里,没有人告诉注意力该看哪里。它是靠一次次答错、被纠正,才学会的。我们来造一个最小的注意力头,看它怎么学会"看对地方"。', hints:['先点几次"训练 1 步",看柱子怎么变。','右边的矩阵是它的"偏好表",学会后对角线会亮。','学习速度调到 1 左右会快很多。']},
+   enter(){ stop(); trainLevel(); } },
+ { name:'规模与涌现', goal:'用不同的"维度"训练同一个任务,找到一个学不会的(< 60%)和一个学会了的(≥ 95%)。',
+   guide:{q:'人们发现,把模型做大以后,有些能力会突然冒出来,这叫"涌现"。真是这样吗?我们在小小的注意力头上试一试。', hints:['先试维度 1。','再试维度 3 或 4。','比较曲线的形状:它是慢慢爬,还是突然跳上去?']},
+   enter(){ stop(); scaleLevel(); } }
+]});
+</script></body></html>
