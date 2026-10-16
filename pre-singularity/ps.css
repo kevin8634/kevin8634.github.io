@@ -1,4 +1,4 @@
-/* 奇点前夜 Pre-Singularity · 基础样式 v0.2 */
+/* 奇点前夜 Pre-Singularity · 基础样式 v0.3 */
 :root{
   --bg:#050b14; --bg2:#0a1626; --card:#0e1d31; --line:#1c3552;
   --fg:#e6f4ff; --dim:#8fb3cc; --cy:#3fe0ff; --cy2:#1aa3c9; --gold:#ffd27a;
@@ -84,7 +84,7 @@ body.skin-horizon .btn{background:#2a1d10} body.skin-horizon .btn:hover{backgrou
 body.skin-horizon .btn.pri{background:linear-gradient(90deg,#c98a3a,#ffd27a);color:#1a0e00}
 body.skin-horizon .bubble,body.skin-horizon .goal{background:#1a130c}
 body.skin-horizon .lv.on{background:#3a2914}
-body.skin-horizon canvas{background:#0b0906}
+body.skin-horizon:not(.lobby) canvas:not(.ying){background:#0b0906}
 .card{position:relative}
 .card::before,.card::after{content:"";position:absolute;width:12px;height:12px;border:1px solid var(--cy);opacity:.55;pointer-events:none}
 .card::before{top:-1px;left:-1px;border-right:0;border-bottom:0;border-radius:var(--r) 0 0 0}
@@ -126,3 +126,114 @@ body.skin-horizon .hud{background:rgba(20,14,8,.62)}
   #hudB{transform:none;flex-wrap:wrap;justify-content:center}
   #info{bottom:12px}
 }
+
+/* =====================================================================
+   v0.3 · 任务页 HUD 视觉语言("实验舱"):玻璃面板 + 切角 + 等宽标签 + 扫描线
+   ===================================================================== */
+:root{--fg:#e4f3ff;--dim:#a3c6dc;--acc:#3fe0ff;--glass:rgba(10,30,52,.55);--edge:rgba(63,224,255,.28)}
+body[data-mission=cat]{--acc:#3fe0ff} body[data-mission=write]{--acc:#b39bff} body[data-mission=panda]{--acc:#ff6fa8}
+body[data-mission=robot]{--acc:#a6ff6b} body[data-mission=truth]{--acc:#ffbe5c} body[data-music=giant]{--acc:#8fb4ff}
+body.skin-horizon{--fg:#f6ecdc;--dim:#d6c3a2;--glass:rgba(30,20,10,.55);--edge:rgba(255,207,122,.28)}
+.mono{font-family:"SF Mono","JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+body:not(.lobby){background:
+  linear-gradient(rgba(63,224,255,.035) 1px,transparent 1px) 0 0/40px 40px,
+  linear-gradient(90deg,rgba(63,224,255,.035) 1px,transparent 1px) 0 0/40px 40px,
+  radial-gradient(1000px 520px at 75% -10%,#0f3a58 0%,transparent 60%),
+  radial-gradient(800px 500px at -10% 110%,#0c2c44 0%,transparent 60%),#040a13}
+body.skin-horizon:not(.lobby){background:
+  linear-gradient(rgba(255,207,122,.03) 1px,transparent 1px) 0 0/40px 40px,
+  linear-gradient(90deg,rgba(255,207,122,.03) 1px,transparent 1px) 0 0/40px 40px,
+  radial-gradient(1000px 520px at 70% -20%,#4a2e0e 0%,transparent 60%),
+  radial-gradient(800px 500px at 0% 120%,#0b2230 0%,transparent 60%),#060504}
+/* 视口边框角标 + 扫描线 */
+.hudframe{position:fixed;inset:10px;pointer-events:none;z-index:1}
+.hudframe i{position:absolute;width:26px;height:26px;border:1.5px solid var(--cy);opacity:.6}
+.hudframe i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0}
+.hudframe i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0}
+.hudframe i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0}
+.hudframe i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0}
+.hudframe .scan{position:absolute;left:0;right:0;height:120px;top:-120px;background:linear-gradient(180deg,transparent,rgba(63,224,255,.05),transparent);animation:scan 9s linear infinite}
+body.skin-horizon .hudframe .scan{background:linear-gradient(180deg,transparent,rgba(255,207,122,.05),transparent)}
+@keyframes scan{to{top:100%}}
+/* 顶栏 */
+header.top{padding:6px 0 10px;border-bottom:1px solid var(--edge)}
+.brand{letter-spacing:1px} .brand b{font-weight:600;letter-spacing:2px}
+.brand small{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:2px;color:var(--cy);opacity:.8;border:1px solid var(--edge);padding:1px 6px;border-radius:3px}
+/* 任务标题区 */
+.mcode{display:flex;gap:14px;align-items:center;margin-top:22px;font-size:11px;letter-spacing:3px;color:var(--acc);text-transform:uppercase}
+.mcode .sig{flex:1;height:1px;background:linear-gradient(90deg,var(--acc),transparent);opacity:.6}
+h1{font-weight:300;letter-spacing:3px;font-size:34px;margin:6px 0 8px;
+  background:linear-gradient(90deg,#ffffff 0%,var(--cy) 60%,var(--acc) 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 30px rgba(63,224,255,.15)}
+body.skin-horizon h1{background:linear-gradient(90deg,#fff6e6 0%,#ffcf7a 60%,#ff9a4a 100%);-webkit-background-clip:text;background-clip:text}
+.sub{color:var(--dim);font-size:15px;max-width:760px}
+/* 关卡步进器 */
+.levels{gap:0;margin:16px 0 18px;position:relative}
+.lv{display:flex;align-items:center;gap:8px;border:0;border-radius:0;background:transparent;padding:6px 18px 6px 0;color:var(--dim);font-size:13px;position:relative}
+.lv::after{content:"";width:28px;height:1px;background:var(--edge);margin-left:10px}
+.lv:last-child::after{display:none}
+.lv i{font-style:normal;width:30px;height:30px;display:grid;place-items:center;font-size:12px;border:1px solid var(--edge);
+  clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:rgba(63,224,255,.06);color:var(--dim)}
+.lv.on{background:transparent;color:var(--fg)} .lv.on i{background:var(--cy);color:#001521;box-shadow:0 0 18px var(--cy)}
+.lv.done::after{content:"";color:inherit} .lv.done i{background:linear-gradient(135deg,#ffe3a3,#ffb547);color:#2a1600}
+.lv.done.on i{background:linear-gradient(135deg,#fff,#ffcf7a)}
+.lv.lock{opacity:.38}
+/* 目标:终端行 */
+.goal{border:1px solid var(--edge);border-left:3px solid var(--acc);background:var(--glass);border-radius:4px;padding:10px 14px;display:flex;gap:12px;align-items:baseline;backdrop-filter:blur(6px)}
+.goal .obj{font-size:11px;letter-spacing:2px;color:var(--acc);white-space:nowrap}
+.goal .gtxt::after{content:"▍";color:var(--acc);margin-left:4px;animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+/* 通讯面板 */
+.guide{align-items:center}
+.bubble{background:var(--glass);border:1px solid var(--edge);border-radius:4px;backdrop-filter:blur(6px);position:relative;overflow:hidden;color:var(--fg)}
+.bubble::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px);pointer-events:none}
+.bubble .who{font-size:10.5px;letter-spacing:2px;color:var(--cy);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.bubble .who .live{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok);animation:blink 1.6s steps(1) infinite}
+canvas.ying{width:78px;height:78px}
+.hint{color:#ffd99a;border-left:2px solid #ffbe5c;padding-left:8px}
+/* 玻璃面板 */
+.card{background:linear-gradient(180deg,rgba(18,44,72,.62),rgba(8,22,38,.72));border:1px solid var(--edge);border-radius:6px;backdrop-filter:blur(8px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 10px 40px rgba(0,0,0,.35)}
+body.skin-horizon .card{background:linear-gradient(180deg,rgba(48,32,16,.6),rgba(18,12,7,.75))}
+.card::before,.card::after{border-color:var(--acc);opacity:.85;width:14px;height:14px}
+.card h2,.card h3{font-weight:500;letter-spacing:1px}
+.card h3::before{content:"◆ ";color:var(--acc);font-size:.8em}
+body:not(.lobby) canvas:not(.ying){background:radial-gradient(circle at 50% 40%,#0b2238,#050d18)!important;border:1px solid var(--edge);border-radius:4px}
+body.skin-horizon:not(.lobby) canvas:not(.ying){background:radial-gradient(circle at 50% 40%,#1e150b,#070504)!important}
+/* 按钮 */
+.btn{border-radius:3px;background:rgba(63,224,255,.07);border:1px solid var(--edge);color:var(--fg);letter-spacing:.5px}
+.btn:hover{background:rgba(63,224,255,.16);border-color:var(--cy);box-shadow:0 0 14px rgba(63,224,255,.25)}
+.btn.pri{clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);border-radius:0;padding:9px 18px;
+  background:linear-gradient(90deg,#14a9d6,#5ef0ff);color:#00121c;box-shadow:none}
+.btn.pri:hover{filter:brightness(1.15)}
+.btn.sel{background:rgba(63,224,255,.22);border-color:var(--cy);box-shadow:0 0 0 1px var(--cy) inset}
+body.skin-horizon .btn{background:rgba(255,207,122,.07)} body.skin-horizon .btn:hover{background:rgba(255,207,122,.16);box-shadow:0 0 14px rgba(255,207,122,.25)}
+body.skin-horizon .btn.sel{background:rgba(255,207,122,.22)}
+/* 文本可读性 */
+.muted{color:var(--dim);font-size:13px}
+.ok{color:#6dffbf} .bad{color:#ff7d9b}
+.pill{border-radius:3px;font-size:11px;letter-spacing:1px;border-color:var(--edge)}
+.toast{border-radius:4px;background:rgba(6,24,40,.92);backdrop-filter:blur(6px);font-size:14px;letter-spacing:.5px}
+body.skin-horizon .toast{background:rgba(30,20,10,.92)}
+.bar{border-radius:2px;background:rgba(255,255,255,.06)} .bar i{background:linear-gradient(90deg,var(--cy2),var(--acc))}
+input[type=range]{accent-color:var(--acc)}
+textarea{background:rgba(4,14,26,.8);border-color:var(--edge);border-radius:4px}
+.sent:hover{background:rgba(63,224,255,.14)}
+#next .ok{font-size:15px}
+footer{font-family:"SF Mono",ui-monospace,Menlo,monospace;letter-spacing:1px}
+@media(max-width:800px){ h1{font-size:26px;letter-spacing:1px} .lv{padding-right:6px} .lv::after{width:10px;margin-left:4px} .lv span{display:none} .lv.on span{display:inline} .hudframe{display:none} }
+/* v0.3 大厅细化 */
+.gate{display:none;position:relative;margin-top:10px;background:transparent;border:0;color:#e9fbff;cursor:pointer;padding:30px 40px;font:inherit}
+.gate b{display:block;font-size:20px;font-weight:400;letter-spacing:6px}
+.gate small{display:block;margin-top:8px;font-size:10px;letter-spacing:3px;color:#7fdcf5}
+.gate .ring{position:absolute;inset:0;border:1px solid rgba(63,224,255,.5);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);animation:gp 2.2s ease-in-out infinite}
+@keyframes gp{50%{box-shadow:inset 0 0 30px rgba(63,224,255,.35);border-color:#3fe0ff}}
+#intro .line{font-weight:300;letter-spacing:2px;color:#e6f7ff;text-shadow:0 0 18px rgba(63,224,255,.45)}
+.hud{border-color:var(--edge);border-radius:4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 10px 40px rgba(0,0,0,.4)}
+.hud::before{content:"";position:absolute;left:-1px;top:-1px;width:14px;height:14px;border-left:1.5px solid var(--cy);border-top:1.5px solid var(--cy)}
+.hud::after{content:"";position:absolute;right:-1px;bottom:-1px;width:14px;height:14px;border-right:1.5px solid var(--cy);border-bottom:1.5px solid var(--cy)}
+.hud h4{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:10.5px;letter-spacing:3px;border-bottom:1px solid var(--edge);padding-bottom:6px}
+#say{color:#e4f6ff} body.skin-horizon #say{color:#f6ecdc}
+.lobbytop{border-bottom:0;background:linear-gradient(180deg,rgba(2,8,16,.85),transparent)}
+body.skin-horizon .lobbytop{background:linear-gradient(180deg,rgba(14,9,4,.85),transparent)}
+#info{border-radius:4px} #info h2{font-weight:400;letter-spacing:2px}
