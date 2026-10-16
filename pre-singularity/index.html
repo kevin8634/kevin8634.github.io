@@ -79,15 +79,15 @@ let WAVE_R=-1;
 function nodeDraw(n,p,t){ const st=n.st, isHi = hiTheme===n.i || hover===n || sel===n; const sc=p.z||1; const c=nodeColor(st);
   const fl = WAVE_R>0 && st!=='future' ? Math.exp(-Math.pow((ringR(n.i)-WAVE_R)/16,2)) : 0;
   if(st==='lit'){ glow(p.x,p.y,(18+fl*14)*sc,GOLD,.5+fl*.4);
-    X.strokeStyle=`rgba(${GOLD},.95)`; X.lineWidth=1.2; hexPath(p.x,p.y,7*sc,t/2400+n.j); X.stroke();
-    X.strokeStyle=`rgba(${GOLD},.55)`; for(let k=0;k<3;k++){ const a=-t/1500+k*2.094+n.i; X.beginPath(); X.arc(p.x,p.y,11.5*sc,a,a+.9); X.stroke(); }
+    X.strokeStyle=`rgba(${GOLD},.95)`; X.lineWidth=1.2; hexPath(p.x,p.y,9*sc,t/2400+n.j); X.stroke();
+    X.strokeStyle=`rgba(${GOLD},.55)`; for(let k=0;k<3;k++){ const a=-t/1500+k*2.094+n.i; X.beginPath(); X.arc(p.x,p.y,13.5*sc,a,a+.9); X.stroke(); }
     X.fillStyle='#fffaf0'; X.beginPath(); X.arc(p.x,p.y,2.6*sc,0,7); X.fill(); }
   else if(st==='open'){ const pu=.5+.5*Math.sin(t/380+n.j); glow(p.x,p.y,(13+pu*6+fl*10)*sc,c,.4+fl*.4);
-    X.strokeStyle=`rgba(${c},.9)`; X.lineWidth=1.2; hexPath(p.x,p.y,6*sc,0); X.stroke();
+    X.strokeStyle=`rgba(${c},.9)`; X.lineWidth=1.2; hexPath(p.x,p.y,8*sc,0); X.stroke();
     X.strokeStyle=`rgba(${c},${.7*(1-pu)})`; X.beginPath(); X.arc(p.x,p.y,(8+pu*12)*sc,0,7); X.stroke();
     X.strokeStyle=`rgba(${c},.8)`; for(let k=0;k<4;k++){ const a=t/3000+k*Math.PI/2; X.beginPath(); X.moveTo(p.x+Math.cos(a)*10*sc,p.y+Math.sin(a)*10*sc); X.lineTo(p.x+Math.cos(a)*14*sc,p.y+Math.sin(a)*14*sc); X.stroke(); }
     X.fillStyle='#e9fdff'; X.beginPath(); X.arc(p.x,p.y,2.4*sc,0,7); X.fill(); }
-  else if(st==='lock'){ X.strokeStyle=`rgba(${c},${.45+fl*.5})`; X.lineWidth=1; hexPath(p.x,p.y,4.5*sc,0); X.stroke(); X.fillStyle=`rgba(${c},.5)`; X.beginPath(); X.arc(p.x,p.y,1.4,0,7); X.fill(); }
+  else if(st==='lock'){ X.strokeStyle=`rgba(${c},${.45+fl*.5})`; X.lineWidth=1; hexPath(p.x,p.y,5.5*sc,0); X.stroke(); X.fillStyle=`rgba(${c},.5)`; X.beginPath(); X.arc(p.x,p.y,1.4,0,7); X.fill(); }
   else { X.strokeStyle='rgba(140,180,210,.3)'; X.lineWidth=1; X.beginPath(); X.moveTo(p.x,p.y-3.5); X.lineTo(p.x+3.5,p.y); X.lineTo(p.x,p.y+3.5); X.lineTo(p.x-3.5,p.y); X.closePath(); X.stroke(); }
   X.lineWidth=1;
   if(isHi){ X.strokeStyle='rgba(255,255,255,.85)'; X.setLineDash([3,3]); X.beginPath(); X.arc(p.x,p.y,17*sc,t/600,t/600+Math.PI*2); X.stroke(); X.setLineDash([]); }
@@ -138,12 +138,12 @@ function drawCore(t){ X.clearRect(0,0,W,H); MOB=innerWidth<900;
     X.fillStyle=`rgba(${CYAN},${.15+.5*(1-m.r)})`; X.fillRect(CX+Math.cos(a)*rr,CY+Math.sin(a)*rr,1.5,1.5); }
   // 核心:线框神经球 + 能量环
   const cr=R*(.075+.045*prog)*(1+.04*Math.sin(t/500)+speakAmp*.22+burst*.8);
-  glow(CX,CY,cr*5,CYAN,.3+prog*.25);
+  glow(CX,CY,cr*4,CYAN,.16+prog*.18);
   const ry=t/5000, rx=.4+Math.sin(t/7000)*.2, cyr=Math.cos(ry), syr=Math.sin(ry), cxr=Math.cos(rx), sxr=Math.sin(rx), SR=cr*2.1;
   const S2=SPH.P.map(([x,y,z])=>{ const x1=x*cyr+z*syr, z1=-x*syr+z*cyr; const y2=y*cxr-z1*sxr, z2=y*sxr+z1*cxr; return [CX+x1*SR, CY+y2*SR, z2]; });
-  for(const [i,j] of SPH.E){ const z=(S2[i][2]+S2[j][2])/2; X.strokeStyle=`rgba(${CYAN},${.12+.35*(z+1)/2})`; X.beginPath(); X.moveTo(S2[i][0],S2[i][1]); X.lineTo(S2[j][0],S2[j][1]); X.stroke(); }
+  for(const [i,j] of SPH.E){ const z=(S2[i][2]+S2[j][2])/2; X.strokeStyle=`rgba(${CYAN},${.25+.55*(z+1)/2})`; X.beginPath(); X.moveTo(S2[i][0],S2[i][1]); X.lineTo(S2[j][0],S2[j][1]); X.stroke(); }
   for(const s of S2){ if(s[2]>.2){ X.fillStyle=`rgba(${WHITE},${.4+.5*s[2]})`; X.fillRect(s[0]-1,s[1]-1,2,2); } }
-  glow(CX,CY,cr*1.5,WHITE,.95);
+  glow(CX,CY,cr*.85,WHITE,.9);
   X.strokeStyle=`rgba(${CYAN},.55)`; for(let k=0;k<3;k++){ X.beginPath(); X.ellipse(CX,CY,cr*(2.6+k*.5),cr*(2.6+k*.5)*.32,t/(2000+k*700)*(k%2?-1:1),0,7); X.stroke(); }
   X.font='9px ui-monospace,Menlo,monospace'; X.fillStyle=`rgba(${WHITE},.65)`; X.fillText('SI · CORE',CX-22,CY+cr*3.3);
   if(burst>0){ X.strokeStyle=`rgba(255,255,255,${burst})`; X.lineWidth=2; X.beginPath(); X.arc(CX,CY,R*(1.2-burst),0,7); X.stroke(); X.lineWidth=1; }
