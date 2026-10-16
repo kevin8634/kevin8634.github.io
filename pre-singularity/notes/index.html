@@ -1,0 +1,22 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>探索笔记 · 奇点前夜</title><link rel="stylesheet" href="../ps.css?v=6"></head>
+<body data-music="giant"><div class="wrap">
+<header class="top"></header>
+<div class="mcode mono"><span>LOG</span><span>// FIELD NOTES</span><span class="sig"></span><span id="cnt"></span></div>
+<h1>探索笔记</h1>
+<p class="sub">你点亮的每一颗神经元,都在这里留下一句话。笔记只存在这台设备的浏览器里。</p>
+<div class="grid g2" id="th"></div>
+<h2 class="sec mono" style="margin-top:26px">探索记录</h2>
+<div class="card" id="tl"></div>
+</div>
+<script src="../ps.js?v=6"></script>
+<script>
+const lg=PS.get('log',[]), when={}; lg.forEach(e=>when[e.m+':'+e.lv]=e.t);
+const fmt=t=>t?new Date(t).toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+let lit=0, all=0;
+document.getElementById('th').innerHTML=PS.THEMES.map((th,i)=>`<div class="card"><h3>L${i+1} · ${th.n}</h3>${th.k.map(k=>{ const st=PS.nodeState(k); all++; if(st==='lit') lit++;
+  const h=k.m&&k.m!=='intro'?`../${k.m}/?lv=${k.lv}`:'../';
+  return `<div class="note ${st}"><a href="${h}"><b>${st==='lit'?'◆':'◇'} ${k.t}</b></a> <span class="muted mono">${st==='lit'?fmt(when[k.m+':'+k.lv]):(st==='open'?'可以去':'未点亮')}</span>${st==='lit'?`<div>${k.d||''}</div>`:''}</div>`; }).join('')}</div>`).join('');
+document.getElementById('cnt').textContent=`${lit} / ${all} NEURONS`;
+document.getElementById('tl').innerHTML = lg.length? lg.slice().reverse().map(e=>`<div class="note lit"><span class="mono muted">${fmt(e.t)}</span> · ${(PS.MISSIONS[e.m]||{}).q||e.m} 第 ${e.lv+1} 关<div>${e.msg}</div></div>`).join('') : '<p class="muted">还没有记录。去点亮第一颗神经元吧。</p>';
+</script></body></html>
