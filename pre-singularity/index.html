@@ -1,0 +1,56 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>奇点前夜 Pre-Singularity · 超级智能 SI</title><link rel="stylesheet" href="ps.css"></head>
+<body><div class="wrap">
+<header class="top"></header>
+<h1>在它比你聪明之前,先学会提问。</h1>
+<p class="sub">奇点前夜是创世计划 Genesis 的第 05 个世界。你将亲手训练、测试、约束一个智能,看懂它怎么学会、在哪里出错、我们怎样和它共处。全部在你的浏览器里运行,不注册、不上传任何内容。</p>
+
+<div class="card" style="margin-bottom:16px">
+  <h2>你和 AI 打过多少交道?</h2>
+  <p class="muted" style="margin-top:0">选一个程度,我们为你推荐起点。随时可以切换,四种程度共用同一张地图。</p>
+  <div class="tiers" id="tiers"></div>
+</div>
+
+<div class="card" style="margin-bottom:16px">
+  <div class="row" style="justify-content:space-between"><h2 style="margin:0">黎明线</h2><span class="muted" id="dawnt"></span></div>
+  <p class="muted" style="margin:4px 0 8px">每过一关,天就亮一点。</p>
+  <div class="dawn"><i id="dawn"></i></div>
+</div>
+
+<div class="grid g3" id="missions"></div>
+
+<div class="card" style="margin-top:16px">
+  <h2>🌌 接入巨人(可选)</h2>
+  <p class="muted" style="margin:0 0 8px">任务里的小模型是你亲手造的"玻璃脑"。想看真正的大模型怎么做同一件事?你可以自己决定怎么接入。</p>
+  <a class="btn" href="giant/">看看三条路</a>
+</div>
+
+<footer>奇点前夜 Pre-Singularity v0.1 · 创世计划 Genesis 05/06 · 科学素养探究工具 · 进度只保存在本机浏览器</footer>
+</div>
+<script src="ps.js"></script>
+<script>
+const MISSIONS = {
+  truth:{q:'这段话是 AI 写的吗?', g:'渡鸦博士', k:'幻觉 · 信息核查', d:'★☆☆', n:3},
+  write:{q:'AI 是怎么"写作文"的?', g:'渡鸦博士', k:'概率 · 预测下一个字', d:'★★☆', n:4},
+  cat:{q:'让 AI 认出一只猫', g:'萤', k:'特征 · 训练 · 神经网络', d:'★★☆', n:4},
+  robot:{q:'为什么扫地机器人会"偷懒"?', g:'萤', k:'强化学习 · 奖励投机 · 对齐', d:'★★☆', n:3},
+  panda:{q:'怎样让 AI 把熊猫认成长臂猿?', g:'渡鸦博士', k:'对抗样本 · 模型局限', d:'★★★', n:3}
+};
+const ORDER = {
+  first:['truth','write','cat','robot','panda'], chat:['write','truth','cat','panda','robot'],
+  work:['truth','robot','write','cat','panda'], geek:['cat','panda','write','robot','truth']
+};
+function render(){
+  const t = PS.tier();
+  document.getElementById('tiers').innerHTML = Object.entries(PS.TIERS).map(([k,v])=>
+    `<button class="card tier ${t===k?'sel':''}" data-t="${k}"><div class="t">${v.name}</div><div class="muted">${v.desc}</div></button>`).join('');
+  document.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{ PS.click(); PS.setTier(b.dataset.t); PS.header(); render(); });
+  const order = ORDER[t||'first']; let got=0, all=0;
+  document.getElementById('missions').innerHTML = order.map((id,i)=>{ const m=MISSIONS[id]; const s=(PS.get(id,{done:[]}).done||[]).length; got+=s; all+=m.n;
+    return `<a class="card mission ${i===0&&s<m.n?'rec':''}" href="${id}/"><span class="tag">${i===0?'推荐起点 · ':''}向导 ${m.g} · ${m.d}</span>
+      <span class="q">${m.q}</span><span class="muted">${m.k}</span><span class="stars">${'★'.repeat(s)}${'☆'.repeat(m.n-s)}</span></a>`; }).join('');
+  document.getElementById('dawn').style.width = (got/all*100)+'%';
+  document.getElementById('dawnt').textContent = `已点亮 ${got} / ${all}`;
+}
+document.addEventListener('DOMContentLoaded', render);
+</script></body></html>
