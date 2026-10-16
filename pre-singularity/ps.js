@@ -1,4 +1,4 @@
-/* 奇点前夜 Pre-Singularity · 公共层 ps.js v0.3
+/* 奇点前夜 Pre-Singularity · 公共层 ps.js v0.6
    本地存储键:gn:ps:<任务>(Genesis Core 约定)。无账号、无服务器、无埋点。 */
 (function(){
 const PS = window.PS = {};
@@ -17,24 +17,24 @@ function applyTier(){ const t = PS.tier(); document.body.classList.remove('tier-
 
 /* 知识骨架:8 层主题 × 知识神经元。m/lv 指向任务关卡;无 m 为即将点亮 */
 PS.THEMES = [
- {n:'智能是什么', k:[{t:'SI 是什么',m:'intro',d:'超级智能:几乎在所有领域都超过最聪明人类的智能。它还没有出现。'},{t:'图灵测试'},{t:'专用与通用'}]},
- {n:'机器怎么学', k:[{t:'特征',m:'cat',lv:0,d:'选对线索,机器才分得清。'},{t:'梯度下降',m:'cat',lv:1,d:'每错一次,往对的方向挪一点。'},{t:'过拟合',m:'cat',lv:3,d:'背答案不等于学会规律。'},{t:'数据的力量'}]},
- {n:'神经网络', k:[{t:'隐藏层',m:'cat',lv:2,d:'多一层神经元,边界就能弯曲。'},{t:'模型在看哪里',m:'panda',lv:0,d:'它不懂"眼圈",只给每个像素打分。'},{t:'卷积'}]},
- {n:'语言模型', k:[{t:'预测下一个字',m:'write',lv:0,d:'写作文的秘密:一个字一个字地猜。'},{t:'温度',m:'write',lv:1,d:'稳和新之间的旋钮。'},{t:'上下文',m:'write',lv:2,d:'记得越多,越通顺。'},{t:'注意力机制'},{t:'规模与涌现'}]},
- {n:'强化学习', k:[{t:'奖励',m:'robot',lv:0,d:'只说做什么得分,它自己找办法。'},{t:'探索与利用'}]},
+ {n:'智能是什么', k:[{t:'SI 是什么',m:'intro',d:'超级智能:几乎在所有领域都超过最聪明人类的智能。它还没有出现。'},{t:'图灵测试',m:'ask',lv:0,d:'像人,不等于会思考。'},{t:'专用与通用',m:'scale',lv:2,d:'今天的 AI 更通用了,但还不是“什么都会”。'}]},
+ {n:'机器怎么学', k:[{t:'特征',m:'cat',lv:0,d:'选对线索,机器才分得清。'},{t:'梯度下降',m:'cat',lv:1,d:'每错一次,往对的方向挪一点。'},{t:'过拟合',m:'cat',lv:3,d:'背答案不等于学会规律。'},{t:'数据的力量',m:'scale',lv:0,d:'见得越多,猜得越准。'}]},
+ {n:'神经网络', k:[{t:'隐藏层',m:'cat',lv:2,d:'多一层神经元,边界就能弯曲。'},{t:'模型在看哪里',m:'panda',lv:0,d:'它不懂"眼圈",只给每个像素打分。'},{t:'卷积',m:'scale',lv:1,d:'一个小窗口扫过整张图,专找一种花纹。'}]},
+ {n:'语言模型', k:[{t:'预测下一个字',m:'write',lv:0,d:'写作文的秘密:一个字一个字地猜。'},{t:'温度',m:'write',lv:1,d:'稳和新之间的旋钮。'},{t:'上下文',m:'write',lv:2,d:'记得越多,越通顺。'},{t:'注意力机制',m:'attn',lv:0,d:'同一个“它”,上下文不同,看的地方就不同。'},{t:'训练注意力',m:'attn',lv:1,d:'注意力是学出来的:该看哪里,由错误教会。'},{t:'规模与涌现',m:'attn',lv:2,d:'容量够了,能力像台阶一样突然出现。'}]},
+ {n:'强化学习', k:[{t:'奖励',m:'robot',lv:0,d:'只说做什么得分,它自己找办法。'},{t:'探索与利用',m:'ask',lv:1,d:'一直选最好的,可能永远发现不了更好的。'}]},
  {n:'AI 的局限', k:[{t:'幻觉的种子',m:'write',lv:3,d:'通顺不等于真实。'},{t:'找出编造',m:'truth',lv:0,d:'一本正经的错,最难发现。'},{t:'对抗样本',m:'panda',lv:1,d:'人眼看不见的噪点,骗过了模型。'}]},
- {n:'对齐与安全', k:[{t:'对齐',m:'robot',lv:1,d:'把奖励对准真正想要的结果。'},{t:'副作用',m:'robot',lv:2,d:'规则没写的,AI 就不在乎。'},{t:'鲁棒性',m:'panda',lv:2,d:'更结实,但永远不完美。'},{t:'可解释性'}]},
- {n:'人机共处', k:[{t:'查出处',m:'truth',lv:1,d:'越像真的,越要查。'},{t:'核查',m:'truth',lv:2,d:'原始出处比任何转述都可靠。'},{t:'人机分工'},{t:'不可能任务'}]}
+ {n:'对齐与安全', k:[{t:'对齐',m:'robot',lv:1,d:'把奖励对准真正想要的结果。'},{t:'副作用',m:'robot',lv:2,d:'规则没写的,AI 就不在乎。'},{t:'鲁棒性',m:'panda',lv:2,d:'更结实,但永远不完美。'},{t:'可解释性',m:'ask',lv:2,d:'打开黑箱,一个神经元一个神经元地看。'}]},
+ {n:'人机共处', k:[{t:'查出处',m:'truth',lv:1,d:'越像真的,越要查。'},{t:'核查',m:'truth',lv:2,d:'原始出处比任何转述都可靠。'},{t:'人机分工',m:'together',lv:0,d:'让 AI 做擅长的,人来做判断和负责。'},{t:'不可能任务',m:'together',lv:1,d:'知道 AI 做不到什么,和知道它能做什么一样重要。'},{t:'共生宣言',m:'together',lv:2,d:'黎明之后,我们想和 AI 怎样相处?'}]}
 ];
-PS.MISSIONS = {cat:{q:'让 AI 认出一只猫',n:4}, write:{q:'AI 是怎么"写作文"的?',n:4}, panda:{q:'怎样让 AI 把熊猫认成长臂猿?',n:3}, robot:{q:'为什么扫地机器人会"偷懒"?',n:3}, truth:{q:'这段话是 AI 写的吗?',n:3}};
-PS.ORDER = { first:['truth','write','cat','robot','panda'], chat:['write','truth','cat','panda','robot'], work:['truth','robot','write','cat','panda'], geek:['cat','panda','write','robot','truth'] };
+PS.MISSIONS = {cat:{q:'让 AI 认出一只猫',n:4}, write:{q:'AI 是怎么"写作文"的?',n:4}, panda:{q:'怎样让 AI 把熊猫认成长臂猿?',n:3}, robot:{q:'为什么扫地机器人会"偷懒"?',n:3}, truth:{q:'这段话是 AI 写的吗?',n:3}, attn:{q:'AI 在“看”哪里?',n:3}, scale:{q:'把 AI 放大会怎样?',n:3}, ask:{q:'AI 会思考吗?',n:3}, together:{q:'我们和 AI 怎么一起生活?',n:3}};
+PS.ORDER = { first:['truth','write','cat','robot','panda','ask','scale','attn','together'], chat:['write','truth','cat','panda','robot','attn','ask','scale','together'], work:['truth','robot','write','together','cat','ask','panda','attn','scale'], geek:['cat','panda','write','attn','scale','robot','ask','truth','together'] };
 PS.done = m => m==='intro' ? (PS.get('intro',0)?[0]:[]) : (PS.get(m,{done:[]}).done||[]);
 PS.nodeState = k => { if(!k.m) return 'future'; if(k.m==='intro') return PS.get('intro',0)?'lit':'open';
   const d=PS.done(k.m); if(d.includes(k.lv)) return 'lit'; return (k.lv===0||d.includes(k.lv-1))?'open':'lock'; };
 PS.total = () => Object.keys(PS.MISSIONS).reduce((s,m)=>s+PS.done(m).length,0);
-PS.TOTAL = 17;
+PS.TOTAL = Object.values(PS.MISSIONS).reduce((s,m)=>s+m.n,0);
 /* 萤的成长:按点亮的神经元数 */
-PS.STAGES = [{n:'光点',at:0},{n:'萤火',at:4},{n:'星核',at:9},{n:'黎明',at:14}];
+PS.STAGES = [{n:'光点',at:0},{n:'萤火',at:6},{n:'星核',at:14},{n:'黎明',at:22}];
 PS.stage = () => { const t=PS.total(); let s=0; PS.STAGES.forEach((x,i)=>{ if(t>=x.at) s=i; }); return s; };
 /* 皮肤:core 神经核(默认)/ horizon 奇点视界 */
 PS.SKINS = {core:'神经核', horizon:'奇点视界'};
@@ -141,6 +141,30 @@ const STY={
    if(st===4||st===12) V.noise(s.b,t,.18,.03,'lowpass',3000,800);
    if(st===0) V.pad(s.b,t,tri(s.sc,s.root,ch),sp*16,.03,700);
    if(st%2===0 && R()<.18) V.bell(s.b,t,mtof(deg(s.sc,s.root+12,ch+[0,2,4,6][R()*4|0])),.03,2.2); }},
+
+ // 注意力:玻璃质感的分解和弦,悬疑
+ attn:{bpm:92, root:57, sc:SC.dorian, prog:[0,3,5,4], fn(s,t,st,ch,sp){
+   if(st===0) V.pad(s.b,t,tri(s.sc,s.root-12,ch),sp*16,.03,900,'triangle');
+   if(st%3===0) V.bell(s.b,t,mtof(deg(s.sc,s.root+12,ch+[0,2,4,6,4,2][(st/3)%6|0])),.022,1.2);
+   if(st===0||st===10) V.osc(s.b,t,mtof(deg(s.sc,s.root-12,ch)),sp*8,.07,'sine');
+   if(st===4||st===12) V.noise(s.b,t,.05,.025,'bandpass',4000); }},
+ // 放大:层层叠加的脉冲,逐渐变厚
+ scale:{bpm:110, root:52, sc:SC.minor, prog:[0,5,3,6], fn(s,t,st,ch,sp){
+   const layers=1+(s.bar%8>>1);
+   if(st===0) V.pad(s.b,t,tri(s.sc,s.root,ch),sp*16,.025*layers,600+layers*300);
+   if(st%4===0) V.kick(s.b,t,.12); if(layers>1&&st%2===0) V.pluck(s.b,t,mtof(deg(s.sc,s.root-12,ch)),.05,'sawtooth',900,.15);
+   if(layers>2) V.pluck(s.b,t,mtof(deg(s.sc,s.root+12,ch+[0,4,2,7][st%4])),.018,'square',2500,.1);
+   if(layers>3&&st%4===2) V.noise(s.b,t,.03,.03,'highpass',9000); }},
+ // 提问:稀疏的钢琴式音符,思考感
+ ask:{bpm:70, root:53, sc:SC.lydian, prog:[0,4,5,1], fn(s,t,st,ch,sp){
+   if(st===0){ V.pad(s.b,t,tri(s.sc,s.root-12,ch),sp*16.5,.03,700,'triangle'); V.osc(s.b,t,mtof(deg(s.sc,s.root-24,ch)),sp*16,.06,'sine',.8); }
+   if(st%2===0 && R()<.4) tri(s.sc,s.root,ch+[0,2,4][R()*3|0]).slice(0,1+(R()*2|0)).forEach(f=>V.osc(s.b,t,f*2,1.6,.03,'triangle',.005)); }},
+ // 共生:温暖大调,渐亮
+ together:{bpm:84, root:55, sc:SC.major, prog:[0,4,5,3], fn(s,t,st,ch,sp){
+   if(st===0) V.pad(s.b,t,tri(s.sc,s.root,ch),sp*16,.04,1300,'triangle');
+   if(st===0||st===6||st===10) V.osc(s.b,t,mtof(deg(s.sc,s.root-12,ch)),sp*6,.08,'sine');
+   if(st%2===0) V.pluck(s.b,t,mtof(deg(s.sc,s.root+12,ch+[0,2,4,2,5,4,2,1][(st/2)%8])),.03,'triangle',2600,.4);
+   if(st===8 && R()<.5) V.bell(s.b,t,mtof(deg(s.sc,s.root+24,ch)),.025,2.5); }},
  // 巨人:宏大缓慢
  giant:{bpm:58, root:48, sc:SC.lydian, prog:[0,1,4,0], fn(s,t,st,ch,sp){
    if(st===0){ V.pad(s.b,t,tri(s.sc,s.root,ch),sp*16.5,.05,750); V.osc(s.b,t,mtof(deg(s.sc,s.root-24,ch)),sp*16,.08,'sine',1); }
@@ -200,10 +224,16 @@ PS.lossChord = (loss) => {
 };
 
 /* 提示条 */
+/* 萤的声音(可选,默认关):浏览器自带中文语音 */
+PS.voiceOn = () => PS.get('voice', false);
+PS.speak = (text) => { try{ if(!PS.voiceOn() || !window.speechSynthesis) return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(String(text).replace(/<[^>]+>/g,''));
+  const v=speechSynthesis.getVoices().find(v=>/zh[-_]CN/i.test(v.lang)); if(v) u.voice=v; u.lang='zh-CN'; u.rate=1.05; u.pitch=1.25; speechSynthesis.speak(u); }catch(e){} };
+/* 性能档位:手机 / 低端机 / 省流量自动降低特效 */
+PS.lowfx = (()=>{ try{ return innerWidth<700 || (navigator.hardwareConcurrency||8)<=4 || !!(navigator.connection&&navigator.connection.saveData) || PS.get('lowfx',false); }catch(e){ return false; } })();
 PS.toast = (msg) => { let t=document.querySelector('.toast'); if(!t){ t=document.createElement('div'); t.className='toast'; document.body.appendChild(t);} t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2600); };
 
 /* 任务框架 */
-PS.MCODE = {cat:['01','VISION','视觉'], write:['02','LANGUAGE','语言'], panda:['03','ADVERSARIAL','对抗'], robot:['04','REWARD','强化'], truth:['05','VERIFY','核查'], giant:['06','GIANT LINK','巨人']};
+PS.MCODE = {cat:['01','VISION','视觉'], write:['02','LANGUAGE','语言'], panda:['03','ADVERSARIAL','对抗'], robot:['04','REWARD','强化'], truth:['05','VERIFY','核查'], giant:['06','GIANT LINK','巨人'], attn:['07','ATTENTION','注意力'], scale:['08','SCALE','放大'], ask:['09','INQUIRY','提问'], together:['10','SYMBIOSIS','共生']};
 PS.mission = (cfg) => {
   const mc=PS.MCODE[cfg.id], h1=document.querySelector('h1'); if(mc && h1 && !document.querySelector('.mcode')){ const d=document.createElement('div'); d.className='mcode mono'; d.innerHTML=`<span>MISSION ${mc[0]}</span><span>// ${mc[1]}</span><span class="sig"></span><span>${cfg.levels.length} LEVELS</span>`; h1.before(d); }
   const st = PS.get(cfg.id, {done:[]}); PS.M = {cfg, st, cur:0};
@@ -223,10 +253,11 @@ PS.mission = (cfg) => {
       <div class="row" style="margin-top:8px">${(g.hints||[]).map((h,k)=>`<button class="btn" data-h="${k}" style="padding:3px 10px;font-size:12px">提示 ${k+1}</button>`).join('')}</div>
       ${(g.hints||[]).map((h,k)=>`<div class="hint" id="h${k}">💡 ${h}</div>`).join('')}</div></div>`;
     document.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{ const k=+b.dataset.h; for(let j=0;j<=k;j++) document.getElementById('h'+j).style.display='block'; });
+    PS.speak(g.q||'');
     L.enter && L.enter();
   }
   PS.pass = (msg) => {
-    const i = PS.M.cur; PS.M.passed=PS.M.passed||{}; if(PS.M.passed[i]) return; PS.M.passed[i]=1; if(!st.done.includes(i)){ st.done.push(i); PS.set(cfg.id, st); }
+    const i = PS.M.cur; PS.M.passed=PS.M.passed||{}; if(PS.M.passed[i]) return; PS.M.passed[i]=1; if(!st.done.includes(i)){ st.done.push(i); PS.set(cfg.id, st); const lg=PS.get('log',[]); lg.push({m:cfg.id,lv:i,t:Date.now(),msg:msg||''}); PS.set('log',lg); }
     PS.win(); PS.toast('★ ' + (msg || '过关!')); draw();
     const n = document.getElementById('next'); if(n){ n.style.display='block';
       n.innerHTML = i+1<cfg.levels.length ? `<button class="btn pri">进入第${i+2}关 →</button>` : `<div class="ok">全部通关!这颗知识星已点亮。<a href="../">回到${PS.SKINS[PS.skin()]}</a></div>`;
@@ -241,10 +272,11 @@ PS.mission = (cfg) => {
 PS.header = (title) => {
   const h = document.querySelector('header.top'); if(!h) return;
   h.innerHTML = `<a class="brand" href="${(document.querySelector('script[src*="ps.js"]').getAttribute('src').replace(/ps\.js.*$/,''))||'./'}">奇点前夜 <b>Pre-Singularity</b><small>超级智能 SI</small></a>
-    <div class="row"><span class="pill" id="tierpill"></span><button class="btn hb" id="skinb" title="切换皮肤">◐ ${PS.SKINS[PS.skin()]}</button><button class="btn hb" id="ambb" title="背景音乐">${PS.musicOn()?'♫ 音乐':'♫ 关'}</button><button class="btn hb" id="mute" title="音效">${PS.muted()?'🔇':'🔊'}</button></div>`;
+    <div class="row"><span class="pill" id="tierpill"></span><button class="btn hb" id="skinb" title="切换皮肤">◐ ${PS.SKINS[PS.skin()]}</button><button class="btn hb" id="ambb" title="背景音乐">${PS.musicOn()?'♫ 音乐':'♫ 关'}</button><button class="btn hb" id="voiceb" title="萤的声音">${PS.voiceOn()?'🗣 语音':'🗣 关'}</button><a class="btn hb" href="${(document.querySelector('script[src*="ps.js"]').getAttribute('src').replace(/ps\.js.*$/,''))||'./'}notes/" title="探索笔记">✎ 笔记</a><button class="btn hb" id="mute" title="音效">${PS.muted()?'🔇':'🔊'}</button></div>`;
   const t = PS.tier(); document.getElementById('tierpill').textContent = t ? ('程度:' + PS.TIERS[t].name) : '未选程度';
   document.getElementById('mute').onclick = (e)=>{ PS.set('mute', !PS.muted()); e.target.textContent = PS.muted()?'🔇':'🔊'; };
   document.getElementById('skinb').onclick = (e)=>{ PS.setSkin(PS.skin()==='core'?'horizon':'core'); e.target.textContent='◐ '+PS.SKINS[PS.skin()]; PS.click(); };
+  document.getElementById('voiceb').onclick = (e)=>{ PS.set('voice',!PS.voiceOn()); e.target.textContent=PS.voiceOn()?'🗣 语音':'🗣 关'; if(PS.voiceOn()) PS.speak('我是萤。现在我可以说话了。'); else speechSynthesis && speechSynthesis.cancel(); };
   document.getElementById('ambb').onclick = (e)=>{ const on=!PS.musicOn(); PS.setMusic(on); e.target.textContent = on?'♫ 音乐':'♫ 关'; };
 };
 
