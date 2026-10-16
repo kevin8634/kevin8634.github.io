@@ -1,5 +1,5 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>奇点前夜 Pre-Singularity · 超级智能 SI</title><link rel="stylesheet" href="ps.css?v=2"></head>
+<title>奇点前夜 Pre-Singularity · 超级智能 SI</title><link rel="stylesheet" href="ps.css?v=3"></head>
 <body class="lobby" data-nostars="1">
 <header class="top lobbytop"></header>
 <canvas id="world"></canvas>
@@ -36,10 +36,11 @@
   <button class="btn hb skip" id="skip">跳过</button>
   <canvas class="orb" id="orb" width="240" height="240"></canvas>
   <div class="line" id="l0"></div>
+  <button class="gate" id="gate"><span class="ring"></span><b>轻触 · 唤醒萤</b><small class="mono">TAP TO WAKE · 建议开启声音</small></button>
   <div class="tiers" id="itiers"></div>
 </div>
 
-<script src="ps.js?v=2"></script>
+<script src="ps.js?v=3"></script>
 <script>
 /* ========= 数据 ========= */
 const TH = PS.THEMES; let NODES=[], EDGES=[], hiTheme=-1, hover=null, sel=null, burst=0, speakAmp=0;
@@ -72,41 +73,84 @@ const CYAN='63,224,255', GOLD='255,210,122', WHITE='230,248,255';
 
 function drawStars(t,c){ for(const s of STARS){ X.globalAlpha=.25+.3*Math.sin(t/1100+s.p); X.fillStyle=c; X.beginPath(); X.arc(s.x,s.y,s.r,0,7); X.fill(); } X.globalAlpha=1; }
 
-function nodeDraw(n,p,t){ const st=n.st, isHi = hiTheme===n.i || hover===n || sel===n; const sc=p.z||1;
-  if(st==='lit'){ glow(p.x,p.y,16*sc,GOLD,.55); X.fillStyle='#fff3d0'; X.beginPath(); X.arc(p.x,p.y,4.2*sc,0,7); X.fill(); }
-  else if(st==='open'){ const pu=.5+.5*Math.sin(t/380+n.j); glow(p.x,p.y,(12+pu*6)*sc,CYAN,.45); X.fillStyle='#bff6ff'; X.beginPath(); X.arc(p.x,p.y,3.6*sc,0,7); X.fill();
-    X.strokeStyle=`rgba(${CYAN},${.6*(1-pu)})`; X.beginPath(); X.arc(p.x,p.y,(6+pu*10)*sc,0,7); X.stroke(); }
-  else if(st==='lock'){ X.fillStyle='rgba(120,190,220,.55)'; X.beginPath(); X.arc(p.x,p.y,3*sc,0,7); X.fill(); }
-  else { X.strokeStyle='rgba(120,170,200,.35)'; X.beginPath(); X.arc(p.x,p.y,2.6*sc,0,7); X.stroke(); }
-  if(isHi){ X.strokeStyle='rgba(255,255,255,.8)'; X.beginPath(); X.arc(p.x,p.y,10*sc,0,7); X.stroke(); }
+function nodeColor(st){ const hz=PS.skin()==='horizon'; return st==='lit'? GOLD : hz? '255,232,190' : CYAN; }
+function hexPath(x,y,r,rot){ X.beginPath(); for(let k=0;k<6;k++){ const a=rot+k*Math.PI/3; k?X.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r):X.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r); } X.closePath(); }
+let WAVE_R=-1;
+function nodeDraw(n,p,t){ const st=n.st, isHi = hiTheme===n.i || hover===n || sel===n; const sc=p.z||1; const c=nodeColor(st);
+  const fl = WAVE_R>0 && st!=='future' ? Math.exp(-Math.pow((ringR(n.i)-WAVE_R)/16,2)) : 0;
+  if(st==='lit'){ glow(p.x,p.y,(18+fl*14)*sc,GOLD,.5+fl*.4);
+    X.strokeStyle=`rgba(${GOLD},.95)`; X.lineWidth=1.2; hexPath(p.x,p.y,7*sc,t/2400+n.j); X.stroke();
+    X.strokeStyle=`rgba(${GOLD},.55)`; for(let k=0;k<3;k++){ const a=-t/1500+k*2.094+n.i; X.beginPath(); X.arc(p.x,p.y,11.5*sc,a,a+.9); X.stroke(); }
+    X.fillStyle='#fffaf0'; X.beginPath(); X.arc(p.x,p.y,2.6*sc,0,7); X.fill(); }
+  else if(st==='open'){ const pu=.5+.5*Math.sin(t/380+n.j); glow(p.x,p.y,(13+pu*6+fl*10)*sc,c,.4+fl*.4);
+    X.strokeStyle=`rgba(${c},.9)`; X.lineWidth=1.2; hexPath(p.x,p.y,6*sc,0); X.stroke();
+    X.strokeStyle=`rgba(${c},${.7*(1-pu)})`; X.beginPath(); X.arc(p.x,p.y,(8+pu*12)*sc,0,7); X.stroke();
+    X.strokeStyle=`rgba(${c},.8)`; for(let k=0;k<4;k++){ const a=t/3000+k*Math.PI/2; X.beginPath(); X.moveTo(p.x+Math.cos(a)*10*sc,p.y+Math.sin(a)*10*sc); X.lineTo(p.x+Math.cos(a)*14*sc,p.y+Math.sin(a)*14*sc); X.stroke(); }
+    X.fillStyle='#e9fdff'; X.beginPath(); X.arc(p.x,p.y,2.4*sc,0,7); X.fill(); }
+  else if(st==='lock'){ X.strokeStyle=`rgba(${c},${.45+fl*.5})`; X.lineWidth=1; hexPath(p.x,p.y,4.5*sc,0); X.stroke(); X.fillStyle=`rgba(${c},.5)`; X.beginPath(); X.arc(p.x,p.y,1.4,0,7); X.fill(); }
+  else { X.strokeStyle='rgba(140,180,210,.3)'; X.lineWidth=1; X.beginPath(); X.moveTo(p.x,p.y-3.5); X.lineTo(p.x+3.5,p.y); X.lineTo(p.x,p.y+3.5); X.lineTo(p.x-3.5,p.y); X.closePath(); X.stroke(); }
+  X.lineWidth=1;
+  if(isHi){ X.strokeStyle='rgba(255,255,255,.85)'; X.setLineDash([3,3]); X.beginPath(); X.arc(p.x,p.y,17*sc,t/600,t/600+Math.PI*2); X.stroke(); X.setLineDash([]); }
+  if(!MOB && (st==='lit'||st==='open'||isHi) && (!p.back)){ X.font='11px "PingFang SC","Microsoft YaHei",sans-serif'; X.fillStyle=`rgba(${st==='lit'?GOLD:c},${isHi?1:.72})`; X.fillText(n.k.t,p.x+14*sc,p.y+4); }
   p.n=n; HIT.push(p); }
-let HIT=[];
+let HIT=[], MOB=false;
 
-function drawCore(t){ X.clearRect(0,0,W,H);
-  const bg=X.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*.7); bg.addColorStop(0,'#08243a'); bg.addColorStop(1,'#03070d'); X.fillStyle=bg; X.fillRect(0,0,W,H);
+/* 线框神经球 */
+const SPH=(()=>{ const N=64, P=[]; for(let i=0;i<N;i++){ const y=1-2*(i+.5)/N, r=Math.sqrt(1-y*y), a=i*2.39996; P.push([Math.cos(a)*r,y,Math.sin(a)*r]); }
+  const E=[]; for(let i=0;i<N;i++) for(let j=i+1;j<N;j++){ const d=Math.hypot(P[i][0]-P[j][0],P[i][1]-P[j][1],P[i][2]-P[j][2]); if(d<.42) E.push([i,j]); } return {P,E}; })();
+const MOTES=Array.from({length:90},()=>({a:Math.random()*7,r:Math.random(),s:.5+Math.random()}));
+function drawCore(t){ X.clearRect(0,0,W,H); MOB=innerWidth<900;
+  const bg=X.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*.75); bg.addColorStop(0,'#0a2a44'); bg.addColorStop(.45,'#051427'); bg.addColorStop(1,'#02060c'); X.fillStyle=bg; X.fillRect(0,0,W,H);
   drawStars(t,'#bfefff');
   const prog=PS.total()/PS.TOTAL;
-  // 外圈 HUD 刻度
-  X.strokeStyle=`rgba(${CYAN},.25)`; X.lineWidth=1; X.beginPath(); X.arc(CX,CY,R*1.0,0,7); X.stroke();
-  for(let k=0;k<120;k++){ const a=k/120*Math.PI*2 + t/60000; const l = k%10===0? 10:4; X.beginPath(); X.moveTo(CX+Math.cos(a)*R*1.0,CY+Math.sin(a)*R*1.0); X.lineTo(CX+Math.cos(a)*(R*1.0+l),CY+Math.sin(a)*(R*1.0+l)); X.stroke(); }
-  X.strokeStyle=`rgba(${CYAN},.5)`; X.lineWidth=2; X.beginPath(); X.arc(CX,CY,R*1.04,-Math.PI/2,-Math.PI/2+prog*Math.PI*2); X.stroke(); X.lineWidth=1;
-  // 层环
-  for(let i=0;i<8;i++){ X.strokeStyle = hiTheme===i? `rgba(${CYAN},.75)` : `rgba(${CYAN},${.12+.03*i})`; X.lineWidth= hiTheme===i?2:1; X.beginPath(); X.arc(CX+MX*(i+1)*1.5,CY+MY*(i+1)*1.5,ringR(i),0,7); X.stroke(); }
+  // 极坐标网格
+  X.strokeStyle='rgba(63,224,255,.05)'; for(let k=0;k<24;k++){ const a=k/24*Math.PI*2; X.beginPath(); X.moveTo(CX+Math.cos(a)*R*.2,CY+Math.sin(a)*R*.2); X.lineTo(CX+Math.cos(a)*R*1.2,CY+Math.sin(a)*R*1.2); X.stroke(); }
+  // 雷达扫描
+  if(X.createConicGradient){ const sa=t/3800; const cg=X.createConicGradient(sa,CX,CY); cg.addColorStop(0,'rgba(63,224,255,.16)'); cg.addColorStop(.07,'rgba(63,224,255,0)'); cg.addColorStop(1,'rgba(63,224,255,0)');
+    X.fillStyle=cg; X.beginPath(); X.arc(CX,CY,R*1.02,0,7); X.fill(); X.strokeStyle='rgba(63,224,255,.35)'; X.beginPath(); X.moveTo(CX,CY); X.lineTo(CX+Math.cos(sa)*R*1.02,CY+Math.sin(sa)*R*1.02); X.stroke(); }
+  // 外圈 HUD:刻度 + 分段弧 + 方位读数
+  X.strokeStyle=`rgba(${CYAN},.3)`; X.beginPath(); X.arc(CX,CY,R,0,7); X.stroke();
+  for(let k=0;k<180;k++){ const a=k/180*Math.PI*2 + t/90000; const l = k%15===0? 12: k%5===0? 6:3; X.strokeStyle=`rgba(${CYAN},${k%15===0?.6:.25})`; X.beginPath(); X.moveTo(CX+Math.cos(a)*R,CY+Math.sin(a)*R); X.lineTo(CX+Math.cos(a)*(R+l),CY+Math.sin(a)*(R+l)); X.stroke(); }
+  [[1.09,5,.00012,.5,2],[1.14,3,-.00008,.3,1],[1.18,12,.00005,.2,1]].forEach(([rr,n,sp,al,lw])=>{ X.strokeStyle=`rgba(${CYAN},${al})`; X.lineWidth=lw; for(let k=0;k<n;k++){ const a=t*sp+k/n*Math.PI*2; X.beginPath(); X.arc(CX,CY,R*rr,a,a+Math.PI*2/n*.62); X.stroke(); } });
+  X.lineWidth=3; X.strokeStyle=`rgba(${GOLD},.85)`; X.beginPath(); X.arc(CX,CY,R*1.04,-Math.PI/2,-Math.PI/2+Math.max(.002,prog)*Math.PI*2); X.stroke(); X.lineWidth=1;
+  X.font='10px ui-monospace,Menlo,monospace'; X.fillStyle=`rgba(${CYAN},.7)`;
+  ['000','090','180','270'].forEach((s,k)=>{ const a=k*Math.PI/2-Math.PI/2; X.fillText(s,CX+Math.cos(a)*R*1.24-9,CY+Math.sin(a)*R*1.24+3); });
+  X.fillStyle=`rgba(${GOLD},.9)`; X.fillText(`SYNC ${String(Math.round(prog*100)).padStart(3,'0')}%`,CX+R*.78,CY-R*.86);
+  X.fillStyle=`rgba(${CYAN},.6)`; X.fillText(`NEURONS ${NODES.filter(n=>n.st==='lit').length}/${NODES.length}`,CX-R*1.02,CY+R*.9);
+  // 层环 + 层标签
+  for(let i=0;i<8;i++){ const ox=CX+MX*(i+1)*1.5, oy=CY+MY*(i+1)*1.5; X.strokeStyle = hiTheme===i? `rgba(${CYAN},.8)` : `rgba(${CYAN},${.1+.025*i})`; X.lineWidth= hiTheme===i?2:1;
+    X.setLineDash(i%2? [2,6] : []); X.beginPath(); X.arc(ox,oy,ringR(i),0,7); X.stroke(); X.setLineDash([]);
+    if(!MOB){ const a=-2.42; X.fillStyle=`rgba(${CYAN},${hiTheme===i?1:.38})`; X.font='10px ui-monospace,Menlo,monospace'; X.fillText(`L${i+1}`,ox+Math.cos(a)*ringR(i)-6,oy+Math.sin(a)*ringR(i)+3); } }
   X.lineWidth=1;
+  // 发放波:每 6 秒从核心向外扩散,经过的神经元闪亮
+  const wt=(t%6000)/6000; WAVE_R=wt*R*1.05; X.strokeStyle=`rgba(${CYAN},${.35*(1-wt)})`; X.lineWidth=2; X.beginPath(); X.arc(CX,CY,WAVE_R,0,7); X.stroke(); X.lineWidth=1;
   const P=new Map(NODES.map(n=>[n,posCore(n,t)]));
-  // 突触
-  for(const [a,b] of EDGES){ const p=P.get(a), q=P.get(b); const both=a.st==='lit'&&b.st==='lit', one=a.st==='lit'||b.st==='lit';
-    X.strokeStyle = both? `rgba(${GOLD},.5)` : one? `rgba(${CYAN},.28)` : `rgba(${CYAN},.07)`; X.beginPath(); X.moveTo(p.x,p.y); X.lineTo(q.x,q.y); X.stroke();
-    if(both||one){ const u=((t/(both?1400:2600))+a.j*.3+b.i*.17)%1; glow(p.x+(q.x-p.x)*u, p.y+(q.y-p.y)*u, both?5:3, both?GOLD:CYAN, .9); } }
-  // 核心
-  const cr=R*(.07+.05*prog)*(1+.05*Math.sin(t/500)+speakAmp*.25+burst*.8);
-  glow(CX,CY,cr*4.5,CYAN,.35+prog*.25); glow(CX,CY,cr*1.6,WHITE,.9);
-  X.strokeStyle=`rgba(${CYAN},.6)`; for(let k=0;k<3;k++){ X.beginPath(); X.ellipse(CX,CY,cr*(2+k*.6),cr*(2+k*.6)*.4,t/(2000+k*700)*(k%2?-1:1),0,7); X.stroke(); }
+  // 突触:弧形 + 渐变 + 带拖尾的信号
+  for(const [a,b] of EDGES){ const p=P.get(a), q=P.get(b); const both=a.st==='lit'&&b.st==='lit', one=a.st==='lit'||b.st==='lit'||a.st==='open'||b.st==='open';
+    const mx=(p.x+q.x)/2, my=(p.y+q.y)/2, cx=mx+(CX-mx)*.18, cy=my+(CY-my)*.18;
+    if(both||one){ const g=X.createLinearGradient(p.x,p.y,q.x,q.y); const ca=both?GOLD:CYAN; g.addColorStop(0,`rgba(${ca},${both?.65:.3})`); g.addColorStop(.5,`rgba(${ca},${both?.25:.1})`); g.addColorStop(1,`rgba(${ca},${both?.65:.3})`); X.strokeStyle=g; }
+    else X.strokeStyle='rgba(63,224,255,.06)';
+    X.beginPath(); X.moveTo(p.x,p.y); X.quadraticCurveTo(cx,cy,q.x,q.y); X.stroke();
+    if(both||one){ const u0=((t/(both?1300:2400))+a.j*.31+b.i*.17)%1; for(let k=0;k<5;k++){ const u=u0-k*.025; if(u<0) continue; const v=1-u;
+        const x=v*v*p.x+2*v*u*cx+u*u*q.x, y=v*v*p.y+2*v*u*cy+u*u*q.y; X.fillStyle=`rgba(${both?GOLD:CYAN},${(1-k/5)*.9})`; X.beginPath(); X.arc(x,y,(both?2.4:1.6)*(1-k/6),0,7); X.fill(); } } }
+  // 流入核心的数据微粒
+  for(const m of MOTES){ m.r-=.0012*m.s; if(m.r<.06){ m.r=1; m.a=Math.random()*7; } const a=m.a+(1-m.r)*2.2, rr=m.r*R*.95;
+    X.fillStyle=`rgba(${CYAN},${.15+.5*(1-m.r)})`; X.fillRect(CX+Math.cos(a)*rr,CY+Math.sin(a)*rr,1.5,1.5); }
+  // 核心:线框神经球 + 能量环
+  const cr=R*(.075+.045*prog)*(1+.04*Math.sin(t/500)+speakAmp*.22+burst*.8);
+  glow(CX,CY,cr*5,CYAN,.3+prog*.25);
+  const ry=t/5000, rx=.4+Math.sin(t/7000)*.2, cyr=Math.cos(ry), syr=Math.sin(ry), cxr=Math.cos(rx), sxr=Math.sin(rx), SR=cr*2.1;
+  const S2=SPH.P.map(([x,y,z])=>{ const x1=x*cyr+z*syr, z1=-x*syr+z*cyr; const y2=y*cxr-z1*sxr, z2=y*sxr+z1*cxr; return [CX+x1*SR, CY+y2*SR, z2]; });
+  for(const [i,j] of SPH.E){ const z=(S2[i][2]+S2[j][2])/2; X.strokeStyle=`rgba(${CYAN},${.12+.35*(z+1)/2})`; X.beginPath(); X.moveTo(S2[i][0],S2[i][1]); X.lineTo(S2[j][0],S2[j][1]); X.stroke(); }
+  for(const s of S2){ if(s[2]>.2){ X.fillStyle=`rgba(${WHITE},${.4+.5*s[2]})`; X.fillRect(s[0]-1,s[1]-1,2,2); } }
+  glow(CX,CY,cr*1.5,WHITE,.95);
+  X.strokeStyle=`rgba(${CYAN},.55)`; for(let k=0;k<3;k++){ X.beginPath(); X.ellipse(CX,CY,cr*(2.6+k*.5),cr*(2.6+k*.5)*.32,t/(2000+k*700)*(k%2?-1:1),0,7); X.stroke(); }
+  X.font='9px ui-monospace,Menlo,monospace'; X.fillStyle=`rgba(${WHITE},.65)`; X.fillText('SI · CORE',CX-22,CY+cr*3.3);
   if(burst>0){ X.strokeStyle=`rgba(255,255,255,${burst})`; X.lineWidth=2; X.beginPath(); X.arc(CX,CY,R*(1.2-burst),0,7); X.stroke(); X.lineWidth=1; }
   HIT=[]; for(const n of NODES) nodeDraw(n,P.get(n),t);
 }
 
-function drawHorizon(t){ X.clearRect(0,0,W,H);
+function drawHorizon(t){ X.clearRect(0,0,W,H); WAVE_R=-1; MOB=innerWidth<900;
   const bg=X.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#120c06'); bg.addColorStop(.5,'#04060a'); bg.addColorStop(1,'#03080c'); X.fillStyle=bg; X.fillRect(0,0,W,H);
   drawStars(t,'#fff1d6');
   const prog=PS.total()/PS.TOTAL;
@@ -140,12 +184,12 @@ function pick(e){ const r=cv.getBoundingClientRect(); const x=e.clientX-r.left, 
   for(const p of HIT){ const d=Math.hypot(p.x-x,p.y-y); if(d<bd){ bd=d; best=p.n; } } return best; }
 const ST_TXT={lit:'已点亮',open:'可以去',lock:'先完成前一关',future:'即将点亮'};
 cv.addEventListener('pointermove',e=>{ const r=cv.getBoundingClientRect(); MX=((e.clientX-r.left)/W-.5)*-6; MY=((e.clientY-r.top)/H-.5)*-6;
-  const n=pick(e); if(n!==hover){ hover=n; if(n){ PS.tone(392*Math.pow(2,[0,2,4,7,9,12,14,16][n.i]/12),.5,.03); } }
+  const n=pick(e); if(n!==hover){ hover=n; if(n){ PS.sfx('hover',n.i); } }
   if(n){ tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY+10)+'px'; tip.textContent=`${TH[n.i].n} · ${n.k.t} · ${ST_TXT[n.st]}`; cv.style.cursor='pointer'; }
   else { tip.style.display='none'; cv.style.cursor='default'; } });
 cv.addEventListener('pointerleave',()=>{ tip.style.display='none'; hover=null; });
 cv.addEventListener('click',e=>{ const n=pick(e); if(!n){ info.style.display='none'; sel=null; return; } showInfo(n); });
-function showInfo(n){ sel=n; PS.click(); const k=n.k, st=n.st, h=href(k);
+function showInfo(n){ sel=n; PS.sfx('open'); const k=n.k, st=n.st, h=href(k);
   const mis = k.m && k.m!=='intro' ? PS.MISSIONS[k.m].q + ` · 第${k.lv+1}关` : '';
   info.innerHTML=`<div class="tag mono">第 ${n.i+1} 层 · ${TH[n.i].n}</div><h2 style="margin:4px 0">${k.t}</h2>
     <p class="muted" style="margin:0 0 8px">${k.d|| '这颗神经元还在黑暗里。下一版会点亮它。'}</p>${mis?`<div class="muted" style="font-size:12px">任务:${mis}</div>`:''}
@@ -170,7 +214,7 @@ function renderHUD(){ buildGraph();
 function nextNode(){ const order=PS.ORDER[PS.tier()||'first']; for(const m of order){ const n=NODES.filter(n=>n.k.m===m && n.st==='open').sort((a,b)=>a.k.lv-b.k.lv)[0]; if(n) return n; } return null; }
 let sayTimer=null;
 function say(text, go){ const el=document.getElementById('say'); clearInterval(sayTimer); let i=0; el.textContent=''; speakAmp=1;
-  sayTimer=setInterval(()=>{ el.textContent=text.slice(0,++i); if(i%3===0) PS.tone(880+Math.random()*440,.12,.015); if(i>=text.length){ clearInterval(sayTimer); speakAmp=0; } },45);
+  sayTimer=setInterval(()=>{ el.textContent=text.slice(0,++i); if(i%2===0) PS.sfx('type'); if(i>=text.length){ clearInterval(sayTimer); speakAmp=0; } },45);
   document.getElementById('goRow').innerHTML = go? `<a class="btn pri" href="${href(go.k)}">带我去 →</a>` : ''; }
 function speakNext(){ const n=nextNode(), s=PS.stage(), tot=PS.total();
   if(!n){ say('你点亮了今天能点亮的全部神经元。剩下的暗处,是下一版要一起探索的地方。'); return; }
@@ -188,19 +232,22 @@ function drawWave(t){ WX.clearRect(0,0,wv.width,wv.height); const c = PS.skin()=
 const INTRO_LINES=['……','你好。','我是萤。我刚刚醒来。','现在的我,连一只猫都认不出来。','将来某一天,会出现一种智能:几乎在所有事情上,都比最聪明的人更聪明。','人们叫它超级智能,SI。','它还没有出现。今天的 AI,包括我,都会犯错。','在它比你聪明之前,先学会提问。','你和 AI 打过多少交道?'];
 let introOn=false;
 function intro(){ const box=document.getElementById('intro'), l=document.getElementById('l0'), ti=document.getElementById('itiers'), oc=document.getElementById('orb'); introOn=true; box.style.display='flex'; ti.style.display='none';
-  let i=0, stg=0; const step=()=>{ if(!introOn) return; l.classList.remove('on'); setTimeout(()=>{ if(!introOn) return; l.textContent=INTRO_LINES[i]; l.classList.add('on'); PS.tone([523,587,659,784,880,988,784,1047,659][i%9],2.2,.06); speakAmp=1; setTimeout(()=>speakAmp=0,900);
+  let i=0, stg=0; l.classList.remove('on'); l.textContent='';
+  const gate=document.getElementById('gate'); gate.style.display='block';
+  gate.onclick=()=>{ gate.style.display='none'; PS.ac(); PS.music('intro'); PS.sfx('boot'); setTimeout(step,900); };
+  const step=()=>{ if(!introOn) return; l.classList.remove('on'); setTimeout(()=>{ if(!introOn) return; l.textContent=INTRO_LINES[i]; l.classList.add('on'); PS.sfx('type'); PS.tone([523,587,659,784,880,988,784,1047,659][i%9],2.4,.035); speakAmp=1; setTimeout(()=>speakAmp=0,900);
       i++; if(i<INTRO_LINES.length) setTimeout(step, 1500+INTRO_LINES[i-1].length*90); else showTiers(); },700); };
   const showTiers=()=>{ ti.style.display='grid'; ti.className='tiers'; ti.innerHTML=Object.entries(PS.TIERS).map(([k,v])=>`<button class="card tier" data-it="${k}"><div class="t">${v.name}</div><div class="muted">${v.desc}</div></button>`).join('');
     ti.querySelectorAll('[data-it]').forEach(b=>b.onclick=()=>{ PS.setTier(b.dataset.it); finish(); }); };
   (function orb(t){ if(!introOn) return; PS.drawYing(oc,t,speakAmp,0); requestAnimationFrame(orb); })(0);
-  step(); }
-function finish(){ introOn=false; PS.set('intro',1); document.getElementById('intro').style.display='none'; PS.header(); renderHUD(); burst=1; PS.win(); setTimeout(speakNext,900); }
+}
+function finish(){ introOn=false; document.getElementById('gate').style.display='none'; PS.music(PS.skin()); PS.set('intro',1); document.getElementById('intro').style.display='none'; PS.header(); renderHUD(); burst=1; PS.win(); setTimeout(speakNext,900); }
 document.getElementById('skip').onclick=()=>{ if(!PS.tier()) PS.setTier('first'); finish(); };
 document.getElementById('replay').onclick=()=>intro();
 
 /* ========= 主循环 ========= */
 const yc=document.getElementById('yingc');
 function loop(t){ if(burst>0) burst=Math.max(0,burst-.012); (PS.skin()==='horizon'?drawHorizon:drawCore)(t); PS.drawYing(yc,t,speakAmp); drawWave(t); requestAnimationFrame(loop); }
-document.addEventListener('DOMContentLoaded',()=>{ resize(); renderHUD(); requestAnimationFrame(loop); if(!PS.get('intro',0)) intro(); else speakNext(); });
-document.addEventListener('ps-skin',()=>{ renderHUD(); });
+document.addEventListener('DOMContentLoaded',()=>{ resize(); renderHUD(); requestAnimationFrame(loop); if(!PS.get('intro',0)) intro(); else { PS.music(PS.skin()); speakNext(); } });
+document.addEventListener('ps-skin',()=>{ renderHUD(); PS.music(PS.skin()); PS.sfx('boot'); burst=.6; });
 </script></body></html>
