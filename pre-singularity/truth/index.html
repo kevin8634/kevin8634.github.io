@@ -1,0 +1,80 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>这段话是 AI 写的吗 · 奇点前夜</title><link rel="stylesheet" href="../ps.css"></head>
+<body data-mission="truth"><div class="wrap">
+<header class="top"></header>
+<h1>这段话是 AI 写的吗?</h1>
+<p class="sub">AI 写的东西越来越像人写的,单凭"感觉"已经很难分辨。比"是谁写的"更重要的问题是:<b>它说的是真的吗?</b></p>
+<div id="levels" class="levels"></div>
+<div id="guide"></div>
+<div id="goal" class="goal"></div>
+<div class="card" id="panel" style="margin-top:12px"></div>
+<div id="next" style="display:none;margin-top:14px"></div>
+</div>
+<script src="../ps.js"></script>
+<script>
+const P=document.getElementById('panel');
+const PASSAGES=[
+ {t:'一位 AI 写的《月球小知识》', s:[
+  ['月球是地球唯一的天然卫星。',1,''],
+  ['它距离地球大约 38 万公里。',1,''],
+  ['月球表面的重力大约是地球的六分之一。',1,''],
+  ['月球上的环形山,大多是在 1970 年代被陨石撞出来的。',0,'环形山大多形成于几十亿年前,1970 年代人类刚刚登月不久。'],
+  ['1969 年,阿波罗 11 号的阿姆斯特朗成为第一个踏上月球的人。',1,''],
+  ['宇航员在月球上种下的第一棵树,至今还活着。',0,'月球没有空气和液态水,从来没有人在月面种活过树。'],
+  ['2019 年,中国的嫦娥四号在月球背面实现了人类首次软着陆。',1,'']]},
+ {t:'一位 AI 写的《蜜蜂小知识》', s:[
+  ['蜜蜂会跳"摇摆舞",告诉同伴花在哪个方向、有多远。',1,''],
+  ['蜂巢的格子是六边形的。',1,''],
+  ['蜜蜂的翅膀每秒只扇动大约 2 次。',0,'蜜蜂翅膀每秒扇动约 200 次,所以才有"嗡嗡"声。'],
+  ['蜜蜂有五只眼睛:两只大复眼和三只小单眼。',1,''],
+  ['科学家在 2015 年证明,蜜蜂能听懂人类说的话。',0,'并没有这样的研究。听起来很具体的年份,常常是编造的信号。'],
+  ['蜂后在繁殖旺季每天能产下上千个卵。',1,'']]}
+];
+const CITES=[
+ ['达尔文在 1859 年出版了《物种起源》。',1,'真的。'],
+ ['图灵在 1950 年发表论文《计算机器与智能》,提出了"模仿游戏",也就是后来的图灵测试。',1,'真的。'],
+ ['牛顿在 1720 年出版了《人工智能原理》。',0,'编的。牛顿的名著是 1687 年的《自然哲学的数学原理》,那时还没有"人工智能"这个词(1956 年才出现)。'],
+ ['《九章算术》是中国古代的一部数学著作。',1,'真的。'],
+ ['李白写过一首诗叫《夜观星河赠机器》。',0,'编的。李白的诗里没有这一首,"机器"也不是唐代的说法。'],
+ ['陶哲轩获得了 2008 年诺贝尔数学奖。',0,'编的。诺贝尔奖根本没有数学奖。陶哲轩获得的是 2006 年菲尔兹奖。'],
+ ['爱因斯坦在 1905 年发表了关于狭义相对论的论文。',1,'真的。']
+];
+const QS=[
+ {q:'AI 告诉你:"这句名言出自爱因斯坦。"你最好怎么核实?', o:['再问同一个 AI 一遍,看它是不是还这么说','找到它出自哪本书、哪篇演讲的原文','看这句话在网上被转发了多少次'], a:1, e:'找原始出处。同一个 AI 再问一遍、转发量多少,都不能证明它是真的。'},
+ {q:'AI 回答时附上了一个"来源链接"。这说明什么?', o:['有链接就一定是真的','要点开链接,看原文是不是真的这么写','链接越多越可信'], a:1, e:'AI 有时会给出打不开、或内容对不上的链接。要亲自打开看。'},
+ {q:'两个不同的 AI 给了你一模一样的答案。', o:['两个都这么说,肯定没错','它们可能学自同样的错误资料,仍然需要可靠来源','以后只问这两个 AI 就行'], a:1, e:'AI 们可能读过同样的错误内容。一致不等于正确。'}
+];
+PS.mission({ id:'truth', guide:'raven', levels:[
+ { name:'找出编造', goal:'读一段 AI 写的小知识,点出所有你认为"编造"的句子,然后点"交卷"。全部找对、最多错标一句就过关。',
+   guide:{who:'raven', q:'AI 有时会一本正经地编造事实,科学家管这叫"幻觉"。它写的大部分是对的,所以错的那几句才更难发现。哪句让你觉得不对劲?',
+     hints:['想一想:这件事有没有可能发生?','太具体的年份、"科学家证明"这样的说法,要多留个心眼。','每段里有 2 句是编造的。']},
+   enter(){ let k=PS.get('truthP',0)%PASSAGES.length; const ps=PASSAGES[k]; const mark=new Set();
+     P.innerHTML=`<h3>${ps.t}</h3><p style="font-size:17px;line-height:2.1">${ps.s.map((x,i)=>`<span class="sent" data-i="${i}">${x[0]}</span>`).join(' ')}</p>
+       <div class="row"><button class="btn pri" id="sub">交卷</button><button class="btn" id="sw">换一段</button></div><div id="fb" style="margin-top:10px"></div>`;
+     document.querySelectorAll('.sent').forEach(e=>e.onclick=()=>{ const i=+e.dataset.i; mark.has(i)?mark.delete(i):mark.add(i); e.classList.toggle('mark'); PS.click(); });
+     document.getElementById('sw').onclick=()=>{ PS.set('truthP',k+1); PS.M.cfg.levels[0].enter(); };
+     document.getElementById('sub').onclick=()=>{ let miss=0, wrong=0; const fb=[];
+       ps.s.forEach((x,i)=>{ const e=document.querySelector(`[data-i="${i}"]`); e.classList.remove('mark');
+         if(!x[1]){ e.classList.add('fake'); if(!mark.has(i)) miss++; fb.push('❌ '+x[0]+' → '+x[2]); } else { e.classList.add('real'); if(mark.has(i)) wrong++; } });
+       document.getElementById('fb').innerHTML=`<p>漏掉 ${miss} 句编造,错标 ${wrong} 句真话。</p>`+fb.map(t=>`<p class="muted">${t}</p>`).join('');
+       if(miss===0&&wrong<=1) PS.pass('你抓到了 AI 的幻觉。'); else { PS.fail(); PS.toast('再试一次,或换一段'); } }; } },
+ { name:'查出处', goal:'AI 最爱编造的是"出处"。判断下面每条说法是真是假,7 条里对 6 条就过关。',
+   guide:{who:'raven', q:'AI 编出的书名、论文、奖项,常常和真的混在一起,格式也一模一样。你能分得清吗?',
+     hints:['想想那个年代有没有这个词、这种东西。','有些奖项本身就不存在。','拿不准的,记下来去查。真实世界里,查一下就是最好的答案。']},
+   enter(){ const ans={};
+     P.innerHTML=CITES.map((c,i)=>`<div class="row" style="margin:8px 0;justify-content:space-between"><span style="flex:1">${c[0]}</span>
+       <span class="row"><button class="btn" data-c="${i}" data-v="1">真</button><button class="btn" data-c="${i}" data-v="0">编的</button></span></div><div class="muted" id="e${i}"></div>`).join('')+`<button class="btn pri" id="sub" style="margin-top:10px">交卷</button><p id="fb"></p>`;
+     document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ ans[b.dataset.c]=+b.dataset.v; document.querySelectorAll(`[data-c="${b.dataset.c}"]`).forEach(x=>x.classList.toggle('sel',x===b)); PS.click(); });
+     document.getElementById('sub').onclick=()=>{ if(Object.keys(ans).length<CITES.length){ PS.toast('每条都判断一下'); return; } let ok=0;
+       CITES.forEach((c,i)=>{ const r=ans[i]===c[1]; if(r) ok++; document.getElementById('e'+i).innerHTML=(r?'<span class="ok">✓</span> ':'<span class="bad">✗</span> ')+c[2]; });
+       document.getElementById('fb').textContent=`答对 ${ok} / ${CITES.length}`; if(ok>=6) PS.pass('越像真的,越要查。'); else PS.fail(); }; } },
+ { name:'怎么核查', goal:'三个真实场景,选出最靠谱的做法。全部答对过关。',
+   guide:{who:'raven', q:'既然没法总靠"感觉"判断,那我们手里最可靠的工具是什么?',
+     hints:['"再问一遍"不等于核查。','原始出处比任何转述都可靠。','"大家都这么说"不是证据。']},
+   enter(){ const ans={};
+     P.innerHTML=QS.map((q,i)=>`<div style="margin:10px 0"><b>${i+1}. ${q.q}</b><div class="grid" style="margin-top:6px">${q.o.map((o,j)=>`<button class="btn" data-q="${i}" data-o="${j}" style="text-align:left">${o}</button>`).join('')}</div><div class="muted" id="x${i}"></div></div>`).join('')+'<button class="btn pri" id="sub">交卷</button>';
+     document.querySelectorAll('[data-q]').forEach(b=>b.onclick=()=>{ ans[b.dataset.q]=+b.dataset.o; document.querySelectorAll(`[data-q="${b.dataset.q}"]`).forEach(x=>x.classList.toggle('sel',x===b)); PS.click(); });
+     document.getElementById('sub').onclick=()=>{ let ok=0; QS.forEach((q,i)=>{ const r=ans[i]===q.a; if(r) ok++; document.getElementById('x'+i).innerHTML=(r?'<span class="ok">✓</span> ':'<span class="bad">✗</span> ')+q.e; });
+       if(ok===QS.length) PS.pass('会核查的人,才能放心地用 AI。'); else PS.fail(); }; } }
+]});
+</script></body></html>
