@@ -1,0 +1,91 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI 是怎么写作文的 · 奇点前夜</title><link rel="stylesheet" href="../ps.css"></head>
+<body data-mission="write"><div class="wrap">
+<header class="top"></header>
+<h1>AI 是怎么"写作文"的?</h1>
+<p class="sub">这里有一个就在你浏览器里运行的小语言模型。它只读过下面这几百个字,却也能"写作文"。秘密只有一个:猜下一个字。</p>
+<div id="levels" class="levels"></div>
+<div id="guide"></div>
+<div id="goal" class="goal"></div>
+<div class="card" id="panel" style="margin-top:12px"></div>
+<div id="next" style="display:none;margin-top:14px"></div>
+<details class="card" style="margin-top:14px"><summary class="muted">它读过的全部文字(训练数据)</summary><p id="corpus" class="muted" style="white-space:pre-wrap"></p></details>
+</div>
+<script src="../ps.js"></script>
+<script>
+const CORPUS = `小猫喜欢晒太阳。小猫喜欢吃鱼。小狗喜欢啃骨头。小狗喜欢在草地上跑。
+夜晚的天空有很多星星。星星在天空里眨眼睛。月亮在天空里慢慢地走。
+太阳从东边升起来。太阳是一颗很大的星星。地球绕着太阳转。月亮绕着地球转。
+我喜欢在夜晚看星星。我喜欢和小猫一起晒太阳。我们一起看月亮。
+科学家用望远镜看星星。科学家发现了一颗新的星星。望远镜可以看到很远的地方。
+机器可以学习。机器从数据里学习规律。机器学会了认出小猫。机器学会了写句子。
+写句子的机器只会猜下一个字。它猜得很快,但是它不知道句子是不是真的。
+春天的花开了。夏天的雨很大。秋天的叶子变黄了。冬天的雪是白色的。
+小猫在雪地里跑。小狗在雨里跳。孩子们在花园里看花。孩子们在夜晚看星星。
+大海很大很深。大海里有很多鱼。鲸鱼是大海里最大的动物。小鱼在大海里游来游去。`;
+document.getElementById('corpus').textContent = CORPUS;
+const TXT = CORPUS.replace(/\n/g,'');
+
+/* 字符级 n 元模型:上下文长度 k 个字 */
+function build(k){ const M={}; for(let i=k;i<TXT.length;i++){ const c=TXT.slice(i-k,i), n=TXT[i]; (M[c]=M[c]||{})[n]=(M[c][n]||0)+1; } return M; }
+const MODELS = {}; const model=k=> MODELS[k] || (MODELS[k]=build(k));
+function probs(ctx, k){ let kk=k; while(kk>0){ const m=model(kk)[ctx.slice(-kk)]; if(m && ctx.length>=kk){ const s=Object.values(m).reduce((a,b)=>a+b,0); return {k:kk, p:Object.entries(m).map(([c,n])=>[c,n/s]).sort((a,b)=>b[1]-a[1])}; } kk--; }
+  const f={}; for(const c of TXT) f[c]=(f[c]||0)+1; return {k:0, p:Object.entries(f).map(([c,n])=>[c,n/TXT.length]).sort((a,b)=>b[1]-a[1])}; }
+function sample(p, T){ if(T<=0.05) return p[0][0]; const w=p.map(([c,q])=>[c,Math.pow(q,1/T)]); const s=w.reduce((a,b)=>a+b[1],0); let r=Math.random()*s; for(const [c,q] of w){ r-=q; if(r<=0) return c; } return w[0][0]; }
+function bars(p, n=6){ return p.slice(0,n).map(([c,q])=>`<div class="row" style="gap:6px;margin:3px 0"><b style="width:22px;text-align:center">${c==='。'?'。':c}</b><div class="bar"><i style="width:${Math.max(2,q*100)}%"></i></div><span class="muted" style="width:44px">${Math.round(q*100)}%</span></div>`).join(''); }
+const P=document.getElementById('panel');
+const tried = new Set();
+
+PS.mission({ id:'write', guide:'raven', levels:[
+ { name:'你来当模型', goal:'从"小猫"开始,每次从模型给出的候选里选一个字,拼出一句以"。"结尾、至少 6 个字的话。',
+   guide:{who:'raven', q:'我是渡鸦博士。这个小模型读完文字后,只记住了一件事:每个字后面,最常跟着哪个字。如果你是它,"小猫"后面你会接什么?',
+     hints:['每根条的长短,是这个字在原文里跟在后面的频率。','不一定要选最长的条,选短的也行,看看会发生什么。','凑满 6 个字以上,再选"。"结束句子。']},
+   enter(){ let s='小猫';
+     function upd(){ const {p}=probs(s,2); P.innerHTML=`<h3>句子:<span style="color:var(--cy)">${s}</span><span style="opacity:.5">▍</span></h3>
+       <div class="muted">模型认为下一个字可能是:</div>${bars(p,6)}<div class="row" style="margin-top:8px">${p.slice(0,6).map(([c])=>`<button class="btn" data-c="${c}">${c}</button>`).join('')}<button class="btn" id="rs">重来</button></div>`;
+       document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{ const c=b.dataset.c; s+=c; PS.tone(500+((c.charCodeAt(0)%12)*40),.4,.08);
+         if(c==='。'){ if(s.length>=7){ upd(); PS.pass(`你写出了"${s}"。语言模型做的就是这件事,一个字一个字地猜。`); return; } else PS.toast('再长一点,6 个字以上'); } upd(); });
+       document.getElementById('rs').onclick=()=>{ s='小猫'; upd(); }; }
+     upd(); } },
+ { name:'温度', goal:'让模型自己写。分别用"很冷"(温度 ≤ 0.2)和"很热"(温度 ≥ 1.6)各写一次,看看有什么不同。',
+   guide:{who:'raven', q:'模型自己写的时候,每次都选最可能的字,还是偶尔冒点险?"温度"就是冒险的程度。你猜,温度太低会怎样?太高呢?',
+     hints:['温度低:几乎总选最长的条。','温度高:短条也常被选中。','两个极端都试一次,比较写出来的东西。']},
+   enter(){ let cold=false, hot=false;
+     P.innerHTML=`<div class="row">开头:<input id="seed" value="我喜欢" style="background:#071321;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:6px;width:120px">
+       温度 <input type="range" id="T" min="0" max="2.5" step="0.1" value="0.8"><b id="Tv">0.8</b><button class="btn pri" id="go">写 40 个字</button></div>
+       <p id="out" style="font-size:18px;min-height:60px;margin-top:12px;letter-spacing:1px"></p><p class="muted" id="cm"></p>`;
+     const T=document.getElementById('T'); T.oninput=()=>document.getElementById('Tv').textContent=T.value;
+     document.getElementById('go').onclick=()=>{ let s=document.getElementById('seed').value||'我'; const t=+T.value; const out=document.getElementById('out'); let i=0; out.textContent=s;
+       const h=setInterval(()=>{ const {p}=probs(s,2); const c=sample(p,t); s+=c; out.textContent=s; PS.tone(400+(c.charCodeAt(0)%16)*45,.3,.05); if(++i>=40){ clearInterval(h);
+         if(t<=.2) cold=true; if(t>=1.6) hot=true;
+         document.getElementById('cm').textContent = t<=.2? '很冷:总选最可能的字,容易原地打转、一再重复。' : t>=1.6? '很热:什么字都敢选,开始胡言乱语。' : '中间的温度,通常写得最像话。';
+         if(cold&&hot) PS.pass('温度控制着"稳"和"新"的平衡。大模型也有这个旋钮。'); } },45); }; } },
+ { name:'记得更多', goal:'把"记忆长度"从 1 个字调到 4 个字,各写一次。找出:记得越多,写得越通顺,但为什么也越像在"抄"原文?',
+   guide:{who:'raven', q:'刚才模型只看前 2 个字来猜。如果它只看 1 个字呢?看 4 个字呢?大模型能一次看几十万个字,你觉得这给了它什么?',
+     hints:['记忆长度 1:几乎不成句。','记忆长度 4:句子很通顺,但你会在原文里找到一模一样的句子。','大模型数据极多,所以它既通顺,又很少整段照抄。']},
+   enter(){
+     P.innerHTML=`<div class="row">记忆长度 ${[1,2,3,4].map(k=>`<button class="btn kb" data-k="${k}">${k} 个字</button>`).join('')}</div>
+       <p id="out" style="font-size:18px;min-height:60px;margin-top:12px"></p><p class="muted" id="cm"></p><div class="geek muted" id="gk"></div>`;
+     document.querySelectorAll('.kb').forEach(b=>b.onclick=()=>{ const k=+b.dataset.k; tried.add(k); document.querySelectorAll('.kb').forEach(x=>x.classList.toggle('sel',x===b));
+       let s='孩子们'; for(let i=0;i<36;i++){ const {p}=probs(s,k); s+=sample(p,.9); } document.getElementById('out').textContent=s;
+       const sents=s.split('。').filter(x=>x.length>4); const copied=sents.filter(x=>TXT.includes(x)).length;
+       document.getElementById('cm').textContent=`写出 ${sents.length} 个句子,其中 ${copied} 个和原文一字不差。`;
+       document.getElementById('gk').textContent=`发烧视图:${k} 字上下文共有 ${Object.keys(model(k)).length} 种组合。上下文越长,组合越多,每种组合见过的例子越少。`;
+       PS.lossChord(1-k/4);
+       if(tried.has(1)&&tried.has(4)) PS.pass('上下文越长越通顺。数据不够多时,模型就只能背原文。'); }); } },
+ { name:'一本正经', goal:'让模型写一句关于"星星"的话。读一读:它通顺吗?它是真的吗?找到一句通顺但不真实的话,点击它。',
+   guide:{who:'raven', q:'这个模型写得通顺的时候,你会不会就相信它?它知道自己写的是真是假吗?',
+     hints:['多写几次,每次结果不同。','比如"太阳绕着地球转"、"月亮是一颗很大的星星",读着顺,却不对。','模型只学了"哪个字跟着哪个字",没有学"世界是什么样"。']},
+   enter(){
+     P.innerHTML=`<button class="btn pri" id="go">写一段</button><p id="out" style="font-size:18px;line-height:2;margin-top:12px"></p><p class="muted" id="cm">点击你认为"通顺但不对"的句子。</p>`;
+     const go=()=>{ let s='', tries=0; let found=false; let txt='';
+       while(tries++<40){ let t='月亮'; if(Math.random()<.5) t='太阳'; if(Math.random()<.3) t='地球'; for(let i=0;i<60;i++){ const {p}=probs(t,2); t+=sample(p,1); }
+         txt=t; const ss=t.split('。').filter(x=>x.length>3); if(ss.some(x=>!TXT.includes(x))) break; }
+       const ss=txt.split('。').filter(x=>x.length>3).slice(0,5);
+       document.getElementById('out').innerHTML=ss.map(x=>`<span class="sent" data-r="${TXT.includes(x)?1:0}">${x}。</span>`).join(' ');
+       document.querySelectorAll('.sent').forEach(e=>e.onclick=()=>{ const real=e.dataset.r==='1';
+         if(real){ e.classList.add('real'); PS.toast('这句和原文一样,原文本身是对的'); }
+         else { e.classList.add('fake'); document.getElementById('cm').innerHTML='这句是模型"拼"出来的,原文里没有。它读起来通顺,但模型并不知道它是否属实。这就是<b>幻觉</b>的种子。请你判断它在现实里对不对。'; PS.pass('通顺不等于真实。读 AI 写的东西,要自己核查。'); } }); };
+     document.getElementById('go').onclick=go; go(); } }
+]});
+</script></body></html>
