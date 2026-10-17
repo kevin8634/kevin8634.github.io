@@ -1,0 +1,15 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>离线巨人 · 网络自检</title>
+<style>body{background:#03101a;color:#cfefff;font:15px/1.7 system-ui,"PingFang SC","Microsoft YaHei",sans-serif;max-width:760px;margin:40px auto;padding:0 18px}h1{font-weight:500;color:#7ff0ff}button{background:#3fe0ff;border:0;color:#012;padding:10px 22px;font-size:15px;border-radius:4px;cursor:pointer}#log{margin-top:18px;font:13px/1.8 ui-monospace,Menlo,monospace;white-space:pre-wrap;background:#061b29;padding:14px;border:1px solid #1d4d63;min-height:120px}.ok{color:#7dffb0}.bad{color:#ff8fa3}</style></head><body>
+<h1>离线巨人 · 网络自检</h1><p>检测推理引擎、运行时和模型文件能否从你的网络下载。只下载开头几 MB 就停止,不会占满流量。</p>
+<button id="go">开始自检</button><div id="log"></div>
+<script>
+const $=id=>document.getElementById(id); const log=(m,c)=>{ const s=document.createElement('div'); s.textContent=m; if(c) s.className=c; $('log').appendChild(s); };
+$('go').onclick=()=>{ $('go').disabled=true; $('log').textContent=''; log('WebGPU:'+(navigator.gpu?'支持':'不支持(检测仍可进行)'), navigator.gpu?'ok':'bad');
+  const w=new Worker('./llm-worker.js?v=7',{type:'module'}); const seen={}; let t0=Date.now();
+  w.onerror=e=>log('线程错误:'+(e.message||''),'bad');
+  w.onmessage=e=>{ const d=e.data;
+    if(d.t==='prog'){ const p=d.p; if(p.status==='progress'&&p.file&&!seen[p.file]){ seen[p.file]=1; log('开始下载 '+p.file+'('+(p.total/1e6).toFixed(1)+' MB)','ok'); }
+      if(p.status==='progress'&&/onnx/.test(p.file||'')&&p.loaded>3e6){ const s=(p.loaded/1e6)/((Date.now()-t0)/1000); log('✓ 模型文件可下载。自检通过,已停止。','ok'); w.terminate(); $('go').disabled=false; } }
+    else if(d.t==='info') log(d.m); else if(d.t==='warn') log(d.m,'bad'); else if(d.t==='err'){ log(d.m,'bad'); $('go').disabled=false; } else if(d.t==='ready') log('已就绪','ok'); };
+  w.postMessage({t:'load',dtype:navigator.gpu?'q4f16':'q4'}); };
+</script></body></html>
