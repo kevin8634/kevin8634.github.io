@@ -101,7 +101,7 @@ let worker=null, ready=false, dtype='q4f16', busy1=false;
     g.textContent=`✓ 支持 WebGPU。首次需下载约 ${f16?480:790} MB,之后从浏览器缓存载入。`; $('dl').disabled=false; }
   catch(e){ g.textContent='检测到 WebGPU,但没有可用的显卡适配器。可以改用 ② ③。'; } })();
 $('dl').onclick=()=>{ PS.sfx('boot'); $('dl').disabled=true; $('dlbar').style.display='block'; const files={};
-  worker=new Worker('./llm-worker.js?v=7',{type:'module'});
+  worker=new Worker('./llm-worker.js?v=8',{type:'module'});
   worker.onerror=ev=>{ $('dlst').textContent='推理线程启动失败:'+(ev.message||'请换用新版 Chrome / Edge'); $('dl').disabled=false; $('dl').textContent='重试'; PS.fail(); };
   worker.onmessage=e=>{ const d=e.data;
     if(d.t==='prog'){ const p=d.p; if(p.status==='progress'&&p.total){ files[p.file]=[p.loaded,p.total]; let a=0,b=0; for(const k in files){ a+=files[k][0]; b+=files[k][1]; }
