@@ -23,6 +23,7 @@
   <meta name="theme-color" content="#060c18" />
   <link rel="stylesheet" href="le-fonts.css" />
   <link rel="stylesheet" href="le-style.css" />
+  <link rel="stylesheet" href="sh-style.css" />
 </head>
 <body>
   <div id="stage" class="le-stage" aria-label="可拖动旋转、缩放的三维场景" role="img"></div>
@@ -103,7 +104,7 @@
       <button class="le-chip" type="button" data-layer="flights" aria-pressed="false" style="--c:#ffb340">航线<small>ROUTES</small></button>
     </div></div>
     <div class="le-chips le-solar-only"><div class="le-chips-in" id="speed-chips"></div></div>
-    <p class="le-foot" id="credits">数据：USGS 地震 · CelesTrak 轨道数据 · JPL 行星轨道 · 城市库 GeoNames (CC BY 4.0) · 纹理 NASA / Solar System Scope (CC BY 4.0) · 天枢 Starhelm 不收集位置</p>
+    <p class="le-foot" id="credits">数据：USGS 地震 · CelesTrak 轨道数据（星链、空间站、天宫、哈勃、导航与气象卫星） · JPL 行星轨道 · 城市库 GeoNames (CC BY 4.0) · 纹理 NASA / Solar System Scope (CC BY 4.0) · 天枢 Starhelm 不收集位置</p>
   </footer>
 
   <!-- 详情卡片（地震 / 卫星 / 星球 通用） -->
@@ -316,6 +317,15 @@
   <script src="le-audio.js"></script>
   <script src="le-ui.js"></script>
   <script src="le-main.js"></script>
+  <!-- 天枢 Starhelm M1:七律框架(任务 · 天枢七星向导 · 航图)+ 此刻 · 日与月 · 天宫/哈勃 · 过境预报 · 轨道分层 -->
+  <script src="sh-orbits-data.js"></script>
+  <script src="sh-data.js"></script>
+  <script src="sh-astro.js"></script>
+  <script src="sh-core.js"></script>
+  <script src="sh-sky.js"></script>
+  <script src="sh-task-where.js"></script>
+  <script src="sh-task-orbit.js"></script>
+  <script src="sh-main.js"></script>
 <script>if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js",{scope:"./"});</script>
 </body>
 </html>
