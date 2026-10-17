@@ -1,0 +1,136 @@
+/* 天枢 Starhelm · M1 组件样式(星辉银 + 深空靛) */
+:root { --sh-silver: #dfe6f5; --sh-silver-dim: rgba(223, 230, 245, 0.62); --sh-indigo: #1a2160; --sh-indigo-2: #0b1033; --sh-gold: #ffd27f; }
+
+/* 任务 / 航图按钮 */
+.sh-btn-quest { --bd: rgba(223, 230, 245, 0.6); }
+.sh-btn-quest .le-btn__ico { color: var(--sh-gold); }
+
+/* 通用面板 */
+.sh-panel { position: fixed; z-index: 9; right: max(14px, env(safe-area-inset-right)); bottom: calc(max(12px, env(safe-area-inset-bottom)) + 104px); width: 380px; max-height: min(680px, calc(100vh - 150px)); overflow: auto; padding: 14px 16px 16px;
+  background: linear-gradient(180deg, rgba(26, 33, 96, 0.92), rgba(8, 11, 36, 0.95)); border-color: rgba(223, 230, 245, 0.3); color: var(--text); }
+.sh-panel[hidden] { display: none; }
+.sh-panel .le-sheet__head h2 small { color: var(--sh-silver-dim); }
+
+/* 向导 */
+.sh-gicon { flex: none; border-radius: 50%; box-shadow: 0 0 0 1px rgba(223, 230, 245, 0.35), 0 0 14px rgba(160, 180, 255, 0.25); }
+.sh-say { margin: 8px 0 0; padding: 10px 12px; font: 500 14px/1.6 var(--cjk); color: #eef2ff; background: rgba(223, 230, 245, 0.07); border-left: 2px solid var(--sh-silver); border-radius: 0 6px 6px 0; }
+.sh-tasks__g { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; }
+.sh-tasks__g .sh-say { margin: 0; font-size: 13px; }
+
+/* 任务列表 */
+.sh-task { padding: 12px 0; border-top: 1px solid rgba(223, 230, 245, 0.16); }
+.sh-task__q { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.sh-task__q b { font: 700 15px/1.4 var(--cjk); color: #fff; }
+.sh-diff { font-style: normal; color: var(--sh-gold); font-size: 12px; white-space: nowrap; }
+.sh-diff span { color: rgba(255, 210, 127, 0.25); }
+.sh-task.is-locked b { color: var(--text-2); }
+.sh-task__soon { margin: 6px 0 0; font: 500 12px/1.4 var(--cjk); color: var(--text-2); }
+.sh-task__lv { display: grid; gap: 6px; margin-top: 8px; }
+.sh-lvbtn { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; min-height: 40px; padding: 6px 10px; border: 1px solid rgba(223, 230, 245, 0.22); background: rgba(10, 14, 44, 0.6); color: var(--text); border-radius: 4px; cursor: pointer; text-align: left; font: 500 13px/1.3 var(--cjk); }
+.sh-lvbtn span { color: var(--sh-silver-dim); font-size: 12px; }
+.sh-lvbtn:hover { border-color: var(--sh-silver); }
+.sh-lvbtn.is-locked { opacity: 0.45; }
+.sh-stars i { font-style: normal; color: rgba(223, 230, 245, 0.22); margin-left: 1px; }
+.sh-stars i.on { color: var(--sh-gold); text-shadow: 0 0 6px rgba(255, 210, 127, 0.6); }
+
+/* 关卡面板:做任务时收起右侧按钮,面板占右侧 */
+.sh-quest { width: 400px; top: calc(max(14px, env(safe-area-inset-top)) + 70px); bottom: auto; max-height: calc(100vh - 190px); }
+body.sh-questing .le-actions > .le-btn, body.sh-side .le-actions > .le-btn:not(.sh-btn-quest):not(.sh-btn-map) { display: none; }
+.sh-tasks, .sh-nowsheet { top: calc(max(14px, env(safe-area-inset-top)) + 190px); bottom: auto; max-height: calc(100vh - 310px); }
+.sh-quest__head { display: flex; gap: 10px; align-items: center; }
+.sh-quest__ttl { flex: 1; min-width: 0; }
+.sh-quest__kicker { font: 600 10px/1.3 var(--display); letter-spacing: 0.18em; color: var(--sh-silver-dim); }
+.sh-quest__q { font: 700 15px/1.35 var(--cjk); color: #fff; }
+.sh-quest__lv { display: flex; gap: 6px; margin-top: 10px; }
+.sh-quest__lv .sh-stars i { font-size: 10px; }
+.sh-quest__lv > span { flex: 1; text-align: center; padding: 4px 0; font: 600 11px/1.2 var(--mono); color: var(--sh-silver-dim); border: 1px solid rgba(223, 230, 245, 0.16); border-radius: 3px; }
+.sh-quest__lv > span.is-cur { border-color: var(--sh-silver); color: #fff; }
+.sh-quest__title { margin: 12px 0 0; font: 700 17px/1.3 var(--cjk); color: #fff; letter-spacing: 0.04em; }
+.sh-quest__area { margin-top: 10px; }
+.sh-quest__foot { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center; }
+.sh-quest__foot:empty { display: none; }
+.sh-go { --bd: rgba(255, 210, 127, 0.7); }
+.sh-note { margin: 0 0 8px; font: 500 13px/1.55 var(--cjk); color: var(--text-2); }
+.sh-note b { color: #fff; }
+.sh-q { margin: 10px 0 6px; font: 600 14px/1.45 var(--cjk); color: #fff; }
+.sh-choice { display: flex; flex-wrap: wrap; gap: 6px; }
+.sh-choice button { min-height: 38px; padding: 0 12px; border: 1px solid rgba(223, 230, 245, 0.28); border-radius: 4px; background: rgba(10, 14, 44, 0.7); color: var(--text); font: 600 13px/1 var(--cjk); cursor: pointer; }
+.sh-choice button[aria-pressed="true"] { border-color: var(--sh-gold); color: #fff; background: rgba(255, 210, 127, 0.14); }
+.sh-hints { margin-top: 12px; }
+.sh-hintbtn { border: 0; background: none; color: var(--sh-gold); font: 600 13px/1.4 var(--cjk); cursor: pointer; padding: 4px 0; }
+.sh-hintbtn:disabled { opacity: 0.6; cursor: default; }
+.sh-hints ol { margin: 4px 0 0; padding-left: 18px; font: 500 13px/1.55 var(--cjk); color: #e6ebff; }
+.sh-hints ol b { color: var(--sh-gold); margin-right: 4px; }
+.sh-feedback { min-height: 1.2em; margin: 10px 0 0; font: 500 13px/1.6 var(--cjk); color: var(--text-2); }
+.sh-feedback.is-ok { color: #c9ffe4; }
+.sh-feedback.is-warn { color: #ffc9a8; }
+.sh-win { margin-right: 4px; }
+.sh-bridge { width: 100%; margin: 4px 0 0; font: 500 12px/1.5 var(--cjk); color: var(--sh-silver-dim); }
+
+/* 尺度尺 */
+.sh-ruler { position: relative; height: 62px; margin: 4px 6px 8px; }
+.sh-ruler__bar { position: absolute; left: 0; right: 0; top: 20px; height: 2px; background: linear-gradient(90deg, rgba(223, 230, 245, 0.6), rgba(160, 140, 255, 0.6)); }
+.sh-ruler span { position: absolute; top: 14px; transform: translateX(-50%); text-align: center; }
+.sh-ruler span b { display: block; width: 8px; height: 8px; margin: 1px auto 0; border-radius: 50%; background: rgba(223, 230, 245, 0.25); }
+.sh-ruler span.on b { background: #fff; box-shadow: 0 0 8px #cfe0ff; }
+.sh-ruler span em { display: block; margin-top: 4px; font: 500 10px/1.1 var(--cjk); font-style: normal; color: var(--text-2); white-space: nowrap; }
+.sh-ruler span:nth-child(odd) em { margin-top: -30px; }
+.sh-ruler span.on em { color: #fff; }
+.sh-ruler small { position: absolute; left: 0; bottom: -4px; font: 500 10px/1 var(--cjk); color: var(--text-2); }
+.sh-lightrow { display: grid; grid-template-columns: 52px 1fr; gap: 8px; align-items: center; margin-top: 8px; }
+.sh-lightrow > b { font: 700 14px/1 var(--cjk); color: #fff; }
+.sh-lightrow .sh-choice button { min-height: 34px; padding: 0 8px; font-size: 12px; }
+
+/* 牛顿大炮 */
+.sh-cannon canvas { display: block; width: 100%; border: 1px solid rgba(223, 230, 245, 0.18); border-radius: 4px; }
+.sh-cannon__ctl { margin-top: 10px; }
+.sh-cannon__ctl label { font: 600 13px/1 var(--cjk); color: var(--text-2); }
+.sh-cannon__ctl b { color: #fff; font-size: 15px; }
+.sh-cannon__ctl input { width: 100%; margin-top: 8px; accent-color: var(--sh-gold); }
+.sh-cannon__btns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.sh-seg { display: inline-flex; align-items: center; gap: 4px; font: 600 12px/1 var(--cjk); color: var(--text-2); }
+.sh-seg button { min-height: 34px; min-width: 42px; border: 1px solid rgba(223, 230, 245, 0.28); background: rgba(10, 14, 44, 0.7); color: var(--text); border-radius: 4px; cursor: pointer; font: 600 12px/1 var(--mono); }
+.sh-seg button[aria-pressed="true"] { border-color: var(--sh-gold); background: rgba(255, 210, 127, 0.14); }
+
+/* 卡片上的向导提问 */
+.sh-cardask { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; padding: 8px 10px; background: rgba(26, 33, 96, 0.55); border: 1px solid rgba(223, 230, 245, 0.2); border-radius: 6px; flex-wrap: wrap; }
+.sh-cardask p { flex: 1; min-width: 0; margin: 0; font: 500 13px/1.55 var(--cjk); color: #eef2ff; }
+.sh-cardask small { width: 100%; font: 500 11px/1.4 var(--cjk); color: var(--text-2); }
+
+/* 标签 */
+.sh-label { color: var(--sh-silver); }
+.sh-label--css { color: #ffb0b0; }
+.sh-label--hst { color: #cfc4ff; }
+.sh-label--sun { color: #ffe08a; }
+.sh-label--ring { color: rgba(223, 230, 245, 0.75); font-size: 11px; }
+
+/* 此刻 */
+.sh-now { position: fixed; z-index: 4; left: 50%; top: max(14px, env(safe-area-inset-top)); transform: translateX(-50%); max-width: min(560px, calc(100vw - 520px)); display: flex; align-items: center; gap: 8px; padding: 8px 14px; border: 1px solid rgba(223, 230, 245, 0.35); border-radius: 999px; background: rgba(11, 16, 51, 0.82); color: var(--text); cursor: pointer; font: 500 13px/1.3 var(--cjk); backdrop-filter: blur(6px); }
+.sh-now__k { flex: none; font: 700 12px/1 var(--cjk); color: var(--sh-gold); letter-spacing: 0.1em; }
+.sh-now__t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sh-now__go { flex: none; color: var(--sh-silver-dim); }
+body[data-mode="solar"] .sh-now { display: none; }
+.sh-h3 { margin: 14px 0 6px; font: 700 14px/1.3 var(--cjk); color: #fff; }
+.sh-pass { margin: 6px 0; font: 500 13px/1.55 var(--cjk); color: var(--text-2); }
+.sh-pass b { color: #fff; margin-right: 4px; }
+.sh-pass span { display: block; }
+
+/* 航图 */
+.sh-map { position: fixed; inset: 0; z-index: 20; background: #03050f; }
+.sh-map[hidden] { display: none; }
+.sh-map canvas { position: absolute; inset: 0; }
+.sh-map__bar { position: absolute; z-index: 1; left: var(--edge); right: max(14px, env(safe-area-inset-right)); top: max(14px, env(safe-area-inset-top)); display: flex; justify-content: space-between; gap: 10px; padding: 10px 14px; background: rgba(11, 16, 51, 0.7); }
+.sh-map__bar h2 { margin: 6px 0 0; font: 700 18px/1 var(--cjk); color: #fff; }
+.sh-map__bar h2 small { font: 600 11px/1 var(--cjk); color: var(--sh-silver-dim); margin-left: 6px; }
+.sh-map__sum { margin: 6px 0 0; font: 500 12px/1.4 var(--cjk); color: var(--text-2); }
+.sh-map__tip { position: absolute; z-index: 1; left: var(--edge); bottom: max(14px, env(safe-area-inset-bottom)); max-width: 360px; padding: 12px 14px; background: rgba(11, 16, 51, 0.9); font: 500 13px/1.55 var(--cjk); }
+.sh-map__tip[hidden] { display: none; }
+.sh-map__tip p { margin: 6px 0 0; color: var(--text-2); }
+.sh-map__tip b { color: #fff; }
+
+@media (max-width: 900px) { .sh-now { top: auto; bottom: calc(max(12px, env(safe-area-inset-bottom)) + 96px); max-width: calc(100vw - 28px); } }
+@media (max-width: 640px) {
+  .sh-panel, .sh-quest { left: 8px; right: 8px; width: auto; top: auto; bottom: max(8px, env(safe-area-inset-bottom)); max-height: 72vh; }
+  body.sh-questing .le-bottom, body.sh-questing .sh-now { display: none; }
+  .sh-now { font-size: 12px; }
+}
