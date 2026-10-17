@@ -26,6 +26,7 @@ async function lib(){
   }
   if(!pipeline) throw new Error('推理引擎下载失败(所有 CDN 都不通)');
   env.allowLocalModels = false;
+  rawFetch = env.fetch || fetch.bind(self); env.fetch = msFetch;
   // 默认 WASM 走 cdn.jsdelivr.net,国内常被拦 → 改为同一可达 CDN;再探测,不通就换下一个
   const onnx = env.backends && env.backends.onnx;
   if(onnx && onnx.wasm){
@@ -38,6 +39,20 @@ async function lib(){
       }
     }
   }
+}
+// 魔搭的小文件在 Range 请求(206)和 404 时不带跨域头,浏览器会报 Failed to fetch。
+// 对魔搭:只请求仓库里真实存在的文件;小文件去掉 Range 头;.onnx 会 302 到 cdn-lfs-cn(带跨域头,可保留 Range)。
+const MS_FILES = new Set(['config.json','generation_config.json','tokenizer.json','tokenizer_config.json','special_tokens_map.json','vocab.json','added_tokens.json',
+  'onnx/model.onnx','onnx/model_bnb4.onnx','onnx/model_fp16.onnx','onnx/model_int8.onnx','onnx/model_q4.onnx','onnx/model_q4f16.onnx','onnx/model_quantized.onnx','onnx/model_uint8.onnx']);
+let rawFetch = null;
+function msFetch(url, init={}){
+  const u = String(url && url.url || url);
+  if(u.startsWith('https://modelscope.cn/models/')){
+    const f = decodeURIComponent((u.split('/resolve/master/')[1]||'').split('?')[0]);
+    if(!MS_FILES.has(f)) return Promise.resolve(new Response(null, {status:404, statusText:'Not Found'}));
+    if(!f.endsWith('.onnx') && init && init.headers){ const h = new Headers(init.headers); h.delete('Range'); init = {...init, headers:h}; }
+  }
+  return rawFetch(url, init);
 }
 async function load(h, dtype){
   env.remoteHost = h.host; env.remotePathTemplate = h.tpl;
