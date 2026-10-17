@@ -61,6 +61,30 @@
       .x-legend h3 { display: flex; align-items: center; gap: 8px; }
       .x-legend h3 i { width: 12px; height: 12px; border-radius: 50%; }
       .x-legend .btn { cursor: pointer; margin-top: 12px; }
+      .x-focus { position: absolute; left: 8px; right: 8px; top: 44px; z-index: 3; max-height: 38%; overflow: auto; padding: 14px 14px 12px; border-radius: 18px;
+        background: rgb(8 12 32 / .78); border: 1px solid color-mix(in srgb, var(--fc) 45%, transparent); box-shadow: 0 0 28px color-mix(in srgb, var(--fc) 22%, transparent);
+        -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); color: #eef1ff; }
+      .x-focus[hidden] { display: none; }
+      @media (min-width: 760px) { .x-focus { right: auto; top: 8px; bottom: 54px; max-height: none; width: 288px; max-height: none; } }
+      .x-focus h3 { margin: 0 34px 6px 0; font: 600 16px/1.35 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+      .x-focus .x-close { top: 8px; right: 8px; }
+      .x-fbar { height: 6px; border-radius: 6px; background: rgb(255 255 255 / .1); overflow: hidden; margin: 6px 0 4px; }
+      .x-fbar i { display: block; height: 100%; background: linear-gradient(90deg, var(--fc), #ffd46b); border-radius: 6px; }
+      .x-fmeta { font-size: 12px; color: rgb(220 228 255 / .72); margin: 0 0 8px; }
+      .x-fcons { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 8px; }
+      .x-fcons span { font-size: 11px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--c); color: var(--c); }
+      .x-flist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+      .x-flist button { all: unset; box-sizing: border-box; width: 100%; cursor: pointer; display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: center; padding: 6px 8px; border-radius: 10px; font-size: 13px; }
+      .x-flist button:hover, .x-flist button.on { background: rgb(255 255 255 / .08); }
+      .x-flist b { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 600 11px/1 sans-serif; color: #05070f; background: var(--fc); }
+      .x-flist .lit b { background: #ffd46b; }
+      .x-flist small { font-size: 11px; color: rgb(220 228 255 / .6); white-space: nowrap; }
+      .x-flist em { font-style: normal; font-size: 11px; display: block; color: rgb(220 228 255 / .55); }
+      .x-fact { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+      .x-fact button, .x-fact a { cursor: pointer; font-size: 12px; padding: 6px 12px; border-radius: 99px; border: 1px solid rgb(160 185 255 / .35); background: rgb(255 255 255 / .06); color: #eef1ff; text-decoration: none; }
+      .x-fact .pri { background: var(--fc); color: #05070f; border-color: transparent; font-weight: 600; }
+      .x-task-wrap { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: stretch; }
+      .x-task-wrap button { cursor: pointer; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--c) 50%, transparent); background: transparent; color: var(--c); font-size: 12px; padding: 0 10px; }
       .x-tour { position: absolute; left: 50%; top: 40px; transform: translateX(-50%); margin: 0; padding: 8px 16px; font: var(--type-label);
         color: #fff; background: rgb(0 0 0 / 0.55); border-radius: var(--r-pill); pointer-events: none; white-space: nowrap; }
       .x-tour[hidden] { display: none; }
@@ -97,7 +121,7 @@
           <div class="x-flt" id="fCons" role="group" aria-label="星座筛选"><span>星座</span></div>
           <div class="x-flt" id="fDep" role="group" aria-label="深度筛选"><span>深度</span></div>
           <div class="x-flt"><span>模式</span>
-            <button class="x-chip" id="mBtn" aria-pressed="false"><i></i>显示任务</button>
+            <button class="x-chip" id="mBtn" aria-pressed="false"><i></i>任务视图</button>
             <button class="x-chip" id="sndBtn" aria-pressed="false"><i></i>🔊 音效</button>
           </div>
           <div class="x-map" id="wrap">
@@ -106,6 +130,7 @@
             <button class="x-home" id="homeBtn" type="button" title="回到全景">⟲ 全景</button>
             <p class="x-tour" id="tour" hidden aria-live="polite"></p>
             <aside class="x-panel" id="panel" hidden aria-live="polite"></aside>
+            <aside class="x-focus" id="focus" hidden aria-live="polite"></aside>
           </div>
           <div class="cards x-legend" id="legend" hidden></div>
         </section>
@@ -365,7 +390,7 @@
         document.getElementById("statsLine").textContent = `${S.length} 颗星 · ${CONS.length} 个星座 · ${TASKS.length} 个任务 · 你已点亮 ${LIT.size} 颗`;
         const fC = new Set(), fD = new Set();
         const vis = (s) => (!fC.size || fC.has(s.constellation)) && (!fD.size || fD.has(s.depth));
-        let mOn = false, plan = null, cur = null, tourT = null, looping = false, AC = null, snd = false;
+        let mOn = false, foc = null, fHi = null, plan = null, cur = null, tourT = null, looping = false, AC = null, snd = false;
         const RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
         const chipBar = (el, items, key, conv, set) => {
           el.insertAdjacentHTML("beforeend", items.map(([v, t, c]) => `<button class="x-chip" aria-pressed="false" data-v="${esc(v)}"${c ? ` style="--c:${c}"` : ""}><i></i>${esc(t)}</button>`).join(""));
@@ -417,16 +442,16 @@
           W = wrap.clientWidth; H = wrap.clientHeight;
           cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
-        let cY, sY, cP, sP, focal, ox = 0;
+        let cY, sY, cP, sP, focal, ox = 0, oy = 0;
         function setup() {
           cY = Math.cos(cam.yaw); sY = Math.sin(cam.yaw); cP = Math.cos(cam.pitch); sP = Math.sin(cam.pitch);
-          focal = Math.min(W, H) * 1.15; ox = !panel.hidden && W >= 760 ? -170 : 0;
+          focal = Math.min(W, H) * 1.15; ox = W >= 760 ? (!panel.hidden ? -170 : 0) + (foc ? 150 : 0) : 0; oy = W < 760 && foc && panel.hidden ? H * 0.2 : 0;
         }
         function proj(x, y, z) {
           const X = x - cam.tx, Y = y - cam.ty, Z = z - cam.tz;
           const x1 = X * cY - Z * sY, z1 = X * sY + Z * cY, y2 = Y * cP - z1 * sP, z2 = Y * sP + z1 * cP;
           const zz = z2 + cam.dist; if (zz < 40) return null;
-          const f = focal / zz; return { x: W / 2 + ox + x1 * f, y: H / 2 + y2 * f, f, z: zz };
+          const f = focal / zz; return { x: W / 2 + ox + x1 * f, y: H / 2 + oy + y2 * f, f, z: zz };
         }
         const rad = (s) => (s.p ? Math.max(1.4, Math.min(7 + s.depth, s.r * s.p.f * 1.7)) : 0);
         function draw() {} function kick() {}
@@ -445,14 +470,15 @@
           }
           S.forEach((s) => (s.p = proj(s.x, s.y, s.z)));
           const chain = sel ? new Set([...anc, sel.id]) : null;
-          const hn = hov && !sel ? new Set([hov.id, ...hov.prereqs, ...(kids[hov.id] || [])]) : null;
+          const hn = hov && !sel && !foc ? new Set([hov.id, ...hov.prereqs, ...(kids[hov.id] || [])]) : null;
           ctx.globalCompositeOperation = "lighter";
           // 连线（突触）
           S.forEach((s) => s.prereqs.forEach((pid) => {
             const q = byId[pid], a = s.p, b = q.p; if (!a || !b) return;
             const gold = chain && chain.has(s.id) && chain.has(pid), hl = hn && (s === hov || q === hov);
             const fog = Math.min(1, 2400 / Math.max(a.z, b.z));
-            let al = gold ? 0.85 : hl ? 0.75 : chain || hn ? 0.025 : 0.17 * fog;
+            if (foc && !chain && foc.set.has(s.id) && foc.set.has(pid)) return;
+            let al = gold ? 0.85 : hl ? 0.75 : chain || hn ? 0.025 : (foc ? 0.035 : 0.17) * fog;
             al *= vis(s) && vis(q) ? 1 : 0.12;
             ctx.strokeStyle = gold ? `rgba(255,206,84,${al})` : hl ? rgba(s.col, al) : `rgba(160,185,255,${al})`;
             ctx.lineWidth = gold || hl ? 1.7 : 0.8;
@@ -460,7 +486,7 @@
           }));
           // 沿前置关系流动的信号脉冲
           if (!RM) S.forEach((s) => s.prereqs.forEach((pid) => {
-            const on = chain ? chain.has(s.id) && chain.has(pid) : hn ? s === hov || byId[pid] === hov : hash(s.id + pid) < 0.28;
+            const on = chain ? chain.has(s.id) && chain.has(pid) : hn ? s === hov || byId[pid] === hov : !foc && hash(s.id + pid) < 0.28;
             if (!on || !vis(s)) return;
             const a = byId[pid].p, b = s.p; if (!a || !b) return;
             const u = (t * (chain || hn ? 0.55 : 0.28) + hash(pid + s.id) * 7) % 1, x = a.x + (b.x - a.x) * u, y = a.y + (b.y - a.y) * u;
@@ -476,16 +502,17 @@
             ids.forEach((i) => { const p = byId[i].p; if (!p) return; started ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); started = true; });
             ctx.stroke(); ctx.restore();
           };
-          if (mOn) MIS.forEach((m) => path(m.path, m.col));
+          if (foc && !chain) focusEdges(t);
           if (plan) path(plan.ids, "#7cf0ff");
           // 星（远的先画）
           const ord = S.filter((s) => s.p).sort((a, b) => b.p.z - a.p.z);
           ord.forEach((s) => {
             const p = s.p, inC = !chain || chain.has(s.id);
-            let a = (inC ? 1 : 0.14) * (vis(s) ? 1 : 0.1) * (hn && !hn.has(s.id) ? 0.3 : 1) * Math.min(1, 3200 / p.z);
+            const inF = foc && foc.set.has(s.id);
+            let a = (inC ? 1 : 0.14) * (vis(s) ? 1 : 0.1) * (hn && !hn.has(s.id) ? 0.3 : 1) * (foc && !chain && !inF ? 0.13 : 1) * Math.min(1, 3200 / p.z);
             const tw = RM ? 1 : 0.82 + 0.18 * Math.sin(t * 1.7 + hash(s.id) * 30), r = rad(s);
             const col = s.lit ? "#ffd46b" : chain && anc.has(s.id) ? "#ffce54" : s.col;
-            const inM = mOn && MIS.some((m) => m.set.has(s.id));
+            const inM = inF || (mOn && !foc && MIS.some((m) => m.set.has(s.id)));
             ctx.globalAlpha = a * tw; const g = r * (inM || s === sel || s === hov ? 3.8 : 2.7) * Math.min(1, 0.55 + 0.45 / Math.max(0.5, p.f));
             ctx.drawImage(spr(col), p.x - g, p.y - g, g * 2, g * 2);
             ctx.globalAlpha = a; ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(0.8, r * 0.42), 0, 7); ctx.fill();
@@ -493,6 +520,12 @@
           ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
           // 已点亮的星：金色呼吸光环
           ord.forEach((s) => { if (!s.lit || !vis(s)) return; const r = rad(s) + 3.5 + (RM ? 0 : Math.sin(t * 2.4 + hash(s.id) * 9)); ctx.globalAlpha = (!chain || chain.has(s.id) ? 0.75 : 0.2) * Math.min(1, 3200 / s.p.z); ctx.strokeStyle = "#ffd46b"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(s.p.x, s.p.y, r, 0, 7); ctx.stroke(); });
+          ctx.globalAlpha = 1;
+          if (foc) focusMarks(t); else if (mOn) ord.forEach((s) => {
+            // 任务视图（未聚焦）：只给属于任务的星加一个小色点，不画连线
+            const ms = s.tasks; if (!ms.length || !vis(s)) return; const r = rad(s) + 4;
+            ms.slice(0, 3).forEach((m, k) => { const an = -1.2 + k * 0.7; ctx.globalAlpha = Math.min(1, 3200 / s.p.z); ctx.fillStyle = m.c; ctx.beginPath(); ctx.arc(s.p.x + Math.cos(an) * r, s.p.y + Math.sin(an) * r, 2.4, 0, 7); ctx.fill(); });
+          });
           ctx.globalAlpha = 1;
           // 选中 / 悬停 / 飞览 的光圈
           [sel, hov, cur].forEach((s, k) => {
@@ -507,28 +540,74 @@
             const p = proj(k.x * d, k.y * d, k.z * d); if (!p) return;
             const sz = Math.max(11, Math.min(22, 15 * p.f * 2.4));
             ctx.font = `600 ${sz}px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif`; ctx.fillStyle = k.col;
-            ctx.globalAlpha = (chain || hn ? 0.4 : 0.95) * (!fC.size || fC.has(c) ? 1 : 0.15) * Math.min(1, 3400 / p.z);
+            ctx.globalAlpha = (chain || hn ? 0.4 : 0.95) * (foc && !foc.cons.has(c) ? 0.14 : 1) * (!fC.size || fC.has(c) ? 1 : 0.15) * Math.min(1, 3400 / p.z);
             ctx.shadowColor = k.col; ctx.shadowBlur = 10; ctx.fillText(c, p.x, p.y); ctx.shadowBlur = 0;
           });
           // 星名
           ctx.globalAlpha = 1;
           ord.slice().reverse().forEach((s) => {
-            const p = s.p, inC = !chain || chain.has(s.id), inM = mOn && MIS.some((m) => m.set.has(s.id));
+            const p = s.p, inC = !chain || chain.has(s.id), inM = false;
+            if (foc && !chain && s !== sel && s !== hov && s !== cur) return;
             const show = s === sel || s === cur || s === hov || (hn && hn.has(s.id) && p.f > 0.25) || (chain && chain.has(s.id) && p.f > 0.25) || (p.f > 1.1 && inC && vis(s)) || (inM && p.f > 0.4);
             if (!show) return;
             ctx.font = (s === sel || s === hov ? "600 13px " : "12px ") + '-apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
             ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.fillText(s.name, p.x + 1, p.y + rad(s) + 12);
             ctx.fillStyle = s === sel ? "#fff" : "rgba(235,240,255,.9)"; ctx.fillText(s.name, p.x, p.y + rad(s) + 11);
           });
+          if (foc && !chain) focusLabels();
           if (plan) plan.ids.forEach((i, k) => {
             const s = byId[i]; if (!s.p) return; const r = rad(s), x = s.p.x + r + 7, y = s.p.y - r - 7;
             ctx.fillStyle = "#7cf0ff"; ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fill();
             ctx.fillStyle = "#05070f"; ctx.font = "600 12px sans-serif"; ctx.fillText(k + 1, x, y + 0.5);
           });
         }
+        // ===== 任务聚焦：只画任务内部真实的前置关系（弧线），其余星空退为背景 =====
+        function focusEdges(t) {
+          const m = foc; ctx.save(); ctx.globalCompositeOperation = "lighter";
+          m.edges.forEach(([pid, sid], k) => {
+            const a = byId[pid].p, b = byId[sid].p; if (!a || !b) return;
+            const both = byId[pid].lit && byId[sid].lit, hi = fHi && (fHi.id === pid || fHi.id === sid);
+            const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2, dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1, bow = Math.min(60, L * 0.18);
+            const cx = mx - (dy / L) * bow, cy = my + (dx / L) * bow, col = both ? "#ffd46b" : m.col;
+            ctx.strokeStyle = rgba(col, hi ? 0.95 : both ? 0.7 : 0.5); ctx.lineWidth = hi ? 2.6 : 1.7; ctx.shadowColor = col; ctx.shadowBlur = hi ? 14 : 8;
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo(cx, cy, b.x, b.y); ctx.stroke();
+            if (!RM) { const u = (t * 0.45 + hash(pid + sid) * 5) % 1, v = 1 - u, x = v * v * a.x + 2 * v * u * cx + u * u * b.x, y = v * v * a.y + 2 * v * u * cy + u * u * b.y;
+              ctx.shadowBlur = 0; ctx.fillStyle = both ? "#fff1c4" : "#ffffff"; ctx.globalAlpha = Math.sin(u * Math.PI); ctx.beginPath(); ctx.arc(x, y, 2, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+          });
+          ctx.restore();
+        }
+        function focusMarks(t) {
+          const m = foc;
+          m.path.forEach((id, k) => {
+            const s = byId[id], p = s.p; if (!p) return; const r = rad(s);
+            const on = fHi === s;
+            // 未点亮：任务色虚线圈；已点亮：金色实心环
+            ctx.save(); ctx.globalAlpha = 1; ctx.lineWidth = on ? 2.4 : 1.6;
+            if (s.lit) { ctx.strokeStyle = "#ffd46b"; ctx.shadowColor = "#ffd46b"; ctx.shadowBlur = 12; }
+            else { ctx.strokeStyle = m.col; ctx.setLineDash([3, 3]); ctx.lineDashOffset = RM ? 0 : -t * 6; }
+            ctx.beginPath(); ctx.arc(p.x, p.y, r + 7 + (on ? 3 : 0), 0, 7); ctx.stroke(); ctx.restore();
+            // 学习顺序编号
+            const bx = p.x - r - 9, by = p.y - r - 9;
+            ctx.fillStyle = s.lit ? "#ffd46b" : m.col; ctx.beginPath(); ctx.arc(bx, by, 8.5, 0, 7); ctx.fill();
+            ctx.fillStyle = "#05070f"; ctx.font = "700 10px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(k + 1, bx, by + 0.5);
+          });
+        }
+        function focusLabels() {
+          // 近处优先、互不重叠；被挡住的名字在左侧卡片里仍能看到
+          const boxes = [], items = foc.path.map((id) => byId[id]).filter((s) => s.p).sort((a, b) => (b === fHi) - (a === fHi) || a.p.z - b.p.z);
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          items.forEach((s) => {
+            const p = s.p, y = p.y + rad(s) + 16; ctx.font = (s === fHi ? "600 13px " : "12px ") + '-apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+            const w = ctx.measureText(s.name).width + 10, b = [p.x - w / 2, y - 9, p.x + w / 2, y + 9];
+            if (s !== fHi && boxes.some((q) => !(b[2] < q[0] || b[0] > q[2] || b[3] < q[1] || b[1] > q[3]))) return;
+            boxes.push(b);
+            ctx.fillStyle = "rgba(5,8,22,.62)"; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(b[0], b[1], w, 18, 9) : ctx.rect(b[0], b[1], w, 18); ctx.fill();
+            ctx.fillStyle = s.lit ? "#ffe39a" : "rgba(238,242,255,.95)"; ctx.fillText(s.name, p.x, y + 0.5);
+          });
+        }
         function loop(now) {
           if (anim) anim(now);
-          else if (!RM && !PT.size && now - lastInt > 3500) cam.yaw += sel ? 0.0004 : 0.0011;
+          else if (!RM && !PT.size && now - lastInt > 3500) cam.yaw += sel || foc ? 0.00035 : 0.0011;
           if (onScreen && !document.hidden) render(now);
           requestAnimationFrame(loop);
         }
@@ -578,7 +657,7 @@
             <dt>前置知识</dt><dd>${list(s.prereqs)}</dd>
             <dt>后续可达</dt><dd>${list(kids[s.id])}</dd>
             <dt>可解锁 · 共 ${succ.length} 颗</dt><dd>${list(succ.slice(0, 8))}${succ.length > 8 ? `<span class="fineprint">… 另有 ${succ.length - 8} 颗</span>` : ""}</dd>
-            </dl>${s.tasks.length ? `<div class="x-go"><small>${s.lit ? "⭐ 你已点亮这颗星" : "在这些任务里点亮它"}</small>${s.tasks.map((t) => `<a class="x-task" href="../${t.id}/" style="--c:${t.c}"><span>${t.em}</span><b>${esc(t.t)}</b><em>${t.done >= t.total ? "✓ 已通关" : t.done ? `进行中 ${t.done}/${t.total}` : "开始 →"}</em></a>`).join("")}</div>` : `<p class="fineprint" style="margin-top:12px">还没有任务覆盖这颗星，后续版本会补上。</p>`}
+            </dl>${s.tasks.length ? `<div class="x-go"><small>${s.lit ? "⭐ 你已点亮这颗星" : "在这些任务里点亮它"}</small>${s.tasks.map((t) => `<div class="x-task-wrap" style="--c:${t.c}"><a class="x-task" href="../${t.id}/" style="--c:${t.c}"><span>${t.em}</span><b>${esc(t.t)}</b><em>${t.done >= t.total ? "✓ 已通关" : t.done ? `进行中 ${t.done}/${t.total}` : "开始 →"}</em></a><button data-focus="${t.id}" title="在星图里只看这个任务">✦ 星座</button></div>`).join("")}</div>` : `<p class="fineprint" style="margin-top:12px">还没有任务覆盖这颗星，后续版本会补上。</p>`}
             <div class="links" style="margin-top:16px">${mine ? '<button class="btn" data-clear>清除路径</button>' : '<button class="btn" data-plan>规划到这颗星的路径</button>'}</div>
             ${mine ? `<p class="x-n" style="margin-top:14px">学习路径 · 共 <b>${plan.ids.length}</b> 步</p><ol class="x-steps">${plan.ids.map((i) => `<li><a class="link" href="#map" data-id="${i}">${esc(byId[i].name)}</a> <small class="fineprint">深度 ${byId[i].depth}</small></li>`).join("")}</ol>` : ""}`;
           panel.hidden = false; panel.scrollTop = 0;
@@ -588,6 +667,8 @@
           if (e.target.closest(".x-close")) return select(null);
           if (e.target.closest("[data-plan]")) { plan = { target: sel.id, ids: topo(new Set([...anc, sel.id])) }; select(sel, false); return kick(); }
           if (e.target.closest("[data-clear]")) { plan = null; return select(sel, false); }
+          const fb = e.target.closest("[data-focus]");
+          if (fb) { const m = MIS.find((x) => x.id === fb.dataset.focus); select(null); return focusOn(m); }
           const a = e.target.closest("[data-id]");
           if (a) { e.preventDefault(); select(byId[a.dataset.id], true); }
         });
@@ -617,7 +698,7 @@
         cv.addEventListener("pointermove", (e) => {
           const n = pos(e);
           if (!PT.has(e.pointerId)) {
-            if (e.pointerType === "mouse") { const h = pick(n); if (h !== hov) { hov = h; cv.style.cursor = h ? "pointer" : "grab"; } }
+            if (e.pointerType === "mouse") { const h = pick(n); if (h !== hov) { hov = h; cv.style.cursor = h ? "pointer" : "grab"; if (foc && !tourT) { fHi = h && foc.set.has(h.id) ? h : null; fEl.querySelectorAll("[data-sid]").forEach((x) => x.classList.toggle("on", fHi && x.dataset.sid === fHi.id)); } } }
             return;
           }
           lastInt = performance.now();
@@ -645,29 +726,73 @@
           if (best) chime();
           select(best, !!best);
         }
-        $("homeBtn").addEventListener("click", () => { select(null); stopTour(); fly(HOME, 1100); });
+        $("homeBtn").addEventListener("click", () => { select(null); stopTour(); foc ? fitFocus(foc) : fly(HOME, 1100); });
         requestAnimationFrame(loop);
 
-        // Missions: toggle, legend, fly-through
-        const legend = $("legend"), tourEl = $("tour");
+        // Missions: 任务视图（只做标记）→ 选一个任务进入聚焦
+        const legend = $("legend"), tourEl = $("tour"), fEl = $("focus");
+        MIS.forEach((m) => {
+          m.edges = []; m.path.forEach((id) => byId[id].prereqs.forEach((p) => { if (m.set.has(p)) m.edges.push([p, id]); }));
+          m.cons = new Set(m.path.map((i) => byId[i].constellation));
+        });
         legend.innerHTML = MIS.map((m, k) => `<div><h3><i style="background:${m.col};box-shadow:0 0 8px ${m.col}"></i>${esc(m.name)}</h3>
-          <p>${m.set.size} 颗星 · ${m.t.done >= m.t.total ? "已通关" : m.t.done ? `进行中 ${m.t.done}/${m.t.total}` : "未开始"}</p><div class="links"><button class="btn" data-m="${k}">按顺序飞览</button><a class="btn btn--ghost" href="../${m.id}/">进入任务</a></div></div>`).join("");
+          <p>${m.set.size} 颗星 · 横跨 ${m.cons.size} 个星座 · ${m.t.done >= m.t.total ? "已通关" : m.t.done ? `进行中 ${m.t.done}/${m.t.total}` : "未开始"}</p><div class="links"><button class="btn" data-f="${k}">✦ 在星图中聚焦</button><a class="btn btn--ghost" href="../${m.id}/">进入任务</a></div></div>`).join("");
         function stopTour() { clearTimeout(tourT); tourT = null; cur = null; tourEl.hidden = true; }
+        function fitFocus(m, dur = 1100) {
+          const ss = m.path.map((i) => byId[i]); const c = ss.reduce((o, s) => ({ x: o.x + s.x / ss.length, y: o.y + s.y / ss.length, z: o.z + s.z / ss.length }), { x: 0, y: 0, z: 0 });
+          const R = Math.max(160, ...ss.map((s) => Math.hypot(s.x - c.x, s.y - c.y, s.z - c.z)));
+          // 让星座朝向镜头：偏航角对准质心方向
+          const from = { ...cam }, yaw = Math.atan2(-c.x, -c.z); let dy = yaw - from.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+          const to = { tx: c.x, ty: c.y, tz: c.z, dist: Math.max(520, Math.min(3400, R * 3.1)), yaw: from.yaw + dy, pitch: -0.18 };
+          const t0 = performance.now(); lastInt = t0; whoosh(dur / 1000 + 0.15);
+          anim = (now) => { const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3); for (const k in to) cam[k] = from[k] + (to[k] - from[k]) * e; if (t >= 1) anim = null; };
+        }
+        function renderFocus() {
+          const m = foc; if (!m) { fEl.hidden = true; return; }
+          const lit = m.path.filter((i) => byId[i].lit).length;
+          fEl.style.setProperty("--fc", m.col);
+          fEl.innerHTML = `<button class="x-close" aria-label="退出任务视图">×</button>
+            <h3>${esc(m.name)}</h3>
+            <div class="x-fbar"><i style="width:${(100 * lit / m.path.length).toFixed(0)}%"></i></div>
+            <p class="x-fmeta">已点亮 ${lit}/${m.path.length} 颗星 · 编号是建议的学习顺序 · 弧线是星与星之间的前置关系</p>
+            <div class="x-fcons">${[...m.cons].map((c) => `<span style="--c:${cl[c].col}">${esc(c)}</span>`).join("")}</div>
+            <ol class="x-flist">${m.path.map((i, k) => { const s = byId[i]; return `<li class="${s.lit ? "lit" : ""}"><button data-sid="${i}"><b>${k + 1}</b><span>${esc(s.name)}<em>${esc(s.constellation)} · 深度 ${s.depth}</em></span><small>${s.lit ? "⭐ 已点亮" : "未点亮"}</small></button></li>`; }).join("")}</ol>
+            <div class="x-fact"><a class="pri" href="../${m.id}/">${m.t.done ? "继续任务" : "开始任务"} →</a><button data-tour>按顺序飞览</button><button data-fit>⟲ 看全貌</button></div>`;
+          fEl.hidden = false; fEl.scrollTop = 0;
+        }
+        function focusOn(m) {
+          stopTour(); foc = m; fHi = null; renderFocus(); fitFocus(m);
+          if (!mOn) { mOn = true; $("mBtn").setAttribute("aria-pressed", "true"); legend.hidden = false; }
+          wrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          try { history.replaceState(null, "", "#task=" + m.id); } catch (e) {}
+        }
+        function focusOff() { stopTour(); foc = null; fHi = null; renderFocus(); try { history.replaceState(null, "", location.pathname); } catch (e) {} }
         $("mBtn").addEventListener("click", (e) => {
           mOn = !mOn; e.currentTarget.setAttribute("aria-pressed", String(mOn)); legend.hidden = !mOn;
-          if (!mOn) stopTour(); kick();
+          if (!mOn) focusOff(); else legend.scrollIntoView({ behavior: "smooth", block: "nearest" });
         });
         legend.addEventListener("click", (e) => {
-          const b = e.target.closest("[data-m]"); if (!b) return;
-          const m = MIS[+b.dataset.m]; let i = 0;
-          stopTour(); select(null); wrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
-          const step = () => {
-            if (i >= m.path.length) return stopTour();
-            cur = byId[m.path[i]]; tourEl.textContent = `${m.t.em} ${i + 1}/${m.path.length} · ${cur.name}`; tourEl.hidden = false;
-            fly(cur, 1000, true); i++; tourT = setTimeout(step, 1200);
-          };
-          step();
+          const b = e.target.closest("[data-f]"); if (!b) return; select(null); focusOn(MIS[+b.dataset.f]);
         });
+        fEl.addEventListener("click", (e) => {
+          if (e.target.closest(".x-close")) return focusOff();
+          if (e.target.closest("[data-fit]")) { select(null); return fitFocus(foc); }
+          if (e.target.closest("[data-tour]")) {
+            const m = foc; let i = 0; stopTour(); select(null);
+            const step = () => {
+              if (!foc || i >= m.path.length) { stopTour(); return foc && fitFocus(m); }
+              cur = fHi = byId[m.path[i]]; tourEl.textContent = `${m.t.em} ${i + 1}/${m.path.length} · ${cur.name}`; tourEl.hidden = false;
+              fly(cur, 1000, true, 900); i++; tourT = setTimeout(step, 1500);
+            };
+            return step();
+          }
+          const b = e.target.closest("[data-sid]"); if (b) { chime(); select(byId[b.dataset.sid], true); }
+        });
+        fEl.addEventListener("pointerover", (e) => { const b = e.target.closest("[data-sid]"); fHi = b ? byId[b.dataset.sid] : null; });
+        fEl.addEventListener("pointerleave", () => { if (!tourT) fHi = null; });
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (sel) select(null); else if (foc) focusOff(); } });
+        const fromHash = () => { const hm = location.hash.match(/task=(\w+)/); if (hm) { const m = MIS.find((x) => x.id === hm[1]); if (m && m !== foc) setTimeout(() => focusOn(m), 300); } };
+        fromHash(); addEventListener("hashchange", fromHash);
 
         // Search
         const q = document.getElementById("q"), res = document.getElementById("res");
