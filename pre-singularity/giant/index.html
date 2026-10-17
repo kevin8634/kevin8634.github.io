@@ -101,13 +101,14 @@ let worker=null, ready=false, dtype='q4f16', busy1=false;
     g.textContent=`✓ 支持 WebGPU。首次需下载约 ${f16?480:790} MB,之后从浏览器缓存载入。`; $('dl').disabled=false; }
   catch(e){ g.textContent='检测到 WebGPU,但没有可用的显卡适配器。可以改用 ② ③。'; } })();
 $('dl').onclick=()=>{ PS.sfx('boot'); $('dl').disabled=true; $('dlbar').style.display='block'; const files={};
-  worker=new Worker('./llm-worker.js',{type:'module'});
+  worker=new Worker('./llm-worker.js?v=7',{type:'module'});
+  worker.onerror=ev=>{ $('dlst').textContent='推理线程启动失败:'+(ev.message||'请换用新版 Chrome / Edge'); $('dl').disabled=false; $('dl').textContent='重试'; PS.fail(); };
   worker.onmessage=e=>{ const d=e.data;
     if(d.t==='prog'){ const p=d.p; if(p.status==='progress'&&p.total){ files[p.file]=[p.loaded,p.total]; let a=0,b=0; for(const k in files){ a+=files[k][0]; b+=files[k][1]; }
         $('dlbar').firstElementChild.style.width=(a/b*100).toFixed(1)+'%'; $('dlst').textContent=`${(a/1e6).toFixed(0)} / ${(b/1e6).toFixed(0)} MB`; } }
     else if(d.t==='info') $('dlst').textContent=d.m;
-    else if(d.t==='warn') console.warn(d.m);
-    else if(d.t==='ready'){ ready=true; $('dlst').textContent='已唤醒 · 现在断网也能用'; $('dl').textContent='已就绪'; $('o1').innerHTML='<span class="muted">准备好了,去下面发问吧。</span>'; PS.win(); $('ysay').textContent='离线巨人醒了。它就住在你的显卡里,你问它什么,都不会离开这台电脑。'; }
+    else if(d.t==='warn'){ console.warn(d.m); $('dlst').textContent=d.m; }
+    else if(d.t==='ready'){ ready=true; $('dlst').textContent='已唤醒'+(d.src?'(来源:'+d.src+')':'')+' · 现在断网也能用'; $('dl').textContent='已就绪'; $('o1').innerHTML='<span class="muted">准备好了,去下面发问吧。</span>'; PS.win(); $('ysay').textContent='离线巨人醒了。它就住在你的显卡里,你问它什么,都不会离开这台电脑。'; }
     else if(d.t==='txt'){ TXT[1]+=d.s; render(1); }
     else if(d.t==='tok'){ TOK[1].push(d.s); if($('tokv').checked) render(1); }
     else if(d.t==='done'){ busy1=false; $('s1').textContent=`${d.n} token · ${(d.n/(d.ms/1000)).toFixed(1)} token/秒`; }
