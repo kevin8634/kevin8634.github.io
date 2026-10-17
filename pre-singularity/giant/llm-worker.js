@@ -1,5 +1,5 @@
 // 离线巨人:在浏览器里运行 Qwen2.5-0.5B-Instruct(WebGPU)。输入不离开本机。
-// v0.6.1 国内网络修复:推理引擎、ONNX Runtime WASM、模型文件三段全部优先走国内可达的源,并逐个探测。
+// v0.6.1 修复:①原用 transformers.web.min.js,内含裸模块导入 onnxruntime-web/webgpu,浏览器直接 import 必失败(根因);改用自带 ORT 的 transformers.min.js。②国内网络:推理引擎、ONNX Runtime WASM、模型文件三段全部优先走国内可达的源,并逐个探测。
 const VER = '4.3.1', ORT = '1.31.0-dev.20260914-8d85527a0';
 const NPM = ['https://cdn.jsdmirror.com/npm/', 'https://s4.zstatic.net/npm/', 'https://jsd.onmicrosoft.cn/npm/',
              'https://cdn.jsdelivr.net/npm/', 'https://fastly.jsdelivr.net/npm/', 'https://unpkg.com/'];
@@ -20,7 +20,7 @@ async function lib(){
   for(const b of NPM){
     try{
       postMessage({t:'info', m:'载入推理引擎:'+new URL(b).host+' …'});
-      ({pipeline, env, TextStreamer} = await withTimeout(import(b+'@huggingface/transformers@'+VER+'/dist/transformers.web.min.js'), 25000, '推理引擎'));
+      ({pipeline, env, TextStreamer} = await withTimeout(import(b+'@huggingface/transformers@'+VER+'/dist/transformers.min.js'), 25000, '推理引擎'));
       npmBase = b; break;
     }catch(e){ postMessage({t:'warn', m:new URL(b).host+' 不通'}); }
   }
@@ -31,7 +31,7 @@ async function lib(){
   if(onnx && onnx.wasm){
     const cands = [npmBase, ...NPM.filter(b=>b!==npmBase)];
     for(const b of cands){
-      const dir = b+'onnxruntime-web@'+ORT+'/dist/';
+      const v = (onnx.versions && onnx.versions.web) || ORT; const dir = b+'onnxruntime-web@'+v+'/dist/';
       if(await probe(dir+'ort-wasm-simd-threaded.asyncify.mjs')){
         onnx.wasm.wasmPaths = { mjs: dir+'ort-wasm-simd-threaded.asyncify.mjs', wasm: dir+'ort-wasm-simd-threaded.asyncify.wasm' };
         postMessage({t:'info', m:'运行时:'+new URL(b).host}); break;
