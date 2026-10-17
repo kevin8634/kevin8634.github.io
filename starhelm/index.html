@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>天枢 Starhelm · 天文 · 你此刻在宇宙的哪里？</title>
+  <!--
+    天枢 Starhelm（创世计划 Genesis 07 · 天文；由 Live Earth 2.1 迁入 /starhelm/）—— 文件结构（全部为经典脚本，按顺序加载，不使用 ES module / importmap）
+      le-style.css      样式（按组件分区）
+      数据   cities-lite.js · planets-data.js · starlink-lite.js · quakes-fallback.js
+      第三方 three.min.js 0.147 · OrbitControls · satellite.js 5（本地副本）
+      模块   le-core.js（config/util/bus/assets）→ le-scene.js（scene/earth）→ le-quakes.js → le-starlink.js
+             → le-flights.js → le-location.js → le-solar.js → le-ui.js → le-main.js（启动）
+    详见 docs/ARCHITECTURE.md
+  -->
+    <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon-180.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="天枢 Starhelm" />
+  <meta name="theme-color" content="#060c18" />
+  <link rel="stylesheet" href="le-fonts.css" />
+  <link rel="stylesheet" href="le-style.css" />
+</head>
+<body>
+  <div id="stage" class="le-stage" aria-label="可拖动旋转、缩放的三维场景" role="img"></div>
+  <div id="labels" class="le-labels" aria-hidden="true">
+    <div id="me-label" class="le-pin-label"></div>
+  </div>
+  <div id="solar-labels" class="le-labels le-solar-only"></div>
+
+  <!-- 电影质感叠层：暗角 + 胶片颗粒 + 扫描线；中心准星 -->
+  <div class="le-fx" aria-hidden="true"></div>
+  <div class="le-reticle le-earth-only" aria-hidden="true"><i></i></div>
+
+  <!-- 加载 / 开机动画 -->
+  <div id="loader" class="le-loader">
+    <div class="le-loader__box">
+      <div class="le-kicker">UNITED EARTH · LIVE DATA LINK</div>
+      <div class="le-loader__title">STARHELM</div>
+      <div class="le-loader__sub">天枢 Starhelm · 创世计划 07 · 天文</div>
+      <div class="le-bar"><i id="loader-bar"></i></div>
+      <div class="le-loader__log" id="loader-text">ESTABLISHING UPLINK…</div>
+    </div>
+  </div>
+
+  <!-- 左上：信息面板 -->
+  <header class="le-top">
+    <section class="le-panel le-hud" id="hud">
+      <div class="le-sound" role="group" aria-label="声音">
+        <button type="button" id="btn-music" aria-pressed="false" title="背景音乐">♪<small>BGM</small></button>
+        <button type="button" id="btn-sfx" aria-pressed="true" title="音效">◖<small>SFX</small></button>
+      </div>
+      <p class="le-kicker"><span class="le-live"></span>UEG · LIVE LINK</p>
+      <h1 class="le-title">天枢 <span>STARHELM</span></h1>
+      <p class="le-clock">LOCAL <b id="clock">--:--:--</b> <small id="tz"></small></p>
+      <div class="le-earth-only">
+        <dl class="le-stats">
+          <div><dt>7天地震 <i>SEISMIC</i></dt><dd id="st-count">—</dd></div>
+          <div><dt>最大震级 <i>MAX</i></dt><dd id="st-max">—</dd></div>
+          <div><dt>星链在轨 <i>STARLINK</i></dt><dd id="sat-count">—</dd></div>
+          <div><dt>头顶卫星 <i>OVERHEAD</i></dt><dd id="st-over">—</dd></div>
+        </dl>
+        <p class="le-meta"><span class="le-tag" id="st-tag">地震连接中</span><span class="le-tag" id="sat-tag">星链连接中</span></p>
+      </div>
+      <div class="le-solar-only">
+        <dl class="le-stats">
+          <div class="le-wide"><dt>模拟时间 <i>SIM EPOCH</i></dt><dd id="sim-date" class="le-mono">—</dd></div>
+        </dl>
+        <p class="le-meta">行星位置按 JPL 轨道根数实时计算 · 距离与大小已压缩显示</p>
+      </div>
+    </section>
+
+    <!-- 右上：模式切换 + 主要按钮 -->
+    <nav class="le-actions">
+      <div class="le-seg le-hud" role="tablist">
+        <button type="button" role="tab" data-mode="earth" aria-selected="true">地球<small>EARTH</small></button>
+        <button type="button" role="tab" data-mode="solar" aria-selected="false">太阳系<small>SOLAR</small></button>
+      </div>
+      <button class="le-btn le-btn--hero le-earth-only" id="btn-sat" type="button" aria-pressed="true"><span class="le-btn__ico">◎</span><span class="le-btn__txt">星链卫星<small>STARLINK</small></span></button>
+      <button class="le-btn le-earth-only" id="btn-iss" type="button"><span class="le-btn__ico">✦</span><span class="le-btn__txt">空间站<small>ISS</small></span></button>
+      <button class="le-btn le-earth-only" id="btn-loc" type="button"><span class="le-btn__ico">◉</span><span class="le-btn__txt">我的位置<small>LOCATE</small></span></button>
+      <button class="le-btn le-earth-only" id="btn-route" type="button"><span class="le-btn__ico">✈</span><span class="le-btn__txt">航线查询<small>ROUTES</small></span></button>
+      <button class="le-btn le-btn--hero le-solar-only" id="btn-planet" type="button"><span class="le-btn__ico">⊕</span><span class="le-btn__txt">搜索星球<small>TARGET</small></span></button>
+      <button class="le-btn le-solar-only" id="btn-overview" type="button"><span class="le-btn__ico">◌</span><span class="le-btn__txt">太阳系全景<small>OVERVIEW</small></span></button>
+      <button class="le-btn le-earth-only" id="btn-reset" type="button"><span class="le-btn__ico">⟲</span><span class="le-btn__txt">重置视角<small>RESET</small></span></button>
+    </nav>
+  </header>
+
+  <!-- 底部：图层开关 -->
+  <footer class="le-bottom">
+    <div class="le-readout le-earth-only" id="readout">VIEW <b id="ro-ll">—</b> · ALT <b id="ro-alt">—</b></div>
+    <div class="le-chips le-earth-only"><div class="le-chips-in" id="chips">
+      <button class="le-chip" type="button" data-layer="iss" aria-pressed="true" style="--c:#ffb46a">空间站<small>ISS</small></button>
+      <button class="le-chip" type="button" data-layer="quakes" aria-pressed="true" style="--c:#ff8a1f">地震<small>SEISMIC</small></button>
+      <button class="le-chip" type="button" data-layer="starlink" aria-pressed="true" style="--c:#4de8ff">星链<small>STARLINK</small></button>
+      <button class="le-chip" type="button" data-layer="trails" aria-pressed="true" style="--c:#c38bff">星链尾迹<small>TRAILS</small></button>
+      <button class="le-chip" type="button" data-layer="terminator" aria-pressed="true" style="--c:#ffd23f">昼夜线<small>TERMINATOR</small></button>
+      <button class="le-chip" type="button" data-layer="clouds" aria-pressed="true" style="--c:#ffffff">云层<small>CLOUDS</small></button>
+      <button class="le-chip" type="button" data-layer="lights" aria-pressed="false" style="--c:#ffb340">城市灯光<small>LIGHTS</small></button>
+      <button class="le-chip" type="button" data-layer="flights" aria-pressed="false" style="--c:#ffb340">航线<small>ROUTES</small></button>
+    </div></div>
+    <div class="le-chips le-solar-only"><div class="le-chips-in" id="speed-chips"></div></div>
+    <p class="le-foot" id="credits">数据：USGS 地震 · CelesTrak 星链 TLE · JPL 行星轨道 · 城市库 GeoNames (CC BY 4.0) · IP 定位 GeoJS · 纹理 NASA / Solar System Scope (CC BY 4.0)</p>
+  </footer>
+
+  <!-- 详情卡片（地震 / 卫星 / 星球 通用） -->
+  <aside class="le-card le-hud" id="card" aria-live="polite">
+    <div class="le-card__head">
+      <span class="le-card__badge" id="card-badge"></span>
+      <div><div class="le-card__kicker" id="card-kicker"></div><div class="le-card__title" id="card-title"></div></div>
+      <button class="le-close" id="card-close" type="button" aria-label="关闭">×</button>
+    </div>
+    <p class="le-card__blurb" id="card-blurb"></p>
+    <dl class="le-card__rows" id="card-rows"></dl>
+    <div class="le-card__actions" id="card-actions"></div>
+  </aside>
+
+  <!-- 面板：我的位置 -->
+  <section class="le-sheet le-hud" id="sheet-loc" hidden aria-label="我的位置">
+    <div class="le-sheet__head"><h2>我的位置 <small>LOCATE</small></h2><span class="le-tag" id="loc-src">—</span><button class="le-close" data-close type="button" aria-label="关闭">×</button></div>
+    <div class="le-combo">
+      <input id="loc-q" type="search" placeholder="搜索城市（中文 / English / 拼音）" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="loc-list" />
+      <ul class="le-list" id="loc-list" role="listbox" hidden></ul>
+    </div>
+    <div class="le-row">
+      <button class="le-btn le-btn--sm" id="loc-relocate" type="button">⟲ 重新定位</button>
+      <button class="le-btn le-btn--sm" id="loc-pick" type="button" aria-pressed="false">◉ 点地球选点</button>
+    </div>
+    <p class="le-hint" id="loc-status">正在定位…</p>
+    <dl class="le-dl" id="loc-info" hidden>
+      <dt>位置</dt><dd id="li-name">—</dd>
+      <dt>经纬度</dt><dd class="le-mono" id="li-ll">—</dd>
+      <dt>此刻</dt><dd id="li-day">—</dd>
+      <dt>最近地震</dt><dd id="li-quake">—</dd>
+      <dt>头顶星链</dt><dd id="li-sat">—</dd>
+    </dl>
+  </section>
+
+  <!-- 面板：航线查询 -->
+  <section class="le-sheet le-hud" id="sheet-route" hidden aria-label="航线查询">
+    <div class="le-sheet__head"><h2>航线查询 <small>ROUTES</small></h2><span class="le-tag is-warn">示意数据</span><button class="le-close" data-close type="button" aria-label="关闭">×</button></div>
+    <label class="le-label" for="r-from">出发</label>
+    <div class="le-combo"><input id="r-from" type="search" placeholder="城市或三字码" autocomplete="off" role="combobox" aria-expanded="false" /><ul class="le-list" id="r-from-list" hidden></ul></div>
+    <label class="le-label" for="r-to">到达</label>
+    <div class="le-combo"><input id="r-to" type="search" placeholder="城市或三字码（可留空看航线网络）" autocomplete="off" role="combobox" aria-expanded="false" /><ul class="le-list" id="r-to-list" hidden></ul></div>
+    <div class="le-row"><button class="le-btn le-btn--sm" id="r-swap" type="button">⇅ 交换</button><button class="le-btn le-btn--sm" id="r-clear" type="button">清空到达</button></div>
+    <dl class="le-dl" id="r-info" hidden>
+      <dt>航线</dt><dd id="ri-route">—</dd>
+      <dt>大圆距离</dt><dd class="le-mono" id="ri-km">—</dd>
+      <dt>预计飞行</dt><dd class="le-mono" id="ri-time">—</dd>
+      <dt>时差</dt><dd id="ri-tz">—</dd>
+    </dl>
+    <p class="le-hint">按巡航 850 km/h + 起降 30 分钟估算，非实时航班。</p>
+  </section>
+
+  <!-- 面板：搜索星球 -->
+  <section class="le-sheet le-hud" id="sheet-planet" hidden aria-label="搜索星球">
+    <div class="le-sheet__head"><h2>搜索星球 <small>TARGET</small></h2><button class="le-close" data-close type="button" aria-label="关闭">×</button></div>
+    <div class="le-combo">
+      <input id="p-q" type="search" placeholder="输入星球名，如 土星 / Saturn / 冥王星" autocomplete="off" role="combobox" aria-expanded="false" />
+      <ul class="le-list le-list--open" id="p-list"></ul>
+    </div>
+  </section>
+
+  <div class="le-toast" id="toast" role="status"></div>
+
+  <!-- 数据 -->
+  <script src="cities-lite.p1.js"></script>
+<script src="cities-lite.p2.js"></script>
+<script src="cities-lite.p3.js"></script>
+<script src="cities-lite.p4.js"></script>
+<script>(function(){var s=document.createElement("script");s.text=window.__C["cities-lite.js"];document.head.appendChild(s);delete window.__C["cities-lite.js"];})();</script>
+  <script src="planets-data.js"></script>
+  <script src="starlink-lite.p1.js"></script>
+<script src="starlink-lite.p2.js"></script>
+<script src="starlink-lite.p3.js"></script>
+<script src="starlink-lite.p4.js"></script>
+<script src="starlink-lite.p5.js"></script>
+<script>(function(){var s=document.createElement("script");s.text=window.__C["starlink-lite.js"];document.head.appendChild(s);delete window.__C["starlink-lite.js"];})();</script>
+  <script src="quakes-fallback.js"></script>
+  <!-- 第三方库：随页面一起发布的本地副本（国内访问不依赖 CDN），本地缺失时才切换 CDN -->
+  <script>
+    window.__libFail = function (name, alt) { var s = document.createElement('script'); s.src = alt; s.async = false; document.head.appendChild(s); console.warn('切换 CDN：' + name); };
+  </script>
+  <script src="three.min.p1.js"></script>
+<script src="three.min.p2.js"></script>
+<script src="three.min.p3.js"></script>
+<script src="three.min.p4.js"></script>
+<script src="three.min.p5.js"></script>
+<script src="three.min.p6.js"></script>
+<script src="three.min.p7.js"></script>
+<script src="three.min.p8.js"></script>
+<script src="three.min.p9.js"></script>
+<script src="three.min.p10.js"></script>
+<script src="three.min.p11.js"></script>
+<script src="three.min.p12.js"></script>
+<script src="three.min.p13.js"></script>
+<script src="three.min.p14.js"></script>
+<script src="three.min.p15.js"></script>
+<script>(function(){var s=document.createElement("script");s.text=window.__C["three.min.js"];document.head.appendChild(s);delete window.__C["three.min.js"];})();</script>
+  <script src="OrbitControls.js"></script>
+  <script src="satellite.min.js"></script>
+  <!-- 本项目模块 -->
+  <script src="tex-earth.p1.js"></script>
+<script src="tex-earth.p2.js"></script>
+<script src="tex-earth.p3.js"></script>
+<script src="tex-earth.p4.js"></script>
+<script src="tex-earth.p5.js"></script>
+<script src="tex-earth.p6.js"></script>
+<script src="tex-earth.p7.js"></script>
+<script src="tex-earth.p8.js"></script>
+<script src="tex-earth.p9.js"></script>
+<script src="tex-earth.p10.js"></script>
+<script src="tex-earth.p11.js"></script>
+<script src="tex-earth.p12.js"></script>
+<script src="tex-earth.p13.js"></script>
+<script src="tex-earth.p14.js"></script>
+<script src="tex-earth.p15.js"></script>
+<script src="tex-earth.p16.js"></script>
+<script src="tex-earth.p17.js"></script>
+<script src="tex-earth.p18.js"></script>
+<script src="tex-earth.p19.js"></script>
+<script src="tex-earth.p20.js"></script>
+<script src="tex-earth.p21.js"></script>
+<script>(function(){var s=document.createElement("script");s.text=window.__C["tex-earth.js"];document.head.appendChild(s);delete window.__C["tex-earth.js"];})();</script>
+<script src="tex-sky.p1.js"></script>
+<script src="tex-sky.p2.js"></script>
+<script src="tex-sky.p3.js"></script>
+<script src="tex-sky.p4.js"></script>
+<script src="tex-sky.p5.js"></script>
+<script src="tex-sky.p6.js"></script>
+<script src="tex-sky.p7.js"></script>
+<script src="tex-sky.p8.js"></script>
+<script src="tex-sky.p9.js"></script>
+<script>(function(){var s=document.createElement("script");s.text=window.__C["tex-sky.js"];document.head.appendChild(s);delete window.__C["tex-sky.js"];})();</script>
+<script src="tex-planets.p1.js"></script>
+<script src="tex-planets.p2.js"></script>
+<script src="tex-planets.p3.js"></script>
+<script src="tex-planets.p4.js"></script>
+<script src="tex-planets.p5.js"></script>
+<script src="tex-planets.p6.js"></script>
+<script src="tex-planets.p7.js"></script>
+<script src="tex-planets.p8.js"></script>
+<script src="tex-planets.p9.js"></script>
+<script src="tex-planets.p10.js"></script>
+<script src="tex-planets.p11.js"></script>
+<script src="tex-planets.p12.js"></script>
+<script src="tex-planets.p13.js"></script>
+<script src="tex-planets.p14.js"></script>
+<script src="tex-planets.p15.js"></script>
+<script src="tex-planets.p16.js"></script>
+<script src="tex-planets.p17.js"></script>
+<script src="tex-planets.p18.js"></script>
+<script src="tex-planets.p19.js"></script>
+<script src="tex-planets.p20.js"></script>
+<script src="tex-planets.p21.js"></script>
+<script src="tex-planets.p22.js"></script>
+<script src="tex-planets.p23.js"></script>
+<script src="tex-planets.p24.js"></script>
+<script src="tex-planets.p25.js"></script>
+<script src="tex-planets.p26.js"></script>
+<script src="tex-planets.p27.js"></script>
+<script>(function(){var s=document.createElement("script");s.text=window.__C["tex-planets.js"];document.head.appendChild(s);delete window.__C["tex-planets.js"];})();</script>
+<script src="GLTFLoader.p1.js"></script>
+<script src="GLTFLoader.p2.js"></script>
+<script src="GLTFLoader.p3.js"></script>
+<script>(function(){var s=document.createElement("script");s.text=window.__C["GLTFLoader.js"];document.head.appendChild(s);delete window.__C["GLTFLoader.js"];})();</script>
+<script src="iss-model.p1.js"></script>
+<script src="iss-model.p2.js"></script>
+<script src="iss-model.p3.js"></script>
+<script src="iss-model.p4.js"></script>
+<script src="iss-model.p5.js"></script>
+<script src="iss-model.p6.js"></script>
+<script src="iss-model.p7.js"></script>
+<script src="iss-model.p8.js"></script>
+<script src="iss-model.p9.js"></script>
+<script src="iss-model.p10.js"></script>
+<script src="iss-model.p11.js"></script>
+<script src="iss-model.p12.js"></script>
+<script src="iss-model.p13.js"></script>
+<script src="iss-model.p14.js"></script>
+<script src="iss-model.p15.js"></script>
+<script src="iss-model.p16.js"></script>
+<script src="iss-model.p17.js"></script>
+<script src="iss-model.p18.js"></script>
+<script src="iss-model.p19.js"></script>
+<script src="iss-model.p20.js"></script>
+<script src="iss-model.p21.js"></script>
+<script src="iss-model.p22.js"></script>
+<script src="iss-model.p23.js"></script>
+<script src="iss-model.p24.js"></script>
+<script src="iss-model.p25.js"></script>
+<script src="iss-model.p26.js"></script>
+<script src="iss-model.p27.js"></script>
+<script src="iss-model.p28.js"></script>
+<script src="iss-model.p29.js"></script>
+<script src="iss-model.p30.js"></script>
+<script src="iss-model.p31.js"></script>
+<script src="iss-model.p32.js"></script>
+<script src="iss-model.p33.js"></script>
+<script src="iss-model.p34.js"></script>
+<script src="iss-model.p35.js"></script>
+<script>(function(){var s=document.createElement("script");s.text=window.__C["iss-model.js"];document.head.appendChild(s);delete window.__C["iss-model.js"];})();</script>
+<script src="le-core.js"></script>
+  <script src="le-scene.js"></script>
+  <script src="le-quakes.js"></script>
+  <script src="le-starlink.js"></script>
+  <script src="le-flights.js"></script>
+  <script src="le-location.js"></script>
+  <script src="le-solar.js"></script>
+  <script src="le-models.js"></script>
+  <script src="le-iss.js"></script>
+  <script src="le-audio.js"></script>
+  <script src="le-ui.js"></script>
+  <script src="le-main.js"></script>
+<script>if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js",{scope:"./"});</script>
+</body>
+</html>
