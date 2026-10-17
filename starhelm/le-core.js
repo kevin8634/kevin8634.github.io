@@ -13,11 +13,12 @@
     EARTH_R: 1,                 // 地球半径 = 1 个场景单位
     EARTH_KM: 6371,
     ALT_SCALE: 1,               // 卫星高度比例（1 = 真实比例，科普准确）
-    TIMEOUT: { quakes: 6000, tle: 8000, ip: 5000, gps: 6000 },
+    TIMEOUT: { quakes: 6000, tle: 12000, gps: 10000 },
     URL: {
       usgs: 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_week.geojson',
-      celestrak: 'https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=3le',
-      ipGeo: ['https://get.geojs.io/v1/ip/geo.json', 'https://ipapi.co/json/'],
+      // 星链:OMM CSV(支持 6 位以上编号;CelesTrak 2026-07-11 起新目标不再提供 TLE)
+      celestrak: 'https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=CSV',
+      // 天枢 Starhelm:已删除 IP 定位(GeoJS / ipapi.co)——定位默认关、只在本机计算
       geocode: 'https://geocoding-api.open-meteo.com/v1/search'
     },
     TEX: {
@@ -93,6 +94,61 @@
       return j === q.length ? Math.max(5, 35 - gaps) : 0;
     }
   });
+
+  /* ---------------------------- LE.settings ---------------------------- */
+  // 天枢 Starhelm 设置:只存本机 localStorage,键 gn:sh:settings(Genesis Core 约定);首次读取时迁移旧键 le.*
+  var SKEY = 'gn:sh:settings', SET = null;
+  function loadSet() {
+    if (SET) return SET;
+    try { SET = JSON.parse(localStorage.getItem(SKEY) || 'null'); } catch (e) { SET = null; }
+    if (!SET) {
+      SET = {};
+      try {
+        ['music', 'sfx'].forEach(function (k) { var v = localStorage.getItem('le.' + k); if (v !== null) SET[k] = v === '1'; });
+        localStorage.setItem(SKEY, JSON.stringify(SET));
+      } catch (e) { /* 隐私模式等 */ }
+    }
+    return SET;
+  }
+  LE.settings = {
+    get: function (k, def) { var s = loadSet(); return s.hasOwnProperty(k) ? s[k] : def; },
+    set: function (k, v) { var s = loadSet(); s[k] = v; try { localStorage.setItem(SKEY, JSON.stringify(s)); } catch (e) {} }
+  };
+
+  /* ---------------------------- LE.netcache ---------------------------- */
+  // 外部实时数据的本机缓存(Cache API,缓存名 shdata-v1,不受 SW 版本清理影响)
+  // 规则:缓存未过期 → 直接用,不发请求;过期 → 请求一次;失败(403/404/超时)→ 用旧缓存,并在 maxAge 内不再重试
+  // 用于遵守 CelesTrak「每次更新只下载一次(约 2 小时)」的使用政策
+  var DCACHE = 'shdata-v1';
+  LE.netcache = {
+    text: function (url, maxAgeMs, timeoutMs, validate) {
+      var now = Date.now(), failKey = 'gn:sh:netfail:' + url;
+      var hasCache = typeof caches !== 'undefined';
+      function readCache() {
+        if (!hasCache) return Promise.resolve(null);
+        return caches.open(DCACHE).then(function (c) { return c.match(url); }).then(function (r) {
+          if (!r) return null;
+          var t = +r.headers.get('x-sh-time') || 0;
+          return r.text().then(function (txt) { return { text: txt, time: t }; });
+        }).catch(function () { return null; });
+      }
+      function lastFail() { try { return +localStorage.getItem(failKey) || 0; } catch (e) { return 0; } }
+      return readCache().then(function (cached) {
+        if (cached && now - cached.time < maxAgeMs) return { text: cached.text, live: true, time: cached.time, cached: true };
+        if (now - lastFail() < maxAgeMs) { if (cached) return { text: cached.text, live: false, time: cached.time, cached: true }; throw new Error('recent failure, not retrying'); }
+        return U.fetchTimeout(url, timeoutMs).then(function (r) { return r.text(); }).then(function (txt) {
+          if (validate && !validate(txt)) throw new Error('bad data');
+          if (hasCache) caches.open(DCACHE).then(function (c) { return c.put(url, new Response(txt, { headers: { 'content-type': 'text/plain; charset=utf-8', 'x-sh-time': String(Date.now()) } })); }).catch(function () {});
+          try { localStorage.removeItem(failKey); } catch (e) {}
+          return { text: txt, live: true, time: Date.now(), cached: false };
+        }).catch(function (e) {
+          try { localStorage.setItem(failKey, String(Date.now())); } catch (x) {}
+          if (cached) return { text: cached.text, live: false, time: cached.time, cached: true };
+          throw e;
+        });
+      });
+    }
+  };
 
   /* ------------------------------- LE.bus ------------------------------ */
   /* 事件一览：

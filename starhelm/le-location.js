@@ -1,7 +1,7 @@
 /* =====================================================================
  * Live Earth 2.0 · le-location.js
  * LE.location：访客真实位置
- *  顺序：① 浏览器 GPS（6 秒）→ ② IP 估算（GeoJS → ipapi.co，各 5 秒）→ ③ 失败则请访客搜索城市
+ *  天枢 Starhelm:默认不定位。用户手选城市(记在本机)或点「用我的位置」才调用浏览器定位,坐标不上传
  *  城市搜索：离线城市库 window.CITIES（GeoNames，约 3,350 城，中/英/别名模糊匹配）
  *            + 在线地理编码 Open-Meteo（防抖 350ms，结果标记“在线”）
  *  地球上的“我的位置”定位针：脉冲光环 + 竖直光柱
@@ -11,7 +11,7 @@
   var LE = window.LE, U = LE.util, C = LE.config, S;
 
   var L = (LE.location = { current: null });
-  var SRC = { gps: 'GPS 定位', ip: 'IP 估算（约城市级）', manual: '手动选择' };
+  var SRC = { gps: '本机定位', manual: '手动选择' };
   L.SRC = SRC;
 
   /* ---------------------------- 城市库 ---------------------------- */
@@ -54,7 +54,7 @@
     }).catch(function () { return []; });
   };
 
-  /* ---------------------------- 自动定位 ---------------------------- */
+  /* ---------------------------- 定位(用户触发) ---------------------------- */
   function gps() {
     return new Promise(function (res, rej) {
       if (!navigator.geolocation) return rej(new Error('no geolocation'));
@@ -67,33 +67,32 @@
       } catch (e) { clearTimeout(t); rej(e); }
     });
   }
-  function ipLookup(i) {
-    var urls = C.URL.ipGeo;
-    if (i >= urls.length) return Promise.reject(new Error('ip failed'));
-    return U.fetchTimeout(urls[i], C.TIMEOUT.ip).then(function (r) { return r.json(); }).then(function (j) {
-      var lat = parseFloat(j.latitude), lng = parseFloat(j.longitude);
-      if (!isFinite(lat) || !isFinite(lng)) throw new Error('bad ip geo');
-      return { lat: lat, lng: lng, cityEn: j.city || '', country: j.country_code || j.country || '', source: 'ip' };
-    }).catch(function () { return ipLookup(i + 1); });
-  }
-
-  /** 自动定位：GPS → IP → 失败 */
+  /** 用我的位置:只在用户点击时调用浏览器定位;坐标只在本机计算,不上传任何服务器(天枢 Starhelm 隐私规则) */
   L.locate = function () {
-    LE.bus.emit('location:status', { state: 'locating', text: '正在定位…' });
-    return gps().catch(function () { return ipLookup(0); }).then(function (p) {
+    LE.bus.emit('location:status', { state: 'locating', text: '正在获取你的位置(只在本机计算)…' });
+    return gps().then(function (p) {
       var nc = L.nearestCity(p.lat, p.lng);
-      var name = nc && nc.d < 60 ? nc.c.name : (p.cityEn || (nc ? '靠近 ' + nc.c.name : '我的位置'));
-      L.set({ lat: p.lat, lng: p.lng, name: name, country: (nc && nc.c.country) || p.country, source: p.source });
+      var name = nc && nc.d < 60 ? nc.c.name : (nc ? '靠近 ' + nc.c.name : '我的位置');
+      L.set({ lat: p.lat, lng: p.lng, name: name, country: (nc && nc.c.country) || '', source: p.source });
       return true;
     }).catch(function () {
-      LE.bus.emit('location:status', { state: 'fail', text: '未获取到定位，请搜索你的城市' });
+      LE.bus.emit('location:status', { state: 'fail', text: '没有获得定位授权，请搜索你的城市或在地球上点选' });
       return false;
     });
   };
 
+  /** 启动:不自动定位。若本机记过上次手选的城市就用它,否则提示用户自己选 */
+  L.restore = function () {
+    var saved = LE.settings.get('home');
+    if (saved && isFinite(saved.lat) && isFinite(saved.lng)) { L.set(saved, true); return true; }
+    LE.bus.emit('location:status', { state: 'idle', text: '选一个城市，或点「用我的位置」（只在本机计算，不上传）' });
+    return false;
+  };
+
   /** 设定位置（任何来源都走这里） */
-  L.set = function (loc) {
+  L.set = function (loc, restoring) {
     L.current = loc;
+    if (!restoring && loc.source === 'manual') LE.settings.set('home', { lat: loc.lat, lng: loc.lng, name: loc.name, country: loc.country, source: 'manual' });
     placePin(loc);
     LE.bus.emit('location:status', { state: 'ok', text: SRC[loc.source] || '' });
     LE.bus.emit('location:changed', loc);

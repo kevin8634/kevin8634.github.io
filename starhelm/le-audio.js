@@ -12,11 +12,11 @@
 (function () {
   'use strict';
   var LE = window.LE;
-  var A = (LE.audio = { music: true, sfx: true, started: false });
+  var A = (LE.audio = { music: false, sfx: true, started: false });   // 天枢 Starhelm:背景音乐默认关,用户手动开启后记住
   var ctx, master, musicBus, sfxBus, reverb, wet, noiseBuf;
 
-  function store(k, v) { try { if (v === undefined) return localStorage.getItem('le.' + k); localStorage.setItem('le.' + k, v); } catch (e) { return null; } }
-  if (store('music') === '0') A.music = false;
+  function store(k, v) { if (v === undefined) { var x = LE.settings.get(k); return x === undefined ? null : (x ? '1' : '0'); } LE.settings.set(k, v === '1'); }
+  if (store('music') === '1') A.music = true;
   if (store('sfx') === '0') A.sfx = false;
 
   /* ------------------------------ 基础图 ------------------------------ */

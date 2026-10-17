@@ -30,22 +30,43 @@
 
   /* ---------------------------- 数据加载 ---------------------------- */
   function loadTle() {
-    return U.fetchTimeout(C.URL.celestrak, C.TIMEOUT.tle).then(function (r) { return r.text(); }).then(function (t) {
-      if (!/^1 /m.test(t) || !/^2 /m.test(t)) throw new Error('bad tle');
-      return { text: t, live: true };
-    }).catch(function () { return { text: window.STARLINK_LITE_TLE || '', live: false }; });
+    // CelesTrak 约 2 小时更新一次,且每次更新只允许下载一次:本机缓存 2 小时,失败也 2 小时内不重试
+    return LE.netcache.text(C.URL.celestrak, 2 * 3600 * 1000, C.TIMEOUT.tle, function (t) { return /^OBJECT_NAME,/.test(t) && t.split('\n').length > 10; })
+      .then(function (r) { return { text: r.text, live: r.live, omm: true }; })
+      .catch(function () { return { text: window.STARLINK_LITE_TLE || '', live: false }; });
   }
   function libReady() {
     return new Promise(function (res, rej) {
       var t0 = performance.now();
       (function check() {
-        if (window.satellite && window.satellite.twoline2satrec) return res();
+        if (window.satellite && window.satellite.json2satrec) return res();
         if (performance.now() - t0 > 20000) return rej(new Error('satellite.js 未加载'));
         setTimeout(check, 60);
       })();
     });
   }
+  /** OMM CSV(CelesTrak FORMAT=CSV)→ satrec;satellite.js 6 的 json2satrec */
+  var NUMF = { MEAN_MOTION: 1, ECCENTRICITY: 1, INCLINATION: 1, RA_OF_ASC_NODE: 1, ARG_OF_PERICENTER: 1, MEAN_ANOMALY: 1, EPHEMERIS_TYPE: 1, NORAD_CAT_ID: 1, ELEMENT_SET_NO: 1, REV_AT_EPOCH: 1, BSTAR: 1, MEAN_MOTION_DOT: 1, MEAN_MOTION_DDOT: 1 };
+  function parseCsv(text) {
+    var rows = text.split(/\r?\n/).filter(function (s) { return s.trim(); }), out = [];
+    if (rows.length < 2) return out;
+    var H = rows[0].split(',');
+    for (var i = 1; i < rows.length; i++) {
+      var v = rows[i].split(','); if (v.length !== H.length) continue;
+      var o = {}; for (var k = 0; k < H.length; k++) o[H[k]] = NUMF[H[k]] ? parseFloat(v[k]) : v[k];
+      try {
+        var rec = satellite.json2satrec(o);
+        if (rec && !rec.error) {
+          var inc = rec.inclo / U.DEG;
+          out.push({ name: o.OBJECT_NAME || 'STARLINK', rec: rec, norad: String(o.NORAD_CAT_ID), inc: inc, shell: SL.shell(inc),
+                     p: new THREE.Vector3(), v: new THREE.Vector3(), t: 0, ok: false, alt: 0, speed: 0 });
+        }
+      } catch (e) { /* 跳过坏记录 */ }
+    }
+    return out;
+  }
   function parse(text) {
+    if (/^OBJECT_NAME,/.test(text)) return parseCsv(text);
     var L = text.split(/\r?\n/).map(function (s) { return s.trim(); }), out = [];
     for (var i = 0; i < L.length - 1; i++) {
       if (L[i].indexOf('1 ') !== 0 || L[i + 1].indexOf('2 ') !== 0) continue;

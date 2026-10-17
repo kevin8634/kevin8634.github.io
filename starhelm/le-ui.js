@@ -174,7 +174,8 @@
     });
     UI.combo($('loc-q'), $('loc-list'), {
       search: function (q) { return L.searchLocal(q, 50); },
-      searchAsync: L.searchOnline,
+      // 在线地名搜索(Open-Meteo,免费接口仅限非商业)只在离线城市库查不到时兜底
+      searchAsync: function (q) { return L.searchLocal(q, 1).length ? Promise.resolve([]) : L.searchOnline(q); },
       key: function (c) { return (c.name + '|' + Math.round(c.lat * 10) + '|' + Math.round(c.lng * 10)); },
       render: function (c) {
         return '<b>' + U.esc(c.name) + '</b><span>' + (c.en && c.en !== c.name ? U.esc(c.en) : '') + '</span><em>' + U.esc(c.country) + (c.pop ? ' · ' + U.fmtPop(c.pop) : '') + '</em>' + (c.online ? '<i class="le-tag le-tag--mini">在线</i>' : '');
@@ -192,7 +193,7 @@
     });
 
     LE.bus.on('location:status', function (s) {
-      var tag = $('loc-src'); tag.textContent = s.state === 'locating' ? '定位中' : s.state === 'fail' ? '未定位' : s.text;
+      var tag = $('loc-src'); tag.textContent = s.state === 'locating' ? '定位中' : s.state === 'fail' || s.state === 'idle' ? '未选择' : s.text;
       tag.classList.toggle('is-warn', s.state !== 'ok');
       $('loc-status').textContent = s.state === 'ok' ? '可搜索其他城市，或在地球上点选。' : s.text;
       if (s.state === 'fail') { UI.openSheet('sheet-loc'); setTimeout(function () { $('loc-q').focus(); }, 300); }

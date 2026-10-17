@@ -57,9 +57,9 @@
     (document.getElementById('labels') || document.body).appendChild(I.label);
 
     var libReady = new Promise(function (res) { (function w() { if (window.satellite && satellite.twoline2satrec) res(); else setTimeout(w, 80); })(); });
-    var tle = U.fetchTimeout(URL, 6000).then(function (r) { return r.text(); }).then(function (t) {
+    var tle = LE.netcache.text(URL, 2 * 3600 * 1000, 6000, function (t) { return /^1 25544/m.test(t); }).then(function (res) { var t = res.text;
       var L = t.split(/\r?\n/).map(function (x) { return x.trim(); }).filter(function (x) { return /^[12] 25544/.test(x); });
-      if (L.length < 2) throw 0; I.live = true; return L;
+      if (L.length < 2) throw 0; I.live = res.live; return L;
     }).catch(function () { return TLE_FALLBACK; });
     Promise.all([tle, libReady]).then(function (r) {
       I.rec = satellite.twoline2satrec(r[0][0], r[0][1]);

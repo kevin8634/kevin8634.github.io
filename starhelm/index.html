@@ -9,7 +9,7 @@
     天枢 Starhelm（创世计划 Genesis 07 · 天文；由 Live Earth 2.1 迁入 /starhelm/）—— 文件结构（全部为经典脚本，按顺序加载，不使用 ES module / importmap）
       le-style.css      样式（按组件分区）
       数据   cities-lite.js · planets-data.js · starlink-lite.js · quakes-fallback.js
-      第三方 three.min.js 0.147 · OrbitControls · satellite.js 5（本地副本）
+      第三方 three.min.js 0.147 · OrbitControls · satellite.js 6.0.2（本地副本，含 OMM json2satrec）
       模块   le-core.js（config/util/bus/assets）→ le-scene.js（scene/earth）→ le-quakes.js → le-starlink.js
              → le-flights.js → le-location.js → le-solar.js → le-ui.js → le-main.js（启动）
     详见 docs/ARCHITECTURE.md
@@ -103,7 +103,7 @@
       <button class="le-chip" type="button" data-layer="flights" aria-pressed="false" style="--c:#ffb340">航线<small>ROUTES</small></button>
     </div></div>
     <div class="le-chips le-solar-only"><div class="le-chips-in" id="speed-chips"></div></div>
-    <p class="le-foot" id="credits">数据：USGS 地震 · CelesTrak 星链 TLE · JPL 行星轨道 · 城市库 GeoNames (CC BY 4.0) · IP 定位 GeoJS · 纹理 NASA / Solar System Scope (CC BY 4.0)</p>
+    <p class="le-foot" id="credits">数据：USGS 地震 · CelesTrak 轨道数据 · JPL 行星轨道 · 城市库 GeoNames (CC BY 4.0) · 纹理 NASA / Solar System Scope (CC BY 4.0) · 天枢 Starhelm 不收集位置</p>
   </footer>
 
   <!-- 详情卡片（地震 / 卫星 / 星球 通用） -->
@@ -126,10 +126,10 @@
       <ul class="le-list" id="loc-list" role="listbox" hidden></ul>
     </div>
     <div class="le-row">
-      <button class="le-btn le-btn--sm" id="loc-relocate" type="button">⟲ 重新定位</button>
+      <button class="le-btn le-btn--sm" id="loc-relocate" type="button">◎ 用我的位置</button>
       <button class="le-btn le-btn--sm" id="loc-pick" type="button" aria-pressed="false">◉ 点地球选点</button>
     </div>
-    <p class="le-hint" id="loc-status">正在定位…</p>
+    <p class="le-hint" id="loc-status">选一个城市，或点「用我的位置」（只在本机计算，不上传）</p>
     <dl class="le-dl" id="loc-info" hidden>
       <dt>位置</dt><dd id="li-name">—</dd>
       <dt>经纬度</dt><dd class="le-mono" id="li-ll">—</dd>
