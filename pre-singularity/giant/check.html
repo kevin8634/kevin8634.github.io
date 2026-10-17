@@ -5,7 +5,7 @@
 <script>
 const $=id=>document.getElementById(id); const log=(m,c)=>{ const s=document.createElement('div'); s.textContent=m; if(c) s.className=c; $('log').appendChild(s); };
 $('go').onclick=()=>{ $('go').disabled=true; $('log').textContent=''; log('WebGPU:'+(navigator.gpu?'支持':'不支持(检测仍可进行)'), navigator.gpu?'ok':'bad');
-  const w=new Worker('./llm-worker.js?v=7',{type:'module'}); const seen={}; let t0=Date.now();
+  const w=new Worker('./llm-worker.js?v=8',{type:'module'}); const seen={}; let t0=Date.now();
   w.onerror=e=>log('线程错误:'+(e.message||''),'bad');
   w.onmessage=e=>{ const d=e.data;
     if(d.t==='prog'){ const p=d.p; if(p.status==='progress'&&p.file&&!seen[p.file]){ seen[p.file]=1; log('开始下载 '+p.file+'('+(p.total/1e6).toFixed(1)+' MB)','ok'); }
