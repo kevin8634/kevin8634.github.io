@@ -1,0 +1,1417 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>星图任务 · 传染病为什么会爆发？</title>
+    <meta name="description" content="星图任务：用乘方和等比数列理解传染病为什么会爆发。难度 ★★★★☆ 进阶，适合初三~高一。" />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <link rel="stylesheet" href="hark-charts.css" />
+    <style>
+      /* x- classes: the game shell. Tokens only (plus the mission accent). */
+      :root { --x-accent: #7cf0c8; --x-on-accent: #0b3a2c; }
+      .x-bar {
+        position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 30;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+        padding: 8px 12px; border-radius: var(--r-pill);
+        background: var(--mat-agent); -webkit-backdrop-filter: var(--hark-blur); backdrop-filter: var(--hark-blur);
+        border: 1px solid var(--stroke-primary); box-shadow: var(--hark-shadow);
+      }
+      .x-brand { font: var(--type-label); margin-right: auto; white-space: nowrap; }
+      .x-meter { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-primary); }
+      .x-meter b { font-weight: var(--weight-bold); }
+      .x-toggle {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap);
+        padding: 4px 12px; border: 1px solid var(--stroke-primary); border-radius: var(--r-pill);
+        background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-tag); cursor: pointer;
+      }
+      .x-toggle[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-vol { width: 86px; accent-color: var(--fill-primary); }
+      .x-map { position: relative; padding: 8px 0 4px; }
+      .x-path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      .x-nodes { position: relative; display: grid; gap: 10px; }
+      .x-node {
+        display: grid; grid-template-columns: 46px 1fr auto; align-items: center; gap: 12px;
+        width: min(100%, 560px); padding: 10px 14px; border-radius: var(--r-l);
+        border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-body); text-align: left; cursor: pointer;
+        transition: box-shadow var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
+      }
+      .x-node:nth-child(even) { justify-self: end; }
+      .x-node:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--hark-shadow); }
+      .x-node:disabled { opacity: 0.55; cursor: not-allowed; }
+      .x-node__num { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-tertiary); font: var(--type-heading); }
+      .x-node.is-open .x-node__num { background: var(--x-accent); color: var(--x-on-accent); }
+      .x-node__t { display: block; font: var(--type-body-strong); }
+      .x-node__s { display: block; font: var(--type-caption); color: var(--text-secondary); }
+      .x-stars { font-size: 15px; letter-spacing: 1px; white-space: nowrap; }
+      .x-panel { padding: 16px; border-radius: var(--r-l); background: var(--fill-tertiary); display: grid; gap: 14px; }
+      .x-cat { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: start; }
+      .x-cat__face { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-primary-on); font-size: 24px; border: 1px solid var(--stroke-primary); }
+      .x-bubble { position: relative; padding: 10px 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-primary); font: var(--type-body); }
+      .x-bubble small { display: block; margin-top: 4px; font: var(--type-caption); color: var(--text-secondary); }
+      .x-opts { display: flex; flex-wrap: wrap; gap: 10px; }
+      .x-opt { padding: 8px; border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); cursor: pointer; display: grid; gap: 6px; justify-items: center; font: var(--type-tag); color: var(--text-primary); }
+      .x-opt svg { width: 48px; height: 48px; display: block; }
+      .x-opt.is-sel { box-shadow: inset 0 0 0 2px var(--fill-primary); }
+      .x-opt.good { border-color: var(--fill-system-green); }
+      .x-opt.bad { border-color: var(--fill-system-red); }
+      .x-qopt { text-align: left; font: var(--type-small); min-height: var(--tap); padding: 8px 14px; }
+      .x-qopt.good { border-color: var(--fill-system-green); box-shadow: inset 0 0 0 1px var(--fill-system-green); }
+      .x-qopt.bad { border-color: var(--fill-system-red); opacity: 0.6; }
+      .x-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+      .x-btn {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 6px 16px;
+        border-radius: var(--r-s); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-label); cursor: pointer;
+      }
+      .x-btn--go, .x-btn[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .x-yn .x-btn { min-width: var(--tap); justify-content: center; padding: 6px 10px; }
+      .x-toasts { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; display: grid; gap: 8px; justify-items: center; pointer-events: none; }
+      .x-toast { padding: 10px 16px; border-radius: var(--r-pill); background: var(--fill-primary); color: var(--text-primary-on); font: var(--type-tag); box-shadow: var(--hark-shadow); animation: x-pop 320ms var(--ease-out); }
+      @keyframes x-pop { from { opacity: 0; transform: translateY(10px); } }
+      .x-shelf { display: flex; flex-wrap: wrap; gap: 8px; }
+      .x-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-secondary); }
+      .x-badge.got { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-badge.lit { background: var(--x-accent); color: var(--x-on-accent); box-shadow: 0 0 14px var(--x-accent); }
+      .x-end { display: grid; gap: 12px; padding: 16px; border-radius: var(--r-l); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); }
+      .x-end h3 { font: var(--type-heading); }
+      .x-end dl { display: grid; gap: 8px; margin: 0; }
+      .x-end dt { font: var(--type-body-strong); }
+      .x-end dd { margin: 0; font: var(--type-small); color: var(--text-secondary); }
+      .x-starid { font: var(--weight-regular) 12px/1.3 "Geist Mono", monospace; }
+      .x-flash { animation: x-shake 320ms var(--ease-out); }
+      @keyframes x-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+      #stage [hidden], .x-drawer[hidden] { display: none; }
+      .x-drawer {
+        position: fixed; top: 0; right: 0; bottom: 0; z-index: 70; width: min(380px, 92vw); padding: 16px;
+        display: grid; align-content: start; gap: 12px; overflow-y: auto;
+        background: var(--mat-regular); -webkit-backdrop-filter: var(--hark-blur); backdrop-filter: var(--hark-blur);
+        border-left: 1px solid var(--stroke-primary); box-shadow: var(--hark-shadow);
+      }
+      .x-tree { border-radius: var(--r-m); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); overflow: hidden; }
+      .x-tree canvas { display: block; width: 100%; height: 340px; }
+      .x-read { font: var(--type-body); }
+      .x-range { width: min(260px, 100%); min-height: var(--tap); accent-color: var(--x-accent); }
+      .x-sub { display: grid; gap: 10px; }
+      .x-sub > h3 { font: var(--type-body-strong); }
+      .x-ruler { position: absolute; inset: 0; pointer-events: none; }
+      .x-ruler__band { position: absolute; border-left: 2px solid var(--x-accent); border-right: 2px solid var(--x-accent); background: color-mix(in srgb, var(--x-accent) 18%, transparent); }
+      .x-ruler__h { position: absolute; width: var(--tap); height: var(--tap); transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid var(--fill-primary-on); background: var(--x-accent); color: var(--x-on-accent); font: var(--type-tag); pointer-events: auto; touch-action: none; cursor: ew-resize; box-shadow: var(--hark-shadow); }
+      .x-net { border-radius: var(--r-m); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); overflow: hidden; }
+      .x-net svg { display: block; width: 100%; height: auto; max-height: 440px; touch-action: manipulation; }
+      .x-net line { stroke: var(--stroke-primary); stroke-width: 1; }
+      .x-net .n { cursor: pointer; outline: none; }
+      .x-net .n .t { fill: transparent; }
+      .x-net .n .d { fill: var(--fill-primary-on); stroke: var(--text-secondary); stroke-width: 1.5; transition: fill var(--dur-quick) var(--ease-out); }
+      .x-net .n.I .d { fill: var(--fill-system-red); stroke: var(--fill-system-red); }
+      .x-net .n.R .d { fill: var(--fill-tertiary); stroke: var(--stroke-primary); }
+      .x-net .n.V .d { fill: var(--x-accent); stroke: var(--x-on-accent); }
+      .x-net .n.P .d, .x-net .n:focus-visible .d { stroke: var(--text-primary); stroke-width: 3; }
+      .x-net text { font: var(--weight-bold) 12px var(--sans); fill: var(--text-primary); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+      .x-key { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; border: 1px solid var(--text-secondary); }
+      .x-hbar { height: 28px; border-radius: var(--r-pill); background: var(--fill-tertiary); overflow: hidden; border: 1px solid var(--stroke-secondary); }
+      .x-hbar > i { display: block; height: 100%; background: var(--x-accent); transition: width var(--dur-quick) var(--ease-out); }
+      .x-tanks { display: grid; grid-template-columns: 1fr minmax(48px, 1.2fr) 1fr minmax(48px, 1.2fr) 1fr; align-items: end; gap: 6px; padding: 14px; border-radius: var(--r-m); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); }
+      .x-bk { display: grid; justify-items: center; gap: 6px; text-align: center; font: var(--type-tag); }
+      .x-bk__tank { position: relative; width: min(100%, 96px); height: 130px; border: 2px solid var(--stroke-primary); border-top: 0; border-radius: 0 0 var(--r-s) var(--r-s); overflow: hidden; background: var(--fill-tertiary); }
+      .x-bk__w { position: absolute; left: 0; right: 0; bottom: 0; transition: height var(--dur-quick) var(--ease-out); }
+      .x-bk b { font: var(--type-label); }
+      .x-pipe { display: grid; gap: 4px; margin-bottom: 52px; text-align: center; font: var(--type-caption); color: var(--text-secondary); }
+      .x-pipe i { display: block; height: 12px; border-radius: var(--r-pill); background: var(--fill-tertiary); border: 1px solid var(--stroke-secondary); }
+      .x-pipe.is-on i { background-image: repeating-linear-gradient(90deg, var(--pc) 0 8px, transparent 8px 16px); animation: x-flow 0.7s linear infinite; }
+      @keyframes x-flow { to { background-position: 16px 0; } }
+      .x-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+      .x-card { display: grid; gap: 8px; align-content: start; padding: 14px; border-radius: var(--r-m); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); }
+      .x-card h3 { font: var(--type-body-strong); }
+      @media (prefers-reduced-motion: reduce) { .x-toast, .x-flash, .x-pipe.is-on i { animation: none; } }
+      @media (max-width: 599px) { .x-brand { width: 100%; } .x-vol { width: 70px; } .x-tree canvas { height: 300px; } }
+    </style>
+      <link rel="stylesheet" href="../ma.css" />
+  </head>
+  <body>
+    <div class="page" id="top">
+      <main class="main">
+        <div class="x-bar" role="toolbar" aria-label="游戏状态">
+          <span class="x-brand">星图任务 · 传染病为什么会爆发？</span>
+          <span class="x-meter">XP <b id="xp">0</b></span>
+          <span class="x-meter">⭐ <b id="stars">0</b>/15</span>
+          <button class="x-toggle" id="notes-btn" aria-expanded="false" aria-controls="notes">📒 笔记</button>
+          <button class="x-toggle" id="sfx" aria-pressed="true">🔊 音效</button>
+          <button class="x-toggle" id="music" aria-pressed="false">🎵 专注音乐</button>
+          <select class="x-toggle" id="track" aria-label="选择曲目">
+            <option value="-1" selected>随机轮播</option><option value="0">星空 Lo-fi</option><option value="1">雨夜书房</option><option value="2">晨光</option>
+          </select>
+          <span class="x-meter" id="nowplaying">正在播放:—</span>
+          <input class="x-vol" id="vol" type="range" min="0" max="100" value="30" aria-label="音乐音量" />
+        </div>
+
+        <section class="section" id="map" data-nav="星图">
+          <div class="head">
+            <p class="head__eyebrow">五关任务</p>
+            <h2>从一个病人开始，弄明白传染病为什么会爆发。</h2>
+            <p class="head__sub">每关得 1–3 颗星，拿到 1 颗星就解锁下一关。</p>
+          </div>
+          <p><span class="pill">难度 ★★★★☆ 进阶</span> <span class="pill">适合 初三~高一</span> <span class="pill">前置 乘方、百分数</span></p>
+          <div class="x-map">
+            <svg class="x-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M18 8 L82 30 L18 52 L82 74 L18 94" fill="none" style="stroke: var(--stroke-primary)" stroke-width="0.6" stroke-dasharray="2 2" />
+            </svg>
+            <div class="x-nodes" id="nodes"></div>
+          </div>
+        </section>
+
+        <section class="section" id="play" data-nav="关卡">
+          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">刺猬博士在星图上等你。</p></div>
+          <div id="stage" class="x-panel">
+            <div class="x-cat">
+              <div class="x-cat__face">🦔</div>
+              <div class="x-bubble">点开第 1 关「一传二，二传四」。一个病人，怎么就变成了成千上万？先猜，再算。<small>刺猬博士只问问题，不直接给答案；连错两次才给提示。</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="shelf" data-nav="徽章">
+          <div class="head"><h2>徽章架</h2><p class="head__sub">做到了才会亮起来。</p></div>
+          <div class="x-shelf" id="badges"></div>
+        </section>
+
+        <section class="section" id="sky" data-nav="星空">
+          <div class="head"><h2>九颗星，等你点亮。</h2><p class="head__sub">每颗星是一个数学知识点，过关时点亮。</p></div>
+          <div id="final" hidden></div>
+          <div class="x-shelf" id="skystars"></div>
+        </section>
+      </main>
+      <footer class="foot">
+        <p>本任务用简化数学模型理解传播规律，不提供医疗建议。</p>
+        <nav aria-label="回到各部分" data-auto></nav>
+        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"><span class="hark-mark"></span><span>built by hark</span></a>
+      </footer>
+    </div>
+    <aside class="x-drawer" id="notes" aria-label="笔记" hidden></aside>
+    <div class="x-toasts" id="toasts" aria-live="polite"></div>
+    <script src="hark.js"></script>
+    <script src="chart.js"></script>
+    <script src="datalabels.js"></script>
+    <script src="hark-charts.js"></script>
+    <script>
+      /* ---------- audio ---------- */
+      const Audio_ = (() => {
+        let ctx = null, master = null, musicGain = null, sfxOn = true, musicOn = false, vol = 0.3, started = false;
+        function ensure() {
+          if (ctx) return ctx;
+          const AC = window.AudioContext || window.webkitAudioContext;
+          ctx = new AC();
+          master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+          musicGain = ctx.createGain(); musicGain.gain.value = 0; musicGain.connect(master);
+          return ctx;
+        }
+        function unlock() { ensure(); if (ctx.state === "suspended") ctx.resume(); started = true; }
+        function env(node, t, a, d, peak) {
+          const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(peak, t + a);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+          node.connect(g); g.connect(master); return g;
+        }
+        function tone(freq, t, dur, type, peak) {
+          const o = ctx.createOscillator(); o.type = type || "sine"; o.frequency.setValueAtTime(freq, t);
+          env(o, t, 0.012, dur, peak || 0.18); o.start(t); o.stop(t + dur + 0.08); return o;
+        }
+        const sfx = {
+          click() { const t = ctx.currentTime; tone(880, t, 0.05, "triangle", 0.08); },
+          correct() { const t = ctx.currentTime; [523.25, 659.25, 783.99].forEach((f, i) => tone(f, t + i * 0.07, 0.22, "sine", 0.14)); },
+          wrong() { const t = ctx.currentTime; tone(150, t, 0.22, "sine", 0.16); tone(110, t + 0.06, 0.26, "sine", 0.12); },
+          star() { const t = ctx.currentTime; [784, 1047, 1319, 1568, 2093].forEach((f, i) => tone(f, t + i * 0.055, 0.3, "triangle", 0.09)); },
+          fanfare() { const t = ctx.currentTime; [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.3]].forEach(([f, d]) => { tone(f, t + d, 0.4, "sawtooth", 0.07); tone(f * 2, t + d, 0.3, "sine", 0.05); }); },
+          /* 刺猬博士: a short, soft squeak */
+          squeak() {
+            const t = ctx.currentTime, o = ctx.createOscillator(); o.type = "sine";
+            o.frequency.setValueAtTime(1300, t); o.frequency.exponentialRampToValueAtTime(1900, t + 0.05); o.frequency.exponentialRampToValueAtTime(1500, t + 0.11);
+            env(o, t, 0.01, 0.11, 0.05); o.start(t); o.stop(t + 0.16);
+          },
+          bonk() {
+            const t = ctx.currentTime, o = ctx.createOscillator();
+            o.type = "square"; o.frequency.setValueAtTime(180, t); o.frequency.exponentialRampToValueAtTime(60, t + 0.18);
+            env(o, t, 0.005, 0.22, 0.12); o.start(t); o.stop(t + 0.3); tone(95, t + 0.02, 0.2, "sine", 0.18);
+          },
+          siren() {
+            const t = ctx.currentTime, o = ctx.createOscillator(); o.type = "square"; o.frequency.setValueAtTime(660, t);
+            [0.3, 0.6, 0.9, 1.2].forEach((d, i) => o.frequency.linearRampToValueAtTime(i % 2 ? 660 : 990, t + d));
+            env(o, t, 0.02, 1.2, 0.05); o.start(t); o.stop(t + 1.3);
+          },
+          tick(f) { tone(f || 600, ctx.currentTime, 0.06, "sine", 0.07); },
+          pop(f) { const t = ctx.currentTime; tone(f || 200 + Math.random() * 500, t, 0.18, "triangle", 0.05); },
+          chord() { const t = ctx.currentTime; [523.25, 659.25, 783.99, 987.77, 1318.5].forEach((f, i) => tone(f, t + i * 0.012, 0.55, "triangle", 0.06)); },
+        };
+        /* tension bed for later BOSS rounds */
+        let sw = null;
+        function swarm(on) {
+          if (on) {
+            if (sw || !sfxOn || !started) return; ensure();
+            const t = ctx.currentTime, g = ctx.createGain(), f = ctx.createBiquadFilter(), nodes = [];
+            f.type = "bandpass"; f.frequency.value = 650; f.Q.value = 1.2;
+            g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.028, t + 1.5); f.connect(g); g.connect(master);
+            [196, 203, 247, 252].forEach((fr, i) => {
+              const o = ctx.createOscillator(), l = ctx.createOscillator(), lg = ctx.createGain();
+              o.type = "sawtooth"; o.frequency.value = fr; l.frequency.value = 5 + i * 1.7; lg.gain.value = 9;
+              l.connect(lg); lg.connect(o.frequency); o.connect(f); o.start(t); l.start(t); nodes.push(o, l);
+            });
+            sw = { g, nodes };
+          } else if (sw) {
+            const t = ctx.currentTime, s = sw; sw = null;
+            s.g.gain.cancelScheduledValues(t); s.g.gain.setValueAtTime(s.g.gain.value, t); s.g.gain.linearRampToValueAtTime(0.0001, t + 0.8);
+            setTimeout(() => { s.nodes.forEach((n) => n.stop()); s.g.disconnect(); }, 900);
+          }
+        }
+        function play(name, arg) { if (!sfxOn || !started) return; ensure(); if (ctx.state === "suspended") ctx.resume(); duckMusic(); (sfx[name] || sfx.click)(arg); }
+        /* ---------- 专注音乐: generative engine, lookahead scheduler (25ms tick, 0.1s ahead) ---------- */
+        const PENTA = [0, 2, 4, 7, 9];
+        const CH = { I: [0, 4, 7, 11], ii: [2, 5, 9, 12], iii: [4, 7, 11, 14], IV: [5, 9, 12, 16], V: [7, 11, 14, 17], vi: [9, 12, 16, 19] };
+        const P = (s) => s.split(" ").map((n) => CH[n]);
+        const TRACKS = [
+          { id: "lofi", name: "星空 Lo-fi", bpm: 72, swing: 0.2, key: 57, cb: 1, wet: 0.3, progs: [P("ii V I vi"), P("IV iii ii I"), P("vi IV I V")] },
+          { id: "rain", name: "雨夜书房", bpm: 60, swing: 0, key: 50, cb: 2, wet: 0.4, progs: [P("I iii vi IV"), P("vi ii V I"), P("IV I ii vi")] },
+          { id: "dawn", name: "晨光", bpm: 90, swing: 0.08, key: 60, cb: 1, wet: 0.25, progs: [P("I V vi IV"), P("IV I V vi"), P("I ii IV V")] },
+        ];
+        let comp = null, duck = null, bus = null, echo = null, noiseBuf = null, players = [], timer = null, offT = null, mode = -1;
+        const rnd = (n) => (Math.random() * n) | 0;
+        const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+        const newMotif = () => [0, 0, 0, 0].map(() => rnd(8));
+        function mutate(m) { const c = m.slice(); for (let i = 0, n = 1 + rnd(2); i < n; i++) { const j = rnd(4); c[j] = Math.max(0, Math.min(9, c[j] + [-2, -1, 1, 2][rnd(4)])); } return c; }
+        function graph() {
+          if (bus) return; ensure();
+          comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 4; comp.attack.value = 0.01; comp.release.value = 0.3;
+          duck = ctx.createGain(); bus = ctx.createGain(); echo = ctx.createDelay(1.5);
+          const fb = ctx.createGain(), lp = ctx.createBiquadFilter(); fb.gain.value = 0.32; lp.type = "lowpass"; lp.frequency.value = 1800;
+          echo.connect(lp); lp.connect(fb); fb.connect(echo); lp.connect(bus);
+          bus.connect(comp); comp.connect(duck); duck.connect(musicGain);
+          const len = ctx.sampleRate * 2; noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+          const d = noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        }
+        function note(p, m, t, dur, type, peak, a, wet) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = mtof(m);
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          o.connect(g); g.connect(p.out); if (wet) g.connect(p.wet); o.start(t); o.stop(t + dur + 0.05);
+        }
+        function hit(p, t, dur, peak, ftype, freq) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+          s.buffer = noiseBuf; f.type = ftype; f.frequency.value = freq;
+          g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(t, Math.random() * 1.5); s.stop(t + dur + 0.02);
+        }
+        function kick(p, t) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.2);
+          g.gain.setValueAtTime(0.28, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+          o.connect(g); g.connect(p.out); o.start(t); o.stop(t + 0.35); hit(p, t, 0.05, 0.05, "lowpass", 400);
+        }
+        function ep(p, ch, t, dur) {
+          const tr = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain(), env = ctx.createGain();
+          tr.gain.value = 0.75; lfo.frequency.value = 3.8; dep.gain.value = 0.22; lfo.connect(dep); dep.connect(tr.gain);
+          env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(1, t + 0.02); env.gain.exponentialRampToValueAtTime(0.35, t + 0.9); env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [["sine", 0.045], ["triangle", 0.01]].forEach(([ty, v]) => {
+            const o = ctx.createOscillator(), g = ctx.createGain(); o.type = ty; o.frequency.value = mtof(m); o.detune.value = rnd(7) - 3; g.gain.value = v;
+            o.connect(g); g.connect(tr); o.start(t); o.stop(t + dur + 0.05);
+          }));
+          tr.connect(env); env.connect(p.out); env.connect(p.wet); lfo.start(t); lfo.stop(t + dur + 0.05);
+        }
+        function pad(p, ch, t, dur, type, peak, lo, hi) {
+          const f = ctx.createBiquadFilter(), env = ctx.createGain(); f.type = "lowpass";
+          f.frequency.setValueAtTime(lo, t); f.frequency.linearRampToValueAtTime(hi, t + dur * 0.5); f.frequency.linearRampToValueAtTime(lo, t + dur);
+          env.gain.setValueAtTime(0.0001, t); env.gain.linearRampToValueAtTime(peak, t + dur * 0.35); env.gain.linearRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [-7, 7].forEach((dt) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = mtof(m); o.detune.value = dt; o.connect(f); o.start(t); o.stop(t + dur + 0.05); }));
+          f.connect(env); env.connect(p.out); env.connect(p.wet);
+        }
+        function rain(p) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain();
+          s.buffer = noiseBuf; s.loop = true; f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 0.5; g.gain.value = 0.05;
+          lfo.frequency.value = 0.07; dep.gain.value = 0.02; lfo.connect(dep); dep.connect(g.gain);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(); lfo.start(); p.nodes.push(s, lfo);
+        }
+        function section(p) {
+          let n; do n = rnd(3); while (n === p.prog); p.prog = n;
+          if (Math.random() < 0.25) p.key = p.t.key + [0, 2, -2, 5, -3][rnd(5)];
+          p.drums = Math.random() > 0.3;
+          if (Math.random() < 0.4) p.motif = newMotif();
+        }
+        function step(p, t) {
+          const T = p.t, s = p.step % 16, bar = (p.step / 16) | 0, beat = 60 / T.bpm;
+          if (s === 0) {
+            if (bar && bar % 8 === 0) section(p);
+            p.cur = bar % 4 === 2 ? mutate(p.motif) : bar % 4 === 0 ? p.motif : p.cur;
+          }
+          const ch = T.progs[p.prog][((bar / T.cb) | 0) % 4].map((x) => p.key + x);
+          const mel = (d) => p.key + 12 + PENTA[d % 5] + 12 * ((d / 5) | 0);
+          if (T.id === "lofi") {
+            if (s === 0) { ep(p, ch, t, beat * 4); note(p, ch[0] - 24, t, beat * 1.8, "sine", 0.16, 0.02); }
+            if (s === 10) note(p, ch[0] - 24, t, beat * 1.2, "sine", 0.12, 0.02);
+            if (p.drums) {
+              if (s === 0 || s === 10 || (s === 7 && Math.random() < 0.3)) kick(p, t);
+              if (s === 4 || s === 12) hit(p, t, 0.16, 0.07, "bandpass", 1800);
+              if (s % 2 === 0 || Math.random() < 0.15) hit(p, t, 0.04, s % 4 === 2 ? 0.03 : 0.018, "highpass", 7000);
+            }
+            if (bar % 2 === 1 && s % 4 === 0 && Math.random() > 0.28) note(p, mel(p.cur[s / 4]), t, beat * 1.3, "sine", 0.035, 0.01, true);
+          } else if (T.id === "rain") {
+            if (s === 0 && bar % 2 === 0) pad(p, ch, t, beat * 8 + 1, "sawtooth", 0.022, 280, 1300);
+            if (s % 8 === 0 && Math.random() < 0.45) { const m = mel(p.cur[(bar * 2 + s / 8) % 4]) - 12; note(p, m, t, 3.5, "triangle", 0.045, 0.005, true); note(p, m, t, 2.5, "sine", 0.03, 0.005); }
+          } else {
+            if (s === 0) pad(p, ch.map((m) => m + 12), t, beat * 4 + 0.6, "sine", 0.014, 2500, 5000);
+            if (s % 2 === 0 && Math.random() > 0.18) { const m = mel(p.cur[(s / 2) % 4] + (s >= 8 ? 1 : 0)); note(p, m, t, 0.55, "sine", 0.05, 0.004, true); note(p, m + 28, t, 0.08, "sine", 0.008, 0.002); }
+            if (p.drums) hit(p, t, 0.05, s % 2 ? 0.022 : 0.01, "highpass", 6000);
+          }
+        }
+        function sched() {
+          const now = ctx.currentTime;
+          players.forEach((p) => {
+            if (p.next < now - 0.05) p.next = now + 0.02; /* tab was throttled: skip, don't burst */
+            while (p.next < now + 0.1) { const sx = 60 / p.t.bpm / 4; step(p, p.next + (p.step % 2 ? p.t.swing * sx : 0)); p.step++; p.next += sx; }
+          });
+          const live = players.find((p) => !p.dead);
+          if (mode < 0 && live && now - live.born > 180) switchTo((live.i + 1 + rnd(2)) % 3);
+        }
+        function label(i) { const n = document.getElementById("nowplaying"); if (n) n.textContent = "正在播放:" + (i == null ? "—" : TRACKS[i].name); }
+        function kill(p) { p.nodes.forEach((n) => { try { n.stop(); } catch (e) {} }); p.out.disconnect(); p.wet.disconnect(); players = players.filter((x) => x !== p); }
+        function switchTo(i) {
+          const now = ctx.currentTime;
+          players.filter((p) => !p.dead).forEach((p) => {
+            p.dead = true; p.out.gain.cancelScheduledValues(now); p.out.gain.setValueAtTime(p.out.gain.value, now);
+            p.out.gain.linearRampToValueAtTime(0.0001, now + 2); setTimeout(() => kill(p), 2300);
+          });
+          const T = TRACKS[i], p = { t: T, i, step: 0, next: now + 0.1, born: now, key: T.key, prog: 0, drums: true, motif: newMotif(), out: ctx.createGain(), wet: ctx.createGain(), nodes: [] };
+          p.cur = p.motif; p.out.gain.setValueAtTime(0.0001, now); p.out.gain.linearRampToValueAtTime(1, now + 2);
+          p.out.connect(bus); p.wet.gain.value = T.wet; p.wet.connect(echo);
+          echo.delayTime.setTargetAtTime((60 / T.bpm) * 0.75, now, 0.5);
+          if (T.id === "rain") rain(p);
+          players.push(p); label(i);
+        }
+        function fadeTo(v) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(v, n + 2); }
+        function startMusic() {
+          graph(); if (ctx.state === "suspended") ctx.resume();
+          clearTimeout(offT); if (!timer) timer = setInterval(sched, 25);
+          if (!players.some((p) => !p.dead)) switchTo(mode < 0 ? rnd(3) : mode);
+          fadeTo(vol);
+        }
+        function stopMusic() {
+          if (!bus) return; fadeTo(0.0001);
+          offT = setTimeout(() => { clearInterval(timer); timer = null; players.slice().forEach(kill); label(null); }, 2100);
+        }
+        function setTrack(v) {
+          mode = v; if (!musicOn || !bus) return;
+          const live = players.find((p) => !p.dead);
+          if (mode >= 0 && (!live || live.i !== mode)) switchTo(mode); else if (live) live.born = ctx.currentTime;
+        }
+        function duckMusic() {
+          if (!musicOn || !duck) return; const t = ctx.currentTime, g = duck.gain;
+          g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.45, t + 0.05);
+          g.setValueAtTime(0.45, t + 0.35); g.linearRampToValueAtTime(1, t + 1);
+        }
+        return {
+          unlock, play, swarm,
+          setSfx(v) { sfxOn = v; if (!v) swarm(false); }, isSfx: () => sfxOn,
+          setMusic(v) { musicOn = v; v ? startMusic() : stopMusic(); }, isMusic: () => musicOn,
+          setVol(v) { vol = v; if (ctx && timer && musicOn) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(vol, n + 0.3); } },
+          setTrack,
+        };
+      })();
+      /* ---------- state ---------- */
+      const State = { xp: 0, stars: 0, perLevel: {}, badges: {}, unlocked: 1, lit: {}, level: 0 };
+      const BADGES = [
+        { id: "expo", name: "指数侦探", hint: "完成第 1 关「一传二，二传四」" },
+        { id: "log", name: "对数尺手", hint: "完成第 2 关「翻倍时间」" },
+        { id: "net", name: "网络守卫", hint: "完成第 3 关「人群里的网络」" },
+        { id: "model", name: "建模师", hint: "完成第 4 关「三个水桶 SIR」" },
+        { id: "flat", name: "曲线压平者", hint: "完成第 5 关「BOSS 压平曲线」" },
+      ];
+      const LEVELS_META = [
+        { id: 1, title: "一传二，二传四 🧫", sub: "乘方与等比数列" },
+        { id: 2, title: "翻倍时间 📈", sub: "指数增长与对数" },
+        { id: 3, title: "人群里的网络 🕸️", sub: "图论与传播树" },
+        { id: 4, title: "三个水桶 SIR 🪣", sub: "变化率与微分方程" },
+        { id: 5, title: "BOSS 压平曲线 🏥", sub: "BOSS 关 · 数学建模" },
+      ];
+      const STARS = [
+        ["n12", "乘方与指数"], ["a18", "等差与等比数列"], ["m04", "指数模型"], ["a14", "对数"], ["d07", "图论初步"],
+        ["d08", "树与网络"], ["c01", "变化率"], ["c15", "常微分方程"], ["m16", "数学建模全流程"],
+      ];
+      const NOTES = {
+        1: [
+          ["Rⁿ = 第 n 代", "每个病人传给 R 人，第 n 代新病人就是 R 自乘 n 次。R=2 时第 10 代 2¹⁰ = 1024。"],
+          ["Sₙ = (Rⁿ⁺¹ − 1)/(R − 1)", "第 0 代到第 n 代的累计人数（R ≠ 1）。R=2、n=10 时是 2047。"],
+          ["R₀ = 每个病人平均传给几人", "基本再生数。R₀ > 1 越滚越大，R₀ = 1 原地踏步，R₀ < 1 自己消失。"],
+          ["参考（常见估计）", "流感 R₀ ≈ 1–2；麻疹 R₀ ≈ 12–18（WHO/CDC）。"],
+          ["应用", "谣言转发、细胞分裂、复利。"],
+        ],
+        2: [
+          ["T = ln2 / ln(1 + r) ≈ 70 / r%", "翻倍时间。每天增长 10%：ln2/ln1.1 ≈ 7.3 天，70/10 = 7 天。"],
+          ["log 把乘法变加法", "log(a×b) = log a + log b。每翻一倍，log 值就加上同一个 log 2。"],
+          ["对数坐标上指数增长是直线", "纵轴每格 ×10（或 ×2），等比增长变成匀速爬坡，斜率越大翻倍越快。"],
+          ["应用", "复利 72 法则、摩尔定律、疫情曲线图。"],
+        ],
+        3: [
+          ["图 = 点 + 边；度", "点代表人，边代表接触。一个点的度 = 连在它身上的边数，也就是朋友数。"],
+          ["无标度网络与超级传播者", "真实人群里，少数枢纽的度特别大，大多数人只有 1–3 个连接。枢纽一旦感染，就成了超级传播者。"],
+          ["群体免疫阈值 = 1 − 1/R₀", "免疫比例超过它，每个病人平均传给不到 1 人。R₀ = 3 → 67%；麻疹 R₀ ≈ 15 → 93%。"],
+          ["应用", "疫苗策略（优先接种接触多的人）、社交网络里的信息传播、计算机病毒防护。"],
+        ],
+        4: [
+          ["变化率 = 每天流量", "水桶里的水每天变多少，就看流进、流出的管子各有多少流量。"],
+          ["SIR 微分方程", "dS/dt = −βSI/N，dI/dt = βSI/N − γI，dR/dt = γI。三个桶加起来永远是 N。"],
+          ["R₀ = β/γ", "β = 每天有效接触传染率，γ = 每天康复率（1/γ = 平均病程）。"],
+          ["差分近似（欧拉法）", "把 dt 取成 1 天：S′ = S − βSI/N，I′ = I + βSI/N − γI，R′ = R + γI。"],
+          ["文献", "Kermack & McKendrick, 1927."],
+          ["应用", "疫情预测、谣言传播、产品扩散。"],
+        ],
+        5: [
+          ["建模全流程", "假设 → 方程 → 模拟 → 检验 → 改进。每跑一次方案，就是走一遍这个循环。"],
+          ["有限预算优化", "10 枚币分给三张卡：比的是每一枚币能把峰值压下多少。"],
+          ["峰值与床位", "同时生病的人数 I 的最高点要低于 150 张床，医院才不崩溃。R₀_eff = β′/γ′ × S₀/N。"],
+          ["局限", "简化模型：均匀混合、参数固定、不考虑年龄与地区差异。只用来理解规律，不提供医疗建议。"],
+          ["应用", "公共卫生决策、交通错峰、电网负荷。"],
+        ],
+      };
+
+      const $ = (s) => document.querySelector(s);
+      function toast(msg) {
+        const el = document.createElement("div"); el.className = "x-toast"; el.textContent = msg;
+        $("#toasts").appendChild(el); setTimeout(() => el.remove(), 3200);
+      }
+      function award(id) {
+        if (State.badges[id]) return;
+        State.badges[id] = true;
+        const b = BADGES.find((x) => x.id === id);
+        Audio_.play("star"); toast("🏅 获得徽章:" + b.name); renderBadges();
+      }
+      function light(ids) {
+        ids.forEach((i) => (State.lit[i] = true));
+        toast("✨ 星图点亮:" + ids.map((i) => i + " " + STARS.find((s) => s[0] === i)[1]).join(" · ")); renderSky();
+      }
+      function renderBadges() {
+        $("#badges").innerHTML = BADGES.map((b) =>
+          `<span class="x-badge ${State.badges[b.id] ? "got" : ""}">${State.badges[b.id] ? "🏅" : "🔒"} ${b.name}<small style="opacity:.75"> · ${b.hint}</small></span>`
+        ).join("");
+      }
+      function renderSky() {
+        $("#skystars").innerHTML = STARS.map(([id, n]) =>
+          `<span class="x-badge ${State.lit[id] ? "lit" : ""}">${State.lit[id] ? "★" : "☆"} <span class="x-starid">${id}</span> ${n}</span>`
+        ).join("");
+      }
+      function renderFinal() {
+        const done = LEVELS_META.filter((m) => State.perLevel[m.id]).length, f = $("#final");
+        if (!done) { f.hidden = true; return; }
+        const left = LEVELS_META.filter((m) => !getLevel(m.id)).map((m) => m.title);
+        const lit = STARS.filter((s) => State.lit[s[0]]).length;
+        f.hidden = false;
+        const all = done === LEVELS_META.length;
+        f.innerHTML = `<div class="x-end"><h3>${all ? "🎉 星图任务全部完成" : `星图进度 ${done}/${LEVELS_META.length} 关`}</h3>
+          <p>⭐ ${State.stars}/15 · 🏅 ${Object.keys(State.badges).length}/${BADGES.length} · XP ${State.xp} · 已点亮 ${lit}/${STARS.length} 颗星</p>
+          ${all ? `<div class="x-shelf">${LEVELS_META.map((m) => `<span class="x-badge got">${m.id} · ${m.title} ${starStr(State.perLevel[m.id])}</span>`).join("")}</div>
+          <div class="x-shelf">${BADGES.filter((b) => State.badges[b.id]).map((b) => `<span class="x-badge got">🏅 ${b.name}</span>`).join("")}</div>
+          <p class="fineprint">从乘方、对数、网络到微分方程和建模：${lit === STARS.length ? "九颗星全部点亮" : `已点亮 ${lit} 颗星`}。你用数学看懂了一场传染病为什么会爆发，又怎样被压平。</p>` : ""}
+          ${left.length ? `<p class="fineprint">即将开放:${left.join("、")}。全部通关后，下面 9 颗星会全部点亮。</p>` : ""}</div>`;
+      }
+      function renderNotes() {
+        const id = State.level, list = NOTES[id], m = LEVELS_META[id - 1];
+        $("#notes").innerHTML = `<div class="x-row"><b style="font:var(--type-body-strong);margin-right:auto">📒 ${m ? `第 ${id} 关笔记` : "笔记"}</b><button class="x-btn" id="notes-x">关闭</button></div>
+          <div class="x-end">${list ? `<h3>${m.title}</h3><dl>${list.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join("")}</dl>` : "<p>打开一关后，这里会出现本关的公式。</p>"}</div>`;
+        $("#notes-x").addEventListener("click", () => toggleNotes(false));
+      }
+      function toggleNotes(on) {
+        $("#notes").hidden = !on; $("#notes-btn").setAttribute("aria-expanded", String(on));
+        if (on) { renderNotes(); $("#notes-x").focus(); } else $("#notes-btn").focus();
+      }
+      function renderBar() { $("#xp").textContent = State.xp; $("#stars").textContent = State.stars; }
+      function starStr(n) { return n ? "⭐".repeat(n) + "☆".repeat(3 - n) : "☆☆☆"; }
+      function renderMap() {
+        $("#nodes").innerHTML = LEVELS_META.map((m) => {
+          const open = m.id <= State.unlocked && !!getLevel(m.id);
+          const got = State.perLevel[m.id] || 0;
+          const note = getLevel(m.id) ? (open ? m.sub : "完成上一关解锁") : "即将开放";
+          return `<button class="x-node ${open ? "is-open" : ""}" data-level="${m.id}" ${open ? "" : "disabled"}>
+            <span class="x-node__num">${m.id}</span>
+            <span><span class="x-node__t">${m.title}</span><span class="x-node__s">${note}</span></span>
+            <span class="x-stars">${starStr(got)}</span></button>`;
+        }).join("");
+        $("#nodes").querySelectorAll("button[data-level]").forEach((b) =>
+          b.addEventListener("click", () => { Audio_.play("click"); openLevel(+b.dataset.level); }));
+      }
+      function finishLevel(id, stars, xp) {
+        const prev = State.perLevel[id] || 0;
+        if (stars > prev) { State.stars += stars - prev; State.perLevel[id] = stars; }
+        State.xp += xp;
+        if (stars >= 1 && State.unlocked < id + 1) State.unlocked = id + 1;
+        renderBar(); renderMap(); renderFinal(); Audio_.play("fanfare");
+        toast(`第 ${id} 关完成 · ${starStr(stars)} · +${xp} XP`);
+      }
+      function openLevel(id) {
+        const lv = getLevel(id); if (!lv) return;
+        State.level = id; if (!$("#notes").hidden) renderNotes();
+        $("#play-title").textContent = `第 ${id} 关 · ${lv.title}`;
+        $("#play-sub").textContent = LEVELS_META[id - 1].sub;
+        const stage = $("#stage"); stage.innerHTML = ""; Audio_.swarm(false);
+        lv.init(stage, (stars, xp) => finishLevel(id, stars, xp));
+        $("#play").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+      }
+      /* guide bubble helper */
+      function guide(container, text, sub) {
+        const wrap = document.createElement("div"); wrap.className = "x-cat";
+        wrap.innerHTML = `<div class="x-cat__face">🦔</div><div class="x-bubble" aria-live="polite"></div>`;
+        const b = wrap.querySelector(".x-bubble");
+        const set = (t, s) => { b.innerHTML = ""; b.append(t); if (s) { const el = document.createElement("small"); el.textContent = s; b.append(el); } Audio_.play("squeak"); };
+        set(text, sub); container.append(wrap);
+        return set;
+      }
+      function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+      /* end-card helper: stars, headline, [[term, meaning]], star-map ids */
+      function endCard(stars, head, math, starIds) {
+        return el("div", "x-end", `<h3>${starStr(stars)} ${head}</h3>
+          <div><p style="font:var(--type-body-strong)">你刚刚用到的数学</p>
+          <dl>${math.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join("")}</dl></div>
+          <div><p style="font:var(--type-body-strong)">星图点亮</p><p class="x-starid">${starIds}</p></div>`);
+      }
+      const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const taskList = (T, got) => T.map(([k, t, s]) => `<li class="${got[k] ? "is-done" : ""}"><span class="checklist__item">${t} <small>${s}</small></span><span class="chip ${got[k] ? "" : "chip--solid"}">${got[k] ? "完成 ⭐" : "进行中"}</span></li>`).join("");
+
+      const LEVELS = [];
+      const getLevel = (id) => LEVELS.find((l) => l.id === id);
+      /* ===== LEVEL 1 · 一传二，二传四 ===== */
+      LEVELS.push({ id: 1, title: "一传二，二传四", init(root, done) {
+        const got = { tree: 0, lo: 0, one: 0, hi: 0, quiz: 0 };
+        const T = [["tree", "把传播树长到第 10 代", "点「下一代 ▶」"], ["lo", "试一个 R < 1", "拖动 R 滑块"], ["one", "试 R = 1", "拖动 R 滑块"],
+          ["hi", "试一个 R > 1", "拖动 R 滑块"], ["quiz", "至少答对 2 道题", "连错两次，刺猬博士给提示"]];
+        const SUP = (n) => String(n).replace(/\d/g, (d) => "⁰¹²³⁴⁵⁶⁷⁸⁹"[d]);
+        const fmt = (v) => (v >= 100 ? Math.round(v).toLocaleString() : v >= 1 ? String(+v.toFixed(2)) : String(+v.toPrecision(2)));
+        const say = guide(root, "先别算，凭直觉猜：1 个病人，每人传给 R=2 个新的人，第 10 代有多少新病人？", "猜错不扣分，猜完我们一起验证。");
+        const tasks = el("ul", "checklist"); root.append(tasks);
+        const paint = () => (tasks.innerHTML = taskList(T, got)); paint();
+
+        /* 1 · guess first */
+        const gs = el("div", "x-opts"); root.append(gs);
+        const rest = el("div", "x-sub"); rest.hidden = true; root.append(rest);
+        [20, 100, 1024].forEach((v) => {
+          const b = el("button", "x-opt x-qopt", v + " 人"); gs.append(b);
+          b.addEventListener("click", () => {
+            gs.querySelectorAll("button").forEach((x) => { x.disabled = true; if (x.textContent === "1024 人") x.classList.add("good"); });
+            b.classList.add("is-sel"); rest.hidden = false; draw();
+            if (v === 1024) { Audio_.play("correct"); say("直觉很准！大多数人会猜 20。为什么只要 10 代就到 1024？点「下一代 ▶」亲眼看看。"); }
+            else { Audio_.play("pop"); say(`答案是 1024，比 ${v} 多得多。每一代是上一代「加 2」还是「乘 2」？点「下一代 ▶」验证。`, "猜错不扣分。"); }
+          });
+        });
+
+        /* 2 · spread tree */
+        rest.innerHTML = `<div class="x-sub"><h3>传播树 · R = 2</h3>
+          <div class="x-tree"><canvas id="tree" role="img" aria-label="传播树：第 0 代 1 个零号病人"></canvas></div>
+          <div class="x-row"><button class="x-btn x-btn--go" id="tnext">下一代 ▶</button><button class="x-btn" id="treset">重来</button></div>
+          <p class="x-read" id="tread" aria-live="polite"></p></div>
+          <div class="x-sub"><h3>换一个 R 试试</h3>
+          <div class="x-row"><span class="x-meter">R = <b id="rv">2</b></span>
+            <input class="x-range" id="rs" type="range" min="0" max="5" step="1" value="4" aria-label="R：每个病人传给几人" aria-valuetext="R = 2" />
+            <button class="x-btn" data-sc="linear" aria-pressed="true">普通刻度</button><button class="x-btn" data-sc="logarithmic" aria-pressed="false">对数刻度</button></div>
+          <figure class="chart"><figcaption class="chart__cap">R 决定每一代是涨还是落<small>第 0–10 代的新病人数（人），从 1 个零号病人开始；虚线 = 1 人</small></figcaption>
+            <div class="chart__canvas"><canvas id="rchart" role="img" aria-label="R 大于 1 时每代人数越来越多，小于 1 时越来越少"></canvas></div></figure>
+          <p class="x-read" id="rread" aria-live="polite"></p></div>
+          <div class="x-sub" id="quiz"><h3>三道小题</h3></div>`;
+        const cv = rest.querySelector("#tree"), probe = el("span"); probe.hidden = true; rest.append(probe);
+        const col = (v) => { probe.style.color = v; return getComputedStyle(probe).color; };
+        let n = 0, anim = 1;
+        function draw() {
+          if (!cv.isConnected || rest.hidden) return;
+          const dpr = devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+          cv.width = W * dpr; cv.height = H * dpr; const c = cv.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+          const ink = col("var(--text-primary)"), sub = col("var(--text-secondary)"), line = col("var(--stroke-primary)"), acc = col("var(--x-accent)"), on = col("var(--x-on-accent)");
+          const L = 58, Rm = 12, top = 16, rowH = (H - 32) / 10, PW = W - L - Rm;
+          const X = (g, i) => L + ((i + 0.5) * PW) / Math.pow(2, g), Y = (g) => top + g * rowH;
+          const e = 1 - Math.pow(1 - anim, 3), lerp = (a, b, t) => a + (b - a) * t;
+          c.textBaseline = "middle";
+          for (let g = 0; g <= n; g++) {
+            const cnt = Math.pow(2, g), isNew = g === n && g > 0, t = isNew ? e : 1;
+            c.font = "12px sans-serif"; c.textAlign = "left"; c.fillStyle = g === n ? ink : sub; c.fillText(`第${g}代`, 6, Y(g));
+            if (cnt > 512) {
+              c.save(); c.globalAlpha = t; c.shadowColor = acc; c.shadowBlur = 20; c.fillStyle = acc;
+              c.beginPath(); c.roundRect ? c.roundRect(L, Y(g) - 11, PW, 22, 11) : c.rect(L, Y(g) - 11, PW, 22); c.fill(); c.restore();
+              c.globalAlpha = t; c.fillStyle = on; c.font = "600 14px sans-serif"; c.textAlign = "center";
+              c.fillText(cnt.toLocaleString() + " 个新病人", L + PW / 2, Y(g)); c.globalAlpha = 1; continue;
+            }
+            const r = Math.max(1, Math.min(6, (PW / cnt) * 0.32));
+            if (g > 0 && cnt <= 128) {
+              c.strokeStyle = line; c.lineWidth = 1; c.beginPath();
+              for (let i = 0; i < cnt; i++) { const px = X(g - 1, i >> 1), py = Y(g - 1); c.moveTo(px, py); c.lineTo(lerp(px, X(g, i), t), lerp(py, Y(g), t)); }
+              c.stroke();
+            }
+            c.fillStyle = g === n ? acc : sub; c.strokeStyle = ink; c.lineWidth = 1;
+            for (let i = 0; i < cnt; i++) {
+              const x = g > 0 ? lerp(X(g - 1, i >> 1), X(g, i), t) : X(0, 0), y = g > 0 ? lerp(Y(g - 1), Y(g), t) : Y(0);
+              c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); if (g === n && r >= 3) c.stroke();
+            }
+          }
+        }
+        function readTree() {
+          const now = Math.pow(2, n), tot = Math.pow(2, n + 1) - 1;
+          rest.querySelector("#tread").innerHTML = n === 0 ? "第 0 代 = 2<sup>0</sup> = 1（零号病人）· 累计 = 1"
+            : `第 ${n} 代 = 2<sup>${n}</sup> = <b>${now.toLocaleString()}</b> · 累计 = 1 + 2 + … + 2<sup>${n}</sup> = <b>${tot.toLocaleString()}</b>`;
+          cv.setAttribute("aria-label", `传播树：已到第 ${n} 代，这一代 ${now} 人，累计 ${tot} 人`);
+          rest.querySelector("#tnext").disabled = n >= 10;
+        }
+        function grow() {
+          if (reduced()) { anim = 1; draw(); return; }
+          const t0 = performance.now();
+          const f = (now) => { anim = Math.min(1, (now - t0) / 450); draw(); if (anim < 1) requestAnimationFrame(f); };
+          anim = 0; requestAnimationFrame(f);
+        }
+        rest.querySelector("#tnext").addEventListener("click", () => {
+          if (n >= 10) return; n++; Audio_.play("tick", 330 * Math.pow(2, n / 6)); readTree(); grow();
+          if (n === 3) say("第 3 代 8 人。从上一代到这一代，人数是加了几，还是乘了几？");
+          if (n === 6) say("第 6 代 64 人。猜猜：第 9 代会是多少？先想再点。");
+          if (n === 10) {
+            say("1024！再看累计 2047：第 10 代比前面 0–9 代加起来（1023）还多 1。这是巧合吗？试试第 3 代：8 和 1+2+4。");
+            if (!got.tree) { got.tree = 1; paint(); check(); }
+          }
+        });
+        rest.querySelector("#treset").addEventListener("click", () => { n = 0; anim = 1; Audio_.play("click"); readTree(); draw(); });
+        readTree(); addEventListener("resize", draw);
+
+        /* 3 · R slider → bars */
+        const RV = [0.5, 0.8, 1, 1.5, 2, 3], rs = rest.querySelector("#rs");
+        let scale = "linear", chart = null;
+        const series = (R) => Array.from({ length: 11 }, (_, g) => Math.pow(R, g));
+        const total = (R) => (R === 1 ? 11 : (Math.pow(R, 11) - 1) / (R - 1));
+        function mk() {
+          if (chart) chart.destroy();
+          const isLog = scale === "logarithmic";
+          chart = new Chart(rest.querySelector("#rchart"), {
+            type: "bar",
+            data: { labels: Array.from({ length: 11 }, (_, g) => String(g)), datasets: [
+              { label: "新病人", data: series(RV[+rs.value]) },
+              { type: "line", label: "", data: Array(11).fill(1), borderColor: "var(--chart-reference)", borderDash: [3, 4], borderWidth: 1, pointRadius: 0 },
+            ] },
+            options: {
+              plugins: { legend: { display: false }, tooltip: { filter: (i) => i.datasetIndex === 0, callbacks: { title: (i) => `第 ${i[0].label} 代`, label: (ctx) => `${fmt(ctx.raw)} 人` } } },
+              scales: { x: { title: { display: true, text: "第几代" } },
+                y: { type: scale, ticks: { callback: (v) => (isLog ? (Math.abs(Math.log10(v) - Math.round(Math.log10(v))) < 1e-6 ? fmt(v) : null) : fmt(v)) } } },
+            },
+          });
+        }
+        function readR() {
+          const R = RV[+rs.value], last = Math.pow(R, 10);
+          rest.querySelector("#rv").textContent = R; rs.setAttribute("aria-valuetext", "R = " + R);
+          rest.querySelector("#rread").innerHTML = `R = ${R}：第 10 代 ${R === 1 ? "=" : "≈"} <b>${fmt(last)}</b> 人，0–10 代累计 ≈ <b>${fmt(total(R))}</b> 人`;
+        }
+        const seen = {};
+        rs.addEventListener("input", () => {
+          const R = RV[+rs.value], k = R < 1 ? "lo" : R === 1 ? "one" : "hi";
+          readR(); chart.data.datasets[0].data = series(R); chart.update(); Audio_.play("tick", 260 + +rs.value * 90);
+          if (!seen[k]) {
+            seen[k] = 1;
+            say(k === "lo" ? `R = ${R}：第 10 代只剩约 ${fmt(Math.pow(R, 10))} 人，不到一个人。这意味着传播链会怎样？`
+              : k === "one" ? "R = 1：每一代都正好 1 人，不涨也不落。为什么说 1 是分水岭？"
+              : `R = ${R}：越往后越陡。切到「对数刻度」，这些柱子变成了什么形状？`);
+          }
+          if (!got[k]) { got[k] = 1; paint(); check(); }
+        });
+        rest.querySelectorAll("[data-sc]").forEach((b) => b.addEventListener("click", () => {
+          scale = b.dataset.sc; Audio_.play("click");
+          rest.querySelectorAll("[data-sc]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); mk();
+          if (scale === "logarithmic") say("对数刻度上，每格是 ×10。R > 1 的柱顶连成了一条斜直线——为什么乘法在这里变成了「匀速爬坡」？", "这把「对数尺」第 2 关会用到。");
+        }));
+        readR(); mk();
+
+        /* 4 · quiz */
+        const Q = [
+          { q: "R = 3，第 5 代有多少新病人？", o: ["15", "125", "243", "729"], a: 2,
+            nudge: "第 1 代 3 人，第 2 代呢？每往下一代，是加 3 还是乘 3？", hint: "提示：第 n 代 = 3ⁿ。3⁵ = 3×3×3×3×3，先算 3² = 9，9×9 = 81，再乘 3。",
+            ok: "对，3⁵ = 243。不是 3×5 = 15：乘方是重复相乘。" },
+          { q: "R = 2，前 10 代累计（含零号病人）一共多少人？", o: ["1023", "1024", "2047", "2048"], a: 2,
+            nudge: "「含零号」意味着从第几代开始加？一共加几项？", hint: "提示：1 = 1，1+2 = 3，1+2+4 = 7，1+2+4+8 = 15，每个和都比下一项少 1。第 0–10 代的下一项是 2¹¹ = 2048。",
+            ok: "对！S₁₀ = (2¹¹ − 1)/(2 − 1) = 2047。" },
+          { q: "R = 0.8，疫情会自己消失吗？", o: ["会，越来越少，直到消失", "不会，一直保持不变", "不会，越来越多"], a: 0,
+            nudge: "一个数每次乘 0.8，会变大还是变小？", hint: "提示：在上面滑块选 R = 0.8，看第 10 代：0.8¹⁰ ≈ 0.11，不到 1 个人。",
+            ok: "会。R < 1 时每代都比上一代少，传播链自己断掉。所以防控的目标是把 R 压到 1 以下。" },
+        ];
+        const qs = Q.map(() => ({ tries: 0, solved: false, first: false })), quiz = rest.querySelector("#quiz");
+        Q.forEach((item, qi) => {
+          const box = el("div", "x-sub", `<p>${qi + 1}. ${item.q}</p>`), opts = el("div", "x-opts");
+          item.o.forEach((txt, oi) => {
+            const b = el("button", "x-opt x-qopt"); b.textContent = txt; opts.append(b);
+            b.addEventListener("click", () => {
+              const s = qs[qi]; if (s.solved) return;
+              if (oi === item.a) {
+                s.solved = true; s.first = s.tries === 0; b.classList.add("good");
+                opts.querySelectorAll("button").forEach((x) => (x.disabled = true));
+                Audio_.play("correct"); say("✓ " + item.ok, s.first ? "一次答对。" : "答出来了；一次答对才算满星。");
+                got.quiz = qs.filter((x) => x.solved).length >= 2 ? 1 : 0; paint(); check();
+              } else {
+                s.tries++; b.classList.add("bad"); b.disabled = true; Audio_.play("wrong");
+                opts.classList.remove("x-flash"); void opts.offsetWidth; opts.classList.add("x-flash");
+                say(s.tries >= 2 ? item.hint : item.nudge, s.tries >= 2 ? "" : "再想想，答错两次我就给提示。");
+              }
+            });
+          });
+          box.append(opts); quiz.append(box);
+        });
+
+        /* 5 · clear */
+        let awarded = 0, card = null;
+        function check() {
+          if (!(got.tree && got.lo && got.one && got.hi && got.quiz)) return;
+          const right = qs.filter((x) => x.first).length, stars = right === 3 ? 3 : right === 2 ? 2 : 1;
+          if (stars <= awarded) return;
+          const first = !awarded; done(stars, first ? 40 + 20 * stars : 20 * (stars - awarded)); awarded = stars;
+          if (first) { award("expo"); light(["n12", "a18"]); say("指数侦探，任务完成！你发现了：决定爆发与否的，不是病人有多少，而是 R 比 1 大还是小。", "第 2 关「翻倍时间」已解锁。"); }
+          const nc = endCard(stars, "指数侦探上任！", [
+            ["乘方 Rⁿ", "第 n 代 = Rⁿ，同一个数重复相乘 n 次。R=2 时第 10 代 1024 人。"],
+            ["等比数列求和", "1 + R + … + Rⁿ = (Rⁿ⁺¹ − 1)/(R − 1)。R=2 时第 0–10 代共 2047 人。"],
+            ["分水岭 R = 1", "R > 1 越滚越大，R = 1 原地踏步，R < 1 自己消失。"],
+          ], "n12 乘方与指数 · a18 等差与等比数列");
+          card ? card.replaceWith(nc) : root.append(nc); card = nc;
+          renderSky(); renderFinal();
+        }
+      } });
+      /* ===== LEVEL 2 · 翻倍时间 ===== */
+      LEVELS.push({ id: 2, title: "翻倍时间", init(root, done) {
+        const got = { scales: 0, ruler: 0, quiz: 0 };
+        const T = [["scales", "线性、对数两种坐标都看过", "切换坐标或拖滑块"], ["ruler", "用对数尺量出翻倍时间", "拖动尺子两端 A、B"], ["quiz", "至少答对 2 道题", "连错两次，刺猬博士给提示"]];
+        const big = (v) => (v >= 1e8 ? +(v / 1e8).toPrecision(3) + " 亿" : v >= 1e4 ? +(v / 1e4).toPrecision(3) + " 万" : v >= 100 ? Math.round(v).toLocaleString() : String(+v.toFixed(1)));
+        const say = guide(root, "刺猬博士考考你：每天新增病例增长 10%，多少天病例翻一倍？", "先凭直觉猜，猜错不扣分。");
+        const tasks = el("ul", "checklist"); root.append(tasks);
+        const paint = () => (tasks.innerHTML = taskList(T, got)); paint();
+
+        /* 1 · guess first */
+        const gs = el("div", "x-opts"); root.append(gs);
+        const rest = el("div", "x-sub"); rest.hidden = true; root.append(rest);
+        [5, 7, 10, 14].forEach((v) => {
+          const b = el("button", "x-opt x-qopt", v + " 天"); gs.append(b);
+          b.addEventListener("click", () => {
+            gs.querySelectorAll("button").forEach((x) => { x.disabled = true; if (x.textContent === "7 天") x.classList.add("good"); });
+            b.classList.add("is-sel"); rest.hidden = false; mkA(); mkB();
+            Audio_.play(v === 7 ? "correct" : "pop");
+            say(v === 7 ? "猜得准！答案 ≈ 7 天：ln2 / ln1.1 ≈ 7.3。拖下面的滑块，看翻倍时间怎么随增长率变。"
+              : `答案 ≈ 7 天（ln2 / ln1.1 ≈ 7.3）。${v < 7 ? "10% 看着不少，可要利滚利 7 天才刚好 ×2。" : "每天都在前一天的基础上再涨 10%，利滚利比想象的快。"}拖下面的滑块验证。`, "猜错不扣分。");
+          });
+        });
+
+        rest.innerHTML = `<div class="x-sub"><h3>A · 增长率滑块</h3>
+          <div class="x-row"><span class="x-meter">增长率 <b id="gv">10</b>%/天</span>
+            <input class="x-range" id="gr" type="range" min="1" max="40" step="1" value="10" aria-label="每天增长率" aria-valuetext="每天 10%" />
+            <button class="x-btn" data-sc2="linear" aria-pressed="true">线性坐标</button><button class="x-btn" data-sc2="logarithmic" aria-pressed="false">对数坐标</button></div>
+          <figure class="chart"><figcaption class="chart__cap">每过一个翻倍时间，病例就 ×2<small>从 10 例开始，60 天的病例数（例）；圆点 = 每次翻倍</small></figcaption>
+            <div class="chart__canvas"><canvas id="gchart" role="img" aria-label="病例增长曲线"></canvas></div></figure>
+          <p class="x-read" id="gread" aria-live="polite"></p></div>
+          <div class="x-sub"><h3>B · 读对数尺</h3><p class="fineprint">一场虚构疫情第 0–9 天的病例。拖动尺子两端 A、B（或聚焦后按方向键），量出病例翻一倍要几天，再点「量好了」。</p>
+          <figure class="chart"><figcaption class="chart__cap">对数纵轴上，这场疫情排成一条直线<small>虚构疫情，第 0–9 天的病例数（例），纵轴为对数坐标</small></figcaption>
+            <div class="chart__canvas"><canvas id="lchart" role="img" aria-label="病例从 10 涨到 226，在对数坐标上排成直线"></canvas>
+              <div class="x-ruler"><div class="x-ruler__band"></div><button class="x-ruler__h" role="slider" aria-label="尺子左端 A（天）">A</button><button class="x-ruler__h" role="slider" aria-label="尺子右端 B（天）">B</button></div></div></figure>
+          <div class="x-row"><button class="x-btn x-btn--go" id="lok">量好了</button><span class="x-read" id="lread" aria-live="polite"></span></div></div>
+          <div class="x-sub" id="quiz2"><h3>三道小题</h3></div>`;
+
+        /* 2 · A: growth-rate slider, linear vs log */
+        const gr = rest.querySelector("#gr"), seen = {}; let sc = "linear", ca = null;
+        const Td = (r) => Math.LN2 / Math.log(1 + r);
+        const dataA = (r) => ({ line: Array.from({ length: 61 }, (_, t) => ({ x: t, y: 10 * Math.pow(1 + r, t) })),
+          dots: Array.from({ length: Math.floor(60 / Td(r)) }, (_, k) => ({ x: (k + 1) * Td(r), y: 10 * Math.pow(2, k + 1) })) });
+        function readA() {
+          const p = +gr.value, r = p / 100, t = Td(r), end = big(10 * Math.pow(1 + r, 60));
+          rest.querySelector("#gv").textContent = p; gr.setAttribute("aria-valuetext", `每天 ${p}%`);
+          rest.querySelector("#gread").innerHTML = `翻倍天数 T = ln2 / ln(1 + ${r}) ≈ <b>${t.toFixed(1)}</b> 天 · 70 法则：70 / ${p} ≈ <b>${(70 / p).toFixed(1)}</b> 天 · 60 天后 ≈ <b>${end}</b> 例`;
+          rest.querySelector("#gchart").setAttribute("aria-label", `每天增长 ${p}%，约 ${t.toFixed(1)} 天翻一倍，60 天后约 ${end} 例`);
+        }
+        function mkA() {
+          if (ca) ca.destroy();
+          const d = dataA(+gr.value / 100), isLog = sc === "logarithmic";
+          ca = new Chart(rest.querySelector("#gchart"), {
+            type: "line",
+            data: { datasets: [{ label: "病例", data: d.line },
+              { label: "翻倍点", data: d.dots, showLine: false, pointRadius: 4, pointHoverRadius: 5, borderColor: "var(--chart-ink)", backgroundColor: "var(--chart-ink)" }] },
+            options: {
+              plugins: { legend: { display: false }, tooltip: { callbacks: { title: (i) => `第 ${+i[0].parsed.x.toFixed(1)} 天`, label: (c) => (c.datasetIndex ? "翻倍点 · " : "") + big(c.parsed.y) + " 例" } } },
+              scales: { x: { type: "linear", min: 0, max: 60, title: { display: true, text: "天" } },
+                y: { type: sc, ticks: { callback: (v) => (isLog ? (Math.abs(Math.log10(v) - Math.round(Math.log10(v))) < 1e-6 ? big(v) : null) : big(v)) } } },
+            },
+          });
+          readA();
+        }
+        const mark = () => {
+          seen[sc] = 1;
+          if (seen.linear && seen.logarithmic && !got.scales) { got.scales = 1; paint(); check(); say("两种坐标都看过了！线性坐标上曲线像一堵墙；对数坐标上它是直线，每翻一倍都往上走同样一段。"); }
+        };
+        gr.addEventListener("input", () => {
+          const d = dataA(+gr.value / 100); readA(); ca.data.datasets[0].data = d.line; ca.data.datasets[1].data = d.dots; ca.update();
+          Audio_.play("tick", 220 + +gr.value * 12); mark();
+        });
+        rest.querySelectorAll("[data-sc2]").forEach((b) => b.addEventListener("click", () => {
+          sc = b.dataset.sc2; Audio_.play("click");
+          rest.querySelectorAll("[data-sc2]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); mkA();
+          if (sc === "logarithmic" && !seen.logarithmic) say("对数坐标：纵轴每格 ×10。指数曲线变成直线，圆点间距一样——为什么？", "提示：log 把乘法变加法。");
+          mark();
+        }));
+
+        /* 3 · B: log ruler */
+        const OB = [10, 14, 20, 28, 40, 56, 80, 113, 160, 226], H = [1, 4]; let cb = null, lt = 0;
+        const box = rest.querySelector("#lchart").parentElement, band = box.querySelector(".x-ruler__band"), hs = box.querySelectorAll(".x-ruler__h");
+        function place() {
+          if (!cb || !cb.chartArea) return;
+          const a = cb.chartArea, X = (v) => cb.scales.x.getPixelForValue(v), lo = Math.min(...H), hi = Math.max(...H);
+          Object.assign(band.style, { left: X(lo) + "px", width: X(hi) - X(lo) + "px", top: a.top + "px", height: a.bottom - a.top + "px" });
+          hs.forEach((h, i) => { h.style.left = X(H[i]) + "px"; h.style.top = a.top + 24 + i * 44 + "px"; h.setAttribute("aria-valuenow", H[i]); h.setAttribute("aria-valuetext", `第 ${H[i].toFixed(1)} 天`); });
+          rest.querySelector("#lread").innerHTML = `尺子：第 ${lo.toFixed(1)} 天 → 第 ${hi.toFixed(1)} 天 · 跨度 <b>${(hi - lo).toFixed(1)}</b> 天`;
+        }
+        function mkB() {
+          if (cb) cb.destroy();
+          cb = new Chart(rest.querySelector("#lchart"), {
+            type: "line",
+            data: { datasets: [{ label: "病例", data: OB.map((y, x) => ({ x, y })), pointRadius: 3 }] },
+            options: {
+              plugins: { legend: { display: false }, tooltip: { callbacks: { title: (i) => `第 ${i[0].parsed.x} 天`, label: (c) => `${c.parsed.y} 例` } } },
+              scales: { x: { type: "linear", min: 0, max: 9, ticks: { stepSize: 1 }, title: { display: true, text: "天" } },
+                y: { type: "logarithmic", min: 8, max: 300, afterBuildTicks: (ax) => { ax.ticks = [10, 20, 40, 80, 160].map((value) => ({ value })); }, ticks: { callback: (v) => v } } },
+            },
+            plugins: [{ id: "x-ruler", afterRender: place }],
+          });
+        }
+        hs.forEach((h, i) => {
+          const setV = (v) => { H[i] = Math.round(Math.max(0, Math.min(9, v)) * 10) / 10; place(); };
+          h.setAttribute("aria-valuemin", 0); h.setAttribute("aria-valuemax", 9);
+          h.addEventListener("pointerdown", (e) => { h.setPointerCapture(e.pointerId); Audio_.play("click"); });
+          h.addEventListener("pointermove", (e) => { if (h.hasPointerCapture(e.pointerId)) setV(cb.scales.x.getValueForPixel(e.clientX - box.getBoundingClientRect().left)); });
+          h.addEventListener("keydown", (e) => { const k = { ArrowLeft: -0.1, ArrowDown: -0.1, ArrowRight: 0.1, ArrowUp: 0.1 }[e.key]; if (k) { e.preventDefault(); setV(H[i] + k); } });
+        });
+        rest.querySelector("#lok").addEventListener("click", () => {
+          const s = Math.abs(H[1] - H[0]);
+          if (Math.abs(s - 2) <= 0.3) {
+            Audio_.play("correct"); say(`量得好！跨度 ${s.toFixed(1)} 天：每 2 天翻一倍，10 → 20 → 40 → 80 → 160。对数坐标上每个 ×2 都是同样高的一格。`);
+            if (!got.ruler) { got.ruler = 1; paint(); check(); }
+          } else {
+            lt++; Audio_.play("wrong");
+            say(lt >= 2 ? "提示：把 A 放在病例 = 20 的第 2 天，B 放在病例 = 40 的那天。纵轴上 10、20、40、80 的间距一样。"
+              : `跨度 ${s.toFixed(1)} 天时，病例${s > 2 ? "翻了不止一倍" : "还没翻倍"}。看纵轴：从 20 涨到 40 要几天？`, lt >= 2 ? "" : "再试一次。");
+          }
+        });
+
+        /* 4 · quiz */
+        const Q = [
+          { q: "增长率 5%/天，翻倍约需几天？", o: ["5", "10", "14", "20"], a: 2,
+            nudge: "试试 70 法则：70 除以什么？", hint: "提示：70 / 5 = 14；精确值 ln2 / ln1.05 ≈ 14.2。也可以把滑块拖到 5% 看看。",
+            ok: "对，约 14 天：70 / 5 = 14。增长率减半，翻倍时间就翻倍。" },
+          { q: "log₁₀1000 = ?", o: ["2", "3", "10", "100"], a: 1,
+            nudge: "10 自乘几次等于 1000？", hint: "提示：10¹ = 10，10² = 100，10³ = 1000。log₁₀ 问的就是这个指数。",
+            ok: "对，10³ = 1000，所以 log₁₀1000 = 3。对数就是「几次方」。" },
+          { q: "对数坐标上的一条直线代表什么增长？", o: ["指数增长", "线性增长", "不增长"], a: 0,
+            nudge: "对数坐标上，往上走同样一段，数值是加了同样多，还是乘了同样多？", hint: "提示：回到 A，把坐标切到「对数坐标」，看指数曲线变成了什么形状。",
+            ok: "对，指数增长。每天乘同一个数，取 log 后就是每天加同一个数，画出来就是直线。" },
+        ];
+        const qs = Q.map(() => ({ tries: 0, solved: false, first: false })), quiz = rest.querySelector("#quiz2");
+        Q.forEach((item, qi) => {
+          const bx = el("div", "x-sub", `<p>${qi + 1}. ${item.q}</p>`), opts = el("div", "x-opts");
+          item.o.forEach((txt, oi) => {
+            const b = el("button", "x-opt x-qopt"); b.textContent = txt; opts.append(b);
+            b.addEventListener("click", () => {
+              const s = qs[qi]; if (s.solved) return;
+              if (oi === item.a) {
+                s.solved = true; s.first = s.tries === 0; b.classList.add("good");
+                opts.querySelectorAll("button").forEach((x) => (x.disabled = true));
+                Audio_.play("correct"); say("✓ " + item.ok, s.first ? "一次答对。" : "答出来了；一次答对才算满星。");
+                got.quiz = qs.filter((x) => x.solved).length >= 2 ? 1 : 0; paint(); check();
+              } else {
+                s.tries++; b.classList.add("bad"); b.disabled = true; Audio_.play("wrong");
+                opts.classList.remove("x-flash"); void opts.offsetWidth; opts.classList.add("x-flash");
+                say(s.tries >= 2 ? item.hint : item.nudge, s.tries >= 2 ? "" : "再想想，答错两次我就给提示。");
+              }
+            });
+          });
+          bx.append(opts); quiz.append(bx);
+        });
+
+        /* 5 · clear */
+        let awarded = 0, card = null;
+        function check() {
+          if (!(got.scales && got.ruler && got.quiz)) return;
+          const right = qs.filter((x) => x.first).length, stars = right === 3 ? 3 : right === 2 ? 2 : 1;
+          if (stars <= awarded) return;
+          const first = !awarded; done(stars, first ? 40 + 20 * stars : 20 * (stars - awarded)); awarded = stars;
+          if (first) { award("log"); light(["m04", "a14"]); say("对数尺手，任务完成！你学会了：看翻倍时间，比看病例数更早知道疫情有多快。", "第 3 关「人群里的网络」已解锁。"); }
+          const nc = endCard(stars, "对数尺手上任！", [
+            ["翻倍时间 T = ln2 / ln(1 + r) ≈ 70 / r%", "每天增长 10% 约 7 天翻倍，5% 约 14 天。"],
+            ["log 把乘法变加法", "log(a×b) = log a + log b；log₁₀1000 = 3。"],
+            ["对数坐标上的直线 = 指数增长", "虚构疫情在对数尺上是直线，每 2 天翻一倍。"],
+          ], "m04 指数模型 · a14 对数");
+          card ? card.replaceWith(nc) : root.append(nc); card = nc;
+          renderSky(); renderFinal();
+        }
+      } });
+      /* ===== LEVEL 3 · 人群里的网络 ===== */
+      LEVELS.push({ id: 3, title: "人群里的网络", init(root, done) {
+        /* fixed seeded layout: 40 people, hubs 0/1/2 (degree 9/10/9), everyone else degree 1–3 */
+        const POS = "100,85 300,85 200,225 148,85 134,114 100,126 66,114 52,85 66,56 100,44 134,56 158,134 42,134 42,36 158,36 345,100 319,123 282,123 256,101 255,70 281,47 318,47 344,69 332,149 225,112 268,21 375,58 235,253 201,266 167,254 152,226 165,197 199,184 233,196 248,224 201,295 122,248 151,169 247,168 278,245".split(" ").map((p) => p.split(",").map(Number));
+        const EDG = "0-1 0-3 0-4 0-5 0-6 0-7 0-8 0-9 0-10 1-2 1-15 1-16 1-17 1-18 1-19 1-20 1-21 1-22 2-27 2-28 2-29 2-30 2-31 2-32 2-33 2-34 3-4 4-11 5-6 6-12 8-13 9-10 10-14 11-37 15-16 16-23 17-18 18-24 19-20 20-25 21-22 22-26 27-28 28-35 29-30 30-36 31-32 31-37 33-34 33-38 34-39".split(" ").map((e) => e.split("-").map(Number));
+        const NN = POS.length, ADJ = POS.map(() => []); EDG.forEach(([a, b]) => { ADJ[a].push(b); ADJ[b].push(a); });
+        const DEG = ADJ.map((a) => a.length), P0 = 4;
+        const rng = (a) => () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+        /* each step: every infected node infects each healthy neighbour with p = 0.5; recovers after 2 steps */
+        function sim(p0, vac, seed) {
+          const r = rng(seed), st = Array(NN).fill(0), age = Array(NN).fill(0);
+          vac.forEach((v) => (st[v] = 3)); st[p0] = 1;
+          const frames = [st.slice()], cur = [1]; let tot = 1;
+          while (st.includes(1) && frames.length < 60) {
+            const nw = [];
+            for (let u = 0; u < NN; u++) if (st[u] === 1) for (const v of ADJ[u]) if (st[v] === 0 && !nw.includes(v) && r() < 0.5) nw.push(v);
+            for (let u = 0; u < NN; u++) if (st[u] === 1 && ++age[u] >= 2) st[u] = 2;
+            nw.forEach((v) => (st[v] = 1)); tot += nw.length; frames.push(st.slice()); cur.push(st.filter((x) => x === 1).length);
+          }
+          return { frames, cur, tot };
+        }
+        function makeNet(host, label, onTap) {
+          const rad = (i) => 4 + DEG[i] * 0.6;
+          host.innerHTML = `<svg viewBox="25 6 370 304" role="group" aria-label="${label}">${EDG.map(([a, b]) => `<line x1="${POS[a][0]}" y1="${POS[a][1]}" x2="${POS[b][0]}" y2="${POS[b][1]}"/>`).join("")}
+            ${POS.map(([x, y], i) => `<g class="n" role="button" tabindex="0" data-i="${i}" aria-label="${i} 号，度 ${DEG[i]}"><title>${i} 号 · 度 ${DEG[i]}</title><circle class="t" cx="${x}" cy="${y}" r="14"/><circle class="d" cx="${x}" cy="${y}" r="${rad(i)}"/><text x="${x}" y="${y}"></text><text x="${x}" y="${y - rad(i) - 8}"></text></g>`).join("")}</svg>`;
+          const gs = [...host.querySelectorAll(".n")];
+          gs.forEach((g, i) => {
+            g.addEventListener("click", () => onTap(i));
+            g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onTap(i); } });
+          });
+          return { host, paint(st, p) {
+            gs.forEach((g, i) => {
+              g.setAttribute("class", "n " + "SIRV"[st[i]] + (i === p ? " P" : ""));
+              const [t1, t2] = g.querySelectorAll("text"); t1.textContent = st[i] === 3 ? "🛡" : ""; t2.textContent = i === p ? "0号" : "";
+              g.setAttribute("aria-label", `${i} 号，度 ${DEG[i]}，${["健康", "感染中", "已康复", "已接种"][st[i]]}${i === p ? "，零号病人" : ""}`);
+            });
+          } };
+        }
+        function play(net, r, p, onFrame, onEnd) {
+          let k = 0;
+          const tick = () => {
+            if (!net.host.isConnected) return;
+            net.paint(r.frames[k], p); onFrame(k); if (k) Audio_.play("tick", 300 + r.cur[k] * 40);
+            if (++k < r.frames.length) setTimeout(tick, reduced() ? 120 : 520); else onEnd();
+          };
+          tick();
+        }
+
+        const got = { start: 0, vax: 0, quiz: 0 };
+        const T = [["start", "分别从枢纽和边缘人开始传播", "枢纽：度 8 以上的大圆点；边缘人：度 1"], ["vax", "5 支疫苗把平均感染压到 ≤ 8 人", "B · 接种，跑 3 次取平均"], ["quiz", "至少答对 2 道题", "连错两次，刺猬博士给提示"]];
+        const say = guide(root, "这张图是一个 40 人的小镇：每个点是一个人，每条线是一次密切接触。连在一个人身上的线有几条，他的「度」就是几，也就是朋友数。", "A · 点任意一个人，让他当零号病人。");
+        const tasks = el("ul", "checklist"); root.append(tasks);
+        const paint = () => (tasks.innerHTML = taskList(T, got)); paint();
+        const rest = el("div", "x-sub"); root.append(rest);
+        const key = `<p class="x-row"><span class="pill">点 = 人</span><span class="pill">线 = 接触</span><span class="pill">度 = 朋友数</span>
+          <span class="pill"><i class="x-key"></i>健康</span><span class="pill"><i class="x-key" style="background:var(--fill-system-red);border-color:var(--fill-system-red)"></i>感染中</span>
+          <span class="pill"><i class="x-key" style="background:var(--fill-tertiary)"></i>已康复</span><span class="pill">🛡 已接种</span></p>`;
+        rest.innerHTML = `<div class="x-sub"><h3>A · 零号病人</h3>${key}
+          <p class="fineprint">每一步，每个病人把病传给每个邻居的概率是 0.5；生病 2 步后康复，不再传染。圆点越大，度越大。</p>
+          <div class="x-net" id="netA"></div><p class="x-read" id="aread" aria-live="polite">点一个人开始。</p>
+          <figure class="chart"><figcaption class="chart__cap">每一步同时在生病的人数<small>本次与上次对比；横轴 = 第几步，纵轴 = 人</small></figcaption>
+            <div class="chart__canvas"><canvas id="ncurve" role="img" aria-label="每一步感染中的人数曲线"></canvas></div></figure></div>
+          <div class="x-sub"><h3>B · 接种</h3><p class="fineprint">零号病人固定是 4 号。点人接种（再点一次取消），打了疫苗的人不会被感染。然后让疫情爆发 3 次，平均感染人数（含零号）要 ≤ 8。</p>
+          <div class="x-row"><span class="x-meter">🛡 剩余 <b id="vleft">5</b>/5</span><button class="x-btn x-btn--go" id="vrun">爆发 3 次 ▶</button><button class="x-btn" id="vclr">清空疫苗</button></div>
+          <div class="x-net" id="netB"></div><p class="x-read" id="bread" aria-live="polite"></p></div>
+          <div class="x-sub"><h3>C · 群体免疫阈值</h3>
+          <div class="x-row"><span class="x-meter">R₀ = <b id="r0v">3</b></span>
+            <input class="x-range" id="r0" type="range" min="1" max="18" step="0.5" value="3" aria-label="R₀：每个病人平均传给几人" aria-valuetext="R₀ = 3" />
+            <button class="x-btn" data-r0="3">R₀ = 3</button><button class="x-btn" data-r0="15">麻疹 R₀ ≈ 15</button></div>
+          <div class="x-hbar" role="img" id="hbar"><i></i></div>
+          <p class="x-read" id="cread" aria-live="polite"></p></div>
+          <div class="x-sub" id="quiz3"><h3>三道小题</h3></div>`;
+
+        /* A · patient zero */
+        const tried = {}; let busy = false, runN = 0, last = null;
+        const cv = rest.querySelector("#ncurve");
+        const chart = new Chart(cv, {
+          type: "line", data: { labels: [], datasets: [] },
+          options: { scales: { x: { title: { display: true, text: "第几步" } }, y: { min: 0, ticks: { stepSize: 2 } } },
+            plugins: { tooltip: { callbacks: { title: (i) => `第 ${i[0].label} 步`, label: (c) => `${c.dataset.label}：${c.raw} 人感染中` } } } },
+        });
+        const netA = makeNet(rest.querySelector("#netA"), "40 人接触网络，点一个人当零号病人", (i) => {
+          if (busy) return; busy = true; runN++; Audio_.play("click");
+          const r = sim(i, [], 100 + runN), name = `${i} 号（度 ${DEG[i]}）`;
+          const prev = last; last = { cur: r.cur, name };
+          const n = Math.max(r.cur.length, prev ? prev.cur.length : 0);
+          chart.data.labels = Array.from({ length: n }, (_, k) => String(k));
+          chart.data.datasets = [{ label: "本次 · " + name, data: [] }].concat(prev ? [{ label: "上次 · " + prev.name, data: prev.cur }] : []);
+          chart.update();
+          play(netA, r, i, (k) => { chart.data.datasets[0].data = r.cur.slice(0, k + 1); chart.update("none"); }, () => {
+            busy = false;
+            const pk = Math.max(...r.cur), at = r.cur.indexOf(pk);
+            rest.querySelector("#aread").innerHTML = `从 ${name} 开始：共 <b>${r.tot}</b> 人被感染，第 ${at} 步达到高峰 <b>${pk}</b> 人同时生病，${r.cur.length - 1} 步后结束。`;
+            cv.setAttribute("aria-label", `从 ${name} 开始，共 ${r.tot} 人被感染，第 ${at} 步高峰 ${pk} 人`);
+            const kind = DEG[i] >= 8 ? "hub" : DEG[i] === 1 ? "leaf" : "mid", fresh = !tried[kind]; tried[kind] = 1;
+            if (tried.hub && tried.leaf && !got.start) {
+              got.start = 1; paint(); check();
+              say("为什么从枢纽开始传得更快？他有 9–10 个朋友，每条线传染概率 0.5，第一步平均就能传出 4–5 人；边缘人只有 1 条线，病毒得先挤过这一条，运气好就直接断了。", "度大的人就是「超级传播者」。下面 B：5 支疫苗，你打算给谁？");
+            } else if (kind === "hub") say("从枢纽开始，第一步就倒下一大片，曲线又快又高。为什么从他开始传得更快？", tried.leaf ? "" : "提示：数数他身上连着几条线。再点一个只连 1 条线的边缘人比比。");
+            else if (kind === "leaf") say(r.tot === 1 ? "这次他一个人都没传染就康复了：他只有 1 条线，这条线没传过去，链就断了。" : `边缘人只连着 1 个人，病毒得先挤过这一条线。这次共 ${r.tot} 人被感染。`, tried.hub ? "" : "再点一个大圆点（枢纽）比比曲线。");
+            else if (fresh) say(`${i} 号的度是 ${DEG[i]}。试试度最大的枢纽（大圆点）和只连 1 条线的边缘人，对比两条曲线。`);
+          });
+        });
+        netA.paint(Array(NN).fill(0), -1);
+
+        /* B · vaccinate */
+        const vac = new Set(); let bt = 0;
+        const base = () => { const s = Array(NN).fill(0); vac.forEach((v) => (s[v] = 3)); s[P0] = 1; return s; };
+        const netB = makeNet(rest.querySelector("#netB"), "接种网络，零号病人是 4 号，点人接种", (i) => {
+          if (busy) return;
+          if (i === P0) { Audio_.play("wrong"); say("4 号已经生病了，疫苗来不及。保护他身边的人试试？"); return; }
+          if (vac.has(i)) vac.delete(i);
+          else if (vac.size >= 5) { Audio_.play("wrong"); toast("疫苗只有 5 支：先取消一支"); return; }
+          else vac.add(i);
+          Audio_.play("pop", 400 + vac.size * 80); rest.querySelector("#vleft").textContent = 5 - vac.size; netB.paint(base(), P0);
+        });
+        netB.paint(base(), P0);
+        rest.querySelector("#vclr").addEventListener("click", () => { if (busy) return; vac.clear(); Audio_.play("click"); rest.querySelector("#vleft").textContent = 5; netB.paint(base(), P0); });
+        rest.querySelector("#vrun").addEventListener("click", () => {
+          if (busy) return; busy = true; Audio_.play("click");
+          const res = [], bread = rest.querySelector("#bread");
+          const go = (j) => {
+            const r = sim(P0, [...vac], 13 + j);
+            play(netB, r, P0, () => (bread.innerHTML = `第 ${j + 1} 次爆发中… ${res.map((v, k) => `第 ${k + 1} 次 ${v} 人`).join(" · ")}`), () => {
+              res.push(r.tot);
+              if (j < 2) return setTimeout(() => go(j + 1), reduced() ? 200 : 700);
+              busy = false;
+              const avg = res.reduce((a, b) => a + b, 0) / 3, hubs = [0, 1, 2].filter((h) => vac.has(h)).length;
+              bread.innerHTML = `${res.map((v, k) => `第 ${k + 1} 次 ${v} 人`).join(" · ")} · 平均 <b>${+avg.toFixed(1)}</b> 人（目标 ≤ 8）`;
+              setTimeout(() => { if (!busy && netB.host.isConnected) netB.paint(base(), P0); }, 1500);
+              if (avg <= 8) {
+                Audio_.play("correct");
+                say(`守住了！平均只有 ${+avg.toFixed(1)} 人。${hubs >= 2 ? "你给枢纽打了疫苗，病毒没了「高速路」，只能在小角落里打转。" : "试试只给枢纽打，看看能不能更少？"}`);
+                if (!got.vax) { got.vax = 1; paint(); check(); }
+              } else {
+                bt++; Audio_.play("wrong");
+                say(bt >= 2 ? "提示：接种枢纽。把疫苗给度最大的 3 个人（最大的圆点），一针就切断 9–10 条传播路线。" : `平均 ${+avg.toFixed(1)} 人，还超过 8。病毒从 4 号出发，最常经过哪几个人传开？`, bt >= 2 ? "" : "调整疫苗，再爆发一次。");
+              }
+            });
+          };
+          go(0);
+        });
+
+        /* C · herd immunity threshold */
+        const r0 = rest.querySelector("#r0"), seenC = {};
+        function readC() {
+          const R = +r0.value, th = 1 - 1 / R, pct = Math.round(th * 100);
+          rest.querySelector("#r0v").textContent = R; r0.setAttribute("aria-valuetext", "R₀ = " + R);
+          rest.querySelector("#hbar i").style.width = pct + "%";
+          rest.querySelector("#hbar").setAttribute("aria-label", `需要免疫的比例 ${pct}%`);
+          rest.querySelector("#cread").innerHTML = `需要免疫的比例 = 1 − 1/R₀ = 1 − 1/${R} ≈ <b>${pct}%</b>`;
+          if (R >= 15 && !seenC[15]) { seenC[15] = 1; say("麻疹 R₀ ≈ 15：要 93% 的人有免疫，病毒才传不起来。所以麻疹疫苗的接种率必须非常高。"); }
+          else if (R === 1 && !seenC[1]) { seenC[1] = 1; say("R₀ = 1 时阈值是 0%：每个病人本来就只传 1 人，不会爆发。为什么 R₀ 越大，要免疫的人越多？"); }
+        }
+        r0.addEventListener("input", () => { readC(); Audio_.play("tick", 240 + +r0.value * 40); });
+        rest.querySelectorAll("[data-r0]").forEach((b) => b.addEventListener("click", () => {
+          r0.value = b.dataset.r0; readC(); Audio_.play("click");
+          if (b.dataset.r0 === "3") say("R₀ = 3：1 − 1/3 ≈ 67%。三个人里有两个免疫，每个病人平均只能再传给 1 人，刚好压到分水岭。");
+        }));
+        readC();
+
+        /* quiz */
+        const Q = [
+          { q: "R₀ = 4 时，群体免疫阈值是多少？", o: ["25%", "50%", "75%", "80%"], a: 2,
+            nudge: "阈值 = 1 − 1/R₀。1/4 是多少？", hint: "提示：1/4 = 25%，1 − 25% = 75%。把 C 的滑块拖到 4 验证。",
+            ok: "对，1 − 1/4 = 75%：4 个人里 3 个免疫，每个病人平均只能再传给 1 人。" },
+          { q: "R₀ = 2 呢？", o: ["25%", "50%", "67%", "100%"], a: 1,
+            nudge: "还是 1 − 1/R₀。1/2 是多少？", hint: "提示：1 − 1/2 = 1 − 50% = 50%。",
+            ok: "对，1 − 1/2 = 50%。R₀ 越小，需要免疫的人越少。" },
+          { q: "只有 5 支疫苗：随机给 5 个人打，还是给 5 个枢纽打？", o: ["随机 5 人", "5 个枢纽", "效果一样"], a: 1,
+            nudge: "病毒最常经过哪种人传开？回看 A 里的曲线。", hint: "提示：在 B 里分别试试随机点 5 人和点最大的圆点，比较平均感染人数。",
+            ok: "对，枢纽。一个枢纽连着 9–10 条线，打一针就切断这么多传播路线；随机打多半打到只有 1–2 条线的人。" },
+        ];
+        const qs = Q.map(() => ({ tries: 0, solved: false, first: false })), quiz = rest.querySelector("#quiz3");
+        Q.forEach((item, qi) => {
+          const bx = el("div", "x-sub", `<p>${qi + 1}. ${item.q}</p>`), opts = el("div", "x-opts");
+          item.o.forEach((txt, oi) => {
+            const b = el("button", "x-opt x-qopt"); b.textContent = txt; opts.append(b);
+            b.addEventListener("click", () => {
+              const s = qs[qi]; if (s.solved) return;
+              if (oi === item.a) {
+                s.solved = true; s.first = s.tries === 0; b.classList.add("good");
+                opts.querySelectorAll("button").forEach((x) => (x.disabled = true));
+                Audio_.play("correct"); say("✓ " + item.ok, s.first ? "一次答对。" : "答出来了；一次答对才算满星。");
+                got.quiz = qs.filter((x) => x.solved).length >= 2 ? 1 : 0; paint(); check();
+              } else {
+                s.tries++; b.classList.add("bad"); b.disabled = true; Audio_.play("wrong");
+                opts.classList.remove("x-flash"); void opts.offsetWidth; opts.classList.add("x-flash");
+                say(s.tries >= 2 ? item.hint : item.nudge, s.tries >= 2 ? "" : "再想想，答错两次我就给提示。");
+              }
+            });
+          });
+          bx.append(opts); quiz.append(bx);
+        });
+
+        /* clear */
+        let awarded = 0, card = null;
+        function check() {
+          if (!(got.start && got.vax && got.quiz)) return;
+          const right = qs.filter((x) => x.first).length, stars = right === 3 ? 3 : right === 2 ? 2 : 1;
+          if (stars <= awarded) return;
+          const first = !awarded; done(stars, first ? 40 + 20 * stars : 20 * (stars - awarded)); awarded = stars;
+          if (first) { award("net"); light(["d07", "d08"]); say("网络守卫，任务完成！你发现了：传播靠的是网络里的少数枢纽，保护好他们，整张网就安全了。", "第 4 关「三个水桶 SIR」已解锁。"); }
+          const nc = endCard(stars, "网络守卫上任！", [
+            ["图 = 点 + 边；度", "点 = 人，边 = 接触；度 = 连在一个点上的边数。这个小镇 40 人，3 个枢纽度 9–10。"],
+            ["超级传播者", "少数枢纽连着大多数线：从枢纽开始传得又快又广；先给枢纽接种，传播网就碎了。"],
+            ["群体免疫阈值 1 − 1/R₀", "R₀ = 3 要 67%，麻疹 R₀ ≈ 15 要 93%。"],
+          ], "d07 图论初步 · d08 树与网络");
+          card ? card.replaceWith(nc) : root.append(nc); card = nc;
+          renderSky(); renderFinal();
+        }
+      } });
+      /* ===== LEVEL 4 · 三个水桶 SIR ===== */
+      LEVELS.push({ id: 4, title: "三个水桶 SIR", init(root, done) {
+        const N = 1000, D = 160, C = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)"];
+        const got = { full: 0, a: 0, b: 0, c: 0, quiz: 0 };
+        const T = [["full", "跑完一次 160 天", "「跑完 160 天」或逐日推进到第 160 天"], ["a", "A · 先预测，再验证 R₀ < 1", "试试 β = 0.08、γ = 0.1"],
+          ["b", "B · R₀ > 1，但感染高峰 < 100 人", "跑完 160 天才算"], ["c", "C · 最终康复人数 vs 1 − 1/R₀", "加分项：R₀ > 1 跑完一次"], ["quiz", "至少答对 2 道题", "连错两次，刺猬博士给提示"]];
+        const say = guide(root, "把 1000 人想成三桶水：S 易感、I 感染、R 康复。一开始 999 人在 S，1 人在 I。两根管子把水从 S 送到 I、从 I 送到 R：管子每天流多少，就是「变化率」。", "先点几次「逐日推进 ▶」，看第 1 天流过去多少。");
+        const tasks = el("ul", "checklist"); root.append(tasks);
+        const paint = () => (tasks.innerHTML = taskList(T, got)); paint();
+        const rest = el("div", "x-sub"); root.append(rest);
+        const bk = (k, i, n) => `<div class="x-bk"><div class="x-bk__tank"><i class="x-bk__w" id="w${k}" style="background:${C[i]}"></i></div><span>${k} ${n}</span><b id="v${k}"></b></div>`;
+        const pipe = (k, i, f) => `<div class="x-pipe" id="p${k}" style="--pc:${C[i]}"><span>${f}</span><i></i><span id="f${k}"></span></div>`;
+        rest.innerHTML = `<div class="x-sub"><h3>模拟器</h3>
+          <div class="x-row"><span class="x-meter">β = <b id="bv"></b></span><input class="x-range" id="beta" type="range" min="0.05" max="1" step="0.01" value="0.4" aria-label="β：每天传染率" />
+            <span class="x-meter">γ = <b id="gv"></b></span><input class="x-range" id="gam" type="range" min="0.05" max="0.5" step="0.01" value="0.1" aria-label="γ：每天康复率" />
+            <span class="x-meter">R₀ = β/γ = <b id="r0v"></b></span></div>
+          <div class="x-tanks" role="img" id="tanks">${bk("S", 0, "易感")}${pipe("S", 1, "β·S·I/N")}${bk("I", 1, "感染")}${pipe("I", 2, "γ·I")}${bk("R", 2, "康复")}</div>
+          <div class="x-row"><span class="x-meter">第 <b id="day">0</b>/160 天</span><button class="x-btn" id="stepb">逐日推进 ▶</button><button class="x-btn x-btn--go" id="runb">跑完 160 天</button><button class="x-btn" id="rst">重来</button></div>
+          <p class="x-read" id="read" aria-live="polite"></p>
+          <figure class="chart"><figcaption class="chart__cap" id="cap"></figcaption>
+            <div class="chart__canvas chart__canvas--tall"><canvas id="sirc" role="img" aria-label="S、I、R 三条曲线"></canvas></div></figure></div>
+          <div class="x-sub"><h3>A · R₀ &lt; 1 会爆发吗？</h3><p class="fineprint">先预测，再把参数设成 β = 0.08、γ = 0.1（R₀ = 0.8），跑完 160 天验证。</p>
+            <div class="x-row"><button class="x-btn" data-p="1" aria-pressed="false">会爆发</button><button class="x-btn" data-p="0" aria-pressed="false">不会爆发</button><button class="x-btn" data-set="0.08,0.1">设成 β = 0.08、γ = 0.1</button></div></div>
+          <div class="x-sub"><h3>B · 压低高峰</h3><p class="fineprint">让 R₀ 保持大于 1，但感染桶 I 最高不到 100 人。该动哪个滑块？</p></div>
+          <div class="x-sub"><h3>C · 过冲</h3><p class="fineprint">S 降到 N/R₀ 以下（也就是 1 − 1/R₀ 的人已不再易感）时，I 开始减少。疫情会停在这条线上吗？R₀ &gt; 1 跑完 160 天，比比 R 桶和图上的虚线。</p><p class="x-read" id="cread" aria-live="polite"></p></div>
+          <div class="x-sub" id="quiz4"><h3>三道小题</h3></div>`;
+        const $$ = (s) => rest.querySelector(s), fmt = (v) => (v >= 100 ? String(Math.round(v)) : v.toFixed(1));
+        let b = 0.4, g = 0.1, S, I, R, day, pk, timer = null, pred = null, bt = 0, firstStep = true;
+        const chart = new Chart($$("#sirc"), {
+          type: "line",
+          data: { datasets: ["S 易感", "I 感染", "R 康复"].map((l, k) => ({ label: l, data: [], borderColor: C[k], backgroundColor: C[k] }))
+            .concat([{ label: "", data: [], borderColor: "var(--chart-reference)", borderDash: [3, 4], borderWidth: 1, pointRadius: 0 }]) },
+          options: { scales: { x: { type: "linear", min: 0, max: D, title: { display: true, text: "天" } }, y: { min: 0, max: N } },
+            plugins: { tooltip: { callbacks: { title: (i) => `第 ${i[0].parsed.x} 天`, label: (c) => `${c.dataset.label}：${c.parsed.y.toFixed(1)} 人` } },
+              datalabels: { ...Hark.labels.points, display: (c) => c.datasetIndex === 1 && c.dataIndex === pk.d && day > pk.d, formatter: (v) => `峰值 第 ${pk.d} 天 · ${fmt(v.y)} 人` } } },
+        });
+        chart.data.datasets[1].pointRadius = (c) => (c.dataIndex === pk.d && day > pk.d ? 4 : 0);
+        const stop = () => { clearInterval(timer); timer = null; };
+        function reset() {
+          stop(); S = N - 1; I = 1; R = 0; day = 0; pk = { d: 0, v: 1 };
+          [S, I, R].forEach((v, k) => (chart.data.datasets[k].data = [{ x: 0, y: v }]));
+          const R0 = b / g, th = Math.round(N * (1 - 1 / R0)), ref = chart.data.datasets[3];
+          ref.label = R0 > 1 ? `1 − 1/R₀ = ${th} 人` : ""; ref.data = R0 > 1 ? [{ x: 0, y: th }, { x: D, y: th }] : [];
+          draw();
+        }
+        function step() {
+          if (day >= D) return;
+          const n = (b * S * I) / N, r = g * I; S -= n; I += n - r; R += r; day++;
+          if (I > pk.v) pk = { d: day, v: I };
+          [S, I, R].forEach((v, k) => chart.data.datasets[k].data.push({ x: day, y: v }));
+          if (day === D) finish();
+        }
+        function draw() {
+          const n = (b * S * I) / N, r = g * I, R0 = +(b / g).toFixed(2), live = day < D;
+          [["S", S], ["I", I], ["R", R]].forEach(([k, v]) => { $$("#w" + k).style.height = (v < 0.5 ? 0 : Math.max(1.5, (v / N) * 100)) + "%"; $$("#v" + k).textContent = fmt(v); });
+          $$("#fS").textContent = n.toFixed(2) + " 人/天"; $$("#fI").textContent = r.toFixed(2) + " 人/天";
+          $$("#pS").classList.toggle("is-on", live && n >= 0.05); $$("#pI").classList.toggle("is-on", live && r >= 0.05);
+          $$("#day").textContent = day; $$("#tanks").setAttribute("aria-label", `第 ${day} 天：S ${fmt(S)} 人，I ${fmt(I)} 人，R ${fmt(R)} 人`);
+          const peak = day > pk.d ? `感染高峰：第 ${pk.d} 天 ${fmt(pk.v)} 人。` : "";
+          $$("#read").innerHTML = `第 ${day} 天：S = <b>${fmt(S)}</b>，I = <b>${fmt(I)}</b>，R = <b>${fmt(R)}</b>。${live ? `明天 S→I 流 ${n.toFixed(2)} 人，I→R 流 ${r.toFixed(2)} 人，I ${n > r ? "还在涨" : "在减少"}。` : ""}${peak}`;
+          $$("#cap").innerHTML = `${peak || "S、I、R 三条曲线"}<small>β = ${b}，γ = ${g}，R₀ = ${R0}；N = 1000，起始 I = 1；横轴 = 天，纵轴 = 人</small>`;
+          $$("#sirc").setAttribute("aria-label", `S、I、R 曲线，第 ${day} 天。${peak}`);
+          $$("#stepb").disabled = $$("#runb").disabled = !live || !!timer;
+          chart.update("none");
+        }
+        function finish() {
+          const R0 = b / g, r0 = +R0.toFixed(2); got.full = 1;
+          if (R0 < 1) {
+            if (pred === null) say("没爆发！不过 A 要先预测再验证：在 A 里选「会」或「不会」，再跑一次。");
+            else {
+              got.a = 1;
+              say(`R₀ = ${r0} < 1：I 从第 1 天起就在变少，160 天里一共只有 ${fmt(R + I)} 人得过病。${pred ? "你预测会爆发，可" : "预测对了！"}每个病人平均传不到 1 人，链条自己断了。`, "为什么？流进 I 的 βSI/N 一开始就比流出的 γI 小。");
+            }
+          } else if (R0 > 1) {
+            const th = Math.round(N * (1 - 1 / R0)), newC = !got.c; got.c = 1;
+            $$("#cread").innerHTML = `R₀ = ${r0}：阈值 1 − 1/R₀ = <b>${th}</b> 人，第 160 天 R = <b>${fmt(R)}</b> 人，${R > th ? `多冲出 ${Math.round(R - th)} 人（过冲）。` : "还没冲过阈值：疫情还没走完，再加天数就会冲过去。"}`;
+            if (pk.v < 100) { if (!got.b) Audio_.play("correct"); got.b = 1; say(`R₀ = ${r0} > 1，可高峰只有 ${fmt(pk.v)} 人（第 ${pk.d} 天）。β 小了，水从 S 流向 I 变慢，同时病人照样康复，感染桶始终装不满。`, "这就是「压平曲线」的数学。"); }
+            else if (newC) say(`高峰在第 ${pk.d} 天，${fmt(pk.v)} 人同时生病。到第 160 天 R 桶有 ${fmt(R)} 人，比虚线 1 − 1/R₀ = ${th} 人多：越过阈值时 I 桶里还有一大群病人，他们还会继续传染，这就是「过冲」。`, "B：R₀ 仍大于 1，你能把高峰压到 100 人以下吗？");
+            else { bt++; say(`高峰 ${fmt(pk.v)} 人，还没压到 100 以下。${bt >= 2 ? "提示：试试 β = 0.15、γ = 0.1，R₀ = 1.5。" : "哪个滑块管「水从 S 流进 I 有多快」？"}`); }
+          }
+          paint(); check();
+        }
+        const beta = $$("#beta"), gam = $$("#gam");
+        function readP() {
+          b = +beta.value; g = +gam.value; $$("#bv").textContent = b.toFixed(2); $$("#gv").textContent = g.toFixed(2); $$("#r0v").textContent = +(b / g).toFixed(2);
+          beta.setAttribute("aria-valuetext", "β = " + b); gam.setAttribute("aria-valuetext", "γ = " + g); reset();
+        }
+        [beta, gam].forEach((s) => s.addEventListener("input", () => { readP(); Audio_.play("tick", 300 + (b / g) * 60); }));
+        $$("#stepb").addEventListener("click", () => {
+          if (timer) return; step(); draw(); Audio_.play("tick", 300 + I);
+          if (firstStep && day === 1) { firstStep = false; say(`第 1 天 S→I 流了 β·S·I/N = ${b} × 999 × 1 / 1000 ≈ ${((b * 999) / N).toFixed(2)} 人，I→R 流了 γ·I = ${g} 人。I 大了，S→I 就流得更快。`, "接着推进，或者直接「跑完 160 天」。"); }
+        });
+        $$("#runb").addEventListener("click", () => {
+          if (timer || day >= D) return; Audio_.play("click");
+          if (reduced()) { while (day < D) step(); draw(); return; }
+          timer = setInterval(() => {
+            if (!rest.isConnected) return stop();
+            step(); step(); if (day % 10 === 0) Audio_.play("tick", 300 + I * 0.8);
+            if (day >= D) stop(); draw();
+          }, 40);
+          draw();
+        });
+        $$("#rst").addEventListener("click", () => { Audio_.play("click"); reset(); });
+        rest.querySelectorAll("[data-p]").forEach((x) => x.addEventListener("click", () => {
+          pred = +x.dataset.p; Audio_.play("click");
+          rest.querySelectorAll("[data-p]").forEach((y) => y.setAttribute("aria-pressed", String(y === x)));
+          say(`记下了：你猜${pred ? "会" : "不会"}爆发。现在点「设成 β = 0.08、γ = 0.1」，再「跑完 160 天」。`);
+        }));
+        $$("[data-set]").addEventListener("click", () => { [beta.value, gam.value] = $$("[data-set]").dataset.set.split(","); Audio_.play("click"); readP(); });
+        readP();
+
+        /* quiz */
+        const Q = [
+          { q: "β = 0.3，γ = 0.1 时，R₀ = ？", o: ["0.03", "0.4", "3", "30"], a: 2,
+            nudge: "R₀ = β/γ。", hint: "提示：0.3 ÷ 0.1 = 3。把滑块调过去，看 R₀ 读数。",
+            ok: "对，R₀ = 0.3/0.1 = 3：每个病人在病程里平均传给 3 人。" },
+          { q: "第一天 S = 999，I = 1，β = 0.4，N = 1000，新增感染约多少？", o: ["约 0.4 人", "约 4 人", "约 40 人", "约 400 人"], a: 0,
+            nudge: "新增感染 = β·S·I/N，把四个数代进去。", hint: "提示：0.4 × 999 × 1 / 1000 = 0.3996。逐日推进一天，看 S→I 管子上的数。",
+            ok: "对，0.4 × 999 × 1/1000 ≈ 0.4 人。开头流得很慢，但 I 越大流得越快。" },
+          { q: "感染桶 I 什么时候开始减少？", o: ["S 流光了才减少", "当 βS/N < γ，即 S/N < 1/R₀", "I 超过 500 人以后", "第 80 天"], a: 1,
+            nudge: "I 每天的变化 = 流进 βSI/N − 流出 γI。什么时候流出比流进多？", hint: "提示：βSI/N < γI，两边约掉 I，得 βS/N < γ，也就是 S/N < γ/β = 1/R₀。",
+            ok: "对！βSI/N < γI ⇔ S/N < 1/R₀。R₀ = 4 时，S 降到 250 人以下，I 就开始减少。" },
+        ];
+        const qs = Q.map(() => ({ tries: 0, solved: false, first: false })), quiz = $$("#quiz4");
+        Q.forEach((item, qi) => {
+          const bx = el("div", "x-sub", `<p>${qi + 1}. ${item.q}</p>`), opts = el("div", "x-opts");
+          item.o.forEach((txt, oi) => {
+            const bn = el("button", "x-opt x-qopt"); bn.textContent = txt; opts.append(bn);
+            bn.addEventListener("click", () => {
+              const s = qs[qi]; if (s.solved) return;
+              if (oi === item.a) {
+                s.solved = true; s.first = s.tries === 0; bn.classList.add("good");
+                opts.querySelectorAll("button").forEach((x) => (x.disabled = true));
+                Audio_.play("correct"); say("✓ " + item.ok, s.first ? "一次答对。" : "答出来了；一次答对才算满星。");
+                got.quiz = qs.filter((x) => x.solved).length >= 2 ? 1 : 0; paint(); check();
+              } else {
+                s.tries++; bn.classList.add("bad"); bn.disabled = true; Audio_.play("wrong");
+                opts.classList.remove("x-flash"); void opts.offsetWidth; opts.classList.add("x-flash");
+                say(s.tries >= 2 ? item.hint : item.nudge, s.tries >= 2 ? "" : "再想想，答错两次我就给提示。");
+              }
+            });
+          });
+          bx.append(opts); quiz.append(bx);
+        });
+
+        /* clear */
+        let awarded = 0, card = null;
+        function check() {
+          if (!(got.full && got.a && got.b && got.quiz)) return;
+          const right = qs.filter((x) => x.first).length, stars = right === 3 ? 3 : right === 2 ? 2 : 1;
+          if (stars <= awarded) return;
+          const first = !awarded; done(stars, first ? 40 + 20 * stars : 20 * (stars - awarded)); awarded = stars;
+          if (first) { award("model"); light(["c01", "c15", "m16"]); say("建模师，任务完成！三个水桶、两根管子、两个参数，就把一场疫情的起落算了出来。", "第 5 关「BOSS 压平曲线」已解锁。"); }
+          const nc = endCard(stars, "建模师上任！", [
+            ["变化率 = 每天流量", "dS/dt = −βSI/N，dI/dt = βSI/N − γI，dR/dt = γI：流进流出多少，桶里就变多少。"],
+            ["差分近似（欧拉法）", "把一天当一步：S′ = S − βSI/N，I′ = I + βSI/N − γI，R′ = R + γI。每按一次「逐日推进」就是一步。"],
+            ["R₀ = β/γ 与过冲", "S/N < 1/R₀ 时 I 开始减少，但最终感染会冲过 1 − 1/R₀：R₀ = 4 时阈值 750 人，第 160 天 R ≈ 985 人。"],
+            ["数学建模", "假设 → 方程 → 模拟 → 对照现实（Kermack & McKendrick, 1927）。也能用来预测谣言传播、产品扩散。"],
+          ], "c01 变化率 · c15 常微分方程 · m16 数学建模全流程");
+          card ? card.replaceWith(nc) : root.append(nc); card = nc;
+          renderSky(); renderFinal();
+        }
+      } });
+      /* ===== LEVEL 5 · BOSS 压平曲线 ===== */
+      LEVELS.push({ id: 5, title: "BOSS 压平曲线", init(root, done) {
+        const N = 1000, D = 300, BED = 150, BUD = 10, lv = { m: 0, q: 0, v: 0 };
+        const K = [["m", "😷 口罩", 2, "β × (1 − 0.15·级)：每次接触更难传染"], ["q", "🏠 隔离", 3, "γ + 0.05·级：病人更早离开传播"], ["v", "💉 疫苗", 3, "开始前把 15%·级 的 S 直接移到 R"]];
+        const cost = () => K.reduce((s, [k, , c]) => s + c * lv[k], 0), r1 = (x) => Math.round(x);
+        function sim(L) {
+          const b = 0.5 * (1 - 0.15 * L.m), g = 0.1 + 0.05 * L.q, S0 = (N - 1) * (1 - 0.15 * L.v), ys = [{ x: 0, y: 1 }];
+          let S = S0, I = 1, R = N - 1 - S0, pk = { d: 0, v: 1 };
+          for (let d = 1; d <= D; d++) { const n = (b * S * I) / N, r = g * I; S -= n; I += n - r; R += r; ys.push({ x: d, y: I }); if (I > pk.v) pk = { d, v: I }; }
+          return { r0: ((b / g) * S0) / N, ys, pk, inf: R - (N - 1 - S0) };
+        }
+        const base = sim(lv);
+        const say = guide(root, `小镇 1000 人，医院只有 150 张床。不干预时感染峰值约 ${r1(base.pk.v)} 人，医院会被挤爆。你只有 10 枚预算币。`, "给三张干预卡加减等级，再点「模拟 300 天」。峰值低于 150 张床就过关。");
+        const rest = el("div", "x-sub"); root.append(rest);
+        rest.innerHTML = `<div class="x-row"><span class="x-meter">🪙 剩余 <b id="left"></b>/10 币</span><span class="x-meter">R₀_eff = β′/γ′ × S₀/N = <b id="r0e"></b></span></div>
+          <div class="x-hbar" id="bud" role="meter" aria-valuemin="0" aria-valuemax="10" aria-label="已用预算"><i></i></div>
+          <div class="x-cards">${K.map(([k, n, c, d]) => `<div class="x-card"><h3>${n} <span class="pill">${c} 币/级</span></h3><p class="fineprint">${d}</p>
+            <div class="x-row x-yn"><button class="x-btn" data-k="${k}" data-d="-1" aria-label="${n} 降一级">−</button><span class="x-meter">第 <b id="l${k}">0</b>/3 级</span><button class="x-btn" data-k="${k}" data-d="1" aria-label="${n} 升一级">+</button></div></div>`).join("")}</div>
+          <div class="x-row"><button class="x-btn x-btn--go" id="go">模拟 300 天</button><span class="x-meter">第 <b id="day">0</b>/300 天</span></div>
+          <div class="stats"><div class="stat"><span class="stat__fig" id="pv">—</span><span class="stat__label">感染峰值 I（人）</span></div>
+            <div class="stat"><span class="stat__fig" id="pd">—</span><span class="stat__label">峰值日（第几天）</span></div>
+            <div class="stat"><span class="stat__fig" id="tr">—</span><span class="stat__label">累计感染 R(300)，不含疫苗移入</span></div></div>
+          <figure class="chart"><figcaption class="chart__cap" id="cap">感染人数 I 与 150 张床<small>N = 1000，起始 I = 1；灰线为不干预；横轴 = 天，纵轴 = 同时生病的人</small></figcaption>
+            <div class="chart__canvas chart__canvas--tall"><canvas id="flc" role="img" aria-label="不干预时感染峰值约 ${r1(base.pk.v)} 人，远超 150 张床"></canvas></div></figure>`;
+        const $$ = (s) => rest.querySelector(s);
+        let fin = false, cur = null, timer = null, fails = 0, best = 0, card = null;
+        const chart = new Chart($$("#flc"), {
+          type: "line",
+          data: { datasets: [{ label: "不干预", data: base.ys, borderColor: "var(--chart-muted)", backgroundColor: "var(--chart-muted)" },
+            { label: "你的方案", data: [], borderColor: "var(--chart-ink)", backgroundColor: "var(--chart-ink)", pointRadius: (c) => (fin && c.dataIndex === cur.pk.d ? 4 : 0) },
+            { label: "床位 150", data: [{ x: 0, y: BED }, { x: D, y: BED }], borderColor: "var(--chart-bad)", borderDash: [3, 4], borderWidth: 1, pointRadius: 0 }] },
+          options: { scales: { x: { type: "linear", min: 0, max: D, title: { display: true, text: "天" } }, y: { min: 0, max: 550 } },
+            plugins: { tooltip: { callbacks: { title: (i) => `第 ${i[0].parsed.x} 天`, label: (c) => `${c.dataset.label}：${r1(c.parsed.y)} 人` } },
+              datalabels: { ...Hark.labels.points, display: (c) => fin && c.datasetIndex === 1 && c.dataIndex === cur.pk.d, formatter: (v) => `峰值 ${r1(v.y)} 人` } } },
+        });
+        function paint() {
+          const c = cost(), r = sim(lv), busy = !!timer;
+          $$("#left").textContent = BUD - c; $$("#r0e").textContent = r.r0.toFixed(2);
+          $$("#bud i").style.width = (c / BUD) * 100 + "%"; $$("#bud").setAttribute("aria-valuenow", c);
+          K.forEach(([k]) => ($$("#l" + k).textContent = lv[k]));
+          rest.querySelectorAll("[data-k]").forEach((x) => { const k = x.dataset.k, up = +x.dataset.d > 0, kc = K.find((y) => y[0] === k)[2];
+            x.disabled = busy || (up ? lv[k] >= 3 || c + kc > BUD : lv[k] <= 0); });
+          $$("#go").disabled = busy;
+        }
+        rest.querySelectorAll("[data-k]").forEach((x) => x.addEventListener("click", () => {
+          lv[x.dataset.k] += +x.dataset.d; Audio_.play("tick", 400 + cost() * 40); paint();
+        }));
+        $$("#go").addEventListener("click", () => {
+          if (timer) return; Audio_.play("click"); fin = false; cur = sim(lv);
+          const ds = chart.data.datasets[1]; ds.data = []; let d = 0, crossed = false;
+          const frame = (n) => {
+            for (const to = Math.min(D, d + n); d <= to; d++) { ds.data.push(cur.ys[d]); if (!crossed && cur.ys[d].y >= BED) { crossed = true; Audio_.play("siren"); } }
+            $$("#day").textContent = d - 1; chart.update("none");
+            if (d > D) { clearInterval(timer); timer = null; Audio_.swarm(false); end(); }
+          };
+          if (reduced()) return frame(D);
+          Audio_.swarm(true); timer = setInterval(() => (rest.isConnected ? frame(6) : (clearInterval(timer), Audio_.swarm(false))), 40); paint();
+        });
+        function end() {
+          const r = cur, pv = r1(r.pk.v); fin = true; chart.update("none"); paint();
+          $$("#pv").textContent = pv; $$("#pd").textContent = r.pk.d; $$("#tr").textContent = r1(r.inf);
+          const sum = `峰值第 ${r.pk.d} 天 ${pv} 人（不干预：第 ${base.pk.d} 天 ${r1(base.pk.v)} 人）`;
+          $$("#cap").innerHTML = `${sum}<small>方案：口罩 ${lv.m} 级 · 隔离 ${lv.q} 级 · 疫苗 ${lv.v} 级，花 ${cost()} 币；灰线为不干预；横轴 = 天，纵轴 = 同时生病的人</small>`;
+          $$("#flc").setAttribute("aria-label", `${sum}，${r.pk.v < BED ? "低于" : "超过"} 150 张床`);
+          if (r.pk.v >= BED) {
+            fails++;
+            return say(`医院挤爆了：峰值 ${pv} 人，超过 150 张床 ${pv - BED} 人。`, fails >= 3 ? "提示：试试把口罩加满，再看隔离。" : fails === 2 ? "提示：哪个手段每一枚币最划算？" : "调整干预卡，再模拟一次。");
+          }
+          const stars = r.pk.v < 120 ? 3 : r.pk.v < 135 ? 2 : 1;
+          say(`守住了！峰值 ${pv} 人 < 150 张床，而且推迟到第 ${r.pk.d} 天。${stars < 3 ? `峰值低于 ${stars === 1 ? 135 : 120} 人能拿 ${stars + 1} 星。` : "三星方案！"}`, "累计感染不一定少很多，但病床一直够用。");
+          if (stars <= best) return Audio_.play("fanfare");
+          const first = !best; done(stars, first ? 60 + 20 * stars : 20 * (stars - best)); best = stars;
+          const nc = endCard(stars, "曲线压平者！", [
+            ["压平曲线不一定减少总感染", `累计感染 ${r1(base.inf)} → ${r1(r.inf)} 人；但峰值从第 ${base.pk.d} 天 ${r1(base.pk.v)} 人，推迟、降低到第 ${r.pk.d} 天 ${pv} 人，医院不崩溃。`],
+            ["有限预算优化", "10 枚币怎么分：比的是每一枚币能把峰值压下多少，而不是哪张卡单看最强。"],
+            ["建模 = 假设 → 方程 → 模拟 → 检验 → 改进", "假设均匀混合、参数固定 → SIR 差分方程 → 跑 300 天 → 峰值对照 150 张床 → 换方案再跑。"],
+          ], "m16 数学建模全流程 · m04 指数模型");
+          card ? card.replaceWith(nc) : root.append(nc); card = nc;
+          if (first) { award("flat"); light(["m16", "m04"]); renderSky(); renderFinal(); setTimeout(() => $("#sky").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" }), 1600); }
+          else renderFinal();
+        }
+        paint();
+      } });
+      /* ---------- boot ---------- */
+      renderBar(); renderBadges(); renderMap(); renderSky(); renderFinal();
+      const once = () => { Audio_.unlock(); window.removeEventListener("pointerdown", once); window.removeEventListener("keydown", once); };
+      window.addEventListener("pointerdown", once); window.addEventListener("keydown", once);
+      $("#notes-btn").addEventListener("click", () => toggleNotes($("#notes").hidden));
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#notes").hidden) toggleNotes(false); });
+      $("#sfx").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.setSfx(on); if (on) Audio_.play("click");
+      });
+      $("#music").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.unlock(); Audio_.setMusic(on); Audio_.play("click");
+      });
+      $("#vol").addEventListener("input", (e) => Audio_.setVol(+e.target.value / 100));
+      $("#track").addEventListener("change", (e) => Audio_.setTrack(+e.target.value));
+    </script>
+      <script src="../ma.js"></script>
+  </body>
+</html>
