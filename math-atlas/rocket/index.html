@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>星图任务 · 火箭怎样飞上月球？</title>
+    <meta name="description" content="星图任务：用速度、极限、导数、积分和火箭方程理解火箭怎样飞上月球。难度 ★★★★☆ 进阶，适合高一~高三。" />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <link rel="stylesheet" href="hark-charts.css" />
+    <style>
+      /* x- classes: the game shell. Tokens only (plus the mission accent). */
+      :root { --x-accent: #7fb0ff; --x-on-accent: #0b1f3a; }
+      .x-bar {
+        position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 30;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+        padding: 8px 12px; border-radius: var(--r-pill);
+        background: var(--mat-agent); -webkit-backdrop-filter: var(--hark-blur); backdrop-filter: var(--hark-blur);
+        border: 1px solid var(--stroke-primary); box-shadow: var(--hark-shadow);
+      }
+      .x-brand { font: var(--type-label); margin-right: auto; white-space: nowrap; }
+      .x-meter { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-primary); }
+      .x-meter b { font-weight: var(--weight-bold); }
+      .x-toggle {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap);
+        padding: 4px 12px; border: 1px solid var(--stroke-primary); border-radius: var(--r-pill);
+        background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-tag); cursor: pointer;
+      }
+      .x-toggle[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-vol { width: 86px; accent-color: var(--fill-primary); }
+      .x-map { position: relative; padding: 8px 0 4px; }
+      .x-path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      .x-nodes { position: relative; display: grid; gap: 10px; }
+      .x-node {
+        display: grid; grid-template-columns: 46px 1fr auto; align-items: center; gap: 12px;
+        width: min(100%, 560px); padding: 10px 14px; border-radius: var(--r-l);
+        border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-body); text-align: left; cursor: pointer;
+        transition: box-shadow var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
+      }
+      .x-node:nth-child(even) { justify-self: end; }
+      .x-node:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--hark-shadow); }
+      .x-node:disabled { opacity: 0.55; cursor: not-allowed; }
+      .x-node__num { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-tertiary); font: var(--type-heading); }
+      .x-node.is-open .x-node__num { background: var(--x-accent); color: var(--x-on-accent); }
+      .x-node__t { display: block; font: var(--type-body-strong); }
+      .x-node__s { display: block; font: var(--type-caption); color: var(--text-secondary); }
+      .x-stars { font-size: 15px; letter-spacing: 1px; white-space: nowrap; }
+      .x-panel { padding: 16px; border-radius: var(--r-l); background: var(--fill-tertiary); display: grid; gap: 14px; }
+      .x-cat { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: start; }
+      .x-cat__face { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-primary-on); font-size: 24px; border: 1px solid var(--stroke-primary); }
+      .x-bubble { position: relative; padding: 10px 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-primary); font: var(--type-body); }
+      .x-bubble small { display: block; margin-top: 4px; font: var(--type-caption); color: var(--text-secondary); }
+      .x-opts { display: flex; flex-wrap: wrap; gap: 10px; }
+      .x-opt { padding: 8px; border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); cursor: pointer; display: grid; gap: 6px; justify-items: center; font: var(--type-tag); color: var(--text-primary); }
+      .x-opt svg { width: 48px; height: 48px; display: block; }
+      .x-opt.is-sel { box-shadow: inset 0 0 0 2px var(--fill-primary); }
+      .x-opt.good { border-color: var(--fill-system-green); }
+      .x-opt.bad { border-color: var(--fill-system-red); }
+      .x-qopt { text-align: left; font: var(--type-small); min-height: var(--tap); padding: 8px 14px; }
+      .x-qopt.good { border-color: var(--fill-system-green); box-shadow: inset 0 0 0 1px var(--fill-system-green); }
+      .x-qopt.bad { border-color: var(--fill-system-red); opacity: 0.6; }
+      .x-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+      .x-btn {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 6px 16px;
+        border-radius: var(--r-s); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-label); cursor: pointer;
+      }
+      .x-btn--go, .x-btn[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .x-yn .x-btn { min-width: var(--tap); justify-content: center; padding: 6px 10px; }
+      .x-toasts { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; display: grid; gap: 8px; justify-items: center; pointer-events: none; }
+      .x-toast { padding: 10px 16px; border-radius: var(--r-pill); background: var(--fill-primary); color: var(--text-primary-on); font: var(--type-tag); box-shadow: var(--hark-shadow); animation: x-pop 320ms var(--ease-out); }
+      @keyframes x-pop { from { opacity: 0; transform: translateY(10px); } }
+      .x-shelf { display: flex; flex-wrap: wrap; gap: 8px; }
+      .x-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-secondary); }
+      .x-badge.got { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-badge.lit { background: var(--x-accent); color: var(--x-on-accent); box-shadow: 0 0 14px var(--x-accent); }
+      .x-end { display: grid; gap: 12px; padding: 16px; border-radius: var(--r-l); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); }
+      .x-end h3 { font: var(--type-heading); }
+      .x-end dl { display: grid; gap: 8px; margin: 0; }
+      .x-end dt { font: var(--type-body-strong); }
+      .x-end dd { margin: 0; font: var(--type-small); color: var(--text-secondary); }
+      .x-starid { font: var(--weight-regular) 12px/1.3 "Geist Mono", monospace; }
+      .x-flash { animation: x-shake 320ms var(--ease-out); }
+      @keyframes x-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+      #stage [hidden], .x-drawer[hidden] { display: none; }
+      .x-drawer {
+        position: fixed; top: 0; right: 0; bottom: 0; z-index: 70; width: min(380px, 92vw); padding: 16px;
+        display: grid; align-content: start; gap: 12px; overflow-y: auto;
+        background: var(--mat-regular); -webkit-backdrop-filter: var(--hark-blur); backdrop-filter: var(--hark-blur);
+        border-left: 1px solid var(--stroke-primary); box-shadow: var(--hark-shadow);
+      }
+      .x-tree { border-radius: var(--r-m); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); overflow: hidden; }
+      .x-tree canvas { display: block; width: 100%; height: 340px; }
+      .x-read { font: var(--type-body); }
+      .x-range { width: min(260px, 100%); min-height: var(--tap); accent-color: var(--x-accent); }
+      .x-sub { display: grid; gap: 10px; }
+      .x-sub > h3 { font: var(--type-body-strong); }
+      .x-ruler { position: absolute; inset: 0; pointer-events: none; }
+      .x-ruler__band { position: absolute; border-left: 2px solid var(--x-accent); border-right: 2px solid var(--x-accent); background: color-mix(in srgb, var(--x-accent) 18%, transparent); }
+      .x-ruler__h { position: absolute; width: var(--tap); height: var(--tap); transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid var(--fill-primary-on); background: var(--x-accent); color: var(--x-on-accent); font: var(--type-tag); pointer-events: auto; touch-action: none; cursor: ew-resize; box-shadow: var(--hark-shadow); }
+      .x-net { border-radius: var(--r-m); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); overflow: hidden; }
+      .x-net svg { display: block; width: 100%; height: auto; max-height: 440px; touch-action: manipulation; }
+      .x-net line { stroke: var(--stroke-primary); stroke-width: 1; }
+      .x-net .n { cursor: pointer; outline: none; }
+      .x-net .n .t { fill: transparent; }
+      .x-net .n .d { fill: var(--fill-primary-on); stroke: var(--text-secondary); stroke-width: 1.5; transition: fill var(--dur-quick) var(--ease-out); }
+      .x-net .n.I .d { fill: var(--fill-system-red); stroke: var(--fill-system-red); }
+      .x-net .n.R .d { fill: var(--fill-tertiary); stroke: var(--stroke-primary); }
+      .x-net .n.V .d { fill: var(--x-accent); stroke: var(--x-on-accent); }
+      .x-net .n.P .d, .x-net .n:focus-visible .d { stroke: var(--text-primary); stroke-width: 3; }
+      .x-net text { font: var(--weight-bold) 12px var(--sans); fill: var(--text-primary); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+      .x-key { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; border: 1px solid var(--text-secondary); }
+      .x-hbar { height: 28px; border-radius: var(--r-pill); background: var(--fill-tertiary); overflow: hidden; border: 1px solid var(--stroke-secondary); }
+      .x-hbar > i { display: block; height: 100%; background: var(--x-accent); transition: width var(--dur-quick) var(--ease-out); }
+      .x-tanks { display: grid; grid-template-columns: 1fr minmax(48px, 1.2fr) 1fr minmax(48px, 1.2fr) 1fr; align-items: end; gap: 6px; padding: 14px; border-radius: var(--r-m); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); }
+      .x-bk { display: grid; justify-items: center; gap: 6px; text-align: center; font: var(--type-tag); }
+      .x-bk__tank { position: relative; width: min(100%, 96px); height: 130px; border: 2px solid var(--stroke-primary); border-top: 0; border-radius: 0 0 var(--r-s) var(--r-s); overflow: hidden; background: var(--fill-tertiary); }
+      .x-bk__w { position: absolute; left: 0; right: 0; bottom: 0; transition: height var(--dur-quick) var(--ease-out); }
+      .x-bk b { font: var(--type-label); }
+      .x-pipe { display: grid; gap: 4px; margin-bottom: 52px; text-align: center; font: var(--type-caption); color: var(--text-secondary); }
+      .x-pipe i { display: block; height: 12px; border-radius: var(--r-pill); background: var(--fill-tertiary); border: 1px solid var(--stroke-secondary); }
+      .x-pipe.is-on i { background-image: repeating-linear-gradient(90deg, var(--pc) 0 8px, transparent 8px 16px); animation: x-flow 0.7s linear infinite; }
+      @keyframes x-flow { to { background-position: 16px 0; } }
+      .x-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+      .x-card { display: grid; gap: 8px; align-content: start; padding: 14px; border-radius: var(--r-m); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); }
+      .x-card h3 { font: var(--type-body-strong); }
+      @media (prefers-reduced-motion: reduce) { .x-toast, .x-flash, .x-pipe.is-on i { animation: none; } }
+      @media (max-width: 599px) { .x-brand { width: 100%; } .x-vol { width: 70px; } .x-tree canvas { height: 300px; } }
+    </style>
+      <link rel="stylesheet" href="../ma.css" />
+  </head>
+  <body>
+    <div class="page" id="top">
+      <main class="main">
+        <div class="x-bar" role="toolbar" aria-label="游戏状态">
+          <span class="x-brand">星图任务 · 火箭怎样飞上月球？</span>
+          <span class="x-meter">XP <b id="xp">0</b></span>
+          <span class="x-meter">⭐ <b id="stars">0</b>/15</span>
+          <button class="x-toggle" id="notes-btn" aria-expanded="false" aria-controls="notes">📒 笔记</button>
+          <button class="x-toggle" id="sfx" aria-pressed="true">🔊 音效</button>
+          <button class="x-toggle" id="music" aria-pressed="false">🎵 专注音乐</button>
+          <select class="x-toggle" id="track" aria-label="选择曲目">
+            <option value="-1" selected>随机轮播</option><option value="0">星空 Lo-fi</option><option value="1">雨夜书房</option><option value="2">晨光</option>
+          </select>
+          <span class="x-meter" id="nowplaying">正在播放:—</span>
+          <input class="x-vol" id="vol" type="range" min="0" max="100" value="30" aria-label="音乐音量" />
+        </div>
+
+        <section class="section" id="map" data-nav="星图">
+          <div class="head">
+            <p class="head__eyebrow">五关任务</p>
+            <h2>从速度表开始，算出一条飞向月球的轨道。</h2>
+            <p class="head__sub">每关得 1–3 颗星，拿到 1 颗星就解锁下一关。</p>
+          </div>
+          <p><span class="pill">难度 ★★★★☆ 进阶</span> <span class="pill">适合 高一~高三</span> <span class="pill">前置 一次函数、乘方</span></p>
+          <div class="x-map">
+            <svg class="x-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M18 8 L82 30 L18 52 L82 74 L18 94" fill="none" style="stroke: var(--stroke-primary)" stroke-width="0.6" stroke-dasharray="2 2" />
+            </svg>
+            <div class="x-nodes" id="nodes"></div>
+          </div>
+        </section>
+
+        <section class="section" id="play" data-nav="关卡">
+          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">狐狸船长在星图上等你。</p></div>
+          <div id="stage" class="x-panel">
+            <div class="x-cat">
+              <div class="x-cat__face">🦊</div>
+              <div class="x-bubble">点开第 1 关「速度表读多少」。火箭越飞越快，某一刻的速度到底怎么量？先猜，再算。<small>狐狸船长只问问题，不直接给答案；连错两次才给提示。</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="shelf" data-nav="徽章">
+          <div class="head"><h2>徽章架</h2><p class="head__sub">做到了才会亮起来。</p></div>
+          <div class="x-shelf" id="badges"></div>
+        </section>
+
+        <section class="section" id="sky" data-nav="星空">
+          <div class="head"><h2>十二颗星，等你点亮。</h2><p class="head__sub">每颗星是一个数学知识点，过关时点亮。</p></div>
+          <div id="final" hidden></div>
+          <div class="x-shelf" id="skystars"></div>
+        </section>
+      </main>
+      <footer class="foot">
+        <p>本任务用简化模型（平面、只算地球与月球引力）理解规律，数据为近似值。</p>
+        <nav aria-label="回到各部分" data-auto></nav>
+        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"><span class="hark-mark"></span><span>built by hark</span></a>
+      </footer>
+    </div>
+    <aside class="x-drawer" id="notes" aria-label="笔记" hidden></aside>
+    <div class="x-toasts" id="toasts" aria-live="polite"></div>
+    <script src="hark.js"></script>
+    <script src="chart.js"></script>
+    <script src="datalabels.js"></script>
+    <script src="hark-charts.js"></script>
+    <script>
+      /* ---------- audio ---------- */
+      const Audio_ = (() => {
+        let ctx = null, master = null, musicGain = null, sfxOn = true, musicOn = false, vol = 0.3, started = false;
+        function ensure() {
+          if (ctx) return ctx;
+          const AC = window.AudioContext || window.webkitAudioContext;
+          ctx = new AC();
+          master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+          musicGain = ctx.createGain(); musicGain.gain.value = 0; musicGain.connect(master);
+          return ctx;
+        }
+        function unlock() { ensure(); if (ctx.state === "suspended") ctx.resume(); started = true; }
+        function env(node, t, a, d, peak) {
+          const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(peak, t + a);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+          node.connect(g); g.connect(master); return g;
+        }
+        function tone(freq, t, dur, type, peak) {
+          const o = ctx.createOscillator(); o.type = type || "sine"; o.frequency.setValueAtTime(freq, t);
+          env(o, t, 0.012, dur, peak || 0.18); o.start(t); o.stop(t + dur + 0.08); return o;
+        }
+        const sfx = {
+          click() { const t = ctx.currentTime; tone(880, t, 0.05, "triangle", 0.08); },
+          correct() { const t = ctx.currentTime; [523.25, 659.25, 783.99].forEach((f, i) => tone(f, t + i * 0.07, 0.22, "sine", 0.14)); },
+          wrong() { const t = ctx.currentTime; tone(150, t, 0.22, "sine", 0.16); tone(110, t + 0.06, 0.26, "sine", 0.12); },
+          star() { const t = ctx.currentTime; [784, 1047, 1319, 1568, 2093].forEach((f, i) => tone(f, t + i * 0.055, 0.3, "triangle", 0.09)); },
+          fanfare() { const t = ctx.currentTime; [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.3]].forEach(([f, d]) => { tone(f, t + d, 0.4, "sawtooth", 0.07); tone(f * 2, t + d, 0.3, "sine", 0.05); }); },
+          /* 狐狸船长: a short, soft squeak */
+          squeak() {
+            const t = ctx.currentTime, o = ctx.createOscillator(); o.type = "sine";
+            o.frequency.setValueAtTime(1300, t); o.frequency.exponentialRampToValueAtTime(1900, t + 0.05); o.frequency.exponentialRampToValueAtTime(1500, t + 0.11);
+            env(o, t, 0.01, 0.11, 0.05); o.start(t); o.stop(t + 0.16);
+          },
+          bonk() {
+            const t = ctx.currentTime, o = ctx.createOscillator();
+            o.type = "square"; o.frequency.setValueAtTime(180, t); o.frequency.exponentialRampToValueAtTime(60, t + 0.18);
+            env(o, t, 0.005, 0.22, 0.12); o.start(t); o.stop(t + 0.3); tone(95, t + 0.02, 0.2, "sine", 0.18);
+          },
+          siren() {
+            const t = ctx.currentTime, o = ctx.createOscillator(); o.type = "square"; o.frequency.setValueAtTime(660, t);
+            [0.3, 0.6, 0.9, 1.2].forEach((d, i) => o.frequency.linearRampToValueAtTime(i % 2 ? 660 : 990, t + d));
+            env(o, t, 0.02, 1.2, 0.05); o.start(t); o.stop(t + 1.3);
+          },
+          tick(f) { tone(f || 600, ctx.currentTime, 0.06, "sine", 0.07); },
+          pop(f) { const t = ctx.currentTime; tone(f || 200 + Math.random() * 500, t, 0.18, "triangle", 0.05); },
+          chord() { const t = ctx.currentTime; [523.25, 659.25, 783.99, 987.77, 1318.5].forEach((f, i) => tone(f, t + i * 0.012, 0.55, "triangle", 0.06)); },
+        };
+        /* tension bed for later BOSS rounds */
+        let sw = null;
+        function swarm(on) {
+          if (on) {
+            if (sw || !sfxOn || !started) return; ensure();
+            const t = ctx.currentTime, g = ctx.createGain(), f = ctx.createBiquadFilter(), nodes = [];
+            f.type = "bandpass"; f.frequency.value = 650; f.Q.value = 1.2;
+            g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.028, t + 1.5); f.connect(g); g.connect(master);
+            [196, 203, 247, 252].forEach((fr, i) => {
+              const o = ctx.createOscillator(), l = ctx.createOscillator(), lg = ctx.createGain();
+              o.type = "sawtooth"; o.frequency.value = fr; l.frequency.value = 5 + i * 1.7; lg.gain.value = 9;
+              l.connect(lg); lg.connect(o.frequency); o.connect(f); o.start(t); l.start(t); nodes.push(o, l);
+            });
+            sw = { g, nodes };
+          } else if (sw) {
+            const t = ctx.currentTime, s = sw; sw = null;
+            s.g.gain.cancelScheduledValues(t); s.g.gain.setValueAtTime(s.g.gain.value, t); s.g.gain.linearRampToValueAtTime(0.0001, t + 0.8);
+            setTimeout(() => { s.nodes.forEach((n) => n.stop()); s.g.disconnect(); }, 900);
+          }
+        }
+        function play(name, arg) { if (!sfxOn || !started) return; ensure(); if (ctx.state === "suspended") ctx.resume(); duckMusic(); (sfx[name] || sfx.click)(arg); }
+        /* ---------- 专注音乐: generative engine, lookahead scheduler (25ms tick, 0.1s ahead) ---------- */
+        const PENTA = [0, 2, 4, 7, 9];
+        const CH = { I: [0, 4, 7, 11], ii: [2, 5, 9, 12], iii: [4, 7, 11, 14], IV: [5, 9, 12, 16], V: [7, 11, 14, 17], vi: [9, 12, 16, 19] };
+        const P = (s) => s.split(" ").map((n) => CH[n]);
+        const TRACKS = [
+          { id: "lofi", name: "星空 Lo-fi", bpm: 72, swing: 0.2, key: 57, cb: 1, wet: 0.3, progs: [P("ii V I vi"), P("IV iii ii I"), P("vi IV I V")] },
+          { id: "rain", name: "雨夜书房", bpm: 60, swing: 0, key: 50, cb: 2, wet: 0.4, progs: [P("I iii vi IV"), P("vi ii V I"), P("IV I ii vi")] },
+          { id: "dawn", name: "晨光", bpm: 90, swing: 0.08, key: 60, cb: 1, wet: 0.25, progs: [P("I V vi IV"), P("IV I V vi"), P("I ii IV V")] },
+        ];
+        let comp = null, duck = null, bus = null, echo = null, noiseBuf = null, players = [], timer = null, offT = null, mode = -1;
+        const rnd = (n) => (Math.random() * n) | 0;
+        const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+        const newMotif = () => [0, 0, 0, 0].map(() => rnd(8));
+        function mutate(m) { const c = m.slice(); for (let i = 0, n = 1 + rnd(2); i < n; i++) { const j = rnd(4); c[j] = Math.max(0, Math.min(9, c[j] + [-2, -1, 1, 2][rnd(4)])); } return c; }
+        function graph() {
+          if (bus) return; ensure();
+          comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 4; comp.attack.value = 0.01; comp.release.value = 0.3;
+          duck = ctx.createGain(); bus = ctx.createGain(); echo = ctx.createDelay(1.5);
+          const fb = ctx.createGain(), lp = ctx.createBiquadFilter(); fb.gain.value = 0.32; lp.type = "lowpass"; lp.frequency.value = 1800;
+          echo.connect(lp); lp.connect(fb); fb.connect(echo); lp.connect(bus);
+          bus.connect(comp); comp.connect(duck); duck.connect(musicGain);
+          const len = ctx.sampleRate * 2; noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+          const d = noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        }
+        function note(p, m, t, dur, type, peak, a, wet) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = mtof(m);
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          o.connect(g); g.connect(p.out); if (wet) g.connect(p.wet); o.start(t); o.stop(t + dur + 0.05);
+        }
+        function hit(p, t, dur, peak, ftype, freq) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+          s.buffer = noiseBuf; f.type = ftype; f.frequency.value = freq;
+          g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(t, Math.random() * 1.5); s.stop(t + dur + 0.02);
+        }
+        function kick(p, t) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.2);
+          g.gain.setValueAtTime(0.28, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+          o.connect(g); g.connect(p.out); o.start(t); o.stop(t + 0.35); hit(p, t, 0.05, 0.05, "lowpass", 400);
+        }
+        function ep(p, ch, t, dur) {
+          const tr = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain(), env = ctx.createGain();
+          tr.gain.value = 0.75; lfo.frequency.value = 3.8; dep.gain.value = 0.22; lfo.connect(dep); dep.connect(tr.gain);
+          env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(1, t + 0.02); env.gain.exponentialRampToValueAtTime(0.35, t + 0.9); env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [["sine", 0.045], ["triangle", 0.01]].forEach(([ty, v]) => {
+            const o = ctx.createOscillator(), g = ctx.createGain(); o.type = ty; o.frequency.value = mtof(m); o.detune.value = rnd(7) - 3; g.gain.value = v;
+            o.connect(g); g.connect(tr); o.start(t); o.stop(t + dur + 0.05);
+          }));
+          tr.connect(env); env.connect(p.out); env.connect(p.wet); lfo.start(t); lfo.stop(t + dur + 0.05);
+        }
+        function pad(p, ch, t, dur, type, peak, lo, hi) {
+          const f = ctx.createBiquadFilter(), env = ctx.createGain(); f.type = "lowpass";
+          f.frequency.setValueAtTime(lo, t); f.frequency.linearRampToValueAtTime(hi, t + dur * 0.5); f.frequency.linearRampToValueAtTime(lo, t + dur);
+          env.gain.setValueAtTime(0.0001, t); env.gain.linearRampToValueAtTime(peak, t + dur * 0.35); env.gain.linearRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [-7, 7].forEach((dt) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = mtof(m); o.detune.value = dt; o.connect(f); o.start(t); o.stop(t + dur + 0.05); }));
+          f.connect(env); env.connect(p.out); env.connect(p.wet);
+        }
+        function rain(p) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain();
+          s.buffer = noiseBuf; s.loop = true; f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 0.5; g.gain.value = 0.05;
+          lfo.frequency.value = 0.07; dep.gain.value = 0.02; lfo.connect(dep); dep.connect(g.gain);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(); lfo.start(); p.nodes.push(s, lfo);
+        }
+        function section(p) {
+          let n; do n = rnd(3); while (n === p.prog); p.prog = n;
+          if (Math.random() < 0.25) p.key = p.t.key + [0, 2, -2, 5, -3][rnd(5)];
+          p.drums = Math.random() > 0.3;
+          if (Math.random() < 0.4) p.motif = newMotif();
+        }
+        function step(p, t) {
+          const T = p.t, s = p.step % 16, bar = (p.step / 16) | 0, beat = 60 / T.bpm;
+          if (s === 0) {
+            if (bar && bar % 8 === 0) section(p);
+            p.cur = bar % 4 === 2 ? mutate(p.motif) : bar % 4 === 0 ? p.motif : p.cur;
+          }
+          const ch = T.progs[p.prog][((bar / T.cb) | 0) % 4].map((x) => p.key + x);
+          const mel = (d) => p.key + 12 + PENTA[d % 5] + 12 * ((d / 5) | 0);
+          if (T.id === "lofi") {
+            if (s === 0) { ep(p, ch, t, beat * 4); note(p, ch[0] - 24, t, beat * 1.8, "sine", 0.16, 0.02); }
+            if (s === 10) note(p, ch[0] - 24, t, beat * 1.2, "sine", 0.12, 0.02);
+            if (p.drums) {
+              if (s === 0 || s === 10 || (s === 7 && Math.random() < 0.3)) kick(p, t);
+              if (s === 4 || s === 12) hit(p, t, 0.16, 0.07, "bandpass", 1800);
+              if (s % 2 === 0 || Math.random() < 0.15) hit(p, t, 0.04, s % 4 === 2 ? 0.03 : 0.018, "highpass", 7000);
+            }
+            if (bar % 2 === 1 && s % 4 === 0 && Math.random() > 0.28) note(p, mel(p.cur[s / 4]), t, beat * 1.3, "sine", 0.035, 0.01, true);
+          } else if (T.id === "rain") {
+            if (s === 0 && bar % 2 === 0) pad(p, ch, t, beat * 8 + 1, "sawtooth", 0.022, 280, 1300);
+            if (s % 8 === 0 && Math.random() < 0.45) { const m = mel(p.cur[(bar * 2 + s / 8) % 4]) - 12; note(p, m, t, 3.5, "triangle", 0.045, 0.005, true); note(p, m, t, 2.5, "sine", 0.03, 0.005); }
+          } else {
+            if (s === 0) pad(p, ch.map((m) => m + 12), t, beat * 4 + 0.6, "sine", 0.014, 2500, 5000);
+            if (s % 2 === 0 && Math.random() > 0.18) { const m = mel(p.cur[(s / 2) % 4] + (s >= 8 ? 1 : 0)); note(p, m, t, 0.55, "sine", 0.05, 0.004, true); note(p, m + 28, t, 0.08, "sine", 0.008, 0.002); }
+            if (p.drums) hit(p, t, 0.05, s % 2 ? 0.022 : 0.01, "highpass", 6000);
+          }
+        }
+        function sched() {
+          const now = ctx.currentTime;
+          players.forEach((p) => {
+            if (p.next < now - 0.05) p.next = now + 0.02; /* tab was throttled: skip, don't burst */
+            while (p.next < now + 0.1) { const sx = 60 / p.t.bpm / 4; step(p, p.next + (p.step % 2 ? p.t.swing * sx : 0)); p.step++; p.next += sx; }
+          });
+          const live = players.find((p) => !p.dead);
+          if (mode < 0 && live && now - live.born > 180) switchTo((live.i + 1 + rnd(2)) % 3);
+        }
+        function label(i) { const n = document.getElementById("nowplaying"); if (n) n.textContent = "正在播放:" + (i == null ? "—" : TRACKS[i].name); }
+        function kill(p) { p.nodes.forEach((n) => { try { n.stop(); } catch (e) {} }); p.out.disconnect(); p.wet.disconnect(); players = players.filter((x) => x !== p); }
+        function switchTo(i) {
+          const now = ctx.currentTime;
+          players.filter((p) => !p.dead).forEach((p) => {
+            p.dead = true; p.out.gain.cancelScheduledValues(now); p.out.gain.setValueAtTime(p.out.gain.value, now);
+            p.out.gain.linearRampToValueAtTime(0.0001, now + 2); setTimeout(() => kill(p), 2300);
+          });
+          const T = TRACKS[i], p = { t: T, i, step: 0, next: now + 0.1, born: now, key: T.key, prog: 0, drums: true, motif: newMotif(), out: ctx.createGain(), wet: ctx.createGain(), nodes: [] };
+          p.cur = p.motif; p.out.gain.setValueAtTime(0.0001, now); p.out.gain.linearRampToValueAtTime(1, now + 2);
+          p.out.connect(bus); p.wet.gain.value = T.wet; p.wet.connect(echo);
+          echo.delayTime.setTargetAtTime((60 / T.bpm) * 0.75, now, 0.5);
+          if (T.id === "rain") rain(p);
+          players.push(p); label(i);
+        }
+        function fadeTo(v) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(v, n + 2); }
+        function startMusic() {
+          graph(); if (ctx.state === "suspended") ctx.resume();
+          clearTimeout(offT); if (!timer) timer = setInterval(sched, 25);
+          if (!players.some((p) => !p.dead)) switchTo(mode < 0 ? rnd(3) : mode);
+          fadeTo(vol);
+        }
+        function stopMusic() {
+          if (!bus) return; fadeTo(0.0001);
+          offT = setTimeout(() => { clearInterval(timer); timer = null; players.slice().forEach(kill); label(null); }, 2100);
+        }
+        function setTrack(v) {
+          mode = v; if (!musicOn || !bus) return;
+          const live = players.find((p) => !p.dead);
+          if (mode >= 0 && (!live || live.i !== mode)) switchTo(mode); else if (live) live.born = ctx.currentTime;
+        }
+        function duckMusic() {
+          if (!musicOn || !duck) return; const t = ctx.currentTime, g = duck.gain;
+          g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.45, t + 0.05);
+          g.setValueAtTime(0.45, t + 0.35); g.linearRampToValueAtTime(1, t + 1);
+        }
+        return {
+          unlock, play, swarm,
+          setSfx(v) { sfxOn = v; if (!v) swarm(false); }, isSfx: () => sfxOn,
+          setMusic(v) { musicOn = v; v ? startMusic() : stopMusic(); }, isMusic: () => musicOn,
+          setVol(v) { vol = v; if (ctx && timer && musicOn) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(vol, n + 0.3); } },
+          setTrack,
+        };
+      })();
+      /* ---------- state ---------- */
+      const State = { xp: 0, stars: 0, perLevel: {}, badges: {}, unlocked: 1, lit: {}, level: 0 };
+      const BADGES = [
+        { id: "speed", name: "测速员", hint: "完成第 1 关「速度表读多少」" },
+        { id: "limit", name: "极限猎手", hint: "完成第 2 关「无限逼近」" },
+        { id: "area", name: "面积魔术师", hint: "完成第 3 关「从速度回到路程」" },
+        { id: "fuel", name: "燃料工程师", hint: "完成第 4 关「火箭方程」" },
+        { id: "moon", name: "登月指挥官", hint: "完成第 5 关「BOSS 奔月」" },
+      ];
+      const LEVELS_META = [
+        { id: 1, title: "速度表读多少 ⏱️", sub: "平均速度与割线斜率" },
+        { id: 2, title: "无限逼近 🔍", sub: "极限与导数" },
+        { id: 3, title: "从速度回到路程 📐", sub: "积分与面积" },
+        { id: 4, title: "火箭方程 ⛽", sub: "e 与对数" },
+        { id: 5, title: "BOSS 奔月 🌕", sub: "BOSS 关 · 微分方程建模" },
+      ];
+      const STARS = [
+        ["c01", "变化率"], ["c02", "斜率"], ["c04", "函数极限与连续"], ["c05", "导数"], ["c06", "求导法则"], ["c08", "积分与面积"],
+        ["c09", "微积分基本定理"], ["c25", "e与自然增长"], ["a14", "对数"], ["c15", "常微分方程"], ["m11", "数值方法"], ["m12", "微分方程建模"],
+      ];
+      const NOTES = {
+        1: [
+          ["平均速度 = Δh ÷ Δt", "高度的变化除以时间的变化。h = 5t² 时，0–10 秒升高 500 m，平均 50 m/s。"],
+          ["割线斜率", "在 h–t 图上连两点，这条线的斜率就是这段时间的平均速度。"],
+          ["瞬时速度", "把时间窗缩小到贴着某一刻，割线变成切线，斜率就是那一刻的速度。h = 5t² 在第 10 秒是 100 m/s。"],
+          ["应用", "测速摄像头、心率、股价涨跌速度。"],
+        ],
+        2: [
+          ["极限", "Δt 取 1、0.1、0.01、0.001…，平均速度 10t + 5Δt 越来越接近 10t。这个「越来越接近的数」就是极限。"],
+          ["导数 h′(t)", "h′(t) = lim (h(t+Δt) − h(t)) / Δt（Δt → 0）。h = 5t² → v = h′ = 10t。"],
+          ["求导法则", "tⁿ 的导数是 n·tⁿ⁻¹；常数倍跟着走：5t² → 5·2t = 10t。"],
+          ["加速度", "速度的导数。v = 10t → a = 10 m/s²，差不多就是重力加速度 g ≈ 9.8 m/s²。"],
+          ["文献", "牛顿《自然哲学的数学原理》1687；莱布尼茨 1684 年发表微分法。"],
+        ],
+        3: [
+          ["面积 = 路程", "v–t 图下面的面积 = 速度 × 时间的累加 = 飞过的路程。"],
+          ["黎曼和", "把 0–T 切成 n 条，每条矩形面积 v(tᵢ)·Δt，加起来；n 越大越接近真实面积。"],
+          ["积分 ∫₀ᵀ v dt", "v = 10t 时 ∫₀ᵀ 10t dt = 5T²，正好回到第 1 关的 h = 5t²。"],
+          ["微积分基本定理", "求导和积分互为逆运算：h 求导得 v，v 积分回到 h。"],
+        ],
+        4: [
+          ["动量守恒", "火箭往后喷出一小块燃料 dm，自己往前快 Δv = vₑ·dm / m。越烧越轻，后面每一块推得越多。"],
+          ["火箭方程", "Δv = vₑ · ln(m₀ / m_f)（齐奥尔科夫斯基，1903）。vₑ 是喷气速度，m₀/m_f 是满载与空载质量比。"],
+          ["e 与 ln", "把燃料切成无穷多份，求和的极限就是自然对数 ln；ln 以 e ≈ 2.718 为底。"],
+          ["多级火箭", "扔掉空油箱，每一级的 Δv 相加。单级入轨约需 96% 是燃料，太难造。"],
+          ["数据说明", "入轨约需 9.4 km/s（含重力与空气损失），煤油发动机 vₑ ≈ 3 km/s，均为近似值。"],
+        ],
+        5: [
+          ["牛顿第二定律 + 万有引力", "a = −GM·r/|r|³，地球和月球的引力加在一起。位置的二阶导数 = 加速度：这就是微分方程。"],
+          ["数值方法", "电脑每次往前算 1 分钟：位置 += 速度×Δt，速度 += 加速度×Δt（欧拉法）。本关用更准的 RK4，思想相同。"],
+          ["时机 = 提前角", "月球每天绕地球走约 13°。飞 t 天到达，点火时月球要领先约 180° − 13°×t。"],
+          ["参考", "阿波罗 11 号奔月加速（TLI）约 3.1 km/s，飞行约 3 天（NASA 公开资料）。本关只算平面、两体引力，结果为近似。"],
+        ],
+      };
+
+      const $ = (s) => document.querySelector(s);
+      function toast(msg) {
+        const el = document.createElement("div"); el.className = "x-toast"; el.textContent = msg;
+        $("#toasts").appendChild(el); setTimeout(() => el.remove(), 3200);
+      }
+      function award(id) {
+        if (State.badges[id]) return;
+        State.badges[id] = true;
+        const b = BADGES.find((x) => x.id === id);
+        Audio_.play("star"); toast("🏅 获得徽章:" + b.name); renderBadges();
+      }
+      function light(ids) {
+        ids.forEach((i) => (State.lit[i] = true));
+        toast("✨ 星图点亮:" + ids.map((i) => i + " " + STARS.find((s) => s[0] === i)[1]).join(" · ")); renderSky();
+      }
+      function renderBadges() {
+        $("#badges").innerHTML = BADGES.map((b) =>
+          `<span class="x-badge ${State.badges[b.id] ? "got" : ""}">${State.badges[b.id] ? "🏅" : "🔒"} ${b.name}<small style="opacity:.75"> · ${b.hint}</small></span>`
+        ).join("");
+      }
+      function renderSky() {
+        $("#skystars").innerHTML = STARS.map(([id, n]) =>
+          `<span class="x-badge ${State.lit[id] ? "lit" : ""}">${State.lit[id] ? "★" : "☆"} <span class="x-starid">${id}</span> ${n}</span>`
+        ).join("");
+      }
+      function renderFinal() {
+        const done = LEVELS_META.filter((m) => State.perLevel[m.id]).length, f = $("#final");
+        if (!done) { f.hidden = true; return; }
+        const left = LEVELS_META.filter((m) => !getLevel(m.id)).map((m) => m.title);
+        const lit = STARS.filter((s) => State.lit[s[0]]).length;
+        f.hidden = false;
+        const all = done === LEVELS_META.length;
+        f.innerHTML = `<div class="x-end"><h3>${all ? "🎉 星图任务全部完成" : `星图进度 ${done}/${LEVELS_META.length} 关`}</h3>
+          <p>⭐ ${State.stars}/15 · 🏅 ${Object.keys(State.badges).length}/${BADGES.length} · XP ${State.xp} · 已点亮 ${lit}/${STARS.length} 颗星</p>
+          ${all ? `<div class="x-shelf">${LEVELS_META.map((m) => `<span class="x-badge got">${m.id} · ${m.title} ${starStr(State.perLevel[m.id])}</span>`).join("")}</div>
+          <div class="x-shelf">${BADGES.filter((b) => State.badges[b.id]).map((b) => `<span class="x-badge got">🏅 ${b.name}</span>`).join("")}</div>
+          <p class="fineprint">从平均速度、极限、导数、积分到火箭方程和轨道模拟：${lit === STARS.length ? "十二颗星全部点亮" : `已点亮 ${lit} 颗星`}。你用微积分一步步算出了奔月的轨道。</p>` : ""}
+          ${left.length ? `<p class="fineprint">即将开放:${left.join("、")}。全部通关后，下面 ${STARS.length} 颗星会全部点亮。</p>` : ""}</div>`;
+      }
+      function renderNotes() {
+        const id = State.level, list = NOTES[id], m = LEVELS_META[id - 1];
+        $("#notes").innerHTML = `<div class="x-row"><b style="font:var(--type-body-strong);margin-right:auto">📒 ${m ? `第 ${id} 关笔记` : "笔记"}</b><button class="x-btn" id="notes-x">关闭</button></div>
+          <div class="x-end">${list ? `<h3>${m.title}</h3><dl>${list.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join("")}</dl>` : "<p>打开一关后，这里会出现本关的公式。</p>"}</div>`;
+        $("#notes-x").addEventListener("click", () => toggleNotes(false));
+      }
+      function toggleNotes(on) {
+        $("#notes").hidden = !on; $("#notes-btn").setAttribute("aria-expanded", String(on));
+        if (on) { renderNotes(); $("#notes-x").focus(); } else $("#notes-btn").focus();
+      }
+      function renderBar() { $("#xp").textContent = State.xp; $("#stars").textContent = State.stars; }
+      function starStr(n) { return n ? "⭐".repeat(n) + "☆".repeat(3 - n) : "☆☆☆"; }
+      function renderMap() {
+        $("#nodes").innerHTML = LEVELS_META.map((m) => {
+          const open = m.id <= State.unlocked && !!getLevel(m.id);
+          const got = State.perLevel[m.id] || 0;
+          const note = getLevel(m.id) ? (open ? m.sub : "完成上一关解锁") : "即将开放";
+          return `<button class="x-node ${open ? "is-open" : ""}" data-level="${m.id}" ${open ? "" : "disabled"}>
+            <span class="x-node__num">${m.id}</span>
+            <span><span class="x-node__t">${m.title}</span><span class="x-node__s">${note}</span></span>
+            <span class="x-stars">${starStr(got)}</span></button>`;
+        }).join("");
+        $("#nodes").querySelectorAll("button[data-level]").forEach((b) =>
+          b.addEventListener("click", () => { Audio_.play("click"); openLevel(+b.dataset.level); }));
+      }
+      function finishLevel(id, stars, xp) {
+        const prev = State.perLevel[id] || 0;
+        if (stars > prev) { State.stars += stars - prev; State.perLevel[id] = stars; }
+        State.xp += xp;
+        if (stars >= 1 && State.unlocked < id + 1) State.unlocked = id + 1;
+        renderBar(); renderMap(); renderFinal(); Audio_.play("fanfare");
+        toast(`第 ${id} 关完成 · ${starStr(stars)} · +${xp} XP`);
+      }
+      function openLevel(id) {
+        const lv = getLevel(id); if (!lv) return;
+        State.level = id; if (!$("#notes").hidden) renderNotes();
+        $("#play-title").textContent = `第 ${id} 关 · ${lv.title}`;
+        $("#play-sub").textContent = LEVELS_META[id - 1].sub;
+        const stage = $("#stage"); stage.innerHTML = ""; Audio_.swarm(false);
+        lv.init(stage, (stars, xp) => finishLevel(id, stars, xp));
+        $("#play").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+      }
+      /* guide bubble helper */
+      function guide(container, text, sub) {
+        const wrap = document.createElement("div"); wrap.className = "x-cat";
+        wrap.innerHTML = `<div class="x-cat__face">🦊</div><div class="x-bubble" aria-live="polite"></div>`;
+        const b = wrap.querySelector(".x-bubble");
+        const set = (t, s) => { b.innerHTML = ""; b.append(t); if (s) { const el = document.createElement("small"); el.textContent = s; b.append(el); } Audio_.play("squeak"); };
+        set(text, sub); container.append(wrap);
+        return set;
+      }
+      function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+      /* end-card helper: stars, headline, [[term, meaning]], star-map ids */
+      function endCard(stars, head, math, starIds) {
+        return el("div", "x-end", `<h3>${starStr(stars)} ${head}</h3>
+          <div><p style="font:var(--type-body-strong)">你刚刚用到的数学</p>
+          <dl>${math.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join("")}</dl></div>
+          <div><p style="font:var(--type-body-strong)">星图点亮</p><p class="x-starid">${starIds}</p></div>`);
+      }
+      const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const taskList = (T, got) => T.map(([k, t, s]) => `<li class="${got[k] ? "is-done" : ""}"><span class="checklist__item">${t} <small>${s}</small></span><span class="chip ${got[k] ? "" : "chip--solid"}">${got[k] ? "完成 ⭐" : "进行中"}</span></li>`).join("");
+
+      /* ---------- v0.7 shared helpers (rocket / cube) ---------- */
+      const probeEl = document.createElement("span"); probeEl.hidden = true; document.body.append(probeEl);
+      const col = (v) => { probeEl.style.color = v; return getComputedStyle(probeEl).color; };
+      const PAL = () => ({ ink: col("var(--text-primary)"), sub: col("var(--text-secondary)"), line: col("var(--stroke-primary)"), faint: col("var(--stroke-secondary)"),
+        acc: col("var(--x-accent)"), on: col("var(--x-on-accent)"), red: col("var(--fill-system-red)"), green: col("var(--fill-system-green)"), bg: col("var(--fill-primary-on)") });
+      function fit(cv) {
+        const dpr = Math.min(2, devicePixelRatio || 1), W = cv.clientWidth || 300, H = cv.clientHeight || 300;
+        cv.width = W * dpr; cv.height = H * dpr; const c = cv.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0); return { c, W, H };
+      }
+      const r1 = (v) => Math.round(v * 10) / 10, r2 = (v) => Math.round(v * 100) / 100;
+      function checklist(root, T, got) { const ul = el("ul", "checklist"); root.append(ul); const paint = () => (ul.innerHTML = taskList(T, got)); paint(); return paint; }
+      /* guess-first block: options -> reveal rest */
+      function guess(root, opts, right, onPick) {
+        const gs = el("div", "x-opts"); root.append(gs);
+        opts.forEach((v, i) => {
+          const b = el("button", "x-opt x-qopt"); b.textContent = v; gs.append(b);
+          b.addEventListener("click", () => {
+            gs.querySelectorAll("button").forEach((x, j) => { x.disabled = true; if (j === right) x.classList.add("good"); });
+            b.classList.add("is-sel"); Audio_.play(i === right ? "correct" : "pop"); onPick(i === right, v);
+          });
+        });
+        return gs;
+      }
+      /* three-question quiz; the guide nudges first, gives the hint after two misses */
+      function makeQuiz(box, Q, say, onUpdate) {
+        const qs = Q.map(() => ({ tries: 0, solved: false, first: false }));
+        Q.forEach((item, qi) => {
+          const b0 = el("div", "x-sub", `<p>${qi + 1}. ${item.q}</p>`), opts = el("div", "x-opts");
+          item.o.forEach((txt, oi) => {
+            const b = el("button", "x-opt x-qopt"); b.textContent = txt; opts.append(b);
+            b.addEventListener("click", () => {
+              const s = qs[qi]; if (s.solved) return;
+              if (oi === item.a) {
+                s.solved = true; s.first = s.tries === 0; b.classList.add("good");
+                opts.querySelectorAll("button").forEach((x) => (x.disabled = true));
+                Audio_.play("correct"); say("✓ " + item.ok, s.first ? "一次答对。" : "答出来了；一次答对才算满星。"); onUpdate(qs);
+              } else {
+                s.tries++; b.classList.add("bad"); b.disabled = true; Audio_.play("wrong");
+                opts.classList.remove("x-flash"); void opts.offsetWidth; opts.classList.add("x-flash");
+                say(s.tries >= 2 ? item.hint : item.nudge, s.tries >= 2 ? "" : "再想想，答错两次我就给提示。");
+              }
+            });
+          });
+          b0.append(opts); box.append(b0);
+        });
+        return qs;
+      }
+      const quizStars = (qs) => { const r = qs.filter((x) => x.first).length; return r === 3 ? 3 : r === 2 ? 2 : 1; };
+      const quizOK = (qs) => qs.filter((x) => x.solved).length >= 2;
+      /* standard clear: stars, badge, star ids, end card */
+      function clearer(root, done, badge, lights, head, math, ids, firstMsg, say) {
+        let awarded = 0, card = null;
+        return (stars) => {
+          if (stars <= awarded) return;
+          const first = !awarded; done(stars, first ? 40 + 20 * stars : 20 * (stars - awarded)); awarded = stars;
+          if (first) { award(badge); light(lights); say(firstMsg[0], firstMsg[1]); }
+          const nc = endCard(stars, head, math, ids);
+          card ? card.replaceWith(nc) : root.append(nc); card = nc; renderSky(); renderFinal();
+        };
+      }
+      const LEVELS = [];
+      const getLevel = (id) => LEVELS.find((l) => l.id === id);
+      /* small plot helper: axes + curve on a canvas */
+      function axes(c, box, P, xMax, yMax, xLab, yLab, xt, yt) {
+        const { L, T, R, B } = box;
+        c.strokeStyle = P.line; c.lineWidth = 1; c.fillStyle = P.sub; c.font = "11px sans-serif";
+        c.beginPath(); c.moveTo(L, T); c.lineTo(L, B); c.lineTo(R, B); c.stroke();
+        c.textAlign = "center"; c.textBaseline = "top";
+        for (let v = 0; v <= xMax + 1e-9; v += xt) { const x = L + (v / xMax) * (R - L); c.fillText(String(+v.toFixed(2)), x, B + 4); }
+        c.textAlign = "right"; c.textBaseline = "middle";
+        for (let v = 0; v <= yMax + 1e-9; v += yt) { const y = B - (v / yMax) * (B - T); c.fillText(String(+v.toFixed(2)), L - 4, y); c.strokeStyle = P.faint; c.beginPath(); c.moveTo(L, y); c.lineTo(R, y); c.stroke(); }
+        c.textAlign = "right"; c.textBaseline = "bottom"; c.fillText(xLab, R, B - 4);
+        c.textAlign = "left"; c.textBaseline = "top"; c.fillText(yLab, L + 4, T);
+        return { X: (v) => L + (v / xMax) * (R - L), Y: (v) => B - (v / yMax) * (B - T) };
+      }
+
+      /* ===== LEVEL 1 · 速度表读多少 ===== */
+      LEVELS.push({ id: 1, title: "速度表读多少", init(root, done) {
+        const got = { avg: 0, small: 0, quiz: 0 };
+        const T = [["avg", "量出 0–10 秒的平均速度", "起点 0 秒，时间窗 10 秒"], ["small", "把时间窗缩到 1 秒以内", "点小一点的时间窗"], ["quiz", "至少答对 2 道题", "连错两次，狐狸船长给提示"]];
+        const say = guide(root, "火箭点火后越飞越快，高度 h = 5t²（米）。先凭直觉猜：第 10 秒那一刻，速度表读多少？", "猜错不扣分，猜完我们一起量。");
+        const paint = checklist(root, T, got);
+        const rest = el("div", "x-sub"); rest.hidden = true;
+        guess(root, ["50 m/s", "100 m/s", "500 m/s"], 1, (ok, v) => {
+          rest.hidden = false; draw();
+          say(ok ? "直觉很准！不过怎么证明？10 秒飞了 500 米，500 ÷ 10 = 50，为什么不是 50？" : `答案是 100 m/s。10 秒飞了 500 米，平均 50 m/s——可第 10 秒那一刻为什么更快？`, "拖动下面的时间窗量一量。");
+        });
+        root.append(rest);
+        rest.innerHTML = `<h3>高度–时间图 · h = 5t²</h3>
+          <div class="x-tree"><canvas id="ht" role="img" aria-label="高度随时间变化的抛物线和一条割线"></canvas></div>
+          <div class="x-row"><span class="x-meter">起点 t₁ = <b id="t1v">0</b> 秒</span>
+            <input class="x-range" id="t1" type="range" min="0" max="10" step="1" value="0" aria-label="起点时间" /></div>
+          <div class="x-row" id="dts"><span class="x-meter">时间窗 Δt</span></div>
+          <p class="x-read" id="read" aria-live="polite"></p>
+          <div class="x-sub" id="quiz"><h3>三道小题</h3></div>`;
+        const DTS = [10, 5, 2, 1, 0.5, 0.1]; let dt = 10;
+        const h = (t) => 5 * t * t, cv = rest.querySelector("#ht"), t1s = rest.querySelector("#t1");
+        DTS.forEach((d) => { const b = el("button", "x-btn", d + " 秒"); b.setAttribute("aria-pressed", String(d === dt)); b.dataset.dt = d; rest.querySelector("#dts").append(b);
+          b.addEventListener("click", () => { dt = d; rest.querySelectorAll("[data-dt]").forEach((x) => x.setAttribute("aria-pressed", String(+x.dataset.dt === d))); Audio_.play("tick", 900 - d * 50); upd(); }); });
+        t1s.addEventListener("input", () => { Audio_.play("tick", 400 + +t1s.value * 40); upd(); });
+        function draw() {
+          if (rest.hidden || !cv.isConnected) return;
+          const { c, W, H } = fit(cv), P = PAL(), t1 = +t1s.value, t2 = t1 + dt;
+          const A = axes(c, { L: 44, T: 14, R: W - 12, B: H - 24 }, P, 20, 2000, "t（秒）", "h（米）", 5, 500);
+          c.strokeStyle = P.ink; c.lineWidth = 2; c.beginPath();
+          for (let t = 0; t <= 20; t += 0.1) { const y = A.Y(h(t)); t ? c.lineTo(A.X(t), y) : c.moveTo(A.X(t), y); } c.stroke();
+          const s = (h(t2) - h(t1)) / dt;
+          c.strokeStyle = P.acc; c.lineWidth = 2; c.setLineDash([6, 4]); c.beginPath();
+          const xa = Math.max(0, t1 - 4), xb = Math.min(20, t2 + 4);
+          c.moveTo(A.X(xa), A.Y(h(t1) + s * (xa - t1))); c.lineTo(A.X(xb), A.Y(h(t1) + s * (xb - t1))); c.stroke(); c.setLineDash([]);
+          [t1, t2].forEach((t) => { c.fillStyle = P.acc; c.beginPath(); c.arc(A.X(t), A.Y(h(t)), 5, 0, 7); c.fill(); });
+          c.fillStyle = P.ink; c.font = "600 13px sans-serif"; c.textAlign = "left"; c.fillText("🚀", A.X(t2) + 6, A.Y(h(t2)) - 6);
+        }
+        function upd() {
+          const t1 = +t1s.value, t2 = t1 + dt, dh = h(t2) - h(t1), v = dh / dt;
+          rest.querySelector("#t1v").textContent = t1;
+          rest.querySelector("#read").innerHTML = `从 ${t1} 秒到 ${r2(t2)} 秒：升高 Δh = ${r2(h(t2))} − ${r2(h(t1))} = <b>${r2(dh)}</b> 米，平均速度 = Δh ÷ Δt = <b>${r2(v)}</b> m/s（虚线的斜率）`;
+          draw();
+          if (!got.avg && t1 === 0 && dt === 10) { got.avg = 1; paint(); say("0–10 秒平均 50 m/s。可火箭一直在加速：开头慢、结尾快。想知道第 10 秒那一刻，时间窗该怎么调？"); check(); }
+          if (!got.small && dt <= 1) { got.small = 1; paint(); say(t1 === 10 ? `从第 10 秒起只看 ${dt} 秒，平均 ${r2(v)} m/s。窗越小越接近哪个数？` : "时间窗缩小了。把起点拖到 10 秒，再看看平均速度接近几？"); check(); }
+          if (t1 === 10 && dt === 0.1) say("10 到 10.1 秒，平均 101 m/s。窗口再小下去会怎样？第 2 关一起把它逼到底。");
+        }
+        upd(); addEventListener("resize", draw);
+        const qs = makeQuiz(rest.querySelector("#quiz"), [
+          { q: "火箭 0–4 秒升高了 80 米，这段时间的平均速度是？", o: ["4 m/s", "20 m/s", "80 m/s", "320 m/s"], a: 1, nudge: "平均速度 = 路程 ÷ 时间。路程多少？时间多少？", hint: "提示：80 ÷ 4 = ?", ok: "对，80 ÷ 4 = 20 m/s。" },
+          { q: "在高度–时间图上，割线越陡，说明什么？", o: ["这段时间平均速度越大", "火箭越重", "这段时间越长"], a: 0, nudge: "陡 = 同样的时间里，高度变得多还是少？", hint: "提示：斜率 = Δh ÷ Δt，就是平均速度。", ok: "对，斜率 = Δh ÷ Δt = 平均速度。" },
+          { q: "h = 5t²，从第 1 秒到第 3 秒的平均速度是？", o: ["15 m/s", "20 m/s", "25 m/s", "40 m/s"], a: 1, nudge: "先算 h(3) 和 h(1)，再做差。", hint: "提示：h(3) = 45，h(1) = 5，升高 40 米，用了 2 秒。", ok: "对，(45 − 5) ÷ 2 = 20 m/s。" },
+        ], say, (q) => { got.quiz = quizOK(q) ? 1 : 0; paint(); check(); });
+        const clear = clearer(root, done, "speed", ["c01", "c02"], "测速员上任！", [
+          ["平均速度 = Δh ÷ Δt", "一段时间里高度的变化除以时间。0–10 秒是 50 m/s。"],
+          ["割线斜率", "高度–时间图上两点连线的斜率，就是这段的平均速度。"],
+          ["时间窗越小越接近瞬时速度", "第 10 秒起看 0.1 秒是 101 m/s，越缩越接近 100。"],
+        ], "c01 变化率 · c02 斜率", ["测速员，任务完成！一段时间的速度好量，「某一刻」的速度要靠把时间窗不断缩小。", "第 2 关「无限逼近」已解锁。"], say);
+        function check() { if (got.avg && got.small && got.quiz) clear(quizStars(qs)); }
+      } });
+
+      /* ===== LEVEL 2 · 无限逼近 ===== */
+      LEVELS.push({ id: 2, title: "无限逼近", init(root, done) {
+        const got = { zoom: 0, plot: 0, rule: 0, quiz: 0 };
+        const T = [["zoom", "把 Δt 缩到 0.001 秒", "点「Δt ÷ 10」"], ["plot", "测出 4 个不同时刻的瞬时速度", "拖动时刻，点「测速」"], ["rule", "猜出速度公式 v(t)", "看测出来的点有什么规律"], ["quiz", "至少答对 2 道题", "连错两次给提示"]];
+        const say = guide(root, "第 10 秒那一刻的速度，就是时间窗缩到「无限小」时平均速度的去向。一起把 Δt 一次次除以 10。", "看小数点后面的数字怎么变。");
+        const paint = checklist(root, T, got);
+        const box = el("div", "x-sub"); root.append(box);
+        box.innerHTML = `<h3>逼近表 · t = 10 秒</h3>
+          <div class="x-tree"><canvas id="zm" role="img" aria-label="放大的曲线，割线越来越接近切线"></canvas></div>
+          <div class="x-row"><button class="x-btn x-btn--go" id="shrink">Δt ÷ 10</button><button class="x-btn" id="zr">重来</button></div>
+          <div class="table-wrap"><table class="table"><thead><tr><th>Δt（秒）</th><th>平均速度（m/s）</th></tr></thead><tbody id="rows"></tbody></table></div>
+          <h3>测速仪 · 任意时刻</h3>
+          <div class="x-row"><span class="x-meter">t = <b id="tv">2</b> 秒</span><input class="x-range" id="ts" type="range" min="0" max="12" step="1" value="2" aria-label="测速时刻" /><button class="x-btn x-btn--go" id="meas">测速</button></div>
+          <div class="x-tree"><canvas id="vt" role="img" aria-label="测出的速度点"></canvas></div>
+          <p class="x-read" id="mread" aria-live="polite"></p>
+          <div class="x-sub" id="rule" hidden><p>这些点排成什么？速度公式 v(t) 是：</p></div>
+          <div class="x-sub" id="quiz"><h3>三道小题</h3></div>`;
+        let k = 0; const pts = {};
+        const cz = box.querySelector("#zm"), cvt = box.querySelector("#vt");
+        function drawZ() {
+          const { c, W, H } = fit(cz), P = PAL(), dt = Math.pow(10, -k), span = Math.max(dt * 1.6, 0.004) * 1.0;
+          const x0 = 10 - span * 0.3, x1 = 10 + span * 1.3, hh = (t) => 5 * t * t, y0 = hh(x0), y1 = hh(x1);
+          const X = (t) => 20 + ((t - x0) / (x1 - x0)) * (W - 40), Y = (v) => H - 20 - ((v - y0) / (y1 - y0)) * (H - 40);
+          c.strokeStyle = P.ink; c.lineWidth = 2; c.beginPath(); for (let i = 0; i <= 60; i++) { const t = x0 + (x1 - x0) * i / 60; i ? c.lineTo(X(t), Y(hh(t))) : c.moveTo(X(t), Y(hh(t))); } c.stroke();
+          c.strokeStyle = P.green; c.setLineDash([2, 4]); c.beginPath(); c.moveTo(X(x0), Y(hh(10) + 100 * (x0 - 10))); c.lineTo(X(x1), Y(hh(10) + 100 * (x1 - 10))); c.stroke();
+          const s = 100 + 5 * dt; c.strokeStyle = P.acc; c.setLineDash([6, 4]); c.beginPath(); c.moveTo(X(x0), Y(hh(10) + s * (x0 - 10))); c.lineTo(X(x1), Y(hh(10) + s * (x1 - 10))); c.stroke(); c.setLineDash([]);
+          [10, 10 + dt].forEach((t) => { c.fillStyle = P.acc; c.beginPath(); c.arc(X(t), Y(hh(t)), 4, 0, 7); c.fill(); });
+          c.fillStyle = P.sub; c.font = "12px sans-serif"; c.textAlign = "left"; c.fillText(`放大镜：横轴宽 ${+(x1 - x0).toPrecision(2)} 秒 · 蓝虚线 = 割线 · 绿点线 = 切线`, 8, 14);
+        }
+        function rows() {
+          let h = ""; for (let i = 0; i <= k; i++) { const dt = Math.pow(10, -i); h += `<tr><td>${dt}</td><td><b>${(100 + 5 * dt).toFixed(Math.max(1, i + 1))}</b></td></tr>`; }
+          box.querySelector("#rows").innerHTML = h; drawZ();
+        }
+        box.querySelector("#shrink").addEventListener("click", () => {
+          if (k >= 3) return; k++; Audio_.play("tick", 500 + k * 200); rows();
+          if (k === 1) say("Δt = 0.1 → 100.5。多出来的 0.5 从哪来？");
+          if (k === 2) say("100.05……每缩小 10 倍，多出来的部分也缩小 10 倍。");
+          if (k === 3) { say("100.005！Δt 越小，平均速度越逼近 100——这个「逼近的目标」就叫极限。第 10 秒的瞬时速度 = 100 m/s。", "割线（蓝）几乎贴在切线（绿）上了。"); box.querySelector("#shrink").disabled = true; if (!got.zoom) { got.zoom = 1; paint(); check(); } }
+        });
+        box.querySelector("#zr").addEventListener("click", () => { k = 0; box.querySelector("#shrink").disabled = false; Audio_.play("click"); rows(); });
+        rows();
+        function drawV() {
+          const { c, W, H } = fit(cvt), P = PAL(), A = axes(c, { L: 40, T: 14, R: W - 12, B: H - 24 }, P, 12, 120, "t（秒）", "v（m/s）", 2, 20);
+          if (got.rule) { c.strokeStyle = P.green; c.lineWidth = 2; c.beginPath(); c.moveTo(A.X(0), A.Y(0)); c.lineTo(A.X(12), A.Y(120)); c.stroke(); }
+          Object.keys(pts).forEach((t) => { c.fillStyle = P.acc; c.beginPath(); c.arc(A.X(+t), A.Y(10 * t), 6, 0, 7); c.fill(); });
+        }
+        const ts = box.querySelector("#ts");
+        ts.addEventListener("input", () => { box.querySelector("#tv").textContent = ts.value; Audio_.play("tick", 400 + +ts.value * 30); });
+        box.querySelector("#meas").addEventListener("click", () => {
+          const t = +ts.value; pts[t] = 1; Audio_.play("correct", 0); drawV();
+          box.querySelector("#mread").innerHTML = `t = ${t} 秒：Δt = 0.001 时平均速度 = ${(10 * t + 0.005).toFixed(3)} → 瞬时速度 <b>${10 * t}</b> m/s`;
+          const n = Object.keys(pts).length;
+          if (n >= 4 && !got.plot) { got.plot = 1; paint(); box.querySelector("#rule").hidden = false; say("四个点了！它们排成什么形状？t 和 v 之间是什么关系？"); check(); }
+          else if (n < 4) say(`已测 ${n} 个时刻，再测 ${4 - n} 个。`);
+        });
+        drawV(); addEventListener("resize", () => { drawZ(); drawV(); });
+        let wr = 0; const ro = el("div", "x-opts"); box.querySelector("#rule").append(ro);
+        ["v = 5t", "v = 10t", "v = 5t²", "v = t²"].forEach((o, i) => { const b = el("button", "x-opt x-qopt"); b.textContent = o; ro.append(b);
+          b.addEventListener("click", () => {
+            if (got.rule) return;
+            if (i === 1) { b.classList.add("good"); got.rule = 1; paint(); drawV(); Audio_.play("correct"); say("对！h = 5t² 的导数是 v = 10t。规律：t² 求导变成 2t，前面的 5 跟着走：5 × 2t = 10t。速度每秒多 10 m/s，这就是加速度 10 m/s²。"); check(); }
+            else { wr++; b.classList.add("bad"); b.disabled = true; Audio_.play("wrong"); say(wr >= 2 ? "提示：t = 2 时 v = 20，t = 6 时 v = 60。v 是 t 的几倍？" : "看点：t 每多 1 秒，v 多多少？是直线还是弯线？"); }
+          }); });
+        const qs = makeQuiz(box.querySelector("#quiz"), [
+          { q: "h = 3t² 的速度公式（导数）是？", o: ["v = 3t", "v = 6t", "v = 9t", "v = t³"], a: 1, nudge: "5t² 变成 10t，规律是什么？", hint: "提示：t² 求导是 2t，再乘前面的 3。", ok: "对，3 × 2t = 6t。" },
+          { q: "v = 10t，加速度是？", o: ["10t m/s²", "10 m/s²", "5 m/s²", "0"], a: 1, nudge: "加速度 = 速度每秒变多少。", hint: "提示：t = 1 时 v = 10，t = 2 时 v = 20，每秒多 10。", ok: "对，加速度 10 m/s²，接近重力加速度 g ≈ 9.8 m/s²。" },
+          { q: "Δt → 0 时，平均速度 10t + 5Δt 趋向？", o: ["10t", "5Δt", "0", "无穷大"], a: 0, nudge: "Δt 越来越小，5Δt 会怎样？", hint: "提示：5 × 0.001 = 0.005，几乎是 0。", ok: "对，极限是 10t：这就是导数。" },
+        ], say, (q) => { got.quiz = quizOK(q) ? 1 : 0; paint(); check(); });
+        const clear = clearer(root, done, "limit", ["c04", "c05", "c06"], "极限猎手！", [
+          ["极限", "Δt = 0.1、0.01、0.001…，平均速度 100.5、100.05、100.005 → 100。"],
+          ["导数", "h′(t) = lim (h(t+Δt) − h(t)) / Δt。h = 5t² 时 v = 10t。"],
+          ["求导法则", "tⁿ → n·tⁿ⁻¹，常数倍跟着走。"],
+        ], "c04 函数极限与连续 · c05 导数 · c06 求导法则", ["极限猎手，任务完成！把「无限缩小」变成一个确定的数，这就是牛顿和莱布尼茨的发明。", "第 3 关「从速度回到路程」已解锁。"], say);
+        function check() { if (got.zoom && got.plot && got.rule && got.quiz) clear(quizStars(qs)); }
+      } });
+
+      /* ===== LEVEL 3 · 从速度回到路程 ===== */
+      LEVELS.push({ id: 3, title: "从速度回到路程", init(root, done) {
+        const got = { fine: 0, both: 0, quiz: 0 };
+        const T = [["fine", "把误差压到 5% 以内", "增加矩形条数"], ["both", "左端点、右端点都试一次", "看真实面积夹在哪里"], ["quiz", "至少答对 2 道题", "连错两次给提示"]];
+        const say = guide(root, "反过来：只知道速度表一路读数，怎么知道飞了多高？速度从 0 均匀涨到 100 m/s，用了 10 秒，飞了多远？", "先猜。");
+        const paint = checklist(root, T, got);
+        const rest = el("div", "x-sub"); rest.hidden = true;
+        guess(root, ["100 米", "500 米", "1000 米"], 1, (ok) => { rest.hidden = false; draw(); say(ok ? "对！平均速度 50 × 10 秒 = 500。可速度一直在变，怎么证明？把速度–时间图切成矩形条。" : "答案是 500 米：不是一直 100 m/s，开头几乎不动。把速度–时间图切成矩形条，一条条加起来看看。"); });
+        root.append(rest);
+        rest.innerHTML = `<h3>速度–时间图 · v = 10t</h3>
+          <div class="x-tree"><canvas id="rs" role="img" aria-label="速度直线下面的矩形条"></canvas></div>
+          <div class="x-row"><span class="x-meter">矩形 <b id="nv">2</b> 条</span><input class="x-range" id="n" type="range" min="1" max="50" step="1" value="2" aria-label="矩形条数" />
+            <button class="x-btn" data-m="L" aria-pressed="true">左端点</button><button class="x-btn" data-m="R" aria-pressed="false">右端点</button></div>
+          <p class="x-read" id="read" aria-live="polite"></p>
+          <div class="x-sub" id="quiz"><h3>三道小题</h3></div>`;
+        const cv = rest.querySelector("#rs"), ns = rest.querySelector("#n"); let mode = "L"; const seenM = { L: 1 };
+        const sum = (n, m) => { const d = 10 / n; let s = 0; for (let i = 0; i < n; i++) s += 10 * ((m === "L" ? i : i + 1) * d) * d; return s; };
+        function draw() {
+          if (rest.hidden || !cv.isConnected) return;
+          const { c, W, H } = fit(cv), P = PAL(), A = axes(c, { L: 40, T: 14, R: W - 12, B: H - 24 }, P, 10, 100, "t（秒）", "v（m/s）", 2, 20), n = +ns.value, d = 10 / n;
+          for (let i = 0; i < n; i++) { const t = (mode === "L" ? i : i + 1) * d, x = A.X(i * d), w = A.X((i + 1) * d) - x, y = A.Y(10 * t);
+            c.fillStyle = P.acc; c.globalAlpha = 0.35; c.fillRect(x, y, w, A.Y(0) - y); c.globalAlpha = 1; c.strokeStyle = P.acc; c.strokeRect(x, y, w, A.Y(0) - y); }
+          c.strokeStyle = P.ink; c.lineWidth = 2; c.beginPath(); c.moveTo(A.X(0), A.Y(0)); c.lineTo(A.X(10), A.Y(100)); c.stroke();
+        }
+        function upd() {
+          const n = +ns.value, s = sum(n, mode), err = Math.abs(s - 500) / 5;
+          rest.querySelector("#nv").textContent = n;
+          rest.querySelector("#read").innerHTML = `${n} 条${mode === "L" ? "左" : "右"}端点矩形面积和 = <b>${r1(s)}</b> 米 · 真实面积（三角形）= ½ × 10 × 100 = 500 米 · 误差 <b>${r1(err)}%</b>`;
+          draw();
+          if (!got.fine && err <= 5) { got.fine = 1; paint(); say(`${n} 条，误差只剩 ${r1(err)}%。条数无限多时会怎样？这个极限就是积分 ∫₀¹⁰ 10t dt = 500。`); check(); }
+          if (!got.both && seenM.L && seenM.R) { got.both = 1; paint(); say("左端点总是少一点，右端点总是多一点，真实面积被夹在中间。条数越多，夹得越紧。"); check(); }
+        }
+        ns.addEventListener("input", () => { Audio_.play("tick", 300 + +ns.value * 12); upd(); });
+        rest.querySelectorAll("[data-m]").forEach((b) => b.addEventListener("click", () => { mode = b.dataset.m; seenM[mode] = 1; Audio_.play("click"); rest.querySelectorAll("[data-m]").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); upd(); }));
+        upd(); addEventListener("resize", draw);
+        const qs = makeQuiz(rest.querySelector("#quiz"), [
+          { q: "速度–时间图下面的面积代表？", o: ["飞过的路程", "加速度", "时间"], a: 0, nudge: "每个矩形 = 速度 × 时间 = ？", hint: "提示：速度 × 时间 = 路程。", ok: "对，面积 = 路程。" },
+          { q: "v = 10t，0–4 秒飞了多远？", o: ["40 米", "80 米", "160 米", "400 米"], a: 1, nudge: "画出三角形：底多长？高多高？", hint: "提示：底 4 秒，高 v(4) = 40，面积 ½ × 4 × 40。", ok: "对，80 米，和 h = 5 × 4² 一样！" },
+          { q: "求导和积分是什么关系？", o: ["互为逆运算", "完全一样", "没有关系"], a: 0, nudge: "h 求导得到 v；v 求面积又得到什么？", hint: "提示：5t² → 10t → 5t²，绕了一圈回来。", ok: "对，这就是微积分基本定理。" },
+        ], say, (q) => { got.quiz = quizOK(q) ? 1 : 0; paint(); check(); });
+        const clear = clearer(root, done, "area", ["c08", "c09"], "面积魔术师！", [
+          ["面积 = 路程", "速度–时间图下面的面积就是飞过的路程。"],
+          ["黎曼和 → 积分", "切成 n 条矩形相加，n → ∞ 的极限就是 ∫₀ᵀ v dt。"],
+          ["微积分基本定理", "∫₀ᵀ 10t dt = 5T²：积分把第 2 关的求导倒了回去。"],
+        ], "c08 积分与面积 · c09 微积分基本定理", ["面积魔术师，任务完成！导数从路程得到速度，积分从速度回到路程。", "第 4 关「火箭方程」已解锁。"], say);
+        function check() { if (got.fine && got.both && got.quiz) clear(quizStars(qs)); }
+      } });
+
+      /* ===== LEVEL 4 · 火箭方程 ===== */
+      LEVELS.push({ id: 4, title: "火箭方程", init(root, done) {
+        const got = { one: 0, stage: 0, quiz: 0 };
+        const T = [["one", "造一枚单级火箭达到入轨速度 9.4 km/s", "调燃料比例和发动机"], ["stage", "燃料比例 ≤ 85% 时也达到 9.4 km/s", "试试多级火箭"], ["quiz", "至少答对 2 道题", "连错两次给提示"]];
+        const say = guide(root, "火箭靠往后喷燃料往前飞。燃料多带一倍，火箭最后的速度也会多一倍吗？", "先猜。");
+        const paint = checklist(root, T, got);
+        const rest = el("div", "x-sub"); rest.hidden = true;
+        guess(root, ["正好多一倍", "多不到一倍", "多一倍还多"], 1, (ok) => { rest.hidden = false; upd(); say(ok ? "对！多带的燃料也要被推着走。到底多多少？公式里藏着一个 ln。" : "答案是「多不到一倍」：多带的燃料自己也要被推着走。到底多多少？公式里藏着一个 ln。"); });
+        root.append(rest);
+        rest.innerHTML = `<h3>设计你的火箭 · 目标：入轨约 9.4 km/s</h3>
+          <div class="x-row"><span class="x-meter">燃料占起飞质量 <b id="fv">80</b>%</span><input class="x-range" id="f" type="range" min="50" max="97" step="1" value="80" aria-label="燃料比例" /></div>
+          <div class="x-row" id="ves"><span class="x-meter">发动机喷气速度 vₑ</span></div>
+          <div class="x-row" id="sts"><span class="x-meter">级数</span></div>
+          <div class="x-hbar" aria-hidden="true"><i id="bar"></i></div>
+          <p class="x-read" id="read" aria-live="polite"></p>
+          <div class="x-tree"><canvas id="lc" role="img" aria-label="速度增量随质量比的对数曲线"></canvas></div>
+          <div class="x-sub" id="quiz"><h3>三道小题</h3></div>`;
+        const VE = [["煤油 3.0", 3.0], ["氢氧 4.4", 4.4]]; let ve = 3.0, N = 1; const fs = rest.querySelector("#f"), cv = rest.querySelector("#lc");
+        VE.forEach(([n, v]) => { const b = el("button", "x-btn", n + " km/s"); b.dataset.ve = v; b.setAttribute("aria-pressed", String(v === ve)); rest.querySelector("#ves").append(b);
+          b.addEventListener("click", () => { ve = v; rest.querySelectorAll("[data-ve]").forEach((x) => x.setAttribute("aria-pressed", String(+x.dataset.ve === v))); Audio_.play("click"); upd(); }); });
+        [1, 2, 3].forEach((n) => { const b = el("button", "x-btn", n + " 级"); b.dataset.st = n; b.setAttribute("aria-pressed", String(n === N)); rest.querySelector("#sts").append(b);
+          b.addEventListener("click", () => { N = n; rest.querySelectorAll("[data-st]").forEach((x) => x.setAttribute("aria-pressed", String(+x.dataset.st === n))); Audio_.play("click"); upd(); }); });
+        fs.addEventListener("input", () => { Audio_.play("tick", 300 + +fs.value * 6); upd(); });
+        function draw(R, dv1) {
+          if (rest.hidden || !cv.isConnected) return;
+          const { c, W, H } = fit(cv), P = PAL(), A = axes(c, { L: 40, T: 14, R: W - 12, B: H - 24 }, P, 30, 15, "质量比 m₀/m_f", "Δv（km/s）", 5, 3);
+          c.strokeStyle = P.ink; c.lineWidth = 2; c.beginPath(); for (let x = 1; x <= 30; x += 0.25) { const y = A.Y(ve * Math.log(x)); x === 1 ? c.moveTo(A.X(x), y) : c.lineTo(A.X(x), y); } c.stroke();
+          c.strokeStyle = P.red; c.setLineDash([4, 4]); c.beginPath(); c.moveTo(A.X(0), A.Y(9.4)); c.lineTo(A.X(30), A.Y(9.4)); c.stroke(); c.setLineDash([]);
+          c.fillStyle = P.red; c.font = "11px sans-serif"; c.textAlign = "left"; c.fillText("入轨 9.4", A.X(0.5), A.Y(9.4) - 8);
+          if (R <= 30) { c.fillStyle = P.acc; c.beginPath(); c.arc(A.X(R), A.Y(dv1), 6, 0, 7); c.fill(); }
+        }
+        function upd() {
+          const f = +fs.value / 100, R = 1 / (1 - f), dv1 = ve * Math.log(R), dv = N * dv1;
+          rest.querySelector("#fv").textContent = Math.round(f * 100);
+          rest.querySelector("#bar").style.width = Math.min(100, (dv / 12) * 100) + "%";
+          rest.querySelector("#read").innerHTML = `每级质量比 m₀/m_f = 1 ÷ (1 − ${f.toFixed(2)}) = ${r2(R)} · 每级 Δv = ${ve} × ln ${r2(R)} = ${r2(dv1)} km/s${N > 1 ? ` · ${N} 级相加 = <b>${r2(dv)}</b>` : ` = <b>${r2(dv)}</b>`} km/s ${dv >= 9.4 ? "✅ 能入轨" : "❌ 还差 " + r2(9.4 - dv) + " km/s"}`;
+          draw(R, dv1);
+          if (dv >= 9.4) {
+            if (N === 1 && !got.one) { got.one = 1; paint(); say(ve === 3 ? "单级做到了，可燃料要占 96% 以上——油箱薄得像蛋壳，造不出来。有什么办法？" : "氢氧发动机单级也要燃料占 89% 左右，非常难造。还有别的办法吗？", "试试级数。"); check(); }
+            if (N > 1 && f <= 0.85 && !got.stage) { got.stage = 1; paint(); say("多级火箭！扔掉空油箱，后面的级轻装上阵，每一级的 Δv 相加。阿波罗的土星五号就是三级。", "（简化：每级质量比相同）"); check(); }
+          }
+        }
+        addEventListener("resize", () => upd());
+        const qs = makeQuiz(rest.querySelector("#quiz"), [
+          { q: "ln e = ？", o: ["0", "1", "e", "2.718"], a: 1, nudge: "ln 问的是：e 的几次方等于它？", hint: "提示：e¹ = e。", ok: "对，ln e = 1。" },
+          { q: "vₑ = 3 km/s，质量比 m₀/m_f = e²（约 7.4），Δv = ？", o: ["3 km/s", "6 km/s", "7.4 km/s", "9 km/s"], a: 1, nudge: "Δv = vₑ × ln(质量比)，ln(e²) 是几？", hint: "提示：ln(e²) = 2，再乘 3。", ok: "对，3 × 2 = 6 km/s。" },
+          { q: "为什么真的火箭都是多级？", o: ["扔掉空油箱，后面的级更轻", "更好看", "燃料更便宜"], a: 0, nudge: "烧空的油箱还留在火箭上，有什么坏处？", hint: "提示：空油箱也要被加速，扔掉它就不用再推。", ok: "对，扔掉死重，Δv 一级级相加。" },
+        ], say, (q) => { got.quiz = quizOK(q) ? 1 : 0; paint(); check(); });
+        const clear = clearer(root, done, "fuel", ["c25", "a14"], "燃料工程师！", [
+          ["火箭方程 Δv = vₑ · ln(m₀/m_f)", "齐奥尔科夫斯基 1903 年写下。燃料越多，增加的速度越来越少。"],
+          ["e 与 ln", "把燃料切成无穷多小块相加，极限就是自然对数，以 e ≈ 2.718 为底。"],
+          ["多级火箭", "扔掉空油箱，每级 Δv 相加，燃料比例不用那么夸张。"],
+        ], "c25 e与自然增长 · a14 对数", ["燃料工程师，任务完成！对数让「多带燃料」越来越不划算，所以要分级。", "第 5 关「BOSS 奔月」已解锁。"], say);
+        function check() { if (got.one && got.stage && got.quiz) clear(quizStars(qs)); }
+      } });
+
+      /* ===== LEVEL 5 · BOSS 奔月 ===== */
+      LEVELS.push({ id: 5, title: "BOSS 奔月", init(root, done) {
+        const got = { prev: 0, hit: 0, save: 0 };
+        const T = [["prev", "用「试飞预览」算出提前角", "只算地球引力，看在哪里穿过月球轨道"], ["hit", "飞到离月心 2 万公里以内", "1 星：抵达"], ["save", "省燃料：奔月加速 ≤ 3.14 km/s 抵达", "3 星；≤ 3.20 km/s 为 2 星"]];
+        const say = guide(root, "最后一关：从 200 公里高的停泊轨道点火奔月。你能调两样东西：点火加速多少（Δv），和点火时月球领先你多少度（提前角）。", "电脑每次往前算 1 分钟，用牛顿定律一步步积出整条轨道。");
+        const paint = checklist(root, T, got);
+        const box = el("div", "x-sub"); root.append(box);
+        box.innerHTML = `<div class="x-net"><canvas id="sp" style="display:block;width:100%;height:420px" role="img" aria-label="地球、月球轨道和飞船轨迹"></canvas></div>
+          <div class="x-row"><span class="x-meter">Δv = <b id="dvv">3.20</b> km/s</span><input class="x-range" id="dv" type="range" min="3.10" max="3.40" step="0.01" value="3.20" aria-label="奔月加速" /></div>
+          <div class="x-row"><span class="x-meter">提前角 = <b id="phv">110</b>°</span><input class="x-range" id="ph" type="range" min="90" max="170" step="1" value="110" aria-label="月球提前角" /></div>
+          <div class="x-row"><button class="x-btn" id="pre">🔭 试飞预览</button><button class="x-btn x-btn--go" id="go">🔥 点火</button></div>
+          <p class="x-read" id="read" aria-live="polite"></p>`;
+        const GM = 398600.4, GMm = 4902.8, RM = 384400, W = (2 * Math.PI) / (27.32 * 86400), r0 = 6571, DEG = W * 86400 * 180 / Math.PI;
+        const cv = box.querySelector("#sp"), dvs = box.querySelector("#dv"), phs = box.querySelector("#ph");
+        let path = null, prev = null, anim = 0, raf = 0, fails = 0, best = 0;
+        function fly(dv, phi, moon) {
+          let x = r0, y = 0, vx = 0, vy = Math.sqrt(GM / r0) + dv; const dt = 60, out = [[x, y, 0]];
+          const acc = (x, y, t) => { const r3 = Math.pow(x * x + y * y, 1.5); let ax = (-GM * x) / r3, ay = (-GM * y) / r3;
+            if (moon) { const mx = RM * Math.cos(phi + W * t), my = RM * Math.sin(phi + W * t), dx = x - mx, dy = y - my, d3 = Math.pow(dx * dx + dy * dy, 1.5); ax -= (GMm * dx) / d3; ay -= (GMm * dy) / d3; }
+            return [ax, ay]; };
+          let near = 1e12, nearT = 0;
+          for (let t = 0; t < 12 * 86400; t += dt) {
+            const k1 = acc(x, y, t), k2 = acc(x + vx * dt / 2, y + vy * dt / 2, t + dt / 2), k3 = acc(x + (vx + k1[0] * dt / 2) * dt / 2, y + (vy + k1[1] * dt / 2) * dt / 2, t + dt / 2);
+            const v2 = [vx + k2[0] * dt / 2, vy + k2[1] * dt / 2], v3 = [vx + k3[0] * dt, vy + k3[1] * dt], k4 = acc(x + v2[0] * dt, y + v2[1] * dt, t + dt);
+            const nx = x + (dt / 6) * (vx + 2 * (vx + k1[0] * dt / 2) + 2 * v2[0] + v3[0]), ny = y + (dt / 6) * (vy + 2 * (vy + k1[1] * dt / 2) + 2 * v2[1] + v3[1]);
+            vx += (dt / 6) * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]); vy += (dt / 6) * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]); x = nx; y = ny;
+            const tt = t + dt; if (tt % 600 === 0) out.push([x, y, tt]);
+            const r = Math.hypot(x, y);
+            if (r < 6371) return { out, end: "crash", t: tt, near };
+            if (!moon && r >= RM) { out.push([x, y, tt]); return { out, end: "orbit", t: tt, ang: Math.atan2(y, x) }; }
+            if (moon) { const d = Math.hypot(x - RM * Math.cos(phi + W * tt), y - RM * Math.sin(phi + W * tt)); if (d < near) { near = d; nearT = tt; } if (d < 20000) { out.push([x, y, tt]); return { out, end: "hit", t: tt, near: d }; } }
+          }
+          return { out, end: "miss", t: 12 * 86400, near, nearT };
+        }
+        function draw() {
+          if (!cv.isConnected) return;
+          const { c, W: w, H } = fit(cv), P = PAL(), S = Math.min(w, H) / 2 / (RM * 1.12), cx = w / 2, cy = H / 2, X = (v) => cx + v * S, Y = (v) => cy - v * S;
+          const phi = (+phs.value * Math.PI) / 180;
+          c.strokeStyle = P.faint; c.setLineDash([3, 5]); c.beginPath(); c.arc(cx, cy, RM * S, 0, 7); c.stroke(); c.setLineDash([]);
+          c.fillStyle = P.acc; c.beginPath(); c.arc(cx, cy, Math.max(5, 6371 * S), 0, 7); c.fill();
+          c.fillStyle = P.sub; c.font = "11px sans-serif"; c.textAlign = "center"; c.fillText("地球", cx, cy + 16);
+          if (prev && prev.end === "orbit") { c.strokeStyle = P.sub; c.setLineDash([2, 4]); c.beginPath(); prev.out.forEach(([x, y], i) => (i ? c.lineTo(X(x), Y(y)) : c.moveTo(X(x), Y(y)))); c.stroke(); c.setLineDash([]); }
+          let t = 0;
+          if (path) {
+            const n = Math.max(1, Math.floor(path.out.length * anim)); t = path.out[n - 1][2];
+            c.strokeStyle = path.end === "hit" ? P.green : P.ink; c.lineWidth = 2; c.beginPath();
+            for (let i = 0; i < n; i++) { const [x, y] = path.out[i]; i ? c.lineTo(X(x), Y(y)) : c.moveTo(X(x), Y(y)); } c.stroke(); c.lineWidth = 1;
+            const [sx, sy] = path.out[n - 1]; c.font = "16px sans-serif"; c.fillText("🚀", X(sx), Y(sy) + 5);
+          }
+          const ma = phi + W * t; c.font = "22px sans-serif"; c.fillText("🌕", X(RM * Math.cos(ma)), Y(RM * Math.sin(ma)) + 8);
+          c.fillStyle = P.sub; c.font = "12px sans-serif"; c.textAlign = "left"; c.fillText(`第 ${r1(t / 86400)} 天`, 10, 18);
+          c.strokeStyle = P.faint; c.beginPath(); c.moveTo(cx, cy); c.lineTo(X(RM * 1.05), cy); c.stroke(); c.fillText("点火方向", X(RM * 0.7), cy - 6);
+        }
+        const rd = () => box.querySelector("#read");
+        dvs.addEventListener("input", () => { box.querySelector("#dvv").textContent = (+dvs.value).toFixed(2); prev = null; Audio_.play("tick", 300 + (+dvs.value - 3) * 1500); draw(); });
+        phs.addEventListener("input", () => { box.querySelector("#phv").textContent = phs.value; path = null; Audio_.play("tick", 300 + +phs.value * 3); draw(); });
+        box.querySelector("#pre").addEventListener("click", () => {
+          Audio_.play("click"); prev = fly(+dvs.value, 0, false); path = null;
+          if (prev.end !== "orbit") { rd().innerHTML = "只算地球引力时，这个速度飞不到月球轨道（38.4 万公里）就掉回来了。加一点 Δv？"; say("预览：飞不到月球轨道。速度不够，引力把你拉回来了。"); }
+          else {
+            const ang = ((prev.ang * 180) / Math.PI + 360) % 360, d = prev.t / 86400, lead = ang - DEG * d;
+            rd().innerHTML = `预览：飞 <b>${r1(d)}</b> 天，在 <b>${Math.round(ang)}°</b> 方向穿过月球轨道。月球每天走 ${r1(DEG)}°，这段时间走 ${Math.round(DEG * d)}°，所以提前角 ≈ ${Math.round(ang)} − ${Math.round(DEG * d)} = <b>${Math.round(lead)}°</b>`;
+            say(`算出来提前角约 ${Math.round(lead)}°。把滑块拨过去再点火——月球引力还会再拉你一把，误差几度没关系。`, "这就是建模：先用简单模型估计，再用完整模型检验。");
+            if (!got.prev) { got.prev = 1; paint(); }
+          }
+          draw();
+        });
+        box.querySelector("#go").addEventListener("click", () => {
+          const dv = +dvs.value, phi = (+phs.value * Math.PI) / 180; path = fly(dv, phi, true); anim = 0; cancelAnimationFrame(raf);
+          Audio_.play("siren"); const t0 = performance.now(), D = reduced() ? 1 : 2600;
+          const f = (now) => { anim = Math.min(1, (now - t0) / D); draw(); if (anim < 1) raf = requestAnimationFrame(f); else end(dv); };
+          raf = requestAnimationFrame(f);
+        });
+        function end(dv) {
+          const p = path, d = r1(p.t / 86400);
+          if (p.end !== "hit") {
+            fails++; Audio_.play("bonk");
+            const msg = p.end === "crash" ? "速度不够，飞船落回了地球。" : `擦肩而过：最近离月心 ${Math.round(p.near).toLocaleString()} 公里。`;
+            rd().textContent = msg;
+            return say(p.end === "crash" ? "飞船被地球拉回来了。Δv 再大一点？" : "飞到时月球不在那里。先点「试飞预览」算提前角。", fails >= 2 ? "提示：提前角 ≈ 穿越方向 − 13.2° × 飞行天数。" : "");
+          }
+          Audio_.play("chord");
+          const stars = dv <= 3.14 ? 3 : dv <= 3.2 ? 2 : 1;
+          rd().innerHTML = `🌕 抵达！飞行 <b>${d}</b> 天，离月心 ${Math.round(p.near).toLocaleString()} 公里，奔月加速 ${dv.toFixed(2)} km/s。`;
+          if (!got.hit) { got.hit = 1; } if (stars === 3) got.save = 1; paint();
+          say(`登月成功！飞了 ${d} 天。${stars < 3 ? `Δv 降到 ${stars === 1 ? "3.20" : "3.14"} km/s 以下能多拿 1 星：慢一点，省燃料，但更难瞄准。` : "三星！这和阿波罗 11 号的约 3.1 km/s、3 天很接近。"}`);
+          if (stars <= best) return;
+          const first = !best; done(stars, first ? 60 + 20 * stars : 20 * (stars - best)); best = stars;
+          const nc = endCard(stars, "登月指挥官！", [
+            ["微分方程", "加速度 = 引力 ÷ 质量：位置的二阶导数由位置决定。整条轨道就藏在这一个方程里。"],
+            ["数值方法", "电脑每次往前算 1 分钟，几千步积出 " + d + " 天的轨道（RK4，欧拉法的升级版）。"],
+            ["建模", "先用只有地球的简单模型估算提前角，再用加上月球的完整模型检验、微调。"],
+          ], "c15 常微分方程 · m11 数值方法 · m12 微分方程建模");
+          const old = root.querySelector(".x-end"); old ? old.replaceWith(nc) : root.append(nc);
+          if (first) { award("moon"); light(["c15", "m11", "m12"]); renderSky(); renderFinal(); setTimeout(() => $("#sky").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" }), 1600); }
+          else renderFinal();
+        }
+        draw(); addEventListener("resize", draw);
+      } });
+      /* ---------- boot ---------- */
+      renderBar(); renderBadges(); renderMap(); renderSky(); renderFinal();
+      const once = () => { Audio_.unlock(); window.removeEventListener("pointerdown", once); window.removeEventListener("keydown", once); };
+      window.addEventListener("pointerdown", once); window.addEventListener("keydown", once);
+      $("#notes-btn").addEventListener("click", () => toggleNotes($("#notes").hidden));
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#notes").hidden) toggleNotes(false); });
+      $("#sfx").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.setSfx(on); if (on) Audio_.play("click");
+      });
+      $("#music").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.unlock(); Audio_.setMusic(on); Audio_.play("click");
+      });
+      $("#vol").addEventListener("input", (e) => Audio_.setVol(+e.target.value / 100));
+      $("#track").addEventListener("change", (e) => Audio_.setTrack(+e.target.value));
+    </script>
+      <script src="../ma.js"></script>
+  </body>
+</html>

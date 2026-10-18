@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>星图任务 · 魔方为什么能复原？</title>
+    <meta name="description" content="星图任务：从正方形的对称到交换子，用群论复原口袋魔方。难度 ★★★★★ 挑战，适合高中~大学。" />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <link rel="stylesheet" href="hark-charts.css" />
+    <style>
+      /* x- classes: the game shell. Tokens only (plus the mission accent). */
+      :root { --x-accent: #c9c6ff; --x-on-accent: #1f1b4d; }
+      .x-bar {
+        position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); z-index: 30;
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+        padding: 8px 12px; border-radius: var(--r-pill);
+        background: var(--mat-agent); -webkit-backdrop-filter: var(--hark-blur); backdrop-filter: var(--hark-blur);
+        border: 1px solid var(--stroke-primary); box-shadow: var(--hark-shadow);
+      }
+      .x-brand { font: var(--type-label); margin-right: auto; white-space: nowrap; }
+      .x-meter { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-primary); }
+      .x-meter b { font-weight: var(--weight-bold); }
+      .x-toggle {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap);
+        padding: 4px 12px; border: 1px solid var(--stroke-primary); border-radius: var(--r-pill);
+        background: var(--fill-primary-on); color: var(--text-primary); font: var(--type-tag); cursor: pointer;
+      }
+      .x-toggle[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-vol { width: 86px; accent-color: var(--fill-primary); }
+      .x-map { position: relative; padding: 8px 0 4px; }
+      .x-path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      .x-nodes { position: relative; display: grid; gap: 10px; }
+      .x-node {
+        display: grid; grid-template-columns: 46px 1fr auto; align-items: center; gap: 12px;
+        width: min(100%, 560px); padding: 10px 14px; border-radius: var(--r-l);
+        border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-body); text-align: left; cursor: pointer;
+        transition: box-shadow var(--dur-quick) var(--ease-out), transform var(--dur-quick) var(--ease-out);
+      }
+      .x-node:nth-child(even) { justify-self: end; }
+      .x-node:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--hark-shadow); }
+      .x-node:disabled { opacity: 0.55; cursor: not-allowed; }
+      .x-node__num { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-tertiary); font: var(--type-heading); }
+      .x-node.is-open .x-node__num { background: var(--x-accent); color: var(--x-on-accent); }
+      .x-node__t { display: block; font: var(--type-body-strong); }
+      .x-node__s { display: block; font: var(--type-caption); color: var(--text-secondary); }
+      .x-stars { font-size: 15px; letter-spacing: 1px; white-space: nowrap; }
+      .x-panel { padding: 16px; border-radius: var(--r-l); background: var(--fill-tertiary); display: grid; gap: 14px; }
+      .x-cat { display: grid; grid-template-columns: 44px 1fr; gap: 10px; align-items: start; }
+      .x-cat__face { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: var(--fill-primary-on); font-size: 24px; border: 1px solid var(--stroke-primary); }
+      .x-bubble { position: relative; padding: 10px 14px; border-radius: var(--r-m); background: var(--fill-primary-on); border: 1px solid var(--stroke-primary); font: var(--type-body); }
+      .x-bubble small { display: block; margin-top: 4px; font: var(--type-caption); color: var(--text-secondary); }
+      .x-opts { display: flex; flex-wrap: wrap; gap: 10px; }
+      .x-opt { padding: 8px; border-radius: var(--r-m); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); cursor: pointer; display: grid; gap: 6px; justify-items: center; font: var(--type-tag); color: var(--text-primary); }
+      .x-opt svg { width: 48px; height: 48px; display: block; }
+      .x-opt.is-sel { box-shadow: inset 0 0 0 2px var(--fill-primary); }
+      .x-opt.good { border-color: var(--fill-system-green); }
+      .x-opt.bad { border-color: var(--fill-system-red); }
+      .x-qopt { text-align: left; font: var(--type-small); min-height: var(--tap); padding: 8px 14px; }
+      .x-qopt.good { border-color: var(--fill-system-green); box-shadow: inset 0 0 0 1px var(--fill-system-green); }
+      .x-qopt.bad { border-color: var(--fill-system-red); opacity: 0.6; }
+      .x-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+      .x-btn {
+        display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 6px 16px;
+        border-radius: var(--r-s); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on);
+        color: var(--text-primary); font: var(--type-label); cursor: pointer;
+      }
+      .x-btn--go, .x-btn[aria-pressed="true"] { background: var(--fill-primary); color: var(--text-primary-on); border-color: transparent; }
+      .x-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+      .x-yn .x-btn { min-width: var(--tap); justify-content: center; padding: 6px 10px; }
+      .x-toasts { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; display: grid; gap: 8px; justify-items: center; pointer-events: none; }
+      .x-toast { padding: 10px 16px; border-radius: var(--r-pill); background: var(--fill-primary); color: var(--text-primary-on); font: var(--type-tag); box-shadow: var(--hark-shadow); animation: x-pop 320ms var(--ease-out); }
+      @keyframes x-pop { from { opacity: 0; transform: translateY(10px); } }
+      .x-shelf { display: flex; flex-wrap: wrap; gap: 8px; }
+      .x-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: var(--r-pill); background: var(--fill-tertiary); font: var(--type-tag); color: var(--text-secondary); }
+      .x-badge.got { background: var(--fill-primary); color: var(--text-primary-on); }
+      .x-badge.lit { background: var(--x-accent); color: var(--x-on-accent); box-shadow: 0 0 14px var(--x-accent); }
+      .x-end { display: grid; gap: 12px; padding: 16px; border-radius: var(--r-l); border: 1px solid var(--stroke-primary); background: var(--fill-primary-on); }
+      .x-end h3 { font: var(--type-heading); }
+      .x-end dl { display: grid; gap: 8px; margin: 0; }
+      .x-end dt { font: var(--type-body-strong); }
+      .x-end dd { margin: 0; font: var(--type-small); color: var(--text-secondary); }
+      .x-starid { font: var(--weight-regular) 12px/1.3 "Geist Mono", monospace; }
+      .x-flash { animation: x-shake 320ms var(--ease-out); }
+      @keyframes x-shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+      #stage [hidden], .x-drawer[hidden] { display: none; }
+      .x-drawer {
+        position: fixed; top: 0; right: 0; bottom: 0; z-index: 70; width: min(380px, 92vw); padding: 16px;
+        display: grid; align-content: start; gap: 12px; overflow-y: auto;
+        background: var(--mat-regular); -webkit-backdrop-filter: var(--hark-blur); backdrop-filter: var(--hark-blur);
+        border-left: 1px solid var(--stroke-primary); box-shadow: var(--hark-shadow);
+      }
+      .x-tree { border-radius: var(--r-m); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); overflow: hidden; }
+      .x-tree canvas { display: block; width: 100%; height: 340px; }
+      .x-read { font: var(--type-body); }
+      .x-range { width: min(260px, 100%); min-height: var(--tap); accent-color: var(--x-accent); }
+      .x-sub { display: grid; gap: 10px; }
+      .x-sub > h3 { font: var(--type-body-strong); }
+      .x-ruler { position: absolute; inset: 0; pointer-events: none; }
+      .x-ruler__band { position: absolute; border-left: 2px solid var(--x-accent); border-right: 2px solid var(--x-accent); background: color-mix(in srgb, var(--x-accent) 18%, transparent); }
+      .x-ruler__h { position: absolute; width: var(--tap); height: var(--tap); transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid var(--fill-primary-on); background: var(--x-accent); color: var(--x-on-accent); font: var(--type-tag); pointer-events: auto; touch-action: none; cursor: ew-resize; box-shadow: var(--hark-shadow); }
+      .x-net { border-radius: var(--r-m); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); overflow: hidden; }
+      .x-net svg { display: block; width: 100%; height: auto; max-height: 440px; touch-action: manipulation; }
+      .x-net line { stroke: var(--stroke-primary); stroke-width: 1; }
+      .x-net .n { cursor: pointer; outline: none; }
+      .x-net .n .t { fill: transparent; }
+      .x-net .n .d { fill: var(--fill-primary-on); stroke: var(--text-secondary); stroke-width: 1.5; transition: fill var(--dur-quick) var(--ease-out); }
+      .x-net .n.I .d { fill: var(--fill-system-red); stroke: var(--fill-system-red); }
+      .x-net .n.R .d { fill: var(--fill-tertiary); stroke: var(--stroke-primary); }
+      .x-net .n.V .d { fill: var(--x-accent); stroke: var(--x-on-accent); }
+      .x-net .n.P .d, .x-net .n:focus-visible .d { stroke: var(--text-primary); stroke-width: 3; }
+      .x-net text { font: var(--weight-bold) 12px var(--sans); fill: var(--text-primary); text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+      .x-key { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; border: 1px solid var(--text-secondary); }
+      .x-hbar { height: 28px; border-radius: var(--r-pill); background: var(--fill-tertiary); overflow: hidden; border: 1px solid var(--stroke-secondary); }
+      .x-hbar > i { display: block; height: 100%; background: var(--x-accent); transition: width var(--dur-quick) var(--ease-out); }
+      .x-tanks { display: grid; grid-template-columns: 1fr minmax(48px, 1.2fr) 1fr minmax(48px, 1.2fr) 1fr; align-items: end; gap: 6px; padding: 14px; border-radius: var(--r-m); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); }
+      .x-bk { display: grid; justify-items: center; gap: 6px; text-align: center; font: var(--type-tag); }
+      .x-bk__tank { position: relative; width: min(100%, 96px); height: 130px; border: 2px solid var(--stroke-primary); border-top: 0; border-radius: 0 0 var(--r-s) var(--r-s); overflow: hidden; background: var(--fill-tertiary); }
+      .x-bk__w { position: absolute; left: 0; right: 0; bottom: 0; transition: height var(--dur-quick) var(--ease-out); }
+      .x-bk b { font: var(--type-label); }
+      .x-pipe { display: grid; gap: 4px; margin-bottom: 52px; text-align: center; font: var(--type-caption); color: var(--text-secondary); }
+      .x-pipe i { display: block; height: 12px; border-radius: var(--r-pill); background: var(--fill-tertiary); border: 1px solid var(--stroke-secondary); }
+      .x-pipe.is-on i { background-image: repeating-linear-gradient(90deg, var(--pc) 0 8px, transparent 8px 16px); animation: x-flow 0.7s linear infinite; }
+      @keyframes x-flow { to { background-position: 16px 0; } }
+      .x-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+      .x-card { display: grid; gap: 8px; align-content: start; padding: 14px; border-radius: var(--r-m); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); }
+      .x-card h3 { font: var(--type-body-strong); }
+      @media (prefers-reduced-motion: reduce) { .x-toast, .x-flash, .x-pipe.is-on i { animation: none; } }
+      @media (max-width: 599px) { .x-brand { width: 100%; } .x-vol { width: 70px; } .x-tree canvas { height: 300px; } }
+      .x-cv { border-radius: var(--r-m); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); overflow: hidden; }
+      .x-cv canvas { display: block; width: 100%; height: 300px; }
+      .x-cv--s canvas { height: 220px; } .x-cv--xs canvas { height: 90px; } .x-cv--l canvas { height: 400px; }
+      .x-tab { border-collapse: collapse; width: min(100%, 360px); font: var(--type-small); }
+      .x-tab th, .x-tab td { padding: 6px 10px; border-bottom: 1px solid var(--stroke-secondary); text-align: left; }
+      .x-deck { position: relative; height: 64px; border-radius: var(--r-m); border: 1px solid var(--stroke-secondary); background: var(--fill-primary-on); }
+      .x-card7 { position: absolute; top: 6px; width: calc(100% / 7 - 4px); height: 50px; display: grid; place-items: center; font-size: 28px; border-radius: var(--r-s); background: var(--fill-tertiary); transition: left 520ms var(--ease-out); }
+      .x-g9 { display: grid; grid-template-columns: repeat(5, minmax(40px, 64px)); gap: 6px; justify-content: center; align-items: center; }
+      .x-g9 > span:empty { display: block; }
+      .x-g9__t { display: grid; place-items: center; aspect-ratio: 1; border-radius: var(--r-s); background: var(--tc); color: #111; font: var(--type-heading); transition: transform var(--dur-quick) var(--ease-out); }
+      .x-g9__t.off { box-shadow: 0 0 0 3px var(--text-primary); }
+      .x-g9__a { justify-content: center; padding: 4px; min-width: var(--tap); }
+      @media (prefers-reduced-motion: reduce) { .x-card7 { transition: none; } }
+    </style>
+      <link rel="stylesheet" href="../ma.css" />
+  </head>
+  <body>
+    <div class="page" id="top">
+      <main class="main">
+        <div class="x-bar" role="toolbar" aria-label="游戏状态">
+          <span class="x-brand">星图任务 · 魔方为什么能复原？</span>
+          <span class="x-meter">XP <b id="xp">0</b></span>
+          <span class="x-meter">⭐ <b id="stars">0</b>/15</span>
+          <button class="x-toggle" id="notes-btn" aria-expanded="false" aria-controls="notes">📒 笔记</button>
+          <button class="x-toggle" id="sfx" aria-pressed="true">🔊 音效</button>
+          <button class="x-toggle" id="music" aria-pressed="false">🎵 专注音乐</button>
+          <select class="x-toggle" id="track" aria-label="选择曲目">
+            <option value="-1" selected>随机轮播</option><option value="0">星空 Lo-fi</option><option value="1">雨夜书房</option><option value="2">晨光</option>
+          </select>
+          <span class="x-meter" id="nowplaying">正在播放:—</span>
+          <input class="x-vol" id="vol" type="range" min="0" max="100" value="30" aria-label="音乐音量" />
+        </div>
+
+        <section class="section" id="map" data-nav="星图">
+          <div class="head">
+            <p class="head__eyebrow">五关任务</p>
+            <h2>从一张正方形卡片开始，看懂魔方背后的群。</h2>
+            <p class="head__sub">每关得 1–3 颗星，拿到 1 颗星就解锁下一关。</p>
+          </div>
+          <p><span class="pill">难度 ★★★★★ 挑战</span> <span class="pill">适合 高中~大学</span> <span class="pill">前置 旋转与对称、乘法</span></p>
+          <div class="x-map">
+            <svg class="x-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M18 8 L82 30 L18 52 L82 74 L18 94" fill="none" style="stroke: var(--stroke-primary)" stroke-width="0.6" stroke-dasharray="2 2" />
+            </svg>
+            <div class="x-nodes" id="nodes"></div>
+          </div>
+        </section>
+
+        <section class="section" id="play" data-nav="关卡">
+          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">熊猫教授在星图上等你。</p></div>
+          <div id="stage" class="x-panel">
+            <div class="x-cat">
+              <div class="x-cat__face">🐼</div>
+              <div class="x-bubble">点开第 1 关「正方形的八种样子」。魔方能复原，秘密从一张卡片的对称开始。先猜，再动手。<small>熊猫教授只问问题，不直接给答案；连错两次才给提示。</small></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="shelf" data-nav="徽章">
+          <div class="head"><h2>徽章架</h2><p class="head__sub">做到了才会亮起来。</p></div>
+          <div class="x-shelf" id="badges"></div>
+        </section>
+
+        <section class="section" id="sky" data-nav="星空">
+          <div class="head"><h2>九颗星，等你点亮。</h2><p class="head__sub">每颗星是一个数学知识点，过关时点亮。</p></div>
+          <div id="final" hidden></div>
+          <div class="x-shelf" id="skystars"></div>
+        </section>
+      </main>
+      <footer class="foot">
+        <p>魔方状态数与「上帝之数」引自公开数学文献；本任务只用于理解群论入门思想。</p>
+        <nav aria-label="回到各部分" data-auto></nav>
+        <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"><span class="hark-mark"></span><span>built by hark</span></a>
+      </footer>
+    </div>
+    <aside class="x-drawer" id="notes" aria-label="笔记" hidden></aside>
+    <div class="x-toasts" id="toasts" aria-live="polite"></div>
+    <script src="hark.js"></script>
+    <script>
+      /* ---------- audio ---------- */
+      const Audio_ = (() => {
+        let ctx = null, master = null, musicGain = null, sfxOn = true, musicOn = false, vol = 0.3, started = false;
+        function ensure() {
+          if (ctx) return ctx;
+          const AC = window.AudioContext || window.webkitAudioContext;
+          ctx = new AC();
+          master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+          musicGain = ctx.createGain(); musicGain.gain.value = 0; musicGain.connect(master);
+          return ctx;
+        }
+        function unlock() { ensure(); if (ctx.state === "suspended") ctx.resume(); started = true; }
+        function env(node, t, a, d, peak) {
+          const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+          g.gain.exponentialRampToValueAtTime(peak, t + a);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+          node.connect(g); g.connect(master); return g;
+        }
+        function tone(freq, t, dur, type, peak) {
+          const o = ctx.createOscillator(); o.type = type || "sine"; o.frequency.setValueAtTime(freq, t);
+          env(o, t, 0.012, dur, peak || 0.18); o.start(t); o.stop(t + dur + 0.08); return o;
+        }
+        const sfx = {
+          click() { const t = ctx.currentTime; tone(880, t, 0.05, "triangle", 0.08); },
+          correct() { const t = ctx.currentTime; [523.25, 659.25, 783.99].forEach((f, i) => tone(f, t + i * 0.07, 0.22, "sine", 0.14)); },
+          wrong() { const t = ctx.currentTime; tone(150, t, 0.22, "sine", 0.16); tone(110, t + 0.06, 0.26, "sine", 0.12); },
+          star() { const t = ctx.currentTime; [784, 1047, 1319, 1568, 2093].forEach((f, i) => tone(f, t + i * 0.055, 0.3, "triangle", 0.09)); },
+          fanfare() { const t = ctx.currentTime; [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.3]].forEach(([f, d]) => { tone(f, t + d, 0.4, "sawtooth", 0.07); tone(f * 2, t + d, 0.3, "sine", 0.05); }); },
+          /* 向导: a short, soft squeak */
+          squeak() {
+            const t = ctx.currentTime, o = ctx.createOscillator(); o.type = "sine";
+            o.frequency.setValueAtTime(1300, t); o.frequency.exponentialRampToValueAtTime(1900, t + 0.05); o.frequency.exponentialRampToValueAtTime(1500, t + 0.11);
+            env(o, t, 0.01, 0.11, 0.05); o.start(t); o.stop(t + 0.16);
+          },
+          bonk() {
+            const t = ctx.currentTime, o = ctx.createOscillator();
+            o.type = "square"; o.frequency.setValueAtTime(180, t); o.frequency.exponentialRampToValueAtTime(60, t + 0.18);
+            env(o, t, 0.005, 0.22, 0.12); o.start(t); o.stop(t + 0.3); tone(95, t + 0.02, 0.2, "sine", 0.18);
+          },
+          siren() {
+            const t = ctx.currentTime, o = ctx.createOscillator(); o.type = "square"; o.frequency.setValueAtTime(660, t);
+            [0.3, 0.6, 0.9, 1.2].forEach((d, i) => o.frequency.linearRampToValueAtTime(i % 2 ? 660 : 990, t + d));
+            env(o, t, 0.02, 1.2, 0.05); o.start(t); o.stop(t + 1.3);
+          },
+          tick(f) { tone(f || 600, ctx.currentTime, 0.06, "sine", 0.07); },
+          pop(f) { const t = ctx.currentTime; tone(f || 200 + Math.random() * 500, t, 0.18, "triangle", 0.05); },
+          chord() { const t = ctx.currentTime; [523.25, 659.25, 783.99, 987.77, 1318.5].forEach((f, i) => tone(f, t + i * 0.012, 0.55, "triangle", 0.06)); },
+        };
+        /* tension bed for later BOSS rounds */
+        let sw = null;
+        function swarm(on) {
+          if (on) {
+            if (sw || !sfxOn || !started) return; ensure();
+            const t = ctx.currentTime, g = ctx.createGain(), f = ctx.createBiquadFilter(), nodes = [];
+            f.type = "bandpass"; f.frequency.value = 650; f.Q.value = 1.2;
+            g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.028, t + 1.5); f.connect(g); g.connect(master);
+            [196, 203, 247, 252].forEach((fr, i) => {
+              const o = ctx.createOscillator(), l = ctx.createOscillator(), lg = ctx.createGain();
+              o.type = "sawtooth"; o.frequency.value = fr; l.frequency.value = 5 + i * 1.7; lg.gain.value = 9;
+              l.connect(lg); lg.connect(o.frequency); o.connect(f); o.start(t); l.start(t); nodes.push(o, l);
+            });
+            sw = { g, nodes };
+          } else if (sw) {
+            const t = ctx.currentTime, s = sw; sw = null;
+            s.g.gain.cancelScheduledValues(t); s.g.gain.setValueAtTime(s.g.gain.value, t); s.g.gain.linearRampToValueAtTime(0.0001, t + 0.8);
+            setTimeout(() => { s.nodes.forEach((n) => n.stop()); s.g.disconnect(); }, 900);
+          }
+        }
+        function play(name, arg) { if (!sfxOn || !started) return; ensure(); if (ctx.state === "suspended") ctx.resume(); duckMusic(); (sfx[name] || sfx.click)(arg); }
+        /* ---------- 专注音乐: generative engine, lookahead scheduler (25ms tick, 0.1s ahead) ---------- */
+        const PENTA = [0, 2, 4, 7, 9];
+        const CH = { I: [0, 4, 7, 11], ii: [2, 5, 9, 12], iii: [4, 7, 11, 14], IV: [5, 9, 12, 16], V: [7, 11, 14, 17], vi: [9, 12, 16, 19] };
+        const P = (s) => s.split(" ").map((n) => CH[n]);
+        const TRACKS = [
+          { id: "lofi", name: "星空 Lo-fi", bpm: 72, swing: 0.2, key: 57, cb: 1, wet: 0.3, progs: [P("ii V I vi"), P("IV iii ii I"), P("vi IV I V")] },
+          { id: "rain", name: "雨夜书房", bpm: 60, swing: 0, key: 50, cb: 2, wet: 0.4, progs: [P("I iii vi IV"), P("vi ii V I"), P("IV I ii vi")] },
+          { id: "dawn", name: "晨光", bpm: 90, swing: 0.08, key: 60, cb: 1, wet: 0.25, progs: [P("I V vi IV"), P("IV I V vi"), P("I ii IV V")] },
+        ];
+        let comp = null, duck = null, bus = null, echo = null, noiseBuf = null, players = [], timer = null, offT = null, mode = -1;
+        const rnd = (n) => (Math.random() * n) | 0;
+        const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+        const newMotif = () => [0, 0, 0, 0].map(() => rnd(8));
+        function mutate(m) { const c = m.slice(); for (let i = 0, n = 1 + rnd(2); i < n; i++) { const j = rnd(4); c[j] = Math.max(0, Math.min(9, c[j] + [-2, -1, 1, 2][rnd(4)])); } return c; }
+        function graph() {
+          if (bus) return; ensure();
+          comp = ctx.createDynamicsCompressor(); comp.threshold.value = -20; comp.ratio.value = 4; comp.attack.value = 0.01; comp.release.value = 0.3;
+          duck = ctx.createGain(); bus = ctx.createGain(); echo = ctx.createDelay(1.5);
+          const fb = ctx.createGain(), lp = ctx.createBiquadFilter(); fb.gain.value = 0.32; lp.type = "lowpass"; lp.frequency.value = 1800;
+          echo.connect(lp); lp.connect(fb); fb.connect(echo); lp.connect(bus);
+          bus.connect(comp); comp.connect(duck); duck.connect(musicGain);
+          const len = ctx.sampleRate * 2; noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+          const d = noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        }
+        function note(p, m, t, dur, type, peak, a, wet) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type; o.frequency.value = mtof(m);
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          o.connect(g); g.connect(p.out); if (wet) g.connect(p.wet); o.start(t); o.stop(t + dur + 0.05);
+        }
+        function hit(p, t, dur, peak, ftype, freq) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+          s.buffer = noiseBuf; f.type = ftype; f.frequency.value = freq;
+          g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(t, Math.random() * 1.5); s.stop(t + dur + 0.02);
+        }
+        function kick(p, t) {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.2);
+          g.gain.setValueAtTime(0.28, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+          o.connect(g); g.connect(p.out); o.start(t); o.stop(t + 0.35); hit(p, t, 0.05, 0.05, "lowpass", 400);
+        }
+        function ep(p, ch, t, dur) {
+          const tr = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain(), env = ctx.createGain();
+          tr.gain.value = 0.75; lfo.frequency.value = 3.8; dep.gain.value = 0.22; lfo.connect(dep); dep.connect(tr.gain);
+          env.gain.setValueAtTime(0.0001, t); env.gain.exponentialRampToValueAtTime(1, t + 0.02); env.gain.exponentialRampToValueAtTime(0.35, t + 0.9); env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [["sine", 0.045], ["triangle", 0.01]].forEach(([ty, v]) => {
+            const o = ctx.createOscillator(), g = ctx.createGain(); o.type = ty; o.frequency.value = mtof(m); o.detune.value = rnd(7) - 3; g.gain.value = v;
+            o.connect(g); g.connect(tr); o.start(t); o.stop(t + dur + 0.05);
+          }));
+          tr.connect(env); env.connect(p.out); env.connect(p.wet); lfo.start(t); lfo.stop(t + dur + 0.05);
+        }
+        function pad(p, ch, t, dur, type, peak, lo, hi) {
+          const f = ctx.createBiquadFilter(), env = ctx.createGain(); f.type = "lowpass";
+          f.frequency.setValueAtTime(lo, t); f.frequency.linearRampToValueAtTime(hi, t + dur * 0.5); f.frequency.linearRampToValueAtTime(lo, t + dur);
+          env.gain.setValueAtTime(0.0001, t); env.gain.linearRampToValueAtTime(peak, t + dur * 0.35); env.gain.linearRampToValueAtTime(0.0001, t + dur);
+          ch.forEach((m) => [-7, 7].forEach((dt) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = mtof(m); o.detune.value = dt; o.connect(f); o.start(t); o.stop(t + dur + 0.05); }));
+          f.connect(env); env.connect(p.out); env.connect(p.wet);
+        }
+        function rain(p) {
+          const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), dep = ctx.createGain();
+          s.buffer = noiseBuf; s.loop = true; f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 0.5; g.gain.value = 0.05;
+          lfo.frequency.value = 0.07; dep.gain.value = 0.02; lfo.connect(dep); dep.connect(g.gain);
+          s.connect(f); f.connect(g); g.connect(p.out); s.start(); lfo.start(); p.nodes.push(s, lfo);
+        }
+        function section(p) {
+          let n; do n = rnd(3); while (n === p.prog); p.prog = n;
+          if (Math.random() < 0.25) p.key = p.t.key + [0, 2, -2, 5, -3][rnd(5)];
+          p.drums = Math.random() > 0.3;
+          if (Math.random() < 0.4) p.motif = newMotif();
+        }
+        function step(p, t) {
+          const T = p.t, s = p.step % 16, bar = (p.step / 16) | 0, beat = 60 / T.bpm;
+          if (s === 0) {
+            if (bar && bar % 8 === 0) section(p);
+            p.cur = bar % 4 === 2 ? mutate(p.motif) : bar % 4 === 0 ? p.motif : p.cur;
+          }
+          const ch = T.progs[p.prog][((bar / T.cb) | 0) % 4].map((x) => p.key + x);
+          const mel = (d) => p.key + 12 + PENTA[d % 5] + 12 * ((d / 5) | 0);
+          if (T.id === "lofi") {
+            if (s === 0) { ep(p, ch, t, beat * 4); note(p, ch[0] - 24, t, beat * 1.8, "sine", 0.16, 0.02); }
+            if (s === 10) note(p, ch[0] - 24, t, beat * 1.2, "sine", 0.12, 0.02);
+            if (p.drums) {
+              if (s === 0 || s === 10 || (s === 7 && Math.random() < 0.3)) kick(p, t);
+              if (s === 4 || s === 12) hit(p, t, 0.16, 0.07, "bandpass", 1800);
+              if (s % 2 === 0 || Math.random() < 0.15) hit(p, t, 0.04, s % 4 === 2 ? 0.03 : 0.018, "highpass", 7000);
+            }
+            if (bar % 2 === 1 && s % 4 === 0 && Math.random() > 0.28) note(p, mel(p.cur[s / 4]), t, beat * 1.3, "sine", 0.035, 0.01, true);
+          } else if (T.id === "rain") {
+            if (s === 0 && bar % 2 === 0) pad(p, ch, t, beat * 8 + 1, "sawtooth", 0.022, 280, 1300);
+            if (s % 8 === 0 && Math.random() < 0.45) { const m = mel(p.cur[(bar * 2 + s / 8) % 4]) - 12; note(p, m, t, 3.5, "triangle", 0.045, 0.005, true); note(p, m, t, 2.5, "sine", 0.03, 0.005); }
+          } else {
+            if (s === 0) pad(p, ch.map((m) => m + 12), t, beat * 4 + 0.6, "sine", 0.014, 2500, 5000);
+            if (s % 2 === 0 && Math.random() > 0.18) { const m = mel(p.cur[(s / 2) % 4] + (s >= 8 ? 1 : 0)); note(p, m, t, 0.55, "sine", 0.05, 0.004, true); note(p, m + 28, t, 0.08, "sine", 0.008, 0.002); }
+            if (p.drums) hit(p, t, 0.05, s % 2 ? 0.022 : 0.01, "highpass", 6000);
+          }
+        }
+        function sched() {
+          const now = ctx.currentTime;
+          players.forEach((p) => {
+            if (p.next < now - 0.05) p.next = now + 0.02; /* tab was throttled: skip, don't burst */
+            while (p.next < now + 0.1) { const sx = 60 / p.t.bpm / 4; step(p, p.next + (p.step % 2 ? p.t.swing * sx : 0)); p.step++; p.next += sx; }
+          });
+          const live = players.find((p) => !p.dead);
+          if (mode < 0 && live && now - live.born > 180) switchTo((live.i + 1 + rnd(2)) % 3);
+        }
+        function label(i) { const n = document.getElementById("nowplaying"); if (n) n.textContent = "正在播放:" + (i == null ? "—" : TRACKS[i].name); }
+        function kill(p) { p.nodes.forEach((n) => { try { n.stop(); } catch (e) {} }); p.out.disconnect(); p.wet.disconnect(); players = players.filter((x) => x !== p); }
+        function switchTo(i) {
+          const now = ctx.currentTime;
+          players.filter((p) => !p.dead).forEach((p) => {
+            p.dead = true; p.out.gain.cancelScheduledValues(now); p.out.gain.setValueAtTime(p.out.gain.value, now);
+            p.out.gain.linearRampToValueAtTime(0.0001, now + 2); setTimeout(() => kill(p), 2300);
+          });
+          const T = TRACKS[i], p = { t: T, i, step: 0, next: now + 0.1, born: now, key: T.key, prog: 0, drums: true, motif: newMotif(), out: ctx.createGain(), wet: ctx.createGain(), nodes: [] };
+          p.cur = p.motif; p.out.gain.setValueAtTime(0.0001, now); p.out.gain.linearRampToValueAtTime(1, now + 2);
+          p.out.connect(bus); p.wet.gain.value = T.wet; p.wet.connect(echo);
+          echo.delayTime.setTargetAtTime((60 / T.bpm) * 0.75, now, 0.5);
+          if (T.id === "rain") rain(p);
+          players.push(p); label(i);
+        }
+        function fadeTo(v) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(v, n + 2); }
+        function startMusic() {
+          graph(); if (ctx.state === "suspended") ctx.resume();
+          clearTimeout(offT); if (!timer) timer = setInterval(sched, 25);
+          if (!players.some((p) => !p.dead)) switchTo(mode < 0 ? rnd(3) : mode);
+          fadeTo(vol);
+        }
+        function stopMusic() {
+          if (!bus) return; fadeTo(0.0001);
+          offT = setTimeout(() => { clearInterval(timer); timer = null; players.slice().forEach(kill); label(null); }, 2100);
+        }
+        function setTrack(v) {
+          mode = v; if (!musicOn || !bus) return;
+          const live = players.find((p) => !p.dead);
+          if (mode >= 0 && (!live || live.i !== mode)) switchTo(mode); else if (live) live.born = ctx.currentTime;
+        }
+        function duckMusic() {
+          if (!musicOn || !duck) return; const t = ctx.currentTime, g = duck.gain;
+          g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0.45, t + 0.05);
+          g.setValueAtTime(0.45, t + 0.35); g.linearRampToValueAtTime(1, t + 1);
+        }
+        return {
+          unlock, play, swarm,
+          setSfx(v) { sfxOn = v; if (!v) swarm(false); }, isSfx: () => sfxOn,
+          setMusic(v) { musicOn = v; v ? startMusic() : stopMusic(); }, isMusic: () => musicOn,
+          setVol(v) { vol = v; if (ctx && timer && musicOn) { const n = ctx.currentTime; musicGain.gain.cancelScheduledValues(n); musicGain.gain.setValueAtTime(musicGain.gain.value, n); musicGain.gain.linearRampToValueAtTime(vol, n + 0.3); } },
+          setTrack,
+        };
+      })();
+      /* ---------- state ---------- */
+      const State = { xp: 0, stars: 0, perLevel: {}, badges: {}, unlocked: 1, lit: {}, level: 0 };
+      const BADGES = [
+        { id: "sym", name: "对称侦探", hint: "完成第 1 关「正方形的八种样子」" },
+        { id: "undo", name: "撤销大师", hint: "完成第 2 关「先穿袜子再穿鞋」" },
+        { id: "shuffle", name: "洗牌师", hint: "完成第 3 关「洗几次回原样」" },
+        { id: "comm", name: "交换子术士", hint: "完成第 4 关「只动三块」" },
+        { id: "cube", name: "魔方复原者", hint: "完成第 5 关「BOSS 口袋魔方」" },
+      ];
+      const LEVELS_META = [
+        { id: 1, title: "正方形的八种样子 🔷", sub: "对称与变换" },
+        { id: 2, title: "先穿袜子再穿鞋 🧦", sub: "运算的顺序与逆" },
+        { id: 3, title: "洗几次回原样 🃏", sub: "置换、循环与最小公倍数" },
+        { id: 4, title: "只动三块 🧩", sub: "群与交换子" },
+        { id: 5, title: "BOSS 口袋魔方 🧊", sub: "BOSS 关 · 群论实战" },
+      ];
+      const STARS = [
+        ["g06", "对称"], ["g07", "平移旋转与反射"], ["l05", "映射与关系"], ["d04", "排列组合"], ["t05", "最大公约数与最小公倍数"],
+        ["a23", "群"], ["t01", "奇数与偶数"], ["d03", "加法与乘法原理"], ["g22", "空间几何"],
+      ];
+      const NOTES = {
+        1: [
+          ["对称 = 让图形看起来不变的变换", "正方形有 4 种旋转（0°、90°、180°、270°）和 4 种翻转，一共 8 种，记作 D₄。"],
+          ["r⁴ = e", "转 90° 四次回到原样；e 表示「什么都不做」（单位元）。翻转两次也回到原样：f² = e。"],
+          ["群的三条规则", "两个对称连做还是对称（封闭）；有「不动」e；每个对称都能撤销（逆元）。另有结合律。"],
+          ["应用", "晶体结构、分子对称、图案设计。"],
+        ],
+        2: [
+          ["复合 AB", "先做 A 再做 B。顺序会影响结果：先转再翻 ≠ 先翻再转，群不一定可交换。"],
+          ["逆元", "r⁻¹ = 逆时针 90° = r³；f⁻¹ = f。"],
+          ["袜子–鞋子法则", "(AB)⁻¹ = B⁻¹A⁻¹：撤销时倒着来，每一步换成它的逆。"],
+          ["应用", "撤销键、解锁步骤、魔方复原。"],
+        ],
+        3: [
+          ["置换", "把 n 个位置重新排一次。7 张牌一共有 7! = 5040 种排法。"],
+          ["循环分解", "跟着箭头走，每张牌都会绕回来；一个置换拆成几个不相交的圈。"],
+          ["周期 = 各圈长度的最小公倍数", "圈长 3 和 4 → lcm(3, 4) = 12 次回原样。"],
+          ["应用", "洗牌魔术（完美洗牌 8 次回原）、密码中的置换、音乐里的节奏循环。"],
+        ],
+        4: [
+          ["交换子 [A, B] = A B A⁻¹ B⁻¹", "两步互相「打扰」的地方才会被改变，其余位置都回到原处。"],
+          ["可交换时交换子 = e", "如果 AB = BA，交换子什么都不动。它衡量的就是「不可交换」的程度。"],
+          ["3-循环", "本关推一列、推一行再撤回，只有 3 块轮换。魔方高手复原最后几块用的就是交换子。"],
+        ],
+        5: [
+          ["魔方是一个群", "每次转动是一个置换；所有转动组合构成魔方群。2×2×2 口袋魔方有 3,674,160 种状态。"],
+          ["复原 = 求逆", "打乱序列是 X₁X₂…Xₖ，复原就是 Xₖ⁻¹…X₂⁻¹X₁⁻¹。"],
+          ["奇偶守恒", "3×3 魔方拆开乱装，只有 1/12 能转回原样：角块与棱块的置换奇偶必须一致，角块总扭转、棱块总翻转也守恒（2 × 3 × 2 = 12）。"],
+          ["数据", "3×3 魔方约 4.3×10¹⁹ 种状态；任意打乱最多 20 步可复原（「上帝之数」，Rokicki 等，2010）。"],
+        ],
+      };
+
+      const $ = (s) => document.querySelector(s);
+      function toast(msg) {
+        const el = document.createElement("div"); el.className = "x-toast"; el.textContent = msg;
+        $("#toasts").appendChild(el); setTimeout(() => el.remove(), 3200);
+      }
+      function award(id) {
+        if (State.badges[id]) return;
+        State.badges[id] = true;
+        const b = BADGES.find((x) => x.id === id);
+        Audio_.play("star"); toast("🏅 获得徽章:" + b.name); renderBadges();
+      }
+      function light(ids) {
+        ids.forEach((i) => (State.lit[i] = true));
+        toast("✨ 星图点亮:" + ids.map((i) => i + " " + STARS.find((s) => s[0] === i)[1]).join(" · ")); renderSky();
+      }
+      function renderBadges() {
+        $("#badges").innerHTML = BADGES.map((b) =>
+          `<span class="x-badge ${State.badges[b.id] ? "got" : ""}">${State.badges[b.id] ? "🏅" : "🔒"} ${b.name}<small style="opacity:.75"> · ${b.hint}</small></span>`
+        ).join("");
+      }
+      function renderSky() {
+        $("#skystars").innerHTML = STARS.map(([id, n]) =>
+          `<span class="x-badge ${State.lit[id] ? "lit" : ""}">${State.lit[id] ? "★" : "☆"} <span class="x-starid">${id}</span> ${n}</span>`
+        ).join("");
+      }
+      function renderFinal() {
+        const done = LEVELS_META.filter((m) => State.perLevel[m.id]).length, f = $("#final");
+        if (!done) { f.hidden = true; return; }
+        const left = LEVELS_META.filter((m) => !getLevel(m.id)).map((m) => m.title);
+        const lit = STARS.filter((s) => State.lit[s[0]]).length;
+        f.hidden = false;
+        const all = done === LEVELS_META.length;
+        f.innerHTML = `<div class="x-end"><h3>${all ? "🎉 星图任务全部完成" : `星图进度 ${done}/${LEVELS_META.length} 关`}</h3>
+          <p>⭐ ${State.stars}/15 · 🏅 ${Object.keys(State.badges).length}/${BADGES.length} · XP ${State.xp} · 已点亮 ${lit}/${STARS.length} 颗星</p>
+          ${all ? `<div class="x-shelf">${LEVELS_META.map((m) => `<span class="x-badge got">${m.id} · ${m.title} ${starStr(State.perLevel[m.id])}</span>`).join("")}</div>
+          <div class="x-shelf">${BADGES.filter((b) => State.badges[b.id]).map((b) => `<span class="x-badge got">🏅 ${b.name}</span>`).join("")}</div>
+          <p class="fineprint">从对称、置换、交换子到魔方群：${lit === STARS.length ? "九颗星全部点亮" : `已点亮 ${lit} 颗星`}。你看懂了魔方为什么转得回去，也知道了为什么乱装的魔方转不回去。</p>` : ""}
+          ${left.length ? `<p class="fineprint">即将开放:${left.join("、")}。全部通关后，下面 9 颗星会全部点亮。</p>` : ""}</div>`;
+      }
+      function renderNotes() {
+        const id = State.level, list = NOTES[id], m = LEVELS_META[id - 1];
+        $("#notes").innerHTML = `<div class="x-row"><b style="font:var(--type-body-strong);margin-right:auto">📒 ${m ? `第 ${id} 关笔记` : "笔记"}</b><button class="x-btn" id="notes-x">关闭</button></div>
+          <div class="x-end">${list ? `<h3>${m.title}</h3><dl>${list.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join("")}</dl>` : "<p>打开一关后，这里会出现本关的公式。</p>"}</div>`;
+        $("#notes-x").addEventListener("click", () => toggleNotes(false));
+      }
+      function toggleNotes(on) {
+        $("#notes").hidden = !on; $("#notes-btn").setAttribute("aria-expanded", String(on));
+        if (on) { renderNotes(); $("#notes-x").focus(); } else $("#notes-btn").focus();
+      }
+      function renderBar() { $("#xp").textContent = State.xp; $("#stars").textContent = State.stars; }
+      function starStr(n) { return n ? "⭐".repeat(n) + "☆".repeat(3 - n) : "☆☆☆"; }
+      function renderMap() {
+        $("#nodes").innerHTML = LEVELS_META.map((m) => {
+          const open = m.id <= State.unlocked && !!getLevel(m.id);
+          const got = State.perLevel[m.id] || 0;
+          const note = getLevel(m.id) ? (open ? m.sub : "完成上一关解锁") : "即将开放";
+          return `<button class="x-node ${open ? "is-open" : ""}" data-level="${m.id}" ${open ? "" : "disabled"}>
+            <span class="x-node__num">${m.id}</span>
+            <span><span class="x-node__t">${m.title}</span><span class="x-node__s">${note}</span></span>
+            <span class="x-stars">${starStr(got)}</span></button>`;
+        }).join("");
+        $("#nodes").querySelectorAll("button[data-level]").forEach((b) =>
+          b.addEventListener("click", () => { Audio_.play("click"); openLevel(+b.dataset.level); }));
+      }
+      function finishLevel(id, stars, xp) {
+        const prev = State.perLevel[id] || 0;
+        if (stars > prev) { State.stars += stars - prev; State.perLevel[id] = stars; }
+        State.xp += xp;
+        if (stars >= 1 && State.unlocked < id + 1) State.unlocked = id + 1;
+        renderBar(); renderMap(); renderFinal(); Audio_.play("fanfare");
+        toast(`第 ${id} 关完成 · ${starStr(stars)} · +${xp} XP`);
+      }
+      function openLevel(id) {
+        const lv = getLevel(id); if (!lv) return;
+        State.level = id; if (!$("#notes").hidden) renderNotes();
+        $("#play-title").textContent = `第 ${id} 关 · ${lv.title}`;
+        $("#play-sub").textContent = LEVELS_META[id - 1].sub;
+        const stage = $("#stage"); stage.innerHTML = ""; Audio_.swarm(false);
+        lv.init(stage, (stars, xp) => finishLevel(id, stars, xp));
+        $("#play").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+      }
+      /* guide bubble helper */
+      function guide(container, text, sub) {
+        const wrap = document.createElement("div"); wrap.className = "x-cat";
+        wrap.innerHTML = `<div class="x-cat__face">🐼</div><div class="x-bubble" aria-live="polite"></div>`;
+        const b = wrap.querySelector(".x-bubble");
+        const set = (t, s) => { b.innerHTML = ""; b.append(t); if (s) { const el = document.createElement("small"); el.textContent = s; b.append(el); } Audio_.play("squeak"); };
+        set(text, sub); container.append(wrap);
+        return set;
+      }
+      function el(tag, cls, html) { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
+      /* end-card helper: stars, headline, [[term, meaning]], star-map ids */
+      function endCard(stars, head, math, starIds) {
+        return el("div", "x-end", `<h3>${starStr(stars)} ${head}</h3>
+          <div><p style="font:var(--type-body-strong)">你刚刚用到的数学</p>
+          <dl>${math.map(([t, d]) => `<dt>${t}</dt><dd>${d}</dd>`).join("")}</dl></div>
+          <div><p style="font:var(--type-body-strong)">星图点亮</p><p class="x-starid">${starIds}</p></div>`);
+      }
+      const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const taskList = (T, got) => T.map(([k, t, s]) => `<li class="${got[k] ? "is-done" : ""}"><span class="checklist__item">${t} <small>${s}</small></span><span class="chip ${got[k] ? "" : "chip--solid"}">${got[k] ? "完成 ⭐" : "进行中"}</span></li>`).join("");
+
+      /* ---------- v0.7 shared helpers (rocket / cube) ---------- */
+      const probeEl = document.createElement("span"); probeEl.hidden = true; document.body.append(probeEl);
+      const col = (v) => { probeEl.style.color = v; return getComputedStyle(probeEl).color; };
+      const PAL = () => ({ ink: col("var(--text-primary)"), sub: col("var(--text-secondary)"), line: col("var(--stroke-primary)"), faint: col("var(--stroke-secondary)"),
+        acc: col("var(--x-accent)"), on: col("var(--x-on-accent)"), red: col("var(--fill-system-red)"), green: col("var(--fill-system-green)"), bg: col("var(--fill-primary-on)") });
+      function fit(cv) {
+        const dpr = Math.min(2, devicePixelRatio || 1), W = cv.clientWidth || 300, H = cv.clientHeight || 300;
+        cv.width = W * dpr; cv.height = H * dpr; const c = cv.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0); return { c, W, H };
+      }
+      const r1 = (v) => Math.round(v * 10) / 10, r2 = (v) => Math.round(v * 100) / 100;
+      function checklist(root, T, got) { const ul = el("ul", "checklist"); root.append(ul); const paint = () => (ul.innerHTML = taskList(T, got)); paint(); return paint; }
+      /* guess-first block: options -> reveal rest */
+      function guess(root, opts, right, onPick) {
+        const gs = el("div", "x-opts"); root.append(gs);
+        opts.forEach((v, i) => {
+          const b = el("button", "x-opt x-qopt"); b.textContent = v; gs.append(b);
+          b.addEventListener("click", () => {
+            gs.querySelectorAll("button").forEach((x, j) => { x.disabled = true; if (j === right) x.classList.add("good"); });
+            b.classList.add("is-sel"); Audio_.play(i === right ? "correct" : "pop"); onPick(i === right, v);
+          });
+        });
+        return gs;
+      }
+      /* three-question quiz; the guide nudges first, gives the hint after two misses */
+      function makeQuiz(box, Q, say, onUpdate) {
+        const qs = Q.map(() => ({ tries: 0, solved: false, first: false }));
+        Q.forEach((item, qi) => {
+          const b0 = el("div", "x-sub", `<p>${qi + 1}. ${item.q}</p>`), opts = el("div", "x-opts");
+          item.o.forEach((txt, oi) => {
+            const b = el("button", "x-opt x-qopt"); b.textContent = txt; opts.append(b);
+            b.addEventListener("click", () => {
+              const s = qs[qi]; if (s.solved) return;
+              if (oi === item.a) {
+                s.solved = true; s.first = s.tries === 0; b.classList.add("good");
+                opts.querySelectorAll("button").forEach((x) => (x.disabled = true));
+                Audio_.play("correct"); say("✓ " + item.ok, s.first ? "一次答对。" : "答出来了；一次答对才算满星。"); onUpdate(qs);
+              } else {
+                s.tries++; b.classList.add("bad"); b.disabled = true; Audio_.play("wrong");
+                opts.classList.remove("x-flash"); void opts.offsetWidth; opts.classList.add("x-flash");
+                say(s.tries >= 2 ? item.hint : item.nudge, s.tries >= 2 ? "" : "再想想，答错两次我就给提示。");
+              }
+            });
+          });
+          b0.append(opts); box.append(b0);
+        });
+        return qs;
+      }
+      const quizStars = (qs) => { const r = qs.filter((x) => x.first).length; return r === 3 ? 3 : r === 2 ? 2 : 1; };
+      const quizOK = (qs) => qs.filter((x) => x.solved).length >= 2;
+      /* standard clear: stars, badge, star ids, end card */
+      function clearer(root, done, badge, lights, head, math, ids, firstMsg, say) {
+        let awarded = 0, card = null;
+        return (stars) => {
+          if (stars <= awarded) return;
+          const first = !awarded; done(stars, first ? 40 + 20 * stars : 20 * (stars - awarded)); awarded = stars;
+          if (first) { award(badge); light(lights); say(firstMsg[0], firstMsg[1]); }
+          const nc = endCard(stars, head, math, ids);
+          card ? card.replaceWith(nc) : root.append(nc); card = nc; renderSky(); renderFinal();
+        };
+      }
+
+      const LEVELS = [];
+      const getLevel = (id) => LEVELS.find((l) => l.id === id);
+      /* ---------- square symmetry helpers (levels 1–2) ---------- */
+      const OPS = { r: [[0, 1], [-1, 0]], ri: [[0, -1], [1, 0]], f: [[-1, 0], [0, 1]] };
+      const OPN = { r: "r 顺时针 90°", ri: "r⁻¹ 逆时针 90°", f: "f 左右翻" };
+      const ID = [[1, 0], [0, 1]];
+      const mul = (A, B) => [[A[0][0] * B[0][0] + A[0][1] * B[1][0], A[0][0] * B[0][1] + A[0][1] * B[1][1]], [A[1][0] * B[0][0] + A[1][1] * B[1][0], A[1][0] * B[0][1] + A[1][1] * B[1][1]]];
+      const key = (M) => M.flat().join(",");
+      const CORN = [[-1, 1], [1, 1], [1, -1], [-1, -1]], CCOL = ["#ff6b8a", "#ffd36e", "#5fd7ff", "#9cf07a"];
+      function drawSquare(cv, M, ghost) {
+        if (!cv.isConnected) return;
+        const { c, W, H } = fit(cv), P = PAL(), s = Math.min(W, H) * 0.3, cx = W / 2, cy = H / 2;
+        c.strokeStyle = P.faint; c.setLineDash([3, 4]); c.beginPath(); c.moveTo(cx, cy - s * 1.45); c.lineTo(cx, cy + s * 1.45); c.stroke(); c.setLineDash([]);
+        c.fillStyle = ghost ? P.faint : P.acc; c.globalAlpha = ghost ? 0.5 : 0.28; c.fillRect(cx - s, cy - s, 2 * s, 2 * s); c.globalAlpha = 1;
+        c.strokeStyle = P.ink; c.lineWidth = 2; c.strokeRect(cx - s, cy - s, 2 * s, 2 * s);
+        c.save(); c.translate(cx, cy); c.transform(M[0][0], -M[1][0], -M[0][1], M[1][1], 0, 0);
+        c.fillStyle = P.ink; c.font = `700 ${Math.round(s * 1.1)}px sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText("F", 0, s * 0.05); c.restore();
+        CORN.forEach((p, i) => { const x = M[0][0] * p[0] + M[0][1] * p[1], y = M[1][0] * p[0] + M[1][1] * p[1];
+          c.fillStyle = CCOL[i]; c.beginPath(); c.arc(cx + x * s * 0.78, cy - y * s * 0.78, s * 0.16, 0, 7); c.fill();
+          c.fillStyle = "#111"; c.font = `700 ${Math.round(s * 0.18)}px sans-serif`; c.textAlign = "center"; c.textBaseline = "middle"; c.fillText(i + 1, cx + x * s * 0.78, cy - y * s * 0.78); });
+      }
+      /* fewest moves from M back to identity with r, r⁻¹, f */
+      function dist(M) { let fr = [M], seen = { [key(M)]: 1 }, d = 0; while (fr.length) { if (fr.some((x) => key(x) === key(ID))) return d; const nx = []; fr.forEach((x) => ["r", "ri", "f"].forEach((o) => { const y = mul(OPS[o], x); if (!seen[key(y)]) { seen[key(y)] = 1; nx.push(y); } })); fr = nx; d++; } return d; }
+
+      /* ===== LEVEL 1 · 正方形的八种样子 ===== */
+      LEVELS.push({ id: 1, title: "正方形的八种样子", init(root, done) {
+        const got = { r4: 0, all: 0, target: 0, quiz: 0 };
+        const T = [["r4", "连续转 4 次", "看看回到哪里"], ["all", "找出全部不同的摆法", "已找到 1 种"], ["target", "摆成右边的目标样子", "旋转 + 翻转"], ["quiz", "至少答对 2 道题", "连错两次，熊猫教授给提示"]];
+        const say = guide(root, "一张正方形卡片，只许旋转、翻面，摆回原来的框里。一共能摆出几种看起来不同的样子？", "先猜，再动手。");
+        const paint = checklist(root, T, got);
+        const rest = el("div", "x-sub");
+        guess(root, ["4 种", "8 种", "16 种"], 1, (ok) => {
+          rest.hidden = false; drawAll();
+          say(ok ? "猜对了！你能把 8 种全都找出来吗？用下面两个按钮。" : "动手数一数吧：只有两个按钮，转 90° 和左右翻。", "四个角的颜色和中间的 F 帮你分辨。");
+        });
+        rest.hidden = true; root.append(rest);
+        rest.innerHTML = `<div class="x-cards"><div class="x-card"><h3>你的卡片</h3><div class="x-cv x-cv--s"><canvas id="sq" role="img" aria-label="正方形卡片"></canvas></div></div>
+          <div class="x-card"><h3>目标样子</h3><div class="x-cv x-cv--s"><canvas id="tg" role="img" aria-label="目标摆法"></canvas></div></div></div>
+          <div class="x-row"><button class="x-btn x-btn--go" data-op="r">↻ 转 90°（r）</button><button class="x-btn x-btn--go" data-op="f">↔ 左右翻（f）</button><button class="x-btn" id="rs">回到原样</button></div>
+          <p class="x-read" id="read" aria-live="polite">已找到 1 / ? 种</p><div class="x-shelf" id="found"></div>
+          <div class="x-sub" id="quiz"><h3>三道小题</h3></div>`;
+        const cv = rest.querySelector("#sq"), tg = rest.querySelector("#tg"), TGT = mul(OPS.r, OPS.f), found = { [key(ID)]: "e" };
+        let M = ID, seq = "", streak = 0;
+        function drawAll() { drawSquare(cv, M); drawSquare(tg, TGT, true); }
+        function upd() {
+          drawAll(); const n = Object.keys(found).length; T[1][2] = `已找到 ${n} 种`;
+          rest.querySelector("#read").textContent = `已找到 ${n} / ? 种 · 这一串动作：${seq || "（还没动）"}`;
+          rest.querySelector("#found").innerHTML = Object.values(found).map((s) => `<span class="x-badge got">${s}</span>`).join(""); paint();
+        }
+        rest.querySelectorAll("[data-op]").forEach((b) => b.addEventListener("click", () => {
+          const o = b.dataset.op; M = mul(OPS[o], M); seq += o; streak = o === "r" ? streak + 1 : 0; Audio_.play("tick", o === "r" ? 520 : 760);
+          if (!found[key(M)]) { found[key(M)] = seq.length > 6 ? seq.slice(-6) : seq; Audio_.play("pop"); }
+          if (streak === 4 && !got.r4) { got.r4 = 1; say("转 4 次，又回到了出发时的样子。转 90° 记作 r，那 r⁴ 等于什么？", "什么都不做的动作叫单位元 e。"); }
+          const n = Object.keys(found).length;
+          if (n === 8 && !got.all) { got.all = 1; say("8 种全找到了！还能找到第 9 种吗？为什么不能？", "4 种转法 × 翻或不翻 = 8。这 8 个动作组成一个群，叫 D₄。"); }
+          else if (n === 4 && !got.all && !seq.includes("f")) say("只转能得到 4 种。再翻一下会出现新的吗？");
+          if (key(M) === key(TGT) && !got.target) { got.target = 1; say(`摆成了！你的动作是 ${seq.slice(-4)}。最少几步能做到？`, "先翻再转，两步就够。"); }
+          upd(); check();
+        }));
+        rest.querySelector("#rs").addEventListener("click", () => { M = ID; seq = ""; streak = 0; Audio_.play("click"); upd(); });
+        addEventListener("resize", drawAll); upd();
+        const qs = makeQuiz(rest.querySelector("#quiz"), [
+          { q: "转 90° 记作 r，r⁴ 等于什么？", o: ["什么都没动（单位元 e）", "转了 90°", "翻了个面"], a: 0,
+            nudge: "回到上面连按 4 次「转 90°」，卡片在哪？", hint: "提示：90° × 4 = 360°，转了一整圈。", ok: "对，r⁴ = e。翻两次也一样：f² = e。" },
+          { q: "等边三角形一共有几种对称（转 + 翻）？", o: ["3 种", "6 种", "9 种"], a: 1,
+            nudge: "三角形能转哪几个角度？每种再翻或不翻。", hint: "提示：0°、120°、240° 三种转法 × 翻或不翻 2 种。", ok: "对，3 × 2 = 6，叫 D₃。正 n 边形有 2n 种对称。" },
+          { q: "数学家说这 8 个动作组成一个「群」。下面哪条不是群的要求？", o: ["任意两个连做还是其中之一", "每个都能被撤销", "先后顺序可以随便交换"], a: 2,
+            nudge: "先转再翻，和先翻再转，结果一样吗？下一关就要验证它。", hint: "提示：群要求封闭、有单位元、有逆元（和结合律），不要求可交换。", ok: "对，群不一定能交换顺序——下一关亲眼看。" },
+        ], say, (q) => { got.quiz = quizOK(q) ? 1 : 0; paint(); check(); });
+        const clear = clearer(root, done, "sym", ["g06", "g07"], "对称侦探上任！", [
+          ["8 种对称", "4 种旋转 + 4 种翻转，组成二面体群 D₄。"],
+          ["r⁴ = e，f² = e", "动作也能像数一样「相乘」：连做就是乘法，e 就像数字 1。"],
+        ], "g06 对称 · g07 平移旋转与反射", ["对称侦探，任务完成！你把「动作」当成了可以计算的对象。", "第 2 关「先穿袜子再穿鞋」已解锁。"], say);
+        function check() { if (got.r4 && got.all && got.target && got.quiz) clear(quizStars(qs)); }
+      } });
+
+      /* ===== LEVEL 2 · 先穿袜子再穿鞋 ===== */
+      LEVELS.push({ id: 2, title: "先穿袜子再穿鞋", init(root, done) {
+        const got = { order: 0, undo: 0, quiz: 0 };
+        const T = [["order", "比较「先转后翻」和「先翻后转」", "一样吗？"], ["undo", "撤销 3 局被打乱的卡片", "第 0 / 3 局"], ["quiz", "至少答对 2 道题", "连错两次，熊猫教授给提示"]];
+        const say = guide(root, "早上先穿袜子，再穿鞋。晚上要脱下来，顺序是什么？", "这个问题和魔方有关系。");
+        const paint = checklist(root, T, got);
+        const rest = el("div", "x-sub");
+        guess(root, ["先脱袜子，再脱鞋", "先脱鞋，再脱袜子"], 1, (ok) => {
+          rest.hidden = false; drawAB();
+          say(ok ? "当然！撤销要倒着来。动作的顺序到底有多重要？先看下面两张卡片。" : "鞋套在袜子外面，得先脱鞋。撤销要倒着来。先看下面两张卡片：顺序会改变结果吗？");
+        });
+        rest.hidden = true; root.append(rest);
+        rest.innerHTML = `<div class="x-cards"><div class="x-card"><h3>A：先 r（转）后 f（翻）</h3><div class="x-cv x-cv--s"><canvas id="ca" role="img" aria-label="先转后翻的结果"></canvas></div></div>
+          <div class="x-card"><h3>B：先 f（翻）后 r（转）</h3><div class="x-cv x-cv--s"><canvas id="cb" role="img" aria-label="先翻后转的结果"></canvas></div></div></div>
+          <div class="x-row"><button class="x-btn x-btn--go" id="play">▶ 做一遍</button><span class="x-meter" id="cmp"></span></div>
+          <div class="x-opts" id="same" hidden></div>
+          <div class="x-sub" id="undo" hidden><h3 id="uh">撤销第 1 局</h3>
+            <div class="x-cv x-cv--s"><canvas id="cu" role="img" aria-label="被打乱的卡片"></canvas></div>
+            <div class="x-row"><button class="x-btn x-btn--go" data-op="r">↻ r</button><button class="x-btn x-btn--go" data-op="ri">↺ r⁻¹</button><button class="x-btn x-btn--go" data-op="f">↔ f</button><button class="x-btn" id="ur">重来这一局</button></div>
+            <p class="x-read" id="ud" aria-live="polite"></p></div>
+          <div class="x-sub" id="quiz"><h3>三道小题</h3></div>`;
+        const ca = rest.querySelector("#ca"), cb = rest.querySelector("#cb"), cu = rest.querySelector("#cu");
+        let A = ID, B = ID, played = 0;
+        const drawAB = () => { drawSquare(ca, A); drawSquare(cb, B); if (!rest.querySelector("#undo").hidden) drawSquare(cu, U); };
+        rest.querySelector("#play").addEventListener("click", () => {
+          A = mul(OPS.r, ID); B = mul(OPS.f, ID); drawAB(); Audio_.play("tick", 520); rest.querySelector("#cmp").textContent = "第 1 步…";
+          setTimeout(() => { A = mul(OPS.f, A); B = mul(OPS.r, B); drawAB(); Audio_.play("tick", 760); rest.querySelector("#cmp").textContent = "做完了：看四个角的颜色";
+            if (!played) { played = 1; const s = rest.querySelector("#same"); s.hidden = false; say("两张卡片现在一样吗？"); } }, reduced() ? 0 : 700);
+        });
+        const sm = rest.querySelector("#same"); let sw = 0;
+        ["一样", "不一样"].forEach((t, i) => { const b = el("button", "x-opt x-qopt"); b.textContent = t; sm.append(b);
+          b.addEventListener("click", () => { if (got.order) return;
+            if (i === 1) { got.order = 1; b.classList.add("good"); sm.querySelectorAll("button").forEach((x) => (x.disabled = true)); Audio_.play("correct");
+              say("不一样！rf ≠ fr：动作的顺序不能随便交换。那撤销一串动作时，顺序该怎么排？", "下面三局：卡片被打乱了，打乱步骤告诉你，把它变回原样。"); startUndo(); paint(); }
+            else { sw++; b.classList.add("bad"); b.disabled = true; Audio_.play("wrong"); say(sw >= 2 ? "提示：看 1 号红角，在 A 里和 B 里分别在哪个位置？" : "仔细比一比四个角的颜色位置。"); } }); });
+        const ROUNDS = [["r", "f"], ["f", "r", "r"], ["r", "f", "ri", "ri"]], SYM = { r: "r", ri: "r⁻¹", f: "f" };
+        let ri = 0, U = ID, moves = [], resets = 0;
+        function setRound() { U = ROUNDS[ri].reduce((m, o) => mul(OPS[o], m), ID); moves = []; rest.querySelector("#uh").textContent = `撤销第 ${ri + 1} 局 · 打乱步骤：${ROUNDS[ri].map((o) => SYM[o]).join(" → ")}`; readU(); }
+        function readU() { drawSquare(cu, U); rest.querySelector("#ud").textContent = `你的撤销：${moves.map((o) => SYM[o]).join(" → ") || "（还没动）"}`; }
+        function startUndo() { rest.querySelector("#undo").hidden = false; setRound(); }
+        rest.querySelectorAll("#undo [data-op]").forEach((b) => b.addEventListener("click", () => {
+          if (ri >= ROUNDS.length) return;
+          const o = b.dataset.op; U = mul(OPS[o], U); moves.push(o); Audio_.play("tick", 600); readU();
+          if (key(U) === key(ID)) {
+            const best = dist(ROUNDS[ri].reduce((m, x) => mul(OPS[x], m), ID)), inv = ROUNDS[ri].slice().reverse().map((x) => SYM[x === "r" ? "ri" : x === "ri" ? "r" : "f"]).join(" → ");
+            Audio_.play("correct"); ri++; T[1][2] = `第 ${ri} / 3 局`;
+            say(`复原！你用了 ${moves.length} 步${moves.length <= best ? "，已经是最少步数" : `，最少只要 ${best} 步`}。倒着撤的标准答案：${inv}。`, ri < 3 ? "下一局。" : "三局全部撤销完成。");
+            if (ri < 3) setTimeout(setRound, reduced() ? 0 : 900); else { got.undo = 1; check(); }
+            paint();
+          } else if (moves.length > ROUNDS[ri].length + 3) say("步数有点多了。从打乱的最后一步开始撤：它的逆是什么？", "点「重来这一局」重新开始。");
+        }));
+        rest.querySelector("#ur").addEventListener("click", () => { resets++; Audio_.play("click"); setRound();
+          if (resets >= 2 && ri < 3) { const o = ROUNDS[ri][ROUNDS[ri].length - 1]; say(`提示：打乱的最后一步是 ${SYM[o]}，先用它的逆 ${SYM[o === "r" ? "ri" : o === "ri" ? "r" : "f"]} 撤掉它，再往前撤。`); } });
+        addEventListener("resize", drawAB); drawAB();
+        const qs = makeQuiz(rest.querySelector("#quiz"), [
+          { q: "先做 A 再做 B（记作 AB），要整个撤销应该怎么做？", o: ["先撤 A，再撤 B：A⁻¹B⁻¹", "先撤 B，再撤 A：B⁻¹A⁻¹", "再做一遍 BA"], a: 1,
+            nudge: "袜子是 A，鞋是 B。先脱哪个？", hint: "提示：最后做的最先撤，所以是 B⁻¹ 在前。", ok: "对，(AB)⁻¹ = B⁻¹A⁻¹，袜子–鞋子法则。" },
+          { q: "r⁻¹（逆时针 90°）也可以写成什么？", o: ["r²", "r³", "f"], a: 1,
+            nudge: "顺时针转几次 90°，等于逆时针转一次？", hint: "提示：顺时针 270° = 逆时针 90°。", ok: "对，r⁻¹ = r³，因为 r⁴ = e。" },
+          { q: "f（左右翻）的逆是什么？", o: ["f 自己", "r", "没有逆"], a: 0,
+            nudge: "翻过去之后，怎样翻回来？", hint: "提示：f² = e，自己就是自己的逆。", ok: "对，翻两次回原样，f⁻¹ = f。" },
+        ], say, (q) => { got.quiz = quizOK(q) ? 1 : 0; paint(); check(); });
+        const clear = clearer(root, done, "undo", ["l05"], "撤销大师上任！", [
+          ["顺序有关", "rf ≠ fr：群里的运算不一定能交换。"],
+          ["(AB)⁻¹ = B⁻¹A⁻¹", "撤销要倒着来，每一步换成它的逆。魔方复原就靠它。"],
+        ], "l05 映射与关系", ["撤销大师，任务完成！复合与逆，就是函数和映射的核心。", "第 3 关「洗几次回原样」已解锁。"], say);
+        function check() { if (got.order && got.undo && got.quiz) clear(quizStars(qs)); }
+      } });
+
+      /* ===== LEVEL 3 · 洗几次回原样 ===== */
+      LEVELS.push({ id: 3, title: "洗几次回原样", init(root, done) {
+        const got = { back: 0, more: 0, quiz: 0 };
+        const T = [["back", "用洗法 A 洗回原样", "数一数洗了几次"], ["more", "再让两种洗法洗回原样", "B、C、D 任选"], ["quiz", "至少答对 2 道题", "连错两次，熊猫教授给提示"]];
+        const CARDS = ["🐼", "🦊", "🐧", "🐢", "🦉", "🐝", "🐳"], N = 7;
+        const PRE = { A: [1, 2, 0, 4, 5, 6, 3], B: [1, 2, 3, 4, 5, 6, 0], C: [1, 0, 3, 2, 5, 4, 6], D: [1, 2, 0, 4, 3, 5, 6] };
+        const say = guide(root, "7 张牌，按同一种方式（洗法 A）一直洗下去。最少洗几次，牌会回到最初的顺序？", "先猜，再洗。");
+        const paint = checklist(root, T, got);
+        const rest = el("div", "x-sub");
+        guess(root, ["7 次", "12 次", "5040 次"], 1, (ok) => {
+          rest.hidden = false; drawArrows();
+          say(ok ? "猜对了！可为什么是 12？洗的时候盯住熊猫，再盯住乌龟。" : "动手洗一洗吧。洗的时候盯住熊猫 🐼，它几次回家？乌龟 🐢 呢？");
+        });
+        rest.hidden = true; root.append(rest);
+        rest.innerHTML = `<div class="x-row" id="pre">${Object.keys(PRE).map((k) => `<button class="x-btn" data-p="${k}" aria-pressed="${k === "A"}">洗法 ${k}</button>`).join("")}</div>
+          <div class="x-deck" id="deck" aria-live="polite"></div>
+          <div class="x-cv x-cv--xs"><canvas id="arr" role="img" aria-label="洗法箭头：每个位置的牌移到哪里"></canvas></div>
+          <div class="x-row"><button class="x-btn x-btn--go" id="sh">🔀 洗一次</button><button class="x-btn" id="rs">重来</button><span class="x-meter">已洗 <b id="cnt">0</b> 次</span></div>
+          <p class="x-read" id="read" aria-live="polite"></p>
+          <div class="x-sub" id="quiz"><h3>三道小题</h3></div>`;
+        const deck = rest.querySelector("#deck"), cv = rest.querySelector("#arr"), backs = {};
+        let pk = "A", P = PRE.A, pos = CARDS.map((_, i) => i), n = 0;
+        const els = CARDS.map((e) => { const d = el("div", "x-card7", e); deck.append(d); return d; });
+        function cycles(p) { const seen = [], out = []; for (let i = 0; i < N; i++) { if (seen[i]) continue; const cy = []; let j = i; while (!seen[j]) { seen[j] = 1; cy.push(j); j = p[j]; } out.push(cy); } return out; }
+        const gcd = (a, b) => (b ? gcd(b, a % b) : a), lcm = (a, b) => (a * b) / gcd(a, b);
+        const CYC = ["#ff6b8a", "#5fd7ff", "#ffd36e", "#9cf07a", "#c79bff", "#ffb36b", "#e8e8ff"];
+        function layout() { els.forEach((d, i) => { d.style.left = `calc(${(pos[i] * 100) / N}% + 2px)`; }); }
+        function drawArrows() {
+          if (!cv.isConnected || rest.hidden) return;
+          const { c, W, H } = fit(cv), P2 = PAL(), w = W / N, cs = cycles(P);
+          cs.forEach((cy, k) => cy.forEach((i) => { const j = P[i], x0 = w * (i + 0.5), x1 = w * (j + 0.5);
+            c.strokeStyle = CYC[k]; c.fillStyle = CYC[k]; c.lineWidth = 2;
+            if (i === j) { c.beginPath(); c.arc(x0, 18, 9, 0, 7); c.stroke(); return; }
+            const hgt = Math.min(H - 10, 14 + Math.abs(j - i) * 12), up = j > i;
+            c.beginPath(); c.moveTo(x0, up ? 6 : H - 6); c.quadraticCurveTo((x0 + x1) / 2, up ? hgt : H - hgt, x1, up ? 6 : H - 6); c.stroke();
+            c.beginPath(); c.arc(x1, up ? 6 : H - 6, 3.5, 0, 7); c.fill(); }));
+        }
+        function read(extra) {
+          const cs = cycles(P).filter((x) => x.length > 1).map((x) => x.length);
+          rest.querySelector("#cnt").textContent = n;
+          rest.querySelector("#read").innerHTML = (extra ? extra + " · " : "") + `洗法 ${pk} 的圈：${cs.join("、")}${cycles(P).length - cs.length ? `（另有 ${cycles(P).length - cs.length} 张不动）` : ""}`;
+        }
+        rest.querySelector("#sh").addEventListener("click", () => {
+          pos = pos.map((p) => P[p]); n++; layout(); Audio_.play("tick", 400 + (n % 12) * 40);
+          const home = pos.every((p, i) => p === i);
+          if (home) {
+            const ord = cycles(P).map((x) => x.length).reduce(lcm, 1); Audio_.play("chord"); backs[pk] = n;
+            read(`洗了 ${n} 次，全部回家！`);
+            if (pk === "A" && !got.back) { got.back = 1; say(`12 次！三张牌的圈每 3 次回家，四张牌的圈每 4 次回家。两个圈要同时回家，最少几次？`, "3 和 4 的什么数？"); }
+            else if (pk !== "A") say(`洗法 ${pk}：${n} 次回原样，各圈长度 ${cycles(P).map((x) => x.length).filter((x) => x > 1).join("、")}，最小公倍数 ${ord}。`);
+            if (Object.keys(backs).filter((k) => k !== "A").length >= 2 && !got.more) { got.more = 1; say("规律找到了：周期 = 各个圈长度的最小公倍数。", "下面三道题检验一下。"); }
+            n = 0; paint(); check();
+          } else {
+            read();
+            if (n === 3 && pk === "A") say("洗了 3 次：熊猫、狐狸、企鹅这一组回家了吗？其他 4 张呢？");
+            if (n === 4 && pk === "A") say("第 4 次：乌龟那一组回家了，可熊猫那组又走了。什么时候两组同时在家？");
+            if (n > 30) say("洗了很多次还没回来？点「重来」，盯住某一个圈数一数。");
+          }
+        });
+        rest.querySelector("#rs").addEventListener("click", () => { pos = CARDS.map((_, i) => i); n = 0; layout(); read(); Audio_.play("click"); });
+        rest.querySelectorAll("[data-p]").forEach((b) => b.addEventListener("click", () => {
+          pk = b.dataset.p; P = PRE[pk]; pos = CARDS.map((_, i) => i); n = 0; layout(); drawArrows(); read(); Audio_.play("click");
+          rest.querySelectorAll("[data-p]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+          if (pk !== "A") say(`洗法 ${pk} 的箭头分成了几个颜色的圈？先猜要洗几次，再验证。`);
+        }));
+        addEventListener("resize", drawArrows); layout(); read();
+        const qs = makeQuiz(rest.querySelector("#quiz"), [
+          { q: "一种洗法分成长度 2 和 5 的两个圈，最少洗几次回原样？", o: ["7 次", "10 次", "5 次"], a: 1,
+            nudge: "长度 2 的圈每几次回家？长度 5 的呢？两个都回家要几次？", hint: "提示：求 2 和 5 的最小公倍数。", ok: "对，lcm(2, 5) = 10。" },
+          { q: "7 张牌一共有多少种不同的排法？", o: ["49 种", "5040 种", "7 种"], a: 1,
+            nudge: "第 1 个位置有 7 种选法，第 2 个位置还剩几种？", hint: "提示：7 × 6 × 5 × 4 × 3 × 2 × 1 = 7!。", ok: "对，7! = 5040。可洗法 A 只会走到其中 12 种。" },
+          { q: "长度 4 和 6 的两个圈，周期是多少？", o: ["24", "12", "10"], a: 1,
+            nudge: "4 × 6 = 24 次时肯定都回家了，但有没有更早的？", hint: "提示：12 既是 4 的倍数，也是 6 的倍数。", ok: "对，lcm(4, 6) = 12，不是 24。" },
+        ], say, (q) => { got.quiz = quizOK(q) ? 1 : 0; paint(); check(); });
+        const clear = clearer(root, done, "shuffle", ["d04", "t05"], "洗牌师上任！", [
+          ["置换与循环", "任何洗法都能拆成几个互不相交的圈。"],
+          ["周期 = 最小公倍数", "洗法 A 的圈长 3 和 4，lcm(3, 4) = 12 次回原样。"],
+          ["排列数", "7 张牌有 7! = 5040 种排法。"],
+        ], "d04 排列组合 · t05 最大公约数与最小公倍数", ["洗牌师，任务完成！魔方的每一次转动，也是这样一个置换。", "第 4 关「只动三块」已解锁。"], say);
+        function check() { if (got.back && got.more && got.quiz) clear(quizStars(qs)); }
+      } });
+
+      /* ===== LEVEL 4 · 只动三块 ===== */
+      LEVELS.push({ id: 4, title: "只动三块", init(root, done) {
+        const got = { comm: 0, fix: 0, quiz: 0 };
+        const T = [["comm", "只让 3 块换位置，其余 6 块不动", "推一列、推一行，再撤回"], ["fix", "复原被打乱的 3 块", "挑战"], ["quiz", "至少答对 2 道题", "连错两次，熊猫教授给提示"]];
+        const say = guide(root, "九宫格只能整行、整列地推（推出去的那块从另一头回来）。能不能只让 3 块换位置，另外 6 块都不动？", "先猜。");
+        const paint = checklist(root, T, got);
+        const rest = el("div", "x-sub");
+        guess(root, ["不能：一推就是一整行 3 块，还会连带别的", "能，有巧妙的组合"], 1, (ok) => {
+          rest.hidden = false;
+          say(ok ? "我也这么觉得。试试这个套路：推一列 → 推一行 → 把那一列推回去 → 把那一行推回去。" : "一推就动 3 块没错，可推回去时会把大部分恢复。试试：推一列 → 推一行 → 把那一列推回去 → 把那一行推回去。");
+        });
+        rest.hidden = true; root.append(rest);
+        const COL9 = ["#ff6b8a", "#ffb36b", "#ffd36e", "#9cf07a", "#5fd7ff", "#7fb0ff", "#c79bff", "#ff8fb1", "#e8e8ff"];
+        rest.innerHTML = `<div class="x-g9" id="g9"></div>
+          <div class="x-row"><button class="x-btn" id="rs">复原到起点</button><button class="x-btn x-btn--go" id="ch" hidden>挑战：复原被打乱的 3 块</button></div>
+          <p class="x-read" id="read" aria-live="polite"></p>
+          <div class="x-sub" id="quiz"><h3>三道小题</h3></div>`;
+        const g9 = rest.querySelector("#g9");
+        let G = [[0, 1, 2], [3, 4, 5], [6, 7, 8]], hist = [], mode = "free", resets = 0;
+        const solved = () => G.flat().every((v, i) => v === i), off = () => G.flat().filter((v, i) => v !== i).length;
+        function mv(m) {
+          const [kind, k, d] = m, N = G.map((r) => r.slice());
+          for (let i = 0; i < 3; i++) { if (kind === "C") N[(i + d + 3) % 3][k] = G[i][k]; else N[k][(i + d + 3) % 3] = G[k][i]; }
+          G = N;
+        }
+        const name = ([kind, k, d]) => `${kind}${k + 1}${d < 0 ? "′" : ""}`;
+        function render() {
+          const b = (m, t, lab) => `<button class="x-btn x-g9__a" data-m="${m.join(",")}" aria-label="${lab}">${t}</button>`;
+          let h = "<span></span>"; for (let c = 0; c < 3; c++) h += b(["C", c, 1], "↓", `第 ${c + 1} 列向下推`); h += "<span></span>";
+          for (let r = 0; r < 3; r++) { h += b(["R", r, 1], "→", `第 ${r + 1} 行向右推`); for (let c = 0; c < 3; c++) { const v = G[r][c]; h += `<span class="x-g9__t${v !== r * 3 + c ? " off" : ""}" style="--tc:${COL9[v]}">${v + 1}</span>`; } h += b(["R", r, -1], "←", `第 ${r + 1} 行向左推`); }
+          h += "<span></span>"; for (let c = 0; c < 3; c++) h += b(["C", c, -1], "↑", `第 ${c + 1} 列向上推`); h += "<span></span>";
+          g9.innerHTML = h;
+          g9.querySelectorAll("[data-m]").forEach((x) => x.addEventListener("click", () => { const p = x.dataset.m.split(","); act([p[0], +p[1], +p[2]]); }));
+          rest.querySelector("#read").textContent = `步骤：${hist.map(name).join(" ") || "（还没动）"} · 不在原位的块：${off()}`;
+        }
+        function act(m) {
+          mv(m); hist.push(m); Audio_.play("tick", m[0] === "C" ? 520 : 700); render();
+          if (mode === "free" && off() === 3 && !got.comm) {
+            got.comm = 1; Audio_.play("chord"); rest.querySelector("#ch").hidden = false;
+            say(`只有 3 块换了位置！你的步骤 ${hist.slice(-4).map(name).join(" ")} 是 A B A⁻¹ B⁻¹ 的形状吗？`, "这叫交换子：A 和 B 只在交叉的地方互相「打扰」。"); paint(); check();
+          } else if (mode === "free" && hist.length >= 12 && !got.comm && hist.length % 6 === 0) say("提示：从起点开始，依次按 C1（第 1 列 ↓）、R1（第 1 行 →）、C1′（第 1 列 ↑）、R1′（第 1 行 ←）。", "先点「复原到起点」。");
+          if (mode === "fix" && solved()) {
+            mode = "done"; got.fix = 1; Audio_.play("chord");
+            say(`复原了，用了 ${hist.length} 步！${hist.length <= 4 ? "正好 4 步：反过来的交换子 B A B⁻¹ A⁻¹。" : "最少 4 步：交换子 [A, B] 的逆是 [B, A]。"}`, "魔方高手复原最后几块，用的就是这个思路。"); paint(); check();
+          }
+        }
+        rest.querySelector("#rs").addEventListener("click", () => { G = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]; hist = []; if (mode === "fix") { resets++; mode = "free"; } Audio_.play("click"); render(); });
+        rest.querySelector("#ch").addEventListener("click", () => {
+          G = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]; [["C", 2, 1], ["R", 0, 1], ["C", 2, -1], ["R", 0, -1]].forEach(mv); hist = []; mode = "fix"; Audio_.play("pop"); render();
+          say("我偷偷做了一个交换子，3 块被轮换了。你能只用推行推列把它复原吗？", resets >= 1 ? "提示：我做的是 C3 R1 C3′ R1′。撤销要倒着来：先撤 R1′……" : "想想上一关：撤销要倒着来。");
+        });
+        render();
+        const qs = makeQuiz(rest.querySelector("#quiz"), [
+          { q: "A B A⁻¹ B⁻¹ 这种动作组合叫什么？", o: ["交换子", "逆元", "单位元"], a: 0,
+            nudge: "它检验的是：A 和 B 能不能交换顺序。", hint: "提示：英文 commutator，「交换」子。", ok: "对，交换子 [A, B]。" },
+          { q: "如果 AB = BA（可以交换），交换子 A B A⁻¹ B⁻¹ 等于什么？", o: ["什么都不动（e）", "A", "B²"], a: 0,
+            nudge: "把中间的 B 和 A⁻¹ 换个位置试试。", hint: "提示：A B A⁻¹ B⁻¹ = A A⁻¹ B B⁻¹ = e。", ok: "对，可交换时交换子就是 e。动了几块，就说明有多「不可交换」。" },
+          { q: "魔方高手复原最后几块时，靠的主要是什么？", o: ["随便乱转碰运气", "交换子：只动几块，其余不动", "把魔方拆开装回去"], a: 1,
+            nudge: "快复原时，最怕的是什么？把已经拼好的弄乱。", hint: "提示：交换子只改动少数几块。", ok: "对，交换子和共轭是魔方公式的秘密。" },
+        ], say, (q) => { got.quiz = quizOK(q) ? 1 : 0; paint(); check(); });
+        const clear = clearer(root, done, "comm", ["a23"], "交换子术士上任！", [
+          ["交换子 [A, B] = A B A⁻¹ B⁻¹", "推一列、推一行再撤回，只有交叉处的 3 块轮换。"],
+          ["逆 [A, B]⁻¹ = [B, A]", "倒着撤：B A B⁻¹ A⁻¹。"],
+          ["群", "所有推法连起来组成一个群；不可交换，才有交换子的魔法。"],
+        ], "a23 群", ["交换子术士，任务完成！下一步：真正的魔方。", "BOSS 关「口袋魔方」已解锁。"], say);
+        function check() { if (got.comm && got.fix && got.quiz) clear(quizStars(qs)); }
+      } });
+
+      /* ===== LEVEL 5 · BOSS 口袋魔方 ===== */
+      const FACE = { "0,1,0": "#f4f4f4", "0,-1,0": "#ffd400", "0,0,1": "#1fbf5b", "0,0,-1": "#2f6bff", "1,0,0": "#ff3b3b", "-1,0,0": "#ff8c1a" };
+      function newCube() { const S = []; [-1, 1].forEach((x) => [-1, 1].forEach((y) => [-1, 1].forEach((z) => [[x, 0, 0], [0, y, 0], [0, 0, z]].forEach((n) => S.push({ p: [x, y, z], n, c: FACE[n.join(",")] }))))); return S; }
+      const ROT = { R: [0, (v) => [v[0], v[2], -v[1]]], U: [1, (v) => [-v[2], v[1], v[0]]], F: [2, (v) => [v[1], -v[0], v[2]]] };
+      function turn(S, m) { const [ax, f] = ROT[m[0]], k = m.length > 1 ? 3 : 1; S.forEach((s) => { if (s.p[ax] > 0) for (let i = 0; i < k; i++) { s.p = f(s.p); s.n = f(s.n); } }); }
+      const isSolved = (S) => Object.keys(FACE).every((nk) => new Set(S.filter((s) => s.n.join(",") === nk).map((s) => s.c)).size === 1);
+      LEVELS.push({ id: 5, title: "BOSS 口袋魔方", init(root, done) {
+        const got = { r1: 0, quiz: 0 };
+        const T = [["r1", "复原第 1 局", "每多复原一局多一颗星"], ["quiz", "至少答对 2 道题", "连错两次，熊猫教授给提示"]];
+        const ROUNDS = [["R", "U"], ["R", "U", "F′"], ["F", "R", "U′", "R′"]];
+        const say = guide(root, "这是 2×2×2 口袋魔方，一共 3,674,160 种状态。我把它打乱了，打乱步骤写在上面。你能把它转回去吗？",
+          "R = 右面顺时针，U = 上面，F = 前面；带 ′ 的是逆时针。顺时针指正对着那一面看。");
+        const paint = checklist(root, T, got);
+        root.append(el("div", "x-sub", `<h3 id="rh"></h3>
+          <div class="x-cards"><div class="x-card"><h3>正面：上 U · 前 F · 右 R</h3><div class="x-cv x-cv--s"><canvas id="cf" role="img" aria-label="魔方正面三个面"></canvas></div></div>
+          <div class="x-card"><h3>背面：下 D · 后 B · 左 L</h3><div class="x-cv x-cv--s"><canvas id="cbk" role="img" aria-label="魔方背面三个面"></canvas></div></div></div>
+          <div class="x-row">${["R", "R′", "U", "U′", "F", "F′"].map((m) => `<button class="x-btn x-btn--go" data-mv="${m}">${m}</button>`).join("")}<button class="x-btn" id="rr">重来这一局</button></div>
+          <p class="x-read" id="read" aria-live="polite"></p><div class="x-sub" id="quiz"><h3>BOSS 三问</h3></div>`));
+        const $$ = (s) => root.querySelector(s), cf = $$("#cf"), cbk = $$("#cbk");
+        let S = newCube(), ri = 0, moves = [], resets = 0, solvedN = 0, card = null, best = 0;
+        const inv = (m) => (m.length > 1 ? m[0] : m + "′");
+        function draw(cv, tf) {
+          if (!cv.isConnected) return;
+          const { c, W, H } = fit(cv), s = Math.min(W, H) / 7.2, cx = W / 2, cy = H / 2 - s * 0.2, P = PAL();
+          const pr = (v) => [cx + (v[0] - v[2]) * 0.866 * s, cy + (-v[1] + (v[0] + v[2]) * 0.5) * s];
+          S.forEach((st) => {
+            const n = tf(st.n); if (!(n[0] > 0 || n[1] > 0 || n[2] > 0)) return;
+            const ce = tf(st.p).map((v, i) => v + n[i]), ax = [0, 1, 2].filter((i) => !n[i]), u = [0, 0, 0], w = [0, 0, 0]; u[ax[0]] = 0.9; w[ax[1]] = 0.9;
+            const q = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) => pr(ce.map((v, i) => v + a * u[i] + b * w[i])));
+            c.beginPath(); q.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]))); c.closePath(); c.fillStyle = st.c; c.fill(); c.strokeStyle = "#111"; c.lineWidth = 2; c.stroke();
+          });
+        }
+        const drawAll = () => { draw(cf, (v) => v); draw(cbk, (v) => [-v[2], -v[1], -v[0]]); };
+        function setRound() { S = newCube(); ROUNDS[Math.min(ri, 2)].forEach((m) => turn(S, m)); moves = []; $$("#rh").textContent = ri < 3 ? `第 ${ri + 1} / 3 局 · 打乱：${ROUNDS[ri].join(" ")}` : "三局全部复原！"; read(); }
+        function read() { drawAll(); $$("#read").textContent = `你的步骤：${moves.join(" ") || "（还没动）"}`; }
+        root.querySelectorAll("[data-mv]").forEach((b) => b.addEventListener("click", () => {
+          if (ri >= 3) return;
+          const m = b.dataset.mv; turn(S, m.replace("′", "'")); moves.push(m); Audio_.play("tick", 380 + "RUF".indexOf(m[0]) * 160 + (m.length > 1 ? 80 : 0)); read();
+          if (isSolved(S)) {
+            const need = ROUNDS[ri].slice().reverse().map(inv).join(" "); ri++; solvedN = ri; Audio_.play("chord"); got.r1 = 1; T[0][2] = `已复原 ${solvedN} / 3 局`;
+            say(`复原！${moves.join(" ") === need ? "完美：正是打乱步骤倒过来、每步取逆。" : `标准答案是 ${need}：倒着撤，每步取逆。`}`, ri < 3 ? "下一局更长。" : "三局全胜！");
+            paint(); check(); if (ri < 3) setTimeout(setRound, reduced() ? 0 : 1000); else $$("#rh").textContent = "三局全部复原！";
+          } else if (moves.length === ROUNDS[ri].length * 2 + 2) say("转乱了？点「重来这一局」。打乱的最后一步是什么？它的逆是什么？");
+        }));
+        $$("#rr").addEventListener("click", () => { if (ri >= 3) return; resets++; Audio_.play("click"); setRound();
+          if (resets >= 2) say(`提示：倒着撤。最后一步 ${ROUNDS[ri][ROUNDS[ri].length - 1]} 先撤，用 ${inv(ROUNDS[ri][ROUNDS[ri].length - 1])}。`); });
+        addEventListener("resize", drawAll); setRound(); paint();
+        const qs = makeQuiz($$("#quiz"), [
+          { q: "3×3 魔方拆开随便装回去，只有 1/12 的装法能转回原样。为什么？", o: ["转动会守恒几种「奇偶」：块的置换奇偶、角块扭转、棱块翻转", "因为魔方太难了", "因为颜色不够分"], a: 0,
+            nudge: "每转一下，块是怎么被交换的？有没有什么量永远不变？", hint: "提示：2（置换奇偶）× 3（角块扭转）× 2（棱块翻转）= 12。", ok: "对，这些守恒量把所有装法分成 12 份，转动只能在其中一份里走。" },
+          { q: "3×3 魔方约有 4.3×10¹⁹ 种状态。每秒试 10 亿种，全部试完要多久？", o: ["约 1 天", "约 10 年", "约 1400 年"], a: 2,
+            nudge: "4.3×10¹⁹ ÷ 10⁹ 是多少秒？一年大约 3.15×10⁷ 秒。", hint: "提示：4.3×10¹⁰ 秒 ÷ 3.15×10⁷ ≈ 1365 年。", ok: "对，约 1400 年。所以要靠群论找规律，而不是硬试。" },
+          { q: "任意打乱的 3×3 魔方，最少多少步一定能复原（「上帝之数」）？", o: ["20 步", "100 步", "1000 步"], a: 0,
+            nudge: "2010 年，数学家用谷歌的计算机算出了这个数，它比你想的小得多。", hint: "提示：Rokicki 等人证明是 20（转一层 90° 或 180° 都算 1 步）。", ok: "对，20 步！" },
+        ], say, (q) => { got.quiz = quizOK(q) ? 1 : 0; paint(); check(); });
+        function check() {
+          if (!(got.r1 && got.quiz)) return;
+          const stars = Math.min(3, solvedN); if (stars <= best) return;
+          const first = !best; done(stars, first ? 60 + 20 * stars : 20 * (stars - best)); best = stars;
+          const nc = endCard(stars, "魔方复原者！", [
+            ["复原 = 求逆", "打乱 X₁X₂…Xₖ，复原就是 Xₖ⁻¹…X₁⁻¹。你复原了 " + solvedN + " / 3 局。"],
+            ["守恒的奇偶", "转动保持某些「奇偶」不变，所以乱装的魔方 11/12 都转不回去。"],
+            ["计数", "口袋魔方 3,674,160 种状态，3×3 约 4.3×10¹⁹ 种，上帝之数 20。"],
+          ], "t01 奇数与偶数 · d03 加法与乘法原理 · g22 空间几何");
+          card ? card.replaceWith(nc) : root.append(nc); card = nc;
+          if (first) { award("cube"); light(["t01", "d03", "g22"]); say(stars < 3 ? "BOSS 通关！复原全部 3 局能拿满星。" : "满星通关！你从正方形的 8 种对称一路走到了魔方群。", "这就是大学「抽象代数」的入口。"); renderSky(); renderFinal(); setTimeout(() => $("#sky").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" }), 1600); }
+          else renderFinal();
+        }
+      } });
+      /* ---------- boot ---------- */
+      renderBar(); renderBadges(); renderMap(); renderSky(); renderFinal();
+      const once = () => { Audio_.unlock(); window.removeEventListener("pointerdown", once); window.removeEventListener("keydown", once); };
+      window.addEventListener("pointerdown", once); window.addEventListener("keydown", once);
+      $("#notes-btn").addEventListener("click", () => toggleNotes($("#notes").hidden));
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#notes").hidden) toggleNotes(false); });
+      $("#sfx").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.setSfx(on); if (on) Audio_.play("click");
+      });
+      $("#music").addEventListener("click", (e) => {
+        const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+        e.currentTarget.setAttribute("aria-pressed", String(on)); Audio_.unlock(); Audio_.setMusic(on); Audio_.play("click");
+      });
+      $("#vol").addEventListener("input", (e) => Audio_.setVol(+e.target.value / 100));
+      $("#track").addEventListener("change", (e) => Audio_.setTrack(+e.target.value));
+    </script>
+      <script src="../ma.js"></script>
+  </body>
+</html>

@@ -5,7 +5,8 @@
   var TASKS = {
     nim: "先拿的人一定赢吗", bee: "为什么蜜蜂选六边形", nav: "导航怎么找到最短的路",
     secret: "怎样把秘密藏进数字里", chord: "为什么有的和弦好听", cat: "让 AI 认出一只猫",
-    casino: "赌场为什么总赢", atlas: "知识星图"
+    casino: "赌场为什么总赢", epidemic: "传染病为什么会爆发", rocket: "火箭怎样飞上月球", cube: "魔方为什么能复原",
+    atlas: "知识星图"
   };
   var seg = location.pathname.replace(/\/index\.html$/, "").split("/").filter(Boolean);
   var TASK = seg[seg.length - 1] || "";
@@ -16,6 +17,15 @@
     set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
     del: function (k) { try { localStorage.removeItem(k); } catch (e) {} }
   };
+  /* v0.7 迁移：10-17 首发的传染病任务未登记，进度误存在 ma:v1:page，这里一次性搬回 ma:v1:epidemic */
+  (function () {
+    var old = store.get("ma:v1:page");
+    if (!old || store.get("ma:v1:epidemic")) return;
+    if (TASK !== "epidemic" && TASK !== "home" && TASK !== "atlas" && TASK !== "notes") return;
+    store.set("ma:v1:epidemic", old); store.del("ma:v1:page");
+    var all = store.get("ma:v1:summary") || {};
+    if (all.page) { all.epidemic = all.page; delete all.page; store.set("ma:v1:summary", all); }
+  })();
 
   /* ---------- 主题：星系风格列表 ---------- */
   var LITE = document.documentElement.hasAttribute("data-ma-lite");
@@ -388,6 +398,36 @@
           if ((i === 6 || i === 10 || i === 14) && Math.random() < 0.45) chord(T, c, 4, 0).forEach(function (m) { I.epiano(t, m, sd * 1.5, 0.6); });
           if (i === 0 && b % 2 === 0) chord(T, c, 4, 0).forEach(function (m) { I.epiano(t, m, sd * 3, 0.7); });
           if (i % 4 === 2 && Math.random() < 0.5) { var v = (mem.vib === undefined ? 4 : mem.vib) + (Math.random() < 0.5 ? -1 : 1); v = Math.max(0, Math.min(9, v)); mem.vib = v; I.box(t, deg(T, v, 1), 0.7); }
+        } },
+      { id: "epidemic", task: "epidemic", name: "刺猬巡诊", d: "🦔 轻柔木琴 · 越来越密的音符", math: "每小节的木琴音符数按 1、2、4、8 翻倍，然后归零重来：这就是指数增长 2ⁿ", bpm: 96, meter: 16, root: 52, mode: MODE.dor, prog: [0, 3, 5, 4],
+        play: function (T, s, t, sd) {
+          var i = s % 16, b = bar(T, s), c = T.prog[b % 4], cnt = Math.pow(2, b % 4), gap = 16 / cnt;
+          if (i === 0) { I.pad(t, chord(T, c, 3, 0), sd * 16, 0.5, "triangle", 500, 1400); I.bass(t, deg(T, c, -1), sd * 8, 0.8); I.kick(t, 0.6); }
+          if (i === 8) { I.bass(t, deg(T, c + 4, -1), sd * 6, 0.6); I.kick(t, 0.45); }
+          if (i === 4 || i === 12) I.snare(t, 0.35);
+          if (i % 2 === 0) I.shaker(t, 0.35);
+          if (i % gap === 0) { var k = mem.ep || 0; mem.ep = k + 1; I.marimba(t, deg(T, c + [0, 2, 4, 7, 4, 2][k % 6], 1), 0.85); }
+        } },
+      { id: "rocket", task: "rocket", name: "升空", d: "🦊 推进节拍 · 明亮的上行琶音", math: "每小节 4 个音的音级是 0、1、4、9（平方数）；相邻的差 1、3、5 是奇数，正是平方数的「导数」", bpm: 104, meter: 16, root: 50, mode: MODE.lyd, prog: [0, 4, 5, 3],
+        play: function (T, s, t, sd) {
+          var i = s % 16, b = bar(T, s), c = T.prog[b % 4];
+          if (i === 0 || i === 8 || (i === 11 && b % 2)) I.kick(t, i === 0 ? 1 : 0.7);
+          if (i === 4 || i === 12) I.clap(t, 0.5);
+          if (i % 2 === 0) I.hat(t, 0.5);
+          if (i === 0) { I.pad(t, chord(T, c, 4, 0), sd * 16, 0.6, "sawtooth", 400, 1800); I.bass(t, deg(T, c, -2), sd * 6, 0.9, "sawtooth"); }
+          if (i === 8) I.bass(t, deg(T, c, -1), sd * 6, 0.7, "sawtooth");
+          if (i % 4 === 0) I.pluck(t, deg(T, c + [0, 1, 4, 9][i / 4], 0), 0.85, 1);
+          if (i === 14 && b % 4 === 3) I.bell(t, deg(T, c + 11, 1), 0.6, 2.76);
+        } },
+      { id: "cube", task: "cube", name: "转动群", d: "🐼 沉稳律动 · 六和弦循环", math: "6 个和弦一轮回到原位：魔方公式 R U R′ U′ 连做 6 次，魔方也会回到原样（这个动作的阶是 6）", bpm: 90, meter: 16, root: 57, mode: MODE.aeo, prog: [0, 3, 4, 5, 2, 6],
+        play: function (T, s, t, sd) {
+          var i = s % 16, b = bar(T, s), c = T.prog[b % 6];
+          if (i === 0 || i === 10) I.kick(t, i ? 0.7 : 0.9);
+          if (i === 4 || i === 12) I.snare(t, 0.4);
+          if (i % 4 === 2) I.tick(t, 0.6);
+          if (i === 0) { chord(T, c, 4, 0).forEach(function (m, k) { I.epiano(t + k * 0.01, m, sd * 10, 0.55); }); I.bass(t, deg(T, c, -1), sd * 7, 0.85); }
+          if (i === 8) I.bass(t, deg(T, c + 2, -1), sd * 6, 0.6);
+          if (i % 4 === 0 && (b + i / 4) % 3 !== 2) I.box(t, deg(T, c + [4, 2, 0, 2][i / 4], 1), 0.7);
         } }
     ];
     var GLOBAL = 4, BYTASK = {}; TR.forEach(function (T, k) { if (T.task) BYTASK[T.task] = k; });
@@ -557,7 +597,7 @@
 
   /* ---------- 底部导航坞 ---------- */
   function dock() {
-    var notes = { nim: "nim", bee: "bee", nav: "nav", secret: "secret", chord: "chord", cat: "cat", casino: "casino" }[TASK];
+    var notes = { nim: "nim", bee: "bee", nav: "nav", secret: "secret", chord: "chord", cat: "cat", casino: "casino", epidemic: "epidemic", rocket: "rocket", cube: "cube" }[TASK];
     var el = document.createElement("nav"); el.className = "ma-dock"; el.setAttribute("aria-label", "星图导航");
     el.innerHTML =
       '<a href="../" title="回到主页"><span>🏠</span><b>主页</b></a>' +
@@ -598,9 +638,23 @@
     });
   })();
 
+  /* ---------- 赌场任务入口：一次性反赌提示 ---------- */
+  function casinoNotice() {
+    if (TASK !== "casino" || store.get("ma:v1:casino-ack")) return;
+    var d = document.createElement("div"); d.className = "ma-modal"; d.setAttribute("role", "dialog"); d.setAttribute("aria-modal", "true"); d.setAttribute("aria-labelledby", "ma-cn-h");
+    d.innerHTML = '<div class="ma-card"><h3 id="ma-cn-h">🦝 开始之前，先读一句</h3>' +
+      "<p class='ma-sub'>这是一个用概率回答「赌场为什么总赢」的数学任务。这里只有虚拟筹码，不涉及任何真钱。</p>" +
+      "<p class='ma-sub'>数学的结论很清楚：赌博的期望是负数，玩得越久，输得越确定。赌博有害，未成年人禁止参与任何形式的赌博。</p>" +
+      '<div class="ma-row"><button type="button" class="ma-btn ma-ok">我明白了，开始学概率</button></div></div>';
+    document.body.appendChild(d);
+    var ok = d.querySelector(".ma-ok");
+    ok.onclick = function () { store.set("ma:v1:casino-ack", 1); d.remove(); };
+    setTimeout(function () { ok.focus(); }, 50);
+  }
+
   function init() {
     if (!LITE) {
-      sky(); dock();
+      sky(); dock(); casinoNotice();
       if (hasState) { try { restoreState(); } catch (e) {} setInterval(saveState, 1200); addEventListener("pagehide", saveState); document.addEventListener("visibilitychange", saveState); }
       else if (TASK === "chord") chordSave();
       /* 页面内任意按钮的轻微星光反馈 */
