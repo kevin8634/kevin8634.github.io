@@ -282,7 +282,7 @@
     <div class="toast" id="toast"></div>
 
     <div class="x-br" id="bridges" hidden role="dialog" aria-label="知识星桥">
-      <canvas id="brCv" role="img" aria-label="七团螺旋星系形态的知识星图，由九条星桥相连"></canvas>
+      <canvas id="brCv" role="img" aria-label="七团螺旋星系形态的知识星图，由十二条星桥相连"></canvas>
       <button class="btn x-br__back" id="brBack">← 回到北斗</button>
       <div class="x-br__top">
         <input class="x-br__search" id="brSearch" type="search" placeholder="搜索世界或问题…" aria-label="搜索世界或问题" autocomplete="off" />
@@ -329,7 +329,7 @@
           meta: [], prefix: ["gn:lt:"] },
         { id: "07", star: "天枢", name: "天枢", en: "Starhelm", field: "天文",
           desc: "北斗第一星 · 用真实实时数据看见此刻的天空。", color: "#dfe6f3", live: true,
-          meta: ["已上线 观测版 M0.5"], href: "starhelm/", prefix: ["gn:sh:"] }
+          meta: ["已上线 M1", "2 个任务已开放"], href: "starhelm/", prefix: ["gn:sh:"] }
       ];
       // 北斗位置（归一化，斗口左上，斗柄右下）：天枢→天璇→天玑→天权→玉衡→开阳→摇光
       var DIPPER = {
@@ -724,17 +724,43 @@
 
       /* ---------- 知识星桥 ---------- */
       var BR_COUNT = { "01": 197, "05": 30, "07": 40 };
+      /* 星桥 v0.1.2：每端 { w 世界码, id 系列星桥 ID「世界码.任务id」, title 任务标题, href 链接（未上线为 null）, label 可选按钮文字 } */
       var BRIDGES = [
-        ["01", "为什么有的和弦好听", "02", "声波与共振"],
-        ["01", "让 AI 认出一只猫", "05", "机器是怎么学会的"],
-        ["01", "赌场为什么总赢", "06", "为什么大多数人会输给概率"],
-        ["02", "恒星的一生", "03", "恒星怎样炼出元素"],
-        ["01", "怎样把秘密藏进数字里", "04", "DNA 是四进制代码"],
-        ["05", "AI 会不会骗人", "06", "怎样判断一个信息靠不靠谱"],
-        ["07", "空间站为什么掉不下来", "02", "引力与轨道"],
-        ["07", "太阳系到底有多大", "01", "比例与数量级"],
-        ["07", "地震在告诉我们什么", "03", "岩石与矿物"]
+        { a: { w: "01", id: "ma.chord", title: "为什么有的和弦好听", href: "math-atlas/chord/" },
+          b: { w: "02", id: "nv.sound", title: "声波与共振", href: null } },
+        { a: { w: "01", id: "ma.cat", title: "让 AI 认出一只猫", href: "math-atlas/cat/" },
+          b: { w: "05", id: "ps.cat", title: "让 AI 认出一只猫", href: "pre-singularity/cat/" } },
+        { a: { w: "01", id: "ma.casino", title: "赌场为什么总是赢？", href: "math-atlas/casino/" },
+          b: { w: "06", id: "lt.odds", title: "为什么大多数人会输给概率", href: null } },
+        { a: { w: "01", id: "ma.secret", title: "怎样把秘密藏进数字里", href: "math-atlas/secret/" },
+          b: { w: "04", id: "ls.dna", title: "DNA 是四进制代码", href: null } },
+        { a: { w: "01", id: "ma.epidemic", title: "传染病为什么会爆发？", href: "math-atlas/epidemic/" },
+          b: { w: "04", id: "ls.virus", title: "病毒怎样传播", href: null } },
+        { a: { w: "05", id: "ps.truth", title: "这段话是 AI 写的吗", href: "pre-singularity/truth/" },
+          b: { w: "06", id: "lt.source", title: "怎样判断一个信息靠不靠谱", href: null } },
+        { a: { w: "02", id: "nv.stars", title: "恒星的一生", href: null },
+          b: { w: "03", id: "ef.stars", title: "恒星怎样炼出元素", href: null } },
+        { a: { w: "07", id: "sh.where", title: "此刻，你在宇宙的哪里？", href: "starhelm/" },
+          b: { w: "01", id: "ma.scale", title: "比例与数量级", href: "math-atlas/" } },
+        { a: { w: "07", id: "sh.orbit", title: "空间站为什么掉不下来？", href: "starhelm/" },
+          b: { w: "02", id: "nv.orbit", title: "引力与轨道", href: null } },
+        { a: { w: "07", id: "sh.seasons", title: "为什么会有四季？", href: "starhelm/", label: "去天枢 →" },
+          b: { w: "04", id: "ls.rhythm", title: "季节与生物节律", href: null } },
+        { a: { w: "07", id: "sh.sats", title: "天上到底有多少颗卫星？", href: "starhelm/", label: "去天枢 →" },
+          b: { w: "05", id: "ps.sats", title: "AI 与卫星数据", href: "pre-singularity/" } },
+        { a: { w: "07", id: "sh.quakes", title: "地震在告诉我们什么？", href: "starhelm/", label: "去天枢 →" },
+          b: { w: "03", id: "ef.rocks", title: "岩石与矿物", href: null } }
       ];
+      // 同一对世界之间有多座桥时，让弧线错开，避免重叠
+      (function () {
+        var seen = {};
+        BRIDGES.forEach(function (b) {
+          var key = [b.a.w, b.b.w].sort().join("-"), k = seen[key] = (seen[key] || 0) + 1;
+          b.bend = k === 1 ? 0.35 : (k % 2 ? 0.35 + 0.2 * (k >> 1) : -0.12 - 0.2 * ((k >> 1) - 1));
+          b.text = (b.a.title + " " + b.b.title + " " + b.a.id + " " + b.b.id).toLowerCase();
+        });
+      })();
+      function brEsc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
       var BR_POS = { "01": [0.33, 0.25], "07": [0.15, 0.46], "05": [0.27, 0.72], "03": [0.50, 0.50], "02": [0.63, 0.24], "04": [0.85, 0.44], "06": [0.73, 0.72] };
       var BR = { open: false, tx: 0, ty: 0, vx: 0, vy: 0, zoom: 1, anim: null, q: "", worlds: null, hover: -1, pin: -1, shown: -2,
         el: document.getElementById("bridges"), cv: document.getElementById("brCv"), card: document.getElementById("brCard"),
@@ -833,8 +859,9 @@
         if (!q) return null;
         for (var id in BR.worlds) { var w = BR.worlds[id]; if ((w.name + " " + w.en).toLowerCase().indexOf(q) > -1) wm[id] = 1; }
         BRIDGES.forEach(function (b, i) {
-          if ((b[1] + " " + b[3]).toLowerCase().indexOf(q) > -1 || wm[b[0]] || wm[b[2]]) {
-            bm[i] = 1; if ((b[1] + " " + b[3]).toLowerCase().indexOf(q) > -1) { wm[b[0]] = 1; wm[b[2]] = 1; }
+          var hit = b.text.indexOf(q) > -1;
+          if (hit || wm[b.a.w] || wm[b.b.w]) {
+            bm[i] = 1; if (hit) { wm[b.a.w] = 1; wm[b.b.w] = 1; }
           }
         });
         return { w: wm, b: bm };
@@ -871,8 +898,10 @@
         }
         // 星桥
         BRIDGES.forEach(function (b, i) {
-          var A = BR.worlds[b[0]], B = BR.worlds[b[2]], a = A.sc, d = B.sc;
-          var L = Math.hypot(d.x - a.x, d.y - a.y), c = { x: (a.x + d.x) / 2, y: (a.y + d.y) / 2 - L * 0.35 };
+          var A = BR.worlds[b.a.w], B = BR.worlds[b.b.w];
+          if (!A || !B) return;
+          var a = A.sc, d = B.sc;
+          var L = Math.hypot(d.x - a.x, d.y - a.y), c = { x: (a.x + d.x) / 2, y: (a.y + d.y) / 2 - L * b.bend };
           b.s = [a, c, d];
           var on = i === act, k = (act > -1 && !on ? 0.3 : 1) * (M && !M.b[i] ? 0.15 : 1);
           var gc = g.createLinearGradient(a.x, a.y, d.x, d.y); gc.addColorStop(0, A.color); gc.addColorStop(1, B.color);
@@ -929,12 +958,22 @@
       function brCard(i) {
         BR.shown = i;
         if (i < 0) { BR.card.classList.remove("on"); return; }
-        var b = BRIDGES[i], A = BR.worlds[b[0]], B = BR.worlds[b[2]];
+        var b = BRIDGES[i], A = BR.worlds[b.a.w], B = BR.worlds[b.b.w];
+        if (!A || !B || !b.s) { BR.card.classList.remove("on"); return; }
+        var ends = [[b.a, A], [b.b, B]].filter(function (e) { return e[0].href; });
+        var status = ends.length === 2 ? '<span class="lit">已开通</span>' : ends.length === 1 ? '<span>单端开放 · 另一端建设中</span>' : "";
+        var btns = ends.length
+          ? '<div style="display:flex;flex-wrap:wrap;gap:8px">' + ends.map(function (e, k) {
+              return '<a class="btn' + (k === 0 ? " btn--solid" : "") + '" href="' + brEsc(e[0].href) + '" target="_blank" rel="noopener">' +
+                brEsc(e[0].label || ("去 " + e[1].name + " →")) + '</a>';
+            }).join("") + '</div>'
+          : '<button class="btn" disabled>两端世界建设中</button>';
         BR.card.style.setProperty("--accent", A.color);
         BR.card.innerHTML = '<p class="card__no">星桥 ' + (i < 9 ? "0" : "") + (i + 1) + '</p>' +
-          '<h2><span style="color:' + A.color + '">' + A.name + '</span>「' + b[1] + '」 ⇄ <span style="color:' + B.color + '">' + B.name + '</span>「' + b[3] + '」</h2>' +
+          '<h2><span style="color:' + A.color + '">' + A.name + '</span>「' + brEsc(b.a.title) + '」 ⇄ <span style="color:' + B.color + '">' + B.name + '</span>「' + brEsc(b.b.title) + '」</h2>' +
+          '<p class="en">' + brEsc(b.a.id) + ' ⇄ ' + brEsc(b.b.id) + '</p>' +
           '<div class="line"></div>' +
-          (A.live ? '<a class="btn btn--solid" href="' + A.path + '" target="_blank" rel="noopener">去源世界 →</a>' : '<button class="btn" disabled>两端点亮后开通</button>');
+          (status ? '<dl>' + status + '</dl>' : "") + btns;
         var m = bez(b.s[0], b.s[1], b.s[2], 0.5);
         BR.card.style.left = Math.min(Math.max(m.x + 18, 16), W - 326) + "px";
         BR.card.style.top = Math.min(Math.max(m.y - 60, 70), H - 220) + "px";
