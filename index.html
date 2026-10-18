@@ -4,6 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>创世计划 Genesis · 七个世界，一张星图</title>
+    <meta name="description" content="创世计划 Genesis：七个互通的学习世界——数学、物理、化学、生物、超级智能、认知觉醒、天文。免费、免注册，把世界当成一款游戏来拆解。">
+    <meta name="theme-color" content="#05070f">
+    <meta property="og:title" content="创世计划 Genesis · 七个世界，一张星图">
+    <meta property="og:description" content="创世计划 Genesis：七个互通的学习世界——数学、物理、化学、生物、超级智能、认知觉醒、天文。免费、免注册，把世界当成一款游戏来拆解。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kevin8634.github.io/">
+    <meta property="og:image" content="https://kevin8634.github.io/trailer-poster.jpg">
+    <meta name="twitter:card" content="summary_large_image">
     <style>
       :root {
         --gold: #e9c779;
@@ -150,6 +158,14 @@
         }
         .card.on { transform: none; }
         .brand { font-size: 12px; top: 18px; left: 18px; }
+      }
+      /* 极矮横屏：标题收在左侧，北斗移到右侧（见 resize） */
+      @media (max-height: 480px) and (orientation: landscape) {
+        .titleblock { left: 18px; right: auto; top: 66px; bottom: auto; max-width: 38vw; }
+        h1 { font-size: 20px; margin-bottom: 8px; }
+        .sub { font-size: 12px; line-height: 1.6; margin-bottom: 10px; }
+        .acts { gap: 8px; }
+        .acts .btn { padding: 10px 14px; font-size: 12px; }
       }
       /* 星桥 */
       .x-br { position: fixed; inset: 0; z-index: 9; background: #03050d; opacity: 0; transition: opacity .8s ease; touch-action: none; }
@@ -361,9 +377,16 @@
         R = Math.max(26, Math.min(R, 62));
         // 横屏：纵向跨度不越过标题区（标题块约占底部 330px，另留星名标签高度）
         var spanY = Math.max(H * 0.22, Math.min(H * 0.40, H - 330 - R * 2.4 - 34 - H * 0.17));
+        // 极矮横屏（高 ≤ 480）：北斗移到标题右侧，纵向留出顶栏、星名与页脚
+        var short = !portrait && H <= 480;
+        var sTop = Math.max(72, R * 1.5 + 12);
+        var sSpan = Math.max(40, H - R * 2 - 34 - 62 - sTop);
         WORLDS.forEach(function (w) {
           var d = DIPPER[w.id], x, y;
-          if (portrait) {
+          if (short) {
+            x = W * 0.46 + d[0] * (W * 0.54 - 80);
+            y = sTop + d[1] * sSpan;
+          } else if (portrait) {
             x = W * (0.82 - d[1] * 0.62);
             y = H * (0.30 + d[0] * 0.52);
           } else {
@@ -651,7 +674,7 @@
           '<p class="desc">' + w.desc + '</p>' +
           '<dl>' + meta + '</dl>' +
           (w.live
-            ? '<a class="btn btn--solid" href="' + w.href + '">进入世界 →</a>'
+            ? '<a class="btn btn--solid" href="' + w.href + '" target="_blank" rel="noopener">进入世界 →</a>'
             : '<button class="btn" disabled>即将觉醒</button>');
         var x = Math.min(Math.max(w.px + w.pr * 1.9, 16), W - 326);
         var y = Math.min(Math.max(w.py - 110, 16), H - 320);
@@ -911,7 +934,7 @@
         BR.card.innerHTML = '<p class="card__no">星桥 ' + (i < 9 ? "0" : "") + (i + 1) + '</p>' +
           '<h2><span style="color:' + A.color + '">' + A.name + '</span>「' + b[1] + '」 ⇄ <span style="color:' + B.color + '">' + B.name + '</span>「' + b[3] + '」</h2>' +
           '<div class="line"></div>' +
-          (A.live ? '<a class="btn btn--solid" href="' + A.path + '">去源世界 →</a>' : '<button class="btn" disabled>两端点亮后开通</button>');
+          (A.live ? '<a class="btn btn--solid" href="' + A.path + '" target="_blank" rel="noopener">去源世界 →</a>' : '<button class="btn" disabled>两端点亮后开通</button>');
         var m = bez(b.s[0], b.s[1], b.s[2], 0.5);
         BR.card.style.left = Math.min(Math.max(m.x + 18, 16), W - 326) + "px";
         BR.card.style.top = Math.min(Math.max(m.y - 60, 70), H - 220) + "px";
