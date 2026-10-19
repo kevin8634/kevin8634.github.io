@@ -389,6 +389,41 @@
       @media (max-width: 860px) { .x-pitch { font-size: 13px; margin: -6px 0 8px; } .x-more { min-height: 30px; font-size: 12px; padding: 0 10px; } }
       @media (max-width: 520px) and (min-height: 481px) { .x-pitch + .sub { display: none; } .x-pitch { margin-bottom: 12px; } }
       @media (max-height: 480px) and (orientation: landscape) { .x-pitch { font-size: 12px; margin: -2px 0 6px; } .x-pitch + .sub { display: none; } .x-more { min-height: 28px; } }
+      /* v0.5 · 选星 */
+      .x-gd { margin: 0 0 24px; padding: 16px 18px 14px; border: 1px solid rgba(233,199,121,.28); border-radius: 18px; background: linear-gradient(160deg, rgba(233,199,121,.07), rgba(233,199,121,.02)); }
+      .x-gd h3 { margin: 0 0 4px; }
+      .x-gd__lead { margin: 0 0 10px; font-size: 12.5px; color: var(--dim); line-height: 1.7; }
+      .x-gd fieldset { border: 0; margin: 0 0 10px; padding: 0; min-width: 0; }
+      .x-gd legend { padding: 0; margin: 0 0 6px; font-size: 12px; letter-spacing: .14em; color: rgba(234,240,255,.78); }
+      .x-gd__opts { display: flex; flex-wrap: wrap; gap: 6px; }
+      .x-gd label { position: relative; cursor: pointer; }
+      .x-gd input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; pointer-events: none; }
+      .x-gd label span { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(234,240,255,.2); font-size: 12.5px; color: rgba(234,240,255,.86); transition: background .2s, border-color .2s, color .2s; }
+      .x-gd label span small { font-size: 10.5px; color: var(--dim); }
+      .x-gd input:checked + span { background: var(--gold); border-color: var(--gold); color: #0a1030; font-weight: 600; }
+      .x-gd input:checked + span small { color: rgba(10,16,48,.7); }
+      .x-gd input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: 2px; }
+      .x-gd__acts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+      .x-gd__out { margin: 12px 0 0; font-size: 13px; line-height: 1.8; color: rgba(234,240,255,.88); }
+      .x-gd__out:empty { display: none; }
+      .x-gd__recs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+      .x-gd__rec { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 4px 14px 4px 5px; border-radius: 999px; border: 1px solid var(--accent); background: rgba(234,240,255,.04); color: var(--ink); font: 500 13px var(--sans); cursor: pointer; }
+      .x-gd__rec img { width: 30px; height: 30px; border-radius: 50%; }
+      .x-gd__rec small { color: var(--dim); font-size: 11px; }
+      .x-gd__rec:hover, .x-gd__rec:focus-visible { background: rgba(233,199,121,.14); outline: none; }
+      .x-gd__rec.soon img { filter: grayscale(.75) brightness(.6); }
+      .x-gd__note { margin: 10px 0 0; font-size: 11px; color: var(--dim); }
+      .x-dk__c.rec .x-dk__f, .x-dk__c.rec .x-dk__b { box-shadow: 0 0 0 2px var(--gold), 0 0 26px rgba(233,199,121,.45); }
+      .x-dk__c.rec .x-dk__f::before { content: "推荐"; position: absolute; top: 6px; left: 6px; padding: 1px 6px; border-radius: 999px; background: var(--gold); color: #0a1030; font-size: 9.5px; font-weight: 700; letter-spacing: .1em; }
+      .x-dk__age { color: var(--gold) !important; }
+      .x-ab__w small.age { color: rgba(233,199,121,.8); }
+      .x-ab__w.rec { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+      .x-ab__path li.rec b { color: var(--gold); }
+      .x-ab__path li.rec i { box-shadow: 0 0 0 3px rgba(233,199,121,.5), 0 0 16px var(--gold); }
+      .x-dk.sm .x-dk__c.rec .x-dk__b i:not(.x-dk__age) { display: none; }
+      .x-dk.sm .x-dk__b i.x-dk__age { flex: none; font-size: 9.5px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      @media (max-height: 480px) and (orientation: landscape) { #moreBtn { display: none; } }
+      @media (max-width: 520px) { .x-gd { padding: 14px 12px 12px; } .x-gd label span { min-height: 30px; padding: 0 10px; font-size: 12px; } }
       /* v0.4.1 · 关于弹层 C 全息北斗星盘 */
       .x-dk { position: relative; margin: 0 0 18px; }
       .x-dk__hint { margin: 0; text-align: center; font-size: 12px; letter-spacing: .14em; color: var(--dim); }
@@ -481,7 +516,7 @@
 
       <div class="titleblock">
         <h1>如果世界是一款游戏</h1>
-        <p class="x-pitch" id="pitch">七个互相连通的学习世界 · 把世界当成一款游戏来拆解 <button type="button" class="x-more" id="moreBtn" aria-haspopup="dialog">了解更多 →</button></p>
+        <p class="x-pitch" id="pitch">七个互相连通的学习世界 · 把世界当成一款游戏来拆解 <button type="button" class="x-more" id="moreBtn" aria-haspopup="dialog">了解更多 →</button><button type="button" class="x-more" id="guideBtn" aria-haspopup="dialog">帮我选一颗星 ✦</button></p>
         <p class="sub">七个世界，一张星图。让一个普通人，用玩游戏的热情，在一生中走过人类知识的全图。</p>
         <div class="acts">
           <button class="btn btn--solid" id="trailerBtn">▶ 观看宣传片</button>
@@ -599,6 +634,17 @@
             </div>
             <p class="x-dk__hint" id="dkHint">拖动星盘旋转 · 点卡片翻面 · 卡顶金线是北斗连线，已上线的世界会点亮</p>
           </section>
+          <section class="x-gd" id="guide" aria-labelledby="gdH">
+            <h3 id="gdH">帮我选一颗星</h3>
+            <p class="x-gd__lead">说说你多大、对什么好奇，我从七个世界里挑 1–3 个给你。都可以不选。</p>
+            <form id="gdForm">
+              <fieldset><legend>年龄段</legend><div class="x-gd__opts" id="gdAge"></div></fieldset>
+              <fieldset><legend>对什么好奇（可多选）</legend><div class="x-gd__opts" id="gdTags"></div></fieldset>
+              <div class="x-gd__acts"><button type="submit" class="btn btn--solid" id="gdGo">看看推荐 ✦</button><button type="button" class="btn" id="gdReset" hidden>重新选</button></div>
+            </form>
+            <div class="x-gd__out" id="gdOut" aria-live="polite"></div>
+            <p class="x-gd__note">年龄只是建议，每个世界都对所有人开放。选择只保存在这台设备上。</p>
+          </section>
           <div class="x-ab__tabs" role="tablist" aria-label="关于创世计划">
             <button class="btn" role="tab" id="abT0" aria-controls="abP0" aria-selected="true">是什么</button>
             <button class="btn" role="tab" id="abT1" aria-controls="abP1" aria-selected="false" tabindex="-1">为什么是七颗星</button>
@@ -642,7 +688,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.4.2</b></span>
+            <span>创世计划总门户 <b>v0.5</b></span>
           </footer>
         </div>
       </div>
@@ -711,27 +757,34 @@
         { id: "01", star: "天璇", name: "星图", en: "Math Atlas", field: "数学",
           desc: "用问题点亮知识星。", color: "#7cc8ff", live: true,
           meta: ["已上线 v0.7", "10 个任务 55 关", "197 颗知识星"], href: "math-atlas/",
-          prefix: ["ma:v1:", "gn:ma:"] },
+          prefix: ["ma:v1:", "gn:ma:"],
+          age: ["ya","huo","chen","he"], tags: ["math"], why: "喜欢找规律、解谜题？每想通一个问题，就点亮一颗知识星。" },
         { id: "02", star: "天玑", name: "宙律", en: "Nomoverse", field: "物理",
           desc: "改写物理常数，看宇宙怎么变。", color: "#a78bfa", live: true,
-          meta: ["已上线 v0.2-α2", "3 个任务 13 关"], href: "nomoverse/", prefix: ["gn:nv:"] },
+          meta: ["已上线 v0.2-α2", "3 个任务 13 关"], href: "nomoverse/", prefix: ["gn:nv:"],
+          age: ["huo","chen","he"], tags: ["space","matter"], why: "好奇宇宙为什么是现在这样？亲手改一改物理常数，看会发生什么。" },
         { id: "03", star: "天权", name: "元素工坊", en: "Element Forge", field: "化学",
           desc: "用元素锻造物质，配方即反应。", color: "#ff9a3c", live: false,
-          meta: [], prefix: ["gn:ef:"] },
+          meta: [], prefix: ["gn:ef:"],
+          age: ["huo","chen","he"], tags: ["matter"], why: "想知道东西由什么组成、怎样变化？它会带你用元素锻造物质。" },
         { id: "04", star: "玉衡", name: "生命源码", en: "Life Source", field: "生物",
           desc: "读、改、调试生命的「源码」。", color: "#34d399", live: true,
           meta: ["已上线 v0.6", "5 个任务已开放"], href: "life-source/",
-          prefix: ["gn:ls:"] },
+          prefix: ["gn:ls:"],
+          age: ["ya","huo","chen","he"], tags: ["life"], why: "对动物、身体和遗传好奇？来读一读、改一改生命的源码。" },
         { id: "05", star: "开阳", name: "奇点前夜", en: "Pre-Singularity", field: "超级智能 SI",
           desc: "亲手训练、测试、约束 AI。", color: "#22d3ee", live: true,
           meta: ["已上线 v0.6.1", "10 个任务 29 关"], href: "pre-singularity/",
-          prefix: ["gn:ps:"] },
+          prefix: ["gn:ps:"],
+          age: ["huo","chen","he"], tags: ["ai","math"], why: "想弄懂 AI 是怎么学会的？亲手训练它、考考它，再给它立规矩。" },
         { id: "06", star: "摇光", name: "觉弈", en: "Ludoterra", field: "认知觉醒",
-          desc: "看见自己的思维，做出更清醒的选择。", color: "#f5c26b", live: false,
-          meta: [], prefix: ["gn:lt:"] },
+          desc: "看见自己的思维，做出更清醒的选择。", color: "#f5c26b", live: true,
+          meta: ["已开张 v0.1", "光之莲认知星盘 · 四层八域"], href: "ludoterra/", prefix: ["gn:lt:"],
+          age: ["huo","chen","he"], tags: ["society"], why: "想看清自己怎么思考、怎么做选择？把每一次选择当成一局棋来复盘。", ageTxt: "星火 12+ · 星芽可试入门关" },
         { id: "07", star: "天枢", name: "天枢", en: "Starhelm", field: "天文",
           desc: "北斗第一星 · 用真实实时数据看见此刻的天空。", color: "#dfe6f3", live: true,
-          meta: ["已上线 v0.4.0", "弦穹号星际航行 · 月相实验室"], href: "starhelm/", prefix: ["gn:sh:"] }
+          meta: ["已上线 v0.4.0", "弦穹号星际航行 · 月相实验室"], href: "starhelm/", prefix: ["gn:sh:"],
+          age: ["ya","huo","chen","he"], tags: ["space"], why: "想知道此刻头顶的天空是什么样？用真实数据去看。" }
       ];
       // 北斗位置（归一化，斗口左上，斗柄右下）：天枢→天璇→天玑→天权→玉衡→开阳→摇光
       var DIPPER = {
@@ -742,6 +795,13 @@
       // 真实连法：斗口闭合四边形 + 斗柄
       var LINKS = [["07", "01"], ["01", "02"], ["02", "03"], ["03", "07"], ["03", "04"], ["04", "05"], ["05", "06"]];
       var byId = {}; WORLDS.forEach(function (w) { byId[w.id] = w; });
+      // v0.5 全系列统一年龄段（王磊 10-20 采纳）与六类兴趣
+      var AGES = { ya: ["星芽", "7–11"], huo: ["星火", "12–15"], chen: ["星辰", "16–22"], he: ["星河", "23+"] };
+      var TAGS = [["space", "宇宙"], ["life", "自然与身体"], ["matter", "物质"], ["ai", "机器与智能"], ["math", "数字与规律"], ["society", "人与社会"]];
+      function ageTxt(w) {
+        if (w.ageTxt) return w.ageTxt;
+        var a = AGES[w.age[0]]; return a ? a[0] + " " + a[1].split("–")[0].replace("+", "") + "+" : "所有人";
+      }
 
       /* ---------- v0.3 北斗七星真实 3D 位置 ----------
        * 数据来源：赤经/赤纬（ICRS，历元 J2000）与三角视差取自 Hipparcos 新归算
@@ -1785,6 +1845,8 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "06", v: "v0.1", d: "2026-10-20", t: "世界开张：光之莲认知星盘点亮「规则是谁写的」四层八域；选好年龄段，看见认知如何影响你在地球 Online 的人性、财富与社交。" },
+        { w: "gn", v: "v0.5", d: "2026-10-20", t: "新玩法「帮我选一颗星」：选年龄段和兴趣，星盘转到推荐的世界并翻面告诉你为什么。全系列统一年龄段：星芽 7–11 · 星火 12–15 · 星辰 16–22 · 星河 23+。" },
         { w: "gn", v: "v0.4.2", d: "2026-10-20", t: "手机竖屏与矮横屏：北斗七星为标题让出空间，不再压住按钮；星盘触屏拖动与翻面体验修整。" },
         { w: "gn", v: "v0.4.1", d: "2026-10-20", t: "「关于创世计划」变成可旋转的全息北斗星盘：拖动轮转七个世界，点卡片翻面看简介与入口；首屏新增一句话介绍。" },
         { w: "gn", v: "v0.4.0", d: "2026-10-20", t: "首屏新增「最新更新」区：最近三条更新一眼可见，点一下直达星历。" },
@@ -2010,8 +2072,8 @@
         AB.built = true;
         document.getElementById("abWorlds").innerHTML = ORDER.map(function (id) {
           var w = byId[id], inner = '<img src="world-' + id + '.webp" alt="" /><span><b>' + w.name + '</b><small>' + w.field.replace(" SI", "") + ' · ' + w.star +
-            '</small><small><em>' + (w.live ? wStat(w) + " ↗" : "筹备中 · 即将点亮") + '</em></small></span>';
-          return '<li>' + (w.live ? '<a class="x-ab__w" style="--accent:' + w.color + '" href="' + w.href + '" target="_blank" rel="noopener" aria-label="进入' + w.name + '（新窗口）">' + inner + '</a>'
+            '</small><small><em>' + (w.live ? wStat(w) + " ↗" : "筹备中 · 即将点亮") + '</em></small><small class="age">适合 ' + ageTxt(w) + '</small></span>';
+          return '<li data-w="' + id + '">' + (w.live ? '<a class="x-ab__w" style="--accent:' + w.color + '" href="' + w.href + '" target="_blank" rel="noopener" aria-label="进入' + w.name + '（新窗口）">' + inner + '</a>'
             : '<div class="x-ab__w soon" style="--accent:' + w.color + '">' + inner + '</div>') + '</li>';
         }).join("");
         document.getElementById("abLaws").innerHTML = [].map.call(document.querySelectorAll("#laws li b"), function (b, i) {
@@ -2019,7 +2081,7 @@
         }).join("");
         document.getElementById("abPath").innerHTML = AB_PATH.map(function (pp) {
           var w = byId[pp[0]];
-          return '<li style="--accent:' + w.color + '"><i></i><b>' + w.name + '</b><small>' + w.field.replace(" SI", "") + '</small><span>' + pp[1] + '</span></li>';
+          return '<li data-w="' + pp[0] + '" style="--accent:' + w.color + '"><i></i><b>' + w.name + '</b><small>' + w.field.replace(" SI", "") + '</small><span>' + pp[1] + '</span></li>';
         }).join("");
         // 小北斗图：与主视觉同一份真实数据（地球视角，只绕视线旋转）
         var fitd = bestRoll(earthView2D(), 236, 96, Math.atan2(0.25, 1)), pts = {}, bb = fitd.bb, sc = fitd.sc;
@@ -2078,7 +2140,7 @@
       });
       AB.el.addEventListener("keydown", function (e) {
         if (e.key !== "Tab") return;
-        var f = [].filter.call(AB.el.querySelectorAll("button, a[href]"), function (x) { return x.offsetParent && x.tabIndex >= 0; });
+        var f = [].filter.call(AB.el.querySelectorAll("button, a[href], input"), function (x) { return x.offsetParent && x.tabIndex >= 0; });
         var a = f[0], z = f[f.length - 1];
         if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
         else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
@@ -2097,7 +2159,7 @@
             '<button type="button" class="x-dk__f' + (w.live ? "" : " soon") + '" aria-expanded="false" aria-label="' + brEsc(w.name + " " + w.en + "，" + w.field + "，" + st + "。翻面查看简介") + '">' +
             '<img src="world-' + id + '.webp" alt="" draggable="false" /><small>' + w.star + '</small><b>' + w.name + '</b><em>' + w.field.replace(" SI", "") + '<span> · ' + st + '</span></em></button>' +
             '<div class="x-dk__b"><button type="button" tabindex="-1" aria-label="翻回正面">×</button><b>' + w.name + '</b><small>' + w.en + ' · ' + w.field + '</small>' +
-            '<p>' + brEsc(w.desc) + '</p><i>' + st + (more ? '<span><br>' + more + '</span>' : '') + '</i>' +
+            '<p>' + brEsc(w.desc) + '</p><i class="x-dk__age" hidden>适合 ' + ageTxt(w) + '</i><i>' + st + (more ? '<span><br>' + more + '</span>' : '') + '</i>' +
             (w.live ? '<a href="' + w.href + '" target="_blank" rel="noopener" tabindex="-1" aria-label="进入' + w.name + '（新窗口）">进入世界 ↗</a>' : '<span class="soon">即将点亮</span>') +
             '</div></div></div>';
         }).join("");
@@ -2279,6 +2341,95 @@
         showLog(); if (LG.open) LG.pin = i;
         if (typeof nwRender === "function") nwRender();
       });
+      /* ---------- v0.5 门户选星：按年龄段与兴趣从七个世界推荐 1–3 个（只读 WORLDS.age/tags/why；选择只存本机 gn:portal:_guide） ---------- */
+      var GD = { K: "gn:portal:_guide", rec: [], el: document.getElementById("guide"), built: false };
+      function gdBuild() {
+        if (GD.built) return; GD.built = true;
+        document.getElementById("gdAge").innerHTML = Object.keys(AGES).concat(["no"]).map(function (k) {
+          var a = AGES[k];
+          return '<label><input type="radio" name="gdA" value="' + k + '"' + (k === "no" ? " checked" : "") + '><span>' + (a ? a[0] + ' <small>' + a[1] + '</small>' : "不说") + '</span></label>';
+        }).join("");
+        document.getElementById("gdTags").innerHTML = TAGS.map(function (t) {
+          return '<label><input type="checkbox" name="gdT" value="' + t[0] + '"><span>' + t[1] + '</span></label>';
+        }).join("");
+        document.getElementById("gdForm").addEventListener("submit", function (e) {
+          e.preventDefault();
+          var s = gdRead(); lsSet(GD.K, JSON.stringify(s)); gdShow(s, true);
+        });
+        document.getElementById("gdReset").addEventListener("click", function () {
+          try { localStorage.removeItem(GD.K); } catch (e) {}
+          gdWrite({ a: "no", t: [] }); GD.rec = []; gdMark(); dkFlip(-1);
+          document.getElementById("gdOut").innerHTML = ""; this.hidden = true; SND.play("tick");
+          document.querySelector('#gdAge input').focus();
+        });
+        document.getElementById("gdOut").addEventListener("click", function (e) {
+          var b = e.target.closest("[data-w]"); if (!b) return;
+          gdFocus(b.dataset.w, true);
+        });
+      }
+      function gdRead() {
+        var a = (document.querySelector('#gdAge input:checked') || {}).value || "no";
+        var t = [].map.call(document.querySelectorAll('#gdTags input:checked'), function (x) { return x.value; });
+        return { a: a, t: t };
+      }
+      function gdWrite(s) {
+        [].forEach.call(document.querySelectorAll('#gdAge input'), function (x) { x.checked = x.value === (s.a || "no"); });
+        [].forEach.call(document.querySelectorAll('#gdTags input'), function (x) { x.checked = (s.t || []).indexOf(x.value) > -1; });
+      }
+      // 可解释的打分：兴趣命中 +2，年龄段命中 +1，已上线 +0.5；同分按北斗顺序
+      function gdPick(s) {
+        var t = s.t || [], a = AGES[s.a] ? s.a : "";
+        var list = ORDER.map(function (id, i) {
+          var w = byId[id], hit = w.tags.filter(function (x) { return t.indexOf(x) > -1; }).length;
+          return { id: id, i: i, hit: hit, sc: hit * 2 + (a && w.age.indexOf(a) > -1 ? 1 : 0) + (w.live ? 0.5 : 0) };
+        });
+        if (t.length) list = list.filter(function (x) { return x.hit > 0; });
+        else list = list.filter(function (x) { return byId[x.id].live; });
+        list.sort(function (p, q) { return q.sc - p.sc || p.i - q.i; });
+        return list.slice(0, t.length ? 3 : 2).map(function (x) { return x.id; });
+      }
+      function gdShow(s, act) {
+        GD.rec = gdPick(s); gdMark();
+        var a = AGES[s.a], tn = (s.t || []).map(function (k) { return TAGS.filter(function (x) { return x[0] === k; })[0][1]; });
+        var head = (a ? a[0] + "（" + a[1] + " 岁）" : "") + (tn.length ? (a ? "，" : "") + "好奇" + tn.join("、") : "");
+        document.getElementById("gdOut").innerHTML = '<span>' + (head ? head + "：" : "") + '推荐你从<b style="color:var(--gold)">' + byId[GD.rec[0]].name + '</b>开始' +
+          (GD.rec.length > 1 ? '，再去看看另外 ' + (GD.rec.length - 1) + ' 个。' : '。') + '点一下转到它。</span><div class="x-gd__recs">' +
+          GD.rec.map(function (id, k) {
+            var w = byId[id];
+            return '<button type="button" class="x-gd__rec' + (w.live ? "" : " soon") + '" data-w="' + id + '" style="--accent:' + w.color + '"><img src="world-' + id + '.webp" alt="">' +
+              (k + 1) + ' · ' + w.name + ' <small>' + (w.live ? "适合 " + ageTxt(w) : "即将点亮") + '</small></button>';
+          }).join("") + '</div>';
+        document.getElementById("gdReset").hidden = false;
+        if (act) { SND.play("unlock"); gdFocus(GD.rec[0], false); }
+        else dkGo(ORDER.indexOf(GD.rec[0]));
+      }
+      // 转到推荐世界并翻面（滚回星盘让访客看到）
+      function gdFocus(id, focusCard) {
+        var i = ORDER.indexOf(id);
+        dkFlip(-1); dkGo(i);
+        DK.el.scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "center" });
+        setTimeout(function () { dkFlip(i, true); }, RM ? 0 : 520);
+      }
+      function gdMark() {
+        DK.cards.forEach(function (c, k) {
+          var id = ORDER[k], w = byId[id], on = GD.rec.indexOf(id) > -1;
+          c.classList.toggle("rec", on);
+          c.querySelector(".x-dk__b p").textContent = on ? w.why : w.desc;
+          c.querySelector(".x-dk__age").hidden = !on;
+        });
+        [].forEach.call(document.querySelectorAll("#abWorlds li[data-w]"), function (li) { li.firstChild.classList.toggle("rec", GD.rec.indexOf(li.dataset.w) > -1); });
+        [].forEach.call(document.querySelectorAll("#abPath li[data-w]"), function (li) { li.classList.toggle("rec", GD.rec.indexOf(li.dataset.w) > -1); });
+      }
+      function gdRestore() {
+        gdBuild();
+        var s = null; try { s = JSON.parse(lsGet(GD.K) || "null"); } catch (e) {}
+        if (s && typeof s === "object" && Array.isArray(s.t)) { s.t = s.t.filter(function (k) { return TAGS.some(function (x) { return x[0] === k; }); }); gdWrite(s); gdShow(s, false); }
+        else { GD.rec = []; gdMark(); }
+      }
+      document.getElementById("guideBtn").addEventListener("click", function () {
+        var b = this; showAbout(0); if (!AB.open) return; AB.prev = b;
+        setTimeout(function () { GD.el.scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" }); (document.querySelector('#gdAge input:checked') || document.querySelector('#gdAge input')).focus({ preventScroll: true }); }, RM ? 0 : 300);
+      });
       // 首屏「了解更多 →」
       var PITCH_K = "gn:portal:_about";
       if (lsGet(PITCH_K) === "1") document.getElementById("pitch").classList.add("seen");
@@ -2287,7 +2438,7 @@
         if (AB.open || LG.open || BR.open || !intro.done) return;
         closeAll(); AB.prev = document.activeElement;
         if (!AB.built) { buildAbout(); dkBuild(); dkFlip(-1); }
-        abNews();
+        abNews(); gdRestore();
         AB.open = true; AB.el.hidden = false; abTab(tab || 0);
         dkResize(); dkKick(); lsSet(PITCH_K, "1"); document.getElementById("pitch").classList.add("seen");
         requestAnimationFrame(function () { AB.el.classList.add("on"); }); SND.play("bridge-open");
