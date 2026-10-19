@@ -90,3 +90,15 @@ export const BRIDGES = [
   { from: 'cocoon', to: '奇点前夜 · AI 会不会骗人', id: 'lt.cocoon ⇄ 奇点前夜' },
   { from: 'meaning', href: '/starhelm/', to: '天枢 · 此刻,你在宇宙的哪里?', id: 'lt.meaning ⇄ sh.where' }
 ];
+
+/* 玩家手册:每关一页(通关后解锁) */
+export const HANDBOOK = [
+  { task: 'compound', no: 1, domain: '财富与风险 × 习惯与时间', title: '增长是乘出来的,不是加出来的',
+    counter: '问自己「它是在加,还是在乘?」会乘的好事越早开始,会乘的坏事(利滚利的欠款)越早停下。' },
+  { task: 'prisoner', no: 2, domain: '合作与博弈 × 人性', title: '只要还会再见面,善良往往不吃亏',
+    counter: '被占便宜时先问「我们还会再见吗?」会,就清楚回应一次再留出原谅;不会,就别把信任押在一次性的承诺上。' },
+  { task: 'sunk', no: 3, domain: '心智与决策', title: '花掉的已经花掉了', counter: '' },
+  { task: 'cocoon', no: 4, domain: '信息与真相 × 习惯与时间', title: '你喂给算法什么,它就把你变成什么', counter: '' },
+  { task: 'survivor', no: 5, domain: '财富与风险 × 信息与真相', title: '你只听得见幸存者说话', counter: '' },
+  { task: 'nature', no: 6, domain: '人性', title: '人性和规则,一起决定人怎么做', counter: '' }
+];
