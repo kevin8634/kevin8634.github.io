@@ -61,7 +61,7 @@ const $ = s => document.querySelector(s);
 
 /* ---------- 开场:编译生命(ls-intro.js) ---------- */
 const pre = () => document.getElementById('lsi-pre')?.remove();
-import('./ls-intro.js').then(m => { m.playIntro(); pre(); }).catch(pre);
+import('./ls-intro.js').then(m => { m.playIntro({ onDive: () => $('#dive').click() }); pre(); }).catch(pre);
 
 /* ---------- 任务列表 ---------- */
 for (const [id, t] of Object.entries(TASKS)) {

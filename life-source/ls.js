@@ -45,6 +45,19 @@ export const sound = {
   get on() { return store.get('sound', false) === true; },
   set on(v) { store.set('sound', !!v); if (v) { ensure(); music.start(); } else music.stop(); },
   musicLevel(l) { music.level = l; music.apply(); },
+  // 学习者主动选择开启声音,但暂不起背景音乐(开场配乐结束后再接上)
+  enableQuiet() { store.set('sound', true); ensure(); dispatchEvent(new Event('ls-sound')); },
+  startMusic() { music.start(); },
+  // 播放一段一次性的配乐(如开场曲),返回可淡出的控制
+  async cue(file, gain = .9, offset = 0) {
+    if (!this.on) return null; ensure();
+    try {
+      const a = await fetch(new URL(file, import.meta.url)).then(r => r.arrayBuffer());
+      const buf = await new Promise((ok, no) => ac.decodeAudioData(a, ok, no));
+      const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = buf; g.gain.value = gain; src.connect(g).connect(master); src.start(0, Math.min(offset, buf.duration - .1));
+      return { fade(d = 1.5) { const t = ac.currentTime; g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(0, t + d); setTimeout(() => { try { src.stop(); } catch {} }, d * 1000 + 100); } };
+    } catch { return null; }
+  },
   tone(f, dur = .35, { type = 'sine', gain = .18, when = 0, detune = 0 } = {}) {
     if (!this.on) return; ensure();
     const t = ac.currentTime + when, o = ac.createOscillator(), g = ac.createGain();

@@ -26,28 +26,52 @@ const css = `
 #lsi .sub{color:#b9c7c1;margin-top:10px;font-size:15px;opacity:0;transition:opacity 1s .3s}
 #lsi .go{position:absolute;left:0;right:0;bottom:5%;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;opacity:0;transform:translateY(12px);transition:all .8s;pointer-events:none;padding:0 12px}
 #lsi .go.on{opacity:1;transform:none;pointer-events:auto}
-#lsi .go button{font:inherit;font-size:15px;border-radius:999px;padding:11px 22px;cursor:pointer;border:1px solid #34d39999;background:rgba(6,20,16,.6);color:#eefcf6;backdrop-filter:blur(6px)}
-#lsi .go button.p{background:linear-gradient(135deg,#10b981,#34d399);color:#03130d;border:0;font-weight:700;box-shadow:0 0 24px #34d39977}
+#lsi .go button,#lsi .gate button{font:inherit;font-size:15px;border-radius:999px;padding:11px 22px;cursor:pointer;border:1px solid #34d39999;background:rgba(6,20,16,.6);color:#eefcf6;backdrop-filter:blur(6px)}
+#lsi .go button.p,#lsi .gate button.p{background:linear-gradient(135deg,#10b981,#34d399);color:#03130d;border:0;font-weight:700;box-shadow:0 0 24px #34d39977}
 #lsi .go button:hover{transform:translateY(-1px)}
 #lsi .badge{position:absolute;right:16px;top:14px;color:#e2be78;font-size:13px;letter-spacing:1px}
 #lsi .badge b{display:inline-block;background:#34d399;color:#04120c;border-radius:6px;padding:1px 8px;margin-left:6px}
 #lsi .skip{position:absolute;left:16px;top:12px;background:none;border:0;color:#94a3a8;font:inherit;font-size:13px;cursor:pointer;padding:6px}
 @media (max-width:640px){#lsi .ttl{bottom:21%}#lsi .go{bottom:3.5%}#lsi .go button{width:min(320px,90vw)}}
+#lsi .gate{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;transition:opacity .9s;padding:0 16px}
+#lsi .gate .ear{font-size:46px;filter:drop-shadow(0 0 18px #34d399);animation:lsiP 2.4s ease-in-out infinite}
+@keyframes lsiP{50%{transform:scale(1.12);filter:drop-shadow(0 0 30px #34d399)}}
+#lsi .gate h2{margin:0;font-size:clamp(26px,6vw,40px);letter-spacing:.25em;color:#eefcf6;text-shadow:0 0 20px #34d39988}
+#lsi .gate p{margin:0;color:#9fb8ae;font-size:14px}
+#lsi .gate .row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+#lsi .ttl{transition:top 1.2s cubic-bezier(.2,.8,.2,1),bottom 1.2s,transform 1.2s}
+#lsi .ttl.up{bottom:auto;top:7%}
+#lsi .ttl.up .sub{display:none}
+#lsi .ttl.up h1{font-size:clamp(30px,6.5vw,52px)}
+#lsi .lens{position:absolute;left:50%;bottom:calc(5% + 80px);width:clamp(150px,22vh,200px);aspect-ratio:1;transform:translateX(-50%) scale(.6);opacity:0;transition:all 1s cubic-bezier(.2,.8,.2,1);cursor:pointer;pointer-events:none}
+#lsi .lens.on{opacity:1;transform:translateX(-50%) scale(1);pointer-events:auto}
+#lsi .lens .lz{position:absolute;inset:9%;border-radius:50%;overflow:hidden;background:#020806;box-shadow:inset 0 0 30px #000,0 0 40px #34d39955}
+#lsi .lens .lz canvas{width:100%!important;height:100%!important}
+#lsi .lens svg{position:absolute;inset:0;width:100%;height:100%;animation:lsiR 18s linear infinite;pointer-events:none}
+#lsi .lens .glass{position:absolute;inset:9%;border-radius:50%;background:radial-gradient(circle at 30% 25%,#ffffff33,transparent 35%);pointer-events:none}
+@keyframes lsiR{to{transform:rotate(360deg)}}
+#lsi .lens .lab{position:absolute;left:50%;top:100%;transform:translateX(-50%);white-space:nowrap;text-align:center;margin-top:4px;font-size:12px;color:#9fd8c4;text-shadow:0 1px 4px #000}
+#lsi .lens .lab b{color:#e2be78;font-weight:600}
+#lsi .lens .side{position:absolute;top:50%;transform:translateY(-50%);font:11px ui-monospace,Menlo,monospace;color:#34d399aa;white-space:nowrap}
+#lsi .lens .side.l{right:104%;text-align:right}#lsi .lens .side.r{left:104%}
+#lsi .lens:hover .lz{box-shadow:inset 0 0 30px #000,0 0 60px #34d399aa}
+@media (max-width:640px){#lsi .lens{bottom:calc(3.5% + 70px);width:clamp(120px,19vh,160px)}#lsi .lens .side{display:none}#lsi .ttl.up{top:8%}}
 #lsi .hint{position:absolute;left:0;right:0;bottom:1.6%;text-align:center;color:#94a3a855;font-size:11px}
 `;
 
-export function playIntro({ onDone } = {}) {
+export function playIntro({ onDone, onDive } = {}) {
   const st = document.createElement('style'); st.textContent = css; document.head.append(st);
   const box = document.createElement('div'); box.id = 'lsi';
   box.innerHTML = `<canvas></canvas><div class="badge">创世计划 · 04/07<b>生物</b></div><button class="skip">跳过 ›</button>
     <div class="cap"><code></code><span></span></div>
     <div class="ttl"><h1>${'生命源码'.split('').map(() => '<span></span>').join('')}</h1><div class="en">LIFE SOURCE</div><div class="sub">读懂生命写好的代码</div></div>
-    <div class="go"></div><div class="hint">拖动可以转动 · 点一下激起涟漪</div>`;
+    <div class="lens"><div class="lz"></div><div class="glass"></div><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="none" stroke="#34d39966" stroke-width=".6"/><circle cx="50" cy="50" r="45.5" fill="none" stroke="#34d399" stroke-width="1.4" stroke-dasharray=".6 2.2"/><circle cx="50" cy="50" r="45.5" fill="none" stroke="#e2be78" stroke-width="2.2" stroke-dasharray="14 57.5"/></svg><div class="side l">放大 ×<span class="mag">1</span></div><div class="side r">比例尺 <span class="bar">1 mm</span></div><div class="lab"><b>一镜到底</b> · <span class="obj">指尖皮肤 · 指纹</span></div></div><div class="go"></div><div class="gate"><div class="ear">🎧</div><h2>生命源码</h2><p>建议戴上耳机,听听生命的声音</p><div class="row"></div></div><div class="hint">拖动可以转动 · 点一下激起涟漪</div>`;
   document.body.append(box);
-  const seen = store.get('intro', false), speed = seen ? 1.7 : 1;
+  const seen = store.get('intro', false); let speed = seen ? 1.7 : 1, gated = true, cue = null, musicOn = false;
+  fetch(new URL('./audio/intro.m4a', import.meta.url)).catch(() => {}); // 预取开场曲
   const $ = s => box.querySelector(s);
   let done = false, warpAt = 0;
-  const finish = () => { if (done) return; done = true; store.set('intro', true); box.style.opacity = 0; setTimeout(() => { box.remove(); st.remove(); renderer && renderer.dispose(); }, 1100); onDone && onDone(); };
+  const finish = () => { if (done) return; done = true; store.set('intro', true); box.style.opacity = 0; if (cue) cue.fade(1.2); if (sound.on) sound.startMusic(); setTimeout(() => { box.remove(); st.remove(); renderer && renderer.dispose(); zm && zm.dispose(); zm = null; }, 1100); onDone && onDone(); };
   $('.skip').onclick = () => (sound.whoosh(.8, false), finish());
 
   /* ---- 按钮:声音默认关,只有学习者自己点了才开 ---- */
@@ -55,12 +79,33 @@ export function playIntro({ onDone } = {}) {
   const enter = withSound => {
     if (withSound && !sound.on) { sound.on = true; dispatchEvent(new Event('ls-sound')); }
     sound.sparkle(6); sound.whoosh(1.4);
-    warpAt = clock; go.classList.remove('on'); $('.ttl').style.transition = 'opacity .8s'; $('.ttl').style.opacity = 0; $('.cap').style.opacity = 0;
+    warpAt = clock; go.classList.remove('on'); lens.classList.remove('on'); $('.ttl').style.opacity = 0; $('.cap').style.opacity = 0;
     setTimeout(finish, reducedMotion() ? 200 : 1300);
   };
   const b1 = document.createElement('button'); b1.className = 'p'; b1.textContent = '进入生命图谱 ›'; b1.onclick = () => enter(false);
   go.append(b1);
-  if (!sound.on) { const b2 = document.createElement('button'); b2.textContent = '🎧 戴上耳机,带着声音进入'; b2.onclick = () => enter(true); go.append(b2); }
+  /* ---- 门屏:声音默认关,由学习者自己选 ---- */
+  const gate = $('.gate'), row = $('.gate .row');
+  const begin = async withSound => {
+    if (!gated) return; row.querySelectorAll('button').forEach(b => b.disabled = true);
+    if (withSound) { sound.enableQuiet(); speed = 1; cue = await sound.cue('./audio/intro.m4a', .95, clock); }
+    gated = false; gate.style.opacity = 0; gate.style.pointerEvents = 'none'; setTimeout(() => gate.remove(), 900);
+  };
+  const g1 = document.createElement('button'); g1.className = 'p'; g1.textContent = '🎧 带着声音进入'; g1.onclick = () => begin(true);
+  const g2 = document.createElement('button'); g2.textContent = '静音进入'; g2.onclick = () => begin(false);
+  row.append(g1, g2);
+  /* ---- 镜头模块:循环播放一镜到底,点击展开全屏 ---- */
+  const lens = $('.lens'); let zm = null;
+  const MAG = ['1', '50', '500', '10⁵', '10⁶', '5×10⁶'];
+  lens.onclick = () => { if (done) return; sound.whoosh(1, true); onDive && setTimeout(onDive, 600); enter(false); };
+  const showLens = async () => {
+    lens.classList.add('on');
+    try {
+      const { createZoom } = await import('./ls-zoom.js');
+      zm = createZoom(lens.querySelector('.lz'), { onLevel(i, L) { lens.querySelector('.obj').textContent = L.obj.split(/[::]/)[0]; lens.querySelector('.bar').textContent = L.bar; lens.querySelector('.mag').textContent = MAG[i] || ''; } });
+      (async function loop() { while (zm && box.isConnected) { await zm.dive({ from: 0, per: 1.8, dwell: 700 }); await new Promise(r => setTimeout(r, 1200)); } })();
+    } catch {}
+  };
 
   /* ---- 标题「解码」:随机碱基字母逐个落定成汉字 ---- */
   const spans = [...box.querySelectorAll('h1 span')], word = '生命源码';
@@ -189,13 +234,14 @@ export function playIntro({ onDone } = {}) {
 
   /* ---- 时间线 ---- */
   const capCode = $('.cap code'), capTxt = $('.cap span'); let capIdx = -1;
-  let last = performance.now(), shown = false;
+  let last = performance.now(), shown = false, holdAt = 0, runAt = 0, runFrom = 0;
   const ease = x => x < .5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2;
   function frame(now) {
     if (!box.isConnected) return;
     const dt = Math.min(.05, (now - last) / 1000); last = now;
     if (reducedMotion() && clock < HOLD) clock = HOLD;
-    if (warpAt) clock += dt; else clock = Math.min(HOLD, clock + dt * speed);
+    if (warpAt) clock += dt; else if (gated) clock = Math.min(1.6, clock + dt); else { if (!runAt) { runAt = now; runFrom = clock; } clock = Math.min(HOLD, runFrom + (now - runAt) / 1000 * speed); }
+    if (!gated && sound.on && !musicOn && (now - holdAt > 2500 && holdAt)) { musicOn = true; sound.startMusic(); }
     const t = warpAt ? HOLD : clock;
     U.uT.value = warpAt ? HOLD + (clock - warpAt) : clock;
     U.uWarp.value = warpAt ? Math.min(1, (clock - warpAt) / 1.2) : 0;
@@ -206,20 +252,19 @@ export function playIntro({ onDone } = {}) {
     const orbit = reducedMotion() ? .6 : t * .22 + spin;
     spinV *= .95; if (!drag) spin += spinV;
     cam.position.set(Math.sin(orbit) * dist + px * 2, camY - py * 1.5, Math.cos(orbit) * dist);
-    cam.lookAt(0, -1 + (t > 7 ? Math.min(1, (t - 7) / 3) * (innerWidth < innerHeight ? .2 : .6) : 0), 0);
+    cam.lookAt(0, -1 + (t > 7 ? Math.min(1, (t - 7) / 3) * (innerWidth < innerHeight ? .2 : 2.2) : 0), 0);
     if (warpAt) { const w = U.uWarp.value; cam.position.multiplyScalar(1 - w * .7); }
     stars.rotation.y = now * .00002;
     renderer.render(scene, cam);
     // 字幕
     let ci = -1; CAPTIONS.forEach(([s], i) => { if (U.uT.value >= s) ci = i; });
-    if (ci !== capIdx && !warpAt) {
+    if (ci !== capIdx && !warpAt && !shown) {
       capIdx = ci; const cap = $('.cap'); cap.style.opacity = 0;
       setTimeout(() => { capTxt.textContent = CAPTIONS[ci][1]; cap.style.opacity = 1; }, 350);
-      if (ci === 1) sound.tone(293.66, 2, { gain: .08 }); if (ci === 2) sound.sparkle(4, -1);
     }
     if (!warpAt) capCode.textContent = '> ' + HBB.slice(0, Math.floor(clock * 6) % HBB.length + 6);
     if (t >= 9.6 && !warpAt) decode(now / 1000);
-    if (t >= HOLD && !shown) { shown = true; go.classList.add('on'); }
+    if (t >= HOLD && !shown) { shown = true; holdAt = now; go.classList.add('on'); $('.ttl').classList.add('up'); $('.cap').style.opacity = 0; setTimeout(showLens, 500); }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

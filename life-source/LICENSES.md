@@ -11,4 +11,4 @@
 
 
 ## 原创音频
-- 背景音乐「生命源码」(audio/bgm.m4a)与全部音效:纯程序合成原创,无采样、无第三方素材;源码 _dev/audio/synth.py(不上线,工程 zip 内),旋律种子为人类 HBB 基因公开参考序列片段(事实数据,无版权)。
+- 背景音乐「生命源码」(audio/bgm.m4a)、开场配乐(audio/intro.m4a,源码 _dev/audio/intro_synth.py)与全部音效:纯程序合成原创,无采样、无第三方素材;源码 _dev/audio/synth.py(不上线,工程 zip 内),旋律种子为人类 HBB 基因公开参考序列片段(事实数据,无版权)。
