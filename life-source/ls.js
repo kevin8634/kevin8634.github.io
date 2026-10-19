@@ -138,3 +138,10 @@ export function toast(msg, ms = 1800) {
 
 // 三星:1 通关;2 先预测且误差在范围内;3 未用第三级提示
 export const starsFor = ({ predicted = false, hintsUsed = 0 }) => 1 + (predicted ? 1 : 0) + (hintsUsed < 3 ? 1 : 0);
+
+/* ---------- 离线缓存(作用域仅 /life-source/) ---------- */
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  addEventListener('load', () => {
+    navigator.serviceWorker.register(new URL('./sw.js', import.meta.url), { scope: '/life-source/' }).catch(() => {});
+  });
+}

@@ -30,7 +30,7 @@ runTask('zebra', [
       { t: '迷惑捕食者', d: '一群斑马奔跑时条纹晃动,让狮子难以锁定一只。', e: '野外观察中,狮子并没有明显更难捕到斑马;支持证据较弱。' },
       { t: '帮助散热', d: '黑白条纹吸热不同,可能形成小气流降温。', e: '有研究支持,也有用水桶模型实验发现条纹并不更凉;仍有争议。' },
       { t: '防蚊蝇叮咬', d: '马蝇、采采蝇等吸血昆虫难以落在条纹上。', e: '多项实验支持,包括 2019 年给马穿条纹外套的实验;目前证据最多。' },
-      { t: '同伴识别', d: '每匹斑马的条纹都不同,方便认出彼此。', e: '条纹确实各不相同,但斑马主要靠声音和气味认亲;证据较弱。' },
+      { t: '同伴识别', d: '每匹斑马的条纹都不同,方便认出彼此。', e: '条纹确实各不相同,但有条纹的马科动物并不比没条纹的更常互相理毛、结伴;证据较弱。' },
     ];
     c.innerHTML = `<div class="hyp" id="h">${H.map((x, i) => `<div class="ls-panel" data-i="${i}"><b>${x.t}</b>${x.d}<div class="ev">${x.e}</div></div>`).join('')}</div>`;
     api.guide.ask('科学家对斑马条纹提出过很多假说。你最相信哪一个?点一张卡片投票。', ['想想斑马生活的地方:非洲草原上有很多吸血昆虫。', '有些假说可以用实验检验,有些很难。', '证据最多的是"防蚊蝇叮咬",但其他假说也没有被完全排除。']);
@@ -44,8 +44,8 @@ runTask('zebra', [
 
   { title: '重做马蝇实验', run(api) {
     const c = api.center();
-    c.innerHTML = `<div class="ls-card ls-panel"><p>2019 年,英国科学家给农场里的马分别穿上<b>黑色</b>、<b>白色</b>和<b>条纹</b>外套,用摄像机记录马蝇。</p><p>你预测哪件外套上落下的马蝇最少?</p></div><canvas class="fly" id="cv"></canvas><div class="row" id="res"></div>`;
-    api.guide.ask('先预测,再"放飞"马蝇看看。', ['马蝇降落前要靠视觉判断距离、减速。', '条纹会干扰它们对运动和距离的判断。', '答案是条纹外套。']);
+    c.innerHTML = `<div class="ls-card ls-panel"><p>2019 年发表的一项研究中,英美科学家在英国一家马场给马分别穿上<b>黑色</b>、<b>白色</b>和<b>条纹</b>外套,用摄像机记录马蝇。</p><p>你预测哪件外套上落下的马蝇最少?</p></div><canvas class="fly" id="cv"></canvas><div class="row" id="res"></div>`;
+    api.guide.ask('先预测,再"放飞"马蝇看看。', ['马蝇降落前要靠视觉判断距离、减速。', '条纹可能干扰它们降落前对速度和距离的判断(具体机制还在研究)。', '答案是条纹外套。']);
     c.append(choice(api, ['黑色', '白色', '条纹'], '条纹', async (ok, o, box) => {
       box.remove(); api.guide.say(ok ? '好预测!放飞马蝇。' : '我们放飞马蝇看看。');
       const cv = c.querySelector('#cv'), D = devicePixelRatio, W = cv.width = cv.clientWidth * D, Hh = cv.height = cv.clientHeight * D, g = cv.getContext('2d');
@@ -71,7 +71,7 @@ runTask('zebra', [
         }
         if (t < 6 && flies.some(f => !f.done)) requestAnimationFrame(frame); else res();
       })(t0); });
-      c.querySelector('#res').innerHTML = `<span class="ls-note">示意动画,方向与 2019 年 Caro 等人的实验一致:马蝇靠近条纹的次数差不多,但很多来不及减速,撞上或飞走,真正落下的明显更少。</span>`;
+      c.querySelector('#res').innerHTML = `<span class="ls-note">示意动画,方向与 2019 年 Caro 等人的研究一致:条纹外套上马蝇的触碰和降落都明显更少;在活斑马身边,马蝇绕飞的次数和在马身边差不多,但常常来不及减速,撞一下就飞走,真正落下的少得多。</span>`;
       api.button('结论', () => api.win('条纹并不能让马蝇"看不见",而是干扰它们降落。一个实验只能检验一个假说,其他假说仍需要别的实验。'), 'primary');
     }));
   } },
@@ -133,7 +133,7 @@ runTask('zebra', [
     c.append(choice(api, ['平原斑马', '山斑马', '家马'], '平原斑马', (ok, o, box) => {
       if (!ok) { api.guide.say(`${o} 和斑驴有 ${diff(rows[0][1], rows.find(r => r[0].includes(o.slice(0, 2)))[1])} 处不同。再数数?`); return; }
       box.remove();
-      api.win('古 DNA 显示,斑驴其实是平原斑马的一个亚种,只是条纹少。同一个物种里,条纹也会因地区和环境而不同。');
+      api.win('1984 年的古 DNA 先显示斑驴和斑马更亲、和马较远;后来(1987、2005 年)更多研究确认,斑驴其实是平原斑马的一个亚种,只是条纹少。同一个物种里,条纹也会因地区和环境而不同。');
     }));
   } },
 ]);

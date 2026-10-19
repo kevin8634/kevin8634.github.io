@@ -83,10 +83,10 @@ runTask('virus', [
     c.append(choice(api, ['不到 5 人', '大约一半', '大部分人'], '大部分人', async (ok, o, box) => {
       box.remove(); api.guide.say('看看会发生什么。');
       const r = await play(c, simulate({ k: 4, p: .1 }));
-      api.guide.say(`这一次,共有 ${r.ever} 人被传染,同一天最多 ${r.peak} 人在生病。多跑几次,每次都不完全一样。`);
+      api.guide.say(`这一次,共有 ${r.ever} 人被传染,同一天最多 ${r.peak} 人在生病。多跑几次,每次都不完全一样——偶尔病毒只传了一两个人就碰巧断了线。`);
       api.clearActions();
       api.button('再模拟一次', async () => { const r2 = await play(c, simulate({ k: 4, p: .1 })); api.guide.say(`这次共 ${r2.ever} 人被传染。`); });
-      api.button('我明白了', () => api.win('一个人平均传给几个人(叫"基本传染数 R₀")决定了疾病会不会扩散。这里大约是 4 次接触 × 10% 传染概率 × 5 天 ≈ 2,大于 1,所以越传越多。'), 'primary');
+      api.button('我明白了', () => api.win('在大家都还没有免疫力时,一个病人平均传给几个人(叫"基本传染数 R₀",也叫基本再生数)决定了疾病会不会扩散。这里大约是 4 次接触 × 10% 传染概率 × 5 天 ≈ 2,大于 1,所以越传越多。'), 'primary');
     }, true));
   } },
 
@@ -116,7 +116,7 @@ runTask('virus', [
   { title: '疫苗与群体免疫', run(api) {
     const c = api.center();
     c.innerHTML = `<div class="row">接种比例:<input type="range" id="v" min="0" max="95" step="5" value="0" style="accent-color:#60a5fa"><b id="vv">0%</b></div>` + classHTML +
-      `<p class="ls-note" style="max-width:520px;text-align:center">普通感冒由 200 多种病毒引起(仅鼻病毒就有 160 多型),所以没有"感冒疫苗"。这里用传播更快的流感作例子(示意参数)。</p>`;
+      `<p class="ls-note" style="max-width:520px;text-align:center">普通感冒由 200 多种病毒引起(仅鼻病毒就有 160 多型),所以目前还没有获批的"感冒疫苗"(科学家还在研发)。这里改用一种假想的、有疫苗可防的病毒作例子(R₀≈3,示意参数;真实的季节性流感 R₀ 通常只有约 1.3,而且流感不算普通感冒)。</p>`;
     c.querySelector('#v').oninput = e => c.querySelector('#vv').textContent = e.target.value + '%';
     api.guide.ask('这种病毒每个病人平均能传给约 3 人。至少要多少人接种疫苗,才能保护整个班级(包括没法接种的同学)?', ['如果 2/3 的人都免疫了,一个病人平均还能传给几个"易感者"?', '3 × (1 − 接种比例) 要小于 1。', '大约 67% 以上。']);
     const box = choice(api, ['约 30%', '约 67%', '必须 100%'], '约 67%', (ok, o, b) => {
@@ -126,7 +126,7 @@ runTask('virus', [
         const r = await play(c, simulate({ k: 6, p: .1, days: 5, vac }), 150);
         const sus = Math.round(40 * (1 - vac));
         api.guide.say(`接种 ${Math.round(vac * 100)}%:共 ${r.ever} 人被传染。`);
-        if (vac >= .65 && r.ever < 8) api.win('当足够多的人免疫时,病毒很难找到下一个易感的人,连没法接种的同学也被保护了。这叫"群体免疫",所需比例约等于 1 − 1/R₀。真实疫苗的效果、接种建议请以医生和卫生部门的意见为准。');
+        if (vac >= .65 && r.ever < 8) api.win('当足够多的人免疫时,病毒很难找到下一个易感的人,连没法接种的同学也被保护了。这叫"群体免疫",所需比例约等于 1 − 1/R₀(这是理想情况:疫苗完全有效、大家随机接触;疫苗效果打折扣时,需要接种的人更多)。真实疫苗的效果、接种建议请以医生和卫生部门的意见为准。');
       }, 'primary');
     });
     c.append(box);
