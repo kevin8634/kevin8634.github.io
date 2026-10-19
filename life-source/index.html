@@ -39,10 +39,11 @@ html,body{overflow:hidden}
 #zoomov .x{position:absolute;right:12px;top:60px;z-index:3}
 @media (max-width:640px){#dive .long{display:none}#legend{display:none}#side{top:56px}.task{padding:6px 8px}}
 </style></head><body>
+<div id="lsi-pre" style="position:fixed;inset:0;z-index:49;background:#060a12"></div>
 <div id="atlas"><canvas></canvas></div>
 <div id="side" class="ls-panel">
   <h1>生命源码 <span class="ls-tag">04 · 生物</span></h1>
-  <div class="sub">读懂生命写好的代码。点亮的星是可以玩的任务。</div>
+  <div class="sub">读懂生命写好的代码。点亮的星是可以玩的任务;拖动、双指或滚轮缩放可以探索。</div>
   <div id="tasks"></div>
 </div>
 <div id="legend"></div>
@@ -51,59 +52,16 @@ html,body{overflow:hidden}
 <div id="zoomov"><div class="zw" style="position:absolute;inset:0"></div><div class="zi ls-panel"></div><div class="zf"></div>
   <button class="ls-btn x" id="zx">✕ 返回图谱</button>
   <div class="zc"><button class="ls-btn primary" id="zp">▶ 播放</button><input id="zs" type="range" min="0" max="5" step="0.001" value="0"></div></div>
-<div id="intro"><canvas></canvas><div class="badge">创世计划 · 04/07<b>生物</b></div>
-  <div class="t"><h1>生命源码</h1><div class="en">LIFE SOURCE</div><p>读懂生命写好的代码</p></div>
-  <button class="ls-btn" id="skip">跳过 ›</button></div>
+
 <script type="module">
 import { chrome, TASKS, taskStars, reducedMotion, sound, store } from './ls.js';
 import { LAYERS, CONS, STARS } from './atlas-data.js';
 chrome({ title: '' });
 const $ = s => document.querySelector(s);
 
-/* ---------- 开场:双螺旋长成生命之树 ---------- */
-(function intro() {
-  const box = $('#intro'), cv = box.querySelector('canvas'), g = cv.getContext('2d');
-  const seenIntro = store.get('intro', false);
-  const end = () => { box.style.opacity = 0; setTimeout(() => box.remove(), 1000); store.set('intro', true); };
-  $('#skip').onclick = end;
-  const W = cv.width = innerWidth * devicePixelRatio, H = cv.height = innerHeight * devicePixelRatio, D = devicePixelRatio;
-  const cx = W / 2, base = H * .7, trunkTop = H * .5, R = Math.min(W, H) * .03;
-  // 生命之树分枝(确定性随机)
-  let seed = 3; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
-  const branches = [];
-  (function grow(x, y, ang, len, depth, t0) {
-    const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
-    branches.push({ x, y, x2, y2, depth, t0, w: Math.max(1, 6 - depth) * D });
-    if (depth < 6) { const n = depth < 2 ? 3 : 2; for (let i = 0; i < n; i++) grow(x2, y2, ang + (i - (n - 1) / 2) * (.55 + rnd() * .25), len * (.68 + rnd() * .12), depth + 1, t0 + .32); }
-  })(cx, trunkTop, -Math.PI / 2, Math.min(H * .1, W * .12), 0, 2.2);
-  const leaves = branches.filter(b => b.depth === 6);
-  const start = performance.now();
-  function draw(now) {
-    const t = reducedMotion() ? 9 : (now - start) / 1000;
-    g.clearRect(0, 0, W, H);
-    // 双螺旋树干(从底部向上生长)
-    const hp = Math.min(1, t / 2.2), yTop = base - (base - trunkTop) * hp;
-    for (let s = 0; s < 2; s++) {
-      g.beginPath();
-      for (let y = base; y >= yTop; y -= 2 * D) { const ph = (base - y) / (R * 2.2) + s * Math.PI; const x = cx + Math.sin(ph) * R; y === base ? g.moveTo(x, y) : g.lineTo(x, y); }
-      g.strokeStyle = s ? '#6ee7b7' : '#10b981'; g.lineWidth = 3 * D; g.shadowColor = '#34d399'; g.shadowBlur = 12 * D; g.stroke();
-    }
-    g.shadowBlur = 0;
-    for (let y = base; y >= yTop; y -= R * .7) { const ph = (base - y) / (R * 2.2); g.beginPath(); g.moveTo(cx + Math.sin(ph) * R, y); g.lineTo(cx - Math.sin(ph) * R, y); g.strokeStyle = ['#4ade80', '#f5b041', '#60a5fa', '#f87171'][Math.floor((base - y) / R) % 4]; g.lineWidth = 2 * D; g.stroke(); }
-    // 分枝
-    for (const b of branches) {
-      const p = Math.max(0, Math.min(1, (t - b.t0) / .4)); if (!p) continue;
-      g.beginPath(); g.moveTo(b.x, b.y); g.lineTo(b.x + (b.x2 - b.x) * p, b.y + (b.y2 - b.y) * p);
-      g.strokeStyle = `rgba(110,231,183,${.5 + .5 / (b.depth + 1)})`; g.lineWidth = b.w; g.stroke();
-    }
-    // 叶子 = 星
-    const lp = Math.max(0, Math.min(1, (t - 4.4) / .8));
-    if (lp) leaves.forEach((b, i) => { const c = Object.values(CONS)[i % 8].color; g.beginPath(); g.arc(b.x2, b.y2, (2.5 + (i % 3)) * D * lp, 0, 7); g.fillStyle = c; g.shadowColor = c; g.shadowBlur = 14 * D; g.fill(); g.shadowBlur = 0; });
-    if (t > 4.6) box.querySelector('.t').style.opacity = 1;
-    if (t < (seenIntro ? 6 : 7.5) && box.isConnected) requestAnimationFrame(draw); else if (box.isConnected) setTimeout(end, reducedMotion() ? 1200 : 300);
-  }
-  requestAnimationFrame(draw);
-})();
+/* ---------- 开场:编译生命(ls-intro.js) ---------- */
+const pre = () => document.getElementById('lsi-pre')?.remove();
+import('./ls-intro.js').then(m => { m.playIntro(); pre(); }).catch(pre);
 
 /* ---------- 任务列表 ---------- */
 for (const [id, t] of Object.entries(TASKS)) {
@@ -115,7 +73,9 @@ $('#legend').innerHTML = Object.values(CONS).map(c => `<span style="color:${c.co
 
 /* ---------- 图谱 ---------- */
 const cv = $('#atlas canvas'), g = cv.getContext('2d');
-let W, H, D, pts = [], sel = null, hover = null;
+let W, H, D, pts = [], sel = null, hover = null, rip = null;
+const V = { s: 1, ox: 0, oy: 0 }; // 视图:缩放与平移
+const T = (x, y) => [(x - W / 2) * V.s + W / 2 + V.ox, (y - H / 2) * V.s + H / 2 + V.oy];
 const bg = []; for (let i = 0; i < 260; i++) bg.push([Math.random(), Math.random(), Math.random()]);
 function layout() {
   D = devicePixelRatio; W = cv.width = innerWidth * D; H = cv.height = innerHeight * D;
@@ -127,41 +87,45 @@ function layout() {
 function draw(now = 0) {
   const { top, bottom, left, right, lh } = layout.m;
   g.clearRect(0, 0, W, H);
-  for (const [x, y, z] of bg) { g.fillStyle = `rgba(200,255,230,${.15 + z * .35 * (reducedMotion() ? 1 : (.6 + .4 * Math.sin(now / 900 + z * 20)))})`; g.fillRect(x * W, y * H, 1.2 * D, 1.2 * D); }
+  for (const [x0, y0, z] of bg) { const x = ((x0 + V.ox / W * z * .3) % 1 + 1) % 1, y = ((y0 + V.oy / H * z * .3) % 1 + 1) % 1; g.fillStyle = `rgba(200,255,230,${.15 + z * .35 * (reducedMotion() ? 1 : (.6 + .4 * Math.sin(now / 900 + z * 20)))})`; g.fillRect(x * W, y * H, 1.2 * D, 1.2 * D); }
   LAYERS.forEach((name, i) => {
-    const y = bottom - (i + 1) * lh;
-    g.strokeStyle = 'rgba(110,231,183,.08)'; g.lineWidth = 1; g.beginPath(); g.moveTo(left - 30 * D, y); g.lineTo(right, y); g.stroke();
-    g.fillStyle = 'rgba(148,163,168,.75)'; g.font = `${12 * D}px "PingFang SC","Noto Sans SC",sans-serif`; g.fillText(name, left - 44 * D, y + lh / 2 + 4 * D);
+    const y = T(0, bottom - (i + 1) * lh)[1], lhs = lh * V.s;
+    g.strokeStyle = 'rgba(110,231,183,.08)'; g.lineWidth = 1; g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke();
+    g.fillStyle = 'rgba(148,163,168,.75)'; g.font = `${12 * D}px "PingFang SC","Noto Sans SC",sans-serif`; g.fillText(name, 8 * D, y + lhs / 2 + 4 * D);
   });
   // 星座连线(最小生成树,避免长线交叉)
   for (const k of Object.keys(CONS)) {
     const ps = pts.filter(p => p.s.con === k); if (ps.length < 2) continue;
-    const inT = [ps[0]], out = ps.slice(1); g.strokeStyle = CONS[k].color + '55'; g.lineWidth = 1.2 * D; g.beginPath();
+    const focus = (hover || sel) && (hover || sel).s.con, on = focus === k;
+    const inT = [ps[0]], out = ps.slice(1); g.strokeStyle = CONS[k].color + (on ? 'dd' : focus ? '22' : '55'); g.lineWidth = (on ? 2.2 : 1.2) * D; g.beginPath();
     while (out.length) {
       let bi = 0, bj = 0, bd = Infinity;
       inT.forEach((a, i) => out.forEach((b, j) => { const d = (a.x - b.x) ** 2 + (a.y - b.y) ** 2; if (d < bd) { bd = d; bi = i; bj = j; } }));
-      const a = inT[bi], b = out.splice(bj, 1)[0]; g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); inT.push(b);
+      const a = inT[bi], b = out.splice(bj, 1)[0]; g.moveTo(...T(a.x, a.y)); g.lineTo(...T(b.x, b.y)); inT.push(b);
     }
     g.stroke();
   }
-  for (const p of pts) {
+  if (rip) { const k = (now - rip.t) / 900; if (k > 1) rip = null; else { const [rx, ry] = T(rip.p.x, rip.p.y); for (const d of [0, .25]) { const kk = Math.max(0, k - d); g.beginPath(); g.arc(rx, ry, (8 + kk * 70) * D, 0, 7); g.strokeStyle = CONS[rip.p.s.con].color; g.globalAlpha = (1 - kk) * .8; g.lineWidth = 2 * D; g.stroke(); } g.globalAlpha = 1; } }
+  for (const p0 of pts) {
+    const [X, Y] = T(p0.x, p0.y), p = { ...p0, x: X, y: Y };
     const c = CONS[p.s.con].color, isTask = !!p.s.task, r = (isTask ? 7 : p.s.soon ? 5 : 3.2) * D;
     const pulse = isTask && !reducedMotion() ? 1 + .25 * Math.sin(now / 500) : 1;
     g.globalAlpha = p.s.soon ? .45 : 1;
     g.beginPath(); g.arc(p.x, p.y, r * pulse, 0, 7); g.fillStyle = c; g.shadowColor = c; g.shadowBlur = (isTask ? 22 : 8) * D; g.fill(); g.shadowBlur = 0;
     if (isTask || p.s.soon) { g.beginPath(); g.arc(p.x, p.y, r * 2.1, 0, 7); g.strokeStyle = c; g.lineWidth = 1.2 * D; g.setLineDash(p.s.soon ? [3 * D, 3 * D] : []); g.stroke(); g.setLineDash([]); }
-    if (isTask || p === hover || p === sel) { g.fillStyle = '#eef5f2'; g.font = `${(isTask ? 13 : 12) * D}px "PingFang SC","Noto Sans SC",sans-serif`; const label = isTask ? p.s.name : p.s.name; const tw = g.measureText(label).width; g.fillText(label, Math.min(Math.max(p.x - tw / 2, 6 * D), W - tw - 6 * D), p.y - r * 2.4 - 4 * D); }
+    if (isTask || p0 === hover || p0 === sel || V.s > 1.8) { g.fillStyle = '#eef5f2'; g.font = `${(isTask ? 13 : 12) * D}px "PingFang SC","Noto Sans SC",sans-serif`; const label = isTask ? p.s.name : p.s.name; const tw = g.measureText(label).width; g.fillText(label, Math.min(Math.max(p.x - tw / 2, 6 * D), W - tw - 6 * D), p.y - r * 2.4 - 4 * D); }
     g.globalAlpha = 1;
   }
   requestAnimationFrame(draw);
 }
-const near = e => { const x = e.clientX * D, y = e.clientY * D; let best = null, bd = (26 * D) ** 2; for (const p of pts) { const d = (p.x - x) ** 2 + (p.y - y) ** 2; if (d < bd) { bd = d; best = p; } } return best; };
+const near = e => { const x = e.clientX * D, y = e.clientY * D; let best = null, bd = (26 * D) ** 2; for (const p of pts) { const [px, py] = T(p.x, p.y), d = (px - x) ** 2 + (py - y) ** 2; if (d < bd) { bd = d; best = p; } } return best; };
 cv.addEventListener('pointermove', e => { hover = near(e); cv.style.cursor = hover ? 'pointer' : ''; });
 cv.addEventListener('click', e => {
-  sel = near(e); const sh = $('#sheet');
+  if (moved) return;
+  sel = near(e); if (sel) rip = { p: sel, t: performance.now() }; const sh = $('#sheet');
   if (!sel) { sh.style.display = 'none'; $('#divebar').style.display = ''; return; }
   const s = sel.s, c = CONS[s.con];
-  sound.tone(392 + s.layer * 60, .3);
+  if (s.task) sound.sparkle(5); else sound.tone(587.33 * 2 ** (s.layer / 5), .5, { gain: .1 });
   sh.innerHTML = `<h3></h3><div class="meta">${LAYERS[s.layer]}层 · <span style="color:${c.color}">${c.name}</span>座</div><p></p><div class="ls-actions"></div>`;
   sh.querySelector('h3').textContent = s.name;
   sh.querySelector('p').textContent = s.task ? `任务 · ★ ${taskStars(s.task)}/${TASKS[s.task].levels * 3}` : s.soon ? '这颗星即将点亮,下一批任务正在制作中。' : s.note;
@@ -171,6 +135,21 @@ cv.addEventListener('click', e => {
   sh.style.display = 'block'; $('#divebar').style.display = 'none';
 });
 addEventListener('resize', layout); layout(); requestAnimationFrame(draw);
+/* 手势:拖动平移、双指或滚轮缩放(以手指/光标为中心)、双击复位 */
+const ptr = new Map(); let moved = false, pinch0 = null;
+const zoomAt = (f, cx, cy) => { const s2 = Math.min(3.2, Math.max(1, V.s * f)), k = s2 / V.s; V.ox = cx - W / 2 - (cx - W / 2 - V.ox) * k; V.oy = cy - H / 2 - (cy - H / 2 - V.oy) * k; V.s = s2; clampV(); };
+const clampV = () => { const m = (V.s - 1) / 2 + .15; V.ox = Math.max(-W * m, Math.min(W * m, V.ox)); V.oy = Math.max(-H * m, Math.min(H * m, V.oy)); if (V.s === 1) { V.ox *= .5; V.oy *= .5; } };
+cv.addEventListener('pointerdown', e => { ptr.set(e.pointerId, [e.clientX, e.clientY]); moved = false; if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch0 = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), s: V.s }; } });
+cv.addEventListener('pointermove', e => {
+  const q = ptr.get(e.pointerId); if (!q) return;
+  if (ptr.size === 1) { const dx = e.clientX - q[0], dy = e.clientY - q[1]; if (Math.abs(dx) + Math.abs(dy) > 2) moved = true; if (moved) { V.ox += dx * D; V.oy += dy * D; clampV(); } }
+  ptr.set(e.pointerId, [e.clientX, e.clientY]);
+  if (ptr.size === 2 && pinch0) { const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); moved = true; zoomAt(pinch0.s * d / pinch0.d / V.s, (a[0] + b[0]) / 2 * D, (a[1] + b[1]) / 2 * D); }
+});
+const up = e => { ptr.delete(e.pointerId); if (ptr.size < 2) pinch0 = null; };
+cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+cv.addEventListener('wheel', e => { e.preventDefault(); zoomAt(Math.exp(-e.deltaY * .0015), e.clientX * D, e.clientY * D); }, { passive: false });
+cv.addEventListener('dblclick', () => { V.s = 1; V.ox = V.oy = 0; sound.whoosh(.6, false); });
 
 /* ---------- 一镜到底浮层 ---------- */
 let zm = null;

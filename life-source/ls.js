@@ -43,7 +43,8 @@ export const BASE_FREQ = { A: 440, C: 523.25, G: 392, T: 329.63, U: 329.63 };
 let ac = null, master = null;
 export const sound = {
   get on() { return store.get('sound', false) === true; },
-  set on(v) { store.set('sound', !!v); if (v) ensure(); },
+  set on(v) { store.set('sound', !!v); if (v) { ensure(); music.start(); } else music.stop(); },
+  musicLevel(l) { music.level = l; music.apply(); },
   tone(f, dur = .35, { type = 'sine', gain = .18, when = 0, detune = 0 } = {}) {
     if (!this.on) return; ensure();
     const t = ac.currentTime + when, o = ac.createOscillator(), g = ac.createGain();
@@ -58,7 +59,40 @@ export const sound = {
   },
   ok() { this.tone(523.25, .18); this.tone(659.25, .3, { when: .1 }); },
   no() { this.tone(220, .25, { type: 'triangle', gain: .12 }); },
+  // 星星点亮:五声音阶上行琶音
+  sparkle(n = 5, base = 0) { [587.33, 659.25, 739.99, 880, 987.77, 1174.66].slice(0, n).forEach((f, i) => this.tone(f * 2 ** base, .5, { when: i * .07, gain: .09 })); },
+  // 过关和弦(D 大九和弦)
+  chord() { [293.66, 369.99, 440, 554.37, 659.25].forEach((f, i) => this.tone(f, 1.6, { when: i * .05, gain: .07, type: i % 2 ? 'sine' : 'triangle' })); },
+  // 镜头推进:滤波噪声扫频
+  whoosh(dur = 1.2, up = true) {
+    if (!this.on) return; ensure();
+    const t = ac.currentTime, n = ac.createBufferSource(), b = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const f = ac.createBiquadFilter(), g = ac.createGain(); f.type = 'bandpass'; f.Q.value = 1.2;
+    f.frequency.setValueAtTime(up ? 300 : 3000, t); f.frequency.exponentialRampToValueAtTime(up ? 3000 : 300, t + dur);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.16, t + dur * .6); g.gain.linearRampToValueAtTime(0, t + dur);
+    n.buffer = b; n.connect(f).connect(g).connect(master); n.start(t);
+  },
 };
+/* 背景音乐「生命源码」:原创程序合成(_dev/audio/synth.py),无缝循环;跟随声音开关,默认关 */
+const music = {
+  level: .3, buf: null, src: null, gain: null, loading: null,
+  async start() {
+    if (!sound.on) return; ensure();
+    if (this.src) return this.apply();
+    if (!this.buf) this.loading ||= fetch(new URL('./audio/bgm.m4a', import.meta.url)).then(r => r.arrayBuffer()).then(a => new Promise((ok, no) => ac.decodeAudioData(a, ok, no)));
+    try { this.buf = await this.loading; } catch { return; }
+    if (!sound.on || this.src) return;
+    this.gain = ac.createGain(); this.gain.gain.value = 0; this.gain.connect(master);
+    this.src = ac.createBufferSource(); this.src.buffer = this.buf; this.src.loop = true; this.src.connect(this.gain); this.src.start();
+    this.apply(3);
+  },
+  apply(fade = 1.2) { if (!this.gain) return; const t = ac.currentTime, v = sound.on && !document.hidden ? this.level : 0; this.gain.gain.cancelScheduledValues(t); this.gain.gain.setValueAtTime(this.gain.gain.value, t); this.gain.gain.linearRampToValueAtTime(v, t + fade); },
+  stop() { if (!this.src) return; const s = this.src; this.apply(.8); setTimeout(() => { try { s.stop(); } catch {} }, 900); this.src = null; },
+};
+document.addEventListener('visibilitychange', () => music.apply(.5));
+// 浏览器不允许自动播放:声音已开时,在第一次点击后接上音乐
+addEventListener('pointerdown', () => { if (sound.on) music.start(); }, { once: true, capture: true });
 function ensure() {
   if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
   ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -80,6 +114,7 @@ export function translate(dna) { const out = []; for (let i = 0; i + 3 <= dna.le
 
 /* ---------- 页面骨架 ---------- */
 export function chrome({ title = '', task = null } = {}) {
+  if (task) music.level = .18;
   const top = document.createElement('header');
   top.className = 'ls-top';
   top.innerHTML = `<a class="brand" href="/life-source/">生命源码</a><div class="title"></div>
@@ -89,7 +124,8 @@ export function chrome({ title = '', task = null } = {}) {
   document.body.prepend(top);
   const snd = top.querySelector('#ls-snd');
   const paint = () => { snd.textContent = sound.on ? '🔊' : '🔇'; snd.classList.toggle('on', sound.on); };
-  snd.onclick = () => { sound.on = !sound.on; paint(); if (sound.on) sound.ok(); };
+  snd.onclick = () => { sound.on = !sound.on; paint(); if (sound.on) sound.sparkle(3); };
+  addEventListener('ls-sound', paint);
   paint();
   const foot = document.createElement('footer');
   foot.className = 'ls-foot';
