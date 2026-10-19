@@ -75,7 +75,7 @@ export const STATS = [
 /* 任务:id 一经上线不再更改 */
 export const TASKS = [
   { id: 'compound', q: '每天多进步 1%,一年后会怎样?', domains: ['wealth', 'habit'], age: 7, guide: 'franklin', path: 'compound/', ver: 'v0.2', live: true },
-  { id: 'prisoner', q: '为什么好人不一定吃亏?', domains: ['coop', 'nature'], age: 12, guide: 'neumann', path: 'prisoner/', ver: 'v0.3', live: false },
+  { id: 'prisoner', q: '为什么好人不一定吃亏?', domains: ['coop', 'nature'], age: 12, guide: 'neumann', path: 'prisoner/', ver: 'v0.3', live: true },
   { id: 'sunk', q: '电影看了一半很难看,要不要看完?', domains: ['mind'], age: 7, guide: 'kahneman', path: 'sunk/', ver: 'M2', live: false },
   { id: 'cocoon', q: '为什么你刷到的视频越来越像?', domains: ['info', 'habit'], age: 12, guide: 'sagan', path: 'cocoon/', ver: 'M2', live: false },
   { id: 'survivor', q: '为什么「成功经验」常常骗人?', domains: ['wealth', 'info'], age: 12, guide: 'sagan', path: 'survivor/', ver: 'M2', live: false },
