@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>觉弈 Ludoterra · 创世计划 06 · 认知觉醒</title>
+<meta name="description" content="创世计划第 06 世界「觉弈」(认知觉醒):地球Online 没有新手教程,这里补上。先被自己的大脑骗一次,再看见规则,最后亲手改写规则。免费、免注册。">
+<meta name="theme-color" content="#070814">
+<link rel="stylesheet" href="lt.css">
+<style>
+html,body{height:100%;overflow:hidden}
+#disc{position:fixed;inset:0;display:block;width:100%;height:100%;touch-action:pan-y;cursor:grab}
+#disc.drag{cursor:grabbing}
+#hero{position:fixed;left:50%;top:60px;transform:translateX(-50%);text-align:center;z-index:10;pointer-events:none;width:min(680px,92vw)}
+#hero h1{margin:0;font-size:clamp(20px,3.2vw,30px);letter-spacing:2px;font-weight:700;text-shadow:0 2px 12px #000}
+#hero p{margin:6px 0 0;color:var(--mute);font-size:14px}
+#side{position:fixed;right:12px;top:64px;z-index:20;width:min(340px,calc(100% - 24px));max-height:calc(100% - 140px);overflow:auto;padding:14px 16px}
+#side h3{margin:0 0 4px;font-size:17px}
+#side .k{font-size:12px;color:var(--gold);letter-spacing:1px}
+#side p{margin:6px 0;font-size:13.5px;line-height:1.65}
+#side .aff{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+#side .aff span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:1px 8px;color:var(--ink)}
+#side .tk{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:12px;margin-top:8px;text-decoration:none;color:var(--ink);font-size:13.5px}
+#side .tk .st{margin-left:auto;font-size:11px;color:var(--gold);white-space:nowrap}
+#side .tk.off{opacity:.62}
+#side .x{float:right}
+#side .lay{display:flex;gap:8px;align-items:flex-start;margin:8px 0;padding:8px 10px;border-radius:12px;border:1px solid var(--line);cursor:pointer;background:none;color:var(--ink);text-align:left;width:100%}
+#side .lay b{font-size:16px;color:var(--gold);min-width:20px}
+#side .lay small{display:block;color:var(--mute);font-size:12px;margin-top:2px}
+#side .doms{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+#side .doms button{font-size:12px;padding:3px 9px}
+#dock{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:20;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:min(720px,94vw)}
+#rec{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);z-index:19;padding:10px 14px;display:flex;gap:10px;align-items:center;width:min(520px,94vw)}
+#rec .q{flex:1;font-size:14px;line-height:1.45}
+#rec .q small{display:block;color:var(--gold);font-size:11px;letter-spacing:1px}
+.foot{position:fixed;left:0;right:0;bottom:6px;z-index:15}
+/* 创建角色 */
+.ages{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0 6px}
+.age{border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.03);color:var(--ink);padding:16px 10px;cursor:pointer;text-align:center}
+.age:hover,.age:focus-visible,.age.on{border-color:var(--gold);outline:none;box-shadow:0 0 22px rgba(245,194,107,.3)}
+.age .i{font-size:28px}
+.age b{display:block;font-size:20px;margin-top:6px;letter-spacing:2px}
+.age .r{display:block;color:var(--gold);font-size:13px;margin-top:2px}
+.age .l{display:block;color:var(--mute);font-size:12px;margin-top:6px;line-height:1.5}
+.layers{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0}
+.layer{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,.03)}
+.layer b{color:var(--gold);font-size:13px}
+.layer h4{margin:4px 0;font-size:17px}
+.layer p{margin:0;color:var(--mute);font-size:12.5px;line-height:1.55}
+.row2{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+.priv{font-size:12px;color:var(--mute)}
+table.map{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+table.map th,table.map td{border-bottom:1px solid rgba(245,194,107,.15);padding:6px 4px;text-align:left;vertical-align:top}
+table.map th{color:var(--gold);font-weight:600;font-size:12px}
+.gl{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.gl div{border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:12.5px;line-height:1.55}
+.gl b{color:var(--gold)}
+@media (max-width:1199px){#side{top:auto;bottom:118px;right:50%;transform:translateX(50%);max-height:38vh;display:none}#side.on{display:block}}
+@media (max-width:640px){.foot{display:none}#hero h1{font-size:16.5px;letter-spacing:.5px}#hero p{display:none}.ages,.layers{grid-template-columns:repeat(2,1fr)}#hero{top:54px}#hero p{font-size:12px}#rec{bottom:74px}#dock{bottom:30px}#dock .lt-btn{font-size:12px;padding:5px 10px}.gl{grid-template-columns:1fr}#side{bottom:150px}}
+@media (max-height:480px){#hero,#rec,.foot{display:none}#dock{bottom:24px}.lt-hud{display:none}#side{top:56px;bottom:auto;max-height:calc(100% - 100px)}}
+</style></head><body>
+<canvas id="disc" tabindex="0" aria-label="光之莲认知星盘:四层八域。左右拖动或用方向键旋转,点扇区查看。"></canvas>
+<div id="hero"><h1>地球Online 没有新手教程。这里补上。</h1><p>看见自己的思维,就是觉醒的开始</p></div>
+<aside id="side" class="lt-panel" aria-live="polite"></aside>
+<div id="rec" class="lt-panel"></div>
+<nav id="dock">
+  <button class="lt-btn" id="bMap" type="button">🗺 认知地图</button>
+  <button class="lt-btn" id="bGuides" type="button">🏛 先贤向导团</button>
+  <button class="lt-btn" id="bAbout" type="button">ⓘ 关于觉弈</button>
+</nav>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.1</div>
+
+<div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
+  <div id="step1">
+    <h2 id="roleT">欢迎来到地球Online</h2>
+    <p class="lead">你一出生就进了这款游戏:规则不公开,数值看不见,还有人专门利用你看不见的那部分。先告诉我,你现在处在哪个阶段?</p>
+    <div class="ages" id="ages"></div>
+    <p class="priv">只保存在这台设备的浏览器里,不是身份认证,随时可以在右上角更换。</p>
+  </div>
+  <div id="step2" hidden>
+    <h2>规则是谁写的?</h2>
+    <p class="lead">地球Online 的规则由三位作者先后写成。越古老的规则越难改,但都可以被看见。最后一层,由你自己来写。</p>
+    <div class="layers" id="layers"></div>
+    <p class="lead" style="margin:0">每一关都分三步:<b style="color:var(--gold)">先中招</b>(凭直觉玩)→ <b style="color:var(--gold)">再看见</b>(揭晓规则)→ <b style="color:var(--gold)">改写规则</b>(坐到庄家那一边)。</p>
+    <div class="row2"><button class="lt-btn" id="back1" type="button">← 换年龄段</button><button class="lt-btn primary" id="enter" type="button">进入地球Online</button></div>
+  </div>
+</div></div>
+
+<div class="lt-modal" id="mGuides" role="dialog" aria-modal="true" aria-labelledby="gT"><div class="box lt-panel">
+  <h2 id="gT">先贤向导团</h2>
+  <p class="lead">向导只提问,不给答案。他们的名字是致敬;关卡里的话是「仿其思想的提问」,不是他们的原话。</p>
+  <div class="gl" id="gl"></div>
+  <div class="row2"><button class="lt-btn primary" data-close type="button">回到星盘</button></div>
+</div></div>
+
+<div class="lt-modal" id="mAbout" role="dialog" aria-modal="true" aria-labelledby="aT"><div class="box lt-panel">
+  <h2 id="aT">关于觉弈 Ludoterra</h2>
+  <p class="lead">觉弈是「创世计划 Genesis」第 06 个世界,学科是<b>认知觉醒</b>。我们把人生和社会看成一款叫「地球Online」的游戏:先看见自己的大脑怎样运作,再看懂人与人、金钱与信息的规则,最后清醒地做选择。</p>
+  <table class="map"><thead><tr><th>层</th><th>认知域</th><th>影响你在地球Online 的</th><th>适合</th></tr></thead><tbody id="mapRows"></tbody></table>
+  <p class="lead" style="font-size:13px">一句话串起来:自我决定你怎么看,他人决定你和谁一起玩,世界决定游戏怎么计分,意义决定你为什么而玩。</p>
+  <p class="lead" style="font-size:13px"><b>我们的底线:</b>只讲机制,不教「应该怎么活」;不排名、不给人格打分、不做心理诊断、不制造焦虑;远离成功学与玄学;财富相关内容<b>不构成投资建议</b>;不涉及政治、宗教立场。</p>
+  <p class="lead" style="font-size:13px">如果你正被情绪或心理困扰压得喘不过气,请告诉一位信任的大人,或拨打全国统一心理援助热线 <b style="color:var(--gold)">12356</b>。</p>
+  <div class="row2"><button class="lt-btn primary" data-close type="button">回到星盘</button></div>
+</div></div>
+
+<script type="module">
+import { AGES, LAYERS, DOMAINS, MEANING, GUIDES, GUIDE_ORDER, TASKS, BRIDGES, ageLabel } from './lt-data.js';
+import { chrome, hud, store, getAge, setAge, isDone, sound, reducedMotion, offline } from './lt.js';
+
+const ch = chrome({ home: './' });
+const H = hud();
+offline();
+
+/* ---------- 弹层通用 ---------- */
+let lastFocus = null;
+function openM(id) { lastFocus = document.activeElement; const m = document.getElementById(id); m.classList.add('on');
+  const f = m.querySelector('button,a'); f && f.focus(); }
+function closeM(m) { m.classList.remove('on'); lastFocus && lastFocus.focus && lastFocus.focus(); }
+document.querySelectorAll('.lt-modal').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m && m.id !== 'mRole') closeM(m); if (e.target.closest('[data-close]')) closeM(m); });
+  m.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && (m.id !== 'mRole' || getAge())) closeM(m);
+    if (e.key === 'Tab') { const fs = [...m.querySelectorAll('button:not([hidden]),a')].filter(x => x.offsetParent); if (!fs.length) return;
+      const i = fs.indexOf(document.activeElement); if (e.shiftKey && i <= 0) { fs[fs.length - 1].focus(); e.preventDefault(); } else if (!e.shiftKey && i === fs.length - 1) { fs[0].focus(); e.preventDefault(); } }
+  });
+});
+
+/* ---------- 创建角色 ---------- */
+const agesEl = document.getElementById('ages');
+agesEl.innerHTML = AGES.map(a => `<button class="age" type="button" data-a="${a.id}"><span class="i" aria-hidden="true">${a.icon}</span><b>${a.name}</b><span class="r">${a.range}</span><span class="l">${a.line}</span></button>`).join('');
+document.getElementById('layers').innerHTML = LAYERS.map(l => `<div class="layer"><b>${l.no} 作者:${l.author} · ${l.era}</b><h4>${l.name}</h4><p>${l.q}</p></div>`).join('');
+agesEl.onclick = e => { const b = e.target.closest('.age'); if (!b) return; setAge(b.dataset.a); sound.bell(3);
+  agesEl.querySelectorAll('.age').forEach(x => x.classList.toggle('on', x === b)); ch.paintAge(); paintRec();
+  document.getElementById('step1').hidden = true; document.getElementById('step2').hidden = false; document.getElementById('enter').focus(); };
+document.getElementById('back1').onclick = () => { document.getElementById('step1').hidden = false; document.getElementById('step2').hidden = true; agesEl.querySelector('.age').focus(); };
+document.getElementById('enter').onclick = () => { store.set('_intro', 1); closeM(document.getElementById('mRole')); sound.bell(5); };
+ch.chip.onclick = () => { document.getElementById('step1').hidden = false; document.getElementById('step2').hidden = true; openM('mRole'); };
+
+/* ---------- 先贤 / 关于 ---------- */
+document.getElementById('gl').innerHTML = GUIDE_ORDER.map(k => { const g = GUIDES[k]; return `<div><b>${g.name}</b> · ${g.era} · ${g.role}<br>${g.why}</div>`; }).join('');
+const domAge = d => `${AGES.find(a => a.min === d.age).name} ${d.age}+${d.intro ? `(入门 ${d.intro}+)` : ''}`;
+document.getElementById('mapRows').innerHTML = [...DOMAINS, MEANING].map(d => { const L = LAYERS.find(l => l.id === d.layer);
+  return `<tr><td>${L.no} ${L.name}</td><td>${d.name}<br><small style="color:var(--mute)">${GUIDES[d.guide].name}</small></td><td>${d.affects.join('、')}</td><td>${domAge(d)}</td></tr>`; }).join('');
+document.getElementById('bGuides').onclick = () => openM('mGuides');
+document.getElementById('bAbout').onclick = () => openM('mAbout');
+
+/* ---------- 侧栏 ---------- */
+const side = document.getElementById('side');
+const taskRow = t => { const live = t.live; const done = isDone(t.id);
+  return live ? `<a class="tk" href="${t.path}">${t.q}<span class="st">${done ? '已看见 ✦' : '进入 →'}</span></a>`
+              : `<div class="tk off">${t.q}<span class="st">即将点亮 · ${t.ver}</span></div>`; };
+function showMap() {
+  side.innerHTML = `<button class="lt-btn x" type="button" data-hide aria-label="收起">✕</button><div class="k">认知地图 · 四层八域</div><h3>规则是谁写的?</h3>` + LAYERS.map(l => {
+    const ds = l.id === 'meaning' ? [MEANING] : DOMAINS.filter(d => d.layer === l.id);
+    return `<div class="lay" role="group" aria-label="${l.name}"><b>${l.no}</b><div style="flex:1"><div>${l.name} · 作者:${l.author}</div><small>${l.say}</small>
+      <div class="doms">${ds.map(d => `<button class="lt-btn" type="button" data-d="${d.id}">${d.name}</button>`).join('')}</div></div></div>`;
+  }).join('');
+  side.classList.add('on');
+}
+function showDomain(id) {
+  const d = id === 'meaning' ? MEANING : DOMAINS.find(x => x.id === id); if (!d) return; sel = id;
+  const L = LAYERS.find(l => l.id === d.layer); const g = GUIDES[d.guide];
+  const ts = TASKS.filter(t => t.domains.includes(d.id));
+  const br = BRIDGES.filter(b => ts.some(t => t.id === b.from) || b.from === d.id);
+  side.innerHTML = `<button class="lt-btn x" type="button" data-map>← 地图</button><button class="lt-btn x" type="button" data-hide aria-label="收起" style="margin-right:6px">✕</button><div class="k">${L.no} ${L.name} · 规则作者:${L.author}</div>
+    <h3>${d.name}</h3><p><b>${d.q}</b></p>
+    <div class="k" style="margin-top:8px">影响你在地球Online 的</div><div class="aff">${d.affects.map(a => `<span>${a}</span>`).join('')}</div>
+    <p><span class="lt-age">${domAge(d)}</span></p>
+    <p style="color:var(--mute)">知识地基:${d.base}</p>
+    <p>向导:<b style="color:var(--gold)">${g.name}</b>(${g.era})——${g.why}</p>
+    ${ts.length ? `<div class="k" style="margin-top:8px">这一域的关卡</div>${ts.map(taskRow).join('')}` : `<p style="color:var(--mute)">关卡筹备中,先在其他域看见规则。</p>`}
+    ${br.length ? `<div class="k" style="margin-top:10px">星桥(连到其他世界,即将开通)</div>${br.map(b => `<p style="font-size:12.5px;margin:4px 0">✦ ${b.to}</p>`).join('')}` : ''}`;
+  side.classList.add('on'); sound.bell(DOMAINS.indexOf(d) + 1);
+}
+side.addEventListener('click', e => { const b = e.target.closest('[data-d]'); if (b) showDomain(b.dataset.d); if (e.target.closest('[data-map]')) { sel = null; showMap(); } if (e.target.closest('[data-hide]')) { sel = null; side.classList.remove('on'); } });
+document.getElementById('bMap').onclick = () => { sel = null; showMap(); };
+
+/* ---------- 推荐第一关 ---------- */
+function paintRec() {
+  const a = AGES.find(x => x.id === getAge()) || AGES[1];
+  const first = a.id === 'spark' ? TASKS.find(t => t.id === 'prisoner') : TASKS.find(t => t.id === 'compound');
+  document.getElementById('rec').innerHTML = `<div class="q"><small>给 ${a.name} · ${a.range} 的第一关</small>${first.q}</div>` +
+    (first.live ? `<a class="lt-btn primary" href="${first.path}">开始 →</a>` : `<span class="lt-age">即将点亮 · ${first.ver}</span>`);
+}
+paintRec();
+
+/* ---------- 光之莲认知星盘 ---------- */
+const cv = document.getElementById('disc'); const cx2 = cv.getContext('2d');
+let W = 0, Hh = 0, DPR = 1, R = 200, CX = 0, CY = 0, TILT = 0.46;
+let theta = -Math.PI / 2, vel = 0, sel = null, hover = null, t0 = performance.now();
+const RINGS = { self: [0.24, 0.47], others: [0.49, 0.72], world: [0.74, 0.95] };
+const SECT = DOMAINS.map(d => ({ d }));
+['self', 'others', 'world'].forEach(L => { const ds = SECT.filter(s => s.d.layer === L); const n = ds.length;
+  ds.forEach((s, i) => { const off = L === 'others' ? Math.PI / 3 : (L === 'world' ? Math.PI / 2 : 0); s.a0 = off + i * 2 * Math.PI / n; s.a1 = s.a0 + 2 * Math.PI / n; s.r0 = RINGS[L][0]; s.r1 = RINGS[L][1]; }); });
+const lit = s => TASKS.some(t => t.live && isDone(t.id) && t.domains.includes(s.d.id));
+const fog = Array.from({ length: 46 }, () => ({ r: 0.25 + Math.random() * 0.72, a: Math.random() * Math.PI * 2, s: 0.04 + Math.random() * 0.07, v: (Math.random() - .5) * 0.04 }));
+const bgStars = Array.from({ length: 160 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * 1.3 + .2, p: Math.random() * 6 }));
+
+function layout() {
+  DPR = Math.min(2, devicePixelRatio || 1); W = innerWidth; Hh = innerHeight;
+  cv.width = W * DPR; cv.height = Hh * DPR; cx2.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const wide = W >= 1200; const short = Hh <= 480;
+  const mid = W > 640 && !short; const L0 = (wide || mid) ? 190 : 0, R0 = wide ? 365 : (mid ? 190 : 0);
+  CX = (L0 + W - R0) / 2; CY = short ? (Hh + 10) / 2 : Hh * (W < 640 ? 0.5 : 0.52);
+  TILT = short ? 0.42 : (W < 640 ? 0.56 : 0.5);
+  const maxW = ((W - L0 - R0) / 2 - 16) / 1.17; const maxH = ((short ? Hh - 140 : Hh - (W < 640 ? 330 : 350)) / 2) / TILT / 1.1;
+  R = Math.max(105, Math.min(maxW, maxH, 430));
+}
+const P = (r, a) => [CX + r * R * Math.cos(a + theta), CY + r * R * Math.sin(a + theta) * TILT];
+function sectorPath(s, grow = 0) {
+  cx2.beginPath(); const N = 40;
+  for (let i = 0; i <= N; i++) { const [x, y] = P(s.r1 + grow, s.a0 + (s.a1 - s.a0) * i / N); i ? cx2.lineTo(x, y) : cx2.moveTo(x, y); }
+  for (let i = N; i >= 0; i--) { const [x, y] = P(s.r0, s.a0 + (s.a1 - s.a0) * i / N); cx2.lineTo(x, y); }
+  cx2.closePath();
+}
+function draw(now) {
+  const t = (now - t0) / 1000;
+  if (!drag && Math.abs(vel) > 0.0001) { theta += vel; vel *= 0.94; }
+  else if (!drag && !reducedMotion) theta += 0.0006;
+  cx2.clearRect(0, 0, W, Hh);
+  const g = cx2.createRadialGradient(CX, CY, 10, CX, CY, Math.max(W, Hh) * .7); g.addColorStop(0, '#16163a'); g.addColorStop(1, '#070814');
+  cx2.fillStyle = g; cx2.fillRect(0, 0, W, Hh);
+  bgStars.forEach(s => { cx2.globalAlpha = 0.35 + 0.35 * Math.sin(t * 0.8 + s.p); cx2.fillStyle = '#fff'; cx2.beginPath(); cx2.arc(s.x * W, s.y * Hh, s.r, 0, 7); cx2.fill(); });
+  cx2.globalAlpha = 1;
+  /* 盘底 */
+  cx2.save(); cx2.beginPath(); cx2.ellipse(CX, CY + R * 0.05, R * 1.02, R * TILT * 1.02, 0, 0, 7);
+  cx2.fillStyle = 'rgba(245,194,107,.05)'; cx2.fill(); cx2.lineWidth = 2; cx2.strokeStyle = 'rgba(245,194,107,.55)'; cx2.shadowColor = '#f5c26b'; cx2.shadowBlur = 18; cx2.stroke(); cx2.restore();
+  cx2.beginPath(); cx2.ellipse(CX, CY, R * 0.98, R * TILT * 0.98, 0, 0, 7); cx2.strokeStyle = 'rgba(245,194,107,.25)'; cx2.lineWidth = 1; cx2.stroke();
+  /* 扇区 */
+  SECT.forEach((s, i) => {
+    const on = lit(s), isSel = sel === s.d.id, isHov = hover === s.d.id;
+    sectorPath(s);
+    if (on) { const [mx, my] = P((s.r0 + s.r1) / 2, (s.a0 + s.a1) / 2); const lg = cx2.createRadialGradient(mx, my, 2, mx, my, R * .5); lg.addColorStop(0, 'rgba(255,220,150,.75)'); lg.addColorStop(1, 'rgba(217,154,62,.35)'); cx2.fillStyle = lg; }
+    else cx2.fillStyle = isSel ? 'rgba(245,194,107,.22)' : isHov ? 'rgba(245,194,107,.14)' : 'rgba(150,160,200,.07)';
+    cx2.fill(); cx2.lineWidth = isSel ? 2 : 1; cx2.strokeStyle = isSel ? '#ffe2a0' : 'rgba(245,194,107,.42)'; cx2.stroke();
+    const [lx, ly] = P((s.r0 + s.r1) / 2, (s.a0 + s.a1) / 2);
+    const fs = Math.max(11, Math.min(16, R * 0.05));
+    cx2.textAlign = 'center'; cx2.textBaseline = 'middle';
+    cx2.font = `${fs + 4}px serif`; cx2.fillStyle = on || isSel ? '#fff3d6' : 'rgba(245,194,107,.75)'; cx2.fillText(s.d.icon, lx, ly - fs * 0.7);
+    cx2.font = `600 ${fs}px ${getComputedStyle(document.body).fontFamily}`; cx2.fillStyle = on || isSel ? '#fff3d6' : 'rgba(243,238,226,.78)'; cx2.fillText(s.d.short, lx, ly + fs * 0.6);
+  });
+  /* 迷雾 */
+  fog.forEach(f => { f.a += f.v * 0.02; const s = SECT.find(s => f.r >= s.r0 && f.r <= s.r1 && ang(f.a) >= s.a0 % (2 * Math.PI) && ang(f.a) < s.a0 % (2 * Math.PI) + (s.a1 - s.a0));
+    if (s && lit(s)) return; const [x, y] = P(f.r, f.a); const rr = f.s * R;
+    const fg = cx2.createRadialGradient(x, y, 0, x, y, rr); fg.addColorStop(0, 'rgba(190,195,215,.16)'); fg.addColorStop(1, 'rgba(190,195,215,0)');
+    cx2.fillStyle = fg; cx2.beginPath(); cx2.ellipse(x, y, rr, rr * TILT * 1.4, 0, 0, 7); cx2.fill(); });
+  /* 中心光之莲:八瓣,点亮几域开几瓣 */
+  const openN = SECT.filter(lit).length;
+  cx2.save(); cx2.translate(CX, CY - R * 0.05);
+  const pr = R * 0.2, pulse = reducedMotion ? 1 : 1 + 0.03 * Math.sin(t * 1.6);
+  const halo = cx2.createRadialGradient(0, 0, 2, 0, 0, pr * 1.8); halo.addColorStop(0, 'rgba(255,236,190,.55)'); halo.addColorStop(1, 'rgba(255,236,190,0)');
+  cx2.fillStyle = halo; cx2.beginPath(); cx2.arc(0, 0, pr * 1.8, 0, 7); cx2.fill();
+  for (let i = 0; i < 8; i++) { const a = -Math.PI / 2 + (i - 3.5) * 0.36; const open = i < openN;
+    cx2.save(); cx2.rotate(a + Math.PI / 2); cx2.scale(1, 1);
+    cx2.beginPath(); cx2.moveTo(0, 0); cx2.quadraticCurveTo(pr * 0.42 * pulse, -pr * 0.55, 0, -pr * (open ? 1.1 : 0.8) * pulse); cx2.quadraticCurveTo(-pr * 0.42 * pulse, -pr * 0.55, 0, 0);
+    cx2.fillStyle = open ? 'rgba(255,240,205,.92)' : 'rgba(255,236,200,.38)'; cx2.strokeStyle = 'rgba(255,215,140,.8)'; cx2.lineWidth = 1; cx2.fill(); cx2.stroke(); cx2.restore(); }
+  cx2.restore();
+  /* 先贤勋章:绕盘沿,随旋转 */
+  const meds = GUIDE_ORDER.map((k, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / GUIDE_ORDER.length; const [x, y] = P(1.1, a); const depth = Math.sin(a + theta); return { k, x, y, depth }; })
+    .sort((a, b) => a.depth - b.depth);
+  medHits = [];
+  meds.forEach(m => { const sc = 0.78 + 0.28 * (m.depth + 1) / 2; const r = Math.max(13, R * 0.062) * sc; const gd = GUIDES[m.k];
+    cx2.globalAlpha = 0.55 + 0.45 * (m.depth + 1) / 2;
+    cx2.beginPath(); cx2.arc(m.x, m.y - r * 0.6, r, 0, 7); cx2.fillStyle = 'rgba(20,22,52,.9)'; cx2.fill(); cx2.lineWidth = 1.4; cx2.strokeStyle = '#e9c779'; cx2.stroke();
+    cx2.fillStyle = '#ffe9b8'; cx2.font = `700 ${gd.mark.length > 1 ? r * 0.62 : r * 0.95}px ${getComputedStyle(document.body).fontFamily}`; cx2.textAlign = 'center'; cx2.textBaseline = 'middle';
+    cx2.fillText(gd.mark, m.x, m.y - r * 0.58); cx2.globalAlpha = 1; medHits.push({ k: m.k, x: m.x, y: m.y - r * 0.6, r }); });
+  /* 蝴蝶:八域全亮时飞出,平时只是淡影 */
+  const by = CY - R * 0.05 - R * 0.32 - (reducedMotion ? 0 : 4 * Math.sin(t * 2));
+  cx2.globalAlpha = openN >= 8 ? 1 : 0.28; drawButterfly(CX + R * 0.02, by, R * 0.05, t); cx2.globalAlpha = 1;
+  requestAnimationFrame(draw);
+}
+const ang = a => ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+function drawButterfly(x, y, s, t) { const f = reducedMotion ? 1 : 0.75 + 0.25 * Math.sin(t * 6);
+  cx2.save(); cx2.translate(x, y); cx2.fillStyle = '#f5c26b';
+  [[-1, 1], [1, 1]].forEach(([sx]) => { cx2.save(); cx2.scale(sx * f, 1);
+    cx2.beginPath(); cx2.ellipse(s * 0.55, -s * 0.35, s * 0.55, s * 0.4, -0.5, 0, 7); cx2.fill();
+    cx2.beginPath(); cx2.ellipse(s * 0.4, s * 0.3, s * 0.35, s * 0.28, 0.5, 0, 7); cx2.fill(); cx2.restore(); });
+  cx2.fillRect(-s * 0.05, -s * 0.5, s * 0.1, s); cx2.restore(); }
+let medHits = [];
+
+/* 命中:反投影到盘面 */
+function hit(x, y) {
+  for (const m of [...medHits].reverse()) if (Math.hypot(x - m.x, y - m.y) <= m.r + 4) return { guide: m.k };
+  const dx = (x - CX) / R, dy = (y - CY) / R / TILT; const r = Math.hypot(dx, dy); const a = ang(Math.atan2(dy, dx) - theta);
+  if (r < 0.22) return { lotus: true };
+  for (const s of SECT) { const a0 = ang(s.a0), span = s.a1 - s.a0; let d = ang(a - a0); if (r >= s.r0 && r <= s.r1 && d < span) return { dom: s.d.id }; }
+  return null;
+}
+let drag = false, sx = 0, lx = 0, moved = 0, pid = null;
+cv.addEventListener('pointerdown', e => { pid = e.pointerId; drag = true; sx = lx = e.clientX; moved = 0; vel = 0; });
+cv.addEventListener('pointermove', e => {
+  if (drag && e.pointerId === pid) { const dx = e.clientX - lx; lx = e.clientX; moved = Math.max(moved, Math.abs(e.clientX - sx));
+    if (moved > 6) { cv.classList.add('drag'); try { cv.setPointerCapture(pid); } catch (_) {} theta += dx / (R * 1.4); vel = dx / (R * 1.4); } }
+  else { const h = hit(e.clientX, e.clientY); const id = h && (h.dom || (h.guide && 'g') || (h.lotus && 'l')); hover = h && h.dom; cv.style.cursor = h ? 'pointer' : 'grab'; }
+});
+const up = e => { if (!drag) return; drag = false; cv.classList.remove('drag'); if (reducedMotion) vel = 0;
+  if (moved <= 6) { const h = hit(e.clientX, e.clientY); if (h && h.dom) showDomain(h.dom); else if (h && h.guide) showGuide(h.guide); else if (h && h.lotus) showDomain('meaning'); } };
+cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', () => { drag = false; cv.classList.remove('drag'); });
+cv.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') { theta -= 0.15; sound.tick(); } if (e.key === 'ArrowRight') { theta += 0.15; sound.tick(); }
+  if (e.key === 'Enter') showMap(); });
+function showGuide(k) { const g = GUIDES[k]; const ds = [...DOMAINS, MEANING].filter(d => d.guide === k);
+  side.innerHTML = `<button class="lt-btn x" type="button" data-map>← 地图</button><button class="lt-btn x" type="button" data-hide aria-label="收起" style="margin-right:6px">✕</button><div class="k">先贤向导团 · ${g.role}</div><h3>${g.name}</h3><p style="color:var(--mute)">${g.era}</p><p>${g.why}</p>
+    ${ds.map(d => `<button class="lt-btn" type="button" data-d="${d.id}">去看「${d.name}」</button>`).join(' ')}
+    <p style="font-size:12px;color:var(--mute)">名字是致敬;关卡里的话是仿其思想的提问,不是原话。</p>`; side.classList.add('on'); sound.bell(7); }
+
+addEventListener('resize', layout); layout(); requestAnimationFrame(draw);
+if (innerWidth >= 1200) showMap();
+if (!getAge()) openM('mRole');
+</script>
+</body></html>
