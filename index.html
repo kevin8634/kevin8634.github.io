@@ -509,7 +509,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.3.2</b></span>
+            <span>创世计划总门户 <b>v0.3.3</b></span>
           </footer>
         </div>
       </div>
@@ -1272,7 +1272,7 @@
 
       /* ---------- 知识星桥 ---------- */
       var BR_COUNT = { "01": 197, "05": 30, "07": 40 };
-      /* 星桥 v0.3（14 座）：每端 { w 世界码, id 系列星桥 ID「世界码.任务id」, title 任务标题, href 链接（未上线为 null）, label 可选按钮文字 } */
+      /* 星桥 v0.3.3（15 座）：每端 { w 世界码, id 系列星桥 ID「世界码.任务id」, title 任务标题, href 链接（未上线为 null）, label 可选按钮文字 } */
       var BRIDGES = [
         { a: { w: "01", id: "ma.chord", title: "为什么有的和弦好听", href: "math-atlas/chord/" },
           b: { w: "02", id: "nv.sound", title: "声波与共振", href: null } },
@@ -1301,7 +1301,9 @@
         { a: { w: "01", id: "ma.rocket", title: "火箭怎样飞上月球？", href: "math-atlas/rocket/" },
           b: { w: "07", id: "sh.orbit", title: "空间站为什么掉不下来？", href: "starhelm/", label: "去天枢 →" } },
         { a: { w: "01", id: "ma.cube", title: "魔方为什么能复原？", href: "math-atlas/cube/" },
-          b: { w: "03", id: "ef.crystal", title: "晶体为什么那么整齐？", href: null } }
+          b: { w: "03", id: "ef.crystal", title: "晶体为什么那么整齐？", href: null } },
+        { a: { w: "01", id: "ma.casino", title: "赌场为什么总是赢？", href: "math-atlas/casino/" },
+          b: { w: "04", id: "ls.parents", title: "为什么你长得像爸妈，又不完全像？", href: "life-source/parents/" } }
       ];
       // 同一对世界之间有多座桥时，让弧线错开，避免重叠
       (function () {
