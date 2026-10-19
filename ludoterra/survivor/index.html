@@ -43,6 +43,7 @@ table.tb th{color:var(--gold);font-weight:600}
 .poster small{display:block;color:var(--mute);font-size:11.5px;margin-top:4px}
 .truth{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.7}
 .truth b{color:#7ee2a8}
+.swipe{display:none}
 .note{font-size:12px;color:var(--mute);line-height:1.6}
 .nav{display:flex;gap:8px;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
 .handbook{border:1.5px solid var(--gold);border-radius:18px;padding:18px;background:radial-gradient(circle at 20% 0,rgba(245,194,107,.18),transparent 60%),#0f1130;position:relative;overflow:hidden}
@@ -54,7 +55,7 @@ table.tb th{color:var(--gold);font-weight:600}
 [hidden]{display:none!important}
 @media (max-width:1100px){.lt-hud{display:none}}
 @media (max-width:760px){.talks{grid-template-columns:1fr 1fr}.talk:last-child{grid-column:1/-1}}
-@media (max-width:640px){.opts{grid-template-columns:1fr 1fr}.talk{font-size:12.5px;padding:8px}table.tb{font-size:12px}table.tb td,table.tb th{padding:5px 4px}}
+@media (max-width:640px){main{padding-top:62px}.swipe{display:inline;color:var(--gold)}.steps{gap:4px;margin-bottom:8px}.steps span{font-size:11.5px;padding:2px 8px}.card{padding:14px}.talks{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px;margin:8px -14px;padding:0 14px 4px;scrollbar-width:none}.talk{flex:0 0 148px;scroll-snap-align:start}.talk:last-child{grid-column:auto}.talk .a{font-size:18px;margin-bottom:2px}.guide{margin:8px 0}.opts{grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}.opt{font-size:14px;padding:10px 2px}.talk{font-size:12.5px;padding:8px}table.tb{font-size:12px}table.tb td,table.tb th{padding:5px 4px}}
 </style></head><body>
 <main>
   <div class="steps" id="steps"><span>① 先中招</span><span>② 拉开幕布</span><span>③ 坐到讲师那边</span><span>④ 玩家手册</span></div>
@@ -63,7 +64,7 @@ table.tb th{color:var(--gold);font-weight:600}
   <section class="card lt-panel" data-step="0">
     <h1>为什么「成功经验」常常骗人?</h1>
     <div class="agehint" id="ageHint" hidden>这一关建议 12 岁以上;星芽玩家可以和家长一起玩。</div>
-    <p class="note" style="font-size:13.5px">一场「创业成功经验分享会」。台上五位都是大获成功的(虚拟)创业者:</p>
+    <p class="note" style="font-size:13.5px">一场「创业成功经验分享会」。台上五位都是大获成功的(虚拟)创业者<span class="swipe">(左右滑动看全部)</span>:</p>
     <div class="talks">
       <div class="talk"><span class="a">🧑‍💼</span>「我拿出全部积蓄,不给自己留退路。」<small>虚拟创业者 · 甲</small></div>
       <div class="talk"><span class="a">👩‍💻</span>「别人都劝我稳一点,我偏不。」<small>虚拟创业者 · 乙</small></div>
