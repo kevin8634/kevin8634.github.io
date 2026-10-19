@@ -103,7 +103,7 @@ table.pay th{color:var(--gold);font-weight:600}
   </section>
 </main>
 <script type="module">
-import { chrome, hud, store, markDone, isDone, sound, reducedMotion, offline } from '../lt.js';
+import { chrome, hud, store, markDone, isDone, sound, reducedMotion, offline, logChoice } from '../lt.js';
 chrome({ home: '../' }); const H = hud(); offline();
 const secs = [...document.querySelectorAll('[data-step]')], tabs = [...document.querySelectorAll('#steps span')];
 let step = 0;
@@ -116,7 +116,8 @@ const pay = (a, b, T = 5) => a === 'C' ? (b === 'C' ? 3 : 0) : (b === 'C' ? T : 
 
 /* ① 一次性博弈 */
 document.querySelectorAll('[data-one]').forEach(b => b.onclick = () => {
-  const me = b.dataset.one; store.set('prisoner_one', me); me === 'C' ? sound.bell(2) : sound.clash();
+  const me = b.dataset.one; store.set('prisoner_one', me);
+  logChoice('prisoner', me === 'C' ? '和只见一次的陌生人选择了合作' : '和只见一次的陌生人选择了背叛', me === 'C' ? '若背叛:多拿 2 分,可两人都这么想就各得 1 分' : '若合作:可能吃亏 0 分,也可能两人各得 3 分'); me === 'C' ? sound.bell(2) : sound.clash();
   document.getElementById('oneRes').innerHTML = `<div class="guide"><span class="m">苏</span><p>${me === 'D'
     ? '你选了背叛。算一算:对方合作时,你背叛得 5 > 3;对方背叛时,你背叛得 1 > 0。不管对方怎么选,背叛都多拿分——只玩一次时,这看起来是「聪明」的选择。可如果两个聪明人都这么想,两人都只得 1 分,比都合作的 3 分少。'
     : '你选了合作。可是算一算:不管对方怎么选,背叛都比合作多拿分(5 > 3,1 > 0)。只玩一次时,许多人会觉得「善良就是吃亏」。你的直觉在提醒你别的东西吗?'}<small>苏格拉底 · 仿其思想的提问</small></p></div>
@@ -176,6 +177,7 @@ document.querySelectorAll('[data-rep]').forEach(b => b.onclick = () => {
   if (me.length === 10) {
     document.querySelectorAll('[data-rep]').forEach(b => b.disabled = true);
     const allC = me.every(m => m === 'C');
+    logChoice('prisoner', `和以牙还牙的镇民打 10 轮,得 ${s1} 分`, s1 < 30 ? '若 10 轮都合作:30 分' : '你已经拿到合作的最高分 30 分');
     document.getElementById('repEnd').innerHTML = `<div class="guide"><span class="m">冯</span><p>揭晓:这位镇民是「以牙还牙」——第一轮合作,之后照着你上一步出招。你得了 ${s1} 分(10 轮都合作能拿 30 分)。${allC ? '你一次都没背叛,所以他也一直合作。' : '你每背叛一次,下一轮就会被回敬一次。'}他从来没有在单局里赢过你,为什么整体却不吃亏?<small>冯·诺依曼 · 仿其思想的提问</small></p></div>`;
     const res = tournament(); bars(document.getElementById('bars1'), res);
     document.getElementById('legend').innerHTML = KEYS.map(k => `<div><b>${S[k].n}</b>:${S[k].d}</div>`).join('');
