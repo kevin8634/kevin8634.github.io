@@ -38,10 +38,10 @@
   SH.levels = SH.levels || {};    // 各任务脚本注册:SH.levels.where = [level1, level2, level3]
 
   /* ------------------------------ 任务音效 ------------------------------ */
-  // 程序合成,跟随 LE.audio 的「音效」开关;不播放背景音乐
+  // 跟随 LE.audio 的「音效」开关(默认关)。chord/soft 用合成音频文件;glass/hum 的音高随数值变化(声音即规律),实时合成
   var actx = null;
   function ac() {
-    if (!LE.audio || !LE.audio.sfx) return null;
+    if (!LE.audio || !LE.audio.sfx || !LE.audio.started) return null;
     if (!actx) { var A = window.AudioContext || window.webkitAudioContext; if (!A) return null; actx = new A(); }
     if (actx.state === 'suspended') actx.resume();
     return actx;
@@ -54,8 +54,8 @@
       o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + (dur || 0.6) + 0.05);
     },
     glass: function (f) { snd.tone(f, 1.6, 0.09); snd.tone(f * 2.76, 1.0, 0.025); },
-    chord: function (base) { base = base || 523.25; [1, 1.25, 1.5, 2].forEach(function (r, i) { snd.tone(base * r, 2.2, 0.06, 'sine', i * 0.07); }); },
-    soft: function () { snd.tone(330, 0.5, 0.06, 'triangle'); snd.tone(262, 0.7, 0.05, 'triangle', 0.12); },
+    chord: function () { LE.audio.play('unlock'); },   // 过关:D 利底亚上行琶音(audio/unlock.m4a)
+    soft: function () { LE.audio.play('soft'); },      // 再想想:温和的下行大二度
     hum: null,
     humStart: function (f) {
       var c = ac(); if (!c) return; snd.humStop();
