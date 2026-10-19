@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>为什么你刷到的视频越来越像? · 觉弈 Ludoterra</title>
+<meta name="description" content="觉弈 Ludoterra 关卡:信息茧房。先一路点自己喜欢的内容,再看见推荐循环,最后坐到推荐算法那一边调权重。">
+<meta name="theme-color" content="#070814">
+<link rel="stylesheet" href="../lt.css">
+<style>
+body{min-height:100vh}
+main{max-width:860px;margin:0 auto;padding:70px 16px 40px}
+.steps{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.steps span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--mute)}
+.steps span.on{color:#1a1206;background:var(--gold);border-color:var(--gold)}
+.card{padding:18px;margin-bottom:12px}
+h1{font-size:clamp(20px,4vw,28px);margin:0 0 6px}
+h3{margin:12px 0 6px;font-size:16px}
+.guide{display:flex;gap:10px;align-items:flex-start;margin:10px 0}
+.guide .m{flex:none;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--gold2);display:flex;align-items:center;justify-content:center;color:#ffe9b8;font-weight:700;background:#14163a}
+.guide p{margin:0;font-size:14.5px;line-height:1.7}
+.guide small{display:block;color:var(--mute);font-size:11px}
+.feed{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.vid{border:1px solid var(--line);border-radius:12px;padding:10px 8px;background:rgba(255,255,255,.03);color:var(--ink);cursor:pointer;text-align:left;font-size:13.5px;line-height:1.4;display:flex;gap:8px;align-items:center;min-height:58px;transition:transform .2s}
+.vid .e{font-size:24px;flex:none}
+.vid small{display:block;color:var(--mute);font-size:11px}
+.vid:hover,.vid:focus-visible{border-color:var(--gold);outline:none}
+.vid.tap{transform:scale(.96);border-color:var(--gold);box-shadow:0 0 14px rgba(245,194,107,.4)}
+.mix{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:6px 0 2px;background:rgba(255,255,255,.06)}
+.mix i{display:block;height:100%;transition:width .4s}
+.meta{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mute);gap:8px;flex-wrap:wrap}
+.meta b{color:var(--gold)}
+.loop{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0;font-size:13px}
+.loop span{border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+.loop em{font-style:normal;color:var(--gold)}
+canvas.ch{width:100%;height:200px;display:block;border-radius:12px;background:rgba(0,0,0,.25)}
+canvas.users{width:100%;height:240px;display:block;border-radius:12px;background:rgba(0,0,0,.25)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--mute);margin:6px 0}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.ctl{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;margin:10px 0;font-size:14px}
+.ctl input{accent-color:#f5c26b;width:100%}
+.ctl output{color:var(--gold);font-weight:700;min-width:64px;text-align:right}
+.pair{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.pair div{border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:12.5px;line-height:1.5}
+.big{font-size:clamp(18px,4vw,24px);font-weight:800;color:var(--gold)}
+.note{font-size:12px;color:var(--mute);line-height:1.6}
+.nav{display:flex;gap:8px;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+.handbook{border:1.5px solid var(--gold);border-radius:18px;padding:18px;background:radial-gradient(circle at 20% 0,rgba(245,194,107,.18),transparent 60%),#0f1130;position:relative;overflow:hidden}
+.handbook .no{font-size:12px;color:var(--gold);letter-spacing:2px;padding-right:44px}
+.handbook h2{margin:6px 0 8px;font-size:22px}
+.handbook p{margin:6px 0;line-height:1.7;font-size:14.5px}
+.handbook .b{position:absolute;right:14px;top:10px;font-size:34px;opacity:.5}
+.agehint{font-size:12.5px;color:var(--gold);border:1px dashed var(--line);border-radius:10px;padding:6px 10px;margin:6px 0}
+[hidden]{display:none!important}
+@media (max-width:1100px){.lt-hud{display:none}}
+@media (max-width:640px){.feed{grid-template-columns:1fr 1fr}.vid{font-size:12.5px;padding:8px 6px;min-height:52px}.vid .e{font-size:20px}.pair div{padding:6px 7px;font-size:11.5px}canvas.ch{height:170px}}
+</style></head><body>
+<main>
+  <div class="steps" id="steps"><span>① 先中招</span><span>② 再看见</span><span>③ 坐到算法那边</span><span>④ 玩家手册</span></div>
+
+  <!-- ① 先中招 -->
+  <section class="card lt-panel" data-step="0">
+    <h1>为什么你刷到的视频越来越像?</h1>
+    <div class="agehint" id="ageHint" hidden>这一关建议 12 岁以上;星芽玩家可以和家长一起玩。</div>
+    <div class="guide"><span class="m">萨</span><p id="g0">这是一个刷视频的 App。每一屏,点一个你最想看的。不用多想,就像平时那样。<small>卡尔·萨根 · 仿其思想的提问</small></p></div>
+    <div class="feed" id="feed" aria-live="polite"></div>
+    <div class="mix" id="mix0" aria-label="这一屏推荐的话题构成"></div>
+    <div class="meta"><span>第 <b id="rd">1</b>/10 屏</span><span>这一屏的话题:<b id="nt">6</b> 种</span></div>
+    <div class="nav" id="n0" hidden><button class="lt-btn" id="again0">再刷一遍</button><button class="lt-btn primary" data-go="1">看看发生了什么 →</button></div>
+  </section>
+
+  <!-- ② 再看见 -->
+  <section class="card lt-panel" data-step="1" hidden>
+    <h1 id="h1"></h1>
+    <canvas class="ch" id="ch1" aria-label="10 屏推荐内容的话题构成变化"></canvas>
+    <div class="legend" id="lg1"></div>
+    <div class="loop" aria-label="推荐循环"><span>你点了</span><em>→</em><span>算法记下:你喜欢它</span><em>→</em><span>推更多同类</span><em>→</em><span>你更常看到、更常点</span><em>↺</em></div>
+    <div class="guide"><span class="m">萨</span><p id="g1"></p></div>
+    <p class="note">推荐算法不坏也不好,它在追一个目标:让你多点、多停留。可它没法知道「你想成为什么样的人」。</p>
+    <div class="nav"><button class="lt-btn" data-go="0">← 再刷一次</button><button class="lt-btn primary" data-go="2">坐到算法那边 →</button></div>
+  </section>
+
+  <!-- ③ 坐到算法那边 -->
+  <section class="card lt-panel" data-step="2" hidden>
+    <h1>你是推荐算法:给 100 个用户调权重</h1>
+    <p class="note" style="font-size:13.5px">每个圆是一个虚拟用户,颜色是他第 30 天推荐流里的话题;金圈 = 入茧(实际只剩不到 2.5 个话题)。</p>
+    <div class="ctl">
+      <label for="sg">猜你喜欢强度</label><input id="sg" type="range" min="1" max="3" step="0.25" value="2"><output id="og"></output>
+      <label for="se">随机探索</label><input id="se" type="range" min="0" max="30" step="5" value="0"><output id="oe"></output>
+    </div>
+    <canvas class="users" id="cu" aria-label="100 个虚拟用户的推荐流构成"></canvas>
+    <div class="pair" id="out"></div>
+    <div class="guide"><span class="m">萨</span><p id="g2"></p></div>
+    <p class="note">教学模型:每个用户有不同的天然兴趣,点得越多,算法给的权重越高,他也会因为常看而更喜欢。真实平台复杂得多,也有许多团队在研究怎样减少茧房。</p>
+    <div class="nav"><button class="lt-btn" data-go="1">← 回到循环</button><button class="lt-btn" id="replay">▶ 重放 30 天</button><button class="lt-btn primary" data-go="3">领取玩家手册 →</button></div>
+  </section>
+
+  <!-- ④ 玩家手册 -->
+  <section class="card lt-panel" data-step="3" hidden>
+    <div class="handbook"><span class="b">◈</span><div class="no">地球Online 玩家手册 · 第 4 页 · 信息与真相 × 习惯与时间</div>
+      <h2>隐藏规则:你喂给算法什么,它就把你变成什么</h2>
+      <p>推荐算法按你的点击猜你喜欢什么,再推更多同类;你看得越多,就越喜欢,点得越多。这个循环不需要谁使坏,就能把世界越收越窄——这就是「信息茧房」。你的注意力是它最想要的东西。</p>
+      <p><b style="color:var(--gold)">反制技巧:</b>刷之前先问「我是来找什么的?」;每隔一阵主动搜一个从没看过的话题,对不想要的点「不感兴趣」。给自己的推荐流加一点「随机探索」。</p>
+      <p class="note">你解锁了隐藏数值「注意力」。</p></div>
+    <div class="guide"><span class="m">萨</span><p id="g3"></p></div>
+    <p class="note">星桥(即将开通):奇点前夜 · AI 会不会骗人。</p>
+    <div class="nav"><a class="lt-btn" href="../">← 回到认知星盘</a><button class="lt-btn" data-go="0">再玩一次</button></div>
+  </section>
+</main>
+<script type="module">
+import { chrome, hud, store, markDone, isDone, sound, reducedMotion, offline, userMinAge, logChoice } from '../lt.js';
+chrome({ home: '../' }); const H = hud(); offline();
+const $ = id => document.getElementById(id);
+const Q = '<small>卡尔·萨根 · 仿其思想的提问</small>';
+const secs = [...document.querySelectorAll('[data-step]')], tabs = [...document.querySelectorAll('#steps span')];
+let step = 0;
+function go(n) { step = n; secs.forEach((s, i) => s.hidden = i !== n); tabs.forEach((t, i) => t.classList.toggle('on', i === n));
+  window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }); if (n === 0) reset0(); if (n === 1) see(); if (n === 2) algo(true); if (n === 3) finish(); }
+window.ltGo = go;
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) { sound.tick(); go(+g.dataset.go); } });
+$('ageHint').hidden = userMinAge() >= 12;
+
+/* 话题 */
+const T = [
+  { n: '游戏', e: '🎮', c: '#f5c26b', v: ['通关秘籍', '新版本速览', '高手操作'] },
+  { n: '美食', e: '🍜', c: '#ff9a7a', v: ['街头小吃', '三分钟做蛋糕', '一碗面的秘密'] },
+  { n: '宠物', e: '🐱', c: '#f0a8d0', v: ['猫咪迷惑行为', '狗狗等你回家', '仓鼠囤粮'] },
+  { n: '科学', e: '🔭', c: '#7ec8ff', v: ['黑洞有多大', '厨房里的化学', '天为什么是蓝的'] },
+  { n: '音乐', e: '🎵', c: '#b89cff', v: ['翻唱现场', '一分钟学和弦', '冷门好歌'] },
+  { n: '运动', e: '⚽', c: '#7ee2a8', v: ['绝杀瞬间', '跳绳挑战', '跑步入门'] },
+  { n: '搞笑', e: '😂', c: '#ffe27a', v: ['整蛊合集', '方言段子', '搞笑配音'] },
+  { n: '历史', e: '🏺', c: '#d9b38c', v: ['古人怎么过年', '文物会说话', '一座城的故事'] }
+];
+const K = T.length;
+const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const shares = (w, g, eps) => { const ww = w.map(v => Math.pow(v, g)); const W = ww.reduce((a, b) => a + b, 0); return ww.map(x => eps / K + (1 - eps) * x / W); };
+const pick = (p, r) => { let x = r(), t = 0; while (t < K - 1 && x > p[t]) { x -= p[t]; t++; } return t; };
+const effN = s => Math.exp(-s.reduce((a, p) => a + (p > 0 ? p * Math.log(p) : 0), 0));
+
+/* ① 先中招:和第三步同一套规则(强度 2、无探索) */
+let w, round, hist, taps, rnd = Math.random;
+function reset0() { w = Array(K).fill(1); round = 0; hist = []; taps = Array(K).fill(0); $('n0').hidden = true; deal();
+  $('g0').innerHTML = '这是一个刷视频的 App。每一屏,点一个你最想看的。不用多想,就像平时那样。' + Q; }
+function deal() {
+  const p = round === 0 ? Array(K).fill(1 / K) : shares(w, 2, 0); hist.push(p);
+  let ts = round === 0 ? [...Array(K).keys()].sort(() => rnd() - 0.5).slice(0, 6) : Array.from({ length: 6 }, () => pick(p, rnd));
+  $('feed').innerHTML = ts.map((t, i) => `<button class="vid" type="button" data-t="${t}"><span class="e">${T[t].e}</span><span>${T[t].v[(i + round + t) % 3]}<small>${T[t].n}</small></span></button>`).join('');
+  $('rd').textContent = Math.min(10, round + 1); $('nt').textContent = new Set(ts).size;
+  $('mix0').innerHTML = p.map((x, t) => `<i style="width:${(x * 100).toFixed(1)}%;background:${T[t].c}" title="${T[t].n}"></i>`).join('');
+}
+$('feed').onclick = e => { const b = e.target.closest('.vid'); if (!b || round >= 10) return; const t = +b.dataset.t; b.classList.add('tap');
+  w[t] += 1; taps[t]++; round++; sound.bell(round % 5 + Math.floor(round / 5));
+  if (round < 10) setTimeout(deal, reducedMotion ? 0 : 220);
+  else { const pf = shares(w, 2, 0); hist.push(pf); setTimeout(() => { $('mix0').innerHTML = pf.map((x, t) => `<i style="width:${(x * 100).toFixed(1)}%;background:${T[t].c}" title="${T[t].n}"></i>`).join(''); const top = shares(w, 2, 0).map((x, i) => [x, i]).sort((a, b) => b[0] - a[0])[0];
+    store.set('cocoon_feed', { top: T[top[1]].n, share: Math.round(top[0] * 100) });
+    logChoice('cocoon', `一路点喜欢的,10 屏后「${T[top[1]].n}」占了推荐流的 ${Math.round(top[0] * 100)}%`, '若每屏都点一个没看过的话题:推荐流会保持 8 种话题');
+    $('g0').innerHTML = `10 屏刷完。现在你的推荐流里,「${T[top[1]].n}」占了 ${Math.round(top[0] * 100)}%。你选的每一下都是自己喜欢的——那这扇窗,是谁关小的?` + Q;
+    $('n0').hidden = false; sound.clash(0.05); }, reducedMotion ? 0 : 260); }
+};
+$('again0').onclick = () => { sound.tick(); reset0(); };
+
+/* ② 再看见 */
+function cctx(c) { const d = Math.min(2, devicePixelRatio || 1); const ww = c.clientWidth, h = c.clientHeight; c.width = ww * d; c.height = h * d; const x = c.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); return [x, ww, h]; }
+function see() {
+  const H0 = hist.length ? hist : [Array(K).fill(1 / K)];
+  const first = effN(H0[0]), last = effN(H0[H0.length - 1]);
+  $('h1').textContent = `窗口从 ${first.toFixed(1)} 个话题,缩到 ${last.toFixed(1)} 个`;
+  const [x, cw, h] = cctx($('ch1')); const pad = 26, n = H0.length, bw = (cw - pad - 10) / n;
+  x.font = '11px sans-serif'; x.fillStyle = 'rgba(243,238,226,.6)';
+  H0.forEach((p, i) => { let y = h - 22; p.forEach((s, t) => { const hh = (h - 40) * s; x.fillStyle = T[t].c; x.fillRect(pad + i * bw + 3, y - hh, bw - 6, hh); y -= hh; }); });
+  x.fillStyle = 'rgba(243,238,226,.6)'; x.fillText('100%', 0, 22); x.fillText('第 1 屏', pad, h - 6); x.fillText('刷完后', cw - 50, h - 6);
+  $('lg1').innerHTML = T.map(t => `<span><i style="background:${t.c}"></i>${t.e} ${t.n}</span>`).join('');
+  const nTap = taps ? taps.filter(v => v).length : 0;
+  $('g1').innerHTML = (nTap > last + 0.5 ? `你一共点过 ${nTap} 种话题,算法却只给你留下了约 ${last.toFixed(1)} 种。` : `第一屏你能看到 8 种话题;你点了 ${nTap} 种,后面的屏幕就只剩下它们。`) + `科学家判断一个说法前,会问「我看到的样本,能代表全部吗?」你的推荐流,还能代表这个世界吗?` + Q;
+}
+addEventListener('resize', () => { if (step === 1) see(); if (step === 2) drawUsers(frames.length - 1); });
+
+/* ③ 坐到算法那边:100 个虚拟用户 × 30 天 */
+function sim(g, eps, D = 30) {
+  const r = rng(1020), us = [];
+  for (let u = 0; u < 100; u++) us.push({ pref: Array.from({ length: K }, () => 0.2 + 0.8 * r() * r()), w: Array(K).fill(1) });
+  const fr = [us.map(u => shares(u.w, g, eps))]; let clicks = 0, shown = 0;
+  for (let d = 0; d < D; d++) {
+    us.forEach(u => { const mx = Math.max(...u.pref);
+      for (let i = 0; i < 10; i++) { const t = r() < eps ? Math.floor(r() * K) : pick(shares(u.w, g, 0), r); shown++;
+        if (r() < 0.1 + 0.6 * u.pref[t] / mx) { clicks++; u.w[t] += 1; u.pref[t] += 0.03; } } });
+    fr.push(us.map(u => shares(u.w, g, eps))); }
+  return { fr, ctr: clicks / shown };
+}
+let frames = [], res = null, anim = 0;
+function drawUsers(d) {
+  const F = frames[d], cu = $('cu'); if (!F || step !== 2 || !cu.clientWidth) return;
+  const cols = cu.clientWidth < 500 ? 10 : 20, rows = 100 / cols, cell = Math.min((cu.clientWidth - 16) / cols, 40);
+  cu.style.height = Math.round(rows * cell + 30) + 'px';
+  const [x, cw, h] = cctx(cu); const r0 = cell * 0.38;
+  const ox = (cw - cell * cols) / 2, oy = 22;
+  F.forEach((s, i) => { const cx = ox + (i % cols + 0.5) * cell, cy = oy + (Math.floor(i / cols) + 0.5) * cell; let a = -Math.PI / 2;
+    s.forEach((p, t) => { if (p < 0.004) return; x.beginPath(); x.moveTo(cx, cy); x.arc(cx, cy, r0, a, a + p * 2 * Math.PI); x.closePath(); x.fillStyle = T[t].c; x.fill(); a += p * 2 * Math.PI; });
+    if (effN(s) < 2.5) { x.beginPath(); x.arc(cx, cy, r0 + 2.5, 0, Math.PI * 2); x.strokeStyle = '#ffe9b8'; x.lineWidth = 2; x.stroke(); } });
+  const coc = F.filter(s => effN(s) < 2.5).length;
+  x.fillStyle = 'rgba(243,238,226,.75)'; x.font = '12px sans-serif'; x.fillText(`第 ${d} 天 · 入茧 ${coc} 人`, 8, 14);
+}
+function algo(fresh) {
+  const g = +$('sg').value, eps = +$('se').value / 100;
+  $('og').textContent = '× ' + g.toFixed(2); $('oe').textContent = Math.round(eps * 100) + '%';
+  res = sim(g, eps); frames = res.fr;
+  const last = frames[frames.length - 1], coc = last.filter(s => effN(s) < 2.5).length, avg = last.reduce((a, s) => a + effN(s), 0) / 100;
+  $('out').innerHTML = `<div>点击率(算法的 KPI)<br><span class="big">${Math.round(res.ctr * 100)}%</span></div><div>平均还剩<br><span class="big">${avg.toFixed(1)}</span> 个话题</div><div>入茧用户<br><span class="big">${coc}</span> / 100</div>`;
+  let q;
+  if (eps === 0 && coc >= 80) q = `点击率 ${Math.round(res.ctr * 100)}%,很漂亮;可 ${coc} 个用户被困进了茧里。把「随机探索」调到 30%,点击率会降多少?你愿意用多少点击率,换用户看见更大的世界?`;
+  else if (eps >= 0.3) q = `探索 ${Math.round(eps * 100)}% 时,入茧 ${coc} 人,点击率 ${Math.round(res.ctr * 100)}%。如果你是平台,老板只看点击率,你会把这条滑杆留在哪里?`;
+  else if (g <= 1) q = `「猜你喜欢」调到最弱时,用户的世界宽多了,点击率却只有 ${Math.round(res.ctr * 100)}%。算法越「懂你」,越好吗?`;
+  else q = `现在入茧 ${coc} 人,平均还剩 ${avg.toFixed(1)} 个话题。哪一个旋钮对茧房影响最大?为什么?`;
+  $('g2').innerHTML = q + Q;
+  if (fresh !== false) play(); else drawUsers(frames.length - 1);
+}
+function play() { cancelAnimationFrame(anim); if (reducedMotion) return drawUsers(frames.length - 1);
+  const s = performance.now(), T0 = 1600; let lastD = -1;
+  const tick = now => { const d = Math.min(30, Math.floor((now - s) / T0 * 30)); if (d !== lastD) { lastD = d; drawUsers(d); if (d % 6 === 0) sound.tick(); } if (d < 30) anim = requestAnimationFrame(tick); };
+  anim = requestAnimationFrame(tick); }
+['sg', 'se'].forEach(id => $(id).addEventListener('input', () => { algo(false); sound.tick(); }));
+$('replay').onclick = () => { sound.bell(3); play(); };
+
+/* ④ */
+function finish() {
+  const first = !isDone('cocoon'); const f = store.get('cocoon_feed', null); markDone('cocoon', f || {});
+  if (store.get('stat_attention', null) == null) store.set('stat_attention', 50);
+  const g = +$('sg').value, eps = +$('se').value;
+  if (frames.length) logChoice('cocoon', `当推荐算法时,把随机探索设为 ${eps}%(猜你喜欢 × ${g.toFixed(2)})`, eps >= 20 ? '若探索为 0:点击率更高,但多数用户入茧' : '若探索调到 30%:点击率略降,几乎没人入茧');
+  $('g3').innerHTML = (f ? `你的 10 屏推荐流,最后「${f.top}」占了 ${f.share}%。` : '') + '今天你刷到的东西里,有哪一条是你主动去找的?你的注意力,这一周花在了哪里?' + Q;
+  H.render(); if (first) [0, 2, 4, 7, 9].forEach((s, i) => setTimeout(() => sound.bell(s), i * 160));
+}
+go(0);
+</script>
+</body></html>
