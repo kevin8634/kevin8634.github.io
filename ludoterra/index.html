@@ -75,7 +75,7 @@ table.map th{color:var(--gold);font-weight:600;font-size:12px}
   <button class="lt-btn" id="bGuides" type="button">🏛 先贤向导团</button>
   <button class="lt-btn" id="bAbout" type="button">ⓘ 关于觉弈</button>
 </nav>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.8</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.9</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -185,7 +185,7 @@ document.getElementById('saveImg').onclick = () => {
   const a = AGES.find(v => v.id === getAge()); x.font = `28px ${ff}`; x.fillStyle = 'rgba(243,238,226,.7)'; x.fillText((a ? a.name + ' · ' + a.range + ' · ' : '') + '已看见 ' + HANDBOOK.filter(h => isDone(h.task)).length + ' 条隐藏规则', 90, 262);
   let y = 340; HANDBOOK.forEach(h => { const on = isDone(h.task);
     x.fillStyle = on ? '#f5c26b' : 'rgba(243,238,226,.35)'; x.font = `600 24px ${ff}`; x.fillText(`第 ${h.no} 页 · ${h.domain}`, 90, y);
-    x.fillStyle = on ? '#f3eee2' : 'rgba(243,238,226,.35)'; x.font = `700 38px ${ff}`; x.fillText(on ? h.title : '?????? 尚未看见', 90, y + 52); y += 150; });
+    x.fillStyle = on ? '#f3eee2' : 'rgba(243,238,226,.35)'; x.font = `700 38px ${ff}`; x.fillText(on ? h.title : '?????? 尚未看见', 90, y + 52); y += HANDBOOK.length > 6 ? 128 : 150; });
   x.fillStyle = 'rgba(243,238,226,.6)'; x.font = `26px ${ff}`; x.fillText('看见自己的思维,就是觉醒的开始。 · 创世计划 Genesis 06', 90, 1270);
   const l = document.createElement('a'); l.download = '地球Online玩家手册.png'; l.href = c.toDataURL('image/png'); l.click(); sound.bell(4);
 };
@@ -216,7 +216,7 @@ function showDomain(id) {
     <p style="color:var(--mute)">知识地基:${d.base}</p>
     <p>向导:<b style="color:var(--gold)">${g.name}</b>(${g.era})——${g.why}</p>
     ${ts.length ? `<div class="k" style="margin-top:8px">这一域的关卡</div>${ts.map(taskRow).join('')}` : `<p style="color:var(--mute)">关卡筹备中,先在其他域看见规则。</p>`}
-    ${br.length ? `<div class="k" style="margin-top:10px">星桥(连到其他世界,即将开通)</div>${br.map(b => `<p style="font-size:12.5px;margin:4px 0">✦ ${b.to}</p>`).join('')}` : ''}`;
+    ${br.length ? `<div class="k" style="margin-top:10px">星桥(连到其他世界)</div>${br.map(b => `<p style="font-size:12.5px;margin:4px 0">✦ ${b.from === 'meaning' && b.href ? `<a href="${b.href}">${b.to}</a>` : b.to}</p>`).join('')}` : ''}`;
   side.classList.add('on'); sound.bell(DOMAINS.indexOf(d) + 1);
 }
 side.addEventListener('click', e => { const b = e.target.closest('[data-d]'); if (b) showDomain(b.dataset.d); if (e.target.closest('[data-map]')) { sel = null; showMap(); } if (e.target.closest('[data-hide]')) { sel = null; side.classList.remove('on'); } });
@@ -292,7 +292,8 @@ function draw(now) {
     const fg = cx2.createRadialGradient(x, y, 0, x, y, rr); fg.addColorStop(0, 'rgba(190,195,215,.16)'); fg.addColorStop(1, 'rgba(190,195,215,0)');
     cx2.fillStyle = fg; cx2.beginPath(); cx2.ellipse(x, y, rr, rr * TILT * 1.4, 0, 0, 7); cx2.fill(); });
   /* 中心光之莲:八瓣,点亮几域开几瓣 */
-  const openN = SECT.filter(lit).length;
+  const litN = SECT.filter(lit).length, mDone = isDone('meaning');
+  const openN = mDone ? 8 : litN;
   cx2.save(); cx2.translate(CX, CY - R * 0.05);
   const pr = R * 0.2, pulse = reducedMotion ? 1 : 1 + 0.03 * Math.sin(t * 1.6);
   const halo = cx2.createRadialGradient(0, 0, 2, 0, 0, pr * 1.8); halo.addColorStop(0, 'rgba(255,236,190,.55)'); halo.addColorStop(1, 'rgba(255,236,190,0)');
@@ -301,6 +302,9 @@ function draw(now) {
     cx2.save(); cx2.rotate(a + Math.PI / 2); cx2.scale(1, 1);
     cx2.beginPath(); cx2.moveTo(0, 0); cx2.quadraticCurveTo(pr * 0.42 * pulse, -pr * 0.55, 0, -pr * (open ? 1.1 : 0.8) * pulse); cx2.quadraticCurveTo(-pr * 0.42 * pulse, -pr * 0.55, 0, 0);
     cx2.fillStyle = open ? 'rgba(255,240,205,.92)' : 'rgba(255,236,200,.38)'; cx2.strokeStyle = 'rgba(255,215,140,.8)'; cx2.lineWidth = 1; cx2.fill(); cx2.stroke(); cx2.restore(); }
+  /* 意义莲心:终章完成后点亮 */
+  if (mDone) { const hr = pr * 0.24 * pulse; const hg = cx2.createRadialGradient(0, -pr * 0.12, 0, 0, -pr * 0.12, hr * 2.2);
+    hg.addColorStop(0, '#fffaf0'); hg.addColorStop(0.45, 'rgba(255,226,160,.9)'); hg.addColorStop(1, 'rgba(255,226,160,0)'); cx2.fillStyle = hg; cx2.beginPath(); cx2.arc(0, -pr * 0.12, hr * 2.2, 0, 7); cx2.fill(); }
   cx2.restore();
   /* 先贤勋章:绕盘沿,随旋转 */
   const meds = GUIDE_ORDER.map((k, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / GUIDE_ORDER.length; const [x, y] = P(1.1, a); const depth = Math.sin(a + theta); return { k, x, y, depth }; })
@@ -312,8 +316,12 @@ function draw(now) {
     cx2.fillStyle = '#ffe9b8'; cx2.font = `700 ${gd.mark.length > 1 ? r * 0.62 : r * 0.95}px ${getComputedStyle(document.body).fontFamily}`; cx2.textAlign = 'center'; cx2.textBaseline = 'middle';
     cx2.fillText(gd.mark, m.x, m.y - r * 0.58); cx2.globalAlpha = 1; medHits.push({ k: m.k, x: m.x, y: m.y - r * 0.6, r }); });
   /* 蝴蝶:八域全亮时飞出,平时只是淡影 */
-  const by = CY - R * 0.05 - R * 0.32 - (reducedMotion ? 0 : 4 * Math.sin(t * 2));
-  cx2.globalAlpha = openN >= 8 ? 1 : 0.28; drawButterfly(CX + R * 0.02, by, R * 0.05, t); cx2.globalAlpha = 1;
+  /* 终章完成:蝴蝶飞出莲心,绕莲盘旋;八域全亮:蝴蝶亮起 */
+  const free = mDone && !reducedMotion;
+  const bx = free ? CX + R * 0.34 * Math.cos(t * 0.5) : CX + R * 0.02;
+  const by = free ? CY - R * 0.36 + R * 0.08 * Math.sin(t * 0.5) * TILT - 6 * Math.sin(t * 1.9) : CY - R * 0.05 - R * 0.32 - (reducedMotion ? 0 : 4 * Math.sin(t * 2));
+  if (mDone || litN >= 8) { cx2.save(); cx2.shadowColor = '#f5c26b'; cx2.shadowBlur = 14; drawButterfly(bx, by, R * (mDone ? 0.06 : 0.05), t); cx2.restore(); }
+  else { cx2.globalAlpha = 0.28; drawButterfly(bx, by, R * 0.05, t); cx2.globalAlpha = 1; }
   requestAnimationFrame(draw);
 }
 const ang = a => ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
