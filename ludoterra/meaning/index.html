@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>看见了这些规则,我想成为怎样的玩家? · 觉弈 Ludoterra</title>
+<meta name="description" content="觉弈 Ludoterra 意义终章:回看你在地球Online 的选择,看见哪些规则能改、哪些改不了,再亲手写下三条「我的规则」。知行合一。">
+<meta name="theme-color" content="#070814">
+<link rel="stylesheet" href="../lt.css">
+<style>
+body{min-height:100vh}
+main{max-width:900px;margin:0 auto;padding:70px 16px 40px}
+.steps{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.steps span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--mute)}
+.steps span.on{color:#1a1206;background:var(--gold);border-color:var(--gold)}
+.card{padding:18px;margin-bottom:12px}
+h1{font-size:clamp(20px,4vw,28px);margin:0 0 6px}
+h3{margin:14px 0 6px;font-size:16px}
+.lead2{font-size:14px;color:var(--mute);line-height:1.7;margin:0 0 8px}
+.guide{display:flex;gap:10px;align-items:flex-start;margin:12px 0}
+.guide .m{flex:none;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--gold2);display:flex;align-items:center;justify-content:center;color:#ffe9b8;font-weight:700;background:#14163a;font-size:15px}
+.guide p{margin:0;font-size:14.5px;line-height:1.7}
+.guide small{display:block;color:var(--mute);font-size:11px}
+/* ① 回放 */
+.replay{display:grid;gap:10px;margin:10px 0}
+.rp{border:1px solid var(--line);border-radius:14px;padding:10px 14px;background:rgba(255,255,255,.025);position:relative}
+.rp .h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.rp .h b{font-size:14.5px}
+.rp .h small{color:var(--gold);font-size:11.5px;letter-spacing:1px}
+.rp .rule{font-size:12.5px;color:var(--gold);margin:4px 0}
+.rp ul{margin:4px 0 0;padding:0;list-style:none}
+.rp li{font-size:13px;line-height:1.6;padding:3px 0 3px 14px;position:relative}
+.rp li::before{content:'';position:absolute;left:2px;top:11px;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.rp li span{display:block;color:var(--mute);font-size:12px}
+.rp.off{opacity:.55}
+.empty{border:1px dashed var(--line);border-radius:14px;padding:14px;font-size:14px;line-height:1.7;color:var(--mute)}
+/* ② 三层 */
+.layers3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0}
+.lay3{border:1px solid var(--line);border-radius:14px;padding:10px}
+.lay3 .t{font-size:12px;color:var(--gold);letter-spacing:1px}
+.lay3 h4{margin:2px 0 6px;font-size:16px}
+.it{border-top:1px solid rgba(245,194,107,.15);padding:8px 0}
+.it p{margin:0 0 6px;font-size:13.5px;line-height:1.55}
+.it .seen{white-space:nowrap;display:inline-block;font-size:10.5px;color:#1a1206;background:var(--gold);border-radius:5px;padding:0 5px;margin-left:4px;vertical-align:1px}
+.it .ab{display:flex;gap:6px;flex-wrap:wrap}
+.it .ab .lt-btn{font-size:12px;padding:4px 10px}
+.it .rv{font-size:12.5px;line-height:1.6;margin-top:6px;color:var(--mute)}
+.it .rv b{color:var(--ink);font-weight:600}
+.it .rv i{font-style:normal;color:#9fe0b8}
+/* ③ 我的规则 */
+.slot{border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;background:rgba(255,255,255,.02)}
+.slot .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.slot .top b{color:var(--gold);font-size:14px}
+.slot select{flex:1;min-width:0;max-width:100%;background:#10122c;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-size:13px;font-family:inherit}
+.slot textarea{width:100%;min-height:58px;resize:vertical;background:#0b0d24;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:15px;line-height:1.6;font-family:inherit}
+.slot textarea:focus,.slot select:focus{outline:none;border-color:var(--gold)}
+.tpl{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tpl button{font-size:12px;padding:3px 9px}
+.cnt{font-size:11px;color:var(--mute);text-align:right}
+.priv{font-size:12px;color:var(--mute);border:1px dashed var(--line);border-radius:10px;padding:6px 10px;margin:8px 0}
+/* ④ 手册 */
+.handbook{border:1.5px solid var(--gold);border-radius:18px;padding:18px;background:radial-gradient(circle at 20% 0,rgba(245,194,107,.18),transparent 60%),#0f1130;position:relative;overflow:hidden}
+.handbook .no{font-size:12px;color:var(--gold);letter-spacing:2px;padding-right:44px}
+.handbook h2{margin:6px 0 8px;font-size:22px}
+.handbook p{margin:6px 0;line-height:1.7;font-size:14.5px}
+.handbook .b{position:absolute;right:14px;top:10px;font-size:30px;opacity:.55}
+canvas.lotus{width:100%;max-width:420px;aspect-ratio:4/3;display:block;margin:4px auto}
+.mine{margin:8px 0;padding:0;list-style:none;counter-reset:r}
+.mine li{counter-increment:r;border-left:2px solid var(--gold);padding:4px 10px;margin:6px 0;font-size:14.5px;line-height:1.6}
+.mine li::before{content:'我的规则 ' counter(r) ' · ';color:var(--gold);font-size:12px}
+.mine li small{display:block;color:var(--mute);font-size:11.5px}
+.note{font-size:12px;color:var(--mute);line-height:1.6}
+.nav{display:flex;gap:8px;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+.agehint{font-size:12.5px;color:var(--gold);border:1px dashed var(--line);border-radius:10px;padding:6px 10px;margin:6px 0}
+[hidden]{display:none!important}
+@media (max-width:1100px){.lt-hud{display:none}}
+@media (max-width:760px){.layers3{grid-template-columns:1fr}}
+@media (max-width:640px){.card{padding:14px}.rp{padding:9px 11px}.handbook{padding:14px}}
+</style></head><body>
+<main>
+  <div class="steps" id="steps"><span>① 回看</span><span>② 看见</span><span>③ 改写</span><span>④ 玩家手册</span></div>
+
+  <!-- ① 回看 -->
+  <section class="card lt-panel" data-step="0">
+    <h1>看见了这些规则,我想成为怎样的玩家?</h1>
+    <div class="agehint" id="ageHint" hidden>终章原本写给 16 岁以上的玩家。这是给你的入门版本:问题更短,也可以和家长一起玩。</div>
+    <p class="lead2">意义终章 · 你的地球Online 回放。下面是你在各关留下的选择(只读取这台设备上的记录)。</p>
+    <div class="replay" id="replay"></div>
+    <div class="guide"><span class="m">王</span><p id="g0"></p></div>
+    <div class="nav"><a class="lt-btn" href="../">← 回到认知星盘</a><button class="lt-btn primary" data-go="1">看见规则:哪些能改? →</button></div>
+  </section>
+
+  <!-- ② 看见 -->
+  <section class="card lt-panel" data-step="1" hidden>
+    <h1>三层规则,哪些能改?</h1>
+    <p class="lead2" id="l1"></p>
+    <div class="layers3" id="layers3"></div>
+    <div class="guide"><span class="m">王</span><p id="g1"></p></div>
+    <p class="note">「规则本身」写的是各关看到的机制;「能动的部分」是一个可能的方向,不是标准答案。你的判断不计分。</p>
+    <div class="nav"><button class="lt-btn" data-go="0">← 回放</button><button class="lt-btn primary" data-go="2">写下我的规则 →</button></div>
+  </section>
+
+  <!-- ③ 改写 -->
+  <section class="card lt-panel" data-step="2" hidden>
+    <h1 id="h2">写下三条「我的规则」</h1>
+    <p class="lead2" id="l2"></p>
+    <div id="slots"></div>
+    <div class="priv">🔒 只保存在这台设备的浏览器里,不上传、不分享、没有人会看到或批改。随时可以回来改。</div>
+    <div class="guide"><span class="m">王</span><p id="g2"></p></div>
+    <div class="nav"><button class="lt-btn" data-go="1">← 再看看规则</button><button class="lt-btn primary" id="toBook" type="button" disabled>写好了,领取终章手册 →</button></div>
+  </section>
+
+  <!-- ④ 玩家手册 -->
+  <section class="card lt-panel" data-step="3" hidden>
+    <div class="handbook"><span class="b">✦</span><div class="no">地球Online 玩家手册 · 第 7 页 · 意义(终章)</div>
+      <h2>知行合一:看见了,还要做到</h2>
+      <canvas class="lotus" id="lotus" aria-label="光之莲全开,一只蝴蝶从莲心飞出"></canvas>
+      <p id="hbText"></p>
+      <ul class="mine" id="mine"></ul>
+      <p><b style="color:var(--gold)">反制技巧:</b>把每条规则变成一个能在路口问出口的问题。做完选择,回看一眼:「我是按自己写的规则玩的吗?」没做到也没关系,下一次再试——规则由你写,也可以由你改。</p></div>
+    <div class="guide"><span class="m">王</span><p id="g3"></p></div>
+    <div class="guide"><span class="m">苏</span><p id="g4"></p></div>
+    <p class="note">星桥:看清了地球Online 的规则,再抬头看看更大的地方——去 <a href="/starhelm/">天枢 · 此刻,你在宇宙的哪里?</a></p>
+    <div class="nav"><a class="lt-btn" href="../">← 回到认知星盘(莲心已点亮)</a><button class="lt-btn" id="saveCard" type="button">⤓ 保存这一页</button><button class="lt-btn" data-go="2">改写我的规则</button></div>
+  </section>
+</main>
+<script type="module">
+import { chrome, hud, store, markDone, isDone, sound, reducedMotion, offline, userMinAge, logChoice } from '../lt.js';
+import { TASKS, HANDBOOK } from '../lt-data.js';
+chrome({ home: '../' }); const H = hud(); offline();
+const $ = id => document.getElementById(id);
+const QW = '<small>王阳明 · 仿其思想的提问</small>', QS = '<small>苏格拉底 · 仿其思想的提问</small>';
+const young = userMinAge() < 16;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const secs = [...document.querySelectorAll('[data-step]')], tabs = [...document.querySelectorAll('#steps span')];
+let step = 0;
+function go(n) { step = n; secs.forEach((s, i) => s.hidden = i !== n); tabs.forEach((t, i) => t.classList.toggle('on', i === n));
+  window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }); if (n === 0) replay(); if (n === 1) see(); if (n === 2) write(); if (n === 3) finish(); }
+window.ltGo = go;
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) { sound.tick(); go(+g.dataset.go); } });
+$('ageHint').hidden = !young;
+
+const LEVELS = TASKS.filter(t => t.id !== 'meaning');
+const seenPages = () => HANDBOOK.filter(h => h.task !== 'meaning' && isDone(h.task));
+
+/* ① 回看:时间线 + 已通关的手册页 */
+function replay() {
+  const tl = store.get('timeline', []) || [];
+  const rows = LEVELS.map(t => {
+    const es = tl.filter(e => e.task === t.id).slice(-3); const done = isDone(t.id); const hb = HANDBOOK.find(h => h.task === t.id);
+    if (!es.length && !done) return '';
+    return `<div class="rp"><div class="h"><small>第 ${hb.no} 关</small><b>${t.q}</b></div>
+      ${done ? `<div class="rule">✦ 看见的隐藏规则:${hb.title}</div>` : '<div class="rule" style="color:var(--mute)">还没走到手册页</div>'}
+      ${es.length ? `<ul>${es.map(e => `<li>${esc(e.choice)}<span>另一条路:${esc(e.alt)}</span></li>`).join('')}</ul>` : ''}</div>`;
+  }).join('');
+  const n = seenPages().length, m = tl.filter(e => e.task !== 'meaning').length;
+  $('replay').innerHTML = rows || `<div class="empty">回放还是空的——你还没在这台设备上玩过前面的关卡。<br>可以先回星盘玩一关再来;也可以现在继续,用「三层规则」本身来写你的规则。</div>`;
+  $('g0').innerHTML = (rows ? `你看见了 ${n} 条隐藏规则,留下了 ${m} 个选择。` : '') +
+    (young ? '回看这些选择,哪一个最像平时的你?如果再来一次,你会换哪一个?' : '这些路口你都走过。哪一次,你心里其实早就知道,手上却走了另一条?知道和做到之间,隔着什么?') + QW;
+}
+
+/* ② 看见:三层规则,先自己判断能不能改,再看一种看法 */
+const ITEMS = [
+  { L: 0, id: 'sunk', task: 'sunk', t: '钱花出去以后,就舍不得放手', rule: '大脑天生怕损失,这是出厂设置。', can: '决定前把镜头倒放到「还没付钱」那一刻。' },
+  { L: 0, id: 'linear', task: 'compound', t: '估计增长时,大脑习惯用「加法」', rule: '直觉按加法想,复利按乘法长。', can: '遇到增长先问:它在加,还是在乘?' },
+  { L: 0, id: 'easy', task: 'cocoon', t: '大脑偏爱熟悉、来得快的东西', rule: '喜欢熟悉和即时的奖励,刻在进化里。', can: '打开之前先问自己:我是来找什么的?' },
+  { L: 1, id: 'tft', task: 'prisoner', t: '人会以牙还牙,也会回报善意', rule: '只要还会再见面,回报就会发生。', can: '你可以选择先伸出手,也选择被辜负后怎么回应。' },
+  { L: 1, id: 'situ', task: 'nature', t: '处境会放大人的善意或私心', rule: '同一群人,换一座小镇就像换了一群人。', can: '你能挑选、也能一点点改造自己身边的小环境。' },
+  { L: 1, id: 'judge', task: 'nature', t: '我们常用「性格」解释别人', rule: '先看人、后看处境,是很老的习惯。', can: '评价之前多问一句:换我在他的处境呢?' },
+  { L: 2, id: 'interest', task: 'compound', t: '利息按复利滚动', rule: '数学规则,对谁都一样。', can: '让好事早点开始乘,让欠款早点停下。' },
+  { L: 2, id: 'algo', task: 'cocoon', t: '推荐算法想留住你的时间', rule: '它按你点过的东西推更多。', can: '你喂给它什么,它就给你什么;你也能主动去搜新的。' },
+  { L: 2, id: 'stage', task: 'survivor', t: '台上站着的多半是幸存者', rule: '失败的人很少被请上台讲话。', can: '追问一句:失败的人里,有多少也这么做?' }
+];
+const LAY = [{ n: 'Ⅰ 自我', a: '作者:进化' }, { n: 'Ⅱ 他人', a: '作者:人性' }, { n: 'Ⅲ 世界', a: '作者:文明' }];
+let judge = store.get('meaning_judge', {}) || {};
+function see() {
+  $('l1').textContent = young ? '每张卡片是一条你可能见过的规则。先凭感觉点:你觉得它「能改」还是「改不了」?点完会出现另一种看法。'
+    : '前三层规则分别由进化、人性和文明写成。先凭你的判断:每一条,你觉得「能改」还是「改不了」?判断之后,会出现一种看法供你对照。';
+  $('layers3').innerHTML = LAY.map((L, li) => `<div class="lay3"><div class="t">${L.a}</div><h4>${L.n}</h4>${ITEMS.filter(i => i.L === li).map(i => {
+    const j = judge[i.id];
+    return `<div class="it" data-i="${i.id}"><p>${i.t}${isDone(i.task) ? '<span class="seen">你已看见</span>' : ''}</p>
+      <div class="ab"><button class="lt-btn" type="button" data-j="fix" aria-pressed="${j === 'fix'}">改不了</button><button class="lt-btn" type="button" data-j="can" aria-pressed="${j === 'can'}">能改</button></div>
+      ${j ? `<div class="rv"><b>规则本身:</b>${i.rule}<br><i>能动的部分:</i>${i.can}</div>` : ''}</div>`; }).join('')}</div>`).join('');
+  const k = Object.keys(judge).length, fix = Object.values(judge).filter(v => v === 'fix').length;
+  $('g1').innerHTML = (k ? `你判断了 ${k}/9 条,其中 ${fix} 条你觉得改不了。` : '') +
+    (young ? '有些规则改不了,就像下雨改不了。那你还能决定什么呢?'
+      : (k < 5 ? '试着多判断几条。哪些是你改不了的,哪些其实一直握在你手里?' : '规则改不了的地方,你还剩下什么?是看它的方式,还是下一步的动作?如果只看见、不去做,这份「看见」算是你的吗?')) + QW;
+}
+$('layers3').addEventListener('click', e => { const b = e.target.closest('[data-j]'); if (!b) return; const id = b.closest('[data-i]').dataset.i;
+  judge[id] = b.dataset.j; store.set('meaning_judge', judge); sound.bell(b.dataset.j === 'fix' ? 1 : 4); see(); });
+
+/* ③ 改写:三条我的规则,只存本机 gn:lt:meaning */
+const TPL = young ? ['下次___的时候,我想先___。', '我想试试每天___。', '当我___,我会对自己说:___。']
+  : ['当___的时候,我先问自己:___?', '我不再___,而是___。', '每___,我给自己___。', '遇到___,我选择___,哪怕___。'];
+const FALL = [{ id: 'L-self', label: '自我 · 进化写的:大脑的出厂设置' }, { id: 'L-others', label: '他人 · 人性写的:人与人相处的老规矩' }, { id: 'L-world', label: '世界 · 文明写的:钱和信息的游戏规则' }];
+function options() { const s = seenPages().map(h => ({ id: h.task, label: `第 ${h.no} 页 · ${h.title}` })); return s.length >= 3 ? s : s.concat(FALL); }
+const labelOf = id => (options().find(o => o.id === id) || FALL.find(o => o.id === id) || { label: '' }).label;
+let M = store.get('meaning', {}) || {};
+let rules = Array.isArray(M.rules) ? M.rules.slice(0, 3) : [];
+function save() { M = Object.assign({}, store.get('meaning', {}) || {}, { rules }); store.set('meaning', M); }
+function write() {
+  const ops = options();
+  while (rules.length < 3) rules.push({ rule: (ops[rules.length] || ops[0]).id, text: '' });
+  $('h2').textContent = young ? '写下三条「我的小规则」' : '写下三条「我的规则」';
+  $('l2').textContent = young ? '每一条选一个你看见过的规则,再写一句你想怎么做。可以点下面的句子开头帮忙。'
+    : '每一条对应一个你看见过的隐藏规则。写给自己,用你自己的话;不会有人打分,也没有标准答案。可选模板句起个头。';
+  $('slots').innerHTML = rules.map((r, i) => `<div class="slot" data-s="${i}"><div class="top"><b>规则 ${i + 1}</b>
+      <label class="sr" for="sel${i}">对应的隐藏规则</label><select id="sel${i}">${ops.map(o => `<option value="${o.id}" ${o.id === r.rule ? 'selected' : ''}>${o.label}</option>`).join('')}</select></div>
+      <label class="sr" for="tx${i}">我的规则 ${i + 1}</label><textarea id="tx${i}" maxlength="80" placeholder="${young ? '例如:下次想买东西的时候,我想先等一天。' : '用你自己的话写下来……'}">${esc(r.text)}</textarea>
+      <div class="cnt"><span>${[...r.text].length}</span>/80</div>
+      <div class="tpl">${TPL.map(t => `<button class="lt-btn" type="button" data-t="${t}">${t}</button>`).join('')}</div></div>`).join('');
+  check();
+}
+function check() { const ok = rules.filter(r => r.text.trim()).length; $('toBook').disabled = ok < 3;
+  $('toBook').textContent = ok < 3 ? `还差 ${3 - ok} 条` : '写好了,领取终章手册 →';
+  $('g2').innerHTML = (ok ? `已写下 ${ok} 条。` : '') + (young ? '写下来之后,明天你会在什么时候想起它?' : '写下来容易。明天它真的出现时,你会怎样认出它?那一刻,你会做什么?') + QW; }
+$('slots').addEventListener('input', e => { const s = e.target.closest('[data-s]'); if (!s) return; const i = +s.dataset.s;
+  if (e.target.tagName === 'TEXTAREA') { rules[i].text = e.target.value.slice(0, 80); s.querySelector('.cnt span').textContent = [...rules[i].text].length; }
+  save(); check(); });
+$('slots').addEventListener('change', e => { const s = e.target.closest('[data-s]'); if (!s || e.target.tagName !== 'SELECT') return; rules[+s.dataset.s].rule = e.target.value; save(); sound.tick(); });
+$('slots').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (!b) return; const s = b.closest('[data-s]'), i = +s.dataset.s, ta = s.querySelector('textarea');
+  ta.value = b.dataset.t; rules[i].text = ta.value; s.querySelector('.cnt span').textContent = [...ta.value].length; save(); check();
+  ta.focus(); const p = ta.value.indexOf('___'); if (p >= 0) ta.setSelectionRange(p, p + 3); sound.bell(2); });
+$('toBook').onclick = () => { if (rules.filter(r => r.text.trim()).length < 3) return; sound.tick(); go(3); };
+
+/* ④ 终章手册:光之莲全开,蝴蝶飞出 */
+let raf = 0, t0 = 0;
+function finish() {
+  const first = !isDone('meaning'); const mine = rules.filter(r => r.text.trim());
+  markDone('meaning', { rules, n: mine.length }); M = store.get('meaning', {});
+  if (first) logChoice('meaning', `在意义终章写下了 ${mine.length} 条自己的规则`, '规则写好了还可以改——知行合一,发生在下一次选择里');
+  $('hbText').textContent = young ? '有些规则是进化、人性和文明写好的,你改不了;但看见它们以后,下一步怎么走,由你决定。真的懂了,会出现在你下一次的选择里。'
+    : '进化、人性、文明写下的规则,你改不了全部:大脑仍会怕损失,人仍会以牙还牙,利息仍按乘法滚动。能改的,是你看见之后怎么玩。真正的「知道」,会出现在下一次选择里。';
+  $('mine').innerHTML = mine.length ? mine.map(r => `<li>${esc(r.text)}<small>对应:${esc(labelOf(r.rule))}</small></li>`).join('') : '<li>(还没有写下规则)</li>';
+  $('g3').innerHTML = (young ? '知道一件事,和做到一件事,哪个更难?你的三条小规则,哪一条明天就能试一次?' : '知道了却没做到,算不算真的知道?你的三条规则里,哪一条明天就能用上一次?') + QW;
+  $('g4').innerHTML = '从第一关走到这里,你比开始时更认识自己一点了吗?如果下一个路口只能带一个问题,你会带哪一个?' + QS;
+  H.render(); if (first) [0, 2, 4, 7, 9, 12].forEach((s, i) => setTimeout(() => sound.bell(s), i * 170));
+  t0 = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(lotus);
+}
+function lotus(now) {
+  const c = $('lotus'); if (step !== 3) return; if (!c.clientWidth) { raf = requestAnimationFrame(lotus); return; }
+  const d = Math.min(2, devicePixelRatio || 1), w = c.clientWidth, h = c.clientHeight;
+  if (c.width !== Math.round(w * d)) { c.width = w * d; c.height = h * d; }
+  const x = c.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, w, h);
+  const t = reducedMotion ? 4 : (now - t0) / 1000, cx = w / 2, cy = h * 0.68, pr = Math.min(w, h) * 0.26;
+  const open = Math.min(1, t / 1.6), ease = 1 - Math.pow(1 - open, 3);
+  const hR = Math.min(pr * 2.2, h - cy, cx); const halo = x.createRadialGradient(cx, cy, 2, cx, cy, hR); halo.addColorStop(0, `rgba(255,236,190,${0.25 + 0.4 * ease})`); halo.addColorStop(1, 'rgba(255,236,190,0)');
+  x.fillStyle = halo; x.beginPath(); x.arc(cx, cy, hR, 0, 7); x.fill();
+  for (let i = 0; i < 8; i++) { const a = -Math.PI / 2 + (i - 3.5) * (0.22 + 0.17 * ease);
+    x.save(); x.translate(cx, cy); x.rotate(a + Math.PI / 2); const L = pr * (0.75 + 0.4 * ease);
+    x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(pr * 0.45, -L * 0.55, 0, -L); x.quadraticCurveTo(-pr * 0.45, -L * 0.55, 0, 0);
+    x.fillStyle = 'rgba(255,240,205,.92)'; x.strokeStyle = 'rgba(255,215,140,.85)'; x.lineWidth = 1; x.fill(); x.stroke(); x.restore(); }
+  /* 意义莲心 */
+  const hr = pr * 0.2 * (reducedMotion ? 1 : 1 + 0.08 * Math.sin(t * 2.4)); const hg = x.createRadialGradient(cx, cy - pr * 0.1, 0, cx, cy - pr * 0.1, hr * 2.4);
+  hg.addColorStop(0, '#fffaf0'); hg.addColorStop(0.4, 'rgba(255,226,160,.9)'); hg.addColorStop(1, 'rgba(255,226,160,0)'); x.fillStyle = hg; x.beginPath(); x.arc(cx, cy - pr * 0.1, hr * 2.4, 0, 7); x.fill();
+  /* 蝴蝶:从莲心飞出,沿弧线上升后盘旋 */
+  const ft = Math.max(0, Math.min(1, (t - 1.2) / 2.2)), fe = ft * ft * (3 - 2 * ft);
+  let bx = cx + Math.sin(fe * Math.PI * 1.2) * w * 0.22, by = cy - pr * 0.1 - fe * h * 0.5;
+  if (ft >= 1 && !reducedMotion) { const k = t - 3.4; bx += Math.sin(k * 0.9) * w * 0.06; by += Math.sin(k * 1.7) * 6; }
+  if (fe > 0.05) for (let i = 1; i <= 10; i++) { const q = Math.max(0, fe - i * 0.04), px = cx + Math.sin(q * Math.PI * 1.2) * w * 0.22, py = cy - pr * 0.1 - q * h * 0.5;
+    x.globalAlpha = 0.5 * (1 - i / 11); x.fillStyle = '#ffe2a0'; x.beginPath(); x.arc(px, py, 1.6, 0, 7); x.fill(); }
+  x.globalAlpha = 1; fly(x, bx, by, pr * 0.24, t);
+  if (!reducedMotion) raf = requestAnimationFrame(lotus);
+}
+function fly(x, px, py, s, t) { const f = reducedMotion ? 1 : 0.55 + 0.45 * Math.abs(Math.sin(t * 7));
+  x.save(); x.translate(px, py); x.shadowColor = '#f5c26b'; x.shadowBlur = 14; x.fillStyle = '#f5c26b';
+  [-1, 1].forEach(sx => { x.save(); x.scale(sx * f, 1); x.beginPath(); x.ellipse(s * 0.55, -s * 0.35, s * 0.55, s * 0.4, -0.5, 0, 7); x.fill();
+    x.beginPath(); x.ellipse(s * 0.4, s * 0.3, s * 0.35, s * 0.28, 0.5, 0, 7); x.fill(); x.restore(); });
+  x.fillRect(-s * 0.05, -s * 0.5, s * 0.1, s); x.restore(); }
+addEventListener('resize', () => { if (step === 3 && reducedMotion) lotus(performance.now()); });
+
+/* 保存这一页:本机生成图片,不含网址与二维码 */
+$('saveCard').onclick = () => {
+  const c = document.createElement('canvas'); c.width = 1080; c.height = 1350; const x = c.getContext('2d'); const ff = getComputedStyle(document.body).fontFamily;
+  const g = x.createLinearGradient(0, 0, 0, 1350); g.addColorStop(0, '#15163a'); g.addColorStop(1, '#070814'); x.fillStyle = g; x.fillRect(0, 0, 1080, 1350);
+  x.strokeStyle = '#f5c26b'; x.lineWidth = 3; x.strokeRect(40, 40, 1000, 1270);
+  x.fillStyle = '#f5c26b'; x.font = `600 30px ${ff}`; x.fillText('觉弈 LUDOTERRA · 玩家手册 第 7 页 · 意义', 90, 120);
+  x.fillStyle = '#f3eee2'; x.font = `800 66px ${ff}`; x.fillText('知行合一', 90, 210);
+  x.font = `30px ${ff}`; x.fillStyle = 'rgba(243,238,226,.7)'; x.fillText('看见了,还要做到。我的三条规则:', 90, 270);
+  const wrap = (s, y, max, lh) => { let line = ''; for (const ch of s) { if (x.measureText(line + ch).width > max) { x.fillText(line, 120, y); y += lh; line = ch; } else line += ch; } if (line) { x.fillText(line, 120, y); y += lh; } return y; };
+  let y = 360; rules.filter(r => r.text.trim()).forEach((r, i) => {
+    x.fillStyle = '#f5c26b'; x.fillRect(90, y - 34, 5, 40); x.font = `600 24px ${ff}`; x.fillText(`我的规则 ${i + 1} · ${labelOf(r.rule)}`.slice(0, 34), 120, y);
+    x.fillStyle = '#f3eee2'; x.font = `600 40px ${ff}`; y = wrap(r.text, y + 60, 860, 56) + 50; });
+  x.fillStyle = 'rgba(243,238,226,.6)'; x.font = `26px ${ff}`; x.fillText('规则由你写,也可以由你改。 · 创世计划 Genesis 06', 90, 1270);
+  const l = document.createElement('a'); l.download = '我的地球Online规则.png'; l.href = c.toDataURL('image/png'); l.click(); sound.bell(4);
+};
+go(0);
+</script>
+</body></html>
