@@ -379,6 +379,63 @@
         .x-ab__br li { grid-template-columns: 1fr 22px 1fr; }
         .x-ab__br .end { padding: 8px 10px; font-size: 12.5px; }
       }
+
+      /* v0.4.1 · 首屏一句话定位 */
+      .x-pitch { margin: -4px 0 10px; font-size: 14.5px; line-height: 1.7; color: var(--gold); letter-spacing: .04em; transition: opacity .6s; }
+      .x-pitch.seen { opacity: .72; }
+      .x-more { display: inline-flex; align-items: center; min-height: 32px; margin-left: 6px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(233,199,121,.4);
+        background: rgba(233,199,121,.08); color: var(--gold); font: 500 12.5px var(--sans); cursor: pointer; vertical-align: middle; white-space: nowrap; }
+      .x-more:hover, .x-more:focus-visible { background: rgba(233,199,121,.2); outline: none; }
+      @media (max-width: 860px) { .x-pitch { font-size: 13px; margin: -6px 0 8px; } .x-more { min-height: 30px; font-size: 12px; padding: 0 10px; } }
+      @media (max-height: 480px) and (orientation: landscape) { .x-pitch { font-size: 12px; margin: -2px 0 6px; } .x-pitch + .sub { display: none; } .x-more { min-height: 28px; } }
+      /* v0.4.1 · 关于弹层 C 全息北斗星盘 */
+      .x-dk { position: relative; margin: 0 0 18px; }
+      .x-dk__hint { margin: 0; text-align: center; font-size: 12px; letter-spacing: .14em; color: var(--dim); }
+      .x-dk__stage { position: relative; height: 380px; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab; outline: none; }
+      .x-dk__stage.drag { cursor: grabbing; }
+      .x-dk__disc, .x-dk__sky { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      .x-dk__sky { z-index: 300; overflow: visible; }
+      .x-dk__c { position: absolute; left: 0; top: 0; width: 120px; height: 168px; perspective: 900px; transform-origin: 50% 100%; will-change: transform; }
+      .x-dk__in { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.3,.7,.2,1); }
+      .x-dk__c.flip .x-dk__in { transform: rotateY(180deg); }
+      .x-dk__f, .x-dk__b { position: absolute; inset: 0; border-radius: 14px; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden;
+        border: 1.5px solid var(--accent); color: var(--ink); text-align: center;
+        background: linear-gradient(160deg, rgba(255,255,255,.16), rgba(255,255,255,.03) 45%, rgba(8,12,34,.55)), rgba(10,16,40,.72);
+        box-shadow: 0 0 18px -4px var(--accent), inset 0 0 22px -10px var(--accent); }
+      .x-dk__f { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 100%; padding: 10px 6px; font: inherit; cursor: pointer; }
+      .x-dk__f:focus-visible, .x-dk__b a:focus-visible, .x-dk__b button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+      .x-dk__f img { pointer-events: none; -webkit-user-drag: none; width: 46%; aspect-ratio: 1; border-radius: 50%; box-shadow: 0 0 20px var(--accent); margin-bottom: 4px; }
+      .x-dk__f.soon img { filter: grayscale(.75) brightness(.6); box-shadow: none; }
+      .x-dk__f small { font-size: 10px; letter-spacing: .2em; color: var(--dim); }
+      .x-dk__f b { font-size: 15px; font-weight: 600; color: var(--accent); letter-spacing: .06em; }
+      .x-dk__f em { font-style: normal; font-size: 10.5px; color: rgba(234,240,255,.7); }
+      .x-dk__b { transform: rotateY(180deg); display: flex; flex-direction: column; padding: 10px 9px 8px; text-align: left; gap: 3px; }
+      .x-dk__b b { font-size: 14px; color: var(--accent); font-weight: 600; }
+      .x-dk__b small { font-size: 10px; color: var(--dim); letter-spacing: .06em; }
+      .x-dk__b p { margin: 2px 0; font-size: 11px; line-height: 1.5; color: rgba(234,240,255,.86); flex: 1; overflow: hidden; }
+      .x-dk__b i { font-style: normal; font-size: 10.5px; color: var(--gold); line-height: 1.45; }
+      .x-dk__b a, .x-dk__b span.soon { display: block; margin-top: 3px; padding: 5px 0; border-radius: 999px; text-align: center; font-size: 11.5px; font-weight: 600; text-decoration: none; }
+      .x-dk__b a { background: var(--accent); color: #0a1030; }
+      .x-dk__b span.soon { border: 1px dashed rgba(234,240,255,.3); color: var(--dim); font-weight: 400; }
+      .x-dk__b button { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: none; color: var(--dim); font-size: 14px; cursor: pointer; }
+      .x-dk__nav { position: absolute; top: 50%; z-index: 400; width: 40px; height: 40px; margin-top: -20px; border-radius: 50%; border: 1px solid rgba(233,199,121,.35);
+        background: rgba(8,12,34,.6); color: var(--gold); font-size: 16px; cursor: pointer; }
+      .x-dk__nav:hover, .x-dk__nav:focus-visible { background: rgba(233,199,121,.18); outline: none; }
+      .x-dk__nav.l { left: 0; } .x-dk__nav.r { right: 0; }
+      .x-ab__news { margin-top: 30px; }
+      .x-ab__news ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+      .x-ab__news button { display: block; width: 100%; text-align: left; padding: 9px 12px 9px 28px; position: relative; border-radius: 12px; border: 1px solid rgba(234,240,255,.08);
+        background: rgba(234,240,255,.025); color: rgba(234,240,255,.84); font: 400 12.5px/1.6 var(--sans); cursor: pointer; }
+      .x-ab__news button::before { content: ""; position: absolute; left: 11px; top: 15px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+      .x-ab__news button:hover, .x-ab__news button:focus-visible { border-color: var(--accent); outline: none; background: rgba(234,240,255,.06); }
+      .x-ab__news b { color: var(--accent); font-weight: 600; margin-right: 6px; }
+      .x-ab__news small { float: right; margin-left: 8px; font: 400 11px/20px ui-monospace, monospace; color: var(--dim); }
+      @media (max-width: 640px) { .x-dk__nav { display: none; } }
+      .x-dk.sm .x-dk__f { gap: 2px; padding: 6px 4px; } .x-dk.sm .x-dk__f b { font-size: 13px; } .x-dk.sm .x-dk__f em span { display: none; }
+      .x-dk.sm .x-dk__b { padding: 7px 7px 6px; gap: 1px; } .x-dk.sm .x-dk__b b { font-size: 12.5px; } .x-dk.sm .x-dk__b small, .x-dk.sm .x-dk__b i span { display: none; }
+      .x-dk.sm .x-dk__b p { font-size: 9.5px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; flex: none; overflow: hidden; }
+      .x-dk.sm .x-dk__b i { font-size: 9.5px; flex: 1; min-height: 0; overflow: hidden; } .x-dk.sm .x-dk__b a, .x-dk.sm .x-dk__b span.soon { font-size: 10px; padding: 4px 0; white-space: nowrap; }
+      .x-dk.sm .x-dk__b button { width: 22px; height: 22px; top: 2px; right: 2px; font-size: 12px; }
       @media (prefers-reduced-motion: reduce) {
         * { transition-duration: .01ms !important; }
         .x-dot { animation: none; }
@@ -423,6 +480,7 @@
 
       <div class="titleblock">
         <h1>如果世界是一款游戏</h1>
+        <p class="x-pitch" id="pitch">七个互相连通的学习世界 · 把世界当成一款游戏来拆解 <button type="button" class="x-more" id="moreBtn" aria-haspopup="dialog">了解更多 →</button></p>
         <p class="sub">七个世界，一张星图。让一个普通人，用玩游戏的热情，在一生中走过人类知识的全图。</p>
         <div class="acts">
           <button class="btn btn--solid" id="trailerBtn">▶ 观看宣传片</button>
@@ -530,6 +588,16 @@
       <button class="btn x-br__back" id="abBack">← 回到北斗</button>
       <div class="x-ab__in">
         <div class="x-ab__wrap">
+          <section class="x-dk" aria-label="全息北斗星盘：七个世界">
+            <div class="x-dk__stage" id="dkStage">
+              <canvas class="x-dk__disc" id="dkDisc" aria-hidden="true"></canvas>
+              <svg class="x-dk__sky" id="dkSky" aria-hidden="true"></svg>
+              <div id="dkCards" role="list"></div>
+              <button type="button" class="x-dk__nav l" id="dkPrev" aria-label="星盘向左转，上一个世界">‹</button>
+              <button type="button" class="x-dk__nav r" id="dkNext" aria-label="星盘向右转，下一个世界">›</button>
+            </div>
+            <p class="x-dk__hint" id="dkHint">拖动星盘旋转 · 点卡片翻面 · 卡顶金线是北斗连线，已上线的世界会点亮</p>
+          </section>
           <div class="x-ab__tabs" role="tablist" aria-label="关于创世计划">
             <button class="btn" role="tab" id="abT0" aria-controls="abP0" aria-selected="true">是什么</button>
             <button class="btn" role="tab" id="abT1" aria-controls="abP1" aria-selected="false" tabindex="-1">为什么是七颗星</button>
@@ -567,9 +635,13 @@
             <ul class="x-ab__br" id="abBridges"></ul>
             <p style="margin:20px 0 0"><button class="btn btn--solid" id="abToBridges">在知识星桥里看 ✦</button></p>
           </section>
+          <section class="x-ab__news" aria-labelledby="abNewsH">
+            <h3 id="abNewsH">最近更新</h3>
+            <ol id="abNews"></ol>
+          </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.4.0</b></span>
+            <span>创世计划总门户 <b>v0.4.1</b></span>
           </footer>
         </div>
       </div>
@@ -1699,6 +1771,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.4.1", d: "2026-10-20", t: "「关于创世计划」变成可旋转的全息北斗星盘：拖动轮转七个世界，点卡片翻面看简介与入口；首屏新增一句话介绍。" },
         { w: "gn", v: "v0.4.0", d: "2026-10-20", t: "首屏新增「最新更新」区：最近三条更新一眼可见，点一下直达星历。" },
         { w: "gn", v: "v0.3.9", d: "2026-10-20", t: "星历新增生命源码 v0.5、v0.6。" },
         { w: "04", v: "v0.6", d: "2026-10-20", t: "每个任务变成一条双螺旋关卡路，每过一关收集一张源码卡，集齐即点亮图谱上的星座。" },
@@ -1922,7 +1995,7 @@
         AB.built = true;
         document.getElementById("abWorlds").innerHTML = ORDER.map(function (id) {
           var w = byId[id], inner = '<img src="world-' + id + '.webp" alt="" /><span><b>' + w.name + '</b><small>' + w.field.replace(" SI", "") + ' · ' + w.star +
-            '</small><small><em>' + (w.live ? "已上线 ↗" : "即将点亮") + '</em></small></span>';
+            '</small><small><em>' + (w.live ? wStat(w) + " ↗" : "筹备中 · 即将点亮") + '</em></small></span>';
           return '<li>' + (w.live ? '<a class="x-ab__w" style="--accent:' + w.color + '" href="' + w.href + '" target="_blank" rel="noopener" aria-label="进入' + w.name + '（新窗口）">' + inner + '</a>'
             : '<div class="x-ab__w soon" style="--accent:' + w.color + '">' + inner + '</div>') + '</li>';
         }).join("");
@@ -1995,17 +2068,219 @@
         if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
         else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
       });
+
+      /* ---------- v0.4.1 关于弹层 C：全息北斗星盘（七张世界卡立于倾斜金盘沿；数据全部读 WORLDS / LINKS / CHANGELOG） ---------- */
+      function wVer(w) { var m = (w.meta[0] || "").match(/v[0-9][\w.\-α-ω]*|M[0-9][\w.]*/); return m ? m[0] : ""; }
+      function wStat(w) { return w.live ? "已上线" + (wVer(w) ? " " + wVer(w) : "") : "筹备中"; }
+      var DK = { el: document.getElementById("dkStage"), cv: document.getElementById("dkDisc"), sky: document.getElementById("dkSky"), box: document.getElementById("dkCards"),
+        n: ORDER.length, ang: 0, tgt: 0, vel: 0, drag: null, moved: false, raf: 0, cards: [], flip: -1, W: 0, H: 0, geo: null, t0: 0 };
+      var dkx = DK.cv.getContext("2d");
+      function dkBuild() {
+        DK.box.innerHTML = ORDER.map(function (id, i) {
+          var w = byId[id], st = wStat(w), more = w.meta.slice(1).map(brEsc).join("<br>");
+          return '<div class="x-dk__c" role="listitem" data-i="' + i + '" style="--accent:' + w.color + '"><div class="x-dk__in">' +
+            '<button type="button" class="x-dk__f' + (w.live ? "" : " soon") + '" aria-expanded="false" aria-label="' + brEsc(w.name + " " + w.en + "，" + w.field + "，" + st + "。翻面查看简介") + '">' +
+            '<img src="world-' + id + '.webp" alt="" draggable="false" /><small>' + w.star + '</small><b>' + w.name + '</b><em>' + w.field.replace(" SI", "") + '<span> · ' + st + '</span></em></button>' +
+            '<div class="x-dk__b"><button type="button" tabindex="-1" aria-label="翻回正面">×</button><b>' + w.name + '</b><small>' + w.en + ' · ' + w.field + '</small>' +
+            '<p>' + brEsc(w.desc) + '</p><i>' + st + (more ? '<span><br>' + more + '</span>' : '') + '</i>' +
+            (w.live ? '<a href="' + w.href + '" target="_blank" rel="noopener" tabindex="-1" aria-label="进入' + w.name + '（新窗口）">进入世界 ↗</a>' : '<span class="soon">即将点亮</span>') +
+            '</div></div></div>';
+        }).join("");
+        DK.cards = [].map.call(DK.box.children, function (c) { return c; });
+        DK.cards.forEach(function (c, i) {
+          var f = c.querySelector(".x-dk__f"), back = c.querySelector(".x-dk__b button");
+          f.addEventListener("click", function () {
+            if (DK.moved) return;
+            if (dkFront() !== i) { dkGo(i); setTimeout(function () { dkFlip(i, true); }, RM ? 0 : 380); } else dkFlip(i, DK.flip !== i);
+          });
+          f.addEventListener("focus", function () { if (dkFront() !== i && !DK.drag) dkGo(i); });
+          back.addEventListener("click", function () { dkFlip(i, false); f.focus(); });
+          c.addEventListener("keydown", function (e) {
+            var d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+            if (!d) return;
+            e.preventDefault(); var j = (i + d + DK.n) % DK.n; dkFlip(-1); dkGo(j); DK.cards[j].querySelector(".x-dk__f").focus();
+          });
+        });
+      }
+      function dkFlip(i, on) {
+        if (on === false && DK.flip !== i) return;
+        var prev = DK.flip; DK.flip = on ? i : -1;
+        DK.cards.forEach(function (c, k) {
+          var o = k === DK.flip;
+          c.classList.toggle("flip", o);
+          c.querySelector(".x-dk__f").setAttribute("aria-expanded", o);
+          c.querySelector(".x-dk__f").tabIndex = o ? -1 : 0;
+          [].forEach.call(c.querySelectorAll(".x-dk__b a, .x-dk__b button"), function (x) { x.tabIndex = o ? 0 : -1; });
+        });
+        dkKick();
+        if (DK.flip > -1) { SND.play("select"); var a = DK.cards[i].querySelector(".x-dk__b a") || DK.cards[i].querySelector(".x-dk__b button"); setTimeout(function () { if (DK.flip === i) { a.focus({ preventScroll: true }); a.closest(".x-dk__b").scrollTop = 0; } }, RM ? 0 : 200); }
+        else if (prev > -1) SND.play("tick");
+      }
+      function dkStep() { return Math.PI * 2 / DK.n; }
+      function dkFront() { var k = Math.round(-DK.ang / dkStep()); return ((k % DK.n) + DK.n) % DK.n; }
+      function dkGo(i) {
+        var s = dkStep(), want = -i * s, cur = DK.tgt;
+        // 走最近的方向
+        var d = want - cur; d -= Math.round(d / (Math.PI * 2)) * Math.PI * 2;
+        DK.tgt = cur + d; DK.vel = 0;
+        if (RM) DK.ang = DK.tgt;
+        dkKick();
+      }
+      function dkResize() {
+        var r = DK.el.getBoundingClientRect(), w = r.width, dpr = Math.min(devicePixelRatio || 1, 2);
+        var R = Math.min(w * 0.36, 330), W = Math.max(70, Math.min(128, R * 0.38)), H = W * 1.42, ry = R * 0.3;
+        if (innerHeight <= 480) { R = Math.min(w * 0.34, 210); W = Math.max(64, Math.min(92, R * 0.42)); H = W * 1.36; ry = R * 0.26; }
+        var cy = Math.round(Math.max(H * 0.66 + ry + 22, H * (W < 100 ? 1.32 : 1.1) - ry + 10)), h = Math.round(cy + ry * 1.25 + 14);
+        DK.el.style.height = h + "px";
+        DK.geo = { w: w, h: h, cx: w / 2, cy: cy, R: R, ry: ry, W: W, H: H };
+        DK.cv.width = Math.round(w * dpr); DK.cv.height = Math.round(h * dpr); dkx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        DK.sky.setAttribute("viewBox", "0 0 " + w.toFixed(1) + " " + h);
+        DK.cards.forEach(function (c) { c.style.width = W + "px"; c.style.height = H + "px"; });
+        DK.el.parentNode.classList.toggle("sm", W < 100);
+        dkDraw();
+      }
+      function dkPose(i) {
+        var g = DK.geo, th = i * dkStep() + DK.ang, s = Math.sin(th), c = Math.cos(th), k = (c + 1) / 2, sc = 0.6 + 0.4 * k;
+        if (i === DK.flip) sc *= g.W < 100 ? 1.32 : 1.1; // 翻开的卡片略放大，便于阅读
+        return { th: th, x: g.cx + g.R * s, y: g.cy + g.ry * c, sc: sc, k: k, s: s };
+      }
+      function dkDraw() {
+        var g = DK.geo; if (!g) return;
+        var P = ORDER.map(function (id, i) { return dkPose(i); });
+        // 星盘
+        var x = dkx, cx = g.cx, cy = g.cy, R = g.R * 1.22, ry = g.ry * 1.22;
+        x.clearRect(0, 0, g.w, g.h);
+        x.save(); x.translate(cx, cy); x.scale(1, ry / R);
+        var gr = x.createRadialGradient(0, 0, 0, 0, 0, R);
+        gr.addColorStop(0, "rgba(233,199,121,.20)"); gr.addColorStop(0.55, "rgba(60,70,140,.16)"); gr.addColorStop(1, "rgba(233,199,121,.06)");
+        x.fillStyle = gr; x.beginPath(); x.arc(0, 0, R, 0, Math.PI * 2); x.fill();
+        [1, 0.93, 0.78, 0.62, 0.46, 0.3, 0.16].forEach(function (f, j) {
+          x.beginPath(); x.arc(0, 0, R * f, 0, Math.PI * 2);
+          x.strokeStyle = "rgba(233,199,121," + (j < 2 ? 0.75 : 0.32) + ")"; x.lineWidth = (j < 2 ? 1.6 : 1) * R / ry * 0.5 + 0.4; x.stroke();
+        });
+        // 刻度与盘面星点随旋转
+        x.rotate(-DK.ang);
+        for (var t = 0; t < 84; t++) {
+          var a = t / 84 * Math.PI * 2, l = t % 12 === 0 ? 0.07 : 0.035;
+          x.beginPath(); x.moveTo(Math.cos(a) * R * 0.93, Math.sin(a) * R * 0.93); x.lineTo(Math.cos(a) * R * (0.93 + l), Math.sin(a) * R * (0.93 + l));
+          x.strokeStyle = "rgba(233,199,121,.55)"; x.lineWidth = 1.2; x.stroke();
+        }
+        for (var q = 0; q < DK.n; q++) {
+          var aa = q * dkStep() + Math.PI / 2;
+          x.beginPath(); x.moveTo(Math.cos(aa) * R * 0.3, Math.sin(aa) * R * 0.3); x.lineTo(Math.cos(aa) * R * 0.78, Math.sin(aa) * R * 0.78);
+          x.strokeStyle = "rgba(233,199,121,.16)"; x.lineWidth = 1; x.stroke();
+        }
+        for (var u = 0; u < 46; u++) {
+          var b = u * 2.399, rr = R * (0.18 + 0.72 * ((u * 0.618) % 1));
+          x.fillStyle = "rgba(255,236,190," + (0.25 + 0.5 * ((u * 0.37) % 1)) + ")";
+          x.beginPath(); x.arc(Math.cos(b) * rr, Math.sin(b) * rr, 1.1 * R / ry * 0.6, 0, Math.PI * 2); x.fill();
+        }
+        x.restore();
+        // 卡片底座光点
+        P.forEach(function (p, i) {
+          var w = byId[ORDER[i]];
+          x.fillStyle = w.color; x.globalAlpha = 0.25 + 0.5 * p.k;
+          x.beginPath(); x.ellipse(p.x, p.y, g.W * 0.42 * p.sc, g.W * 0.08 * p.sc, 0, 0, Math.PI * 2); x.fill();
+        });
+        x.globalAlpha = 1;
+        // 卡片
+        DK.cards.forEach(function (c, i) {
+          var p = P[i];
+          c.style.transform = "translate(" + (p.x - g.W / 2).toFixed(1) + "px," + (p.y - g.H).toFixed(1) + "px) scale(" + p.sc.toFixed(3) + ") rotateY(" + (p.s * 24).toFixed(1) + "deg)";
+          c.style.zIndex = Math.round(p.k * 200);
+          c.style.filter = "brightness(" + (0.5 + 0.5 * p.k).toFixed(2) + ")";
+        });
+        // 卡顶金色星桥：北斗连线，两端都已上线即点亮
+        var tops = P.map(function (p) { return [p.x, p.y - g.H * p.sc]; }), svg = "";
+        LINKS.forEach(function (l) {
+          var i = ORDER.indexOf(l[0]), j = ORDER.indexOf(l[1]), a = tops[i], b = tops[j], lit = byId[l[0]].live && byId[l[1]].live;
+          var op = (0.35 + 0.65 * (P[i].k + P[j].k) / 2) * (lit ? 1 : 0.45);
+          svg += '<line x1="' + a[0].toFixed(1) + '" y1="' + a[1].toFixed(1) + '" x2="' + b[0].toFixed(1) + '" y2="' + b[1].toFixed(1) + '" stroke="#e9c779" stroke-opacity="' + op.toFixed(2) +
+            '" stroke-width="' + (lit ? 1.4 : 1) + '"' + (lit ? "" : ' stroke-dasharray="3 4"') + '/>';
+        });
+        tops.forEach(function (t, i) {
+          var lit = byId[ORDER[i]].live;
+          svg += '<circle cx="' + t[0].toFixed(1) + '" cy="' + t[1].toFixed(1) + '" r="' + (lit ? 3.2 : 2.2) + '" fill="' + (lit ? "#ffe9b0" : "rgba(233,199,121,.5)") + '"' + (lit ? ' filter="url(#dkG)"' : "") + '/>';
+        });
+        DK.sky.innerHTML = '<defs><filter id="dkG" x="-3" y="-3" width="7" height="7"><feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' + svg;
+      }
+      function dkTick(ts) {
+        DK.raf = 0;
+        if (!AB.open) return;
+        var dt = Math.min(0.05, Math.max(0, (ts - (DK.t0 || ts)) / 1000)); DK.t0 = ts;
+        if (!DK.drag) {
+          var d = DK.tgt - DK.ang;
+          DK.ang += RM ? d : d * Math.min(1, dt * 7);
+          if (Math.abs(d) < 0.0005) DK.ang = DK.tgt;
+        }
+        dkDraw();
+        if (DK.drag || DK.ang !== DK.tgt) dkKick(); else DK.t0 = 0;
+      }
+      function dkKick() { if (!DK.raf) DK.raf = requestAnimationFrame(dkTick); }
+      DK.el.addEventListener("pointerdown", function (e) {
+        if (e.button > 0 || e.target.closest(".x-dk__nav, .x-dk__b a, .x-dk__b button")) return;
+        DK.drag = { x: e.clientX, y: e.clientY, a: DK.ang, id: e.pointerId, t: performance.now(), lx: e.clientX, v: 0, on: false }; DK.moved = false;
+      });
+      DK.el.addEventListener("pointermove", function (e) {
+        var D = DK.drag; if (!D || e.pointerId !== D.id) return;
+        var dx = e.clientX - D.x;
+        if (!D.on) {
+          if (Math.abs(dx) < 6) return;
+          if (Math.abs(e.clientY - D.y) > Math.abs(dx)) { DK.drag = null; return; } // 竖向留给页面滚动
+          D.on = true; DK.moved = true; DK.el.classList.add("drag"); dkFlip(-1);
+          try { DK.el.setPointerCapture(e.pointerId); } catch (er) {}
+        }
+        var now = performance.now(), R = DK.geo.R;
+        D.v = (e.clientX - D.lx) / R / Math.max(1, now - D.t) * 1000; D.lx = e.clientX; D.t = now;
+        DK.ang = D.a + dx / R; DK.tgt = DK.ang; dkKick();
+      });
+      function dkUp(e) {
+        var D = DK.drag; if (!D || (e && e.pointerId !== D.id)) return;
+        DK.drag = null; DK.el.classList.remove("drag");
+        if (D.on) {
+          var s = dkStep(), fly = RM ? 0 : Math.max(-2.2, Math.min(2.2, D.v * 0.28)), was = dkFront();
+          DK.tgt = Math.round((DK.ang + fly) / s) * s; if (RM) DK.ang = DK.tgt;
+          dkKick();
+          setTimeout(function () { if (dkFront() !== was) SND.play("tick"); DK.moved = false; }, 60);
+        }
+      }
+      DK.el.addEventListener("pointerup", dkUp); DK.el.addEventListener("pointercancel", dkUp);
+      document.getElementById("dkPrev").addEventListener("click", function () { dkFlip(-1); dkGo((dkFront() - 1 + DK.n) % DK.n); SND.play("tick"); });
+      document.getElementById("dkNext").addEventListener("click", function () { dkFlip(-1); dkGo((dkFront() + 1) % DK.n); SND.play("tick"); });
+      addEventListener("resize", function () { if (AB.open) dkResize(); });
+      // 弹层页尾「最近更新」：CHANGELOG 最新 3 条，点开定位到星历
+      function abNews() {
+        document.getElementById("abNews").innerHTML = LOG.slice(0, 3).map(function (e, i) {
+          var W0 = lgW(e.w);
+          return '<li><button type="button" data-i="' + i + '" style="--accent:' + W0.color + '" aria-label="' + brEsc(W0.name + " " + e.v + "，" + e.d + "：" + e.t + "。在星历中查看") + '">' +
+            '<small>' + e.d + '</small><b>' + W0.name + ' ' + e.v + '</b>' + brEsc(e.t) + '</button></li>';
+        }).join("");
+      }
+      document.getElementById("abNews").addEventListener("click", function (ev) {
+        var b = ev.target.closest("button"); if (!b) return;
+        var i = +b.dataset.i;
+        hideAbout(true);
+        if (LG.f !== "all") { var c = document.querySelector('#logChips [data-f="all"]'); if (c) c.click(); }
+        showLog(); if (LG.open) LG.pin = i;
+        if (typeof nwRender === "function") nwRender();
+      });
+      // 首屏「了解更多 →」
+      var PITCH_K = "gn:portal:_about";
+      if (lsGet(PITCH_K) === "1") document.getElementById("pitch").classList.add("seen");
+      document.getElementById("moreBtn").addEventListener("click", function () { showAbout(0); AB.prev = document.getElementById("moreBtn"); });
       function showAbout(tab) {
         if (AB.open || LG.open || BR.open || !intro.done) return;
         closeAll(); AB.prev = document.activeElement;
-        if (!AB.built) buildAbout();
+        if (!AB.built) { buildAbout(); dkBuild(); dkFlip(-1); }
+        abNews();
         AB.open = true; AB.el.hidden = false; abTab(tab || 0);
+        dkResize(); dkKick(); lsSet(PITCH_K, "1"); document.getElementById("pitch").classList.add("seen");
         requestAnimationFrame(function () { AB.el.classList.add("on"); }); SND.play("bridge-open");
         document.getElementById("abBack").focus();
       }
       function hideAbout(noFocus) {
         if (!AB.open) return;
-        SND.play("close"); AB.open = false; AB.el.classList.remove("on");
+        SND.play("close"); AB.open = false; AB.el.classList.remove("on"); dkFlip(-1); DK.drag = null;
         setTimeout(function () { if (!AB.open) AB.el.hidden = true; }, RM ? 10 : 600);
         if (!noFocus) { var p = AB.prev; (p && p !== document.body && p.focus ? p : AB.btn).focus(); }
       }
