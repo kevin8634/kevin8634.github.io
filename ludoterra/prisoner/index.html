@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>为什么好人不一定吃亏? · 觉弈 Ludoterra</title>
+<meta name="description" content="觉弈 Ludoterra 关卡:重复囚徒困境。先凭直觉出招,再看见信任的隐藏规则,最后亲手改写小镇的规则。">
+<meta name="theme-color" content="#070814">
+<link rel="stylesheet" href="../lt.css">
+<style>
+body{min-height:100vh}
+main{max-width:860px;margin:0 auto;padding:70px 16px 40px}
+.steps{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.steps span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--mute)}
+.steps span.on{color:#1a1206;background:var(--gold);border-color:var(--gold)}
+.card{padding:18px;margin-bottom:12px}
+h1{font-size:clamp(20px,4vw,28px);margin:0 0 6px}
+h3{margin:12px 0 6px;font-size:16px}
+.guide{display:flex;gap:10px;align-items:flex-start;margin:10px 0}
+.guide .m{flex:none;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--gold2);display:flex;align-items:center;justify-content:center;color:#ffe9b8;font-weight:700;background:#14163a}
+.guide p{margin:0;font-size:14.5px;line-height:1.7}
+.guide small{display:block;color:var(--mute);font-size:11px}
+table.pay{border-collapse:collapse;margin:8px 0;font-size:14px;width:100%;max-width:460px}
+table.pay td,table.pay th{border:1px solid var(--line);padding:8px;text-align:center}
+table.pay th{color:var(--gold);font-weight:600}
+.two{display:flex;gap:10px;margin:12px 0;flex-wrap:wrap}
+.two .lt-btn{font-size:16px;padding:10px 20px}
+.coop{border-color:#7ee2a8!important;color:#bff5d6!important}
+.def{border-color:#ff9a7a!important;color:#ffd0c0!important}
+.rounds{display:flex;gap:4px;flex-wrap:wrap;margin:8px 0}
+.rounds i{width:22px;height:30px;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-style:normal;font-size:11px;border:1px solid var(--line)}
+.rounds i b{font-weight:700}
+.score{font-size:14px;color:var(--mute)}
+.score b{color:var(--gold);font-size:20px}
+.bars{margin:10px 0}
+.bar{display:grid;grid-template-columns:118px 1fr 64px;gap:8px;align-items:center;margin:5px 0;font-size:13px}
+.bar .t{height:14px;border-radius:7px;background:rgba(255,255,255,.06);overflow:hidden}
+.bar .t i{display:block;height:100%;background:linear-gradient(90deg,#d99a3e,#f5c26b);transition:width .5s}
+.bar.nice .t i{background:linear-gradient(90deg,#3fae78,#7ee2a8)}
+.bar .v{text-align:right;color:var(--gold)}
+.ctl{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;margin:12px 0;font-size:14px}
+.ctl input{accent-color:#f5c26b;width:100%}
+.ctl output{color:var(--gold);font-weight:700;min-width:70px;text-align:right}
+.note{font-size:12px;color:var(--mute);line-height:1.6}
+.nav{display:flex;gap:8px;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12.5px;color:var(--mute);margin-top:6px}
+.legend b{color:var(--ink)}
+.handbook{border:1.5px solid var(--gold);border-radius:18px;padding:18px;background:radial-gradient(circle at 20% 0,rgba(245,194,107,.18),transparent 60%),#0f1130;position:relative}
+.handbook .no{font-size:12px;color:var(--gold);letter-spacing:2px}
+.handbook h2{margin:6px 0 8px;font-size:22px}
+.handbook p{margin:6px 0;line-height:1.7;font-size:14.5px}
+[hidden]{display:none!important}
+@media (max-width:1100px){.lt-hud{display:none}}
+@media (max-width:640px){.legend{grid-template-columns:1fr}.bar{grid-template-columns:96px 1fr 52px;font-size:12px}}
+</style></head><body>
+<main>
+  <div class="steps" id="steps"><span>① 先中招</span><span>② 再看见</span><span>③ 改写规则</span><span>④ 玩家手册</span></div>
+
+  <section class="card lt-panel" data-step="0">
+    <h1>为什么好人不一定吃亏?</h1>
+    <p class="note" style="font-size:13.5px">你和一个陌生人各自选择「合作」或「背叛」,互相看不见对方的选择。得分如下(你的分 / 对方的分):</p>
+    <table class="pay"><tr><th></th><th>对方合作</th><th>对方背叛</th></tr><tr><th>你合作</th><td>3 / 3</td><td>0 / 5</td></tr><tr><th>你背叛</th><td>5 / 0</td><td>1 / 1</td></tr></table>
+    <div class="guide"><span class="m">冯</span><p>只玩这一次,以后再也不会见面。凭直觉,你选哪个?<small>冯·诺依曼 · 仿其思想的提问</small></p></div>
+    <div class="two"><button class="lt-btn coop" data-one="C">🤝 合作</button><button class="lt-btn def" data-one="D">🗡 背叛</button></div>
+    <div id="oneRes"></div>
+  </section>
+
+  <section class="card lt-panel" data-step="1" hidden>
+    <h1>可地球Online 不是只玩一次</h1>
+    <p class="note" style="font-size:13.5px">现在你和小镇上的一位镇民连续打 10 轮,每轮都能看到上一轮对方出了什么。他有自己的策略,你猜猜是什么。</p>
+    <div class="two"><button class="lt-btn coop" data-rep="C">🤝 合作</button><button class="lt-btn def" data-rep="D">🗡 背叛</button></div>
+    <div class="rounds" id="rounds" aria-live="polite"></div>
+    <div class="score" id="repScore"></div>
+    <div id="repEnd"></div>
+    <div id="tour" hidden>
+      <h3>小镇锦标赛:8 种性格,两两对打 200 轮</h3>
+      <div class="bars" id="bars1"></div>
+      <div class="legend" id="legend"></div>
+      <div class="guide"><span class="m">冯</span><p id="tq"></p></div>
+      <div class="nav"><button class="lt-btn" id="again">再打 10 轮</button><button class="lt-btn primary" data-go="2">改写小镇规则 →</button></div>
+    </div>
+  </section>
+
+  <section class="card lt-panel" data-step="2" hidden>
+    <h1>坐到规则制定者那边</h1>
+    <p class="note" style="font-size:13.5px">你是小镇的设计者。拖动三条规则,看哪种性格会赢。</p>
+    <div class="ctl">
+      <label for="sR">还会再见几轮</label><input id="sR" type="range" min="1" max="200" step="1" value="200"><output id="oR"></output>
+      <label for="sT">背叛的诱惑</label><input id="sT" type="range" min="4" max="9" step="0.5" value="5"><output id="oT"></output>
+      <label for="sN">误会的概率</label><input id="sN" type="range" min="0" max="20" step="1" value="0"><output id="oN"></output>
+    </div>
+    <div class="bars" id="bars2"></div>
+    <div class="guide"><span class="m">冯</span><p id="rq"></p></div>
+    <p class="note">绿色是「善良」的性格(从不先背叛)。模型很简单,但它解释了为什么人们重视长期关系、口碑和规则。</p>
+    <div class="nav"><button class="lt-btn" data-go="1">← 回到锦标赛</button><button class="lt-btn primary" data-go="3">领取玩家手册 →</button></div>
+  </section>
+
+  <section class="card lt-panel" data-step="3" hidden>
+    <div class="handbook"><div class="no">地球Online 玩家手册 · 第 2 页 · 合作与博弈 × 人性</div>
+      <h2>隐藏规则:只要还会再见面,善良往往不吃亏</h2>
+      <p>只玩一次时,背叛看起来最划算;可地球Online 里大多数关系都会再见面。重复的游戏里,赢的往往是「先善意、会回应、能原谅、讲清楚」的玩家。</p>
+      <p><b style="color:var(--gold)">反制技巧:</b>遇到别人占你便宜,先问「我们还会再见吗?」——会,就清楚地回应一次,然后留出原谅的余地;不会,就别把信任押在一次性的承诺上。</p>
+      <p class="note">你解锁了隐藏数值「信任」。</p></div>
+    <div class="guide"><span class="m">孟荀</span><p>孟子说人性本善,荀子说人性本恶。看完这场锦标赛,你觉得「善良会赢」是因为人性,还是因为规则?<small>孟子与荀子 · 仿其思想的提问</small></p></div>
+    <div class="nav"><a class="lt-btn" href="../">← 回到认知星盘</a><button class="lt-btn" data-go="0">再玩一次</button></div>
+  </section>
+</main>
+<script type="module">
+import { chrome, hud, store, markDone, isDone, sound, reducedMotion, offline } from '../lt.js';
+chrome({ home: '../' }); const H = hud(); offline();
+const secs = [...document.querySelectorAll('[data-step]')], tabs = [...document.querySelectorAll('#steps span')];
+let step = 0;
+function go(n) { step = n; secs.forEach((s, i) => s.hidden = i !== n); tabs.forEach((t, i) => t.classList.toggle('on', i === n));
+  window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }); if (n === 1) resetRep(); if (n === 2) rules(); if (n === 3) finish(); }
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) { sound.tick(); go(+g.dataset.go); } });
+
+/* 得分 */
+const pay = (a, b, T = 5) => a === 'C' ? (b === 'C' ? 3 : 0) : (b === 'C' ? T : 1);
+
+/* ① 一次性博弈 */
+document.querySelectorAll('[data-one]').forEach(b => b.onclick = () => {
+  const me = b.dataset.one; store.set('prisoner_one', me); me === 'C' ? sound.bell(2) : sound.clash();
+  document.getElementById('oneRes').innerHTML = `<div class="guide"><span class="m">苏</span><p>${me === 'D'
+    ? '你选了背叛。算一算:对方合作时,你背叛得 5 > 3;对方背叛时,你背叛得 1 > 0。不管对方怎么选,背叛都多拿分——只玩一次时,这看起来是「聪明」的选择。可如果两个聪明人都这么想,两人都只得 1 分,比都合作的 3 分少。'
+    : '你选了合作。可是算一算:不管对方怎么选,背叛都比合作多拿分(5 > 3,1 > 0)。只玩一次时,许多人会觉得「善良就是吃亏」。你的直觉在提醒你别的东西吗?'}<small>苏格拉底 · 仿其思想的提问</small></p></div>
+    <div class="nav"><span></span><button class="lt-btn primary" data-go="1">如果还会再见面? →</button></div>`;
+});
+
+/* 8 种性格 */
+const S = {
+  allC: { n: '永远合作', nice: true, d: '老好人,无论如何都合作', f: () => 'C' },
+  allD: { n: '永远背叛', nice: false, d: '只顾自己,永远背叛', f: () => 'D' },
+  tft: { n: '以牙还牙', nice: true, d: '先合作,之后学你上一步', f: (m, o) => o.length ? o[o.length - 1] : 'C' },
+  gtft: { n: '宽容以牙还牙', nice: true, d: '你连续背叛两次才报复', f: (m, o) => o.length >= 2 && o[o.length - 1] === 'D' && o[o.length - 2] === 'D' ? 'D' : 'C' },
+  grim: { n: '记仇者', nice: true, d: '被背叛一次,永不原谅', f: (m, o) => o.includes('D') ? 'D' : 'C' },
+  rand: { n: '随心所欲', nice: false, d: '一半合作一半背叛', f: (m, o, r) => r() < 0.5 ? 'C' : 'D' },
+  joss: { n: '试探者', nice: false, d: '像以牙还牙,但偶尔偷偷背叛', f: (m, o, r) => (o.length ? o[o.length - 1] : 'C') === 'C' && r() < 0.1 ? 'D' : (o.length ? o[o.length - 1] : 'C') },
+  pav: { n: '赢了就不变', nice: true, d: '得分好就重复,吃亏就换', f: (m, o) => !m.length ? 'C' : ((m[m.length - 1] === o[o.length - 1]) ? 'C' : 'D') }
+};
+const KEYS = Object.keys(S);
+const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+function match(a, b, R, T, noise, r) {
+  const ma = [], mb = []; let sa = 0, sb = 0;
+  for (let i = 0; i < R; i++) {
+    let x = S[a].f(ma, mb, r), y = S[b].f(mb, ma, r);
+    if (r() < noise) x = x === 'C' ? 'D' : 'C'; if (r() < noise) y = y === 'C' ? 'D' : 'C';
+    ma.push(x); mb.push(y); sa += pay(x, y, T); sb += pay(y, x, T);
+  }
+  return [sa, sb];
+}
+function tournament(R = 200, T = 5, noise = 0) {
+  const tot = Object.fromEntries(KEYS.map(k => [k, 0])); const r = rng(20261020);
+  for (let i = 0; i < KEYS.length; i++) for (let j = i; j < KEYS.length; j++) {
+    const [a, b] = match(KEYS[i], KEYS[j], R, T, noise, r); tot[KEYS[i]] += a; if (i !== j) tot[KEYS[j]] += b;
+  }
+  return KEYS.map(k => ({ k, v: tot[k] / KEYS.length / R })).sort((a, b) => b.v - a.v);
+}
+function bars(el, res) {
+  const max = Math.max(...res.map(x => x.v));
+  el.innerHTML = res.map(x => `<div class="bar ${S[x.k].nice ? 'nice' : ''}"><span>${S[x.k].n}</span><span class="t"><i style="width:${(x.v / max * 100).toFixed(1)}%"></i></span><span class="v">${x.v.toFixed(2)}</span></div>`).join('')
+    + '<p class="note">数字 = 平均每轮得分。</p>';
+}
+
+/* ② 连续 10 轮(对手:以牙还牙,结束后揭晓) */
+let me = [], op = [];
+function resetRep() { me = []; op = []; paintRep(); document.getElementById('repEnd').innerHTML = ''; document.getElementById('tour').hidden = true;
+  document.querySelectorAll('[data-rep]').forEach(b => b.disabled = false); }
+function paintRep() {
+  document.getElementById('rounds').innerHTML = me.map((m, i) => `<i title="第 ${i + 1} 轮"><b style="color:${m === 'C' ? '#7ee2a8' : '#ff9a7a'}">${m === 'C' ? '合' : '叛'}</b><b style="color:${op[i] === 'C' ? '#7ee2a8' : '#ff9a7a'}">${op[i] === 'C' ? '合' : '叛'}</b></i>`).join('') +
+    Array.from({ length: 10 - me.length }, () => '<i>·<br>·</i>').join('');
+  const s1 = me.reduce((a, m, i) => a + pay(m, op[i]), 0), s2 = op.reduce((a, o, i) => a + pay(o, me[i]), 0);
+  document.getElementById('repScore').innerHTML = `上排是你,下排是镇民 · 第 ${me.length}/10 轮 · 你 <b>${s1}</b> 分 · 镇民 <b>${s2}</b> 分`;
+  return [s1, s2];
+}
+document.querySelectorAll('[data-rep]').forEach(b => b.onclick = () => {
+  if (me.length >= 10) return; const x = b.dataset.rep; const y = S.tft.f(op, me); me.push(x); op.push(y);
+  x === 'C' && y === 'C' ? sound.bell(me.length % 5 + 2) : (x !== y ? sound.clash() : sound.tick());
+  const [s1, s2] = paintRep();
+  if (me.length === 10) {
+    document.querySelectorAll('[data-rep]').forEach(b => b.disabled = true);
+    const allC = me.every(m => m === 'C');
+    document.getElementById('repEnd').innerHTML = `<div class="guide"><span class="m">冯</span><p>揭晓:这位镇民是「以牙还牙」——第一轮合作,之后照着你上一步出招。你得了 ${s1} 分(10 轮都合作能拿 30 分)。${allC ? '你一次都没背叛,所以他也一直合作。' : '你每背叛一次,下一轮就会被回敬一次。'}他从来没有在单局里赢过你,为什么整体却不吃亏?<small>冯·诺依曼 · 仿其思想的提问</small></p></div>`;
+    const res = tournament(); bars(document.getElementById('bars1'), res);
+    document.getElementById('legend').innerHTML = KEYS.map(k => `<div><b>${S[k].n}</b>:${S[k].d}</div>`).join('');
+    const nN = res.findIndex(x => !S[x.k].nice); const k = nN < 0 ? res.length : nN;
+    document.getElementById('tq').innerHTML = `前 ${k} 名全是「善良型」(从不先背叛)。最后一名「${S[res[res.length - 1].k].n}」输在哪里?(1980 年,政治学家阿克塞尔罗德组织过类似的电脑锦标赛,冠军是最简单的「以牙还牙」:善良、会回应、肯原谅。)<small>冯·诺依曼 · 仿其思想的提问</small>`;
+    document.getElementById('tour').hidden = false;
+  }
+});
+document.getElementById('again').onclick = () => { resetRep(); sound.tick(); };
+
+/* ③ 改写规则 */
+function rules() {
+  const R = +sR.value, T = +sT.value, N = +sN.value / 100;
+  oR.textContent = R + ' 轮'; oT.textContent = T + ' 分'; oN.textContent = Math.round(N * 100) + '%';
+  const res = tournament(R, T, N); bars(document.getElementById('bars2'), res);
+  const top = S[res[0].k];
+  let q;
+  if (R <= 3) q = `只见几面时,冠军变成了「${top.n}」。为什么「一锤子买卖」的地方更容易出现欺骗?`;
+  else if (N >= 0.05) { const rk = k => res.findIndex(x => x.k === k) + 1;
+    q = `有了 ${Math.round(N * 100)}% 的误会,冠军变成「${top.n}」;「记仇者」排第 ${rk('grim')},「宽容以牙还牙」排第 ${rk('gtft')}。误会会让善良的人互相报复——什么样的规则或习惯,能让误会不变成仇恨?`; }
+  else if (T >= 7) q = `背叛的诱惑变大后,冠军是「${top.n}」。现实中有哪些规则在压低背叛的诱惑?`;
+  else q = `冠军是「${top.n}」(${top.nice ? '善良型' : '非善良型'})。试试把「还会再见几轮」拖到 1,或把「误会的概率」调到 10%。`;
+  document.getElementById('rq').innerHTML = q + '<small>冯·诺依曼 · 仿其思想的提问</small>';
+}
+const sR = document.getElementById('sR'), sT = document.getElementById('sT'), sN = document.getElementById('sN');
+const oR = document.getElementById('oR'), oT = document.getElementById('oT'), oN = document.getElementById('oN');
+[sR, sT, sN].forEach(s => s.addEventListener('input', () => { rules(); sound.tick(); }));
+
+/* ④ */
+function finish() { const first = !isDone('prisoner'); markDone('prisoner');
+  if (store.get('stat_trust', null) == null) store.set('stat_trust', 45); H.render();
+  if (first) [0, 2, 4, 7, 9].forEach((s, i) => setTimeout(() => sound.bell(s), i * 160)); }
+go(0);
+</script>
+</body></html>
