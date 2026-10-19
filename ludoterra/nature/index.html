@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>人性本善,还是本恶? · 觉弈 Ludoterra</title>
+<meta name="description" content="觉弈 Ludoterra 关卡:人性与处境。先凭直觉评价别人,再看同一群人在两座小镇里的不同,最后亲手设计小镇,听孟子与荀子辩论,由你来判断。">
+<meta name="theme-color" content="#070814">
+<link rel="stylesheet" href="../lt.css">
+<style>
+body{min-height:100vh}
+main{max-width:860px;margin:0 auto;padding:70px 16px 40px}
+.steps{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.steps span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--mute)}
+.steps span.on{color:#1a1206;background:var(--gold);border-color:var(--gold)}
+.card{padding:18px;margin-bottom:12px}
+h1{font-size:clamp(20px,4vw,28px);margin:0 0 6px}
+h3{margin:12px 0 6px;font-size:16px}
+.guide{display:flex;gap:10px;align-items:flex-start;margin:10px 0}
+.guide .m{flex:none;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--gold2);display:flex;align-items:center;justify-content:center;color:#ffe9b8;font-weight:700;background:#14163a;font-size:14px}
+.guide .m.x{border-color:#9fb4ff;color:#d8e0ff;background:#141a3a}
+.guide p{margin:0;font-size:14.5px;line-height:1.7}
+.guide small{display:block;color:var(--mute);font-size:11px}
+.scene{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0;background:rgba(255,255,255,.025)}
+.scene p{margin:0 0 8px;line-height:1.7;font-size:14.5px}
+.two{display:flex;gap:10px;flex-wrap:wrap}
+.two .lt-btn{font-size:15px;padding:9px 16px;white-space:normal;text-align:left}
+.two .lt-btn.pick{border-color:var(--gold);box-shadow:0 0 16px rgba(245,194,107,.35)}
+.towns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.town{border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.town b{color:var(--gold)}
+.town small{display:block;color:var(--mute);font-size:11.5px;line-height:1.5;margin-bottom:6px}
+canvas.vil{width:100%;max-width:260px;aspect-ratio:1;display:block;margin:0 auto}
+canvas.big{width:100%;max-width:340px;aspect-ratio:1;display:block;margin:0 auto}
+.rate{font-size:clamp(18px,4vw,24px);font-weight:800;color:var(--gold)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--mute);margin:6px 0;justify-content:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+.debate{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.debate div{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.7}
+.debate div.x{border-color:rgba(159,180,255,.4)}
+.debate b{color:var(--gold)}
+.debate div.x b{color:#c4d0ff}
+.debate small{display:block;color:var(--mute);font-size:11px}
+.lab{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:center}
+.ctl{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center;margin:8px 0;font-size:14px}
+.ctl input[type=range]{accent-color:#f5c26b;width:100%}
+.ctl output{color:var(--gold);font-weight:700;min-width:40px;text-align:right}
+.tog{display:flex;gap:6px;align-items:center;font-size:14px;margin:4px 0;cursor:pointer}
+.tog input{accent-color:#f5c26b;width:18px;height:18px}
+.vote{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.vote .lt-btn[aria-pressed=true]{background:rgba(245,194,107,.15)}
+.note{font-size:12px;color:var(--mute);line-height:1.6}
+.nav{display:flex;gap:8px;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+.handbook{border:1.5px solid var(--gold);border-radius:18px;padding:18px;background:radial-gradient(circle at 20% 0,rgba(245,194,107,.18),transparent 60%),#0f1130;position:relative;overflow:hidden}
+.handbook .no{font-size:12px;color:var(--gold);letter-spacing:2px;padding-right:44px}
+.handbook h2{margin:6px 0 8px;font-size:22px}
+.handbook p{margin:6px 0;line-height:1.7;font-size:14.5px}
+.handbook .b{position:absolute;right:14px;top:10px;font-size:34px;opacity:.5}
+.agehint{font-size:12.5px;color:var(--gold);border:1px dashed var(--line);border-radius:10px;padding:6px 10px;margin:6px 0}
+[hidden]{display:none!important}
+@media (max-width:1100px){.lt-hud{display:none}}
+@media (max-width:640px){.debate{grid-template-columns:1fr}.lab{grid-template-columns:1fr}.towns{gap:6px}.town{padding:8px 6px}canvas.big{max-width:240px}}
+</style></head><body>
+<main>
+  <div class="steps" id="steps"><span>① 先中招</span><span>② 再看见</span><span>③ 设计小镇</span><span>④ 玩家手册</span></div>
+
+  <!-- ① 先中招 -->
+  <section class="card lt-panel" data-step="0">
+    <h1>人性本善,还是本恶?</h1>
+    <div class="agehint" id="ageHint" hidden>这一关建议 12 岁以上;星芽玩家可以和家长一起玩。</div>
+    <div class="scene"><p>🚌 公交车上,一个年轻人坐在老人旁边,一直低着头,没有让座。你的第一反应:</p>
+      <div class="two"><button class="lt-btn" data-a="1" data-v="p">😤 这人没教养</button><button class="lt-btn" data-a="1" data-v="s">🤔 也许他很累,或没看见</button></div></div>
+    <div class="scene" id="q2" hidden><p>🧾 有个小镇,排队时总有人插队。你的第一反应:</p>
+      <div class="two"><button class="lt-btn" data-a="2" data-v="p">😤 这里的人素质差</button><button class="lt-btn" data-a="2" data-v="s">🤔 这里的规矩没人管</button></div></div>
+    <div class="guide"><span class="m">孟荀</span><p id="g0">两千多年前,孟子和荀子为「人性」争论过。先别管他们,凭第一感觉选。<small>孟子与荀子 · 仿其思想的提问</small></p></div>
+    <div class="nav" id="n0" hidden><span></span><button class="lt-btn primary" data-go="1">换个小镇看看 →</button></div>
+  </section>
+
+  <!-- ② 再看见 -->
+  <section class="card lt-panel" data-step="1" hidden>
+    <h1>同一群人,两座小镇</h1>
+    <p class="note" style="font-size:13.5px">100 位虚拟镇民,每人天生的善意和私心都不一样。把<b>同一批人</b>分别放进两座小镇:</p>
+    <div class="towns">
+      <div class="town"><b>🌾 丰收镇</b><small>粮食够吃 · 规矩清楚 · 从小被善待</small><canvas class="vil" id="cA"></canvas><div>愿意分享 <span class="rate" id="rA"></span></div></div>
+      <div class="town"><b>🏜 旱灾镇</b><small>粮食紧缺 · 没人管 · 没人教</small><canvas class="vil" id="cB"></canvas><div>愿意分享 <span class="rate" id="rB"></span></div></div>
+    </div>
+    <div class="legend"><span><i style="background:#7ee2a8"></i>分享、帮忙</span><span><i style="background:#ff9a7a"></i>抢、只顾自己</span></div>
+    <div class="guide"><span class="m">孟荀</span><p id="g1"></p></div>
+    <p class="note">心理学把这种倾向叫「基本归因错误」:解释别人的行为时,常常高估性格、低估处境。</p>
+    <div class="nav"><button class="lt-btn" data-go="0">← 重新选</button><button class="lt-btn primary" data-go="2">听孟子与荀子辩论,设计你的小镇 →</button></div>
+  </section>
+
+  <!-- ③ 设计小镇 -->
+  <section class="card lt-panel" data-step="2" hidden>
+    <h1>你来设计小镇</h1>
+    <div class="debate">
+      <div><b>孟子</b>:看见小孩快掉进井里,几乎谁都会心里一紧。那份不忍,是从哪里来的?如果每个人心里都有善的苗,该怎样养护它?<small>孟子 · 仿其思想的提问</small></div>
+      <div class="x"><b>荀子</b>:人生来就会饿、会想要更多。如果没有规矩和学习,资源紧缺时会发生什么?善,是不是要靠「人为」一点点练出来?<small>荀子 · 仿其思想的提问</small></div>
+    </div>
+    <div class="lab">
+      <div>
+        <div class="ctl">
+          <label for="sE">养护善意</label><input id="sE" type="range" min="0" max="10" value="5"><output id="oE"></output>
+          <label for="sR">规矩与监督</label><input id="sR" type="range" min="0" max="10" value="5"><output id="oR"></output>
+          <label for="sS">资源紧缺</label><input id="sS" type="range" min="0" max="10" value="5"><output id="oS"></output>
+        </div>
+        <label class="tog"><input type="checkbox" id="anon"> 🌙 没人看见的时候</label>
+        <p class="note">养护善意 = 榜样、被善待、学会体会别人(孟子更看重);规矩与监督 = 礼法、奖惩、有人管(荀子更看重)。</p>
+      </div>
+      <div><canvas class="big" id="cC"></canvas><div style="text-align:center">愿意分享 <span class="rate" id="rC"></span></div></div>
+    </div>
+    <div class="guide"><span class="m" id="gm"></span><p id="g2"></p></div>
+    <h3>你更同意谁?(没有标准答案,也不计分)</h3>
+    <div class="vote" id="vote"><button class="lt-btn" data-v="孟子">孟子:善要养护</button><button class="lt-btn" data-v="荀子">荀子:善要靠规矩练出来</button><button class="lt-btn" data-v="都有道理">都有道理</button><button class="lt-btn" data-v="还没想好">还没想好</button></div>
+    <p class="note">教学模型:只展示「天性 × 处境」如何一起起作用,不代表孟子或荀子学说的全部,也不评判任何人。</p>
+    <div class="nav"><button class="lt-btn" data-go="1">← 回到两座小镇</button><button class="lt-btn primary" data-go="3">领取玩家手册 →</button></div>
+  </section>
+
+  <!-- ④ 玩家手册 -->
+  <section class="card lt-panel" data-step="3" hidden>
+    <div class="handbook"><span class="b">☯</span><div class="no">地球Online 玩家手册 · 第 6 页 · 人性</div>
+      <h2>隐藏规则:人性和规则,一起决定人怎么做</h2>
+      <p>同一个人,在丰收镇和旱灾镇会做出不同的事。天性给每个人不同的起点,处境——资源、规矩、有没有被善待——决定哪一面更常出现。孟子和荀子争的是起点,却都同意:人可以变好,要靠养护,也要靠学习和规矩。</p>
+      <p><b style="color:var(--gold)">反制技巧:</b>评价一个人之前,先问「换我在他的处境,会怎么做?」想让人变好,既养护善意(榜样、被善待),也设计规则——让做好事更容易,做坏事更难。</p></div>
+    <div class="guide"><span class="m">孟荀</span><p id="g3"></p></div>
+    <p class="note">星桥(即将开通):天性有多少来自爸妈?去 <a href="/life-source/parents/">生命源码 · 为什么你长得像爸妈,又不完全像?</a> 看看先天与后天。</p>
+    <div class="nav"><a class="lt-btn" href="../">← 回到认知星盘</a><button class="lt-btn" data-go="0">再玩一次</button></div>
+  </section>
+</main>
+<script type="module">
+import { chrome, hud, store, markDone, isDone, sound, reducedMotion, offline, userMinAge, logChoice } from '../lt.js';
+chrome({ home: '../' }); const H = hud(); offline();
+const $ = id => document.getElementById(id);
+const QM = '<small>孟子 · 仿其思想的提问</small>', QX = '<small>荀子 · 仿其思想的提问</small>', QB = '<small>孟子与荀子 · 仿其思想的提问</small>';
+const secs = [...document.querySelectorAll('[data-step]')], tabs = [...document.querySelectorAll('#steps span')];
+let step = 0;
+function go(n) { step = n; secs.forEach((s, i) => s.hidden = i !== n); tabs.forEach((t, i) => t.classList.toggle('on', i === n));
+  window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }); if (n === 0) reset0(); if (n === 1) towns(); if (n === 2) lab(); if (n === 3) finish(); }
+window.ltGo = go;
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) { sound.tick(); go(+g.dataset.go); } });
+$('ageHint').hidden = userMinAge() >= 12;
+
+/* 100 位虚拟镇民:天生善意 e、私心 g(种子随机数,每次相同) */
+const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const r = rng(372); const V = Array.from({ length: 100 }, () => ({ e: r(), g: r(), n: (r() - 0.5) * 0.3 }));
+const helps = (v, edu, rules, scarce, anon) => v.e * (0.4 + 0.6 * edu) - v.g * (0.2 + 0.6 * scarce) + 0.32 * rules * (anon ? 0.3 : 1) + v.n > 0.12;
+const rate = (...a) => V.filter(v => helps(v, ...a)).length;
+
+/* ① */
+let ans = store.get('nature_pick', {}) || {};
+function reset0() { document.querySelectorAll('[data-a]').forEach(b => b.classList.toggle('pick', ans[b.dataset.a] === b.dataset.v)); $('q2').hidden = !ans[1]; $('n0').hidden = !(ans[1] && ans[2]); }
+document.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+  const q = b.dataset.a, v = b.dataset.v; ans[q] = v; store.set('nature_pick', ans);
+  document.querySelectorAll(`[data-a="${q}"]`).forEach(x => x.classList.toggle('pick', x === b));
+  if (q === '1') { logChoice('nature', v === 'p' ? '看到年轻人没让座,第一反应是「他没教养」' : '看到年轻人没让座,先想到他的处境', v === 'p' ? '若先想处境:他也许很累、没看见' : '若只看性格:会直接给他贴上标签'); $('q2').hidden = false; sound.bell(1); }
+  else { logChoice('nature', v === 'p' ? '看到小镇常有人插队,归因于「人素质差」' : '看到小镇常有人插队,归因于「规矩没人管」', v === 'p' ? '若看规则:排队的规矩有没有人管?' : '若只看人:会认为这里的人天生如此');
+    const n = (ans[1] === 'p') + (ans[2] === 'p');
+    $('g0').innerHTML = (n === 2 ? '两次你都先想到了「这个人怎么样」。' : n === 1 ? '一次你想到了人,一次想到了处境。' : '两次你都先想到了处境。') + '如果把同一群人换到另一个地方,他们还会这样做吗?' + QB;
+    $('n0').hidden = false; sound.bell(3); }
+});
+
+/* 画镇民 */
+function drawVil(c, edu, rules, scarce, anon) {
+  if (!c.clientWidth) return; const d = Math.min(2, devicePixelRatio || 1), w = c.clientWidth; c.width = w * d; c.height = w * d;
+  const x = c.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); const cell = w / 10;
+  V.forEach((v, i) => { const h = helps(v, edu, rules, scarce, anon), cx = (i % 10 + 0.5) * cell, cy = (Math.floor(i / 10) + 0.5) * cell;
+    x.beginPath(); x.arc(cx, cy, cell * 0.36, 0, Math.PI * 2); x.fillStyle = h ? '#7ee2a8' : '#ff9a7a'; x.globalAlpha = 0.35 + 0.65 * v.e; x.fill();
+    x.globalAlpha = 1; x.beginPath(); x.arc(cx, cy, cell * 0.36, 0, Math.PI * 2); x.strokeStyle = 'rgba(7,8,20,.6)'; x.lineWidth = 1; x.stroke(); });
+}
+/* ② 两座小镇 */
+const A = [0.7, 0.7, 0, false], B = [0, 0, 1, false];
+function towns() {
+  drawVil($('cA'), ...A); drawVil($('cB'), ...B); const a = rate(...A), b = rate(...B);
+  $('rA').textContent = a + '%'; $('rB').textContent = b + '%';
+  const sw = V.filter(v => helps(v, ...A) && !helps(v, ...B)).length;
+  $('g1').innerHTML = `同样的 100 个人:丰收镇 ${a} 人愿意分享,旱灾镇只有 ${b} 人。有 ${sw} 个人在两座镇子里像是换了一个人。如果你只去过旱灾镇,你会怎么评价「人性」?(颜色越亮,天生善意越多。)` + QB;
+}
+addEventListener('resize', () => { if (step === 1) towns(); if (step === 2) lab(); });
+
+/* ③ 设计小镇 */
+let vote = store.get('nature_vote', null), moved = new Set();
+function lab() {
+  const e = +$('sE').value / 10, ru = +$('sR').value / 10, s = +$('sS').value / 10, an = $('anon').checked;
+  $('oE').textContent = $('sE').value; $('oR').textContent = $('sR').value; $('oS').textContent = $('sS').value;
+  drawVil($('cC'), e, ru, s, an); const k = rate(e, ru, s, an); $('rC').textContent = k + '%';
+  const off = rate(e, ru, s, !an);
+  let m, q;
+  if (an && ru > e) { m = '孟'; q = `没人看见时,愿意分享的从 ${off} 人变成 ${k} 人。只靠监督撑起来的善,天黑以后还剩多少?心里的那份不忍,能不能在没人看时也起作用?` + QM; }
+  else if (s >= 0.8 && ru < 0.3) { m = '荀'; q = `粮食紧缺又没人管,只剩 ${k} 人愿意分享。这时候光讲「人心本善」够吗?规矩是在限制人,还是在保护愿意分享的人?` + QX; }
+  else if (e < 0.3 && ru >= 0.7) { m = '孟'; q = `规矩很严,${k} 人在分享。可如果从来没人善待过他们,规矩一松,会怎样?试试打开「没人看见的时候」。` + QM; }
+  else if (e >= 0.7 && ru < 0.3) { m = '荀'; q = `善意被养护得很好,${k} 人在分享。可把「资源紧缺」拉满试试:只靠心里的苗,扛得住饥荒吗?` + QX; }
+  else { m = '孟荀'; q = `现在 ${k} 人愿意分享。三个滑杆里,哪一个最能改变这座镇子?它更接近孟子说的「养」,还是荀子说的「学与规矩」?` + QB; }
+  $('gm').textContent = m; $('gm').classList.toggle('x', m === '荀');
+  $('g2').innerHTML = q;
+  $('vote').querySelectorAll('[data-v]').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === vote));
+}
+['sE', 'sR', 'sS'].forEach(id => $(id).addEventListener('input', () => { moved.add(id); lab(); sound.tick(); }));
+$('anon').addEventListener('change', () => { lab(); sound.bell($('anon').checked ? 0 : 2); });
+$('vote').onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; vote = b.dataset.v; store.set('nature_vote', vote); lab(); sound.bell(4);
+  logChoice('nature', `听完辩论,选择了「${vote}」`, '另一种看法同样被认真讨论了两千多年——觉弈不判对错'); };
+
+/* ④ */
+function finish() {
+  const first = !isDone('nature'); markDone('nature', { pick: ans, vote });
+  $('g3').innerHTML = (vote ? `你选了「${vote}」。` : '') + '想一个你不太喜欢的人:他的哪些做法,可能和他的处境有关?而你自己,在什么样的处境里最容易变成更好的人?' + QB;
+  H.render(); if (first) [0, 2, 4, 7, 9].forEach((s, i) => setTimeout(() => sound.bell(s), i * 160));
+}
+go(0);
+</script>
+</body></html>
