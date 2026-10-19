@@ -254,6 +254,59 @@
       @media (max-height: 480px) and (orientation: landscape) {
         .x-3d { bottom: 64px; } .x-3d p { display: none; }
       }
+      /* v0.4.0 · 首屏「最新更新」区（只读 CHANGELOG，星历原样保留） */
+      .x-news { position: absolute; left: 484px; bottom: 112px; width: 320px; z-index: 1; border-radius: 20px; padding: 14px 14px 8px;
+        border: 1px solid rgba(233,199,121,.24); background: rgba(8,12,34,.58); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+        box-shadow: 0 10px 40px rgba(0,0,0,.35); transition: opacity .4s ease, transform .4s ease; }
+      .x-news[hidden] { display: none; }
+      .x-news__hd { display: flex; align-items: center; justify-content: space-between; margin: 0 0 6px 4px; }
+      .x-news__hd h2 { margin: 0; font: 500 11px/1 var(--sans); letter-spacing: .3em; color: var(--gold); }
+      .x-news__x { width: 32px; height: 32px; margin: -6px -4px -6px 0; border-radius: 50%; border: 0; background: none; color: var(--dim); font: 400 16px/1 var(--sans); cursor: pointer; }
+      .x-news__x:hover, .x-news__x:focus-visible { color: var(--gold); background: rgba(233,199,121,.1); outline: none; }
+      .x-news ol { list-style: none; margin: 0; padding: 0; }
+      .x-news__it { position: relative; display: block; width: 100%; text-align: left; padding: 9px 10px 9px 26px; border: 0; border-radius: 12px; background: none;
+        color: var(--ink); font: 400 12.5px/1.6 var(--sans); cursor: pointer; transition: background .2s; }
+      .x-news__it:hover, .x-news__it:focus-visible { background: rgba(234,240,255,.06); outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
+      .x-news__it::before { content: ""; position: absolute; left: 10px; top: 15px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+      .x-news__it b { font-weight: 600; font-size: 13px; color: var(--accent); }
+      .x-news__it small { float: right; font: 400 11px/22px ui-monospace, monospace; color: var(--dim); }
+      .x-news__it span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: rgba(234,240,255,.82); }
+      .x-news__it.new b::after { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 0 2px 6px; border-radius: 50%; background: #ff6b6b; box-shadow: 0 0 8px #ff6b6b; vertical-align: middle; }
+      .x-news__all { display: block; width: 100%; min-height: 40px; margin-top: 2px; border: 0; border-top: 1px solid rgba(234,240,255,.08); background: none;
+        color: var(--gold); font: 500 12.5px var(--sans); cursor: pointer; border-radius: 0 0 12px 12px; }
+      .x-news__all:hover, .x-news__all:focus-visible { background: rgba(233,199,121,.08); outline: none; }
+      .x-news__bar, .x-news__pin { display: none; }
+      /* 收起成徽标 */
+      .x-news.min { width: auto; padding: 0; border-radius: 999px; }
+      .x-news.min > :not(.x-news__pin) { display: none; }
+      .x-news.min .x-news__pin { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border: 0; background: none; color: var(--gold); font: 500 12.5px var(--sans); cursor: pointer; border-radius: 999px; }
+      .x-news__pin i { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+      .x-news__pin i.new { background: #ff6b6b; box-shadow: 0 0 8px #ff6b6b; }
+      /* 手机竖屏 / 极矮横屏：底部一行横条，点开展开三条 */
+      .x-news.is-bar { left: 18px; right: 18px; bottom: var(--nb, 110px); width: auto; padding: 0; border-radius: 16px; }
+      .x-news.is-bar .x-news__bar { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0 8px 0 14px; border: 0; background: none; color: var(--ink); font: 400 12.5px var(--sans); cursor: pointer; text-align: left; }
+      .x-news.is-bar .x-news__bar em { flex: none; font-style: normal; color: var(--gold); font-weight: 600; letter-spacing: .1em; }
+      .x-news.is-bar .x-news__tk { flex: 1; overflow: hidden; white-space: nowrap; mask-image: linear-gradient(90deg, #000 85%, transparent); -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); }
+      .x-news.is-bar .x-news__tk span { display: inline-block; padding-right: 40px; }
+      .x-news.is-bar .x-news__tk.run span { animation: xNewsTk var(--td, 12s) linear infinite; }
+      .x-news.is-bar .x-news__bar i { flex: none; font-style: normal; color: var(--dim); transition: transform .3s; }
+      .x-news.is-bar.open .x-news__bar i { transform: rotate(180deg); }
+      .x-news.is-bar .x-news__hd, .x-news.is-bar ol, .x-news.is-bar .x-news__all { display: none; }
+      .x-news.is-bar.open { padding: 0 10px 6px; background: rgba(8,12,34,.93); }
+      .x-news.is-bar.open .x-news__bar { padding-left: 4px; }
+      .x-news.is-bar.open ol, .x-news.is-bar.open .x-news__all { display: block; }
+      .x-news.is-bar.min { left: auto; right: 18px; }
+      @media (max-width: 1180px) and (min-width: 861px) and (min-height: 481px) {
+        .x-news.is-bar { left: 24px; right: auto; bottom: 72px; width: 420px; }
+        .x-news.is-bar.min { left: 24px; right: auto; width: auto; }
+        .titleblock { bottom: 132px; }
+      }
+      @keyframes xNewsTk { 0%, 12% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+      @media (max-height: 480px) and (orientation: landscape) {
+        .x-news.is-bar { left: auto; right: 18px; bottom: 16px; width: min(280px, 44vw); }
+        .x-news.is-bar.open { max-height: calc(100vh - 80px); overflow-y: auto; }
+      }
+      @media (prefers-reduced-motion: reduce) { .x-news.is-bar .x-news__tk.run span { animation: none; } .x-news.is-bar .x-news__tk span { text-overflow: ellipsis; } }
       /* v0.3 · 关于创世计划 */
       .x-ab { position: fixed; inset: 0; z-index: 9; opacity: 0; transition: opacity .6s ease;
         background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(233,199,121,.07), transparent 70%), radial-gradient(ellipse 60% 50% at 85% 100%, rgba(124,200,255,.06), transparent 70%), #03050d; }
@@ -388,6 +441,13 @@
       </div>
       <div class="demo-tag" id="demoTag">演示进度</div>
 
+      <section class="x-news" id="news" aria-label="最新更新">
+        <button type="button" class="x-news__bar" id="newsBar" aria-expanded="false" aria-controls="newsList"><em>最新</em><span class="x-news__tk" id="newsTk"><span></span></span><i aria-hidden="true">⌃</i></button>
+        <div class="x-news__hd"><h2>最新更新</h2><button type="button" class="x-news__x" id="newsMin" aria-label="收起最新更新" title="收起">—</button></div>
+        <ol id="newsList"></ol>
+        <button type="button" class="x-news__all" id="newsAll">全部星历 →</button>
+        <button type="button" class="x-news__pin" id="newsPin" aria-label="展开最新更新"><i></i>最新更新</button>
+      </section>
       <aside class="card" id="card" role="dialog" aria-label="世界简介"></aside>
     </div>
 
@@ -509,7 +569,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.3.9</b></span>
+            <span>创世计划总门户 <b>v0.4.0</b></span>
           </footer>
         </div>
       </div>
@@ -727,7 +787,7 @@
       function layoutLabels() {
         if (performance.now() - uiRectT > 500) {
           uiRectT = performance.now();
-          uiRects = [].map.call(document.querySelectorAll(".titleblock, .brand, .passport-btn, .foot, .x-3d p, .x-home.on"), function (el) {
+          uiRects = [].map.call(document.querySelectorAll(".titleblock, .brand, .passport-btn, .foot, .x-3d p, .x-home.on, .x-news"), function (el) {
             var r = el.getBoundingClientRect(); return r.width && getComputedStyle(el).visibility !== "hidden" ? [r.left - 4, r.top - 4, r.right + 4, r.bottom + 4] : null;
           }).filter(Boolean);
         }
@@ -1639,6 +1699,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.4.0", d: "2026-10-20", t: "首屏新增「最新更新」区：最近三条更新一眼可见，点一下直达星历。" },
         { w: "gn", v: "v0.3.9", d: "2026-10-20", t: "星历新增生命源码 v0.5、v0.6。" },
         { w: "04", v: "v0.6", d: "2026-10-20", t: "每个任务变成一条双螺旋关卡路，每过一关收集一张源码卡，集齐即点亮图谱上的星座。" },
         { w: "04", v: "v0.5", d: "2026-10-20", t: "生命尺度图谱焕新：六层尺度环环绕生命之树，拖动「穿越尺度」从分子一路飞到生态。" },
@@ -1951,6 +2012,73 @@
       AB.btn.addEventListener("click", function () { showAbout(0); });
       document.getElementById("abBack").addEventListener("click", function () { hideAbout(); });
       document.getElementById("abToBridges").addEventListener("click", function () { hideAbout(true); showBridges(); });
+
+      /* ---------- v0.4.0 首屏「最新更新」区：只读 CHANGELOG 最新 3 条，与星历共用已读键 ---------- */
+      var NW = { el: document.getElementById("news"), list: document.getElementById("newsList"), bar: document.getElementById("newsBar"),
+        tk: document.getElementById("newsTk"), K: "gn:portal:_news", n: 3 };
+      function nwUnread() {
+        var v = lsGet("gn:portal:log");
+        if (!v) return LOG.length;
+        if (v === LG_SIG) return 0;
+        if (v.indexOf("|") < 0) return v > LOG[0].d ? 0 : LOG.length;
+        return Math.max(0, LOG.length - (parseInt(v.split("|")[1], 10) || 0));
+      }
+      function nwRender() {
+        var un = nwUnread();
+        NW.list.innerHTML = LOG.slice(0, NW.n).map(function (e, i) {
+          var W0 = lgW(e.w);
+          return '<li><button type="button" class="x-news__it' + (i < un ? " new" : "") + '" data-i="' + i + '" style="--accent:' + W0.color + '" aria-label="' +
+            brEsc(W0.name + " " + e.v + "，" + e.d + "：" + e.t + (i < un ? "（未读）" : "")) + '"><small>' + e.d.slice(5) + '</small><b>' + W0.name + ' ' + e.v +
+            '</b><span>' + brEsc(e.t) + '</span></button></li>';
+        }).join("");
+        var e0 = LOG[0], W0 = lgW(e0.w);
+        NW.tk.firstChild.textContent = W0.name + " " + e0.v + " · " + e0.t;
+        document.querySelector("#newsPin i").className = un ? "new" : "";
+        requestAnimationFrame(nwTicker);
+      }
+      function nwTicker() {
+        var s = NW.tk.firstChild, run = !RM && NW.el.classList.contains("is-bar") && !NW.el.classList.contains("open") && s.offsetWidth > NW.tk.clientWidth;
+        NW.tk.classList.toggle("run", run);
+        if (run) NW.tk.style.setProperty("--td", Math.max(8, s.offsetWidth / 40) + "s");
+      }
+      function nwLayout() {
+        var bar = innerWidth <= 1180 || innerHeight <= 480;
+        NW.el.classList.toggle("is-bar", bar);
+        if (!bar) NW.el.classList.remove("open");
+        NW.bar.setAttribute("aria-expanded", NW.el.classList.contains("open"));
+        if (innerWidth <= 860 && innerHeight > 480) {
+          var b3 = document.getElementById("v3Box").getBoundingClientRect();
+          var top = b3.height ? b3.top : innerHeight - 62;
+          document.documentElement.style.setProperty("--nb", Math.round(innerHeight - top + 8) + "px");
+        }
+        nwTicker(); uiRectT = 0;
+      }
+      function nwMin(on) {
+        NW.el.classList.toggle("min", on); NW.el.classList.remove("open");
+        if (on) lsSet(NW.K, "0"); else { try { localStorage.removeItem(NW.K); } catch (e) {} }
+        nwLayout(); SND.play("tick");
+        document.getElementById(on ? "newsPin" : (NW.el.classList.contains("is-bar") ? "newsBar" : "newsMin")).focus();
+      }
+      NW.list.addEventListener("click", function (ev) {
+        var b = ev.target.closest(".x-news__it"); if (!b) return;
+        var i = +b.dataset.i;
+        if (LG.f !== "all") { var c = document.querySelector('#logChips [data-f="all"]'); if (c) c.click(); }
+        showLog();
+        if (LG.open) LG.pin = i;
+        nwRender();
+      });
+      document.getElementById("newsAll").addEventListener("click", function () { showLog(); nwRender(); });
+      document.getElementById("newsMin").addEventListener("click", function () { nwMin(true); });
+      document.getElementById("newsPin").addEventListener("click", function () { nwMin(false); });
+      NW.bar.addEventListener("click", function () { NW.el.classList.toggle("open"); SND.play("tick"); nwLayout(); });
+      LG.btn.addEventListener("click", nwRender);
+      document.addEventListener("pointerdown", function (e) { if (NW.el.classList.contains("open") && !NW.el.contains(e.target)) { NW.el.classList.remove("open"); nwLayout(); } });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape" && NW.el.classList.contains("open")) { NW.el.classList.remove("open"); nwLayout(); } });
+      if (lsGet(NW.K) === "0") NW.el.classList.add("min");
+      nwRender();
+      addEventListener("resize", nwLayout);
+      requestAnimationFrame(nwLayout);
+      setTimeout(nwLayout, 1000);
 
       resize();
       if (demo) document.getElementById("demoTag").classList.add("on");
