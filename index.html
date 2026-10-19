@@ -509,7 +509,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.3.6</b></span>
+            <span>创世计划总门户 <b>v0.3.7</b></span>
           </footer>
         </div>
       </div>
@@ -580,8 +580,8 @@
           meta: ["已上线 v0.7", "10 个任务 55 关", "197 颗知识星"], href: "math-atlas/",
           prefix: ["ma:v1:", "gn:ma:"] },
         { id: "02", star: "天玑", name: "宙律", en: "Nomoverse", field: "物理",
-          desc: "改写物理常数，看宇宙怎么变。", color: "#a78bfa", live: false,
-          meta: [], prefix: ["gn:nv:"] },
+          desc: "改写物理常数，看宇宙怎么变。", color: "#a78bfa", live: true,
+          meta: ["已上线 v0.2-α2", "3 个任务 13 关"], href: "nomoverse/", prefix: ["gn:nv:"] },
         { id: "03", star: "天权", name: "元素工坊", en: "Element Forge", field: "化学",
           desc: "用元素锻造物质，配方即反应。", color: "#ff9a3c", live: false,
           meta: [], prefix: ["gn:ef:"] },
@@ -780,7 +780,7 @@
       function hasProgress(w) {
         if (demo) return w.id === "01" || w.id === "05";
         var keys = lsKeys();
-        return keys.some(function (k) { return w.prefix.some(function (p) { return k.indexOf(p) === 0; }); });
+        return keys.some(function (k) { return w.prefix.some(function (p) { return k.indexOf(p) === 0 && k.charAt(p.length) !== "_"; }); });
       }
 
       /* ---------- Canvas ---------- */
@@ -1272,10 +1272,10 @@
 
       /* ---------- 知识星桥 ---------- */
       var BR_COUNT = { "01": 197, "05": 30, "07": 40 };
-      /* 星桥 v0.3.3（15 座）：每端 { w 世界码, id 系列星桥 ID「世界码.任务id」, title 任务标题, href 链接（未上线为 null）, label 可选按钮文字 } */
+      /* 星桥 v0.3.7（15 座）：每端 { w 世界码, id 系列星桥 ID「世界码.任务id」, title 任务标题, href 链接（未上线为 null）, label 可选按钮文字 } */
       var BRIDGES = [
         { a: { w: "01", id: "ma.chord", title: "为什么有的和弦好听", href: "math-atlas/chord/" },
-          b: { w: "02", id: "nv.sound", title: "声波与共振", href: null } },
+          b: { w: "02", id: "nv.sound", title: "为什么救护车经过时声音会变？", href: "nomoverse/sound/" } },
         { a: { w: "01", id: "ma.cat", title: "让 AI 认出一只猫", href: "math-atlas/cat/" },
           b: { w: "05", id: "ps.cat", title: "让 AI 认出一只猫", href: "pre-singularity/cat/" } },
         { a: { w: "01", id: "ma.casino", title: "赌场为什么总是赢？", href: "math-atlas/casino/" },
@@ -1287,11 +1287,11 @@
         { a: { w: "05", id: "ps.truth", title: "这段话是 AI 写的吗", href: "pre-singularity/truth/" },
           b: { w: "06", id: "lt.source", title: "怎样判断一个信息靠不靠谱", href: null } },
         { a: { w: "02", id: "nv.stars", title: "恒星的一生", href: null },
-          b: { w: "03", id: "ef.stars", title: "恒星怎样炼出元素", href: null } },
+          b: { w: "03", id: "ef.stars", title: "你身体里的铁是从哪颗星来的？", href: null } },
         { a: { w: "07", id: "sh.where", title: "此刻，你在宇宙的哪里？", href: "starhelm/" },
           b: { w: "01", id: "ma.scale", title: "比例与数量级", href: "math-atlas/" } },
         { a: { w: "07", id: "sh.orbit", title: "空间站为什么掉不下来？", href: "starhelm/" },
-          b: { w: "02", id: "nv.orbit", title: "引力与轨道", href: null } },
+          b: { w: "02", id: "nv.orbit", title: "为什么宇航员在空间站会飘起来？", href: "nomoverse/orbit/" } },
         { a: { w: "07", id: "sh.seasons", title: "为什么会有四季？", href: "starhelm/", label: "去天枢 →" },
           b: { w: "04", id: "ls.rhythm", title: "季节与生物节律", href: null } },
         { a: { w: "07", id: "sh.sats", title: "天上到底有多少颗卫星？", href: "starhelm/", label: "去天枢 →" },
@@ -1639,6 +1639,8 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "02", v: "v0.2-α2", d: "2026-10-20", t: "第 02 世界开放：3 个任务 13 关——宇航员为什么会飘、救护车为什么变声、两倍引力下还能不能投篮；首页 3D 宇宙尺度星图，原创声音（默认关闭）。" },
+        { w: "gn", v: "v0.3.7", d: "2026-10-20", t: "点亮宙律入口；星桥 ma.chord ⇄ nv.sound、sh.orbit ⇄ nv.orbit 两端打通。" },
         { w: "04", v: "v0.4", d: "2026-10-20", t: "开场有了与动画同步的原创配乐（可选「带着声音进入」）；新增「生命显微镜头」，从指纹一路放大到碱基对。" },
         { w: "04", v: "v0.3", d: "2026-10-20", t: "全新开场：发光粒子从原始海洋聚成 DNA 双螺旋、长成生命之树；原创背景音乐「生命源码」（旋律来自真实的血红蛋白基因序列，默认关闭）；图谱可以拖动、缩放探索。" },
         { w: "04", v: "v0.2.1", d: "2026-10-20", t: "打开过的任务断网也能继续玩；斑马、感冒、狼三个任务完成科学复核并修订表述。" },
