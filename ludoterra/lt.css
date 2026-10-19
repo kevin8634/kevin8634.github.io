@@ -35,4 +35,6 @@ button{font-family:inherit}
 .lt-modal .lead{color:var(--mute);margin:0 0 14px;line-height:1.7;font-size:14px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (max-width:640px){.lt-top .brand span{display:none}.lt-hud{top:92px;left:50%;transform:translateX(-50%);width:auto;padding:6px 8px;display:flex;gap:8px;align-items:center}.lt-hud h4,.lt-hud .tip{display:none}.lt-hud .row{margin:0;flex-direction:column;gap:2px;font-size:10px}.lt-hud .row .n{width:auto}.lt-hud .row .bar{width:32px;flex:none}}
+/* 矮横屏(如 568×320):关卡页收紧顶部留白 */
+@media (max-height:480px){body main{padding-top:56px}main .steps{margin-bottom:6px}main h1{font-size:20px}main .card{padding:14px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
