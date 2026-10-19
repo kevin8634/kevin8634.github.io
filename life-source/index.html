@@ -37,7 +37,25 @@ html,body{overflow:hidden}
 #zoomov .zc{position:absolute;left:50%;bottom:44px;transform:translateX(-50%);z-index:3;display:flex;gap:10px;width:min(560px,92vw)}
 #zoomov .zc input{flex:1;accent-color:#34d399}
 #zoomov .x{position:absolute;right:12px;top:60px;z-index:3}
-@media (max-width:640px){#dive .long{display:none}#legend{display:none}#side{top:56px}.task{padding:6px 8px}}
+#side h1{cursor:pointer;user-select:none}
+#side h1::after{content:' ▾';font-size:13px;color:var(--mute)}
+#side.fold h1::after{content:' ▸'}
+#side.fold #tasks,#side.fold .sub{display:none}
+#scale{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:16;display:flex;flex-direction:column;align-items:center;gap:8px;user-select:none}
+#scale .cap{font-size:12px;color:#ffe9b8;border:1px solid rgba(226,190,120,.7);border-radius:8px;padding:3px 8px;background:rgba(6,10,18,.7)}
+#scale .rail{position:relative;height:min(52vh,420px);width:14px;border-radius:7px;border:1px solid rgba(226,190,120,.7);background:linear-gradient(#2a2412cc,#120e06cc);box-shadow:0 0 14px rgba(226,190,120,.35)}
+#scale input{position:absolute;left:50%;top:50%;width:min(52vh,420px);transform:translate(-50%,-50%) rotate(-90deg);accent-color:#e2be78;margin:0;background:transparent}
+#scale .ticks{position:absolute;inset:14px 0;pointer-events:none}
+#scale .tk{position:absolute;right:24px;transform:translateY(-50%);pointer-events:auto;background:none;border:0;color:var(--mute);font:12px inherit;white-space:nowrap;cursor:pointer;padding:2px 4px}
+#scale .tk.on{color:#bff5dc;text-shadow:0 0 8px #34d399}
+#scale .lv{display:none}
+#scale .all{font-size:12px;padding:4px 10px}
+#legend{display:none}
+#chain{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);z-index:16;display:flex;align-items:center;gap:2px;padding:6px 12px;border:1px solid rgba(110,231,183,.6);border-radius:10px;background:rgba(6,10,18,.75);box-shadow:0 0 16px rgba(52,211,153,.25);white-space:nowrap}
+#chain button{background:none;border:0;color:#eefcf6;font:600 14px inherit;cursor:pointer;padding:2px 4px}
+#chain button.on{color:#6ee7b7;text-shadow:0 0 8px #34d399}
+#chain i{color:var(--mute);font-style:normal;font-size:12px}
+@media (max-width:640px){#chain{bottom:84px;padding:4px 6px}#chain button{font-size:12px;padding:2px 1px}#chain i{font-size:10px}#scale{right:4px;top:auto;bottom:100px;transform:none}#scale .rail{height:26vh;width:26px}#scale input{width:26vh}#scale .cap,#scale .all{display:none}#scale .tk{font-size:11px;right:38px}#dive .long{display:none}#legend{display:none}#side{top:56px}.task{padding:6px 8px}}
 </style></head><body>
 <div id="lsi-pre" style="position:fixed;inset:0;z-index:49;background:#060a12"></div>
 <div id="atlas"><canvas></canvas></div>
@@ -47,6 +65,8 @@ html,body{overflow:hidden}
   <div id="tasks"></div>
 </div>
 <div id="legend"></div>
+<div id="chain"></div>
+<div id="scale"><div class="cap">穿越尺度</div><div class="rail"><input type="range" min="0" max="5" step="0.01" value="2.5" aria-label="穿越尺度:从分子到生态"><div class="ticks"></div></div><div class="lv">全景</div><button class="all ls-btn">全景</button></div>
 <div id="sheet" class="ls-panel"></div>
 <div id="divebar"><button class="ls-btn primary" id="dive">🔬 一镜到底<span class="long">:从指纹到碱基对</span></button></div>
 <div id="zoomov"><div class="zw" style="position:absolute;inset:0"></div><div class="zi ls-panel"></div><div class="zf"></div>
@@ -56,7 +76,8 @@ html,body{overflow:hidden}
 <script type="module">
 import { chrome, TASKS, taskStars, reducedMotion, sound, store } from './ls.js';
 import { LAYERS, CONS, STARS } from './atlas-data.js';
-chrome({ title: '' });
+import { mountAlbum, cards } from './ls-cards.js';
+mountAlbum(chrome({ title: '' }).top);
 const $ = s => document.querySelector(s);
 
 /* ---------- 开场:编译生命(ls-intro.js) ---------- */
@@ -71,85 +92,37 @@ for (const [id, t] of Object.entries(TASKS)) {
 }
 $('#legend').innerHTML = Object.values(CONS).map(c => `<span style="color:${c.color}">●</span> ${c.name}`).join('<br>');
 
-/* ---------- 图谱 ---------- */
-const cv = $('#atlas canvas'), g = cv.getContext('2d');
-let W, H, D, pts = [], sel = null, hover = null, rip = null;
-const V = { s: 1, ox: 0, oy: 0 }; // 视图:缩放与平移
-const T = (x, y) => [(x - W / 2) * V.s + W / 2 + V.ox, (y - H / 2) * V.s + H / 2 + V.oy];
-const bg = []; for (let i = 0; i < 260; i++) bg.push([Math.random(), Math.random(), Math.random()]);
-function layout() {
-  D = devicePixelRatio; W = cv.width = innerWidth * D; H = cv.height = innerHeight * D;
-  const narrow = innerWidth < 640, top = (narrow ? 250 : 90) * D, bottom = H - 96 * D, left = (narrow ? 50 : 380) * D, right = W - (narrow ? 20 : 120) * D;
-  const lh = (bottom - top) / LAYERS.length;
-  pts = STARS.map((s, i) => ({ s, x: left + s.x * (right - left), y: bottom - (s.layer + .5) * lh + Math.sin(i * 2.3) * lh * .22 }));
-  layout.m = { top, bottom, left, right, lh };
-}
-function draw(now = 0) {
-  const { top, bottom, left, right, lh } = layout.m;
-  g.clearRect(0, 0, W, H);
-  for (const [x0, y0, z] of bg) { const x = ((x0 + V.ox / W * z * .3) % 1 + 1) % 1, y = ((y0 + V.oy / H * z * .3) % 1 + 1) % 1; g.fillStyle = `rgba(200,255,230,${.15 + z * .35 * (reducedMotion() ? 1 : (.6 + .4 * Math.sin(now / 900 + z * 20)))})`; g.fillRect(x * W, y * H, 1.2 * D, 1.2 * D); }
-  LAYERS.forEach((name, i) => {
-    const y = T(0, bottom - (i + 1) * lh)[1], lhs = lh * V.s;
-    g.strokeStyle = 'rgba(110,231,183,.08)'; g.lineWidth = 1; g.beginPath(); g.moveTo(0, y); g.lineTo(W, y); g.stroke();
-    g.fillStyle = 'rgba(148,163,168,.75)'; g.font = `${12 * D}px "PingFang SC","Noto Sans SC",sans-serif`; g.fillText(name, 8 * D, y + lhs / 2 + 4 * D);
-  });
-  // 星座连线(最小生成树,避免长线交叉)
-  for (const k of Object.keys(CONS)) {
-    const ps = pts.filter(p => p.s.con === k); if (ps.length < 2) continue;
-    const focus = (hover || sel) && (hover || sel).s.con, on = focus === k;
-    const inT = [ps[0]], out = ps.slice(1); g.strokeStyle = CONS[k].color + (on ? 'dd' : focus ? '22' : '55'); g.lineWidth = (on ? 2.2 : 1.2) * D; g.beginPath();
-    while (out.length) {
-      let bi = 0, bj = 0, bd = Infinity;
-      inT.forEach((a, i) => out.forEach((b, j) => { const d = (a.x - b.x) ** 2 + (a.y - b.y) ** 2; if (d < bd) { bd = d; bi = i; bj = j; } }));
-      const a = inT[bi], b = out.splice(bj, 1)[0]; g.moveTo(...T(a.x, a.y)); g.lineTo(...T(b.x, b.y)); inT.push(b);
-    }
-    g.stroke();
-  }
-  if (rip) { const k = (now - rip.t) / 900; if (k > 1) rip = null; else { const [rx, ry] = T(rip.p.x, rip.p.y); for (const d of [0, .25]) { const kk = Math.max(0, k - d); g.beginPath(); g.arc(rx, ry, (8 + kk * 70) * D, 0, 7); g.strokeStyle = CONS[rip.p.s.con].color; g.globalAlpha = (1 - kk) * .8; g.lineWidth = 2 * D; g.stroke(); } g.globalAlpha = 1; } }
-  for (const p0 of pts) {
-    const [X, Y] = T(p0.x, p0.y), p = { ...p0, x: X, y: Y };
-    const c = CONS[p.s.con].color, isTask = !!p.s.task, r = (isTask ? 7 : p.s.soon ? 5 : 3.2) * D;
-    const pulse = isTask && !reducedMotion() ? 1 + .25 * Math.sin(now / 500) : 1;
-    g.globalAlpha = p.s.soon ? .45 : 1;
-    g.beginPath(); g.arc(p.x, p.y, r * pulse, 0, 7); g.fillStyle = c; g.shadowColor = c; g.shadowBlur = (isTask ? 22 : 8) * D; g.fill(); g.shadowBlur = 0;
-    if (isTask || p.s.soon) { g.beginPath(); g.arc(p.x, p.y, r * 2.1, 0, 7); g.strokeStyle = c; g.lineWidth = 1.2 * D; g.setLineDash(p.s.soon ? [3 * D, 3 * D] : []); g.stroke(); g.setLineDash([]); }
-    if (isTask || p0 === hover || p0 === sel || V.s > 1.8) { g.fillStyle = '#eef5f2'; g.font = `${(isTask ? 13 : 12) * D}px "PingFang SC","Noto Sans SC",sans-serif`; const label = isTask ? p.s.name : p.s.name; const tw = g.measureText(label).width; g.fillText(label, Math.min(Math.max(p.x - tw / 2, 6 * D), W - tw - 6 * D), p.y - r * 2.4 - 4 * D); }
-    g.globalAlpha = 1;
-  }
-  requestAnimationFrame(draw);
-}
-const near = e => { const x = e.clientX * D, y = e.clientY * D; let best = null, bd = (26 * D) ** 2; for (const p of pts) { const [px, py] = T(p.x, p.y), d = (px - x) ** 2 + (py - y) ** 2; if (d < bd) { bd = d; best = p; } } return best; };
-cv.addEventListener('pointermove', e => { hover = near(e); cv.style.cursor = hover ? 'pointer' : ''; });
-cv.addEventListener('click', e => {
-  if (moved) return;
-  sel = near(e); if (sel) rip = { p: sel, t: performance.now() }; const sh = $('#sheet');
-  if (!sel) { sh.style.display = 'none'; $('#divebar').style.display = ''; return; }
-  const s = sel.s, c = CONS[s.con];
+/* ---------- 图谱(ls-atlas.js) ---------- */
+const { createAtlas } = await import('./ls-atlas.js');
+const showSheet = s => {
+  const sh = $('#sheet');
+  if (!s) { sh.style.display = 'none'; $('#divebar').style.display = ''; return; }
+  const c = CONS[s.con];
   if (s.task) sound.sparkle(5); else sound.tone(587.33 * 2 ** (s.layer / 5), .5, { gain: .1 });
   sh.innerHTML = `<h3></h3><div class="meta">${LAYERS[s.layer]}层 · <span style="color:${c.color}">${c.name}</span>座</div><p></p><div class="ls-actions"></div>`;
   sh.querySelector('h3').textContent = s.name;
   sh.querySelector('p').textContent = s.task ? `任务 · ★ ${taskStars(s.task)}/${TASKS[s.task].levels * 3}` : s.soon ? '这颗星即将点亮,下一批任务正在制作中。' : s.note;
   const act = sh.querySelector('.ls-actions');
   if (s.task) { const a = document.createElement('a'); a.className = 'ls-btn primary'; a.style.textDecoration = 'none'; a.textContent = '出发 ›'; a.href = `${s.task}/`; act.append(a); }
-  const x = document.createElement('button'); x.className = 'ls-btn'; x.textContent = '关闭'; x.onclick = () => { sh.style.display = 'none'; $('#divebar').style.display = ''; sel = null; }; act.append(x);
+  const x = document.createElement('button'); x.className = 'ls-btn'; x.textContent = '关闭'; x.onclick = () => { showSheet(null); atlas.clear(); }; act.append(x);
   sh.style.display = 'block'; $('#divebar').style.display = 'none';
+};
+const atlas = createAtlas($('#atlas canvas'), {
+  onSelect: showSheet,
+  onBridge: br => { location.href = br.href; },
+  isDone: id => taskStars(id) > 0,
+  litCon: k => STARS.some(st => st.task && st.con === k && Object.keys(cards()[st.task] || {}).length >= TASKS[st.task].levels),
 });
-addEventListener('resize', layout); layout(); requestAnimationFrame(draw);
-/* 手势:拖动平移、双指或滚轮缩放(以手指/光标为中心)、双击复位 */
-const ptr = new Map(); let moved = false, pinch0 = null;
-const zoomAt = (f, cx, cy) => { const s2 = Math.min(3.2, Math.max(1, V.s * f)), k = s2 / V.s; V.ox = cx - W / 2 - (cx - W / 2 - V.ox) * k; V.oy = cy - H / 2 - (cy - H / 2 - V.oy) * k; V.s = s2; clampV(); };
-const clampV = () => { const m = (V.s - 1) / 2 + .15; V.ox = Math.max(-W * m, Math.min(W * m, V.ox)); V.oy = Math.max(-H * m, Math.min(H * m, V.oy)); if (V.s === 1) { V.ox *= .5; V.oy *= .5; } };
-cv.addEventListener('pointerdown', e => { ptr.set(e.pointerId, [e.clientX, e.clientY]); moved = false; if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pinch0 = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), s: V.s }; } });
-cv.addEventListener('pointermove', e => {
-  const q = ptr.get(e.pointerId); if (!q) return;
-  if (ptr.size === 1) { const dx = e.clientX - q[0], dy = e.clientY - q[1]; if (Math.abs(dx) + Math.abs(dy) > 2) moved = true; if (moved) { V.ox += dx * D; V.oy += dy * D; clampV(); } }
-  ptr.set(e.pointerId, [e.clientX, e.clientY]);
-  if (ptr.size === 2 && pinch0) { const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]); moved = true; zoomAt(pinch0.s * d / pinch0.d / V.s, (a[0] + b[0]) / 2 * D, (a[1] + b[1]) / 2 * D); }
-});
-const up = e => { ptr.delete(e.pointerId); if (ptr.size < 2) pinch0 = null; };
-cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
-cv.addEventListener('wheel', e => { e.preventDefault(); zoomAt(Math.exp(-e.deltaY * .0015), e.clientX * D, e.clientY * D); }, { passive: false });
-cv.addEventListener('dblclick', () => { V.s = 1; V.ox = V.oy = 0; sound.whoosh(.6, false); });
+/* 尺度滑杆:滑杆 = 穿越尺度(上 生态 … 下 分子) */
+const sc = $('#scale'), si = $('#scale input'), sl = $('#scale .lv');
+const setL = v => { const i = Math.round(v); atlas.setFocus(i); sl.textContent = i < 0 ? '全景' : LAYERS[i]; document.querySelectorAll('#scale .tk,#chain button').forEach(t => t.classList.toggle('on', +t.dataset.i === i)); if (i >= 0) si.value = i; };
+LAYERS.forEach((n, i) => { if (i) $('#chain').insertAdjacentHTML('beforeend', '<i>→</i>'); const b = document.createElement('button'); b.dataset.i = i; b.textContent = n; b.onclick = () => setL(atlas.focus === i ? -1 : i); $('#chain').append(b); });
+LAYERS.forEach((n, i) => { const t = document.createElement('button'); t.className = 'tk'; t.dataset.i = i; t.textContent = n; t.style.top = `${(5 - i) / 5 * 100}%`; t.onclick = () => { si.value = i; setL(i); }; $('#scale .ticks').append(t); });
+let lastI = -2; si.oninput = () => { const i = Math.round(+si.value); if (i !== lastI) { lastI = i; setL(i); } };
+$('#scale .all').onclick = () => { lastI = -1; setL(-1); };
+/* 任务面板:手机端默认收起 */
+const sideT = $('#side h1'); sideT.onclick = () => $('#side').classList.toggle('fold');
+$('#side').classList.add('fold');
 
 /* ---------- 一镜到底浮层 ---------- */
 let zm = null;

@@ -1,11 +1,13 @@
 // 生命源码 · 任务外壳:关卡导航、向导、星级、通关弹窗
 import { chrome, guide, saveLevel, store, sound, TASKS, starsFor } from './ls.js';
+import { mountAlbum, saveCard, flipCard, helixMap, transition, burst } from './ls-cards.js';
 
 export function runTask(taskId, levels) {
   const meta = TASKS[taskId];
   document.body.classList.add('ls-task');
   document.body.innerHTML = '';
   const ui = chrome({ title: meta.title, task: taskId });
+  mountAlbum(ui.top);
   const nav = document.createElement('nav'); nav.className = 'ls-levels';
   const stage = document.createElement('main'); stage.className = 'ls-stage';
   const dock = document.createElement('section'); dock.className = 'ls-dock';
@@ -17,16 +19,11 @@ export function runTask(taskId, levels) {
   let cur = 0, cleanup = null;
   const saved = () => store.get(taskId, { levels: {} }).levels;
   const paintNav = () => {
-    const s = saved(); nav.innerHTML = '';
-    levels.forEach((L, i) => {
-      const b = document.createElement('button'); b.textContent = i + 1; b.title = L.title;
-      b.className = (i === cur ? 'cur ' : '') + (s[i] ? 'done' : '');
-      b.disabled = i > 0 && !s[i - 1] && !s[i] && i !== cur;
-      b.onclick = () => go(i); nav.append(b);
-    });
+    const s = saved(); helixMap(nav, levels, cur, s, i => go(i, true));
     const total = Object.values(s).reduce((a, b) => a + b, 0); ui.setStars(total, levels.length * 3);
   };
-  function go(i) {
+  async function go(i, anim = false) {
+    if (anim) await transition(i, levels[i].title);
     if (cleanup) { try { cleanup(); } catch {} cleanup = null; }
     cur = i; stage.innerHTML = ''; actions.innerHTML = '';
     const h = document.createElement('h2'); h.textContent = `${i + 1} · ${levels[i].title}`; stage.append(h);
@@ -40,16 +37,17 @@ export function runTask(taskId, levels) {
       predicted(v = true) { predicted = v; },
       win(msg) {
         const stars = starsFor({ predicted, hintsUsed: g.hintsUsed });
-        saveLevel(taskId, i, stars); paintNav(); sound.ok();
+        saveLevel(taskId, i, stars); paintNav(); sound.ok(); burst();
+        const full = saveCard(taskId, i, levels[i].title, msg); dispatchEvent(new Event('ls-cards'));
         const m = document.createElement('div'); m.className = 'ls-modal';
         const last = i === levels.length - 1;
-        m.innerHTML = `<div class="ls-panel"><div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div><p class="msg"></p>
+        m.innerHTML = `<div class="ls-panel"><div class="fc-slot"></div><div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
           <p class="ls-note">★ 通关 · ★ 先预测再验证 · ★ 没用到第 3 级提示</p>
           <div class="ls-actions"><button class="ls-btn" data-a="again">再玩一次</button><button class="ls-btn primary" data-a="next">${last ? '回到图谱' : '下一关'}</button></div></div>`;
-        m.querySelector('.msg').textContent = msg;
+        m.querySelector('.fc-slot').append(flipCard(taskId, i, levels[i].title, msg, full));
         m.onclick = e => {
           const a = e.target.dataset.a; if (!a) return; m.remove();
-          if (a === 'again') go(i); else if (last) location.href = '/life-source/'; else go(i + 1);
+          if (a === 'again') go(i, true); else if (last) location.href = '/life-source/'; else go(i + 1, true);
         };
         document.body.append(m);
       },
