@@ -1,0 +1,73 @@
+/* 生命源码 Life Source · 公共样式 */
+:root{
+  --bg:#060a12; --bg2:#0b1420; --panel:rgba(14,28,36,.72); --line:rgba(110,231,183,.28);
+  --em:#34d399; --em2:#6ee7b7; --gold:#e2be78; --ink:#eef5f2; --mute:#94a3a8;
+  --A:#4ade80; --T:#f5b041; --G:#60a5fa; --C:#f87171;
+  --r:14px; --font:"PingFang SC","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-tap-highlight-color:transparent}
+body{background:radial-gradient(1200px 700px at 70% 10%,rgba(52,211,153,.10),transparent 60%),var(--bg)}
+a{color:var(--em2)}
+button{font:inherit;color:inherit;cursor:pointer}
+.ls-top{position:fixed;inset:0 0 auto 0;height:52px;display:flex;align-items:center;gap:10px;padding:0 14px;z-index:20;
+  background:linear-gradient(180deg,rgba(6,10,18,.92),rgba(6,10,18,0))}
+.ls-top .brand{font-weight:700;letter-spacing:.5px;color:var(--gold);text-decoration:none;font-size:14px}
+.ls-top .title{flex:1;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ls-btn{border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(8px);border-radius:999px;padding:7px 12px;font-size:14px}
+.ls-btn:hover{border-color:var(--em)}
+.ls-btn.on{background:rgba(52,211,153,.18);border-color:var(--em)}
+.ls-btn.primary{background:var(--em);color:#04120c;border-color:var(--em);font-weight:700}
+.ls-stars{color:var(--gold);letter-spacing:2px;font-size:14px}
+.ls-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);backdrop-filter:blur(10px);padding:14px}
+.ls-foot{position:fixed;left:0;right:0;bottom:0;padding:6px 12px;font-size:11px;color:var(--mute);text-align:center;z-index:15;
+  background:linear-gradient(0deg,rgba(6,10,18,.9),rgba(6,10,18,0));pointer-events:none}
+/* 向导气泡 */
+.ls-guide{position:fixed;left:12px;bottom:34px;max-width:min(420px,calc(100% - 24px));display:flex;gap:10px;align-items:flex-end;z-index:18}
+.ls-guide .ava{width:56px;height:56px;flex:none;border-radius:50%;background:radial-gradient(circle at 35% 30%,#a7f3d0,#10b981 60%,#065f46);
+  box-shadow:0 0 18px rgba(52,211,153,.6);display:grid;place-items:center;font-size:12px;font-weight:700;color:#03140d}
+.ls-guide .bubble{background:var(--panel);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:10px 12px;font-size:14px;line-height:1.55}
+.ls-guide .who{color:var(--gold);font-size:12px;margin-bottom:2px}
+.ls-guide .hints{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+.ls-guide .hints button{font-size:12px;padding:4px 9px}
+.ls-tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--em2)}
+.ls-hud{position:fixed;right:12px;top:60px;z-index:16;font-size:12px;color:var(--mute);text-align:right;pointer-events:none}
+.ls-hud b{color:var(--ink);font-weight:600}
+.ls-toast{position:fixed;left:50%;top:64px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--em);border-radius:999px;
+  padding:8px 16px;font-size:14px;z-index:30;opacity:0;transition:opacity .25s}
+.ls-toast.show{opacity:1}
+canvas.ls-gl{display:block;width:100%;height:100%;touch-action:none}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---------- 任务页布局 ---------- */
+body.ls-task{display:grid;grid-template-rows:52px auto 1fr auto auto;height:100vh;height:100dvh;overflow:hidden}
+body.ls-task .ls-top{position:static;background:none}
+body.ls-task .ls-foot{position:static;background:none;padding:2px 12px 6px}
+.ls-levels{display:flex;gap:6px;justify-content:center;padding:2px 12px 6px;flex-wrap:wrap}
+.ls-levels button{width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font-size:12px;padding:0}
+.ls-levels button.cur{border-color:var(--gold);color:var(--gold);box-shadow:0 0 10px rgba(226,190,120,.5)}
+.ls-levels button.done{background:rgba(52,211,153,.25)}
+.ls-levels button:disabled{opacity:.35;cursor:default}
+.ls-stage{position:relative;min-height:0;overflow:hidden}
+.ls-stage h2{position:absolute;left:0;right:0;top:4px;margin:0;text-align:center;font-size:16px;color:var(--gold);z-index:3;pointer-events:none;padding:0 12px}
+.ls-dock{padding:8px 12px 4px;display:flex;flex-direction:column;gap:8px;max-width:760px;width:100%;margin:0 auto}
+body.ls-task .ls-guide{position:static;max-width:none}
+.ls-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.ls-actions:empty{display:none}
+.ls-center{position:absolute;inset:34px 0 0 0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:8px 14px;overflow:auto}
+.ls-choice{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.ls-choice .ls-btn{min-width:84px}
+.ls-big{font-size:34px;font-weight:800;color:var(--em2)}
+.ls-card{max-width:520px;width:100%}
+.ls-card h3{margin:0 0 6px;color:var(--gold);font-size:16px}
+.ls-card p,.ls-card li{font-size:14px;line-height:1.6;margin:4px 0}
+.ls-note{font-size:12px;color:var(--mute);line-height:1.5}
+.ls-modal{position:fixed;inset:0;background:rgba(3,6,10,.7);display:grid;place-items:center;z-index:40;padding:16px}
+.ls-modal .ls-panel{max-width:420px;width:100%;text-align:center}
+.ls-modal .stars{font-size:34px;color:var(--gold);letter-spacing:6px}
+.ls-dots{display:grid;gap:3px;justify-content:center}
+.ls-dots i{width:12px;height:12px;border-radius:50%;display:block}
+.seq{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px}
+.b-A{color:var(--A)}.b-T,.b-U{color:var(--T)}.b-G{color:var(--G)}.b-C{color:var(--C)}
+.bkey{width:52px;height:52px;border-radius:12px;font-size:20px;font-weight:800;border:2px solid currentColor;background:rgba(255,255,255,.04)}
+@media (max-width:520px){.ls-guide .ava{width:44px;height:44px}.ls-stage h2{font-size:15px}}

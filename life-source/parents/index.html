@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>为什么你长得像爸妈,又不完全像? · 生命源码</title>
+<meta name="description" content="生命源码 · 生物:从孟德尔的豌豆到人类的耳垢、血型和身高,亲手做杂交实验,看遗传规律怎么"算"出来。">
+<meta name="theme-color" content="#060a12">
+<link rel="stylesheet" href="../ls.css">
+<style>
+.pea{display:inline-block;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fef9c3,#a3c94a 55%,#4d7c0f)}
+.pea.w{border-radius:46% 54% 40% 60%/55% 40% 60% 45%;background:radial-gradient(circle at 35% 30%,#ecfccb,#a3a34a 55%,#57534e);clip-path:polygon(50% 0,64% 12%,82% 8%,88% 28%,100% 46%,90% 64%,94% 84%,72% 90%,54% 100%,36% 90%,16% 92%,10% 70%,0 52%,10% 32%,8% 12%,30% 10%)}
+.row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:14px}
+.gene{display:inline-block;border:1px solid var(--line);border-radius:8px;padding:2px 8px;font-weight:800;font-family:ui-monospace,Menlo,monospace;background:var(--panel)}
+.punnett{display:grid;grid-template-columns:44px 80px 80px;grid-template-rows:36px 64px 64px;gap:4px}
+.punnett div{display:grid;place-items:center;border-radius:10px;font-weight:800}
+.punnett .h{color:var(--gold)}
+.punnett .c{background:var(--panel);border:1px solid var(--line);font-size:15px;transition:background .3s}
+.punnett .c.dry{background:rgba(226,190,120,.18)}
+.chromo{display:flex;gap:14px;justify-content:center;align-items:flex-end}
+.pair{display:flex;gap:3px;align-items:flex-end}
+.chr{width:12px;border-radius:6px;transition:transform .5s,opacity .5s}
+.chr.dad{background:linear-gradient(#60a5fa,#1d4ed8)}
+.chr.mom{background:linear-gradient(#f9a8d4,#db2777)}
+.chr.out{opacity:.15;transform:translateY(16px)}
+.gam{display:flex;gap:6px;justify-content:center;min-height:56px;align-items:flex-end}
+.sel{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font:inherit}
+.kids{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.kid{border:1px solid var(--line);border-radius:12px;padding:6px 10px;text-align:center;min-width:64px;background:var(--panel)}
+.kid b{display:block;font-size:20px;color:var(--em2)}
+canvas.hist{width:min(560px,92vw);height:200px;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:12px}
+.claim{max-width:520px;width:100%}
+.claim .ans{font-size:13px;color:var(--mute);margin-top:6px;display:none}
+.claim.open .ans{display:block}
+</style></head><body>
+<noscript>需要开启 JavaScript 才能游玩。</noscript>
+<script type="module">
+import { runTask, sleep, el, dots } from '../ls-task.js';
+import { sound, reducedMotion } from '../ls.js';
+
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const choice = (api, opts, correct, onDone, record = true) => {
+  const box = el('div', { className: 'ls-choice' }); let first = true;
+  opts.forEach(o => { const b = el('button', { className: 'ls-btn', textContent: o }); b.onclick = () => {
+    const ok = o === correct; if (first && record) { api.predicted(ok); } first = false;
+    ok ? sound.ok() : sound.no(); onDone(ok, o, box);
+  }; box.append(b); });
+  return box;
+};
+const fast = () => reducedMotion() ? 0 : 1;
+
+runTask('parents', [
+  { title: '孟德尔的豌豆', run(api) {
+    const c = api.center();
+    c.innerHTML = `<div class="ls-card ls-panel"><h3>1856–1863 年,修道院的菜园</h3>
+      <p>孟德尔把纯种<b>圆粒</b>豌豆 <span class="pea"></span> 和纯种<b>皱粒</b>豌豆 <span class="pea w"></span> 杂交。第一代全是圆粒。</p>
+      <p>再让第一代自己授粉,第二代会是什么样?</p></div><div id="res"></div>`;
+    api.guide.ask('先做一个预测:第二代里,圆粒和皱粒大约是什么比例?', ['皱粒在第一代"消失"了。它真的不见了吗?', '每粒豌豆从父母各拿到一份"因子",第一代是"一圆一皱"。', '两个"一圆一皱"相遇,有 4 种组合,只有 1 种是"皱皱"。']);
+    c.append(choice(api, ['全是圆粒', '圆:皱 ≈ 3:1', '圆:皱 ≈ 1:1'], '圆:皱 ≈ 3:1', async (ok, o, box) => {
+      box.remove(); const res = c.querySelector('#res');
+      api.guide.say(ok ? '好预测。我们来种 200 粒验证。' : '我们种 200 粒看看结果。');
+      const kids = Array.from({ length: 200 }, () => (Math.random() < .5) + (Math.random() < .5) > 0);
+      dots(res, kids.map(r => r ? '#a3c94a' : '#78716c'), 20);
+      const n = kids.filter(Boolean).length;
+      res.append(el('p', { className: 'row', innerHTML: `圆粒 <b>${n}</b> · 皱粒 <b>${200 - n}</b> · 约 ${(n / (200 - n)).toFixed(2)} : 1` }));
+      res.append(el('p', { className: 'ls-note', textContent: '孟德尔当年真实数据:圆粒 5474 粒,皱粒 1850 粒,约 2.96 : 1。' }));
+      api.clearActions();
+      api.button('明白了', () => api.win('皱粒没有消失,只是被"藏"起来了。遗传因子成对出现、各传一个——这就是孟德尔发现的规律。后来人们把这种因子叫作"基因"。'), 'primary');
+    }));
+  } },
+
+  { title: '每人只给一半', run(api) {
+    const c = api.center();
+    const pairs = [90, 70, 52];
+    c.innerHTML = `<div class="ls-note">细胞里的染色体(示意:只画 3 对,人其实有 23 对)</div>
+      <div class="chromo" id="ch">${pairs.map((h, i) => `<div class="pair"><div class="chr dad" style="height:${h}px"></div><div class="chr mom" style="height:${h}px"></div></div>`).join('')}</div>
+      <div class="row"><span style="color:#60a5fa">■ 来自爸爸</span><span style="color:#f472b6">■ 来自妈妈</span></div>
+      <div class="ls-note">形成精子或卵子时,每一对只留下一条:</div><div class="gam" id="gm"></div><div class="row" id="cnt"></div>`;
+    const seen = new Set();
+    const make = async () => {
+      const pickD = pairs.map(() => Math.random() < .5);
+      const ps = c.querySelectorAll('.pair');
+      ps.forEach((p, i) => { p.children[0].classList.toggle('out', !pickD[i]); p.children[1].classList.toggle('out', pickD[i]); });
+      const gm = c.querySelector('#gm'); gm.innerHTML = '';
+      pairs.forEach((h, i) => gm.append(el('div', { className: 'chr ' + (pickD[i] ? 'dad' : 'mom') + '', style: `height:${h * .6}px` })));
+      seen.add(pickD.join()); sound.tone(pickD[0] ? 392 : 523.25, .2);
+      c.querySelector('#cnt').textContent = `已经出现 ${seen.size} 种不同组合(3 对最多 8 种)`;
+      if (seen.size >= 4 && !asked) ask();
+    };
+    let asked = false;
+    const ask = () => {
+      asked = true;
+      api.guide.ask('3 对染色体有 8 种组合。人有 23 对,一个人能产生多少种不同的精子或卵子?', ['3 对是 2×2×2 = 8。', '23 对就是 2 连乘 23 次。', '2²³ ≈ 838 万。']);
+      c.append(choice(api, ['46 种', '约 838 万种', '23 种'], '约 838 万种', (ok, o, box) => {
+        if (!ok) { api.guide.say(`不是 ${o}。3 对是 2×2×2,那 23 对呢?`); return; }
+        box.remove();
+        api.win('每个孩子从爸爸、妈妈各拿 23 条染色体。光是"拿哪一条"就有约 838 万种,再加上染色体之间还会交换片段,所以兄弟姐妹之间也不完全一样(同卵双胞胎除外)。');
+      }));
+    };
+    api.button('形成一个配子', make, 'primary');
+    api.guide.ask('多按几次"形成一个配子"。每次留下的组合一样吗?', ['看看蓝色和粉色是怎么混的。', '每一对都是独立地随机选一条。', '再按几次,数一数有几种组合。']);
+  } },
+
+  { title: '耳垢:干的还是湿的?', run(api) {
+    const c = api.center();
+    c.innerHTML = `<div class="ls-card ls-panel"><h3>一个真实的单基因性状</h3>
+      <p>耳垢分<b>湿型</b>(黄褐、黏)和<b>干型</b>(灰白、片状)两种,主要由 16 号染色体上的 <b>ABCC11</b> 基因决定。湿型是显性(W),干型是隐性(w)。</p>
+      <p>东亚人群里干型占大多数,欧洲和非洲人群里湿型占大多数。</p></div>
+      <div class="row"><span>爸爸:湿型</span><span>×</span><span>妈妈:湿型</span></div><div id="r"></div>`;
+    api.guide.ask('爸爸妈妈都是湿型耳垢。他们的孩子有可能是干型吗?', ['湿型是显性。一个湿型的人,基因可能是 WW,也可能是…?', '如果两人都是 Ww,各传一个 w 会怎样?', '能。两人都是 Ww 时,孩子有 1/4 的机会是 ww。']);
+    c.append(choice(api, ['有可能', '不可能'], '有可能', (ok, o, box) => {
+      box.remove();
+      c.querySelector('#r').innerHTML = `<div class="row"><span class="gene">W w</span><span>×</span><span class="gene">W w</span></div>
+        <p class="row">两人都"藏着"一个干型基因 w。孩子同时拿到两个 w,就是干型。</p>`;
+      api.guide.say(ok ? '对!显性性状的父母,可以生出隐性性状的孩子。' : '其实有可能:两人都可能"藏着"一个 w。');
+      api.clearActions();
+      api.button('下一步:算概率', () => api.win('看起来一样的父母,基因可能不同。显性会"盖住"隐性,但隐性基因照样能传下去。'), 'primary');
+    }));
+  } },
+
+  { title: '棋盘格与大数', run(api) {
+    const c = api.center();
+    c.innerHTML = `<div class="punnett" id="pn">
+      <div></div><div class="h">W</div><div class="h">w</div>
+      <div class="h">W</div><div class="c" data-k="WW">?</div><div class="c" data-k="Ww">?</div>
+      <div class="h">w</div><div class="c" data-k="wW">?</div><div class="c dryc" data-k="ww">?</div></div>
+      <div class="ls-note">上方是爸爸可能给的,左侧是妈妈可能给的。点格子填写。</div><div id="sim"></div>`;
+    let filled = 0;
+    c.querySelectorAll('.c').forEach(cell => cell.onclick = () => {
+      if (cell.textContent !== '?') return;
+      const k = cell.dataset.k; cell.textContent = k.includes('W') ? '湿' : '干'; if (!k.includes('W')) cell.classList.add('dry');
+      sound.tone(k.includes('W') ? 440 : 329.63, .25); filled++;
+      if (filled === 4) predict();
+    });
+    api.guide.ask('棋盘格的 4 个格子机会相等。先把它们全部填上。', ['每个格子 = 上方字母 + 左侧字母。', '只要有一个 W,就是湿型。', '只有右下角是 ww。']);
+    const predict = () => {
+      api.guide.ask('如果这对父母生 4 个孩子,一定正好 1 个干型吗?', ['棋盘格给的是"机会",不是"名额"。', '抛 4 次硬币,一定正好 2 次正面吗?', '不一定。试试让他们生很多很多个。']);
+      c.append(choice(api, ['一定', '不一定'], '不一定', (ok, o, box) => { box.remove(); sim(); }));
+    };
+    const sim = () => {
+      const s = c.querySelector('#sim'); const tried = new Set();
+      const run = n => {
+        tried.add(n);
+        let dry = 0; for (let i = 0; i < n; i++) if (Math.random() < .5 && Math.random() < .5) dry++;
+        s.innerHTML = ''; if (n <= 200) dots(s, Array.from({ length: n }, (_, i) => i < dry ? '#e2be78' : '#a16207'), Math.min(20, n));
+        s.append(el('p', { className: 'row', innerHTML: `${n} 个孩子:干型 <b>${dry}</b> 个,占 <b>${(dry / n * 100).toFixed(1)}%</b>` }));
+        sound.tone(330 + dry / n * 600, .25);
+        if (tried.size >= 3 && tried.has(10000)) {
+          api.clearActions(); api.button('我发现了', () => api.win('孩子少时,比例忽高忽低;孩子越多,越接近 25%。遗传规律说的是概率,要在大量样本里才看得清——孟德尔种了上万株豌豆,就是这个道理。'), 'primary');
+        }
+      };
+      api.clearActions();
+      for (const n of [4, 20, 200, 10000]) api.button(`生 ${n} 个`, () => run(n));
+      api.guide.ask('分别试试生 4、20、200、10000 个。干型的比例怎么变?', ['多按几次"生 4 个",结果一样吗?', '比较 4 个和 10000 个的百分比。', '样本越大,越接近 25%。']);
+    };
+  } },
+
+  { title: 'ABO 血型', run(api) {
+    const c = api.center();
+    const G = { 'A 型(IA IA)': ['A', 'A'], 'A 型(IA i)': ['A', 'O'], 'B 型(IB IB)': ['B', 'B'], 'B 型(IB i)': ['B', 'O'], 'AB 型(IA IB)': ['A', 'B'], 'O 型(i i)': ['O', 'O'] };
+    const opts = Object.keys(G).map(k => `<option>${k}</option>`).join('');
+    c.innerHTML = `<div class="ls-card ls-panel"><p>ABO 血型由 9 号染色体上的一个基因决定,有三种版本:<b>IA</b>、<b>IB</b>、<b>i</b>。IA 和 IB <b>共显性</b>(同时出现就是 AB 型),i 是隐性。</p></div>
+      <div class="row"><select class="sel" id="p1">${opts}</select><span>×</span><select class="sel" id="p2">${opts}</select></div>
+      <div class="kids" id="kids"></div><div class="ls-note" id="tip"></div>`;
+    const type = (a, b) => { const s = [a, b].sort().join(''); return s === 'AB' ? 'AB' : s.includes('A') ? 'A' : s.includes('B') ? 'B' : 'O'; };
+    let tries = 0;
+    const calc = () => {
+      tries++;
+      const a = G[c.querySelector('#p1').value], b = G[c.querySelector('#p2').value], cnt = {};
+      for (const x of a) for (const y of b) { const t = type(x, y); cnt[t] = (cnt[t] || 0) + 1; }
+      const k = c.querySelector('#kids'); k.innerHTML = '';
+      for (const t of ['A', 'B', 'AB', 'O']) if (cnt[t]) k.append(el('div', { className: 'kid', innerHTML: `<b>${t}</b>${cnt[t] * 25}%` }));
+      sound.tone(392 + Object.keys(cnt).length * 60, .25);
+      if (Object.keys(cnt).length === 4) { api.predicted(tries <= 5); api.win('A 型(IA i)× B 型(IB i)的孩子,A、B、AB、O 四种血型都可能出现,各占 1/4。注意:O 型 × O 型的父母一般不会生出 AB 型孩子;不过存在极少数例外(如孟买型、顺式 AB),所以血型不能用来"判定"亲子关系,那需要专门的基因检测。'); }
+    };
+    c.querySelector('#p1').onchange = calc; c.querySelector('#p2').onchange = calc;
+    api.guide.ask('挑战:选出一对父母,让他们的孩子 A、B、AB、O 四种血型都有可能。', ['要生出 O 型,孩子得从两人那里各拿到一个 i。', '要生出 AB 型,一人得给 IA,另一人给 IB。', '试试 A 型(IA i)× B 型(IB i)。']);
+    tries = -1; calc();
+  } },
+
+  { title: '身高:很多基因 + 环境', run(api) {
+    const c = api.center();
+    c.innerHTML = `<canvas class="hist" id="h"></canvas>
+      <div class="row">影响身高的基因数:<input type="range" id="n" min="1" max="30" value="1" style="accent-color:#34d399"><b id="nv">1</b></div>
+      <div class="row">营养与环境的影响:<input type="range" id="e" min="0" max="10" value="0" style="accent-color:#e2be78"><b id="ev">无</b></div>
+      <div class="ls-note">模拟 3000 个人。每个基因有"高一点"和"矮一点"两种版本,各占一半。</div>`;
+    const cv = c.querySelector('#h'), cx = cv.getContext('2d');
+    const settings = new Set();
+    const draw = () => {
+      const n = +c.querySelector('#n').value, e = +c.querySelector('#e').value;
+      c.querySelector('#nv').textContent = n; c.querySelector('#ev').textContent = e ? e : '无';
+      settings.add(`${n}`);
+      const W = cv.width = cv.clientWidth * devicePixelRatio, H = cv.height = cv.clientHeight * devicePixelRatio;
+      const bins = new Array(40).fill(0);
+      for (let k = 0; k < 3000; k++) {
+        let s = 0; for (let i = 0; i < n * 2; i++) s += Math.random() < .5 ? 1 : 0;
+        let v = s / (n * 2); // 0..1
+        if (e) { let g = 0; for (let j = 0; j < 4; j++) g += Math.random(); v += (g / 4 - .5) * e * .06; }
+        bins[Math.max(0, Math.min(39, Math.floor(v * 39.99)))]++;
+      }
+      const mx = Math.max(...bins); cx.clearRect(0, 0, W, H);
+      bins.forEach((b, i) => { const h = b / mx * (H - 20); cx.fillStyle = '#34d399'; cx.fillRect(i * W / 40 + 1, H - h - 14, W / 40 - 2, h); });
+      cx.fillStyle = '#94a3a8'; cx.font = `${11 * devicePixelRatio}px sans-serif`; cx.fillText('矮', 4, H - 2); cx.fillText('高', W - 16 * devicePixelRatio, H - 2);
+      if (settings.size >= 4 && !asked) ask();
+    };
+    let asked = false;
+    const ask = () => {
+      asked = true;
+      api.guide.ask('基因数越多,图形越像什么?', ['看看基因数 1 和 30 的区别。', '中间的人最多,两头越来越少。', '像一口钟:钟形分布。']);
+      c.append(choice(api, ['两座山', '一口钟', '一条平线'], '一口钟', (ok, o, box) => {
+        if (!ok) { api.guide.say('再拖到 20 以上看看?'); return; }
+        box.remove();
+        api.win('身高由成百上千个基因共同影响,再加上营养、睡眠、运动和健康状况,所以人的身高是连续变化的钟形分布,不是"高"和"矮"两类。"遗传度"是描述整个人群的统计数字,不能用来预言某一个人能长多高。');
+      }, false));
+    };
+    c.querySelector('#n').oninput = draw; c.querySelector('#e').oninput = draw;
+    api.guide.ask('先只有 1 个基因,只有几种身高?把基因数慢慢往右拖,看图形怎么变。', ['1 个基因只有 3 种组合。', '每多一个基因,组合就更多。', '拖到 20 以上,再加一点环境影响。']);
+    requestAnimationFrame(draw);
+  } },
+
+  { title: '课本里的"单基因"可靠吗?', run(api) {
+    const c = api.center();
+    const claims = [
+      { t: '能不能卷舌,由一个显性基因决定。', a: false, why: '早在 1950 年代就有研究发现,不少同卵双胞胎(基因几乎相同)一个会卷舌、一个不会;很多人还能通过练习学会。它不是简单的单基因性状。' },
+      { t: '耳垂只分"有耳垂"和"无耳垂"两种,由一个基因决定。', a: false, why: '耳垂和脸颊的连接方式是从"完全分离"到"完全贴合"的连续过渡;大型基因研究找到了数十个相关基因。' },
+      { t: '湿型和干型耳垢主要由一个基因(ABCC11)决定。', a: true, why: '这是少数真正接近"一个基因决定"的人类性状,2006 年已找到具体的那个碱基变化。' },
+    ];
+    c.innerHTML = claims.map((x, i) => `<div class="claim ls-panel" data-i="${i}"><div>${x.t}</div>
+      <div class="ls-choice" style="margin-top:8px"><button class="ls-btn" data-v="1">可靠</button><button class="ls-btn" data-v="0">不可靠</button></div><div class="ans"></div></div>`).join('');
+    let right = 0, answered = 0;
+    c.querySelectorAll('.claim').forEach(card => card.addEventListener('click', e => {
+      const v = e.target.dataset.v; if (v === undefined || card.classList.contains('open')) return;
+      const x = claims[+card.dataset.i], ok = (v === '1') === x.a; right += ok; answered++;
+      card.classList.add('open'); card.querySelector('.ans').textContent = (ok ? '✓ ' : '✗ ') + (x.a ? '可靠。' : '不可靠。') + x.why;
+      ok ? sound.ok() : sound.no();
+      if (answered === claims.length) { api.predicted(right >= 2); api.win('很多人类性状并不是简单的"一个基因、显性或隐性"。科学会根据新证据修正旧说法——这正是科学最可靠的地方。'); }
+    }));
+    api.guide.ask('这些说法常出现在课本和网上。你觉得哪些可靠?', ['同卵双胞胎的基因几乎一样。如果性状由一个基因决定,他们应该总是一样。', '想想耳垂:真的只有两种吗?看看身边人的耳朵。', '前两条都不可靠,第三条可靠。']);
+    c.append(el('p', { className: 'ls-note', textContent: '小提示:家庭有很多种形式,亲人之间的联结不只来自基因。本任务只讨论生物学上的遗传。' }));
+  } },
+]);
+</script>
+</body></html>

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>四个字母怎么写出一个人? · 生命源码</title>
+<meta name="description" content="生命源码 · 生物:从指纹一路放大到碱基对,亲手配对、抄写、翻译 DNA,看一个字母的改动会发生什么。">
+<meta name="theme-color" content="#060a12">
+<link rel="stylesheet" href="../ls.css">
+<style>
+.zoomwrap{position:absolute;inset:30px 0 0 0}
+.zinfo{position:absolute;left:10px;top:36px;z-index:4;font-size:12px;max-width:62%}
+.zinfo .obj{font-size:15px;font-weight:700}
+.zfact{position:absolute;left:0;right:0;bottom:8px;text-align:center;color:var(--gold);font-size:14px;z-index:4;text-shadow:0 1px 4px #000;padding:0 10px}
+.hxwrap{position:absolute;inset:30px 0 0 0}
+.keys{display:flex;gap:10px;justify-content:center}
+.strip{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;max-width:620px}
+.strip span{font-size:20px;font-weight:800;width:24px;text-align:center;transition:transform .2s}
+.strip span.flip{transform:rotateX(360deg)}
+.codons{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:640px}
+.codon{border:1px solid var(--line);border-radius:10px;padding:6px 6px 4px;text-align:center;background:var(--panel);min-width:64px}
+.codon.on{border-color:var(--gold);box-shadow:0 0 12px rgba(226,190,120,.5)}
+.codon .s{font-size:18px;font-weight:800;letter-spacing:2px}
+.codon .s b{cursor:pointer;padding:0 1px;border-radius:4px}
+.codon .s b:hover{background:rgba(255,255,255,.1)}
+.codon .a{font-size:12px;color:var(--mute);min-height:16px}
+.codon.chg .a{color:var(--C)}
+.codon.stop .a{color:#fca5a5}
+.beads{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:640px;min-height:48px}
+.bead{border-radius:999px;padding:6px 10px;font-size:13px;background:radial-gradient(circle at 30% 30%,#fef3c7,#d6a85a);color:#2a1c05;font-weight:700;animation:pop .35s}
+.bead.diff{background:radial-gradient(circle at 30% 30%,#fee2e2,#ef4444);color:#fff}
+@keyframes pop{from{transform:scale(.2);opacity:0}}
+.ribo{font-size:13px;color:var(--mute)}
+.goals{font-size:13px;line-height:1.8}
+.goals .ok{color:var(--em2)}
+svg.rbc{width:120px;height:80px}
+</style></head><body>
+<noscript>需要开启 JavaScript 才能游玩。</noscript>
+<script type="module">
+import { runTask, sleep, el } from '../ls-task.js';
+import { COMP, isPair, sound, translate, codonAA, AA_ZH, BASE_FREQ, reducedMotion } from '../ls.js';
+
+// 人类 β-珠蛋白(HBB)基因编码区开头 27 个碱基:甲硫氨酸-缬氨酸-组氨酸-亮氨酸-苏氨酸-脯氨酸-谷氨酸-谷氨酸-赖氨酸
+const HBB = 'ATGGTGCACCTGACTCCTGAGGAGAAG';
+const ch = (s, cls = '') => [...s].map(b => `<span class="b-${b} ${cls}">${b}</span>`).join('');
+const choice = (api, opts, correct, onDone) => {
+  const box = el('div', { className: 'ls-choice' }); let first = true;
+  opts.forEach(o => { const b = el('button', { className: 'ls-btn', textContent: o }); b.onclick = () => {
+    const ok = o === correct; if (first) { api.predicted(ok); first = false; }
+    b.classList.add(ok ? 'on' : ''); ok ? sound.ok() : sound.no(); onDone(ok, o, box);
+  }; box.append(b); });
+  return box;
+};
+
+runTask('dna', [
+  { title: '一镜到底:说明书藏在哪?', async run(api) {
+    const c = api.center();
+    c.innerHTML = `<div class="ls-card ls-panel"><h3>先猜一猜</h3><p>你身体里的一个细胞核,直径大约只有 6 微米(头发丝的十几分之一)。把它里面的 DNA 全部拉直,大概有多长?</p></div>`;
+    api.guide.ask('凭直觉选一个。猜错没关系,等会儿我们亲眼去看。', ['想想:越细的线,同样的体积能装得越长。', 'DNA 的直径只有约 2 纳米,是细胞核直径的三千分之一。', '答案在"米"这一级。']);
+    c.append(choice(api, ['2 厘米', '2 米', '2 千米'], '2 米', async (ok) => {
+      api.guide.say(ok ? '猜对了!约 2 米。现在潜进去,看它怎么装进去的。' : '其实约 2 米。我们潜进去,看看它怎么装得下。');
+      await sleep(900); c.remove();
+      const { createZoom, FACTS } = await import('../ls-zoom.js');
+      const wrap = el('div', { className: 'zoomwrap' }); api.stage.append(wrap);
+      const info = el('div', { className: 'zinfo ls-panel' }); const fact = el('div', { className: 'zfact' });
+      api.stage.append(info, fact);
+      let seen = 0;
+      const zm = createZoom(wrap, { onLevel(i, L) {
+        seen = Math.max(seen, i);
+        info.innerHTML = `<div style="color:var(--gold)">观察方式 · ${L.tool}</div><div class="obj">${L.obj}</div><div>比例尺 ${L.bar} ${L.tag ? `<span class="ls-tag">${L.tag}</span>` : ''}</div>`;
+        fact.textContent = FACTS[i] || '';
+        if (i === 5) api.guide.ask('到底了。你从指纹一路看到了碱基对。注意:从哪一层开始,我们已经不是"用眼睛看"了?', ['看看左上角的标签。', '光学显微镜最多分辨约 200 纳米。', '从电子显微镜那层起,画面是根据结构数据重建的模型。']);
+      } });
+      api.onCleanup(() => zm.dispose());
+      const slider = el('input', { type: 'range', min: 0, max: 5, step: .001, value: 0 }); slider.style.flex = '1'; slider.style.accentColor = '#34d399';
+      slider.oninput = () => zm.setZ(+slider.value);
+      const t = setInterval(() => { if (document.activeElement !== slider) slider.value = zm.z; }, 120);
+      api.onCleanup(() => { clearInterval(t); zm.dispose(); });
+      api.button('▶ 一镜到底', () => zm.dive({ from: 0 }), 'primary');
+      document.querySelector('.ls-actions').append(slider);
+      api.button('我看到碱基对了', () => { if (seen >= 5 || zm.z > 4.9) api.win('一个细胞核里约 2 米长的 DNA,靠一圈圈缠绕压缩进去。光学显微镜看不到双螺旋,最后两层是科学家用结构数据重建的模型。'); else { sound.no(); api.guide.say('还没到底哦。拖动滑杆,或者点"一镜到底"。'); } });
+      zm.dive({ from: 0 });
+    }));
+  } },
+
+  { title: '配对规则', async run(api) {
+    const top = 'GACTCCTGAG', given = 3;
+    let comp = [...top].map((b, i) => i < given ? COMP[b] : 'N'), pos = given, mistakes = 0;
+    const { createHelix } = await import('../ls-helix.js');
+    const wrap = el('div', { className: 'hxwrap' }); api.stage.append(wrap);
+    const hx = createHelix(wrap, { seq: top, comp: comp.join(''), spin: false, tilt: .2, distance: 5 });
+    api.onCleanup(() => hx.dispose());
+    hx.select(pos);
+    api.guide.ask(`左边那条链已经写好了。右边空着的台阶(灰色、断开的)该接哪个字母?前 ${given} 级给你做了示范。`, ['示范里,A 的对面是谁?G 的对面呢?', '数数中间的小亮点:A–T 有 2 个,G–C 有 3 个。', () => { api.guide.say(`现在这一级左边是 ${top[pos]},对面是 ${COMP[top[pos]]}。`); }]);
+    const keys = el('div', { className: 'keys' });
+    for (const b of 'ATGC') {
+      const k = el('button', { className: `bkey b-${b}`, textContent: b });
+      k.onclick = () => {
+        if (pos >= top.length) return;
+        sound.pair(top[pos], b);
+        if (isPair(top[pos], b)) {
+          comp[pos] = b; pos++; hx.setSequence(top, comp.join('')); hx.select(pos < top.length ? pos : -1);
+          if (pos >= top.length) { api.predicted(mistakes <= 1); hx.setSpin(true); api.win('规则是:A 只和 T 配,G 只和 C 配。所以只要知道一条链,就能写出另一条——细胞复制 DNA 靠的就是这个。'); }
+        } else {
+          mistakes++; const tmp = [...comp]; tmp[pos] = b; hx.setSequence(top, tmp.join('')); hx.select(pos);
+          api.guide.say('台阶中间裂开了,声音也不和谐。换一个试试?');
+          setTimeout(() => { hx.setSequence(top, comp.join('')); hx.select(pos); }, 900);
+        }
+      };
+      keys.append(k);
+    }
+    document.querySelector('.ls-actions').append(keys);
+  } },
+
+  { title: '抄写:从 DNA 到 RNA', async run(api) {
+    const c = api.center();
+    c.innerHTML = `<div class="ls-note">DNA(存在细胞核里,不出门)</div><div class="strip seq" id="s">${ch(HBB)}</div>
+      <div class="ls-card ls-panel"><p>细胞要用这段说明书时,会先把它抄写成一条 RNA 带出细胞核。抄写时有一个字母会换成新字母 <b class="b-U">U</b>(尿嘧啶)。</p><p>你猜被换掉的是哪个?</p></div>`;
+    api.guide.ask('RNA 用 U 顶替了 DNA 里的一个字母。U 的颜色和谁一样?', ['U 和被它顶替的字母配对规则一样。', 'U 也和 A 配对。', '和 A 配对的,原本是 T。']);
+    c.append(choice(api, ['A', 'T', 'G', 'C'], 'T', async (ok, o, box) => {
+      if (!ok) { api.guide.say(`${o} 没有变。再想想:U 也和 A 配对。`); return; }
+      box.remove(); api.guide.say('对!看抄写过程:');
+      const spans = c.querySelectorAll('#s span');
+      for (let i = 0; i < spans.length; i++) {
+        const sp = spans[i]; sound.base(HBB[i] === 'T' ? 'U' : HBB[i], { gain: .1 });
+        if (HBB[i] === 'T') { sp.className = 'b-U flip'; sp.textContent = 'U'; }
+        await sleep(reducedMotion() ? 20 : 110);
+      }
+      c.querySelector('.ls-note').textContent = 'mRNA(信使 RNA,带着说明书去核糖体)';
+      api.win('DNA 留在细胞核里当"原稿",抄出来的 mRNA 把 T 换成 U,带着信息去核糖体。');
+    }));
+  } },
+
+  { title: '核糖体流水线', async run(api) {
+    const rna = HBB.replace(/T/g, 'U'), c = api.center();
+    c.innerHTML = `<div class="codons" id="cd"></div><div class="ribo" id="rb">核糖体:三个字母读一次</div><div class="beads" id="bd"></div>`;
+    const cd = c.querySelector('#cd');
+    for (let i = 0; i < rna.length; i += 3) cd.append(el('div', { className: 'codon' }, `<div class="s">${ch(rna.slice(i, i + 3))}</div><div class="a"></div>`));
+    api.guide.ask('核糖体每次读 3 个字母,串上 1 颗氨基酸珠。这里有 27 个字母,能串出几颗珠子?', ['3 个字母一组,叫一个"密码子"。', '27 ÷ 3 = ?', '是 9 颗。']);
+    const q = choice(api, ['3 颗', '9 颗', '27 颗'], '9 颗', async (ok, o, box) => {
+      if (!ok) { api.guide.say(`不是 ${o}。再算算:每 3 个字母一组。`); return; }
+      box.remove(); api.guide.say('开动流水线!');
+      const aas = translate(HBB), bd = c.querySelector('#bd');
+      for (let k = 0; k < aas.length; k++) {
+        const node = cd.children[k]; node.classList.add('on');
+        node.querySelector('.a').textContent = AA_ZH[aas[k]];
+        for (let j = 0; j < 3; j++) sound.base(rna[k * 3 + j], { when: j * .07, gain: .08 });
+        bd.append(el('span', { className: 'bead', textContent: AA_ZH[aas[k]] }));
+        await sleep(reducedMotion() ? 50 : 650); node.classList.remove('on');
+      }
+      c.querySelector('#rb').textContent = '这 9 颗珠子是血红蛋白 β 链的开头。开头的甲硫氨酸之后会被切掉,成熟的 β 链有 146 颗。';
+      api.win('三个字母决定一颗氨基酸,珠子按顺序串起来、折叠,就成了蛋白质。这一段来自真实的人类血红蛋白基因。');
+    });
+    c.append(q);
+  } },
+
+  { title: '改一个字母会怎样?', async run(api) {
+    let seq = [...HBB]; const orig = translate(HBB); const done = { silent: false, sickle: false };
+    const c = api.center();
+    c.innerHTML = `<div class="ls-note">点任意字母可以改写它(A→T→G→C 轮换)</div><div class="codons" id="cd"></div><div class="beads" id="bd"></div>
+      <div class="goals ls-panel" id="gl"></div><div id="rbc"></div>`;
+    const cd = c.querySelector('#cd'), bd = c.querySelector('#bd'), gl = c.querySelector('#gl'), rbc = c.querySelector('#rbc');
+    const cycle = { A: 'T', T: 'G', G: 'C', C: 'A' };
+    function render() {
+      const s = seq.join(''), aas = translate(s);
+      cd.innerHTML = ''; bd.innerHTML = '';
+      for (let k = 0; k < 9; k++) {
+        const cod = s.slice(k * 3, k * 3 + 3), a = codonAA(cod), changed = cod !== HBB.slice(k * 3, k * 3 + 3);
+        const node = el('div', { className: 'codon' + (changed && a !== orig[k] ? ' chg' : '') + (a === '*' ? ' stop' : '') });
+        node.innerHTML = `<div class="s">${[...cod].map((b, j) => `<b class="b-${b}" data-i="${k * 3 + j}">${b}</b>`).join('')}</div><div class="a">${AA_ZH[a]}</div>`;
+        cd.append(node);
+      }
+      aas.forEach((a, k) => bd.append(el('span', { className: 'bead' + (a !== orig[k] ? ' diff' : ''), textContent: AA_ZH[a] })));
+      const diffs = seq.reduce((n, b, i) => n + (b !== HBB[i]), 0);
+      if (diffs === 1 && aas.join('') === orig.join('')) done.silent = true;
+      if (aas[6] === 'V') done.sickle = true;
+      gl.innerHTML = `<div class="${done.silent ? 'ok' : ''}">${done.silent ? '✓' : '○'} 只改 1 个字母,珠子却一颗都没变</div>
+        <div class="${done.sickle ? 'ok' : ''}">${done.sickle ? '✓' : '○'} 让第 7 颗珠子从谷氨酸变成缬氨酸</div>
+        ${aas.includes('*') ? '<div style="color:#fca5a5">出现了"终止"密码子:流水线提前停下,蛋白质变短了。</div>' : ''}`;
+      const sick = aas[6] === 'V';
+      rbc.innerHTML = `<div class="ls-note" style="text-align:center">红细胞形状(示意)</div><svg class="rbc" viewBox="0 0 120 80">${sick
+        ? '<path d="M14 52 Q60 -4 106 52 Q60 22 14 52Z" fill="#b91c1c" stroke="#fca5a5" stroke-width="2"/>'
+        : '<ellipse cx="60" cy="40" rx="44" ry="30" fill="#dc2626"/><ellipse cx="60" cy="40" rx="20" ry="13" fill="#991b1b"/>'}</svg>`;
+      if (done.silent && done.sickle) {
+        api.predicted(true);
+        api.win('有的改动不改变蛋白质(同一种氨基酸有好几个密码子);有的只改一个字母就改变了它。GAG→GTG(医学上按去掉甲硫氨酸后的编号,叫第 6 位)正是镰状细胞病的成因:红细胞容易变成镰刀形。在疟疾流行地区,只带一份这种变化的人反而更不容易得重症疟疾——同一个变化是好是坏,要看环境。');
+      }
+    }
+    cd.addEventListener('click', e => { const i = e.target.dataset.i; if (i === undefined) return; seq[+i] = cycle[seq[+i]]; sound.base(seq[+i]); render(); });
+    api.button('恢复原样', () => { seq = [...HBB]; render(); });
+    api.guide.ask('试着完成下面两个目标。每次只改一个字母,看珠子怎么变。', ['第 4 组 CTG 是亮氨酸。只改它的第 3 个字母会怎样?', '第 7 组 GAG 是谷氨酸。缬氨酸的密码子是 GU_ 开头。', () => { api.guide.say('把第 7 组中间的 A 改成 T(点两下)。'); }]);
+    render();
+  } },
+
+  { title: '在厨房里看见 DNA', run(api) {
+    const c = api.center();
+    c.innerHTML = `<div class="ls-card ls-panel"><h3>🍓 草莓提取 DNA 实验卡</h3>
+      <p><b>材料</b>:草莓 2–3 颗、密封袋、洗洁精 1 勺、食盐 1/2 小勺、清水半杯、咖啡滤纸、透明杯、冰过的高度酒精(药店医用酒精即可,放冰箱冷藏)。</p>
+      <ol><li>草莓去蒂装袋,捏碎约 2 分钟。</li><li>水 + 洗洁精 + 盐混匀,倒进袋里再轻揉 1 分钟:洗洁精打破细胞膜和核膜,盐让 DNA 聚到一起。</li>
+      <li>用滤纸滤到杯里。</li><li>沿杯壁缓缓倒入约等量的冷酒精,不要搅拌。</li><li>几分钟后,交界处会出现白色絮状物。</li></ol>
+      <p class="ls-note">⚠️ 必须有成年人陪同。酒精易燃,远离明火和热源,不可饮用;用完洗手,废液按家里大人的指示处理。</p></div>`;
+    api.guide.ask('还没做实验前先想一想:你看到的白色絮状物,是一条 DNA,还是许多条 DNA 缠在一起?', ['一条 DNA 只有约 2 纳米粗。', '肉眼能看到的东西至少要 0.1 毫米左右。', '所以是成千上万条缠在一起。']);
+    c.append(choice(api, ['一条', '许多条缠在一起'], '许多条缠在一起', (ok, o, box) => {
+      if (!ok) { api.guide.say('一条 DNA 只有约 2 纳米粗,肉眼看不见哦。再想想?'); return; }
+      box.remove();
+      api.win('对!你看到的是来自成千上万个细胞的 DNA 缠成的团。草莓是八倍体,每个细胞有 8 套染色体,所以 DNA 特别多。');
+    }));
+  } },
+]);
+</script>
+</body></html>

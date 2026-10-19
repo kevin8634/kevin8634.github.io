@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>生命源码 Life Source · 创世计划 04 · 生物</title>
+<meta name="description" content="创世计划第 04 世界「生命源码」(生物):读懂生命写好的代码。从指纹放大到碱基对,亲手做遗传实验。免费、免注册。">
+<meta name="theme-color" content="#060a12">
+<link rel="stylesheet" href="ls.css">
+<style>
+html,body{overflow:hidden}
+#atlas{position:fixed;inset:0}
+#atlas canvas{width:100%;height:100%;display:block;touch-action:none}
+#intro{position:fixed;inset:0;z-index:50;background:#060a12;transition:opacity 1s}
+#intro canvas{width:100%;height:100%;display:block}
+#intro .t{position:absolute;left:0;right:0;bottom:7%;text-align:center;opacity:0;transition:opacity 1.2s}
+#intro .t h1{margin:0;font-size:clamp(30px,7vw,54px);letter-spacing:4px;color:#eef5f2}
+#intro .t .en{color:var(--gold);letter-spacing:3px;font-size:14px;margin-top:4px}
+#intro .t p{color:var(--mute);margin:10px 0 0;font-size:15px}
+#intro .badge{position:absolute;right:16px;top:14px;color:var(--gold);font-size:13px;letter-spacing:1px}
+#intro .badge b{display:inline-block;background:var(--em);color:#04120c;border-radius:6px;padding:1px 8px;margin-left:6px}
+#skip{position:absolute;right:16px;bottom:24px}
+#side{position:fixed;left:12px;top:60px;z-index:16;max-width:min(330px,calc(100% - 24px))}
+#side h1{margin:0;font-size:20px}
+#side .sub{color:var(--mute);font-size:13px;margin:2px 0 8px}
+.task{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);padding:8px 10px;border-radius:12px;border:1px solid var(--line);margin-top:8px;background:rgba(6,10,18,.4)}
+.task:hover{border-color:var(--em)}
+.task .q{flex:1;font-size:14px;line-height:1.4}
+.task .st{color:var(--gold);font-size:12px;white-space:nowrap}
+#legend{position:fixed;right:12px;top:60px;z-index:16;font-size:11px;color:var(--mute);text-align:right;line-height:1.7}
+#sheet{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:20;width:min(440px,calc(100% - 24px));display:none}
+#sheet h3{margin:0 0 4px;font-size:16px}
+#sheet .meta{font-size:12px;color:var(--mute);margin-bottom:6px}
+#sheet p{margin:0 0 10px;font-size:14px;line-height:1.6}
+#divebar{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:17}
+#zoomov{position:fixed;inset:0;z-index:45;background:#060a12;display:none}
+#zoomov .zi{position:absolute;left:12px;top:60px;z-index:3;max-width:min(360px,70vw)}
+#zoomov .zi .obj{font-size:16px;font-weight:700}
+#zoomov .zf{position:absolute;left:0;right:0;bottom:96px;text-align:center;color:var(--gold);z-index:3;text-shadow:0 1px 4px #000;padding:0 12px}
+#zoomov .zc{position:absolute;left:50%;bottom:44px;transform:translateX(-50%);z-index:3;display:flex;gap:10px;width:min(560px,92vw)}
+#zoomov .zc input{flex:1;accent-color:#34d399}
+#zoomov .x{position:absolute;right:12px;top:60px;z-index:3}
+@media (max-width:640px){#dive .long{display:none}#legend{display:none}#side{top:56px}.task{padding:6px 8px}}
+</style></head><body>
+<div id="atlas"><canvas></canvas></div>
+<div id="side" class="ls-panel">
+  <h1>生命源码 <span class="ls-tag">04 · 生物</span></h1>
+  <div class="sub">读懂生命写好的代码。点亮的星是可以玩的任务。</div>
+  <div id="tasks"></div>
+</div>
+<div id="legend"></div>
+<div id="sheet" class="ls-panel"></div>
+<div id="divebar"><button class="ls-btn primary" id="dive">🔬 一镜到底<span class="long">:从指纹到碱基对</span></button></div>
+<div id="zoomov"><div class="zw" style="position:absolute;inset:0"></div><div class="zi ls-panel"></div><div class="zf"></div>
+  <button class="ls-btn x" id="zx">✕ 返回图谱</button>
+  <div class="zc"><button class="ls-btn primary" id="zp">▶ 播放</button><input id="zs" type="range" min="0" max="5" step="0.001" value="0"></div></div>
+<div id="intro"><canvas></canvas><div class="badge">创世计划 · 04/07<b>生物</b></div>
+  <div class="t"><h1>生命源码</h1><div class="en">LIFE SOURCE</div><p>读懂生命写好的代码</p></div>
+  <button class="ls-btn" id="skip">跳过 ›</button></div>
+<script type="module">
+import { chrome, TASKS, taskStars, reducedMotion, sound, store } from './ls.js';
+import { LAYERS, CONS, STARS } from './atlas-data.js';
+chrome({ title: '' });
+const $ = s => document.querySelector(s);
+
+/* ---------- 开场:双螺旋长成生命之树 ---------- */
+(function intro() {
+  const box = $('#intro'), cv = box.querySelector('canvas'), g = cv.getContext('2d');
+  const seenIntro = store.get('intro', false);
+  const end = () => { box.style.opacity = 0; setTimeout(() => box.remove(), 1000); store.set('intro', true); };
+  $('#skip').onclick = end;
+  const W = cv.width = innerWidth * devicePixelRatio, H = cv.height = innerHeight * devicePixelRatio, D = devicePixelRatio;
+  const cx = W / 2, base = H * .7, trunkTop = H * .5, R = Math.min(W, H) * .03;
+  // 生命之树分枝(确定性随机)
+  let seed = 3; const rnd = () => (seed = seed * 16807 % 2147483647) / 2147483647;
+  const branches = [];
+  (function grow(x, y, ang, len, depth, t0) {
+    const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
+    branches.push({ x, y, x2, y2, depth, t0, w: Math.max(1, 6 - depth) * D });
+    if (depth < 6) { const n = depth < 2 ? 3 : 2; for (let i = 0; i < n; i++) grow(x2, y2, ang + (i - (n - 1) / 2) * (.55 + rnd() * .25), len * (.68 + rnd() * .12), depth + 1, t0 + .32); }
+  })(cx, trunkTop, -Math.PI / 2, Math.min(H * .1, W * .12), 0, 2.2);
+  const leaves = branches.filter(b => b.depth === 6);
+  const start = performance.now();
+  function draw(now) {
+    const t = reducedMotion() ? 9 : (now - start) / 1000;
+    g.clearRect(0, 0, W, H);
+    // 双螺旋树干(从底部向上生长)
+    const hp = Math.min(1, t / 2.2), yTop = base - (base - trunkTop) * hp;
+    for (let s = 0; s < 2; s++) {
+      g.beginPath();
+      for (let y = base; y >= yTop; y -= 2 * D) { const ph = (base - y) / (R * 2.2) + s * Math.PI; const x = cx + Math.sin(ph) * R; y === base ? g.moveTo(x, y) : g.lineTo(x, y); }
+      g.strokeStyle = s ? '#6ee7b7' : '#10b981'; g.lineWidth = 3 * D; g.shadowColor = '#34d399'; g.shadowBlur = 12 * D; g.stroke();
+    }
+    g.shadowBlur = 0;
+    for (let y = base; y >= yTop; y -= R * .7) { const ph = (base - y) / (R * 2.2); g.beginPath(); g.moveTo(cx + Math.sin(ph) * R, y); g.lineTo(cx - Math.sin(ph) * R, y); g.strokeStyle = ['#4ade80', '#f5b041', '#60a5fa', '#f87171'][Math.floor((base - y) / R) % 4]; g.lineWidth = 2 * D; g.stroke(); }
+    // 分枝
+    for (const b of branches) {
+      const p = Math.max(0, Math.min(1, (t - b.t0) / .4)); if (!p) continue;
+      g.beginPath(); g.moveTo(b.x, b.y); g.lineTo(b.x + (b.x2 - b.x) * p, b.y + (b.y2 - b.y) * p);
+      g.strokeStyle = `rgba(110,231,183,${.5 + .5 / (b.depth + 1)})`; g.lineWidth = b.w; g.stroke();
+    }
+    // 叶子 = 星
+    const lp = Math.max(0, Math.min(1, (t - 4.4) / .8));
+    if (lp) leaves.forEach((b, i) => { const c = Object.values(CONS)[i % 8].color; g.beginPath(); g.arc(b.x2, b.y2, (2.5 + (i % 3)) * D * lp, 0, 7); g.fillStyle = c; g.shadowColor = c; g.shadowBlur = 14 * D; g.fill(); g.shadowBlur = 0; });
+    if (t > 4.6) box.querySelector('.t').style.opacity = 1;
+    if (t < (seenIntro ? 6 : 7.5) && box.isConnected) requestAnimationFrame(draw); else if (box.isConnected) setTimeout(end, reducedMotion() ? 1200 : 300);
+  }
+  requestAnimationFrame(draw);
+})();
+
+/* ---------- 任务列表 ---------- */
+for (const [id, t] of Object.entries(TASKS)) {
+  const a = document.createElement('a'); a.className = 'task'; a.href = `${id}/`;
+  a.innerHTML = `<span class="q"></span><span class="st">★ ${taskStars(id)}/${t.levels * 3}</span>`;
+  a.querySelector('.q').textContent = t.title; $('#tasks').append(a);
+}
+$('#legend').innerHTML = Object.values(CONS).map(c => `<span style="color:${c.color}">●</span> ${c.name}`).join('<br>');
+
+/* ---------- 图谱 ---------- */
+const cv = $('#atlas canvas'), g = cv.getContext('2d');
+let W, H, D, pts = [], sel = null, hover = null;
+const bg = []; for (let i = 0; i < 260; i++) bg.push([Math.random(), Math.random(), Math.random()]);
+function layout() {
+  D = devicePixelRatio; W = cv.width = innerWidth * D; H = cv.height = innerHeight * D;
+  const narrow = innerWidth < 640, top = (narrow ? 250 : 90) * D, bottom = H - 96 * D, left = (narrow ? 50 : 380) * D, right = W - (narrow ? 20 : 120) * D;
+  const lh = (bottom - top) / LAYERS.length;
+  pts = STARS.map((s, i) => ({ s, x: left + s.x * (right - left), y: bottom - (s.layer + .5) * lh + Math.sin(i * 2.3) * lh * .22 }));
+  layout.m = { top, bottom, left, right, lh };
+}
+function draw(now = 0) {
+  const { top, bottom, left, right, lh } = layout.m;
+  g.clearRect(0, 0, W, H);
+  for (const [x, y, z] of bg) { g.fillStyle = `rgba(200,255,230,${.15 + z * .35 * (reducedMotion() ? 1 : (.6 + .4 * Math.sin(now / 900 + z * 20)))})`; g.fillRect(x * W, y * H, 1.2 * D, 1.2 * D); }
+  LAYERS.forEach((name, i) => {
+    const y = bottom - (i + 1) * lh;
+    g.strokeStyle = 'rgba(110,231,183,.08)'; g.lineWidth = 1; g.beginPath(); g.moveTo(left - 30 * D, y); g.lineTo(right, y); g.stroke();
+    g.fillStyle = 'rgba(148,163,168,.75)'; g.font = `${12 * D}px "PingFang SC","Noto Sans SC",sans-serif`; g.fillText(name, left - 44 * D, y + lh / 2 + 4 * D);
+  });
+  // 星座连线(最小生成树,避免长线交叉)
+  for (const k of Object.keys(CONS)) {
+    const ps = pts.filter(p => p.s.con === k); if (ps.length < 2) continue;
+    const inT = [ps[0]], out = ps.slice(1); g.strokeStyle = CONS[k].color + '55'; g.lineWidth = 1.2 * D; g.beginPath();
+    while (out.length) {
+      let bi = 0, bj = 0, bd = Infinity;
+      inT.forEach((a, i) => out.forEach((b, j) => { const d = (a.x - b.x) ** 2 + (a.y - b.y) ** 2; if (d < bd) { bd = d; bi = i; bj = j; } }));
+      const a = inT[bi], b = out.splice(bj, 1)[0]; g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); inT.push(b);
+    }
+    g.stroke();
+  }
+  for (const p of pts) {
+    const c = CONS[p.s.con].color, isTask = !!p.s.task, r = (isTask ? 7 : p.s.soon ? 5 : 3.2) * D;
+    const pulse = isTask && !reducedMotion() ? 1 + .25 * Math.sin(now / 500) : 1;
+    g.globalAlpha = p.s.soon ? .45 : 1;
+    g.beginPath(); g.arc(p.x, p.y, r * pulse, 0, 7); g.fillStyle = c; g.shadowColor = c; g.shadowBlur = (isTask ? 22 : 8) * D; g.fill(); g.shadowBlur = 0;
+    if (isTask || p.s.soon) { g.beginPath(); g.arc(p.x, p.y, r * 2.1, 0, 7); g.strokeStyle = c; g.lineWidth = 1.2 * D; g.setLineDash(p.s.soon ? [3 * D, 3 * D] : []); g.stroke(); g.setLineDash([]); }
+    if (isTask || p === hover || p === sel) { g.fillStyle = '#eef5f2'; g.font = `${(isTask ? 13 : 12) * D}px "PingFang SC","Noto Sans SC",sans-serif`; const label = isTask ? p.s.name : p.s.name; const tw = g.measureText(label).width; g.fillText(label, Math.min(Math.max(p.x - tw / 2, 6 * D), W - tw - 6 * D), p.y - r * 2.4 - 4 * D); }
+    g.globalAlpha = 1;
+  }
+  requestAnimationFrame(draw);
+}
+const near = e => { const x = e.clientX * D, y = e.clientY * D; let best = null, bd = (26 * D) ** 2; for (const p of pts) { const d = (p.x - x) ** 2 + (p.y - y) ** 2; if (d < bd) { bd = d; best = p; } } return best; };
+cv.addEventListener('pointermove', e => { hover = near(e); cv.style.cursor = hover ? 'pointer' : ''; });
+cv.addEventListener('click', e => {
+  sel = near(e); const sh = $('#sheet');
+  if (!sel) { sh.style.display = 'none'; $('#divebar').style.display = ''; return; }
+  const s = sel.s, c = CONS[s.con];
+  sound.tone(392 + s.layer * 60, .3);
+  sh.innerHTML = `<h3></h3><div class="meta">${LAYERS[s.layer]}层 · <span style="color:${c.color}">${c.name}</span>座</div><p></p><div class="ls-actions"></div>`;
+  sh.querySelector('h3').textContent = s.name;
+  sh.querySelector('p').textContent = s.task ? `任务 · ★ ${taskStars(s.task)}/${TASKS[s.task].levels * 3}` : s.soon ? '这颗星即将点亮,下一批任务正在制作中。' : s.note;
+  const act = sh.querySelector('.ls-actions');
+  if (s.task) { const a = document.createElement('a'); a.className = 'ls-btn primary'; a.style.textDecoration = 'none'; a.textContent = '出发 ›'; a.href = `${s.task}/`; act.append(a); }
+  const x = document.createElement('button'); x.className = 'ls-btn'; x.textContent = '关闭'; x.onclick = () => { sh.style.display = 'none'; $('#divebar').style.display = ''; sel = null; }; act.append(x);
+  sh.style.display = 'block'; $('#divebar').style.display = 'none';
+});
+addEventListener('resize', layout); layout(); requestAnimationFrame(draw);
+
+/* ---------- 一镜到底浮层 ---------- */
+let zm = null;
+$('#dive').onclick = async () => {
+  $('#zoomov').style.display = 'block';
+  if (!zm) {
+    const { createZoom, FACTS } = await import('./ls-zoom.js');
+    zm = createZoom($('#zoomov .zw'), { onLevel(i, L) {
+      $('#zoomov .zi').innerHTML = `<div style="color:var(--gold);font-size:12px">观察方式 · ${L.tool}</div><div class="obj">${L.obj}</div><div style="font-size:12px;color:var(--mute)">比例尺 ${L.bar} ${L.tag ? `<span class="ls-tag">${L.tag}</span>` : ''}</div>`;
+      $('#zoomov .zf').textContent = FACTS[i] || '';
+    } });
+    const sl = $('#zs'); sl.oninput = () => zm.setZ(+sl.value);
+    setInterval(() => { if (document.activeElement !== sl && zm) sl.value = zm.z; }, 120);
+    $('#zp').onclick = () => zm.dive({ from: zm.z > 4.9 ? 0 : Math.round(zm.z) });
+  }
+  zm.dive({ from: 0 });
+};
+$('#zx').onclick = () => { $('#zoomov').style.display = 'none'; };
+</script>
+</body></html>
