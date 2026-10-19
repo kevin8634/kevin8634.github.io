@@ -1,186 +1,140 @@
 /* =====================================================================
- * Live Earth 2.2 · le-audio.js
- * LE.audio：全部用 Web Audio 实时合成，零音频文件、零版权问题
- *  背景音乐（生成式太空氛围，类似星空 App 的漂浮感）：
- *   - 慢速和弦铺底：D 利底亚调式 4 个和弦循环，每个 14 秒，交叉淡入淡出
- *   - 每个音 = 正弦 + 微失谐三角波 → 低通（缓慢呼吸的 LFO）→ 长混响
- *   - 低频 D 持续音 + “宇宙风”噪声（带通缓慢扫频）
- *   - 随机高音“星光”铃音（五声音阶），几乎全进混响
- *  音效：按钮点击、开关、镜头飞行呼啸、目标锁定、太阳系时间加速时的轨道嗡鸣
- *  浏览器要求用户先交互才能出声：第一次点击页面时创建 AudioContext 并开始播放背景音乐。
+ * 天枢 Starhelm · le-audio.js(M1.5 起按《创世计划 Genesis 声音设计指南 v1.0》重做)
+ * LE.audio:播放 audio/ 下的原创合成音频(源码 audio/synth.py,numpy+scipy 纯程序合成,无采样)。
+ *  - 调式 D 利底亚(与门户同调),音色:钟声 + 深空垫;背景音乐「天枢 · 深空巡航」96 秒无缝循环。
+ *  - 声音默认关闭;偏好存 localStorage「gn:sh:_pref」({music, sfx}),全部 try/catch。
+ *  - 只在用户手势后创建 AudioContext,并在此时才下载音频;切到后台淡出并挂起。
+ *  - 同一音效 80ms 内不重复;本世界没有悬停音效(触屏也就不会误触发)。
+ *  - 声音即规律:七星域越远音越高;引擎越接近「猜想」音色越飘;
+ *    太阳系时间加速与星际航行时的嗡鸣,音高/亮度随速度(取对数)升高 —— 这两种连续变化的声音实时合成。
  * ===================================================================== */
 (function () {
   'use strict';
   var LE = window.LE;
-  var A = (LE.audio = { music: false, sfx: true, started: false });   // 天枢 Starhelm:背景音乐默认关,用户手动开启后记住
-  var ctx, master, musicBus, sfxBus, reverb, wet, noiseBuf;
+  var A = (LE.audio = { music: false, sfx: false, started: false });
+  var PKEY = 'gn:sh:_pref';
+  var BASE = 'audio/';
+  var NAMES = ['click', 'tick', 'blip', 'toggle-on', 'toggle-off', 'select', 'lock', 'whoosh', 'boom', 'open', 'close', 'unlock', 'soft', 'arrive',
+    'sector-1', 'sector-2', 'sector-3', 'sector-4', 'sector-5', 'sector-6', 'sector-7', 'sector-8', 'ignite-1', 'ignite-2', 'ignite-3'];
+  var ctx, comp, musicGain, sfxGain, buf = {}, musicBuf = null, musicSrc = null, loading = false, last = {}, noiseBuf;
 
-  function store(k, v) { if (v === undefined) { var x = LE.settings.get(k); return x === undefined ? null : (x ? '1' : '0'); } LE.settings.set(k, v === '1'); }
-  if (store('music') === '1') A.music = true;
-  if (store('sfx') === '0') A.sfx = false;
+  /* ---------- 偏好 ---------- */
+  function readPref() {
+    try { var p = JSON.parse(localStorage.getItem(PKEY) || 'null'); if (p) { A.music = !!p.music; A.sfx = !!p.sfx; return; } } catch (e) { }
+    // 旧版本迁移:只迁移用户曾主动打开的开关
+    try { if (LE.settings && LE.settings.get('music') === true) A.music = true; } catch (e) { }
+  }
+  function savePref() { try { localStorage.setItem(PKEY, JSON.stringify({ music: A.music ? 1 : 0, sfx: A.sfx ? 1 : 0 })); } catch (e) { } }
+  readPref();
 
-  /* ------------------------------ 基础图 ------------------------------ */
-  function impulse(sec, decay) {
-    var n = ctx.sampleRate * sec, b = ctx.createBuffer(2, n, ctx.sampleRate);
-    for (var c = 0; c < 2; c++) { var d = b.getChannelData(c); for (var i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, decay); }
-    return b;
-  }
-  function makeNoise() {
-    var n = ctx.sampleRate * 4, b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0), last = 0;
-    for (var i = 0; i < n; i++) { var w = Math.random() * 2 - 1; last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; }   // 棕噪声，柔和
-    return b;
-  }
+  /* ---------- 音频图 ---------- */
   function setup() {
     var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
-    ctx = new AC();
-    master = ctx.createDynamicsCompressor(); master.threshold.value = -18; master.ratio.value = 3; master.connect(ctx.destination);
-    reverb = ctx.createConvolver(); reverb.buffer = impulse(6, 2.6);
-    wet = ctx.createGain(); wet.gain.value = 0.9; reverb.connect(wet); wet.connect(master);
-    musicBus = ctx.createGain(); musicBus.gain.value = 0; musicBus.connect(master);
-    sfxBus = ctx.createGain(); sfxBus.gain.value = A.sfx ? 0.55 : 0; sfxBus.connect(master);
-    noiseBuf = makeNoise();
+    try { ctx = new AC(); } catch (e) { return false; }
+    comp = ctx.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3; comp.connect(ctx.destination);
+    musicGain = ctx.createGain(); musicGain.gain.value = 0; musicGain.connect(ctx.destination);
+    sfxGain = ctx.createGain(); sfxGain.gain.value = 0.7; sfxGain.connect(comp);
+    var n = ctx.sampleRate * 4; noiseBuf = ctx.createBuffer(1, n, ctx.sampleRate);
+    var d = noiseBuf.getChannelData(0), l = 0; for (var i = 0; i < n; i++) { var w = Math.random() * 2 - 1; l = (l + 0.02 * w) / 1.02; d[i] = l * 3.5; }
     return true;
   }
-  function send(node, dry, wetAmt, bus) {
-    var d = ctx.createGain(); d.gain.value = dry; node.connect(d); d.connect(bus);
-    var w = ctx.createGain(); w.gain.value = wetAmt; node.connect(w); w.connect(reverb);
-    // 混响也要跟随所属总线的音量：把湿声单独经过一个跟随增益
-    return { dry: d, wet: w };
+  function fetchBuf(name) {
+    return fetch(BASE + name + '.m4a').then(function (r) { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+      .then(function (ab) { return new Promise(function (res, rej) { ctx.decodeAudioData(ab, res, rej); }); });
+  }
+  function loadSfx() {
+    if (loading) return; loading = true;
+    NAMES.forEach(function (n) { fetchBuf(n).then(function (b) { buf[n] = b; }).catch(function () { }); });
+  }
+  function loadMusic() {
+    if (musicBuf || A._mLoading) return Promise.resolve(musicBuf); A._mLoading = true;
+    return fetchBuf('music-starhelm-loop').then(function (b) { musicBuf = b; return b; }).catch(function () { A._mLoading = false; return null; });
   }
 
-  /* ------------------------------ 背景音乐 ------------------------------ */
-  var mtof = function (m) { return 440 * Math.pow(2, (m - 69) / 12); };
-  // D 利底亚：Dmaj9 → Bm11 → Gmaj7(#11) → Aadd9/E —— 明亮、悬浮、不落地
-  var CHORDS = [[50, 57, 64, 66, 69], [47, 54, 61, 62, 66], [43, 50, 54, 61, 64], [45, 52, 59, 61, 64]];
-  var PENTA = [74, 76, 78, 81, 83, 86, 88, 90, 93];
-  var musicNodes = [], chordIdx = 0, chordTimer = null, bellTimer = null, padWet;
-
-  function padNote(m, t0, dur) {
-    var g = ctx.createGain(); g.gain.setValueAtTime(0, t0);
-    g.gain.linearRampToValueAtTime(0.055, t0 + 5); g.gain.setValueAtTime(0.055, t0 + dur - 6); g.gain.linearRampToValueAtTime(0, t0 + dur);
-    var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 700 + Math.random() * 500; f.Q.value = 0.4;
-    var lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 0.05 + Math.random() * 0.05; lg.gain.value = 350; lfo.connect(lg); lg.connect(f.frequency);
-    var o1 = ctx.createOscillator(); o1.type = 'sine'; o1.frequency.value = mtof(m);
-    var o2 = ctx.createOscillator(); o2.type = 'triangle'; o2.frequency.value = mtof(m); o2.detune.value = (Math.random() < 0.5 ? -1 : 1) * (5 + Math.random() * 5);
-    var o2g = ctx.createGain(); o2g.gain.value = 0.45;
-    o1.connect(f); o2.connect(o2g); o2g.connect(f); f.connect(g);
-    g.connect(musicBus); g.connect(padWet);
-    [o1, o2, lfo].forEach(function (o) { o.start(t0); o.stop(t0 + dur + 0.5); });
-  }
-  function playChord() {
-    var t = ctx.currentTime + 0.05, ch = CHORDS[chordIdx++ % CHORDS.length];
-    ch.forEach(function (m, i) { padNote(m, t + i * 0.35, 20); });
-    chordTimer = setTimeout(playChord, 14000);
-  }
-  function bell() {
-    if (!A.music || !A.started) return;
-    var t = ctx.currentTime + 0.02, m = PENTA[Math.floor(Math.random() * PENTA.length)];
-    var o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
-    o.type = 'sine'; o.frequency.value = mtof(m); o2.type = 'sine'; o2.frequency.value = mtof(m) * 2.76;   // 非谐泛音 → 钟声质感
-    var g2 = ctx.createGain(); g2.gain.value = 0.18; o2.connect(g2); g2.connect(g); o.connect(g);
-    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.03, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0005, t + 4.5);
-    var pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
-    if (pan) { pan.pan.value = Math.random() * 1.6 - 0.8; g.connect(pan); pan.connect(padWet); var d = ctx.createGain(); d.gain.value = 0.25; pan.connect(d); d.connect(musicBus); }
-    else { g.connect(padWet); }
-    o.start(t); o2.start(t); o.stop(t + 5); o2.stop(t + 5);
-    bellTimer = setTimeout(bell, 2500 + Math.random() * 6000);
-  }
-  function startMusic() {
-    padWet = ctx.createGain(); padWet.gain.value = 1.1; padWet.connect(reverb);
-    // 湿声同样受 musicBus 开关影响：通过一个跟随增益
-    var follow = ctx.createGain(); follow.gain.value = 0; padWet.disconnect(); padWet.connect(follow); follow.connect(reverb);
-    A._padFollow = follow;
-    // 低频持续音
-    var sub = ctx.createOscillator(), sg = ctx.createGain(); sub.type = 'sine'; sub.frequency.value = mtof(38); sg.gain.value = 0.05;
-    sub.connect(sg); sg.connect(musicBus); sub.start();
-    // 宇宙风
-    var n = ctx.createBufferSource(); n.buffer = noiseBuf; n.loop = true;
-    var bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 500; bp.Q.value = 0.8;
-    var lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 0.03; lg.gain.value = 380; lfo.connect(lg); lg.connect(bp.frequency);
-    var ng = ctx.createGain(); ng.gain.value = 0.05; n.connect(bp); bp.connect(ng); ng.connect(musicBus); ng.connect(follow);
-    n.start(); lfo.start();
-    playChord(); bellTimer = setTimeout(bell, 4000);
-  }
+  /* ---------- 背景音乐 ---------- */
   function setMusic(on) {
-    A.music = on; store('music', on ? '1' : '0');
-    if (!ctx) return;
+    A.music = on; savePref(); if (!ctx) return;
     var t = ctx.currentTime;
-    [musicBus.gain, A._padFollow && A._padFollow.gain].forEach(function (p) {
-      if (!p) return; p.cancelScheduledValues(t); p.setValueAtTime(p.value, t); p.linearRampToValueAtTime(on ? (p === musicBus.gain ? 0.75 : 0.6) : 0, t + (on ? 4 : 1.2));
-    });
-    if (on && !bellTimer) bell();
+    if (on) {
+      loadMusic().then(function (b) {
+        if (!b || !A.music) return;
+        if (!musicSrc) { musicSrc = ctx.createBufferSource(); musicSrc.buffer = b; musicSrc.loop = true; musicSrc.loopEnd = 96; musicSrc.connect(musicGain); musicSrc.start(); }
+        musicGain.gain.cancelScheduledValues(ctx.currentTime); musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+        musicGain.gain.linearRampToValueAtTime(A._duck ? 0.06 : 0.35, ctx.currentTime + 2);
+      });
+    } else { musicGain.gain.cancelScheduledValues(t); musicGain.gain.setValueAtTime(musicGain.gain.value, t); musicGain.gain.linearRampToValueAtTime(0, t + 0.6); }
   }
+  A.duck = function (on) { A._duck = !!on; if (ctx && A.music) musicGain.gain.setTargetAtTime(on ? 0.06 : 0.35, ctx.currentTime, 0.3); };
 
-  /* ------------------------------ 音效 ------------------------------ */
-  function env(g, t, a, peak, d) { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + d); }
-  function tone(type, f0, f1, t, a, peak, d, wetAmt) {
-    var o = ctx.createOscillator(), g = ctx.createGain(); o.type = type;
-    o.frequency.setValueAtTime(f0, t); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + a + d);
-    env(g, t, a, peak, d); o.connect(g); send(g, 1, wetAmt || 0.15, sfxBus);
-    o.start(t); o.stop(t + a + d + 0.05);
+  /* ---------- 音效 ---------- */
+  function play(name, opt) {
+    if (!ctx || !A.sfx || !A.started) return;
+    var b = buf[name]; if (!b) return;
+    var now = performance.now(); if (last[name] && now - last[name] < 80) return; last[name] = now;
+    var s = ctx.createBufferSource(); s.buffer = b; if (opt && opt.rate) s.playbackRate.value = opt.rate;
+    var g = ctx.createGain(); g.gain.value = opt && opt.gain != null ? opt.gain : 1; s.connect(g); g.connect(sfxGain); s.start();
   }
-  var SFX = {
-    click: function () { var t = ctx.currentTime; tone('sine', 1500, 900, t, 0.004, 0.18, 0.07, 0.1); tone('triangle', 3200, 2400, t, 0.002, 0.03, 0.03, 0); },
-    toggle: function (on) { var t = ctx.currentTime; tone('sine', on ? 660 : 990, null, t, 0.005, 0.12, 0.08); tone('sine', on ? 990 : 660, null, t + 0.07, 0.005, 0.12, 0.12, 0.2); },
-    lock: function () { var t = ctx.currentTime; [880, 1318.5, 1760].forEach(function (f, i) { tone('sine', f, null, t + i * 0.06, 0.006, 0.09, 0.9, 0.5); }); },
-    whoosh: function (dur) {
-      dur = dur || 3; var t = ctx.currentTime;
-      var n = ctx.createBufferSource(); n.buffer = noiseBuf; n.loop = true;
-      var bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.2;
-      bp.frequency.setValueAtTime(220, t); bp.frequency.exponentialRampToValueAtTime(1800, t + dur * 0.55); bp.frequency.exponentialRampToValueAtTime(300, t + dur);
-      var g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t + dur * 0.45); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      n.connect(bp); bp.connect(g); send(g, 1, 0.5, sfxBus); n.start(t); n.stop(t + dur + 0.1);
-      // 低频推进感
-      tone('sine', 55, 90, t, dur * 0.5, 0.25, dur * 0.5, 0.3);
-    },
-    boom: function () { var t = ctx.currentTime; tone('sine', 120, 38, t, 0.01, 0.4, 1.4, 0.6); }
+  var MAP = {
+    click: function () { play('click'); },
+    toggle: function (on) { play(on ? 'toggle-on' : 'toggle-off'); },
+    lock: function () { play('lock'); },
+    whoosh: function (dur) { play('whoosh', { rate: Math.max(0.6, Math.min(1.4, 2.4 / (dur || 2.4))) }); },   // 飞得越久,呼啸越低沉
+    boom: function () { play('boom'); }
   };
-  A.play = function (name, arg) { if (!ctx || !A.sfx || !A.started) return; try { SFX[name](arg); } catch (e) { /* 忽略 */ } };
+  A.play = function (name, arg) { try { if (MAP[name]) MAP[name](arg); else play(name, arg); } catch (e) { } };
 
-  /* ---------- 太阳系时间加速：轨道“嗡鸣”，速度越快越亮 ---------- */
-  var hum = null;
+  /* ---------- 连续变化的声音:嗡鸣(实时合成,随速度变化) ---------- */
+  var hum = null, voyLvl = 0;
+  A.setVoyageHum = function (lvl) { voyLvl = Math.max(0, Math.min(1, lvl || 0)); updateHum(); };
   function updateHum() {
     if (!ctx || !A.started) return;
-    var sp = LE.solar && LE.solar.speed || 1, on = A.sfx && document.body.dataset.mode === 'solar' && sp > 1;
+    var sp = LE.solar && LE.solar.speed || 1;
+    var solar = document.body.dataset.mode === 'solar' && sp > 1 ? Math.min(1, Math.log10(sp) / 6.5) : 0;
+    var lvl = A.sfx ? Math.max(solar, voyLvl) : 0;
+    if (!hum && lvl === 0) return;
     if (!hum) {
       var n = ctx.createBufferSource(); n.buffer = noiseBuf; n.loop = true;
       var lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 200;
-      var o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 55;
+      var o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 36.7;   // D1
       var og = ctx.createGain(); og.gain.value = 0.08; o.connect(og); og.connect(lp);
-      var g = ctx.createGain(); g.gain.value = 0; n.connect(lp); lp.connect(g); send(g, 1, 0.4, sfxBus);
+      var g = ctx.createGain(); g.gain.value = 0; n.connect(lp); lp.connect(g); g.connect(sfxGain);
       n.start(); o.start(); hum = { g: g, lp: lp, o: o };
     }
-    var lvl = on ? Math.min(1, Math.log10(sp) / 6.5) : 0, t = ctx.currentTime;
-    hum.g.gain.setTargetAtTime(lvl * 0.35, t, 0.6);
-    hum.lp.frequency.setTargetAtTime(160 + lvl * 1400, t, 0.6);
-    hum.o.frequency.setTargetAtTime(45 + lvl * 40, t, 0.6);
+    var t = ctx.currentTime;
+    hum.g.gain.setTargetAtTime(lvl * 0.35, t, 0.4);
+    hum.lp.frequency.setTargetAtTime(160 + lvl * 1400, t, 0.4);
+    hum.o.frequency.setTargetAtTime(36.7 * Math.pow(2, lvl * 1.5), t, 0.4);   // D1 往上,速度越快越高
   }
 
-  /* ------------------------------ 绑定 ------------------------------ */
+  /* ---------- 启动 / 后台 ---------- */
   function start() {
-    if (A.started) return;
-    if (!ctx && !setup()) return;
+    if (A.started) return true;
+    if (!ctx && !setup()) return false;
     if (ctx.state === 'suspended') ctx.resume();
-    A.started = true;
-    startMusic();
-    setMusic(A.music);
+    A.started = true; loadSfx(); setMusic(A.music);
+    return true;
   }
+  document.addEventListener('visibilitychange', function () {
+    if (!ctx) return; var t = ctx.currentTime;
+    if (document.hidden) { musicGain.gain.setTargetAtTime(0, t, 0.2); setTimeout(function () { if (document.hidden) ctx.suspend(); }, 700); }
+    else { ctx.resume().then(function () { if (A.music) setMusic(true); }); }
+  });
+
   A.init = function () {
     var bm = document.getElementById('btn-music'), bs = document.getElementById('btn-sfx');
     function sync() { if (bm) bm.setAttribute('aria-pressed', A.music ? 'true' : 'false'); if (bs) bs.setAttribute('aria-pressed', A.sfx ? 'true' : 'false'); }
     sync();
-    // 第一次与页面交互：启动音频（浏览器自动播放策略要求）
-    var first = function () { start(); sync(); window.removeEventListener('pointerdown', first, true); window.removeEventListener('keydown', first, true); };
+    // 已开启声音的回访者:第一次手势时才创建 AudioContext;默认关闭的用户什么都不加载
+    var first = function () { if (A.music || A.sfx) start(); window.removeEventListener('pointerdown', first, true); window.removeEventListener('keydown', first, true); };
     window.addEventListener('pointerdown', first, true); window.addEventListener('keydown', first, true);
     if (bm) bm.addEventListener('click', function (e) { e.stopPropagation(); start(); setMusic(!A.music); sync(); });
     if (bs) bs.addEventListener('click', function (e) {
-      e.stopPropagation(); start(); A.sfx = !A.sfx; store('sfx', A.sfx ? '1' : '0');
-      sfxBus.gain.setTargetAtTime(A.sfx ? 0.55 : 0, ctx.currentTime, 0.05); sync(); if (A.sfx) SFX.toggle(true);
+      e.stopPropagation(); A.sfx = !A.sfx; savePref(); start(); sync();
+      if (A.sfx) setTimeout(function () { A.play('toggle', true); }, 250); else updateHum();
     });
-    // 所有按钮的点击声（声音开关自己除外）
     document.addEventListener('click', function (e) {
       var b = e.target.closest && e.target.closest('button, .le-list li');
-      if (!b || b.closest('.le-sound')) return;
+      if (!b || b.closest('.le-sound') || b.closest('.voy')) return;   // 航行界面自己管声音
       if (b.classList.contains('le-chip') && b.hasAttribute('aria-pressed')) A.play('toggle', b.getAttribute('aria-pressed') === 'true');
       else A.play('click');
     }, true);
