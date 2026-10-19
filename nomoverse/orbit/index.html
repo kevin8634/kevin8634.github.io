@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#07061a">
+<title>为什么宇航员在空间站会飘起来? · 宙律 Nomoverse</title>
+<meta name="description" content="宙律 Nomoverse · 物理探究:亲手扔球、开牛顿大炮、改变引力,看看空间站为什么一直掉不下来。">
+<link rel="stylesheet" href="../core/nv.css">
+</head>
+<body>
+<noscript><p style="padding:16px">这个小实验需要开启 JavaScript。<a href="../">返回宙律首页</a></p></noscript>
+<script src="../core/nv.js"></script>
+<script>
+"use strict";
+(function () {
+  var P = NV.Phys, Dr = NV.Draw, MU = P.MU_EARTH, R = P.R_EARTH;
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function ease(t) { return t < 0 ? 0 : t > 1 ? 1 : t * t * (3 - 2 * t); }
+  /* 引力强弱 → 低频脉冲音高:以 400 km 处 8.69 m/s² 为 E2(82.4 Hz),按 √g 映射 */
+  function pulseHz(gms2) { return Math.max(30, Math.min(260, 82.41 * Math.sqrt(gms2 / 8.694))); }
+  function gHere(mu, r) { return mu / (r * r) * 1000; }   // km/s² → m/s²
+  function orbitView(L, rMax, cyFrac) {
+    var s = Math.min(L.w, L.h * 0.98) / (2 * rMax);
+    return { s: s, cx: L.w / 2, cy: L.h * (cyFrac || 0.5) };
+  }
+  function toS(V, x, y) { return [V.cx + x * V.s, V.cy - y * V.s]; }
+  function bg(L) { var c = L.ctx; c.clearRect(0, 0, L.w, L.h); Dr.stars(c, L.w, L.h, 11, Math.round(L.w * L.h / 5000)); }
+
+  /* ================= 第 1 关 扔得更远 ================= */
+  var L1 = {
+    name: "扔得更远",
+    goal: "站在 20 m 高的山顶水平扔球,让球落进远处的旗帜区。",
+    note: "近地面视为平地,g = 9.8 m/s²;阻力为二次阻力示意。",
+    ask: "先猜一猜:用现在的速度扔出去,球会落在哪里?",
+    predict: { type: "tap", q: "点一下地面,猜球落在哪儿",
+      alt: function () { return [15, 30, 45].map(function (d) { return { label: "约 " + d + " m", make: function () { return { x: d, y: 0 }; } }; }); } },
+    controls: [
+      { id: "v", label: "水平扔出速度", min: 2, max: 30, step: 0.5, value: 8, unit: " m/s" },
+      { id: "drag", type: "toggle", label: "空气阻力", value: false }
+    ],
+    runLabel: "扔球",
+    crit: ["球落进旗帜区", "落点预测误差 ≤ 15%", "2 次以内完成"],
+    hints: ["球离手以后,它在水平方向上有没有被什么东西推着走?", "速度从 8 m/s 换成 16 m/s,落点远了大约几倍?", "只动「速度」这一条规则,别的都别动,再扔一次看看?"],
+    summary: "水平速度越大,同样的下落时间里飞得越远。",
+    lights: "位移与速度、运动的合成",
+    card: { t: "平抛:水平匀速 + 竖直下落", b: "球从同一高度落地所用的时间只由高度和 g 决定;水平速度越大,这段时间里走得越远。", f: "x = v·√(2h/g)", src: "OpenStax《University Physics Volume 1》4.3 抛体运动(CC BY 4.0)" },
+    H: 20, zone: [38, 44],
+    view: function (L) {
+      var s = Math.min(L.w / 82, L.h * 0.78 / 30), gy = L.h * 0.86, ox = Math.max(8, (L.w - 82 * s) / 2) + 8 * s;
+      return { s: s, gy: gy, ox: ox };
+    },
+    toWorld: function (L, x, y) { var V = this.view(L); return { x: Math.max(0, (x - V.ox) / V.s), y: 0 }; },
+    init: function (L) { L.st = { path: null, t: 0, land: null }; },
+    run: function (L) {
+      var r = P.shoot({ v: L.v.v, ang: 0, g: 9.8, x0: 0, y0: this.H, k: L.v.drag ? 0.02 : 0, hoopX: 999, rimY: -9, xMax: 300, dt: 1 / 240 });
+      var p = r.pts, a = p[p.length - 2], b = p[p.length - 1];
+      L.st.land = a[0] + (b[0] - a[0]) * a[1] / (a[1] - b[1]);
+      L.st.path = p; L.st.t = 0; L.st.done = false;
+    },
+    frame: function (L, dt) {
+      var c = L.ctx, V = this.view(L), st = L.st, self = this; bg(L);
+      function S(x, y) { return [V.ox + x * V.s, V.gy - y * V.s]; }
+      // 地球一角(弯曲地平线示意)
+      c.fillStyle = "#1c2f5e"; c.beginPath(); c.moveTo(0, L.h); c.lineTo(0, V.gy); c.quadraticCurveTo(L.w / 2, V.gy - 6, L.w, V.gy); c.lineTo(L.w, L.h); c.fill();
+      c.strokeStyle = "rgba(167,139,250,.6)"; c.lineWidth = 2; c.beginPath(); c.moveTo(0, V.gy); c.quadraticCurveTo(L.w / 2, V.gy - 6, L.w, V.gy); c.stroke();
+      // 山
+      var m0 = S(-7, 0), m1 = S(0, this.H), m2 = S(1.5, 0);
+      c.fillStyle = "#3b2f7a"; c.beginPath(); c.moveTo(m0[0] - 20, V.gy); c.lineTo(m1[0] - 6, m1[1]); c.lineTo(m1[0] + 4, m1[1]); c.lineTo(m2[0] + 8, V.gy); c.fill();
+      // 小人
+      c.strokeStyle = "#eeebff"; c.lineWidth = 2; var hx = m1[0] - 2, hy = m1[1];
+      c.beginPath(); c.arc(hx, hy - 22, 4, 0, 7); c.moveTo(hx, hy - 18); c.lineTo(hx, hy - 8); c.lineTo(hx - 4, hy); c.moveTo(hx, hy - 8); c.lineTo(hx + 4, hy); c.moveTo(hx, hy - 15); c.lineTo(hx + 7, hy - 17); c.stroke();
+      // 刻度
+      for (var d = 10; d <= 70; d += 10) { var q = S(d, 0); c.fillStyle = "rgba(238,235,255,.5)"; c.fillRect(q[0], V.gy, 1, 6); Dr.label(c, d + " m", q[0], V.gy + 18, "#bcb5e2", 11, "center"); }
+      // 旗帜区
+      var z0 = S(this.zone[0], 0), z1 = S(this.zone[1], 0);
+      c.fillStyle = "rgba(110,231,183,.25)"; c.fillRect(z0[0], V.gy - 4, z1[0] - z0[0], 8);
+      c.strokeStyle = "#6ee7b7"; c.beginPath(); c.moveTo((z0[0] + z1[0]) / 2, V.gy); c.lineTo((z0[0] + z1[0]) / 2, V.gy - 26); c.stroke();
+      c.fillStyle = "#6ee7b7"; c.beginPath(); c.moveTo((z0[0] + z1[0]) / 2, V.gy - 26); c.lineTo((z0[0] + z1[0]) / 2 + 14, V.gy - 21); c.lineTo((z0[0] + z1[0]) / 2, V.gy - 16); c.fill();
+      // 预测
+      var pr = L.pred || L.runPred;
+      if (pr) { var pp = S(pr.x, 0); Dr.dashPath(c, [[pp[0], V.gy - 40], [pp[0], V.gy + 2]], "#fbbf24", 2.5); Dr.label(c, "你的预测", pp[0], V.gy - 44, "#fbbf24", 12, "center"); }
+      // 轨迹
+      if (st.path) {
+        if (L.phase === "running") st.t += dt * (L.RM ? 3 : 1);
+        var n = Math.min(st.path.length, Math.floor(st.t * 240) + 1), pts = [];
+        for (var i = 0; i < n; i += 2) pts.push(S(st.path[i][0], Math.max(0, st.path[i][1])));
+        if (n > 0) pts.push(S(st.path[n - 1][0], Math.max(0, st.path[n - 1][1])));
+        Dr.path(c, pts, "#c4b5fd", 2.5);
+        var bp = pts[pts.length - 1]; c.fillStyle = "#fff"; c.beginPath(); c.arc(bp[0], bp[1], 5, 0, 7); c.fill();
+        if (n >= st.path.length && L.phase === "running") {
+          var land = st.land, ok = land >= this.zone[0] && land <= this.zone[1], pe = L.runPred ? Math.abs(L.runPred.x - land) / land : 1;
+          L.sfx("thud");
+          L.finishRun({ pass: ok, predText: "猜落在 " + L.runPred.x.toFixed(1) + " m", resultText: "速度 " + L.v.v + " m/s,实际落在 " + land.toFixed(1) + " m" + (L.v.drag ? "(有阻力)" : ""),
+            html: "你猜 <b>" + L.runPred.x.toFixed(1) + " m</b>,实际 <b>" + land.toFixed(1) + " m</b>(相差 " + Math.round(pe * 100) + "%)。" + (ok ? "<span class=ok>落进旗帜区!</span>" : "<span class=no>" + (land < this.zone[0] ? "没扔到旗帜区。" : "扔过头了。") + "</span>"),
+            say: land < this.zone[0] ? "落在旗子前面了。要让它飞得更远,你想改哪一条规则?" : "飞过头了。哪条规则能让它少飞一点?" });
+        }
+        if (n >= st.path.length) { var lp = S(st.land, 0); c.strokeStyle = "#c4b5fd"; c.lineWidth = 2; c.beginPath(); c.moveTo(lp[0], V.gy - 30); c.lineTo(lp[0], V.gy + 2); c.stroke(); Dr.label(c, "实际", lp[0], V.gy - 34, "#c4b5fd", 12, "center"); }
+      }
+      L.hud.innerHTML = "速度 <b>" + L.v.v + " m/s</b> · 山高 <b>20 m</b>" + (st.land != null && L.phase !== "running" ? " · 落点 <b>" + st.land.toFixed(1) + " m</b>" : "");
+    },
+    predictGood: function (L) { return L.runPred && Math.abs(L.runPred.x - L.st.land) <= Math.max(1.5, 0.15 * L.st.land); },
+    star3: function (L) { return L.attempts <= 2; }
+  };
+
+  /* ================= 第 2 关 牛顿大炮 ================= */
+  var H2 = 150, K_DRAG = 1.2e-6;
+  var L2 = {
+    name: "牛顿大炮",
+    goal: "在 150 km 高的「牛顿之山」上开炮,把炮弹速度调大,直到它绕地球整整一圈都不落地。",
+    note: "地球为均匀球体、无自转,忽略月球与太阳;山高按 150 km 计(示意)。阻力为夸张示意。",
+    ask: "炮弹越快,落得越远……快到什么程度,它就再也落不到地上?",
+    predict: { type: "slider", q: "要多快,炮弹才会一直掉不到地上?", min: 1, max: 12, step: 0.1, value: 5, unit: " km/s" },
+    controls: [
+      { id: "v", label: "炮弹速度", min: 1, max: 12, step: 0.05, value: 3, unit: " km/s", fmt: function (x) { return x.toFixed(2); } },
+      { id: "drag", type: "toggle", label: "空气阻力(夸张示意)", value: false }
+    ],
+    runLabel: "开炮",
+    crit: ["炮弹绕地球一整圈", "速度预测误差 ≤ 0.6 km/s", "3 次以内完成"],
+    hints: ["炮弹落地的地方,随着速度变大,离山越来越远还是越来越近?", "速度 3 km/s 和 6 km/s 的两条轨迹,哪一条更「贴着」地球弯下去?", "只把「炮弹速度」一点点往上调,每次看一眼落点,在哪个速度附近它开始不落地?"],
+    summary: "轨道就是一直在往下掉,只是快到地面「弯走」的速度追不上它。",
+    lights: "环绕速度、逃逸速度",
+    card: { t: "环绕速度", b: "炮弹每下落一点,地球表面也恰好弯下去一点,它就永远落不到地上。在 150 km 高度这个速度约 7.8 km/s;再快到约 11 km/s 就会飞离地球。", f: "v = √(GM/r),GM = 3.986×10¹⁴ m³/s²", src: "OpenStax《University Physics Volume 1》13.4 卫星轨道与能量;GM 取 IERS/WGS-84 地心引力常数" },
+    init: function (L) { L.st = { body: null, trail: [], ang: 0, zoom: L.RM ? 1 : 0, out: "" }; },
+    run: function (L) {
+      var r0 = R + H2;
+      L.st.body = P.body(0, r0, L.v.v, 0); L.st.trail = [[0, r0]]; L.st.ang = 0; L.st.prevA = Math.PI / 2; L.st.out = ""; L.st.done = false; L.st.orbits = 0; L.st.minR = r0;
+    },
+    frame: function (L, dt) {
+      var c = L.ctx, st = L.st; bg(L);
+      st.zoom = Math.min(1, st.zoom + dt / 1.6);
+      var zf = ease(st.zoom), rView = lerp(900, 2.3 * R, zf);
+      var V = orbitView(L, rView, lerp(0.9, 0.5, zf));
+      // 镜头从山顶拉远到整颗地球
+      V.cy = lerp(L.h * 0.5 + (R + H2) * V.s, L.h * 0.5, zf);
+      Dr.earth(c, V.cx, V.cy, R * V.s);
+      // 山
+      var mt = toS(V, 0, R + H2), base = R * V.s;
+      c.fillStyle = "#4a3a8f"; c.beginPath(); c.moveTo(V.cx - Math.max(10, 0.05 * base), V.cy - base + 1); c.lineTo(mt[0], mt[1]); c.lineTo(V.cx + Math.max(10, 0.05 * base), V.cy - base + 1); c.fill();
+      Dr.label(c, "牛顿之山", mt[0] + 8, mt[1] - 4, "#bcb5e2", 11);
+      if (st.body && L.phase === "running" || st.body && !st.done) {
+        var steps = L.RM ? 1600 : 700, sub = 2, n = Math.round(steps * dt / sub);
+        for (var i = 0; i < n && !st.done; i++) {
+          var dragFn = L.v.drag ? function (x, y, vx, vy) { var h = Math.hypot(x, y) - R, sp = Math.hypot(vx, vy), k = K_DRAG * Math.exp(-(h - H2) / 60); return [-k * sp * vx, -k * sp * vy]; } : null;
+          P.advance(st.body, MU, sub, sub, dragFn);
+          var b = st.body, r = Math.hypot(b.x, b.y), a = Math.atan2(b.y, b.x), da = a - st.prevA;
+          if (da > Math.PI) da -= 2 * Math.PI; if (da < -Math.PI) da += 2 * Math.PI;
+          st.ang += -da; st.prevA = a; st.minR = Math.min(st.minR, r);
+          if (st.trail.length === 0 || i % 3 === 0) st.trail.push([b.x, b.y]);
+          if (st.ang >= 2 * Math.PI * (st.orbits + 1)) { st.orbits++; L.snd.pulse(pulseHz(gHere(MU, r))); }
+          if (r < R) { st.out = "crash"; st.done = true; L.snd.glide(330, 70, 0.9); }
+          else if (r > 5.5 * R) { st.out = "escape"; st.done = true; L.sfx("whoosh"); }
+          else if (st.orbits >= 3) { st.out = "orbit"; st.done = true; }
+          if (L.phase === "running" && (st.out || st.orbits >= 1)) this.report(L);
+        }
+      }
+      var pts = st.trail.map(function (p) { return toS(V, p[0], p[1]); });
+      if (st.body && !st.done) pts.push(toS(V, st.body.x, st.body.y));
+      Dr.path(c, pts, "#c4b5fd", 2);
+      if (st.body) { var bp = toS(V, st.body.x, st.body.y); c.fillStyle = "#fff"; c.beginPath(); c.arc(bp[0], bp[1], 4, 0, 7); c.fill(); }
+      var pr = L.pred != null ? L.pred : L.runPred;
+      var spd = st.body ? Math.hypot(st.body.vx, st.body.vy) : L.v.v, alt = st.body ? Math.hypot(st.body.x, st.body.y) - R : H2;
+      L.hud.innerHTML = "速度 <b>" + spd.toFixed(2) + " km/s</b> · 高度 <b>" + Math.max(0, alt).toFixed(0) + " km</b><br>已绕 <b>" + Math.round(st.ang * 180 / Math.PI) + "°</b> · 时间 <b>" + (st.body ? (st.body.t / 60).toFixed(0) : 0) + " 分钟</b>" + (pr != null ? "<br><span style='color:#fbbf24'>你的预测 " + pr.toFixed(1) + " km/s</span>" : "");
+    },
+    report: function (L) {
+      var st = L.st, out = st.orbits >= 1 ? "orbit" : st.out, pv = L.runPred;
+      var txt = out === "orbit" ? "绕地球一整圈!" : out === "crash" ? "落地了(绕了 " + Math.round(st.ang * 180 / Math.PI) + "°)" : "飞离地球了";
+      L.finishRun({ pass: out === "orbit", predText: "猜要 " + pv.toFixed(1) + " km/s", resultText: "以 " + L.v.v.toFixed(2) + " km/s 开炮:" + txt + (L.v.drag ? "(开了阻力)" : ""),
+        html: "你猜要 <b>" + pv.toFixed(1) + " km/s</b>;这一炮 <b>" + L.v.v.toFixed(2) + " km/s</b> → " + (out === "orbit" ? "<span class=ok>" + txt + "</span>" : "<span class=no>" + txt + "</span>"),
+        say: out === "crash" ? "它绕了 " + Math.round(st.ang * 180 / Math.PI) + "° 就落地了。再快一点,落点会跑到哪里去?" : "它飞走了!是不是快过头了?慢一点会怎样?" });
+    },
+    predictGood: function (L) { return Math.abs(L.runPred - P.vCirc(MU, R + H2)) <= 0.6; },
+    star3: function (L) { return L.attempts <= 3; }
+  };
+
+  /* ================= 第 3 关 电梯里的苹果 ================= */
+  var L3 = {
+    name: "电梯里的苹果",
+    goal: "左边是舱里,右边是从外面看。宇航员松开苹果,比较三种情形。",
+    note: "苹果与空间站只受地球引力;「悬停的空间站」是假想情形。",
+    ask: "空间站离地面只有约 400 km,那里还有引力吗?",
+    predict: { type: "choice", q: "在轨道上的空间站里,松开苹果,它会……", options: ["掉到地板上", "飘在原地", "飞向天花板"] },
+    controls: [{ id: "sc", type: "seg", label: "情形", options: ["地面上的房间", "轨道上的空间站", "悬停的空间站(假想)"], value: 1 }],
+    runLabel: "松手",
+    crit: ["在轨道情形里松手", "预测正确", "也试了「悬停」情形"],
+    hints: ["右边画面里,苹果和空间站各自在做什么运动?", "地面房间里的苹果和空间站里的苹果,受的引力差多少?(看右上角的数)", "只把情形换成「悬停的空间站」,苹果相对宇航员还动吗?空间站自己呢?"],
+    summary: "失重不是没有引力,而是你和身边的东西在一起下落。",
+    lights: "失重",
+    card: { t: "失重 = 一起自由下落", b: "约 400 km 高处的引力仍有地面的约 89%。空间站、宇航员和苹果以同样的加速度一起「掉」向地球,彼此之间就没有挤压,看起来像飘着。", f: "g(r) = GM/r²,g(400 km) ≈ 8.7 m/s²", src: "OpenStax《University Physics Volume 1》13.2;NASA ISS 轨道数据" },
+    init: function (L) { L.st = { t: 0, ran: {}, rel: 0, ext: null }; },
+    // 切换情形:清空上一次松手的画面状态(保留已试过的情形记录)
+    onControl: function (L, id) { if (id === "sc" && L.phase !== "running") L.st = { t: 0, ran: L.st.ran || {}, rel: 0, ext: null }; },
+    run: function (L) {
+      var st = L.st, sc = L.v.sc, r0 = R + 400;
+      st.sc = sc; st.t = 0; st.reported = false;
+      var v = sc === 1 ? P.vCirc(MU, r0) : 0;
+      st.stn = P.body(0, r0, v, 0); st.apl = P.body(0, r0 + 0.001, v, 0);   // 苹果在宇航员手上方 1 m
+      st.ext = P.body(0, r0, v, 0); st.trail = [[0, r0]]; st.crash = false;
+      st.appleY = 1.0;   // 地面房间:苹果离地 1 m
+    },
+    frame: function (L, dt) {
+      var c = L.ctx, st = L.st, w = L.w, h = L.h; bg(L);
+      var side = w > h * 1.05, A = side ? { x: 0, y: 0, w: w / 2, h: h } : { x: 0, y: 0, w: w, h: h / 2 }, B = side ? { x: w / 2, y: 0, w: w / 2, h: h } : { x: 0, y: h / 2, w: w, h: h / 2 };
+      var sc = st.sc != null && L.phase !== "observe" ? st.sc : L.v.sc;
+      if (L.phase === "running" || (st.stn && st.t < 6)) {
+        st.t += dt;
+        // 舱内:实时积分(1×)
+        if (sc === 0) { st.appleY = Math.max(0, 1 - 0.5 * 9.8 * st.t * st.t); }
+        else { var n = Math.max(1, Math.round(dt / 0.005)); for (var i = 0; i < n; i++) { P.verletStep(st.stn, MU, dt / n); P.verletStep(st.apl, MU, dt / n); } }
+        // 舱外:加速播放
+        if (sc !== 0 && !st.crash) {
+          var warp = sc === 1 ? 900 : 60, m = Math.round(warp * dt / 1);
+          for (var j = 0; j < m; j++) { P.verletStep(st.ext, MU, 1); if (j % 4 === 0) st.trail.push([st.ext.x, st.ext.y]); if (Math.hypot(st.ext.x, st.ext.y) < R) { st.crash = true; L.snd.glide(300, 60, 0.8); break; } }
+        }
+        if (L.phase === "running" && st.t > 3 && !st.reported) { st.reported = true; this.report(L); }
+      }
+      // ---- 舱内 ----
+      c.save(); c.beginPath(); c.rect(A.x, A.y, A.w, A.h); c.clip();
+      var cx = A.x + A.w / 2, cy = A.y + A.h * 0.55, S = Math.min(A.w * 0.8, A.h * 0.75) / 2.4;   // S px/m
+      c.fillStyle = sc === 0 ? "#1d2440" : "#181540"; c.strokeStyle = "#7c5cf0"; c.lineWidth = 3;
+      c.beginPath(); c.roundRect ? c.roundRect(cx - 1.2 * S, cy - 1.3 * S, 2.4 * S, 2.3 * S, 14) : c.rect(cx - 1.2 * S, cy - 1.3 * S, 2.4 * S, 2.3 * S); c.fill(); c.stroke();
+      Dr.label(c, sc === 0 ? "地面上的房间" : "舱内(实时)", cx, A.y + 16, "#bcb5e2", 12, "center");
+      var floorY = cy + 1.0 * S;
+      // 宇航员
+      var floatOff = sc === 0 ? 0 : Math.sin(st.t * 1.3) * 3;
+      var ax = cx - 0.45 * S, ay = floorY - (sc === 0 ? 0 : 0.25 * S) + floatOff;
+      c.strokeStyle = "#eeebff"; c.lineWidth = 3; c.fillStyle = "#eeebff";
+      c.beginPath(); c.arc(ax, ay - 1.55 * S, 0.14 * S, 0, 7); c.stroke();
+      c.beginPath(); c.moveTo(ax, ay - 1.4 * S); c.lineTo(ax, ay - 0.75 * S); c.lineTo(ax - 0.15 * S, ay); c.moveTo(ax, ay - 0.75 * S); c.lineTo(ax + 0.15 * S, ay); c.moveTo(ax, ay - 1.25 * S); c.lineTo(ax + 0.4 * S, ay - 1.05 * S); c.stroke();
+      // 苹果
+      var handX = ax + 0.45 * S, handY = floorY - 1.0 * S;
+      var apY;
+      if (!st.stn || L.phase === "observe" || (L.phase !== "running" && !st.stn)) apY = handY;
+      else if (sc === 0) apY = floorY - st.appleY * S - 0.08 * S + 0.08 * S * (1 - st.appleY);
+      else { var dx = st.apl.x - st.stn.x, dy = st.apl.y - st.stn.y, up = (dx * st.stn.x + dy * st.stn.y) / Math.hypot(st.stn.x, st.stn.y); st.rel = (up - 0.001) * 1000; apY = handY - st.rel * S; }
+      c.fillStyle = "#ef4444"; c.beginPath(); c.arc(handX, apY - 0.08 * S, 0.08 * S, 0, 7); c.fill(); c.fillStyle = "#22c55e"; c.fillRect(handX - 1, apY - 0.2 * S, 3, 0.06 * S);
+      if (L.runPred != null || L.pred != null) { var pc = L.firstChoice != null ? L.firstChoice : L.pred; var py = pc === 0 ? floorY - 0.08 * S : pc === 1 ? handY - 0.08 * S : cy - 1.3 * S + 0.1 * S; c.save(); c.setLineDash([4, 4]); c.strokeStyle = "#fbbf24"; c.lineWidth = 2; c.beginPath(); c.arc(handX + 0.3 * S, py, 0.09 * S, 0, 7); c.stroke(); c.restore(); Dr.label(c, "预测", handX + 0.45 * S, py + 4, "#fbbf24", 11); }
+      c.restore();
+      // ---- 舱外 ----
+      c.save(); c.beginPath(); c.rect(B.x, B.y, B.w, B.h); c.clip();
+      var V = { s: Math.min(B.w, B.h) * 0.92 / (2 * (R + 900)), cx: B.x + B.w / 2, cy: B.y + B.h / 2 + 6 };
+      Dr.earth(c, V.cx, V.cy, R * V.s);
+      Dr.label(c, sc === 0 ? "房间在地面上" : sc === 1 ? "从外面看(加速 900×)" : "从外面看(加速 60×)", B.x + B.w / 2, B.y + 16, "#bcb5e2", 12, "center");
+      if (sc === 0) { var hp = toS(V, 0, R); c.fillStyle = "#eeebff"; c.fillRect(hp[0] - 5, hp[1] - 9, 10, 9); }
+      else {
+        var ex = st.ext && L.phase !== "observe" ? st.ext : P.body(0, R + 400, 0, 0);
+        if (st.trail && st.ext) Dr.path(c, st.trail.map(function (p) { return toS(V, p[0], p[1]); }), "rgba(196,181,253,.7)", 1.5);
+        var sp = toS(V, ex.x, ex.y); c.fillStyle = "#fff"; c.fillRect(sp[0] - 6, sp[1] - 2, 12, 4); c.fillStyle = "#ef4444"; c.beginPath(); c.arc(sp[0] + 2, sp[1] - 6, 2.5, 0, 7); c.fill();
+        var rr = Math.hypot(ex.x, ex.y); Dr.arrow(c, sp[0], sp[1], sp[0] - ex.x / rr * 26, sp[1] + ex.y / rr * 26, "#fbbf24", 2);
+        if (st.crash) Dr.label(c, "假想:悬停的站会坠向地球", V.cx, B.y + B.h - 10, "#fca5a5", 12, "center");
+      }
+      c.restore();
+      c.strokeStyle = "#2e2a5e"; c.lineWidth = 1; c.beginPath(); if (side) { c.moveTo(w / 2, 0); c.lineTo(w / 2, h); } else { c.moveTo(0, h / 2); c.lineTo(w, h / 2); } c.stroke();
+      var gtxt = sc === 0 ? "9.8 m/s²(100%)" : "8.7 m/s²(约 89%)";
+      L.hud.style.left = side ? (w / 2 + 8) + "px" : "8px"; L.hud.style.top = side ? "26px" : (h / 2 + 24) + "px";
+      L.hud.innerHTML = "这里的引力 <b>" + gtxt + "</b>" + (sc !== 0 && st.stn && L.phase !== "observe" ? "<br>苹果相对宇航员移动 <b>" + Math.abs(st.rel * 100).toFixed(2) + " cm</b>" : "");
+    },
+    leave: function (L) { L.hud.style.left = ""; L.hud.style.top = ""; },
+    report: function (L) {
+      var st = L.st, sc = st.sc; st.ran[sc] = true;
+      var names = ["地面房间:苹果掉到地板上", "轨道空间站:苹果飘在原地", "悬停空间站:苹果仍飘在宇航员身边,但整个站在坠落"];
+      var pc = L.firstChoice, ok = pc === 1;
+      L.finishRun({ pass: sc === 1, predText: "预测在轨道上苹果会「" + L.lv.predict.options[pc] + "」", resultText: names[sc],
+        html: "结果:<b>" + names[sc] + "</b>。" + (sc === 1 ? (ok ? "<span class=ok>和你的预测一致。</span>" : "<span class=no>和你的预测不同。</span>") : "换到「轨道上的空间站」再松一次手?"),
+        say: sc === 0 ? "地面上苹果掉下去了。到了轨道上,引力只少了一成多,结果会一样吗?" : "悬停的站里苹果也飘着,可站本身在干什么?" });
+    },
+    predictGood: function (L) { return L.firstChoice === 1; },
+    star3: function (L) { return !!L.st.ran[2]; }
+  };
+
+  /* ================= 第 4 关 改宇宙 ================= */
+  var L4 = {
+    name: "改宇宙",
+    goal: "拖动地球质量和轨道高度,做出周期 2 小时(115–125 分钟)的轨道。每绕一圈响一声低频脉冲。",
+    note: "圆轨道,地球为均匀球体;改质量时地球大小不变。",
+    ask: "如果地球变重,卫星要飞得更快还是更慢才不掉下来?",
+    predict: { type: "slider", q: "按现在的设置,绕一圈要多少分钟?", min: 30, max: 400, step: 1, value: 60, unit: " 分钟" },
+    controls: [
+      { id: "m", label: "地球质量", min: 0.5, max: 4, step: 0.1, value: 1, unit: " 倍", fmt: function (x) { return "×" + x.toFixed(1); } },
+      { id: "h", label: "轨道高度", min: 200, max: 10000, step: 50, value: 400, unit: " km" }
+    ],
+    runLabel: "绕三圈",
+    crit: ["做出 115–125 分钟的轨道", "周期预测误差 ≤ 15%", "在改过质量的宇宙里完成"],
+    hints: ["听一听:轨道越高,两声脉冲之间隔得更长还是更短?", "质量 ×1 和 ×4、同样高度时,周期差了几倍?", "先只动「高度」把周期凑近 2 小时,再试着只动「质量」?"],
+    summary: "引力越强,需要飞得越快;轨道越高,绕一圈越久。",
+    lights: "万有引力、轨道周期、开普勒第三定律",
+    card: { t: "开普勒第三定律", b: "同一中心天体,轨道越大,周期越长,T² 与 r³ 成正比;中心天体越重,同一高度要飞得越快,周期越短。", f: "T = 2π·√(r³ / GM)", src: "OpenStax《University Physics Volume 1》13.5 开普勒定律" },
+    init: function (L) { L.st = { body: null, trail: [], ang: 0, orbits: 0, Tm: 0, view: 0 }; },
+    mu: function (L) { return MU * L.v.m; },
+    run: function (L) {
+      var mu = this.mu(L), r = R + L.v.h;
+      L.st = { body: P.body(r, 0, 0, P.vCirc(mu, r)), trail: [], ang: 0, prevA: 0, orbits: 0, Tm: 0, mu: mu, r: r, view: L.st.view, done: false, reported: false };
+    },
+    frame: function (L, dt) {
+      var c = L.ctx, st = L.st; bg(L);
+      var mu = st.body ? st.mu : this.mu(L), r = st.body ? st.r : R + L.v.h;
+      var target = r * 1.12; st.view = st.view ? (L.RM ? target : lerp(st.view, target, Math.min(1, dt * 4))) : target;
+      var V = orbitView(L, st.view, 0.5);
+      Dr.earth(c, V.cx, V.cy, R * V.s);
+      c.save(); c.setLineDash([3, 5]); c.strokeStyle = "rgba(196,181,253,.45)"; c.beginPath(); c.arc(V.cx, V.cy, r * V.s, 0, 7); c.stroke(); c.restore();
+      if (st.body && !st.done) {
+        var simPerSec = 1000, sub = 2, n = Math.round(simPerSec * dt / sub);
+        for (var i = 0; i < n; i++) {
+          P.verletStep(st.body, mu, sub);
+          var a = Math.atan2(st.body.y, st.body.x), da = a - st.prevA; if (da < -Math.PI) da += 2 * Math.PI; if (da > Math.PI) da -= 2 * Math.PI;
+          st.ang += da; st.prevA = a;
+          if (st.ang >= 2 * Math.PI * (st.orbits + 1)) {
+            st.orbits++; if (st.orbits === 1) st.Tm = st.body.t / 60;
+            L.snd.pulse(pulseHz(gHere(mu, r)));
+            if (st.orbits >= 3) { st.done = true; break; }
+          }
+          if (i % 2 === 0) { st.trail.push([st.body.x, st.body.y]); if (st.trail.length > 400) st.trail.shift(); }
+        }
+        if (st.orbits >= 1 && L.phase === "running" && !st.reported) { st.reported = true; this.report(L); }
+      }
+      if (st.trail.length) Dr.path(c, st.trail.map(function (p) { return toS(V, p[0], p[1]); }), "#c4b5fd", 2);
+      var sb = st.body || { x: r, y: 0 }, sp = toS(V, sb.x, sb.y);
+      c.fillStyle = "#fff"; c.fillRect(sp[0] - 5, sp[1] - 2, 10, 4);
+      var Tth = P.period(mu, r) / 60;
+      var timer = st.body ? (st.body.t / 60) % Math.max(1e-9, Tth) : 0;
+      // 周期计时器(圆环)
+      var rx = L.w - 34, ry = 34; c.strokeStyle = "#2e2a5e"; c.lineWidth = 6; c.beginPath(); c.arc(rx, ry, 22, 0, 7); c.stroke();
+      c.strokeStyle = "#a78bfa"; c.beginPath(); c.arc(rx, ry, 22, -Math.PI / 2, -Math.PI / 2 + 2 * Math.PI * (timer / Tth)); c.stroke();
+      Dr.label(c, Math.round(timer) + "′", rx, ry + 4, "#eeebff", 12, "center");
+      var pr = L.pred != null ? L.pred : L.runPred;
+      L.hud.innerHTML = "质量 <b>×" + (mu / MU).toFixed(1) + "</b> · 高度 <b>" + (r - R).toFixed(0) + " km</b><br>速度 <b>" + P.vCirc(mu, r).toFixed(2) + " km/s</b> · 引力 <b>" + gHere(mu, r).toFixed(2) + " m/s²</b>" +
+        (st.orbits >= 1 ? "<br>测得周期 <b>" + st.Tm.toFixed(1) + " 分钟</b>" : "") + (pr != null ? "<br><span style='color:#fbbf24'>你的预测 " + pr + " 分钟</span>" : "");
+    },
+    report: function (L) {
+      var T = L.st.Tm, ok = T >= 115 && T <= 125, pe = Math.abs(L.runPred - T) / T;
+      L.finishRun({ pass: ok, predText: "猜周期 " + L.runPred + " 分钟", resultText: "质量×" + L.v.m.toFixed(1) + "、高度 " + L.v.h + " km,测得周期 " + T.toFixed(1) + " 分钟",
+        html: "你猜 <b>" + L.runPred + " 分钟</b>,测得 <b>" + T.toFixed(1) + " 分钟</b>(相差 " + Math.round(pe * 100) + "%)。" + (ok ? "<span class=ok>正好约 2 小时!</span>" : "<span class=no>离 2 小时还差 " + Math.abs(120 - T).toFixed(0) + " 分钟。</span>"),
+        say: T < 115 ? "周期短了。要让它绕得慢一些,你会动哪条规则、往哪边拖?" : "周期长了。哪条规则能让它绕得快一点?" });
+    },
+    predictGood: function (L) { return Math.abs(L.runPred - L.st.Tm) / L.st.Tm <= 0.15; },
+    star3: function (L) { return Math.abs(L.v.m - 1) > 0.05; }
+  };
+
+  /* ================= 第 5 关 追上空间站 ================= */
+  var RT = R + 420, GAP = 10 * Math.PI / 180, FUEL = 250, DV = [0.005, 0.01, 0.02];
+  var L5 = {
+    name: "追上空间站",
+    goal: "你的飞船在同一轨道上,落后空间站 10°。点火变轨,靠到 30 km 内且相对速度 < 30 m/s 就算会合。燃料 250 m/s。",
+    note: "二体模型,冲量式点火(瞬间改变速度);飞船与空间站互不吸引。",
+    ask: "空间站就在前面,你想追上它。直接踩油门加速,会更快追上吗?",
+    predict: { type: "choice", q: "想追上前方的空间站,第一步应该……", options: ["向前点火,加速", "向后点火,减速", "什么都不做,等它"] },
+    controls: [
+      { id: "dv", type: "seg", label: "每次点火", options: ["5 m/s", "10 m/s", "20 m/s"], value: 1, live: true },
+      { id: "fast", type: "seg", label: "时间", options: ["慢放", "快进"], value: 1, live: true }
+    ],
+    runLabel: "开始任务",
+    crit: ["与空间站会合", "预测正确", "燃料用量 ≤ 80 m/s"],
+    hints: ["点火以后,飞船的轨道形状变了吗?点火的那个位置变了吗?", "向前点火和向后点火,哪一种让飞船绕一圈用的时间更短?", "只用「向后点火」一次,看飞船回到点火处时,比空间站早到还是晚到?"],
+    summary: "想追上前面的,先减速降低轨道:低轨道绕得更快。",
+    lights: "变轨与会合",
+    card: { t: "变轨与会合", b: "向后点火让飞船掉到更低的椭圆轨道,绕一圈更快,于是慢慢追上;回到原高度时再向前点火,把轨道变回圆形,与空间站并肩。", f: "T ∝ a^(3/2):a 变小 → 周期变短", src: "OpenStax《University Physics Volume 1》13.5;NASA 交会对接科普资料" },
+    extra: function (L) {
+      var box = NV.el("div", { class: "nv-actions", role: "group", "aria-label": "点火" });
+      var fire = function (dir) { return function () { L.lv.burn(L, dir); }; };
+      L.st.bF = NV.el("button", { class: "nv-btn", type: "button", text: "向前点火 ⇢", onclick: fire(1), disabled: true });
+      L.st.bB = NV.el("button", { class: "nv-btn", type: "button", text: "⇠ 向后点火", onclick: fire(-1), disabled: true });
+      box.appendChild(L.st.bB); box.appendChild(L.st.bF); return box;
+    },
+    init: function (L) { this.setup(L, false); },
+    setup: function (L, live) {
+      var keep = L.st || {};
+      var v = P.vCirc(MU, RT);
+      L.st = { bF: keep.bF, bB: keep.bB, live: live, fuel: FUEL, used: 0, t: 0,
+        tgt: P.body(RT * Math.cos(GAP), RT * Math.sin(GAP), -v * Math.sin(GAP), v * Math.cos(GAP)),
+        me: P.body(RT, 0, 0, v), trail: [], ang: 0, prevA: 0, orbits: 0, burns: 0 };
+      if (L.st.bF) { L.st.bF.disabled = !live; L.st.bB.disabled = !live; }
+    },
+    run: function (L) { this.setup(L, true); },
+    burn: function (L, dir) {
+      var st = L.st; if (!st.live) return;
+      var dv = DV[L.v.dv]; if (st.fuel < dv * 1000 - 1e-9) { L.toast("燃料不够了"); return; }
+      var m = st.me, sp = Math.hypot(m.vx, m.vy);
+      m.vx += dir * dv * m.vx / sp; m.vy += dir * dv * m.vy / sp; m.ax = NaN;
+      st.fuel -= dv * 1000; st.used += dv * 1000; st.burns++;
+      L.snd.glide(dir > 0 ? 110 : 220, dir > 0 ? 220 : 110, 0.25, 0.2);
+    },
+    rel: function (st) {
+      var dx = st.tgt.x - st.me.x, dy = st.tgt.y - st.me.y;
+      return { d: Math.hypot(dx, dy), dv: Math.hypot(st.tgt.vx - st.me.vx, st.tgt.vy - st.me.vy) * 1000, dx: dx, dy: dy };
+    },
+    frame: function (L, dt) {
+      var c = L.ctx, st = L.st; bg(L);
+      var V = orbitView(L, RT * 1.18, 0.5);
+      Dr.earth(c, V.cx, V.cy, R * V.s);
+      c.save(); c.setLineDash([3, 5]); c.strokeStyle = "rgba(196,181,253,.35)"; c.beginPath(); c.arc(V.cx, V.cy, RT * V.s, 0, 7); c.stroke(); c.restore();
+      var rel = this.rel(st);
+      if (st.live && L.phase === "running") {
+        var warp = (L.v.fast === 1 && rel.d > 300) ? 600 : 120; if (L.RM) warp = Math.min(warp, 300);
+        var n = Math.max(1, Math.round(warp * dt));
+        for (var i = 0; i < n; i++) {
+          P.verletStep(st.me, MU, 1); P.verletStep(st.tgt, MU, 1); st.t += 1;
+          var a = Math.atan2(st.me.y, st.me.x), da = a - st.prevA; if (da < -Math.PI) da += 2 * Math.PI; if (da > Math.PI) da -= 2 * Math.PI; st.ang += da; st.prevA = a;
+          if (st.ang >= 2 * Math.PI * (st.orbits + 1)) { st.orbits++; L.snd.pulse(pulseHz(gHere(MU, Math.hypot(st.me.x, st.me.y)))); }
+          if (i % 6 === 0) { st.trail.push([st.me.x, st.me.y]); if (st.trail.length > 700) st.trail.shift(); }
+          rel = this.rel(st);
+          if (rel.d < 30 && rel.dv < 30) { this.end(L, true, rel); break; }
+          if (Math.hypot(st.me.x, st.me.y) < R + 120) { this.end(L, false, rel, "crash"); break; }
+          if (st.orbits >= 10) { this.end(L, false, rel, "time"); break; }
+        }
+      }
+      // 当前轨道(椭圆预览)
+      var el = P.elements(MU, st.me);
+      if (el.e < 0.9 && el.a > 0) {
+        var w = Math.atan2(st.me.y, st.me.x), pts = [];
+        var ex = (st.me.vy * el.h) / MU - st.me.x / Math.hypot(st.me.x, st.me.y), ey = (-st.me.vx * el.h) / MU - st.me.y / Math.hypot(st.me.x, st.me.y);
+        var om = Math.atan2(ey, ex);
+        for (var k = 0; k <= 120; k++) { var nu = k / 120 * 2 * Math.PI, rr = el.a * (1 - el.e * el.e) / (1 + el.e * Math.cos(nu)); pts.push(toS(V, rr * Math.cos(nu + om), rr * Math.sin(nu + om))); }
+        c.save(); c.globalAlpha = 0.6; Dr.path(c, pts, "#fbbf24", 1.2); c.restore();
+      }
+      if (st.trail.length) Dr.path(c, st.trail.map(function (p) { return toS(V, p[0], p[1]); }), "rgba(196,181,253,.8)", 1.5);
+      var tp = toS(V, st.tgt.x, st.tgt.y), mp = toS(V, st.me.x, st.me.y);
+      c.fillStyle = "#6ee7b7"; c.fillRect(tp[0] - 6, tp[1] - 2, 12, 4); Dr.label(c, "空间站", tp[0] + 8, tp[1] - 6, "#6ee7b7", 11);
+      c.fillStyle = "#fff"; c.beginPath(); c.arc(mp[0], mp[1], 4, 0, 7); c.fill(); Dr.label(c, "你", mp[0] + 7, mp[1] + 12, "#eeebff", 11);
+      // 近距视图:以飞船为中心,上 = 远离地心,右 = 前进方向
+      var box = Math.min(130, L.w * 0.32), bx = L.w - box - 8, by = 8;
+      c.fillStyle = "rgba(11,10,31,.85)"; c.strokeStyle = "#2e2a5e"; c.fillRect(bx, by, box, box); c.strokeRect(bx, by, box, box);
+      var rm = Math.hypot(st.me.x, st.me.y), ux = st.me.x / rm, uy = st.me.y / rm, tx = -uy, ty = ux;
+      var radial = rel.dx * ux + rel.dy * uy, along = rel.dx * tx + rel.dy * ty, scale = box / 2 / Math.max(200, Math.min(2000, Math.max(Math.abs(radial), Math.abs(along)) * 1.2));
+      c.fillStyle = "#fff"; c.beginPath(); c.arc(bx + box / 2, by + box / 2, 3, 0, 7); c.fill();
+      var qx = bx + box / 2 + along * scale, qy = by + box / 2 - radial * scale;
+      if (qx > bx && qx < bx + box && qy > by && qy < by + box) { c.fillStyle = "#6ee7b7"; c.fillRect(qx - 4, qy - 2, 8, 4); }
+      Dr.label(c, "近距视图 ±" + Math.round(box / 2 / scale) + " km", bx + 4, by + box - 6, "#bcb5e2", 10);
+      L.hud.innerHTML = "距离 <b>" + rel.d.toFixed(0) + " km</b> · 相对速度 <b>" + rel.dv.toFixed(0) + " m/s</b><br>燃料 <b>" + st.fuel.toFixed(0) + " m/s</b> · 已绕 <b>" + st.orbits + "</b> 圈" +
+        "<br><span style='color:#fbbf24'>黄线:你现在的轨道</span>";
+    },
+    end: function (L, ok, rel, why) {
+      var st = L.st; st.live = false; st.bF.disabled = st.bB.disabled = true; st.ok = ok;
+      if (!ok) L.snd.glide(260, 90, 0.7);
+      var msg = ok ? "会合成功!用了 " + st.used.toFixed(0) + " m/s 燃料、" + (st.t / 60).toFixed(0) + " 分钟。" : why === "crash" ? "飞船掉进大气层了。" : "绕了 10 圈还没追上。";
+      L.finishRun({ pass: ok, predText: "第一步选择「" + L.lv.predict.options[L.firstChoice] + "」", resultText: msg + "(点火 " + st.burns + " 次)",
+        html: ok ? "<span class=ok>" + msg + "</span>" : "<span class=no>" + msg + "</span> 最近距离时你在空间站的哪一边?",
+        say: why === "crash" ? "减速太多,轨道低到碰到大气了。少减一点会怎样?" : "飞船回到点火的位置时,空间站在你前面还是后面?" });
+    },
+    predictGood: function (L) { return L.firstChoice === 1; },
+    star3: function (L) { return L.st.used <= 80 + 1e-6; }
+  };
+
+  NV.task({
+    id: "orbit", guide: "abyss",
+    title: "为什么宇航员在空间站会飘起来?",
+    bridge: { href: "../../starhelm/", label: "天枢 Starhelm「空间站为什么掉不下来?」" },
+    safety: "请勿在现实中模仿:不要从高处抛掷物体;火箭与发射只能在模拟中尝试。",
+    levels: [L1, L2, L3, L4, L5]
+  });
+})();
+</script>
+</body>
+</html>

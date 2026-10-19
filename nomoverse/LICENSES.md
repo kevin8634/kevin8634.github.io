@@ -1,0 +1,26 @@
+# 宙律 Nomoverse · 许可与素材台账
+
+更新:2026-10-19(v0.2-α1)
+
+## 第三方代码
+| 组件 | 版本 | 许可 | 位置 | 说明 |
+|---|---|---|---|---|
+| Three.js | r186(npm `three@0.186.1`) | MIT | `vendor/three.module.min.js`;许可全文 `vendor/three.LICENSE` | 来自 npm 注册表官方 tarball(https://registry.npmjs.org/three/-/three-0.186.1.tgz)。该版本已不再附带 `build/three.module.min.js`,因此用 esbuild 把官方 `build/three.module.js` + `build/three.core.js` 原样打包压缩成单文件(未改动任何源码,文件头保留 `@license` 版权声明)。sha256 `1c5931a54b06ef6f20cf2ed10a7ff1c3ae257d941f965894470b5cd02075e7cf`。只在支持 WebGL 的非低端设备上按需加载,不走 CDN。 |
+
+除此之外,**本站没有其他第三方代码**:`core/nv.js`、`core/nv.css`、各任务页与首页的脚本和样式都是本项目原创。
+
+## 声音
+- `audio/*.m4a` 全部由 `audio/synth.py` 纯程序**原创合成**(无采样、无第三方音色库、无版权素材)。
+- 「声音即规律」的实时音效(多普勒、拍频、低频脉冲等)在浏览器里由 Web Audio 振荡器现场生成。
+
+## 物理常数与数据
+- 标准重力加速度 g = 9.80665 m/s² 等常数按 **CODATA** 约定值;地心引力常数 GM = 3.986004418×10¹⁴ m³/s² 取自 IERS / WGS-84 约定值;声速、行星表面重力等为公开的教科书数据。
+- 公式与数值只用于简化模型的科普探究,不代表工程精度。
+
+## 引用与链接
+- **NASA**:只在知识卡里以文字形式引用其官方公开资料(如行星数据表、ISS 轨道数据),不复制、不内嵌 NASA 的图片、视频或其他素材。
+- OpenStax《University Physics Volume 1》:知识卡中仅做文字出处标注,未复制其内容。
+
+## 字体与图形
+- 只用**系统字体**(系统无衬线字体栈与系统等宽字体栈),不下载、不内置任何网络字体。
+- 向导徽标、图腾、星图和全部画面都由 Canvas / WebGL 程序绘制,无外部图片素材。

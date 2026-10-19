@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#07061a">
+<title>如果引力变成两倍,篮球还能投进吗? · 宙律 Nomoverse</title>
+<meta name="description" content="宙律 Nomoverse · 物理探究:先画出你猜的弧线,再投篮;把引力调成两倍、换到月球和木星,看规律怎么变。">
+<link rel="stylesheet" href="../core/nv.css">
+</head>
+<body>
+<noscript><p style="padding:16px">这个小实验需要开启 JavaScript。<a href="../">返回宙律首页</a></p></noscript>
+<script src="../core/nv.js"></script>
+<script>
+"use strict";
+(function () {
+  var P = NV.Phys, Dr = NV.Draw, G0 = P.G_STD;
+  var X0 = 0, Y0 = 2.1, HX = 4.6, RIM = 3.05, BALL = 0.12;
+  var lastMade = { v: 7.45, ang: 52 };          // 第 1 关进球的出手,第 2 关沿用
+  // 持久化:gn:nv:hoop 本身是星级数组(core Store 每次写星会整体覆盖),故存于同前缀的独立键
+  var LM_KEY = "gn:nv:hoop:last";
+  try {
+    var lm0 = NV.jGet(LM_KEY);
+    if (lm0 && isFinite(lm0.v) && isFinite(lm0.ang) && lm0.v >= 2 && lm0.v <= 16 && lm0.ang >= 15 && lm0.ang <= 80) lastMade = { v: +lm0.v, ang: +lm0.ang };
+  } catch (e) {}
+  function saveLastMade() { try { NV.lsSet(LM_KEY, JSON.stringify(lastMade)); } catch (e) {} }
+
+  function view(L) {
+    var wx = 7.2, wy = 5.8, s = Math.min(L.w / wx, (L.h - 10) / wy);
+    var ox = (L.w - wx * s) / 2 + 1.0 * s, gy = L.h - Math.max(6, (L.h - wy * s) / 2) - 2;
+    return { s: s, ox: ox, gy: gy };
+  }
+  function S(V, x, y) { return [V.ox + x * V.s, V.gy - y * V.s]; }
+  function toWorld(L, x, y) { var V = view(L); return [(x - V.ox) / V.s, (V.gy - y) / V.s]; }
+  function arcTemplates() {
+    return [["低弧", 3.4], ["中弧", 4.1], ["高弧", 5.0]].map(function (a) {
+      return { label: a[0], make: function () {
+        // 过出手点与篮筐、顶点高 a[1] 的抛物线(只作预测草图)
+        var pts = [], H = a[1], xp = HX * Math.sqrt(H - Y0) / (Math.sqrt(H - Y0) + Math.sqrt(H - RIM));
+        for (var i = 0; i <= 30; i++) { var x = i / 30 * (HX + 0.2), k = x <= xp ? (H - Y0) / (xp * xp) : (H - RIM) / ((HX - xp) * (HX - xp)); pts.push([x, H - k * (x - xp) * (x - xp)]); }
+        return pts;
+      } };
+    });
+  }
+  function predErr(pred, path) {
+    if (!pred || !path) return Infinity;
+    var sum = 0, n = 0, j = 0;
+    for (var i = 0; i < pred.length; i++) {
+      var x = pred[i][0];
+      while (j < path.length - 1 && path[j + 1][0] < x) j++;
+      if (j >= path.length - 1 || x < path[0][0]) continue;
+      var a = path[j], b = path[j + 1], t = (x - a[0]) / ((b[0] - a[0]) || 1e-9), y = a[1] + (b[1] - a[1]) * t;
+      sum += Math.abs(pred[i][1] - y); n++;
+    }
+    return n >= 5 ? sum / n : Infinity;
+  }
+  function court(L, V, gLabel) {
+    var c = L.ctx; c.clearRect(0, 0, L.w, L.h); Dr.stars(c, L.w, L.h, 3, Math.round(L.w * L.h / 7000));
+    c.fillStyle = "#231d52"; c.fillRect(0, V.gy, L.w, L.h - V.gy);
+    c.strokeStyle = "#7c5cf0"; c.lineWidth = 2; c.beginPath(); c.moveTo(0, V.gy); c.lineTo(L.w, V.gy); c.stroke();
+    // 篮架
+    var bb0 = S(V, HX + 0.375, 2.9), bb1 = S(V, HX + 0.375, 4.0), pole = S(V, HX + 0.9, 0);
+    c.strokeStyle = "#8f88b8"; c.lineWidth = 3; c.beginPath(); c.moveTo(pole[0], pole[1]); c.lineTo(pole[0], bb0[1] + 10); c.lineTo(bb0[0], bb0[1] + 10); c.stroke();
+    c.strokeStyle = "#eeebff"; c.lineWidth = 3; c.beginPath(); c.moveTo(bb0[0], bb0[1]); c.lineTo(bb1[0], bb1[1]); c.stroke();
+    var r0 = S(V, HX - 0.225, RIM), r1 = S(V, HX + 0.225, RIM);
+    c.strokeStyle = "#f97316"; c.lineWidth = 3; c.beginPath(); c.moveTo(r0[0], r0[1]); c.lineTo(r1[0], r1[1]); c.lineTo(bb0[0], r1[1]); c.stroke();
+    c.strokeStyle = "rgba(238,235,255,.6)"; c.lineWidth = 1; c.beginPath();
+    for (var k = 0; k <= 4; k++) { var xx = r0[0] + (r1[0] - r0[0]) * k / 4; c.moveTo(xx, r0[1]); c.lineTo(r0[0] + (r1[0] - r0[0]) * (0.25 + k / 8), r0[1] + 0.42 * V.s); }
+    c.stroke();
+    // 投篮者
+    var hp = S(V, X0 - 0.15, 0); c.strokeStyle = "#eeebff"; c.lineWidth = 2.5;
+    var hh = 1.9 * V.s; c.beginPath(); c.arc(hp[0], hp[1] - hh, 0.12 * V.s, 0, 7);
+    c.moveTo(hp[0], hp[1] - hh + 0.12 * V.s); c.lineTo(hp[0], hp[1] - 0.9 * V.s); c.lineTo(hp[0] - 0.2 * V.s, hp[1]); c.moveTo(hp[0], hp[1] - 0.9 * V.s); c.lineTo(hp[0] + 0.2 * V.s, hp[1]);
+    var rel = S(V, X0, Y0); c.moveTo(hp[0], hp[1] - 1.55 * V.s); c.lineTo(rel[0], rel[1]); c.stroke();
+    Dr.label(c, gLabel, L.w - 8, 16, "#c4b5fd", 12, "right");
+  }
+  /* 投篮动画与判定(各关共用) */
+  function shotOpts(L, g) {
+    var air = L.v.air ? P.K_BALL : 0;
+    return { v: L.v.v, ang: L.v.ang, g: g, x0: X0, y0: Y0, k: air, wind: air ? (L.v.wind || 0) : 0, hoopX: HX, rimY: RIM, tol: 0.13, dt: 1 / 240, tMax: 12, xMax: 14 };
+  }
+  function startShot(L, g) { var r = P.shoot(shotOpts(L, g)); L.st.shot = r; L.st.t = 0; L.st.g = g; L.st.done = false; return r; }
+  function animShot(L, V, dt, onEnd) {
+    var c = L.ctx, st = L.st, r = st.shot; if (!r) return;
+    if (L.phase === "running") st.t += dt * (L.RM ? 2.5 : 1);
+    var n = L.phase === "running" ? Math.min(r.pts.length, Math.floor(st.t * 240) + 1) : r.pts.length;
+    var pts = []; for (var i = 0; i < n; i += 3) pts.push(S(V, r.pts[i][0], r.pts[i][1]));
+    var last = r.pts[n - 1]; pts.push(S(V, last[0], last[1]));
+    Dr.path(c, pts, "#c4b5fd", 2.5);
+    var bp = S(V, last[0], last[1]);
+    if (bp[1] < 0) { Dr.label(c, "↑ 球在 " + last[1].toFixed(1) + " m 高", Math.max(40, Math.min(L.w - 40, bp[0])), 30, "#fbbf24", 12, "center"); }
+    else { c.fillStyle = "#f97316"; c.beginPath(); c.arc(bp[0], bp[1], Math.max(4, BALL * V.s), 0, 7); c.fill(); c.strokeStyle = "#1f1147"; c.lineWidth = 1; c.beginPath(); c.moveTo(bp[0] - BALL * V.s, bp[1]); c.lineTo(bp[0] + BALL * V.s, bp[1]); c.stroke(); }
+    if (L.phase === "running") {
+      // 声音即规律:球越高音越高(E 利底亚音域内连续滑动)
+      if (!st.vo || !st.vo.alive) st.vo = L.snd.voice("sine", 3000);
+      st.vo.freq(164.8 * Math.pow(2, Math.max(-1, Math.min(4, last[1])) / 2)); st.vo.gain(0.07);
+      if (r.madeIdx > 0 && n > r.madeIdx && !st.swished) { st.swished = true; L.sfx("swish"); }
+      if (n >= r.pts.length && !st.done) { st.done = true; if (st.vo) st.vo.stop(); if (r.res !== "made") L.sfx("thud"); onEnd(r); }
+    }
+  }
+  var RES = { made: "进了!", rim: "砸到篮筐弹出去了", short: "偏短,落在篮筐前", long: "偏长,飞过了篮筐", low: "没够到篮筐的高度", over: "从篮筐上方飞过去了" };
+  function sayFor(res) {
+    return res === "short" || res === "low" ? "球没到篮筐就落下来了。想让它飞得更远,有几条规则可以动?" :
+      res === "long" || res === "over" ? "飞过头了。是速度的问题,还是角度的问题?" :
+      res === "rim" ? "差一点点!只微调一条规则,往哪边调?" : "";
+  }
+  var CTL_V = { id: "v", label: "出手速度", min: 2, max: 16, step: 0.05, value: 6.5, unit: " m/s", fmt: function (x) { return x.toFixed(2); } };
+  var CTL_A = { id: "ang", label: "出手角度", min: 15, max: 80, step: 0.5, value: 50, unit: "°" };
+  function clone(o, patch) { var r = {}; for (var k in o) r[k] = o[k]; for (var j in patch) r[j] = patch[j]; return r; }
+  var NOTE = "篮球视为质点,不计篮板与篮筐碰撞、旋转;阻力为二次阻力(篮球 Cd≈0.47)。";
+
+  /* ================= 第 1 关 地球投篮 ================= */
+  var H1 = {
+    name: "地球投篮",
+    goal: "先用手指画出你猜的球的路线,再调速度和角度,把球投进。",
+    note: NOTE,
+    ask: "你猜,球飞出去的路线是什么形状?",
+    predict: { type: "draw", q: "画出你猜的路线", alt: arcTemplates },
+    toWorld: function (L, x, y) { return toWorld(L, x, y); },
+    controls: [CTL_V, CTL_A],
+    runLabel: "投篮",
+    crit: ["投进一球", "画的路线与实际接近(平均差 ≤ 0.35 m)", "3 次以内投进"],
+    hints: ["球在哪一刻最高?最高点在篮筐的左边还是右边?", "速度不变、角度从 40° 变成 60°,最高点高了还是低了?落点呢?", "先把角度定在 50° 左右不动,只调「出手速度」?"],
+    summary: "抛出去的球走的是一条抛物线:水平匀速,竖直方向被 g 一直往下拉。",
+    lights: "抛体运动",
+    card: { t: "抛体轨迹是抛物线", b: "不计空气阻力时,水平速度不变,竖直速度每秒减少 g ≈ 9.8 m/s,合起来就是一条抛物线。", f: "y = y₀ + x·tanθ − g·x² / (2v²cos²θ)", src: "OpenStax《University Physics Volume 1》4.3 抛体运动" },
+    init: function (L) { L.st = {}; },
+    run: function (L) { L.st.swished = false; startShot(L, G0); },
+    frame: function (L, dt) {
+      var V = view(L); court(L, V, "g = 9.81 m/s²(地球)");
+      var pr = L.drawing ? L.drawPts : (L.pred || L.runPred);
+      if (pr) Dr.dashPath(L.ctx, pr.map(function (p) { return S(V, p[0], p[1]); }), "#fbbf24", 2.5);
+      animShot(L, V, dt, function (r) { H1.report(L, r); });
+      L.hud.innerHTML = "速度 <b>" + L.v.v.toFixed(2) + " m/s</b> · 角度 <b>" + L.v.ang + "°</b><br>篮筐 <b>3.05 m</b> 高 · 距离 <b>4.6 m</b>";
+    },
+    report: function (L, r) {
+      var e = predErr(L.runPred, r.pts), ok = r.res === "made";
+      if (ok) { lastMade = { v: L.v.v, ang: L.v.ang }; saveLastMade(); }
+      L.finishRun({ pass: ok, predText: "画了一条预测路线", resultText: "速度 " + L.v.v.toFixed(2) + " m/s、角度 " + L.v.ang + "°:" + RES[r.res] + ",最高 " + r.peak.toFixed(2) + " m",
+        html: (ok ? "<span class=ok>" : "<span class=no>") + RES[r.res] + "</span> 最高点 <b>" + r.peak.toFixed(2) + " m</b>。" + (isFinite(e) ? "你画的路线平均差 <b>" + e.toFixed(2) + " m</b>。" : "你画的线和实际路线没有重叠的部分。"),
+        say: sayFor(r.res) });
+    },
+    predictGood: function (L) { return predErr(L.runPred, L.st.shot && L.st.shot.pts) <= 0.35; },
+    star3: function (L) { return L.attempts <= 3; }
+  };
+
+  /* ================= 第 2 关 引力 ×2 ================= */
+  var H2 = {
+    name: "引力 ×2",
+    goal: "引力变成地球的两倍。先用刚才进球的出手试一次,再调整,在 2g 下投进。",
+    note: NOTE,
+    ask: "引力变成两倍,同样的出手,球会怎样?",
+    predict: { type: "choice", q: "用刚才进球的出手,在两倍引力下……", options: ["偏短,落在篮筐前", "偏长,飞过篮筐", "照样进"] },
+    controls: [CTL_V, CTL_A],
+    runLabel: "投篮",
+    crit: ["在 2g 下投进", "预测正确", "4 次以内投进"],
+    hints: ["和第 1 关比,这条弧线更「弯」了还是更「平」了?", "同样的角度,2g 下要进球的速度,比地球上大还是小?大概大多少?", "保持角度不变,只把「出手速度」往上调一点点?"],
+    summary: "加速度越大,轨迹弯得越厉害;要投进,就得出手更快(速度约 ×√2)。",
+    lights: "重力加速度、牛顿第二定律",
+    card: { t: "g 决定弯曲程度", b: "物体所受重力 F = mg,加速度就是 g。g 变成两倍,同样的出手下落得更快、射程变短;同角度投进所需速度变为 √2 ≈ 1.41 倍。", f: "a = F/m = g;同角度 v ∝ √g", src: "OpenStax《University Physics Volume 1》5.3 牛顿第二定律、4.3" },
+    init: function (L) { L.st = {}; L.setControl("v", Math.round(lastMade.v * 20) / 20); L.setControl("ang", lastMade.ang); },
+    run: function (L) { L.st.swished = false; startShot(L, 2 * G0); },
+    frame: function (L, dt) {
+      var V = view(L); court(L, V, "g = 19.61 m/s²(2 倍地球)");
+      // 淡紫虚线:地球 g 下同样出手的路线
+      var key = L.v.v + "|" + L.v.ang, st = L.st;   // 参数变化时才重算
+      if (st.refKey !== key) { var r0 = P.shoot(clone(shotOpts(L, G0), {})); st.refKey = key; st.refPts = r0.pts.filter(function (p, i) { return i % 4 === 0; }); }
+      var ref = { pts: st.refPts };
+      L.ctx.save(); L.ctx.globalAlpha = 0.35; Dr.path(L.ctx, ref.pts.map(function (p) { return S(V, p[0], p[1]); }), "#8f88b8", 1.5); L.ctx.restore();
+      animShot(L, V, dt, function (r) { H2.report(L, r); });
+      L.hud.innerHTML = "速度 <b>" + L.v.v.toFixed(2) + " m/s</b> · 角度 <b>" + L.v.ang + "°</b><br><span style='color:#8f88b8'>灰线:同样出手在地球上的路线</span>";
+    },
+    report: function (L, r) {
+      var ok = r.res === "made";
+      L.finishRun({ pass: ok, predText: "预测「" + H2.predict.options[L.firstChoice] + "」", resultText: "2g 下速度 " + L.v.v.toFixed(2) + " m/s、角度 " + L.v.ang + "°:" + RES[r.res],
+        html: (ok ? "<span class=ok>" : "<span class=no>") + RES[r.res] + "</span>" + (L.attempts === 1 ? (L.firstChoice === 0 ? " 和你的预测一致。" : " 和你的预测不同。") : ""),
+        say: sayFor(r.res) });
+    },
+    predictGood: function (L) { return L.firstChoice === 0; },
+    star3: function (L) { return L.attempts <= 4; }
+  };
+
+  /* ================= 第 3 关 月球与木星 ================= */
+  var PLANETS = [["月球", 1.62], ["火星", 3.71], ["木星", 24.79]];
+  var H3 = {
+    name: "月球与木星",
+    goal: "换到月球、火星、木星上,每个星球都投进一球。",
+    note: NOTE + "各星球按表面重力计,忽略大气差异。",
+    ask: "同一个篮筐搬到月球上,你会更用力还是更轻地投?",
+    predict: { type: "choice", q: "在木星上投进,出手速度要比在地球上……", options: ["更大", "更小", "一样"] },
+    controls: [{ id: "pl", type: "seg", label: "星球", options: ["月球 0.17g", "火星 0.38g", "木星 2.53g"], value: 0 }, CTL_V, CTL_A],
+    runLabel: "投篮",
+    crit: ["三个星球都投进", "预测正确", "总共 9 次以内"],
+    hints: ["月球上的弧线,和地球上比是更高更远,还是更低更近?", "火星的 g 大约是月球的几倍?投进需要的速度差多少?", "每换一个星球,先只调「出手速度」,角度保持不动?"],
+    summary: "规律相同,参数不同:g 越小弧线越舒展,g 越大弧线越弯。",
+    lights: "星球表面重力",
+    card: { t: "同一规律,不同参数", b: "月球表面重力约 1.62 m/s²,火星约 3.71 m/s²,木星(云顶)约 24.79 m/s²。抛物线公式完全相同,只是 g 不一样。", f: "g = GM / R²", src: "NASA 行星数据表(Planetary Fact Sheet)" },
+    init: function (L) { L.st = { made: [false, false, false] }; },
+    run: function (L) { L.st.swished = false; startShot(L, PLANETS[L.v.pl][1]); L.st.pl = L.v.pl; },
+    frame: function (L, dt) {
+      var V = view(L), pl = PLANETS[L.v.pl]; court(L, V, pl[0] + " g = " + pl[1] + " m/s²");
+      animShot(L, V, dt, function (r) { H3.report(L, r); });
+      var m = L.st.made.map(function (x, k) { return (x ? "✓" : "○") + PLANETS[k][0]; }).join(" ");
+      L.hud.innerHTML = "速度 <b>" + L.v.v.toFixed(2) + " m/s</b> · 角度 <b>" + L.v.ang + "°</b><br>" + m;
+    },
+    report: function (L, r) {
+      var st = L.st, ok = r.res === "made"; if (ok) st.made[st.pl] = true;
+      var all = st.made.every(Boolean);
+      L.finishRun({ pass: all, predText: "预测木星上要「" + H3.predict.options[L.firstChoice] + "」的速度", resultText: PLANETS[st.pl][0] + " 上速度 " + L.v.v.toFixed(2) + " m/s:" + RES[r.res],
+        html: PLANETS[st.pl][0] + ":" + (ok ? "<span class=ok>" : "<span class=no>") + RES[r.res] + "</span><br>" + st.made.map(function (x, k) { return (x ? "✓ " : "○ ") + PLANETS[k][0]; }).join(" "),
+        say: ok && !all ? "这个星球搞定了。换下一个星球之前,先猜猜速度要调大还是调小?" : sayFor(r.res) });
+    },
+    predictGood: function (L) { return L.firstChoice === 0; },
+    star3: function (L) { return L.attempts <= 9; }
+  };
+
+  /* ================= 第 4 关 荒谬宇宙 ================= */
+  var H4 = {
+    name: "荒谬宇宙",
+    goal: "自由沙盒:把 g 调到 0 到 5 倍,开风试试。在不是地球的 g 下投进一球;三星:三种不同的 g 都投进。",
+    note: NOTE + "风只在开启空气时起作用。",
+    ask: "如果 g 变成 0,球还会落进篮筐吗?",
+    predict: { type: "draw", q: "画出你猜的路线", alt: arcTemplates },
+    toWorld: function (L, x, y) { return toWorld(L, x, y); },
+    controls: [
+      { id: "gm", label: "重力加速度 g", min: 0, max: 5, step: 0.05, value: 0.5, fmt: function (x) { return "×" + x.toFixed(2) + "(" + (x * G0).toFixed(2) + " m/s²)"; } },
+      clone(CTL_V, {}), clone(CTL_A, {}),
+      { id: "air", type: "toggle", label: "空气(阻力)", value: false },
+      { id: "wind", label: "风(正 = 顺风)", min: -8, max: 8, step: 0.5, value: 0, unit: " m/s", enabled: function (L) { return !!L.v.air; } }
+    ],
+    runLabel: "投篮",
+    crit: ["在非地球 g 下投进", "画的路线与实际接近", "三种不同的 g 都投进"],
+    hints: ["g 变成 0 时,球离手以后还会往下弯吗?", "g = 0.5 倍和 g = 3 倍,要投进,哪个需要的速度更大?", "先关掉空气,只动「g」和「出手速度」两条,找到规律后再开风?"],
+    summary: "破坏规律才更懂规律:g = 0 时球走直线,永远不会从上方落进篮筐。",
+    lights: "空气阻力",
+    card: { t: "改规则,看后果", b: "没有 g,球只会沿直线飞;有空气时,阻力与速度平方成正比,顺风让球飞得更远、逆风更近。", f: "a = g + 阻力/m,阻力 ∝ v²", src: "OpenStax《University Physics Volume 1》6.4 阻力与终端速度" },
+    init: function (L) { L.st = { gs: [] }; },
+    onControl: function (L) { L.refreshUI(); },
+    run: function (L) { L.st.swished = false; startShot(L, L.v.gm * G0); L.st.gm = L.v.gm; },
+    frame: function (L, dt) {
+      var V = view(L); court(L, V, "g = ×" + L.v.gm.toFixed(2) + (L.v.air ? " · 风 " + L.v.wind + " m/s" : ""));
+      var pr = L.drawing ? L.drawPts : (L.pred || L.runPred);
+      if (pr) Dr.dashPath(L.ctx, pr.map(function (p) { return S(V, p[0], p[1]); }), "#fbbf24", 2.5);
+      if (L.v.air && L.v.wind) { var y = 40; for (var i = 0; i < 3; i++) { var x = ((performance.now() / 1000 * L.v.wind * 12 * (L.RM ? 0 : 1)) % L.w + L.w + i * L.w / 3) % L.w; Dr.arrow(L.ctx, x, y + i * 18, x + (L.v.wind > 0 ? 18 : -18), y + i * 18, "rgba(196,181,253,.5)", 1.5); } }
+      animShot(L, V, dt, function (r) { H4.report(L, r); });
+      L.hud.innerHTML = "g <b>×" + L.v.gm.toFixed(2) + "</b> · 速度 <b>" + L.v.v.toFixed(2) + " m/s</b> · 角度 <b>" + L.v.ang + "°</b><br>已投进的 g:" + (L.st.gs.length ? L.st.gs.map(function (g) { return "×" + g.toFixed(2); }).join("、") : "—");
+    },
+    report: function (L, r) {
+      var st = L.st, ok = r.res === "made", notEarth = Math.abs(st.gm - 1) > 0.05;
+      if (ok && st.gs.every(function (g) { return Math.abs(g - st.gm) >= 0.5; })) st.gs.push(st.gm);
+      var e = predErr(L.runPred, r.pts);
+      L.finishRun({ pass: ok && notEarth, predText: "画了一条预测路线", resultText: "g×" + st.gm.toFixed(2) + (L.v.air ? "、风 " + L.v.wind + " m/s" : "") + ":" + RES[r.res],
+        html: (ok ? "<span class=ok>" : "<span class=no>") + RES[r.res] + "</span>" + (ok && !notEarth ? " 不过这是地球的 g,换一个 g 吧。" : "") + (isFinite(e) ? " 路线平均差 <b>" + e.toFixed(2) + " m</b>。" : ""),
+        say: st.gm < 0.05 ? "g 是 0 的时候,球的路线还会往下弯吗?" : sayFor(r.res) || "换一个 g 再投,规律还一样吗?" });
+    },
+    predictGood: function (L) { return predErr(L.runPred, L.st.shot && L.st.shot.pts) <= 0.35; },
+    star3: function (L) { return L.st.gs.length >= 3; }
+  };
+
+  NV.task({
+    id: "hoop", guide: "quark",
+    title: "如果引力变成两倍,篮球还能投进吗?",
+    safety: "请勿在现实中模仿:不要从高处抛掷篮球或其他物体。",
+    levels: [H1, H2, H3, H4]
+  });
+})();
+</script>
+</body>
+</html>

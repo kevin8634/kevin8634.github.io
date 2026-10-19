@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#07061a">
+<title>为什么救护车经过时声音会变? · 宙律 Nomoverse</title>
+<meta name="description" content="宙律 Nomoverse · 物理探究:拨动琴弦、让救护车驶过、把声速调慢,亲耳听见多普勒效应与拍频。">
+<link rel="stylesheet" href="../core/nv.css">
+</head>
+<body>
+<noscript><p style="padding:16px">这个小实验需要开启 JavaScript。<a href="../">返回宙律首页</a></p></noscript>
+<script src="../core/nv.js"></script>
+<script>
+"use strict";
+(function () {
+  var P = NV.Phys, Dr = NV.Draw;
+  function bg(L) { L.ctx.clearRect(0, 0, L.w, L.h); Dr.stars(L.ctx, L.w, L.h, 5, Math.round(L.w * L.h / 9000)); }
+  function duck(L, on) { if (!!L.st.ducked !== on) { L.st.ducked = on; L.snd.duck(on); } }
+
+  /* ---------- 示波器 ---------- */
+  function scope(c, x, y, w, h, waves, winMs) {
+    c.save(); c.fillStyle = "rgba(11,10,31,.75)"; c.strokeStyle = "#2e2a5e"; c.fillRect(x, y, w, h); c.strokeRect(x, y, w, h);
+    c.strokeStyle = "rgba(188,181,226,.15)"; c.beginPath(); c.moveTo(x, y + h / 2); c.lineTo(x + w, y + h / 2); c.stroke();
+    waves.forEach(function (wv) {
+      c.strokeStyle = wv.color; c.lineWidth = wv.width || 2; c.setLineDash(wv.dash || []);
+      c.beginPath();
+      for (var i = 0; i <= w; i++) { var t = i / w * winMs / 1000, v = wv.fn(t); var py = y + h / 2 - v * h * 0.42; if (i === 0) c.moveTo(x + i, py); else c.lineTo(x + i, py); }
+      c.stroke();
+    });
+    c.restore();
+    Dr.label(c, winMs + " ms", x + w - 4, y + h - 5, "#8f88b8", 10, "right");
+  }
+
+  /* ================= 第 1 关 声音是振动 ================= */
+  var TARGET = 440;
+  var S1 = {
+    name: "声音是振动",
+    goal: "绿色虚线是一个更高的音(440 Hz)。拖动「振动快慢」,让你的波形和它重合,再点「比较」。",
+    note: "理想弦,只画基频;示波器窗口 10 ms。",
+    ask: "弦振得快一点或慢一点,声音会有什么不同?",
+    predict: { type: "choice", q: "要让声音变得更高,弦要振得……", options: ["更快", "更慢", "一样快,只要更用力"] },
+    controls: [{ id: "f", label: "振动快慢(频率)", min: 110, max: 880, step: 1, value: 220, unit: " Hz" }],
+    runLabel: "比较",
+    crit: ["波形与 440 Hz 重合(误差 ≤ 3%)", "预测正确", "3 次以内完成"],
+    hints: ["示波器里,10 ms 里能数出几个波峰?绿色的呢?", "频率从 220 Hz 调到 330 Hz,波峰多了几个?音高变了吗?", "只动「振动快慢」,让你的波峰数和绿色一样多?"],
+    summary: "每秒振动的次数就是频率:振得越快,音越高。",
+    lights: "振动与频率、音高",
+    card: { t: "频率与音高", b: "声音是物体的振动推动空气形成的波。每秒振动的次数叫频率,单位赫兹(Hz);频率越高,听起来音越高。440 Hz 是常用的标准音 A4。", f: "f = 1 / T", src: "OpenStax《University Physics Volume 1》17.1–17.3 声波" },
+    init: function (L) { L.st = { t: 0, cmp: 0 }; },
+    onControl: function (L, id, v) {
+      var st = L.st; if (!st.vo || !st.vo.alive) st.vo = L.snd.voice("triangle", 3000);
+      st.vo.freq(v); st.vo.gain(0.12); duck(L, true); clearTimeout(st.to);
+      st.to = setTimeout(function () { if (st.vo) st.vo.stop(); duck(L, false); }, 500);
+    },
+    leave: function (L) { if (L.st.vo) L.st.vo.stop(); clearTimeout(L.st.to); duck(L, false); },
+    run: function (L) {
+      var st = L.st, f = L.v.f; st.cmp = 1.8;
+      var a = L.snd.voice("triangle", 3000); a.freq(TARGET); a.gain(0.12); duck(L, true);
+      setTimeout(function () { a.freq(f); }, 750);
+      setTimeout(function () { a.stop(); duck(L, false); }, 1500);
+      setTimeout(function () {
+        var err = Math.abs(f - TARGET) / TARGET, ok = err <= 0.03;
+        L.finishRun({ pass: ok, predText: "选择「" + S1.predict.options[L.firstChoice] + "」", resultText: "调到 " + f + " Hz,目标 440 Hz",
+          html: "你的弦 <b>" + f + " Hz</b>,目标 <b>440 Hz</b>(相差 " + (err * 100).toFixed(1) + "%)。" + (ok ? "<span class=ok>波形重合!</span>" : "<span class=no>" + (f < TARGET ? "你的波峰少一些。" : "你的波峰多一些。") + "</span>"),
+          say: f < TARGET ? "数一数,10 ms 里你的波峰比绿色的多还是少?" : "你的波峰挤得更密了。要往哪边拖?" });
+      }, 1550);
+    },
+    frame: function (L, dt) {
+      var c = L.ctx, st = L.st, w = L.w, h = L.h; bg(L); st.t += dt;
+      var f = L.v.f, x0 = w * 0.1, x1 = w * 0.9, yS = h * 0.28, amp = Math.min(h * 0.12, 40) * (L.RM ? 0.6 : 1);
+      // 弦(视觉上放慢 40 倍)
+      c.fillStyle = "#4a3a8f"; c.fillRect(x0 - 8, yS - 18, 8, 36); c.fillRect(x1, yS - 18, 8, 36);
+      var ph = L.RM ? 0.25 : st.t * f / 40;
+      c.strokeStyle = "#c4b5fd"; c.lineWidth = 2.5; c.shadowColor = "#a78bfa"; c.shadowBlur = 8; c.beginPath();
+      for (var i = 0; i <= 80; i++) { var u = i / 80; var y = yS + Math.sin(Math.PI * u) * amp * Math.sin(2 * Math.PI * ph); if (i === 0) c.moveTo(x0 + u * (x1 - x0), y); else c.lineTo(x0 + u * (x1 - x0), y); }
+      c.stroke(); c.shadowBlur = 0;
+      Dr.label(c, "弦(画面放慢 40 倍)", w / 2, yS + amp + 22, "#bcb5e2", 12, "center");
+      var sh = Math.min(h * 0.38, 160), sy = h * 0.55;
+      var waves = [{ fn: function (t) { return Math.sin(2 * Math.PI * TARGET * t); }, color: "#6ee7b7", dash: [6, 5], width: 2 }, { fn: function (t) { return Math.sin(2 * Math.PI * f * t); }, color: "#c4b5fd", width: 2.5 }];
+      scope(c, x0, sy, x1 - x0, sh, waves, 10);
+      Dr.label(c, "示波器:紫 = 你的弦,绿 = 目标", x0, sy - 6, "#bcb5e2", 11);
+      L.hud.innerHTML = "频率 <b>" + f + " Hz</b> · 10 ms 内 <b>" + (f / 100).toFixed(1) + "</b> 个波";
+    },
+    predictGood: function (L) { return L.firstChoice === 0; },
+    star3: function (L) { return L.attempts <= 3; }
+  };
+
+  /* ---------- 街道 + 波纹(第 2、3 关共用) ---------- */
+  var X = 200, DL = 20;   // 街道半长 200 m,听者离路 20 m
+  function streetSetup(L) {
+    var v = L.v.v, c = L.v.c || P.C_AIR;
+    L.st = { mode: "run", t: 0, x0: -X, v: v, c: c, f: L.v.f || 700, emits: [], lastE: -1, rate: (2 * X / v) / 6, hist: [], heard: 0, boomed: false, maxRatio: 0, reported: false, ducked: L.st.ducked, vo: [] };
+  }
+  function streetView(L) {
+    var gh = Math.max(70, L.h * 0.28), top = L.h - gh;
+    var s = Math.min(L.w / (2 * X * 1.04), top / 160);
+    return { s: s, cx: L.w / 2, ry: top * 0.42, gh: gh, top: top };
+  }
+  function streetFrame(L, dt, opts) {
+    var c = L.ctx, st = L.st, V = streetView(L); bg(L);
+    function S(x, y) { return [V.cx + x * V.s, V.ry - y * V.s]; }
+    // 路
+    c.fillStyle = "#1d1a46"; c.fillRect(0, V.ry - 9 * V.s - 4, L.w, 18 * V.s + 8);
+    c.strokeStyle = "rgba(238,235,255,.3)"; c.setLineDash([12, 10]); c.beginPath(); c.moveTo(0, V.ry); c.lineTo(L.w, V.ry); c.stroke(); c.setLineDash([]);
+    var running = st.mode === "run" && L.phase === "running", dragging = st.mode === "drag";
+    if (running) {
+      st.t += dt * st.rate;
+      var eInt = 0.085 * st.rate;
+      while (st.lastE + eInt <= st.t) { st.lastE = st.lastE < 0 ? 0 : st.lastE + eInt; st.emits.push(st.lastE); }
+    }
+    var xs = st.mode === "drag" ? st.dx : st.x0 + st.v * Math.min(st.t, 2 * X / st.v);
+    // 波纹
+    var maxR = Math.hypot(L.w, L.h) / V.s;
+    c.lineWidth = 1.5;
+    var keep = [];
+    st.emits.forEach(function (e) {
+      var ex = typeof e === "number" ? st.x0 + st.v * e : e.x, te = typeof e === "number" ? e : e.t;
+      var r = st.c * (st.t - te);
+      if (r > maxR) return; keep.push(e);
+      var p = S(ex, 0), a = Math.max(0, 0.8 - r / maxR);
+      c.strokeStyle = "rgba(196,181,253," + a.toFixed(3) + ")"; c.beginPath(); c.arc(p[0], p[1], Math.max(0.5, r * V.s), 0, 7); c.stroke();
+    });
+    st.emits = keep;
+    // 马赫锥辅助线
+    if (opts && opts.cone && st.v > st.c && st.t > 0) {
+      var ang = Math.asin(st.c / st.v), cp = S(xs, 0), Lc = L.w;
+      c.save(); c.strokeStyle = "rgba(251,191,36,.7)"; c.setLineDash([5, 5]); c.lineWidth = 1.5;
+      c.beginPath(); c.moveTo(cp[0], cp[1]); c.lineTo(cp[0] - Math.cos(ang) * Lc, cp[1] - Math.sin(ang) * Lc); c.moveTo(cp[0], cp[1]); c.lineTo(cp[0] - Math.cos(ang) * Lc, cp[1] + Math.sin(ang) * Lc); c.stroke(); c.restore();
+      Dr.label(c, "马赫锥", cp[0] - 50, cp[1] - 30 * Math.tan(ang) - 10, "#fbbf24", 11);
+    }
+    // 救护车
+    var cp2 = S(xs, 0), cw = Math.max(26, 9 * V.s), chh = cw * 0.5;
+    c.fillStyle = "#f5f3ff"; c.fillRect(cp2[0] - cw / 2, cp2[1] - chh / 2, cw, chh);
+    c.fillStyle = "#ef4444"; c.fillRect(cp2[0] - 3, cp2[1] - chh / 2 + 3, 6, chh - 6); c.fillRect(cp2[0] - 8, cp2[1] - 3, 16, 6);
+    c.fillStyle = (Math.floor(st.t * 8) % 2) ? "#60a5fa" : "#ef4444"; c.fillRect(cp2[0] - 4, cp2[1] - chh / 2 - 4, 8, 4);
+    // 听者
+    var lp = S(0, -DL);
+    c.strokeStyle = "#fbbf24"; c.lineWidth = 2; c.beginPath(); c.arc(lp[0], lp[1] - 12, 5, 0, 7); c.moveTo(lp[0], lp[1] - 7); c.lineTo(lp[0], lp[1] + 6); c.moveTo(lp[0] - 6, lp[1]); c.lineTo(lp[0] + 6, lp[1]); c.stroke();
+    Dr.label(c, "你", lp[0] + 9, lp[1] + 4, "#fbbf24", 12);
+    // 听到的频率
+    var fr = [];
+    if (running || (st.mode === "run" && st.t > 0)) {
+      var sols = P.retarded(st.t, 0, st.x0, st.v, st.c, 0, -DL);
+      fr = sols.map(function (te) { return P.receivedFreq(st.f, st.c, te, st.x0, st.v, 0, -DL); });
+      if (running) {
+        if (fr.length) { st.hist.push([st.t, fr.slice()]); fr.forEach(function (x) { st.maxRatio = Math.max(st.maxRatio, x / st.f); }); }
+        if (fr.length >= 2 && !st.boomed) { st.boomed = true; L.snd.boom(); L.toast("轰!音爆"); }
+      }
+    } else if (dragging && st.dv != null) {
+      var dxl = 0 - st.dx, d = Math.hypot(dxl, DL), vt = st.dv * dxl / d;
+      if (Math.abs(vt) < st.c * 0.95) fr = [P.doppler(st.f, st.c, vt)];
+    }
+    // 实时变调
+    if ((running || dragging) && L.snd.on) {
+      duck(L, true);
+      for (var k = 0; k < 2; k++) {
+        if (k < fr.length) {
+          if (!st.vo[k] || !st.vo[k].alive) st.vo[k] = L.snd.voice("triangle", 2200);
+          var dd = Math.hypot(xs, DL); st.vo[k].freq(fr[k]); st.vo[k].gain(0.16 / (1 + dd / 60));
+        } else if (st.vo[k]) st.vo[k].gain(0);
+      }
+    }
+    // 频率曲线
+    var gx = 8, gy = V.top + 4, gw = L.w - 16, gh = V.gh - 12, tEnd = 2 * X / st.v + 1.5 * X / st.c;
+    c.fillStyle = "rgba(11,10,31,.8)"; c.strokeStyle = "#2e2a5e"; c.fillRect(gx, gy, gw, gh); c.strokeRect(gx, gy, gw, gh);
+    var fmin = st.f * 0.6, fmax = st.f * 1.6;
+    function GY(fq) { return gy + gh - (Math.log(fq / fmin) / Math.log(fmax / fmin)) * gh; }
+    c.strokeStyle = "rgba(188,181,226,.35)"; c.setLineDash([3, 4]); c.beginPath(); c.moveTo(gx, GY(st.f)); c.lineTo(gx + gw, GY(st.f)); c.stroke(); c.setLineDash([]);
+    Dr.label(c, "原音 " + Math.round(st.f) + " Hz", gx + 4, GY(st.f) - 4, "#8f88b8", 10);
+    Dr.label(c, "你听到的音高 →时间", gx + gw - 4, gy + 12, "#bcb5e2", 10, "right");
+    if (opts && opts.predCurve && L.firstChoice != null) {
+      var pc = L.firstChoice, hi = GY(st.f * 1.12), lo = GY(st.f * 0.89), mid = GY(st.f);
+      var y1 = pc === 0 ? hi : pc === 1 ? lo : mid, y2 = pc === 0 ? lo : pc === 1 ? hi : mid;
+      Dr.dashPath(c, [[gx, y1], [gx + gw * 0.42, y1], [gx + gw * 0.5, y2], [gx + gw, y2]], "#fbbf24", 2);
+    }
+    if (st.hist.length > 1) {
+      c.fillStyle = "#c4b5fd";
+      st.hist.forEach(function (hp) { hp[1].forEach(function (fq) { var px = gx + Math.min(1, hp[0] / tEnd) * gw; c.fillRect(px - 1, GY(Math.max(fmin, Math.min(fmax, fq))) - 1, 2.5, 2.5); }); });
+    }
+    if (running && st.t >= tEnd) { st.vo.forEach(function (v) { v && v.stop(); }); duck(L, false); if (opts && opts.onEnd) opts.onEnd(L); }
+    var cur = fr.length ? fr.map(function (x) { return Math.round(x); }).join(" / ") + " Hz" : (running ? "(还没传到)" : "—");
+    L.hud.innerHTML = "车速 <b>" + st.v + " m/s</b> · 声速 <b>" + st.c + " m/s</b> · 马赫数 <b>" + (st.v / st.c).toFixed(2) + "</b><br>你听到 <b>" + cur + "</b>";
+  }
+
+  /* ================= 第 2 关 救护车驶过 ================= */
+  var S2 = {
+    name: "救护车驶过",
+    goal: "救护车鸣笛驶过你身边。先猜你听到的音高怎么变,再运行。不运行时也可以用手指拖着车走。",
+    note: "声源匀速直线、空气静止;画面时间按比例压缩,音高按 f′ = f·c/(c − v) 实时计算。",
+    ask: "救护车靠近你和离开你的时候,声波有什么不一样?",
+    predict: { type: "choice", q: "车经过你时,你听到的音高……", options: ["靠近时更高,远离时更低", "靠近时更低,远离时更高", "一直不变"] },
+    controls: [
+      { id: "v", label: "车速", min: 5, max: 60, step: 1, value: 25, unit: " m/s" },
+      { id: "f", label: "鸣笛频率", min: 300, max: 900, step: 10, value: 700, unit: " Hz" }
+    ],
+    runLabel: "开过来",
+    crit: ["让救护车驶过(车速 ≥ 10 m/s)", "预测正确", "让靠近时的音高比原音高 10% 以上"],
+    hints: ["看车头前面和车尾后面的波纹,哪边挤得更密?", "车速 10 m/s 和 50 m/s 时,曲线的「台阶」哪个更高?", "只动「车速」,能让靠近时的音高比原音高出一成吗?"],
+    summary: "声源朝你来,波被挤密、音变高;离你而去,波被拉疏、音变低。",
+    lights: "多普勒效应、波长",
+    card: { t: "多普勒效应", b: "声源向你运动时,后发出的波离你更近,波长变短、频率变高;远离时相反。救护车车速约 25 m/s 时,音高变化约 7%。", f: "f′ = f · c / (c ∓ v_s)", src: "OpenStax《University Physics Volume 1》17.7 多普勒效应" },
+    init: function (L) { L.st = {}; streetSetup(L); L.st.t = 0; L.st.mode = "run"; },
+    onControl: function (L) { if (L.phase !== "running") { var d = L.st.ducked; streetSetup(L); L.st.ducked = d; } },
+    leave: function (L) { (L.st.vo || []).forEach(function (v) { v && v.stop(); }); duck(L, false); },
+    run: function (L) { var d = L.st.ducked; (L.st.vo || []).forEach(function (v) { v && v.stop(); }); streetSetup(L); L.st.ducked = d; },
+    onPointer: function (L, type, x, y, e) {
+      if (L.phase === "running") return;
+      var st = L.st, V = streetView(L), wx = (x - V.cx) / V.s, now = performance.now() / 1000;
+      if (type === "down" && Math.abs(y - V.ry) < 40) {
+        var d = st.ducked; streetSetup(L); st = L.st; st.ducked = d;
+        st.mode = "drag"; st.dx = wx; st.dv = 0; st.lt = now; st.t = 0; st.emits = []; st.nextE = 0;
+      } else if (type === "move" && st.mode === "drag") {
+        var dtt = Math.max(0.008, now - st.lt), nv = (wx - st.dx) / dtt;
+        st.dv = Math.max(-80, Math.min(80, st.dv * 0.7 + nv * 0.3)); st.dx = Math.max(-X, Math.min(X, wx)); st.lt = now;
+      } else if (type === "up" && st.mode === "drag") {
+        st.mode = "idle"; (st.vo || []).forEach(function (v) { v && v.stop(); }); duck(L, false);
+      }
+    },
+    frame: function (L, dt) {
+      var st = L.st;
+      if (st.mode === "drag") { st.t += dt; if (st.t >= st.nextE) { st.emits.push({ t: st.t, x: st.dx }); st.nextE = st.t + 0.03; } }
+      if (st.mode === "idle") st.t += dt;
+      streetFrame(L, dt, { predCurve: true, onEnd: function () { S2.report(L); } });
+    },
+    report: function (L) {
+      var st = L.st, ok = st.v >= 10, up = (st.maxRatio - 1) * 100;
+      L.finishRun({ pass: ok, predText: "选择「" + S2.predict.options[L.firstChoice] + "」", resultText: "车速 " + st.v + " m/s,靠近时最高 " + Math.round(st.f * st.maxRatio) + " Hz(原音 " + st.f + " Hz),远离时更低",
+        html: "原音 <b>" + st.f + " Hz</b>,靠近时最高 <b>" + Math.round(st.f * st.maxRatio) + " Hz</b>(高 " + up.toFixed(1) + "%),远离后更低。" + (L.firstChoice === 0 ? "<span class=ok>和你的预测一致。</span>" : "<span class=no>和你的预测不同,看看黄色虚线和紫色点。</span>") + (ok ? "" : " 车速太慢了,快一点再试?"),
+        say: ok ? "曲线中间那一下「跳」,发生在车的哪个位置?" : "车开得太慢,变化不明显。车速调大一些呢?" });
+    },
+    predictGood: function (L) { return L.firstChoice === 0; },
+    star3: function (L) { return L.st.maxRatio >= 1.1; }
+  };
+
+  /* ================= 第 3 关 改声速 ================= */
+  var S3 = {
+    name: "改声速",
+    goal: "在「荒谬宇宙」里把声速调到比车还慢,看车头前的波纹发生了什么。",
+    note: "二维几何模型;真实音爆与空气的非线性有关,这里只示意波前叠加。",
+    ask: "如果声音跑得比车还慢,车前面的人什么时候才能听到它?",
+    predict: { type: "choice", q: "把声速调到比车还慢,车头前的波纹会……", options: ["挤成一个尖尖的锥", "均匀地散开", "全部消失"] },
+    controls: [
+      { id: "c", label: "声速", min: 10, max: 1500, step: 1, value: 343, unit: " m/s" },
+      { id: "med", type: "seg", label: "快速选择", options: ["空气 343", "水 1480", "荒谬 20"], value: 0 },
+      { id: "v", label: "车速", min: 10, max: 60, step: 1, value: 30, unit: " m/s" }
+    ],
+    runLabel: "开过来",
+    crit: ["让车比声音快(马赫数 ≥ 1)", "预测正确", "做出马赫数 ≥ 2 的锥"],
+    hints: ["车头前面的波纹,一圈和下一圈之间的距离在变大还是变小?", "马赫数 0.5 和 1.5 时,车前面还有波纹吗?", "只动「声速」,让它比「车速」小,看看车前方?"],
+    summary: "声源比声速还快时,波前在后方叠成锥面,锥扫过你才听到「轰」的一声。",
+    lights: "声速、马赫锥与音爆",
+    card: { t: "声速与马赫锥", b: "声速由介质决定:20 °C 空气约 343 m/s,水约 1480 m/s。声源快过声速时,波前在身后叠成锥,速度越快锥越尖。", f: "sin θ = c / v = 1 / M", src: "OpenStax《University Physics Volume 1》17.2 声速、17.7 冲击波" },
+    init: function (L) { L.st = {}; streetSetup(L); L.st.best = 0; },
+    onControl: function (L, id, v) {
+      if (id === "med") L.setControl("c", [343, 1480, 20][v]);
+      if (L.phase !== "running") { var d = L.st.ducked, b = L.st.best; streetSetup(L); L.st.ducked = d; L.st.best = b; }
+    },
+    leave: function (L) { (L.st.vo || []).forEach(function (v) { v && v.stop(); }); duck(L, false); },
+    run: function (L) { var d = L.st.ducked, b = L.st.best; (L.st.vo || []).forEach(function (v) { v && v.stop(); }); streetSetup(L); L.st.ducked = d; L.st.best = b; },
+    frame: function (L, dt) { streetFrame(L, dt, { cone: true, onEnd: function () { S3.report(L); } }); },
+    report: function (L) {
+      var st = L.st, M = st.v / st.c; st.best = Math.max(st.best || 0, M);
+      var ok = M >= 1;
+      L.finishRun({ pass: ok, predText: "选择「" + S3.predict.options[L.firstChoice] + "」", resultText: "车速 " + st.v + " m/s、声速 " + st.c + " m/s,马赫数 " + M.toFixed(2),
+        html: "马赫数 <b>" + M.toFixed(2) + "</b>。" + (ok ? "<span class=ok>波纹在车后叠成锥" + (M > 1 ? ",半顶角约 " + Math.round(Math.asin(1 / M) * 180 / Math.PI) + "°" : "") + "。</span>" : "<span class=no>车还没快过声音。</span>"),
+        say: ok ? "锥扫过你之前,你听得到车吗?" : "车头前的波纹被挤得更密了。声速再慢下去会怎样?" });
+    },
+    predictGood: function (L) { return L.firstChoice === 0; },
+    star3: function (L) { return (L.st.best || 0) >= 2; }
+  };
+
+  /* ================= 第 4 关 和声与拍频 ================= */
+  var F1 = 220;
+  function ratioName(r) {
+    var best = null;
+    for (var q = 1; q <= 5; q++) for (var p = q; p <= 2 * q + 1; p++) { if (Math.abs(p / q - r) / r < 0.01 && (!best || q < best[1])) best = [p, q]; }
+    return best;
+  }
+  var S4 = {
+    name: "和声与拍频",
+    goal: "左边音叉固定 220 Hz。调右边音叉,分别找到并「锁定」:① 2:1 ② 3:2 ③ 每秒 1–5 次的「哇哇」拍频。",
+    note: "两个纯音叠加;拍频 = |f₁ − f₂|。",
+    ask: "两个音一起响,什么时候听起来最融洽?",
+    predict: { type: "choice", q: "两个音频率很接近(220 Hz 和 223 Hz)一起响,你会听到……", options: ["一个忽强忽弱的音", "两个清楚分开的音", "完全没有声音"] },
+    controls: [
+      { id: "f2", label: "右边音叉频率", min: 200, max: 480, step: 0.5, value: 260, unit: " Hz", live: true },
+      { id: "play", type: "toggle", label: "一起发声(需开启声音)", value: false, live: true }
+    ],
+    runLabel: "锁定这一组",
+    crit: ["三组都找到", "预测正确", "6 次锁定以内完成"],
+    hints: ["下面的包络线,什么时候会一鼓一瘪?", "f₂ = 440 和 f₂ = 445 时,上面两条波形的波峰对齐得一样整齐吗?", "只动右边音叉,让它离 220 Hz 只差几赫兹,数一数每秒「哇」几下?"],
+    summary: "频率成简单整数比时听起来融洽;两个频率很接近时,会听到每秒 |f₁ − f₂| 次的拍。",
+    lights: "拍频、频率比与和声",
+    card: { t: "频率比与拍频", b: "2:1 是八度,3:2 是纯五度——波峰周期性地对齐,听起来融洽。两个频率差几赫兹时,叠加后的振幅忽大忽小,每秒变化 |f₁ − f₂| 次。", f: "f_拍 = |f₁ − f₂|", src: "OpenStax《University Physics Volume 1》17.6 拍频" },
+    init: function (L) { L.st = { found: [false, false, false], t: 0 }; },
+    onControl: function (L) { this.sound(L); },
+    sound: function (L) {
+      var st = L.st, want = L.v.play && L.snd.on;
+      if (want) {
+        if (!st.a || !st.a.alive) st.a = L.snd.voice("sine", 4000);
+        if (!st.b || !st.b.alive) st.b = L.snd.voice("sine", 4000);
+        st.a.freq(F1); st.b.freq(L.v.f2); st.a.gain(0.11); st.b.gain(0.11); duck(L, st.a.alive);
+      } else { if (st.a) st.a.stop(); if (st.b) st.b.stop(); duck(L, false); }
+    },
+    leave: function (L) { L.v.play = false; this.sound(L); },
+    run: function (L) {
+      var f2 = L.v.f2, st = L.st, hit = -1;
+      if (Math.abs(f2 / F1 - 2) <= 0.01) hit = 0; else if (Math.abs(f2 / F1 - 1.5) <= 0.01) hit = 1; else if (Math.abs(f2 - F1) >= 1 && Math.abs(f2 - F1) <= 5) hit = 2;
+      var names = ["2:1(八度)", "3:2(五度)", "拍频 " + Math.abs(f2 - F1).toFixed(1) + " 次/秒"];
+      if (hit >= 0 && !st.found[hit]) { st.found[hit] = true; L.sfx("star"); }
+      var all = st.found.every(Boolean);
+      var list = st.found.map(function (x, k) { return (x ? "✓ " : "○ ") + ["2:1", "3:2", "拍频 1–5 Hz"][k]; }).join(" ");
+      setTimeout(function () {
+        L.finishRun({ pass: all, predText: "选择「" + S4.predict.options[L.firstChoice] + "」", resultText: "f₂ = " + f2 + " Hz,比值 " + (f2 / F1).toFixed(3) + (hit >= 0 ? ",找到 " + names[hit] : ",不是目标组合"),
+          html: "f₂ = <b>" + f2 + " Hz</b>,比值 <b>" + (f2 / F1).toFixed(3) + "</b>。" + (hit >= 0 ? "<span class=ok>找到 " + names[hit] + "!</span>" : "<span class=no>这一组不是目标。</span>") + "<br>" + list,
+          say: all ? "" : hit >= 0 ? "找到一组了!还差哪一组?" : "看看比值:离哪个简单整数比最近?" });
+      }, 60);
+    },
+    frame: function (L, dt) {
+      var c = L.ctx, st = L.st, w = L.w, h = L.h, f2 = L.v.f2; bg(L); st.t += dt;
+      if (L.v.play && L.snd.on && (!st.a || !st.a.alive)) this.sound(L);
+      var pad = 10, wh = Math.max(50, (h - 40) * 0.3), y1 = 26;
+      scope(c, pad, y1, w - 2 * pad, wh, [
+        { fn: function (t) { return Math.sin(2 * Math.PI * F1 * t) * 0.9; }, color: "#6ee7b7", width: 1.8 },
+        { fn: function (t) { return Math.sin(2 * Math.PI * f2 * t) * 0.9; }, color: "#c4b5fd", width: 1.8 }], 25);
+      Dr.label(c, "绿 220 Hz · 紫 " + f2 + " Hz", pad, y1 - 8, "#bcb5e2", 11);
+      var y2 = y1 + wh + 26, wh2 = Math.max(50, h - y2 - 30);
+      c.fillStyle = "rgba(11,10,31,.75)"; c.strokeStyle = "#2e2a5e"; c.fillRect(pad, y2, w - 2 * pad, wh2); c.strokeRect(pad, y2, w - 2 * pad, wh2);
+      var win = 2, df = Math.abs(f2 - F1), mid = y2 + wh2 / 2;
+      c.fillStyle = "rgba(167,139,250,.45)"; c.beginPath(); c.moveTo(pad, mid);
+      for (var i = 0; i <= w - 2 * pad; i++) { var t = i / (w - 2 * pad) * win; var env = Math.abs(Math.cos(Math.PI * df * t)); c.lineTo(pad + i, mid - env * wh2 * 0.45); }
+      for (var j = w - 2 * pad; j >= 0; j--) { var t2 = j / (w - 2 * pad) * win; var env2 = Math.abs(Math.cos(Math.PI * df * t2)); c.lineTo(pad + j, mid + env2 * wh2 * 0.45); }
+      c.closePath(); c.fill();
+      Dr.label(c, "合成后的响度(2 秒)", pad, y2 - 8, "#bcb5e2", 11);
+      var rn = ratioName(f2 / F1);
+      L.hud.innerHTML = "比值 f₂:f₁ = <b>" + (f2 / F1).toFixed(3) + "</b>" + (rn ? " ≈ <b>" + rn[0] + ":" + rn[1] + "</b>" : "") + " · 频率差 <b>" + df.toFixed(1) + " Hz</b>";
+      var fl = st.found.map(function (x, k) { return (x ? "✓" : "○") + ["2:1", "3:2", "拍频"][k]; }).join("  ");
+      Dr.label(c, fl, w - pad, h - 8, "#eeebff", 12, "right");
+    },
+    predictGood: function (L) { return L.firstChoice === 0; },
+    star3: function (L) { return L.attempts <= 6; }
+  };
+
+  NV.task({
+    id: "sound", guide: "ripple",
+    title: "为什么救护车经过时声音会变?",
+    bridge: { href: "../../math-atlas/chord/", label: "星图 Math Atlas「为什么有的和弦好听」" },
+    safety: "实验时请把音量调小;不要长时间听高音量的声音。",
+    levels: [S1, S2, S3, S4]
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#07061a">
+<title>宙律 Nomoverse · 亲手改写宇宙的规律 · 创世计划 Genesis</title>
+<meta name="description" content="宙律 Nomoverse · 创世计划 Genesis 02 · 物理:把引力调大一点、把声速调慢一点,在改写规律中理解规律。三个探究任务、十三关、宇宙尺度知识星图。">
+<link rel="stylesheet" href="core/nv.css">
+<style>
+  body { background: radial-gradient(ellipse at 70% 0%, var(--bg-hi) 0%, var(--bg) 55%) fixed, var(--bg); }
+  .hm { max-width: 1180px; margin: 0 auto; padding: 0 14px 30px; }
+  .hm-sec { margin: 26px 0 0; }
+  .hm-h { font-size: 18px; margin: 0 0 4px; color: var(--tx); }
+  .hm-sub { margin: 0 0 12px; font-size: 13px; color: var(--mu); }
+
+  /* ① 图腾 */
+  .hero { display: grid; grid-template-columns: 1fr; gap: 6px; padding-top: 14px; }
+  .hero h1 { margin: 0; font-size: clamp(24px, 6.4vw, 40px); line-height: 1.2; letter-spacing: .5px; }
+  .hero h1 .en { color: var(--ac); font-weight: 700; }
+  .hero h1 .tag { display: block; font-size: .56em; font-weight: 600; color: var(--ac2); margin-top: 4px; letter-spacing: 1px; }
+  .hero .series { margin: 6px 0 0; color: var(--mu); font-size: 14px; letter-spacing: 1px; }
+  .hero .lead { margin: 8px 0 0; color: var(--tx); font-size: 15px; max-width: 34em; }
+  .totem { position: relative; height: 54vw; min-height: 230px; max-height: 440px; border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--glass-bd); background: radial-gradient(ellipse at 50% 40%, var(--bg-hi) 0%, var(--bg) 78%); box-shadow: var(--sh-1); }
+  .totem canvas.gl3 { z-index: 1; }
+  .totem .cap, .totem .hudtag { z-index: 2; }
+  .totem .hudtag { position: absolute; right: 10px; top: 8px; font: 11px/1.3 var(--mono); color: var(--cy2); letter-spacing: 1px; pointer-events: none; text-shadow: 0 1px 2px #000; }
+  .totem canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .totem .cap { position: absolute; left: 10px; bottom: 6px; font-size: 11px; color: var(--mu); text-shadow: 0 1px 2px #000; pointer-events: none; }
+  .gctl { margin: 8px 0 0; }
+  .gctl label { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; color: var(--mu); }
+  .gctl output { color: var(--cy2); font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .gctl input[type=range] { width: 100%; height: 32px; margin: 0; accent-color: var(--ac); }
+  .gctl .hint { font-size: 12px; color: var(--dim); margin: 0; }
+
+  /* ② 任务卡 */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+  .card { display: flex; flex-direction: column; gap: 8px; text-decoration: none; color: var(--tx); background: var(--glass); -webkit-backdrop-filter: blur(var(--blur)); backdrop-filter: blur(var(--blur));
+    border: 1px solid var(--glass-bd); border-radius: var(--r-lg); box-shadow: var(--sh-1); padding: 12px 14px; transition: border-color var(--dur), transform var(--dur) var(--ease); }
+  .card:hover, .card:focus-visible { border-color: var(--ac); }
+  .card:hover { transform: translateY(-2px); }
+  .card .top { display: flex; gap: 10px; align-items: center; }
+  .card .top canvas { width: 56px; height: 56px; flex: none; }
+  .card .who { font-size: 13px; color: var(--cy2); }
+  .card .diff { font-size: 12px; color: var(--pred); letter-spacing: 1px; }
+  .card h3 { margin: 0; font-size: 17px; line-height: 1.4; }
+  .card .meta { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; color: var(--mu); flex-wrap: wrap; }
+  .card .meta b { color: var(--pred); font-weight: 600; letter-spacing: 1px; }
+  .card .lv { display: flex; gap: 4px; flex-wrap: wrap; }
+  .card .lv span { font-size: 11px; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--line); color: var(--dim); white-space: nowrap; }
+  .card .lv span.ok { border-color: var(--ok-bd); color: var(--ac2); }
+  .card .go { margin-top: auto; align-self: flex-start; }
+
+  /* ③ 尺度轴图谱 */
+  .maphead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .maphead .cnt { font-size: 13px; color: var(--mu); }
+  .maphead .cnt b { color: var(--ac2); }
+  .mapbox { display: flex; border: 1px solid var(--glass-bd); border-radius: var(--r-lg); background: var(--map-bg); overflow: hidden; }
+  .mapcols { flex: none; width: 76px; border-right: 1px solid var(--map-line); background: var(--map-col); }
+  .mapcols div { display: flex; align-items: center; padding: 0 6px 0 9px; font-size: 12px; font-weight: 600; color: var(--ac2); line-height: 1.25; border-top: 1px solid var(--line2); }
+  .mapcols div:first-child, .mapcols div:last-child { border-top: 0; }
+  .mapwrap { flex: 1; min-width: 0; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; scrollbar-color: var(--scroll) var(--map-bg); }
+  @media (max-width: 599px) { .mapcols { width: 58px; } .mapcols div { font-size: 11px; padding: 0 4px 0 6px; } }
+  .map { position: relative; }
+  .map .row { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line2); }
+  .map .row:nth-child(even) { background: rgba(167,139,250,.035); }
+  .map .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--map-tick); z-index: 0; }
+  .map .tl { position: absolute; font-size: 11px; color: var(--mu); transform: translateX(-50%); white-space: nowrap; font-family: var(--mono); font-variant-numeric: tabular-nums; z-index: 1; }
+  .map .lm { position: absolute; font-size: 11px; color: var(--dim); transform: translateX(-50%); white-space: nowrap; z-index: 1; }
+  .star { position: absolute; z-index: 2; display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 6px 0 2px; border: 0; background: none;
+    font-size: 12px; color: var(--star-tx); cursor: pointer; white-space: nowrap; border-radius: 8px; }
+  .star i { width: 9px; height: 9px; border-radius: 50%; background: var(--star-off); flex: none; box-shadow: 0 0 0 2px rgba(74,69,112,.25); }
+  .star:hover, .star:focus-visible { background: rgba(167,139,250,.12); color: var(--tx); }
+  .star.on { color: var(--tx); font-weight: 600; }
+  .star.on i { background: var(--star-on); box-shadow: 0 0 6px 2px var(--ac), 0 0 14px 4px rgba(167,139,250,.55); }
+  .star.task i { box-shadow: 0 0 0 2px rgba(167,139,250,.45); }
+  .star.on.task i { box-shadow: 0 0 6px 2px var(--ac), 0 0 14px 4px rgba(167,139,250,.55); }
+  .maplegend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--mu); margin: 8px 2px 0; }
+  .maplegend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: -1px; margin-right: 5px; background: var(--star-off); }
+  .maplegend i.on { background: var(--star-on); box-shadow: 0 0 6px 2px var(--ac); }
+  .maplegend i.task { box-shadow: 0 0 0 2px rgba(167,139,250,.6); }
+  .swipe { display: block; font-size: 12px; color: var(--dim); margin: 0 0 6px; }
+
+
+  /* ③b 宇宙尺度星图 3D(v0.2-α2,仅 gl3d 可用时插入;失败整块移除回 2D) */
+  .sm-sec[data-mode="3d"] .swipe, .sm-sec[data-mode="3d"]:not(.show2d) .mapbox { display: none; }
+  .smtog { display: none; }
+  .sm-sec[data-mode="3d"] .smtog { display: inline-flex; }
+  .sm3 { position: relative; height: min(74vh, 680px); min-height: 460px; border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--glass-bd);
+    background: #05041a; box-shadow: var(--sh-1); isolation: isolate; }
+  .sm3-view { position: absolute; inset: 0; touch-action: pan-y; outline: none; -webkit-user-select: none; user-select: none; }
+  .sm3-view:focus-visible { box-shadow: inset 0 0 0 2px var(--ac); }
+  .sm3:focus-within { border-color: var(--ac); }
+  .sm3-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .sm3-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .sm3-lb { position: absolute; left: 0; top: 0; font-size: 12px; line-height: 1; padding: 3px 6px; border-radius: 6px; white-space: nowrap; color: #d4cff5;
+    background: rgba(5,4,26,.62); text-shadow: 0 1px 2px #000; will-change: transform; }
+  .sm3-lb.on { color: #fff; font-weight: 600; }
+  .sm3-lb.task { color: #e9e3ff; }
+  .sm3-lb.st:not(.on):not(.task) { color: #b9b3dd; }
+  .sm3-lb.hi { background: rgba(124,92,240,.85); color: #fff; }
+  .sm3-lb.lm { font: 11px/1 var(--mono); letter-spacing: .5px; color: var(--cy2); background: rgba(5,4,26,.7); border: 1px solid var(--cy-line); }
+  .sm3-ring { position: absolute; left: 0; top: 0; width: 34px; height: 34px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 3px var(--ac), 0 0 16px var(--ac); pointer-events: none; display: none; }
+  .sm3-hud { position: absolute; left: 12px; top: 10px; display: flex; gap: 10px; align-items: baseline; font: 11px/1.3 var(--mono); color: var(--cy2); letter-spacing: 1px; pointer-events: none; text-shadow: 0 1px 2px #000; }
+  .sm3-hud .sm3-hint { color: var(--mu); letter-spacing: 0; font-family: var(--font); }
+  .sm3.has-card .sm3-hud { opacity: 0; }
+  .sm3-card { position: absolute; left: 12px; top: 12px; width: 300px; max-height: calc(100% - 112px); overflow: auto; z-index: 3; padding: 14px 16px 12px;
+    background: var(--glass); -webkit-backdrop-filter: blur(var(--blur)); backdrop-filter: blur(var(--blur)); border: 1px solid var(--glass-bd); border-radius: var(--r-lg); box-shadow: var(--sh-1); color: var(--tx); }
+  .sm3-card[hidden] { display: none; }
+  .sm3-x { position: absolute; right: 6px; top: 6px; width: 34px; height: 34px; border: 0; border-radius: 50%; background: transparent; color: var(--mu); font-size: 22px; line-height: 1; cursor: pointer; }
+  .sm3-x:hover, .sm3-x:focus-visible { background: rgba(167,139,250,.18); color: var(--tx); }
+  .sm3-ch { display: flex; gap: 10px; align-items: center; padding-right: 30px; }
+  .sm3-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+  .sm3-card h3 { margin: 0; font-size: 18px; line-height: 1.3; }
+  .sm3-meta { margin: 2px 0 0; font-size: 12px; color: var(--cy2); font-family: var(--mono); }
+  .sm3-chip { display: inline-block; margin: 10px 0 0; font-size: 12px; padding: 2px 9px; border-radius: 99px; border: 1px solid var(--line); color: var(--mu); }
+  .sm3-chip.on { border-color: var(--ac); color: #fff; background: rgba(124,92,240,.35); }
+  .sm3-chip.task { border-color: var(--ac); color: var(--ac2); }
+  .sm3-desc { margin: 8px 0; font-size: 14px; line-height: 1.6; }
+  .sm3-lk { margin: 0 0 8px; font-size: 13px; color: var(--mu); line-height: 1.5; }
+  .sm3-src { margin: 8px 0 0; font-size: 11px; color: var(--dim); }
+  .sm3-bar { position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 2; display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 4px 10px;
+    padding: 6px 12px 4px; background: var(--glass); -webkit-backdrop-filter: blur(var(--blur)); backdrop-filter: blur(var(--blur)); border: 1px solid var(--glass-bd); border-radius: var(--r-lg); }
+  .sm3-read { min-width: 96px; font-size: 12px; color: var(--mu); white-space: nowrap; }
+  .sm3-re { display: block; font: 600 15px/1.2 var(--mono); color: var(--cy2); font-variant-numeric: tabular-nums; }
+  .sm3-z { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--glass-bd); background: var(--btn); color: var(--tx); font-size: 18px; line-height: 1; cursor: pointer; flex: none; }
+  .sm3-z:hover, .sm3-z:focus-visible { border-color: var(--ac); }
+  .sm3-track { position: relative; min-width: 0; padding: 0 16px; }
+  .sm3-rule { position: relative; height: 26px; cursor: pointer; }
+  .sm3-rule > i { position: absolute; bottom: 0; width: 1px; height: 6px; background: rgba(165,180,252,.45); }
+  .sm3-rule > i.mj { height: 10px; background: rgba(199,210,254,.85); }
+  .sm3-rule > i.sm3-cur { width: 2px; height: 13px; background: var(--cy); box-shadow: 0 0 8px var(--cy); transform: translateX(-1px); }
+  .sm3-tl { position: absolute; top: 0; transform: translateX(-50%); padding: 1px 3px; border: 0; background: none; color: var(--mu); font: 11px/1.2 var(--mono); cursor: pointer; border-radius: 4px; white-space: nowrap; }
+  .sm3-tl:hover, .sm3-tl:focus-visible { color: #fff; background: rgba(167,139,250,.25); }
+  .sm3-sl { display: block; width: calc(100% + 32px); margin: 0 -16px; height: 26px; accent-color: var(--ac); }
+  .smlegend { display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 12px; color: var(--mu); margin: 8px 2px 0; }
+  .smlegend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: -1px; margin-right: 5px; }
+  .sm-sec:not([data-mode="3d"]) .smlegend.cons { display: none; }
+  @media (max-width: 1023px) { .sm3-tl.odd { display: none; } }
+  @media (max-width: 419px) { .sm3-tl.n12 { display: none; } }
+  @media (orientation: portrait) and (max-width: 820px) {
+    .sm3 { height: min(78vh, 640px); min-height: 440px; }
+    .sm3-hud .sm3-hint { display: none; }
+    .sm3-card { left: 8px; right: 8px; top: auto; bottom: 104px; width: auto; max-height: 46%; padding: 12px 14px 10px; }
+    .sm3-bar { left: 6px; right: 6px; bottom: 6px; grid-template-columns: auto 1fr auto; padding: 4px 8px 2px; }
+    .sm3-read { grid-column: 1 / -1; display: flex; gap: 8px; align-items: baseline; min-width: 0; }
+    .sm3-re { display: inline; font-size: 13px; }
+  }
+  @media (orientation: landscape) and (max-height: 519px) {
+    .sm3 { height: calc(100vh - 64px); min-height: 240px; }
+    .sm3-meta { font-size: 11px; }
+    .sm3-hud .sm3-hint { display: none; }
+    .sm3-card { width: 244px; top: 8px; left: 8px; bottom: 8px; max-height: none; padding: 10px 12px 8px; }
+    .sm3.has-card .sm3-bar { left: 260px; }
+    .sm3.has-card .sm3-read { display: none; }
+    .sm3.has-card .sm3-bar { grid-template-columns: auto 1fr auto; }
+    .sm3.has-card .sm3-tl.n12 { display: none; }
+    .sm3-src { display: none; }
+    .sm3-card h3 { font-size: 15px; }
+    .sm3-desc { font-size: 13px; line-height: 1.5; margin: 6px 0; }
+    .sm3-bar { left: 6px; right: 6px; bottom: 6px; padding: 3px 8px 1px; }
+    .sm3-read { min-width: 84px; }
+    .sm3-tl.odd { display: none; }
+  }
+
+  /* ⑤ 底部 */
+  .hm-foot { margin-top: 30px; padding: 14px 0 0; border-top: 1px solid var(--line); font-size: 13px; color: var(--mu); }
+  .hm-foot .nv-row { margin-bottom: 10px; }
+  .hm-foot p { margin: 6px 0; }
+  .hm-foot .dim { color: var(--dim); font-size: 12px; }
+
+  @media (min-width: 900px) {
+    .hero { grid-template-columns: 1fr 1.25fr; gap: 24px; align-items: center; padding-top: 24px; }
+    .totem { height: 420px; max-height: none; }
+    .hero .txt { order: 0; }
+  }
+  @media (orientation: landscape) and (max-height: 519px) {
+    .hero { grid-template-columns: 1fr 1.1fr; gap: 14px; align-items: center; }
+    .hero h1 { font-size: 24px; }
+    .hero .lead { font-size: 13px; }
+    .totem { height: 230px; min-height: 0; }
+  }
+  .nv-top .nv-sp { display: block !important; }
+  @media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
+</style>
+</head>
+<body>
+<noscript><p style="padding:16px">宙律需要开启 JavaScript。<a href="../">返回创世门户</a></p></noscript>
+<script src="core/nv.js"></script>
+<script>
+"use strict";
+(function () {
+  var el = NV.el, D = document, W = window, RM = NV.RM, SND = NV.snd;
+
+  /* ---------------- 数据 ---------------- */
+  var TASKS = [
+    { id: "hoop", n: 4, guide: "quark", diff: 1, href: "hoop/", q: "如果引力变成两倍,篮球还能投进吗?", lv: ["地球投篮", "引力 ×2", "月球与木星", "荒谬宇宙"] },
+    { id: "orbit", n: 5, guide: "abyss", diff: 2, href: "orbit/", q: "为什么宇航员在空间站会飘起来?", lv: ["扔得更远", "牛顿大炮", "电梯里的苹果", "改宇宙", "追上空间站"] },
+    { id: "sound", n: 4, guide: "ripple", diff: 2, href: "sound/", q: "为什么救护车经过时声音会变?", lv: ["声音是振动", "救护车驶过", "改声速", "和声与拍频"] }
+  ];
+  var CONS = ["运动", "力与能量", "引力与天体", "波与声", "光", "热与熵", "电与磁", "现代物理"];
+  var CCOL = ["#5eead4", "#fbbf24", "#a78bfa", "#86efac", "#f0abfc", "#fb923c", "#60a5fa", "#f87171"];   // 3D 星图星座色
+  // [星座序号, 名称, 尺度指数 log10(m), 一句话, 关联关卡 "任务:关序号"]
+  var STARS = [
+    [0, "布朗运动", -6, "水里的花粉微粒被看不见的水分子不停撞击,走出杂乱的折线。"],
+    [0, "惯性", -0.3, "没有外力时,物体保持静止或匀速直线运动;急刹车时人会往前倾。"],
+    [0, "抛体运动", 0.7, "不计空气阻力,抛出的物体走一条抛物线,篮球也一样。", "hoop:0"],
+    [0, "运动的独立性", 2, "水平方向匀速前进、竖直方向自由下落,两者互不干扰:扔得越快,落得越远。", "orbit:0"],
+    [0, "加速度", 1.4, "速度在变化就有加速度;踩刹车时加速度和运动方向相反。"],
+    [0, "圆周运动", -1.2, "速度大小不变、方向一直在变,需要一个始终指向圆心的力。"],
+    [0, "参考系", 3.4, "「动」还是「静」取决于从哪里看:高铁上的人看窗外,树在后退。"],
+
+    [1, "重力加速度", 0.3, "地面附近 g ≈ 9.8 m/s²;g 越大,同样的出手,抛物线弯得越急。", "hoop:1"],
+    [1, "牛顿第二定律", -0.8, "F = ma:同样的力,质量越大,加速度越小。"],
+    [1, "空气阻力", 1.2, "速度越快阻力越大,让轨迹不再是完美的抛物线;风也会把球推偏。", "hoop:3"],
+    [1, "作用与反作用", -2, "你推墙,墙也以同样大小的力推你;火箭向后喷气,自己向前飞。"],
+    [1, "摩擦力", -4.5, "接触面上微小的凹凸互相阻碍;没有摩擦,人连路都走不了。"],
+    [1, "动能与势能", 1.9, "高处的物体有势能,落下时变成动能:越高落下越快。"],
+    [1, "能量守恒", 2.8, "能量不会凭空产生或消失,只会从一种形式变成另一种。"],
+    [1, "变轨与轨道能量", 6.4, "想追上前面的航天器,反而要先减速降到更低、更快的轨道。", "orbit:4"],
+
+    [2, "失重", 0.1, "空间站里的人和舱一起绕地球「自由下落」,所以飘起来;引力并没有消失。", "orbit:2"],
+    [2, "表面重力", 5.2, "月球表面约 0.17 g、火星约 0.38 g、木星云顶约 2.5 g:同一规律,不同参数。", "hoop:2"],
+    [2, "环绕速度", 6.8, "近地轨道约 7.9 km/s:快到「一直在下落,却总也落不到地面」。", "orbit:1"],
+    [2, "逃逸速度", 7.8, "从地面出发约 11.2 km/s(不计空气)才能彻底摆脱地球引力。"],
+    [2, "万有引力", 3.6, "任何两个有质量的物体都相互吸引,距离变为 2 倍,引力变为 1/4。"],
+    [2, "潮汐", 8.6, "月球对地球近侧和远侧的引力不一样大,拉出两个潮汐隆起。"],
+    [2, "开普勒第三定律", 11.2, "轨道越高,绕一圈的周期越长:周期的平方与轨道半长轴的立方成正比。", "orbit:3"],
+    [2, "恒星", 9.8, "太阳靠自身引力把自己压紧,核心的核聚变让它发光发热。"],
+    [2, "银河系", 20.9, "直径约 10 万光年(约 10²¹ m),数千亿颗恒星绕着中心旋转。"],
+
+    [3, "频率与音高", -0.6, "振动越快,频率越高,听到的音越高。", "sound:0"],
+    [3, "多普勒效应", 1.5, "声源靠近时波被挤密、音变高;远离时波被拉疏、音变低。", "sound:1"],
+    [3, "马赫锥", 2.6, "声源跑得比声速还快,波纹在前方叠成锥形,传来的就是音爆。", "sound:2"],
+    [3, "拍频", 0.4, "两个频率相近的音叠在一起,响度忽强忽弱,快慢等于两者频率之差。", "sound:3"],
+    [3, "频率比与和声", -1.6, "频率比 2:1 是八度、3:2 是五度,简单的整数比听起来更和谐。"],
+    [3, "共振", 3.6, "外力的节奏和物体自身的频率一致时,振动会越来越大。"],
+    [3, "超声波", -3.6, "频率高于约 2 万赫兹、人耳听不到,蝙蝠和 B 超都用它「看」东西。"],
+    [3, "地震波", 5.6, "地震的能量以波的形式穿过地球,横波和纵波跑得不一样快。"],
+
+    [4, "光速", 8.5, "真空中约 30 万 km/s,1 秒钟能绕地球约 7.5 圈。"],
+    [4, "光年", 16, "光走一年的距离,约 9.46 × 10¹⁵ m,用来量恒星之间的距离。"],
+    [4, "反射与折射", -0.8, "光碰到镜面会反射,穿过水和玻璃会拐弯,所以筷子在水里像折断了。"],
+    [4, "可见光谱", -6.3, "可见光波长约 400–700 纳米,从紫到红;白光是多种颜色混合的。"],
+    [4, "干涉与衍射", -4.4, "两束光叠加会出现明暗条纹,这是光具有波动性的证据。"],
+    [4, "X 射线", -10, "波长和原子差不多大的电磁波,能穿透人体软组织,用来拍片。"],
+    [4, "无线电波", 1.4, "波长从毫米到千米的电磁波,手机、广播和雷达都靠它传信。"],
+
+    [5, "温度与分子运动", -9.5, "温度越高,分子平均运动得越剧烈;温度是分子平均动能的量度。"],
+    [5, "气体压强", -7.6, "大量气体分子不停撞击容器壁,形成压强;打气筒越打越费劲。"],
+    [5, "宇宙微波背景", -3, "大爆炸留下的「余温」,约 2.7 K,辐射峰值波长约 1 毫米。"],
+    [5, "热传递", -0.6, "热量通过传导、对流、辐射从高温处流向低温处。"],
+    [5, "热膨胀", 1.6, "大多数物体受热膨胀,所以铁轨之间要留一点缝。"],
+    [5, "熵增", 0.5, "孤立系统的熵(混乱程度)只增不减:冰会化,热茶会凉。"],
+    [5, "热机", 2.7, "把热变成功的机器;它的效率永远达不到 100%。"],
+
+    [6, "电荷与库仑力", -10, "同种电荷相斥、异种电荷相吸,距离越近力越大。"],
+    [6, "晶体管", -7.8, "芯片里数十亿个微小开关,控制电流的通断来计算。"],
+    [6, "电流与电路", -1.4, "电荷定向移动形成电流;电路要闭合,灯泡才会亮。"],
+    [6, "电磁感应", 0.4, "磁场变化会产生电流,发电机就是这样把转动变成电的。"],
+    [6, "磁场", -2.8, "磁体周围有看不见的磁场,铁屑会沿着磁感线排列。"],
+    [6, "闪电", 3.6, "云中积累的大量电荷击穿空气放电,瞬间温度可达数万摄氏度。"],
+    [6, "地磁场与极光", 7.2, "地球像一块大磁铁,把太阳风的带电粒子引向两极,点亮极光。"],
+
+    [7, "夸克", -15, "质子和中子各由 3 个夸克组成,夸克从不单独出现。"],
+    [7, "原子核", -13.6, "质子和中子靠强相互作用挤在一起,只占原子极小的一部分。"],
+    [7, "量子能级", -10.4, "原子里的电子只能处在一级一级的能级上,跳跃时放出特定颜色的光。"],
+    [7, "引力波探测", 3.6, "2015 年首次直接探测到:臂长 4 公里的探测器,量出了比质子还小的伸缩。"],
+    [7, "黑洞", 4.7, "引力强到连光都逃不出去;恒星级黑洞的视界半径约几十公里。"],
+    [7, "广义相对论", 7.4, "质量让时空弯曲,弯曲的时空告诉物体如何运动;导航卫星要据此校正时钟。"],
+    [7, "狭义相对论", 8.8, "速度接近光速时,时间会变慢、长度会收缩;光速对所有观察者都一样。"]
+  ];
+  var LANDMARKS = [[-15, "质子"], [-10, "原子"], [-7, "病毒"], [-5, "细胞"], [0, "人"], [3.9, "珠峰"], [7.1, "地球"], [11.2, "日地距离"], [16, "1 光年"], [21, "银河系"]];
+
+  function sup(n) { var m = "⁰¹²³⁴⁵⁶⁷⁸⁹"; return String(n).replace(/-/g, "⁻").replace(/\d/g, function (d) { return m[+d]; }); }
+  function prog(id, n) { return NV.store.task(id, n); }
+  function isLit(link) {
+    if (!link) return false;
+    var p = link.split(":"), t = TASKS.filter(function (x) { return x.id === p[0]; })[0];
+    return !!t && prog(t.id, t.n)[+p[1]] >= 1;
+  }
+
+  /* ---------------- 页面骨架 ---------------- */
+  D.body.appendChild(NV.header({ links: [["../", "← 创世门户"]], brand: "宙律 Nomoverse" }));
+  var main = el("main", { class: "hm" });
+  D.body.appendChild(main);
+
+  /* ① 图腾 */
+  var cv = el("canvas", { role: "img", "aria-label": "带轨道环的行星压弯了周围的时空网格;引力越大,网格凹得越深" });
+  var cap = el("div", { class: "cap", text: "示意图 · 时空弯曲(简化模型)" });
+  var gOut = el("output", { "for": "nvg", text: "×1.0" });
+  var hudtag = el("div", { class: "hudtag", "aria-hidden": "true", text: "G ×1.0 · 2D" });
+  var totem = el("div", { class: "totem nv-hudc", "data-mode": "2d" }, [cv, cap, hudtag]);
+  var gIn = el("input", { id: "nvg", type: "range", min: "0.2", max: "3", step: "0.1", value: "1", "aria-describedby": "nvgh" });
+  var hero = el("section", { class: "hero", "aria-label": "宙律 Nomoverse" }, [
+    el("div", { class: "txt" }, [
+      el("h1", {}, [el("span", { text: "宙律 " }), el("span", { class: "en", text: "Nomoverse" }), el("span", { class: "tag", text: "亲手改写宇宙的规律" })]),
+      el("p", { class: "series", text: "创世计划 Genesis · 02 · 物理" }),
+      el("p", { class: "lead", text: "把引力调大一点,把声速调慢一点:先猜,再运行,看规律怎么变。在改写规律的过程中,读懂规律。" }),
+      el("div", { class: "gctl" }, [
+        el("label", { "for": "nvg" }, [el("span", { text: "引力强度" }), gOut]),
+        gIn,
+        el("p", { class: "hint", id: "nvgh", text: "拖动滑杆:质量越大、引力越强,时空网格凹得越深。" })
+      ])
+    ]),
+    totem
+  ]);
+  main.appendChild(hero);
+
+  /* ② 任务卡 */
+  var cardsBox = el("div", { class: "cards" });
+  main.appendChild(el("section", { class: "hm-sec", "aria-labelledby": "h-tasks" }, [
+    el("h2", { class: "hm-h", id: "h-tasks", text: "三个探究任务" }),
+    el("p", { class: "hm-sub", text: "每关都是:观察 → 预测 → 运行 → 对比 → 改规则。拿到 1 颗星就能解锁下一关。" }),
+    cardsBox
+  ]));
+  function renderCards() {
+    cardsBox.innerHTML = "";
+    TASKS.forEach(function (t) {
+      var p = prog(t.id, t.n), got = p.reduce(function (a, b) { return a + b; }, 0), done = p.filter(function (x) { return x >= 1; }).length;
+      var g = NV.GUIDES[t.guide], av = NV.avatar(t.guide, 56);
+      var lvRow = el("div", { class: "lv", "aria-hidden": "true" });
+      t.lv.forEach(function (name, i) { lvRow.appendChild(el("span", { class: p[i] >= 1 ? "ok" : "", text: (i + 1) + " " + name + (p[i] ? " " + NV.starsTxt(p[i]) : "") })); });
+      var a = el("a", { class: "card nv-hudc", href: t.href, "aria-label": t.q + ",向导" + g.name + ",难度 " + t.diff + " 星,已得 " + got + " / " + (t.n * 3) + " 颗星",
+        onpointerenter: SND.hover, onclick: function () { SND.play("whoosh"); } }, [
+        el("div", { class: "top" }, [av.cv, el("div", {}, [el("div", { class: "who", text: "向导 · " + g.name }), el("div", { class: "diff", text: "难度 " + NV.starsTxt(t.diff) })])]),
+        el("h3", { text: t.q }),
+        lvRow,
+        el("div", { class: "meta" }, [el("span", { text: t.n + " 关 · 已通 " + done + " 关" }), el("span", {}, ["已得 ", el("b", { text: got + " / " + (t.n * 3) + " ★" })])]),
+        el("span", { class: "nv-btn sm pri go", "aria-hidden": "true", text: got ? "继续探究 →" : "开始探究 →" })
+      ]);
+      cardsBox.appendChild(a);
+    });
+  }
+  renderCards();
+
+  /* ③ 尺度轴图谱 */
+  var EMIN = -15, EMAX = 21, MAPW = 1800, LEFT = 30, RIGHT = 74, AXH = 26, LANE = 22;
+  var cnt = el("span", { class: "cnt" });
+  var mapEl = el("div", { class: "map", role: "group", "aria-label": "宇宙尺度知识星图,横轴从 10⁻¹⁵ 米到 10²¹ 米" });
+  var wrap = el("div", { class: "mapwrap", tabindex: "-1" }, mapEl);
+  var colsEl = el("div", { class: "mapcols", "aria-hidden": "true" });
+  var mapbox = el("div", { class: "mapbox" }, [colsEl, wrap]);
+  var smTog = el("button", { class: "nv-btn sm smtog", type: "button", "aria-expanded": "false", text: "列表视图" });
+  var smSec = el("section", { class: "hm-sec sm-sec", "aria-labelledby": "h-map", "data-mode": "2d" }, [
+    el("div", { class: "maphead" }, [el("h2", { class: "hm-h", id: "h-map", text: "宇宙尺度星图" }), el("span", { class: "nv-row", style: "gap:10px;align-items:center" }, [cnt, smTog])]),
+    el("p", { class: "hm-sub", text: "从质子到银河系,8 个星座 60 颗知识星按大小排在一条对数尺上(每格是 10 倍)。通关对应的关卡,就能点亮那颗星。" }),
+    el("p", { class: "swipe", text: "← 左右滑动查看整条尺度轴 →" }),
+    mapbox,
+    el("div", { class: "smlegend cons", "aria-hidden": "true" }, CONS.map(function (c, i) { return el("span", {}, [el("i", { style: "background:" + CCOL[i] + ";box-shadow:0 0 6px " + CCOL[i] }), c]); })),
+    el("div", { class: "maplegend l2" }, [
+      el("span", {}, [el("i", { class: "on" }), "已点亮"]),
+      el("span", {}, [el("i", { class: "task" }), "可在本期任务中点亮"]),
+      el("span", {}, [el("i"), "待探索"])
+    ])
+  ]);
+  main.appendChild(smSec);
+  function X(e) { return LEFT + (e - EMIN) / (EMAX - EMIN) * (MAPW - LEFT - RIGHT); }
+  function textW(s) { var w = 0; for (var i = 0; i < s.length; i++) w += s.charCodeAt(i) > 255 ? 12.5 : 7; return w + 22; }
+  function linkLabel(link) {
+    var p = link.split(":"), t = TASKS.filter(function (x) { return x.id === p[0]; })[0];
+    return { t: t, i: +p[1], txt: "「" + t.q + "」第 " + (+p[1] + 1) + " 关 · " + t.lv[+p[1]] };
+  }
+  function openStar(s) {
+    var lit = isLit(s[4]), e = Math.round(s[2]);
+    var body = [el("div", { class: "nv-kc" }, [
+      el("h3", { text: CONS[s[0]] + " 星座" }),
+      el("p", { text: s[3] }),
+      el("p", { class: "src", text: "典型尺度:约 10" + sup(e) + " 米 · 简化表述,供科普探究" })
+    ])];
+    if (s[4]) {
+      var L = linkLabel(s[4]);
+      body.push(el("p", { style: "font-size:14px;margin:8px 0", text: (lit ? "✓ 已点亮。来自 " : "待探索。完成 ") + L.txt + (lit ? "" : " 即可点亮。") }));
+      body.push(el("div", { class: "nv-actions" }, [
+        el("a", { class: "nv-btn pri", href: L.t.href, text: lit ? "再去玩一次 →" : "去点亮 →", onclick: function () { SND.play("whoosh"); } }),
+        el("button", { class: "nv-btn", type: "button", text: "关闭", onclick: NV.closeModal })
+      ]));
+    } else {
+      body.push(el("p", { style: "font-size:14px;margin:8px 0;color:var(--mu)", text: "待探索。这颗星会在后续任务中开放。" }));
+      body.push(el("div", { class: "nv-actions" }, [el("button", { class: "nv-btn", type: "button", text: "关闭", onclick: NV.closeModal })]));
+    }
+    NV.modal((lit ? "★ " : "") + s[1], body);
+  }
+  var SM3 = null;   // 3D 星图实例(可用时)
+  function renderMap() {
+    mapEl.innerHTML = ""; colsEl.innerHTML = ""; colsEl.appendChild(el("div", { style: "height:" + AXH + "px" }));
+    // 每个星座按 x 排序,贪心分配泳道,避免文字重叠
+    var rows = CONS.map(function () { return []; });
+    STARS.forEach(function (s, k) { rows[s[0]].push({ s: s, k: k, x: X(s[2]), w: textW(s[1]) }); });
+    var y = AXH, litN = 0, rowTops = [];
+    rows.forEach(function (list, ci) {
+      list.sort(function (a, b) { return a.x - b.x; });
+      var ends = [];
+      list.forEach(function (it) {
+        var ln = 0; while (ln < ends.length && ends[ln] > it.x - 6) ln++;
+        ends[ln] = it.x + it.w; it.lane = ln;
+      });
+      var nl = Math.max(1, ends.length), h = nl * LANE + 16;
+      var row = el("div", { class: "row", style: "top:" + y + "px;height:" + h + "px" });
+      colsEl.appendChild(el("div", { style: "height:" + h + "px", text: CONS[ci] }));
+      mapEl.appendChild(row);
+      list.forEach(function (it) {
+        var s = it.s, lit = isLit(s[4]); if (lit) litN++;
+        var b = el("button", { class: "star" + (lit ? " on" : "") + (s[4] ? " task" : ""), type: "button",
+          style: "left:" + (it.x - 6.5) + "px;top:" + (y + 8 + it.lane * LANE) + "px",
+          "aria-label": s[1] + "," + CONS[s[0]] + "," + (lit ? "已点亮" : "待探索"),
+          onpointerenter: SND.hover, onclick: function () { openStar(s); } }, [el("i"), s[1]]);
+        mapEl.appendChild(b);
+      });
+      rowTops.push(y); y += h;
+    });
+    var H = y + AXH; colsEl.appendChild(el("div", { style: "height:" + AXH + "px" }));
+    mapEl.style.cssText = "width:" + MAPW + "px;height:" + H + "px";
+    for (var e = EMIN; e <= EMAX; e++) {
+      var x = X(e);
+      mapEl.appendChild(el("div", { class: "tick", style: "left:" + x + "px;" + (e % 3 ? "opacity:.45" : "background:var(--map-line)") }));
+      if (e % 3 === 0) {
+        mapEl.appendChild(el("div", { class: "tl", style: "left:" + x + "px;top:5px", text: "10" + sup(e) + " m" }));
+      }
+    }
+    LANDMARKS.forEach(function (l) { mapEl.appendChild(el("div", { class: "lm", style: "left:" + X(l[0]) + "px;top:" + (H - AXH + 6) + "px", text: l[1] })); });
+    cnt.innerHTML = "";
+    cnt.appendChild(D.createTextNode("已点亮 ")); cnt.appendChild(el("b", { text: String(litN) })); cnt.appendChild(D.createTextNode(" / " + STARS.length + " 颗知识星"));
+    if (SM3) SM3.update(STARS.map(function (s) { return { lit: isLit(s[4]), task: !!s[4] }; }));
+  }
+  renderMap();
+  // 初次:手机上把视窗滚到「人」的尺度附近
+  W.requestAnimationFrame(function () { if (wrap.clientWidth < MAPW) wrap.scrollLeft = Math.max(0, X(0) - wrap.clientWidth * 0.45); });
+
+
+  /* ③b 宇宙尺度星图 3D:gl3d 可用时按需加载 core/starmap3d.js;任何失败移除 3D,2D 星图原样可用 */
+  function sm3Fallback(err) {
+    if (SM3) { var x = SM3; SM3 = null; try { x.dispose(); } catch (e) {} }
+    var st = smSec.querySelector(".sm3"); if (st) st.remove();
+    smSec.setAttribute("data-mode", "2d"); smSec.classList.remove("show2d");
+    if (err && W.console && console.warn) console.warn("[宙律] 3D 星图不可用,已回退 2D:", err && err.message || err);
+  }
+  smTog.addEventListener("click", function () {
+    var on = !smSec.classList.contains("show2d");
+    smSec.classList.toggle("show2d", on); smTog.setAttribute("aria-expanded", on ? "true" : "false");
+    smTog.textContent = on ? "收起列表" : "列表视图";
+  });
+  if (NV.gl3d.ok) {
+    Promise.all([NV.gl3d.load(), import(NV.ROOT + "core/starmap3d.js")]).then(function (r) {
+      try {
+        SM3 = r[1].mount(r[0], {
+          host: mapbox, el: el, sup: sup, snd: SND, RM: RM, cons: CONS, colors: CCOL, landmarks: LANDMARKS, startE: 0,
+          stars: STARS.map(function (s) {
+            var L = s[4] ? linkLabel(s[4]) : null;
+            return { name: s[1], cons: s[0], e: s[2], desc: s[3], link: s[4] || null, lit: isLit(s[4]), task: !!s[4], linkTxt: L ? L.txt : "", href: L ? L.t.href : "" };
+          }),
+          onFail: sm3Fallback
+        });
+        smSec.setAttribute("data-mode", "3d");
+      } catch (err) { SM3 = null; sm3Fallback(err); }
+    }).catch(sm3Fallback);
+  }
+
+  /* ⑤ 底部 */
+  main.appendChild(el("footer", { class: "hm-foot" }, [
+    el("div", { class: "nv-row" }, [
+      el("a", { class: "nv-btn", href: "../", text: "← 返回创世门户" }),
+      el("button", { class: "nv-btn", type: "button", text: "声音与 AI 向导设置", onclick: NV.settings })
+    ]),
+    el("p", { text: "简化模型 · 科普探究:画面中的数值来自经典物理公式和简化模型(例如把地球当作均匀球体、忽略月球和太阳),用于理解规律,不代表精确的工程计算。" }),
+    el("p", { class: "dim", text: "本站为纯静态网页,无外部请求、无统计埋点;进度只保存在本机浏览器。声音默认关闭;生成式 AI 向导默认关闭,需自行开启并填写自己的接口。" }),
+    el("p", { class: "dim", text: "创世计划 Genesis · 02 · 宙律 Nomoverse · 物理" })
+  ]));
+
+  /* 从任务页返回时刷新进度 */
+  function refresh() { renderCards(); renderMap(); }
+  W.addEventListener("pageshow", function (e) { if (e.persisted) refresh(); });
+  W.addEventListener("storage", function (e) { if (!e.key || e.key.indexOf("gn:nv:") === 0) refresh(); });
+
+  /* ---------------- 图腾绘制 ---------------- */
+  var gTarget = 1, gCur = 1, t0 = performance.now(), visible = true, raf = 0;
+  function project(x, y, z, P) {
+    var ca = Math.cos(P.tilt), sa = Math.sin(P.tilt);
+    var yy = y * ca - z * sa, zz = y * sa + z * ca + P.cam;
+    var k = P.f / zz;
+    return [P.cx + x * k, P.cy - yy * k, zz];
+  }
+  // 势阱深度随引力单调变深,但做软饱和,避免 ×3 时冲出画面(示意,不按比例)
+  function well(x, z, g) { var A = 0.9 * (1 - Math.exp(-g / 1.3)), r2 = x * x + z * z; return -A * (1 / Math.sqrt(r2 + 0.16) - 1 / Math.sqrt(9.16)); }
+  function drawTotem(now) {
+    var F = NV.fit(cv), c = F.ctx, w = F.w, h = F.h;
+    c.clearRect(0, 0, w, h);
+    NV.Draw.stars(c, w, h, 7, Math.round(w * h / 2600));
+    var P = { cx: w / 2, cy: 0, f: Math.min(w * 0.62, h * 1.05), cam: 4.2, tilt: 0.42 };
+    var g = gCur, t = RM ? 0 : (now - t0) / 1000;
+    var R = 0.36 + 0.07 * Math.sqrt(g), wy = well(0, 0, g) + R + 0.02;
+    P.cy = h * 0.58 - project(0, wy, 0, P)[1];      // 行星中心固定在画面 58% 高处
+    // 时空网格
+    var N = 18, M = 34, RX = 3.2, RZ = 2.6;
+    c.lineWidth = 1;
+    function line(pts) {
+      for (var i = 1; i < pts.length; i++) {
+        var a = pts[i - 1], b = pts[i], d = (a[2] + b[2]) / 2;
+        var al = Math.max(0.08, Math.min(0.75, 1.25 - (d - 2.4) * 0.32));
+        c.strokeStyle = "rgba(167,139,250," + al.toFixed(3) + ")";
+        c.beginPath(); c.moveTo(a[0], a[1]); c.lineTo(b[0], b[1]); c.stroke();
+      }
+    }
+    for (var i = 0; i <= N; i++) {
+      var z = -RZ + 2 * RZ * i / N, pts = [];
+      for (var j = 0; j <= M; j++) { var x = -RX + 2 * RX * j / M; pts.push(project(x, well(x, z, g), z, P)); }
+      line(pts);
+    }
+    for (var j2 = 0; j2 <= N + 6; j2++) {
+      var x2 = -RX + 2 * RX * j2 / (N + 6), pts2 = [];
+      for (var i2 = 0; i2 <= M; i2++) { var z2 = -RZ + 2 * RZ * i2 / M; pts2.push(project(x2, well(x2, z2, g), z2, P)); }
+      line(pts2);
+    }
+    // 行星:坐在凹陷底部,大小随引力(质量)略增
+    var C = project(0, wy, 0, P), Rs = R * P.f / C[2];
+    // 轨道环(倾斜椭圆),先画后半
+    var ringA = Rs * 2.05, ringB = Rs * 0.52, rot = -0.32;
+    function ring(from, to, alpha) {
+      c.save(); c.translate(C[0], C[1]); c.rotate(rot);
+      [[1, 3, 0.9], [0.86, 1.6, 0.6], [1.13, 1.2, 0.45]].forEach(function (r) {
+        c.strokeStyle = "rgba(196,181,253," + (r[2] * alpha).toFixed(3) + ")"; c.lineWidth = r[1];
+        c.beginPath(); c.ellipse(0, 0, ringA * r[0], ringB * r[0], 0, from, to); c.stroke();
+      });
+      c.restore();
+    }
+    ring(Math.PI, Math.PI * 2, 0.75);
+    // 星体
+    var glow = c.createRadialGradient(C[0], C[1], Rs * 0.6, C[0], C[1], Rs * 2.4);
+    glow.addColorStop(0, "rgba(167,139,250,.38)"); glow.addColorStop(1, "rgba(167,139,250,0)");
+    c.fillStyle = glow; c.beginPath(); c.arc(C[0], C[1], Rs * 2.4, 0, 7); c.fill();
+    var body = c.createRadialGradient(C[0] - Rs * 0.35, C[1] - Rs * 0.4, Rs * 0.1, C[0], C[1], Rs);
+    body.addColorStop(0, "#e9e2ff"); body.addColorStop(0.35, "#a78bfa"); body.addColorStop(0.8, "#5b3fc4"); body.addColorStop(1, "#2a1d6e");
+    c.fillStyle = body; c.beginPath(); c.arc(C[0], C[1], Rs, 0, 7); c.fill();
+    c.save(); c.beginPath(); c.arc(C[0], C[1], Rs, 0, 7); c.clip();
+    c.strokeStyle = "rgba(255,255,255,.13)"; c.lineWidth = Rs * 0.09;
+    for (var b = -2; b <= 2; b++) { c.beginPath(); c.ellipse(C[0], C[1] + b * Rs * 0.36, Rs * 1.1, Rs * 0.16, -0.12, 0, 7); c.stroke(); }
+    c.restore();
+    ring(0, Math.PI, 1);
+    // 卫星:沿外圈轨道,周期随引力变快(示意 ∝ 1/√g)
+    var orbA = Rs * 3.1, orbB = Rs * 0.95, ph = RM ? 2.2 : t * 0.55 * Math.sqrt(g);
+    c.save(); c.translate(C[0], C[1]); c.rotate(rot * 0.6);
+    c.setLineDash([3, 5]); c.strokeStyle = "rgba(196,181,253,.35)"; c.lineWidth = 1;
+    c.beginPath(); c.ellipse(0, 0, orbA, orbB, 0, 0, 7); c.stroke(); c.setLineDash([]);
+    var mx = Math.cos(ph) * orbA, my = Math.sin(ph) * orbB, mr = Math.max(2.5, Rs * 0.13);
+    c.fillStyle = "#fbe9ff"; c.shadowColor = "#c4b5fd"; c.shadowBlur = 10;
+    c.beginPath(); c.arc(mx, my, mr, 0, 7); c.fill();
+    c.restore();
+  }
+  var G3 = null;   // Three.js 场景(可用时)
+  function loop(now) {
+    raf = 0;
+    gCur += (gTarget - gCur) * (RM ? 1 : 0.12);
+    if (G3) { try { G3.render(now); } catch (err) { fallback2D(err); drawTotem(now); } }
+    else drawTotem(now);
+    if (!RM && visible && !D.hidden) raf = W.requestAnimationFrame(loop);
+    else if (Math.abs(gTarget - gCur) > 0.002) raf = W.requestAnimationFrame(loop);
+  }
+  function kick() { if (!raf) raf = W.requestAnimationFrame(loop); }
+  gIn.addEventListener("input", function () {
+    gTarget = +gIn.value; gOut.textContent = "×" + gTarget.toFixed(1);
+    hudtag.textContent = "G ×" + gTarget.toFixed(1) + " · " + (G3 ? "3D" : "2D");
+    if (RM) gCur = gTarget;
+    kick();
+  });
+  gIn.addEventListener("change", function () { SND.play("tick"); });
+  if (W.IntersectionObserver) new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) kick(); }).observe(cv);
+  D.addEventListener("visibilitychange", function () { if (!D.hidden) kick(); });
+  var rT; W.addEventListener("resize", function () { clearTimeout(rT); rT = setTimeout(kick, 80); });
+  kick();
+
+  /* ---------------- 图腾 3D(Three.js,按需加载;任何失败回到上面的 2D) ---------------- */
+  function fallback2D(err) {
+    if (G3) { try { G3.dispose(); } catch (e) {} }
+    G3 = null; NV.gl3d.disable("3D 运行失败");
+    cv.style.visibility = ""; cv.removeAttribute("aria-hidden");
+    totem.setAttribute("data-mode", "2d"); hudtag.textContent = "G ×" + gTarget.toFixed(1) + " · 2D";
+    if (err && W.console && console.warn) console.warn("[宙律] 3D 不可用,已回退 2D:", err && err.message || err);
+    kick();
+  }
+  function mount3D(THREE) {
+    var cv3 = el("canvas", { class: "gl3", role: "img", "aria-label": cv.getAttribute("aria-label") });
+    var renderer;
+    try { renderer = new THREE.WebGLRenderer({ canvas: cv3, antialias: true, alpha: true, powerPreference: "low-power" }); }
+    catch (e) { throw e; }
+    renderer.setPixelRatio(Math.min(2, W.devicePixelRatio || 1));
+    renderer.setClearColor(0x000000, 0);
+    var scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x07061a, 4.2, 9.2);
+    var cam = new THREE.PerspectiveCamera(38, 1, 0.1, 60);
+    cam.position.set(0, 1.75, 4.9); cam.lookAt(0, -0.3, 0);
+    scene.add(new THREE.AmbientLight(0x6a5acd, 0.55));
+    var sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(-3, 3, 2.5); scene.add(sun);
+    var rim = new THREE.PointLight(0x67e8f9, 6, 10); rim.position.set(2.6, 0.6, -1.5); scene.add(rim);
+
+    function canvasTex(w, h, paint) { var c = D.createElement("canvas"); c.width = w; c.height = h; paint(c.getContext("2d"), w, h); var t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; }
+    // 弯曲时空网格:LineSegments,随引力更新顶点
+    var RX = 4.6, RZ = 5.6, NZ = 34, NX = 30, M = 60, segs = (NZ + 1 + NX + 1) * M;
+    var pos = new Float32Array(segs * 6), col = new Float32Array(segs * 6);
+    var gridGeo = new THREE.BufferGeometry();
+    gridGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    gridGeo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+    var gridMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.85 });
+    var grid = new THREE.LineSegments(gridGeo, gridMat); scene.add(grid);
+    var cA = new THREE.Color(0xa78bfa), cB = new THREE.Color(0x67e8f9), tmp = new THREE.Color();
+    function fillGrid(g) {
+      var k = 0;
+      function put(x, z) { var y = well(x, z, g), d = Math.min(1, Math.sqrt(x * x + z * z) / 1.6); tmp.copy(cB).lerp(cA, d); pos[k] = x; pos[k + 1] = y; pos[k + 2] = z; col[k] = tmp.r; col[k + 1] = tmp.g; col[k + 2] = tmp.b; k += 3; }
+      for (var i = 0; i <= NZ; i++) { var z = -RZ + 2 * RZ * i / NZ; for (var j = 0; j < M; j++) { put(-RX + 2 * RX * j / M, z); put(-RX + 2 * RX * (j + 1) / M, z); } }
+      for (var a = 0; a <= NX; a++) { var x = -RX + 2 * RX * a / NX; for (var b = 0; b < M; b++) { put(x, -RZ + 2 * RZ * b / M); put(x, -RZ + 2 * RZ * (b + 1) / M); } }
+      gridGeo.attributes.position.needsUpdate = true; gridGeo.attributes.color.needsUpdate = true; gridGeo.computeBoundingSphere();
+    }
+    // 行星(程序生成条纹贴图)
+    var bands = canvasTex(256, 128, function (c, w, h) {
+      var g = c.createLinearGradient(0, 0, 0, h);
+      [["#2a1d6e", 0], ["#7c5cf0", .18], ["#c4b5fd", .3], ["#8b6cf6", .42], ["#e9e2ff", .5], ["#a78bfa", .6], ["#5b3fc4", .75], ["#c4b5fd", .86], ["#2a1d6e", 1]].forEach(function (s) { g.addColorStop(s[1], s[0]); });
+      c.fillStyle = g; c.fillRect(0, 0, w, h);
+      c.globalAlpha = .18; for (var i = 0; i < 40; i++) { c.fillStyle = i % 2 ? "#fff" : "#1b1450"; c.fillRect(0, Math.random() * h, w, 1 + Math.random() * 2); }
+    });
+    var planet = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), new THREE.MeshStandardMaterial({ map: bands, roughness: 0.65, metalness: 0.05, emissive: 0x2a1d6e, emissiveIntensity: 0.35 }));
+    planet.rotation.z = 0.32;
+    var pivot = new THREE.Group(); pivot.add(planet); scene.add(pivot);
+    // 轨道环(三层)
+    var ringGrp = new THREE.Group(); ringGrp.rotation.set(-Math.PI / 2 + 0.42, 0.0, 0.3);
+    [[1.45, 1.75, 0.55], [1.8, 2.05, 0.35], [2.1, 2.22, 0.5]].forEach(function (r) {
+      ringGrp.add(new THREE.Mesh(new THREE.RingGeometry(r[0], r[1], 128), new THREE.MeshBasicMaterial({ color: 0xc4b5fd, transparent: true, opacity: r[2], side: THREE.DoubleSide, depthWrite: false })));
+    });
+    pivot.add(ringGrp);
+    // 光晕
+    var glowTex = canvasTex(128, 128, function (c, w) { var g = c.createRadialGradient(w / 2, w / 2, 0, w / 2, w / 2, w / 2); g.addColorStop(0, "rgba(167,139,250,.55)"); g.addColorStop(1, "rgba(167,139,250,0)"); c.fillStyle = g; c.fillRect(0, 0, w, w); });
+    var glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+    pivot.add(glow);
+    // 卫星 + 虚线轨道
+    var moon = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfbe9ff }));
+    var orbPts = []; for (var i = 0; i <= 128; i++) { var a = i / 128 * Math.PI * 2; orbPts.push(new THREE.Vector3(Math.cos(a), 0, Math.sin(a))); }
+    var orbGeo = new THREE.BufferGeometry().setFromPoints(orbPts);
+    var orbit = new THREE.Line(orbGeo, new THREE.LineDashedMaterial({ color: 0xc4b5fd, dashSize: 0.04, gapSize: 0.05, transparent: true, opacity: 0.55 }));
+    orbit.computeLineDistances();
+    var orbGrp = new THREE.Group(); orbGrp.rotation.set(0.22, 0, 0.18); orbGrp.add(orbit); orbGrp.add(moon); pivot.add(orbGrp);
+    // 远景星点
+    var sp = new Float32Array(600 * 3); for (var q = 0; q < 600; q++) { var th = Math.random() * 6.283, ph = Math.acos(2 * Math.random() - 1), rr = 18 + Math.random() * 10; sp[q * 3] = rr * Math.sin(ph) * Math.cos(th); sp[q * 3 + 1] = Math.abs(rr * Math.cos(ph)) * 0.8 + 1; sp[q * 3 + 2] = -Math.abs(rr * Math.sin(ph) * Math.sin(th)); }
+    var stG = new THREE.BufferGeometry(); stG.setAttribute("position", new THREE.BufferAttribute(sp, 3));
+    scene.add(new THREE.Points(stG, new THREE.PointsMaterial({ color: 0xe6e1ff, size: 0.06, transparent: true, opacity: 0.8, fog: false })));
+
+    var lastG = -1, lastW = 0, lastH = 0, lost = false;
+    cv3.addEventListener("webglcontextlost", function (e) { e.preventDefault(); lost = true; fallback2D(new Error("WebGL context lost")); });
+    function render(now) {
+      if (lost) throw new Error("context lost");
+      var w = Math.max(1, totem.clientWidth), h = Math.max(1, totem.clientHeight);
+      if (w !== lastW || h !== lastH) { lastW = w; lastH = h; renderer.setSize(w, h, false); cam.aspect = w / h; cam.fov = w / h < 1.1 ? 50 : 38; cam.updateProjectionMatrix(); }
+      var g = gCur, t = (now - t0) / 1000;
+      if (Math.abs(g - lastG) > 1e-3) { fillGrid(g); lastG = g; }
+      var R = 0.36 + 0.07 * Math.sqrt(g);
+      pivot.position.set(0, well(0, 0, g) + R + 0.02, 0); planet.scale.setScalar(R); ringGrp.scale.setScalar(R); glow.scale.setScalar(R * 5);
+      orbGrp.scale.setScalar(R * 3.1);
+      planet.rotation.y = t * 0.25;
+      var ang = t * 0.55 * Math.sqrt(g); moon.position.set(Math.cos(ang), 0, Math.sin(ang)); moon.scale.setScalar(1 / (R * 3.1) * R * 1.4);
+      renderer.render(scene, cam);
+    }
+    function dispose() {
+      scene.traverse(function (o) { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } });
+      renderer.dispose(); cv3.remove();
+    }
+    totem.insertBefore(cv3, cap);
+    render(performance.now());                       // 首帧成功才切换
+    cv.style.visibility = "hidden"; cv.setAttribute("aria-hidden", "true");
+    totem.setAttribute("data-mode", "3d"); hudtag.textContent = "G ×" + gTarget.toFixed(1) + " · 3D";
+    return { render: render, dispose: dispose };
+  }
+  if (NV.gl3d.ok) {
+    NV.gl3d.load().then(function (THREE) {
+      try { G3 = mount3D(THREE); kick(); }
+      catch (err) { var c3 = totem.querySelector("canvas.gl3"); if (c3) c3.remove(); G3 = null; fallback2D(err); }
+    }).catch(function (err) { fallback2D(err); });
+  }
+})();
+</script>
+</body>
+</html>
