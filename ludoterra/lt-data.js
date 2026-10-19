@@ -76,7 +76,7 @@ export const STATS = [
 export const TASKS = [
   { id: 'compound', q: '每天多进步 1%,一年后会怎样?', domains: ['wealth', 'habit'], age: 7, guide: 'franklin', path: 'compound/', ver: 'v0.2', live: true },
   { id: 'prisoner', q: '为什么好人不一定吃亏?', domains: ['coop', 'nature'], age: 12, guide: 'neumann', path: 'prisoner/', ver: 'v0.3', live: true },
-  { id: 'sunk', q: '电影看了一半很难看,要不要看完?', domains: ['mind'], age: 7, guide: 'kahneman', path: 'sunk/', ver: 'M2', live: false },
+  { id: 'sunk', q: '电影看了一半很难看,要不要看完?', domains: ['mind'], age: 7, guide: 'kahneman', path: 'sunk/', ver: 'v0.5', live: true },
   { id: 'cocoon', q: '为什么你刷到的视频越来越像?', domains: ['info', 'habit'], age: 12, guide: 'sagan', path: 'cocoon/', ver: 'M2', live: false },
   { id: 'survivor', q: '为什么「成功经验」常常骗人?', domains: ['wealth', 'info'], age: 12, guide: 'sagan', path: 'survivor/', ver: 'M2', live: false },
   { id: 'nature', q: '人性本善,还是本恶?', domains: ['nature'], age: 12, guide: 'mengxun', path: 'nature/', ver: 'M2', live: false }
@@ -97,7 +97,8 @@ export const HANDBOOK = [
     counter: '问自己「它是在加,还是在乘?」会乘的好事越早开始,会乘的坏事(利滚利的欠款)越早停下。' },
   { task: 'prisoner', no: 2, domain: '合作与博弈 × 人性', title: '只要还会再见面,善良往往不吃亏',
     counter: '被占便宜时先问「我们还会再见吗?」会,就清楚回应一次再留出原谅;不会,就别把信任押在一次性的承诺上。' },
-  { task: 'sunk', no: 3, domain: '心智与决策', title: '花掉的已经花掉了', counter: '' },
+  { task: 'sunk', no: 3, domain: '心智与决策', title: '花掉的已经花掉了',
+    counter: '做决定前把镜头倒放到「还没付钱」的那一刻,问「如果现在免费给我,我还要吗?」已经付的两条路上都付了,只比较接下来的时间和钱能换到什么。' },
   { task: 'cocoon', no: 4, domain: '信息与真相 × 习惯与时间', title: '你喂给算法什么,它就把你变成什么', counter: '' },
   { task: 'survivor', no: 5, domain: '财富与风险 × 信息与真相', title: '你只听得见幸存者说话', counter: '' },
   { task: 'nature', no: 6, domain: '人性', title: '人性和规则,一起决定人怎么做', counter: '' }
