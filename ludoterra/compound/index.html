@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>每天多进步 1%,一年后会怎样? · 觉弈 Ludoterra</title>
+<meta name="description" content="觉弈 Ludoterra 关卡:先凭直觉猜,再看见复利的隐藏规则,最后坐到银行那一边亲手设计利率。">
+<meta name="theme-color" content="#070814">
+<link rel="stylesheet" href="../lt.css">
+<style>
+body{min-height:100vh}
+main{max-width:860px;margin:0 auto;padding:70px 16px 40px}
+.steps{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.steps span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--mute)}
+.steps span.on{color:#1a1206;background:var(--gold);border-color:var(--gold)}
+.card{padding:18px 18px 16px;margin-bottom:12px}
+h1{font-size:clamp(20px,4vw,28px);margin:0 0 6px}
+.guide{display:flex;gap:10px;align-items:flex-start;margin:10px 0}
+.guide .m{flex:none;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--gold2);display:flex;align-items:center;justify-content:center;color:#ffe9b8;font-weight:700;background:#14163a}
+.guide p{margin:0;font-size:14.5px;line-height:1.7}
+.guide small{display:block;color:var(--mute);font-size:11px}
+.opts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.opt{border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink);border-radius:14px;padding:14px 6px;font-size:18px;font-weight:700;cursor:pointer}
+.opt:hover,.opt:focus-visible{border-color:var(--gold);outline:none}
+.opt.pick{border-color:var(--gold);box-shadow:0 0 18px rgba(245,194,107,.35)}
+.opt.right{border-color:#7ee2a8;color:#bff5d6}
+canvas.ch{width:100%;height:280px;display:block;border-radius:12px;background:rgba(0,0,0,.25);touch-action:pan-y}
+.ctl{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;margin:12px 0;font-size:14px}
+.ctl input{accent-color:#f5c26b;width:100%}
+.ctl output{color:var(--gold);font-weight:700;min-width:84px;text-align:right}
+.big{font-size:clamp(22px,5vw,34px);font-weight:800;color:var(--gold)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.pair div{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.6}
+.note{font-size:12px;color:var(--mute);line-height:1.6}
+.nav{display:flex;gap:8px;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+.handbook{border:1.5px solid var(--gold);border-radius:18px;padding:18px;background:radial-gradient(circle at 20% 0,rgba(245,194,107,.18),transparent 60%),#0f1130;position:relative;overflow:hidden}
+.handbook .no{font-size:12px;color:var(--gold);letter-spacing:2px}
+.handbook h2{margin:6px 0 8px;font-size:22px}
+.handbook p{margin:6px 0;line-height:1.7;font-size:14.5px}
+.handbook .b{position:absolute;right:14px;top:10px;font-size:34px;opacity:.5}
+[hidden]{display:none!important}
+@media (max-width:640px){.opts{grid-template-columns:repeat(2,1fr)}.pair{grid-template-columns:1fr}canvas.ch{height:230px}.lt-hud{display:none}}
+@media (max-width:1100px){.lt-hud{display:none}}
+</style></head><body>
+<main>
+  <div class="steps" id="steps"><span>① 先中招</span><span>② 再看见</span><span>③ 坐到庄家那边</span><span>④ 玩家手册</span></div>
+
+  <!-- ① 先中招 -->
+  <section class="card lt-panel" data-step="0">
+    <h1>每天多进步 1%,一年后会怎样?</h1>
+    <div class="guide"><span class="m">苏</span><p>别算,凭第一感觉选:如果你今天的水平是 1,之后每天都比前一天多进步 1%,365 天后,你大约是现在的多少倍?<small>苏格拉底 · 仿其思想的提问</small></p></div>
+    <div class="opts" id="opts"><button class="opt" data-v="3.65">3.65 倍</button><button class="opt" data-v="5">5 倍</button><button class="opt" data-v="13">13 倍</button><button class="opt" data-v="37.8">37.8 倍</button></div>
+    <p class="note">提示:没有标准的「好答案」。先凭直觉选,下一步揭晓。</p>
+  </section>
+
+  <!-- ② 再看见 -->
+  <section class="card lt-panel" data-step="1" hidden>
+    <div id="reveal"></div>
+    <canvas class="ch" id="ch1" aria-label="加法增长和复利增长对比曲线"></canvas>
+    <div class="ctl">
+      <label for="r1">每天变化</label><input id="r1" type="range" min="-2" max="2" step="0.1" value="1"><output id="o1">+1.0%</output>
+      <label for="d1">天数</label><input id="d1" type="range" min="30" max="1095" step="5" value="365"><output id="od1">365 天</output>
+    </div>
+    <div class="pair"><div>加法直觉(每天多 1% 的「原来」)<br><span class="big" id="lin">4.65</span> 倍</div><div>复利真相(每天多 1% 的「昨天」)<br><span class="big" id="exp">37.78</span> 倍</div></div>
+    <div class="guide"><span class="m">富</span><p id="fq">把「每天变化」拖到 −1%:每天只差 2 个百分点的两个人,一年后差多少倍?<small>富兰克林 · 仿其思想的提问</small></p></div>
+    <p class="note">这是一个数学模型:真实的成长不会每天稳定 1%,但「乘出来」的规律在利息、人口、病毒传播中都在发生。</p>
+    <div class="nav"><button class="lt-btn" data-go="0">← 重新猜</button><button class="lt-btn" id="ff">⏩ 一生快进 30 年</button><button class="lt-btn primary" data-go="2">坐到庄家那边 →</button></div>
+  </section>
+
+  <!-- ③ 坐到庄家那边 -->
+  <section class="card lt-panel" data-step="2" hidden>
+    <div id="bank"></div>
+    <canvas class="ch" id="ch2" aria-label="余额随时间变化"></canvas>
+    <div class="ctl" id="ctl2"></div>
+    <div class="pair" id="out2"></div>
+    <div class="guide"><span class="m">富</span><p id="bq"></p></div>
+    <p class="note">本关只讲机制,<b>不构成投资建议</b>;数字为教学模型,不对应任何真实产品。</p>
+    <div class="nav"><button class="lt-btn" data-go="1">← 回到曲线</button><button class="lt-btn primary" data-go="3">领取玩家手册 →</button></div>
+  </section>
+
+  <!-- ④ 玩家手册 -->
+  <section class="card lt-panel" data-step="3" hidden>
+    <div class="handbook"><span class="b">✦</span><div class="no">地球Online 玩家手册 · 第 1 页 · 财富与风险 × 习惯与时间</div>
+      <h2>隐藏规则:增长是乘出来的,不是加出来的</h2>
+      <p>大脑天生用加法估计未来,所以总是低估复利:好习惯的回报来得比你想的晚,也比你想的大;欠款滚起来,也比你想的快。</p>
+      <p><b style="color:var(--gold)">反制技巧:</b>判断一件事时问自己「它是在加,还是在乘?」——会乘的好事,越早开始越好;会乘的坏事(比如利滚利的欠款),越早停下越好。</p>
+      <p class="note">你解锁了隐藏数值「复利」与「时间」。</p></div>
+    <div class="guide"><span class="m">苏</span><p>现在回头看:你第一次凭直觉选了 <b id="myGuess">?</b>。是什么让大脑选了它?<small>苏格拉底 · 仿其思想的提问</small></p></div>
+    <p class="note">星桥(即将开通):指数增长也藏在 <a href="/math-atlas/epidemic/">星图 · 传染病为什么会爆发?</a> 里。</p>
+    <div class="nav"><a class="lt-btn" href="../">← 回到认知星盘</a><button class="lt-btn" data-go="0">再玩一次</button></div>
+  </section>
+</main>
+<script type="module">
+import { chrome, hud, store, markDone, isDone, sound, reducedMotion, offline, userMinAge } from '../lt.js';
+chrome({ home: '../' }); const H = hud(); offline();
+const secs = [...document.querySelectorAll('[data-step]')], tabs = [...document.querySelectorAll('#steps span')];
+let step = 0;
+function go(n) { step = n; secs.forEach((s, i) => s.hidden = i !== n); tabs.forEach((t, i) => t.classList.toggle('on', i === n));
+  window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }); if (n === 1) draw1(); if (n === 2) setupBank(); if (n === 3) finish(); }
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) { sound.tick(); go(+g.dataset.go); } });
+go(0);
+
+/* ① 先中招 */
+let guess = store.get('compound_guess', null);
+document.getElementById('opts').onclick = e => { const b = e.target.closest('.opt'); if (!b) return; guess = +b.dataset.v; store.set('compound_guess', guess); sound.bell(1);
+  document.querySelectorAll('.opt').forEach(o => o.classList.toggle('pick', o === b)); setTimeout(() => go(1), 350); };
+
+/* ② 再看见 */
+const fmt = x => x >= 1000 ? Math.round(x).toLocaleString('zh-CN') : x >= 100 ? x.toFixed(0) : x >= 10 ? x.toFixed(1) : x.toFixed(2);
+function canvasCtx(c) { const d = Math.min(2, devicePixelRatio || 1); const w = c.clientWidth, h = c.clientHeight; c.width = w * d; c.height = h * d; const x = c.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); return [x, w, h]; }
+let prog = 1; // 曲线绘制进度(倒放/快进动画)
+function draw1() {
+  const r = +document.getElementById('r1').value / 100, D = +document.getElementById('d1').value;
+  document.getElementById('o1').textContent = (r >= 0 ? '+' : '') + (r * 100).toFixed(1) + '%';
+  document.getElementById('od1').textContent = D + ' 天';
+  const lin = Math.max(0, 1 + r * D), ex = Math.pow(1 + r, D);
+  document.getElementById('lin').textContent = fmt(lin); document.getElementById('exp').textContent = fmt(ex);
+  const g = guess;
+  document.getElementById('reveal').innerHTML = g == null ? '<h1>看见:复利曲线</h1>' :
+    `<h1>${Math.abs(g - 37.8) < 0.5 ? '你看穿了!' : '你刚才中招了'}</h1><p style="margin:4px 0 8px;line-height:1.7">答案是 <b class="big" style="font-size:22px">1.01³⁶⁵ ≈ 37.78 倍</b>。${Math.abs(g - 37.8) < 0.5 ? '大多数人会选 3.65 倍或 5 倍,因为大脑默认用「加法」估计未来。' : `你选了 ${g} 倍:这是大脑的「加法直觉」——把每天的 1% 都算在「原来的你」身上。可是每天的 1% 是算在「昨天的你」身上的,于是它会越滚越大。`}</p>`;
+  const [x, w, h] = canvasCtx(document.getElementById('ch1')); const pad = 34;
+  const N = Math.max(2, Math.floor(D * prog)); const ymax = Math.max(lin, ex, 1.2, ...(r < 0 ? [1] : []));
+  const X = i => pad + (w - pad - 10) * i / D, Y = v => h - pad - (h - pad - 14) * v / ymax;
+  x.strokeStyle = 'rgba(245,194,107,.18)'; x.lineWidth = 1; x.font = '11px sans-serif'; x.fillStyle = 'rgba(243,238,226,.6)';
+  for (let k = 0; k <= 4; k++) { const v = ymax * k / 4, yy = Y(v); x.beginPath(); x.moveTo(pad, yy); x.lineTo(w - 10, yy); x.stroke(); x.fillText(fmt(v), 2, yy + 4); }
+  x.fillText('第 ' + D + ' 天', w - 70, h - 12); x.fillText('第 0 天', pad, h - 12);
+  const line = (f, col, wd) => { x.beginPath(); for (let i = 0; i <= N; i++) { const yy = Y(f(i)); i ? x.lineTo(X(i), yy) : x.moveTo(X(i), yy); } x.strokeStyle = col; x.lineWidth = wd; x.stroke(); };
+  line(i => Math.max(0, 1 + r * i), 'rgba(180,190,230,.8)', 2);
+  line(i => Math.pow(1 + r, i), '#f5c26b', 3);
+  x.fillStyle = '#f5c26b'; x.fillText('复利(乘)', X(N) - 60, Math.max(14, Y(Math.pow(1 + r, N)) - 8));
+  x.fillStyle = 'rgba(200,210,240,.9)'; x.fillText('加法直觉', X(N) - 60, Math.min(h - 40, Y(Math.max(0, 1 + r * N)) + 16));
+  const fq = document.getElementById('fq');
+  if (Math.abs(r + 0.01) < 0.0001) fq.innerHTML = `每天退步 1%,一年后只剩 <b>${fmt(ex)}</b>。和每天进步 1% 的人相比,差了约 <b>${fmt(Math.pow(1.01, D) / ex)}</b> 倍。差距是从哪一天开始变得看得见的?<small>富兰克林 · 仿其思想的提问</small>`;
+  else fq.innerHTML = `把「每天变化」拖到 −1%:每天只差 2 个百分点的两个人,一年后差多少倍?<small>富兰克林 · 仿其思想的提问</small>`;
+}
+['r1', 'd1'].forEach(id => document.getElementById(id).addEventListener('input', () => { prog = 1; draw1(); sound.tick(); }));
+addEventListener('resize', () => { if (step === 1) draw1(); if (step === 2) drawBank(); });
+/* 一生快进:天数从 30 天推到 10950 天(30 年)需要更大的轴,这里用每天 0.1% 的「慢复利」演示 30 年 */
+document.getElementById('ff').onclick = () => {
+  const r1 = document.getElementById('r1'), d1 = document.getElementById('d1');
+  r1.value = 0.1; d1.max = 10950; d1.value = 10950; prog = 0; sound.bell(4);
+  const T = reducedMotion ? 1 : 3200, s = performance.now(); let lastStep = -1;
+  const tick = now => { prog = Math.min(1, (now - s) / T); draw1(); const k = Math.floor(prog * 6); if (k !== lastStep) { lastStep = k; sound.bell(k); }
+    if (prog < 1) requestAnimationFrame(tick); else document.getElementById('fq').innerHTML = `每天只多 0.1%,30 年后是 <b>${fmt(Math.pow(1.001, 10950))}</b> 倍;但前 3 年几乎看不出变化。你会在第几年放弃?<small>富兰克林 · 仿其思想的提问</small>`; };
+  requestAnimationFrame(tick);
+};
+
+/* ③ 坐到庄家那边:16+ 你是发卡银行;16 以下你是存钱罐银行 */
+const adult = userMinAge() >= 16;
+let B = {};
+function setupBank() {
+  const ctl = document.getElementById('ctl2');
+  if (adult) {
+    document.getElementById('bank').innerHTML = `<h1>你是银行:设计一张「先享后付」卡</h1><p class="note" style="font-size:13.5px">顾客刷卡花了 10000 元,每月只还「最低还款」。你来定月利率和最低还款比例,看看谁在赚钱。</p>`;
+    ctl.innerHTML = `<label for="mr">月利率</label><input id="mr" type="range" min="0.5" max="3" step="0.1" value="1.5"><output id="omr"></output>
+      <label for="mp">最低还款</label><input id="mp" type="range" min="2" max="20" step="1" value="5"><output id="omp"></output>`;
+  } else {
+    document.getElementById('bank').innerHTML = `<h1>你是存钱罐银行:给存钱的人付利息</h1><p class="note" style="font-size:13.5px">一位小朋友每周存 10 元。你来定每周利息,看看「利息生利息」能帮他多少。</p>`;
+    ctl.innerHTML = `<label for="mr">每周利息</label><input id="mr" type="range" min="0" max="2" step="0.1" value="0.5"><output id="omr"></output>
+      <label for="mp">存多少周</label><input id="mp" type="range" min="26" max="520" step="26" value="260"><output id="omp"></output>`;
+  }
+  ctl.oninput = () => { drawBank(); sound.tick(); }; drawBank();
+}
+function drawBank() {
+  const a = +document.getElementById('mr').value / 100, b = +document.getElementById('mp').value;
+  let series = [], o2 = '', q = '';
+  if (adult) {
+    document.getElementById('omr').textContent = (a * 100).toFixed(1) + '%'; document.getElementById('omp').textContent = b + '%';
+    let bal = 10000, paid = 0, m = 0; series.push(bal);
+    while (bal > 1 && m < 600) { bal *= 1 + a; const pay = Math.min(bal, Math.max(bal * b / 100, 50)); bal -= pay; paid += pay; m++; series.push(bal); }
+    const yrs = (m / 12).toFixed(1), interest = paid - 10000;
+    o2 = `<div>顾客要还 <span class="big" style="font-size:24px">${m >= 600 ? '50 年以上' : m + ' 个月'}</span><br>(约 ${yrs} 年)</div><div>银行多收的利息<br><span class="big" style="font-size:24px">${Math.round(interest).toLocaleString('zh-CN')} 元</span></div>`;
+    q = interest > 10000 ? '利息已经超过了顾客当初花的钱。为什么「最低还款」这几个字听起来那么友好?' : '把最低还款调低一点,银行的利息会怎么变?顾客会觉得更轻松,还是更危险?';
+  } else {
+    document.getElementById('omr').textContent = (a * 100).toFixed(1) + '%'; document.getElementById('omp').textContent = b + ' 周';
+    let bal = 0, dep = 0; series.push(0);
+    for (let w = 0; w < b; w++) { bal = bal * (1 + a) + 10; dep += 10; series.push(bal); }
+    o2 = `<div>他自己存进去<br><span class="big" style="font-size:24px">${dep} 元</span></div><div>最后罐子里有<br><span class="big" style="font-size:24px">${Math.round(bal).toLocaleString('zh-CN')} 元</span></div>`;
+    q = '多出来的钱是谁给的?如果你是真的银行,你会从哪里赚到钱来付这些利息?';
+  }
+  B = { series };
+  document.getElementById('out2').innerHTML = o2; document.getElementById('bq').innerHTML = q + '<small>富兰克林 · 仿其思想的提问</small>';
+  const [x, w, h] = canvasCtx(document.getElementById('ch2')); const pad = 34, n = series.length - 1, ymax = Math.max(...series, 1);
+  x.strokeStyle = 'rgba(245,194,107,.18)'; x.font = '11px sans-serif'; x.fillStyle = 'rgba(243,238,226,.6)';
+  for (let k = 0; k <= 4; k++) { const v = ymax * k / 4, yy = h - pad - (h - pad - 14) * k / 4; x.beginPath(); x.moveTo(pad, yy); x.lineTo(w - 10, yy); x.stroke(); x.fillText(v >= 10000 ? (v / 10000).toFixed(1) + '万' : Math.round(v), 2, yy + 4); }
+  x.beginPath(); series.forEach((v, i) => { const xx = pad + (w - pad - 10) * i / Math.max(1, n), yy = h - pad - (h - pad - 14) * v / ymax; i ? x.lineTo(xx, yy) : x.moveTo(xx, yy); });
+  x.strokeStyle = adult ? '#ff9a7a' : '#7ee2a8'; x.lineWidth = 3; x.stroke();
+  x.fillText(adult ? '欠款余额' : '存钱罐余额', pad + 6, 14);
+}
+
+/* ④ 玩家手册 */
+function finish() {
+  const first = !isDone('compound'); markDone('compound', { guess });
+  if (store.get('stat_compound', null) == null) store.set('stat_compound', 38);
+  if (store.get('stat_time', null) == null) store.set('stat_time', 30);
+  document.getElementById('myGuess').textContent = guess == null ? '(还没选)' : guess + ' 倍';
+  H.render(); if (first) [0, 2, 4, 7].forEach((s, i) => setTimeout(() => sound.bell(s), i * 180));
+}
+</script>
+</body></html>
