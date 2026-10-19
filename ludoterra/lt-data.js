@@ -79,7 +79,8 @@ export const TASKS = [
   { id: 'sunk', q: '电影看了一半很难看,要不要看完?', domains: ['mind'], age: 7, guide: 'kahneman', path: 'sunk/', ver: 'v0.5', live: true },
   { id: 'cocoon', q: '为什么你刷到的视频越来越像?', domains: ['info', 'habit'], age: 12, guide: 'sagan', path: 'cocoon/', ver: 'v0.6', live: true },
   { id: 'survivor', q: '为什么「成功经验」常常骗人?', domains: ['wealth', 'info'], age: 12, guide: 'sagan', path: 'survivor/', ver: 'v0.7', live: true },
-  { id: 'nature', q: '人性本善,还是本恶?', domains: ['nature'], age: 12, guide: 'mengxun', path: 'nature/', ver: 'v0.8', live: true }
+  { id: 'nature', q: '人性本善,还是本恶?', domains: ['nature'], age: 12, guide: 'mengxun', path: 'nature/', ver: 'v0.8', live: true },
+  { id: 'meaning', q: '看见了这些规则,我想成为怎样的玩家?', domains: ['meaning'], age: 16, guide: 'wang', path: 'meaning/', ver: 'v0.9', live: true, finale: true }
 ];
 
 /* 星桥意向(已登记,未上线) */
@@ -104,5 +105,7 @@ export const HANDBOOK = [
   { task: 'survivor', no: 5, domain: '财富与风险 × 信息与真相', title: '你只听得见幸存者说话',
     counter: '听到「成功的人都……」时追问:「失败的人里,有多少也这么做?」再问:「我看到的是全部人,还是被挑出来的人?」(只讲统计规律,不构成投资建议)' },
   { task: 'nature', no: 6, domain: '人性', title: '人性和规则,一起决定人怎么做',
-    counter: '评价一个人之前,先问「换我在他的处境,会怎么做?」想让人变好,既养护善意(榜样、被善待),也设计规则——让做好事更容易,做坏事更难。' }
+    counter: '评价一个人之前,先问「换我在他的处境,会怎么做?」想让人变好,既养护善意(榜样、被善待),也设计规则——让做好事更容易,做坏事更难。' },
+  { task: 'meaning', no: 7, domain: '意义(终章)', title: '知行合一:看见了,还要做到',
+    counter: '把你写下的规则变成一个能在路口问出口的问题。做完选择回看一眼:「我是按自己写的规则玩的吗?」没做到也没关系,下一次再试——规则由你写,也可以由你改。' }
 ];
