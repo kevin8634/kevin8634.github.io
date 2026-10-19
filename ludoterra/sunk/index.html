@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>电影看了一半很难看,要不要看完? · 觉弈 Ludoterra</title>
+<meta name="description" content="觉弈 Ludoterra 关卡:沉没成本。先凭直觉做决定,再把镜头倒放,看见「已经付了」怎样悄悄替你做选择。">
+<meta name="theme-color" content="#070814">
+<link rel="stylesheet" href="../lt.css">
+<style>
+body{min-height:100vh}
+main{max-width:860px;margin:0 auto;padding:70px 16px 40px}
+.steps{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.steps span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--mute)}
+.steps span.on{color:#1a1206;background:var(--gold);border-color:var(--gold)}
+.card{padding:18px;margin-bottom:12px}
+h1{font-size:clamp(20px,4vw,28px);margin:0 0 6px}
+h3{margin:12px 0 6px;font-size:16px}
+.guide{display:flex;gap:10px;align-items:flex-start;margin:10px 0}
+.guide .m{flex:none;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--gold2);display:flex;align-items:center;justify-content:center;color:#ffe9b8;font-weight:700;background:#14163a}
+.guide p{margin:0;font-size:14.5px;line-height:1.7}
+.guide small{display:block;color:var(--mute);font-size:11px}
+.scene{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0;background:rgba(255,255,255,.025)}
+.scene p{margin:0 0 8px;line-height:1.7;font-size:14.5px}
+.two{display:flex;gap:10px;flex-wrap:wrap}
+.two .lt-btn{font-size:15px;padding:9px 16px;white-space:normal;text-align:left}
+.two .lt-btn.pick{border-color:var(--gold);box-shadow:0 0 16px rgba(245,194,107,.35)}
+canvas.film{width:100%;height:150px;display:block;border-radius:12px;background:rgba(0,0,0,.3)}
+.fut{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.fut div{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.7}
+.fut b{color:var(--gold)}
+.fut s{color:#ff9a7a;text-decoration-thickness:2px}
+.ctl{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;margin:10px 0;font-size:14px}
+.ctl input[type=range]{accent-color:#f5c26b;width:100%}
+.ctl output{color:var(--gold);font-weight:700;min-width:70px;text-align:right}
+.alts{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.alts .lt-btn[aria-pressed=true]{background:rgba(245,194,107,.15)}
+.scale{display:grid;grid-template-columns:76px 1fr 44px;gap:6px 10px;align-items:center;font-size:13px;margin:8px 0}
+.scale .t{height:14px;border-radius:7px;background:rgba(255,255,255,.06);overflow:hidden}
+.scale .t i{display:block;height:100%;background:linear-gradient(90deg,#d99a3e,#f5c26b);transition:width .35s}
+.scale .t i.g{background:linear-gradient(90deg,#3fae78,#7ee2a8)}
+.scale .v{text-align:right;color:var(--gold)}
+.tog{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 4px;font-size:14px}
+.tog label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.tog input{accent-color:#f5c26b;width:18px;height:18px}
+canvas.ch{width:100%;height:200px;display:block;border-radius:12px;background:rgba(0,0,0,.25)}
+.pair{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.pair div{border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:12.5px;line-height:1.5}
+.big{font-size:clamp(18px,4vw,24px);font-weight:800;color:var(--gold)}
+.note{font-size:12px;color:var(--mute);line-height:1.6}
+.nav{display:flex;gap:8px;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+.handbook{border:1.5px solid var(--gold);border-radius:18px;padding:18px;background:radial-gradient(circle at 20% 0,rgba(245,194,107,.18),transparent 60%),#0f1130;position:relative;overflow:hidden}
+.handbook .no{font-size:12px;color:var(--gold);letter-spacing:2px;padding-right:44px}
+.handbook h2{margin:6px 0 8px;font-size:22px}
+.handbook p{margin:6px 0;line-height:1.7;font-size:14.5px}
+.handbook .b{position:absolute;right:14px;top:10px;font-size:34px;opacity:.5}
+[hidden]{display:none!important}
+@media (max-width:1100px){.lt-hud{display:none}}
+@media (max-width:640px){.fut{grid-template-columns:1fr}.pair{grid-template-columns:1fr 1fr 1fr}.pair div{padding:6px 7px;font-size:11.5px}canvas.film{height:120px}canvas.ch{height:170px}.scale{grid-template-columns:64px 1fr 36px}}
+</style></head><body>
+<main>
+  <div class="steps" id="steps"><span>① 先中招</span><span>② 镜头倒放</span><span>③ 坐到商家那边</span><span>④ 玩家手册</span></div>
+
+  <!-- ① 先中招 -->
+  <section class="card lt-panel" data-step="0">
+    <h1>电影看了一半很难看,要不要看完?</h1>
+    <div class="scene" id="q1"><p>🎬 你花 <b>40 元</b>买了电影票。看了 45 分钟,越看越无聊,还剩 75 分钟。</p>
+      <div class="two"><button class="lt-btn" data-a="1" data-v="stay">🍿 看完,票都买了</button><button class="lt-btn" data-a="1" data-v="leave">🚪 走,去做别的</button></div></div>
+    <div class="scene" id="q2" hidden><p>🧱 你花 <b>60 元</b>买了一套积木,拼到一半发现它根本不是你想要的样子。要拼完,还得再花 <b>30 元</b>买缺的零件。</p>
+      <div class="two"><button class="lt-btn" data-a="2" data-v="more">🧩 再花 30 元拼完,不然白买了</button><button class="lt-btn" data-a="2" data-v="stop">✋ 不拼了,30 元留着</button></div></div>
+    <div class="guide"><span class="m">卡</span><p id="g0">别想太久,凭第一感觉选。<small>卡尼曼 · 仿其思想的提问</small></p></div>
+    <div class="nav" id="n0" hidden><span></span><button class="lt-btn primary" data-go="1">把镜头倒放 ⏪</button></div>
+  </section>
+
+  <!-- ② 再看见:镜头倒放 -->
+  <section class="card lt-panel" data-step="1" hidden>
+    <h1>镜头倒放:回到买票之前</h1>
+    <canvas class="film" id="film" aria-label="电影胶片时间线,播放头从第 45 分钟倒回买票之前"></canvas>
+    <div class="nav" style="margin-top:8px"><button class="lt-btn" id="rw">⏪ 倒放</button><span class="note" id="rwNote">看看那 40 元,在两条路上分别去了哪里。</span></div>
+    <div id="after" hidden>
+      <div class="fut"><div>🍿 <b>看完</b><br>票钱:<s>−40 元</s>(已经付了)<br>接下来 75 分钟:继续看无聊的后半场</div><div>🚪 <b>离开</b><br>票钱:<s>−40 元</s>(已经付了)<br>接下来 75 分钟:<span id="altName">做别的事</span></div></div>
+      <h3>决策天平:只称「接下来」</h3>
+      <div class="ctl">
+        <label for="pr">票价</label><input id="pr" type="range" min="0" max="200" step="10" value="40"><output id="opr"></output>
+        <label for="fun">后半场好看度</label><input id="fun" type="range" min="0" max="10" step="1" value="2"><output id="ofun"></output>
+      </div>
+      <div class="alts" id="alts" role="group" aria-label="离开后可以做的事"></div>
+      <div class="scale"><span>🍿 看完</span><span class="t"><i id="bs"></i></span><span class="v" id="vs"></span><span>🚪 离开</span><span class="t"><i class="g" id="bl"></i></span><span class="v" id="vl"></span></div>
+      <div class="guide"><span class="m">卡</span><p id="g1"></p></div>
+      <div class="nav"><button class="lt-btn" data-go="0">← 重新选</button><button class="lt-btn primary" data-go="2">坐到商家那边 →</button></div>
+    </div>
+  </section>
+
+  <!-- ③ 坐到商家那边 -->
+  <section class="card lt-panel" data-step="2" hidden>
+    <div id="biz"></div>
+    <div class="ctl"><label for="pp">预付次数</label><input id="pp" type="range" min="0" max="3" step="1" value="2"><output id="opp"></output></div>
+    <div class="tog"><label><input type="checkbox" id="remind" checked> 发提醒:「还剩 N 次,别浪费!」</label><label><input type="checkbox" id="refund"> 没用完可以退款</label></div>
+    <canvas class="ch" id="ch" aria-label="20 周里每周来的顾客人数"></canvas>
+    <div class="pair" id="out"></div>
+    <div class="guide"><span class="m">卡</span><p id="g2"></p></div>
+    <p class="note">教学模型:100 位虚拟顾客,每人真实的喜欢程度不同。1985 年心理学家阿克斯和布卢默做过一个现场实验:同一剧场的季票,原价买的人前半季去看戏的次数,比打折买的人更多。</p>
+    <div class="nav"><button class="lt-btn" data-go="1">← 回到天平</button><button class="lt-btn primary" data-go="3">领取玩家手册 →</button></div>
+  </section>
+
+  <!-- ④ 玩家手册 -->
+  <section class="card lt-panel" data-step="3" hidden>
+    <div class="handbook"><span class="b">⏪</span><div class="no">地球Online 玩家手册 · 第 3 页 · 心智与决策</div>
+      <h2>隐藏规则:花掉的已经花掉了</h2>
+      <p>已经付出的钱和时间叫「沉没成本」:不管你接下来怎么选,它都回不来了。可大脑讨厌「浪费」的感觉,会拉着你继续投入;而真正该比较的,是接下来的时间和钱还能换到什么——这叫「机会成本」。</p>
+      <p><b style="color:var(--gold)">反制技巧:</b>做决定前把镜头倒放到「还没付钱」的那一刻,问自己:「如果现在免费给我,我还要吗?」已经付的,两条路上都付了;只比较接下来。</p>
+      <p class="note">你解锁了隐藏数值「迷雾值」:地球Online 里遮住视线的雾,有一部分是自己的大脑放的。</p></div>
+    <div class="guide"><span class="m">卡</span><p id="g3"></p></div>
+    <div class="nav"><a class="lt-btn" href="../">← 回到认知星盘</a><button class="lt-btn" data-go="0">再玩一次</button></div>
+  </section>
+</main>
+<script type="module">
+import { chrome, hud, store, markDone, isDone, sound, reducedMotion, offline, userMinAge, logChoice } from '../lt.js';
+chrome({ home: '../' }); const H = hud(); offline();
+const $ = id => document.getElementById(id);
+const Q = '<small>卡尼曼 · 仿其思想的提问</small>';
+const secs = [...document.querySelectorAll('[data-step]')], tabs = [...document.querySelectorAll('#steps span')];
+let step = 0;
+function go(n) { step = n; secs.forEach((s, i) => s.hidden = i !== n); tabs.forEach((t, i) => t.classList.toggle('on', i === n));
+  window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }); if (n === 0) reset0(); if (n === 1) enter1(); if (n === 2) biz(); if (n === 3) finish(); }
+window.ltGo = go;
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) { sound.tick(); go(+g.dataset.go); } });
+
+/* ① 先中招 */
+let ans = store.get('sunk_pick', {}) || {};
+function reset0() { document.querySelectorAll('[data-a]').forEach(b => b.classList.toggle('pick', ans[b.dataset.a] === b.dataset.v));
+  $('q2').hidden = !ans[1]; $('n0').hidden = !(ans[1] && ans[2]); }
+document.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+  const q = b.dataset.a, v = b.dataset.v; ans[q] = v; store.set('sunk_pick', ans);
+  document.querySelectorAll(`[data-a="${q}"]`).forEach(x => x.classList.toggle('pick', x === b));
+  if (q === '1') { logChoice('sunk', v === 'stay' ? '电影很难看,因为票已买了选择看完' : '电影很难看,选择离场去做别的', v === 'stay' ? '若离场:40 元一样回不来,但多出 75 分钟' : '若看完:40 元一样回不来,还多搭进 75 分钟');
+    $('q2').hidden = false; $('g0').innerHTML = '再来一个。还是凭第一感觉。' + Q; sound.bell(1); }
+  else { logChoice('sunk', v === 'more' ? '积木不合心意,又花 30 元拼完' : '积木不合心意,停下留住 30 元', v === 'more' ? '若停下:60 元一样回不来,30 元可以换别的' : '若拼完:多花 30 元,换来一个不想要的模型');
+    const n = (ans[1] === 'stay') + (ans[2] === 'more');
+    $('g0').innerHTML = (n ? `两道题里,你有 ${n} 次因为「已经付了」继续投入。` : '两次你都选择了停下。') + '如果那 40 元和 60 元从来没花过,你的选择还会一样吗?' + Q;
+    $('n0').hidden = false; n ? sound.clash() : sound.bell(3); }
+});
+
+/* ② 镜头倒放 */
+function cctx(c) { const d = Math.min(2, devicePixelRatio || 1); const w = c.clientWidth, h = c.clientHeight; c.width = w * d; c.height = h * d; const x = c.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); return [x, w, h]; }
+let head = 45, rewound = false;
+function drawFilm() {
+  const [x, w, h] = cctx($('film')); const pad = 14, L = pad, R = w - pad, top = 34, fh = h - 64;
+  const T = m => L + (R - L) * (m + 20) / 140; // −20(买票前)… 120 分钟
+  x.fillStyle = '#1a1b38'; x.fillRect(L, top, R - L, fh);
+  x.fillStyle = 'rgba(7,8,20,.9)'; for (let px = L + 4; px < R - 6; px += 14) { x.fillRect(px, top + 3, 7, 5); x.fillRect(px, top + fh - 8, 7, 5); }
+  for (let m = 0; m < 120; m += 15) { const a = T(m) + 2, b = T(m + 15) - 2; const watched = m < 45;
+    x.fillStyle = m < 45 ? (m < 15 ? 'rgba(126,226,168,.35)' : 'rgba(245,194,107,.22)') : 'rgba(180,190,230,.10)'; x.fillRect(a, top + 12, b - a, fh - 24);
+    if (watched && m >= 15) { x.fillStyle = 'rgba(243,238,226,.55)'; x.font = '14px sans-serif'; x.fillText('😴', (a + b) / 2 - 8, top + fh / 2 + 5); } }
+  x.fillStyle = 'rgba(245,194,107,.12)'; x.fillRect(L, top, T(0) - L, fh);
+  x.fillStyle = 'rgba(243,238,226,.7)'; x.font = '11px sans-serif';
+  x.fillText('买票前', L + 4, top + fh + 16); x.fillText('第 45 分', T(45) - 18, top + fh + 16); x.fillText('第 120 分', R - 50, top + fh + 16);
+  const hx = T(head); x.strokeStyle = '#f5c26b'; x.lineWidth = 3; x.beginPath(); x.moveTo(hx, top - 6); x.lineTo(hx, top + fh + 4); x.stroke();
+  x.fillStyle = '#f5c26b'; x.beginPath(); x.moveTo(hx - 6, top - 12); x.lineTo(hx + 6, top - 12); x.lineTo(hx, top - 4); x.fill();
+  x.font = '700 13px sans-serif'; const msg = head <= 0 ? '💰 40 元还在你手里' : '💸 40 元已付出';
+  x.fillText(msg, Math.min(hx + 12, R - 130), 18);
+}
+function enter1() { head = rewound ? -10 : 45; $('after').hidden = !rewound; drawFilm(); if (rewound) paint1(); }
+$('rw').onclick = () => {
+  const s = performance.now(), T = reducedMotion ? 1 : 1800, from = 45; sound.bell(4);
+  const tick = now => { const p = Math.min(1, (now - s) / T); head = from - (from + 10) * (1 - Math.pow(1 - p, 2)); drawFilm();
+    if (p < 1) requestAnimationFrame(tick); else { rewound = true; $('rwNote').textContent = '回到买票前:无论看完还是离开,40 元都会花掉。它不在两条路的差别里。';
+      $('after').hidden = false; paint1(); sound.bell(0); } };
+  requestAnimationFrame(tick);
+};
+const ALTS = [{ n: '和朋友打球', v: 7 }, { n: '回家睡一觉', v: 5 }, { n: '看本好书', v: 6 }, { n: '换一部好电影', v: 8 }];
+let alt = 0, prMoved = false;
+$('alts').innerHTML = '<span class="note" style="align-self:center">离开后去:</span>' + ALTS.map((a, i) => `<button class="lt-btn" type="button" data-alt="${i}" aria-pressed="${i === 0}">${a.n}</button>`).join('');
+$('alts').onclick = e => { const b = e.target.closest('[data-alt]'); if (!b) return; alt = +b.dataset.alt; $('alts').querySelectorAll('[data-alt]').forEach(x => x.setAttribute('aria-pressed', x === b)); sound.tick(); paint1(); };
+function paint1() {
+  const pr = +$('pr').value, fun = +$('fun').value, a = ALTS[alt];
+  $('opr').textContent = pr + ' 元'; $('ofun').textContent = fun + ' / 10'; $('altName').textContent = a.n;
+  const vs = fun * 75 / 10, vl = a.v * 75 / 10, mx = 75;
+  $('bs').style.width = (vs / mx * 100) + '%'; $('bl').style.width = (vl / mx * 100) + '%'; $('vs').textContent = Math.round(vs); $('vl').textContent = Math.round(vl);
+  let q;
+  if (prMoved) q = `票价现在是 ${pr} 元,天平动了吗?票钱在两边都已付出,所以它不在天平上。让你犹豫的,是钱,还是「浪费」的感觉?`;
+  else if (fun > a.v) q = `后半场好看度 ${fun} 分,比「${a.n}」更值得,那留下就是好选择——理由是「接下来更好」,不是「已经付了」。现在拖一拖票价试试。`;
+  else q = `天平只称接下来的 75 分钟:「${a.n}」比无聊的后半场更重。拖动票价,从 0 元到 200 元,看看天平会不会动?`;
+  $('g1').innerHTML = q + '(数字是教学用的「开心值」。)' + Q;
+}
+$('pr').addEventListener('input', () => { prMoved = true; paint1(); sound.tick(); });
+$('fun').addEventListener('input', () => { paint1(); sound.tick(); });
+addEventListener('resize', () => { if (step === 1) drawFilm(); if (step === 2) biz(); });
+
+/* ③ 坐到商家那边:预付次卡 */
+const teen = userMinAge() >= 12;
+const PP = [0, 5, 10, 20], PRICE = 30;
+const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+function sim(P, remind, refund) {
+  const r = rng(85), N = 100, W = 20; const cs = Array.from({ length: N }, () => ({ like: r(), left: P, quit: false }));
+  const weekly = [], weeklyPay = []; let visits = 0, reluctant = 0, revenue = P ? N * P * PRICE * 0.8 : 0, unused = 0;
+  const s = P ? (remind ? 0.32 : 0.14) : 0;
+  for (let w = 0; w < W; w++) { let n = 0, np = 0;
+    cs.forEach(c => { const mood = c.like + (r() - 0.5) * 0.3;
+      if (mood > 0.5) np++;
+      if (c.quit) return; const pull = c.left > 0 ? s * (remind ? 1 : c.left / P) : 0;
+      if (mood + pull > 0.5) { n++; visits++; if (mood <= 0.5) reluctant++; if (c.left > 0) c.left--; else revenue += PRICE; }
+      else if (w > 3 && mood + pull < 0.25) c.quit = true; });
+    weekly.push(n); weeklyPay.push(np); }
+  cs.forEach(c => unused += c.left);
+  if (refund) revenue -= unused * PRICE * 0.8;
+  return { weekly, weeklyPay, visits, reluctant, revenue, unused: refund ? 0 : unused };
+}
+function biz() {
+  const P = PP[+$('pp').value], remind = $('remind').checked, refund = $('refund').checked;
+  $('biz').innerHTML = `<h1>你是${teen ? '健身房' : '游乐场'}老板:卖预付次卡</h1><p class="note" style="font-size:13.5px">单次 ${PRICE} 元;预付次卡打 8 折,先付钱后来玩。看「已经付了」能留住多少人——包括那些其实不想来的人。</p>`;
+  $('opp').textContent = P ? P + ' 次' : '按次付费';
+  const R = sim(P, remind, refund), B = sim(0, false, false);
+  const [x, w, h] = cctx($('ch')); const pad = 30, n = R.weekly.length, ymax = 100;
+  const X = i => pad + (w - pad - 10) * i / (n - 1), Y = v => h - 22 - (h - 36) * v / ymax;
+  x.strokeStyle = 'rgba(245,194,107,.15)'; x.font = '11px sans-serif'; x.fillStyle = 'rgba(243,238,226,.6)';
+  for (let k = 0; k <= 4; k++) { const yy = Y(k * 25); x.beginPath(); x.moveTo(pad, yy); x.lineTo(w - 10, yy); x.stroke(); x.fillText(k * 25, 4, yy + 4); }
+  x.fillText('第 1 周', pad, h - 6); x.fillText('第 20 周', w - 56, h - 6);
+  const line = (arr, col, wd, dash) => { x.setLineDash(dash || []); x.beginPath(); arr.forEach((v, i) => i ? x.lineTo(X(i), Y(v)) : x.moveTo(X(i), Y(v))); x.strokeStyle = col; x.lineWidth = wd; x.stroke(); x.setLineDash([]); };
+  line(R.weeklyPay, 'rgba(126,226,168,.8)', 2, [5, 4]); line(R.weekly, '#f5c26b', 3);
+  x.fillStyle = '#f5c26b'; x.fillText('每周来的人', pad + 6, 14); x.fillStyle = 'rgba(126,226,168,.95)'; x.fillText('- - 那周真想来的人', pad + 86, 14);
+  $('out').innerHTML = `<div>20 周收入<br><span class="big">${Math.round(R.revenue).toLocaleString('zh-CN')}</span> 元<br><span class="note">按次:${Math.round(B.revenue).toLocaleString('zh-CN')}</span></div>
+    <div>「不想来但来了」<br><span class="big">${R.reluctant}</span> 人次</div><div>没用完、退不了<br><span class="big">${R.unused}</span> 次</div>`;
+  let q;
+  if (!P) q = '按次付费时,黄线和绿线几乎重合:想来才来。现在把预付次数调高,打开提醒,看看两条线怎么分开。';
+  else if (refund) q = `允许退款后,白收的钱没了,但仍有 ${R.reluctant} 人次是被「已经付了」拉来的。预付能帮想坚持的人,也能拖住不想来的人——区别在哪里?`;
+  else if (R.unused > 0) q = `${R.unused} 次课付了钱却没人用,这些钱留在了你这里;还有 ${R.reluctant} 人次是「不想来但来了」。「别浪费」这句提醒,是在帮顾客,还是在帮你?`;
+  else q = `${R.reluctant} 人次是「不想来但来了」。关掉提醒再看:让人留下的,是喜欢,还是「已经付了」?`;
+  $('g2').innerHTML = q + Q;
+}
+['pp', 'remind', 'refund'].forEach(id => $(id).addEventListener('input', () => { biz(); sound.tick(); }));
+
+/* ④ */
+function finish() {
+  const first = !isDone('sunk'); markDone('sunk', { pick: ans });
+  if (store.get('stat_fog', null) == null) store.set('stat_fog', 40);
+  const n = (ans[1] === 'stay') + (ans[2] === 'more');
+  $('g3').innerHTML = (ans[1] ? `第一次凭直觉,你在两道题里有 ${n} 次继续投入。` : '') + '最近有没有一件事,你还在坚持,只是因为「已经投入了那么多」?如果倒放到开始之前,你还会选它吗?' + Q;
+  H.render(); if (first) [0, 2, 4, 7].forEach((s, i) => setTimeout(() => sound.bell(s), i * 180));
+}
+go(0);
+</script>
+</body></html>
