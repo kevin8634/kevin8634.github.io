@@ -88,7 +88,7 @@ canvas.ch{width:100%;height:280px;display:block;border-radius:12px;background:rg
   </section>
 </main>
 <script type="module">
-import { chrome, hud, store, markDone, isDone, sound, reducedMotion, offline, userMinAge } from '../lt.js';
+import { chrome, hud, store, markDone, isDone, sound, reducedMotion, offline, userMinAge, logChoice } from '../lt.js';
 chrome({ home: '../' }); const H = hud(); offline();
 const secs = [...document.querySelectorAll('[data-step]')], tabs = [...document.querySelectorAll('#steps span')];
 let step = 0;
@@ -99,7 +99,8 @@ go(0);
 
 /* ① 先中招 */
 let guess = store.get('compound_guess', null);
-document.getElementById('opts').onclick = e => { const b = e.target.closest('.opt'); if (!b) return; guess = +b.dataset.v; store.set('compound_guess', guess); sound.bell(1);
+document.getElementById('opts').onclick = e => { const b = e.target.closest('.opt'); if (!b) return; guess = +b.dataset.v; store.set('compound_guess', guess);
+  logChoice('compound', `凭直觉猜一年后是 ${guess} 倍`, guess === 37.8 ? '你看穿了复利:1.01³⁶⁵ ≈ 37.78' : '如果按「乘」来想:1.01³⁶⁵ ≈ 37.78 倍'); sound.bell(1);
   document.querySelectorAll('.opt').forEach(o => o.classList.toggle('pick', o === b)); setTimeout(() => go(1), 350); };
 
 /* ② 再看见 */
