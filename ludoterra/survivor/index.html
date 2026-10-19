@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>为什么「成功经验」常常骗人? · 觉弈 Ludoterra</title>
+<meta name="description" content="觉弈 Ludoterra 关卡:幸存者偏差。先听成功者讲故事,再拉开幕布看全部 1000 个虚拟创业者,最后坐到成功学讲师那一边挑数据。">
+<meta name="theme-color" content="#070814">
+<link rel="stylesheet" href="../lt.css">
+<style>
+body{min-height:100vh}
+main{max-width:860px;margin:0 auto;padding:70px 16px 40px}
+.steps{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.steps span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--mute)}
+.steps span.on{color:#1a1206;background:var(--gold);border-color:var(--gold)}
+.card{padding:18px;margin-bottom:12px}
+h1{font-size:clamp(20px,4vw,28px);margin:0 0 6px}
+h3{margin:12px 0 6px;font-size:16px}
+.guide{display:flex;gap:10px;align-items:flex-start;margin:10px 0}
+.guide .m{flex:none;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--gold2);display:flex;align-items:center;justify-content:center;color:#ffe9b8;font-weight:700;background:#14163a}
+.guide p{margin:0;font-size:14.5px;line-height:1.7}
+.guide small{display:block;color:var(--mute);font-size:11px}
+.talks{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0}
+.talk{border:1px solid var(--line);border-radius:12px;padding:10px 9px;font-size:13px;line-height:1.55;background:radial-gradient(circle at 50% 0,rgba(245,194,107,.16),transparent 70%)}
+.talk .a{font-size:22px;display:block;margin-bottom:4px}
+.talk small{display:block;color:var(--mute);font-size:11px;margin-top:4px}
+.opts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+.opt{border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink);border-radius:12px;padding:11px 6px;font-size:15px;font-weight:700;cursor:pointer}
+.opt:hover,.opt:focus-visible{border-color:var(--gold);outline:none}
+.opt.pick{border-color:var(--gold);box-shadow:0 0 16px rgba(245,194,107,.35)}
+canvas.dots{width:100%;height:300px;display:block;border-radius:12px;background:rgba(0,0,0,.28)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--mute);margin:6px 0}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:-1px}
+table.tb{border-collapse:collapse;width:100%;font-size:13.5px;margin:8px 0}
+table.tb td,table.tb th{border:1px solid var(--line);padding:6px 8px;text-align:center}
+table.tb th{color:var(--gold);font-weight:600}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.chips .lt-btn[aria-pressed=true]{background:rgba(245,194,107,.15)}
+.ctl{display:grid;grid-template-columns:auto 1fr auto;gap:8px 12px;align-items:center;margin:10px 0;font-size:14px}
+.ctl input[type=range]{accent-color:#f5c26b;width:100%}
+.ctl output{color:var(--gold);font-weight:700;min-width:56px;text-align:right}
+.tog{display:flex;gap:6px;align-items:center;font-size:14px;margin:4px 0;cursor:pointer}
+.tog input{accent-color:#f5c26b;width:18px;height:18px}
+.poster{border:1.5px dashed var(--gold);border-radius:14px;padding:12px 14px;margin:10px 0;text-align:center;background:rgba(245,194,107,.06)}
+.poster .s{font-size:clamp(18px,4.2vw,26px);font-weight:800;color:var(--gold)}
+.poster small{display:block;color:var(--mute);font-size:11.5px;margin-top:4px}
+.truth{border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.7}
+.truth b{color:#7ee2a8}
+.note{font-size:12px;color:var(--mute);line-height:1.6}
+.nav{display:flex;gap:8px;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+.handbook{border:1.5px solid var(--gold);border-radius:18px;padding:18px;background:radial-gradient(circle at 20% 0,rgba(245,194,107,.18),transparent 60%),#0f1130;position:relative;overflow:hidden}
+.handbook .no{font-size:12px;color:var(--gold);letter-spacing:2px;padding-right:44px}
+.handbook h2{margin:6px 0 8px;font-size:22px}
+.handbook p{margin:6px 0;line-height:1.7;font-size:14.5px}
+.handbook .b{position:absolute;right:14px;top:10px;font-size:34px;opacity:.5}
+.agehint{font-size:12.5px;color:var(--gold);border:1px dashed var(--line);border-radius:10px;padding:6px 10px;margin:6px 0}
+[hidden]{display:none!important}
+@media (max-width:1100px){.lt-hud{display:none}}
+@media (max-width:760px){.talks{grid-template-columns:1fr 1fr}.talk:last-child{grid-column:1/-1}}
+@media (max-width:640px){.opts{grid-template-columns:1fr 1fr}.talk{font-size:12.5px;padding:8px}table.tb{font-size:12px}table.tb td,table.tb th{padding:5px 4px}}
+</style></head><body>
+<main>
+  <div class="steps" id="steps"><span>① 先中招</span><span>② 拉开幕布</span><span>③ 坐到讲师那边</span><span>④ 玩家手册</span></div>
+
+  <!-- ① 先中招 -->
+  <section class="card lt-panel" data-step="0">
+    <h1>为什么「成功经验」常常骗人?</h1>
+    <div class="agehint" id="ageHint" hidden>这一关建议 12 岁以上;星芽玩家可以和家长一起玩。</div>
+    <p class="note" style="font-size:13.5px">一场「创业成功经验分享会」。台上五位都是大获成功的(虚拟)创业者:</p>
+    <div class="talks">
+      <div class="talk"><span class="a">🧑‍💼</span>「我拿出全部积蓄,不给自己留退路。」<small>虚拟创业者 · 甲</small></div>
+      <div class="talk"><span class="a">👩‍💻</span>「别人都劝我稳一点,我偏不。」<small>虚拟创业者 · 乙</small></div>
+      <div class="talk"><span class="a">🧔</span>「谨慎的人,赚不到大钱。」<small>虚拟创业者 · 丙</small></div>
+      <div class="talk"><span class="a">👩‍🔬</span>「我每天 5 点起床。」<small>虚拟创业者 · 丁</small></div>
+      <div class="talk"><span class="a">🧑‍🎤</span>「我押上了一切,然后赢了。」<small>虚拟创业者 · 戊</small></div>
+    </div>
+    <div class="guide"><span class="m">萨</span><p>凭直觉:和稳着来的人相比,「孤注一掷」的创业者,结果会怎样?<small>卡尔·萨根 · 仿其思想的提问</small></p></div>
+    <div class="opts" id="opts"><button class="opt" data-v="much">好得多</button><button class="opt" data-v="same">差不多</button><button class="opt" data-v="worse">更糟</button><button class="opt" data-v="idk">说不准</button></div>
+  </section>
+
+  <!-- ② 拉开幕布 -->
+  <section class="card lt-panel" data-step="1" hidden>
+    <h1 id="h1">台上只有成功者</h1>
+    <canvas class="dots" id="cv" aria-label="1000 个虚拟创业者的结果"></canvas>
+    <div class="legend"><span><i style="background:#f5c26b"></i>大获成功</span><span><i style="background:#6d7396"></i>普通结果</span><span><i style="background:#ff7a66"></i>倾家荡产</span><span>● 实心 = 孤注一掷 · ○ 空心 = 稳着来</span></div>
+    <div class="nav" style="margin-top:6px"><button class="lt-btn primary" id="open">🎭 拉开幕布,看全部 1000 人</button></div>
+    <div id="after" hidden>
+      <table class="tb"><tr><th></th><th>人数</th><th>大获成功</th><th>倾家荡产</th></tr><tbody id="tbody"></tbody></table>
+      <div class="guide"><span class="m">萨</span><p id="g1"></p></div>
+      <div class="nav"><button class="lt-btn" data-go="0">← 重新选</button><button class="lt-btn primary" data-go="2">坐到讲师那边 →</button></div>
+    </div>
+  </section>
+
+  <!-- ③ 坐到讲师那边 -->
+  <section class="card lt-panel" data-step="2" hidden>
+    <h1>你是成功学讲师:做一张海报</h1>
+    <p class="note" style="font-size:13.5px">挑一个「秘诀」,从 1000 人的数据里请人上台。你会怎么挑?</p>
+    <div class="chips" id="chips" role="group" aria-label="秘诀"></div>
+    <div class="ctl"><label for="sn">台上人数</label><input id="sn" type="range" min="5" max="40" step="1" value="10"><output id="on"></output></div>
+    <label class="tog"><input type="checkbox" id="cherry"> 只请「有这个习惯」的成功者上台</label>
+    <div class="poster"><div class="s" id="slogan"></div><small id="sub"></small></div>
+    <div class="truth" id="truth"></div>
+    <div class="guide"><span class="m">萨</span><p id="g2"></p></div>
+    <p class="note">本关只讲统计机制,<b>不构成投资建议</b>,也不评价任何真实的人或课程;1000 位创业者全是程序生成的虚拟数据。</p>
+    <div class="nav"><button class="lt-btn" data-go="1">← 回到幕布</button><button class="lt-btn primary" data-go="3">领取玩家手册 →</button></div>
+  </section>
+
+  <!-- ④ 玩家手册 -->
+  <section class="card lt-panel" data-step="3" hidden>
+    <div class="handbook"><span class="b">🎭</span><div class="no">地球Online 玩家手册 · 第 5 页 · 财富与风险 × 信息与真相</div>
+      <h2>隐藏规则:你只听得见幸存者说话</h2>
+      <p>失败的人很少上台,所以我们听到的「经验」几乎都来自幸存者。如果失败的人也做过同样的事,那它就不是成功的秘诀——这叫「幸存者偏差」。冒大险的人里会出明星,也会出更多看不见的倾家荡产。</p>
+      <p><b style="color:var(--gold)">反制技巧:</b>听到「成功的人都……」时,追问一句:「失败的人里,有多少也这么做?」再问:「我看到的,是全部人,还是被挑出来的人?」</p>
+      <p class="note">本页只讲统计规律,不构成投资建议。</p></div>
+    <div class="guide"><span class="m">萨</span><p id="g3"></p></div>
+    <p class="note">星桥(即将开通):为什么输家总是不说话?去 <a href="/math-atlas/casino/">星图 · 赌场为什么总是赢?</a> 看看。</p>
+    <div class="nav"><a class="lt-btn" href="../">← 回到认知星盘</a><button class="lt-btn" data-go="0">再玩一次</button></div>
+  </section>
+</main>
+<script type="module">
+import { chrome, hud, store, markDone, isDone, sound, reducedMotion, offline, userMinAge, logChoice } from '../lt.js';
+chrome({ home: '../' }); const H = hud(); offline();
+const $ = id => document.getElementById(id);
+const Q = '<small>卡尔·萨根 · 仿其思想的提问</small>';
+const secs = [...document.querySelectorAll('[data-step]')], tabs = [...document.querySelectorAll('#steps span')];
+let step = 0;
+function go(n) { step = n; secs.forEach((s, i) => s.hidden = i !== n); tabs.forEach((t, i) => t.classList.toggle('on', i === n));
+  window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }); if (n === 0) paint0(); if (n === 1) enter1(); if (n === 2) lecture(); if (n === 3) finish(); }
+window.ltGo = go;
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) { sound.tick(); go(+g.dataset.go); } });
+$('ageHint').hidden = userMinAge() >= 12;
+
+/* 1000 位虚拟创业者:600 孤注一掷(成功 5% · 倾家荡产 55%),400 稳着来(成功 4% · 倾家荡产 10%)
+ * 其他习惯(早起/辍学/冷水澡/读书)与结果无关,随机分配。种子随机数,每次相同。 */
+const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const r = rng(1000);
+const P = [];
+const add = (allin, n, win, bust) => { for (let i = 0; i < n; i++) P.push({ allin, o: i < win ? 2 : i < win + bust ? 0 : 1 }); };
+add(true, 600, 30, 330); add(false, 400, 16, 40);
+P.forEach(p => { p.early = r() < 0.4; p.drop = r() < 0.08; p.cold = r() < 0.2; p.read = r() < 0.5; p.k = r(); p.score = p.o === 2 ? 1 + r() : r(); });
+P.sort((a, b) => a.k - b.k);
+const HAB = [
+  { id: 'allin', n: '孤注一掷', s: '押上一切' }, { id: 'early', n: '每天早起', s: '每天 5 点起床' },
+  { id: 'drop', n: '中途辍学', s: '敢于辍学' }, { id: 'cold', n: '冷水澡', s: '每天洗冷水澡' }, { id: 'read', n: '每天读书', s: '每天读书' }
+];
+const pct = (a, b) => b ? Math.round(a / b * 1000) / 10 : 0;
+
+/* ① */
+let guess = store.get('survivor_guess', null);
+function paint0() { document.querySelectorAll('.opt').forEach(o => o.classList.toggle('pick', o.dataset.v === guess)); }
+const GL = { much: '好得多', same: '差不多', worse: '更糟', idk: '说不准' };
+$('opts').onclick = e => { const b = e.target.closest('.opt'); if (!b) return; guess = b.dataset.v; store.set('survivor_guess', guess); paint0(); sound.bell(1);
+  logChoice('survivor', `听完五位成功者,直觉认为孤注一掷的结果「${GL[guess]}」`, '若先看全部 1000 人:成功率 5% 对 4%,倾家荡产 55% 对 10%');
+  setTimeout(() => go(1), 320); };
+
+/* ② 拉开幕布 */
+function cctx(c) { const d = Math.min(2, devicePixelRatio || 1); const w = c.clientWidth, h = c.clientHeight; c.width = w * d; c.height = h * d; const x = c.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); return [x, w, h]; }
+let reveal = 0, opened = false;
+const COL = ['#ff7a66', '#6d7396', '#f5c26b'];
+function drawDots() {
+  const cv = $('cv'); if (!cv.clientWidth) return;
+  const cols = cv.clientWidth < 500 ? 25 : 50, rows = 1000 / cols, cell = Math.min((cv.clientWidth - 12) / cols, 15);
+  cv.style.height = Math.round(rows * cell + 12) + 'px';
+  const [x, w] = cctx(cv); const ox = (w - cols * cell) / 2, rr = cell * 0.36;
+  P.forEach((p, i) => { const cx = ox + (i % cols + 0.5) * cell, cy = 6 + (Math.floor(i / cols) + 0.5) * cell;
+    const a = p.o === 2 ? 1 : reveal * (p.o === 0 ? 0.95 : 0.7) + 0.05;
+    x.globalAlpha = a; x.beginPath(); x.arc(cx, cy, p.o === 2 ? rr + 1 : rr, 0, Math.PI * 2);
+    if (p.allin) { x.fillStyle = COL[p.o]; x.fill(); } else { x.strokeStyle = COL[p.o]; x.lineWidth = 1.6; x.stroke(); } });
+  x.globalAlpha = 1;
+}
+function stats() {
+  const g = f => { const s = P.filter(f); return { n: s.length, win: s.filter(p => p.o === 2).length, bust: s.filter(p => p.o === 0).length }; };
+  return { A: g(p => p.allin), C: g(p => !p.allin) };
+}
+function enter1() { opened ? (reveal = 1) : (reveal = 0); $('after').hidden = !opened; $('open').hidden = opened;
+  $('h1').textContent = opened ? '幕布后面:全部 1000 人' : `台上只有成功者:${P.filter(p => p.o === 2).length} 人`; drawDots(); if (opened) paint1(); }
+$('open').onclick = () => { sound.bell(3); const s = performance.now(), T = reducedMotion ? 1 : 1600;
+  const tick = now => { reveal = Math.min(1, (now - s) / T); drawDots(); if (reveal < 1) requestAnimationFrame(tick); else { opened = true; enter1(); sound.clash(0.05); } };
+  requestAnimationFrame(tick); };
+function paint1() {
+  const { A, C } = stats(); const wins = A.win + C.win;
+  $('tbody').innerHTML = `<tr><th>● 孤注一掷</th><td>${A.n}</td><td>${A.win}(${pct(A.win, A.n)}%)</td><td>${A.bust}(${pct(A.bust, A.n)}%)</td></tr>
+    <tr><th>○ 稳着来</th><td>${C.n}</td><td>${C.win}(${pct(C.win, C.n)}%)</td><td>${C.bust}(${pct(C.bust, C.n)}%)</td></tr>`;
+  const lead = { much: '你选了「好得多」。', same: '你选了「差不多」。', worse: '你选了「更糟」。', idk: '你选了「说不准」——这是很诚实的答案。' }[guess] || '';
+  $('g1').innerHTML = `${lead}台上 ${wins} 位成功者里,有 ${A.win} 位(${pct(A.win, wins)}%)是孤注一掷的,听起来像秘诀。可幕布后面还有 ${A.bust} 位倾家荡产的人,也做了一模一样的事,只是没人请他们上台。只看台上,你能算出「孤注一掷」的风险吗?` + Q;
+}
+addEventListener('resize', () => { if (step === 1) drawDots(); });
+
+/* ③ 坐到讲师那边 */
+let hab = 'early';
+$('chips').innerHTML = HAB.map(h => `<button class="lt-btn" type="button" data-h="${h.id}" aria-pressed="${h.id === hab}">${h.n}</button>`).join('');
+$('chips').onclick = e => { const b = e.target.closest('[data-h]'); if (!b) return; hab = b.dataset.h; $('chips').querySelectorAll('[data-h]').forEach(x => x.setAttribute('aria-pressed', x === b)); sound.tick(); lecture(); };
+let cherryUsed = false;
+function lecture() {
+  const N = +$('sn').value, cherry = $('cherry').checked, h = HAB.find(x => x.id === hab);
+  $('on').textContent = N + ' 人';
+  let pool = P.filter(p => p.o === 2); if (cherry) pool = pool.filter(p => p[hab]);
+  const stage = pool.sort((a, b) => b.score - a.score).slice(0, N), k = stage.filter(p => p[hab]).length;
+  const yes = P.filter(p => p[hab]), no = P.filter(p => !p[hab]);
+  const wy = yes.filter(p => p.o === 2).length, wn = no.filter(p => p.o === 2).length, by = yes.filter(p => p.o === 0).length, bn = no.filter(p => p.o === 0).length;
+  const short = stage.length < N;
+  $('slogan').textContent = `台上 ${pct(k, stage.length)}% 的成功者都${h.s}!`;
+  $('sub').textContent = short ? `(有这个习惯的成功者只有 ${stage.length} 位,全请上台了)` : `—— 你的海报 · 台上 ${stage.length} 人`;
+  $('truth').innerHTML = `全部 1000 人里:<br>${h.n}的 ${yes.length} 人,成功率 <b>${pct(wy, yes.length)}%</b>,倾家荡产 ${pct(by, yes.length)}%;<br>没有这个习惯的 ${no.length} 人,成功率 <b>${pct(wn, no.length)}%</b>,倾家荡产 ${pct(bn, no.length)}%。`;
+  let q;
+  if (cherry) { cherryUsed = true; q = `勾上「只请有这个习惯的人」,海报就变成了 100%。海报上的每个字都是真的——那它骗人了吗?骗在哪里?`; }
+  else if (hab === 'allin') q = `孤注一掷的成功率只比稳着来的高一点,倾家荡产却多得多。海报会把哪一半印出来?`;
+  else q = `「${h.n}」和成功几乎没有关系(成功率 ${pct(wy, yes.length)}% 对 ${pct(wn, no.length)}%),可台上照样能凑出 ${pct(k, stage.length)}%。试试勾上「只请有这个习惯的成功者上台」。`;
+  $('g2').innerHTML = q + Q;
+}
+$('sn').addEventListener('input', () => { lecture(); sound.tick(); });
+$('cherry').addEventListener('change', () => { lecture(); $('cherry').checked ? sound.clash(0.05) : sound.tick(); });
+
+/* ④ */
+function finish() {
+  const first = !isDone('survivor'); markDone('survivor', { guess });
+  if (step === 3 && cherryUsed) logChoice('survivor', '当讲师时,试过只挑有「秘诀」的成功者上台', '若请全部数据上台:秘诀和成功率几乎无关');
+  $('g3').innerHTML = (guess ? `一开始你的直觉是「${GL[guess]}」。` : '') + '最近你听过哪一条「成功的人都……」?那些这么做却失败了的人,现在在哪里?' + Q;
+  H.render(); if (first) [0, 2, 4, 7].forEach((s, i) => setTimeout(() => sound.bell(s), i * 180));
+}
+go(0);
+</script>
+</body></html>
