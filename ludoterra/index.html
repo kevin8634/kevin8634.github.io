@@ -28,7 +28,7 @@ html,body{height:100%;overflow:hidden}
 #side .doms button{font-size:12px;padding:3px 9px}
 #dock{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:20;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:min(720px,94vw)}
 #rec{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);z-index:19;padding:10px 14px;display:flex;gap:10px;align-items:center;width:min(520px,94vw)}
-#rec .q{flex:1;font-size:14px;line-height:1.45}
+#rec .q{flex:1;min-width:0;font-size:14px;line-height:1.45}
 #rec .q small{display:block;color:var(--gold);font-size:11px;letter-spacing:1px}
 .foot{position:fixed;left:0;right:0;bottom:6px;z-index:15}
 /* 创建角色 */
@@ -62,7 +62,7 @@ table.map th{color:var(--gold);font-weight:600;font-size:12px}
 .tlh{display:grid;grid-template-columns:86px 1fr 1fr;gap:8px;font-size:12px;color:var(--gold)}
 @media (max-width:640px){.tli{grid-template-columns:1fr;gap:2px}.tlh{display:none}.tli .a::before{content:'你走的路:';color:var(--gold)}.tli .b::before{content:'另一条路:';color:var(--gold)}}
 @media (max-width:1199px){#side{top:auto;bottom:118px;right:50%;transform:translateX(50%);max-height:38vh;display:none}#side.on{display:block}}
-@media (max-width:640px){.foot{display:none}#hero h1{font-size:16.5px;letter-spacing:.5px}#hero p{display:none}.ages,.layers{grid-template-columns:repeat(2,1fr)}#hero{top:54px}#hero p{font-size:12px}#rec{bottom:104px}#dock{bottom:24px}#dock .lt-btn{font-size:12px;padding:5px 10px}.gl{grid-template-columns:1fr}#side{bottom:150px}}
+@media (max-width:640px){.foot{display:none}#hero h1{font-size:16.5px;letter-spacing:.5px}#hero p{display:none}.ages,.layers{grid-template-columns:repeat(2,1fr)}#hero{top:54px}#hero p{font-size:12px}#rec{bottom:104px;gap:6px;padding:8px 10px}#rec .q{font-size:13px}#rec .lt-btn{padding:6px 10px}#dock{bottom:24px}#dock .lt-btn{font-size:12px;padding:5px 10px}.gl{grid-template-columns:1fr}#side{bottom:150px}}
 @media (max-height:480px){#hero,#rec,.foot{display:none}#dock{bottom:24px}.lt-hud{display:none}#side{top:56px;bottom:auto;max-height:calc(100% - 100px)}}
 </style></head><body>
 <canvas id="disc" tabindex="0" aria-label="光之莲认知星盘:四层八域。左右拖动或用方向键旋转,点扇区查看。"></canvas>
@@ -75,7 +75,7 @@ table.map th{color:var(--gold);font-weight:600;font-size:12px}
   <button class="lt-btn" id="bGuides" type="button">🏛 先贤向导团</button>
   <button class="lt-btn" id="bAbout" type="button">ⓘ 关于觉弈</button>
 </nav>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.9</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.10</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -222,12 +222,18 @@ function showDomain(id) {
 side.addEventListener('click', e => { const b = e.target.closest('[data-d]'); if (b) showDomain(b.dataset.d); if (e.target.closest('[data-map]')) { sel = null; showMap(); } if (e.target.closest('[data-hide]')) { sel = null; side.classList.remove('on'); } });
 document.getElementById('bMap').onclick = () => { sel = null; showMap(); };
 
-/* ---------- 推荐第一关 ---------- */
+/* ---------- 推荐卡:第一关 → 下一关 → 终章 → 全部通关 ---------- */
 function paintRec() {
-  const a = AGES.find(x => x.id === getAge()) || AGES[1];
+  const a = AGES.find(x => x.id === getAge()) || AGES[1]; const rec = document.getElementById('rec');
+  const levels = TASKS.filter(t => t.live && !t.finale), fin = TASKS.find(t => t.finale);
   const first = a.id === 'spark' ? TASKS.find(t => t.id === 'prisoner') : TASKS.find(t => t.id === 'compound');
-  document.getElementById('rec').innerHTML = `<div class="q"><small>给 ${a.name} · ${a.range} 的第一关</small>${first.q}</div>` +
-    (first.live ? `<a class="lt-btn primary" href="${first.path}">开始 →</a>` : `<span class="lt-age">即将点亮 · ${first.ver}</span>`);
+  const doneN = levels.filter(t => isDone(t.id)).length;
+  if (!doneN) { rec.innerHTML = `<div class="q"><small>给 ${a.name} · ${a.range} 的第一关</small>${first.q}</div><a class="lt-btn primary" href="${first.path}">开始 →</a>`; return; }
+  const next = levels.find(t => !isDone(t.id) && t.age <= a.min) || levels.find(t => !isDone(t.id));
+  if (next) { rec.innerHTML = `<div class="q"><small>下一关 · 已看见 ${doneN}/${levels.length} 条规则${next.age > a.min ? ' · 建议和家长一起' : ''}</small>${next.q}</div><a class="lt-btn primary" href="${next.path}">进入 →</a>`; return; }
+  if (fin && !isDone(fin.id)) { rec.innerHTML = `<div class="q"><small>✦ 六条规则都看见了 · 意义终章${a.min < 16 ? '(入门版)' : ''}</small>${fin.q}</div><a class="lt-btn primary" href="${fin.path}">走进终章 →</a>`; return; }
+  rec.innerHTML = `<div class="q"><small>✦ 全部通关 · 莲心已点亮</small>规则由你写,也可以由你改。</div><a class="lt-btn" href="${fin.path}">重玩终章</a><button class="lt-btn primary" type="button" id="recSave">⤓ 保存手册</button>`;
+  document.getElementById('recSave').onclick = () => document.getElementById('saveImg').click();
 }
 paintRec();
 
