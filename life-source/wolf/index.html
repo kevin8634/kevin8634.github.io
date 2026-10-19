@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>狼回来之后,河流为什么变了? · 生命源码</title>
+<meta name="description" content="生命源码 · 生物:搭一张黄石公园的食物网,在生态沙盒里放回狼,比较科学家的不同证据,再用一杯河水里的环境 DNA 认出动物。">
+<meta name="theme-color" content="#060a12">
+<link rel="stylesheet" href="../ls.css">
+<style>
+.row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:14px}
+.web{display:flex;flex-direction:column;gap:6px;align-items:center}
+.sp{border:1px solid var(--line);border-radius:12px;padding:6px 12px;background:var(--panel);font-size:15px;cursor:pointer;min-width:120px;text-align:center}
+.sp.on{border-color:var(--gold);box-shadow:0 0 10px rgba(226,190,120,.5)}
+.sp.ok{border-color:var(--em);opacity:.6;cursor:default}
+.arrow{color:var(--mute);font-size:12px}
+canvas.ch{width:min(560px,94vw);height:170px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)}
+.cards{display:grid;grid-template-columns:1fr;gap:6px;max-width:560px;width:100%}
+.ev{border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;line-height:1.5;background:var(--panel)}
+.ev .b{display:flex;gap:6px;margin-top:6px}
+.ev .b button{font-size:12px;padding:4px 8px}
+.ev.done{opacity:.75}
+.ev .why{font-size:12px;color:var(--mute);margin-top:4px}
+.seqtab{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;line-height:1.9;max-width:94vw;overflow:auto}
+.seqtab td{padding:0 6px;white-space:nowrap}
+.hit{background:rgba(52,211,153,.25);border-radius:3px}
+</style></head><body>
+<noscript>需要开启 JavaScript 才能游玩。</noscript>
+<script type="module">
+import { runTask, sleep, el, choice, lineChart } from '../ls-task.js';
+import { sound, reducedMotion } from '../ls.js';
+
+runTask('wolf', [
+  { title: '谁吃谁?', run(api) {
+    const c = api.center();
+    const chain = [['🐺 灰狼', 0], ['🦌 马鹿', 1], ['🌿 柳树和杨树', 2]];
+    c.innerHTML = `<div class="ls-card ls-panel"><p>美国黄石国家公园的狼在 1926 年前后被猎杀殆尽。1995–1997 年,人们从加拿大和蒙大拿州把 41 只野狼放归公园。</p><p>按"被吃 → 吃它的"顺序,从下往上点:</p></div><div class="web" id="w"></div><div class="row" id="o"></div>`;
+    const w = c.querySelector('#w'); const shuffled = [...chain].sort(() => Math.random() - .5);
+    shuffled.forEach(([n, lv]) => { const b = el('div', { className: 'sp', textContent: n }); b.dataset.lv = lv; w.append(b); });
+    let need = 2, mistakes = 0; const out = c.querySelector('#o');
+    w.onclick = e => {
+      const b = e.target.closest('.sp'); if (!b || b.classList.contains('ok')) return;
+      if (+b.dataset.lv === need) { b.classList.add('ok'); out.append(el('span', { textContent: (need < 2 ? '→ ' : '') + b.textContent })); sound.tone(300 + (2 - need) * 150, .3); need--;
+        if (need < 0) { api.predicted(mistakes <= 1); api.win('柳树被马鹿吃,马鹿被狼吃。能量沿着食物链一级一级往上传,每一级叫一个"营养级"。'); } }
+      else { mistakes++; sound.no(); api.guide.say('再想想:谁是最底层、靠阳光生长的?'); }
+    };
+    api.guide.ask('先找到食物链的最底层。', ['谁不用吃别的生物,靠阳光生长?', '植物 → 吃植物的动物 → 吃动物的动物。', '柳树 → 马鹿 → 灰狼。']);
+  } },
+
+  { title: '生态沙盒', run(api) {
+    const c = api.center();
+    c.innerHTML = `<canvas class="ch" id="ch"></canvas>
+      <div class="row"><label><input type="checkbox" id="wf"> 放回狼</label><label><input type="checkbox" id="hu"> 人类狩猎马鹿</label></div>
+      <div class="ls-note" style="max-width:520px;text-align:center">简化模型,数值为示意:马鹿越多,河边柳树被啃得越厉害;柳树越多,河狸越容易筑坝。</div>`;
+    const runs = new Set();
+    const sim = () => {
+      const wolves = c.querySelector('#wf').checked, hunt = c.querySelector('#hu').checked;
+      let E = 1, Wl = .2, B = .1; const e = [], w = [], b = [];
+      for (let y = 0; y < 30; y++) {
+        const pred = (wolves ? .18 : 0) + (hunt ? .1 : 0);
+        E = Math.max(.05, E + E * (.25 * (1 - E / 1.2) - pred) );
+        Wl = Math.max(.02, Math.min(1, Wl + .18 * Wl * (1 - Wl) - .22 * E * Wl + (wolves ? .02 : 0)));
+        B = Math.max(.01, Math.min(1, B + .25 * B * (Wl - .35)));
+        e.push(E); w.push(Wl); b.push(B);
+      }
+      lineChart(c.querySelector('#ch'), [{ name: '马鹿', color: '#e2be78', data: e }, { name: '河边柳树', color: '#34d399', data: w }, { name: '河狸', color: '#7dd3fc', data: b }], { max: 1.2 });
+      runs.add(`${wolves}${hunt}`); sound.tone(wolves ? 440 : 330, .3);
+      return { E, Wl, B };
+    };
+    api.guide.ask('先什么都不勾,看看没有狼的 30 年。然后预测:放回狼以后,河边的柳树会变多还是变少?', ['狼吃马鹿,马鹿吃柳树。', '狼也会让马鹿不敢久留在开阔的河边。', '柳树会变多,河狸也跟着多起来。']);
+    sim();
+    c.append(choice(api, ['变多', '变少', '不变'], '变多', (ok, o, box) => {
+      box.remove(); c.querySelector('#wf').checked = true; sim();
+      api.guide.say(ok ? '模型里柳树和河狸都回升了。再勾上"人类狩猎",看看不放狼会不会有类似效果?' : '模型里柳树和河狸都回升了。再试试只勾"人类狩猎"。');
+      c.querySelectorAll('input').forEach(i => i.onchange = () => { sim(); if (runs.has('falsetrue') && !api._shown) { api._shown = true;
+        api.button('有意思', () => api.win('一个物种的变化能沿着食物网一层层传下去,这叫"营养级联"。但模型里狩猎也能减少马鹿——真实世界里,到底是狼的功劳有多大?下一关看科学家的争论。'), 'primary'); } });
+    }));
+  } },
+
+  { title: '科学家在争论什么?', run(api) {
+    const c = api.center();
+    const E = [
+      { t: '狼回来后,黄石北部的马鹿数量从约 1.9 万头降到几千头。', a: '都有', w: '马鹿减少是事实,但同期还有人类狩猎、干旱、熊和美洲狮捕食,狼只是原因之一。' },
+      { t: '部分河段的柳树、杨树重新长高,河狸群落也增加了。', a: '支持', w: '这是"狼改变了河流"说法的主要证据。' },
+      { t: '很多河边的柳树至今仍然矮小,恢复是斑块状的。', a: '质疑', w: '狼不在的几十年里,河狸消失、河床下切,河流已经变了,不是放回狼就能"复原"。' },
+      { t: '"马鹿因为怕狼而不敢在河边吃草"这一点,有的野外测量没有找到明显证据。', a: '质疑', w: '所谓"恐惧景观"效应的大小,研究结论并不一致。' },
+    ];
+    c.innerHTML = `<div class="ls-note">网上流行一个视频:"狼改变了河流"。把每条证据放到合适的位置:</div><div class="cards">${E.map((x, i) => `<div class="ev" data-i="${i}">${x.t}<div class="b"><button class="ls-btn" data-v="支持">支持</button><button class="ls-btn" data-v="质疑">质疑</button><button class="ls-btn" data-v="都有">两方都会引用</button></div><div class="why"></div></div>`).join('')}</div>`;
+    let right = 0, n = 0;
+    c.querySelector('.cards').onclick = e => {
+      const v = e.target.dataset.v, card = e.target.closest('.ev'); if (!v || card.classList.contains('done')) return;
+      const x = E[+card.dataset.i], ok = v === x.a; right += ok; n++; card.classList.add('done');
+      card.querySelector('.b').remove(); card.querySelector('.why').textContent = (ok ? '✓ ' : `✗ 更合适:${x.a === '都有' ? '两方都会引用' : x.a}。`) + x.w;
+      ok ? sound.ok() : sound.no();
+      if (n === E.length) { api.predicted(right >= 3); api.win('狼确实影响了黄石的生态,但"狼单独让河流改道"是被简化的说法。生态系统里很多因素同时变化,科学家还在用更长期的数据研究。好的科学,是分清"有证据的部分"和"被夸大的部分"。'); }
+    };
+    api.guide.ask('分辨一下:哪些证据支持"狼改变了河流",哪些让人怀疑?', ['看看这条证据里,还有没有其他原因?', '恢复不均匀,说明还有别的因素。', '第 1 条两方都会引用;第 2 条支持;第 3、4 条质疑。']);
+  } },
+
+  { title: '一杯河水里的 DNA', run(api) {
+    const c = api.center();
+    const lib = [['灰狼', 'GTAGCTTAACCT'], ['马鹿', 'CCATTAGGCAAT'], ['河狸', 'TTGACCGATAGC'], ['野牛', 'AGGCTTCAAGTA'], ['鳟鱼', 'CATGGTACCTTA']];
+    const sample = 'ACGTTGACCGATAGCAGTCCATTAGGCAATCGGA';
+    c.innerHTML = `<div class="ls-card ls-panel"><p>动物的皮屑、粪便和黏液会把 DNA 留在水里。科学家只要取一杯河水,读出里面的 DNA 片段,和"条形码"库比对,就能知道附近生活着哪些动物——这叫<b>环境 DNA</b>。</p></div>
+      <div class="ls-note">河水样本中读到的序列(示意):</div><div class="seqtab" id="s">${[...sample].map(b => `<span class="b-${b}">${b}</span>`).join('')}</div>
+      <table class="seqtab">${lib.map(([n, s]) => `<tr><td>${n}</td><td>${[...s].map(b => `<span class="b-${b}">${b}</span>`).join('')}</td><td><button class="ls-btn" data-n="${n}">在样本里吗?</button></td></tr>`).join('')}</table>`;
+    const found = new Set(), truth = lib.filter(([, s]) => sample.includes(s)).map(([n]) => n); let wrong = 0;
+    c.querySelector('table').onclick = e => {
+      const n = e.target.dataset.n; if (!n) return; const s = lib.find(x => x[0] === n)[1], i = sample.indexOf(s);
+      e.target.disabled = true;
+      if (i >= 0) {
+        found.add(n); e.target.textContent = '✓ 找到了'; sound.ok();
+        const spans = c.querySelectorAll('#s span'); for (let k = i; k < i + s.length; k++) spans[k].classList.add('hit');
+        if (found.size === truth.length) { api.predicted(wrong <= 1); api.win(`样本里有${truth.join('和')}的 DNA。环境 DNA 不用抓捕、不打扰动物,就能调查一条河里有谁——现在已经用来监测珍稀和入侵物种。`); }
+      } else { wrong++; e.target.textContent = '✗ 没有'; sound.no(); }
+    };
+    api.guide.ask('先自己在样本里找一找,再点按钮核对:哪些动物的"条形码"出现在样本里?', ['把条形码的前三个字母,在样本里找一找。', 'TTGACC……和 CCATTA……都能在样本里找到。', '是河狸和马鹿。']);
+  } },
+]);
+</script>
+</body></html>

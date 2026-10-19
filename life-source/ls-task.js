@@ -71,3 +71,24 @@ export function dots(container, items, cols = 20) { // items: 颜色数组
   items.forEach(c => { const i = document.createElement('i'); i.style.background = c; d.append(i); });
   container.append(d); return d;
 }
+
+// 预测选择题:第一次作答计入"先预测"星
+export function choice(api, opts, correct, onDone, record = true) {
+  const box = el('div', { className: 'ls-choice' }); let first = true;
+  opts.forEach(o => { const b = el('button', { className: 'ls-btn', textContent: o }); b.onclick = () => {
+    const ok = correct == null || o === correct; if (first && record) api.predicted(ok); first = false;
+    ok ? api.sound.ok() : api.sound.no(); onDone(ok, o, box);
+  }; box.append(b); });
+  return box;
+}
+// 折线图:series [{name,color,data:[]}]
+export function lineChart(canvas, series, { max } = {}) {
+  const D = devicePixelRatio, W = canvas.width = canvas.clientWidth * D, H = canvas.height = canvas.clientHeight * D, g = canvas.getContext('2d');
+  g.clearRect(0, 0, W, H);
+  const n = Math.max(...series.map(s => s.data.length)), m = max || Math.max(1, ...series.flatMap(s => s.data));
+  series.forEach((s, k) => {
+    g.strokeStyle = s.color; g.lineWidth = 2 * D; g.beginPath();
+    s.data.forEach((v, i) => { const x = 8 * D + i / Math.max(1, n - 1) * (W - 16 * D), y = H - 18 * D - v / m * (H - 30 * D); i ? g.lineTo(x, y) : g.moveTo(x, y); });
+    g.stroke(); g.fillStyle = s.color; g.font = `${11 * D}px sans-serif`; g.fillText(s.name, 10 * D + k * 70 * D, 12 * D);
+  });
+}

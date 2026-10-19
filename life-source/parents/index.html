@@ -50,7 +50,7 @@ runTask('parents', [
   { title: '孟德尔的豌豆', run(api) {
     const c = api.center();
     c.innerHTML = `<div class="ls-card ls-panel"><h3>1856–1863 年,修道院的菜园</h3>
-      <p>孟德尔把纯种<b>圆粒</b>豌豆 <span class="pea"></span> 和纯种<b>皱粒</b>豌豆 <span class="pea w"></span> 杂交。第一代全是圆粒。</p>
+      <p>孟德尔把纯种<b>圆粒</b>豌豆 <span class="pea"></span> 和纯种<b>皱粒</b>豌豆 <span class="pea w"></span> 杂交。子一代(F₁)全是圆粒。</p>
       <p>再让第一代自己授粉,第二代会是什么样?</p></div><div id="res"></div>`;
     api.guide.ask('先做一个预测:第二代里,圆粒和皱粒大约是什么比例?', ['皱粒在第一代"消失"了。它真的不见了吗?', '每粒豌豆从父母各拿到一份"因子",第一代是"一圆一皱"。', '两个"一圆一皱"相遇,有 4 种组合,只有 1 种是"皱皱"。']);
     c.append(choice(api, ['全是圆粒', '圆:皱 ≈ 3:1', '圆:皱 ≈ 1:1'], '圆:皱 ≈ 3:1', async (ok, o, box) => {
@@ -87,11 +87,11 @@ runTask('parents', [
     let asked = false;
     const ask = () => {
       asked = true;
-      api.guide.ask('3 对染色体有 8 种组合。人有 23 对,一个人能产生多少种不同的精子或卵子?', ['3 对是 2×2×2 = 8。', '23 对就是 2 连乘 23 次。', '2²³ ≈ 838 万。']);
+      api.guide.ask('3 对染色体有 8 种组合。人有 23 对。只看“每对留哪一条”,一个人能产生多少种不同的精子或卵子?', ['3 对是 2×2×2 = 8。', '23 对就是 2 连乘 23 次。', '2²³ ≈ 838 万。']);
       c.append(choice(api, ['46 种', '约 838 万种', '23 种'], '约 838 万种', (ok, o, box) => {
         if (!ok) { api.guide.say(`不是 ${o}。3 对是 2×2×2,那 23 对呢?`); return; }
         box.remove();
-        api.win('每个孩子从爸爸、妈妈各拿 23 条染色体。光是"拿哪一条"就有约 838 万种,再加上染色体之间还会交换片段,所以兄弟姐妹之间也不完全一样(同卵双胞胎除外)。');
+        api.win('每个孩子从爸爸、妈妈各拿 23 条染色体。光是"拿哪一条"就有约 838 万种,再加上每对同源染色体之间还会交换片段(交叉互换),所以兄弟姐妹之间也不完全一样(同卵双胞胎除外)。');
       }));
     };
     api.button('形成一个配子', make, 'primary');
@@ -102,7 +102,7 @@ runTask('parents', [
     const c = api.center();
     c.innerHTML = `<div class="ls-card ls-panel"><h3>一个真实的单基因性状</h3>
       <p>耳垢分<b>湿型</b>(黄褐、黏)和<b>干型</b>(灰白、片状)两种,主要由 16 号染色体上的 <b>ABCC11</b> 基因决定。湿型是显性(W),干型是隐性(w)。</p>
-      <p>东亚人群里干型占大多数,欧洲和非洲人群里湿型占大多数。</p></div>
+      <p>东亚人群里干型占大多数,欧洲和非洲人群里湿型占大多数。(不用掏耳朵去“验证”:耳垢能保护耳道,一般会自己排出;用棉签或挖耳勺掏,反而可能把耳垢推进去或伤到耳朵。)</p></div>
       <div class="row"><span>爸爸:湿型</span><span>×</span><span>妈妈:湿型</span></div><div id="r"></div>`;
     api.guide.ask('爸爸妈妈都是湿型耳垢。他们的孩子有可能是干型吗?', ['湿型是显性。一个湿型的人,基因可能是 WW,也可能是…?', '如果两人都是 Ww,各传一个 w 会怎样?', '能。两人都是 Ww 时,孩子有 1/4 的机会是 ww。']);
     c.append(choice(api, ['有可能', '不可能'], '有可能', (ok, o, box) => {
@@ -143,7 +143,7 @@ runTask('parents', [
         s.append(el('p', { className: 'row', innerHTML: `${n} 个孩子:干型 <b>${dry}</b> 个,占 <b>${(dry / n * 100).toFixed(1)}%</b>` }));
         sound.tone(330 + dry / n * 600, .25);
         if (tried.size >= 3 && tried.has(10000)) {
-          api.clearActions(); api.button('我发现了', () => api.win('孩子少时,比例忽高忽低;孩子越多,越接近 25%。遗传规律说的是概率,要在大量样本里才看得清——孟德尔种了上万株豌豆,就是这个道理。'), 'primary');
+          api.clearActions(); api.button('我发现了', () => api.win('孩子少时,比例忽高忽低;孩子越多,越接近 25%。遗传规律说的是概率,要在大量样本里才看得清——孟德尔在 8 年里种了约 2.8 万株植物(大多是豌豆),就是这个道理。'), 'primary');
         }
       };
       api.clearActions();
@@ -156,7 +156,7 @@ runTask('parents', [
     const c = api.center();
     const G = { 'A 型(IA IA)': ['A', 'A'], 'A 型(IA i)': ['A', 'O'], 'B 型(IB IB)': ['B', 'B'], 'B 型(IB i)': ['B', 'O'], 'AB 型(IA IB)': ['A', 'B'], 'O 型(i i)': ['O', 'O'] };
     const opts = Object.keys(G).map(k => `<option>${k}</option>`).join('');
-    c.innerHTML = `<div class="ls-card ls-panel"><p>ABO 血型由 9 号染色体上的一个基因决定,有三种版本:<b>IA</b>、<b>IB</b>、<b>i</b>。IA 和 IB <b>共显性</b>(同时出现就是 AB 型),i 是隐性。</p></div>
+    c.innerHTML = `<div class="ls-card ls-panel"><p>ABO 血型主要由 9 号染色体上的 ABO 基因决定,它有三种主要的等位基因(版本):<b>IA</b>、<b>IB</b>、<b>i</b>。IA 和 IB <b>共显性</b>(同时出现就是 AB 型),i 是隐性。</p></div>
       <div class="row"><select class="sel" id="p1">${opts}</select><span>×</span><select class="sel" id="p2">${opts}</select></div>
       <div class="kids" id="kids"></div><div class="ls-note" id="tip"></div>`;
     const type = (a, b) => { const s = [a, b].sort().join(''); return s === 'AB' ? 'AB' : s.includes('A') ? 'A' : s.includes('B') ? 'B' : 'O'; };
@@ -168,7 +168,7 @@ runTask('parents', [
       const k = c.querySelector('#kids'); k.innerHTML = '';
       for (const t of ['A', 'B', 'AB', 'O']) if (cnt[t]) k.append(el('div', { className: 'kid', innerHTML: `<b>${t}</b>${cnt[t] * 25}%` }));
       sound.tone(392 + Object.keys(cnt).length * 60, .25);
-      if (Object.keys(cnt).length === 4) { api.predicted(tries <= 5); api.win('A 型(IA i)× B 型(IB i)的孩子,A、B、AB、O 四种血型都可能出现,各占 1/4。注意:O 型 × O 型的父母一般不会生出 AB 型孩子;不过存在极少数例外(如孟买型、顺式 AB),所以血型不能用来"判定"亲子关系,那需要专门的基因检测。'); }
+      if (Object.keys(cnt).length === 4) { api.predicted(tries <= 5); api.win('A 型(IA i)× B 型(IB i)的孩子,A、B、AB、O 四种血型都可能出现,各占 1/4。注意:按常规规律,O 型 × O 型的孩子只会是 O 型,AB 型 × O 型的孩子只会是 A 型或 B 型。但有极少数例外:“孟买型”的人验血看起来是 O 型,其实可能带着 IA 或 IB 并传给孩子;“顺式 AB”的人能把 A 和 B 一起传给孩子。验血本身也可能出错。所以孩子的血型和“预期”不一样,并不能说明什么,血型不能用来判断亲子关系。'); }
     };
     c.querySelector('#p1').onchange = calc; c.querySelector('#p2').onchange = calc;
     api.guide.ask('挑战:选出一对父母,让他们的孩子 A、B、AB、O 四种血型都有可能。', ['要生出 O 型,孩子得从两人那里各拿到一个 i。', '要生出 AB 型,一人得给 IA,另一人给 IB。', '试试 A 型(IA i)× B 型(IB i)。']);
@@ -207,7 +207,7 @@ runTask('parents', [
       c.append(choice(api, ['两座山', '一口钟', '一条平线'], '一口钟', (ok, o, box) => {
         if (!ok) { api.guide.say('再拖到 20 以上看看?'); return; }
         box.remove();
-        api.win('身高由成百上千个基因共同影响,再加上营养、睡眠、运动和健康状况,所以人的身高是连续变化的钟形分布,不是"高"和"矮"两类。"遗传度"是描述整个人群的统计数字,不能用来预言某一个人能长多高。');
+        api.win('身高受上万个遗传变异(分布在几千个基因区域)共同影响,再加上营养、疾病和整体健康状况等环境因素,所以人的身高是连续变化的钟形分布,不是"高"和"矮"两类。"遗传度"(也叫遗传力)是描述某个人群在特定环境下的统计数字,不能用来预言某一个人能长多高。');
       }, false));
     };
     c.querySelector('#n').oninput = draw; c.querySelector('#e').oninput = draw;
@@ -218,8 +218,8 @@ runTask('parents', [
   { title: '课本里的"单基因"可靠吗?', run(api) {
     const c = api.center();
     const claims = [
-      { t: '能不能卷舌,由一个显性基因决定。', a: false, why: '早在 1950 年代就有研究发现,不少同卵双胞胎(基因几乎相同)一个会卷舌、一个不会;很多人还能通过练习学会。它不是简单的单基因性状。' },
-      { t: '耳垂只分"有耳垂"和"无耳垂"两种,由一个基因决定。', a: false, why: '耳垂和脸颊的连接方式是从"完全分离"到"完全贴合"的连续过渡;大型基因研究找到了数十个相关基因。' },
+      { t: '能不能卷舌,由一个显性基因决定。', a: false, why: '早在 1950 年代就有研究发现,不少同卵双胞胎(基因几乎相同)一个会卷舌、一个不会;还有不少人(尤其是孩子)起初不会,长大后却学会了。它不是简单的单基因性状。' },
+      { t: '耳垂只分"有耳垂"和"无耳垂"两种,由一个基因决定。', a: false, why: '耳垂和脸颊的连接方式是从"完全分离"到"完全贴合"的连续过渡;2017 年一项 7 万多人的基因研究找到了 49 个相关的基因位点。' },
       { t: '湿型和干型耳垢主要由一个基因(ABCC11)决定。', a: true, why: '这是少数真正接近"一个基因决定"的人类性状,2006 年已找到具体的那个碱基变化。' },
     ];
     c.innerHTML = claims.map((x, i) => `<div class="claim ls-panel" data-i="${i}"><div>${x.t}</div>

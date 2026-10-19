@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>为什么斑马会有条纹? · 生命源码</title>
+<meta name="description" content="生命源码 · 生物:比较几种假说,重做马蝇实验,快进几十代看自然选择,再用古 DNA 认出已灭绝的斑驴。">
+<meta name="theme-color" content="#060a12">
+<link rel="stylesheet" href="../ls.css">
+<style>
+.hyp{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:560px;width:100%}
+.hyp .ls-panel{padding:10px;font-size:13px;line-height:1.5;cursor:pointer}
+.hyp .ls-panel b{display:block;color:var(--gold);font-size:14px;margin-bottom:2px}
+.hyp .ls-panel.on{border-color:var(--em)}
+.hyp .ev{display:none;color:var(--mute);font-size:12px;margin-top:4px}
+.hyp.open .ev{display:block}
+canvas.fly{width:min(560px,94vw);height:190px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)}
+canvas.hist{width:min(560px,94vw);height:150px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)}
+.row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:14px}
+.seqtab{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;line-height:1.9;max-width:94vw;overflow:auto}
+.seqtab td{padding:0 6px;white-space:nowrap}
+.seqtab .d{background:rgba(248,113,113,.3);border-radius:3px}
+</style></head><body>
+<noscript>需要开启 JavaScript 才能游玩。</noscript>
+<script type="module">
+import { runTask, sleep, el, choice, lineChart } from '../ls-task.js';
+import { sound, reducedMotion } from '../ls.js';
+
+runTask('zebra', [
+  { title: '四种假说', run(api) {
+    const c = api.center();
+    const H = [
+      { t: '迷惑捕食者', d: '一群斑马奔跑时条纹晃动,让狮子难以锁定一只。', e: '野外观察中,狮子并没有明显更难捕到斑马;支持证据较弱。' },
+      { t: '帮助散热', d: '黑白条纹吸热不同,可能形成小气流降温。', e: '有研究支持,也有用水桶模型实验发现条纹并不更凉;仍有争议。' },
+      { t: '防蚊蝇叮咬', d: '马蝇、采采蝇等吸血昆虫难以落在条纹上。', e: '多项实验支持,包括 2019 年给马穿条纹外套的实验;目前证据最多。' },
+      { t: '同伴识别', d: '每匹斑马的条纹都不同,方便认出彼此。', e: '条纹确实各不相同,但斑马主要靠声音和气味认亲;证据较弱。' },
+    ];
+    c.innerHTML = `<div class="hyp" id="h">${H.map((x, i) => `<div class="ls-panel" data-i="${i}"><b>${x.t}</b>${x.d}<div class="ev">${x.e}</div></div>`).join('')}</div>`;
+    api.guide.ask('科学家对斑马条纹提出过很多假说。你最相信哪一个?点一张卡片投票。', ['想想斑马生活的地方:非洲草原上有很多吸血昆虫。', '有些假说可以用实验检验,有些很难。', '证据最多的是"防蚊蝇叮咬",但其他假说也没有被完全排除。']);
+    c.querySelector('#h').onclick = e => {
+      const card = e.target.closest('[data-i]'); if (!card || c.querySelector('#h').classList.contains('open')) return;
+      card.classList.add('on'); c.querySelector('#h').classList.add('open'); api.predicted(true); sound.ok();
+      api.guide.say('每张卡片下面都出现了目前的证据。注意:这个问题科学上还在争论。');
+      api.button('继续', () => api.win('斑马为什么有条纹,科学家至今还在争论,目前证据最多的是"防蚊蝇叮咬"。不知道答案并不丢人——提出假说、设计实验、比较证据,本身就是科学。'), 'primary');
+    };
+  } },
+
+  { title: '重做马蝇实验', run(api) {
+    const c = api.center();
+    c.innerHTML = `<div class="ls-card ls-panel"><p>2019 年,英国科学家给农场里的马分别穿上<b>黑色</b>、<b>白色</b>和<b>条纹</b>外套,用摄像机记录马蝇。</p><p>你预测哪件外套上落下的马蝇最少?</p></div><canvas class="fly" id="cv"></canvas><div class="row" id="res"></div>`;
+    api.guide.ask('先预测,再"放飞"马蝇看看。', ['马蝇降落前要靠视觉判断距离、减速。', '条纹会干扰它们对运动和距离的判断。', '答案是条纹外套。']);
+    c.append(choice(api, ['黑色', '白色', '条纹'], '条纹', async (ok, o, box) => {
+      box.remove(); api.guide.say(ok ? '好预测!放飞马蝇。' : '我们放飞马蝇看看。');
+      const cv = c.querySelector('#cv'), D = devicePixelRatio, W = cv.width = cv.clientWidth * D, Hh = cv.height = cv.clientHeight * D, g = cv.getContext('2d');
+      const coats = [{ n: '黑色', p: .62 }, { n: '白色', p: .5 }, { n: '条纹', p: .18 }];
+      const bw = W / 3, flies = [], landed = [0, 0, 0];
+      for (let i = 0; i < 90; i++) { const k = i % 3; flies.push({ k, x: k * bw + Math.random() * bw, y: -Math.random() * Hh, land: Math.random() < coats[k].p, done: false, vx: (Math.random() - .5) * 2 * D }); }
+      const t0 = performance.now();
+      await new Promise(res => { (function frame(now) {
+        const t = (now - t0) / 1000;
+        g.clearRect(0, 0, W, Hh);
+        coats.forEach((ct, k) => {
+          const x0 = k * bw + bw * .12, y0 = Hh * .5, w = bw * .76, h = Hh * .38;
+          g.save(); g.beginPath(); g.roundRect(x0, y0, w, h, 14 * D); g.clip();
+          if (k === 0) { g.fillStyle = '#111'; g.fillRect(x0, y0, w, h); } else if (k === 1) { g.fillStyle = '#e7e5e4'; g.fillRect(x0, y0, w, h); }
+          else { for (let s = 0; s < 14; s++) { g.fillStyle = s % 2 ? '#111' : '#e7e5e4'; g.fillRect(x0 + s * w / 14, y0, w / 14 + 1, h); } }
+          g.restore(); g.fillStyle = '#94a3a8'; g.font = `${12 * D}px sans-serif`; g.fillText(ct.n + ` 落下 ${landed[k]}`, x0, y0 + h + 16 * D);
+        });
+        for (const f of flies) {
+          if (!f.done) { f.y += (reducedMotion() ? 20 : 3) * D; f.x += f.vx; const top = Hh * .5;
+            if (f.y > top) { if (f.land) { f.done = true; f.y = top + Math.random() * Hh * .3; landed[f.k]++; sound.tone(880 + f.k * 60, .03, { gain: .03 }); } else { f.vx = (Math.random() < .5 ? -1 : 1) * 5 * D; f.y = top - 2; f.land = null; } }
+            if (f.land === null) { f.y -= 2 * D; if (f.y < -10) f.done = true; } }
+          g.fillStyle = '#e2be78'; g.beginPath(); g.arc(f.x, f.y, 2.5 * D, 0, 7); g.fill();
+        }
+        if (t < 6 && flies.some(f => !f.done)) requestAnimationFrame(frame); else res();
+      })(t0); });
+      c.querySelector('#res').innerHTML = `<span class="ls-note">示意动画,方向与 2019 年 Caro 等人的实验一致:马蝇靠近条纹的次数差不多,但很多来不及减速,撞上或飞走,真正落下的明显更少。</span>`;
+      api.button('结论', () => api.win('条纹并不能让马蝇"看不见",而是干扰它们降落。一个实验只能检验一个假说,其他假说仍需要别的实验。'), 'primary');
+    }));
+  } },
+
+  { title: '快进五十代', run(api) {
+    const c = api.center();
+    c.innerHTML = `<canvas class="hist" id="h"></canvas>
+      <div class="row">吸血蝇的多少:<input type="range" id="p" min="0" max="10" value="8" style="accent-color:#e2be78"><b id="pv">8</b></div>
+      <div class="row" id="gen">第 0 代 · 平均条纹度 —</div>
+      <div class="ls-note">模拟一群祖先马:条纹多少因个体而异,且能遗传给后代(数值为示意)。</div>`;
+    const tried = new Set(); let timer = null;
+    const run = () => {
+      clearInterval(timer);
+      const P = +c.querySelector('#p').value / 10;
+      let pop = Array.from({ length: 300 }, () => Math.max(0, Math.min(1, .15 + (Math.random() - .5) * .3)));
+      const avg = [pop.reduce((a, b) => a + b) / pop.length]; let gen = 0;
+      timer = setInterval(() => {
+        gen++;
+        const fit = pop.map(s => 1 - P * .6 * (1 - s));
+        const tot = fit.reduce((a, b) => a + b); const next = [];
+        for (let i = 0; i < pop.length; i++) { let r = Math.random() * tot, j = 0; while ((r -= fit[j]) > 0 && j < pop.length - 1) j++; next.push(Math.max(0, Math.min(1, pop[j] + (Math.random() - .5) * .06))); }
+        pop = next; avg.push(pop.reduce((a, b) => a + b) / pop.length);
+        lineChart(c.querySelector('#h'), [{ name: '平均条纹度', color: '#e2be78', data: avg }], { max: 1 });
+        c.querySelector('#gen').textContent = `第 ${gen} 代 · 平均条纹度 ${(avg.at(-1) * 100).toFixed(0)}%`;
+        sound.tone(220 + avg.at(-1) * 500, .05, { gain: .03 });
+        if (gen >= 50) { clearInterval(timer); tried.add(P > .5 ? 'hi' : P === 0 ? 'zero' : 'lo'); check(); }
+      }, reducedMotion() ? 5 : 60);
+    };
+    api.onCleanup(() => clearInterval(timer));
+    c.querySelector('#p').oninput = e => c.querySelector('#pv').textContent = e.target.value;
+    let asked = false;
+    const check = () => {
+      if (tried.has('hi') && tried.has('zero') && !asked) {
+        asked = true;
+        api.guide.ask('没有吸血蝇时,条纹为什么没有变多?', ['看看适应度公式:没有蝇时,条纹多少有区别吗?', '没有"选择压力",条纹多的个体不会多留后代。', '条纹度只会随机地小幅漂移。']);
+        document.querySelector('.ls-actions').innerHTML = '';
+        api.button('因为没有选择压力', () => api.win('变异提供原料,环境决定"谁多留后代"。吸血蝇多,条纹多的个体被叮得少、留下更多后代,条纹就越来越多;没有压力就没有方向。这就是自然选择。'), 'primary');
+      }
+    };
+    api.button('▶ 快进 50 代', run, 'primary');
+    api.guide.ask('先在蝇很多(8)时快进 50 代,再把蝇调到 0 再试一次。你预测两次结果会一样吗?', ['条纹多的个体被叮得少,更健康,后代可能更多。', '如果没有蝇呢?', '两种情况都跑一遍,比较曲线。']);
+    api.predicted(true);
+  } },
+
+  { title: '古 DNA 认亲', run(api) {
+    const c = api.center();
+    const ref = 'ACCTAGCATTGGTACCGTAA';
+    const rows = [
+      ['斑驴(博物馆标本)', 'ACCTAGCATCGGTACCGTAA'],
+      ['平原斑马', 'ACCTAGCATTGGTACCGTAA'],
+      ['山斑马', 'ACTTAGCGTTGATACCGCAA'],
+      ['家马', 'GCTTAACGTTGATGCCATAA'],
+    ];
+    const diff = (a, b) => [...a].filter((x, i) => x !== b[i]).length;
+    c.innerHTML = `<div class="ls-card ls-panel"><p><b>斑驴</b>(Quagga)只有前半身有条纹,1883 年灭绝。1984 年,科学家从博物馆标本里读出了它的 DNA——这是人类第一次读出已灭绝动物的 DNA。</p><p>斑驴更像谁的近亲?</p></div>
+      <table class="seqtab">${rows.map(([n, s]) => `<tr><td>${n}</td><td>${[...s].map((b, i) => `<span class="b-${b} ${b !== rows[0][1][i] ? 'd' : ''}">${b}</span>`).join('')}</td></tr>`).join('')}</table>
+      <div class="ls-note">示意序列(20 个碱基),红底为与斑驴不同的位置。</div>`;
+    api.guide.ask('数一数红底的差异:斑驴和谁最接近?', ['差异越少,亲缘越近。', '平原斑马只差 1 个。', '是平原斑马。']);
+    c.append(choice(api, ['平原斑马', '山斑马', '家马'], '平原斑马', (ok, o, box) => {
+      if (!ok) { api.guide.say(`${o} 和斑驴有 ${diff(rows[0][1], rows.find(r => r[0].includes(o.slice(0, 2)))[1])} 处不同。再数数?`); return; }
+      box.remove();
+      api.win('古 DNA 显示,斑驴其实是平原斑马的一个亚种,只是条纹少。同一个物种里,条纹也会因地区和环境而不同。');
+    }));
+  } },
+]);
+</script>
+</body></html>

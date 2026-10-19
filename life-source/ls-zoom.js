@@ -10,7 +10,7 @@ export const LEVELS = [
   { key: 'skin',       tool: '肉眼 / 放大镜',           obj: '指尖皮肤 · 指纹',               bar: '1 mm',     tag: '' },
   { key: 'cells',      tool: '光学显微镜 · 染色切片',   obj: '皮肤表皮细胞',                   bar: '20 μm',    tag: '染色后观察' },
   { key: 'nucleus',    tool: '荧光显微镜',             obj: '细胞核里的染色质',               bar: '2 μm',     tag: '荧光标记着色' },
-  { key: 'nucleosome', tool: '电子显微镜 / 冷冻电镜结构', obj: '核小体:DNA 绕组蛋白约 1.65 圈', bar: '10 nm',    tag: '模型重建 · 非照片' },
+  { key: 'nucleosome', tool: 'X 射线晶体学 / 冷冻电镜结构', obj: '核小体:DNA 绕组蛋白八聚体约 1.65 圈', bar: '10 nm',    tag: '模型重建 · 非照片' },
   { key: 'helix',      tool: '分子模型',               obj: 'DNA 双螺旋 · 右手 · 直径约 2 nm', bar: '1 nm',     tag: '模型重建 · 伪彩' },
   { key: 'pair',       tool: '原子模型',               obj: '碱基对与氢键(A–T 2 根)',        bar: '0.2 nm',   tag: '模型示意 · 原子通用配色' },
 ];

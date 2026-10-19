@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>一场感冒是怎么在班里传开的? · 生命源码</title>
+<meta name="description" content="生命源码 · 生物:看病毒怎样借用细胞复制自己,在一个虚拟班级里模拟感冒传播,找到让传播停下来的办法。">
+<meta name="theme-color" content="#060a12">
+<link rel="stylesheet" href="../ls.css">
+<style>
+.row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:14px}
+.cls{display:grid;grid-template-columns:repeat(8,30px);gap:6px;justify-content:center}
+.stu{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:15px;background:#1f2937;transition:background .25s}
+.stu.S{background:#334155}.stu.I{background:#ef4444;box-shadow:0 0 10px #ef4444}.stu.R{background:#34d399}.stu.V{background:#60a5fa}
+canvas.ch{width:min(560px,94vw);height:130px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)}
+.legend{font-size:12px;color:var(--mute)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 3px 0 8px;vertical-align:-1px}
+svg.cyc{width:min(320px,80vw);height:200px}
+.ctl{display:grid;grid-template-columns:auto 140px 36px;gap:6px 8px;align-items:center;font-size:13px}
+.ctl input{accent-color:#67e8f9}
+</style></head><body>
+<noscript>需要开启 JavaScript 才能游玩。</noscript>
+<script type="module">
+import { runTask, sleep, el, choice, lineChart } from '../ls-task.js';
+import { sound, reducedMotion } from '../ls.js';
+
+/* 班级 SIR 模型(离散天):每个感染者每天随机接触 k 人,每次接触以概率 p 传染,感染约 5 天后康复 */
+function simulate({ n = 40, k = 4, p = .1, days = 5, vac = 0, maxDay = 40 }) {
+  const st = Array.from({ length: n }, (_, i) => (i > 0 && Math.random() < vac) ? 'V' : 'S'); st[0] = 'I';
+  const left = new Array(n).fill(0); left[0] = days; const hist = [];
+  for (let d = 0; d <= maxDay; d++) {
+    hist.push([...st]);
+    const newI = [];
+    st.forEach((s, i) => { if (s !== 'I') return; for (let c = 0; c < k; c++) { const j = Math.floor(Math.random() * n); if (st[j] === 'S' && Math.random() < p) newI.push(j); } });
+    st.forEach((s, i) => { if (s === 'I' && --left[i] <= 0) st[i] = 'R'; });
+    newI.forEach(j => { if (st[j] === 'S') { st[j] = 'I'; left[j] = days; } });
+    if (!st.includes('I')) { hist.push([...st]); break; }
+  }
+  return hist;
+}
+async function play(c, hist, speed = 220) {
+  const grid = c.querySelector('.cls'); grid.innerHTML = hist[0].map(() => '<div class="stu"></div>').join('');
+  const I = [], R = [];
+  for (const day of hist) {
+    day.forEach((s, i) => grid.children[i].className = 'stu ' + s);
+    I.push(day.filter(s => s === 'I').length); R.push(day.filter(s => s === 'R').length);
+    lineChart(c.querySelector('.ch'), [{ name: '生病中', color: '#ef4444', data: I }, { name: '已康复', color: '#34d399', data: R }], { max: day.length });
+    c.querySelector('.day').textContent = `第 ${I.length - 1} 天`;
+    sound.tone(200 + I.at(-1) * 18, .08, { gain: .04 });
+    await sleep(reducedMotion() ? 10 : speed);
+  }
+  const last = hist.at(-1); return { ever: last.filter(s => s === 'R' || s === 'I').length, peak: Math.max(...I) };
+}
+const classHTML = `<div class="row"><span class="day">第 0 天</span><span class="legend"><i style="background:#334155"></i>健康<i style="background:#ef4444"></i>生病<i style="background:#34d399"></i>康复<i style="background:#60a5fa"></i>已接种</span></div><div class="cls"></div><canvas class="ch"></canvas>`;
+
+runTask('virus', [
+  { title: '病毒自己会繁殖吗?', run(api) {
+    const c = api.center();
+    c.innerHTML = `<svg class="cyc" viewBox="0 0 320 200" id="sv"></svg><div class="ls-card ls-panel" id="txt"><p>引起感冒的病毒(最常见的是鼻病毒)只有约 30 纳米,比细胞小上千倍。它没有自己的"工厂",只带着一小段遗传信息。</p><p>把一个病毒单独放在培养皿的营养液里,没有细胞,它能繁殖吗?</p></div>`;
+    const sv = c.querySelector('#sv');
+    const draw = step => {
+      const v = (x, y, s = 1) => `<g transform="translate(${x},${y}) scale(${s})"><polygon points="0,-9 8,-4 8,4 0,9 -8,4 -8,-4" fill="#67e8f9"/><circle r="3" fill="#0e7490"/></g>`;
+      let h = `<ellipse cx="170" cy="110" rx="120" ry="80" fill="rgba(52,211,153,.12)" stroke="#34d399"/><text x="170" y="196" fill="#94a3a8" font-size="12" text-anchor="middle">宿主细胞</text><circle cx="190" cy="115" r="28" fill="rgba(52,211,153,.18)"/>`;
+      if (step === 0) h += v(30, 40, 1.4);
+      if (step === 1) h += v(70, 70, 1.4) + `<path d="M80 78 Q120 100 150 105" stroke="#67e8f9" stroke-dasharray="4 3" fill="none"/>`;
+      if (step === 2) for (let i = 0; i < 9; i++) h += v(120 + (i % 3) * 30, 85 + Math.floor(i / 3) * 24);
+      if (step === 3) for (let i = 0; i < 12; i++) h += v(40 + Math.random() * 260, 20 + Math.random() * 170);
+      sv.innerHTML = h;
+    };
+    draw(0);
+    const steps = ['① 病毒附着在细胞表面', '② 把遗传信息送进细胞', '③ 细胞被迫按病毒的"说明书"复制病毒', '④ 大量新病毒释放,去感染更多细胞'];
+    api.guide.ask('先预测:没有细胞,病毒自己能繁殖吗?', ['病毒有没有核糖体?', '病毒自己不会制造蛋白质。', '不能。它必须借用活细胞。']);
+    c.append(choice(api, ['能', '不能'], '不能', async (ok, o, box) => {
+      box.remove(); api.guide.say(ok ? '对!看看它是怎么"借"的。' : '其实不能。看看它是怎么"借"细胞的。');
+      const t = c.querySelector('#txt');
+      for (let i = 0; i < 4; i++) { draw(i); t.innerHTML = `<p>${steps[i]}</p>`; sound.tone(330 + i * 110, .25); await sleep(reducedMotion() ? 200 : 1300); }
+      t.innerHTML += `<p class="ls-note">病毒算不算"活的",科学家也有不同看法:它有遗传信息、会进化,却不能独立代谢和繁殖。</p>`;
+      api.button('继续', () => api.win('病毒只能在活细胞里复制自己。所以它要不停地从一个人传到另一个人,才能延续下去。'), 'primary');
+    }));
+  } },
+
+  { title: '一个人的喷嚏', async run(api) {
+    const c = api.center(); c.innerHTML = classHTML;
+    c.querySelector('.cls').innerHTML = Array.from({ length: 40 }, (_, i) => `<div class="stu ${i ? 'S' : 'I'}"></div>`).join('');
+    api.guide.ask('全班 40 人,第 1 天只有 1 人感冒。每人每天和 4 个同学近距离接触。你预测最后大约多少人会被传染?', ['每次接触不一定传染。', '传染的人会再传给别人,像滚雪球。', '在这个设定下,通常会传给班里大部分人。']);
+    c.append(choice(api, ['不到 5 人', '大约一半', '大部分人'], '大部分人', async (ok, o, box) => {
+      box.remove(); api.guide.say('看看会发生什么。');
+      const r = await play(c, simulate({ k: 4, p: .1 }));
+      api.guide.say(`这一次,共有 ${r.ever} 人被传染,同一天最多 ${r.peak} 人在生病。多跑几次,每次都不完全一样。`);
+      api.clearActions();
+      api.button('再模拟一次', async () => { const r2 = await play(c, simulate({ k: 4, p: .1 })); api.guide.say(`这次共 ${r2.ever} 人被传染。`); });
+      api.button('我明白了', () => api.win('一个人平均传给几个人(叫"基本传染数 R₀")决定了疾病会不会扩散。这里大约是 4 次接触 × 10% 传染概率 × 5 天 ≈ 2,大于 1,所以越传越多。'), 'primary');
+    }, true));
+  } },
+
+  { title: '让传播停下来', run(api) {
+    const c = api.center();
+    c.innerHTML = `<div class="ctl">
+      <span>每天近距离接触</span><input type="range" id="k" min="1" max="8" value="4"><b id="kv">4</b>
+      <span>勤洗手、咳嗽遮挡</span><input type="range" id="w" min="0" max="5" value="0"><b id="wv">0</b>
+      <span>生病后在家休息</span><input type="range" id="h" min="0" max="4" value="0"><b id="hv">0</b></div>
+      <div class="row ls-note" id="r0"></div>` + classHTML;
+    const get = () => {
+      const k = +c.querySelector('#k').value, w = +c.querySelector('#w').value, h = +c.querySelector('#h').value;
+      const p = .1 * (1 - w * .12), days = 5 - h; return { k, p, days, R: k * p * days };
+    };
+    const upd = () => { const g = get(); ['k', 'w', 'h'].forEach(x => c.querySelector('#' + x + 'v').textContent = c.querySelector('#' + x).value); c.querySelector('#r0').textContent = `估算:每个病人平均传给 ${g.R.toFixed(1)} 人(数值为示意)`; };
+    c.querySelectorAll('input').forEach(i => i.oninput = upd); upd();
+    let tries = 0;
+    api.button('▶ 开始模拟', async () => {
+      tries++; const g = get();
+      const r = await play(c, simulate({ k: g.k, p: g.p, days: g.days }), 160);
+      if (r.ever < 10) { api.predicted(tries <= 3); api.win(`只有 ${r.ever} 人被传染!当每个病人平均传染不到 1 人时,传播会自己停下来。少接触、勤洗手、生病在家休息,每一项都在降低这个数字。`); }
+      else api.guide.say(`这次有 ${r.ever} 人被传染。试着把"平均传给几人"降到 1 以下。`);
+    }, 'primary');
+    api.guide.ask('挑战:调整三个滑杆,让全班被传染的人少于 10 人。', ['看看"平均传给几人"那个数字。', '三个办法可以组合使用。', '想办法让它小于 1,比如接触 2 人、洗手 4、在家休息 2。']);
+  } },
+
+  { title: '疫苗与群体免疫', run(api) {
+    const c = api.center();
+    c.innerHTML = `<div class="row">接种比例:<input type="range" id="v" min="0" max="95" step="5" value="0" style="accent-color:#60a5fa"><b id="vv">0%</b></div>` + classHTML +
+      `<p class="ls-note" style="max-width:520px;text-align:center">普通感冒由 200 多种病毒引起(仅鼻病毒就有 160 多型),所以没有"感冒疫苗"。这里用传播更快的流感作例子(示意参数)。</p>`;
+    c.querySelector('#v').oninput = e => c.querySelector('#vv').textContent = e.target.value + '%';
+    api.guide.ask('这种病毒每个病人平均能传给约 3 人。至少要多少人接种疫苗,才能保护整个班级(包括没法接种的同学)?', ['如果 2/3 的人都免疫了,一个病人平均还能传给几个"易感者"?', '3 × (1 − 接种比例) 要小于 1。', '大约 67% 以上。']);
+    const box = choice(api, ['约 30%', '约 67%', '必须 100%'], '约 67%', (ok, o, b) => {
+      b.remove(); api.guide.say(ok ? '理论值约 67%。用模拟验证一下:试试不同的接种比例。' : '理论值约 67%。用模拟验证一下。');
+      api.button('▶ 开始模拟', async () => {
+        const vac = +c.querySelector('#v').value / 100;
+        const r = await play(c, simulate({ k: 6, p: .1, days: 5, vac }), 150);
+        const sus = Math.round(40 * (1 - vac));
+        api.guide.say(`接种 ${Math.round(vac * 100)}%:共 ${r.ever} 人被传染。`);
+        if (vac >= .65 && r.ever < 8) api.win('当足够多的人免疫时,病毒很难找到下一个易感的人,连没法接种的同学也被保护了。这叫"群体免疫",所需比例约等于 1 − 1/R₀。真实疫苗的效果、接种建议请以医生和卫生部门的意见为准。');
+      }, 'primary');
+    });
+    c.append(box);
+  } },
+]);
+</script>
+</body></html>

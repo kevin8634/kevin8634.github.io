@@ -66,7 +66,7 @@ runTask('dna', [
         seen = Math.max(seen, i);
         info.innerHTML = `<div style="color:var(--gold)">观察方式 · ${L.tool}</div><div class="obj">${L.obj}</div><div>比例尺 ${L.bar} ${L.tag ? `<span class="ls-tag">${L.tag}</span>` : ''}</div>`;
         fact.textContent = FACTS[i] || '';
-        if (i === 5) api.guide.ask('到底了。你从指纹一路看到了碱基对。注意:从哪一层开始,我们已经不是"用眼睛看"了?', ['看看左上角的标签。', '光学显微镜最多分辨约 200 纳米。', '从电子显微镜那层起,画面是根据结构数据重建的模型。']);
+        if (i === 5) api.guide.ask('到底了。你从指纹一路看到了碱基对。注意:从哪一层开始,我们已经不是"用眼睛看"了?', ['看看左上角的标签。', '光学显微镜最多分辨约 200 纳米。', '从核小体那层起,画面是根据 X 射线晶体学、冷冻电镜等结构数据重建的模型。']);
       } });
       api.onCleanup(() => zm.dispose());
       const slider = el('input', { type: 'range', min: 0, max: 5, step: .001, value: 0 }); slider.style.flex = '1'; slider.style.accentColor = '#34d399';
@@ -75,7 +75,7 @@ runTask('dna', [
       api.onCleanup(() => { clearInterval(t); zm.dispose(); });
       api.button('▶ 一镜到底', () => zm.dive({ from: 0 }), 'primary');
       document.querySelector('.ls-actions').append(slider);
-      api.button('我看到碱基对了', () => { if (seen >= 5 || zm.z > 4.9) api.win('一个细胞核里约 2 米长的 DNA,靠一圈圈缠绕压缩进去。光学显微镜看不到双螺旋,最后两层是科学家用结构数据重建的模型。'); else { sound.no(); api.guide.say('还没到底哦。拖动滑杆,或者点"一镜到底"。'); } });
+      api.button('我看到碱基对了', () => { if (seen >= 5 || zm.z > 4.9) api.win('一个细胞核里约 2 米长的 DNA,靠一圈圈缠绕压缩进去。光学显微镜看不到双螺旋,最后三层(核小体、双螺旋、碱基对)都是科学家根据结构数据重建的模型,不是照片。'); else { sound.no(); api.guide.say('还没到底哦。拖动滑杆,或者点"一镜到底"。'); } });
       zm.dive({ from: 0 });
     }));
   } },
@@ -111,7 +111,7 @@ runTask('dna', [
 
   { title: '抄写:从 DNA 到 RNA', async run(api) {
     const c = api.center();
-    c.innerHTML = `<div class="ls-note">DNA(存在细胞核里,不出门)</div><div class="strip seq" id="s">${ch(HBB)}</div>
+    c.innerHTML = `<div class="ls-note">DNA(绝大部分在细胞核里,不出门)</div><div class="strip seq" id="s">${ch(HBB)}</div>
       <div class="ls-card ls-panel"><p>细胞要用这段说明书时,会先把它抄写成一条 RNA 带出细胞核。抄写时有一个字母会换成新字母 <b class="b-U">U</b>(尿嘧啶)。</p><p>你猜被换掉的是哪个?</p></div>`;
     api.guide.ask('RNA 用 U 顶替了 DNA 里的一个字母。U 的颜色和谁一样?', ['U 和被它顶替的字母配对规则一样。', 'U 也和 A 配对。', '和 A 配对的,原本是 T。']);
     c.append(choice(api, ['A', 'T', 'G', 'C'], 'T', async (ok, o, box) => {
@@ -124,7 +124,7 @@ runTask('dna', [
         await sleep(reducedMotion() ? 20 : 110);
       }
       c.querySelector('.ls-note').textContent = 'mRNA(信使 RNA,带着说明书去核糖体)';
-      api.win('DNA 留在细胞核里当"原稿",抄出来的 mRNA 把 T 换成 U,带着信息去核糖体。');
+      api.win('DNA 留在细胞核里当"原稿",以 DNA 的一条链为模板、按配对规则合成的 mRNA,序列和另一条链一样,只是 T 的位置换成了 U,带着信息去核糖体。');
     }));
   } },
 
@@ -180,12 +180,12 @@ runTask('dna', [
         : '<ellipse cx="60" cy="40" rx="44" ry="30" fill="#dc2626"/><ellipse cx="60" cy="40" rx="20" ry="13" fill="#991b1b"/>'}</svg>`;
       if (done.silent && done.sickle) {
         api.predicted(true);
-        api.win('有的改动不改变蛋白质(同一种氨基酸有好几个密码子);有的只改一个字母就改变了它。GAG→GTG(医学上按去掉甲硫氨酸后的编号,叫第 6 位)正是镰状细胞病的成因:红细胞容易变成镰刀形。在疟疾流行地区,只带一份这种变化的人反而更不容易得重症疟疾——同一个变化是好是坏,要看环境。');
+        api.win('有的改动不改变蛋白质(大多数氨基酸都有好几个密码子);有的只改一个字母就改变了它。GAG→GTG(医学上按去掉甲硫氨酸后的编号,叫第 6 位)正是镰状细胞病的成因:当两份 HBB 基因都带有这种变化时,红细胞在缺氧时容易变成镰刀形(只带一份的人叫“携带者”,通常没有明显症状)。在疟疾流行地区,只带一份这种变化的人反而更不容易得重症疟疾——同一个变化是好是坏,要看环境。');
       }
     }
     cd.addEventListener('click', e => { const i = e.target.dataset.i; if (i === undefined) return; seq[+i] = cycle[seq[+i]]; sound.base(seq[+i]); render(); });
     api.button('恢复原样', () => { seq = [...HBB]; render(); });
-    api.guide.ask('试着完成下面两个目标。每次只改一个字母,看珠子怎么变。', ['第 4 组 CTG 是亮氨酸。只改它的第 3 个字母会怎样?', '第 7 组 GAG 是谷氨酸。缬氨酸的密码子是 GU_ 开头。', () => { api.guide.say('把第 7 组中间的 A 改成 T(点两下)。'); }]);
+    api.guide.ask('试着完成下面两个目标。每次只改一个字母,看珠子怎么变。', ['第 4 组 CTG 是亮氨酸。只改它的第 3 个字母会怎样?', '第 7 组 GAG 是谷氨酸。缬氨酸的密码子在 mRNA 上是 GU_ 开头,写在这条 DNA 上就是 GT_。', () => { api.guide.say('把第 7 组中间的 A 改成 T(点一下)。'); }]);
     render();
   } },
 
@@ -193,14 +193,14 @@ runTask('dna', [
     const c = api.center();
     c.innerHTML = `<div class="ls-card ls-panel"><h3>🍓 草莓提取 DNA 实验卡</h3>
       <p><b>材料</b>:草莓 2–3 颗、密封袋、洗洁精 1 勺、食盐 1/2 小勺、清水半杯、咖啡滤纸、透明杯、冰过的高度酒精(药店医用酒精即可,放冰箱冷藏)。</p>
-      <ol><li>草莓去蒂装袋,捏碎约 2 分钟。</li><li>水 + 洗洁精 + 盐混匀,倒进袋里再轻揉 1 分钟:洗洁精打破细胞膜和核膜,盐让 DNA 聚到一起。</li>
+      <ol><li>草莓去蒂装袋,捏碎约 2 分钟。</li><li>水 + 洗洁精 + 盐混匀,倒进袋里再轻揉 1 分钟:洗洁精打破细胞膜和核膜,盐里的钠离子能中和 DNA 上的负电荷、帮它和蛋白质分开,让 DNA 在酒精里更容易析出。</li>
       <li>用滤纸滤到杯里。</li><li>沿杯壁缓缓倒入约等量的冷酒精,不要搅拌。</li><li>几分钟后,交界处会出现白色絮状物。</li></ol>
-      <p class="ls-note">⚠️ 必须有成年人陪同。酒精易燃,远离明火和热源,不可饮用;用完洗手,废液按家里大人的指示处理。</p></div>`;
+      <p class="ls-note">⚠️ 必须有成年人陪同。酒精易燃:不要在燃气灶、蜡烛、电暖器等热源旁操作,保持通风,用完马上拧紧瓶盖;酒精不可饮用。洗洁精或酒精溅进眼睛,立即用大量清水冲洗,不适就医。实验用过的草莓和液体都不能吃;对草莓过敏的人不要参与。做完洗手,废液按家里大人的指示处理。</p></div>`;
     api.guide.ask('还没做实验前先想一想:你看到的白色絮状物,是一条 DNA,还是许多条 DNA 缠在一起?', ['一条 DNA 只有约 2 纳米粗。', '肉眼能看到的东西至少要 0.1 毫米左右。', '所以是成千上万条缠在一起。']);
     c.append(choice(api, ['一条', '许多条缠在一起'], '许多条缠在一起', (ok, o, box) => {
       if (!ok) { api.guide.say('一条 DNA 只有约 2 纳米粗,肉眼看不见哦。再想想?'); return; }
       box.remove();
-      api.win('对!你看到的是来自成千上万个细胞的 DNA 缠成的团。草莓是八倍体,每个细胞有 8 套染色体,所以 DNA 特别多。');
+      api.win('对!你看到的是来自成千上万个细胞的 DNA 缠成的团。栽培草莓是八倍体,每个细胞有 8 套染色体,加上果肉软、容易捣碎,所以很容易提出大量 DNA。');
     }));
   } },
 ]);

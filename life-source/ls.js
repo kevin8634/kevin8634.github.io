@@ -4,6 +4,9 @@ export const WORLD = 'ls';
 export const TASKS = {
   parents: { title: '为什么你长得像爸妈,又不完全像?', path: '/life-source/parents/', guide: 'epi', levels: 7 },
   dna:     { title: '四个字母怎么写出一个人?',       path: '/life-source/dna/',     guide: 'cas', levels: 6 },
+  zebra:   { title: '为什么斑马会有条纹?',           path: '/life-source/zebra/',   guide: 'adna', levels: 4 },
+  virus:   { title: '一场感冒是怎么在班里传开的?',   path: '/life-source/virus/',   guide: 'phage', levels: 4 },
+  wolf:    { title: '狼回来之后,河流为什么变了?',   path: '/life-source/wolf/',    guide: 'edna', levels: 4 },
 };
 export const GUIDES = {
   cas:   { name: '卡丝 Cas',    term: 'CRISPR 基因剪刀', color: '#34d399' },
