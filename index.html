@@ -509,7 +509,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.3</b></span>
+            <span>创世计划总门户 <b>v0.3.1</b></span>
           </footer>
         </div>
       </div>
@@ -586,8 +586,9 @@
           desc: "用元素锻造物质，配方即反应。", color: "#ff9a3c", live: false,
           meta: [], prefix: ["gn:ef:"] },
         { id: "04", star: "玉衡", name: "生命源码", en: "Life Source", field: "生物",
-          desc: "读、改、调试生命的「源码」。", color: "#34d399", live: false,
-          meta: [], prefix: ["gn:ls:"] },
+          desc: "读、改、调试生命的「源码」。", color: "#34d399", live: true,
+          meta: ["已上线 v0.1", "2 个任务已开放"], href: "life-source/",
+          prefix: ["gn:ls:"] },
         { id: "05", star: "开阳", name: "奇点前夜", en: "Pre-Singularity", field: "超级智能 SI",
           desc: "亲手训练、测试、约束 AI。", color: "#22d3ee", live: true,
           meta: ["已上线 v0.6.1", "10 个任务 29 关"], href: "pre-singularity/",
@@ -1280,7 +1281,7 @@
         { a: { w: "01", id: "ma.casino", title: "赌场为什么总是赢？", href: "math-atlas/casino/" },
           b: { w: "06", id: "lt.odds", title: "为什么大多数人会输给概率", href: null } },
         { a: { w: "01", id: "ma.secret", title: "怎样把秘密藏进数字里", href: "math-atlas/secret/" },
-          b: { w: "04", id: "ls.dna", title: "DNA 是四进制代码", href: null } },
+          b: { w: "04", id: "ls.dna", title: "四个字母怎么写出一个人？", href: "life-source/dna/" } },
         { a: { w: "01", id: "ma.epidemic", title: "传染病为什么会爆发？", href: "math-atlas/epidemic/" },
           b: { w: "04", id: "ls.virus", title: "病毒怎样传播", href: null } },
         { a: { w: "05", id: "ps.truth", title: "这段话是 AI 写的吗", href: "pre-singularity/truth/" },
@@ -1636,6 +1637,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "04", v: "v0.1", d: "2026-10-20", t: "第 04 世界开放：从指纹一路放大到碱基对，亲手配对、抄写、翻译 DNA，并用豌豆、耳垢、血型和身高探究你为什么像爸妈又不完全像。" },
         { w: "gn", v: "v0.3", d: "2026-10-19", t: "北斗七星改为真实 3D 位置，可拖动从不同角度观察；新增「创世计划说明」。" },
         { w: "01", v: "v0.7", d: "2026-10-19", t: "新任务「火箭怎样飞上月球？」「魔方为什么能复原？」，共 10 个任务。" },
         { w: "gn", v: "v0.2", d: "2026-10-19", t: "新增「星历」更新公告；原创背景音乐「创世星海」与七星音阶交互音效（默认关闭，右上角开启）。" },
