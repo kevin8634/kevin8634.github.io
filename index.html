@@ -59,7 +59,8 @@
         position: absolute; left: 24px; right: 24px; bottom: 26px; display: flex;
         gap: 16px; align-items: center; flex-wrap: wrap; font-size: 11.5px; color: rgba(234,240,255,.5);
       }
-      .foot button {
+      .ui > .foot { pointer-events: none; } /* v0.3：页脚整行不再挡住画布拖动，只有按钮可点 */
+      .foot button { pointer-events: auto;
         background: none; border: 0; color: var(--gold); font: 400 11.5px var(--sans);
         text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 10px 2px; min-height: 44px;
       }
@@ -155,10 +156,12 @@
           left: 0 !important; right: 0; top: auto !important; bottom: 0; width: 100%;
           border-radius: 22px 22px 0 0; transform: translateY(100%); padding-bottom: 28px;
           border-left: 0; border-right: 0; border-bottom: 0;
+          background: #080d24; /* v0.3：底部卡片不透明，避免下面的文字透出来 */
         }
         .card.on { transform: none; }
         .brand { font-size: 12px; top: 18px; left: 18px; }
       }
+      @media (max-width: 420px) { .brand { font-size: 11px; letter-spacing: .1em; } .brand small { letter-spacing: .16em; } }
       /* 极矮横屏：标题收在左侧，北斗移到右侧（见 resize） */
       @media (max-height: 480px) and (orientation: landscape) {
         .titleblock { left: 18px; right: auto; top: 66px; bottom: auto; max-width: 38vw; }
@@ -232,6 +235,97 @@
       .x-sndbtn { right: 212px; width: 44px; padding: 0; display: grid; place-items: center; }
       .x-sndbtn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
       @media (max-width: 860px) { .x-sndbtn { right: 196px; } }
+      /* v0.3 · 北斗七星真实 3D */
+      #sky { touch-action: none; outline: none; }
+      #stage, .ui { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+      #sky:focus-visible { box-shadow: inset 0 0 0 2px rgba(233,199,121,.45); }
+      .x-3d { position: absolute; right: 24px; bottom: 84px; width: min(300px, 32vw); display: flex; flex-direction: column; gap: 10px; align-items: flex-end; pointer-events: none !important; }
+      .x-3d p { margin: 0; font-size: 12px; line-height: 1.8; color: var(--dim); text-align: right; text-wrap: pretty; }
+      .x-3d p b { color: var(--gold); font-weight: 500; }
+      .x-home { pointer-events: auto; flex: none; white-space: nowrap; opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s, background .25s; }
+      .x-home.on { opacity: 1; visibility: visible; }
+      @media (max-width: 860px) {
+        .x-3d { left: 18px; right: 18px; bottom: 62px; width: auto; align-items: stretch; min-height: 44px; justify-content: flex-end; }
+        .x-3d p { text-align: left; font-size: 11.5px; line-height: 1.7; }
+        .x-3d .x-home { position: absolute; right: 0; bottom: 0; }
+        .x-3d.off p { visibility: hidden; }
+        .acts .btn { padding: 10px 14px; font-size: 12.5px; }
+      }
+      @media (max-height: 480px) and (orientation: landscape) {
+        .x-3d { bottom: 64px; } .x-3d p { display: none; }
+      }
+      /* v0.3 · 关于创世计划 */
+      .x-ab { position: fixed; inset: 0; z-index: 9; opacity: 0; transition: opacity .6s ease;
+        background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(233,199,121,.07), transparent 70%), radial-gradient(ellipse 60% 50% at 85% 100%, rgba(124,200,255,.06), transparent 70%), #03050d; }
+      .x-ab.on { opacity: 1; }
+      .x-ab::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 76px; z-index: 1; pointer-events: none; background: linear-gradient(#03050d 55%, rgba(3,5,13,0)); }
+      .x-ab .x-br__back { z-index: 2; }
+      .x-ab__in { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; }
+      .x-ab__wrap { max-width: 880px; margin: 0 auto; padding: 80px 24px 36px; min-height: 100%; display: flex; flex-direction: column; }
+      .x-ab__tabs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 0 0 26px; padding-bottom: 2px; }
+      .x-ab__tabs .btn { flex: none; }
+      .x-ab__tabs .btn[aria-selected="true"] { background: var(--gold); color: #0a1030; border-color: var(--gold); font-weight: 600; }
+      .x-ab__pane { flex: 1; }
+      .x-ab__pane[hidden] { display: none; }
+      .x-ab__kick { margin: 0 0 8px; font: 400 11px/1 ui-monospace, monospace; letter-spacing: .3em; color: var(--gold); }
+      .x-ab h2 { font-size: clamp(21px, 2.8vw, 30px); margin: 0 0 12px; letter-spacing: .06em; font-weight: 600; line-height: 1.35; }
+      .x-ab h3 { font-size: 14px; margin: 26px 0 12px; letter-spacing: .14em; color: var(--gold); font-weight: 500; }
+      .x-ab .lead { font-size: 14px; line-height: 1.95; color: rgba(234,240,255,.84); margin: 0 0 20px; max-width: 640px; }
+      .x-ab .lead b { color: var(--ink); font-weight: 600; }
+      .x-ab__chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+      .x-ab__chips li { border: 1px solid rgba(233,199,121,.32); color: var(--gold); border-radius: 999px; padding: 7px 14px; font-size: 13px; background: rgba(233,199,121,.05); }
+      .x-ab__chips li i { font-style: normal; font: 400 10.5px ui-monospace, monospace; opacity: .6; margin-right: 6px; }
+      .x-ab__worlds { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+      .x-ab__w { display: flex; gap: 12px; align-items: center; padding: 11px 14px; border-radius: 16px; border: 1px solid rgba(234,240,255,.1); color: var(--ink); text-decoration: none; background: rgba(234,240,255,.025); height: 100%; }
+      a.x-ab__w { border-color: rgba(234,240,255,.2); }
+      a.x-ab__w:hover, a.x-ab__w:focus-visible, .x-ab__br a:hover, .x-ab__br a:focus-visible { border-color: var(--accent); outline: none; background: rgba(234,240,255,.06); }
+      .x-ab__w img { width: 40px; height: 40px; border-radius: 50%; flex: none; }
+      .x-ab__w.soon img { filter: grayscale(.8) brightness(.55); }
+      .x-ab__w b { display: block; font-size: 14px; font-weight: 600; }
+      .x-ab__w small { display: block; font-size: 11.5px; color: var(--dim); line-height: 1.5; }
+      .x-ab__w em { font-style: normal; color: var(--accent); }
+      .x-ab__why { display: grid; grid-template-columns: minmax(220px, 300px) 1fr; gap: 26px; align-items: center; }
+      .x-ab__why svg { width: 100%; height: auto; display: block; }
+      .x-ab__path { list-style: none; display: grid; grid-template-columns: repeat(6, 1fr); padding: 0; margin: 0; }
+      .x-ab__path li { position: relative; text-align: center; padding: 28px 4px 0; }
+      .x-ab__path li i { position: absolute; top: 6px; left: 50%; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+      .x-ab__path li::before { content: ""; position: absolute; top: 12px; right: calc(50% + 10px); width: calc(100% - 20px); height: 1px; background: linear-gradient(90deg, rgba(233,199,121,.15), rgba(233,199,121,.6)); }
+      .x-ab__path li:first-child::before { display: none; }
+      .x-ab__path b { display: block; font-size: 14px; color: var(--accent); font-weight: 600; }
+      .x-ab__path small { display: block; font-size: 11px; color: var(--dim); margin: 2px 0 4px; }
+      .x-ab__path span { display: block; font-size: 12.5px; line-height: 1.6; color: rgba(234,240,255,.86); }
+      .x-ab__lang { margin: 16px 0 0; padding: 10px 16px; border-radius: 999px; text-align: center; font-size: 13px; color: #7cc8ff; border: 1px solid rgba(124,200,255,.35);
+        background: linear-gradient(90deg, rgba(124,200,255,0), rgba(124,200,255,.12), rgba(124,200,255,0)); }
+      .x-ab__note { font-size: 12.5px; line-height: 1.85; color: var(--dim); margin: 16px 0 0; }
+      .x-ab__br { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+      .x-ab__br li { display: grid; grid-template-columns: 1fr 28px 1fr; align-items: stretch; }
+      .x-ab__br .end { display: block; padding: 9px 12px; border-radius: 14px; border: 1px solid rgba(234,240,255,.1); background: rgba(234,240,255,.025); color: var(--ink); text-decoration: none; font-size: 13px; line-height: 1.55; }
+      .x-ab__br a.end { border-color: rgba(234,240,255,.22); }
+      .x-ab__br .end small { display: block; font-size: 11px; color: var(--accent); letter-spacing: .06em; }
+      .x-ab__br .end em { font-style: normal; font-size: 11px; color: var(--dim); margin-left: 4px; white-space: nowrap; }
+      .x-ab__br a.end em { color: var(--gold); }
+      .x-ab__br .x-ab__ar { display: grid; place-items: center; color: var(--gold); opacity: .75; font-size: 17px; }
+      .x-ab__eg { border-left: 2px solid var(--gold); padding: 4px 0 4px 14px; margin: 0 0 20px; font-size: 13.5px; line-height: 1.9; color: rgba(234,240,255,.84); max-width: 640px; }
+      .x-ab__foot { margin-top: 30px; padding-top: 16px; border-top: 1px solid rgba(233,199,121,.18); font-size: 12px; color: var(--dim); line-height: 1.8; display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: space-between; }
+      .x-ab__foot b { color: var(--gold); font-weight: 500; }
+      @media (max-width: 640px) {
+        .x-ab__wrap { padding: 76px 16px 28px; }
+        .x-ab__tabs { margin-bottom: 20px; }
+        .x-ab__tabs .btn { padding: 10px 14px; font-size: 12.5px; }
+        .x-ab__why { grid-template-columns: 1fr; gap: 8px; }
+        .x-ab__why svg { max-width: 300px; margin: 0 auto; }
+        .x-ab__worlds { grid-template-columns: 1fr 1fr; gap: 8px; }
+        .x-ab__w { padding: 10px; gap: 10px; }
+        .x-ab__w img { width: 32px; height: 32px; }
+        .x-ab__path { grid-template-columns: 1fr; }
+        .x-ab__path li { text-align: left; padding: 0 0 14px 30px; }
+        .x-ab__path li i { left: 6px; top: 5px; margin: 0; }
+        .x-ab__path li::before { top: -9px; left: 11.5px; right: auto; width: 1px; height: 14px; background: rgba(233,199,121,.5); }
+        .x-ab__path b, .x-ab__path small, .x-ab__path span { display: inline; margin: 0 6px 0 0; }
+        .x-ab__lang { border-radius: 16px; }
+        .x-ab__br li { grid-template-columns: 1fr 22px 1fr; }
+        .x-ab__br .end { padding: 8px 10px; font-size: 12.5px; }
+      }
       @media (prefers-reduced-motion: reduce) {
         * { transition-duration: .01ms !important; }
         .x-dot { animation: none; }
@@ -240,7 +334,7 @@
   </head>
   <body>
     <div id="stage">
-      <canvas id="sky"></canvas>
+      <canvas id="sky" tabindex="0" role="img" aria-label="北斗七星的真实三维位置，七颗星是七个世界的入口。拖动或用方向键旋转，滚轮或加减号缩放，按 0 或 Home 回到地球视角。"></canvas>
     </div>
     <div hidden id="srcImgs">
       <img data-w="01" src="world-01.webp" alt="" />
@@ -280,12 +374,17 @@
         <div class="acts">
           <button class="btn btn--solid" id="trailerBtn">▶ 观看宣传片</button>
           <button class="btn" id="bridgeBtn">展开星桥 ✦</button>
+          <button class="btn" id="aboutBtn" aria-haspopup="dialog">关于创世计划</button>
         </div>
       </div>
 
       <div class="foot">
         <span>免费 · 无需注册 · 进度只保存在你的设备上</span>
         <button id="lawBtn">创世七律</button>
+      </div>
+      <div class="x-3d" id="v3Box">
+        <p id="v3Note">北斗七星并不在同一平面：天枢距我们约 <b>123 光年</b>，天璇约 <b>80 光年</b>。拖动看看它们在太空中的真实位置。</p>
+        <button class="btn x-home" id="homeBtn" aria-keyshortcuts="Home 0">⟲ 回到地球视角</button>
       </div>
       <div class="demo-tag" id="demoTag">演示进度</div>
 
@@ -341,7 +440,7 @@
     <div class="toast" id="toast"></div>
 
     <div class="x-br" id="bridges" hidden role="dialog" aria-label="知识星桥">
-      <canvas id="brCv" role="img" aria-label="七团螺旋星系形态的知识星图，由十二条星桥相连"></canvas>
+      <canvas id="brCv" role="img" aria-label="七团螺旋星系形态的知识星图，由十四条星桥相连"></canvas>
       <button class="btn x-br__back" id="brBack">← 回到北斗</button>
       <div class="x-br__top">
         <input class="x-br__search" id="brSearch" type="search" placeholder="搜索世界或问题…" aria-label="搜索世界或问题" autocomplete="off" />
@@ -365,6 +464,55 @@
         <ol id="logList"></ol>
       </section>
       <aside class="card" id="logCard" aria-live="polite"></aside>
+    </div>
+
+    <div class="x-ab" id="about" hidden role="dialog" aria-modal="true" aria-label="关于创世计划">
+      <button class="btn x-br__back" id="abBack">← 回到北斗</button>
+      <div class="x-ab__in">
+        <div class="x-ab__wrap">
+          <div class="x-ab__tabs" role="tablist" aria-label="关于创世计划">
+            <button class="btn" role="tab" id="abT0" aria-controls="abP0" aria-selected="true">是什么</button>
+            <button class="btn" role="tab" id="abT1" aria-controls="abP1" aria-selected="false" tabindex="-1">为什么是七颗星</button>
+            <button class="btn" role="tab" id="abT2" aria-controls="abP2" aria-selected="false" tabindex="-1">世界怎么相连</button>
+          </div>
+          <section class="x-ab__pane" role="tabpanel" id="abP0" aria-labelledby="abT0">
+            <p class="x-ab__kick">GENESIS · 01</p>
+            <h2>把世界当成一款游戏来拆解</h2>
+            <p class="lead">创世计划是<b>七个互相连通的学习世界</b>。每个世界都从一个让人忍不住想知道答案的真实问题出发，让你亲手把规则拆开、改动、再装回去。</p>
+            <ul class="x-ab__chips">
+              <li>不按年级</li><li>问题先行</li><li>向导只提问，不给答案</li><li>免费 · 免注册</li><li>不刷题 · 不排名</li>
+            </ul>
+            <h3>七个世界</h3>
+            <ul class="x-ab__worlds" id="abWorlds"></ul>
+          </section>
+          <section class="x-ab__pane" role="tabpanel" id="abP1" aria-labelledby="abT1" hidden>
+            <p class="x-ab__kick">GENESIS · 02</p>
+            <h2>北斗七星，夜空里的指路者</h2>
+            <div class="x-ab__why">
+              <svg id="abDipper" viewBox="0 0 300 190" role="img" aria-label="从地球看到的北斗七星，七颗星对应七个世界"></svg>
+              <div>
+                <p class="lead" style="margin-bottom:14px">北斗七星自古为人指路。七颗星对应七个世界，也对应每个世界都遵守的「创世七律」：</p>
+                <ol class="x-ab__chips" id="abLaws"></ol>
+              </div>
+            </div>
+            <h3>从宇宙到心智的一条路</h3>
+            <ol class="x-ab__path" id="abPath"></ol>
+            <div class="x-ab__lang">星图 · 数学 —— 贯穿所有世界的语言</div>
+            <p class="x-ab__note">天枢是北斗第一星，也是第一个看向真实天空的世界。</p>
+          </section>
+          <section class="x-ab__pane" role="tabpanel" id="abP2" aria-labelledby="abT2" hidden>
+            <p class="x-ab__kick">GENESIS · 03</p>
+            <h2>一个问题，走进另一个世界</h2>
+            <p class="x-ab__eg" id="abEg"></p>
+            <ul class="x-ab__br" id="abBridges"></ul>
+            <p style="margin:20px 0 0"><button class="btn btn--solid" id="abToBridges">在知识星桥里看 ✦</button></p>
+          </section>
+          <footer class="x-ab__foot">
+            <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
+            <span>创世计划总门户 <b>v0.3</b></span>
+          </footer>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -429,7 +577,7 @@
       var WORLDS = [
         { id: "01", star: "天璇", name: "星图", en: "Math Atlas", field: "数学",
           desc: "用问题点亮知识星。", color: "#7cc8ff", live: true,
-          meta: ["已上线 v0.7", "8 个任务 45 关", "197 颗知识星"], href: "math-atlas/",
+          meta: ["已上线 v0.7", "10 个任务 55 关", "197 颗知识星"], href: "math-atlas/",
           prefix: ["ma:v1:", "gn:ma:"] },
         { id: "02", star: "天玑", name: "宙律", en: "Nomoverse", field: "物理",
           desc: "改写物理常数，看宇宙怎么变。", color: "#a78bfa", live: false,
@@ -460,6 +608,172 @@
       // 真实连法：斗口闭合四边形 + 斗柄
       var LINKS = [["07", "01"], ["01", "02"], ["02", "03"], ["03", "07"], ["03", "04"], ["04", "05"], ["05", "06"]];
       var byId = {}; WORLDS.forEach(function (w) { byId[w.id] = w; });
+
+      /* ---------- v0.3 北斗七星真实 3D 位置 ----------
+       * 数据来源：赤经/赤纬（ICRS，历元 J2000）与三角视差取自 Hipparcos 新归算
+       *   van Leeuwen F. (2007) A&A 474, 653「Validation of the new Hipparcos reduction」，
+       *   经英文维基百科各星条目信息框核对（2026-10-19）；开阳取 ζ UMa A 的 Hipparcos 值。
+       *   距离（光年）= 3261.56 / 视差（毫角秒）。
+       *   07 天枢 Dubhe  α UMa 11h03m43.67s +61°45′03.7″ 26.54 mas ≈ 122.9 ly
+       *   01 天璇 Merak  β UMa 11h01m50.48s +56°22′56.7″ 40.90 mas ≈  79.7 ly
+       *   02 天玑 Phecda γ UMa 11h53m49.85s +53°41′41.1″ 39.21 mas ≈  83.2 ly
+       *   03 天权 Megrez δ UMa 12h15m25.56s +57°01′57.4″ 40.51 mas ≈  80.5 ly
+       *   04 玉衡 Alioth ε UMa 12h54m01.75s +55°57′35.4″ 39.51 mas ≈  82.6 ly
+       *   05 开阳 Mizar  ζ UMa 13h23m55.54s +54°55′31.3″ 39.36 mas ≈  82.9 ly
+       *   06 摇光 Alkaid η UMa 13h47m32.44s +49°18′47.8″ 31.38 mas ≈ 103.9 ly
+       * 坐标：以地球（太阳）为原点的赤道直角坐标，单位光年。 */
+      var STAR3D = {
+        "07": [11, 3, 43.67152, 61, 45, 3.7249, 26.54], "01": [11, 1, 50.47654, 56, 22, 56.7339, 40.90],
+        "02": [11, 53, 49.84732, 53, 41, 41.1350, 39.21], "03": [12, 15, 25.56063, 57, 1, 57.4156, 40.51],
+        "04": [12, 54, 1.74959, 55, 57, 35.3627, 39.51], "05": [13, 23, 55.54048, 54, 55, 31.2671, 39.36],
+        "06": [13, 47, 32.43776, 49, 18, 47.7602, 31.38]
+      };
+      function v3dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+      function v3cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+      function v3norm(a) { var l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; }
+      var S3 = (function () {
+        var P = {}, C = [0, 0, 0], RAD = Math.PI / 180;
+        ORDER.forEach(function (id) {
+          var d = STAR3D[id], ra = (d[0] + d[1] / 60 + d[2] / 3600) * 15 * RAD, de = (d[3] + d[4] / 60 + d[5] / 3600) * RAD, ly = 3261.56 / d[6];
+          P[id] = [ly * Math.cos(de) * Math.cos(ra), ly * Math.cos(de) * Math.sin(ra), ly * Math.sin(de)];
+          byId[id].ly = ly;
+          for (var k = 0; k < 3; k++) C[k] += P[id][k] / 7;
+        });
+        // 默认相机：在地球（原点）朝七星质心看；右 = 天球西，上 = 天球北（与仰望夜空所见一致，不做镜像）
+        var D0 = Math.hypot(C[0], C[1], C[2]), f = v3norm(C), r = v3norm(v3cross(f, [0, 0, 1])), u = v3cross(r, f);
+        return { P: P, C: C, D0: D0, f: f, r: r, u: u };
+      })();
+      // 四元数 [w,x,y,z]（相机坐标系：x 屏幕右，y 屏幕上，z 视线向前）
+      function qMul(a, b) {
+        return [a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3], a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2],
+          a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1], a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0]];
+      }
+      function qAxis(x, y, z, ang) { var h = ang / 2, s = Math.sin(h); return [Math.cos(h), x * s, y * s, z * s]; }
+      function qNorm(q) { var l = Math.hypot(q[0], q[1], q[2], q[3]) || 1; return [q[0] / l, q[1] / l, q[2] / l, q[3] / l]; }
+      function qMat(q) {
+        var w = q[0], x = q[1], y = q[2], z = q[3];
+        return [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y),
+          2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x),
+          2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)];
+      }
+      function qSlerpId(q, t) { // q → 单位四元数
+        var a = q[0] < 0 ? [-q[0], -q[1], -q[2], -q[3]] : q, th = Math.acos(Math.min(1, a[0]));
+        if (th < 1e-5) return [1, 0, 0, 0];
+        var s = Math.sin(th), k0 = Math.sin((1 - t) * th) / s, k1 = Math.sin(t * th) / s;
+        return qNorm([a[0] * k0 + k1, a[1] * k0, a[2] * k0, a[3] * k0]);
+      }
+      // 视图状态：q 旋转、D 相机到质心距离（光年），D = D0 且 q = 单位 时即「地球视角」
+      var V3 = { q: [1, 0, 0, 0], D: S3.D0, s: 1, cx: 0, cy: 0, R: 30, th: 0, vx: 0, vy: 0, ptrs: {}, drag: null, pinch: null,
+        anim: null, off: false, lyK: 0, earth: null };
+      var V3_ZMIN = 0.62, V3_ZMAX = 2.4;
+      var homeBtn = document.getElementById("homeBtn"), v3Box = document.getElementById("v3Box");
+      // 只绕视线旋转（不镜像）：在「斗口中心→摇光」方向与原构图相差 ≤ 30° 的角度里，选最能撑满 tw×th 框的一个
+      function bestRoll(p, tw, tht, tdir) {
+        function rotBox(th) {
+          var c = Math.cos(th), sn = Math.sin(th), bb = [1e9, 1e9, -1e9, -1e9], q = {};
+          ORDER.forEach(function (id) {
+            var x = c * p[id][0] - sn * p[id][1], y = sn * p[id][0] + c * p[id][1]; q[id] = [x, y];
+            bb = [Math.min(bb[0], x), Math.min(bb[1], y), Math.max(bb[2], x), Math.max(bb[3], y)];
+          });
+          var bx = (q["07"][0] + q["01"][0] + q["02"][0] + q["03"][0]) / 4, by = (q["07"][1] + q["01"][1] + q["02"][1] + q["03"][1]) / 4;
+          var dd = Math.atan2(q["06"][1] - by, q["06"][0] - bx) - tdir; dd = Math.atan2(Math.sin(dd), Math.cos(dd));
+          return { th: th, q: q, bb: bb, sc: Math.min(tw / (bb[2] - bb[0]), tht / (bb[3] - bb[1])), dd: Math.abs(dd) };
+        }
+        var best = null;
+        for (var deg = -180; deg < 180; deg += 1) {
+          var cand = rotBox(deg * Math.PI / 180);
+          if (cand.dd <= 0.52 && (!best || cand.sc > best.sc)) best = cand;
+        }
+        return best || rotBox(0);
+      }
+      function earthView2D() { // 地球视角下的针孔投影（屏幕 x 右 = 西，y 下 = 南）
+        var p = {}; ORDER.forEach(function (id) { var q = S3.P[id], z = v3dot(q, S3.f); p[id] = [v3dot(q, S3.r) / z, -v3dot(q, S3.u) / z]; }); return p;
+      }
+      // 把默认（地球）视角的投影，用「绕视线旋转 + 等比缩放 + 平移」放进原 2D 构图框 T（不镜像）
+      function fit3D(T) {
+        var p = earthView2D(), f = S3.f, r = S3.r, u = S3.u;
+        var tbb = [1e9, 1e9, -1e9, -1e9];
+        ORDER.forEach(function (id) { tbb = [Math.min(tbb[0], T[id][0]), Math.min(tbb[1], T[id][1]), Math.max(tbb[2], T[id][0]), Math.max(tbb[3], T[id][1])]; });
+        var best = bestRoll(p, tbb[2] - tbb[0], tbb[3] - tbb[1], Math.atan2(T["06"][1] - T["07"][1], T["06"][0] - T["07"][0]));
+        var th = best.th, c = Math.cos(th), sn = Math.sin(th), bb = best.bb, sc = best.sc;
+
+        V3.th = th; V3.s = sc;
+        V3.cx = (tbb[0] + tbb[2]) / 2 - sc * (bb[0] + bb[2]) / 2; V3.cy = (tbb[1] + tbb[3]) / 2 - sc * (bb[1] + bb[3]) / 2;
+        // 屏幕对齐的相机基：右 Rs = c·r + s·u，上 Us = c·u − s·r
+        var Rs = [c * r[0] + sn * u[0], c * r[1] + sn * u[1], c * r[2] + sn * u[2]], Us = [c * u[0] - sn * r[0], c * u[1] - sn * r[1], c * u[2] - sn * r[2]];
+        WORLDS.forEach(function (w) {
+          var P = S3.P[w.id], q = [P[0] - S3.C[0], P[1] - S3.C[1], P[2] - S3.C[2]];
+          w.a3 = [v3dot(q, Rs), v3dot(q, Us), v3dot(q, f)]; w.z0 = w.a3[2] + S3.D0;
+        });
+      }
+      function proj3D() {
+        var m = qMat(V3.q), D = V3.D;
+        WORLDS.forEach(function (w) {
+          var a = w.a3, bx = m[0] * a[0] + m[1] * a[1] + m[2] * a[2], by = m[3] * a[0] + m[4] * a[1] + m[5] * a[2],
+            z = Math.max(6, m[6] * a[0] + m[7] * a[1] + m[8] * a[2] + D);
+          w.x = V3.cx + V3.s * bx / z; w.y = V3.cy - V3.s * by / z; w.z = z;
+          w.r = V3.R * Math.max(0.5, Math.min(1.8, Math.pow(w.z0 / z, 0.8)));
+        });
+        // 地球：相对质心 (0,0,−D0)
+        var ex = -S3.D0 * m[2], ey = -S3.D0 * m[5], ez = -S3.D0 * m[8] + D;
+        V3.earth = { x: V3.cx + V3.s * ex / Math.max(ez, 1e-3), y: V3.cy - V3.s * ey / Math.max(ez, 1e-3), z: ez, dx: ex, dy: -ey };
+        var ang = 2 * Math.acos(Math.min(1, Math.abs(V3.q[0]))), off = ang > 0.015 || Math.abs(D - S3.D0) / S3.D0 > 0.015;
+        if (off !== V3.off) { V3.off = off; homeBtn.classList.toggle("on", off); v3Box.classList.toggle("off", off); }
+      }
+      /* 星名避让：近的星优先；依次尝试 下 / 上 / 右 / 左，避开其他星、已放好的星名和界面文字 */
+      var uiRects = [], uiRectT = 0, txtW = {};
+      function measure(t, font) { var k = font + t; if (!txtW[k]) { ctx.font = font; txtW[k] = ctx.measureText(t).width; } return txtW[k]; }
+      function layoutLabels() {
+        if (performance.now() - uiRectT > 500) {
+          uiRectT = performance.now();
+          uiRects = [].map.call(document.querySelectorAll(".titleblock, .brand, .passport-btn, .foot, .x-3d p, .x-home.on"), function (el) {
+            var r = el.getBoundingClientRect(); return r.width && getComputedStyle(el).visibility !== "hidden" ? [r.left - 4, r.top - 4, r.right + 4, r.bottom + 4] : null;
+          }).filter(Boolean);
+        }
+        var placed = [], list = WORLDS.slice().sort(function (a, b) { return a.z - b.z; });
+        list.forEach(function (w) {
+          var r = w.r, x = w.x, y = w.y;
+          var tw = Math.max(measure(w.id + " " + w.name, "500 13px " + FONT), measure(V3.off ? w.star + " · 约 " + Math.round(w.ly) + " 光年" : "Awakening Soon", "400 10.5px " + FONT)) + 6;
+          var c = [
+            [x - tw / 2, y + r * 2 + 1, x + tw / 2, y + r * 2 + 34],
+            [x - tw / 2, y - r * 1.85 - 35, x + tw / 2, y - r * 1.85 - 2],
+            [x + r * 1.5, y - 16, x + r * 1.5 + tw, y + 17],
+            [x - r * 1.5 - tw, y - 16, x - r * 1.5, y + 17]
+          ];
+          var best = 0, bestBad = 1e9;
+          for (var i = 0; i < 4; i++) {
+            var b = c[i], bad = 0;
+            if (b[0] < 0 || b[2] > W || b[1] < 0 || b[3] > H) bad += 50;
+            WORLDS.forEach(function (o) { var k = o.r * 0.85; if (o !== w && o.x + k > b[0] && o.x - k < b[2] && o.y + k > b[1] && o.y - k < b[3]) bad += 10; });
+            placed.concat(uiRects).forEach(function (o) { if (b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]) bad += 8; });
+            if (bad < bestBad) { bestBad = bad; best = i; }
+            if (!bad) break;
+          }
+          w.side = best; placed.push(c[best]);
+        });
+      }
+      function rot3D(dx, dy) {
+        var k = 0.0048;
+        V3.q = qNorm(qMul(qAxis(1, 0, 0, -dy * k), qMul(qAxis(0, 1, 0, -dx * k), V3.q)));
+      }
+      function zoom3D(f) { V3.anim = null; V3.D = Math.max(S3.D0 * V3_ZMIN, Math.min(S3.D0 * V3_ZMAX, V3.D * f)); }
+      function home3D() {
+        V3.vx = V3.vy = 0;
+        if (RM) { V3.anim = null; V3.q = [1, 0, 0, 0]; V3.D = S3.D0; }
+        else V3.anim = { q: V3.q.slice(), D: V3.D, t: 0 };
+      }
+      function step3D(dt) {
+        if (V3.anim) {
+          var A = V3.anim; A.t = Math.min(1, A.t + dt / 0.9);
+          var e = A.t < 0.5 ? 4 * A.t * A.t * A.t : 1 - Math.pow(-2 * A.t + 2, 3) / 2;
+          V3.q = qSlerpId(A.q, e); V3.D = A.D + (S3.D0 - A.D) * e;
+          if (A.t >= 1) { V3.anim = null; V3.q = [1, 0, 0, 0]; V3.D = S3.D0; }
+        } else if (!V3.drag && !V3.pinch && (V3.vx || V3.vy)) {
+          rot3D(V3.vx, V3.vy); V3.vx *= 0.92; V3.vy *= 0.92;
+          if (Math.abs(V3.vx) + Math.abs(V3.vy) < 0.05) V3.vx = V3.vy = 0;
+        }
+        V3.lyK += ((V3.off ? 1 : 0) - V3.lyK) * (RM ? 1 : Math.min(1, dt * 6));
+      }
 
       var demo = location.hash.indexOf("demo") > -1;
       function hasProgress(w) {
@@ -501,28 +815,31 @@
         var short = !portrait && H <= 480;
         var sTop = Math.max(72, R * 1.5 + 12);
         var sSpan = Math.max(40, H - R * 2 - 34 - 62 - sTop);
+        var T = {};
         WORLDS.forEach(function (w) {
           var d = DIPPER[w.id], x, y;
           if (short) {
             x = W * 0.46 + d[0] * (W * 0.54 - 80);
             y = sTop + d[1] * sSpan;
           } else if (portrait) {
+            // v0.3：竖屏为底部的 3D 说明留出空间
             x = W * (0.82 - d[1] * 0.62);
-            y = H * (0.30 + d[0] * 0.52);
+            y = H * (0.38 + d[0] * 0.38);
           } else {
             x = W * (0.17 + d[0] * 0.62);
             y = H * 0.17 + d[1] * spanY;
           }
-          w.x = x; w.y = y; w.r = R;
+          T[w.id] = [x, y];
           var was = w.lit; w.lit = hasProgress(w);
           if (was === false && w.lit) SND.play("unlock");
         });
+        V3.R = R; fit3D(T); proj3D();
       }
       addEventListener("resize", resize);
 
       addEventListener("pointermove", function (e) {
         mx = (e.clientX / W - 0.5); my = (e.clientY / H - 0.5);
-        if (e.pointerType === "mouse" && e.target === cv) hoverTest(e.clientX, e.clientY);
+        if (e.pointerType === "mouse" && e.target === cv && !(V3.drag && V3.drag.moved) && !V3.pinch) hoverTest(e.clientX, e.clientY);
       });
 
       /* ---------- 开场 ---------- */
@@ -536,12 +853,65 @@
       function onSkip() { if (!intro.done) finishIntro(); }
       addEventListener("keydown", function (e) {
         if (!intro.done) { onSkip(); return; }
-        if (e.key === "Escape") { if (LG.open) { hideLog(); return; } if (BR.open) { hideBridges(); return; } closeAll(); }
-        if (LG.open) return;
+        if (e.key === "Escape") { if (AB.open) { hideAbout(); return; } if (LG.open) { hideLog(); return; } if (BR.open) { hideBridges(); return; } closeAll(); }
+        if (LG.open || AB.open) return;
+        // v0.3：键盘操作 3D 北斗（无弹层、焦点不在输入框/链接时）
+        if (!BR.open && !scrim.classList.contains("on") && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT|A)$/.test(e.target.tagName)) {
+          var K = { ArrowLeft: [-18, 0], ArrowRight: [18, 0], ArrowUp: [0, -18], ArrowDown: [0, 18] }[e.key];
+          if (K) { e.preventDefault(); V3.anim = null; V3.vx = V3.vy = 0; rot3D(K[0], K[1]); selected = hovered = null; hideCard(); return; }
+          if (e.key === "Home" || e.key === "0") { e.preventDefault(); home3D(); return; }
+          if (e.key === "+" || e.key === "=") { zoom3D(1 / 1.12); return; }
+          if (e.key === "-" || e.key === "_") { zoom3D(1.12); return; }
+        }
         if ((e.key === "n" || e.key === "N") && !e.ctrlKey && !e.metaKey && !e.altKey && !/INPUT|TEXTAREA/.test(e.target.tagName)) { showLog(); return; }
         if (e.key === "d" || e.key === "D") toggleDemo();
       });
-      cv.addEventListener("pointerdown", function (e) { if (!intro.done) { onSkip(); return; } clickTest(e.clientX, e.clientY); });
+      /* v0.3：拖动旋转 / 双指缩放 / 点按（移动 < 6px）才算点击 */
+      cv.addEventListener("pointerdown", function (e) {
+        if (!intro.done) { onSkip(); return; }
+        if (e.pointerType === "mouse") e.preventDefault(); // 拖动时不选中页面文字
+        try { cv.setPointerCapture(e.pointerId); } catch (er) {}
+        V3.ptrs[e.pointerId] = { x: e.clientX, y: e.clientY }; V3.anim = null; V3.vx = V3.vy = 0;
+        var ids = Object.keys(V3.ptrs);
+        if (ids.length === 2) {
+          var a = V3.ptrs[ids[0]], b = V3.ptrs[ids[1]];
+          V3.pinch = { d: Math.hypot(a.x - b.x, a.y - b.y) }; V3.drag = null;
+          selected = hovered = null; hideCard();
+        } else if (ids.length === 1) V3.drag = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, moved: false, t: performance.now() };
+      });
+      cv.addEventListener("pointermove", function (e) {
+        if (!V3.ptrs[e.pointerId]) return;
+        V3.ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
+        if (V3.pinch) {
+          var ids = Object.keys(V3.ptrs); if (ids.length < 2) return;
+          var a = V3.ptrs[ids[0]], b = V3.ptrs[ids[1]], d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (d > 0 && V3.pinch.d > 0) zoom3D(V3.pinch.d / d);
+          V3.pinch.d = d; return;
+        }
+        var g = V3.drag; if (!g) return;
+        if (!g.moved) {
+          if (Math.hypot(e.clientX - g.sx, e.clientY - g.sy) < 6) return;
+          g.moved = true; selected = hovered = null; hideCard(); cv.style.cursor = "grabbing";
+        }
+        var dx = e.clientX - g.x, dy = e.clientY - g.y;
+        rot3D(dx, dy); V3.vx = dx; V3.vy = dy; g.x = e.clientX; g.y = e.clientY; g.t = performance.now();
+      });
+      function v3Up(e) {
+        if (!V3.ptrs[e.pointerId]) return;
+        var g = V3.drag; delete V3.ptrs[e.pointerId];
+        if (V3.pinch) { if (Object.keys(V3.ptrs).length < 2) { V3.pinch = null; V3.vx = V3.vy = 0; } return; }
+        V3.drag = null; if (!g) return;
+        cv.style.cursor = "";
+        if (!g.moved) { V3.vx = V3.vy = 0; if (e.type === "pointerup") clickTest(e.clientX, e.clientY); }
+        else if (RM || performance.now() - g.t > 90) V3.vx = V3.vy = 0;
+      }
+      cv.addEventListener("pointerup", v3Up);
+      cv.addEventListener("pointercancel", v3Up);
+      cv.addEventListener("wheel", function (e) {
+        e.preventDefault(); if (!intro.done) return;
+        zoom3D(Math.exp(Math.max(-60, Math.min(60, e.deltaY)) * 0.004));
+      }, { passive: false });
+      homeBtn.addEventListener("click", function () { home3D(); cv.focus({ preventScroll: true }); });
 
       function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
 
@@ -549,13 +919,18 @@
       var selected = null, hovered = null, t0 = performance.now();
 
       function draw(now) {
-        var dt = (now - t0) / 1000; t0 = now;
+        // v0.3 修复：rAF 时间戳可能早于脚本里的 t0，dt 为负会让开场进度为负、光核半径为负而报错（减少动态模式下必现概率高）
+        var dt = Math.max(0, (now - t0) / 1000); t0 = now;
         if (!intro.done) {
           intro.t += dt;
           if (intro.t >= intro.dur) { intro.t = intro.dur; intro.done = true; revealUI(); SND.play("whoosh"); }
         }
         px += ((mx * 16) - px) * 0.05; py += ((my * 12) - py) * 0.05;
         var T = now / 1000;
+        step3D(Math.min(dt, 0.1)); proj3D(); if (intro.done) layoutLabels();
+        // 背景星随旋转缓慢平移，增强「转身」感
+        var bgx = 0, bgy = 0;
+        if (V3.off || V3.anim) { var mq = qMat(V3.q); bgx = mq[2] * W * 0.25; bgy = -mq[5] * H * 0.25; }
 
         // 背景
         var g = ctx.createRadialGradient(W * 0.5, H * 0.45, 0, W * 0.5, H * 0.45, Math.max(W, H) * 0.8);
@@ -573,7 +948,9 @@
             ctx.globalAlpha = s.a * tw * (intro.done ? 1 : Math.min(1, intro.t / 0.6));
             ctx.fillStyle = L === 2 ? "#e9c779" : "#dfe6f3";
             ctx.beginPath();
-            ctx.arc(s.x + px * k, s.y + py * k, s.r, 0, 6.2832);
+            var sxx = s.x + px * k + bgx * k, syy = s.y + py * k + bgy * k;
+            if (bgx || bgy) { sxx = ((sxx % W) + W) % W; syy = ((syy % H) + H) % H; }
+            ctx.arc(sxx, syy, s.r, 0, 6.2832);
             ctx.fill();
           }
         }
@@ -598,12 +975,45 @@
         // 连线
         drawLinks(T, intro.done ? 1 : lineP);
 
-        // 星球
-        for (var n = 0; n < WORLDS.length; n++) drawPlanet(WORLDS[n], T, fly, p);
+        // 地球与视线（离开地球视角后）
+        if (intro.done && V3.lyK > 0.01) drawEarth(V3.lyK);
+
+        // 星球：由远及近绘制
+        var drawList = WORLDS.slice().sort(function (a, b) { return b.z - a.z; });
+        for (var n = 0; n < drawList.length; n++) drawPlanet(drawList[n], T, fly, p);
 
         requestAnimationFrame(draw);
       }
       function clamp(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+      var FONT = '"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif';
+      function drawEarth(k) {
+        var E = V3.earth, M = 46, on = E.z > 4 && E.x > M && E.x < W - M && E.y > 90 && E.y < H - 90;
+        ctx.save(); ctx.font = "400 11px " + FONT; ctx.textAlign = "center";
+        if (on) {
+          ctx.setLineDash([2, 6]); ctx.lineWidth = 1; ctx.strokeStyle = "rgba(124,200,255," + (0.22 * k) + ")";
+          WORLDS.forEach(function (w) { ctx.beginPath(); ctx.moveTo(E.x, E.y); ctx.lineTo(w.px || w.x, w.py || w.y); ctx.stroke(); });
+          ctx.setLineDash([]);
+          var g = ctx.createRadialGradient(E.x, E.y, 0, E.x, E.y, 12);
+          g.addColorStop(0, "rgba(160,215,255," + k + ")"); g.addColorStop(1, "rgba(124,200,255,0)");
+          ctx.fillStyle = g; ctx.beginPath(); ctx.arc(E.x, E.y, 12, 0, 6.2832); ctx.fill();
+          ctx.fillStyle = "rgba(200,230,255," + k + ")"; ctx.beginPath(); ctx.arc(E.x, E.y, 3, 0, 6.2832); ctx.fill();
+          ctx.globalAlpha = 0.85 * k; ctx.fillText("地球", E.x, E.y + 22);
+        } else {
+          var dx = E.dx, dy = E.dy, l = Math.hypot(dx, dy);
+          if (l > 1e-3) {
+            dx /= l; dy /= l;
+            var cx = W / 2, cy = H / 2, hw = W / 2 - M, hh = H / 2 - 96, t = Math.min(Math.abs(hw / (dx || 1e-6)), Math.abs(hh / (dy || 1e-6)));
+            var ax = cx + dx * t, ay = cy + dy * t;
+            ctx.globalAlpha = 0.75 * k; ctx.fillStyle = "rgba(160,215,255,1)";
+            ctx.translate(ax, ay); ctx.rotate(Math.atan2(dy, dx));
+            ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-5, -6); ctx.lineTo(-2, 0); ctx.lineTo(-5, 6); ctx.closePath(); ctx.fill();
+            ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+            var tx = Math.max(40, Math.min(W - 40, ax - dx * 6)), ty2 = ay + (dy > 0.5 ? -16 : 22);
+            ctx.fillText("地球方向", tx, ty2);
+          }
+        }
+        ctx.restore();
+      }
 
       function dimOf(w) {
         if (!selected && !hovered) return 1;
@@ -647,9 +1057,9 @@
       // 辉光 sprite：以 base 半径 r 生成，外径 r*outerK；返回 {c, k}
       function glowSprite(w) {
         var outerK = w.lit ? 3.1 : 2.3;
-        var key = w.id + (w.lit ? "L" : "") + Math.round(w.r * DPR);
+        var key = w.id + (w.lit ? "L" : "") + Math.round(V3.R * DPR);
         if (glowCache[key]) return glowCache[key];
-        var rr = w.r * DPR * 1.1, half = Math.ceil(rr * outerK), c = mkCanvas(half * 2, half * 2), g = c.getContext("2d");
+        var rr = V3.R * DPR * 1.1, half = Math.ceil(rr * outerK), c = mkCanvas(half * 2, half * 2), g = c.getContext("2d");
         var rg = g.createRadialGradient(half, half, rr * 0.5, half, half, rr * outerK);
         rg.addColorStop(0, hexA(w.color, 0.38)); rg.addColorStop(1, hexA(w.color, 0));
         g.fillStyle = rg; g.fillRect(0, 0, half * 2, half * 2);
@@ -735,15 +1145,25 @@
         // 文字
         if (e > 0.9 && (intro.done || p > 0.9)) {
           var fade = clamp((e - 0.9) / 0.1) * dim;
-          ctx.textAlign = "center";
+          var sd = w.side || 0, lx = sd === 2 ? x + r * 1.5 : sd === 3 ? x - r * 1.5 : x;
+          ctx.textAlign = sd === 2 ? "left" : sd === 3 ? "right" : "center";
           ctx.globalAlpha = fade * (alive ? 0.95 : 0.6);
           ctx.fillStyle = "#eaf0ff";
           ctx.font = "500 13px " + '"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif';
-          ctx.fillText(w.id + " " + w.name, x, y + r * 2.0 + 14);
+          var ly1 = sd === 1 ? y - r * 1.85 - 22 : sd >= 2 ? y - 3 : y + r * 2.0 + 14, ly2 = ly1 + 16;
+          ctx.fillText(w.id + " " + w.name, lx, ly1);
           ctx.font = "400 10.5px " + '"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif';
           ctx.globalAlpha = fade * 0.6;
           ctx.fillStyle = alive ? (w.lit ? "#e9c779" : "rgba(234,240,255,.65)") : "rgba(234,240,255,.5)";
-          ctx.fillText(alive ? (w.lit ? "你已点亮" : w.star) : "Awakening Soon", x, y + r * 2.0 + 30);
+          var lk = V3.lyK;
+          if (lk < 0.99) {
+            ctx.globalAlpha = fade * 0.6 * (1 - lk);
+            ctx.fillText(alive ? (w.lit ? "你已点亮" : w.star) : "Awakening Soon", lx, ly2);
+          }
+          if (lk > 0.01) {
+            ctx.globalAlpha = Math.max(fade, 0.5) * 0.9 * lk; ctx.fillStyle = "#e9c779";
+            ctx.fillText(w.star + " · 约 " + Math.round(w.ly) + " 光年", lx, ly2);
+          }
           ctx.globalAlpha = 1;
         }
         w.px = x; w.py = y; w.pr = r;
@@ -756,13 +1176,14 @@
 
       /* ---------- 交互 ---------- */
       function pick(cx, cy) {
+        var best = null;
         for (var i = 0; i < WORLDS.length; i++) {
           var w = WORLDS[i];
           if (w.px == null) continue;
           var d = Math.hypot(cx - w.px, cy - w.py);
-          if (d < Math.max(w.pr * 1.5, 26)) return w;
+          if (d < Math.max(w.pr * 1.5, 26) && (!best || w.z < best.z)) best = w; // 重叠时取离相机近的
         }
-        return null;
+        return best;
       }
       function hoverTest(x, y) {
         if (!intro.done || selected) return;
@@ -850,7 +1271,7 @@
 
       /* ---------- 知识星桥 ---------- */
       var BR_COUNT = { "01": 197, "05": 30, "07": 40 };
-      /* 星桥 v0.1.2：每端 { w 世界码, id 系列星桥 ID「世界码.任务id」, title 任务标题, href 链接（未上线为 null）, label 可选按钮文字 } */
+      /* 星桥 v0.3（14 座）：每端 { w 世界码, id 系列星桥 ID「世界码.任务id」, title 任务标题, href 链接（未上线为 null）, label 可选按钮文字 } */
       var BRIDGES = [
         { a: { w: "01", id: "ma.chord", title: "为什么有的和弦好听", href: "math-atlas/chord/" },
           b: { w: "02", id: "nv.sound", title: "声波与共振", href: null } },
@@ -875,7 +1296,11 @@
         { a: { w: "07", id: "sh.sats", title: "天上到底有多少颗卫星？", href: "starhelm/", label: "去天枢 →" },
           b: { w: "05", id: "ps.sats", title: "AI 与卫星数据", href: "pre-singularity/" } },
         { a: { w: "07", id: "sh.quakes", title: "地震在告诉我们什么？", href: "starhelm/", label: "去天枢 →" },
-          b: { w: "03", id: "ef.rocks", title: "岩石与矿物", href: null } }
+          b: { w: "03", id: "ef.rocks", title: "岩石与矿物", href: null } },
+        { a: { w: "01", id: "ma.rocket", title: "火箭怎样飞上月球？", href: "math-atlas/rocket/" },
+          b: { w: "07", id: "sh.orbit", title: "空间站为什么掉不下来？", href: "starhelm/", label: "去天枢 →" } },
+        { a: { w: "01", id: "ma.cube", title: "魔方为什么能复原？", href: "math-atlas/cube/" },
+          b: { w: "03", id: "ef.crystal", title: "晶体为什么那么整齐？", href: null } }
       ];
       // 同一对世界之间有多座桥时，让弧线错开，避免重叠
       (function () {
@@ -1159,7 +1584,7 @@
       addEventListener("resize", function () { if (BR.open) brResize(); });
 
       function showBridges() {
-        if (BR.open) return;
+        if (BR.open || AB.open) return;
         closeAll();
         if (!BR.worlds) buildWorlds();
         BR.open = true; BR.pin = BR.hover = -1; BR.shown = -2; BR.el.hidden = false; brResize();
@@ -1211,6 +1636,8 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.3", d: "2026-10-19", t: "北斗七星改为真实 3D 位置，可拖动从不同角度观察；新增「创世计划说明」。" },
+        { w: "01", v: "v0.7", d: "2026-10-19", t: "新任务「火箭怎样飞上月球？」「魔方为什么能复原？」，共 10 个任务。" },
         { w: "gn", v: "v0.2", d: "2026-10-19", t: "新增「星历」更新公告；原创背景音乐「创世星海」与七星音阶交互音效（默认关闭，右上角开启）。" },
         { w: "gn", v: "v0.1.2", d: "2026-10-18", t: "12 座知识星桥对齐各世界真实任务，系列星桥 ID 上线（如 ma.cat ⇄ ps.cat）。" },
         { w: "gn", v: "v0.1.1", d: "2026-10-18", t: "世界入口改为新窗口打开；横屏小屏布局优化；分享卡片。" },
@@ -1241,8 +1668,9 @@
         el: document.getElementById("log"), cv: document.getElementById("logCv"), card: document.getElementById("logCard"),
         list: document.getElementById("logList"), btn: document.getElementById("logBtn"), dot: document.getElementById("logDot") };
       var lgx = LG.cv.getContext("2d");
-      var lgSeen = lsGet("gn:portal:log");
-      LG.dot.hidden = !!lgSeen && lgSeen >= LOG[0].d;
+      var lgSeen = lsGet("gn:portal:log"), LG_SIG = LOG[0].d + "|" + LOG.length;
+      // v0.3：同一天多次更新也要亮红点 → 已读标记改为「最新日期|条目数」；兼容 v0.2 旧值（纯日期）
+      LG.dot.hidden = !!lgSeen && (lgSeen === LG_SIG || (lgSeen.indexOf("|") < 0 && lgSeen > LOG[0].d));
 
       LG.list.innerHTML = LOG.map(function (e, i) {
         var W0 = lgW(e.w);
@@ -1392,10 +1820,10 @@
         else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
       });
       function showLog() {
-        if (LG.open || BR.open || !intro.done) return;
+        if (LG.open || BR.open || AB.open || !intro.done) return;
         closeAll(); LG.prev = document.activeElement;
         LG.open = true; LG.el.hidden = false; lgResize();
-        lsSet("gn:portal:log", LOG[0].d); LG.dot.hidden = true;
+        lsSet("gn:portal:log", LG_SIG); LG.dot.hidden = true;
         requestAnimationFrame(function () { LG.el.classList.add("on"); }); SND.play("bridge-open");
         LG.raf = requestAnimationFrame(lgDraw);
         document.getElementById("logBack").focus();
@@ -1410,6 +1838,104 @@
       LG.btn.addEventListener("click", showLog);
       document.getElementById("logBack").addEventListener("click", hideLog);
       addEventListener("resize", function () { if (LG.open) lgResize(); });
+
+      /* ---------- v0.3 关于创世计划 ---------- */
+      var AB = { open: false, built: false, prev: null, tab: 0, el: document.getElementById("about"), btn: document.getElementById("aboutBtn") };
+      var AB_PATH = [["07", "我们在宇宙哪里"], ["02", "宇宙的规则"], ["03", "规则造出物质"], ["04", "物质组成生命"], ["05", "生命创造智能"], ["06", "智能看见自己"]];
+      function buildAbout() {
+        AB.built = true;
+        document.getElementById("abWorlds").innerHTML = ORDER.map(function (id) {
+          var w = byId[id], inner = '<img src="world-' + id + '.webp" alt="" /><span><b>' + w.name + '</b><small>' + w.field.replace(" SI", "") + ' · ' + w.star +
+            '</small><small><em>' + (w.live ? "已上线 ↗" : "即将点亮") + '</em></small></span>';
+          return '<li>' + (w.live ? '<a class="x-ab__w" style="--accent:' + w.color + '" href="' + w.href + '" target="_blank" rel="noopener" aria-label="进入' + w.name + '（新窗口）">' + inner + '</a>'
+            : '<div class="x-ab__w soon" style="--accent:' + w.color + '">' + inner + '</div>') + '</li>';
+        }).join("");
+        document.getElementById("abLaws").innerHTML = [].map.call(document.querySelectorAll("#laws li b"), function (b, i) {
+          return '<li><i>' + (i + 1) + '</i>' + b.textContent.replace("、", "") + '</li>';
+        }).join("");
+        document.getElementById("abPath").innerHTML = AB_PATH.map(function (pp) {
+          var w = byId[pp[0]];
+          return '<li style="--accent:' + w.color + '"><i></i><b>' + w.name + '</b><small>' + w.field.replace(" SI", "") + '</small><span>' + pp[1] + '</span></li>';
+        }).join("");
+        // 小北斗图：与主视觉同一份真实数据（地球视角，只绕视线旋转）
+        var fitd = bestRoll(earthView2D(), 236, 96, Math.atan2(0.25, 1)), pts = {}, bb = fitd.bb, sc = fitd.sc;
+        var ox = 150 - sc * (bb[0] + bb[2]) / 2, oy = 96 - sc * (bb[1] + bb[3]) / 2;
+        ORDER.forEach(function (id) { pts[id] = [ox + sc * fitd.q[id][0], oy + sc * fitd.q[id][1]]; });
+        var svg = LINKS.map(function (l) { var a = pts[l[0]], b = pts[l[1]]; return '<line x1="' + a[0].toFixed(1) + '" y1="' + a[1].toFixed(1) + '" x2="' + b[0].toFixed(1) + '" y2="' + b[1].toFixed(1) + '" stroke="rgba(233,199,121,.4)" stroke-width="1"/>'; }).join("");
+        var boxes = [];
+        svg += ORDER.map(function (id) {
+          var w = byId[id], q = pts[id], X = q[0].toFixed(1), hw = w.name.length * 5.6 + 3;
+          // 名字放下方；与已放好的名字或其他星相撞就放上方
+          function clash(y0) {
+            var b = [q[0] - hw, y0, q[0] + hw, y0 + 25];
+            return boxes.some(function (o) { return b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]; }) ||
+              ORDER.some(function (o) { return o !== id && pts[o][0] > b[0] - 4 && pts[o][0] < b[2] + 4 && pts[o][1] > b[1] - 4 && pts[o][1] < b[3] + 4; });
+          }
+          var top0 = clash(q[1] + 8) && !clash(q[1] - 33) ? q[1] - 33 : q[1] + 8;
+          boxes.push([q[0] - hw, top0, q[0] + hw, top0 + 25]);
+          var y1 = top0 + 9, ff = ' text-anchor="middle" font-family="PingFang SC, Noto Sans SC, Microsoft YaHei, sans-serif"';
+          return '<circle cx="' + X + '" cy="' + q[1].toFixed(1) + '" r="9" fill="' + w.color + '" opacity=".18"/>' +
+            '<circle cx="' + X + '" cy="' + q[1].toFixed(1) + '" r="3.6" fill="' + w.color + '"/>' +
+            '<text x="' + X + '" y="' + y1.toFixed(1) + '" fill="rgba(234,240,255,.6)" font-size="9.5"' + ff + '>' + w.star + '</text>' +
+            '<text x="' + X + '" y="' + (y1 + 12).toFixed(1) + '" fill="' + w.color + '" font-size="11"' + ff + '>' + w.name + '</text>';
+        }).join("");
+        document.getElementById("abDipper").innerHTML = svg;
+        // 星桥：由 BRIDGES 数据动态生成
+        function end(e) {
+          var w = byId[e.w], body = '<small>' + w.name + '</small>「' + brEsc(e.title) + '」';
+          return e.href ? '<a class="end" style="--accent:' + w.color + '" href="' + brEsc(e.href) + '" target="_blank" rel="noopener">' + body + '<em>去看 ↗</em></a>'
+            : '<span class="end" style="--accent:' + w.color + '">' + body + '<em>即将点亮</em></span>';
+        }
+        document.getElementById("abBridges").innerHTML = BRIDGES.map(function (b) {
+          return '<li>' + end(b.a) + '<span class="x-ab__ar" aria-label="连通">⇄</span>' + end(b.b) + '</li>';
+        }).join("");
+        var eg = BRIDGES.filter(function (b) { return b.a.id === "ma.casino"; })[0];
+        document.getElementById("abEg").innerHTML = eg ? '在星图里算清「' + brEsc(eg.a.title) + '」之后，下一个问题自然冒出来：「' + brEsc(eg.b.title) +
+          '」——这就走进了觉弈。像这样把两个世界连起来的问题，叫作<b style="color:var(--gold);font-weight:500">星桥</b>，现在共有 ' + BRIDGES.length + ' 座。' : "";
+      }
+      var abTabs = [0, 1, 2].map(function (i) { return document.getElementById("abT" + i); });
+      function abTab(i, focus) {
+        AB.tab = i;
+        abTabs.forEach(function (t, k) {
+          t.setAttribute("aria-selected", k === i); t.tabIndex = k === i ? 0 : -1;
+          document.getElementById("abP" + k).hidden = k !== i;
+        });
+        if (focus) abTabs[i].focus();
+        AB.el.querySelector(".x-ab__in").scrollTop = 0;
+      }
+      abTabs.forEach(function (t, k) {
+        t.addEventListener("click", function () { if (AB.tab !== k) SND.play("tick"); abTab(k); });
+        t.addEventListener("keydown", function (e) {
+          var n = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+          if (n) { e.preventDefault(); abTab((AB.tab + n + 3) % 3, true); }
+          else if (e.key === "Home") { e.preventDefault(); abTab(0, true); }
+          else if (e.key === "End") { e.preventDefault(); abTab(2, true); }
+        });
+      });
+      AB.el.addEventListener("keydown", function (e) {
+        if (e.key !== "Tab") return;
+        var f = [].filter.call(AB.el.querySelectorAll("button, a[href]"), function (x) { return x.offsetParent && x.tabIndex >= 0; });
+        var a = f[0], z = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
+        else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
+      });
+      function showAbout(tab) {
+        if (AB.open || LG.open || BR.open || !intro.done) return;
+        closeAll(); AB.prev = document.activeElement;
+        if (!AB.built) buildAbout();
+        AB.open = true; AB.el.hidden = false; abTab(tab || 0);
+        requestAnimationFrame(function () { AB.el.classList.add("on"); }); SND.play("bridge-open");
+        document.getElementById("abBack").focus();
+      }
+      function hideAbout(noFocus) {
+        if (!AB.open) return;
+        SND.play("close"); AB.open = false; AB.el.classList.remove("on");
+        setTimeout(function () { if (!AB.open) AB.el.hidden = true; }, RM ? 10 : 600);
+        if (!noFocus) { var p = AB.prev; (p && p !== document.body && p.focus ? p : AB.btn).focus(); }
+      }
+      AB.btn.addEventListener("click", function () { showAbout(0); });
+      document.getElementById("abBack").addEventListener("click", function () { hideAbout(); });
+      document.getElementById("abToBridges").addEventListener("click", function () { hideAbout(true); showBridges(); });
 
       resize();
       if (demo) document.getElementById("demoTag").classList.add("on");
