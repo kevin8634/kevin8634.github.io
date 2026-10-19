@@ -52,8 +52,17 @@ table.map th{color:var(--gold);font-weight:600;font-size:12px}
 .gl{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .gl div{border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:12.5px;line-height:1.55}
 .gl b{color:var(--gold)}
+.tabs{display:flex;gap:8px;margin:6px 0 12px}.tabs [aria-selected=true]{border-color:var(--gold);color:var(--gold)}
+.pg{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:8px 0}
+.pg.on{border-color:var(--gold);background:radial-gradient(circle at 10% 0,rgba(245,194,107,.14),transparent 60%)}
+.pg .n{font-size:11px;color:var(--gold);letter-spacing:1px}.pg h4{margin:4px 0;font-size:16px}.pg p{margin:4px 0;font-size:13px;color:var(--mute);line-height:1.6}
+.pg.lock h4{color:var(--mute);letter-spacing:3px}
+.tli{display:grid;grid-template-columns:86px 1fr 1fr;gap:8px;border-bottom:1px solid rgba(245,194,107,.15);padding:8px 0;font-size:13px;line-height:1.55}
+.tli .d{color:var(--mute);font-size:12px}.tli .a{color:var(--ink)}.tli .b{color:var(--mute)}
+.tlh{display:grid;grid-template-columns:86px 1fr 1fr;gap:8px;font-size:12px;color:var(--gold)}
+@media (max-width:640px){.tli{grid-template-columns:1fr;gap:2px}.tlh{display:none}.tli .a::before{content:'你走的路:';color:var(--gold)}.tli .b::before{content:'另一条路:';color:var(--gold)}}
 @media (max-width:1199px){#side{top:auto;bottom:118px;right:50%;transform:translateX(50%);max-height:38vh;display:none}#side.on{display:block}}
-@media (max-width:640px){.foot{display:none}#hero h1{font-size:16.5px;letter-spacing:.5px}#hero p{display:none}.ages,.layers{grid-template-columns:repeat(2,1fr)}#hero{top:54px}#hero p{font-size:12px}#rec{bottom:74px}#dock{bottom:30px}#dock .lt-btn{font-size:12px;padding:5px 10px}.gl{grid-template-columns:1fr}#side{bottom:150px}}
+@media (max-width:640px){.foot{display:none}#hero h1{font-size:16.5px;letter-spacing:.5px}#hero p{display:none}.ages,.layers{grid-template-columns:repeat(2,1fr)}#hero{top:54px}#hero p{font-size:12px}#rec{bottom:104px}#dock{bottom:24px}#dock .lt-btn{font-size:12px;padding:5px 10px}.gl{grid-template-columns:1fr}#side{bottom:150px}}
 @media (max-height:480px){#hero,#rec,.foot{display:none}#dock{bottom:24px}.lt-hud{display:none}#side{top:56px;bottom:auto;max-height:calc(100% - 100px)}}
 </style></head><body>
 <canvas id="disc" tabindex="0" aria-label="光之莲认知星盘:四层八域。左右拖动或用方向键旋转,点扇区查看。"></canvas>
@@ -62,10 +71,11 @@ table.map th{color:var(--gold);font-weight:600;font-size:12px}
 <div id="rec" class="lt-panel"></div>
 <nav id="dock">
   <button class="lt-btn" id="bMap" type="button">🗺 认知地图</button>
+  <button class="lt-btn" id="bBook" type="button">📖 玩家手册</button>
   <button class="lt-btn" id="bGuides" type="button">🏛 先贤向导团</button>
   <button class="lt-btn" id="bAbout" type="button">ⓘ 关于觉弈</button>
 </nav>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.3</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.4</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -81,6 +91,14 @@ table.map th{color:var(--gold);font-weight:600;font-size:12px}
     <p class="lead" style="margin:0">每一关都分三步:<b style="color:var(--gold)">先中招</b>(凭直觉玩)→ <b style="color:var(--gold)">再看见</b>(揭晓规则)→ <b style="color:var(--gold)">改写规则</b>(坐到庄家那一边)。</p>
     <div class="row2"><button class="lt-btn" id="back1" type="button">← 换年龄段</button><button class="lt-btn primary" id="enter" type="button">进入地球Online</button></div>
   </div>
+</div></div>
+
+<div class="lt-modal" id="mBook" role="dialog" aria-modal="true" aria-labelledby="bT"><div class="box lt-panel">
+  <h2 id="bT">地球Online 玩家手册</h2>
+  <div class="tabs" role="tablist"><button class="lt-btn" role="tab" aria-selected="true" data-tab="pages" type="button">手册页</button><button class="lt-btn" role="tab" aria-selected="false" data-tab="tl" type="button">我的人生时间线</button></div>
+  <div id="pages"></div>
+  <div id="tl" hidden></div>
+  <div class="row2"><button class="lt-btn" id="saveImg" type="button">⤓ 保存手册图片</button><button class="lt-btn primary" data-close type="button">回到星盘</button></div>
 </div></div>
 
 <div class="lt-modal" id="mGuides" role="dialog" aria-modal="true" aria-labelledby="gT"><div class="box lt-panel">
@@ -101,7 +119,7 @@ table.map th{color:var(--gold);font-weight:600;font-size:12px}
 </div></div>
 
 <script type="module">
-import { AGES, LAYERS, DOMAINS, MEANING, GUIDES, GUIDE_ORDER, TASKS, BRIDGES, ageLabel } from './lt-data.js';
+import { AGES, LAYERS, DOMAINS, MEANING, GUIDES, GUIDE_ORDER, TASKS, BRIDGES, HANDBOOK, ageLabel } from './lt-data.js';
 import { chrome, hud, store, getAge, setAge, isDone, sound, reducedMotion, offline } from './lt.js';
 
 const ch = chrome({ home: './' });
@@ -139,6 +157,38 @@ const domAge = d => `${AGES.find(a => a.min === d.age).name} ${d.age}+${d.intro 
 document.getElementById('mapRows').innerHTML = [...DOMAINS, MEANING].map(d => { const L = LAYERS.find(l => l.id === d.layer);
   return `<tr><td>${L.no} ${L.name}</td><td>${d.name}<br><small style="color:var(--mute)">${GUIDES[d.guide].name}</small></td><td>${d.affects.join('、')}</td><td>${domAge(d)}</td></tr>`; }).join('');
 document.getElementById('bGuides').onclick = () => openM('mGuides');
+/* ---------- 玩家手册 + 人生时间线 ---------- */
+const tname = id => (TASKS.find(t => t.id === id) || {}).q || id;
+function paintBook() {
+  const got = HANDBOOK.filter(h => isDone(h.task)).length;
+  document.getElementById('bBook').textContent = `📖 玩家手册 ${got}/${HANDBOOK.length}`;
+  document.getElementById('pages').innerHTML = `<p class="lead" style="margin:0">已收集 ${got}/${HANDBOOK.length} 页。每通一关,得到一条隐藏规则和一个反制技巧。</p>` + HANDBOOK.map(h => isDone(h.task)
+    ? `<div class="pg on"><div class="n">第 ${h.no} 页 · ${h.domain}</div><h4>${h.title}</h4><p><b style="color:var(--gold)">反制技巧:</b>${h.counter}</p></div>`
+    : `<div class="pg lock"><div class="n">第 ${h.no} 页 · ${h.domain}</div><h4>??????</h4><p>通关「${tname(h.task)}」后显形。</p></div>`).join('');
+  const tl = (store.get('timeline', []) || []).slice().reverse();
+  document.getElementById('tl').innerHTML = tl.length ? `<p class="lead" style="margin:0 0 6px">每一次选择都会留下记录。右边是「如果当时选另一条」——不是评判,只是让你看见岔路口。</p>
+    <div class="tlh"><span>时间</span><span>你走的路</span><span>另一条路</span></div>` + tl.map(e => { const d = new Date(e.t);
+      return `<div class="tli"><span class="d">${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}<br>${tname(e.task).slice(0, 10)}…</span><span class="a">${e.choice}</span><span class="b">${e.alt}</span></div>`; }).join('')
+    : '<p class="lead">还没有记录。去玩第一关,你的每个选择都会出现在这里(只保存在这台设备)。</p>';
+}
+paintBook();
+document.getElementById('bBook').onclick = () => { paintBook(); openM('mBook'); };
+document.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { document.querySelectorAll('[data-tab]').forEach(x => x.setAttribute('aria-selected', x === b));
+  document.getElementById('pages').hidden = b.dataset.tab !== 'pages'; document.getElementById('tl').hidden = b.dataset.tab !== 'tl'; });
+/* 保存手册图片:本机生成,不含网址与二维码 */
+document.getElementById('saveImg').onclick = () => {
+  const c = document.createElement('canvas'); c.width = 1080; c.height = 1350; const x = c.getContext('2d'); const ff = getComputedStyle(document.body).fontFamily;
+  const g = x.createLinearGradient(0, 0, 0, 1350); g.addColorStop(0, '#15163a'); g.addColorStop(1, '#070814'); x.fillStyle = g; x.fillRect(0, 0, 1080, 1350);
+  x.strokeStyle = '#f5c26b'; x.lineWidth = 3; x.strokeRect(40, 40, 1000, 1270);
+  x.fillStyle = '#f5c26b'; x.font = `600 30px ${ff}`; x.fillText('觉弈 LUDOTERRA · 认知觉醒', 90, 120);
+  x.fillStyle = '#f3eee2'; x.font = `800 64px ${ff}`; x.fillText('地球Online 玩家手册', 90, 210);
+  const a = AGES.find(v => v.id === getAge()); x.font = `28px ${ff}`; x.fillStyle = 'rgba(243,238,226,.7)'; x.fillText((a ? a.name + ' · ' + a.range + ' · ' : '') + '已看见 ' + HANDBOOK.filter(h => isDone(h.task)).length + ' 条隐藏规则', 90, 262);
+  let y = 340; HANDBOOK.forEach(h => { const on = isDone(h.task);
+    x.fillStyle = on ? '#f5c26b' : 'rgba(243,238,226,.35)'; x.font = `600 24px ${ff}`; x.fillText(`第 ${h.no} 页 · ${h.domain}`, 90, y);
+    x.fillStyle = on ? '#f3eee2' : 'rgba(243,238,226,.35)'; x.font = `700 38px ${ff}`; x.fillText(on ? h.title : '?????? 尚未看见', 90, y + 52); y += 150; });
+  x.fillStyle = 'rgba(243,238,226,.6)'; x.font = `26px ${ff}`; x.fillText('看见自己的思维,就是觉醒的开始。 · 创世计划 Genesis 06', 90, 1270);
+  const l = document.createElement('a'); l.download = '地球Online玩家手册.png'; l.href = c.toDataURL('image/png'); l.click(); sound.bell(4);
+};
 document.getElementById('bAbout').onclick = () => openM('mAbout');
 
 /* ---------- 侧栏 ---------- */
@@ -200,7 +250,7 @@ function layout() {
   const mid = W > 640 && !short; const L0 = (wide || mid) ? 190 : 0, R0 = wide ? 365 : (mid ? 190 : 0);
   CX = (L0 + W - R0) / 2; CY = short ? (Hh + 10) / 2 : Hh * (W < 640 ? 0.5 : 0.52);
   TILT = short ? 0.42 : (W < 640 ? 0.56 : 0.5);
-  const maxW = ((W - L0 - R0) / 2 - 16) / 1.17; const maxH = ((short ? Hh - 140 : Hh - (W < 640 ? 330 : 350)) / 2) / TILT / 1.1;
+  const maxW = ((W - L0 - R0) / 2 - 16) / 1.17; const maxH = ((short ? Hh - 140 : Hh - (W < 640 ? 380 : 350)) / 2) / TILT / 1.1;
   R = Math.max(105, Math.min(maxW, maxH, 430));
 }
 const P = (r, a) => [CX + r * R * Math.cos(a + theta), CY + r * R * Math.sin(a + theta) * TILT];
