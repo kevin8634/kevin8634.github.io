@@ -387,6 +387,7 @@
         background: rgba(233,199,121,.08); color: var(--gold); font: 500 12.5px var(--sans); cursor: pointer; vertical-align: middle; white-space: nowrap; }
       .x-more:hover, .x-more:focus-visible { background: rgba(233,199,121,.2); outline: none; }
       @media (max-width: 860px) { .x-pitch { font-size: 13px; margin: -6px 0 8px; } .x-more { min-height: 30px; font-size: 12px; padding: 0 10px; } }
+      @media (max-width: 520px) and (min-height: 481px) { .x-pitch + .sub { display: none; } .x-pitch { margin-bottom: 12px; } }
       @media (max-height: 480px) and (orientation: landscape) { .x-pitch { font-size: 12px; margin: -2px 0 6px; } .x-pitch + .sub { display: none; } .x-more { min-height: 28px; } }
       /* v0.4.1 · 关于弹层 C 全息北斗星盘 */
       .x-dk { position: relative; margin: 0 0 18px; }
@@ -641,7 +642,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.4.1</b></span>
+            <span>创世计划总门户 <b>v0.4.2</b></span>
           </footer>
         </div>
       </div>
@@ -949,15 +950,27 @@
         var sTop = Math.max(72, R * 1.5 + 12);
         var sSpan = Math.max(40, H - R * 2 - 34 - 62 - sTop);
         var T = {};
+        // v0.4.2:按标题块实际位置让出空间（UI 未显示时量不到，退回原比例）
+        var tbR = ui.hidden ? null : document.querySelector(".titleblock").getBoundingClientRect();
+        var pTop = H * 0.38, pBot = H * 0.76, sLeft = W * 0.46;
+        if (tbR && tbR.height) {
+          if (portrait) pTop = Math.min(H * 0.56, Math.max(pTop, tbR.bottom + R * 1.3 + 6));
+          if (short) sLeft = Math.min(W * 0.56, Math.max(sLeft, tbR.right + R * 2 + 20));
+          if (portrait) {
+            var nb = document.querySelector(".x-news"), nbR = nb && nb.offsetParent ? nb.getBoundingClientRect() : null;
+            var lim = nbR && nbR.height ? nbR.top : H * 0.84;
+            pBot = Math.max(pTop + 90, Math.min(pBot, lim - R - 34));
+          }
+        }
         WORLDS.forEach(function (w) {
           var d = DIPPER[w.id], x, y;
           if (short) {
-            x = W * 0.46 + d[0] * (W * 0.54 - 80);
+            x = sLeft + d[0] * (W - sLeft - 80);
             y = sTop + d[1] * sSpan;
           } else if (portrait) {
             // v0.3：竖屏为底部的 3D 说明留出空间
             x = W * (0.82 - d[1] * 0.62);
-            y = H * (0.38 + d[0] * 0.38);
+            y = pTop + d[0] * (pBot - pTop);
           } else {
             x = W * (0.17 + d[0] * 0.62);
             y = H * 0.17 + d[1] * spanY;
@@ -1370,6 +1383,7 @@
       var ui = document.getElementById("ui"), skipHint = document.getElementById("skipHint");
       function revealUI() {
         ui.hidden = false;
+        requestAnimationFrame(resize);
         ui.animate ? ui.animate([{ opacity: 0 }, { opacity: 1 }], { duration: RM ? 1 : 900, easing: "ease-out" }) : null;
         skipHint.style.display = "none";
         lsSet("gn:portal:seen", "1");
@@ -1771,6 +1785,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.4.2", d: "2026-10-20", t: "手机竖屏与矮横屏：北斗七星为标题让出空间，不再压住按钮；星盘触屏拖动与翻面体验修整。" },
         { w: "gn", v: "v0.4.1", d: "2026-10-20", t: "「关于创世计划」变成可旋转的全息北斗星盘：拖动轮转七个世界，点卡片翻面看简介与入口；首屏新增一句话介绍。" },
         { w: "gn", v: "v0.4.0", d: "2026-10-20", t: "首屏新增「最新更新」区：最近三条更新一眼可见，点一下直达星历。" },
         { w: "gn", v: "v0.3.9", d: "2026-10-20", t: "星历新增生命源码 v0.5、v0.6。" },
