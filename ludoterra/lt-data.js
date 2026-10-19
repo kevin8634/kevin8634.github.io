@@ -78,7 +78,7 @@ export const TASKS = [
   { id: 'prisoner', q: '为什么好人不一定吃亏?', domains: ['coop', 'nature'], age: 12, guide: 'neumann', path: 'prisoner/', ver: 'v0.3', live: true },
   { id: 'sunk', q: '电影看了一半很难看,要不要看完?', domains: ['mind'], age: 7, guide: 'kahneman', path: 'sunk/', ver: 'v0.5', live: true },
   { id: 'cocoon', q: '为什么你刷到的视频越来越像?', domains: ['info', 'habit'], age: 12, guide: 'sagan', path: 'cocoon/', ver: 'v0.6', live: true },
-  { id: 'survivor', q: '为什么「成功经验」常常骗人?', domains: ['wealth', 'info'], age: 12, guide: 'sagan', path: 'survivor/', ver: 'M2', live: false },
+  { id: 'survivor', q: '为什么「成功经验」常常骗人?', domains: ['wealth', 'info'], age: 12, guide: 'sagan', path: 'survivor/', ver: 'v0.7', live: true },
   { id: 'nature', q: '人性本善,还是本恶?', domains: ['nature'], age: 12, guide: 'mengxun', path: 'nature/', ver: 'M2', live: false }
 ];
 
@@ -101,6 +101,7 @@ export const HANDBOOK = [
     counter: '做决定前把镜头倒放到「还没付钱」的那一刻,问「如果现在免费给我,我还要吗?」已经付的两条路上都付了,只比较接下来的时间和钱能换到什么。' },
   { task: 'cocoon', no: 4, domain: '信息与真相 × 习惯与时间', title: '你喂给算法什么,它就把你变成什么',
     counter: '刷之前先问「我是来找什么的?」每隔一阵主动搜一个从没看过的话题,对不想要的点「不感兴趣」,给自己的推荐流加一点随机探索。' },
-  { task: 'survivor', no: 5, domain: '财富与风险 × 信息与真相', title: '你只听得见幸存者说话', counter: '' },
+  { task: 'survivor', no: 5, domain: '财富与风险 × 信息与真相', title: '你只听得见幸存者说话',
+    counter: '听到「成功的人都……」时追问:「失败的人里,有多少也这么做?」再问:「我看到的是全部人,还是被挑出来的人?」(只讲统计规律,不构成投资建议)' },
   { task: 'nature', no: 6, domain: '人性', title: '人性和规则,一起决定人怎么做', counter: '' }
 ];
