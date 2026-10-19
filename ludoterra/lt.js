@@ -16,6 +16,11 @@ export const markDone = (id, extra = {}) => store.set(id, Object.assign({}, stor
 export const userMinAge = () => { const a = AGES.find(x => x.id === getAge()); return a ? a.min : 12; };
 export const ageOk = minAge => (minAge || 0) <= userMinAge();
 
+/* 人生时间线:只存本机,最多 60 条 */
+export function logChoice(task, choice, alt) {
+  const tl = store.get('timeline', []) || []; tl.push({ t: Date.now(), task, choice, alt }); store.set('timeline', tl.slice(-60));
+}
+
 /* ---------- 声音:纯程序合成,默认关 ---------- */
 let ac = null;
 export const sound = {
