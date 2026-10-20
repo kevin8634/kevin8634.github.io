@@ -20,20 +20,24 @@
   function fmt(s) { if (typeof s === 'string' && /T\d\d:\d\d(:\d\d)?$/.test(s)) s += 'Z'; var d = new Date(s); if (isNaN(d)) return String(s || '—'); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
 
   /* ---------- 台风 ---------- */
-  function spiralTex() {
-    var c = document.createElement('canvas'); c.width = c.height = 128; var g = c.getContext('2d');
-    g.translate(64, 64); g.lineCap = 'round';
-    for (var arm = 0; arm < 2; arm++) {
-      g.beginPath();
-      for (var t = 0; t < 1; t += 0.02) { var a = arm * Math.PI + t * 4.2, r = 6 + t * 54; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
-      g.strokeStyle = 'rgba(255,255,255,0.95)'; g.lineWidth = 9; g.stroke();
-    }
-    g.beginPath(); g.arc(0, 0, 7, 0, 7); g.fillStyle = '#fff'; g.fill();
-    var tx = new THREE.CanvasTexture(c); return tx;
-  }
+  // 太空俯视的台风云系:对数螺旋云带 + 分形噪声 + 清晰台风眼(着色器程序生成,无外部图片)
+  var CLOUD_VS = 'varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }';
+  var CLOUD_FS = [
+    'varying vec2 vUv; uniform float uT, uDir, uSeed, uK;',
+    'float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }',
+    'float n2(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f); return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y); }',
+    'float fbm(vec2 p){ float v=0., a=.5; for(int i=0;i<5;i++){ v+=a*n2(p); p=p*2.03+17.; a*=.5; } return v; }',
+    'void main(){ vec2 p=(vUv-.5)*2.; float r=length(p); if(r>1.) discard;',
+    ' float a=atan(p.y,p.x); float tw=a-uDir*(3.2*log(r+.06))-uDir*uT*.35;',
+    ' vec2 q=vec2(cos(tw),sin(tw))*(1.2+r*2.5)+uSeed;',
+    ' float n=fbm(q*1.6+vec2(0.,uT*.05)); float arms=.5+.5*sin(2.*tw+n*3.);',
+    ' float dens=(.35+.65*arms)*(.55+.7*n)*smoothstep(1.,.15,r)+smoothstep(.55,.08,r)*.75*uK;',
+    ' float eye=smoothstep(.035,.11,r); float al=clamp(dens*eye,0.,1.)*smoothstep(1.,.7,r);',
+    ' al=smoothstep(.18,.85,al); vec3 c=mix(vec3(.78,.83,.9),vec3(1.),n)*(.85+.15*(1.-r));',
+    ' float wall=smoothstep(.09,.13,r)*smoothstep(.22,.13,r)*uK; c+=wall*.12;',
+    ' gl_FragColor=vec4(c,al*.95); }'].join('\n');
   function initStorms(S, U) {
     var grp = EYE.sg = new THREE.Group(); S.earthScene.add(grp);
-    var tex = spiralTex();
     fetch(URL_TC).then(function (r) { return r.json(); }).then(function (j) {
       EYE.storms = (j.features || []).filter(function (f) { return f.properties && String(f.properties.iscurrent) === 'true' && (Date.now() - new Date(f.properties.todate + 'Z').getTime() < 4 * 864e5) && f.geometry && f.geometry.type === 'Point'; }).map(function (f) {
         var p = f.properties, sv = p.severitydata || {}, c = f.geometry.coordinates;
@@ -41,22 +45,25 @@
         return { name: (p.eventname || p.name || '').replace(/^Tropical Cyclone\s*/i, '').replace(/-\d\d$/, ''), lng: c[0], lat: c[1], wind: +sv.severity || 0, from: p.fromdate, to: p.todate, url: u };
       });
       EYE.storms.forEach(function (s) {
-        var m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: tex, color: gcol(s.wind), transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
-        var sz = 0.05 + Math.min(1, s.wind / 280) * 0.06; m.scale.setScalar(sz);
+        var k = Math.min(1, s.wind / 250), dir = s.lat >= 0 ? 1 : -1;   // 北半球逆时针、南半球顺时针(从太空俯视)
+        var mat = new THREE.ShaderMaterial({ uniforms: { uT: { value: 0 }, uDir: { value: dir }, uSeed: { value: Math.random() * 50 }, uK: { value: k } },
+          vertexShader: CLOUD_VS, fragmentShader: CLOUD_FS, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+        var m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
+        m.scale.setScalar(0.12 + k * 0.1);   // 直径约 750–1400 km 的云系
         m.position.copy(U.ll(s.lat, s.lng, 1.012)); m.lookAt(0, 0, 0);
-        m.userData.s = s; m.userData.spin = s.lat >= 0 ? 1 : -1;   // 北半球逆时针、南半球顺时针(从上往下看)
+        m.userData.s = s;
         s.mesh = m; grp.add(m);
       });
       EYE.tcOk = true; chipNote();
     }).catch(function (e) { EYE.tcOk = false; chipNote(); console.warn('[eye] GDACS', e); });
-    S.addUpdater(function (dt) { if (!grp.visible) return; grp.children.forEach(function (m) { m.rotateZ(dt * 1.6 * m.userData.spin); }); });
+    S.addUpdater(function (dt) { if (!grp.visible) return; var t = performance.now() / 1000; grp.children.forEach(function (m) { m.material.uniforms.uT.value = t; }); });
     S.addPicker({ mode: 'earth', priority: 2, fn: function (ray) {
       if (!grp.visible || !EYE.storms.length) return null;
       var best = null, v = new THREE.Vector3();
       EYE.storms.forEach(function (s) {
         s.mesh.getWorldPosition(v); if (S.occluded(v)) return;
         var d = Math.sqrt(ray.ray.distanceSqToPoint(v));
-        if (d < 0.05 && (!best || d < best.d)) best = { s: s, d: d };
+        if (d < 0.08 && (!best || d < best.d)) best = { s: s, d: d };
       });
       return best && { score: 3 - best.d, run: function () { card(best.s); } };
     } });
@@ -120,7 +127,7 @@
       var on = EYE.on[id] = !EYE.on[id]; b.setAttribute('aria-pressed', on ? 'true' : 'false');
       var g = id === 'storms' ? EYE.sg : EYE.ag; if (g) g.visible = on;
       if (on && id === 'aurora') auroraInfo();
-      if (on && id === 'storms' && LE.ui.toast) LE.ui.toast(EYE.storms.length ? '点旋转的台风符号查看风速和等级' : '目前全球没有进行中的热带气旋');
+      if (on && id === 'storms' && LE.ui.toast) LE.ui.toast(EYE.storms.length ? '点台风云系查看风速和等级' : '目前全球没有进行中的热带气旋');
     });
     bar.appendChild(b); chips[id] = b;
   }
