@@ -116,17 +116,6 @@ body[data-mode="solar"] .sh-now { display: none; }
 .sh-pass span { display: block; }
 
 /* 航图 */
-.sh-map { position: fixed; inset: 0; z-index: 20; background: #03050f; }
-.sh-map[hidden] { display: none; }
-.sh-map canvas { position: absolute; inset: 0; }
-.sh-map__bar { position: absolute; z-index: 1; left: var(--edge); right: max(14px, env(safe-area-inset-right)); top: max(14px, env(safe-area-inset-top)); display: flex; justify-content: space-between; gap: 10px; padding: 10px 14px; background: rgba(11, 16, 51, 0.7); }
-.sh-map__bar h2 { margin: 6px 0 0; font: 700 18px/1 var(--cjk); color: #fff; }
-.sh-map__bar h2 small { font: 600 11px/1 var(--cjk); color: var(--sh-silver-dim); margin-left: 6px; }
-.sh-map__sum { margin: 6px 0 0; font: 500 12px/1.4 var(--cjk); color: var(--text-2); }
-.sh-map__tip { position: absolute; z-index: 1; left: var(--edge); bottom: max(14px, env(safe-area-inset-bottom)); max-width: 360px; padding: 12px 14px; background: rgba(11, 16, 51, 0.9); font: 500 13px/1.55 var(--cjk); }
-.sh-map__tip[hidden] { display: none; }
-.sh-map__tip p { margin: 6px 0 0; color: var(--text-2); }
-.sh-map__tip b { color: #fff; }
 
 @media (max-width: 900px) { .sh-now { top: auto; bottom: calc(max(12px, env(safe-area-inset-bottom)) + 96px); max-width: calc(100vw - 28px); } }
 @media (max-width: 640px) {
