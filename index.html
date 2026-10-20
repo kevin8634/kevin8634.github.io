@@ -139,6 +139,31 @@
         position: absolute; top: 14px; right: 16px; min-width: 48px; min-height: 48px;
         background: none; border: 0; color: var(--dim); font-size: 20px; cursor: pointer;
       }
+      /* v0.6.3 · 联系开发者：领航员信号牌 */
+      .foot .x-devb { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; margin-left: auto; padding: 6px 12px 6px 6px; min-height: 40px; border-radius: 999px; border: 1px solid rgba(233,199,121,.35); background: rgba(3,5,13,.45); }
+      .foot .x-devb img { width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 0 0 1.5px var(--gold), 0 0 10px rgba(233,199,121,.6); }
+      .foot .x-devb:hover, .foot .x-devb:focus-visible { background: rgba(233,199,121,.12); outline: none; }
+      .x-dev { position: relative; display: flex; gap: 18px; align-items: center; padding: 18px; border-radius: 16px; overflow: hidden;
+        border: 1px solid rgba(233,199,121,.35); background: linear-gradient(160deg, rgba(233,199,121,.10), rgba(10,16,40,.6) 45%, rgba(124,200,255,.06)); box-shadow: inset 0 0 30px -14px rgba(233,199,121,.6); }
+      .x-dev::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px); }
+      .x-dev__av { position: relative; flex: none; width: 84px; height: 84px; }
+      .x-dev__av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--gold), 0 0 24px -2px rgba(233,199,121,.7); }
+      .x-dev__av::before { content: ""; position: absolute; inset: -8px; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0 60%, rgba(124,200,255,.9) 75%, transparent 76% 100%);
+        -webkit-mask: radial-gradient(circle, transparent 47px, #000 48px 50px, transparent 51px); mask: radial-gradient(circle, transparent 47px, #000 48px 50px, transparent 51px); animation: xdkSpin 4s linear infinite; }
+      .x-dev__t { min-width: 0; }
+      .x-dev__t small { display: block; font: 400 10px/1 ui-monospace, monospace; letter-spacing: .28em; color: var(--gold); margin-bottom: 6px; }
+      .x-dev__t b { display: block; font-size: 16px; letter-spacing: .08em; color: #fff; }
+      .x-dev__t p { margin: 4px 0 10px; font-size: 12.5px; line-height: 1.7; color: rgba(234,240,255,.8); }
+      .x-dev__id { display: inline-flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px; border-radius: 999px; border: 1px solid rgba(233,199,121,.4); background: rgba(3,5,13,.5); font-size: 12px; color: var(--dim); }
+      .x-dev__id code { font: 600 14px/1 ui-monospace, monospace; letter-spacing: .06em; color: var(--gold); user-select: all; -webkit-user-select: all; }
+      .x-dev__cp { min-height: 30px; padding: 0 14px; border-radius: 999px; border: 0; background: linear-gradient(90deg, var(--gold), #ffe7a8); color: #0a1030; font: 600 12px var(--sans); cursor: pointer; }
+      .x-dev__cp:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+      .x-dev__t em { display: block; margin-top: 8px; font-style: normal; font-size: 11.5px; color: rgba(234,240,255,.62); }
+      .x-ab__dev { margin-top: 26px; } .x-ab__dev h3 { margin: 0 0 12px; }
+      .modal.x-devm { width: min(480px, calc(100vw - 32px)); }
+      .x-devm .x-dev { margin-top: 4px; }
+      @media (max-width: 480px) { .x-dev { flex-direction: column; text-align: center; padding: 16px 14px; } .foot .x-devb { padding: 4px; min-height: 36px; } .foot .x-devb span { display: none; } }
+      @media (prefers-reduced-motion: reduce) { .x-dev__av::before { animation: none; } }
       .toast {
         position: fixed; left: 50%; bottom: 76px; transform: translateX(-50%) translateY(10px);
         background: rgba(8,13,36,.9); border: 1px solid rgba(233,199,121,.4); color: var(--gold);
@@ -657,6 +682,7 @@
       <div class="foot">
         <span>免费 · 无需注册 · 进度只保存在你的设备上</span>
         <button id="lawBtn">创世七律</button>
+        <button id="devBtn" class="x-devb" aria-haspopup="dialog" aria-label="联系开发者"><img src="dev-avatar.webp" alt="" width="26" height="26"><span>联系开发者</span></button>
       </div>
       <div class="x-3d" id="v3Box">
         <p id="v3Note">北斗七星并不在同一平面：天枢距我们约 <b>123 光年</b>，天璇约 <b>80 光年</b>。拖动看看它们在太空中的真实位置。</p>
@@ -706,6 +732,11 @@
       </div>
     </div>
 
+    <div class="modal x-devm" id="devM" role="dialog" aria-label="联系开发者">
+      <button class="close" data-close aria-label="关闭">×</button>
+      <h2>联系开发者</h2>
+      <div class="x-dev"><div class="x-dev__av"><img src="dev-avatar.webp" alt="开发者头像" width="240" height="240" loading="lazy"></div><div class="x-dev__t"><small>DEVELOPER · 领航员</small><b>创世计划开发者</b><p>想聊学习世界的点子、合作，或反馈问题，欢迎加我微信。</p><div class="x-dev__id"><span>微信</span><code>kevinwong8634</code><button type="button" class="x-dev__cp" data-copy="kevinwong8634" aria-label="复制微信号 kevinwong8634">复制</button></div><em>添加时请注明来意，例如「创世计划 · 合作」或「创世计划 · 反馈」。</em></div></div>
+    </div>
     <div class="modal" id="laws" role="dialog" aria-label="创世七律">
       <button class="close" data-close aria-label="关闭">×</button>
       <h2>创世七律</h2>
@@ -821,9 +852,13 @@
             <h3 id="abNewsH">最近更新</h3>
             <ol id="abNews"></ol>
           </section>
+          <section class="x-ab__dev" aria-labelledby="abDevH">
+            <h3 id="abDevH">联系开发者</h3>
+            <div class="x-dev"><div class="x-dev__av"><img src="dev-avatar.webp" alt="开发者头像" width="240" height="240" loading="lazy"></div><div class="x-dev__t"><small>DEVELOPER · 领航员</small><b>创世计划开发者</b><p>想聊学习世界的点子、合作，或反馈问题，欢迎加我微信。</p><div class="x-dev__id"><span>微信</span><code>kevinwong8634</code><button type="button" class="x-dev__cp" data-copy="kevinwong8634" aria-label="复制微信号 kevinwong8634">复制</button></div><em>添加时请注明来意，例如「创世计划 · 合作」或「创世计划 · 反馈」。</em></div></div>
+          </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.6.2</b></span>
+            <span>创世计划总门户 <b>v0.6.3</b></span>
           </footer>
         </div>
       </div>
@@ -1593,7 +1628,7 @@
         if (wasT || drawer.classList.contains("on")) SND.play("close");
         if (wasT) SND.duck(false);
         scrim.classList.remove("on");
-        [drawer, trailer, laws].forEach(function (e) { e.classList.remove("on"); });
+        [drawer, trailer, laws, devM].forEach(function (e) { e.classList.remove("on"); });
         try { var vv = document.getElementById("video"); vv.pause(); vv.currentTime = 0; } catch (e) {}
         selected = null; hovered = null; hideCard();
       }
@@ -1609,6 +1644,15 @@
         }
       });
       document.getElementById("lawBtn").addEventListener("click", function () { openEl(laws); });
+      // v0.6.3 联系开发者
+      var devM = document.getElementById("devM");
+      document.getElementById("devBtn").addEventListener("click", function () { openEl(devM); setTimeout(function () { var b = devM.querySelector(".x-dev__cp"); if (b) b.focus({ preventScroll: true }); }, 60); });
+      document.addEventListener("click", function (e) {
+        var b = e.target.closest && e.target.closest(".x-dev__cp"); if (!b) return;
+        var id = b.dataset.copy, ok = function () { b.textContent = "已复制"; setTimeout(function () { b.textContent = "复制"; }, 1800); toast("已复制微信号 " + id + "，添加时请注明来意"); };
+        var fb = function () { var c = b.parentNode.querySelector("code"), r = document.createRange(); r.selectNodeContents(c); var s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("已选中微信号，请长按或 Ctrl+C 复制"); };
+        try { if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(id).then(ok, fb); else fb(); } catch (err) { fb(); }
+      });
       document.getElementById("bridgeBtn").addEventListener("click", function () { showBridges(); });
 
       /* ---------- 知识星桥 ---------- */
@@ -1984,6 +2028,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.6.3", d: "2026-10-20", t: "新增「联系开发者」：首页页脚头像入口与关于弹层名片，微信号一键复制，添加请注明来意。" },
         { w: "gn", v: "v0.6.2", d: "2026-10-20", t: "卡片与 HUD 对齐概念图：磨砂玻璃卡+世界色霓虹边光、前卡星芒；顶栏雷达与斜段灯、四周切角框线；左舷航线进度条、右舷星桥/星历环形仪表；罗盘刻度弧。" },
         { w: "gn", v: "v0.6.1", d: "2026-10-20", t: "星盘对齐效果图：亮金厚底盘与扇区金带、弧形星桥带辉光、玻璃大卡，盘面倾斜度与光斑随鼠标移动；雷达顶栏、半圆罗盘。" },
         { w: "gn", v: "v0.6.0", d: "2026-10-20", t: "「关于创世计划」升级为 HUD 指挥舱：开场动画、三层环慢转与中心光柱、星桥能量脉冲、景深卡片，宽屏新增七世界航线表与当前世界情报板，底部罗盘拨盘。" },
