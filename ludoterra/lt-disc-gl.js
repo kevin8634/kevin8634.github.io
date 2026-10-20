@@ -114,9 +114,13 @@ void main(){
 }`;
 export async function makeDiscGL() {
   let THREE; try { THREE = await import('./vendor/three.module.min.js'); } catch (_) { return null; }
-  const probe = document.createElement('canvas'); if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) return null;
   let renderer; try { renderer = new THREE.WebGLRenderer({ alpha: true, premultipliedAlpha: true, preserveDrawingBuffer: true, antialias: false, powerPreference: 'high-performance' }); } catch (_) { return null; }
+  if (!renderer.getContext()) return null;
   renderer.setClearColor(0x000000, 0);
+  /* v0.20.1 上下文丢失时暂停,恢复后继续,不再永久退回 2D */
+  const cvs = renderer.domElement; let ok = true;
+  cvs.addEventListener('webglcontextlost', e => { e.preventDefault(); ok = false; });
+  cvs.addEventListener('webglcontextrestored', () => { ok = true; });
   const U = { uRes: { value: new THREE.Vector2() }, uDpr: { value: 1 }, uC: { value: new THREE.Vector2() }, uR: { value: 1 }, uES: { value: 0 }, uEC: { value: 1 }, uD: { value: 1 }, uTh: { value: 0 }, uT: { value: 0 },
     uHs: { value: 0 }, uHo: { value: 0 }, uMode: { value: 0 }, uSel: { value: -1 }, uLa: { value: new THREE.Vector4() }, uLb: { value: new THREE.Vector4() },
     uM0: { value: new THREE.Matrix3() }, uM1: { value: new THREE.Matrix3() }, uM2: { value: new THREE.Matrix3() }, uRad: { value: new THREE.Vector3() } };
@@ -124,7 +128,7 @@ export async function makeDiscGL() {
   const scene = new THREE.Scene(); const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat); quad.frustumCulled = false; scene.add(quad);
   const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
   return {
-    c: renderer.domElement, three: THREE.REVISION,
+    c: renderer.domElement, three: THREE.REVISION, get ok() { return ok; },
     size(W, H, dpr) { const d = Math.min(1.5, dpr); if (this.W !== W || this.H !== H || this.d !== d) { renderer.setPixelRatio(d); renderer.setSize(W, H, false); this.d = d; this.W = W; this.H = H; } },
     render(o, mode) {
       U.uRes.value.set(this.W, this.H); U.uDpr.value = this.d; U.uC.value.set(o.CX, o.CY); U.uR.value = o.R; U.uES.value = o.ES; U.uEC.value = o.EC; U.uD.value = o.D; U.uTh.value = o.theta; U.uT.value = o.t;
