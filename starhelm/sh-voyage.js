@@ -1,7 +1,7 @@
 /* 天枢 Starhelm · sh-voyage.js(M1.5)
  * 星际航行:弦穹号 Chordion 驾驶舱 + 随船智能「星璃」+ 引擎系统 + 航图选点 + 穿梭。
  * 独立渲染器;进入航行时暂停 Live Earth 的渲染,退出后恢复,原有任务与地球模式不受影响。
- * 星璃形象:VRoid 官方 β Ver AvatarSample_3(pixiv Inc.,CC0),已改为高领驾驶服并压缩贴图。
+ * 星璃形象(M1.7 B3 版):VRoid 官方 AvatarSample_G(pixiv Inc.,CC0)贴图重绘 + 程序附加双马尾/耳机/立领。
  * three-vrm 0.6.11(pixiv,MIT)。台词为写好的脚本,不接任何大模型。 */
 (function () {
   'use strict';
@@ -73,7 +73,7 @@
         '<div><small>信号回地球</small><b class="d-sig">—</b></div>' +
         '<div class="d-x-w"><small>演示快进</small><b class="d-x">—</b></div>' +
       '</footer>' +
-      '<div class="voy-credit">影像:NASA, ESA, CSA, STScI(CC BY 4.0)· 星璃形象底模:VRoid β AvatarSample_3(CC0)· 不代表任何机构背书</div>' +
+      '<div class="voy-credit">影像:NASA, ESA, CSA, STScI(CC BY 4.0)· 驾驶舱与星璃形象:天枢原创设计图· 不代表任何机构背书</div>' +
       '<section class="voy-map" hidden><div class="voy-map__bar"><div><small>STARHELM · ATLAS</small><h2>航图 <span>选择目的地</span></h2></div><button type="button" class="voy-b voy-map__x">×</button></div>' +
         '<canvas></canvas><div class="voy-map__legend"><i class="lg-open"></i>已测绘 <i class="lg-un"></i>未测绘星域 <i class="lg-cj"></i>猜想 <i class="lg-here"></i>当前位置</div><div class="voy-map__card" hidden></div></section>' +
       '<div class="voy-load"><div class="voy-load__ring"></div><p>弦穹号启动中……</p></div>';
@@ -102,13 +102,14 @@
     R.tier = tierOf();
     var r = new T.WebGLRenderer({ antialias: R.tier !== 'low', alpha: false, powerPreference: 'high-performance' });
     r.setPixelRatio(Math.min(window.devicePixelRatio || 1, R.tier === 'high' ? 2 : R.tier === 'mid' ? 1.5 : 1.15));
-    r.setSize(innerWidth, innerHeight); r.outputEncoding = T.sRGBEncoding; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 1.0;
+    r.setSize(innerWidth, innerHeight); r.outputEncoding = T.sRGBEncoding; r.toneMapping = T.ACESFilmicToneMapping; r.toneMappingExposure = 0.82;
     r.autoClear = false; UI.stage.appendChild(r.domElement); R.r = r;
     R.out = new T.Scene(); R.outCam = new T.PerspectiveCamera(55, innerWidth / innerHeight, 0.5, 4000);
     FX.build(R.out, R.tier); if (FX.buildEngines) { FX.buildEngines(R.out, R.tier); FX.buildShip(R.out); }
     R.in = new T.Scene(); R.cam = new T.PerspectiveCamera(62, innerWidth / innerHeight, 0.02, 50);
-    R.cam.position.set(0, 1.3, 0.8); R.look = new T.Vector3(0, 1.05, -1.6); R.cam.lookAt(R.look);
+    R.cam.position.set(0, 1.58, 2.05); R.look = new T.Vector3(0.05, 1.05, -1.5); R.cam.lookAt(R.look);
     buildCockpit();
+    R.mode25 = !/[?&]ck=3d/.test(location.search); if (R.mode25) build25();
     R.clock = new T.Clock(); R.t = 0; R.shake = 0;
     R.ray = new T.Raycaster(); R.ptr = new T.Vector2(); R.mouse = new T.Vector2();
     r.domElement.addEventListener('pointermove', function (e) { R.mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); });
@@ -121,9 +122,9 @@
     R.outCam.aspect = R.cam.aspect = w / hh;
     R.cam.fov = w / hh < 0.8 ? 78 : 62; // 竖屏手机拉宽视野
     var port = w / hh < 0.8;
-    if (R.pad) { if (port) R.pad.position.set(0.3, 0.86, -0.42); else R.pad.position.set(0.74, 0.86, -0.72); R.padLight.position.set(R.pad.position.x, 1.3, R.pad.position.z + 0.15); }
-    if (R.scrMesh) { R.scrMesh.position.x = port ? -0.36 : R.scrBaseX; R.scrBack.position.x = R.scrMesh.position.x; }
-    R.outCam.updateProjectionMatrix(); R.cam.updateProjectionMatrix();
+    if (R.pad) { if (port) R.pad.position.set(0.42, 0, -0.2); else R.pad.position.set(0.95, 0, -0.45); R.padLight.position.set(R.pad.position.x, 1.5, R.pad.position.z + 0.25); }
+    if (R.bench) R.bench.position.x = port ? 0.25 : 0.55;
+    R.outCam.updateProjectionMatrix(); R.cam.updateProjectionMatrix(); lay25();
   }
 
   function mat(c, e, ei, rough, metal) { return new T.MeshStandardMaterial({ color: c, emissive: e || 0x000000, emissiveIntensity: ei || 1, roughness: rough == null ? 0.55 : rough, metalness: metal == null ? 0.6 : metal }); }
@@ -140,136 +141,270 @@
     s.lineTo(x + r, y + hh); s.quadraticCurveTo(x, y + hh, x, y + hh - r); s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y); return s;
   }
   function roundPath(w, hh, r) { var s = roundRect(w, hh, r); var p = new T.Path(); p.curves = s.curves; return p; }
+  /* M1.7 驾驶舱 3.0 —— 按概念图 cockpit_B_luxury 重建:
+   * 全景大舷窗 + 白色复合材料舱壁 + 顶部两组暖光灯槽 + 石墨地板鎏金线 + 中央全息星图台(大旋涡星系)
+   * + 左右两张白色驾驶座与弧形控制台 + 前景长条操作台(引擎旋钮/推杆) + 右侧通往副舱的开口。全部程序生成。 */
+  function rbox(w, hh, d, r, m, bev) {
+    var g = new T.ExtrudeGeometry(roundRect(w, hh, Math.min(r, w / 2 - 1e-3, hh / 2 - 1e-3)), { depth: d, bevelEnabled: bev !== false, bevelThickness: Math.min(0.012, d * 0.3), bevelSize: Math.min(0.012, r * 0.5), bevelSegments: 3, curveSegments: 10 });
+    g.translate(0, 0, -d / 2); return new T.Mesh(g, m);
+  }
+  function glowTex(c0, soft) {
+    var c = document.createElement('canvas'); c.width = 256; c.height = 64; var g = c.getContext('2d');
+    var gr = g.createLinearGradient(0, 0, 0, 64); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.5, c0); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 256, 64);
+    var gx = g.createLinearGradient(0, 0, 256, 0); gx.addColorStop(0, 'rgba(0,0,0,1)'); gx.addColorStop(soft || 0.08, 'rgba(0,0,0,0)'); gx.addColorStop(1 - (soft || 0.08), 'rgba(0,0,0,0)'); gx.addColorStop(1, 'rgba(0,0,0,1)');
+    g.globalCompositeOperation = 'destination-out'; g.fillStyle = gx; g.fillRect(0, 0, 256, 64);
+    var t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; return t;
+  }
+  function radialTex(stops) {
+    var c = document.createElement('canvas'); c.width = c.height = 128; var g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+    stops.forEach(function (s) { gr.addColorStop(s[0], s[1]); }); g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+    var t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; return t;
+  }
+  function floorTex() {
+    var c = document.createElement('canvas'); c.width = c.height = 512; var g = c.getContext('2d');
+    g.fillStyle = '#16181c'; g.fillRect(0, 0, 512, 512);
+    for (var i = 0; i < 2600; i++) { g.fillStyle = 'rgba(255,255,255,' + (Math.random() * 0.025) + ')'; g.fillRect(Math.random() * 512, Math.random() * 512, 2, 2); }
+    g.strokeStyle = 'rgba(0,0,0,0.55)'; g.lineWidth = 3;
+    for (var k = 0; k <= 4; k++) { g.beginPath(); g.moveTo(k * 128, 0); g.lineTo(k * 128, 512); g.stroke(); g.beginPath(); g.moveTo(0, k * 128); g.lineTo(512, k * 128); g.stroke(); }
+    g.strokeStyle = 'rgba(255,255,255,0.05)'; g.lineWidth = 1;
+    for (k = 0; k <= 4; k++) { g.beginPath(); g.moveTo(k * 128 + 2, 0); g.lineTo(k * 128 + 2, 512); g.stroke(); }
+    var t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(3, 3); t.anisotropy = 4; return t;
+  }
+  function holoTopTex() {
+    var c = document.createElement('canvas'); c.width = c.height = 512; var g = c.getContext('2d'), C = 256;
+    var gr = g.createRadialGradient(C, C, 0, C, C, C); gr.addColorStop(0, '#2a8fd0'); gr.addColorStop(0.55, '#0b3f78'); gr.addColorStop(0.92, '#04172e'); gr.addColorStop(1, '#020a14');
+    g.fillStyle = gr; g.beginPath(); g.arc(C, C, C, 0, 7); g.fill();
+    g.strokeStyle = 'rgba(140,220,255,0.55)'; g.lineWidth = 1.5;
+    [60, 110, 160, 205, 240].forEach(function (r) { g.beginPath(); g.arc(C, C, r, 0, 7); g.stroke(); });
+    for (var a = 0; a < 24; a++) { g.beginPath(); g.moveTo(C + Math.cos(a / 24 * 6.283) * 60, C + Math.sin(a / 24 * 6.283) * 60); g.lineTo(C + Math.cos(a / 24 * 6.283) * 240, C + Math.sin(a / 24 * 6.283) * 240); g.globalAlpha = a % 6 ? 0.25 : 0.6; g.stroke(); }
+    g.globalAlpha = 1;
+    for (var i = 0; i < 260; i++) { var rr = Math.sqrt(Math.random()) * 235, th = Math.random() * 6.283; g.fillStyle = Math.random() < 0.15 ? '#ffd890' : '#bdf0ff'; g.fillRect(C + Math.cos(th) * rr, C + Math.sin(th) * rr, 2, 2); }
+    g.strokeStyle = '#ffcf8a'; g.lineWidth = 6; g.beginPath(); g.arc(C, C, 250, 0, 7); g.stroke();
+    var t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; return t;
+  }
+  function holoPanelTex(seed) {
+    var c = document.createElement('canvas'); c.width = 256; c.height = 160; var g = c.getContext('2d');
+    g.fillStyle = 'rgba(40,190,255,0.10)'; g.fillRect(0, 0, 256, 160); g.strokeStyle = 'rgba(120,230,255,0.9)'; g.lineWidth = 2; g.strokeRect(3, 3, 250, 154);
+    g.fillStyle = 'rgba(160,240,255,0.85)';
+    for (var i = 0; i < 6; i++) g.fillRect(14, 18 + i * 20, 40 + ((seed * 37 + i * 53) % 150), 6);
+    g.strokeStyle = 'rgba(255,210,130,0.9)'; g.beginPath(); for (var x = 0; x < 230; x += 5) { var y = 140 - 20 * Math.abs(Math.sin(x * 0.05 + seed)); if (x) g.lineTo(13 + x, y); else g.moveTo(13, y); } g.stroke();
+    var t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; return t;
+  }
   function cabinEnv() {
-    var es = new T.Scene(), box = new T.Mesh(new T.BoxGeometry(10, 6, 10), new T.MeshBasicMaterial({ color: 0x15171c, side: T.BackSide })); es.add(box);
+    var es = new T.Scene(), box = new T.Mesh(new T.BoxGeometry(10, 6, 10), new T.MeshBasicMaterial({ color: 0x1b1d22, side: T.BackSide })); es.add(box);
     function lamp(c, w, hh, x, y, z, ry, rx) { var m = new T.Mesh(new T.PlaneGeometry(w, hh), new T.MeshBasicMaterial({ color: c, side: T.DoubleSide })); m.position.set(x, y, z); m.rotation.set(rx || 0, ry || 0, 0); es.add(m); }
-    lamp(0xfff0d8, 6, 0.4, 0, 2.9, 0, 0, Math.PI / 2);        // 顶部暖白灯带
-    lamp(0x8fd8ff, 5, 2.4, 0, 1.2, -4.9);                      // 前方舷窗(偏冷)
-    lamp(0xffc070, 0.25, 5, -4.9, 0.5, 0, Math.PI / 2);        // 两侧鎏金灯带
-    lamp(0xffc070, 0.25, 5, 4.9, 0.5, 0, -Math.PI / 2);
+    lamp(0xfff0d8, 1.6, 3.2, -1.4, 2.95, 0, 0, Math.PI / 2); lamp(0xfff0d8, 1.6, 3.2, 1.4, 2.95, 0, 0, Math.PI / 2);   // 顶部两组暖光灯槽
+    lamp(0x9fd8ff, 6, 2.6, 0, 1.4, -4.9);                         // 前方舷窗
+    lamp(0xffc070, 0.2, 5, -4.9, 0.3, 0, Math.PI / 2); lamp(0xffc070, 0.2, 5, 4.9, 0.3, 0, -Math.PI / 2);
+    lamp(0xd8e2ec, 3, 2, 0, 1.5, 4.9);                            // 背后舱壁
     var pm = new T.PMREMGenerator(R.r); var rt = pm.fromScene(es, 0.04); pm.dispose(); return rt.texture;
+  }
+  function chair(S, white, graph, gold, x, z, ry) {
+    var g = new T.Group(); g.position.set(x, 0, z); g.rotation.y = ry; S.add(g);
+    var base = new T.Mesh(new T.CylinderGeometry(0.2, 0.26, 0.05, 40), graph); base.position.y = 0.025; g.add(base);
+    var bring = new T.Mesh(new T.TorusGeometry(0.235, 0.004, 6, 60), gold); bring.rotation.x = Math.PI / 2; bring.position.y = 0.05; g.add(bring);
+    var post = new T.Mesh(new T.CylinderGeometry(0.05, 0.07, 0.36, 24), white); post.position.y = 0.23; g.add(post);
+    var seat = rbox(0.56, 0.52, 0.11, 0.12, white); seat.rotation.x = -Math.PI / 2; seat.position.set(0, 0.46, 0.02); g.add(seat);
+    var cush = rbox(0.44, 0.44, 0.06, 0.1, graph); cush.rotation.x = -Math.PI / 2; cush.position.set(0, 0.53, 0.01); g.add(cush);
+    var back = rbox(0.54, 0.86, 0.12, 0.16, white); back.position.set(0, 0.98, 0.27); back.rotation.x = -0.18; g.add(back);
+    var bc = rbox(0.4, 0.66, 0.05, 0.12, graph); bc.position.set(0, 0.96, 0.2); bc.rotation.x = -0.18; g.add(bc);
+    var head = rbox(0.34, 0.2, 0.12, 0.08, white); head.position.set(0, 1.5, 0.37); head.rotation.x = -0.18; g.add(head);
+    [-1, 1].forEach(function (s) {
+      var arm = rbox(0.08, 0.5, 0.07, 0.035, white); arm.rotation.x = -Math.PI / 2; arm.position.set(s * 0.32, 0.68, 0.0); g.add(arm);
+      var sup = rbox(0.06, 0.2, 0.05, 0.025, white); sup.position.set(s * 0.32, 0.58, 0.12); g.add(sup);
+      var gl = new T.Mesh(new T.BoxGeometry(0.006, 0.8, 0.006), gold); gl.position.set(s * 0.275, 0.98, 0.335); gl.rotation.x = -0.18; g.add(gl);
+    });
+    return g;
   }
   function buildCockpit() {
     var S = R.in;
     R.env = cabinEnv(); S.environment = R.env;
-    var white = new T.MeshPhysicalMaterial({ color: 0xcfccc6, roughness: 0.36, metalness: 0.05, clearcoat: 0.6, clearcoatRoughness: 0.25 });
-    var white2 = new T.MeshPhysicalMaterial({ color: 0xb9b6b0, roughness: 0.5, metalness: 0.05, clearcoat: 0.3 });
-    var graph = new T.MeshStandardMaterial({ color: 0x23262c, roughness: 0.42, metalness: 0.65 });
-    var graph2 = new T.MeshStandardMaterial({ color: 0x15171b, roughness: 0.6, metalness: 0.4 });
-    var gold = new T.MeshBasicMaterial({ color: 0xffc27a, toneMapped: false });      // 鎏金灯带(自发光)
+    var white = new T.MeshPhysicalMaterial({ color: 0xcfcdc8, roughness: 0.34, metalness: 0.04, clearcoat: 0.7, clearcoatRoughness: 0.2, envMapIntensity: 1.0 });
+    var white2 = new T.MeshPhysicalMaterial({ color: 0xbcbab5, roughness: 0.48, metalness: 0.05, clearcoat: 0.35 });
+    var graph = new T.MeshStandardMaterial({ color: 0x2a2d33, roughness: 0.4, metalness: 0.6 });
+    var graph2 = new T.MeshStandardMaterial({ color: 0x17191d, roughness: 0.55, metalness: 0.45 });
+    var gold = new T.MeshBasicMaterial({ color: 0xffc27a, toneMapped: false });
     var goldM = new T.MeshStandardMaterial({ color: 0xc9a062, roughness: 0.25, metalness: 1 });
     var edge = new T.MeshBasicMaterial({ color: 0x5fdcff, toneMapped: false });
     R.goldMat = gold; R.edgeMat = edge;
-    S.add(new T.HemisphereLight(0xf2f0ff, 0x24262c, 0.35));
-    var key = new T.PointLight(0xfff1dc, 0.7, 7); key.position.set(0, 2.35, -0.3); S.add(key); R.cabinLight = key;
-    var cool = new T.PointLight(0x7fd8ff, 0.35, 5); cool.position.set(0, 1.6, -1.9); S.add(cool);
+    S.add(new T.HemisphereLight(0xf4f2ee, 0x2a2c32, 0.38));
+    var key = new T.PointLight(0xfff1dc, 0.6, 8); key.position.set(0, 2.5, -0.2); S.add(key); R.cabinLight = key;
+    [-1.4, 1.4].forEach(function (x) { var l = new T.PointLight(0xffe6c4, 0.45, 5); l.position.set(x, 2.45, 0.2); S.add(l); });
+    var cool = new T.PointLight(0x7fd0ff, 0.5, 4); cool.position.set(0, 1.3, -1.6); S.add(cool);
 
-    // 前壁:圆角大舷窗(挤出 + 倒角,软质感)
-    var Z = -1.75, fw = new T.Shape(); fw.moveTo(-3.2, -0.6); fw.lineTo(3.2, -0.6); fw.lineTo(3.2, 3.2); fw.lineTo(-3.2, 3.2); fw.lineTo(-3.2, -0.6);
-    var hole = roundPath(4.3, 2.25, 0.55); hole.curves.forEach(function (c) { ['v0', 'v1', 'v2'].forEach(function (k) { if (c[k]) c[k].y += 1.5; }); }); fw.holes.push(hole);
-    var front = new T.Mesh(new T.ExtrudeGeometry(fw, { depth: 0.14, bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.06, bevelSegments: 4, curveSegments: 24 }), white);
-    front.position.set(0, 0, Z - 0.1); S.add(front);
-    // 舷窗内圈鎏金细线
-    var lp = roundRect(4.22, 2.17, 0.52).getPoints(80).map(function (p) { return new T.Vector3(p.x, p.y + 1.5, Z + 0.11); });
-    S.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(lp, true), 200, 0.007, 6, true), gold));
-    var glass = new T.Mesh(new T.PlaneGeometry(4.4, 2.4), new T.MeshPhysicalMaterial({ color: 0xbfe6ff, transparent: true, opacity: 0.05, roughness: 0.04, metalness: 0, depthWrite: false, envMapIntensity: 0.5 }));
-    glass.position.set(0, 1.5, Z - 0.05); S.add(glass);
-    // 两侧弧形舱壁 + 顶棚
-    [-1, 1].forEach(function (s) {
-      var wall = new T.Mesh(new T.CylinderGeometry(3.0, 3.0, 3.2, 40, 1, true, s > 0 ? Math.PI * 0.2 : Math.PI * 1.55, Math.PI * 0.25), white2);
-      wall.position.set(0, 1.1, -0.1); S.add(wall);
-      var gs = new T.Mesh(new T.BoxGeometry(0.02, 0.02, 2.6), gold); gs.position.set(s * 2.62, 0.42, -0.35); S.add(gs);
-      var gs2 = gs.clone(); gs2.position.y = 2.15; S.add(gs2);
-      var pnl = new T.Mesh(new T.BoxGeometry(0.03, 0.55, 1.0), graph2); pnl.position.set(s * 2.58, 1.25, -0.55); pnl.rotation.y = s * 0.18; S.add(pnl);
+    var Z = -2.3, YC = 1.55;   // 前壁 z,舷窗中心高度
+    // —— 前壁:全景大舷窗
+    var fw = new T.Shape(); fw.moveTo(-3.4, -0.2); fw.lineTo(3.4, -0.2); fw.lineTo(3.4, 3.4); fw.lineTo(-3.4, 3.4); fw.lineTo(-3.4, -0.2);
+    var hole = roundPath(5.0, 2.15, 0.62); hole.curves.forEach(function (c) { ['v0', 'v1', 'v2'].forEach(function (k) { if (c[k]) c[k].y += YC; }); }); fw.holes.push(hole);
+    var front = new T.Mesh(new T.ExtrudeGeometry(fw, { depth: 0.18, bevelEnabled: true, bevelThickness: 0.08, bevelSize: 0.08, bevelSegments: 5, curveSegments: 28 }), white);
+    front.position.set(0, 0, Z - 0.12); S.add(front);
+    var lp = roundRect(4.9, 2.05, 0.58).getPoints(100).map(function (p) { return new T.Vector3(p.x, p.y + YC, Z + 0.15); });
+    S.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(lp, true), 240, 0.008, 6, true), gold));
+    var glass = new T.Mesh(new T.PlaneGeometry(5.2, 2.4), new T.MeshPhysicalMaterial({ color: 0xbfe6ff, transparent: true, opacity: 0.04, roughness: 0.03, metalness: 0, depthWrite: false, envMapIntensity: 0.6 }));
+    glass.position.set(0, YC, Z - 0.05); S.add(glass);
+    // 舷窗下沿:暖光灯带(概念图窗下一道金线)
+    var sill = new T.Mesh(new T.PlaneGeometry(4.6, 0.09), new T.MeshBasicMaterial({ map: glowTex('rgba(255,200,130,1)', 0.12), transparent: true, blending: T.AdditiveBlending, depthWrite: false, toneMapped: false }));
+    sill.position.set(0, YC - 1.14, Z + 0.17); S.add(sill);
+
+    // —— 侧壁:左侧弧形白壁 + 小舷窗;右侧开口通往副舱
+    function sideWall(s) {
+      var sh = new T.Shape(); sh.moveTo(-2.3, -0.2); sh.lineTo(2.4, -0.2); sh.lineTo(2.4, 3.2); sh.lineTo(-2.3, 3.2); sh.lineTo(-2.3, -0.2);
+      var hp = roundPath(s > 0 ? 1.9 : 1.1, s > 0 ? 1.55 : 1.5, 0.35);
+      hp.curves.forEach(function (c) { ['v0', 'v1', 'v2'].forEach(function (k) { if (c[k]) { c[k].x += (s > 0 ? -0.75 : -1.25); c[k].y += 1.45; } }); });
+      sh.holes.push(hp);
+      var w = new T.Mesh(new T.ExtrudeGeometry(sh, { depth: 0.14, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 4, curveSegments: 20 }), white2);
+      w.rotation.y = -s * Math.PI / 2 + s * 0.12; w.position.set(s * 2.55, 0, -0.3); S.add(w);
+      var gl = new T.Mesh(new T.BoxGeometry(0.02, 0.025, 4.2), gold); gl.position.set(s * 2.42, 0.32, -0.25); gl.rotation.y = s * 0.12; S.add(gl);
+      return w;
+    }
+    sideWall(-1); sideWall(1);
+    // 副舱(右侧开口后):暗色小舱 + 几块屏幕
+    var ann = new T.Group(); ann.position.set(3.35, 0, -0.85); ann.rotation.y = 0.12; S.add(ann);
+    var abox = new T.Mesh(new T.BoxGeometry(1.6, 2.8, 2.6), new T.MeshStandardMaterial({ color: 0x101216, roughness: 0.8, metalness: 0.3, side: T.BackSide })); abox.position.set(0.3, 1.3, 0); ann.add(abox);
+    [[1.08, 1.75, -0.6, 0.5, 0.3], [1.08, 1.75, 0.15, 0.55, 0.32], [1.08, 1.3, -0.25, 0.7, 0.22], [1.08, 1.85, 0.75, 0.4, 0.26]].forEach(function (p, i) {
+      var m = new T.Mesh(new T.PlaneGeometry(p[3], p[4]), new T.MeshBasicMaterial({ map: holoPanelTex(i + 3), toneMapped: false, transparent: true }));
+      m.position.set(p[0], p[1], p[2]); m.rotation.y = -Math.PI / 2; ann.add(m);
     });
-    var ceil = new T.Mesh(new T.ExtrudeGeometry(roundRect(4.6, 2.6, 0.5), { depth: 0.08, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 3 }), white);
-    ceil.rotation.x = Math.PI / 2; ceil.position.set(0, 2.55, -0.45); S.add(ceil);
-    var cove = new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(roundRect(3.6, 1.7, 0.45).getPoints(60).map(function (p) { return new T.Vector3(p.x, 2.48, p.y - 0.45); }), true), 160, 0.012, 6, true), gold); S.add(cove);
-    var floor = new T.Mesh(new T.BoxGeometry(5.6, 0.06, 3.4), graph2); floor.position.set(0, -0.05, -0.3); S.add(floor);
-    for (var fl = -2; fl <= 2; fl++) { var fs = new T.Mesh(new T.BoxGeometry(0.012, 0.004, 3.2), gold); fs.position.set(fl * 0.9, -0.018, -0.3); S.add(fs); }
+    var al = new T.Mesh(new T.BoxGeometry(0.02, 0.02, 2.4), gold); al.position.set(1.05, 2.4, 0); ann.add(al);
+    var aLight = new T.PointLight(0x6fd0ff, 0.35, 2.5); aLight.position.set(0.5, 1.6, 0); ann.add(aLight);
 
-    // 弧形控制台:白色主体 + 石墨台面 + 鎏金前缘
-    var desk = new T.Mesh(new T.CylinderGeometry(1.75, 1.85, 0.1, 72, 1, false, Math.PI * 1.16, Math.PI * 0.68), graph);
-    desk.position.set(0, 0.8, 0.55); S.add(desk);
-    var deskBody = new T.Mesh(new T.CylinderGeometry(1.86, 1.55, 0.78, 72, 1, true, Math.PI * 1.16, Math.PI * 0.68), white);
-    deskBody.position.set(0, 0.37, 0.55); S.add(deskBody);
-    var deskEdge = new T.Mesh(new T.TorusGeometry(1.86, 0.008, 6, 120, Math.PI * 0.68), gold);
-    deskEdge.rotation.set(Math.PI / 2, 0, Math.PI * 0.16 + Math.PI); deskEdge.position.set(0, 0.85, 0.55); S.add(deskEdge);
+    // —— 顶棚:白色曲面 + 两组暖光灯槽(概念图最醒目的元素)
+    var ceil = new T.Mesh(new T.PlaneGeometry(6, 5), white2); ceil.rotation.x = Math.PI / 2; ceil.position.set(0, 2.95, -0.2); S.add(ceil);
+    var coveGlow = glowTex('rgba(255,226,180,1)', 0.05);
+    [-1, 1].forEach(function (s) {
+      var cg = new T.Group(); cg.position.set(s * 1.35, 2.78, -0.35); cg.rotation.y = s * 0.22; S.add(cg);
+      var ring = new T.Shape(); var o = roundRect(1.7, 3.0, 0.4); ring.curves = o.curves; ring.holes.push(roundPath(1.25, 2.55, 0.3));
+      var rm = new T.Mesh(new T.ExtrudeGeometry(ring, { depth: 0.1, bevelEnabled: true, bevelThickness: 0.04, bevelSize: 0.04, bevelSegments: 4, curveSegments: 16 }), white);
+      rm.rotation.x = Math.PI / 2; cg.add(rm);
+      var lp2 = roundRect(1.3, 2.6, 0.32).getPoints(80).map(function (p) { return new T.Vector3(p.x, 0.03, p.y); });
+      cg.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(lp2, true), 200, 0.02, 6, true), new T.MeshBasicMaterial({ color: 0xffe2b8, toneMapped: false })));
+      var inner = new T.Mesh(new T.PlaneGeometry(1.25, 2.55), new T.MeshBasicMaterial({ color: 0xfff0d8, toneMapped: false }));
+      inner.rotation.x = Math.PI / 2; inner.position.y = 0.12; cg.add(inner);
+      [0, 1].forEach(function (k) {   // 灯槽向下散开的柔光
+        var gp = new T.Mesh(new T.PlaneGeometry(2.7, 0.5), new T.MeshBasicMaterial({ map: coveGlow, transparent: true, opacity: 0.35, blending: T.AdditiveBlending, depthWrite: false, toneMapped: false, side: T.DoubleSide }));
+        gp.position.set((k ? 1 : -1) * 0.66, -0.12, 0); gp.rotation.set(0, Math.PI / 2, 0); cg.add(gp);
+      });
+    });
+    // 窗上横梁暖光
+    var hb = new T.Mesh(new T.PlaneGeometry(5.2, 0.14), new T.MeshBasicMaterial({ map: glowTex('rgba(255,215,160,1)', 0.1), transparent: true, blending: T.AdditiveBlending, depthWrite: false, toneMapped: false }));
+    hb.position.set(0, 2.82, Z + 0.25); hb.rotation.x = 0.6; S.add(hb);
 
-    // 中央:全息星图台(点它打开航图)
-    var holo = new T.Group(); holo.position.set(0, 0.8, -0.98); S.add(holo); R.holo = holo;
-    var ped = new T.Mesh(new T.CylinderGeometry(0.2, 0.24, 0.07, 48), white); ped.position.y = 0.035; holo.add(ped);
-    var top = new T.Mesh(new T.CylinderGeometry(0.19, 0.19, 0.012, 48), new T.MeshBasicMaterial({ color: 0x06202e, toneMapped: false })); top.position.y = 0.075; holo.add(top);
-    var hr = new T.Mesh(new T.TorusGeometry(0.2, 0.004, 6, 80), gold); hr.rotation.x = Math.PI / 2; hr.position.y = 0.075; holo.add(hr);
-    var gN = R.tier === 'low' ? 1400 : 3200, gp = new Float32Array(gN * 3), gc = new Float32Array(gN * 3);
+    // —— 地板:石墨分块 + 鎏金导光线
+    var floor = new T.Mesh(new T.PlaneGeometry(6, 5), new T.MeshStandardMaterial({ map: floorTex(), roughness: 0.38, metalness: 0.55, envMapIntensity: 0.7 }));
+    floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0, -0.2); S.add(floor);
+    [[-1.2, 0.35], [1.2, -0.35], [-2.0, 0.15], [2.0, -0.15]].forEach(function (p) {
+      var fl = new T.Mesh(new T.BoxGeometry(0.012, 0.004, 3.2), gold); fl.position.set(p[0], 0.003, -0.4); fl.rotation.y = p[1]; S.add(fl);
+    });
+    var fring = new T.Mesh(new T.RingGeometry(0.78, 0.8, 96), new T.MeshBasicMaterial({ color: 0xffc27a, toneMapped: false, side: T.DoubleSide })); fring.rotation.x = -Math.PI / 2; fring.position.set(0, 0.004, -1.0); S.add(fring);
+
+    // —— 中央:全息星图台(大旋涡星系;点它打开航图)
+    var holo = new T.Group(); holo.position.set(0, 0, -1.0); S.add(holo); R.holo = holo;
+    var prof = [[0, 0], [0.42, 0], [0.44, 0.03], [0.3, 0.08], [0.2, 0.2], [0.17, 0.52], [0.24, 0.62], [0.5, 0.7], [0.56, 0.74], [0.56, 0.79], [0, 0.79]].map(function (p) { return new T.Vector2(p[0], p[1]); });
+    holo.add(new T.Mesh(new T.LatheGeometry(prof, 64), white));
+    var band = new T.Mesh(new T.CylinderGeometry(0.205, 0.205, 0.04, 48, 1, true), graph); band.position.y = 0.36; holo.add(band);
+    var hr = new T.Mesh(new T.TorusGeometry(0.545, 0.007, 6, 100), gold); hr.rotation.x = Math.PI / 2; hr.position.y = 0.785; holo.add(hr);
+    var top = new T.Mesh(new T.CircleGeometry(0.5, 64), new T.MeshBasicMaterial({ map: holoTopTex(), toneMapped: false })); top.rotation.x = -Math.PI / 2; top.position.y = 0.792; holo.add(top);
+    var gN = R.tier === 'low' ? 4000 : 9000, gp = new Float32Array(gN * 3), gc = new Float32Array(gN * 3);
     for (var i = 0; i < gN; i++) {
-      var arm = i % 2, rr = Math.pow(Math.random(), 0.7) * 0.17, th = rr * 26 + arm * Math.PI + (Math.random() - 0.5) * 0.7, core = rr < 0.03;
-      gp[i * 3] = Math.cos(th) * rr; gp[i * 3 + 2] = Math.sin(th) * rr; gp[i * 3 + 1] = (Math.random() - 0.5) * 0.012 * (1 - rr * 4);
-      var c = core ? [0.7, 0.55, 0.35] : [0.18, 0.42, 0.6]; gc[i * 3] = c[0]; gc[i * 3 + 1] = c[1]; gc[i * 3 + 2] = c[2];
+      var arm = i % 2, rr = Math.pow(Math.random(), 0.55) * 0.4, th = Math.log(rr / 0.02 + 1) * 2.6 + arm * Math.PI + (Math.random() - 0.5) * (0.5 + rr), core = rr < 0.06;
+      if (Math.random() < 0.18) { th = Math.random() * 6.283; }
+      gp[i * 3] = Math.cos(th) * rr; gp[i * 3 + 2] = Math.sin(th) * rr; gp[i * 3 + 1] = (Math.random() - 0.5) * 0.03 * Math.exp(-rr * 6);
+      var w = Math.random(), c = core ? [1.0, 0.85, 0.6] : (w < 0.2 ? [0.95, 0.9, 1.0] : [0.35, 0.65, 1.0]);
+      var f = core ? 1 : 0.5 + 0.5 * Math.exp(-rr * 3); gc[i * 3] = c[0] * f; gc[i * 3 + 1] = c[1] * f; gc[i * 3 + 2] = c[2] * f;
     }
     var gg = new T.BufferGeometry(); gg.setAttribute('position', new T.BufferAttribute(gp, 3)); gg.setAttribute('color', new T.BufferAttribute(gc, 3));
-    var gal = new T.Points(gg, new T.PointsMaterial({ size: 0.005, vertexColors: true, transparent: true, opacity: 0.6, blending: T.AdditiveBlending, depthWrite: false, toneMapped: false }));
-    gal.position.y = 0.2; gal.rotation.x = 0.35; holo.add(gal); R.holoGal = gal;
-    var cone = new T.Mesh(new T.CylinderGeometry(0.19, 0.17, 0.14, 48, 1, true), new T.ShaderMaterial({
+    var gal = new T.Points(gg, new T.PointsMaterial({ size: 0.012, map: radialTex([[0, 'rgba(255,255,255,1)'], [0.4, 'rgba(255,255,255,0.5)'], [1, 'rgba(255,255,255,0)']]), vertexColors: true, transparent: true, opacity: 0.9, blending: T.AdditiveBlending, depthWrite: false, toneMapped: false }));
+    var galG = new T.Group(); galG.position.y = 1.2; galG.rotation.set(0.5, 0, 0.12); holo.add(galG); galG.add(gal); R.holoGal = gal;
+    var coreS = new T.Sprite(new T.SpriteMaterial({ map: radialTex([[0, 'rgba(255,240,210,1)'], [0.25, 'rgba(255,200,120,0.6)'], [1, 'rgba(255,160,80,0)']]), blending: T.AdditiveBlending, depthWrite: false, toneMapped: false }));
+    coreS.scale.set(0.32, 0.32, 1); galG.add(coreS);
+    var haloS = new T.Sprite(new T.SpriteMaterial({ map: radialTex([[0, 'rgba(120,190,255,0.45)'], [1, 'rgba(60,120,255,0)']]), blending: T.AdditiveBlending, depthWrite: false, toneMapped: false }));
+    haloS.scale.set(1.0, 0.7, 1); galG.add(haloS);
+    var cone = new T.Mesh(new T.CylinderGeometry(0.42, 0.48, 0.4, 64, 1, true), new T.ShaderMaterial({
       uniforms: { t: { value: 0 } },
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }',
-      fragmentShader: 'uniform float t; varying vec2 vUv; void main(){ float s = 0.5+0.5*sin(vUv.y*60.0 - t*3.0); gl_FragColor = vec4(0.35,0.85,1.0,(1.0-vUv.y)*0.12*(0.6+0.4*s)); }',
+      fragmentShader: 'uniform float t; varying vec2 vUv; void main(){ float s = 0.5+0.5*sin(vUv.y*70.0 - t*3.0); gl_FragColor = vec4(0.35,0.8,1.0,(1.0-vUv.y)*0.10*(0.6+0.4*s)); }',
       transparent: true, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide
     }));
-    cone.position.y = 0.15; holo.add(cone); R.holoCone = cone;
-    var hit = new T.Mesh(new T.CylinderGeometry(0.24, 0.24, 0.35, 16), new T.MeshBasicMaterial({ visible: false })); hit.position.y = 0.15; holo.add(hit); R.holoHit = hit;
+    cone.position.y = 1.0; holo.add(cone); R.holoCone = cone;
+    var hl = new T.PointLight(0x6cc6ff, 0.8, 3); hl.position.set(0, 1.25, 0); holo.add(hl);
+    var hit = new T.Mesh(new T.CylinderGeometry(0.56, 0.56, 1.3, 16), new T.MeshBasicMaterial({ visible: false })); hit.position.y = 0.75; holo.add(hit); R.holoHit = hit;
 
-    // 左:主屏(航行数据)
+    // —— 左:驾驶座 + 弧形控制台(主屏 = 航行数据 + 浮动全息小窗)
+    chair(S, white, graph, gold, -1.85, -0.6, 0.4);
+    var lc = new T.Group(); lc.position.set(-1.4, 0, -1.2); lc.rotation.y = 0.35; S.add(lc);
+    var lcb = rbox(0.22, 0.75, 0.5, 0.08, white); lcb.position.set(0.25, 0.37, 0); lc.add(lcb);
+    var lct = rbox(1.15, 0.5, 0.07, 0.12, white); lct.rotation.x = -Math.PI / 2 + 0.12; lct.position.set(0, 0.78, 0); lc.add(lct);
+    var lcs = rbox(1.0, 0.36, 0.02, 0.08, graph); lcs.rotation.x = -Math.PI / 2 + 0.12; lcs.position.set(0, 0.82, 0); lc.add(lcs);
+    var lcg = new T.Mesh(new T.BoxGeometry(1.12, 0.008, 0.008), gold); lcg.position.set(0, 0.76, 0.26); lc.add(lcg);
     R.scr = screenTex(null, 512, 256);
-    var scr = new T.Mesh(new T.PlaneGeometry(0.56, 0.28), new T.MeshBasicMaterial({ map: R.scr.t, transparent: true, toneMapped: false }));
-    R.scrBaseX = -0.62; scr.position.set(-0.62, 1.0, -0.9); scr.rotation.set(-0.5, 0.32, 0); S.add(scr); R.scrMesh = scr;
-    var scrBack = new T.Mesh(new T.ExtrudeGeometry(roundRect(0.62, 0.34, 0.04), { depth: 0.02, bevelEnabled: false }), graph);
-    scrBack.position.set(-0.62, 1.0, -0.925); scrBack.rotation.copy(scr.rotation); S.add(scrBack); R.scrBack = scrBack;
+    var scr = new T.Mesh(new T.PlaneGeometry(0.62, 0.31), new T.MeshBasicMaterial({ map: R.scr.t, transparent: true, toneMapped: false }));
+    scr.rotation.x = -Math.PI / 2 + 0.12; scr.position.set(0, 0.835, 0); lc.add(scr); R.scrMesh = scr; R.scrBack = lcs; R.scrBaseX = 0;
+    [[-0.32, 1.05, -0.12], [-0.12, 1.1, -0.15], [0.3, 1.02, -0.1]].forEach(function (p, k) {
+      var hp2 = new T.Mesh(new T.PlaneGeometry(0.18, 0.12), new T.MeshBasicMaterial({ map: holoPanelTex(k), transparent: true, opacity: 0.85, blending: T.AdditiveBlending, depthWrite: false, toneMapped: false, side: T.DoubleSide }));
+      hp2.position.set(p[0], p[1], p[2]); lc.add(hp2);
+    });
 
-    // 左前:引擎选择旋钮(10 段)
-    var knobG = new T.Group(); knobG.position.set(-0.98, 0.88, -0.55); S.add(knobG);
-    knobG.add(new T.Mesh(new T.CylinderGeometry(0.15, 0.17, 0.04, 48), white));
-    var knob = new T.Mesh(new T.CylinderGeometry(0.09, 0.1, 0.07, 40), goldM); knob.position.y = 0.05; knobG.add(knob);
+    // —— 右:驾驶座 + 小控制台(全息小窗)
+    chair(S, white, graph, gold, 2.05, -1.75, -0.5);
+    var rc = new T.Group(); rc.position.set(1.55, 0, -2.0); rc.rotation.y = -0.45; S.add(rc);
+    var rcb = rbox(0.2, 0.72, 0.4, 0.07, white); rcb.position.set(0, 0.36, 0); rc.add(rcb);
+    var rct = rbox(0.8, 0.4, 0.06, 0.1, white); rct.rotation.x = -Math.PI / 2 + 0.1; rct.position.set(0, 0.74, 0); rc.add(rct);
+    R.mini = [];
+    [[-0.18, 0.77, 0], [0.18, 0.77, 0]].forEach(function (p) {
+      var st = screenTex(null, 256, 160);
+      var m = new T.Mesh(new T.PlaneGeometry(0.32, 0.2), new T.MeshBasicMaterial({ map: st.t, transparent: true, toneMapped: false }));
+      m.position.set(p[0], p[1] + 0.012, p[2]); m.rotation.x = -Math.PI / 2 + 0.1; rc.add(m); R.mini.push(st);
+    });
+    var rh = new T.Mesh(new T.PlaneGeometry(0.14, 0.2), new T.MeshBasicMaterial({ map: holoPanelTex(9), transparent: true, opacity: 0.85, blending: T.AdditiveBlending, depthWrite: false, toneMapped: false, side: T.DoubleSide }));
+    rh.position.set(-0.1, 0.98, -0.08); rc.add(rh);
+
+    // —— 前景长条操作台(白色侧板 + 石墨台面 + 鎏金前缘;引擎旋钮、推力推杆、全息圆盘)
+    var bench = new T.Group(); bench.position.set(0.55, 0, 0.55); bench.rotation.y = -0.32; S.add(bench); R.bench = bench;
+    var bsh = new T.Shape(); bsh.moveTo(-1.0, 0); bsh.lineTo(1.0, 0); bsh.quadraticCurveTo(1.08, 0.0, 1.08, 0.1); bsh.lineTo(1.08, 0.5); bsh.quadraticCurveTo(1.08, 0.62, 0.95, 0.62); bsh.lineTo(-0.95, 0.62); bsh.quadraticCurveTo(-1.08, 0.62, -1.08, 0.5); bsh.lineTo(-1.08, 0.1); bsh.quadraticCurveTo(-1.08, 0, -1.0, 0);
+    var bb = new T.Mesh(new T.ExtrudeGeometry(bsh, { depth: 0.55, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 4, curveSegments: 10 }), white);
+    bb.position.set(0, 0, -0.275); bench.add(bb);
+    var btop = rbox(2.0, 0.5, 0.03, 0.12, graph); btop.rotation.x = -Math.PI / 2; btop.position.set(0, 0.66, 0); bench.add(btop);
+    var bgl = new T.Mesh(new T.BoxGeometry(2.05, 0.008, 0.008), gold); bgl.position.set(0, 0.6, 0.305); bench.add(bgl);
+    var bgl2 = new T.Mesh(new T.BoxGeometry(2.05, 0.006, 0.006), gold); bgl2.position.set(0, 0.06, 0.3); bench.add(bgl2);
+    var puck = new T.Mesh(new T.CylinderGeometry(0.1, 0.1, 0.015, 40), new T.MeshBasicMaterial({ color: 0x4fd8ff, toneMapped: false })); puck.position.set(-0.72, 0.68, 0.02); bench.add(puck);
+    var pr = new T.Mesh(new T.TorusGeometry(0.115, 0.006, 6, 60), edge); pr.rotation.x = Math.PI / 2; pr.position.set(-0.72, 0.69, 0.02); bench.add(pr);
+    var ps = new T.Sprite(new T.SpriteMaterial({ map: radialTex([[0, 'rgba(120,230,255,0.8)'], [1, 'rgba(60,180,255,0)']]), blending: T.AdditiveBlending, depthWrite: false, toneMapped: false })); ps.scale.set(0.35, 0.18, 1); ps.position.set(-0.72, 0.72, 0.02); bench.add(ps);
+    // 引擎选择旋钮(10 段)
+    var knobG = new T.Group(); knobG.position.set(-0.32, 0.675, 0.05); bench.add(knobG);
+    knobG.add(new T.Mesh(new T.CylinderGeometry(0.15, 0.17, 0.03, 48), white));
+    var knob = new T.Mesh(new T.CylinderGeometry(0.09, 0.1, 0.07, 40), goldM); knob.position.y = 0.045; knobG.add(knob);
     var ptr = new T.Mesh(new T.BoxGeometry(0.012, 0.012, 0.07), edge); ptr.position.set(0, 0.04, -0.04); knob.add(ptr);
     R.ticks = [];
     V.engines.forEach(function (e, i) {
       var a = -Math.PI * 0.8 + i / (V.engines.length - 1) * Math.PI * 1.6;
       var tk = new T.Mesh(new T.BoxGeometry(0.012, 0.006, 0.028), new T.MeshBasicMaterial({ color: V.TIER_COLOR[e.tier], toneMapped: false }));
-      tk.position.set(Math.sin(a) * 0.13, 0.025, -Math.cos(a) * 0.13); tk.rotation.y = -a; knobG.add(tk); R.ticks.push(tk);
+      tk.position.set(Math.sin(a) * 0.13, 0.02, -Math.cos(a) * 0.13); tk.rotation.y = -a; knobG.add(tk); R.ticks.push(tk);
     });
-    knobG.rotation.x = -0.25; R.knob = knob; knob.userData.pick = 'knob';
-
-    // 推力推杆
-    var rail = new T.Mesh(new T.BoxGeometry(0.05, 0.02, 0.32), graph); rail.position.set(-0.3, 0.86, -0.62); rail.rotation.x = -0.25; S.add(rail);
-    var lever = new T.Group(); lever.position.set(-0.3, 0.87, -0.5); S.add(lever);
+    R.knob = knob; knob.userData.pick = 'knob';
+    // 推力推杆(局部坐标 z 前后推)
+    var rail = new T.Mesh(new T.BoxGeometry(0.05, 0.015, 0.34), graph2); rail.position.set(0.05, 0.68, 0.0); bench.add(rail);
+    var lever = new T.Group(); lever.position.set(0.05, 0.69, 0.1); bench.add(lever);
     var stick = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 0.16, 12), goldM); stick.position.y = 0.08; lever.add(stick);
     var grip = new T.Mesh(new T.SphereGeometry(0.032, 20, 14), white); grip.position.y = 0.17; lever.add(grip);
-    R.lever = lever;
+    R.lever = lever; R.leverZ0 = 0.1;
 
-    // 右:全息投影台(星璃)
-    var pad = new T.Group(); pad.position.set(0.74, 0.86, -0.72); S.add(pad);
-    pad.add(new T.Mesh(new T.CylinderGeometry(0.17, 0.2, 0.035, 56), white));
-    var ring = new T.Mesh(new T.TorusGeometry(0.165, 0.005, 8, 72), gold); ring.rotation.x = Math.PI / 2; ring.position.y = 0.019; pad.add(ring);
-    var ring2 = new T.Mesh(new T.TorusGeometry(0.12, 0.004, 8, 72), edge); ring2.rotation.x = Math.PI / 2; ring2.position.y = 0.019; pad.add(ring2);
-    var beam = new T.Mesh(new T.CylinderGeometry(0.16, 0.17, 0.62, 40, 1, true), new T.ShaderMaterial({
+    // —— 星璃全息投影台(右前;半身全息像从光环中升起)
+    var pad = new T.Group(); pad.position.set(0.95, 0, -0.45); S.add(pad);
+    var pprof = [[0, 0], [0.26, 0], [0.27, 0.03], [0.14, 0.08], [0.11, 0.62], [0.2, 0.7], [0.24, 0.74], [0.24, 0.78], [0, 0.78]].map(function (p) { return new T.Vector2(p[0], p[1]); });
+    pad.add(new T.Mesh(new T.LatheGeometry(pprof, 48), white));
+    var ring = new T.Mesh(new T.TorusGeometry(0.235, 0.006, 8, 72), gold); ring.rotation.x = Math.PI / 2; ring.position.y = 0.78; pad.add(ring);
+    var ring2 = new T.Mesh(new T.TorusGeometry(0.17, 0.005, 8, 72), edge); ring2.rotation.x = Math.PI / 2; ring2.position.y = 0.785; pad.add(ring2);
+    var beam = new T.Mesh(new T.CylinderGeometry(0.26, 0.22, 0.8, 48, 1, true), new T.ShaderMaterial({
       uniforms: { t: { value: 0 } },
       vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }',
-      fragmentShader: 'uniform float t; varying vec2 vUv; void main(){ float s = 0.5+0.5*sin(vUv.y*80.0 - t*4.0); float a = (1.0-vUv.y)*0.14*(0.6+0.4*s); gl_FragColor = vec4(0.35,0.85,1.0,a); }',
-      transparent: true, blending: T.AdditiveBlending, depthWrite: false, side: T.BackSide
+      fragmentShader: 'uniform float t; varying vec2 vUv; void main(){ float s = 0.5+0.5*sin(vUv.y*90.0 - t*4.0); float a = pow(1.0-vUv.y,2.0)*0.16*(0.6+0.4*s); gl_FragColor = vec4(0.35,0.85,1.0,a); }',
+      transparent: true, blending: T.AdditiveBlending, depthWrite: false, side: T.DoubleSide
     }));
-    beam.position.y = 0.32; pad.add(beam); R.beam = beam; R.pad = pad;
-    R.padLight = new T.PointLight(0x6fe0ff, 0.3, 1.2); R.padLight.position.set(0.8, 1.3, -0.65); S.add(R.padLight);
-    var face = new T.PointLight(0xfff4ea, 0.8, 2.2); face.position.set(0.55, 1.45, -0.2); S.add(face);
-
-    // 两侧小屏
-    R.mini = [];
-    [[-1.3, 0.98, -0.3, 0.6], [1.3, 0.98, -0.3, -0.6]].forEach(function (p) {
-      var st = screenTex(null, 256, 160);
-      var m = new T.Mesh(new T.PlaneGeometry(0.32, 0.2), new T.MeshBasicMaterial({ map: st.t, transparent: true, toneMapped: false }));
-      m.position.set(p[0], p[1], p[2]); m.rotation.set(-0.5, p[3], 0); S.add(m); R.mini.push(st);
-      var bk = new T.Mesh(new T.ExtrudeGeometry(roundRect(0.36, 0.24, 0.03), { depth: 0.015, bevelEnabled: false }), graph); bk.position.set(p[0], p[1], p[2] - 0.012); bk.rotation.copy(m.rotation); S.add(bk);
-    });
-    // 舱外飞船也用同一张环境贴图,金属有反射
+    beam.position.y = 1.18; pad.add(beam); R.beam = beam; R.pad = pad; R.padTop = 0.78;
+    R.padLight = new T.PointLight(0x6fe0ff, 0.6, 1.6); R.padLight.position.set(1.05, 1.5, -0.3); S.add(R.padLight);
+    var face = new T.PointLight(0xfff4ea, 0.7, 2.4); face.position.set(0.6, 1.7, 0.4); S.add(face);
+    var rim = new T.PointLight(0x7fe6ff, 0.9, 1.5); rim.position.set(1.15, 1.6, -1.0); S.add(rim);
     if (FX.setShipEnv) FX.setShipEnv(R.env);
   }
 
@@ -296,9 +431,101 @@
     });
   }
 
-  /* ============================ 星璃(VRM) ============================ */
-  var A = { vrm: null, mood: 'neutral', talk: 0, blinkT: 2, look: new T.Object3D(), waveT: 0, tilt: 0, bob: 0 };
+  /* ============================ 星璃 2.0(B3 半身全息版) ============================
+   * 底模 VRoid AvatarSample_G(CC0),贴图重绘:银青发、青色瞳、银白潮牌科技夹克 + 鎏金流光饰线、灰色高领内搭。
+   * 程序附加:双马尾 + 鎏金发扣、颈挂耳机、夹克高立领;全息效果:腰部以下裁切(光环升起的半身像)、浮动六边形图标、光点。 */
+  var A = { vrm: null, mood: 'neutral', talk: 0, blinkT: 2, look: new T.Object3D(), waveT: 0, tilt: 0, bob: 0, wink: 0, acc: [] };
+  function hairTex() {
+    var c = document.createElement('canvas'); c.width = 256; c.height = 128; var g = c.getContext('2d');
+    var gr = g.createLinearGradient(0, 0, 256, 0); gr.addColorStop(0, '#eef8fb'); gr.addColorStop(0.45, '#d8eef4'); gr.addColorStop(0.8, '#a6e2ef'); gr.addColorStop(1, '#7fd7ea');
+    g.fillStyle = gr; g.fillRect(0, 0, 256, 128);
+    for (var y = 0; y < 128; y += 2) { g.fillStyle = 'rgba(70,120,140,' + (0.05 + Math.random() * 0.16) + ')'; g.fillRect(0, y, 256, 1); }
+    for (y = 0; y < 128; y += 9) { g.fillStyle = 'rgba(255,255,255,0.35)'; g.fillRect(0, y + (Math.random() * 4 | 0), 256, 1); }
+    var t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; return t;
+  }
+  function taperTube(curve, r0, seg, rad, prof) {
+    var g = new T.TubeGeometry(curve, seg, 1, rad, false), p = g.attributes.position, v = new T.Vector3(), c = new T.Vector3();
+    for (var i = 0; i <= seg; i++) {
+      var t = i / seg; curve.getPointAt(t, c); var r = r0 * prof(t);
+      for (var j = 0; j <= rad; j++) { var k = i * (rad + 1) + j; v.fromBufferAttribute(p, k).sub(c); v.x *= r; v.y *= r; v.z *= r * 0.75; v.add(c); p.setXYZ(k, v.x, v.y, v.z); }
+    }
+    g.computeVertexNormals(); return g;
+  }
+  function hexTex(glyph) {
+    var c = document.createElement('canvas'); c.width = c.height = 128; var g = c.getContext('2d');
+    g.strokeStyle = 'rgba(140,235,255,0.95)'; g.lineWidth = 5; g.fillStyle = 'rgba(40,170,230,0.18)';
+    g.beginPath(); for (var i = 0; i < 6; i++) { var a = Math.PI / 6 + i * Math.PI / 3; g[i ? 'lineTo' : 'moveTo'](64 + Math.cos(a) * 54, 64 + Math.sin(a) * 54); } g.closePath(); g.fill(); g.stroke();
+    g.strokeStyle = 'rgba(255,205,120,1)'; g.lineWidth = 4; g.beginPath();
+    if (glyph === 0) { g.arc(64, 64, 20, 0, 6.283); g.moveTo(40, 64); g.lineTo(88, 64); }
+    else if (glyph === 1) { g.moveTo(44, 80); g.lineTo(64, 44); g.lineTo(84, 80); g.closePath(); }
+    else if (glyph === 2) { g.moveTo(42, 64); g.lineTo(86, 64); g.moveTo(74, 52); g.lineTo(86, 64); g.lineTo(74, 76); }
+    else { g.arc(64, 64, 8, 0, 6.283); g.moveTo(84, 64); g.arc(64, 64, 20, 0, 4.5); }
+    g.stroke(); var t = new T.CanvasTexture(c); t.encoding = T.sRGBEncoding; return t;
+  }
+  function addAccessories(vrm, clip) {
+    var head = bone('Head'), neck = bone('Neck');
+    var hm = new T.MeshStandardMaterial({ map: hairTex(), roughness: 0.45, metalness: 0.1, emissive: 0x2a5a66, emissiveIntensity: 0.25, side: T.DoubleSide });
+    var gold = new T.MeshBasicMaterial({ color: 0xffc77e, toneMapped: false });
+    var graph = new T.MeshStandardMaterial({ color: 0x2a2e35, roughness: 0.35, metalness: 0.7 });
+    var silver = new T.MeshStandardMaterial({ color: 0xdfe4ea, roughness: 0.25, metalness: 0.85 });
+    var jacket = new T.MeshPhysicalMaterial({ color: 0xeef0f2, roughness: 0.5, metalness: 0.05, clearcoat: 0.3, side: T.DoubleSide });
+    [hm, gold, graph, silver, jacket].forEach(function (m) { m.clippingPlanes = clip; });
+    if (head) {
+      [-1, 1].forEach(function (s) {
+        var tg = new T.Group(); tg.position.set(s * 0.085, 0.165, 0.035); head.add(tg); A.acc.push({ g: tg, s: s });
+        var cv = new T.CatmullRomCurve3([[0, 0, 0], [s * 0.05, 0.0, 0.02], [s * 0.1, -0.08, 0.05], [s * 0.13, -0.3, 0.06], [s * 0.13, -0.58, 0.05], [s * 0.1, -0.86, 0.06], [s * 0.07, -1.02, 0.08]].map(function (p) { return new T.Vector3(p[0], p[1], p[2]); }));
+        var prof = function (t) { return t < 0.08 ? 0.45 + t * 6 : Math.max(0.06, 1.0 - Math.pow((t - 0.08) / 0.92, 1.6) * 0.95) * (0.92 + 0.08 * Math.sin(t * 12)); };
+        tg.add(new T.Mesh(taperTube(cv, 0.065, 72, 14, prof), hm));
+        // 外层几缕发丝,让发束更蓬松
+        [[0.012, 0.01], [-0.014, -0.008]].forEach(function (o, k) {
+          var cv2 = new T.CatmullRomCurve3(cv.points.map(function (p, i) { return new T.Vector3(p.x + o[0] * i, p.y, p.z + o[1] * i); }));
+          tg.add(new T.Mesh(taperTube(cv2, 0.035, 60, 10, function (t) { return Math.max(0.05, 1 - t * 0.95); }), hm));
+        });
+        // 鎏金发扣(概念图:发根处发光金色圆筒)
+        var clipG = new T.Group(); clipG.position.set(s * 0.02, 0.0, 0.005); clipG.rotation.z = s * 1.2; tg.add(clipG);
+        clipG.add(new T.Mesh(new T.CylinderGeometry(0.034, 0.034, 0.05, 28, 1, true), graph));
+        [-0.022, 0.022].forEach(function (y) { var r = new T.Mesh(new T.TorusGeometry(0.035, 0.005, 6, 32), gold); r.rotation.x = Math.PI / 2; r.position.y = y; clipG.add(r); });
+      });
+    }
+    if (neck) {
+      // 颈挂耳机
+      var hp = new T.Group(); hp.position.set(0, 0.0, 0.0); neck.add(hp);
+      var arc = new T.Mesh(new T.TorusGeometry(0.082, 0.011, 10, 40, Math.PI * 1.15), graph); arc.rotation.set(Math.PI / 2 - 0.25, 0, Math.PI * 0.0 - Math.PI * 0.075); arc.position.set(0, -0.005, 0.015); hp.add(arc);
+      [-1, 1].forEach(function (s) {
+        var cup = new T.Group(); cup.position.set(s * 0.086, -0.03, -0.012); cup.rotation.z = s * 0.25; hp.add(cup);
+        var c1 = new T.Mesh(new T.CylinderGeometry(0.043, 0.043, 0.034, 32), silver); c1.rotation.z = Math.PI / 2; cup.add(c1);
+        var c2 = new T.Mesh(new T.CylinderGeometry(0.032, 0.032, 0.038, 32), graph); c2.rotation.z = Math.PI / 2; c2.position.x = s * 0.004; cup.add(c2);
+        var gr = new T.Mesh(new T.TorusGeometry(0.04, 0.0035, 6, 36), gold); gr.rotation.y = Math.PI / 2; gr.position.x = s * 0.019; cup.add(gr);
+      });
+      // 夹克高立领(前方敞开)
+      var col = new T.Mesh(new T.CylinderGeometry(0.098, 0.072, 0.085, 40, 1, true, Math.PI + 0.55, Math.PI * 2 - 1.1), jacket); col.position.set(0, -0.045, 0.005); neck.add(col);
+      var ce = new T.Mesh(new T.TorusGeometry(0.098, 0.003, 6, 60, Math.PI * 2 - 1.1), gold); ce.rotation.set(Math.PI / 2, 0, -(Math.PI / 2 + 0.55) + Math.PI); ce.position.set(0, -0.0025, 0.005); neck.add(ce);
+    }
+    // 全息:裁切环、浮动六边形图标、光点
+    var ringS = new T.Sprite(new T.SpriteMaterial({ map: radialTex([[0, 'rgba(140,230,255,0.0)'], [0.55, 'rgba(140,230,255,0.0)'], [0.8, 'rgba(140,230,255,0.55)'], [1, 'rgba(140,230,255,0)']]), blending: T.AdditiveBlending, depthWrite: false, toneMapped: false }));
+    ringS.scale.set(0.42, 0.1, 1); ringS.material.opacity = 0.7; ringS.position.set(0, R.cutY + 0.005, 0); R.pad.add(ringS);
+    A.hex = [];
+    for (var i = 0; i < 4; i++) {
+      var sp = new T.Sprite(new T.SpriteMaterial({ map: hexTex(i), transparent: true, opacity: 0.9, blending: T.AdditiveBlending, depthWrite: false, toneMapped: false }));
+      sp.scale.setScalar(i % 2 ? 0.075 : 0.09); R.pad.add(sp); A.hex.push({ s: sp, a: i / 4 * 6.283 + 0.4, y: [1.38, 1.18, 1.5, 1.08][i], r: [0.3, 0.32, 0.26, 0.28][i] });
+    }
+    var n = R.tier === 'low' ? 80 : 180, sp3 = new Float32Array(n * 3), sc = new Float32Array(n * 3); A.spk = [];
+    for (i = 0; i < n; i++) { A.spk.push([Math.random() * 6.283, 0.12 + Math.random() * 0.24, R.cutY + Math.random() * 0.85, 0.2 + Math.random() * 0.6]); var gc2 = Math.random() < 0.35 ? [1, 0.8, 0.45] : [0.5, 0.9, 1]; sc.set(gc2, i * 3); }
+    var spg = new T.BufferGeometry(); spg.setAttribute('position', new T.BufferAttribute(sp3, 3)); spg.setAttribute('color', new T.BufferAttribute(sc, 3));
+    A.spkPts = new T.Points(spg, new T.PointsMaterial({ size: 0.01, map: radialTex([[0, 'rgba(255,255,255,1)'], [1, 'rgba(255,255,255,0)']]), vertexColors: true, transparent: true, blending: T.AdditiveBlending, depthWrite: false, toneMapped: false }));
+    R.pad.add(A.spkPts);
+  }
+  function updHolo(dt, t) {
+    A.acc.forEach(function (a) { a.g.rotation.z = a.s * (0.03 * Math.sin(t * 1.3 + a.s)) ; a.g.rotation.x = 0.04 * Math.sin(t * 1.1); });
+    if (A.hex) A.hex.forEach(function (h, i) { var a = h.a + t * 0.25; h.s.position.set(Math.cos(a) * h.r, h.y + Math.sin(t * 1.2 + i) * 0.02, Math.sin(a) * h.r * 0.6); h.s.material.opacity = 0.55 + 0.35 * Math.sin(t * 2 + i * 1.7); });
+    if (A.spkPts) {
+      var p = A.spkPts.geometry.attributes.position;
+      A.spk.forEach(function (s, i) { s[2] += dt * 0.06 * s[3]; if (s[2] > R.cutY + 0.9) s[2] = R.cutY; var a = s[0] + t * 0.3 * s[3]; p.setXYZ(i, Math.cos(a) * s[1], s[2], Math.sin(a) * s[1] * 0.7); });
+      p.needsUpdate = true;
+    }
+  }
   function loadAvatar() {
+    if (R.mode25) return R.c25.ready;
     return new Promise(function (res) {
       if (!window.THREE_VRM || !T.GLTFLoader) { console.warn('[voy] VRM 库缺失'); return res(null); }
       fetch('xingli.vrm').then(function (r) { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(function (buf) {
@@ -306,11 +533,16 @@
           THREE_VRM.VRMUtils.removeUnnecessaryJoints(gltf.scene);
           THREE_VRM.VRM.from(gltf, { materialImporter: new THREE_VRM.VRMMaterialImporter({ encoding: T.sRGBEncoding }) }).then(function (vrm) {
             A.vrm = vrm; var s = vrm.scene;
-            s.traverse(function (o) { o.frustumCulled = false; if (o.material) [].concat(o.material).forEach(function (m) { m.toneMapped = false; }); });
-            s.scale.setScalar(0.37); s.position.set(0, 0.016, 0); s.rotation.y = Math.PI;   // VRM 0.x 默认朝 -Z,转向船长
+            // 半身像:按髋部高度定位,腰部以下用裁切平面隐去
+            s.updateMatrixWorld(true); var hip = vrm.humanoid.getBoneNode(THREE_VRM.VRMSchema.HumanoidBoneName.Hips), hp = new T.Vector3();
+            hip.getWorldPosition(hp); var K = 0.8; A.K = K; A.y0 = R.padTop + 0.1 - hp.y * K;
+            R.cutY = R.padTop + 0.11 + 0.06;
+            R.clip = [new T.Plane(new T.Vector3(0, 1, 0), -R.cutY)]; R.r.localClippingEnabled = true;
+            s.traverse(function (o) { o.frustumCulled = false; if (o.material) [].concat(o.material).forEach(function (m) { m.toneMapped = false; m.clippingPlanes = R.clip; m.clipping = true; }); });
+            s.scale.setScalar(K); s.position.set(0, A.y0, 0); s.rotation.y = Math.PI - 0.35;   // VRM 0.x 默认朝 -Z,转向船长
             R.pad.add(s);
-            A.look.position.set(0, 1.25, 0.2); R.in.add(A.look); vrm.lookAt.target = A.look;
-            pose(0); res(vrm);
+            A.look.position.set(0, 1.5, 1.2); R.in.add(A.look); vrm.lookAt.target = A.look;
+            pose(0); addAccessories(vrm, R.clip); res(vrm);
           }).catch(function (e) { console.warn('[voy] VRM 解析失败', e); res(null); });
         }, function (e) { console.warn('[voy] glTF 解析失败', e); res(null); });
       }).catch(function (e) { console.warn('[voy] 星璃模型加载失败', e); res(null); });
@@ -349,6 +581,7 @@
     // 眨眼
     A.blinkT -= dt; var bl = 0; if (A.blinkT < 0.15) bl = Math.sin(Math.max(0, A.blinkT) / 0.15 * Math.PI); if (A.blinkT < 0) A.blinkT = 2 + Math.random() * 3.5;
     bs('Blink', CUR.Joy > 0.5 ? 0 : bl);
+    if (A.wink > 0) { A.wink -= dt * 1.4; bs('BlinkR', Math.sin(Math.min(1, Math.max(0, A.wink)) * Math.PI)); }
     // 说话口型:A I U E O 轮换
     var mouth = { A: 0, I: 0, U: 0, E: 0, O: 0 };
     if (A.talk > 0) { var seq = ['A', 'I', 'U', 'E', 'O'], ph = t * 11, k = seq[Math.floor(ph) % 5]; mouth[k] = 0.35 + 0.45 * Math.abs(Math.sin(ph * Math.PI)); }
@@ -356,8 +589,8 @@
     Object.keys(mouth).forEach(function (k) { bs(k, mouth[k]); });
     if (A.waveT > 0) A.waveT -= dt * 0.45;
     // 视线跟随指针
-    A.look.position.set(R.mouse.x * 0.8, 1.2 + R.mouse.y * 0.5, 0.3);
-    A.vrm.scene.position.y = 0.016 + Math.sin(t * 1.4) * 0.006;
+    A.look.position.set(R.mouse.x * 0.9, 1.5 + R.mouse.y * 0.5, 1.6);
+    A.vrm.scene.position.y = A.y0 + Math.sin(t * 1.4) * 0.006;
     pose(t); A.vrm.update(dt);
   }
 
@@ -632,14 +865,111 @@
   }
 
   function onClick3D(e) {
+    if (R.mode25) {
+      var k = hit25(e);
+      if (k === 'xl') { var l0 = V.lines.poke[(Math.random() * V.lines.poke.length) | 0]; A.waveT = 1.2; A.gl = 1; say(l0); }
+      else if (k === 'map' && VY.state !== 'travel') { sfx.glass(880); openMap(); }
+      return;
+    }
     R.ptr.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); R.ray.setFromCamera(R.ptr, R.cam);
     var hits = R.ray.intersectObjects(R.in.children, true);
     for (var i = 0; i < hits.length; i++) {
       var o = hits[i].object, isAv = false, p = o; while (p) { if (A.vrm && p === A.vrm.scene) isAv = true; p = p.parent; }
-      if (isAv) { var l = V.lines.poke[(Math.random() * V.lines.poke.length) | 0]; A.waveT = 1.2; say(l); return; }
+      if (isAv) { var l = V.lines.poke[(Math.random() * V.lines.poke.length) | 0]; A.waveT = 1.2; A.wink = 1; setMood('joy'); say(l); return; }
       if (o === R.holoHit) { if (VY.state !== 'travel') { sfx.glass ? sfx.glass(880) : 0; openMap(); } return; }
       if (o === R.knob || o.parent === R.knob) { if (VY.state === 'travel') return; var idx = VY.engine ? V.engines.indexOf(V.engine(VY.engine)) : -1; var nx = V.engines[(idx + 1) % V.engines.length]; pickEngine(nx.id); return; }
     }
+  }
+
+  /* ============================ 驾驶舱 2.5D(M1.7b:概念图贴图 + 深度视差) ============================ */
+  // 驾驶舱 = cockpit_B_luxury 原图贴图(舷窗区抠透明,露出真实舱外场景),MiDaS 深度图做鼠标视差;
+  // 星璃 = B3 概念图抠像,全息着色器(扫描线/闪烁/发梢摆动/眨眼)。?ck=3d 可回到程序建模版。
+  var IMG_ASP = 1408 / 768, XL_ASP = 780 / 768;
+  var GAL = [480 / 900, 1 - 228 / 491], TABLE = [476 / 900, 1 - 292 / 491], DISC = [622 / 900, 1 - 342 / 491];
+  function build25() {
+    var L = new T.TextureLoader(), n = 0, done; R.c25 = { ready: new Promise(function (r) { done = r; }) };
+    var S = new T.Scene(), cam = new T.OrthographicCamera(0, 1, 1, 0, -1, 1); R.s25 = S; R.cam25 = cam;
+    function tex(u) { var t = L.load(u, function () { if (++n === 4) done(); }, undefined, function () { console.warn('[voy] 贴图加载失败', u); if (++n === 4) done(); }); t.minFilter = T.LinearFilter; t.generateMipmaps = false; return t; }
+    var U = R.c25.u = { map: { value: tex('ck25.webp') }, dep: { value: tex('ck25d.jpg') }, mouse: { value: new T.Vector2() }, t: { value: 0 }, power: { value: 0 },
+      sc: { value: new T.Vector4(0, 0, 1, 1) }, shake: { value: new T.Vector2() }, gal: { value: new T.Vector2(GAL[0], GAL[1]) } };
+    var q = new T.Mesh(new T.PlaneGeometry(1, 1), new T.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, depthTest: false,
+      vertexShader: 'varying vec2 vS;void main(){vS=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader: [
+        'uniform sampler2D map,dep;uniform vec2 mouse,shake,gal;uniform float t,power;uniform vec4 sc;varying vec2 vS;',
+        'void main(){',
+        ' vec2 uv=sc.xy+vS*sc.zw+shake;',
+        ' float d=texture2D(dep,uv).r;',
+        ' uv-=mouse*(d-0.32)*vec2(0.016,0.010);',             // 深度视差:近处动得多,舷窗几乎不动
+        ' vec2 P=(uv-gal)*vec2(900.,491.)/vec2(80.,44.);float r=length(P);',
+        ' if(r<1.){float a=0.10*sin(t*0.35)*(1.-r)*smoothstep(1.,0.6,r);float c=cos(a),s=sin(a);P=mat2(c,-s,s,c)*P;uv=mix(uv,gal+P*vec2(80.,44.)/vec2(900.,491.),smoothstep(1.,0.8,r));}',
+        ' vec4 c=texture2D(map,uv);',
+        ' float g=r<1.?1.+0.18*sin(t*2.1)*(1.-r):1.;',
+        ' c.rgb*=g*(1.+power*0.14*vec3(1.,0.78,0.48));',
+        ' gl_FragColor=c;}'].join('\n') }));
+    q.position.set(0.5, 0.5, 0); S.add(q); R.c25.bg = q;
+    // —— 星璃全息像
+    var X = R.c25.xu = { map: { value: tex('xl25.webp') }, bk: { value: tex('xl25b.webp') }, br: { value: new T.Vector4(0.3359, 0.6693, 0.1231, 0.0677) },
+      blink: { value: 0 }, t: { value: 0 }, talk: { value: 0 }, glitch: { value: 0 }, fade: { value: 0 } };
+    var xm = new T.Mesh(new T.PlaneGeometry(1, 1), new T.ShaderMaterial({ uniforms: X, transparent: true, depthWrite: false, depthTest: false,
+      vertexShader: 'varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader: [
+        'uniform sampler2D map,bk;uniform vec4 br;uniform float blink,t,talk,glitch,fade;varying vec2 vU;',
+        'float h(float x){return fract(sin(x*91.7)*43758.5);}',
+        'void main(){vec2 uv=vU;',
+        ' float side=smoothstep(0.30,0.04,uv.x)+smoothstep(0.70,0.96,uv.x);',     // 双马尾发梢在两侧,越往下摆幅越大
+        ' uv.x+=side*(1.-uv.y)*0.010*sin(t*1.25+uv.y*4.);',
+        ' float band=step(0.985,h(floor(uv.y*40.)+floor(t*14.)));uv.x+=band*glitch*0.02;',
+        ' vec4 c=texture2D(map,uv);',
+        ' vec2 b=(uv-br.xy)/br.zw;if(blink>0.&&b.x>0.&&b.x<1.&&b.y>0.&&b.y<1.){vec4 e=texture2D(bk,b);c.rgb=mix(c.rgb,e.rgb,e.a*blink);}',
+        ' float l=dot(c.rgb,vec3(.3,.59,.11));',
+        ' float a=c.a*mix(0.5,1.,smoothstep(0.04,0.22,l));',
+        ' a*=smoothstep(0.0,0.14,uv.y);',                                       // 腰部以下渐隐 = 从投影台升起
+        ' float scan=0.94+0.06*sin(gl_FragCoord.y*1.6+t*9.);',
+        ' float fl=0.975+0.025*sin(t*23.)*sin(t*7.3);',
+        ' vec3 col=c.rgb*(1.04+talk*0.08)*scan+vec3(0.02,0.06,0.09)*(1.-uv.y*0.5);',
+        ' gl_FragColor=vec4(col,clamp(a*fl*fade,0.,1.));}'].join('\n') }));
+    S.add(xm); R.c25.xl = xm;
+    // —— 投影光锥
+    var cone = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ map: radialTex([[0, 'rgba(120,230,255,0.55)'], [0.4, 'rgba(80,200,255,0.18)'], [1, 'rgba(80,200,255,0)']]), transparent: true, blending: T.AdditiveBlending, depthWrite: false, depthTest: false }));
+    S.add(cone); R.c25.cone = cone;
+    lay25();
+  }
+  function lay25() {
+    if (!R.c25) return; var w = innerWidth, hh = innerHeight, sa = w / hh, port = sa < 0.8, U = R.c25.u;
+    var zx, zy, fx = 0.5, fy = 0.5;
+    if (sa < IMG_ASP) { zy = 0.97; zx = zy * sa / IMG_ASP; fx = port ? 0.55 : 0.5; } else { zx = 0.97; zy = zx * IMG_ASP / sa; fy = 0.55; }
+    var x0 = Math.max(0.012, Math.min(1 - zx - 0.012, fx - zx / 2)), y0 = Math.max(0.012, Math.min(1 - zy - 0.012, fy - zy / 2));
+    U.sc.value.set(x0, y0, zx, zy); R.c25.view = [x0, y0, zx, zy];
+    var xl = R.c25.xl, H, cx, by;
+    if (!port) { H = 0.5; cx = (DISC[0] - x0) / zx; by = (DISC[1] - y0) / zy - 0.035; }
+    else { H = 0.42; cx = 0.62; by = 0.26; }
+    var W = H * XL_ASP / sa; if (W > 0.86) { W = 0.86; H = W * sa / XL_ASP; }
+    xl.scale.set(W, H, 1); xl.position.set(cx, by + H / 2, 0); R.c25.xr = [cx - W / 2, by, W, H];
+    R.c25.cone.scale.set(W * 0.75, H * 0.28, 1); R.c25.cone.position.set(cx, by + H * 0.05, 0);
+  }
+  function img2scr(u, v) { var s = R.c25.view; return [(u - s[0]) / s[2], (v - s[1]) / s[3]]; }
+  function hit25(e) {
+    var sx = e.clientX / innerWidth, sy = 1 - e.clientY / innerHeight, r = R.c25.xr;
+    if (sx > r[0] + r[2] * 0.2 && sx < r[0] + r[2] * 0.8 && sy > r[1] + r[3] * 0.12 && sy < r[1] + r[3] * 0.95) return 'xl';
+    var t = img2scr(TABLE[0], TABLE[1]), s = R.c25.view, dx = (sx - t[0]) * s[2] * 900 / 112, dy = (sy - t[1]) * s[3] * 491 / 70;
+    if (dx * dx + dy * dy < 1) return 'map';
+    return null;
+  }
+  function upd25(dt, t, sx, sy) {
+    if (!R.c25) return; var U = R.c25.u, X = R.c25.xu;
+    U.t.value = t; U.power.value = R.power || 0; U.shake.value.set(sx * 0.05, sy * 0.05);
+    U.mouse.value.x += (R.mouse.x - U.mouse.value.x) * Math.min(1, dt * 4); U.mouse.value.y += (R.mouse.y - U.mouse.value.y) * Math.min(1, dt * 4);
+    X.t.value = t; if (!R.c25.t0) R.c25.t0 = performance.now(); X.fade.value = Math.min(1, (performance.now() - R.c25.t0) / 1200);
+    // 眨眼(她本是 wink 表情,另一只眼也合上 = 眨眼)
+    A.blinkT -= dt; if (A.blinkT < 0) { A.blinkT = 2.6 + Math.random() * 3; A.bl = 0.16; }
+    if (A.bl > 0) { A.bl -= dt; X.blink.value = Math.sin(Math.max(0, A.bl) / 0.16 * Math.PI); } else X.blink.value = 0;
+    X.talk.value += ((A.talk ? 0.6 + 0.4 * Math.abs(Math.sin(t * 9)) : 0) - X.talk.value) * Math.min(1, dt * 10);
+    A.gl = Math.max(0, (A.gl || 0) - dt * 2); if (Math.random() < dt * 0.15) A.gl = 0.6; X.glitch.value = A.gl;
+    var r = R.c25.xr, xl = R.c25.xl, bob = Math.sin(t * 1.4) * 0.004 + (A.waveT > 0 ? Math.sin(A.waveT * 9) * 0.006 : 0) + X.talk.value * 0.002 * Math.sin(t * 18);
+    if (A.waveT > 0) A.waveT -= dt;
+    xl.position.y = r[1] + r[3] / 2 + bob; var br = 1 + Math.sin(t * 1.4) * 0.004; xl.scale.y = r[3] * br;
+    R.c25.cone.material.opacity = 0.75 + 0.25 * Math.sin(t * 3.1);
+    UI.stage.style.cursor = '';
   }
 
   /* ---------- 循环 ---------- */
@@ -654,19 +984,19 @@
     R.outCam.position.set(Math.sin(R.t * 0.13) * 0.6, Math.sin(R.t * 0.17) * 0.4, 0);
     R.outCam.rotation.set(-0.06 + R.mouse.y * 0.015 + sy, -R.mouse.x * 0.03 + sx, 0);
     }
-    R.cam.position.set(R.mouse.x * 0.05 + sx * 2, 1.3 + R.mouse.y * 0.025 + sy * 2, 0.8); R.cam.lookAt(R.look);
+    R.cam.position.set(R.mouse.x * 0.06 + sx * 2, 1.58 + R.mouse.y * 0.03 + sy * 2, 2.05); R.cam.lookAt(R.look);
     FX.update(dt, R.t, R.outCam); if (FX.engUpdate) FX.engUpdate(dt, R.t, R.outCam);
     if (R.knob && R.knobTarget != null) R.knob.rotation.y += (R.knobTarget - R.knob.rotation.y) * Math.min(1, dt * 8);
-    if (R.lever) R.lever.position.z += ((-0.6 - (R.leverTarget || (R.power || 0) * 0.12)) - R.lever.position.z) * Math.min(1, dt * 6);
+    if (R.lever) R.lever.position.z += ((R.leverZ0 - (R.leverTarget != null ? R.leverTarget + 0.1 : (R.power || 0) * 0.2)) - R.lever.position.z) * Math.min(1, dt * 6);
     R.beam.material.uniforms.t.value = R.t;
     if (R.holoGal) { R.holoGal.rotation.y = R.t * 0.12; R.holoCone.material.uniforms.t.value = R.t; R.goldMat.color.setHSL(0.1, 1, 0.68 + (R.power || 0) * 0.1 + Math.sin(R.t * 1.2) * 0.02); }
     R.cabinLight.intensity = 0.8 + (R.power || 0) * 0.6 + (VY.state === 'travel' ? Math.sin(R.t * 30) * 0.05 : 0);
     if ((R.frame = (R.frame || 0) + 1) % 3 === 0) drawScreens();
-    updAvatar(dt, R.t);
+    if (R.mode25) upd25(dt, R.t, sx, sy); else { updAvatar(dt, R.t); updHolo(dt, R.t); }
     if (!UI.map.hidden && R.frame % 6 === 0) drawMap();
     // 闲聊
     if (VY.state === 'idle' && UI.map.hidden) { R.idle = (R.idle || 0) + dt; if (R.idle > 28) { R.idle = 0; say(V.lines.idle[(Math.random() * V.lines.idle.length) | 0]); } } else R.idle = 0;
-    var r = R.r; r.clear(); r.render(R.out, R.outCam); if (!R.evaView) { r.clearDepth(); r.render(R.in, R.cam); }
+    var r = R.r; r.clear(); r.render(R.out, R.outCam); if (!R.evaView) { r.clearDepth(); if (R.mode25) r.render(R.s25, R.cam25); else r.render(R.in, R.cam); }
   }
 
   /* ============================ 进入 / 退出 ============================ */
