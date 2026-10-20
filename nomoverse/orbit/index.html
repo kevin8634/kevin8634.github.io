@@ -24,10 +24,18 @@
   function gHere(mu, r) { return mu / (r * r) * 1000; }   // km/s² → m/s²
   function orbitView(L, rMax, cyFrac) {
     var s = Math.min(L.w, L.h * 0.98) / (2 * rMax);
-    return { s: s, cx: L.w / 2, cy: L.h * (cyFrac || 0.5) };
+    var V = { s: s, cx: L.w / 2, cy: L.h * (cyFrac || 0.5) };
+    return L.d3 ? L.d3.view(V) : V;
   }
-  function toS(V, x, y) { return [V.cx + x * V.s, V.cy - y * V.s]; }
-  function bg(L) { var c = L.ctx; c.clearRect(0, 0, L.w, L.h); Dr.stars(c, L.w, L.h, 11, Math.round(L.w * L.h / 5000)); }
+  /* 3D 舞台下 toS 走透视投影(被地球挡住的点返回 NaN,画线时自动断开) */
+  function toS(V, x, y) { return V.p3 ? V.p3(x, y) : [V.cx + x * V.s, V.cy - y * V.s]; }
+  function bg(L) { var c = L.ctx; c.clearRect(0, 0, L.w, L.h); if (!L.d3) Dr.stars(c, L.w, L.h, 11, Math.round(L.w * L.h / 5000)); }
+  function earth(L, V) { if (!L.d3) Dr.earth(L.ctx, V.cx, V.cy, R * V.s); }
+  function ring(L, V, r, color) {
+    var c = L.ctx;
+    if (V.p3) { var pts = []; for (var k = 0; k <= 160; k++) { var a = k / 160 * 2 * Math.PI; pts.push(toS(V, r * Math.cos(a), r * Math.sin(a))); } c.save(); c.setLineDash([3, 5]); Dr.path(c, pts, color, 1); c.restore(); return; }
+    c.save(); c.setLineDash([3, 5]); c.strokeStyle = color; c.beginPath(); c.arc(V.cx, V.cy, r * V.s, 0, 7); c.stroke(); c.restore();
+  }
 
   /* ================= 第 1 关 扔得更远 ================= */
   var L1 = {
@@ -108,7 +116,7 @@
   /* ================= 第 2 关 牛顿大炮 ================= */
   var H2 = 150, K_DRAG = 1.2e-6;
   var L2 = {
-    name: "牛顿大炮",
+    name: "牛顿大炮", d3: true,
     goal: "在 150 km 高的「牛顿之山」上开炮,把炮弹速度调大,直到它绕地球整整一圈都不落地。",
     note: "地球为均匀球体、无自转,忽略月球与太阳;山高按 150 km 计(示意)。阻力为夸张示意。",
     ask: "炮弹越快,落得越远……快到什么程度,它就再也落不到地上?",
@@ -134,11 +142,12 @@
       var zf = ease(st.zoom), rView = lerp(900, 2.3 * R, zf);
       var V = orbitView(L, rView, lerp(0.9, 0.5, zf));
       // 镜头从山顶拉远到整颗地球
-      V.cy = lerp(L.h * 0.5 + (R + H2) * V.s, L.h * 0.5, zf);
-      Dr.earth(c, V.cx, V.cy, R * V.s);
+      V.cy = lerp(L.h * 0.5 + (L.d3 ? -L.d3.sinE : 1) * (R + H2) * V.s, L.h * 0.5, zf);
+      if (L.d3) L.d3.view(V);
+      earth(L, V);
       // 山
-      var mt = toS(V, 0, R + H2), base = R * V.s;
-      c.fillStyle = "#4a3a8f"; c.beginPath(); c.moveTo(V.cx - Math.max(10, 0.05 * base), V.cy - base + 1); c.lineTo(mt[0], mt[1]); c.lineTo(V.cx + Math.max(10, 0.05 * base), V.cy - base + 1); c.fill();
+      var mt = toS(V, 0, R + H2), hw = Math.max(10 / V.s, 0.05 * R), m0 = toS(V, -hw, R - 2), m1 = toS(V, hw, R - 2);
+      c.fillStyle = "#4a3a8f"; c.beginPath(); c.moveTo(m0[0], m0[1]); c.lineTo(mt[0], mt[1]); c.lineTo(m1[0], m1[1]); c.fill();
       Dr.label(c, "牛顿之山", mt[0] + 8, mt[1] - 4, "#bcb5e2", 11);
       if (st.body && L.phase === "running" || st.body && !st.done) {
         var steps = L.RM ? 1600 : 700, sub = 2, n = Math.round(steps * dt / sub);
@@ -272,7 +281,7 @@
 
   /* ================= 第 4 关 改宇宙 ================= */
   var L4 = {
-    name: "改宇宙",
+    name: "改宇宙", d3: true,
     goal: "拖动地球质量和轨道高度,做出周期 2 小时(115–125 分钟)的轨道。每绕一圈响一声低频脉冲。",
     note: "圆轨道,地球为均匀球体;改质量时地球大小不变。",
     ask: "如果地球变重,卫星要飞得更快还是更慢才不掉下来?",
@@ -298,8 +307,7 @@
       var mu = st.body ? st.mu : this.mu(L), r = st.body ? st.r : R + L.v.h;
       var target = r * 1.12; st.view = st.view ? (L.RM ? target : lerp(st.view, target, Math.min(1, dt * 4))) : target;
       var V = orbitView(L, st.view, 0.5);
-      Dr.earth(c, V.cx, V.cy, R * V.s);
-      c.save(); c.setLineDash([3, 5]); c.strokeStyle = "rgba(196,181,253,.45)"; c.beginPath(); c.arc(V.cx, V.cy, r * V.s, 0, 7); c.stroke(); c.restore();
+      earth(L, V); ring(L, V, r, "rgba(196,181,253,.45)");
       if (st.body && !st.done) {
         var simPerSec = 1000, sub = 2, n = Math.round(simPerSec * dt / sub);
         for (var i = 0; i < n; i++) {
@@ -341,7 +349,7 @@
   /* ================= 第 5 关 追上空间站 ================= */
   var RT = R + 420, GAP = 10 * Math.PI / 180, FUEL = 250, DV = [0.005, 0.01, 0.02];
   var L5 = {
-    name: "追上空间站",
+    name: "追上空间站", d3: true,
     goal: "你的飞船在同一轨道上,落后空间站 10°。点火变轨,靠到 30 km 内且相对速度 < 30 m/s 就算会合。燃料 250 m/s。",
     note: "二体模型,冲量式点火(瞬间改变速度);飞船与空间站互不吸引。",
     ask: "空间站就在前面,你想追上它。直接踩油门加速,会更快追上吗?",
@@ -388,8 +396,7 @@
     frame: function (L, dt) {
       var c = L.ctx, st = L.st; bg(L);
       var V = orbitView(L, RT * 1.18, 0.5);
-      Dr.earth(c, V.cx, V.cy, R * V.s);
-      c.save(); c.setLineDash([3, 5]); c.strokeStyle = "rgba(196,181,253,.35)"; c.beginPath(); c.arc(V.cx, V.cy, RT * V.s, 0, 7); c.stroke(); c.restore();
+      earth(L, V); ring(L, V, RT, "rgba(196,181,253,.35)");
       var rel = this.rel(st);
       if (st.live && L.phase === "running") {
         var warp = (L.v.fast === 1 && rel.d > 300) ? 600 : 120; if (L.RM) warp = Math.min(warp, 300);
@@ -443,7 +450,7 @@
   };
 
   NV.task({
-    id: "orbit", guide: "abyss",
+    id: "orbit", guide: "abyss", scene3d: "core/orbit3d.js",
     title: "为什么宇航员在空间站会飘起来?",
     bridge: { href: "../../starhelm/", label: "天枢 Starhelm「空间站为什么掉不下来?」" },
     safety: "请勿在现实中模仿:不要从高处抛掷物体;火箭与发射只能在模拟中尝试。",
