@@ -208,6 +208,8 @@
       .x-br { position: fixed; inset: 0; z-index: 9; background: #03050d; opacity: 0; transition: opacity .8s ease; touch-action: none; }
       .x-br.on { opacity: 1; }
       .x-br canvas { cursor: grab; display: block; }
+      .x-br #brCv { position: relative; z-index: 1; }
+      .x-br #brGL { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
       .x-br__back { position: absolute; top: 18px; left: 20px; z-index: 2; }
       .x-br__top { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); z-index: 2; width: min(420px, 52vw); text-align: center; }
       .x-br__search {
@@ -763,7 +765,7 @@
     <div class="toast" id="toast"></div>
 
     <div class="x-br" id="bridges" hidden role="dialog" aria-label="知识星桥">
-      <canvas id="brCv" role="img" aria-label="七团螺旋星系形态的知识星图，由十四条星桥相连"></canvas>
+      <canvas id="brCv" role="img" aria-label="七团三维粒子星系形态的知识星图，由十四条星桥相连"></canvas>
       <button class="btn x-br__back" id="brBack">← 回到北斗</button>
       <div class="x-br__top">
         <input class="x-br__search" id="brSearch" type="search" placeholder="搜索世界或问题…" aria-label="搜索世界或问题" autocomplete="off" />
@@ -867,7 +869,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.6.7</b></span>
+            <span>创世计划总门户 <b>v0.6.8</b></span>
           </footer>
         </div>
       </div>
@@ -958,7 +960,7 @@
           age: ["huo","chen","he"], tags: ["ai","math"], why: "想弄懂 AI 是怎么学会的？亲手训练它、考考它，再给它立规矩。" },
         { id: "06", star: "摇光", name: "觉弈", en: "Ludoterra", field: "认知觉醒",
           desc: "看见自己的思维，做出更清醒的选择。", color: "#f5c26b", live: true,
-          meta: ["已上线 v0.15", "7 个关卡 · 地球Online 玩家手册"], href: "ludoterra/", prefix: ["gn:lt:"],
+          meta: ["已上线 v0.16", "7 个关卡 · 地球Online 玩家手册"], href: "ludoterra/", prefix: ["gn:lt:"],
           age: ["huo","chen","he"], tags: ["society"], why: "想看清自己怎么思考、怎么做选择？把每一次选择当成一局棋来复盘。", ageTxt: "星火 12+ · 星芽可试入门关" },
         { id: "07", star: "天枢", name: "天枢", en: "Starhelm", field: "天文",
           desc: "北斗第一星 · 用真实实时数据看见此刻的天空。", color: "#dfe6f3", live: true,
@@ -1871,6 +1873,130 @@
         g.fillStyle = gr; g.fillRect(C - 62, C - 62, 124, 124);
         return c;
       }
+      /* v0.6.8 Three.js / WebGL 星系层：本地 vendor/three.min.js，不支持则保持 Canvas 2D */
+      var GL = { on: false, tried: false };
+      window.__brGL = function () { return GL.on; };
+      var GL_V = "attribute vec3 acol; attribute float size; attribute float ph; uniform float uTime, uPix, uTw; varying vec3 vC; varying float vA;" +
+        "void main(){ vC = acol; vA = 1.0 - uTw + uTw * (0.5 + 0.5 * sin(uTime * 0.0016 + ph)); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_PointSize = size * uPix; }";
+      var GL_RV = "attribute vec3 acol; attribute float size; attribute float sp; uniform float uTime, uPix, uL; varying vec3 vC; varying float vA;" +
+        "void main(){ vec3 p = position; float u = fract(p.x + uTime * sp); vA = sin(u * 3.14159); p.x = (u - 0.5) * uL; vC = acol; gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0); gl_PointSize = size * uPix; }";
+      var GL_F = "uniform sampler2D uTex; uniform float uAlpha; varying vec3 vC; varying float vA; void main(){ float t = texture2D(uTex, gl_PointCoord).a; gl_FragColor = vec4(vC * t * vA * uAlpha, 1.0); }";
+      var GL_FD = "uniform sampler2D uTex; uniform float uAlpha; varying vec3 vC; varying float vA; void main(){ float t = texture2D(uTex, gl_PointCoord).a; gl_FragColor = vec4(vC, t * vA * uAlpha); }";
+      function glLoad() {
+        if (GL.tried) { if (GL.on && !GL.built) glBuildWorlds(); return; }
+        GL.tried = true;
+        try { var t = document.createElement("canvas"); if (!(t.getContext("webgl2") || t.getContext("webgl"))) return; } catch (e) { return; }
+        var sc = document.createElement("script"); sc.src = "vendor/three.min.js";
+        sc.onload = function () { try { glInit(); } catch (e) { GL.on = false; if (GL.cv) GL.cv.style.display = "none"; } };
+        document.head.appendChild(sc);
+      }
+      function glMat(vs, fs, extra, dark) {
+        var T = THREE, u = { uTex: { value: GL.tex }, uTime: { value: 0 }, uPix: { value: 1 }, uTw: { value: 0 }, uAlpha: { value: 1 }, uL: { value: 1 } };
+        return new T.ShaderMaterial({ uniforms: u, vertexShader: vs, fragmentShader: fs, transparent: true, depthWrite: false, depthTest: false,
+          blending: dark ? T.NormalBlending : T.AdditiveBlending });
+      }
+      function glGeo(pos, col, size, extraName, extra) {
+        var T = THREE, g = new T.BufferGeometry();
+        g.setAttribute("position", new T.Float32BufferAttribute(pos, 3));
+        g.setAttribute("acol", new T.Float32BufferAttribute(col, 3));
+        g.setAttribute("size", new T.Float32BufferAttribute(size, 1));
+        g.setAttribute(extraName, new T.Float32BufferAttribute(extra, 1));
+        return g;
+      }
+      function rgb(hex) { var n = parseInt(hex.slice(1), 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; }
+      function glInit() {
+        var T = THREE, cv = document.createElement("canvas");
+        cv.id = "brGL"; cv.setAttribute("aria-hidden", "true"); BR.el.insertBefore(cv, BR.cv);
+        var r = new T.WebGLRenderer({ canvas: cv, antialias: false, alpha: false, powerPreference: "high-performance" });
+        r.setClearColor(0x03050d, 1);
+        GL.cv = cv; GL.r = r; GL.scene = new T.Scene(); GL.cam = new T.OrthographicCamera(0, 1, 0, -1, -4000, 4000);
+        GL.mob = matchMedia("(pointer: coarse)").matches || Math.min(innerWidth, innerHeight) < 600;
+        var tc = mkC(64), tg = tc.getContext("2d"), gr = tg.createRadialGradient(32, 32, 0, 32, 32, 32);
+        gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.18, "rgba(255,255,255,0.75)"); gr.addColorStop(0.45, "rgba(255,255,255,0.18)"); gr.addColorStop(1, "rgba(255,255,255,0)");
+        tg.fillStyle = gr; tg.fillRect(0, 0, 64, 64);
+        GL.tex = new T.CanvasTexture(tc);
+        cv.addEventListener("webglcontextlost", function (e) { e.preventDefault(); GL.on = false; cv.style.display = "none"; });
+        GL.on = true;
+        if (BR.worlds) glBuildWorlds();
+        glResize();
+      }
+      /* 从每界一形的星系图采样粒子，保留形态并给出厚度 */
+      function glBuildWorlds() {
+        var T = THREE, N = GL.mob ? 3000 : 6500;
+        GL.gx = {};
+        for (var id in BR.worlds) {
+          var w = BR.worlds[id], S = w.img.width, C = S / 2, dt = w.img.getContext("2d").getImageData(0, 0, S, S).data;
+          var pos = [], col = [], siz = [], ph = [], n = 0, guard = 0, base = rgb(w.color);
+          while (n < N && guard++ < N * 60) {
+            var px = Math.random() * S | 0, py = Math.random() * S | 0, k = (py * S + px) * 4, a = dt[k + 3] / 255;
+            var mx = Math.max(dt[k], dt[k + 1], dt[k + 2]) / 255, L = a * mx;
+            if (Math.random() > Math.pow(L, 1.15) * 1.6) continue;
+            var x = (px - C) / C, y = (py - C) / C, rr = Math.hypot(x, y);
+            var z = gauss() * (0.035 + 0.16 * Math.max(0, 1 - rr / 0.3));
+            pos.push(x, -y, z);
+            var m = Math.max(dt[k], dt[k + 1], dt[k + 2], 1);
+            col.push(dt[k] / m * (0.32 + L * 0.5), dt[k + 1] / m * (0.32 + L * 0.5), dt[k + 2] / m * (0.32 + L * 0.5));
+            siz.push(1.3 + L * 2.8 + (Math.random() < 0.02 ? 3.5 : 0)); ph.push(Math.random() * 6.283); n++;
+          }
+          for (var j = 0; j < 4; j++) { pos.push(0, 0, 0); col.push(base[0] * 0.3 + 0.12, base[1] * 0.3 + 0.12, base[2] * 0.3 + 0.12); siz.push([80, 36, 16, 7][j]); ph.push(0); }
+          for (j = 0; j < 22; j++) { var aa = Math.random() * 6.283, r2 = 0.15 + Math.random() * 0.6; pos.push(Math.cos(aa) * r2, Math.sin(aa) * r2, gauss() * 0.05); col.push(base[0] * 0.07, base[1] * 0.07, base[2] * 0.07); siz.push(60 + Math.random() * 70); ph.push(0); }
+          var mat = glMat(GL_V, GL_F); mat.uniforms.uTw.value = 0.35;
+          var pts = new T.Points(glGeo(pos, col, siz, "ph", ph), mat);
+          var inc = new T.Group(), out = new T.Group();
+          inc.rotation.x = Math.acos(0.55); inc.add(pts); out.add(inc); out.renderOrder = 5; pts.renderOrder = 5;
+          GL.scene.add(out);
+          GL.gx[id] = { out: out, inc: inc, pts: pts, mat: mat };
+        }
+        GL.built = true;
+      }
+      function glResize() {
+        if (!GL.on) return;
+        var T = THREE, pr = Math.min(DPR, GL.mob ? 1.5 : 2);
+        GL.pr = pr; GL.r.setPixelRatio(pr); GL.r.setSize(W, H);
+        GL.cam.left = 0; GL.cam.right = W; GL.cam.top = 0; GL.cam.bottom = -H; GL.cam.updateProjectionMatrix();
+        ["bg", "riv", "dust"].forEach(function (k) { if (GL[k]) { GL.scene.remove(GL[k]); GL[k].traverse(function (o) { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); GL[k] = null; } });
+        // 背景星
+        var pos = [], col = [], siz = [], ph = [], i, n = Math.round(W * H / (GL.mob ? 1500 : 1100));
+        for (i = 0; i < n; i++) { pos.push(Math.random() * W, -Math.random() * H, 0); var c = Math.random() < 0.2 ? [0.79, 0.84, 1] : [1, 1, 1], b = 0.2 + Math.random() * 0.6; col.push(c[0] * b, c[1] * b, c[2] * b); siz.push(1.2 + Math.random() * 2.2); ph.push(Math.random() * 6.283); }
+        var mb = glMat(GL_V, GL_F); mb.uniforms.uTw.value = 0.55;
+        GL.bg = new T.Points(glGeo(pos, col, siz, "ph", ph), mb); GL.bg.renderOrder = 1; GL.scene.add(GL.bg);
+        // 星河洋流：粒子带 + 星云团 + 快速流星
+        var rl = Math.hypot(W, H), rh = Math.min(W, H) * 0.75, sp = [];
+        pos = []; col = []; siz = [];
+        var nr = GL.mob ? 5200 : 11000;
+        for (i = 0; i < nr; i++) {
+          pos.push(Math.random(), gauss() * rh * 0.13, 0);
+          var w2 = Math.random() < 0.25 ? [1, 0.91, 0.78] : [0.84, 0.88, 1], b2 = 0.2 + Math.random() * 0.55;
+          col.push(w2[0] * b2, w2[1] * b2, w2[2] * b2); siz.push(1 + Math.random() * 2.2); sp.push(1 / 300000);
+        }
+        for (i = 0; i < 46; i++) { pos.push(Math.random(), gauss() * rh * 0.09, 0); col.push(0.075, 0.08, 0.11); siz.push(rh * (0.3 + Math.random() * 0.4)); sp.push(1 / 300000); }
+        for (i = 0; i < 70; i++) { pos.push(Math.random(), gauss() * rh * 0.11, 0); col.push(0.9, 0.93, 1); siz.push(2.4 + Math.random() * 2); sp.push((0.6 + Math.random() * 0.8) / 70000); }
+        var mr = glMat(GL_RV, GL_F); mr.uniforms.uL.value = rl * 1.1;
+        var riv = new T.Points(glGeo(pos, col, siz, "sp", sp), mr); riv.renderOrder = 2;
+        // 暗尘带（正常混合压暗）
+        pos = []; col = []; siz = []; sp = [];
+        for (i = 0; i < 40; i++) { pos.push(Math.random(), gauss() * rh * 0.04, 0); col.push(0.055, 0.03, 0.025); siz.push(rh * (0.1 + Math.random() * 0.16)); sp.push(1 / 300000); }
+        var md = glMat(GL_RV, GL_FD, null, true); md.uniforms.uL.value = rl * 1.1; md.uniforms.uAlpha.value = 0.35;
+        var dust = new T.Points(glGeo(pos, col, siz, "sp", sp), md); dust.renderOrder = 3;
+        GL.riv = new T.Group(); GL.riv.add(riv); GL.riv.renderOrder = 2; GL.scene.add(GL.riv);
+        GL.dust = new T.Group(); GL.dust.add(dust); GL.scene.add(GL.dust);
+        GL.rivM = [mr, md];
+      }
+      function glRender(now, z, port, spinT, M) {
+        var t = RM ? 0 : now, pr = GL.pr, ang = port ? -1.15 : -0.32, rs = z * 0.4 + 0.6;
+        GL.bg.material.uniforms.uTime.value = t; GL.bg.material.uniforms.uPix.value = pr;
+        [GL.riv, GL.dust].forEach(function (g) { g.position.set(W / 2 + BR.tx * 0.5, -(H / 2 + BR.ty * 0.5), 0); g.rotation.z = -ang; g.scale.set(rs, rs, 1); });
+        GL.rivM.forEach(function (m) { m.uniforms.uTime.value = t; m.uniforms.uPix.value = pr * rs; });
+        for (var id in GL.gx) {
+          var G = GL.gx[id], w = BR.worlds[id], s = w.sc, R = w.R;
+          G.out.position.set(s.x, -s.y, 0); G.out.rotation.z = -w.tilt; G.out.scale.set(R, R, R);
+          G.inc.rotation.x = Math.acos(0.55) + (RM ? 0 : Math.sin(now / 41000 + w.ph) * 0.12);
+          G.pts.rotation.z = -(w.spin + spinT * w.dir);
+          G.mat.uniforms.uTime.value = t; G.mat.uniforms.uPix.value = pr * Math.max(0.7, Math.pow(R / 150, 0.6));
+          G.mat.uniforms.uAlpha.value = (w.live ? 1 : 0.45) * (M && !M.w[id] ? 0.18 : 1);
+        }
+        GL.r.render(GL.scene, GL.cam);
+      }
       function buildWorlds() {
         BR.worlds = {};
         WORLDS.forEach(function (w) {
@@ -1892,6 +2018,7 @@
         var rl = Math.hypot(W, H);
         BR.riv = mkRiver(Math.round(rl * 0.9), Math.round(Math.min(W, H) * 0.75)); BR.rivL = rl;
         BR.flow = []; for (var f = 0; f < 70; f++) BR.flow.push({ u: Math.random(), v: gauss() * 0.11, s: 0.6 + Math.random() * 0.8, a: 0.3 + Math.random() * 0.5 });
+        if (GL.on) glResize();
       }
       function brZoomAt(px, py, f, smooth) {
         var base = BR.anim || BR, z2 = Math.max(0.6, Math.min(2.5, base.zoom * f)), k = z2 / base.zoom;
@@ -1920,10 +2047,11 @@
           BR.tx += BR.vx; BR.ty += BR.vy; BR.vx *= 0.92; BR.vy *= 0.92;
         }
         var g = bctx, z = BR.zoom, port = H > W, id, w;
-        g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.fillStyle = "#03050d"; g.fillRect(0, 0, W, H);
-        if (BR.bg) g.drawImage(BR.bg, 0, 0, W, H);
+        g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
+        if (GL.on && GL.built) g.clearRect(0, 0, W, H);
+        else { g.fillStyle = "#03050d"; g.fillRect(0, 0, W, H); if (BR.bg) g.drawImage(BR.bg, 0, 0, W, H); }
         // 星河洋流：斜贯画面，约 5 分钟流过一个周期；流动星点约 70 秒穿过
-        if (BR.riv) {
+        if (BR.riv && !(GL.on && GL.built)) {
           var rv = BR.riv, rw = rv.width, rh = rv.height, ang = port ? -1.15 : -0.32, sh = RM ? 0 : (now / 300000 % 1) * rw;
           g.save(); g.translate(W / 2 + BR.tx * 0.5, H / 2 + BR.ty * 0.5); g.rotate(ang); g.scale(z * 0.4 + 0.6, z * 0.4 + 0.6);
           g.globalAlpha = 0.95;
@@ -1952,10 +2080,11 @@
           if (s.x < -R * 2 || s.x > W + R * 2 || s.y < -R * 2 || s.y > H + R * 2) continue;
           g.globalAlpha = (w.live ? 1 : 0.45) * (M && !M.w[id] ? 0.18 : 1);
           g.save(); g.translate(s.x, s.y); g.rotate(w.tilt); g.scale(1, 0.55); g.rotate(w.spin + spinT * w.dir);
-          g.drawImage(w.img, -R, -R, R * 2, R * 2);
+          if (!(GL.on && GL.built)) g.drawImage(w.img, -R, -R, R * 2, R * 2);
           g.restore();
           if (!w.live) { var mg = g.createRadialGradient(s.x, s.y, 0, s.x, s.y, R * 1.1); mg.addColorStop(0, "rgba(190,200,230,0.10)"); mg.addColorStop(1, "rgba(190,200,230,0)"); g.globalAlpha = 1; g.fillStyle = mg; g.fillRect(s.x - R * 1.1, s.y - R * 1.1, R * 2.2, R * 2.2); }
         }
+        if (GL.on && GL.built) glRender(now, z, port, spinT, M);
         // 星桥
         BRIDGES.forEach(function (b, i) {
           var A = BR.worlds[b.a.w], B = BR.worlds[b.b.w];
@@ -2097,7 +2226,7 @@
         closeAll();
         if (!BR.worlds) buildWorlds();
         BR.open = true; BR.pin = BR.hover = -1; BR.shown = -2; BR.el.hidden = false; brResize();
-        requestAnimationFrame(function () { BR.el.classList.add("on"); }); SND.play("bridge-open");
+        glLoad(); requestAnimationFrame(function () { BR.el.classList.add("on"); }); SND.play("bridge-open");
         BR.raf = requestAnimationFrame(brDraw);
       }
       function hideBridges() {
@@ -2145,6 +2274,8 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.6.8", d: "2026-10-20", t: "「展开星桥」改用 Three.js / WebGL 渲染：七星系成为可倾斜自转的三维粒子星系，星河洋流粒子流动更细腻；设备不支持时自动退回原版。" },
+        { w: "06", v: "v0.16", d: "2026-10-20", t: "星盘改为 WebGL 着色器渲染：三层台阶盘体、金属侧壁、星宿玻璃、鎏金流光与中心浑仪，不支持时自动退回 2D。" },
         { w: "gn", v: "v0.6.7", d: "2026-10-20", t: "「展开星桥」七星系升级：一界一形（黄金螺线、棒旋磁力线、六边晶格、双螺旋、电路旋臂、金莲、经典旋涡），在星河洋流中缓慢自转漂移。" },
         { w: "06", v: "v0.15", d: "2026-10-20", t: "星盘 UI 2.0 按效果图重做：真实透视倾斜、三层环分高度、中心浑仪金环转动、鎏金流光与星闪。" },
         { w: "06", v: "v0.14", d: "2026-10-20", t: "星盘 UI 2.0：细金线、半透明星宿盘、鎏金流光与星闪，外圈北斗等星座连线，面板磨砂玻璃加四角金框。" },
