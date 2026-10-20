@@ -64,6 +64,28 @@ table.map th{color:var(--gold);font-weight:600;font-size:12px}
 @media (max-width:1199px){#side{top:auto;bottom:118px;right:50%;transform:translateX(50%);max-height:38vh;display:none}#side.on{display:block}}
 @media (max-width:640px){.foot{display:none}#hero h1{font-size:16.5px;letter-spacing:.5px}#hero p{display:none}.ages,.layers{grid-template-columns:repeat(2,1fr)}#hero{top:54px}#hero p{font-size:12px}#rec{bottom:104px;gap:6px;padding:8px 10px}#rec .q{font-size:13px}#rec .lt-btn{padding:6px 10px}#dock{bottom:24px}#dock .lt-btn{font-size:12px;padding:5px 10px}.gl{grid-template-columns:1fr}#side{bottom:150px}}
 @media (max-height:480px){#hero,#rec,.foot{display:none}#dock{bottom:24px}.lt-hud{display:none}#side{top:56px;bottom:auto;max-height:calc(100% - 100px)}}
+/* v0.12 星之音播放器 */
+#player{position:fixed;right:24px;top:70px;width:min(400px,calc(100% - 16px));max-height:calc(100% - 90px);overflow:auto;z-index:45;padding:16px 16px 12px;display:none}
+body.pmode #player{display:block}
+body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .lt-hud,body.pmode .foot{opacity:0;pointer-events:none}
+#hero,#rec,#side,#dock,.lt-hud,.foot{transition:opacity .4s}
+#player .k{font-size:12px;color:var(--gold);letter-spacing:2px}#player h3{margin:2px 0 4px;font-size:19px}
+#player .lead{font-size:12px;color:var(--mute);line-height:1.6;margin:0 0 10px}
+#player .x{position:absolute;right:12px;top:12px}
+.trk{display:grid;grid-template-columns:30px 1fr auto;gap:2px 8px;width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:12px;padding:8px;color:var(--ink);cursor:pointer;margin:2px 0}
+.trk:hover,.trk:focus-visible{border-color:var(--line);outline:none}.trk.on{border-color:var(--gold);background:rgba(245,194,107,.08)}
+.trk .no{grid-row:span 3;color:var(--gold);font-size:13px;padding-top:2px}.trk b{font-size:15px}.trk .du{font-size:12px;color:var(--mute)}
+.trk .wh{grid-column:2/4;font-size:11px;color:var(--gold)}.trk .lg{grid-column:2/4;font-size:12px;color:var(--mute);line-height:1.55}
+.trk.lock b::after{content:' · 试听 15 秒';font-size:11px;color:var(--mute);font-weight:400}
+.pctl{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}.pctl .lt-btn{padding:6px 10px}
+.pctl .pp{width:44px;height:44px;justify-content:center;font-size:16px}
+.pbar{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mute);margin-top:8px}.pbar input{flex:1}
+.pvol{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mute);margin-left:auto}.pvol input{width:84px}
+#player input[type=range]{accent-color:#f5c26b}
+#pNote{font-size:12px;color:var(--gold);min-height:1em;margin-top:6px}
+@media (max-width:640px){#ltMusic .t{display:none}#player{right:8px;left:8px;top:auto;bottom:8px;width:auto;max-height:calc(100% - 64px);padding:14px 12px 10px}#player .lead{display:none}#player h3{font-size:17px}.trk{padding:6px 8px}.trk:not(.on) .lg{display:none}}
+@media (max-height:480px){.trk:not(.on) .lg,#player .lead{display:none}}
+@media (max-height:480px){#player{top:56px;bottom:8px;max-height:none}}
 </style></head><body>
 <canvas id="disc" tabindex="0" aria-label="光之莲认知星盘:四层八域。左右拖动或用方向键旋转,点扇区查看。"></canvas>
 <div id="hero"><h1>地球Online 没有新手教程。这里补上。</h1><p>看见自己的思维,就是觉醒的开始</p></div>
@@ -75,7 +97,22 @@ table.map th{color:var(--gold);font-weight:600;font-size:12px}
   <button class="lt-btn" id="bGuides" type="button">🏛 先贤向导团</button>
   <button class="lt-btn" id="bAbout" type="button">ⓘ 关于觉弈</button>
 </nav>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.11</div>
+<aside id="player" class="lt-panel" role="dialog" aria-label="星之音播放器">
+  <button class="lt-btn x" type="button" id="pClose" aria-label="退出播放器">✕</button>
+  <div class="k">星之音 · 播放器</div><h3>每一首,都是一条规则</h3>
+  <p class="lead">真实乐器录音采样离线编排,不是 MIDI。通关对应关卡解锁完整版。</p>
+  <div id="pList"></div>
+  <div class="pbar"><span id="pCur">0:00</span><input id="pSeek" type="range" min="0" max="1000" value="0" aria-label="播放进度"><span id="pDur">0:00</span></div>
+  <div class="pctl">
+    <button class="lt-btn" id="pPrev" type="button" aria-label="上一首">⏮</button>
+    <button class="lt-btn primary pp" id="pPlay" type="button" aria-label="播放">▶</button>
+    <button class="lt-btn" id="pNext" type="button" aria-label="下一首">⏭</button>
+    <button class="lt-btn" id="pLoop" type="button" aria-pressed="false" aria-label="循环模式">🔁 列表</button>
+    <label class="pvol">音量<input id="pVol" type="range" min="0" max="100" aria-label="音量"></label>
+  </div>
+  <div id="pNote" aria-live="polite"></div>
+</aside>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.12</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -119,10 +156,10 @@ table.map th{color:var(--gold);font-weight:600;font-size:12px}
 </div></div>
 
 <script type="module">
-import { AGES, LAYERS, DOMAINS, MEANING, GUIDES, GUIDE_ORDER, TASKS, BRIDGES, HANDBOOK, STATS, ageLabel } from './lt-data.js';
+import { AGES, LAYERS, DOMAINS, MEANING, GUIDES, GUIDE_ORDER, TASKS, BRIDGES, HANDBOOK, STATS, TRACKS, ageLabel } from './lt-data.js';
 import { chrome, hud, store, getAge, setAge, isDone, sound, reducedMotion, offline } from './lt.js';
 
-const ch = chrome({ home: './' });
+const ch = chrome({ home: './', extra: '<button class="lt-btn" id="ltMusic" type="button" aria-label="星之音:曲目与播放器">♪<span class="t"> 曲目</span></button>' });
 const H = hud();
 offline();
 
@@ -288,8 +325,8 @@ function layout() {
   const wide = W >= 1200; const short = Hh <= 480;
   const mid = W > 640 && !short; const L0 = (wide || mid) ? 190 : 0, R0 = wide ? 365 : (mid ? 190 : 0);
   CX = (L0 + W - R0) / 2; CY = short ? (Hh + 10) / 2 : Hh * (W < 640 ? 0.5 : 0.52);
-  TILT = short ? 0.42 : (W < 640 ? 0.56 : 0.5);
-  const maxW = ((W - L0 - R0) / 2 - 16) / 1.17; const maxH = ((short ? Hh - 140 : Hh - (W < 640 ? 380 : 350)) / 2) / TILT / 1.1;
+  TILT = short ? 0.42 : (W < 640 ? 0.62 : 0.5);
+  const maxW = ((W - L0 - R0) / 2 - 16) / 1.17; const maxH = ((short ? Hh - 140 : Hh - (W < 640 ? 330 : 350)) / 2) / TILT / 1.1;
   R = Math.max(105, Math.min(maxW, maxH, 430));
 }
 const P = (r, a) => [CX + r * R * Math.cos(a + theta), CY + r * R * Math.sin(a + theta) * TILT];
@@ -300,7 +337,7 @@ function sectorPath(s, grow = 0) {
   cx2.closePath();
 }
 function draw(now) {
-  const t = (now - t0) / 1000; stepRite(now);
+  const t = (now - t0) / 1000; stepRite(now); qTip = null;
   if (!drag && Math.abs(vel) > 0.0001) { theta += vel; vel *= 0.94; }
   else if (!drag && !reducedMotion) theta += 0.0006;
   cx2.clearRect(0, 0, W, Hh);
@@ -315,6 +352,7 @@ function draw(now) {
   /* 扇区 */
   SECT.forEach((s, i) => {
     const k = litK(s), on = k >= 1, isSel = sel === s.d.id, isHov = hover === s.d.id;
+    const lift = (isHov || isSel) && !(rite && rite.s === s); if (lift) { cx2.save(); cx2.translate(0, -4); }
     sectorPath(rite && rite.s === s && k > 0 && k < 1 ? s : s, rite && rite.s === s ? 0.03 * Math.sin(Math.PI * k) : 0);
     if (k > 0 && k < 1) { cx2.fillStyle = 'rgba(150,160,200,.07)'; cx2.fill(); cx2.globalAlpha = k; }
     if (k > 0) { const [mx, my] = P((s.r0 + s.r1) / 2, (s.a0 + s.a1) / 2); const lg = cx2.createRadialGradient(mx, my, 2, mx, my, R * .5); lg.addColorStop(0, 'rgba(255,220,150,.75)'); lg.addColorStop(1, 'rgba(217,154,62,.35)'); cx2.fillStyle = lg; }
@@ -322,11 +360,16 @@ function draw(now) {
     cx2.fill(); cx2.globalAlpha = 1;
     if (k > 0 && k < 1) { cx2.save(); cx2.shadowColor = '#ffd98a'; cx2.shadowBlur = 30 * Math.sin(Math.PI * k); cx2.lineWidth = 2.5; cx2.strokeStyle = '#ffe2a0'; cx2.stroke(); cx2.restore(); }
     cx2.lineWidth = isSel ? 2 : 1; cx2.strokeStyle = isSel ? '#ffe2a0' : 'rgba(245,194,107,.42)'; cx2.stroke();
-    const [lx, ly] = P((s.r0 + s.r1) / 2, (s.a0 + s.a1) / 2);
-    const fs = Math.max(11, Math.min(16, R * 0.05));
+    /* v0.12 标签:始终正对镜头,按前后深度缩放与淡出(远端 0.8×) */
+    const mid = (s.a0 + s.a1) / 2, depth = Math.sin(mid + theta), dk = (depth + 1) / 2;
+    const [lx, ly] = P((s.r0 + s.r1) / 2, mid);
+    const fs = Math.max(11, Math.min(16, R * 0.05)) * (0.8 + 0.22 * dk) * (lift ? 1.08 : 1);
+    cx2.globalAlpha = on || isSel || isHov ? 1 : 0.5 + 0.5 * dk;
     cx2.textAlign = 'center'; cx2.textBaseline = 'middle';
-    cx2.font = `${fs + 4}px serif`; cx2.fillStyle = on || isSel ? '#fff3d6' : 'rgba(245,194,107,.75)'; cx2.fillText(s.d.icon, lx, ly - fs * 0.7);
-    cx2.font = `600 ${fs}px ${getComputedStyle(document.body).fontFamily}`; cx2.fillStyle = on || isSel ? '#fff3d6' : 'rgba(243,238,226,.78)'; cx2.fillText(s.d.short, lx, ly + fs * 0.6);
+    cx2.font = `${fs + 4}px serif`; cx2.fillStyle = on || isSel ? '#fff3d6' : 'rgba(245,194,107,.8)'; cx2.fillText(s.d.icon, lx, ly - fs * 0.7);
+    cx2.font = `600 ${fs}px ${FF}`; cx2.fillStyle = on || isSel ? '#fff3d6' : 'rgba(243,238,226,.85)'; cx2.fillText(s.d.short, lx, ly + fs * 0.6);
+    cx2.globalAlpha = 1;
+    if (lift) { cx2.restore(); qTip = { s, x: lx, y: ly - 4 + fs * 1.5 }; }
   });
   /* 迷雾 */
   fog.forEach(f => { f.a += f.v * 0.02; const s = SECT.find(s => f.r >= s.r0 && f.r <= s.r1 && ang(f.a) >= s.a0 % (2 * Math.PI) && ang(f.a) < s.a0 % (2 * Math.PI) + (s.a1 - s.a0));
@@ -371,6 +414,12 @@ function draw(now) {
   const by = free ? CY - R * 0.36 + R * 0.08 * Math.sin(t * 0.5) * TILT - 6 * Math.sin(t * 1.9) : CY - R * 0.05 - R * 0.32 - (reducedMotion ? 0 : 4 * Math.sin(t * 2));
   if (mDone || litN >= 8) { cx2.save(); cx2.shadowColor = '#f5c26b'; cx2.shadowBlur = 14; drawButterfly(bx, by, R * (mDone ? 0.06 : 0.05), t); cx2.restore(); }
   else { cx2.globalAlpha = 0.28; drawButterfly(bx, by, R * 0.05, t); cx2.globalAlpha = 1; }
+  /* v0.12 悬停/选中:扇区下方显示该域的核心问题 */
+  if (qTip) { const q = qTip.s.d.q; cx2.font = `${Math.max(11, Math.min(13, R * 0.04))}px ${FF}`; const w = cx2.measureText(q).width + 16;
+    const x = Math.min(Math.max(qTip.x, w / 2 + 6), W - w / 2 - 6), y = qTip.y + 4;
+    cx2.fillStyle = 'rgba(10,11,30,.85)'; cx2.strokeStyle = 'rgba(245,194,107,.5)'; cx2.lineWidth = 1; cx2.beginPath();
+    cx2.roundRect ? cx2.roundRect(x - w / 2, y - 11, w, 22, 11) : cx2.rect(x - w / 2, y - 11, w, 22); cx2.fill(); cx2.stroke();
+    cx2.fillStyle = '#fff3d6'; cx2.textAlign = 'center'; cx2.textBaseline = 'middle'; cx2.fillText(q, x, y + 0.5); }
   requestAnimationFrame(draw);
 }
 const ang = a => ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
@@ -380,7 +429,7 @@ function drawButterfly(x, y, s, t) { const f = reducedMotion ? 1 : 0.75 + 0.25 *
     cx2.beginPath(); cx2.ellipse(s * 0.55, -s * 0.35, s * 0.55, s * 0.4, -0.5, 0, 7); cx2.fill();
     cx2.beginPath(); cx2.ellipse(s * 0.4, s * 0.3, s * 0.35, s * 0.28, 0.5, 0, 7); cx2.fill(); cx2.restore(); });
   cx2.fillRect(-s * 0.05, -s * 0.5, s * 0.1, s); cx2.restore(); }
-let medHits = [];
+let medHits = [], qTip = null; const FF = getComputedStyle(document.body).fontFamily;
 
 /* 命中:反投影到盘面 */
 function hit(x, y) {
@@ -398,7 +447,7 @@ cv.addEventListener('pointermove', e => {
   else { const h = hit(e.clientX, e.clientY); const id = h && (h.dom || (h.guide && 'g') || (h.lotus && 'l')); hover = h && h.dom; cv.style.cursor = h ? 'pointer' : 'grab'; }
 });
 const up = e => { if (!drag) return; drag = false; cv.classList.remove('drag'); if (reducedMotion) vel = 0;
-  if (moved <= 6) { const h = hit(e.clientX, e.clientY); if (h && h.dom) showDomain(h.dom); else if (h && h.guide) showGuide(h.guide); else if (h && h.lotus) showDomain('meaning'); } };
+  if (moved <= 6) { const h = hit(e.clientX, e.clientY); if (h && h.dom) { sel = h.dom; showDomain(h.dom); } else if (h && h.guide) showGuide(h.guide); else if (h && h.lotus) showDomain('meaning'); } };
 cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', () => { drag = false; cv.classList.remove('drag'); });
 cv.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') { theta -= 0.15; sound.tick(); } if (e.key === 'ArrowRight') { theta += 0.15; sound.tick(); }
   if (e.key === 'Enter') showMap(); });
@@ -406,6 +455,42 @@ function showGuide(k) { const g = GUIDES[k]; const ds = [...DOMAINS, MEANING].fi
   side.innerHTML = `<button class="lt-btn x" type="button" data-map>← 地图</button><button class="lt-btn x" type="button" data-hide aria-label="收起" style="margin-right:6px">✕</button><div class="k">先贤向导团 · ${g.role}</div><h3>${g.name}</h3><p style="color:var(--mute)">${g.era}</p><p>${g.why}</p>
     ${ds.map(d => `<button class="lt-btn" type="button" data-d="${d.id}">去看「${d.name}」</button>`).join(' ')}
     <p style="font-size:12px;color:var(--mute)">名字是致敬;关卡里的话是仿其思想的提问,不是原话。</p>`; side.classList.add('on'); sound.bell(7); }
+
+/* ---------- v0.12 星之音播放器 ---------- */
+const au = new Audio(); au.preload = 'none';
+let tIdx = Math.min(store.get('m_idx', 0) || 0, TRACKS.length - 1), loopOne = store.get('m_loop', false) === true;
+const PREV = 15, fmt = s => isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00';
+const unlocked = tr => !tr.task || isDone(tr.task);
+const $ = id => document.getElementById(id);
+au.volume = (store.get('m_vol', 70) ?? 70) / 100; $('pVol').value = Math.round(au.volume * 100);
+function paintList() { $('pList').innerHTML = TRACKS.map((tr, i) => `<button class="trk${i === tIdx ? ' on' : ''}${unlocked(tr) ? '' : ' lock'}" type="button" data-i="${i}" aria-current="${i === tIdx}">
+  <span class="no">${tr.no}</span><b>${tr.name}</b><span class="du">${tr.dur}</span><span class="wh">${unlocked(tr) ? '✦ ' : '🔒 '}${tr.where}</span><span class="lg">${tr.logic}</span></button>`).join(''); }
+function paintCtl() { const p = !au.paused; $('pPlay').textContent = p ? '❚❚' : '▶'; $('pPlay').setAttribute('aria-label', p ? '暂停' : '播放');
+  $('pLoop').textContent = loopOne ? '🔂 单曲' : '🔁 列表'; $('pLoop').setAttribute('aria-pressed', loopOne);
+  const mb = $('ltMusic'); mb.setAttribute('aria-pressed', p); }
+function load(i, play = true) { tIdx = (i + TRACKS.length) % TRACKS.length; store.set('m_idx', tIdx); const tr = TRACKS[tIdx];
+  au.src = tr.file; $('pNote').textContent = unlocked(tr) ? '' : `试听 ${PREV} 秒 · 通关「${(TASKS.find(t => t.id === tr.task) || {}).q}」解锁完整版`;
+  paintList(); if (play) au.play().catch(() => {}); paintCtl(); }
+$('pList').onclick = e => { const b = e.target.closest('.trk'); if (!b) return; const i = +b.dataset.i; if (i === tIdx && au.src) { au.paused ? au.play() : au.pause(); } else load(i); };
+$('pPlay').onclick = () => { if (!au.src) return load(tIdx); au.paused ? au.play().catch(() => {}) : au.pause(); };
+$('pPrev').onclick = () => { if (au.currentTime > 3) au.currentTime = 0; else load(tIdx - 1); };
+$('pNext').onclick = () => load(tIdx + 1);
+$('pLoop').onclick = () => { loopOne = !loopOne; store.set('m_loop', loopOne); paintCtl(); };
+$('pVol').oninput = e => { au.volume = e.target.value / 100; store.set('m_vol', +e.target.value); };
+$('pSeek').oninput = e => { const lim = unlocked(TRACKS[tIdx]) ? au.duration : Math.min(PREV, au.duration); if (isFinite(lim)) au.currentTime = e.target.value / 1000 * lim; };
+au.addEventListener('timeupdate', () => { const tr = TRACKS[tIdx], lim = unlocked(tr) ? au.duration : Math.min(PREV, au.duration || PREV);
+  $('pCur').textContent = fmt(au.currentTime); $('pDur').textContent = fmt(lim); if (isFinite(lim) && lim > 0) $('pSeek').value = Math.round(au.currentTime / lim * 1000);
+  if (!unlocked(tr) && au.currentTime >= PREV) { au.pause(); au.currentTime = 0; } });
+au.addEventListener('ended', () => loopOne ? (au.currentTime = 0, au.play()) : load(tIdx + 1));
+['play', 'pause'].forEach(ev => au.addEventListener(ev, paintCtl));
+au.addEventListener('error', () => { if (au.src) $('pNote').textContent = '这首暂时加载不了(离线时只能播放听过的曲子)。'; });
+function openPlayer() { paintList(); paintCtl(); document.body.classList.add('pmode'); $('pClose').focus(); }
+function closePlayer() { document.body.classList.remove('pmode'); $('ltMusic').focus(); }
+$('ltMusic').onclick = () => document.body.classList.contains('pmode') ? closePlayer() : openPlayer();
+$('pClose').onclick = closePlayer;
+$('player').addEventListener('keydown', e => { if (e.key === 'Escape') closePlayer(); });
+paintList(); paintCtl();
+window.ltPlayer = { open: openPlayer, close: closePlayer, load, au };
 
 addEventListener('resize', layout); layout(); requestAnimationFrame(draw);
 H.render(holdStats()); prevOpen = STATS.map(x => x.id).filter(id => H.el.querySelector(`.row[data-id="${id}"]:not(.locked)`));
