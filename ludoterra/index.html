@@ -112,7 +112,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   </div>
   <div id="pNote" aria-live="polite"></div>
 </aside>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.14</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.15</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -278,10 +278,11 @@ paintRec();
 const cv = document.getElementById('disc'); const cx2 = cv.getContext('2d');
 let W = 0, Hh = 0, DPR = 1, R = 200, CX = 0, CY = 0, TILT = 0.46;
 let theta = -Math.PI / 2, vel = 0, sel = null, hover = null, t0 = performance.now();
-const RINGS = { self: [0.24, 0.47], others: [0.49, 0.72], world: [0.74, 0.95] };
+const RINGS = { self: [0.24, 0.47], others: [0.49, 0.72], world: [0.74, 0.985] };
+const LH = { self: 0.06, others: 0.03, world: 0 }; const hOf = r => r < 0.48 ? LH.self : r < 0.73 ? LH.others : 0;
 const SECT = DOMAINS.map(d => ({ d }));
 ['self', 'others', 'world'].forEach(L => { const ds = SECT.filter(s => s.d.layer === L); const n = ds.length;
-  ds.forEach((s, i) => { const off = L === 'others' ? Math.PI / 3 : (L === 'world' ? Math.PI / 2 : 0); s.a0 = off + i * 2 * Math.PI / n; s.a1 = s.a0 + 2 * Math.PI / n; s.r0 = RINGS[L][0]; s.r1 = RINGS[L][1]; }); });
+  ds.forEach((s, i) => { const off = L === 'others' ? Math.PI / 3 : (L === 'world' ? Math.PI / 2 : 0); s.a0 = off + i * 2 * Math.PI / n; s.a1 = s.a0 + 2 * Math.PI / n; s.r0 = RINGS[L][0]; s.r1 = RINGS[L][1]; s.h = LH[L]; }); });
 const litRaw = s => TASKS.some(t => t.live && isDone(t.id) && t.domains.includes(s.d.id));
 /* ---------- v0.11 点亮仪式:新点亮的域排队播放 ---------- */
 const seenK = 'lit_seen'; let seen = store.get(seenK, null);
@@ -357,16 +358,44 @@ function layout() {
   const wide = W >= 1200; const short = Hh <= 480;
   const mid = W > 640 && !short; const L0 = (wide || mid) ? 190 : 0, R0 = wide ? 365 : (mid ? 190 : 0);
   CX = (L0 + W - R0) / 2; CY = short ? (Hh + 10) / 2 : Hh * (W < 640 ? 0.5 : 0.52);
-  TILT = short ? 0.42 : (W < 640 ? 0.62 : 0.5);
-  const maxW = ((W - L0 - R0) / 2 - 16) / 1.17; const maxH = ((short ? Hh - 140 : Hh - (W < 640 ? 330 : 350)) / 2) / TILT / 1.1;
+  TILT = short ? 0.42 : (W < 640 ? 0.6 : 0.5);
+  const maxW = ((W - L0 - R0) / 2 - 16) / 1.2; const maxH = ((short ? Hh - 140 : Hh - (W < 640 ? 330 : 350)) / 2) / TILT / 1.28;
   R = Math.max(105, Math.min(maxW, maxH, 430)); TILT0 = TILT; paintNebula();
 }
 let TILT0 = 0.5;
-const P = (r, a) => [CX + r * R * Math.cos(a + theta), CY + r * R * Math.sin(a + theta) * TILT];
+/* v0.15 真实透视:盘面绕水平轴倾斜(俯角由 TILT 决定),近大远小;h 为离盘面的高度(×R) */
+let ES = 0.5, EC = 0.866; const DCAM = 3.2;
+function P3(X, Y, Z) { const yp = Z * ES - Y * EC, zp = Z * EC + Y * ES; const f = DCAM * R / (DCAM * R - zp); return [CX + X * f, CY + yp * f, zp, f]; }
+const P = (r, a, h = 0) => { const A = a + theta; return P3(r * R * Math.cos(A), h * R, r * R * Math.sin(A)); };
+function ringPath(r0, r1, h, N = 120) { cx2.beginPath();
+  for (let i = 0; i <= N; i++) { const [x, y] = P(r1, i * 2 * Math.PI / N, h); i ? cx2.lineTo(x, y) : cx2.moveTo(x, y); }
+  for (let i = N; i >= 0; i--) { const [x, y] = P(r0, i * 2 * Math.PI / N, h); cx2.lineTo(x, y); } cx2.closePath(); }
+function goldGrad(t, a = 1, sp = .3) { if (!cx2.createConicGradient || reducedMotion) return `rgba(226,178,98,${.8 * a})`;
+  const g = cx2.createConicGradient(t * sp, CX, CY); g.addColorStop(0, `rgba(255,244,214,${a})`); g.addColorStop(.05, `rgba(240,196,118,${.9 * a})`); g.addColorStop(.3, `rgba(176,124,56,${.75 * a})`);
+  g.addColorStop(.55, `rgba(232,186,104,${.85 * a})`); g.addColorStop(.8, `rgba(150,104,46,${.7 * a})`); g.addColorStop(.95, `rgba(240,196,118,${.9 * a})`); g.addColorStop(1, `rgba(255,244,214,${a})`); return g; }
+/* 细金带:薄薄一圈鎏金,带两道细边 */
+function band(r0, r1, h, t, sp = .3, a = 1) { ringPath(r0, r1, h); cx2.fillStyle = goldGrad(t, a, sp); cx2.fill();
+  [r0, r1].forEach(r => { cx2.beginPath(); for (let i = 0; i <= 120; i++) { const [x, y] = P(r, i * Math.PI / 60, h); i ? cx2.lineTo(x, y) : cx2.moveTo(x, y); } cx2.lineWidth = .6; cx2.strokeStyle = `rgba(255,236,190,${.55 * a})`; cx2.stroke(); }); }
+/* 台阶侧壁:只画朝向镜头的前半圈 */
+function wall(r, h0, h1, a = .55) { cx2.beginPath(); const N = 60;
+  for (let i = 0; i <= N; i++) { const [x, y] = P(r, Math.PI * i / N - theta, h1); i ? cx2.lineTo(x, y) : cx2.moveTo(x, y); }
+  for (let i = N; i >= 0; i--) { const [x, y] = P(r, Math.PI * i / N - theta, h0); cx2.lineTo(x, y); } cx2.closePath();
+  const [, yt] = P(r, Math.PI / 2 - theta, h1), [, yb] = P(r, Math.PI / 2 - theta, h0); const wg = cx2.createLinearGradient(0, yt, 0, yb);
+  wg.addColorStop(0, `rgba(240,200,130,${a})`); wg.addColorStop(.35, `rgba(120,86,40,${a * .7})`); wg.addColorStop(1, `rgba(40,30,20,${a * .4})`); cx2.fillStyle = wg; cx2.fill(); }
+/* 中心浑仪金环:三道立着的细金环绕竖轴转动,分前后两半绘制以便穿过光之莲 */
+const ARM = [{ r: .3, tilt: 1.2, sp: .3, ph: 0 }, { r: .26, tilt: .62, sp: -.42, ph: 1.4 }, { r: .34, tilt: 1.5, sp: .18, ph: 2.6 }];
+function armillary(t, front) { const hc = LH.self * R + R * .2; const cz = P3(0, hc, 0)[2];
+  ARM.forEach((g, gi) => { const sp = reducedMotion ? g.ph : g.ph + t * g.sp; const ct = Math.cos(g.tilt), st = Math.sin(g.tilt), cs = Math.cos(sp), ss = Math.sin(sp);
+    const pts = []; for (let i = 0; i <= 96; i++) { const u = i * Math.PI / 48; let x = Math.cos(u) * g.r * R, y = Math.sin(u) * g.r * R, z = 0;
+      const y2 = y * ct - z * st, z2 = y * st + z * ct; const x3 = x * cs + z2 * ss, z3 = -x * ss + z2 * cs; pts.push(P3(x3, hc + y2, z3)); }
+    [[1.8, `rgba(240,196,118,.95)`], [.6, 'rgba(255,244,214,.9)']].forEach(([lw, col], k) => { cx2.lineWidth = lw; cx2.strokeStyle = col; cx2.beginPath(); let on = false;
+      pts.forEach(([x, y, z], i) => { const isF = z >= cz; if (isF === front) { on ? cx2.lineTo(x, y) : cx2.moveTo(x, y); on = true; } else on = false; }); cx2.stroke(); });
+    if (front && !reducedMotion) { const k = Math.floor(((t * .12 + gi * .33) % 1) * 96); const q = pts[k]; if (q[2] >= cz) glint(q[0], q[1], 1.4, .9); } }); }
+
 function sectorPath(s, grow = 0) {
   cx2.beginPath(); const N = 40;
-  for (let i = 0; i <= N; i++) { const [x, y] = P(s.r1 + grow, s.a0 + (s.a1 - s.a0) * i / N); i ? cx2.lineTo(x, y) : cx2.moveTo(x, y); }
-  for (let i = N; i >= 0; i--) { const [x, y] = P(s.r0, s.a0 + (s.a1 - s.a0) * i / N); cx2.lineTo(x, y); }
+  for (let i = 0; i <= N; i++) { const [x, y] = P(s.r1 + grow, s.a0 + (s.a1 - s.a0) * i / N, s.h); i ? cx2.lineTo(x, y) : cx2.moveTo(x, y); }
+  for (let i = N; i >= 0; i--) { const [x, y] = P(s.r0, s.a0 + (s.a1 - s.a0) * i / N, s.h); cx2.lineTo(x, y); }
   cx2.closePath();
 }
 function draw(now) {
@@ -380,40 +409,32 @@ function draw(now) {
   bgStars.forEach(s => { const tw = reducedMotion ? .55 : 0.3 + 0.4 * Math.sin(t * 0.8 + s.p); cx2.globalAlpha = tw; cx2.fillStyle = '#fff'; cx2.beginPath(); cx2.arc(s.x * W - mx * 10, s.y * Hh - my * 6, s.r, 0, 7); cx2.fill();
     if (!reducedMotion && s.r > 1.25 && tw > .68) glint(s.x * W - mx * 10, s.y * Hh - my * 6, 1.1, (tw - .68) * 3); });
   cx2.globalAlpha = 1;
-  /* 星宿盘:半透明玻璃盘面 */
-  cx2.save(); cx2.beginPath(); cx2.ellipse(CX, CY, R * 1.06, R * TILT * 1.06, 0, 0, 7);
-  const dg = cx2.createRadialGradient(CX, CY - R * TILT * .3, R * .1, CX, CY, R * 1.06); dg.addColorStop(0, 'rgba(70,80,160,.20)'); dg.addColorStop(.7, 'rgba(40,46,110,.14)'); dg.addColorStop(1, 'rgba(120,140,230,.10)');
-  cx2.fillStyle = dg; cx2.fill(); cx2.restore();
-  /* 盘面下方的微弱倒影光 */
-  cx2.save(); cx2.globalAlpha = .5; cx2.beginPath(); cx2.ellipse(CX, CY + R * TILT * .1, R * 1.08, R * TILT * 1.08, 0, 0, 7); cx2.strokeStyle = 'rgba(245,194,107,.12)'; cx2.lineWidth = 6; cx2.shadowColor = '#f5c26b'; cx2.shadowBlur = 24; cx2.stroke(); cx2.restore();
-  /* 星座带(r 0.96–1.06):细线星座 */
-  CONS.forEach((c, ci) => { const pp = c.pts.map(([u, v]) => P(0.975 + v * 0.025, c.a + u * 0.07));
-    const dep = Math.sin(c.a + 0.1 + theta), al = .25 + .3 * (dep + 1) / 2;
-    cx2.strokeStyle = `rgba(200,210,255,${al * .7})`; cx2.lineWidth = .7; cx2.beginPath(); c.ln.forEach(([i, j]) => { cx2.moveTo(...pp[i]); cx2.lineTo(...pp[j]); }); cx2.stroke();
-    pp.forEach(([x, y], k) => { const tw = reducedMotion ? 1 : .6 + .4 * Math.sin(t * 2 + k * 1.7 + ci); cx2.fillStyle = `rgba(255,245,220,${al + .3 * tw})`; cx2.beginPath(); cx2.arc(x, y, 1.3 + .5 * tw, 0, 7); cx2.fill(); }); });
-  /* 细金线:外缘双线 + 刻度 + 三层分界 */
-  ringLine(1.06, 1.4, .75, t); ringLine(1.035, .6, .35, t, false); ringLine(0.955, .8, .45, t * 1.3);
-  for (let i = 0; i < 72; i++) { const a = i * Math.PI / 36, big = i % 6 === 0; const [x1, y1] = P(1.035, a), [x2, y2] = P(big ? 1.06 : 1.05, a);
-    const dep = Math.sin(a + theta); cx2.strokeStyle = `rgba(245,194,107,${(big ? .55 : .3) * (.6 + .4 * (dep + 1) / 2)})`; cx2.lineWidth = big ? 1 : .6; cx2.beginPath(); cx2.moveTo(x1, y1); cx2.lineTo(x2, y2); cx2.stroke(); }
-  [0.235, 0.48, 0.73].forEach((r, i) => ringLine(r, .9, .5, t * (i % 2 ? -1 : 1)));
-  /* 扇区 */
-  SECT.forEach((s, i) => {
+  ES = TILT; EC = Math.sqrt(1 - TILT * TILT);
+  /* 星宿盘:外缘厚度(细金侧壁)+ 半透明玻璃盘面 + 盘底青色辉光 */
+  wall(1.035, -0.045, 0, .65);
+  ringPath(0, 1.035, 0); const dg = cx2.createRadialGradient(CX, CY, R * .05, CX, CY, R * 1.1); dg.addColorStop(0, 'rgba(60,150,170,.22)'); dg.addColorStop(.45, 'rgba(36,60,120,.16)'); dg.addColorStop(1, 'rgba(90,110,200,.10)'); cx2.fillStyle = dg; cx2.fill();
+  /* 外圈细金带 + 刻度 */
+  band(.99, 1.035, 0, t, .3, .95);
+  for (let i = 0; i < 120; i++) { const a = i * Math.PI / 60, big = i % 10 === 0; const [x1, y1] = P(big ? .995 : 1.005, a), [x2, y2] = P(1.03, a);
+    cx2.strokeStyle = big ? 'rgba(70,44,14,.9)' : 'rgba(90,60,20,.6)'; cx2.lineWidth = big ? 1.1 : .5; cx2.beginPath(); cx2.moveTo(x1, y1); cx2.lineTo(x2, y2); cx2.stroke(); }
+  /* 扇区:按 世界→他人→自我 由低到高分层绘制,层间是细金侧壁和金带 */
+  const drawSect = (s, i) => {
     const k = litK(s), on = k >= 1, isSel = sel === s.d.id, isHov = hover === s.d.id;
     const lift = (isHov || isSel) && !(rite && rite.s === s); if (lift) { cx2.save(); cx2.translate(0, -4); }
-    sectorPath(rite && rite.s === s && k > 0 && k < 1 ? s : s, rite && rite.s === s ? 0.03 * Math.sin(Math.PI * k) : 0);
+    sectorPath(s, rite && rite.s === s ? 0.03 * Math.sin(Math.PI * k) : 0);
     if (k > 0 && k < 1) { cx2.fillStyle = 'rgba(150,160,200,.07)'; cx2.fill(); cx2.globalAlpha = k; }
-    if (k > 0) { const [sx, sy] = P((s.r0 + s.r1) / 2, (s.a0 + s.a1) / 2); const lg = cx2.createRadialGradient(sx, sy, 2, sx, sy, R * .5); lg.addColorStop(0, 'rgba(255,222,155,.42)'); lg.addColorStop(1, 'rgba(217,154,62,.12)'); cx2.fillStyle = lg; }
-    else cx2.fillStyle = isSel ? 'rgba(245,194,107,.18)' : isHov ? 'rgba(245,194,107,.11)' : 'rgba(140,155,230,.045)';
-    cx2.fill(); cx2.globalAlpha = 1;
+    if (k > 0) { const [sx, sy] = P((s.r0 + s.r1) / 2, (s.a0 + s.a1) / 2, s.h); const lg = cx2.createRadialGradient(sx, sy, 2, sx, sy, R * .5); lg.addColorStop(0, 'rgba(255,205,115,.5)'); lg.addColorStop(.6, 'rgba(214,146,52,.34)'); lg.addColorStop(1, 'rgba(150,96,30,.28)'); cx2.fillStyle = lg; }
+    else cx2.fillStyle = isSel ? 'rgba(245,194,107,.2)' : isHov ? 'rgba(245,194,107,.13)' : 'rgba(30,70,100,.28)';
+    cx2.fill(); cx2.globalAlpha = 1; cx2.globalCompositeOperation = 'source-over';
     if (k > 0 && !reducedMotion) { /* 鎏金流光:一道斜向亮带缓慢扫过已点亮扇区 */
       cx2.save(); cx2.clip(); const ph = ((t * 0.18 + i * 0.13) % 1.6) - 0.3; const x0 = CX - R * 1.1 + ph * R * 2.2;
       const sg = cx2.createLinearGradient(x0 - R * .25, CY - R * .3, x0 + R * .25, CY + R * .3); sg.addColorStop(0, 'rgba(255,240,200,0)'); sg.addColorStop(.5, `rgba(255,244,214,${.32 * k})`); sg.addColorStop(1, 'rgba(255,240,200,0)');
-      cx2.fillStyle = sg; cx2.fillRect(CX - R * 1.2, CY - R, R * 2.4, R * 2); cx2.restore(); sectorPath(s); }
+      cx2.globalCompositeOperation = 'lighter'; cx2.fillStyle = sg; cx2.fillRect(CX - R * 1.2, CY - R, R * 2.4, R * 2); cx2.restore(); sectorPath(s); }
     if (k > 0 && k < 1) { cx2.save(); cx2.shadowColor = '#ffd98a'; cx2.shadowBlur = 30 * Math.sin(Math.PI * k); cx2.lineWidth = 2.5; cx2.strokeStyle = '#ffe2a0'; cx2.stroke(); cx2.restore(); }
     cx2.lineWidth = isSel ? 1.6 : .8; cx2.strokeStyle = isSel ? '#ffe2a0' : on ? 'rgba(255,215,140,.75)' : 'rgba(245,194,107,.3)'; cx2.stroke();
     /* v0.12 标签:始终正对镜头,按前后深度缩放与淡出(远端 0.8×) */
     const mid = (s.a0 + s.a1) / 2, depth = Math.sin(mid + theta), dk = (depth + 1) / 2;
-    const [lx, ly] = P((s.r0 + s.r1) / 2, mid);
+    const [lx, ly] = P((s.r0 + s.r1) / 2, mid, s.h);
     const fs = Math.max(11, Math.min(16, R * 0.05)) * (0.8 + 0.22 * dk) * (lift ? 1.08 : 1);
     cx2.globalAlpha = on || isSel || isHov ? 1 : 0.5 + 0.5 * dk;
     cx2.textAlign = 'center'; cx2.textBaseline = 'middle';
@@ -421,33 +442,44 @@ function draw(now) {
     cx2.font = `600 ${fs}px ${FF}`; cx2.fillStyle = on || isSel ? '#fff3d6' : 'rgba(243,238,226,.85)'; cx2.fillText(s.d.short, lx, ly + fs * 0.6);
     cx2.globalAlpha = 1;
     if (lift) { cx2.restore(); qTip = { s, x: lx, y: ly - 4 + fs * 1.5 }; }
-  });
+  };
+  const L3 = { world: () => {}, others: () => { wall(.74, 0, LH.others, .7); }, self: () => { wall(.49, LH.others, LH.self, .7); } };
+  const B3 = { world: () => {
+      CONS.forEach((c, ci) => { [0, Math.PI].forEach((off, oi) => { const pp = c.pts.map(([u, v]) => P(0.79 + v * 0.045, c.a + off + u * 0.075));
+        cx2.strokeStyle = 'rgba(200,215,255,.32)'; cx2.lineWidth = .7; cx2.beginPath(); c.ln.forEach(([i, j]) => { cx2.moveTo(pp[i][0], pp[i][1]); cx2.lineTo(pp[j][0], pp[j][1]); }); cx2.stroke();
+        pp.forEach(([x, y], k) => { const tw = reducedMotion ? 1 : .6 + .4 * Math.sin(t * 2 + k * 1.7 + ci + oi * 3); cx2.fillStyle = `rgba(255,245,220,${.45 + .4 * tw})`; cx2.beginPath(); cx2.arc(x, y, 1.1 + .6 * tw, 0, 7); cx2.fill(); }); }); });
+      band(.725, .74, 0, t, -.25, .9); },
+    others: () => band(.475, .49, LH.others, t, .4, .9),
+    self: () => { band(.225, .24, LH.self, t, -.35, .9); } };
+  ['world', 'others', 'self'].forEach(L => { L3[L](); SECT.forEach((s, i) => { if (s.d.layer === L) drawSect(s, i); }); B3[L](); });
   /* 能量弧:同一关覆盖的两个域都点亮后,以流动金弧相连 */
   TASKS.filter(tk => tk.live && isDone(tk.id) && tk.domains.length > 1).forEach((tk, ti) => {
     const ss = tk.domains.map(id => SECT.find(s => s.d.id === id)).filter(s => s && lit(s)); if (ss.length < 2) return;
-    const [a, b] = ss.map(s => P((s.r0 + s.r1) / 2, (s.a0 + s.a1) / 2)); const cxm = (a[0] + b[0]) / 2, cym = Math.min(a[1], b[1]) - R * 0.22;
+    const [a, b] = ss.map(s => P((s.r0 + s.r1) / 2, (s.a0 + s.a1) / 2, s.h)); const cxm = (a[0] + b[0]) / 2, cym = Math.min(a[1], b[1]) - R * 0.22;
     cx2.save(); cx2.lineWidth = 1.2; cx2.strokeStyle = 'rgba(255,220,150,.35)'; cx2.shadowColor = '#f5c26b'; cx2.shadowBlur = 8;
-    cx2.beginPath(); cx2.moveTo(...a); cx2.quadraticCurveTo(cxm, cym, ...b); cx2.stroke(); cx2.restore();
+    cx2.beginPath(); cx2.moveTo(a[0], a[1]); cx2.quadraticCurveTo(cxm, cym, b[0], b[1]); cx2.stroke(); cx2.restore();
     if (!reducedMotion) for (let q = 0; q < 3; q++) { const u = ((t * 0.25 + q / 3 + ti * .2) % 1); const x = (1 - u) ** 2 * a[0] + 2 * u * (1 - u) * cxm + u * u * b[0], y = (1 - u) ** 2 * a[1] + 2 * u * (1 - u) * cym + u * u * b[1]; glint(x, y, 1.3, Math.sin(Math.PI * u)); } });
   /* 迷雾 */
   fog.forEach(f => { f.a += f.v * 0.02; const s = SECT.find(s => f.r >= s.r0 && f.r <= s.r1 && ang(f.a) >= s.a0 % (2 * Math.PI) && ang(f.a) < s.a0 % (2 * Math.PI) + (s.a1 - s.a0));
-    if (s && lit(s)) return; const [x, y] = P(f.r, f.a); const rr = f.s * R;
+    if (s && lit(s)) return; const [x, y] = P(f.r, f.a, hOf(f.r)); const rr = f.s * R;
     const fg = cx2.createRadialGradient(x, y, 0, x, y, rr); fg.addColorStop(0, 'rgba(190,195,215,.16)'); fg.addColorStop(1, 'rgba(190,195,215,0)');
     cx2.fillStyle = fg; cx2.beginPath(); cx2.ellipse(x, y, rr, rr * TILT * 1.4, 0, 0, 7); cx2.fill(); });
   /* 吹散的迷雾 */
   for (let i = burst.length - 1; i >= 0; i--) { const b = burst[i]; b.r += b.vr * 0.016; b.a += b.va * 0.016; b.life -= 0.016 / 1.6; if (b.life <= 0) { burst.splice(i, 1); continue; }
-    const [x, y] = P(b.r, b.a); const rr = b.s * R * (1.6 - b.life * 0.6); const fg = cx2.createRadialGradient(x, y, 0, x, y, rr);
+    const [x, y] = P(b.r, b.a, hOf(b.r)); const rr = b.s * R * (1.6 - b.life * 0.6); const fg = cx2.createRadialGradient(x, y, 0, x, y, rr);
     fg.addColorStop(0, `rgba(225,228,240,${0.32 * b.life})`); fg.addColorStop(1, 'rgba(225,228,240,0)'); cx2.fillStyle = fg; cx2.beginPath(); cx2.ellipse(x, y, rr, rr * TILT * 1.4, 0, 0, 7); cx2.fill(); }
+  const [LX, LY] = P(0, 0, LH.self);
+  armillary(t, false);
   /* 中心光柱(呼吸) */
-  { const br = reducedMotion ? .8 : .65 + .35 * Math.sin(t * 1.2); const top = CY - R * (TILT0 < .5 ? .55 : .75); const bw = R * 0.07;
-    const pg = cx2.createLinearGradient(0, CY - R * .05, 0, top); pg.addColorStop(0, `rgba(255,236,190,${.38 * br})`); pg.addColorStop(1, 'rgba(255,236,190,0)');
-    cx2.fillStyle = pg; cx2.beginPath(); cx2.moveTo(CX - bw, CY - R * .05); cx2.lineTo(CX - bw * .3, top); cx2.lineTo(CX + bw * .3, top); cx2.lineTo(CX + bw, CY - R * .05); cx2.closePath(); cx2.fill(); }
+  { const br = reducedMotion ? .8 : .65 + .35 * Math.sin(t * 1.2); const top = LY - R * .85; const bw = R * 0.06;
+    const pg = cx2.createLinearGradient(0, LY, 0, top); pg.addColorStop(0, `rgba(255,236,190,${.42 * br})`); pg.addColorStop(1, 'rgba(255,236,190,0)');
+    cx2.fillStyle = pg; cx2.beginPath(); cx2.moveTo(LX - bw, LY); cx2.lineTo(LX - bw * .25, top); cx2.lineTo(LX + bw * .25, top); cx2.lineTo(LX + bw, LY); cx2.closePath(); cx2.fill(); }
   /* 中心光之莲:八瓣,点亮几域开几瓣 */
   const litN = SECT.filter(lit).length, mDone = isDone('meaning');
   const openN = mDone ? 8 : litN; const bloomI = rite && rite.stage >= 1 ? SECT.filter(lit).length - (litK(rite.s) >= 1 ? 1 : 0) : -1;
   const bloomK = rite ? Math.max(0, Math.min(1, (rite.el - 1.8) / 1.6)) : 0;
-  cx2.save(); cx2.translate(CX, CY - R * 0.05);
-  const pr = R * 0.2, pulse = reducedMotion ? 1 : 1 + 0.03 * Math.sin(t * 1.6);
+  cx2.save(); cx2.translate(LX, LY - R * 0.04);
+  const pr = R * 0.17, pulse = reducedMotion ? 1 : 1 + 0.03 * Math.sin(t * 1.6);
   const halo = cx2.createRadialGradient(0, 0, 2, 0, 0, pr * 1.8); halo.addColorStop(0, 'rgba(255,236,190,.55)'); halo.addColorStop(1, 'rgba(255,236,190,0)');
   cx2.fillStyle = halo; cx2.beginPath(); cx2.arc(0, 0, pr * 1.8, 0, 7); cx2.fill();
   for (let i = 0; i < 8; i++) { const a = -Math.PI / 2 + (i - 3.5) * 0.36; const bl = i === bloomI && !mDone; const open = i < openN || bl;
@@ -460,8 +492,9 @@ function draw(now) {
   if (mDone) { const hr = pr * 0.24 * pulse; const hg = cx2.createRadialGradient(0, -pr * 0.12, 0, 0, -pr * 0.12, hr * 2.2);
     hg.addColorStop(0, '#fffaf0'); hg.addColorStop(0.45, 'rgba(255,226,160,.9)'); hg.addColorStop(1, 'rgba(255,226,160,0)'); cx2.fillStyle = hg; cx2.beginPath(); cx2.arc(0, -pr * 0.12, hr * 2.2, 0, 7); cx2.fill(); }
   cx2.restore();
+  armillary(t, true);
   /* 先贤勋章:绕盘沿,随旋转 */
-  const meds = GUIDE_ORDER.map((k, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / GUIDE_ORDER.length; const [x, y] = P(1.1, a); const depth = Math.sin(a + theta); return { k, x, y, depth }; })
+  const meds = GUIDE_ORDER.map((k, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / GUIDE_ORDER.length; const [x, y] = P(1.13, a); const depth = Math.sin(a + theta); return { k, x, y, depth }; })
     .sort((a, b) => a.depth - b.depth);
   medHits = [];
   meds.forEach(m => { const sc = 0.78 + 0.28 * (m.depth + 1) / 2; const r = Math.max(13, R * 0.062) * sc; const gd = GUIDES[m.k];
@@ -473,13 +506,13 @@ function draw(now) {
   /* 终章完成:蝴蝶飞出莲心,绕莲盘旋;八域全亮:蝴蝶亮起 */
   const free = mDone && !reducedMotion;
   const bx = free ? CX + R * 0.34 * Math.cos(t * 0.5) : CX + R * 0.02;
-  const by = free ? CY - R * 0.36 + R * 0.08 * Math.sin(t * 0.5) * TILT - 6 * Math.sin(t * 1.9) : CY - R * 0.05 - R * 0.32 - (reducedMotion ? 0 : 4 * Math.sin(t * 2));
+  const by = free ? CY - R * 0.36 + R * 0.08 * Math.sin(t * 0.5) * TILT - 6 * Math.sin(t * 1.9) : LY - R * 0.42 - (reducedMotion ? 0 : 4 * Math.sin(t * 2));
   if (mDone || litN >= 8) { cx2.save(); cx2.shadowColor = '#f5c26b'; cx2.shadowBlur = 14; drawButterfly(bx, by, R * (mDone ? 0.06 : 0.05), t); cx2.restore(); }
   else { cx2.globalAlpha = 0.28; drawButterfly(bx, by, R * 0.05, t); cx2.globalAlpha = 1; }
   /* 星闪:金线与点亮扇区上随机闪现的四芒星 */
   if (!reducedMotion) { if (glints.length < 7 && Math.random() < 0.06) { const ls = SECT.filter(lit); const onSec = ls.length && Math.random() < .45;
-      const s = onSec ? ls[Math.floor(Math.random() * ls.length)] : null; glints.push({ r: s ? s.r0 + Math.random() * (s.r1 - s.r0) : [1.06, .955, .73, .48][Math.floor(Math.random() * 4)], a: s ? s.a0 + Math.random() * (s.a1 - s.a0) : Math.random() * 7, life: 0, sz: 1.2 + Math.random() * 1.4 }); }
-    for (let i = glints.length - 1; i >= 0; i--) { const g = glints[i]; g.life += 0.016 / 1.1; if (g.life >= 1) { glints.splice(i, 1); continue; } const [x, y] = P(g.r, g.a); glint(x, y, g.sz, Math.sin(Math.PI * g.life)); } }
+      const s = onSec ? ls[Math.floor(Math.random() * ls.length)] : null; glints.push({ r: s ? s.r0 + Math.random() * (s.r1 - s.r0) : [1.03, .995, .735, .485, .235][Math.floor(Math.random() * 5)], a: s ? s.a0 + Math.random() * (s.a1 - s.a0) : Math.random() * 7, life: 0, sz: 1.2 + Math.random() * 1.4 }); }
+    for (let i = glints.length - 1; i >= 0; i--) { const g = glints[i]; g.life += 0.016 / 1.1; if (g.life >= 1) { glints.splice(i, 1); continue; } const [x, y] = P(g.r, g.a, hOf(g.r)); glint(x, y, g.sz, Math.sin(Math.PI * g.life)); } }
   /* v0.12 悬停/选中:扇区下方显示该域的核心问题 */
   if (qTip) { const q = qTip.s.d.q; cx2.font = `${Math.max(11, Math.min(13, R * 0.04))}px ${FF}`; const w = cx2.measureText(q).width + 16;
     const x = Math.min(Math.max(qTip.x, w / 2 + 6), W - w / 2 - 6), y = qTip.y + 4;
@@ -500,9 +533,8 @@ let medHits = [], qTip = null; const FF = getComputedStyle(document.body).fontFa
 /* 命中:反投影到盘面 */
 function hit(x, y) {
   for (const m of [...medHits].reverse()) if (Math.hypot(x - m.x, y - m.y) <= m.r + 4) return { guide: m.k };
-  const dx = (x - CX) / R, dy = (y - CY) / R / TILT; const r = Math.hypot(dx, dy); const a = ang(Math.atan2(dy, dx) - theta);
-  if (r < 0.22) return { lotus: true };
-  for (const s of SECT) { const a0 = ang(s.a0), span = s.a1 - s.a0; let d = ang(a - a0); if (r >= s.r0 && r <= s.r1 && d < span) return { dom: s.d.id }; }
+  const [lx0, ly0] = P(0, 0, LH.self); if (Math.hypot((x - lx0) / R, (y - ly0) / R / TILT) < 0.22) return { lotus: true };
+  for (const L of ['self', 'others', 'world']) for (const s of SECT) { if (s.d.layer !== L) continue; sectorPath(s); if (cx2.isPointInPath(x * DPR, y * DPR)) return { dom: s.d.id }; }
   return null;
 }
 let drag = false, sx = 0, lx = 0, moved = 0, pid = null;
