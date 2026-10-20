@@ -628,6 +628,17 @@
     zone.appendChild(hud); zone.appendChild(badge); zone.appendChild(toastEl);
     stage.appendChild(cv); stage.appendChild(zone);
     app.appendChild(stage); app.appendChild(top);
+    // 3D 舞台(v0.3-α2):任务声明 scene3d 模块时,在 2D 画布下方叠一层 WebGL;关卡 d3:true 才启用,失败回 2D
+    var G3 = null;
+    if (def.scene3d && GL3D.ok) {
+      var cv3 = el("canvas", { class: "nv-cv nv-cv3", "aria-hidden": "true" });
+      cv3.style.visibility = "hidden"; stage.insertBefore(cv3, cv);
+      var drop3 = function (err) { if (W.console && err) console.warn("[nv] 3D 舞台回退 2D:", err && err.message || err); if (G3) { try { G3.dispose(); } catch (e) {} } G3 = null; GL3D.disable("3D 舞台失败,已回退 2D"); if (cv3.parentNode) cv3.parentNode.removeChild(cv3); app.classList.remove("nv-3d"); };
+      GL3D.load().then(function (THREE) { return import(ROOT + def.scene3d).then(function (m) {
+        if (W.__nvScene3dFail) throw new Error("scene3d forced failure");      // 自测钩子
+        G3 = m.mount(THREE, cv3, { earthR: Phys.R_EARTH, onLost: drop3 });
+      }); }).catch(drop3);
+    }
 
     // 右上:向导徽标 + 玻璃提问卡片
     var av = avatar(def.guide, 56);
@@ -1020,15 +1031,19 @@
       var dt = Math.min(0.05, (now - (lastT || now)) / 1000); lastT = now;
       if (L && L.lv.frame) {
         measure();
-        var f = fit(cv), c = f.ctx;
+        var f = fit(cv), c = f.ctx, on3 = !!(G3 && L.lv.d3);
         c.clearRect(0, 0, f.w, f.h);
-        Draw.stars(c, f.w, f.h, 11, Math.round(f.w * f.h / 7000));   // 安全区外也铺满星空(沉浸)
+        if (G3) { G3.show(on3); G3.setZone(SZ); }
+        app.classList.toggle("nv-3d", on3);
+        L.d3 = on3 ? G3 : null;
+        if (!on3) Draw.stars(c, f.w, f.h, 11, Math.round(f.w * f.h / 7000));   // 安全区外也铺满星空(沉浸)
         c.translate(SZ.x, SZ.y);
         L.ctx = c; L.w = SZ.w; L.h = SZ.h;
         c.save();
         try { L.lv.frame(L, dt, now / 1000); } catch (err) { if (W.console) console.error(err); }
         c.restore();
-        bleed(c, f);
+        if (on3) { try { G3.render(L); } catch (err) { if (W.console) console.error(err); } }
+        else bleed(c, f);
       }
       W.requestAnimationFrame(frame);
     }
@@ -1043,12 +1058,12 @@
     dashPath: function (c, pts, color, w) {
       if (!pts || pts.length < 2) return;
       c.save(); c.setLineDash([7, 6]); c.strokeStyle = color || "#fbbf24"; c.lineWidth = w || 2.5;
-      c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (var i = 1; i < pts.length; i++) c.lineTo(pts[i][0], pts[i][1]); c.stroke(); c.restore();
+      c.beginPath(); var pen = false; for (var i = 0; i < pts.length; i++) { var X = pts[i][0], Y = pts[i][1]; if (X !== X || Y !== Y) { pen = false; continue; } if (pen) c.lineTo(X, Y); else { c.moveTo(X, Y); pen = true; } } c.stroke(); c.restore();
     },
     path: function (c, pts, color, w) {
       if (!pts || pts.length < 2) return;
       c.save(); c.strokeStyle = color || "#c4b5fd"; c.lineWidth = w || 2.5; c.lineJoin = "round";
-      c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); for (var i = 1; i < pts.length; i++) c.lineTo(pts[i][0], pts[i][1]); c.stroke(); c.restore();
+      c.beginPath(); var pen = false; for (var i = 0; i < pts.length; i++) { var X = pts[i][0], Y = pts[i][1]; if (X !== X || Y !== Y) { pen = false; continue; } if (pen) c.lineTo(X, Y); else { c.moveTo(X, Y); pen = true; } } c.stroke(); c.restore();
     },
     stars: function (c, w, h, seed, n) {
       var s = seed || 1; function r() { s = (s * 16807) % 2147483647; return s / 2147483647; }
