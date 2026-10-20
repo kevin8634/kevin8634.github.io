@@ -1146,6 +1146,14 @@
     };
   })();
 
+  /* 世界内跳转标记(页面禁用 referrer,改用会话标记):点本世界内链接时记一笔,首页据此不重复播开场 */
+  try {
+    D.addEventListener("click", function (e) {
+      var a = e.target && e.target.closest && e.target.closest("a[href]"); if (!a) return;
+      try { var u = new URL(a.href, location.href); if (u.origin === location.origin && u.href.indexOf(ROOT) === 0) W.sessionStorage.setItem("gn:nv:_inner", "1"); } catch (err) {}
+    }, true);
+  } catch (e) {}
+
   var NV = { Phys: Phys, gl3d: GL3D, perf: PERF, RM: RM, ROOT: ROOT, store: Store, lsGet: lsGet, lsSet: lsSet, jGet: jGet, el: el, fit: fit, fmt: fmt, esc: esc, starsTxt: starsTxt,
     snd: SND, ai: AI, settings: settings, header: header, avatar: avatar, drawGuide: drawGuide, GUIDES: GUIDES, modal: modal, closeModal: closeModal, task: task, Draw: Draw, ICON: ICON };
   G.NV = NV;
