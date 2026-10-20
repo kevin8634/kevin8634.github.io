@@ -556,8 +556,19 @@
     var adult = el("input", { type: "checkbox", checked: a.adult });
     var err = el("p", { class: "nv-err", role: "alert" });
     var sndT = el("input", { type: "checkbox", checked: SND.on, onchange: function () { SND.set(sndT.checked); } });
+    var curP = PERF.pref;
+    var perfRow = el("div", { class: "nv-seg", role: "radiogroup", "aria-label": "画面质量" }, [["auto", "自动"], ["high", "高"], ["mid", "中"], ["low", "低"]].map(function (o) {
+      return el("label", { class: "nv-radio nv-seg-i" }, [el("input", { type: "radio", name: "nvperf", value: o[0], checked: curP === o[0] }), el("span", { text: o[1] })]);
+    }));
+    var perfNote = el("p", { style: "font-size:12px;color:var(--dim);margin:2px 0 6px", text: "高:完整光效与粒子 · 中:粒子减半 · 低:关闭 3D,用 2D 画面(功能不变)。当前:" + ({ high: "高", mid: "中", low: "低" })[PERF.tier] + (GL3D.ok ? "" : "(" + GL3D.reason + ")") + "。切换后刷新页面生效。" });
+    perfRow.addEventListener("change", function (e) { if (e.target && e.target.name === "nvperf") { PERF.set(e.target.value); perfNote.textContent = "已保存,刷新页面后生效。"; } });
     var card = modal("设置", [
       el("label", { class: "nv-tog" }, [sndT, "声音(背景音乐与「声音即规律」音效)"]),
+      el("h3", { class: "nv-q", text: "画面质量" }),
+      perfRow, perfNote,
+      el("div", { class: "nv-row", style: "margin:0 0 8px" }, [el("button", { class: "nv-btn sm", type: "button", text: "▶ 重播开场动画", onclick: function () {
+        closeModal(); if (W.NVIntro && W.NVIntro.replay) W.NVIntro.replay(); else location.href = ROOT + "?intro=1";
+      } })]),
       el("h3", { class: "nv-q", text: "生成式 AI 向导(可选,默认关闭)" }),
       el("div", {}, radios),
       el("label", { class: "nv-field" }, ["接口地址 base_url(OpenAI 兼容,优先国内已备案模型)", base]),
@@ -1061,7 +1072,28 @@
     }
   };
 
-  /* ---------- 3D 能力检测与按需加载(Three.js 本地内置,失败自动回 2D) ---------- */
+  /* ---------- 性能三档(§5.3.1):高 = 全效 / 中 = 粒子减半、无景深 / 低 = 回落 Canvas 2D,功能不减 ----------
+     自动检测 + 设置里手动切换(gn:nv:_pref.perf = auto|high|mid|low);像素比 桌面 ≤2、手机 ≤1.5 */
+  var PERF = (function () {
+    var nav = W.navigator || {}, mq = function (m) { return !!(W.matchMedia && W.matchMedia(m).matches); };
+    var mobile = mq("(pointer: coarse)") || Math.min(W.screen ? W.screen.width : 9999, W.innerWidth || 9999) < 760;
+    function pref() { var v = Store.pref().perf; return v === "high" || v === "mid" || v === "low" ? v : "auto"; }
+    function auto() {
+      var mem = nav.deviceMemory, cpu = nav.hardwareConcurrency;
+      if ((mem && mem <= 2) || (cpu && cpu <= 2)) return "low";
+      if (mobile || (mem && mem <= 4) || (cpu && cpu <= 4)) return "mid";
+      return "high";
+    }
+    return {
+      get pref() { return pref(); },
+      get tier() { if (GL3D && !GL3D.ok) return "low"; var p = pref(), a = auto(); return p === "auto" ? (a === "low" ? "mid" : a) : (p === "low" ? "mid" : p); },
+      get mobile() { return mobile; },
+      get prCap() { return mobile ? 1.5 : 2; },
+      set: function (v) { Store.setPref("perf", v); }
+    };
+  })();
+
+  /* ---------- 3D 能力检测与按需加载(Three.js r169 本地内置,失败自动回 2D) ---------- */
   var GL3D = (function () {
     var cache = null, pending = null, why = "";
     function q(k) { try { return new URLSearchParams(location.search).get(k); } catch (e) { return null; } }
@@ -1069,9 +1101,10 @@
       if (cache !== null) return cache;
       var force = q("gl3d") || lsGet("gn:nv:_gl3d");
       if (force === "0") { why = "已手动关闭 3D"; return (cache = false); }
+      if (PERF.pref === "low" && force !== "1") { why = "画质设为「低」"; return (cache = false); }
       if (RM) { why = "减少动态效果"; return (cache = false); }
       var nav = W.navigator || {}, mem = nav.deviceMemory, cpu = nav.hardwareConcurrency;
-      if (force !== "1" && ((mem && mem <= 2) || (cpu && cpu <= 2))) { why = "低端设备"; return (cache = false); }
+      if (force !== "1" && PERF.pref === "auto" && ((mem && mem <= 2) || (cpu && cpu <= 2))) { why = "低端设备"; return (cache = false); }
       var ok = false;
       try {
         var t = D.createElement("canvas"), g = t.getContext("webgl2") || t.getContext("webgl");
@@ -1098,7 +1131,7 @@
     };
   })();
 
-  var NV = { Phys: Phys, gl3d: GL3D, RM: RM, ROOT: ROOT, store: Store, lsGet: lsGet, lsSet: lsSet, jGet: jGet, el: el, fit: fit, fmt: fmt, esc: esc, starsTxt: starsTxt,
+  var NV = { Phys: Phys, gl3d: GL3D, perf: PERF, RM: RM, ROOT: ROOT, store: Store, lsGet: lsGet, lsSet: lsSet, jGet: jGet, el: el, fit: fit, fmt: fmt, esc: esc, starsTxt: starsTxt,
     snd: SND, ai: AI, settings: settings, header: header, avatar: avatar, drawGuide: drawGuide, GUIDES: GUIDES, modal: modal, closeModal: closeModal, task: task, Draw: Draw, ICON: ICON };
   G.NV = NV;
 })(typeof window !== "undefined" ? window : this);

@@ -166,6 +166,7 @@
     .sm3-tl.odd { display: none; }
   }
 
+
   /* ⑤ 底部 */
   .hm-foot { margin-top: 30px; padding: 14px 0 0; border-top: 1px solid var(--line); font-size: 13px; color: var(--mu); }
   .hm-foot .nv-row { margin-bottom: 10px; }
@@ -182,6 +183,74 @@
     .hero h1 { font-size: 24px; }
     .hero .lead { font-size: 13px; }
     .totem { height: 230px; min-height: 0; }
+  }
+
+  /* ===== v0.3 统一 HUD:3D 首页 = 全屏星图舞台(时空网格地面)+ 左任务抽屉 + 右向导气泡 ===== */
+  body.hud3d .hm { max-width: none; padding: 0 0 30px; }
+  body.hud3d .hm > section:not(.sm-sec), body.hud3d .hm > footer { max-width: 1180px; margin-left: auto; margin-right: auto; padding-left: 14px; padding-right: 14px; }
+  body.hud3d .sm-sec { margin: 0; }
+  body.hud3d .sm-sec > .maphead, body.hud3d .sm-sec > .hm-sub { max-width: 1180px; margin-left: auto; margin-right: auto; padding: 0 14px; }
+  body.hud3d .sm-sec > .maphead { position: absolute; left: -9999px; }
+  body.hud3d .sm-sec > .hm-sub { display: none; }
+  body.hud3d .sm-sec > .smlegend, body.hud3d .sm-sec > .maplegend, body.hud3d .sm-sec > .mapbox { max-width: 1180px; margin-left: auto; margin-right: auto; }
+  body.hud3d .sm3 { height: calc(100svh - 52px); min-height: 480px; max-height: none; border-radius: 0; border: 0; border-bottom: 1px solid var(--glass-bd); }
+  body.hud3d .totem, body.hud3d .gctl { display: none; }
+  body.hud3d .hero { grid-template-columns: 1fr !important; padding-top: 22px; }
+  body.hud3d .sm3-hud { left: 50%; transform: translateX(-50%); top: auto; bottom: 86px; }
+  body.hud3d .sm3-card { left: 300px; }
+  .hm-stitle { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); z-index: 2; text-align: center; pointer-events: none; text-shadow: 0 0 14px rgba(167,139,250,.6), 0 1px 3px #000; white-space: nowrap; }
+  .hm-stitle b { display: block; font-size: 20px; letter-spacing: 3px; color: #f1edff; }
+  .hm-stitle span { font-size: 12px; letter-spacing: 2px; color: var(--cy2); }
+  .hm-drawer { position: absolute; left: 12px; top: 12px; z-index: 3; width: 272px; padding: 10px 10px 8px; background: var(--glass); -webkit-backdrop-filter: blur(var(--blur)); backdrop-filter: blur(var(--blur));
+    border: 1px solid var(--glass-bd); border-radius: var(--r-lg); box-shadow: var(--sh-1); transition: transform .35s var(--ease), opacity .35s; }
+  .hm-drawer.closed { transform: translateX(calc(-100% + 34px)); }
+  .hm-drawer.closed .hd-list { opacity: 0; pointer-events: none; }
+  .hd-h { display: flex; justify-content: space-between; align-items: center; font-size: 12px; letter-spacing: 1px; color: var(--cy2); margin: 0 0 6px 4px; }
+  .hd-tog { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--glass-bd); background: var(--btn); color: var(--tx); font-size: 18px; line-height: 1; cursor: pointer; }
+  .hd-tog:hover, .hd-tog:focus-visible { border-color: var(--ac); }
+  .hd-list { display: grid; gap: 6px; transition: opacity .25s; }
+  .hd-card { display: flex; gap: 10px; align-items: center; padding: 7px 8px; border-radius: 12px; text-decoration: none; color: var(--tx); border: 1px solid transparent; background: rgba(167,139,250,.06); }
+  .hd-card:hover, .hd-card:focus-visible { border-color: var(--ac); background: rgba(124,92,240,.18); }
+  .hd-card canvas { width: 40px; height: 40px; flex: none; }
+  .hd-txt { min-width: 0; display: grid; gap: 3px; }
+  .hd-txt b { font-size: 13px; font-weight: 600; line-height: 1.35; }
+  .hd-meta { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--mu); }
+  .hd-meta em { font-style: normal; color: var(--pred); font-family: var(--mono); }
+  .hd-dots { display: inline-flex; gap: 3px; }
+  .hd-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--star-off); }
+  .hd-dots i.on { background: var(--star-on); box-shadow: 0 0 5px var(--ac); }
+  .hm-guide { position: absolute; right: 12px; top: 12px; z-index: 2; display: flex; gap: 10px; align-items: flex-start; width: 270px; padding: 10px 12px; cursor: pointer;
+    background: var(--glass); -webkit-backdrop-filter: blur(var(--blur)); backdrop-filter: blur(var(--blur)); border: 1px solid var(--glass-bd); border-radius: var(--r-lg) var(--r-lg) 4px var(--r-lg); box-shadow: var(--sh-1); }
+  .hm-guide canvas { width: 44px; height: 44px; flex: none; }
+  .hg-who { font-size: 12px; color: var(--cy2); }
+  .hg-tx { margin: 2px 0 0; font-size: 13px; line-height: 1.55; color: var(--tx); }
+  .hm-c { position: absolute; z-index: 1; width: 22px; height: 22px; border: 2px solid rgba(165,243,252,.55); pointer-events: none; }
+  .hm-c.tl { left: 6px; top: 6px; border-right: 0; border-bottom: 0; } .hm-c.tr { right: 6px; top: 6px; border-left: 0; border-bottom: 0; }
+  .hm-c.bl { left: 6px; bottom: 6px; border-right: 0; border-top: 0; } .hm-c.br { right: 6px; bottom: 6px; border-left: 0; border-top: 0; }
+  .sm3.has-card .hm-guide { opacity: 0; pointer-events: none; }
+  @media (max-width: 1023px) { .hm-stitle { display: none; } }
+  @media (orientation: portrait) and (max-width: 820px) {
+    body.hud3d .sm3 { height: calc(100svh - 52px); }
+    .hm-drawer { left: 6px; right: 6px; top: auto; bottom: 96px; width: auto; padding: 6px; }
+    .hm-drawer .hd-h { display: none; }
+    .hd-list { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .hd-card { flex-direction: column; gap: 3px; padding: 6px 4px; text-align: center; }
+    .hd-card canvas { width: 34px; height: 34px; }
+    .hd-txt b { display: none; }
+    .hd-meta { flex-direction: column; gap: 2px; }
+    .hm-guide { left: auto; right: 8px; top: 8px; width: min(250px, 70vw); padding: 8px 10px; }
+    .hm-guide canvas { width: 34px; height: 34px; }
+    .hg-tx { font-size: 12px; }
+    body.hud3d .sm3-card { left: 8px; }
+    .sm3.has-card .hm-drawer { opacity: 0; pointer-events: none; }
+    body.hud3d .sm3-hud { display: none; }
+  }
+  @media (orientation: landscape) and (max-height: 519px) {
+    body.hud3d .sm3 { height: calc(100svh - 52px); min-height: 280px; }
+    .hm-drawer { width: 220px; } .hd-txt b { font-size: 12px; } .hd-card canvas { width: 30px; height: 30px; }
+    .hm-guide { display: none; }
+    body.hud3d .sm3-card { left: 8px; }
+    .sm3.has-card .hm-drawer { opacity: 0; pointer-events: none; }
   }
   .nv-top .nv-sp { display: block !important; }
   @media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
@@ -287,6 +356,24 @@
   D.body.appendChild(NV.header({ links: [["../", "← 创世门户"]], brand: "宙律 Nomoverse" }));
   var main = el("main", { class: "hm" });
   D.body.appendChild(main);
+
+  /* ---------------- v0.3 开场动画:首次自动播 / ?intro=1 / 设置里重播;减少动态不播;无 WebGL 静态淡入 ---------------- */
+  var introBusy = false;
+  function playIntro(force) {
+    if (introBusy) return Promise.resolve();
+    if (RM && !force) return Promise.resolve();
+    introBusy = true;
+    var getT = (!RM && NV.gl3d.ok) ? NV.gl3d.load().catch(function () { return null; }) : Promise.resolve(null);
+    return getT.then(function (T) { return import(NV.ROOT + "core/intro.js").then(function (m) { return m.run(T); }); })
+      .catch(function (err) { if (W.console) console.warn("[宙律] 开场动画跳过:", err && err.message); })
+      .then(function () { introBusy = false; });
+  }
+  W.NVIntro = { replay: function () { return playIntro(true); } };
+  var introQ = null; try { introQ = new URLSearchParams(location.search).get("intro"); } catch (e) {}
+  var introP = Promise.resolve();
+  if (introQ === "1" || (introQ !== "0" && NV.lsGet("gn:nv:_intro") !== "1" && !RM)) { NV.lsSet("gn:nv:_intro", "1"); introP = playIntro(introQ === "1"); }
+  var HUD3D = NV.gl3d.ok;                 // v0.3:3D 可用时首页 = 全屏星图舞台 + 统一 HUD;否则保留 v0.2 版式(功能不减)
+  if (HUD3D) D.body.classList.add("hud3d");
 
   /* ① 图腾 */
   var cv = el("canvas", { role: "img", "aria-label": "带轨道环的行星压弯了周围的时空网格;引力越大,网格凹得越深" });
@@ -436,6 +523,7 @@
     if (SM3) { var x = SM3; SM3 = null; try { x.dispose(); } catch (e) {} }
     var st = smSec.querySelector(".sm3"); if (st) st.remove();
     smSec.setAttribute("data-mode", "2d"); smSec.classList.remove("show2d");
+    if (HUD3D) { HUD3D = false; D.body.classList.remove("hud3d"); main.insertBefore(smSec, hero.nextSibling.nextSibling); }
     if (err && W.console && console.warn) console.warn("[宙律] 3D 星图不可用,已回退 2D:", err && err.message || err);
   }
   smTog.addEventListener("click", function () {
@@ -444,7 +532,8 @@
     smTog.textContent = on ? "收起列表" : "列表视图";
   });
   if (NV.gl3d.ok) {
-    Promise.all([NV.gl3d.load(), import(NV.ROOT + "core/starmap3d.js")]).then(function (r) {
+    if (HUD3D) main.insertBefore(smSec, main.firstChild);
+    Promise.all([NV.gl3d.load(), import(NV.ROOT + "core/starmap3d.js"), introP]).then(function (r) {
       try {
         SM3 = r[1].mount(r[0], {
           host: mapbox, el: el, sup: sup, snd: SND, RM: RM, cons: CONS, colors: CCOL, landmarks: LANDMARKS, startE: 0,
@@ -455,9 +544,51 @@
           onFail: sm3Fallback
         });
         smSec.setAttribute("data-mode", "3d");
+        if (HUD3D) mountHud(smSec.querySelector(".sm3"));
       } catch (err) { SM3 = null; sm3Fallback(err); }
     }).catch(sm3Fallback);
   }
+
+  /* ---------------- v0.3 统一 HUD(3D 首页):左任务抽屉 + 右向导气泡;手机收成底部任务条 ---------------- */
+  var hudDrawer = null;
+  var GTIPS = [
+    "从质子到银河系,每往右一格就放大 10 倍。你自己在哪个尺度?",
+    "地球把脚下的时空网格压出了一个坑。引力再大一点,坑会更深吗?",
+    "看到地球发出的涟漪了吗?那是引力波的示意。它跑得有多快?",
+    "点一颗亮着的知识星看看。哪颗星离你最近?"
+  ];
+  function renderDrawer() {
+    if (!hudDrawer) return;
+    var list = hudDrawer.querySelector(".hd-list"); list.innerHTML = "";
+    TASKS.forEach(function (t) {
+      var p = prog(t.id, t.n), got = p.reduce(function (a, b) { return a + b; }, 0), done = p.filter(function (x) { return x >= 1; }).length;
+      var av = NV.avatar(t.guide, 40);
+      var dots = el("span", { class: "hd-dots", "aria-hidden": "true" });
+      for (var i = 0; i < t.n; i++) dots.appendChild(el("i", { class: p[i] >= 1 ? "on" : "" }));
+      list.appendChild(el("a", { class: "hd-card", href: t.href, "aria-label": t.q + ",已通 " + done + " / " + t.n + " 关,已得 " + got + " 颗星",
+        onpointerenter: SND.hover, onclick: function () { SND.play("whoosh"); } }, [
+        av.cv,
+        el("span", { class: "hd-txt" }, [el("b", { text: t.q }), el("span", { class: "hd-meta" }, [dots, el("em", { text: got + "/" + (t.n * 3) + "★" })])])
+      ]));
+    });
+  }
+  function mountHud(stage) {
+    if (!stage || stage.querySelector(".hm-drawer")) return;
+    var tog = el("button", { class: "hd-tog", type: "button", "aria-expanded": "true", "aria-label": "收起任务抽屉", text: "‹" });
+    hudDrawer = el("nav", { class: "hm-drawer", "aria-label": "三个探究任务" }, [
+      el("div", { class: "hd-h" }, [el("span", { text: "探究任务 · 13 关" }), tog]),
+      el("div", { class: "hd-list" })
+    ]);
+    tog.addEventListener("click", function () { var c = hudDrawer.classList.toggle("closed"); tog.setAttribute("aria-expanded", c ? "false" : "true"); tog.setAttribute("aria-label", c ? "展开任务抽屉" : "收起任务抽屉"); tog.textContent = c ? "›" : "‹"; });
+    renderDrawer();
+    var gav = NV.avatar("quark", 44), gtx = el("p", { class: "hg-tx", text: GTIPS[0] });
+    var gi = 0, guide = el("aside", { class: "hm-guide", "aria-live": "polite", "aria-label": "向导 夸克「阿夸」" }, [gav.cv, el("div", {}, [el("span", { class: "hg-who", text: "阿夸 · 向导" }), gtx])]);
+    guide.addEventListener("click", function () { gi = (gi + 1) % GTIPS.length; gtx.textContent = GTIPS[gi]; SND.play("select"); });
+    var title = el("div", { class: "hm-stitle", "aria-hidden": "true" }, [el("b", { text: "宙律 Nomoverse" }), el("span", { text: "物理 · 亲手改写宇宙的规律" })]);
+    stage.appendChild(title); stage.appendChild(hudDrawer); stage.appendChild(guide);
+    ["tl", "tr", "bl", "br"].forEach(function (k) { stage.appendChild(el("i", { class: "hm-c " + k, "aria-hidden": "true" })); });
+  }
+
 
   /* ⑤ 底部 */
   main.appendChild(el("footer", { class: "hm-foot" }, [
@@ -471,7 +602,7 @@
   ]));
 
   /* 从任务页返回时刷新进度 */
-  function refresh() { renderCards(); renderMap(); }
+  function refresh() { renderCards(); renderMap(); renderDrawer(); }
   W.addEventListener("pageshow", function (e) { if (e.persisted) refresh(); });
   W.addEventListener("storage", function (e) { if (!e.key || e.key.indexOf("gn:nv:") === 0) refresh(); });
 
@@ -669,7 +800,7 @@
     totem.setAttribute("data-mode", "3d"); hudtag.textContent = "G ×" + gTarget.toFixed(1) + " · 3D";
     return { render: render, dispose: dispose };
   }
-  if (NV.gl3d.ok) {
+  if (NV.gl3d.ok && !HUD3D) {
     NV.gl3d.load().then(function (THREE) {
       try { G3 = mount3D(THREE); kick(); }
       catch (err) { var c3 = totem.querySelector("canvas.gl3"); if (c3) c3.remove(); G3 = null; fallback2D(err); }

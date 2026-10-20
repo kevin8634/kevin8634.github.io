@@ -5,7 +5,7 @@
 ## 第三方代码
 | 组件 | 版本 | 许可 | 位置 | 说明 |
 |---|---|---|---|---|
-| Three.js | r186(npm `three@0.186.1`) | MIT | `vendor/three.module.min.js`;许可全文 `vendor/three.LICENSE` | 来自 npm 注册表官方 tarball(https://registry.npmjs.org/three/-/three-0.186.1.tgz)。该版本已不再附带 `build/three.module.min.js`,因此用 esbuild 把官方 `build/three.module.js` + `build/three.core.js` 原样打包压缩成单文件(未改动任何源码,文件头保留 `@license` 版权声明)。sha256 `1c5931a54b06ef6f20cf2ed10a7ff1c3ae257d941f965894470b5cd02075e7cf`。只在支持 WebGL 的非低端设备上按需加载,不走 CDN。 |
+| Three.js | r169(npm `three@0.169.0`) | MIT | `vendor/three.module.min.js`;许可全文 `vendor/three.LICENSE` | v0.3 起按 HANDOFF §5.3.1 统一对齐 r169(原 r186 已替换)。来自 npm 官方包 `build/three.module.min.js`(单文件,未改动,文件头保留 `@license`)。sha256 `f7cee3c7533449a1505cc12cb5128b89e3d4fd3d7ea62b05f9f5464a217472ee`。只在支持 WebGL 且画质非「低」时按需加载,不走 CDN。 |
 
 除此之外,**本站没有其他第三方代码**:`core/nv.js`、`core/nv.css`、各任务页与首页的脚本和样式都是本项目原创。
 

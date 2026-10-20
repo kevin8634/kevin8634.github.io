@@ -278,3 +278,37 @@ button, input, select { font: inherit; color: inherit; }
   * { scroll-behavior: auto !important; }
   .nv-toast, .nv-btn, .nv-run .dot, .nv-prog .bar i { transition: none; }
 }
+
+/* ===== v0.3 开场动画(引力之海 × 尺度穿梭) ===== */
+.nv-intro { position: fixed; inset: 0; z-index: 9999; background: #05041a; overflow: hidden; cursor: pointer; opacity: 1; transition: opacity .6s ease; }
+.nv-intro.out { opacity: 0; pointer-events: none; }
+.nv-intro-cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.nv-intro-title { position: absolute; left: 50%; top: 9%; transform: translate(-50%, 14px); text-align: center; opacity: 0; transition: opacity 1s ease, transform 1.2s cubic-bezier(.2,.7,.2,1); pointer-events: none; text-shadow: 0 0 24px rgba(167,139,250,.65), 0 2px 6px #000; white-space: nowrap; }
+.nv-intro-title .zh { display: block; font-size: clamp(44px, 9vw, 104px); font-weight: 800; letter-spacing: .18em; color: #f3f0ff; line-height: 1.05; padding-left: .18em; }
+.nv-intro-title .en { display: block; font-size: clamp(18px, 3vw, 34px); font-weight: 700; letter-spacing: .32em; color: #c4b5fd; margin-top: 4px; padding-left: .32em; }
+.nv-intro-title .sub { display: block; margin-top: 14px; font-size: clamp(13px, 1.7vw, 18px); letter-spacing: .14em; color: #cfd4ff; }
+.nv-intro-title .sub b { color: #67e8f9; font-weight: 800; font-size: 1.25em; }
+.nv-intro-title .tag { display: block; margin-top: 6px; font-size: clamp(12px, 1.4vw, 15px); letter-spacing: .3em; color: #a5a1d8; }
+.nv-intro.t-on .nv-intro-title { opacity: 1; transform: translate(-50%, 0); }
+.nv-intro.t-off .nv-intro-title { opacity: 0; transform: translate(-50%, -18px); transition-duration: .8s; }
+.nv-intro-scale { position: absolute; left: 50%; bottom: 13%; transform: translateX(-50%); font: 600 15px/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .12em; color: #67e8f9; text-shadow: 0 0 10px rgba(103,232,249,.6); opacity: .85; pointer-events: none; font-variant-numeric: tabular-nums; }
+.nv-intro-c { position: absolute; width: 34px; height: 34px; border: 2px solid rgba(165,243,252,.75); opacity: 0; transition: opacity .5s ease, transform .7s cubic-bezier(.2,.7,.2,1); pointer-events: none; }
+.nv-intro-c.tl { left: 18px; top: 18px; border-right: 0; border-bottom: 0; transform: translate(-30px, -30px); }
+.nv-intro-c.tr { right: 18px; top: 18px; border-left: 0; border-bottom: 0; transform: translate(30px, -30px); }
+.nv-intro-c.bl { left: 18px; bottom: 18px; border-right: 0; border-top: 0; transform: translate(-30px, 30px); }
+.nv-intro-c.br { right: 18px; bottom: 18px; border-left: 0; border-top: 0; transform: translate(30px, 30px); }
+.nv-intro.hud-on .nv-intro-c { opacity: 1; transform: none; }
+.nv-intro-skip { position: absolute; right: 22px; bottom: 22px; z-index: 2; min-width: 44px; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(196,181,253,.45); background: rgba(20,16,52,.55); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: #e9e5ff; font-size: 14px; cursor: pointer; }
+.nv-intro-skip:hover, .nv-intro-skip:focus-visible { border-color: #a78bfa; outline: none; box-shadow: 0 0 0 2px rgba(167,139,250,.5); }
+.nv-intro-hint { position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%); margin: 0; font-size: 12px; color: rgba(207,212,255,.55); pointer-events: none; }
+.nv-intro.static { background: radial-gradient(ellipse at 50% 40%, #1a1450 0%, #05041a 70%); }
+.nv-intro.static .nv-intro-title { top: 34%; }
+.nv-intro.static .nv-intro-scale, .nv-intro.static .nv-intro-c { display: none; }
+@media (max-width: 600px) { .nv-intro-title { top: 16%; } .nv-intro-hint { display: none; } }
+@media (prefers-reduced-motion: reduce) { .nv-intro, .nv-intro-title { transition: none; } }
+
+/* 设置:画质分段 */
+.nv-seg { display: flex; gap: 6px; flex-wrap: wrap; margin: 2px 0; }
+.nv-seg-i { padding: 4px 12px; border: 1px solid var(--line); border-radius: 999px; align-items: center; }
+.nv-seg-i input { margin: 0; }
+.nv-seg-i:has(input:checked) { border-color: var(--ac); background: rgba(124,92,240,.22); }

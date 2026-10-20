@@ -2,6 +2,8 @@
    ES 模块,仅在 NV.gl3d 可用时由首页动态 import;THREE 由调用方传入(同一份本地 vendor)。
    任何构建 / 渲染 / context lost 失败都通过 cfg.onFail 交回首页,首页回到 2D 星图。
    draw call 控制:知识星 1(Points + 自定义着色器)、星座连线 1、背景星 1、轴 + 刻度 2、地标若干、星云 sprite 若干。 */
+import { createRenderer, spacetimeGrid, tierInfo } from "./nvscene.js";
+
 export function mount(THREE, cfg) {
   "use strict";
   var D = document, W = window, el = cfg.el, sup = cfg.sup;
@@ -80,9 +82,9 @@ export function mount(THREE, cfg) {
   cfg.host.parentNode.insertBefore(stage, cfg.host);
 
   /* ---------------- Three.js 场景 ---------------- */
-  var renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: false, powerPreference: "low-power" });
-  var PR = Math.min(2, W.devicePixelRatio || 1);
-  renderer.setPixelRatio(PR);
+  var TIER = tierInfo();                                // v0.3:渲染器与性能分级统一走 nvscene
+  var renderer = createRenderer(THREE, { canvas: cv, clear: 0x05041a });
+  var PR = renderer.getPixelRatio();
   renderer.setClearColor(0x05041a, 1);
   var scene = new THREE.Scene();
   scene.fog = new THREE.Fog(0x05041a, 16, 58);
@@ -117,7 +119,7 @@ export function mount(THREE, cfg) {
 
   // 背景星(1 个 Points)
   (function () {
-    var N = 2600, p = new Float32Array(N * 3), c = new Float32Array(N * 3), tc = new THREE.Color();
+    var N = Math.round(2600 * TIER.particles), p = new Float32Array(N * 3), c = new Float32Array(N * 3), tc = new THREE.Color();
     for (var i = 0; i < N; i++) {
       var th = hash(i * 3 + 1) * Math.PI * 2, r = 26 + hash(i * 3 + 2) * 70;
       p[i * 3] = -40 + hash(i * 3 + 3) * (L + 90); p[i * 3 + 1] = Math.sin(th) * r; p[i * 3 + 2] = Math.cos(th) * r - 10;
@@ -266,6 +268,12 @@ export function mount(THREE, cfg) {
     }
     lmObjs.push({ e: e, o: g, name: n }); g.position.x = X(e); if (g.position.y === 0 && n !== "1 光年") g.position.y = 0.75; scene.add(g);
   });
+
+  /* ---------------- v0.3 时空网格「地面」:全站统一舞台;地球、太阳(日地距离)、银河压出引力井,地球周期性发出引力波涟漪 ---------------- */
+  var ST = spacetimeGrid(THREE, { x0: X(EMIN) - 24, x1: X(EMAX) + 24, z0: -46, z1: 16, nx: TIER.tier === "high" ? 150 : 100, nz: 34, seg: TIER.tier === "high" ? 260 : 160, opacity: 0.85, fadeNear: 14, fadeFar: 54 });
+  ST.mesh.position.y = -3.2; ST.uni.uRipSpeed.value = 7; scene.add(ST.mesh);
+  ST.setWells([{ x: X(0), z: 0, depth: 0.25, r: 0.5 }, { x: X(7.1), z: 0, depth: 1.6, r: 1.1 }, { x: X(11.2), z: -2, depth: 2.4, r: 1.6 }, { x: X(21), z: -3, depth: 3.2, r: 2.2 }, { x: X(-15), z: 0, depth: 0.5, r: 0.6 }]);
+  var ripNext = 1.5;
 
   /* ---------------- 相机飞行 ---------------- */
   var camE = clampE(cfg.startE == null ? 0 : cfg.startE), tgtE = camE, sel = -1, focusI = -1, hoverI = -1;
@@ -437,7 +445,8 @@ export function mount(THREE, cfg) {
       var diff = tgtE - camE;
       camE = Math.abs(diff) < 0.002 || RM ? tgtE : camE + diff * (1 - Math.exp(-dt * 4.2));
       placeCam(RM ? 1 : 1 - Math.exp(-dt * 5));
-      var t = RM ? 0 : (now - t0) / 1000; uni.uTime.value = t;
+      var t = RM ? 0 : (now - t0) / 1000; uni.uTime.value = t; ST.uni.uTime.value = t;
+      if (!RM && t > ripNext) { ST.uni.uRip.value.set(X(7.1), 0, t, 0.9); ripNext = t + 9; }
       if (!RM) spin.forEach(function (s) { s[0].rotation[s[2]] = t * s[1]; });
       renderer.render(scene, cam);
       for (var i = 0; i < N; i++) project(world[i], scr, i * 3);
