@@ -32,7 +32,7 @@ export async function playIntro() {
   const ring = new THREE.Mesh(new THREE.TorusGeometry(15, .12, 8, 160), new THREE.MeshBasicMaterial({ color: 0xf5c26b, transparent: true, opacity: .8 }));
   ring.rotation.x = 1.25; P.add(ring);
   const T = seen ? 1.5 : 4.0; let t0 = performance.now(), last = t0, stop = false;
-  const skip = () => { if (stop) return; stop = true; try { localStorage.setItem(KEY, '1'); } catch (_) {} done(); R.dispose(); };
+  const skip = () => { if (stop) return; stop = true; try { localStorage.setItem(KEY, '1'); } catch (_) {} done(); try { R.dispose(); R.forceContextLoss(); } catch (_) {} dispatchEvent(new Event('lt:intro-done')); };
   el.querySelector('.skip').onclick = skip; el.addEventListener('pointerdown', skip); addEventListener('keydown', skip, { once: true });
   addEventListener('resize', () => { R.setSize(innerWidth, innerHeight); C.aspect = innerWidth / innerHeight; C.updateProjectionMatrix(); });
   const ease = x => x * x * (3 - 2 * x), cl = x => Math.min(1, Math.max(0, x));
