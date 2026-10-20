@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>元素工坊 Element Forge · 化学 · 创世计划 Genesis</title>
+<meta name="description" content="元素工坊 Element Forge:创世计划 Genesis 第 03 世界(化学)。从恒星熔炉开始,用元素锻造万物。免费、免注册、无广告。">
+<meta property="og:title" content="元素工坊 Element Forge · 化学 · 创世计划 Genesis">
+<meta property="og:description" content="从一颗恒星里,炼出整个世界。亲手聚变出元素、把石墨压成钻石。免费、免注册。">
+<meta name="theme-color" content="#070a14">
+<link rel="stylesheet" href="ef.css">
+</head>
+<body>
+<main class="wrap">
+  <section class="hero">
+    <h1>元素工坊</h1>
+    <p class="tagline">从一颗恒星里,炼出整个世界。</p>
+    <p>创世计划 Genesis · 第 03 世界 · 化学 · v0.1</p>
+  </section>
+
+  <section class="scope glass" aria-label="尺度镜">
+    <div class="scope-cap"><b id="scName">尺度镜</b><span id="scSize"></span></div>
+    <div id="scCv"></div>
+    <input type="range" id="scR" min="0" max="6" step="0.01" value="0" aria-label="尺度">
+    <div class="dial" id="dial"></div>
+    <div class="scope-tasks" id="scTasks"></div>
+  </section>
+
+  <section class="sec">
+    <h2>第一期任务</h2>
+    <p class="sub">每个任务从一个问题出发:先猜,再动手,最后揭晓。不排名、不计时。</p>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section class="sec">
+    <h2>星球篇 · 即将点亮</h2>
+    <p class="sub">元素离开恒星,变成岩石和行星。不同的星球,有不同的化学。</p>
+    <figure class="mars glass"><img src="img/mars-base.webp" alt="火星基地概念图" loading="lazy"><figcaption>终章「火星基地」:只用火星上的空气、冰和岩石,造出氧气、水和燃料。<small>概念图,非实景</small></figcaption></figure>
+    <div class="cards" id="planets"></div>
+  </section>
+
+  <section class="sec">
+    <h2>元素起源周期表</h2>
+    <p class="sub">每个元素按它主要诞生的地方上色。完成任务,亲手点亮它们。</p>
+    <div class="pt-ctl"><button class="ef-btn ghost" id="flatBtn" style="padding:4px 12px;font-size:13px">切换平面 / 立体</button><span id="litCount"></span></div>
+    <div class="pt-wrap">
+      <div class="pt-scene"><div class="pt" id="pt"></div></div>
+      <aside class="pt-side glass" id="side"></aside>
+    </div>
+    <div class="legend" id="legend"></div>
+    <p class="note-sm">来源为简化示意:许多元素有不止一个来源,这里只标主要的一个。科学背景可参考 <a href="https://blog.sdss.org/2017/01/09/origin-of-the-elements-in-the-solar-system/" target="_blank" rel="noopener">SDSS 关于元素起源的介绍</a>。</p>
+  </section>
+
+  <section class="sec">
+    <h2>工坊七匠</h2>
+    <p class="sub">七位向导,各来自一项化学前沿成果。他们只提问,不直接给答案。</p>
+    <div class="guides" id="guides"></div>
+  </section>
+
+  <footer class="foot">
+    <b>实验安全</b>:元素工坊里的所有实验只在虚拟中发生。标有「请勿在现实中尝试」的内容,请不要在现实中模仿;本站不提供任何危险品的制备方法或配比。<br>
+    免费 · 免注册 · 无广告 · 无追踪 · 进度只保存在你的浏览器里 · <a href="LICENSES.md">许可台账</a><br>
+    创世计划 Genesis · 科学素养 / 科普探究
+  </footer>
+</main>
+<script src="ef.js"></script>
+<script>
+(function () {
+EF.sky(); EF.topbar({ back: '../', backText: '← 创世计划' });
+var lit = EF.litSet();
+
+/* ---------- 尺度镜 ---------- */
+var SC = [
+  { n: '恒星', s: '约 10⁹ 米 · 一颗恒星', t: 'stars' }, { n: '行星', s: '约 10⁷ 米 · 一颗行星', t: 'planet' },
+  { n: '烧杯', s: '约 10⁻¹ 米 · 你看得见的实验', t: 'cabbage' }, { n: '晶体', s: '约 10⁻⁵ 米 · 电镜下的晶粒(示意)', t: 'carbon' },
+  { n: '分子', s: '约 10⁻⁹ 米 · 原子手拉手', t: 'carbon' }, { n: '原子', s: '约 10⁻¹⁰ 米 · 电子是一团"概率云"', t: 'carbon' },
+  { n: '原子核', s: '约 10⁻¹⁵ 米 · 质子和中子', t: 'stars' }
+];
+var host = document.getElementById('scCv'), C = EF.canvas(host, Math.min(300, Math.max(220, innerWidth * 0.32))), R = document.getElementById('scR');
+var dial = document.getElementById('dial'), target = 0, val = 0;
+dial.innerHTML = SC.map(function (s, i) { return '<button data-i="' + i + '" style="left:calc(8px + (100% - 16px) * ' + (i / 6).toFixed(4) + ')">' + s.n + '</button>'; }).join('');
+Array.prototype.forEach.call(dial.children, function (b) { b.onclick = function () { target = +b.dataset.i; R.value = target; EF.play('whoosh'); }; });
+R.oninput = function () { target = +R.value; };
+R.onchange = function () { target = Math.round(+R.value); R.value = target; EF.play('anvil'); };
+var rnd = (function (s) { return function () { s = (s * 16807) % 2147483647; return s / 2147483647; }; })(42);
+var grainCv = null, grains = []; for (var i = 0; i < 46; i++) grains.push({ x: rnd(), y: rnd(), g: 90 + rnd() * 110 });
+function scene(i, x, W, H, t) {
+  var cx = W / 2, cy = H / 2, m = Math.min(W, H);
+  if (i === 0) {
+    var g = x.createRadialGradient(cx, cy, 0, cx, cy, m * 0.6); g.addColorStop(0, '#fff6d8'); g.addColorStop(0.25, '#ffb347'); g.addColorStop(0.45, '#ff5a1a'); g.addColorStop(0.62, 'rgba(255,60,10,.25)'); g.addColorStop(1, 'rgba(255,60,10,0)');
+    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, m * 0.6, 0, 7); x.fill();
+    for (var k = 0; k < 60; k++) { var a = k * 2.39996, r = Math.sqrt(k / 60) * m * 0.33; x.globalAlpha = 0.18 + 0.12 * Math.sin(t / 400 + k); x.fillStyle = '#fff1c0'; x.beginPath(); x.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, m * 0.02, 0, 7); x.fill(); }
+    x.globalAlpha = 1;
+  } else if (i === 1) {
+    var r1 = m * 0.33, g1 = x.createRadialGradient(cx - r1 * 0.4, cy - r1 * 0.4, r1 * 0.1, cx, cy, r1); g1.addColorStop(0, '#e9b48a'); g1.addColorStop(0.6, '#a5552c'); g1.addColorStop(1, '#2a1208');
+    x.fillStyle = g1; x.beginPath(); x.arc(cx, cy, r1, 0, 7); x.fill();
+    x.save(); x.beginPath(); x.arc(cx, cy, r1, 0, 7); x.clip(); x.fillStyle = 'rgba(60,25,10,.35)';
+    for (var k2 = 0; k2 < 9; k2++) { x.beginPath(); x.ellipse(cx + Math.sin(k2 * 3.1 + t / 6000) * r1 * 0.8, cy + Math.cos(k2 * 1.7) * r1 * 0.6, r1 * 0.18, r1 * 0.07, k2, 0, 7); x.fill(); }
+    x.restore(); x.strokeStyle = 'rgba(255,190,140,.35)'; x.lineWidth = 2; x.beginPath(); x.arc(cx, cy, r1 + 3, 0, 7); x.stroke();
+  } else if (i === 2) {
+    var bw = m * 0.42, bh = m * 0.62, bx = cx - bw / 2, by = cy - bh / 2 + 10, lvl = by + bh * 0.42;
+    x.fillStyle = 'rgba(255,140,40,.55)'; x.beginPath(); x.moveTo(bx + 4, lvl); x.lineTo(bx + bw - 4, lvl); x.lineTo(bx + bw - 4, by + bh - 6); x.quadraticCurveTo(cx, by + bh + 6, bx + 4, by + bh - 6); x.fill();
+    for (var b = 0; b < 14; b++) { var yy = (by + bh) - ((t / 18 + b * 37) % (bh * 0.55)); x.fillStyle = 'rgba(255,230,190,.7)'; x.beginPath(); x.arc(bx + 12 + (b * 53) % (bw - 24), yy, 2 + (b % 3), 0, 7); x.fill(); }
+    x.strokeStyle = 'rgba(230,240,255,.8)'; x.lineWidth = 2.5; x.beginPath(); x.moveTo(bx - 6, by); x.lineTo(bx, by + 8); x.lineTo(bx, by + bh - 8); x.quadraticCurveTo(bx, by + bh, bx + 10, by + bh); x.lineTo(bx + bw - 10, by + bh); x.quadraticCurveTo(bx + bw, by + bh, bx + bw, by + bh - 8); x.lineTo(bx + bw, by); x.stroke();
+  } else if (i === 3) {
+    if (!grainCv || grainCv.w !== W || grainCv.h !== H) {
+      grainCv = document.createElement('canvas'); grainCv.width = W; grainCv.height = H; grainCv.w = W; grainCv.h = H; var gx = grainCv.getContext('2d');
+      var hw = Math.min(W * 0.46, m * 1.1); for (var py = cy - m * 0.42; py < cy + m * 0.42; py += 3) for (var px = cx - hw; px < cx + hw; px += 3) {
+        var best = 9, bi = 0, sec = 9; for (var q = 0; q < grains.length; q++) { var dx = (px - cx) / hw * 1.1 - (grains[q].x - 0.5) * 2.2, dy = (py - cy) / m - (grains[q].y - 0.5) * 0.9, d = dx * dx + dy * dy; if (d < best) { sec = best; best = d; bi = q; } else if (d < sec) sec = d; }
+        var edge = Math.sqrt(sec) - Math.sqrt(best), v = grains[bi].g * (edge < 0.012 ? 0.35 : 1) + (Math.sin(px * 0.7 + py) * 6);
+        gx.fillStyle = 'rgb(' + (v | 0) + ',' + (v | 0) + ',' + ((v + 6) | 0) + ')'; gx.fillRect(px, py, 3, 3);
+      }
+      gx.fillStyle = 'rgba(0,0,0,.6)'; gx.fillRect(cx - hw + 8, cy + m * 0.42 - 30, 150, 22); gx.fillStyle = '#fff'; gx.font = '12px system-ui'; gx.fillText('示意 · 非真实电镜照片', cx - hw + 16, cy + m * 0.42 - 15);
+    }
+    x.drawImage(grainCv, 0, 0, W, H);
+  } else if (i === 4) {
+    var at = [[0, 0, 0, 'C'], [1, 1, 1, 'H'], [-1, -1, 1, 'H'], [-1, 1, -1, 'H'], [1, -1, -1, 'H']], ry = t / 1600, s = m * 0.16;
+    var P = at.map(function (p) { var X = p[0] * Math.cos(ry) - p[2] * Math.sin(ry), Z = p[0] * Math.sin(ry) + p[2] * Math.cos(ry); return { x: cx + X * s, y: cy + p[1] * s * 0.95 + Z * s * 0.2, z: Z, e: p[3] }; });
+    x.strokeStyle = 'rgba(255,220,170,.8)'; x.lineWidth = 4; for (var j = 1; j < 5; j++) { x.beginPath(); x.moveTo(P[0].x, P[0].y); x.lineTo(P[j].x, P[j].y); x.stroke(); }
+    P.slice().sort(function (a, b) { return a.z - b.z; }).forEach(function (p) { EF.ball(x, p.x, p.y, p.e === 'C' ? m * 0.09 : m * 0.06, p.e === 'C' ? '#ffb35c' : '#e8eef8', p.e); });
+  } else if (i === 5) {
+    var g5 = x.createRadialGradient(cx, cy, 0, cx, cy, m * 0.42); g5.addColorStop(0, 'rgba(255,190,120,.55)'); g5.addColorStop(0.5, 'rgba(255,140,60,.18)'); g5.addColorStop(1, 'rgba(255,140,60,0)');
+    x.fillStyle = g5; x.beginPath(); x.arc(cx, cy, m * 0.42, 0, 7); x.fill();
+    for (var e = 0; e < 140; e++) { var rr = Math.abs(Math.sin(e * 12.9898 + Math.floor(t / 90)) * 43758.5453 % 1) * m * 0.36, aa = e * 2.4 + t / 900; x.fillStyle = 'rgba(255,230,190,.55)'; x.fillRect(cx + Math.cos(aa) * rr, cy + Math.sin(aa) * rr, 1.5, 1.5); }
+    EF.ball(x, cx, cy, m * 0.035, '#ff7a3a');
+  } else {
+    var nuc = [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1], [.7, .7, .7], [-.7, -.7, .7], [.7, -.7, -.7], [-.7, .7, -.7], [.7, .7, -.7]], ry6 = t / 2200, s6 = m * 0.1;
+    nuc.map(function (p, k) { var X = p[0] * Math.cos(ry6) - p[2] * Math.sin(ry6), Z = p[0] * Math.sin(ry6) + p[2] * Math.cos(ry6); return { x: cx + X * s6, y: cy + p[1] * s6, z: Z, k: k }; })
+      .sort(function (a, b) { return a.z - b.z; }).forEach(function (p) { EF.ball(x, p.x, p.y, m * 0.075, p.k % 2 ? '#9aa6b8' : '#ff6a3d'); });
+  }
+}
+function draw(t) {
+  val += (target - val) * 0.08; if (Math.abs(target - val) < 0.002) val = target;
+  var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+  var i = Math.floor(val), f = val - i;
+  x.save(); x.globalAlpha = 1 - f; x.translate(W / 2, H / 2); x.scale(1 + f * 3, 1 + f * 3); x.translate(-W / 2, -H / 2); scene(i, x, W, H, t); x.restore();
+  if (f > 0.001 && i < 6) { x.save(); x.globalAlpha = f; x.translate(W / 2, H / 2); x.scale(0.25 + f * 0.75, 0.25 + f * 0.75); x.translate(-W / 2, -H / 2); scene(i + 1, x, W, H, t); x.restore(); }
+  var k = Math.round(val); document.getElementById('scName').textContent = '尺度镜 · ' + SC[k].n; document.getElementById('scSize').textContent = SC[k].s;
+  Array.prototype.forEach.call(dial.children, function (b, j) { b.classList.toggle('on', j === k); });
+  var T = SC[k].t, M = EF.MISSIONS[T];
+  document.getElementById('scTasks').innerHTML = T === 'planet' ? '这一档的任务在「星球篇」,即将点亮。' : (M ? (M.soon ? '这一档的任务「' + M.q + '」锻造中。' : '这一档的任务:<a href="' + M.href + '">' + M.q + '</a>') : '');
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+
+/* ---------- 任务卡 ---------- */
+function card(M, k, cls) {
+  var a = document.createElement(M.href ? 'a' : 'div'); a.className = 'card glass ' + (cls || ''); if (M.href) a.href = M.href;
+  var p = M.n ? EF.prog(k) : null, s = p ? Object.keys(p.stars).reduce(function (t, i) { return t + p.stars[i]; }, 0) : 0;
+  a.innerHTML = '<canvas width="128" height="128"></canvas><div><b>' + M.q + '</b><small>向导 ' + EF.GUIDES[M.g].n + (M.lv ? ' · ' + M.lv : '') + '</small>' +
+    (p ? '<div class="prog">' + p.done.length + ' / ' + M.n + ' 关 · ★ ' + s + '</div>' : '') + '</div>';
+  a.onmouseenter = EF.hover; return a;
+}
+var cards = document.getElementById('cards'), planets = document.getElementById('planets'), cvs = [];
+Object.keys(EF.MISSIONS).forEach(function (k) { var M = EF.MISSIONS[k], c = card(M, k, M.soon ? 'soon' : ''); cards.appendChild(c); cvs.push([c.querySelector('canvas'), M.g]); });
+EF.PLANETS.forEach(function (P) { var c = card(P, null, 'planet'); planets.appendChild(c); cvs.push([c.querySelector('canvas'), P.g]); });
+
+/* ---------- 元素起源周期表 ---------- */
+var pt = document.getElementById('pt'), side = document.getElementById('side'), sel = 26;
+EF.ELEM.forEach(function (e) {
+  var b = document.createElement('button'), p = EF.pos(e.z), O = EF.ORIGIN[e.o];
+  b.className = 'el tint' + (lit[e.z] ? ' lit' : ''); b.style.setProperty('--oc', O.c); b.style.gridColumn = p[0]; b.style.gridRow = p[1] >= 9 ? p[1] : p[1];
+  b.innerHTML = '<i>' + e.z + '</i><b>' + e.sym + '</b><i>' + e.zh + '</i>'; b.title = e.zh + ' ' + e.sym + ' · ' + O.n;
+  b.onclick = function () { sel = e.z; showEl(); EF.tone(e.z); }; b.dataset.z = e.z; pt.appendChild(b);
+});
+var gap = document.createElement('div'); gap.style.gridRow = 8; gap.style.gridColumn = '1 / 19'; pt.appendChild(gap);
+function showEl() {
+  var e = EF.ELEM[sel - 1], O = EF.ORIGIN[e.o];
+  Array.prototype.forEach.call(pt.querySelectorAll('.el'), function (b) { b.classList.toggle('sel', +b.dataset.z === sel); });
+  var src = []; Object.keys(EF.MISSIONS).forEach(function (k) { var M = EF.MISSIONS[k]; if (M.unlock && M.unlock.indexOf(sel) > -1) src.push('<a href="' + M.href + '">' + M.q + '</a>'); });
+  side.innerHTML = '<div><span class="big">' + e.sym + '</span><span class="zh">' + e.zh + '</span></div><div class="kv"><small>原子序数</small>' + e.z + ' 号</div>' +
+    '<div class="kv"><small>主要诞生在</small><span style="color:' + O.c + '">■</span> ' + O.n + ' · ' + O.d + '</div>' +
+    (EF.FACT[e.z] ? '<div class="kv"><small>小知识</small>' + EF.FACT[e.z] + '</div>' : '') +
+    '<div class="kv"><small>状态</small>' + (lit[e.z] ? '★ 你已亲手点亮' : (src.length ? '去这里点亮它:' + src.join('、') : '后续任务开放后可点亮')) + '</div>';
+}
+showEl();
+document.getElementById('legend').innerHTML = Object.keys(EF.ORIGIN).map(function (k) { return '<span style="--oc:' + EF.ORIGIN[k].c + '">' + EF.ORIGIN[k].n + '</span>'; }).join('');
+document.getElementById('litCount').textContent = '已点亮 ' + Object.keys(lit).length + ' / 118 个元素';
+document.getElementById('flatBtn').onclick = function () { pt.classList.toggle('flat'); EF.play('select'); };
+
+/* ---------- 七匠 ---------- */
+var met = { oga: 1, bucky: 1 }, gs = document.getElementById('guides');
+Object.keys(EF.GUIDES).forEach(function (k) {
+  var G = EF.GUIDES[k], d = document.createElement('div'); d.className = 'guide glass' + (met[k] ? '' : ' off');
+  d.innerHTML = '<canvas width="168" height="168"></canvas><b>' + G.n + '</b><small>' + G.from + '</small><small>' + (met[k] ? G.d : '即将登场') + '</small>';
+  gs.appendChild(d); cvs.push([d.querySelector('canvas'), k]);
+});
+(function loop(t) { cvs.forEach(function (c) { EF.drawGuide(c[0], c[1], t, 0); }); requestAnimationFrame(loop); })(0);
+})();
+</script>
+</body>
+</html>

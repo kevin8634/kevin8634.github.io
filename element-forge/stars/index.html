@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>你身体里的铁是从哪颗星来的? · 元素工坊 Element Forge</title>
+<meta name="description" content="元素工坊 · 在恒星熔炉里亲手聚变出元素,追踪一个铁原子从超新星来到你的血液。创世计划 Genesis 化学世界。">
+<meta name="theme-color" content="#070a14">
+<link rel="stylesheet" href="../ef.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="../ef.js"></script>
+<script>
+(function () {
+var COL = { H: '#ff8a5c', He: '#ffd27a', C: '#8a8f99', O: '#7ad7ff', Ne: '#ff7ad9', Mg: '#c9e4a0', Si: '#d9c49a', Fe: '#c86b3c' };
+var NAME = { H: 'H 氢', He: 'He 氦', C: 'C 碳', Ne: 'Ne 氖', O: 'O 氧', Si: 'Si 硅', Fe: 'Fe 铁', 'C/O': 'C 碳 / O 氧' };
+var Z = { H: 1, He: 2, C: 6, O: 8, Ne: 10, Mg: 12, Si: 14, Fe: 26, Kr: 36 };
+
+/* 第 1 关:点燃恒星 */
+function L0(stage, api) {
+  var C = EF.canvas(stage, 380), x = C.x, ps = [], inCore = 0, he = 0, flash = 0, fly = [], heBalls = [], done = false;
+  var hud = document.createElement('p'); hud.className = 'note-sm'; stage.appendChild(hud);
+  function spawn() { var a = Math.random() * 6.28, r = 150 + Math.random() * 60; return { a: a, r: r, v: (Math.random() < .5 ? -1 : 1) * (0.002 + Math.random() * 0.004) }; }
+  for (var i = 0; i < 10; i++) ps.push(spawn());
+  function pos(p) { return { x: C.W / 2 + Math.cos(p.a) * p.r * Math.min(1, C.W / 520), y: C.H / 2 + Math.sin(p.a) * p.r * 0.62 }; }
+  C.c.addEventListener('pointerdown', function (e) {
+    var q = C.pt(e), best = -1, bd = 30;
+    ps.forEach(function (p, i) { var o = pos(p), d = Math.hypot(o.x - q.x, o.y - q.y); if (d < bd) { bd = d; best = i; } });
+    if (best < 0 || inCore + fly.length >= 4) return;
+    var o = pos(ps[best]); fly.push({ x: o.x, y: o.y, t: 0 }); ps[best] = spawn(); EF.tone(1);
+  });
+  function upd() {
+    hud.innerHTML = '核心里的氢核:<b>' + inCore + ' / 4</b> · 已炼出氦核:<b>' + he + ' / 3</b><br>' +
+      (he ? '4 个氢核 4 × 1.008 = 4.032 → 1 个氦核 4.003,<b style="color:#ffc46b">少了 0.029(约 0.7%)</b>,这点质量变成了光和热。' : '点击外面漂浮的氢核(H),把它们送进恒星核心。');
+  }
+  upd();
+  (function loop(t) {
+    if (!C.c.isConnected) return;
+    var W = C.W, H = C.H, cx = W / 2, cy = H / 2; x.clearRect(0, 0, W, H);
+    var g = x.createRadialGradient(cx, cy, 0, cx, cy, 120 + flash * 80); g.addColorStop(0, '#fff7e0'); g.addColorStop(0.3, '#ffb347'); g.addColorStop(0.7, 'rgba(255,90,20,.35)'); g.addColorStop(1, 'rgba(255,90,20,0)');
+    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, 120 + flash * 80, 0, 7); x.fill(); flash *= 0.93;
+    x.strokeStyle = 'rgba(255,200,140,.25)'; x.setLineDash([4, 6]); x.beginPath(); x.arc(cx, cy, 52, 0, 7); x.stroke(); x.setLineDash([]);
+    ps.forEach(function (p) { p.a += p.v; var o = pos(p); EF.ball(x, o.x, o.y, 13, COL.H, 'H'); });
+    fly.forEach(function (f) { f.t += 0.05; var k = Math.min(1, f.t), px = f.x + (cx - f.x) * k, py = f.y + (cy - f.y) * k; EF.ball(x, px, py, 13, COL.H, 'H'); });
+    fly = fly.filter(function (f) { if (f.t >= 1) { inCore++; upd(); return false; } return true; });
+    for (var i = 0; i < inCore; i++) { var a = t / 300 + i * 1.57; EF.ball(x, cx + Math.cos(a) * 22, cy + Math.sin(a) * 22, 12, COL.H, 'H'); }
+    if (inCore === 4) { inCore = 0; he++; flash = 1; EF.play('fuse'); EF.tone(2, 0.15); heBalls.push(Math.random() * 6.28); upd(); if (he >= 3 && !done) { done = true; setTimeout(api.complete, 700); } }
+    heBalls.forEach(function (a, i) { var b = a + t / 1400; EF.ball(x, cx + Math.cos(b) * 80, cy + Math.sin(b) * 50, 16, COL.He, 'He'); });
+    if (flash > 0.05) { for (var r = 0; r < 18; r++) { var ang = r * 0.349, d = (1 - flash) * 160; x.fillStyle = 'rgba(255,230,160,' + flash + ')'; x.fillRect(cx + Math.cos(ang) * d, cy + Math.sin(ang) * d, 3, 3); } }
+    requestAnimationFrame(loop);
+  })(0);
+}
+
+/* 第 2 关:恒星的洋葱(规则可改:恒星质量) */
+function L1(stage, api) {
+  var C = EF.canvas(stage, 360), x = C.x, mass = 1, shown = 0, layers = [], running = false;
+  var ctl = document.createElement('div'); ctl.className = 'ctl';
+  ctl.innerHTML = '<span>恒星质量</span><input type="range" min="0" max="100" value="30" id="ms"><output id="mo"></output><button class="ef-btn" id="go">点火,看它能炼到哪</button>';
+  stage.appendChild(ctl); var res = document.createElement('p'); res.className = 'note-sm'; stage.appendChild(res);
+  var ms = ctl.querySelector('#ms'), mo = ctl.querySelector('#mo');
+  function m() { return Math.round(0.3 * Math.pow(25 / 0.3, ms.value / 100) * 10) / 10; }
+  function plan(M) { return M < 0.5 ? ['H', 'He'] : M < 8 ? ['H', 'He', 'C/O'] : ['H', 'He', 'C', 'Ne', 'O', 'Si', 'Fe']; }
+  function sync() { mass = m(); mo.textContent = mass + ' 倍太阳'; if (!running) { shown = 0; layers = []; } }
+  ms.oninput = sync; sync();
+  ctl.querySelector('#go').onclick = function () {
+    if (running) return; running = true; layers = plan(mass); shown = 0; EF.play('anvil');
+    var step = function () {
+      shown++; var el = layers[shown - 1]; EF.tone(Z[el] || 7);
+      if (shown < layers.length) setTimeout(step, 520);
+      else {
+        running = false; var last = layers[layers.length - 1];
+        if (last === 'Fe') { res.innerHTML = '<b style="color:#ffc46b">炼到铁了!</b>核心一层层分开,像洋葱:氢 → 氦 → 碳 → 氖 → 氧 → 硅 → 铁。'; setTimeout(api.complete, 900); }
+        else if (last === 'C/O') { res.innerHTML = '这颗星最远只能炼到<b>碳和氧</b>,最后变成一颗白矮星。太阳就是这样。'; api.say('碳和氧已经很了不起了。可是铁呢?想想:要让更重的原子核撞在一起,核心得怎样?'); }
+        else { res.innerHTML = '这颗小星只能把氢炼成<b>氦</b>,它会安静地燃烧上万亿年。'; api.say('它太小了,核心不够热。你觉得该往哪个方向拉滑块?'); }
+      }
+    };
+    step();
+  };
+  (function loop(t) {
+    if (!C.c.isConnected) return;
+    var W = C.W, H = C.H, cx = W * 0.42, cy = H / 2, R = 36 + 86 * (Math.log(mass / 0.3) / Math.log(25 / 0.3));
+    x.clearRect(0, 0, W, H);
+    var hue = mass < 0.5 ? '#ff5a2a' : mass < 2 ? '#ffd27a' : mass < 8 ? '#fff1d0' : '#cfe3ff';
+    var g = x.createRadialGradient(cx, cy, R * 0.2, cx, cy, R * 1.4); g.addColorStop(0, hue); g.addColorStop(0.7, hue + '99'); g.addColorStop(1, hue + '00');
+    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, R * 1.4, 0, 7); x.fill();
+    var L = layers.length || 0;
+    for (var i = 0; i < Math.min(shown, L); i++) {
+      var rr = R * (1 - i / L) * 0.95, el = layers[i], col = COL[el] || '#9aa0aa';
+      x.fillStyle = col; x.globalAlpha = 0.85; x.beginPath(); x.arc(cx, cy, rr, 0, 7); x.fill(); x.globalAlpha = 1;
+      var ly = 30 + i * 30; x.strokeStyle = 'rgba(255,255,255,.4)'; x.beginPath(); x.moveTo(cx + rr * 0.7, cy - rr * 0.7); x.lineTo(W * 0.78, ly); x.stroke();
+      x.fillStyle = '#f4ede1'; x.font = '700 15px system-ui'; x.textAlign = 'left'; x.textBaseline = 'middle'; x.fillText(NAME[el] || el, W * 0.79, ly);
+    }
+    x.fillStyle = '#a9a29a'; x.font = '13px system-ui'; x.textAlign = 'center'; x.fillText(mass < 0.5 ? '红矮星' : mass < 8 ? '类太阳恒星' : '大质量恒星', cx, H - 14);
+    requestAnimationFrame(loop);
+  })(0);
+}
+
+/* 第 3 关:铁为什么是终点(比结合能曲线) */
+function L2(stage, api) {
+  var C = EF.canvas(stage, 360), x = C.x;
+  var PTS = [['H', 1, 0], ['He', 4, 7.07], ['C', 12, 7.68], ['O', 16, 7.98], ['Ne', 20, 8.03], ['Mg', 24, 8.26], ['Si', 28, 8.45], ['S', 32, 8.49], ['Ca', 40, 8.55], ['Fe', 56, 8.79], ['Kr', 84, 8.72], ['Ag', 107, 8.55], ['Au', 197, 7.92], ['U', 238, 7.57]];
+  var CHAIN = ['He', 'C', 'O', 'Ne', 'Mg', 'Si', 'Fe', 'Kr'], ci = 0, energy = 0, flashC = null, fl = 0;
+  var ctl = document.createElement('div'); ctl.className = 'ctl'; ctl.innerHTML = '<button class="ef-btn" id="fz">再熔合一步 →</button><output id="eo" style="min-width:auto"></output>';
+  stage.appendChild(ctl); var info = document.createElement('p'); info.className = 'note-sm'; info.textContent = '纵轴:原子核里每个质子或中子"抱得多紧"(比结合能,单位 MeV)。越往上越稳定。'; stage.appendChild(info);
+  function get(s) { for (var i = 0; i < PTS.length; i++) if (PTS[i][0] === s) return PTS[i]; }
+  ctl.querySelector('#fz').onclick = function () {
+    if (ci >= CHAIN.length - 1) return; var a = get(CHAIN[ci]), b = get(CHAIN[ci + 1]), d = b[2] - a[2]; ci++;
+    energy += d; fl = 1; flashC = d >= 0 ? '#ffc46b' : '#7ad7ff'; EF.play(d >= 0 ? 'fuse' : 'absorb'); EF.tone(Z[b[0]] || 20, 0.1);
+    ctl.querySelector('#eo').innerHTML = a[0] + ' → ' + b[0] + ':' + (d >= 0 ? '<span style="color:#ffc46b">放出能量 +' + d.toFixed(2) + '</span>' : '<span style="color:#7ad7ff">倒贴能量 ' + d.toFixed(2) + '</span>') + ' MeV / 核子';
+    if (b[0] === 'Fe') api.say('到铁了。再往前一步试试,看看能量表会怎样?');
+    if (b[0] === 'Kr') { ctl.querySelector('#fz').disabled = true; setTimeout(api.complete, 1100); }
+  };
+  (function loop() {
+    if (!C.c.isConnected) return;
+    var W = C.W, H = C.H, l = 50, r = W - 90, top = 24, bot = H - 40; x.clearRect(0, 0, W, H);
+    function X(A) { return l + (Math.log(A) / Math.log(240)) * (r - l); } function Y(v) { return bot - (v / 9.2) * (bot - top); }
+    x.strokeStyle = '#2a2f44'; x.beginPath(); x.moveTo(l, top); x.lineTo(l, bot); x.lineTo(r, bot); x.stroke();
+    x.fillStyle = '#a9a29a'; x.font = '12px system-ui'; x.textAlign = 'center'; x.fillText('原子核越来越重 →', (l + r) / 2, H - 12);
+    x.strokeStyle = 'rgba(255,170,80,.5)'; x.lineWidth = 2; x.beginPath(); PTS.forEach(function (p, i) { x[i ? 'lineTo' : 'moveTo'](X(p[1]), Y(p[2])); }); x.stroke(); x.lineWidth = 1;
+    var fe = get('Fe'); x.fillStyle = 'rgba(255,196,107,.12)'; x.fillRect(X(fe[1]) - 18, top, 36, bot - top);
+    PTS.forEach(function (p) { var on = CHAIN.indexOf(p[0]) > -1 && CHAIN.indexOf(p[0]) <= ci; EF.ball(x, X(p[1]), Y(p[2]), on ? 11 : 7, on ? (COL[p[0]] || '#ffb35c') : '#3a3f55', on ? p[0] : ''); if (!on) { x.fillStyle = '#6a7088'; x.font = '11px system-ui'; x.fillText(p[0], X(p[1]), Y(p[2]) - 12); } });
+    var c = get(CHAIN[ci]); x.strokeStyle = '#fff'; x.beginPath(); x.arc(X(c[1]), Y(c[2]), 16, 0, 7); x.stroke();
+    var mh = bot - top, eh = Math.max(-0.4, Math.min(1, energy / 1.8)) * mh * 0.9;
+    x.fillStyle = '#1a1f33'; x.fillRect(r + 40, top, 22, mh); x.fillStyle = energy >= 0 ? '#ffb35c' : '#7ad7ff'; x.fillRect(r + 40, bot - Math.max(0, eh), 22, Math.abs(eh) || 1);
+    x.fillStyle = '#a9a29a'; x.fillText('能量', r + 51, bot + 16);
+    if (fl > 0.02) { x.globalAlpha = fl * 0.35; x.fillStyle = flashC; x.fillRect(0, 0, W, H); x.globalAlpha = 1; fl *= 0.9; }
+    requestAnimationFrame(loop);
+  })();
+}
+
+/* 第 4 关:超新星把铁撒向宇宙 → 你的血 */
+function L3(stage, api) {
+  var C = EF.canvas(stage, 360), x = C.x, ph = 'core', t0 = 0, parts = [], node = 0, nodeT = 0;
+  var NODES = [['超新星爆发', '比太阳更早的恒星炸开,把铁撒向太空'], ['星云', '铁和其他元素混进巨大的气体尘埃云'], ['太阳系与地球', '约 46 亿年前,星云塌缩成太阳和地球'], ['你的血液', '铁进入食物,再进入血红蛋白,帮你运氧']];
+  var ctl = document.createElement('div'); ctl.className = 'ctl'; ctl.innerHTML = '<button class="ef-btn" id="bang">让铁核心塌缩</button><button class="ef-btn" id="nx" hidden>铁的下一站 →</button>';
+  stage.appendChild(ctl); var cap = document.createElement('p'); cap.className = 'note-sm'; stage.appendChild(cap);
+  var bang = ctl.querySelector('#bang'), nx = ctl.querySelector('#nx');
+  bang.onclick = function () { bang.disabled = true; ph = 'collapse'; t0 = performance.now(); EF.play('whoosh'); };
+  nx.onclick = function () { if (node < 3) { node++; nodeT = performance.now(); EF.play(node === 3 ? 'fuse' : 'select'); EF.tone(26); cap.textContent = NODES[node][1]; if (node === 3) { nx.disabled = true; setTimeout(api.complete, 1200); } } };
+  (function loop(t) {
+    if (!C.c.isConnected) return;
+    var W = C.W, H = C.H, cx = W / 2, cy = H * 0.42; x.clearRect(0, 0, W, H); var e = (t - t0) / 1000;
+    if (ph === 'core' || ph === 'collapse') {
+      var k = ph === 'collapse' ? Math.max(0, 1 - e / 0.8) : 1, R = 120;
+      var g = x.createRadialGradient(cx, cy, 0, cx, cy, R * 1.3); g.addColorStop(0, '#cfe3ff'); g.addColorStop(1, 'rgba(160,190,255,0)'); x.fillStyle = g; x.beginPath(); x.arc(cx, cy, R * 1.3, 0, 7); x.fill();
+      ['#ff8a5c', '#ffd27a', '#8a8f99', '#ff7ad9', '#7ad7ff', '#d9c49a'].forEach(function (c, i) { x.fillStyle = c; x.globalAlpha = 0.8; x.beginPath(); x.arc(cx, cy, R * (1 - i * 0.14), 0, 7); x.fill(); });
+      x.globalAlpha = 1; EF.ball(x, cx, cy, R * 0.16 * k + 3, COL.Fe, k > 0.5 ? 'Fe' : '');
+      if (ph === 'collapse' && e > 0.85) {
+        ph = 'boom'; t0 = t; EF.play('boom');
+        for (var i = 0; i < 160; i++) { var a = Math.random() * 6.28, v = 1 + Math.random() * 4; parts.push({ x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, fe: i % 5 === 0 }); }
+      }
+    } else if (ph === 'boom') {
+      var s = e; x.globalAlpha = Math.max(0, 1 - s / 2.5);
+      if (!EF.campus) { var gg = x.createRadialGradient(cx, cy, 0, cx, cy, 60 + s * 260); gg.addColorStop(0, 'rgba(255,250,235,.9)'); gg.addColorStop(0.4, 'rgba(255,170,90,.35)'); gg.addColorStop(1, 'rgba(255,120,60,0)'); x.fillStyle = gg; x.beginPath(); x.arc(cx, cy, 60 + s * 260, 0, 7); x.fill(); }
+      x.strokeStyle = 'rgba(255,200,140,.6)'; x.lineWidth = 3; x.beginPath(); x.arc(cx, cy, s * 240, 0, 7); x.stroke(); x.lineWidth = 1; x.globalAlpha = 1;
+      parts.forEach(function (p) { p.x += p.vx; p.y += p.vy; p.vx *= 0.985; p.vy *= 0.985; if (p.fe) EF.ball(x, p.x, p.y, 6, COL.Fe); else { x.fillStyle = 'rgba(255,220,180,.7)'; x.fillRect(p.x, p.y, 2, 2); } });
+      if (s > 2.6) { ph = 'trip'; nx.hidden = false; cap.textContent = NODES[0][1]; nodeT = t; }
+    } else {
+      var n = NODES.length, y = H * 0.45;
+      for (var j = 0; j < n; j++) {
+        var px = W * (0.12 + j * 0.25), on = j <= node; x.strokeStyle = on ? '#ffb35c' : '#2a2f44'; x.lineWidth = 2;
+        if (j < n - 1) { x.beginPath(); x.moveTo(px + 34, y); x.lineTo(px + W * 0.25 - 34, y); x.stroke(); }
+        x.lineWidth = 1; x.fillStyle = on ? 'rgba(255,154,60,.18)' : 'rgba(30,34,52,.6)'; x.beginPath(); x.arc(px, y, 32, 0, 7); x.fill(); x.stroke();
+        icon(j, px, y, t); x.fillStyle = on ? '#f4ede1' : '#6a7088'; x.font = '13px system-ui'; x.textAlign = 'center'; x.fillText(NODES[j][0], px, y + 54);
+      }
+      var k2 = Math.min(1, (t - nodeT) / 700), from = W * (0.12 + Math.max(0, node - 1) * 0.25), to = W * (0.12 + node * 0.25), fx = node ? from + (to - from) * k2 : to;
+      EF.ball(x, fx, y - 46 - Math.sin(k2 * Math.PI) * 20, 11, COL.Fe, 'Fe');
+    }
+    requestAnimationFrame(loop);
+  })(0);
+  function icon(j, px, py, t) {
+    if (j === 0) { for (var i = 0; i < 10; i++) { var a = i * 0.628 + t / 2000; x.fillStyle = '#ffd27a'; x.fillRect(px + Math.cos(a) * 18, py + Math.sin(a) * 18, 2, 2); } x.fillStyle = '#fff'; x.beginPath(); x.arc(px, py, 4, 0, 7); x.fill(); }
+    else if (j === 1) { var g = x.createRadialGradient(px, py, 0, px, py, 24); g.addColorStop(0, 'rgba(201,166,255,.8)'); g.addColorStop(1, 'rgba(201,166,255,0)'); x.fillStyle = g; x.beginPath(); x.arc(px, py, 24, 0, 7); x.fill(); }
+    else if (j === 2) { EF.ball(x, px - 8, py, 9, '#ffd27a'); EF.ball(x, px + 14, py + 6, 6, '#5aa0e0'); }
+    else { x.fillStyle = '#e0443a'; x.beginPath(); x.ellipse(px, py, 14, 9, 0.3, 0, 7); x.fill(); x.fillStyle = '#ff8a7a'; x.beginPath(); x.ellipse(px - 3, py - 2, 6, 3, 0.3, 0, 7); x.fill(); }
+  }
+}
+
+var LEVELS = [
+  { title: '点燃恒星', setup: L0, task: '把 4 个氢核送进核心熔合,炼出 3 个氦核。',
+    ask: { q: '4 个氢核熔合成 1 个氦核。你猜,氦核会比 4 个氢核加起来——', opts: ['更重', '一样重', '轻一点点'], ok: 2 },
+    hints: ['恒星一直在发光发热,这些能量是从哪来的?', '爱因斯坦说过,质量和能量可以互相转换。你觉得质量会去哪?', '发光要付出点什么。熔合前后称一称,哪边会少?'],
+    explain: '少掉的约 0.7% 质量变成了光和热。太阳每秒这样"烧掉"约 400 万吨质量,才照亮了地球。' },
+  { title: '恒星的洋葱', setup: L1, task: '拖动滑块改变恒星质量,点火,造一颗能炼出铁的恒星。',
+    ask: { q: '想在恒星核心里炼出铁,恒星应该——', opts: ['更小、更冷', '更大、更重', '大小无所谓'], ok: 1 },
+    hints: ['铁的原子核带的电荷很多,要让这样的原子核撞到一起,需要什么条件?', '温度越高,原子核撞得越猛。什么样的恒星核心最热?', '恒星越重,自己的引力把核心压得越紧。'],
+    explain: '大约 8 倍太阳质量以上的恒星,核心才热到能一层层炼到铁,像洋葱一样分层。太阳最远只能炼到碳和氧。' },
+  { title: '铁为什么是终点', setup: L2, task: '一步步熔合,盯住右边的能量表。到了铁,再多走一步。',
+    ask: { q: '一路熔合下去,恒星会一直有能量吗?', opts: ['会,越往后放出的能量越多', '会,一直熔合一直放能', '不会,到某个元素就不再放能了'], ok: 2 },
+    hints: ['看看那条曲线,它是一直往上走的吗?', '曲线的最高点在哪个元素附近?', '翻过山顶之后,再往前走是上坡还是下坡?'],
+    explain: '铁(和镍)的原子核抱得最紧,站在曲线顶端。再往后熔合不放能,反而要倒贴能量。核心堆满铁,恒星失去能量来源,几秒内向内塌缩——超新星来了。比铁更重的元素(比如金),主要靠中子星相撞这样更猛烈的事件造出来。' },
+  { title: '超新星与你的血', setup: L3, task: '让铁核心塌缩,然后一站站追踪一个铁原子,直到它来到你身上。',
+    ask: { q: '你身体里的铁原子,和太阳比,谁更"老"?', opts: ['铁原子更老', '太阳更老', '一样大'], ok: 0 },
+    hints: ['太阳和地球是用什么材料做成的?', '做成太阳系的那团星云里,已经有上一代恒星留下的铁了吗?', '盖房子用的砖,比房子早还是晚?'],
+    explain: '你的铁比太阳还老:它在 46 亿年前太阳系诞生之前,就已在别的恒星里炼成、随爆炸撒向宇宙。补充一句:宇宙里的铁,很大一部分来自白矮星爆发,另一部分来自大质量恒星的超新星。你,真的是星尘做的。' }
+];
+var NOTES = { title: '元素工坊 · 你身体里的铁是从哪颗星来的?', items: [
+  '恒星靠<b>核聚变</b>发光:轻的原子核熔合成重的,少掉的一点质量变成能量(E = mc²)。',
+  '恒星越重,核心越热,能炼出的元素越重;约 8 倍太阳质量以上才能一路炼到<b>铁</b>。',
+  '<b>铁</b>的原子核最稳定,熔合到铁就不再放能,核心会塌缩,引发<b>超新星</b>。',
+  '比铁重的元素(金、铂、铀等)主要来自<b>中子星合并</b>等更猛烈的事件。',
+  '你身体里的铁(成年人约 4 克)来自太阳诞生之前就爆炸的恒星——你是星尘做的。'],
+  bridge: '宙律 Nomoverse「恒星的一生」(即将点亮)' };
+EF.mission('stars', LEVELS, NOTES);
+})();
+</script>
+</body>
+</html>
