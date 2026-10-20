@@ -112,7 +112,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   </div>
   <div id="pNote" aria-live="polite"></div>
 </aside>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.12</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.13</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -491,6 +491,20 @@ $('pClose').onclick = closePlayer;
 $('player').addEventListener('keydown', e => { if (e.key === 'Escape') closePlayer(); });
 paintList(); paintCtl();
 window.ltPlayer = { open: openPlayer, close: closePlayer, load, au };
+
+/* ---------- v0.13 俯冲进关卡 / 返回拉远 ---------- */
+document.addEventListener('click', e => { const a = e.target.closest('a[href]'); if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
+  const href = a.getAttribute('href'); const t = TASKS.find(t => t.live && t.path === href); if (!t || reducedMotion) return;
+  e.preventDefault(); const s = SECT.find(s => t.domains.includes(s.d.id));
+  let ox = CX, oy = CY - R * 0.05; if (s) { const [x, y] = P((s.r0 + s.r1) / 2, (s.a0 + s.a1) / 2); ox = x; oy = y; }
+  if (!document.body.classList.contains('pmode')) { /* 播放器开着时不打断 */ }
+  sound.bell(4, 0.08, 1.2); document.body.classList.add('diving');
+  cv.style.transformOrigin = `${ox}px ${oy}px`; cv.style.transform = 'scale(3.2)'; cv.classList.add('dive');
+  setTimeout(() => { location.href = href; }, 520);
+});
+addEventListener('pageshow', e => { if (e.persisted) { document.body.classList.remove('diving'); cv.classList.remove('dive'); cv.style.transform = ''; } });
+try { const ref = document.referrer && new URL(document.referrer); if (ref && ref.origin === location.origin && TASKS.some(t => ref.pathname.endsWith('/ludoterra/' + t.path)) && !reducedMotion) {
+  cv.classList.add('back'); cv.addEventListener('animationend', () => cv.classList.remove('back'), { once: true }); } } catch (_) {}
 
 addEventListener('resize', layout); layout(); requestAnimationFrame(draw);
 H.render(holdStats()); prevOpen = STATS.map(x => x.id).filter(id => H.el.querySelector(`.row[data-id="${id}"]:not(.locked)`));
