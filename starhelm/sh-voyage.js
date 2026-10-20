@@ -55,7 +55,7 @@
       '<header class="voy-top">' +
         '<div class="voy-brand"><b>弦穹号</b><span>CHORDION</span></div>' +
         '<div class="voy-loc"><span class="voy-loc__n"></span><b class="voy-loc__zh"></b><em class="voy-loc__st"></em></div>' +
-        '<div class="voy-topbtns"><button type="button" class="voy-b voy-b--map">✧ 航图</button><button type="button" class="voy-b voy-b--eva" hidden>⇱ 舱外观景</button><button type="button" class="voy-b voy-b--tts" title="星璃朗读(默认关)">🔈</button><button type="button" class="voy-b voy-b--exit">返回母港</button></div>' +
+        '<div class="voy-topbtns"><button type="button" class="voy-b voy-b--map" hidden>✧ 航图</button><button type="button" class="voy-b voy-b--eva" hidden>⇱ 舱外观景</button><button type="button" class="voy-b voy-b--tts" title="星璃朗读(默认关)">🔈</button><button type="button" class="voy-b voy-b--exit">返回母港</button></div>' +
       '</header>' +
       '<div class="voy-banner" hidden></div>' +
       '<aside class="voy-eng"><div class="voy-eng__h">引擎 <small>ENGINES</small></div><div class="voy-eng__list"></div><div class="voy-eng__info"></div></aside>' +
@@ -75,7 +75,9 @@
       '</footer>' +
       '<div class="voy-credit">影像:NASA, ESA, CSA, STScI(CC BY 4.0)· 驾驶舱与星璃形象:天枢原创设计图· 不代表任何机构背书</div>' +
       '<section class="voy-map" hidden><div class="voy-map__bar"><div><small>STARHELM · ATLAS</small><h2>航图 <span>选择目的地</span></h2></div><button type="button" class="voy-b voy-map__x">×</button></div>' +
-        '<canvas></canvas><div class="voy-map__legend"><i class="lg-open"></i>已测绘 <i class="lg-un"></i>未测绘星域 <i class="lg-cj"></i>猜想 <i class="lg-here"></i>当前位置</div><div class="voy-map__card" hidden></div></section>' +
+        '<canvas></canvas><div class="voy-map__legend"><i class="lg-open"></i>已测绘 <i class="lg-un"></i>未测绘星域 <i class="lg-cj"></i>猜想 <i class="lg-here"></i>当前位置</div><div class="voy-map__hint">拖动旋转 · 滚轮/双指缩放 · 越往外越远(对数尺度)</div><div class="voy-map__card" hidden></div></section>' +
+      '<div class="voy-holotag" hidden><b>航图</b><small>ATLAS · 点击星图选择目的地</small><i></i></div>' +
+      '<div class="voy-boardcap" hidden><small>BOARDING</small><b>登舰 · 弦穹号</b><span>CHORDION</span></div><button type="button" class="voy-boardskip" hidden>跳过 ›</button>' +
       '<div class="voy-load"><div class="voy-load__ring"></div><p>弦穹号启动中……</p></div>';
     document.body.appendChild(root);
     UI.root = root; UI.stage = root.querySelector('.voy-stage'); UI.fade = root.querySelector('.voy-fade');
@@ -83,7 +85,8 @@
     UI.banner = root.querySelector('.voy-banner'); UI.engList = root.querySelector('.voy-eng__list'); UI.engInfo = root.querySelector('.voy-eng__info');
     UI.sayT = root.querySelector('.voy-say__t'); UI.sayCh = root.querySelector('.voy-say__ch'); UI.say = root.querySelector('.voy-say');
     UI.ctrl = root.querySelector('.voy-ctrl'); UI.map = root.querySelector('.voy-map'); UI.mapCv = UI.map.querySelector('canvas'); UI.mapCard = UI.map.querySelector('.voy-map__card');
-    UI.load = root.querySelector('.voy-load');
+    UI.load = root.querySelector('.voy-load'); UI.boardCap = root.querySelector('.voy-boardcap'); UI.holoTag = root.querySelector('.voy-holotag'); UI.boardSkip = root.querySelector('.voy-boardskip');
+    UI.boardSkip.addEventListener('click', function () { boardEnd(); });
     UI.d = {}; ['to', 'dist', 'v', 'te', 'ts', 'sig', 'x'].forEach(function (k) { UI.d[k] = root.querySelector('.d-' + k); });
     root.querySelector('.voy-b--exit').addEventListener('click', function () { SH.voyExit(); });
     root.querySelector('.voy-b--map').addEventListener('click', function () { openMap(); });
@@ -93,8 +96,7 @@
     root.querySelector('.voy-map__x').addEventListener('click', function () { UI.map.hidden = true; sfx.close(); });
     var tts = root.querySelector('.voy-b--tts');
     tts.addEventListener('click', function () { VY.tts = !VY.tts; tts.textContent = VY.tts ? '🔊' : '🔈'; tts.classList.toggle('on', VY.tts); if (!VY.tts && window.speechSynthesis) speechSynthesis.cancel(); });
-    UI.mapCv.addEventListener('click', function (e) { mapTap(e.clientX, e.clientY); });
-    buildEngines();
+    buildEngines(); buildHubDom(root);
   }
 
   /* ============================ 3D:舱外 + 驾驶舱 ============================ */
@@ -109,7 +111,7 @@
     R.in = new T.Scene(); R.cam = new T.PerspectiveCamera(62, innerWidth / innerHeight, 0.02, 50);
     R.cam.position.set(0, 1.58, 2.05); R.look = new T.Vector3(0.05, 1.05, -1.5); R.cam.lookAt(R.look);
     buildCockpit();
-    R.mode25 = !/[?&]ck=3d/.test(location.search); if (R.mode25) build25();
+    R.mode25 = !/[?&]ck=3d/.test(location.search); if (R.mode25) { build25(); UI.root.classList.add('m25'); }
     R.clock = new T.Clock(); R.t = 0; R.shake = 0;
     R.ray = new T.Raycaster(); R.ptr = new T.Vector2(); R.mouse = new T.Vector2();
     r.domElement.addEventListener('pointermove', function (e) { R.mouse.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); });
@@ -525,7 +527,7 @@
     }
   }
   function loadAvatar() {
-    if (R.mode25) return R.c25.ready;
+    if (R.mode25) return R.c25.ready.then(function () { UI.load.classList.add('out'); setTimeout(function () { UI.load.hidden = true; }, 400); return board(); });
     return new Promise(function (res) {
       if (!window.THREE_VRM || !T.GLTFLoader) { console.warn('[voy] VRM 库缺失'); return res(null); }
       fetch('xingli.vrm').then(function (r) { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); }).then(function (buf) {
@@ -628,7 +630,7 @@
   }
   function markEngines() {
     var to = VY.target;
-    UI.engList.querySelectorAll('.voy-e').forEach(function (b) {
+    UI.root.querySelectorAll('.voy-e, .hub-e').forEach(function (b) {
       var e = V.engine(b.dataset.id); b.classList.toggle('is-sel', VY.engine === e.id); b.classList.toggle('is-fit', !!(to && e.fit.indexOf(to) >= 0));
       b.disabled = VY.state === 'travel' || (to === 'outer' ? e.id !== 'mind' : e.id === 'mind');
     });
@@ -638,38 +640,11 @@
   }
 
   /* ============================ 航图 ============================ */
-  function openMap() { UI.map.hidden = false; UI.mapCard.hidden = true; drawMap(); sfx.open(); }
-  function mapGeom() {
-    var cv = UI.mapCv, w = cv.clientWidth, hh = cv.clientHeight, cx = w / 2, cy = hh / 2 + 10, R0 = Math.min(w, hh) * 0.06, R1 = Math.min(w, hh) * 0.46;
-    return { w: w, h: hh, cx: cx, cy: cy, r: function (i) { return R0 + (R1 - R0) * (i + 0.5) / V.sectors.length; } };
-  }
-  function drawMap() {
-    var cv = UI.mapCv, pr = Math.min(2, devicePixelRatio || 1), Gm = mapGeom(); cv.width = Gm.w * pr; cv.height = Gm.h * pr;
-    var g = cv.getContext('2d'); g.setTransform(pr, 0, 0, pr, 0, 0); g.clearRect(0, 0, Gm.w, Gm.h);
-    V.sectors.forEach(function (s, i) {
-      var r = Gm.r(i), here = s.id === VY.at, tgt = s.id === VY.target, col = s.status === 'open' ? '#7fe3c4' : s.status === 'conjecture' ? '#c9a6ff' : '#8aa0c0';
-      g.beginPath(); g.arc(Gm.cx, Gm.cy, r, 0, Math.PI * 2);
-      g.setLineDash(s.status === 'conjecture' ? [4, 6] : s.status === 'uncharted' ? [2, 4] : []);
-      g.strokeStyle = tgt ? '#ffffff' : col; g.globalAlpha = tgt ? 1 : 0.55; g.lineWidth = tgt ? 2.4 : 1.2; g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
-      var a = -Math.PI * 0.92 + i * (Math.PI * 1.25 / (V.sectors.length - 1)), x = Gm.cx + Math.cos(a) * r, y = Gm.cy + Math.sin(a) * r;
-      s._xy = [x, y];
-      g.beginPath(); g.arc(x, y, here ? 9 : 6, 0, Math.PI * 2); g.fillStyle = here ? '#ffffff' : col; g.fill();
-      if (here) { g.beginPath(); g.arc(x, y, 14 + Math.sin(R.t * 3) * 2, 0, Math.PI * 2); g.strokeStyle = '#7fe3ff'; g.stroke(); }
-      g.font = '600 13px sans-serif'; g.fillStyle = '#e8f2ff'; g.textAlign = 'center';
-      var narrow = Gm.w < 560, side = Math.cos(a) < -0.2 ? -1 : Math.cos(a) > 0.2 ? 1 : 0;
-      g.font = (narrow ? '600 12px' : '600 13px') + ' sans-serif';
-      var lx = x + side * (narrow ? 12 : 14), ly = side ? y + 4 : y - 16; g.textAlign = side < 0 ? 'right' : side > 0 ? 'left' : 'center';
-      if (here) { lx = x; ly = y + 26; g.textAlign = 'center'; }
-      g.fillText(s.n + ' ' + s.zh, lx, ly);
-      g.font = '11px sans-serif'; g.fillStyle = col; g.fillText(V.STATUS_ZH[s.status], lx, ly + 14);
-    });
-    g.font = '11px sans-serif'; g.fillStyle = 'rgba(200,220,255,0.6)'; g.textAlign = 'center';
-    g.fillText('越往外越远(对数尺度:每一圈都比上一圈远几十到几十万倍)', Gm.cx, Gm.h - 40);
-  }
+  function openMap() { UI.map.hidden = false; UI.mapCard.hidden = true; atlasOpen(); sfx.open(); }
   function mapTap(cx, cy) {
     var rect = UI.mapCv.getBoundingClientRect(), x = cx - rect.left, y = cy - rect.top, best = null, bd = 30;
     V.sectors.forEach(function (s) { if (!s._xy) return; var d = Math.hypot(s._xy[0] - x, s._xy[1] - y); if (d < bd) { bd = d; best = s; } });
-    if (!best) return; sfx.sector(best.id);
+    if (!best) return; sfx.sector(best.id); if (AT) { AT.sel = best.id; atlasRoute(); }
     var here = best.id === VY.at;
     UI.mapCard.hidden = false;
     UI.mapCard.innerHTML = '<div class="voy-mc__k">星域 ' + best.n + (best.star ? ' · ' + best.star : '') + ' · <em>' + V.STATUS_ZH[best.status] + '</em></div><h3>' + esc(best.zh) + ' <small>' + best.en + '</small></h3>' +
@@ -705,11 +680,11 @@
     dash({ dist: d, te: 0, ts: 0, v: 0, x: '—' });
     var s = V.byId(id);
     say(V.lines.pickEngine, { to: s.zh, dist: V.fmtDist(d) });
-    UI.root.classList.add('pick-engine');
+    UI.root.classList.add('pick-engine'); if (R.mode25) setTimeout(openHub, 350);
   }
   function pickEngine(id) {
     if (VY.state === 'travel') return;
-    if (!VY.target) { say(['think', '船长,先在航图上选一个目的地哦~']).then(function () { openMap(); }); return; }
+    if (!VY.target) { closeHub(true); say(['think', '船长,先在航图上选一个目的地哦~']).then(function () { openMap(); }); return; }
     VY.engine = id; sfx.tick(); markEngines(); UI.root.classList.remove('pick-engine');
     var e = V.engine(id), d = VY.dist;
     if (e.model === 'none') { VY.state = 'control'; say(V.lines.arriveOuter).then(function () { showCtrl(e); }); return; }
@@ -866,9 +841,11 @@
 
   function onClick3D(e) {
     if (R.mode25) {
+      if (R.board || R.evaView || (R.hub && R.hub.k > 0)) return;
       var k = hit25(e);
       if (k === 'xl') { var l0 = V.lines.poke[(Math.random() * V.lines.poke.length) | 0]; A.waveT = 1.2; A.gl = 1; say(l0); }
       else if (k === 'map' && VY.state !== 'travel') { sfx.glass(880); openMap(); }
+      else if (k === 'hub') { sfx.glass(660); openHub(); }
       return;
     }
     R.ptr.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); R.ray.setFromCamera(R.ptr, R.cam);
@@ -889,15 +866,15 @@
   function build25() {
     var L = new T.TextureLoader(), n = 0, done; R.c25 = { ready: new Promise(function (r) { done = r; }) };
     var S = new T.Scene(), cam = new T.OrthographicCamera(0, 1, 1, 0, -1, 1); R.s25 = S; R.cam25 = cam;
-    function tex(u) { var t = L.load(u, function () { if (++n === 4) done(); }, undefined, function () { console.warn('[voy] 贴图加载失败', u); if (++n === 4) done(); }); t.minFilter = T.LinearFilter; t.generateMipmaps = false; return t; }
+    function tex(u) { var t = L.load(u, function () { if (++n === 7) done(); }, undefined, function () { console.warn('[voy] 贴图加载失败', u); if (++n === 7) done(); }); t.minFilter = T.LinearFilter; t.generateMipmaps = false; return t; }
     var U = R.c25.u = { map: { value: tex('ck25.webp') }, dep: { value: tex('ck25d.jpg') }, mouse: { value: new T.Vector2() }, t: { value: 0 }, power: { value: 0 },
-      sc: { value: new T.Vector4(0, 0, 1, 1) }, shake: { value: new T.Vector2() }, gal: { value: new T.Vector2(GAL[0], GAL[1]) } };
+      sc: { value: new T.Vector4(0, 0, 1, 1) }, op: { value: 1 }, zm: { value: 1 }, zf: { value: new T.Vector2(0.5, 0.5) }, shake: { value: new T.Vector2() }, gal: { value: new T.Vector2(GAL[0], GAL[1]) } };
     var q = new T.Mesh(new T.PlaneGeometry(1, 1), new T.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, depthTest: false,
       vertexShader: 'varying vec2 vS;void main(){vS=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
       fragmentShader: [
-        'uniform sampler2D map,dep;uniform vec2 mouse,shake,gal;uniform float t,power;uniform vec4 sc;varying vec2 vS;',
+        'uniform sampler2D map,dep;uniform vec2 mouse,shake,gal,zf;uniform float t,power,op,zm;uniform vec4 sc;varying vec2 vS;',
         'void main(){',
-        ' vec2 uv=sc.xy+vS*sc.zw+shake;',
+        ' vec2 uv=sc.xy+((vS-zf)/zm+zf)*sc.zw+shake;',
         ' float d=texture2D(dep,uv).r;',
         ' uv-=mouse*(d-0.32)*vec2(0.016,0.010);',             // 深度视差:近处动得多,舷窗几乎不动
         ' vec2 P=(uv-gal)*vec2(900.,491.)/vec2(80.,44.);float r=length(P);',
@@ -905,15 +882,15 @@
         ' vec4 c=texture2D(map,uv);',
         ' float g=r<1.?1.+0.18*sin(t*2.1)*(1.-r):1.;',
         ' c.rgb*=g*(1.+power*0.14*vec3(1.,0.78,0.48));',
-        ' gl_FragColor=c;}'].join('\n') }));
-    q.position.set(0.5, 0.5, 0); S.add(q); R.c25.bg = q;
+        ' gl_FragColor=vec4(c.rgb,c.a*op);}'].join('\n') }));
+    q.position.set(0.5, 0.5, 0); q.renderOrder = -2; S.add(q); R.c25.bg = q;
     // —— 星璃全息像
     var X = R.c25.xu = { map: { value: tex('xl25.webp') }, bk: { value: tex('xl25b.webp') }, br: { value: new T.Vector4(0.3359, 0.6693, 0.1231, 0.0677) },
-      blink: { value: 0 }, t: { value: 0 }, talk: { value: 0 }, glitch: { value: 0 }, fade: { value: 0 } };
+      blink: { value: 0 }, t: { value: 0 }, talk: { value: 0 }, glitch: { value: 0 }, fade: { value: 0 }, vis: { value: 1 } };
     var xm = new T.Mesh(new T.PlaneGeometry(1, 1), new T.ShaderMaterial({ uniforms: X, transparent: true, depthWrite: false, depthTest: false,
       vertexShader: 'varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
       fragmentShader: [
-        'uniform sampler2D map,bk;uniform vec4 br;uniform float blink,t,talk,glitch,fade;varying vec2 vU;',
+        'uniform sampler2D map,bk;uniform vec4 br;uniform float blink,t,talk,glitch,fade,vis;varying vec2 vU;',
         'float h(float x){return fract(sin(x*91.7)*43758.5);}',
         'void main(){vec2 uv=vU;',
         ' float side=smoothstep(0.30,0.04,uv.x)+smoothstep(0.70,0.96,uv.x);',     // 双马尾发梢在两侧,越往下摆幅越大
@@ -923,16 +900,289 @@
         ' vec2 b=(uv-br.xy)/br.zw;if(blink>0.&&b.x>0.&&b.x<1.&&b.y>0.&&b.y<1.){vec4 e=texture2D(bk,b);c.rgb=mix(c.rgb,e.rgb,e.a*blink);}',
         ' float l=dot(c.rgb,vec3(.3,.59,.11));',
         ' float a=c.a*mix(0.5,1.,smoothstep(0.04,0.22,l));',
-        ' a*=smoothstep(0.0,0.14,uv.y);',                                       // 腰部以下渐隐 = 从投影台升起
+        ' a*=smoothstep(0.0,0.14,uv.y);float sw=fade*1.2-0.08;a*=smoothstep(sw+0.04,sw-0.04,uv.y);',                                       // 腰部以下渐隐 = 从投影台升起
         ' float scan=0.94+0.06*sin(gl_FragCoord.y*1.6+t*9.);',
         ' float fl=0.975+0.025*sin(t*23.)*sin(t*7.3);',
         ' vec3 col=c.rgb*(1.04+talk*0.08)*scan+vec3(0.02,0.06,0.09)*(1.-uv.y*0.5);',
-        ' gl_FragColor=vec4(col,clamp(a*fl*fade,0.,1.));}'].join('\n') }));
+        ' col+=vec3(0.4,0.9,1.)*smoothstep(0.035,0.,abs(uv.y-sw))*step(fade,0.999)*c.a;',
+        ' gl_FragColor=vec4(col,clamp(a*fl*min(1.,fade*1.6)*vis,0.,1.));}'].join('\n') }));
     S.add(xm); R.c25.xl = xm;
     // —— 投影光锥
     var cone = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ map: radialTex([[0, 'rgba(120,230,255,0.55)'], [0.4, 'rgba(80,200,255,0.18)'], [1, 'rgba(80,200,255,0)']]), transparent: true, blending: T.AdditiveBlending, depthWrite: false, depthTest: false }));
     S.add(cone); R.c25.cone = cone;
+    buildShip25(tex); buildGal25(S); buildHub25(S, tex);
     lay25();
+  }
+  /* ---------- 弦穹号外观 2.5D(概念图 chordion_B_manifold 抠像 + 深度视差;曲率环为「猜想」装置)---------- */
+  var SHIP_ASP = 1155 / 576, CANOPY = [0.177, 0.47], NOZZLE = [0.962, 0.565];
+  function buildShip25(tex) {
+    var S = new T.Scene(); R.sh25 = S;
+    var U = R.sh25u = { map: { value: tex('ship25.webp') }, aux: { value: tex('ship25a.jpg') }, mouse: { value: new T.Vector2() }, t: { value: 0 }, k: { value: 0 }, warp: { value: 0 } };
+    var m = new T.Mesh(new T.PlaneGeometry(1, 1), new T.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, depthTest: false,
+      vertexShader: 'varying vec2 vU;void main(){vU=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader: [
+        'uniform sampler2D map,aux;uniform vec2 mouse;uniform float t,k,warp;varying vec2 vU;',
+        'void main(){vec2 uv=vU;vec4 x=texture2D(aux,uv);uv-=mouse*(x.r-0.45)*vec2(0.012,0.008);x=texture2D(aux,uv);',
+        ' vec4 c=texture2D(map,uv);float ring=x.g;',
+        ' float pulse=0.18+0.12*sin(t*1.6);',
+        ' c.rgb+=vec3(0.62,0.45,1.)*ring*(pulse+warp*2.2);',
+        ' float a=clamp(c.a+ring*warp*0.6,0.,1.);',
+        ' gl_FragColor=vec4(c.rgb,a*k);}'].join('\n') }));
+    S.add(m); R.ship25 = m;
+    var plume = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ map: radialTex([[0, 'rgba(190,230,255,0.95)'], [0.25, 'rgba(110,190,255,0.45)'], [1, 'rgba(60,140,255,0)']]), transparent: true, blending: T.AdditiveBlending, depthWrite: false, depthTest: false }));
+    S.add(plume); R.plume25 = plume;
+    var halo = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ map: radialTex([[0, 'rgba(170,120,255,0.5)'], [0.5, 'rgba(140,100,255,0.15)'], [1, 'rgba(140,100,255,0)']]), transparent: true, blending: T.AdditiveBlending, depthWrite: false, depthTest: false, opacity: 0 }));
+    S.add(halo); R.halo25 = halo;
+  }
+  // 摆放飞船:zoom=1 为常规取景;focus 为放大时对准的船体 uv(登舰时对准驾驶舱舷窗)
+  function placeShip(zoom, focus, dx, k) {
+    var w = innerWidth, hh = innerHeight, sa = w / hh, W0 = sa < 0.8 ? 1.15 : 0.8, H0 = W0 * sa / SHIP_ASP;
+    var Wq = W0 * zoom, Hq = H0 * zoom, z = Math.min(1, Math.max(0, (zoom - 1) / 3));
+    var fx0 = 0.5 + (focus[0] - 0.5) * W0 + dx, fy0 = 0.52 + (focus[1] - 0.5) * H0;
+    var px = fx0 + (0.5 - fx0) * z, py = fy0 + (0.5 - fy0) * z;
+    var cx = px + (0.5 - focus[0]) * Wq, cy = py + (0.5 - focus[1]) * Hq;
+    R.ship25.scale.set(Wq, Hq, 1); R.ship25.position.set(cx, cy, 0); R.sh25u.k.value = k;
+    var nx = cx + (NOZZLE[0] - 0.5) * Wq, ny = cy + (NOZZLE[1] - 0.5) * Hq, fl = 0.85 + 0.15 * Math.sin(R.t * 31) * Math.sin(R.t * 7);
+    R.plume25.scale.set(Wq * 0.3 * fl, Hq * 0.16, 1); R.plume25.position.set(nx + Wq * 0.07, ny, 0); R.plume25.material.opacity = k * 0.8;
+    R.halo25.scale.set(Wq * 0.5, Hq * 1.3, 1); R.halo25.position.set(cx + Wq * 0.04, cy, 0); R.halo25.material.opacity = k * R.sh25u.warp.value;
+  }
+  function eio(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+  /* ---------- 登舰动画:远景接近弦穹号 → 推进驾驶舱舷窗 → 舱内落定 → 星璃投影扫描成像 ---------- */
+  function board() {
+    return new Promise(function (res) {
+      var B = R.board = { t0: performance.now(), res: res, dur: 4300 };
+      UI.root.classList.add('voy-boarding'); UI.boardCap.hidden = false; UI.boardSkip.hidden = false;
+      R.c25.xu.fade.value = 0; R.c25.t0 = 0; P('whoosh', 3);
+    });
+  }
+  function boardEnd() {
+    var B = R.board; if (!B) return; R.board = null;
+    UI.root.classList.remove('voy-boarding'); UI.boardCap.hidden = true; UI.boardSkip.hidden = true;
+    R.c25.u.op.value = 1; R.c25.u.zm.value = 1; if (!R.c25.t0) R.c25.t0 = performance.now(); R.sh25u.k.value = 0;
+    B.res();
+  }
+  function updBoard() {
+    var B = R.board; if (!B) return false;
+    var s = (performance.now() - B.t0) / 1000, fz = /[?&]bt=([\d.]+)/.exec(location.search); if (fz) s = +fz[1];   // bt= 仅供截图调试
+    if (s > B.dur / 1000) { boardEnd(); return false; }
+    var a = eio(s / 1.8), zoom, dx, k = 1;
+    if (s < 1.8) { zoom = 0.38 + 0.62 * a; dx = 0.28 * (1 - a); }
+    else { var b = (s - 1.8) / 1.2; zoom = 1 + 11 * Math.pow(Math.min(1, b), 2.6); dx = 0; }
+    placeShip(zoom, CANOPY, dx, s < 3.05 ? 1 : Math.max(0, 1 - (s - 3.05) / 0.25));
+    var ck = eio((s - 2.55) / 0.5); R.c25.u.op.value = ck; R.c25.u.zm.value = 1 + 0.32 * (1 - eio((s - 2.55) / 1.6));
+    if (s > 3.2 && !R.c25.t0) { R.c25.t0 = performance.now(); P('open'); }
+    UI.boardCap.style.opacity = String(Math.min(1, s / 0.5) * (1 - eio((s - 2.2) / 0.5)));
+    return true;
+  }
+  /* ---------- 全息星图:3D 粒子旋涡星系(替换概念图里的静态星系;差速自转,内快外慢)---------- */
+  var GALC = [742 / 1408, 1 - 357 / 768], GALR = 140 / 1408;
+  function buildGal25(S) {
+    var N = 16000, M = 300, pos = new Float32Array((N + M) * 3), col = new Float32Array((N + M) * 3), sz = new Float32Array(N + M), kind = new Float32Array(N + M);
+    function g() { return (Math.random() + Math.random() + Math.random() - 1.5) / 1.5; }
+    for (var i = 0; i < N; i++) {
+      var r, th, h, c, s = 1, u = Math.random();
+      if (u < 0.2) { r = Math.abs(g()) * 0.22; th = Math.random() * 6.283; h = g() * 0.05; c = [1, 0.9, 0.7]; s = 1.3; }   // 核球:暖黄白
+      else {
+        var arm = (Math.random() < 0.5 ? 0 : Math.PI); r = 0.12 + Math.pow(Math.random(), 0.8) * 0.9;
+        th = arm + Math.log(r / 0.12) / 0.26 + g() * (0.38 + 0.25 * r); h = g() * 0.03; if (Math.random() < 0.25) th = Math.random() * 6.283;
+        var w = Math.random(); c = w < 0.06 ? [1, 0.55, 0.75] : w < 0.12 ? [1, 0.82, 0.45] : [0.25 + 0.25 * Math.random(), 0.55 + 0.2 * Math.random(), 1]; s = w < 0.12 ? 1.6 : 1;   // 粉色 HII 区 / 鎏金光点 / 蓝白年轻恒星
+      }
+      pos[i * 3] = r; pos[i * 3 + 1] = th; pos[i * 3 + 2] = h; col.set(c, i * 3); sz[i] = s * (1 + 1.4 * Math.random()); kind[i] = 0;
+    }
+    for (var j = N; j < N + M; j++) { pos[j * 3] = (Math.random() - 0.5) * 0.25; pos[j * 3 + 1] = Math.random(); pos[j * 3 + 2] = (Math.random() - 0.5) * 0.25; col.set([0.5, 0.9, 1], j * 3); sz[j] = 0.8 + Math.random(); kind[j] = 1; }   // 星图台升起的全息光尘
+    var G = new T.BufferGeometry();
+    G.setAttribute('position', new T.BufferAttribute(pos, 3)); G.setAttribute('color', new T.BufferAttribute(col, 3)); G.setAttribute('sz', new T.BufferAttribute(sz, 1)); G.setAttribute('kind', new T.BufferAttribute(kind, 1));
+    var U = { t: { value: 0 }, px: { value: 1 }, asp: { value: 1 }, hot: { value: 0 }, fade: { value: 0 } };
+    var P = new T.Points(G, new T.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, depthTest: false, blending: T.AdditiveBlending, vertexColors: true,
+      vertexShader: [
+        'attribute float sz,kind;uniform float t,px,asp,hot;varying vec3 vC;varying float vA;',
+        'void main(){vec3 p;float a=1.;',
+        ' if(kind<0.5){float r=position.x,th=position.y-t*(0.05+0.16/(r+0.25));',
+        '  vec3 d=vec3(r*cos(th),position.z,r*sin(th));',
+        '  d=vec3(d.x,d.z*0.44+d.y*0.9,0.);',   // 倾角约 64°
+        '  float cr=cos(-0.12),sr=sin(-0.12);p=vec3(d.x*cr-d.y*sr,d.x*sr+d.y*cr,0.);',
+        '  a=0.55+0.45*sin(t*2.+position.y*7.);}',
+        ' else{float k=fract(position.y+t*0.18);p=vec3(position.x*(1.-k*0.4),-1.05+k*0.95,0.);a=sin(k*3.1416);}',
+        ' vC=color*(1.+hot*0.6);vA=a;',
+        ' gl_Position=projectionMatrix*modelViewMatrix*vec4(p.x,p.y*asp,0.,1.);gl_PointSize=sz*px*(kind<0.5?1.:0.8);}'].join('\n'),
+      fragmentShader: 'uniform float fade;varying vec3 vC;varying float vA;void main(){vec2 q=gl_PointCoord-0.5;float d=dot(q,q);if(d>0.25)discard;gl_FragColor=vec4(vC*vA*fade*pow((0.25-d)*4.,1.5)*0.3,1.);}' }));
+    P.renderOrder = -1; P.frustumCulled = false; S.add(P); R.gal25 = { p: P, u: U };
+    var glow = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ map: radialTex([[0, 'rgba(255,240,210,0.9)'], [0.15, 'rgba(160,200,255,0.35)'], [1, 'rgba(80,140,255,0)']]), transparent: true, blending: T.AdditiveBlending, depthWrite: false, depthTest: false }));
+    glow.renderOrder = -1; S.add(glow); R.gal25.glow = glow;
+  }
+  function layGal25(x0, y0, zx, zy) {
+    if (!R.gal25) return; var w = innerWidth, hh = innerHeight, c = img2scr(GALC[0], GALC[1]);
+    var rpx = GALR * w / zx;   // 星系半径(像素)
+    R.gal25.p.position.set(c[0], c[1], 0); R.gal25.p.scale.set(rpx / w, rpx / w, 1); R.gal25.u.asp.value = w / hh;
+    R.gal25.u.px.value = Math.max(1.2, rpx / 70) * (window.devicePixelRatio > 1 ? 1.4 : 1);
+    R.gal25.glow.position.set(c[0], c[1], 0); R.gal25.glow.scale.set(rpx * 1.1 / w, rpx * 0.55 / hh, 1);
+    var tag = UI.holoTag; if (tag) { tag.hidden = false; var tp = img2scr(GALC[0], 1 - 286 / 768); tag.style.left = (tp[0] * 100) + '%'; tag.style.top = ((1 - tp[1]) * 100) + '%'; }
+  }
+  /* ============ 指令台(2.5D 近景 hub25.webp + 全息操作屏):引擎 / 舷窗观景 / 返回母港 ============ */
+  var HUB_P = { eng: [77, 126, 490, 484], eva: [512, 176, 913, 429], home: [935, 126, 1364, 484] };
+  function buildHub25(S, tex) {
+    var U = R.hubU = { map: { value: tex('hub25.webp') }, sc: { value: new T.Vector4(0, 0, 1, 1) }, zm: { value: 1.25 }, op: { value: 0 }, mouse: { value: new T.Vector2() } };
+    var q = new T.Mesh(new T.PlaneGeometry(1, 1), new T.ShaderMaterial({ uniforms: U, transparent: true, depthWrite: false, depthTest: false,
+      vertexShader: 'varying vec2 vS;void main(){vS=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader: 'uniform sampler2D map;uniform vec4 sc;uniform float zm,op;uniform vec2 mouse;varying vec2 vS;void main(){vec2 uv=sc.xy+((vS-0.5)/zm+0.5)*sc.zw-mouse*vec2(0.006,0.004);vec4 c=texture2D(map,uv);gl_FragColor=vec4(c.rgb,op);}' }));
+    q.position.set(0.5, 0.5, 0); q.renderOrder = 2; S.add(q); R.hub25 = q;
+    R.hub = { k: 0, to: 0 };
+  }
+  function buildHubDom(root) {
+    var hub = h('div', 'voy-hub'); hub.hidden = true;
+    hub.innerHTML =
+      '<section class="hp hp-eng"><header>引擎 <small>ENGINES</small></header><div class="hp-ring"></div><div class="hp-read"><b>选择引擎</b><p>三种颜色代表科学可信度:<i style="color:#7fe3c4">实测</i> / <i style="color:#ffd27a">推断</i> / <i style="color:#c9a6ff">猜想</i></p></div></section>' +
+      '<section class="hp hp-eva"><header>舷窗观景 <small>EXTERIOR</small></header><div class="hp-ship"><img src="ship25.webp" alt=""></div><button type="button" class="hp-go hp-go--eva">⇱ 出舱看看弦穹号</button><p class="hp-note">外观为设计示意 · 曲率环属「猜想」</p></section>' +
+      '<section class="hp hp-home"><header>返回母港 <small>HOME</small></header><canvas class="hp-globe" width="240" height="240"></canvas><button type="button" class="hp-go hp-go--home">⌂ 返回地球母港</button></section>' +
+      '<button type="button" class="hp-back">↩ 回到驾驶座</button>';
+    root.appendChild(hub); UI.hub = hub; UI.hubRing = hub.querySelector('.hp-ring'); UI.hubRead = hub.querySelector('.hp-read'); UI.globe = hub.querySelector('.hp-globe');
+    V.engines.forEach(function (e, i) {
+      var a = -Math.PI / 2 + i / V.engines.length * Math.PI * 2;
+      var b = h('button', 'hub-e', '<span>' + e.icon + '</span>'); b.type = 'button'; b.dataset.id = e.id; b.title = e.zh;
+      b.style.left = (50 + Math.cos(a) * 40) + '%'; b.style.top = (50 + Math.sin(a) * 40) + '%'; b.style.setProperty('--c', V.TIER_COLOR[e.tier]);
+      b.addEventListener('mouseenter', function () { hubRead(e); }); b.addEventListener('focus', function () { hubRead(e); });
+      b.addEventListener('click', function () { hubRead(e); if (!VY.target) { pickEngine(e.id); return; } closeHub(); setTimeout(function () { pickEngine(e.id); }, 650); });
+      UI.hubRing.appendChild(b);
+    });
+    hub.querySelector('.hp-go--eva').addEventListener('click', function () { closeHub(true); evaIn(); });
+    hub.querySelector('.hp-go--home').addEventListener('click', function () { closeHub(true); SH.voyExit(); });
+    hub.querySelector('.hp-back').addEventListener('click', function () { closeHub(); });
+    var tag = h('div', 'voy-holotag voy-holotag--hub', '<i></i><b>指令台</b><small>CONSOLE · 引擎 / 观景 / 返航</small>'); tag.hidden = true; root.appendChild(tag); UI.hubTag = tag;
+    tag.addEventListener('click', function () { sfx.glass(660); openHub(); });
+    root.querySelector('.voy-holotag').addEventListener('click', function () { if (VY.state !== 'travel') { sfx.glass(880); openMap(); } });
+  }
+  function hubRead(e) {
+    var c = V.TIER_COLOR[e.tier], fit = VY.target && e.fit.indexOf(VY.target) >= 0;
+    UI.hubRead.innerHTML = '<b>' + e.icon + ' ' + esc(e.zh) + ' <em style="color:' + c + '">' + e.tier + '</em>' + (fit ? ' <em class="fit">适合本航线</em>' : '') + '</b><p>' + esc(e.fact) + '</p>';
+  }
+  function openHub() {
+    if (!R.mode25 || !R.hub || R.hub.to === 1 || VY.state === 'travel' || R.board || R.evaView) return;
+    UI.map.hidden = true; R.hub.to = 1; P('whoosh', 2); markEngines();
+    var e = VY.engine && V.engine(VY.engine); if (e) hubRead(e);
+    UI.root.classList.add('voy-inhub');
+  }
+  function closeHub(quick) {
+    if (!R.hub || R.hub.to === 0) return; R.hub.to = 0; UI.hub.classList.remove('on'); UI.root.classList.remove('voy-inhub');
+    if (quick) { R.hub.k = 0; UI.hub.hidden = true; }
+  }
+  function updHub(dt) {
+    var H = R.hub; if (!H) return;
+    var sp = dt / 0.9; H.k = H.to ? Math.min(1, H.k + sp) : Math.max(0, H.k - sp * 1.3);
+    var e = eio(H.k), U = R.c25.u, f = img2scr(DISC[0], DISC[1] + 0.03);
+    U.zm.value = (R.board ? U.zm.value : 1 + 0.75 * e); U.zf.value.set(f[0], f[1]);
+    var ho = eio((H.k - 0.35) / 0.5); R.hubU.op.value = ho; R.hubU.zm.value = 1 + 0.22 * (1 - ho); R.hub25.visible = ho > 0.001;
+    R.hubU.mouse.value.copy(U.mouse.value);
+    var vis = 1 - eio(H.k / 0.35); R.c25.xu.vis.value = vis; if (R.gal25) R.gal25.u.fade.value *= vis;
+    if (H.to && H.k >= 1 && UI.hub.hidden) { UI.hub.hidden = false; layHub(); requestAnimationFrame(function () { UI.hub.classList.add('on'); }); }
+    if (!H.to && H.k <= 0.6 && !UI.hub.hidden) UI.hub.hidden = true;
+    if (!UI.hub.hidden) drawGlobe(R.t);
+    var show = H.k === 0 && !R.board && !R.evaView && VY.state !== 'travel';
+    if (UI.holoTag) UI.holoTag.style.visibility = show ? '' : 'hidden';
+    if (UI.hubTag) UI.hubTag.style.visibility = show ? '' : 'hidden';
+  }
+  function layHub() {
+    if (!R.c25 || !UI.hub) return; var port = innerWidth / innerHeight < 0.8; UI.hub.classList.toggle('port', port);
+    R.hubU.sc.value.copy(R.c25.u.sc.value);
+    var tp = img2scr(DISC[0], DISC[1] - 0.05), xr = R.c25.xr; if (port) tp = [xr[0] + xr[2] / 2, xr[1] + 0.035];
+    if (UI.hubTag) { UI.hubTag.hidden = false; UI.hubTag.style.left = (tp[0] * 100) + '%'; UI.hubTag.style.top = ((1 - tp[1]) * 100 + (port ? 0 : 1.5)) + '%'; }
+    UI.hub.querySelectorAll('.hp').forEach(function (el) {
+      if (port) { el.style.cssText = ''; return; }
+      var k = el.classList.contains('hp-eng') ? 'eng' : el.classList.contains('hp-eva') ? 'eva' : 'home', b = HUB_P[k];
+      var a = img2scr(b[0] / 1408, 1 - b[1] / 768), c = img2scr(b[2] / 1408, 1 - b[3] / 768);
+      el.style.left = (a[0] * 100) + '%'; el.style.top = ((1 - a[1]) * 100) + '%'; el.style.width = ((c[0] - a[0]) * 100) + '%'; el.style.height = ((a[1] - c[1]) * 100) + '%';
+    });
+  }
+  function drawGlobe(t) {
+    var cv = UI.globe, g = cv.getContext('2d'), W = cv.width, r = W * 0.38, cx = W / 2, cy = W / 2, rot = t * 0.35;
+    g.clearRect(0, 0, W, W);
+    var gr = g.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.1, cx, cy, r); gr.addColorStop(0, 'rgba(120,220,255,0.35)'); gr.addColorStop(1, 'rgba(30,110,200,0.08)');
+    g.fillStyle = gr; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fill();
+    g.strokeStyle = 'rgba(140,230,255,0.55)'; g.lineWidth = 1;
+    for (var la = -60; la <= 60; la += 30) { var y = cy - Math.sin(la * Math.PI / 180) * r, rr = Math.cos(la * Math.PI / 180) * r; g.beginPath(); g.ellipse(cx, y, rr, rr * 0.12, 0, 0, 7); g.stroke(); }
+    for (var lo = 0; lo < 180; lo += 30) { var a = lo * Math.PI / 180 + rot, sx = Math.cos(a); g.beginPath(); g.ellipse(cx, cy, Math.abs(sx) * r, r, 0, 0, 7); g.stroke(); }
+    g.strokeStyle = 'rgba(160,240,255,0.9)'; g.lineWidth = 1.5; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke();
+    // 返航弧线(鎏金)
+    var k = (t * 0.4) % 1; g.strokeStyle = 'rgba(255,205,120,0.9)'; g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, r * 1.22, -2.6, -2.6 + 2.2 * k); g.stroke();
+    var ea = -2.6 + 2.2 * k; g.fillStyle = '#ffd88a'; g.beginPath(); g.arc(cx + Math.cos(ea) * r * 1.22, cy + Math.sin(ea) * r * 1.22, 3.5, 0, 7); g.fill();
+  }
+
+  /* ============ 航图:Three.js 全息星域沙盘(对数尺度同心环,可拖动旋转、滚轮/双指缩放)============ */
+  var AT = null;
+  function atlasInit() {
+    var cv = UI.mapCv, r = new T.WebGLRenderer({ canvas: cv, antialias: true, alpha: true }); r.setPixelRatio(Math.min(2, devicePixelRatio || 1)); r.setClearColor(0x000000, 0);
+    var S = new T.Scene(), cam = new T.PerspectiveCamera(42, 1, 0.1, 200);
+    AT = { r: r, S: S, cam: cam, th: -0.5, ph: 0.66, dist: 15.5, auto: 1, nodes: [], labels: [], sel: null, flow: [] };
+    // 背景星尘
+    var n = 1800, p = new Float32Array(n * 3); for (var i = 0; i < n; i++) { var u = Math.random() * 2 - 1, a = Math.random() * 6.283, rr = 30 + Math.random() * 30, q = Math.sqrt(1 - u * u); p.set([Math.cos(a) * q * rr, u * rr, Math.sin(a) * q * rr], i * 3); }
+    var sg = new T.BufferGeometry(); sg.setAttribute('position', new T.BufferAttribute(p, 3));
+    S.add(new T.Points(sg, new T.PointsMaterial({ color: 0x9fc8ff, size: 0.12, transparent: true, opacity: 0.7, depthWrite: false })));
+    var grid = new T.PolarGridHelper(9.5, 24, 10, 96, 0x2c6c8c, 0x1a3c52); grid.position.y = -0.03; grid.material.transparent = true; grid.material.opacity = 0.35; S.add(grid);
+    // 中心:地球(我们出发的地方)
+    var earth = new T.Mesh(new T.SphereGeometry(0.13, 32, 16), new T.MeshBasicMaterial({ color: 0x4fb4ff })); S.add(earth);
+    var eg = new T.Sprite(new T.SpriteMaterial({ map: radialTex([[0, 'rgba(140,220,255,0.9)'], [0.4, 'rgba(60,150,255,0.25)'], [1, 'rgba(40,120,255,0)']]), blending: T.AdditiveBlending, depthWrite: false })); eg.scale.set(1.3, 1.3, 1); S.add(eg);
+    var N = V.sectors.length;
+    V.sectors.forEach(function (s, i) {
+      var rad = 0.75 + i * (8.6 / N), col = new T.Color(s.status === 'open' ? 0x7fe3c4 : s.status === 'conjecture' ? 0xc9a6ff : 0x7fa6d8);
+      var pts = []; for (var k = 0; k <= 160; k++) { var a = k / 160 * Math.PI * 2; pts.push(new T.Vector3(Math.cos(a) * rad, 0, Math.sin(a) * rad)); }
+      var lg = new T.BufferGeometry().setFromPoints(pts), dashed = s.status !== 'open';
+      var line = new T.Line(lg, dashed ? new T.LineDashedMaterial({ color: col, dashSize: 0.18, gapSize: 0.14, transparent: true, opacity: 0.75 }) : new T.LineBasicMaterial({ color: col, transparent: true, opacity: 0.85 }));
+      if (dashed) line.computeLineDistances(); S.add(line);
+      var band = new T.Mesh(new T.RingGeometry(rad - 0.06, rad + 0.06, 160), new T.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.16, side: T.DoubleSide, blending: T.AdditiveBlending, depthWrite: false }));
+      band.rotation.x = -Math.PI / 2; S.add(band);
+      var a = -Math.PI * 0.82 + i * (Math.PI * 1.3 / Math.max(1, N - 1)), pos = new T.Vector3(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+      var glow = new T.Sprite(new T.SpriteMaterial({ map: radialTex([[0, 'rgba(255,255,255,1)'], [0.22, 'rgba(' + Math.round(col.r * 255) + ',' + Math.round(col.g * 255) + ',' + Math.round(col.b * 255) + ',0.8)'], [1, 'rgba(0,0,0,0)']]), blending: T.AdditiveBlending, depthWrite: false }));
+      glow.position.copy(pos); glow.scale.set(0.55, 0.55, 1); S.add(glow);
+      var beam = new T.Mesh(new T.CylinderGeometry(0.012, 0.012, 1.6, 6, 1, true), new T.MeshBasicMaterial({ color: 0xffd27a, transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false }));
+      beam.position.copy(pos).add(new T.Vector3(0, 0.8, 0)); S.add(beam);
+      AT.nodes.push({ s: s, pos: pos, glow: glow, line: line, band: band, beam: beam, col: col, rad: rad });
+      var lb = h('div', 'at-lb', '<b>' + s.n + ' ' + esc(s.zh) + '</b><small>' + V.STATUS_ZH[s.status] + '</small>'); UI.map.appendChild(lb); AT.labels.push(lb);
+    });
+    // 航线弧 + 流动光点
+    AT.route = new T.Line(new T.BufferGeometry(), new T.LineBasicMaterial({ color: 0xffcf7a, transparent: true, opacity: 0.95 })); S.add(AT.route);
+    for (var j = 0; j < 36; j++) { var f = new T.Sprite(new T.SpriteMaterial({ map: radialTex([[0, 'rgba(255,230,170,1)'], [1, 'rgba(255,200,100,0)']]), blending: T.AdditiveBlending, depthWrite: false })); f.scale.set(0.16, 0.16, 1); f.visible = false; S.add(f); AT.flow.push(f); }
+    AT.here = new T.Mesh(new T.RingGeometry(0.3, 0.34, 48), new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, side: T.DoubleSide, depthWrite: false })); AT.here.rotation.x = -Math.PI / 2; S.add(AT.here);
+    // 拖动旋转 / 缩放 / 点选
+    var pts = {}, down = null, pinch = 0;
+    cv.addEventListener('pointerdown', function (e) { pts[e.pointerId] = [e.clientX, e.clientY]; down = { x: e.clientX, y: e.clientY, m: 0 }; AT.auto = 0; cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener('pointermove', function (e) {
+      if (!pts[e.pointerId]) return; var o = pts[e.pointerId], dx = e.clientX - o[0], dy = e.clientY - o[1]; pts[e.pointerId] = [e.clientX, e.clientY];
+      var ids = Object.keys(pts);
+      if (ids.length >= 2) { var A = pts[ids[0]], B = pts[ids[1]], d = Math.hypot(A[0] - B[0], A[1] - B[1]); if (pinch) AT.dist = Math.max(5, Math.min(24, AT.dist * pinch / d)); pinch = d; if (down) down.m = 99; return; }
+      AT.th -= dx * 0.006; AT.ph = Math.max(0.15, Math.min(1.35, AT.ph + dy * 0.004)); if (down) down.m += Math.abs(dx) + Math.abs(dy);
+    });
+    var up = function (e) { delete pts[e.pointerId]; pinch = 0; if (down && down.m < 8 && e.type === 'pointerup') mapTap(e.clientX, e.clientY); down = null; };
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    cv.addEventListener('wheel', function (e) { e.preventDefault(); AT.dist = Math.max(5, Math.min(24, AT.dist * (1 + e.deltaY * 0.001))); }, { passive: false });
+  }
+  function atlasRoute() {
+    var to = AT.sel || VY.target, a = AT.nodes.filter(function (n) { return n.s.id === VY.at; })[0], b = AT.nodes.filter(function (n) { return n.s.id === to; })[0];
+    AT.curve = null; AT.route.visible = false; AT.flow.forEach(function (f) { f.visible = false; });
+    AT.nodes.forEach(function (n) { n.beam.material.opacity = n.s.id === to ? 0.8 : 0; });
+    if (!a || !b || a === b) return;
+    var mid = a.pos.clone().add(b.pos).multiplyScalar(0.5); mid.y = 0.6 + a.pos.distanceTo(b.pos) * 0.25;
+    AT.curve = new T.QuadraticBezierCurve3(a.pos.clone(), mid, b.pos.clone());
+    AT.route.geometry.dispose(); AT.route.geometry = new T.BufferGeometry().setFromPoints(AT.curve.getPoints(80)); AT.route.visible = true;
+    AT.flow.forEach(function (f) { f.visible = true; });
+  }
+  function atlasOpen() {
+    if (!AT) atlasInit(); AT.sel = null; AT.auto = 1; atlasRoute();
+    var go = function () { if (UI.map.hidden) return; atlasFrame(); requestAnimationFrame(go); }; requestAnimationFrame(go);
+  }
+  function atlasFrame() {
+    var cv = UI.mapCv, w = cv.clientWidth, hh = cv.clientHeight; if (!w || !hh) return;
+    if (AT.w !== w || AT.h !== hh) { AT.w = w; AT.h = hh; AT.r.setSize(w, hh, false); AT.cam.aspect = w / hh; AT.cam.fov = w / hh < 0.8 ? 62 : 42; AT.cam.updateProjectionMatrix(); }
+    var t = performance.now() / 1000; if (AT.auto) AT.th += 0.0012;
+    var c = AT.cam; c.position.set(Math.cos(AT.th) * Math.cos(AT.ph) * AT.dist, Math.sin(AT.ph) * AT.dist, Math.sin(AT.th) * Math.cos(AT.ph) * AT.dist); c.lookAt(0, -0.4, 0); c.updateMatrixWorld();
+    var to = AT.sel || VY.target;
+    AT.nodes.forEach(function (n, i) {
+      var on = n.s.id === to, here = n.s.id === VY.at, pul = 1 + 0.12 * Math.sin(t * 3 + i);
+      n.glow.scale.setScalar((on ? 0.85 : here ? 0.7 : 0.5) * pul); n.band.material.opacity = on ? 0.42 : 0.14; n.line.material.opacity = on ? 1 : 0.7;
+      if (here) { AT.here.position.copy(n.pos); AT.here.scale.setScalar(1 + 0.25 * Math.sin(t * 3)); }
+      var v = n.pos.clone().project(c), x = (v.x + 1) / 2 * w, y = (1 - v.y) / 2 * hh, lb = AT.labels[i];
+      n.s._xy = [x, y]; lb.style.transform = 'translate(' + x.toFixed(1) + 'px,' + (y + 14).toFixed(1) + 'px) translateX(-50%)'; lb.classList.toggle('on', on); lb.classList.toggle('here', here);
+    });
+    if (AT.curve) AT.flow.forEach(function (f, j) { var k = (t * 0.25 + j / AT.flow.length) % 1; f.position.copy(AT.curve.getPoint(k)); f.material.opacity = Math.sin(k * Math.PI); });
+    AT.r.render(AT.S, c);
   }
   function lay25() {
     if (!R.c25) return; var w = innerWidth, hh = innerHeight, sa = w / hh, port = sa < 0.8, U = R.c25.u;
@@ -942,24 +1192,31 @@
     U.sc.value.set(x0, y0, zx, zy); R.c25.view = [x0, y0, zx, zy];
     var xl = R.c25.xl, H, cx, by;
     if (!port) { H = 0.5; cx = (DISC[0] - x0) / zx; by = (DISC[1] - y0) / zy - 0.035; }
-    else { H = 0.42; cx = 0.62; by = 0.26; }
+    else { H = 0.36; cx = 0.7; by = 0.235; }
     var W = H * XL_ASP / sa; if (W > 0.86) { W = 0.86; H = W * sa / XL_ASP; }
     xl.scale.set(W, H, 1); xl.position.set(cx, by + H / 2, 0); R.c25.xr = [cx - W / 2, by, W, H];
     R.c25.cone.scale.set(W * 0.75, H * 0.28, 1); R.c25.cone.position.set(cx, by + H * 0.05, 0);
+    layGal25(x0, y0, zx, zy); layHub();
   }
   function img2scr(u, v) { var s = R.c25.view; return [(u - s[0]) / s[2], (v - s[1]) / s[3]]; }
   function hit25(e) {
     var sx = e.clientX / innerWidth, sy = 1 - e.clientY / innerHeight, r = R.c25.xr;
+    var pd = img2scr(DISC[0], DISC[1]), s0 = R.c25.view, px = (sx - pd[0]) * s0[2] * 1408 / 95, py = (sy - pd[1]) * s0[3] * 768 / 34; if (px * px + py * py < 1) return 'hub';
     if (sx > r[0] + r[2] * 0.2 && sx < r[0] + r[2] * 0.8 && sy > r[1] + r[3] * 0.12 && sy < r[1] + r[3] * 0.95) return 'xl';
     var t = img2scr(TABLE[0], TABLE[1]), s = R.c25.view, dx = (sx - t[0]) * s[2] * 900 / 112, dy = (sy - t[1]) * s[3] * 491 / 70;
     if (dx * dx + dy * dy < 1) return 'map';
+    var gc = img2scr(GALC[0], GALC[1]), gx = (sx - gc[0]) * s[2] / (GALR * 1.1), gy = (sy - gc[1]) * s[3] * (768 / 1408) / (GALR * 0.6);
+    if (gx * gx + gy * gy < 1) return 'map';
     return null;
   }
   function upd25(dt, t, sx, sy) {
     if (!R.c25) return; var U = R.c25.u, X = R.c25.xu;
     U.t.value = t; U.power.value = R.power || 0; U.shake.value.set(sx * 0.05, sy * 0.05);
     U.mouse.value.x += (R.mouse.x - U.mouse.value.x) * Math.min(1, dt * 4); U.mouse.value.y += (R.mouse.y - U.mouse.value.y) * Math.min(1, dt * 4);
-    X.t.value = t; if (!R.c25.t0) R.c25.t0 = performance.now(); X.fade.value = Math.min(1, (performance.now() - R.c25.t0) / 1200);
+    X.t.value = t; if (!R.board && !R.c25.t0) R.c25.t0 = performance.now(); X.fade.value = R.c25.t0 ? Math.min(1, (performance.now() - R.c25.t0) / 1500) : 0;
+    if (R.gal25) { R.gal25.u.t.value = t; R.gal25.u.fade.value = U.op.value; }
+    updHub(dt);
+    var SU = R.sh25u; SU.t.value = t; SU.mouse.value.copy(U.mouse.value); SU.warp.value += ((FX.eva && FX.eva.warp ? 1 : 0) - SU.warp.value) * Math.min(1, dt * 3);
     // 眨眼(她本是 wink 表情,另一只眼也合上 = 眨眼)
     A.blinkT -= dt; if (A.blinkT < 0) { A.blinkT = 2.6 + Math.random() * 3; A.bl = 0.16; }
     if (A.bl > 0) { A.bl -= dt; X.blink.value = Math.sin(Math.max(0, A.bl) / 0.16 * Math.PI); } else X.blink.value = 0;
@@ -993,10 +1250,15 @@
     R.cabinLight.intensity = 0.8 + (R.power || 0) * 0.6 + (VY.state === 'travel' ? Math.sin(R.t * 30) * 0.05 : 0);
     if ((R.frame = (R.frame || 0) + 1) % 3 === 0) drawScreens();
     if (R.mode25) upd25(dt, R.t, sx, sy); else { updAvatar(dt, R.t); updHolo(dt, R.t); }
-    if (!UI.map.hidden && R.frame % 6 === 0) drawMap();
     // 闲聊
     if (VY.state === 'idle' && UI.map.hidden) { R.idle = (R.idle || 0) + dt; if (R.idle > 28) { R.idle = 0; say(V.lines.idle[(Math.random() * V.lines.idle.length) | 0]); } } else R.idle = 0;
-    var r = R.r; r.clear(); r.render(R.out, R.outCam); if (!R.evaView) { r.clearDepth(); if (R.mode25) r.render(R.s25, R.cam25); else r.render(R.in, R.cam); }
+    var r = R.r; r.clear(); r.render(R.out, R.outCam);
+    if (R.mode25) {
+      r.clearDepth();
+      if (updBoard()) { r.render(R.sh25, R.cam25); r.render(R.s25, R.cam25); }
+      else if (R.evaView) { if (FX.ship) FX.ship.visible = false; var ek = FX.eva ? FX.eva.k : 0, ee = eio(ek); placeShip(1 + 2.4 * (1 - ee), CANOPY, 0, Math.min(1, ek * 3)); r.render(R.sh25, R.cam25); }
+      else r.render(R.s25, R.cam25);
+    } else if (!R.evaView) { r.clearDepth(); r.render(R.in, R.cam); }
   }
 
   /* ============================ 进入 / 退出 ============================ */
@@ -1020,12 +1282,13 @@
         UI.load.classList.add('out'); setTimeout(function () { UI.load.hidden = true; }, 600);
         A.waveT = 1.6;
         var first = !ST.met; ST.met = 1; save(ST);
-        (first ? sayList(V.lines.hello) : say(V.lines.back[0])).then(function () { return say(['neutral', '点击「航图」选择目的地,或者直接点左边的引擎看看。'], {}, [{ label: '打开航图', value: 'map' }]); }).then(function (v) { if (v === 'map') openMap(); });
+        (first ? sayList(V.lines.hello) : say(V.lines.back[0])).then(function () { return say(['neutral', '中间那团星系就是航图,点它选目的地;我面前的指令台能选引擎、出舱观景和返航。'], {}, [{ label: '打开航图', value: 'map' }]); }).then(function (v) { if (v === 'map') openMap(); });
       });
-    } else { R.clock.getDelta(); loop(); say(V.lines.back[0]); }
+    } else { R.clock.getDelta(); loop(); (R.mode25 ? board() : Promise.resolve()).then(function () { say(V.lines.back[0]); }); }
     fade(1); setTimeout(function () { fade(0); }, 60);
   };
   SH.voyExit = function () {
+    closeHub(true);
     if (!VY.active) return;
     if (VY.state === 'travel') return;
     if (R.evaView || (FX.eva && FX.eva.on)) evaOut(true);
@@ -1037,9 +1300,7 @@
   function addEntry() {
     var nav = document.querySelector('.le-actions'); if (!nav || document.querySelector('.sh-btn-voy')) return;
     var b = h('button', 'le-btn le-btn--hero sh-btn-voy', '<span class="le-btn__ico">🚀</span><span class="le-btn__txt">航行<small>VOYAGE</small></span>'); b.type = 'button';
-    b.addEventListener('click', SH.voyEnter); var bm = nav.querySelector('.sh-btn-map'); nav.insertBefore(b, bm ? bm.nextSibling : null);
-    var mb = document.querySelector('#sh-map .sh-map__bar');   // M1 航图里也能直接登舰
-    if (mb) { var g = h('button', 'le-btn le-btn--sm sh-map__voy', '🚀 登舰航行'); g.type = 'button'; g.addEventListener('click', function () { document.getElementById('sh-map').hidden = true; SH.voyEnter(); }); mb.insertBefore(g, mb.lastElementChild); }
+    b.addEventListener('click', SH.voyEnter); var bq = nav.querySelector('.sh-btn-quest'); nav.insertBefore(b, bq ? bq.nextSibling : null);
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && VY.active) { if (UI.map && !UI.map.hidden) UI.map.hidden = true; else SH.voyExit(); } });
   }
   (function wait2(n) { if (document.querySelector('.sh-btn-quest')) return addEntry(); if (n > 600) return; setTimeout(function () { wait2(n + 1); }, 100); })(0);
