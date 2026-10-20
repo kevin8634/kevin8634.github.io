@@ -869,7 +869,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.6.8.1</b></span>
+            <span>创世计划总门户 <b>v0.6.9</b></span>
           </footer>
         </div>
       </div>
@@ -2004,6 +2004,25 @@
         GL.dust = new T.Group(); GL.dust.add(dust); GL.scene.add(GL.dust);
         GL.rivM = [mr, md];
       }
+      function glWarp(k, dx, dy) {
+        var T = THREE;
+        if (!GL.wp) {
+          var n = GL.mob ? 80 : 170, geo = new T.BufferGeometry();
+          geo.setAttribute("position", new T.BufferAttribute(new Float32Array(n * 6), 3));
+          GL.wp = new T.LineSegments(geo, new T.LineBasicMaterial({ color: 0xd6e8ff, transparent: true, opacity: 0, blending: T.AdditiveBlending, depthTest: false, depthWrite: false }));
+          GL.wp.renderOrder = 9; GL.wp.frustumCulled = false; GL.wpS = [];
+          for (var i = 0; i < n; i++) GL.wpS.push({ x: Math.random(), y: Math.random(), s: 0.4 + Math.random() });
+          GL.scene.add(GL.wp);
+        }
+        GL.wp.visible = k > 0.01; if (!GL.wp.visible) return;
+        var a = GL.wp.geometry.attributes.position.array, L = Math.min(W, H) * 0.32 * k;
+        GL.wpS.forEach(function (p, i) {
+          p.x = (p.x - dx * 0.03 * p.s * k + 1) % 1; p.y = (p.y - dy * 0.03 * p.s * k + 1) % 1;
+          var x = p.x * W, y = p.y * H;
+          a[i * 6] = x; a[i * 6 + 1] = -y; a[i * 6 + 2] = 0; a[i * 6 + 3] = x + dx * L * p.s; a[i * 6 + 4] = -(y + dy * L * p.s); a[i * 6 + 5] = 0;
+        });
+        GL.wp.geometry.attributes.position.needsUpdate = true; GL.wp.material.opacity = 0.7 * k;
+      }
       function glRender(now, z, port, spinT, M) {
         var t = RM ? 0 : now, pr = GL.pr, ang = port ? -1.15 : -0.32, rs = z * 0.4 + 0.6;
         GL.bg.material.uniforms.uTime.value = t; GL.bg.material.uniforms.uPix.value = pr;
@@ -2020,6 +2039,7 @@
           G.pm[0].uniforms.uAlpha.value = al * 0.95; G.pm[1].uniforms.uAlpha.value = al * 0.85;
           G.pm[0].uniforms.uTime.value = t; G.pm[1].uniforms.uTime.value = t;
         }
+        glWarp(BR.wk || 0, BR.wdx || 0, BR.wdy || 0);
         GL.r.render(GL.scene, GL.cam);
       }
       function buildWorlds() {
@@ -2063,9 +2083,36 @@
         });
         return { w: wm, b: bm };
       }
+      function wEase(x) { x = Math.max(0, Math.min(1, x)); return x * x * (3 - 2 * x); }
+      function warpView(F, p) {
+        var A = F.A, B = F.B, u = wEase((p - 0.14) / 0.68), cx = (A.x + B.x) / 2 + F.nx, cy = (A.y + B.y) / 2 + F.ny,
+          px = (1 - u) * (1 - u) * A.x + 2 * u * (1 - u) * cx + u * u * B.x, py = (1 - u) * (1 - u) * A.y + 2 * u * (1 - u) * cy + u * u * B.y,
+          z = p < 0.2 ? 1.25 - 0.5 * wEase(p / 0.2) : p < 0.78 ? 0.75 : 0.75 + 0.95 * wEase((p - 0.78) / 0.22);
+        BR.zoom = z; BR.tx = -(px - W / 2) * z; BR.ty = -(py - H / 2) * z;
+        BR.wk = Math.sin(Math.PI * Math.max(0, Math.min(1, (p - 0.12) / 0.74)));
+        var dx = 2 * (1 - u) * (cx - A.x) + 2 * u * (B.x - cx), dy = 2 * (1 - u) * (cy - A.y) + 2 * u * (B.y - cy), dl = Math.hypot(dx, dy) || 1;
+        BR.wdx = dx / dl; BR.wdy = dy / dl;
+      }
+      function warpStart(i, now) {
+        var b = BRIDGES[i], A = BR.worlds[b.a.w], B = BR.worlds[b.b.w];
+        if (!A || !B || A.bx == null || B.bx == null) { BR.pin = i; return; }
+        var ax = A.bx, ay = A.by, bx = B.bx, by = B.by, dl = Math.hypot(bx - ax, by - ay) || 1;
+        BR.warp = { i: i, t0: now, dur: 2500, A: { x: ax, y: ay }, B: { x: bx, y: by }, nx: (by - ay) / dl * -0.18 * dl, ny: (ax - bx) / dl * -0.18 * dl - 0.12 * dl };
+        BR.pin = -1; BR.hover = -1; BR.anim = null; BR.vx = BR.vy = 0; brCard(-1);
+        BR.el.classList.add("warping"); try { SND.play("bridge-open"); } catch (e) {}
+      }
+      window.__brMid = function (i) { var b = BRIDGES[i]; if (!b || !b.s) return null; var q = bez(b.s[0], b.s[1], b.s[2], 0.5); return [q.x, q.y]; };
+      window.__brState = function () { return { warp: !!BR.warp, pin: BR.pin, card: BR.card.classList.contains("on") }; };
+      function warpEnd() {
+        var F = BR.warp; if (!F) return;
+        warpView(F, 1); BR.warp = null; BR.wk = 0; BR.pin = F.i; BR.el.classList.remove("warping");
+      }
       function brDraw(now) {
         if (!BR.open) return;
-        if (BR.anim) {
+        if (BR.warp) {
+          var wp = (now - BR.warp.t0) / BR.warp.dur;
+          if (wp >= 1) warpEnd(); else warpView(BR.warp, Math.max(0, wp));
+        } else if (BR.anim) {
           var A0 = BR.anim; BR.zoom += (A0.zoom - BR.zoom) * 0.16; BR.tx += (A0.tx - BR.tx) * 0.16; BR.ty += (A0.ty - BR.ty) * 0.16;
           if (Math.abs(A0.zoom - BR.zoom) < 0.002 && Math.abs(A0.tx - BR.tx) < 0.5 && Math.abs(A0.ty - BR.ty) < 0.5) { BR.zoom = A0.zoom; BR.tx = A0.tx; BR.ty = A0.ty; BR.anim = null; }
         } else if (!BR.drag && !BR.pinch) {
@@ -2088,12 +2135,13 @@
           });
           g.restore(); g.globalCompositeOperation = "source-over"; g.globalAlpha = 1;
         }
-        var R0 = Math.min(W, H) * 0.145 * z, M = brMatch(), act = BR.pin > -1 ? BR.pin : BR.hover;
+        var R0 = Math.min(W, H) * 0.145 * z, M = brMatch(), act = BR.warp ? BR.warp.i : BR.pin > -1 ? BR.pin : BR.hover;
         for (id in BR.worlds) {
           w = BR.worlds[id];
           var nx = port ? w.n[1] : w.n[0], ny = port ? w.n[0] : w.n[1];
           var x = nx * W, y = (0.04 + ny * 0.96) * H;
           if (!RM) { var ph = now / 300000 * 6.283 + w.ph; x += Math.cos(ph) * W * 0.012; y += Math.sin(ph) * H * 0.012; }
+          w.bx = x; w.by = y;
           w.sc = { x: W / 2 + (x - W / 2) * z + BR.tx, y: H / 2 + (y - H / 2) * z + BR.ty };
           w.R = R0 * w.big;
         }
@@ -2158,7 +2206,22 @@
           g.globalAlpha = 0.75 * dimK; g.font = "400 12px " + BR_FONT; g.fillText(w.en + (w.live ? "" : " · Awakening Soon"), p.x, ty + 17);
         }
         g.shadowBlur = 0; g.globalAlpha = 1;
-        if (act !== BR.shown) brCard(act);
+        if (BR.warp) {   // 曲速光束：沿桥拉伸
+          var wb = BRIDGES[BR.warp.i], wk = BR.wk || 0;
+          if (wb && wb.s) {
+            var WA = BR.worlds[wb.a.w], WB = BR.worlds[wb.b.w], gr = g.createLinearGradient(wb.s[0].x, wb.s[0].y, wb.s[2].x, wb.s[2].y);
+            gr.addColorStop(0, WA.color); gr.addColorStop(1, WB.color);
+            g.globalCompositeOperation = "lighter"; g.strokeStyle = gr; g.lineCap = "round";
+            [[14, 0.12], [6, 0.35], [2.2, 0.95]].forEach(function (L) {
+              g.globalAlpha = L[1] * (0.35 + wk); g.lineWidth = L[0] * (0.6 + wk * 1.4);
+              g.beginPath(); g.moveTo(wb.s[0].x, wb.s[0].y); g.quadraticCurveTo(wb.s[1].x, wb.s[1].y, wb.s[2].x, wb.s[2].y); g.stroke();
+            });
+            g.globalCompositeOperation = "source-over";
+          }
+          g.globalAlpha = 0.7; g.fillStyle = "#cfd8ea"; g.font = "400 12px " + BR_FONT; g.textAlign = "center";
+          g.fillText("曲速折跃中 · 点击任意处或按 Esc 跳过", W / 2, H - 28); g.globalAlpha = 1;
+        }
+        if (act !== BR.shown && !BR.warp) brCard(act);
         BR.raf = requestAnimationFrame(brDraw);
       }
       function brHit(x, y) {
@@ -2194,6 +2257,7 @@
         BR.card.classList.add("on");
       }
       BR.cv.addEventListener("pointerdown", function (e) {
+        if (BR.warp) { warpEnd(); e.preventDefault(); return; }
         BR.cv.setPointerCapture(e.pointerId); BR.ptrs[e.pointerId] = { x: e.clientX, y: e.clientY };
         var ids = Object.keys(BR.ptrs);
         BR.anim = null; BR.vx = BR.vy = 0;
@@ -2227,7 +2291,10 @@
         var d = BR.drag; delete BR.ptrs[e.pointerId];
         if (Object.keys(BR.ptrs).length < 2) { if (BR.pinch) { BR.vx = BR.vy = 0; } BR.pinch = null; }
         if (d && d.t && performance.now() - d.t > 90) { BR.vx = BR.vy = 0; }
-        if (d && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 6) { BR.pin = brHit(e.clientX, e.clientY); BR.vx = BR.vy = 0; }
+        if (d && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 6) {
+          var hh = brHit(e.clientX, e.clientY); BR.vx = BR.vy = 0;
+          if (hh > -1 && hh !== BR.pin && !RM && !BR.noWarp) warpStart(hh, performance.now()); else BR.pin = hh;
+        }
         BR.drag = null;
       }
       BR.cv.addEventListener("pointerup", brUp);
@@ -2243,7 +2310,8 @@
       });
       document.getElementById("brSearch").addEventListener("input", function (e) { BR.q = e.target.value.trim().toLowerCase(); });
       BR.card.addEventListener("pointerenter", function () { clearTimeout(BR.hideT); if (BR.pin < 0) BR.pin = BR.hover; });
-      document.getElementById("brBack").addEventListener("click", hideBridges);
+      document.getElementById("brBack").addEventListener("click", function () { warpEnd(); hideBridges(); });
+      addEventListener("keydown", function (e) { if (BR.warp && e.key === "Escape") { warpEnd(); e.stopImmediatePropagation(); e.preventDefault(); } }, true);
       addEventListener("resize", function () { if (BR.open) brResize(); });
 
       function showBridges() {
@@ -2299,6 +2367,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.6.9", d: "2026-10-20", t: "星桥穿越过场：点一座星桥，镜头离开起点星系，沿桥曲速折跃到目标星系并推近，约 2.5 秒，点任意处或 Esc 跳过；减少动态效果时直接显示。" },
         { w: "gn", v: "v0.6.8.1", d: "2026-10-20", t: "星桥七星系辨识度回归概念 L：星系图层 + 加强主题特效（奇点前夜电路脉冲、觉弈金莲、生命源码双螺旋、宙律磁力线、元素工坊晶格），星河尘带更浓。" },
         { w: "06", v: "v0.17–v0.19", d: "2026-10-20", t: "星盘迁至本地 Three.js；星闪加密、金属反射与鎏金流动；新增音乐播放条。" },
         { w: "gn", v: "v0.6.8", d: "2026-10-20", t: "「展开星桥」改用 Three.js / WebGL 渲染：七星系成为可倾斜自转的三维粒子星系，星河洋流粒子流动更细腻；设备不支持时自动退回原版。" },
