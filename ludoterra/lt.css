@@ -38,3 +38,16 @@ button{font-family:inherit}
 /* 矮横屏(如 568×320):关卡页收紧顶部留白 */
 @media (max-height:480px){body main{padding-top:56px}main .steps{margin-bottom:6px}main h1{font-size:20px}main .card{padding:14px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* v0.11 点亮仪式 */
+.lt-hud .row.flip{animation:ltFlip .9s cubic-bezier(.2,.8,.3,1.2) both}
+.lt-hud .row.flip .bar i{animation:ltFill 1.4s .3s ease-out both}
+@keyframes ltFlip{0%{transform:rotateX(90deg);opacity:0}60%{transform:rotateX(-12deg);opacity:1}100%{transform:none}}
+@keyframes ltFill{from{width:0}}
+.lt-hud .row.flip .n{color:var(--gold)}
+.lt-lightup{position:fixed;left:50%;top:21%;padding:10px 26px 12px;border-radius:18px;background:radial-gradient(ellipse at center,rgba(10,11,30,.82) 40%,rgba(10,11,30,0) 75%);transform:translate(-50%,8px);z-index:40;pointer-events:none;text-align:center;opacity:0;transition:opacity .6s,transform .6s}
+.lt-lightup.on{opacity:1;transform:translate(-50%,0)}
+.lt-lightup small{display:block;font-size:12px;letter-spacing:4px;color:var(--gold);margin-bottom:4px}
+.lt-lightup b{font-size:clamp(20px,3.2vw,30px);font-weight:600;color:#fff3d6;text-shadow:0 0 18px rgba(245,194,107,.8)}
+.lt-lightup em{display:block;font-style:normal;font-size:13px;color:var(--mute);margin-top:6px}
+@media (prefers-reduced-motion:reduce){.lt-hud .row.flip,.lt-hud .row.flip .bar i{animation:none}.lt-lightup{transition:none}}
