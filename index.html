@@ -867,7 +867,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.6.4</b></span>
+            <span>创世计划总门户 <b>v0.6.5</b></span>
           </footer>
         </div>
       </div>
@@ -2037,6 +2037,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.6.5", d: "2026-10-20", t: "「帮我选一颗星」打开后停在顶部，直接看到星盘。" },
         { w: "gn", v: "v0.6.4", d: "2026-10-20", t: "「联系开发者」移到首页标题上方并放大头像，完整呈现发型与脸部。" },
         { w: "06", v: "v0.12", d: "2026-10-20", t: "星盘可读性提升（标签随深度缩放、悬停显示核心问题）；「星之音」播放器上线，首批三首真实乐器曲目。" },
         { w: "gn", v: "v0.6.3", d: "2026-10-20", t: "新增「联系开发者」：首页页脚头像入口与关于弹层名片，微信号一键复制，添加请注明来意。" },
@@ -2764,7 +2765,7 @@
       }
       document.getElementById("guideBtn").addEventListener("click", function () {
         var b = this; showAbout(0); if (!AB.open) return; AB.prev = b;
-        setTimeout(function () { GD.el.scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" }); (document.querySelector('#gdAge input:checked') || document.querySelector('#gdAge input')).focus({ preventScroll: true }); }, RM ? 0 : 300);
+        setTimeout(function () { AB.el.querySelector(".x-ab__in").scrollTop = 0; (document.querySelector('#gdAge input:checked') || document.querySelector('#gdAge input')).focus({ preventScroll: true }); }, RM ? 0 : 300);
       });
       // 首屏「了解更多 →」
       var PITCH_K = "gn:portal:_about";
