@@ -869,7 +869,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.6.9</b></span>
+            <span>创世计划总门户 <b>v0.7.0</b></span>
           </footer>
         </div>
       </div>
@@ -1305,6 +1305,63 @@
       /* ---------- 绘制 ---------- */
       var selected = null, hovered = null, t0 = performance.now();
 
+      // v0.7.0 首屏三维星场（Three.js，本地 vendor/；无 WebGL 时保留 Canvas 2D 背景）
+      var SK = { on: false, tried: false };
+      var SK_V = "attribute float size; attribute float ph; attribute vec3 color; uniform float uTime, uPix; varying vec3 vC;" +
+        "void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = clamp(size * uPix * (38.0 / -mv.z), 0.8, 220.0);" +
+        "vC = color * (0.72 + 0.28 * sin(uTime * 0.0009 + ph)); gl_Position = projectionMatrix * mv; }";
+      var SK_F = "uniform float uFade; varying vec3 vC; void main(){ float d = length(gl_PointCoord - 0.5); float a = smoothstep(0.5, 0.0, d); a *= a; gl_FragColor = vec4(vC * a * uFade, 1.0); }";
+      function skLoad() {
+        if (SK.tried) return; SK.tried = true;
+        try { var t = document.createElement("canvas"); if (!(t.getContext("webgl2") || t.getContext("webgl"))) return; } catch (e) { return; }
+        if (window.THREE) { try { skInit(); } catch (e) { SK.on = false; } return; }
+        var sc = document.createElement("script"); sc.src = "vendor/three.min.js";
+        sc.onload = function () { try { skInit(); } catch (e) { SK.on = false; if (SK.c) SK.c.style.display = "none"; } };
+        document.head.appendChild(sc);
+      }
+      function skInit() {
+        var T = THREE, c = document.createElement("canvas"), mob = Math.min(innerWidth, innerHeight) < 600;
+        c.id = "skyGL"; c.setAttribute("aria-hidden", "true"); c.style.pointerEvents = "none"; cv.parentNode.insertBefore(c, cv);
+        var r = new T.WebGLRenderer({ canvas: c, antialias: false, alpha: false, powerPreference: "low-power" });
+        var pr = Math.min(devicePixelRatio || 1, mob ? 1.5 : 2); r.setPixelRatio(pr); r.setClearColor(0x04060f, 1);
+        var scn = new T.Scene(), cam = new T.PerspectiveCamera(62, 1, 0.1, 200), grp = new T.Group(); scn.add(grp);
+        function gauss() { return (Math.random() + Math.random() + Math.random() - 1.5) / 1.5; }
+        function cloud(N, band, big) {
+          var pos = new Float32Array(N * 3), col = new Float32Array(N * 3), siz = new Float32Array(N), ph = new Float32Array(N);
+          for (var i = 0; i < N; i++) {
+            var u = Math.random() * 6.283, v = band ? gauss() * (big ? 0.16 : 0.22) : Math.asin(Math.random() * 2 - 1), rr = big ? 70 : 18 + Math.random() * 70;
+            var x = Math.cos(v) * Math.cos(u), y = Math.sin(v), z = Math.cos(v) * Math.sin(u);
+            var yy = y * 0.9 + x * 0.44, xx = x * 0.9 - y * 0.44;   // 银河带倾斜
+            pos[i * 3] = xx * rr; pos[i * 3 + 1] = yy * rr; pos[i * 3 + 2] = z * rr;
+            var k = Math.random(), cc = big ? (k < 0.5 ? [0.05, 0.06, 0.12] : k < 0.8 ? [0.08, 0.05, 0.11] : [0.1, 0.075, 0.05])
+              : k < 0.14 ? [0.91, 0.78, 0.47] : k < 0.3 ? [0.7, 0.8, 1] : [0.87, 0.9, 0.95];
+            var b = big ? 1 : 0.45 + Math.random() * 0.55;
+            col[i * 3] = cc[0] * b; col[i * 3 + 1] = cc[1] * b; col[i * 3 + 2] = cc[2] * b;
+            siz[i] = big ? 90 + Math.random() * 140 : 1.1 + Math.pow(Math.random(), 7) * 5;
+            ph[i] = Math.random() * 6.283;
+          }
+          var geo = new T.BufferGeometry();
+          geo.setAttribute("position", new T.BufferAttribute(pos, 3)); geo.setAttribute("color", new T.BufferAttribute(col, 3));
+          geo.setAttribute("size", new T.BufferAttribute(siz, 1)); geo.setAttribute("ph", new T.BufferAttribute(ph, 1));
+          var m = new T.ShaderMaterial({ uniforms: { uTime: { value: 0 }, uPix: { value: pr }, uFade: { value: 0 } }, vertexShader: SK_V, fragmentShader: SK_F,
+            transparent: true, depthWrite: false, depthTest: false, blending: T.AdditiveBlending });
+          var p = new T.Points(geo, m); p.frustumCulled = false; grp.add(p); return m;
+        }
+        var mats = [cloud(mob ? 110 : 220, true, true), cloud(mob ? 1600 : 3600, false, false), cloud(mob ? 900 : 2000, true, false)];
+        SK = { on: true, tried: true, r: r, scn: scn, cam: cam, grp: grp, c: c, mats: mats, w: 0, h: 0, m4: new T.Matrix4(), q: new T.Quaternion() };
+        window.__skyGL = function () { return SK.on; };
+      }
+      function skFrame(now) {
+        if (W !== SK.w || H !== SK.h) { SK.w = W; SK.h = H; SK.r.setSize(W, H, false); SK.cam.aspect = W / H; SK.cam.updateProjectionMatrix(); }
+        var m = qMat(V3.q);
+        SK.m4.set(m[0], m[3], m[6], 0, m[1], m[4], m[7], 0, m[2], m[5], m[8], 0, 0, 0, 0, 1);
+        SK.grp.quaternion.setFromRotationMatrix(SK.m4);
+        if (!RM) SK.grp.rotateY(now * 0.0000035);
+        SK.cam.position.set(-px * 0.05, py * 0.05, 0);
+        var f = intro.done ? 1 : Math.min(1, intro.t / 0.6);
+        SK.mats.forEach(function (mt) { mt.uniforms.uTime.value = RM ? 0 : now; mt.uniforms.uFade.value = f; });
+        SK.r.render(SK.scn, SK.cam);
+      }
       function draw(now) {
         // v0.3 修复：rAF 时间戳可能早于脚本里的 t0，dt 为负会让开场进度为负、光核半径为负而报错（减少动态模式下必现概率高）
         var dt = Math.max(0, (now - t0) / 1000); t0 = now;
@@ -1320,12 +1377,15 @@
         if (V3.off || V3.anim) { var mq = qMat(V3.q); bgx = mq[2] * W * 0.25; bgy = -mq[5] * H * 0.25; }
 
         // 背景
+        if (SK.on) { ctx.clearRect(0, 0, W, H); skFrame(now); }
+        else {
         var g = ctx.createRadialGradient(W * 0.5, H * 0.45, 0, W * 0.5, H * 0.45, Math.max(W, H) * 0.8);
         g.addColorStop(0, "#0a1030"); g.addColorStop(1, "#04060f");
         ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        }
 
-        // 星空
-        for (var L = 0; L < layers.length; L++) {
+        // 星空（WebGL 星场开启后由三维星场取代）
+        for (var L = 0; L < (SK.on ? 0 : layers.length); L++) {
           var k = (L + 1) / 3, arr = layers[L];
           for (var i = 0; i < arr.length; i++) {
             var s = arr[i];
@@ -1623,6 +1683,7 @@
       /* ---------- UI ---------- */
       var ui = document.getElementById("ui"), skipHint = document.getElementById("skipHint");
       function revealUI() {
+        setTimeout(skLoad, 200);
         ui.hidden = false;
         requestAnimationFrame(resize);
         ui.animate ? ui.animate([{ opacity: 0 }, { opacity: 1 }], { duration: RM ? 1 : 900, easing: "ease-out" }) : null;
@@ -2367,6 +2428,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.7.0", d: "2026-10-20", t: "首屏星空迁移 Three.js：三维纵深星场与银河光带，随北斗旋转同步转动并带视差景深；不支持 WebGL 时保留原版。" },
         { w: "gn", v: "v0.6.9", d: "2026-10-20", t: "星桥穿越过场：点一座星桥，镜头离开起点星系，沿桥曲速折跃到目标星系并推近，约 2.5 秒，点任意处或 Esc 跳过；减少动态效果时直接显示。" },
         { w: "gn", v: "v0.6.8.1", d: "2026-10-20", t: "星桥七星系辨识度回归概念 L：星系图层 + 加强主题特效（奇点前夜电路脉冲、觉弈金莲、生命源码双螺旋、宙律磁力线、元素工坊晶格），星河尘带更浓。" },
         { w: "06", v: "v0.17–v0.19", d: "2026-10-20", t: "星盘迁至本地 Three.js；星闪加密、金属反射与鎏金流动；新增音乐播放条。" },
