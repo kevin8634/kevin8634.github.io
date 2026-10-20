@@ -641,6 +641,9 @@
         * { transition-duration: .01ms !important; }
         .x-dot { animation: none; }
       }
+          .x-fs { background: none; border: 0; padding: 0 0 0 12px; font: inherit; color: rgba(233,199,121,.8); cursor: pointer; }
+      .x-fs:hover, .x-fs:focus-visible { color: #e9c779; text-decoration: underline; }
+      .x-fs kbd { font: inherit; border: 1px solid rgba(233,199,121,.5); border-radius: 4px; padding: 0 4px; }
     </style>
   </head>
   <body>
@@ -693,6 +696,7 @@
 
       <div class="foot">
         <span>免费 · 无需注册 · 进度只保存在你的设备上</span>
+        <button type="button" id="fsTip" class="x-fs" hidden>⛶ 按 <kbd>F11</kbd> 全屏，体验更好</button>
         <button id="lawBtn">创世七律</button>
       </div>
       <div class="x-3d" id="v3Box">
@@ -869,7 +873,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.7.0.1</b></span>
+            <span>创世计划总门户 <b>v0.7.0.2</b></span>
           </footer>
         </div>
       </div>
@@ -3282,5 +3286,16 @@
       if (demo) document.getElementById("demoTag").classList.add("on");
       requestAnimationFrame(draw);
     </script>
-  </body>
+  <script>
+  (function () { // v0.7.0.2 全屏提示：仅桌面（精确指针、宽≥1000、高≥600），全屏时隐藏，点击可直接全屏
+    var b = document.getElementById("fsTip"); if (!b) return;
+    var mac = /Mac/.test(navigator.platform || "");
+    if (mac) b.innerHTML = "⛶ 按 <kbd>⌃⌘F</kbd> 全屏，体验更好";
+    function full() { return !!document.fullscreenElement || (innerHeight >= screen.height - 2 && innerWidth >= screen.width - 2); }
+    function upd() { b.hidden = !(matchMedia("(pointer:fine)").matches && innerWidth >= 1000 && innerHeight >= 600) || full(); }
+    b.addEventListener("click", function () { var e = document.documentElement; if (e.requestFullscreen) e.requestFullscreen().catch(function () {}); });
+    addEventListener("resize", upd); document.addEventListener("fullscreenchange", upd); upd();
+  })();
+</script>
+</body>
 </html>
