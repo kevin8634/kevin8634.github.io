@@ -66,3 +66,12 @@ body.diving #hero,body.diving #rec,body.diving #side,body.diving #dock,body.divi
 @keyframes ltPulse{50%{box-shadow:0 0 14px rgba(245,194,107,.55)}}
 @media (prefers-reduced-motion:reduce){::view-transition-old(root),::view-transition-new(root){animation:none}#disc.dive,#disc.back{transition:none;animation:none}}
 @media (max-width:640px){.lt-lvm{font-size:0!important;gap:0}.lt-lvm::before{content:'♪';font-size:14px}}
+
+/* v0.14 面板:磨砂玻璃 + 细金切角框线(与门户 v0.6.2 统一) */
+.lt-panel{background:linear-gradient(160deg,rgba(28,30,72,.62),rgba(10,11,30,.58));border:1px solid rgba(245,194,107,.22);position:relative}
+.lt-panel::before{content:'';position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;
+ background:linear-gradient(#f5c26b,#f5c26b) left top/14px 1px,linear-gradient(#f5c26b,#f5c26b) left top/1px 14px,
+ linear-gradient(#f5c26b,#f5c26b) right top/14px 1px,linear-gradient(#f5c26b,#f5c26b) right top/1px 14px,
+ linear-gradient(#f5c26b,#f5c26b) left bottom/14px 1px,linear-gradient(#f5c26b,#f5c26b) left bottom/1px 14px,
+ linear-gradient(#f5c26b,#f5c26b) right bottom/14px 1px,linear-gradient(#f5c26b,#f5c26b) right bottom/1px 14px;background-repeat:no-repeat;opacity:.75;border-radius:16px}
+.lt-hud.lt-panel{position:fixed}
