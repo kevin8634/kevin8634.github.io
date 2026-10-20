@@ -52,3 +52,20 @@
 - ck25.webp 挖掉概念图静态星系(原图备份 /workspace/work/p25/ck25_orig.webp),buildGal25:16000 粒子双旋臂+核球+鎏金/粉色光点,差速自转,星图台升起 300 颗全息光尘;全息标签 .voy-holotag「航图 · ATLAS · 点击星图选择目的地」;点星系或星图台都打开航图;顶部「航图」按钮隐藏。
 - 母港:sh-core 不再插入 ATLAS 按钮,SH.openMap 改为直接登舰;旧 #sh-map 页保留但无入口,收尾时删除。
 - 概念图(待王磊选):design/m17/hub_console_concept(统一指令台:引擎 / 舷窗观景 / 返回母港 三块全息屏)、design/m17/atlas_concept(航图:对数尺度七星域同心环 + 航线 + 信息面板)。
+
+## v0.4.3 上线(2026-10-21 01:25 北京时间,王磊 00:19 授权「做完直接上线」)
+- 指令台:点星璃面前的全息圆盘(或「指令台」全息标签)→ 驾驶舱向圆盘推进 → 淡入指令台近景 hub25.webp(design/m17/hub_console_concept)→ 三块全息屏:引擎转盘(10 台,三色可信度,适合本航线的会发光)/ 舷窗观景(出舱看弦穹号)/ 返回母港。左侧引擎列表、顶部「返回母港」「舱外观景」按钮取消(?ck=3d 旧版保留)。选好航线目标后自动进入指令台;选引擎后自动回驾驶座继续「先猜」流程。竖屏改为纵向排列可滚动。
+- 航图:canvas 2D 改为 Three.js 全息沙盘(design/m17/atlas_concept):地球居中,七星域+猜想外圈为对数尺度同心环(已测绘实线,未测绘/猜想虚线),节点光点+中文标签、当前位置白环、选中节点金色光柱+航线弧+流动光点;拖动旋转、滚轮/双指缩放、慢速自转;右下角信息卡。
+- 竖屏星璃缩小靠右,不再挡住星图。
+- 推送 10 个文件(sh-voyage.js/css、sh-core.js、sw.js、ck25.webp、ship25.webp、ship25a.jpg、hub25.webp、docs×2),线上 HTTP 200,sw sh-v0.4.3。index.html 与线上一致未推。
+
+## v0.4.4 本地(2026-10-21 01:00,未上线,待验收)
+- 星璃与初音拉开差别:双马尾青色挑染改「薰衣草紫→玫瑰粉」粉彩渐变,睁开的那只眼改鎏金瞳(docs/build_xl_recolor.py,原图备份 /workspace/work/p25/xl25_orig.webp)。
+- 嘴型:着色器以嘴为中心纵向拉伸+口内压暗,说话时按两路正弦开合(uniform mo/mop;?mo=1 冻结张嘴调试)。
+- 删除母港旧航图 #sh-map(sh-core.js buildMap/drawMap/mapTap/openMapOld 及 sh-style.css .sh-map 规则)。
+- sw sh-v0.4.4。竖屏专用舱景留到下一版(需新画竖版概念图)。
+
+## v0.4.5 本地(2026-10-21 01:20,未上线,待验收)
+- 王磊 10-21:手机不做竖屏专用开发 → 飞船模式手机竖屏(portrait 且宽 ≤820px)显示「请把手机横过来」遮罩,可点「仍然竖屏继续」。
+- 删除旧 3D 驾驶舱 buildCockpit/drawScreens 与 VRM 星璃(loadAvatar/pose/updAvatar 等),每帧不再渲染隐藏的 3D 舱;?ck=3d 回退取消;index.html 不再加载 three-vrm.min.js(sw 预缓存表同步移除)。sh-voyage.js 1308→约 930 行。
+- sw sh-v0.4.5。测试:桌面「打开航图→选月球→设为目标→自动进指令台→选引擎→回舱猜时间」全程无 page error;手机 390×800 竖屏提示正常。
