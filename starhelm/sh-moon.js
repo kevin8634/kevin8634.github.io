@@ -25,7 +25,7 @@
     { kind: 'drag', q: '现在把月亮拖到「满月」的位置,然后按「就是这里」。',
       check: function (a) { return a >= 168 && a <= 192; },
       hint: ['满月 = 从地球上能看到整个亮面。', '亮面朝着太阳。地球要站在哪里,才能正对着整个亮面?', '满月时太阳、地球、月亮几乎排成一条线,月亮在太阳的正对面,也就是左边。'],
-      good: '找到了!满月时月亮和太阳隔着地球相对。不过它们通常不完全在一条线上,所以不是每个满月都有月食。为什么?下一站「日月食」揭晓。' },
+      good: '找到了!满月时月亮和太阳隔着地球相对。不过它们通常不完全在一条线上,所以不是每个满月都有月食。为什么?「日月食实验室」揭晓。' },
     { kind: 'choice', q: '上弦月时,月亮在天上比太阳偏东大约 90°。它大约几点升到正南方最高处?',
       ch: ['中午 12 点', '傍晚 6 点', '半夜 12 点', '清晨 6 点'], ok: 1,
       hint: ['太阳升到正南方,是中午 12 点。', '地球自转一圈 24 小时,也就是 360°。月亮比太阳晚 90°,要晚几小时才转到正南?', '360° 对应 24 小时,90° 就是 6 小时。12 点再加 6 小时呢?'],
@@ -139,7 +139,9 @@
   function stars() { var n = ST.stars.reduce(function (s, x) { return s + x; }, 0); U.st.textContent = '★ ' + n + ' / 9'; }
   function showQ() {
     stars(); L.hints = 0; U.hs.textContent = ''; U.ch.innerHTML = ''; U.hint.hidden = false;
-    if (L.q >= QS.length) { U.q.innerHTML = '<b>月相三关完成!</b>下一站:日食与月食(即将开放)。可以继续拖动月亮自由探索。'; U.hint.hidden = true; return; }
+    if (L.q >= QS.length) { U.q.innerHTML = '<b>月相三关完成!</b>下一站:日食与月食。也可以继续拖动月亮自由探索。'; U.hint.hidden = true;
+      if (SH.eclipseLab) { var go = h('button', 'ml-c ml-c--go', '🌑 去日月食实验室'); go.type = 'button'; go.onclick = function () { close(); SH.eclipseLab.open(); }; U.ch.appendChild(go); }
+      return; }
     var Q = QS[L.q]; U.q.innerHTML = '<small>第 ' + (L.q + 1) + ' / 3 关</small>' + Q.q;
     if (Q.kind === 'choice') Q.ch.forEach(function (t, i) { var b = h('button', 'ml-c', t); b.type = 'button'; b.onclick = function () { answer(i === Q.ok, b); }; U.ch.appendChild(b); });
     else { var b = h('button', 'ml-c ml-c--go', '就是这里'); b.type = 'button'; b.onclick = function () { answer(Q.check(L.age), b); }; U.ch.appendChild(b); }
