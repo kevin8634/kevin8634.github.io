@@ -1,6 +1,6 @@
 /* 觉弈 Ludoterra · 共用模块:本机存储、年龄段、HUD、顶栏、声音(默认关)、离线
  * 存储键统一 gn:lt:*;不收集任何个人信息,不发外部请求。 */
-import { AGES, STATS, TASKS, ageLabel } from './lt-data.js';
+import { AGES, STATS, TASKS, TRACKS, ageLabel } from './lt-data.js';
 
 export const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const K = k => 'gn:lt:' + k;
@@ -57,9 +57,21 @@ export function chrome({ home = './', extra = '' } = {}) {
     <button class="lt-btn" id="ltSound" type="button" aria-pressed="false" aria-label="声音开关(默认关)">🔈</button>
     <a class="lt-btn" href="/" title="回到创世计划总门户">总门户</a>`;
   document.body.prepend(top);
-  const sb = top.querySelector('#ltSound');
+  const sb = top.querySelector('#ltSound'); const chip0 = top.querySelector('#ltAgeChip');
   const paint = () => { const on = sound.on(); sb.setAttribute('aria-pressed', on); sb.textContent = on ? '🔊' : '🔈'; };
   sb.onclick = () => { sound.set(!sound.on()); paint(); sound.bell(2); }; paint();
+  /* v0.13 关卡配乐:每关顶栏「♪ 本关」播放本关曲子(循环,音量压低 40%);偏好记在本机,下一关自动接上 */
+  const seg = (location.pathname.match(/\/ludoterra\/([a-z]+)\//) || [])[1]; const tr = seg && TRACKS.find(x => x.task === seg);
+  if (tr && home !== './') {
+    const mb = document.createElement('button'); mb.className = 'lt-btn lt-lvm'; mb.type = 'button'; mb.title = `本关配乐:${tr.no} ${tr.name}`;
+    mb.setAttribute('aria-label', `本关配乐「${tr.name}」开关`); top.insertBefore(mb, chip0);
+    const au = new Audio(home + tr.file); au.loop = true; au.preload = 'none'; au.volume = ((store.get('m_vol', 70) ?? 70) / 100) * 0.6;
+    const pm = () => { const on = !au.paused; mb.setAttribute('aria-pressed', on); mb.textContent = on ? `♪ ${tr.name}` : '♪ 本关'; };
+    const play = () => au.play().then(pm).catch(() => { pm(); const once = () => { au.play().then(pm).catch(() => {}); removeEventListener('pointerdown', once); }; addEventListener('pointerdown', once); });
+    mb.onclick = () => { if (au.paused) { store.set('m_lvl', true); play(); } else { store.set('m_lvl', false); au.pause(); pm(); } };
+    au.addEventListener('pause', pm); pm(); if (store.get('m_lvl', false) === true) play();
+    window.ltLevelMusic = au;
+  }
   const chip = top.querySelector('#ltAgeChip');
   const paintAge = () => { const a = getAge(); chip.textContent = a ? ageLabel(a) : '选择年龄段'; };
   paintAge(); chip.addEventListener('lt-age', paintAge);
