@@ -65,7 +65,17 @@ table.map th{color:var(--gold);font-weight:600;font-size:12px}
 @media (max-width:640px){.foot{display:none}#hero h1{font-size:16.5px;letter-spacing:.5px}#hero p{display:none}.ages,.layers{grid-template-columns:repeat(2,1fr)}#hero{top:54px}#hero p{font-size:12px}#rec{bottom:104px;gap:6px;padding:8px 10px}#rec .q{font-size:13px}#rec .lt-btn{padding:6px 10px}#dock{bottom:24px}#dock .lt-btn{font-size:12px;padding:5px 10px}.gl{grid-template-columns:1fr}#side{bottom:150px}}
 @media (max-height:480px){#hero,#rec,.foot{display:none}#dock{bottom:24px}.lt-hud{display:none}#side{top:56px;bottom:auto;max-height:calc(100% - 100px)}}
 /* v0.12 星之音播放器 */
-#player{position:fixed;right:24px;top:70px;width:min(400px,calc(100% - 16px));max-height:calc(100% - 90px);overflow:auto;z-index:45;padding:16px 16px 12px;display:none}
+#mbar{position:fixed;left:16px;bottom:30px;z-index:46;width:240px;display:flex;align-items:center;gap:8px;padding:7px 8px 9px;border-radius:16px;overflow:hidden}
+#mbar .mpp{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--gold);background:rgba(245,194,107,.14);color:var(--gold);cursor:pointer;font-size:13px}
+#mbar .minfo{flex:1;min-width:0;text-align:left;background:none;border:0;color:var(--ink);cursor:pointer;padding:0;display:flex;flex-direction:column;line-height:1.3}
+#mbar .mk{font-size:10px;color:var(--gold);letter-spacing:1px}#mbar b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mbar .mlg{font-size:10.5px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mbar .mlist{flex:none;background:none;border:1px solid var(--line);border-radius:10px;color:var(--ink);width:30px;height:30px;cursor:pointer}
+#mbar .mprog{position:absolute;left:0;right:0;bottom:0;height:2px;background:rgba(245,194,107,.15)}#mbar .mprog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c98a2e,#ffe2a0)}
+#mbar button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media (max-width:640px){#mbar{left:8px;right:8px;bottom:6px;width:auto}#dock{bottom:68px!important}#rec{bottom:150px!important}#side{bottom:150px!important}}
+@media (max-height:480px){#mbar{width:200px;left:8px;bottom:8px;padding:5px 6px 7px}#mbar .mlg{display:none}#mbar .mpp{width:30px;height:30px}#dock{left:auto!important;right:8px;transform:none!important;width:auto!important;max-width:calc(100% - 230px);justify-content:flex-end;bottom:8px!important}}
+#player{position:fixed;left:16px;bottom:78px;width:min(400px,calc(100% - 16px));max-height:calc(100% - 150px);overflow:auto;z-index:45;padding:16px 16px 12px;display:none}
 body.pmode #player{display:block}
 body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .lt-hud,body.pmode .foot{opacity:0;pointer-events:none}
 #hero,#rec,#side,#dock,.lt-hud,.foot{transition:opacity .4s}
@@ -83,9 +93,9 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
 .pvol{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mute);margin-left:auto}.pvol input{width:84px}
 #player input[type=range]{accent-color:#f5c26b}
 #pNote{font-size:12px;color:var(--gold);min-height:1em;margin-top:6px}
-@media (max-width:640px){#ltMusic .t{display:none}#player{right:8px;left:8px;top:auto;bottom:8px;width:auto;max-height:calc(100% - 64px);padding:14px 12px 10px}#player .lead{display:none}#player h3{font-size:17px}.trk{padding:6px 8px}.trk:not(.on) .lg{display:none}}
+@media (max-width:640px){#player{right:8px;left:8px;top:auto;bottom:62px;width:auto;max-height:calc(100% - 64px);padding:14px 12px 10px}#player .lead{display:none}#player h3{font-size:17px}.trk{padding:6px 8px}.trk:not(.on) .lg{display:none}}
 @media (max-height:480px){.trk:not(.on) .lg,#player .lead{display:none}}
-@media (max-height:480px){#player{top:56px;bottom:8px;max-height:none}}
+@media (max-height:480px){#player{top:56px;bottom:56px;max-height:none}}
 </style></head><body>
 <canvas id="disc" tabindex="0" aria-label="光之莲认知星盘:四层八域。左右拖动或用方向键旋转,点扇区查看。"></canvas>
 <div id="hero"><h1>地球Online 没有新手教程。这里补上。</h1><p>看见自己的思维,就是觉醒的开始</p></div>
@@ -97,6 +107,12 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   <button class="lt-btn" id="bGuides" type="button">🏛 先贤向导团</button>
   <button class="lt-btn" id="bAbout" type="button">ⓘ 关于觉弈</button>
 </nav>
+<div id="mbar" class="lt-panel" role="region" aria-label="星之音播放条">
+  <button class="mpp" id="mPlay" type="button" aria-label="播放">▶</button>
+  <button class="minfo" id="ltMusic" type="button" aria-label="展开曲目列表" aria-expanded="false"><span class="mk">星之音 · <span id="mNo">00</span></span><b id="mName">—</b><span class="mlg" id="mWh"></span></button>
+  <button class="mlist" id="mList" type="button" aria-label="曲目列表">☰</button>
+  <i class="mprog"><i id="mProg"></i></i>
+</div>
 <aside id="player" class="lt-panel" role="dialog" aria-label="星之音播放器">
   <button class="lt-btn x" type="button" id="pClose" aria-label="退出播放器">✕</button>
   <div class="k">星之音 · 播放器</div><h3>每一首,都是一条规则</h3>
@@ -112,7 +128,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   </div>
   <div id="pNote" aria-live="polite"></div>
 </aside>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.18</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.19</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -159,7 +175,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
 import { AGES, LAYERS, DOMAINS, MEANING, GUIDES, GUIDE_ORDER, TASKS, BRIDGES, HANDBOOK, STATS, TRACKS, ageLabel } from './lt-data.js';
 import { chrome, hud, store, getAge, setAge, isDone, sound, reducedMotion, offline } from './lt.js';
 
-const ch = chrome({ home: './', extra: '<button class="lt-btn" id="ltMusic" type="button" aria-label="星之音:曲目与播放器">♪<span class="t"> 曲目</span></button>' });
+const ch = chrome({ home: './' });
 const H = hud();
 offline();
 
@@ -586,7 +602,9 @@ function paintList() { $('pList').innerHTML = TRACKS.map((tr, i) => `<button cla
   <span class="no">${tr.no}</span><b>${tr.name}</b><span class="du">${tr.dur}</span><span class="wh">${unlocked(tr) ? '✦ ' : '🔒 '}${tr.where}</span><span class="lg">${tr.logic}</span></button>`).join(''); }
 function paintCtl() { const p = !au.paused; $('pPlay').textContent = p ? '❚❚' : '▶'; $('pPlay').setAttribute('aria-label', p ? '暂停' : '播放');
   $('pLoop').textContent = loopOne ? '🔂 单曲' : '🔁 列表'; $('pLoop').setAttribute('aria-pressed', loopOne);
-  const mb = $('ltMusic'); mb.setAttribute('aria-pressed', p); }
+  $('mPlay').textContent = p ? '❚❚' : '▶'; $('mPlay').setAttribute('aria-label', p ? '暂停' : '播放');
+  const tr = TRACKS[tIdx]; $('mNo').textContent = tr.no; $('mName').textContent = tr.name; $('mWh').textContent = (unlocked(tr) ? '' : '试听 · ') + tr.where;
+  $('ltMusic').setAttribute('aria-expanded', document.body.classList.contains('pmode')); }
 function load(i, play = true) { tIdx = (i + TRACKS.length) % TRACKS.length; store.set('m_idx', tIdx); const tr = TRACKS[tIdx];
   au.src = tr.file; $('pNote').textContent = unlocked(tr) ? '' : `试听 ${PREV} 秒 · 通关「${(TASKS.find(t => t.id === tr.task) || {}).q}」解锁完整版`;
   paintList(); if (play) au.play().catch(() => {}); paintCtl(); }
@@ -599,13 +617,22 @@ $('pVol').oninput = e => { au.volume = e.target.value / 100; store.set('m_vol', 
 $('pSeek').oninput = e => { const lim = unlocked(TRACKS[tIdx]) ? au.duration : Math.min(PREV, au.duration); if (isFinite(lim)) au.currentTime = e.target.value / 1000 * lim; };
 au.addEventListener('timeupdate', () => { const tr = TRACKS[tIdx], lim = unlocked(tr) ? au.duration : Math.min(PREV, au.duration || PREV);
   $('pCur').textContent = fmt(au.currentTime); $('pDur').textContent = fmt(lim); if (isFinite(lim) && lim > 0) $('pSeek').value = Math.round(au.currentTime / lim * 1000);
+  if (isFinite(lim) && lim > 0) $('mProg').style.width = Math.min(100, au.currentTime / lim * 100) + '%';
   if (!unlocked(tr) && au.currentTime >= PREV) { au.pause(); au.currentTime = 0; } });
 au.addEventListener('ended', () => loopOne ? (au.currentTime = 0, au.play()) : load(tIdx + 1));
 ['play', 'pause'].forEach(ev => au.addEventListener(ev, paintCtl));
 au.addEventListener('error', () => { if (au.src) $('pNote').textContent = '这首暂时加载不了(离线时只能播放听过的曲子)。'; });
 function openPlayer() { paintList(); paintCtl(); document.body.classList.add('pmode'); $('pClose').focus(); }
-function closePlayer() { document.body.classList.remove('pmode'); $('ltMusic').focus(); }
-$('ltMusic').onclick = () => document.body.classList.contains('pmode') ? closePlayer() : openPlayer();
+function closePlayer() { document.body.classList.remove('pmode'); paintCtl(); $('ltMusic').focus(); }
+$('ltMusic').onclick = $('mList').onclick = () => document.body.classList.contains('pmode') ? closePlayer() : openPlayer();
+$('mPlay').onclick = () => { manual = true; if (!au.src) return load(tIdx); if (au.paused) { store.set('m_off', false); au.play().catch(() => {}); } else { store.set('m_off', true); au.pause(); } };
+/* v0.19 进站自动播放:浏览器禁止带声自动播放时,在首次点击/按键时开始;用户主动暂停过则记住不再自动播 */
+let manual = false;
+if (!store.get('m_off', false)) {
+  if (!unlocked(TRACKS[tIdx])) tIdx = Math.max(0, TRACKS.findIndex(unlocked));
+  const kick = e => { if (e && e.target.closest && e.target.closest('#mbar,#player')) return; removeEventListener('pointerdown', kick, true); removeEventListener('keydown', kick, true); if (!manual && au.paused) load(tIdx); };
+  load(tIdx, false); au.play().then(() => {}).catch(() => { addEventListener('pointerdown', kick, true); addEventListener('keydown', kick, true); });
+}
 $('pClose').onclick = closePlayer;
 $('player').addEventListener('keydown', e => { if (e.key === 'Escape') closePlayer(); });
 paintList(); paintCtl();
