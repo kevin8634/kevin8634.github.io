@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · 公共层 ef.js v0.2
+/* 元素工坊 Element Forge · 公共层 ef.js v0.3
    创世计划 Genesis 第 03 世界(化学)。本地存储键:gn:ef:<任务>;以 _ 开头的键为偏好(如 gn:ef:_sound)。
    无账号、无服务器、无埋点、无第三方请求。 */
 (function () {
@@ -9,6 +9,8 @@ EF.BASE = BASE;
 var KEY = function (k) { return 'gn:ef:' + k; };
 EF.get = function (k, d) { try { var v = localStorage.getItem(KEY(k)); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
 EF.set = function (k, v) { try { localStorage.setItem(KEY(k), JSON.stringify(v)); } catch (e) {} };
+/* 离线缓存:只在 /element-forge/ 作用域注册 */
+if ('serviceWorker' in navigator && location.protocol === 'https:' && /\/element-forge\//.test(BASE)) addEventListener('load', function () { navigator.serviceWorker.register(BASE + 'sw.js', { scope: BASE }).catch(function () {}); });
 EF.campus = /campus=1/.test(location.search) || EF.get('_campus', 0) === 1;
 EF.reduced = (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || EF.get('_motion', 1) === 0;
 EF.mobile = (window.matchMedia && matchMedia('(hover: none)').matches) || innerWidth < 760;
@@ -221,6 +223,10 @@ EF.esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { retur
 EF.mission = function (id, LEVELS, NOTES) {
   var M = EF.MISSIONS[id], G = EF.GUIDES[M.g], P = EF.prog(id), cur = 0, st;
   EF.sky(); EF.topbar({ back: '../', backText: '← 工坊' });
+  /* v0.3:B1 沉浸舞台 —— 四角括弧 + 背后 3D 场景(低档不加载) */
+  document.body.classList.add('mission', 'mission-' + id); EF.missionId = id; EF.level = 0;
+  document.body.insertAdjacentHTML('afterbegin', '<div id="bg3d" aria-hidden="true"></div><i class="cn tl"></i><i class="cn tr"></i><i class="cn bl"></i><i class="cn br"></i>');
+  if (EF.glTier !== 'low') { var m3 = document.createElement('script'); m3.type = 'module'; m3.src = BASE + 'ef-mission3d.js?v=3'; document.body.appendChild(m3); }
   var root = document.getElementById('app');
   root.innerHTML = '<div class="m-head"><h1>' + EF.esc(M.q) + '</h1><div class="m-dots" id="dots"></div></div>' +
     '<div class="m-body"><section class="m-stage" id="stage"></section>' +
@@ -240,7 +246,7 @@ EF.mission = function (id, LEVELS, NOTES) {
     Array.prototype.forEach.call(document.querySelectorAll('#dots .dot'), function (b) { b.onclick = function () { EF.play('select'); start(+b.dataset.i); }; });
   }
   function start(i) {
-    cur = i; var L = LEVELS[i]; st = { guessed: null, hints: 0, done: false };
+    cur = i; EF.level = i; if (EF.onLevel) EF.onLevel(i); var L = LEVELS[i]; st = { guessed: null, hints: 0, done: false };
     dots(); var stage = document.getElementById('stage'); stage.innerHTML = ''; stage.className = 'm-stage locked';
     document.getElementById('hint').innerHTML = ''; document.getElementById('over').hidden = true;
     say('<em>第 ' + (i + 1) + ' 关 · ' + EF.esc(L.title) + '</em><br>' + L.ask.q);
@@ -267,7 +273,7 @@ EF.mission = function (id, LEVELS, NOTES) {
       if (st.done) return; st.done = true; var L = LEVELS[cur];
       var s = 1 + (st.guessed ? 1 : 0) + (st.hints <= 1 ? 1 : 0);
       if (P.done.indexOf(cur) < 0) P.done.push(cur); P.stars[cur] = Math.max(P.stars[cur] || 0, s); EF.set(id, P);
-      EF.play('unlock'); dots();
+      EF.play('unlock'); dots(); if (EF.onComplete) EF.onComplete(cur);
       var last = cur === LEVELS.length - 1, ov = document.getElementById('over');
       ov.innerHTML = '<div class="m-card"><div class="m-stars">' + '★'.repeat(s) + '<span>' + '☆'.repeat(3 - s) + '</span></div>' +
         '<p class="m-explain">' + L.explain + '</p><div class="m-row">' +
