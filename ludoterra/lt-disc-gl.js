@@ -11,8 +11,24 @@ float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float litOf(float s){return s<.5?uLa.x:s<1.5?uLa.y:s<2.5?uLa.z:s<3.5?uLa.w:s<4.5?uLb.x:s<5.5?uLb.y:s<6.5?uLb.z:uLb.w;}
 vec3 goldc(float s){s=clamp(s,0.,1.);return mix(vec3(.30,.18,.06),vec3(1.,.83,.50),s)+vec3(.25,.2,.12)*pow(s,6.);}
 float angd(float a,float b){return abs(mod(a-b+PI,TAU)-PI);}
+float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*vn(p);p=p*2.03+vec2(1.7,9.2);a*=.5;}return v;}
+/* 程序化环境光:顶部柔光箱 + 地平线亮带,金属反射它们才像真金属 */
+float env(vec3 v){float y=v.y;float az=atan(v.z,v.x);
+  return .05+.25*smoothstep(-.1,.9,y)+1.25*exp(-pow((y-.55)*8.,2.))*(.55+.45*cos(az-2.3))+.7*exp(-pow((y-.12)*16.,2.))
+   +1.8*exp(-pow(angd(az,-2.0),2.)*4.)*exp(-pow((y-.42)*6.,2.));}
+vec3 metal(vec3 n,vec3 rd,float br){vec3 rv=reflect(rd,n);float e=env(rv);float fr=.55+.45*pow(1.-max(dot(n,-rd),0.),4.);
+  vec3 tint=vec3(1.,.76,.38);return tint*(.10+e*.95)*fr*(.82+.36*br)+vec3(1.,.95,.85)*pow(max(e-1.2,0.),2.)*.6;}
+/* 鎏金流动:域扭曲噪声随时间流淌,取亮丝 */
+float liquid(vec2 p){vec2 w=vec2(fbm(p*2.2+vec2(uT*.07,-uT*.05)),fbm(p*2.2-vec2(uT*.05,uT*.08)+5.));float f=fbm(p*4.5+w*2.2+vec2(uT*.12,0.));
+  return smoothstep(.52,.72,f)*(.6+.4*sin(f*30.-uT*1.5));}
+float stars(vec2 p,float sc,float th,float seed){vec2 cell=floor(p*sc);float h=hash(cell+seed);if(h<th)return 0.;
+  vec2 c=fract(p*sc)-.5+(vec2(hash(cell+3.1),hash(cell+7.7))-.5)*.5;float tw=.35+.65*pow(.5+.5*sin(uT*(1.5+h*3.)+h*90.),2.);
+  float core=smoothstep(.16,.0,length(c));float cross=smoothstep(.035,.0,abs(c.x))*smoothstep(.45,.0,abs(c.y))+smoothstep(.035,.0,abs(c.y))*smoothstep(.45,.0,abs(c.x));
+  return (core+cross*step(.985,h)*.8)*tw;}
 float flow(float A,float sp,float off){return exp(-pow(angd(A,uT*sp+off),2.)*14.);}
 const vec3 LD=vec3(-.45,.75,.48);
+vec3 camP;
 vec4 shadeTop(vec3 q,float layer){
   float r=length(q.xz);float A=atan(q.z,q.x);float a=mod(A-uTh,TAU);
   float sheen=.5+.5*cos(A-2.3);
@@ -22,8 +38,10 @@ vec4 shadeTop(vec3 q,float layer){
   else if(layer<1.5){if(r>.725){b0=.725;b1=.74;}}
   else{if(r>.99){b0=.99;b1=1.035;}}
   if(b0>0.){ /* 细金带 */
-    vec3 c=goldc(.25+.6*sheen+.35*spot);
-    c+=vec3(1.,.9,.68)*(flow(A,.45,layer*2.1)+flow(A,-.3,layer*1.3+3.))*.85;
+    vec3 rd=normalize(q-camP);vec3 tg=vec3(-sin(A),0.,cos(A));float br=hash(vec2(floor(r*900.),layer));
+    vec3 n=normalize(vec3(0.,1.,0.)+tg*(br-.5)*.10+vec3(q.x,0.,q.z)/max(r,.001)*(vn(vec2(r*60.,A*3.))-.5)*.06);
+    vec3 c=metal(n,rd,br);
+    c+=vec3(1.,.88,.6)*(flow(A,.45,layer*2.1)+flow(A,-.3,layer*1.3+3.))*.75;c+=vec3(1.,.9,.6)*liquid(vec2(A*1.2,r*8.))*.35;
     float e=min(abs(r-b0),abs(r-b1));c+=vec3(.5,.42,.25)*smoothstep(.004,.0,e);
     if(layer>1.5){float n=a/TAU*120.;float f=abs(fract(n)-.5);bool big=mod(floor(n+.5),10.)<.5;
       if(f>.42&&(r>1.004||big))c*=.3;}
@@ -41,11 +59,12 @@ vec4 shadeTop(vec3 q,float layer){
   vec3 g=mix(vec3(.80,.48,.14),vec3(1.,.86,.56),sheen*.6+.25*(1.-(r-r0)/(r1-r0)));
   float sw=exp(-pow(fract(dot(q.xz,vec2(.6,.8))*.55-uT*.07)-.5,2.)*160.);
   float inr=1.-(r-r0)/(r1-r0);float edgeG=smoothstep(.05,.0,min(fr,1.-fr)*span*r)+smoothstep(.03,.0,min(abs(r-r0),abs(r-r1)));
-  vec3 litc=g*(.32+.22*inr+.25*sheen)+g*edgeG*.45+vec3(1.,.95,.8)*sw*.35;
+  vec3 litc=g*(.40+.25*inr+.25*sheen)+g*edgeG*.45+vec3(1.,.95,.8)*sw*.35;
   vec3 c=mix(glass,litc,L);float al=mix(.52,.62,L);
   c+=vec3(.28,.2,.08)*S;al=max(al,.6*S);
-  vec2 cell=floor(q.xz*72.);float h=hash(cell+layer*17.);
-  if(h>.972){vec2 cc=fract(q.xz*72.)-.5;float sp=smoothstep(.28,.0,length(cc))*(.45+.55*sin(uT*2.6+h*90.));c+=vec3(1.,.95,.82)*sp*(.7+L);al=max(al,sp);}
+  c+=vec3(1.,.84,.5)*liquid(q.xz)*L*1.25;
+  float sp=stars(q.xz,70.,.9,layer*17.)+stars(q.xz,150.,.95,layer*29.+4.)*.6+stars(q.xz,26.,.975,layer*5.+9.)*1.3;
+  c+=mix(vec3(.75,.9,1.),vec3(1.,.93,.75),L)*sp*(.8+L*.6);al=max(al,min(sp,1.));
   float bd=min(fr,1.-fr)*span*r;float ed=min(abs(r-r0),abs(r-r1));
   float ln=max(smoothstep(.0045,.0,bd),smoothstep(.003,.0,ed)*.8);
   c=mix(c,goldc(.75+.25*sheen)+vec3(.4,.3,.15)*(L+S),ln*(.55+.45*max(L,S)));al=max(al,ln*.9);
@@ -53,9 +72,9 @@ vec4 shadeTop(vec3 q,float layer){
   return vec4(c,al);
 }
 vec4 shadeWall(vec3 q,float y0,float y1){
-  vec3 nn=normalize(vec3(q.x,0.,q.z));float lam=.25+.75*max(dot(nn,normalize(LD)),0.);
-  float yf=clamp((q.y-y0)/(y1-y0),0.,1.);float A=atan(q.z,q.x);
-  vec3 c=goldc(lam*(.45+.55*yf))+vec3(1.,.9,.7)*flow(A,.45,y1*40.)*.5*yf;
+  vec3 nn=normalize(vec3(q.x,0.,q.z));float yf=clamp((q.y-y0)/(y1-y0),0.,1.);float A=atan(q.z,q.x);
+  vec3 rd=normalize(q-camP);float br=hash(vec2(floor(q.y*2500.),3.));vec3 n=normalize(nn+vec3(0.,(br-.5)*.15+(yf-.5)*.5,0.));
+  vec3 c=metal(n,rd,br)*(.75+.25*yf)+vec3(1.,.9,.7)*flow(A,.45,y1*40.)*.5*yf;
   c+=vec3(.6,.5,.3)*smoothstep(.85,1.,yf)*.6;return vec4(c,1.);
 }
 float sdRing(vec3 p,mat3 M,float rad){vec3 l=M*p;return length(vec2(length(l.xy)-rad,l.z))-.0065;}
@@ -63,7 +82,7 @@ float sdArm(vec3 p){return min(sdRing(p,uM0,uRad.x),min(sdRing(p,uM1,uRad.y),sdR
 void main(){
   vec2 px=vec2(gl_FragCoord.x,uRes.y*uDpr-gl_FragCoord.y)/uDpr;
   float u=(px.x-uC.x)/uR,v=(px.y-uC.y)/uR,D=uD/uR;
-  vec3 O=vec3(0.,D*uES,D*uEC);vec3 rd=normalize(vec3(u,-v*uEC-D*uES,v*uES-D*uEC));
+  vec3 O=vec3(0.,D*uES,D*uEC);camP=O;vec3 rd=normalize(vec3(u,-v*uEC-D*uES,v*uES-D*uEC));
   float tb=1e9;float kind=0.;vec3 hp;
   /* 顶面 */
   for(int i=0;i<3;i++){float h=i==0?uHs:i==1?uHo:0.;float t=(h-O.y)/rd.y;
@@ -88,7 +107,7 @@ void main(){
         if(t<tb&&((uMode>.5)==front)){vec2 e=vec2(.0008,0.);
           vec3 n=normalize(vec3(sdArm(p+e.xyy)-sdArm(p-e.xyy),sdArm(p+e.yxy)-sdArm(p-e.yxy),sdArm(p+e.yyx)-sdArm(p-e.yyx)));
           float lam=.3+.7*max(dot(n,normalize(LD)),0.);float spc=pow(max(dot(reflect(-normalize(LD),n),-rd),0.),28.);
-          vec3 rc=goldc(lam)+vec3(1.,.95,.8)*spc*1.2;col=vec4(rc,1.);}
+          vec3 rc=metal(n,rd,.5)*(.6+.5*lam)+vec3(1.,.95,.8)*spc*1.1;col=vec4(rc,1.);}
         break;}
       t+=max(d*.9,.0012);if(t>te)break;}}
   gl_FragColor=col;
