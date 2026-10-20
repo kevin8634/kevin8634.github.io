@@ -51,3 +51,18 @@ button{font-family:inherit}
 .lt-lightup b{font-size:clamp(20px,3.2vw,30px);font-weight:600;color:#fff3d6;text-shadow:0 0 18px rgba(245,194,107,.8)}
 .lt-lightup em{display:block;font-style:normal;font-size:13px;color:var(--mute);margin-top:6px}
 @media (prefers-reduced-motion:reduce){.lt-hud .row.flip,.lt-hud .row.flip .bar i{animation:none}.lt-lightup{transition:none}}
+
+/* v0.13 进出关卡转场(浏览器原生跨页 View Transitions;不支持则直接切换) */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:ltVtOut .38s cubic-bezier(.4,0,.2,1) both}
+::view-transition-new(root){animation:ltVtIn .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ltVtOut{to{opacity:0;transform:scale(1.06);filter:blur(3px)}}
+@keyframes ltVtIn{from{opacity:0;transform:scale(.97)}}
+#disc.dive{transition:transform .55s cubic-bezier(.5,0,.75,0),opacity .55s ease-in,filter .55s;opacity:0;filter:blur(2px)}
+#disc.back{animation:ltBack .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes ltBack{from{transform:scale(1.9);opacity:0;filter:blur(3px)}}
+body.diving #hero,body.diving #rec,body.diving #side,body.diving #dock,body.diving .lt-hud,body.diving .foot{opacity:0;transition:opacity .3s}
+.lt-lvm[aria-pressed=true]{animation:ltPulse 2.4s ease-in-out infinite}
+@keyframes ltPulse{50%{box-shadow:0 0 14px rgba(245,194,107,.55)}}
+@media (prefers-reduced-motion:reduce){::view-transition-old(root),::view-transition-new(root){animation:none}#disc.dive,#disc.back{transition:none;animation:none}}
+@media (max-width:640px){.lt-lvm{font-size:0!important;gap:0}.lt-lvm::before{content:'♪';font-size:14px}}
