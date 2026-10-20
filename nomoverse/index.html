@@ -361,8 +361,7 @@
   var introBusy = false;
   function playIntro(force) {
     if (introBusy) return Promise.resolve();
-    if (RM && !force) return Promise.resolve();
-    introBusy = true;
+    introBusy = true;                      // 减少动态效果:只播静态淡入版(无运动)
     var getT = (!RM && NV.gl3d.ok) ? NV.gl3d.load().catch(function () { return null; }) : Promise.resolve(null);
     return getT.then(function (T) { return import(NV.ROOT + "core/intro.js").then(function (m) { return m.run(T); }); })
       .catch(function (err) { if (W.console) console.warn("[宙律] 开场动画跳过:", err && err.message); })
@@ -371,7 +370,15 @@
   W.NVIntro = { replay: function () { return playIntro(true); } };
   var introQ = null; try { introQ = new URLSearchParams(location.search).get("intro"); } catch (e) {}
   var introP = Promise.resolve();
-  if (introQ === "1" || (introQ !== "0" && NV.lsGet("gn:nv:_intro") !== "1" && !RM)) { NV.lsSet("gn:nv:_intro", "1"); introP = playIntro(introQ === "1"); }
+  /* v0.3-α2 修复:原先仅「首次访问」播一次(且减少动态时完全不播),之后进入宙律就再也看不到开场。
+     现改为:每次从世界外(门户、书签、直接输入、刷新)进入都播;从本世界任务页点链接回首页不重复;减少动态时播静态淡入版;?intro=0 关闭。 */
+  var fromWorld = false;
+  try { fromWorld = sessionStorage.getItem("gn:nv:_inner") === "1"; sessionStorage.removeItem("gn:nv:_inner"); } catch (e) {}
+  var seenS = null; try { seenS = sessionStorage.getItem("gn:nv:_introS"); } catch (e) {}
+  if (introQ === "1" || (introQ !== "0" && !(fromWorld && seenS === "1"))) {
+    try { sessionStorage.setItem("gn:nv:_introS", "1"); } catch (e) {}
+    NV.lsSet("gn:nv:_intro", "1"); introP = playIntro(introQ === "1");
+  }
   var HUD3D = NV.gl3d.ok;                 // v0.3:3D 可用时首页 = 全屏星图舞台 + 统一 HUD;否则保留 v0.2 版式(功能不减)
   if (HUD3D) D.body.classList.add("hud3d");
 
