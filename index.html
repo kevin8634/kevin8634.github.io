@@ -1011,7 +1011,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.8.0.1</b></span>
+            <span>创世计划总门户 <b>v0.8.1</b></span>
           </footer>
         </div>
       </div>
@@ -1782,7 +1782,7 @@
         w.ck += (tgt - w.ck) * (RM ? 1 : 0.06);
         if (w.ck < 0.02) return;
         var k = w.ck, beat = RM ? 0 : Math.pow(0.5 + 0.5 * Math.sin(T * 2.4 + i), 6);
-        var D = r * (2.6 + 2.2 * k) * (1 + 0.04 * beat);
+        var D = r * (1.9 + 0.95 * k) * (1 + 0.03 * beat);   // v0.8.1 缩小：七星不再挤到一起
         ctx.save(); ctx.globalCompositeOperation = "lighter";
         ctx.globalAlpha = op * (0.16 + 0.5 * k) * (0.85 + 0.3 * beat);
         ctx.translate(x, y); ctx.rotate(RM ? 0 : T * (0.05 + 0.04 * k) * (i % 2 ? -1 : 1));
@@ -1792,7 +1792,7 @@
           for (var j = 0; j < 2; j++) {
             var ph = (T * 0.4 + i * 0.13 + j * 0.5) % 1;
             ctx.strokeStyle = hexA(w.color, (1 - ph) * 0.55 * op * k); ctx.lineWidth = 1.3;
-            ctx.beginPath(); ctx.arc(x, y, r * (1.3 + 1.6 * ph), 0, 6.2832); ctx.stroke();
+            ctx.beginPath(); ctx.arc(x, y, r * (1.2 + 0.55 * ph), 0, 6.2832); ctx.stroke();
           }
         }
       }
@@ -1874,8 +1874,20 @@
           ctx.save();
           ctx.globalCompositeOperation = "lighter";
           ctx.globalAlpha = op * (alive ? 1 : 0.8);
-          ctx.drawImage(alive ? im : dimImage(w.id, im), x - r, y - r, r * 2, r * 2);
+          // v0.8.1 星球自转：圆形裁切后绕中心缓慢旋转，单双号反向，点亮的转得稍快
+          ctx.translate(x, y);
+          if (!RM) {
+            ctx.beginPath(); ctx.arc(0, 0, r * 0.99, 0, 6.2832); ctx.clip();
+            ctx.rotate(T * (alive ? (w.lit ? 0.32 : 0.22) : 0.1) * (i % 2 ? 1 : -1) + i);
+          }
+          ctx.drawImage(alive ? im : dimImage(w.id, im), -r, -r, r * 2, r * 2);
           ctx.restore();
+          if (!RM && alive) {   // 固定的晨昏高光，让旋转读起来像立体球体
+            ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = op * 0.35;
+            var sh = ctx.createRadialGradient(x - r * 0.38, y - r * 0.42, r * 0.05, x, y, r);
+            sh.addColorStop(0, "rgba(255,255,255,0.55)"); sh.addColorStop(0.45, "rgba(255,255,255,0.06)"); sh.addColorStop(1, "rgba(255,255,255,0)");
+            ctx.fillStyle = sh; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill(); ctx.restore();
+          }
         }
         ctx.globalAlpha = 1;
         if (e >= 1) drawIgnite(w, x, y, r, T);
@@ -2748,6 +2760,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.1", d: "2026-10-21", t: "学科冠冕缩小，七颗星不再挤在一起；冠冕中的星球开始自转。" },
         { w: "07", v: "v0.4.3", d: "2026-10-21", t: "登舰动画与弦穹号外观改为 2.5D；舱内航图换成 3D 粒子星系全息沙盘；引擎、舷窗观景、返回母港收进统一指令台。" },
         { w: "gn", v: "v0.8.0.1", d: "2026-10-21", t: "星历新增天枢 Starhelm v0.4.3。" },
         { w: "gn", v: "v0.8.0", d: "2026-10-21", t: "北斗七星升级：每颗星换上学科冠冕，点亮后展开并随心跳脉动；第一次点亮会播放点火动画，相邻两颗都点亮时星光沿连线流动。页脚新增强制刷新提示。" },
