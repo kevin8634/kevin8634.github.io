@@ -958,7 +958,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.7.0.2</b></span>
+            <span>创世计划总门户 <b>v0.7.0.3</b></span>
           </footer>
         </div>
       </div>
@@ -1034,8 +1034,8 @@
           meta: ["已上线 v0.2-α2", "3 个任务 13 关"], href: "nomoverse/", prefix: ["gn:nv:"],
           age: ["huo","chen","he"], tags: ["space","matter"], why: "好奇宇宙为什么是现在这样？亲手改一改物理常数，看会发生什么。" },
         { id: "03", star: "天权", name: "元素工坊", en: "Element Forge", field: "化学",
-          desc: "用元素锻造物质，配方即反应。", color: "#ff9a3c", live: false,
-          meta: [], prefix: ["gn:ef:"],
+          desc: "用元素锻造物质，配方即反应。", color: "#ff9a3c", live: true,
+          meta: ["已上线 v0.1", "2 个任务 8 关"], href: "element-forge/", prefix: ["gn:ef:"],
           age: ["huo","chen","he"], tags: ["matter"], why: "想知道东西由什么组成、怎样变化？它会带你用元素锻造物质。" },
         { id: "04", star: "玉衡", name: "生命源码", en: "Life Source", field: "生物",
           desc: "读、改、调试生命的「源码」。", color: "#34d399", live: true,
@@ -1049,7 +1049,7 @@
           age: ["huo","chen","he"], tags: ["ai","math"], why: "想弄懂 AI 是怎么学会的？亲手训练它、考考它，再给它立规矩。" },
         { id: "06", star: "摇光", name: "觉弈", en: "Ludoterra", field: "认知觉醒",
           desc: "看见自己的思维，做出更清醒的选择。", color: "#f5c26b", live: true,
-          meta: ["已上线 v0.19", "7 个关卡 · 地球Online 玩家手册"], href: "ludoterra/", prefix: ["gn:lt:"],
+          meta: ["已上线 v0.20.1", "7 个关卡 · 地球Online 玩家手册"], href: "ludoterra/", prefix: ["gn:lt:"],
           age: ["huo","chen","he"], tags: ["society"], why: "想看清自己怎么思考、怎么做选择？把每一次选择当成一局棋来复盘。", ageTxt: "星火 12+ · 星芽可试入门关" },
         { id: "07", star: "天枢", name: "天枢", en: "Starhelm", field: "天文",
           desc: "北斗第一星 · 用真实实时数据看见此刻的天空。", color: "#dfe6f3", live: true,
@@ -1825,15 +1825,15 @@
         { a: { w: "01", id: "ma.cat", title: "让 AI 认出一只猫", href: "math-atlas/cat/" },
           b: { w: "05", id: "ps.cat", title: "让 AI 认出一只猫", href: "pre-singularity/cat/" } },
         { a: { w: "01", id: "ma.casino", title: "赌场为什么总是赢？", href: "math-atlas/casino/" },
-          b: { w: "06", id: "lt.odds", title: "为什么大多数人会输给概率", href: null } },
+          b: { w: "06", id: "lt.survivor", title: "为什么「成功经验」常常骗人？", href: "ludoterra/survivor/" } },
         { a: { w: "01", id: "ma.secret", title: "怎样把秘密藏进数字里", href: "math-atlas/secret/" },
           b: { w: "04", id: "ls.dna", title: "四个字母怎么写出一个人？", href: "life-source/dna/" } },
         { a: { w: "01", id: "ma.epidemic", title: "传染病为什么会爆发？", href: "math-atlas/epidemic/" },
           b: { w: "04", id: "ls.virus", title: "一场感冒是怎么在班里传开的？", href: "life-source/virus/" } },
         { a: { w: "05", id: "ps.truth", title: "这段话是 AI 写的吗", href: "pre-singularity/truth/" },
-          b: { w: "06", id: "lt.source", title: "怎样判断一个信息靠不靠谱", href: null } },
+          b: { w: "06", id: "lt.cocoon", title: "为什么你刷到的视频越来越像？", href: "ludoterra/cocoon/" } },
         { a: { w: "02", id: "nv.stars", title: "恒星的一生", href: null },
-          b: { w: "03", id: "ef.stars", title: "你身体里的铁是从哪颗星来的？", href: null } },
+          b: { w: "03", id: "ef.stars", title: "你身体里的铁是从哪颗星来的？", href: "element-forge/stars/" } },
         { a: { w: "07", id: "sh.where", title: "此刻，你在宇宙的哪里？", href: "starhelm/" },
           b: { w: "01", id: "ma.scale", title: "比例与数量级", href: "math-atlas/" } },
         { a: { w: "07", id: "sh.orbit", title: "空间站为什么掉不下来？", href: "starhelm/" },
@@ -1843,7 +1843,7 @@
         { a: { w: "07", id: "sh.sats", title: "天上到底有多少颗卫星？", href: "starhelm/", label: "去天枢 →" },
           b: { w: "05", id: "ps.sats", title: "AI 与卫星数据", href: "pre-singularity/" } },
         { a: { w: "07", id: "sh.quakes", title: "地震在告诉我们什么？", href: "starhelm/", label: "去天枢 →" },
-          b: { w: "03", id: "ef.rocks", title: "岩石与矿物", href: null } },
+          b: { w: "03", id: "ef.rocks", title: "岩石是怎么“长”出来的？", href: null } },
         { a: { w: "01", id: "ma.rocket", title: "火箭怎样飞上月球？", href: "math-atlas/rocket/" },
           b: { w: "07", id: "sh.orbit", title: "空间站为什么掉不下来？", href: "starhelm/", label: "去天枢 →" } },
         { a: { w: "01", id: "ma.cube", title: "魔方为什么能复原？", href: "math-atlas/cube/" },
@@ -1853,7 +1853,17 @@
         { a: { w: "06", id: "lt.compound", title: "每天多进步 1%，一年后会怎样？", href: "ludoterra/compound/" },
           b: { w: "01", id: "ma.epidemic", title: "传染病为什么会爆发？", href: "math-atlas/epidemic/" } },
         { a: { w: "06", id: "lt.meaning", title: "看见了这些规则，我想成为怎样的玩家？", href: "ludoterra/meaning/" },
-          b: { w: "07", id: "sh.where", title: "此刻，你在宇宙的哪里？", href: "starhelm/", label: "去天枢 →" } }
+          b: { w: "07", id: "sh.where", title: "此刻，你在宇宙的哪里？", href: "starhelm/", label: "去天枢 →" } },
+        { a: { w: "03", id: "ef.stars", title: "你身体里的铁是从哪颗星来的？", href: "element-forge/stars/" },
+          b: { w: "07", id: "sh.where", title: "此刻，你在宇宙的哪里？", href: "starhelm/", label: "去天枢 →" } },
+        { a: { w: "03", id: "ef.carbon", title: "为什么钻石和铅笔芯是同一种东西？", href: "element-forge/carbon/" },
+          b: { w: "01", id: "ma.bee", title: "为什么蜜蜂选六边形", href: "math-atlas/bee/" } },
+        { a: { w: "06", id: "lt.prisoner", title: "为什么好人不一定吃亏？", href: "ludoterra/prisoner/" },
+          b: { w: "01", id: "ma.nim", title: "先拿的人一定赢吗？", href: "math-atlas/nim/" } },
+        { a: { w: "06", id: "lt.nature", title: "人性本善，还是本恶？", href: "ludoterra/nature/" },
+          b: { w: "04", id: "ls.parents", title: "为什么你长得像爸妈，又不完全像？", href: "life-source/parents/" } },
+        { a: { w: "02", id: "nv.hoop", title: "如果引力变成两倍，篮球还能投进吗？", href: "nomoverse/hoop/" },
+          b: { w: "01", id: "ma.rocket", title: "火箭怎样飞上月球？", href: "math-atlas/rocket/" } }
       ];
       // 同一对世界之间有多座桥时，让弧线错开，避免重叠
       (function () {
@@ -2536,6 +2546,10 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.7.0.3", d: "2026-10-20", t: "七星全亮：点亮元素工坊；星桥盘点，新通 5 座（铁与星尘、碳与六边形、囚徒困境与取石子、人性与遗传、引力与火箭），原预留的「赌场⇄成功经验」「AI 写作⇄信息茧房」接通到觉弈真实关卡，星桥共 22 座。" },
+        { w: "03", v: "v0.1", d: "2026-10-20", t: "元素工坊开张：开放「你身体里的铁是从哪颗星来的？」「为什么钻石和铅笔芯是同一种东西？」两个任务，还有尺度镜和元素起源周期表。" },
+        { w: "06", v: "v0.20–v0.20.1", d: "2026-10-20", t: "进入星球动画（跃迁坠落，可跳过）；修复动画后偶现旧星盘。" },
+        { w: "gn", v: "v0.7.0.1–0.7.0.2", d: "2026-10-20", t: "天枢星系加亮旋臂与蓝色星团结；桌面端新增全屏提示，点击即全屏。" },
         { w: "gn", v: "v0.7.0", d: "2026-10-20", t: "首屏星空迁移 Three.js：三维纵深星场与银河光带，随北斗旋转同步转动并带视差景深；不支持 WebGL 时保留原版。" },
         { w: "gn", v: "v0.6.9", d: "2026-10-20", t: "星桥穿越过场：点一座星桥，镜头离开起点星系，沿桥曲速折跃到目标星系并推近，约 2.5 秒，点任意处或 Esc 跳过；减少动态效果时直接显示。" },
         { w: "gn", v: "v0.6.8.1", d: "2026-10-20", t: "星桥七星系辨识度回归概念 L：星系图层 + 加强主题特效（奇点前夜电路脉冲、觉弈金莲、生命源码双螺旋、宙律磁力线、元素工坊晶格），星河尘带更浓。" },
