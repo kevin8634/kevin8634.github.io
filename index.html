@@ -164,6 +164,15 @@
       .x-devm .x-dev { margin-top: 4px; }
       @media (max-width: 480px) { .x-dev { flex-direction: column; text-align: center; padding: 16px 14px; } .foot .x-devb { padding: 4px; min-height: 36px; } .foot .x-devb span { display: none; } }
       @media (prefers-reduced-motion: reduce) { .x-dev__av::before { animation: none; } }
+      /* v0.6.4 联系开发者移到标题上方，头像放大完整呈现发型与脸部 */
+      .x-devb { display: inline-flex; align-items: center; gap: 12px; margin: 0 0 18px; padding: 5px 18px 5px 5px; border-radius: 999px; border: 1px solid rgba(233,199,121,.42);
+        background: linear-gradient(90deg, rgba(233,199,121,.12), rgba(3,5,13,.55) 60%); color: var(--ink); font: 500 14px var(--sans); letter-spacing: .06em; cursor: pointer; backdrop-filter: blur(6px); transition: background .25s, box-shadow .25s; }
+      .x-devb img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--gold), 0 0 16px rgba(233,199,121,.55); }
+      .x-devb span { display: grid; gap: 4px; text-align: left; }
+      .x-devb small { font: 400 9.5px/1 ui-monospace, monospace; letter-spacing: .24em; color: var(--gold); }
+      .x-devb:hover, .x-devb:focus-visible { background: linear-gradient(90deg, rgba(233,199,121,.22), rgba(3,5,13,.6) 70%); box-shadow: 0 0 22px -6px rgba(233,199,121,.7); outline: none; }
+      @media (max-width: 760px) { .x-devb { margin-bottom: 8px; gap: 8px; padding: 3px 14px 3px 3px; font-size: 12.5px; } .x-devb img { width: 40px; height: 40px; } .x-devb small { font-size: 8.5px; } }
+      @media (max-height: 480px) { .x-devb { display: none; } }
       .toast {
         position: fixed; left: 50%; bottom: 76px; transform: translateX(-50%) translateY(10px);
         background: rgba(8,13,36,.9); border: 1px solid rgba(233,199,121,.4); color: var(--gold);
@@ -669,6 +678,7 @@
       </div>
 
       <div class="titleblock">
+        <button id="devBtn" class="x-devb" aria-haspopup="dialog" aria-label="联系开发者"><img src="dev-avatar.webp?v=2" alt="" width="60" height="60"><span><small>DEVELOPER · 领航员</small>联系开发者</span></button>
         <h1>如果世界是一款游戏</h1>
         <p class="x-pitch" id="pitch">七个互相连通的学习世界 · 把世界当成一款游戏来拆解 <button type="button" class="x-more" id="moreBtn" aria-haspopup="dialog">了解更多 →</button><button type="button" class="x-more" id="guideBtn" aria-haspopup="dialog">帮我选一颗星 ✦</button></p>
         <p class="sub">七个世界，一张星图。让一个普通人，用玩游戏的热情，在一生中走过人类知识的全图。</p>
@@ -682,7 +692,6 @@
       <div class="foot">
         <span>免费 · 无需注册 · 进度只保存在你的设备上</span>
         <button id="lawBtn">创世七律</button>
-        <button id="devBtn" class="x-devb" aria-haspopup="dialog" aria-label="联系开发者"><img src="dev-avatar.webp" alt="" width="26" height="26"><span>联系开发者</span></button>
       </div>
       <div class="x-3d" id="v3Box">
         <p id="v3Note">北斗七星并不在同一平面：天枢距我们约 <b>123 光年</b>，天璇约 <b>80 光年</b>。拖动看看它们在太空中的真实位置。</p>
@@ -735,7 +744,7 @@
     <div class="modal x-devm" id="devM" role="dialog" aria-label="联系开发者">
       <button class="close" data-close aria-label="关闭">×</button>
       <h2>联系开发者</h2>
-      <div class="x-dev"><div class="x-dev__av"><img src="dev-avatar.webp" alt="开发者头像" width="240" height="240" loading="lazy"></div><div class="x-dev__t"><small>DEVELOPER · 领航员</small><b>创世计划开发者</b><p>想聊学习世界的点子、合作，或反馈问题，欢迎加我微信。</p><div class="x-dev__id"><span>微信</span><code>kevinwong8634</code><button type="button" class="x-dev__cp" data-copy="kevinwong8634" aria-label="复制微信号 kevinwong8634">复制</button></div><em>添加时请注明来意，例如「创世计划 · 合作」或「创世计划 · 反馈」。</em></div></div>
+      <div class="x-dev"><div class="x-dev__av"><img src="dev-avatar.webp?v=2" alt="开发者头像" width="240" height="240" loading="lazy"></div><div class="x-dev__t"><small>DEVELOPER · 领航员</small><b>创世计划开发者</b><p>想聊学习世界的点子、合作，或反馈问题，欢迎加我微信。</p><div class="x-dev__id"><span>微信</span><code>kevinwong8634</code><button type="button" class="x-dev__cp" data-copy="kevinwong8634" aria-label="复制微信号 kevinwong8634">复制</button></div><em>添加时请注明来意，例如「创世计划 · 合作」或「创世计划 · 反馈」。</em></div></div>
     </div>
     <div class="modal" id="laws" role="dialog" aria-label="创世七律">
       <button class="close" data-close aria-label="关闭">×</button>
@@ -854,11 +863,11 @@
           </section>
           <section class="x-ab__dev" aria-labelledby="abDevH">
             <h3 id="abDevH">联系开发者</h3>
-            <div class="x-dev"><div class="x-dev__av"><img src="dev-avatar.webp" alt="开发者头像" width="240" height="240" loading="lazy"></div><div class="x-dev__t"><small>DEVELOPER · 领航员</small><b>创世计划开发者</b><p>想聊学习世界的点子、合作，或反馈问题，欢迎加我微信。</p><div class="x-dev__id"><span>微信</span><code>kevinwong8634</code><button type="button" class="x-dev__cp" data-copy="kevinwong8634" aria-label="复制微信号 kevinwong8634">复制</button></div><em>添加时请注明来意，例如「创世计划 · 合作」或「创世计划 · 反馈」。</em></div></div>
+            <div class="x-dev"><div class="x-dev__av"><img src="dev-avatar.webp?v=2" alt="开发者头像" width="240" height="240" loading="lazy"></div><div class="x-dev__t"><small>DEVELOPER · 领航员</small><b>创世计划开发者</b><p>想聊学习世界的点子、合作，或反馈问题，欢迎加我微信。</p><div class="x-dev__id"><span>微信</span><code>kevinwong8634</code><button type="button" class="x-dev__cp" data-copy="kevinwong8634" aria-label="复制微信号 kevinwong8634">复制</button></div><em>添加时请注明来意，例如「创世计划 · 合作」或「创世计划 · 反馈」。</em></div></div>
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.6.3</b></span>
+            <span>创世计划总门户 <b>v0.6.4</b></span>
           </footer>
         </div>
       </div>
@@ -949,7 +958,7 @@
           age: ["huo","chen","he"], tags: ["ai","math"], why: "想弄懂 AI 是怎么学会的？亲手训练它、考考它，再给它立规矩。" },
         { id: "06", star: "摇光", name: "觉弈", en: "Ludoterra", field: "认知觉醒",
           desc: "看见自己的思维，做出更清醒的选择。", color: "#f5c26b", live: true,
-          meta: ["已上线 v0.11", "7 个关卡 · 地球Online 玩家手册"], href: "ludoterra/", prefix: ["gn:lt:"],
+          meta: ["已上线 v0.12", "7 个关卡 · 地球Online 玩家手册"], href: "ludoterra/", prefix: ["gn:lt:"],
           age: ["huo","chen","he"], tags: ["society"], why: "想看清自己怎么思考、怎么做选择？把每一次选择当成一局棋来复盘。", ageTxt: "星火 12+ · 星芽可试入门关" },
         { id: "07", star: "天枢", name: "天枢", en: "Starhelm", field: "天文",
           desc: "北斗第一星 · 用真实实时数据看见此刻的天空。", color: "#dfe6f3", live: true,
@@ -2028,6 +2037,8 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.6.4", d: "2026-10-20", t: "「联系开发者」移到首页标题上方并放大头像，完整呈现发型与脸部。" },
+        { w: "06", v: "v0.12", d: "2026-10-20", t: "星盘可读性提升（标签随深度缩放、悬停显示核心问题）；「星之音」播放器上线，首批三首真实乐器曲目。" },
         { w: "gn", v: "v0.6.3", d: "2026-10-20", t: "新增「联系开发者」：首页页脚头像入口与关于弹层名片，微信号一键复制，添加请注明来意。" },
         { w: "gn", v: "v0.6.2", d: "2026-10-20", t: "卡片与 HUD 对齐概念图：磨砂玻璃卡+世界色霓虹边光、前卡星芒；顶栏雷达与斜段灯、四周切角框线；左舷航线进度条、右舷星桥/星历环形仪表；罗盘刻度弧。" },
         { w: "gn", v: "v0.6.1", d: "2026-10-20", t: "星盘对齐效果图：亮金厚底盘与扇区金带、弧形星桥带辉光、玻璃大卡，盘面倾斜度与光斑随鼠标移动；雷达顶栏、半圆罗盘。" },
