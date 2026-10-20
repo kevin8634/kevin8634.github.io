@@ -284,7 +284,7 @@
     }
     M.tip.innerHTML = html; M.tip.hidden = false;
   }
-  SH.openMap = function () { closeTasks(); M.el.hidden = false; M.tip.hidden = true; drawMap(); snd.glass(523.25); };
+  SH.openMapOld = function () { closeTasks(); M.el.hidden = false; M.tip.hidden = true; drawMap(); snd.glass(523.25); };
 
   /* ------------------------------ 卡片上的向导提问 ------------------------------ */
   SH.cardAsk = function (kind) {
@@ -303,6 +303,7 @@
   };
   function firstOpenLevel(id) { var L = SH.levels[id] || []; for (var i = 0; i < L.length; i++) if (P.stars(id, i + 1) < 1) return i + 1; return 1; }
 
+  SH.openMap = function () { closeTasks(); if (SH.voyEnter) SH.voyEnter(); };
   /* ------------------------------ 初始化 ------------------------------ */
   SH.initCore = function () {
     buildQuest(); buildTasks(); buildMap();
@@ -312,8 +313,7 @@
     var bQ = h('button', 'le-btn le-btn--hero sh-btn-quest', '<span class="le-btn__ico">★</span><span class="le-btn__txt">任务<small>QUESTS</small></span>'); bQ.type = 'button';
     var bM = h('button', 'le-btn sh-btn-map', '<span class="le-btn__ico">✧</span><span class="le-btn__txt">航图<small>ATLAS</small></span>'); bM.type = 'button';
     bQ.addEventListener('click', function () { if (TL.el.hidden) SH.openTasks(); else closeTasks(); });
-    bM.addEventListener('click', SH.openMap);
-    nav.insertBefore(bM, nav.children[1]); nav.insertBefore(bQ, bM);
+    nav.insertBefore(bQ, nav.children[1]);   // 10-21:母港「航图 ATLAS」按钮与旧航图页已取消,航图改在飞船星图台打开
     LE.bus.on('select', function (e) { setTimeout(function () { SH.cardAsk(e.kind); }, 0); });
     P.on(function () { if (!TL.el.hidden) drawTasks(); if (!M.el.hidden) drawMap(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if (!M.el.hidden) M.el.hidden = true; else closeTasks(); } });
