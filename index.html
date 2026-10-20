@@ -502,6 +502,58 @@
       .x-dk.sm .x-dk__f img { width: 44% !important; }
       @media (max-width: 520px) { .x-dk__dial::before { width: 230px; margin-left: -115px; height: 48px; border-radius: 115px 115px 0 0 / 48px 48px 0 0; } }
       @media (prefers-reduced-motion: reduce) { .x-hud__bar::after { animation: none; } }
+      /* v0.6.2 · 卡片光效与 HUD 对齐概念图① */
+      .x-hud::before { display: none; }
+      .x-hud__frame { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; opacity: 0; transition: opacity .8s ease .15s; }
+      .x-ab.hud .x-hud__frame { opacity: 1; }
+      .x-hud > i { border-color: #f0cf86 !important; filter: drop-shadow(0 0 4px rgba(233,199,121,.8)); }
+      .x-hud > i:nth-child(2) { border-width: 2.5px 0 0 2.5px !important; } .x-hud > i:nth-child(3) { border-width: 2.5px 2.5px 0 0 !important; } .x-hud > i:nth-child(4) { border-width: 0 2.5px 2.5px 0 !important; } .x-hud > i:nth-child(5) { border-width: 0 0 2.5px 2.5px !important; }
+      .x-hud > i:nth-child(2) { left: 0; top: 0; right: auto; bottom: auto; border-radius: 6px 0 0 0; } .x-hud > i:nth-child(3) { right: 0; top: 0; left: auto; bottom: auto; border-radius: 0 6px 0 0; } .x-hud > i:nth-child(4) { right: 0; bottom: 0; left: auto; top: auto; border-radius: 0 0 6px 0; } .x-hud > i:nth-child(5) { left: 0; bottom: 0; right: auto; top: auto; border-radius: 0 0 0 6px; }
+      .x-hud__bar { top: 0 !important; height: 30px !important; gap: 12px !important; border: 0 !important; background: none !important; backdrop-filter: none !important; }
+      .x-hud__bar::after { display: none; }
+      .x-hud__bar .g s { width: 11px !important; height: 8px !important; transform: skewX(-35deg) !important; }
+      .x-hud__bar .g.t s { background: rgba(90,200,220,.2); } .x-hud__bar .g.t s.on { background: #5ac8dc; box-shadow: 0 0 6px rgba(90,200,220,.8); }
+      .x-hud__bar .rd { position: relative; width: 30px; height: 30px; flex: none; border-radius: 50%; margin: 0 4px;
+        background: radial-gradient(circle, #ffe7a8 0 2.5px, transparent 3.5px), repeating-radial-gradient(circle, transparent 0 4px, rgba(90,200,220,.45) 4.5px 5px), rgba(10,30,50,.6);
+        box-shadow: 0 0 0 1px rgba(90,200,220,.7), 0 0 14px rgba(90,200,220,.45); overflow: hidden; }
+      .x-hud__bar .rd::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: conic-gradient(from 0deg, rgba(120,230,255,.7), transparent 28%); animation: xdkSpin 3.2s linear infinite; }
+      .x-hud__tick { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); font: 400 10.5px/1 var(--sans); letter-spacing: .14em; color: rgba(234,240,255,.62); white-space: nowrap; opacity: 0; transition: opacity .6s ease .5s; }
+      .x-ab.hud .x-hud__tick { opacity: 1; } @media (max-width: 760px) { .x-hud__tick { display: none; } }
+      .x-dk__f { background: linear-gradient(160deg, rgba(235,240,255,.30), rgba(200,212,245,.12) 38%, rgba(160,175,225,.08) 68%, rgba(235,240,255,.20)), rgba(26,36,76,.42) !important;
+        border: 2px solid var(--accent) !important; border-radius: 12px !important;
+        box-shadow: 0 0 5px var(--accent), 0 0 20px var(--accent), 0 0 46px -8px var(--accent), inset 0 0 20px -5px var(--accent), inset 0 0 0 1px rgba(255,255,255,.22) !important; }
+      .x-dk__f::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(118deg, transparent 28%, rgba(255,255,255,.16) 40%, transparent 54%); }
+      .x-dk__f img { width: 66% !important; box-shadow: 0 0 26px var(--accent), 0 0 60px -6px var(--accent) !important; }
+      .x-dk__f small { color: rgba(255,255,255,.75) !important; text-shadow: 0 1px 3px rgba(0,0,0,.9); } .x-dk__f b { color: #fff !important; text-shadow: 0 0 10px var(--accent), 0 1px 3px rgba(0,0,0,.9); } .x-dk__f em { color: rgba(255,255,255,.85) !important; text-shadow: 0 1px 3px rgba(0,0,0,.9); }
+      .x-dk__c.fr .x-dk__f { box-shadow: 0 0 6px var(--accent), 0 0 30px var(--accent), 0 0 70px -6px var(--accent), inset 0 0 26px -4px var(--accent), inset 0 0 0 1px rgba(255,255,255,.35) !important;
+        background-image: radial-gradient(circle at 50% 36%, rgba(190,225,255,.55), transparent 32%), linear-gradient(90deg, transparent 6%, rgba(190,225,255,.75) 50%, transparent 94%), linear-gradient(transparent 4%, rgba(190,225,255,.6) 36%, transparent 70%),
+          linear-gradient(160deg, rgba(235,240,255,.32), rgba(200,212,245,.12) 38%, rgba(160,175,225,.08) 68%, rgba(235,240,255,.22)) !important;
+        background-size: 100% 100%, 100% 2px, 2px 100%, 100% 100% !important; background-position: 0 0, 0 36%, 50% 0, 0 0 !important; background-repeat: no-repeat !important; }
+      .x-dk__c.fr .x-dk__f img { animation: xdkFl 2.6s ease-in-out infinite; }
+      @keyframes xdkFl { 50% { box-shadow: 0 0 36px var(--accent), 0 0 90px -4px rgba(190,225,255,.8); } }
+      .x-dk.sm .x-dk__f img { width: 46% !important; }
+      @media (min-width: 1180px) {
+        .x-dk__rail, .x-dk__info { border-color: rgba(200,215,255,.2) !important; background: linear-gradient(160deg, rgba(235,240,255,.10), rgba(235,240,255,.03) 50%, rgba(235,240,255,.07)), rgba(12,18,40,.5) !important;
+          box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 10px 40px -20px rgba(0,0,0,.8) !important; }
+      }
+      .x-dk__rail button { grid-template-columns: 10px 1fr !important; }
+      .x-dk__rail button .pb { grid-column: 2; display: block; height: 3px; margin-top: 5px; border-radius: 2px; background: rgba(234,240,255,.1); overflow: hidden; }
+      .x-dk__rail button .pb s { display: block; height: 100%; background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+      .x-dk__rail button.soon .pb s { opacity: .45; }
+      .x-dk__info .pic { border-radius: 12px; }
+      .x-dk__info .gz { display: flex; justify-content: space-around; margin: 0 0 12px; }
+      .x-dk__info .gz div { text-align: center; font-size: 10px; color: var(--dim); letter-spacing: .1em; }
+      .x-dk__info .gz svg { display: block; width: 46px; height: 46px; margin: 0 auto 3px; }
+      .x-dk__info .gz b { font-size: 12px; color: rgba(234,240,255,.9); }
+      .x-dk__info .gz svg .a { animation: xdkSpin 6s linear infinite; transform-origin: 23px 23px; }
+      .x-dk__dial > button { border: 0 !important; background: none !important; font-size: 22px !important; text-shadow: 0 0 8px rgba(233,199,121,.8); }
+      .x-dk__dial::before { width: 320px !important; height: 44px !important; margin-left: -160px !important; top: -10px !important; border: 0 !important; border-radius: 0 !important;
+        background: radial-gradient(circle at 50% 260px, transparent 258px, rgba(240,207,134,.55) 259px 260px, transparent 261px), radial-gradient(ellipse at 50% 100%, rgba(233,199,121,.12), transparent 70%) !important; }
+      .x-dk__dial::after { content: ""; position: absolute; left: 50%; top: -10px; width: 320px; height: 44px; margin-left: -160px; pointer-events: none;
+        background: repeating-conic-gradient(from 0deg at 50% 260px, rgba(240,207,134,.6) 0 .3deg, transparent .3deg 2deg);
+        -webkit-mask: radial-gradient(circle at 50% 260px, transparent 247px, #000 248px 256px, transparent 257px); mask: radial-gradient(circle at 50% 260px, transparent 247px, #000 248px 256px, transparent 257px); }
+      @media (max-width: 520px) { .x-dk__dial::before, .x-dk__dial::after { width: 250px !important; margin-left: -125px !important; } }
+      @media (prefers-reduced-motion: reduce) { .x-hud__bar .rd::after, .x-dk__c.fr .x-dk__f img, .x-dk__info .gz svg .a { animation: none; } }
       @media (prefers-reduced-motion: reduce) { .x-dk__info .pic::before, .x-dk__info .pic::after { animation: none; } .x-hud > i, .x-hud__bar, .x-dk__rail, .x-dk__info { transition: none !important; } }
       .x-dk__hint { margin: 0; text-align: center; font-size: 12px; letter-spacing: .14em; color: var(--dim); }
       .x-dk__stage { position: relative; height: 380px; touch-action: pan-y; user-select: none; -webkit-user-select: none; cursor: grab; outline: none; }
@@ -698,7 +750,7 @@
     </div>
 
     <div class="x-ab" id="about" hidden role="dialog" aria-modal="true" aria-label="关于创世计划">
-      <div class="x-hud" aria-hidden="true"><i></i><i></i><i></i><i></i><div class="x-hud__bar" id="hudBar"></div></div>
+      <div class="x-hud" aria-hidden="true"><svg class="x-hud__frame" id="hudFrame"></svg><i></i><i></i><i></i><i></i><div class="x-hud__bar" id="hudBar"></div><div class="x-hud__tick" id="hudTick"></div></div>
       <button class="btn x-br__back" id="abBack">← 回到北斗</button>
       <div class="x-ab__in">
         <div class="x-ab__wrap">
@@ -771,7 +823,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.6.1</b></span>
+            <span>创世计划总门户 <b>v0.6.2</b></span>
           </footer>
         </div>
       </div>
@@ -1932,6 +1984,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.6.2", d: "2026-10-20", t: "卡片与 HUD 对齐概念图：磨砂玻璃卡+世界色霓虹边光、前卡星芒；顶栏雷达与斜段灯、四周切角框线；左舷航线进度条、右舷星桥/星历环形仪表；罗盘刻度弧。" },
         { w: "gn", v: "v0.6.1", d: "2026-10-20", t: "星盘对齐效果图：亮金厚底盘与扇区金带、弧形星桥带辉光、玻璃大卡，盘面倾斜度与光斑随鼠标移动；雷达顶栏、半圆罗盘。" },
         { w: "gn", v: "v0.6.0", d: "2026-10-20", t: "「关于创世计划」升级为 HUD 指挥舱：开场动画、三层环慢转与中心光柱、星桥能量脉冲、景深卡片，宽屏新增七世界航线表与当前世界情报板，底部罗盘拨盘。" },
         { w: "06", v: "v0.11", d: "2026-10-20", t: "点亮仪式上线：通关回首页时星盘转向新扇区、迷雾吹散、莲瓣绽放、隐藏数值翻牌。" },
@@ -2282,7 +2335,7 @@
         document.getElementById("dkRail").innerHTML = ORDER.map(function (id, i) {
           var w = byId[id];
           return '<li><button type="button" data-i="' + i + '" class="' + (w.live ? "" : "soon") + '" style="--accent:' + w.color + '"><i></i><b>' + w.name + '</b><small>' + wStat(w) +
-            (hasProgress(w) ? ' · <u>已到访</u>' : '') + '</small></button></li>';
+            (hasProgress(w) ? ' · <u>已到访</u>' : '') + '</small><span class="pb"><s style="width:' + (hasProgress(w) ? 100 : w.live ? 55 : 14) + '%"></s></span></button></li>';
         }).join("");
         document.getElementById("dkDial").innerHTML = ORDER.map(function (id, i) {
           var w = byId[id]; return '<li><button type="button" tabindex="-1" data-i="' + i + '" class="' + (w.live ? "" : "soon") + '" style="--accent:' + w.color + '"></button></li>';
@@ -2294,22 +2347,43 @@
         document.getElementById("dkDialR").addEventListener("click", function () { document.getElementById("dkNext").click(); });
         var lit = WORLDS.filter(function (w) { return w.live; }).length, e0 = LOG[0], W0 = lgW(e0.w), gs = "";
         for (var q = 0; q < WORLDS.length; q++) gs += '<s class="' + (q < lit ? "on" : "") + '"></s>';
-        document.getElementById("hudBar").innerHTML = '<span>GENESIS · 全息星盘</span><span class="g">' + gs + '</span><span>已开张 <b>' + lit + '/' + WORLDS.length +
-          '</b></span><span>星桥 <b>' + BRIDGES.length + '</b></span><em>星历 · ' + brEsc(W0.name + " " + e0.v) + '</em>';
+        var ts = ""; for (var q2 = 0; q2 < 6; q2++) ts += '<s class="' + (q2 < Math.min(6, Math.round(BRIDGES.length / 3)) ? "on" : "") + '"></s>';
+        document.getElementById("hudBar").innerHTML = '<span class="g t">' + ts + '</span><span>星桥 <b>' + BRIDGES.length + '</b> 座</span><i class="rd"></i><span>已开张 <b>' + lit + '/' + WORLDS.length +
+          '</b></span><span class="g">' + gs + '</span>';
+        document.getElementById("hudTick").textContent = "GENESIS · 星历 · " + W0.name + " " + e0.v + " · " + e0.d;
+        document.getElementById("dkDialL").textContent = "«"; document.getElementById("dkDialR").textContent = "»";
       }
       function dkInfo(i) {
         var w = byId[ORDER[i]], el = document.getElementById("dkInfo"), had = el.contains(document.activeElement);
         el.className = "x-dk__info" + (w.live ? "" : " soon"); el.style.setProperty("--accent", w.color);
         el.innerHTML = '<h4>当前世界 · ' + w.star + '</h4><div class="pic"><img src="world-' + ORDER[i] + '.webp" alt=""></div><b class="n">' + w.name + '</b><small class="e">' + w.en + ' · ' + w.field + '</small>' +
           '<dl><dt>状态</dt><dd>' + wStat(w) + '</dd>' + (w.meta[1] ? '<dt>内容</dt><dd>' + brEsc(w.meta[1]) + '</dd>' : '') + '<dt>适合</dt><dd>' + ageTxt(w) + '</dd></dl>' +
-          '<p>' + brEsc(w.why || w.desc) + '</p>' +
+          dkGauges(ORDER[i], w) + '<p>' + brEsc(w.why || w.desc) + '</p>' +
           (w.live ? '<a href="' + w.href + '" target="_blank" rel="noopener">进入' + w.name + ' ↗</a>' : '<span class="soon">即将点亮</span>');
         if (had) { var nf = el.querySelector("a"); if (nf) nf.focus({ preventScroll: true }); else { el.tabIndex = -1; el.focus({ preventScroll: true }); } } // 重绘时不丢焦点
+      }
+      function dkGauges(id, w) {
+        var nb = BRIDGES.filter(function (b) { return b.a.w === id || b.b.w === id; }).length, nl = LOG.filter(function (e) { return e.w === id; }).length;
+        function ring(v, max, col) { var c = 2 * Math.PI * 18, f = Math.min(1, v / max);
+          return '<svg viewBox="0 0 46 46"><circle cx="23" cy="23" r="18" fill="none" stroke="rgba(234,240,255,.12)" stroke-width="3"/><circle cx="23" cy="23" r="18" fill="none" stroke="' + col + '" stroke-width="3" stroke-linecap="round" stroke-dasharray="' + (c * f).toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 23 23)"/><circle class="a" cx="23" cy="23" r="13" fill="none" stroke="' + col + '" stroke-opacity=".5" stroke-width="1.5" stroke-dasharray="20 62"/></svg>'; }
+        return '<div class="gz"><div>' + ring(nb, 6, "#5ac8dc") + '星桥 <b>' + nb + '</b></div><div>' + ring(nl, 12, w.color) + '星历 <b>' + nl + '</b></div></div>';
+      }
+      function hudFrame() {
+        var s = document.getElementById("hudFrame"); if (!s) return;
+        var w = innerWidth - 20, hh = innerHeight - 20, cx = w / 2, bar = document.getElementById("hudBar"), bw = bar.offsetWidth || 0, nh = w >= 760 && bw ? bw / 2 + 26 : 0, dh = w >= 760 ? 150 : 0;
+        var G = "rgba(233,199,121,", d = "M44 1H" + (cx - nh - 30) + (nh ? "L" + (cx - nh) + " 34H" + (cx + nh) + "L" + (cx + nh + 30) + " 1" : "") + "H" + (w - 44);
+        var b = "M44 " + (hh - 1) + "H" + (cx - dh - 30) + (dh ? "L" + (cx - dh) + " " + (hh - 28) + "H" + (cx + dh) + "L" + (cx + dh + 30) + " " + (hh - 1) : "") + "H" + (w - 44);
+        s.setAttribute("viewBox", "0 0 " + w + " " + hh);
+        s.innerHTML = '<path d="' + d + '" fill="none" stroke="' + G + '.38)"/><path d="' + b + '" fill="none" stroke="' + G + '.3)"/>' +
+          '<path d="M1 44V' + (hh - 44) + 'M' + (w - 1) + ' 44V' + (hh - 44) + '" stroke="' + G + '.16)"/>' +
+          (nh ? '<path d="M' + (cx - nh - 120) + ' 1H' + (cx - nh - 30) + 'L' + (cx - nh) + ' 34M' + (cx + nh) + ' 34L' + (cx + nh + 30) + ' 1H' + (cx + nh + 120) + '" fill="none" stroke="#f0cf86" stroke-width="2" style="filter:drop-shadow(0 0 4px rgba(233,199,121,.9))"/>' : '') +
+          (dh ? '<path d="M' + (cx - dh - 30) + ' ' + (hh - 1) + 'L' + (cx - dh) + ' ' + (hh - 28) + 'M' + (cx + dh) + ' ' + (hh - 28) + 'L' + (cx + dh + 30) + ' ' + (hh - 1) + '" fill="none" stroke="#f0cf86" stroke-width="1.6"/>' : '');
       }
       function dkFrontUI() {
         var f = dkFront(); if (f === DK.front) return; DK.front = f;
         [].forEach.call(document.querySelectorAll("#dkRail button, #dkDial button"), function (b) { b.classList.toggle("on", +b.dataset.i === f); });
         dkInfo(f);
+        DK.cards.forEach(function (c, k) { c.classList.toggle("fr", k === f); });
       }
       function dkFlip(i, on) {
         if (on === false && DK.flip !== i) return;
@@ -2337,7 +2411,7 @@
       }
       function dkResize() {
         var r = DK.el.getBoundingClientRect(), w = r.width, dpr = Math.min(devicePixelRatio || 1, 2);
-        var R = Math.min(w * 0.4, 370), W = Math.max(70, Math.min(150, R * 0.4)), H = W * 1.46, ry = R * 0.3;
+        var R = Math.min(w * 0.4, 370), W = Math.max(70, Math.min(150, R * 0.4)), H = W * (R > 250 ? 1.58 : 1.46), ry = R * 0.3;
         if (innerHeight <= 480) { R = Math.min(w * 0.34, 210); W = Math.max(64, Math.min(92, R * 0.42)); H = W * 1.36; ry = R * 0.26; }
         var cy = Math.round(Math.max(H * 0.66 + ry + 22, H * (W < 100 ? 1.32 : 1.1) - ry + 10)), h = Math.round(cy + ry * 1.62 + 16);
         DK.el.style.height = h + "px";
@@ -2349,7 +2423,7 @@
         dkDraw();
       }
       function dkPose(i) {
-        var g = DK.geo, th = i * dkStep() + DK.ang, s = Math.sin(th), c = Math.cos(th), k = (c + 1) / 2, sc = 0.6 + 0.4 * k;
+        var g = DK.geo, th = i * dkStep() + DK.ang, s = Math.sin(th), c = Math.cos(th), k = (c + 1) / 2, sc = 0.5 + 0.55 * k;
         if (i === DK.flip) sc *= g.W < 100 ? 1.32 : 1.1; // 翻开的卡片略放大，便于阅读
         var ci = dkIntro(120 + i * 60, 320);
         return { th: th, x: g.cxD + g.R * s, y: g.cy + g.ryD * c + (1 - ci) * g.H * 0.45, sc: sc, k: k, s: s, ci: ci };
@@ -2447,9 +2521,9 @@
         // 卡片
         DK.cards.forEach(function (c, i) {
           var p = P[i];
-          c.style.transform = "translate(" + (p.x - g.W / 2).toFixed(1) + "px," + (p.y - g.H).toFixed(1) + "px) scale(" + p.sc.toFixed(3) + ") rotateY(" + (p.s * 24).toFixed(1) + "deg)";
+          c.style.transform = "translate(" + (p.x - g.W / 2).toFixed(1) + "px," + (p.y - g.H).toFixed(1) + "px) scale(" + p.sc.toFixed(3) + ") rotateY(" + (p.s * 30).toFixed(1) + "deg)";
           c.style.zIndex = Math.round(p.k * 200);
-          c.style.filter = "brightness(" + (0.5 + 0.5 * p.k).toFixed(2) + ")" + (p.k < 0.8 && i !== DK.flip ? " blur(" + ((0.8 - p.k) * 2.4).toFixed(2) + "px)" : "");
+          c.style.filter = "brightness(" + (0.6 + 0.45 * p.k).toFixed(2) + ")" + (p.k < 0.8 && i !== DK.flip ? " blur(" + ((0.8 - p.k) * 2.4).toFixed(2) + "px)" : "");
           c.style.opacity = p.ci.toFixed(3);
         });
         // 卡顶金色星桥：北斗连线，两端都已上线即点亮
@@ -2462,13 +2536,14 @@
           var hot = i === fr || j === fr, c = [(a[0] + b0[0]) / 2, Math.min(a[1], b0[1]) - Math.abs(b0[0] - a[0]) * 0.32 - g.H * 0.12];
           var op = (0.4 + 0.6 * (P[i].k + P[j].k) / 2) * (lit ? 1 : 0.45) * (hot ? 1 : 0.8), d = "M" + a[0].toFixed(1) + " " + a[1].toFixed(1);
           for (var sN = 1; sN <= 16; sN++) { var pt = qb(a, c, b0, sN / 16 * lp); d += "L" + pt[0].toFixed(1) + " " + pt[1].toFixed(1); }
-          if (lit) glow += '<path d="' + d + '" stroke="#ffcf7a" stroke-opacity="' + (op * 0.55).toFixed(2) + '" stroke-width="' + (hot ? 6 : 4) + '" fill="none"/>';
-          svg += '<path d="' + d + '" fill="none" stroke="' + (lit ? "#ffe3a3" : "#e9c779") + '" stroke-opacity="' + op.toFixed(2) + '" stroke-width="' + (lit ? (hot ? 2.2 : 1.5) : 1) + '"' + (lit ? "" : ' stroke-dasharray="3 4"') + '/>';
+          if (lit) glow += '<path d="' + d + '" stroke="#ffcf7a" stroke-opacity="' + (op * 0.55).toFixed(2) + '" stroke-width="' + (hot ? 8 : 6) + '" fill="none"/>';
+          svg += '<path d="' + d + '" fill="none" stroke="' + (lit ? "#ffe3a3" : "#e9c779") + '" stroke-opacity="' + op.toFixed(2) + '" stroke-width="' + (lit ? (hot ? 2.8 : 2) : 1) + '"' + (lit ? "" : ' stroke-dasharray="3 4"') + '/>';
           if (lit && lp >= 1 && !RM) for (var pp = 0; pp < 2; pp++) { // 能量脉冲沿星桥流动
             var u = (T * 0.4 + li * 0.27 + pp * 0.5) % 1, q = qb(a, c, b0, u);
             svg += '<circle cx="' + q[0].toFixed(1) + '" cy="' + q[1].toFixed(1) + '" r="' + (hot ? 3 : 2.2) + '" fill="#fff4cf" fill-opacity="' + (op * Math.sin(u * Math.PI)).toFixed(2) + '" filter="url(#dkG)"/>';
           }
         });
+        tops.forEach(function (t, k) { if (byId[ORDER[k]].live && P[k].ci >= 1) svg += '<circle cx="' + t[0].toFixed(1) + '" cy="' + t[1].toFixed(1) + '" r="' + (k === fr ? 4 : 2.8) + '" fill="#fff2c8" fill-opacity="' + (0.5 + 0.5 * P[k].k).toFixed(2) + '" filter="url(#dkG)"/>'; });
         svg = '<g filter="url(#dkB)">' + glow + '</g>' + svg;
         tops.forEach(function (t, i) {
           var lit = byId[ORDER[i]].live;
@@ -2520,7 +2595,7 @@
       DK.el.addEventListener("pointerup", dkUp); DK.el.addEventListener("pointercancel", dkUp);
       document.getElementById("dkPrev").addEventListener("click", function () { dkFlip(-1); dkGo((dkFront() - 1 + DK.n) % DK.n); SND.play("tick"); });
       document.getElementById("dkNext").addEventListener("click", function () { dkFlip(-1); dkGo((dkFront() + 1) % DK.n); SND.play("tick"); });
-      addEventListener("resize", function () { if (AB.open) dkResize(); });
+      addEventListener("resize", function () { if (AB.open) { dkResize(); hudFrame(); } });
       document.addEventListener("visibilitychange", function () { if (!document.hidden && AB.open) dkKick(); });
       // v0.6.1 鼠标视差：盘面倾斜与光斑跟随（仅鼠标，减少动态时关闭）
       AB.el.addEventListener("pointermove", function (e) {
@@ -2645,7 +2720,7 @@
         if (!AB.built) { buildAbout(); dkBuild(); dkFlip(-1); }
         abNews(); gdRestore();
         AB.open = true; AB.el.hidden = false; abTab(tab || 0);
-        DK.intro = performance.now(); DK.front = -1; dkResize(); dkKick(); lsSet(PITCH_K, "1"); document.getElementById("pitch").classList.add("seen");
+        DK.intro = performance.now(); DK.front = -1; dkResize(); hudFrame(); dkKick(); lsSet(PITCH_K, "1"); document.getElementById("pitch").classList.add("seen");
         requestAnimationFrame(function () { AB.el.classList.add("on"); setTimeout(function () { if (AB.open) AB.el.classList.add("hud"); }, RM ? 0 : 60); }); SND.play("bridge-open");
         document.getElementById("abBack").focus();
       }
