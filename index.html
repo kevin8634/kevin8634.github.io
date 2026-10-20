@@ -869,7 +869,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.6.8</b></span>
+            <span>创世计划总门户 <b>v0.6.8.1</b></span>
           </footer>
         </div>
       </div>
@@ -960,7 +960,7 @@
           age: ["huo","chen","he"], tags: ["ai","math"], why: "想弄懂 AI 是怎么学会的？亲手训练它、考考它，再给它立规矩。" },
         { id: "06", star: "摇光", name: "觉弈", en: "Ludoterra", field: "认知觉醒",
           desc: "看见自己的思维，做出更清醒的选择。", color: "#f5c26b", live: true,
-          meta: ["已上线 v0.16", "7 个关卡 · 地球Online 玩家手册"], href: "ludoterra/", prefix: ["gn:lt:"],
+          meta: ["已上线 v0.19", "7 个关卡 · 地球Online 玩家手册"], href: "ludoterra/", prefix: ["gn:lt:"],
           age: ["huo","chen","he"], tags: ["society"], why: "想看清自己怎么思考、怎么做选择？把每一次选择当成一局棋来复盘。", ageTxt: "星火 12+ · 星芽可试入门关" },
         { id: "07", star: "天枢", name: "天枢", en: "Starhelm", field: "天文",
           desc: "北斗第一星 · 用真实实时数据看见此刻的天空。", color: "#dfe6f3", live: true,
@@ -1828,7 +1828,7 @@
           if (bar && r < bar) return { x: C + Math.cos(off) * (k ? -r : r) + gauss() * 4, y: C + Math.sin(off) * (k ? -r : r) + gauss() * 4 };
           return { x: C + Math.cos(th) * r + gauss() * sp, y: C + Math.sin(th) * r + gauss() * sp };
         }
-        gxTheme(g, w.id, C, col, off, arms, pitch);
+        gxTheme(g, w.id, C, col, off, arms, pitch); c._th = [off, arms, pitch];
         // 螺旋臂尘埃
         var dust = 600 + Math.floor(Math.random() * 300);
         for (i = 0; i < dust; i++) {
@@ -1882,6 +1882,25 @@
         "void main(){ vec3 p = position; float u = fract(p.x + uTime * sp); vA = sin(u * 3.14159); p.x = (u - 0.5) * uL; vC = acol; gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0); gl_PointSize = size * uPix; }";
       var GL_F = "uniform sampler2D uTex; uniform float uAlpha; varying vec3 vC; varying float vA; void main(){ float t = texture2D(uTex, gl_PointCoord).a; gl_FragColor = vec4(vC * t * vA * uAlpha, 1.0); }";
       var GL_FD = "uniform sampler2D uTex; uniform float uAlpha; varying vec3 vC; varying float vA; void main(){ float t = texture2D(uTex, gl_PointCoord).a; gl_FragColor = vec4(vC, t * vA * uAlpha); }";
+      var GL_PV = "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }";
+      var GL_PF = "uniform sampler2D uTex; uniform float uAlpha, uTime, uPulse; varying vec2 vUv;" +
+        "void main(){ vec4 t = texture2D(uTex, vUv); float r = length(vUv - 0.5) * 2.0; float a = atan(vUv.y - 0.5, vUv.x - 0.5);" +
+        "float p = 1.0 + uPulse * (pow(0.5 + 0.5 * sin(r * 26.0 - uTime * 0.0032), 8.0) * 2.2 + pow(0.5 + 0.5 * sin(a * 3.0 + r * 9.0 - uTime * 0.0011), 12.0) * 1.2);" +
+        "gl_FragColor = vec4(t.rgb * t.a * uAlpha * p, 1.0); }";
+      var GX_PULSE = { "01": 0.25, "02": 0.45, "03": 0.3, "04": 0.4, "05": 1.0, "06": 0.35, "07": 0.15 };
+      function gxThemeLayer(w) {
+        var S = w.img.width, C = S / 2, c = mkC(S), g = c.getContext("2d"), th = w.img._th || [0, 2, 0.36];
+        g.globalCompositeOperation = "lighter";
+        g.save(); g.shadowColor = w.color; g.shadowBlur = 10; gxTheme(g, w.id, C, w.color, th[0], th[1], th[2]); g.restore();
+        gxTheme(g, w.id, C, w.color, th[0], th[1], th[2]);
+        gxTheme(g, w.id, C, "#ffffff", th[0], th[1], th[2]);
+        return c;
+      }
+      function glPlane(tex, pulse) {
+        var T = THREE, m = new T.ShaderMaterial({ uniforms: { uTex: { value: tex }, uAlpha: { value: 1 }, uTime: { value: 0 }, uPulse: { value: pulse } },
+          vertexShader: GL_PV, fragmentShader: GL_PF, transparent: true, depthWrite: false, depthTest: false, blending: T.AdditiveBlending });
+        return new T.Mesh(new T.PlaneGeometry(2, 2), m);
+      }
       function glLoad() {
         if (GL.tried) { if (GL.on && !GL.built) glBuildWorlds(); return; }
         GL.tried = true;
@@ -1922,7 +1941,7 @@
       }
       /* 从每界一形的星系图采样粒子，保留形态并给出厚度 */
       function glBuildWorlds() {
-        var T = THREE, N = GL.mob ? 3000 : 6500;
+        var T = THREE, N = GL.mob ? 1400 : 2800;
         GL.gx = {};
         for (var id in BR.worlds) {
           var w = BR.worlds[id], S = w.img.width, C = S / 2, dt = w.img.getContext("2d").getImageData(0, 0, S, S).data;
@@ -1940,12 +1959,15 @@
           }
           for (var j = 0; j < 4; j++) { pos.push(0, 0, 0); col.push(base[0] * 0.3 + 0.12, base[1] * 0.3 + 0.12, base[2] * 0.3 + 0.12); siz.push([80, 36, 16, 7][j]); ph.push(0); }
           for (j = 0; j < 22; j++) { var aa = Math.random() * 6.283, r2 = 0.15 + Math.random() * 0.6; pos.push(Math.cos(aa) * r2, Math.sin(aa) * r2, gauss() * 0.05); col.push(base[0] * 0.07, base[1] * 0.07, base[2] * 0.07); siz.push(60 + Math.random() * 70); ph.push(0); }
-          var mat = glMat(GL_V, GL_F); mat.uniforms.uTw.value = 0.35;
+          var mat = glMat(GL_V, GL_F); mat.uniforms.uTw.value = 0.5;
           var pts = new T.Points(glGeo(pos, col, siz, "ph", ph), mat);
           var inc = new T.Group(), out = new T.Group();
-          inc.rotation.x = Math.acos(0.55); inc.add(pts); out.add(inc); out.renderOrder = 5; pts.renderOrder = 5;
+          var base2 = glPlane(new T.CanvasTexture(w.img), 0), them = glPlane(new T.CanvasTexture(gxThemeLayer(w)), GX_PULSE[id] || 0.3);
+          base2.renderOrder = 4; them.renderOrder = 5; pts.renderOrder = 6;
+          var spin = new T.Group(); spin.add(base2); spin.add(them); spin.add(pts);
+          inc.rotation.x = Math.acos(0.55); inc.add(spin); out.add(inc);
           GL.scene.add(out);
-          GL.gx[id] = { out: out, inc: inc, pts: pts, mat: mat };
+          GL.gx[id] = { out: out, inc: inc, pts: spin, mat: mat, pm: [base2.material, them.material] };
         }
         GL.built = true;
       }
@@ -1969,14 +1991,14 @@
           var w2 = Math.random() < 0.25 ? [1, 0.91, 0.78] : [0.84, 0.88, 1], b2 = 0.2 + Math.random() * 0.55;
           col.push(w2[0] * b2, w2[1] * b2, w2[2] * b2); siz.push(1 + Math.random() * 2.2); sp.push(1 / 300000);
         }
-        for (i = 0; i < 46; i++) { pos.push(Math.random(), gauss() * rh * 0.09, 0); col.push(0.075, 0.08, 0.11); siz.push(rh * (0.3 + Math.random() * 0.4)); sp.push(1 / 300000); }
+        for (i = 0; i < 90; i++) { pos.push(Math.random(), gauss() * rh * 0.08, 0); var wm = Math.random() < 0.5; col.push(wm ? 0.13 : 0.08, wm ? 0.095 : 0.085, wm ? 0.07 : 0.115); siz.push(rh * (0.3 + Math.random() * 0.4)); sp.push(1 / 300000); }
         for (i = 0; i < 70; i++) { pos.push(Math.random(), gauss() * rh * 0.11, 0); col.push(0.9, 0.93, 1); siz.push(2.4 + Math.random() * 2); sp.push((0.6 + Math.random() * 0.8) / 70000); }
         var mr = glMat(GL_RV, GL_F); mr.uniforms.uL.value = rl * 1.1;
         var riv = new T.Points(glGeo(pos, col, siz, "sp", sp), mr); riv.renderOrder = 2;
         // 暗尘带（正常混合压暗）
         pos = []; col = []; siz = []; sp = [];
-        for (i = 0; i < 40; i++) { pos.push(Math.random(), gauss() * rh * 0.04, 0); col.push(0.055, 0.03, 0.025); siz.push(rh * (0.1 + Math.random() * 0.16)); sp.push(1 / 300000); }
-        var md = glMat(GL_RV, GL_FD, null, true); md.uniforms.uL.value = rl * 1.1; md.uniforms.uAlpha.value = 0.35;
+        for (i = 0; i < 110; i++) { pos.push(Math.random(), gauss() * rh * 0.035, 0); col.push(0.06, 0.035, 0.025); siz.push(rh * (0.06 + Math.random() * 0.14)); sp.push(1 / 300000); }
+        var md = glMat(GL_RV, GL_FD, null, true); md.uniforms.uL.value = rl * 1.1; md.uniforms.uAlpha.value = 0.5;
         var dust = new T.Points(glGeo(pos, col, siz, "sp", sp), md); dust.renderOrder = 3;
         GL.riv = new T.Group(); GL.riv.add(riv); GL.riv.renderOrder = 2; GL.scene.add(GL.riv);
         GL.dust = new T.Group(); GL.dust.add(dust); GL.scene.add(GL.dust);
@@ -1993,7 +2015,10 @@
           G.inc.rotation.x = Math.acos(0.55) + (RM ? 0 : Math.sin(now / 41000 + w.ph) * 0.12);
           G.pts.rotation.z = -(w.spin + spinT * w.dir);
           G.mat.uniforms.uTime.value = t; G.mat.uniforms.uPix.value = pr * Math.max(0.7, Math.pow(R / 150, 0.6));
-          G.mat.uniforms.uAlpha.value = (w.live ? 1 : 0.45) * (M && !M.w[id] ? 0.18 : 1);
+          var al = (w.live ? 1 : 0.45) * (M && !M.w[id] ? 0.18 : 1);
+          G.mat.uniforms.uAlpha.value = al * 0.55;
+          G.pm[0].uniforms.uAlpha.value = al * 0.95; G.pm[1].uniforms.uAlpha.value = al * 0.85;
+          G.pm[0].uniforms.uTime.value = t; G.pm[1].uniforms.uTime.value = t;
         }
         GL.r.render(GL.scene, GL.cam);
       }
@@ -2274,6 +2299,8 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.6.8.1", d: "2026-10-20", t: "星桥七星系辨识度回归概念 L：星系图层 + 加强主题特效（奇点前夜电路脉冲、觉弈金莲、生命源码双螺旋、宙律磁力线、元素工坊晶格），星河尘带更浓。" },
+        { w: "06", v: "v0.17–v0.19", d: "2026-10-20", t: "星盘迁至本地 Three.js；星闪加密、金属反射与鎏金流动；新增音乐播放条。" },
         { w: "gn", v: "v0.6.8", d: "2026-10-20", t: "「展开星桥」改用 Three.js / WebGL 渲染：七星系成为可倾斜自转的三维粒子星系，星河洋流粒子流动更细腻；设备不支持时自动退回原版。" },
         { w: "06", v: "v0.16", d: "2026-10-20", t: "星盘改为 WebGL 着色器渲染：三层台阶盘体、金属侧壁、星宿玻璃、鎏金流光与中心浑仪，不支持时自动退回 2D。" },
         { w: "gn", v: "v0.6.7", d: "2026-10-20", t: "「展开星桥」七星系升级：一界一形（黄金螺线、棒旋磁力线、六边晶格、双螺旋、电路旋臂、金莲、经典旋涡），在星河洋流中缓慢自转漂移。" },
