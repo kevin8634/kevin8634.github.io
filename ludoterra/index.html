@@ -130,7 +130,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   </div>
   <div id="pNote" aria-live="polite"></div>
 </aside>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.20</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.20.1</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -352,7 +352,11 @@ const CONS = [
 ];
 /* v0.16 WebGL 盘体(不支持时退回 2D) */
 let GLD = null; /* Three.js 异步加载完成前先用 2D 星盘 */
-import('./lt-disc-gl.js').then(m => m.makeDiscGL()).then(g => { GLD = g; }).catch(() => { GLD = null; });
+/* v0.20.1 修复:进入动画占用 WebGL 时星盘偶尔初始化失败而永久退回旧 2D 样式 → 失败重试,动画结束后再试 */
+let glTry = 0; const glOK = () => !!(GLD && GLD.ok);
+function initGL() { if (GLD || glTry > 6) return; glTry++;
+  import('./lt-disc-gl.js').then(m => m.makeDiscGL()).then(g => { if (g) GLD = g; else setTimeout(initGL, 800); }).catch(() => setTimeout(initGL, 800)); }
+initGL(); addEventListener('lt:intro-done', () => setTimeout(initGL, 100));
 const bloomCv = document.createElement('canvas'); const bcx = bloomCv.getContext('2d');
 function armMats(t) { return ARM.map(g => { const sp = reducedMotion ? g.ph : g.ph + t * g.sp; const ct = Math.cos(g.tilt), st = Math.sin(g.tilt), cs = Math.cos(sp), ss = Math.sin(sp);
   /* N = Ry·Rx(行主序),按列主序传入即 M = Nᵀ = 世界→环局部 */
@@ -426,7 +430,7 @@ function armillary(t, front) { const hc = LH.self * R + R * .2; const cz = P3(0,
       const y2 = y * ct - z * st, z2 = y * st + z * ct; const x3 = x * cs + z2 * ss, z3 = -x * ss + z2 * cs; pts.push(P3(x3, hc + y2, z3)); }
     [[1.8, `rgba(240,196,118,.95)`], [.6, 'rgba(255,244,214,.9)']].forEach(([lw, col], k) => { cx2.lineWidth = lw; cx2.strokeStyle = col; cx2.beginPath(); let on = false;
       pts.forEach(([x, y, z], i) => { const isF = z >= cz; if (isF === front) { on ? cx2.lineTo(x, y) : cx2.moveTo(x, y); on = true; } else on = false; }); cx2.stroke(); });
-    if (front && !reducedMotion) { const k = Math.floor(((t * .12 + gi * .33) % 1) * 96); const q = pts[k]; if (q[2] >= cz) glint(q[0], q[1], 1.4, .9); } }); }
+    if (front && !reducedMotion) { const k = ((Math.floor(((t * .12 + gi * .33) % 1) * 96) % 97) + 97) % 97; const q = pts[k]; if (q && q[2] >= cz) glint(q[0], q[1], 1.4, .9); } }); }
 
 function sectorPath(s, grow = 0) {
   cx2.beginPath(); const N = 40;
@@ -436,6 +440,7 @@ function sectorPath(s, grow = 0) {
 }
 function draw(now) {
   if (document.hidden) { requestAnimationFrame(draw); return; } /* 页面隐藏时暂停渲染 */
+  requestAnimationFrame(draw); /* v0.20.1 先排下一帧:某帧出错也不会冻结在旧星盘 */
   const t = (now - t0) / 1000; stepRite(now); qTip = null;
   if (!drag && Math.abs(vel) > 0.0001) { theta += vel; vel *= 0.94; }
   else if (!drag && !reducedMotion) theta += 0.0006;
@@ -448,7 +453,7 @@ function draw(now) {
   cx2.globalAlpha = 1;
   ES = TILT; EC = Math.sqrt(1 - TILT * TILT);
   /* 星宿盘:外缘厚度(细金侧壁)+ 半透明玻璃盘面 + 盘底青色辉光 */
-  if (GLD) glDraw(t, 0); else {
+  if (glOK()) glDraw(t, 0); else {
   wall(1.035, -0.045, 0, .65);
   ringPath(0, 1.035, 0); const dg = cx2.createRadialGradient(CX, CY, R * .05, CX, CY, R * 1.1); dg.addColorStop(0, 'rgba(60,150,170,.22)'); dg.addColorStop(.45, 'rgba(36,60,120,.16)'); dg.addColorStop(1, 'rgba(90,110,200,.10)'); cx2.fillStyle = dg; cx2.fill();
   /* 外圈细金带 + 刻度 */
@@ -460,7 +465,7 @@ function draw(now) {
   const drawSect = (s, i) => {
     const k = litK(s), on = k >= 1, isSel = sel === s.d.id, isHov = hover === s.d.id;
     const lift = (isHov || isSel) && !(rite && rite.s === s); if (lift) { cx2.save(); cx2.translate(0, -4); }
-    if (!GLD) {
+    if (!glOK()) {
     sectorPath(s, rite && rite.s === s ? 0.03 * Math.sin(Math.PI * k) : 0);
     if (k > 0 && k < 1) { cx2.fillStyle = 'rgba(150,160,200,.07)'; cx2.fill(); cx2.globalAlpha = k; }
     if (k > 0) { const [sx, sy] = P((s.r0 + s.r1) / 2, (s.a0 + s.a1) / 2, s.h); const lg = cx2.createRadialGradient(sx, sy, 2, sx, sy, R * .5); lg.addColorStop(0, 'rgba(255,205,115,.5)'); lg.addColorStop(.6, 'rgba(214,146,52,.34)'); lg.addColorStop(1, 'rgba(150,96,30,.28)'); cx2.fillStyle = lg; }
@@ -484,14 +489,14 @@ function draw(now) {
     cx2.globalAlpha = 1;
     if (lift) { cx2.restore(); qTip = { s, x: lx, y: ly - 4 + fs * 1.5 }; }
   };
-  const L3 = GLD ? { world() {}, others() {}, self() {} } : { world: () => {}, others: () => { wall(.74, 0, LH.others, .7); }, self: () => { wall(.49, LH.others, LH.self, .7); } };
+  const L3 = glOK() ? { world() {}, others() {}, self() {} } : { world: () => {}, others: () => { wall(.74, 0, LH.others, .7); }, self: () => { wall(.49, LH.others, LH.self, .7); } };
   const B3 = { world: () => {
       CONS.forEach((c, ci) => { [0, Math.PI].forEach((off, oi) => { const pp = c.pts.map(([u, v]) => P(0.79 + v * 0.045, c.a + off + u * 0.075));
         cx2.strokeStyle = 'rgba(200,215,255,.32)'; cx2.lineWidth = .7; cx2.beginPath(); c.ln.forEach(([i, j]) => { cx2.moveTo(pp[i][0], pp[i][1]); cx2.lineTo(pp[j][0], pp[j][1]); }); cx2.stroke();
         pp.forEach(([x, y], k) => { const tw = reducedMotion ? 1 : .6 + .4 * Math.sin(t * 2 + k * 1.7 + ci + oi * 3); cx2.fillStyle = `rgba(255,245,220,${.45 + .4 * tw})`; cx2.beginPath(); cx2.arc(x, y, 1.1 + .6 * tw, 0, 7); cx2.fill(); }); }); });
-      if (!GLD) band(.725, .74, 0, t, -.25, .9); },
-    others: () => { if (!GLD) band(.475, .49, LH.others, t, .4, .9); },
-    self: () => { if (!GLD) band(.225, .24, LH.self, t, -.35, .9); } };
+      if (!glOK()) band(.725, .74, 0, t, -.25, .9); },
+    others: () => { if (!glOK()) band(.475, .49, LH.others, t, .4, .9); },
+    self: () => { if (!glOK()) band(.225, .24, LH.self, t, -.35, .9); } };
   ['world', 'others', 'self'].forEach(L => { L3[L](); SECT.forEach((s, i) => { if (s.d.layer === L) drawSect(s, i); }); B3[L](); });
   /* 能量弧:同一关覆盖的两个域都点亮后,以流动金弧相连 */
   TASKS.filter(tk => tk.live && isDone(tk.id) && tk.domains.length > 1).forEach((tk, ti) => {
@@ -510,7 +515,7 @@ function draw(now) {
     const [x, y] = P(b.r, b.a, hOf(b.r)); const rr = b.s * R * (1.6 - b.life * 0.6); const fg = cx2.createRadialGradient(x, y, 0, x, y, rr);
     fg.addColorStop(0, `rgba(225,228,240,${0.32 * b.life})`); fg.addColorStop(1, 'rgba(225,228,240,0)'); cx2.fillStyle = fg; cx2.beginPath(); cx2.ellipse(x, y, rr, rr * TILT * 1.4, 0, 0, 7); cx2.fill(); }
   const [LX, LY] = P(0, 0, LH.self);
-  if (!GLD) armillary(t, false);
+  if (!glOK()) armillary(t, false);
   /* 中心光柱(呼吸) */
   { const br = reducedMotion ? .8 : .65 + .35 * Math.sin(t * 1.2); const top = LY - R * .85; const bw = R * 0.06;
     const pg = cx2.createLinearGradient(0, LY, 0, top); pg.addColorStop(0, `rgba(255,236,190,${.42 * br})`); pg.addColorStop(1, 'rgba(255,236,190,0)');
@@ -533,7 +538,7 @@ function draw(now) {
   if (mDone) { const hr = pr * 0.24 * pulse; const hg = cx2.createRadialGradient(0, -pr * 0.12, 0, 0, -pr * 0.12, hr * 2.2);
     hg.addColorStop(0, '#fffaf0'); hg.addColorStop(0.45, 'rgba(255,226,160,.9)'); hg.addColorStop(1, 'rgba(255,226,160,0)'); cx2.fillStyle = hg; cx2.beginPath(); cx2.arc(0, -pr * 0.12, hr * 2.2, 0, 7); cx2.fill(); }
   cx2.restore();
-  if (GLD) glDraw(t, 1); else armillary(t, true);
+  if (glOK()) glDraw(t, 1); else armillary(t, true);
   /* 先贤勋章:绕盘沿,随旋转 */
   const meds = GUIDE_ORDER.map((k, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / GUIDE_ORDER.length; const [x, y] = P(1.13, a); const depth = Math.sin(a + theta); return { k, x, y, depth }; })
     .sort((a, b) => a.depth - b.depth);
@@ -560,7 +565,6 @@ function draw(now) {
     cx2.fillStyle = 'rgba(10,11,30,.85)'; cx2.strokeStyle = 'rgba(245,194,107,.5)'; cx2.lineWidth = 1; cx2.beginPath();
     cx2.roundRect ? cx2.roundRect(x - w / 2, y - 11, w, 22, 11) : cx2.rect(x - w / 2, y - 11, w, 22); cx2.fill(); cx2.stroke();
     cx2.fillStyle = '#fff3d6'; cx2.textAlign = 'center'; cx2.textBaseline = 'middle'; cx2.fillText(q, x, y + 0.5); }
-  requestAnimationFrame(draw);
 }
 const ang = a => ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
 function drawButterfly(x, y, s, t) { const f = reducedMotion ? 1 : 0.75 + 0.25 * Math.sin(t * 6);
