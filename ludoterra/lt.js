@@ -69,12 +69,12 @@ export function chrome({ home = './', extra = '' } = {}) {
 /* ---------- HUD:隐藏数值 ---------- */
 export function hud(parent = document.body) {
   const el = document.createElement('aside'); el.className = 'lt-hud lt-panel'; el.setAttribute('aria-label', '隐藏数值');
-  const render = () => {
+  const render = (hold = [], flip = []) => {
     const rows = STATS.map(s => {
-      const open = isDone(s.by); const v = open ? (store.get('stat_' + s.id, 60) || 60) : 0;
-      return `<div class="row ${open ? '' : 'locked'}" title="${open ? s.name : '通关后显形'}"><span class="n">${open ? s.name : '???'}</span><span class="bar"><i style="width:${v}%"></i></span></div>`;
+      const open = isDone(s.by) && !hold.includes(s.id); const v = open ? (store.get('stat_' + s.id, 60) || 60) : 0;
+      return `<div class="row ${open ? '' : 'locked'}${open && flip.includes(s.id) ? ' flip' : ''}" data-id="${s.id}" title="${open ? s.name : '通关后显形'}"><span class="n">${open ? s.name : '???'}</span><span class="bar"><i style="width:${v}%"></i></span></div>`;
     }).join('');
-    const n = STATS.filter(s => isDone(s.by)).length;
+    const n = STATS.filter(s => isDone(s.by) && !hold.includes(s.id)).length;
     el.innerHTML = `<h4>隐藏数值 ${n}/${STATS.length}</h4>${rows}<div class="tip">地球Online 不显示这些数值。每看见一条规则,就显形一条。</div>`;
   };
   render(); parent.appendChild(el); return { el, render };
