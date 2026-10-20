@@ -207,85 +207,6 @@
   function closeTasks() { if (TL.el) TL.el.hidden = true; document.body.classList.remove('sh-side'); }
   SH.closeTasks = closeTasks;
 
-  /* ------------------------------ 航图 v0 ------------------------------ */
-  var M = {};
-  function buildMap() {
-    var el = h('section', 'sh-map'); el.id = 'sh-map'; el.hidden = true;
-    el.innerHTML = '<div class="sh-map__bar le-hud"><div><div class="le-kicker">STARHELM · ATLAS</div><h2>航图 <small>七星域</small></h2><p class="sh-map__sum"></p></div><button class="le-close" type="button" aria-label="关闭">×</button></div>' +
-      '<canvas></canvas><div class="sh-map__tip le-hud" hidden></div>';
-    document.body.appendChild(el);
-    M.el = el; M.cv = el.querySelector('canvas'); M.tip = el.querySelector('.sh-map__tip'); M.sum = el.querySelector('.sh-map__sum');
-    el.querySelector('.le-close').addEventListener('click', function () { el.hidden = true; });
-    M.cv.addEventListener('click', function (e) { mapTap(e.clientX, e.clientY); });
-    window.addEventListener('resize', function () { if (!el.hidden) drawMap(); });
-  }
-  function mapLayout() {
-    var W = innerWidth, H = innerHeight, cx = W / 2, cy = H / 2 + (W < 640 ? 40 : 30);
-    var R = W < 640 ? Math.min(W / 2 - 40, (H - 300) / 2) : Math.min(W, H - 120) / 2 - 20;
-    // 已开放的星域 I 占内圈大半(给知识星留位置),II–VII 依次排在外圈
-    return { W: W, H: H, cx: cx, cy: cy, ring: function (n) { return W < 640 ? (n === 1 ? R * 0.66 : R * (0.76 + (n - 2) * 0.048)) : (n === 1 ? R * 0.46 : R * (0.6 + (n - 2) * 0.08)); } };
-  }
-  function drawMap() {
-    var pr = Math.min(2, window.devicePixelRatio || 1), L = mapLayout(), cv = M.cv;
-    cv.width = L.W * pr; cv.height = L.H * pr; cv.style.width = L.W + 'px'; cv.style.height = L.H + 'px';
-    var x = cv.getContext('2d'); x.setTransform(pr, 0, 0, pr, 0, 0); x.clearRect(0, 0, L.W, L.H);
-    var bg = x.createRadialGradient(L.cx, L.cy, 10, L.cx, L.cy, Math.max(L.W, L.H) / 1.2);
-    bg.addColorStop(0, '#141c45'); bg.addColorStop(1, '#03050f'); x.fillStyle = bg; x.fillRect(0, 0, L.W, L.H);
-    M.hits = [];
-    SH.DOMAINS.forEach(function (D) {
-      var r = L.ring(D.n);
-      x.setLineDash(D.open ? [] : [3, 6]); x.lineWidth = D.open ? 1.4 : 1;
-      x.strokeStyle = D.open ? 'rgba(214,226,255,0.55)' : 'rgba(150,165,210,0.22)';
-      x.beginPath(); x.arc(L.cx, L.cy, r, 0, 7); x.stroke(); x.setLineDash([]);
-      var G = SH.guide(D.guide), a = -Math.PI / 2 - 0.42, narrow = L.W < 640;
-      var lx = L.cx + Math.cos(a) * r, ly = L.cy + Math.sin(a) * r;
-      x.font = '600 12px ' + getComputedStyle(document.body).fontFamily; x.textAlign = 'right';
-      if (D.n === 1) { lx = L.cx + 6 + (x.measureText('I 家园 · 天枢').width / 2); ly = L.cy + 36; }
-      else if (narrow) { x.textAlign = 'left'; lx = 14; ly = L.H - 14 - (7 - D.n) * 30; }
-      x.fillStyle = D.open ? '#e8eeff' : 'rgba(170,182,220,0.55)';
-      x.fillText(['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][D.n] + ' ' + D.zh + ' · ' + G.zh + (D.open ? '' : ' · 即将点亮'), narrow && D.n > 1 ? lx : lx - 6, ly);
-      x.font = '10px ' + getComputedStyle(document.body).fontFamily; x.fillStyle = 'rgba(170,182,220,0.45)';
-      x.fillText('约 10^' + D.scale + ' 米', narrow && D.n > 1 ? lx : lx - 6, ly + 13);
-      M.hits.push({ x: narrow && D.n > 1 ? lx + 60 : lx - 60, y: ly - 4, r: 40, domain: D });
-    });
-    // 中心:你
-    x.fillStyle = '#9fffd0'; x.shadowColor = '#5dffb0'; x.shadowBlur = 12; x.beginPath(); x.arc(L.cx, L.cy, 4, 0, 7); x.fill(); x.shadowBlur = 0;
-    x.font = '600 12px sans-serif'; x.textAlign = 'center'; x.fillStyle = '#c8ffe6'; x.fillText('你', L.cx, L.cy + 18);
-    // 知识星
-    var lit = 0, tot = 0;
-    [1, 2].forEach(function (d) {
-      var list = SH.STARS.filter(function (s) { return s.d === d; }), r = L.ring(d);
-      list.forEach(function (s, i) {
-        var a = (d === 1 ? -Math.PI / 2 + 0.3 : 1.9) + (i / Math.max(1, list.length)) * Math.PI * (d === 1 ? 2 : 0.3);
-        var sx = L.cx + Math.cos(a) * r, sy = L.cy + Math.sin(a) * r, on = P.lit(s); tot++; if (on) lit++;
-        if (on) { x.fillStyle = '#ffffff'; x.shadowColor = '#cfe0ff'; x.shadowBlur = 14; } else x.fillStyle = 'rgba(160,175,215,0.35)';
-        x.beginPath(); x.arc(sx, sy, on ? 4.2 : 2.6, 0, 7); x.fill(); x.shadowBlur = 0;
-        if (on || (d === 1 && L.W >= 640)) { var out = i % 2 ? 1 : -1, tx = L.cx + Math.cos(a) * (r + out * 16), ty = L.cy + Math.sin(a) * (r + out * 16) + 4;
-          x.font = '11px sans-serif'; x.textAlign = 'center'; x.fillStyle = on ? 'rgba(232,238,255,0.95)' : 'rgba(160,175,215,0.45)'; x.fillText(s.zh, tx, ty); }
-        M.hits.push({ x: sx, y: sy, r: 16, star: s, on: on });
-      });
-    });
-    M.sum.textContent = '已点亮 ' + lit + ' / ' + tot + ' 颗知识星 · 由近及远七个星域,圈越大、尺度越大(对数刻度)';
-  }
-  function mapTap(cx, cy) {
-    var best = null;
-    (M.hits || []).forEach(function (t) { var d = Math.hypot(t.x - cx, t.y - cy); if (d < t.r && (!best || d < best.d)) best = { t: t, d: d }; });
-    if (!best) { M.tip.hidden = true; return; }
-    var t = best.t, html;
-    if (t.star) {
-      var b = t.star.by.split(':'), src;
-      if (b[0] === 'explore') src = { shells: '打开「轨道分层」图层', pass: '查看空间站过境预报', subsolar: '点一下地球上的太阳直射点', moon: '点一下月球' }[b[1]];
-      else if (b[0] === 'task') src = '任务「' + (task(b[1]) || {}).q + '」(即将开放)';
-      else src = '任务「' + task(b[0]).q + '」第 ' + b[1] + ' 关';
-      html = '<b>' + U.esc(t.star.zh) + '</b> ' + (t.on ? '<span class="le-tag">已点亮</span>' : '<span class="le-tag is-warn">未点亮</span>') + '<p>来自:' + U.esc(src) + '</p>' + (t.star.bridge ? '<p>✦ 星桥 → ' + U.esc(t.star.bridge) + '</p>' : '');
-    } else {
-      var D = t.domain, G = SH.guide(D.guide);
-      html = '<b>星域 ' + D.n + ' · ' + U.esc(D.zh) + '</b><p>' + U.esc(D.blurb) + '</p><p><i>' + U.esc(G.zh) + ':' + U.esc(G.line) + '</i></p>';
-    }
-    M.tip.innerHTML = html; M.tip.hidden = false;
-  }
-  SH.openMapOld = function () { closeTasks(); M.el.hidden = false; M.tip.hidden = true; drawMap(); snd.glass(523.25); };
-
   /* ------------------------------ 卡片上的向导提问 ------------------------------ */
   SH.cardAsk = function (kind) {
     var a = SH.ASK[kind]; if (!a) return;
@@ -306,16 +227,15 @@
   SH.openMap = function () { closeTasks(); if (SH.voyEnter) SH.voyEnter(); };
   /* ------------------------------ 初始化 ------------------------------ */
   SH.initCore = function () {
-    buildQuest(); buildTasks(); buildMap();
+    buildQuest(); buildTasks();
     var _show = LE.ui.showCard;   // 每张新卡片先清掉上一张的向导提问
     LE.ui.showCard = function (c) { var o = document.querySelector('#card .sh-cardask'); if (o) o.remove(); _show(c); };
     var nav = document.querySelector('.le-actions');
     var bQ = h('button', 'le-btn le-btn--hero sh-btn-quest', '<span class="le-btn__ico">★</span><span class="le-btn__txt">任务<small>QUESTS</small></span>'); bQ.type = 'button';
-    var bM = h('button', 'le-btn sh-btn-map', '<span class="le-btn__ico">✧</span><span class="le-btn__txt">航图<small>ATLAS</small></span>'); bM.type = 'button';
     bQ.addEventListener('click', function () { if (TL.el.hidden) SH.openTasks(); else closeTasks(); });
     nav.insertBefore(bQ, nav.children[1]);   // 10-21:母港「航图 ATLAS」按钮与旧航图页已取消,航图改在飞船星图台打开
     LE.bus.on('select', function (e) { setTimeout(function () { SH.cardAsk(e.kind); }, 0); });
-    P.on(function () { if (!TL.el.hidden) drawTasks(); if (!M.el.hidden) drawMap(); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { if (!M.el.hidden) M.el.hidden = true; else closeTasks(); } });
+    P.on(function () { if (!TL.el.hidden) drawTasks(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeTasks(); });
   };
 })();
