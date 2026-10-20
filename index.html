@@ -768,6 +768,8 @@
       }
           .x-fs { background: none; border: 0; padding: 0 0 0 12px; font: inherit; color: rgba(233,199,121,.8); cursor: pointer; }
       .x-fs:hover, .x-fs:focus-visible { color: #e9c779; text-decoration: underline; }
+      @media (max-width: 760px), (max-height: 480px) { .x-rf { display: none; } }
+      .x-rf { color: rgba(234,240,255,.62); } .x-rf kbd { font: inherit; color: #e9c779; border: 1px solid rgba(233,199,121,.5); border-radius: 4px; padding: 0 4px; }
       .x-fs kbd { font: inherit; border: 1px solid rgba(233,199,121,.5); border-radius: 4px; padding: 0 4px; }
     </style>
   </head>
@@ -831,6 +833,7 @@
 
       <div class="foot">
         <span>免费 · 无需注册 · 进度只保存在你的设备上</span>
+        <span class="x-rf" id="rfTip">网站更新较快，按 <kbd>Ctrl</kbd>+<kbd>F5</kbd> 强制刷新，查看最新效果</span>
         <button type="button" id="fsTip" class="x-fs" hidden>⛶ 按 <kbd>F11</kbd> 全屏，体验更好</button>
         <button id="lawBtn">创世七律</button>
       </div>
@@ -1008,7 +1011,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.7.0.5</b></span>
+            <span>创世计划总门户 <b>v0.8.0</b></span>
           </footer>
         </div>
       </div>
@@ -1631,6 +1634,7 @@
         if (intro.done && V3.lyK > 0.01) drawEarth(V3.lyK);
 
         // 星球：由远及近绘制
+        if (intro.done) igniteCheck(T);
         var drawList = WORLDS.slice().sort(function (a, b) { return b.z - a.z; });
         for (var n = 0; n < drawList.length; n++) drawPlanet(drawList[n], T, fly, p);
 
@@ -1689,6 +1693,16 @@
             var fx = a.x + (b.x - a.x) * u, fy = a.y + (b.y - a.y) * u;
             ctx.globalAlpha = 0.85 * Math.min(dimOf(a), dimOf(b));
             ctx.drawImage(flowSprite(), fx - 7, fy - 7, 14, 14);
+            if (a.lit && b.lit && !RM) {   // v0.8 星链：两端都已点亮时，星光沿连线成串流动
+              var cl = ctx.createLinearGradient(a.x, a.y, b.x, b.y); cl.addColorStop(0, a.color); cl.addColorStop(1, b.color);
+              ctx.strokeStyle = cl; ctx.globalAlpha = 0.5 * Math.min(dimOf(a), dimOf(b)); ctx.lineWidth = 1.6;
+              ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+              for (var q = 0; q < 3; q++) {
+                var u2 = (T * 0.32 + q / 3 + i * 0.17) % 1;
+                ctx.globalAlpha = 0.9 * Math.min(dimOf(a), dimOf(b)) * Math.sin(u2 * Math.PI);
+                ctx.drawImage(flowSprite(), a.x + (b.x - a.x) * u2 - 9, a.y + (b.y - a.y) * u2 - 9, 18, 18);
+              }
+            }
             ctx.globalAlpha = 1;
           }
         }
@@ -1736,6 +1750,76 @@
         return (dimCache[id] = c);
       }
 
+      /* ---------- v0.8 七星升级：A 星核冠冕 + B 星链点火 ---------- */
+      var crownCache = {};
+      function crownSprite(w) {   // 学科冠冕：复用星桥七星系的主题图形，中心镂空露出星球
+        if (crownCache[w.id]) return crownCache[w.id];
+        var S = 420, C = S / 2, c = mkCanvas(S, S), g = c.getContext("2d");
+        g.globalCompositeOperation = "lighter";
+        g.save(); g.shadowColor = w.color; g.shadowBlur = 12; gxTheme(g, w.id, C, w.color, 0.3, 3, 0.36); g.restore();
+        gxTheme(g, w.id, C, w.color, 0.3, 3, 0.36);
+        g.globalCompositeOperation = "destination-out";
+        var m = g.createRadialGradient(C, C, 0, C, C, C);
+        m.addColorStop(0, "rgba(0,0,0,1)"); m.addColorStop(0.2, "rgba(0,0,0,0.9)"); m.addColorStop(0.42, "rgba(0,0,0,0)");
+        m.addColorStop(0.86, "rgba(0,0,0,0)"); m.addColorStop(1, "rgba(0,0,0,1)");
+        g.fillStyle = m; g.fillRect(0, 0, S, S);
+        return (crownCache[w.id] = c);
+      }
+      var IG = { K: "gn:portal:_lit", q: {}, last: -9 };
+      function igniteCheck(T) {   // 首次点亮的世界播放一次点火（存本机，不计进度）
+        if (T - IG.last < 1) return; IG.last = T;
+        if (demo) return;
+        var seen = (lsGet(IG.K) || "").split(","), add = [], n = 0;
+        WORLDS.forEach(function (w) {
+          if (w.lit && seen.indexOf(w.id) < 0 && !IG.q[w.id]) { add.push(w.id); if (!RM) { IG.q[w.id] = T + 0.5 + n * 0.45; w.ck = 0; n++; } }
+        });
+        if (add.length) lsSet(IG.K, seen.concat(add).filter(Boolean).join(","));
+      }
+      function drawCrown(w, x, y, r, T, i, op) {
+        var tgt = w.lit ? 1 : (w.live ? 0.25 : 0), st = IG.q[w.id];
+        if (st && T < st) tgt = 0.25;
+        if (w.ck === undefined) w.ck = tgt;
+        w.ck += (tgt - w.ck) * (RM ? 1 : 0.06);
+        if (w.ck < 0.02) return;
+        var k = w.ck, beat = RM ? 0 : Math.pow(0.5 + 0.5 * Math.sin(T * 2.4 + i), 6);
+        var D = r * (2.6 + 2.2 * k) * (1 + 0.04 * beat);
+        ctx.save(); ctx.globalCompositeOperation = "lighter";
+        ctx.globalAlpha = op * (0.16 + 0.5 * k) * (0.85 + 0.3 * beat);
+        ctx.translate(x, y); ctx.rotate(RM ? 0 : T * (0.05 + 0.04 * k) * (i % 2 ? -1 : 1));
+        ctx.drawImage(crownSprite(w), -D / 2, -D / 2, D, D);
+        ctx.restore();
+        if (w.lit && k > 0.6 && !RM) {   // 心跳脉冲环
+          for (var j = 0; j < 2; j++) {
+            var ph = (T * 0.4 + i * 0.13 + j * 0.5) % 1;
+            ctx.strokeStyle = hexA(w.color, (1 - ph) * 0.55 * op * k); ctx.lineWidth = 1.3;
+            ctx.beginPath(); ctx.arc(x, y, r * (1.3 + 1.6 * ph), 0, 6.2832); ctx.stroke();
+          }
+        }
+      }
+      function drawIgnite(w, x, y, r, T) {
+        var st = IG.q[w.id]; if (!st || T < st) return;
+        var t = (T - st) / 1.8; if (t >= 1) { delete IG.q[w.id]; return; }
+        var e = 1 - Math.pow(1 - t, 3), f = 1 - t;
+        ctx.save(); ctx.globalCompositeOperation = "lighter";
+        var fg = ctx.createRadialGradient(x, y, 0, x, y, r * 2.4);   // 核心闪光
+        fg.addColorStop(0, "rgba(255,255,255," + (0.9 * f) + ")"); fg.addColorStop(0.3, hexA(w.color, 0.6 * f)); fg.addColorStop(1, hexA(w.color, 0));
+        ctx.fillStyle = fg; ctx.beginPath(); ctx.arc(x, y, r * 2.4, 0, 6.2832); ctx.fill();
+        ctx.strokeStyle = hexA(w.color, 0.9 * f); ctx.lineWidth = 3 * f + 0.5;   // 冲击波
+        ctx.beginPath(); ctx.arc(x, y, r * (1 + 2.6 * e), 0, 6.2832); ctx.stroke();
+        ctx.strokeStyle = "rgba(255,255,255," + (0.6 * f) + ")"; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(x, y, r * (1 + 1.8 * e), 0, 6.2832); ctx.stroke();
+        var L = r * 4 * (0.4 + 0.6 * f), hg = ctx.createLinearGradient(x - L, y, x + L, y);   // 镜头光晕
+        hg.addColorStop(0, hexA(w.color, 0)); hg.addColorStop(0.5, "rgba(255,255,255," + (0.85 * f) + ")"); hg.addColorStop(1, hexA(w.color, 0));
+        ctx.fillStyle = hg; ctx.fillRect(x - L, y - 1.2, L * 2, 2.4);
+        ctx.fillStyle = hexA(w.color, 0.9 * f);   // 火花
+        for (var j = 0; j < 20; j++) {
+          var a = j * 2.3999 + w.id.charCodeAt(1), d = r * (1.1 + (1.2 + (j % 5) * 0.35) * e);
+          ctx.beginPath(); ctx.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, 1.8 * f + 0.4, 0, 6.2832); ctx.fill();
+        }
+        ctx.restore();
+        if (t < 0.05 && !w._igS) { w._igS = 1; SND.play("unlock"); }
+      }
+
       function drawPlanet(w, T, fly, p) {
         var i = ORDER.indexOf(w.id);
         var k = clamp((fly * 7 - i * 0.55) / 1.6);
@@ -1767,7 +1851,8 @@
         ctx.drawImage(gs.c, x - gr, y - gr, gr * 2, gr * 2);
         ctx.globalAlpha = 1;
 
-        // 已点亮光环
+        // v0.8 星核冠冕（点亮后展开 + 心跳脉冲；未点亮只留收拢的淡冠冕）
+        if (e >= 1) drawCrown(w, x, y, r, T, i, op);
         if (w.lit) {
           ctx.strokeStyle = "rgba(233,199,121," + (0.75 * dim) + ")";
           ctx.lineWidth = 1.4; ctx.setLineDash([]);
@@ -1793,6 +1878,7 @@
           ctx.restore();
         }
         ctx.globalAlpha = 1;
+        if (e >= 1) drawIgnite(w, x, y, r, T);
 
         // 文字
         if (e > 0.9 && (intro.done || p > 0.9)) {
@@ -2662,6 +2748,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.0", d: "2026-10-21", t: "北斗七星升级：每颗星换上学科冠冕，点亮后展开并随心跳脉动；第一次点亮会播放点火动画，相邻两颗都点亮时星光沿连线流动。页脚新增强制刷新提示。" },
         { w: "02", v: "v0.3-α2–α2.1", d: "2026-10-21", t: "轨道任务第 2、4、5 关搬进 3D 舞台：三维地球、时空网格引力井、绕圈涟漪；从门户进入宙律首页时开场动画恢复播放。" },
         { w: "07", v: "v0.4.2", d: "2026-10-20", t: "弦穹号驾驶舱与星璃改为 2.5D 呈现：深度视差、全息投影、会眨眼的星璃；舷窗外仍是真实 3D 舱外场景。" },
         { w: "gn", v: "v0.7.0.5", d: "2026-10-21", t: "星历新增天枢 Starhelm v0.4.2、宙律 v0.3-α2–α2.1。" },
@@ -3509,6 +3596,12 @@
     </script>
   <script>
   (function () { // v0.7.0.2 全屏提示：仅桌面（精确指针、宽≥1000、高≥600），全屏时隐藏，点击可直接全屏
+    (function () { /* v0.8.0 强制刷新提示：Mac 显示 ⌘+Shift+R，触屏显示「重新打开页面」 */
+      var t = document.getElementById("rfTip"); if (!t) return;
+      var mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent), coarse = matchMedia && matchMedia("(pointer: coarse)").matches;
+      if (coarse) t.textContent = "网站更新较快，看不到新效果时请关闭页面后重新打开";
+      else if (mac) t.innerHTML = "网站更新较快，按 <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> 强制刷新，查看最新效果";
+    })();
     var b = document.getElementById("fsTip"); if (!b) return;
     var mac = /Mac/.test(navigator.platform || "");
     if (mac) b.innerHTML = "⛶ 按 <kbd>⌃⌘F</kbd> 全屏，体验更好";
