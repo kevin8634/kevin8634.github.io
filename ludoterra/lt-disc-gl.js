@@ -1,6 +1,6 @@
-/* 觉弈 Ludoterra · 星盘 WebGL 渲染(v0.16)
+/* 觉弈 Ludoterra · 星盘 Three.js + WebGL 渲染(v0.17;Three.js 本地自带 vendor/,MIT)
  * 原生 WebGL1 + 片元着色器逐像素光线求交:三层台阶盘体、细金带与侧壁、半透明星宿玻璃、
- * 鎏金流光、星闪、中心三道浑仪金环(SDF 光线步进)。无第三方库、无外部请求。
+ * 鎏金流光、星闪、中心三道浑仪金环(SDF 光线步进)。按需动态加载,无外部请求。
  * 投影与首页 2D 的 P3() 完全一致,2D 层的标签/莲花/勋章可直接叠在上面。 */
 const VS = `attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}`;
 const FS = `precision highp float;
@@ -93,29 +93,25 @@ void main(){
       t+=max(d*.9,.0012);if(t>te)break;}}
   gl_FragColor=col;
 }`;
-export function makeDiscGL() {
-  const c = document.createElement('canvas');
-  const gl = c.getContext('webgl', { alpha: true, premultipliedAlpha: true, preserveDrawingBuffer: true, antialias: false });
-  if (!gl) return null;
-  const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) { console.warn(gl.getShaderInfoLog(o)); return null; } return o; };
-  const v = sh(gl.VERTEX_SHADER, VS), f = sh(gl.FRAGMENT_SHADER, FS); if (!v || !f) return null;
-  const pr = gl.createProgram(); gl.attachShader(pr, v); gl.attachShader(pr, f); gl.linkProgram(pr);
-  if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return null;
-  gl.useProgram(pr); const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-  const loc = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-  const U = {}; ['uRes', 'uDpr', 'uC', 'uR', 'uES', 'uEC', 'uD', 'uTh', 'uT', 'uHs', 'uHo', 'uMode', 'uSel', 'uLa', 'uLb', 'uM0', 'uM1', 'uM2', 'uRad'].forEach(k => U[k] = gl.getUniformLocation(pr, k));
+export async function makeDiscGL() {
+  let THREE; try { THREE = await import('./vendor/three.module.min.js'); } catch (_) { return null; }
+  const probe = document.createElement('canvas'); if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) return null;
+  let renderer; try { renderer = new THREE.WebGLRenderer({ alpha: true, premultipliedAlpha: true, preserveDrawingBuffer: true, antialias: false, powerPreference: 'high-performance' }); } catch (_) { return null; }
+  renderer.setClearColor(0x000000, 0);
+  const U = { uRes: { value: new THREE.Vector2() }, uDpr: { value: 1 }, uC: { value: new THREE.Vector2() }, uR: { value: 1 }, uES: { value: 0 }, uEC: { value: 1 }, uD: { value: 1 }, uTh: { value: 0 }, uT: { value: 0 },
+    uHs: { value: 0 }, uHo: { value: 0 }, uMode: { value: 0 }, uSel: { value: -1 }, uLa: { value: new THREE.Vector4() }, uLb: { value: new THREE.Vector4() },
+    uM0: { value: new THREE.Matrix3() }, uM1: { value: new THREE.Matrix3() }, uM2: { value: new THREE.Matrix3() }, uRad: { value: new THREE.Vector3() } };
+  const mat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: 'void main(){gl_Position=vec4(position.xy,0.,1.);}', fragmentShader: FS.replace('precision highp float;', ''), transparent: true, depthTest: false, depthWrite: false, toneMapped: false });
+  const scene = new THREE.Scene(); const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat); quad.frustumCulled = false; scene.add(quad);
+  const cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
   return {
-    c,
-    size(W, H, dpr) { const d = Math.min(1.5, dpr); if (c.width !== Math.round(W * d) || c.height !== Math.round(H * d)) { c.width = Math.round(W * d); c.height = Math.round(H * d); } this.d = d; this.W = W; this.H = H; },
+    c: renderer.domElement, three: THREE.REVISION,
+    size(W, H, dpr) { const d = Math.min(1.5, dpr); if (this.W !== W || this.H !== H || this.d !== d) { renderer.setPixelRatio(d); renderer.setSize(W, H, false); this.d = d; this.W = W; this.H = H; } },
     render(o, mode) {
-      gl.viewport(0, 0, c.width, c.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.uniform2f(U.uRes, this.W, this.H); gl.uniform1f(U.uDpr, this.d); gl.uniform2f(U.uC, o.CX, o.CY);
-      gl.uniform1f(U.uR, o.R); gl.uniform1f(U.uES, o.ES); gl.uniform1f(U.uEC, o.EC); gl.uniform1f(U.uD, o.D); gl.uniform1f(U.uTh, o.theta); gl.uniform1f(U.uT, o.t);
-      gl.uniform1f(U.uHs, o.hs); gl.uniform1f(U.uHo, o.ho); gl.uniform1f(U.uMode, mode); gl.uniform1f(U.uSel, o.sel);
-      gl.uniform4fv(U.uLa, o.lit.slice(0, 4)); gl.uniform4fv(U.uLb, o.lit.slice(4, 8));
-      gl.uniformMatrix3fv(U.uM0, false, o.mats[0]); gl.uniformMatrix3fv(U.uM1, false, o.mats[1]); gl.uniformMatrix3fv(U.uM2, false, o.mats[2]); gl.uniform3fv(U.uRad, o.rads);
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      U.uRes.value.set(this.W, this.H); U.uDpr.value = this.d; U.uC.value.set(o.CX, o.CY); U.uR.value = o.R; U.uES.value = o.ES; U.uEC.value = o.EC; U.uD.value = o.D; U.uTh.value = o.theta; U.uT.value = o.t;
+      U.uHs.value = o.hs; U.uHo.value = o.ho; U.uMode.value = mode; U.uSel.value = o.sel; U.uLa.value.fromArray(o.lit, 0); U.uLb.value.fromArray(o.lit, 4);
+      U.uM0.value.fromArray(o.mats[0]); U.uM1.value.fromArray(o.mats[1]); U.uM2.value.fromArray(o.mats[2]); U.uRad.value.fromArray(o.rads);
+      renderer.render(scene, cam);
     }
   };
 }
