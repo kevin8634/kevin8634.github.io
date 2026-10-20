@@ -112,7 +112,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   </div>
   <div id="pNote" aria-live="polite"></div>
 </aside>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.16</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.17</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -157,7 +157,6 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
 
 <script type="module">
 import { AGES, LAYERS, DOMAINS, MEANING, GUIDES, GUIDE_ORDER, TASKS, BRIDGES, HANDBOOK, STATS, TRACKS, ageLabel } from './lt-data.js';
-import { makeDiscGL } from './lt-disc-gl.js';
 import { chrome, hud, store, getAge, setAge, isDone, sound, reducedMotion, offline } from './lt.js';
 
 const ch = chrome({ home: './', extra: '<button class="lt-btn" id="ltMusic" type="button" aria-label="星之音:曲目与播放器">♪<span class="t"> 曲目</span></button>' });
@@ -332,7 +331,8 @@ const CONS = [
   { a: 4.9, pts: [[1.2, 0], [1.2, 1], [1.2, 2.2], [0, 1.1], [2.4, .9]], ln: [[0, 1], [1, 2], [3, 1], [1, 4]] }
 ];
 /* v0.16 WebGL 盘体(不支持时退回 2D) */
-let GLD = null; try { GLD = makeDiscGL(); } catch (_) { GLD = null; }
+let GLD = null; /* Three.js 异步加载完成前先用 2D 星盘 */
+import('./lt-disc-gl.js').then(m => m.makeDiscGL()).then(g => { GLD = g; }).catch(() => { GLD = null; });
 const bloomCv = document.createElement('canvas'); const bcx = bloomCv.getContext('2d');
 function armMats(t) { return ARM.map(g => { const sp = reducedMotion ? g.ph : g.ph + t * g.sp; const ct = Math.cos(g.tilt), st = Math.sin(g.tilt), cs = Math.cos(sp), ss = Math.sin(sp);
   /* N = Ry·Rx(行主序),按列主序传入即 M = Nᵀ = 世界→环局部 */
@@ -415,6 +415,7 @@ function sectorPath(s, grow = 0) {
   cx2.closePath();
 }
 function draw(now) {
+  if (document.hidden) { requestAnimationFrame(draw); return; } /* 页面隐藏时暂停渲染 */
   const t = (now - t0) / 1000; stepRite(now); qTip = null;
   if (!drag && Math.abs(vel) > 0.0001) { theta += vel; vel *= 0.94; }
   else if (!drag && !reducedMotion) theta += 0.0006;
