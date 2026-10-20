@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · 公共层 ef.js v0.1
+/* 元素工坊 Element Forge · 公共层 ef.js v0.2
    创世计划 Genesis 第 03 世界(化学)。本地存储键:gn:ef:<任务>;以 _ 开头的键为偏好(如 gn:ef:_sound)。
    无账号、无服务器、无埋点、无第三方请求。 */
 (function () {
@@ -10,7 +10,23 @@ var KEY = function (k) { return 'gn:ef:' + k; };
 EF.get = function (k, d) { try { var v = localStorage.getItem(KEY(k)); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
 EF.set = function (k, v) { try { localStorage.setItem(KEY(k), JSON.stringify(v)); } catch (e) {} };
 EF.campus = /campus=1/.test(location.search) || EF.get('_campus', 0) === 1;
-EF.reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+EF.reduced = (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || EF.get('_motion', 1) === 0;
+EF.mobile = (window.matchMedia && matchMedia('(hover: none)').matches) || innerWidth < 760;
+/* 画质分级(§5.3.1):high / mid / low;low = 无 WebGL 或低端机,回落 Canvas 2D 版。?q=high|mid|low 可强制 */
+EF.glTier = (function () {
+  var q = (location.search.match(/[?&]q=(high|mid|low)/) || [])[1] || EF.get('_quality', 'auto');
+  var ok = false, soft = false;
+  try { var c = document.createElement('canvas'), g = c.getContext('webgl2') || c.getContext('webgl');
+    if (g) { ok = true; var d = g.getExtension('WEBGL_debug_renderer_info'); var r = d ? String(g.getParameter(d.UNMASKED_RENDERER_WEBGL)) : ''; soft = /swiftshader|llvmpipe|software/i.test(r); var lc = g.getExtension('WEBGL_lose_context'); if (lc) lc.loseContext(); } } catch (e) {}
+  if (!ok) return 'low';
+  if (q !== 'auto') return q;
+  if (soft) return 'low';
+  var mem = navigator.deviceMemory || 8, cpu = navigator.hardwareConcurrency || 8;
+  if (mem <= 2 || cpu <= 2) return 'low';
+  if (EF.mobile || mem <= 4 || cpu <= 4) return 'mid';
+  return 'high';
+})();
+EF.dpr = function () { var d = window.devicePixelRatio || 1; return Math.min(d, EF.mobile ? 1.5 : (EF.glTier === 'high' ? 2 : 1.5)); };
 
 /* ---------- 元素与来源(主要来源,简化示意;许多元素有多个来源) ---------- */
 EF.ORIGIN = {
@@ -158,6 +174,7 @@ EF.toggleSound = function () {
   else fade(0, 0.6);
   syncBtn();
 };
+EF.syncBtn = function () { syncBtn(); };
 function syncBtn() { var b = document.getElementById('sndBtn'); if (b) { b.setAttribute('aria-pressed', SND.on ? 'true' : 'false'); b.innerHTML = SND.on ? ICON.on : ICON.off; b.title = SND.on ? '关闭声音' : '开启声音'; } }
 var ICON = {
   on: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>',
@@ -265,7 +282,7 @@ EF.mission = function (id, LEVELS, NOTES) {
   function notes() {
     var ov = document.getElementById('over'), txt = NOTES.title + '\n' + NOTES.items.map(function (s) { return '· ' + s; }).join('\n');
     ov.innerHTML = '<div class="m-card notes"><h2>知识笔记 · ' + EF.esc(M.q) + '</h2><ul>' + NOTES.items.map(function (s) { return '<li>' + s + '</li>'; }).join('') + '</ul>' +
-      (NOTES.bridge ? '<p class="m-bridge">星桥预告:' + NOTES.bridge + '</p>' : '') +
+      (NOTES.bridge ? '<p class="m-bridge">星桥:' + NOTES.bridge + '</p>' : '') +
       '<div class="m-row"><button class="ef-btn ghost" id="copyBtn">复制笔记</button><a class="ef-btn" href="../">回到工坊</a></div></div>';
     ov.hidden = false;
     document.getElementById('copyBtn').onclick = function () {

@@ -8,24 +8,42 @@
 <meta property="og:title" content="元素工坊 Element Forge · 化学 · 创世计划 Genesis">
 <meta property="og:description" content="从一颗恒星里,炼出整个世界。亲手聚变出元素、把石墨压成钻石。免费、免注册。">
 <meta name="theme-color" content="#070a14">
-<link rel="stylesheet" href="ef.css">
+<link rel="stylesheet" href="ef.css?v=2">
+<link rel="stylesheet" href="ef-hud.css?v=2">
 </head>
-<body>
-<main class="wrap">
-  <section class="hero">
-    <h1>元素工坊</h1>
-    <p class="tagline">从一颗恒星里,炼出整个世界。</p>
-    <p>创世计划 Genesis · 第 03 世界 · 化学 · v0.1</p>
-  </section>
-
-  <section class="scope glass" aria-label="尺度镜">
-    <div class="scope-cap"><b id="scName">尺度镜</b><span id="scSize"></span></div>
-    <div id="scCv"></div>
-    <input type="range" id="scR" min="0" max="6" step="0.01" value="0" aria-label="尺度">
-    <div class="dial" id="dial"></div>
-    <div class="scope-tasks" id="scTasks"></div>
-  </section>
-
+<body class="home pre">
+<section class="stage" id="stage" aria-label="尺度镜舞台">
+  <div class="stage-gl" id="stageHost"></div>
+  <div class="hud" id="hud">
+    <i class="cn tl"></i><i class="cn tr"></i><i class="cn bl"></i><i class="cn br"></i>
+    <header class="hud-top">
+      <a class="hud-back" href="../" title="回到创世计划">← <span>创世计划</span></a>
+      <div class="hud-brand"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><circle cx="20" cy="16" r="9" fill="none" stroke="#ff9a3c" stroke-width="2"/><circle cx="20" cy="16" r="4" fill="#ffc46b"/><path d="M8 31h24l-3 5H11z M14 26h12v5H14z" fill="#ff9a3c"/></svg><div><b>元素工坊</b><span>Element Forge · 化学</span></div></div>
+      <div class="hud-btns"><button id="sndBtn" class="ef-icon" aria-pressed="false" aria-label="声音开关"></button><button id="fsBtn" class="ef-icon" title="全屏" aria-label="全屏"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button id="setBtn" class="ef-icon" title="设置" aria-label="设置"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></button></div>
+    </header>
+    <div class="set-pop glass" id="setPop" hidden>
+      <b>设置</b>
+      <label>画质 <select id="qSel"><option value="auto">自动</option><option value="high">高</option><option value="mid">中</option><option value="low">低(平面版)</option></select></label>
+      <label><input type="checkbox" id="motionChk"> 动态效果</label>
+      <label><input type="checkbox" id="campusChk"> 校园版(去掉强光闪烁)</label>
+      <button class="ef-btn ghost" id="replayBtn">重播开场动画</button>
+      <small id="tierNote"></small>
+    </div>
+    <button class="drawer-tab" id="drawerTab" aria-expanded="false" aria-controls="drawer"><span>任务</span></button>
+    <aside class="drawer glass" id="drawer" aria-label="任务与星桥">
+      <div class="dr-head"><b>工坊任务</b><button class="dr-x" id="drawerX" aria-label="收起">×</button></div>
+      <div id="drTasks"></div>
+      <div class="dr-head"><b>星桥</b><small>通往其他世界</small></div>
+      <div id="drBridges"></div>
+    </aside>
+    <div class="gbox" id="gbox"><div class="bubble" id="gSay" aria-live="polite"></div><canvas id="gAv" width="160" height="160"></canvas></div>
+    <div class="scale-cap"><b id="scName">恒星</b><span id="scSize"></span></div>
+    <nav class="ruler" id="ruler" aria-label="尺度镜刻度"><div class="r-line"><i id="rFill"></i></div></nav>
+    <a class="dive" href="#more">任务 · 元素周期表 · 七匠 ↓</a>
+  </div>
+  <div class="intro" id="intro" hidden><h1 class="i-title" id="iTitle">元素工坊</h1><p class="i-sub" id="iSub">从一颗恒星里,炼出整个世界</p><button class="i-skip" id="iSkip">跳过 ›</button></div>
+</section>
+<main class="wrap" id="more">
   <section class="sec">
     <h2>第一期任务</h2>
     <p class="sub">每个任务从一个问题出发:先猜,再动手,最后揭晓。不排名、不计时。</p>
@@ -44,7 +62,7 @@
     <p class="sub">每个元素按它主要诞生的地方上色。完成任务,亲手点亮它们。</p>
     <div class="pt-ctl"><button class="ef-btn ghost" id="flatBtn" style="padding:4px 12px;font-size:13px">切换平面 / 立体</button><span id="litCount"></span></div>
     <div class="pt-wrap">
-      <div class="pt-scene"><div class="pt" id="pt"></div></div>
+      <div class="pt-scene" id="ptScene"><div id="pt3d" class="pt3d" hidden></div><div class="pt" id="pt"></div></div>
       <aside class="pt-side glass" id="side"></aside>
     </div>
     <div class="legend" id="legend"></div>
@@ -63,25 +81,133 @@
     创世计划 Genesis · 科学素养 / 科普探究
   </footer>
 </main>
-<script src="ef.js"></script>
+<script src="ef.js?v=2"></script>
 <script>
 (function () {
-EF.sky(); EF.topbar({ back: '../', backText: '← 创世计划' });
+if (EF.get('_intro', 0) || EF.reduced) document.body.classList.remove('pre');
+EF.sky(); EF.syncBtn(); document.getElementById('sndBtn').onclick = EF.toggleSound;
 var lit = EF.litSet();
 
-/* ---------- 尺度镜 ---------- */
+/* ---------- 尺度镜舞台(状态在这里;3D 由 ef-home.js 渲染,低档回落本页 Canvas 2D) ---------- */
 var SC = [
-  { n: '恒星', s: '约 10⁹ 米 · 一颗恒星', t: 'stars' }, { n: '行星', s: '约 10⁷ 米 · 一颗行星', t: 'planet' },
-  { n: '烧杯', s: '约 10⁻¹ 米 · 你看得见的实验', t: 'cabbage' }, { n: '晶体', s: '约 10⁻⁵ 米 · 电镜下的晶粒(示意)', t: 'carbon' },
-  { n: '分子', s: '约 10⁻⁹ 米 · 原子手拉手', t: 'carbon' }, { n: '原子', s: '约 10⁻¹⁰ 米 · 电子是一团"概率云"', t: 'carbon' },
-  { n: '原子核', s: '约 10⁻¹⁵ 米 · 质子和中子', t: 'stars' }
+  { n: '恒星', s: '约 10⁹ 米 · 一颗恒星', t: 'stars', e: 9, g: 'oga', q: '这颗恒星每秒要把约 6 亿吨氢聚变成氦。等氢烧完了,它还能炼出什么?' },
+  { n: '行星', s: '约 10⁷ 米 · 一颗行星', t: 'planet', e: 7, g: 'mof', q: '火星为什么是红色的?那片红色里的元素,又是在哪颗星里炼出来的?' },
+  { n: '烧杯', s: '约 10⁻¹ 米 · 你看得见的实验', t: 'cabbage', e: -1, g: 'dot', q: '同一杯紫甘蓝汁,为什么能变成红、紫、蓝、绿好几种颜色?' },
+  { n: '晶体', s: '约 10⁻⁹ 米 · 金刚石里的碳原子', t: 'carbon', e: -9, g: 'bucky', q: '这些碳原子排得整整齐齐。换一种排法,它还会是钻石吗?' },
+  { n: '分子', s: '约 10⁻¹⁰ 米 · 一个甲烷分子', t: 'carbon', e: -10, g: 'click', q: '一个碳原子,为什么偏偏伸出 4 只"手"?' },
+  { n: '原子', s: '约 10⁻¹⁰ 米 · 电子是一团"概率云"', t: 'carbon', e: -10, g: 'cryo', q: '电子并不是绕着原子核转圈的小球。那它到底在哪里?' },
+  { n: '原子核', s: '约 10⁻¹⁴ 米 · 铁-56:26 个质子、30 个中子', t: 'stars', e: -14, g: 'oga', q: '恒星一路炼到铁就停下了。铁原子核到底有什么特别?' }
 ];
-var host = document.getElementById('scCv'), C = EF.canvas(host, Math.min(300, Math.max(220, innerWidth * 0.32))), R = document.getElementById('scR');
-var dial = document.getElementById('dial'), target = 0, val = 0;
-dial.innerHTML = SC.map(function (s, i) { return '<button data-i="' + i + '" style="left:calc(8px + (100% - 16px) * ' + (i / 6).toFixed(4) + ')">' + s.n + '</button>'; }).join('');
-Array.prototype.forEach.call(dial.children, function (b) { b.onclick = function () { target = +b.dataset.i; R.value = target; EF.play('whoosh'); }; });
-R.oninput = function () { target = +R.value; };
-R.onchange = function () { target = Math.round(+R.value); R.value = target; EF.play('anvil'); };
+EF.SC = SC;
+var ST = EF.stage = { val: 0, target: 0, k: 0, mode: '' };
+var ruler = document.getElementById('ruler'), rFill = document.getElementById('rFill');
+ruler.insertAdjacentHTML('beforeend', SC.map(function (s, i) {
+  return '<button class="r-stop" data-i="' + i + '" style="left:' + (i / 6 * 100).toFixed(3) + '%"><i></i><b>' + s.n + '</b><small>10<sup>' + String(s.e).replace('-', '−') + '</sup> m</small></button>';
+}).join('') + Array.apply(null, Array(37)).map(function (_, j) { return '<u style="left:' + (j / 36 * 100).toFixed(3) + '%" class="' + (j % 6 ? '' : 'mj') + '"></u>'; }).join(''));
+var stops = ruler.querySelectorAll('.r-stop');
+function go(k, snd) { k = Math.max(0, Math.min(6, k)); if (k !== ST.target && snd !== false) EF.play('whoosh'); ST.target = k; }
+EF.stageGo = go;
+Array.prototype.forEach.call(stops, function (b) { b.onclick = function () { go(+b.dataset.i); }; b.onmouseenter = EF.hover; });
+/* 拖动刻度条 */
+(function () {
+  var line = ruler.querySelector('.r-line'), drag = false;
+  function at(e) { var r = ruler.getBoundingClientRect(); return Math.max(0, Math.min(6, (e.clientX - r.left) / r.width * 6)); }
+  line.addEventListener('pointerdown', function (e) { drag = true; line.setPointerCapture(e.pointerId); ST.target = at(e); });
+  line.addEventListener('pointermove', function (e) { if (drag) ST.target = at(e); });
+  line.addEventListener('pointerup', function () { drag = false; go(Math.round(ST.target)); EF.play('anvil'); });
+})();
+/* 滚轮 / 双指 / 方向键:在舞台内切换尺度;到两端时放行页面滚动 */
+var stage = document.getElementById('stage'), wAcc = 0, wT = 0;
+stage.addEventListener('wheel', function (e) {
+  if (document.body.classList.contains('pre') || e.target.closest('.drawer,.set-pop')) return;
+  var dir = e.deltaY > 0 ? 1 : -1, r = Math.round(ST.target);
+  if ((dir > 0 && r >= 6) || (dir < 0 && r <= 0)) return;
+  e.preventDefault(); wAcc += e.deltaY; var now = performance.now();
+  if (Math.abs(wAcc) > 60 && now - wT > 420) { go(r + dir); wAcc = 0; wT = now; }
+}, { passive: false });
+(function () {
+  var d0 = 0, k0 = 0;
+  stage.addEventListener('touchstart', function (e) { if (e.touches.length === 2) { d0 = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); k0 = ST.target; } }, { passive: true });
+  stage.addEventListener('touchmove', function (e) { if (e.touches.length === 2 && d0) { e.preventDefault(); var d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); ST.target = Math.max(0, Math.min(6, k0 + Math.log(d / d0) * 2.2)); } }, { passive: false });
+  stage.addEventListener('touchend', function (e) { if (d0 && e.touches.length < 2) { d0 = 0; go(Math.round(ST.target)); } });
+})();
+addEventListener('keydown', function (e) {
+  if (document.body.classList.contains('pre') || /input|select|textarea/i.test(e.target.tagName)) return;
+  var r = stage.getBoundingClientRect(); if (r.bottom < 120) return;
+  if (e.key === 'ArrowRight' || e.key === ']') go(Math.round(ST.target) + 1); else if (e.key === 'ArrowLeft' || e.key === '[') go(Math.round(ST.target) - 1);
+});
+/* HUD 同步 */
+var gSay = document.getElementById('gSay'), gAv = document.getElementById('gAv');
+function hudSet(k) {
+  var S = SC[k], M = EF.MISSIONS[S.t], G = EF.GUIDES[S.g];
+  document.getElementById('scName').textContent = S.n; document.getElementById('scSize').textContent = S.s;
+  Array.prototype.forEach.call(stops, function (b, j) { b.classList.toggle('on', j === k); });
+  var act = S.t === 'planet' ? '<span class="soon">星球篇 · 即将点亮</span>' : (M && !M.soon ? '<a class="ef-btn" href="' + M.href + '">去试试:' + M.q + '</a>' : '<span class="soon">「' + (M ? M.q : '') + '」锻造中</span>');
+  gSay.innerHTML = '<em>' + G.n + ' 问:</em>' + S.q + '<div class="g-act">' + act + '</div>';
+  gSay.classList.remove('pop'); void gSay.offsetWidth; gSay.classList.add('pop');
+}
+(function hudLoop(t) {
+  if (!document.hidden) {
+    if (ST.mode === '2d' || ST.mode === '') { ST.val += (ST.target - ST.val) * (EF.reduced ? 1 : 0.08); if (Math.abs(ST.target - ST.val) < 0.002) ST.val = ST.target; }
+    var k = Math.round(ST.val); if (k !== ST.k || !gSay.innerHTML) { ST.k = k; hudSet(k); }
+    rFill.style.width = (ST.val / 6 * 100) + '%';
+    EF.drawGuide(gAv, SC[k].g, t, 1);
+  }
+  requestAnimationFrame(hudLoop);
+})(0);
+/* 抽屉 */
+var drawer = document.getElementById('drawer'), dTab = document.getElementById('drawerTab');
+function openDr(o) { drawer.classList.toggle('open', o); dTab.setAttribute('aria-expanded', o ? 'true' : 'false'); EF.play(o ? 'slide' : 'tick'); }
+dTab.onclick = function () { openDr(!drawer.classList.contains('open')); }; document.getElementById('drawerX').onclick = function () { openDr(false); };
+document.getElementById('drTasks').innerHTML = Object.keys(EF.MISSIONS).map(function (k) {
+  var M = EF.MISSIONS[k], p = M.n ? EF.prog(k) : null, s = p ? Object.keys(p.stars).reduce(function (t, i) { return t + p.stars[i]; }, 0) : 0;
+  return (M.soon ? '<div class="dr-t soon">' : '<a class="dr-t" href="' + M.href + '">') + '<b>' + M.q + '</b><small>' + EF.GUIDES[M.g].n + (M.soon ? ' · 锻造中' : ' · ' + p.done.length + '/' + M.n + ' 关 · ★' + s) + '</small>' + (M.soon ? '</div>' : '</a>');
+}).join('');
+EF.BRIDGES = [
+  { a: 'ef.stars', b: 'sh.where', w: '天枢 Starhelm', t: '此刻,你在宇宙的哪里?', href: '../starhelm/', why: '你身体里的铁来自远古的星星;天枢带你看清自己在宇宙中的位置。' },
+  { a: 'ef.carbon', b: 'ma.bee', w: '星图 Math Atlas', t: '为什么蜜蜂选六边形', href: '../math-atlas/bee/', why: '石墨的每一层都是六边形网格,蜂巢也是。' },
+  { a: 'ef.stars', b: 'nv.stars', w: '宙律 Nomoverse', t: '恒星的一生', href: null, why: '恒星怎样诞生、燃烧、死亡。' },
+  { a: 'ef.crystal', b: 'ma.cube', w: '星图 Math Atlas', t: '魔方为什么能复原?', href: '../math-atlas/cube/', why: '晶体的对称,和魔方的对称是同一种数学。', soon: 1 },
+  { a: 'ef.rocks', b: 'sh.quakes', w: '天枢 Starhelm', t: '地震在告诉我们什么?', href: '../starhelm/', why: '岩石怎样"长"出来,和地球内部的运动有关。', soon: 1 }
+];
+document.getElementById('drBridges').innerHTML = EF.BRIDGES.map(function (B) {
+  var on = B.href && !B.soon;
+  return (on ? '<a class="dr-b" href="' + B.href + '">' : '<div class="dr-b off">') + '<small>' + B.a + ' ⇄ ' + B.b + '</small><b>' + B.w + '「' + B.t + '」</b><span>' + (B.soon ? '本端任务锻造中' : (B.href ? B.why : '对岸即将点亮')) + '</span>' + (on ? '</a>' : '</div>');
+}).join('');
+/* 设置 */
+var pop = document.getElementById('setPop');
+document.getElementById('setBtn').onclick = function (e) { e.stopPropagation(); pop.hidden = !pop.hidden; EF.play('tick'); };
+document.addEventListener('click', function (e) { if (!pop.hidden && !e.target.closest('.set-pop')) pop.hidden = true; });
+var qSel = document.getElementById('qSel'); qSel.value = EF.get('_quality', 'auto');
+qSel.onchange = function () { EF.set('_quality', qSel.value); location.reload(); };
+var mc = document.getElementById('motionChk'); mc.checked = EF.get('_motion', 1) !== 0; mc.onchange = function () { EF.set('_motion', mc.checked ? 1 : 0); location.reload(); };
+var cc = document.getElementById('campusChk'); cc.checked = EF.campus; cc.onchange = function () { EF.set('_campus', cc.checked ? 1 : 0); EF.campus = cc.checked; };
+document.getElementById('replayBtn').onclick = function () { pop.hidden = true; scrollTo(0, 0); if (EF.playIntro) EF.playIntro(true); };
+document.getElementById('tierNote').textContent = '当前:' + ({ high: '高画质 3D', mid: '中画质 3D', low: '平面版' })[EF.glTier] + (EF.reduced ? ' · 已减少动态' : '');
+document.getElementById('fsBtn').onclick = function () { var d = document.documentElement; if (!document.fullscreenElement) { (d.requestFullscreen || d.webkitRequestFullscreen || function () {}).call(d); } else document.exitFullscreen(); };
+/* 开场结束 → HUD 入场 */
+EF.introDone = function () { document.body.classList.remove('pre'); document.getElementById('intro').hidden = true; EF.set('_intro', 1); };
+/* 低档 / 3D 未就绪:Canvas 2D 舞台 + 简短淡入开场 */
+EF.start2D = function () {
+  if (ST.mode || EF.glReady) return; ST.mode = '2d'; document.body.classList.add('flat2d'); SC[3].s = '约 10⁻⁵ 米 · 电镜下的晶粒(示意)'; ST.k = -1;
+  var host = document.getElementById('stageHost'); host.innerHTML = '';
+  var C = EF.canvas(host, 0); C.c.style.height = '100%'; C.c.style.borderRadius = '0'; C.c.style.touchAction = 'pan-y';
+  function rs2() { var w = host.clientWidth, h = host.clientHeight, d = EF.dpr(); C.c.width = w * d; C.c.height = h * d; C.W = w; C.H = h; C.x.setTransform(d, 0, 0, d, 0, 0); }
+  rs2(); addEventListener('resize', rs2);
+  (function draw(t) {
+    if (!document.hidden) {
+      var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+      var i = Math.floor(ST.val), f = ST.val - i;
+      x.save(); x.globalAlpha = 1 - f; x.translate(W / 2, H / 2); x.scale(1 + f * 3, 1 + f * 3); x.translate(-W / 2, -H / 2); scene(i, x, W, H, t); x.restore();
+      if (f > 0.001 && i < 6) { x.save(); x.globalAlpha = f; x.translate(W / 2, H / 2); x.scale(0.25 + f * 0.75, 0.25 + f * 0.75); x.translate(-W / 2, -H / 2); scene(i + 1, x, W, H, t); x.restore(); }
+    }
+    requestAnimationFrame(draw);
+  })(0);
+  var intro = document.getElementById('intro');
+  if (!EF.get('_intro', 0) && !EF.reduced) { intro.hidden = false; intro.classList.add('flat'); setTimeout(EF.introDone, 2200); intro.onclick = EF.introDone; }
+  else EF.introDone();
+  EF.playIntro = function () { intro.hidden = false; intro.classList.remove('flat'); void intro.offsetWidth; intro.classList.add('flat'); document.body.classList.add('pre'); setTimeout(EF.introDone, 2200); };
+};
 var rnd = (function (s) { return function () { s = (s * 16807) % 2147483647; return s / 2147483647; }; })(42);
 var grainCv = null, grains = []; for (var i = 0; i < 46; i++) grains.push({ x: rnd(), y: rnd(), g: 90 + rnd() * 110 });
 function scene(i, x, W, H, t) {
@@ -129,19 +255,6 @@ function scene(i, x, W, H, t) {
       .sort(function (a, b) { return a.z - b.z; }).forEach(function (p) { EF.ball(x, p.x, p.y, m * 0.075, p.k % 2 ? '#9aa6b8' : '#ff6a3d'); });
   }
 }
-function draw(t) {
-  val += (target - val) * 0.08; if (Math.abs(target - val) < 0.002) val = target;
-  var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
-  var i = Math.floor(val), f = val - i;
-  x.save(); x.globalAlpha = 1 - f; x.translate(W / 2, H / 2); x.scale(1 + f * 3, 1 + f * 3); x.translate(-W / 2, -H / 2); scene(i, x, W, H, t); x.restore();
-  if (f > 0.001 && i < 6) { x.save(); x.globalAlpha = f; x.translate(W / 2, H / 2); x.scale(0.25 + f * 0.75, 0.25 + f * 0.75); x.translate(-W / 2, -H / 2); scene(i + 1, x, W, H, t); x.restore(); }
-  var k = Math.round(val); document.getElementById('scName').textContent = '尺度镜 · ' + SC[k].n; document.getElementById('scSize').textContent = SC[k].s;
-  Array.prototype.forEach.call(dial.children, function (b, j) { b.classList.toggle('on', j === k); });
-  var T = SC[k].t, M = EF.MISSIONS[T];
-  document.getElementById('scTasks').innerHTML = T === 'planet' ? '这一档的任务在「星球篇」,即将点亮。' : (M ? (M.soon ? '这一档的任务「' + M.q + '」锻造中。' : '这一档的任务:<a href="' + M.href + '">' + M.q + '</a>') : '');
-  requestAnimationFrame(draw);
-}
-requestAnimationFrame(draw);
 
 /* ---------- 任务卡 ---------- */
 function card(M, k, cls) {
@@ -174,9 +287,11 @@ function showEl() {
     '<div class="kv"><small>状态</small>' + (lit[e.z] ? '★ 你已亲手点亮' : (src.length ? '去这里点亮它:' + src.join('、') : '后续任务开放后可点亮')) + '</div>';
 }
 showEl();
+EF.selectEl = function (z) { sel = z; showEl(); EF.tone(z); };
+EF.lit = lit;
 document.getElementById('legend').innerHTML = Object.keys(EF.ORIGIN).map(function (k) { return '<span style="--oc:' + EF.ORIGIN[k].c + '">' + EF.ORIGIN[k].n + '</span>'; }).join('');
 document.getElementById('litCount').textContent = '已点亮 ' + Object.keys(lit).length + ' / 118 个元素';
-document.getElementById('flatBtn').onclick = function () { pt.classList.toggle('flat'); EF.play('select'); };
+document.getElementById('flatBtn').onclick = function () { pt.classList.toggle('flat'); if (EF.pt3dFlat) EF.pt3dFlat(); EF.play('select'); };
 
 /* ---------- 七匠 ---------- */
 var met = { oga: 1, bucky: 1 }, gs = document.getElementById('guides');
@@ -186,7 +301,10 @@ Object.keys(EF.GUIDES).forEach(function (k) {
   gs.appendChild(d); cvs.push([d.querySelector('canvas'), k]);
 });
 (function loop(t) { cvs.forEach(function (c) { EF.drawGuide(c[0], c[1], t, 0); }); requestAnimationFrame(loop); })(0);
+if (EF.glTier === 'low') EF.start2D();
+else setTimeout(function () { if (!EF.glReady) EF.start2D(); }, 15000);
 })();
 </script>
+<script>if (EF.glTier !== 'low') { var m3 = document.createElement('script'); m3.type = 'module'; m3.src = 'ef-home.js?v=2'; document.body.appendChild(m3); }</script>
 </body>
 </html>
