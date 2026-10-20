@@ -17,7 +17,7 @@
       blurb: '地球、季节、地震、卫星与空间站。我们出发的地方。' },
     { id: 'moon',   n: 'II',  zh: '日与月',     en: 'SUN & MOON',  star: '天璇', status: 'open',
       km: 384400, label: '月球 · 38.4 万 km', scale: '38 万 km → 8 光分',
-      blurb: '月相实验室已开放;日月食即将开放。之后还有潮汐、太阳活动与极光。' },
+      blurb: '月相实验室、日月食实验室已开放。之后还有潮汐、太阳活动与极光。' },
     { id: 'planets', n: 'III', zh: '行星世界',  en: 'PLANETS',     star: '天玑', status: 'uncharted',
       km: 5.2 * AU, label: '木星 · 约 5.2 AU', scale: '→ 海王星 30 AU(约 4 光时)',
       blurb: '八大行星和它们的卫星,以及飞向它们的探测器。' },
