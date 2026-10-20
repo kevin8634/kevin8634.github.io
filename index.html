@@ -869,7 +869,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.7.0</b></span>
+            <span>创世计划总门户 <b>v0.7.0.1</b></span>
           </footer>
         </div>
       </div>
@@ -1845,7 +1845,26 @@
             g.globalAlpha = 0.5; g.beginPath(); g.moveTo(16, 0); g.lineTo(150, 0); g.stroke();
             g.restore();
           }
-        } else if (id === "07") {   // 经典旋涡：外晕亮星
+        } else if (id === "07") {   // 经典旋涡：两条亮旋臂 + 蓝色星团结 + 外晕亮星
+          for (k = 0; k < arms; k++) {
+            [[7, 0.10], [3, 0.3], [1.3, 0.75]].forEach(function (L) {
+              g.strokeStyle = hexA(L[0] > 5 ? col : "#ffffff", L[1]); g.lineWidth = L[0]; g.beginPath();
+              for (var tt = 0; tt <= 3.6; tt += 0.05) {
+                var rr2 = 16 * Math.exp(pitch * tt * 1.55), aa = off + k * 6.283 / arms + tt;
+                if (rr2 > 200) break;
+                var xx = C + Math.cos(aa) * rr2, yy = C + Math.sin(aa) * rr2;
+                if (tt === 0) g.moveTo(xx, yy); else g.lineTo(xx, yy);
+              }
+              g.stroke();
+            });
+            g.fillStyle = "#bcd6ff";
+            for (i = 0; i < 18; i++) {
+              var t3 = 0.6 + Math.random() * 2.8, r3 = 16 * Math.exp(pitch * t3 * 1.55), a3 = off + k * 6.283 / arms + t3;
+              if (r3 > 195) continue;
+              g.globalAlpha = 0.5 + Math.random() * 0.5; g.beginPath(); g.arc(C + Math.cos(a3) * r3 + gauss() * 4, C + Math.sin(a3) * r3 + gauss() * 4, 1.2 + Math.random() * 1.8, 0, 6.283); g.fill();
+            }
+            g.globalAlpha = 1;
+          }
           g.fillStyle = "#ffffff";
           for (i = 0; i < 60; i++) { a = Math.random() * 6.283; r = 120 + Math.random() * 80; g.globalAlpha = 0.3 + Math.random() * 0.5; g.beginPath(); g.arc(C + Math.cos(a) * r, C + Math.sin(a) * r, 0.6 + Math.random() * 1.2, 0, 6.283); g.fill(); }
         }
