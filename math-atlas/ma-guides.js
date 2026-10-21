@@ -1,138 +1,199 @@
-/* 星图 Math Atlas · 3D 向导形象(v0.8.1)
- * 十位动物向导,用基本几何体程序化搭建(无外部模型文件),冰蓝轮廓光 + 金色称号光环。
- * 称号取自数学前沿名词;任务页台词里的短名(松鼠博士等)不变。
+/* 星图 Math Atlas · 3D 向导(v0.8.2)
+ * 每位向导就是一个前沿数学名词本身:用会动的 3D 数学对象来表达它(程序化搭建,无外部模型)。
+ * 任务页台词里的旧短名暂不改。
  */
 import * as THREE from "three";
 
 export var GUIDES = {
-  nim:      { title: "超现实数", name: "松鼠博士", sym: "ω",    why: "超现实数:康威把每一局博弈都变成了一个数。" },
-  bee:      { title: "球堆积",   name: "蜂博士",   sym: "E₈",   why: "球堆积:2022 年菲尔兹奖,8 维空间里最密的装球法。" },
-  nav:      { title: "扩展图",   name: "蚁博士",   sym: "λ₂",   why: "扩展图:连线很少,却四通八达的网络。" },
-  secret:   { title: "格密码",   name: "枭博士",   sym: "Λ",    why: "格密码:连量子计算机都难破解的新一代密码。" },
-  chord:    { title: "朗兰兹",   name: "琴鸟博士", sym: "L(s)", why: "朗兰兹纲领:把数论和“波”连在一起的大统一蓝图。" },
-  cat:      { title: "扩散模型", name: "喵博士",   sym: "∇",    why: "扩散模型:AI 从一团噪声里,一步步“画”出图像。" },
-  casino:   { title: "随机矩阵", name: "浣熊博士", sym: "GUE",  why: "随机矩阵:一大堆随机数,竟排出整齐的规律。" },
-  epidemic: { title: "渗流",     name: "刺猬博士", sym: "pc",   why: "渗流:2022 年菲尔兹奖,水什么时候能渗透整块石头。" },
-  rocket:   { title: "辛几何",   name: "狐狸船长", sym: "dq∧dp", why: "辛几何:轨道力学背后的几何,有一种“面积”永远守恒。" },
-  cube:     { title: "范畴论",   name: "熊猫教授", sym: "f∘g",  why: "范畴论:只看“箭头”的数学,研究变换本身。" }
+  nim:      { title: "超现实数", shape: "会长枝的数之树",       why: "超现实数:康威把每一局博弈都变成了一个数。树每长一层,就生出一批新数。" },
+  bee:      { title: "球堆积",   shape: "一球紧贴十二球",       why: "球堆积:2022 年菲尔兹奖。三维里,一个球最多同时贴住 12 个球。" },
+  nav:      { title: "扩展图",   shape: "彼得森图上的漫步者",   why: "扩展图:连线很少,却四通八达。光点随便走几步,就能到任何地方。" },
+  secret:   { title: "格密码",   shape: "格点与最短向量",       why: "格密码:在一大片格点里找最短的那根箭头,连量子计算机都犯难。" },
+  chord:    { title: "朗兰兹",   shape: "数与波的双环",         why: "朗兰兹纲领:把数论(金环)和“波”(蓝环)扣在一起的大统一蓝图。" },
+  cat:      { title: "扩散模型", shape: "从噪声里聚成形",       why: "扩散模型:AI 从一团随机噪点出发,一步步去噪,聚出图像。" },
+  casino:   { title: "随机矩阵", shape: "半圆律",               why: "随机矩阵:每次都随机,特征值却总排成一个半圆(维格纳半圆律)。" },
+  epidemic: { title: "渗流",     shape: "临界簇",               why: "渗流:2022 年菲尔兹奖。打通的格子一过临界比例,就突然连成一片。" },
+  rocket:   { title: "辛几何",   shape: "相空间里守恒的面积",   why: "辛几何:轨道力学背后的几何。一团状态会被拉长扭弯,面积却永远不变。" },
+  cube:     { title: "范畴论",   shape: "交换三角形",           why: "范畴论:只看“箭头”的数学。先走 f 再走 g,和直接走 g∘f 一样。" }
 };
 
-/* ---------- 搭建工具 ---------- */
-var M = {};
-function mat(c, o) { var k = c + (o ? JSON.stringify(o) : ""); return M[k] || (M[k] = new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.55, metalness: 0.05 }, o || {}))); }
-function mesh(geo, c, p, s, r, o) { var m = new THREE.Mesh(geo, mat(c, o)); if (p) m.position.set(p[0], p[1], p[2]); if (s) m.scale.set(s[0], s[1], s[2]); if (r) m.rotation.set(r[0], r[1], r[2]); return m; }
-var G = {
-  s: new THREE.SphereGeometry(1, 28, 20), c: new THREE.ConeGeometry(1, 1, 20), cy: new THREE.CylinderGeometry(1, 1, 1, 20),
-  t: new THREE.TorusGeometry(1, 0.08, 10, 48), b: new THREE.BoxGeometry(1, 1, 1), sp: new THREE.ConeGeometry(1, 1, 6)
-};
-function add(g) { for (var i = 1; i < arguments.length; i++) g.add(arguments[i]); return g; }
-function eyes(g, x, y, z, r, white) {
-  [-1, 1].forEach(function (k) {
-    if (white) g.add(mesh(G.s, 0xffffff, [k * x, y, z - r * 0.3], [r * 1.5, r * 1.5, r * 0.8]));
-    g.add(mesh(G.s, 0x0b0f1c, [k * x, y, z], [r, r, r * 0.6], null, { roughness: 0.2 }));
-    g.add(mesh(G.s, 0xffffff, [k * x + r * 0.3, y + r * 0.35, z + r * 0.45], [r * 0.3, r * 0.3, r * 0.3], null, { emissive: 0xffffff, emissiveIntensity: 1 }));
-  });
+var ICE = 0x6fc6ff, GOLD = 0xf2c879, VIO = 0xb69cff, WHITE = 0xeaf4ff;
+var SPH = new THREE.SphereGeometry(1, 20, 14);
+function glow(c, k) { return new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: k == null ? 0.7 : k, roughness: 0.35, metalness: 0.1 }); }
+function ball(c, r, p, k) { var m = new THREE.Mesh(SPH, glow(c, k)); m.scale.setScalar(r); if (p) m.position.copy(p); return m; }
+function line(pts, c, op) { var g = new THREE.BufferGeometry().setFromPoints(pts); return new THREE.Line(g, new THREE.LineBasicMaterial({ color: c, transparent: true, opacity: op == null ? 0.8 : op })); }
+function arrow(a, b, c, r) {
+  var g = new THREE.Group(), d = b.clone().sub(a), L = d.length(), head = Math.min(0.18, L * 0.3);
+  var shaft = new THREE.Mesh(new THREE.CylinderGeometry(r, r, L - head, 8), glow(c, 0.8)); shaft.position.y = (L - head) / 2;
+  var tip = new THREE.Mesh(new THREE.ConeGeometry(r * 3, head, 12), glow(c, 0.9)); tip.position.y = L - head / 2;
+  g.add(shaft, tip); g.position.copy(a); g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); return g;
 }
-function nose(g, y, z, r, c) { g.add(mesh(G.s, c || 0x2a1f22, [0, y, z], [r * 1.3, r, r])); }
-function glasses(g, y, z) { [-1, 1].forEach(function (k) { g.add(mesh(G.t, 0xf2c879, [k * 0.3, y, z], [0.2, 0.2, 0.2], null, { metalness: 0.8, roughness: 0.25 })); }); g.add(mesh(G.cy, 0xf2c879, [0, y, z], [0.02, 0.2, 0.02], [0, 0, Math.PI / 2], { metalness: 0.8, roughness: 0.25 })); }
+function V(x, y, z) { return new THREE.Vector3(x, y, z); }
+function rng(seed) { var s = seed >>> 0; return function () { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
 
 var BUILD = {
-  nim: function (g) { // 松鼠:圆头、尖耳、蓬松大尾
-    var b = 0xc8743a, l = 0xf3d3a8;
-    add(g, mesh(G.s, b, [0, 0, 0], [0.82, 0.78, 0.76]), mesh(G.s, l, [0, -0.2, 0.5], [0.5, 0.4, 0.35]));
-    [-1, 1].forEach(function (k) { g.add(mesh(G.c, b, [k * 0.45, 0.72, 0], [0.18, 0.42, 0.14], [0, 0, -k * 0.35])); g.add(mesh(G.c, 0xfff1e0, [k * 0.46, 0.84, -0.02], [0.05, 0.12, 0.05], [0, 0, -k * 0.35])); });
-    var tail = new THREE.Group(); [0, 1, 2, 3].forEach(function (i) { tail.add(mesh(G.s, i % 2 ? 0xd98a4c : b, [0.25 * Math.sin(i * 0.9), 0.32 * i, -0.15 * i], [0.38 - i * 0.03, 0.42, 0.34])); });
-    tail.position.set(0.55, -0.3, -0.55); tail.rotation.z = -0.35; g.add(tail);
-    eyes(g, 0.28, 0.12, 0.66, 0.1); nose(g, -0.08, 0.84, 0.07);
+  /* 超现实数:二叉树一层层长出(第 n 天生出 2^n 个新数) */
+  nim: function (g) {
+    var nodes = [], edges = [];
+    (function grow(p, depth, spread, parent) {
+      var n = ball(depth === 0 ? GOLD : ICE, 0.09 - depth * 0.012, p); n.userData.d = depth; g.add(n); nodes.push(n);
+      if (parent) { var l = line([parent, p], ICE, 0.7); l.userData.d = depth; g.add(l); edges.push(l); }
+      if (depth < 4) [-1, 1].forEach(function (k) { grow(V(p.x + k * spread, p.y + 0.38, p.z + (depth % 2 ? k * spread * 0.4 : 0)), depth + 1, spread * 0.5, p); });
+    })(V(0, -0.78, 0), 0, 0.5, null);
+    return function (t, still) {
+      var lvl = still ? 4 : (t * 0.9) % 6.5;
+      nodes.forEach(function (n) { var on = n.userData.d <= lvl; n.visible = on; n.material.emissiveIntensity = on ? 0.5 + 0.5 * Math.max(0, 1 - (lvl - n.userData.d)) : 0; });
+      edges.forEach(function (l) { l.visible = l.userData.d <= lvl; });
+    };
   },
-  bee: function (g) { // 蜜蜂:黄黑条纹圆身、触角、透明翅
-    add(g, mesh(G.s, 0xffc93c, [0, 0, 0], [0.78, 0.78, 0.78]));
-    [-0.22, 0.2].forEach(function (y) { g.add(mesh(G.cy, 0x22180c, [0, y - 0.25, 0], [0.8, 0.12, 0.8])); });
-    [-1, 1].forEach(function (k) {
-      g.add(mesh(G.cy, 0x22180c, [k * 0.25, 0.85, 0.1], [0.025, 0.45, 0.025], [0.3, 0, -k * 0.4]));
-      g.add(mesh(G.s, 0x22180c, [k * 0.38, 1.06, 0.18], [0.08, 0.08, 0.08]));
-      g.add(mesh(G.s, 0xdff4ff, [k * 0.8, 0.45, -0.3], [0.45, 0.22, 0.04], [0.2, k * 0.5, -k * 0.5], { transparent: true, opacity: 0.55, roughness: 0.1, emissive: 0x6fc6ff, emissiveIntensity: 0.25 }));
+  /* 球堆积:中心球 + 12 个相切球(接吻数 12),呼吸开合 */
+  bee: function (g) {
+    var c = ball(GOLD, 0.3, V(0, 0, 0), 0.6), outer = [], dirs = [];
+    g.add(c);
+    [[1, 1, 0], [1, -1, 0], [-1, 1, 0], [-1, -1, 0], [1, 0, 1], [1, 0, -1], [-1, 0, 1], [-1, 0, -1], [0, 1, 1], [0, 1, -1], [0, -1, 1], [0, -1, -1]].forEach(function (d) {
+      var v = V(d[0], d[1], d[2]).normalize(); dirs.push(v);
+      var m = new THREE.Mesh(SPH, new THREE.MeshStandardMaterial({ color: ICE, emissive: ICE, emissiveIntensity: 0.25, transparent: true, opacity: 0.55, roughness: 0.1, metalness: 0.2 }));
+      m.scale.setScalar(0.3); g.add(m); outer.push(m);
     });
-    eyes(g, 0.27, 0.18, 0.66, 0.11);
-    g.add(mesh(G.t, 0x22180c, [0, -0.15, 0.7], [0.12, 0.08, 0.08], [0, 0, Math.PI]));
+    return function (t, still) { var r = 0.6 + (still ? 0 : 0.12 * Math.max(0, Math.sin(t * 1.3))); outer.forEach(function (m, i) { m.position.copy(dirs[i]).multiplyScalar(r); }); };
   },
-  nav: function (g) { // 蚂蚁:三节身、长触角
-    var c = 0x7a3b2a;
-    add(g, mesh(G.s, c, [0, 0.15, 0.1], [0.6, 0.56, 0.56]), mesh(G.s, c, [0, -0.5, -0.25], [0.32, 0.28, 0.3]), mesh(G.s, c, [0, -0.92, -0.65], [0.48, 0.4, 0.48]));
-    [-1, 1].forEach(function (k) {
-      var a = new THREE.Group(); a.add(mesh(G.cy, c, [0, 0.3, 0], [0.03, 0.6, 0.03])); a.add(mesh(G.cy, c, [k * 0.18, 0.66, 0.12], [0.025, 0.4, 0.025], [0.5, 0, -k * 0.6])); a.add(mesh(G.s, 0xffd27a, [k * 0.3, 0.82, 0.24], [0.06, 0.06, 0.06], null, { emissive: 0xffc04a, emissiveIntensity: 0.8 }));
-      a.position.set(k * 0.22, 0.6, 0.25); a.rotation.z = -k * 0.35; g.add(a);
-    });
-    eyes(g, 0.24, 0.24, 0.55, 0.11); glasses(g, 0.24, 0.62);
+  /* 扩展图:彼得森图 + 随机漫步的光点 */
+  nav: function (g) {
+    var P = [], E = [];
+    for (var i = 0; i < 5; i++) { var a = Math.PI / 2 + i * 2 * Math.PI / 5; P.push(V(Math.cos(a) * 0.95, Math.sin(a) * 0.95, 0.25)); }
+    for (i = 0; i < 5; i++) { a = Math.PI / 2 + i * 2 * Math.PI / 5; P.push(V(Math.cos(a) * 0.45, Math.sin(a) * 0.45, -0.25)); }
+    for (i = 0; i < 5; i++) { E.push([i, (i + 1) % 5]); E.push([i, i + 5]); E.push([5 + i, 5 + (i + 2) % 5]); }
+    var adj = P.map(function () { return []; }); E.forEach(function (e) { adj[e[0]].push(e[1]); adj[e[1]].push(e[0]); g.add(line([P[e[0]], P[e[1]]], ICE, 0.55)); });
+    var nb = P.map(function (p, k) { var m = ball(k < 5 ? ICE : VIO, 0.07, p, 0.5); g.add(m); return m; });
+    var walker = ball(GOLD, 0.1, P[0], 1.2); g.add(walker);
+    var R = rng(7), from = 0, to = adj[0][0], seen = new Array(10).fill(0);
+    return function (t, still) {
+      if (still) { walker.position.copy(P[0]); return; }
+      var k = (t * 1.6) % 1, step = Math.floor(t * 1.6);
+      if (step !== walker.userData.s) { walker.userData.s = step; from = to; to = adj[from][Math.floor(R() * 3)]; seen[from] = t; }
+      walker.position.lerpVectors(P[from], P[to], k);
+      nb.forEach(function (m, j) { m.material.emissiveIntensity = 0.4 + 1.2 * Math.max(0, 1 - (t - seen[j]) * 0.8); });
+    };
   },
-  secret: function (g) { // 猫头鹰:大眼、耳羽、喙
-    var c = 0x6b5a7e, l = 0xcfc0de;
-    add(g, mesh(G.s, c, [0, 0, 0], [0.82, 0.86, 0.74]), mesh(G.s, l, [0, -0.25, 0.42], [0.55, 0.5, 0.35]));
-    [-1, 1].forEach(function (k) { g.add(mesh(G.c, c, [k * 0.48, 0.78, 0], [0.16, 0.38, 0.12], [0, 0, -k * 0.5])); g.add(mesh(G.s, 0xffe8b0, [k * 0.3, 0.15, 0.55], [0.26, 0.26, 0.12])); });
-    eyes(g, 0.3, 0.15, 0.66, 0.13);
-    g.add(mesh(G.c, 0xf2b640, [0, -0.08, 0.72], [0.08, 0.2, 0.08], [Math.PI, 0, 0]));
-  },
-  chord: function (g) { // 琴鸟:鸟头 + 竖琴形尾羽扇
-    var c = 0x4f6fb8;
-    add(g, mesh(G.s, c, [0, 0, 0], [0.7, 0.72, 0.68]), mesh(G.s, 0xe8f1ff, [0, -0.25, 0.38], [0.45, 0.4, 0.3]));
-    for (var i = -3; i <= 3; i++) g.add(mesh(G.cy, i % 2 ? 0x9fd8ff : 0xf2c879, [i * 0.13, 0.55, -0.55], [0.03, 1.1 - Math.abs(i) * 0.1, 0.03], [0, 0, -i * 0.16], { emissive: i % 2 ? 0x2a6aa0 : 0x6a4a10, emissiveIntensity: 0.6 }));
-    g.add(mesh(G.t, 0x9fd8ff, [0, 0.9, -0.55], [0.5, 0.5, 0.5], [0, 0, 0], { emissive: 0x2a6aa0, emissiveIntensity: 0.5 }));
-    eyes(g, 0.24, 0.12, 0.6, 0.1);
-    g.add(mesh(G.c, 0xf2b640, [0, -0.04, 0.78], [0.08, 0.3, 0.08], [Math.PI / 2, 0, 0]));
-  },
-  cat: function (g) { // 猫:三角耳、胡须
-    var c = 0x8a8fa8, l = 0xf2f2f8;
-    add(g, mesh(G.s, c, [0, 0, 0], [0.84, 0.74, 0.74]), mesh(G.s, l, [0, -0.2, 0.5], [0.42, 0.3, 0.3]));
-    [-1, 1].forEach(function (k) {
-      g.add(mesh(G.sp, c, [k * 0.5, 0.68, 0], [0.24, 0.42, 0.14], [0, 0, -k * 0.3])); g.add(mesh(G.sp, 0xffb6c8, [k * 0.5, 0.66, 0.06], [0.12, 0.26, 0.06], [0, 0, -k * 0.3]));
-      for (var j = 0; j < 2; j++) g.add(mesh(G.cy, 0xffffff, [k * 0.5, -0.15 - j * 0.08, 0.6], [0.008, 0.42, 0.008], [0, 0, Math.PI / 2 + k * (j ? -0.12 : 0.12)], { emissive: 0xffffff, emissiveIntensity: 0.4 }));
-    });
-    eyes(g, 0.28, 0.1, 0.64, 0.11); nose(g, -0.1, 0.78, 0.06, 0xff8fb1);
-  },
-  casino: function (g) { // 浣熊:黑眼罩、圆耳
-    var c = 0x8e8e96, l = 0xeaeaf0;
-    add(g, mesh(G.s, c, [0, 0, 0], [0.84, 0.74, 0.74]), mesh(G.s, l, [0, -0.18, 0.5], [0.5, 0.34, 0.34]));
-    [-1, 1].forEach(function (k) { g.add(mesh(G.s, c, [k * 0.55, 0.6, -0.05], [0.24, 0.24, 0.1])); g.add(mesh(G.s, 0x23232b, [k * 0.3, 0.12, 0.55], [0.3, 0.17, 0.12], [0, 0, k * 0.25])); g.add(mesh(G.s, l, [k * 0.3, 0.32, 0.58], [0.2, 0.06, 0.06])); });
-    eyes(g, 0.3, 0.12, 0.68, 0.09); nose(g, -0.12, 0.84, 0.07);
-  },
-  epidemic: function (g) { // 刺猬:背刺 + 尖嘴
-    var c = 0xc9a07a, sp = 0x5a4434;
-    add(g, mesh(G.s, c, [0, -0.05, 0.1], [0.66, 0.6, 0.62]), mesh(G.s, c, [0, -0.18, 0.62], [0.26, 0.22, 0.32]));
-    for (var i = 0; i < 44; i++) {
-      var a = i * 2.39996, y = 1 - (i + 0.5) / 44 * 1.55, r = Math.sqrt(Math.max(0, 1 - y * y));
-      var dir = new THREE.Vector3(Math.cos(a) * r, y + 0.15, -Math.abs(Math.sin(a) * r) * 0.8 - 0.05).normalize();
-      if (dir.z > 0.2 && dir.y < 0.5) continue;
-      var s = mesh(G.c, i % 3 ? sp : 0xe8d5bf, [dir.x * 0.62, dir.y * 0.58, dir.z * 0.62 + 0.02], [0.075, 0.5, 0.075]);
-      s.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir); g.add(s);
+  /* 格密码:斜格点 + 很长的“坏基”(金)与最短向量(冰蓝) */
+  secret: function (g) {
+    var b1 = V(0.42, 0.12, 0), b2 = V(0.18, 0.4, 0.1), b3 = V(-0.06, 0.1, 0.42), pts = [];
+    for (var i = -2; i <= 2; i++) for (var j = -2; j <= 2; j++) for (var k = -1; k <= 1; k++) {
+      var p = b1.clone().multiplyScalar(i).add(b2.clone().multiplyScalar(j)).add(b3.clone().multiplyScalar(k)).sub(V(0, 0, 0));
+      if (p.length() > 1.15) continue; var m = ball(WHITE, 0.035, p, 0.35); g.add(m); pts.push(m);
     }
-    eyes(g, 0.22, 0.06, 0.62, 0.1); nose(g, -0.15, 0.94, 0.07);
+    var O = V(0, 0, 0); g.add(ball(GOLD, 0.06, O, 0.9));
+    var bad1 = arrow(O, b1.clone().multiplyScalar(2).add(b2.clone().multiplyScalar(1)), GOLD, 0.018);
+    var bad2 = arrow(O, b1.clone().multiplyScalar(-1).add(b2.clone().multiplyScalar(2)), GOLD, 0.018);
+    var short = arrow(O, b3.clone(), ICE, 0.028);
+    g.add(bad1, bad2, short);
+    return function (t, still) { short.children.forEach(function (m) { m.material.emissiveIntensity = still ? 1 : 0.6 + 0.6 * Math.max(0, Math.sin(t * 2.2)); }); };
   },
-  rocket: function (g) { // 狐狸:尖嘴、大耳、船长帽
-    var c = 0xe0703a, l = 0xfff1e6;
-    add(g, mesh(G.s, c, [0, 0, 0], [0.78, 0.7, 0.7]), mesh(G.c, l, [0, -0.15, 0.62], [0.26, 0.55, 0.24], [Math.PI / 2, 0, 0]));
-    [-1, 1].forEach(function (k) { g.add(mesh(G.sp, c, [k * 0.46, 0.66, 0], [0.24, 0.5, 0.12], [0, 0, -k * 0.35])); g.add(mesh(G.s, l, [k * 0.42, -0.2, 0.42], [0.22, 0.2, 0.2])); });
-    g.add(mesh(G.cy, 0x1b2a4a, [0, 0.66, 0], [0.5, 0.18, 0.5])); g.add(mesh(G.cy, 0x1b2a4a, [0, 0.58, 0.12], [0.55, 0.04, 0.6]));
-    g.add(mesh(G.cy, 0xf2c879, [0, 0.66, 0.02], [0.505, 0.04, 0.505], null, { metalness: 0.8, roughness: 0.3 }));
-    g.add(mesh(G.s, 0xf2c879, [0, 0.68, 0.5], [0.08, 0.08, 0.04], null, { emissive: 0xf2c879, emissiveIntensity: 0.6 }));
-    eyes(g, 0.26, 0.12, 0.6, 0.09); nose(g, -0.15, 0.9, 0.06);
+  /* 朗兰兹:金环(数)与带波纹的蓝环(波)相扣 */
+  chord: function (g) {
+    var gold = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.035, 12, 96), glow(GOLD, 0.6)); gold.position.x = -0.25; gold.rotation.y = 0.5;
+    var beads = []; for (var i = 0; i < 7; i++) { var a = i / 7 * Math.PI * 2, b = ball(WHITE, 0.045, V(Math.cos(a) * 0.5, Math.sin(a) * 0.5, 0), 0.8); gold.add(b); beads.push(b); } /* 7 个“素数”珠 */
+    var N = 240, pos = new Float32Array(N * 3), geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    var wave = new THREE.LineLoop(geo, new THREE.LineBasicMaterial({ color: WHITE, transparent: true, opacity: 0.9 })); wave.position.x = 0.25; wave.rotation.set(Math.PI / 2 - 0.5, 0.35, 0);
+    var blue = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.022, 10, 96), glow(ICE, 0.55)); blue.position.copy(wave.position); blue.rotation.copy(wave.rotation);
+    g.add(gold, blue, wave);
+    return function (t, still) {
+      var ph = still ? 0 : t * 2;
+      for (var i = 0; i < N; i++) { var a = i / N * Math.PI * 2, r = 0.5 + 0.06 * Math.sin(a * 7 + ph); pos[i * 3] = Math.cos(a) * r; pos[i * 3 + 1] = Math.sin(a) * r; pos[i * 3 + 2] = 0.05 * Math.cos(a * 7 + ph); }
+      geo.attributes.position.needsUpdate = true;
+    };
   },
-  cube: function (g) { // 熊猫:黑耳、黑眼圈 + 小魔方
-    var w = 0xf5f6fa, k0 = 0x1c1d24;
-    add(g, mesh(G.s, w, [0, 0, 0], [0.86, 0.78, 0.76]));
-    [-1, 1].forEach(function (k) { g.add(mesh(G.s, k0, [k * 0.55, 0.62, -0.05], [0.24, 0.24, 0.14])); g.add(mesh(G.s, k0, [k * 0.3, 0.1, 0.58], [0.2, 0.25, 0.12], [0, 0, -k * 0.5])); });
-    eyes(g, 0.3, 0.12, 0.68, 0.08); nose(g, -0.14, 0.76, 0.08);
-    var cb = new THREE.Group(), cols = [0xff6b6b, 0xffd36e, 0x6ff0c8, 0x7fb0ff, 0xffffff, 0xff9f43];
-    for (var x = 0; x < 2; x++) for (var y = 0; y < 2; y++) for (var z = 0; z < 2; z++) cb.add(mesh(G.b, cols[(x + 2 * y + 3 * z) % 6], [x * 0.21 - 0.105, y * 0.21 - 0.105, z * 0.21 - 0.105], [0.19, 0.19, 0.19], null, { roughness: 0.35 }));
-    cb.position.set(0.62, -0.62, 0.45); cb.rotation.set(0.5, 0.7, 0); g.add(cb); g.userData.spinner = cb;
+  /* 扩散模型:点云在“噪声”与“三叶结”之间来回去噪 */
+  cat: function (g) {
+    var N = 420, R = rng(3), noise = new Float32Array(N * 3), shape = new Float32Array(N * 3), pos = new Float32Array(N * 3);
+    for (var i = 0; i < N; i++) {
+      var u = R() * 2 - 1, th = R() * Math.PI * 2, rr = Math.cbrt(R()) * 1.05, s = Math.sqrt(1 - u * u);
+      noise[i * 3] = rr * s * Math.cos(th); noise[i * 3 + 1] = rr * u; noise[i * 3 + 2] = rr * s * Math.sin(th);
+      var q = i / N * Math.PI * 2, j = (R() - 0.5) * 0.06;
+      shape[i * 3] = (Math.sin(q) + 2 * Math.sin(2 * q)) * 0.28 + j; shape[i * 3 + 1] = (Math.cos(q) - 2 * Math.cos(2 * q)) * 0.28 + j; shape[i * 3 + 2] = -Math.sin(3 * q) * 0.28 + j;
+    }
+    var geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    var pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: ICE, size: 0.045, transparent: true, opacity: 0.95 }));
+    g.add(pts);
+    return function (t, still) {
+      var c = still ? 1 : Math.min(1, Math.max(0, 0.5 - 0.62 * Math.cos(t * 0.7)));   /* 0=噪声,1=成形 */
+      var e = c * c * (3 - 2 * c);
+      for (var i = 0; i < N * 3; i++) pos[i] = noise[i] * (1 - e) + shape[i] * e;
+      geo.attributes.position.needsUpdate = true; pts.material.color.setHex(e > 0.85 ? GOLD : ICE);
+    };
+  },
+  /* 随机矩阵:随机抖动的柱子,轮廓始终贴着维格纳半圆 */
+  casino: function (g) {
+    var bars = [], n = 15, R = rng(11);
+    for (var i = 0; i < n; i++) {
+      var x = (i - (n - 1) / 2) / ((n - 1) / 2) * 0.95;
+      var m = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1, 0.1), glow(i % 2 ? ICE : VIO, 0.45)); m.position.x = x; m.userData.h = Math.sqrt(Math.max(0, 1 - (x / 1.0) * (x / 1.0))) * 1.1; g.add(m); bars.push(m);
+    }
+    var arc = []; for (i = 0; i <= 64; i++) { var a = Math.PI - i / 64 * Math.PI; arc.push(V(Math.cos(a) * 1.0, Math.sin(a) * 1.1 - 0.6, 0.08)); }
+    g.add(line(arc, GOLD, 0.95));
+    var jit = bars.map(function () { return 0; }), last = -1;
+    return function (t, still) {
+      var s = Math.floor(t * 2.5); if (s !== last) { last = s; jit = bars.map(function () { return still ? 0 : (R() - 0.5) * 0.22; }); }
+      bars.forEach(function (m, i) { var h = Math.max(0.03, m.userData.h * (1 + jit[i])); m.scale.y += (h - m.scale.y) * 0.25; m.position.y = -0.6 + m.scale.y / 2; });
+    };
+  },
+  /* 渗流:5×5×5 格子,打通比例 p 来回扫过临界值;连通到底就变金 */
+  epidemic: function (g) {
+    var n = 5, R = rng(5), cells = [], val = [];
+    for (var x = 0; x < n; x++) for (var y = 0; y < n; y++) for (var z = 0; z < n; z++) {
+      var m = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), new THREE.MeshStandardMaterial({ color: WHITE, emissive: ICE, emissiveIntensity: 0.2, transparent: true, opacity: 0.12, roughness: 0.4 }));
+      m.position.set((x - 2) * 0.28, (y - 2) * 0.28, (z - 2) * 0.28); g.add(m); cells.push(m); val.push(R());
+    }
+    function id(x, y, z) { return (x * n + y) * n + z; }
+    var lastP = -1;
+    return function (t, still) {
+      var p = still ? 0.36 : 0.12 + 0.34 * (0.5 - 0.5 * Math.cos(t * 0.55)); p = Math.round(p * 40) / 40; if (p === lastP) return; lastP = p;
+      var seen = new Uint8Array(n * n * n), q = [];
+      for (var x = 0; x < n; x++) for (var z = 0; z < n; z++) { var k = id(x, n - 1, z); if (val[k] < p) { seen[k] = 1; q.push([x, n - 1, z]); } }
+      var span = false;
+      while (q.length) { var c = q.pop(); if (c[1] === 0) span = true; [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]].forEach(function (d) { var a = c[0] + d[0], b = c[1] + d[1], e = c[2] + d[2]; if (a < 0 || b < 0 || e < 0 || a >= n || b >= n || e >= n) return; var k2 = id(a, b, e); if (!seen[k2] && val[k2] < p) { seen[k2] = 1; q.push([a, b, e]); } }); }
+      cells.forEach(function (m, k) {
+        var open = val[k] < p, inC = seen[k];
+        var col = inC ? (span ? GOLD : ICE) : VIO;
+        m.material.opacity = inC ? 0.9 : open ? 0.35 : 0.06; m.material.color.setHex(open ? col : WHITE);
+        m.material.emissive.setHex(col); m.material.emissiveIntensity = inC ? 0.45 : open ? 0.15 : 0.03;
+      });
+    };
+  },
+  /* 辛几何:相空间里一团点被扭成螺旋,面积守恒(刘维尔定理) */
+  rocket: function (g) {
+    for (var r = 0.25; r <= 1.0; r += 0.25) { var c = []; for (var i = 0; i <= 64; i++) { var a = i / 64 * Math.PI * 2; c.push(V(Math.cos(a) * r, Math.sin(a) * r * 0.8, 0)); } g.add(line(c, ICE, 0.25)); }
+    g.add(line([V(-1.1, 0, 0), V(1.1, 0, 0)], WHITE, 0.3), line([V(0, -0.95, 0), V(0, 0.95, 0)], WHITE, 0.3));
+    var N = 260, R = rng(9), base = [], pos = new Float32Array(N * 3);
+    for (i = 0; i < N; i++) { var rr = Math.sqrt(R()) * 0.22, th = R() * Math.PI * 2; base.push([0.6 + rr * Math.cos(th), rr * Math.sin(th)]); }
+    var geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    g.add(new THREE.Points(geo, new THREE.PointsMaterial({ color: GOLD, size: 0.055 })));
+    return function (t, still) {
+      var T = still ? 0 : (t % 9);
+      for (var i = 0; i < N; i++) {
+        var x = base[i][0], y = base[i][1], r = Math.hypot(x, y), a = Math.atan2(y, x), w = 1.6 / (0.4 + r);   /* 角速度随半径变化:扭转映射,保面积 */
+        var b = a + w * T * 0.6; pos[i * 3] = Math.cos(b) * r; pos[i * 3 + 1] = Math.sin(b) * r * 0.8; pos[i * 3 + 2] = 0.02;
+      }
+      geo.attributes.position.needsUpdate = true;
+    };
+  },
+  /* 范畴论:A→B→C 与 A→C 两路光点同时出发、同时到达(图交换) */
+  cube: function (g) {
+    var A = V(-0.75, -0.5, 0), B = V(0, 0.75, 0.1), C = V(0.75, -0.5, 0);
+    [A, B, C].forEach(function (p, i) { g.add(ball([ICE, VIO, ICE][i], 0.13, p, 0.6)); });
+    function trim(a, b) { var d = b.clone().sub(a).normalize(); return [a.clone().add(d.clone().multiplyScalar(0.16)), b.clone().sub(d.clone().multiplyScalar(0.16))]; }
+    var f = trim(A, B), gg = trim(B, C), h = trim(A, C);
+    g.add(arrow(f[0], f[1], GOLD, 0.015), arrow(gg[0], gg[1], GOLD, 0.015), arrow(h[0], h[1], ICE, 0.015));
+    [A, B, C].forEach(function (p) { var loop = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.008, 6, 32, Math.PI * 1.6), glow(WHITE, 0.5)); loop.position.copy(p).add(V(0, 0.2, 0)); loop.rotation.z = -Math.PI * 0.3; g.add(loop); }); /* 恒等箭头 */
+    var p1 = ball(GOLD, 0.06, A, 1.4), p2 = ball(ICE, 0.06, A, 1.4); g.add(p1, p2);
+    return function (t, still) {
+      var k = still ? 1 : Math.min(1, (t % 3.2) / 2.6);
+      if (k < 0.5) p1.position.lerpVectors(A, B, k * 2); else p1.position.lerpVectors(B, C, (k - 0.5) * 2);
+      p2.position.lerpVectors(A, C, k);
+      var s = k >= 1 ? 1.6 : 1; p1.scale.setScalar(0.06 * s); p2.scale.setScalar(0.06 * s);
+    };
   }
 };
-
-function symTex(text) {
-  var c = document.createElement("canvas"); c.width = 256; c.height = 128; var x = c.getContext("2d");
-  x.font = "600 64px 'Times New Roman', 'Noto Serif', serif"; x.textAlign = "center"; x.textBaseline = "middle";
-  x.shadowColor = "rgba(255,210,120,.9)"; x.shadowBlur = 16; x.fillStyle = "#ffe2a0"; x.fillText(text, 128, 66);
-  var t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-}
 
 /* ---------- 小窗口渲染 ---------- */
 export function createGuideView(canvas, opts) {
@@ -142,29 +203,19 @@ export function createGuideView(canvas, opts) {
   var mobile = matchMedia("(pointer: coarse)").matches;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  var scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(30, 1, 0.1, 50);
-  cam.position.set(0, 0.35, 3.9); cam.lookAt(0, 0.3, 0);
-  scene.add(new THREE.HemisphereLight(0xdfeaff, 0x1a1030, 1.4));
-  var key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(2, 3, 4); scene.add(key);
-  var rim = new THREE.DirectionalLight(0x6fc6ff, 3.2); rim.position.set(-3, 1.5, -3); scene.add(rim);
-  var rim2 = new THREE.DirectionalLight(0xf2c879, 1.2); rim2.position.set(3, -1, -2); scene.add(rim2);
+  var scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(32, 1, 0.1, 50);
+  cam.position.set(0, 0.15, 4.0); cam.lookAt(0, 0, 0);
+  scene.add(new THREE.HemisphereLight(0xdfeaff, 0x1a1030, 1.2));
+  var key = new THREE.DirectionalLight(0xffffff, 1.8); key.position.set(2, 3, 4); scene.add(key);
+  var rim = new THREE.DirectionalLight(ICE, 2.4); rim.position.set(-3, 1.5, -3); scene.add(rim);
   var holder = new THREE.Group(); scene.add(holder);
-  var halo = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.02, 8, 64), new THREE.MeshBasicMaterial({ color: 0xf2c879, transparent: true, opacity: 0.85 }));
-  halo.rotation.x = Math.PI / 2.2; halo.position.y = 0.9; scene.add(halo);
-  var dots = new THREE.Group(); for (var i = 0; i < 3; i++) { var d = new THREE.Mesh(G.s, new THREE.MeshBasicMaterial({ color: i ? 0x9fd8ff : 0xffe2a0 })); d.scale.setScalar(0.05); dots.add(d); } scene.add(dots);
-  var sym = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthTest: false })); sym.scale.set(0.8, 0.4, 1); sym.position.set(0.95, 0.75, 0.3); scene.add(sym);
-  var current = null, cache = {}, raf = 0, running = false, t0 = performance.now(), reduce = !!opts.reduce;
+  var current = null, upd = null, cache = {}, raf = 0, running = false, t0 = performance.now(), reduce = !!opts.reduce;
   function size() { var w = canvas.clientWidth || 64, h = canvas.clientHeight || 64; renderer.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); }
   function frame(now) {
     raf = 0; if (!running) return;
     var t = (now - t0) / 1000;
-    if (current) {
-      current.rotation.y = reduce ? -0.35 : Math.sin(t * 0.7) * 0.55 - 0.15;
-      current.position.y = reduce ? 0 : Math.sin(t * 1.6) * 0.05;
-      if (current.userData.spinner && !reduce) current.userData.spinner.rotation.y = t * 1.2;
-    }
-    halo.rotation.z = reduce ? 0 : t * 0.4;
-    dots.children.forEach(function (d, i) { var a = (reduce ? 0 : t * (1.2 + i * 0.35)) + i * 2.0944; d.position.set(Math.cos(a) * 0.5, 0.9 + Math.sin(a) * 0.5 * 0.06, Math.sin(a) * 0.5); });
+    if (current) { current.rotation.y = reduce ? -0.4 : -0.4 + Math.sin(t * 0.35) * 0.6; current.rotation.x = reduce ? 0.15 : 0.15 + Math.sin(t * 0.23) * 0.12; }
+    if (upd) upd(t, reduce);
     renderer.render(scene, cam);
     if (!reduce && !document.hidden) raf = requestAnimationFrame(frame);
   }
@@ -173,10 +224,9 @@ export function createGuideView(canvas, opts) {
   return {
     set: function (id) {
       if (current) holder.remove(current);
-      if (!cache[id]) { var g = new THREE.Group(); (BUILD[id] || BUILD.nim)(g); g.scale.setScalar(0.82); cache[id] = g; }
-      current = cache[id]; holder.add(current);
-      var info = GUIDES[id]; sym.material.map = info ? symTex(info.sym) : null; sym.material.needsUpdate = true; sym.visible = !!info && !!opts.symbol;
-      size(); play(); if (reduce) requestAnimationFrame(frame);
+      if (!cache[id]) { var g = new THREE.Group(), u = (BUILD[id] || BUILD.nim)(g); g.scale.setScalar(0.92); cache[id] = { g: g, u: u }; }
+      current = cache[id].g; upd = cache[id].u; holder.add(current);
+      t0 = performance.now(); size(); play(); if (reduce) requestAnimationFrame(frame);
     },
     stop: function () { running = false; if (raf) cancelAnimationFrame(raf); raf = 0; },
     setReduce: function (v) { reduce = v; play(); },
