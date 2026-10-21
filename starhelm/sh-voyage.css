@@ -242,3 +242,26 @@ body.voy-on .le-actions,body.voy-on .le-hud-top{visibility:hidden}
 .ml--sea .sea-ctl{flex-wrap:nowrap;gap:6px;font-size:12px}.ml--sea .sea-ctl label{min-width:0}.ml--sea .sea-ctl .sea-l2 .ml-rng{width:64px}.ml--sea .sea-ctl button{padding:4px 8px;font-size:12px}.ml--sea .sea-md,.ml--sea .sea-tv{min-width:0;white-space:nowrap}
 .ml--sea .ml-guide{padding:6px 10px;gap:5px}.ml--sea .ml-q{font-size:13px;line-height:1.4}.ml--sea .ml-c,.ml--sea .ml-hint{padding:3px 8px;font-size:12px}.ml--sea .ml-note{display:none}
 .ml--sea .ml-body{grid-template-columns:3fr 2.4fr}.ml--sea .sea-info{padding:2px 6px 6px;gap:3px}.ml--sea .sea-info b{font-size:12px}.ml--sea .sea-info small{font-size:9.5px}.sea-r{padding-top:22px}}
+
+/* ---- M2 #4 卫星星海 ---- */
+.ml--sat .ml-body{grid-template-columns:3fr 2fr}
+.sat-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9fd9c6;font-size:14px;pointer-events:none}.sat-load[hidden]{display:none}
+.sat-leg{position:absolute;right:12px;top:8px;font-size:11px;color:#b9c7da;display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:60%}
+.sat-leg i,.sat-k i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c);margin-left:4px}
+.sat-r{padding:10px;gap:8px;justify-content:flex-start;overflow:auto}
+.sat-kinds{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sat-k{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:6px 8px;color:#8c98aa;cursor:pointer;font:inherit;font-size:12px;text-align:left}
+.sat-k span{flex:1}.sat-k b{font-size:15px;color:#7f8a9c}
+.sat-k.on{border-color:rgba(127,227,196,.6);background:rgba(127,227,196,.08);color:#dff6ee}.sat-k.on b{color:#f3cf7a}
+.sat-orb{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:11.5px;color:#9fb3cc;align-items:center}
+.sat-orb span{width:100%}.sat-orb em{font-style:normal;border-left:3px solid var(--c);padding-left:5px}.sat-orb em b{color:#f3cf7a;margin-left:4px}
+.sat-cv{width:100%;height:auto;aspect-ratio:440/200}
+.sat-src{font-size:10.5px;color:#6f8099}
+.sat-ctl label{display:flex;align-items:center;gap:6px;flex:1;min-width:160px}
+.sat-yv{color:#f3cf7a;min-width:120px;font-size:12px}
+.sat-sp{display:flex;gap:4px}.sat-ctl .sat-spb{padding:4px 8px;font-size:12px;opacity:.7}.sat-ctl .sat-spb.on{opacity:1;background:rgba(127,227,196,.18);border-color:#7fe3c4;color:#cff8ea}
+@media (max-width:760px),(orientation:portrait){.ml--sat .ml-body{grid-template-columns:1fr}}
+@media (max-height:520px){.ml--sat{padding:6px 10px;gap:5px}.ml--sat .ml-hd b{font-size:15px}.ml--sat .ml-hd small,.ml--sat .ml-note,.ml--sat .sat-leg{display:none}
+.ml--sat .sat-ctl{flex-wrap:nowrap;gap:6px;font-size:12px}.ml--sat .sat-ctl label{min-width:0}.ml--sat .sat-yv{min-width:0;white-space:nowrap;font-size:11px}.ml--sat .sat-ctl button{padding:3px 6px;font-size:11px}
+.ml--sat .ml-guide{padding:6px 10px;gap:5px}.ml--sat .ml-q{font-size:13px;line-height:1.4}.ml--sat .ml-c,.ml--sat .ml-hint{padding:3px 8px;font-size:12px}
+.ml--sat .sat-r{padding:6px;gap:4px}.ml--sat .sat-k{padding:3px 6px;font-size:11px}.ml--sat .sat-k b{font-size:12px}.ml--sat .sat-orb,.ml--sat .sat-src{display:none}}
