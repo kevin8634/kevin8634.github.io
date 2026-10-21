@@ -197,11 +197,11 @@
         </section>
 
         <section class="section" id="play" data-nav="关卡">
-          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">喵博士在星图上等你。</p></div>
+          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">扩散模型在星图上等你。</p></div>
           <div id="stage" class="x-panel">
             <div class="x-cat">
-              <div class="x-cat__face">🐱</div>
-              <div class="x-bubble">点开第 1 关「像素就是数字」，我们先搞清楚：机器眼里的一张图，到底长什么样？<small>喵博士只问问题，不直接给答案。</small></div>
+              <div class="x-cat__face">🌫️</div>
+              <div class="x-bubble">点开第 1 关「像素就是数字」，我们先搞清楚：机器眼里的一张图，到底长什么样？<small>扩散模型只问问题，不直接给答案。</small></div>
             </div>
           </div>
         </section>
@@ -558,7 +558,7 @@
       /* guide bubble helper */
       function guide(container, text, sub) {
         const wrap = document.createElement("div"); wrap.className = "x-cat";
-        wrap.innerHTML = `<div class="x-cat__face">🐱</div><div class="x-bubble"></div>`;
+        wrap.innerHTML = `<div class="x-cat__face">🌫️</div><div class="x-bubble"></div>`;
         const b = wrap.querySelector(".x-bubble");
         const set = (t, s) => { b.innerHTML = ""; b.append(t); if (s) { const el = document.createElement("small"); el.textContent = s; b.append(el); } Audio_.play("meow"); };
         set(text, sub); container.append(wrap);
@@ -1747,7 +1747,7 @@
         $("#play-sub").textContent = "七关全部走完，星图已点亮。";
         const stage = $("#stage"); stage.innerHTML = "";
         const fw = document.createElement("canvas"); fw.className = "x-fw"; fw.setAttribute("aria-hidden", "true"); stage.append(fw);
-        guide(stage, "你刚刚从像素一路走到了神经网络。", "喵博士给你放烟花！");
+        guide(stage, "你刚刚从像素一路走到了神经网络。", "扩散模型给你放烟花！");
         const earned = BADGES.filter((b) => State.badges[b.id]);
         stage.append(el("section", "stats", `<div class="stat"><span class="stat__fig">${State.stars}/21</span><span class="stat__label">⭐ 星星</span></div>
           <div class="stat"><span class="stat__fig">${State.xp}</span><span class="stat__label">XP</span></div>
@@ -1760,7 +1760,7 @@
         again.addEventListener("click", () => {
           Object.assign(State, { xp: 0, stars: 0, perLevel: {}, badges: {}, unlocked: 1 });
           renderBar(); renderBadges(); renderMap(); Audio_.play("click");
-          $("#play-title").textContent = "选一关开始"; $("#play-sub").textContent = "喵博士在星图上等你。";
+          $("#play-title").textContent = "选一关开始"; $("#play-sub").textContent = "扩散模型在星图上等你。";
           stage.innerHTML = ""; guide(stage, "新的一轮！点开第 1 关「像素就是数字」，我们从一个像素重新开始。");
           $("#map").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
         });
