@@ -253,7 +253,7 @@ function makeNeurons(layers) {
     for (let i = 0; i < n; i++) {
       const st = states[i] || 'future', k = ST_CODE[st] ?? 3;
       const c = k === 0 ? GOLD : k === 1 ? CY : k === 2 ? DIM : FUT;
-      col.setXYZ(i, c.r, c.g, c.b); sz.setX(i, [1, 0.8, 0.45, 0.3][k]); kk.setX(i, k);
+      col.setXYZ(i, c.r, c.g, c.b); sz.setX(i, [1.5, 1.2, 0.75, 0.5][k]); kk.setX(i, k);
     }
     col.needsUpdate = sz.needsUpdate = kk.needsUpdate = true;
     const lc = lg.attributes.color;
@@ -314,6 +314,49 @@ function makeHole() {
   const halo = new THREE.Sprite(new THREE.SpriteMaterial({ ...add, map: ringTex(0.46, 0.12), color: CY, opacity: 0 }));
   halo.scale.setScalar(2.9); grp.add(halo);
   return { group: grp, ball, mat, ring, halo };
+}
+
+/* ---------- v0.8 外围探针节点:随机闪现、跳动,沿连线与核心交换信号(监测 / 学习) ---------- */
+function makeProbes(N = 10) {
+  const pos = new Float32Array(N * 3), size = new Float32Array(N), col = new Float32Array(N * 3);
+  const lp = new Float32Array(N * 6), lc = new Float32Array(N * 6), pp = new Float32Array(N * 3), ps = new Float32Array(N);
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aS', new THREE.BufferAttribute(size, 1)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const mat = new THREE.ShaderMaterial({ ...add, vertexColors: true, uniforms: { uPR: { value: 1 }, uOp: { value: 0 } },
+    vertexShader: `attribute float aS; uniform float uPR; varying vec3 vC; varying float vA; void main(){ vec4 mv=modelViewMatrix*vec4(position,1.); gl_Position=projectionMatrix*mv; gl_PointSize=uPR*110.*aS/(-mv.z); vC=color; vA=min(1.,aS); }`,
+    fragmentShader: `uniform float uOp; varying vec3 vC; varying float vA; void main(){ float d=length(gl_PointCoord-.5); float core=smoothstep(.14,.0,d), halo=smoothstep(.5,.0,d); float ring=smoothstep(.06,.0,abs(d-.33));
+      gl_FragColor=vec4(mix(vC,vec3(1.),core*.7)*1.6,(core*1.3+halo*halo*.5+ring*.6)*uOp*vA); }` });
+  const pts = new THREE.Points(g, mat); pts.frustumCulled = false;
+  const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.BufferAttribute(lp, 3)); lg.setAttribute('color', new THREE.BufferAttribute(lc, 3));
+  const lm = new THREE.LineBasicMaterial({ ...add, vertexColors: true, opacity: 0 }); const lines = new THREE.LineSegments(lg, lm); lines.frustumCulled = false;
+  const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pp, 3)); pg.setAttribute('aS', new THREE.BufferAttribute(ps, 1)); pg.setAttribute('color', new THREE.BufferAttribute(new Float32Array(N * 3).fill(1), 3));
+  const pulses = new THREE.Points(pg, mat.clone()); pulses.frustumCulled = false;
+  const grp = new THREE.Group(); grp.add(lines, pts, pulses);
+  const P = [];
+  const spawn = (p, t) => { const th = R() * 6.2832, y = (R() - 0.5) * 1.1, r = 1.25 + R() * 0.95; const h = Math.sqrt(Math.max(0, 1 - y * y * 0.4));
+    p.d = new THREE.Vector3(Math.cos(th) * h, y * 0.6, Math.sin(th) * h).normalize(); p.r = r; p.t0 = t + R() * 0.6; p.life = 1.4 + R() * 2.6; p.in = R() < 0.6; p.gold = R() < 0.25; p.jit = R() * 10; };
+  for (let i = 0; i < N; i++) { const p = {}; spawn(p, -R() * 3); P.push(p); }
+  const CYc = new THREE.Color(0x8ff0ff), GDc = new THREE.Color(0xffd27a);
+  function update(t, op, pr) {
+    mat.uniforms.uOp.value = op; mat.uniforms.uPR.value = pr; pulses.material.uniforms.uOp.value = op; pulses.material.uniforms.uPR.value = pr; lm.opacity = 0.55 * op;
+    P.forEach((p, i) => {
+      let a = (t - p.t0) / p.life; if (a > 1) { spawn(p, t); a = 0; }
+      const vis = a < 0 ? 0 : Math.min(1, a * 8) * Math.min(1, (1 - a) * 6);
+      const blink = 0.65 + 0.35 * Math.sin(t * 9 + p.jit) * Math.sin(t * 3.3 + p.jit * 2);
+      const flash = a >= 0 && a < 0.12 ? (1 - a / 0.12) * 1.4 : 0;
+      const jump = 0.03 * Math.sin(t * 13 + p.jit); // 小幅跳动
+      const q = p.d.clone().multiplyScalar(p.r + jump);
+      pos.set([q.x, q.y, q.z], i * 3); size[i] = (0.55 * blink + flash) * vis;
+      const c = p.gold ? GDc : CYc; col.set([c.r, c.g, c.b], i * 3);
+      const s0 = p.d.clone().multiplyScalar(0.78);
+      lp.set([q.x, q.y, q.z, s0.x, s0.y, s0.z], i * 6);
+      const f = 0.6 * vis; lc.set([c.r * f, c.g * f, c.b * f, c.r * f * 0.2, c.g * f * 0.2, c.b * f * 0.2], i * 6);
+      const u = ((t * 1.3 + p.jit) % 1), uu = p.in ? u : 1 - u; const m = q.clone().lerp(s0, uu);
+      pp.set([m.x, m.y, m.z], i * 3); ps[i] = 0.35 * vis;
+    });
+    g.attributes.position.needsUpdate = g.attributes.aS.needsUpdate = g.attributes.color.needsUpdate = true;
+    lg.attributes.position.needsUpdate = lg.attributes.color.needsUpdate = true; pg.attributes.position.needsUpdate = pg.attributes.aS.needsUpdate = true;
+  }
+  return { group: grp, update };
 }
 
 /* ---------- 电路冠冕:曼哈顿走线向外,过孔白点,光脉冲外流 ---------- */
@@ -392,6 +435,7 @@ export function buildCore(stage, opts = {}) {
   const hole = makeHole(); root.add(hole.group); hole.group.visible = false;
   const crown = makeCrown(); root.add(crown.group); crown.group.renderOrder = -1;
   const fly = makeFirefly(); root.add(fly.group);
+  const probes = makeProbes(10); root.add(probes.group);
   const shock = makeShock(); root.add(shock);
 
   const st = { t: 0, intro: opts.skipIntro ? 99 : 0, morph: 0, morphTarget: 0, mx: 0, my: 0, beat: 0 };
@@ -428,12 +472,13 @@ export function buildCore(stage, opts = {}) {
       r.mats.forEach((mm, j) => mm.opacity = r.base[j] * ringIn * coreOp);
     });
     neu.u.uSpin.value = t * 0.1; neu.u.uTime.value = t; neu.u.uPR.value = pr; neu.u.uMorph.value = m; neu.u.uTilt.value = parts.u.uTilt.value; neu.lines.rotation.y = t * 0.1;
+    probes.update(t, sm(4.4, 5.6, I) * Math.pow(coreOp, 3), pr);
     neu.u.uOp.value = sm(3.2, 4.6, I); neu.u.uTilt.value = parts.u.uTilt.value; neu.lineMat.opacity = 0.7 * sm(3.4, 5.0, I) * coreOp;
     // 核心
     core.bill.quaternion.copy(camera.quaternion);
     core.bill.children.forEach((c, i) => c.rotation.z = t * (i % 2 ? -0.6 : 0.4));
     const coreIn = sm(1.4, 3.0, I);
-    core.glow.material.opacity = (0.75 + 0.25 * st.beat) * coreIn * (1 - ms * 0.9);
+    core.glow.material.opacity = (0.5 + 0.25 * st.beat) * coreIn * (1 - ms * 0.9);
     core.glow.scale.setScalar(0.55 + 0.1 * st.beat);
     core.glow2.material.opacity = 0.16 * coreIn * (1 - ms);
     core.mats.forEach(([mm, op]) => mm.opacity = op * sm(2.5, 4.2, I) * coreOp);
