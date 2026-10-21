@@ -152,11 +152,11 @@
         </section>
 
         <section class="section" id="play" data-nav="关卡">
-          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">蜂博士在星图上等你。</p></div>
+          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">球堆积在星图上等你。</p></div>
           <div id="stage" class="x-panel">
             <div class="x-cat">
-              <div class="x-cat__face">🐝</div>
-              <div class="x-bubble">点开第 1 关「哪些形状能铺满地面」。先猜，再试：哪些正多边形能把地面铺得一条缝都没有？<small>蜂博士只问问题，不直接给答案。</small></div>
+              <div class="x-cat__face">🔵</div>
+              <div class="x-bubble">点开第 1 关「哪些形状能铺满地面」。先猜，再试：哪些正多边形能把地面铺得一条缝都没有？<small>球堆积只问问题，不直接给答案。</small></div>
             </div>
           </div>
         </section>
@@ -527,7 +527,7 @@
       /* guide bubble helper */
       function guide(container, text, sub) {
         const wrap = document.createElement("div"); wrap.className = "x-cat";
-        wrap.innerHTML = `<div class="x-cat__face">🐝</div><div class="x-bubble" aria-live="polite"></div>`;
+        wrap.innerHTML = `<div class="x-cat__face">🔵</div><div class="x-bubble" aria-live="polite"></div>`;
         const b = wrap.querySelector(".x-bubble");
         const set = (t, s) => { b.innerHTML = ""; b.append(t); if (s) { const el = document.createElement("small"); el.textContent = s; b.append(el); } Audio_.play("buzz"); };
         set(text, sub); container.append(wrap);
@@ -641,7 +641,7 @@
 
           /* tasks + question */
           const tasks = el("ul", "checklist"); root.append(tasks);
-          const T = [["all", "1★ 把 5 种形状都试一遍", "每种先猜再试"], ["pred", "2★ 至少猜对 4 个", "试之前的猜想才算数"], ["q", "3★ 回答蜂博士的问题", "为什么五边形不行?"]];
+          const T = [["all", "1★ 把 5 种形状都试一遍", "每种先猜再试"], ["pred", "2★ 至少猜对 4 个", "试之前的猜想才算数"], ["q", "3★ 回答球堆积的问题", "为什么五边形不行?"]];
           const renderTasks = () => (tasks.innerHTML = taskList(T, got));
           renderTasks();
           const qBox = el("div"); qBox.hidden = true; root.append(qBox);
@@ -718,7 +718,7 @@
           }
           function ask() {
             qBox.hidden = false;
-            qBox.innerHTML = `<p style="font:var(--type-body-strong);margin-bottom:8px">🐝 蜂博士的问题:为什么五边形不行?</p>`;
+            qBox.innerHTML = `<p style="font:var(--type-body-strong);margin-bottom:8px">🔵 球堆积的问题:为什么五边形不行?</p>`;
             const ch = [
               ["108° × 3 = 324° 不够，× 4 = 432° 太多", true],
               ["五边形的边太多了", false],
@@ -769,11 +769,11 @@
           const SINGLE = ["3×6", "4×4", "6×3"];
           let placed = [], found = [], qTries = 0, busy = false, finished = false;
           const got = { single: false, mixed: false, many: false };
-          const say = guide(root, "开始之前，蜂博士先考你一个问题:一个点周围一圈是多少度?", "答对了，再去拼角。");
+          const say = guide(root, "开始之前，球堆积先考你一个问题:一个点周围一圈是多少度?", "答对了，再去拼角。");
 
           /* question first */
           const qBox = el("div"); root.append(qBox);
-          qBox.append(el("p", "", `<span style="font:var(--type-body-strong)">🐝 蜂博士的问题:一个点周围一圈是多少度?</span>`));
+          qBox.append(el("p", "", `<span style="font:var(--type-body-strong)">🔵 球堆积的问题:一个点周围一圈是多少度?</span>`));
           const qOpts = el("div", "x-opts"); qBox.append(qOpts);
           const game = el("div"); game.hidden = true; game.style.gap = "14px"; root.append(game);
           const open = () => { game.hidden = false; game.style.display = "grid"; say("从调色板里点角，把它们拼在中心点周围，凑满 360°。", "点一下已经拼上的角，就能把它拿掉。"); };
@@ -980,9 +980,9 @@
           });
           function ask() {
             qBox.hidden = false;
-            qBox.innerHTML = `<p style="font:var(--type-body-strong);margin-bottom:8px">🐝 蜂博士的问题:圆的墙最短，蜜蜂为什么不用圆?</p>`;
+            qBox.innerHTML = `<p style="font:var(--type-body-strong);margin-bottom:8px">🔵 球堆积的问题:圆的墙最短，蜜蜂为什么不用圆?</p>`;
             const box = el("div", "x-opts"); qBox.append(box);
-            say("看见黄色的缝了吗?圆排得再紧，也有约 9.3% 的空间空着。", "回答蜂博士的问题。");
+            say("看见黄色的缝了吗?圆排得再紧，也有约 9.3% 的空间空着。", "回答球堆积的问题。");
             [["圆铺不满，会有缝隙浪费空间和蜡", true], ["圆的墙其实更费蜡", false], ["圆太难画了", false], ["圆装不下蜂蜜", false]].sort(() => Math.random() - 0.5).forEach(([t, ok]) => {
               const b = el("button", "x-opt x-qopt", t); b.type = "button"; box.append(b);
               b.addEventListener("click", () => {
@@ -1054,7 +1054,7 @@
           }
 
           const tasks = el("ul", "checklist"); root.append(tasks);
-          const T = [["order", "1★ 排排队", "从最费蜡排到最省蜡，一次排对"], ["circle", "2★ 圆最省，为什么不用圆?", "回答蜂博士的问题"], ["wall", "3★ 猜中最省蜡的蜂巢", "先猜，再切换三种格子"]];
+          const T = [["order", "1★ 排排队", "从最费蜡排到最省蜡，一次排对"], ["circle", "2★ 圆最省，为什么不用圆?", "回答球堆积的问题"], ["wall", "3★ 猜中最省蜡的蜂巢", "先猜，再切换三种格子"]];
           const renderTasks = () => (tasks.innerHTML = taskList(T, got));
           const endRow = el("div", "x-row"); endRow.hidden = true; root.append(endRow);
           const fin = el("button", "x-btn x-btn--go", "完成第 3 关"); fin.type = "button"; endRow.append(fin);
@@ -1200,7 +1200,7 @@
 
           /* tasks + question */
           const tasks = el("ul", "checklist"); root.append(tasks);
-          const T = [["pred", "1★ 放松之前先预测", "中间的格子最后多数是几边形?"], ["hex", "2★ 中间格子六成是六边形", "不碰边框的格子里，六边形 ≥ 60%"], ["q", "3★ 回答蜂博士的问题", "没有谁设计，为什么会变成六边形?"]];
+          const T = [["pred", "1★ 放松之前先预测", "中间的格子最后多数是几边形?"], ["hex", "2★ 中间格子六成是六边形", "不碰边框的格子里，六边形 ≥ 60%"], ["q", "3★ 回答球堆积的问题", "没有谁设计，为什么会变成六边形?"]];
           const renderTasks = () => (tasks.innerHTML = taskList(T, got));
           const qBox = el("div"); qBox.hidden = true; root.append(qBox);
           const endRow = el("div", "x-row"); endRow.hidden = true; root.append(endRow);
@@ -1208,7 +1208,7 @@
           const RIGHT = "每个泡泡都想用最短的墙装下自己的空间，互相挤压就成了六边形";
           function ask() {
             qBox.hidden = false;
-            qBox.innerHTML = `<p style="font:var(--type-body-strong);margin-bottom:8px">🐝 蜂博士的问题:没有谁设计，为什么会变成六边形?</p>`;
+            qBox.innerHTML = `<p style="font:var(--type-body-strong);margin-bottom:8px">🔵 球堆积的问题:没有谁设计，为什么会变成六边形?</p>`;
             const opts = el("div", "x-opts"); qBox.append(opts);
             say("最后一个问题:没有谁画图纸，泡泡为什么会排成六边形?", "想想总墙长是怎么变的。");
             [[RIGHT, true], ["有人偷偷把它们修成了六边形", false], ["泡泡天生就是六边形的", false], ["盒子的形状决定的", false]].sort(() => Math.random() - 0.5).forEach(([t, ok]) => {
@@ -1293,7 +1293,7 @@
           const mk = (t, go) => { const b = el("button", "x-btn" + (go ? " x-btn--go" : ""), t); b.type = "button"; row.append(b); return b; };
           const clearB = mk("清空重建"), goB = mk("提交这一波", true), skipB = mk("跳过这一波");
           const tasks = el("ul", "checklist"); root.append(tasks);
-          const T = [["0", "★ 第 1 波 · 自由建造", `效率(蜜/蜡)≥ ${TARGET}`], ["1", "★ 第 2 波 · 风暴来了", "填满不规则的风暴区 ≥ 80%"], ["2", "★ 第 3 波 · 挑战蜂博士", "同样 100 蜡币，存蜜比他多"]];
+          const T = [["0", "★ 第 1 波 · 自由建造", `效率(蜜/蜡)≥ ${TARGET}`], ["1", "★ 第 2 波 · 风暴来了", "填满不规则的风暴区 ≥ 80%"], ["2", "★ 第 3 波 · 挑战球堆积", "同样 100 蜡币，存蜜比他多"]];
           const renderTasks = () => (tasks.innerHTML = taskList(T, got));
 
           /* wax is order-free: a wall pays full alone, 0.75 per side when shared (so a neighbour adds half); storm edge cells ×1.5 */
@@ -1307,7 +1307,7 @@
             return G;
           }
           const fill = () => S.filter(([x, y]) => [...on].some((i) => inCell(L[i], x, y))).length / S.length;
-          /* 蜂博士: greedy squares, most shared walls first, then nearest the middle */
+          /* 球堆积: greedy squares, most shared walls first, then nearest the middle */
           function docBuild() {
             const Q = hiveLattice(4), set = new Set(), own4 = (c, s) => c.e.reduce((t, e) => t + e.l * (s.has(e.n) ? 0.75 : 1), 0) * K;
             for (;;) {
@@ -1339,7 +1339,7 @@
             n.G.forEach((P) => { g.beginPath(); P.forEach((p, k) => (k ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]))); g.closePath(); g.fill(); });
             on.forEach((i) => { path(L[i]); g.fillStyle = honey; g.fill(); g.strokeStyle = ink; g.lineWidth = 1.5; g.stroke(); });
             cv.setAttribute("aria-label", `蜂巢画布，第 ${wave + 1} 波，${on.size} 个格子，存蜜 ${n.h.toFixed(1)}，用蜡 ${n.w.toFixed(1)}`);
-            const goal = [[TARGET.toFixed(2), "目标效率"], [Math.round(n.f * 100) + "%", "风暴区填满 · 目标 80%"], [doc, "蜂博士的存蜜 · 正方形"]][wave];
+            const goal = [[TARGET.toFixed(2), "目标效率"], [Math.round(n.f * 100) + "%", "风暴区填满 · 目标 80%"], [doc, "球堆积的存蜜 · 正方形"]][wave];
             meter.innerHTML = `<div class="stat"><span class="stat__fig">${(BUDGET - n.w).toFixed(1)}</span><span class="stat__label">蜡剩余 / ${BUDGET}</span></div>
               <div class="stat"><span class="stat__fig">${n.h.toFixed(1)}</span><span class="stat__label">存蜜量(总面积)${n.G.length ? ` · 漏掉 ${(n.G.length * GAP).toFixed(1)}` : ""}</span></div>
               <div class="stat"><span class="stat__fig">${n.eff.toFixed(2)}</span><span class="stat__label">效率 = 蜜/蜡</span></div>
@@ -1369,10 +1369,10 @@
           function startWave(w) {
             wave = w; on = new Set(); busy = false;
             if (w === 2) doc = docBuild();
-            head.textContent = ["第 1 波 · 自由建造", "第 2 波 · 风暴来了", "第 3 波 · 挑战蜂博士"][w];
+            head.textContent = ["第 1 波 · 自由建造", "第 2 波 · 风暴来了", "第 3 波 · 挑战球堆积"][w];
             [() => say(`自由建造:效率达到 ${TARGET} 就拿星。`, "哪种格子墙最短，又能和最多邻居共用墙?"),
              () => say("风暴来了!只能在虚线圈里建，压到边界的格子要多花一半蜡。", "把风暴区填满 80% 就拿星。"),
-             () => say(`蜂博士用正方形、同样 100 蜡币，存了 ${doc} 蜜。比他多就赢!`, "他的格子挤得很紧，你得更聪明。")][w]();
+             () => say(`球堆积用正方形、同样 100 蜡币，存了 ${doc} 蜜。比他多就赢!`, "他的格子挤得很紧，你得更聪明。")][w]();
             Audio_.swarm(true); renderTasks(); draw();
           }
           function next() { if (wave < 2) startWave(wave + 1); else finish(); }
@@ -1383,13 +1383,13 @@
             const ok = [n.eff >= TARGET, n.f >= 0.8, n.h > doc][wave];
             if (ok) {
               got[wave] = true; busy = true; Audio_.swarm(false); Audio_.play("fanfare"); toast(`⭐ 第 ${wave + 1} 波通过!`); renderTasks();
-              say(["效率达标!挤紧的六边形，墙最短、共墙最多。", `风暴区填满 ${Math.round(n.f * 100)}%!`, `你存了 ${n.h.toFixed(1)} 蜜，赢了蜂博士的 ${doc}!`][wave], wave < 2 ? "下一波马上来……" : "");
+              say(["效率达标!挤紧的六边形，墙最短、共墙最多。", `风暴区填满 ${Math.round(n.f * 100)}%!`, `你存了 ${n.h.toFixed(1)} 蜜，赢了球堆积的 ${doc}!`][wave], wave < 2 ? "下一波马上来……" : "");
               return setTimeout(next, 1800);
             }
             Audio_.play("wrong");
             if (wave === 1) return say(`现在填满 ${Math.round(n.f * 100)}%，还差一点。`, "边上的格子贵，先铺满中间，再补边。");
             say(shape !== 6 ? "还不够。试试六边形:同样大的格子，它的墙最短，还能和 6 个邻居共墙。" : "还不够。把六边形挤成一整团，别留缺口，也别拉成长条。",
-              wave ? `你 ${n.h.toFixed(1)} 蜜，蜂博士 ${doc} 蜜。` : `现在效率 ${n.eff.toFixed(2)}，目标 ${TARGET}。`);
+              wave ? `你 ${n.h.toFixed(1)} 蜜，球堆积 ${doc} 蜜。` : `现在效率 ${n.eff.toFixed(2)}，目标 ${TARGET}。`);
           });
           function finish() {
             finished = true; Audio_.swarm(false); [clearB, goB, skipB].forEach((b) => (b.disabled = true));
@@ -1428,8 +1428,8 @@
         again.addEventListener("click", () => {
           Object.assign(State, { xp: 0, stars: 0, perLevel: {}, badges: {}, unlocked: 1 });
           renderBar(); renderBadges(); renderMap(); Audio_.play("click");
-          $("#play-title").textContent = "选一关开始"; $("#play-sub").textContent = "蜂博士在星图上等你。";
-          $("#stage").innerHTML = ""; guide($("#stage"), "新的一轮开始了!点开第 1 关「哪些形状能铺满地面」。", "蜂博士只问问题，不直接给答案。");
+          $("#play-title").textContent = "选一关开始"; $("#play-sub").textContent = "球堆积在星图上等你。";
+          $("#stage").innerHTML = ""; guide($("#stage"), "新的一轮开始了!点开第 1 关「哪些形状能铺满地面」。", "球堆积只问问题，不直接给答案。");
           $("#map").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
         });
       }
