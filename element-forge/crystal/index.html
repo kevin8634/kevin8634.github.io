@@ -6,12 +6,12 @@
 <title>晶体为什么那么整齐? · 元素工坊 Element Forge</title>
 <meta name="description" content="元素工坊 · 亲手搭钠离子和氯离子的格子,在烧杯里慢慢长出大晶体,量晶面夹角,调出六角雪花——看懂晶体为什么那么整齐。创世计划 Genesis 化学世界。">
 <meta name="theme-color" content="#070a14">
-<link rel="stylesheet" href="../ef.css?v=6">
+<link rel="stylesheet" href="../ef.css?v=7">
 </head>
-<body>
+<body class="frost">
 <div id="app"></div>
-<script src="../ef.js?v=6"></script>
-<script>if (EF.glTier !== 'low') { var x3 = document.createElement('script'); x3.type = 'module'; x3.src = '../ef-crystal3d.js?v=1'; document.head.appendChild(x3); }</script>
+<script src="../ef.js?v=7"></script>
+<script>if (EF.glTier !== 'low') { var x3 = document.createElement('script'); x3.type = 'module'; x3.src = '../ef-crystal3d.js?v=2'; document.head.appendChild(x3); }</script>
 <script>
 (function () {
 /* 平面版(低档设备或 3D 出错时使用,玩法与 3D 版一致) */
@@ -30,7 +30,7 @@ function L0(stage, api) {
   var msg = txt(stage, '先看桌上这撮盐。切到更高的放大倍数,最后点一颗钠离子、一颗氯离子。');
   var pile = []; for (var i = 0; i < 40; i++) pile.push([Math.random(), Math.random(), 6 + Math.random() * 8]);
   ctl.querySelectorAll('button').forEach(function (b) { b.onclick = function () { cur = b.dataset.k; ctl.querySelectorAll('button').forEach(function (z) { z.classList.toggle('on', z === b); }); EF.play('whoosh');
-    msg.innerHTML = cur === 'pile' ? '桌上的一撮食盐:一粒粒,有大有小。' : cur === 'cube' ? '放大镜下,每一粒都是带棱角的<b>小立方块</b>。' : '钠离子和氯离子一个隔一个,排成立方格子。点一点它们。'; }; });
+    msg.innerHTML = cur === 'pile' ? '桌上的一撮食盐:一粒粒,有大有小。' : cur === 'cube' ? '放大镜下,大多数盐粒都是带棱角的<b>小立方块</b>。' : '钠离子和氯离子一个隔一个,排成立方格子。点一点它们。'; }; });
   C.c.addEventListener('pointerdown', function (e) {
     if (cur !== 'ions') return; var q = C.pt(e);
     hit.forEach(function (h) { if (Math.hypot(h[0] - q.x, h[1] - q.y) < h[2]) { seen[h[3]] = 1; EF.tone(h[3] === NA ? 11 : 17); EF.play('select');
@@ -82,14 +82,14 @@ function L1(stage, api) {
 
 function L2(stage, api) {
   var C = EF.canvas(stage, 340), x = C.x, xs = [], t0 = 0, dur = 1, run = false, TARGET = 0.46;
-  var ctl = document.createElement('div'); ctl.className = 'ctl'; ctl.innerHTML = '<span>冷却 / 蒸发速度</span><input type="range" min="1" max="10" value="7" id="sp"><output id="so"></output><button class="ef-btn" id="go">开始结晶</button>'; stage.appendChild(ctl);
-  var msg = txt(stage, '烧杯里是热的浓盐水。长出一颗<b>超过金色刻度框</b>的大晶体。');
-  txt(stage, '<span style="color:#7ad7ff">现实里也能试:</span>食盐溶进热水(热水请大人帮忙),放在窗台慢慢晾干,几天后能看到小立方晶。实验液不要食用。');
+  var ctl = document.createElement('div'); ctl.className = 'ctl'; ctl.innerHTML = '<span>蒸发速度</span><input type="range" min="1" max="10" value="7" id="sp"><output id="so"></output><button class="ef-btn" id="go">开始结晶</button>'; stage.appendChild(ctl);
+  var msg = txt(stage, '烧杯里是饱和的浓盐水。长出一颗<b>超过金色刻度框</b>的大晶体。');
+  txt(stage, '<span style="color:#7ad7ff">现实里也能试:</span>食盐溶进热水(热水请大人帮忙),倒进浅碟,放在小朋友和宠物碰不到的窗台慢慢晾干,几天后能看到小立方晶。实验液不要食用。');
   var sp = ctl.querySelector('#sp'), so = ctl.querySelector('#so'), btn = ctl.querySelector('#go');
   function sync() { var v = +sp.value; so.textContent = v <= 2 ? '很慢' : v <= 4 ? '偏慢' : v <= 7 ? '偏快' : '很快'; } sp.oninput = sync; sync();
   btn.onclick = function () { if (run) return; run = true; btn.disabled = true; var v = +sp.value, N = Math.min(60, Math.round(1 + (v - 1) * (v - 1) * 0.9)), w = [], s = 0, i;
     for (i = 0; i < N; i++) { var q = .7 + Math.random() * .6; w.push(q); s += q; } xs = w.map(function (q) { return { e: Math.cbrt(0.2 * q / s), u: Math.random() }; });
-    dur = EF.reduced ? 0.01 : 2.5 + (11 - v) * 0.45; t0 = performance.now(); EF.play('slide'); msg.innerHTML = '溶液在冷下来……<b>' + N + '</b> 个晶核出现了。'; };
+    dur = EF.reduced ? 0.01 : 2.5 + (11 - v) * 0.45; t0 = performance.now(); EF.play('slide'); msg.innerHTML = '水在一点点蒸发,盐水越来越浓……<b>' + N + '</b> 个晶核出现了。'; };
   (function loop(t) {
     if (!C.c.isConnected) return; var W = C.W, H = C.H, bx = W / 2 - 90, by = H - 40, bw = 180, sc = 200; x.clearRect(0, 0, W, H);
     var k = run || xs.length ? Math.min(1, (performance.now() - t0) / 1000 / dur) : 0, e2 = k * k * (3 - 2 * k);
@@ -110,7 +110,7 @@ function L3(stage, api) {
   var C = EF.canvas(stage, 340), x = C.x, ph = 'a', done = {}, type = null, gt = 0, wet = 0, tried = {};
   var msg = txt(stage, '三颗大小不同的盐晶。依次点一点,量一量相邻两个晶面的夹角。');
   var ctl = document.createElement('div'); ctl.className = 'ctl'; ctl.hidden = true;
-  ctl.innerHTML = '<span>温度</span><input type="range" min="-25" max="-1" value="-3" id="tt"><output id="to"></output><div class="seg"><button data-w="0" class="on">空气干</button><button data-w="1">空气湿</button></div><button class="ef-btn" id="grow">长一片雪花</button>'; stage.appendChild(ctl);
+  ctl.innerHTML = '<span>温度</span><input type="range" min="-25" max="-1" value="-3" id="tt"><output id="to"></output><div class="seg"><button data-w="0" class="on">水汽少</button><button data-w="1">水汽多</button></div><button class="ef-btn" id="grow">长一片雪花</button>'; stage.appendChild(ctl);
   var tt = ctl.querySelector('#tt'), to = ctl.querySelector('#to'); function st() { to.textContent = tt.value + ' ℃'; } tt.oninput = st; st();
   ctl.querySelectorAll('.seg button').forEach(function (b) { b.onclick = function () { wet = +b.dataset.w; ctl.querySelectorAll('.seg button').forEach(function (z) { z.classList.toggle('on', z === b); }); EF.play('tick'); }; });
   var S = [40, 80, 130];
@@ -119,7 +119,7 @@ function L3(stage, api) {
       var n = Object.keys(done).length; msg.innerHTML = n < 3 ? '这颗:<b>90°</b>。再量 ' + (3 - n) + ' 颗。' : '大小不同,夹角都是 <b>90°</b>——1669 年斯泰诺发现的"晶面夹角守恒"。';
       if (n === 3) setTimeout(function () { ph = 'b'; ctl.hidden = false; EF.play('whoosh'); msg.innerHTML = '换成冰:水分子靠氢键排成<b>六边形</b>格子。调温度和湿度,长出一片<b>最繁茂的星状雪花</b>。'; }, 1600); } }); });
   ctl.querySelector('#grow').onclick = function () { type = flakeType(+tt.value, wet); gt = EF.reduced ? 1 : 0; tried[type] = 1; EF.play('slide');
-    msg.innerHTML = tt.value + ' ℃、空气' + (wet ? '湿' : '干') + ':长成了<b>' + SNOW[type] + '</b>。无论哪种,都是六重对称。';
+    msg.innerHTML = tt.value + ' ℃、水汽' + (wet ? '多' : '少') + ':长成了<b>' + SNOW[type] + '</b>。无论哪种,都是六重对称。';
     if (type === 'dendrite') { EF.play('fuse'); setTimeout(api.complete, 1400); } else if (Object.keys(tried).length >= 3) api.say('枝杈要繁茂,空气里得有足够多的水汽。温度大概在零下十几度试试?'); };
   function line(x0, y0, a, L) { x.beginPath(); x.moveTo(x0, y0); x.lineTo(x0 + Math.cos(a) * L, y0 + Math.sin(a) * L); x.stroke(); }
   (function loop(t) {
@@ -144,26 +144,26 @@ var LEVELS = [
   { title: '盐粒为什么是小方块', setup: pick(L0, 'L0'), task: '用尺度镜把一撮食盐一路放大到离子,各点一颗钠离子和氯离子。',
     ask: { q: '用放大镜看一粒食盐,你觉得它是——', opts: ['小立方块', '小圆球', '每粒形状都不一样'], ok: 0 },
     hints: ['盐粒摸起来是滑的还是有棱角的?', '切到"放大镜下"那一档看看。', '到离子尺度,小紫球是钠,大绿球是氯。'],
-    explain: '食盐(氯化钠)的每一粒都是小立方块,因为里面的<b>钠离子</b>和<b>氯离子</b>一个隔一个,排成了立方格子。宏观的平整晶面,就是微观格子的放大。' },
+    explain: '食盐(氯化钠)的颗粒大多是小立方块,因为里面的<b>钠离子</b>和<b>氯离子</b>一个隔一个,排成了立方格子。宏观的平整晶面,就是微观格子的放大。' },
   { title: '搭格子:谁挨着谁', setup: pick(L1, 'L1'), task: '从中间的晶种开始放离子,让格子长满,再数一数中心钠离子周围贴着几个氯离子。',
     ask: { q: '格子长满后,一个钠离子周围贴着几个氯离子?', opts: ['4 个', '6 个', '8 个'], ok: 1 },
     hints: ['钠离子带正电、氯离子带负电。谁和谁会挨在一起?', '同号的离子靠近会被推开,试试换一种离子。', '长满后转一转:上下、左右、前后,各有几个?'],
-    explain: '正负相吸、同号相斥,最省能量的排法只有一种:钠和氯交替。每个钠离子被 <b>6</b> 个氯离子包围,每个氯离子也被 6 个钠离子包围。同一个规则一遍遍重复,就"排"出了整齐的晶体。粒子并不会"想"排队,只是这样排能量最低。' },
-  { title: '慢长与快长', setup: pick(L2, 'L2'), task: '调冷却或蒸发的速度,在烧杯里长出一颗超过金色刻度框的大晶体。',
-    ask: { q: '想得到一颗大晶体,溶液应该——', opts: ['快快冷下来', '慢慢冷下来', '快慢都一样'], ok: 1 },
-    hints: ['晶体一开始都要先有一个小"种子"(晶核)。', '冷得越快,同时冒出的晶核越多还是越少?', '盐的总量是固定的,分给的晶核越少,每颗分到的越多。'],
-    explain: '冷得快,满杯同时冒出许多晶核,盐被分成许多小颗粒;冷得慢,只有少数晶核,离子有时间一层层排上去,长成大晶体。岩浆在地下慢慢冷却形成的花岗岩颗粒粗,喷出地表快速冷却的玄武岩颗粒细,也是这个道理。' },
+    explain: '正负相吸、同号相斥,对钠和氯来说,最省能量的排法是两者交替。每个钠离子被 <b>6</b> 个氯离子包围,每个氯离子也被 6 个钠离子包围。同一个规则一遍遍重复,就"排"出了整齐的晶体。粒子并不会"想"排队,只是这样排能量最低。' },
+  { title: '慢长与快长', setup: pick(L2, 'L2'), task: '调水蒸发的速度,在烧杯里长出一颗超过金色刻度框的大晶体。',
+    ask: { q: '想得到一颗大盐晶,应该——', opts: ['让水快快蒸发', '让水慢慢蒸发', '快慢都一样'], ok: 1 },
+    hints: ['晶体一开始都要先有一个小"种子"(晶核)。', '盐析出得越快,同时冒出的晶核越多还是越少?', '盐的总量是固定的,分给的晶核越少,每颗分到的越多。'],
+    explain: '析出得快(水蒸发得快,或溶液冷得快),满杯同时冒出许多晶核,盐被分成许多小颗粒;析出得慢,只有少数晶核,离子有时间一层层排上去,长成大晶体。食盐在热水和冷水里溶解得差不多多,所以种盐晶主要靠慢慢蒸发;明矾、白糖则也能靠慢慢降温。同样的岩浆,在地下慢慢冷却成颗粒粗大的辉长岩,喷出地表快速冷却就成了颗粒细小的玄武岩,也是这个道理。' },
   { title: '晶面的角度 · 雪花六角', setup: pick(L3, 'L3'), task: '量三颗盐晶的晶面夹角,再调温度和湿度,长出一片最繁茂的星状雪花。',
     ask: { q: '一颗小盐晶和一颗大盐晶,相邻晶面的夹角——', opts: ['大的角度更大', '都一样', '小的角度更大'], ok: 1 },
     hints: ['晶体的样子由里面的格子决定,格子会随大小改变吗?', '雪花的格子是六边形的,所以它总有几个角?', '星状枝晶需要湿润的空气,温度大约在零下 15 度左右。'],
-    explain: '同种晶体,不管长多大,对应晶面的夹角都不变(斯泰诺,1669):盐总是 90°。冰的水分子靠氢键排成六边形格子(六方冰),所以雪花总是六重对称;温度和水汽多少,只决定它长成薄片、柱子还是星状枝杈。' }
+    explain: '同种晶体,不管长多大,对应晶面的夹角都不变(斯泰诺 1669 年在石英上发现,一百多年后被证明适用于各种晶体):盐的相邻立方晶面总是 90°。冰的水分子靠氢键排成六边形格子(六方冰),所以雪花几乎都是六重对称;温度和水汽多少,只决定它长成薄片、柱子还是星状枝杈。' }
 ];
 var NOTES = { title: '元素工坊 · 晶体为什么那么整齐?', items: [
-  '晶体里的粒子按同一个规则在空间里一遍遍<b>重复</b>,所以整齐。粒子总是待在能量最低的位置。',
+  '晶体里的粒子按同一个规则在空间里一遍遍<b>重复</b>,所以整齐。粒子会落到能量最低的位置附近,并在那里不停地微微振动。',
   '食盐是钠离子和氯离子交替排成的<b>立方格子</b>,每个离子周围贴着 6 个异号离子;所以盐粒是小立方块。',
-  '冷却或蒸发越慢,晶核越少,晶体越大;越快,晶粒越细。',
+  '析出越慢(水蒸发得慢),晶核越少,晶体越大;越快,晶粒越细。',
   '同种晶体的晶面夹角总是不变(斯泰诺定律,1669)。',
-  '冰的水分子靠氢键排成六边形,雪花总是六重对称;温度和湿度决定它的形状。'],
+  '冰的水分子靠氢键排成六边形,雪花几乎都是六重对称;温度和湿度决定它的形状。'],
   bridge: '<a href="../../math-atlas/cube/">星图 Math Atlas「魔方为什么能复原?」</a>——盐的立方格子转 90° 还是它自己,魔方也一样:去转一转,看看"对称"在数学里是什么。' };
 EF.mission('crystal', LEVELS, NOTES);
 })();

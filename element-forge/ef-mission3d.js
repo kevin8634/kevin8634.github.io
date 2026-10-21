@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.3
+/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.4.1(crystal 霜镜舞台)
    每关一个 3D 场景,随关卡切换淡入淡出;关卡玩法仍在前景面板里进行。低档不加载(保留 v0.1 星空背景)。 */
 import { THREE, makeGL, P, glowSprite, starMaterial, fresnelMaterial } from './ef-gl.js?v=2';
 const EF = window.EF;
@@ -27,7 +27,12 @@ function boot() {
   function setA(sc, a) { sc.g.visible = a > 0.004; for (const [m, b] of sc.mats) { if (m.uniforms && m.uniforms.uA) m.uniforms.uA.value = a * b; else m.opacity = a * b; } }
   const glowW = s => glowSprite([[0, 'rgba(255,200,120,.85)'], [0.25, 'rgba(255,140,50,.45)'], [0.6, 'rgba(255,80,20,.1)'], [1, 'rgba(0,0,0,0)']], s);
 
-  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : [];
+  const isX = EF.missionId === 'crystal';
+  if (isX) { /* v0.4.1:霜镜舞台——冷光、冰蓝,取代熔炉暖光 */
+    scene.fog = new THREE.FogExp2(0x0a1a2a, 0.035); key.color.set(0xe6f6ff); rim.color.set(0x7ad7ff); stars.material.color.set(0xcfefff);
+    scene.children.forEach(o => { if (o.isAmbientLight) o.color.set(0x7a90a8); });
+  }
+  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : [];
   LV.forEach(s => { scene.add(s.g); setA(s, 0); });
 
   /* ---------- stars:主序星 → 洋葱分层的大质量恒星 → 铁核心 → 超新星遗迹 ---------- */
@@ -78,7 +83,7 @@ function boot() {
       const seen = new Set(), at = pts.filter(p => { const k = p.x.toFixed(2) + ',' + p.z.toFixed(2); if (seen.has(k)) return false; seen.add(k); return true; });
       return { at, b: bondsOf(at, a, 0.02) };
     }
-    function graphite(s) { const layers = [-0.75, 0, 0.75].map((y, k) => { const sh = sheet(k % 2 ? 0.42 * Math.sqrt(3) / 2 : 0, y); const g = build(s, sh.at, sh.b, 0.075, 0.022); s.g.add(g); return g; }); return layers; }
+    function graphite(s) { const layers = [-0.99, 0, 0.99].map((y, k) => { const sh = sheet(k % 2 ? 0.42 * Math.sqrt(3) / 2 : 0, y); const g = build(s, sh.at, sh.b, 0.075, 0.022); s.g.add(g); return g; }); return layers; }
     const out = [];
     { const s = SC(); graphite(s); s.g.rotation.x = 0.35; s.upd = t => { s.g.rotation.y = t * 0.08; }; out.push(s); }
     { const s = SC(); const L = graphite(s); s.g.rotation.x = 0.55; const glow = glowW(1.1); reg(s, glow.material); s.g.add(glow); s.upd = t => { s.g.rotation.y = t * 0.06; glow.material.opacity = 0.5 + 0.4 * Math.sin(t * 3); }; out.push(s); }
@@ -90,6 +95,35 @@ function boot() {
       s.g.add(build(s, at, bondsOf(at, Math.sqrt(3) / 4 * A, 0.02), 0.08, 0.026));
       const g = glowSprite([[0, 'rgba(200,230,255,.35)'], [1, 'rgba(0,0,0,0)']], 5); reg(s, g.material); s.g.add(g);
       s.g.rotation.set(0.5, 0.6, 0); s.upd = t => { s.g.rotation.y = 0.6 + t * 0.12; }; out.push(s); }
+    return out;
+  }
+
+  /* ---------- crystal(霜镜):盐粒 → 离子格子 → 晶体慢长 → 雪花 ---------- */
+  function crystalScenes() {
+    const ice = op => new THREE.MeshStandardMaterial({ color: 0xcfefff, roughness: 0.15, metalness: 0.05, emissive: 0x2a6a8a, emissiveIntensity: 0.5, opacity: op });
+    const out = [];
+    /* 0 漂浮的小盐立方 */
+    { const s = SC(), m = reg(s, ice(0.8), 0.8), cubes = [];
+      for (let i = 0; i < 26; i++) { const c = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), m); const k = 0.12 + rnd() * 0.28; c.scale.setScalar(k);
+        c.position.set((rnd() - 0.5) * 4, (rnd() - 0.5) * 3, (rnd() - 0.5) * 2.5); c.rotation.set(rnd() * 3, rnd() * 3, 0); c.userData.v = 0.2 + rnd() * 0.4; s.g.add(c); cubes.push(c); }
+      s.upd = t => { cubes.forEach((c, i) => { c.rotation.y = t * c.userData.v + i; c.position.y += Math.sin(t * 0.6 + i) * 0.0008; }); }; out.push(s); }
+    /* 1 Na/Cl 岩盐格子 3×3×3 */
+    { const s = SC(), mN = reg(s, new THREE.MeshStandardMaterial({ color: 0xb48cff, emissive: 0x2a1450, emissiveIntensity: 0.6, roughness: 0.35 }), 0.9),
+        mC = reg(s, new THREE.MeshStandardMaterial({ color: 0x7be08a, emissive: 0x123a18, emissiveIntensity: 0.6, roughness: 0.35 }), 0.9);
+      const gN = new THREE.SphereGeometry(0.17, 24, 16), gC = new THREE.SphereGeometry(0.28, 24, 16), d = 0.7;
+      for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) for (let k = -1; k <= 1; k++) { const na = (i + j + k + 3) % 2 === 0; const b = new THREE.Mesh(na ? gN : gC, na ? mN : mC); b.position.set(i * d, j * d, k * d); s.g.add(b); }
+      s.g.rotation.set(0.5, 0.6, 0); s.upd = t => { s.g.rotation.y = 0.6 + t * 0.1; }; out.push(s); }
+    /* 2 一颗大晶体与一群小晶体 */
+    { const s = SC(), m = reg(s, ice(0.85), 0.85), big = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.3, 1.3), m); big.rotation.set(0.5, 0.7, 0); s.g.add(big);
+      const small = []; for (let i = 0; i < 40; i++) { const c = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.12), m); const a = rnd() * 6.283, r = 1.4 + rnd() * 0.9; c.position.set(Math.cos(a) * r, (rnd() - 0.5) * 1.6, Math.sin(a) * r); s.g.add(c); small.push(c); }
+      s.upd = t => { big.rotation.y = 0.7 + t * 0.08; const k = 1 + 0.04 * Math.sin(t * 0.5); big.scale.setScalar(k); s.g.rotation.y = t * 0.05; }; out.push(s); }
+    /* 3 六角雪花 */
+    { const s = SC(), m = reg(s, ice(0.9), 0.9), flake = new THREE.Group();
+      const arm = new THREE.BoxGeometry(0.07, 1.6, 0.04), twig = new THREE.BoxGeometry(0.05, 0.42, 0.03);
+      for (let k = 0; k < 6; k++) { const g = new THREE.Group(); g.rotation.z = k * Math.PI / 3; const a = new THREE.Mesh(arm, m); a.position.y = 0.8; g.add(a);
+        [0.55, 0.95, 1.3].forEach((y, n) => [-1, 1].forEach(sd => { const tw = new THREE.Mesh(twig, m); tw.scale.y = 1 - n * 0.25; tw.position.set(sd * 0.13, y, 0); tw.rotation.z = -sd * Math.PI / 3; g.add(tw); })); flake.add(g); }
+      flake.add(new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.05, 6), m).rotateX(Math.PI / 2));
+      s.g.add(flake); s.upd = t => { flake.rotation.z = t * 0.1; flake.rotation.y = Math.sin(t * 0.3) * 0.5; }; out.push(s); }
     return out;
   }
 

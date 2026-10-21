@@ -2,13 +2,14 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
+<script>/* §5.12 门户坠入大气 → 同色接入 */(function(){try{var s=sessionStorage.getItem('gn:portal:arrive');if(!s)return;sessionStorage.removeItem('gn:portal:arrive');var a=JSON.parse(s);if(!a||!(Date.now()-a.t<5000)||!/^#[0-9a-fA-F]{3,8}$/.test(a.c||''))return;var ms=matchMedia('(prefers-reduced-motion: reduce)').matches?200:600;var d=document.createElement('div');d.setAttribute('aria-hidden','true');d.style.cssText='position:fixed;inset:0;z-index:2147483000;pointer-events:none;background:linear-gradient(rgba(4,6,15,.82),rgba(4,6,15,.82)),'+a.c+';transition:opacity '+ms+'ms ease-out';document.documentElement.appendChild(d);var go=function(){requestAnimationFrame(function(){requestAnimationFrame(function(){d.style.opacity='0';setTimeout(function(){d.remove()},ms+80)})})};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',go):go()}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>元素工坊 Element Forge · 化学 · 创世计划 Genesis</title>
 <meta name="description" content="元素工坊 Element Forge:创世计划 Genesis 第 03 世界(化学)。从恒星熔炉开始,用元素锻造万物。免费、免注册、无广告。">
 <meta property="og:title" content="元素工坊 Element Forge · 化学 · 创世计划 Genesis">
 <meta property="og:description" content="从一颗恒星里,炼出整个世界。亲手聚变出元素、把石墨压成钻石。免费、免注册。">
 <meta name="theme-color" content="#070a14">
-<link rel="stylesheet" href="ef.css?v=6">
+<link rel="stylesheet" href="ef.css?v=7">
 <link rel="stylesheet" href="ef-hud.css?v=2">
 </head>
 <body class="home pre">
@@ -67,7 +68,7 @@
     </div>
     <div class="legend" id="legend"></div>
     <p class="note-sm" id="bodyNote" hidden>人体组成视图:柱子越高,这种元素在你体重里占得越多(成年人平均,按质量;个体差异大)。氧、碳、氢、氮四种就占了约 96%。数据参考 <a href="https://en.wikipedia.org/wiki/Composition_of_the_human_body" target="_blank" rel="noopener">Composition of the human body</a>。</p>
-    <p class="note-sm">来源为简化示意:许多元素有不止一个来源,这里只标主要的一个。科学背景可参考 <a href="https://blog.sdss.org/2017/01/09/origin-of-the-elements-in-the-solar-system/" target="_blank" rel="noopener">SDSS 关于元素起源的介绍</a>。</p>
+    <p class="note-sm">来源为简化示意:许多元素有不止一个来源,这里只标主要的一个;钒、钴等铁峰元素和钽,几种来源的比例很接近。科学背景可参考 <a href="https://blog.sdss.org/2017/01/09/origin-of-the-elements-in-the-solar-system/" target="_blank" rel="noopener">SDSS 关于元素起源的介绍</a>。</p>
   </section>
 
   <section class="sec">
@@ -82,7 +83,7 @@
     创世计划 Genesis · 科学素养 / 科普探究
   </footer>
 </main>
-<script src="ef.js?v=6"></script>
+<script src="ef.js?v=7"></script>
 <script>
 (function () {
 if (EF.reduced) document.body.classList.remove('pre');  /* v0.3.2:进入动画每次进入都播放(减少动态除外) */
@@ -96,7 +97,7 @@ var SC = [
   { n: '烧杯', s: '约 10⁻¹ 米 · 你看得见的实验', t: 'cabbage', e: -1, g: 'dot', q: '同一杯紫甘蓝汁,为什么能变成红、紫、蓝、绿好几种颜色?' },
   { n: '晶体', s: '约 10⁻⁹ 米 · 金刚石里的碳原子', t: 'carbon', e: -9, g: 'bucky', q: '这些碳原子排得整整齐齐。换一种排法,它还会是钻石吗?' },
   { n: '分子', s: '约 10⁻¹⁰ 米 · 一个甲烷分子', t: 'carbon', e: -10, g: 'click', q: '一个碳原子,为什么偏偏伸出 4 只"手"?' },
-  { n: '原子', s: '约 10⁻¹⁰ 米 · 电子是一团"概率云"', t: 'carbon', e: -10, g: 'cryo', q: '电子并不是绕着原子核转圈的小球。那它到底在哪里?' },
+  { n: '原子', s: '约 10⁻¹⁰ 米 · 电子是一团"概率云"(示意)', t: 'carbon', e: -10, g: 'cryo', q: '电子并不是绕着原子核转圈的小球。那它到底在哪里?' },
   { n: '原子核', s: '约 10⁻¹⁴ 米 · 铁-56:26 个质子、30 个中子', t: 'stars', e: -14, g: 'oga', q: '恒星一路炼到铁就停下了。铁原子核到底有什么特别?' }
 ];
 EF.SC = SC;
@@ -254,6 +255,7 @@ function scene(i, x, W, H, t) {
     var nuc = [[0, 0, 0], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1], [.7, .7, .7], [-.7, -.7, .7], [.7, -.7, -.7], [-.7, .7, -.7], [.7, .7, -.7]], ry6 = t / 2200, s6 = m * 0.1;
     nuc.map(function (p, k) { var X = p[0] * Math.cos(ry6) - p[2] * Math.sin(ry6), Z = p[0] * Math.sin(ry6) + p[2] * Math.cos(ry6); return { x: cx + X * s6, y: cy + p[1] * s6, z: Z, k: k }; })
       .sort(function (a, b) { return a.z - b.z; }).forEach(function (p) { EF.ball(x, p.x, p.y, m * 0.075, p.k % 2 ? '#9aa6b8' : '#ff6a3d'); });
+    x.fillStyle = 'rgba(255,255,255,.6)'; x.font = '12px system-ui'; x.textAlign = 'center'; x.fillText('示意 · 只画出一部分质子和中子', cx, cy + m * 0.3);
   }
 }
 
@@ -274,8 +276,8 @@ var pt = document.getElementById('pt'), side = document.getElementById('side'), 
 EF.ELEM.forEach(function (e) {
   var b = document.createElement('button'), p = EF.pos(e.z), O = EF.ORIGIN[e.o];
   b.className = 'el tint' + (lit[e.z] ? ' lit' : ''); b.style.setProperty('--oc', O.c); b.style.gridColumn = p[0]; b.style.gridRow = p[1] >= 9 ? p[1] : p[1];
-  b.innerHTML = '<i>' + e.z + '</i><b>' + e.sym + '</b><i>' + e.zh + '</i>' + (EF.BODY[e.z] ? '<em class="bp">' + EF.BODY[e.z] + '%</em>' : EF.BODY_TRACE.indexOf(e.z) > -1 ? '<em class="bp">微量</em>' : '');
-  if (EF.BODY[e.z] || EF.BODY_TRACE.indexOf(e.z) > -1) b.classList.add('bd'); if (EF.BODY[e.z]) b.classList.add('bm'); b.title = e.zh + ' ' + e.sym + ' · ' + O.n;
+  b.innerHTML = '<i>' + e.z + '</i><b>' + e.sym + '</b><i>' + EF.zhHTML(e) + '</i>' + (EF.BODY[e.z] ? '<em class="bp">' + EF.BODY[e.z] + '%</em>' : EF.BODY_TRACE.indexOf(e.z) > -1 ? '<em class="bp">微量</em>' : '');
+  if (EF.BODY[e.z] || EF.BODY_TRACE.indexOf(e.z) > -1) b.classList.add('bd'); if (EF.BODY[e.z]) b.classList.add('bm'); b.title = EF.zhText(e) + ' ' + e.sym + ' · ' + O.n;
   b.onclick = function () { sel = e.z; showEl(); EF.tone(e.z); }; b.dataset.z = e.z; pt.appendChild(b);
 });
 var gap = document.createElement('div'); gap.style.gridRow = 8; gap.style.gridColumn = '1 / 19'; pt.appendChild(gap);
@@ -283,7 +285,7 @@ function showEl() {
   var e = EF.ELEM[sel - 1], O = EF.ORIGIN[e.o];
   Array.prototype.forEach.call(pt.querySelectorAll('.el'), function (b) { b.classList.toggle('sel', +b.dataset.z === sel); });
   var src = []; Object.keys(EF.MISSIONS).forEach(function (k) { var M = EF.MISSIONS[k]; if (M.unlock && M.unlock.indexOf(sel) > -1) src.push('<a href="' + M.href + '">' + M.q + '</a>'); });
-  side.innerHTML = '<div><span class="big">' + e.sym + '</span><span class="zh">' + e.zh + '</span></div><div class="kv"><small>原子序数</small>' + e.z + ' 号</div>' +
+  side.innerHTML = '<div><span class="big">' + e.sym + '</span><span class="zh">' + EF.zhHTML(e) + '</span></div><div class="kv"><small>原子序数</small>' + e.z + ' 号</div>' +
     '<div class="kv"><small>主要诞生在</small><span style="color:' + O.c + '">■</span> ' + O.n + ' · ' + O.d + '</div>' +
     (EF.bodyText(e.z) ? '<div class="kv"><small>在你身体里</small>' + EF.bodyText(e.z) + '</div>' : '') +
     (EF.FACT[e.z] ? '<div class="kv"><small>小知识</small>' + EF.FACT[e.z] + '</div>' : '') +
@@ -315,6 +317,6 @@ if (EF.glTier === 'low') EF.start2D();
 else setTimeout(function () { if (!EF.glReady) EF.start2D(); }, 15000);
 })();
 </script>
-<script>if (EF.glTier !== 'low') { var m3 = document.createElement('script'); m3.type = 'module'; m3.src = 'ef-home.js?v=3'; document.body.appendChild(m3); }</script>
+<script>if (EF.glTier !== 'low') { var m3 = document.createElement('script'); m3.type = 'module'; m3.src = 'ef-home.js?v=4'; document.body.appendChild(m3); }</script>
 </body>
 </html>

@@ -145,3 +145,12 @@ body.stage3d #bg3d{visibility:hidden}
 .pt.body .el.bd{opacity:1;color:#1a1206;background:#7ad7ff;border-color:#fff8}
 .pt.body .el.bd .bp{display:block}
 .pt.body .el.bm{background:#ffb35c}
+
+/* v0.4.1:扩展区新字的偏旁拼合 */
+.zc{display:inline-flex;width:1em;white-space:nowrap;vertical-align:baseline}.zc>span{display:inline-block;transform-origin:0 50%}.zc>span:first-child{width:.42em;transform:scaleX(.42)}.zc>span:last-child{width:.58em;transform:scaleX(.6)}
+/* v0.4.1:crystal 霜镜舞台(冷光冰蓝;品牌金只留在按钮与星级) */
+body.frost{--line:rgba(140,215,255,.28)}
+body.mission.frost .cn{border-color:#9fdcff;filter:drop-shadow(0 0 6px #7ad7ff88)}
+body.mission.frost .ef-top,body.mission.frost .m-stage .ctl{border-color:rgba(140,215,255,.22)}
+body.mission.frost .m-stage{border-color:rgba(140,215,255,.26);background:rgba(6,14,26,.42)}
+body.mission.frost .m-guide{box-shadow:0 0 40px rgba(122,215,255,.1)}

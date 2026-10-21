@@ -302,7 +302,7 @@ function bootTable() {
     x.fillStyle = on ? '#1a1206' : '#f4ede1'; x.textAlign = 'center'; x.textBaseline = 'middle';
     x.font = '800 54px system-ui,-apple-system,"PingFang SC","Noto Sans SC",sans-serif'; x.fillText(e.sym, 64, 62);
     x.font = '600 20px system-ui,sans-serif'; x.textAlign = 'left'; x.fillText(String(e.z), 10, 18);
-    x.font = '500 20px system-ui,"PingFang SC","Noto Sans SC",sans-serif'; x.textAlign = 'center'; x.fillText(e.zh, 64, 108);
+    x.font = '500 20px system-ui,"PingFang SC","Noto Sans SC",sans-serif'; x.textAlign = 'center'; EF.zhDraw(x, e, 64, 108, 20);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
   }
   EF.ELEM.forEach(e => {
@@ -355,7 +355,7 @@ function bootTable() {
     camera.position.lerp(flat ? CAM.top : CAM.tilt, 0.06); camera.lookAt(0, 0, flat ? 0.2 : 0.6);
     ray.setFromCamera(mv, camera); const hit = ray.intersectObjects(tiles, false)[0];
     const h = hit ? hit.object : null;
-    if (h !== hov) { hov = h; cv.style.cursor = h ? 'pointer' : 'grab'; if (h) { const e = h.userData.e; tip.textContent = e.z + ' ' + e.zh + ' ' + e.sym + ' · ' + (body ? (EF.bodyText(e.z) || '人体里几乎没有') : EF.ORIGIN[e.o].n); tip.hidden = false; EF.hover(); } else tip.hidden = true; }
+    if (h !== hov) { hov = h; cv.style.cursor = h ? 'pointer' : 'grab'; if (h) { const e = h.userData.e; tip.textContent = e.z + ' ' + EF.zhText(e) + ' ' + e.sym + ' · ' + (body ? (EF.bodyText(e.z) || '人体里几乎没有') : EF.ORIGIN[e.o].n); tip.hidden = false; EF.hover(); } else tip.hidden = true; }
     tiles.forEach(m => { const u = m.userData, hb = body ? Math.max(0.22, u.bh) : 0.22, tgt = (body ? (u.bh ? 0 : -0.06) : u.base) + (m === hov ? 0.3 : 0) + (u.e.z === sel ? 0.18 : 0);
       u.h = EF.reduced ? hb : lerp(u.h, hb, Math.min(1, dt * 6)); m.scale.y = u.h / 0.22; u.lift = lerp(u.lift, tgt, 0.15); m.position.y = u.lift + (u.h - 0.22) / 2; });
     if (SP) { sp.forEach((s, i) => { s.y += s.v * dt; if (s.y > 4.2) s.y = 0.5; spP[i * 3] = s.x; spP[i * 3 + 1] = s.y; spP[i * 3 + 2] = s.z; }); spG.attributes.position.needsUpdate = true; }

@@ -244,7 +244,7 @@ function L2(stage, api) {
 /* ==================== 第 4 关:改规则·3D 压机 ==================== */
 function L3(stage, api) {
   const wrap = document.createElement('div'); wrap.className = 'two'; stage.appendChild(wrap);
-  const pa = document.createElement('div'); pa.className = 'panel'; pa.innerHTML = '<h3>碳的相图(示意)</h3>'; wrap.appendChild(pa);
+  const pa = document.createElement('div'); pa.className = 'panel'; pa.innerHTML = '<h3>碳的相图(示意 · 1100–1600 °C 段为实测)</h3>'; wrap.appendChild(pa);
   const pb = document.createElement('div'); pb.className = 'panel'; pb.innerHTML = '<h3>压机里的碳</h3>'; wrap.appendChild(pb);
   const Dg = EF.canvas(pa, 260), x = Dg.x;
   const s = stage3d(pb, { h: 260, yaw: 0.7, pitch: 0.25 });

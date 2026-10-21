@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · crystal 任务 3D 玩法 ef-crystal3d.js v0.4
+/* 元素工坊 Element Forge · crystal 任务 3D 玩法 ef-crystal3d.js v0.4.1
    「晶体为什么那么整齐?」四关:尺度镜看盐、搭离子格子、烧杯里慢长快长、晶面角度与雪花六角。
    几何:NaCl 岩盐结构(面心立方),Na–Cl 间距 2.82 Å,配位数 6;离子半径 Cl⁻(1.81 Å)> Na⁺(1.02 Å)。
    冰为六方冰 Ih,雪花形态随温度/湿度变化只做定性(参照中谷宇吉郎雪晶图)。
@@ -111,7 +111,7 @@ function L0(stage, api) {
   const all = { pile, cube, ions: ions.g }; Object.values(all).forEach(o => { o.visible = false; S.scene.add(o); });
   let cur = 'pile', k0 = 0, seen = {}; const dist = { pile: 4.2, cube: 3.8, ions: 5.4 };
   function go(k) { cur = k; k0 = 0; EF.play('whoosh'); leg.style.display = k === 'ions' ? '' : 'none';
-    msg.innerHTML = k === 'pile' ? '桌上的一撮食盐:一粒粒,有大有小。' : k === 'cube' ? '放大镜下,每一粒都是带棱角的<b>小立方块</b>,晶面平得像切过一样。' : '放大到离子:<b>钠离子</b>和<b>氯离子</b>一个隔一个,排成立方格子。点一点它们。'; }
+    msg.innerHTML = k === 'pile' ? '桌上的一撮食盐:一粒粒,有大有小。' : k === 'cube' ? '放大镜下,大多数盐粒都是带棱角的<b>小立方块</b>,晶面平得像切过一样。' : '放大到离子:<b>钠离子</b>和<b>氯离子</b>一个隔一个,排成立方格子。点一点它们。'; }
   S.onPick = rc => {
     if (cur !== 'ions') return; const o = pickObj(rc, ions.list); if (!o) return;
     const t = o.userData.t; seen[t] = 1; EF.tone(t === NA ? 11 : 17); EF.play('select');
@@ -203,9 +203,9 @@ function L1(stage, api) {
 function L2(stage, api) {
   const S = stage3d(stage, { yaw: 0.35, pitch: 0.28 });
   const ctl = document.createElement('div'); ctl.className = 'ctl';
-  ctl.innerHTML = '<span>冷却 / 蒸发速度</span><input type="range" min="1" max="10" value="7" id="sp"><output id="so"></output><button class="ef-btn" id="go">开始结晶</button>';
-  stage.appendChild(ctl); const msg = note(stage, '烧杯里是热的浓盐水。速度调慢或调快,长出一颗<b>超过金色刻度框</b>的大晶体。');
-  note(stage, '<span style="color:#7ad7ff">现实里也能试:</span>食盐溶进热水(热水请大人帮忙),放在窗台慢慢晾干,几天后能看到小立方晶。实验液不要食用。');
+  ctl.innerHTML = '<span>蒸发速度</span><input type="range" min="1" max="10" value="7" id="sp"><output id="so"></output><button class="ef-btn" id="go">开始结晶</button>';
+  stage.appendChild(ctl); const msg = note(stage, '烧杯里是饱和的浓盐水。速度调慢或调快,长出一颗<b>超过金色刻度框</b>的大晶体。');
+  note(stage, '<span style="color:#7ad7ff">现实里也能试:</span>食盐溶进热水(热水请大人帮忙),倒进浅碟,放在小朋友和宠物碰不到的窗台慢慢晾干,几天后能看到小立方晶。实验液不要食用。');
   const sp = ctl.querySelector('#sp'), so = ctl.querySelector('#so'), btn = ctl.querySelector('#go');
   const sync = () => { const v = +sp.value; so.textContent = v <= 2 ? '很慢' : v <= 4 ? '偏慢' : v <= 7 ? '偏快' : '很快'; }; sp.oninput = sync; sync();
   /* 烧杯 + 溶液 + 溶解的离子 */
@@ -229,7 +229,7 @@ function L2(stage, api) {
     w.forEach(q => { const e = Math.cbrt(VOL * q / sum), m = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), saltMat()); m.add(edges(new THREE.BoxGeometry(1, 1, 1), 0xffffff, 0.5));
       const a = Math.random() * 6.28, r = Math.sqrt(Math.random()) * Math.max(0, 0.85 - e / 2); m.position.set(N === 1 ? 0 : Math.cos(a) * r, 0, N === 1 ? 0 : Math.sin(a) * r); m.rotation.y = Math.random() * 1.57; m.userData.e = e; m.scale.setScalar(0.001); S.scene.add(m); xs.push(m); });
     dur = RM() ? 0.01 : 2.5 + (11 - v) * 0.45; t0 = performance.now(); EF.play('slide');
-    msg.innerHTML = '溶液在冷下来……<b>' + N + '</b> 个晶核出现了。';
+    msg.innerHTML = '水在一点点蒸发,盐水越来越浓……<b>' + N + '</b> 个晶核出现了。';
   };
   S.onFrame((t, dt) => {
     let k = 0; if (t0 > 0) k = Math.min(1, (performance.now() - t0) / 1000 / dur);
@@ -265,7 +265,7 @@ function L3(stage, api) {
   const S = stage3d(stage, { yaw: 0.6, pitch: 0.35 });
   const msg = note(stage, '三颗大小不同的盐晶。依次点一点,量一量相邻两个晶面的夹角。');
   const ctl = document.createElement('div'); ctl.className = 'ctl'; ctl.hidden = true;
-  ctl.innerHTML = '<span>温度</span><input type="range" min="-25" max="-1" value="-3" id="tt"><output id="to"></output><div class="seg"><button data-w="0" class="on">空气干</button><button data-w="1">空气湿</button></div><button class="ef-btn" id="grow">长一片雪花</button>';
+  ctl.innerHTML = '<span>温度</span><input type="range" min="-25" max="-1" value="-3" id="tt"><output id="to"></output><div class="seg"><button data-w="0" class="on">水汽少</button><button data-w="1">水汽多</button></div><button class="ef-btn" id="grow">长一片雪花</button>';
   stage.appendChild(ctl);
   const part = { a: new THREE.Group(), b: new THREE.Group() }; S.scene.add(part.a, part.b); part.b.visible = false;
   const sizes = [0.35, 0.7, 1.1], xs = [-1.35, -0.25, 1.15], cubes = [], done = {};
@@ -289,7 +289,7 @@ function L3(stage, api) {
   ctl.querySelector('#grow').onclick = () => {
     if (flake) part.b.remove(flake.g); flake = snowflake(+tt.value, wet); part.b.add(flake.g); gt = RM() ? 1 : 0; tried[flake.type] = 1;
     EF.play('slide'); EF.tone(8, 0, 0.7);
-    msg.innerHTML = tt.value + ' ℃、空气' + (wet ? '湿' : '干') + ':长成了<b>' + SNOW[flake.type] + '</b>。无论哪种,都是六重对称。';
+    msg.innerHTML = tt.value + ' ℃、水汽' + (wet ? '多' : '少') + ':长成了<b>' + SNOW[flake.type] + '</b>。无论哪种,都是六重对称。';
     if (flake.type === 'dendrite') { EF.play('fuse'); setTimeout(api.complete, 1400); }
     else if (Object.keys(tried).length >= 3) api.say('枝杈要繁茂,空气里得有足够多的水汽。温度大概在零下十几度试试?');
   };

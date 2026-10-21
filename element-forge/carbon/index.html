@@ -6,12 +6,12 @@
 <title>为什么钻石和铅笔芯是同一种东西? · 元素工坊 Element Forge</title>
 <meta name="description" content="元素工坊 · 转动真实的钻石与石墨结构,推一推、压一压,把石墨压成钻石,认识碳的同素异形体。创世计划 Genesis 化学世界。">
 <meta name="theme-color" content="#070a14">
-<link rel="stylesheet" href="../ef.css?v=6">
+<link rel="stylesheet" href="../ef.css?v=7">
 </head>
 <body>
 <div id="app"></div>
-<script src="../ef.js?v=6"></script>
-<script>if (EF.glTier !== 'low') { var c3 = document.createElement('script'); c3.type = 'module'; c3.src = '../ef-carbon3d.js?v=1'; document.head.appendChild(c3); }</script>
+<script src="../ef.js?v=7"></script>
+<script>if (EF.glTier !== 'low') { var c3 = document.createElement('script'); c3.type = 'module'; c3.src = '../ef-carbon3d.js?v=2'; document.head.appendChild(c3); }</script>
 <script>
 (function () {
 /* ---------- 晶体结构(真实几何:金刚石键长 1.545 Å、四面体;石墨层内 1.42 Å、层距 3.35 Å) ---------- */
@@ -144,7 +144,7 @@ function L2(stage, api) {
 /* 第 4 关:改规则·把石墨压成钻石 */
 function L3(stage, api) {
   var wrap = document.createElement('div'); wrap.className = 'two'; stage.appendChild(wrap);
-  var pa = document.createElement('div'); pa.className = 'panel'; pa.innerHTML = '<h3>碳的相图(示意)</h3>'; wrap.appendChild(pa);
+  var pa = document.createElement('div'); pa.className = 'panel'; pa.innerHTML = '<h3>碳的相图(示意 · 1100–1600 °C 段为实测)</h3>'; wrap.appendChild(pa);
   var pb = document.createElement('div'); pb.className = 'panel'; pb.innerHTML = '<h3>压机里的碳</h3>'; wrap.appendChild(pb);
   var D = EF.canvas(pa, 260), V = Viewer(pb, 260, GRA), x = D.x;
   var ctl = document.createElement('div'); ctl.innerHTML = '<div class="ctl"><span>压力</span><input type="range" id="pp" min="0" max="10" step="0.1" value="1"><output id="po"></output></div><div class="ctl"><span>温度</span><input type="range" id="tt" min="300" max="3000" step="10" value="300"><output id="to"></output></div><div class="ctl"><button class="ef-btn" id="press">开压!</button></div>';
@@ -182,8 +182,8 @@ function pick(f2, k) { return function (stage, api) { if (EF.C3 && EF.C3[k]) { t
 var LEVELS = [
   { title: '同一种原子', setup: pick(L0, 'L0'), task: '用尺度镜把钻石和铅笔芯一路放大到原子,各点一颗原子看看。',
     ask: { q: '把钻石和铅笔芯放大到原子,你会看到——', opts: ['完全不同的两种原子', '都是同一种原子', '钻石是碳,铅笔芯是铅'], ok: 1 },
-    hints: ['铅笔芯里真的有铅吗?它为什么叫"铅笔"?', '如果把钻石和铅笔芯都烧掉,剩下的气体会一样吗?', '放大到原子那一档,点一下,看看它几号。'],
-    explain: '两边全是<b>碳原子</b>。铅笔芯里其实没有铅,"铅笔"是古人把石墨误认成铅留下的名字。不同的不是原子,而是原子怎么排、怎么手拉手。' },
+    hints: ['铅笔芯里真的有铅吗?它为什么叫"铅笔"?', '如果把钻石和铅笔芯都烧掉,剩下的气体会一样吗?(想一想就好,不要在家尝试)', '放大到原子那一档,点一下,看看它几号。'],
+    explain: '两边全是<b>碳原子</b>。铅笔芯其实是石墨加一点黏土,里面没有铅,"铅笔"是古人把石墨误认成铅留下的名字。不同的不是原子,而是原子怎么排、怎么手拉手。' },
   { title: '数一数手', setup: pick(L1, 'L1'), task: '在钻石和石墨里,各数一数中心那颗碳连着几个碳。',
     ask: { q: '你觉得哪种排法整体更硬?', opts: ['每个碳手拉 4 个,立体交织', '每个碳手拉 3 个,一层层平铺'], ok: 0 },
     hints: ['点选中心那颗原子,亮起来的线就是它的"手"。', '拖动转一转,有的线可能藏在背后。', '钻石的线朝几个方向伸出去?石墨的线都在同一个平面里吗?'],

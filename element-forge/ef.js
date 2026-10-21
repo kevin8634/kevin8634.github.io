@@ -48,6 +48,17 @@ EF.ELEM = RAW.split(' ').map(function (s, i) {
   var m = s.match(/^([A-Z][a-z]?)(.+?)(bb|cr|low|massive|wd|nsm|decay|human)$/);
   return { z: i + 1, sym: m[1], zh: m[2], o: m[3] };
 });
+/* v0.4.1:104–116 号里 9 个新字在 CJK 扩展区,部分设备缺字形会显示方框。
+   这里按偏旁「钅」+ 声旁拼出来(任何中文字体都有),并附拼音。 */
+EF.ZHC = { 104: ['钅', '卢', 'lú'], 105: ['钅', '杜', 'dù'], 106: ['钅', '喜', 'xǐ'], 107: ['钅', '波', 'bō'], 108: ['钅', '黑', 'hēi'], 110: ['钅', '达', 'dá'], 111: ['钅', '仑', 'lún'], 114: ['钅', '夫', 'fū'], 116: ['钅', '立', 'lì'] };
+EF.zhHTML = function (e) { var c = EF.ZHC[e.z]; return c ? '<span class="zc" title="' + c[2] + '"><span>' + c[0] + '</span><span>' + c[1] + '</span></span>' : e.zh; };
+EF.zhText = function (e) { var c = EF.ZHC[e.z]; return c ? c[0] + c[1] + '(' + c[2] + ')' : e.zh; };
+EF.zhDraw = function (x, e, cx, cy, px) {
+  var c = EF.ZHC[e.z]; if (!c) { x.fillText(e.zh, cx, cy); return; }
+  x.save(); x.textAlign = 'center';
+  x.translate(cx - px * 0.3, cy); x.scale(0.42, 1); x.fillText(c[0], 0, 0); x.restore();
+  x.save(); x.textAlign = 'center'; x.translate(cx + px * 0.2, cy); x.scale(0.62, 1); x.fillText(c[1], 0, 0); x.restore();
+};
 /* 人体组成(按质量,成年人平均;个体差异大):Wikipedia「Composition of the human body」汇总表,来源 Chang《Chemistry》等。
    BODY_TRACE:必需微量元素(合计不到 10 克)。 */
 EF.BODY = { 8: 65, 6: 18.5, 1: 9.5, 7: 2.6, 20: 1.3, 15: 0.6, 16: 0.3, 19: 0.2, 11: 0.2, 17: 0.2, 12: 0.1 };
@@ -234,7 +245,7 @@ EF.mission = function (id, LEVELS, NOTES) {
   /* v0.3:B1 沉浸舞台 —— 四角括弧 + 背后 3D 场景(低档不加载) */
   document.body.classList.add('mission', 'mission-' + id); EF.missionId = id; EF.level = 0;
   document.body.insertAdjacentHTML('afterbegin', '<div id="bg3d" aria-hidden="true"></div><i class="cn tl"></i><i class="cn tr"></i><i class="cn bl"></i><i class="cn br"></i>');
-  if (EF.glTier !== 'low') { var m3 = document.createElement('script'); m3.type = 'module'; m3.src = BASE + 'ef-mission3d.js?v=4'; document.body.appendChild(m3); }
+  if (EF.glTier !== 'low') { var m3 = document.createElement('script'); m3.type = 'module'; m3.src = BASE + 'ef-mission3d.js?v=5'; document.body.appendChild(m3); }
   var root = document.getElementById('app');
   root.innerHTML = '<div class="m-head"><h1>' + EF.esc(M.q) + '</h1><div class="m-dots" id="dots"></div></div>' +
     '<div class="m-body"><section class="m-stage" id="stage"></section>' +
