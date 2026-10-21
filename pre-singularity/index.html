@@ -295,7 +295,9 @@ function intro(){ const box=document.getElementById('intro'), l=document.getElem
 }
 function finish(){ introOn=false; document.getElementById('gate').style.display='none'; PS.music(PS.skin()); PS.set('intro',1); document.getElementById('intro').style.display='none'; PS.header(); renderHUD(); burst=1; PS.win(); setTimeout(speakNext,900); }
 document.getElementById('skip').onclick=()=>{ if(!PS.tier()) PS.setTier('first'); finish(); };
-function replayAll(){ if(window.PSGL&&PSGL.on) PSGL.cine(()=>intro()); else intro(); }
+/* v0.8.2:中/高画质只放新 3D 开场;低画质(2D)才放旧开场 */
+function afterCine(){ if(!PS.get('intro',0)){ if(!PS.tier()) PS.setTier('first'); finish(); } else { PS.music(PS.skin()); speakNext(); } }
+function replayAll(){ if(window.PSGL&&PSGL.on) PSGL.cine(afterCine); else intro(); }
 document.getElementById('replay').onclick=()=>replayAll();
 document.addEventListener('DOMContentLoaded',function(){ const b=document.getElementById('gfxb'); const cur=(window.PSGL&&PSGL.tier)||'low'; const N={high:'高',mid:'中',low:'低'}; b.textContent='画质 · '+N[cur];
   b.onclick=()=>{ const nx={high:'mid',mid:'low',low:'high'}[cur]; PS.set('gfx',nx); PS.set('cineSeen',0); location.reload(); }; });
@@ -305,7 +307,7 @@ const yc=document.getElementById('yingc');
 function loop(t){ if(burst>0) burst=Math.max(0,burst-.012); if(window.PSGL&&PSGL.on){ PSGL.amp(speakAmp*.6, burst); drawOverlay(t); } else (PS.skin()==='horizon'?drawHorizon:drawCore)(t); PS.drawYing(yc,t,speakAmp); drawWave(t); requestAnimationFrame(loop); }
 document.addEventListener('DOMContentLoaded',()=>{ resize(); renderHUD(); requestAnimationFrame(loop);
   const go=()=>{ if(!PS.get('intro',0)) intro(); else { PS.music(PS.skin()); speakNext(); } };
-  if(window.PSGL&&PSGL.on) PSGL.boot(go); else go(); });
+  if(window.PSGL&&PSGL.on) PSGL.boot(afterCine); else go(); });
 document.addEventListener('ps-skin',()=>{ if(window.PSGL&&PSGL.on) PSGL.skin(PS.skin()); renderHUD(); PS.music(PS.skin()); PS.sfx('boot'); burst=.6; });
 </script>
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
@@ -330,7 +332,7 @@ try{
   addEventListener('keydown',e=>{ if(e.key==='Escape') endCine(); });
   const q=new URLSearchParams(location.search);
   window.PSGL = { on:true, tier,
-    boot(cb){ let seen=false; try{ seen=sessionStorage.getItem('gn:ps:cine')==='1'; }catch(e){}
+    boot(cb){ const seen=q.has('nocine'); /* v0.8.2:每次进入都播放开场(可点击/Esc 跳过) */
       if(q.has('t')||q.has('m')){ cb(); return; }
       if(seen || reduce){ cb(); } else cine(cb); },
     cine, setStates:core.setStates, project:core.project,
