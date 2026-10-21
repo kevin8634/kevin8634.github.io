@@ -225,3 +225,20 @@ body.voy-on .le-actions,body.voy-on .le-hud-top{visibility:hidden}
 .ec-ctl .ml-rng{min-width:80px}
 @media (max-width:760px){.ec-ctl{flex-wrap:wrap}.ec-ctl label{flex:1 1 45%}}
 @media (max-height:480px){.ml{padding:6px 10px;gap:5px}.ml-hd{padding-bottom:3px}.ml-hd small{display:none}.ml-hd b{font-size:15px}.ml-x{width:26px;height:26px}.ml-guide{padding:6px 10px;gap:4px}.ml-q{font-size:13px;line-height:1.4}.ml-c,.ml-ctl button,.ml-hint{padding:3px 9px;font-size:12px}.ml-gb{gap:6px}.ml-ctl{gap:6px;font-size:12px}}
+
+/* ---- M2 #2 四季实验室 ---- */
+.ml--sea .ml-body{grid-template-columns:3fr 2.2fr}
+.sea-r{align-items:center;justify-content:flex-start;padding-top:30px}
+.sea-cvw{flex:1;min-height:0;width:100%;position:relative}.sea-cv{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.sea-info{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;padding:4px 10px 10px;box-sizing:border-box}
+.sea-info span{display:flex;flex-direction:column;align-items:center;background:rgba(214,178,94,.07);border:1px solid rgba(214,178,94,.25);border-radius:10px;padding:4px 2px}
+.sea-info small{font-size:10.5px;color:#9fb3cc}.sea-info b{font-size:15px;color:#f3cf7a;font-weight:600;white-space:nowrap}
+.sea-ctl{flex-wrap:wrap}.sea-ctl label{display:flex;align-items:center;gap:6px;flex:1;min-width:180px}.sea-ctl .sea-l2{flex:0 1 auto;min-width:0}
+.sea-ctl .sea-l2 .ml-rng{width:110px}
+.sea-city{background:rgba(8,16,30,.8);color:#f6e2b0;border:1px solid rgba(214,178,94,.55);border-radius:8px;padding:4px 6px;font:inherit;font-size:13px}
+.sea-md,.sea-tv{min-width:62px;color:#f3cf7a}
+@media (max-width:760px),(orientation:portrait){.ml--sea .ml-body{grid-template-columns:1fr}.sea-r{flex-direction:column;padding-top:24px}.sea-info b{font-size:13px}}
+@media (max-height:520px){.ml--sea{padding:6px 10px;gap:5px}.ml--sea .ml-hd{padding-bottom:3px}.ml--sea .ml-hd b{font-size:15px}.ml--sea .ml-hd small{display:none}
+.ml--sea .sea-ctl{flex-wrap:nowrap;gap:6px;font-size:12px}.ml--sea .sea-ctl label{min-width:0}.ml--sea .sea-ctl .sea-l2 .ml-rng{width:64px}.ml--sea .sea-ctl button{padding:4px 8px;font-size:12px}.ml--sea .sea-md,.ml--sea .sea-tv{min-width:0;white-space:nowrap}
+.ml--sea .ml-guide{padding:6px 10px;gap:5px}.ml--sea .ml-q{font-size:13px;line-height:1.4}.ml--sea .ml-c,.ml--sea .ml-hint{padding:3px 8px;font-size:12px}.ml--sea .ml-note{display:none}
+.ml--sea .ml-body{grid-template-columns:3fr 2.4fr}.ml--sea .sea-info{padding:2px 6px 6px;gap:3px}.ml--sea .sea-info b{font-size:12px}.ml--sea .sea-info small{font-size:9.5px}.sea-r{padding-top:22px}}
