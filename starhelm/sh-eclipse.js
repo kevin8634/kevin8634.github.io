@@ -189,7 +189,9 @@
   function stars() { var n = ST.stars.reduce(function (s, x) { return s + x; }, 0); U.st.textContent = '★ ' + n + ' / 9'; }
   function showQ() {
     stars(); L.hints = 0; U.hs.textContent = ''; U.ch.innerHTML = ''; U.hint.hidden = false;
-    if (L.q >= QS.length) { U.q.innerHTML = '<b>日月食三关完成!</b>星域「日与月」的两个实验室都通关了。可以继续自由探索:试试找一次日环食和半影月食。'; U.hint.hidden = true; return; }
+    if (L.q >= QS.length) { U.q.innerHTML = '<b>日月食三关完成!</b>可以继续自由探索:试试找一次日环食和半影月食。'; U.hint.hidden = true;
+      if (SH.tideLab) { var go = h('button', 'ml-c ml-c--go', '🌊 去潮汐实验室'); go.type = 'button'; go.onclick = function () { close(); SH.tideLab.open(); }; U.ch.appendChild(go); }
+      return; }
     var Q = QS[L.q]; U.q.innerHTML = '<small>第 ' + (L.q + 1) + ' / 3 关</small>' + Q.q;
     if (Q.kind === 'choice') Q.ch.forEach(function (t, i) { var b = h('button', 'ml-c', t); b.type = 'button'; b.onclick = function () { answer(i === Q.ok, b); }; U.ch.appendChild(b); });
     else { var b = h('button', 'ml-c ml-c--go', '做到了'); b.type = 'button'; b.onclick = function () { answer(Q.check(), b); }; U.ch.appendChild(b); }
