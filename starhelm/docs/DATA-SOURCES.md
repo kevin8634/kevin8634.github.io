@@ -75,3 +75,9 @@
 | M87* 黑洞 m87 | ESO eso1907a | CC BY 4.0 | EHT Collaboration |
 | 韦布第一深场 deep | ESA/Webb weic2209a(同 sv-deepfield) | CC BY 4.0 | NASA, ESA, CSA, STScI |
 统一声明:不用机构 logo,界面注明「不代表任何机构背书」。改动:仅缩放/方形裁切与格式转换(CC BY 要求注明修改,已在此台账记录)。
+
+## v0.6.3 卫星星海(sh.sats)
+| 资料 | 来源 | 许可/条款 | 用法 | 署名 |
+|---|---|---|---|---|
+| 活跃卫星轨道根数(GP,16,758 颗) | CelesTrak `gp.php?GROUP=active&FORMAT=csv`(2026-10-22 下载) | 公开免费数据,注明来源使用(与现有星链/ISS 快照同一做法) | 打包为 sh-sats-data.js 快照(build_sats.py),本地按开普勒+J2 推算位置 | 「数据:CelesTrak」 |
+| 在轨编目统计与每年发射数量(SATCAT) | CelesTrak `pub/satcat.csv`(2026-10-22 下载) | 同上 | 失效卫星/火箭残骸/碎片的高度、倾角;每年发射卫星数柱状图;不按国家分类 | 「数据:CelesTrak」 |
