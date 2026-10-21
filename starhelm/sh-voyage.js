@@ -285,6 +285,8 @@
     UI.mapCard.appendChild(b);
     if (here && best.id === 'moon' && SH.moonLab) { var ml = h('button', 'voy-go', '🌓 进入月相实验室'); ml.type = 'button'; ml.addEventListener('click', function () { UI.map.hidden = true; SH.moonLab.open(); }); UI.mapCard.appendChild(ml); }
     if (here && best.id === 'moon' && SH.eclipseLab) { var el = h('button', 'voy-go', '🌑 进入日月食实验室'); el.type = 'button'; el.addEventListener('click', function () { UI.map.hidden = true; SH.eclipseLab.open(); }); UI.mapCard.appendChild(el); }
+    if (here && best.id === 'moon' && SH.tideLab) { var tl = h('button', 'voy-go', '🌊 进入潮汐实验室'); tl.type = 'button'; tl.addEventListener('click', function () { UI.map.hidden = true; SH.tideLab.open(); }); UI.mapCard.appendChild(tl); }
+    if (here && best.id === 'moon' && SH.sunLab) { var sl = h('button', 'voy-go', '☀ 进入太阳活动观测台'); sl.type = 'button'; sl.addEventListener('click', function () { UI.map.hidden = true; SH.sunLab.open(); }); UI.mapCard.appendChild(sl); }
   }
 
   /* ============================ 航行流程 ============================ */
@@ -460,10 +462,12 @@
     banner(s);
     var line = s.status === 'open' ? V.lines.arriveOpen : s.status === 'conjecture' ? V.lines.arriveOuter : V.lines.arriveUncharted;
     var ch = [{ label: '打开航图', value: 'map' }, { label: s.status === 'open' ? '看看风景' : '⇱ 舱外观景', value: s.status === 'open' ? 'stay' : 'eva', cls: 'alt' }];
+    if (id === 'moon' && SH.sunLab) ch.unshift({ label: '☀ 太阳活动观测台', value: 'sunlab' });
+    if (id === 'moon' && SH.tideLab) ch.unshift({ label: '🌊 进入潮汐实验室', value: 'tidelab' });
     if (id === 'moon' && SH.eclipseLab) ch.unshift({ label: '🌑 进入日月食实验室', value: 'ecllab' });
     if (id === 'moon' && SH.moonLab) ch.unshift({ label: '🌓 进入月相实验室', value: 'moonlab' });
     evaBtnSync();
-    say(line, { to: s.zh, star: s.star }, ch).then(function (v) { if (v === 'map') openMap(); else if (v === 'eva') evaIn(); else if (v === 'moonlab') SH.moonLab.open(); else if (v === 'ecllab') SH.eclipseLab.open(); });
+    say(line, { to: s.zh, star: s.star }, ch).then(function (v) { if (v === 'map') openMap(); else if (v === 'eva') evaIn(); else if (v === 'moonlab') SH.moonLab.open(); else if (v === 'ecllab') SH.eclipseLab.open(); else if (v === 'tidelab') SH.tideLab.open(); else if (v === 'sunlab') SH.sunLab.open(); });
   }
   function banner(s) {
     UI.banner.hidden = false;
