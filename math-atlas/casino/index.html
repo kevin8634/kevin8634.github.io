@@ -199,7 +199,7 @@
           <div class="hero__copy">
             <p class="hero__eyebrow">星图任务 · 概率与期望</p>
             <h1>赌场为什么总是赢？</h1>
-            <p class="hero__sub">拉斯维加斯的灯从来不灭——赌场靠什么稳赚？跟着浣熊博士，用硬币、骰子和轮盘找出答案。</p>
+            <p class="hero__sub">拉斯维加斯的灯从来不灭——赌场靠什么稳赚？跟着随机矩阵，用硬币、骰子和轮盘找出答案。</p>
             <div class="x-tags">
               <span class="chip chip--solid">难度 ★★★ 中阶</span>
               <span class="pill">适合 初一~初三</span>
@@ -223,11 +223,11 @@
         </section>
 
         <section class="section" id="play" data-nav="关卡">
-          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">浣熊博士在星图上等你。</p></div>
+          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">随机矩阵在星图上等你。</p></div>
           <div id="stage" class="x-panel">
             <div class="x-cat">
-              <div class="x-cat__face">🦝</div>
-              <div class="x-bubble">嘿，我以前在赌场上班，知道他们的小秘密。先点开第 1 关「硬币公平吗」：抛一枚硬币，正面和反面真的一样容易吗？<small>浣熊博士只问问题，不直接给答案。</small></div>
+              <div class="x-cat__face">📊</div>
+              <div class="x-bubble">嘿，我以前在赌场上班，知道他们的小秘密。先点开第 1 关「硬币公平吗」：抛一枚硬币，正面和反面真的一样容易吗？<small>随机矩阵只问问题，不直接给答案。</small></div>
             </div>
           </div>
         </section>
@@ -609,10 +609,10 @@
         lv.init(stage, (stars, xp) => finishLevel(id, stars, xp));
         $("#play").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
       }
-      /* guide bubble helper: 浣熊博士 */
+      /* guide bubble helper: 随机矩阵 */
       function guide(container, text, sub) {
         const wrap = document.createElement("div"); wrap.className = "x-cat";
-        wrap.innerHTML = `<div class="x-cat__face">🦝</div><div class="x-bubble" aria-live="polite"></div>`;
+        wrap.innerHTML = `<div class="x-cat__face">📊</div><div class="x-bubble" aria-live="polite"></div>`;
         const b = wrap.querySelector(".x-bubble");
         const set = (t, s) => { b.innerHTML = ""; b.append(t); if (s) { const el = document.createElement("small"); el.textContent = s; b.append(el); } Audio_.play("chirp"); };
         set(text, sub); container.append(wrap);
@@ -1576,7 +1576,7 @@
                 ran.both = true; gain(15, 10); const Q = B.querySelector("[data-q]");
                 Q.append(el("div", "prose", `<p><strong>蒙特卡洛方法 = 用大量随机模拟来估计概率。</strong>不会算、不好算的时候，就让电脑把实验做上千次，用频率去估计概率。它的名字就来自摩纳哥的蒙特卡洛赌场。</p>
                   <p>每一局只差一点点（18/37 对 1/2），可几百局累积下来，翻倍的机会就从约 50% 掉到约 25%。</p>`));
-                nextBtn(Q, "迎战 BOSS 🦝", startC);
+                nextBtn(Q, "迎战 BOSS 📊", startC);
               }
             });
           }
@@ -1585,7 +1585,7 @@
           function startC() {
             const ST = [["① 每次押 🪙1 慢慢来", 1, "要押好几百局"], ["② 每次押 🪙5", 5, "大约押十几局"], ["③ 一把押 🪙20 全下", 20, "只押 1 局"]];
             const C = el("div", "x-part", `<h3>C ·「BOSS 选择」</h3>
-              <div class="x-bubble">🦝 浣熊博士：「你有 🪙20，想变成 🪙40，在赌场里怎么做成功率最高？」<small>每种办法都押红，各模拟 1000 个玩家。虚线是 50%。</small></div>
+              <div class="x-bubble">📊 随机矩阵：「你有 🪙20，想变成 🪙40，在赌场里怎么做成功率最高？」<small>每种办法都押红，各模拟 1000 个玩家。虚线是 50%。</small></div>
               <div class="x-suspects">${ST.map(([n, , d], i) => `<div class="x-suspect"><h4>${n}</h4><p class="x-num">${d}</p><div class="x-gauge"><i></i></div><p class="x-num" data-res aria-live="polite">还没模拟</p><button class="x-btn" data-s="${i}">🎲 模拟 1000 人</button></div>`).join("")}</div>
               <div data-q></div>`);
             root.append(C); scrollTo(C);
