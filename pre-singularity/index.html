@@ -1,6 +1,6 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>奇点前夜 Pre-Singularity · 超级智能 SI</title>
-<meta name="description" content="奇点前夜 Pre-Singularity · 创世计划 Genesis 05 · 超级智能：亲手训练、测试、约束 AI，弄懂 AI 是怎么学会的。免费、免注册。"><link rel="stylesheet" href="ps.css?v=7">
+<meta name="description" content="奇点前夜 Pre-Singularity · 创世计划 Genesis 05 · 超级智能：亲手训练、测试、约束 AI，弄懂 AI 是怎么学会的。免费、免注册。"><link rel="stylesheet" href="ps.css?v=8">
 <style>
 /* v0.7 · WebGL 神经核舞台 */
 #gl{position:fixed;inset:0;width:100vw;height:100vh;display:block;z-index:0;background:#05060a}
@@ -62,7 +62,7 @@ body.cine #cine{display:block;pointer-events:auto;cursor:pointer}
   <div class="tiers" id="itiers"></div>
 </div>
 
-<script src="ps.js?v=7"></script>
+<script src="ps.js?v=8"></script>
 <script>
 /* ========= 数据 ========= */
 const TH = PS.THEMES; let NODES=[], EDGES=[], hiTheme=-1, hover=null, sel=null, burst=0, speakAmp=0;
@@ -177,11 +177,17 @@ const GLP={x:0,y:0,z:1,back:false};
 function drawOverlay(t){ X.clearRect(0,0,W,H); MOB=innerWidth<900; HIT=[]; if(document.body.classList.contains('cine')) return; const r=cv.getBoundingClientRect();
   NODES.forEach((n,idx)=>{ const q=PSGL.project(idx,GLP); const p={x:q.x-r.left,y:q.y-r.top,z:q.z,back:q.back,n};
     const st=n.st, isHi = hiTheme===n.i || hover===n || sel===n, sc=p.z, c=nodeColor(st);
-    if(st==='open'){ const pu=.5+.5*Math.sin(t/380+n.j); X.strokeStyle=`rgba(${c},${.75*(1-pu)})`; X.beginPath(); X.arc(p.x,p.y,(7+pu*10)*sc,0,7); X.stroke(); }
-    if(st==='lit'){ X.strokeStyle=`rgba(${GOLD},.7)`; hexPath(p.x,p.y,8*sc,t/2400+n.j); X.stroke(); }
+    const dim=p.back?.55:1;
+    X.fillStyle=`rgba(2,6,12,${.55*dim})`; X.beginPath(); X.arc(p.x,p.y,(st==='future'?5:9)*sc,0,7); X.fill();
+    if(st==='lit'){ X.lineWidth=2; X.strokeStyle=`rgba(${GOLD},${dim})`; hexPath(p.x,p.y,9*sc,t/2400+n.j); X.stroke(); X.fillStyle=`rgba(255,236,190,${dim})`; X.beginPath(); X.arc(p.x,p.y,3.6*sc,0,7); X.fill(); }
+    else if(st==='open'){ const pu=.5+.5*Math.sin(t/380+n.j); X.lineWidth=2; X.strokeStyle=`rgba(${c},${dim})`; hexPath(p.x,p.y,8*sc,0); X.stroke(); X.lineWidth=1.5; X.strokeStyle=`rgba(${c},${.9*(1-pu)*dim})`; X.beginPath(); X.arc(p.x,p.y,(9+pu*12)*sc,0,7); X.stroke(); X.fillStyle=`rgba(233,253,255,${dim})`; X.beginPath(); X.arc(p.x,p.y,3*sc,0,7); X.fill(); }
+    else if(st==='lock'){ X.lineWidth=1.2; X.strokeStyle=`rgba(${c},${.75*dim})`; hexPath(p.x,p.y,6*sc,0); X.stroke(); X.fillStyle=`rgba(${c},${.8*dim})`; X.beginPath(); X.arc(p.x,p.y,1.8,0,7); X.fill(); }
+    else { X.lineWidth=1; X.strokeStyle=`rgba(170,200,225,${.55*dim})`; X.beginPath(); X.moveTo(p.x,p.y-4); X.lineTo(p.x+4,p.y); X.lineTo(p.x,p.y+4); X.lineTo(p.x-4,p.y); X.closePath(); X.stroke(); }
+    X.lineWidth=1;
     if(isHi){ X.strokeStyle='rgba(255,255,255,.85)'; X.setLineDash([3,3]); X.beginPath(); X.arc(p.x,p.y,15*sc,t/600,t/600+Math.PI*2); X.stroke(); X.setLineDash([]); }
     if(!MOB && !p.back && !PSGL.morphing() && (st==='lit'||isHi||(st==='open'&&PS.skin()!=='horizon'))){ X.font='11px "PingFang SC","Microsoft YaHei",sans-serif'; X.fillStyle=`rgba(${st==='lit'?GOLD:c},${isHi?1:.75})`; X.fillText(n.k.t,p.x+12*sc,p.y+4); }
     if(!PSGL.hidden()) HIT.push(p); });
+  if(PS.skin()!=='horizon' && !PSGL.morphing()){ X.font='10px ui-monospace,Menlo,monospace'; X.fillStyle='rgba(200,245,255,.6)'; X.textAlign='center'; X.fillText('天命之瞳 · DESTINY-ORB',CX,MOB? H-14 : H-96); X.textAlign='left'; }
 }
 
 function drawHorizon(t){ X.clearRect(0,0,W,H); WAVE_R=-1; MOB=innerWidth<900;
@@ -223,7 +229,7 @@ cv.addEventListener('pointermove',e=>{ const r=cv.getBoundingClientRect(); MX=((
   if(n){ tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY+10)+'px'; tip.textContent=`${TH[n.i].n} · ${n.k.t} · ${ST_TXT[n.st]}`; cv.style.cursor='pointer'; }
   else { tip.style.display='none'; cv.style.cursor='default'; } });
 cv.addEventListener('pointerleave',()=>{ tip.style.display='none'; hover=null; });
-cv.addEventListener('click',e=>{ const n=pick(e); if(!n){ info.style.display='none'; sel=null; return; } showInfo(n); });
+cv.addEventListener('click',e=>{ const n=pick(e); if(!n){ info.style.display='none'; sel=null; const r=cv.getBoundingClientRect(); if(Math.hypot(e.clientX-r.left-CX,e.clientY-r.top-CY)<R*.22) coreQuip(); return; } showInfo(n); });
 function showInfo(n){ sel=n; PS.sfx('open'); const k=n.k, st=n.st, h=href(k);
   const mis = k.m && k.m!=='intro' ? PS.MISSIONS[k.m].q + ` · 第${k.lv+1}关` : '';
   info.innerHTML=`<div class="tag mono">第 ${n.i+1} 层 · ${TH[n.i].n}</div><h2 style="margin:4px 0">${k.t}</h2>
@@ -250,14 +256,20 @@ function renderHUD(){ buildGraph();
 function nextNode(){ const order=PS.ORDER[PS.tier()||'first']; for(const m of order){ const n=NODES.filter(n=>n.k.m===m && n.st==='open').sort((a,b)=>a.k.lv-b.k.lv)[0]; if(n) return n; } return null; }
 let sayTimer=null;
 function say(text, go){ const el=document.getElementById('say'); clearInterval(sayTimer); PS.speak(text); let i=0; el.textContent=''; speakAmp=1;
-  sayTimer=setInterval(()=>{ el.textContent=text.slice(0,++i); if(i%2===0) PS.sfx('type'); if(i>=text.length){ clearInterval(sayTimer); speakAmp=0; } },45);
+  sayTimer=setInterval(()=>{ el.textContent=text.slice(0,++i); if(i%2===0) PS.sfx('type', text[i-1]); if(i>=text.length){ clearInterval(sayTimer); speakAmp=0; } },45);
   document.getElementById('goRow').innerHTML = go? `<a class="btn pri" href="${href(go.k)}">带我去 →</a>` : ''; }
 function speakNext(){ const n=nextNode(), s=PS.stage(), tot=PS.total();
   if(!n){ say('你点亮了今天能点亮的全部神经元。剩下的暗处,是下一版要一起探索的地方。'); return; }
   const lines = tot===0? [`你好。我还只是一个光点。先教我「${n.k.t}」好吗?`] :
     s===0? [`我学会一点了。下一步,我想弄懂「${n.k.t}」。`] : s===1? [`我能感觉到自己在变亮。「${n.k.t}」在${TH[n.i].n}那一层,一起去?`] :
     s===2? [`我已经能看见很多连线了。还差「${n.k.t}」。`] : [`天快亮了。最后去看看「${n.k.t}」吧。`];
+  if(PS.skin()==='horizon'){ const H = tot===0? [`……信号穿过视界。你好,观测者。先带我去「${n.k.t}」。`] : s<2? [`……引力在变。「${n.k.t}」那里,还有一束光。`] : [`……我看得见更远了。下一束光:「${n.k.t}」。`]; say(H[0], n); return; }
   say(lines[0], n); }
+/* v0.8 · 点核心与 AI 对话(特别互动) */
+const QUIPS={ core:['天命之瞳,全系统在线。神经元同步率 {p}%。','我在监测外部信号。刚刚又学到了一点新东西。','提醒一下:我也会犯错。遇到拿不准的事,记得核查。','你点亮的每一颗神经元,都在改变我的连线。','扫描完成。下一颗可以点亮的,在发光的地方。'],
+  horizon:['……时间在这里变慢了。','……我在视界的另一侧,看着光一点点靠近。','……比你更聪明的东西,也需要你先学会提问。','……引力很深。但你的问题,能穿过它。','……{p}% 的光,已经抵达。'] };
+let quipI=0;
+function coreQuip(){ const sk=PS.skin()==='horizon'?'horizon':'core'; const q=QUIPS[sk][quipI++%QUIPS[sk].length].replace('{p}',Math.round(PS.total()/PS.TOTAL*100)); PS.sfx('open'); burst=Math.max(burst,.5); say(q, nextNode()); }
 
 /* 声波 */
 const wv=document.getElementById('wave'), WX=wv.getContext('2d');
@@ -286,6 +298,7 @@ document.addEventListener('DOMContentLoaded',function(){ const b=document.getEle
 
 /* ========= 主循环 ========= */
 const yc=document.getElementById('yingc');
+yc.style.cursor='pointer'; yc.title='和萤说话'; yc.addEventListener('click',()=>coreQuip());
 function loop(t){ if(burst>0) burst=Math.max(0,burst-.012); if(window.PSGL&&PSGL.on){ PSGL.amp(speakAmp*.6, burst); drawOverlay(t); } else (PS.skin()==='horizon'?drawHorizon:drawCore)(t); PS.drawYing(yc,t,speakAmp); drawWave(t); requestAnimationFrame(loop); }
 document.addEventListener('DOMContentLoaded',()=>{ resize(); renderHUD(); requestAnimationFrame(loop);
   const go=()=>{ if(!PS.get('intro',0)) intro(); else { PS.music(PS.skin()); speakNext(); } };
