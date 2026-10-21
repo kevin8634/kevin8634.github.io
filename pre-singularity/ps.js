@@ -349,7 +349,7 @@ PS.mission = (cfg) => {
 /* 顶栏 */
 PS.header = (title) => {
   const h = document.querySelector('header.top'); if(!h) return;
-  h.innerHTML = `<a class="brand" href="${(document.querySelector('script[src*="ps.js"]').getAttribute('src').replace(/ps\.js.*$/,''))||'./'}">奇点前夜 <b>Pre-Singularity</b><small>超级智能 SI</small></a>
+  h.innerHTML = `<a class="gnback" href="/" title="返回创世计划 Genesis 门户" aria-label="返回创世计划"><i>←</i><em>创世计划</em></a><a class="brand" href="${(document.querySelector('script[src*="ps.js"]').getAttribute('src').replace(/ps\.js.*$/,''))||'./'}">奇点前夜 <b>Pre-Singularity</b><small>超级智能 SI</small></a>
     <div class="row"><span class="pill" id="tierpill"></span><button class="btn hb" id="skinb" title="切换皮肤">◐ ${PS.SKINS[PS.skin()]}</button><button class="btn hb" id="ambb" title="背景音乐">${PS.musicOn()?'♫ 音乐':'♫ 关'}</button><button class="btn hb" id="voiceb" title="萤的声音">${PS.voiceOn()?'🗣 语音':'🗣 关'}</button><a class="btn hb" href="${(document.querySelector('script[src*="ps.js"]').getAttribute('src').replace(/ps\.js.*$/,''))||'./'}notes/" title="探索笔记">✎ 笔记</a><button class="btn hb" id="mute" title="音效">${PS.muted()?'🔇':'🔊'}</button></div>`;
   const t = PS.tier(); document.getElementById('tierpill').textContent = t ? ('程度:' + PS.TIERS[t].name) : '未选程度';
   document.getElementById('mute').onclick = (e)=>{ PS.set('mute', !PS.muted()); e.target.textContent = PS.muted()?'🔇':'🔊'; };

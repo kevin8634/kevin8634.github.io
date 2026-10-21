@@ -278,3 +278,13 @@ select.btn{padding:7px 10px} select.btn option{background:#081626;color:#e4f3ff}
 .prin{margin:4px 4px 0 0}
 .note{padding:7px 0;border-bottom:1px solid var(--edge);font-size:14px} .note a{color:var(--fg);text-decoration:none} .note.lit a b{color:var(--gold)} .note.future,.note.lock{opacity:.55}
 .note div{color:var(--dim);font-size:13px;margin-top:2px}
+
+/* v0.8.3 返回创世计划(同窗口,HANDOFF §5.12) */
+header.top{gap:12px}
+.gnback{display:inline-flex;align-items:center;gap:6px;flex:none;margin-right:4px;padding:5px 11px 5px 9px;border:1px solid var(--edge);border-radius:999px;color:var(--fg);text-decoration:none;font-size:13px;letter-spacing:.08em;background:rgba(95,230,255,.06);transition:background .2s,border-color .2s}
+.gnback i{font-style:normal;color:var(--cy)}
+.gnback em{font-style:normal}
+.gnback:hover,.gnback:focus-visible{background:rgba(95,230,255,.16);border-color:var(--cy);outline:none}
+@media(max-width:600px){.gnback{padding:5px 9px}.gnback em{display:none}}
+.gnback+.brand{margin-right:auto}
+.lobbytop .gnback{margin-left:14px}
