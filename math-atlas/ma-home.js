@@ -3,7 +3,6 @@
  * 进度只读 ma:v1:summary(不新增进度键);界面偏好存 ma:gl / ma:motion / ma:intro(与 ma:music、ma:theme 同类,仅本机)。
  */
 import { createStage, detectTier, readPref, writePref, reducedMotion, introSound } from "./ma-gl.js";
-import { createHomeMusic } from "./ma-music-home.js";
 import { createGuideView, GUIDES } from "./ma-guides.js";
 
 var D = document, $ = function (s) { return D.querySelector(s); };
@@ -83,27 +82,27 @@ function start() {
   function introDone() { root.classList.remove("intro-on"); skip.hidden = true; writePref("ma:intro", 1); showHud(); if (soundOn()) playBgm(); }
 
   /* ---------- 顶栏 ---------- */
-  /* 声音:主页背景音乐「星图序曲」(ma-music-home.js);声音默认关,开场动画结束后才开始播放 */
-  var M = window.MA_Music, H = createHomeMusic(), sb = $("#hSound"), waitGesture = null;
-  function anyOn() { return H.on() || (M && M.on()); }
-  function soundUi() { var on = anyOn(); sb.innerHTML = "♪ 声音 " + (on ? "开" : "关"); sb.title = H.on() ? "星图序曲 · 和弦 " + H.chordName() + "(在 Tonnetz 音网上按 π 的数位行走)" : "背景音乐"; sb.setAttribute("aria-pressed", on ? "true" : "false"); }
+  /* 声音:主页背景音乐 = 音乐列表里的「星图序曲」(ma.js 曲目 overture);声音默认关,开场动画结束后才开始播放 */
+  var M = window.MA_Music, sb = $("#hSound"), waitGesture = null;
+  function anyOn() { return !!(M && M.on()); }
+  function soundUi() { var on = anyOn(); sb.innerHTML = "♪ 声音 " + (on ? "开" : "关"); sb.title = on && M.curId && M.curId() === "overture" ? "星图序曲 · 和弦 " + M.chordName() + "(在 Tonnetz 音网上按 π 的数位行走)" : (on ? "正在播放「" + M.name() + "」" : "背景音乐"); sb.setAttribute("aria-pressed", on ? "true" : "false"); }
+  function homeTrack() { if (!M.on()) M.playId("overture"); }
   function playBgm() {
-    if (stage.isIntro()) return;           /* 开场中不播,等 introDone */
-    if (M && M.on()) M.stop();
-    H.start().then(soundUi).catch(function () {
-      /* 浏览器自动播放拦截:等用户第一次点按后再开始 */
-      if (waitGesture) return;
-      waitGesture = function () { removeEventListener("pointerdown", waitGesture, true); removeEventListener("keydown", waitGesture, true); waitGesture = null; if (soundOn() && !stage.isIntro()) H.start().then(soundUi).catch(function () {}); };
+    if (!M || stage.isIntro()) return;     /* 开场中不播,等 introDone */
+    homeTrack();                           /* 主页用声音键开声时放「星图序曲」;在音乐列表里另选的曲目照常播放 */
+    M.start().then(soundUi).catch(function () {
+      if (waitGesture) return;             /* 浏览器自动播放拦截:等第一次点按 */
+      waitGesture = function () { removeEventListener("pointerdown", waitGesture, true); removeEventListener("keydown", waitGesture, true); waitGesture = null; if (soundOn() && !stage.isIntro()) M.start().then(soundUi).catch(function () {}); };
       addEventListener("pointerdown", waitGesture, true); addEventListener("keydown", waitGesture, true);
     });
   }
   sb.onclick = function () {
-    if (anyOn()) { H.stop(); if (M && M.on()) M.stop(); writePref("ma:music", "off"); }
+    if (anyOn()) { M.stop(); writePref("ma:music", "off"); }
     else { writePref("ma:music", "on"); playBgm(); }
     setTimeout(soundUi, 80);
   };
-  H.sub(soundUi); window.MA_HOME_MUSIC = H;
-  if (M && M.sub) M.sub(function () { if (M.on() && H.on()) H.stop(); soundUi(); });
+  if (M && M.sub) M.sub(soundUi);
+  window.MA_HOME_MUSIC = { on: function () { return anyOn() && M.curId() === "overture"; }, chordName: function () { return M.chordName(); } };
   soundUi();
   if (!playIntro && soundOn()) playBgm();
   var fb = $("#hFull");
@@ -132,7 +131,8 @@ function start() {
     cur = t; hintI = -1;
     D.querySelectorAll(".ht-item").forEach(function (b) { b.classList.toggle("on", b.dataset.id === id); });
     var g = GUIDE[id] || [t.em + " 向导", t.t, []], gi = GUIDES[id];
-    $("#hgName").textContent = gi ? gi.title + " · " + gi.name : g[0];
+    $("#hgName").textContent = gi ? gi.title : g[0];
+    $("#hgName").nextElementSibling.textContent = gi ? gi.shape : "向导只提问";
     $("#hgWhy").textContent = gi ? gi.why : "";
     if (gview) { gview.set(id); $("#hgEm").classList.add("is3d"); } else { $("#hgEm").textContent = t.em; }
     $("#hgQ").textContent = g[1]; $("#hgHint").textContent = ""; $("#hgHintBtn").textContent = "提示 0/" + g[2].length;
