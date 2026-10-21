@@ -123,3 +123,11 @@ body[data-mode="solar"] .sh-now { display: none; }
   body.sh-questing .le-bottom, body.sh-questing .sh-now { display: none; }
   .sh-now { font-size: 12px; }
 }
+
+/* v0.5.4 返回创世计划总门户(HANDOFF §5.3.1 顶栏规范) */
+.sh-genesis { display: inline-flex; align-items: center; gap: 4px; margin: 0 0 8px; padding: 3px 9px; border: 1px solid var(--cyan-line, rgba(127,220,255,.35)); border-radius: 2px; color: var(--cyan, #7fdcff); font: 600 11px/1.2 var(--cjk, sans-serif); letter-spacing: 0.12em; text-decoration: none; background: rgba(127, 220, 255, 0.06); transition: background .2s, color .2s; }
+.sh-genesis:hover, .sh-genesis:focus-visible { color: #fff; background: rgba(127, 220, 255, 0.16); }
+@media (max-height: 480px) {
+  .le-panel .le-kicker { display: none; }   /* 矮屏(手机横屏):返回按钮占用 kicker 一行,HUD 高度不变 */
+  .sh-genesis { margin: 0 0 4px; padding: 2px 8px; }
+}
