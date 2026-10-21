@@ -1,15 +1,16 @@
 // 生命源码 · 开场「编译生命」(WebGL / Three.js 粒子)
-// 一镜到底四幕:原始海洋的分子 → 聚成 DNA 双螺旋 → 双螺旋长成生命之树 → 穿过星海进入图谱。
+// v0.7 学科开场(约 7 秒,HANDOFF §5.3.1):细胞分裂 → DNA 双螺旋解旋、碱基逐个点亮 → 长成生命之树 → 标题浮现、HUD 滑入。
 // 约 4200 个粒子,每个粒子带三组目标位置,在顶点着色器里插值;可拖动、可点击激起涟漪。
 import * as THREE from './vendor/three.module.min.js';
 import { sound, reducedMotion, store } from './ls.js';
+import { tier, pixelRatio, particleScale } from './ls-scene.js';
 
 const CON_COLORS = ['#34d399', '#5eead4', '#e2be78', '#7dd3fc', '#67e8f9', '#f9a8d4', '#fbbf24', '#c4b5fd'];
 const BASE_COL = { A: '#4ade80', T: '#f5b041', G: '#60a5fa', C: '#f87171' };
 const HBB = 'ATGGTGCACCTGACTCCTGAGGAGAAGTCTGCCGTTACTGCCCTGTGGGGCAAGGTGAACGTG';
 const CAPTIONS = [
-  [0.3, '数十亿年前 · 原始海洋里漂着无数分子'],
-  [2.8, '有一种分子学会了复制自己 · DNA 双螺旋(示意)'],
+  [0.3, '一个细胞,一分为二'],
+  [2.8, '每个细胞里都有一份 DNA 双螺旋 · 碱基逐个被读出(示意)'],
   [7.0, '复制、出错、筛选……长成一棵生命之树'],
   [9.8, '几乎所有生物,都在用同一套遗传密码'],
 ];
@@ -59,20 +60,22 @@ const css = `
 #lsi .hint{position:absolute;left:0;right:0;bottom:1.6%;text-align:center;color:#94a3a855;font-size:11px}
 `;
 
-export function playIntro({ onDone, onDive } = {}) {
+export function playIntro({ onDone, onDive, replay = false } = {}) {
   const st = document.createElement('style'); st.textContent = css; document.head.append(st);
   const box = document.createElement('div'); box.id = 'lsi';
   box.innerHTML = `<canvas></canvas><div class="badge">创世计划 · 04/07<b>生物</b></div><button class="skip">跳过 ›</button>
     <div class="cap"><code></code><span></span></div>
     <div class="ttl"><h1>${'生命源码'.split('').map(() => '<span></span>').join('')}</h1><div class="en">LIFE SOURCE</div><div class="sub">读懂生命写好的代码</div></div>
-    <div class="lens"><div class="lz"></div><div class="glass"></div><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="none" stroke="#34d39966" stroke-width=".6"/><circle cx="50" cy="50" r="45.5" fill="none" stroke="#34d399" stroke-width="1.4" stroke-dasharray=".6 2.2"/><circle cx="50" cy="50" r="45.5" fill="none" stroke="#e2be78" stroke-width="2.2" stroke-dasharray="14 57.5"/></svg><div class="side l">放大 ×<span class="mag">1</span></div><div class="side r">比例尺 <span class="bar">1 mm</span></div><div class="lab"><b>一镜到底</b> · <span class="obj">指尖皮肤 · 指纹</span></div></div><div class="go"></div><div class="gate"><div class="ear">🎧</div><h2>生命源码</h2><p>建议戴上耳机,听听生命的声音</p><div class="row"></div></div><div class="hint">拖动可以转动 · 点一下激起涟漪</div>`;
+    <div class="lens"><div class="lz"></div><div class="glass"></div><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="none" stroke="#34d39966" stroke-width=".6"/><circle cx="50" cy="50" r="45.5" fill="none" stroke="#34d399" stroke-width="1.4" stroke-dasharray=".6 2.2"/><circle cx="50" cy="50" r="45.5" fill="none" stroke="#e2be78" stroke-width="2.2" stroke-dasharray="14 57.5"/></svg><div class="side l">放大 ×<span class="mag">1</span></div><div class="side r">比例尺 <span class="bar">1 mm</span></div><div class="lab"><b>一镜到底</b> · <span class="obj">指尖皮肤 · 指纹</span></div></div><div class="go"></div><div class="gate"><div class="ear">🎧</div><h2>生命源码</h2><p>建议戴上耳机,听听生命的声音</p><div class="row"></div></div><div class="hint">点一下跳到结尾 · Esc 直接进入 · 结尾可拖动、点出涟漪</div>`;
   document.body.append(box);
-  const seen = store.get('intro', false); let speed = seen ? 1.7 : 1, gated = true, cue = null, musicOn = false;
+  const seen = store.get('intro', false); let speed = 1.6, gated = true, cue = null, musicOn = false;
   fetch(new URL('./audio/intro.m4a', import.meta.url)).catch(() => {}); // 预取开场曲
   const $ = s => box.querySelector(s);
   let done = false, warpAt = 0;
-  const finish = () => { if (done) return; done = true; store.set('intro', true); box.style.opacity = 0; if (cue) cue.fade(1.2); if (sound.on) sound.startMusic(); setTimeout(() => { box.remove(); st.remove(); renderer && renderer.dispose(); zm && zm.dispose(); zm = null; }, 1100); onDone && onDone(); };
+  const finish = () => { if (done) return; done = true; removeEventListener('keydown', onKey); store.set('intro', true); box.style.opacity = 0; if (cue) cue.fade(1.2); if (sound.on) sound.startMusic(); setTimeout(() => { box.remove(); st.remove(); renderer && renderer.dispose(); zm && zm.dispose(); zm = null; }, 1100); onDone && onDone(); };
   $('.skip').onclick = () => (sound.whoosh(.8, false), finish());
+  const onKey = e => { if (e.key === 'Escape' && !done) { removeEventListener('keydown', onKey); finish(); } };
+  addEventListener('keydown', onKey);
 
   /* ---- 按钮:声音默认关,只有学习者自己点了才开 ---- */
   const go = $('.go');
@@ -88,12 +91,13 @@ export function playIntro({ onDone, onDive } = {}) {
   const gate = $('.gate'), row = $('.gate .row');
   const begin = async withSound => {
     if (!gated) return; row.querySelectorAll('button').forEach(b => b.disabled = true);
-    if (withSound) { sound.enableQuiet(); speed = 1; cue = await sound.cue('./audio/intro.m4a', .95, clock); }
+    if (withSound) { sound.enableQuiet(); cue = await sound.cue('./audio/intro.m4a', .95, clock); }
     gated = false; gate.style.opacity = 0; gate.style.pointerEvents = 'none'; setTimeout(() => gate.remove(), 900);
   };
   const g1 = document.createElement('button'); g1.className = 'p'; g1.textContent = '🎧 带着声音进入'; g1.onclick = () => begin(true);
   const g2 = document.createElement('button'); g2.textContent = '静音进入'; g2.onclick = () => begin(false);
   row.append(g1, g2);
+  if (replay) { gate.style.display = 'none'; begin(false); }
   /* ---- 镜头模块:循环播放一镜到底,点击展开全屏 ---- */
   const lens = $('.lens'); let zm = null;
   const MAG = ['1', '50', '500', '10⁵', '10⁶', '5×10⁶'];
@@ -120,11 +124,11 @@ export function playIntro({ onDone, onDive } = {}) {
   /* ---- WebGL ---- */
   const cv = $('canvas');
   let renderer;
-  try { renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: false, alpha: true, powerPreference: 'high-performance' }); }
+  try { if (tier() === 'low') throw 0; renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: false, alpha: true, powerPreference: 'high-performance' }); }
   catch { renderer = null; }
   let clock = 0;
-  if (!renderer) { decode(1); decodeStart = -10; decode(10); go.classList.add('on'); return { finish }; }
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  if (!renderer) { box.querySelector('.hint').remove(); gate.querySelector('p').textContent = '平面画面 · 功能不变'; const ttl = $('.ttl'); ttl.style.opacity = 0; ttl.style.transition = 'opacity 1.4s'; const showT = () => { decode(1); decodeStart = -10; decode(10); requestAnimationFrame(() => (ttl.style.opacity = 1)); go.classList.add('on'); }; if (replay) showT(); else row.querySelectorAll('button').forEach(b => b.addEventListener('click', () => setTimeout(showT, 300))); return { finish }; }
+  renderer.setPixelRatio(pixelRatio()); const PS = particleScale();
   const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(50, 1, .1, 400);
   const group = new THREE.Group(); scene.add(group);
 
@@ -153,8 +157,10 @@ export function playIntro({ onDone, onDive } = {}) {
 
   const push = (p1, c1, size, kind) => {
     // 原始海洋:扁平的旋涡云
-    const r = 3 + rnd() * 9, a = rnd() * 6.28; P0.push(Math.cos(a) * r, gauss() * 2.5, Math.sin(a) * r);
-    C0.push(...col(rnd() < .15 ? BASE_COL['ATGC'[Math.floor(rnd() * 4)]] : '#2dd4bf').toArray());
+    // 细胞:单位球面 = 细胞膜(长度 1),球内 = 细胞核里的染色质(长度 < .5);着色器里完成分裂
+    const zz = 2 * rnd() - 1, aa = rnd() * 6.28, rr = Math.sqrt(1 - zz * zz), nuc = rnd() < .2, rl = nuc ? .12 + rnd() * .3 : 1;
+    P0.push(Math.cos(aa) * rr * rl, zz * rl, Math.sin(aa) * rr * rl);
+    C0.push(...col(nuc ? BASE_COL['ATGC'[Math.floor(rnd() * 4)]] : rnd() < .25 ? '#a7f3d0' : '#2dd4bf').toArray());
     P1.push(...p1); C1.push(...c1.toArray());
     let p2, c2, dd;
     if (p1[1] <= TRUNK_TOP) { p2 = [p1[0] * .8, p1[1], p1[2] * .8]; c2 = c1.clone().lerp(col('#6ee7b7'), .4); dd = 0; }
@@ -163,13 +169,13 @@ export function playIntro({ onDone, onDive } = {}) {
     P2.push(...p2); C2.push(...c2.toArray()); DL.push(rnd(), dd); SZ.push(size); KD.push(kind);
   };
   // 骨架
-  for (let s = 0; s < 2; s++) for (let i = 0; i < 1300; i++) { const y = Y0 + (Y1 - Y0) * (i / 1300); push(helixAt(y, s).map(v => v + gauss() * .05), col(s ? '#6ee7b7' : '#10b981'), 1.1, 0); }
+  for (let s = 0; s < 2; s++) for (let i = 0, n = Math.round(1300 * PS); i < n; i++) { const y = Y0 + (Y1 - Y0) * (i / n); push(helixAt(y, s).map(v => v + gauss() * .05), col(s ? '#6ee7b7' : '#10b981'), 1.1, 0); }
   // 碱基对横档:颜色来自 HBB 序列
   const RISE = .34;
   for (let k = 0; Y0 + k * RISE < Y1; k++) {
     const y = Y0 + k * RISE, b = HBB[k % HBB.length], pair = { A: 'T', T: 'A', G: 'C', C: 'G' }[b];
     const a = helixAt(y, 0), c = helixAt(y, 1);
-    for (let j = 0; j < 22; j++) { const t = j / 21; push([a[0] + (c[0] - a[0]) * t, y, a[2] + (c[2] - a[2]) * t], col(BASE_COL[t < .5 ? b : pair]), .9, 1); }
+    for (let j = 0, n = Math.round(22 * PS); j < n; j++) { const t = j / (n - 1); push([a[0] + (c[0] - a[0]) * t, y, a[2] + (c[2] - a[2]) * t], col(BASE_COL[t < .5 ? b : pair]), .9, 1); }
   }
   const N = SZ.length, geo = new THREE.BufferGeometry();
   const A = (arr, n) => new THREE.Float32BufferAttribute(arr, n);
@@ -184,7 +190,17 @@ export function playIntro({ onDone, onDive } = {}) {
       uniform float uT; uniform float uPR; uniform float uWarp; uniform vec4 uRip; varying vec3 vC; varying float vA;
       void main(){
         float a = uT * .18 + dl.x * 6.28;
-        vec3 soup = vec3(position.x * cos(uT*.12) - position.z * sin(uT*.12), position.y + sin(uT*.8 + dl.x*20.)*.25, position.x * sin(uT*.12) + position.z * cos(uT*.12));
+        // 细胞分裂:一个球 → 中间缢缩 → 两个子细胞
+        float ks = smoothstep(.15, 1.9, uT);
+        float rl = length(position); vec3 dr = position / max(rl, 1e-4);
+        float sd = dr.x >= 0. ? 1. : -1.;
+        float u = abs(dr.x), xn = sd * (2. * u - 1.);
+        float sc = sqrt(max(0., 1. - xn*xn)) / max(sqrt(max(0., 1. - u*u)), 1e-3);
+        vec3 dn = normalize(mix(dr, vec3(xn, dr.y * sc, dr.z * sc), ks));
+        float CR = mix(3.3, 2.6, ks);
+        float wob = 1. + .035 * sin(uT*3.2 + dl.x*40.);
+        vec3 soup = (rl > .9 ? dn * CR * wob : dn * rl * CR * 1.5) + vec3(sd * ks * CR * 1.08, 0., 0.);
+        soup = vec3(soup.x * cos(uT*.15) - soup.z * sin(uT*.15), soup.y, soup.x * sin(uT*.15) + soup.z * cos(uT*.15));
         float k1 = smoothstep(2.6 + dl.x*1.3, 2.6 + dl.x*1.3 + 1.6, uT);
         float k2 = smoothstep(7.0 + dl.y, 7.0 + dl.y + 1.3, uT);
         vec3 p = mix(mix(soup, p1, k1), p2, k2);
@@ -209,7 +225,7 @@ export function playIntro({ onDone, onDive } = {}) {
   group.add(new THREE.Points(geo, mat));
   // 远处星尘
   const sg = new THREE.BufferGeometry(), sp = [];
-  for (let i = 0; i < 900; i++) { const r = 40 + rnd() * 80, t = rnd() * 6.28, f = Math.acos(2 * rnd() - 1); sp.push(r * Math.sin(f) * Math.cos(t), r * Math.cos(f), r * Math.sin(f) * Math.sin(t)); }
+  for (let i = 0; i < 900 * PS; i++) { const r = 40 + rnd() * 80, t = rnd() * 6.28, f = Math.acos(2 * rnd() - 1); sp.push(r * Math.sin(f) * Math.cos(t), r * Math.cos(f), r * Math.sin(f) * Math.sin(t)); }
   sg.setAttribute('position', A(sp, 3));
   const stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0x9fe8d0, size: 1.4, sizeAttenuation: false, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false }));
   scene.add(stars);
@@ -222,6 +238,7 @@ export function playIntro({ onDone, onDive } = {}) {
     if (drag) { const dx = e.clientX - drag.x; drag.x = e.clientX; drag.m += Math.abs(dx); spinV = dx * .006; spin += spinV; }
   });
   addEventListener('pointerup', e => {
+    if (drag && drag.m < 6 && !done && !gated && !shown && !warpAt) { runFrom = HOLD; runAt = performance.now(); drag = null; return; }
     if (drag && drag.m < 6 && !done) { // 视为点击:在点击处投射到 z=0 平面激起涟漪
       const v = new THREE.Vector3(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1, .5).unproject(cam).sub(cam.position).normalize();
       const p = cam.position.clone().add(v.multiplyScalar(-cam.position.z / v.z)); group.worldToLocal(p);
@@ -238,6 +255,7 @@ export function playIntro({ onDone, onDive } = {}) {
   const ease = x => x < .5 ? 4 * x * x * x : 1 - (-2 * x + 2) ** 3 / 2;
   function frame(now) {
     if (!box.isConnected) return;
+    if (document.hidden) { last = now; requestAnimationFrame(frame); return; }
     const dt = Math.min(.05, (now - last) / 1000); last = now;
     if (reducedMotion() && clock < HOLD) clock = HOLD;
     if (warpAt) clock += dt; else if (gated) clock = Math.min(1.6, clock + dt); else { if (!runAt) { runAt = now; runFrom = clock; } clock = Math.min(HOLD, runFrom + (now - runAt) / 1000 * speed); }

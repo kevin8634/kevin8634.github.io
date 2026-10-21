@@ -29,7 +29,25 @@ html,body{overflow:hidden}
 #sheet h3{margin:0 0 4px;font-size:16px}
 #sheet .meta{font-size:12px;color:var(--mute);margin-bottom:6px}
 #sheet p{margin:0 0 10px;font-size:14px;line-height:1.6}
-#divebar{position:fixed;left:50%;bottom:44px;transform:translateX(-50%);z-index:17}
+/* v0.7 HUD A · 全息实验室 */
+.ls-top{border-bottom:1px solid rgba(110,231,183,.28);background:linear-gradient(180deg,rgba(6,14,18,.92),rgba(6,14,18,.55));box-shadow:0 1px 18px rgba(52,211,153,.12)}
+.ls-top .brand{display:none}
+.ls-top .title{text-align:center}
+.ls-top .emb{display:inline-flex;align-items:center;gap:8px;padding:3px 14px;border:1px solid rgba(226,190,120,.45);border-radius:999px;background:rgba(6,10,18,.55);font-size:14px;letter-spacing:1px;color:#eefcf6}
+.ls-top .emb b{color:#04120c;background:var(--em);border-radius:6px;padding:0 6px;font-size:12px}
+#side{border-color:rgba(110,231,183,.45);box-shadow:0 0 22px rgba(52,211,153,.15),inset 0 0 0 1px rgba(255,255,255,.03)}
+#divebar{position:fixed;left:16px;bottom:40px;z-index:17}
+#dive{width:70px;height:70px;border-radius:50%;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:26px;line-height:1;background:radial-gradient(circle at 35% 30%,#1b4d3e,#062018 70%);color:#eefcf6;border:2px solid rgba(226,190,120,.8);box-shadow:0 0 0 4px rgba(6,10,18,.6),0 0 22px rgba(52,211,153,.45);animation:diveP 3.2s ease-in-out infinite}
+#dive .lb{font-size:11px;font-weight:600;letter-spacing:.5px;color:#ffe9b8}
+#dive .long{display:none}
+#dive:hover{box-shadow:0 0 0 4px rgba(6,10,18,.6),0 0 34px rgba(52,211,153,.8)}
+@keyframes diveP{50%{box-shadow:0 0 0 4px rgba(6,10,18,.6),0 0 30px rgba(52,211,153,.7)}}
+#gd{position:fixed;right:12px;top:62px;z-index:17;display:flex;align-items:flex-start;gap:8px;flex-direction:row-reverse;max-width:min(300px,calc(100% - 24px))}
+#gd .ava{flex:none;width:46px;height:46px;border-radius:50%;border:2px solid rgba(226,190,120,.85);display:flex;align-items:center;justify-content:center;font-weight:700;color:#04120c;cursor:pointer;box-shadow:0 0 16px rgba(52,211,153,.45);background:radial-gradient(circle at 35% 30%,#ecfdf5,#34d399 60%,#064e3b)}
+#gd .bb{font-size:13px;line-height:1.55;padding:9px 12px;border-radius:14px 4px 14px 14px;transition:opacity .4s,transform .4s;transform-origin:top right}
+#gd .bb .who{color:var(--gold);font-size:11px;margin-bottom:2px}
+#gd.min .bb{opacity:0;transform:scale(.8);pointer-events:none}
+@media (prefers-reduced-motion:reduce){#dive{animation:none}}
 #zoomov{position:fixed;inset:0;z-index:45;background:#060a12;display:none}
 #zoomov .zi{position:absolute;left:12px;top:60px;z-index:3;max-width:min(360px,70vw)}
 #zoomov .zi .obj{font-size:16px;font-weight:700}
@@ -55,20 +73,21 @@ html,body{overflow:hidden}
 #chain button{background:none;border:0;color:#eefcf6;font:600 14px inherit;cursor:pointer;padding:2px 4px}
 #chain button.on{color:#6ee7b7;text-shadow:0 0 8px #34d399}
 #chain i{color:var(--mute);font-style:normal;font-size:12px}
-@media (max-width:640px){#chain{bottom:84px;padding:4px 6px}#chain button{font-size:12px;padding:2px 1px}#chain i{font-size:10px}#scale{right:4px;top:auto;bottom:100px;transform:none}#scale .rail{height:26vh;width:26px}#scale input{width:26vh}#scale .cap,#scale .all{display:none}#scale .tk{font-size:11px;right:38px}#dive .long{display:none}#legend{display:none}#side{top:56px}.task{padding:6px 8px}}
+@media (max-width:640px){.ls-top .title{visibility:hidden}#divebar{left:10px;bottom:128px}#dive{width:56px;height:56px;font-size:21px}#dive .lb{font-size:10px}#gd{top:58px}#gd .ava{width:38px;height:38px}#chain{bottom:84px;padding:4px 6px}#chain button{font-size:12px;padding:2px 1px}#chain i{font-size:10px}#scale{right:4px;top:auto;bottom:100px;transform:none}#scale .rail{height:26vh;width:26px}#scale input{width:26vh}#scale .cap,#scale .all{display:none}#scale .tk{font-size:11px;right:38px}#dive .long{display:none}#legend{display:none}#side{top:56px}.task{padding:6px 8px}}
 </style></head><body>
 <div id="lsi-pre" style="position:fixed;inset:0;z-index:49;background:#060a12"></div>
 <div id="atlas"><canvas></canvas></div>
-<div id="side" class="ls-panel">
+<div id="side" class="ls-panel hud-left">
   <h1>生命源码 <span class="ls-tag">04 · 生物</span></h1>
   <div class="sub">读懂生命写好的代码。点亮的星是可以玩的任务;拖动、双指或滚轮缩放可以探索。</div>
   <div id="tasks"></div>
 </div>
 <div id="legend"></div>
-<div id="chain"></div>
-<div id="scale"><div class="cap">穿越尺度</div><div class="rail"><input type="range" min="0" max="5" step="0.01" value="2.5" aria-label="穿越尺度:从分子到生态"><div class="ticks"></div></div><div class="lv">全景</div><button class="all ls-btn">全景</button></div>
+<div id="chain" class="hud-bottom"></div>
+<div id="gd" class="hud-right"><div class="ava" title="向导 卡丝 Cas">卡丝</div><div class="bb ls-panel"><div class="who">卡丝 Cas · 首席向导</div><div class="say"></div></div></div>
+<div id="scale" class="hud-right"><div class="cap">穿越尺度</div><div class="rail"><input type="range" min="0" max="5" step="0.01" value="2.5" aria-label="穿越尺度:从分子到生态"><div class="ticks"></div></div><div class="lv">全景</div><button class="all ls-btn">全景</button></div>
 <div id="sheet" class="ls-panel"></div>
-<div id="divebar"><button class="ls-btn primary" id="dive">🔬 一镜到底<span class="long">:从指纹到碱基对</span></button></div>
+<div id="divebar" class="hud-left"><button class="ls-btn" id="dive" title="一镜到底:从指纹到碱基对" aria-label="一镜到底:从指纹到碱基对">🔬<span class="lb">一镜到底</span></button></div>
 <div id="zoomov"><div class="zw" style="position:absolute;inset:0"></div><div class="zi ls-panel"></div><div class="zf"></div>
   <button class="ls-btn x" id="zx">✕ 返回图谱</button>
   <div class="zc"><button class="ls-btn primary" id="zp">▶ 播放</button><input id="zs" type="range" min="0" max="5" step="0.001" value="0"></div></div>
@@ -77,12 +96,24 @@ html,body{overflow:hidden}
 import { chrome, TASKS, taskStars, reducedMotion, sound, store } from './ls.js';
 import { LAYERS, CONS, STARS } from './atlas-data.js';
 import { mountAlbum, cards } from './ls-cards.js';
-mountAlbum(chrome({ title: '' }).top);
+import { hudIn } from './ls-scene.js';
 const $ = s => document.querySelector(s);
+let intro = null;
+const startIntro = (replay = false) => import('./ls-intro.js').then(m => { intro = m.playIntro({ replay, onDive: () => $('#dive').click(), onDone: hudIn }); pre(); }).catch(() => { pre(); hudIn(); });
+const C = chrome({ title: '', onReplay: () => startIntro(true) });
+C.top.querySelector('.title').innerHTML = '<span class="emb">🧬 生命源码 <b>生物</b></span>';
+mountAlbum(C.top);
 
 /* ---------- 开场:编译生命(ls-intro.js) ---------- */
 const pre = () => document.getElementById('lsi-pre')?.remove();
-import('./ls-intro.js').then(m => { m.playIntro({ onDive: () => $('#dive').click() }); pre(); }).catch(pre);
+// 首次自动播放;看过的人直接进入(设置 ⚙ 里可重播);减少动态效果时直接进入
+if (reducedMotion() || store.get('intro', false)) { pre(); hudIn(); } else startIntro();
+/* ---------- 向导气泡:只提问 ---------- */
+const ASK = ['从哪一层开始探索?拖动右边的「穿越尺度」试试。', '一颗星点亮了——你猜它属于哪个尺度?', '从指纹放大到碱基对,要放大多少倍?点左下角的显微镜看看。'];
+let ai = 0; const gd = $('#gd'), say = () => { $('#gd .say').textContent = ASK[ai % ASK.length]; };
+say(); let gdT = setTimeout(() => gd.classList.add('min'), 9000);
+$('#gd .ava').onclick = () => { clearTimeout(gdT); if (gd.classList.contains('min')) { ai++; say(); gd.classList.remove('min'); sound.sparkle(2); } else gd.classList.add('min'); };
+if (matchMedia('(max-width:640px)').matches) gd.classList.add('min');
 
 /* ---------- 任务列表 ---------- */
 for (const [id, t] of Object.entries(TASKS)) {

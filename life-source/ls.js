@@ -126,7 +126,7 @@ export function codonAA(c) { c = c.toUpperCase().replace(/U/g, 'T'); const i = B
 export function translate(dna) { const out = []; for (let i = 0; i + 3 <= dna.length; i += 3) { const a = codonAA(dna.slice(i, i + 3)); out.push(a); if (a === '*') break; } return out; }
 
 /* ---------- 页面骨架 ---------- */
-export function chrome({ title = '', task = null } = {}) {
+export function chrome({ title = '', task = null, onReplay = null } = {}) {
   if (task) music.level = .18;
   const top = document.createElement('header');
   top.className = 'ls-top';
@@ -140,6 +140,7 @@ export function chrome({ title = '', task = null } = {}) {
   snd.onclick = () => { sound.on = !sound.on; paint(); if (sound.on) sound.sparkle(3); };
   addEventListener('ls-sound', paint);
   paint();
+  import('./ls-scene.js').then(m => m.mountHud(top, { onReplay })).catch(() => {});
   const foot = document.createElement('footer');
   foot.className = 'ls-foot';
   foot.textContent = '用于知识学习与科学研究科普 · 不替代医生意见 · 免费免注册,不收集个人信息';
