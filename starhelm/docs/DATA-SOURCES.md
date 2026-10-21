@@ -81,3 +81,10 @@
 |---|---|---|---|---|
 | 活跃卫星轨道根数(GP,16,758 颗) | CelesTrak `gp.php?GROUP=active&FORMAT=csv`(2026-10-22 下载) | 公开免费数据,注明来源使用(与现有星链/ISS 快照同一做法) | 打包为 sh-sats-data.js 快照(build_sats.py),本地按开普勒+J2 推算位置 | 「数据:CelesTrak」 |
 | 在轨编目统计与每年发射数量(SATCAT) | CelesTrak `pub/satcat.csv`(2026-10-22 下载) | 同上 | 失效卫星/火箭残骸/碎片的高度、倾角;每年发射卫星数柱状图;不按国家分类 | 「数据:CelesTrak」 |
+
+## v0.6.4 地震实验室(sh.quakes)
+| 资料 | 来源 | 许可/条款 | 用法 | 署名 |
+|---|---|---|---|---|
+| 近一年 M5+ 地震(1,983 次) | USGS ANSS ComCat FDSN `fdsnws/event/1/query?format=csv&minmagnitude=5`(2026-10-22 下载) | 美国政府作品,公有领域 | 打包为 sh-quakes-data.js 快照(build_quakes.py) | 「数据:USGS 地震灾害计划」 |
+| 近 7 天 M4.5+ 实时 | USGS `summary/4.5_week.geojson`(CORS *) | 同上 | 浏览器实时取,7 秒超时用快照近 7 天 | 同上 |
+| 板块边界 PB2002 | Bird (2003) G3 4(3):1027;Hugo Ahlenius / Nordpil 数字化(github fraxen/tectonicplates) | ODC-By 1.0(须署名) | 精简到 0.1° 后打包进 sh-quakes-data.js | 页面写「板块边界 PB2002(Bird, 2003),Ahlenius/Nordpil 数字化,ODC-By」 |
