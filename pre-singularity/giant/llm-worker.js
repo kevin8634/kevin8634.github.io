@@ -1,4 +1,5 @@
 // 离线巨人:在浏览器里运行 Qwen2.5-0.5B-Instruct(WebGPU)。输入不离开本机。
+// v0.6.2:已下载过的模型直接从浏览器缓存唤醒(按缓存来源选源、跳过探测)。
 // v0.6.1 修复:①原用 transformers.web.min.js,内含裸模块导入 onnxruntime-web/webgpu,浏览器直接 import 必失败(根因);改用自带 ORT 的 transformers.min.js。②国内网络:推理引擎、ONNX Runtime WASM、模型文件三段全部优先走国内可达的源,并逐个探测。
 const VER = '4.3.1', ORT = '1.31.0-dev.20260914-8d85527a0';
 const NPM = ['https://cdn.jsdmirror.com/npm/', 'https://s4.zstatic.net/npm/', 'https://jsd.onmicrosoft.cn/npm/',
@@ -63,7 +64,13 @@ async function load(h, dtype){
 onmessage = async (e) => { const d = e.data;
   if(d.t === 'load'){
     try{ await lib(); }catch(err){ postMessage({t:'err', m:String(err.message||err)}); return; }
-    for(const h of HOSTS){
+    // v0.6.2:本机已缓存时,优先用当初下载的那个源(缓存按网址存),并跳过联网探测,避免换源导致重复下载
+    const order = d.prefer ? [...HOSTS.filter(h=>h.name===d.prefer), ...HOSTS.filter(h=>h.name!==d.prefer)] : HOSTS;
+    for(const h of order){
+      if(d.cached && h.name===d.prefer){
+        try{ postMessage({t:'info', m:'从本机缓存唤醒('+h.name+')…'}); await load(h, d.dtype); postMessage({t:'ready', src:'本机缓存'}); return; }
+        catch(err){ postMessage({t:'warn', m:'本机缓存载入失败,改为联网:'+String(err && err.message || err)}); }
+      }
       const cfg = h.host + h.tpl.replace('{model}', MODEL).replace('{revision}', 'main') + 'config.json';
       postMessage({t:'info', m:'检测模型源:'+h.name+' …'});
       if(!(await probe(cfg))){ postMessage({t:'warn', m:h.name+' 不通,换下一个'}); continue; }
