@@ -27,7 +27,7 @@ function boot() {
   function setA(sc, a) { sc.g.visible = a > 0.004; for (const [m, b] of sc.mats) { if (m.uniforms && m.uniforms.uA) m.uniforms.uA.value = a * b; else m.opacity = a * b; } }
   const glowW = s => glowSprite([[0, 'rgba(255,200,120,.85)'], [0.25, 'rgba(255,140,50,.45)'], [0.6, 'rgba(255,80,20,.1)'], [1, 'rgba(0,0,0,0)']], s);
 
-  const LV = EF.missionId === 'carbon' ? carbonScenes() : starScenes();
+  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : [];
   LV.forEach(s => { scene.add(s.g); setA(s, 0); });
 
   /* ---------- stars:主序星 → 洋葱分层的大质量恒星 → 铁核心 → 超新星遗迹 ---------- */

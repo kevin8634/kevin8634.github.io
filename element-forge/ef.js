@@ -86,7 +86,7 @@ EF.MISSIONS = {
   cabbage: { q: '为什么紫甘蓝汁会变色?', g: 'dot', lv: '★☆☆', soon: 1 },
   battery: { q: '怎样造一块会发电的电池?', g: 'lili', lv: '★★☆', soon: 1 },
   fireworks: { q: '为什么烟花有不同的颜色?', g: 'dot', lv: '★★☆', soon: 1 },
-  crystal: { q: '晶体为什么那么整齐?', g: 'cryo', lv: '★★☆', soon: 1 },
+  crystal: { q: '晶体为什么那么整齐?', n: 4, g: 'cryo', href: 'crystal/', lv: '★★☆', scale: '晶体 · 离子', unlock: [11, 17] },
   rocks: { q: '岩石是怎么"长"出来的?', g: 'mof', lv: '★★☆', soon: 1 }
 };
 EF.PLANETS = [
@@ -234,7 +234,7 @@ EF.mission = function (id, LEVELS, NOTES) {
   /* v0.3:B1 沉浸舞台 —— 四角括弧 + 背后 3D 场景(低档不加载) */
   document.body.classList.add('mission', 'mission-' + id); EF.missionId = id; EF.level = 0;
   document.body.insertAdjacentHTML('afterbegin', '<div id="bg3d" aria-hidden="true"></div><i class="cn tl"></i><i class="cn tr"></i><i class="cn bl"></i><i class="cn br"></i>');
-  if (EF.glTier !== 'low') { var m3 = document.createElement('script'); m3.type = 'module'; m3.src = BASE + 'ef-mission3d.js?v=3'; document.body.appendChild(m3); }
+  if (EF.glTier !== 'low') { var m3 = document.createElement('script'); m3.type = 'module'; m3.src = BASE + 'ef-mission3d.js?v=4'; document.body.appendChild(m3); }
   var root = document.getElementById('app');
   root.innerHTML = '<div class="m-head"><h1>' + EF.esc(M.q) + '</h1><div class="m-dots" id="dots"></div></div>' +
     '<div class="m-body"><section class="m-stage" id="stage"></section>' +
@@ -255,7 +255,7 @@ EF.mission = function (id, LEVELS, NOTES) {
   }
   function start(i) {
     cur = i; EF.level = i; if (EF.onLevel) EF.onLevel(i); var L = LEVELS[i]; st = { guessed: null, hints: 0, done: false };
-    dots(); var stage = document.getElementById('stage'); stage.innerHTML = ''; stage.className = 'm-stage locked';
+    dots(); var stage = document.getElementById('stage'); stage.innerHTML = ''; stage._tok = null; stage.className = 'm-stage locked';
     document.getElementById('hint').innerHTML = ''; document.getElementById('over').hidden = true;
     say('<em>第 ' + (i + 1) + ' 关 · ' + EF.esc(L.title) + '</em><br>' + L.ask.q);
     var o = document.getElementById('opts');
