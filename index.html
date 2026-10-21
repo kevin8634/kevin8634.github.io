@@ -1018,7 +1018,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.8.2</b></span>
+            <span>创世计划总门户 <b>v0.8.2.1</b></span>
           </footer>
         </div>
       </div>
@@ -1152,7 +1152,7 @@
       var WORLDS = [
         { id: "01", star: "天璇", name: "星图", en: "Math Atlas", field: "数学",
           desc: "用问题点亮知识星。", color: "#7cc8ff", live: true,
-          meta: ["已上线 v0.8", "10 个任务 55 关", "197 颗知识星"], href: "math-atlas/",
+          meta: ["已上线 v0.8.2", "10 个任务 55 关", "197 颗知识星"], href: "math-atlas/",
           prefix: ["ma:v1:", "gn:ma:"],
           age: ["ya","huo","chen","he"], tags: ["math"], why: "喜欢找规律、解谜题？每想通一个问题，就点亮一颗知识星。" },
         { id: "02", star: "天玑", name: "宙律", en: "Nomoverse", field: "物理",
@@ -1446,10 +1446,9 @@
 
       /* ---------- 开场 ---------- */
       var intro = { t: 0, dur: RM ? 0.01 : 5.2, done: false };
-      // v0.8.2 北斗点灯：每次新打开门户（新会话）播放，本会话内返回不重复；点击或按键可跳过
+      // v0.8.2.1 北斗点灯：每次进入门户都播放（王磊 10-21 20:37）；点击或按键可跳过
       function ssGet(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
       function ssSet(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
-      if (ssGet("gn:portal:intro")) { intro.t = intro.dur; intro.done = true; }
       var IG0 = 0.12, IGS = 0.095, IGD = 0.10;   // 第 i 颗星点亮起点 = IG0 + i*IGS，历时 IGD
 
       function finishIntro() {
@@ -2878,6 +2877,8 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.2.1", d: "2026-10-21", t: "「北斗点灯」开场改为每次进入门户都会播放，点一下或按任意键就能跳过。" },
+        { w: "01", v: "v0.8.2", d: "2026-10-21", t: "十位向导变成会动的数学对象，比如长枝的超现实数树、从噪声里聚出形状的扩散云；新曲「星图序曲」也加进了音乐列表。" },
         { w: "gn", v: "v0.8.2", d: "2026-10-21", t: "新开场「北斗点灯」：金色星光从天枢出发，接力点亮七颗星；点星球直接在本窗口进入世界，镜头会穿过它的大气层落进去。" },
         { w: "01", v: "v0.8.1", d: "2026-10-21", t: "主页换上用 π、黄金比和斐波那契数列写成的新配乐「星图序曲」，十位动物向导变成 3D，还带上数学前沿称号（比如「格密码 · 枭博士」「渗流 · 刺猬博士」）。" },
         { w: "gn", v: "v0.8.1.5", d: "2026-10-21", t: "星历补记星图 Math Atlas v0.8、元素工坊 v0.4、天枢 Starhelm v0.5.3；点亮星桥「魔方 ⇄ 晶体」。" },
