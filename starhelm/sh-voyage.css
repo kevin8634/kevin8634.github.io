@@ -265,3 +265,24 @@ body.voy-on .le-actions,body.voy-on .le-hud-top{visibility:hidden}
 .ml--sat .sat-ctl{flex-wrap:nowrap;gap:6px;font-size:12px}.ml--sat .sat-ctl label{min-width:0}.ml--sat .sat-yv{min-width:0;white-space:nowrap;font-size:11px}.ml--sat .sat-ctl button{padding:3px 6px;font-size:11px}
 .ml--sat .ml-guide{padding:6px 10px;gap:5px}.ml--sat .ml-q{font-size:13px;line-height:1.4}.ml--sat .ml-c,.ml--sat .ml-hint{padding:3px 8px;font-size:12px}
 .ml--sat .sat-r{padding:6px;gap:4px}.ml--sat .sat-k{padding:3px 6px;font-size:11px}.ml--sat .sat-k b{font-size:12px}.ml--sat .sat-orb,.ml--sat .sat-src{display:none}}
+
+/* ---- M2 #5 地震实验室 ---- */
+.ml--qk .ml-body{grid-template-columns:3fr 2fr}
+.qk-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9fd9c6;font-size:14px;pointer-events:none}.qk-load[hidden]{display:none}
+.qk-leg{position:absolute;right:12px;top:8px;font-size:11px;color:#b9c7da;display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:62%}
+.qk-leg i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c);margin-left:4px}
+.qk-r{padding:10px;gap:8px;justify-content:flex-start;overflow:auto}
+.qk-tiles{display:grid;grid-template-columns:1fr 1.6fr;gap:6px}
+.qk-tiles div{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:6px 10px;display:flex;flex-direction:column}
+.qk-tiles span{font-size:11.5px;color:#9fb3cc}.qk-tiles b{font-size:20px;color:#f3cf7a}.qk-tiles small{font-size:11px;color:#b9c7da;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qk-cv{width:100%;height:auto;aspect-ratio:440/190}
+.qk-dep{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:#9fb3cc;align-items:center}.qk-dep span{width:100%}.qk-dep em{font-style:normal;border-left:3px solid var(--c);padding-left:5px}.qk-dep em b{color:#f3cf7a;margin-left:4px}
+.qk-src{font-size:10.5px;color:#6f8099}
+.qk-ctl{gap:10px;flex-wrap:wrap}.qk-md,.qk-tg,.qk-vw{display:flex;gap:4px}.qk-ctl .qk-b{padding:4px 9px;font-size:12px;opacity:.75}.qk-ctl .qk-b.on{opacity:1;background:rgba(127,227,196,.18);border-color:#7fe3c4;color:#cff8ea}
+.qk-vw{margin-left:auto}
+@media (max-width:760px),(orientation:portrait){.ml--qk .ml-body{grid-template-columns:1fr}}
+@media (max-height:520px){.ml--qk{padding:6px 10px;gap:5px}.ml--qk .ml-hd b{font-size:15px}.ml--qk .ml-hd small,.ml--qk .ml-note,.ml--qk .qk-leg,.ml--qk .qk-src,.ml--qk .qk-dep{display:none}
+.ml--qk .qk-ctl{flex-wrap:nowrap;gap:5px}.ml--qk .qk-ctl .qk-b{padding:3px 6px;font-size:11px}
+.ml--qk .ml-guide{padding:6px 10px;gap:5px}.ml--qk .ml-q{font-size:13px;line-height:1.4}.ml--qk .ml-c,.ml--qk .ml-hint{padding:3px 8px;font-size:12px}
+.ml--qk .qk-r{padding:6px;gap:4px}.ml--qk .qk-tiles b{font-size:15px}.ml--qk .qk-tiles div{padding:3px 8px}}
+@media (max-height:520px){.ml--qk .qk-tiles small{display:none}.ml--qk .qk-tiles span{font-size:10.5px}}
