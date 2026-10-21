@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>创世计划 Genesis · 开发攻略书 第一卷</title>
+    <meta name="description" content="创世计划 Genesis 开发心得:七个学习世界的创意来源、开发过程、提示词与人机协作经验。" />
+    <link rel="stylesheet" href="hark.css" />
+    <link rel="stylesheet" href="hark-hero.css" />
+    <style>
+      /* This page departs from the default: a full-bleed game-guide artbook. Tokens stay. */
+      :root {
+        --x-ink: #f3f6ff;
+        --x-dim: #c2cbdf;
+        --x-faint: #9aa5bd;
+        --x-void: #05070f;
+        --x-glass: rgba(8, 12, 24, 0.58);
+        --x-glass-2: rgba(16, 22, 40, 0.78);
+        --x-edge: rgba(255, 255, 255, 0.16);
+        --x-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        --x-sans: "PingFang SC", "Noto Sans SC", "Microsoft YaHei", "Geist", system-ui, sans-serif;
+        --accent: #7fd3ff;
+      }
+      body { background: var(--x-void); }
+      .x-book {
+        font-family: var(--x-sans);
+        color: var(--x-ink);
+        background: var(--x-void);
+        min-height: 100vh;
+      }
+      .x-book .nav { margin-inline: auto; width: max-content; max-width: calc(100% - 24px); }
+      .x-book :focus-visible { outline-color: var(--accent); }
+      .x-book > .nav { margin-top: 12px; margin-bottom: -56px; }
+      .x-book code { font-family: var(--x-mono); font-size: 13px; color: var(--accent); }
+
+      /* chapter frame */
+      .x-ch {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        padding-block: clamp(56px, 9vw, 110px);
+        scroll-margin-top: 84px;
+      }
+      .x-ch__bg {
+        position: absolute; inset: 0; z-index: -2;
+        background-size: cover; background-position: 70% center;
+      }
+      .x-ch::after {
+        content: ""; position: absolute; inset: 0; z-index: -1;
+        background:
+          linear-gradient(100deg, rgba(4, 7, 16, 0.95) 0%, rgba(4, 7, 16, 0.9) 40%, rgba(4, 7, 16, 0.5) 74%, rgba(4, 7, 16, 0.7) 100%),
+          linear-gradient(to bottom, rgba(4, 7, 16, 0.82), rgba(4, 7, 16, 0.25) 32%, rgba(4, 7, 16, 0.92));
+      }
+      .x-ch--mid::after {
+        background:
+          linear-gradient(to bottom, rgba(4, 7, 16, 0.94) 0%, rgba(4, 7, 16, 0.6) 38%, rgba(4, 7, 16, 0.6) 58%, rgba(4, 7, 16, 0.95) 100%),
+          linear-gradient(95deg, rgba(4, 7, 16, 0.78), rgba(4, 7, 16, 0.35));
+      }
+      @media (min-width: 900px) and (hover: hover) { .x-ch__bg { background-attachment: fixed; } }
+      .x-wrap { max-width: var(--page-max); margin: 0 auto; padding-inline: var(--gutter); }
+      .x-col { max-width: 820px; }
+      .x-col > * + * { margin-top: 18px; }
+      .x-ch + .x-ch { border-top: 1px solid rgba(255, 255, 255, 0.08); }
+
+      /* starfield for chapters without a photo */
+      .x-stars-bg {
+        background-color: #04060e;
+        background-image:
+          radial-gradient(1.4px 1.4px at 20% 30%, rgba(255, 255, 255, 0.75), transparent 60%),
+          radial-gradient(1.2px 1.2px at 70% 18%, rgba(190, 215, 255, 0.7), transparent 60%),
+          radial-gradient(1.6px 1.6px at 44% 72%, rgba(255, 255, 255, 0.6), transparent 60%),
+          radial-gradient(1.1px 1.1px at 88% 62%, rgba(255, 228, 180, 0.7), transparent 60%),
+          radial-gradient(1.3px 1.3px at 12% 84%, rgba(255, 255, 255, 0.5), transparent 60%),
+          radial-gradient(900px 500px at 78% 20%, rgba(90, 120, 255, 0.18), transparent 70%);
+        background-size: 280px 240px, 340px 300px, 420px 360px, 300px 260px, 360px 320px, 100% 100%;
+      }
+      .x-stars-bg--amber { background-image:
+          radial-gradient(1.4px 1.4px at 25% 28%, rgba(255, 255, 255, 0.8), transparent 60%),
+          radial-gradient(1.2px 1.2px at 66% 20%, rgba(255, 220, 170, 0.8), transparent 60%),
+          radial-gradient(1.5px 1.5px at 40% 70%, rgba(255, 255, 255, 0.55), transparent 60%),
+          radial-gradient(1.1px 1.1px at 85% 66%, rgba(255, 200, 120, 0.8), transparent 60%),
+          radial-gradient(1000px 520px at 60% 30%, rgba(232, 196, 106, 0.2), transparent 70%); }
+
+      /* chapter opener */
+      .x-ch__kicker {
+        font: var(--weight-medium) var(--size-caption) / 1.4 var(--x-mono);
+        letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent);
+      }
+      .x-ch__title { font-size: clamp(28px, 4.6vw, 50px); font-weight: var(--weight-bold); line-height: 1.15; margin-top: 10px; }
+      .x-ch__sub { margin-top: 12px; font-size: clamp(15px, 1.6vw, 19px); color: var(--x-dim); max-width: 56ch; line-height: 1.6; }
+      .x-ch__meta { margin-top: 10px; font: var(--weight-regular) 13px/1.5 var(--x-mono); color: var(--x-faint); }
+      .x-lead { font-size: var(--size-prose); line-height: 1.75; color: var(--x-dim); max-width: 62ch; }
+      .x-lead + .x-lead { margin-top: 12px; }
+      .x-h3 { font-size: 19px; font-weight: var(--weight-bold); color: var(--x-ink); }
+      .x-eyebrow {
+        font: var(--weight-medium) 12px/1.4 var(--x-mono);
+        letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent);
+      }
+
+      /* panels with HUD brackets */
+      .x-panel {
+        position: relative;
+        background: var(--x-glass);
+        -webkit-backdrop-filter: blur(16px) saturate(1.3);
+        backdrop-filter: blur(16px) saturate(1.3);
+        border: 1px solid var(--x-edge);
+        border-radius: var(--r-l);
+        padding: clamp(18px, 2.4vw, 26px);
+      }
+      .x-panel > * + * { margin-top: 12px; }
+      .x-panel::before, .x-panel::after {
+        content: ""; position: absolute; width: 16px; height: 16px; border: 2px solid var(--accent); opacity: 0.85;
+      }
+      .x-panel::before { top: 10px; left: 10px; border-right: 0; border-bottom: 0; border-radius: 6px 0 0 0; }
+      .x-panel::after { bottom: 10px; right: 10px; border-left: 0; border-top: 0; border-radius: 0 0 6px 0; }
+      .x-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(248px, 1fr)); }
+      .x-grid--2 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+      .x-card {
+        background: var(--x-glass-2);
+        border: 1px solid var(--x-edge);
+        border-radius: var(--r-m);
+        padding: 16px 18px;
+      }
+      .x-card > * + * { margin-top: 8px; }
+      .x-card p, .x-panel p { font-size: var(--size-body); line-height: 1.7; color: var(--x-dim); }
+      .x-card h4, .x-panel h4 { margin: 0; font-size: 16px; font-weight: var(--weight-bold); color: var(--x-ink); }
+      .x-card--accent { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+
+      /* tip / boss boxes */
+      .x-tip, .x-boss {
+        border-radius: var(--r-m); padding: 14px 16px;
+        border: 1px solid var(--x-edge); border-left: 3px solid var(--accent);
+        background: rgba(10, 15, 30, 0.82);
+      }
+      .x-boss { border-left-color: #f1555b; border-color: rgba(241, 85, 91, 0.4); background: rgba(70, 12, 20, 0.45); }
+      .x-tip__label, .x-boss__label {
+        font: var(--weight-medium) 12px/1.4 var(--x-mono); letter-spacing: 0.16em; text-transform: uppercase;
+        color: var(--accent); display: block; margin-bottom: 6px;
+      }
+      .x-boss__label { color: #ff9ba0; }
+      .x-tip p, .x-boss p { font-size: var(--size-body); line-height: 1.7; color: var(--x-dim); }
+
+      /* lists */
+      .x-gear { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+      .x-gear li { position: relative; padding-left: 20px; font-size: var(--size-body); line-height: 1.7; color: var(--x-dim); }
+      .x-gear li::before { content: "◆"; position: absolute; left: 0; top: 0; font-size: 11px; line-height: 1.9; color: var(--accent); }
+      .x-gear b, .x-gear strong { color: var(--x-ink); }
+      .x-rules { list-style: none; margin: 0; padding: 0; counter-reset: r; display: grid; gap: 12px; }
+      .x-rules li {
+        counter-increment: r; position: relative; padding-left: 46px;
+        font-size: var(--size-body); line-height: 1.75; color: var(--x-dim);
+      }
+      .x-rules li::before {
+        content: counter(r, decimal-leading-zero); position: absolute; left: 0; top: 0;
+        width: 32px; height: 26px; display: grid; place-items: center;
+        font: var(--weight-medium) 12px/1 var(--x-mono); color: var(--accent);
+        border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); border-radius: 6px;
+      }
+      .x-rules b { color: var(--x-ink); }
+
+      /* tags, stars, bars, stats */
+      .x-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+      .x-tag {
+        font: var(--weight-medium) 12px/1 var(--x-mono); letter-spacing: 0.04em;
+        padding: 7px 12px; border-radius: var(--r-pill);
+        border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+        color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent);
+      }
+      .x-tag--plain { color: var(--x-dim); border-color: var(--x-edge); background: var(--x-glass-2); }
+      .x-stars { color: #e8c46a; letter-spacing: 3px; font-size: 14px; }
+      .x-bar { height: 8px; border-radius: var(--r-pill); background: rgba(255, 255, 255, 0.14); overflow: hidden; }
+      .x-bar > i { display: block; height: 100%; border-radius: var(--r-pill); background: var(--accent); width: var(--w, 50%); }
+      .x-barrow { display: grid; gap: 7px; }
+      .x-barrow__top { display: flex; justify-content: space-between; gap: 12px; font: var(--weight-regular) 13px/1.4 var(--x-mono); color: var(--x-dim); }
+      .x-stats { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+      .x-stat { border-left: 2px solid color-mix(in srgb, var(--accent) 60%, transparent); padding-left: 14px; }
+      .x-stat__fig { display: block; font: var(--weight-medium) clamp(22px, 2.6vw, 30px) / 1.1 var(--x-mono); color: var(--x-ink); }
+      .x-stat__label { display: block; margin-top: 6px; font-size: 13px; color: var(--x-faint); line-height: 1.5; }
+
+      /* timeline */
+      .x-tl { list-style: none; margin: 0; padding: 0 0 0 22px; display: grid; gap: 16px; border-left: 1px solid var(--x-edge); }
+      .x-tl li { position: relative; font-size: var(--size-body); line-height: 1.7; color: var(--x-dim); }
+      .x-tl li::before {
+        content: ""; position: absolute; left: -27px; top: 6px; width: 9px; height: 9px; border-radius: 50%;
+        background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent);
+      }
+      .x-tl__when { font: var(--weight-medium) 13px/1.4 var(--x-mono); color: var(--x-ink); display: block; margin-bottom: 3px; }
+
+      /* spell scrolls */
+      .x-spell { padding: 0; overflow: hidden; }
+      .x-spell__head {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+        padding: 14px clamp(16px, 2vw, 22px); border-bottom: 1px solid var(--x-edge);
+        background: rgba(16, 22, 40, 0.7);
+      }
+      .x-spell__no { font: var(--weight-medium) 13px/1 var(--x-mono); color: var(--accent); }
+      .x-spell__name { font-size: 15px; font-weight: var(--weight-bold); }
+      .x-spell__body { display: grid; grid-template-columns: 1fr 1fr; }
+      .x-spell__side { padding: clamp(16px, 2vw, 22px); }
+      .x-spell__side + .x-spell__side { border-left: 1px solid var(--x-edge); background: rgba(16, 22, 40, 0.6); }
+      .x-spell__side p { font-size: var(--size-body); line-height: 1.8; color: var(--x-dim); }
+      .x-spell__side blockquote { margin: 0; font-size: var(--size-body); line-height: 1.8; color: var(--x-ink); }
+      .x-spell__foot { display: grid; gap: 8px; padding: 14px clamp(16px, 2vw, 22px); border-top: 1px solid var(--x-edge); }
+      .x-spell__foot p { font-size: 14px; line-height: 1.7; color: var(--x-dim); }
+      .x-spell__foot b { color: var(--x-ink); }
+      .x-spell .x-panel__corners { display: none; }
+      @media (max-width: 760px) {
+        .x-spell__body { grid-template-columns: 1fr; }
+        .x-spell__side + .x-spell__side { border-left: 0; border-top: 1px solid var(--x-edge); }
+      }
+
+      /* template scroll cards */
+      .x-tpl { display: grid; gap: 10px; }
+      .x-tpl__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+      .x-tpl pre {
+        margin: 0; padding: 14px 16px; border-radius: var(--r-s);
+        background: rgba(2, 5, 12, 0.6); border: 1px dashed var(--x-edge);
+        font: var(--weight-regular) 13px/1.8 var(--x-mono); color: var(--x-dim);
+        white-space: pre-wrap; word-break: break-word;
+      }
+      .x-copy {
+        min-height: 36px; padding: 8px 16px; border-radius: var(--r-pill); cursor: pointer;
+        font: var(--weight-medium) 13px/1 var(--x-sans);
+        background: transparent; color: var(--accent);
+        border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+      }
+      .x-copy:hover { background: color-mix(in srgb, var(--accent) 16%, transparent); }
+      @media (max-width: 599px) { .x-copy { min-height: var(--tap); } }
+
+      /* footer */
+      .x-foot {
+        border-top: 1px solid var(--x-edge); padding: 32px 0 48px;
+        display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px;
+      }
+      .x-foot p { font-size: 13px; color: var(--x-faint); line-height: 1.7; }
+      .x-foot .badge { text-decoration: none; }
+
+      /* reveal */
+      .x-rise { opacity: 0; transform: translateY(18px); transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out); }
+      .x-rise.is-in { opacity: 1; transform: none; }
+      @media (prefers-reduced-motion: reduce) {
+        .x-rise { opacity: 1; transform: none; transition: none; }
+        .x-ch__bg { background-attachment: scroll; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="x-book" id="top">
+      <header class="nav glass" data-auto></header>
+      <main>
+        <section class="x-ch" id="cover" style="--accent: #ffbe5c">
+          <div class="x-ch__bg" style="background-image: url('bg_cover.jpg')"></div>
+          <div class="x-wrap">
+            <div class="x-col">
+              <p class="x-ch__kicker x-rise">Genesis · Volume 01</p>
+              <h1 class="x-ch__title x-rise">创世计划 Genesis · 开发攻略书</h1>
+              <p class="x-ch__sub x-rise">第一卷 · 七星点亮 ｜ 一份写给开发分享会的通关记录</p>
+              <p class="x-lead x-rise" style="margin-top: 20px">
+                把世界当成一款游戏来拆解。让一个普通人,用玩游戏的热情,在一生中走过人类知识的全图。
+              </p>
+              <p class="x-ch__meta x-rise">总指挥 王磊 × AI 协作团队 · 2026 年 10 月 · kevin8634.github.io</p>
+              <div class="x-panel x-rise" style="margin-top: 28px">
+                <div class="x-stats">
+                  <div class="x-stat"><span class="x-stat__fig">7</span><span class="x-stat__label">个世界全部上线</span></div>
+                  <div class="x-stat"><span class="x-stat__fig">22</span><span class="x-stat__label">座星桥</span></div>
+                  <div class="x-stat"><span class="x-stat__fig">v0.8.1.3</span><span class="x-stat__label">门户版本</span></div>
+                  <div class="x-stat"><span class="x-stat__fig">~7 天</span><span class="x-stat__label">10-15 至 10-21</span></div>
+                  <div class="x-stat"><span class="x-stat__fig">8</span><span class="x-stat__label">协作项目窗口(1 总指挥 + 7 分支)</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="x-ch x-stars-bg" id="intro" data-nav="序章" style="--accent: #8fb6ff">
+          <div class="x-wrap">
+            <div class="x-col">
+              <p class="x-ch__kicker x-rise">Prologue / 序章</p>
+              <h2 class="x-ch__title x-rise">这本书怎么读</h2>
+              <p class="x-lead x-rise">
+                这不是论文,是一份通关笔记:我们做了什么、为什么这样做、踩了哪些坑、怎样和 AI 一起把七个世界点亮。
+              </p>
+              <div class="x-tip x-rise">
+                <span class="x-tip__label">阅读路线</span>
+                <p>第一章 门户与世界观 → 第二至八章 七个世界攻略 → 第九章 咒语书(提示词)→ 第十章 人与 AI 协作心法 → 终章 下一卷预告。</p>
+              </div>
+            </div>
+            <div class="x-grid x-rise" style="margin-top: 28px">
+              <div class="x-card x-card--accent">
+                <p class="x-eyebrow">传统做法 → 创世计划</p>
+                <h4>按年龄切学段 → 无年级</h4>
+                <p>知识是一张图,不是一条按生日排好的队。</p>
+              </div>
+              <div class="x-card x-card--accent">
+                <p class="x-eyebrow">传统做法 → 创世计划</p>
+                <h4>先讲公式再练习 → 问题先行</h4>
+                <p>先遇到问题,再发明工具。</p>
+              </div>
+              <div class="x-card x-card--accent">
+                <p class="x-eyebrow">传统做法 → 创世计划</p>
+                <h4>文字符号为主 → 非文字优先</h4>
+                <p>2D/3D 可视化、可操作模拟、声音先上场。</p>
+              </div>
+              <div class="x-card x-card--accent">
+                <p class="x-eyebrow">传统做法 → 创世计划</p>
+                <h4>刷题提分 → 向导只提问</h4>
+                <p>向导不给答案,我们永远不变成刷题网站。</p>
+              </div>
+            </div>
+            <p class="x-ch__meta x-rise" style="margin-top: 20px">
+              灵感之一:Ad Astra / Astra Nova 一类按问题和能力组织学习的学校。
+            </p>
+          </div>
+        </section>
+
+        <section class="x-ch" id="portal" data-nav="门户" style="--accent: #ffbe5c">
+          <div class="x-ch__bg" style="background-image: url('bg_portal.jpg')"></div>
+          <div class="x-wrap">
+            <div class="x-col">
+              <p class="x-ch__kicker x-rise">Chapter 01 / 第一章</p>
+              <h2 class="x-ch__title x-rise">总门户:北斗七星与星桥</h2>
+              <p class="x-ch__sub x-rise">七个世界排成北斗七星,用跨学科的「星桥」连成一张总图。</p>
+            </div>
+            <div class="x-grid x-grid--2 x-rise" style="margin-top: 32px">
+              <div class="x-panel" style="background: rgba(14, 14, 40, 0.66)">
+                <p class="x-eyebrow">游戏规则书</p>
+                <h3 class="x-h3">创世七律</h3>
+                <ol class="x-rules">
+                  <li><b>一问一世界</b>:任务以生活化问题命名,不以知识点命名。</li>
+                  <li><b>规则可改</b>:不是看世界,而是改世界。</li>
+                  <li><b>一张总图</b>:每个世界有 3D 知识图谱,并通过「星桥」相连。</li>
+                  <li><b>向导只提问</b>:分级提示,不直接给答案。</li>
+                  <li><b>非文字优先</b>:每关文字不超过一屏。</li>
+                  <li><b>声音即规律</b>:程序合成声景,由学科规律驱动。</li>
+                  <li><b>零门槛零打扰</b>:免费免注册,不刷题、不排名、不制造焦虑,未成年人隐私默认最高保护。</li>
+                </ol>
+              </div>
+              <div style="display: grid; gap: 14px; align-content: start">
+                <div class="x-panel" style="background: rgba(14, 14, 40, 0.66)">
+                  <p class="x-eyebrow">门户创意</p>
+                  <ul class="x-gear">
+                    <li><b>星桥</b>:跨学科的任务连接。星图「传染病」⇄ 生命源码「病毒」;宙律「声音」⇄ 星图「和弦」;元素工坊「恒星」⇄ 天枢「此刻你在宇宙哪里」。</li>
+                    <li><b>星历</b>:写给学习者的更新日志。</li>
+                    <li><b>护照</b>:记录你走过的世界。</li>
+                    <li><b>关于弹层</b>:「全息北斗星盘」——王磊从三个效果图方向里选了 C。</li>
+                  </ul>
+                </div>
+                <div class="x-panel" style="background: rgba(14, 14, 40, 0.66)">
+                  <p class="x-eyebrow">职业等级 · 年龄四段</p>
+                  <div class="x-tags">
+                    <span class="x-tag">星芽 7–11</span>
+                    <span class="x-tag">星火 12–15</span>
+                    <span class="x-tag">星辰 16–22</span>
+                    <span class="x-tag">星河 23+</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="x-panel x-rise" style="margin-top: 14px; background: rgba(14, 14, 40, 0.66); max-width: 820px">
+              <p class="x-eyebrow">门户版本时间线</p>
+              <ol class="x-tl">
+                <li><span class="x-tl__when">v0.3</span>生命源码点亮</li>
+                <li><span class="x-tl__when">v0.3.9</span>宙律上线</li>
+                <li><span class="x-tl__when">v0.4.0</span>首屏「最新更新」区</li>
+                <li><span class="x-tl__when">v0.7.x</span>元素工坊点亮</li>
+                <li><span class="x-tl__when">v0.8.x</span>七星全亮</li>
+                <li><span class="x-tl__when">v0.8.1.3 · 10-21</span>星历补齐</li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        <section class="x-ch" id="math" data-nav="星图" style="--accent: #7fd3ff">
+          <div class="x-ch__bg" style="background-image: url('bg_01_math.jpg')"></div>
+          <div class="x-wrap">
+            <div class="x-col">
+              <p class="x-ch__kicker x-rise">Chapter 02 / 第二章 · World 01</p>
+              <h2 class="x-ch__title x-rise">星图 Math Atlas · 数学</h2>
+              <p class="x-ch__sub x-rise">核心隐喻:星空地图——用 197 颗知识星、9 个星座替代课本目录。</p>
+              <div class="x-panel x-rise">
+                <div class="x-tags"><span class="x-tag">已上线 v0.7</span><span class="x-tag x-tag--plain">系列的「第一颗星」</span></div>
+                <div class="x-stats">
+                  <div class="x-stat"><span class="x-stat__fig">10</span><span class="x-stat__label">个任务</span></div>
+                  <div class="x-stat"><span class="x-stat__fig">55</span><span class="x-stat__label">关</span></div>
+                  <div class="x-stat"><span class="x-stat__fig">197</span><span class="x-stat__label">颗知识星 · 9 个星座</span></div>
+                </div>
+                <p>它验证了整个方法论。</p>
+              </div>
+              <div class="x-panel x-rise">
+                <p class="x-eyebrow">代表关卡 · 问题即关名</p>
+                <ul class="x-gear">
+                  <li>先拿的人一定赢吗(巴什博弈)</li>
+                  <li>为什么蜜蜂选六边形</li>
+                  <li>导航怎么找最短的路(Dijkstra)</li>
+                  <li>怎样把秘密藏进数字里(凯撒→RSA)</li>
+                  <li>为什么有的和弦好听(频率比/傅里叶)</li>
+                  <li>让 AI 认出一只猫(神经网络)</li>
+                  <li>赌场为什么总赢(概率/期望/赌徒破产)</li>
+                  <li><b>v0.7 新增</b>:火箭、魔方</li>
+                </ul>
+              </div>
+              <div class="x-panel x-rise">
+                <p class="x-eyebrow">装备 · 创意亮点</p>
+                <ul class="x-gear">
+                  <li><b>11 首</b>浏览器实时合成的专注音乐,每首背后一个数学规律:随机游走低音、读取 π 的旋律。</li>
+                  <li>向导是只提问的动物博士。</li>
+                </ul>
+              </div>
+              <div class="x-tip x-rise">
+                <span class="x-tip__label">攻略要点</span>
+                <p>内容产能已不是瓶颈,质量验证(真人试玩)才是。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="x-ch" id="physics" data-nav="宙律" style="--accent: #a98bff">
+          <div class="x-ch__bg" style="background-image: url('bg_02_physics.jpg')"></div>
+          <div class="x-wrap">
+            <div class="x-col">
+              <p class="x-ch__kicker x-rise">Chapter 03 / 第三章 · World 02</p>
+              <h2 class="x-ch__title x-rise">宙律 Nomoverse · 物理</h2>
+              <p class="x-ch__sub x-rise">核心隐喻:可编辑的宇宙——改写物理常数,看宇宙怎么变。</p>
+              <div class="x-panel x-rise">
+                <div class="x-tags"><span class="x-tag">已上线 v0.3-α2.1</span></div>
+                <div class="x-stats">
+                  <div class="x-stat"><span class="x-stat__fig">3</span><span class="x-stat__label">个任务:轨道、声音、投篮</span></div>
+                  <div class="x-stat"><span class="x-stat__fig">13</span><span class="x-stat__label">关</span></div>
+                  <div class="x-stat"><span class="x-stat__fig">48/48</span><span class="x-stat__label">物理内核测试通过</span></div>
+                </div>
+                <div class="x-barrow">
+                  <div class="x-barrow__top"><span>物理内核测试</span><span>100%</span></div>
+                  <div class="x-bar"><i style="--w: 100%"></i></div>
+                </div>
+              </div>
+              <div class="x-panel x-rise">
+                <p class="x-eyebrow">装备 · 亮点</p>
+                <ul class="x-gear">
+                  <li>首页 3D「宇宙尺度星图」</li>
+                  <li>7 秒「引力之海 × 尺度穿梭」开场</li>
+                  <li>轨道任务 3D 舞台</li>
+                  <li>向导是三枚无五官的科学仪器徽标:夸克 / 黑洞 / 引力波</li>
+                </ul>
+              </div>
+              <div class="x-tip x-rise">
+                <span class="x-tip__label">灵感</span>
+                <p>如果你能拧动引力的旋钮,空间站还会绕地球转吗?</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="x-ch" id="chem" data-nav="元素工坊" style="--accent: #ffa640">
+          <div class="x-ch__bg" style="background-image: url('bg_03_chem.jpg')"></div>
+          <div class="x-wrap">
+            <div class="x-col">
+              <p class="x-ch__kicker x-rise">Chapter 04 / 第四章 · World 03</p>
+              <h2 class="x-ch__title x-rise">元素工坊 Element Forge · 化学</h2>
+              <p class="x-ch__sub x-rise">核心隐喻:恒星熔炉与工坊——配方即反应。</p>
+              <div class="x-panel x-rise">
+                <div class="x-tags"><span class="x-tag">已上线 v0.3</span><span class="x-tag x-tag--plain">沉浸化迭代规范 · 样板世界</span></div>
+                <div class="x-stats">
+                  <div class="x-stat"><span class="x-stat__fig">4 关</span><span class="x-stat__label">「你身体里的铁是从哪颗星来的?」</span></div>
+                  <div class="x-stat"><span class="x-stat__fig">4 关</span><span class="x-stat__label">「碳」</span></div>
+                  <div class="x-stat"><span class="x-stat__fig">7 档</span><span class="x-stat__label">尺度镜</span></div>
+                </div>
+              </div>
+              <div class="x-panel x-rise">
+                <p class="x-eyebrow">装备 · 亮点</p>
+                <ul class="x-gear">
+                  <li><b>约 7 秒熔炉开场</b>:星尘塌缩 → 恒星点燃 → 穿越恒星洋葱层 → 四个氢核聚变 →「元素工坊」烙印。</li>
+                  <li><b>尺度镜七档</b>:恒星 / 火星 / 紫甘蓝烧杯 / 金刚石晶格 / 甲烷分子 / 碳原子电子云 / 铁-56 原子核。</li>
+                  <li>元素起源周期表 3D 台面。</li>
+                  <li><b>做题时的 3D 背景随关卡变化</b>:恒星长出铁核心直到爆发;石墨层滑动再压成金刚石。</li>
+                  <li>向导「工坊七匠」。</li>
+                </ul>
+              </div>
+              <div class="x-tip x-rise">
+                <span class="x-tip__label">灵感来源 · 恒星核合成</span>
+                <p>你身体里的每一个铁原子,都曾在一颗大质量恒星的核心里被锻造。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="x-ch" id="bio" data-nav="生命源码" style="--accent: #2fe39a">
+          <div class="x-ch__bg" style="background-image: url('bg_04_bio.jpg')"></div>
+          <div class="x-wrap">
+            <div class="x-col">
+              <p class="x-ch__kicker x-rise">Chapter 05 / 第五章 · World 04</p>
+              <h2 class="x-ch__title x-rise">生命源码 Life Source · 生物</h2>
+              <p class="x-ch__sub x-rise">核心隐喻:生命是一段代码——读、改、调试生命的「源码」。</p>
+              <div class="x-panel x-rise">
+                <div class="x-tags"><span class="x-tag">已上线 v0.6</span><span class="x-tag x-tag--plain">5 个任务</span></div>
+                <ul class="x-gear">
+                  <li>四个字母怎么写出一个人 <code>dna</code></li>
+                  <li>遗传 <code>parents</code></li>
+                  <li>斑马 <code>zebra</code></li>
+                  <li>病毒 <code>virus</code></li>
+                  <li>狼 <code>wolf</code></li>
+                </ul>
+              </div>
+              <div class="x-panel x-rise">
+                <p class="x-eyebrow">向导「源码五灵」· 以生物前沿名词命名</p>
+                <div class="x-tags">
+                  <span class="x-tag">卡丝 Cas · CRISPR · 首席</span>
+                  <span class="x-tag x-tag--plain">艾比 Epi · 表观遗传</span>
+                  <span class="x-tag x-tag--plain">阿古 aDNA · 古 DNA</span>
+                  <span class="x-tag x-tag--plain">菲吉 Phage · 噬菌体</span>
+                  <span class="x-tag x-tag--plain">伊蒂 eDNA · 环境 DNA</span>
+                </div>
+              </div>
+              <div class="x-panel x-rise">
+                <p class="x-eyebrow">装备 · 亮点</p>
+                <ul class="x-gear">
+                  <li>粒子开场「编译生命」</li>
+                  <li>一镜到底:从指纹放大到碱基对</li>
+                  <li>生命显微镜头模块 · 生命尺度图谱</li>
+                  <li>关卡螺旋地图与源码卡收集</li>
+                  <li>原创 BGM(默认关)</li>
+                </ul>
+              </div>
+              <div class="x-panel x-rise">
+                <p class="x-eyebrow">迭代节奏 · 一天内六个版本</p>
+                <ol class="x-tl">
+                  <li><span class="x-tl__when">v0.1</span>入口与图谱</li>
+                  <li><span class="x-tl__when">v0.2</span>三个新任务 + 32 处科学复核修订</li>
+                  <li><span class="x-tl__when">v0.3</span>新开场与配乐</li>
+                  <li><span class="x-tl__when">v0.4</span>开场门屏与显微镜头</li>
+                  <li><span class="x-tl__when">v0.5</span>尺度图谱焕新</li>
+                  <li><span class="x-tl__when">v0.6</span>关卡地图与源码卡</li>
+                </ol>
+              </div>
+              <div class="x-tip x-rise">
+                <span class="x-tip__label">王磊定下的价值观</span>
+                <p>保持真实,求知而非刻意隐瞒;在合适处标注用于知识学习和科研,不涉及暴力血腥,保持理性。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="x-ch" id="si" data-nav="奇点前夜" style="--accent: #36d6d6">
+          <div class="x-ch__bg" style="background-image: url('bg_05_si.jpg')"></div>
+          <div class="x-wrap">
+            <div class="x-col">
+              <p class="x-ch__kicker x-rise">Chapter 06 / 第六章 · World 05</p>
+              <h2 class="x-ch__title x-rise">奇点前夜 Pre-Singularity · 超级智能</h2>
+              <p class="x-ch__sub x-rise">核心隐喻:奇点之前的黎明——亲手训练、测试、约束 AI。</p>
+              <div class="x-panel x-rise">
+                <div class="x-tags"><span class="x-tag">已上线 v0.6.1</span></div>
+                <div class="x-stats">
+                  <div class="x-stat"><span class="x-stat__fig">10</span><span class="x-stat__label">个任务</span></div>
+                  <div class="x-stat"><span class="x-stat__fig">29</span><span class="x-stat__label">关</span></div>
+                  <div class="x-stat"><span class="x-stat__fig">30</span><span class="x-stat__label">颗知识神经元</span></div>
+                  <div class="x-stat"><span class="x-stat__fig">101 秒</span><span class="x-stat__label">宣传片</span></div>
+                </div>
+              </div>
+              <div class="x-panel x-rise">
+                <p class="x-eyebrow">装备 · 亮点</p>
+                <ul class="x-gear">
+                  <li>AI 伙伴「萤」</li>
+                  <li>四层 AI 程度由学习者自选</li>
+                  <li><b>离线小模型</b> Qwen2.5-0.5B,WebGPU,在浏览器本地运行;也可自带钥匙</li>
+                  <li>黎明证书</li>
+                </ul>
+              </div>
+              <div class="x-tip x-rise">
+                <span class="x-tip__label">原则</span>
+                <p>未成年人 AI 默认关;学的是「超级智能 SI」,不是只会用工具。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="x-ch" id="mind" data-nav="觉弈" style="--accent: #e8c46a">
+          <div class="x-ch__bg" style="background-image: url('bg_06_mind.jpg')"></div>
+          <div class="x-wrap">
+            <div class="x-col">
+              <p class="x-ch__kicker x-rise">Chapter 07 / 第七章 · World 06</p>
+              <h2 class="x-ch__title x-rise">觉弈 Ludoterra · 认知觉醒</h2>
+              <p class="x-ch__sub x-rise">核心隐喻:破茧觉醒的心智——「地球 Online 玩家手册」。</p>
+              <div class="x-panel x-rise">
+                <div class="x-tags"><span class="x-tag">已上线 v0.20.1</span><span class="x-tag x-tag--plain">星桥最多 · 6 座</span></div>
+                <p class="x-eyebrow">7 个关卡</p>
+                <div class="x-tags">
+                  <span class="x-tag x-tag--plain">复利</span><span class="x-tag x-tag--plain">囚徒困境</span><span class="x-tag x-tag--plain">沉没成本</span>
+                  <span class="x-tag x-tag--plain">信息茧房</span><span class="x-tag x-tag--plain">幸存者偏差</span><span class="x-tag x-tag--plain">天性与教养</span>
+                  <span class="x-tag x-tag--plain">意义</span>
+                </div>
+              </div>
+              <div class="x-panel x-rise">
+                <p class="x-eyebrow">装备 · 亮点</p>
+                <ul class="x-gear">
+                  <li><b>金属鎏金星盘</b>:逐像素着色器,真实反射与星闪</li>
+                  <li>约 4 秒「跃迁坠落」进入星球动画</li>
+                  <li>音乐播放条与曲目 00–06</li>
+                </ul>
+              </div>
+              <div class="x-tip x-rise">
+                <span class="x-tip__label">灵感</span>
+                <p>把人生和社会的机制当成游戏规则来看懂,做出更清醒的选择。它是星桥最多的世界(6 座),连着数学、生物和超级智能。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="x-ch" id="astro" data-nav="天枢" style="--accent: #7ea6ff">
+          <div class="x-ch__bg" style="background-image: url('bg_07_astro.jpg')"></div>
+          <div class="x-wrap">
+            <div class="x-col">
+              <p class="x-ch__kicker x-rise">Chapter 08 / 第八章 · World 07</p>
+              <h2 class="x-ch__title x-rise">天枢 Starhelm · 天文</h2>
+              <p class="x-ch__sub x-rise">核心隐喻:驾驶「弦穹号」做星际航行,同时用真实数据看地球。</p>
+              <div class="x-panel x-rise">
+                <div class="x-tags"><span class="x-tag">已上线 v0.5.2</span><span class="x-tag x-tag--plain">由 Live Earth 2.1 实时 3D 地球改造</span></div>
+                <ul class="x-gear">
+                  <li>驾驶舱与领航员「星璃」、登舰动画、指令台、全息航图</li>
+                  <li>月相与日月食实验室</li>
+                  <li><b>地球之眼</b>:台风太空俯视云系、极光与 Kp 指数(公开机构数据)</li>
+                  <li>向导「天枢七星」</li>
+                </ul>
+              </div>
+              <div class="x-tip x-rise">
+                <span class="x-tip__label">下一关 · M1.8b 真实卫星云图</span>
+                <p>台风用 10 分钟间隔的连续帧播放,做出真实旋转。</p>
+              </div>
+              <div class="x-tip x-rise">
+                <span class="x-tip__label">原则</span>
+                <p>航班层是示意航线,不称实时航班;定位默认关、只在本机计算。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="x-ch" id="spells" data-nav="咒语书" style="--accent: #ffbe5c">
+          <div class="x-ch__bg" style="background-image: url('bg_prompt.jpg')"></div>
+          <div class="x-wrap">
+            <div class="x-col">
+              <p class="x-ch__kicker x-rise">Chapter 09 / 第九章</p>
+              <h2 class="x-ch__title x-rise">咒语书:提示词的炼成</h2>
+              <p class="x-lead x-rise">
+                好的提示词像游戏里的咒语:<b>目标、约束、验收标准、放权边界</b>,四个元素齐了就能一次生效。以下是本次开发里王磊最出彩的几句「原咒语」,以及我们建议的「强化咒语」。
+              </p>
+            </div>
+
+            <div style="display: grid; gap: 18px; margin-top: 32px; max-width: 980px">
+              <article class="x-panel x-spell x-rise">
+                <div class="x-spell__head"><span class="x-spell__no">咒语 ①</span><span class="x-spell__name">示意图与向导命名</span><span class="x-stars" aria-label="五星">★★★★★</span></div>
+                <div class="x-spell__body">
+                  <div class="x-spell__side">
+                    <p class="x-eyebrow">原咒语</p>
+                    <blockquote>「给我几份开发示意图,你做好向导的名字定位,以生物前沿名词为准……我希望开发出来的效果多以动画的形式表达,比如基因螺旋的旋转动画,一镜到底的放大效果……你给出建议以及对我的想法进行改良或纠错。」</blockquote>
+                  </div>
+                  <div class="x-spell__side">
+                    <p class="x-eyebrow">强化咒语</p>
+                    <p>「为生命源码出 3 张开发示意图(首页、任务页、向导家族)。向导以生物前沿名词命名,5 位以内。动画优先:基因螺旋旋转、一镜到底放大到碱基对。请先指出我想法里不合理的地方再给方案;只出方案和图,不写代码。」</p>
+                  </div>
+                </div>
+                <div class="x-spell__foot">
+                  <p><b>为什么出彩</b> · 给了具体画面,还主动邀请纠错。</p>
+                  <p><b>可补强</b> · 数量、交付物和「只出方案」的边界。</p>
+                </div>
+              </article>
+
+              <article class="x-panel x-spell x-rise">
+                <div class="x-spell__head"><span class="x-spell__no">咒语 ②</span><span class="x-spell__name">决策清单</span><span class="x-stars" aria-label="五星">★★★★★</span></div>
+                <div class="x-spell__body">
+                  <div class="x-spell__side">
+                    <p class="x-eyebrow">原咒语</p>
+                    <blockquote>「用『源码五灵』替换章鱼博士和蝙蝠博士;动画技术改用 WebGL + Three.js;虚拟显微镜、实验台、草莓实验卡进入 M1;……遗传任务保留人类性状,保持真实,求知而非刻意隐瞒。」</blockquote>
+                  </div>
+                  <div class="x-spell__side">
+                    <p class="x-eyebrow">强化咒语</p>
+                    <p>保持「决策清单」格式,每条加编号,并加一句「以上全部确认,按此执行;未提到的项按你的建议」。</p>
+                  </div>
+                </div>
+                <div class="x-spell__foot">
+                  <p><b>为什么出彩</b> · 一次拍板多项决策,还给出价值观,AI 可以直接执行。</p>
+                  <p><b>可补强</b> · 编号便于回溯。</p>
+                </div>
+              </article>
+
+              <article class="x-panel x-spell x-rise">
+                <div class="x-spell__head"><span class="x-spell__no">咒语 ③</span><span class="x-spell__name">放权</span><span class="x-stars" aria-label="四星">★★★★☆</span></div>
+                <div class="x-spell__body">
+                  <div class="x-spell__side">
+                    <p class="x-eyebrow">原咒语</p>
+                    <blockquote>「这次你直接按你的想法来,要求就是希望足够吸引人,不要太简单。」</blockquote>
+                  </div>
+                  <div class="x-spell__side">
+                    <p class="x-eyebrow">强化咒语</p>
+                    <p>「开场动画这次由你全权设计。标准:8 秒内抓住人、可跳过、手机不卡、默认静音。做完直接上线,我真机看。」</p>
+                  </div>
+                </div>
+                <div class="x-spell__foot">
+                  <p><b>为什么出彩</b> · 敢放权,反而得到了满意的开场。</p>
+                  <p><b>可补强</b> · 把「吸引人」翻译成可检查的标准。</p>
+                </div>
+              </article>
+
+              <article class="x-panel x-spell x-rise">
+                <div class="x-spell__head"><span class="x-spell__no">咒语 ④</span><span class="x-spell__name">结构化反馈</span><span class="x-stars" aria-label="五星">★★★★★</span></div>
+                <div class="x-spell__body">
+                  <div class="x-spell__side">
+                    <p class="x-eyebrow">原咒语</p>
+                    <blockquote>「进入时动画很满意,不过缺乏音乐,下个版本补上。另外把一镜到底的指纹那部分动画放在进入生命图谱上方,按钮换一个效果酷炫的模块……你构思下然后设计出来。」</blockquote>
+                  </div>
+                  <div class="x-spell__side">
+                    <p class="x-eyebrow">强化咒语</p>
+                    <p>保持「先肯定 → 缺什么 → 放在哪个版本 → 换什么」的结构,结尾加「给我 2–3 个方向的效果图选」。</p>
+                  </div>
+                </div>
+                <div class="x-spell__foot">
+                  <p><b>为什么出彩</b> · 反馈结构清楚,放进了版本节奏。</p>
+                </div>
+              </article>
+
+              <div class="x-grid x-grid--2 x-rise">
+                <div class="x-panel">
+                  <p class="x-eyebrow">咒语 ⑤ · 选择题</p>
+                  <p style="color: var(--x-ink)">「构思关于创世计划按钮内的创意……做好三个创意方向然后用图片展示给我,由我选择开发方向。」</p>
+                  <p><b style="color: var(--x-ink)">为什么出彩</b> · 把开放问题变成选择题——人负责选择,AI 负责发散。王磊后来选了 C(全息北斗星盘)。</p>
+                </div>
+                <div class="x-panel">
+                  <p class="x-eyebrow">咒语 ⑥ · 风险规则</p>
+                  <p style="color: var(--x-ink)">「开发任务时,每完成一个项目就先上传,注意额度使用,若即将耗尽要保留返回进度,网盘保存……避免开发一半工程文件无法交接。」</p>
+                  <p><b style="color: var(--x-ink)">为什么出彩</b> · 提前设定风险规则,后来多次换账号都能无缝接手。</p>
+                </div>
+                <div class="x-panel">
+                  <p class="x-eyebrow">咒语 ⑦ · 验收基准</p>
+                  <p style="color: var(--x-ink)">「比对 06_生命尺度图谱.jpg 的差异,需要再优化。」</p>
+                  <p><b style="color: var(--x-ink)">为什么出彩</b> · 用效果图当验收基准,比「再好看一点」精确十倍。</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="x-col" style="margin-top: 44px">
+              <h3 class="x-h3 x-rise">Boss 战 · 可以更好的地方</h3>
+            </div>
+            <div class="x-grid x-rise" style="margin-top: 16px; max-width: 980px">
+              <div class="x-boss"><span class="x-boss__label">「OK 继续」</span><p>说清继续哪一项、到哪里停。</p></div>
+              <div class="x-boss"><span class="x-boss__label">「按你的建议执行」</span><p>列出你同意的是哪几条。</p></div>
+              <div class="x-boss"><span class="x-boss__label">「继续迭代」→「停止」</span><p>先说清停的原因和要保留的进度。</p></div>
+            </div>
+
+            <div class="x-col" style="margin-top: 44px">
+              <h3 class="x-h3 x-rise">咒语卷轴 · 六张可复制模板</h3>
+            </div>
+            <div class="x-grid x-grid--2" style="margin-top: 16px; max-width: 980px">
+              <div class="x-panel x-tpl x-rise">
+                <div class="x-tpl__head"><h4>T1 新世界立项</h4><button class="x-copy" type="button" data-target="t1">复制</button></div>
+                <pre id="t1">为【世界名·学科】出立项方案:核心隐喻一句话;3 个以问题命名的首批任务;向导家族(命名规则:___);主色;与哪些世界可架星桥。只出方案,不写代码。</pre>
+              </div>
+              <div class="x-panel x-tpl x-rise">
+                <div class="x-tpl__head"><h4>T2 效果图选择</h4><button class="x-copy" type="button" data-target="t2">复制</button></div>
+                <pre id="t2">为【模块】出 3 个差异明显的创意方向,每个一张效果图 + 三句话说明(体验、技术难度、风险)。我选定后再开发。</pre>
+              </div>
+              <div class="x-panel x-tpl x-rise">
+                <div class="x-tpl__head"><h4>T3 迭代反馈</h4><button class="x-copy" type="button" data-target="t3">复制</button></div>
+                <pre id="t3">本版【满意的地方】。需要改:1.___ 2.___。放进 v___。验收标准:与【效果图文件名】对照 / 手机 375 宽不遮挡 / 默认静音。</pre>
+              </div>
+              <div class="x-panel x-tpl x-rise">
+                <div class="x-tpl__head"><h4>T4 放权授权</h4><button class="x-copy" type="button" data-target="t4">复制</button></div>
+                <pre id="t4">【模块】这次由你全权设计。硬标准:___。范围仅限【子目录】。自测通过后可直接上线,上线后告诉我版本号和额度。</pre>
+              </div>
+              <div class="x-panel x-tpl x-rise">
+                <div class="x-tpl__head"><h4>T5 交接与额度</h4><button class="x-copy" type="button" data-target="t5">复制</button></div>
+                <pre id="t5">额度剩 ___% 时停下:写开发日志、打包工程、同步云盘、更新交接文档,并告诉我下一步从哪里接。</pre>
+              </div>
+              <div class="x-panel x-tpl x-rise">
+                <div class="x-tpl__head"><h4>T6 总指挥同步</h4><button class="x-copy" type="button" data-target="t6">复制</button></div>
+                <pre id="t6">同步云盘与 GitHub 最新进度,以工程包为准,列出各世界线上版本、星历缺口和待我决定的事项,先汇报再改线上。</pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="x-ch x-ch--mid" id="collab" data-nav="协作心法" style="--accent: #8fb6ff">
+          <div class="x-ch__bg" style="background-image: url('bg_collab.jpg'); background-position: center"></div>
+          <div class="x-wrap">
+            <div class="x-col">
+              <p class="x-ch__kicker x-rise">Chapter 10 / 第十章</p>
+              <h2 class="x-ch__title x-rise">人与 AI 协作心法</h2>
+              <p class="x-ch__sub x-rise">一位制作人,一个总指挥窗口,七支开发小队,外加一位科学审校。</p>
+            </div>
+            <div class="x-grid x-rise" style="margin-top: 28px">
+              <div class="x-panel"><p class="x-eyebrow">制作人 / 总设计</p><h4>王磊</h4><p>定方向、做选择、守价值观。</p></div>
+              <div class="x-panel"><p class="x-eyebrow">项目经理</p><h4>总指挥窗口</h4><p>门户、星历、星桥、规范、交接。</p></div>
+              <div class="x-panel"><p class="x-eyebrow">七支开发小队</p><h4>7 个分支窗口</h4><p>各管一个世界的子目录。</p></div>
+              <div class="x-panel"><p class="x-eyebrow">科学审校</p><h4>专业 AI</h4><p>独立复核内容;生命源码 v0.2 一次修订 32 处。</p></div>
+            </div>
+
+            <div class="x-grid x-grid--2" style="margin-top: clamp(140px, 22vw, 300px)">
+              <div class="x-panel x-rise" style="background: rgba(6, 10, 22, 0.8)">
+                <p class="x-eyebrow">心法七条</p>
+                <ol class="x-rules">
+                  <li><b>人定方向,AI 定实现</b>:愿景、取舍、价值观由人拍板;代码、动画、文档交给 AI。</li>
+                  <li><b>效果图先行</b>:先看图再写代码,改图的成本远低于改代码。</li>
+                  <li><b>云盘是共同记忆</b>:交接文档(HANDOFF)从 v1 写到 v3.14,任何新窗口读完就能接手。</li>
+                  <li><b>唯一真源</b>:代码只认 GitHub,文档只认云盘;推送前先拉最新版本、核对文件指纹。</li>
+                  <li><b>小步快跑</b>:一天六个版本,每版都能上线、能回滚。</li>
+                  <li><b>授权有边界</b>:可以「自测通过直接上线」,但只限自己的子目录;根目录和别人的世界必须问。</li>
+                  <li><b>额度也是资源</b>:提前留出上线与归档的额度,避免「开发一半无法交接」。</li>
+                </ol>
+              </div>
+              <div style="display: grid; gap: 12px; align-content: start" class="x-rise">
+                <h3 class="x-h3">Boss 战 · 踩过的坑</h3>
+                <div class="x-boss"><span class="x-boss__label">互相覆盖</span><p>多个窗口同时改总门户,差点互相覆盖 → 推送前拉最新 + 核对指纹。</p></div>
+                <div class="x-boss"><span class="x-boss__label">旧页面卡住</span><p>根目录离线缓存(Service Worker)导致旧页面卡住 → 改为自毁版,保留到 2027-04-17,各世界只能缓存自己的子目录。</p></div>
+                <div class="x-boss"><span class="x-boss__label">密钥外泄</span><p>密钥曾在聊天里出现 → 立即吊销更换,密钥只进保险库。</p></div>
+                <div class="x-boss"><span class="x-boss__label">星历漏记</span><p>星历有时漏记 → 以工程包为准定期对账(10-21 补记元素工坊 v0.3)。</p></div>
+              </div>
+            </div>
+            <div class="x-tip x-rise" style="margin-top: 24px; max-width: 820px; background: rgba(6, 10, 22, 0.8)">
+              <span class="x-tip__label">一句话</span>
+              <p style="color: var(--x-ink); font-size: 17px">AI 让「做出来」变得便宜,于是「想清楚要什么」和「验证它是否真的帮到学习者」成了最值钱的能力。</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="x-ch x-stars-bg x-stars-bg--amber" id="next" data-nav="下一卷" style="--accent: #ffbe5c">
+          <div class="x-wrap">
+            <div class="x-col">
+              <p class="x-ch__kicker x-rise">Epilogue / 终章</p>
+              <h2 class="x-ch__title x-rise">下一卷预告</h2>
+              <div class="x-panel x-rise">
+                <p class="x-eyebrow">待解锁</p>
+                <ul class="x-gear">
+                  <li>天枢「日月食实验室」的星桥对端</li>
+                  <li>门户关于弹层「全息北斗星盘」WebGL 版</li>
+                  <li>天枢 M1.8b 真实云图</li>
+                  <li>觉弈 v0.21 进入动画细化</li>
+                  <li>各世界按「沉浸化迭代规范」升级:学科主题开场、统一 HUD、性能三档</li>
+                  <li>星图开始 10–30 人真人试玩</li>
+                </ul>
+              </div>
+              <p class="x-ch__title x-rise" style="font-size: clamp(24px, 3.4vw, 36px); margin-top: 40px">学习从一个问题开始。<br />下一卷见。</p>
+            </div>
+          </div>
+        </section>
+      </main>
+      <div class="x-wrap">
+        <footer class="x-foot">
+          <p>创世计划 Genesis · 开发攻略书 第一卷 · <span style="font-family: var(--x-mono)">2026-10-21</span> · 免费、免注册、无广告。 · <a href="../" style="color:inherit">← 返回创世计划总门户</a></p>
+          <a class="badge" href="https://hark.com/" target="_blank" rel="noopener"><span class="hark-mark"></span><span>built by hark</span></a>
+        </footer>
+      </div>
+    </div>
+    <script src="hark.js"></script>
+    <script>
+      (function () {
+        var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var items = [].slice.call(document.querySelectorAll(".x-rise"));
+        if (reduce || !("IntersectionObserver" in window)) {
+          items.forEach(function (el) { el.classList.add("is-in"); });
+        } else {
+          var io = new IntersectionObserver(function (es) {
+            es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); } });
+          }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+          items.forEach(function (el) { io.observe(el); });
+        }
+        [].slice.call(document.querySelectorAll(".x-copy")).forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var pre = document.getElementById(btn.getAttribute("data-target"));
+            if (!pre) return;
+            var text = pre.textContent.trim(), copied = false;
+            clearTimeout(btn._t);
+            try {
+              var r = document.createRange(); r.selectNodeContents(pre);
+              var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+              copied = document.execCommand && document.execCommand("copy");
+            } catch (e) { /* selection blocked: the text stays on screen */ }
+            btn.textContent = copied ? "已复制" : "已选中,按 Ctrl/⌘+C";
+            pre.style.borderColor = "var(--accent)";
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () { btn.textContent = "已复制"; }, function () {});
+              }
+            } catch (e) { /* clipboard blocked in a sandbox: the selection is the fallback */ }
+            btn._t = setTimeout(function () { btn.textContent = "复制"; pre.style.borderColor = ""; }, 2400);
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>

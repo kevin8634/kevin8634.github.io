@@ -243,6 +243,8 @@
       .x-dev__id code { font: 600 14px/1 ui-monospace, monospace; letter-spacing: .06em; color: var(--gold); user-select: all; -webkit-user-select: all; }
       .x-dev__cp { min-height: 30px; padding: 0 14px; border-radius: 999px; border: 0; background: linear-gradient(90deg, var(--gold), #ffe7a8); color: #0a1030; font: 600 12px var(--sans); cursor: pointer; }
       .x-dev__cp:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+      .x-dev__book { display: inline-flex; align-items: center; min-height: 36px; margin-top: 10px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(233,199,121,.45); background: rgba(233,199,121,.08); color: var(--gold); font: 500 12.5px var(--sans); text-decoration: none; }
+      .x-dev__book:hover, .x-dev__book:focus-visible { background: rgba(233,199,121,.18); outline: none; }
       .x-dev__t em { display: block; margin-top: 8px; font-style: normal; font-size: 11.5px; color: rgba(234,240,255,.62); }
       .x-ab__dev { margin-top: 26px; } .x-ab__dev h3 { margin: 0 0 12px; }
       .modal.x-devm { width: min(480px, calc(100vw - 32px)); }
@@ -895,7 +897,7 @@
     <div class="modal x-devm" id="devM" role="dialog" aria-label="联系开发者">
       <button class="close" data-close aria-label="关闭">×</button>
       <h2>联系开发者</h2>
-      <div class="x-dev"><div class="x-dev__av"><img src="dev-avatar.webp?v=2" alt="开发者头像" width="240" height="240" loading="lazy"></div><div class="x-dev__t"><small>DEVELOPER · 领航员</small><b>创世计划开发者</b><p>想聊学习世界的点子、合作，或反馈问题，欢迎加我微信。</p><div class="x-dev__id"><span>微信</span><code>kevinwong8634</code><button type="button" class="x-dev__cp" data-copy="kevinwong8634" aria-label="复制微信号 kevinwong8634">复制</button></div><em>添加时请注明来意，例如「创世计划 · 合作」或「创世计划 · 反馈」。</em></div></div>
+      <div class="x-dev"><div class="x-dev__av"><img src="dev-avatar.webp?v=2" alt="开发者头像" width="240" height="240" loading="lazy"></div><div class="x-dev__t"><small>DEVELOPER · 领航员</small><b>创世计划开发者</b><p>想聊学习世界的点子、合作，或反馈问题，欢迎加我微信。</p><div class="x-dev__id"><span>微信</span><code>kevinwong8634</code><button type="button" class="x-dev__cp" data-copy="kevinwong8634" aria-label="复制微信号 kevinwong8634">复制</button></div><em>添加时请注明来意，例如「创世计划 · 合作」或「创世计划 · 反馈」。</em><a class="x-dev__book" href="handbook/">📖 我的开发心得 · 开发攻略书 第一卷 →</a></div></div>
     </div>
     <div class="modal" id="laws" role="dialog" aria-label="创世七律">
       <button class="close" data-close aria-label="关闭">×</button>
@@ -1014,11 +1016,11 @@
           </section>
           <section class="x-ab__dev" aria-labelledby="abDevH">
             <h3 id="abDevH">联系开发者</h3>
-            <div class="x-dev"><div class="x-dev__av"><img src="dev-avatar.webp?v=2" alt="开发者头像" width="240" height="240" loading="lazy"></div><div class="x-dev__t"><small>DEVELOPER · 领航员</small><b>创世计划开发者</b><p>想聊学习世界的点子、合作，或反馈问题，欢迎加我微信。</p><div class="x-dev__id"><span>微信</span><code>kevinwong8634</code><button type="button" class="x-dev__cp" data-copy="kevinwong8634" aria-label="复制微信号 kevinwong8634">复制</button></div><em>添加时请注明来意，例如「创世计划 · 合作」或「创世计划 · 反馈」。</em></div></div>
+            <div class="x-dev"><div class="x-dev__av"><img src="dev-avatar.webp?v=2" alt="开发者头像" width="240" height="240" loading="lazy"></div><div class="x-dev__t"><small>DEVELOPER · 领航员</small><b>创世计划开发者</b><p>想聊学习世界的点子、合作，或反馈问题，欢迎加我微信。</p><div class="x-dev__id"><span>微信</span><code>kevinwong8634</code><button type="button" class="x-dev__cp" data-copy="kevinwong8634" aria-label="复制微信号 kevinwong8634">复制</button></div><em>添加时请注明来意，例如「创世计划 · 合作」或「创世计划 · 反馈」。</em><a class="x-dev__book" href="handbook/">📖 我的开发心得 · 开发攻略书 第一卷 →</a></div></div>
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.8.2.2</b></span>
+            <span>创世计划总门户 <b>v0.8.2.3</b></span>
           </footer>
         </div>
       </div>
@@ -2877,6 +2879,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.2.3", d: "2026-10-21", t: "新增「开发心得」：在「联系开发者」里打开《开发攻略书 第一卷》，看七个世界是怎么做出来的。" },
         { w: "01", v: "v0.8.3", d: "2026-10-21", t: "十位向导都换上数学名词的新名字和新图标，从门户进来会无缝接上星图的开场动画。" },
         { w: "03", v: "v0.4.1", d: "2026-10-21", t: "晶体任务按化学审校全面修订，换上霜镜冷光舞台；扩展区新增 9 个金属新字，从门户进来画面无缝接上。" },
         { w: "05", v: "v0.8.3", d: "2026-10-21", t: "每个页面左上角都能一键回到创世计划门户，从门户坠入时画面无缝接上。" },
