@@ -224,3 +224,4 @@ body.voy-on .le-actions,body.voy-on .le-hud-top{visibility:hidden}
 .ec-ctl label{display:flex;align-items:center;gap:6px;flex:1;white-space:nowrap}
 .ec-ctl .ml-rng{min-width:80px}
 @media (max-width:760px){.ec-ctl{flex-wrap:wrap}.ec-ctl label{flex:1 1 45%}}
+@media (max-height:480px){.ml{padding:6px 10px;gap:5px}.ml-hd{padding-bottom:3px}.ml-hd small{display:none}.ml-hd b{font-size:15px}.ml-x{width:26px;height:26px}.ml-guide{padding:6px 10px;gap:4px}.ml-q{font-size:13px;line-height:1.4}.ml-c,.ml-ctl button,.ml-hint{padding:3px 9px;font-size:12px}.ml-gb{gap:6px}.ml-ctl{gap:6px;font-size:12px}}
