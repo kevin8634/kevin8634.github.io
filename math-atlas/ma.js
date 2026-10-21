@@ -516,7 +516,7 @@
     };
   })();
   window.MA_Music = Music;
-  function wantMusic() { return store.get("ma:music") !== "off"; }
+  function wantMusic() { return store.get("ma:music") === "on"; } /* v0.8:按系列规则 5.10,背景音乐默认关,只有用户开过才自动续播 */
   function toggleMusic() {
     if (Music.on()) { Music.stop(); store.set("ma:music", "off"); }
     else { store.set("ma:music", "on"); Music.start().catch(function () { note("点一下页面任意处，音乐就会响起"); }); }
