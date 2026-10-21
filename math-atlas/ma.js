@@ -523,6 +523,7 @@
   }
   function autoMusic() {
     if (!wantMusic()) return;
+    if (document.documentElement.hasAttribute("data-ma-gl")) return; /* v0.8.1:沉浸版主页由「星图序曲」接管,开场结束后再播 */
     Music.start().catch(function () {
       Music.setBlocked(true);
       var go = function (e) {
