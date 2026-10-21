@@ -177,11 +177,11 @@
         </section>
 
         <section class="section" id="play" data-nav="关卡">
-          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">熊猫教授在星图上等你。</p></div>
+          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">范畴论在星图上等你。</p></div>
           <div id="stage" class="x-panel">
             <div class="x-cat">
-              <div class="x-cat__face">🐼</div>
-              <div class="x-bubble">点开第 1 关「正方形的八种样子」。魔方能复原，秘密从一张卡片的对称开始。先猜，再动手。<small>熊猫教授只问问题，不直接给答案；连错两次才给提示。</small></div>
+              <div class="x-cat__face">🔺</div>
+              <div class="x-bubble">点开第 1 关「正方形的八种样子」。魔方能复原，秘密从一张卡片的对称开始。先猜，再动手。<small>范畴论只问问题，不直接给答案；连错两次才给提示。</small></div>
             </div>
           </div>
         </section>
@@ -560,7 +560,7 @@
       /* guide bubble helper */
       function guide(container, text, sub) {
         const wrap = document.createElement("div"); wrap.className = "x-cat";
-        wrap.innerHTML = `<div class="x-cat__face">🐼</div><div class="x-bubble" aria-live="polite"></div>`;
+        wrap.innerHTML = `<div class="x-cat__face">🔺</div><div class="x-bubble" aria-live="polite"></div>`;
         const b = wrap.querySelector(".x-bubble");
         const set = (t, s) => { b.innerHTML = ""; b.append(t); if (s) { const el = document.createElement("small"); el.textContent = s; b.append(el); } Audio_.play("squeak"); };
         set(text, sub); container.append(wrap);
@@ -665,7 +665,7 @@
       /* ===== LEVEL 1 · 正方形的八种样子 ===== */
       LEVELS.push({ id: 1, title: "正方形的八种样子", init(root, done) {
         const got = { r4: 0, all: 0, target: 0, quiz: 0 };
-        const T = [["r4", "连续转 4 次", "看看回到哪里"], ["all", "找出全部不同的摆法", "已找到 1 种"], ["target", "摆成右边的目标样子", "旋转 + 翻转"], ["quiz", "至少答对 2 道题", "连错两次，熊猫教授给提示"]];
+        const T = [["r4", "连续转 4 次", "看看回到哪里"], ["all", "找出全部不同的摆法", "已找到 1 种"], ["target", "摆成右边的目标样子", "旋转 + 翻转"], ["quiz", "至少答对 2 道题", "连错两次，范畴论给提示"]];
         const say = guide(root, "一张正方形卡片，只许旋转、翻面，摆回原来的框里。一共能摆出几种看起来不同的样子？", "先猜，再动手。");
         const paint = checklist(root, T, got);
         const rest = el("div", "x-sub");
@@ -717,7 +717,7 @@
       /* ===== LEVEL 2 · 先穿袜子再穿鞋 ===== */
       LEVELS.push({ id: 2, title: "先穿袜子再穿鞋", init(root, done) {
         const got = { order: 0, undo: 0, quiz: 0 };
-        const T = [["order", "比较「先转后翻」和「先翻后转」", "一样吗？"], ["undo", "撤销 3 局被打乱的卡片", "第 0 / 3 局"], ["quiz", "至少答对 2 道题", "连错两次，熊猫教授给提示"]];
+        const T = [["order", "比较「先转后翻」和「先翻后转」", "一样吗？"], ["undo", "撤销 3 局被打乱的卡片", "第 0 / 3 局"], ["quiz", "至少答对 2 道题", "连错两次，范畴论给提示"]];
         const say = guide(root, "早上先穿袜子，再穿鞋。晚上要脱下来，顺序是什么？", "这个问题和魔方有关系。");
         const paint = checklist(root, T, got);
         const rest = el("div", "x-sub");
@@ -786,7 +786,7 @@
       /* ===== LEVEL 3 · 洗几次回原样 ===== */
       LEVELS.push({ id: 3, title: "洗几次回原样", init(root, done) {
         const got = { back: 0, more: 0, quiz: 0 };
-        const T = [["back", "用洗法 A 洗回原样", "数一数洗了几次"], ["more", "再让两种洗法洗回原样", "B、C、D 任选"], ["quiz", "至少答对 2 道题", "连错两次，熊猫教授给提示"]];
+        const T = [["back", "用洗法 A 洗回原样", "数一数洗了几次"], ["more", "再让两种洗法洗回原样", "B、C、D 任选"], ["quiz", "至少答对 2 道题", "连错两次，范畴论给提示"]];
         const CARDS = ["🐼", "🦊", "🐧", "🐢", "🦉", "🐝", "🐳"], N = 7;
         const PRE = { A: [1, 2, 0, 4, 5, 6, 3], B: [1, 2, 3, 4, 5, 6, 0], C: [1, 0, 3, 2, 5, 4, 6], D: [1, 2, 0, 4, 3, 5, 6] };
         const say = guide(root, "7 张牌，按同一种方式（洗法 A）一直洗下去。最少洗几次，牌会回到最初的顺序？", "先猜，再洗。");
@@ -868,7 +868,7 @@
       /* ===== LEVEL 4 · 只动三块 ===== */
       LEVELS.push({ id: 4, title: "只动三块", init(root, done) {
         const got = { comm: 0, fix: 0, quiz: 0 };
-        const T = [["comm", "只让 3 块换位置，其余 6 块不动", "推一列、推一行，再撤回"], ["fix", "复原被打乱的 3 块", "挑战"], ["quiz", "至少答对 2 道题", "连错两次，熊猫教授给提示"]];
+        const T = [["comm", "只让 3 块换位置，其余 6 块不动", "推一列、推一行，再撤回"], ["fix", "复原被打乱的 3 块", "挑战"], ["quiz", "至少答对 2 道题", "连错两次，范畴论给提示"]];
         const say = guide(root, "九宫格只能整行、整列地推（推出去的那块从另一头回来）。能不能只让 3 块换位置，另外 6 块都不动？", "先猜。");
         const paint = checklist(root, T, got);
         const rest = el("div", "x-sub");
@@ -941,7 +941,7 @@
       const isSolved = (S) => Object.keys(FACE).every((nk) => new Set(S.filter((s) => s.n.join(",") === nk).map((s) => s.c)).size === 1);
       LEVELS.push({ id: 5, title: "BOSS 口袋魔方", init(root, done) {
         const got = { r1: 0, quiz: 0 };
-        const T = [["r1", "复原第 1 局", "每多复原一局多一颗星"], ["quiz", "至少答对 2 道题", "连错两次，熊猫教授给提示"]];
+        const T = [["r1", "复原第 1 局", "每多复原一局多一颗星"], ["quiz", "至少答对 2 道题", "连错两次，范畴论给提示"]];
         const ROUNDS = [["R", "U"], ["R", "U", "F′"], ["F", "R", "U′", "R′"]];
         const say = guide(root, "这是 2×2×2 口袋魔方，一共 3,674,160 种状态。我把它打乱了，打乱步骤写在上面。你能把它转回去吗？",
           "R = 右面顺时针，U = 上面，F = 前面；带 ′ 的是逆时针。顺时针指正对着那一面看。");
