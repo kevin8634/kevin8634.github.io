@@ -171,3 +171,8 @@ html[data-ma-webgl]:not([data-ma-gl]) #glBack { display: inline-flex; }
 @media (prefers-reduced-motion: reduce) {
   .hud-top, .hud-tasks, .hud-bar, .hud-guide { transition: none; }
 }
+
+/* v0.8.3 向导图标 = 3D 数学对象静帧 */
+.ht-em--img { background: radial-gradient(circle at 50% 50%, rgb(111 198 255 / .16), transparent 70%) !important; padding: 0; overflow: visible; }
+.ht-em--img img { width: 120%; height: 120%; margin: -10%; display: block; object-fit: contain; }
+.hc-gi { width: 18px; height: 18px; vertical-align: -4px; }
