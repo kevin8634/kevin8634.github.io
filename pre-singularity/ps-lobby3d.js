@@ -522,6 +522,7 @@ export function buildCore(stage, opts = {}) {
   return {
     update,
     state: st,
+    bg,   // v0.9:供 ps-penthouse.js 在套房开启时隐藏星云背景
     setMorph(v) { st.morphTarget = v; },
     skipIntro() { st.intro = 99; },
     replay() { st.intro = 0; },
