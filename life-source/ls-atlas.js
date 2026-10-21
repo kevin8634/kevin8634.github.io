@@ -70,12 +70,18 @@ const DECOR = [['⚛️', '🧪', '⚗️', '🔬'], ['🦠', '🧫', '🔵', '�
     const padTop = (narrow ? 120 : 64) * D, padBot = (narrow ? 110 : 70) * D;
     cx = W / 2; cy = padTop + (H - padTop - padBot) / 2;
     ry = narrow ? 1.0 : .46;
-    R = Math.min((W / 2 - (narrow ? -10 : 70) * D) / 1.0, (H - padTop - padBot) / 2 / ry / 1.0);
+    R = Math.min((W / 2 - (narrow ? -10 : 110) * D) / 1.0, (H - padTop - padBot) / 2 / ry / 1.0);
     R /= (.2 + 5 * .16) * 1.0; R *= 1.0;
   }
   const T = (x, y) => [(x - W / 2) * V.s + W / 2 + V.ox, (y - H / 2) * V.s + H / 2 + V.oy];
 
   function draw(now) {
+    raf = requestAnimationFrame(draw);
+    try { frame(now); } catch (e) { g.restore?.(); g.globalAlpha = 1; g.shadowBlur = 0; g.globalCompositeOperation = 'source-over'; if (!draw.warned) { draw.warned = true; console.warn('atlas frame', e); } }
+  }
+  // 全息生命之树(AI 生成原创底图,见 LICENSES.md);加载前用程序绘制的树
+  const treeImg = new Image(); treeImg.src = new URL('./img/atlas-tree.webp', import.meta.url).href;
+  function frame(now) {
     const rm = reducedMotion(), spin = rm ? 0 : now / 1000 * .012;
     // 平滑缩放到焦点层(滑杆=穿越尺度)
     if (focusT !== focus) focusT = focus;
@@ -109,7 +115,7 @@ const DECOR = [['⚛️', '🧪', '⚗️', '🔬'], ['🦠', '🧫', '🔵', '�
       return { ...st, X, Y, depth };
     });
     // 星座连线(同星座按角度相邻相连)
-    const fc = (hover || sel) && (hover || sel).s.con;
+    const fs = (hover && hover.s) || (sel && sel.s), fc = fs ? fs.con : null; // 修复:悬停星桥时 hover 没有 .s,曾导致整帧中断、星盘元素消失
     for (const k of conKeys) {
       const ps = pts.filter(p => p.s.con === k).sort((a, b) => a.s.layer - b.s.layer || a.a - b.a); if (ps.length < 2) continue;
       const lit = litCon && litCon(k), on = fc === k || lit; g.strokeStyle = on ? CONS[k].color + (fc && fc !== k ? '55' : 'dd') : `rgba(220,235,230,${fc ? .06 : .22})`; g.lineWidth = (on ? 1.8 : .8) * D;
@@ -119,6 +125,17 @@ const DECOR = [['⚛️', '🧪', '⚗️', '🔬'], ['🦠', '🧫', '🔵', '�
     }
     // 生命之树(中心):双螺旋树干 + 分枝 + 发光叶点
     const ts = Math.min(rx(1) * 1.2, ryOf(2) * 1.45) * V.s, sway = rm ? 0 : Math.sin(now / 2200) * .04, base = ccy + ryOf(0) * V.s * .95;
+    if (treeImg.complete && treeImg.naturalWidth) {
+      // 全息投影台
+      g.save(); g.globalCompositeOperation = 'lighter';
+      const pb = g.createRadialGradient(ccx, base, 0, ccx, base, rx(0) * V.s * .9); pb.addColorStop(0, 'rgba(110,231,183,.35)'); pb.addColorStop(1, 'rgba(52,211,153,0)');
+      g.fillStyle = pb; g.beginPath(); g.ellipse(ccx, base, rx(0) * V.s * .9, ryOf(0) * V.s * .5, 0, 0, 7); g.fill();
+      const th = ts * 1.18, tw = th * treeImg.naturalWidth / treeImg.naturalHeight;
+      g.globalAlpha = .92 + (rm ? 0 : .08 * Math.sin(now / 900)); g.drawImage(treeImg, ccx - tw / 2, base - th * .97, tw, th);
+      // 扫描光
+      if (!rm) { const sy = base - th * ((now / 2600) % 1); const sg = g.createLinearGradient(0, sy - 6 * D, 0, sy + 6 * D); sg.addColorStop(0, 'rgba(110,231,183,0)'); sg.addColorStop(.5, 'rgba(160,255,215,.16)'); sg.addColorStop(1, 'rgba(110,231,183,0)'); g.fillStyle = sg; g.fillRect(ccx - tw * .45, sy - 6 * D, tw * .9, 12 * D); }
+      g.restore();
+    } else {
     for (let s = 0; s < 2; s++) {
       g.beginPath();
       for (let k = 0; k <= 40; k++) { const t = k / 40, y = base - t * ts * .55, x = ccx + Math.sin(t * 9 + now / 700 * (rm ? 0 : 1) + s * Math.PI) * ts * .07 * (1 - t * .3); k ? g.lineTo(x, y) : g.moveTo(x, y); }
@@ -130,6 +147,7 @@ const DECOR = [['⚛️', '🧪', '⚗️', '🔬'], ['🦠', '🧫', '🔵', '�
     for (const b of branches) { const [x1, y1] = tx(b.x, b.y), [x2, y2] = tx(b.x2, b.y2); g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.strokeStyle = `rgba(110,231,183,${.85 - b.dep * .09})`; g.lineWidth = Math.max(.6, 4.6 - b.dep * .6) * D; g.shadowColor = '#34d399'; g.shadowBlur = 6 * D; g.stroke(); } g.shadowBlur = 0;
     for (const l of leaves) { const [x, y] = tx(l.x, l.y), r = (2.6 + (rm ? 0 : Math.sin(now / 600 + l.p)) * 1.2) * D; g.beginPath(); g.arc(x, y, Math.max(1, r), 0, 7); g.fillStyle = l.c; g.shadowColor = l.c; g.shadowBlur = 10 * D; g.fill(); }
     g.shadowBlur = 0;
+    }
     // 金色星桥
     for (const br of BRIDGES) {
       const p = pts.find(q => q.s.id === br.from); if (!p) continue;
@@ -158,6 +176,8 @@ const DECOR = [['⚛️', '🧪', '⚗️', '🔬'], ['🦠', '🧫', '🔵', '�
       const pulse = isTask && !rm ? 1 + .18 * Math.sin(now / 500) : 1;
       // 光晕底盘
       const hg = g.createRadialGradient(p.X, p.Y, 0, p.X, p.Y, px * .9 * pulse); hg.addColorStop(0, c + '55'); hg.addColorStop(1, c + '00'); g.fillStyle = hg; g.beginPath(); g.arc(p.X, p.Y, px * .9 * pulse, 0, 7); g.fill();
+      // 全息徽章底盘
+      g.beginPath(); g.arc(p.X, p.Y, px * .72, 0, 7); g.fillStyle = 'rgba(6,24,20,.72)'; g.fill(); g.strokeStyle = c + (isTask ? 'cc' : '77'); g.lineWidth = (isTask ? 1.6 : 1) * D; g.stroke();
       const im = glyph(p.ic, c, 48);
       if (im) { g.shadowColor = c; g.shadowBlur = (isTask ? 16 : 8) * D; g.drawImage(im, p.X - px * .7, p.Y - px * .7, px * 1.4, px * 1.4); g.shadowBlur = 0; }
       else { g.beginPath(); g.arc(p.X, p.Y, px * .2, 0, 7); g.fillStyle = c; g.fill(); }
@@ -170,7 +190,6 @@ const DECOR = [['⚛️', '🧪', '⚗️', '🔬'], ['🦠', '🧫', '🔵', '�
       }
       p.r = px * .8; g.globalAlpha = 1;
     }
-    raf = requestAnimationFrame(draw);
   }
   let raf;
   const near = e => {

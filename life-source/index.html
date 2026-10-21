@@ -48,6 +48,26 @@ html,body{overflow:hidden}
 #gd .bb .who{color:var(--gold);font-size:11px;margin-bottom:2px}
 #gd.min .bb{opacity:0;transform:scale(.8);pointer-events:none}
 @media (prefers-reduced-motion:reduce){#dive{animation:none}}
+/* 全息实验室玻璃框 */
+.ls-top{height:54px;clip-path:none}
+.ls-top::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,transparent,rgba(110,231,183,.55) 20%,rgba(110,231,183,.15) 38%,rgba(226,190,120,.8) 50%,rgba(110,231,183,.15) 62%,rgba(110,231,183,.55) 80%,transparent)}
+.ls-top .emb{position:relative;padding:4px 26px;border-radius:0 0 14px 14px;clip-path:polygon(0 0,100% 0,92% 100%,8% 100%);border:0;background:linear-gradient(180deg,rgba(20,60,48,.9),rgba(6,20,16,.85));box-shadow:inset 0 -1px 0 rgba(226,190,120,.7)}
+#hframe{position:fixed;inset:62px 8px 28px 8px;z-index:1;pointer-events:none;border:1px solid rgba(110,231,183,.16);border-radius:22px;
+  background:linear-gradient(rgba(110,231,183,.55),rgba(110,231,183,.55)) left top/26px 2px no-repeat,linear-gradient(rgba(110,231,183,.55),rgba(110,231,183,.55)) left top/2px 26px no-repeat,
+  linear-gradient(rgba(110,231,183,.55),rgba(110,231,183,.55)) right top/26px 2px no-repeat,linear-gradient(rgba(110,231,183,.55),rgba(110,231,183,.55)) right top/2px 26px no-repeat,
+  linear-gradient(rgba(110,231,183,.55),rgba(110,231,183,.55)) left bottom/26px 2px no-repeat,linear-gradient(rgba(110,231,183,.55),rgba(110,231,183,.55)) left bottom/2px 26px no-repeat,
+  linear-gradient(rgba(110,231,183,.55),rgba(110,231,183,.55)) right bottom/26px 2px no-repeat,linear-gradient(rgba(110,231,183,.55),rgba(110,231,183,.55)) right bottom/2px 26px no-repeat;
+  box-shadow:inset 0 0 60px rgba(52,211,153,.06)}
+#rail{position:fixed;left:14px;top:50%;transform:translateY(-50%);z-index:17;display:flex;flex-direction:column;gap:10px;padding:12px 8px;border-radius:0 18px 18px 0;border:1px solid rgba(110,231,183,.4);border-left:3px solid rgba(110,231,183,.7);background:linear-gradient(180deg,rgba(10,34,28,.78),rgba(6,16,14,.7));backdrop-filter:blur(10px);box-shadow:0 0 22px rgba(52,211,153,.18)}
+#rail button{width:42px;height:42px;border-radius:12px;border:1px solid transparent;background:none;color:#a7f3d0;font-size:19px;display:flex;align-items:center;justify-content:center;position:relative}
+#rail button:hover,#rail button.on{border-color:rgba(110,231,183,.6);background:rgba(52,211,153,.12);color:#eefcf6;box-shadow:0 0 12px rgba(52,211,153,.35)}
+#rail button span{position:absolute;left:52px;white-space:nowrap;font-size:12px;color:#cfe9df;background:rgba(6,10,18,.85);border:1px solid var(--line);border-radius:8px;padding:3px 8px;opacity:0;pointer-events:none;transition:opacity .2s}
+#rail button:hover span{opacity:1}
+#side{left:80px;top:72px}
+#scale{padding:12px 10px 10px;border-radius:18px 0 0 18px;border:1px solid rgba(110,231,183,.4);border-right:3px solid rgba(110,231,183,.7);background:linear-gradient(180deg,rgba(10,34,28,.72),rgba(6,16,14,.62));backdrop-filter:blur(10px);box-shadow:0 0 22px rgba(52,211,153,.18)}
+#chain{bottom:34px;padding:8px 34px;border-radius:16px 16px 0 0;clip-path:polygon(0 100%,4% 0,96% 0,100% 100%);border:0;border-top:2px solid rgba(110,231,183,.7);background:linear-gradient(180deg,rgba(14,46,38,.9),rgba(6,16,14,.85))}
+#divebar{left:80px;bottom:44px}
+@media (max-width:640px){#hframe,#rail{display:none}#side{left:12px;top:60px}#scale{padding:6px 4px;border-radius:12px}#chain{bottom:84px;padding:4px 18px}#divebar{left:10px;bottom:128px}}
 #zoomov{position:fixed;inset:0;z-index:45;background:#060a12;display:none}
 #zoomov .zi{position:absolute;left:12px;top:60px;z-index:3;max-width:min(360px,70vw)}
 #zoomov .zi .obj{font-size:16px;font-weight:700}
@@ -77,6 +97,8 @@ html,body{overflow:hidden}
 </style></head><body>
 <div id="lsi-pre" style="position:fixed;inset:0;z-index:49;background:#060a12"></div>
 <div id="atlas"><canvas></canvas></div>
+<div id="hframe" aria-hidden="true"></div>
+<nav id="rail" class="hud-left" aria-label="工具栏"><button data-a="tasks" aria-label="任务">📂<span>任务抽屉</span></button><button data-a="album" aria-label="源码卡册">🃏<span>源码卡册</span></button><button data-a="all" aria-label="全景">🌐<span>回到全景</span></button><button data-a="replay" aria-label="重播开场">↺<span>重播开场</span></button><button data-a="set" aria-label="设置">⚙<span>设置</span></button></nav>
 <div id="side" class="ls-panel hud-left">
   <h1>生命源码 <span class="ls-tag">04 · 生物</span></h1>
   <div class="sub">读懂生命写好的代码。点亮的星是可以玩的任务;拖动、双指或滚轮缩放可以探索。</div>
@@ -105,9 +127,17 @@ C.top.querySelector('.title').innerHTML = '<span class="emb">🧬 生命源码 <
 mountAlbum(C.top);
 
 /* ---------- 开场:编译生命(ls-intro.js) ---------- */
+/* 门户接力(HANDOFF §5.12):5 秒内从总门户进入时,用门户同色画面淡出接上开场 */
+(() => { try {
+  const a = JSON.parse(sessionStorage.getItem('gn:portal:arrive') || 'null'); sessionStorage.removeItem('gn:portal:arrive');
+  if (!a || a.w !== '04' || Date.now() - a.t > 5000) return;
+  const v = document.createElement('div'); v.id = 'gn-arrive';
+  v.style.cssText = `position:fixed;inset:0;z-index:2147483000;pointer-events:none;background:radial-gradient(circle at 50% 50%,${a.c || '#34d399'} 0%,#02110c 70%);opacity:1;transition:opacity ${reducedMotion() ? .2 : 1.1}s ease`;
+  document.body.append(v); requestAnimationFrame(() => requestAnimationFrame(() => { v.style.opacity = 0; })); setTimeout(() => v.remove(), 1400);
+} catch (e) {} })();
 const pre = () => document.getElementById('lsi-pre')?.remove();
-// 首次自动播放;看过的人直接进入(设置 ⚙ 里可重播);减少动态效果时直接进入
-if (reducedMotion() || store.get('intro', false)) { pre(); hudIn(); } else startIntro();
+// 每次进入都播放开场;系统开启「减少动态效果」时直接进入
+if (reducedMotion()) { pre(); hudIn(); } else startIntro(store.get('intro', false)); // 王磊 10-21:每次进入都播放开场;首次带声音门屏,之后静音自动播放(可点跳过)
 /* ---------- 向导气泡:只提问 ---------- */
 const ASK = ['从哪一层开始探索?拖动右边的「穿越尺度」试试。', '一颗星点亮了——你猜它属于哪个尺度?', '从指纹放大到碱基对,要放大多少倍?点左下角的显微镜看看。'];
 let ai = 0; const gd = $('#gd'), say = () => { $('#gd .say').textContent = ASK[ai % ASK.length]; };
@@ -154,6 +184,9 @@ $('#scale .all').onclick = () => { lastI = -1; setL(-1); };
 /* 任务面板:手机端默认收起 */
 const sideT = $('#side h1'); sideT.onclick = () => $('#side').classList.toggle('fold');
 $('#side').classList.add('fold');
+/* 左侧工具栏 */
+const RA = { tasks: () => { $('#side').classList.toggle('fold'); sound.tone(660, .2, { gain: .06 }); }, album: () => document.querySelector('.ls-albtn')?.click(), all: () => { lastI = -1; setL(-1); atlas.clear?.(); }, replay: () => startIntro(true), set: () => [...document.querySelectorAll('.ls-top .ls-icn')].pop()?.click() };
+document.querySelectorAll('#rail button').forEach(b => b.onclick = () => RA[b.dataset.a]());
 
 /* ---------- 一镜到底浮层 ---------- */
 let zm = null;
