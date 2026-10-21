@@ -701,7 +701,7 @@
   function casinoNotice() {
     if (TASK !== "casino" || store.get("ma:v1:casino-ack")) return;
     var d = document.createElement("div"); d.className = "ma-modal"; d.setAttribute("role", "dialog"); d.setAttribute("aria-modal", "true"); d.setAttribute("aria-labelledby", "ma-cn-h");
-    d.innerHTML = '<div class="ma-card"><h3 id="ma-cn-h">🦝 开始之前，先读一句</h3>' +
+    d.innerHTML = '<div class="ma-card"><h3 id="ma-cn-h">📊 开始之前，先读一句</h3>' +
       "<p class='ma-sub'>这是一个用概率回答「赌场为什么总赢」的数学任务。这里只有虚拟筹码，不涉及任何真钱。</p>" +
       "<p class='ma-sub'>数学的结论很清楚：赌博的期望是负数，玩得越久，输得越确定。赌博有害，未成年人禁止参与任何形式的赌博。</p>" +
       '<div class="ma-row"><button type="button" class="ma-btn ma-ok">我明白了，开始学概率</button></div></div>';
