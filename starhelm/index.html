@@ -56,6 +56,7 @@
         <button type="button" id="btn-music" aria-pressed="false" title="背景音乐">♪<small>BGM</small></button>
         <button type="button" id="btn-sfx" aria-pressed="true" title="音效">◖<small>SFX</small></button>
       </div>
+      <a class="sh-genesis" href="../" title="回到创世计划总门户">← 创世计划</a>
       <p class="le-kicker"><span class="le-live"></span>UEG · LIVE LINK</p>
       <h1 class="le-title">天枢 <span>STARHELM</span></h1>
       <p class="le-clock">LOCAL <b id="clock">--:--:--</b> <small id="tz"></small></p>
@@ -106,7 +107,7 @@
       <button class="le-chip" type="button" data-layer="flights" aria-pressed="false" style="--c:#ffb340">航线<small>ROUTES</small></button>
     </div></div>
     <div class="le-chips le-solar-only"><div class="le-chips-in" id="speed-chips"></div></div>
-    <p class="le-foot" id="credits">数据：USGS 地震 · CelesTrak 轨道 · JPL 星历 · GDACS 台风 · NOAA SWPC 极光 · 卫星云图 NASA GIBS(Himawari-9:日本气象厅;GOES:NOAA;VIIRS:NASA/NOAA) · GeoNames (CC BY 4.0) · 纹理 NASA(公有领域)、Solar System Scope(CC BY 4.0) · 不代表任何机构背书 · 不收集位置</p>
+    <p class="le-foot" id="credits">数据：USGS 地震 · CelesTrak 轨道 · JPL 星历 · GDACS 台风 · NOAA SWPC 极光与太阳活动 · 太阳实拍 NASA/SDO · 卫星云图 NASA GIBS(Himawari-9:日本气象厅;GOES:NOAA;VIIRS:NASA/NOAA) · GeoNames (CC BY 4.0) · 纹理 NASA(公有领域)、Solar System Scope(CC BY 4.0) · 不代表任何机构背书 · 不收集位置</p>
   </footer>
 
   <!-- 详情卡片（地震 / 卫星 / 星球 通用） -->
@@ -336,6 +337,8 @@
   <script src="sh-moon.js"></script>
   <script src="sh-eclipse.js"></script>
   <script src="sh-eye.js"></script>
+  <script src="sh-tide.js"></script>
+  <script src="sh-sun.js"></script>
 <script>if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js",{scope:"./"});</script>
 </body>
 </html>
