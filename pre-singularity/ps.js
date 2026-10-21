@@ -289,6 +289,16 @@ function vfxStop(){ const S=VFX.on; if(!S) return; VFX.on=null; clearInterval(S.
   S.bus.gain.cancelScheduledValues(t); S.bus.gain.setValueAtTime(S.bus.gain.value,t); S.bus.gain.linearRampToValueAtTime(0,t+(S.sk==='core'?.4:1.6));
   if(!PS.muted()){ if(S.sk==='core'){ V.fm(sfxBus,t,mtof(95),.16,.03,2,1,.3); V.fm(sfxBus,t+.1,mtof(88),.3,.03,2,1,-.3); } else { V.sweep(sfxBus,t,240,40,2.2,.07); V.bell(sfxBus,t+.3,mtof(61),.03,4); } }
   setTimeout(()=>{ S.nodes.forEach(n=>{ try{n.stop();}catch(e){} }); S.bus.disconnect(); },2000); }
+/* v0.8.1 角色语音片段:预合成音频(vo/),点天命之瞳白光 / 奇点黑洞播放;叠加人设声效床,音乐自动避让 */
+const VOB={};
+PS.playVO = async (sk, i) => { if(PS.muted()) return 0; const a=ac(); const url=`vo/${sk==='horizon'?'hz':'core'}${i}.mp3`;
+  try{ if(!VOB[url]) VOB[url]=fetch(url).then(r=>r.arrayBuffer()).then(b=>new Promise((ok,no)=>a.decodeAudioData(b,ok,no)));
+    const buf=await VOB[url]; if(PS.muted()) return 0; if(VFX.src){ try{VFX.src.stop();}catch(e){} }
+    const S=vfxStart(sk), t=a.currentTime+(sk==='horizon'?.9:.35), src=a.createBufferSource(), g=a.createGain(); g.gain.value=1.15; src.buffer=buf; src.connect(g); g.connect(sfxBus);
+    src.start(t); VFX.src=src; const iv=setInterval(()=>{ if(VFX.on===S && R()<.5) vfxTick(); },260);
+    if(musicBus){ const n=a.currentTime, v=PS.musicOn()?.55:0; musicBus.gain.cancelScheduledValues(n); musicBus.gain.setValueAtTime(musicBus.gain.value,n); musicBus.gain.linearRampToValueAtTime(v*.35,n+.4); musicBus.gain.setValueAtTime(v*.35,t+buf.duration-.8); musicBus.gain.linearRampToValueAtTime(v,t+buf.duration+.8); }
+    src.onended=()=>{ clearInterval(iv); if(VFX.src===src) VFX.src=null; if(VFX.on===S) vfxStop(); };
+    return buf.duration; }catch(e){ console.warn('[ps vo]',e); return 0; } };
 PS.speak = (text) => { try{ const clean=String(text).replace(/<[^>]+>/g,''); if(!PS.voiceOn() || !window.speechSynthesis) return; speechSynthesis.cancel();
   const sk=PS.skin()==='horizon'?'horizon':'core', C=VOX[sk]; const S=vfxStart(sk);
   const u=new SpeechSynthesisUtterance(clean); const v=pickVoice(C.prefer); if(v) u.voice=v; u.lang='zh-CN'; u.rate=C.rate; u.pitch=C.pitch;
