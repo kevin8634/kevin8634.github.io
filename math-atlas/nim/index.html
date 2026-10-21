@@ -239,14 +239,14 @@
 
         <section class="hero">
           <div class="hero__copy">
-            <p class="hero__eyebrow">星图任务 · 🐿 松鼠博士</p>
+            <p class="hero__eyebrow">星图任务 · 🌳 超现实数</p>
             <h1>先拿的人一定赢吗？</h1>
-            <p class="hero__sub">秋天到了，森林里有一堆松果。松鼠博士和你玩“抢松果”：轮流拿，拿到最后一颗的人赢。可松鼠博士总是赢，它有什么秘密？</p>
+            <p class="hero__sub">秋天到了，森林里有一堆松果。超现实数和你玩“抢松果”：轮流拿，拿到最后一颗的人赢。可超现实数总是赢，它有什么秘密？</p>
             <p class="hero__meta"><span class="pill">难度 ★☆☆ 入门</span> <span class="pill">适合 小学一~三年级</span> <span class="pill">前置 数到20、加减</span></p>
           </div>
           <aside class="callout" aria-label="开始">
             <p class="callout__head"><span class="hark-mark" data-size="16"></span> 第一站</p>
-            <p class="callout__lead"><strong>第 1 关「抢10颗松果」已开放。</strong>和松鼠博士比一比！拿到 1 颗星，就能解锁第 2 关「倒着想」。</p>
+            <p class="callout__lead"><strong>第 1 关「抢10颗松果」已开放。</strong>和超现实数比一比！拿到 1 颗星，就能解锁第 2 关「倒着想」。</p>
             <a class="btn" href="#play" id="start">开始任务</a>
           </aside>
         </section>
@@ -266,11 +266,11 @@
         </section>
 
         <section class="section" id="play" data-nav="关卡">
-          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">松鼠博士在星图上等你。</p></div>
+          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">超现实数在星图上等你。</p></div>
           <div id="stage" class="x-panel">
             <div class="x-cat">
-              <div class="x-cat__face">🐿</div>
-              <div class="x-bubble">点开第 1 关「抢10颗松果」。你先拿，我后拿，看谁拿到最后一颗！<small>松鼠博士只问问题，不直接给答案。</small></div>
+              <div class="x-cat__face">🌳</div>
+              <div class="x-bubble">点开第 1 关「抢10颗松果」。你先拿，我后拿，看谁拿到最后一颗！<small>超现实数只问问题，不直接给答案。</small></div>
             </div>
           </div>
         </section>
@@ -622,7 +622,7 @@
       /* guide bubble helper */
       function guide(container, text, sub) {
         const wrap = document.createElement("div"); wrap.className = "x-cat";
-        wrap.innerHTML = `<div class="x-cat__face" aria-hidden="true">🐿</div><div class="x-bubble" aria-live="polite"></div>`;
+        wrap.innerHTML = `<div class="x-cat__face" aria-hidden="true">🌳</div><div class="x-bubble" aria-live="polite"></div>`;
         const b = wrap.querySelector(".x-bubble");
         const set = (t, s, quiet) => { b.innerHTML = ""; b.append(t); if (s) { const el = document.createElement("small"); el.textContent = s; b.append(el); } if (!quiet) Audio_.play("squeak"); };
         set(text, sub, true); container.append(wrap);
@@ -648,7 +648,7 @@
           const TOTAL = 10, MAX_ROUNDS = 5;
           const HINTS = [
             ["如果只剩3颗，轮到你拿，你能赢吗？", "提示 1/3 · 先想一想"],
-            ["试试让松鼠博士面对 3 颗、6 颗、9 颗。", "提示 2/3 · 推你一把"],
+            ["试试让超现实数面对 3 颗、6 颗、9 颗。", "提示 2/3 · 推你一把"],
             ["先拿1颗，留下9颗！", "提示 3/3 · 直接告诉你"],
           ];
           const S = { n: TOTAL, owners: [], turn: "you", busy: false, over: true, round: 0, set: 1, you: 0, sq: 0, hints: 0, winHints: null, quizHints: null, cleared: 0, xpGiven: 0, logs: [] };
@@ -664,9 +664,9 @@
           const hintBtn = el("button", "x-btn", "💡 提示");
           const nextBtn = el("button", "x-btn", "下一局 ▶"); nextBtn.hidden = true;
           ctrls.append(b1, b2, hintBtn, nextBtn);
-          const note = el("div", "x-note", `<h3>🔍 侦探笔记本 <small style="font:var(--type-caption);color:var(--text-secondary)">· 松鼠博士拿完后，剩下几颗？</small></h3><ol></ol>`);
+          const note = el("div", "x-note", `<h3>🔍 侦探笔记本 <small style="font:var(--type-caption);color:var(--text-secondary)">· 超现实数拿完后，剩下几颗？</small></h3><ol></ol>`);
           const quiz = el("div", "x-quiz"); quiz.hidden = true;
-          quiz.innerHTML = `<p>🕵️ 侦探问题：松鼠博士每次都让剩下的松果数变成几的倍数？</p><div class="x-row x-yn"></div>`;
+          quiz.innerHTML = `<p>🕵️ 侦探问题：超现实数每次都让剩下的松果数变成几的倍数？</p><div class="x-row x-yn"></div>`;
           const endWrap = el("div");
           root.append(score, left, pile, ctrls, note, quiz, endWrap);
 
@@ -679,22 +679,22 @@
           }
 
           function render() {
-            score.innerHTML = `<span>你 <b>${S.you}</b></span><span>:</span><span><b>${S.sq}</b> 🐿 松鼠博士</span>
-              <span class="x-score__turn">第 ${Math.min(S.round, MAX_ROUNDS) || 1} / ${MAX_ROUNDS} 局 · ${S.over ? "本局结束" : S.turn === "you" ? "轮到：你" : "轮到：松鼠博士…"}</span>`;
+            score.innerHTML = `<span>你 <b>${S.you}</b></span><span>:</span><span><b>${S.sq}</b> 🌳 超现实数</span>
+              <span class="x-score__turn">第 ${Math.min(S.round, MAX_ROUNDS) || 1} / ${MAX_ROUNDS} 局 · ${S.over ? "本局结束" : S.turn === "you" ? "轮到：你" : "轮到：超现实数…"}</span>`;
             left.innerHTML = `还剩 <b>${S.n}</b> 颗松果`;
             cones.forEach((c, i) => {
               const gone = i >= S.n, who = S.owners[i];
               c.classList.toggle("is-gone", gone);
               c.classList.toggle("is-sq", gone && who === "sq");
-              c.querySelector(".x-cone__n").textContent = gone ? (who === "sq" ? "🐿拿" : "你拿") : String(i + 1);
-              c.setAttribute("aria-label", gone ? `第 ${i + 1} 颗，已被${who === "sq" ? "松鼠博士" : "你"}拿走` : `第 ${i + 1} 颗松果`);
+              c.querySelector(".x-cone__n").textContent = gone ? (who === "sq" ? "🌳拿" : "你拿") : String(i + 1);
+              c.setAttribute("aria-label", gone ? `第 ${i + 1} 颗，已被${who === "sq" ? "超现实数" : "你"}拿走` : `第 ${i + 1} 颗松果`);
             });
             const mine = !S.over && !S.busy && S.turn === "you";
             b1.disabled = !mine || S.n < 1; b2.disabled = !mine || S.n < 2;
             hintBtn.textContent = `💡 提示 ${Math.min(S.hints, 3)}/3`;
             note.querySelector("ol").innerHTML = S.logs.map((l) => {
-              const seq = l.left.length ? l.left.map((x) => (S.cleared && x % 3 === 0 ? `<mark>${x}</mark>` : x)).join(" → ") : "（松鼠博士还没拿）";
-              return `<li>第 ${l.round} 局 <span class="x-seq">10 ⋯ ${seq}</span>${l.winner ? ` · ${l.winner === "you" ? "你赢 🎉" : "松鼠博士赢"}` : ""}</li>`;
+              const seq = l.left.length ? l.left.map((x) => (S.cleared && x % 3 === 0 ? `<mark>${x}</mark>` : x)).join(" → ") : "（超现实数还没拿）";
+              return `<li>第 ${l.round} 局 <span class="x-seq">10 ⋯ ${seq}</span>${l.winner ? ` · ${l.winner === "you" ? "你赢 🎉" : "超现实数赢"}` : ""}</li>`;
             }).join("") || `<li style="list-style:none;margin-left:-20px;color:var(--text-secondary)">开始第一局后，这里会记下数字。</li>`;
           }
 
@@ -738,7 +738,7 @@
           }
           function tapCone(i, c) {
             if (S.over || i >= S.n) return;
-            if (S.busy || S.turn !== "you") { say("等一等，现在是松鼠博士在拿哦。"); return; }
+            if (S.busy || S.turn !== "you") { say("等一等，现在是超现实数在拿哦。"); return; }
             const k = S.n - i;
             if (k === 1 || k === 2) return playerTake(k);
             c.classList.remove("x-flash"); void c.offsetWidth; c.classList.add("x-flash"); Audio_.play("wrong");
@@ -754,7 +754,7 @@
               say("你拿到了最后一颗，你赢了！你是怎么做到的？", "说说看：你每次拿完以后，给我留下了几颗？");
             } else {
               S.sq++; Audio_.play("wrong");
-              say("我拿到最后一颗啦！松鼠博士拿完后，剩下几颗？你发现了什么？", "看看侦探笔记本里的数字。");
+              say("我拿到最后一颗啦！超现实数拿完后，剩下几颗？你发现了什么？", "看看侦探笔记本里的数字。");
             }
             quiz.hidden = false;
             nextBtn.hidden = false;
@@ -815,9 +815,9 @@
             endWrap.innerHTML = "";
             endWrap.append(el("div", "x-end", `<h3>${starStr(s)} 第 1 关通过！</h3>
               <p style="font:var(--type-body-strong)">你发现了：让对手面对 3 的倍数，你就赢！</p>
-              <dl><dt>为什么先拿 1 颗？</dt><dd>10 ÷ 3 = 3 余 1。先拿掉余下的 1 颗，留下 9 颗；之后松鼠博士拿 1，你就拿 2；它拿 2，你就拿 1。每轮一共拿走 3 颗：9 → 6 → 3 → 0。</dd></dl>
+              <dl><dt>为什么先拿 1 颗？</dt><dd>10 ÷ 3 = 3 余 1。先拿掉余下的 1 颗，留下 9 颗；之后超现实数拿 1，你就拿 2；它拿 2，你就拿 1。每轮一共拿走 3 颗：9 → 6 → 3 → 0。</dd></dl>
               <div class="x-row"><span class="x-meter">⭐ ${s} 颗星</span><span class="x-meter">XP <b>+${xp}</b></span><span class="x-meter">🏅 小侦探</span></div>
-              ${s < 3 ? `<p class="fineprint">想拿 3 颗星？不看提示，赢松鼠博士一局！</p>` : ""}
+              ${s < 3 ? `<p class="fineprint">想拿 3 颗星？不看提示，赢超现实数一局！</p>` : ""}
               <div class="x-row"><button class="x-btn x-btn--go" data-go2>第 2 关「倒着想」已解锁 ▶</button></div>`));
             endWrap.querySelector("[data-go2]").addEventListener("click", () => { Audio_.play("click"); openLevel(2); });
             render();
@@ -915,16 +915,16 @@
               col[n] = want; S.pending = null; S.stepMiss = 0; Audio_.play("correct");
               if (want === "green") {
                 const k = col[n - 1] === "red" ? 1 : 2;
-                say(`对！第 ${n} 级是绿色：拿 ${k} 颗，就把松鼠博士送到红色的第 ${n - k} 级。`, n < TOP ? `接着想第 ${n + 1} 级。` : "");
+                say(`对！第 ${n} 级是绿色：拿 ${k} 颗，就把超现实数送到红色的第 ${n - k} 级。`, n < TOP ? `接着想第 ${n + 1} 级。` : "");
               } else {
-                say(`对！第 ${n} 级是红色：拿1颗到第 ${n - 1} 级，拿2颗到第 ${n - 2} 级，都是绿色，好位置全让给了松鼠博士。`, n < TOP ? `接着想第 ${n + 1} 级。` : "");
+                say(`对！第 ${n} 级是红色：拿1颗到第 ${n - 1} 级，拿2颗到第 ${n - 2} 级，都是绿色，好位置全让给了超现实数。`, n < TOP ? `接着想第 ${n + 1} 级。` : "");
               }
               if (n === TOP) return finale();
               S.active++; render();
             } else {
               S.mistakes++; S.stepMiss++; S.pending = null; Audio_.play("wrong");
               const sub = n === 1 ? "从第 1 级只能拿1颗，会到第 0 级。那里是什么颜色？"
-                : S.stepMiss >= 2 ? `拿1颗→第 ${n - 1} 级（${cname(col[n - 1])}），拿2颗→第 ${n - 2} 级（${cname(col[n - 2])}）。能把松鼠博士送到红色吗？能，就是绿色。`
+                : S.stepMiss >= 2 ? `拿1颗→第 ${n - 1} 级（${cname(col[n - 1])}），拿2颗→第 ${n - 2} 级（${cname(col[n - 2])}）。能把超现实数送到红色吗？能，就是绿色。`
                 : "看看箭头指向的两级台阶。";
               say("从这一级，拿1颗会到第几级？拿2颗呢？那里是什么颜色？", sub);
               render(); flash(steps[n]);
@@ -964,8 +964,8 @@
           makeQuiz(quiz2, ["能", "不能"], "不能",
             { "能": "15 ÷ 3 = 5，没有余数。15 站在红色台阶上，还是绿色台阶上？" },
             () => {
-              say("对！15 是 3 的倍数，是红色台阶：轮到你就会输。你先拿，不管拿1还是2，松鼠博士都能把你送回红色：12、9、6、3、0。",
-                "所以要客气地说：“松鼠博士，你先请！”让它站上红色台阶。");
+              say("对！15 是 3 的倍数，是红色台阶：轮到你就会输。你先拿，不管拿1还是2，超现实数都能把你送回红色：12、9、6、3、0。",
+                "所以要客气地说：“超现实数，你先请！”让它站上红色台阶。");
               finish();
             });
 
@@ -979,7 +979,7 @@
             endWrap.append(el("div", "x-end", `<h3>${starStr(s)} 第 2 关通过！</h3>
               <p style="font:var(--type-body-strong)">你学会了「倒着想」：从结局往回推，数学家叫它『逆推』。红色台阶 = 必败位置。</p>
               <dl><dt>红色台阶</dt><dd>0、3、6、9、12、15……都是 3 的倍数。</dd>
-                <dt>怎么赢？</dt><dd>每次都让松鼠博士站上红色台阶。开局就在红色上？请它先拿。</dd></dl>
+                <dt>怎么赢？</dt><dd>每次都让超现实数站上红色台阶。开局就在红色上？请它先拿。</dd></dl>
               <div class="x-row"><span class="x-meter">⭐ ${s} 颗星</span><span class="x-meter">失误 ${S.mistakes} 次</span><span class="x-meter">XP <b>+${delta}</b></span><span class="x-meter">🏅 倒推小能手</span></div>
               ${s < 3 ? `<p class="fineprint">想拿 3 颗星？整关最多错 1 次。</p>` : ""}
               <div class="x-row"><button class="x-btn" data-again>再爬一次楼梯</button><button class="x-btn x-btn--go" data-go3>第 3 关「换个规则」已解锁 ▶</button></div>`));
@@ -1006,7 +1006,7 @@
             setups: [], idx: 0, right: 0, answered: false, N: 12, m: 2, free: false, finished: false };
           const flash = (b) => { b.classList.remove("x-flash"); void b.offsetWidth; b.classList.add("x-flash"); };
 
-          const say = guide(root, "新规则：20 颗松果，每次可以拿 1 颗、2 颗或 3 颗。拿到最后一颗的人赢！", "开局前先选：你先拿，还是让松鼠博士先拿？");
+          const say = guide(root, "新规则：20 颗松果，每次可以拿 1 颗、2 颗或 3 颗。拿到最后一颗的人赢！", "开局前先选：你先拿，还是让超现实数先拿？");
 
           /* ---- Round A ---- */
           const headA = el("h3", "x-sub", "Ⓐ 抢20颗松果 · 每次拿 1~3 颗");
@@ -1022,7 +1022,7 @@
           const hintBtn = el("button", "x-btn", "💡 提示");
           const nextBtn = el("button", "x-btn", "再试一次 ▶"); nextBtn.hidden = true;
           ctrls.append(...tb, hintBtn, nextBtn);
-          const note = el("div", "x-note", `<h3>🔍 侦探笔记本 <small style="font:var(--type-caption);color:var(--text-secondary)">· 松鼠博士拿完后，剩下几颗？</small></h3><ol></ol>`);
+          const note = el("div", "x-note", `<h3>🔍 侦探笔记本 <small style="font:var(--type-caption);color:var(--text-secondary)">· 超现实数拿完后，剩下几颗？</small></h3><ol></ol>`);
           const toB = el("div", "x-row"); toB.hidden = true;
           const toBBtn = el("button", "x-btn x-btn--go", "进入 Ⓑ「规则实验室」▶"); toB.append(toBBtn);
 
@@ -1055,7 +1055,7 @@
           }
 
           function renderA() {
-            const st = S.aDone ? (S.wonAt ? "你赢啦 🎉" : "Ⓐ 结束") : S.turn === null ? "先选谁先拿" : S.over ? "本局结束" : S.turn === "you" ? "轮到：你" : "轮到：松鼠博士…";
+            const st = S.aDone ? (S.wonAt ? "你赢啦 🎉" : "Ⓐ 结束") : S.turn === null ? "先选谁先拿" : S.over ? "本局结束" : S.turn === "you" ? "轮到：你" : "轮到：超现实数…";
             score.innerHTML = `<span>第 <b>${Math.max(S.tries, 1)}</b> / ${MAX_TRIES} 次</span><span class="x-score__turn">${st}</span>`;
             left.innerHTML = `还剩 <b>${S.n}</b> 颗松果`;
             choose.hidden = S.aDone || S.turn !== null;
@@ -1063,16 +1063,16 @@
               const gone = i >= S.n, who = S.owners[i];
               c.classList.toggle("is-gone", gone);
               c.classList.toggle("is-sq", gone && who === "sq");
-              c.querySelector(".x-cone__n").textContent = gone ? (who === "sq" ? "🐿拿" : "你拿") : String(i + 1);
-              c.setAttribute("aria-label", gone ? `第 ${i + 1} 颗，已被${who === "sq" ? "松鼠博士" : "你"}拿走` : `第 ${i + 1} 颗松果`);
+              c.querySelector(".x-cone__n").textContent = gone ? (who === "sq" ? "🌳拿" : "你拿") : String(i + 1);
+              c.setAttribute("aria-label", gone ? `第 ${i + 1} 颗，已被${who === "sq" ? "超现实数" : "你"}拿走` : `第 ${i + 1} 颗松果`);
             });
             const mine = !S.over && !S.busy && S.turn === "you";
             tb.forEach((b, j) => (b.disabled = !mine || S.n < j + 1));
             hintBtn.textContent = `💡 提示 ${Math.min(S.hints, 3)}/3`;
             hintBtn.disabled = S.aDone;
             note.querySelector("ol").innerHTML = S.logs.map((l) => {
-              const seq = l.left.length ? l.left.map((x) => (S.aDone && x % 4 === 0 ? `<mark>${x}</mark>` : x)).join(" → ") : "（松鼠博士还没拿）";
-              return `<li>第 ${l.t} 次 · ${l.first === "you" ? "你先" : "松鼠先"} <span class="x-seq">20 ⋯ ${seq}</span>${l.winner ? ` · ${l.winner === "you" ? "你赢 🎉" : "松鼠博士赢"}` : ""}</li>`;
+              const seq = l.left.length ? l.left.map((x) => (S.aDone && x % 4 === 0 ? `<mark>${x}</mark>` : x)).join(" → ") : "（超现实数还没拿）";
+              return `<li>第 ${l.t} 次 · ${l.first === "you" ? "你先" : "松鼠先"} <span class="x-seq">20 ⋯ ${seq}</span>${l.winner ? ` · ${l.winner === "you" ? "你赢 🎉" : "超现实数赢"}` : ""}</li>`;
             }).join("") || `<li style="list-style:none;margin-left:-20px;color:var(--text-secondary)">开始后，这里会记下数字。</li>`;
           }
 
@@ -1258,7 +1258,7 @@
             endWrap.innerHTML = "";
             endWrap.append(el("div", "x-end", `<h3>${starStr(s)} 第 3 关通过！</h3>
               <p style="font:var(--type-body-strong)">你发现了总规律：每次最多拿 m 颗，就看 N 除以 (m+1) 的余数！这就是『除法与余数』的威力。</p>
-              <dl><dt>Ⓐ 抢20颗松果</dt><dd>${won ? `第 ${S.wonAt} 次赢了松鼠博士。` : "这次没赢到，下次让松鼠先拿！"}20 ÷ 4 = 5 余 0，请松鼠先拿。</dd>
+              <dl><dt>Ⓐ 抢20颗松果</dt><dd>${won ? `第 ${S.wonAt} 次赢了超现实数。` : "这次没赢到，下次让松鼠先拿！"}20 ÷ 4 = 5 余 0，请松鼠先拿。</dd>
                 <dt>Ⓑ 规则实验室</dt><dd>预测对了 ${S.right} / 3 题。</dd></dl>
               <div class="x-row"><span class="x-meter">⭐ ${s} 颗星</span><span class="x-meter">XP <b>+${delta}</b></span><span class="x-meter">🏅 规则破解者</span></div>
               ${s < 3 ? `<p class="fineprint">想拿 3 颗星？2 次之内赢下Ⓐ，Ⓑ 的 3 题全对。</p>` : ""}
@@ -1283,7 +1283,7 @@
           const wait = (ms) => (reduced() ? 150 : ms);
           const foxGuide = (text, sub) => { const box = el("div"); const set = guide(box, text, sub); box.querySelector(".x-cat__face").textContent = "🦊"; return [box, set]; };
 
-          const say = guide(root, "这关换你来当“松鼠博士”！小狐狸先拿，每次拿 1~3 颗。", "小狐狸拿完，轮到你：让你们俩这一轮拿的加起来正好是 4，凑成“一对”。");
+          const say = guide(root, "这关换你来当“超现实数”！小狐狸先拿，每次拿 1~3 颗。", "小狐狸拿完，轮到你：让你们俩这一轮拿的加起来正好是 4，凑成“一对”。");
 
           /* ---- Part A ---- */
           const headA = el("h3", "x-sub", "Ⓐ 凑成一对 · 每次拿 1~3 颗");
@@ -1508,7 +1508,7 @@
           const say = guide(root, "松鼠大王来了！这次有两棵树，每棵树上一堆松果。轮到你时，选一棵树，从上面拿任意颗（至少 1 颗）。拿到最后一颗的人赢！", "点一颗松果：它和它上面的松果都会被选中，再按“拿走”。");
           const kingBox = el("div"); const king = guide(kingBox, "我是松鼠大王！三场比赛，你能赢我吗？", "");
           kingBox.firstChild.classList.add("x-cat--king");
-          kingBox.querySelector(".x-cat__face").innerHTML = `<span class="x-crown">👑</span>🐿`;
+          kingBox.querySelector(".x-cat__face").innerHTML = `<span class="x-crown">👑</span>🌳`;
 
           const score = el("div", "x-score");
           const chooseRow = el("div", "x-row"); chooseRow.hidden = true;
