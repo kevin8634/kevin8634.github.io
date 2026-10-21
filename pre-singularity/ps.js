@@ -37,7 +37,7 @@ PS.TOTAL = Object.values(PS.MISSIONS).reduce((s,m)=>s+m.n,0);
 PS.STAGES = [{n:'光点',at:0},{n:'萤火',at:6},{n:'星核',at:14},{n:'黎明',at:22}];
 PS.stage = () => { const t=PS.total(); let s=0; PS.STAGES.forEach((x,i)=>{ if(t>=x.at) s=i; }); return s; };
 /* 皮肤:core 神经核(默认)/ horizon 奇点视界 */
-PS.SKINS = {core:'神经核', horizon:'奇点视界'};
+PS.SKINS = {core:'天命之瞳', horizon:'奇点视界'};
 PS.skin = () => PS.get('skin','core');
 PS.setSkin = k => { PS.set('skin',k); applySkin(); document.dispatchEvent(new Event('ps-skin')); };
 function applySkin(){ document.body.classList.remove('skin-core','skin-horizon'); document.body.classList.add('skin-'+PS.skin()); }
@@ -89,19 +89,54 @@ const V={
 };
 PS.V = V; PS.mtof = mtof; PS.ac = ac;
 
+/* ---------- v0.8 合成工具:FM、超锯齿、颗粒、立体声/HRTF 环绕、乒乓延迟、侧链 ---------- */
+function panTo(dest,p){ if(!AC.createStereoPanner) return dest; const s=AC.createStereoPanner(); s.pan.value=Math.max(-1,Math.min(1,p)); s.connect(dest); return s; }
+function env(g,t,vol,att,dur){ g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+att); g.gain.exponentialRampToValueAtTime(.0001,t+dur); }
+V.fm=(dest,t,f,dur,vol,ratio=3.5,index=2.2,p=0,att=.004)=>{ const d=panTo(dest,p), c=AC.createOscillator(), m=AC.createOscillator(), mg=AC.createGain(), g=AC.createGain();
+  c.frequency.value=f; m.frequency.value=f*ratio; mg.gain.setValueAtTime(f*index,t); mg.gain.exponentialRampToValueAtTime(f*index*.04+.01,t+dur*.8);
+  m.connect(mg); mg.connect(c.frequency); env(g,t,vol,att,dur); c.connect(g); g.connect(d); c.start(t); m.start(t); c.stop(t+dur+.05); m.stop(t+dur+.05); };
+V.supersaw=(dest,t,freqs,dur,vol,c0=500,c1=2200)=>{ const fl=AC.createBiquadFilter(); fl.type='lowpass'; fl.Q.value=2.2; fl.frequency.setValueAtTime(c0,t); fl.frequency.exponentialRampToValueAtTime(c1,t+dur*.55); fl.frequency.exponentialRampToValueAtTime(c0,t+dur);
+  const g=AC.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+dur*.3); g.gain.setValueAtTime(vol,t+dur*.7); g.gain.linearRampToValueAtTime(0,t+dur); fl.connect(g); g.connect(dest);
+  const sp=[-.85,-.4,0,.4,.85], dt=[-24,-11,0,11,24];
+  freqs.forEach(fr=>dt.forEach((d,k)=>{ const o=AC.createOscillator(); o.type='sawtooth'; o.frequency.value=fr; o.detune.value=d+(Math.random()-.5)*4; const pn=panTo(fl,sp[k]); const og=AC.createGain(); og.gain.value=1/(dt.length); o.connect(og); og.connect(pn); o.start(t); o.stop(t+dur+.05); })); };
+V.grain=(dest,t,f,vol,p=0,dur=.06)=>{ const d=panTo(dest,p), o=AC.createOscillator(), g=AC.createGain(); o.frequency.value=f; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+dur*.5); g.gain.linearRampToValueAtTime(0,t+dur); o.connect(g); g.connect(d); o.start(t); o.stop(t+dur+.02); };
+V.hat=(dest,t,vol,p=0,open=false)=>{ const d=panTo(dest,p), s=AC.createBufferSource(); s.buffer=NOISE; s.playbackRate.value=1+Math.random()*.2; const fl=AC.createBiquadFilter(); fl.type='highpass'; fl.frequency.value=open?7000:9500; const g=AC.createGain(); env(g,t,vol,.001,open?.28:.05); s.connect(fl); fl.connect(g); g.connect(d); s.start(t, Math.random()*.5); s.stop(t+.35); };
+V.clap=(dest,t,vol)=>{ [0,.011,.023].forEach(o=>{ const s=AC.createBufferSource(); s.buffer=NOISE; const fl=AC.createBiquadFilter(); fl.type='bandpass'; fl.frequency.value=1600; fl.Q.value=1.2; const g=AC.createGain(); env(g,t+o,vol,.001,.16); s.connect(fl); fl.connect(g); g.connect(dest); s.start(t+o, Math.random()*.5); s.stop(t+o+.2); }); V.osc(dest,t,190,.09,vol*.6,'triangle'); };
+function pingpong(dest,time,fb=.38,wet=.32){ const inp=AC.createGain(), dl=AC.createDelay(2), dr=AC.createDelay(2), f1=AC.createGain(), f2=AC.createGain(), w=AC.createGain(), lp=AC.createBiquadFilter();
+  dl.delayTime.value=time; dr.delayTime.value=time; f1.gain.value=fb; f2.gain.value=fb; w.gain.value=wet; lp.type='lowpass'; lp.frequency.value=4200;
+  const pl=panTo(dest,-.8), pr=panTo(dest,.8); inp.connect(lp); lp.connect(dl); dl.connect(f1); f1.connect(dr); dr.connect(f2); f2.connect(dl); dl.connect(w); dr.connect(w); w.connect(pl); dl.connect(pl); dr.connect(pr); return inp; }
+function orbitPanner(dest){ const p=AC.createPanner(); p.panningModel='HRTF'; p.distanceModel='inverse'; p.refDistance=1; p.connect(dest); return p; }
+PS.V2 = { panTo, pingpong, orbitPanner };
+
 /* ---------- 生成式音乐:每个场景一种风格 ---------- */
 const SC={dorian:[0,2,3,5,7,9,10], minor:[0,2,3,5,7,8,10], major:[0,2,4,5,7,9,11], lydian:[0,2,4,6,7,9,11], phryg:[0,1,3,5,7,8,10], hminor:[0,2,3,5,7,8,11]};
 const deg=(sc,root,d)=>{ const n=sc.length; return root+sc[((d%n)+n)%n]+12*Math.floor(d/n); };
 const tri=(sc,root,d)=>[0,2,4].map(k=>mtof(deg(sc,root,d+k)));
 const R=Math.random;
 const STY={
- // 贾维斯神经核:清亮数字琶音 + 脉冲低音 + 细碎电子 hi-hat
- core:{bpm:96, root:50, sc:SC.dorian, prog:[0,5,2,6], fn(s,t,st,ch,sp){
-   if(st===0){ V.pad(s.b,t,tri(s.sc,s.root,ch),sp*16,.035,1200); V.osc(s.b,t,mtof(deg(s.sc,s.root-24,ch)),sp*16,.07,'sine',.4); }
-   const A=[0,2,4,7,9,7,4,2]; if(st%2===0) V.pluck(s.b,t,mtof(deg(s.sc,s.root+12,ch+A[(st/2)%8])),.028,'square',1600+800*Math.sin(t/3),.22);
-   if(st%4===2) V.noise(s.b,t,.035,.035,'highpass',8500);
-   if(st===0||st===10) V.kick(s.b,t,.13);
-   if(st%8===4 && R()<.35) V.bell(s.b,t,mtof(deg(s.sc,s.root+24,ch+[0,2,4][R()*3|0])),.025,1.6); }},
+ // 天命之瞳 · 音乐 2.0:超锯齿和声垫(侧链呼吸)+ FM 玻璃琶音(乒乓延迟、轨道声像)+ 颗粒数据雨 + 次低音 + 电子鼓组;16 小节一个起伏
+ core:{bpm:100, root:50, sc:SC.dorian, prog:[0,5,2,6,0,3,5,4], fn(s,t,st,ch,sp){
+   const x=s.x; if(!x.pad){ x.pad=AC.createGain(); x.pad.connect(s.b); x.dly=pingpong(s.b,sp*3,.42,.35); x.dly.connect(s.b); }
+   const sec=s.bar%16, build=sec<4?0:sec<14?2:1, brk=sec===14||sec===15;
+   const chord=[0,2,4,6].map(k=>mtof(deg(s.sc,s.root+12,ch+k)));
+   if(st===0) V.supersaw(x.pad,t,chord.slice(0,3).concat([chord[3]/2]),sp*16.2,.045,420+build*220,1500+build*900);
+   if(st===0) V.osc(x.pad,t,mtof(deg(s.sc,s.root-12,ch)),sp*16,.05,'triangle',.6);
+   // 次低音:八分音符脉冲,被侧链压
+   if(!brk && build>0 && st%2===0) V.pluck(x.pad,t,mtof(deg(s.sc,s.root-24,ch)),.11,'sine',600,sp*1.6);
+   // FM 玻璃琶音:轨道声像 + 乒乓
+   const AR=[0,2,4,7,9,7,4,2,0,4,7,11,9,7,4,2];
+   if(st%2===0 || (build===2 && R()<.3)){ const n=mtof(deg(s.sc,s.root+12,ch+AR[(st+s.bar*3)%16])); const p=Math.sin((s.bar*16+st)/5)*.75; V.fm(s.b,t,n,.5,.022,3.01,1.6+build*.4,p); V.fm(x.dly,t,n,.4,.014,3.01,1.2,p); }
+   // 颗粒数据雨
+   if(R()<.22+build*.12) V.grain(s.b,t+R()*sp,mtof(deg(s.sc,s.root+36,ch+(R()*7|0))),.012,R()*2-1,.03+R()*.05);
+   // 鼓组 + 侧链
+   if(build>0 && !brk){
+     if(st===0||st===8||(st===14&&s.bar%2)){ V.kick(s.b,t,.15); x.pad.gain.cancelScheduledValues(t); x.pad.gain.setValueAtTime(.3,t); x.pad.gain.linearRampToValueAtTime(1,t+sp*3.2); }
+     if(st===4||st===12) V.clap(s.b,t,.05);
+     V.hat(s.b,t,[.03,.012,.02,.012][st%4]*(build===2?1:.6),st%2?.35:-.35,st===14&&R()<.5); }
+   // 每 8 小节第 4 小节:FM 主题短句;break 前的上升噪声
+   if(s.bar%8===4 && [0,3,6,10].includes(st)){ const M=[4,2,0,-1]; V.fm(x.dly,t,mtof(deg(s.sc,s.root+24,ch+M[[0,3,6,10].indexOf(st)])),1.2,.03,2,1.1,0,.02); }
+   if(sec===13 && st===0) V.noise(s.b,t,sp*16,.04,'bandpass',300,9000);
+   if(sec===0 && st===0 && s.bar>0) V.fm(s.b,t,mtof(s.root+36),2.5,.03,1.41,3,0,.01); }},
  // 奇点视界:深空长音 + 引力下坠 + 稀疏玻璃钟
  horizon:{bpm:54, root:49, sc:SC.minor, prog:[0,5,3,4], fn(s,t,st,ch,sp){
    if(st===0){ V.pad(s.b,t,tri(s.sc,s.root-12,ch),sp*16.5,.06,650,'triangle'); V.osc(s.b,t,mtof(deg(s.sc,s.root-24,ch)),sp*16,.09,'sine',1.2); }
@@ -177,12 +212,12 @@ PS.music = (name) => { MUS.want=name; if(PS.musicOn() && AC && AC.state==='runni
 function startMusic(name){ const S=STY[name]; if(!S) return; const a=ac(); if(MUS.style===name && MUS.timer) return;
   const now=a.currentTime, bus=a.createGain(); bus.gain.setValueAtTime(0,now); bus.gain.linearRampToValueAtTime(1,now+2.5); bus.connect(musicBus);
   if(MUS.bus){ const ob=MUS.bus; ob.gain.cancelScheduledValues(now); ob.gain.setValueAtTime(ob.gain.value,now); ob.gain.linearRampToValueAtTime(0,now+2); setTimeout(()=>ob.disconnect(),3000); }
-  Object.assign(MUS,{style:name,S,bus,step:0,bar:0,next:now+.1});
+  Object.assign(MUS,{style:name,S,bus,step:0,bar:0,next:now+.1,x:{}});
   musicBus.gain.cancelScheduledValues(now); musicBus.gain.setValueAtTime(musicBus.gain.value,now); musicBus.gain.linearRampToValueAtTime(.55,now+1.5);
   if(!MUS.timer) MUS.timer=setInterval(tick,30); }
 function tick(){ const a=AC, S=MUS.S; if(!S||a.state!=='running') return; const sp=60/S.bpm/4;
   if(MUS.next < a.currentTime-.05) MUS.next=a.currentTime+.05;
-  while(MUS.next < a.currentTime+.2){ const ch=S.prog[MUS.bar%S.prog.length]; try{ S.fn({b:MUS.bus,sc:S.sc,root:S.root,bar:MUS.bar},MUS.next,MUS.step,ch,sp); }catch(e){}
+  while(MUS.next < a.currentTime+.2){ const ch=S.prog[MUS.bar%S.prog.length]; try{ S.fn({b:MUS.bus,sc:S.sc,root:S.root,bar:MUS.bar,x:MUS.x},MUS.next,MUS.step,ch,sp); }catch(e){ if(!MUS.err){ MUS.err=1; console.warn('[ps music]',e); } }
     MUS.next+=sp; if(++MUS.step===16){ MUS.step=0; MUS.bar++; } } }
 function stopMusic(){ if(!AC) return; const now=AC.currentTime; musicBus.gain.cancelScheduledValues(now); musicBus.gain.setValueAtTime(musicBus.gain.value,now); musicBus.gain.linearRampToValueAtTime(0,now+1);
   setTimeout(()=>{ if(!PS.musicOn()){ clearInterval(MUS.timer); MUS.timer=null; MUS.style=null; if(MUS.bus){ MUS.bus.disconnect(); MUS.bus=null; } } },1200); }
@@ -198,7 +233,7 @@ const FX={
   click(){ const t=ac().currentTime; V.osc(sfxBus,t,1760,.06,.07); V.osc(sfxBus,t+.04,2637,.08,.05); V.noise(sfxBus,t,.025,.05,'highpass',7500); },
   hover(i=0){ const t=ac().currentTime; V.osc(sfxBus,t,mtof(81+[0,2,3,5,7,9,10,12][i%8]),.1,.022); },
   open(){ const t=ac().currentTime; V.noise(sfxBus,t,.3,.06,'bandpass',700,6000); V.osc(sfxBus,t+.08,1320,.12,.04,'triangle'); V.osc(sfxBus,t+.14,1980,.12,.035,'triangle'); },
-  type(){ const t=ac().currentTime; V.osc(sfxBus,t,2400+R()*1200,.03,.012,'square'); },
+  type(c){ const t=ac().currentTime; const k=c? c.charCodeAt(0)%7 : R()*7|0; V.fm(sfxBus,t,mtof(84+[0,2,3,5,7,9,10][k]),.07,.016,2,1.4,(R()-.5)*.6); if(R()<.3) V.noise(sfxBus,t,.015,.02,'highpass',9000); },
   win(){ const t=ac().currentTime; [0,4,7,12,16,19,24].forEach((m,i)=>V.pluck(sfxBus,t+i*.045,mtof(72+m),.06,'square',4200,.28)); V.pad(sfxBus,t+.3,[72,76,79,84].map(mtof),1.6,.045,2600); },
   fail(){ const t=ac().currentTime; V.pluck(sfxBus,t,mtof(50),.12,'square',900,.22); V.pluck(sfxBus,t+.12,mtof(49),.12,'square',700,.32); },
   boot(){ const t=ac().currentTime; V.sweep(sfxBus,t,200,2400,.6,.05,'sawtooth'); V.noise(sfxBus,t,.6,.04,'bandpass',400,8000); [0,7,12].forEach((m,i)=>V.osc(sfxBus,t+.55+i*.07,mtof(76+m),.4,.05)); } },
@@ -206,12 +241,12 @@ const FX={
   click(){ const t=ac().currentTime; V.bell(sfxBus,t,mtof(64),.05,1.4); V.osc(sfxBus,t,55,.45,.12); },
   hover(i=0){ const t=ac().currentTime; const f=mtof(57+[0,3,5,7,10,12,15,17][i%8]); V.sweep(sfxBus,t,f*1.01,f*.985,.7,.028); },
   open(){ const t=ac().currentTime; V.sweep(sfxBus,t,420,55,.9,.08); V.noise(sfxBus,t,.9,.035,'lowpass',2600,160); },
-  type(){ const t=ac().currentTime; V.osc(sfxBus,t,mtof(76+[0,3,7,10][R()*4|0]),.25,.01); },
+  type(c){ const t=ac().currentTime; const k=c? c.charCodeAt(0)%5 : R()*5|0; const f=mtof(69+[0,3,5,7,10][k]); V.sweep(panTo(sfxBus,(R()-.5)*1.6),t,f*1.5,f,.22,.014); },
   win(){ const t=ac().currentTime; V.sweep(sfxBus,t,900,48,1.2,.09); V.pad(sfxBus,t+.55,[61,65,68,73,77].map(mtof),3,.055,1700,'triangle'); V.bell(sfxBus,t+.7,mtof(85),.045,3); },
   fail(){ const t=ac().currentTime; V.sweep(sfxBus,t,95,32,1.1,.16); V.noise(sfxBus,t,.8,.05,'lowpass',420,60); },
   boot(){ const t=ac().currentTime; V.sweep(sfxBus,t,60,30,2,.14); V.noise(sfxBus,t,2,.05,'lowpass',200,2500); V.bell(sfxBus,t+1.2,mtof(73),.05,3); } }
 };
-PS.sfx = (n,...a) => { if(PS.muted()) return; try{ ac(); FX[PS.skin()][n](...a); }catch(e){} };
+PS.sfx = (n,...a) => { if(PS.muted()) return; try{ ac(); FX[PS.skin()][n](...a); }catch(e){ console.warn('[ps sfx]',n,e); } };
 PS.tone = (f, dur=1.2, vol=.15, type='sine', when=0) => { if(PS.muted()) return; const a=ac(), t=a.currentTime+when; V.osc(sfxBus,t,f,dur,vol,type,.01); V.osc(sfxBus,t,f*2.76,dur*.5,vol*.25); };
 PS.click = () => PS.sfx('click');
 PS.win = () => PS.sfx('win');
@@ -226,8 +261,41 @@ PS.lossChord = (loss) => {
 /* 提示条 */
 /* 萤的声音(可选,默认关):浏览器自带中文语音 */
 PS.voiceOn = () => PS.get('voice', false);
-PS.speak = (text) => { try{ if(!PS.voiceOn() || !window.speechSynthesis) return; speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(String(text).replace(/<[^>]+>/g,''));
-  const v=speechSynthesis.getVoices().find(v=>/zh[-_]CN/i.test(v.lang)); if(v) u.voice=v; u.lang='zh-CN'; u.rate=1.05; u.pitch=1.25; speechSynthesis.speak(u); }catch(e){} };
+/* v0.8 双 AI 语音:天命之瞳 = 冷静女声 AI 管家(数字提示音 + 高频微光底噪 + 字节滴答);
+   奇点 = 低沉异星声(倒放吸入 + 次低频 + 三路共振峰合唱 HRTF 环绕 + 异星滑音)。
+   语音用浏览器自带中文 TTS(默认关);声效全部 Web Audio 实时合成。 */
+const VOX={ core:{pitch:1.12, rate:1.0, pre:.55, prefer:[/Xiaoxiao/i,/Xiaoyi/i,/Xiaochen/i,/Xiaohan/i,/Tingting|Ting-Ting/i,/Meijia/i,/Yaoyao/i,/Huihui/i,/Lili/i,/female|女/i]},
+  horizon:{pitch:.45, rate:.8, pre:1.15, prefer:[/Yunxi|Yunjian|Yunyang|Yunze/i,/Kangkang/i,/male|男/i,/Xiaoxiao/i]} };
+function pickVoice(pref){ const vs=(speechSynthesis.getVoices()||[]).filter(v=>/zh|cmn/i.test(v.lang)); for(const re of pref){ const v=vs.find(v=>re.test(v.name)&&/CN|Hans|cmn/i.test(v.lang)) || vs.find(v=>re.test(v.name)); if(v) return v; } return vs.find(v=>/zh[-_]CN/i.test(v.lang))||vs[0]||null; }
+const VFX={ on:null };
+function vfxStart(sk){ vfxStop(); if(PS.muted()) return null; const a=ac(), t=a.currentTime, bus=a.createGain(); bus.gain.value=0; bus.connect(sfxBus); const S={sk,bus,nodes:[],timer:null};
+  bus.gain.linearRampToValueAtTime(1,t+.3);
+  if(sk==='core'){
+    V.fm(sfxBus,t,mtof(88),.18,.04,2,1.2,-.3); V.fm(sfxBus,t+.12,mtof(95),.3,.04,2,1.2,.3); V.noise(sfxBus,t,.35,.025,'bandpass',1200,7000);
+    [mtof(100),mtof(103.02),mtof(107)].forEach((f,i)=>{ const o=a.createOscillator(), g=a.createGain(), lfo=a.createOscillator(), lg=a.createGain(); o.frequency.value=f; g.gain.value=.0035; lfo.frequency.value=5+i*1.7; lg.gain.value=.003; lfo.connect(lg); lg.connect(g.gain); o.connect(g); g.connect(panTo(bus,[-.6,0,.6][i])); o.start(t+.3); lfo.start(t+.3); S.nodes.push(o,lfo); });
+  } else {
+    V.noise(sfxBus,t,1.1,.06,'lowpass',90,2400); V.sweep(sfxBus,t+.9,90,32,1.6,.13);
+    const sub=a.createOscillator(), sg=a.createGain(); sub.frequency.value=36.7; sg.gain.value=.05; sub.connect(sg); sg.connect(bus); sub.start(t+.6); S.nodes.push(sub);
+    const P=[]; [[220,700,1150],[277,520,1900],[330,400,2600]].forEach(([f,f1,f2],i)=>{ const o=a.createOscillator(); o.type='sawtooth'; o.frequency.value=f*.5; o.detune.value=(i-1)*9;
+      const b1=a.createBiquadFilter(); b1.type='bandpass'; b1.frequency.value=f1; b1.Q.value=9; const b2=a.createBiquadFilter(); b2.type='bandpass'; b2.frequency.value=f2; b2.Q.value=12;
+      const g=a.createGain(); g.gain.value=.03; const pn=PS.V2.orbitPanner(bus); o.connect(b1); o.connect(b2); b1.connect(g); b2.connect(g); g.connect(pn); o.start(t+.7); S.nodes.push(o); P.push(pn); });
+    let ph=0; S.timer=setInterval(()=>{ ph+=.045; P.forEach((pn,i)=>{ const a2=ph*(1+i*.35)+i*2.1; if(pn.positionX){ pn.positionX.value=Math.cos(a2)*2.2; pn.positionZ.value=Math.sin(a2)*2.2; pn.positionY.value=Math.sin(ph*.7+i)*.6; } else pn.setPosition(Math.cos(a2)*2.2,Math.sin(ph*.7+i)*.6,Math.sin(a2)*2.2); }); },50);
+  }
+  VFX.on=S; return S; }
+function vfxTick(){ const S=VFX.on; if(!S||PS.muted()) return; const t=AC.currentTime;
+  if(S.sk==='core'){ V.fm(S.bus,t,mtof(96+[0,3,5,7,10][R()*5|0]),.05,.012,2.5,1,(R()-.5)*.8); }
+  else { const f=600+R()*1600; const o=AC.createOscillator(), g=AC.createGain(), vib=AC.createOscillator(), vg=AC.createGain(); o.frequency.setValueAtTime(f*1.6,t); o.frequency.exponentialRampToValueAtTime(f*.55,t+.35); vib.frequency.value=22; vg.gain.value=f*.04; vib.connect(vg); vg.connect(o.frequency); env(g,t,.012,.02,.4); const pn=PS.V2.orbitPanner(S.bus); const an=R()*6.28; if(pn.positionX){ pn.positionX.value=Math.cos(an)*2; pn.positionZ.value=Math.sin(an)*2; } o.connect(g); g.connect(pn); o.start(t); vib.start(t); o.stop(t+.45); vib.stop(t+.45); } }
+function vfxStop(){ const S=VFX.on; if(!S) return; VFX.on=null; clearInterval(S.timer); clearInterval(S.tk); const t=AC.currentTime;
+  S.bus.gain.cancelScheduledValues(t); S.bus.gain.setValueAtTime(S.bus.gain.value,t); S.bus.gain.linearRampToValueAtTime(0,t+(S.sk==='core'?.4:1.6));
+  if(!PS.muted()){ if(S.sk==='core'){ V.fm(sfxBus,t,mtof(95),.16,.03,2,1,.3); V.fm(sfxBus,t+.1,mtof(88),.3,.03,2,1,-.3); } else { V.sweep(sfxBus,t,240,40,2.2,.07); V.bell(sfxBus,t+.3,mtof(61),.03,4); } }
+  setTimeout(()=>{ S.nodes.forEach(n=>{ try{n.stop();}catch(e){} }); S.bus.disconnect(); },2000); }
+PS.speak = (text) => { try{ const clean=String(text).replace(/<[^>]+>/g,''); if(!PS.voiceOn() || !window.speechSynthesis) return; speechSynthesis.cancel();
+  const sk=PS.skin()==='horizon'?'horizon':'core', C=VOX[sk]; const S=vfxStart(sk);
+  const u=new SpeechSynthesisUtterance(clean); const v=pickVoice(C.prefer); if(v) u.voice=v; u.lang='zh-CN'; u.rate=C.rate; u.pitch=C.pitch;
+  let got=false; u.onboundary=()=>{ got=true; vfxTick(); };
+  u.onstart=()=>{ if(S) S.tk=setInterval(()=>{ if(!got && R()<.55) vfxTick(); }, 230/C.rate); };
+  const end=()=>{ if(VFX.on===S) vfxStop(); }; u.onend=end; u.onerror=end; setTimeout(end,(clean.length*.32/C.rate+3)*1000);
+  setTimeout(()=>{ if(PS.voiceOn()) speechSynthesis.speak(u); else end(); }, C.pre*1000); }catch(e){} };
 /* 性能档位:手机 / 低端机 / 省流量自动降低特效 */
 PS.lowfx = (()=>{ try{ return innerWidth<700 || (navigator.hardwareConcurrency||8)<=4 || !!(navigator.connection&&navigator.connection.saveData) || PS.get('lowfx',false); }catch(e){ return false; } })();
 PS.toast = (msg) => { let t=document.querySelector('.toast'); if(!t){ t=document.createElement('div'); t.className='toast'; document.body.appendChild(t);} t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2600); };
@@ -276,7 +344,7 @@ PS.header = (title) => {
   const t = PS.tier(); document.getElementById('tierpill').textContent = t ? ('程度:' + PS.TIERS[t].name) : '未选程度';
   document.getElementById('mute').onclick = (e)=>{ PS.set('mute', !PS.muted()); e.target.textContent = PS.muted()?'🔇':'🔊'; };
   document.getElementById('skinb').onclick = (e)=>{ PS.setSkin(PS.skin()==='core'?'horizon':'core'); e.target.textContent='◐ '+PS.SKINS[PS.skin()]; PS.click(); };
-  document.getElementById('voiceb').onclick = (e)=>{ PS.set('voice',!PS.voiceOn()); e.target.textContent=PS.voiceOn()?'🗣 语音':'🗣 关'; if(PS.voiceOn()) PS.speak('我是萤。现在我可以说话了。'); else speechSynthesis && speechSynthesis.cancel(); };
+  document.getElementById('voiceb').onclick = (e)=>{ PS.set('voice',!PS.voiceOn()); e.target.textContent=PS.voiceOn()?'🗣 语音':'🗣 关'; if(PS.voiceOn()) PS.speak(PS.skin()==='horizon'?'……我在视界的另一侧。我听得见你。':'天命之瞳,在线。我是萤,现在我可以说话了。'); else speechSynthesis && speechSynthesis.cancel(); };
   document.getElementById('ambb').onclick = (e)=>{ const on=!PS.musicOn(); PS.setMusic(on); e.target.textContent = on?'♫ 音乐':'♫ 关'; };
 };
 
