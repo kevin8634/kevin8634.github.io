@@ -2,9 +2,9 @@
  * 只缓存本世界自己的文件,让学生断网时也能继续玩已打开过的任务。
  * 页面:先走网络,失败再用缓存;脚本/样式:先用缓存,后台更新。
  * 不碰根目录、门户或其他世界的缓存;不发任何外部请求。 */
-const VER = 'ls-v0.8.2';
+const VER = 'ls-v0.9';
 const BASE = '/life-source/';
-const CORE = ['', 'ls.css', 'ls.js', 'ls-task.js', 'ls-cards.js', 'ls-scene.js', 'img/intro1.webp', 'img/intro2.webp', 'img/intro3.webp', 'img/atlas-tree.webp', 'ls-helix.js', 'ls-zoom.js', 'atlas-data.js', 'ls-intro.js', 'ls-atlas.js',
+const CORE = ['', 'ls.css', 'ls.js', 'ls-task.js', 'ls-cards.js', 'ls-scene.js', 'img/intro1.webp', 'img/intro2.webp', 'img/intro3.webp', 'img/atlas-tree.webp', 'img/g-cas.webp', 'img/g-epi.webp', 'img/g-adna.webp', 'img/g-phage.webp', 'img/g-edna.webp', 'ls-helix.js', 'ls-zoom.js', 'atlas-data.js', 'ls-intro.js', 'ls-atlas.js',
   'vendor/three.module.min.js', 'dna/', 'parents/', 'zebra/', 'virus/', 'wolf/'].map(p => BASE + p);
 
 self.addEventListener('install', e => {

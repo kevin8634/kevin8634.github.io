@@ -106,7 +106,7 @@ html,body{overflow:hidden}
 </div>
 <div id="legend"></div>
 <div id="chain" class="hud-bottom"></div>
-<div id="gd" class="hud-right"><div class="ava" title="向导 卡丝 Cas">卡丝</div><div class="bb ls-panel"><div class="who">卡丝 Cas · 首席向导</div><div class="say"></div></div></div>
+<div id="gd" class="hud-right"><div class="ava" title="向导 卡丝 Cas"><img alt="" src="img/g-cas.webp" onerror="this.remove()"><span>卡丝</span></div><div class="bb ls-panel"><div class="who">卡丝 Cas · 首席向导</div><div class="say"></div></div></div>
 <div id="scale" class="hud-right"><div class="cap">穿越尺度</div><div class="rail"><input type="range" min="0" max="5" step="0.01" value="2.5" aria-label="穿越尺度:从分子到生态"><div class="ticks"></div></div><div class="lv">全景</div><button class="all ls-btn">全景</button></div>
 <div id="sheet" class="ls-panel"></div>
 <div id="divebar" class="hud-left"><button class="ls-btn" id="dive" title="一镜到底:从指纹到碱基对" aria-label="一镜到底:从指纹到碱基对">🔬<span class="lb">一镜到底</span></button></div>
@@ -140,7 +140,7 @@ const pre = () => document.getElementById('lsi-pre')?.remove();
 if (reducedMotion()) { pre(); hudIn(); } else startIntro(store.get('intro', false)); // 王磊 10-21:每次进入都播放开场;首次带声音门屏,之后静音自动播放(可点跳过)
 /* ---------- 向导气泡:只提问 ---------- */
 const ASK = ['从哪一层开始探索?拖动右边的「穿越尺度」试试。', '一颗星点亮了——你猜它属于哪个尺度?', '从指纹放大到碱基对,要放大多少倍?点左下角的显微镜看看。'];
-let ai = 0; const gd = $('#gd'), say = () => { $('#gd .say').textContent = ASK[ai % ASK.length]; };
+let ai = 0; const gd = $('#gd'), say = () => { $('#gd .say').textContent = ASK[ai % ASK.length]; gd.classList.remove('talk'); void gd.offsetWidth; gd.classList.add('talk'); };
 say(); let gdT = setTimeout(() => gd.classList.add('min'), 9000);
 $('#gd .ava').onclick = () => { clearTimeout(gdT); if (gd.classList.contains('min')) { ai++; say(); gd.classList.remove('min'); sound.sparkle(2); } else gd.classList.add('min'); };
 if (matchMedia('(max-width:640px)').matches) gd.classList.add('min');

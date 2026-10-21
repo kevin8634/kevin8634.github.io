@@ -153,7 +153,8 @@ export function guide(id) {
   const g = GUIDES[id] || GUIDES.cas;
   const box = document.createElement('div');
   box.className = 'ls-guide';
-  box.innerHTML = `<div class="ava" style="background:radial-gradient(circle at 35% 30%,#ecfdf5,${g.color} 60%,#064e3b)">${g.name.split(' ')[1]}</div>
+  const gk = GUIDES[id] ? id : 'cas';
+  box.innerHTML = `<div class="ava" style="--gc:${g.color};background:radial-gradient(circle at 35% 30%,#ecfdf5,${g.color} 60%,#064e3b)"><img alt="" src="${new URL(`./img/g-${gk}.webp`, import.meta.url)}" onerror="this.remove()"><span>${g.name.split(' ')[1]}</span></div>
     <div class="bubble"><div class="who"></div><div class="say"></div><div class="hints"></div></div>`;
   box.querySelector('.who').textContent = `${g.name} · ${g.term}`;
   document.body.append(box);
@@ -162,6 +163,7 @@ export function guide(id) {
     get hintsUsed() { return used; },
     ask(text, hints = []) { // hints: [反问, 高亮线索, 演示一半]
       used = 0; box.querySelector('.say').textContent = text;
+      box.classList.remove('talk'); void box.offsetWidth; box.classList.add('talk');
       const h = box.querySelector('.hints'); h.innerHTML = '';
       hints.forEach((hint, i) => {
         const b = document.createElement('button'); b.className = 'ls-btn'; b.textContent = ['提示 1', '提示 2', '提示 3'][i];

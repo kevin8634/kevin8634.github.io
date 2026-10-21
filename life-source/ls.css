@@ -103,3 +103,15 @@ body.ls-task .ls-guide{position:static;max-width:none}
 .ls-album .al-c.on{border:1px solid var(--gold);background:linear-gradient(135deg,#0f3a2c,#06120e);color:var(--gold);cursor:pointer}
 .ls-album .al-big{margin-top:10px;padding:10px;border:1px solid rgba(226,190,120,.5);border-radius:10px}.ls-album .al-big b{color:var(--gold)}.ls-album .al-big p{margin:6px 0 0;font-size:13px}
 @media (max-width:480px){.ls-task .ls-top .title{display:none}.ls-albtn{padding:3px 7px;font-size:12px}}
+
+/* v0.8 五灵头像:取自已定稿的「源码五灵」设定图;呼吸漂浮 + 提问时点头发光 */
+.ls-guide .ava,#gd .ava{position:relative;overflow:hidden}
+.ls-guide .ava img,#gd .ava img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
+.ls-guide .ava img+span,#gd .ava img+span{display:none}
+.ls-guide .ava{border:2px solid rgba(226,190,120,.85);animation:lsFloat 4.2s ease-in-out infinite}
+.ls-guide.talk .ava,#gd.talk .ava{animation:lsNod .7s ease-out,lsFloat 4.2s ease-in-out .7s infinite}
+.ls-guide.talk .ava::after,#gd.talk .ava::after{content:"";position:absolute;inset:-2px;border-radius:50%;box-shadow:0 0 0 0 var(--gc,#34d399);animation:lsRing 1.1s ease-out}
+@keyframes lsFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes lsNod{0%{transform:scale(1) rotate(0)}30%{transform:scale(1.12) rotate(-6deg)}60%{transform:scale(.97) rotate(4deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes lsRing{0%{box-shadow:0 0 0 0 rgba(110,231,183,.8)}100%{box-shadow:0 0 0 14px rgba(110,231,183,0)}}
+@media (prefers-reduced-motion:reduce){.ls-guide .ava,.ls-guide.talk .ava,#gd.talk .ava{animation:none}.ls-guide.talk .ava::after,#gd.talk .ava::after{animation:none}}
