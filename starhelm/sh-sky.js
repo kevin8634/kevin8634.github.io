@@ -86,7 +86,8 @@
     LE.ui.showCard({ kind: 'subsolar', color: '#ffd23f', kicker: '太阳直射点', title: '此刻太阳正对着这里',
       blurb: '站在这一点的人,中午影子几乎消失。直射点一年里在南北回归线之间来回移动——这正是四季的线索。',
       rows: [['纬度', Math.abs(ss.lat).toFixed(2) + '°' + (ss.lat >= 0 ? 'N' : 'S'), 1], ['经度', Math.abs(ss.lng).toFixed(2) + '°' + (ss.lng >= 0 ? 'E' : 'W'), 1],
-             ['所在半球', ss.lat >= 0 ? '北半球' : '南半球'], ['回归线', '23.44°N ~ 23.44°S']] });
+             ['所在半球', ss.lat >= 0 ? '北半球' : '南半球'], ['回归线', '23.44°N ~ 23.44°S']],
+      actions: SH.sunLab ? [{ label: '☀ 太阳活动观测台', fn: function () { LE.ui.closeCard && LE.ui.closeCard(); SH.sunLab.open(); } }] : [] });
   };
   SKY.cardMoon = function () {
     var ph = A.moonPhase(new Date()), ml = SKY.sm.moonLL; SH.progress.explore('moon');
@@ -94,7 +95,8 @@
       blurb: '月球的方向是真实的,距离被压缩了:真实距离约是地球半径的 60 倍。月亮正下方的地面,就是此刻离月亮最近的地方。',
       rows: [['月相', ph.name + (ph.waxing ? '(渐盈)' : '(渐亏)')], ['被照亮', Math.round(ph.k * 100) + '%', 1],
              ['地月距离', U.fmtNum(Math.round(ph.km)) + ' km', 1], ['光从月球到你', (ph.km / 299792.458).toFixed(2) + ' 秒', 1],
-             ['月下点', ml.lat.toFixed(1) + ', ' + ml.lng.toFixed(1), 1]] });
+             ['月下点', ml.lat.toFixed(1) + ', ' + ml.lng.toFixed(1), 1]],
+      actions: SH.tideLab ? [{ label: '🌊 潮汐实验室', fn: function () { LE.ui.closeCard && LE.ui.closeCard(); SH.tideLab.open(); } }] : [] });
     SH.cardAsk('moon');
   };
 
