@@ -187,6 +187,7 @@
   var Music = (function () {
     var PHI = (1 + Math.sqrt(5)) / 2;
     var PI_D = "31415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679821480865132823066470938446095505822317253594081284811174502841027019385211055596446229489549303819644288109756659334461284756482337867831652712019091456485669234603486104543266482133936072602491412737245870066063155881748815209209628292540917153643678925903600113305305488204665213841469519415116094330572703657595919530921861173819326117931051185480744623799627495673518857527248912279381830119491";
+    var E_D = "27182818284590452353602874713526624977572470936999595749669676277240766303535475945713821785251664274";
     var MODE = {
       ion: [0, 2, 4, 5, 7, 9, 11], dor: [0, 2, 3, 5, 7, 9, 10], lyd: [0, 2, 4, 6, 7, 9, 11],
       mix: [0, 2, 4, 5, 7, 9, 10], aeo: [0, 2, 3, 5, 7, 8, 10], hmin: [0, 2, 3, 5, 7, 8, 11]
@@ -334,6 +335,61 @@
           if (i === 10 && b % 4 === 3) I.box(t, deg(T, c + 7, 2), 0.5);
         } },
       /* —— 任务专属曲 —— */
+      { id: "overture", name: "星图序曲", d: "电影感氛围 · 钟声、长音与拨弦 · 主页主题曲", math: "和弦在 Tonnetz 音网上按 π 的数位做 P/L/R 变换；钟声调制比 = 黄金比 φ；各声部按斐波那契小节 1、2、3、5、8、13 依次进场", bpm: 70, meter: 16, root: 50, mode: MODE.dor,
+        play: function (T, s, t, sd) {
+          var X = mem.ov || (mem.ov = { ch: { r: 2, maj: false }, pi: 0, v: [50, 53, 57], pads: [] }), i = s % 16, bar = Math.floor(s / 16), b34 = bar % 34;
+          var ENTER = { pad: 0, harm: 1, bell: 2, bass: 3, pluck: 5, pulse: 8, tick: 13 };
+          function act(l) { if (b34 < ENTER[l]) return false; return !((l === "pulse" || l === "bass" || l === "tick") && b34 >= 26 && b34 < 30); }
+          function pan(node, p) { if (!ac.createStereoPanner) return node; var q = ac.createStereoPanner(); q.pan.value = p; node.connect(q); return q; }
+          function drift(per) { return Math.sin(t / per * 6.2832) * 0.6; }
+          var tri = X.ch.maj ? [0, 4, 7] : [0, 3, 7];
+          if (i === 0 && bar % 2 === 0) {
+            if (bar > 0) { var d = +PI_D[X.pi++ % PI_D.length] % 3, r = X.ch.r, mj = X.ch.maj;          /* 新黎曼变换 P / L / R */
+              X.ch = d === 0 ? { r: r, maj: !mj } : d === 1 ? (mj ? { r: r + 4, maj: false } : { r: r - 4, maj: true }) : (mj ? { r: r - 3, maj: false } : { r: r + 3, maj: true });
+              X.ch.r = ((X.ch.r % 12) + 12) % 12; tri = X.ch.maj ? [0, 4, 7] : [0, 3, 7]; }
+            X.v = tri.map(function (iv) { var pc = (X.ch.r + iv) % 12, best = 0, bd = 99; for (var m = 47; m <= 71; m++) if ((m - pc) % 12 === 0) { var dd = Math.min.apply(null, X.v.map(function (v) { return Math.abs(v - m); })); if (dd < bd) { bd = dd; best = m; } } return best; }).sort(function (a, b) { return a - b; });
+            if (act("pad")) {
+              X.pads.forEach(function (p) { try { p.g.gain.cancelScheduledValues(t); p.g.gain.setTargetAtTime(0.0001, t, 1.2); p.o.forEach(function (o) { o.stop(t + 6); }); } catch (e) {} }); X.pads = [];
+              X.v.forEach(function (m, k) {
+                var g = ac.createGain(), f = ac.createBiquadFilter(), dur = sd * 32 + 1.5, base = 900 + 500 * Math.sin(t / 13 * 6.28) + 300 * Math.sin(t / 21 * 6.28);
+                f.type = "lowpass"; f.frequency.setValueAtTime(base, t); f.frequency.linearRampToValueAtTime(base + 600, t + dur / 2); f.frequency.linearRampToValueAtTime(base, t + dur);
+                var os = [-7, 7, 0].map(function (c, j) { var o = ac.createOscillator(); o.type = j < 2 ? "sawtooth" : "sine"; o.frequency.value = hz(m + (j === 2 ? 12 : 0)); o.detune.value = c; o.connect(f); o.start(t); o.stop(t + dur + 6); return o; });
+                g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.05, t + 2.4); g.gain.setValueAtTime(0.05, t + dur - 0.2); g.gain.setTargetAtTime(0.0001, t + dur, 1);
+                f.connect(g); send(pan(g, (k - 1) * 0.45), 0.5, 0.9); X.pads.push({ g: g, o: os });
+              });
+            }
+            if (act("harm")) [3, 5, 7].forEach(function (n, j) {   /* 根音的第 3、5、7 次谐波 */
+              var o = ac.createOscillator(), g = ac.createGain(), dur = sd * 28, t0 = t + sd * 4; o.frequency.value = hz(X.v[0] - 24) * n;
+              g.gain.setValueAtTime(0.0001, t0); g.gain.linearRampToValueAtTime(0.013 / (j + 1), t0 + dur * 0.4); g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+              o.connect(g); send(pan(g, [-0.7, 0.7, 0][j]), 0.2, 1, 0.2); o.start(t0); o.stop(t0 + dur + 0.1);
+            });
+          }
+          var R = X.ch.r, lo = R > 5 ? -12 : 0;
+          if (act("bass") && i % 2 === 0 && euclid(3, 8, i / 2)) {   /* 欧几里得节奏 E(3,8) */
+            var bo = ac.createOscillator(), bs = ac.createOscillator(), bg = ac.createGain(), bf = ac.createBiquadFilter(), m0 = 36 + R + (i === 6 ? 7 : 0), bd = sd * 5;
+            bo.type = "sawtooth"; bo.frequency.value = hz(m0); bs.frequency.value = hz(m0 - 12); bf.type = "lowpass"; bf.frequency.value = 260; bf.Q.value = 2;
+            bo.connect(bf); bf.connect(bg); bs.connect(bg); bg.gain.setValueAtTime(0.0001, t); bg.gain.linearRampToValueAtTime(0.13, t + 0.03); bg.gain.setTargetAtTime(0.06, t + 0.1, 0.3); bg.gain.exponentialRampToValueAtTime(0.0001, t + bd);
+            send(bg, 0.9, 0.12); bo.start(t); bs.start(t); bo.stop(t + bd + 0.05); bs.stop(t + bd + 0.05);
+          }
+          if (act("bell") && euclid(5, 16, i)) {                   /* FM 钟声:调制比 φ;音高 = 斐波那契 mod 7 */
+            if (!X.fib) { X.fib = []; for (var a = 0, c2 = 1, k2 = 0; k2 < 16; k2++) { X.fib.push(a % 7); var tt = (a + c2) % 7; a = c2; c2 = tt; } }
+            var sc = X.ch.maj ? [0, 2, 4, 5, 7, 9, 11] : [0, 2, 3, 5, 7, 8, 10], fq = hz(72 + R + lo + sc[X.fib[s % 16]]);
+            var car = ac.createOscillator(), mo = ac.createOscillator(), mg = ac.createGain(), eg = ac.createGain();
+            car.frequency.value = fq; mo.frequency.value = fq * PHI; mg.gain.setValueAtTime(fq * 2.2, t); mg.gain.exponentialRampToValueAtTime(fq * 0.05, t + 2.5);
+            mo.connect(mg); mg.connect(car.frequency); car.connect(eg); eg.gain.setValueAtTime(0.0001, t); eg.gain.linearRampToValueAtTime(0.06, t + 0.006); eg.gain.exponentialRampToValueAtTime(0.0001, t + 3.2);
+            send(pan(eg, drift(8 * PHI)), 0.55, 0.8, 0.45); car.start(t); mo.start(t); car.stop(t + 3.3); mo.stop(t + 3.3);
+          }
+          if (act("pluck") && i % 2 === 1) {                         /* Thue–Morse 节奏 + e 的数位 */
+            var n = s >> 1, tm = 0; while (n) { tm ^= n & 1; n >>= 1; }
+            if (tm) { var ed = +E_D[(s >> 1) % E_D.length], pm = 60 + R + lo + [0, 2, 4, 7, 9][ed % 5] + (ed > 6 ? 12 : 0);
+              var p1 = ac.createOscillator(), p2 = ac.createOscillator(), pg = ac.createGain(), pf = ac.createBiquadFilter();
+              p1.type = "triangle"; p1.frequency.value = hz(pm); p2.frequency.value = hz(pm) * 2.001; pf.type = "lowpass"; pf.frequency.setValueAtTime(4200, t); pf.frequency.exponentialRampToValueAtTime(600, t + 0.5);
+              p1.connect(pf); p2.connect(pf); pf.connect(pg); pg.gain.setValueAtTime(0.0001, t); pg.gain.linearRampToValueAtTime(0.05, t + 0.004); pg.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+              send(pan(pg, drift(8)), 0.5, 0.45, 0.35); p1.start(t); p2.start(t); p1.stop(t + 1); p2.stop(t + 1); }
+          }
+          if (act("pulse") && (i === 0 || i === 10)) I.kick(t, i ? 0.22 : 0.32);
+          if (act("tick") && sturm(s)) I.hat(t, 0.25 + (i % 4 === 0 ? 0.15 : 0));
+        } },
       { id: "nim", task: "nim", name: "松果蹦蹦", d: "🐿️ 轻快木琴 · 松鼠的游戏", math: "拍手只落在第 2、3、5、7、11、13 个八分拍上，全是质数", bpm: 124, meter: 16, root: 55, mode: MODE.ion, prog: [0, 4, 5, 3],
         play: function (T, s, t, sd) {
           var i = s % 16, b = bar(T, s), c = T.prog[b % 4], e = (s % 32) / 2;
@@ -430,7 +486,7 @@
           if (i % 4 === 0 && (b + i / 4) % 3 !== 2) I.box(t, deg(T, c + [4, 2, 0, 2][i / 4], 1), 0.7);
         } }
     ];
-    var GLOBAL = 4, BYTASK = {}; TR.forEach(function (T, k) { if (T.task) BYTASK[T.task] = k; });
+    var GLOBAL = 5, BYTASK = {}; TR.forEach(function (T, k) { if (T.task) BYTASK[T.task] = k; });
 
     var trk = store.get("ma:track"); if (trk === null || trk === undefined || trk >= GLOBAL) trk = 0;
     var auto = store.get("ma:mauto") !== "off";
@@ -503,7 +559,9 @@
     return {
       TR: TR, GLOBAL: GLOBAL, taskTrack: function () { return BYTASK[TASK]; }, start: start, stop: stop, tap: tap, setTrack: setTrack, setVol: setVol, setAuto: setAuto,
       auto: function () { return auto; }, on: function () { return on; }, blocked: function () { return blocked; }, setBlocked: function (b) { blocked = b; emit(); },
-      track: function () { return trk; }, cur: function () { return cur; }, vol: function () { return vol; },
+      track: function () { return trk; }, cur: function () { return cur; },
+      curId: function () { return TR[cur].id; }, chordName: function () { var X = mem.ov; if (!X) return "Dm"; return ["C","C♯","D","E♭","E","F","F♯","G","A♭","A","B♭","B"][X.ch.r] + (X.ch.maj ? "" : "m"); },
+      playId: function (id) { var k = -1; TR.forEach(function (T, j) { if (T.id === id) k = j; }); if (k >= 0 && k !== cur) switchTo(k); }, vol: function () { return vol; },
       name: function () { return TR[cur].name; }, sub: function (f) { subs.push(f); },
       _offline: function (k, secs) {
         var save = [ac, out, master, verb, dly, noiseBuf, ksCache, mem], sr = 44100;
