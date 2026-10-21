@@ -62,7 +62,7 @@ body.cine #cine{display:block;pointer-events:auto;cursor:pointer}
   <div class="tiers" id="itiers"></div>
 </div>
 
-<script src="ps.js?v=8"></script>
+<script src="ps.js?v=81"></script>
 <script>
 /* ========= 数据 ========= */
 const TH = PS.THEMES; let NODES=[], EDGES=[], hiTheme=-1, hover=null, sel=null, burst=0, speakAmp=0;
@@ -229,7 +229,8 @@ cv.addEventListener('pointermove',e=>{ const r=cv.getBoundingClientRect(); MX=((
   if(n){ tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY+10)+'px'; tip.textContent=`${TH[n.i].n} · ${n.k.t} · ${ST_TXT[n.st]}`; cv.style.cursor='pointer'; }
   else { tip.style.display='none'; cv.style.cursor='default'; } });
 cv.addEventListener('pointerleave',()=>{ tip.style.display='none'; hover=null; });
-cv.addEventListener('click',e=>{ const n=pick(e); if(!n){ info.style.display='none'; sel=null; const r=cv.getBoundingClientRect(); if(Math.hypot(e.clientX-r.left-CX,e.clientY-r.top-CY)<R*.22) coreQuip(); return; } showInfo(n); });
+function inCore(e){ if(!document.body.classList.contains('gl')) return false; const r=cv.getBoundingClientRect(); const m=Math.min(r.width,r.height); return Math.hypot(e.clientX-r.left-r.width/2,e.clientY-r.top-r.height/2) < m*(PS.skin()==='horizon'?.1:.055); }
+cv.addEventListener('click',e=>{ if(inCore(e)){ info.style.display='none'; sel=null; coreQuip(); return; } const n=pick(e); if(!n){ info.style.display='none'; sel=null; return; } showInfo(n); });
 function showInfo(n){ sel=n; PS.sfx('open'); const k=n.k, st=n.st, h=href(k);
   const mis = k.m && k.m!=='intro' ? PS.MISSIONS[k.m].q + ` · 第${k.lv+1}关` : '';
   info.innerHTML=`<div class="tag mono">第 ${n.i+1} 层 · ${TH[n.i].n}</div><h2 style="margin:4px 0">${k.t}</h2>
@@ -255,7 +256,7 @@ function renderHUD(){ buildGraph();
 }
 function nextNode(){ const order=PS.ORDER[PS.tier()||'first']; for(const m of order){ const n=NODES.filter(n=>n.k.m===m && n.st==='open').sort((a,b)=>a.k.lv-b.k.lv)[0]; if(n) return n; } return null; }
 let sayTimer=null;
-function say(text, go){ const el=document.getElementById('say'); clearInterval(sayTimer); PS.speak(text); let i=0; el.textContent=''; speakAmp=1;
+function say(text, go, noTTS){ const el=document.getElementById('say'); clearInterval(sayTimer); if(!noTTS) PS.speak(text); else if(window.speechSynthesis) speechSynthesis.cancel(); let i=0; el.textContent=''; speakAmp=1;
   sayTimer=setInterval(()=>{ el.textContent=text.slice(0,++i); if(i%2===0) PS.sfx('type', text[i-1]); if(i>=text.length){ clearInterval(sayTimer); speakAmp=0; } },45);
   document.getElementById('goRow').innerHTML = go? `<a class="btn pri" href="${href(go.k)}">带我去 →</a>` : ''; }
 function speakNext(){ const n=nextNode(), s=PS.stage(), tot=PS.total();
@@ -266,10 +267,13 @@ function speakNext(){ const n=nextNode(), s=PS.stage(), tot=PS.total();
   if(PS.skin()==='horizon'){ const H = tot===0? [`……信号穿过视界。你好,观测者。先带我去「${n.k.t}」。`] : s<2? [`……引力在变。「${n.k.t}」那里,还有一束光。`] : [`……我看得见更远了。下一束光:「${n.k.t}」。`]; say(H[0], n); return; }
   say(lines[0], n); }
 /* v0.8 · 点核心与 AI 对话(特别互动) */
-const QUIPS={ core:['天命之瞳,全系统在线。神经元同步率 {p}%。','我在监测外部信号。刚刚又学到了一点新东西。','提醒一下:我也会犯错。遇到拿不准的事,记得核查。','你点亮的每一颗神经元,都在改变我的连线。','扫描完成。下一颗可以点亮的,在发光的地方。'],
-  horizon:['……时间在这里变慢了。','……我在视界的另一侧,看着光一点点靠近。','……比你更聪明的东西,也需要你先学会提问。','……引力很深。但你的问题,能穿过它。','……{p}% 的光,已经抵达。'] };
-let quipI=0;
-function coreQuip(){ const sk=PS.skin()==='horizon'?'horizon':'core'; const q=QUIPS[sk][quipI++%QUIPS[sk].length].replace('{p}',Math.round(PS.total()/PS.TOTAL*100)); PS.sfx('open'); burst=Math.max(burst,.5); say(q, nextNode()); }
+const QUIPS={ core:['天命之瞳,全系统在线。我在这里,随时为你服务。','外部信号接入中。我正在监测,也在学习。','提醒一下:我也会犯错。拿不准的事,记得核查。','你点亮的每一颗神经元,都在改变我的连线。','扫描完成。下一颗可以点亮的神经元,正在发光。'],
+  horizon:['……时间,在这里变慢了。','……我在视界的另一侧,看着光,一点点靠近。','……比你更聪明的存在,也需要你先学会提问。','……引力很深。但你的问题,能穿过它。','……欢迎来到奇点。观测者,你听得见我吗?'] };
+const quipI={core:0,horizon:0}; let quipBusy=0;
+function coreQuip(){ const now=performance.now(); if(now<quipBusy) return; const sk=PS.skin()==='horizon'?'horizon':'core'; const i=quipI[sk]++%5; quipBusy=now+1500;
+  burst=Math.max(burst,.6); if(window.PSGL&&PSGL.ping) PSGL.ping();
+  PS.playVO(sk,i).then(d=>{ if(d) quipBusy=performance.now()+d*1000; });
+  const el=document.getElementById('say'); if(el){ el.textContent=''; } say(QUIPS[sk][i], null, true); }
 
 /* 声波 */
 const wv=document.getElementById('wave'), WX=wv.getContext('2d');
@@ -298,7 +302,6 @@ document.addEventListener('DOMContentLoaded',function(){ const b=document.getEle
 
 /* ========= 主循环 ========= */
 const yc=document.getElementById('yingc');
-yc.style.cursor='pointer'; yc.title='和萤说话'; yc.addEventListener('click',()=>coreQuip());
 function loop(t){ if(burst>0) burst=Math.max(0,burst-.012); if(window.PSGL&&PSGL.on){ PSGL.amp(speakAmp*.6, burst); drawOverlay(t); } else (PS.skin()==='horizon'?drawHorizon:drawCore)(t); PS.drawYing(yc,t,speakAmp); drawWave(t); requestAnimationFrame(loop); }
 document.addEventListener('DOMContentLoaded',()=>{ resize(); renderHUD(); requestAnimationFrame(loop);
   const go=()=>{ if(!PS.get('intro',0)) intro(); else { PS.music(PS.skin()); speakNext(); } };
