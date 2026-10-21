@@ -131,3 +131,9 @@ body[data-mode="solar"] .sh-now { display: none; }
   .le-panel .le-kicker { display: none; }   /* 矮屏(手机横屏):返回按钮占用 kicker 一行,HUD 高度不变 */
   .sh-genesis { margin: 0 0 4px; padding: 2px 8px; }
 }
+@media (max-height: 480px) and (min-width: 600px) {   /* 手机横屏:右侧主按钮压扁,给底部图层条让位 */
+  .le-actions { gap: 4px; }
+  .le-btn--hero { min-height: 34px; padding: 0 12px 0 10px; }
+  .le-btn--hero .le-btn__txt { font-size: 13px; }
+  .le-btn--hero .le-btn__txt small { display: none; }
+}
