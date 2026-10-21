@@ -771,6 +771,12 @@
       @media (max-width: 760px), (max-height: 480px) { .x-rf { display: none; } }
       .x-rf { color: rgba(234,240,255,.62); } .x-rf kbd { font: inherit; color: #e9c779; border: 1px solid rgba(233,199,121,.5); border-radius: 4px; padding: 0 4px; }
       .x-fs kbd { font: inherit; border: 1px solid rgba(233,199,121,.5); border-radius: 4px; padding: 0 4px; }
+      /* v0.8.2 坠入大气：点星球后镜头推近、锁定、穿过大气进入世界 */
+      #dive { position: fixed; inset: 0; z-index: 9999; cursor: pointer; }
+      #dive[hidden] { display: none; }
+      #dive canvas { width: 100%; height: 100%; display: block; }
+      #stage.is-diving { transition: none; will-change: transform, filter; }
+      .ui.is-diving { transition: opacity .35s ease; opacity: 0 !important; pointer-events: none; }
     </style>
   </head>
   <body>
@@ -853,6 +859,7 @@
       <aside class="card" id="card" role="dialog" aria-label="世界简介"></aside>
     </div>
 
+    <div id="dive" hidden><canvas id="diveCv"></canvas></div>
     <p class="skip" id="skipHint">点击或按任意键跳过</p>
 
     <div class="scrim" id="scrim"></div>
@@ -1011,7 +1018,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.8.1.5</b></span>
+            <span>创世计划总门户 <b>v0.8.2</b></span>
           </footer>
         </div>
       </div>
@@ -1438,8 +1445,12 @@
       });
 
       /* ---------- 开场 ---------- */
-      var intro = { t: 0, dur: RM ? 0.01 : 3.5, done: false };
-      if (lsGet("gn:portal:seen")) { intro.t = intro.dur; intro.done = true; }
+      var intro = { t: 0, dur: RM ? 0.01 : 5.2, done: false };
+      // v0.8.2 北斗点灯：每次新打开门户（新会话）播放，本会话内返回不重复；点击或按键可跳过
+      function ssGet(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+      function ssSet(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
+      if (ssGet("gn:portal:intro")) { intro.t = intro.dur; intro.done = true; }
+      var IG0 = 0.12, IGS = 0.095, IGD = 0.10;   // 第 i 颗星点亮起点 = IG0 + i*IGS，历时 IGD
 
       function finishIntro() {
         if (intro.done) return;
@@ -1614,10 +1625,11 @@
         var p = intro.t / intro.dur;
         var core = Math.min(1, p / 0.17);            // 光核
         var fly = clamp((p - 0.12) / 0.40);          // 飞出落位
-        var lineP = clamp((p - 0.52) / 0.33);        // 连线
+        var lineP = clamp((p - 0.80) / 0.15);        // 连线（七星点亮后补全斗口）
 
         // 光核
-        if (p < 0.6) {
+        if (!intro.done) drawRelay(T, p);
+        if (false) {
           var ca = (p < 0.18 ? core : Math.max(0, 1 - (p - 0.18) / 0.3));
           var cx = W * 0.5, cy = H * 0.46, cr = 4 + 70 * core;
           var cg = ctx.createRadialGradient(cx, cy, 0, cx, cy, cr);
@@ -1641,6 +1653,24 @@
         requestAnimationFrame(draw);
       }
       function clamp(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+      function drawRelay(T, p) {   // v0.8.2 金色星光沿北斗顺序接力
+        var fade = 1 - clamp((p - 0.86) / 0.12);
+        for (var i = 1; i < ORDER.length; i++) {
+          var a = byId[ORDER[i - 1]], b = byId[ORDER[i]];
+          var st = IG0 + (i - 1) * IGS + IGD * 0.55, en = IG0 + i * IGS, sp = clamp((p - st) / (en - st));
+          if (sp <= 0) break;
+          var ax = a.x + px * 1.6, ay = a.y + py * 1.3, bx = b.x + px * 1.6, by = b.y + py * 1.3;
+          var hx = ax + (bx - ax) * sp, hy = ay + (by - ay) * sp;
+          var lg = ctx.createLinearGradient(ax, ay, hx, hy);
+          lg.addColorStop(0, "rgba(233,199,121," + (0.15 * fade) + ")"); lg.addColorStop(1, "rgba(255,236,190," + (0.85 * fade) + ")");
+          ctx.strokeStyle = lg; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(hx, hy); ctx.stroke();
+          if (sp < 1) { ctx.globalAlpha = fade; ctx.drawImage(flowSprite(), hx - 14, hy - 14, 28, 28); ctx.globalAlpha = 1; }
+        }
+        if (p < IG0 + 0.02) {   // 起点：天枢先亮起一点金光
+          var s0 = byId[ORDER[0]], g = clamp(p / IG0), x0 = s0.x + px * 1.6, y0 = s0.y + py * 1.3;
+          ctx.globalAlpha = g; ctx.drawImage(flowSprite(), x0 - 18, y0 - 18, 36, 36); ctx.globalAlpha = 1;
+        }
+      }
       var FONT = '"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif';
       function drawEarth(k) {
         var E = V3.earth, M = 46, on = E.z > 4 && E.x > M && E.x < W - M && E.y > 90 && E.y < H - 90;
@@ -1823,16 +1853,21 @@
       function drawPlanet(w, T, fly, p) {
         var i = ORDER.indexOf(w.id);
         var k = clamp((fly * 7 - i * 0.55) / 1.6);
-        var e = easeOut(k);
+        var e = easeOut(k), ign = 1;
+        if (!intro.done && !RM) {   // v0.8.2 北斗点灯：七星在原位，按北斗顺序逐颗点亮
+          k = 1; e = 1; ign = clamp((p - (IG0 + i * IGS)) / IGD);
+          if (ign > 0 && !w._ig) { w._ig = 1; SND.play("star-" + w.id); }
+        }
+        var ie = easeOut(ign);
         if (k <= 0) return;
         var sx = W * 0.5, sy = H * 0.46;
         var x = sx + (w.x - sx) * e + px * 1.6;
         var y = sy + (w.y - sy) * e + py * 1.3;
         var breathe = RM ? 1 : 1 + 0.025 * Math.sin(T * 0.9 + i);
-        var r = w.r * (0.25 + 0.75 * e) * breathe;
+        var r = w.r * (0.25 + 0.75 * e) * breathe * (0.2 + 0.8 * ie);
         var dim = dimOf(w);
         var alive = w.live;
-        var op = dim * (alive ? 1 : 0.55);
+        var op = dim * (alive ? 1 : 0.55) * (0.28 + 0.72 * ie);
 
         // 光尾
         if (e < 1) {
@@ -1852,7 +1887,7 @@
         ctx.globalAlpha = 1;
 
         // v0.8 星核冠冕（点亮后展开 + 心跳脉冲；未点亮只留收拢的淡冠冕）
-        if (e >= 1) drawCrown(w, x, y, r, T, i, op);
+        if (e >= 1 && ign >= 1) drawCrown(w, x, y, r, T, i, op);
         if (w.lit) {
           ctx.strokeStyle = "rgba(233,199,121," + (0.75 * dim) + ")";
           ctx.lineWidth = 1.4; ctx.setLineDash([]);
@@ -1890,10 +1925,18 @@
           }
         }
         ctx.globalAlpha = 1;
-        if (e >= 1) drawIgnite(w, x, y, r, T);
+        if (e >= 1 && ign >= 1) drawIgnite(w, x, y, r, T);
+        if (ign > 0 && ign < 1) {   // 点亮瞬间：一圈世界色光环扩散
+          ctx.save(); ctx.globalCompositeOperation = "lighter";
+          ctx.strokeStyle = hexA(w.color, 0.9 * (1 - ign)); ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(x, y, r * (1.2 + 2.6 * ie), 0, 6.2832); ctx.stroke();
+          var fg = ctx.createRadialGradient(x, y, 0, x, y, r * 2.2);
+          fg.addColorStop(0, "rgba(255,255,255," + (0.7 * (1 - ign)) + ")"); fg.addColorStop(1, "rgba(255,255,255,0)");
+          ctx.fillStyle = fg; ctx.beginPath(); ctx.arc(x, y, r * 2.2, 0, 6.2832); ctx.fill(); ctx.restore();
+        }
 
         // 文字
-        if (e > 0.9 && (intro.done || p > 0.9)) {
+        if (e > 0.9 && ign >= 1 && (intro.done || p > 0.9)) {
           var fade = clamp((e - 0.9) / 0.1) * dim;
           var sd = w.side || 0, lx = sd === 2 ? x + r * 1.5 : sd === 3 ? x - r * 1.5 : x;
           ctx.textAlign = sd === 2 ? "left" : sd === 3 ? "right" : "center";
@@ -1948,6 +1991,7 @@
       var hideT;
       function clickTest(x, y) {
         var w = pick(x, y);
+        if (w && w.live && (w === selected || w === hovered)) { enterWorld(w.id, w.href); return; }   // v0.8.2 桌面悬停后单击 / 手机第二次点按 = 直接进入
         if (w) { selected = w; showCard(w); SND.play("select"); }
         else { selected = null; hovered = null; hideCard(); }
       }
@@ -1968,7 +2012,7 @@
           '<p class="desc">' + w.desc + '</p>' +
           '<dl>' + meta + '</dl>' +
           (w.live
-            ? '<a class="btn btn--solid" href="' + w.href + '" target="_blank" rel="noopener">进入世界 →</a>'
+            ? '<a class="btn btn--solid" data-enter="' + w.id + '" href="' + w.href + '">进入世界 →</a>'
             : '<button class="btn" disabled>即将觉醒</button>');
         var x = Math.min(Math.max(w.px + w.pr * 1.9, 16), W - 326);
         var y = Math.min(Math.max(w.py - 110, 16), H - 320);
@@ -1983,6 +2027,80 @@
         hideT = setTimeout(function () { hovered = null; hideCard(); }, 250);
       });
 
+      /* ---------- v0.8.2 进入世界：坠入大气 ---------- */
+      var DV = { on: false };
+      function enterWorld(id, href) {
+        var w = byId[id]; if (!w || !href || DV.on) return;
+        DV.on = true;
+        // 接力给世界：同窗口进入；世界可读取 sessionStorage「gn:portal:arrive」，用同色画面接上自己的开场（5 秒内有效）
+        ssSet("gn:portal:arrive", JSON.stringify({ w: id, c: w.color, t: Date.now() }));
+        SND.play("whoosh");
+        var go = function () { if (DV.went) return; DV.went = true; location.href = href; };
+        var el = document.getElementById("dive"), dc = document.getElementById("diveCv"), dx = dc.getContext("2d");
+        var stage = document.getElementById("stage"), dpr = Math.min(2, devicePixelRatio || 1);
+        el.hidden = false; dc.width = W * dpr; dc.height = H * dpr; dx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        el.onclick = null; setTimeout(function () { el.onclick = go; addEventListener("keydown", go, { once: true }); }, 400);   // 让触发进入的那次点击先结束，再允许点击跳过
+        hideCard(); ui.classList.add("is-diving");
+        var ox = w.px != null ? w.px : W / 2, oy = w.py != null ? w.py : H / 2, pr = Math.max(14, w.pr || w.r || 30);
+        var col = w.color, t0d = performance.now(), DUR = RM ? 320 : 1650;
+        var ps = [];
+        for (var n = 0; n < (RM ? 0 : 150); n++) ps.push({ a: Math.random() * 6.2832, d: Math.random(), v: 0.6 + Math.random() * 1.4, l: 0.04 + Math.random() * 0.12 });
+        function f(now) {
+          var t = Math.min(1, (now - t0d) / DUR);
+          dx.clearRect(0, 0, W, H);
+          if (RM) { dx.fillStyle = hexA(col, 0.35 * t); dx.fillRect(0, 0, W, H); dx.fillStyle = "rgba(4,6,15," + t + ")"; dx.fillRect(0, 0, W, H); }
+          else {
+            // ① 0–0.45 推近并把星球移到画面中央；② 0.35–0.8 穿过大气；③ 0.75–1 落入世界色
+            var z = clamp(t / 0.8), ze = z * z * z, s = 1 + ze * (Math.max(W, H) / pr) * 0.9, mv = easeOut(clamp(t / 0.45));
+            stage.classList.add("is-diving");
+            stage.style.transformOrigin = ox + "px " + oy + "px";
+            stage.style.transform = "translate(" + ((W / 2 - ox) * mv) + "px," + ((H / 2 - oy) * mv) + "px) scale(" + s + ")";
+            stage.style.filter = "blur(" + (ze * 6) + "px) saturate(" + (1 + ze) + ")";
+            var cx = W / 2, cy = H / 2, R = Math.hypot(W, H) / 2;
+            // 锁定环
+            var lk = clamp(t / 0.4), la = 1 - clamp((t - 0.35) / 0.15);
+            if (la > 0) {
+              var rr = pr * (3.2 - 1.6 * easeOut(lk)) * (1 + ze * 3), lx = ox + (cx - ox) * mv, ly = oy + (cy - oy) * mv;
+              dx.save(); dx.translate(lx, ly); dx.rotate(t * 2.2); dx.strokeStyle = "rgba(233,199,121," + (0.85 * la) + ")"; dx.lineWidth = 1.4;
+              dx.beginPath(); dx.arc(0, 0, rr, 0, 6.2832); dx.stroke();
+              for (var q = 0; q < 4; q++) { dx.rotate(1.5708); dx.beginPath(); dx.moveTo(rr + 4, 0); dx.lineTo(rr + 14, 0); dx.stroke(); }
+              dx.restore();
+            }
+            // 大气：世界色光幕 + 向外飞掠的光粒
+            var at = clamp((t - 0.35) / 0.45);
+            if (at > 0) {
+              var g = dx.createRadialGradient(cx, cy, R * 0.05, cx, cy, R * 1.1);
+              g.addColorStop(0, hexA(col, 0.10 * at)); g.addColorStop(0.6, hexA(col, 0.45 * at)); g.addColorStop(1, hexA(col, 0.8 * at));
+              dx.fillStyle = g; dx.fillRect(0, 0, W, H);
+              dx.save(); dx.globalCompositeOperation = "lighter"; dx.lineCap = "round";
+              ps.forEach(function (o) {
+                var d = (o.d + at * o.v * 1.6) % 1.2, r0 = R * d * d, r1 = r0 + R * o.l * (0.5 + d);
+                dx.strokeStyle = "rgba(255,255,255," + (0.55 * Math.sin(Math.min(1, d) * Math.PI) * (1 - clamp((t - 0.85) / 0.15))) + ")";
+                dx.lineWidth = 0.6 + d * 2.2;
+                dx.beginPath(); dx.moveTo(cx + Math.cos(o.a) * r0, cy + Math.sin(o.a) * r0); dx.lineTo(cx + Math.cos(o.a) * r1, cy + Math.sin(o.a) * r1); dx.stroke();
+              });
+              dx.restore();
+            }
+            // 落入：先满屏世界色，再压暗为世界开场的底色
+            var fl = clamp((t - 0.72) / 0.18), dk = clamp((t - 0.88) / 0.12);
+            if (fl > 0) { dx.fillStyle = hexA(col, 0.9 * fl); dx.fillRect(0, 0, W, H); }
+            if (dk > 0) { dx.fillStyle = "rgba(4,6,15," + (0.82 * dk) + ")"; dx.fillRect(0, 0, W, H); }
+          }
+          if (t < 1) requestAnimationFrame(f); else go();
+        }
+        requestAnimationFrame(f);
+      }
+      document.addEventListener("click", function (e) {
+        var a = e.target.closest && e.target.closest("a[data-enter]");
+        if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;   // 按住 Ctrl/⌘ 仍可新标签打开
+        e.preventDefault(); e.stopPropagation(); enterWorld(a.getAttribute("data-enter"), a.getAttribute("href"));
+      }, true);
+      addEventListener("pageshow", function (e) {   // 从世界按「返回」回到门户时复位
+        if (!DV.on) return; DV.on = false; DV.went = false;
+        var st = document.getElementById("stage"); st.style.transform = st.style.filter = ""; st.classList.remove("is-diving");
+        document.getElementById("dive").hidden = true; ui.classList.remove("is-diving");
+      });
+
       /* ---------- UI ---------- */
       var ui = document.getElementById("ui"), skipHint = document.getElementById("skipHint");
       function revealUI() {
@@ -1991,7 +2109,7 @@
         requestAnimationFrame(resize);
         ui.animate ? ui.animate([{ opacity: 0 }, { opacity: 1 }], { duration: RM ? 1 : 900, easing: "ease-out" }) : null;
         skipHint.style.display = "none";
-        lsSet("gn:portal:seen", "1");
+        lsSet("gn:portal:seen", "1"); ssSet("gn:portal:intro", "1");
       }
       if (intro.done) { revealUI(); }
 
@@ -2634,7 +2752,7 @@
         var status = ends.length === 2 ? '<span class="lit">已开通</span>' : ends.length === 1 ? '<span>单端开放 · 另一端建设中</span>' : "";
         var btns = ends.length
           ? '<div style="display:flex;flex-wrap:wrap;gap:8px">' + ends.map(function (e, k) {
-              return '<a class="btn' + (k === 0 ? " btn--solid" : "") + '" href="' + brEsc(e[0].href) + '" target="_blank" rel="noopener">' +
+              return '<a class="btn' + (k === 0 ? " btn--solid" : "") + '" data-enter="' + e[0].w + '" href="' + brEsc(e[0].href) + '">' +
                 brEsc(e[0].label || ("去 " + e[1].name + " →")) + '</a>';
             }).join("") + '</div>'
           : '<button class="btn" disabled>两端世界建设中</button>';
@@ -2760,6 +2878,8 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.2", d: "2026-10-21", t: "新开场「北斗点灯」：金色星光从天枢出发，接力点亮七颗星；点星球直接在本窗口进入世界，镜头会穿过它的大气层落进去。" },
+        { w: "01", v: "v0.8.1", d: "2026-10-21", t: "主页换上用 π、黄金比和斐波那契数列写成的新配乐「星图序曲」，十位动物向导变成 3D，还带上数学前沿称号（比如「格密码 · 枭博士」「渗流 · 刺猬博士」）。" },
         { w: "gn", v: "v0.8.1.5", d: "2026-10-21", t: "星历补记星图 Math Atlas v0.8、元素工坊 v0.4、天枢 Starhelm v0.5.3；点亮星桥「魔方 ⇄ 晶体」。" },
         { w: "01", v: "v0.8", d: "2026-10-21", t: "首页变成可以拖动的 3D 旋涡星图：开场从一条数轴和斐波那契螺线长出 197 颗知识星，点任意一颗星就能看到通往它的学习路径。" },
         { w: "03", v: "v0.4", d: "2026-10-21", t: "新任务「晶体为什么那么整齐？」四关上线：用尺度镜看盐、搭离子格子、比慢长与快长、量晶面夹角，还能看雪花为什么是六角。" },
@@ -2990,7 +3110,7 @@
         LG.card.style.setProperty("--accent", W0.color);
         LG.card.innerHTML = '<p class="card__no">' + e.v + ' · ' + e.d + '</p><h2>' + W0.name + '</h2><p class="en">' + W0.en + '</p>' +
           '<div class="line"></div><p class="desc">' + brEsc(e.t) + '</p>' +
-          (e.w !== "gn" && W0.live ? '<a class="btn btn--solid" href="' + W0.href + '" target="_blank" rel="noopener">进入世界 →</a>' : "");
+          (e.w !== "gn" && W0.live ? '<a class="btn btn--solid" data-enter="' + e.w + '" href="' + W0.href + '">进入世界 →</a>' : "");
         LG.card.classList.add("on"); LG.ch = LG.card.offsetHeight;
       }
       function lgHit(x, y) {
@@ -3047,8 +3167,8 @@
         AB.built = true;
         document.getElementById("abWorlds").innerHTML = ORDER.map(function (id) {
           var w = byId[id], inner = '<img src="world-' + id + '.webp" alt="" /><span><b>' + w.name + '</b><small>' + w.field.replace(" SI", "") + ' · ' + w.star +
-            '</small><small><em>' + (w.live ? wStat(w) + " ↗" : "筹备中 · 即将点亮") + '</em></small><small class="age">适合 ' + ageTxt(w) + '</small></span>';
-          return '<li data-w="' + id + '">' + (w.live ? '<a class="x-ab__w" style="--accent:' + w.color + '" href="' + w.href + '" target="_blank" rel="noopener" aria-label="进入' + w.name + '（新窗口）">' + inner + '</a>'
+            '</small><small><em>' + (w.live ? wStat(w) + " →" : "筹备中 · 即将点亮") + '</em></small><small class="age">适合 ' + ageTxt(w) + '</small></span>';
+          return '<li data-w="' + id + '">' + (w.live ? '<a class="x-ab__w" style="--accent:' + w.color + '" data-enter="' + id + '" href="' + w.href + '" aria-label="进入' + w.name + '">' + inner + '</a>'
             : '<div class="x-ab__w soon" style="--accent:' + w.color + '">' + inner + '</div>') + '</li>';
         }).join("");
         document.getElementById("abLaws").innerHTML = [].map.call(document.querySelectorAll("#laws li b"), function (b, i) {
@@ -3084,7 +3204,7 @@
         // 星桥：由 BRIDGES 数据动态生成
         function end(e) {
           var w = byId[e.w], body = '<small>' + w.name + '</small>「' + brEsc(e.title) + '」';
-          return e.href ? '<a class="end" style="--accent:' + w.color + '" href="' + brEsc(e.href) + '" target="_blank" rel="noopener">' + body + '<em>去看 ↗</em></a>'
+          return e.href ? '<a class="end" style="--accent:' + w.color + '" data-enter="' + e.w + '" href="' + brEsc(e.href) + '">' + body + '<em>去看 →</em></a>'
             : '<span class="end" style="--accent:' + w.color + '">' + body + '<em>即将点亮</em></span>';
         }
         document.getElementById("abBridges").innerHTML = BRIDGES.map(function (b) {
@@ -3135,7 +3255,7 @@
             '<img src="world-' + id + '.webp" alt="" draggable="false" /><small>' + w.star + '</small><b>' + w.name + '</b><em>' + w.field.replace(" SI", "") + '<span> · ' + st + '</span></em></button>' +
             '<div class="x-dk__b"><button type="button" tabindex="-1" aria-label="翻回正面">×</button><b>' + w.name + '</b><small>' + w.en + ' · ' + w.field + '</small>' +
             '<p>' + brEsc(w.desc) + '</p><i class="x-dk__age" hidden>适合 ' + ageTxt(w) + '</i><i>' + st + (more ? '<span><br>' + more + '</span>' : '') + '</i>' +
-            (w.live ? '<a href="' + w.href + '" target="_blank" rel="noopener" tabindex="-1" aria-label="进入' + w.name + '（新窗口）">进入世界 ↗</a>' : '<span class="soon">即将点亮</span>') +
+            (w.live ? '<a data-enter="' + id + '" href="' + w.href + '" tabindex="-1" aria-label="进入' + w.name + '">进入世界 →</a>' : '<span class="soon">即将点亮</span>') +
             '</div></div></div>';
         }).join("");
         DK.cards = [].map.call(DK.box.children, function (c) { return c; });
@@ -3181,7 +3301,7 @@
         el.innerHTML = '<h4>当前世界 · ' + w.star + '</h4><div class="pic"><img src="world-' + ORDER[i] + '.webp" alt=""></div><b class="n">' + w.name + '</b><small class="e">' + w.en + ' · ' + w.field + '</small>' +
           '<dl><dt>状态</dt><dd>' + wStat(w) + '</dd>' + (w.meta[1] ? '<dt>内容</dt><dd>' + brEsc(w.meta[1]) + '</dd>' : '') + '<dt>适合</dt><dd>' + ageTxt(w) + '</dd></dl>' +
           dkGauges(ORDER[i], w) + '<p>' + brEsc(w.why || w.desc) + '</p>' +
-          (w.live ? '<a href="' + w.href + '" target="_blank" rel="noopener">进入' + w.name + ' ↗</a>' : '<span class="soon">即将点亮</span>');
+          (w.live ? '<a data-enter="' + ORDER[i] + '" href="' + w.href + '">进入' + w.name + ' →</a>' : '<span class="soon">即将点亮</span>');
         if (had) { var nf = el.querySelector("a"); if (nf) nf.focus({ preventScroll: true }); else { el.tabIndex = -1; el.focus({ preventScroll: true }); } } // 重绘时不丢焦点
       }
       function dkGauges(id, w) {
