@@ -3,6 +3,8 @@
  * 进度只读 ma:v1:summary(不新增进度键);界面偏好存 ma:gl / ma:motion / ma:intro(与 ma:music、ma:theme 同类,仅本机)。
  */
 import { createStage, detectTier, readPref, writePref, reducedMotion, introSound } from "./ma-gl.js";
+import { createHomeMusic } from "./ma-music-home.js";
+import { createGuideView, GUIDES } from "./ma-guides.js";
 
 var D = document, $ = function (s) { return D.querySelector(s); };
 var DATA = window.DATA, TASKS = window.TASKS.filter(function (t) { return !t.soon; }), COLORS = window.COLORS, SEE = window.SEE || {};
@@ -78,18 +80,32 @@ function start() {
   function anySkip(e) { if (!stage.isIntro()) return; if (e.type === "keydown" && e.key !== "Escape" && e.key !== " " && e.key !== "Enter") return; stage.skipIntro(); }
   addEventListener("keydown", anySkip); $("#glStage").addEventListener("pointerdown", anySkip);
   function showHud() { root.classList.add("hud-on"); }
-  function introDone() { root.classList.remove("intro-on"); skip.hidden = true; writePref("ma:intro", 1); showHud(); }
+  function introDone() { root.classList.remove("intro-on"); skip.hidden = true; writePref("ma:intro", 1); showHud(); if (soundOn()) playBgm(); }
 
   /* ---------- 顶栏 ---------- */
-  var M = window.MA_Music, sb = $("#hSound");
-  function soundUi() { var on = M && M.on(); sb.innerHTML = "♪ 声音 " + (on ? "开" : "关"); sb.setAttribute("aria-pressed", on ? "true" : "false"); }
+  /* 声音:主页背景音乐「星图序曲」(ma-music-home.js);声音默认关,开场动画结束后才开始播放 */
+  var M = window.MA_Music, H = createHomeMusic(), sb = $("#hSound"), waitGesture = null;
+  function anyOn() { return H.on() || (M && M.on()); }
+  function soundUi() { var on = anyOn(); sb.innerHTML = "♪ 声音 " + (on ? "开" : "关"); sb.title = H.on() ? "星图序曲 · 和弦 " + H.chordName() + "(在 Tonnetz 音网上按 π 的数位行走)" : "背景音乐"; sb.setAttribute("aria-pressed", on ? "true" : "false"); }
+  function playBgm() {
+    if (stage.isIntro()) return;           /* 开场中不播,等 introDone */
+    if (M && M.on()) M.stop();
+    H.start().then(soundUi).catch(function () {
+      /* 浏览器自动播放拦截:等用户第一次点按后再开始 */
+      if (waitGesture) return;
+      waitGesture = function () { removeEventListener("pointerdown", waitGesture, true); removeEventListener("keydown", waitGesture, true); waitGesture = null; if (soundOn() && !stage.isIntro()) H.start().then(soundUi).catch(function () {}); };
+      addEventListener("pointerdown", waitGesture, true); addEventListener("keydown", waitGesture, true);
+    });
+  }
   sb.onclick = function () {
-    if (!M) return;
-    if (M.on()) { M.stop(); writePref("ma:music", "off"); }
-    else { writePref("ma:music", "on"); M.start().catch(function () {}); }
-    setTimeout(soundUi, 60);
+    if (anyOn()) { H.stop(); if (M && M.on()) M.stop(); writePref("ma:music", "off"); }
+    else { writePref("ma:music", "on"); playBgm(); }
+    setTimeout(soundUi, 80);
   };
-  if (M && M.sub) M.sub(soundUi); soundUi();
+  H.sub(soundUi); window.MA_HOME_MUSIC = H;
+  if (M && M.sub) M.sub(function () { if (M.on() && H.on()) H.stop(); soundUi(); });
+  soundUi();
+  if (!playIntro && soundOn()) playBgm();
   var fb = $("#hFull");
   if (!D.documentElement.requestFullscreen) fb.hidden = true;
   fb.onclick = function () { if (D.fullscreenElement) D.exitFullscreen(); else D.documentElement.requestFullscreen().catch(function () {}); };
@@ -115,8 +131,10 @@ function start() {
     var t = TASKS.find(function (x) { return x.id === id; }); if (!t) return;
     cur = t; hintI = -1;
     D.querySelectorAll(".ht-item").forEach(function (b) { b.classList.toggle("on", b.dataset.id === id); });
-    var g = GUIDE[id] || [t.em + " 向导", t.t, []];
-    $("#hgEm").textContent = t.em; $("#hgName").textContent = g[0];
+    var g = GUIDE[id] || [t.em + " 向导", t.t, []], gi = GUIDES[id];
+    $("#hgName").textContent = gi ? gi.title + " · " + gi.name : g[0];
+    $("#hgWhy").textContent = gi ? gi.why : "";
+    if (gview) { gview.set(id); $("#hgEm").classList.add("is3d"); } else { $("#hgEm").textContent = t.em; }
     $("#hgQ").textContent = g[1]; $("#hgHint").textContent = ""; $("#hgHintBtn").textContent = "提示 0/" + g[2].length;
     $("#hgGo").href = "./" + t.id + "/"; $("#hgGo").textContent = "去这一关 →";
     $("#hgTask").textContent = t.t;
@@ -136,7 +154,9 @@ function start() {
     if (!cur) return; var g = GUIDE[cur.id]; if (!g || !g[2].length) return;
     hintI = (hintI + 1) % g[2].length; $("#hgHint").textContent = g[2][hintI]; this.textContent = "提示 " + (hintI + 1) + "/" + g[2].length;
   };
-  $("#hgClose").onclick = function () { $("#hGuide").hidden = true; root.classList.remove("guide-on"); cur = null; D.querySelectorAll(".ht-item").forEach(function (b) { b.classList.remove("on"); }); stage.setHighlight([], []); };
+  var gview = null;
+  try { gview = createGuideView($("#hgCanvas"), { reduce: reducedMotion() }); } catch (e) { gview = null; }
+  $("#hgClose").onclick = function () { if (gview) gview.stop(); $("#hGuide").hidden = true; root.classList.remove("guide-on"); cur = null; D.querySelectorAll(".ht-item").forEach(function (b) { b.classList.remove("on"); }); stage.setHighlight([], []); };
 
   /* ---------- 悬停浮卡 / 点星规划路径 ---------- */
   var card = $("#hCard"), pathTag = $("#hPath"), planOn = true, pinned = null;
@@ -218,7 +238,7 @@ function start() {
       info = detectTier(); if (info.tier === "lo") { location.reload(); return; }
       stage.setTier(info.tier); syncSettings();
     }
-    if (m) { writePref("ma:motion", m.dataset.m); stage.setReduce(reducedMotion()); syncSettings(); }
+    if (m) { writePref("ma:motion", m.dataset.m); stage.setReduce(reducedMotion()); if (gview) gview.setReduce(reducedMotion()); syncSettings(); }
   });
   $("#hsReplay").onclick = function () { setP.hidden = true; if (reducedMotion()) return; root.classList.remove("hud-on"); root.classList.add("intro-on"); skip.hidden = false; stage.replay(); };
   $("#hsFeedback").onclick = function () { if (window.MA_feedback) MA_feedback(); };
