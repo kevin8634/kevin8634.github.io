@@ -6,6 +6,18 @@
 <title>星图 Math Atlas · 问题先行的数学星图</title>
 <meta name="description" content="无年级、问题先行的数学学习平台：从小学到大学，用游戏、声音和图像走进数学。" />
 <link rel="stylesheet" href="./ma.css" />
+<link rel="stylesheet" href="./ma-hud.css" />
+<script>
+/* v0.8 沉浸版判定:有 WebGL 且画质不是「低」→ 沉浸版;否则经典 Canvas 版(功能不减) */
+(function () { var d = document.documentElement, p = "auto";
+  try { p = JSON.parse(localStorage.getItem("ma:gl")) || "auto"; } catch (e) {}
+  var gl = null; try { var c = document.createElement("canvas"); gl = c.getContext("webgl2") || c.getContext("webgl"); } catch (e) {}
+  if (!gl) return; d.setAttribute("data-ma-webgl", "");
+  var cores = navigator.hardwareConcurrency || 4, mem = navigator.deviceMemory || 4;
+  if (p === "lo" || (p === "auto" && (cores <= 2 || mem <= 1))) return;
+  if (!("noModule" in HTMLScriptElement.prototype) || !(HTMLScriptElement.supports && HTMLScriptElement.supports("importmap"))) return;
+  d.setAttribute("data-ma-gl", ""); })();
+</script>
 <style>
   :root { --ink: #eef1ff; --mute: #9aa4cf; --line: rgb(160 185 255 / .18); --glass: rgb(12 17 42 / .58);
     --sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif; }
@@ -134,6 +146,51 @@
 </style>
 </head>
 <body>
+<div id="gl" class="gl" hidden>
+  <div id="glStage" class="gl-stage"></div>
+  <div id="glTitle" class="gl-title" aria-hidden="true"><b>星图</b><span>MATH ATLAS · 数学</span></div>
+  <div id="glLabels" class="gl-labels" hidden></div>
+  <header class="hud-top">
+    <div class="ht-l hud-p"><a class="hud-btn" href="/" title="回到创世计划总门户">← 创世计划</a><span class="hud-mark"><i></i>星图</span></div>
+    <div class="hud-title hud-p">星图 Math Atlas · <span>数学</span></div>
+    <div class="ht-r"><button class="hud-btn" id="hSound" type="button" aria-pressed="false">♪ 声音 关</button><button class="hud-btn" id="hFull" type="button">全屏</button><button class="hud-btn" id="hSet" type="button">设置</button></div>
+  </header>
+  <aside class="hud-tasks hud-p" aria-label="任务">
+    <button id="hTasksToggle" type="button"><b>任务 · 10 个问题</b><small>点亮 <em class="lit-n">0</em> / 197</small></button>
+    <div class="ht-head"><b>任务 · 10 个问题</b><small>点亮 <em id="hLit">0</em> / 197 颗知识星</small></div>
+    <ol id="hTaskList"></ol>
+  </aside>
+  <aside class="hud-guide hud-p" id="hGuide" hidden aria-live="polite">
+    <div class="hg-h"><span class="hg-em" id="hgEm"></span><div><b id="hgName"></b><small>向导只提问</small></div><button id="hgClose" type="button" aria-label="关闭">×</button></div>
+    <p class="hg-task" id="hgTask"></p>
+    <p class="hg-q" id="hgQ"></p>
+    <p class="hg-hint" id="hgHint"></p>
+    <div class="hg-act"><button class="hud-btn" id="hgHintBtn" type="button">提示</button><a class="hud-btn" id="hgGo" href="#">去这一关 →</a></div>
+    <div id="hgBridges"></div>
+  </aside>
+  <nav class="hud-bar hud-p" aria-label="星图控件">
+    <button class="hud-btn" id="bCons" type="button">星座</button>
+    <button class="hud-btn" id="bPlan" type="button">规划路径</button>
+    <button class="hud-btn" id="bLit" type="button">只看已点亮</button>
+    <button class="hud-btn" id="bTheme" type="button">主题</button>
+    <button class="hud-btn" id="bMusic" type="button">专注音乐</button>
+    <a class="hud-btn" href="./notes/">笔记</a>
+    <button class="hud-btn" id="bReset" type="button" title="回到初始视角">回正</button>
+  </nav>
+  <div class="hud-card hud-p" id="hCard" hidden></div>
+  <div class="hud-path" id="hPath" hidden></div>
+  <div class="hud-settings hud-p" id="hSettings" hidden>
+    <h3>设置 <button id="hsClose" type="button" aria-label="关闭">×</button></h3>
+    <h4>画质</h4>
+    <div class="seg"><button class="hud-btn" data-q="auto" type="button">自动</button><button class="hud-btn" data-q="hi" type="button">高</button><button class="hud-btn" data-q="mid" type="button">中</button><button class="hud-btn" data-q="lo" type="button">低 · 经典版</button></div>
+    <p id="hsNow"></p>
+    <h4>动态效果</h4>
+    <div class="seg"><button class="hud-btn" data-m="auto" type="button">跟随系统</button><button class="hud-btn" data-m="reduce" type="button">减少</button><button class="hud-btn" data-m="full" type="button">完整</button></div>
+    <div class="row"><button class="hud-btn" id="hsReplay" type="button">重看开场</button><a class="hud-btn" href="./atlas/">完整知识星图 →</a><button class="hud-btn" id="hsFeedback" type="button">反馈</button></div>
+    <p>拖动旋转 · 滚轮或双指缩放 · 双击回正。设置只保存在这台设备上。</p>
+  </div>
+  <button class="hud-btn intro-skip" id="introSkip" type="button" hidden>跳过 · Esc</button>
+</div>
 <canvas id="galaxy" aria-hidden="true"></canvas>
 <div class="vignette"></div>
 
@@ -145,6 +202,7 @@
     <a class="pill" href="./notes/">知识笔记</a>
     <button class="pill" type="button" onclick="MA_feedback()">反馈</button>
   </nav>
+  <button class="pill" id="glBack" type="button" title="回到 3D 沉浸版" onclick="try{localStorage.setItem('ma:gl',JSON.stringify('auto'))}catch(e){};location.reload()">✦<span class="hide-s"> 沉浸版</span></button>
   <button class="pill" id="themeBtn" type="button" title="星系主题">🎨<span class="hide-s"> 主题</span></button>
   <button class="pill" id="music" type="button" aria-pressed="false" title="背景音乐"><span class="eq"><s></s><s></s><s></s><s></s></span><span id="musiclabel">音乐</span></button>
 </header>
@@ -210,8 +268,9 @@
 <button class="pill unmute" id="unmute" type="button" hidden>🔊 点一下，开启星空音乐</button>
 
 <script>
-var UPDATED = "2026-10-18 · v0.7";
+var UPDATED = "2026-10-21 · v0.8";
 var DATA = {"c":["数与运算","代数与结构","几何与空间","变化与极限","随机与数据","离散与算法","数论","模型与最优化","证明与基础"],"s":[["n01","计数与一一对应",0,1,[]],["n02","位值与十进制",0,1,["n01"]],["n03","加法与减法",0,1,["n01"]],["n04","乘法",0,1,["n03"]],["n05","除法与余数",0,1,["n04"]],["n06","分数",0,2,["n05"]],["n07","小数",0,2,["n02","n06"]],["n08","百分数",0,2,["n07"]],["n09","比与比例",0,2,["n06"]],["n10","负数",0,2,["n03"]],["n11","运算律",0,2,["n04","n10"]],["n12","乘方与指数",0,2,["n04"]],["n13","平方根",0,3,["n12"]],["n14","无理数",0,3,["n13","n09"]],["n15","实数与数轴",0,3,["n14","n07"]],["n16","科学记数法与数量级",0,2,["n12"]],["n17","估算与近似",0,2,["n07"]],["n18","复数",0,4,["n15","a07"]],["n19","模运算(时钟算术)",0,3,["n05"]],["n20","二进制与进制",0,2,["n02"]],["n21","无穷与可数性",0,4,["n15","l04"]],["n22","p进数",0,5,["n19","n15"]],["n23","四元数",0,5,["n18","a20"]],["a01","模式与规律",1,1,[]],["a02","用字母表示数",1,2,["a01","n04"]],["a03","代数式与化简",1,2,["a02","n11"]],["a04","一元一次方程",1,2,["a03"]],["a05","不等式",1,3,["a04","n10"]],["a06","二元一次方程组",1,3,["a04","g11"]],["a07","一元二次方程",1,3,["a04","n13"]],["a08","多项式",1,3,["a03"]],["a09","因式分解",1,3,["a08"]],["a10","函数概念",1,3,["a02","g11"]],["a11","一次函数",1,3,["a10"]],["a12","二次函数",1,3,["a10","a07"]],["a13","指数函数",1,3,["a10","n12"]],["a14","对数",1,3,["a13"]],["a15","反比例函数",1,3,["a10","n09"]],["a16","函数图像变换",1,3,["a10","g07"]],["a17","数列",1,3,["a01","a10"]],["a18","等差与等比数列",1,3,["a17"]],["a19","向量空间",1,4,["g15","a06"]],["a20","矩阵与线性变换",1,4,["a19"]],["a21","行列式",1,4,["a20"]],["a22","特征值与特征向量",1,4,["a21"]],["a23","群",1,4,["g06","a20"]],["a24","环与域",1,4,["a23","n19"]],["a25","伽罗瓦理论",1,5,["a24","a08"]],["a26","表示论",1,5,["a23","a20"]],["a27","范畴论",1,5,["a23","l05"]],["a28","线性方程组与消元",1,4,["a06","a20"]],["a29","奇异值分解",1,5,["a22"]],["a30","张量",1,5,["a20"]],["g01","平面图形",2,1,[]],["g02","立体图形",2,1,["g01"]],["g03","长度与测量",2,1,["n01"]],["g04","角",2,2,["g01"]],["g05","周长与面积",2,2,["g03","n04"]],["g06","对称",2,2,["g01"]],["g07","平移旋转与反射",2,2,["g06"]],["g08","体积",2,2,["g05","g02"]],["g09","三角形",2,2,["g04"]],["g10","平行与垂直",2,2,["g04"]],["g11","坐标系",2,2,["n10","g10"]],["g12","全等",2,3,["g09","g07"]],["g13","相似",2,3,["g12","n09"]],["g14","勾股定理",2,3,["g09","n13"]],["g15","向量",2,3,["g11","n15"]],["g16","圆与π",2,3,["g05"]],["g17","三角比",2,3,["g13","g14"]],["g18","三角函数",2,4,["g17","a10"]],["g19","尺规作图",2,3,["g12","g16"]],["g20","解析几何",2,3,["g11","a11"]],["g21","圆锥曲线",2,4,["g20","a12"]],["g22","空间几何",2,3,["g02","g15"]],["g23","三视图与投影",2,3,["g22"]],["g24","非欧几何",2,5,["g19","g17"]],["g25","分形",2,4,["a17","g13"]],["g26","拓扑初步",2,4,["g02"]],["g27","曲线与曲率",2,5,["c05","g15"]],["g28","微分几何",2,5,["g27","c13"]],["g29","流形",2,5,["g28","g26"]],["g30","代数拓扑",2,5,["g26","a23"]],["g31","极坐标",2,3,["g17","g11"]],["g32","四维空间",2,4,["g22","a19"]],["c01","变化率",3,2,["n09"]],["c02","斜率",3,3,["c01","a11"]],["c03","数列极限",3,4,["a17","n15"]],["c04","函数极限与连续",3,4,["c03","a10"]],["c05","导数",3,4,["c04","c02"]],["c06","求导法则",3,4,["c05"]],["c07","极值与最优",3,4,["c06"]],["c08","积分与面积",3,4,["c05","g05"]],["c09","微积分基本定理",3,4,["c08"]],["c10","级数",3,4,["c03"]],["c11","泰勒展开",3,5,["c10","c06"]],["c12","多元函数与偏导",3,5,["c06","g22"]],["c13","多重积分",3,5,["c12","c08"]],["c14","向量场、散度与旋度",3,5,["c12","g15"]],["c15","常微分方程",3,4,["c09"]],["c16","偏微分方程",3,5,["c15","c12"]],["c17","傅里叶级数",3,4,["g18","c10"]],["c18","傅里叶变换",3,5,["c17","c13"]],["c19","实分析",3,5,["c04","l06"]],["c20","测度论",3,5,["c19"]],["c21","复分析",3,5,["n18","c05"]],["c22","泛函分析",3,5,["c19","a19"]],["c23","变分法",3,5,["c07","c13"]],["c24","动力系统与混沌",3,5,["c15"]],["c25","e与自然增长",3,4,["a13","c05"]],["p01","分类与计数统计",4,1,["n01"]],["p02","统计图表",4,2,["p01"]],["p03","平均数、中位数、众数",4,2,["p02","n06"]],["p04","可能性",4,2,["p01","n06"]],["p05","古典概率",4,3,["p04","d03"]],["p06","条件概率",4,3,["p05"]],["p07","贝叶斯思想",4,4,["p06"]],["p08","随机变量与期望",4,4,["p05","a10"]],["p09","方差与离散程度",4,3,["p03"]],["p10","二项分布",4,4,["p08","d04"]],["p11","正态分布",4,4,["p10","c08"]],["p12","大数定律",4,4,["p08","c03"]],["p13","中心极限定理",4,5,["p11","p12"]],["p14","抽样与估计",4,4,["p11"]],["p15","假设检验",4,4,["p14"]],["p16","相关与回归",4,4,["p09","a11"]],["p17","随机游走",4,4,["p08"]],["p18","马尔可夫链",4,5,["p17","a20"]],["p19","信息熵",4,5,["p08","a14"]],["p20","统计学习",4,5,["p16","m07"]],["p21","实验设计与因果",4,4,["p15"]],["p22","蒙特卡洛方法",4,4,["p12"]],["d01","分类与排序",5,1,[]],["d02","规律与递推",5,2,["a01"]],["d03","加法与乘法原理",5,2,["n04"]],["d04","排列组合",5,3,["d03"]],["d05","杨辉三角与二项式",5,3,["d04","a08"]],["d06","鸽巢原理",5,3,["d03"]],["d07","图论初步",5,3,["d03"]],["d08","树与网络",5,4,["d07"]],["d09","最短路径",5,4,["d08"]],["d10","算法与流程",5,2,["d01"]],["d11","递归",5,3,["d02","d10"]],["d12","算法复杂度",5,4,["d11","c03"]],["d13","容斥原理",5,3,["d03"]],["d14","生成函数",5,5,["d05","c10"]],["d15","图着色与平面图",5,4,["d07"]],["d16","布尔代数与电路",5,3,["l02","n20"]],["d17","密码学",5,4,["t08","d12"]],["d18","纠错码",5,5,["a28","d17"]],["d19","组合博弈",5,4,["d11"]],["d20","网络科学",5,5,["d08","p10"]],["t01","奇数与偶数",6,1,["n04"]],["t02","倍数与因数",6,2,["n05"]],["t03","质数",6,2,["t02"]],["t04","质因数分解",6,2,["t03"]],["t05","最大公约数与最小公倍数",6,2,["t04"]],["t06","辗转相除法",6,3,["t05","d10"]],["t07","同余",6,3,["n19","t05"]],["t08","费马小定理与欧拉定理",6,4,["t07","a23"]],["t09","不定方程",6,4,["t06","a06"]],["t10","质数分布",6,4,["t03","c25"]],["t11","二次剩余",6,5,["t07"]],["t12","黎曼ζ函数",6,5,["t10","c21"]],["t13","代数数论",6,5,["t11","a24"]],["t14","椭圆曲线",6,5,["t13","g21"]],["t15","连分数",6,4,["t06","n14"]],["m01","量与单位",7,1,["g03"]],["m02","比例模型",7,2,["n09"]],["m03","线性模型",7,3,["a11","m02"]],["m04","指数模型",7,3,["a13"]],["m05","线性规划",7,4,["a05","a06"]],["m06","最优化与极值",7,4,["c07"]],["m07","梯度下降",7,5,["c12","m06"]],["m08","凸优化",7,5,["m07","g20"]],["m09","博弈论",7,4,["p08"]],["m10","动态规划",7,4,["d11"]],["m11","数值方法",7,4,["c05"]],["m12","微分方程建模",7,5,["c15","m04"]],["m13","神经网络",7,5,["m07","a20","p20"]],["m14","控制论",7,5,["c15","m06"]],["m15","运筹与调度",7,4,["d09","m05"]],["m16","数学建模全流程",7,3,["m03","p02"]],["l01","说理与举例",8,1,[]],["l02","命题与逻辑联结词",8,3,["l01"]],["l03","量词",8,3,["l02"]],["l04","集合",8,2,["l01"]],["l05","映射与关系",8,3,["l04","a10"]],["l06","直接证明与反证法",8,3,["l02"]],["l07","数学归纳法",8,3,["l06","a17"]],["l08","公理化思想",8,4,["l06","g19"]],["l09","可计算性",8,5,["l08","d12"]],["l10","哥德尔不完备定理",8,5,["l09"]],["l11","形式化证明(Lean)",8,4,["l06","l03"]],["l12","公理集合论与选择公理",8,5,["l08","n21"]],["l13","类型论",8,5,["l11","l05"]],["l14","数学写作与表达",8,3,["l06"]]]};
+var SEE = {"n01":"数手指、配对小球","n02":"算盘与千格积木","n03":"数轴上跳跃","n04":"面积阵列","n05":"平均分糖果","n06":"分数条与披萨","n07":"无限放大的数轴放大镜","n08":"百格涂色","n09":"琴弦长度、配方缩放","n10":"温度计与电梯","n11":"翻转与交换的箭头","n12":"折纸对折次数","n13":"由正方形面积求边长","n14":"听见√2永不重复的和声","n15":"无限放大的数轴","n16":"从原子到宇宙的尺度缩放","n17":"弹珠罐猜数","n18":"复平面上的旋转","n19":"时钟表盘","n20":"一排灯泡开关","n21":"希尔伯特旅馆","n22":"树状的\\","n23":"三维旋转的陀螺","a01":"彩色串珠","a02":"神秘盒子","a03":"代数砖块","a04":"天平保持平衡","a05":"跷跷板","a06":"两条直线的交点","a07":"配方拼成正方形","a08":"拖动根看曲线变形","a09":"矩形切分","a10":"输入输出机器","a11":"斜坡与匀速","a12":"抛物线喷泉","a13":"细菌分裂动画","a14":"音高螺旋、地震震级","a15":"杠杆力臂","a16":"拖动平移与伸缩","a17":"台阶","a18":"楼梯与复利","a19":"网格被拉伸","a20":"网格变形动画","a21":"面积缩放倍数","a22":"变换中不转向的箭头","a23":"魔方与舞步","a24":"时钟与多项式","a25":"根的对称置换","a26":"对称体的矩阵影子","a27":"只看箭头的世界","a28":"三维中平面相交","a29":"图片压缩","a30":"多维数组魔方","g01":"七巧板","g02":"展开图折叠","g03":"身体尺","g04":"时针扫过","g05":"方格纸铺砖","g06":"镜子与剪纸","g07":"拖动描图纸","g08":"积木填箱子","g09":"撕下三个角拼成平角","g10":"铁轨","g11":"寻宝地图","g12":"重叠动画","g13":"用影子测楼高","g14":"拼图证明","g15":"风力箭头","g16":"滚动的圆","g17":"单位圆上的影子","g18":"摩天轮高度","g19":"交互圆规","g20":"方程即图像","g21":"手电筒照墙","g22":"VR中切立方体","g23":"转盘看物体","g24":"球面三角形内角和大于180°","g25":"无限放大的雪花","g26":"甜甜圈=咖啡杯","g27":"开车时方向盘的转角","g28":"曲面上的蚂蚁","g29":"地球仪与地图册","g30":"绕洞的绳圈","g31":"雷达扫描","g32":"超立方体旋转投影","c01":"速度表","c02":"坡道","c03":"芝诺追乌龟","c04":"不断的绳","c05":"割线滑成切线","c06":"拼积木的变化","c07":"小球滚到谷底","c08":"细长矩形累加","c09":"速度图与里程表联动","c10":"半块巧克力无穷分下去","c11":"多项式一层层贴合曲线","c12":"山地地形图","c13":"三维体积切片","c14":"流水与漩涡","c15":"方向场里放小船","c16":"热量扩散动画","c17":"本轮画图、和弦拆解","c18":"声音频谱","c19":"ε-δ瞄准游戏","c20":"撒沙测面积","c21":"颜色域着色","c22":"函数也是向量","c23":"肥皂膜的最小面积","c24":"双摆","c25":"复利的极限动画","p01":"贴纸分类","p02":"动态柱状图","p03":"天平平衡点","p04":"转盘","p05":"掷骰子模拟","p06":"树状图分流","p07":"医学检测网格","p08":"长期平均线","p09":"散点抖动","p10":"高尔顿板","p11":"钟形曲线生长","p12":"硬币频率收敛","p13":"任意分布求和变钟形","p14":"抽样罐","p15":"法庭类比","p16":"拖动数据点看拟合线","p17":"醉汉走路","p18":"天气状态转移","p19":"猜数游戏要问几次","p20":"分类边界动画","p21":"随机分组模拟","p22":"投针估π","d01":"按大小排卡片","d02":"斐波那契兔子","d03":"衣服搭配树","d04":"座位重排动画","d05":"奇偶上色出分形","d06":"鸽子进笼","d07":"七桥问题","d08":"家谱与路由","d09":"地铁导航","d10":"积木编程","d11":"汉诺塔","d12":"排序算法竞速","d13":"维恩图","d14":"把计数装进多项式","d15":"地图四色","d16":"开关灯电路","d17":"加密信封","d18":"破损二维码仍可读","d19":"拿石子游戏","d20":"社交网络生长","t01":"两两配对","t02":"矩形排列","t03":"筛子动画","t04":"因数树","t05":"两个齿轮啮合","t06":"长方形切正方形","t07":"时钟上色","t08":"项链计数","t09":"格点上的直线","t10":"质数螺旋","t11":"模平方的对称图","t12":"复平面上的波","t13":"高斯整数格点","t14":"曲线上的点相加","t15":"黄金矩形切割","m01":"厨房量杯","m02":"地图比例尺","m03":"出租车计价","m04":"传染病传播模拟","m05":"拖动可行域","m06":"包装盒最省材料","m07":"蒙眼下山","m08":"碗形曲面","m09":"囚徒困境多人游戏","m10":"背包装宝","m11":"牛顿法切线逼近","m12":"捕食者与猎物","m13":"可视化神经元","m14":"平衡车","m15":"排课挑战","m16":"真实问题工作坊","l01":"\\","l02":"真假开关电路","l03":"\\","l04":"维恩图分类","l05":"连线配对","l06":"√2是无理数的反证动画","l07":"多米诺骨牌","l08":"欧几里得的五条规则","l09":"图灵机模拟器","l10":"自指悖论卡片","l11":"证明积木游戏","l12":"无穷多个抽屉的选择","l13":"积木形状匹配","l14":"讲给同伴听"};
 var COLORS = ["#ffd36e", "#7fb0ff", "#6ff0c8", "#ff8fb1", "#c79bff", "#5fd7ff", "#ffb36b", "#9cf07a", "#e8e8ff"];
 var BLURB = [
   "数数、位值、分数、小数——一切数学的地基。",
@@ -256,6 +315,7 @@ var TASKS = [
     t.stars.slice(0, k).forEach(function (id) { LIT[id] = 1; });
   });
   $("#m-lit").textContent = Object.keys(LIT).length;
+  window.MA_LIT = LIT;
 
   /* ---------- 任务卡 ---------- */
   var grid = $("#grid");
@@ -304,7 +364,8 @@ var TASKS = [
   var io = new IntersectionObserver(function (es) { es.forEach(function (e) { e.target.classList.toggle("on", e.isIntersecting); }); }, { threshold: 0.45 });
   document.querySelectorAll(".cons").forEach(function (el) { io.observe(el); });
 
-  /* ---------- 3D 星系 ---------- */
+  /* ---------- 3D 星系(经典 Canvas 版;沉浸版启用时不运行,回落时由 MA_classic 启动) ---------- */
+  window.MA_classic = function () { if (window.MA_classic.done) return; window.MA_classic.done = 1;
   var cv = $("#galaxy"), g = cv.getContext("2d"), W, H, DPR = Math.min(2, window.devicePixelRatio || 1);
   var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   var GAP = 900, Z0 = 700;
@@ -414,7 +475,8 @@ var TASKS = [
   }
   requestAnimationFrame(frame);
   addEventListener("scroll", function () { if (reduce) requestAnimationFrame(frame); }, { passive: true });
-
+  };
+  if (!document.documentElement.hasAttribute("data-ma-gl")) window.MA_classic();
 })();
 </script>
 <script src="./ma.js"></script>
@@ -427,6 +489,12 @@ var TASKS = [
   document.getElementById("themeBtn").onclick = function () { MA_openTheme(this); };
   M.sub(ui); ui();
 })();
+</script>
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
+<script type="module">
+if (document.documentElement.hasAttribute("data-ma-gl")) {
+  import("./ma-home.js").catch(function (e) { console.error(e); document.documentElement.removeAttribute("data-ma-gl"); var g = document.getElementById("gl"); if (g) g.hidden = true; if (window.MA_classic) window.MA_classic(); });
+}
 </script>
 </body>
 </html>
