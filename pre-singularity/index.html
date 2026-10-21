@@ -1,9 +1,29 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>奇点前夜 Pre-Singularity · 超级智能 SI</title>
-<meta name="description" content="奇点前夜 Pre-Singularity · 创世计划 Genesis 05 · 超级智能：亲手训练、测试、约束 AI，弄懂 AI 是怎么学会的。免费、免注册。"><link rel="stylesheet" href="ps.css?v=6"></head>
+<meta name="description" content="奇点前夜 Pre-Singularity · 创世计划 Genesis 05 · 超级智能：亲手训练、测试、约束 AI，弄懂 AI 是怎么学会的。免费、免注册。"><link rel="stylesheet" href="ps.css?v=7">
+<style>
+/* v0.7 · WebGL 神经核舞台 */
+#gl{position:fixed;inset:0;width:100vw;height:100vh;display:block;z-index:0;background:#05060a}
+body.gl #world{pointer-events:auto}
+body.gl .hud{background:rgba(8,14,22,.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+body.gl #intro{background:rgba(2,4,8,.62)}
+.hud,.lobbytop{transition:transform 1s cubic-bezier(.2,.8,.2,1),opacity 1s}
+body.cine .hud,body.cine .lobbytop,body.cine #info{opacity:0;pointer-events:none}
+body.cine #hudL{transform:translateX(-120%)} body.cine #hudR{transform:translateX(120%)} body.cine #hudB{transform:translate(-50%,160%)} body.cine .lobbytop{transform:translateY(-100%)}
+#cine{position:fixed;inset:0;z-index:15;display:none;pointer-events:none}
+body.cine #cine{display:block;pointer-events:auto;cursor:pointer}
+#cineT{position:absolute;left:0;right:0;bottom:16vh;text-align:center;opacity:0;transition:opacity .6s}
+#cineT b{display:block;font-size:44px;font-weight:600;letter-spacing:.35em;color:#effdff;text-shadow:0 0 18px rgba(95,230,255,.9),0 0 50px rgba(95,230,255,.5)}
+#cineT i{font-style:normal;font-size:13px;letter-spacing:.35em;color:#5fe6ff}
+#cineS{position:absolute;right:20px;bottom:18px;color:#7fb2c2;font-size:12px;letter-spacing:.1em}
+@media(max-width:900px){ #gl{position:absolute;top:56px;height:62vh} #cineT b{font-size:28px} body.cine #hudB{transform:translateY(160%)} }
+@media (prefers-reduced-motion:reduce){ .hud,.lobbytop{transition:none} }
+</style></head>
 <body class="lobby" data-nostars="1">
 <header class="top lobbytop"></header>
+<canvas id="gl" aria-hidden="true"></canvas>
 <canvas id="world"></canvas>
+<div id="cine"><div id="cineT"><b>奇点前夜</b><i>PRE-SINGULARITY · 超级智能 SI</i></div><div id="cineS">点任意处或 Esc 跳过</div></div>
 
 <div class="hud" id="hudL">
   <h4 class="mono">萤 · YING</h4>
@@ -28,6 +48,7 @@
   <b id="dawnt" class="mono"></b>
   <a class="btn hb" href="giant/">🌌 接入巨人</a>
   <button class="btn hb" id="replay">重看开场</button>
+  <button class="btn hb" id="gfxb" title="画质:高 / 中 / 低(低 = 2D 省电)">画质</button>
 </div>
 
 <div class="card" id="info"></div>
@@ -41,7 +62,7 @@
   <div class="tiers" id="itiers"></div>
 </div>
 
-<script src="ps.js?v=6"></script>
+<script src="ps.js?v=7"></script>
 <script>
 /* ========= 数据 ========= */
 const TH = PS.THEMES; let NODES=[], EDGES=[], hiTheme=-1, hover=null, sel=null, burst=0, speakAmp=0;
@@ -151,6 +172,18 @@ function drawCore(t){ X.clearRect(0,0,W,H); MOB=innerWidth<900;
   HIT=[]; for(const n of NODES) nodeDraw(n,P.get(n),t);
 }
 
+/* v0.7 · WebGL 模式:3D 场景由 ps-lobby3d.js 渲染,这里只画神经元标签 / 高亮 / 拾取 */
+const GLP={x:0,y:0,z:1,back:false};
+function drawOverlay(t){ X.clearRect(0,0,W,H); MOB=innerWidth<900; HIT=[]; if(document.body.classList.contains('cine')) return; const r=cv.getBoundingClientRect();
+  NODES.forEach((n,idx)=>{ const q=PSGL.project(idx,GLP); const p={x:q.x-r.left,y:q.y-r.top,z:q.z,back:q.back,n};
+    const st=n.st, isHi = hiTheme===n.i || hover===n || sel===n, sc=p.z, c=nodeColor(st);
+    if(st==='open'){ const pu=.5+.5*Math.sin(t/380+n.j); X.strokeStyle=`rgba(${c},${.75*(1-pu)})`; X.beginPath(); X.arc(p.x,p.y,(7+pu*10)*sc,0,7); X.stroke(); }
+    if(st==='lit'){ X.strokeStyle=`rgba(${GOLD},.7)`; hexPath(p.x,p.y,8*sc,t/2400+n.j); X.stroke(); }
+    if(isHi){ X.strokeStyle='rgba(255,255,255,.85)'; X.setLineDash([3,3]); X.beginPath(); X.arc(p.x,p.y,15*sc,t/600,t/600+Math.PI*2); X.stroke(); X.setLineDash([]); }
+    if(!MOB && !p.back && !PSGL.morphing() && (st==='lit'||isHi||(st==='open'&&PS.skin()!=='horizon'))){ X.font='11px "PingFang SC","Microsoft YaHei",sans-serif'; X.fillStyle=`rgba(${st==='lit'?GOLD:c},${isHi?1:.75})`; X.fillText(n.k.t,p.x+12*sc,p.y+4); }
+    if(!PSGL.hidden()) HIT.push(p); });
+}
+
 function drawHorizon(t){ X.clearRect(0,0,W,H); WAVE_R=-1; MOB=innerWidth<900;
   const bg=X.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#120c06'); bg.addColorStop(.5,'#04060a'); bg.addColorStop(1,'#03080c'); X.fillStyle=bg; X.fillRect(0,0,W,H);
   drawStars(t,'#fff1d6');
@@ -185,6 +218,7 @@ function pick(e){ const r=cv.getBoundingClientRect(); const x=e.clientX-r.left, 
   for(const p of HIT){ const d=Math.hypot(p.x-x,p.y-y); if(d<bd){ bd=d; best=p.n; } } return best; }
 const ST_TXT={lit:'已点亮',open:'可以去',lock:'先完成前一关',future:'即将点亮'};
 cv.addEventListener('pointermove',e=>{ const r=cv.getBoundingClientRect(); MX=((e.clientX-r.left)/W-.5)*-6; MY=((e.clientY-r.top)/H-.5)*-6;
+  if(window.PSGL&&PSGL.on) PSGL.pointer(e);
   const n=pick(e); if(n!==hover){ hover=n; if(n){ PS.sfx('hover',n.i); } }
   if(n){ tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY+10)+'px'; tip.textContent=`${TH[n.i].n} · ${n.k.t} · ${ST_TXT[n.st]}`; cv.style.cursor='pointer'; }
   else { tip.style.display='none'; cv.style.cursor='default'; } });
@@ -197,8 +231,8 @@ function showInfo(n){ sel=n; PS.sfx('open'); const k=n.k, st=n.st, h=href(k);
     <div class="row" style="margin-top:10px">${ st==='future'? '<span class="pill">即将点亮</span>' : k.m==='intro'? '<button class="btn pri" id="ri">重看开场</button>' :
       st==='lock'? `<span class="pill">先完成前一关</span><a class="btn" href="${k.m}/">去任务</a>` : `<a class="btn pri" href="${h}">${st==='lit'?'再玩一次':'出发'} →</a>`}
       <button class="btn" id="ix">关闭</button></div>`;
-  info.style.display='block'; document.getElementById('ix').onclick=()=>{ info.style.display='none'; sel=null; };
-  const ri=document.getElementById('ri'); if(ri) ri.onclick=()=>{ info.style.display='none'; intro(); }; }
+  info.style.display='block'; if(window.PSGL&&PSGL.on) PSGL.ping(); document.getElementById('ix').onclick=()=>{ info.style.display='none'; sel=null; };
+  const ri=document.getElementById('ri'); if(ri) ri.onclick=()=>{ info.style.display='none'; replayAll(); }; }
 
 /* ========= HUD ========= */
 function renderHUD(){ buildGraph();
@@ -206,6 +240,7 @@ function renderHUD(){ buildGraph();
     return `<div class="theme" data-i="${i}"><span class="ix mono">${String(i+1).padStart(2,'0')}</span><span style="width:76px">${th.n}</span><span class="tb"><i style="width:${lit/ns.length*100}%"></i></span><span class="muted mono" style="font-size:11px">${lit}/${ns.length}</span></div>`; }).join('');
   document.querySelectorAll('.theme').forEach(e=>{ e.onmouseenter=()=>{ hiTheme=+e.dataset.i; }; e.onmouseleave=()=>{ hiTheme=-1; };
     e.onclick=()=>{ const n=NODES.filter(n=>n.i===+e.dataset.i).find(n=>n.st==='open') || NODES.find(n=>n.i===+e.dataset.i); showInfo(n); }; });
+  if(window.PSGL&&PSGL.on) PSGL.setStates(NODES.map(n=>n.st));
   const tot=PS.total(); document.getElementById('dawn').style.width=(tot/PS.TOTAL*100)+'%'; document.getElementById('dawnt').textContent=`${tot}/${PS.TOTAL}`;
   const s=PS.stage(); document.getElementById('stageN').textContent=`${PS.STAGES[s].n}期`;
   const nx=PS.STAGES[s+1]; document.getElementById('stageD').textContent = nx? `再点亮 ${nx.at-tot} 颗,长成${nx.n}` : '我已经长大了';
@@ -244,11 +279,56 @@ function intro(){ const box=document.getElementById('intro'), l=document.getElem
 }
 function finish(){ introOn=false; document.getElementById('gate').style.display='none'; PS.music(PS.skin()); PS.set('intro',1); document.getElementById('intro').style.display='none'; PS.header(); renderHUD(); burst=1; PS.win(); setTimeout(speakNext,900); }
 document.getElementById('skip').onclick=()=>{ if(!PS.tier()) PS.setTier('first'); finish(); };
-document.getElementById('replay').onclick=()=>intro();
+function replayAll(){ if(window.PSGL&&PSGL.on) PSGL.cine(()=>intro()); else intro(); }
+document.getElementById('replay').onclick=()=>replayAll();
+document.addEventListener('DOMContentLoaded',function(){ const b=document.getElementById('gfxb'); const cur=(window.PSGL&&PSGL.tier)||'low'; const N={high:'高',mid:'中',low:'低'}; b.textContent='画质 · '+N[cur];
+  b.onclick=()=>{ const nx={high:'mid',mid:'low',low:'high'}[cur]; PS.set('gfx',nx); PS.set('cineSeen',0); location.reload(); }; });
 
 /* ========= 主循环 ========= */
 const yc=document.getElementById('yingc');
-function loop(t){ if(burst>0) burst=Math.max(0,burst-.012); (PS.skin()==='horizon'?drawHorizon:drawCore)(t); PS.drawYing(yc,t,speakAmp); drawWave(t); requestAnimationFrame(loop); }
-document.addEventListener('DOMContentLoaded',()=>{ resize(); renderHUD(); requestAnimationFrame(loop); if(!PS.get('intro',0)) intro(); else { PS.music(PS.skin()); speakNext(); } });
-document.addEventListener('ps-skin',()=>{ renderHUD(); PS.music(PS.skin()); PS.sfx('boot'); burst=.6; });
+function loop(t){ if(burst>0) burst=Math.max(0,burst-.012); if(window.PSGL&&PSGL.on){ PSGL.amp(speakAmp*.6, burst); drawOverlay(t); } else (PS.skin()==='horizon'?drawHorizon:drawCore)(t); PS.drawYing(yc,t,speakAmp); drawWave(t); requestAnimationFrame(loop); }
+document.addEventListener('DOMContentLoaded',()=>{ resize(); renderHUD(); requestAnimationFrame(loop);
+  const go=()=>{ if(!PS.get('intro',0)) intro(); else { PS.music(PS.skin()); speakNext(); } };
+  if(window.PSGL&&PSGL.on) PSGL.boot(go); else go(); });
+document.addEventListener('ps-skin',()=>{ if(window.PSGL&&PSGL.on) PSGL.skin(PS.skin()); renderHUD(); PS.music(PS.skin()); PS.sfx('boot'); burst=.6; });
+</script>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+<script type="module">
+/* v0.7 · 萤的贾维斯式全息神经核(Three.js r169 本地)。失败或低画质 → 保持 v0.6 Canvas 2D */
+import { createStage, pickTier, reducedMotion } from './ps-scene.js';
+import { buildCore } from './ps-lobby3d.js';
+try{
+  const tier = pickTier();
+  if(tier==='low') throw 0;
+  const layers = PS.THEMES.map(t=>t.k.length);
+  const states = PS.THEMES.flatMap(t=>t.k.map(k=>PS.nodeState(k)));
+  const stage = createStage(document.getElementById('gl'), tier);
+  const reduce = reducedMotion();
+  const core = buildCore(stage, { layers, states, skipIntro:true });
+  if(PS.skin()==='horizon') core.jump(99,1);
+  document.body.classList.add('gl');
+  const cineT=document.getElementById('cineT'); let cineCb=null, cineOn=false, cineAt=0;
+  function endCine(){ if(!cineOn) return; cineOn=false; core.skipIntro(); document.body.classList.remove('cine'); cineT.style.opacity=0; PS.set('cineSeen',1); try{sessionStorage.setItem('gn:ps:cine','1');}catch(e){} const f=cineCb; cineCb=null; f&&setTimeout(f,400); }
+  function cine(cb){ cineCb=cb; if(reduce){ cineOn=true; endCine(); return; } cineOn=true; cineAt=performance.now(); core.replay(); document.body.classList.add('cine'); }
+  document.getElementById('cine').addEventListener('pointerdown',endCine);
+  addEventListener('keydown',e=>{ if(e.key==='Escape') endCine(); });
+  const q=new URLSearchParams(location.search);
+  window.PSGL = { on:true, tier,
+    boot(cb){ let seen=false; try{ seen=sessionStorage.getItem('gn:ps:cine')==='1'; }catch(e){}
+      if(q.has('t')||q.has('m')){ cb(); return; }
+      if(seen || reduce){ cb(); } else cine(cb); },
+    cine, setStates:core.setStates, project:core.project,
+    skin(k){ core.setMorph(k==='horizon'?1:0); },
+    morphing(){ const s=core.state; return Math.abs(s.morph-s.morphTarget)>0.02 || (s.morph>0.02&&s.morph<0.98); },
+    hidden(){ return cineOn || document.body.classList.contains('cine'); },
+    amp(a,b){ core.state.amp=a; if(b>core.state.burst) core.state.burst=b; },
+    ping(){ core.state.burst=0.6; },
+    pointer(e){},
+  };
+  // 截图/自测:?t=开场秒数&m=0|1 冻结画面
+  if(q.has('t')||q.has('m')){ const T=+(q.get('t')??99), M=+(q.get('m')??0); core.jump(Math.max(0,T-3),M); for(let i=0;i<180;i++) core.update(1/60,i>170); core.jump(T,M); core.update(0.0001,true);
+    if(T<6){ document.body.classList.add('cine'); cineT.style.opacity=(T>4.3&&T<6.4)?1:0; }
+    stage.start(()=>{}); window.__ready=true; }
+  else stage.start((dt)=>{ core.update(dt); const I=core.state.intro; if(cineOn){ cineT.style.opacity=(I>4.3&&I<6.4)?1:0; if(I>=6.2 || performance.now()-cineAt>8500) endCine(); } });
+}catch(e){ if(e) console.warn('[奇点前夜] WebGL 场景未启用,使用 2D:', e); document.getElementById('gl').style.display='none'; }
 </script></body></html>
