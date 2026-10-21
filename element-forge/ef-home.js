@@ -271,7 +271,7 @@ function bootStage() {
     if (T > 6.0) cue('out', () => { EF.play('whoosh'); gl._pull = 5; gl.scene = stageScene; gl.camera = cam; });
     if (T > 6.2) finish();
   });
-  if (!EF.get('_intro', 0) && !EF.reduced) EF.playIntro(); else EF.introDone();
+  if (!EF.reduced) EF.playIntro(); else EF.introDone();  /* v0.3.2:每次进入都播放 */
 }
 
 /* ======================================================================
@@ -287,7 +287,7 @@ function bootTable() {
   const plat = new THREE.Mesh(new THREE.BoxGeometry(19.6, 0.12, 11.6), new THREE.MeshStandardMaterial({ color: 0x0f1628, metalness: 0.7, roughness: 0.22, transparent: true, opacity: 0.88 }));
   plat.position.set(0, -0.17, 0.3); world.add(plat);
   const edge = new THREE.LineSegments(new THREE.EdgesGeometry(plat.geometry), new THREE.LineBasicMaterial({ color: 0xff9a3c, transparent: true, opacity: 0.35 })); edge.position.copy(plat.position); world.add(edge);
-  const lit = EF.lit || {}, tiles = [], box = new THREE.BoxGeometry(0.9, 0.22, 0.9);
+  const lit = EF.lit || {}, tiles = [], beams = [], box = new THREE.BoxGeometry(0.9, 0.22, 0.9);
   const beamM = new THREE.ShaderMaterial({
     uniforms: { uT: { value: 0 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
     vertexShader: `varying vec2 vU; void main(){ vU=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
@@ -309,22 +309,31 @@ function bootTable() {
     const O = EF.ORIGIN[e.o], p = EF.pos(e.z), on = !!lit[e.z], col = new THREE.Color(O.c);
     const side = new THREE.MeshStandardMaterial({ color: col.clone().multiplyScalar(on ? 0.9 : 0.4), roughness: 0.35, metalness: 0.3, emissive: on ? col.clone().multiplyScalar(0.5) : new THREE.Color(0) });
     const top = new THREE.MeshBasicMaterial({ map: face(e, O, on) });
+    const bpct = EF.BODY[e.z] || 0, btr = EF.BODY_TRACE.indexOf(e.z) > -1;
     const m = new THREE.Mesh(box, [side, side, top, side, side, side]);
     const bx = (p[0] - 9.5) * 1.0, bz = (p[1] - 5.2) * 1.0 - (p[1] >= 9 ? 0.55 : 0);
-    m.position.set(bx, 0, bz); m.userData = { e, base: on ? 0.45 : 0, lift: 0 }; world.add(m); tiles.push(m);
-    if (on) { const b = new THREE.Mesh(beamG, beamM); b.position.set(bx, 0.45 + 2.2, bz); world.add(b); }
+    m.position.set(bx, 0, bz); m.userData = { e, base: on ? 0.45 : 0, lift: 0, side, top, col, on, bh: bpct ? 0.35 + 4.2 * Math.sqrt(bpct / 65) : btr ? 0.3 : 0, bpct, btr, h: 0.22 }; world.add(m); tiles.push(m);
+    if (on) { const b = new THREE.Mesh(beamG, beamM); b.position.set(bx, 0.45 + 2.2, bz); world.add(b); beams.push(b); }
   });
   /* 光柱上升的火星 */
   const litT = tiles.filter(m => m.userData.base > 0), SP = litT.length * 10, spP = new Float32Array(SP * 3), sp = [];
   for (let i = 0; i < SP; i++) { const m = litT[i % litT.length]; sp.push({ x: m.position.x + (rnd() - 0.5) * 0.5, z: m.position.z + (rnd() - 0.5) * 0.5, y: rnd() * 4, v: 0.5 + rnd() }); }
   const spG = new THREE.BufferGeometry(); spG.setAttribute('position', new THREE.BufferAttribute(spP, 3));
-  if (SP) world.add(new THREE.Points(spG, new THREE.PointsMaterial({ color: 0xffc46b, size: 0.07, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })));
+  const spPts = SP ? new THREE.Points(spG, new THREE.PointsMaterial({ color: 0xffc46b, size: 0.07, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false })) : null; if (spPts) world.add(spPts);
   /* 相机:倾斜台面 / 俯视 */
   let flat = false, yaw = 0, yawT = 0;
   const CAM = { tilt: new THREE.Vector3(), top: new THREE.Vector3() };
   const fit = () => { const k = Math.max(1, 1.75 / camera.aspect); CAM.tilt.set(0, 11 * k, 13 * k); CAM.top.set(0, 19 * k, 0.6); };
   fit(); gl.onresize = fit; camera.position.copy(CAM.tilt);
   EF.pt3dFlat = () => { flat = !flat; };
+  /* v0.3.2「人体组成」视图:按占体重比例升起元素柱(高度取平方根,让小份额也看得见);其余方块沉暗 */
+  let body = false; const BODY_C = new THREE.Color(0xffb35c), TRACE_C = new THREE.Color(0x7ad7ff), DIM = new THREE.Color(0x0c0e16);
+  EF.pt3dBody = on => {
+    body = on; beams.forEach(b => b.visible = !on); if (spPts) spPts.visible = !on;
+    tiles.forEach(m => { const u = m.userData, inB = u.bpct || u.btr;
+      if (on) { u.side.color.copy(inB ? (u.bpct ? BODY_C : TRACE_C) : DIM); u.side.emissive.copy(inB ? (u.bpct ? BODY_C : TRACE_C) : new THREE.Color(0)).multiplyScalar(inB ? 0.35 : 0); u.top.color.setScalar(inB ? 1 : 0.07); }
+      else { u.side.color.copy(u.col).multiplyScalar(u.on ? 0.9 : 0.4); u.side.emissive.copy(u.on ? u.col.clone().multiplyScalar(0.5) : new THREE.Color(0)); u.top.color.setScalar(1); } });
+  };
   /* 悬停 / 点击 */
   const ray = new THREE.Raycaster(), mv = new THREE.Vector2(-9, -9), cv = renderer.domElement;
   const tip = document.createElement('div'); tip.className = 'pt3d-tip'; tip.hidden = true; document.body.appendChild(tip);
@@ -346,8 +355,9 @@ function bootTable() {
     camera.position.lerp(flat ? CAM.top : CAM.tilt, 0.06); camera.lookAt(0, 0, flat ? 0.2 : 0.6);
     ray.setFromCamera(mv, camera); const hit = ray.intersectObjects(tiles, false)[0];
     const h = hit ? hit.object : null;
-    if (h !== hov) { hov = h; cv.style.cursor = h ? 'pointer' : 'grab'; if (h) { const e = h.userData.e; tip.textContent = e.z + ' ' + e.zh + ' ' + e.sym + ' · ' + EF.ORIGIN[e.o].n; tip.hidden = false; EF.hover(); } else tip.hidden = true; }
-    tiles.forEach(m => { const u = m.userData, tgt = u.base + (m === hov ? 0.3 : 0) + (u.e.z === sel ? 0.18 : 0); u.lift = lerp(u.lift, tgt, 0.15); m.position.y = u.lift; });
+    if (h !== hov) { hov = h; cv.style.cursor = h ? 'pointer' : 'grab'; if (h) { const e = h.userData.e; tip.textContent = e.z + ' ' + e.zh + ' ' + e.sym + ' · ' + (body ? (EF.bodyText(e.z) || '人体里几乎没有') : EF.ORIGIN[e.o].n); tip.hidden = false; EF.hover(); } else tip.hidden = true; }
+    tiles.forEach(m => { const u = m.userData, hb = body ? Math.max(0.22, u.bh) : 0.22, tgt = (body ? (u.bh ? 0 : -0.06) : u.base) + (m === hov ? 0.3 : 0) + (u.e.z === sel ? 0.18 : 0);
+      u.h = EF.reduced ? hb : lerp(u.h, hb, Math.min(1, dt * 6)); m.scale.y = u.h / 0.22; u.lift = lerp(u.lift, tgt, 0.15); m.position.y = u.lift + (u.h - 0.22) / 2; });
     if (SP) { sp.forEach((s, i) => { s.y += s.v * dt; if (s.y > 4.2) s.y = 0.5; spP[i * 3] = s.x; spP[i * 3 + 1] = s.y; spP[i * 3 + 2] = s.z; }); spG.attributes.position.needsUpdate = true; }
   });
   const origSel = EF.selectEl; EF.selectEl = z => { sel = z; origSel(z); };

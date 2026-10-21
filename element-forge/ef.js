@@ -48,6 +48,11 @@ EF.ELEM = RAW.split(' ').map(function (s, i) {
   var m = s.match(/^([A-Z][a-z]?)(.+?)(bb|cr|low|massive|wd|nsm|decay|human)$/);
   return { z: i + 1, sym: m[1], zh: m[2], o: m[3] };
 });
+/* 人体组成(按质量,成年人平均;个体差异大):Wikipedia「Composition of the human body」汇总表,来源 Chang《Chemistry》等。
+   BODY_TRACE:必需微量元素(合计不到 10 克)。 */
+EF.BODY = { 8: 65, 6: 18.5, 1: 9.5, 7: 2.6, 20: 1.3, 15: 0.6, 16: 0.3, 19: 0.2, 11: 0.2, 17: 0.2, 12: 0.1 };
+EF.BODY_TRACE = [26, 30, 29, 53, 34, 25, 42, 27];
+EF.bodyText = function (z) { return EF.BODY[z] ? '约占体重 ' + EF.BODY[z] + '%' : EF.BODY_TRACE.indexOf(z) > -1 ? '必需的微量元素(不到 0.01%)' : ''; };
 EF.FACT = {
   1: '宇宙里最多的元素,你身上约每 10 个原子里有 6 个是氢。', 2: '恒星把氢熔合成氦,这就是太阳发光的秘密。',
   6: '钻石、铅笔芯、你的身体,都离不开它。', 8: '你呼吸的氧,由大恒星炼出、再被超新星撒向宇宙。',

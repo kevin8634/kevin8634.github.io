@@ -138,3 +138,10 @@ body.mission .g-who canvas{width:84px;height:84px}
 .s3d-leg i{width:10px;height:10px;border-radius:50%;display:inline-block}
 body.stage3d #bg3d{visibility:hidden}
 @media (max-width:480px){.guides{grid-template-columns:repeat(3,1fr)}}
+
+/* v0.3.2 周期表「人体组成」视图(平面 / 低档) */
+.el .bp{display:none;font-style:normal;font-size:8px;font-weight:700}
+.pt.body .el{opacity:.18;box-shadow:none}
+.pt.body .el.bd{opacity:1;color:#1a1206;background:#7ad7ff;border-color:#fff8}
+.pt.body .el.bd .bp{display:block}
+.pt.body .el.bm{background:#ffb35c}

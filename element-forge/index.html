@@ -8,7 +8,7 @@
 <meta property="og:title" content="元素工坊 Element Forge · 化学 · 创世计划 Genesis">
 <meta property="og:description" content="从一颗恒星里,炼出整个世界。亲手聚变出元素、把石墨压成钻石。免费、免注册。">
 <meta name="theme-color" content="#070a14">
-<link rel="stylesheet" href="ef.css?v=4">
+<link rel="stylesheet" href="ef.css?v=5">
 <link rel="stylesheet" href="ef-hud.css?v=2">
 </head>
 <body class="home pre">
@@ -60,12 +60,13 @@
   <section class="sec">
     <h2>元素起源周期表</h2>
     <p class="sub">每个元素按它主要诞生的地方上色。完成任务,亲手点亮它们。</p>
-    <div class="pt-ctl"><button class="ef-btn ghost" id="flatBtn" style="padding:4px 12px;font-size:13px">切换平面 / 立体</button><span id="litCount"></span></div>
+    <div class="pt-ctl"><button class="ef-btn ghost" id="flatBtn" style="padding:4px 12px;font-size:13px">切换平面 / 立体</button><button class="ef-btn ghost" id="bodyBtn" aria-pressed="false" style="padding:4px 12px;font-size:13px">视图:宇宙来源</button><span id="litCount"></span></div>
     <div class="pt-wrap">
       <div class="pt-scene" id="ptScene"><div id="pt3d" class="pt3d" hidden></div><div class="pt" id="pt"></div></div>
       <aside class="pt-side glass" id="side"></aside>
     </div>
     <div class="legend" id="legend"></div>
+    <p class="note-sm" id="bodyNote" hidden>人体组成视图:柱子越高,这种元素在你体重里占得越多(成年人平均,按质量;个体差异大)。氧、碳、氢、氮四种就占了约 96%。数据参考 <a href="https://en.wikipedia.org/wiki/Composition_of_the_human_body" target="_blank" rel="noopener">Composition of the human body</a>。</p>
     <p class="note-sm">来源为简化示意:许多元素有不止一个来源,这里只标主要的一个。科学背景可参考 <a href="https://blog.sdss.org/2017/01/09/origin-of-the-elements-in-the-solar-system/" target="_blank" rel="noopener">SDSS 关于元素起源的介绍</a>。</p>
   </section>
 
@@ -81,10 +82,10 @@
     创世计划 Genesis · 科学素养 / 科普探究
   </footer>
 </main>
-<script src="ef.js?v=4"></script>
+<script src="ef.js?v=5"></script>
 <script>
 (function () {
-if (EF.get('_intro', 0) || EF.reduced) document.body.classList.remove('pre');
+if (EF.reduced) document.body.classList.remove('pre');  /* v0.3.2:进入动画每次进入都播放(减少动态除外) */
 EF.sky(); EF.syncBtn(); document.getElementById('sndBtn').onclick = EF.toggleSound;
 var lit = EF.litSet();
 
@@ -204,7 +205,7 @@ EF.start2D = function () {
     requestAnimationFrame(draw);
   })(0);
   var intro = document.getElementById('intro');
-  if (!EF.get('_intro', 0) && !EF.reduced) { intro.hidden = false; intro.classList.add('flat'); setTimeout(EF.introDone, 2200); intro.onclick = EF.introDone; }
+  if (!EF.reduced) { intro.hidden = false; intro.classList.add('flat'); setTimeout(EF.introDone, 2200); intro.onclick = EF.introDone; }
   else EF.introDone();
   EF.playIntro = function () { intro.hidden = false; intro.classList.remove('flat'); void intro.offsetWidth; intro.classList.add('flat'); document.body.classList.add('pre'); setTimeout(EF.introDone, 2200); };
 };
@@ -273,7 +274,8 @@ var pt = document.getElementById('pt'), side = document.getElementById('side'), 
 EF.ELEM.forEach(function (e) {
   var b = document.createElement('button'), p = EF.pos(e.z), O = EF.ORIGIN[e.o];
   b.className = 'el tint' + (lit[e.z] ? ' lit' : ''); b.style.setProperty('--oc', O.c); b.style.gridColumn = p[0]; b.style.gridRow = p[1] >= 9 ? p[1] : p[1];
-  b.innerHTML = '<i>' + e.z + '</i><b>' + e.sym + '</b><i>' + e.zh + '</i>'; b.title = e.zh + ' ' + e.sym + ' · ' + O.n;
+  b.innerHTML = '<i>' + e.z + '</i><b>' + e.sym + '</b><i>' + e.zh + '</i>' + (EF.BODY[e.z] ? '<em class="bp">' + EF.BODY[e.z] + '%</em>' : EF.BODY_TRACE.indexOf(e.z) > -1 ? '<em class="bp">微量</em>' : '');
+  if (EF.BODY[e.z] || EF.BODY_TRACE.indexOf(e.z) > -1) b.classList.add('bd'); if (EF.BODY[e.z]) b.classList.add('bm'); b.title = e.zh + ' ' + e.sym + ' · ' + O.n;
   b.onclick = function () { sel = e.z; showEl(); EF.tone(e.z); }; b.dataset.z = e.z; pt.appendChild(b);
 });
 var gap = document.createElement('div'); gap.style.gridRow = 8; gap.style.gridColumn = '1 / 19'; pt.appendChild(gap);
@@ -283,6 +285,7 @@ function showEl() {
   var src = []; Object.keys(EF.MISSIONS).forEach(function (k) { var M = EF.MISSIONS[k]; if (M.unlock && M.unlock.indexOf(sel) > -1) src.push('<a href="' + M.href + '">' + M.q + '</a>'); });
   side.innerHTML = '<div><span class="big">' + e.sym + '</span><span class="zh">' + e.zh + '</span></div><div class="kv"><small>原子序数</small>' + e.z + ' 号</div>' +
     '<div class="kv"><small>主要诞生在</small><span style="color:' + O.c + '">■</span> ' + O.n + ' · ' + O.d + '</div>' +
+    (EF.bodyText(e.z) ? '<div class="kv"><small>在你身体里</small>' + EF.bodyText(e.z) + '</div>' : '') +
     (EF.FACT[e.z] ? '<div class="kv"><small>小知识</small>' + EF.FACT[e.z] + '</div>' : '') +
     '<div class="kv"><small>状态</small>' + (lit[e.z] ? '★ 你已亲手点亮' : (src.length ? '去这里点亮它:' + src.join('、') : '后续任务开放后可点亮')) + '</div>';
 }
@@ -291,6 +294,13 @@ EF.selectEl = function (z) { sel = z; showEl(); EF.tone(z); };
 EF.lit = lit;
 document.getElementById('legend').innerHTML = Object.keys(EF.ORIGIN).map(function (k) { return '<span style="--oc:' + EF.ORIGIN[k].c + '">' + EF.ORIGIN[k].n + '</span>'; }).join('');
 document.getElementById('litCount').textContent = '已点亮 ' + Object.keys(lit).length + ' / 118 个元素';
+var bodyOn = false, legO = document.getElementById('legend').innerHTML;
+document.getElementById('bodyBtn').onclick = function () {
+  bodyOn = !bodyOn; this.textContent = '视图:' + (bodyOn ? '人体组成' : '宇宙来源'); this.setAttribute('aria-pressed', bodyOn);
+  pt.classList.toggle('body', bodyOn); document.getElementById('bodyNote').hidden = !bodyOn;
+  document.getElementById('legend').innerHTML = bodyOn ? '<span style="--oc:#ffb35c">常量元素(数字 = 占体重的百分比)</span><span style="--oc:#7ad7ff">必需微量元素</span>' : legO;
+  if (EF.pt3dBody) EF.pt3dBody(bodyOn); EF.play('select');
+};
 document.getElementById('flatBtn').onclick = function () { pt.classList.toggle('flat'); if (EF.pt3dFlat) EF.pt3dFlat(); EF.play('select'); };
 
 /* ---------- 七匠 ---------- */
@@ -305,6 +315,6 @@ if (EF.glTier === 'low') EF.start2D();
 else setTimeout(function () { if (!EF.glReady) EF.start2D(); }, 15000);
 })();
 </script>
-<script>if (EF.glTier !== 'low') { var m3 = document.createElement('script'); m3.type = 'module'; m3.src = 'ef-home.js?v=2'; document.body.appendChild(m3); }</script>
+<script>if (EF.glTier !== 'low') { var m3 = document.createElement('script'); m3.type = 'module'; m3.src = 'ef-home.js?v=3'; document.body.appendChild(m3); }</script>
 </body>
 </html>
