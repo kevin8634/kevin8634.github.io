@@ -1011,7 +1011,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.8.1.4</b></span>
+            <span>创世计划总门户 <b>v0.8.1.5</b></span>
           </footer>
         </div>
       </div>
@@ -1145,7 +1145,7 @@
       var WORLDS = [
         { id: "01", star: "天璇", name: "星图", en: "Math Atlas", field: "数学",
           desc: "用问题点亮知识星。", color: "#7cc8ff", live: true,
-          meta: ["已上线 v0.7", "10 个任务 55 关", "197 颗知识星"], href: "math-atlas/",
+          meta: ["已上线 v0.8", "10 个任务 55 关", "197 颗知识星"], href: "math-atlas/",
           prefix: ["ma:v1:", "gn:ma:"],
           age: ["ya","huo","chen","he"], tags: ["math"], why: "喜欢找规律、解谜题？每想通一个问题，就点亮一颗知识星。" },
         { id: "02", star: "天玑", name: "宙律", en: "Nomoverse", field: "物理",
@@ -1154,7 +1154,7 @@
           age: ["huo","chen","he"], tags: ["space","matter"], why: "好奇宇宙为什么是现在这样？亲手改一改物理常数，看会发生什么。" },
         { id: "03", star: "天权", name: "元素工坊", en: "Element Forge", field: "化学",
           desc: "用元素锻造物质，配方即反应。", color: "#ff9a3c", live: true,
-          meta: ["已上线 v0.3.2", "2 个任务 8 关"], href: "element-forge/", prefix: ["gn:ef:"],
+          meta: ["已上线 v0.4", "3 个任务 12 关"], href: "element-forge/", prefix: ["gn:ef:"],
           age: ["huo","chen","he"], tags: ["matter"], why: "想知道东西由什么组成、怎样变化？它会带你用元素锻造物质。" },
         { id: "04", star: "玉衡", name: "生命源码", en: "Life Source", field: "生物",
           desc: "读、改、调试生命的「源码」。", color: "#34d399", live: true,
@@ -1172,7 +1172,7 @@
           age: ["huo","chen","he"], tags: ["society"], why: "想看清自己怎么思考、怎么做选择？把每一次选择当成一局棋来复盘。", ageTxt: "星火 12+ · 星芽可试入门关" },
         { id: "07", star: "天枢", name: "天枢", en: "Starhelm", field: "天文",
           desc: "北斗第一星 · 用真实实时数据看见此刻的天空。", color: "#dfe6f3", live: true,
-          meta: ["已上线 v0.5.2", "弦穹号星际航行 · 月相与日月食实验室"], href: "starhelm/", prefix: ["gn:sh:"],
+          meta: ["已上线 v0.5.3", "弦穹号星际航行 · 月相与日月食实验室"], href: "starhelm/", prefix: ["gn:sh:"],
           age: ["ya","huo","chen","he"], tags: ["space"], why: "想知道此刻头顶的天空是什么样？用真实数据去看。" }
       ];
       // 北斗位置（归一化，斗口左上，斗柄右下）：天枢→天璇→天玑→天权→玉衡→开阳→摇光
@@ -2061,7 +2061,7 @@
         { a: { w: "01", id: "ma.rocket", title: "火箭怎样飞上月球？", href: "math-atlas/rocket/" },
           b: { w: "07", id: "sh.orbit", title: "空间站为什么掉不下来？", href: "starhelm/", label: "去天枢 →" } },
         { a: { w: "01", id: "ma.cube", title: "魔方为什么能复原？", href: "math-atlas/cube/" },
-          b: { w: "03", id: "ef.crystal", title: "晶体为什么那么整齐？", href: null } },
+          b: { w: "03", id: "ef.crystal", title: "晶体为什么那么整齐？", href: "element-forge/crystal/" } },
         { a: { w: "01", id: "ma.casino", title: "赌场为什么总是赢？", href: "math-atlas/casino/" },
           b: { w: "04", id: "ls.parents", title: "为什么你长得像爸妈，又不完全像？", href: "life-source/parents/" } },
         { a: { w: "06", id: "lt.compound", title: "每天多进步 1%，一年后会怎样？", href: "ludoterra/compound/" },
@@ -2760,6 +2760,10 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.1.5", d: "2026-10-21", t: "星历补记星图 Math Atlas v0.8、元素工坊 v0.4、天枢 Starhelm v0.5.3；点亮星桥「魔方 ⇄ 晶体」。" },
+        { w: "01", v: "v0.8", d: "2026-10-21", t: "首页变成可以拖动的 3D 旋涡星图：开场从一条数轴和斐波那契螺线长出 197 颗知识星，点任意一颗星就能看到通往它的学习路径。" },
+        { w: "03", v: "v0.4", d: "2026-10-21", t: "新任务「晶体为什么那么整齐？」四关上线：用尺度镜看盐、搭离子格子、比慢长与快长、量晶面夹角，还能看雪花为什么是六角。" },
+        { w: "07", v: "v0.5.3", d: "2026-10-21", t: "地球之眼换上卫星实拍：进行中的台风播放最近约 3 小时的真实云图，全球云层可切换为前一天的卫星实拍。" },
         { w: "gn", v: "v0.8.1.4", d: "2026-10-21", t: "星历补记元素工坊 v0.3.1–v0.3.2、奇点前夜 v0.7–v0.8.2。" },
         { w: "03", v: "v0.3.2", d: "2026-10-21", t: "「钻石和铅笔芯」四关搬进 3D：放大到原子、转动晶格数化学键、在压机里把石墨压成钻石；周期表新增「人体组成」视图。" },
         { w: "05", v: "v0.8.2", d: "2026-10-21", t: "每次进入大厅都播放开场，中高画质为全新 3D 开场。" },
