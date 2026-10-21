@@ -68,9 +68,9 @@ const DECOR = [['⚛️', '🧪', '⚗️', '🔬'], ['🦠', '🧫', '🔵', '�
   function layout() {
     D = devicePixelRatio; W = cv.width = innerWidth * D; H = cv.height = innerHeight * D; narrow = innerWidth < 640;
     const padTop = (narrow ? 120 : 64) * D, padBot = (narrow ? 110 : 70) * D;
-    cx = W / 2; cy = padTop + (H - padTop - padBot) / 2;
+    cx = W / 2 - (narrow ? 18 : 0) * D; cy = padTop + (H - padTop - padBot) / 2;
     ry = narrow ? 1.0 : .46;
-    R = Math.min((W / 2 - (narrow ? -10 : 110) * D) / 1.0, (H - padTop - padBot) / 2 / ry / 1.0);
+    R = Math.min((W / 2 - (narrow ? 22 : 110) * D) / 1.0, (H - padTop - padBot) / 2 / ry / 1.0);
     R /= (.2 + 5 * .16) * 1.0; R *= 1.0;
   }
   const T = (x, y) => [(x - W / 2) * V.s + W / 2 + V.ox, (y - H / 2) * V.s + H / 2 + V.oy];
