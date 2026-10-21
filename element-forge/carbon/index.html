@@ -6,11 +6,11 @@
 <title>为什么钻石和铅笔芯是同一种东西? · 元素工坊 Element Forge</title>
 <meta name="description" content="元素工坊 · 转动真实的钻石与石墨结构,推一推、压一压,把石墨压成钻石,认识碳的同素异形体。创世计划 Genesis 化学世界。">
 <meta name="theme-color" content="#070a14">
-<link rel="stylesheet" href="../ef.css?v=3">
+<link rel="stylesheet" href="../ef.css?v=4">
 </head>
 <body>
 <div id="app"></div>
-<script src="../ef.js?v=3"></script>
+<script src="../ef.js?v=4"></script>
 <script>
 (function () {
 /* ---------- 晶体结构(真实几何:金刚石键长 1.545 Å、四面体;石墨层内 1.42 Å、层距 3.35 Å) ---------- */
@@ -156,7 +156,7 @@ function L3(stage, api) {
     if (done) return; var P = +pp.value, T = +tt.value; EF.play('anvil');
     if (P < line(T)) { res.innerHTML = '压力不够:在这里,碳更喜欢当<b>石墨</b>。'; api.say('点还在石墨区。你想往哪个方向推它?'); }
     else if (T < 1500) { res.innerHTML = '理论上已经该变钻石了,可是<b>太冷</b>,原子挪不动位置——要等上亿年。'; api.say('方向对了!可原子们"冻"住了。什么能让它们动起来?'); V.shake = 0.3; }
-    else { done = true; res.innerHTML = '<b style="color:#ffc46b">成功!</b>高压把层与层挤到一起,高温让原子重新手拉手,石墨变成了钻石。'; EF.play('fuse'); V.S = DIA; V.kind = 'dia'; V.sel = DIA.center; V.shake = 0.6; setTimeout(api.complete, 1400); }
+    else { done = true; res.innerHTML = '<b style="color:#ffc46b">成功!</b>高压把层与层挤到一起,高温让原子重新手拉手,石墨变成了钻石(工厂里还会加熔化的金属帮忙)。'; EF.play('fuse'); V.S = DIA; V.kind = 'dia'; V.sel = DIA.center; V.shake = 0.6; setTimeout(api.complete, 1400); }
   };
   (function loop() {
     if (!D.c.isConnected) return;
@@ -182,7 +182,7 @@ var LEVELS = [
     hints: ['铅笔芯里真的有铅吗?它为什么叫"铅笔"?', '如果把钻石和铅笔芯都烧掉,剩下的气体会一样吗?', '放大到原子那一档,点一下,看看它几号。'],
     explain: '两边全是<b>碳原子</b>。铅笔芯里其实没有铅,"铅笔"是古人把石墨误认成铅留下的名字。不同的不是原子,而是原子怎么排、怎么手拉手。' },
   { title: '数一数手', setup: L1, task: '在钻石和石墨里,各数一数中心那颗碳连着几个碳。',
-    ask: { q: '你觉得哪种排法更结实?', opts: ['每个碳手拉 4 个,立体交织', '每个碳手拉 3 个,一层层平铺'], ok: 0 },
+    ask: { q: '你觉得哪种排法整体更硬?', opts: ['每个碳手拉 4 个,立体交织', '每个碳手拉 3 个,一层层平铺'], ok: 0 },
     hints: ['点选中心那颗原子,亮起来的线就是它的"手"。', '拖动转一转,有的线可能藏在背后。', '钻石的线朝几个方向伸出去?石墨的线都在同一个平面里吗?'],
     explain: '钻石里每个碳和 <b>4</b> 个碳连成立体骨架,哪个方向都牢,所以是天然最硬的物质之一。石墨里每个碳只和同一层的 <b>3</b> 个碳相连,层与层之间只靠很弱的力吸着。' },
   { title: '刮一刮', setup: L2, task: '在纸上用石墨划一划,再用钻石在玻璃上划一划,看看原子们怎么反应。',
@@ -192,7 +192,7 @@ var LEVELS = [
   { title: '改规则:压出钻石', setup: L3, task: '调压力和温度,在压机里把石墨变成钻石。',
     ask: { q: '要把石墨变成钻石,需要——', opts: ['高压加高温', '冷冻起来就行', '用锤子多砸几下'], ok: 0 },
     hints: ['天然钻石是在地下多深的地方形成的?那里是什么环境?', '相图上,钻石区在高压那边。点该往哪走?', '只有压力够还不行,原子还得"动得起来"。'],
-    explain: '地下约 150 公里深处的高压高温,把碳压成钻石;工厂的压机也能做到(约 5 万个大气压以上、上千度)。反过来,钻石在常温下其实也会慢慢变回石墨,只是慢到几十亿年都看不出来。' }
+    explain: '地下约 150–200 公里深处的高压高温,把碳变成钻石。工厂也能做到:约 5 万个大气压、1300 多摄氏度,再加熔化的铁、镍帮原子“搬家”。反过来,钻石在常温下其实也会慢慢变回石墨,只是慢到几十亿年都看不出来。' }
 ];
 var NOTES = { title: '元素工坊 · 为什么钻石和铅笔芯是同一种东西?', items: [
   '钻石和石墨都由<b>碳</b>组成,它们是碳的<b>同素异形体</b>:同一种元素,不同的排列。',

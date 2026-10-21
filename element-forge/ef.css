@@ -128,3 +128,13 @@ body.mission .m-head h1{text-shadow:0 2px 14px #000}
 @media (max-width:860px){body.mission .cn{display:none}body.mission .ef-top{margin:8px 8px 0}body.mission .m-body{grid-template-columns:1fr}body.mission .m-stage{min-height:420px}}
 body.gl-bg #ef-sky{display:none}
 body.mission{background:transparent}
+/* v0.3.1:任务玩法 3D 舞台 + 3D 向导 */
+.s3d{position:relative;width:100%;border-radius:12px;overflow:hidden;cursor:grab;touch-action:none;background:radial-gradient(ellipse at 50% 45%,rgba(255,154,60,.08),rgba(7,10,20,.0) 70%)}
+.s3d:active{cursor:grabbing}.s3d canvas{display:block;width:100%;height:100%}
+body.mission .g-who canvas{width:84px;height:84px}
+@media (max-width:760px){body.mission .g-who canvas{width:68px;height:68px}}
+.s3d-leg{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:4px;font-size:13px;pointer-events:none}
+.s3d-leg span{background:rgba(10,12,26,.72);border:1px solid var(--line);border-radius:8px;padding:2px 8px;display:flex;align-items:center;gap:6px}
+.s3d-leg i{width:10px;height:10px;border-radius:50%;display:inline-block}
+body.stage3d #bg3d{visibility:hidden}
+@media (max-width:480px){.guides{grid-template-columns:repeat(3,1fr)}}

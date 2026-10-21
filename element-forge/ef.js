@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · 公共层 ef.js v0.3
+/* 元素工坊 Element Forge · 公共层 ef.js v0.3.1
    创世计划 Genesis 第 03 世界(化学)。本地存储键:gn:ef:<任务>;以 _ 开头的键为偏好(如 gn:ef:_sound)。
    无账号、无服务器、无埋点、无第三方请求。 */
 (function () {
@@ -29,19 +29,21 @@ EF.glTier = (function () {
   return 'high';
 })();
 EF.dpr = function () { var d = window.devicePixelRatio || 1; return Math.min(d, EF.mobile ? 1.5 : (EF.glTier === 'high' ? 2 : 1.5)); };
+/* v0.3.1:工坊七匠 3D 形象(低档不加载,继续用 2D 版) */
+if (EF.glTier !== 'low') addEventListener('DOMContentLoaded', function () { var g = document.createElement('script'); g.type = 'module'; g.src = BASE + 'ef-guide3d.js?v=1'; document.body.appendChild(g); });
 
 /* ---------- 元素与来源(主要来源,简化示意;许多元素有多个来源) ---------- */
 EF.ORIGIN = {
   bb: { n: '大爆炸', c: '#bfe3ff', d: '宇宙诞生后最初几分钟' },
-  cr: { n: '宇宙射线', c: '#8fd6c4', d: '高能粒子把大原子核撞碎' },
+  cr: { n: '宇宙射线', c: '#8fd6c4', d: '高能粒子撞碎碳、氧等原子核' },
   low: { n: '小恒星临终', c: '#ffb35c', d: '像太阳这样的恒星老去时吹出' },
   massive: { n: '大恒星爆发', c: '#ff6a3d', d: '大质量恒星的超新星' },
   wd: { n: '白矮星爆发', c: '#ffd2ec', d: '白矮星吸积后炸开(Ia 型超新星)' },
   nsm: { n: '中子星合并', c: '#a37bff', d: '两颗中子星相撞' },
-  decay: { n: '放射性衰变', c: '#7f8c9c', d: '由铀、钍衰变而来,寿命很短' },
+  decay: { n: '放射性衰变', c: '#7f8c9c', d: '由铀、钍衰变而来,比地球年龄短命得多' },
   human: { n: '人造', c: '#566070', d: '自然界几乎没有,靠实验室合成' }
 };
-var RAW = 'H氢bb He氦bb Li锂low Be铍cr B硼cr C碳low N氮low O氧massive F氟low Ne氖massive Na钠massive Mg镁massive Al铝massive Si硅massive P磷massive S硫massive Cl氯massive Ar氩massive K钾massive Ca钙massive Sc钪massive Ti钛massive V钒wd Cr铬wd Mn锰wd Fe铁wd Co钴wd Ni镍wd Cu铜massive Zn锌massive Ga镓massive Ge锗massive As砷massive Se硒massive Br溴massive Kr氪massive Rb铷massive Sr锶low Y钇low Zr锆low Nb铌low Mo钼low Tc锝human Ru钌nsm Rh铑nsm Pd钯nsm Ag银nsm Cd镉low In铟low Sn锡low Sb锑nsm Te碲nsm I碘nsm Xe氙nsm Cs铯nsm Ba钡low La镧low Ce铈low Pr镨low Nd钕low Pm钷human Sm钐nsm Eu铕nsm Gd钆nsm Tb铽nsm Dy镝nsm Ho钬nsm Er铒nsm Tm铥nsm Yb镱nsm Lu镥nsm Hf铪low Ta钽nsm W钨low Re铼nsm Os锇nsm Ir铱nsm Pt铂nsm Au金nsm Hg汞low Tl铊low Pb铅low Bi铋low Po钋decay At砹decay Rn氡decay Fr钫decay Ra镭decay Ac锕decay Th钍nsm Pa镤decay U铀nsm Np镎human Pu钚human Am镅human Cm锔human Bk锫human Cf锎human Es锿human Fm镄human Md钔human No锘human Lr铹human Rf𬬻human Db𬭊human Sg𬭳human Bh𬭛human Hs𬭶human Mt鿏human Ds𫟼human Rg𬬭human Cn鿔human Nh鿭human Fl𫓧human Mc镆human Lv𫟷human Ts鿬human Og鿫human';
+var RAW = 'H氢bb He氦bb Li锂low Be铍cr B硼cr C碳low N氮low O氧massive F氟low Ne氖massive Na钠massive Mg镁massive Al铝massive Si硅massive P磷massive S硫massive Cl氯massive Ar氩massive K钾massive Ca钙massive Sc钪massive Ti钛massive V钒wd Cr铬wd Mn锰wd Fe铁wd Co钴wd Ni镍wd Cu铜massive Zn锌massive Ga镓massive Ge锗massive As砷massive Se硒massive Br溴massive Kr氪massive Rb铷massive Sr锶low Y钇low Zr锆low Nb铌low Mo钼low Tc锝human Ru钌nsm Rh铑nsm Pd钯nsm Ag银nsm Cd镉low In铟low Sn锡low Sb锑nsm Te碲nsm I碘nsm Xe氙nsm Cs铯nsm Ba钡low La镧low Ce铈low Pr镨low Nd钕low Pm钷human Sm钐nsm Eu铕nsm Gd钆nsm Tb铽nsm Dy镝nsm Ho钬nsm Er铒nsm Tm铥nsm Yb镱nsm Lu镥nsm Hf铪low Ta钽nsm W钨low Re铼nsm Os锇nsm Ir铱nsm Pt铂nsm Au金nsm Hg汞low Tl铊low Pb铅low Bi铋nsm Po钋decay At砹decay Rn氡decay Fr钫decay Ra镭decay Ac锕decay Th钍nsm Pa镤decay U铀nsm Np镎human Pu钚human Am镅human Cm锔human Bk锫human Cf锎human Es锿human Fm镄human Md钔human No锘human Lr铹human Rf𬬻human Db𬭊human Sg𬭳human Bh𬭛human Hs𬭶human Mt鿏human Ds𫟼human Rg𬬭human Cn鿔human Nh鿭human Fl𫓧human Mc镆human Lv𫟷human Ts鿬human Og鿫human';
 EF.ELEM = RAW.split(' ').map(function (s, i) {
   var m = s.match(/^([A-Z][a-z]?)(.+?)(bb|cr|low|massive|wd|nsm|decay|human)$/);
   return { z: i + 1, sym: m[1], zh: m[2], o: m[3] };
@@ -49,8 +51,8 @@ EF.ELEM = RAW.split(' ').map(function (s, i) {
 EF.FACT = {
   1: '宇宙里最多的元素,你身上约每 10 个原子里有 6 个是氢。', 2: '恒星把氢熔合成氦,这就是太阳发光的秘密。',
   6: '钻石、铅笔芯、你的身体,都离不开它。', 8: '你呼吸的氧,由大恒星炼出、再被超新星撒向宇宙。',
-  14: '沙子和芯片里的主角。', 26: '成年人体内约 4 克,大多在血红蛋白里帮你运氧。',
-  79: '金子多半来自两颗中子星相撞。', 92: '最重的天然元素之一。', 118: '最年轻的元素,只在加速器里存在过一瞬间——向导奥加的名字就来自它。'
+  14: '沙子和芯片里的主角。', 26: '成年人体内约 3–4 克,大多在血红蛋白里帮你运氧。',
+  79: '科学家认为,金子多半来自两颗中子星相撞。', 92: '最重的天然元素之一。', 118: '目前最重的元素(118 号),只在加速器里造出过几个原子、一瞬间就衰变了——向导奥加的名字就来自它。'
 };
 /* 周期表格位置 */
 EF.pos = function (z) {
@@ -65,7 +67,7 @@ EF.pos = function (z) {
 
 /* ---------- 向导:工坊七匠 ---------- */
 EF.GUIDES = {
-  oga: { n: '奥加', en: 'Oga', from: '鿫 Og · 118 号元素', d: '元素家族最年轻的一员,总在问"我从哪来"', c: '#ffb35c' },
+  oga: { n: '奥加', en: 'Oga', from: '鿫 Og · 118 号元素', d: '元素家族里最重的一员,总在问"我从哪来"', c: '#ffb35c' },
   bucky: { n: '巴基', en: 'Bucky', from: '富勒烯 C₆₀', d: '足球形状的碳分子,碳家族的顽皮鬼', c: '#ffd27a' },
   dot: { n: '小点', en: 'Dot', from: '量子点', d: '个头一变,颜色就变', c: '#ff7ad9' },
   lili: { n: '锂锂', en: 'Lili', from: '锂离子电池', d: '坐不住,总在两极之间跑来跑去', c: '#7ad7ff' },
@@ -99,6 +101,7 @@ EF.litSet = function () {
 
 /* ---------- 向导形象(程序绘制) ---------- */
 EF.drawGuide = function (cv, id, t, talk) {
+  if (EF.g3 && EF.g3(cv, id, t || 0, talk || 0)) return;   /* v0.3.1:有 WebGL 时用 3D 形象 */
   var x = cv.getContext('2d'), W = cv.width, H = cv.height, cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.3;
   x.clearRect(0, 0, W, H); t = t || 0; talk = talk || 0;
   var g0 = x.createRadialGradient(cx, cy, 0, cx, cy, R * 2.2); var c = EF.GUIDES[id].c;

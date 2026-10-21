@@ -6,11 +6,12 @@
 <title>你身体里的铁是从哪颗星来的? · 元素工坊 Element Forge</title>
 <meta name="description" content="元素工坊 · 在恒星熔炉里亲手聚变出元素,追踪一个铁原子从超新星来到你的血液。创世计划 Genesis 化学世界。">
 <meta name="theme-color" content="#070a14">
-<link rel="stylesheet" href="../ef.css?v=3">
+<link rel="stylesheet" href="../ef.css?v=4">
 </head>
 <body>
 <div id="app"></div>
-<script src="../ef.js?v=3"></script>
+<script src="../ef.js?v=4"></script>
+<script>if (EF.glTier !== 'low') { var s3 = document.createElement('script'); s3.type = 'module'; s3.src = '../ef-stars3d.js?v=1'; document.head.appendChild(s3); }</script>
 <script>
 (function () {
 var COL = { H: '#ff8a5c', He: '#ffd27a', C: '#8a8f99', O: '#7ad7ff', Ne: '#ff7ad9', Mg: '#c9e4a0', Si: '#d9c49a', Fe: '#c86b3c' };
@@ -32,7 +33,7 @@ function L0(stage, api) {
   });
   function upd() {
     hud.innerHTML = '核心里的氢核:<b>' + inCore + ' / 4</b> · 已炼出氦核:<b>' + he + ' / 3</b><br>' +
-      (he ? '4 个氢核 4 × 1.008 = 4.032 → 1 个氦核 4.003,<b style="color:#ffc46b">少了 0.029(约 0.7%)</b>,这点质量变成了光和热。' : '点击外面漂浮的氢核(H),把它们送进恒星核心。');
+      (he ? '4 个氢原子 4 × 1.008 = 4.032 → 1 个氦原子 4.003(真实恒星里要经过好几步反应),<b style="color:#ffc46b">少了 0.029(约 0.7%)</b>,这点质量变成了能量。' : '点击外面漂浮的氢核(H),把它们送进恒星核心。');
   }
   upd();
   (function loop(t) {
@@ -71,8 +72,8 @@ function L1(stage, api) {
       else {
         running = false; var last = layers[layers.length - 1];
         if (last === 'Fe') { res.innerHTML = '<b style="color:#ffc46b">炼到铁了!</b>核心一层层分开,像洋葱:氢 → 氦 → 碳 → 氖 → 氧 → 硅 → 铁。'; setTimeout(api.complete, 900); }
-        else if (last === 'C/O') { res.innerHTML = '这颗星最远只能炼到<b>碳和氧</b>,最后变成一颗白矮星。太阳就是这样。'; api.say('碳和氧已经很了不起了。可是铁呢?想想:要让更重的原子核撞在一起,核心得怎样?'); }
-        else { res.innerHTML = '这颗小星只能把氢炼成<b>氦</b>,它会安静地燃烧上万亿年。'; api.say('它太小了,核心不够热。你觉得该往哪个方向拉滑块?'); }
+        else if (last === 'C/O') { res.innerHTML = '这颗星最远只能炼到<b>碳和氧</b>,最后变成一颗白矮星。太阳就是这样。'; api.say('碳和氧已经很了不起了。可是铁呢?想想:要让更重的原子核发生反应,核心得怎样?'); }
+        else { res.innerHTML = '这颗小星只能把氢炼成<b>氦</b>,它会安静地燃烧几千亿年——比宇宙现在的年龄长得多。'; api.say('它太小了,核心不够热。你觉得该往哪个方向拉滑块?'); }
       }
     };
     step();
@@ -91,7 +92,7 @@ function L1(stage, api) {
       var ly = 30 + i * 30; x.strokeStyle = 'rgba(255,255,255,.4)'; x.beginPath(); x.moveTo(cx + rr * 0.7, cy - rr * 0.7); x.lineTo(W * 0.78, ly); x.stroke();
       x.fillStyle = '#f4ede1'; x.font = '700 15px system-ui'; x.textAlign = 'left'; x.textBaseline = 'middle'; x.fillText(NAME[el] || el, W * 0.79, ly);
     }
-    x.fillStyle = '#a9a29a'; x.font = '13px system-ui'; x.textAlign = 'center'; x.fillText(mass < 0.5 ? '红矮星' : mass < 8 ? '类太阳恒星' : '大质量恒星', cx, H - 14);
+    x.fillStyle = '#a9a29a'; x.font = '13px system-ui'; x.textAlign = 'center'; x.fillText(mass < 0.5 ? '红矮星' : mass < 2 ? '类太阳恒星' : mass < 8 ? '中等质量恒星' : '大质量恒星', cx, H - 14);
     requestAnimationFrame(loop);
   })(0);
 }
@@ -102,12 +103,12 @@ function L2(stage, api) {
   var PTS = [['H', 1, 0], ['He', 4, 7.07], ['C', 12, 7.68], ['O', 16, 7.98], ['Ne', 20, 8.03], ['Mg', 24, 8.26], ['Si', 28, 8.45], ['S', 32, 8.49], ['Ca', 40, 8.55], ['Fe', 56, 8.79], ['Kr', 84, 8.72], ['Ag', 107, 8.55], ['Au', 197, 7.92], ['U', 238, 7.57]];
   var CHAIN = ['He', 'C', 'O', 'Ne', 'Mg', 'Si', 'Fe', 'Kr'], ci = 0, energy = 0, flashC = null, fl = 0;
   var ctl = document.createElement('div'); ctl.className = 'ctl'; ctl.innerHTML = '<button class="ef-btn" id="fz">再熔合一步 →</button><output id="eo" style="min-width:auto"></output>';
-  stage.appendChild(ctl); var info = document.createElement('p'); info.className = 'note-sm'; info.textContent = '纵轴:原子核里每个质子或中子"抱得多紧"(比结合能,单位 MeV)。越往上越稳定。'; stage.appendChild(info);
+  stage.appendChild(ctl); var info = document.createElement('p'); info.className = 'note-sm'; info.textContent = '纵轴:原子核里每个质子或中子"抱得多紧"(比结合能,单位 MeV)。越往上越稳定。能量表为示意:按每个核子"抱紧程度"的变化估算。'; stage.appendChild(info);
   function get(s) { for (var i = 0; i < PTS.length; i++) if (PTS[i][0] === s) return PTS[i]; }
   ctl.querySelector('#fz').onclick = function () {
     if (ci >= CHAIN.length - 1) return; var a = get(CHAIN[ci]), b = get(CHAIN[ci + 1]), d = b[2] - a[2]; ci++;
     energy += d; fl = 1; flashC = d >= 0 ? '#ffc46b' : '#7ad7ff'; EF.play(d >= 0 ? 'fuse' : 'absorb'); EF.tone(Z[b[0]] || 20, 0.1);
-    ctl.querySelector('#eo').innerHTML = a[0] + ' → ' + b[0] + ':' + (d >= 0 ? '<span style="color:#ffc46b">放出能量 +' + d.toFixed(2) + '</span>' : '<span style="color:#7ad7ff">倒贴能量 ' + d.toFixed(2) + '</span>') + ' MeV / 核子';
+    ctl.querySelector('#eo').innerHTML = a[0] + ' → ' + b[0] + ':' + (d >= 0 ? '<span style="color:#ffc46b">放出能量 +' + d.toFixed(2) + '</span>' : '<span style="color:#7ad7ff">反而吸收 ' + d.toFixed(2) + '</span>') + ' MeV / 核子(示意)';
     if (b[0] === 'Fe') api.say('到铁了。再往前一步试试,看看能量表会怎样?');
     if (b[0] === 'Kr') { ctl.querySelector('#fz').disabled = true; setTimeout(api.complete, 1100); }
   };
@@ -124,7 +125,7 @@ function L2(stage, api) {
     var mh = bot - top, eh = Math.max(-0.4, Math.min(1, energy / 1.8)) * mh * 0.9;
     x.fillStyle = '#1a1f33'; x.fillRect(r + 40, top, 22, mh); x.fillStyle = energy >= 0 ? '#ffb35c' : '#7ad7ff'; x.fillRect(r + 40, bot - Math.max(0, eh), 22, Math.abs(eh) || 1);
     x.fillStyle = '#a9a29a'; x.fillText('能量', r + 51, bot + 16);
-    if (fl > 0.02) { x.globalAlpha = fl * 0.35; x.fillStyle = flashC; x.fillRect(0, 0, W, H); x.globalAlpha = 1; fl *= 0.9; }
+    if (fl > 0.02 && !EF.reduced) { x.globalAlpha = fl * 0.35; x.fillStyle = flashC; x.fillRect(0, 0, W, H); x.globalAlpha = 1; fl *= 0.9; }
     requestAnimationFrame(loop);
   })();
 }
@@ -132,7 +133,7 @@ function L2(stage, api) {
 /* 第 4 关:超新星把铁撒向宇宙 → 你的血 */
 function L3(stage, api) {
   var C = EF.canvas(stage, 360), x = C.x, ph = 'core', t0 = 0, parts = [], node = 0, nodeT = 0;
-  var NODES = [['超新星爆发', '比太阳更早的恒星炸开,把铁撒向太空'], ['星云', '铁和其他元素混进巨大的气体尘埃云'], ['太阳系与地球', '约 46 亿年前,星云塌缩成太阳和地球'], ['你的血液', '铁进入食物,再进入血红蛋白,帮你运氧']];
+  var NODES = [['超新星爆发', '塌缩的铁核心变成中子星;冲击波在外层瞬间炼出新的铁,撒向太空'], ['星云', '铁和其他元素混进巨大的气体尘埃云'], ['太阳系与地球', '约 46 亿年前,星云塌缩成太阳和地球'], ['你的血液', '铁进入食物,再进入血红蛋白,帮你运氧']];
   var ctl = document.createElement('div'); ctl.className = 'ctl'; ctl.innerHTML = '<button class="ef-btn" id="bang">让铁核心塌缩</button><button class="ef-btn" id="nx" hidden>铁的下一站 →</button>';
   stage.appendChild(ctl); var cap = document.createElement('p'); cap.className = 'note-sm'; stage.appendChild(cap);
   var bang = ctl.querySelector('#bang'), nx = ctl.querySelector('#nx');
@@ -152,7 +153,7 @@ function L3(stage, api) {
       }
     } else if (ph === 'boom') {
       var s = e; x.globalAlpha = Math.max(0, 1 - s / 2.5);
-      if (!EF.campus) { var gg = x.createRadialGradient(cx, cy, 0, cx, cy, 60 + s * 260); gg.addColorStop(0, 'rgba(255,250,235,.9)'); gg.addColorStop(0.4, 'rgba(255,170,90,.35)'); gg.addColorStop(1, 'rgba(255,120,60,0)'); x.fillStyle = gg; x.beginPath(); x.arc(cx, cy, 60 + s * 260, 0, 7); x.fill(); }
+      if (!EF.campus && !EF.reduced) { var gg = x.createRadialGradient(cx, cy, 0, cx, cy, 60 + s * 260); gg.addColorStop(0, 'rgba(255,250,235,.9)'); gg.addColorStop(0.4, 'rgba(255,170,90,.35)'); gg.addColorStop(1, 'rgba(255,120,60,0)'); x.fillStyle = gg; x.beginPath(); x.arc(cx, cy, 60 + s * 260, 0, 7); x.fill(); }
       x.strokeStyle = 'rgba(255,200,140,.6)'; x.lineWidth = 3; x.beginPath(); x.arc(cx, cy, s * 240, 0, 7); x.stroke(); x.lineWidth = 1; x.globalAlpha = 1;
       parts.forEach(function (p) { p.x += p.vx; p.y += p.vy; p.vx *= 0.985; p.vy *= 0.985; if (p.fe) EF.ball(x, p.x, p.y, 6, COL.Fe); else { x.fillStyle = 'rgba(255,220,180,.7)'; x.fillRect(p.x, p.y, 2, 2); } });
       if (s > 2.6) { ph = 'trip'; nx.hidden = false; cap.textContent = NODES[0][1]; nodeT = t; }
@@ -177,30 +178,32 @@ function L3(stage, api) {
   }
 }
 
+/* v0.3.1:有 3D 舞台就在 3D 里动手;低档或 3D 出错时回落平面版 */
+function pick(f2, k) { return function (stage, api) { if (EF.S3 && EF.S3[k]) { try { return EF.S3[k](stage, api); } catch (e) { console.warn('[ef] 3D 玩法出错,回落平面版', e); stage.innerHTML = ''; } } return f2(stage, api); }; }
 var LEVELS = [
-  { title: '点燃恒星', setup: L0, task: '把 4 个氢核送进核心熔合,炼出 3 个氦核。',
+  { title: '点燃恒星', setup: pick(L0, 'L0'), task: '把 4 个氢核送进核心熔合,炼出 3 个氦核。',
     ask: { q: '4 个氢核熔合成 1 个氦核。你猜,氦核会比 4 个氢核加起来——', opts: ['更重', '一样重', '轻一点点'], ok: 2 },
     hints: ['恒星一直在发光发热,这些能量是从哪来的?', '爱因斯坦说过,质量和能量可以互相转换。你觉得质量会去哪?', '发光要付出点什么。熔合前后称一称,哪边会少?'],
-    explain: '少掉的约 0.7% 质量变成了光和热。太阳每秒这样"烧掉"约 400 万吨质量,才照亮了地球。' },
-  { title: '恒星的洋葱', setup: L1, task: '拖动滑块改变恒星质量,点火,造一颗能炼出铁的恒星。',
+    explain: '少掉的约 0.7% 质量变成了能量,绝大部分成了光和热(一小部分被中微子带走)。太阳每秒这样"烧掉"约 400 万吨质量,才照亮了地球。' },
+  { title: '恒星的洋葱', setup: pick(L1, 'L1'), task: '拖动滑块改变恒星质量,点火,造一颗能炼出铁的恒星。',
     ask: { q: '想在恒星核心里炼出铁,恒星应该——', opts: ['更小、更冷', '更大、更重', '大小无所谓'], ok: 1 },
-    hints: ['铁的原子核带的电荷很多,要让这样的原子核撞到一起,需要什么条件?', '温度越高,原子核撞得越猛。什么样的恒星核心最热?', '恒星越重,自己的引力把核心压得越紧。'],
-    explain: '大约 8 倍太阳质量以上的恒星,核心才热到能一层层炼到铁,像洋葱一样分层。太阳最远只能炼到碳和氧。' },
-  { title: '铁为什么是终点', setup: L2, task: '一步步熔合,盯住右边的能量表。到了铁,再多走一步。',
-    ask: { q: '一路熔合下去,恒星会一直有能量吗?', opts: ['会,越往后放出的能量越多', '会,一直熔合一直放能', '不会,到某个元素就不再放能了'], ok: 2 },
+    hints: ['要造出铁,得让带很多电荷的重原子核(比如硅)发生反应,需要什么条件?', '温度越高,原子核撞得越猛。什么样的恒星核心最热?', '恒星越重,自己的引力把核心压得越紧。'],
+    explain: '大约 8–10 倍太阳质量以上的恒星,核心才热到能一层层炼到铁,像洋葱一样分层。太阳最远只能炼到碳和氧。' },
+  { title: '铁为什么是终点', setup: pick(L2, 'L2'), task: '一步步熔合,盯住右边的能量表。到了铁,再多走一步。',
+    ask: { q: '一路熔合下去,恒星会一直有能量吗?', opts: ['会,越往后放出的能量越多', '会,一直熔合一直放能', '不会,到某个元素附近就几乎放不出能量了'], ok: 2 },
     hints: ['看看那条曲线,它是一直往上走的吗?', '曲线的最高点在哪个元素附近?', '翻过山顶之后,再往前走是上坡还是下坡?'],
-    explain: '铁(和镍)的原子核抱得最紧,站在曲线顶端。再往后熔合不放能,反而要倒贴能量。核心堆满铁,恒星失去能量来源,几秒内向内塌缩——超新星来了。比铁更重的元素(比如金),主要靠中子星相撞这样更猛烈的事件造出来。' },
-  { title: '超新星与你的血', setup: L3, task: '让铁核心塌缩,然后一站站追踪一个铁原子,直到它来到你身上。',
+    explain: '铁(和镍)的原子核抱得最紧,站在曲线顶端。到了这里,再熔合几乎榨不出能量;高温还会把铁核打碎、反过来吸走能量。核心堆满铁、失去支撑,不到一秒就向内塌缩——超新星来了。比铁更重的元素,大约一半是垂死的中小恒星慢慢“吃中子”造出来的;金、铂这类,科学家认为主要来自中子星相撞这样更猛烈的事件。' },
+  { title: '超新星与你的血', setup: pick(L3, 'L3'), task: '让铁核心塌缩,然后一站站追踪一个铁原子,直到它来到你身上。',
     ask: { q: '你身体里的铁原子,和太阳比,谁更"老"?', opts: ['铁原子更老', '太阳更老', '一样大'], ok: 0 },
     hints: ['太阳和地球是用什么材料做成的?', '做成太阳系的那团星云里,已经有上一代恒星留下的铁了吗?', '盖房子用的砖,比房子早还是晚?'],
-    explain: '你的铁比太阳还老:它在 46 亿年前太阳系诞生之前,就已在别的恒星里炼成、随爆炸撒向宇宙。补充一句:宇宙里的铁,很大一部分来自白矮星爆发,另一部分来自大质量恒星的超新星。你,真的是星尘做的。' }
+    explain: '你的铁比太阳还老:它在 46 亿年前太阳系诞生之前,就已在别的恒星里炼成、随爆炸撒向宇宙。补充一句:太阳系里的铁,很大一部分来自白矮星整个炸开(Ia 型超新星),另一部分来自大质量恒星的超新星。你,真的是星尘做的。' }
 ];
 var NOTES = { title: '元素工坊 · 你身体里的铁是从哪颗星来的?', items: [
   '恒星靠<b>核聚变</b>发光:轻的原子核熔合成重的,少掉的一点质量变成能量(E = mc²)。',
-  '恒星越重,核心越热,能炼出的元素越重;约 8 倍太阳质量以上才能一路炼到<b>铁</b>。',
-  '<b>铁</b>的原子核最稳定,熔合到铁就不再放能,核心会塌缩,引发<b>超新星</b>。',
-  '比铁重的元素(金、铂、铀等)主要来自<b>中子星合并</b>等更猛烈的事件。',
-  '你身体里的铁(成年人约 4 克)来自太阳诞生之前就爆炸的恒星——你是星尘做的。'],
+  '恒星越重,核心越热,能炼出的元素越重;约 8–10 倍太阳质量以上才能一路炼到<b>铁</b>。',
+  '<b>铁</b>和镍一带的原子核最稳定,熔合到这里就几乎不再放能,核心会塌缩,引发<b>超新星</b>。',
+  '比铁重的元素有两条路:约一半由中小恒星晚年慢慢造出(如钡、铅);金、铂、铀等则主要来自<b>中子星合并</b>等猛烈事件。',
+  '你身体里的铁(成年人约 3–4 克)来自太阳诞生之前就爆炸的恒星——你是星尘做的。'],
   bridge: '<a href="../../starhelm/">天枢 Starhelm「此刻,你在宇宙的哪里?」</a>——你身体里的铁来自远古的星星,去看看你自己在宇宙中的位置。宙律 Nomoverse「恒星的一生」即将点亮。' };
 EF.mission('stars', LEVELS, NOTES);
 })();
