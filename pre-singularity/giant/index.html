@@ -13,7 +13,8 @@
  <div class="card door" id="d1"><h3>离线巨人</h3><p class="tag mono">QWEN2.5-0.5B · 在你的电脑上运行</p>
   <p>一个真实的 5 亿参数语言模型,下载一次后断网也能对话。你输入的每个字都不离开这台设备。</p>
   <p class="muted" id="gpu">正在检查 WebGPU…</p>
-  <div class="row"><button class="btn pri" id="dl" disabled>下载并唤醒</button></div>
+  <div class="row"><button class="btn pri" id="dl" disabled>下载并唤醒</button><button class="btn" id="chk">检测本机模型</button><button class="btn" id="rm" style="display:none">删除本机模型</button></div>
+  <p class="muted mono" id="cachest"></p>
   <div class="bar" style="margin-top:10px;display:none" id="dlbar"><i style="width:0"></i></div>
   <p class="muted mono" id="dlst"></p></div>
  <div class="card door" id="d2"><h3>自带钥匙</h3><p class="tag mono">BYOK · 你的浏览器直连厂商</p>
@@ -98,22 +99,55 @@ $('tokv').onchange=()=>{ [0,1,2].forEach(render); PS.click(); if($('tokv').check
 let worker=null, ready=false, dtype='q4f16', busy1=false;
 (async()=>{ const g=$('gpu'); if(!navigator.gpu){ g.textContent='你的浏览器暂不支持 WebGPU。请用新版 Chrome 或 Edge 电脑版,或改用 ② ③。'; return; }
   try{ const ad=await navigator.gpu.requestAdapter(); if(!ad) throw 0; const f16=ad.features.has('shader-f16'); dtype=f16?'q4f16':'q4';
-    g.textContent=`✓ 支持 WebGPU。首次需下载约 ${f16?480:790} MB,之后从浏览器缓存载入。`; $('dl').disabled=false; }
+    g.textContent=`✓ 支持 WebGPU。首次需下载约 ${f16?480:790} MB,之后从浏览器缓存载入。`; gpuOK=true; $('dl').disabled=false; refreshCache(false); }
   catch(e){ g.textContent='检测到 WebGPU,但没有可用的显卡适配器。可以改用 ② ③。'; } })();
+/* v0.6.2 本机模型检测:已下载过就直接从浏览器缓存唤醒,不重复下载 */
+const TFCACHE='transformers-cache', MODELKEY='Qwen2.5-0.5B-Instruct';
+const HOSTNAMES=[['modelscope.cn','魔搭 ModelScope'],['hf-mirror.com','hf-mirror 镜像'],['huggingface.co','huggingface.co']];
+let cached=null, gpuOK=false;
+async function scanCache(){
+  if(!('caches' in self)) return null;
+  const c=await caches.open(TFCACHE), ks=(await c.keys()).filter(r=>r.url.includes(MODELKEY));
+  if(!ks.length) return null;
+  const info={files:0, bytes:0, onnx:{}, tok:false, host:null};
+  for(const r of ks){ const res=await c.match(r); const n=+(res&&res.headers.get('content-length'))||0; info.files++; info.bytes+=n;
+    const m=r.url.match(/onnx\/model_([a-z0-9]+)\.onnx/); if(m) info.onnx[m[1]]=n;
+    if(/tokenizer\.json/.test(r.url)) info.tok=true;
+    if(!info.host){ const h=HOSTNAMES.find(([d])=>r.url.includes(d)); if(h) info.host=h[1]; } }
+  info.ok = info.tok && Object.values(info.onnx).some(n=>n>1e8);
+  info.dtype = info.onnx[dtype]>1e8 ? dtype : (Object.keys(info.onnx).find(k=>info.onnx[k]>1e8)||null);
+  return info; }
+async function refreshCache(manual){
+  const st=$('cachest');
+  try{ cached=await scanCache(); }catch(e){ cached=null; }
+  if(cached && cached.ok){
+    let est=''; try{ const e=await navigator.storage.estimate(); est=` · 浏览器存储已用 ${(e.usage/1e6).toFixed(0)} MB`; }catch(e){}
+    st.textContent=`✓ 本机已有模型(${cached.dtype||''},${(cached.bytes/1e6).toFixed(0)} MB${cached.host?',来自 '+cached.host:''})${est}。无需重新下载。`;
+    $('rm').style.display=''; if(!ready){ $('dl').textContent='从本机唤醒(无需下载)'; if(gpuOK) $('dl').disabled=false; }
+    try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  } else if(cached){
+    st.textContent=`本机只有部分模型文件(${(cached.bytes/1e6).toFixed(0)} MB),上次下载可能没完成。点「下载并唤醒」会续上缺的部分。`; $('rm').style.display='';
+  } else { st.textContent=manual?'本机还没有离线巨人的模型。首次需要下载一次。':''; $('rm').style.display='none'; if(!ready) $('dl').textContent='下载并唤醒'; }
+  if(manual) PS.click(); }
+$('chk').onclick=()=>refreshCache(true);
+$('rm').onclick=async()=>{ if(!confirm('确定从这台设备删除离线巨人的模型文件吗?下次使用需要重新下载。')) return;
+  try{ const c=await caches.open(TFCACHE); for(const r of await c.keys()) if(r.url.includes(MODELKEY)) await c.delete(r); }catch(e){}
+  PS.toast('模型已从本机删除'); refreshCache(true); };
 $('dl').onclick=()=>{ PS.sfx('boot'); $('dl').disabled=true; $('dlbar').style.display='block'; const files={};
-  worker=new Worker('./llm-worker.js?v=10',{type:'module'});
+  worker=new Worker('./llm-worker.js?v=11',{type:'module'});
   worker.onerror=ev=>{ $('dlst').textContent='推理线程启动失败:'+(ev.message||'请换用新版 Chrome / Edge'); $('dl').disabled=false; $('dl').textContent='重试'; PS.fail(); };
   worker.onmessage=e=>{ const d=e.data;
     if(d.t==='prog'){ const p=d.p; if(p.status==='progress'&&p.total){ files[p.file]=[p.loaded,p.total]; let a=0,b=0; for(const k in files){ a+=files[k][0]; b+=files[k][1]; }
-        $('dlbar').firstElementChild.style.width=(a/b*100).toFixed(1)+'%'; $('dlst').textContent=`${(a/1e6).toFixed(0)} / ${(b/1e6).toFixed(0)} MB`; } }
+        $('dlbar').firstElementChild.style.width=(a/b*100).toFixed(1)+'%'; $('dlst').textContent=(cached&&cached.ok?'从本机载入 ':'')+`${(a/1e6).toFixed(0)} / ${(b/1e6).toFixed(0)} MB`; } }
     else if(d.t==='info') $('dlst').textContent=d.m;
     else if(d.t==='warn'){ console.warn(d.m); $('dlst').textContent=d.m; }
-    else if(d.t==='ready'){ ready=true; $('dlst').textContent='已唤醒'+(d.src?'(来源:'+d.src+')':'')+' · 现在断网也能用'; $('dl').textContent='已就绪'; $('o1').innerHTML='<span class="muted">准备好了,去下面发问吧。</span>'; PS.win(); $('ysay').textContent='离线巨人醒了。它就住在你的显卡里,你问它什么,都不会离开这台电脑。'; }
+    else if(d.t==='ready'){ ready=true; $('dlst').textContent='已唤醒'+(d.src?'(来源:'+d.src+')':'')+' · 现在断网也能用'; $('dl').textContent='已就绪'; refreshCache(false); $('o1').innerHTML='<span class="muted">准备好了,去下面发问吧。</span>'; PS.win(); $('ysay').textContent='离线巨人醒了。它就住在你的显卡里,你问它什么,都不会离开这台电脑。'; }
     else if(d.t==='txt'){ TXT[1]+=d.s; render(1); }
     else if(d.t==='tok'){ TOK[1].push(d.s); if($('tokv').checked) render(1); }
     else if(d.t==='done'){ busy1=false; $('s1').textContent=`${d.n} token · ${(d.n/(d.ms/1000)).toFixed(1)} token/秒`; }
     else if(d.t==='err'){ busy1=false; $('dlst').textContent=d.m; $('dl').disabled=false; $('dl').textContent='重试'; PS.fail(); } };
-  worker.postMessage({t:'load',dtype}); };
+  const useC=cached&&cached.ok; if(useC){ $('dlst').textContent='从本机缓存唤醒…'; }
+  worker.postMessage({t:'load', dtype: useC&&cached.dtype?cached.dtype:dtype, prefer: useC?cached.host:null, cached: !!useC}); };
 
 /* ---------- 钥匙巨人(OpenAI 兼容接口,浏览器直连) ---------- */
 const PROV={
