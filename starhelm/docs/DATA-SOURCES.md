@@ -57,3 +57,21 @@
 | 潮汐 | 无外部数据:平衡潮理论自算(月龄来自 SH.astro.moonPhase) | 原创 | 实验室内注明「平衡潮理论 · 示意」 |
 | GOES X 射线通量(24 小时)、太阳风速度、月均太阳黑子数 | NOAA SWPC:json/goes/primary/xrays-1-day.json、products/summary/solar-wind-speed.json、json/solar-cycle/observed-solar-cycle-indices.json(黑子数原始来源 SILSO/比利时皇家天文台,经 SWPC 发布) | 美国政府公有领域;CORS *;前端在打开观测台时实时调用,不自托管 | 页脚「NOAA SWPC 极光与太阳活动」、观测台「NOAA SWPC 实时数据」 |
 | 太阳最新实拍(HMI 连续谱、AIA 171Å、AIA 304Å) | NASA SDO sdo.gsfc.nasa.gov/assets/img/latest/ | NASA 图像,公开使用需署名「NASA/SDO 及 AIA、HMI 科学团队」;以 <img> 直接显示,不读像素、不自托管 | 页脚「太阳实拍 NASA/SDO」、观测台图下注 |
+
+## M2 星档馆 v0(2026-10-21,v0.6.0)— 自托管于 /starhelm/arc/(≤1024px WebP)
+| 展品/文件 | 来源编号 | 许可 | 署名(界面逐件显示) |
+|---|---|---|---|
+| 太阳 sun-vis / sun-171 / sun-304 | NASA SDO(HMI 连续谱 latest;AIA 171/304 browse 2026-10-15) | NASA 图像,公开使用需署名 | NASA/SDO 及 HMI / AIA 科学团队 |
+| 蓝色弹珠 earth | NASA AS17-148-22727(1972-12-07) | 美国政府公有领域 | NASA |
+| 暗淡蓝点 pbd | NASA/JPL PIA23645(2020 重处理) | 公有领域 | NASA/JPL-Caltech |
+| 木星 jupiter | ESA/Hubble heic2017a | CC BY 4.0 | NASA, ESA, A. Simon (GSFC), M. H. Wong (UC Berkeley), OPAL 团队 |
+| 创生之柱 可见光 pillars-vis | ESA/Hubble heic1501a | CC BY 4.0 | NASA, ESA/Hubble, Hubble Heritage Team |
+| 创生之柱 近红外 pillars-nir | ESA/Webb weic2216a(同 sv-pillars) | CC BY 4.0 | NASA, ESA, CSA, STScI; J. DePasquale, A. Koekemoer, A. Pagan |
+| 创生之柱 中红外 pillars-miri | ESA/Webb weic2218a | CC BY 4.0 | NASA, ESA, CSA, STScI, J. DePasquale, A. Pagan |
+| 蟹状星云 可见光 crab-vis | ESA/Hubble heic0515a | CC BY 4.0 | NASA, ESA, J. Hester, A. Loll (ASU) |
+| 蟹状星云 红外 crab-ir | ESA/Webb weic2326a | CC BY 4.0 | NASA, ESA, CSA, STScI, T. Temim (Princeton) |
+| 蟹状星云 X 射线 crab-xray | Chandra photo/2018/crab(crab_xray.jpg) | NASA 图像,署名使用 | NASA/CXC/SAO |
+| 宇宙悬崖 cliffs | ESA/Webb weic2205a(同 sv-cliffs) | CC BY 4.0 | NASA, ESA, CSA, STScI |
+| M87* 黑洞 m87 | ESO eso1907a | CC BY 4.0 | EHT Collaboration |
+| 韦布第一深场 deep | ESA/Webb weic2209a(同 sv-deepfield) | CC BY 4.0 | NASA, ESA, CSA, STScI |
+统一声明:不用机构 logo,界面注明「不代表任何机构背书」。改动:仅缩放/方形裁切与格式转换(CC BY 要求注明修改,已在此台账记录)。
