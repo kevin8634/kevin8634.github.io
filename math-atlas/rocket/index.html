@@ -164,11 +164,11 @@
         </section>
 
         <section class="section" id="play" data-nav="关卡">
-          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">狐狸船长在星图上等你。</p></div>
+          <div class="head"><h2 id="play-title">选一关开始</h2><p class="head__sub" id="play-sub">辛几何在星图上等你。</p></div>
           <div id="stage" class="x-panel">
             <div class="x-cat">
-              <div class="x-cat__face">🦊</div>
-              <div class="x-bubble">点开第 1 关「速度表读多少」。火箭越飞越快，某一刻的速度到底怎么量？先猜，再算。<small>狐狸船长只问问题，不直接给答案；连错两次才给提示。</small></div>
+              <div class="x-cat__face">🌀</div>
+              <div class="x-bubble">点开第 1 关「速度表读多少」。火箭越飞越快，某一刻的速度到底怎么量？先猜，再算。<small>辛几何只问问题，不直接给答案；连错两次才给提示。</small></div>
             </div>
           </div>
         </section>
@@ -225,7 +225,7 @@
           wrong() { const t = ctx.currentTime; tone(150, t, 0.22, "sine", 0.16); tone(110, t + 0.06, 0.26, "sine", 0.12); },
           star() { const t = ctx.currentTime; [784, 1047, 1319, 1568, 2093].forEach((f, i) => tone(f, t + i * 0.055, 0.3, "triangle", 0.09)); },
           fanfare() { const t = ctx.currentTime; [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.3]].forEach(([f, d]) => { tone(f, t + d, 0.4, "sawtooth", 0.07); tone(f * 2, t + d, 0.3, "sine", 0.05); }); },
-          /* 狐狸船长: a short, soft squeak */
+          /* 辛几何: a short, soft squeak */
           squeak() {
             const t = ctx.currentTime, o = ctx.createOscillator(); o.type = "sine";
             o.frequency.setValueAtTime(1300, t); o.frequency.exponentialRampToValueAtTime(1900, t + 0.05); o.frequency.exponentialRampToValueAtTime(1500, t + 0.11);
@@ -553,7 +553,7 @@
       /* guide bubble helper */
       function guide(container, text, sub) {
         const wrap = document.createElement("div"); wrap.className = "x-cat";
-        wrap.innerHTML = `<div class="x-cat__face">🦊</div><div class="x-bubble" aria-live="polite"></div>`;
+        wrap.innerHTML = `<div class="x-cat__face">🌀</div><div class="x-bubble" aria-live="polite"></div>`;
         const b = wrap.querySelector(".x-bubble");
         const set = (t, s) => { b.innerHTML = ""; b.append(t); if (s) { const el = document.createElement("small"); el.textContent = s; b.append(el); } Audio_.play("squeak"); };
         set(text, sub); container.append(wrap);
@@ -649,7 +649,7 @@
       /* ===== LEVEL 1 · 速度表读多少 ===== */
       LEVELS.push({ id: 1, title: "速度表读多少", init(root, done) {
         const got = { avg: 0, small: 0, quiz: 0 };
-        const T = [["avg", "量出 0–10 秒的平均速度", "起点 0 秒，时间窗 10 秒"], ["small", "把时间窗缩到 1 秒以内", "点小一点的时间窗"], ["quiz", "至少答对 2 道题", "连错两次，狐狸船长给提示"]];
+        const T = [["avg", "量出 0–10 秒的平均速度", "起点 0 秒，时间窗 10 秒"], ["small", "把时间窗缩到 1 秒以内", "点小一点的时间窗"], ["quiz", "至少答对 2 道题", "连错两次，辛几何给提示"]];
         const say = guide(root, "火箭点火后越飞越快，高度 h = 5t²（米）。先凭直觉猜：第 10 秒那一刻，速度表读多少？", "猜错不扣分，猜完我们一起量。");
         const paint = checklist(root, T, got);
         const rest = el("div", "x-sub"); rest.hidden = true;
