@@ -1,6 +1,6 @@
 # 天枢 Starhelm · 数据与素材许可台账
 
-> 创世计划 Genesis 07 · 天文 · 维护规则:新增数据源/素材先核对许可再接入;CC BY-NC 类商用前必须替换;云盘「07_天枢 Starhelm/开发文档」同步。最后更新 2026-10-21(M1.8b)。
+> 创世计划 Genesis 07 · 天文 · 维护规则:新增数据源/素材先核对许可再接入;CC BY-NC 类商用前必须替换;云盘「07_天枢 Starhelm/开发文档」同步。最后更新 2026-10-21(M2c/M2d)。
 
 | 数据/素材 | 来源 | 许可/条款 | 用法 | 备注 |
 |---|---|---|---|---|
@@ -50,3 +50,10 @@
 | 极光预报 OVATION、行星 Kp 指数 | NOAA SWPC services.swpc.noaa.gov | 美国政府公有领域,前端实时调用 | 页脚「NOAA SWPC 极光」、卡片按钮 |
 | 台风卫星实拍连续帧(10 分钟间隔,近 3 小时) | NASA GIBS WMS(epsg4326/best):Himawari_AHI_Band3_Red_Visible_1km / Band13_Clean_Infrared(Himawari-9,原始数据日本气象厅);GOES-East/West_ABI_Band2_Red_Visible_1km / Band13_Clean_Infrared(NOAA) | NASA EOSDIS 数据开放使用,需署名;CORS *;前端实时调用,不自托管、不缓存 | 页脚「卫星云图 NASA GIBS(Himawari-9:日本气象厅;GOES:NOAA;VIIRS:NASA/NOAA)」、台风卡片「卫星实拍」行、画面角标 |
 | 全球真实云图(最近一天) | NASA GIBS VIIRS_NOAA20_CorrectedReflectance_TrueColor(NASA/NOAA) | 同上 | 同上;云层开关「实拍 日期」 |
+
+## M2c 潮汐实验室 / M2d 太阳活动观测台(2026-10-21,v0.5.4)
+| 资料 | 来源 | 许可/使用方式 | 署名位置 |
+|---|---|---|---|
+| 潮汐 | 无外部数据:平衡潮理论自算(月龄来自 SH.astro.moonPhase) | 原创 | 实验室内注明「平衡潮理论 · 示意」 |
+| GOES X 射线通量(24 小时)、太阳风速度、月均太阳黑子数 | NOAA SWPC:json/goes/primary/xrays-1-day.json、products/summary/solar-wind-speed.json、json/solar-cycle/observed-solar-cycle-indices.json(黑子数原始来源 SILSO/比利时皇家天文台,经 SWPC 发布) | 美国政府公有领域;CORS *;前端在打开观测台时实时调用,不自托管 | 页脚「NOAA SWPC 极光与太阳活动」、观测台「NOAA SWPC 实时数据」 |
+| 太阳最新实拍(HMI 连续谱、AIA 171Å、AIA 304Å) | NASA SDO sdo.gsfc.nasa.gov/assets/img/latest/ | NASA 图像,公开使用需署名「NASA/SDO 及 AIA、HMI 科学团队」;以 <img> 直接显示,不读像素、不自托管 | 页脚「太阳实拍 NASA/SDO」、观测台图下注 |
