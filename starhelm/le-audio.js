@@ -78,9 +78,43 @@
     click: function () { play('click'); },
     toggle: function (on) { play(on ? 'toggle-on' : 'toggle-off'); },
     lock: function () { play('lock'); },
-    whoosh: function (dur) { play('whoosh', { rate: Math.max(0.6, Math.min(1.4, 2.4 / (dur || 2.4))) }); },   // 飞得越久,呼啸越低沉
-    boom: function () { play('boom'); }
+    // v1.0-M1b(王磊 10-22:一镜到底音效太吓人)→ 改为本机合成的柔和「星海涌动」:慢起慢落的滤波噪声 + 空五度长音,不再用 whoosh/boom 采样
+    whoosh: function (dur) { swell(typeof dur === 'number' ? dur : (dur && dur.dur) || 2.4); },
+    boom: function () { softBoom(); }
   };
+  function env(g, t, peak, up, len) {
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(peak, t + up);
+    g.gain.setTargetAtTime(0.0001, t + up, Math.max(0.2, (len - up) / 3.2));
+  }
+  function swell(dur) {
+    if (!ctx || !A.sfx || !A.started || !noiseBuf) return;
+    var now = performance.now(); if (last._sw && now - last._sw < 600) return; last._sw = now;
+    dur = Math.max(1.6, Math.min(6, dur || 2.4));
+    var t = ctx.currentTime + 0.02, up = Math.min(1.6, dur * 0.4), end = t + dur + 1.5;
+    var out = ctx.createGain(); env(out, t, 0.32, up, dur); out.connect(sfxGain);
+    // 星风:低通噪声,截止频率缓慢升起再落下
+    var n = ctx.createBufferSource(); n.buffer = noiseBuf; n.loop = true;
+    var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 0.6;
+    f.frequency.setValueAtTime(160, t); f.frequency.exponentialRampToValueAtTime(720, t + up); f.frequency.exponentialRampToValueAtTime(200, t + dur);
+    var ng = ctx.createGain(); ng.gain.value = 0.55; n.connect(f); f.connect(ng); ng.connect(out);
+    // 空五度长音(A2 + E3 + A3 轻微失谐),像远处的星海和声
+    [[110, 0.10], [164.81, 0.07], [220.6, 0.045], [329.2, 0.02]].forEach(function (p) {
+      var o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = p[0];
+      var og = ctx.createGain(); og.gain.value = p[1]; o.connect(og); og.connect(out); o.start(t); o.stop(end);
+    });
+    n.start(t); n.stop(end);
+  }
+  function softBoom() {
+    if (!ctx || !A.sfx || !A.started || !noiseBuf) return;
+    var t = ctx.currentTime + 0.02, end = t + 3;
+    var out = ctx.createGain(); env(out, t, 0.22, 0.35, 2.2); out.connect(sfxGain);
+    var o = ctx.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(82, t); o.frequency.exponentialRampToValueAtTime(55, t + 2);
+    o.connect(out); o.start(t); o.stop(end);
+    var n = ctx.createBufferSource(); n.buffer = noiseBuf; var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 140;
+    var ng = ctx.createGain(); ng.gain.value = 0.25; n.connect(f); f.connect(ng); ng.connect(out); n.start(t); n.stop(end);
+  }
+  A.swell = swell;
   A.play = function (name, arg) { try { if (MAP[name]) MAP[name](arg); else play(name, arg); } catch (e) { } };
 
   /* ---------- 连续变化的声音:嗡鸣(实时合成,随速度变化) ---------- */
@@ -141,7 +175,7 @@
     LE.bus.on('cinematic:start', function () { A.play('whoosh', 5.4); });
     LE.bus.on('cinematic:end', function () { A.play('lock'); });
     LE.bus.on('select', function (e) { if (e.kind === 'planet') { A.play('whoosh', 2.6); setTimeout(function () { A.play('lock'); }, 1800); } else if (e.kind === 'quake') A.play('lock'); });
-    LE.bus.on('mode:changed', function () { A.play('boom'); A.play('whoosh', 2.4); });
+    LE.bus.on('mode:changed', function () { A.play('whoosh', 3.2); });
     setInterval(updateHum, 400);
   };
 })();
