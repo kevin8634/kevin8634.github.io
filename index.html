@@ -438,6 +438,9 @@
       .x-news__all { display: block; width: 100%; min-height: 40px; margin-top: 2px; border: 0; border-top: 1px solid rgba(234,240,255,.08); background: none;
         color: var(--gold); font: 500 12.5px var(--sans); cursor: pointer; border-radius: 0 0 12px 12px; }
       .x-news__all:hover, .x-news__all:focus-visible { background: rgba(233,199,121,.08); outline: none; }
+      .x-news__board { text-align: center; text-decoration: none; line-height: 40px; box-sizing: border-box; }
+      .x-log__board { display: block; margin-top: 10px; padding: 9px 12px; border: 1px solid rgba(233,199,121,.32); border-radius: 10px; color: var(--gold); text-decoration: none; font-size: 13px; }
+      .x-log__board:hover, .x-log__board:focus-visible { background: rgba(233,199,121,.10); outline: none; }
       .x-news__bar, .x-news__pin { display: none; }
       /* 收起成徽标 */
       .x-news.min { width: auto; padding: 0; border-radius: 999px; }
@@ -856,6 +859,7 @@
         <div class="x-news__hd"><h2>最新更新</h2><button type="button" class="x-news__x" id="newsMin" aria-label="收起最新更新" title="收起">—</button></div>
         <ol id="newsList"></ol>
         <button type="button" class="x-news__all" id="newsAll">全部星历 →</button>
+        <a class="x-news__all x-news__board" href="board/">开发看板 · 路线图 →</a>
         <button type="button" class="x-news__pin" id="newsPin" aria-label="展开最新更新"><i></i>最新更新</button>
       </section>
       <aside class="card" id="card" role="dialog" aria-label="世界简介"></aside>
@@ -937,6 +941,7 @@
       <section class="x-log__panel" aria-label="纪年">
         <h2>纪年</h2>
         <p class="hint" style="margin:0;font-size:12px;color:var(--dim)">由新到旧 · 日期为北京时间 · 按 N 打开</p>
+        <a class="x-log__board" href="board/">开发看板 · 七个世界的下一步 →</a>
         <ol id="logList"></ol>
       </section>
       <aside class="card" id="logCard" aria-live="polite"></aside>
@@ -1020,7 +1025,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.8.2.7</b></span>
+            <span>创世计划总门户 <b>v0.8.2.8</b></span>
           </footer>
         </div>
       </div>
@@ -2879,6 +2884,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.2.8", d: "2026-10-22", t: "新增「开发看板」：七个世界的版本、进度和下一步一页看全，从星历和最新更新进入。" },
         { w: "gn", v: "v0.8.2.7", d: "2026-10-22", t: "星历补记天枢 Starhelm v0.6.1–v0.6.4；天枢卡更新为星域 I 五个任务全部开放。" },
         { w: "07", v: "v0.6.4", d: "2026-10-22", t: "新任务「地震在告诉我们什么？」：一年近 2,000 次真实地震连成环太平洋地震带，还能透视地下看板块俯冲。" },
         { w: "07", v: "v0.6.3", d: "2026-10-22", t: "新任务「天上到底有多少颗卫星？」：3.5 万个在轨物体按真实轨道绕地球飞，还能开时间机器看卫星从 2019 年起暴涨。" },
