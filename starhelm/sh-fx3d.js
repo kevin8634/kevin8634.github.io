@@ -233,6 +233,38 @@
       } catch (x) { }
     });
   }
+  function earthMoon4k(SO, S, rd) {
+    var E = SO.byId.earth, Mo = SO.byId.moon;
+    if (Mo && Mo.mesh && Mo.mesh.material.uniforms) { var mt = loadTex('hd/moon-4k.jpg', rd); mt.ready.then(function () { Mo.mesh.material.uniforms.uMap.value = mt; Mo.mesh.material.uniforms.uHas.value = 1; }).catch(function () { }); }
+    if (!E || !E.mesh) return;
+    var day = loadTex('hd/earth-day-4k.jpg', rd), night = loadTex('hd/earth-night-4k.jpg', rd), cl = loadTex('hd/earth-clouds-4k.jpg', rd, false);
+    Promise.all([day.ready, night.ready]).then(function () {
+      var R = E.mesh.geometry.parameters.radius;
+      var mat = new T.ShaderMaterial({
+        uniforms: { uDay: { value: day }, uNight: { value: night } },
+        vertexShader: 'varying vec2 vUv;varying vec3 vN;varying vec3 vW;void main(){vUv=uv;vN=normalize(mat3(modelMatrix)*normal);vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}',
+        fragmentShader: ['uniform sampler2D uDay,uNight;varying vec2 vUv;varying vec3 vN;varying vec3 vW;',
+          'void main(){vec3 N=normalize(vN),L=normalize(-vW),V=normalize(cameraPosition-vW);float ndl=dot(N,L),mu=max(dot(N,V),0.);',
+          ' vec3 d=texture2D(uDay,vUv).rgb, n=texture2D(uNight,vUv).rgb;',
+          ' float dayK=smoothstep(-.08,.22,ndl);',
+          ' vec3 col=d*(vec3(1.,.97,.92)*1.5*max(ndl,0.)+.03)*dayK + n*vec3(1.,.78,.45)*1.6*(1.-dayK);',
+          ' vec3 H=normalize(L+V);float spec=pow(max(dot(N,H),0.),60.)*smoothstep(.25,.05,length(d-vec3(.05,.1,.2)))*dayK;col+=vec3(.9,.95,1.)*spec*.6;',
+          ' float rim=pow(1.-mu,3.);col+=vec3(.35,.65,1.)*rim*(.2+.8*smoothstep(-.3,.4,ndl));',
+          ' gl_FragColor=vec4(col,1.);}'].join('\n')
+      });
+      E.mesh.geometry.dispose(); E.mesh.geometry = new T.SphereGeometry(R, 96, 48);
+      E.mesh.material.dispose(); E.mesh.material = mat;
+      cl.ready.then(function () {
+        var cm = new T.Mesh(new T.SphereGeometry(R * 1.012, 96, 48), new T.ShaderMaterial({
+          uniforms: { uC: { value: cl } }, transparent: true, depthWrite: false,
+          vertexShader: 'varying vec2 vUv;varying vec3 vN;varying vec3 vW;void main(){vUv=uv;vN=normalize(mat3(modelMatrix)*normal);vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}',
+          fragmentShader: 'uniform sampler2D uC;varying vec2 vUv;varying vec3 vN;varying vec3 vW;void main(){float a=texture2D(uC,vUv).r;float ndl=dot(normalize(vN),normalize(-vW));float l=smoothstep(-.1,.3,ndl);gl_FragColor=vec4(vec3(1.)*(.08+1.1*max(ndl,0.)),a*.85*(.15+.85*l));}'
+        }));
+        E.mesh.add(cm); var last = performance.now();
+        S.addUpdater(function () { var n = performance.now(); if (S.mode === 'solar') cm.rotation.y += (n - last) * 2e-6; last = n; });
+      }).catch(function () { });
+    }).catch(function () { });
+  }
   function upgradeSolar() {
     var S = window.LE && LE.scene, SO = window.LE && LE.solar; if (solarDone || !S || !SO || !SO.byId || !SO.byId.sun) return false;
     solarDone = true; var rd = S.renderer, sc = S.solarScene;
@@ -250,6 +282,8 @@
         var t = loadTex('hd/' + id + '-4k.jpg', rd);
         t.ready.then(function () { b.mesh.material.uniforms.uMap.value = t; b.mesh.material.uniforms.uHas.value = 1; }).catch(function () { });
       });
+      // 2b 地球 / 月球 4K(v1.0-M2g):地球昼夜着色(夜面城市灯光辉光)+ 云层 + 大气;月球 4K
+      if (hdOK(rd)) try { earthMoon4k(SO, S, rd); } catch (e) { console.warn('[SHFX3D] earth4k', e); }
       // 3 土星粒子环
       if (SO.byId.saturn) ringParticles(SO.byId.saturn, rd);
       jupiterExtras(SO, S);

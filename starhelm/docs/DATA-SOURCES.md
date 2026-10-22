@@ -107,3 +107,6 @@
 - 木卫四 callisto:USGS 赤道区镶嵌(File:Callisto equatorial.jpg),公有领域。改动:着色 + 极区补齐。
 - 土卫六 titan:NASA/JPL-Caltech/Univ. Arizona PIA22770(Cassini VIMS 红外透雾地表镶嵌),公有领域。改动:按土卫六大气的橙色着色;画面中位置为示意(周期真实)。
 - 卫星数值(半径、轨道半长轴、周期):NASA Solar System Exploration 公开数据。
+
+## hd/earth-{day,night,clouds}-4k.jpg、hd/moon-4k.jpg(v1.0-M2g)
+- 来源:Solar System Scope 8K 纹理(经 Wikimedia Commons 3840 宽缩略图,放大到 4096×2048),基于 NASA Blue Marble / Black Marble / LRO 影像。许可 CC BY 4.0(页脚已署名 Solar System Scope)。仅桌面加载。
