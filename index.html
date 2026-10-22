@@ -224,6 +224,44 @@
         position: absolute; top: 14px; right: 16px; min-width: 48px; min-height: 48px;
         background: none; border: 0; color: var(--dim); font-size: 20px; cursor: pointer;
       }
+      /* v0.8.4 · 创世护照：星阶 + 成就卡 + 挑战卡（只和自己比，卡片本机生成） */
+      .x-pp { margin: 22px 0 0; padding-top: 20px; border-top: 1px solid rgba(233,199,121,.18); }
+      .x-pp__lab { font-size: 11px; letter-spacing: .28em; color: var(--gold); margin: 0 0 10px; }
+      .x-pp__tier { display: flex; align-items: flex-end; gap: 10px; }
+      .x-pp__tier b { font-size: 30px; line-height: 1; color: #ffe7a8; text-shadow: 0 0 18px rgba(255,210,120,.45); letter-spacing: .06em; }
+      .x-pp__tier span { font-size: 12px; color: var(--gold); padding-bottom: 3px; }
+      .x-pp__prog { height: 5px; border-radius: 5px; background: rgba(234,240,255,.1); overflow: hidden; margin: 12px 0 6px; }
+      .x-pp__prog i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #e9c779, #fff2c6); transition: width .5s; }
+      .x-pp__hint { font-size: 12px; color: var(--dim); margin: 0; line-height: 1.6; }
+      .x-pp__stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; }
+      .x-pp__stats div { border: 1px solid rgba(234,240,255,.12); border-radius: 12px; padding: 10px 0 8px; text-align: center; background: rgba(10,16,40,.5); }
+      .x-pp__stats b { display: block; font-size: 22px; line-height: 1.1; color: #fff; }
+      .x-pp__stats span { font-size: 11px; color: var(--dim); }
+      .x-pp details { margin: 0 0 14px; }
+      .x-pp summary { cursor: pointer; font-size: 12px; color: var(--gold); min-height: 32px; display: flex; align-items: center; list-style: none; }
+      .x-pp summary::-webkit-details-marker { display: none; }
+      .x-pp summary::after { content: "▾"; margin-left: 6px; font-size: 10px; transition: transform .2s; }
+      .x-pp details[open] summary::after { transform: rotate(180deg); }
+      .x-pp__ladder { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 6px; }
+      .x-pp__ladder li { display: flex; gap: 10px; align-items: baseline; font-size: 12px; color: var(--dim); padding: 7px 10px; border-radius: 10px; border: 1px solid rgba(234,240,255,.08); }
+      .x-pp__ladder li b { flex: none; width: 46px; color: rgba(234,240,255,.55); font-weight: 600; }
+      .x-pp__ladder li.done b { color: var(--ink); }
+      .x-pp__ladder li.on { border-color: rgba(233,199,121,.7); box-shadow: 0 0 16px -6px rgba(233,199,121,.6); }
+      .x-pp__ladder li.on b { color: #ffe7a8; }
+      .x-pp__f { display: block; font-size: 12px; color: var(--dim); margin: 0 0 12px; }
+      .x-pp__f input, .x-pp__f select { display: block; width: 100%; margin-top: 6px; min-height: 40px; padding: 0 12px; border-radius: 10px; font: inherit; font-size: 13px;
+        color: var(--ink); background: rgba(3,5,13,.6); border: 1px solid rgba(234,240,255,.18); }
+      .x-pp__f select:disabled { opacity: .5; }
+      .x-pp__f input:focus-visible, .x-pp__f select:focus-visible { outline: none; border-color: var(--gold); }
+      .x-pp__btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .x-pp__btns button, .x-pp__out button { min-height: 44px; border-radius: 999px; cursor: pointer; font: inherit; font-size: 13px; letter-spacing: .06em;
+        color: var(--gold); background: rgba(233,199,121,.06); border: 1px solid rgba(233,199,121,.45); }
+      .x-pp__btns button:hover, .x-pp__btns button:focus-visible, .x-pp__out button:hover, .x-pp__out button:focus-visible { background: rgba(233,199,121,.16); outline: none; }
+      .x-pp__btns button:disabled { opacity: .4; cursor: default; }
+      .x-pp__out { margin-top: 14px; }
+      .x-pp__out img { display: block; width: 100%; max-height: 72vh; object-fit: contain; border-radius: 14px; border: 1px solid rgba(233,199,121,.35); }
+      .x-pp__out .x-pp__row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+      .x-pp__note { font-size: 11px; color: var(--dim); line-height: 1.7; margin: 12px 0 0; }
       /* v0.6.3 · 联系开发者：领航员信号牌 */
       .foot .x-devb { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; margin-left: auto; padding: 6px 12px 6px 6px; min-height: 40px; border-radius: 999px; border: 1px solid rgba(233,199,121,.35); background: rgba(3,5,13,.45); }
       .foot .x-devb img { width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 0 0 1.5px var(--gold), 0 0 10px rgba(233,199,121,.6); }
@@ -893,7 +931,23 @@
       </div>
       <p class="count" id="count">已点亮 0 / 7 个世界</p>
       <div class="bar"><i id="bar"></i></div>
-      <p class="hint">数据只存在本机浏览器。</p>
+      <section class="x-pp" id="pp" aria-label="星阶与分享卡">
+        <p class="x-pp__lab">我的星阶 · 只和自己比</p>
+        <div class="x-pp__tier"><b id="ppTier">星尘</b><span id="ppStep">第 1 阶 / 7</span></div>
+        <div class="x-pp__prog" role="progressbar" aria-label="距下一阶" aria-valuemin="0" aria-valuemax="100" id="ppBarW"><i id="ppBar"></i></div>
+        <p class="x-pp__hint" id="ppHint"></p>
+        <div class="x-pp__stats"><div><b id="ppK">0</b><span>个任务</span></div><div><b id="ppW">0</b><span>个世界</span></div><div><b id="ppB">0</b><span>座星桥</span></div></div>
+        <details><summary>七级星阶怎么升</summary><ol class="x-pp__ladder" id="ppLadder"></ol></details>
+        <label class="x-pp__f">昵称（可不填，别写真名）<input id="ppNick" maxlength="8" autocomplete="off" placeholder="例如：小航"></label>
+        <label class="x-pp__f">我最近弄懂的问题<select id="ppQ"></select></label>
+        <div class="x-pp__btns"><button type="button" id="ppMake1">生成成就卡</button><button type="button" id="ppMake2">生成挑战卡</button></div>
+        <div class="x-pp__out" id="ppOut" hidden>
+          <img id="ppImg" alt="">
+          <div class="x-pp__row"><button type="button" id="ppSave">下载图片</button><button type="button" id="ppShare">分享</button></div>
+        </div>
+        <p class="x-pp__note">卡片在本机生成，不含姓名、学校、年龄、网址或二维码；不设排行榜，不用连续打卡。数据只存在本机浏览器。</p>
+      </section>
+
     </aside>
 
     <div class="modal" id="trailer" role="dialog" aria-label="宣传片">
@@ -2897,7 +2951,248 @@
         });
         document.getElementById("count").textContent = "已点亮 " + lit + " / 7 个世界";
         document.getElementById("bar").style.width = (lit / 7 * 100) + "%";
+        PP.render();
       }
+      /* ---------- v0.8.4 创世护照：星阶 + 成就卡 + 挑战卡 ----------
+         读各世界本机进度键 gn:<世界码>:<任务>（星图另含 ma:v1:<任务>），键存在即算点亮该任务；
+         昵称存 gn:portal:_nick、所选问题存 gn:portal:_q（_ 开头 = 偏好，不算进度）。不上传，不比较他人。 */
+      var PP = (function () {
+        var TASKS = {
+          "01": { p: ["ma:v1:", "gn:ma:"], t: { chord: "为什么有的和弦好听？", cat: "怎样让 AI 认出一只猫？", casino: "赌场为什么总是赢？", secret: "怎样把秘密藏进数字里？", epidemic: "传染病为什么会爆发？", rocket: "火箭怎样飞上月球？", cube: "魔方为什么能复原？", bee: "为什么蜜蜂选六边形？", nim: "先拿的人一定赢吗？", nav: "导航怎么找到最短的路？" } },
+          "02": { p: ["gn:nv:"], t: { orbit: "为什么宇航员在空间站会飘起来？", sound: "为什么救护车经过时声音会变？", hoop: "如果引力变成两倍，篮球还能投进吗？" } },
+          "03": { p: ["gn:ef:"], t: { stars: "你身体里的铁是从哪颗星来的？", carbon: "为什么钻石和铅笔芯是同一种东西？", crystal: "晶体为什么那么整齐？" } },
+          "04": { p: ["gn:ls:"], t: { dna: "四个字母怎么写出一个人？", parents: "为什么你长得像爸妈，又不完全像？", zebra: "为什么斑马会有条纹？", virus: "一场感冒是怎么在班里传开的？", wolf: "狼回来之后，河流为什么变了？" } },
+          "05": { p: ["gn:ps:"], t: { ask: "AI 会思考吗？", write: "AI 是怎么写作文的？", cat: "怎样让 AI 认出一只猫？", attn: "AI 在「看」哪里？", panda: "怎样让 AI 把熊猫认成长臂猿？", truth: "这段话是 AI 写的吗？", robot: "为什么扫地机器人会偷懒？", scale: "把 AI 放大会怎样？", together: "我们和 AI 怎么一起生活？" } },
+          "06": { p: ["gn:lt:"], t: { compound: "每天多进步 1%，一年后会怎样？", prisoner: "为什么好人不一定吃亏？", sunk: "电影看了一半很难看，要不要看完？", cocoon: "为什么你刷到的视频越来越像？", survivor: "为什么「成功经验」常常骗人？", nature: "人性本善，还是本恶？", meaning: "看见了这些规则，我想成为怎样的玩家？" } },
+          "07": { p: ["gn:sh:"], t: { where: "此刻，你在宇宙的哪里？", orbit: "空间站为什么掉不下来？", seasons: "为什么会有四季？", sats: "天上到底有多少颗卫星？", quakes: "地震在告诉我们什么？" } }
+        };
+        var CODE = { ma: "01", nv: "02", ef: "03", ls: "04", ps: "05", lt: "06", sh: "07" };
+        var DEMO = { "01": ["chord", "cat", "rocket", "nim", "bee"], "05": ["cat", "ask", "write", "truth", "attn"] };
+        var TIERS = [
+          { n: "星尘", d: "从这里出发", k: 0, w: 0, b: 0 },
+          { n: "星云", d: "点亮 1 个任务", k: 1, w: 0, b: 0 },
+          { n: "初星", d: "点亮 3 个任务", k: 3, w: 0, b: 0 },
+          { n: "恒星", d: "3 个世界 · 8 个任务", k: 8, w: 3, b: 0 },
+          { n: "双星", d: "4 个世界 · 走通 1 座星桥", k: 8, w: 4, b: 1 },
+          { n: "星团", d: "6 个世界 · 走通 3 座星桥", k: 8, w: 6, b: 3 },
+          { n: "星系", d: "七个世界全部点亮", k: 8, w: 7, b: 3 }
+        ];
+        var DIPPER = ["07", "01", "02", "03", "04", "05", "06"];
+        var DPOS = [[.15, .40], [.29, .24], [.47, .29], [.55, .45], [.69, .50], [.81, .42], [.88, .21]];
+        var $ = function (id) { return document.getElementById(id); };
+        var st = null, url = null, blob = null, fname = "";
+
+        function wById(id) { for (var i = 0; i < WORLDS.length; i++) if (WORLDS[i].id === id) return WORLDS[i]; return null; }
+        function read(k) { try { var v = localStorage.getItem(k); return v == null || v === "null" || v === "" ? null : v; } catch (e) { return null; } }
+        function ts(v) { try { var o = JSON.parse(v); return o && typeof o.t === "number" ? o.t : 0; } catch (e) { return 0; } }
+
+        function scan() {
+          var lit = [], set = {}, worlds = {};
+          Object.keys(TASKS).forEach(function (w) {
+            var T = TASKS[w];
+            Object.keys(T.t).forEach(function (id) {
+              var on = false, t = 0;
+              if (demo) on = (DEMO[w] || []).indexOf(id) > -1;
+              else T.p.forEach(function (p) { var v = read(p + id); if (v) { on = true; t = Math.max(t, ts(v)); } });
+              if (on) { lit.push({ w: w, id: id, q: T.t[id], t: t }); set[w + "." + id] = 1; worlds[w] = 1; }
+            });
+          });
+          WORLDS.forEach(function (w) { if (w.lit) worlds[w.id] = 1; });
+          var pairs = {}, nb = 0;
+          BRIDGES.forEach(function (b) {
+            var a = b.a.id.split("."), c = b.b.id.split("."), wa = CODE[a[0]], wb = CODE[c[0]];
+            if (!wa || !wb || !set[wa + "." + a[1]] || !set[wb + "." + c[1]]) return;
+            var key = [b.a.id, b.b.id].sort().join("|");
+            if (!pairs[key]) { pairs[key] = 1; nb++; }
+          });
+          var nw = Object.keys(worlds).length, nk = lit.length, ti = 0;
+          for (var i = 1; i < TIERS.length; i++) { var T2 = TIERS[i]; if (nk >= T2.k && nw >= T2.w && nb >= T2.b) ti = i; else break; }
+          lit.sort(function (x, y) { return y.t - x.t; });
+          return { lit: lit, k: nk, w: nw, b: nb, ti: ti, worlds: worlds };
+        }
+
+        function nextInfo(s) {
+          if (s.ti >= TIERS.length - 1) return { f: 1, h: "七个世界都亮了。继续点亮新任务，走更多星桥吧。" };
+          var N = TIERS[s.ti + 1], parts = [], fs = [];
+          if (N.k) { fs.push(Math.min(1, s.k / N.k)); if (s.k < N.k) parts.push("点亮 " + (N.k - s.k) + " 个任务"); }
+          if (N.w) { fs.push(Math.min(1, s.w / N.w)); if (s.w < N.w) parts.push("点亮 " + (N.w - s.w) + " 个世界"); }
+          if (N.b) { fs.push(Math.min(1, s.b / N.b)); if (s.b < N.b) parts.push("走通 " + (N.b - s.b) + " 座星桥"); }
+          var f = fs.reduce(function (a, x) { return a + x; }, 0) / (fs.length || 1);
+          return { f: f, h: "再" + parts.join("、") + "，升到第 " + (s.ti + 2) + " 阶「" + N.n + "」。" };
+        }
+
+        function render() {
+          st = scan();
+          var T = TIERS[st.ti], nx = nextInfo(st);
+          $("ppTier").textContent = T.n;
+          $("ppStep").textContent = "第 " + (st.ti + 1) + " 阶 / 7";
+          $("ppBar").style.width = Math.round(nx.f * 100) + "%";
+          $("ppBarW").setAttribute("aria-valuenow", Math.round(nx.f * 100));
+          $("ppHint").textContent = nx.h;
+          $("ppK").textContent = st.k; $("ppW").textContent = st.w; $("ppB").textContent = st.b;
+          $("ppLadder").innerHTML = TIERS.map(function (x, i) {
+            return '<li class="' + (i < st.ti ? "done" : i === st.ti ? "on done" : "") + '"><b>' + (i + 1) + " " + x.n + "</b><span>" + x.d + "</span></li>";
+          }).join("");
+          var sel = $("ppQ"), keep = lsGet("gn:portal:_q");
+          if (!st.lit.length) { sel.innerHTML = "<option>先去任意世界点亮一个任务</option>"; sel.disabled = true; }
+          else {
+            sel.disabled = false;
+            sel.innerHTML = st.lit.map(function (x) { var w = wById(x.w); return '<option value="' + x.w + "." + x.id + '">' + brEsc(x.q) + "（" + brEsc(w ? w.name : "") + "）</option>"; }).join("");
+            if (keep && st.lit.some(function (x) { return x.w + "." + x.id === keep; })) sel.value = keep;
+          }
+          $("ppMake2").disabled = !st.lit.length;
+          var nick = lsGet("gn:portal:_nick");
+          if (document.activeElement !== $("ppNick")) $("ppNick").value = nick || "";
+        }
+
+        function today() { var d = new Date(), z = function (n) { return (n < 10 ? "0" : "") + n; }; return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()); }
+        function cleanNick() { return ($("ppNick").value || "").replace(/[\s<>]/g, "").slice(0, 8); }
+        function chosen() { var v = $("ppQ").value; for (var i = 0; i < st.lit.length; i++) if (st.lit[i].w + "." + st.lit[i].id === v) return st.lit[i]; return st.lit[0] || null; }
+        function F(wt, px) { return wt + " " + px + "px " + BR_FONT; }
+        function glow(c, x, y, R, col, a) { var g = c.createRadialGradient(x, y, 0, x, y, R); g.addColorStop(0, col); g.addColorStop(1, "rgba(0,0,0,0)"); c.globalAlpha = a; c.fillStyle = g; c.beginPath(); c.arc(x, y, R, 0, 7); c.fill(); c.globalAlpha = 1; }
+        function bg(c, W, H, seed, tint) {
+          var g = c.createRadialGradient(W * .5, H * .28, 0, W * .5, H * .4, H * .95);
+          g.addColorStop(0, tint || "#141a46"); g.addColorStop(.5, "#070b22"); g.addColorStop(1, "#02030a");
+          c.fillStyle = g; c.fillRect(0, 0, W, H);
+          var s = seed; function r() { s = (s * 9301 + 49297) % 233280; return s / 233280; }
+          for (var i = 0; i < 380; i++) { c.globalAlpha = .18 + r() * .65; c.fillStyle = "#fff"; c.beginPath(); c.arc(r() * W, r() * H, r() < .93 ? 1.1 : 2.2, 0, 7); c.fill(); }
+          c.globalAlpha = 1;
+          c.strokeStyle = "rgba(233,199,121,.55)"; c.lineWidth = 3; rr(c, 18, 18, W - 36, H - 36, 40); c.stroke();
+        }
+        function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+        function wrap(c, text, maxW) {
+          var lines = [], cur = "";
+          for (var i = 0; i < text.length; i++) { var t = cur + text[i]; if (c.measureText(t).width > maxW && cur) { lines.push(cur); cur = text[i]; } else cur = t; }
+          if (cur) lines.push(cur);
+          // 标点不放行首
+          for (var j = 1; j < lines.length; j++) if (/^[，。？！、」）：；]/.test(lines[j])) { lines[j - 1] += lines[j][0]; lines[j] = lines[j].slice(1); }
+          return lines.filter(function (l) { return l; });
+        }
+        function brand(c, sub) {
+          c.textAlign = "left"; c.fillStyle = "#e9c779"; c.font = F(600, 34); c.fillText("创世计划 Genesis", 84, 128);
+          c.fillStyle = "rgba(234,240,255,.55)"; c.font = F(400, 22); c.fillText(sub, 86, 172);
+        }
+        function nickPill(c, W, nick) {
+          if (!nick) return;
+          c.font = F(400, 28); var w = c.measureText(nick).width + 48;
+          c.strokeStyle = "rgba(234,240,255,.25)"; c.lineWidth = 2; rr(c, W - 84 - w, 92, w, 56, 28); c.stroke();
+          c.fillStyle = "rgba(234,240,255,.85)"; c.textAlign = "center"; c.fillText(nick, W - 84 - w / 2, 130);
+        }
+
+        function cardA(nick) {
+          var W = 1080, H = 1440, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+          var c = cv.getContext("2d"), s = st, T = TIERS[s.ti], nx = nextInfo(s);
+          bg(c, W, H, 7); brand(c, "我 的 星 盘"); nickPill(c, W, nick);
+          var ox = 40, oy = 240, w = W - 80, h = 720;
+          var pts = DPOS.map(function (p) { return [ox + p[0] * w, oy + p[1] * h]; });
+          c.lineWidth = 4;
+          for (var i = 0; i < 6; i++) {
+            var on = s.worlds[DIPPER[i]] && s.worlds[DIPPER[i + 1]];
+            c.strokeStyle = on ? "rgba(255,226,150,.9)" : "rgba(233,199,121,.25)"; c.setLineDash(on ? [] : [10, 12]);
+            c.beginPath(); c.moveTo(pts[i][0], pts[i][1]); c.lineTo(pts[i + 1][0], pts[i + 1][1]); c.stroke();
+          }
+          c.setLineDash([]);
+          pts.forEach(function (p, i) {
+            var wd = wById(DIPPER[i]), lit = !!s.worlds[DIPPER[i]], col = wd ? wd.color : "#fff";
+            if (lit) { glow(c, p[0], p[1], 150, col, .55); glow(c, p[0], p[1], 40, "#ffffff", .9); }
+            c.fillStyle = lit ? "#fff" : "rgba(234,240,255,.28)"; c.beginPath(); c.arc(p[0], p[1], lit ? 15 : 8, 0, 7); c.fill();
+            var dy = [62, -40, -40, 62, 62, -40, -40][i];
+            c.font = F(lit ? 600 : 400, 30); c.textAlign = "center"; c.fillStyle = lit ? col : "rgba(234,240,255,.38)";
+            c.fillText(wd ? wd.name : "", p[0], p[1] + dy);
+          });
+          var y = 900;
+          c.textAlign = "left"; c.font = F(700, 96); c.fillStyle = "#ffe7a8"; c.shadowColor = "rgba(255,210,120,.5)"; c.shadowBlur = 30;
+          c.fillText(T.n, 84, y); var tw = c.measureText(T.n).width; c.shadowBlur = 0;
+          c.font = F(400, 30); c.fillStyle = "#e9c779"; c.fillText("第 " + (s.ti + 1) + " 阶 / 7", 84 + tw + 26, y - 8);
+          c.fillStyle = "rgba(234,240,255,.1)"; rr(c, 84, y + 32, W - 168, 12, 6); c.fill();
+          var g = c.createLinearGradient(84, 0, W - 84, 0); g.addColorStop(0, "#e9c779"); g.addColorStop(1, "#fff2c6");
+          c.fillStyle = g; rr(c, 84, y + 32, Math.max(12, (W - 168) * nx.f), 12, 6); c.fill();
+          c.font = F(400, 24); c.fillStyle = "rgba(234,240,255,.6)";
+          wrap(c, nx.h, W - 168).slice(0, 2).forEach(function (l, i) { c.fillText(l, 84, y + 86 + i * 34); });
+          var sy = y + 150, bw = (W - 168 - 40) / 3;
+          [[s.k, "个任务"], [s.w, "个世界"], [s.b, "座星桥"]].forEach(function (x, i) {
+            var bx = 84 + i * (bw + 20);
+            c.fillStyle = "rgba(10,16,40,.55)"; rr(c, bx, sy, bw, 130, 24); c.fill();
+            c.strokeStyle = "rgba(234,240,255,.16)"; c.lineWidth = 2; rr(c, bx, sy, bw, 130, 24); c.stroke();
+            c.textAlign = "center"; c.fillStyle = "#fff"; c.font = F(700, 56); c.fillText(String(x[0]), bx + bw / 2, sy + 70);
+            c.fillStyle = "rgba(234,240,255,.6)"; c.font = F(400, 22); c.fillText(x[1], bx + bw / 2, sy + 108);
+          });
+          var q = chosen(), qy = sy + 180;
+          if (q) {
+            var qw = wById(q.w);
+            c.fillStyle = qw ? qw.color : "#7cc8ff"; c.fillRect(84, qy, 5, 98);
+            c.textAlign = "left"; c.fillStyle = "rgba(234,240,255,.55)"; c.font = F(400, 22); c.fillText("我最近弄懂的问题 · " + (qw ? qw.name : ""), 110, qy + 26);
+            c.fillStyle = "#eaf0ff"; c.font = F(500, 34);
+            wrap(c, q.q, W - 200).slice(0, 2).forEach(function (l, i) { c.fillText(l, 110, qy + 72 + i * 44); });
+          } else {
+            c.textAlign = "left"; c.fillStyle = "rgba(234,240,255,.6)"; c.font = F(400, 30); c.fillText("第一颗星，正在等我点亮。", 84, qy + 60);
+          }
+          c.font = F(400, 22); c.fillStyle = "rgba(234,240,255,.45)"; c.textAlign = "left"; c.fillText("点亮于 " + today(), 84, H - 70);
+          c.textAlign = "right"; c.fillText("只和昨天的自己比", W - 84, H - 70);
+          return cv;
+        }
+
+        function cardB(nick) {
+          var q = chosen(); if (!q) return null;
+          var wd = wById(q.w), col = wd ? wd.color : "#e9c779";
+          var W = 1080, H = 1440, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+          var c = cv.getContext("2d");
+          bg(c, W, H, 3); brand(c, "挑 战 卡");
+          glow(c, W - 250, 420, 420, col, .5);
+          var im = imgs[q.w];
+          if (im && im.complete && im.naturalWidth) {
+            c.save(); c.beginPath(); c.arc(W - 250, 420, 170, 0, 7); c.clip(); c.drawImage(im, W - 420, 250, 340, 340); c.restore();
+            c.strokeStyle = col; c.globalAlpha = .7; c.lineWidth = 3; c.beginPath(); c.arc(W - 250, 420, 178, 0, 7); c.stroke(); c.globalAlpha = 1;
+          } else { glow(c, W - 250, 420, 160, "#ffffff", .7); }
+          c.textAlign = "left"; c.fillStyle = "#eaf0ff"; c.font = F(700, 78); c.fillText("我弄懂了", 84, 720);
+          c.font = F(700, 64); c.fillStyle = "#ffd27a";
+          var L = wrap(c, "「" + q.q.replace(/[？?]$/, "") + "？」", W - 168).slice(0, 3);
+          L.forEach(function (l, i) { c.fillText(l, 84, 820 + i * 86); });
+          var y = 820 + L.length * 86 + 10;
+          c.fillStyle = "#eaf0ff"; c.font = F(700, 78); c.fillText("你能吗？", 84, y + 20);
+          c.font = F(400, 30); c.fillStyle = "rgba(234,240,255,.78)";
+          c.fillText("去「创世计划 · " + (wd ? wd.name : "") + "」，亲手试一试。", 84, y + 100);
+          var tags = [q.w + " " + (wd ? wd.name + " " + wd.en : ""), "适合全家一起"], tx = 84;
+          c.font = F(400, 24);
+          tags.forEach(function (t) { var w = c.measureText(t).width + 44; c.strokeStyle = "rgba(223,230,243,.45)"; c.lineWidth = 2; rr(c, tx, y + 140, w, 52, 26); c.stroke(); c.fillStyle = "rgba(234,240,255,.85)"; c.textAlign = "center"; c.fillText(t, tx + w / 2, y + 175); tx += w + 16; });
+          c.textAlign = "left"; c.font = F(400, 26); c.fillStyle = "rgba(234,240,255,.7)";
+          c.fillText("—— " + (nick ? nick + " · " : "") + TIERS[st.ti].n + "阶 · " + today(), 84, H - 70);
+          return cv;
+        }
+
+        function make(kind) {
+          st = scan();
+          var nick = cleanNick(), cv = kind === 1 ? cardA(nick) : cardB(nick);
+          if (!cv) return;
+          fname = "创世计划-" + (kind === 1 ? "成就卡" : "挑战卡") + "-" + today() + ".png";
+          cv.toBlob(function (b) {
+            if (!b) return;
+            blob = b; if (url) URL.revokeObjectURL(url); url = URL.createObjectURL(b);
+            $("ppImg").src = url; $("ppImg").alt = kind === 1 ? "我的成就卡预览" : "我的挑战卡预览";
+            var canShare = false;
+            try { canShare = !!(navigator.canShare && navigator.canShare({ files: [new File([b], fname, { type: "image/png" })] })); } catch (e) {}
+            $("ppShare").hidden = !canShare;
+            $("ppOut").querySelector(".x-pp__row").style.gridTemplateColumns = canShare ? "1fr 1fr" : "1fr";
+            $("ppOut").hidden = false;
+            SND.play("unlock");
+            setTimeout(function () { $("ppOut").scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); }, 60);
+          }, "image/png");
+        }
+
+        function init() {
+          $("ppNick").addEventListener("input", function () { var v = cleanNick(); try { if (v) localStorage.setItem("gn:portal:_nick", v); else localStorage.removeItem("gn:portal:_nick"); } catch (e) {} });
+          $("ppQ").addEventListener("change", function () { try { localStorage.setItem("gn:portal:_q", this.value); } catch (e) {} });
+          $("ppMake1").addEventListener("click", function () { make(1); });
+          $("ppMake2").addEventListener("click", function () { make(2); });
+          $("ppSave").addEventListener("click", function () { if (!url) return; var a = document.createElement("a"); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove(); });
+          $("ppShare").addEventListener("click", function () {
+            if (!blob) return;
+            try { navigator.share({ files: [new File([blob], fname, { type: "image/png" })], title: "创世计划 Genesis" }).catch(function () {}); } catch (e) {}
+          });
+        }
+        init();
+        return { render: render, scan: scan, make: make };
+      })();
 
       function toggleDemo() {
         demo = !demo;
@@ -2908,6 +3203,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.4", d: "2026-10-22", t: "创世护照新增七级星阶（星尘→星系），只和昨天的自己比；可在本机生成成就卡和挑战卡，手机直接分享、电脑下载图片，不含姓名、学校、年龄和网址。" },
         { w: "gn", v: "v0.8.3.1", d: "2026-10-22", t: "星历补记宙律 v0.3-α3、天枢 Starhelm v0.6.5；七个世界都已接上门户进入转场；新通星桥「卫星暴涨⇄每天进步 1%」「太阳⇄你身体里的铁」，天枢星桥直达对应任务。" },
         { w: "07", v: "v0.6.5", d: "2026-10-22", t: "从创世计划门户进入天枢时画面无缝接上，星桥可直达对应任务。" },
         { w: "02", v: "v0.3-α3", d: "2026-10-22", t: "从门户进入时同色画面接上开场，首页与三个任务页顶栏「← 创世计划」同窗口回门户。" },
