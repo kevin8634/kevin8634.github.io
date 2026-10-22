@@ -20,7 +20,7 @@
     { id: 'sun', d: 2, q: '太阳活动观测台', lab: 'sunLab', key: 'sun' },
     { id: 'moon', d: 2, q: '月相实验室', lab: 'moonLab', key: 'moon' },
     { id: 'tidelock', d: 2, q: '月亮为什么总用同一面对着我们?', isNew: true, lab: 'tidelockLab', key: 'tidelock' },
-    { id: 'aurora', d: 2, q: '极光是太阳寄来的信吗?', soon: true, key: 'aurora' }];
+    { id: 'aurora', d: 2, q: '极光是太阳寄来的信吗?', isNew: true, lab: 'auroraLab', key: 'aurora' }];
   var GUIDES = { tianshu: { zh: '北辰', sub: '星域 I 家园' }, xihe: { zh: '羲和', sub: '管太阳这一边', av: '' }, wangshu: { zh: '望舒', sub: '管月亮这一边', av: 'moon' } };
 
   var nowT = 0, H = {}, subs = {}, st = { dom: 1, body: '', km: 4e5, task: '', nowBody: null, nowPt: null, hints: [], hintN: 0 };
@@ -315,6 +315,6 @@
     setTask: function (id) { st.task = id; drawTasks(); },
     refreshTasks: drawTasks,
     drawer: function (open) { setDrawer(open, true); },
-    fmtKm: fmtKm, fmtLight: fmtLight, DOMAINS: DOM, TASKS2: TASKS2
+    fmtKm: fmtKm, fmtLight: fmtLight, DOMAINS: DOM, TASKS2: TASKS2, tasksOf: tasksOf, lit: lit
   };
 })();
