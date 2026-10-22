@@ -119,3 +119,7 @@
 | HYG 恒星库 v4(100 光年恒星场) | CC BY-SA 4.0(astronexus,codeberg.org/astronexus/hyg) | 署名 David Nash / astronexus;由其派生的星表数据文件同样以 CC BY-SA 4.0 发布(在文件头注明) |
 | Gaia DR3 | ESA/Gaia/DPAC,CC BY-SA 3.0 IGO | 署名「ESA/Gaia/DPAC」;派生数据同许可 |
 | NASA 系外行星档案 | NASA/Caltech-IPAC 公开数据 | 署名「NASA Exoplanet Archive」(致谢语按其要求) |
+
+## sh-probes-data.js(v1.0-M3a)
+- 旅行者 1/2 号、新视野号、先驱者 10/11 号日心黄道坐标,每 90 天一点,至 2031-01。来源:NASA/JPL-Caltech Horizons API(2026-10-23 下载),美国政府公开数据。页面内插值;署名「NASA/JPL Horizons」,不使用标志。
+- 日球层顶 121.6 AU / 119 AU、终端激波 94 / 84 AU:旅行者号实测穿越距离(NASA 公开资料);日球层形状为示意。

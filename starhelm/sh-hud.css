@@ -301,3 +301,9 @@ body.shh-on .le-chips.le-solar-only{display:none!important}
   body.shh-on .le-foot.is-open{white-space:normal;max-height:none;opacity:.9;background:rgba(4,10,20,.92);padding:6px;border-radius:8px}
   body.shh-on[data-mode="solar"] .le-bottom{bottom:calc(var(--shh-console) + 10px)}
 }
+
+/* v1.0-M3a 停靠式任务面板:3D 场景就是画面,面板靠右 */
+.ml.ml--dock{inset:auto;right:16px;top:calc(var(--shh-acts,140px) + 8px);width:min(400px,calc(100vw - 32px));max-height:calc(100vh - var(--shh-acts,140px) - 150px);overflow:auto;background:rgba(5,12,24,.86);backdrop-filter:blur(10px);border:1px solid rgba(127,227,196,.28);border-radius:14px;box-shadow:0 0 30px rgba(88,200,255,.18)}
+.ml--dock .ml-ctl{display:flex;gap:8px;flex-wrap:wrap}.ml--dock .ml-ctl button{flex:1;padding:7px 8px;border-radius:9px;border:1px solid rgba(127,227,196,.4);background:rgba(127,227,196,.1);color:#dff;cursor:pointer}
+.ml--dock .ml-note{font-size:11px;opacity:.55}
+@media (max-height:500px),(max-width:760px){.ml.ml--dock{top:auto;bottom:8px;right:8px;max-height:58vh}}

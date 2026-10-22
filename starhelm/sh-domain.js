@@ -55,6 +55,7 @@
     } else if (S.mode === 'solar') {
       var c = S.solarCam.position.distanceTo(S.solarCtl.target), r = Math.pow(c / 14, 2);
       km = r * AU; var fo = LE.solar && LE.solar.follow; key = '3|' + (fo && fo.zh ? fo.zh : '太阳系');
+      var k4 = window.SHD4 && SHD4.ready && SHD4.crumb(); if (k4) key = k4;
     } else if (D.focus === 'moon' && window.SHFOCUS) {
       km = SHFOCUS.moonKm(); key = '2|月球';
     } else {
@@ -79,6 +80,10 @@
       if (window.SHFOCUS && SHFOCUS.focused) SHFOCUS.back();
       if (window.SHD3) SHD3.go(); else if (LE.ui.setMode) LE.ui.setMode('solar');
       tick(true);
+    } else if (n === 4) {
+      if (window.SHFOCUS && SHFOCUS.focused) SHFOCUS.back();
+      if (window.SHD4 && SHD4.ready) SHD4.go(); else if (LE.ui.setMode) LE.ui.setMode('solar');
+      tick(true);
     } else if (n === 2) {
       if (S.mode !== 'earth' && LE.ui.setMode) LE.ui.setMode('earth');
       if (window.SHFOCUS && SHFOCUS.focused) SHFOCUS.back();
@@ -89,8 +94,8 @@
   function deepLink() {
     var m = /[?&]domain=(\d)/.exec(location.search); if (!m) return;
     var n = +m[1];
-    if (n === 2 || n === 3) setTimeout(function () { D.go(n); }, 900);
-    else if (n > 3) toast('星域 ' + ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][n] + ' 还在建造中,先从家园出发');
+    if (n >= 2 && n <= 4) setTimeout(function () { D.go(n); }, n === 4 ? 1600 : 900);
+    else if (n > 4) toast('星域 ' + ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][n] + ' 还在建造中,先从家园出发');
   }
 
   (function wait(k) {

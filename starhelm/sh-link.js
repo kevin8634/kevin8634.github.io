@@ -26,7 +26,8 @@
     marsday: function () { SH.marsdayLab.open(); },
     tonight: function () { SH.tonightLab.open(); },
     jupiter: function () { SH.jupiterLab.open(); },
-    retro: function () { SH.retroLab.open(); }
+    retro: function () { SH.retroLab.open(); },
+    voyager: function () { SH.voyagerLab.open(); }
   };
   if (!OPEN[id]) return;
   (function w(n) {
