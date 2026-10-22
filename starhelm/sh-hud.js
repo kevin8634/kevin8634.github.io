@@ -19,11 +19,11 @@
     { id: 'tide', d: 2, q: '潮汐实验室', lab: 'tideLab', key: 'tide' },
     { id: 'sun', d: 2, q: '太阳活动观测台', lab: 'sunLab', key: 'sun' },
     { id: 'moon', d: 2, q: '月相实验室', lab: 'moonLab', key: 'moon' },
-    { id: 'tidelock', d: 2, q: '月亮为什么总用同一面对着我们?', isNew: true, key: 'tidelock' },
-    { id: 'aurora', d: 2, q: '极光是太阳寄来的信吗?', isNew: true, key: 'aurora' }];
+    { id: 'tidelock', d: 2, q: '月亮为什么总用同一面对着我们?', soon: true, key: 'tidelock' },
+    { id: 'aurora', d: 2, q: '极光是太阳寄来的信吗?', soon: true, key: 'aurora' }];
   var GUIDES = { tianshu: { zh: '北辰', sub: '星域 I 家园' }, xihe: { zh: '羲和', sub: '管太阳这一边', av: '' }, wangshu: { zh: '望舒', sub: '管月亮这一边', av: 'moon' } };
 
-  var H = {}, subs = {}, st = { dom: 1, body: '', km: 4e5, task: '', nowBody: null, nowPt: null, hints: [], hintN: 0 };
+  var nowT = 0, H = {}, subs = {}, st = { dom: 1, body: '', km: 4e5, task: '', nowBody: null, nowPt: null, hints: [], hintN: 0 };
   function $(s, r) { return (r || document).querySelector(s); }
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -81,7 +81,7 @@
       var ts = tasksOf(d), n = ts.filter(lit).length; all += ts.length; on += n;
       h += '<div class="shh-dom" id="shh-dom' + d + '"><span>星域 ' + ROMAN[d] + ' · ' + DOM[d - 1].zh + ' · ' + DOM[d - 1].g + '</span><span>' + n + '/' + ts.length + '</span></div>';
       ts.forEach(function (t) {
-        h += '<button type="button" class="shh-task' + (t.id === st.task ? ' cur' : '') + '" data-id="' + t.id + '" data-d="' + d + '"><i>' + (lit(t) ? '★' : '☆') + '</i><span>' + esc(t.q) + (t.isNew ? '<span class="shh-new">新</span>' : '') + '</span></button>';
+        h += '<button type="button" class="shh-task' + (t.id === st.task ? ' cur' : '') + '" data-id="' + t.id + '" data-d="' + d + '"><i>' + (lit(t) ? '★' : '☆') + '</i><span>' + esc(t.q) + (t.isNew ? '<span class="shh-new">新</span>' : t.soon ? '<span class="shh-new is-soon">即将</span>' : '') + '</span></button>';
       });
     });
     h += '<div class="shh-lock">星域 III–VII · 即将开放</div>';
@@ -93,8 +93,15 @@
     st.task = id; drawTasks(); emit('task', { id: id, d: d });
     var t = tasksOf(d).filter(function (x) { return x.id === id; })[0];
     if (!t || (subs.task && subs.task.length)) return;   // 有外部接管时不自动打开
-    if (t.fw && window.SH && SH.task) { var T = SH.task(id); if (T && T.open) return T.open(); }
-    if (t.lab && window.SH && SH[t.lab]) return SH[t.lab].open();
+    if (t.soon) { emit('soon', t); return; }
+    try {
+      if (t.fw && window.SH && SH.play && SH.levels && SH.levels[id]) {   // 打开第一个还没拿星的关卡
+        var n = 1, L = SH.levels[id].length; for (var i = 1; i <= L; i++) { if (SH.progress.stars(id, i) < 1) { n = i; break; } n = i; }
+        return SH.play(id, n);
+      }
+      if (t.lab && window.SH && SH[t.lab]) return SH[t.lab].open();
+      if (window.SH && SH.lab && SH.lab[id]) return SH.lab[id].open();
+    } catch (e) { console.warn('[SHHUD] 打开任务失败', id, e); }
   }
 
   /* ---------- 抽屉开合 ---------- */
@@ -103,7 +110,7 @@
     H.tog.textContent = open ? '‹' : '›'; H.tog.setAttribute('aria-label', open ? '收起任务' : '展开任务');
     H.tog.setAttribute('aria-expanded', open ? 'true' : 'false');
     if (save) store('drawer', open ? 'open' : 'closed');
-    emit('drawer', open); place();
+    document.body.classList.toggle('shh-dclosed', !open); emit('drawer', open); place();
   }
   function defaultDrawer() { var s = store('drawer'); if (s) return s === 'open'; return window.innerWidth > 1180; }
 
@@ -136,7 +143,7 @@
     H.knob.style.left = trackPct(d) + '%';
     var r = s ? s.rate : 1;
     [].forEach.call(H.rates, function (b) { b.setAttribute('aria-pressed', String(+b.dataset.r === r || (b.dataset.r === '1' && r === 1))); });
-    if (st.nowBody) fillNow();
+    if (st.nowBody) { var tt = performance.now(); if (tt - nowT > (r === 1 ? 900 : 250)) { nowT = tt; fillNow(); } }
   }
   function bindTrack() {
     var drag = false;
@@ -209,10 +216,10 @@
         '<button type="button" class="shh-btn shh-mtask" id="shh-mtask" aria-controls="shh-drawer">★ 任务</button>' +
         '<div class="shh-scale" aria-live="polite"><div class="shh-scale__a"><div class="shh-scale__bar"></div><span id="shh-sc"></span></div><div class="shh-scale__l" id="shh-sl"></div></div>' +
         '<button type="button" class="shh-atlas" id="shh-atlas" title="宇宙航图">' + miniSvg(34, 1) + '<span>航图</span></button>' +
-        '<button type="button" class="shh-btn is-x" data-ev="gfx">◇ <span class="t">画质</span></button>' +
+        '<button type="button" class="shh-btn is-x" data-ev="gfx" id="shh-gfx">◇ <span class="t">画质' + (opts.gfxLabel ? ' ' + esc(opts.gfxLabel) : '') + '</span></button>' +
         '<button type="button" class="shh-btn" data-ev="sound" aria-pressed="false">♪ <span class="t" id="shh-snd">声音 关</span></button>' +
         '<button type="button" class="shh-btn is-ic is-x" data-ev="fullscreen" title="全屏">⛶</button>' +
-        '<button type="button" class="shh-btn is-x" data-ev="opening" title="重播开场">↺ <span class="t">开场</span></button>' +
+        (opts.noOpening ? '' : '<button type="button" class="shh-btn is-x" data-ev="opening" title="重播开场">↺ <span class="t">开场</span></button>') +
       '</header>' +
       '<nav class="shh-drawer shh-glass" id="shh-drawer" aria-label="任务抽屉"><div class="shh-rail">' +
         DOM.map(function (d) { return '<button type="button" data-d="' + d.n + '" class="' + (d.open ? 'on' : '') + '" title="星域 ' + ROMAN[d.n] + ' · ' + d.zh + (d.open ? '' : ' · 即将开放') + '"' + (d.open ? '' : ' aria-disabled="true"') + '>' + ROMAN[d.n] + '</button>'; }).join('') +
@@ -300,7 +307,11 @@
       if (acts) { H.fly.textContent = acts[0]; H.out.textContent = acts[1]; H.out.hidden = !acts[1]; }
       fillNow(); place(); return SHHUD;
     },
-    hideNow: function () { st.nowBody = null; H.now.hidden = true; H.lead.innerHTML = ''; },
+    movePt: function (pt) { st.nowPt = pt; place(); },
+    setActs: function (a, b) { H.fly.textContent = a; H.out.textContent = b || ''; H.out.hidden = !b; },
+    setSound: function (on) { var b = H.root.querySelector('[data-ev="sound"]'); b.setAttribute('aria-pressed', String(!!on)); H.snd.textContent = on ? '声音 开' : '声音 关'; },
+    nowBody: function () { return st.nowBody; },
+    hideNow: function () { var was = st.nowBody; st.nowBody = null; H.now.hidden = true; H.lead.innerHTML = ''; if (was) emit('nowclose', was); },
     setTask: function (id) { st.task = id; drawTasks(); },
     refreshTasks: drawTasks,
     drawer: function (open) { setDrawer(open, true); },
