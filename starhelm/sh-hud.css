@@ -178,3 +178,72 @@ body.shh-on .le-labels{z-index:39}
 .ml-ctl .ml-mode.is-on{background:rgba(127,227,196,.2);border-color:#7fe3c4;color:#cff8ea}
 .ml--tl .ml-hd b{font-size:17px}
 @media (max-width:760px){.ml--tl .ml-ctl{flex-wrap:wrap;gap:6px}.ml--tl .ml-modes{order:3;flex-basis:100%}.ml--tl .ml-ctl .ml-mode{flex:1;padding:6px 4px;font-size:12px}.ml--tl .ml-go3d{margin-left:auto}.ml--tl .ml-hd b{font-size:15px}.ml--tl .ml-body{grid-template-rows:1.3fr 1fr}.ml--tl .ml-note{display:none}}
+
+/* ---------- 星域 II 独立视图 sh-domain2.js(v1.0-M1c) ---------- */
+.sh2{position:fixed;inset:0;z-index:35;background:#02040a}
+.sh2[hidden]{display:none}
+.sh2-cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+body.sh2-on .le-actions,body.sh2-on .le-bottom,body.sh2-on .le-labels,body.sh2-on .le-sheet,body.sh2-on .le-foot,body.sh2-on .le-hint,body.sh2-on .sh-now,body.sh2-on .le-card,body.sh2-on .le-chips{visibility:hidden!important}
+.sh2-lbls{position:absolute;inset:0;pointer-events:none}
+.sh2-l{position:absolute;left:0;top:0;pointer-events:auto;background:rgba(8,14,30,.7);border:1px solid rgba(240,201,122,.5);color:#f6e2b0;border-radius:12px;padding:3px 10px;font:13px "Noto Sans SC","PingFang SC",sans-serif;cursor:pointer;white-space:nowrap}
+.sh2-l--earth{border-color:rgba(127,214,255,.6);color:#cfefff}
+.sh2-info{position:absolute;right:var(--shh-pad,16px);top:calc(var(--shh-top,56px) + 28px);width:250px;background:rgba(8,14,30,.78);border:1px solid rgba(140,180,230,.25);border-radius:14px;padding:10px 12px;color:#e8f2ff;font-family:"Noto Sans SC","PingFang SC",sans-serif}
+.sh2-kick{font-size:11px;color:#f0c97a;letter-spacing:.06em;margin-bottom:4px}
+.sh2-r{display:grid;grid-template-columns:auto 1fr;column-gap:8px;padding:5px 0;border-top:1px solid rgba(140,180,230,.12)}
+.sh2-r small{grid-row:span 2;font-size:12px;color:#9fb3cc;padding-top:2px}.sh2-r b{font-size:16px;color:#fff;font-weight:600;text-align:right}.sh2-r i{font-style:normal;font-size:11px;color:#7fd6ff;text-align:right}
+.sh2-note{position:absolute;right:var(--shh-pad,16px);bottom:calc(var(--shh-console,96px) + 34px);font:11px "Noto Sans SC",sans-serif;color:#7f93ad;max-width:360px;text-align:right;pointer-events:none}
+.sh2-back{position:absolute;left:calc(var(--shh-drawer,300px) + var(--shh-pad,16px) + 14px);top:calc(var(--shh-top,56px) + 28px);background:rgba(8,14,30,.75);border:1px solid rgba(127,214,255,.5);color:#cfefff;border-radius:12px;padding:6px 12px;font:13px "Noto Sans SC",sans-serif;cursor:pointer}
+.sh2-offer{position:absolute;left:50%;bottom:calc(var(--shh-console,96px) + 40px);transform:translateX(-50%);display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:min(640px,92vw);background:rgba(8,14,30,.85);border:1px solid rgba(240,201,122,.45);border-radius:14px;padding:10px 36px 10px 12px}
+.sh2-ob{background:rgba(214,178,94,.12);border:1px solid rgba(214,178,94,.55);color:#f6e2b0;border-radius:10px;padding:6px 12px;cursor:pointer;font:13px "Noto Sans SC",sans-serif}
+.sh2-ox{position:absolute;right:8px;top:8px;background:none;border:0;color:#9fb3cc;cursor:pointer;font-size:14px}
+body.shh-dclosed .sh2-back{left:calc(var(--shh-pad,16px) + 60px)}
+@media (max-width:760px){
+  .sh2-info{top:calc(var(--shh-top,46px) + 56px);bottom:auto;right:8px;width:auto;left:8px;display:flex;gap:6px;padding:6px 8px}
+  .sh2-kick{display:none}.sh2-rows{display:flex;gap:6px;width:100%}.sh2-r{flex:1;display:block;border:0;padding:0;text-align:center}.sh2-r small{font-size:10px}.sh2-r b{font-size:13px;display:block;text-align:center}.sh2-r i{display:none}
+  .sh2-note{display:none}.sh2-back{left:8px;top:calc(var(--shh-top,46px) + 16px)}
+  .sh2-offer{bottom:calc(var(--shh-console,64px) + 24px);z-index:2}
+}
+
+/* ---------- 宇宙航图 sh-atlas.js(v1.0-M1c) ---------- */
+.sha{position:fixed;inset:0;z-index:75;background:radial-gradient(120% 90% at 50% 40%,rgba(14,26,52,.96),rgba(2,4,10,.98) 70%);color:#e8f2ff;font-family:"Noto Sans SC","PingFang SC",sans-serif;display:flex;flex-direction:column;padding:12px 16px 16px;gap:10px}
+.sha[hidden]{display:none}
+.sha-hd{display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(240,201,122,.35);padding-bottom:8px}
+.sha-hd small{display:block;font-size:11px;color:#9fb3cc;letter-spacing:.08em}.sha-hd b{font-size:19px;letter-spacing:.06em}
+.sha-old{margin-left:auto;background:rgba(127,214,255,.1);border:1px solid rgba(127,214,255,.45);color:#cfefff;border-radius:10px;padding:5px 12px;cursor:pointer;font:inherit;font-size:13px}
+.sha-x{background:none;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer}
+.sha-body{flex:1;min-height:0;display:grid;grid-template-columns:1fr 340px;gap:14px}
+.sha-map{position:relative;min-height:0;display:flex;align-items:center;justify-content:center}
+.sha-svg{width:100%;height:100%;max-height:100%}
+.sha-c{fill:none;stroke:rgba(160,180,210,.22);stroke-width:.6;stroke-dasharray:1.2 1.6}
+.sha-hit{fill:none;stroke:transparent;stroke-width:9;cursor:pointer}
+.sha-t{fill:#7f93ad;font-size:4.6px;text-anchor:middle;pointer-events:none;letter-spacing:.05em}
+.sha-ring.on .sha-c{stroke:rgba(127,214,255,.55);stroke-dasharray:none;stroke-width:.8}.sha-ring.on .sha-t{fill:#cfefff}
+.sha-ring.sel .sha-c{stroke:#f0c97a;stroke-width:1.4}.sha-ring.sel .sha-t{fill:#f0c97a;font-weight:700}
+.sha-ring.cur .sha-t{text-decoration:underline}
+.sha-ring:focus{outline:none}.sha-ring:focus-visible .sha-c{stroke-width:2}
+.sha-hint{position:absolute;left:0;bottom:0;font-size:11px;color:#7f93ad}
+.sha-card{border:1px solid rgba(240,201,122,.35);border-radius:14px;background:rgba(10,16,30,.7);padding:14px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.sha-card small{font-size:11px;color:#f0c97a;letter-spacing:.06em}.sha-card h3{margin:0;font-size:24px;letter-spacing:.1em}
+.sha-q{margin:0;font-size:16px;color:#fff}.sha-b{margin:0;font-size:13px;color:#9fb3cc;line-height:1.6}
+.sha-sc{display:flex;gap:14px;font-size:12px;color:#9fb3cc}.sha-sc b{color:#7fd6ff;font-size:14px}
+.sha-pg{font-size:12px;color:#f0c97a}
+.sha-ls{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:13px;color:#c9d6e8}.sha-ls li.lit{color:#f6e2b0}.sha-ls li.soon{color:#6f8299}.sha-ls em{font-style:normal;font-size:10px;border:1px solid #4a5a70;border-radius:6px;padding:0 4px}
+.sha-lock{font-size:13px;color:#8c9bb0;margin:0}
+.sha-go{margin-top:auto;background:rgba(127,227,196,.15);border:1px solid #7fe3c4;color:#cff8ea;border-radius:12px;padding:9px 14px;cursor:pointer;font:inherit;font-size:14px}
+@media (max-width:760px),(orientation:portrait){.sha-body{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}.sha-card{max-height:46vh}.sha-hd b{font-size:16px}.sha-hint{display:none}}
+
+/* ---------- 学科开场 sh-opening.js(v1.0-M1c) ---------- */
+.sho{position:fixed;inset:0;z-index:95;background:#02040a;cursor:pointer;font-family:"Noto Sans SC","PingFang SC",sans-serif;color:#e8f2ff}
+.sho[hidden]{display:none}
+.sho-cv{position:absolute;inset:0;width:100%;height:100%}
+.sho-tx{position:absolute;left:0;right:0;top:14%;text-align:center;pointer-events:none;animation:shoIn 1.2s ease both}
+.sho-tx small{font-size:12px;color:#9fb3cc;letter-spacing:.2em}
+.sho-tx h1{margin:8px 0 6px;font-size:clamp(30px,5vw,52px);letter-spacing:.16em;font-weight:600}.sho-tx h1 span{color:#f0c97a;letter-spacing:.06em}
+.sho-q{margin:0;font-size:clamp(15px,2vw,20px);color:#cfefff;animation:shoIn 1.2s .8s ease both}
+.sho-sc{position:absolute;left:0;right:0;bottom:16%;text-align:center;font-size:14px;color:#f0c97a;letter-spacing:.12em;pointer-events:none}
+.sho-skip{position:absolute;right:18px;bottom:18px;background:rgba(8,14,30,.6);border:1px solid rgba(255,255,255,.25);color:#cfd8e6;border-radius:12px;padding:6px 14px;cursor:pointer;font:inherit;font-size:13px}
+.sho--static .sho-tx,.sho--static .sho-q{animation:none}
+@keyframes shoIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.ml--au .au-l{white-space:nowrap;color:#9fb3cc}.ml--au .ml-hd b{font-size:17px}
+@media (max-width:760px){.ml--au .ml-ctl{flex-wrap:wrap;gap:6px}.ml--au .ml-rng{order:3;flex-basis:100%}.ml--au .ml-note{display:none}.ml--au .ml-info{font-size:11px;text-align:center}}
