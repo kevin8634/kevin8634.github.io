@@ -70,7 +70,7 @@
   function build() {
     var r = U.root = h('section', 'ml ml--sea');
     r.innerHTML =
-      '<header class="ml-hd"><div><small>星域 I · 天枢 · 家园</small><b>四季实验室 · 为什么会有四季?</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
+      '<header class="ml-hd"><div><small>星域 I · 北辰 · 家园</small><b>四季实验室 · 为什么会有四季?</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
       '<div class="ml-body"><div class="ml-pane ml-space"><div class="ml-cap">公转沙盘 · 拖动转换视角</div><canvas class="ml-cv3"></canvas>' +
       '<div class="ml-note">日期、距离、倾角按真实计算 · 地球和太阳的大小、距离未按比例</div></div>' +
       '<div class="ml-pane sea-r"><div class="ml-cap"><span class="sea-view">站在北京,朝南看太阳</span></div><div class="sea-cvw"><canvas class="sea-cv" width="420" height="380"></canvas></div>' +
