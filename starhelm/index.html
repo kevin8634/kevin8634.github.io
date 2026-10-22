@@ -18,7 +18,7 @@
     天枢 Starhelm（创世计划 Genesis 07 · 天文；由 Live Earth 2.1 迁入 /starhelm/）—— 文件结构（全部为经典脚本，按顺序加载，不使用 ES module / importmap）
       le-style.css      样式（按组件分区）
       数据   cities-lite.js · planets-data.js · starlink-lite.js · quakes-fallback.js
-      第三方 three.min.js 0.147 · OrbitControls · satellite.js 6.0.2（本地副本，含 OMM json2satrec）
+      第三方 three r169(vendor/three-r169,含 OrbitControls、GLTFLoader 与 r147 兼容层;r147 旧包保留作降级)· OrbitControls · satellite.js 6.0.2（本地副本，含 OMM json2satrec）
       模块   le-core.js（config/util/bus/assets）→ le-scene.js（scene/earth）→ le-quakes.js → le-starlink.js
              → le-flights.js → le-location.js → le-solar.js → le-ui.js → le-main.js（启动）
     详见 docs/ARCHITECTURE.md
@@ -197,23 +197,9 @@
   <script>
     window.__libFail = function (name, alt) { var s = document.createElement('script'); s.src = alt; s.async = false; document.head.appendChild(s); console.warn('切换 CDN：' + name); };
   </script>
-  <script src="three.min.p1.js"></script>
-<script src="three.min.p2.js"></script>
-<script src="three.min.p3.js"></script>
-<script src="three.min.p4.js"></script>
-<script src="three.min.p5.js"></script>
-<script src="three.min.p6.js"></script>
-<script src="three.min.p7.js"></script>
-<script src="three.min.p8.js"></script>
-<script src="three.min.p9.js"></script>
-<script src="three.min.p10.js"></script>
-<script src="three.min.p11.js"></script>
-<script src="three.min.p12.js"></script>
-<script src="three.min.p13.js"></script>
-<script src="three.min.p14.js"></script>
-<script src="three.min.p15.js"></script>
-<script>(function(){var s=document.createElement("script");s.text=window.__C["three.min.js"];document.head.appendChild(s);delete window.__C["three.min.js"];})();</script>
-  <script src="OrbitControls.js"></script>
+  <!-- v0.9.0:共享场景模块按设备选 Three.js(WebGL2 → vendor/three-r169;否则 r147 降级;无 WebGL → 2D) -->
+  <script src="sh-scene.js"></script>
+  <script>window.SHGFX&&SHGFX.writeThree();</script>
   <script src="satellite.min.js"></script>
   <!-- 本项目模块 -->
   <script src="tex-earth.p1.js"></script>
@@ -276,10 +262,6 @@
 <script src="tex-planets.p26.js"></script>
 <script src="tex-planets.p27.js"></script>
 <script>(function(){var s=document.createElement("script");s.text=window.__C["tex-planets.js"];document.head.appendChild(s);delete window.__C["tex-planets.js"];})();</script>
-<script src="GLTFLoader.p1.js"></script>
-<script src="GLTFLoader.p2.js"></script>
-<script src="GLTFLoader.p3.js"></script>
-<script>(function(){var s=document.createElement("script");s.text=window.__C["GLTFLoader.js"];document.head.appendChild(s);delete window.__C["GLTFLoader.js"];})();</script>
 <script src="iss-model.p1.js"></script>
 <script src="iss-model.p2.js"></script>
 <script src="iss-model.p3.js"></script>
