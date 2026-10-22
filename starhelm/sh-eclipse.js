@@ -48,7 +48,7 @@
   function build() {
     var r = U.root = h('section', 'ml ml--ecl');
     r.innerHTML =
-      '<header class="ml-hd"><div><small>星域 II · 天璇 · 日与月</small><b>日月食实验室</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
+      '<header class="ml-hd"><div><small>星域 II · 羲和与望舒 · 日与月</small><b>日月食实验室</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
       '<div class="ml-body"><div class="ml-pane ml-space"><div class="ml-cap">太空侧视 · 太阳在左边</div><canvas class="ml-cv3"></canvas>' +
       '<div class="ml-note">实时计算 · 轨道倾角放大 3 倍示意(真实 5.1°),大小与距离未按比例</div></div>' +
       '<div class="ml-pane ml-earth"><div class="ml-cap"><span class="ec-view">从地球上最佳地点看太阳</span> <button class="ml-hemi ec-near" type="button">月亮:近地点</button></div><canvas class="ml-cv2" width="360" height="360"></canvas>' +
