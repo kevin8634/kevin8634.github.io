@@ -2,7 +2,7 @@
  * 星际航行:弦穹号 Chordion 驾驶舱 + 随船智能「星璃」+ 引擎系统 + 航图选点 + 穿梭。
  * 独立渲染器;进入航行时暂停 Live Earth 的渲染,退出后恢复,原有任务与地球模式不受影响。
  * 星璃形象(M1.7 B3 版):VRoid 官方 AvatarSample_G(pixiv Inc.,CC0)贴图重绘 + 程序附加双马尾/耳机/立领。
- * three-vrm 0.6.11(pixiv,MIT)。台词为写好的脚本,不接任何大模型。 */
+ * (v0.9.1 起不再使用 three-vrm / VRM 模型)台词为写好的脚本,不接任何大模型。 */
 (function () {
   'use strict';
   var SH = (window.SH = window.SH || {});
@@ -74,7 +74,7 @@
         '<div><small>信号回地球</small><b class="d-sig">—</b></div>' +
         '<div class="d-x-w"><small>演示快进</small><b class="d-x">—</b></div>' +
       '</footer>' +
-      '<div class="voy-credit">影像:NASA, ESA, CSA, STScI(CC BY 4.0)· 驾驶舱与星璃形象:天枢原创设计图· 不代表任何机构背书</div>' +
+      '<div class="voy-credit">影像:NASA, ESA, CSA, STScI(CC BY 4.0)· 驾驶舱、飞船与星璃形象:天枢原创设计图(AI 辅助生成)· 不代表任何机构背书</div>' +
       '<section class="voy-map" hidden><div class="voy-map__bar"><div><small>STARHELM · ATLAS</small><h2>航图 <span>选择目的地</span></h2></div><button type="button" class="voy-b voy-map__x">×</button></div>' +
         '<canvas></canvas><div class="voy-map__legend"><i class="lg-open"></i>已测绘 <i class="lg-un"></i>未测绘星域 <i class="lg-cj"></i>猜想 <i class="lg-here"></i>当前位置</div><div class="voy-map__hint">拖动旋转 · 滚轮/双指缩放 · 越往外越远(对数尺度)</div><div class="voy-map__card" hidden></div></section>' +
       '<div class="voy-holotag" hidden><b>航图</b><small>ATLAS · 点击星图选择目的地</small><i></i></div>' +
@@ -477,7 +477,7 @@
   }
   function banner(s) {
     UI.banner.hidden = false;
-    UI.banner.innerHTML = '<small>星域 ' + s.n + (s.star ? ' · ' + s.star + '向导' : '') + '</small><b>' + esc(s.zh) + '</b><span class="st-' + s.status + '">' + V.STATUS_ZH[s.status] + '</span><em>' + esc(s.scale) + '</em>';
+    UI.banner.innerHTML = '<small>星域 ' + s.n + (s.star ? ' · 守星人 ' + s.star : '') + '</small><b>' + esc(s.zh) + '</b><span class="st-' + s.status + '">' + V.STATUS_ZH[s.status] + '</span><em>' + esc(s.scale) + '</em>';
     UI.banner.classList.remove('on'); void UI.banner.offsetWidth; UI.banner.classList.add('on');
     clearTimeout(UI.bT); UI.bT = setTimeout(function () { UI.banner.hidden = true; }, 5200);
   }
