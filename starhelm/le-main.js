@@ -44,8 +44,10 @@
         setTimeout(function () { LE.location.restore(); }, 1200);   // 天枢 Starhelm:不自动定位
         window.READY = true;
       }).catch(function (e) {
-        console.error(e);
-        $('loader-text').textContent = '三维引擎加载失败，请检查网络后刷新';
+        console.error(e); clearInterval(logT);
+        var noGL = window.SHSCENE && SHSCENE.lib === 'none' || /WebGL/i.test(String(e && e.message));
+        $('loader-text').textContent = noGL ? '这台设备或浏览器没有开启 WebGL 三维显示，星空无法绘制。\n请换用新版 Chrome、Edge 或 Safari 打开，或在浏览器设置里开启「硬件加速」。' : '三维引擎加载失败，请检查网络后刷新';
+        var bar = $('loader-bar'); if (bar && bar.parentNode) bar.parentNode.style.display = 'none';
       });
     }
   };

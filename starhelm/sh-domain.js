@@ -97,4 +97,7 @@
     if (window.SH_READY && window.SHHUD) { try { mount(); } catch (e) { console.error('[SHDOM] HUD 接入失败,保留旧界面', e); try { SHHUD.unmount(); } catch (x) { } } return; }
     if (k > 900) return; setTimeout(function () { wait(k + 1); }, 100);
   })(0);
+
+  // v1.0-M2e:矮屏下署名一行,点按展开/收起
+  document.addEventListener('click', function (e) { var f = e.target && e.target.closest && e.target.closest('.le-foot'); if (f && innerHeight <= 500) f.classList.toggle('is-open'); });
 })();

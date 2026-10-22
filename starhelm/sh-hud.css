@@ -291,3 +291,13 @@ body.shh-on .le-chips.le-solar-only{display:none!important}
 .sha-here{color:#7fd6ff}
 .sha--voy .sha-hd b::after{content:' · 弦穹号';color:#7fd6ff;font-size:.75em}
 @media (max-width:760px),(orientation:portrait){.sha-legend{display:none}.sha-lb{font-size:11px;padding:2px 7px}}
+/* v1.0-M2e 手机横屏(矮屏)避让:按钮行收成一行小按钮、署名缩成一行可点开、太阳系模式隐藏图层条留白 */
+@media (max-height:500px) and (orientation:landscape){
+  body.shh-on .le-top{top:calc(8px + var(--shh-top) + 4px);max-width:62vw;flex-wrap:nowrap;gap:4px;overflow-x:auto;scrollbar-width:none}
+  body.shh-on .le-top::-webkit-scrollbar{display:none}
+  body.shh-on .le-top button small,body.shh-on .le-top .le-btn small,body.shh-on .le-top em{display:none}
+  body.shh-on .le-top button{padding:4px 8px;min-height:28px;font-size:11px}
+  body.shh-on .le-foot{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:9px;line-height:12px;max-height:12px;opacity:.55;cursor:pointer}
+  body.shh-on .le-foot.is-open{white-space:normal;max-height:none;opacity:.9;background:rgba(4,10,20,.92);padding:6px;border-radius:8px}
+  body.shh-on[data-mode="solar"] .le-bottom{bottom:calc(var(--shh-console) + 10px)}
+}
