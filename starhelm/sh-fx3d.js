@@ -201,6 +201,37 @@
     };
     im.src = 'hd/saturn-ring.png';
   }
+
+  function jupiterExtras(SO, S) {   // 木星云带差速流动 + 伽利略四卫星(方向由 astronomy-engine JupiterMoons 实时计算,距离对数压缩)
+    var b = SO.byId.jupiter; if (!b || !b.mesh) return;
+    var m = b.mesh.material, uT = { value: 0 };
+    if (m.isShaderMaterial && m.fragmentShader.indexOf('texture2D(uMap, vUv)') > 0) {
+      m.uniforms.uT = uT;
+      m.fragmentShader = 'uniform float uT;\n' + m.fragmentShader.replace('texture2D(uMap, vUv)', 'texture2D(uMap, vec2(vUv.x + (sin(vUv.y*40.)*0.0025 + sin(vUv.y*13.+1.)*0.004)*sin(uT*0.08), vUv.y))');
+      m.needsUpdate = true;
+    }
+    var A = window.Astronomy, Rj = b.R, defs = [['木卫一 Io', 0xe8d27a, 421700, 0.286], ['木卫二 Europa', 0xd9cfbf, 671000, 0.245], ['木卫三 Ganymede', 0xa59a8c, 1070400, 0.413], ['木卫四 Callisto', 0x6f6558, 1882700, 0.378]];
+    var moons = defs.map(function (d) {
+      var mesh = new T.Mesh(new T.SphereGeometry(Rj * 0.09 * (d[3] / 0.3), 32, 16), new T.ShaderMaterial({
+        uniforms: { uC: { value: new T.Color(d[1]) } },
+        vertexShader: 'varying vec3 vN;varying vec3 vW;void main(){vN=normalize(mat3(modelMatrix)*normal);vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}',
+        fragmentShader: 'uniform vec3 uC;varying vec3 vN;varying vec3 vW;void main(){float l=max(dot(normalize(vN),normalize(-vW)),0.);gl_FragColor=vec4(uC*(l*1.4+.06),1.);}'
+      }));
+      mesh.userData.r = Rj * (2 + 1.8 * Math.log(d[2] / 421700)); b.pivot.add(mesh); return mesh;
+    });
+    var v = new T.Vector3(), last = 0;
+    S.addUpdater(function () {
+      if (S.mode !== 'solar') return; uT.value = performance.now() / 1000;
+      var now = performance.now(); if (now - last < 200 || !A || !A.JupiterMoons) return; last = now;
+      try {
+        var t = A.MakeTime(new Date(SO.simTime || Date.now())), jm = A.JupiterMoons(t), rot = A.Rotation_EQJ_ECL();
+        [jm.io, jm.europa, jm.ganymede, jm.callisto].forEach(function (st, i) {
+          var e = A.RotateVector(rot, new A.Vector(st.x, st.y, st.z, t));
+          v.set(e.x, e.z, -e.y).normalize().multiplyScalar(moons[i].userData.r); moons[i].position.copy(v);
+        });
+      } catch (x) { }
+    });
+  }
   function upgradeSolar() {
     var S = window.LE && LE.scene, SO = window.LE && LE.solar; if (solarDone || !S || !SO || !SO.byId || !SO.byId.sun) return false;
     solarDone = true; var rd = S.renderer, sc = S.solarScene;
@@ -220,6 +251,7 @@
       });
       // 3 土星粒子环
       if (SO.byId.saturn) ringParticles(SO.byId.saturn, rd);
+      jupiterExtras(SO, S);
       // 4 小行星带/柯伊伯带改用软圆点
       var dt0 = dotTex();
       sc.children.forEach(function (o) { if (o.isPoints && o.material && !o.material.map && o.material.size === 1.6) { o.material.map = dt0; o.material.size = 2.4; o.material.needsUpdate = true; } });
