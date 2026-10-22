@@ -149,7 +149,7 @@
       if (LE.ui.toast) LE.ui.toast(x.title);
       return;
     }
-    if (x.kind === 'aurora') { var ac = document.querySelector('[data-layer="aurora"]'); if (ac && ac.getAttribute('aria-pressed') !== 'true') ac.click(); if (LE.ui.toast) LE.ui.toast(x.title + ' · ' + x.meta); return; }
+    if (x.kind === 'aurora') { var ac = document.querySelector('[data-eye="aurora"]'); if (ac && ac.getAttribute('aria-pressed') !== 'true') ac.click(); if (LE.ui.toast) LE.ui.toast(x.title + ' · ' + x.meta); return; }
     if (x.kind === 'pass' && SH.sky && SH.sky.cardOrbiter && x.id === 'css') { SH.sky.cardOrbiter('css'); return; }
     if (x.kind === 'pass' && LE.layers.iss && LE.layers.iss.select) { LE.layers.iss.select(); return; }
     if (x.lab && SH[x.lab] && SH[x.lab].open) { SH[x.lab].open(); return; }

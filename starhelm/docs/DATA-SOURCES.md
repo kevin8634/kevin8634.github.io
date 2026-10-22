@@ -126,3 +126,6 @@
 
 ## sh-comet.js 哈雷彗星轨道(v1.0-M3c)
 - 1P/Halley 轨道根数(a 17.834 AU、e 0.96714、i 162.26°、Ω 58.42°、ω 111.33°、近日点 1986-02-09):NASA/JPL Small-Body Database 公开数据。尾巴长度为示意放大,方向真实。
+
+## sh-swind.js 太阳风(v1.0-M3e)
+- NOAA SWPC 实时太阳风摘要:products/summary/solar-wind-speed.json、solar-wind-mag-field.json(DSCOVR/ACE,L1 点),美国政府公开数据。署名「NOAA SWPC」,不使用标志。磁层形状为示意压缩。
