@@ -36,7 +36,7 @@
   function build() {
     var r = U.root = h('section', 'ml');
     r.innerHTML =
-      '<header class="ml-hd"><div><small>星域 II · 天璇 · 日与月</small><b>月相实验室</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
+      '<header class="ml-hd"><div><small>星域 II · 羲和与望舒 · 日与月</small><b>月相实验室</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
       '<div class="ml-body"><div class="ml-pane ml-space"><div class="ml-cap">太空俯视 · 从北极上方看</div><canvas class="ml-cv3"></canvas><div class="ml-sun">阳光 ☀ →</div><div class="ml-note">实时光照计算 · 大小与距离未按比例(真实地月距离约 30 个地球直径)</div></div>' +
       '<div class="ml-pane ml-earth"><div class="ml-cap">从地球上看 <button class="ml-hemi" type="button">北半球</button></div><canvas class="ml-cv2" width="360" height="360"></canvas>' +
       '<div class="ml-info"><b class="ml-nm"></b><span class="ml-k"></span><span class="ml-t"></span></div></div></div>' +
