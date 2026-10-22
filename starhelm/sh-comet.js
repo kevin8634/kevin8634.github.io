@@ -7,7 +7,7 @@
   var DEG = Math.PI / 180, AU = 149597870.7;
   var HALLEY = { kepler: { a: 17.834, e: 0.96714, I: 162.26, Omega: 58.42, omega: 111.33, M0: 0, epochJD: 2446470.5 } };
   var T_PERI = Date.UTC(2061, 6, 28);
-  var K = { on: false, t: T_PERI - 120 * 864e5 };
+  var K = { on: false, t: T_PERI - 120 * 864e5, play: true, last: 0, rd: 0 };
   function jd(ms) { return ms / 864e5 + 2440587.5; }
   function glowTex(rgb) {
     var c = document.createElement('canvas'); c.width = c.height = 64; var x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
@@ -56,7 +56,7 @@
     // 喷流:向阳面喷出的气尘柱,随彗核自转扫动,再被推向背日方向
     var jets = new T.Points(seeds(small ? 1200 : 3000), mat(
       'void main(){float f=mod(seed.w+uT*.35,1.);float k=floor(seed.x*4.);float ang=k*1.57+uT*.6+seed.y*.25;vec3 u=basisU(uSun),w=cross(uSun,u);' +
-        'vec3 d=normalize(-uSun*.9+(u*cos(ang)+w*sin(ang))*.55);vec3 p=uC+d*f*uL*.09+uSun*f*f*uL*.12;vA=uAct*(1.-f)*.8;vF=f;outp(p,1.1);}',
+        'vec3 d=normalize(-uSun*.9+(u*cos(ang)+w*sin(ang))*.55);vec3 p=uC+d*f*uL*.03+uSun*f*f*uL*.035;vA=uAct*(1.-f)*.8;vF=f;outp(p,1.1);}',
       soft + 'void main(){gl_FragColor=vec4(vec3(1.,.97,.9)*sd()*vA*.5,1.);}'));
     // 离子尾:被太阳风吹成笔直的蓝色细丝(CO⁺ 荧光),带流光与扭结
     var ion = new T.Points(seeds(small ? 3500 : 10000), mat(
@@ -78,16 +78,29 @@
     S.addUpdater(function () {
       var on = S.mode === 'solar' && (K.on || (window.SHD4 && SHD4.ready && SHD4.visible()));
       G.visible = on; if (!on) { lbl.style.visibility = 'hidden'; return; }
+      var nowp = performance.now(), dtp = K.last ? Math.min(0.1, (nowp - K.last) / 1000) : 0; K.last = nowp;
+      if (K.play && !K.drag) {   // 回归动画:每秒约 6 天,在近日点前后 400 天之间循环
+        K.t += dtp * 6 * 864e5; if (K.t > T_PERI + 400 * 864e5) K.t = T_PERI - 400 * 864e5;
+        if (K.on && U.rng && (K.rd += dtp) > 0.2) { K.rd = 0; U.rng.value = Math.round((K.t - T_PERI) / 864e5); read(); }
+      }
       var h = helioAt(K.t), r = Math.hypot(h.x, h.y, h.z); K.r = r;
       var px0 = C.x, py0 = C.y, pz0 = C.z;
       SO.toScene(h, C); SO.toScene(helioAt(K.t + 864e5), C2);
-      if (K.on && K.follow && K.had) { var dx = C.x - px0, dy = C.y - py0, dz = C.z - pz0; S.solarCam.position.x += dx; S.solarCam.position.y += dy; S.solarCam.position.z += dz; S.solarCtl.target.x += dx; S.solarCtl.target.y += dy; S.solarCtl.target.z += dz; }
+      if ((SO.follow || (S.fly && !K.cine)) && (K.follow || K.cine)) { K.follow = false; K.cine = null; }
+      if (K.cine) {   // 一镜到底:距离按对数平滑推近,方向球面插值,目标锁定彗核
+        var q = Math.min(1, (nowp - K.cine.t0) / K.cine.ms), e = q < .5 ? 4 * q * q * q : 1 - Math.pow(-2 * q + 2, 3) / 2;
+        var dd = Math.exp(Math.log(K.cine.d0) + (Math.log(K.cine.d1) - Math.log(K.cine.d0)) * e);
+        var dir = K.cine.u0.clone().lerp(K.cine.u1, e).normalize();
+        S.fly = null; S.solarCam.position.copy(C).addScaledVector(dir, dd); S.solarCtl.target.copy(K.cine.c0).lerp(C, Math.min(1, e * 1.6));
+        if (q >= 1) { K.cine = null; K.follow = true; S.solarCtl.target.copy(C); }
+        K.had = true;
+      } else if (K.follow && K.had) { var dx = C.x - px0, dy = C.y - py0, dz = C.z - pz0; S.solarCam.position.x += dx; S.solarCam.position.y += dy; S.solarCam.position.z += dz; S.solarCtl.target.x += dx; S.solarCtl.target.y += dy; S.solarCtl.target.z += dz; }
       K.had = true;
       var act = r > 4.5 ? 0 : Math.min(1, Math.pow(1.2 / Math.max(r, 0.5), 1.6)); K.act = act;
       U0.uC.value.copy(C); U0.uSun.value.copy(C).normalize(); U0.uVel.value.subVectors(C2, C).normalize();
       U0.uAct.value = act; U0.uL.value = 6 + act * 22; U0.uT.value = (performance.now() - t0) / 1000;
       var cam = S.solarCam.position.distanceTo(C);
-      nuc.position.copy(C); nuc.scale.setScalar(Math.max(0.05, cam * 0.006)); nuc.rotation.y += 0.004; nuc.rotation.z = 0.4;
+      nuc.position.copy(C); nuc.scale.setScalar(Math.max(0.12, cam * 0.006)); nuc.rotation.y += 0.004; nuc.rotation.z = 0.4;
       nucM.uniforms.uSun.value.copy(C).normalize().negate(); nucM.uniforms.uAct.value = act;
       wp.copy(C).project(S.solarCam);
       var show = wp.z < 1 && Math.abs(wp.x) < 1.05 && Math.abs(wp.y) < 1.05;
@@ -95,12 +108,15 @@
       if (show) lbl.style.transform = 'translate(' + Math.round((wp.x + 1) / 2 * innerWidth + 10) + 'px,' + Math.round((1 - wp.y) / 2 * innerHeight - 10) + 'px)';
     });
   }
-  function fly() {
-    var S = LE.scene, SO = LE.solar; SO.follow = null;
-    var side = new THREE.Vector3(0, 1, 0).cross(K.pos).normalize();
-    K.follow = false; S.flyTo({ target: K.pos.clone(), position: K.pos.clone().add(side.multiplyScalar(30)).add(new THREE.Vector3(0, 16, 0)), ms: 2000, arc: false });
-    setTimeout(function () { K.follow = true; }, 2100);
-    S.solarCtl.minDistance = 1;
+  function fly() {   // 一镜到底:从当前视角一路推近到彗核特写(侧后方,能同时看到喷流、彗发和两条尾巴)
+    var S = LE.scene, SO = LE.solar, T = THREE; SO.follow = null; S.fly = null; K.follow = false;
+    if (!K.pos || !K.pos.lengthSq()) return;
+    var sun = K.pos.clone().normalize(), side = new T.Vector3(0, 1, 0).cross(sun).normalize();
+    var u1 = side.clone().multiplyScalar(0.8).addScaledVector(sun, -0.45).add(new T.Vector3(0, 0.38, 0)).normalize();
+    var off = S.solarCam.position.clone().sub(K.pos), d0 = Math.max(4, off.length());
+    K.cine = { t0: performance.now(), ms: 4200, d0: d0, d1: 3.2, u0: off.normalize(), u1: u1, c0: S.solarCtl.target.clone() };
+    K.play = true; K.had = true; S.solarCtl.minDistance = 0.6; snd('arrive');
+    if (U.pp) U.pp.textContent = '❚❚ 暂停';
   }
 
   /* ---------------- 任务面板 ---------------- */
@@ -123,14 +139,16 @@
   function build2() {
     var r = U.root = h('section', 'ml ml--cm ml--dock');
     r.innerHTML = '<header class="ml-hd"><div><small>星域 IV · 星槎 · 太阳系边疆</small><b>彗星的尾巴为什么总背着太阳?</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
-      '<div class="ml-ctl"><button class="ml-fly" type="button">◎ 飞到哈雷彗星</button></div>' +
+      '<div class="ml-ctl"><button class="ml-fly" type="button">◎ 彗核特写(一镜到底)</button><button class="ml-pp" type="button">❚❚ 暂停</button></div>' +
       '<div class="cm-time"><input class="ml-rng" type="range" min="-400" max="400" step="1"><div class="cm-read"><span class="ml-day"></span><span class="ml-r"></span></div></div>' +
       '<div class="ml-guide"><div class="ml-q"></div><div class="ml-ch"></div><div class="ml-gb"><button class="ml-hint" type="button">给我一点提示</button><span class="ml-hs"></span></div></div>' +
       '<div class="ml-note">轨道根数:NASA/JPL SBDB;彗核形状依据 1986 年 ESA 乔托号实拍(约 15×8 km,体积示意放大);尾巴长度为示意,方向真实。下次回归:2061 年 7 月。</div>';
     document.body.appendChild(r);
-    ['st', 'x', 'fly', 'rng', 'day', 'r', 'q', 'ch', 'hint', 'hs'].forEach(function (k) { U[k] = r.querySelector('.ml-' + k); });
+    ['st', 'x', 'fly', 'pp', 'rng', 'day', 'r', 'q', 'ch', 'hint', 'hs'].forEach(function (k) { U[k] = r.querySelector('.ml-' + k); });
     U.x.onclick = close; U.hint.onclick = hint; U.fly.onclick = function () { fly(); snd('click'); };
-    U.rng.oninput = function () { K.t = T_PERI + (+U.rng.value) * 864e5; read(); if (!K.follow) { clearTimeout(K.rf); K.rf = setTimeout(fly, 120); } };
+    U.pp.onclick = function () { K.play = !K.play; U.pp.textContent = K.play ? '❚❚ 暂停' : '▶ 播放'; snd('click'); };
+    U.rng.onpointerdown = function () { K.drag = true; }; U.rng.onpointerup = U.rng.onpointercancel = function () { K.drag = false; };
+    U.rng.oninput = function () { K.play = false; U.pp.textContent = '▶ 播放'; K.t = T_PERI + (+U.rng.value) * 864e5; read(); if (!K.follow && !K.cine) { clearTimeout(K.rf); K.rf = setTimeout(fly, 120); } };
   }
   function read() {
     var d = new Date(K.t + 8 * 3600e3), dd = Math.round((K.t - T_PERI) / 864e5);

@@ -135,3 +135,19 @@
 - hd/ceres-1k.jpg:Ceres Dawn FC Global Mosaic(NASA/JPL-Caltech/UCLA/MPS/DLR/IDA,USGS Astrogeology 发布,公有领域)。
 - 妊神星、鸟神星、阋神星:尚无探测器近距离照片,沿用原贴图并在卡片注明「想象图」。
 - 哈雷彗核形状依据 ESA 乔托号 1986 年实拍(约 15×8×8 km 花生形、反照率约 4%),为程序化建模。
+
+## 天枢天文台 arc/ 新增影像(v1.0-M3g,均经 Wikimedia Commons 核对许可,自托管 1600px webp)
+| 文件 | 内容 | 来源 / 许可 |
+|---|---|---|
+| moon.webp | 满月 2010 | Gregory H. Revera · CC BY-SA 3.0 |
+| earthrise.webp | 地出 1968 | NASA / Bill Anders · 公有领域 |
+| mercury.webp | 水星 MESSENGER 2008 | NASA/JHUAPL/Carnegie · 公有领域 |
+| venus.webp | 金星 水手 10 号 1974 | NASA;处理 Ricardo Nunes · 公有领域 |
+| mars.webp | 火星 Rosetta OSIRIS 2007 | ESA & MPS for OSIRIS Team · CC BY-SA 3.0 IGO |
+| saturn.webp | 土星 卡西尼 2008 分点 | NASA/JPL/Space Science Institute · 公有领域 |
+| uranus.webp | 天王星 旅行者 2 号 1986 | NASA/JPL;色彩校准 Ardenau4 · CC0 |
+| neptune.webp | 海王星 旅行者 2 号 1989 | NASA/JPL/Voyager-ISS;处理 Aster Cowart · 公有领域 |
+| io.webp | 木卫一 伽利略号 | NASA/JPL/University of Arizona · 公有领域 |
+| europa.webp | 木卫二 伽利略号 | NASA/JPL/DLR · 公有领域 |
+| pluto.webp | 冥王星 新视野号 2015 | NASA/JHUAPL/SwRI · 公有领域 |
+| c67p.webp | 67P 彗星 罗塞塔号 NAVCAM 2014 | ESA/Rosetta/NAVCAM · CC BY-SA 3.0 IGO |
