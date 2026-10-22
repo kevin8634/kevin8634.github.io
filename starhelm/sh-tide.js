@@ -51,7 +51,7 @@
   function build() {
     var r = U.root = h('section', 'ml ml--tide');
     r.innerHTML =
-      '<header class="ml-hd"><div><small>星域 II · 天璇 · 日与月</small><b>潮汐实验室</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
+      '<header class="ml-hd"><div><small>星域 II · 羲和与望舒 · 日与月</small><b>潮汐实验室</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
       '<div class="ml-body"><div class="ml-pane ml-space"><div class="ml-cap">太空俯视 · 从北极上方看</div><canvas class="ml-cv3"></canvas><div class="ml-sun" style="left:10px;right:auto">☀ 阳光 →</div>' +
       '<div class="ml-note">平衡潮理论 · 海水隆起放大约 10 万倍示意 · 大小与距离未按比例</div></div>' +
       '<div class="ml-pane ml-earth"><div class="ml-cap">海边小镇(北纬 30°)的潮高 · 48 小时</div><canvas class="ml-cv2 td-cv" width="420" height="300" style="aspect-ratio:7/5;width:min(100%,380px)"></canvas>' +
