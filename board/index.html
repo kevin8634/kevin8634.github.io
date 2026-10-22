@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>创世计划 Genesis · 开发看板</title>
+<style>
+:root{--bg:#04060f;--panel:rgba(18,24,48,.62);--line:rgba(233,199,121,.22);--gold:#e9c779;--txt:#e8ecf6;--mute:#8d97b3}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.55 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+body{background:radial-gradient(1200px 600px at 70% -10%,rgba(233,199,121,.10),transparent 60%),radial-gradient(900px 500px at 0% 100%,rgba(124,200,255,.07),transparent 60%),var(--bg);min-height:100vh}
+.sky{position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(1px 1px at 12% 20%,#fff8,transparent),radial-gradient(1px 1px at 72% 34%,#fff6,transparent),radial-gradient(1.5px 1.5px at 40% 80%,#e9c77999,transparent),radial-gradient(1px 1px at 88% 70%,#fff5,transparent),radial-gradient(1px 1px at 25% 60%,#fff4,transparent)}
+.wrap{position:relative;max-width:1280px;margin:0 auto;padding:28px 22px 60px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;border-bottom:1px solid var(--line);padding-bottom:18px}
+.eyebrow{color:var(--gold);letter-spacing:.32em;font-size:12px}
+h1{margin:6px 0 4px;font-size:28px;font-weight:600;letter-spacing:.06em}
+.sub{color:var(--mute);font-size:13px}
+.back{color:var(--gold);text-decoration:none;border:1px solid var(--line);padding:6px 12px;border-radius:999px;font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;backdrop-filter:blur(8px)}
+.kpi b{display:block;font-size:26px;color:var(--gold);font-weight:600}
+.kpi span{color:var(--mute);font-size:12px}
+.gate{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:22px}
+.gate h2,.sec h2{margin:0 0 10px;font-size:15px;color:var(--gold);letter-spacing:.12em;font-weight:600}
+.gate ol{margin:0;padding-left:20px;color:#cfd6e8}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin:0 0 12px}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.04em}
+.P0{background:#ff5d6c22;color:#ff8a95;border:1px solid #ff5d6c66}
+.P1{background:#e9c77922;color:#f0d38f;border:1px solid #e9c77966}
+.P2{background:#7cc8ff1f;color:#9fd5ff;border:1px solid #7cc8ff55}
+.board{display:grid;grid-template-columns:220px repeat(4,1fr);gap:8px;align-items:stretch}
+.colh{color:var(--mute);font-size:12px;letter-spacing:.2em;padding:6px 10px;border-bottom:1px solid var(--line)}
+.world{border-left:3px solid var(--c);background:linear-gradient(90deg,color-mix(in srgb,var(--c) 14%,transparent),transparent);border-radius:10px;padding:10px 12px}
+.world .nm{font-weight:600}
+.world .en{color:var(--mute);font-size:11px}
+.world .ver{font-size:12px;margin-top:4px;color:#cfd6e8}
+.bar{height:6px;border-radius:6px;background:#ffffff14;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--c);box-shadow:0 0 10px var(--c)}
+.world .cnt{font-size:11px;color:var(--mute);margin-top:4px}
+.cell{background:var(--panel);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:6px;min-height:64px}
+.card{border:1px solid color-mix(in srgb,var(--c) 40%,transparent);border-radius:8px;padding:7px 9px;background:rgba(4,6,15,.55);font-size:12.5px}
+.card .t{margin-top:3px}
+.card .m{color:var(--mute);font-size:11px;margin-top:3px}
+.card.done{opacity:.7}
+.sec{margin-top:26px}
+.cmd{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:10px}
+.cmd .card{--c:#e9c779}
+footer{margin-top:30px;color:var(--mute);font-size:12px;border-top:1px solid var(--line);padding-top:12px}
+@media (max-width:900px){
+ .kpis{grid-template-columns:repeat(2,1fr)}
+ .board{grid-template-columns:1fr}
+ .colh{display:none}
+ .cell{min-height:0}
+ .cell:empty{display:none}
+ .cell::before{content:attr(data-col);color:var(--mute);font-size:11px;letter-spacing:.18em}
+ .world{margin-top:14px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="sky"></div>
+<div class="wrap">
+<header>
+ <div>
+  <div class="eyebrow">GENESIS · 开发看板</div>
+  <h1>七星开发进度</h1>
+  <div class="sub" id="asof"></div>
+ </div>
+ <a class="back" href="../">← 创世计划总门户</a>
+</header>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="gate">
+ <h2>1.0「首批公开版」门槛</h2>
+ <ol>
+  <li>每个世界至少 5 个已上线任务</li>
+  <li>七个世界全部接入门户→世界接力,同窗口返回门户</li>
+  <li>3D 统一 Three.js r169,iOS Safari / Android Chrome 真机通过</li>
+  <li>素材来源与署名齐全,AI 生成内容有标注</li>
+ </ol>
+</div>
+
+<div class="legend"><span><span class="pill P0">P0</span> 本周必须</span><span><span class="pill P1">P1</span> 下一轮</span><span><span class="pill P2">P2</span> 排队</span><span>进度条 = 已上线任务 / 1.0 门槛 5 个</span></div>
+
+<div class="board" id="board">
+ <div class="colh">世界</div><div class="colh">方案中</div><div class="colh">开发中</div><div class="colh">待验收</div><div class="colh">最近上线</div>
+</div>
+
+<div class="sec">
+ <h2>系列事项</h2>
+ <div class="cmd" id="cmd"></div>
+</div>
+
+<footer>路线图会随各世界上线持续更新,顺序与版本可能调整。日期为北京时间。</footer>
+</div>
+
+<script>
+var BOARD = {
+ asOf: "2026-10-22 10:50 北京时间",
+ portal: "总门户 v0.8.2.8",
+ worlds: [
+  { id:"01", name:"星图", en:"Math Atlas", c:"#7cc8ff", ver:"v0.8.3", tasks:10, levels:"55 关 · 197 星", relay:true, href:"../math-atlas/",
+    plan:[{p:"P2",t:"版权与页脚说明(v0.8.4)"},{p:"P2",t:"新任务方案:为什么很多东西都按「级」来量?"}], dev:[], review:[{p:"P2",t:"3D 星图真人试玩复测"}], done:[{t:"v0.8.3",m:"10-21"}] },
+  { id:"02", name:"宙律", en:"Nomoverse", c:"#a78bfa", ver:"v0.3-α2.1", tasks:3, levels:"13 关", relay:false, href:"../nomoverse/",
+    plan:[{p:"P0",t:"v0.3-α3 门户接力 + 返回门户"},{p:"P0",t:"v0.4 正式版:三任务收口 + 沉浸化"},{p:"P1",t:"新任务:恒星为什么会发光?"},{p:"P1",t:"新任务:潮汐 ⇄ 天枢"}], dev:[], review:[], done:[{t:"v0.3-α2.1",m:"10-21"}] },
+  { id:"03", name:"元素工坊", en:"Element Forge", c:"#ff9a3c", ver:"v0.4.1", tasks:3, levels:"12 关", relay:true, href:"../element-forge/",
+    plan:[{p:"P1",t:"v0.5 紫甘蓝汁为什么会变色?(效果图)"},{p:"P1",t:"岩石任务方案 ⇄ 天枢地震"}], dev:[], review:[], done:[{t:"v0.4.1",m:"10-21"}] },
+  { id:"04", name:"生命源码", en:"Life Source", c:"#34d399", ver:"v0.8", tasks:5, levels:"全息实验台", relay:true, href:"../life-source/",
+    plan:[{p:"P1",t:"新任务:为什么一到晚上就犯困?(方案+效果图已出)"},{p:"P1",t:"v0.9 全息实验台"}], dev:[], review:[], done:[{t:"v0.8",m:"源码五灵头像 · 10-21"}] },
+  { id:"05", name:"奇点前夜", en:"Pre-Singularity", c:"#22d3ee", ver:"v0.9", tasks:10, levels:"29 关", relay:true, href:"../pre-singularity/",
+    plan:[{p:"P0",t:"v0.9.1 素材与署名收口"},{p:"P1",t:"主页 HUD 改版"},{p:"P2",t:"v1.0「黎明」"}], dev:[], review:[{p:"P1",t:"中低端机 3D 开场性能"}], done:[{t:"v0.9",m:"全息屏墙 · 10-21"}] },
+  { id:"06", name:"觉弈", en:"Ludoterra", c:"#f5c26b", ver:"v0.20.1", tasks:7, levels:"7 关", relay:false, href:"../ludoterra/",
+    plan:[{p:"P0",t:"门户接力 + 返回门户"},{p:"P1",t:"沉浸化开场 + 统一 HUD"},{p:"P1",t:"星桥:幸存者 ⇄ 赌场、睡眠 ⇄ 生物钟"}], dev:[], review:[], done:[{t:"v0.20.1",m:"10-20"}] },
+  { id:"07", name:"天枢", en:"Starhelm", c:"#dfe6f3", ver:"v0.6.4", tasks:5, levels:"星域 I 全开", relay:false, href:"../starhelm/",
+    plan:[{p:"P0",t:"v0.6.5 门户接力 + 星桥深链"},{p:"P1",t:"v0.7.0 三维引擎升级"},{p:"P1",t:"新星桥:太阳、日食、卫星"}], dev:[], review:[{p:"P1",t:"v0.7.1 真机抽查"}], done:[{t:"v0.6.4",m:"地震实验室 · 10-22"},{t:"v0.6.3",m:"卫星星海 · 10-22"}] }
+ ],
+ command: [
+  {p:"P0",t:"统一七个世界的门户接力"},
+  {p:"P1",t:"星桥配对:天枢新端点 × 各世界"},
+  {p:"P1",t:"真机验收:iOS Safari / Android Chrome"},
+  {p:"P2",t:"达到 1.0 门槛后首批公开"}
+ ]
+};
+(function(){
+ var B=BOARD, el=function(h){var d=document.createElement('div');d.innerHTML=h;return d.firstChild;};
+ document.getElementById('asof').textContent='更新于 '+B.asOf+' · '+B.portal;
+ var tot=0,relay=0,ok=0;B.worlds.forEach(function(w){tot+=w.tasks;if(w.relay)relay++;if(w.tasks>=5)ok++;});
+ var p0=0;B.worlds.forEach(function(w){['plan','dev','review'].forEach(function(k){w[k].forEach(function(x){if(x.p==='P0')p0++;});});});
+ document.getElementById('kpis').innerHTML=[[7,'个世界已上线'],[tot,'个任务已上线'],[ok+' / 7','个世界达到 5 任务'],[relay+' / 7','个世界已接入接力']].map(function(k){return '<div class="kpi"><b>'+k[0]+'</b><span>'+k[1]+'</span></div>';}).join('');
+ var bd=document.getElementById('board');
+ function card(x,c,done){return '<div class="card'+(done?' done':'')+'" style="--c:'+c+'">'+(x.p?'<span class="pill '+x.p+'">'+x.p+'</span>':'')+'<div class="t">'+x.t+'</div>'+(x.m?'<div class="m">'+x.m+'</div>':'')+'</div>';}
+ B.worlds.forEach(function(w){
+  var pct=Math.min(100,w.tasks/5*100);
+  bd.appendChild(el('<div class="world" style="--c:'+w.c+'"><div class="nm"><a href="'+w.href+'" style="color:inherit;text-decoration:none">'+w.id+' '+w.name+' <span class="en">'+w.en+'</span> ↗</a></div><div class="ver">'+w.ver+' · '+w.levels+'</div><div class="bar"><i style="width:'+pct+'%"></i></div><div class="cnt">'+w.tasks+' 个任务'+(w.relay?' · 已接力':' · 未接力')+'</div></div>'));
+  [['plan','方案中'],['dev','开发中'],['review','待验收'],['done','最近上线']].forEach(function(k){
+   var d=document.createElement('div');d.className='cell';d.setAttribute('data-col',k[1]);
+   d.innerHTML=w[k[0]].map(function(x){return card(x,w.c,k[0]==='done');}).join('');bd.appendChild(d);
+  });
+ });
+ document.getElementById('cmd').innerHTML=B.command.map(function(x){return card(x,'#e9c779');}).join('');
+})();
+</script>
+</body>
+</html>
