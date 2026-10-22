@@ -599,7 +599,7 @@
   function header(opts) {
     var top = el("header", { class: "nv-top" });
     var nav = el("nav", { class: "nv-nav", "aria-label": "站点导航" });
-    (opts.links || []).forEach(function (l) { nav.appendChild(el("a", { href: l[0], text: l[1] })); });
+    (opts.links || []).forEach(function (l) { var A = el("a", { href: l[0], text: l[1] }); if (/创世计划/.test(l[1])) { A.setAttribute("title", "返回创世计划 Genesis 总门户(同一窗口)"); A.setAttribute("aria-label", "返回创世计划总门户"); A.className = "nv-home"; } nav.appendChild(A); });
     top.appendChild(nav);
     if (opts.brand) top.appendChild(el("span", { class: "nv-brand", text: opts.brand }));
     if (opts.tabs) top.appendChild(opts.tabs);
@@ -615,7 +615,7 @@
     var N = def.levels.length, prog = Store.task(def.id, N), gd = GUIDES[def.guide];
     var app = el("div", { class: "nv-app nv-im" });
     var tabs = el("div", { class: "nv-tabs", role: "tablist", "aria-label": "关卡" });
-    var top = header({ links: [["../", "← 宙律"], ["../../", "创世门户"]], brand: "宙律 · 物理", tabs: tabs });
+    var top = header({ links: [["../", "← 宙律"], ["../../", "创世计划"]], brand: "宙律 · 物理", tabs: tabs });
     var progFill = el("i"), progTxt = el("span", { class: "t" });
     var progBar = el("div", { class: "bar", role: "progressbar", "aria-label": "本任务星数", "aria-valuemin": "0", "aria-valuemax": String(N * 3) }, progFill);
     top.appendChild(el("div", { class: "nv-prog" }, [progBar, progTxt]));
@@ -668,7 +668,7 @@
 
     var foot = el("div", { class: "nv-foot nv-glass nv-card2" });
     if (def.bridge) foot.appendChild(el("div", { class: "nv-row" }, [el("a", { class: "nv-btn sm", href: def.bridge.href, text: "星桥 → " + def.bridge.label, onpointerenter: SND.hover, onclick: function () { SND.play("whoosh"); } })]));
-    foot.appendChild(el("div", { class: "nv-row" }, [el("a", { href: "../", text: "返回宙律首页" }), el("a", { href: "../../", text: "创世门户" })]));
+    foot.appendChild(el("div", { class: "nv-row" }, [el("a", { href: "../", text: "返回宙律首页" }), el("a", { href: "../../", text: "← 返回创世计划" })]));
     if (def.safety) foot.appendChild(el("p", { class: "nv-safe", text: def.safety }));
     foot.appendChild(el("p", { text: "科普探究小实验。画面中的数字来自简化模型,单位见各仪表。" }));
 
