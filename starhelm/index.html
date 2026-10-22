@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="le-style.css" />
   <link rel="stylesheet" href="sh-style.css" />
   <link rel="stylesheet" href="sh-voyage.css" />
+  <link rel="stylesheet" href="sh-hud.css" />
 </head>
 <body>
   <div id="stage" class="le-stage" aria-label="可拖动旋转、缩放的三维场景" role="img"></div>
@@ -335,6 +336,15 @@
   <script src="sh-archive.js"></script>
   <script src="sh-orbmodels.js"></script>
   <script src="sh-link.js"></script>
+  <!-- 天枢 Starhelm 1.0 · M1a:统一时间源 · 此刻卡 · 1.0 HUD(A 舰桥 + 尺度尺 + 大读数 · 守星人入控制台)· 七星域调度 · 3D 月球 -->
+  <script src="vendor/astronomy-engine/astro.p1.js"></script>
+  <script src="vendor/astronomy-engine/astro.p2.js"></script>
+  <script src="vendor/astronomy-engine/astro.p3.js"></script>
+  <script src="sh-time.js"></script>
+  <script src="sh-now.js"></script>
+  <script src="sh-hud.js"></script>
+  <script src="sh-domain.js"></script>
+  <script src="sh-focus.js"></script>
 <script>if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js",{scope:"./"});</script>
 </body>
 </html>
