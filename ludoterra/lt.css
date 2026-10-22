@@ -75,3 +75,5 @@ body.diving #hero,body.diving #rec,body.diving #side,body.diving #dock,body.divi
  linear-gradient(#f5c26b,#f5c26b) left bottom/14px 1px,linear-gradient(#f5c26b,#f5c26b) left bottom/1px 14px,
  linear-gradient(#f5c26b,#f5c26b) right bottom/14px 1px,linear-gradient(#f5c26b,#f5c26b) right bottom/1px 14px;background-repeat:no-repeat;opacity:.75;border-radius:16px}
 .lt-hud.lt-panel{position:fixed}
+
+@media (max-width:420px){.lt-top .lt-wide{display:none}}
