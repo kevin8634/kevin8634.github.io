@@ -271,7 +271,20 @@
   }
 
   /* ============================ 航图 ============================ */
-  function openMap() { UI.map.hidden = false; UI.mapCard.hidden = true; atlasOpen(); sfx.open(); }
+  function openMap() {   // v1.0-M2c:航行中的航图与外场 HUD 航图合并为同一张(SHATLAS)
+    if (window.SHATLAS && window.SHHUD && SHHUD.DOMAINS) { SHATLAS.open({ voy: true }); return; }
+    UI.map.hidden = false; UI.mapCard.hidden = true; atlasOpen(); sfx.open();
+  }
+  var DOM_OF = { home: 1, moon: 2, planets: 3, edge: 4, stars: 5, galaxy: 6, cosmos: 7 };
+  function domOpen(id) { var n = DOM_OF[id], D = window.SHHUD && SHHUD.DOMAINS; return !!(n && D && D[n - 1] && D[n - 1].open); }
+  function syncStatus() { V.sectors.forEach(function (s) { if (DOM_OF[s.id] && window.SHHUD && SHHUD.DOMAINS) s.status = domOpen(s.id) ? 'open' : 'uncharted'; }); }
+  function land(id) {   // 离开驾驶舱,直接进入该星域的 3D 场景
+    var n = DOM_OF[id]; if (!n) return;
+    fade(1); setTimeout(function () { SH.voyExit(); fade(0); if (window.SHDOM) SHDOM.go(n); }, 650);
+  }
+  SH.voySetTarget = function (id) { if (VY.state === 'travel') return; setTarget(id); };
+  SH.voyReady = function () { return VY.active && booted && UI.load && UI.load.hidden && VY.state !== 'travel'; };
+  SH.voyLand = land;
   function mapTap(cx, cy) {
     var rect = UI.mapCv.getBoundingClientRect(), x = cx - rect.left, y = cy - rect.top, best = null, bd = 30;
     V.sectors.forEach(function (s) { if (!s._xy) return; var d = Math.hypot(s._xy[0] - x, s._xy[1] - y); if (d < bd) { bd = d; best = s; } });
@@ -463,6 +476,11 @@
     setLoc(); markEngines(); dash({ v: 0, x: '—' }); UI.d.to.textContent = '—';
     var s = V.byId(id); sfx.arrive(id); sfx.hum(0); A.waveT = 1.4;
     banner(s);
+    if (domOpen(id) && window.SHDOM) {   // v1.0-M2c:到达已开放星域 → 直接进入对应 3D 场景
+      evaBtnSync();
+      say(['happy', '已抵达星域 ' + s.n + '「' + s.zh + '」。舷窗打开,我们直接下去看看!']).then(function () { land(id); });
+      return;
+    }
     var line = s.status === 'open' ? V.lines.arriveOpen : s.status === 'conjecture' ? V.lines.arriveOuter : V.lines.arriveUncharted;
     var ch = [{ label: '打开航图', value: 'map' }, { label: s.status === 'open' ? '看看风景' : '⇱ 舱外观景', value: s.status === 'open' ? 'stay' : 'eva', cls: 'alt' }];
     if (id === 'moon' && SH.sunLab) ch.unshift({ label: '☀ 太阳活动观测台', value: 'sunlab' });
@@ -904,6 +922,7 @@
   var booted = false;
   SH.voyEnter = function () {
     if (VY.active) return;
+    syncStatus();
     if (!UI.root) buildDom();
     UI.root.hidden = false; VY.active = true; document.body.classList.add('voy-on'); pauseLE(true); P('open');
     if (window.LE && LE.ui && LE.ui.closeSheets) try { LE.ui.closeSheets(); } catch (e) { }

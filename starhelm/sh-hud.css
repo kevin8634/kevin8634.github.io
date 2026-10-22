@@ -209,7 +209,7 @@ body.shh-dclosed .sh2-back{left:calc(var(--shh-pad,16px) + 60px)}
 .sha[hidden]{display:none}
 .sha-hd{display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(240,201,122,.35);padding-bottom:8px}
 .sha-hd small{display:block;font-size:11px;color:#9fb3cc;letter-spacing:.08em}.sha-hd b{font-size:19px;letter-spacing:.06em}
-.sha-old{margin-left:auto;background:rgba(127,214,255,.1);border:1px solid rgba(127,214,255,.45);color:#cfefff;border-radius:10px;padding:5px 12px;cursor:pointer;font:inherit;font-size:13px}
+.sha-old{display:none;margin-left:auto;background:rgba(127,214,255,.1);border:1px solid rgba(127,214,255,.45);color:#cfefff;border-radius:10px;padding:5px 12px;cursor:pointer;font:inherit;font-size:13px}
 .sha-x{background:none;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer}
 .sha-body{flex:1;min-height:0;display:grid;grid-template-columns:1fr 340px;gap:14px}
 .sha-map{position:relative;min-height:0;display:flex;align-items:center;justify-content:center}
@@ -277,3 +277,17 @@ body.shh-on .le-chips.le-solar-only{display:none!important}
 .jp-need{height:10px;border-radius:5px;background:rgba(255,122,74,.18);outline:1px dashed rgba(255,122,74,.6)}.jp-need i{display:block;height:100%;background:#e8c39a;border-radius:5px;min-width:3px}
 .rt-body{grid-template-columns:1fr!important;grid-template-rows:1fr!important}
 @media (max-width:760px){.jp-read b{font-size:16px}.jp-r{padding:26px 8px 8px;overflow:auto}}
+
+/* ---------- v1.0-M2c:统一 3D 航图 ---------- */
+.sha-cv{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}.sha-cv:active{cursor:grabbing}
+.sha-lbls{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.sha-lb{position:absolute;left:0;top:0;pointer-events:auto;background:rgba(8,16,30,.66);border:1px solid rgba(127,166,216,.35);border-radius:10px;padding:3px 9px;color:#9fb3cc;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap;backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;line-height:1.25}
+.sha-lb small{font-size:10px;opacity:.8}.sha-lb.on{color:#cff8ea;border-color:rgba(127,227,196,.55)}.sha-lb.cj{color:#d9c6ff;border-color:rgba(201,166,255,.45)}
+.sha-lb.sel{color:#1a1206;background:#f0c97a;border-color:#f0c97a}.sha-lb.here b::before{content:'◉ ';color:#7fd6ff}.sha-lb.sel.here b::before{color:#1a1206}
+.sha-legend{position:absolute;left:0;top:0;font-size:11px;color:#9fb3cc;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.sha-legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-left:6px}.lg-on{background:#7fe3c4}.lg-off{background:repeating-linear-gradient(90deg,#7fa6d8 0 4px,transparent 4px 7px)}.lg-cj{background:repeating-linear-gradient(90deg,#c9a6ff 0 4px,transparent 4px 7px)}.lg-here{width:8px!important;height:8px!important;border-radius:50%!important;border:1.5px solid #fff}
+.sha-acts{margin-top:auto;display:flex;flex-direction:column;gap:8px}.sha-acts .sha-go{margin-top:0}
+.sha-go.alt{background:rgba(127,214,255,.08);border-color:rgba(127,214,255,.5);color:#cfefff}
+.sha-here{color:#7fd6ff}
+.sha--voy .sha-hd b::after{content:' · 弦穹号';color:#7fd6ff;font-size:.75em}
+@media (max-width:760px),(orientation:portrait){.sha-legend{display:none}.sha-lb{font-size:11px;padding:2px 7px}}

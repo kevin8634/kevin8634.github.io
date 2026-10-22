@@ -42,16 +42,20 @@
     root.querySelector('.sh2-back').onclick = function () { if (window.SHDOM) SHDOM.go(1); else close(); };
     var cv = root.querySelector('.sh2-cv');
     var rd = new T.WebGLRenderer({ canvas: cv, antialias: true }); rd.setPixelRatio(Math.min(2, devicePixelRatio || 1));
-    rd.outputEncoding = T.sRGBEncoding;
+    rd.outputEncoding = T.sRGBEncoding; rd.toneMapping = T.ACESFilmicToneMapping; rd.toneMappingExposure = 1.05;
     var sc = new T.Scene(), cam = new T.PerspectiveCamera(42, 1, 0.05, 2000);
     var tex = LE.assets.texture;
     // 星空
-    var sky = new T.Mesh(new T.SphereGeometry(900, 48, 24), new T.MeshBasicMaterial({ map: tex(LE.config.TEX.milkyway, true), side: T.BackSide, color: 0x8899aa }));
+    var sky = window.SHFX3D ? SHFX3D.skyMesh(rd, 900) : new T.Mesh(new T.SphereGeometry(900, 48, 24), new T.MeshBasicMaterial({ map: tex(LE.config.TEX.milkyway, true), side: T.BackSide, color: 0x8899aa }));
     sc.add(sky);
     // 太阳
-    var sun = new T.Mesh(new T.SphereGeometry(1.6, 48, 24), new T.MeshBasicMaterial({ color: 0xffd98a }));
-    var halo = new T.Sprite(new T.SpriteMaterial({ map: glowTex('rgba(255,236,190,1)', 'rgba(255,190,90,.45)'), blending: T.AdditiveBlending, depthWrite: false, transparent: true }));
-    halo.scale.set(9, 9, 1); sun.add(halo); sc.add(sun);
+    var sunFx = window.SHFX3D ? SHFX3D.sun({ radius: 1.6 }) : null, sun;   // v1.0-M2c:着色器太阳 + 日冕 + 日珥/太阳风粒子
+    if (sunFx) { sun = sunFx.core; sc.add(sunFx.group); }
+    else {
+      sun = new T.Mesh(new T.SphereGeometry(1.6, 48, 24), new T.MeshBasicMaterial({ color: 0xffd98a }));
+      var halo = new T.Sprite(new T.SpriteMaterial({ map: glowTex('rgba(255,236,190,1)', 'rgba(255,190,90,.45)'), blending: T.AdditiveBlending, depthWrite: false, transparent: true }));
+      halo.scale.set(9, 9, 1); sun.add(halo); sc.add(sun);
+    }
     var light = new T.PointLight(0xffffff, 2.2, 0, 0); sc.add(light); sc.add(new T.AmbientLight(0x3a4a6a, 0.7));
     // 地球(地轴倾斜 23.44°,自转跟恒星时)
     var eTilt = new T.Group(); eTilt.rotation.x = -EPS;
@@ -70,7 +74,7 @@
     sc.add(new T.Line(new T.BufferGeometry().setFromPoints(op), new T.LineBasicMaterial({ color: 0x7fd6ff, transparent: true, opacity: 0.28 })));
     var mOrb = new T.Line(new T.BufferGeometry(), new T.LineBasicMaterial({ color: 0xf0c97a, transparent: true, opacity: 0.45 })); sc.add(mOrb);
     var ctl = new T.OrbitControls(cam, cv); ctl.enableDamping = true; ctl.dampingFactor = 0.08; ctl.minDistance = 1.2; ctl.maxDistance = 60; ctl.enablePan = false;
-    G = { rd: rd, sc: sc, cam: cam, ctl: ctl, sun: sun, earth: earth, eG: eG, mPivot: mPivot, moon: moon, mOrb: mOrb, light: light, orbDay: -1e9, ePrev: new T.Vector3() };
+    G = { rd: rd, sc: sc, cam: cam, ctl: ctl, sun: sun, sunFx: sunFx, earth: earth, eG: eG, mPivot: mPivot, moon: moon, mOrb: mOrb, light: light, orbDay: -1e9, ePrev: new T.Vector3() };
     // 标签
     var L = root.querySelector('.sh2-lbls');
     G.lbl = {
@@ -163,6 +167,7 @@
     raf = requestAnimationFrame(loop); var dt = Math.min(0.1, (t - last) / 1000 || 0); last = t;
     var d = now(), b = place(d, false);
     if ((acc += dt) > 0.25) { acc = 0; info(b); }
+    if (G.sunFx) G.sunFx.update(dt, G.cam);
     G.ctl.update(); G.rd.render(G.sc, G.cam); labels();
   }
   function pauseLE(p) {

@@ -92,3 +92,7 @@
 | 近一年 M5+ 地震(1,983 次) | USGS ANSS ComCat FDSN `fdsnws/event/1/query?format=csv&minmagnitude=5`(2026-10-22 下载) | 美国政府作品,公有领域 | 打包为 sh-quakes-data.js 快照(build_quakes.py) | 「数据:USGS 地震灾害计划」 |
 | 近 7 天 M4.5+ 实时 | USGS `summary/4.5_week.geojson`(CORS *) | 同上 | 浏览器实时取,7 秒超时用快照近 7 天 | 同上 |
 | 板块边界 PB2002 | Bird (2003) G3 4(3):1027;Hugo Ahlenius / Nordpil 数字化(github fraxen/tectonicplates) | ODC-By 1.0(须署名) | 精简到 0.1° 后打包进 sh-quakes-data.js | 页面写「板块边界 PB2002(Bird, 2003),Ahlenius/Nordpil 数字化,ODC-By」 |
+
+## sky-8k.jpg / sky-4k.jpg(v1.0-M2c)
+- 来源:NASA Scientific Visualization Studio「Deep Star Maps 2020」(svs.gsfc.nasa.gov/4851),starmap_2020_8k.exr 色调映射后转 JPEG。
+- 数据基于 ESA Gaia、Hipparcos、Tycho-2 星表。许可:NASA 媒体,可免费用于教育;致谢 NASA/Goddard Space Flight Center Scientific Visualization Studio。
