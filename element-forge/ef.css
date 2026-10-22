@@ -194,3 +194,9 @@ body.mission.volt .cn{border-color:#9fe4ff;filter:drop-shadow(0 0 6px #7ad7ff88)
 body.mission.volt .m-stage{border-color:rgba(122,215,255,.26);background:rgba(6,14,24,.46)}
 body.mission.volt .m-stage .ctl{border-color:rgba(122,215,255,.22)}
 body.mission.volt .m-guide{box-shadow:0 0 40px rgba(122,215,255,.1)}
+/* v0.8 rocks 岩石标本台主题(莫芙) */
+body.stone{--line:rgba(201,166,255,.26)}
+body.mission.stone .cn{border-color:#d6bcff;filter:drop-shadow(0 0 6px #c9a6ff88)}
+body.mission.stone .m-stage{border-color:rgba(201,166,255,.26);background:rgba(18,12,26,.46)}
+body.mission.stone .m-stage .ctl{border-color:rgba(201,166,255,.22)}
+body.mission.stone .m-guide{box-shadow:0 0 40px rgba(201,166,255,.1)}

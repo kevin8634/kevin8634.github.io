@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.7(crystal 霜镜舞台、cabbage 染色台、fireworks 夜空焰色台、battery 电光实验台)
+/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.7(crystal 霜镜舞台、cabbage 染色台、fireworks 夜空焰色台、battery 电光实验台、rocks 岩石标本台)
    每关一个 3D 场景,随关卡切换淡入淡出;关卡玩法仍在前景面板里进行。低档不加载(保留 v0.1 星空背景)。 */
 import { THREE, makeGL, P, glowSprite, starMaterial, fresnelMaterial } from './ef-gl.js?v=2';
 const EF = window.EF;
@@ -44,7 +44,11 @@ function boot() {
   if (isB) { /* v0.7:电光实验台——深青 + 电光蓝边光(锂锂) */
     scene.fog = new THREE.FogExp2(0x061018, 0.028); key.color.set(0xeef8ff); rim.color.set(0x7ad7ff);
   }
-  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : isK ? cabbageScenes() : isF ? fireScenes() : isB ? voltScenes() : [];
+  const isR = EF.missionId === 'rocks';
+  if (isR) { /* v0.8:岩石标本台——暗紫褐 + 熔岩橙边光(莫芙) */
+    scene.fog = new THREE.FogExp2(0x140c14, 0.03); key.color.set(0xfff0e6); rim.color.set(0xff7a3a);
+  }
+  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : isK ? cabbageScenes() : isF ? fireScenes() : isB ? voltScenes() : isR ? rockScenes() : [];
   LV.forEach(s => { scene.add(s.g); setA(s, 0); });
 
   /* ---------- stars:主序星 → 洋葱分层的大质量恒星 → 铁核心 → 超新星遗迹 ---------- */
@@ -218,6 +222,36 @@ function boot() {
       const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pp, 3));
       s.g.add(new THREE.Points(pg, reg(s, new THREE.PointsMaterial({ color: 0xffd27a, size: 0.13, blending: add, depthWrite: false }))));
       s.upd = t => { seeds.forEach((q, i) => { const k = 0.5 + 0.5 * Math.sin(t * 0.5 + q[0] * 6.283); pp.set([-1 + 2 * k, q[1], q[2]], i * 3); }); pg.attributes.position.needsUpdate = true; s.g.rotation.y = 0.5 + Math.sin(t * 0.2) * 0.3; }; out.push(s); }
+    return out;
+  }
+
+  /* ---------- rocks(莫芙):三块岩石 → 冷却的岩浆 → 硅氧四面体 → 岩石循环环 ---------- */
+  function rockScenes() {
+    const out = [], add = THREE.AdditiveBlending;
+    function lump(r, c, rough) { const g = new THREE.IcosahedronGeometry(r, 3), p = g.attributes.position, v = new THREE.Vector3(), k = rnd() * 5;
+      for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i); v.multiplyScalar(1 + 0.12 * Math.sin(v.x * 5 + k) * Math.cos(v.y * 4 + k)); p.setXYZ(i, v.x, v.y * 0.8, v.z); } g.computeVertexNormals();
+      return new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: c, roughness: rough, flatShading: true })); }
+    /* 0 三块岩石(岩浆岩、沉积岩、变质岩)缓缓转 */
+    { const s = SC(); [[0xd8b8a8, -1.3], [0xd8b07a, 0], [0xeeeae4, 1.3]].forEach(([c, x]) => { const m = lump(0.5, c, 0.9); reg(s, m.material); m.position.x = x; s.g.add(m); });
+      s.upd = t => { s.g.children.forEach((m, i) => { m.rotation.y = t * 0.3 + i; m.rotation.x = Math.sin(t * 0.4 + i) * 0.2; }); }; out.push(s); }
+    /* 1 一团岩浆,表面逐渐长出晶粒 */
+    { const s = SC(), m = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), reg(s, new THREE.MeshStandardMaterial({ color: 0x3a2018, emissive: 0xff5a1a, emissiveIntensity: 1, roughness: 0.6 }))); s.g.add(m);
+      const g = glowW(4.2); reg(s, g.material, 0.6); s.g.add(g);
+      const N = 160, pp = new Float32Array(N * 3); for (let i = 0; i < N; i++) { const u = rnd() * 2 - 1, a = rnd() * 6.283, q = Math.sqrt(1 - u * u); pp.set([Math.cos(a) * q * 1.02, u * 1.02, Math.sin(a) * q * 1.02], i * 3); }
+      const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pp, 3)); const pm = reg(s, new THREE.PointsMaterial({ color: 0xf0e6e0, size: 0.09, depthWrite: false })); s.g.add(new THREE.Points(pg, pm));
+      s.upd = t => { const k = (t * 0.12) % 1; m.material.emissiveIntensity = 1.2 * (1 - k); pm.size = 0.04 + k * 0.12; s.g.rotation.y = t * 0.15; }; out.push(s); }
+    /* 2 硅氧四面体 */
+    { const s = SC(), si = new THREE.Mesh(new THREE.SphereGeometry(0.32, 32, 24), reg(s, new THREE.MeshStandardMaterial({ color: 0x9aa6b8, metalness: 0.4, roughness: 0.4 }))); s.g.add(si);
+      const om = reg(s, new THREE.MeshStandardMaterial({ color: 0xff5a5a, roughness: 0.35 }), 0.95), bm = reg(s, new THREE.MeshBasicMaterial({ color: 0xd8d0e6 }), 0.5);
+      [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]].forEach(d => { const v = new THREE.Vector3(...d).normalize().multiplyScalar(1.1); const o = new THREE.Mesh(new THREE.SphereGeometry(0.42, 32, 24), om); o.position.copy(v); s.g.add(o);
+        const b = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.1, 8), bm); b.position.copy(v.clone().multiplyScalar(0.5)); b.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), v.clone().normalize()); s.g.add(b); });
+      s.upd = t => { s.g.rotation.y = t * 0.3; s.g.rotation.x = 0.4 + Math.sin(t * 0.2) * 0.2; }; out.push(s); }
+    /* 3 岩石循环:一个环上三块岩石 + 一团岩浆,颗粒绕环流动 */
+    { const s = SC(), R = 1.4, ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.03, 8, 120), reg(s, new THREE.MeshBasicMaterial({ color: 0xd8d0e6 }), 0.5)); s.g.add(ring);
+      [[0xd8b8a8, 0], [0xd8b07a, 1.57], [0xc9a6ff, 3.14], [0xff6a2a, 4.71]].forEach(([c, a]) => { const m = lump(0.28, c, 0.8); reg(s, m.material); if (c === 0xff6a2a) { m.material.emissive = new THREE.Color(0xff4a10); m.material.emissiveIntensity = 0.8; } m.position.set(Math.cos(a) * R, Math.sin(a) * R, 0); s.g.add(m); });
+      const N = 30, pp = new Float32Array(N * 3), pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pp, 3));
+      s.g.add(new THREE.Points(pg, reg(s, new THREE.PointsMaterial({ color: 0xffd27a, size: 0.09, blending: add, depthWrite: false }))));
+      s.upd = t => { for (let i = 0; i < N; i++) { const a = i / N * 6.283 - t * 0.4; pp.set([Math.cos(a) * R, Math.sin(a) * R, 0], i * 3); } pg.attributes.position.needsUpdate = true; s.g.rotation.x = 0.5; s.g.rotation.y = Math.sin(t * 0.2) * 0.4; }; out.push(s); }
     return out;
   }
 

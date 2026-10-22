@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>岩石是怎么"长"出来的? · 元素工坊 Element Forge</title>
+<meta name="description" content="元素工坊 · 给六块岩石分家,让岩浆慢慢或飞快地冷却、看晶体长多大,拆开矿物里的元素,再走三段旅程看懂岩石循环。创世计划 Genesis 化学世界。">
+<meta name="theme-color" content="#120c1a">
+<link rel="stylesheet" href="../ef.css?v=11">
+</head>
+<body class="stone">
+<div id="app"></div>
+<script src="../ef.js?v=11"></script>
+<script src="../ef-tri.js?v=1"></script>
+<script>
+/* ---------- 共享数据:岩石样本、程序纹理、分类控制器(2D/3D 共用) ---------- */
+(function () {
+function rnd(seed) { var s = seed || 7; return function () { s = (s * 16807) % 2147483647; return s / 2147483647; }; }
+/* 六块样本。cat:ig 岩浆岩 / sed 沉积岩 / met 变质岩 */
+var ROCKS = [
+  { k: 'granite', n: '花岗岩', cat: 'ig', clue: '看得见一颗颗大的矿物颗粒:粉红、白、黑,像芝麻糖。' },
+  { k: 'basalt', n: '玄武岩', cat: 'ig', clue: '黑灰色,颗粒细得几乎看不见,有时有小气孔。' },
+  { k: 'sandstone', n: '砂岩', cat: 'sed', clue: '摸起来粗糙,是一粒粒沙子粘在一起的,常有一层层的纹。' },
+  { k: 'limestone', n: '石灰岩', cat: 'sed', clue: '浅灰色,常能看到贝壳一样的化石。' },
+  { k: 'marble', n: '大理岩', cat: 'met', clue: '白色,有花纹,闪着细小的晶粒——它原来是石灰岩。' },
+  { k: 'slate', n: '板岩', cat: 'met', clue: '深灰色,能剥成一片片薄板——它原来是页岩(泥巴变成的岩石)。' }];
+var RBY = {}; ROCKS.forEach(function (r, i) { r.i = i; RBY[r.k] = r; });
+var CAT = { ig: ['岩浆岩', '#ff8a4a'], sed: ['沉积岩', '#e6c27a'], met: ['变质岩', '#c9a6ff'] };
+/* 程序纹理:画在任意 2D 上下文里 */
+function tex(x, kind, X, Y, W, H, seed) {
+  var r = rnd(seed || 11), i, n;
+  function dots(cols, cnt, rmin, rmax) { for (i = 0; i < cnt; i++) { x.fillStyle = cols[Math.floor(r() * cols.length)]; var px = X + r() * W, py = Y + r() * H, rr = rmin + r() * (rmax - rmin); x.beginPath(); x.ellipse(px, py, rr, rr * (0.6 + r() * 0.5), r() * 3, 0, 7); x.fill(); } }
+  if (kind === 'granite') { x.fillStyle = '#d8c2b4'; x.fillRect(X, Y, W, H); dots(['#f0e6e0', '#e8a890', '#c98a78', '#2a2626', '#f6f2ee'], W * H / 60, 2, 6); }
+  else if (kind === 'basalt') { x.fillStyle = '#3a3a3e'; x.fillRect(X, Y, W, H); dots(['#2a2a2e', '#4a4a50', '#323236'], W * H / 6, 0.5, 1.4); dots(['#1a1a1c'], W * H / 500, 1.5, 3); }
+  else if (kind === 'sandstone') { x.fillStyle = '#d8b07a'; x.fillRect(X, Y, W, H); for (i = 0; i < 6; i++) { x.fillStyle = 'rgba(160,100,50,' + (0.08 + r() * 0.12) + ')'; x.fillRect(X, Y + i * H / 6 + r() * 4, W, H / 14); } dots(['#e8c896', '#c89a62', '#b08050'], W * H / 10, 0.6, 1.6); }
+  else if (kind === 'limestone') { x.fillStyle = '#bdb8ae'; x.fillRect(X, Y, W, H); dots(['#c8c4ba', '#aaa59c'], W * H / 14, 0.6, 1.6);
+    for (i = 0; i < Math.max(2, W * H / 1800); i++) { var cx = X + r() * W, cy = Y + r() * H, s = 4 + r() * 6; x.strokeStyle = '#e8e2d4'; x.lineWidth = 1.2; x.beginPath(); for (n = 0; n < 5; n++) { x.moveTo(cx, cy + s * 0.6); x.lineTo(cx + (n - 2) * s * 0.35, cy - s * 0.5); } x.stroke(); x.beginPath(); x.arc(cx, cy, s * 0.7, Math.PI * 1.05, Math.PI * 1.95); x.stroke(); } }
+  else if (kind === 'marble') { x.fillStyle = '#efece6'; x.fillRect(X, Y, W, H); dots(['#f8f6f2', '#e2ded6'], W * H / 12, 0.8, 1.8);
+    x.strokeStyle = 'rgba(120,120,130,.45)'; x.lineWidth = 1.4; for (i = 0; i < 3; i++) { var yy = Y + r() * H; x.beginPath(); x.moveTo(X, yy); for (n = 1; n <= 8; n++) x.lineTo(X + n * W / 8, yy + (r() - 0.5) * H * 0.3 + n * 2); x.stroke(); } }
+  else if (kind === 'slate') { x.fillStyle = '#4a4e58'; x.fillRect(X, Y, W, H); for (i = 0; i < H / 3; i++) { x.fillStyle = 'rgba(' + (r() < 0.5 ? '30,32,38' : '90,94,104') + ',.35)'; x.fillRect(X, Y + i * 3, W, 1); } }
+  else if (kind === 'obsidian') { var g = x.createLinearGradient(X, Y, X + W, Y + H); g.addColorStop(0, '#0a0a10'); g.addColorStop(0.5, '#2a2a38'); g.addColorStop(1, '#08080c'); x.fillStyle = g; x.fillRect(X, Y, W, H); }
+}
+var DANGER = '<b style="color:#ff7a7a">请勿在现实中尝试!</b><br>这里的岩浆、火山都是虚拟的。真实熔岩约有七八百到一千多摄氏度,火山气体有毒——不要靠近活火山口和流动的熔岩;去火山景区走规定步道,听管理人员的。野外找岩石要有大人陪同,远离悬崖、陡坡和落石区,下雨后、涨水时不要进山谷河滩,在海边要留意涨潮;不要进入矿坑和采石场。自然保护区和地质公园里不要敲打或带走岩石;化石属于国家所有,不能私自挖掘。敲岩石要在大人指导下戴护目镜,旁边不要站人,碎片会飞溅。矿物不要舔、不要尝,摸完洗手。用酸检验石灰岩只能在实验室由老师做。';
+var SAFE = '<b style="color:#ff9a7a">安全常识</b>:岩浆和火山只在屏幕里看。野外找岩石要有大人陪同,远离悬崖和落石区;保护区里的岩石不要敲、不要带走。';
+function txt(stage, h, cls) { var p = document.createElement('p'); p.className = cls || 'note-sm'; p.innerHTML = h || ''; stage.appendChild(p); return p; }
+function card(stage, h, warn) { var d = document.createElement('div'); d.className = 'cab-card' + (warn ? ' warn' : ''); d.innerHTML = h; stage.appendChild(d); return d; }
+
+/* L0 分类控制器:view.mount(stage) 挂画面,view.pickCb 设为选中回调,view.draw(st) 重画 */
+function sorter(stage, api, view) {
+  var st = { sel: -1, put: {}, wrong: 0, done: false };
+  var pickRock = function (i) { if (st.done || st.put[i]) return; st.sel = i; EF.play('select'); var R = ROCKS[i]; msg.innerHTML = '<b>' + R.n + '</b>:' + R.clue + '它属于哪一家?'; view.draw(st); };
+  EF.RK._pick = pickRock; view.mount(stage, pickRock);
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips';
+  ctl.innerHTML = Object.keys(CAT).map(function (k) { return '<button class="ef-btn ghost chip" data-c="' + k + '" style="--c:' + CAT[k][1] + '">' + CAT[k][0] + '</button>'; }).join('');
+  stage.appendChild(ctl);
+  var msg = txt(stage, '架子上有六块岩石样本。先点一块,看它的样子,再把它放进三个"家"之一:<b>岩浆岩</b>(岩浆冷却凝固成的)、<b>沉积岩</b>(碎屑、生物遗体或水中析出的物质一层层沉积、压实固结成的)、<b>变质岩</b>(老岩石被高温高压"重新改造"的)。');
+  card(stage, DANGER, true);
+  ctl.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () {
+    if (st.done) return; if (st.sel < 0) { EF.play('tick'); msg.innerHTML = '先点一块岩石样本。'; return; }
+    var R = ROCKS[st.sel], c = b.dataset.c;
+    if (c === R.cat) { st.put[st.sel] = c; EF.play('fuse'); var left = ROCKS.length - Object.keys(st.put).length;
+      msg.innerHTML = '对!' + R.n + '是<b>' + CAT[c][0] + '</b>。' + ({ granite: '大颗粒说明它在地下深处慢慢冷却。', basalt: '颗粒细说明它在地表较快冷却。', sandstone: '沙粒被水冲下来,一层层堆起再压紧粘牢。', limestone: '贝壳和碳酸钙在海底一层层堆积。', marble: '石灰岩在高温高压下没有熔化,方解石重新结晶;它也可能被附近的岩浆"烤"出来。"大理石"是石材名,"大理岩"是地质名称。', slate: '页岩受挤压,矿物排成一个方向,所以能剥成片。' })[R.k] + (left ? '还剩 ' + left + ' 块。' : '');
+      st.sel = -1; if (!left) { st.done = true; setTimeout(function () { msg.innerHTML = '六块都回家了!看岩石的样子,就能猜出它是怎么"长"出来的。'; }, 1200); setTimeout(api.complete, 2200); } }
+    else { st.wrong++; EF.play('tick'); msg.innerHTML = R.n + '不属于' + CAT[c][0] + '。再看看线索:' + R.clue; if (st.wrong >= 2) api.say('大理岩和板岩都是"原来是别的岩石"——被改造过的。'); }
+    view.draw(st);
+  }; });
+  view.draw(st);
+}
+function sorter2D() {
+  var C, st = { sel: -1, put: {} }, cb;
+  function pos(i, W, H) { var cols = W < 520 ? 3 : 6, row = Math.floor(i / cols), col = i % cols, rows = Math.ceil(6 / cols); return { x: W * (col + 0.5) / cols, y: H * (row + 0.5) / rows - 8, r: Math.min(W / cols, H / rows) * 0.32 }; }
+  return {
+    mount: function (stage, pick) { cb = pick; C = EF.canvas(stage, 300);
+      C.c.addEventListener('pointerdown', function (e) { var q = C.pt(e); ROCKS.forEach(function (R, i) { var p = pos(i, C.W, C.H); if (Math.hypot(q.x - p.x, q.y - p.y) < p.r + 8) cb(i); }); });
+      (function loop() { if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+        ROCKS.forEach(function (R, i) { var p = pos(i, W, H), put = st.put[i];
+          x.save(); x.beginPath(); x.moveTo(p.x - p.r, p.y); for (var k = 1; k < 9; k++) { var a = k / 9 * 6.283, rr = p.r * (0.85 + 0.15 * Math.sin(k * 2.3 + i)); x.lineTo(p.x + Math.cos(a + Math.PI) * rr, p.y + Math.sin(a + Math.PI) * rr * 0.8); } x.closePath(); x.clip();
+          tex(x, R.k, p.x - p.r, p.y - p.r, p.r * 2, p.r * 2, 31 + i); x.restore();
+          if (st.sel === i) { x.strokeStyle = '#ffd27a'; x.lineWidth = 3; x.beginPath(); x.arc(p.x, p.y, p.r + 6, 0, 7); x.stroke(); x.lineWidth = 1; }
+          x.fillStyle = put ? CAT[put][1] : '#efe6f6'; x.font = '12px system-ui'; x.textAlign = 'center'; x.fillText(R.n + (put ? ' · ' + CAT[put][0] : ''), p.x, p.y + p.r * 0.8 + 16); });
+        requestAnimationFrame(loop); })(); },
+    draw: function (s) { st = s; }
+  };
+}
+EF.RK = { ROCKS: ROCKS, RBY: RBY, CAT: CAT, tex: tex, rnd: rnd, DANGER: DANGER, SAFE: SAFE, txt: txt, card: card, sorter: sorter, sorter2D: sorter2D };
+})();
+</script>
+<script>if (EF.glTier !== 'low') { var r3 = document.createElement('script'); r3.type = 'module'; r3.src = '../ef-rock3d.js?v=1'; document.head.appendChild(r3); }</script>
+<script>
+(function () {
+var RK = EF.RK, txt = RK.txt, card = RK.card;
+
+/* ---------- L0 岩石三兄弟(平面版) ---------- */
+function L0(stage, api) { RK.sorter(stage, api, RK.sorter2D()); }
+
+/* ---------- L1 冷却快慢(三窗联动):晶核少 → 晶粒大 ---------- */
+var GOALS = [{ t: 'coarse', w: '<b>粗粒</b>的岩石(像花岗岩,颗粒一眼就看得见)' }, { t: 'fine', w: '<b>细粒</b>的岩石(像玄武岩,颗粒细得几乎看不见)' }, { t: 'glass', w: '<b>玻璃一样</b>的岩石(像黑曜岩,几乎没有晶粒)' }];
+function kindOf(v) { return v <= 3 ? 'coarse' : v <= 8 ? 'fine' : 'glass'; }
+var KN = { coarse: '粗粒', fine: '细粒', glass: '玻璃质' };
+function L1(stage, api) {
+  var T = EF.tri(stage, { state: { v: 2, run: 0, res: null, g: 0 }, h: 250 }), st = T.state, done = false, miss = 0;
+  var ctl = document.createElement('div'); ctl.className = 'ctl';
+  ctl.innerHTML = '<span>冷却速度</span><input type="range" id="rate" min="1" max="10" value="2" style="flex:1;min-width:120px" aria-label="冷却速度"><b id="rv" style="min-width:5em">很慢</b><button class="ef-btn" id="cool">开始冷却</button>';
+  stage.appendChild(ctl);
+  var msg = txt(stage, '');
+  card(stage, RK.SAFE, true);
+  function lab(v) { return v <= 3 ? '很慢(地下深处)' : v <= 8 ? '较快(地表熔岩)' : '极快(示意)'; }
+  function intro() { msg.innerHTML = '订单 ' + (st.g + 1) + '/3:做一块' + GOALS[st.g].w + '。调好冷却速度,点"开始冷却"。'; }
+  intro();
+  var rate = ctl.querySelector('#rate'), rv = ctl.querySelector('#rv'); rv.textContent = lab(2);
+  rate.oninput = function () { rv.textContent = lab(+rate.value); T.set({ v: +rate.value }, 'ctl'); };
+  ctl.querySelector('#cool').onclick = function () { if (done) return; EF.play('whoosh'); T.set({ run: st.run + 1, res: null }, 'ctl'); };
+  /* 微观:格子里的晶核生长 */
+  var CU = EF.canvas(T.pane.micro, 250), GW = 64, GH = 40, grid = new Int16Array(GW * GH), cols = [], phase = 'idle', tick = 0, lastRun = 0, frozenAt = 0;
+  for (var i = 0; i < 400; i++) { var r = Math.random(); var b0 = r < 0.4 ? [236, 228, 222] : r < 0.7 ? [222, 160, 140] : r < 0.85 ? [200, 196, 190] : [52, 46, 46], f = 0.72 + Math.random() * 0.38; cols.push(b0.map(function (c) { return Math.min(255, Math.round(c * f)); })); }
+  function start(v) {
+    grid.fill(0); tick = 0; phase = 'grow';
+    if (kindOf(v) === 'glass') { phase = 'glass'; finish('glass'); return; }
+    var n = Math.round(v <= 3 ? 3 + v * 3 : 18 + (v - 3) * 28);   /* 冷得越快,同时冒出的晶核越多(示意) */
+    for (var k = 1; k <= n; k++) grid[Math.floor(Math.random() * GW * GH)] = k;
+  }
+  function grow() {
+    var nxt = grid.slice(), empty = 0;
+    for (var y = 0; y < GH; y++) for (var x = 0; x < GW; x++) { var j = y * GW + x; if (grid[j]) continue; empty++;
+      var nb = [x > 0 ? grid[j - 1] : 0, x < GW - 1 ? grid[j + 1] : 0, y > 0 ? grid[j - GW] : 0, y < GH - 1 ? grid[j + GW] : 0].filter(Boolean);
+      if (nb.length && Math.random() < 0.55) nxt[j] = nb[Math.floor(Math.random() * nb.length)]; }
+    grid = nxt; return empty;
+  }
+  function finish(k) { phase = 'done'; T.set({ res: k }, 'micro'); }
+  (function loop() {
+    if (!CU.c.isConnected) return; var x = CU.x, W = CU.W, H = CU.H; x.clearRect(0, 0, W, H);
+    if (st.run !== lastRun) { lastRun = st.run; start(st.v); }
+    if (phase === 'grow') { var steps = EF.reduced ? 200 : 2; for (var s = 0; s < steps && phase === 'grow'; s++) { if (grow() === 0) finish(kindOf(st.v)); } }
+    var cw = W / GW, ch = (H - 24) / GH;
+    for (var y = 0; y < GH; y++) for (var xx = 0; xx < GW; xx++) { var v = grid[y * GW + xx];
+      if (phase === 'glass' || (phase === 'done' && st.res === 'glass')) x.fillStyle = 'rgba(30,28,40,' + (0.85 + 0.15 * ((xx * 7 + y * 13) % 5) / 5) + ')';
+      else if (!v) x.fillStyle = phase === 'idle' ? 'rgba(255,120,40,.55)' : 'rgba(255,' + (100 + 40 * Math.sin(xx + y)) + ',40,.6)';
+      else { var c = cols[v % cols.length]; x.fillStyle = 'rgb(' + c.join(',') + ')'; }
+      x.fillRect(xx * cw, y * ch, cw + 0.5, ch + 0.5); }
+    x.fillStyle = '#e6dff0'; x.font = '11px system-ui'; x.textAlign = 'left';
+    x.fillText(phase === 'idle' ? '一滩热岩浆(示意)' : phase === 'grow' ? '晶核长大中……' : st.res === 'glass' ? '晶体几乎长不出来,凝成"玻璃"' : '凝固了:相邻色块是不同晶粒(颜色只为区分)', 4, H - 6);
+    requestAnimationFrame(loop);
+  })();
+  /* 宏观:地下/地表示意 + 结果岩石 */
+  var CM = EF.canvas(T.pane.macro, 250);
+  (function loop() {
+    if (!CM.c.isConnected) return; var x = CM.x, W = CM.W, H = CM.H; x.clearRect(0, 0, W, H);
+    x.fillStyle = '#2a3a5a'; x.fillRect(0, 0, W, H * 0.22); x.fillStyle = '#5a4436'; x.fillRect(0, H * 0.22, W, H * 0.5);
+    x.fillStyle = 'rgba(255,255,255,.75)'; x.font = '10px system-ui'; x.textAlign = 'left'; x.fillText('地表', 6, H * 0.2); x.fillText('地下深处', 6, H * 0.68);
+    var k = kindOf(st.v), py = k === 'coarse' ? H * 0.58 : H * 0.2;
+    var g = x.createRadialGradient(W * 0.6, py, 2, W * 0.6, py, 34); g.addColorStop(0, 'rgba(255,200,80,.95)'); g.addColorStop(1, 'rgba(255,80,20,0)'); x.fillStyle = g; x.beginPath(); x.ellipse(W * 0.6, py, 46, 20, 0, 0, 7); x.fill();
+    x.fillStyle = '#ffd9b0'; x.textAlign = 'center'; x.fillText(k === 'coarse' ? '岩浆在地下慢慢冷却' : k === 'fine' ? '熔岩流到地表,较快冷却' : '黏稠岩浆难结晶,凝成玻璃', W * 0.6, py + 34);
+    if (st.res) { var rx = W * 0.3, ry = H * 0.78, rw = W * 0.4, rh = H * 0.2; x.save(); x.beginPath(); x.roundRect ? x.roundRect(rx, ry, rw, rh, 8) : x.rect(rx, ry, rw, rh); x.clip(); RK.tex(x, st.res === 'coarse' ? 'granite' : st.res === 'fine' ? 'basalt' : 'obsidian', rx, ry, rw, rh, 5); x.restore();
+      x.fillStyle = '#efe6f6'; x.textAlign = 'left'; x.font = '12px system-ui'; x.fillText('→ ' + KN[st.res], rx + rw + 8, ry + rh / 2 + 4); }
+    requestAnimationFrame(loop);
+  })();
+  /* 符号 */
+  var sy = document.createElement('div'); sy.className = 'tri-sym'; T.pane.sym.appendChild(sy);
+  T.on(function (s, ch) {
+    sy.innerHTML = '<div class="eq" style="font-size:16px">冷却越慢 → 晶核越少 → 晶粒越大</div>' +
+      '<p class="note-sm">冷却速度:<b>' + lab(s.v) + '</b></p>' +
+      '<p class="note-sm">地下深处:岩浆被岩石裹着,散热很慢,可能要几百年到上百万年才凝固——少数晶核有充足的时间长大,成了<b>粗粒</b>(侵入岩,如花岗岩)。</p>' +
+      '<p class="note-sm">地表:熔岩表面几分钟就结壳,整体几天到几年凝固,晶核一下子冒出很多,每颗都长不大,成了<b>细粒</b>(喷出岩,如玄武岩)。如果岩浆富含二氧化硅、非常黏稠,原子很难排成晶体,冷却又较快,就成了几乎没有晶粒的<b>火山玻璃</b>(如黑曜岩)。</p>' +
+      '<p class="note-sm">(示意:真实的花岗岩和玄武岩成分也不一样,这里只比冷却快慢。同成分对照:花岗岩那样的岩浆冷得快成流纹岩,玄武岩那样的岩浆冷得慢成辉长岩;黑曜岩成分接近花岗岩)</p>';
+    if (ch.indexOf('res') > -1 && s.res && !done) {
+      var G = GOALS[s.g];
+      if (s.res === G.t) { EF.play('fuse'); var g2 = s.g + 1;
+        if (g2 === GOALS.length) { done = true; msg.innerHTML = '三张订单都完成了!同样是岩浆,冷得慢长出大晶粒,冷得快长出小晶粒,快到来不及就成了玻璃。'; setTimeout(api.complete, 1700); }
+        else { msg.innerHTML = '做出了' + KN[s.res] + '的岩石!'; setTimeout(function () { T.set({ g: g2 }, 'ctl'); intro(); }, 1300); } }
+      else { miss++; EF.play('tick'); msg.innerHTML = '这次得到的是' + KN[s.res] + '的岩石,订单要的是' + G.w + '。调一调冷却速度再试。'; if (miss >= 2) api.say('想要晶粒大,就让它冷得慢一点。'); }
+    }
+  });
+}
+
+/* ---------- L2 矿物里的元素 ---------- */
+var CRUST = [['O', '氧', 48.60], ['Si', '硅', 26.30], ['Al', '铝', 7.73], ['Fe', '铁', 4.75], ['Ca', '钙', 3.45], ['Na', '钠', 2.74], ['K', '钾', 2.47], ['Mg', '镁', 2.00]];
+var MIN = [{ n: '石英', f: 'SiO₂', ks: ['Si', 'O'], c: '#e8eef6', d: '透明或白色,六方柱状;大多数河沙、海滩沙的主要成分就是它。' },
+  { n: '方解石', f: 'CaCO₃', ks: ['Ca', 'C', 'O'], c: '#f4ead2', d: '石灰岩和大理岩的主要矿物;敲碎后是一块块菱面体。' },
+  { n: '钾长石', f: 'KAlSi₃O₈', ks: ['K', 'Al', 'Si', 'O'], c: '#e8a890', d: '花岗岩里常见肉红色(也有白色)的颗粒;长石是地壳里最多的一类矿物。' }];
+var EK = ['O', 'Si', 'Al', 'Fe', 'Ca', 'Na', 'K', 'Mg', 'C'], EN = { O: '氧', Si: '硅', Al: '铝', Fe: '铁', Ca: '钙', Na: '钠', K: '钾', Mg: '镁', C: '碳' };
+function L2(stage, api) {
+  var C = EF.canvas(stage, 300), pick = [], r = 0, done = false, ok = null, miss = 0;
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips';
+  ctl.innerHTML = EK.map(function (k) { return '<button class="ef-btn ghost chip" data-k="' + k + '">' + EN[k] + ' ' + k + '</button>'; }).join('') + '<button class="ef-btn" id="chk">拆开看看</button>';
+  stage.appendChild(ctl);
+  var msg = txt(stage, '');
+  card(stage, RK.SAFE, true);
+  function intro() { msg.innerHTML = '第 ' + (r + 1) + '/3 种矿物:<b>' + MIN[r].n + '</b>。' + MIN[r].d + '它是由哪几种元素组成的?选好后点"拆开看看"。'; }
+  intro();
+  ctl.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () { if (done) return; var k = b.dataset.k, i = pick.indexOf(k); if (i > -1) pick.splice(i, 1); else pick.push(k); b.classList.toggle('on', i < 0); EF.play('tick'); }; });
+  ctl.querySelector('#chk').onclick = function () {
+    if (done) return; var M = MIN[r], good = pick.length === M.ks.length && M.ks.every(function (k) { return pick.indexOf(k) > -1; });
+    if (good) { EF.play('fuse'); ok = r; r++;
+      if (r === MIN.length) { done = true; msg.innerHTML = '三种都拆开了!石英和长石里都有<b>硅和氧</b>——地壳里最多的两种元素。长石、云母、橄榄石这些含硅和氧的<b>硅酸盐矿物</b>占了地壳的大部分;石英是二氧化硅,化学上属于氧化物。'; setTimeout(api.complete, 1800); }
+      else { msg.innerHTML = M.n + ' = <b>' + M.f + '</b>,对了!' + (r === 1 ? '石英里每个硅原子被四个氧原子围成小"四面体",四面体共用氧原子连成网;它是氧化物,不算硅酸盐。' : '方解石是碳酸盐,里面没有硅。') + '下一种来了。'; setTimeout(function () { pick = []; ctl.querySelectorAll('.chip').forEach(function (z) { z.classList.remove('on'); }); intro(); }, 1500); } }
+    else { miss++; EF.play('tick'); var extra = pick.filter(function (k) { return M.ks.indexOf(k) < 0; }), lack = M.ks.filter(function (k) { return pick.indexOf(k) < 0; });
+      msg.innerHTML = (extra.length ? '多选了' + extra.map(function (k) { return EN[k]; }).join('、') + '。' : '') + (lack.length ? '还少了 ' + lack.length + ' 种元素。' : '') + (lack.indexOf('C') > -1 ? '碳不在地壳前 8 名里,但这种矿物离不开它。' : '看看左边地壳里哪些元素最多。');
+      if (miss >= 2) api.say('化学式就是配方:' + M.n + '的化学式是 ' + M.f + '。'); }
+  };
+  (function loop(t) {
+    if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+    var bw = Math.min(W * 0.5, 300), y0 = 30, rh = (H - 60) / CRUST.length;
+    x.fillStyle = '#e6dff0'; x.font = '12px system-ui'; x.textAlign = 'left'; x.fillText('地壳里含量最多的 8 种元素(质量分数,不同资料略有差别)', 10, 18);
+    CRUST.forEach(function (e, i) { var y = y0 + i * rh, w = e[2] / 50 * (bw - 70), on = pick.indexOf(e[0]) > -1;
+      x.fillStyle = on ? '#ffd27a' : '#c9a6ff'; x.fillRect(46, y + 3, w, rh - 8); x.fillStyle = '#efe6f6'; x.textAlign = 'right'; x.fillText(e[1] + ' ' + e[0], 42, y + rh / 2 + 3); x.textAlign = 'left'; x.fillText(e[2].toFixed(2) + '%', 50 + w, y + rh / 2 + 3); });
+    x.fillStyle = 'rgba(220,210,235,.6)'; x.font = '10px system-ui'; x.fillText('数据:初中化学教材常用值', 10, H - 6);
+    /* 右边:当前矿物 + 硅氧四面体 */
+    var cx = bw + (W - bw) / 2, cy = H * 0.42, M = MIN[Math.min(r, MIN.length - 1)];
+    if (r < MIN.length || done) {
+      x.save(); x.translate(cx, cy); x.rotate(EF.reduced ? 0 : Math.sin(t / 1600) * 0.15);
+      x.fillStyle = M.c; x.strokeStyle = 'rgba(255,255,255,.7)'; x.lineWidth = 1.5;
+      if (M.n === '石英') { x.beginPath(); x.moveTo(-22, 40); x.lineTo(-22, -20); x.lineTo(0, -48); x.lineTo(22, -20); x.lineTo(22, 40); x.closePath(); x.globalAlpha = 0.75; x.fill(); x.globalAlpha = 1; x.stroke(); }
+      else if (M.n === '方解石') { x.beginPath(); x.moveTo(-40, 20); x.lineTo(-10, -36); x.lineTo(40, -20); x.lineTo(10, 36); x.closePath(); x.fill(); x.stroke(); x.beginPath(); x.moveTo(-10, -36); x.lineTo(10, 36); x.stroke(); }
+      else { x.fillRect(-36, -28, 72, 56); x.strokeRect(-36, -28, 72, 56); x.beginPath(); x.moveTo(-36, -28); x.lineTo(-20, -40); x.lineTo(52, -40); x.lineTo(36, -28); x.fill(); x.stroke(); }
+      x.restore(); x.lineWidth = 1;
+      x.fillStyle = '#efe6f6'; x.textAlign = 'center'; x.font = '700 14px system-ui'; x.fillText(M.n + (ok !== null && ok >= M.i ? '' : ''), cx, cy + 66);
+    }
+    if (ok !== null) { var m2 = MIN[ok]; x.font = '700 16px system-ui'; x.fillStyle = '#ffd27a'; x.textAlign = 'center'; x.fillText(m2.n + ' = ' + m2.f, cx, H - 40); }
+    /* 小四面体:Si 在中心,四个 O */
+    var tx = W - 46, ty = 46; [[0, -22], [-20, 12], [20, 12], [0, 2]].forEach(function (p, i) { EF.ball(x, tx + p[0], ty + p[1], i === 3 ? 7 : 9, i === 3 ? '#9aa6b8' : '#ff6a6a', i === 3 ? 'Si' : 'O'); });
+    x.fillStyle = 'rgba(220,210,235,.75)'; x.font = '10px system-ui'; x.textAlign = 'center'; x.fillText('硅氧四面体', tx, ty + 34);
+    requestAnimationFrame(loop);
+  })(0);
+  MIN.forEach(function (m, i) { m.i = i; });
+}
+
+/* ---------- L3 岩石循环 ---------- */
+var NODES = { mag: ['岩浆', 0.5, 0.86, '#ff7a3a'], ig: ['岩浆岩', 0.14, 0.5, '#ff8a4a'], sedi: ['沉积物', 0.5, 0.12, '#d8c08a'], sed: ['沉积岩', 0.86, 0.38, '#e6c27a'], met: ['变质岩', 0.78, 0.78, '#c9a6ff'] };
+var PROC = [['wea', '风化 · 侵蚀 · 搬运', 'sedi'], ['dep', '沉积(一层层堆积)', 'sedi'], ['lit', '压实 · 胶结(固结成岩)', 'sed'], ['heat', '高温高压(变质作用)', 'met'], ['melt', '熔化(重熔)', 'mag'], ['cool', '冷却凝固', 'ig']];
+var PBY = {}; PROC.forEach(function (p) { PBY[p[0]] = p; });
+var TRIPS = [{ a: 'ig', n: '花岗岩', to: '砂岩', ans: [['wea', 'dep', 'lit']] }, { a: 'sed', n: '石灰岩', to: '大理岩', ans: [['heat']] }, { a: 'met', n: '板岩', to: '花岗岩', ans: [['melt', 'cool'], ['heat', 'melt', 'cool']] }];
+function L3(stage, api) {
+  var C = EF.canvas(stage, 320), seq = [], r = 0, done = false, dot = null, path = [], miss = 0;
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips';
+  ctl.innerHTML = PROC.map(function (p) { return '<button class="ef-btn ghost chip" data-p="' + p[0] + '">' + p[1] + '</button>'; }).join('') + '<button class="ef-btn ghost" id="undo">撤一步</button><button class="ef-btn" id="go">出发!</button>';
+  stage.appendChild(ctl);
+  var msg = txt(stage, '');
+  card(stage, RK.DANGER, true);
+  function intro() { var R = TRIPS[r]; msg.innerHTML = '旅程 ' + (r + 1) + '/3:把一块<b>' + R.n + '</b>变成<b>' + R.to + '</b>。按顺序点要经过的过程,再点"出发!"。'; seq = []; drawSeq(); dot = { n: R.a, x: NODES[R.a][1], y: NODES[R.a][2] }; path = []; }
+  var seqEl = document.createElement('p'); seqEl.className = 'note-sm'; stage.insertBefore(seqEl, msg);
+  function drawSeq() { seqEl.innerHTML = '你的路线:' + TRIPS[r].n + (seq.length ? ' → ' + seq.map(function (k) { return PBY[k][1]; }).join(' → ') : ' → ?'); }
+  intro();
+  ctl.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () { if (done || seq.length >= 5) return; seq.push(b.dataset.p); EF.play('tick'); drawSeq(); }; });
+  ctl.querySelector('#undo').onclick = function () { seq.pop(); EF.play('tick'); drawSeq(); };
+  ctl.querySelector('#go').onclick = function () {
+    if (done || !seq.length) return; var R = TRIPS[r], good = R.ans.some(function (a) { return a.join() === seq.join(); });
+    path = seq.map(function (k) { return PBY[k][2]; }); EF.play('whoosh');
+    if (good) { EF.play('fuse');
+      var why = ['花岗岩风化成碎屑和沙粒,被水冲走、在低处一层层沉下来,再被压紧、被胶结物粘牢,就成了砂岩。', '石灰岩被埋到深处,受高温高压,方解石重新结晶,变成了大理岩——它没有熔化。', '板岩被带到更深处,温度、压力越来越高,终于熔化成岩浆;岩浆在地下慢慢冷却凝固,又成了花岗岩一类的岩浆岩。'][r];
+      r++; if (r === TRIPS.length) { done = true; msg.innerHTML = why + '<br>三段旅程连起来就是<b>岩石循环</b>:岩石没有"终点",只是一直在变——地球内部的热和板块运动、太阳能和重力推动的风化搬运,一起推着它转。'; setTimeout(api.complete, 2600); }
+      else { msg.innerHTML = why; setTimeout(function () { if (!done) intro(); }, 2600); } }
+    else { miss++; EF.play('tick'); var last = path[path.length - 1], want = { '砂岩': 'sed', '大理岩': 'met', '花岗岩': 'ig' }[R.to];
+      msg.innerHTML = '这条路线' + (last === want ? '最后到对了地方,但中间的步骤不对或多了。' : '最后到了"' + NODES[last][0] + '",不是' + R.to + '。') + '撤回重排试试。';
+      if (miss >= 2) api.say(['沙粒先要被冲走、堆起来,再压紧粘牢。', '变质只要"高温高压",不用熔化。', '要变成岩浆岩,得先熔化成岩浆,再冷却。'][r]); }
+  };
+  (function loop() {
+    if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+    function P(k) { return [NODES[k][1] * W, NODES[k][2] * H]; }
+    var E = [['ig', 'sedi', '风化侵蚀'], ['sed', 'sedi', ''], ['met', 'sedi', ''], ['sedi', 'sed', '压实胶结'], ['sed', 'met', '高温高压'], ['ig', 'met', ''], ['met', 'mag', '熔化'], ['sed', 'mag', ''], ['ig', 'mag', ''], ['mag', 'ig', '冷却凝固']];
+    E.forEach(function (e) { var a = P(e[0]), b = P(e[1]); x.strokeStyle = 'rgba(220,210,235,.28)'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(a[0], a[1]); x.lineTo(b[0], b[1]); x.stroke(); var an = Math.atan2(b[1] - a[1], b[0] - a[0]), mx = a[0] + (b[0] - a[0]) * 0.62, my = a[1] + (b[1] - a[1]) * 0.62; x.fillStyle = 'rgba(220,210,235,.55)'; x.beginPath(); x.moveTo(mx + Math.cos(an) * 7, my + Math.sin(an) * 7); x.lineTo(mx + Math.cos(an + 2.5) * 7, my + Math.sin(an + 2.5) * 7); x.lineTo(mx + Math.cos(an - 2.5) * 7, my + Math.sin(an - 2.5) * 7); x.fill();
+      if (e[2]) { x.fillStyle = 'rgba(220,210,235,.6)'; x.font = '10px system-ui'; x.textAlign = 'center'; x.fillText(e[2], (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - 4); } });
+    Object.keys(NODES).forEach(function (k) { var p = P(k), N = NODES[k]; x.fillStyle = N[3]; x.globalAlpha = 0.85; x.beginPath(); x.ellipse(p[0], p[1], 40, 20, 0, 0, 7); x.fill(); x.globalAlpha = 1; x.fillStyle = '#1a1020'; x.font = '700 13px system-ui'; x.textAlign = 'center'; x.fillText(N[0], p[0], p[1] + 4); });
+    if (dot) { if (path.length) { var tg = P(path[0]); dot.x += (tg[0] / W - dot.x) * (EF.reduced ? 1 : 0.05); dot.y += (tg[1] / H - dot.y) * (EF.reduced ? 1 : 0.05); if (Math.hypot(tg[0] / W - dot.x, tg[1] / H - dot.y) < 0.01) path.shift(); }
+      EF.ball(x, dot.x * W, dot.y * H - 26, 9, '#ffd27a', ''); }
+    x.fillStyle = 'rgba(220,210,235,.55)'; x.font = '10px system-ui'; x.textAlign = 'left'; x.fillText('任何一种岩石露出地表,都会被风化;埋到深处,都可能变质或熔化', 6, H - 6);
+    requestAnimationFrame(loop);
+  })();
+}
+
+function guard(stage, api) { var tok = {}, fired = false; stage._tok = tok; return { say: api.say, complete: function () { if (fired || stage._tok !== tok) return; fired = true; api.complete(); } }; }
+function pick(f2, k) { return function (stage, api0) { var api = guard(stage, api0); if (EF.R3 && EF.R3[k]) { try { return EF.R3[k](stage, api); } catch (e) { console.warn('[ef] 3D 玩法出错,回落平面版', e); stage.innerHTML = ''; } } return f2(stage, api); }; }
+var LEVELS = [
+  { title: '岩石三兄弟', setup: pick(L0, 'L0'), task: '点一块岩石看线索,把六块样本分进岩浆岩、沉积岩、变质岩三个"家"。',
+    ask: { q: '按"怎么形成的"来分,岩石可以分成几大类?', opts: ['一类,石头都一样', '三类', '一百类'], ok: 1 },
+    hints: ['花岗岩和玄武岩都由岩浆冷却而成,颗粒大小取决于冷得快慢。', '由沙粒粘成的、或带着贝壳化石的,是一层层沉积出来的。', '大理岩原来是石灰岩,板岩原来是页岩——都在没有熔化的情况下被高温高压改造过。'],
+    explain: '岩石按形成方式分三大类:<b>岩浆岩</b>(岩浆冷却凝固,如花岗岩、玄武岩)、<b>沉积岩</b>(碎屑、生物遗体或化学沉淀物一层层沉积后压实固结,如砂岩、石灰岩,常有层理,有的含化石)、<b>变质岩</b>(原有岩石在高温高压下、没有熔化而发生改变,如大理岩、板岩)。看颗粒、层理、化石,就能猜它的身世。' },
+  { title: '冷却快慢', setup: pick(L1, 'L1'), task: '调冷却速度,做出粗粒、细粒、玻璃质三种岩石。',
+    ask: { q: '同样的岩浆,冷却得越慢,长出来的晶粒——', opts: ['越大', '越小', '一样大'], ok: 0 },
+    hints: ['花岗岩的大颗粒,是在地下深处慢慢长的。', '冷得快,同时冒出的晶核多,每颗都长不大。', '玻璃质:把速度拉到最快(示意;真实黑曜岩还因为岩浆特别黏稠)。'],
+    explain: '岩浆冷却时,先冒出一些小晶核,原子再一个个排上去,晶体慢慢长大。<b>冷得慢</b>:晶核少、时间长,晶粒大(地下深处的侵入岩,如花岗岩);<b>冷得快</b>:晶核多、时间短,晶粒小(地表的喷出岩,如玄武岩);<b>富含二氧化硅、非常黏稠的岩浆冷得又较快</b>:原子很难排成晶体,成了几乎没有晶粒的火山玻璃(如黑曜岩)。和晶体任务里的"排队"是同一个道理。' },
+  { title: '矿物里的元素', setup: pick(L2, 'L2'), task: '为石英、方解石、钾长石选出组成它们的元素。',
+    ask: { q: '地壳里含量最多的元素是——', opts: ['铁', '氧', '金'], ok: 1 },
+    hints: ['看左边的条形图:最长的两根是谁?', '方解石的化学式是 CaCO₃。', '钾长石的名字里就藏着一种元素,再加上铝、硅、氧。'],
+    explain: '岩石由<b>矿物</b>组成,矿物又由元素组成。地壳里最多的是<b>氧</b>和<b>硅</b>,它们组成"硅氧四面体"。四面体和铝、铁、钙、钠、钾、镁搭配,形成长石、云母、橄榄石等<b>硅酸盐矿物</b>,占了地壳的大部分;四面体彼此共用氧原子,就是石英(SiO₂,化学上属于氧化物)。石灰岩的方解石则是碳酸钙,来自海水和生物;滴稀盐酸会冒泡:CaCO₃ + 2HCl = CaCl₂ + H₂O + CO₂↑(只在实验室由老师做)。' },
+  { title: '岩石循环', setup: pick(L3, 'L3'), task: '排出三段旅程的过程顺序:花岗岩→砂岩、石灰岩→大理岩、板岩→花岗岩。',
+    ask: { q: '一块岩石能不能变成另一类岩石?', opts: ['不能,岩石永远不变', '能,岩石一直在循环变化', '只有人工才能'], ok: 1 },
+    hints: ['花岗岩变砂岩:先被拆碎,再被搬走、堆起、粘牢。', '石灰岩变大理岩只要一步,而且不熔化。', '板岩变花岗岩:先熔化,再冷却(路上经过高温高压也算对)。'],
+    explain: '三类岩石可以互相转化:露出地表的岩石被风化、侵蚀,碎屑沉积后压实胶结成沉积岩;埋到深处受高温高压成为变质岩;温度再高就熔化成岩浆,冷却凝固又成为岩浆岩。这叫<b>岩石循环</b>。推动它的有<b>内力</b>(地球内部的热和板块运动,同样的力量也会引发地震和火山)和<b>外力</b>(太阳能、重力推动的风化、侵蚀、搬运、沉积)。' }
+];
+var NOTES = { title: '元素工坊 · 岩石是怎么"长"出来的?', items: [
+  '岩石按形成方式分三大类:岩浆岩(岩浆冷却凝固)、沉积岩(碎屑、生物或化学沉积物压实固结,常有层理,有的含化石)、变质岩(原有岩石在高温高压下、未熔化而改变)。',
+  '岩浆冷却越慢,晶核越少、晶粒越大:地下的花岗岩是粗粒,地表的玄武岩是细粒;富含二氧化硅的黏稠岩浆较快冷却,会成为几乎没有晶粒的火山玻璃(黑曜岩)。',
+  '地壳中含量最多的元素依次是氧、硅、铝、铁;硅和氧组成的硅氧四面体是石英和硅酸盐矿物的"积木"。',
+  '石英 SiO₂(氧化物)、方解石 CaCO₃(碳酸盐)、钾长石 KAlSi₃O₈(硅酸盐)。',
+  '岩石循环:风化侵蚀 → 沉积 → 压实胶结 → 沉积岩;高温高压 → 变质岩;熔化 → 岩浆;冷却凝固 → 岩浆岩。动力来自内力(地球内部的热、板块运动)和外力(太阳能、重力)。',
+  '安全:不要靠近活火山口和熔岩;野外找岩石要有大人陪同,远离悬崖落石、矿坑和采石场,海边留意涨潮;保护区里的岩石不要敲、不要带走,化石不能私挖;敲岩石戴护目镜、旁边不站人;矿物不舔不尝,摸完洗手。'],
+  bridge: '推动岩石循环的内力之一是板块运动,它也会引发地震——星桥 ef.rocks 通往天枢「地震在告诉我们什么?」(对岸点亮后开通)。' };
+EF.mission('rocks', LEVELS, NOTES);
+})();
+</script>
+</body>
+</html>
