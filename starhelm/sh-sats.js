@@ -60,7 +60,7 @@
   function build() {
     var r = U.root = h('section', 'ml ml--sat');
     r.innerHTML =
-      '<header class="ml-hd"><div><small>星域 I · 天枢 · 家园</small><b>卫星星海 · 天上到底有多少颗卫星?</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
+      '<header class="ml-hd"><div><small>星域 I · 北辰 · 家园</small><b>卫星星海 · 天上到底有多少颗卫星?</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
       '<div class="ml-body"><div class="ml-pane ml-space"><div class="ml-cap"><span class="sat-time"></span></div><canvas class="ml-cv3"></canvas><div class="sat-load">正在加载 3.5 万个轨道…</div>' +
       '<div class="sat-leg"><i style="--c:#8fd0ff"></i>星链 <i style="--c:#4de8ff"></i>近地 <i style="--c:#7dff9a"></i>中轨 <i style="--c:#ffd23f"></i>地球静止 <i style="--c:#d68bff"></i>大椭圆</div>' +
       '<div class="ml-note">工作中卫星按真实轨道推算 · 失效卫星/残骸/碎片的高度与倾角真实,位置为示意 · 地球与轨道同比例</div></div>' +
