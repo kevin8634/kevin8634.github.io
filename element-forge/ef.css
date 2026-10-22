@@ -154,3 +154,28 @@ body.mission.frost .cn{border-color:#9fdcff;filter:drop-shadow(0 0 6px #7ad7ff88
 body.mission.frost .ef-top,body.mission.frost .m-stage .ctl{border-color:rgba(140,215,255,.22)}
 body.mission.frost .m-stage{border-color:rgba(140,215,255,.26);background:rgba(6,14,26,.42)}
 body.mission.frost .m-guide{box-shadow:0 0 40px rgba(122,215,255,.1)}
+/* v0.5 三窗联动 ef-tri.js */
+.tri{margin-top:4px}
+.tri-tabs{display:none;margin:0 0 8px}
+.tri-tabs button{position:relative}.tri-tabs button i{position:absolute;top:4px;right:6px;width:7px;height:7px;border-radius:50%;background:#ff7ad9;opacity:0;transition:opacity .2s}
+.tri-tabs button.ping i{opacity:1}
+.tri-grid{display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:10px}
+.tri-pane{background:rgba(8,10,24,.55);border:1px solid var(--line);border-radius:12px;padding:8px;min-width:0;display:flex;flex-direction:column;transition:box-shadow .4s}
+.tri-pane header{display:flex;align-items:baseline;gap:6px;font-size:13px;margin:0 2px 6px}.tri-pane header b{color:var(--gold2)}.tri-pane header small{color:var(--dim)}
+.tri-body{flex:1;position:relative;min-height:240px}
+.tri.pulse .tri-pane{animation:triPulse .6s ease-out}
+@keyframes triPulse{0%{box-shadow:0 0 0 rgba(255,122,217,0)}30%{box-shadow:0 0 18px rgba(255,122,217,.35)}100%{box-shadow:0 0 0 rgba(255,122,217,0)}}
+.tri-sym{font-size:15px;line-height:1.7}
+.eq{font:600 20px/1.5 "Cambria Math","Times New Roman",serif;text-align:center;margin:10px 0;letter-spacing:.5px}
+.eq .dim{opacity:.35}.eq .hot{color:#ffd27a;text-shadow:0 0 10px rgba(255,210,122,.5)}
+.ph-big{font:800 40px/1 system-ui;text-align:center;margin:6px 0 2px}.ph-cap{text-align:center;color:var(--dim);font-size:13px}
+.hbar{height:10px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 0}.hbar i{display:block;height:100%;background:linear-gradient(90deg,#ff5a7a,#ffd27a);transition:width .3s}
+.cab-card{border:1px solid rgba(255,122,217,.35);background:rgba(40,10,40,.45);border-radius:12px;padding:8px 12px;margin:8px 0 0;font-size:13.5px;line-height:1.6}
+.cab-card.warn{border-color:rgba(255,90,90,.5);background:rgba(50,8,12,.5)}
+@media (max-width:1099px){.tri-tabs{display:inline-flex}.tri-grid{grid-template-columns:1fr}.tri-pane{display:none}.tri-pane.on{display:flex}.tri-body{min-height:280px}}
+/* v0.5 cabbage 染色台主题(小点) */
+body.dye{--line:rgba(255,122,217,.26)}
+body.mission.dye .cn{border-color:#ff9ae0;filter:drop-shadow(0 0 6px #ff7ad988)}
+body.mission.dye .m-stage{border-color:rgba(255,122,217,.26);background:rgba(18,8,24,.42)}
+body.mission.dye .m-stage .ctl{border-color:rgba(255,122,217,.22)}
+body.mission.dye .m-guide{box-shadow:0 0 40px rgba(255,122,217,.1)}

@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.4.1(crystal 霜镜舞台)
+/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.5(crystal 霜镜舞台、cabbage 染色台)
    每关一个 3D 场景,随关卡切换淡入淡出;关卡玩法仍在前景面板里进行。低档不加载(保留 v0.1 星空背景)。 */
 import { THREE, makeGL, P, glowSprite, starMaterial, fresnelMaterial } from './ef-gl.js?v=2';
 const EF = window.EF;
@@ -32,7 +32,11 @@ function boot() {
     scene.fog = new THREE.FogExp2(0x0a1a2a, 0.035); key.color.set(0xe6f6ff); rim.color.set(0x7ad7ff); stars.material.color.set(0xcfefff);
     scene.children.forEach(o => { if (o.isAmbientLight) o.color.set(0x7a90a8); });
   }
-  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : [];
+  const isK = EF.missionId === 'cabbage';
+  if (isK) { /* v0.5:染色台——品红冷暖光(小点) */
+    scene.fog = new THREE.FogExp2(0x1a0a20, 0.03); key.color.set(0xfff0f8); rim.color.set(0xff7ad9);
+  }
+  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : isK ? cabbageScenes() : [];
   LV.forEach(s => { scene.add(s.g); setA(s, 0); });
 
   /* ---------- stars:主序星 → 洋葱分层的大质量恒星 → 铁核心 → 超新星遗迹 ---------- */
@@ -124,6 +128,30 @@ function boot() {
         [0.55, 0.95, 1.3].forEach((y, n) => [-1, 1].forEach(sd => { const tw = new THREE.Mesh(twig, m); tw.scale.y = 1 - n * 0.25; tw.position.set(sd * 0.13, y, 0); tw.rotation.z = -sd * Math.PI / 3; g.add(tw); })); flake.add(g); }
       flake.add(new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.05, 6), m).rotateX(Math.PI / 2));
       s.g.add(flake); s.upd = t => { flake.rotation.z = t * 0.1; flake.rotation.y = Math.sin(t * 0.3) * 0.5; }; out.push(s); }
+    return out;
+  }
+
+  /* ---------- cabbage(小点):彩色液滴 → pH 色环 → 分子环 → 中和气泡 ---------- */
+  function cabbageScenes() {
+    const ph = p => { const c = EF.CAB ? EF.CAB.rgb(p) : [140, 80, 180]; return new THREE.Color(c[0] / 255, c[1] / 255, c[2] / 255); };
+    const mat = (c, op) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.25, emissive: c.clone().multiplyScalar(0.35), emissiveIntensity: 1, opacity: op });
+    const out = [];
+    /* 0 六颗漂浮的彩色液滴 */
+    { const s = SC(), drops = []; [2.2, 2.6, 7, 8.3, 9.5, 11.5].forEach((p, i) => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.32, 28, 20), reg(s, mat(ph(p), 0.85), 0.85)); m.scale.set(1, 1.25, 1);
+        const a = i / 6 * 6.283; m.position.set(Math.cos(a) * 1.7, Math.sin(a * 2) * 0.4, Math.sin(a) * 1.1); m.userData.a = a; s.g.add(m); drops.push(m); });
+      s.upd = t => { drops.forEach((m, i) => { const a = m.userData.a + t * 0.15; m.position.set(Math.cos(a) * 1.7, Math.sin(t * 0.7 + i) * 0.25, Math.sin(a) * 1.1); }); }; out.push(s); }
+    /* 1 pH 0–14 色环 */
+    { const s = SC(), ring = new THREE.Group(); for (let p = 0; p < 14; p++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.5, 0.12), reg(s, mat(ph(Math.max(1, p + 0.5)), 0.85), 0.85)); const a = (p / 14) * 6.283; b.position.set(Math.cos(a) * 1.6, Math.sin(a) * 1.6, 0); b.rotation.z = a; ring.add(b); }
+      s.g.add(ring); s.g.rotation.x = -0.5; s.upd = t => { ring.rotation.z = t * 0.12; }; out.push(s); }
+    /* 2 三个相连的六元环(花青素骨架示意) */
+    { const s = SC(), g = new THREE.Group(), m = reg(s, mat(ph(7), 0.9), 0.9), cs = [[-0.87, 0], [0, 0], [1.3, -0.75]];
+      cs.forEach(c => { const r = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.06, 10, 6), m); r.position.set(c[0], c[1], 0); r.rotation.z = Math.PI / 6; g.add(r); });
+      g.position.x = -0.2; s.g.add(g); s.upd = t => { g.rotation.y = Math.sin(t * 0.4) * 0.6; m.color.copy(ph(4 + 4 * (1 + Math.sin(t * 0.5)))); m.emissive.copy(m.color).multiplyScalar(0.35); }; out.push(s); }
+    /* 3 紫色液滴 + 上升的 CO₂ 气泡 */
+    { const s = SC(), core = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 24), reg(s, mat(ph(7), 0.8), 0.8)); s.g.add(core);
+      const bm = reg(s, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1, emissive: 0x334455, opacity: 0.5 }), 0.5), bs = [];
+      for (let i = 0; i < 30; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(0.04 + rnd() * 0.07, 12, 8), bm); b.userData = { x: (rnd() - 0.5) * 2.2, z: (rnd() - 0.5) * 1.5, o: rnd() * 3 }; s.g.add(b); bs.push(b); }
+      s.upd = t => { bs.forEach(b => { const u = b.userData, y = ((t * 0.35 + u.o) % 3) - 1.5; b.position.set(u.x + Math.sin(t + u.o) * 0.05, y, u.z); }); core.scale.setScalar(1 + 0.03 * Math.sin(t)); }; out.push(s); }
     return out;
   }
 
