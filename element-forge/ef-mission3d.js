@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.6(crystal 霜镜舞台、cabbage 染色台、fireworks 夜空焰色台)
+/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.7(crystal 霜镜舞台、cabbage 染色台、fireworks 夜空焰色台、battery 电光实验台)
    每关一个 3D 场景,随关卡切换淡入淡出;关卡玩法仍在前景面板里进行。低档不加载(保留 v0.1 星空背景)。 */
 import { THREE, makeGL, P, glowSprite, starMaterial, fresnelMaterial } from './ef-gl.js?v=2';
 const EF = window.EF;
@@ -40,7 +40,11 @@ function boot() {
   if (isF) { /* v0.6:夜空焰色台——深夜蓝 + 暖橙边光 */
     scene.fog = new THREE.FogExp2(0x070818, 0.025); key.color.set(0xfff4e6); rim.color.set(0xffb35c);
   }
-  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : isK ? cabbageScenes() : isF ? fireScenes() : [];
+  const isB = EF.missionId === 'battery';
+  if (isB) { /* v0.7:电光实验台——深青 + 电光蓝边光(锂锂) */
+    scene.fog = new THREE.FogExp2(0x061018, 0.028); key.color.set(0xeef8ff); rim.color.set(0x7ad7ff);
+  }
+  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : isK ? cabbageScenes() : isF ? fireScenes() : isB ? voltScenes() : [];
   LV.forEach(s => { scene.add(s.g); setA(s, 0); });
 
   /* ---------- stars:主序星 → 洋葱分层的大质量恒星 → 铁核心 → 超新星遗迹 ---------- */
@@ -187,6 +191,33 @@ function boot() {
       for (let i = 0; i < N; i++) { const nm = 380 + i / N * 400, c = FW ? FW.wl(nm) : [200, 200, 200], m = reg(s, new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0] / 255, c[1] / 255, c[2] / 255) }), 0.18); const b = new THREE.Mesh(new THREE.BoxGeometry(3.6 / N, 0.8, 0.02), m); b.position.x = -1.8 + i / N * 3.6; g.add(b); }
       [656.3, 486.1, 434.0, 410.2].forEach(nm => { const c = FW ? FW.wl(nm) : [255, 255, 255], m = reg(s, new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0] / 255, c[1] / 255, c[2] / 255), blending: add })); const b = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.9, 0.03), m); b.position.x = -1.8 + (nm - 380) / 400 * 3.6; g.add(b); });
       s.g.add(g); s.upd = t => { g.rotation.y = Math.sin(t * 0.3) * 0.5; g.rotation.x = -0.2; }; out.push(s); }
+    return out;
+  }
+
+  /* ---------- battery(锂锂):柠檬电池 → 导线里的电子 → 金属梯子 → 锂离子往返 ---------- */
+  function voltScenes() {
+    const out = [], add = THREE.AdditiveBlending;
+    /* 0 一个插着锌片、铜片的柠檬 */
+    { const s = SC(), L = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), reg(s, new THREE.MeshStandardMaterial({ color: 0xf2d33a, roughness: 0.55 }))); L.scale.set(1.3, 0.9, 0.95); s.g.add(L);
+      [[-0.4, 0x9fb3c8], [0.4, 0xe08a4a]].forEach(([x, c]) => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.4, 0.4), reg(s, new THREE.MeshStandardMaterial({ color: c, metalness: 0.8, roughness: 0.3 }))); p.position.set(x, 0.9, 0); s.g.add(p); });
+      const g = glowSprite([[0, 'rgba(255,230,120,.5)'], [1, 'rgba(0,0,0,0)']], 4.5); reg(s, g.material, 0.5); s.g.add(g);
+      s.upd = t => { s.g.rotation.y = Math.sin(t * 0.3) * 0.6; }; out.push(s); }
+    /* 1 一圈导线,电子沿着跑 */
+    { const s = SC(), R = 1.3, tor = new THREE.Mesh(new THREE.TorusGeometry(R, 0.03, 8, 120), reg(s, new THREE.MeshBasicMaterial({ color: 0xcfd8e6 }), 0.6)); s.g.add(tor);
+      const N = 40, pp = new Float32Array(N * 3), pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pp, 3));
+      s.g.add(new THREE.Points(pg, reg(s, new THREE.PointsMaterial({ color: 0x7ad7ff, size: 0.12, blending: add, depthWrite: false }))));
+      s.upd = t => { for (let i = 0; i < N; i++) { const a = i / N * 6.283 + t * 0.6; pp.set([Math.cos(a) * R, Math.sin(a) * R, 0], i * 3); } pg.attributes.position.needsUpdate = true; s.g.rotation.x = 0.9; s.g.rotation.z = t * 0.05; }; out.push(s); }
+    /* 2 金属梯子:五块金属按电极电势高低排开 */
+    { const s = SC(), M = [[-2.37, 0xc8d0d8], [-0.76, 0x9fb3c8], [-0.44, 0x6f7480], [0.34, 0xe08a4a], [0.8, 0xe6e9ee]];
+      M.forEach(([E, c], i) => { const b = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.18, 0.5), reg(s, new THREE.MeshStandardMaterial({ color: c, metalness: 0.85, roughness: 0.28 }))); b.position.set((i - 2) * 0.55, E * 0.6 + 0.4, 0); s.g.add(b); });
+      s.upd = t => { s.g.rotation.y = Math.sin(t * 0.25) * 0.7; }; out.push(s); }
+    /* 3 锂离子电池剖面:石墨层 / 正极层,锂离子往返 */
+    { const s = SC(), gm = reg(s, new THREE.MeshStandardMaterial({ color: 0x3a3f4a, roughness: 0.6 })), cm = reg(s, new THREE.MeshStandardMaterial({ color: 0x5a4a7a, roughness: 0.5 }));
+      for (let i = 0; i < 6; i++) { const a = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, 1), gm); a.position.set(-1, -0.9 + i * 0.36, 0); s.g.add(a); const b = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.05, 1), cm); b.position.set(1, -0.9 + i * 0.36, 0); s.g.add(b); }
+      const N = 14, pp = new Float32Array(N * 3), seeds = []; for (let i = 0; i < N; i++) seeds.push([rnd(), -0.8 + (i % 6) * 0.36, (rnd() - 0.5) * 0.8]);
+      const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pp, 3));
+      s.g.add(new THREE.Points(pg, reg(s, new THREE.PointsMaterial({ color: 0xffd27a, size: 0.13, blending: add, depthWrite: false }))));
+      s.upd = t => { seeds.forEach((q, i) => { const k = 0.5 + 0.5 * Math.sin(t * 0.5 + q[0] * 6.283); pp.set([-1 + 2 * k, q[1], q[2]], i * 3); }); pg.attributes.position.needsUpdate = true; s.g.rotation.y = 0.5 + Math.sin(t * 0.2) * 0.3; }; out.push(s); }
     return out;
   }
 

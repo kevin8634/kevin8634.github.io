@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>怎样造一块会发电的电池? · 元素工坊 Element Forge</title>
+<meta name="description" content="元素工坊 · 用虚拟柠檬和两片金属造电池,看电子怎样绕着导线跑,给金属排队比电压,再陪锂离子在手机电池里来回搬家。创世计划 Genesis 化学世界。">
+<meta name="theme-color" content="#06101a">
+<link rel="stylesheet" href="../ef.css?v=10">
+</head>
+<body class="volt">
+<div id="app"></div>
+<script src="../ef.js?v=10"></script>
+<script src="../ef-tri.js?v=1"></script>
+<script>
+/* ---------- 共享数据与水果电池控制器(2D/3D 共用) ---------- */
+(function () {
+/* 水果电池用的三种金属。p 为"柠檬里"的相对电位(示意,使 锌-铜≈0.9 V、铁-铜≈0.5 V、锌-铁≈0.4 V) */
+var FM = [{ k: 'Zn', n: '锌片', c: '#9fb3c8', p: 0 }, { k: 'Cu', n: '铜片', c: '#e08a4a', p: 0.9 }, { k: 'Fe', n: '铁钉', c: '#6f7480', p: 0.4 }];
+var FBY = {}; FM.forEach(function (m) { FBY[m.k] = m; });
+/* 金属梯子:标准电极电势 E°(V,25 °C,各金属在自己 1 mol/L 的盐溶液里;Fe 指 Fe²⁺/Fe) */
+var LAD = [{ k: 'Mg', n: '镁', E: -2.37, c: '#c8d0d8' }, { k: 'Zn', n: '锌', E: -0.76, c: '#9fb3c8' }, { k: 'Fe', n: '铁', E: -0.44, c: '#6f7480' }, { k: 'Cu', n: '铜', E: 0.34, c: '#e08a4a' }, { k: 'Ag', n: '银', E: 0.80, c: '#e6e9ee' }];
+var LBY = {}; LAD.forEach(function (m) { LBY[m.k] = m; });
+var DANGER = '<b style="color:#ff7a7a">锂电池实验请勿在现实中尝试!</b><br>这里的扎破、过充都是虚拟的。真锂电池不要拆、扎、压、摔、烧,不要泡水,也不要放在暴晒的车里或暖气旁。鼓包、发烫、有怪味或冒烟时立刻停用,人离开它,别用手去碰,告诉大人;起火时马上离开房间并拨打 119(烟有毒)。用合格的原装充电器,线破了不要用,别整夜放在床上或枕边充电。电动自行车和它的电池不要推进楼道、电梯,也不要带回家充电。纽扣电池要放在小孩够不着的地方:万一吞下,不要催吐、不要吃喝,立刻去医院,带上电池包装。新旧电池、不同牌子的电池不要混着用;普通干电池不能充电。废锂电池、纽扣电池属于有害垃圾:先用胶带贴住两极,再投进有害垃圾桶或电池回收点。不要把导线插进墙上的插座,也不要用金属把电池两极直接连起来(短路会发烫)。水果电池可以在大人陪同下用锌片、铜片做:金属片边缘可能很锋利,做完洗手,做过实验的水果不要吃。';
+var SAFE = '<b style="color:#ff9a7a">安全常识</b>:水果电池可以在大人陪同下做,金属片边缘可能锋利,做完洗手,做过实验的水果不要吃;镁、银这些组合只在屏幕里试。锂电池不要拆、扎、压、烧;鼓包、发烫时立刻停用并告诉大人。';
+function txt(stage, h, cls) { var p = document.createElement('p'); p.className = cls || 'note-sm'; p.innerHTML = h || ''; stage.appendChild(p); return p; }
+function card(stage, h, warn) { var d = document.createElement('div'); d.className = 'cab-card' + (warn ? ' warn' : ''); d.innerHTML = h; stage.appendChild(d); return d; }
+
+/* L0 控制器:view(stage) 先挂出画面,再生成控件、说明、安全卡;每次状态改变调用 view.draw(st) */
+var LED_ON = 2.4;
+function lemon(stage, api, view) {
+  var st = { a: 'Cu', b: 'Cu', n: 1, V: 0, led: false, done: false, tried: {} };
+  view.mount(stage);
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips';
+  function seg(id, lab) { return '<span>' + lab + '</span><span class="seg" id="' + id + '">' + FM.map(function (m) { return '<button data-v="' + m.k + '"' + (st[id] === m.k ? ' class="on"' : '') + '>' + m.n + '</button>'; }).join('') + '</span>'; }
+  ctl.innerHTML = seg('a', '左边(接 COM 黑表笔)') + seg('b', '右边(接红表笔)') + '<span class="seg" id="nn"><button data-d="-1">− 拿走柠檬</button><button data-d="1">+ 串一个柠檬</button></span>';
+  stage.appendChild(ctl);
+  var msg = txt(stage, '两片一样的铜片插在柠檬里,电压表几乎不动。换一换金属,让电压表的指针动起来。');
+  card(stage, DANGER, true);
+  ['a', 'b'].forEach(function (id) { ctl.querySelectorAll('#' + id + ' button').forEach(function (b) { b.onclick = function () { ctl.querySelectorAll('#' + id + ' button').forEach(function (z) { z.classList.toggle('on', z === b); }); st[id] = b.dataset.v; EF.play('tick'); upd(); }; }); });
+  ctl.querySelectorAll('#nn button').forEach(function (b) { b.onclick = function () { var n = Math.max(1, Math.min(4, st.n + (+b.dataset.d))); if (n === st.n) { EF.play('tick'); msg.innerHTML = n === 4 ? '桌上最多放 4 个柠檬。' : '至少要 1 个柠檬。'; return; } st.n = n; EF.play('select'); upd(); }; });
+  function upd() {
+    if (st.done) return;
+    var A = FBY[st.a], B = FBY[st.b], cell = Math.round((B.p - A.p) * 100) / 100; st.V = Math.round(cell * st.n * 100) / 100; st.led = st.V >= LED_ON;
+    st.tried[[st.a, st.b].sort().join('')] = 1;
+    var vs = (st.V < 0 ? '−' : '') + Math.abs(st.V).toFixed(2) + ' V';
+    if (cell === 0) msg.innerHTML = '两片都是' + A.n.slice(0, 1) + ':读数 ' + vs + '。一样的金属"交出电子"的本领一样,谁也推不动谁,电压是 0。';
+    else if (cell < 0) msg.innerHTML = '读数 <b>' + vs + '</b>:负号说明表笔接反了——交出电子的那片(更活泼的' + (A.p > B.p ? B.n : A.n) + ')应该放在左边接黑表笔。' + (st.n > 1 ? 'LED 只让电流朝一个方向走,接反不会亮。' : '');
+    else if (st.led) {
+      st.done = true; EF.play('fuse'); EF.tone(12);
+      msg.innerHTML = st.n + ' 个柠檬串起来:<b>' + vs + '</b>,红色 LED 微微亮了!(水果电池电流很小,真实的灯只是暗暗的一点光)每个柠檬的电压加在一起——这就是<b>串联</b>。';
+      setTimeout(api.complete, 1700);
+    } else if (st.n === 1) msg.innerHTML = A.n + ' + ' + B.n + ':一个柠檬 <b>' + vs + '</b>。指针动了!可是红色 LED 要接近 2 V 才开始导通;水果电池内阻大,一接上灯电压就往下掉。所以电压表上(没接灯时)的读数大约要到 2.4 V 以上,灯才看得出微光——试试多串几个柠檬。';
+    else msg.innerHTML = st.n + ' 个柠檬串起来:<b>' + vs + '</b>,LED 还不亮(没接灯时的读数约要 ' + LED_ON + ' V 以上,接上灯才剩下接近 2 V 的电压,示意)。' + (st.n === 4 ? '4 个都串上了还不够?换一对电压更高的金属。' : '再串一个,或者换一对金属。');
+    view.draw(st);
+  }
+  upd();
+  return st;
+}
+
+/* 2D 水果电池台 */
+function lemon2D() {
+  var C, st = { a: 'Cu', b: 'Cu', n: 1, V: 0, led: false }, needle = 0;
+  return {
+    mount: function (stage) {
+      C = EF.canvas(stage, 330);
+      (function loop() {
+        if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+        x.fillStyle = 'rgba(40,52,70,.6)'; x.fillRect(0, H * 0.78, W, H * 0.22);
+        var n = st.n, gap = Math.min(150, (W - 40) / n), x0 = W / 2 - gap * (n - 1) / 2, ly = H * 0.66, A = FBY[st.a], B = FBY[st.b], pts = [];
+        for (var i = 0; i < n; i++) {
+          var cx = x0 + i * gap, rx = Math.min(58, gap * 0.4), ry = rx * 0.68;
+          var g = x.createRadialGradient(cx - rx * 0.3, ly - ry * 0.4, 4, cx, ly, rx * 1.1); g.addColorStop(0, '#fff6a8'); g.addColorStop(0.5, '#f2d33a'); g.addColorStop(1, '#a8860e');
+          x.fillStyle = g; x.beginPath(); x.ellipse(cx, ly, rx, ry, 0, 0, 7); x.fill();
+          var la = cx - rx * 0.42, lb = cx + rx * 0.42;
+          x.fillStyle = A.c; x.fillRect(la - 4, ly - ry - 34, 8, 46); x.fillStyle = B.c; x.fillRect(lb - 4, ly - ry - 34, 8, 46);
+          pts.push([la, lb, ly - ry - 34]);
+        }
+        /* 串联导线:每个柠檬的右片接下一个的左片 */
+        x.strokeStyle = '#cfd8e6'; x.lineWidth = 2; for (var j = 0; j < n - 1; j++) { x.beginPath(); x.moveTo(pts[j][1], pts[j][2]); x.quadraticCurveTo((pts[j][1] + pts[j + 1][0]) / 2, pts[j][2] - 30, pts[j + 1][0], pts[j + 1][2]); x.stroke(); }
+        /* 电压表 + LED */
+        var mx = W / 2, my = H * 0.2, R = 54, Vabs = Math.max(-1, Math.min(3.2, st.V)); needle += ((Vabs / 3.2) - needle) * (EF.reduced ? 1 : 0.12);
+        x.strokeStyle = '#9aa3b0'; x.beginPath(); x.moveTo(pts[0][0], pts[0][2]); x.lineTo(pts[0][0], my); x.lineTo(mx - R - 6, my); x.stroke();
+        x.strokeStyle = '#ff4a4a'; x.beginPath(); x.moveTo(pts[n - 1][1], pts[n - 1][2]); x.lineTo(pts[n - 1][1], my); x.lineTo(mx + R + 6, my); x.stroke();
+        x.fillStyle = '#1a2230'; x.beginPath(); x.arc(mx, my + 14, R, Math.PI, 0); x.closePath(); x.fill(); x.strokeStyle = '#7ad7ff'; x.lineWidth = 1.5; x.stroke();
+        for (var t = -1; t <= 3; t++) { var a = Math.PI + (t + 1) / 4.2 * Math.PI; x.strokeStyle = 'rgba(200,220,240,.6)'; x.beginPath(); x.moveTo(mx + Math.cos(a) * R * 0.8, my + 14 + Math.sin(a) * R * 0.8); x.lineTo(mx + Math.cos(a) * R * 0.95, my + 14 + Math.sin(a) * R * 0.95); x.stroke(); }
+        var an = Math.PI + (needle * 3.2 + 1) / 4.2 * Math.PI; x.strokeStyle = '#ffd27a'; x.lineWidth = 2.5; x.beginPath(); x.moveTo(mx, my + 14); x.lineTo(mx + Math.cos(an) * R * 0.85, my + 14 + Math.sin(an) * R * 0.85); x.stroke();
+        x.fillStyle = '#c8d6e6'; x.font = '10px system-ui'; x.textAlign = 'center'; x.fillText('COM', mx - R - 16, my - 6); x.fillText('V+', mx + R + 16, my - 6);
+        x.fillStyle = '#e8f4ff'; x.font = '700 15px system-ui'; x.fillText((st.V < 0 ? '−' : '') + Math.abs(st.V).toFixed(2) + ' V', mx, my + 6);
+        var lx = W - 40, lyy = my; if (st.led) { var gl = x.createRadialGradient(lx, lyy, 2, lx, lyy, 40); gl.addColorStop(0, 'rgba(255,60,60,.7)'); gl.addColorStop(1, 'rgba(255,60,60,0)'); x.fillStyle = gl; x.fillRect(lx - 40, lyy - 40, 80, 80); }
+        x.fillStyle = st.led ? '#ff5050' : '#5a2a2a'; x.beginPath(); x.arc(lx, lyy, 9, Math.PI, 0); x.lineTo(lx + 9, lyy + 10); x.lineTo(lx - 9, lyy + 10); x.fill();
+        x.fillStyle = '#c8d6e6'; x.font = '11px system-ui'; x.fillText('红色 LED', lx, lyy + 26);
+        x.textAlign = 'left'; x.fillText(A.n + ' | 柠檬汁 | ' + B.n + (n > 1 ? ' × ' + n + '(串联)' : ''), 12, H - 10);
+        x.lineWidth = 1; requestAnimationFrame(loop);
+      })();
+    },
+    draw: function (s) { st = s; }
+  };
+}
+
+EF.BT = { FM: FM, FBY: FBY, LAD: LAD, LBY: LBY, DANGER: DANGER, SAFE: SAFE, txt: txt, card: card, lemon: lemon, lemon2D: lemon2D, LED_ON: LED_ON };
+})();
+</script>
+<script>if (EF.glTier !== 'low') { var v3 = document.createElement('script'); v3.type = 'module'; v3.src = '../ef-volt3d.js?v=1'; document.head.appendChild(v3); }</script>
+<script>
+(function () {
+var BT = EF.BT, txt = BT.txt, card = BT.card;
+
+/* ---------- L0 柠檬电池(平面版) ---------- */
+function L0(stage, api) { BT.lemon(stage, api, BT.lemon2D()); }
+
+/* ---------- L1 电子去哪儿(三窗联动) ---------- */
+var STEPS = [
+  { q: '电子从哪一片出发,沿导线流出去?', o: [['Zn', '锌片'], ['Cu', '铜片']], ok: 'Zn', no: '看中间窗口:小蓝点(电子)是从哪片金属里钻出来的?' },
+  { q: '铜片表面冒出的小气泡是什么?', o: [['H2', '氢气 H₂'], ['O2', '氧气 O₂'], ['CO2', '二氧化碳 CO₂']], ok: 'H2', no: '看铜片旁边:两个 H⁺ 各拿到一个电子,合成了什么?' },
+  { q: '锌原子把电子交出去,这叫——', o: [['ox', '氧化(失去电子)'], ['re', '还原(得到电子)']], ok: 'ox', no: '记一句口诀:失电子是氧化,得电子是还原。' }];
+function L1(stage, api) {
+  var T = EF.tri(stage, { state: { on: false, s: 0 }, h: 260 }), st = T.state, done = false;
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips'; stage.appendChild(ctl);
+  var msg = txt(stage, '烧杯里是柠檬汁(酸性,里面有 H⁺),插着一片锌、一片铜,用导线连着一只电流表。先合上开关。');
+  card(stage, BT.SAFE, true);
+  function drawCtl() {
+    if (!st.on) { ctl.innerHTML = '<button class="ef-btn" id="sw">合上开关</button>'; ctl.querySelector('#sw').onclick = function () { EF.play('select'); T.set({ on: true }, 'ctl'); msg.innerHTML = '电流表的指针偏转了——有电流!' + STEPS[0].q; drawCtl(); }; return; }
+    if (st.s >= STEPS.length) { ctl.innerHTML = ''; return; }
+    var S = STEPS[st.s]; ctl.innerHTML = '<span>' + S.q + '</span>' + S.o.map(function (o) { return '<button class="ef-btn ghost chip" data-k="' + o[0] + '">' + o[1] + '</button>'; }).join('');
+    ctl.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () {
+      if (b.dataset.k === S.ok) { EF.play('select'); var s = st.s + 1; T.set({ s: s }, 'ctl');
+        if (s === 1) msg.innerHTML = '对!锌比铜活泼,锌原子交出 2 个电子,自己变成 Zn²⁺ 溜进溶液。电子只能沿导线走到铜片。' + STEPS[1].q;
+        else if (s === 2) msg.innerHTML = '对!溶液里的 H⁺ 在铜片上接过电子,两个 H 合成一个氢气分子 H₂。(真实水果电池电流很小,气泡很少,这里放大了;真做实验时锌片上也可能冒少量气泡,那是一部分锌直接和酸反应了,电子没走导线)' + STEPS[2].q;
+        else { done = true; EF.play('fuse'); msg.innerHTML = '对!锌<b>失去</b>电子是<b>氧化</b>,H⁺ <b>得到</b>电子是<b>还原</b>,两件事同时发生——这就是<b>氧化还原反应</b>。电流的方向规定得和电子相反:从铜片经导线流向锌片。'; setTimeout(api.complete, 1700); }
+        drawCtl(); }
+      else { EF.play('tick'); msg.innerHTML = '再想想。' + S.no; if (st.s === 0) api.say('电子带负电,是从"交出电子"的那片金属出发的。'); }
+    }; });
+  }
+  drawCtl();
+  /* 宏观:烧杯、两片金属、电流表、气泡 */
+  var CM = EF.canvas(T.pane.macro, 260), zw = 14, bub = [], nd = 0;
+  (function loop(t) {
+    if (!CM.c.isConnected) return; var x = CM.x, W = CM.W, H = CM.H; x.clearRect(0, 0, W, H);
+    var bx = W * 0.15, bw = W * 0.7, by = H * 0.42, bh = H * 0.5;
+    x.fillStyle = 'rgba(242,211,58,.28)'; x.fillRect(bx, by + 16, bw, bh - 16); x.strokeStyle = 'rgba(200,230,255,.7)'; x.lineWidth = 2; x.strokeRect(bx, by, bw, bh);
+    var zx = bx + bw * 0.22, cx = bx + bw * 0.72; if (st.on && zw > 7 && !EF.reduced) zw -= 0.004;
+    x.fillStyle = '#9fb3c8'; x.fillRect(zx - zw / 2, by - 30, zw, bh * 0.8 + 30); x.fillStyle = '#e08a4a'; x.fillRect(cx - 7, by - 30, 14, bh * 0.8 + 30);
+    x.fillStyle = '#dfe8f2'; x.font = '12px system-ui'; x.textAlign = 'center'; x.fillText('锌', zx, by + bh + 16); x.fillText('铜', cx, by + bh + 16);
+    var mx = (zx + cx) / 2, my = H * 0.14; nd += ((st.on ? 0.5 : 0) - nd) * (EF.reduced ? 1 : 0.08);
+    x.strokeStyle = '#cfd8e6'; x.lineWidth = 2; x.beginPath(); x.moveTo(zx, by - 30); x.lineTo(zx, my); x.lineTo(mx - 22, my); x.moveTo(mx + 22, my); x.lineTo(cx, my); x.lineTo(cx, by - 30); x.stroke();
+    x.fillStyle = '#1a2230'; x.beginPath(); x.arc(mx, my, 22, 0, 7); x.fill(); x.strokeStyle = '#7ad7ff'; x.stroke();
+    var an = -Math.PI / 2 + nd; x.strokeStyle = '#ffd27a'; x.beginPath(); x.moveTo(mx, my + 6); x.lineTo(mx + Math.cos(an) * 16, my + 6 + Math.sin(an) * 16); x.stroke();
+    x.fillStyle = '#dfe8f2'; x.font = '10px system-ui'; x.fillText('A', mx, my + 16);
+    if (!st.on) { x.fillStyle = 'rgba(255,210,122,.9)'; x.fillText('开关断开', mx, my - 28); }
+    if (st.on && Math.random() < (EF.reduced ? 0 : 0.12)) bub.push({ x: cx + 9 + Math.random() * 6, y: by + bh * 0.7 * Math.random() + 30, r: 1.5 + Math.random() * 2 });
+    bub = bub.filter(function (b) { b.y -= 0.7; x.strokeStyle = 'rgba(230,245,255,.8)'; x.lineWidth = 1; x.beginPath(); x.arc(b.x, b.y, b.r, 0, 7); x.stroke(); return b.y > by + 18; });
+    if (st.on && EF.reduced) { x.fillStyle = 'rgba(230,245,255,.8)'; x.fillText('○ 气泡', cx + 22, by + 40); }
+    x.lineWidth = 1; requestAnimationFrame(loop);
+  })(0);
+  /* 微观:锌原子交出电子 → 电子走导线 → H⁺ 在铜片上变 H₂ */
+  var CU = EF.canvas(T.pane.micro, 260), el = [], ions = [], hp = [], h2 = [], zn = [], last = 0;
+  for (var r = 0; r < 6; r++) for (var c = 0; c < 2; c++) zn.push({ r: r, c: c, on: 1 });
+  for (var i = 0; i < 9; i++) hp.push({ x: 0.35 + Math.random() * 0.3, y: 0.45 + Math.random() * 0.45, vx: 0, vy: 0 });
+  (function loop(t) {
+    if (!CU.c.isConnected) return; var x = CU.x, W = CU.W, H = CU.H; x.clearRect(0, 0, W, H);
+    var zx = W * 0.14, cx = W * 0.82, top = H * 0.36, wy = H * 0.12;
+    x.fillStyle = 'rgba(242,211,58,.08)'; x.fillRect(0, top, W, H - top);
+    x.strokeStyle = 'rgba(207,216,230,.8)'; x.lineWidth = 2; x.beginPath(); x.moveTo(zx + 10, top); x.lineTo(zx + 10, wy); x.lineTo(cx, wy); x.lineTo(cx, top); x.stroke(); x.lineWidth = 1;
+    zn.forEach(function (a) { if (!a.on) return; EF.ball(x, zx + a.c * 16, top + 14 + a.r * 19, 8, '#9fb3c8', ''); });
+    for (var r2 = 0; r2 < 6; r2++) for (var c2 = 0; c2 < 2; c2++) EF.ball(x, cx + c2 * 16, top + 14 + r2 * 19, 8, '#e08a4a', '');
+    x.fillStyle = '#dfe8f2'; x.font = '11px system-ui'; x.textAlign = 'center'; x.fillText('锌 Zn', zx + 8, H - 6); x.fillText('铜 Cu', cx + 8, H - 6);
+    if (st.on && t - last > (EF.reduced ? 400 : 1300)) { last = t; var a = zn.filter(function (z) { return z.on && z.c === 1; })[0] || zn.filter(function (z) { return z.on; })[0];
+      if (!a) { zn.forEach(function (z) { z.on = 1; }); } else { a.on = 0; var ax = zx + a.c * 16, ay = top + 14 + a.r * 19;
+        ions.push({ x: ax, y: ay, l: 1 }); el.push({ p: 0, d: 0 }, { p: 0, d: -0.07 }); } }
+    ions = ions.filter(function (o) { o.x += EF.reduced ? 20 : 0.5; o.l -= 0.006; x.globalAlpha = Math.max(0, o.l); EF.ball(x, o.x, o.y, 8, '#b8c8dc', ''); x.fillStyle = '#ffd27a'; x.font = '9px system-ui'; x.fillText('Zn²⁺', o.x, o.y - 11); x.globalAlpha = 1; return o.l > 0; });
+    /* 电子沿导线:p 0→1 */
+    var path = [[zx + 10, top], [zx + 10, wy], [cx, wy], [cx, top + 30]], seg = [], tot = 0;
+    for (var k = 0; k < 3; k++) { var L = Math.hypot(path[k + 1][0] - path[k][0], path[k + 1][1] - path[k][1]); seg.push(L); tot += L; }
+    el = el.filter(function (e) { e.p += EF.reduced ? 0.25 : 0.006; var q = e.p + e.d; if (q < 0) return true;       var s = Math.min(1, q) * tot, k2 = 0; while (k2 < 2 && s > seg[k2]) { s -= seg[k2]; k2++; } var f = Math.min(1, s / seg[k2]);
+      var ex = path[k2][0] + (path[k2 + 1][0] - path[k2][0]) * f, ey = path[k2][1] + (path[k2 + 1][1] - path[k2][1]) * f;
+      x.fillStyle = '#7ad7ff'; x.beginPath(); x.arc(ex, ey, 4, 0, 7); x.fill(); x.fillStyle = '#dff4ff'; x.font = '9px system-ui'; x.fillText('e⁻', ex, ey - 7);
+      if (q >= 1) { h2.push({ x: cx - 14, y: top + 40 + Math.random() * 60, l: 1, half: 1 }); return false; } return true; });
+    /* H⁺ 漂移;每到两个电子在铜片旁合成 H₂ */
+    hp.forEach(function (h) { h.vx += (Math.random() - 0.5) * 0.0008; h.vy += (Math.random() - 0.5) * 0.0008; h.vx *= 0.96; h.vy *= 0.96; h.x = Math.max(0.3, Math.min(0.72, h.x + h.vx)); h.y = Math.max(0.42, Math.min(0.94, h.y + h.vy));
+      x.fillStyle = '#ff9a9a'; x.beginPath(); x.arc(h.x * W, h.y * H, 4, 0, 7); x.fill(); x.fillStyle = '#ffd0d0'; x.font = '9px system-ui'; x.fillText('H⁺', h.x * W, h.y * H - 7); });
+    var halves = h2.filter(function (b) { return b.half; }); if (halves.length >= 2) { halves[0].half = 0; h2.splice(h2.indexOf(halves[1]), 1); }
+    h2 = h2.filter(function (b) { if (b.half) return true; b.y -= EF.reduced ? 10 : 0.6; b.l -= 0.004; x.globalAlpha = Math.max(0, b.l); x.strokeStyle = '#e6f5ff'; x.beginPath(); x.arc(b.x, b.y, 7, 0, 7); x.stroke(); x.fillStyle = '#e6f5ff'; x.font = '9px system-ui'; x.fillText('H₂', b.x, b.y + 3); x.globalAlpha = 1; return b.y > top + 6 && b.l > 0; });
+    if (!st.on) { x.fillStyle = 'rgba(255,210,122,.9)'; x.font = '12px system-ui'; x.fillText('合上开关后,看电子往哪跑', W / 2, wy - 2); }
+    requestAnimationFrame(loop);
+  })(0);
+  /* 符号 */
+  var sy = document.createElement('div'); sy.className = 'tri-sym'; T.pane.sym.appendChild(sy);
+  T.on(function (s) {
+    var L = [];
+    L.push(s.s >= 1 ? '<div class="eq" style="font-size:16px">负极(锌):Zn − 2e⁻ = Zn²⁺' + (s.s >= 3 ? ' <span class="hot">氧化</span>' : '') + '</div>' : '<p class="note-sm">负极(电子流出的一片):?</p>');
+    L.push(s.s >= 2 ? '<div class="eq" style="font-size:16px">正极(铜):2H⁺ + 2e⁻ = H₂↑' + (s.s >= 3 ? ' <span class="hot">还原</span>' : '') + '</div>' : '<p class="note-sm">正极(电子流入的一片):?</p>');
+    if (s.s >= 3) L.push('<div class="eq" style="font-size:16px">总反应:Zn + 2H⁺ = Zn²⁺ + H₂↑</div><p class="note-sm">铜片本身不参加反应,只是给 H⁺ 一个接电子的地方。课本里常用稀硫酸代替柠檬汁做这个实验。</p>');
+    L.push('<p class="note-sm">' + (s.on ? '电子:锌 → 导线 → 铜;电流方向相反:铜 → 导线 → 锌。溶液里:阳离子(H⁺、Zn²⁺)向正极移动,阴离子向负极移动,电路才是通的。' : '开关还断着,没有电流。') + '</p>');
+    sy.innerHTML = L.join('');
+  });
+}
+
+/* ---------- L2 金属排队 ---------- */
+var ORD = [{ q: '做一块约 <b>1.1 V</b> 的电池(按梯子上的理论值算)。', ok: function (a, b) { return pair(a, b, 'Zn', 'Cu'); } },
+  { q: '让<b>铜</b>当负极(交出电子的那片)。', ok: function (a, b) { return pair(a, b, 'Cu', 'Ag'); } },
+  { q: '做出<b>电压最大</b>的一块电池。', ok: function (a, b) { return pair(a, b, 'Mg', 'Ag'); } }];
+function pair(a, b, p, q) { return (a === p && b === q) || (a === q && b === p); }
+function L2(stage, api) {
+  var C = EF.canvas(stage, 330), pick = [], r = 0, done = false, shown = null, miss = 0;
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips';
+  ctl.innerHTML = BT.LAD.map(function (m) { return '<button class="ef-btn ghost chip" data-k="' + m.k + '" style="--c:' + m.c + '">' + m.n + ' ' + m.k + '</button>'; }).join('') + '<button class="ef-btn" id="go">组装电池</button>';
+  stage.appendChild(ctl);
+  var msg = txt(stage, '');
+  card(stage, BT.SAFE, true);
+  function intro() { msg.innerHTML = '订单 ' + (r + 1) + '/3:' + ORD[r].q + '在梯子上选<b>两种</b>金属,再点"组装电池"。'; }
+  intro();
+  ctl.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () {
+    if (done) return; var k = b.dataset.k, i = pick.indexOf(k); if (i > -1) pick.splice(i, 1); else { if (pick.length === 2) { var o = pick.shift(); ctl.querySelector('.chip[data-k="' + o + '"]').classList.remove('on'); } pick.push(k); }
+    b.classList.toggle('on', pick.indexOf(k) > -1); shown = null; EF.play('tick'); };
+  });
+  ctl.querySelector('#go').onclick = function () {
+    if (done) return; if (pick.length < 2) { EF.play('tick'); msg.innerHTML = '要选两种不同的金属。'; return; }
+    var A = BT.LBY[pick[0]], B = BT.LBY[pick[1]], neg = A.E < B.E ? A : B, pos = neg === A ? B : A, V = Math.round((pos.E - neg.E) * 100) / 100; shown = { neg: neg, pos: pos, V: V };
+    if (ORD[r].ok(pick[0], pick[1])) { EF.play('fuse'); r++;
+      if (r === ORD.length) { done = true; msg.innerHTML = '三张订单都完成了!镁 + 银:<b>' + V.toFixed(2) + ' V</b>。两种金属在梯子上隔得越远,电压越大;更活泼(更靠下)的那片当负极。'; setTimeout(api.complete, 1700); }
+      else { msg.innerHTML = '完成!' + neg.n + '(负极)+ ' + pos.n + '(正极)= <b>' + V.toFixed(2) + ' V</b>。' + (r === 2 ? '同一块铜,碰上锌是正极,碰上银就成了负极。' : '') + '下一张:' + ORD[r].q; } }
+    else { EF.play('tick'); miss++; msg.innerHTML = neg.n + '(负极)+ ' + pos.n + '(正极)= ' + V.toFixed(2) + ' V,不符合订单。' + ORD[r].q; if (miss >= 2) api.say('理论电压 = 正极(上面那种)的数 − 负极(下面那种)的数。负极总是梯子上更靠下的那种。'); }
+  };
+  (function loop() {
+    if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+    var top = 24, bot = H - 26, Y = function (E) { return top + (1.0 - E) / 3.5 * (bot - top); }, ax = Math.min(W * 0.32, 150);
+    x.strokeStyle = 'rgba(200,220,240,.5)'; x.beginPath(); x.moveTo(ax, top); x.lineTo(ax, bot); x.stroke();
+    x.fillStyle = 'rgba(200,220,240,.7)'; x.font = '11px system-ui'; x.textAlign = 'center'; x.fillText('↑ 更难失电子', ax, top - 8); x.fillText('↓ 更容易失电子(更活泼)', ax, bot + 18);
+    x.setLineDash([4, 4]); x.strokeStyle = 'rgba(255,255,255,.3)'; x.beginPath(); x.moveTo(ax - 40, Y(0)); x.lineTo(ax + 60, Y(0)); x.stroke(); x.setLineDash([]); x.textAlign = 'left'; x.fillStyle = 'rgba(220,230,240,.6)'; x.fillText('氢(H⁺/H₂)0.00 参照', ax + 64, Y(0) + 4);
+    BT.LAD.forEach(function (m) { var y = Y(m.E), on = pick.indexOf(m.k) > -1; EF.ball(x, ax, y, on ? 13 : 10, m.c, m.k); x.fillStyle = on ? '#ffd27a' : '#dfe8f2'; x.font = (on ? '700 ' : '') + '12px system-ui'; x.textAlign = 'right'; x.fillText(m.n + '  ' + (m.E > 0 ? '+' : '') + m.E.toFixed(2) + ' V', ax - 18, y + 4); });
+    if (shown) { var y1 = Y(shown.neg.E), y2 = Y(shown.pos.E), bx = ax + 30;
+      x.strokeStyle = '#7ad7ff'; x.lineWidth = 3; x.beginPath(); x.moveTo(bx, y1); x.lineTo(bx, y2); x.stroke(); x.beginPath(); x.moveTo(bx - 6, y2 + 10); x.lineTo(bx, y2); x.lineTo(bx + 6, y2 + 10); x.stroke(); x.lineWidth = 1;
+      x.textAlign = 'left'; x.fillStyle = '#7ad7ff'; x.font = '700 18px system-ui'; x.fillText(shown.V.toFixed(2) + ' V', bx + 14, (y1 + y2) / 2);
+      x.font = '12px system-ui'; x.fillStyle = '#dfe8f2'; x.fillText('电子:' + shown.neg.n + '(负极)→ 导线 → ' + shown.pos.n + '(正极)', bx + 14, (y1 + y2) / 2 + 20); }
+    x.textAlign = 'right'; x.fillStyle = 'rgba(200,215,230,.55)'; x.font = '10px system-ui'; x.fillText('标准电极电势 E°(25 °C,金属在浓度 1 mol/L 的自身盐溶液里,理论值)', W - 8, H - 6);
+    requestAnimationFrame(loop);
+  })();
+}
+
+/* ---------- L3 锂锂的往返(三窗联动) ---------- */
+var NLI = 10;
+function L3(stage, api) {
+  var T = EF.tri(stage, { state: { q: NLI, mode: 0, ph: 'dis', bad: 0 }, h: 260 }), st = T.state, done = false, tmr = null, flow = [];
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips';
+  ctl.innerHTML = '<button class="ef-btn ghost chip" data-m="-1" style="--c:#ffd27a">放电:点亮手机</button><button class="ef-btn ghost chip" data-m="1" style="--c:#7ad7ff">充电:接充电器</button><button class="ef-btn ghost chip" data-m="0" style="--c:#aab">暂停</button><button class="ef-btn ghost chip" id="poke" style="--c:#ff6a6a">⚠ 虚拟扎破</button>';
+  stage.appendChild(ctl);
+  var ask = document.createElement('div'); ask.className = 'ctl chips'; ask.hidden = true; stage.appendChild(ask);
+  var msg = txt(stage, '这是一块充满电的锂离子电池(示意):左边是石墨负极,10 个锂(Li)都住在石墨层之间;右边是金属氧化物正极(比如钴酸锂);中间是电解质(只让离子通过、不让电子通过)。先放电,让手机亮起来,一直用到没电。');
+  card(stage, BT.DANGER, true);
+  function setMode(m) { ctl.querySelectorAll('.chip[data-m]').forEach(function (b) { b.classList.toggle('on', +b.dataset.m === m && m !== 0); }); T.set({ mode: m }, 'ctl'); clearInterval(tmr); if (m) tmr = setInterval(step, EF.reduced ? 160 : 520); }
+  function step() {
+    if (!stage.isConnected) { clearInterval(tmr); return; }
+    var m = st.mode, q = st.q + m;
+    if (q < 0 || q > NLI) { setMode(0); if (q < 0) { msg.innerHTML = '电量用完了,手机灭了。'; if (st.ph === 'dis') { T.set({ ph: 'ask' }, 'ctl'); showAsk(); } } else { msg.innerHTML = '充满了!真电池里有保护电路,充满后会自动停止,防止<b>过充</b>。'; if (st.ph === 'chg' && !done) { done = true; EF.play('fuse'); msg.innerHTML = '充满了——锂离子又全回到石墨里。一放一充,就是一次<b>循环</b>。手机电池能用几百上千次,就是靠锂离子这样来回搬家。'; setTimeout(api.complete, 1700); } } return; }
+    flow.push({ d: m, t: performance.now() }); T.set({ q: q }, 'tick'); EF.tone(m < 0 ? 4 + q : 4 + q, 0, 0.08);
+  }
+  function showAsk() {
+    ask.hidden = false; ask.innerHTML = '<span>刚才放电时,锂离子 Li⁺ 在电池<b>里面</b>往哪边跑?</span><button class="ef-btn ghost chip" data-k="a">从石墨(负极)跑到正极</button><button class="ef-btn ghost chip" data-k="b">从正极跑到石墨(负极)</button>';
+    ask.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () {
+      if (b.dataset.k === 'a') { EF.play('select'); ask.hidden = true; T.set({ ph: 'chg' }, 'ctl'); msg.innerHTML = '对!放电时 Li⁺ 在里面穿过电解质跑向正极,电子在外面走导线、经过手机。现在接上充电器,把锂离子"赶"回石墨,充满它。'; }
+      else { EF.play('tick'); msg.innerHTML = '再看中间窗口:放电时,锂球是从左边的石墨层里出来的。'; api.say('放电 = 锂离子离开石墨。充电才是把它们送回石墨。'); }
+    }; });
+  }
+  ctl.querySelectorAll('.chip[data-m]').forEach(function (b) { b.onclick = function () {
+    var m = +b.dataset.m; EF.play('tick');
+    if (st.ph === 'ask') { msg.innerHTML = '先回答下面的问题。'; return; }
+    if (m === 1 && st.q >= NLI) { msg.innerHTML = '已经是满电了,再充就是过充。真电池的保护电路会切断充电。'; return; }
+    if (m === -1 && st.q <= 0) { msg.innerHTML = '已经没电了,先充电吧。'; return; }
+    if (m === 1 && st.ph === 'dis') msg.innerHTML = '先把电用完,看清锂离子放电时往哪跑。';
+    setMode(m);
+  }; });
+  ctl.querySelector('#poke').onclick = function () {
+    EF.play('tick'); T.set({ bad: 1 }, 'ctl'); setTimeout(function () { if (stage.isConnected) T.set({ bad: 0 }, 'ctl'); }, 3500);
+    msg.innerHTML = '<b style="color:#ff8a8a">虚拟演示:电池被扎破,正负极在里面直接碰上(内部短路),电流一下子变得很大,电池迅速发热。</b>温度一高,电池里的材料开始分解、放出更多热(有的还放出氧气),热又让分解更快——这种停不下来的升温叫<b>热失控</b>。电解液是易燃的有机液体,所以会冒浓烟、起火甚至喷火,而且烟有毒。真电池千万别扎、别压;鼓包、发烫、冒烟立刻停用、远离它,并告诉大人。';
+  };
+  /* 微观:石墨层 / 正极层,锂球 */
+  var CU = EF.canvas(T.pane.micro, 260), pos = [];
+  for (var i = 0; i < NLI; i++) pos.push({ x: 0, y: 0, init: 0 });
+  function slot(i, side, W, H) { var row = i % 5, col = Math.floor(i / 5); return side < 0 ? { x: W * (0.1 + col * 0.12), y: H * (0.2 + row * 0.15) } : { x: W * (0.7 + col * 0.12), y: H * (0.2 + row * 0.15) }; }
+  (function loop() {
+    if (!CU.c.isConnected) return; var x = CU.x, W = CU.W, H = CU.H; x.clearRect(0, 0, W, H);
+    x.fillStyle = 'rgba(122,215,255,.06)'; x.fillRect(W * 0.34, H * 0.08, W * 0.3, H * 0.84);
+    x.fillStyle = 'rgba(200,230,255,.6)'; x.font = '10px system-ui'; x.textAlign = 'center'; x.fillText('电解质 + 隔膜', W * 0.49, H * 0.97);
+    for (var r = 0; r < 6; r++) { x.fillStyle = '#3a3f4a'; x.fillRect(W * 0.04, H * (0.13 + r * 0.15), W * 0.28, 5); x.fillStyle = '#5a4a7a'; x.fillRect(W * 0.66, H * (0.13 + r * 0.15), W * 0.3, 5); }
+    x.fillStyle = '#dfe8f2'; x.font = '11px system-ui'; x.fillText('石墨(负极)', W * 0.18, H * 0.06); x.fillText('正极(层状氧化物)', W * 0.81, H * 0.06);
+    for (var k = 0; k < NLI; k++) { var side = k < st.q ? -1 : 1, s = slot(k, side, W, H), p = pos[k]; if (!p.init) { p.x = s.x; p.y = s.y; p.init = 1; }
+      p.x += (s.x - p.x) * (EF.reduced ? 1 : 0.07); p.y += (s.y - p.y) * (EF.reduced ? 1 : 0.07); var moving = Math.abs(s.x - p.x) > 3;
+      EF.ball(x, p.x, p.y, 7, '#ffd27a', ''); x.fillStyle = '#fff3c8'; x.font = '9px system-ui'; x.fillText(moving || side > 0 ? 'Li⁺' : 'Li', p.x, p.y - 9); }
+    if (st.bad && !EF.campus) { x.fillStyle = 'rgba(255,80,40,' + (0.25 + 0.15 * Math.sin(performance.now() / 80)) + ')'; x.fillRect(0, 0, W, H); }
+    if (st.bad) { x.fillStyle = '#ffdede'; x.font = '700 13px system-ui'; x.fillText('内部短路 · 热失控(示意)', W / 2, H / 2); }
+    requestAnimationFrame(loop);
+  })();
+  /* 宏观:手机 + 充电器 + 外电路电子 */
+  var CM = EF.canvas(T.pane.macro, 260), smoke = [];
+  (function loop(t) {
+    if (!CM.c.isConnected) return; var x = CM.x, W = CM.W, H = CM.H; x.clearRect(0, 0, W, H);
+    var px = W / 2 - 40, py = H * 0.12, pw = 80, ph = H * 0.62, lit = st.mode === -1 && st.q > 0;
+    if (lit) { var g = x.createRadialGradient(W / 2, py + ph / 2, 10, W / 2, py + ph / 2, W * 0.6); g.addColorStop(0, 'rgba(122,215,255,.35)'); g.addColorStop(1, 'rgba(122,215,255,0)'); x.fillStyle = g; x.fillRect(0, 0, W, H); }
+    x.fillStyle = '#1a1f2a'; x.beginPath(); x.roundRect ? x.roundRect(px, py, pw, ph, 12) : x.rect(px, py, pw, ph); x.fill(); x.strokeStyle = '#7ad7ff'; x.stroke();
+    x.fillStyle = lit ? '#bfeaff' : '#0c1018'; x.fillRect(px + 6, py + 12, pw - 12, ph - 24);
+    var bw = 40, bx = W / 2 - bw / 2, by = py + ph * 0.42; x.strokeStyle = lit ? '#1a2a3a' : '#7ad7ff'; x.strokeRect(bx, by, bw, 16); x.fillRect(bx + bw, by + 5, 3, 6);
+    x.fillStyle = st.q > 3 ? '#5ad87a' : '#ff7a5a'; x.fillRect(bx + 2, by + 2, (bw - 4) * st.q / NLI, 12);
+    x.fillStyle = lit ? '#123' : '#dfe8f2'; x.font = '700 12px system-ui'; x.textAlign = 'center'; x.fillText(Math.round(st.q / NLI * 100) + '%', W / 2, by + 32);
+    if (st.mode === 1) { x.strokeStyle = '#cfd8e6'; x.lineWidth = 2; x.beginPath(); x.moveTo(W / 2, py + ph); x.quadraticCurveTo(W / 2, H * 0.9, W * 0.85, H * 0.9); x.stroke(); x.lineWidth = 1; x.fillStyle = '#dfe8f2'; x.fillRect(W * 0.85, H * 0.86, 18, 12); x.font = '11px system-ui'; x.fillText('充电器', W * 0.88, H * 0.84); }
+    x.fillStyle = '#dfe8f2'; x.font = '12px system-ui'; x.fillText(st.mode === -1 ? '放电中:手机在用电' : st.mode === 1 ? '充电中' : '暂停', W / 2, H - 6);
+    if (st.bad) { if (Math.random() < 0.5) smoke.push({ x: W / 2 + (Math.random() - 0.5) * 30, y: by, l: 1 }); if (!EF.campus) { x.fillStyle = 'rgba(255,90,40,.35)'; x.fillRect(px, py, pw, ph); } }
+    smoke = smoke.filter(function (s) { s.y -= 0.8; s.l -= 0.012; x.fillStyle = 'rgba(160,160,170,' + Math.max(0, s.l * 0.5) + ')'; x.beginPath(); x.arc(s.x, s.y, 8 + (1 - s.l) * 10, 0, 7); x.fill(); return s.l > 0; });
+    requestAnimationFrame(loop);
+  })(0);
+  /* 符号 */
+  var sy = document.createElement('div'); sy.className = 'tri-sym'; T.pane.sym.appendChild(sy);
+  T.on(function (s) {
+    var d = s.mode === -1, c = s.mode === 1;
+    sy.innerHTML = (c ? '<p class="note-sm"><b>充电</b>(电池负极接充电器负极;两极反应和放电时相反)</p>' +
+        '<div class="eq" style="font-size:15px">总反应:LiCoO₂ + 6C <small>—充电→</small> LiC₆ + CoO₂</div>' :
+        '<p class="note-sm">' + (d ? '<b>放电</b>' : '放电时(充电时反过来)') + '</p>' +
+        '<div class="eq" style="font-size:15px">负极:LiC₆ − e⁻ = Li⁺ + 6C</div>' +
+        '<div class="eq" style="font-size:15px">正极:CoO₂ + Li⁺ + e⁻ = LiCoO₂</div>' +
+        '<div class="eq" style="font-size:15px">总反应:LiC₆ + CoO₂ <small>—放电→</small> LiCoO₂ + 6C</div>') +
+      '<p class="note-sm">充电和放电条件不同,不是"可逆反应"。Li⁺ 在电池<b>里面</b>穿过电解质;e⁻ 在<b>外面</b>走导线。两条路缺一条,电流就停了。</p>' +
+      '<p class="note-sm">电量:<b>' + s.q + '/' + NLI + '</b> 个锂在石墨里</p>' +
+      '<p class="note-sm">(简化写法:真实负极是 LiₓC₆、正极是 Li₁₋ₓCoO₂,每次只搬一部分锂;石墨里的锂可以看成 Li⁺ 加上石墨里的一个电子;很多电池用的是磷酸铁锂等别的正极)</p>';
+  });
+}
+
+function guard(stage, api) { var tok = {}, fired = false; stage._tok = tok; return { say: api.say, complete: function () { if (fired || stage._tok !== tok) return; fired = true; api.complete(); } }; }
+function pick(f2, k) { return function (stage, api0) { var api = guard(stage, api0); if (EF.V3 && EF.V3[k]) { try { return EF.V3[k](stage, api); } catch (e) { console.warn('[ef] 3D 玩法出错,回落平面版', e); stage.innerHTML = ''; } } return f2(stage, api); }; }
+var LEVELS = [
+  { title: '柠檬电池', setup: pick(L0, 'L0'), task: '给柠檬换上不同的金属片,看电压表;再串联柠檬,点亮红色 LED。',
+    ask: { q: '一个柠檬能当电池,关键是插进去的两片金属——', opts: ['越长越好', '要用两种不同的金属', '必须是金子'], ok: 1 },
+    hints: ['先试两片一样的金属,再试两片不一样的。', '锌片和铜片的组合电压最高。', '一个柠檬约 0.9 V;没接灯时读数到约 2.4 V,LED 才看得出微光。需要几个?'],
+    explain: '两种<b>不同的金属</b>插进能导电的酸性果汁(电解质溶液)里,再用导线连成回路,就成了一个<b>原电池</b>,把化学能变成电能。一个柠檬(锌-铜)约 0.9 V;几个<b>串联</b>,电压相加。电不是柠檬"装"着的,而是来自锌的化学变化——锌片会被慢慢消耗。LED 只让电流朝一个方向通过,接反了不亮。(读数为示意,真实水果、金属片大小不同,读数会有差别;很多钉子表面镀了锌,用它测出来会和锌片差不多)' },
+  { title: '电子去哪儿', setup: pick(L1, 'L1'), task: '合上开关,跟着电子走一圈,回答三个问题,写出两极的反应。',
+    ask: { q: '导线里流动的电子,是从哪里来的?', opts: ['导线里凭空产生的', '锌原子交出来的', '柠檬汁里本来就有的电'], ok: 1 },
+    hints: ['看中间窗口,小蓝点 e⁻ 是从哪片金属里出来的。', '铜片旁边:两个 H⁺ 各拿到一个电子。', '失电子 = 氧化,得电子 = 还原。'],
+    explain: '锌比铜活泼:锌原子<b>失去</b>电子变成 Zn²⁺(<b>氧化</b>),电子沿导线流到铜片,溶液里的 H⁺ 在铜片上<b>得到</b>电子变成氢气(<b>还原</b>)。电子从哪一极流出,哪一极就是<b>负极</b>(这里发生氧化反应);电子流进的一极是<b>正极</b>(在它表面发生还原反应——这里是 H⁺ 得到电子)。氧化和还原总是同时发生,所以叫氧化还原反应。电流方向规定得和电子方向相反。' },
+  { title: '金属排队', setup: pick(L2, 'L2'), task: '在金属梯子上选两种金属,完成三张订单:约 1.1 V、铜当负极、电压最大。',
+    ask: { q: '两种金属"活泼"程度差得越多,做成的电池电压——', opts: ['越大', '越小', '不变'], ok: 0 },
+    hints: ['理论电压 = 正极(上面那种)的数 − 负极(下面那种)的数。', '想让铜当负极,得找一种比铜更难失电子的金属。', '电压最大:梯子最下面和最上面。'],
+    explain: '把金属按"失电子的本领"排成一列(标准电极电势),两种金属隔得越远,电压越大;更活泼(更靠下)的那片交出电子、当<b>负极</b>。所以同一块铜,碰上锌是正极,碰上银就成了负极。这个顺序和初中学的金属活动性顺序一致:镁 > 锌 > 铁 >(氢)> 铜 > 银。这些数字是标准条件下的理论值:每种金属泡在自己的盐溶液里(比如铜泡在硫酸铜溶液里,正极上是 Cu²⁺ 得电子变成铜),两杯溶液用盐桥(装着盐溶液凝胶的弯管,让离子通过)连成回路。柠檬电池里正极上得电子的是 H⁺,不是 Cu²⁺,所以读数不是 1.10 V,而是 0.9 V 左右;水果电池的实际读数和梯子算出的数不同,大多偏低。' },
+  { title: '锂锂的往返', setup: pick(L3, 'L3'), task: '给手机放电到没电,说出锂离子往哪跑,再把电池充满。',
+    ask: { q: '手机电池能反复充电,是因为——', opts: ['锂离子能在两极之间来回"搬家"', '充电器把电装进了瓶子', '电池里藏着一台小发电机'], ok: 0 },
+    hints: ['先点"放电",一直用到 0%。', '放电时,锂球是从哪边的层里出来的?', '回答完,再点"充电"充到 100%。'],
+    explain: '锂离子电池放电时,锂离子从<b>石墨负极</b>穿过电解质跑到<b>正极</b>,电子从外面的导线走过、给手机供电;充电时,充电器把它们赶回石墨。离子走里面、电子走外面,两条路缺一不可。电池里的电解液是可燃的有机液体,扎破、挤压、过充、高温都可能让它发热、冒烟甚至起火(热失控)——所以真电池绝不能扎、压、烧。' }
+];
+var NOTES = { title: '元素工坊 · 怎样造一块会发电的电池?', items: [
+  '原电池的四个条件:活泼性不同的两个电极(常用两种金属,也可以是金属和石墨)+ 电解质溶液(能导电的溶液,比如稀硫酸、果汁)+ 用导线连成闭合回路 + 能自发发生的氧化还原反应。它把化学能直接变成电能。',
+  '更活泼的金属失去电子(氧化),是<b>负极</b>;电子流入的一极是<b>正极</b>,在它表面有物质得到电子(还原)。电子从负极经导线流向正极,电流方向相反。',
+  '锌-铜放在酸里:负极 Zn − 2e⁻ = Zn²⁺,正极 2H⁺ + 2e⁻ = H₂↑,总反应 Zn + 2H⁺ = Zn²⁺ + H₂↑。',
+  '两种金属在标准电极电势的梯子上(和金属活动性顺序一致)隔得越远,电压越大;串联几个电池,电压相加。',
+  '锂离子电池:放电时 Li⁺ 从石墨负极跑到正极,电子走外电路;充电时反过来。',
+  '安全:锂电池不拆、不扎、不压、不烧,鼓包发烫立即停用并远离;电动自行车电池不进楼、不进电梯;纽扣电池防儿童误吞,吞了别催吐、马上去医院;废锂电池贴住两极投进有害垃圾桶;别碰墙上插座、别短路电池;做过实验的水果不要吃。'],
+  bridge: '电池的星桥正在搭建中:电子在导线里怎样流动,会连到讲电路的世界。' };
+EF.mission('battery', LEVELS, NOTES);
+})();
+</script>
+</body>
+</html>

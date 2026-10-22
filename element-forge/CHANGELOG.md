@@ -1,5 +1,11 @@
 # 元素工坊 Element Forge · 变更记录
 
+## v0.7 · 2026-10-23(本地开发版,未推送)
+- 新任务 battery「怎样造一块会发电的电池?」(锂锂,★★☆,电子 · 离子):L0 柠檬电池(3D 水果电池台,串联点亮 LED)、L1 电子去哪儿(三窗联动,Zn−2e⁻=Zn²⁺ / 2H⁺+2e⁻=H₂↑)、L2 金属排队(标准电极电势梯子三张订单)、L3 锂锂的往返(三窗联动,锂离子电池充放电 + 虚拟扎破热失控演示)。
+- 独立化学审校(中 7 低 13)全部落地;安全卡含锂电池、纽扣电池、电动车电池、废电池分类、水果电池注意事项。
+- 新模块 ef-volt3d.js(EF.V3);ef-mission3d ?v=8 增 battery 电光实验台四场景;ef.css/js ?v=10(body.volt 主题、battery 点亮);SW ef-v0.7。
+- 解锁元素 H Li C Mg Fe Co Cu Zn Ag。
+
 ## v0.6 · fireworks「为什么烟花有不同的颜色?」+ cabbage 审校落地(2026-10-23,本地完成,未推送)
 - 新任务 fireworks/(向导小点,★★☆,进度键 gn:ef:fireworks,拟星桥端点 ef.fireworks,解锁 Li Na K Ca Cu Sr Ba):L0 夜空点单(3D 夜空七颗颜色星放虚拟烟花 + 三张订单)、L1 火焰里的指纹(虚拟焰色灯 + 分光镜,只看光谱认三个神秘样品)、L2 电子跳台阶(三窗联动,氢原子能级、巴耳末四线、落回 n=1 紫外)、L3 光谱认元素(三窗联动,三朵混色烟花选元素对谱线)。
 - 新 ef-fire3d.js(EF.F3);ef-mission3d.js 加夜空焰色台四场景(?v=7);ef.css 加 body.spark 主题与元素按钮(?v=9);ef.js 点亮 fireworks(?v=9);首页尺度镜「原子」档改链 fireworks;SW ef-v0.6。

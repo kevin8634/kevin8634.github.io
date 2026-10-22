@@ -188,3 +188,9 @@ body.mission.spark .m-guide{box-shadow:0 0 40px rgba(255,154,60,.1)}
 .ctl.chips{flex-wrap:wrap;gap:6px}
 .ef-btn.chip{min-height:44px;padding:6px 12px;border-color:var(--c,#ffd27a);color:#f4ede1}
 .ef-btn.chip.on{background:color-mix(in srgb,var(--c,#ffd27a) 30%,transparent);box-shadow:0 0 12px var(--c,#ffd27a)}
+/* v0.7 battery 电光实验台主题(锂锂) */
+body.volt{--line:rgba(122,215,255,.26)}
+body.mission.volt .cn{border-color:#9fe4ff;filter:drop-shadow(0 0 6px #7ad7ff88)}
+body.mission.volt .m-stage{border-color:rgba(122,215,255,.26);background:rgba(6,14,24,.46)}
+body.mission.volt .m-stage .ctl{border-color:rgba(122,215,255,.22)}
+body.mission.volt .m-guide{box-shadow:0 0 40px rgba(122,215,255,.1)}
