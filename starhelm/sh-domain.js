@@ -54,7 +54,7 @@
       km = SHD2.camKm(); key = '2|日-地-月';
     } else if (S.mode === 'solar') {
       var c = S.solarCam.position.distanceTo(S.solarCtl.target), r = Math.pow(c / 14, 2);
-      km = r * AU; key = '3|太阳系 · 预览';
+      km = r * AU; var fo = LE.solar && LE.solar.follow; key = '3|' + (fo && fo.zh ? fo.zh : '太阳系');
     } else if (D.focus === 'moon' && window.SHFOCUS) {
       km = SHFOCUS.moonKm(); key = '2|月球';
     } else {
@@ -75,6 +75,10 @@
       if (S.mode !== 'earth' && LE.ui.setMode) LE.ui.setMode('earth');
       if (window.SHFOCUS) SHFOCUS.back(); else if (S.flyTo) S.flyTo({ target: new THREE.Vector3(), position: S.earthCam.position.clone().normalize().multiplyScalar(S.fitDistance()) });
       SHHUD.guide('tianshu', '你就在这颗蓝色星球上。拖动它,找找你此刻在哪儿?', []);
+    } else if (n === 3) {
+      if (window.SHFOCUS && SHFOCUS.focused) SHFOCUS.back();
+      if (window.SHD3) SHD3.go(); else if (LE.ui.setMode) LE.ui.setMode('solar');
+      tick(true);
     } else if (n === 2) {
       if (S.mode !== 'earth' && LE.ui.setMode) LE.ui.setMode('earth');
       if (window.SHFOCUS && SHFOCUS.focused) SHFOCUS.back();
@@ -85,8 +89,8 @@
   function deepLink() {
     var m = /[?&]domain=(\d)/.exec(location.search); if (!m) return;
     var n = +m[1];
-    if (n === 2) setTimeout(function () { D.go(2); }, 900);
-    else if (n > 2) toast('星域 ' + ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][n] + ' 还在建造中,先从家园出发');
+    if (n === 2 || n === 3) setTimeout(function () { D.go(n); }, 900);
+    else if (n > 3) toast('星域 ' + ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][n] + ' 还在建造中,先从家园出发');
   }
 
   (function wait(k) {
