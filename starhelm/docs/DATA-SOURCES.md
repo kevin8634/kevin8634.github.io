@@ -96,3 +96,6 @@
 ## sky-8k.jpg / sky-4k.jpg(v1.0-M2c)
 - 来源:NASA Scientific Visualization Studio「Deep Star Maps 2020」(svs.gsfc.nasa.gov/4851),starmap_2020_8k.exr 色调映射后转 JPEG。
 - 数据基于 ESA Gaia、Hipparcos、Tycho-2 星表。许可:NASA 媒体,可免费用于教育;致谢 NASA/Goddard Space Flight Center Scientific Visualization Studio。
+
+## hd/*.jpg、hd/saturn-ring.png(v1.0-M2d)
+- 来源:Solar System Scope 纹理(solarsystemscope.com/textures,经 Wikimedia Commons 获取),基于 NASA 影像与高程数据。许可 CC BY 4.0。改动:缩放到 4096×2048(环 2048×64)。

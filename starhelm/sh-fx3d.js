@@ -40,7 +40,7 @@
     var S = window.LE && LE.scene; if (!S || !S.renderer) return;
     var tex = skyTexture(S.renderer);
     tex.ready.then(function () {
-      [[S.earthScene, 0x55565e], [S.solarScene, 0x4a4b52]].forEach(function (p) {
+      [[S.earthScene, 0x55565e], [S.solarScene, 0x5a5b62]].forEach(function (p) {
         if (!p[0]) return;
         p[0].traverse(function (o) {
           var mt = o.material;
@@ -150,7 +150,83 @@
     update(0.01);
     return { group: grp, core: core, update: update, dispose: function () { grp.traverse(function (x) { if (x.geometry) x.geometry.dispose(); if (x.material) x.material.dispose(); }); } };
   }
-  window.SHFX3D = { skyTexture: skyTexture, skyMesh: skyMesh, upgradeSkies: upgradeSkies, sun: sun, EPS: EPS };
+
+  /* ---------------- 星域 III:太阳系场景升级(v1.0-M2d) ---------------- */
+  var solarDone = false;
+  function loadTex(src, rd, srgb) {
+    var t = new T.Texture(); if (srgb !== false) t.encoding = T.sRGBEncoding;
+    t.anisotropy = rd ? Math.min(8, rd.capabilities.getMaxAnisotropy()) : 4;
+    t.ready = new Promise(function (res, rej) { var im = new Image(); im.decoding = 'async'; im.onload = function () { t.image = im; t.needsUpdate = true; res(t); }; im.onerror = rej; im.src = src; });
+    return t;
+  }
+  function hdOK(rd) {
+    var small = Math.min(screen.width, screen.height) < 700 || (navigator.deviceMemory && navigator.deviceMemory < 4);
+    return !small && rd && rd.capabilities.maxTextureSize >= 4096;
+  }
+  function ringParticles(b, rd) {   // 土星环:按真实环亮度(透明度贴图)分布的粒子
+    var tilt = b.mesh.parent, ringMesh = null;
+    tilt.children.forEach(function (c) { if (c.geometry && c.geometry.type === 'RingGeometry') ringMesh = c; });
+    if (!ringMesh) return;
+    var gp = ringMesh.geometry.parameters, rIn = gp.innerRadius, rOut = gp.outerRadius;
+    var im = new Image();
+    im.onload = function () {
+      var cv = document.createElement('canvas'); cv.width = 512; cv.height = 1; var g = cv.getContext('2d'); g.drawImage(im, 0, 0, 512, 1);
+      var px = g.getImageData(0, 0, 512, 1).data, cdf = [], sum = 0;
+      for (var i = 0; i < 512; i++) { sum += px[i * 4 + 3] / 255 + 0.002; cdf.push(sum); }
+      var N = hdOK(rd) ? 26000 : 9000, pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
+      for (var k = 0; k < N; k++) {
+        var u = Math.random() * sum, lo = 0, hi = 511; while (lo < hi) { var m = (lo + hi) >> 1; if (cdf[m] < u) lo = m + 1; else hi = m; }
+        var f = (lo + Math.random()) / 512, r = rIn + f * (rOut - rIn), a = Math.random() * Math.PI * 2;
+        pos[k * 3] = Math.cos(a) * r; pos[k * 3 + 1] = (Math.random() - 0.5) * (rOut - rIn) * 0.004; pos[k * 3 + 2] = Math.sin(a) * r;
+        var c = 0.75 + Math.random() * 0.25; col[k * 3] = (px[lo * 4] / 255 * 0.6 + 0.4) * c; col[k * 3 + 1] = (px[lo * 4 + 1] / 255 * 0.6 + 0.36) * c; col[k * 3 + 2] = (px[lo * 4 + 2] / 255 * 0.6 + 0.3) * c;
+      }
+      var geo = new T.BufferGeometry(); geo.setAttribute('position', new T.BufferAttribute(pos, 3)); geo.setAttribute('color', new T.BufferAttribute(col, 3));
+      var pts = new T.Points(geo, new T.PointsMaterial({ size: (rOut - rIn) * 0.012, map: dotTex(), vertexColors: true, transparent: true, opacity: 0.85, depthWrite: false, sizeAttenuation: true }));
+      tilt.add(pts);
+      // 环与粒子都接收土星本体的影子:从该点指向太阳(原点)的光线若穿过土星球体 → 变暗
+      var SU = { uPC: { value: new T.Vector3() }, uPR: { value: b.R } };
+      var SHADOW = 'uniform vec3 uPC;uniform float uPR;float shd(vec3 w){vec3 d=normalize(-w);vec3 oc=uPC-w;float tt=dot(oc,d);if(tt<0.)return 1.;float dd=length(oc-d*tt);return mix(.12,1.,smoothstep(uPR*.97,uPR*1.03,dd));}';
+      var rtex = loadTex('hd/saturn-ring.png', rd);
+      ringMesh.material = new T.ShaderMaterial({
+        uniforms: { uMap: { value: rtex }, uPC: SU.uPC, uPR: SU.uPR }, transparent: true, depthWrite: false, side: T.DoubleSide,
+        vertexShader: 'varying vec2 vU;varying vec3 vW;void main(){vU=uv;vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}',
+        fragmentShader: 'uniform sampler2D uMap;varying vec2 vU;varying vec3 vW;' + SHADOW + 'void main(){vec4 c=texture2D(uMap,vec2(vU.x,.5));gl_FragColor=vec4(c.rgb*1.7*shd(vW),c.a*.85);}'
+      });
+      pts.material.onBeforeCompile = function (sh) {
+        sh.uniforms.uPC = SU.uPC; sh.uniforms.uPR = SU.uPR;
+        sh.vertexShader = 'varying vec3 vW2;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vW2=(modelMatrix*vec4(transformed,1.)).xyz;');
+        sh.fragmentShader = 'varying vec3 vW2;\n' + SHADOW + '\n' + sh.fragmentShader.replace('#include <premultiplied_alpha_fragment>', 'gl_FragColor.rgb*=shd(vW2);\n#include <premultiplied_alpha_fragment>');
+      };
+      var S = LE.scene; S.addUpdater(function () { b.mesh.getWorldPosition(SU.uPC.value); });
+    };
+    im.src = 'hd/saturn-ring.png';
+  }
+  function upgradeSolar() {
+    var S = window.LE && LE.scene, SO = window.LE && LE.solar; if (solarDone || !S || !SO || !SO.byId || !SO.byId.sun) return false;
+    solarDone = true; var rd = S.renderer, sc = S.solarScene;
+    try {
+      // 1 太阳:换成 SHFX3D 太阳,旧光晕精灵隐藏
+      var sb = SO.byId.sun, fx = sun({ radius: sb.R || 3.2 });
+      sb.mesh.material.transparent = true; sb.mesh.material.opacity = 0; sb.mesh.material.depthWrite = false;
+      sc.children.forEach(function (o) { if (o.isSprite && o.position.lengthSq() < 1e-6) o.visible = false; });
+      sc.add(fx.group); SHFX3D._solarSun = fx;
+      var last = performance.now();
+      S.addUpdater(function () { var n = performance.now(), dt = Math.min(0.1, (n - last) / 1000); last = n; if (S.mode === 'solar') fx.update(dt, S.solarCam); });
+      // 2 高清行星贴图(桌面)
+      if (hdOK(rd)) ['jupiter', 'saturn', 'mars', 'mercury', 'venus'].forEach(function (id) {
+        var b = SO.byId[id]; if (!b || !b.mesh || !b.mesh.material.uniforms) return;
+        var t = loadTex('hd/' + id + '-4k.jpg', rd);
+        t.ready.then(function () { b.mesh.material.uniforms.uMap.value = t; b.mesh.material.uniforms.uHas.value = 1; }).catch(function () { });
+      });
+      // 3 土星粒子环
+      if (SO.byId.saturn) ringParticles(SO.byId.saturn, rd);
+      // 4 小行星带/柯伊伯带改用软圆点
+      var dt0 = dotTex();
+      sc.children.forEach(function (o) { if (o.isPoints && o.material && !o.material.map && o.material.size === 1.6) { o.material.map = dt0; o.material.size = 2.4; o.material.needsUpdate = true; } });
+    } catch (e) { console.warn('[SHFX3D] 太阳系升级失败', e); }
+    return true;
+  }
+  window.SHFX3D = { skyTexture: skyTexture, skyMesh: skyMesh, upgradeSkies: upgradeSkies, sun: sun, upgradeSolar: upgradeSolar, EPS: EPS };
   // 母港与太阳系场景就绪后自动换高清星空
-  (function w(k) { if (window.SH_READY && window.LE && LE.scene && LE.scene.renderer) { try { upgradeSkies(); } catch (e) { console.warn('[SHFX3D] 星空升级失败', e); } return; } if (k < 600) setTimeout(function () { w(k + 1); }, 150); })(0);
+  (function w(k) { if (window.SH_READY && window.LE && LE.scene && LE.scene.renderer) { try { upgradeSkies(); LE.scene.addUpdater(function () { if (!solarDone && LE.scene.mode === 'solar') upgradeSolar(); }); } catch (e) { console.warn('[SHFX3D] 星空升级失败', e); } return; } if (k < 600) setTimeout(function () { w(k + 1); }, 150); })(0);
 })();
