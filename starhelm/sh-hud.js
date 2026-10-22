@@ -10,7 +10,7 @@
   var AU = 149597870.7, C = 299792.458, LY = 9460730472580.8;
   var DOM = [ // 七星域(scale = 航图对数半径 log10 米,与 sh-data.js 一致)
     { n: 1, zh: '家园', g: '北辰', scale: 7, open: true }, { n: 2, zh: '日与月', g: '羲和与望舒', scale: 9, open: true },
-    { n: 3, zh: '行星世界', g: '岁星', scale: 12 }, { n: 4, zh: '太阳系边疆', g: '星槎', scale: 14 }, { n: 5, zh: '群星', g: '织女', scale: 17 },
+    { n: 3, zh: '行星世界', g: '岁星', scale: 12, open: true }, { n: 4, zh: '太阳系边疆', g: '星槎', scale: 14 }, { n: 5, zh: '群星', g: '织女', scale: 17 },
     { n: 6, zh: '银河', g: '银汉', scale: 21 }, { n: 7, zh: '宇宙', g: '太一', scale: 26 }];
   var ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
   // 星域 II(M1):四个已有实验室 + 两个新任务;星域 I 读 SH.TASKS
@@ -21,7 +21,13 @@
     { id: 'moon', d: 2, q: '月相实验室', lab: 'moonLab', key: 'moon' },
     { id: 'tidelock', d: 2, q: '月亮为什么总用同一面对着我们?', isNew: true, lab: 'tidelockLab', key: 'tidelock' },
     { id: 'aurora', d: 2, q: '极光是太阳寄来的信吗?', isNew: true, lab: 'auroraLab', key: 'aurora' }];
-  var GUIDES = { tianshu: { zh: '北辰', sub: '星域 I 家园' }, xihe: { zh: '羲和', sub: '管太阳这一边', av: '' }, wangshu: { zh: '望舒', sub: '管月亮这一边', av: 'moon' } };
+  // 星域 III(M2a):两个新任务开放,两个即将
+  var TASKS3 = [
+    { id: 'marsday', d: 3, q: '火星上的一天有多长?', isNew: true, lab: 'marsdayLab', key: 'marsday' },
+    { id: 'tonight', d: 3, q: '今晚抬头能看到哪颗行星?', isNew: true, lab: 'tonightLab', key: 'tonight' },
+    { id: 'jupiter', d: 3, q: '木星为什么没变成太阳?', soon: true, key: 'jupiter' },
+    { id: 'retro', d: 3, q: '行星为什么有时会倒着走?', soon: true, key: 'retro' }];
+  var GUIDES = { suixing: { zh: '岁星', sub: '星域 III 行星世界', av: '' }, tianshu: { zh: '北辰', sub: '星域 I 家园' }, xihe: { zh: '羲和', sub: '管太阳这一边', av: '' }, wangshu: { zh: '望舒', sub: '管月亮这一边', av: 'moon' } };
 
   var nowT = 0, H = {}, subs = {}, st = { dom: 1, body: '', km: 4e5, task: '', nowBody: null, nowPt: null, hints: [], hintN: 0 };
   function $(s, r) { return (r || document).querySelector(s); }
@@ -63,6 +69,7 @@
   function tasksOf(d) {
     if (d === 1) return (window.SH && SH.TASKS ? SH.TASKS : []).map(function (t) { return { id: t.id, d: 1, q: t.q, key: t.id, fw: true }; });
     if (d === 2) return TASKS2;
+    if (d === 3) return TASKS3;
     return [];
   }
   function lit(t) { // ★:每关至少 1 星
@@ -77,14 +84,14 @@
   }
   function drawTasks() {
     var all = 0, on = 0, h = '';
-    [1, 2].forEach(function (d) {
+    [1, 2, 3].forEach(function (d) {
       var ts = tasksOf(d), n = ts.filter(lit).length; all += ts.length; on += n;
       h += '<div class="shh-dom" id="shh-dom' + d + '"><span>星域 ' + ROMAN[d] + ' · ' + DOM[d - 1].zh + ' · ' + DOM[d - 1].g + '</span><span>' + n + '/' + ts.length + '</span></div>';
       ts.forEach(function (t) {
         h += '<button type="button" class="shh-task' + (t.id === st.task ? ' cur' : '') + '" data-id="' + t.id + '" data-d="' + d + '"><i>' + (lit(t) ? '★' : '☆') + '</i><span>' + esc(t.q) + (t.isNew ? '<span class="shh-new">新</span>' : t.soon ? '<span class="shh-new is-soon">即将</span>' : '') + '</span></button>';
       });
     });
-    h += '<div class="shh-lock">星域 III–VII · 即将开放</div>';
+    h += '<div class="shh-lock">星域 IV–VII · 即将开放</div>';
     H.list.innerHTML = '<div class="shh-list__h">任务<small>' + on + '/' + all + ' 已点亮</small></div>' + h;
     var rb = H.rail.querySelectorAll('button[data-d]');
     for (var i = 0; i < rb.length; i++) rb[i].classList.toggle('cur', +rb[i].dataset.d === st.dom);
@@ -174,6 +181,7 @@
     if (!window.SHNOW || !SHNOW.ok) { H.nowRows.innerHTML = '<div class="shnow-s">天文计算模块未载入</div>'; return; }
     var d = window.SHTIME ? SHTIME.now() : new Date(), o = SHNOW.card(H.nowRows, st.nowBody, d);
     H.nowName.innerHTML = '<b>' + o.name + '</b><small>' + o.en + '</small>';
+    if (!o.distKm) { var su = o.sunAU * AU, sa = bigNum(su), sb = bigLight(su); H.big.innerHTML = '<div><small>离太阳</small><b>' + sa[0] + '<em>' + sa[1] + '</em></b></div><div class="shh-cyan"><small>阳光走</small><b>' + sb[0] + '<em>' + sb[1] + '</em></b></div>'; return; }
     var a = bigNum(o.distKm), b = bigLight(o.distKm); SHHUD.setScale(o.distKm);
     H.big.innerHTML = '<div><small>离地球</small><b>' + a[0] + '<em>' + a[1] + '</em></b></div><div class="shh-cyan"><small>' + (o.id === 'sun' ? '光到地球' : '光从这里到你') + '</small><b>' + b[0] + '<em>' + b[1] + '</em></b></div>';
     // 大读数已显示距离与光行时,行内去重
@@ -315,6 +323,6 @@
     setTask: function (id) { st.task = id; drawTasks(); },
     refreshTasks: drawTasks,
     drawer: function (open) { setDrawer(open, true); },
-    fmtKm: fmtKm, fmtLight: fmtLight, DOMAINS: DOM, TASKS2: TASKS2, tasksOf: tasksOf, lit: lit
+    fmtKm: fmtKm, fmtLight: fmtLight, DOMAINS: DOM, TASKS2: TASKS2, TASKS3: TASKS3, tasksOf: tasksOf, lit: lit
   };
 })();
