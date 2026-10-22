@@ -55,7 +55,7 @@ export function chrome({ home = './', extra = '' } = {}) {
     <span class="sp"></span>${extra}
     <button class="lt-btn lt-age-chip" id="ltAgeChip" type="button" title="更换年龄段"></button>
     <button class="lt-btn" id="ltSound" type="button" aria-pressed="false" aria-label="声音开关(默认关)">🔈</button>
-    <a class="lt-btn" href="/" title="回到创世计划总门户">总门户</a>`;
+    <a class="lt-btn lt-home" href="/" title="回到创世计划总门户(同窗口)">← 创世<span class="lt-wide">计划</span></a>`;
   document.body.prepend(top);
   const sb = top.querySelector('#ltSound'); const chip0 = top.querySelector('#ltAgeChip');
   const paint = () => { const on = sound.on(); sb.setAttribute('aria-pressed', on); sb.textContent = on ? '🔊' : '🔈'; };
