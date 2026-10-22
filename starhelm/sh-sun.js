@@ -47,7 +47,7 @@
   function build() {
     var r = U.root = h('section', 'ml ml--sun');
     r.innerHTML =
-      '<header class="ml-hd"><div><small>星域 II · 天璇 · 日与月</small><b>太阳活动观测台</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
+      '<header class="ml-hd"><div><small>星域 II · 羲和与望舒 · 日与月</small><b>太阳活动观测台</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
       '<div class="ml-body"><div class="ml-pane sn-img"><div class="ml-cap">NASA SDO 最新实拍 <span class="sn-bands"></span></div>' +
       '<div class="sn-wrap"><img class="sn-sun" alt="太阳最新实拍" referrerpolicy="no-referrer"><div class="sn-fail" hidden>实拍图暂时取不到</div></div>' +
       '<div class="ml-note sn-note"></div></div>' +
