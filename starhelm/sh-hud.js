@@ -19,7 +19,7 @@
     { id: 'tide', d: 2, q: '潮汐实验室', lab: 'tideLab', key: 'tide' },
     { id: 'sun', d: 2, q: '太阳活动观测台', lab: 'sunLab', key: 'sun' },
     { id: 'moon', d: 2, q: '月相实验室', lab: 'moonLab', key: 'moon' },
-    { id: 'tidelock', d: 2, q: '月亮为什么总用同一面对着我们?', soon: true, key: 'tidelock' },
+    { id: 'tidelock', d: 2, q: '月亮为什么总用同一面对着我们?', isNew: true, lab: 'tidelockLab', key: 'tidelock' },
     { id: 'aurora', d: 2, q: '极光是太阳寄来的信吗?', soon: true, key: 'aurora' }];
   var GUIDES = { tianshu: { zh: '北辰', sub: '星域 I 家园' }, xihe: { zh: '羲和', sub: '管太阳这一边', av: '' }, wangshu: { zh: '望舒', sub: '管月亮这一边', av: 'moon' } };
 
