@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<html lang="zh-CN"><head><meta charset="utf-8"><script src="/ludoterra/gn-arrive.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>觉弈 Ludoterra · 创世计划 06 · 认知觉醒</title>
 <meta name="description" content="创世计划第 06 世界「觉弈」(认知觉醒):地球Online 没有新手教程,这里补上。先被自己的大脑骗一次,再看见规则,最后亲手改写规则。免费、免注册。">
 <meta name="theme-color" content="#070814">
@@ -130,7 +130,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   </div>
   <div id="pNote" aria-live="polite"></div>
 </aside>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.20.1</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.21</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -170,12 +170,13 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   <p class="lead" style="font-size:13px">一句话串起来:自我决定你怎么看,他人决定你和谁一起玩,世界决定游戏怎么计分,意义决定你为什么而玩。</p>
   <p class="lead" style="font-size:13px"><b>我们的底线:</b>只讲机制,不教「应该怎么活」;不排名、不给人格打分、不做心理诊断、不制造焦虑;远离成功学与玄学;财富相关内容<b>不构成投资建议</b>;不涉及政治、宗教立场。</p>
   <p class="lead" style="font-size:13px">如果你正被情绪或心理困扰压得喘不过气,请告诉一位信任的大人,或拨打全国统一心理援助热线 <b style="color:var(--gold)">12356</b>。</p>
-  <div class="row2"><button class="lt-btn primary" data-close type="button">回到星盘</button></div>
+  <div class="row2"><button class="lt-btn" id="bReplay" type="button">✦ 重播开场动画</button><button class="lt-btn primary" data-close type="button">回到星盘</button></div>
 </div></div>
 
 <script type="module">
 import { playIntro } from './lt-intro.js';
 playIntro();
+document.getElementById('bReplay').onclick = () => { closeM(document.getElementById('mAbout')); setTimeout(() => playIntro(true), 250); };
 import { AGES, LAYERS, DOMAINS, MEANING, GUIDES, GUIDE_ORDER, TASKS, BRIDGES, HANDBOOK, STATS, TRACKS, ageLabel } from './lt-data.js';
 import { chrome, hud, store, getAge, setAge, isDone, sound, reducedMotion, offline } from './lt.js';
 
