@@ -16,6 +16,7 @@
 | 航线 | 自建 39 个机场坐标 | 自有 | `le-flights.js` | **示意航线,非实时航班**,对外称「航线示意」 |
 | three.js 0.169.0 / OrbitControls / GLTFLoader | three.js | MIT | 本地打包 `vendor/three-r169/`(附 LICENSE),含 r147 兼容层 | v0.9.0 主力 |
 | three.js 0.147 / OrbitControls / GLTFLoader | three.js | MIT | 本地副本(根目录 three.min.p*.js) | v0.9.0 起仅作 WebGL1/无 WebGL 降级 |
+| astronomy-engine 2.1.19 | Don Cross / cosinekitty/astronomy | MIT | 本地副本 `vendor/astronomy-engine/astro.p1–p3.js`(附 LICENSE);本机计算月相、日月距离、日月食 | v1.0-M1a 起 |
 | satellite.js 6.0.2 | shashwatak/satellite-js | MIT | 本地副本(含 OMM `json2satrec`) | 2026-10-17 由 5.0 升级 |
 | 字体 Orbitron / Rajdhani | Google Fonts | SIL OFL 1.1 | base64 内嵌 | |
 | 天宫空间站、哈勃望远镜轨道 | CelesTrak GP,`CATNR=48274` / `CATNR=20580`,`FORMAT=CSV` | 同上 | `LE.netcache` 本机缓存 2 小时;`sh-orbits-data.js` 内置快照(历元 2026-10-17)兜底 | M1 新增 |
