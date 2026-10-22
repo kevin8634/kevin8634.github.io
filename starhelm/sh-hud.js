@@ -22,7 +22,7 @@
     { id: 'tidelock', d: 2, q: '月亮为什么总用同一面对着我们?', isNew: true, lab: 'tidelockLab', key: 'tidelock' },
     { id: 'aurora', d: 2, q: '极光是太阳寄来的信吗?', isNew: true, lab: 'auroraLab', key: 'aurora' }];
   // 星域 III(M2a/M2b):四个任务全部开放
-  var TASKS4 = [{ id: 'voyager', d: 4, q: '旅行者号此刻飞到哪了?', isNew: true, lab: 'voyagerLab', key: 'voyager' }, { id: 'comet', d: 4, q: '彗星的尾巴为什么总背着太阳?', isNew: true, lab: 'cometLab', key: 'comet' }];
+  var TASKS4 = [{ id: 'voyager', d: 4, q: '旅行者号此刻飞到哪了?', isNew: true, lab: 'voyagerLab', key: 'voyager' }, { id: 'comet', d: 4, q: '彗星的尾巴为什么总背着太阳?', isNew: true, lab: 'cometLab', key: 'comet' }, { id: 'dino', d: 4, q: '恐龙那天到底发生了什么?', isNew: true, lab: 'dinoLab', key: 'dino' }];
   var TASKS3 = [
     { id: 'marsday', d: 3, q: '火星上的一天有多长?', isNew: true, lab: 'marsdayLab', key: 'marsday' },
     { id: 'tonight', d: 3, q: '今晚抬头能看到哪颗行星?', isNew: true, lab: 'tonightLab', key: 'tonight' },

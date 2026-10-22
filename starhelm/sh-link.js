@@ -28,7 +28,8 @@
     jupiter: function () { SH.jupiterLab.open(); },
     retro: function () { SH.retroLab.open(); },
     voyager: function () { SH.voyagerLab.open(); },
-    comet: function () { SH.cometLab.open(); }
+    comet: function () { SH.cometLab.open(); },
+    dino: function () { SH.dinoLab.open(); }
   };
   if (!OPEN[id]) return;
   (function w(n) {

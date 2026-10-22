@@ -1,6 +1,6 @@
 /* 天枢 Starhelm · sh-opening.js · 学科开场(v1.0-M1c)
  * 约 8 秒:从你所在的那一点出发,七层光壳逐层展开到宇宙,再收回到地球。随时可跳过(点任意处 / Esc)。
- * 只在第一次进入时自动播放(gn:sh:opening);门户接力、深链 ?domain= 进入时不打扰;顶栏「↺ 开场」可重播。
+ * v1.0-M3d 起每次进入自动播放(王磊 10-23),可跳过;星桥深链 ?domain= / ?task= 进入时不打扰;顶栏「↺ 开场」可重播。
  * 减少动态:静态标题 2 秒淡出。默认无声(声音即规律,默认关)。API:window.SHOPEN.play(force)
  */
 (function () {
@@ -71,7 +71,7 @@
   (function wait(k) {
     if (window.SHHUD && window.SHDOM && SHDOM.ready) {
       var portal = false; try { portal = !!sessionStorage.getItem('gn:portal:arrive'); } catch (e) { }
-      if (!seen() && !/[?&](domain|task|from)=/.test(location.search) && !portal) play(false);
+      if (!/[?&](domain|task)=/.test(location.search)) play(true);   // v1.0-M3d 王磊:每次进入默认播放(可跳过;星桥深链除外)
       return;
     }
     if (k > 600) return; setTimeout(function () { wait(k + 1); }, 100);

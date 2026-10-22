@@ -70,10 +70,9 @@
       uniforms: { uC: { value: new T.Color(col) }, uT: { value: 0 }, uK: { value: k } }, transparent: true, depthWrite: false, side: T.DoubleSide, blending: T.AdditiveBlending,
       vertexShader: 'varying vec3 vN;varying vec3 vW;varying vec3 vP;void main(){vP=position;vN=normalize(mat3(modelMatrix)*normal);vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}',
       fragmentShader: 'uniform vec3 uC;uniform float uT,uK;varying vec3 vN;varying vec3 vW;varying vec3 vP;' +
-        'float h(vec3 p){return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453);}' +
-        'void main(){vec3 v=normalize(cameraPosition-vW);float f=pow(1.-abs(dot(normalize(vN),v)),2.2);' +
-        'float band=.55+.45*sin(length(vP)*.08-uT*.6+vP.y*.05)*sin(vP.x*.03+uT*.25);float spark=step(.997,h(floor(vP*.9)+floor(uT*2.)));' +
-        'gl_FragColor=vec4(uC*(f*1.3*band+spark*.6)*uK,1.);}'
+        'void main(){vec3 v=normalize(cameraPosition-vW);float f=pow(1.-abs(dot(normalize(vN),v)),2.6);' +
+        'float band=.75+.25*sin(length(vP)*.035-uT*.35);' +
+        'gl_FragColor=vec4(uC*f*1.2*band*uK,1.);}'
     });
   }
   function glowTex(T, rgb) {
@@ -89,26 +88,28 @@
     var hp = new T.Mesh(shellGeo(T, SO, 121, 1.4), shellMat(T, 0x58c8ff, 0.55)); G.add(hp);
     var ts = new T.Mesh(shellGeo(T, SO, 90, 0.9), shellMat(T, 0xb48cff, 0.32)); G.add(ts);
     D4.shells = [hp, ts];
-    // 星际风粒子:从迎风方向吹来,遇到日球层顶沿表面绕过
-    var N = innerWidth < 760 ? 1400 : 3200, pos = new Float32Array(N * 3), nose = SO.toScene(NOSE).normalize(), up = new T.Vector3(0, 1, 0).cross(nose).normalize(), side = nose.clone().cross(up).normalize();
-    var R0 = 14 * Math.sqrt(121), Rf = R0 * 2.6, P = [];
-    function spawn(i, anywhere) { var a = Math.random() * 6.283, r = Math.sqrt(Math.random()) * Rf, s = anywhere ? (Math.random() * 2 - 1) * Rf : Rf; P[i] = { u: Math.cos(a) * r, w: Math.sin(a) * r, s: s, sp: 6 + Math.random() * 6 }; }
-    for (var i = 0; i < N; i++) spawn(i, true);
-    var pg = new T.BufferGeometry(); pg.setAttribute('position', new T.BufferAttribute(pos, 3).setUsage(T.DynamicDrawUsage));
-    var pts = new T.Points(pg, new T.PointsMaterial({ size: 2.2, sizeAttenuation: false, map: glowTex(T, '150,210,255'), color: 0x9fd8ff, transparent: true, opacity: 0.55, depthWrite: false, blending: T.AdditiveBlending }));
-    pts.frustumCulled = false; G.add(pts);
-    var tmp = new T.Vector3();
-    D4.wind = function (dt) {
-      for (var i = 0; i < N; i++) {
-        var q = P[i]; q.s -= q.sp * dt * 3;
-        if (q.s < -Rf) spawn(i, false);
-        tmp.copy(nose).multiplyScalar(q.s).addScaledVector(up, q.u).addScaledVector(side, q.w);
-        var L = tmp.length(), rr = R0 * (1 + 1.4 * Math.pow((1 - tmp.dot(nose) / (L || 1)) / 2, 1.6)) * 1.04;
-        if (L < rr) tmp.multiplyScalar(rr / (L || 1));
-        pos[i * 3] = tmp.x; pos[i * 3 + 1] = tmp.y; pos[i * 3 + 2] = tmp.z;
-      }
-      pg.attributes.position.needsUpdate = true;
-    };
+    // 星际风 + 日球层表面流动粒子(全部在 GPU 上计算,CPU 每帧只更新时间)
+    var nose = SO.toScene(NOSE).normalize(), up = new T.Vector3(0, 1, 0).cross(nose).normalize(), side = nose.clone().cross(up).normalize();
+    var R0 = 14 * Math.sqrt(121), Rf = R0 * 2.6, small = innerWidth < 760;
+    function seeds(n, f) { var g = new T.BufferGeometry(), a = new Float32Array(n * 4); for (var i = 0; i < n; i++) f(a, i * 4); g.setAttribute('seed', new T.BufferAttribute(a, 4)); g.setAttribute('position', new T.BufferAttribute(new Float32Array(n * 3), 3)); g.boundingSphere = new T.Sphere(new T.Vector3(), Rf * 2); return g; }
+    var U0 = { uT: { value: 0 }, uN: { value: nose }, uU: { value: up }, uS: { value: side }, uR0: { value: R0 }, uRf: { value: Rf }, uPx: { value: Math.min(2, devicePixelRatio || 1) } };
+    var shapeGL = 'float rr(float c){return uR0*sqrt(1.+1.4*pow((1.-c)/2.,1.6));}';
+    var windM = new T.ShaderMaterial({ uniforms: U0, transparent: true, depthWrite: false, blending: T.AdditiveBlending,
+      vertexShader: 'uniform float uT,uR0,uRf,uPx;uniform vec3 uN,uU,uS;attribute vec4 seed;varying float vA;' + shapeGL +
+        'void main(){float L=2.*uRf;float s=uRf-mod(uT*seed.w+seed.z*L,L);vec3 p=uN*s+uU*seed.x*uRf+uS*seed.y*uRf;float l=length(p);float c=dot(p,uN)/max(l,1e-3);float r=rr(c)*1.04;' +
+        'float push=smoothstep(r*1.25,r,l);p=normalize(p)*mix(l,max(l,r),push);vA=smoothstep(uRf,uRf*.7,abs(s))*(.35+.65*push);' +
+        'vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=uPx*(1.4+push*1.6);}',
+      fragmentShader: 'varying float vA;void main(){vec2 d=gl_PointCoord-.5;float a=smoothstep(.5,0.,length(d));gl_FragColor=vec4(vec3(.55,.8,1.)*a*vA*.8,1.);}' });
+    var nW = small ? 2500 : 7000;
+    G.add(new T.Points(seeds(nW, function (a, k) { var ang = Math.random() * 6.283, r = Math.sqrt(Math.random()); a[k] = Math.cos(ang) * r; a[k + 1] = Math.sin(ang) * r; a[k + 2] = Math.random(); a[k + 3] = 18 + Math.random() * 14; }), windM));
+    var flowM = new T.ShaderMaterial({ uniforms: U0, transparent: true, depthWrite: false, blending: T.AdditiveBlending,
+      vertexShader: 'uniform float uT,uR0,uPx;uniform vec3 uN,uU,uS;attribute vec4 seed;varying float vA;varying float vK;' + shapeGL +
+        'void main(){float th=mod(seed.x+uT*seed.w,1.)*3.0;float ph=seed.y*6.2832;float c=cos(th);vec3 d=uN*c+(uU*cos(ph)+uS*sin(ph))*sin(th);float r=rr(c)*(seed.z>.5?1.:.745);' +
+        'vec3 p=d*r;vA=sin(th/3.0*3.1416);vK=seed.z;vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=uPx*(1.2+1.3*vA);}',
+      fragmentShader: 'varying float vA;varying float vK;void main(){vec2 d=gl_PointCoord-.5;float a=smoothstep(.5,0.,length(d));vec3 c=vK>.5?vec3(.35,.85,1.):vec3(.75,.55,1.);gl_FragColor=vec4(c*a*vA*.9,1.);}' });
+    var nF = small ? 3000 : 9000;
+    G.add(new T.Points(seeds(nF, function (a, k) { a[k] = Math.random(); a[k + 1] = Math.random(); a[k + 2] = Math.random() < 0.6 ? 1 : 0; a[k + 3] = 0.012 + Math.random() * 0.012; }), flowM));
+    D4.wind = function (t) { U0.uT.value = t; };
     // 探测器:轨迹 + 辉光标记 + 标签
     var box = SO.labels || document.getElementById('solar-labels');
     D4.probes = {};
@@ -131,7 +132,7 @@
       if (!on) return;
       var ms = SO.simTime || Date.now(), J = jd(ms);
       D4.shells.forEach(function (s) { s.material.uniforms.uT.value = now / 1000; });
-      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) D4.wind(dt);
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) D4.wind(now / 1000);
       var camD = S.solarCam.position.length(), mkS = Math.max(1.2, camD * 0.012);
       Object.keys(D4.probes).forEach(function (k) {
         var q = D4.probes[k], h = helio(k, ms);
