@@ -127,3 +127,10 @@
 - 右侧:次数、最强一次、按震级柱状图(对数刻度:1,844/125/14)、按深度计数。
 - 3 关:①地震排成带子、环太平洋 ②南美俯冲带越往内陆越深 ③每大 1 级次数少约 10 倍、能量约 32 倍。
 - 自测 1280×720、844×390 三关全流程无 page error。sw sh-v0.6.4。
+
+## v0.6.5 门户接力 + 星桥深链(2026-10-22,本账号新窗口;王磊 11:2x 授权测通即上线)
+- §5.12 门户→世界接力:index.html `<head>` 最前内联脚本读 sessionStorage `gn:portal:arrive`(5 秒内有效,读后即删),铺世界色(默认 #dfe6f3)上叠 rgba(4,6,15,.82) 的遮罩,约 600 ms 淡出接入加载画面;减少动态 200 ms;无键/过期/坏 JSON 照旧。
+- 「← 创世计划」(v0.5.4 起)同窗口返回门户,已核查全站无其他回门户链接、无 target=_blank。
+- 星桥深链 sh-link.js:`?task=where|orbit|seasons|sats|quakes|eclipse|tide|sun|moon|archive`,载入后直接打开对应任务(第一个未拿星的关卡)或实验室;未知 id 忽略。
+- 小修:首页 SFX 按钮初始 aria-pressed 改为 false(与声音默认关一致)。sw sh-v0.6.5(预缓存加 sh-link.js)。
+- 自测(playwright + SwiftShader):1440×900、1024×768、375×667;接力有键/过期/坏 JSON/减少动态/无键;10 个深链全部打开、未知 id 无反应;无 page error。
