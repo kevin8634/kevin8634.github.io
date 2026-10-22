@@ -10,6 +10,7 @@
   'use strict';
   var SH = window.SH, LE = window.LE, U = LE.util, C = LE.config, $ = U.$, A = SH.astro, h = SH.h;
   var S, DEG = Math.PI / 180;
+  function TNOW() { return window.SHTIME ? SHTIME.now() : new Date(); }   // v1.0-M1b:日月跟随统一时间轴
   var SKY = (SH.sky = {});
 
   function sprite(tex, size) { var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false })); s.scale.set(size, size, size); return s; }
@@ -54,25 +55,26 @@
   SKY.initSunMoon = function () {
     var g = new THREE.Group(); S.earthScene.add(g); SKY.smGroup = g;
     var sun = sprite(sunTex(), 0.09); g.add(sun);
-    var moon = sprite(moonTex(A.moonPhase(new Date())), 0.34); g.add(moon);
+    var moon = sprite(moonTex(A.moonPhase(TNOW())), 0.34); g.add(moon);
     var sub = new THREE.Mesh(new THREE.RingGeometry(0.012, 0.018, 24), new THREE.MeshBasicMaterial({ color: 0xdfe6f5, transparent: true, opacity: 0.8, side: THREE.DoubleSide, depthWrite: false }));
     g.add(sub);
     var lSun = label('☀ 太阳直射点', 'sh-label--sun'), lMoon = label('☾ 月球(距离已压缩)', 'sh-label--moon');
     var st = SKY.sm = { sunP: new THREE.Vector3(), moonP: new THREE.Vector3(), subP: new THREE.Vector3(), ph: null, sub: null, moonLL: null };
     var acc = 99, phAcc = 0;
     function update() {
-      var now = new Date(), s = A.sun(now), m = A.moon(now);
+      var now = TNOW(), s = A.sun(now), m = A.moon(now);
       var ss = A.subPoint(s.ra, s.dec, now), ml = A.subPoint(m.ra, m.dec, now);
       st.sub = ss; st.moonLL = ml; st.moonKm = m.km;
       U.ll(ss.lat, ss.lng, 1.012, st.sunP); sun.position.copy(st.sunP);
       U.ll(ml.lat, ml.lng, 4.2, st.moonP); moon.position.copy(st.moonP);
       U.ll(ml.lat, ml.lng, 1.004, st.subP); sub.position.copy(st.subP); sub.lookAt(0, 0, 0);
     }
-    update();
+    update(); SKY.updateSM = update;
     S.addUpdater(function (dt, nowMs, mode) {
       var on = mode === 'earth' && g.visible;
-      if ((acc += dt) > 5) { acc = 0; update(); }
-      if ((phAcc += dt) > 600) { phAcc = 0; moon.material.map.dispose(); moon.material.map = moonTex(A.moonPhase(new Date())); }
+      var fast = window.SHTIME && !SHTIME.isLive();
+      if ((acc += dt) > (fast ? 0.05 : 5) || st.wasFast !== fast) { acc = 0; st.wasFast = fast; update(); }
+      if ((phAcc += dt) > 600) { phAcc = 0; moon.material.map.dispose(); moon.material.map = moonTex(A.moonPhase(TNOW())); }
       var camD = S.earthCam.position.length();
       sun.scale.setScalar(0.05 * Math.max(1, camD / 2.2));
       placeLabel(lSun, st.sunP, 10, -10, on && camD < 6);
@@ -90,7 +92,7 @@
       actions: SH.sunLab ? [{ label: '☀ 太阳活动观测台', fn: function () { LE.ui.closeCard && LE.ui.closeCard(); SH.sunLab.open(); } }] : [] });
   };
   SKY.cardMoon = function () {
-    var ph = A.moonPhase(new Date()), ml = SKY.sm.moonLL; SH.progress.explore('moon');
+    var ph = A.moonPhase(TNOW()), ml = SKY.sm.moonLL; SH.progress.explore('moon');
     LE.ui.showCard({ kind: 'moon', color: '#e9ecf2', kicker: '月球 · Moon', title: '今天的月亮:' + ph.name,
       blurb: '月球的方向是真实的,距离被压缩了:真实距离约是地球半径的 60 倍。月亮正下方的地面,就是此刻离月亮最近的地方。',
       rows: [['月相', ph.name + (ph.waxing ? '(渐盈)' : '(渐亏)')], ['被照亮', Math.round(ph.k * 100) + '%', 1],
@@ -322,7 +324,7 @@
   };
   function drawSheet() {
     var L = LE.location.current; if (!L) return;
-    var now = new Date(), el = A.sunElevation(L.lat, L.lng, now), ph = A.moonPhase(now), ss = SKY.sm && SKY.sm.sub;
+    var now = TNOW(), el = A.sunElevation(L.lat, L.lng, now), ph = A.moonPhase(now), ss = SKY.sm && SKY.sm.sub;
     var rows = [
       ['你在', L.name + (L.country ? ',' + L.country : '')],
       ['太阳高度', el.toFixed(1) + '°' + (el > 0 ? '(白天)' : el > -6 ? '(黄昏/黎明)' : '(天黑了)')],
