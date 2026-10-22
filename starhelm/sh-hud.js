@@ -21,12 +21,12 @@
     { id: 'moon', d: 2, q: '月相实验室', lab: 'moonLab', key: 'moon' },
     { id: 'tidelock', d: 2, q: '月亮为什么总用同一面对着我们?', isNew: true, lab: 'tidelockLab', key: 'tidelock' },
     { id: 'aurora', d: 2, q: '极光是太阳寄来的信吗?', isNew: true, lab: 'auroraLab', key: 'aurora' }];
-  // 星域 III(M2a):两个新任务开放,两个即将
+  // 星域 III(M2a/M2b):四个任务全部开放
   var TASKS3 = [
     { id: 'marsday', d: 3, q: '火星上的一天有多长?', isNew: true, lab: 'marsdayLab', key: 'marsday' },
     { id: 'tonight', d: 3, q: '今晚抬头能看到哪颗行星?', isNew: true, lab: 'tonightLab', key: 'tonight' },
-    { id: 'jupiter', d: 3, q: '木星为什么没变成太阳?', soon: true, key: 'jupiter' },
-    { id: 'retro', d: 3, q: '行星为什么有时会倒着走?', soon: true, key: 'retro' }];
+    { id: 'jupiter', d: 3, q: '木星为什么没变成太阳?', isNew: true, lab: 'jupiterLab', key: 'jupiter' },
+    { id: 'retro', d: 3, q: '行星为什么有时会倒着走?', isNew: true, lab: 'retroLab', key: 'retro' }];
   var GUIDES = { suixing: { zh: '岁星', sub: '星域 III 行星世界', av: '' }, tianshu: { zh: '北辰', sub: '星域 I 家园' }, xihe: { zh: '羲和', sub: '管太阳这一边', av: '' }, wangshu: { zh: '望舒', sub: '管月亮这一边', av: 'moon' } };
 
   var nowT = 0, H = {}, subs = {}, st = { dom: 1, body: '', km: 4e5, task: '', nowBody: null, nowPt: null, hints: [], hintN: 0 };
