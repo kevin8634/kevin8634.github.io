@@ -8,6 +8,38 @@
 <meta name="theme-color" content="#07061a">
 <title>宙律 Nomoverse · 亲手改写宇宙的规律 · 创世计划 Genesis</title>
 <meta name="description" content="宙律 Nomoverse · 创世计划 Genesis 02 · 物理:把引力调大一点、把声速调慢一点,在改写规律中理解规律。三个探究任务、十三关、宇宙尺度知识星图。">
+<script>
+/* v0.3-α3 · HANDOFF §5.12 门户→世界接力:最早执行。读临时键 gn:portal:arrive(<5 秒有效,读后即删,不计进度),
+   先铺「世界色 + rgba(4,6,15,.82)」同色遮罩,开场就绪后约 600 ms 淡出(减少动态 200 ms);无键照旧。 */
+(function () {
+  var a = null, K = "gn:portal:arrive";
+  try { a = JSON.parse(sessionStorage.getItem(K) || "null"); sessionStorage.removeItem(K); } catch (e) { a = null; }
+  if (!a || typeof a.t !== "number" || !(Date.now() - a.t < 5000 && Date.now() - a.t >= -1000)) return;
+  var c = /^#[0-9a-fA-F]{3,8}$/.test(a.c || "") ? a.c : "#a78bfa";
+  var rm = false; try { rm = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+  var R = document.documentElement, ms = rm ? 200 : 600;
+  var st = document.createElement("style");
+  st.textContent = "html.gn-arrive::after{content:'';position:fixed;inset:0;z-index:2147483646;pointer-events:none;" +
+    "background:linear-gradient(rgba(4,6,15,.82),rgba(4,6,15,.82))," + c + ";opacity:1;transition:opacity " + ms + "ms ease}" +
+    "html.gn-arrive.gn-arrive-out::after{opacity:0}";
+  document.head.appendChild(st);
+  R.classList.add("gn-arrive"); R.setAttribute("data-gn-arrive", a.w || "");
+  var t0 = Date.now(), gone = false;
+  function out() {
+    if (gone) return; gone = true;
+    R.classList.add("gn-arrive-out");
+    setTimeout(function () { R.classList.remove("gn-arrive", "gn-arrive-out"); R.removeAttribute("data-gn-arrive"); }, ms + 80);
+  }
+  /* 等开场画面就位(.nv-intro.t-on)或首页可见;最长 1.2 秒兜底,避免长时间盖住页面 */
+  (function wait() {
+    if (gone) return;
+    var ready = document.querySelector(".nv-intro.t-on") ||
+      (document.readyState !== "loading" && !document.querySelector(".nv-intro") && Date.now() - t0 > 250);
+    if (ready || Date.now() - t0 > 1200) { requestAnimationFrame(out); return; }
+    requestAnimationFrame(wait);
+  })();
+})();
+</script>
 <link rel="stylesheet" href="core/nv.css">
 <style>
   body { background: radial-gradient(ellipse at 70% 0%, var(--bg-hi) 0%, var(--bg) 55%) fixed, var(--bg); }
@@ -257,7 +289,7 @@
 </style>
 </head>
 <body>
-<noscript><p style="padding:16px">宙律需要开启 JavaScript。<a href="../">返回创世门户</a></p></noscript>
+<noscript><p style="padding:16px">宙律需要开启 JavaScript。<a href="../">← 返回创世计划</a></p></noscript>
 <script src="core/nv.js"></script>
 <script>
 "use strict";
@@ -353,7 +385,7 @@
   }
 
   /* ---------------- 页面骨架 ---------------- */
-  D.body.appendChild(NV.header({ links: [["../", "← 创世门户"]], brand: "宙律 Nomoverse" }));
+  D.body.appendChild(NV.header({ links: [["../", "← 创世计划"]], brand: "宙律 Nomoverse" }));
   var main = el("main", { class: "hm" });
   D.body.appendChild(main);
 
@@ -600,7 +632,7 @@
   /* ⑤ 底部 */
   main.appendChild(el("footer", { class: "hm-foot" }, [
     el("div", { class: "nv-row" }, [
-      el("a", { class: "nv-btn", href: "../", text: "← 返回创世门户" }),
+      el("a", { class: "nv-btn", href: "../", text: "← 返回创世计划" }),
       el("button", { class: "nv-btn", type: "button", text: "声音与 AI 向导设置", onclick: NV.settings })
     ]),
     el("p", { text: "简化模型 · 科普探究:画面中的数值来自经典物理公式和简化模型(例如把地球当作均匀球体、忽略月球和太阳),用于理解规律,不代表精确的工程计算。" }),
