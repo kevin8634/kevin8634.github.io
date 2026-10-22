@@ -219,6 +219,7 @@
       }));
       mesh.userData.r = Rj * (2 + 1.8 * Math.log(d[2] / 421700)); b.pivot.add(mesh); return mesh;
     });
+    b.moons = moons;   // v1.0-M2f:供 sh-moons.js 点选
     var v = new T.Vector3(), last = 0;
     S.addUpdater(function () {
       if (S.mode !== 'solar') return; uT.value = performance.now() / 1000;

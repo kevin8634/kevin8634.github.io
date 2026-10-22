@@ -29,7 +29,7 @@
       if (window.SHDOM) SHDOM.setFocus(id);
     });
     SHHUD.on('fly', function (b) { if (PLAN.indexOf(b) >= 0) SO.select(b); });
-    SHHUD.on('zoomout', function (b) { var t = taskFor(b); if (t && window.SH && SH[t[1]]) { SHHUD.hideNow(); SH[t[1]].open(); } });
+    SHHUD.on('zoomout', function (b) { if (PLAN.indexOf(b) < 0) return; var t = taskFor(b); if (t && window.SH && SH[t[1]]) { SHHUD.hideNow(); SH[t[1]].open(); } });
     SHHUD.on('nowclose', function (b) { if (PLAN.indexOf(b) >= 0 && window.SHDOM) SHDOM.setFocus(null); });
     D3.ready = true;
   }

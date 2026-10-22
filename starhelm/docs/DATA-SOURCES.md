@@ -99,3 +99,11 @@
 
 ## hd/*.jpg、hd/saturn-ring.png(v1.0-M2d)
 - 来源:Solar System Scope 纹理(solarsystemscope.com/textures,经 Wikimedia Commons 获取),基于 NASA 影像与高程数据。许可 CC BY 4.0。改动:缩放到 4096×2048(环 2048×64)。
+
+## hd/moons/*.jpg(v1.0-M2f,卫星表面贴图;均经 Wikimedia Commons 获取,缩放为 2048×1024 / 1024×512)
+- 木卫一 io:NASA/JPL/USGS PIA00319(Galileo/Voyager 镶嵌),公有领域。改动:上下极区以边缘色补齐成 2:1。
+- 木卫二 europa:NASA/JPL Voyager 镶嵌(File:Jupiter II-Europa map NASA JPL Voyager.jpg),公有领域。改动:灰度图按欧罗巴真实色调(冰白 + 红褐线纹)着色。
+- 木卫三 ganymede:NASA 原始影像 / Björn Jónsson 制图(File:Map of Ganymede by Björn Jónsson.jpg),Commons 标注「Attribution」:须署名 NASA / Björn Jónsson。
+- 木卫四 callisto:USGS 赤道区镶嵌(File:Callisto equatorial.jpg),公有领域。改动:着色 + 极区补齐。
+- 土卫六 titan:NASA/JPL-Caltech/Univ. Arizona PIA22770(Cassini VIMS 红外透雾地表镶嵌),公有领域。改动:按土卫六大气的橙色着色;画面中位置为示意(周期真实)。
+- 卫星数值(半径、轨道半长轴、周期):NASA Solar System Exploration 公开数据。
