@@ -8,6 +8,7 @@
 .shh-root{position:fixed;inset:0;pointer-events:none;z-index:40;font-family:var(--shh-font);color:var(--shh-txt);font-size:14px;line-height:1.5}
 .shh-root *{box-sizing:border-box}
 .shh-root button,.shh-root input{font:inherit;color:inherit}
+.shh-root small,.shh-root b,.shh-root em,.shh-root i{font-family:var(--shh-font)!important;letter-spacing:normal;text-transform:none}
 .shh-glass{background:var(--shh-glass);border:1px solid var(--shh-line);border-radius:12px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);pointer-events:auto}
 .shh-btn{appearance:none;background:transparent;border:1px solid rgba(140,180,230,.3);border-radius:8px;color:#c9d4e6;padding:5px 11px;font-size:13px;white-space:nowrap;cursor:pointer;display:inline-flex;align-items:center;gap:5px;min-height:32px}
 .shh-root a.shh-btn{text-decoration:none}
@@ -55,6 +56,7 @@
 .shh-task.cur{background:rgba(240,201,122,.14);color:var(--shh-gold)}
 .shh-task i{font-style:normal;color:var(--shh-gold);width:14px;flex:none;text-align:center}
 .shh-new{font-size:11px;color:var(--shh-ink);background:var(--shh-cyan);border-radius:4px;padding:0 4px;margin-left:4px;white-space:nowrap}
+.shh-new.is-soon{background:rgba(140,180,230,.25);color:#c9d4e6}
 .shh-lock{font-size:12px;color:var(--shh-mut);margin-top:12px}
 .shh-drawer.is-closed{width:44px}
 .shh-drawer.is-closed .shh-list{display:none}
@@ -144,8 +146,26 @@
   .shh-console{left:var(--shh-pad)!important;right:var(--shh-pad);bottom:8px}
   .shh-c-guide,.shh-ruler,.shh-c-ctl .shh-btn.is-x,.shh-date,.shh-track .ev span{display:none}
   .shh-now.is-sheet .shh-rows{columns:1}
-  .shh-c-time{width:104px;padding:8px 10px}.shh-c-time b{font-size:15px}
+  .shh-c-time{width:104px;padding:8px 10px}.shh-c-time b{font-size:15px}.shh-c-time small{display:none}
   .shh-now,.shh-now.is-sheet{left:var(--shh-pad)!important;right:var(--shh-pad);width:auto;top:auto!important;bottom:calc(var(--shh-console) + 20px);display:block}
   .shh-tag{display:none}
 }
 @media (prefers-reduced-motion:reduce){.shh-drawer,.shh-console,.shh-ruler .me,.shh-ruler .v{transition:none}}
+
+/* ---------- 接入 Live Earth 内核后的旧组件让位(v1.0-M1a) ---------- */
+body.shh-on #hud,body.shh-on .sh-btn-quest,body.shh-on #sh-tasks,body.shh-on .le-readout{display:none!important}
+body.shh-on .le-top{top:calc(14px + var(--shh-top) + 10px);left:auto;right:var(--shh-pad);padding:0;justify-content:flex-end}
+body.shh-on .le-actions{flex-direction:row;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100vw - var(--shh-drawer) - 60px)}
+body.shh-on .le-bottom{left:calc(var(--shh-pad) + var(--shh-drawer) + 16px);right:var(--shh-pad);bottom:calc(var(--shh-console) + 26px);width:auto}
+body.shh-on.shh-dclosed .le-bottom{left:calc(var(--shh-pad) + 60px)}
+body.shh-on .le-card{left:auto;right:var(--shh-pad);bottom:calc(var(--shh-console) + 84px);max-height:calc(100vh - var(--shh-console) - 250px)}
+body.shh-on .sh-panel{bottom:calc(var(--shh-console) + 84px)}
+body.shh-on .sh-quest{top:calc(14px + var(--shh-top) + 64px);max-height:calc(100vh - var(--shh-top) - var(--shh-console) - 120px)}
+body.shh-on .le-labels{z-index:39}
+@media (max-width:640px){
+  body.shh-on .le-top{top:calc(8px + var(--shh-top) + 6px);left:var(--shh-pad)}
+  body.shh-on .le-actions{max-width:none}
+  body.shh-on .le-bottom{left:var(--shh-pad)!important;bottom:calc(var(--shh-console) + 16px)}
+  body.shh-on .le-foot{display:none}
+  body.shh-on .le-card,body.shh-on .sh-panel,body.shh-on .sh-quest{left:var(--shh-pad);right:var(--shh-pad);top:auto;bottom:calc(var(--shh-console) + 16px);max-height:58vh}
+}
