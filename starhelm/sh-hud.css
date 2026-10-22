@@ -158,8 +158,10 @@ body.shh-on .le-top{top:calc(14px + var(--shh-top) + 10px);left:auto;right:var(-
 body.shh-on .le-actions{flex-direction:row;flex-wrap:wrap;justify-content:flex-end;max-width:calc(100vw - var(--shh-drawer) - 60px)}
 body.shh-on .le-bottom{left:calc(var(--shh-pad) + var(--shh-drawer) + 16px);right:var(--shh-pad);bottom:calc(var(--shh-console) + 26px);width:auto}
 body.shh-on.shh-dclosed .le-bottom{left:calc(var(--shh-pad) + 60px)}
-body.shh-on .le-card{left:auto;right:var(--shh-pad);bottom:calc(var(--shh-console) + 84px);max-height:calc(100vh - var(--shh-console) - 250px)}
+body.shh-on .le-card{left:auto;right:var(--shh-pad);bottom:calc(var(--shh-lb,calc(var(--shh-console) + 84px)) + 10px);max-height:calc(100vh - var(--shh-lb,calc(var(--shh-console) + 84px)) - var(--shh-acts,140px) - 24px)}
 body.shh-on .sh-panel{bottom:calc(var(--shh-console) + 84px)}
+/* M1b:旧侧栏面板(我的位置/航线查询/搜索星球/此刻)不再压在任务抽屉上,统一靠右,位于按钮行与控制台之间 */
+body.shh-on .le-sheet{left:auto;right:var(--shh-pad);top:calc(var(--shh-acts,140px) + 10px);bottom:calc(var(--shh-lb,calc(var(--shh-console) + 84px)) + 10px);background:var(--panel-solid,#07101d);max-height:none;z-index:41}
 body.shh-on .sh-quest{top:calc(14px + var(--shh-top) + 64px);max-height:calc(100vh - var(--shh-top) - var(--shh-console) - 120px)}
 body.shh-on .le-labels{z-index:39}
 @media (max-width:640px){
@@ -167,5 +169,12 @@ body.shh-on .le-labels{z-index:39}
   body.shh-on .le-actions{max-width:none}
   body.shh-on .le-bottom{left:var(--shh-pad)!important;bottom:calc(var(--shh-console) + 16px)}
   body.shh-on .le-foot{display:none}
-  body.shh-on .le-card,body.shh-on .sh-panel,body.shh-on .sh-quest{left:var(--shh-pad);right:var(--shh-pad);top:auto;bottom:calc(var(--shh-console) + 16px);max-height:58vh}
+  body.shh-on .le-sheet{top:auto;max-height:58vh}
+  body.shh-on .le-card,body.shh-on .le-sheet,body.shh-on .sh-panel,body.shh-on .sh-quest{left:var(--shh-pad);right:var(--shh-pad);top:auto;bottom:calc(var(--shh-console) + 16px);max-height:58vh}
 }
+
+/* ---------- sh.tidelock 实验室(v1.0-M1b,沿用 .ml 样式) ---------- */
+.ml-modes{display:flex;gap:6px;flex-wrap:wrap;flex:1}.ml-ctl .ml-mode{white-space:nowrap}
+.ml-ctl .ml-mode.is-on{background:rgba(127,227,196,.2);border-color:#7fe3c4;color:#cff8ea}
+.ml--tl .ml-hd b{font-size:17px}
+@media (max-width:760px){.ml--tl .ml-ctl{flex-wrap:wrap;gap:6px}.ml--tl .ml-modes{order:3;flex-basis:100%}.ml--tl .ml-ctl .ml-mode{flex:1;padding:6px 4px;font-size:12px}.ml--tl .ml-go3d{margin-left:auto}.ml--tl .ml-hd b{font-size:15px}.ml--tl .ml-body{grid-template-rows:1.3fr 1fr}.ml--tl .ml-note{display:none}}
