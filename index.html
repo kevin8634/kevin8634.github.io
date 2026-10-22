@@ -342,6 +342,14 @@
         background: none; border: 1px solid transparent; color: var(--ink); font: 400 13px/1.7 var(--sans); transition: background .2s, border-color .2s;
       }
       .x-log__item b { color: var(--accent); font-weight: 600; }
+      .x-log__item .ty, .x-news__it .ty { display: inline-block; margin: 0 0 0 6px; padding: 1px 7px; border-radius: 999px; font: 500 10.5px/16px var(--sans); font-style: normal; vertical-align: 1px;
+        border: 1px solid rgba(234,240,255,.18); color: var(--dim); }
+      .ty--task { color: #ffb4a8 !important; border-color: rgba(255,138,122,.5) !important; }
+      .ty--gn { color: var(--gold) !important; border-color: rgba(233,199,121,.4) !important; }
+      .x-log__types { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
+      .x-log__types .btn { padding: 6px 11px; font-size: 12px; }
+      .x-log__types .btn[aria-pressed="true"] { background: var(--gold); color: #0a1030; border-color: var(--gold); }
+      .card dl .nt { color: #ffb4a8; border-color: rgba(255,138,122,.55); }
       .x-log__item small { float: right; font: 400 12px ui-monospace, monospace; color: var(--dim); }
       .x-log__item span { display: block; color: rgba(234,240,255,.8); margin-top: 2px; }
       .x-log__item.is-on, .x-log__item:hover, .x-log__item:focus-visible { background: rgba(234,240,255,.06); border-color: var(--accent); outline: none; }
@@ -854,13 +862,13 @@
       </div>
       <div class="demo-tag" id="demoTag">演示进度</div>
 
-      <section class="x-news" id="news" aria-label="最新更新">
-        <button type="button" class="x-news__bar" id="newsBar" aria-expanded="false" aria-controls="newsList"><em>最新</em><span class="x-news__tk" id="newsTk"><span></span></span><i aria-hidden="true">⌃</i></button>
-        <div class="x-news__hd"><h2>最新更新</h2><button type="button" class="x-news__x" id="newsMin" aria-label="收起最新更新" title="收起">—</button></div>
+      <section class="x-news" id="news" aria-label="新任务上线">
+        <button type="button" class="x-news__bar" id="newsBar" aria-expanded="false" aria-controls="newsList"><em>新任务</em><span class="x-news__tk" id="newsTk"><span></span></span><i aria-hidden="true">⌃</i></button>
+        <div class="x-news__hd"><h2>新任务上线</h2><button type="button" class="x-news__x" id="newsMin" aria-label="收起新任务上线" title="收起">—</button></div>
         <ol id="newsList"></ol>
-        <button type="button" class="x-news__all" id="newsAll">全部星历 →</button>
+        <button type="button" class="x-news__all" id="newsAll">全部更新 · 星历 →</button>
         <a class="x-news__all x-news__board" href="board/">开发看板 · 路线图 →</a>
-        <button type="button" class="x-news__pin" id="newsPin" aria-label="展开最新更新"><i></i>最新更新</button>
+        <button type="button" class="x-news__pin" id="newsPin" aria-label="展开新任务上线"><i></i>新任务</button>
       </section>
       <aside class="card" id="card" role="dialog" aria-label="世界简介"></aside>
     </div>
@@ -942,6 +950,7 @@
         <h2>纪年</h2>
         <p class="hint" style="margin:0;font-size:12px;color:var(--dim)">由新到旧 · 日期为北京时间 · 按 N 打开</p>
         <a class="x-log__board" href="board/">开发看板 · 七个世界的下一步 →</a>
+        <div class="x-log__types" id="logTypes" role="group" aria-label="按类型筛选"></div>
         <ol id="logList"></ol>
       </section>
       <aside class="card" id="logCard" aria-live="polite"></aside>
@@ -1194,6 +1203,7 @@
         "07": [0.00, 0.00], "01": [-0.01, 0.43], "02": [0.30, 0.64], "03": [0.43, 0.38],
         "04": [0.66, 0.46], "05": [0.84, 0.55], "06": [0.99, 1.00]
       };
+      var NEWT = {}; // v0.8.3 今明两天（北京时间今天、昨天）上线新任务的世界 → 最新那条星历
       var ORDER = ["07", "01", "02", "03", "04", "05", "06"];
       // 真实连法：斗口闭合四边形 + 斗柄
       var LINKS = [["07", "01"], ["01", "02"], ["02", "03"], ["03", "07"], ["03", "04"], ["04", "05"], ["05", "06"]];
@@ -1951,6 +1961,13 @@
           ctx.font = "500 13px " + '"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif';
           var ly1 = sd === 1 ? y - r * 1.85 - 22 : sd >= 2 ? y - 3 : y + r * 2.0 + 14, ly2 = ly1 + 16;
           ctx.fillText(w.id + " " + w.name, lx, ly1);
+          if (NEWT[w.id] && alive && innerWidth > 860) {   // v0.8.3 近两天有新任务（窄屏不画，避免压字）：名字上方小红标
+            ctx.font = "600 10px " + '"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif';
+            ctx.fillStyle = "#ff8a7a"; ctx.globalAlpha = fade;
+            ctx.fillText("● 新任务", lx, ly1 - 15);
+            ctx.font = "500 13px " + '"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif'; ctx.fillStyle = "#eaf0ff";
+            ctx.globalAlpha = fade * (alive ? 0.95 : 0.6);
+          }
           ctx.font = "400 10.5px " + '"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif';
           ctx.globalAlpha = fade * 0.6;
           ctx.fillStyle = alive ? (w.lit ? "#e9c779" : "rgba(234,240,255,.65)") : "rgba(234,240,255,.5)";
@@ -2008,6 +2025,7 @@
         cardFor = w;
         var meta = w.meta.map(function (m) { return "<span>" + m + "</span>"; }).join("");
         if (w.lit) meta += '<span class="lit">你已点亮</span>';
+        if (NEWT[w.id]) meta = '<span class="nt">新任务 · ' + NEWT[w.id].d.slice(5) + '</span>' + meta;
         if (!w.live) meta = '<span>Awakening Soon</span>';
         cardEl.style.setProperty("--accent", w.color);
         cardEl.innerHTML =
@@ -2884,21 +2902,22 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.3", d: "2026-10-22", t: "首屏改为「新任务上线」，只推各世界新任务；近两天有新任务的世界亮起小红标；星历可按新任务、体验升级、门户筛选。" },
         { w: "gn", v: "v0.8.2.9", d: "2026-10-22", t: "星历补记觉弈 v0.21、星图 Math Atlas v0.8.4；觉弈已接上门户的进入转场。" },
         { w: "01", v: "v0.8.4", d: "2026-10-22", t: "新增「关于与隐私」页：讲清版权与许可，列出只存在你设备上的全部数据，并可一键清除。" },
         { w: "06", v: "v0.21", d: "2026-10-22", t: "进入动画细化：八域色带星球、云层与大气辉光、穿云俯冲、鎏金落地，配八泛音开场和弦（声音默认关）；接上门户进入转场，关于页可重播开场。" },
         { w: "gn", v: "v0.8.2.8", d: "2026-10-22", t: "新增「开发看板」：七个世界的版本、进度和下一步一页看全，从星历和最新更新进入。" },
         { w: "gn", v: "v0.8.2.7", d: "2026-10-22", t: "星历补记天枢 Starhelm v0.6.1–v0.6.4；天枢卡更新为星域 I 五个任务全部开放。" },
-        { w: "07", v: "v0.6.4", d: "2026-10-22", t: "新任务「地震在告诉我们什么？」：一年近 2,000 次真实地震连成环太平洋地震带，还能透视地下看板块俯冲。" },
-        { w: "07", v: "v0.6.3", d: "2026-10-22", t: "新任务「天上到底有多少颗卫星？」：3.5 万个在轨物体按真实轨道绕地球飞，还能开时间机器看卫星从 2019 年起暴涨。" },
-        { w: "07", v: "v0.6.2", d: "2026-10-22", t: "新任务「为什么会有四季？」：拨动日期和地轴倾角，从太空和地面两个角度看太阳高度与昼长怎么变，自己找到夏至。" },
+        { y: "task", w: "07", v: "v0.6.4", d: "2026-10-22", t: "新任务「地震在告诉我们什么？」：一年近 2,000 次真实地震连成环太平洋地震带，还能透视地下看板块俯冲。" },
+        { y: "task", w: "07", v: "v0.6.3", d: "2026-10-22", t: "新任务「天上到底有多少颗卫星？」：3.5 万个在轨物体按真实轨道绕地球飞，还能开时间机器看卫星从 2019 年起暴涨。" },
+        { y: "task", w: "07", v: "v0.6.2", d: "2026-10-22", t: "新任务「为什么会有四季？」：拨动日期和地轴倾角，从太空和地面两个角度看太阳高度与昼长怎么变，自己找到夏至。" },
         { w: "07", v: "v0.6.1", d: "2026-10-22", t: "星档馆新添天宫空间站与哈勃望远镜 3D 模型，可以拖动旋转细看。" },
         { w: "gn", v: "v0.8.2.6", d: "2026-10-21", t: "星历补记生命源码 Life Source v0.8、天枢 Starhelm v0.6.0。" },
         { w: "04", v: "v0.8", d: "2026-10-21", t: "源码五灵现身：卡丝、艾比、阿古、菲吉、伊蒂换上正式头像，提问时会点头发光；手机上星盘不再被尺度条遮挡。" },
         { w: "07", v: "v0.6.0", d: "2026-10-21", t: "星档馆开馆：飞船全息展厅陈列 9 件真实望远镜影像，太阳、创生之柱、蟹状星云可扫描切换波段。" },
         { w: "gn", v: "v0.8.2.5", d: "2026-10-21", t: "星历补记生命源码 Life Source v0.7.1、奇点前夜 v0.9、天枢 Starhelm v0.5.4。" },
         { w: "04", v: "v0.7.1", d: "2026-10-21", t: "开场换成写实三幕：细胞分裂、DNA 解旋、生命之树破土，每次进入都会播放；生命图谱中心换上全息生命之树，修复星盘中间元素偶尔消失的问题。" },
-        { w: "07", v: "v0.5.4", d: "2026-10-21", t: "顶栏加「← 创世计划」返回门户；新开潮汐实验室和太阳活动观测台（NASA SDO 实拍 + NOAA 实时耀斑与黑子周期），星域 II「日与月」四个实验室齐了。" },
+        { y: "task", w: "07", v: "v0.5.4", d: "2026-10-21", t: "顶栏加「← 创世计划」返回门户；新开潮汐实验室和太阳活动观测台（NASA SDO 实拍 + NOAA 实时耀斑与黑子周期），星域 II「日与月」四个实验室齐了。" },
         { w: "05", v: "v0.9", d: "2026-10-21", t: "「全息屏墙」：大厅搬进都市最高楼顶层套房，窗外俯瞰城市夜景与客机航行灯，天命之瞳外加光环，面板化为弧形全息玻璃屏。" },
         { w: "gn", v: "v0.8.2.4", d: "2026-10-21", t: "星历补记生命源码 Life Source v0.7、奇点前夜 v0.8.4。" },
         { w: "04", v: "v0.7", d: "2026-10-21", t: "全新 7 秒开场：看一个细胞一分为二、DNA 碱基逐个点亮、长成生命之树；界面全新升级，左上角一键返回创世，左下角显微镜随时「一镜到底」。" },
@@ -2914,7 +2933,7 @@
         { w: "01", v: "v0.8.1", d: "2026-10-21", t: "主页换上用 π、黄金比和斐波那契数列写成的新配乐「星图序曲」，十位动物向导变成 3D，还带上数学前沿称号（比如「格密码 · 枭博士」「渗流 · 刺猬博士」）。" },
         { w: "gn", v: "v0.8.1.5", d: "2026-10-21", t: "星历补记星图 Math Atlas v0.8、元素工坊 v0.4、天枢 Starhelm v0.5.3；点亮星桥「魔方 ⇄ 晶体」。" },
         { w: "01", v: "v0.8", d: "2026-10-21", t: "首页变成可以拖动的 3D 旋涡星图：开场从一条数轴和斐波那契螺线长出 197 颗知识星，点任意一颗星就能看到通往它的学习路径。" },
-        { w: "03", v: "v0.4", d: "2026-10-21", t: "新任务「晶体为什么那么整齐？」四关上线：用尺度镜看盐、搭离子格子、比慢长与快长、量晶面夹角，还能看雪花为什么是六角。" },
+        { y: "task", w: "03", v: "v0.4", d: "2026-10-21", t: "新任务「晶体为什么那么整齐？」四关上线：用尺度镜看盐、搭离子格子、比慢长与快长、量晶面夹角，还能看雪花为什么是六角。" },
         { w: "07", v: "v0.5.3", d: "2026-10-21", t: "地球之眼换上卫星实拍：进行中的台风播放最近约 3 小时的真实云图，全球云层可切换为前一天的卫星实拍。" },
         { w: "gn", v: "v0.8.1.4", d: "2026-10-21", t: "星历补记元素工坊 v0.3.1–v0.3.2、奇点前夜 v0.7–v0.8.2。" },
         { w: "03", v: "v0.3.2", d: "2026-10-21", t: "「钻石和铅笔芯」四关搬进 3D：放大到原子、转动晶格数化学键、在压机里把石墨压成钻石；周期表新增「人体组成」视图。" },
@@ -2928,7 +2947,7 @@
         { w: "07", v: "v0.5.2", d: "2026-10-21", t: "台风换成从太空俯视的真实感云系：螺旋云带和台风眼，风越大云团越大越浓，北半球逆时针、南半球顺时针缓缓旋转。" },
         { w: "gn", v: "v0.8.1.2", d: "2026-10-21", t: "星历新增天枢 Starhelm v0.5.2。" },
         { w: "07", v: "v0.5.1", d: "2026-10-21", t: "地球之眼上线：地球上实时显示进行中的台风（点开看风速与等级）和极光预报（含 Kp 指数）。" },
-        { w: "07", v: "v0.5.0", d: "2026-10-21", t: "新增「日月食实验室」：亲手做一次日全食和月全食，弄懂为什么不是每个月都有日食；星璃换新造型并会开口说话；手机竖屏提示横屏。" },
+        { y: "task", w: "07", v: "v0.5.0", d: "2026-10-21", t: "新增「日月食实验室」：亲手做一次日全食和月全食，弄懂为什么不是每个月都有日食；星璃换新造型并会开口说话；手机竖屏提示横屏。" },
         { w: "gn", v: "v0.8.1.1", d: "2026-10-21", t: "星历新增天枢 Starhelm v0.5.0、v0.5.1。" },
         { w: "gn", v: "v0.8.1", d: "2026-10-21", t: "学科冠冕缩小，七颗星不再挤在一起；冠冕中的星球开始自转。" },
         { w: "07", v: "v0.4.3", d: "2026-10-21", t: "登舰动画与弦穹号外观改为 2.5D；舱内航图换成 3D 粒子星系全息沙盘；引擎、舷窗观景、返回母港收进统一指令台。" },
@@ -2941,7 +2960,7 @@
         { w: "03", v: "v0.2", d: "2026-10-20", t: "新增熔炉开场动画和全屏 3D 尺度镜：从一颗恒星一路放大到铁原子核，元素周期表也立了起来。" },
         { w: "gn", v: "v0.7.0.4", d: "2026-10-20", t: "星海三曲：新增原创合成背景音乐「北斗夜航」「星尘回响」；声音开关旁新增曲目列表，默认三首顺序循环，可切换单曲循环。声音仍默认关闭。" },
         { w: "gn", v: "v0.7.0.3", d: "2026-10-20", t: "七星全亮：点亮元素工坊；星桥盘点，新通 5 座（铁与星尘、碳与六边形、囚徒困境与取石子、人性与遗传、引力与火箭），原预留的「赌场⇄成功经验」「AI 写作⇄信息茧房」接通到觉弈真实关卡，星桥共 22 座。" },
-        { w: "03", v: "v0.1", d: "2026-10-20", t: "元素工坊开张：开放「你身体里的铁是从哪颗星来的？」「为什么钻石和铅笔芯是同一种东西？」两个任务，还有尺度镜和元素起源周期表。" },
+        { y: "task", w: "03", v: "v0.1", d: "2026-10-20", t: "元素工坊开张：开放「你身体里的铁是从哪颗星来的？」「为什么钻石和铅笔芯是同一种东西？」两个任务，还有尺度镜和元素起源周期表。" },
         { w: "06", v: "v0.20–v0.20.1", d: "2026-10-20", t: "进入星球动画（跃迁坠落，可跳过）；修复动画后偶现旧星盘。" },
         { w: "gn", v: "v0.7.0.1–0.7.0.2", d: "2026-10-20", t: "天枢星系加亮旋臂与蓝色星团结；桌面端新增全屏提示，点击即全屏。" },
         { w: "gn", v: "v0.7.0", d: "2026-10-20", t: "首屏星空迁移 Three.js：三维纵深星场与银河光带，随北斗旋转同步转动并带视差景深；不支持 WebGL 时保留原版。" },
@@ -2964,15 +2983,15 @@
         { w: "06", v: "v0.11", d: "2026-10-20", t: "点亮仪式上线：通关回首页时星盘转向新扇区、迷雾吹散、莲瓣绽放、隐藏数值翻牌。" },
         { w: "gn", v: "v0.5.1", d: "2026-10-20", t: "星历新增觉弈 v0.2–v0.10；新开两座星桥：觉弈「每天多进步 1%」⇄ 星图「传染病为什么会爆发？」，觉弈「我想成为怎样的玩家？」⇄ 天枢「此刻，你在宇宙的哪里？」。" },
         { w: "06", v: "v0.10", d: "2026-10-20", t: "打磨：首页推荐卡随进度变化，通关后可重玩、保存玩家手册；手机小屏巡检无遮挡。" },
-        { w: "06", v: "v0.9", d: "2026-10-20", t: "意义终章「看见了这些规则，我想成为怎样的玩家？」：回放各关选择，亲手写下 3 条「我的规则」（只存本机），光之莲全开。" },
-        { w: "06", v: "v0.8", d: "2026-10-20", t: "「人性本善，还是本恶？」开放：人性和规则一起决定人怎么做——评价别人前，先想想换我在他的处境会怎么做。" },
-        { w: "06", v: "v0.7", d: "2026-10-20", t: "「为什么『成功经验』常常骗人？」开放：你只听得见幸存者说话，学会追问失败的人里有多少也这么做。" },
-        { w: "06", v: "v0.6", d: "2026-10-20", t: "「为什么你刷到的视频越来越像？」开放：你喂给算法什么，它就把你变成什么——给推荐流留一点随机探索。" },
-        { w: "06", v: "v0.5", d: "2026-10-20", t: "「电影看了一半很难看，要不要看完？」开放：花掉的已经花掉了，把镜头倒放到付钱之前，只为接下来做选择。" },
+        { y: "task", w: "06", v: "v0.9", d: "2026-10-20", t: "意义终章「看见了这些规则，我想成为怎样的玩家？」：回放各关选择，亲手写下 3 条「我的规则」（只存本机），光之莲全开。" },
+        { y: "task", w: "06", v: "v0.8", d: "2026-10-20", t: "「人性本善，还是本恶？」开放：人性和规则一起决定人怎么做——评价别人前，先想想换我在他的处境会怎么做。" },
+        { y: "task", w: "06", v: "v0.7", d: "2026-10-20", t: "「为什么『成功经验』常常骗人？」开放：你只听得见幸存者说话，学会追问失败的人里有多少也这么做。" },
+        { y: "task", w: "06", v: "v0.6", d: "2026-10-20", t: "「为什么你刷到的视频越来越像？」开放：你喂给算法什么，它就把你变成什么——给推荐流留一点随机探索。" },
+        { y: "task", w: "06", v: "v0.5", d: "2026-10-20", t: "「电影看了一半很难看，要不要看完？」开放：花掉的已经花掉了，把镜头倒放到付钱之前，只为接下来做选择。" },
         { w: "06", v: "v0.4", d: "2026-10-20", t: "新增「地球Online 玩家手册」与「人生时间线」：每通一关显形一条隐藏规则，还能看见每个选择旁边的另一条路。" },
-        { w: "06", v: "v0.3", d: "2026-10-20", t: "「为什么好人不一定吃亏？」开放：和小镇八种性格反复博弈，再亲手改写小镇规则，看见信任为什么会赢。" },
-        { w: "06", v: "v0.2", d: "2026-10-20", t: "第一关「每天多进步 1%，一年后会怎样？」开放：先凭直觉猜，再看见复利曲线，最后坐到银行那一边亲手定利率。" },
-        { w: "06", v: "v0.1", d: "2026-10-20", t: "世界开张：光之莲认知星盘点亮「规则是谁写的」四层八域；选好年龄段，看见认知如何影响你在地球 Online 的人性、财富与社交。" },
+        { y: "task", w: "06", v: "v0.3", d: "2026-10-20", t: "「为什么好人不一定吃亏？」开放：和小镇八种性格反复博弈，再亲手改写小镇规则，看见信任为什么会赢。" },
+        { y: "task", w: "06", v: "v0.2", d: "2026-10-20", t: "第一关「每天多进步 1%，一年后会怎样？」开放：先凭直觉猜，再看见复利曲线，最后坐到银行那一边亲手定利率。" },
+        { y: "task", w: "06", v: "v0.1", d: "2026-10-20", t: "世界开张：光之莲认知星盘点亮「规则是谁写的」四层八域；选好年龄段，看见认知如何影响你在地球 Online 的人性、财富与社交。" },
         { w: "gn", v: "v0.5", d: "2026-10-20", t: "新玩法「帮我选一颗星」：选年龄段和兴趣，星盘转到推荐的世界并翻面告诉你为什么。全系列统一年龄段：星芽 7–11 · 星火 12–15 · 星辰 16–22 · 星河 23+。" },
         { w: "gn", v: "v0.4.2", d: "2026-10-20", t: "手机竖屏与矮横屏：北斗七星为标题让出空间，不再压住按钮；星盘触屏拖动与翻面体验修整。" },
         { w: "gn", v: "v0.4.1", d: "2026-10-20", t: "「关于创世计划」变成可旋转的全息北斗星盘：拖动轮转七个世界，点卡片翻面看简介与入口；首屏新增一句话介绍。" },
@@ -2982,24 +3001,24 @@
         { w: "04", v: "v0.5", d: "2026-10-20", t: "生命尺度图谱焕新：六层尺度环环绕生命之树，拖动「穿越尺度」从分子一路飞到生态。" },
         { w: "07", v: "v0.4.0", d: "2026-10-20", t: "登上弦穹号开始星际航行：3D 驾驶舱、10 种引擎画面、舱外观景、随船 AI 星璃；第二星域「日与月」开放月相实验室（3 关）；原创声音（默认关闭）。" },
         { w: "gn", v: "v0.3.8", d: "2026-10-20", t: "星历新增天枢 Starhelm v0.4.0。" },
-        { w: "02", v: "v0.2-α2", d: "2026-10-20", t: "第 02 世界开放：3 个任务 13 关——宇航员为什么会飘、救护车为什么变声、两倍引力下还能不能投篮；首页 3D 宇宙尺度星图，原创声音（默认关闭）。" },
+        { y: "task", w: "02", v: "v0.2-α2", d: "2026-10-20", t: "第 02 世界开放：3 个任务 13 关——宇航员为什么会飘、救护车为什么变声、两倍引力下还能不能投篮；首页 3D 宇宙尺度星图，原创声音（默认关闭）。" },
         { w: "gn", v: "v0.3.7", d: "2026-10-20", t: "点亮宙律入口；星桥 ma.chord ⇄ nv.sound、sh.orbit ⇄ nv.orbit 两端打通。" },
         { w: "04", v: "v0.4", d: "2026-10-20", t: "开场有了与动画同步的原创配乐（可选「带着声音进入」）；新增「生命显微镜头」，从指纹一路放大到碱基对。" },
         { w: "04", v: "v0.3", d: "2026-10-20", t: "全新开场：发光粒子从原始海洋聚成 DNA 双螺旋、长成生命之树；原创背景音乐「生命源码」（旋律来自真实的血红蛋白基因序列，默认关闭）；图谱可以拖动、缩放探索。" },
         { w: "04", v: "v0.2.1", d: "2026-10-20", t: "打开过的任务断网也能继续玩；斑马、感冒、狼三个任务完成科学复核并修订表述。" },
-        { w: "04", v: "v0.2", d: "2026-10-20", t: "新增三个探究：斑马为什么有条纹、一场感冒怎样在班里传开、狼回来后河流为什么变了；「源码五灵」向导到齐，并按科学复核修订了遗传与 DNA 任务的表述。" },
-        { w: "04", v: "v0.1", d: "2026-10-20", t: "第 04 世界开放：从指纹一路放大到碱基对，亲手配对、抄写、翻译 DNA，并用豌豆、耳垢、血型和身高探究你为什么像爸妈又不完全像。" },
+        { y: "task", w: "04", v: "v0.2", d: "2026-10-20", t: "新增三个探究：斑马为什么有条纹、一场感冒怎样在班里传开、狼回来后河流为什么变了；「源码五灵」向导到齐，并按科学复核修订了遗传与 DNA 任务的表述。" },
+        { y: "task", w: "04", v: "v0.1", d: "2026-10-20", t: "第 04 世界开放：从指纹一路放大到碱基对，亲手配对、抄写、翻译 DNA，并用豌豆、耳垢、血型和身高探究你为什么像爸妈又不完全像。" },
         { w: "gn", v: "v0.3", d: "2026-10-19", t: "北斗七星改为真实 3D 位置，可拖动从不同角度观察；新增「创世计划说明」。" },
-        { w: "01", v: "v0.7", d: "2026-10-19", t: "新任务「火箭怎样飞上月球？」「魔方为什么能复原？」，共 10 个任务。" },
+        { y: "task", w: "01", v: "v0.7", d: "2026-10-19", t: "新任务「火箭怎样飞上月球？」「魔方为什么能复原？」，共 10 个任务。" },
         { w: "gn", v: "v0.2", d: "2026-10-19", t: "新增「星历」更新公告；原创背景音乐「创世星海」与七星音阶交互音效（默认关闭，右上角开启）。" },
         { w: "gn", v: "v0.1.2", d: "2026-10-18", t: "12 座知识星桥对齐各世界真实任务，系列星桥 ID 上线（如 ma.cat ⇄ ps.cat）。" },
         { w: "gn", v: "v0.1.1", d: "2026-10-18", t: "世界入口改为新窗口打开；横屏小屏布局优化；分享卡片。" },
         { w: "gn", v: "v0.1", d: "2026-10-18", t: "总门户首发：北斗七世界、知识星桥、创世护照、七世界宣传片。" },
         { w: "07", v: "M1", d: "2026-10-18", t: "任务框架与天枢七星向导；开放任务「此刻，你在宇宙的哪里？」「空间站为什么掉不下来？」。" },
         { w: "07", v: "M0.5", d: "2026-10-17", t: "观测版上线：实时空间站、卫星、地震等图层，看见此刻真实的天空。" },
-        { w: "01", v: "v0.7", d: "2026-10-17", t: "新任务「传染病为什么会爆发？」（刺猬博士 5 关），共 8 个任务 45 关、197 颗知识星。" },
-        { w: "01", v: "v0.6", d: "2026-10-15", t: "7 个任务 40 关：和弦、AI 认猫、赌场、密码、蜂巢、导航、取石子。" },
-        { w: "05", v: "v0.6.1", d: "2026-10-17", t: "10 个任务 29 关；向导「萤」；「接入巨人」可在本机离线运行开源模型。" },
+        { y: "task", w: "01", v: "v0.7", d: "2026-10-17", t: "新任务「传染病为什么会爆发？」（刺猬博士 5 关），共 8 个任务 45 关、197 颗知识星。" },
+        { y: "task", w: "01", v: "v0.6", d: "2026-10-15", t: "7 个任务 40 关：和弦、AI 认猫、赌场、密码、蜂巢、导航、取石子。" },
+        { y: "task", w: "05", v: "v0.6.1", d: "2026-10-17", t: "10 个任务 29 关；向导「萤」；「接入巨人」可在本机离线运行开源模型。" },
         { w: "02", v: "立项", d: "2026-10-17", t: "世界设计中：改写物理常数，看宇宙怎么变。" },
         { w: "03", v: "立项", d: "2026-10-17", t: "世界设计中。" },
         { w: "04", v: "立项", d: "2026-10-17", t: "世界设计中。" },
@@ -3008,14 +3027,19 @@
       var GN = { name: "总门户", en: "Genesis Portal", color: "#e9c779" };
       var LG_ORB = ["gn"].concat(ORDER);
       function lgW(k) { return k === "gn" ? GN : byId[k]; }
+      // v0.8.3 更新类型：task 新任务 · ux 体验升级 · gn 门户 · plan 立项（条目可写 y，否则按规则推断）
+      function lgType(e) { return e.v === "立项" ? "plan" : e.w === "gn" ? "gn" : (e.y || (/^新任务/.test(e.t) ? "task" : "ux")); }
+      var LG_TY = { task: "新任务", ux: "体验升级", gn: "门户", plan: "立项" };
       var LOG = CHANGELOG.slice().sort(function (a, b) { return a.d < b.d ? 1 : a.d > b.d ? -1 : 0; });
       (function () {
         var cnt = {}, top = Date.parse(LOG[0].d);
         LOG.forEach(function (e, i) {
-          e.o = LG_ORB.indexOf(e.w); e.k = cnt[e.w] = (cnt[e.w] || 0) + 1; e.plan = e.v === "立项";
+          e.ty = lgType(e); e.o = LG_ORB.indexOf(e.w); e.k = cnt[e.w] = (cnt[e.w] || 0) + 1; e.plan = e.v === "立项";
           e.f = e.plan ? 0 : Math.max(0.15, 1 - (top - Date.parse(e.d)) / 864e5 / 4.5 - i * 0.02);
         });
         LOG.forEach(function (e) { e.n = cnt[e.w]; });
+        var now = Date.now();
+        LOG.forEach(function (e) { if (e.ty === "task" && !NEWT[e.w] && now - Date.parse(e.d + "T00:00:00+08:00") < 2 * 864e5) NEWT[e.w] = e; });
       })();
       var LG = { open: false, hover: -1, lh: -1, focus: -1, pin: -1, shown: -2, f: "all", pts: [], stars: [], raf: 0, hideT: 0, prev: null,
         el: document.getElementById("log"), cv: document.getElementById("logCv"), card: document.getElementById("logCard"),
@@ -3028,18 +3052,28 @@
       LG.list.innerHTML = LOG.map(function (e, i) {
         var W0 = lgW(e.w);
         return '<li><button class="x-log__item" data-i="' + i + '" style="--accent:' + W0.color + '"><small>' + e.d + '</small><b>' +
-          W0.name + ' ' + e.v + '</b><span>' + brEsc(e.t) + '</span></button></li>';
+          W0.name + ' ' + e.v + '</b>' + (e.ty !== "plan" ? '<em class="ty ty--' + e.ty + '">' + LG_TY[e.ty] + '</em>' : '') + '<span>' + brEsc(e.t) + '</span></button></li>';
       }).join("");
       var lgItems = LG.list.querySelectorAll(".x-log__item");
       document.getElementById("logChips").innerHTML = [["all", "全部"]].concat(LG_ORB.map(function (k) { return [k, lgW(k).name]; }))
         .map(function (c) { return '<button class="btn" data-f="' + c[0] + '" aria-pressed="' + (c[0] === "all") + '">' + c[1] + '</button>'; }).join("");
+      LG.y = "all";
+      document.getElementById("logTypes").innerHTML = [["all", "全部类型"], ["task", "新任务"], ["ux", "体验升级"], ["gn", "门户"]]
+        .map(function (c) { return '<button class="btn" data-y="' + c[0] + '" aria-pressed="' + (c[0] === "all") + '">' + c[1] + '</button>'; }).join("");
+      function lgFilter() { lgItems.forEach(function (x) { x.parentNode.hidden = !lgOn(LOG[x.dataset.i]); }); }
       document.getElementById("logChips").addEventListener("click", function (e) {
         var b = e.target.closest("[data-f]"); if (!b) return;
         LG.f = b.dataset.f; LG.pin = LG.hover = -1;
         this.querySelectorAll("[data-f]").forEach(function (x) { x.setAttribute("aria-pressed", x === b); });
-        lgItems.forEach(function (x) { x.parentNode.hidden = !lgOn(LOG[x.dataset.i]); });
+        lgFilter();
       });
-      function lgOn(e) { return LG.f === "all" || LG.f === e.w; }
+      document.getElementById("logTypes").addEventListener("click", function (e) {
+        var b = e.target.closest("[data-y]"); if (!b) return;
+        LG.y = b.dataset.y; LG.pin = LG.hover = -1;
+        this.querySelectorAll("[data-y]").forEach(function (x) { x.setAttribute("aria-pressed", x === b); });
+        lgFilter();
+      });
+      function lgOn(e) { return (LG.f === "all" || LG.f === e.w) && (LG.y === "all" || LG.y === e.ty); }
       lgItems.forEach(function (b) {
         var i = +b.dataset.i;
         b.addEventListener("pointerenter", function () { LG.lh = i; });
@@ -3592,6 +3626,7 @@
         var i = +b.dataset.i;
         hideAbout(true);
         if (LG.f !== "all") { var c = document.querySelector('#logChips [data-f="all"]'); if (c) c.click(); }
+        if (LG.y !== "all") { var c2 = document.querySelector('#logTypes [data-y="all"]'); if (c2) c2.click(); }
         showLog(); if (LG.open) LG.pin = i;
         if (typeof nwRender === "function") nwRender();
       });
@@ -3720,15 +3755,16 @@
       }
       function nwRender() {
         var un = nwUnread();
-        NW.list.innerHTML = LOG.slice(0, NW.n).map(function (e, i) {
-          var W0 = lgW(e.w);
+        var TL = []; LOG.forEach(function (e, i) { if (e.ty === "task" && TL.length < NW.n) TL.push(i); });
+        NW.list.innerHTML = TL.map(function (i) {
+          var e = LOG[i], W0 = lgW(e.w);
           return '<li><button type="button" class="x-news__it' + (i < un ? " new" : "") + '" data-i="' + i + '" style="--accent:' + W0.color + '" aria-label="' +
             brEsc(W0.name + " " + e.v + "，" + e.d + "：" + e.t + (i < un ? "（未读）" : "")) + '"><small>' + e.d.slice(5) + '</small><b>' + W0.name + ' ' + e.v +
             '</b><span>' + brEsc(e.t) + '</span></button></li>';
         }).join("");
-        var e0 = LOG[0], W0 = lgW(e0.w);
+        var e0 = LOG[TL[0]], W0 = lgW(e0.w);
         NW.tk.firstChild.textContent = W0.name + " " + e0.v + " · " + e0.t;
-        document.querySelector("#newsPin i").className = un ? "new" : "";
+        document.querySelector("#newsPin i").className = TL.some(function (i) { return i < un; }) ? "new" : "";
         requestAnimationFrame(nwTicker);
       }
       function nwTicker() {
@@ -3758,6 +3794,7 @@
         var b = ev.target.closest(".x-news__it"); if (!b) return;
         var i = +b.dataset.i;
         if (LG.f !== "all") { var c = document.querySelector('#logChips [data-f="all"]'); if (c) c.click(); }
+        if (LG.y !== "all") { var c2 = document.querySelector('#logTypes [data-y="all"]'); if (c2) c2.click(); }
         showLog();
         if (LG.open) LG.pin = i;
         nwRender();
