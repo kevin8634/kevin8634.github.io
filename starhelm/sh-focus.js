@@ -29,7 +29,13 @@
     var tex = LE.assets.texture('planet-moon.jpg', true);
     var mat = new THREE.ShaderMaterial({ uniforms: { map: { value: tex }, sun: { value: LE.earth.sun } }, vertexShader: VS, fragmentShader: FS });
     var m = F.mesh = new THREE.Mesh(geo, mat); m.name = 'sh-moon3d'; g.add(m);
+    // v1.0-M1b:太阳方向(昼夜线、城市灯光、月相)跟随统一时间轴
+    var sunDir0 = LE.earth.sunDir, wasFast = false;
+    LE.earth.sunDir = function (d) { return sunDir0(d || (window.SHTIME ? SHTIME.now() : new Date())); };
     S.addUpdater(function (dt, now, mode) {
+      var fast = window.SHTIME && !SHTIME.isLive();
+      if (fast || wasFast) LE.earth.sun.copy(LE.earth.sunDir());
+      wasFast = fast;
       if (mode !== 'earth') return;
       var p = moonP(); m.position.copy(p); m.lookAt(0, 0, 0);
       if (F.focused) {   // 跟着月亮走(它每 5 秒按真实位置更新一次)
@@ -81,6 +87,7 @@
     // 站在地月之间偏一点,看月球正面;距离按屏幕大小
     var side = new THREE.Vector3().crossVectors(dir, S.earthCam.up).normalize();
     var pos = p.clone().sub(dir.clone().multiplyScalar(0.95)).add(side.multiplyScalar(0.35)).add(S.earthCam.up.clone().multiplyScalar(0.12));
+    try { LE.audio.play('whoosh', 2.4); } catch (e) { }
     F.focused = true; tgtPrev = null; S.holdRotate = true; S.earthCtl.autoRotate = false;
     S.earthCtl.minDistance = R_MOON * 1.35; S.earthCtl.maxDistance = 6;
     S.flyTo({ target: p, position: pos, ms: matchMedia('(prefers-reduced-motion: reduce)').matches ? 300 : 2400, arc: false,
@@ -92,6 +99,7 @@
     var was = F.focused; F.focused = false; tgtPrev = null; S.holdRotate = false;
     S.earthCtl.minDistance = 1.08; S.earthCtl.maxDistance = 12;
     if (was) {
+      try { LE.audio.play('whoosh', 2.2); } catch (e) { }
       var d = S.earthCam.position.clone(); if (d.lengthSq() < 1e-6) d.set(0, 0.6, 9);
       S.flyTo({ target: new THREE.Vector3(), position: d.normalize().multiplyScalar(Math.max(S.fitDistance(), 6.2)), ms: 2200, arc: false });
     }
