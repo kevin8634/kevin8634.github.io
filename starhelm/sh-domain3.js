@@ -35,6 +35,7 @@
   }
   function taskFor(id) {
     if (id === 'mars' || id === 'venus') return ['火星上的一天有多长?', 'marsdayLab'];
+    if (id === 'jupiter') return ['木星为什么没变成太阳?', 'jupiterLab'];
     if (id !== 'earth' && id !== 'uranus' && id !== 'neptune') return ['今晚能看到它吗?', 'tonightLab'];
     return null;
   }
