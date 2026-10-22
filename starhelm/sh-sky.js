@@ -110,7 +110,7 @@
     var o = {}; for (var k = 0; k < H.length; k++) o[H[k]] = NUMF[H[k]] ? parseFloat(v[k]) : v[k];
     try { var rec = satellite.json2satrec(o); return rec && !rec.error ? { rec: rec, name: o.OBJECT_NAME, norad: String(o.NORAD_CAT_ID), epoch: o.EPOCH } : null; } catch (e) { return null; }
   }
-  SKY.ommRec = ommRec;
+  SKY.ommRec = ommRec; SKY.geo = function (rec, date, out) { return geo(rec, date, out); };
   function geo(rec, date, out, scale) {
     var pv = satellite.propagate(rec, date);
     if (!pv || !pv.position || !isFinite(pv.position.x)) return null;

@@ -110,3 +110,12 @@
 
 ## hd/earth-{day,night,clouds}-4k.jpg、hd/moon-4k.jpg(v1.0-M2g)
 - 来源:Solar System Scope 8K 纹理(经 Wikimedia Commons 3840 宽缩略图,放大到 4096×2048),基于 NASA Blue Marble / Black Marble / LRO 影像。许可 CC BY 4.0(页脚已署名 Solar System Scope)。仅桌面加载。
+
+## 待接入数据源许可核查(10-23,M3/M4 前)
+| 数据 | 许可结论 | 用法要求 |
+|---|---|---|
+| JPL Horizons 星历(探测器/矮行星/彗星位置) | NASA/JPL 公开数据,美国政府作品无版权限制 | 离线快照;署名「NASA/JPL-Caltech Horizons」;不使用 NASA/JPL 标志,不暗示背书 |
+| MPC 小行星中心(彗星、柯伊伯带天体根数) | IAU 小行星中心公开数据,免费使用 | 署名「IAU Minor Planet Center」;离线快照 |
+| HYG 恒星库 v4(100 光年恒星场) | CC BY-SA 4.0(astronexus,codeberg.org/astronexus/hyg) | 署名 David Nash / astronexus;由其派生的星表数据文件同样以 CC BY-SA 4.0 发布(在文件头注明) |
+| Gaia DR3 | ESA/Gaia/DPAC,CC BY-SA 3.0 IGO | 署名「ESA/Gaia/DPAC」;派生数据同许可 |
+| NASA 系外行星档案 | NASA/Caltech-IPAC 公开数据 | 署名「NASA Exoplanet Archive」(致谢语按其要求) |
