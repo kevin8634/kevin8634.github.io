@@ -27,7 +27,8 @@
     tonight: function () { SH.tonightLab.open(); },
     jupiter: function () { SH.jupiterLab.open(); },
     retro: function () { SH.retroLab.open(); },
-    voyager: function () { SH.voyagerLab.open(); }
+    voyager: function () { SH.voyagerLab.open(); },
+    comet: function () { SH.cometLab.open(); }
   };
   if (!OPEN[id]) return;
   (function w(n) {

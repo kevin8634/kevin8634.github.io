@@ -324,3 +324,5 @@ body:has(#card.is-open) .sh-cast,body:has(.shh-now:not([hidden])) .sh-cast,body.
 .sh-cast.is-fold{width:auto;cursor:pointer}.sh-cast.is-fold .sh-cast__for,.sh-cast.is-fold .sh-cast__list,.sh-cast.is-fold .sh-cast__src{display:none}
 .sh-cast.is-fold .sh-cast__h::after{content:attr(data-n)}
 @media (max-width:1180px){.sh-cast{width:300px}}
+
+.ml--dock .cm-time{display:flex;flex-direction:column;gap:4px}.ml--dock .cm-time input{width:100%}.ml--dock .cm-read{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:#bfe;flex-wrap:wrap}
