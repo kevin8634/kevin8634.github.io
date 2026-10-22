@@ -129,3 +129,9 @@
 
 ## sh-swind.js 太阳风(v1.0-M3e)
 - NOAA SWPC 实时太阳风摘要:products/summary/solar-wind-speed.json、solar-wind-mag-field.json(DSCOVR/ACE,L1 点),美国政府公开数据。署名「NOAA SWPC」,不使用标志。磁层形状为示意压缩。
+
+## 矮行星实拍贴图(v1.0-M3f)
+- hd/pluto-2k.jpg:NASA/JHUAPL/SwRI New Horizons「Pluto Global Color Map」(2017,science.nasa.gov),缩放至 2048×1024。NASA 公开素材,署名 NASA/JHUAPL/SwRI,不使用标志。
+- hd/ceres-1k.jpg:Ceres Dawn FC Global Mosaic(NASA/JPL-Caltech/UCLA/MPS/DLR/IDA,USGS Astrogeology 发布,公有领域)。
+- 妊神星、鸟神星、阋神星:尚无探测器近距离照片,沿用原贴图并在卡片注明「想象图」。
+- 哈雷彗核形状依据 ESA 乔托号 1986 年实拍(约 15×8×8 km 花生形、反照率约 4%),为程序化建模。

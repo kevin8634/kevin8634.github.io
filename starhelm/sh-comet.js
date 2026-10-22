@@ -18,52 +18,77 @@
     var SO = LE.solar, n = 0.9856076686 / Math.pow(HALLEY.kepler.a, 1.5), M = ((n * (jd(ms) - HALLEY.kepler.epochJD)) % 360) * DEG;
     return SO.helio(HALLEY, ms, M);
   }
-  function build() {
+  function build() {   // v1.0-M3f 王磊:彗星全部改为真实感 GPU 粒子 + 真实彗核模型
     var T = THREE, S = LE.scene, SO = LE.solar, G = new T.Group(); G.visible = false; S.solarScene.add(G); K.group = G;
+    var small = innerWidth < 760, px = Math.min(2, devicePixelRatio || 1);
     // 轨道线
     var pts = []; for (var i = 0; i <= 720; i++) pts.push(SO.toScene(SO.helio(HALLEY, 0, i / 2 * DEG)));
-    G.add(new T.Line(new T.BufferGeometry().setFromPoints(pts), new T.LineBasicMaterial({ color: 0x7fd4ff, transparent: true, opacity: 0.35, depthWrite: false })));
-    var core = new T.Sprite(new T.SpriteMaterial({ map: glowTex('210,240,255'), blending: T.AdditiveBlending, transparent: true, depthWrite: false })); G.add(core);
-    var coma = new T.Sprite(new T.SpriteMaterial({ map: glowTex('120,220,200'), blending: T.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0.7 })); G.add(coma);
-    function tail(n, rgb, size) {
-      var g = new T.BufferGeometry(), p = new Float32Array(n * 3), a = new Float32Array(n);
-      g.setAttribute('position', new T.BufferAttribute(p, 3).setUsage(T.DynamicDrawUsage));
-      var m = new T.PointsMaterial({ size: size, map: glowTex(rgb), transparent: true, opacity: 0.8, depthWrite: false, blending: T.AdditiveBlending, sizeAttenuation: true });
-      var pt = new T.Points(g, m); pt.frustumCulled = false; G.add(pt);
-      var P = []; for (var i = 0; i < n; i++) P.push({ age: Math.random(), life: 0.6 + Math.random() * 0.8, o: new T.Vector3(), v: new T.Vector3() });
-      return { pt: pt, pos: p, P: P, n: n };
+    G.add(new T.Line(new T.BufferGeometry().setFromPoints(pts), new T.LineBasicMaterial({ color: 0x7fd4ff, transparent: true, opacity: 0.28, depthWrite: false })));
+    // 彗核:1986 年乔托号拍到的「花生形」黑色冰块(约 15×8×8 km,反照率仅约 4%),按太阳方向打光;体积示意放大
+    var ng = new T.SphereGeometry(1, 96, 64), pa = ng.attributes.position, v = new T.Vector3();
+    for (i = 0; i < pa.count; i++) {
+      v.fromBufferAttribute(pa, i); var x = v.x, waist = 1 - 0.28 * Math.exp(-x * x * 6);
+      var n = 1 + 0.07 * Math.sin(v.x * 9 + v.y * 4) * Math.cos(v.z * 7) + 0.04 * Math.sin(v.y * 17 + v.z * 13) + 0.025 * Math.sin(v.x * 31 - v.z * 23);
+      pa.setXYZ(i, x * 1.0 * n, v.y * 0.52 * waist * n, v.z * 0.5 * waist * n);
     }
-    var ion = tail(innerWidth < 760 ? 900 : 2200, '110,180,255', 0.35), dust = tail(innerWidth < 760 ? 900 : 2200, '255,225,160', 0.45);
+    ng.computeVertexNormals();
+    var nucM = new T.ShaderMaterial({ uniforms: { uSun: { value: new T.Vector3(1, 0, 0) }, uAct: { value: 0 } },
+      vertexShader: 'varying vec3 vN;varying vec3 vP;void main(){vN=normalize(mat3(modelMatrix)*normal);vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+      fragmentShader: 'uniform vec3 uSun;uniform float uAct;varying vec3 vN;varying vec3 vP;float h(vec3 p){return fract(sin(dot(p,vec3(12.9,78.2,37.7)))*43758.5);}' +
+        'void main(){float l=max(dot(normalize(vN),uSun),0.);float g=.75+.25*h(floor(vP*40.));float crater=smoothstep(.35,.0,abs(fract(vP.x*6.+vP.y*3.)-.5))*.15;' +
+        'vec3 c=vec3(.11,.1,.095)*g*(1.-crater);vec3 col=c*(l*1.6+.03);col+=vec3(.9,.95,1.)*pow(l,8.)*uAct*.25;gl_FragColor=vec4(col,1.);}' });
+    var nuc = new T.Mesh(ng, nucM); G.add(nuc); K.nuc = nuc;
+    // —— GPU 粒子:彗发 / 喷流 / 离子尾 / 尘埃尾 ——
+    var U0 = { uT: { value: 0 }, uC: { value: new T.Vector3() }, uSun: { value: new T.Vector3(1, 0, 0) }, uVel: { value: new T.Vector3(0, 0, 1) },
+      uAct: { value: 0 }, uL: { value: 20 }, uPx: { value: px }, uNs: { value: 1 } };
+    K.U = U0;
+    function seeds(n) { var g = new T.BufferGeometry(), a = new Float32Array(n * 4); for (var i = 0; i < n * 4; i++) a[i] = Math.random(); g.setAttribute('seed', new T.BufferAttribute(a, 4)); g.setAttribute('position', new T.BufferAttribute(new Float32Array(n * 3), 3)); g.boundingSphere = new T.Sphere(new T.Vector3(), 1e5); return g; }
+    var head = 'uniform float uT,uAct,uL,uPx,uNs;uniform vec3 uC,uSun,uVel;attribute vec4 seed;varying float vA;varying float vF;' +
+      'vec3 basisU(vec3 d){return normalize(cross(d,abs(d.y)<.9?vec3(0.,1.,0.):vec3(1.,0.,0.)));}' +
+      'vec3 rnd(vec4 s){float a=s.x*6.2832,z=s.y*2.-1.;float r=sqrt(1.-z*z);return vec3(cos(a)*r,z,sin(a)*r);}' +
+      'void outp(vec3 p,float size){vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=clamp(uPx*size*(150./-mv.z),1.,16.);}';
+    function mat(vs, fs) { return new T.ShaderMaterial({ uniforms: U0, vertexShader: head + vs, fragmentShader: 'varying float vA;varying float vF;' + fs, transparent: true, depthWrite: false, blending: T.AdditiveBlending }); }
+    var soft = 'float sd(){vec2 d=gl_PointCoord-.5;return exp(-dot(d,d)*14.);}';
+    // 彗发:高斯分布的气体与尘埃云,内层偏青绿(C2 分子荧光),外层偏白
+    var coma = new T.Points(seeds(small ? 2500 : 7000), mat(
+      'void main(){float f=mod(seed.w+uT*.08,1.);float r=pow(seed.z,2.2)*uL*.16*(.3+f);vec3 p=uC+rnd(seed)*r+uSun*r*.35*f;vA=uAct*(1.-f)*(1.-seed.z*.6)*.55;vF=seed.z;outp(p,.9+1.6*(1.-seed.z));}',
+      soft + 'void main(){vec3 c=mix(vec3(.45,1.,.8),vec3(.95,.97,1.),vF);gl_FragColor=vec4(c*sd()*vA*.35,1.);}'));
+    // 喷流:向阳面喷出的气尘柱,随彗核自转扫动,再被推向背日方向
+    var jets = new T.Points(seeds(small ? 1200 : 3000), mat(
+      'void main(){float f=mod(seed.w+uT*.35,1.);float k=floor(seed.x*4.);float ang=k*1.57+uT*.6+seed.y*.25;vec3 u=basisU(uSun),w=cross(uSun,u);' +
+        'vec3 d=normalize(-uSun*.9+(u*cos(ang)+w*sin(ang))*.55);vec3 p=uC+d*f*uL*.09+uSun*f*f*uL*.12;vA=uAct*(1.-f)*.8;vF=f;outp(p,1.1);}',
+      soft + 'void main(){gl_FragColor=vec4(vec3(1.,.97,.9)*sd()*vA*.5,1.);}'));
+    // 离子尾:被太阳风吹成笔直的蓝色细丝(CO⁺ 荧光),带流光与扭结
+    var ion = new T.Points(seeds(small ? 3500 : 10000), mat(
+      'void main(){float f=mod(seed.w+uT*(.12+.06*seed.z),1.);float ray=floor(seed.x*9.);float ra=ray*.698+sin(uT*.3+ray)*.2;vec3 u=basisU(uSun),w=cross(uSun,u);' +
+        'float spread=(.012+.05*f)*uL;vec3 lat=(u*cos(ra)+w*sin(ra))*spread*(.4+seed.y)+u*sin(f*12.+uT*1.5+ray)*.015*uL*f;vec3 p=uC+uSun*f*uL*1.6+lat;' +
+        'vA=uAct*smoothstep(0.,.04,f)*(1.-f)*.85;vF=f;outp(p,1.+1.4*(1.-f));}',
+      soft + 'void main(){vec3 c=mix(vec3(.55,.8,1.),vec3(.25,.5,1.),vF);gl_FragColor=vec4(c*sd()*vA*.3,1.);}'));
+    // 尘埃尾:被光压慢慢推开、落在轨道后方的宽阔弧形尘幕,偏黄白,带同步条纹
+    var dust = new T.Points(seeds(small ? 4000 : 12000), mat(
+      'void main(){float f=mod(seed.w+uT*.05,1.);float beta=.25+seed.x*.75;float s=f*uL*1.05*beta;vec3 u=basisU(uSun);' +
+        'float stria=floor(seed.y*7.)/7.;vec3 p=uC+uSun*s-uVel*f*f*uL*.9*(1.1-beta)+cross(uSun,uVel)*(seed.z-.5)*f*uL*.12+u*(seed.y-.5)*f*uL*.05;' +
+        'vA=uAct*smoothstep(0.,.03,f)*(1.-f)*(.55+.45*step(.5,fract(stria*7.+seed.x*.3)))*.7;vF=f;outp(p,1.2+1.6*(1.-f));}',
+      soft + 'void main(){vec3 c=mix(vec3(1.,.95,.82),vec3(1.,.82,.6),vF);gl_FragColor=vec4(c*sd()*vA*.22,1.);}'));
+    [coma, jets, ion, dust].forEach(function (o) { o.frustumCulled = false; G.add(o); });
     var lbl = document.createElement('button'); lbl.type = 'button'; lbl.className = 'le-plabel is-major sh-cometlabel'; lbl.textContent = '哈雷彗星'; lbl.style.visibility = 'hidden';
     (SO.labels || document.body).appendChild(lbl); lbl.onclick = function () { fly(); };
-    var C = new T.Vector3(), C2 = new T.Vector3(), sunDir = new T.Vector3(), vel = new T.Vector3(), wp = new T.Vector3(), last = performance.now();
+    var C = new T.Vector3(), C2 = new T.Vector3(), wp = new T.Vector3(), t0 = performance.now();
     K.pos = C;
     S.addUpdater(function () {
-      var now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now;
       var on = S.mode === 'solar' && (K.on || (window.SHD4 && SHD4.ready && SHD4.visible()));
       G.visible = on; if (!on) { lbl.style.visibility = 'hidden'; return; }
       var h = helioAt(K.t), r = Math.hypot(h.x, h.y, h.z); K.r = r;
-      var px = C.x, py = C.y, pz = C.z;
+      var px0 = C.x, py0 = C.y, pz0 = C.z;
       SO.toScene(h, C); SO.toScene(helioAt(K.t + 864e5), C2);
-      if (K.on && K.follow && K.had) { var dx = C.x - px, dy = C.y - py, dz = C.z - pz; S.solarCam.position.x += dx; S.solarCam.position.y += dy; S.solarCam.position.z += dz; S.solarCtl.target.x += dx; S.solarCtl.target.y += dy; S.solarCtl.target.z += dz; }
-      K.had = true; vel.subVectors(C2, C).normalize();
-      sunDir.copy(C).normalize();                         // 背向太阳
+      if (K.on && K.follow && K.had) { var dx = C.x - px0, dy = C.y - py0, dz = C.z - pz0; S.solarCam.position.x += dx; S.solarCam.position.y += dy; S.solarCam.position.z += dz; S.solarCtl.target.x += dx; S.solarCtl.target.y += dy; S.solarCtl.target.z += dz; }
+      K.had = true;
       var act = r > 4.5 ? 0 : Math.min(1, Math.pow(1.2 / Math.max(r, 0.5), 1.6)); K.act = act;
-      core.position.copy(C); core.scale.setScalar(0.5 + act * 0.6); coma.position.copy(C); coma.scale.setScalar(0.6 + act * 3.2); coma.material.opacity = 0.2 + act * 0.6;
-      var Lion = act * 26, Ldust = act * 15, cam = S.solarCam.position.distanceTo(C);
-      ion.pt.material.size = dust.pt.material.size = Math.max(0.3, cam * 0.012);
-      [ion, dust].forEach(function (tl, j) {
-        for (var i = 0; i < tl.n; i++) {
-          var q = tl.P[i]; q.age += dt / q.life * (K.on ? 0.9 : 0.6);
-          if (q.age >= 1) { q.age = 0; q.o.copy(C); q.v.set((Math.random() - .5), (Math.random() - .5), (Math.random() - .5)).multiplyScalar(j ? 0.18 : 0.06); }
-          var s = q.age;
-          if (j === 0) wp.copy(q.o).addScaledVector(sunDir, s * Lion).addScaledVector(q.v, s * 6);                               // 离子尾:直
-          else wp.copy(q.o).addScaledVector(sunDir, s * Ldust).addScaledVector(vel, -s * s * Ldust * 0.55).addScaledVector(q.v, s * 10);   // 尘埃尾:弯,落在轨道后方
-          if (act === 0) wp.copy(C);
-          tl.pos[i * 3] = wp.x; tl.pos[i * 3 + 1] = wp.y; tl.pos[i * 3 + 2] = wp.z;
-        }
-        tl.pt.geometry.attributes.position.needsUpdate = true; tl.pt.material.opacity = 0.15 + act * 0.75;
-      });
+      U0.uC.value.copy(C); U0.uSun.value.copy(C).normalize(); U0.uVel.value.subVectors(C2, C).normalize();
+      U0.uAct.value = act; U0.uL.value = 6 + act * 22; U0.uT.value = (performance.now() - t0) / 1000;
+      var cam = S.solarCam.position.distanceTo(C);
+      nuc.position.copy(C); nuc.scale.setScalar(Math.max(0.05, cam * 0.006)); nuc.rotation.y += 0.004; nuc.rotation.z = 0.4;
+      nucM.uniforms.uSun.value.copy(C).normalize().negate(); nucM.uniforms.uAct.value = act;
       wp.copy(C).project(S.solarCam);
       var show = wp.z < 1 && Math.abs(wp.x) < 1.05 && Math.abs(wp.y) < 1.05;
       lbl.style.visibility = show ? 'visible' : 'hidden';
@@ -101,11 +126,11 @@
       '<div class="ml-ctl"><button class="ml-fly" type="button">◎ 飞到哈雷彗星</button></div>' +
       '<div class="cm-time"><input class="ml-rng" type="range" min="-400" max="400" step="1"><div class="cm-read"><span class="ml-day"></span><span class="ml-r"></span></div></div>' +
       '<div class="ml-guide"><div class="ml-q"></div><div class="ml-ch"></div><div class="ml-gb"><button class="ml-hint" type="button">给我一点提示</button><span class="ml-hs"></span></div></div>' +
-      '<div class="ml-note">轨道根数:NASA/JPL SBDB;尾巴长度为示意放大,方向真实。下次回归:2061 年 7 月。</div>';
+      '<div class="ml-note">轨道根数:NASA/JPL SBDB;彗核形状依据 1986 年 ESA 乔托号实拍(约 15×8 km,体积示意放大);尾巴长度为示意,方向真实。下次回归:2061 年 7 月。</div>';
     document.body.appendChild(r);
     ['st', 'x', 'fly', 'rng', 'day', 'r', 'q', 'ch', 'hint', 'hs'].forEach(function (k) { U[k] = r.querySelector('.ml-' + k); });
     U.x.onclick = close; U.hint.onclick = hint; U.fly.onclick = function () { fly(); snd('click'); };
-    U.rng.oninput = function () { K.t = T_PERI + (+U.rng.value) * 864e5; read(); };
+    U.rng.oninput = function () { K.t = T_PERI + (+U.rng.value) * 864e5; read(); if (!K.follow) { clearTimeout(K.rf); K.rf = setTimeout(fly, 120); } };
   }
   function read() {
     var d = new Date(K.t + 8 * 3600e3), dd = Math.round((K.t - T_PERI) / 864e5);

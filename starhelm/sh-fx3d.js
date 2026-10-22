@@ -282,6 +282,12 @@
         var t = loadTex('hd/' + id + '-4k.jpg', rd);
         t.ready.then(function () { b.mesh.material.uniforms.uMap.value = t; b.mesh.material.uniforms.uHas.value = 1; }).catch(function () { });
       });
+      // 2a 矮行星实拍(v1.0-M3f):冥王星 = New Horizons 彩色全球图;谷神星 = Dawn 全球图(手机也加载,文件小)
+      [['pluto', 'hd/pluto-2k.jpg'], ['ceres', 'hd/ceres-1k.jpg']].forEach(function (x) {
+        var b = SO.byId[x[0]]; if (!b || !b.mesh || !b.mesh.material.uniforms) return;
+        var t = loadTex(x[1], rd); t.ready.then(function () { b.mesh.material.uniforms.uMap.value = t; b.mesh.material.uniforms.uHas.value = 1; }).catch(function () { });
+      });
+      if (SO.byId.haumea && SO.byId.haumea.mesh) SO.byId.haumea.mesh.scale.multiply(new THREE.Vector3(1, 0.51, 0.8));   // 妊神星:约 2100×1680×1074 km 的椭球
       // 2b 地球 / 月球 4K(v1.0-M2g):地球昼夜着色(夜面城市灯光辉光)+ 云层 + 大气;月球 4K
       if (hdOK(rd)) try { earthMoon4k(SO, S, rd); } catch (e) { console.warn('[SHFX3D] earth4k', e); }
       // 3 土星粒子环
