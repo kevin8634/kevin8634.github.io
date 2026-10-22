@@ -208,7 +208,7 @@ button, input, select { font: inherit; color: inherit; }
 /* 手机竖屏(默认):顶部向导卡,底部抽屉 + 控制条 */
 @media not all and (min-width: 900px) and (min-height: 520px) {
   .nv-im .nv-top { grid-template-columns: auto 1fr auto auto; grid-template-areas: "nav prog snd gear" "tabs tabs tabs tabs"; }
-  .nv-im .nv-top .nv-nav a + a { display: none; }
+  .nv-im .nv-top .nv-nav a + a:not(.nv-home) { display: none; }
   .nv-im .nv-guide { left: 8px; right: 8px; top: var(--toph, 80px); padding: 6px 10px 6px 6px; }
   .nv-im .nv-guide canvas { width: 44px; height: 44px; }
   .nv-im .nv-bubble { font-size: 13.5px; min-height: 0; }
@@ -227,7 +227,7 @@ button, input, select { font: inherit; color: inherit; }
   .nv-im { --side: 264px; }
   .nv-im .nv-top { right: var(--side); grid-template-columns: auto 1fr; grid-template-areas: "nav tabs" "prog prog"; padding: 3px 8px 6px; gap: 2px 6px; }
   .nv-im .nv-top .nv-nav a { padding: 4px 6px; font-size: 13px; }
-  .nv-im .nv-top .nv-nav a + a { display: none; }
+  .nv-im .nv-top .nv-nav a + a:not(.nv-home) { display: none; }
   .nv-im .nv-tab { min-height: 28px; padding: 1px 8px; }
   .nv-im .nv-top [data-snd], .nv-im .nv-top .nv-gear { position: fixed; top: 4px; width: 30px; height: 30px; min-height: 30px; }
   .nv-im .nv-top .nv-gear { right: 4px; }
@@ -314,3 +314,20 @@ button, input, select { font: inherit; color: inherit; }
 .nv-seg-i { padding: 4px 12px; border: 1px solid var(--line); border-radius: 999px; align-items: center; }
 .nv-seg-i input { margin: 0; }
 .nv-seg-i:has(input:checked) { border-color: var(--ac); background: rgba(124,92,240,.22); }
+
+/* v0.3-α3 · HANDOFF §5.12/§5.3.1:顶栏「← 创世计划」同窗口返回门户;小屏任务页收成紧凑胶囊,不再隐藏 */
+.nv-top .nv-nav a.nv-home { color: var(--ac2); }
+@media not all and (min-width: 900px) and (min-height: 520px) {
+  .nv-im .nv-top .nv-nav a.nv-home { font-size: 12px; padding: 3px 7px; border: 1px solid var(--glass-bd); border-radius: var(--r-pill); color: var(--mu); }
+}
+/* 窄竖屏:给「创世计划」让位——胶囊缩成「创世」(读屏仍读 aria-label 全称),进度细条隐藏(星数读数保留) */
+@media (max-width: 420px) {
+  .nv-im .nv-top .nv-nav a.nv-home { font-size: 0; }
+  .nv-im .nv-top .nv-nav a.nv-home::before { content: "创世"; font-size: 12px; }
+  .nv-im .nv-prog .bar { display: none; }
+  .nv-im .nv-top { gap: 4px 6px; }
+}
+@media (orientation: landscape) and (max-height: 519px) {
+  .nv-im .nv-top .nv-nav a.nv-home { font-size: 0; padding: 2px 6px; }
+  .nv-im .nv-top .nv-nav a.nv-home::before { content: "创世"; font-size: 11.5px; }
+}
