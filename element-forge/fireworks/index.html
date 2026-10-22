@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>为什么烟花有不同的颜色? · 元素工坊 Element Forge</title>
+<meta name="description" content="元素工坊 · 在虚拟夜空里放七种颜色的烟花,用分光镜读出每种元素的颜色指纹,看电子跳台阶放出光,再用光谱认出混色烟花里的元素。创世计划 Genesis 化学世界。">
+<meta name="theme-color" content="#070a14">
+<link rel="stylesheet" href="../ef.css?v=9">
+</head>
+<body class="spark">
+<div id="app"></div>
+<script src="../ef.js?v=9"></script>
+<script src="../ef-tri.js?v=1"></script>
+<script>
+/* ---------- 共享数据:七种焰色元素、谱线/谱带、波长→颜色、氢原子能级(2D/3D 共用) ---------- */
+(function () {
+/* 波长(nm)→ 近似 RGB(可见光 380–780 nm,示意) */
+function wl(nm) {
+  var r = 0, g = 0, b = 0;
+  if (nm < 440) { r = (440 - nm) / 60; b = 1; } else if (nm < 490) { g = (nm - 440) / 50; b = 1; } else if (nm < 510) { g = 1; b = (510 - nm) / 20; }
+  else if (nm < 580) { r = (nm - 510) / 70; g = 1; } else if (nm < 645) { r = 1; g = (645 - nm) / 65; } else { r = 1; }
+  var f = nm < 420 ? 0.3 + 0.7 * (nm - 380) / 40 : nm > 700 ? 0.3 + 0.7 * (780 - nm) / 80 : 1; f = Math.max(0, Math.min(1, f));
+  return [r, g, b].map(function (v) { return Math.round(255 * Math.pow(Math.max(0, v) * f, 0.8)); });
+}
+function css(c, a) { return a == null ? 'rgb(' + c.join(',') + ')' : 'rgba(' + c.join(',') + ',' + a + ')'; }
+function hx(h) { var n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
+/* 七种焰色元素。焰色为公认的定性结论;烟花里真正发光的常是含这些金属的小分子(如 SrCl/SrOH、CaOH/CaCl、BaCl/BaOH、CuCl),谱带位置为示意;铜在普通焰色试验中显绿色,烟花里与氯结合成 CuCl 才发蓝光 */
+var EL = [
+  { k: 'Li', z: 3, n: '锂', c: '#ff2f6e', cn: '紫红', lines: [[670.8, 1], [610.4, 0.25]], bands: [] },
+  { k: 'Sr', z: 38, n: '锶', c: '#ff3b2f', cn: '洋红', lines: [[460.7, 0.25]], bands: [[600, 612, 0.7], [635, 682, 1]] },
+  { k: 'Ca', z: 20, n: '钙', c: '#ff8a2a', cn: '砖红', lines: [[422.7, 0.3]], bands: [[548, 560, 0.55], [598, 626, 1]] },
+  { k: 'Na', z: 11, n: '钠', c: '#ffd02a', cn: '黄', lines: [[589.0, 1], [589.6, 1]], bands: [] },
+  { k: 'Ba', z: 56, n: '钡', c: '#8dff5a', cn: '黄绿', lines: [[553.5, 0.4]], bands: [[505, 536, 1]] },
+  { k: 'Cu', z: 29, n: '铜', c: '#3d8bff', cn: '蓝', lines: [], bands: [[420, 456, 1], [478, 490, 0.35]] },
+  { k: 'K', z: 19, n: '钾', c: '#c9a0ff', cn: '浅紫', lines: [[404.4, 0.5], [766.5, 0.9], [769.9, 0.8]], bands: [] }];
+var BY = {}; EL.forEach(function (e, i) { e.i = i; e.rgb = hx(e.c); BY[e.k] = e; });
+/* 加色混合(几种光叠在一起) */
+function mixRGB(ks) { var s = [0, 0, 0]; ks.forEach(function (k) { var c = BY[k].rgb; s = s.map(function (v, j) { return v + c[j]; }); }); var m = Math.max(1, Math.max.apply(null, s) / 255); return s.map(function (v) { return Math.round(v / m); }); }
+/* 氢原子:Eₙ = −13.6/n² eV;λ(nm)≈ 1239.84/ΔE */
+function En(n) { return -13.6 / (n * n); }
+function lam(hi, lo) { return 1239.84 / (En(hi) - En(lo)); }
+/* 画一条分光镜谱:ks 为元素列表,或 { lines:[[nm,强度]] } 自定义 */
+function spectrum(x, X, Y, W, H, ks, opt) {
+  x.save(); spec0(x, X, Y, W, H, ks, opt); x.restore();
+}
+function spec0(x, X, Y, W, H, ks, opt) {
+  opt = opt || {}; var L = [], B = [];
+  (ks || []).forEach(function (k) { var e = typeof k === 'string' ? BY[k] : k; (e.lines || []).forEach(function (l) { L.push(l); }); (e.bands || []).forEach(function (b) { B.push(b); }); });
+  var px = function (nm) { return X + (nm - 380) / 400 * W; };
+  x.fillStyle = '#05060c'; x.fillRect(X, Y, W, H);
+  for (var nm = 380; nm < 780; nm += 2) { x.fillStyle = css(wl(nm), opt.ruler == null ? 0.12 : opt.ruler); x.fillRect(px(nm), Y, W / 200 + 0.6, H); }
+  B.forEach(function (b) { for (var nm2 = b[0]; nm2 <= b[1]; nm2 += 1) { var edge = Math.min(nm2 - b[0], b[1] - nm2) / 4; x.fillStyle = css(wl(nm2), Math.min(1, 0.25 + edge) * b[2] * 0.85); x.fillRect(px(nm2), Y + 2, W / 400 + 0.8, H - 4); } });
+  L.forEach(function (l) { if (l[0] < 380 || l[0] > 780) return; var c = wl(l[0]); x.save(); x.shadowColor = css(c); x.shadowBlur = 8; x.fillStyle = css(c, Math.min(1, 0.35 + l[1])); x.fillRect(px(l[0]) - 1.2, Y + 1, 2.4, H - 2); x.restore(); });
+  if (opt.ticks !== false) { x.fillStyle = 'rgba(220,220,235,.65)'; x.font = '10px system-ui'; x.textAlign = 'center'; x.textBaseline = 'top'; [400, 500, 600, 700].forEach(function (t) { x.fillRect(px(t) - 0.5, Y + H, 1, 4); x.fillText(t, px(t), Y + H + 5); }); x.textAlign = 'right'; x.fillText('nm', X + W, Y + H + 5); }
+}
+EF.FW = { wl: wl, css: css, hx: hx, EL: EL, BY: BY, mixRGB: mixRGB, En: En, lam: lam, spectrum: spectrum,
+  BALMER: [3, 4, 5, 6].map(function (n) { return { n: n, nm: Math.round(lam(n, 2) * 10) / 10 }; }) };
+})();
+</script>
+<script>if (EF.glTier !== 'low') { var f3 = document.createElement('script'); f3.type = 'module'; f3.src = '../ef-fire3d.js?v=1'; document.head.appendChild(f3); }</script>
+<script>
+(function () {
+var FW = EF.FW, EL = FW.EL, BY = FW.BY;
+function txt(stage, h, cls) { var p = document.createElement('p'); p.className = cls || 'note-sm'; p.innerHTML = h || ''; stage.appendChild(p); return p; }
+function card(stage, h, warn) { var d = document.createElement('div'); d.className = 'cab-card' + (warn ? ' warn' : ''); d.innerHTML = h; stage.appendChild(d); return d; }
+var DANGER = '<b style="color:#ff7a7a">请勿在现实中尝试!</b><br>这里的烟花和火焰都是虚拟的。真烟花里有火药,只能由持证的专业人员制作;焰色试验只能在实验室由老师操作。不要在家点火,也不要往燃气灶或蜡烛火里撒盐或任何粉末;不要拆烟花、不要收集"烟花原料"。烟花里的一些金属化合物有毒(比如可溶的钡盐),不要摸、不要捡烟花残渣和没炸响的烟花。很多城市禁止或限制燃放烟花:要遵守当地规定,看烟花站在安全距离外,听现场工作人员指挥。';
+EF.FWUI = { txt: txt, card: card, DANGER: DANGER };
+
+/* 一朵 2D 烟花:粒子从中心炸开 */
+function Burst(x0, y0, rgb, n) {
+  var P = [], soft = EF.campus; n = n || (soft ? 50 : 110);
+  for (var i = 0; i < n; i++) { var a = Math.random() * 6.283, v = (0.6 + Math.random() * 0.6) * (soft ? 2 : 3); P.push({ x: x0, y: y0, vx: Math.cos(a) * v, vy: Math.sin(a) * v, l: 1 }); }
+  return { P: P, rgb: rgb, f: soft ? 0 : 1, x0: x0, y0: y0 };
+}
+function drawBursts(x, B) {
+  return B.filter(function (b) {
+    if (b.f > 0.02) { var g = x.createRadialGradient(b.x0, b.y0, 0, b.x0, b.y0, 60); g.addColorStop(0, 'rgba(255,255,255,' + (b.f * 0.5) + ')'); g.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = g; x.fillRect(b.x0 - 60, b.y0 - 60, 120, 120); b.f *= 0.85; }
+    var alive = false;
+    b.P.forEach(function (p) { if (p.l <= 0) return; alive = true; p.x += p.vx; p.y += p.vy; p.vx *= 0.975; p.vy = p.vy * 0.975 + 0.03; p.l -= EF.reduced ? 0.03 : 0.012;
+      x.fillStyle = FW.css(b.rgb, Math.max(0, p.l)); x.beginPath(); x.arc(p.x, p.y, 2 + p.l, 0, 7); x.fill(); });
+    return alive;
+  });
+}
+function orb(x, px, py, r, e, lit) {
+  if (lit) { var g = x.createRadialGradient(px, py, 0, px, py, r * 2.4); g.addColorStop(0, FW.css(e.rgb, .5)); g.addColorStop(1, FW.css(e.rgb, 0)); x.fillStyle = g; x.fillRect(px - r * 2.4, py - r * 2.4, r * 4.8, r * 4.8); }
+  EF.ball(x, px, py, r, e.c, e.k);
+  x.fillStyle = '#efe6f6'; x.font = '12px system-ui'; x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillText(e.n, px, py + r + 15);
+}
+
+/* ---------- L0 夜空点单(平面版) ---------- */
+var ORDERS = [{ k: 'Ba', w: '一朵<b style="color:#8dff5a">绿色</b>的烟花' }, { k: 'Na', w: '一朵<b style="color:#ffd02a">黄色</b>的烟花' }, { k: 'Cu', w: '一朵<b style="color:#3d8bff">蓝色</b>的烟花' }];
+EF.FW.ORDERS = ORDERS;
+function L0(stage, api) {
+  var C = EF.canvas(stage, 360), x = C.x, B = [], R = [], seen = {}, phase = 'try', oi = 0, wrong = 0;
+  var msg = txt(stage, '七颗"颜色星"各藏着一种金属元素。点一颗,放一朵虚拟烟花。');
+  card(stage, DANGER, true);
+  function pos(i) { return { x: C.W * (i + 0.5) / 7, y: C.H - 46 }; }
+  C.c.addEventListener('pointerdown', function (e) {
+    var q = C.pt(e); EL.forEach(function (el, i) { var p = pos(i); if (Math.hypot(q.x - p.x, q.y - p.y) > 26) return; launch(el, i); });
+  });
+  function launch(el, i) {
+    var p = pos(i); R.push({ x: p.x, y: p.y - 24, ty: C.H * (0.22 + Math.random() * 0.15), el: el }); EF.play('whoosh');
+    if (phase === 'try') { if (!seen[el.k]) { seen[el.k] = 1; } var n = Object.keys(seen).length;
+      msg.innerHTML = el.n + '(' + el.k + ')→ <b style="color:' + el.c + '">' + el.cn + '</b>。' + (n < 7 ? '还有 ' + (7 - n) + ' 颗没试。' : '');
+      if (n === 7) setTimeout(function () { phase = 'order'; msg.innerHTML = '七种元素,七种颜色!现在接订单:客人想要' + ORDERS[0].w + ',该点哪颗星?'; EF.play('unlock'); }, 1400); }
+    else if (phase === 'order') {
+      var O = ORDERS[oi];
+      if (el.k === O.k) { oi++; EF.play('select'); if (oi === ORDERS.length) { phase = 'done'; msg.innerHTML = '三张订单都完成了。颜色由烟花里的<b>金属元素</b>决定。'; setTimeout(api.complete, 1500); } else msg.innerHTML = '对了!下一位客人想要' + ORDERS[oi].w + '。'; }
+      else { wrong++; EF.play('tick'); msg.innerHTML = '这朵是' + el.cn + '色的。客人要的是' + O.w + ',再找找。'; }
+    }
+  }
+  (function loop() {
+    if (!C.c.isConnected) return; var W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+    R = R.filter(function (r) { r.y += (r.ty - r.y) * (EF.reduced ? 1 : 0.08); x.fillStyle = 'rgba(255,230,200,.9)'; x.beginPath(); x.arc(r.x, r.y, 2.5, 0, 7); x.fill();
+      if (Math.abs(r.y - r.ty) < 3) { B.push(Burst(r.x, r.ty, r.el.rgb)); EF.tone(r.el.z % 21 + 1); return false; } return true; });
+    B = drawBursts(x, B);
+    EL.forEach(function (el, i) { var p = pos(i); orb(x, p.x, p.y, 18, el, !!seen[el.k]); });
+    requestAnimationFrame(loop);
+  })();
+}
+
+/* ---------- L1 火焰里的指纹 ---------- */
+var MYST = [{ k: 'Li', q: '神秘样品 A:火焰是红色的。' }, { k: 'Ba', q: '神秘样品 B:火焰是绿色的。' }, { k: 'Sr', q: '神秘样品 C:火焰也是红色的!' }];
+function L1(stage, api) {
+  var C = EF.canvas(stage, 330), x = C.x, cur = null, seen = {}, phase = 'try', mi = 0, t0 = 0;
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips';
+  ctl.innerHTML = EL.map(function (e) { return '<button class="ef-btn ghost chip" data-k="' + e.k + '" style="--c:' + e.c + '">' + e.n + ' ' + e.k + '</button>'; }).join('');
+  stage.appendChild(ctl);
+  var msg = txt(stage, '这是一盏虚拟的焰色灯。点一种元素,把它放进火焰里,看火焰颜色,再看下面分光镜里的<b>谱线</b>。');
+  card(stage, DANGER, true);
+  ctl.querySelectorAll('button').forEach(function (b) { b.onclick = function () {
+    var k = b.dataset.k, e = BY[k];
+    if (phase === 'try') { cur = [k]; t0 = performance.now(); seen[k] = 1; b.classList.add('on'); EF.play('select'); EF.tone(e.z % 21 + 1);
+      var n = Object.keys(seen).length, sp = e.bands.length && e.lines.length ? '几段亮带和一条细线' : e.bands.length ? '几段亮带' : '几条细亮线';
+      msg.innerHTML = (k === 'Cu' ? '铜:这里显示的是<b>烟花里的蓝</b>——铜和氯结合成的小分子发出蓝光。课本上普通焰色试验里,铜的火焰是<b>绿色</b>的。' : e.n + ':火焰' + e.cn + '色。' + (k === 'K' ? '化学课上看钾的焰色,要隔着蓝色钴玻璃,滤掉钠的黄光。' : '')) +
+        '分光镜里是' + sp + '——这就是它的颜色"指纹"。' + (e.bands.length ? '(亮带来自火焰里含这种金属的小分子,样子是示意)' : '') + (n < 7 ? '还有 ' + (7 - n) + ' 种。' : '');
+      if (n === 7) setTimeout(function () { phase = 'myst'; mi = 0; ctl.querySelectorAll('button').forEach(function (z) { z.classList.remove('on'); }); ask(); EF.play('unlock'); }, 1300); }
+    else if (phase === 'myst') {
+      var M = MYST[mi]; if (k === M.k) { EF.play('select'); mi++; if (mi === MYST.length) { phase = 'done'; cur = null; msg.innerHTML = '三个都认出来了!锂和锶都是红色,但<b>光谱不一样</b>:锂主要是一条很细的红线,锶是一大片红色亮带,还多一条蓝线。'; setTimeout(api.complete, 1300); } else ask(); }
+      else { EF.play('tick'); msg.innerHTML = M.q + '不是' + e.n + '。对比一下它的谱线和' + e.n + '的谱线(右边的小谱图)。'; }
+    }
+  }; });
+  function ask() { var M = MYST[mi]; cur = [M.k]; t0 = performance.now(); msg.innerHTML = M.q + '只看分光镜里的谱线,它是哪种元素?(点上面的元素按钮)'; }
+  (function loop(t) {
+    if (!C.c.isConnected) return; var W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+    var fx = phase === 'myst' ? W * 0.3 : W / 2, fy = H * 0.55, e = cur ? BY[cur[0]] : null, k = cur ? Math.min(1, (performance.now() - t0) / 500) : 0; if (EF.reduced) k = cur ? 1 : 0;
+    /* 灯座 */
+    x.fillStyle = '#3a3448'; x.fillRect(fx - 10, fy, 20, 46); x.fillRect(fx - 30, fy + 46, 60, 8);
+    /* 火焰:底部蓝色,上部被元素染色 */
+    var fl = 1 + 0.06 * Math.sin(t / 90) + 0.04 * Math.sin(t / 37);
+    for (var j = 0; j < 3; j++) {
+      var hh = (110 - j * 26) * fl, ww = 26 - j * 6, base = j === 2 ? [120, 170, 255] : e ? e.rgb.map(function (v, z) { return Math.round([90, 140, 255][z] + (v - [90, 140, 255][z]) * k); }) : [90, 140, 255];
+      var g = x.createLinearGradient(fx, fy, fx, fy - hh); g.addColorStop(0, FW.css([120, 170, 255], 0.85)); g.addColorStop(0.25, FW.css(base, 0.75 - j * 0.15)); g.addColorStop(1, FW.css(base, 0));
+      x.fillStyle = g; x.beginPath(); x.moveTo(fx - ww, fy); x.quadraticCurveTo(fx - ww * 1.1, fy - hh * 0.45, fx, fy - hh); x.quadraticCurveTo(fx + ww * 1.1, fy - hh * 0.45, fx + ww, fy); x.closePath(); x.fill();
+    }
+    x.fillStyle = '#d8d0e6'; x.font = '12px system-ui'; x.textAlign = 'center'; x.fillText(e && phase !== 'myst' ? e.n + ' · 火焰' + e.cn + '色' : phase === 'myst' ? '神秘样品' : '虚拟焰色灯', fx, fy + 72);
+    /* 分光镜 */
+    var sx = phase === 'myst' ? W * 0.52 : 20, sw = phase === 'myst' ? W * 0.45 : W - 40;
+    x.fillStyle = '#e6dff0'; x.textAlign = 'left'; x.font = '12px system-ui'; x.fillText('分光镜', sx, 20);
+    FW.spectrum(x, sx, 28, sw, 34, cur && k > 0.5 ? cur : []);
+    if (phase === 'myst') { var y0 = 92, rowH = Math.max(18, (H - y0 - 10) / 7 - 4); EL.forEach(function (el, i) { var yy = y0 + i * (rowH + 4); x.fillStyle = el.c; x.font = '11px system-ui'; x.fillText(el.n, sx, yy + rowH * 0.7); FW.spectrum(x, sx + 26, yy, sw - 26, rowH, [el.k], { ticks: false, ruler: 0.05 }); }); }
+    requestAnimationFrame(loop);
+  })(0);
+}
+
+/* ---------- L2 电子跳台阶(三窗联动) ---------- */
+function L2(stage, api) {
+  var T = EF.tri(stage, { state: { up: 0, lo: 2, nm: 0, got: {} }, h: 270 }), st = T.state, el = { n: 2, y: 0, tgt: 2, ph: null }, photons = [], done = false;
+  var ctl = document.createElement('div'); ctl.className = 'ctl';
+  ctl.innerHTML = '<span>电子落回第</span><span class="seg" id="lo"><button data-v="2" class="on">2 层</button><button data-v="1">1 层</button></span><span class="note-sm" style="margin:0">点中间窗口里的台阶,把电子"踢"上去</span>';
+  stage.appendChild(ctl);
+  var msg = txt(stage, '这是最简单的氢原子(玻尔模型,示意)。电子平时待在最低的第 1 层;为了看可见光,我们先只看它最后落回第 2 层的那一步。点一层更高的台阶,电子吸收能量跳上去,再掉回来时放出一份光。集齐<b>四种看得见的颜色</b>。');
+  card(stage, DANGER, true);
+  ctl.querySelectorAll('#lo button').forEach(function (b) { b.onclick = function () { ctl.querySelectorAll('#lo button').forEach(function (z) { z.classList.toggle('on', z === b); }); T.set({ lo: +b.dataset.v }, 'ctl'); EF.play('tick'); }; });
+  /* 微观:能级台阶 */
+  var CU = EF.canvas(T.pane.micro, 270);
+  function ly(n) { var H = CU.H; return H - 26 - Math.pow((FW.En(n) + 13.6) / 13.6, 6) * (H - 56); }   /* 高层台阶挤在一起,纵向按比例拉开(示意,非等比) */
+  CU.c.addEventListener('pointerdown', function (e) {
+    var q = CU.pt(e), best = 0, bd = 1e9; for (var n = 1; n <= 6; n++) { var d = Math.abs(q.y - ly(n)); if (d < bd) { bd = d; best = n; } }
+    if (bd > 22 || el.busy) return; var lo = st.lo; if (best <= lo) { msg.innerHTML = '要比第 ' + lo + ' 层更高才行,电子才有地方"掉下来"。'; EF.play('tick'); return; }
+    el.busy = true; el.tgt = best; EF.play('select');
+    setTimeout(function () { var nm = FW.lam(best, lo); el.tgt = lo; photons.push({ x: CU.W * 0.42, y: (ly(best) + ly(lo)) / 2, nm: nm, l: 1 });
+      var got = Object.assign({}, st.got); if (lo === 2) got[best] = 1; T.set({ up: best, nm: nm, got: got }, 'micro');
+      EF.tone(Math.max(1, Math.min(21, Math.round(3 + (FW.En(best) - FW.En(lo)) * 1.5)))); setTimeout(function () { el.busy = false; }, 400); }, EF.reduced ? 50 : 650);
+  });
+  (function loop() {
+    if (!CU.c.isConnected) return; var x = CU.x, W = CU.W, H = CU.H; x.clearRect(0, 0, W, H);
+    for (var n = 1; n <= 6; n++) { var y = ly(n); x.strokeStyle = n === st.lo ? 'rgba(255,210,122,.9)' : 'rgba(200,200,230,.55)'; x.lineWidth = n === st.lo ? 2.4 : 1.4; x.beginPath(); x.moveTo(W * 0.18, y); x.lineTo(W * 0.66, y); x.stroke();
+      x.fillStyle = '#d8d0e6'; x.font = '11px system-ui'; x.textAlign = 'right'; x.fillText('n=' + n, W * 0.16, y + 4); x.textAlign = 'left'; x.fillStyle = 'rgba(200,200,220,.7)'; x.fillText(FW.En(n).toFixed(2) + ' eV', W * 0.68, y + 4); }
+    x.fillStyle = 'rgba(200,200,220,.55)'; x.font = '10px system-ui'; x.textAlign = 'left'; x.fillText('台阶间距为示意(非等比)', 6, 14);
+    x.lineWidth = 1; var ty = ly(el.tgt); el.y = el.y ? el.y + (ty - el.y) * (EF.reduced ? 1 : 0.18) : ty;
+    EF.ball(x, W * 0.42, el.y - 9, 8, '#7ad7ff', 'e⁻');
+    photons = photons.filter(function (p) { p.x += EF.reduced ? 30 : 2.2; p.l -= 0.008; var vis = p.nm >= 380 && p.nm <= 780, c = vis ? FW.wl(p.nm) : [180, 160, 255];
+      x.strokeStyle = FW.css(c, vis ? 1 : 0.5); x.lineWidth = 2; x.beginPath(); for (var i = 0; i < 26; i++) { var xx = p.x - i * 2, yy = p.y + Math.sin((xx) / (p.nm / 60)) * 5; i ? x.lineTo(xx, yy) : x.moveTo(xx, yy); } x.stroke(); x.lineWidth = 1;
+      if (!vis) { x.fillStyle = 'rgba(200,190,255,.8)'; x.font = '10px system-ui'; x.fillText('紫外 · 看不见', p.x - 40, p.y - 10); }
+      return p.x < W + 60 && p.l > 0; });
+    requestAnimationFrame(loop);
+  })();
+  /* 宏观:灯管发光 + 已收集谱线 */
+  var CM = EF.canvas(T.pane.macro, 270);
+  (function loop(t) {
+    if (!CM.c.isConnected) return; var x = CM.x, W = CM.W, H = CM.H; x.clearRect(0, 0, W, H);
+    var vis = st.nm >= 380 && st.nm <= 780, c = vis ? FW.wl(st.nm) : [70, 60, 110], g = x.createRadialGradient(W / 2, H * 0.36, 4, W / 2, H * 0.36, W * 0.5);
+    g.addColorStop(0, FW.css(c, vis ? .7 : .15)); g.addColorStop(1, FW.css(c, 0)); x.fillStyle = g; x.fillRect(0, 0, W, H * 0.75);
+    x.fillStyle = FW.css(c, vis ? 0.95 : 0.35); x.beginPath(); x.roundRect ? x.roundRect(W / 2 - 16, H * 0.12, 32, H * 0.48, 16) : x.rect(W / 2 - 16, H * 0.12, 32, H * 0.48); x.fill();
+    x.fillStyle = '#e6dff0'; x.font = '12px system-ui'; x.textAlign = 'center'; x.fillText(st.nm ? (vis ? '发出的光' : '放出了紫外光,眼睛看不见') : '通电的氢气灯管(示意)', W / 2, H * 0.68);
+    var L = Object.keys(st.got).map(function (n) { return [FW.lam(+n, 2), 1]; });
+    FW.spectrum(x, 10, H * 0.74, W - 20, 26, [{ lines: L }]);
+    requestAnimationFrame(loop);
+  })(0);
+  /* 符号 */
+  var sy = document.createElement('div'); sy.className = 'tri-sym'; T.pane.sym.appendChild(sy);
+  T.on(function (s) {
+    var dE = s.up ? FW.En(s.up) - FW.En(s.lo) : 0, vis = s.nm >= 380 && s.nm <= 780, n = Object.keys(s.got).length;
+    sy.innerHTML = '<div class="eq" style="font-size:17px">E<sub>n</sub> = −13.6 / n² eV</div>' +
+      (s.up ? '<div class="eq" style="font-size:16px">ΔE = E<sub>' + s.up + '</sub> − E<sub>' + s.lo + '</sub> = <span class="hot">' + dE.toFixed(2) + ' eV</span></div>' +
+        '<div class="eq" style="font-size:16px">λ ≈ 1240 / ΔE ≈ <span style="color:' + (vis ? FW.css(FW.wl(s.nm)) : '#c8b8ff') + '">' + Math.round(s.nm) + ' nm</span></div>' : '<p class="note-sm">还没有跳。点一层台阶试试。</p>') +
+      '<p class="note-sm">(ΔE 用 eV,λ 得到的是 nm;1240 来自 h·c ≈ 1240 eV·nm)</p><p class="note-sm">落差越大(ΔE 越大),放出的光能量越大、波长越短,颜色越偏<b>蓝紫</b>;落差小,颜色偏<b>红</b>。看得见的颜色:<b>' + n + '/4</b></p>';
+    if (s.up && s.lo === 1) msg.innerHTML = '掉回第 1 层的台阶太大了,放出的是<b>紫外光</b>,眼睛看不见。换成"落回第 2 层"试试。';
+    else if (s.up && vis && n < 4) msg.innerHTML = '从第 ' + s.up + ' 层掉回第 2 层:约 ' + Math.round(s.nm) + ' nm 的光。' + (n < 4 ? '还差 ' + (4 - n) + ' 种颜色。' : '');
+    if (!done && n === 4) { done = true; EF.play('fuse'); msg.innerHTML = '四种颜色集齐:红、青、蓝、紫。落回同一层时,起点越高、落差越大,颜色越偏蓝紫——这就是氢的光谱"指纹"。'; setTimeout(api.complete, 1300); }
+  });
+}
+
+/* ---------- L3 光谱认元素(三窗联动) ---------- */
+var ROUNDS = [{ ks: ['Sr', 'Cu'], q: '一朵<b style="color:#c06cff">紫色</b>烟花。' }, { ks: ['Na', 'Ba'], q: '一朵<b style="color:#d6ff4a">黄绿色</b>烟花。' }, { ks: ['Li', 'K'], q: '一朵<b style="color:#ff6fb8">粉紫色</b>的虚拟烟花(练习用:真实火焰里钾的浅紫很弱,会被锂的红光盖住,肉眼几乎看不出来)。' }];
+EF.FW.ROUNDS = ROUNDS;
+function L3(stage, api) {
+  var T = EF.tri(stage, { state: { r: 0, pick: [], ok: false }, h: 260 }), st = T.state, done = false, B = [], miss = 0;
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips';
+  ctl.innerHTML = EL.map(function (e) { return '<button class="ef-btn ghost chip" data-k="' + e.k + '" style="--c:' + e.c + '">' + e.n + '</button>'; }).join('') + '<button class="ef-btn" id="chk">对照光谱</button>';
+  stage.appendChild(ctl);
+  var msg = txt(stage, '');
+  card(stage, DANGER, true);
+  function intro() { msg.innerHTML = '第 ' + (st.r + 1) + '/3 朵:' + ROUNDS[st.r].q + '它里面藏着<b>两种</b>元素。选出元素,让下面的谱线和它的光谱完全对上。'; }
+  intro();
+  ctl.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () {
+    if (done) return; var k = b.dataset.k, p = st.pick.slice(), i = p.indexOf(k); if (i > -1) p.splice(i, 1); else if (p.length < 3) p.push(k); else return;
+    b.classList.toggle('on', p.indexOf(k) > -1); EF.play('tick'); EF.tone(BY[k].z % 21 + 1, 0, 0.15); T.set({ pick: p }, 'ctl'); }; });
+  ctl.querySelector('#chk').onclick = function () {
+    if (done) return; var want = ROUNDS[st.r].ks, p = st.pick, ok = p.length === want.length && want.every(function (k) { return p.indexOf(k) > -1; });
+    if (ok) { EF.play('fuse'); B.push({ ks: want, t: performance.now() });
+      if (st.r === ROUNDS.length - 1) { done = true; msg.innerHTML = '三朵都认出来了!只看光就能知道里面有什么元素。天文学家用的是同一把"尺子":星光彩带里缺掉的几条<b>暗线</b>,正好落在这些元素亮线的位置上。'; setTimeout(api.complete, 1700); }
+      else { setTimeout(function () { ctl.querySelectorAll('.chip').forEach(function (z) { z.classList.remove('on'); }); T.set({ r: st.r + 1, pick: [] }, 'ctl'); intro(); }, 1100); msg.innerHTML = '完全对上!这朵烟花是' + want.map(function (k) { return BY[k].n; }).join(' + ') + '。' + (want.indexOf('Na') > -1 ? '钠的黄光特别亮,真实火焰里一点点就会盖过别的颜色。' : ''); } }
+    else { miss++; EF.play('tick'); var extra = p.filter(function (k) { return want.indexOf(k) < 0; }), lack = want.filter(function (k) { return p.indexOf(k) < 0; });
+      msg.innerHTML = (extra.length ? '多了一些烟花里没有的谱线。' : '') + (lack.length ? '烟花的光谱里还有没对上的线或亮带。' : '') + '看看哪些亮线没有被你选的元素"解释"。';
+      if (miss >= 2) api.say('一条一条对:先找最亮的那片颜色,是哪种元素的指纹?'); }
+  };
+  /* 宏观:烟花 */
+  var CM = EF.canvas(T.pane.macro, 260), BB = [], last = 0;
+  (function loop(t) {
+    if (!CM.c.isConnected) return; var x = CM.x, W = CM.W, H = CM.H; x.clearRect(0, 0, W, H);
+    var want = ROUNDS[st.r].ks, rgb = FW.mixRGB(want);
+    if (t - last > (EF.reduced ? 99999 : 1800) || !BB.length) { last = t; BB.push(Burst(W / 2 + (Math.random() - 0.5) * W * 0.3, H * 0.4, rgb, EF.campus ? 40 : 80)); }
+    BB = drawBursts(x, BB);
+    x.fillStyle = '#e6dff0'; x.font = '12px system-ui'; x.textAlign = 'center'; x.fillText('目标烟花', W / 2, H - 8);
+    requestAnimationFrame(loop);
+  })(0);
+  /* 微观:两条光谱对照 */
+  var CU = EF.canvas(T.pane.micro, 260);
+  (function loop() {
+    if (!CU.c.isConnected) return; var x = CU.x, W = CU.W, H = CU.H; x.clearRect(0, 0, W, H);
+    x.fillStyle = '#e6dff0'; x.font = '12px system-ui'; x.textAlign = 'left';
+    x.fillText('烟花的光谱', 12, 22); FW.spectrum(x, 12, 30, W - 24, 40, ROUNDS[st.r].ks);
+    x.fillText('你选的元素合起来', 12, 112); FW.spectrum(x, 12, 120, W - 24, 40, st.pick);
+    var y = 196; st.pick.forEach(function (k, i) { var e = BY[k]; x.fillStyle = e.c; x.fillText(e.n, 12 + i * 70, y); });
+    requestAnimationFrame(loop);
+  })();
+  /* 符号 */
+  var sy = document.createElement('div'); sy.className = 'tri-sym'; T.pane.sym.appendChild(sy);
+  T.on(function (s) {
+    var rows = s.pick.map(function (k) { var e = BY[k], L = e.lines.filter(function (l) { return l[1] >= 0.5; }).map(function (l) { return l[0].toFixed(1); }), Bd = e.bands.filter(function (b) { return b[2] >= 0.5; }).map(function (b) { return b[0] + '–' + b[1]; });
+      return '<p class="note-sm"><b style="color:' + e.c + '">' + e.n + ' ' + e.k + '</b>:' + (L.length ? '亮线 ' + L.join('、') + ' nm' : '') + (L.length && Bd.length ? ';' : '') + (Bd.length ? '亮带约 ' + Bd.join('、') + ' nm' : '') + '</p>'; }).join('');
+    sy.innerHTML = '<div class="eq" style="font-size:16px">烟花的光 = ' + (s.pick.length ? s.pick.map(function (k) { return '<span style="color:' + BY[k].c + '">' + k + '</span>'; }).join(' + ') : '?') + '</div>' + (rows || '<p class="note-sm">还没选元素。每种元素只发出属于自己的几种颜色的光。</p>') + '<p class="note-sm">谱线位置为约值;烟花里发光的常是含这些金属的小分子,所以有的是亮带。</p>';
+  });
+}
+
+function guard(stage, api) { var tok = {}, fired = false; stage._tok = tok; return { say: api.say, complete: function () { if (fired || stage._tok !== tok) return; fired = true; api.complete(); } }; }
+function pick(f2, k) { return function (stage, api0) { var api = guard(stage, api0); if (EF.F3 && EF.F3[k]) { try { return EF.F3[k](stage, api); } catch (e) { console.warn('[ef] 3D 玩法出错,回落平面版', e); stage.innerHTML = ''; } } return f2(stage, api); }; }
+var LEVELS = [
+  { title: '夜空点单', setup: pick(L0, 'L0'), task: '七颗颜色星各放一朵虚拟烟花,再按订单放出绿色、黄色、蓝色的烟花。',
+    ask: { q: '烟花五颜六色,颜色主要取决于——', opts: ['火药放得多少', '里面加了哪种金属元素', '飞得多高'], ok: 1 },
+    hints: ['先把七颗星都点一遍,记住各自的颜色。', '绿色和蓝色来自两种不同的金属。', '黄色是钠——食盐(氯化钠)里就有它。'],
+    explain: '烟花的颜色主要来自里面的<b>金属元素</b>:锂紫红、锶洋红(鲜红)、钙砖红(橙红)、钠黄、钡黄绿、铜蓝(烟花里铜和氯一起发蓝光;普通焰色试验中铜显绿色)、钾浅紫。火药负责把烟花送上天、让它炸开;烟花里的发色小球燃烧放出热量,把金属"点亮"。(金色、银白色的火花不一样:那是烧得发烫的小颗粒在发光,像烧红的炭,不是焰色。)' },
+  { title: '火焰里的指纹', setup: pick(L1, 'L1'), task: '把七种元素都放进虚拟焰色灯看一遍,再只看光谱认出三个神秘样品。',
+    ask: { q: '锂和锶的火焰都是红色的。怎样把它们分开?', opts: ['分不开', '用分光镜看它们的光谱', '闻气味'], ok: 1 },
+    hints: ['分光镜把光拆开,每种元素的亮线位置不同。', '钠是一条很亮的黄线(放大看是两条只差 0.6 nm 的线);钡是一片绿色亮带。', '锂主要是一条很细的红线;锶是一大片红色亮带,蓝色那边还有一条细线。'],
+    explain: '把光通过分光镜拆开,会看到一组亮线或亮带,叫<b>光谱</b>,像指纹一样能认出元素。细亮线来自单个原子;一段段亮带来自火焰里含这种金属的小分子(亮带的样子是示意)。肉眼看都是"红",光谱一看就分得清。' },
+  { title: '电子跳台阶', setup: pick(L2, 'L2'), task: '点高层台阶把电子踢上去,让它落回第 2 层,集齐四种看得见的颜色。',
+    ask: { q: '都落回第 2 层时,电子从更高的台阶掉下来,放出的光会更偏——', opts: ['红色', '蓝紫色', '颜色不变'], ok: 1 },
+    hints: ['先试从第 3 层掉到第 2 层,是什么颜色?', '都落回第 2 层时,起点越高,落差 ΔE 越大,颜色越往蓝紫走。', '四种颜色:3→2、4→2、5→2、6→2。'],
+    explain: '原子里的电子只能待在一级级"台阶"(能级)上。加热时电子吸收能量跳上高台阶,掉回来时把多出的能量变成一份光放出去。<b>台阶差越大,光的能量越大、波长越短,颜色越偏蓝紫</b>。每种元素的台阶高度不同,所以有各自的颜色。(这是玻尔的"台阶"模型:真实电子不是绕圈跑的小球,但"能量一级一级"这个结论是对的。)' },
+  { title: '光谱认元素', setup: pick(L3, 'L3'), task: '看三朵混色烟花的光谱,选出每朵里的两种元素,让谱线完全对上。',
+    ask: { q: '一朵紫色的烟花,可能是——', opts: ['一种叫"紫"的元素', '红光和蓝光混在一起', '火药烧焦的颜色'], ok: 1 },
+    hints: ['紫色 = 红 + 蓝,哪种元素发红光,哪种发蓝光?', '黄绿色里有一条很亮的黄线。', '粉紫色那朵:一条细红线,加上光谱两头的几条线。'],
+    explain: '混色烟花把几种元素的光叠在一起:锶的红 + 铜的蓝 = 紫。分光镜能把它们重新拆开,一条线一条线地认出来。天文学家也用同一把"尺子":太阳和恒星的光谱里有一条条暗线,位置和氢、钠、铁的亮线一样,于是知道恒星外层有这些元素。' }
+];
+var NOTES = { title: '元素工坊 · 为什么烟花有不同的颜色?', items: [
+  '烟花的颜色主要来自金属元素:锂紫红、锶洋红、钙砖红、钠黄、钡黄绿、钾浅紫;铜在烟花里发蓝光(普通焰色试验中显绿色)。',
+  '用分光镜把光拆开,会看到一组亮线(来自原子)或亮带(来自含金属的小分子),叫<b>光谱</b>,像指纹一样能认出元素。',
+  '电子只能待在一级级能级"台阶"上;掉回低台阶时放出一份光,落差越大,光越偏蓝紫。',
+  '氢原子落回第 2 层放出四种看得见的光:约 656(红)、486(青)、434(蓝)、410 nm(紫);落回第 1 层是看不见的紫外光。',
+  '烟花含火药,只能由持证专业人员制作;焰色试验在实验室由老师操作。不要在家点火或往火里撒东西;烟花残渣可能有毒,哑炮不要碰;燃放要遵守当地规定。'],
+  bridge: '光谱认元素的星桥正在搭建中:天文学家用星光里的暗线读出星星外层的成分。' };
+EF.mission('fireworks', LEVELS, NOTES);
+})();
+</script>
+</body>
+</html>

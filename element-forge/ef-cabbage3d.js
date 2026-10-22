@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · cabbage 任务 3D 玩法 ef-cabbage3d.js v0.5
+/* 元素工坊 Element Forge · cabbage 任务 3D 玩法 ef-cabbage3d.js v0.5.1(审校 v0.5 落实:绿色形、H⁺/OH⁻ 至少各 1、图例标示意)
    「为什么紫甘蓝汁会变色?」:L0 厨房调色盘(3D 台面滴汁、排队),L2/L3 微观窗口的花青素分子(可拖转)。
    颜色与 pH 的对应、分子骨架示意都来自页面里的 EF.CAB(2D/3D 共用一份数据)。
    关卡判定、提示、三星由 ef.js 负责;低档或这里出错时回落 cabbage/index.html 里的平面版。 */
@@ -80,8 +80,8 @@ function makeTube(r = 0.17, h = 1.25) {
 /* ---------- L0 厨房调色盘 ---------- */
 function L0(stage, api) {
   const S = stage3d(stage, { yaw: 0, pitch: 0.32, drag: true });
-  const msg = note(stage, '台面上 6 杯厨房里的液体。点一支试管,滴进紫甘蓝汁。拖动可以转台面。');
-  const cd = document.createElement('div'); cd.className = 'cab-card'; cd.innerHTML = '<b style="color:#ff9ae0">在家可以试:</b>紫甘蓝切碎(请大人帮忙用刀),泡热水(热水请大人倒)几分钟,滤出紫色汁。再分别滴进柠檬汁、白醋、清水、小苏打水里看颜色。实验液不要喝,做完倒掉、洗手。'; stage.appendChild(cd);
+  const msg = note(stage, '台面上 6 杯家里常见的液体。点一支试管,滴进紫甘蓝汁。拖动可以转台面。');
+  const cd = document.createElement('div'); cd.className = 'cab-card'; cd.innerHTML = CAB.HOME; stage.appendChild(cd);
   const W = 0.62, slotX = s => (s - 2.5) * W;
   const table = new THREE.Mesh(new THREE.BoxGeometry(4.6, 0.08, 1.6), new THREE.MeshStandardMaterial({ color: 0x3a2a36, roughness: 0.85 })); table.position.y = -0.05; S.scene.add(table);
   const T = CAB.DISP.map((li, s) => {
@@ -105,13 +105,13 @@ function L0(stage, api) {
     if (ph === 'drop' && !o.drop && !busy) {
       busy = { o, t0: performance.now() }; o.drop = 1; dropped++; EF.play('select'); EF.tone(Math.round(24 - L.ph * 1.5));
       msg.innerHTML = L.n + ' + 紫甘蓝汁 → 变成了这个颜色。' + (dropped < 6 ? '还剩 ' + (6 - dropped) + ' 支。' : '');
-      if (dropped === 6) setTimeout(() => { ph = 'sort'; EF.play('whoosh'); msg.innerHTML = '同一种紫色的汁,变出了一整排颜色!现在<b>从最红到最黄</b>,依次点试管,把它们排成一排。'; }, 1600);
+      if (dropped === 6) setTimeout(() => { ph = 'sort'; EF.play('whoosh'); msg.innerHTML = '同一种紫色的汁,变出了一整排颜色!现在<b>从最红到最黄绿</b>,依次点试管,把它们排成一排。'; }, 1600);
     } else if (ph === 'sort' && sorted.indexOf(o) < 0) {
       const rem = T.filter(z => sorted.indexOf(z) < 0).map(z => z.li);
       if (CAB.nextOK(rem, o.li)) {
         sorted.push(o); EF.play('select'); EF.tone(Math.round(24 - L.ph * 1.5)); relayout();
         o.num.material.map.dispose(); const n = label(String(sorted.length), { size: 0.16, color: '#ffd27a' }); o.g.remove(o.num); o.num = n; n.position.set(0, 1.5, 0); o.g.add(n);
-        if (sorted.length === 6) { msg.innerHTML = '排好了:红 → 粉 → 紫 → 蓝 → 绿 → 黄。汁没变,变的是它遇到的液体。'; setTimeout(api.complete, 900); } else msg.innerHTML = '对!下一支,哪支更接近红色?';
+        if (sorted.length === 6) { msg.innerHTML = '排好了:红 → 粉红 → 紫 → 蓝 → 蓝绿 → 黄绿。汁没变,变的是它遇到的液体。'; setTimeout(api.complete, 900); } else msg.innerHTML = '对!下一支,哪支更接近红色?';
       } else { EF.play('tick'); msg.innerHTML = '再看看:剩下的里面,还有<b>更红</b>的一支。'; }
     }
   };
@@ -142,7 +142,7 @@ function mol(parent, opt = {}) {
   const ions = new THREE.Group(); S.scene.add(ions);
   const mHp = new THREE.MeshStandardMaterial({ color: 0xff7a9a, emissive: 0x5a0a20, emissiveIntensity: 0.7 }), mOH = new THREE.MeshStandardMaterial({ color: 0x7ad7ff, emissive: 0x0a3a5a, emissiveIntensity: 0.7 });
   const pool = []; for (let i = 0; i < 26; i++) { const m = new THREE.Mesh(new THREE.SphereGeometry(i < 16 ? 0.05 : 0.07, 12, 8), i < 16 ? mHp : mOH); m.userData = { a: Math.random() * 6.28, r: 1.3 + Math.random() * 0.6, y: (Math.random() - 0.5) * 1.4, v: 0.2 + Math.random() * 0.4, kind: i < 16 ? 'H' : 'OH' }; ions.add(m); pool.push(m); }
-  const legend = document.createElement('div'); legend.className = 's3d-leg'; legend.innerHTML = '<span><i style="background:#ff5a4a"></i>O 氧</span><span><i style="background:#f4f4f4"></i>H 氢</span><span><i style="background:#ff7a9a"></i>H⁺</span><span><i style="background:#7ad7ff"></i>OH⁻</span>'; S.wrap.appendChild(legend);
+  const legend = document.createElement('div'); legend.className = 's3d-leg'; legend.innerHTML = '<span><i style="background:#9aa0ab"></i>C 碳</span><span><i style="background:#ff5a4a"></i>O 氧</span><span><i style="background:#f4f4f4"></i>H 氢</span><span><i style="background:#ff7a9a"></i>H⁺</span><span><i style="background:#7ad7ff"></i>OH⁻</span><span>分子为示意</span>'; S.wrap.appendChild(legend);
   let form = null, curPh = 7;
   function bond(a, b, off = 0) { const A = new THREE.Vector3(a.x, a.y, 0), B = new THREE.Vector3(b.x, b.y, 0), d = B.clone().sub(A), L = d.length(); const m = new THREE.Mesh(gBond, mB);
     m.scale.set(1, L, 1); m.position.copy(A).add(B).multiplyScalar(0.5); if (off) { const n = new THREE.Vector3(-d.y, d.x, 0).normalize().multiplyScalar(off); m.position.add(n); } m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.normalize()); return m; }
@@ -157,7 +157,7 @@ function mol(parent, opt = {}) {
   S.onFrame((t, dt) => {
     S.orbit(Math.max(5.4, 7.6 / Math.max(0.8, S.camera.aspect)), 0);
     if (!RM()) host.rotation.y = Math.sin(t * 0.5) * 0.25;
-    const nH = Math.max(0, Math.min(16, Math.round((7 - curPh) * 2.6))), nOH = Math.max(0, Math.min(10, Math.round((curPh - 8) * 2)));
+    const nH = Math.max(1, Math.min(16, Math.round((7 - curPh) * 2.6))), nOH = Math.max(1, Math.min(10, Math.round((curPh - 7) * 2)));   /* 任何水溶液里 H⁺、OH⁻ 都同时存在 */
     let iH = 0, iO = 0;
     pool.forEach(m => { const u = m.userData, show = u.kind === 'H' ? iH++ < nH : iO++ < nOH; m.visible = show; if (!show) return; if (!RM()) u.a += dt * u.v * 0.5; m.position.set(Math.cos(u.a) * u.r, u.y + Math.sin(t + u.a) * 0.05, Math.sin(u.a) * u.r * 0.6); });
   });

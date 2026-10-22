@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.5(crystal 霜镜舞台、cabbage 染色台)
+/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.6(crystal 霜镜舞台、cabbage 染色台、fireworks 夜空焰色台)
    每关一个 3D 场景,随关卡切换淡入淡出;关卡玩法仍在前景面板里进行。低档不加载(保留 v0.1 星空背景)。 */
 import { THREE, makeGL, P, glowSprite, starMaterial, fresnelMaterial } from './ef-gl.js?v=2';
 const EF = window.EF;
@@ -36,7 +36,11 @@ function boot() {
   if (isK) { /* v0.5:染色台——品红冷暖光(小点) */
     scene.fog = new THREE.FogExp2(0x1a0a20, 0.03); key.color.set(0xfff0f8); rim.color.set(0xff7ad9);
   }
-  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : isK ? cabbageScenes() : [];
+  const isF = EF.missionId === 'fireworks';
+  if (isF) { /* v0.6:夜空焰色台——深夜蓝 + 暖橙边光 */
+    scene.fog = new THREE.FogExp2(0x070818, 0.025); key.color.set(0xfff4e6); rim.color.set(0xffb35c);
+  }
+  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : isK ? cabbageScenes() : isF ? fireScenes() : [];
   LV.forEach(s => { scene.add(s.g); setA(s, 0); });
 
   /* ---------- stars:主序星 → 洋葱分层的大质量恒星 → 铁核心 → 超新星遗迹 ---------- */
@@ -152,6 +156,37 @@ function boot() {
       const bm = reg(s, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.1, emissive: 0x334455, opacity: 0.5 }), 0.5), bs = [];
       for (let i = 0; i < 30; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(0.04 + rnd() * 0.07, 12, 8), bm); b.userData = { x: (rnd() - 0.5) * 2.2, z: (rnd() - 0.5) * 1.5, o: rnd() * 3 }; s.g.add(b); bs.push(b); }
       s.upd = t => { bs.forEach(b => { const u = b.userData, y = ((t * 0.35 + u.o) % 3) - 1.5; b.position.set(u.x + Math.sin(t + u.o) * 0.05, y, u.z); }); core.scale.setScalar(1 + 0.03 * Math.sin(t)); }; out.push(s); }
+    return out;
+  }
+
+
+  /* ---------- fireworks(小点):远处烟花 → 火焰 → 能级台阶 → 光谱彩带 ---------- */
+  function fireScenes() {
+    const FW = EF.FW, col = h => new THREE.Color(h), out = [], add = THREE.AdditiveBlending;
+    /* 0 远处缓缓绽放的几朵烟花 */
+    { const s = SC(), N = EF.campus ? 600 : 1400, pp = new Float32Array(N * 3), cc = new Float32Array(N * 3), seeds = [], cols = FW ? FW.EL.map(e => col(e.c)) : [col(0xff8844)];
+      for (let i = 0; i < N; i++) { const u = rnd() * 2 - 1, a = rnd() * 6.283, q = Math.sqrt(1 - u * u), b = i % 5; seeds.push([Math.cos(a) * q, u, Math.sin(a) * q, b]); const c = cols[(b * 3) % cols.length]; cc.set([c.r, c.g, c.b], i * 3); }
+      const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pp, 3)); pg.setAttribute('color', new THREE.BufferAttribute(cc, 3));
+      s.g.add(new THREE.Points(pg, reg(s, new THREE.PointsMaterial({ size: 0.05, vertexColors: true, blending: add, depthWrite: false }), 0.9)));
+      const C = [[-1.4, 0.8, 0], [1.2, 1.1, -1], [0, -0.2, 0.5], [-0.6, 1.6, -1.5], [1.6, -0.4, -0.5]];
+      s.upd = t => { seeds.forEach((q, i) => { const ph = ((t * 0.22 + q[3] * 0.2) % 1), r = (1 - Math.exp(-ph * 4)) * 1.1, c = C[q[3]]; pp.set([c[0] + q[0] * r, c[1] + q[1] * r - ph * ph * 0.4, c[2] + q[2] * r], i * 3); }); pg.attributes.position.needsUpdate = true; }; out.push(s); }
+    /* 1 一束被染色的火焰 */
+    { const s = SC(), fl = [], cols = FW ? FW.EL.map(e => col(e.c)) : [col(0xff8844)];
+      for (let j = 0; j < 3; j++) { const m = reg(s, new THREE.MeshBasicMaterial({ color: 0x6aa0ff, blending: add, depthWrite: false }), 0.5 - j * 0.1); const me = new THREE.Mesh(new THREE.ConeGeometry(0.45 - j * 0.1, 2.2 - j * 0.5, 32, 1, true), m); me.position.y = 0.1 - j * 0.25; s.g.add(me); fl.push(me); }
+      s.upd = t => { const c = cols[Math.floor(t / 3) % cols.length]; fl.forEach((me, j) => { if (j < 2) me.material.color.lerp(c, 0.04); me.scale.set(1 + 0.05 * Math.sin(t * 9 + j), 1 + 0.08 * Math.sin(t * 7 + j), 1); }); }; out.push(s); }
+    /* 2 能级台阶 + 跳动的电子 */
+    { const s = SC(), lm = reg(s, new THREE.MeshBasicMaterial({ color: 0xd8d0f0 }), 0.6), Y = n => 1.5 - 13.6 / (n * n) * 0.22;
+      for (let n = 1; n <= 6; n++) { const b = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.025, 0.025), lm); b.position.y = Y(n); s.g.add(b); }
+      const e = new THREE.Mesh(new THREE.SphereGeometry(0.09, 16, 12), reg(s, new THREE.MeshBasicMaterial({ color: 0x7ad7ff }))); s.g.add(e);
+      const ph = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 8), reg(s, new THREE.MeshBasicMaterial({ color: 0xff4444, blending: add }))); s.g.add(ph);
+      s.g.position.y = -0.3;
+      s.upd = t => { const k = t % 2.4, hi = 3 + Math.floor(t / 2.4) % 4; e.position.set(-0.3, k < 1 ? Y(2) + (Y(hi) - Y(2)) * Math.min(1, k * 3) : Y(hi) + (Y(2) - Y(hi)) * Math.min(1, (k - 1) * 4), 0);
+        const nm = FW ? FW.lam(hi, 2) : 600, c = FW ? FW.wl(nm) : [255, 80, 80]; ph.material.color.setRGB(c[0] / 255, c[1] / 255, c[2] / 255); ph.visible = k > 1.2; ph.position.set(-0.3 + (k - 1.2) * 1.4, (Y(hi) + Y(2)) / 2, 0); }; out.push(s); }
+    /* 3 光谱彩带 + 氢的四条亮线 */
+    { const s = SC(), N = 120, g = new THREE.Group();
+      for (let i = 0; i < N; i++) { const nm = 380 + i / N * 400, c = FW ? FW.wl(nm) : [200, 200, 200], m = reg(s, new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0] / 255, c[1] / 255, c[2] / 255) }), 0.18); const b = new THREE.Mesh(new THREE.BoxGeometry(3.6 / N, 0.8, 0.02), m); b.position.x = -1.8 + i / N * 3.6; g.add(b); }
+      [656.3, 486.1, 434.0, 410.2].forEach(nm => { const c = FW ? FW.wl(nm) : [255, 255, 255], m = reg(s, new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0] / 255, c[1] / 255, c[2] / 255), blending: add })); const b = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.9, 0.03), m); b.position.x = -1.8 + (nm - 380) / 400 * 3.6; g.add(b); });
+      s.g.add(g); s.upd = t => { g.rotation.y = Math.sin(t * 0.3) * 0.5; g.rotation.x = -0.2; }; out.push(s); }
     return out;
   }
 

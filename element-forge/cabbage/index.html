@@ -4,16 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>为什么紫甘蓝汁会变色? · 元素工坊 Element Forge</title>
-<meta name="description" content="元素工坊 · 给六杯厨房液体滴紫甘蓝汁,排出酸碱数轴,看花青素分子随氢离子多少"换衣服",再一滴一滴把红色调回紫色。创世计划 Genesis 化学世界。">
+<meta name="description" content="元素工坊 · 给六杯家里常见的液体滴紫甘蓝汁,排出酸碱数轴,看花青素分子随氢离子浓度"换衣服",再一滴一滴把红色调回紫色。创世计划 Genesis 化学世界。">
 <meta name="theme-color" content="#070a14">
-<link rel="stylesheet" href="../ef.css?v=8">
+<link rel="stylesheet" href="../ef.css?v=9">
 </head>
 <body class="dye">
 <div id="app"></div>
-<script src="../ef.js?v=8"></script>
+<script src="../ef.js?v=9"></script>
 <script src="../ef-tri.js?v=1"></script>
 <script>
-/* ---------- 共享数据:紫甘蓝花青素色带、六种厨房液体、分子示意(2D/3D 共用) ---------- */
+/* ---------- 共享数据:紫甘蓝花青素色带、六种家里常见的液体、分子示意、在家可试卡(2D/3D 共用) ---------- */
 (function () {
 var STOPS = [[1, '#c8102e'], [2, '#e0245e'], [3, '#d63a8c'], [4, '#b5479f'], [5, '#9150ae'], [6, '#7550b4'], [7, '#5b4fbd'], [8, '#3d62c9'], [9, '#2a86bf'], [10, '#22a596'], [11, '#3fb954'], [12, '#9cc43a'], [13, '#d9c92c'], [14, '#e3be1f']];
 function hx(h) { var n = parseInt(h.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; }
@@ -30,12 +30,14 @@ var LIQ = [
   { k: 'water', n: '清水', ph: 7, raw: '#dfeaf6' }, { k: 'soda', n: '小苏打水', ph: 8.3, raw: '#e8eef4' },
   { k: 'soap', n: '肥皂水', ph: 9.5, raw: '#efefef' }, { k: 'wash', n: '洗衣碱水', ph: 11.5, raw: '#e8eef4' }];
 var DISP = [4, 0, 2, 5, 1, 3];                                  /* 台面上的摆放顺序(打乱) */
-function form(ph) { return ph < 3.5 ? 'cat' : ph < 7.2 ? 'base' : ph < 10.8 ? 'anion' : 'chal'; }
-var FORM = { cat: '红色 · 带正电', base: '紫色 · 不带电', anion: '蓝色 · 带负电', chal: '黄色 · 中间的环打开了' };
+/* 形态阈值(示意):红 < 4.5 ≤ 紫 < 7.2 ≤ 蓝 < 9.5 ≤ 绿(蓝、黄两种样子混在一起)< 12 ≤ 黄 */
+function form(ph) { return ph < 4.5 ? 'cat' : ph < 7.2 ? 'base' : ph < 9.5 ? 'anion' : ph < 12 ? 'mix' : 'chal'; }
+var FORM = { cat: '红色 · 带正电', base: '紫色 · 不带电', anion: '蓝色 · 带负电', mix: '绿色 · 蓝、黄两种样子混在一起', chal: '黄色 · 中间的环打开了' };
 /* 下一支是否排对:剩下的试管里 pH 最小的那支(差不到 0.5 的两支算并列) */
 function nextOK(rem, idx) { var m = Math.min.apply(null, rem.map(function (i) { return LIQ[i].ph; })); return LIQ[idx].ph <= m + 0.5; }
 /* 花青素(矢车菊素型)骨架示意:A 环 + C 环(含氧)+ B 环;只示意会得失 H⁺ 的位置,不是精确构型 */
 function mol(f) {
+  if (f === 'mix') f = 'anion';                                   /* 绿色 = 蓝色形 + 黄色形混在一起,图上画蓝色形 */
   var s = 0.5, at = [], bd = [], u = function (d) { return [Math.cos(d * Math.PI / 180), Math.sin(d * Math.PI / 180)]; };
   function add(x, y, e, tag) { at.push({ x: x, y: y, e: e, tag: tag || '' }); return at.length - 1; }
   function ring(cx, cy, angs, names, el) { return angs.map(function (a, i) { var v = u(a); return add(cx + s * v[0], cy + s * v[1], (el && el[i]) || 'C', names[i]); }); }
@@ -44,7 +46,7 @@ function mol(f) {
   var C4 = add(0, s, 'C', 'C4'), C3 = add(s * 0.866 + shift[0] * 0.4, s * 0.5 + shift[1] * 0.4, 'C', 'C3'), C2 = add(s * 0.866 + shift[0], -s * 0.5 + shift[1], 'C', 'C2'), O1 = add(0, -s, 'O', 'O1');
   var bc = [1.299 + shift[0], -0.75 + shift[1]], B = ring(bc[0], bc[1], [150, 90, 30, -30, -90, -150], ["C1'", "C2'", "C3'", "C4'", "C5'", "C6'"]);
   for (var i = 0; i < 6; i++) { bd.push([A[i], A[(i + 1) % 6], 1]); bd.push([B[i], B[(i + 1) % 6], 1]); }
-  bd.push([A[0], C4, 1], [C4, C3, 1], [C3, C2, 1], [O1, A[5], 1], [C2, B[0], 1]);
+  bd.push([A[0], C4, 1], [C4, C3, f === 'chal' ? 2 : 1], [C3, C2, 1], [O1, A[5], 1], [C2, B[0], 1]);
   if (f !== 'chal') bd.push([O1, C2, 1]);
   function sub(ix, cx, cy, hasH, ord, tag) {
     var a = at[ix], d = [a.x - cx, a.y - cy], L = Math.hypot(d[0], d[1]); d = [d[0] / L, d[1] / L];
@@ -52,7 +54,7 @@ function mol(f) {
     if (hasH) { var h = add(at[o].x + d[0] * 0.3, at[o].y + d[1] * 0.3, 'H'); bd.push([o, h, 1]); }
     return o;
   }
-  var lost7 = f !== 'cat', lost4 = f === 'anion' || f === 'chal';
+  var lost7 = f === 'base' || f === 'anion', lost4 = f === 'anion' || f === 'chal';   /* 开环(黄色形)后 A 环恢复成 7-OH */
   sub(A[1], -0.866, 0, true, 1);                                  /* 5-OH */
   var o7 = sub(A[3], -0.866, 0, !lost7, lost7 ? 2 : 1);            /* 7-OH → 7=O */
   sub(C3, 0, 0, true, 1);                                          /* 3-OH(天然多连糖,这里简化为 OH) */
@@ -60,21 +62,23 @@ function mol(f) {
   var o4 = sub(B[3], bc[0], bc[1], !lost4, 1);                     /* 4'-OH → 4'-O⁻ */
   if (f === 'cat') at[O1].ch = '+';
   if (lost4) at[o4].ch = '−';
-  if (f === 'chal') at[O1].ch = '−';
+  if (f === 'chal') { at[O1].ch = '−';                            /* 开环:O1 变成 A 环上的 O⁻,原 C2 变成 C=O */
+    var oc = add(at[C2].x - 0.3 * 0.42, at[C2].y - 0.954 * 0.42, 'O'); bd.push([C2, oc, 2]); }
   return { at: at, bd: bd, o7: o7, o4: o4 };
 }
-EF.CAB = { rgb: rgb, css: css, mix: mix, hx: hx, LIQ: LIQ, DISP: DISP, form: form, FORM: FORM, nextOK: nextOK, mol: mol,
+var HOME = '<b style="color:#ff9ae0">在家可以试:</b>紫甘蓝切碎(请大人帮忙用刀),泡热水(热水请大人倒)几分钟,滤出紫色汁。再分别滴进柠檬汁、白醋、清水、小苏打水里看颜色。杯子贴上标签;实验液不要喝,别碰眼睛;紫甘蓝汁会染色,小心衣服和桌面。做完倒掉、洗手。';
+EF.CAB = { HOME: HOME, rgb: rgb, css: css, mix: mix, hx: hx, LIQ: LIQ, DISP: DISP, form: form, FORM: FORM, nextOK: nextOK, mol: mol,
   near: function (ph) { var b = LIQ[0]; LIQ.forEach(function (q) { if (Math.abs(q.ph - ph) < Math.abs(b.ph - ph)) b = q; }); return Math.abs(b.ph - ph) < 0.8 ? b.n : ''; } };
 })();
 </script>
-<script>if (EF.glTier !== 'low') { var k3 = document.createElement('script'); k3.type = 'module'; k3.src = '../ef-cabbage3d.js?v=1'; document.head.appendChild(k3); }</script>
+<script>if (EF.glTier !== 'low') { var k3 = document.createElement('script'); k3.type = 'module'; k3.src = '../ef-cabbage3d.js?v=2'; document.head.appendChild(k3); }</script>
 <script>
 (function () {
 var CAB = EF.CAB, LIQ = CAB.LIQ;
 function txt(stage, h, cls) { var p = document.createElement('p'); p.className = cls || 'note-sm'; p.innerHTML = h || ''; stage.appendChild(p); return p; }
 function card(stage, h, warn) { var d = document.createElement('div'); d.className = 'cab-card' + (warn ? ' warn' : ''); d.innerHTML = h; stage.appendChild(d); return d; }
-var HOME = '<b style="color:#ff9ae0">在家可以试:</b>紫甘蓝切碎(请大人帮忙用刀),泡热水(热水请大人倒)几分钟,滤出紫色汁。再分别滴进柠檬汁、白醋、清水、小苏打水里看颜色。实验液不要喝,做完倒掉、洗手。';
-var DANGER = '<b style="color:#ff7a7a">危险品柜 · 请勿在现实中尝试</b><br>洁厕灵、管道疏通剂、漂白剂(84 消毒液)腐蚀性很强,会伤皮肤和眼睛,不能拿来做颜色实验。<b>漂白剂和洁厕灵这类酸性清洁剂绝不能混在一起</b>,会放出有毒的氯气。家里的清洁剂要放在小朋友够不到的地方,用的时候开窗、戴手套,由大人来用。';
+var HOME = CAB.HOME;
+var DANGER = '<b style="color:#ff7a7a">危险品柜 · 请勿在现实中尝试</b><br>洁厕灵(强酸性)、管道疏通剂(多为强碱性)、漂白剂(如 84 消毒液)腐蚀性很强,会伤皮肤和眼睛,不能拿来做颜色实验。<b>不同的清洁剂绝不能混在一起</b>:比如漂白剂遇到洁厕灵这类酸性清洁剂,会放出有毒的氯气。清洁剂要放在小朋友够不到的地方,由大人开窗、戴手套使用;万一溅到皮肤或眼睛,马上用大量清水冲洗,告诉大人,眼睛要去医院。';
 
 /* 画一支试管:cx,底 by,宽 w,高 h,液面比例 lv,颜色 col */
 function tube(x, cx, by, w, h, lv, col, glow) {
@@ -99,9 +103,9 @@ function drawMol(x, W, H, f, col, t) {
   x.fillStyle = CAB.css(col); x.font = '700 14px system-ui'; x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillText(CAB.FORM[f], W / 2, H - 10);
   x.fillStyle = 'rgba(200,200,215,.6)'; x.font = '11px system-ui'; x.fillText('花青素分子 · 示意', W / 2, 16);
 }
-/* H⁺ 小粒子:越酸越多 */
+/* H⁺ / OH⁻ 小粒子:越酸 H⁺ 越多,越碱 OH⁻ 越多;两种都至少留 1 个 */
 function hDots(x, W, H, ph, t) {
-  var n = Math.max(0, Math.min(16, Math.round((7 - ph) * 2.6))), m = Math.max(0, Math.min(10, Math.round((ph - 8) * 2)));
+  var n = Math.max(1, Math.min(16, Math.round((7 - ph) * 2.6))), m = Math.max(1, Math.min(10, Math.round((ph - 7) * 2)));   /* 任何水溶液里 H⁺、OH⁻ 都同时存在 */
   x.font = '700 10px system-ui'; x.textAlign = 'center'; x.textBaseline = 'middle';
   for (var i = 0; i < n; i++) { var px = (i * 97 + t * 0.02 * (1 + i % 3)) % W, py = 24 + ((i * 61 + Math.sin(t / 700 + i) * 20) % (H - 48) + H) % (H - 48); x.fillStyle = 'rgba(255,122,154,.9)'; x.beginPath(); x.arc(px, py, 6, 0, 7); x.fill(); x.fillStyle = '#1a0a12'; x.fillText('H⁺', px, py + .5); }
   for (var j = 0; j < m; j++) { var qx = (j * 131 + 40 + t * 0.015 * (1 + j % 2)) % W, qy = 30 + ((j * 83 + Math.cos(t / 800 + j) * 18) % (H - 60) + H) % (H - 60); x.fillStyle = 'rgba(122,215,255,.85)'; x.beginPath(); x.arc(qx, qy, 8, 0, 7); x.fill(); x.fillStyle = '#081420'; x.fillText('OH⁻', qx, qy + .5); }
@@ -110,7 +114,7 @@ function hDots(x, W, H, ph, t) {
 /* ---------- L0 厨房调色盘(平面版) ---------- */
 function L0(stage, api) {
   var C = EF.canvas(stage, 340), x = C.x, T = CAB.DISP.map(function (li, s) { return { li: li, k: 0, drop: 0, slot: s, px: 0 }; }), ph = 'drop', sorted = [], dropped = 0;
-  var msg = txt(stage, '台面上 6 杯厨房里的液体。点一支试管,滴进紫甘蓝汁。');
+  var msg = txt(stage, '台面上 6 杯家里常见的液体。点一支试管,滴进紫甘蓝汁。');
   card(stage, HOME);
   function cx(slot) { return C.W * (slot + 0.5) / 6; }
   T.forEach(function (o) { o.px = cx(o.slot); });
@@ -119,11 +123,11 @@ function L0(stage, api) {
       if (Math.abs(q.x - o.px) > 26 || q.y < C.H * 0.2 || q.y > C.H * 0.85) return;
       if (ph === 'drop' && !o.drop) { o.drop = performance.now(); dropped++; EF.play('select'); EF.tone(Math.round(24 - LIQ[o.li].ph * 1.5));
         msg.innerHTML = LIQ[o.li].n + ' + 紫甘蓝汁 → 变成了这个颜色。' + (dropped < 6 ? '还剩 ' + (6 - dropped) + ' 支。' : '');
-        if (dropped === 6) setTimeout(function () { ph = 'sort'; EF.play('whoosh'); msg.innerHTML = '同一种紫色的汁,变出了一整排颜色!现在<b>从最红到最黄</b>,依次点试管,把它们排成一排。'; }, 1300); }
+        if (dropped === 6) setTimeout(function () { ph = 'sort'; EF.play('whoosh'); msg.innerHTML = '同一种紫色的汁,变出了一整排颜色!现在<b>从最红到最黄绿</b>,依次点试管,把它们排成一排。'; }, 1300); }
       else if (ph === 'sort' && sorted.indexOf(o) < 0) {
         var rem = T.filter(function (z) { return sorted.indexOf(z) < 0; }).map(function (z) { return z.li; });
         if (CAB.nextOK(rem, o.li)) { sorted.push(o); EF.play('select'); EF.tone(Math.round(24 - LIQ[o.li].ph * 1.5)); relayout();
-          if (sorted.length === 6) { msg.innerHTML = '排好了:红 → 粉 → 紫 → 蓝 → 绿 → 黄。汁没变,变的是它遇到的液体。'; setTimeout(api.complete, 900); } else msg.innerHTML = '对!下一支,哪支更接近红色?'; }
+          if (sorted.length === 6) { msg.innerHTML = '排好了:红 → 粉红 → 紫 → 蓝 → 蓝绿 → 黄绿。汁没变,变的是它遇到的液体。'; setTimeout(api.complete, 900); } else msg.innerHTML = '对!下一支,哪支更接近红色?'; }
         else { EF.play('tick'); msg.innerHTML = '再看看:剩下的里面,还有<b>更红</b>的一支。'; }
       }
     });
@@ -149,7 +153,7 @@ function L0(stage, api) {
 function L1(stage, api) {
   var C = EF.canvas(stage, 360), x = C.x, T = CAB.DISP.map(function (li, s) { return { li: li, slot: s, placed: false, x: 0, y: 0 }; }), drag = null, sel = null, down = null, done = false;
   var ctl = document.createElement('div'); ctl.className = 'ctl'; ctl.innerHTML = '<button class="ef-btn ghost" id="dg">危险品柜</button><span class="note-sm" style="margin:0">拖动试管,或先点试管再点数轴</span>'; stage.appendChild(ctl);
-  var msg = txt(stage, '把 6 支试管放到 pH 数轴上它该在的位置。中间的 7 是清水。');
+  var msg = txt(stage, '把 6 支试管放到 pH 数轴上它该在的位置。中间的 7 是清水(纯净的水)。');
   var dc = card(stage, DANGER, true); dc.hidden = true; ctl.querySelector('#dg').onclick = function () { dc.hidden = !dc.hidden; EF.play('tick'); };
   function ax() { return { x0: 34, x1: C.W - 34, y: C.H * 0.7 }; }
   function home(o) { return { x: C.W * (o.slot + 0.5) / 6, y: 78 }; }
@@ -192,13 +196,28 @@ function L1(stage, api) {
 }
 
 /* ---------- L2 分子在换衣服(三窗联动) ---------- */
+/* H⁺ 浓度与清水相比:10^|7−pH|,保留 1 位有效数字 */
+function timesTxt(d) {
+  var v = Math.pow(10, Math.abs(d)), e = Math.floor(Math.log10(v)), m = Math.round(v / Math.pow(10, e));
+  if (m >= 10) { m = 1; e++; }
+  return e >= 8 ? m * Math.pow(10, e - 8) + ' 亿' : e >= 4 ? m * Math.pow(10, e - 4) + ' 万' : String(m * Math.pow(10, e));
+}
+/* 方程跟着形态走:花青素一步步放掉 H⁺(示意) */
+function eqPH(ph) {
+  function sp(t, on) { return '<span class="' + (on ? 'hot' : 'dim') + '">' + t + '</span>'; }
+  var cap = function (t) { return '<div class="ph-cap" style="margin-top:-6px">' + t + '</div>'; };
+  if (ph < 5.8) { var l = ph < 4.5; return '<div class="eq" style="font-size:16px">' + sp('红色形(带+)', l) + ' <span>⇌</span> ' + sp('H⁺ + 紫色形(不带电)', !l) + '</div>' + cap(l ? '平衡偏向左边:大多是红色形' : '平衡偏向右边:大多已变成紫色形'); }
+  if (ph < 9.5) { var l2 = ph < 7.2; return '<div class="eq" style="font-size:16px">' + sp('紫色形(不带电)', l2) + ' <span>⇌</span> ' + sp('H⁺ + 蓝色形(带−)', !l2) + '</div>' + cap(l2 ? '平衡偏向左边:大多是紫色形' : '平衡偏向右边:大多已变成蓝色形'); }
+  var y = ph >= 12; return '<div class="ph-cap">碱性更强:中间的环打开</div><div class="eq" style="font-size:16px;margin-top:2px">' + sp('蓝色形(带−)', !y) + ' <span>→</span> ' + sp('黄色形(环打开)', true) + '</div>' + cap(y ? '大多已变成黄色形' : '蓝色形和黄色形同时存在,混在一起看起来是绿色');
+}
 function symPH(el, ph, extra) {
-  var n = Math.round(7 - ph), f = CAB.form(ph), side = ph < 5.5 ? 'L' : ph > 8 ? 'R' : '';
-  var times = Math.abs(n) <= 6 ? Math.pow(10, Math.abs(n)).toLocaleString('zh-CN') : '10 的 ' + Math.abs(n) + ' 次方';
+  var d = 7 - ph, t = timesTxt(d);
+  var hx = Math.abs(d) < 0.2 ? 'H⁺ 的浓度和清水差不多。' : d > 0 ? 'H⁺ 的浓度大约是清水的 <b>' + t + '</b> 倍。' : 'H⁺ 的浓度只有清水的约 <b>1/' + t + '</b>。';
+  var both = ph > 7.5 ? '碱性溶液里也有 H⁺,只是很少,OH⁻ 比它多。' : ph < 6.5 ? '酸性溶液里也有一点点 OH⁻,只是 H⁺ 多得多。' : '';
   el.innerHTML = '<div class="ph-big" style="color:' + CAB.css(CAB.rgb(ph)) + '">pH ' + ph.toFixed(1) + '</div><div class="ph-cap">' + (ph < 6.5 ? '酸性' : ph > 7.5 ? '碱性' : '接近中性') + (CAB.near(ph) ? ' · 像' + CAB.near(ph) : '') + '</div>' +
-    '<div class="eq"><span class="' + (side === 'L' ? 'hot' : side ? 'dim' : '') + '">HIn</span> <span>' + (side === 'L' ? '⇇' : side === 'R' ? '⇉' : '⇌') + '</span> <span class="' + (side === 'R' ? 'hot' : side ? 'dim' : '') + '">H⁺ + In⁻</span></div>' +
-    '<div class="hbar"><i style="width:' + Math.max(2, Math.min(100, (14 - ph) / 13 * 100)) + '%"></i></div>' +
-    '<p class="note-sm">H⁺ ' + (n > 0 ? '比清水<b>多</b>约 ' + times + ' 倍' : n < 0 ? '比清水<b>少</b>约 ' + times + ' 倍' : '和清水差不多') + '。HIn 是指示剂分子"抱着" H⁺ 的样子,In⁻ 是"放掉" H⁺ 的样子。</p>' + (extra || '');
+    eqPH(ph) +
+    '<p class="note-sm">' + hx + both + '</p>' +
+    '<p class="note-sm">花青素会一步一步放掉 H⁺,每放掉一个,就换一种颜色。化学书上常把指示剂简写成 HIn ⇌ H⁺ + In⁻,那只是其中的一步。</p>' + (extra || '');
 }
 function L2(stage, api) {
   var T = EF.tri(stage, { state: { ph: 2.5 }, h: 250 }), st = T.state, f0 = CAB.form(st.ph), purpleT = 0, got = { p: 0, y: 0 }, lastInt = Math.round(st.ph);
@@ -221,7 +240,7 @@ function L2(stage, api) {
     var i = Math.round(ph); if (i !== lastInt) { lastInt = i; EF.tone(Math.max(3, Math.round(26 - ph * 1.6)), 0, 0.5); }
     if (!got.p && ph >= 6 && ph <= 7.4) { purpleT = purpleT || performance.now(); }
     else if (ph < 6 || ph > 7.4) purpleT = 0;
-    if (!got.y && got.p && ph >= 11.5) { got.y = 1; EF.play('fuse'); msg.innerHTML = '黄色!碱性很强时,分子中间那个含氧的环<b>打开</b>了。红 → 紫 → 蓝 → 黄,都是同一种分子。'; setTimeout(api.complete, 1200); }
+    if (!got.y && got.p && ph >= 12.5) { got.y = 1; EF.play('fuse'); msg.innerHTML = '黄色!碱性很强时,分子中间那个含氧的环<b>打开</b>了。红 → 紫 → 蓝 → 绿 → 黄,都是同一种色素变出来的不同样子;中间的绿色,是蓝色和黄色两种样子混在一起。'; setTimeout(api.complete, 1200); }
   });
   var iv = setInterval(function () {
     if (!stage.isConnected) { clearInterval(iv); return; }
@@ -261,7 +280,7 @@ function L3(stage, api) {
   var CU = EF.canvas(T.pane.micro, 250);
   (function loop(t) { if (!CU.c.isConnected) return; var x = CU.x, W = CU.W, H = CU.H; x.clearRect(0, 0, W, H);
     var g = x.createRadialGradient(W / 2, H / 2, 10, W / 2, H / 2, W * 0.6); g.addColorStop(0, CAB.css(CAB.rgb(st.ph), .3)); g.addColorStop(1, CAB.css(CAB.rgb(st.ph), 0)); x.fillStyle = g; x.fillRect(0, 0, W, H);
-    var nH = Math.max(0, Math.round(Math.min(st.net, 10) * 1.8)), nB = Math.max(0, Math.min(14, Math.round(-st.net * 4)));
+    var nH = Math.max(1, Math.round(Math.min(st.net, 10) * 1.8)), nB = Math.max(0, Math.min(14, Math.round(-st.net * 4)));
     x.font = '700 10px system-ui'; x.textAlign = 'center'; x.textBaseline = 'middle';
     for (var i = 0; i < nH; i++) { var px = 16 + (i * 89 + t * 0.018 * (1 + i % 3)) % (W - 32), py = 20 + ((i * 53 + Math.sin(t / 600 + i) * 16) % (H - 40) + H) % (H - 40); x.fillStyle = 'rgba(255,122,154,.92)'; x.beginPath(); x.arc(px, py, 7, 0, 7); x.fill(); x.fillStyle = '#1a0a12'; x.fillText('H⁺', px, py + .5); }
     for (var j = 0; j < nB; j++) { var qx = 20 + (j * 113 + t * 0.012) % (W - 40), qy = 26 + ((j * 71 + Math.cos(t / 700 + j) * 14) % (H - 52) + H) % (H - 52); x.fillStyle = 'rgba(122,215,255,.9)'; x.beginPath(); x.arc(qx, qy, 11, 0, 7); x.fill(); x.fillStyle = '#081420'; x.fillText('HCO₃⁻', qx, qy + .5); }
@@ -278,8 +297,9 @@ function L3(stage, api) {
     if (newOver) { s.over++; EF.play('tick'); msg.innerHTML = '过头了,变蓝了!加一滴<b>白醋</b>把它拉回来。'; if (s.over >= 2) api.say('快到紫色时,换成"一小滴"会更稳。'); }
     sy.innerHTML = '<div class="ph-big" style="color:' + CAB.css(CAB.rgb(ph)) + '">pH ' + ph.toFixed(1) + '</div><div class="ph-cap">' + (ph >= 6.2 && ph <= 7.3 ? '紫色区间' : ph < 6.2 ? '还偏酸(偏红)' : '过头了(偏蓝)') + '</div>' +
       '<div class="eq" style="font-size:17px"><span class="hot">H⁺</span> + HCO₃⁻ → H₂O + CO₂↑</div>' +
+      '<div class="ph-cap" style="margin-top:-6px">完整写法:CH₃COOH + HCO₃⁻ → CH₃COO⁻ + H₂O + CO₂↑</div>' +
       '<p class="note-sm">已经"接走" <b>' + Math.round(s.n) + '</b> 份 H⁺ · 过头 <b>' + s.over + '</b> 次</p>' +
-      '<p class="note-sm">酸和碱相遇,H⁺ 被接走,叫<b>中和</b>。碱溶液里的 OH⁻ 也会接走 H⁺:<span style="white-space:nowrap">H⁺ + OH⁻ → H₂O</span>。</p>';
+      '<p class="note-sm">醋酸分子大多还"抱着" H⁺;H⁺ 被接走一个,醋酸就再放出一个。小苏打把 H⁺ 接走,酸性就变弱。课本里的<b>中和反应</b>是酸和碱生成盐和水:<span style="white-space:nowrap">H⁺ + OH⁻ → H₂O</span>;小苏打是盐,它和醋的反应不算中和反应。</p>';
     if (!done && ph >= 6.2 && ph <= 7.3) { done = true; EF.play('fuse'); msg.innerHTML = '调回紫色了!醋里的 H⁺ 被小苏打一份份接走,溶液回到接近中性。' + (s.over ? '' : '一次都没过头,手很稳。'); setTimeout(api.complete, 1200); }
     else if (!done && !over && ph > 5 && ph < 6.2) msg.innerHTML = '颜色越来越紫了……快到了,试试"一小滴"。';
   });
@@ -289,29 +309,29 @@ function L3(stage, api) {
 function guard(stage, api) { var tok = {}, fired = false; stage._tok = tok; return { say: api.say, complete: function () { if (fired || stage._tok !== tok) return; fired = true; api.complete(); } }; }
 function pick(f2, k) { return function (stage, api0) { var api = guard(stage, api0); if (EF.K3 && EF.K3[k]) { try { return EF.K3[k](stage, api); } catch (e) { console.warn('[ef] 3D 玩法出错,回落平面版', e); stage.innerHTML = ''; } } return f2(stage, api); }; }
 var LEVELS = [
-  { title: '厨房调色盘', setup: pick(L0, 'L0'), task: '给 6 杯厨房液体都滴进紫甘蓝汁,再从最红到最黄把它们排成一排。',
-    ask: { q: '把紫甘蓝汁滴进不同的厨房液体里,颜色会——', opts: ['都还是紫色', '变成好几种颜色', '都变透明'], ok: 1 },
+  { title: '厨房调色盘', setup: pick(L0, 'L0'), task: '给 6 杯家里常见的液体都滴进紫甘蓝汁,再从最红到最黄绿把它们排成一排。',
+    ask: { q: '把紫甘蓝汁滴进家里不同的液体里,颜色会——', opts: ['都还是紫色', '变成好几种颜色', '都变透明'], ok: 1 },
     hints: ['先一杯杯滴,看看都变成了什么颜色。', '排队时,先找最红的那杯。', '柠檬汁和白醋都很红,谁先都可以;最后一杯是最黄绿的。'],
-    explain: '同一种紫甘蓝汁,滴进柠檬汁、白醋变红,清水里是紫色,小苏打水、肥皂水里偏蓝绿,洗衣碱水里偏黄绿。汁没变,<b>变的是它遇到的液体</b>。紫甘蓝里让颜色变来变去的,是一类叫<b>花青素</b>的色素(不同品种的紫甘蓝,颜色会略有差别)。' },
-  { title: '酸碱数轴', setup: pick(L1, 'L1'), task: '把 6 支试管放到 pH 数轴(0–14)上它们该在的位置。',
+    explain: '同一种紫甘蓝汁,滴进柠檬汁、白醋变红,清水里是紫色,小苏打水、肥皂水(用块状肥皂泡的)里偏蓝绿,洗衣碱(碳酸钠)水里偏黄绿。汁没变,<b>变的是它遇到的液体</b>。紫甘蓝里让颜色变来变去的,是一类叫<b>花青素</b>的色素(不同品种的紫甘蓝,颜色会略有差别)。肥皂水和洗衣碱水这两杯只在游戏里滴:洗衣碱碱性较强(它不是烧碱,但溅进眼睛一样会受伤),现实中要由大人戴手套使用。' },
+  { title: '酸碱数轴', setup: pick(L1, 'L1'), task: '把 6 支试管放到 pH 数轴(常见范围 0–14)上它们该在的位置。',
     ask: { q: '清水在 pH 数轴的中间(7)。柠檬汁应该在它的——', opts: ['左边(数更小)', '右边(数更大)', '也在中间'], ok: 0 },
-    hints: ['先放最容易的:清水在 7。', '越红的越靠左,越绿黄的越靠右。', '小苏打水只是弱碱,在 8 左右;洗衣碱水在 11 以上。'],
-    explain: 'pH 是一把量"<b>H⁺(氢离子)有多少</b>"的尺子:7 是中性;小于 7 是<b>酸性</b>,数越小 H⁺ 越多;大于 7 是<b>碱性</b>。而且 pH 每差 1,H⁺ 的多少差 10 倍——柠檬汁(约 2)里的 H⁺ 大约是清水的十万倍。' },
+    hints: ['先放最容易的:清水(纯净的水)在 7。', '越红的越靠左,越绿黄的越靠右。', '小苏打水只有弱碱性,在 8 左右;洗衣碱水在 11 以上。'],
+    explain: 'pH 是一把量"<b>H⁺(氢离子)有多浓</b>"的尺子,也就是同样多的水里有多少 H⁺。7 是中性;小于 7 是<b>酸性</b>,数越小 H⁺ 越浓;大于 7 是<b>碱性</b>,数越大 H⁺ 越稀、OH⁻ 越多。pH 每差 1,H⁺ 的浓度差 10 倍——柠檬汁(约 2)里 H⁺ 的浓度大约是清水的十万倍。(数轴上的颜色是大致的样子:紫甘蓝品种不同、汁的浓淡不同,颜色会略有差别。)' },
   { title: '分子在换衣服', setup: pick(L2, 'L2'), task: '拖动 pH 滑杆,先找到让花青素分子变紫的那一段,再找到它变黄的那一段。',
-    ask: { q: '紫甘蓝汁变色,是因为——', opts: ['液体把颜料冲淡了', '色素分子随 H⁺ 多少改变了样子', '颜色是光线的错觉'], ok: 1 },
-    hints: ['看中间窗口:分子身上哪些地方的 H 会跑掉?', '紫色大约在 pH 6–7。', '一直往右拖到 12 左右,看分子中间那个带 O 的环。'],
-    explain: '花青素分子身上有几处能"抱住"或"放掉" H⁺ 的位置。H⁺ 很多时,它带正电,吸收绿光、显红色;H⁺ 少一些,放掉一个 H⁺ 变成不带电的紫色;再少,又放掉一个变成带负电的蓝色;碱性很强时,中间的含氧环会打开,变成黄色。分子样子一变,吸收的光就变,我们看到的颜色也跟着变。(分子图为示意,真实的花青素还连着糖,各形态之间是逐渐过渡的。)' },
+    ask: { q: '紫甘蓝汁变色,是因为——', opts: ['液体把颜料冲淡了', '色素分子随 H⁺ 浓度改变了样子', '颜色是光线的错觉'], ok: 1 },
+    hints: ['看中间窗口:分子身上哪些地方的 H 会跑掉?', '紫色大约在 pH 6–7。', '一直往右拖到 13 左右,看分子中间那个带 O 的环。'],
+    explain: '花青素分子身上有几处能"抱住"或"放掉" H⁺ 的位置。H⁺ 很多时,它带正电,吸收绿光、显红色;H⁺ 少一些,放掉一个 H⁺,变成不带电的紫色;再少,又放掉一个,变成带负电的蓝色;碱性很强时,中间的含氧环会打开,变成黄色。蓝色和黄色两种样子同时存在时,我们看到的就是绿色。分子样子一变,吸收的光就变,看到的颜色也跟着变。(分子图为示意:真实的花青素还连着糖,还有一种几乎无色的样子;各种样子会同时存在、逐渐过渡。在强碱里放久了,色素会慢慢分解,颜色就调不回来了。)' },
   { title: '调回紫色', setup: pick(L3, 'L3'), task: '一滴一滴加小苏打水,把加了醋的红色紫甘蓝汁调回紫色;加过头了就用白醋拉回来。',
     ask: { q: '往变红的(加了醋的)紫甘蓝汁里加小苏打水,会——', opts: ['更红', '慢慢变回紫色,再多会变蓝', '没有变化'], ok: 1 },
-    hints: ['小苏打水是碱性的,它会和醋里的什么相遇?', '先用大滴,颜色开始变紫时换小滴。', '变蓝就是过头了,加一滴白醋。'],
-    explain: '醋里的 H⁺ 遇到小苏打里的碳酸氢根(HCO₃⁻),会结合成水和二氧化碳:<b>H⁺ + HCO₃⁻ → H₂O + CO₂↑</b>,所以会冒气泡。H⁺ 被一份份接走,溶液就从酸性回到接近中性,颜色也回到紫色。酸和碱相互抵消的过程叫<b>中和</b>;碱溶液里的 OH⁻ 接走 H⁺ 变成水(H⁺ + OH⁻ → H₂O),也是中和。' }
+    hints: ['小苏打水呈弱碱性,它会和醋里的什么相遇?', '先用大滴,颜色开始变紫时换小滴。', '变蓝就是过头了,加一滴白醋。'],
+    explain: '醋里的 H⁺ 遇到小苏打里的碳酸氢根(HCO₃⁻),会结合成水和二氧化碳:<b>H⁺ + HCO₃⁻ → H₂O + CO₂↑</b>,所以会冒气泡。醋酸是弱酸,醋酸分子大多还"抱着" H⁺;H⁺ 被接走一个,醋酸就再放出一个,所以要加不少小苏打才能调回紫色(完整写法:CH₃COOH + HCO₃⁻ → CH₃COO⁻ + H₂O + CO₂↑)。H⁺ 被一份份接走,溶液就从酸性回到接近中性,颜色也回到紫色。注意:课本里的<b>中和反应</b>专指酸和碱反应生成盐和水,本质是 H⁺ + OH⁻ → H₂O。小苏打是一种盐,只是它的水溶液呈碱性,所以它和醋的反应不叫中和反应,但一样能"接走" H⁺、让酸性变弱。' }
 ];
 var NOTES = { title: '元素工坊 · 为什么紫甘蓝汁会变色?', items: [
-  '紫甘蓝里的<b>花青素</b>是天然的酸碱指示剂:酸性偏红,中性附近紫色,弱碱性偏蓝绿,强碱性偏黄。',
-  'pH 是量 H⁺(氢离子)多少的尺子:7 中性,小于 7 酸性,大于 7 碱性;每差 1,H⁺ 的多少差 10 倍。',
-  '花青素分子会随 H⁺ 多少得到或失去 H⁺,样子一变,吸收的光就变,颜色也变。',
-  '酸和碱相遇会<b>中和</b>:醋里的 H⁺ 和小苏打里的 HCO₃⁻ 变成水和二氧化碳(所以冒泡);H⁺ + OH⁻ → H₂O。',
-  '在家只用紫甘蓝、白醋、柠檬汁、小苏打和清水做;洁厕灵、漂白剂等清洁剂不能拿来做实验,更不能混用。'],
+  '紫甘蓝里的<b>花青素</b>是天然的酸碱指示剂:酸性偏红,中性附近紫色,弱碱性偏蓝,碱性再强偏绿,强碱性偏黄(颜色是大致范围)。',
+  'pH 是量 H⁺(氢离子)浓度的尺子:7 中性,小于 7 酸性,大于 7 碱性;每差 1,H⁺ 的浓度差 10 倍。',
+  '花青素分子会随 H⁺ 浓度得到或失去 H⁺,样子一变,吸收的光就变,颜色也变;绿色是蓝色和黄色两种样子混在一起。',
+  '小苏打能"接走"醋里的 H⁺:H⁺ + HCO₃⁻ → H₂O + CO₂↑(所以冒泡)。课本里的<b>中和反应</b>专指酸和碱生成盐和水,本质是 H⁺ + OH⁻ → H₂O。',
+  '在家只用紫甘蓝、白醋、柠檬汁、小苏打和清水做;洁厕灵、漂白剂等清洁剂不能拿来做实验,不同的清洁剂更不能混在一起。'],
   bridge: '颜色指示剂的星桥正在搭建中:花的颜色、土壤的酸碱,也藏着同样的秘密。' };
 EF.mission('cabbage', LEVELS, NOTES);
 })();

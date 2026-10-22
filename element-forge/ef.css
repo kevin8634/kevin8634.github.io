@@ -179,3 +179,12 @@ body.mission.dye .cn{border-color:#ff9ae0;filter:drop-shadow(0 0 6px #ff7ad988)}
 body.mission.dye .m-stage{border-color:rgba(255,122,217,.26);background:rgba(18,8,24,.42)}
 body.mission.dye .m-stage .ctl{border-color:rgba(255,122,217,.22)}
 body.mission.dye .m-guide{box-shadow:0 0 40px rgba(255,122,217,.1)}
+/* v0.6 fireworks 夜空焰色台主题(小点) */
+body.spark{--line:rgba(255,179,92,.26)}
+body.mission.spark .cn{border-color:#ffc27a;filter:drop-shadow(0 0 6px #ff9a3c88)}
+body.mission.spark .m-stage{border-color:rgba(255,179,92,.26);background:rgba(10,8,22,.46)}
+body.mission.spark .m-stage .ctl{border-color:rgba(255,179,92,.22)}
+body.mission.spark .m-guide{box-shadow:0 0 40px rgba(255,154,60,.1)}
+.ctl.chips{flex-wrap:wrap;gap:6px}
+.ef-btn.chip{min-height:44px;padding:6px 12px;border-color:var(--c,#ffd27a);color:#f4ede1}
+.ef-btn.chip.on{background:color-mix(in srgb,var(--c,#ffd27a) 30%,transparent);box-shadow:0 0 12px var(--c,#ffd27a)}
