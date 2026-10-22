@@ -247,3 +247,22 @@ body.shh-dclosed .sh2-back{left:calc(var(--shh-pad,16px) + 60px)}
 
 .ml--au .au-l{white-space:nowrap;color:#9fb3cc}.ml--au .ml-hd b{font-size:17px}
 @media (max-width:760px){.ml--au .ml-ctl{flex-wrap:wrap;gap:6px}.ml--au .ml-rng{order:3;flex-basis:100%}.ml--au .ml-note{display:none}.ml--au .ml-info{font-size:11px;text-align:center}}
+
+/* ---------- 星域 III(v1.0-M2a):太阳系模式接入 + 火星日 / 今晚行星 ---------- */
+body.shh-on .le-chips.le-solar-only{display:none!important}
+.md-r{justify-content:flex-start;padding:34px 12px 12px;gap:14px}
+.md-tbl{width:100%;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.md-h,.md-row{display:grid;grid-template-columns:52px 1.3fr 1fr 1fr;gap:8px;align-items:center;padding:6px 8px;border-radius:10px}
+.md-h{font-size:11px;color:#9fb3cc}.md-row{background:rgba(255,255,255,.03);color:#c9d6e8}.md-row.is-on{background:rgba(240,201,122,.12);outline:1px solid rgba(240,201,122,.45);color:#fff}
+.md-clk{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:auto}
+.md-clk div{background:rgba(255,255,255,.04);border-radius:10px;padding:8px;text-align:center}.md-clk small{display:block;font-size:11px;color:#9fb3cc}.md-clk b{font-size:17px;color:#e8f2ff;font-variant-numeric:tabular-nums}
+.md-clk .md-m b{color:#ff9a6c}
+.ml--md .ml-ctl .ml-mode.is-on,.ml--tn .ml-ctl .ml-mode.is-on{background:rgba(127,227,196,.2);border-color:#7fe3c4;color:#cff8ea}
+.tn-r{justify-content:flex-start;padding:34px 12px 12px;gap:8px}
+.tn-list{width:100%;display:flex;flex-direction:column;gap:5px}
+.tn-row{display:grid;grid-template-columns:12px 48px 60px 1fr;gap:8px;align-items:center;font-size:13px;color:#7f93ad;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.03)}
+.tn-row i{width:10px;height:10px;border-radius:50%;opacity:.5}.tn-row.ok{color:#e8f2ff;background:rgba(127,227,196,.08)}.tn-row.ok i{opacity:1;box-shadow:0 0 8px currentColor}
+.tn-now{margin-top:auto;font-size:12px;color:#9fd9c6;text-align:center}
+.tn-a,.tn-b{font-size:12px;color:#9fb3cc;white-space:nowrap}
+@media (max-width:760px){.md-h,.md-row{grid-template-columns:40px 1.4fr 1fr 1fr;font-size:11px;gap:4px;padding:4px}.md-clk b{font-size:13px}.md-r,.tn-r{padding:26px 6px 6px;overflow:auto;flex-direction:column}.tn-row{grid-template-columns:10px 40px 52px 1fr;font-size:11px;gap:4px}
+.ml--md .ml-ctl,.ml--tn .ml-ctl{flex-wrap:wrap;gap:6px}.ml--tn .ml-rng{order:3;flex-basis:100%}.ml--md .ml-note,.ml--tn .ml-note{display:none}}
