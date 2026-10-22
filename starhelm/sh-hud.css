@@ -307,3 +307,20 @@ body.shh-on .le-chips.le-solar-only{display:none!important}
 .ml--dock .ml-ctl{display:flex;gap:8px;flex-wrap:wrap}.ml--dock .ml-ctl button{flex:1;padding:7px 8px;border-radius:9px;border:1px solid rgba(127,227,196,.4);background:rgba(127,227,196,.1);color:#dff;cursor:pointer}
 .ml--dock .ml-note{font-size:11px;opacity:.55}
 @media (max-height:500px),(max-width:760px){.ml.ml--dock{top:auto;bottom:8px;right:8px;max-height:58vh}}
+
+/* v1.0-M3b 地球重要播报(右上,按钮行下方;卡片/此刻卡/实验室打开时让位) */
+.sh-cast{position:fixed;z-index:22;right:var(--shh-pad,16px);top:calc(var(--shh-acts,140px) + 10px);width:min(350px,calc(100vw - 32px));max-height:calc(100vh - var(--shh-acts,140px) - var(--shh-console,110px) - 120px);display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(8,18,34,.86),rgba(4,10,20,.8));backdrop-filter:blur(10px);border:1px solid rgba(255,138,92,.35);border-radius:14px;box-shadow:0 0 24px rgba(255,120,60,.16),inset 0 0 18px rgba(88,200,255,.06);color:#e8f2ff;font-size:12px;overflow:hidden;transition:opacity .25s}
+body:not(.shh-on) .sh-cast{display:none}
+body:has(#card.is-open) .sh-cast,body:has(.shh-now:not([hidden])) .sh-cast,body.ml-on .sh-cast,body.sh-side .sh-cast,body:has(.le-sheet.is-open) .sh-cast{opacity:0;pointer-events:none}
+.sh-cast__h{display:flex;align-items:center;gap:7px;padding:9px 12px 6px;letter-spacing:.06em}.sh-cast__h b{font-size:13px;color:#ffd0b0}.sh-cast__h small{font-size:9px;color:#ff8a5c;border:1px solid rgba(255,138,92,.5);border-radius:4px;padding:0 4px}
+.sh-cast__live{width:8px;height:8px;border-radius:50%;background:#ff5a3c;box-shadow:0 0 8px #ff5a3c;animation:shcast 1.6s infinite}@keyframes shcast{50%{opacity:.25}}
+.sh-cast__fold{margin-left:auto;background:none;border:1px solid rgba(255,255,255,.2);color:#cfe;border-radius:6px;width:22px;height:20px;cursor:pointer}
+.sh-cast__for{padding:0 12px 6px;color:#9fb6d0;font-size:11px}.sh-cast__for b{color:#7fe3c4}.sh-cast__set{background:rgba(127,227,196,.12);border:1px solid rgba(127,227,196,.45);color:#bff;border-radius:6px;padding:1px 6px;cursor:pointer;font-size:11px}
+.sh-cast__list{list-style:none;margin:0;padding:0 6px 4px;overflow:auto;flex:1}.sh-cast__list li button{display:flex;gap:8px;align-items:flex-start;width:100%;text-align:left;background:none;border:0;border-left:2px solid var(--c);color:inherit;padding:6px 6px 6px 8px;margin:3px 0;border-radius:0 8px 8px 0;cursor:pointer}
+.sh-cast__list li button:hover{background:rgba(255,255,255,.05)}.sh-cast__list i{font-style:normal;color:var(--c);text-shadow:0 0 8px var(--c);width:16px;flex:none;text-align:center}
+.sh-cast__list span{flex:1;min-width:0}.sh-cast__list b{display:block;font-size:12px;font-weight:600;line-height:1.35}.sh-cast__list small{display:block;color:#93a8c2;font-size:10.5px;line-height:1.35;margin-top:1px}
+.sh-cast__list em{font-style:normal;font-size:9.5px;color:#9fb6d0;border:1px solid rgba(159,182,208,.3);border-radius:4px;padding:0 4px;white-space:nowrap;flex:none}.sh-cast__list em.me{color:#ffcf8a;border-color:rgba(255,190,110,.6);box-shadow:0 0 6px rgba(255,170,80,.3)}
+.sh-cast__none{padding:8px;color:#93a8c2}.sh-cast__src{padding:4px 12px 7px;font-size:9.5px;color:#6f86a2;border-top:1px solid rgba(255,255,255,.06)}
+.sh-cast.is-fold{width:auto;cursor:pointer}.sh-cast.is-fold .sh-cast__for,.sh-cast.is-fold .sh-cast__list,.sh-cast.is-fold .sh-cast__src{display:none}
+.sh-cast.is-fold .sh-cast__h::after{content:attr(data-n)}
+@media (max-width:1180px){.sh-cast{width:300px}}
