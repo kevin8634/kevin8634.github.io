@@ -1147,7 +1147,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.8.7</b></span>
+            <span>创世计划总门户 <b>v0.8.8</b></span>
           </footer>
         </div>
       </div>
@@ -1290,7 +1290,7 @@
           age: ["huo","chen","he"], tags: ["space","matter"], why: "好奇宇宙为什么是现在这样？亲手改一改物理常数，看会发生什么。" },
         { id: "03", star: "天权", name: "元素工坊", en: "Element Forge", field: "化学",
           desc: "用元素锻造物质，配方即反应。", color: "#ff9a3c", live: true,
-          meta: ["已上线 v0.4.1", "3 个任务 12 关"], href: "element-forge/", prefix: ["gn:ef:"],
+          meta: ["已上线 v0.8.1", "7 个任务 28 关"], href: "element-forge/", prefix: ["gn:ef:"],
           age: ["huo","chen","he"], tags: ["matter"], why: "想知道东西由什么组成、怎样变化？它会带你用元素锻造物质。" },
         { id: "04", star: "玉衡", name: "生命源码", en: "Life Source", field: "生物",
           desc: "读、改、调试生命的「源码」。", color: "#34d399", live: true,
@@ -2312,7 +2312,7 @@
         { a: { w: "07", id: "sh.sats", title: "天上到底有多少颗卫星？", href: "starhelm/?task=sats", label: "去天枢 →" },
           b: { w: "05", id: "ps.sats", title: "AI 与卫星数据", href: "pre-singularity/" } },
         { a: { w: "07", id: "sh.quakes", title: "地震在告诉我们什么？", href: "starhelm/?task=quakes", label: "去天枢 →" },
-          b: { w: "03", id: "ef.rocks", title: "岩石是怎么“长”出来的？", href: null } },
+          b: { w: "03", id: "ef.rocks", title: "岩石是怎么“长”出来的？", href: "element-forge/rocks/" } },
         { a: { w: "01", id: "ma.rocket", title: "火箭怎样飞上月球？", href: "math-atlas/rocket/" },
           b: { w: "07", id: "sh.orbit", title: "空间站为什么掉不下来？", href: "starhelm/?task=orbit", label: "去天枢 →" } },
         { a: { w: "01", id: "ma.cube", title: "魔方为什么能复原？", href: "math-atlas/cube/" },
@@ -2338,7 +2338,13 @@
         { a: { w: "07", id: "sh.sun", title: "太阳活动观测台", href: "starhelm/?task=sun", label: "去天枢 →" },
           b: { w: "03", id: "ef.stars", title: "你身体里的铁是从哪颗星来的？", href: "element-forge/stars/" } },
         { a: { w: "07", id: "sh.eclipse", title: "日月食实验室", href: "starhelm/?task=eclipse", label: "去天枢 →" },
-          b: { w: "01", id: "ma.scale", title: "比例与数量级", href: null } }
+          b: { w: "01", id: "ma.scale", title: "比例与数量级", href: null } },
+        { a: { w: "03", id: "ef.fireworks", title: "烟花为什么五颜六色？", href: "element-forge/fireworks/" },
+          b: { w: "07", id: "sh.aurora", title: "极光是太阳寄来的信吗？", href: "starhelm/?task=aurora", label: "去天枢 →" } },
+        { a: { w: "03", id: "ef.cabbage", title: "紫甘蓝汁为什么会变色？", href: "element-forge/cabbage/" },
+          b: { w: "01", id: "ma.scale", title: "比例与数量级", href: null } },
+        { a: { w: "03", id: "ef.battery", title: "怎样造一块会发电的电池？", href: "element-forge/battery/" },
+          b: { w: "02", id: "nv.circuit", title: "电路与能量", href: null } }
       ];
       // 同一对世界之间有多座桥时，让弧线错开，避免重叠
       (function () {
@@ -3019,7 +3025,7 @@
         var TASKS = {
           "01": { p: ["ma:v1:", "gn:ma:"], t: { chord: "为什么有的和弦好听？", cat: "怎样让 AI 认出一只猫？", casino: "赌场为什么总是赢？", secret: "怎样把秘密藏进数字里？", epidemic: "传染病为什么会爆发？", rocket: "火箭怎样飞上月球？", cube: "魔方为什么能复原？", bee: "为什么蜜蜂选六边形？", nim: "先拿的人一定赢吗？", nav: "导航怎么找到最短的路？" } },
           "02": { p: ["gn:nv:"], t: { orbit: "为什么宇航员在空间站会飘起来？", sound: "为什么救护车经过时声音会变？", hoop: "如果引力变成两倍，篮球还能投进吗？" } },
-          "03": { p: ["gn:ef:"], t: { stars: "你身体里的铁是从哪颗星来的？", carbon: "为什么钻石和铅笔芯是同一种东西？", crystal: "晶体为什么那么整齐？" } },
+          "03": { p: ["gn:ef:"], t: { stars: "你身体里的铁是从哪颗星来的？", carbon: "为什么钻石和铅笔芯是同一种东西？", crystal: "晶体为什么那么整齐？", cabbage: "紫甘蓝汁为什么会变色？", fireworks: "烟花为什么五颜六色？", battery: "怎样造一块会发电的电池？", rocks: "岩石是怎么“长”出来的？" } },
           "04": { p: ["gn:ls:"], t: { dna: "四个字母怎么写出一个人？", parents: "为什么你长得像爸妈，又不完全像？", zebra: "为什么斑马会有条纹？", virus: "一场感冒是怎么在班里传开的？", wolf: "狼回来之后，河流为什么变了？" } },
           "05": { p: ["gn:ps:"], t: { ask: "AI 会思考吗？", write: "AI 是怎么写作文的？", cat: "怎样让 AI 认出一只猫？", attn: "AI 在「看」哪里？", panda: "怎样让 AI 把熊猫认成长臂猿？", truth: "这段话是 AI 写的吗？", robot: "为什么扫地机器人会偷懒？", scale: "把 AI 放大会怎样？", together: "我们和 AI 怎么一起生活？" } },
           "06": { p: ["gn:lt:"], t: { compound: "每天多进步 1%，一年后会怎样？", prisoner: "为什么好人不一定吃亏？", sunk: "电影看了一半很难看，要不要看完？", cocoon: "为什么你刷到的视频越来越像？", survivor: "为什么「成功经验」常常骗人？", nature: "人性本善，还是本恶？", meaning: "看见了这些规则，我想成为怎样的玩家？" } },
@@ -3262,6 +3268,12 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.8", d: "2026-10-23", t: "星历补记元素工坊 v0.5 到 v0.8.1，工坊卡片更新为 7 个任务；星桥开通 岩石 ⇄ 地震、烟花 ⇄ 极光，并预留 紫甘蓝 ⇄ 数量级、电池 ⇄ 电路。" },
+        { w: "03", v: "v0.8.1", d: "2026-10-23", t: "星桥开通：岩石任务和天枢「地震在告诉我们什么？」连上了，两边可以互相跳转。" },
+        { y: "task", w: "03", v: "v0.8", d: "2026-10-23", t: "新任务「岩石是怎么“长”出来的？」：给岩石分类，看冷却快慢怎样决定晶粒大小，走一遍岩石循环。" },
+        { y: "task", w: "03", v: "v0.7", d: "2026-10-23", t: "新任务「怎样造一块会发电的电池？」：从柠檬电池到电极电势，再看锂电池怎样充电和放电。" },
+        { y: "task", w: "03", v: "v0.6", d: "2026-10-23", t: "新任务「烟花为什么五颜六色？」：烧一烧不同的金属看焰色，用分光镜拆开光，认识氢原子的能级。" },
+        { y: "task", w: "03", v: "v0.5", d: "2026-10-23", t: "新任务「紫甘蓝汁为什么会变色？」：三个窗口联动，同时看颜色、分子和 pH 怎样跟着酸碱变。" },
         { w: "gn", v: "v0.8.7", d: "2026-10-23", t: "重要公告换成天枢 1.0 开发进度：七星域已开放 4 个，公告图轮播四个星域的实拍画面；星历补记天枢 v1.0-M1 到 M3a，七个新任务进入创世护照。" },
         { y: "task", w: "07", v: "v1.0-M3a", d: "2026-10-23", t: "新任务「旅行者号此刻飞到哪了？」：星域 IV 太阳系边疆开放，看太阳风吹出的发光「泡泡」和五个深空探测器此刻的真实位置。" },
         { w: "07", v: "v1.0-M2e~M2h", d: "2026-10-23", t: "木星四大卫星和土卫六换上真实表面、可以点开飞近；太阳系里的地球夜面亮起城市灯光；导航和气象卫星可以飞过去看 3D 模型。" },
