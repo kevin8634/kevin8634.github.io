@@ -35,6 +35,10 @@
     ['btn-music'].forEach(function (id) { var b = document.getElementById(id); if (b && window.MutationObserver) new MutationObserver(function () { SHHUD.setSound(soundOn()); }).observe(b, { attributes: true, attributeFilter: ['aria-pressed'] }); });
     if (window.LE && LE.bus) LE.bus.on('mode:changed', function () { tick(true); });
     if (LE.scene && LE.scene.addUpdater) { var n = 0; LE.scene.addUpdater(function () { if (++n % 15 === 0) tick(false); }); }
+    // 旧按钮行可能换成两行:量出它的底边,让右侧面板/卡片排在它下面(v1.0-M1b)
+    function syncActs() { var a = document.querySelector('.le-actions'); if (!a) return; var r = a.getBoundingClientRect(); if (r.height) document.documentElement.style.setProperty('--shh-acts', Math.round(r.bottom) + 'px'); var lb = document.querySelector('.le-bottom'); if (lb && innerWidth > 640) { var q = lb.getBoundingClientRect(); if (q.height) document.documentElement.style.setProperty('--shh-lb', Math.round(innerHeight - q.top) + 'px'); } }
+    syncActs(); addEventListener('resize', syncActs); setTimeout(syncActs, 1500);
+    if (window.ResizeObserver) { var ro = new ResizeObserver(syncActs); ['.le-actions', '.le-bottom'].forEach(function (q) { var e = document.querySelector(q); if (e) ro.observe(e); }); }
     deepLink();
     tick(true);
   }
