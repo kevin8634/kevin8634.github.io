@@ -16,9 +16,10 @@
 
   function mount() {
     if (!window.SHHUD || D.ready) return;
-    var H = SHHUD.mount({ genesis: '../', noOpening: true, gfxLabel: gfxLabel() });
+    var H = SHHUD.mount({ genesis: '../', gfxLabel: gfxLabel() });
     D.list = SHHUD.DOMAINS; D.ready = true;
-    H.on('atlas', function () { if (window.SH && SH.openMap) SH.openMap(); });
+    H.on('atlas', function () { if (window.SHATLAS) SHATLAS.open(); else if (window.SH && SH.openMap) SH.openMap(); });
+    H.on('opening', function () { if (window.SHOPEN) SHOPEN.play(true); });
     H.on('gfx', function () { var b = document.getElementById('btn-gfx'); if (b) b.click(); });
     H.on('sound', function (on) { toggleSound(on); });
     H.on('domain', function (e) {
@@ -49,7 +50,9 @@
   function tick(force) {
     var S = LE.scene; if (!S) return;
     var key, km;
-    if (S.mode === 'solar') {
+    if (window.SHD2 && SHD2.isOpen()) {
+      km = SHD2.camKm(); key = '2|日-地-月';
+    } else if (S.mode === 'solar') {
       var c = S.solarCam.position.distanceTo(S.solarCtl.target), r = Math.pow(c / 14, 2);
       km = r * AU; key = '3|太阳系 · 预览';
     } else if (D.focus === 'moon' && window.SHFOCUS) {
@@ -64,15 +67,19 @@
   D.setFocus = function (f) { D.focus = f; tick(true); };
 
   /* ---------- 星域跳转(M1:I 家园 / II 日与月) ---------- */
-  D.go = function (n) {
-    var S = LE.scene;
+  D.go = function (n, o) {
+    var S = LE.scene; o = o || {};
+    if (n !== 2 && window.SHD2) SHD2.close();
+    if (n === 1 && o.quiet) { if (S.mode !== 'earth' && LE.ui.setMode) LE.ui.setMode('earth'); tick(true); return; }
     if (n === 1) {
       if (S.mode !== 'earth' && LE.ui.setMode) LE.ui.setMode('earth');
       if (window.SHFOCUS) SHFOCUS.back(); else if (S.flyTo) S.flyTo({ target: new THREE.Vector3(), position: S.earthCam.position.clone().normalize().multiplyScalar(S.fitDistance()) });
       SHHUD.guide('tianshu', '你就在这颗蓝色星球上。拖动它,找找你此刻在哪儿?', []);
     } else if (n === 2) {
       if (S.mode !== 'earth' && LE.ui.setMode) LE.ui.setMode('earth');
-      if (window.SHFOCUS) SHFOCUS.showMoon(true);
+      if (window.SHFOCUS && SHFOCUS.focused) SHFOCUS.back();
+      if (!(window.SHD2 && SHD2.open()) && window.SHFOCUS) SHFOCUS.showMoon(true);   // 无独立视图时退回 M1a 的飞近月球
+      tick(true);
     }
   };
   function deepLink() {
