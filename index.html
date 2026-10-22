@@ -484,6 +484,20 @@
       .x-ann__w { position: absolute; left: 10px; bottom: 7px; z-index: 1; font: 500 11px/1.4 var(--sans); letter-spacing: .06em; color: var(--accent); }
       .x-ann h3 { margin: 12px 4px 6px; font-size: 15.5px; line-height: 1.45; color: #fff; letter-spacing: .02em; }
       .x-ann p { margin: 0 4px 10px; font-size: 12.5px; line-height: 1.7; color: rgba(234,240,255,.8); }
+      .x-ann__slide { position: absolute; inset: 0; opacity: 0; transform: scale(1.04); transition: opacity 1s ease, transform 5s ease; }
+      .x-ann__slide.on { opacity: 1; transform: scale(1); }
+      .x-ann__fig { cursor: pointer; }
+      .x-ann__dots { position: absolute; right: 10px; bottom: 10px; z-index: 1; display: flex; gap: 4px; }
+      .x-ann__dots i { width: 5px; height: 5px; border-radius: 50%; background: rgba(234,240,255,.35); transition: background .3s, width .3s; }
+      .x-ann__dots i.on { width: 14px; border-radius: 3px; background: var(--gold); }
+      .x-ann__prog { margin: 0 4px 10px; }
+      .x-ann__pt { display: flex; align-items: baseline; gap: 4px; font: 400 11.5px/1.4 var(--sans); color: rgba(234,240,255,.72); }
+      .x-ann__pt b { font: 600 15px/1 var(--sans); color: var(--gold); }
+      .x-ann__pt span { margin-left: auto; font-weight: 600; color: var(--gold); }
+      .x-ann__bar { position: relative; height: 4px; margin: 6px 0 8px; border-radius: 2px; background: rgba(234,240,255,.1); overflow: hidden; }
+      .x-ann__bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: linear-gradient(90deg, rgba(233,199,121,.55), var(--gold)); box-shadow: 0 0 8px rgba(233,199,121,.6); }
+      .x-ann__prog .x-ann__dom { margin: 0; }
+      @media (prefers-reduced-motion: reduce) { .x-ann__slide { transition: opacity .3s; transform: none !important; } }
       .x-ann__dom { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 4px 10px; padding: 0; list-style: none; }
       .x-ann__dom li { padding: 2px 8px; border-radius: 999px; font: 400 10.5px/18px var(--sans); color: rgba(234,240,255,.62); border: 1px solid rgba(234,240,255,.14); }
       .x-ann__dom li.on { color: #ffe7a8; border-color: rgba(233,199,121,.65); background: rgba(233,199,121,.1); }
@@ -549,7 +563,12 @@
         .x-news:not(.is-bar):not(.min) .x-ann__fig figcaption { display: none; }
         .x-news:not(.is-bar):not(.min) .x-ann h3 { margin: 0 0 3px; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .x-news:not(.is-bar):not(.min) .x-ann p { margin: 0 0 6px; font-size: 12px; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .x-news:not(.is-bar):not(.min) .x-ann__dom { display: none; }
+        .x-news:not(.is-bar):not(.min) .x-ann { grid-template-rows: auto auto auto auto; }
+        .x-news:not(.is-bar):not(.min) .x-ann__fig { grid-row: 1 / 5; }
+        .x-news:not(.is-bar):not(.min) .x-ann p { -webkit-line-clamp: 1; margin-bottom: 7px; }
+        .x-news:not(.is-bar):not(.min) .x-ann__prog { margin: 0 0 8px; }
+        .x-news:not(.is-bar):not(.min) .x-ann__bar { margin: 5px 0 7px; }
+        .x-news:not(.is-bar):not(.min) .x-ann__dom li { padding: 1px 7px; font-size: 10px; line-height: 16px; }
         .x-news:not(.is-bar):not(.min) .x-ann__ft { margin: 0; }
         .x-news:not(.is-bar):not(.min) .x-ann__go { min-height: 30px; }
         .x-news:not(.is-bar):not(.min) .x-news__one { grid-column: 2; grid-row: 2; align-self: center; border-top: 0; border-radius: 10px; background: rgba(234,240,255,.04); min-height: 36px; }
@@ -1128,7 +1147,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.8.2.9</b></span>
+            <span>创世计划总门户 <b>v0.8.7</b></span>
           </footer>
         </div>
       </div>
@@ -1289,7 +1308,7 @@
           age: ["huo","chen","he"], tags: ["society"], why: "想看清自己怎么思考、怎么做选择？把每一次选择当成一局棋来复盘。", ageTxt: "星火 12+ · 星芽可试入门关" },
         { id: "07", star: "天枢", name: "天枢", en: "Starhelm", field: "天文",
           desc: "北斗第一星 · 用真实实时数据看见此刻的天空。", color: "#dfe6f3", live: true,
-          meta: ["已上线 v0.9.1 · 1.0 七星域研发中", "四季 · 卫星 · 地震 · 月相与日月食实验室"], href: "starhelm/", prefix: ["gn:sh:"],
+          meta: ["已上线 v1.0-M3a · 七星域开放 4 / 7", "家园 · 日与月 · 行星世界 · 太阳系边疆"], href: "starhelm/", prefix: ["gn:sh:"],
           age: ["ya","huo","chen","he"], tags: ["space"], why: "想知道此刻头顶的天空是什么样？用真实数据去看。" }
       ];
       // 北斗位置（归一化，斗口左上，斗柄右下）：天枢→天璇→天玑→天权→玉衡→开阳→摇光
@@ -3004,7 +3023,7 @@
           "04": { p: ["gn:ls:"], t: { dna: "四个字母怎么写出一个人？", parents: "为什么你长得像爸妈，又不完全像？", zebra: "为什么斑马会有条纹？", virus: "一场感冒是怎么在班里传开的？", wolf: "狼回来之后，河流为什么变了？" } },
           "05": { p: ["gn:ps:"], t: { ask: "AI 会思考吗？", write: "AI 是怎么写作文的？", cat: "怎样让 AI 认出一只猫？", attn: "AI 在「看」哪里？", panda: "怎样让 AI 把熊猫认成长臂猿？", truth: "这段话是 AI 写的吗？", robot: "为什么扫地机器人会偷懒？", scale: "把 AI 放大会怎样？", together: "我们和 AI 怎么一起生活？" } },
           "06": { p: ["gn:lt:"], t: { compound: "每天多进步 1%，一年后会怎样？", prisoner: "为什么好人不一定吃亏？", sunk: "电影看了一半很难看，要不要看完？", cocoon: "为什么你刷到的视频越来越像？", survivor: "为什么「成功经验」常常骗人？", nature: "人性本善，还是本恶？", meaning: "看见了这些规则，我想成为怎样的玩家？" } },
-          "07": { p: ["gn:sh:"], t: { where: "此刻，你在宇宙的哪里？", orbit: "空间站为什么掉不下来？", seasons: "为什么会有四季？", sats: "天上到底有多少颗卫星？", quakes: "地震在告诉我们什么？" } }
+          "07": { p: ["gn:sh:"], t: { where: "此刻，你在宇宙的哪里？", orbit: "空间站为什么掉不下来？", seasons: "为什么会有四季？", sats: "天上到底有多少颗卫星？", quakes: "地震在告诉我们什么？", tidelock: "月亮为什么总用同一面对着我们？", aurora: "极光是太阳寄来的信吗？", marsday: "火星上的一天有多长？", tonight: "今晚抬头能看到哪颗行星？", jupiter: "木星为什么没变成太阳？", retro: "行星为什么有时会倒着走？", voyager: "旅行者号此刻飞到哪了？" } }
         };
         var CODE = { ma: "01", nv: "02", ef: "03", ls: "04", ps: "05", lt: "06", sh: "07" };
         var DEMO = { "01": ["chord", "cat", "rocket", "nim", "bee"], "05": ["cat", "ask", "write", "truth", "attn"] };
@@ -3243,6 +3262,10 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.7", d: "2026-10-23", t: "重要公告换成天枢 1.0 开发进度：七星域已开放 4 个，公告图轮播四个星域的实拍画面；星历补记天枢 v1.0-M1 到 M3a，七个新任务进入创世护照。" },
+        { y: "task", w: "07", v: "v1.0-M3a", d: "2026-10-23", t: "新任务「旅行者号此刻飞到哪了？」：星域 IV 太阳系边疆开放，看太阳风吹出的发光「泡泡」和五个深空探测器此刻的真实位置。" },
+        { w: "07", v: "v1.0-M2e~M2h", d: "2026-10-23", t: "木星四大卫星和土卫六换上真实表面、可以点开飞近；太阳系里的地球夜面亮起城市灯光；导航和气象卫星可以飞过去看 3D 模型。" },
+        { y: "task", w: "07", v: "v1.0-M1~M2d", d: "2026-10-22", t: "新任务「月亮为什么总用同一面对着我们？」「极光是太阳寄来的信吗？」「火星上的一天有多长？」「今晚抬头能看到哪颗行星？」「木星为什么没变成太阳？」「行星为什么有时会倒着走？」；七星域航图开启，从地球一路拉远飞到日与月、行星世界，太阳和土星换上全新 3D 画面。" },
         { w: "gn", v: "v0.8.6", d: "2026-10-22", t: "电脑端「重要公告」改为底部横幅（图左文右），不再遮挡北斗星球与左下页脚。" },
         { w: "gn", v: "v0.8.5", d: "2026-10-22", t: "首屏改为「重要公告」，首条公告：天枢 1.0「七星域」正式开始研发；新任务改为单条滚动播放，全部更新与开发看板并排放在公告下方。" },
         { w: "07", v: "立项", d: "2026-10-22", t: "天枢 1.0「七星域」正式开始研发：家园、日与月、行星世界、太阳系边疆、群星、银河、宇宙，由近及远七个能飞进去的 3D 星域。" },
@@ -4096,12 +4119,18 @@
       /* ---------- v0.8.5 首屏「重要公告」：ANN 只在王磊下令时改；ANN = null 时只显示新任务滚动条 ----------
          已读键 gn:portal:_ann = 公告 id；收起偏好 gn:portal:_news；新任务单条轮播（悬停 / 聚焦暂停）。 */
       var ANN = {
-        id: "sh-1.0-start", d: "2026-10-22", w: "07", tag: "研发启动",
-        title: "天枢 1.0「七星域」正式开始研发",
-        text: "从家园一路飞到宇宙尽头：七个星域由近及远，每一个都是能飞进去的 3D 场景，点任何天体都能看它此刻的样子。",
-        img: "ann-starhelm-1.0.webp", alt: "七星域航图概念图：从地球、太阳系一路向外到银河与宇宙网", cap: "七星域航图 · 概念图",
-        domains: ["I 家园", "II 日与月", "III 行星世界", "IV 太阳系边疆", "V 群星", "VI 银河", "VII 宇宙"], on: 2,
-        foot: "首站：宇宙航图 + 家园 + 日与月", cta: "去天枢 →"
+        id: "sh-1.0-m3a", d: "2026-10-23", w: "07", tag: "开发进度",
+        title: "天枢 1.0「七星域」开发进度",
+        text: "从地球一路飞到太阳系边疆，看旅行者号此刻飞到了哪里。",
+        imgs: [
+          { src: "ann-sh-d1.webp", cap: "星域 I · 家园" },
+          { src: "ann-sh-d2.webp", cap: "星域 II · 日与月" },
+          { src: "ann-sh-d3.webp", cap: "星域 III · 行星世界" },
+          { src: "ann-sh-d4.webp", cap: "星域 IV · 太阳系边疆" }
+        ],
+        alt: "天枢已开放星域实拍画面", cap: "",
+        domains: ["I 家园", "II 日与月", "III 行星世界", "IV 太阳系边疆", "V 群星", "VI 银河", "VII 宇宙"], on: 4,
+        stat: "16 个任务", foot: "下一站：星域 V 群星", cta: "去天枢 →"
       };
       var NW = { el: document.getElementById("news"), bar: document.getElementById("newsBar"), tk: document.getElementById("newsTk"),
         one: document.getElementById("newsOne"), oneT: document.getElementById("newsOneT"), ann: document.getElementById("ann"),
@@ -4114,15 +4143,35 @@
         return Math.max(0, LOG.length - (parseInt(v.split("|")[1], 10) || 0));
       }
       function annUnread() { return !!ANN && lsGet(NW.AK) !== ANN.id; }
+      var ANS = { i: 0, t: 0 };
+      function annSlides(IM) {
+        clearInterval(ANS.t); ANS.i = 0;
+        if (IM.length < 2) return;
+        var sl = NW.ann.querySelectorAll(".x-ann__slide"), dt = NW.ann.querySelectorAll(".x-ann__dots i"), cp = document.getElementById("annCap");
+        function go(n) {
+          sl[ANS.i].classList.remove("on"); dt[ANS.i].classList.remove("on");
+          ANS.i = (n + IM.length) % IM.length;
+          sl[ANS.i].classList.add("on"); dt[ANS.i].classList.add("on"); cp.textContent = IM[ANS.i].cap;
+        }
+        ANS.t = setInterval(function () { if (!NW.hold && !document.hidden && !NW.el.classList.contains("min")) go(ANS.i + 1); }, RM ? 8000 : 4000);
+        NW.ann.querySelector(".x-ann__fig").addEventListener("click", function () { go(ANS.i + 1); });
+      }
       function annRender() {
         if (!ANN) { NW.ann.hidden = true; NW.ann.innerHTML = ""; return; }
         var W0 = lgW(ANN.w);
         NW.ann.style.setProperty("--accent", W0.color);
-        NW.ann.innerHTML = '<figure class="x-ann__fig"><img src="' + ANN.img + '" alt="' + brEsc(ANN.alt) + '" width="720" height="402" loading="lazy" decoding="async">' +
-          '<span class="x-ann__tag">' + brEsc(ANN.tag) + '</span><span class="x-ann__w">' + ANN.w + " " + brEsc(W0.name + (W0.en ? " " + W0.en : "")) + '</span><figcaption>' + brEsc(ANN.cap) + '</figcaption></figure>' +
+        var IM = ANN.imgs || [{ src: ANN.img, cap: ANN.cap }];
+        var pct = ANN.domains ? Math.round(ANN.on / ANN.domains.length * 100) : 0;
+        NW.ann.innerHTML = '<figure class="x-ann__fig" aria-roledescription="轮播" aria-label="' + brEsc(ANN.alt) + '">' +
+          IM.map(function (m, i) { return '<img class="x-ann__slide' + (i ? "" : " on") + '" src="' + m.src + '" alt="' + brEsc(m.cap || ANN.alt) + '" width="960" height="540"' + (i ? ' loading="lazy"' : "") + ' decoding="async">'; }).join("") +
+          '<span class="x-ann__tag">' + brEsc(ANN.tag) + '</span><span class="x-ann__w" id="annCap">' + brEsc(IM[0].cap || (ANN.w + " " + W0.name)) + '</span>' +
+          (IM.length > 1 ? '<span class="x-ann__dots" aria-hidden="true">' + IM.map(function (m, i) { return '<i' + (i ? "" : ' class="on"') + '></i>'; }).join("") + '</span>' : "") + '</figure>' +
           '<h3>' + brEsc(ANN.title) + '</h3><p>' + brEsc(ANN.text) + '</p>' +
-          (ANN.domains ? '<ul class="x-ann__dom" aria-label="七个星域">' + ANN.domains.map(function (d, i) { return '<li' + (i < ANN.on ? ' class="on"' : "") + '>' + brEsc(d) + '</li>'; }).join("") + '</ul>' : "") +
+          (ANN.domains ? '<div class="x-ann__prog"><div class="x-ann__pt"><b>' + ANN.on + '</b> / ' + ANN.domains.length + ' 星域已开放' + (ANN.stat ? ' · ' + brEsc(ANN.stat) : "") + '<span>' + pct + '%</span></div>' +
+            '<div class="x-ann__bar" role="progressbar" aria-label="七星域开放进度" aria-valuemin="0" aria-valuemax="' + ANN.domains.length + '" aria-valuenow="' + ANN.on + '"><i style="width:' + pct + '%"></i></div>' +
+            '<ul class="x-ann__dom" aria-label="七个星域">' + ANN.domains.map(function (d, i) { return '<li' + (i < ANN.on ? ' class="on"' : "") + '>' + brEsc(d) + '</li>'; }).join("") + '</ul></div>' : "") +
           '<div class="x-ann__ft"><small>' + brEsc(ANN.foot) + " · " + ANN.d.slice(5).replace("-", "/") + '</small><button type="button" class="x-ann__go" id="annGo">' + brEsc(ANN.cta) + '</button></div>';
+        annSlides(IM);
         NW.ann.hidden = false;
         document.getElementById("annGo").addEventListener("click", function () { lsSet(NW.AK, ANN.id); var w = lgW(ANN.w); enterWorld(ANN.w, w.href); });
       }
