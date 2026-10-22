@@ -380,7 +380,7 @@
         background: none; border: 1px solid transparent; color: var(--ink); font: 400 13px/1.7 var(--sans); transition: background .2s, border-color .2s;
       }
       .x-log__item b { color: var(--accent); font-weight: 600; }
-      .x-log__item .ty, .x-news__it .ty { display: inline-block; margin: 0 0 0 6px; padding: 1px 7px; border-radius: 999px; font: 500 10.5px/16px var(--sans); font-style: normal; vertical-align: 1px;
+      .x-log__item .ty { display: inline-block; margin: 0 0 0 6px; padding: 1px 7px; border-radius: 999px; font: 500 10.5px/16px var(--sans); font-style: normal; vertical-align: 1px;
         border: 1px solid rgba(234,240,255,.18); color: var(--dim); }
       .ty--task { color: #ffb4a8 !important; border-color: rgba(255,138,122,.5) !important; }
       .ty--gn { color: var(--gold) !important; border-color: rgba(233,199,121,.4) !important; }
@@ -463,28 +463,48 @@
       @media (max-height: 480px) and (orientation: landscape) {
         .x-3d { bottom: 64px; } .x-3d p { display: none; }
       }
-      /* v0.4.0 · 首屏「最新更新」区（只读 CHANGELOG，星历原样保留） */
-      .x-news { position: absolute; left: 484px; bottom: 112px; width: 320px; z-index: 1; border-radius: 20px; padding: 14px 14px 8px;
-        border: 1px solid rgba(233,199,121,.24); background: rgba(8,12,34,.58); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      /* v0.8.5 · 首屏「重要公告」（只在王磊下令时发布，数据 ANN）+ 新任务单条滚动 + 星历/看板并排 */
+      .x-news { position: absolute; left: 484px; bottom: 112px; width: 336px; z-index: 1; border-radius: 20px; padding: 14px 14px 6px;
+        border: 1px solid rgba(233,199,121,.28); background: rgba(8,12,34,.62); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
         box-shadow: 0 10px 40px rgba(0,0,0,.35); transition: opacity .4s ease, transform .4s ease; }
       .x-news[hidden] { display: none; }
-      .x-news__hd { display: flex; align-items: center; justify-content: space-between; margin: 0 0 6px 4px; }
-      .x-news__hd h2 { margin: 0; font: 500 11px/1 var(--sans); letter-spacing: .3em; color: var(--gold); }
+      .x-news__hd { display: flex; align-items: center; justify-content: space-between; margin: 0 0 10px 4px; }
+      .x-news__hd h2 { margin: 0; display: flex; align-items: center; gap: 8px; font: 500 11px/1 var(--sans); letter-spacing: .3em; color: var(--gold); }
+      .x-news__hd h2 i { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+      .x-news__hd h2 i.new { background: #ff6b6b; box-shadow: 0 0 8px #ff6b6b; }
       .x-news__x { width: 32px; height: 32px; margin: -6px -4px -6px 0; border-radius: 50%; border: 0; background: none; color: var(--dim); font: 400 16px/1 var(--sans); cursor: pointer; }
       .x-news__x:hover, .x-news__x:focus-visible { color: var(--gold); background: rgba(233,199,121,.1); outline: none; }
-      .x-news ol { list-style: none; margin: 0; padding: 0; }
-      .x-news__it { position: relative; display: block; width: 100%; text-align: left; padding: 9px 10px 9px 26px; border: 0; border-radius: 12px; background: none;
-        color: var(--ink); font: 400 12.5px/1.6 var(--sans); cursor: pointer; transition: background .2s; }
-      .x-news__it:hover, .x-news__it:focus-visible { background: rgba(234,240,255,.06); outline: none; box-shadow: inset 0 0 0 1px var(--accent); }
-      .x-news__it::before { content: ""; position: absolute; left: 10px; top: 15px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
-      .x-news__it b { font-weight: 600; font-size: 13px; color: var(--accent); }
-      .x-news__it small { float: right; font: 400 11px/22px ui-monospace, monospace; color: var(--dim); }
-      .x-news__it span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: rgba(234,240,255,.82); }
-      .x-news__it.new b::after { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 0 2px 6px; border-radius: 50%; background: #ff6b6b; box-shadow: 0 0 8px #ff6b6b; vertical-align: middle; }
-      .x-news__all { display: block; width: 100%; min-height: 40px; margin-top: 2px; border: 0; border-top: 1px solid rgba(234,240,255,.08); background: none;
-        color: var(--gold); font: 500 12.5px var(--sans); cursor: pointer; border-radius: 0 0 12px 12px; }
+      .x-ann { --accent: var(--gold); }
+      .x-ann[hidden] { display: none; }
+      .x-ann__fig { position: relative; margin: 0; border-radius: 14px; overflow: hidden; aspect-ratio: 16 / 8; background: #03050d; border: 1px solid rgba(234,240,255,.1); }
+      .x-ann__fig img { display: block; width: 100%; height: 100%; object-fit: cover; }
+      .x-ann__fig::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(3,5,13,0) 45%, rgba(3,5,13,.75)); pointer-events: none; }
+      .x-ann__tag { position: absolute; left: 10px; top: 10px; z-index: 1; padding: 3px 9px; border-radius: 999px; font: 600 10.5px/16px var(--sans); letter-spacing: .08em; color: #03050d; background: var(--gold); }
+      .x-ann__fig figcaption { position: absolute; right: 10px; bottom: 7px; z-index: 1; font: 400 10px/1.4 var(--sans); color: rgba(234,240,255,.6); }
+      .x-ann__w { position: absolute; left: 10px; bottom: 7px; z-index: 1; font: 500 11px/1.4 var(--sans); letter-spacing: .06em; color: var(--accent); }
+      .x-ann h3 { margin: 12px 4px 6px; font-size: 15.5px; line-height: 1.45; color: #fff; letter-spacing: .02em; }
+      .x-ann p { margin: 0 4px 10px; font-size: 12.5px; line-height: 1.7; color: rgba(234,240,255,.8); }
+      .x-ann__dom { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 4px 10px; padding: 0; list-style: none; }
+      .x-ann__dom li { padding: 2px 8px; border-radius: 999px; font: 400 10.5px/18px var(--sans); color: rgba(234,240,255,.62); border: 1px solid rgba(234,240,255,.14); }
+      .x-ann__dom li.on { color: #ffe7a8; border-color: rgba(233,199,121,.65); background: rgba(233,199,121,.1); }
+      .x-ann__ft { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 4px 12px; }
+      .x-ann__ft small { font: 400 11px/1.5 var(--sans); color: var(--dim); }
+      .x-ann__go { flex: none; min-height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(233,199,121,.5); background: rgba(233,199,121,.08);
+        color: var(--gold); font: 500 12px var(--sans); cursor: pointer; }
+      .x-ann__go:hover, .x-ann__go:focus-visible { background: rgba(233,199,121,.18); outline: none; }
+      .x-news__one { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 0 10px; border: 0; border-top: 1px solid rgba(234,240,255,.08);
+        background: none; color: var(--ink); font: 400 12px var(--sans); text-align: left; cursor: pointer; overflow: hidden; }
+      .x-news__one:hover, .x-news__one:focus-visible { background: rgba(234,240,255,.05); outline: none; }
+      .x-news__one em { flex: none; font-style: normal; font-weight: 600; font-size: 11px; letter-spacing: .1em; color: var(--gold); }
+      .x-news__one em.new::after { content: ""; display: inline-block; width: 5px; height: 5px; margin: 0 0 2px 5px; border-radius: 50%; background: #ff6b6b; box-shadow: 0 0 6px #ff6b6b; vertical-align: middle; }
+      .x-news__one span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: opacity .35s, transform .35s; }
+      .x-news__one span b { font-weight: 600; color: var(--accent, var(--gold)); margin-right: 4px; }
+      .x-news__one span.out { opacity: 0; transform: translateY(-6px); }
+      .x-news__one span.in { opacity: 0; transform: translateY(6px); transition: none; }
+      .x-news__links { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid rgba(234,240,255,.08); }
+      .x-news__all { display: block; min-height: 40px; border: 0; background: none; color: var(--gold); font: 500 12px var(--sans); cursor: pointer; text-align: center; text-decoration: none; line-height: 40px; border-radius: 0 0 0 12px; }
+      .x-news__all + .x-news__all { border-left: 1px solid rgba(234,240,255,.08); border-radius: 0 0 12px 0; }
       .x-news__all:hover, .x-news__all:focus-visible { background: rgba(233,199,121,.08); outline: none; }
-      .x-news__board { text-align: center; text-decoration: none; line-height: 40px; box-sizing: border-box; }
       .x-log__board { display: block; margin-top: 10px; padding: 9px 12px; border: 1px solid rgba(233,199,121,.32); border-radius: 10px; color: var(--gold); text-decoration: none; font-size: 13px; }
       .x-log__board:hover, .x-log__board:focus-visible { background: rgba(233,199,121,.10); outline: none; }
       .x-news__bar, .x-news__pin { display: none; }
@@ -494,31 +514,35 @@
       .x-news.min .x-news__pin { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border: 0; background: none; color: var(--gold); font: 500 12.5px var(--sans); cursor: pointer; border-radius: 999px; }
       .x-news__pin i { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 8px var(--gold); }
       .x-news__pin i.new { background: #ff6b6b; box-shadow: 0 0 8px #ff6b6b; }
-      /* 手机竖屏 / 极矮横屏：底部一行横条，点开展开三条 */
+      /* 中屏 / 手机 / 极矮横屏：底部一行横条（公告标题），点开展开整张公告 */
       .x-news.is-bar { left: 18px; right: 18px; bottom: var(--nb, 110px); width: auto; padding: 0; border-radius: 16px; }
       .x-news.is-bar .x-news__bar { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0 8px 0 14px; border: 0; background: none; color: var(--ink); font: 400 12.5px var(--sans); cursor: pointer; text-align: left; }
       .x-news.is-bar .x-news__bar em { flex: none; font-style: normal; color: var(--gold); font-weight: 600; letter-spacing: .1em; }
-      .x-news.is-bar .x-news__tk { flex: 1; overflow: hidden; white-space: nowrap; mask-image: linear-gradient(90deg, #000 85%, transparent); -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); }
-      .x-news.is-bar .x-news__tk span { display: inline-block; padding-right: 40px; }
-      .x-news.is-bar .x-news__tk.run span { animation: xNewsTk var(--td, 12s) linear infinite; }
+      .x-news.is-bar .x-news__bar em.new::after { content: ""; display: inline-block; width: 6px; height: 6px; margin: 0 0 2px 6px; border-radius: 50%; background: #ff6b6b; box-shadow: 0 0 8px #ff6b6b; vertical-align: middle; }
+      .x-news.is-bar .x-news__tk { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
       .x-news.is-bar .x-news__bar i { flex: none; font-style: normal; color: var(--dim); transition: transform .3s; }
       .x-news.is-bar.open .x-news__bar i { transform: rotate(180deg); }
-      .x-news.is-bar .x-news__hd, .x-news.is-bar ol, .x-news.is-bar .x-news__all { display: none; }
-      .x-news.is-bar.open { padding: 0 10px 6px; background: rgba(8,12,34,.93); }
-      .x-news.is-bar.open .x-news__bar { padding-left: 4px; }
-      .x-news.is-bar.open ol, .x-news.is-bar.open .x-news__all { display: block; }
+      .x-news.is-bar > :not(.x-news__bar):not(.x-news__pin) { display: none; }
+      .x-news.is-bar.open { padding: 0 10px 4px; background: rgba(8,12,34,.95); max-height: calc(100vh - 150px); overflow-y: auto; }
+      .x-news.is-bar.open .x-news__bar { padding-left: 4px; position: sticky; top: 0; background: rgba(8,12,34,.98); z-index: 2; }
+      .x-news.is-bar.open > .x-ann:not([hidden]), .x-news.is-bar.open > .x-news__one, .x-news.is-bar.open > .x-news__links { display: block; }
+      .x-news.is-bar.open > .x-news__one { display: flex; }
+      .x-news.is-bar.open > .x-news__links { display: grid; }
+      .x-news.is-bar.open .x-ann__fig { aspect-ratio: 16 / 7; }
       .x-news.is-bar.min { left: auto; right: 18px; }
       @media (max-width: 1180px) and (min-width: 861px) and (min-height: 481px) {
         .x-news.is-bar { left: 24px; right: auto; bottom: 72px; width: 420px; }
         .x-news.is-bar.min { left: 24px; right: auto; width: auto; }
         .titleblock { bottom: 132px; }
       }
-      @keyframes xNewsTk { 0%, 12% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
       @media (max-height: 480px) and (orientation: landscape) {
-        .x-news.is-bar { left: auto; right: 18px; bottom: 16px; width: min(280px, 44vw); }
-        .x-news.is-bar.open { max-height: calc(100vh - 80px); overflow-y: auto; }
+        .x-news.is-bar { left: auto; right: 18px; bottom: 16px; width: min(300px, 46vw); }
+        .x-news.is-bar.open { max-height: calc(100vh - 32px); }
+        .x-news.is-bar.open .x-ann__fig { display: none; }
       }
-      @media (prefers-reduced-motion: reduce) { .x-news.is-bar .x-news__tk.run span { animation: none; } .x-news.is-bar .x-news__tk span { text-overflow: ellipsis; } }
+      @media (min-width: 1181px) and (max-height: 860px) { .x-news:not(.is-bar) .x-ann__fig { aspect-ratio: 16 / 5; } .x-news:not(.is-bar) .x-ann p { -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; } }
+      @media (min-width: 1181px) and (max-height: 760px) { .x-news:not(.is-bar) .x-ann__fig { aspect-ratio: 16 / 3.6; } .x-news:not(.is-bar) .x-ann__dom { display: none; } .x-news:not(.is-bar) { bottom: 96px; } }
+      @media (prefers-reduced-motion: reduce) { .x-news__one span { transition: none; } }
       /* v0.3 · 关于创世计划 */
       .x-ab { position: fixed; inset: 0; z-index: 9; opacity: 0; transition: opacity .6s ease;
         background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(233,199,121,.07), transparent 70%), radial-gradient(ellipse 60% 50% at 85% 100%, rgba(124,200,255,.06), transparent 70%), #03050d; }
@@ -900,13 +924,13 @@
       </div>
       <div class="demo-tag" id="demoTag">演示进度</div>
 
-      <section class="x-news" id="news" aria-label="新任务上线">
-        <button type="button" class="x-news__bar" id="newsBar" aria-expanded="false" aria-controls="newsList"><em>新任务</em><span class="x-news__tk" id="newsTk"><span></span></span><i aria-hidden="true">⌃</i></button>
-        <div class="x-news__hd"><h2>新任务上线</h2><button type="button" class="x-news__x" id="newsMin" aria-label="收起新任务上线" title="收起">—</button></div>
-        <ol id="newsList"></ol>
-        <button type="button" class="x-news__all" id="newsAll">全部更新 · 星历 →</button>
-        <a class="x-news__all x-news__board" href="board/">开发看板 · 路线图 →</a>
-        <button type="button" class="x-news__pin" id="newsPin" aria-label="展开新任务上线"><i></i>新任务</button>
+      <section class="x-news" id="news" aria-label="重要公告">
+        <button type="button" class="x-news__bar" id="newsBar" aria-expanded="false" aria-controls="ann"><em id="newsBarK">公告</em><span class="x-news__tk" id="newsTk"></span><i aria-hidden="true">⌃</i></button>
+        <div class="x-news__hd"><h2><i id="annDot"></i>重要公告</h2><button type="button" class="x-news__x" id="newsMin" aria-label="收起重要公告" title="收起">—</button></div>
+        <article class="x-ann" id="ann" hidden></article>
+        <button type="button" class="x-news__one" id="newsOne" aria-live="polite"><em id="newsOneK">新任务</em><span id="newsOneT"></span></button>
+        <div class="x-news__links"><button type="button" class="x-news__all" id="newsAll">全部更新 · 星历</button><a class="x-news__all" href="board/">开发看板 →</a></div>
+        <button type="button" class="x-news__pin" id="newsPin" aria-label="展开重要公告"><i></i>公告</button>
       </section>
       <aside class="card" id="card" role="dialog" aria-label="世界简介"></aside>
     </div>
@@ -1249,7 +1273,7 @@
           age: ["huo","chen","he"], tags: ["society"], why: "想看清自己怎么思考、怎么做选择？把每一次选择当成一局棋来复盘。", ageTxt: "星火 12+ · 星芽可试入门关" },
         { id: "07", star: "天枢", name: "天枢", en: "Starhelm", field: "天文",
           desc: "北斗第一星 · 用真实实时数据看见此刻的天空。", color: "#dfe6f3", live: true,
-          meta: ["已上线 v0.6.5 · 星域 I 五个任务全开", "四季 · 卫星 · 地震 · 月相与日月食实验室"], href: "starhelm/", prefix: ["gn:sh:"],
+          meta: ["已上线 v0.9.1 · 1.0 七星域研发中", "四季 · 卫星 · 地震 · 月相与日月食实验室"], href: "starhelm/", prefix: ["gn:sh:"],
           age: ["ya","huo","chen","he"], tags: ["space"], why: "想知道此刻头顶的天空是什么样？用真实数据去看。" }
       ];
       // 北斗位置（归一化，斗口左上，斗柄右下）：天枢→天璇→天玑→天权→玉衡→开阳→摇光
@@ -3203,6 +3227,10 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.5", d: "2026-10-22", t: "首屏改为「重要公告」，首条公告：天枢 1.0「七星域」正式开始研发；新任务改为单条滚动播放，全部更新与开发看板并排放在公告下方。" },
+        { w: "07", v: "立项", d: "2026-10-22", t: "天枢 1.0「七星域」正式开始研发：家园、日与月、行星世界、太阳系边疆、群星、银河、宇宙，由近及远七个能飞进去的 3D 星域。" },
+        { w: "07", v: "v0.9.1", d: "2026-10-22", t: "向导改名「守星人」：北辰、羲和与望舒、岁星、星槎、织女、银汉、太一，不再与北斗七星重名；补齐素材许可与 AI 辅助标注。" },
+        { w: "07", v: "v0.9.0", d: "2026-10-22", t: "3D 引擎升级到 Three.js r169，新增画质档位（自动 / 高 / 中 / 兼容），老设备自动降级，观感不变。" },
         { w: "gn", v: "v0.8.4", d: "2026-10-22", t: "创世护照新增七级星阶（星尘→星系），只和昨天的自己比；可在本机生成成就卡和挑战卡，手机直接分享、电脑下载图片，不含姓名、学校、年龄和网址。" },
         { w: "gn", v: "v0.8.3.1", d: "2026-10-22", t: "星历补记宙律 v0.3-α3、天枢 Starhelm v0.6.5；七个世界都已接上门户进入转场；新通星桥「卫星暴涨⇄每天进步 1%」「太阳⇄你身体里的铁」，天枢星桥直达对应任务。" },
         { w: "07", v: "v0.6.5", d: "2026-10-22", t: "从创世计划门户进入天枢时画面无缝接上，星桥可直达对应任务。" },
@@ -4048,9 +4076,19 @@
       document.getElementById("abBack").addEventListener("click", function () { hideAbout(); });
       document.getElementById("abToBridges").addEventListener("click", function () { hideAbout(true); showBridges(); });
 
-      /* ---------- v0.4.0 首屏「最新更新」区：只读 CHANGELOG 最新 3 条，与星历共用已读键 ---------- */
-      var NW = { el: document.getElementById("news"), list: document.getElementById("newsList"), bar: document.getElementById("newsBar"),
-        tk: document.getElementById("newsTk"), K: "gn:portal:_news", n: 3 };
+      /* ---------- v0.8.5 首屏「重要公告」：ANN 只在王磊下令时改；ANN = null 时只显示新任务滚动条 ----------
+         已读键 gn:portal:_ann = 公告 id；收起偏好 gn:portal:_news；新任务单条轮播（悬停 / 聚焦暂停）。 */
+      var ANN = {
+        id: "sh-1.0-start", d: "2026-10-22", w: "07", tag: "研发启动",
+        title: "天枢 1.0「七星域」正式开始研发",
+        text: "从家园一路飞到宇宙尽头：七个星域由近及远，每一个都是能飞进去的 3D 场景，点任何天体都能看它此刻的样子。",
+        img: "ann-starhelm-1.0.webp", alt: "七星域航图概念图：从地球、太阳系一路向外到银河与宇宙网", cap: "七星域航图 · 概念图",
+        domains: ["I 家园", "II 日与月", "III 行星世界", "IV 太阳系边疆", "V 群星", "VI 银河", "VII 宇宙"], on: 2,
+        foot: "首站：宇宙航图 + 家园 + 日与月", cta: "去天枢 →"
+      };
+      var NW = { el: document.getElementById("news"), bar: document.getElementById("newsBar"), tk: document.getElementById("newsTk"),
+        one: document.getElementById("newsOne"), oneT: document.getElementById("newsOneT"), ann: document.getElementById("ann"),
+        K: "gn:portal:_news", AK: "gn:portal:_ann", n: 5, tl: [], i: 0, timer: 0, hold: false };
       function nwUnread() {
         var v = lsGet("gn:portal:log");
         if (!v) return LOG.length;
@@ -4058,25 +4096,47 @@
         if (v.indexOf("|") < 0) return v > LOG[0].d ? 0 : LOG.length;
         return Math.max(0, LOG.length - (parseInt(v.split("|")[1], 10) || 0));
       }
+      function annUnread() { return !!ANN && lsGet(NW.AK) !== ANN.id; }
+      function annRender() {
+        if (!ANN) { NW.ann.hidden = true; NW.ann.innerHTML = ""; return; }
+        var W0 = lgW(ANN.w);
+        NW.ann.style.setProperty("--accent", W0.color);
+        NW.ann.innerHTML = '<figure class="x-ann__fig"><img src="' + ANN.img + '" alt="' + brEsc(ANN.alt) + '" width="720" height="402" loading="lazy" decoding="async">' +
+          '<span class="x-ann__tag">' + brEsc(ANN.tag) + '</span><span class="x-ann__w">' + ANN.w + " " + brEsc(W0.name + (W0.en ? " " + W0.en : "")) + '</span><figcaption>' + brEsc(ANN.cap) + '</figcaption></figure>' +
+          '<h3>' + brEsc(ANN.title) + '</h3><p>' + brEsc(ANN.text) + '</p>' +
+          (ANN.domains ? '<ul class="x-ann__dom" aria-label="七个星域">' + ANN.domains.map(function (d, i) { return '<li' + (i < ANN.on ? ' class="on"' : "") + '>' + brEsc(d) + '</li>'; }).join("") + '</ul>' : "") +
+          '<div class="x-ann__ft"><small>' + brEsc(ANN.foot) + " · " + ANN.d.slice(5).replace("-", "/") + '</small><button type="button" class="x-ann__go" id="annGo">' + brEsc(ANN.cta) + '</button></div>';
+        NW.ann.hidden = false;
+        document.getElementById("annGo").addEventListener("click", function () { lsSet(NW.AK, ANN.id); var w = lgW(ANN.w); enterWorld(ANN.w, w.href); });
+      }
       function nwRender() {
         var un = nwUnread();
-        var TL = []; LOG.forEach(function (e, i) { if (e.ty === "task" && TL.length < NW.n) TL.push(i); });
-        NW.list.innerHTML = TL.map(function (i) {
-          var e = LOG[i], W0 = lgW(e.w);
-          return '<li><button type="button" class="x-news__it' + (i < un ? " new" : "") + '" data-i="' + i + '" style="--accent:' + W0.color + '" aria-label="' +
-            brEsc(W0.name + " " + e.v + "，" + e.d + "：" + e.t + (i < un ? "（未读）" : "")) + '"><small>' + e.d.slice(5) + '</small><b>' + W0.name + ' ' + e.v +
-            '</b><span>' + brEsc(e.t) + '</span></button></li>';
-        }).join("");
-        var e0 = LOG[TL[0]], W0 = lgW(e0.w);
-        NW.tk.firstChild.textContent = W0.name + " " + e0.v + " · " + e0.t;
-        document.querySelector("#newsPin i").className = TL.some(function (i) { return i < un; }) ? "new" : "";
-        requestAnimationFrame(nwTicker);
+        NW.tl = []; LOG.forEach(function (e, i) { if (e.ty === "task" && NW.tl.length < NW.n) NW.tl.push(i); });
+        var au = annUnread(), tu = NW.tl.some(function (i) { return i < un; });
+        document.getElementById("annDot").className = au ? "new" : "";
+        document.querySelector("#newsPin i").className = au || tu ? "new" : "";
+        document.getElementById("newsOneK").className = tu ? "new" : "";
+        var k = document.getElementById("newsBarK");
+        if (ANN) { k.textContent = "公告"; k.className = au ? "new" : ""; NW.tk.textContent = ANN.title; }
+        else { k.textContent = "新任务"; k.className = tu ? "new" : ""; }
+        nwShow(false);
       }
-      function nwTicker() {
-        var s = NW.tk.firstChild, run = !RM && NW.el.classList.contains("is-bar") && !NW.el.classList.contains("open") && s.offsetWidth > NW.tk.clientWidth;
-        NW.tk.classList.toggle("run", run);
-        if (run) NW.tk.style.setProperty("--td", Math.max(8, s.offsetWidth / 40) + "s");
+      function nwShow(anim) {
+        if (!NW.tl.length) { NW.one.hidden = true; return; }
+        NW.i = NW.i % NW.tl.length;
+        var e = LOG[NW.tl[NW.i]], W0 = lgW(e.w), txt = e.t.replace(/^新任务/, "");
+        var put = function () {
+          NW.oneT.style.setProperty("--accent", W0.color);
+          NW.oneT.innerHTML = "<b>" + brEsc(W0.name) + "</b>" + brEsc(txt);
+          NW.one.setAttribute("aria-label", "新任务：" + W0.name + " " + e.v + "，" + e.t + "。打开星历");
+          NW.one.dataset.i = NW.tl[NW.i];
+          if (!ANN) NW.tk.textContent = W0.name + " · " + txt;
+        };
+        if (!anim || RM) { put(); return; }
+        NW.oneT.classList.add("out");
+        setTimeout(function () { put(); NW.oneT.classList.remove("out"); NW.oneT.classList.add("in"); void NW.oneT.offsetWidth; NW.oneT.classList.remove("in"); }, 350);
       }
+      function nwTick() { if (NW.hold || document.hidden || NW.tl.length < 2) return; NW.i++; nwShow(true); }
       function nwLayout() {
         var bar = innerWidth <= 1180 || innerHeight <= 480;
         NW.el.classList.toggle("is-bar", bar);
@@ -4087,32 +4147,38 @@
           var top = b3.height ? b3.top : innerHeight - 62;
           document.documentElement.style.setProperty("--nb", Math.round(innerHeight - top + 8) + "px");
         }
-        nwTicker(); uiRectT = 0;
+        uiRectT = 0;
       }
       function nwMin(on) {
         NW.el.classList.toggle("min", on); NW.el.classList.remove("open");
-        if (on) lsSet(NW.K, "0"); else { try { localStorage.removeItem(NW.K); } catch (e) {} }
-        nwLayout(); SND.play("tick");
+        if (on) { lsSet(NW.K, "0"); if (ANN) lsSet(NW.AK, ANN.id); } else { try { localStorage.removeItem(NW.K); } catch (e) {} }
+        nwRender(); nwLayout(); SND.play("tick");
         document.getElementById(on ? "newsPin" : (NW.el.classList.contains("is-bar") ? "newsBar" : "newsMin")).focus();
       }
-      NW.list.addEventListener("click", function (ev) {
-        var b = ev.target.closest(".x-news__it"); if (!b) return;
-        var i = +b.dataset.i;
+      NW.one.addEventListener("click", function () {
+        var i = +NW.one.dataset.i;
         if (LG.f !== "all") { var c = document.querySelector('#logChips [data-f="all"]'); if (c) c.click(); }
         if (LG.y !== "all") { var c2 = document.querySelector('#logTypes [data-y="all"]'); if (c2) c2.click(); }
         showLog();
         if (LG.open) LG.pin = i;
         nwRender();
       });
+      ["mouseenter", "focusin"].forEach(function (t) { NW.el.addEventListener(t, function () { NW.hold = true; }); });
+      ["mouseleave", "focusout"].forEach(function (t) { NW.el.addEventListener(t, function () { NW.hold = false; }); });
       document.getElementById("newsAll").addEventListener("click", function () { showLog(); nwRender(); });
       document.getElementById("newsMin").addEventListener("click", function () { nwMin(true); });
       document.getElementById("newsPin").addEventListener("click", function () { nwMin(false); });
-      NW.bar.addEventListener("click", function () { NW.el.classList.toggle("open"); SND.play("tick"); nwLayout(); });
+      NW.bar.addEventListener("click", function () {
+        var o = NW.el.classList.toggle("open"); SND.play("tick");
+        if (o && ANN) { lsSet(NW.AK, ANN.id); nwRender(); }
+        nwLayout();
+      });
       LG.btn.addEventListener("click", nwRender);
       document.addEventListener("pointerdown", function (e) { if (NW.el.classList.contains("open") && !NW.el.contains(e.target)) { NW.el.classList.remove("open"); nwLayout(); } });
       document.addEventListener("keydown", function (e) { if (e.key === "Escape" && NW.el.classList.contains("open")) { NW.el.classList.remove("open"); nwLayout(); } });
-      if (lsGet(NW.K) === "0") NW.el.classList.add("min");
-      nwRender();
+      if (lsGet(NW.K) === "0" && !annUnread()) NW.el.classList.add("min");
+      annRender(); nwRender();
+      NW.timer = setInterval(nwTick, 4500);
       addEventListener("resize", nwLayout);
       requestAnimationFrame(nwLayout);
       setTimeout(nwLayout, 1000);
