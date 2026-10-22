@@ -266,3 +266,14 @@ body.shh-on .le-chips.le-solar-only{display:none!important}
 .tn-a,.tn-b{font-size:12px;color:#9fb3cc;white-space:nowrap}
 @media (max-width:760px){.md-h,.md-row{grid-template-columns:40px 1.4fr 1fr 1fr;font-size:11px;gap:4px;padding:4px}.md-clk b{font-size:13px}.md-r,.tn-r{padding:26px 6px 6px;overflow:auto;flex-direction:column}.tn-row{grid-template-columns:10px 40px 52px 1fr;font-size:11px;gap:4px}
 .ml--md .ml-ctl,.ml--tn .ml-ctl{flex-wrap:wrap;gap:6px}.ml--tn .ml-rng{order:3;flex-basis:100%}.ml--md .ml-note,.ml--tn .ml-note{display:none}}
+
+/* ---------- v1.0-M2b:木星 / 逆行 ---------- */
+.jp-r{justify-content:flex-start;padding:34px 14px 14px;gap:14px}
+.jp-read{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.jp-read div{background:rgba(255,255,255,.04);border-radius:10px;padding:8px 10px}.jp-read small{display:block;font-size:11px;color:#9fb3cc}.jp-read b{font-size:22px;color:#e8f2ff;font-variant-numeric:tabular-nums}.jp-read em{font-style:normal;font-size:12px;color:#9fb3cc}
+.jp-bar{width:100%;display:flex;flex-direction:column;gap:6px;margin-top:auto;font-size:12px;color:#9fb3cc}
+.jp-stack{display:flex;height:14px;border-radius:7px;overflow:hidden}.jp-stack i{display:block}
+.jp-leg{display:flex;flex-wrap:wrap;gap:4px 10px}.jp-leg i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.jp-need{height:10px;border-radius:5px;background:rgba(255,122,74,.18);outline:1px dashed rgba(255,122,74,.6)}.jp-need i{display:block;height:100%;background:#e8c39a;border-radius:5px;min-width:3px}
+.rt-body{grid-template-columns:1fr!important;grid-template-rows:1fr!important}
+@media (max-width:760px){.jp-read b{font-size:16px}.jp-r{padding:26px 8px 8px;overflow:auto}}
