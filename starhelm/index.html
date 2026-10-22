@@ -2,6 +2,14 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
+  <script>/* §5.12 门户→世界接力(v0.6.5):读 sessionStorage gn:portal:arrive,5 秒内有效,读后即删;同色遮罩约 600 ms 淡出(减少动态 200 ms) */
+  (function(){try{var K='gn:portal:arrive',r=sessionStorage.getItem(K);if(!r)return;sessionStorage.removeItem(K);var a=JSON.parse(r);if(!a||!(Date.now()-(+a.t||0)<5000))return;
+  var c=/^#[0-9a-fA-F]{3,8}$/.test(a.c||'')?a.c:'#dfe6f3',rm=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches,d=rm?200:600;
+  var o=document.createElement('div');o.id='gn-arrive';o.setAttribute('aria-hidden','true');
+  o.style.cssText='position:fixed;inset:0;z-index:2147483000;pointer-events:none;background:linear-gradient(rgba(4,6,15,.82),rgba(4,6,15,.82)),'+c+';opacity:1;transition:opacity '+d+'ms ease-out';
+  document.documentElement.appendChild(o);document.documentElement.classList.add('gn-arrive');
+  function go(){requestAnimationFrame(function(){requestAnimationFrame(function(){o.style.opacity='0';setTimeout(function(){if(o.parentNode)o.parentNode.removeChild(o);document.documentElement.classList.remove('gn-arrive');},d+80);});});}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();}catch(e){}})();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
   <title>天枢 Starhelm · 天文 · 你此刻在宇宙的哪里？</title>
@@ -54,7 +62,7 @@
     <section class="le-panel le-hud" id="hud">
       <div class="le-sound" role="group" aria-label="声音">
         <button type="button" id="btn-music" aria-pressed="false" title="背景音乐">♪<small>BGM</small></button>
-        <button type="button" id="btn-sfx" aria-pressed="true" title="音效">◖<small>SFX</small></button>
+        <button type="button" id="btn-sfx" aria-pressed="false" title="音效">◖<small>SFX</small></button>
       </div>
       <a class="sh-genesis" href="../" title="回到创世计划总门户">← 创世计划</a>
       <p class="le-kicker"><span class="le-live"></span>UEG · LIVE LINK</p>
@@ -344,6 +352,7 @@
   <script src="sh-sun.js"></script>
   <script src="sh-archive.js"></script>
   <script src="sh-orbmodels.js"></script>
+  <script src="sh-link.js"></script>
 <script>if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js",{scope:"./"});</script>
 </body>
 </html>
