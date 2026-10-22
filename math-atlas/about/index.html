@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>关于与隐私 · 星图 Math Atlas</title>
+<meta name="description" content="星图 Math Atlas 的版权、许可、隐私说明与第三方组件。" />
+<meta name="theme-color" content="#04060f" />
+<style>
+  :root { --bg:#04060f; --fg:#e8ecff; --mute:#9aa6cc; --ice:#9fd8ff; --line:rgb(160 185 255 / .18); }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:radial-gradient(1200px 600px at 70% -10%, #13204a 0%, transparent 60%), var(--bg); color:var(--fg);
+    font:15px/1.75 -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif; min-height:100%; }
+  main { max-width:760px; margin:0 auto; padding:28px 20px 72px; }
+  a { color:var(--ice); }
+  .back { display:inline-block; margin-bottom:18px; text-decoration:none; padding:6px 14px; border:1px solid var(--line); border-radius:100px; font-size:13px; }
+  h1 { font-size:28px; margin:.2em 0 .1em; letter-spacing:.02em; }
+  h1 small { display:block; font-size:13px; color:var(--mute); font-weight:400; letter-spacing:.12em; }
+  h2 { font-size:18px; margin:30px 0 8px; color:var(--ice); }
+  p, li { color:#d4daf5; }
+  .note { font-size:13px; color:var(--mute); border-left:3px solid #ffd36e; padding:4px 12px; background:rgb(255 211 110 / .06); border-radius:4px; }
+  table { width:100%; border-collapse:collapse; font-size:13.5px; margin:8px 0; }
+  th, td { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--mute); font-weight:500; }
+  code { font-family:ui-monospace, Menlo, Consolas, monospace; font-size:12.5px; color:#cfe8ff; background:rgb(255 255 255 / .06); padding:1px 5px; border-radius:4px; word-break:break-all; }
+  button { font:inherit; color:var(--fg); background:rgb(255 120 140 / .12); border:1px solid rgb(255 140 160 / .4); border-radius:100px; padding:8px 18px; cursor:pointer; }
+  button:hover { background:rgb(255 120 140 / .22); }
+  #clrMsg { margin-left:10px; font-size:13px; color:#8fe3b8; }
+  footer { margin-top:40px; font-size:12.5px; color:var(--mute); text-align:center; }
+  @media (max-width:560px){ th:nth-child(3), td:nth-child(3){ display:none; } }
+</style>
+</head>
+<body>
+<main>
+  <a class="back" href="../">← 回到星图</a>
+  <h1>关于与隐私<small>星图 MATH ATLAS · 数学</small></h1>
+  <p class="note">本页法律类文字为初稿,需律师审阅。</p>
+
+  <h2>星图是什么</h2>
+  <p>星图 Math Atlas 是「创世计划 Genesis」的第 01 个世界:用生活中的问题出发,在游戏里动手改规则、发现数学。它是科普探究作品,免费、免注册,不排名、不打卡。</p>
+
+  <h2>版权与许可</h2>
+  <ul>
+    <li>© 2026 王磊(创世计划 Genesis)。</li>
+    <li><b>源代码</b>:MIT 许可,可自由使用、修改与分发,需保留版权与许可声明。</li>
+    <li><b>内容与设计</b>(名称与标识、任务与关卡设计、文字、知识星图数据、向导设定、图片图标、合成乐曲与音效):保留所有权利。个人学习、课堂与家庭非商业使用可自由访问和分享链接;转载、改编或商业使用请先联系我们。</li>
+    <li>完整文本见 <a href="../LICENSE.txt">LICENSE</a>。网址:<a href="https://kevin8634.github.io/math-atlas/">kevin8634.github.io/math-atlas</a>(托管于 GitHub Pages)。</li>
+  </ul>
+
+  <h2>隐私说明</h2>
+  <ul>
+    <li>没有账号,不收集姓名、手机号、位置等任何个人信息;没有统计、广告或第三方追踪脚本。</li>
+    <li>学习进度与偏好只保存在<b>你这台设备的浏览器</b>(localStorage)里,不会上传。换设备或清除浏览器数据后会消失。</li>
+    <li>点击「反馈」会打开你自己的邮件程序,发不发、写什么由你决定。</li>
+    <li>声音默认关闭;全部由浏览器实时合成,不使用麦克风。</li>
+  </ul>
+  <table>
+    <thead><tr><th>本机存储键</th><th>用途</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>ma:v1:&lt;任务&gt;</code></td><td>各任务的关卡进度与星星</td><td>如 ma:v1:nim、ma:v1:rocket</td></tr>
+      <tr><td><code>ma:v1:summary</code></td><td>点亮了哪些知识星</td><td>主页与星图读取</td></tr>
+      <tr><td><code>ma:v1:notes-known</code></td><td>笔记里标记「已懂」的条目</td><td>笔记页</td></tr>
+      <tr><td><code>ma:v1:casino-ack</code></td><td>是否已看过赌场任务的反赌提示</td><td>只提示一次</td></tr>
+      <tr><td><code>ma:music</code> <code>ma:track</code> <code>ma:vol</code> <code>ma:mauto</code> <code>ma:mpos</code></td><td>音乐开关、曲目、音量、续播与位置</td><td>默认关</td></tr>
+      <tr><td><code>ma:theme</code></td><td>星系主题</td><td>外观偏好</td></tr>
+      <tr><td><code>ma:gl</code> <code>ma:motion</code> <code>ma:intro</code></td><td>画质档位、动态效果、是否看过开场</td><td>沉浸版偏好</td></tr>
+    </tbody>
+  </table>
+  <p>从创世计划门户进入时,浏览器会临时用 <code>gn:portal:arrive</code>(sessionStorage)做过场衔接,读到后立即删除。</p>
+  <p><button id="clr" type="button">清除本设备上的星图数据</button><span id="clrMsg" role="status"></span></p>
+
+  <h2>第三方组件</h2>
+  <table>
+    <thead><tr><th>组件</th><th>许可</th><th>位置</th></tr></thead>
+    <tbody>
+      <tr><td>three.js r169(含后期处理与着色器模块)</td><td>MIT · © 2010-2024 three.js authors</td><td><a href="../vendor/LICENSE">vendor/LICENSE</a></td></tr>
+    </tbody>
+  </table>
+  <p>所有组件随网站本地提供,不加载外部 CDN 或网络字体。</p>
+
+  <h2>联系</h2>
+  <p>意见、纠错或授权:<a href="mailto:wanglei19860304@gmail.com?subject=%5B%E6%98%9F%E5%9B%BE%5D%20%E5%85%B3%E4%BA%8E%E4%B8%8E%E9%9A%90%E7%A7%81">wanglei19860304@gmail.com</a></p>
+
+  <footer>© 2026 星图 Math Atlas · 创世计划 Genesis · 最近更新 2026-10-22</footer>
+</main>
+<script>
+document.getElementById("clr").onclick = function () {
+  if (!confirm("确定清除这台设备上的星图进度和偏好吗?清除后无法恢复。")) return;
+  var n = 0;
+  try { for (var i = localStorage.length - 1; i >= 0; i--) { var k = localStorage.key(i); if (k && k.indexOf("ma:") === 0) { localStorage.removeItem(k); n++; } } } catch (e) {}
+  document.getElementById("clrMsg").textContent = "已清除 " + n + " 项。";
+};
+</script>
+</body>
+</html>

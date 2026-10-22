@@ -34,6 +34,11 @@
 }
 @keyframes ma-flow { 0%,100% { background-position: 0% 0; } 50% { background-position: 100% 0; } }
 
+/* 版权行 */
+.ma-legal { position: relative; z-index: 2; margin: 28px auto 8px; padding: 0 16px; text-align: center; font-size: 12px; line-height: 1.7; color: rgb(170 182 220 / .75); }
+.ma-legal a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.ma-legal a:hover { color: #cfe3ff; }
+
 /* 导航坞 */
 .ma-dock {
   position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); transform: translateX(-50%);

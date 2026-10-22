@@ -667,6 +667,9 @@
       '<button type="button" class="ma-fb" title="反馈"><span>💬</span><b>反馈</b></button>' +
       (hasState || TASK === "chord" ? '<button type="button" class="ma-reset" title="清空进度重来"><span>↺</span><b>重来</b></button>' : "") +
       (hasState || TASK === "chord" ? '<span class="ma-saved" title="进度自动保存在这台设备的浏览器里">✓ 自动保存</span>' : "");
+    var lg = document.createElement("p"); lg.className = "ma-legal";
+    lg.innerHTML = '© 2026 星图 Math Atlas · 创世计划 Genesis · <a href="../about/">关于与隐私</a> · <a href="../LICENSE.txt">许可</a>';
+    document.body.appendChild(lg);
     document.body.appendChild(el);
     el.querySelector(".ma-fb").onclick = feedback;
     el.querySelector(".ma-theme").onclick = function () { openTheme(this); };

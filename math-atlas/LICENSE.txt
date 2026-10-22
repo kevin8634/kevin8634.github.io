@@ -1,0 +1,40 @@
+星图 Math Atlas · 许可说明(初稿,需律师审阅)
+Copyright © 2026 王磊(创世计划 Genesis)
+
+一、源代码 —— MIT 许可
+本目录(/math-atlas/)中由本项目编写的源代码(.html 中的脚本与样式、.js、.css 文件)按下述 MIT 许可提供。
+
+----------------------------------------------------------------------
+MIT License
+
+Copyright (c) 2026 王磊 (创世计划 Genesis)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+----------------------------------------------------------------------
+
+二、内容与设计 —— 保留所有权利
+「星图 Math Atlas」「创世计划 Genesis」名称与标识、任务与关卡设计、文字、知识星图数据与编排、
+向导设定、图片与图标、程序合成的乐曲与音效,版权归王磊(创世计划 Genesis)所有,保留所有权利。
+个人学习、课堂与家庭非商业使用可自由访问和分享链接;转载、改编或商业使用请先联系
+wanglei19860304@gmail.com。
+
+三、第三方组件
+- three.js r169 —— MIT License,Copyright © 2010-2024 three.js authors,全文见 vendor/LICENSE。
+  (含 vendor/addons 下的后期处理与着色器模块,同属 three.js,同一许可。)
+本世界不加载任何外部 CDN、字体或统计脚本;音频全部为浏览器内实时合成。
