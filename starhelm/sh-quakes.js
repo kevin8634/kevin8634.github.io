@@ -55,7 +55,7 @@
   function build() {
     var r = U.root = h('section', 'ml ml--qk');
     r.innerHTML =
-      '<header class="ml-hd"><div><small>星域 I · 天枢 · 家园</small><b>地震实验室 · 地震在告诉我们什么?</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
+      '<header class="ml-hd"><div><small>星域 I · 北辰 · 家园</small><b>地震实验室 · 地震在告诉我们什么?</b></div><span class="ml-st"></span><button class="ml-x" type="button" aria-label="关闭">✕</button></header>' +
       '<div class="ml-body"><div class="ml-pane ml-space"><div class="ml-cap"><span class="qk-cap"></span></div><canvas class="ml-cv3"></canvas><div class="qk-load">正在加载地震数据…</div>' +
       '<div class="qk-leg"><i style="--c:#ff4d5e"></i>浅 <70 km <i style="--c:#ffc94d"></i>中 70–300 km <i style="--c:#5aa8ff"></i>深 ≥300 km · 圆点越大震级越高</div>' +
       '<div class="ml-note qk-note">震中位置、深度、震级均为 USGS 实测 · 地球与板块按真实比例</div></div>' +
