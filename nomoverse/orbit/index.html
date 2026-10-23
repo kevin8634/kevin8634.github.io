@@ -395,7 +395,8 @@
     },
     frame: function (L, dt) {
       var c = L.ctx, st = L.st; bg(L);
-      var V = orbitView(L, RT * 1.18, 0.5);
+      var narrow = L.w < 520;   // v0.4:窄屏缩小一点、地心略下移,给左上读数和近距视图让位
+      var V = orbitView(L, RT * (narrow ? 1.42 : 1.18), narrow ? 0.6 : 0.5);
       earth(L, V); ring(L, V, RT, "rgba(196,181,253,.35)");
       var rel = this.rel(st);
       if (st.live && L.phase === "running") {
@@ -426,14 +427,14 @@
       c.fillStyle = "#6ee7b7"; c.fillRect(tp[0] - 6, tp[1] - 2, 12, 4); Dr.label(c, "空间站", tp[0] + 8, tp[1] - 6, "#6ee7b7", 11);
       c.fillStyle = "#fff"; c.beginPath(); c.arc(mp[0], mp[1], 4, 0, 7); c.fill(); Dr.label(c, "你", mp[0] + 7, mp[1] + 12, "#eeebff", 11);
       // 近距视图:以飞船为中心,上 = 远离地心,右 = 前进方向
-      var box = Math.min(130, L.w * 0.32), bx = L.w - box - 8, by = 8;
+      var box = narrow ? Math.min(92, L.w * 0.25) : Math.min(130, L.w * 0.32), bx = L.w - box - 8, by = 8;
       c.fillStyle = "rgba(11,10,31,.85)"; c.strokeStyle = "#2e2a5e"; c.fillRect(bx, by, box, box); c.strokeRect(bx, by, box, box);
       var rm = Math.hypot(st.me.x, st.me.y), ux = st.me.x / rm, uy = st.me.y / rm, tx = -uy, ty = ux;
       var radial = rel.dx * ux + rel.dy * uy, along = rel.dx * tx + rel.dy * ty, scale = box / 2 / Math.max(200, Math.min(2000, Math.max(Math.abs(radial), Math.abs(along)) * 1.2));
       c.fillStyle = "#fff"; c.beginPath(); c.arc(bx + box / 2, by + box / 2, 3, 0, 7); c.fill();
       var qx = bx + box / 2 + along * scale, qy = by + box / 2 - radial * scale;
       if (qx > bx && qx < bx + box && qy > by && qy < by + box) { c.fillStyle = "#6ee7b7"; c.fillRect(qx - 4, qy - 2, 8, 4); }
-      Dr.label(c, "近距视图 ±" + Math.round(box / 2 / scale) + " km", bx + 4, by + box - 6, "#bcb5e2", 10);
+      Dr.label(c, (narrow ? "±" : "近距视图 ±") + Math.round(box / 2 / scale) + " km", bx + 4, by + box - 6, "#bcb5e2", 10);
       L.hud.innerHTML = "距离 <b>" + rel.d.toFixed(0) + " km</b> · 相对速度 <b>" + rel.dv.toFixed(0) + " m/s</b><br>燃料 <b>" + st.fuel.toFixed(0) + " m/s</b> · 已绕 <b>" + st.orbits + "</b> 圈" +
         "<br><span style='color:#fbbf24'>黄线:你现在的轨道</span>";
     },
