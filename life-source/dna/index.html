@@ -36,6 +36,7 @@ svg.rbc{width:120px;height:80px}
 <script type="module">
 import { runTask, sleep, el } from '../ls-task.js';
 import { COMP, isPair, sound, translate, codonAA, AA_ZH, BASE_FREQ, reducedMotion } from '../ls.js';
+import { dragTool } from '../ls-lab.js';
 
 // 人类 β-珠蛋白(HBB)基因编码区开头 27 个碱基:甲硫氨酸-缬氨酸-组氨酸-亮氨酸-苏氨酸-脯氨酸-谷氨酸-谷氨酸-赖氨酸
 const HBB = 'ATGGTGCACCTGACTCCTGAGGAGAAG';
@@ -44,7 +45,7 @@ const choice = (api, opts, correct, onDone) => {
   const box = el('div', { className: 'ls-choice' }); let first = true;
   opts.forEach(o => { const b = el('button', { className: 'ls-btn', textContent: o }); b.onclick = () => {
     const ok = o === correct; if (first) { api.predicted(ok); first = false; }
-    b.classList.add(ok ? 'on' : ''); ok ? sound.ok() : sound.no(); onDone(ok, o, box);
+    if (ok) b.classList.add('on'); ok ? sound.ok() : sound.no(); onDone(ok, o, box);
   }; box.append(b); });
   return box;
 };
@@ -85,7 +86,13 @@ runTask('dna', [
     let comp = [...top].map((b, i) => i < given ? COMP[b] : 'N'), pos = given, mistakes = 0;
     const { createHelix } = await import('../ls-helix.js');
     const wrap = el('div', { className: 'hxwrap' }); api.stage.append(wrap);
-    const hx = createHelix(wrap, { seq: top, comp: comp.join(''), spin: false, tilt: .2, distance: 5 });
+    let hx;
+    try { hx = createHelix(wrap, { seq: top, comp: comp.join(''), spin: false, tilt: .2, distance: 5 }); }
+    catch { // 不支持 WebGL:平面双链,玩法不变
+      const f = el('div', { className: 'hx-flat' }); wrap.append(f); let sel = -1, a = top, b = comp.join('');
+      const paint = () => { f.innerHTML = [a, b].map(r => `<div>${[...r].map((x, i) => `<span class="b-${x}${i === sel ? ' sel' : ''}">${x === 'N' ? '·' : x}</span>`).join('')}</div>`).join(''); };
+      hx = { setSequence(x, y) { a = x; b = y; paint(); }, select(i) { sel = i; paint(); }, setSpin() {}, dispose() { f.remove(); } }; paint();
+    }
     api.onCleanup(() => hx.dispose());
     hx.select(pos);
     api.guide.ask(`左边那条链已经写好了。右边空着的台阶(灰色、断开的)该接哪个字母?前 ${given} 级给你做了示范。`, ['示范里,A 的对面是谁?G 的对面呢?', '数数中间的小亮点:A–T 有 2 个,G–C 有 3 个。', () => { api.guide.say(`现在这一级左边是 ${top[pos]},对面是 ${COMP[top[pos]]}。`); }]);
@@ -105,8 +112,9 @@ runTask('dna', [
         }
       };
       keys.append(k);
+      dragTool(k, wrap, () => k.onclick());   // v0.9:把碱基拖到双螺旋上,或直接点
     }
-    document.querySelector('.ls-actions').append(keys);
+    document.querySelector('.ls-actions').append(keys, el('div', { className: 'lab-hint', textContent: '把碱基拖到双螺旋的空台阶上,或直接点' }));
   } },
 
   { title: '抄写:从 DNA 到 RNA', async run(api) {

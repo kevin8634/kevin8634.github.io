@@ -143,7 +143,7 @@ export function chrome({ title = '', task = null, onReplay = null } = {}) {
   import('./ls-scene.js').then(m => m.mountHud(top, { onReplay })).catch(() => {});
   const foot = document.createElement('footer');
   foot.className = 'ls-foot';
-  foot.textContent = '用于知识学习与科学研究科普 · 不替代医生意见 · 免费免注册,不收集个人信息';
+  foot.textContent = '用于知识学习与科学研究科普 · 不替代医生意见 · 免费免注册,不收集个人信息 · 部分插图由 AI 生成';
   document.body.append(foot);
   return { top, foot, setStars(n, max) { const el = top.querySelector('#ls-stars'); if (el) el.textContent = `★ ${n}/${max}`; } };
 }

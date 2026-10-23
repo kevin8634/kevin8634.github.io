@@ -6,49 +6,112 @@
 <link rel="stylesheet" href="../ls.css">
 <style>
 .row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:14px}
-.cls{display:grid;grid-template-columns:repeat(8,30px);gap:6px;justify-content:center}
-.stu{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:15px;background:#1f2937;transition:background .25s}
-.stu.S{background:#334155}.stu.I{background:#ef4444;box-shadow:0 0 10px #ef4444}.stu.R{background:#34d399}.stu.V{background:#60a5fa}
-canvas.ch{width:min(560px,94vw);height:130px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)}
+.room{width:min(600px,96%);position:relative;border-radius:18px;transition:box-shadow .3s}
+.room canvas{display:block;width:100%;aspect-ratio:600/330}
+.room.pulse{box-shadow:0 0 0 2px var(--gold),0 0 24px rgba(226,190,120,.5)}
+.curve{width:min(420px,92%);border:1px solid var(--line);border-radius:12px;background:rgba(6,16,16,.72);padding:4px 8px 6px}
+.curve small{color:var(--mute);font-size:11px}
+canvas.ch{display:block;width:100%;height:84px}
+@media (min-width:900px) and (min-height:700px){canvas.ch{height:100px}}
+@media (max-width:520px){.room{width:86%}canvas.ch{height:52px}.curve{padding:2px 6px 4px}.row{font-size:12px}}
 .legend{font-size:12px;color:var(--mute)}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 3px 0 8px;vertical-align:-1px}
 svg.cyc{width:min(320px,80vw);height:200px}
-.ctl{display:grid;grid-template-columns:auto 140px 36px;gap:6px 8px;align-items:center;font-size:13px}
+.ctl{display:grid;grid-template-columns:auto 140px 36px;background:rgba(6,16,16,.7);border:1px solid var(--line);border-radius:12px;padding:8px 12px;gap:6px 8px;align-items:center;font-size:13px}
 .ctl input{accent-color:#67e8f9}
 </style></head><body>
 <noscript>需要开启 JavaScript 才能游玩。</noscript>
 <script type="module">
 import { runTask, sleep, el, choice, lineChart } from '../ls-task.js';
 import { sound, reducedMotion } from '../ls.js';
+import { dragTool } from '../ls-lab.js';
 
 /* 班级 SIR 模型(离散天):每个感染者每天随机接触 k 人,每次接触以概率 p 传染,感染约 5 天后康复 */
 function simulate({ n = 40, k = 4, p = .1, days = 5, vac = 0, maxDay = 40 }) {
   const st = Array.from({ length: n }, (_, i) => (i > 0 && Math.random() < vac) ? 'V' : 'S'); st[0] = 'I';
-  const left = new Array(n).fill(0); left[0] = days; const hist = [];
+  const left = new Array(n).fill(0); left[0] = days; const hist = [], ev = [];
   for (let d = 0; d <= maxDay; d++) {
     hist.push([...st]);
     const newI = [];
-    st.forEach((s, i) => { if (s !== 'I') return; for (let c = 0; c < k; c++) { const j = Math.floor(Math.random() * n); if (st[j] === 'S' && Math.random() < p) newI.push(j); } });
+    st.forEach((s, i) => { if (s !== 'I') return; for (let c = 0; c < k; c++) { const j = Math.floor(Math.random() * n); if (st[j] === 'S' && Math.random() < p) newI.push([i, j]); } });
     st.forEach((s, i) => { if (s === 'I' && --left[i] <= 0) st[i] = 'R'; });
-    newI.forEach(j => { if (st[j] === 'S') { st[j] = 'I'; left[j] = days; } });
-    if (!st.includes('I')) { hist.push([...st]); break; }
+    const e = []; newI.forEach(([i, j]) => { if (st[j] === 'S') { st[j] = 'I'; left[j] = days; e.push([i, j]); } });
+    ev.push(e);
+    if (!st.includes('I')) { hist.push([...st]); ev.push([]); break; }
   }
-  return hist;
+  hist.ev = ev; return hist;
 }
+/* v0.9 教室沙盘:等轴测教室,8 列 × 5 排课桌;传染时画出一条传播弧线 */
+const COL = { S: ['#5eead4', .55], I: ['#fb923c', 1], R: ['#34d399', .95], V: ['#60a5fa', .95] };
+function room(cv) {
+  const D = Math.min(devicePixelRatio || 1, 2), W = 600, H = 330;
+  cv.width = W * D; cv.height = H * D; const g = cv.getContext('2d'); g.scale(D, D);
+  const tw = 54, th = 27, ox = W / 2 + 40, oy = 70;            // 单格宽高、原点
+  const P = (x, y, z = 0) => [ox + (x - y) * tw / 2, oy + (x + y) * th / 2 - z];
+  const seat = i => { const c = i % 8, r = Math.floor(i / 8); return [c + .5, r * 1.6 + .6]; };
+  const DX = 8, DY = 8;                                          // 地面 8 × 8 格
+  const poly = (pts, fill, stroke) => { g.beginPath(); pts.forEach((p, k) => k ? g.lineTo(...p) : g.moveTo(...p)); g.closePath(); if (fill) { g.fillStyle = fill; g.fill(); } if (stroke) { g.strokeStyle = stroke; g.stroke(); } };
+  function base() {
+    g.clearRect(0, 0, W, H);
+    // 圆台光晕
+    const cx = P(DX / 2, DY / 2); const rg = g.createRadialGradient(cx[0], cx[1] + 20, 20, cx[0], cx[1] + 20, 300);
+    rg.addColorStop(0, 'rgba(52,211,153,.16)'); rg.addColorStop(1, 'rgba(52,211,153,0)'); g.fillStyle = rg; g.fillRect(0, 0, W, H);
+    // 后墙(左后、右后)
+    const wh = 46;
+    poly([P(0, 0), P(0, DY), [P(0, DY)[0], P(0, DY)[1] - wh], [P(0, 0)[0], P(0, 0)[1] - wh]], 'rgba(30,64,60,.55)', 'rgba(110,231,183,.35)');
+    poly([P(0, 0), P(DX, 0), [P(DX, 0)[0], P(DX, 0)[1] - wh], [P(0, 0)[0], P(0, 0)[1] - wh]], 'rgba(22,52,50,.6)', 'rgba(110,231,183,.35)');
+    // 窗户(右后墙)与黑板(左后墙)
+    const w0 = P(5.2, 0), w1 = P(7.2, 0); poly([[w0[0], w0[1] - 12], [w1[0], w1[1] - 12], [w1[0], w1[1] - 38], [w0[0], w0[1] - 38]], 'rgba(253,230,138,.28)', 'rgba(253,230,138,.7)');
+    const b0 = P(0, 2), b1 = P(0, 5.5); poly([[b0[0], b0[1] - 14], [b1[0], b1[1] - 14], [b1[0], b1[1] - 36], [b0[0], b0[1] - 36]], 'rgba(15,46,36,.95)', 'rgba(110,231,183,.5)');
+    // 地面
+    poly([P(0, 0), P(DX, 0), P(DX, DY), P(0, DY)], 'rgba(18,40,38,.72)', 'rgba(110,231,183,.55)');
+    g.strokeStyle = 'rgba(110,231,183,.08)'; for (let k = 1; k < 8; k++) { g.beginPath(); g.moveTo(...P(k, 0)); g.lineTo(...P(k, DY)); g.stroke(); g.beginPath(); g.moveTo(...P(0, k)); g.lineTo(...P(DX, k)); g.stroke(); }
+  }
+  function student(i, s, glow) {
+    const [x, y] = seat(i), [c, a] = COL[s];
+    // 课桌
+    const d = .32; poly([P(x - d, y + .1, 9), P(x + d, y + .1, 9), P(x + d, y + .55, 9), P(x - d, y + .55, 9)], 'rgba(148,163,184,.35)', 'rgba(203,213,225,.35)');
+    const [sx, sy] = P(x, y);
+    if (glow) { g.fillStyle = 'rgba(251,146,60,.25)'; g.beginPath(); g.arc(sx, sy - 12, 15 + glow * 6, 0, 7); g.fill(); }
+    g.globalAlpha = a; g.fillStyle = c;
+    g.beginPath(); g.ellipse(sx, sy - 9, 7, 9, 0, 0, 7); g.fill();          // 身体
+    g.beginPath(); g.arc(sx, sy - 22, 6.5, 0, 7); g.fill();                  // 头
+    if (s === 'V') { g.fillStyle = '#e0f2fe'; g.fillRect(sx - 4, sy - 21, 8, 3); }
+    g.globalAlpha = 1;
+  }
+  function draw(st, arcs = [], t = 1) {
+    base();
+    const order = st.map((s, i) => i).sort((a, b) => seat(a)[0] + seat(a)[1] - seat(b)[0] - seat(b)[1]);
+    const fresh = new Set(arcs.map(e => e[1]));
+    order.forEach(i => student(i, fresh.has(i) && t < 1 ? 'S' : st[i], st[i] === 'I' ? (fresh.has(i) ? t : .4) : 0));
+    arcs.forEach(([a, b]) => {
+      const [ax, ay] = P(...seat(a)), [bx, by] = P(...seat(b)); const mx = (ax + bx) / 2, my = Math.min(ay, by) - 46;
+      g.strokeStyle = 'rgba(253,186,116,.9)'; g.lineWidth = 1.6; g.setLineDash([5, 4]); g.beginPath();
+      const N = 24, M = Math.max(1, Math.round(N * t)); for (let k = 0; k <= M; k++) { const u = k / N, x = (1 - u) ** 2 * ax + 2 * (1 - u) * u * mx + u * u * bx, y = (1 - u) ** 2 * (ay - 22) + 2 * (1 - u) * u * my + u * u * (by - 22); k ? g.lineTo(x, y) : g.moveTo(x, y); }
+      g.stroke(); g.setLineDash([]); g.lineWidth = 1;
+    });
+  }
+  return { draw };
+}
+const rooms = new WeakMap();
+const roomOf = c => { const cv = c.querySelector('.cls'); if (!rooms.has(cv)) rooms.set(cv, room(cv)); return rooms.get(cv); };
+function seed(c, vac = 0) { roomOf(c).draw(Array.from({ length: 40 }, (_, i) => (!i ? 'I' : ((i * 17) % 39) / 39 < vac ? 'V' : 'S'))); }
 async function play(c, hist, speed = 220) {
-  const grid = c.querySelector('.cls'); grid.innerHTML = hist[0].map(() => '<div class="stu"></div>').join('');
+  const rm = roomOf(c), ev = hist.ev || [];
   const I = [], R = [];
-  for (const day of hist) {
-    day.forEach((s, i) => grid.children[i].className = 'stu ' + s);
+  for (let d = 0; d < hist.length; d++) {
+    const day = hist[d], arcs = ev[d - 1] || [];
     I.push(day.filter(s => s === 'I').length); R.push(day.filter(s => s === 'R').length);
-    lineChart(c.querySelector('.ch'), [{ name: '生病中', color: '#ef4444', data: I }, { name: '已康复', color: '#34d399', data: R }], { max: day.length });
+    lineChart(c.querySelector('.ch'), [{ name: '生病中', color: '#fb923c', data: I }, { name: '已康复', color: '#34d399', data: R }], { max: day.length });
     c.querySelector('.day').textContent = `第 ${I.length - 1} 天`;
     sound.tone(200 + I.at(-1) * 18, .08, { gain: .04 });
-    await sleep(reducedMotion() ? 10 : speed);
+    if (reducedMotion() || !arcs.length) { rm.draw(day, arcs); await sleep(reducedMotion() ? 10 : speed); continue; }
+    const t0 = performance.now();
+    await new Promise(ok => { const f = now => { const t = Math.min(1, (now - t0) / speed); rm.draw(day, arcs, t); t < 1 ? requestAnimationFrame(f) : ok(); }; requestAnimationFrame(f); });
   }
   const last = hist.at(-1); return { ever: last.filter(s => s === 'R' || s === 'I').length, peak: Math.max(...I) };
 }
-const classHTML = `<div class="row"><span class="day">第 0 天</span><span class="legend"><i style="background:#334155"></i>健康<i style="background:#ef4444"></i>生病<i style="background:#34d399"></i>康复<i style="background:#60a5fa"></i>已接种</span></div><div class="cls"></div><canvas class="ch"></canvas>`;
+const classHTML = `<div class="row"><span class="day">第 0 天</span><span class="legend"><i style="background:#5eead4;opacity:.6"></i>健康<i style="background:#fb923c"></i>生病<i style="background:#34d399"></i>康复<i style="background:#60a5fa"></i>已接种</span></div><div class="room"><canvas class="cls" aria-label="教室沙盘:40 名同学的健康状态"></canvas></div><div class="curve"><small>感染曲线</small><canvas class="ch"></canvas></div>`;
 
 runTask('virus', [
   { title: '病毒自己会繁殖吗?', run(api) {
@@ -77,8 +140,7 @@ runTask('virus', [
   } },
 
   { title: '一个人的喷嚏', async run(api) {
-    const c = api.center(); c.innerHTML = classHTML;
-    c.querySelector('.cls').innerHTML = Array.from({ length: 40 }, (_, i) => `<div class="stu ${i ? 'S' : 'I'}"></div>`).join('');
+    const c = api.center(); c.innerHTML = classHTML; seed(c);
     api.guide.ask('全班 40 人,第 1 天只有 1 人感冒。每人每天和 4 个同学近距离接触。你预测最后大约多少人会被传染?', ['每次接触不一定传染。', '传染的人会再传给别人,像滚雪球。', '在这个设定下,通常会传给班里大部分人。']);
     c.append(choice(api, ['不到 5 人', '大约一半', '大部分人'], '大部分人', async (ok, o, box) => {
       box.remove(); api.guide.say('看看会发生什么。');
@@ -102,7 +164,11 @@ runTask('virus', [
       const p = .1 * (1 - w * .12), days = 5 - h; return { k, p, days, R: k * p * days };
     };
     const upd = () => { const g = get(); ['k', 'w', 'h'].forEach(x => c.querySelector('#' + x + 'v').textContent = c.querySelector('#' + x).value); c.querySelector('#r0').textContent = `估算:每个病人平均传给 ${g.R.toFixed(1)} 人(数值为示意)`; };
-    c.querySelectorAll('input').forEach(i => i.oninput = upd); upd();
+    c.querySelectorAll('input').forEach(i => i.oninput = upd); upd(); seed(c);
+    // 工具槽:把防护措施拖进教室(或直接点),对应滑杆加一档
+    const roomEl = c.querySelector('.room');
+    const tool = (label, id, d) => { const b = api.button(label, () => { const r = c.querySelector('#' + id); r.value = Math.max(+r.min, Math.min(+r.max, +r.value + d)); upd(); roomEl.classList.add('pulse'); setTimeout(() => roomEl.classList.remove('pulse'), 350); sound.tone(520, .12, { gain: .06 }); }); dragTool(b, roomEl, () => b.onclick()); };
+    tool('🧼 勤洗手', 'w', 1); tool('🏠 在家休息', 'h', 1); tool('🪑 少接触', 'k', -1);
     let tries = 0;
     api.button('▶ 开始模拟', async () => {
       tries++; const g = get();
@@ -110,17 +176,21 @@ runTask('virus', [
       if (r.ever < 10) { api.predicted(tries <= 3); api.win(`只有 ${r.ever} 人被传染!当每个病人平均传染不到 1 人时,传播会自己停下来。少接触、勤洗手、生病在家休息,每一项都在降低这个数字。`); }
       else api.guide.say(`这次有 ${r.ever} 人被传染。试着把"平均传给几人"降到 1 以下。`);
     }, 'primary');
-    api.guide.ask('挑战:调整三个滑杆,让全班被传染的人少于 10 人。', ['看看"平均传给几人"那个数字。', '三个办法可以组合使用。', '想办法让它小于 1,比如接触 2 人、洗手 4、在家休息 2。']);
+    api.button('↺ 重置', () => { c.querySelector('#k').value = 4; c.querySelector('#w').value = 0; c.querySelector('#h').value = 0; upd(); });
+    api.guide.ask('挑战:把工具拖进教室(或调整三个滑杆),让全班被传染的人少于 10 人。', ['看看"平均传给几人"那个数字。', '三个办法可以组合使用。', '想办法让它小于 1,比如接触 2 人、洗手 4、在家休息 2。']);
   } },
 
   { title: '疫苗与群体免疫', run(api) {
     const c = api.center();
     c.innerHTML = `<div class="row">接种比例:<input type="range" id="v" min="0" max="95" step="5" value="0" style="accent-color:#60a5fa"><b id="vv">0%</b></div>` + classHTML +
       `<p class="ls-note" style="max-width:520px;text-align:center">普通感冒由 200 多种病毒引起(仅鼻病毒就有 160 多型),所以目前还没有获批的"感冒疫苗"(科学家还在研发)。这里改用一种假想的、有疫苗可防的病毒作例子(R₀≈3,示意参数;真实的季节性流感 R₀ 通常只有约 1.3,而且流感不算普通感冒)。</p>`;
-    c.querySelector('#v').oninput = e => c.querySelector('#vv').textContent = e.target.value + '%';
+    c.querySelector('#v').oninput = e => { c.querySelector('#vv').textContent = e.target.value + '%'; seed(c, e.target.value / 100); }; seed(c);
     api.guide.ask('这种病毒每个病人平均能传给约 3 人。至少要多少人接种疫苗,才能保护整个班级(包括没法接种的同学)?', ['如果 2/3 的人都免疫了,一个病人平均还能传给几个"易感者"?', '3 × (1 − 接种比例) 要小于 1。', '大约 67% 以上。']);
     const box = choice(api, ['约 30%', '约 67%', '必须 100%'], '约 67%', (ok, o, b) => {
       b.remove(); api.guide.say(ok ? '理论值约 67%。用模拟验证一下:试试不同的接种比例。' : '理论值约 67%。用模拟验证一下。');
+      const roomEl = c.querySelector('.room'), vr = c.querySelector('#v');
+      const vb = api.button('💉 疫苗 +10%', () => { vr.value = Math.min(95, +vr.value + 10); vr.oninput({ target: vr }); roomEl.classList.add('pulse'); setTimeout(() => roomEl.classList.remove('pulse'), 350); sound.tone(620, .12, { gain: .06 }); });
+      dragTool(vb, roomEl, () => vb.onclick());
       api.button('▶ 开始模拟', async () => {
         const vac = +c.querySelector('#v').value / 100;
         const r = await play(c, simulate({ k: 6, p: .1, days: 5, vac }), 150);

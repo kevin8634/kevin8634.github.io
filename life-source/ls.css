@@ -115,3 +115,96 @@ body.ls-task .ls-guide{position:static;max-width:none}
 @keyframes lsNod{0%{transform:scale(1) rotate(0)}30%{transform:scale(1.12) rotate(-6deg)}60%{transform:scale(.97) rotate(4deg)}100%{transform:scale(1) rotate(0)}}
 @keyframes lsRing{0%{box-shadow:0 0 0 0 rgba(110,231,183,.8)}100%{box-shadow:0 0 0 14px rgba(110,231,183,0)}}
 @media (prefers-reduced-motion:reduce){.ls-guide .ava,.ls-guide.talk .ava,#gd.talk .ava{animation:none}.ls-guide.talk .ava::after,#gd.talk .ava::after{animation:none}}
+
+/* ================= v0.9 全息实验台(王磊 10-22 00:32 定稿:效果图 07 dna / 08 virus) ================= */
+body.lab{grid-template-rows:52px 1fr auto}
+body.lab #ls-stars{display:none}            /* 定稿:去掉奖杯计数,不排名 */
+.ls-lab{position:relative;min-height:0;margin:0 10px 2px;display:grid;
+  grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;
+  grid-template-areas:"nav" "stage" "dock" "tray";
+  border:1.5px solid rgba(110,231,183,.42);border-radius:22px;
+  background:
+    radial-gradient(60% 50% at 50% 70%,rgba(52,211,153,.10),transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='97' viewBox='0 0 56 97'%3E%3Cpath d='M28 0l28 16v32L28 64 0 48V16zM28 64v33' fill='none' stroke='%2334d399' stroke-opacity='.07'/%3E%3C/svg%3E"),
+    linear-gradient(180deg,rgba(10,24,24,.78),rgba(5,12,14,.9));
+  box-shadow:inset 0 0 0 1px rgba(6,10,18,.8),inset 0 0 40px rgba(52,211,153,.10),0 0 26px rgba(52,211,153,.12)}
+.ls-lab::before,.ls-lab::after{content:"";position:absolute;width:26px;height:26px;border:2px solid var(--em2);pointer-events:none;opacity:.8}
+.ls-lab::before{left:-2px;top:-2px;border-right:0;border-bottom:0;border-radius:22px 0 0 0}
+.ls-lab::after{right:-2px;bottom:-2px;border-left:0;border-top:0;border-radius:0 0 22px 0}
+.ls-lab>.ls-levels{grid-area:nav;position:relative;z-index:3;margin:-1px auto 0;padding:2px 16px 0;max-width:100%;
+  background:linear-gradient(180deg,#07130f,rgba(7,19,15,.85));border:1.5px solid rgba(110,231,183,.42);border-top:0;border-radius:0 0 22px 22px}
+.ls-lab>.ls-stage{grid-area:stage;z-index:1;overflow:clip}
+.ls-lab>.ls-dock{grid-area:dock;z-index:4;max-width:none;padding:6px 10px 2px}
+.ls-lab>.ls-actions{grid-area:tray;z-index:4;margin:4px auto 8px;padding:8px 12px;max-width:calc(100% - 16px);
+  background:linear-gradient(180deg,rgba(20,44,40,.72),rgba(8,20,18,.82));border:1.5px solid rgba(110,231,183,.38);border-radius:20px;
+  box-shadow:0 0 18px rgba(52,211,153,.18),inset 0 1px 0 rgba(255,255,255,.08)}
+.ls-lab>.ls-actions .ls-btn{border-radius:14px;padding:9px 14px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.02));box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.ls-lab>.ls-actions .ls-btn.primary{background:linear-gradient(180deg,#5ef0b4,#22c58b);color:#03130d}
+.ls-lab>.ls-actions .bkey{border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 12px currentColor}
+/* 中央标本台:3D 全息圆台在舞台后面 */
+.lab-bench{grid-area:stage;z-index:0;align-self:end;width:100%;height:62%;pointer-events:none}
+.ls-lab.lab-flat::marker{content:none}
+.ls-lab.lab-flat>.ls-stage{background:radial-gradient(42% 16% at 50% 88%,rgba(52,211,153,.22),transparent 70%),radial-gradient(36% 9% at 50% 88%,transparent 80%,rgba(110,231,183,.5) 86%,transparent 92%)}
+/* 猜 → 跑 → 收 */
+.lab-phase{position:absolute;right:12px;top:8px;z-index:5;display:flex;gap:4px;margin:0;padding:0;list-style:none;font-size:12px}
+.lab-phase li{padding:3px 9px;border:1px solid var(--line);border-radius:999px;color:var(--mute);background:rgba(6,14,14,.7)}
+.lab-phase li.done{color:var(--em2);border-color:rgba(110,231,183,.5)}
+.lab-phase li.on{color:#03130d;background:var(--gold);border-color:var(--gold);font-weight:700;box-shadow:0 0 10px rgba(226,190,120,.6)}
+.lab-phase li+li::before{content:"→ ";opacity:.5}
+/* 左侧观察记录抽屉 */
+.lab-logtab{position:absolute;left:-1px;top:50%;transform:translateY(-50%);z-index:6;width:30px;padding:12px 0;border:1.5px solid rgba(110,231,183,.42);border-left:0;
+  border-radius:0 14px 14px 0;background:linear-gradient(90deg,#07130f,rgba(12,32,28,.92));color:var(--em2);font-size:12px;line-height:1.2;writing-mode:vertical-rl;letter-spacing:3px}
+.lab-logtab{display:flex;flex-direction:column;align-items:center;gap:6px;writing-mode:horizontal-tb;padding:10px 0;min-height:118px}
+.lab-logtab span{writing-mode:vertical-rl;white-space:nowrap}
+.lab-logtab::after{content:"»";display:block}
+.lab-logtab[aria-expanded="true"]::after{content:"«"}
+.lab-logtab.new{color:var(--gold);box-shadow:0 0 12px rgba(226,190,120,.6)}
+.lab-log{position:absolute;left:30px;top:44px;bottom:12px;z-index:7;width:min(300px,calc(100% - 44px));display:none;flex-direction:column;padding:12px}
+.lab-log.on{display:flex;animation:hudL .3s ease-out}
+.lab-log h4{margin:0 0 8px;color:var(--gold);font-size:14px}
+.lab-log .lg{overflow:auto;display:flex;flex-direction:column;gap:7px;font-size:13px;line-height:1.55}
+.lab-log .lg>div{display:flex;gap:7px}
+.lab-log .lg i{flex:none;width:20px;height:20px;border-radius:6px;font-style:normal;font-size:11px;display:grid;place-items:center;border:1px solid var(--line);color:var(--em2)}
+.lab-log .lg-h{margin-top:6px;color:var(--gold);font-weight:700}.lab-log .lg-h i{border-color:var(--gold);color:var(--gold)}
+.lab-log .lg-w i{background:var(--em);color:#03130d;border-color:var(--em)}
+.lab-log .lg-s{color:#cfe3dc}
+/* 拖拽工具 */
+.lab-drag{cursor:grab}
+.lab-lift{opacity:.35}
+.lab-ghost{position:fixed;left:0;top:0;z-index:80;pointer-events:none;opacity:.92;transform-origin:center;filter:drop-shadow(0 0 12px rgba(110,231,183,.8))}
+.lab-hot{outline:2px dashed var(--gold);outline-offset:-6px;border-radius:16px}
+.lab-hint{font-size:12px;color:var(--mute);text-align:center;width:100%}
+/* 宽屏:右侧向导栏 */
+@media (min-width:900px) and (min-height:560px){
+  .ls-lab{grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:auto minmax(0,1fr) auto;
+    grid-template-areas:"nav nav" "stage dock" "tray dock";margin:0 14px 2px}
+  .lab-bench{height:70%}
+  .ls-lab>.ls-dock{align-self:end;padding:0 16px 14px 0}
+  .ls-lab .ls-guide{flex-direction:column-reverse;align-items:flex-end;gap:8px}
+  .ls-lab .ls-guide .ava{width:112px;height:112px;margin-right:10px}
+  .ls-lab .ls-guide .bubble{border-radius:16px 16px 4px 16px;max-height:52vh;overflow:auto;box-shadow:0 0 18px rgba(52,211,153,.15)}
+  .lab-phase{right:316px}
+}
+@media (max-width:520px){
+  .ls-lab{margin:0 4px 2px;border-radius:16px}
+  .lab-phase{display:none}
+  .ls-lab>.ls-actions{margin:2px auto 6px;padding:6px 8px}
+  .ls-lab>.ls-dock{padding:4px 6px 0}
+  .ls-lab .ls-guide .bubble{font-size:13px;padding:7px 10px;line-height:1.5}
+  .ls-lab .ls-guide .hints{margin-top:5px}
+  .ls-lab .ls-guide .ava{width:40px;height:40px}
+  .ls-lab .ls-center{gap:8px;padding:6px 8px}
+}
+@media (max-height:480px) and (orientation:landscape){
+  .ls-lab{grid-template-columns:minmax(0,1fr) 260px;grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"nav dock" "stage dock" "tray dock"}
+  .ls-lab .ls-guide .ava{width:40px;height:40px}
+  .lab-phase{display:none}
+}
+/* 内容超高时不被顶部裁掉:用自动外边距代替 justify-content:center */
+.ls-lab .ls-center{justify-content:flex-start}
+.ls-lab .ls-center>:first-child{margin-top:auto}
+.ls-lab .ls-center>:last-child{margin-bottom:auto}
+.hx-flat{display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;height:100%;font:800 22px ui-monospace,Menlo,monospace}
+.hx-flat div{display:flex;gap:6px}.hx-flat span{width:28px;text-align:center}.hx-flat .sel{outline:2px solid var(--gold);border-radius:6px}
+.ls-modal .ls-panel{max-height:calc(100dvh - 32px);overflow:auto}
+.ls-lab .ls-center>.ls-note{background:rgba(6,14,14,.72);border-radius:10px;padding:6px 10px;text-shadow:0 1px 3px #000}
