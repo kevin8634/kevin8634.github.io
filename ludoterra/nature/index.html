@@ -149,8 +149,8 @@ function reset0() { document.querySelectorAll('[data-a]').forEach(b => b.classLi
 document.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
   const q = b.dataset.a, v = b.dataset.v; ans[q] = v; store.set('nature_pick', ans);
   document.querySelectorAll(`[data-a="${q}"]`).forEach(x => x.classList.toggle('pick', x === b));
-  if (q === '1') { logChoice('nature', v === 'p' ? '看到年轻人没让座,第一反应是「他没教养」' : '看到年轻人没让座,先想到他的处境', v === 'p' ? '若先想处境:他也许很累、没看见' : '若只看性格:会直接给他贴上标签'); $('q2').hidden = false; sound.bell(1); }
-  else { logChoice('nature', v === 'p' ? '看到小镇常有人插队,归因于「人素质差」' : '看到小镇常有人插队,归因于「规矩没人管」', v === 'p' ? '若看规则:排队的规矩有没有人管?' : '若只看人:会认为这里的人天生如此');
+  if (q === '1') { logChoice('nature', v === 'p' ? '看到有人做了不妥的事,第一反应是给他贴「人品差」的标签' : '看到有人做了不妥的事,先想到他的处境', v === 'p' ? '若先想处境:他也许不知道、很累或没看见' : '若只看性格:会直接给他贴上标签'); $('q2').hidden = false; sound.bell(1); }
+  else { logChoice('nature', v === 'p' ? '看到一群人常出同样的问题,归因于「人素质差」' : '看到一群人常出同样的问题,归因于「规矩没人管」', v === 'p' ? '若看规则:那里的规矩有没有人管?' : '若只看人:会认为这里的人天生如此');
     const n = (ans[1] === 'p') + (ans[2] === 'p');
     $('g0').innerHTML = (n === 2 ? '两次你都先想到了「这个人怎么样」。' : n === 1 ? '一次你想到了人,一次想到了处境。' : '两次你都先想到了处境。') + '如果把同一群人换到另一个地方,他们还会这样做吗?' + QB;
     $('n0').hidden = false; sound.bell(3); }
