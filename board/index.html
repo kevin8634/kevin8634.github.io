@@ -98,23 +98,23 @@ footer{margin-top:30px;color:var(--mute);font-size:12px;border-top:1px solid var
 
 <script>
 var BOARD = {
- asOf: "2026-10-23 20:40 北京时间",
- portal: "总门户 v0.8.11",
+ asOf: "2026-10-23 23:55 北京时间",
+ portal: "总门户 v0.8.12",
  worlds: [
   { id:"01", name:"星图", en:"Math Atlas", c:"#7cc8ff", ver:"v0.8.4", tasks:10, levels:"55 关 · 197 星", relay:true, href:"../math-atlas/",
     plan:[{p:"P2",t:"新任务:为什么酸碱、声音、地震都按级来量?"}], dev:[], review:[], done:[{t:"v0.8.4",m:"关于与隐私 · 10-22"},{t:"v0.8.3",m:"10-21"}] },
   { id:"02", name:"宙律", en:"Nomoverse", c:"#a78bfa", ver:"v0.3-α4", tasks:3, levels:"13 关 · 篮球 3D 星球实景", relay:true, href:"../nomoverse/",
-    plan:[{p:"P0",t:"v0.4 正式版:三任务收口 + 沉浸化"},{p:"P1",t:"新任务:恒星为什么会发光?"},{p:"P1",t:"新任务:潮汐 ⇄ 天枢"}], dev:[{p:"P0",t:"v0.3-α5 声音任务:夜间城市救护车街景"}], review:[], done:[{t:"v0.3-α4",m:"篮球 3D 星球实景 · 10-23"},{t:"v0.3-α3",m:"门户接力 · 10-22"}] },
+    plan:[{p:"P0",t:"v0.4 正式版:三任务收口 + 沉浸化"},{p:"P1",t:"新任务:恒星为什么会发光?"},{p:"P1",t:"新任务:潮汐 ⇄ 天枢"}], dev:[], review:[{p:"P0",t:"v0.3-α5 声音任务效果图(夜间城市街景)待王磊确认"}], done:[{t:"v0.3-α4",m:"篮球 3D 星球实景 · 10-23"},{t:"v0.3-α3",m:"门户接力 · 10-22"}] },
   { id:"03", name:"元素工坊", en:"Element Forge", c:"#ff9a3c", ver:"v0.9", tasks:8, levels:"32 关 · 星球篇 1 / 5", relay:true, href:"../element-forge/",
     plan:[{p:"P2",t:"星球篇:spectra → meteorite → isru"},{p:"P2",t:"星桥对岸:紫甘蓝 ⇄ 星图数量级、电池 ⇄ 宙律电路、土卫六 ⇄ 天枢(待配)"}], dev:[{p:"P2",t:"v0.10 土卫六为什么是橙色的? + 首页火星基地动效(已批,换账号接续)"}], review:[], done:[{t:"v0.9",m:"火星为什么是红的? · 10-23"},{t:"v0.8.1",m:"岩石 ⇄ 地震星桥 · 10-23"},{t:"v0.5–v0.8",m:"紫甘蓝 · 烟花 · 电池 · 岩石 · 10-23"}] },
   { id:"04", name:"生命源码", en:"Life Source", c:"#34d399", ver:"v0.9.3", tasks:5, levels:"全息实验台", relay:true, href:"../life-source/",
     plan:[{p:"P1",t:"其余三个任务迁入全息实验台"},{p:"P1",t:"新任务:为什么一到晚上就犯困?(方案+效果图已出)"}], dev:[{p:"P1",t:"v0.9.4 界面细节:手机阶段点、顶栏精简、向导框"}], review:[], done:[{t:"v0.9–v0.9.3",m:"全息实验台 · 工具栏 · 开场 · 10-23"},{t:"v0.8",m:"源码五灵头像 · 10-21"}] },
   { id:"05", name:"奇点前夜", en:"Pre-Singularity", c:"#22d3ee", ver:"v0.9.2", tasks:10, levels:"29 关", relay:true, href:"../pre-singularity/",
     plan:[{p:"P1",t:"主页 HUD 改版(A/B/C 待选)"},{p:"P1",t:"v0.9.3 黎明天色"},{p:"P1",t:"v1.0 终章「奇点门口」ps.gate(待总指挥星桥规范)"}], dev:[], review:[{p:"P1",t:"中低端机开场:王磊真机实测"}], done:[{t:"v0.9.2",m:"中低端机开场 5 秒 · 10-23"},{t:"v0.9.1",m:"合规收口 · 10-23"},{t:"v0.9",m:"全息屏墙 · 10-21"}] },
-  { id:"06", name:"觉弈", en:"Ludoterra", c:"#f5c26b", ver:"v0.30", tasks:10, levels:"10 关 · 八域全开", relay:true, href:"../ludoterra/",
-    plan:[{p:"P1",t:"R2 意义终章纳入三个新关"},{p:"P2",t:"新三关配乐"},{p:"P3",t:"星桥:睡眠 ⇄ 生物钟"}], dev:[], review:[], done:[{t:"v0.30",m:"每关 3D 背景舞台 · 10-23"},{t:"v0.27–v0.29",m:"睡眠负债 · 情绪浪 · 回声 · 10-23"},{t:"v0.23–v0.26",m:"心莲星盘 · 新开场 · 10-23"}] },
-  { id:"07", name:"天枢", en:"Starhelm", c:"#dfe6f3", ver:"v1.0-M3g1", tasks:18, levels:"七星域开放 4 / 7 · 天文台 22 目标", relay:true, href:"../starhelm/",
-    plan:[{p:"P1",t:"天文台第二轮:银河系目录 + 视频 + 补全各类"},{p:"P2",t:"光速邮差"},{p:"P2",t:"M4 群星 / M5 银河 / M6 宇宙 → v1.0.0"},{p:"P1",t:"星桥对端:comet ⇄ 宙律/元素工坊、dino ⇄ 生命源码(待定)"}], dev:[], review:[], done:[{t:"v1.0-M3g1",m:"天文台 N159 · 10-23"},{t:"v1.0-M3g",m:"天枢天文台 · 10-23"},{t:"v1.0-M3c~M3f",m:"彗星 + 恐龙 + 太阳风 · 10-23"},{t:"v1.0-M3b",m:"地球重要播报 · 10-23"}] }
+  { id:"06", name:"觉弈", en:"Ludoterra", c:"#f5c26b", ver:"v0.31", tasks:10, levels:"10 关 · 八域全开", relay:true, href:"../ludoterra/",
+    plan:[{p:"P2",t:"R3 新三关配乐"},{p:"P3",t:"星桥:睡眠 ⇄ 生物钟"}], dev:[], review:[], done:[{t:"v0.31",m:"意义终章纳入新三关 · 10-23"},{t:"v0.30",m:"每关 3D 背景舞台 · 10-23"},{t:"v0.27–v0.29",m:"睡眠负债 · 情绪浪 · 回声 · 10-23"}] },
+  { id:"07", name:"天枢", en:"Starhelm", c:"#dfe6f3", ver:"v1.0-M4b", tasks:22, levels:"七星域开放 5 / 7 · 群星 100 光年", relay:true, href:"../starhelm/",
+    plan:[{p:"P1",t:"天文台第二轮:银河系目录 + 视频 + 补全各类"},{p:"P2",t:"光速邮差"},{p:"P1",t:"M5 星域 VI 银河(换账号接续)"},{p:"P2",t:"M6 宇宙 → v1.0.0 · 真机验收"},{p:"P1",t:"星桥对端:comet ⇄ 宙律/元素工坊、dino ⇄ 生命源码(待定)"}], dev:[], review:[], done:[{t:"v1.0-M4a/M4b",m:"星域 V 群星 + 4 任务 · 10-23"},{t:"v1.0-M3g2/M3h",m:"彗星修复 · 此刻卡 · 10-23"},{t:"v1.0-M3g1",m:"天文台 N159 · 10-23"},{t:"v1.0-M3g",m:"天枢天文台 · 10-23"}] }
  ],
  command: [
     {p:"P1",t:"星桥配对:天枢新端点 × 各世界"},
