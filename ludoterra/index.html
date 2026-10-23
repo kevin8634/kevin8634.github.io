@@ -65,7 +65,7 @@ table.map th{color:var(--gold);font-weight:600;font-size:12px}
 @media (max-width:640px){.foot{display:none}#hero h1{font-size:16.5px;letter-spacing:.5px}#hero p{display:none}.ages,.layers{grid-template-columns:repeat(2,1fr)}#hero{top:54px}#hero p{font-size:12px}#rec{bottom:104px;gap:6px;padding:8px 10px}#rec .q{font-size:13px}#rec .lt-btn{padding:6px 10px}#dock{bottom:24px}#dock .lt-btn{font-size:12px;padding:5px 10px}.gl{grid-template-columns:1fr}#side{bottom:150px}}
 @media (max-height:480px){#hero,#rec,.foot{display:none}#dock{bottom:24px}.lt-hud{display:none}#side{top:56px;bottom:auto;max-height:calc(100% - 100px)}}
 /* v0.12 星之音播放器 */
-#intro{position:fixed;inset:0;z-index:300;background:#02030a;transition:opacity .7s}#intro.out{opacity:0;pointer-events:none}#intro canvas{display:block;width:100%;height:100%}#intro .skip{position:absolute;right:20px;bottom:24px;opacity:.75}
+#intro{position:fixed;inset:0;z-index:300;background:#02030a;transition:opacity .7s}#intro.out{opacity:0;pointer-events:none}#intro canvas{display:block;width:100%;height:100%}#intro .cap{position:absolute;left:0;right:0;bottom:6%;text-align:center;color:#ffe9b8;font-size:clamp(20px,3.4vw,30px);letter-spacing:.5em;text-indent:.5em;opacity:0;pointer-events:none;text-shadow:0 0 18px rgba(245,194,107,.6)}#intro .cap small{display:block;margin-top:8px;font-size:12px;letter-spacing:.2em;text-indent:.2em;color:rgba(255,233,184,.6)}#intro .skip{position:absolute;right:20px;bottom:24px;opacity:.75}
 #mbar{position:fixed;left:16px;bottom:30px;z-index:46;width:240px;display:flex;align-items:center;gap:8px;padding:7px 8px 9px;border-radius:16px;overflow:hidden}
 #mbar .mpp{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--gold);background:rgba(245,194,107,.14);color:var(--gold);cursor:pointer;font-size:13px}
 #mbar .minfo{flex:1;min-width:0;text-align:left;background:none;border:0;color:var(--ink);cursor:pointer;padding:0;display:flex;flex-direction:column;line-height:1.3}
@@ -130,7 +130,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   </div>
   <div id="pNote" aria-live="polite"></div>
 </aside>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.24</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.25</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
