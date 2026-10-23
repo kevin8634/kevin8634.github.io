@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>火星为什么是红的? · 元素工坊 Element Forge</title>
+<meta name="description" content="元素工坊 · 星球篇第一站:拧动尺度镜从火星一路放大到原子,做铁钉生锈实验,比一比哪种"锈"最像火星尘土,再钻开一块红石头。创世计划 Genesis 化学世界。">
+<meta name="theme-color" content="#140a08">
+<link rel="stylesheet" href="../ef.css?v=12">
+</head>
+<body class="rust">
+<div id="app"></div>
+<script src="../ef.js?v=12"></script>
+<script src="../ef-tri.js?v=1"></script>
+<script>
+/* ---------- 共享数据:尺度镜四档、程序绘制、尺度镜控制器(2D/3D 共用) ---------- */
+(function () {
+function rnd(seed) { var s = seed || 7; return function () { s = (s * 16807) % 2147483647; return s / 2147483647; }; }
+/* 四档:每档一个"红色在这里吗?"的判断 */
+var LENS = [
+  { n: '火星', s: '约 10⁷ 米 · 一整颗行星', q: '火星看上去红红的。红色是从哪儿来的?',
+    opts: [['大气把它染红了', 0, '火星大气非常稀薄,地面气压不到地球的 1%,主要是二氧化碳——它本身没有颜色。天空偏黄褐色,是因为飘着细尘。'], ['地面上的东西本身是红的', 1, '对!是火星表面的物质反射了较多红光。再拧一档,看看地面上到底是什么红。']] },
+  { n: '地表', s: '约 1 米 · 火星车脚下', q: '地面上有石头,也有一层细细的尘土。红色主要在哪?',
+    opts: [['石头从里到外都是红的', 0, '石头被风吹掉一层尘土、或者被敲开时,里面常是深灰色的。'], ['盖在表面的细尘土', 1, '对!红色主要来自铺满地表、还会被风吹上天的细尘。再拧一档,看看尘粒。']] },
+  { n: '尘粒', s: '约 10⁻⁶ 米 · 比面粉还细的尘', q: '把一粒尘放大,里面混着什么,让它显得红?',
+    opts: [['混着含铜的绿色矿物', 0, '铜的化合物常是蓝绿色,火星尘土里铜很少。'], ['混着极细的含铁矿物', 1, '对!尘粒里混着极细的、含铁的矿物,和灰黑色的岩石碎屑拌在一起。最后一档,看原子。'], ['沾着红色的冰', 0, '火星上的冰(水冰、干冰)是白色的,在两极最多。']] },
+  { n: '原子', s: '约 10⁻¹⁰ 米 · 矿物里的原子(示意)', q: '这种含铁矿物里,铁原子是怎样存在的?',
+    opts: [['铁原子单独待着,像一根铁钉', 0, '金属铁是银灰色的,不是红色。'], ['铁和氧结合在一起(可能还带着水)', 1, '对!铁和氧结合成了"铁锈"一类的矿物;科学家认为其中可能还带着水(第 3 关会细看)。红色,就是铁生锈的颜色。'], ['硅和氧结合在一起', 0, '硅和氧组成的石英、长石大多是白色、浅色的;它们是尘粒里的"灰底色"。']] }
+];
+var SAFE = '<b style="color:#ff9a7a">安全常识</b>:干燥剂只用<b>透明小珠子的硅胶干燥剂</b>,整包放进去,不拆开、不入口、不进眼睛;<b>不要用</b>写着"生石灰"的白色块状干燥剂(遇水会发烫、伤眼伤皮肤),也不要用装黑色粉末的"脱氧剂"。不用盐酸和除锈剂;生锈的铁钉边缘可能扎手,做完洗手。';
+var HOME = '<b style="color:#ffd27a">可以在家试</b>(请大人陪同):准备三个干净的杯子和三根没有镀层的铁钉。① 杯里放一包硅胶干燥剂(不拆包),把铁钉放进去,盖紧;② 杯里倒一点清水,让铁钉一半在水里、一半在空气里;③ 请大人把水烧开后放凉(煮沸能赶走水里大部分氧气),倒满杯子淹没铁钉,在水面上倒一层食用油封住。放几天,每天看一眼、拍张照。<br>' + SAFE;
+var DANGER = '<b style="color:#ff7a7a">请勿在现实中尝试!</b><br>这里的火星、钻机都是虚拟的。真实的钻机、电钻和角磨机只能由成年人按说明使用。';
+function txt(stage, h, cls) { var p = document.createElement('p'); p.className = cls || 'note-sm'; p.innerHTML = h || ''; stage.appendChild(p); return p; }
+function card(stage, h, warn) { var d = document.createElement('div'); d.className = 'cab-card' + (warn ? ' warn' : ''); d.innerHTML = h; stage.appendChild(d); return d; }
+
+/* 2D 场景画法:k = 档位,x 画布,W/H,t 时间 */
+var R0 = rnd(5), DOTS = []; for (var i = 0; i < 260; i++) DOTS.push([R0(), R0(), R0(), R0()]);
+function marsBall(x, cx, cy, r, t) {
+  var g = x.createRadialGradient(cx - r * 0.35, cy - r * 0.35, r * 0.1, cx, cy, r);
+  g.addColorStop(0, '#f2a46a'); g.addColorStop(0.55, '#c1562c'); g.addColorStop(1, '#4a1a0e');
+  x.fillStyle = g; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill();
+  x.save(); x.beginPath(); x.arc(cx, cy, r, 0, 7); x.clip();
+  for (var i = 0; i < 40; i++) { var d = DOTS[i], px = cx + ((d[0] + t * 0.01) % 1 * 2.4 - 1.2) * r, py = cy + (d[1] * 1.6 - 0.8) * r; x.fillStyle = 'rgba(70,24,12,' + (0.12 + d[2] * 0.2) + ')'; x.beginPath(); x.ellipse(px, py, r * (0.06 + d[3] * 0.18), r * (0.03 + d[2] * 0.08), d[0] * 3, 0, 7); x.fill(); }
+  x.fillStyle = 'rgba(255,255,255,.85)'; x.beginPath(); x.ellipse(cx, cy - r * 0.93, r * 0.28, r * 0.09, 0, 0, 7); x.fill();
+  x.restore();
+  x.strokeStyle = 'rgba(255,190,140,.35)'; x.lineWidth = 3; x.beginPath(); x.arc(cx, cy, r + 2, 0, 7); x.stroke(); x.lineWidth = 1;
+}
+function ground(x, W, H) {
+  var g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#e8b98a'); g.addColorStop(0.42, '#d49a6a'); g.addColorStop(0.43, '#b4552c'); g.addColorStop(1, '#6a2a14'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  [[0.25, 0.68, 0.11], [0.62, 0.78, 0.15], [0.84, 0.6, 0.07]].forEach(function (r, i) {
+    var cx = r[0] * W, cy = r[1] * H, rr = r[2] * Math.min(W, H) * 1.6;
+    x.fillStyle = '#3e3a38'; x.beginPath(); x.ellipse(cx, cy, rr, rr * 0.55, 0, 0, 7); x.fill();
+    x.fillStyle = '#b55a30'; x.beginPath(); x.ellipse(cx, cy - rr * 0.18, rr * 0.98, rr * 0.42, 0, Math.PI, 2 * Math.PI); x.fill();
+    if (i === 1) { x.fillStyle = '#4c4846'; x.beginPath(); x.ellipse(cx + rr * 0.35, cy, rr * 0.3, rr * 0.2, 0, 0, 7); x.fill(); x.fillStyle = 'rgba(255,255,255,.8)'; x.font = '11px system-ui'; x.textAlign = 'center'; x.fillText('被风吹掉尘土的一角', cx + rr * 0.35, cy + rr * 0.45); }
+  });
+}
+function dust(x, W, H, t) {
+  x.fillStyle = '#1a0d0a'; x.fillRect(0, 0, W, H);
+  var cx = W * 0.5, cy = H * 0.5, R = Math.min(W, H) * 0.3;
+  x.fillStyle = '#4a4648'; x.beginPath(); for (var k = 0; k < 10; k++) { var a = k / 10 * 6.283, rr = R * (0.85 + 0.15 * Math.sin(k * 2.1)); x.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } x.closePath(); x.fill();
+  DOTS.forEach(function (d, i) { var a = d[0] * 6.283 + t * 0.02 * (d[3] - 0.5), rr = R * (0.8 + d[1] * 0.55), px = cx + Math.cos(a) * rr, py = cy + Math.sin(a) * rr * 0.9;
+    x.fillStyle = i % 3 ? 'rgba(' + (190 + d[2] * 50 | 0) + ',' + (80 + d[3] * 40 | 0) + ',40,.9)' : 'rgba(110,104,100,.9)'; x.beginPath(); x.arc(px, py, 1.5 + d[2] * 3.5, 0, 7); x.fill(); });
+  x.fillStyle = 'rgba(255,255,255,.7)'; x.font = '11px system-ui'; x.textAlign = 'center'; x.fillText('中间:一粒灰黑色的岩石碎屑;周围:极细的红褐色颗粒(示意)', cx, H - 10);
+}
+function atoms(x, W, H, t) {
+  x.fillStyle = '#120a10'; x.fillRect(0, 0, W, H);
+  var s = Math.min(W, H) / 6.2, ox = W / 2 - s * 2.5, oy = H / 2 - s * 1.6;
+  for (var r = 0; r < 4; r++) for (var c = 0; c < 6; c++) { var px = ox + c * s, py = oy + r * s + (c % 2) * s * 0.5;
+    if (c < 5) { x.strokeStyle = 'rgba(255,200,150,.25)'; x.beginPath(); x.moveTo(px, py); x.lineTo(px + s, py + (c % 2 ? -s * 0.5 : s * 0.5)); x.stroke(); }
+    if ((r + c) % 2 === 0) EF.ball(x, px, py, s * 0.24, '#c8743c', 'Fe'); else EF.ball(x, px, py, s * 0.18, '#ff4a4a', 'O');
+    if ((r * 7 + c) % 5 === 1) { var hx = px + s * 0.35 + Math.sin(t / 700 + c) * 2, hy = py - s * 0.32; EF.ball(x, hx, hy, s * 0.14, '#ff4a4a', 'O'); EF.ball(x, hx - s * 0.15, hy - s * 0.12, s * 0.08, '#f4f4f4', ''); EF.ball(x, hx + s * 0.15, hy - s * 0.12, s * 0.08, '#f4f4f4', ''); } }
+  x.fillStyle = 'rgba(255,255,255,.7)'; x.font = '11px system-ui'; x.textAlign = 'center'; x.fillText('示意:铁(Fe)和氧(O)排在一起,夹着水分子(红白小球);未按真实比例,真实结构更乱', W / 2, H - 10);
+}
+
+/* 尺度镜控制器:view.mount(stage, setK) / view.draw(st) */
+function lens(stage, api, view) {
+  var st = { k: 0, ok: {}, done: false, wrong: 0 };
+  var ctl = document.createElement('div'); ctl.className = 'ctl';
+  ctl.innerHTML = '<span>尺度镜</span><input type="range" id="lk" min="0" max="3" step="1" value="0" style="flex:1;min-width:140px" aria-label="尺度镜档位"><b id="ln" style="min-width:8em"></b>';
+  var opts = document.createElement('div'); opts.className = 'ctl chips';
+  var msg;
+  function setK(k) { k = Math.max(0, Math.min(3, k)); if (k > 0 && !st.ok[k - 1]) { EF.play('tick'); msg.innerHTML = '先回答这一档的问题,再往下拧。'; ctl.querySelector('#lk').value = st.k; return; }
+    st.k = k; ctl.querySelector('#lk').value = k; EF.play('whoosh'); show(); view.draw(st); }
+  view.mount(stage, setK);
+  stage.appendChild(ctl); stage.appendChild(opts);
+  msg = txt(stage, '');
+  function show() { var L = LENS[st.k]; ctl.querySelector('#ln').textContent = (st.k + 1) + ' · ' + L.n;
+    msg.innerHTML = '<b>' + L.n + '</b>(' + L.s + '):' + L.q + (st.ok[st.k] ? '<br>这一档已经弄清了' + (st.k < 3 ? ',继续往下拧。' : '。') : '');
+    opts.innerHTML = st.ok[st.k] ? '' : L.opts.map(function (o, i) { return '<button class="ef-btn ghost chip" data-i="' + i + '">' + o[0] + '</button>'; }).join('');
+    opts.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () { var o = L.opts[+b.dataset.i];
+      if (o[1]) { EF.play('fuse'); st.ok[st.k] = 1; msg.innerHTML = o[2]; opts.innerHTML = ''; view.draw(st);
+        if (Object.keys(st.ok).length === 4 && !st.done) { st.done = true; setTimeout(function () { msg.innerHTML = '找到了:火星的红,来自尘土里<b>铁和氧结合成的含铁矿物</b>——也就是"铁锈"一类的东西。'; }, 1800); setTimeout(api.complete, 2800); }
+        else if (st.k < 3) setTimeout(function () { if (st.k < 3 && st.ok[st.k]) setK(st.k + 1); }, 2400); }
+      else { st.wrong++; EF.play('tick'); msg.innerHTML = '不对哦:' + o[2]; if (st.wrong >= 2) api.say('红色是"铁锈色"。顺着这个想。'); } }; });
+  }
+  ctl.querySelector('#lk').oninput = function () { setK(+this.value); };
+  card(stage, '<b style="color:#ffd27a">尺度镜</b>:拖动滑杆或点画面上的档位,从一整颗行星一路放大到原子。每档回答一个问题才能往下拧。');
+  show(); view.draw(st);
+  EF.MR._lens = { setK: setK, st: st, answer: function (i) { var b = opts.querySelector('[data-i="' + i + '"]'); if (b) b.click(); } };
+}
+function lens2D() {
+  var C, st = { k: 0, ok: {} }, cb, shown = 0;
+  return {
+    mount: function (stage, setK) { cb = setK; C = EF.canvas(stage, 300);
+      C.c.addEventListener('pointerdown', function (e) { var q = C.pt(e); if (q.y < 34) { var k = Math.floor(q.x / (C.W / 4)); cb(k); } });
+      (function loop(t) { if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; shown += (st.k - shown) * (EF.reduced ? 1 : 0.12); x.clearRect(0, 0, W, H);
+        var k = Math.round(shown);
+        x.save(); x.translate(0, 34); var h2 = H - 34;
+        if (k === 0) { x.fillStyle = '#0a0610'; x.fillRect(0, 0, W, h2); marsBall(x, W / 2, h2 / 2, h2 * 0.4, t / 1000); }
+        else if (k === 1) ground(x, W, h2); else if (k === 2) dust(x, W, h2, t / 1000); else atoms(x, W, h2, t);
+        var a = Math.abs(shown - k); if (a > 0.02) { x.fillStyle = 'rgba(255,150,70,' + Math.min(0.6, a) + ')'; x.fillRect(0, 0, W, h2); }
+        x.restore();
+        LENS.forEach(function (L, i) { var bx = i * W / 4; x.fillStyle = i === st.k ? 'rgba(255,150,70,.35)' : 'rgba(20,10,10,.75)'; x.fillRect(bx + 2, 2, W / 4 - 4, 28); x.strokeStyle = 'rgba(255,170,90,.6)'; x.strokeRect(bx + 2, 2, W / 4 - 4, 28);
+          x.fillStyle = st.ok[i] ? '#ffd27a' : '#f4ede1'; x.font = '12px system-ui'; x.textAlign = 'center'; x.fillText((i + 1) + ' ' + L.n + (st.ok[i] ? ' ✓' : ''), bx + W / 8, 21); });
+        requestAnimationFrame(loop); })(0); },
+    draw: function (s) { st = s; }
+  };
+}
+EF.MR = { LENS: LENS, SAFE: SAFE, HOME: HOME, DANGER: DANGER, txt: txt, card: card, rnd: rnd, lens: lens, lens2D: lens2D, marsBall: marsBall };
+})();
+</script>
+<script>if (EF.glTier !== 'low') { var r3 = document.createElement('script'); r3.type = 'module'; r3.src = '../ef-mars3d.js?v=1'; document.head.appendChild(r3); }</script>
+<script>
+(function () {
+var MR = EF.MR, txt = MR.txt, card = MR.card;
+
+/* ---------- L0 红色藏在哪一层?(平面版) ---------- */
+function L0(stage, api) { MR.lens(stage, api, MR.lens2D()); }
+
+/* ---------- L1 铁是怎样生锈的?(三窗联动) ---------- */
+var CASES = { '10': '只有空气(氧气),没有水', '01': '只有水,几乎没有氧气', '11': '有水,也有空气', '00': '既没有水,也没有空气(示意)' };
+function L1(stage, api) {
+  var T = EF.tri(stage, { state: { o2: 1, w: 0, day: 0, tried: {}, rust: { '10': 0, '01': 0, '11': 0, '00': 0 } }, h: 250 }), st = T.state, done = false, asked = false;
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips';
+  ctl.innerHTML = '<button class="ef-btn ghost chip on" id="sO" style="--c:#7ad7ff">氧气(空气):有</button><button class="ef-btn ghost chip" id="sW" style="--c:#5aa8ff">水:无</button><button class="ef-btn" id="go">放 7 天</button>';
+  stage.appendChild(ctl);
+  var msg = txt(stage, '拨两个开关,决定铁钉身边有没有<b>氧气</b>、有没有<b>水</b>,然后点"放 7 天"。把四种组合里至少三种都试一试,找出铁生锈需要什么。');
+  var ans = document.createElement('div'); ans.className = 'ctl chips'; stage.appendChild(ans);
+  card(stage, MR.HOME);
+  function key() { return '' + st.o2 + st.w; }
+  function sync() { ctl.querySelector('#sO').textContent = '氧气(空气):' + (st.o2 ? '有' : '无'); ctl.querySelector('#sO').classList.toggle('on', !!st.o2);
+    ctl.querySelector('#sW').textContent = '水:' + (st.w ? '有' : '无'); ctl.querySelector('#sW').classList.toggle('on', !!st.w); }
+  ctl.querySelector('#sO').onclick = function () { if (done) return; EF.play('tick'); T.set({ o2: st.o2 ? 0 : 1, day: 0 }, 'ctl'); sync(); };
+  ctl.querySelector('#sW').onclick = function () { if (done) return; EF.play('tick'); T.set({ w: st.w ? 0 : 1, day: 0 }, 'ctl'); sync(); };
+  ctl.querySelector('#go').onclick = function () {
+    if (done) return; EF.play('whoosh'); var k = key(), tr = Object.assign({}, st.tried); tr[k] = 1;
+    var lv = { '11': 1, '01': 0.08, '10': 0.03, '00': 0 }[k], ru = Object.assign({}, st.rust); ru[k] = lv;
+    T.set({ day: 7, tried: tr, rust: ru }, 'ctl');
+    msg.innerHTML = '7 天后 · ' + CASES[k] + ':' + (k === '11' ? '铁钉长满了红褐色的锈!' : k === '00' ? '铁钉几乎没变。' : '铁钉只是稍微暗了一点,几乎没生锈。') + ' 已试 ' + Object.keys(tr).length + '/4 种组合。';
+    if (Object.keys(tr).length >= 3 && tr['11'] && !asked) { asked = true; setTimeout(ask, 1200); }
+  };
+  function ask() {
+    msg.innerHTML += '<br><b>结论:铁生锈需要——</b>';
+    ans.innerHTML = [['只要氧气', 0], ['只要水', 0], ['氧气和水都要', 1]].map(function (o, i) { return '<button class="ef-btn ghost chip" data-ok="' + o[1] + '">' + o[0] + '</button>'; }).join('');
+    ans.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () { if (done) return;
+      if (b.dataset.ok === '1') { done = true; EF.play('fuse'); ans.innerHTML = ''; msg.innerHTML = '对!铁和<b>氧气、水</b>同时接触,才会明显生锈。火星今天又干又冷,地表几乎没有液态水,空气里的氧气也不到 0.2%,铁很难像在地球上这样生锈。许多科学家认为,火星的"锈"有相当一部分形成于远古、还有液态水的时候(仍在研究)。'; setTimeout(api.complete, 2200); }
+      else { EF.play('tick'); msg.innerHTML = '看看四支铁钉:只有一种组合锈得最厉害,它身边有哪两样?'; api.say('比一比"只有空气"和"有水也有空气"那两支。'); } }; });
+  }
+  sync();
+  /* 宏观:试管 + 铁钉 */
+  var CM = EF.canvas(T.pane.macro, 250);
+  (function loop(t) {
+    if (!CM.c.isConnected) return; var x = CM.x, W = CM.W, H = CM.H; x.clearRect(0, 0, W, H);
+    var k = key(), tw = Math.min(70, W * 0.3), tx = W / 2 - tw / 2, ty = 20, th = H - 70;
+    x.strokeStyle = 'rgba(220,235,255,.7)'; x.lineWidth = 2; x.beginPath(); x.moveTo(tx, ty); x.lineTo(tx, ty + th - tw / 2); x.arc(tx + tw / 2, ty + th - tw / 2, tw / 2, Math.PI, 0, true); x.lineTo(tx + tw, ty); x.stroke();
+    if (st.w) { var wy = st.o2 ? ty + th * 0.55 : ty + 10; x.fillStyle = 'rgba(90,168,255,.28)'; x.fillRect(tx + 2, wy, tw - 4, ty + th - tw / 2 - wy); x.beginPath(); x.arc(tx + tw / 2, ty + th - tw / 2, tw / 2 - 2, 0, Math.PI); x.fill();
+      if (!st.o2) { x.fillStyle = 'rgba(255,214,90,.55)'; x.fillRect(tx + 2, ty + 4, tw - 4, 8); x.fillStyle = '#ffd27a'; x.font = '10px system-ui'; x.textAlign = 'left'; x.fillText('油层(隔绝空气)', tx + tw + 6, ty + 12); } }
+    if (!st.w && st.o2) { x.fillStyle = 'rgba(240,240,250,.75)'; x.fillRect(tx + 8, ty + th - tw - 20, tw - 16, 26); x.fillStyle = '#556'; x.font = '9px system-ui'; x.textAlign = 'center'; x.fillText('干燥剂', tx + tw / 2, ty + th - tw - 3); }
+    if (!st.w && !st.o2) { x.fillStyle = 'rgba(255,255,255,.6)'; x.font = '10px system-ui'; x.textAlign = 'center'; x.fillText('抽成真空(示意)', tx + tw / 2, ty + 30); }
+    var lv = st.day ? st.rust[k] : 0, nx = tx + tw / 2;
+    x.fillStyle = '#9aa0a8'; x.fillRect(nx - 4, ty + 26, 8, th - 46); x.fillRect(nx - 12, ty + 22, 24, 6); x.beginPath(); x.moveTo(nx - 4, ty + th - 20); x.lineTo(nx + 4, ty + th - 20); x.lineTo(nx, ty + th - 8); x.fill();
+    if (lv > 0) { var r = MR.rnd(9); for (var i = 0; i < 90 * lv + 3; i++) { var ry = ty + 26 + r() * (th - 46); if (k === '11' && ry < ty + th * 0.45 && r() < 0.6) continue; x.fillStyle = 'rgba(' + (150 + r() * 60 | 0) + ',' + (60 + r() * 30 | 0) + ',20,' + (0.5 + r() * 0.5) + ')'; x.fillRect(nx - 6 + r() * 12, ry, 2 + r() * 4, 2 + r() * 5); } }
+    x.fillStyle = '#efe6dc'; x.font = '12px system-ui'; x.textAlign = 'center'; x.fillText(CASES[k], W / 2, H - 28); x.fillStyle = '#ffd27a'; x.fillText(st.day ? '第 7 天' : '第 0 天', W / 2, H - 10);
+    requestAnimationFrame(loop);
+  })(0);
+  /* 微观:铁表面 + 来访的氧分子、水分子 */
+  var CU = EF.canvas(T.pane.micro, 250), P = [], rr = MR.rnd(3);
+  for (var i = 0; i < 18; i++) P.push({ x: rr(), y: rr() * 0.55, v: 0.2 + rr() * 0.6, k: i % 2 });
+  (function loop(t) {
+    if (!CU.c.isConnected) return; var x = CU.x, W = CU.W, H = CU.H; x.clearRect(0, 0, W, H);
+    var s = W / 13, base = H * 0.66, k = key(), lv = st.day ? st.rust[k] : 0;
+    for (var r = 0; r < 3; r++) for (var c = 0; c < 14; c++) EF.ball(x, c * s + (r % 2) * s / 2, base + r * s * 0.8, s * 0.42, '#9aa0a8', r ? '' : 'Fe');
+    P.forEach(function (p, i) { if ((p.k === 0 && !st.o2) || (p.k === 1 && !st.w)) return; var px = p.x * W + Math.sin(t / 900 + i) * 8, py = 14 + ((p.y + (EF.reduced ? 0 : t / 1000 * p.v * 0.08)) % 0.55) * H;
+      if (p.k === 0) { EF.ball(x, px - 6, py, 7, '#ff4a4a', ''); EF.ball(x, px + 6, py, 7, '#ff4a4a', ''); }
+      else { EF.ball(x, px, py, 7, '#ff4a4a', ''); EF.ball(x, px - 7, py - 6, 4, '#f4f4f4', ''); EF.ball(x, px + 7, py - 6, 4, '#f4f4f4', ''); } });
+    if (st.o2 && st.w) for (var j = 0; j < 6; j++) { var ex = ((j * 0.17 + t / 4000) % 1) * W, ey = base - s * 0.2 - ((t / 600 + j) % 1) * s; x.fillStyle = '#ffe066'; x.beginPath(); x.arc(ex, ey, 2.5, 0, 7); x.fill(); }
+    var n = Math.round(lv * 9), rr2 = MR.rnd(17); for (var m = 0; m < n; m++) { var cx = (0.08 + rr2() * 0.84) * W, cy = base - s * 0.55; for (var q = 0; q < 5; q++) EF.ball(x, cx + (q - 2) * 7, cy - (q % 2) * 7, 6, '#c8743c', ''); }
+    x.fillStyle = 'rgba(255,255,255,.7)'; x.font = '10px system-ui'; x.textAlign = 'left';
+    x.fillText(st.o2 && st.w ? '铁和氧、水慢慢结合成锈团(黄点:被交出的电子,示意)' : (st.o2 ? '只有氧分子:干燥时反应极慢' : st.w ? '只有水分子:没有氧气,几乎不锈' : '铁表面很安静'), 4, H - 6);
+    x.fillText('红红:氧分子 O₂ · 红白白:水分子 H₂O(示意)', 4, 10);
+    requestAnimationFrame(loop);
+  })(0);
+  /* 符号 */
+  var sy = document.createElement('div'); sy.className = 'tri-sym'; T.pane.sym.appendChild(sy);
+  T.on(function (s) {
+    var both = s.o2 && s.w;
+    sy.innerHTML = '<div class="eq" style="font-size:16px"><span class="' + (s.o2 ? 'hot' : 'dim') + '">氧气</span> + <span class="' + (s.w ? 'hot' : 'dim') + '">水</span> + 铁 → <span class="' + (both && s.day ? 'hot' : 'dim') + '">铁锈</span></div>' +
+      '<p class="note-sm">铁锈是红褐色的<b>含水的铁的氧化物</b>,成分不固定,常写成 Fe₂O₃·xH₂O。</p>' +
+      '<p class="note-sm">铁和氧气发生的反应属于<b>氧化反应</b>;铁生锈进行得很慢,是一种<b>缓慢氧化</b>(和铁丝在氧气里燃烧生成黑色的 Fe₃O₄ 不一样)。</p>' +
+      '<div class="eq ' + (both && s.day ? '' : 'dim') + '" style="font-size:15px">4Fe + 3O₂ + 2xH₂O = 2Fe₂O₃·xH₂O</div>' +
+      '<p class="note-sm">这个式子只表示总结果(示意,不是课本要求);真实的生锈要分好几步:铁先变成亚铁离子 Fe²⁺,再被进一步氧化成 Fe³⁺。到了高中,你会从"得失电子"的角度再认识它。</p>';
+  });
+}
+
+/* ---------- L2 两种"锈",哪种最像火星?(颜色曲线比对) ---------- */
+/* 反射率曲线(示意,按 2025 年研究的趋势简化):x = 波长 400–1000 纳米 */
+function curve(k, w) { var u = (w - 400) / 600;
+  if (k === 'mars') return 0.06 + 0.27 / (1 + Math.exp(-(w - 590) / 38)) + 0.02 * u - 0.045 * Math.exp(-Math.pow((w - 980) / 120, 2));
+  if (k === 'fh') return 0.06 + 0.26 / (1 + Math.exp(-(w - 585) / 40)) + 0.03 * u - 0.05 * Math.exp(-Math.pow((w - 960) / 120, 2));
+  if (k === 'hm') return 0.05 + 0.07 / (1 + Math.exp(-(w - 515) / 10)) + 0.15 / (1 + Math.exp(-(w - 590) / 14)) - 0.12 * Math.exp(-Math.pow((w - 865) / 55, 2));
+  return 0.09 + 0.02 * u; }
+var SAMP = [{ k: 'hm', n: '赤铁矿(不含水的铁锈矿物)', c: '#ff6a5a' }, { k: 'fh', n: '水铁矿 + 玄武岩(含水的铁锈矿物)', c: '#ffd27a' }, { k: 'bs', n: '纯玄武岩粉(灰黑色岩石)', c: '#9aa6b8' }];
+function L2(stage, api) {
+  var C = EF.canvas(stage, 280), sel = -1, tried = {}, done = false;
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips';
+  ctl.innerHTML = SAMP.map(function (S, i) { return '<button class="ef-btn ghost chip" data-i="' + i + '" style="--c:' + S.c + '">' + S.n + '</button>'; }).join('');
+  stage.appendChild(ctl);
+  var pick = document.createElement('div'); pick.className = 'ctl chips'; stage.appendChild(pick);
+  var msg = txt(stage, '白色粗线是从太空测到的<b>火星尘土</b>的颜色曲线:每种颜色的光被反射回来多少。把三种实验室样品一一叠上去,看哪条和火星最吻合。');
+  card(stage, '<b style="color:#ffd27a">怎么读这张图</b>:横轴是光的颜色(波长),左边蓝紫、中间绿黄、右边红,约 750 纳米再往右是眼睛看不见的近红外;纵轴是反射得多少。曲线左低右高 = 蓝绿光被吸收、红光反射得多 = 看起来偏红。');
+  function score(k) { var d = 0; for (var w = 400; w <= 1000; w += 10) d += Math.abs(curve(k, w) - curve('mars', w)); return d; }
+  ctl.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () { if (done) return; sel = +b.dataset.i; tried[sel] = 1; EF.play('select');
+    ctl.querySelectorAll('.chip').forEach(function (z) { z.classList.toggle('on', z === b); });
+    var S = SAMP[sel]; msg.innerHTML = '<b>' + S.n + '</b>:' + ({ hm: '整体也偏红,但在绿光处爬到一半停了一下(一个"肩膀"),在近红外约 860 纳米处还有一个又深又窄的凹坑;火星曲线的下弯更浅、更宽,位置也更靠右。', fh: '一路平滑地抬起来,右端也微微下弯,几乎和火星曲线重合!', bs: '几乎是一条平线,而且很低:灰黑色,哪种颜色都反射得少。' })[S.k] + ' 已比过 ' + Object.keys(tried).length + '/3 种。';
+    if (Object.keys(tried).length === 3) finalAsk(); }; });
+  function finalAsk() {
+    if (pick.innerHTML) return;
+    pick.innerHTML = '<span style="align-self:center">最像火星的是:</span>' + SAMP.map(function (S, i) { return '<button class="ef-btn chip" data-i="' + i + '" style="--c:' + S.c + '">' + S.n.split('(')[0] + '</button>'; }).join('');
+    pick.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () { if (done) return; var S = SAMP[+b.dataset.i];
+      if (S.k === 'fh') { done = true; EF.play('fuse'); pick.innerHTML = ''; msg.innerHTML = '没错。2025 年发表的一项研究把多种样品和火星轨道器、火星车的数据一一比对,发现<b>含水的水铁矿</b>和玄武岩(再加少量硫酸盐)的极细混合物最吻合。水铁矿通常在有<b>凉的液态水</b>的环境里形成——这条线索支持"远古火星曾经又冷又湿"的想法。(这是新结论,科学家还在继续检验。)'; setTimeout(api.complete, 2800); }
+      else { EF.play('tick'); msg.innerHTML = S.n + '和火星曲线差得' + (S.k === 'bs' ? '最远。' : '不算远,但近红外那个凹坑的位置和深浅都对不上。') + '再比一比。'; api.say('看哪条线和白色粗线贴得最紧,尤其是右边。'); } }; });
+  }
+  (function loop() {
+    if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+    var L = 40, R = W - 12, T = 16, B = H - 34;
+    var sp = x.createLinearGradient(L, 0, L + (R - L) * 0.583, 0); ['#7a3cff', '#3c6cff', '#3cc8ff', '#4cd060', '#e8e040', '#ff9a30', '#ff3030', '#a01818'].forEach(function (c, i) { sp.addColorStop(i / 7, c); });
+    x.fillStyle = sp; x.fillRect(L, B + 4, (R - L) * 0.583, 6); x.fillStyle = 'rgba(160,40,40,.35)'; x.fillRect(L + (R - L) * 0.583, B + 4, (R - L) * 0.417, 6);
+    x.fillStyle = 'rgba(255,255,255,.65)'; x.font = '10px system-ui'; x.textAlign = 'center';
+    [400, 500, 600, 700, 800, 900, 1000].forEach(function (w) { x.fillText(w, L + (w - 400) / 600 * (R - L), B + 22); });
+    x.textAlign = 'left'; x.fillText('波长(纳米) · 约 750 以右是近红外,眼睛看不见', L, H - 2);
+    x.save(); x.translate(12, (T + B) / 2); x.rotate(-Math.PI / 2); x.textAlign = 'center'; x.fillText('反射得多少', 0, 0); x.restore();
+    x.strokeStyle = 'rgba(255,255,255,.15)'; x.strokeRect(L, T, R - L, B - T);
+    function plot(k, col, lw) { x.strokeStyle = col; x.lineWidth = lw; x.beginPath(); for (var w = 400; w <= 1000; w += 5) { var px = L + (w - 400) / 600 * (R - L), py = B - curve(k, w) / 0.4 * (B - T); w === 400 ? x.moveTo(px, py) : x.lineTo(px, py); } x.stroke(); x.lineWidth = 1; }
+    plot('mars', 'rgba(255,255,255,.9)', 5);
+    if (sel > -1) plot(SAMP[sel].k, SAMP[sel].c, 2.5);
+    x.fillStyle = '#fff'; x.textAlign = 'left'; x.font = '12px system-ui'; x.fillText('— 火星尘土(示意曲线)', L + 8, T + 16);
+    if (sel > -1) { x.fillStyle = SAMP[sel].c; x.fillText('— ' + SAMP[sel].n, L + 8, T + 34); x.fillStyle = 'rgba(255,255,255,.7)'; x.fillText('吻合度:' + Math.max(0, Math.round(100 - score(SAMP[sel].k) * 9)) + ' 分(示意)', L + 8, T + 52); }
+    requestAnimationFrame(loop);
+  })();
+}
+
+/* ---------- L3 钻开红石头 ---------- */
+var STORY = [['star', '恒星里炼出铁,超新星爆发把它撒进太空'], ['core', '星尘聚成火星,大部分铁沉进火星的核心'], ['rust', '留在表面的铁遇到水和氧,生了锈']];
+function L3(stage, api) {
+  var C = EF.canvas(stage, 280), st = { guess: null, depth: 0, drilling: false, revealed: false, seq: [] }, done = false;
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips';
+  ctl.innerHTML = '<span style="align-self:center">先猜:钻出来的粉是——</span><button class="ef-btn ghost chip" data-g="red" style="--c:#e0703a">红色</button><button class="ef-btn ghost chip" data-g="grey" style="--c:#9aa6b8">灰色</button><button class="ef-btn" id="drill" disabled>按住钻孔</button>';
+  stage.appendChild(ctl);
+  var story = document.createElement('div'); story.className = 'ctl chips'; stage.appendChild(story);
+  var msg = txt(stage, '火星车停在一块平平的红色岩石上。先猜一猜,钻头磨出来的岩石粉会是什么颜色,再按住"按住钻孔"。');
+  card(stage, MR.DANGER, true);
+  ctl.querySelectorAll('[data-g]').forEach(function (b) { b.onclick = function () { if (st.guess) return; st.guess = b.dataset.g; b.classList.add('on'); EF.play('select'); ctl.querySelector('#drill').disabled = false; msg.innerHTML = '你猜:' + (st.guess === 'red' ? '红色' : '灰色') + '。按住"按住钻孔"往下钻。'; }; });
+  var dr = ctl.querySelector('#drill');
+  function on(e) { if (e) e.preventDefault(); if (!st.guess || st.revealed) return; st.drilling = true; EF.play('whoosh'); }
+  function off() { st.drilling = false; }
+  dr.addEventListener('pointerdown', on); dr.addEventListener('pointerup', off); dr.addEventListener('pointerleave', off); dr.addEventListener('keydown', function (e) { if (e.key === ' ' || e.key === 'Enter') { on(e); if (EF.reduced) st.depth = 1; } }); dr.addEventListener('keyup', off);
+  function reveal() { st.revealed = true; EF.play('fuse');
+    msg.innerHTML = (st.guess === 'grey' ? '猜对了!' : '意外吧?') + '钻出来的粉是<b>灰色</b>的。好奇号火星车 2013 年第一次钻孔时就看到过这一幕:那块岩石只有表面一层被染红,里面是灰色的。<br>最后,把铁的旅程按顺序排一排:';
+    var order = [2, 0, 1]; story.innerHTML = order.map(function (i) { return '<button class="ef-btn ghost chip" data-k="' + STORY[i][0] + '">' + STORY[i][1] + '</button>'; }).join('');
+    story.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () { if (done || b.disabled) return; var want = STORY[st.seq.length][0];
+      if (b.dataset.k === want) { st.seq.push(want); b.disabled = true; b.classList.add('on'); b.textContent = st.seq.length + '. ' + b.textContent; EF.play('fuse');
+        if (st.seq.length === 3) { done = true; msg.innerHTML = '铁的旅程:<b>恒星炼铁 → 沉进火星的核心 → 表面生锈</b>。火星的红,是一颗星球生锈的颜色;那些铁,来自比太阳更早的恒星。'; setTimeout(api.complete, 2400); } }
+      else { EF.play('tick'); api.say('铁先得被"炼"出来,才能落到行星上。'); } }; });
+  }
+  (function loop() {
+    if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+    var sky = x.createLinearGradient(0, 0, 0, H * 0.45); sky.addColorStop(0, '#d8a878'); sky.addColorStop(1, '#e8c09a'); x.fillStyle = sky; x.fillRect(0, 0, W, H * 0.45);
+    var top = H * 0.45, skin = 7, cx = W * 0.42;
+    x.fillStyle = '#b4552c'; x.fillRect(0, top, W, skin); x.fillStyle = '#5a5654'; x.fillRect(0, top + skin, W, H - top - skin);
+    var r2 = MR.rnd(4); for (var i = 0; i < 120; i++) { x.fillStyle = 'rgba(' + (70 + r2() * 40 | 0) + ',' + (68 + r2() * 36 | 0) + ',' + (66 + r2() * 34 | 0) + ',.8)'; x.fillRect(r2() * W, top + skin + r2() * (H - top - skin), 3, 2); }
+    if (st.drilling && st.depth < 1) { st.depth = Math.min(1, st.depth + (EF.reduced ? 1 : 0.012)); if (st.depth >= 1 && !st.revealed) reveal(); }
+    var dd = st.depth * (H - top - 40);
+    x.fillStyle = '#1a1210'; x.fillRect(cx - 6, top, 12, dd);
+    x.fillStyle = '#d8d4cc'; x.fillRect(cx - 3, top - 70 + dd, 6, 70); x.fillStyle = '#e8e2d8'; x.fillRect(cx - 30, top - 90 + dd * 0.15, 60, 22);
+    x.fillStyle = '#c9c2b6'; x.fillRect(cx - 60, top - 120, 140, 30); x.fillRect(cx + 60, top - 150, 10, 40);
+    if (st.depth > 0.05) { var pr = 8 + st.depth * 22; x.fillStyle = st.depth > 0.12 ? '#8a8682' : '#b4552c'; x.beginPath(); x.ellipse(cx + 26 + pr * 0.4, top + 1, pr, pr * 0.38, 0, Math.PI, 2 * Math.PI); x.fill(); }
+    x.fillStyle = 'rgba(255,255,255,.75)'; x.font = '11px system-ui'; x.textAlign = 'left';
+    x.fillText('红色锈皮(很薄,示意放大)', W * 0.6, top + 4); x.fillText('灰色岩石内部', W * 0.6, top + 30);
+    if (st.revealed) { x.fillStyle = '#ffd27a'; x.font = '700 13px system-ui'; x.fillText('岩石粉:灰色', cx + 40, top - 14); }
+    requestAnimationFrame(loop);
+  })();
+  EF.MR._drill = function () { st.depth = 0.999; st.drilling = true; };
+}
+
+function guard(stage, api) { var tok = {}, fired = false; stage._tok = tok; return { say: api.say, complete: function () { if (fired || stage._tok !== tok) return; fired = true; api.complete(); } }; }
+function pick(f2, k) { return function (stage, api0) { var api = guard(stage, api0); if (EF.M3 && EF.M3[k]) { try { return EF.M3[k](stage, api); } catch (e) { console.warn('[ef] 3D 玩法出错,回落平面版', e); stage.innerHTML = ''; } } return f2(stage, api); }; }
+var LEVELS = [
+  { title: '红色藏在哪一层?', setup: pick(L0, 'L0'), task: '拧动尺度镜:火星 → 地表 → 尘粒 → 原子,每一档回答"红色在这里吗"。',
+    ask: { q: '你觉得,火星的红色是怎么来的?', opts: ['火星很热,烧红了', '表面有"生锈"的东西', '涂了红色颜料'], ok: 1 },
+    hints: ['火星的大气很稀薄,也没有颜色。', '风一吹,红色的尘土会飘起来;敲开的石头里面常是灰的。', '金属铁是银灰色的;铁生锈后才变成红褐色。'],
+    explain: '火星表面平均温度约零下 60 摄氏度,一点也不"热"。它的红色来自铺满地表的细尘:尘粒里混着极细的<b>含铁矿物</b>,铁和氧(还有水)结合在一起——和地球上的铁锈是同一类东西。这类矿物吸收较多蓝绿光、反射较多红光,所以整颗星球看起来是红的。' },
+  { title: '铁是怎样生锈的?', setup: pick(L1, 'L1'), task: '拨"氧气""水"两个开关,把四种组合里至少三种都放 7 天,找出铁生锈的条件。',
+    ask: { q: '一根铁钉,放在哪里最容易生锈?', opts: ['密封的干燥罐里', '一半泡在水里、一半露在空气里', '烧开后放凉、表面盖了油的水里'], ok: 1 },
+    hints: ['干燥罐里有空气,但几乎没有水。', '烧开过的水里,溶解的氧气被赶走了;油层又挡住了空气。', '水和空气交界的地方,两样都有。'],
+    explain: '铁生锈要<b>同时</b>接触<b>氧气和水</b>,是一种进行得很慢的<b>缓慢氧化</b>,生成红褐色、疏松的铁锈(含水的铁的氧化物,常写成 Fe₂O₃·xH₂O)。铁锈疏松,挡不住里面的铁继续生锈。盐水、酸会让生锈更快;刷漆、涂油、镀锌能防锈。火星今天又干又冷,地表几乎没有液态水,氧气也不到 0.2%;许多科学家认为,它的"锈"有相当一部分形成于远古还有液态水的时候。' },
+  { title: '两种"锈",哪种最像火星?', setup: pick(L2, 'L2'), task: '把三种实验室样品的颜色曲线叠到火星尘土的曲线上,找出最吻合的一种。',
+    ask: { q: '科学家没把火星尘土带回地球,怎么知道它是什么?', opts: ['只能猜', '看它反射各种颜色光的"指纹",和实验室样品比对', '尝一尝'], ok: 1 },
+    hints: ['白色粗线是目标,看谁和它贴得最紧。', '注意右边近红外那一段:有没有凹坑?', '纯玄武岩是灰黑色的,曲线又平又低。'],
+    explain: '每种物质吸收和反射不同颜色光的方式都不一样,画成曲线就像一枚<b>光的指纹</b>。科学家用轨道器、火星车测火星尘土的曲线,再和实验室里做的样品比对。过去多认为火星的红主要来自不含水的<b>赤铁矿</b>;2025 年的一项研究发现,<b>含水的水铁矿</b>与玄武岩(加少量硫酸盐)的极细混合物更吻合。水铁矿通常在凉的液态水环境里形成,所以这条线索支持"远古火星又冷又湿"(仍在检验)。下一站「光谱」会教你更多读光的本领。' },
+  { title: '钻开红石头', setup: pick(L3, 'L3'), task: '先猜钻出来的岩石粉是什么颜色,按住钻孔;再把铁的旅程排好顺序。',
+    ask: { q: '火星上的红色石头,里面也是红的吗?', opts: ['从里到外都是红的', '不一定,红色可能只是表面一层', '里面是空心的'], ok: 1 },
+    hints: ['风把尘土吹走的地方,石头露出深色。', '红色是"锈",锈只长在铁和水、氧接触的地方。', '铁的旅程:先在恒星里炼出来,再落到行星上。'],
+    explain: '好奇号火星车 2013 年第一次钻孔时,钻出的粉末是<b>灰色</b>的:那块岩石(一种细粒的泥岩)只有表面被氧化成红色,里面是灰色。后来也有钻孔钻出红色粉末,所以不是每块石头都"红皮灰心",但红色常常只是薄薄的一层。至于铁本身——它在恒星里被炼出来,超新星爆发把它撒进太空,随星尘聚成行星;火星形成时大部分铁沉进了火星的核心,留在表层的铁遇到水和氧,就给这颗星球"刷"上了红色。' }
+];
+var NOTES = { title: '元素工坊 · 火星为什么是红的?', items: [
+  '火星的红来自表面细尘里的含铁矿物:铁和氧(还有水)结合,和地球上的铁锈是同一类东西;它们反射较多红光。',
+  '火星大气稀薄,地面气压不到地球的 1%,主要是二氧化碳,氧气不到 0.2%;天空的黄褐色来自飘浮的细尘。',
+  '铁生锈需要同时接触氧气和水,属于缓慢氧化;铁锈是含水的铁的氧化物(常写成 Fe₂O₃·xH₂O),疏松,不能保护里面的铁。',
+  '防锈:保持干燥,刷漆、涂油、镀锌等隔绝氧气和水。',
+  '科学家用"光的指纹"(反射光谱)辨认远方的物质。2025 年的研究认为,火星尘土的颜色更像含水的水铁矿与玄武岩的混合物——水铁矿通常在凉的液态水中形成,支持远古火星曾经又冷又湿的想法(仍在继续研究)。',
+  '火星上有些红色岩石只有表面一层是红的,钻开后里面是灰色(好奇号 2013 年首次钻孔)。',
+  '铁的旅程:恒星炼出铁、超新星爆发把它撒进太空 → 随星尘聚成行星,大部分铁沉进火星的核心 → 留在表面的铁遇水和氧生锈。',
+  '安全:在家做生锈实验只用铁钉、清水、杯子、硅胶干燥剂(不拆包),请大人陪同、由大人烧水;不用生石灰干燥剂、脱氧剂、盐酸和除锈剂。'],
+  bridge: '火星的红是它的"化学";它的一天有多长,是它的"天文"——星桥通往天枢「火星上的一天有多长?」<a href="../../starhelm/?task=marsday">去看看 →</a>' };
+EF.mission('mars', LEVELS, NOTES);
+})();
+</script>
+</body>
+</html>

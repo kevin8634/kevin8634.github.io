@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.7(crystal 霜镜舞台、cabbage 染色台、fireworks 夜空焰色台、battery 电光实验台、rocks 岩石标本台)
+/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.9(crystal 霜镜舞台、cabbage 染色台、fireworks 夜空焰色台、battery 电光实验台、rocks 岩石标本台、mars 锈红舞台)
    每关一个 3D 场景,随关卡切换淡入淡出;关卡玩法仍在前景面板里进行。低档不加载(保留 v0.1 星空背景)。 */
 import { THREE, makeGL, P, glowSprite, starMaterial, fresnelMaterial } from './ef-gl.js?v=2';
 const EF = window.EF;
@@ -48,7 +48,11 @@ function boot() {
   if (isR) { /* v0.8:岩石标本台——暗紫褐 + 熔岩橙边光(莫芙) */
     scene.fog = new THREE.FogExp2(0x140c14, 0.03); key.color.set(0xfff0e6); rim.color.set(0xff7a3a);
   }
-  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : isK ? cabbageScenes() : isF ? fireScenes() : isB ? voltScenes() : isR ? rockScenes() : [];
+  const isM = EF.missionId === 'mars';
+  if (isM) { /* v0.9:锈红舞台——暗赭 + 铁锈橙边光(奥加) */
+    scene.fog = new THREE.FogExp2(0x180a06, 0.03); key.color.set(0xfff0e0); rim.color.set(0xe0703a);
+  }
+  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : isK ? cabbageScenes() : isF ? fireScenes() : isB ? voltScenes() : isR ? rockScenes() : isM ? marsScenes() : [];
   LV.forEach(s => { scene.add(s.g); setA(s, 0); });
 
   /* ---------- stars:主序星 → 洋葱分层的大质量恒星 → 铁核心 → 超新星遗迹 ---------- */
@@ -252,6 +256,29 @@ function boot() {
       const N = 30, pp = new Float32Array(N * 3), pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pp, 3));
       s.g.add(new THREE.Points(pg, reg(s, new THREE.PointsMaterial({ color: 0xffd27a, size: 0.09, blending: add, depthWrite: false }))));
       s.upd = t => { for (let i = 0; i < N; i++) { const a = i / N * 6.283 - t * 0.4; pp.set([Math.cos(a) * R, Math.sin(a) * R, 0], i * 3); } pg.attributes.position.needsUpdate = true; s.g.rotation.x = 0.5; s.g.rotation.y = Math.sin(t * 0.2) * 0.4; }; out.push(s); }
+    return out;
+  }
+
+  /* ---------- mars(奥加):火星 → 生锈的铁钉 → 光的指纹曲线 → 红皮灰心的岩芯 ---------- */
+  function marsScenes() {
+    const out = [], add = THREE.AdditiveBlending;
+    { const s = SC(), m = new THREE.Mesh(new THREE.SphereGeometry(1.2, 64, 48), reg(s, new THREE.MeshStandardMaterial({ color: 0xc1562c, roughness: 0.95 }))); s.g.add(m);
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(1.205, 48, 16, 0, 6.283, 0, 0.32), reg(s, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 }))); s.g.add(cap);
+      const g = glowSprite([[0, 'rgba(255,160,100,.35)'], [0.5, 'rgba(255,110,60,.08)'], [1, 'rgba(0,0,0,0)']], 4.2); reg(s, g.material); s.g.add(g);
+      s.upd = t => { s.g.rotation.y = t * 0.08; s.g.rotation.z = 0.44; }; out.push(s); }
+    { const s = SC(), nail = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 2.4, 16), reg(s, new THREE.MeshStandardMaterial({ color: 0x9aa0a8, metalness: 0.7, roughness: 0.4 }))); s.g.add(nail);
+      const head = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.08, 24), nail.material); head.position.y = 1.22; s.g.add(head);
+      const N = 120, pp = new Float32Array(N * 3); for (let i = 0; i < N; i++) { const a = rnd() * 6.283; pp.set([Math.cos(a) * 0.12, -1.1 + rnd() * 1.4, Math.sin(a) * 0.12], i * 3); }
+      const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pp, 3)); const pm = reg(s, new THREE.PointsMaterial({ color: 0xc8643a, size: 0.09, depthWrite: false })); s.g.add(new THREE.Points(pg, pm));
+      s.upd = t => { s.g.rotation.y = t * 0.3; s.g.rotation.z = 0.5; pm.size = 0.05 + 0.06 * (0.5 + 0.5 * Math.sin(t * 0.4)); }; out.push(s); }
+    { const s = SC(), pts = []; for (let i = 0; i <= 60; i++) { const w = i / 60; pts.push(new THREE.Vector3(-1.8 + w * 3.6, -0.9 + 1.6 / (1 + Math.exp(-(w - 0.32) * 14)), 0)); }
+      const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 120, 0.035, 8), reg(s, new THREE.MeshBasicMaterial({ color: 0xffd27a, blending: add }))); s.g.add(tube);
+      const cols = [0x7a3cff, 0x3c6cff, 0x3cc8ff, 0x4cd060, 0xf0e040, 0xff9a30, 0xff3030]; cols.forEach((c, i) => { const b = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.06, 0.06), reg(s, new THREE.MeshBasicMaterial({ color: c }), 0.8)); b.position.set(-1.8 + 0.17 + i * 0.34, -1.15, 0); s.g.add(b); });
+      s.upd = t => { s.g.rotation.y = Math.sin(t * 0.2) * 0.35; }; out.push(s); }
+    { const s = SC(), core = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 1.8, 32), reg(s, new THREE.MeshStandardMaterial({ color: 0x5a5654, roughness: 0.9 }))); s.g.add(core);
+      const skin = new THREE.Mesh(new THREE.CylinderGeometry(0.47, 0.47, 0.12, 32), reg(s, new THREE.MeshStandardMaterial({ color: 0xb4552c, roughness: 1 }))); skin.position.y = 0.92; s.g.add(skin);
+      const fe = glowSprite([[0, 'rgba(255,220,160,.9)'], [0.3, 'rgba(255,160,80,.4)'], [1, 'rgba(0,0,0,0)']], 1.2); reg(s, fe.material); fe.position.set(0, 1.9, 0); s.g.add(fe);
+      s.upd = t => { s.g.rotation.y = t * 0.25; s.g.rotation.x = 0.35; fe.position.y = 1.9 - ((t * 0.15) % 1) * 0.9; }; out.push(s); }
     return out;
   }
 

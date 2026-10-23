@@ -9,7 +9,7 @@
 <meta property="og:title" content="元素工坊 Element Forge · 化学 · 创世计划 Genesis">
 <meta property="og:description" content="从一颗恒星里,炼出整个世界。亲手聚变出元素、把石墨压成钻石。免费、免注册。">
 <meta name="theme-color" content="#070a14">
-<link rel="stylesheet" href="ef.css?v=11">
+<link rel="stylesheet" href="ef.css?v=12">
 <link rel="stylesheet" href="ef-hud.css?v=2">
 </head>
 <body class="home pre">
@@ -52,8 +52,8 @@
   </section>
 
   <section class="sec">
-    <h2>星球篇 · 即将点亮</h2>
-    <p class="sub">元素离开恒星,变成岩石和行星。不同的星球,有不同的化学。</p>
+    <h2>星球篇</h2>
+    <p class="sub">元素离开恒星,变成岩石和行星。不同的星球,有不同的化学。第一站火星已点亮,其余陆续开放。</p>
     <figure class="mars glass"><img src="img/mars-base.webp" alt="火星基地概念图" loading="lazy"><figcaption>终章「火星基地」:只用火星上的空气、冰和岩石,造出氧气、水和燃料。<small>概念图,非实景</small></figcaption></figure>
     <div class="cards" id="planets"></div>
   </section>
@@ -83,7 +83,7 @@
     创世计划 Genesis · 科学素养 / 科普探究
   </footer>
 </main>
-<script src="ef.js?v=11"></script>
+<script src="ef.js?v=12"></script>
 <script>
 (function () {
 if (EF.reduced) document.body.classList.remove('pre');  /* v0.3.2:进入动画每次进入都播放(减少动态除外) */
@@ -93,7 +93,7 @@ var lit = EF.litSet();
 /* ---------- 尺度镜舞台(状态在这里;3D 由 ef-home.js 渲染,低档回落本页 Canvas 2D) ---------- */
 var SC = [
   { n: '恒星', s: '约 10⁹ 米 · 一颗恒星', t: 'stars', e: 9, g: 'oga', q: '这颗恒星每秒要把约 6 亿吨氢聚变成氦。等氢烧完了,它还能炼出什么?' },
-  { n: '行星', s: '约 10⁷ 米 · 一颗行星', t: 'planet', e: 7, g: 'mof', q: '火星为什么是红色的?那片红色里的元素,又是在哪颗星里炼出来的?' },
+  { n: '行星', s: '约 10⁷ 米 · 一颗行星', t: 'mars', e: 7, g: 'oga', q: '火星为什么是红色的?那片红色里的元素,又是在哪颗星里炼出来的?' },
   { n: '烧杯', s: '约 10⁻¹ 米 · 你看得见的实验', t: 'cabbage', e: -1, g: 'dot', q: '同一杯紫甘蓝汁,为什么能变成红、紫、蓝、绿好几种颜色?' },
   { n: '晶体', s: '约 10⁻⁹ 米 · 金刚石里的碳原子', t: 'carbon', e: -9, g: 'bucky', q: '这些碳原子排得整整齐齐。换一种排法,它还会是钻石吗?' },
   { n: '分子', s: '约 10⁻¹⁰ 米 · 一个甲烷分子', t: 'carbon', e: -10, g: 'click', q: '一个碳原子,为什么偏偏伸出 4 只"手"?' },
@@ -170,7 +170,8 @@ EF.BRIDGES = [
   { a: 'ef.carbon', b: 'ma.bee', w: '星图 Math Atlas', t: '为什么蜜蜂选六边形', href: '../math-atlas/bee/', why: '石墨的每一层都是六边形网格,蜂巢也是。' },
   { a: 'ef.stars', b: 'nv.stars', w: '宙律 Nomoverse', t: '恒星的一生', href: null, why: '恒星怎样诞生、燃烧、死亡。' },
   { a: 'ef.crystal', b: 'ma.cube', w: '星图 Math Atlas', t: '魔方为什么能复原?', href: '../math-atlas/cube/', why: '晶体的对称,和魔方的对称是同一种数学。' },
-  { a: 'ef.rocks', b: 'sh.quakes', w: '天枢 Starhelm', t: '地震在告诉我们什么?', href: '../starhelm/?task=quakes', why: '岩石怎样"长"出来,和地球内部的运动有关。' }
+  { a: 'ef.rocks', b: 'sh.quakes', w: '天枢 Starhelm', t: '地震在告诉我们什么?', href: '../starhelm/?task=quakes', why: '岩石怎样"长"出来,和地球内部的运动有关。' },
+  { a: 'ef.mars', b: 'sh.marsday', w: '天枢 Starhelm', t: '火星上的一天有多长?', href: '../starhelm/?task=marsday', why: '火星为什么红是它的化学,火星的一天多长是它的天文。' }
 ];
 document.getElementById('drBridges').innerHTML = EF.BRIDGES.map(function (B) {
   var on = B.href && !B.soon;
@@ -268,8 +269,8 @@ function card(M, k, cls) {
   a.onmouseenter = EF.hover; return a;
 }
 var cards = document.getElementById('cards'), planets = document.getElementById('planets'), cvs = [];
-Object.keys(EF.MISSIONS).forEach(function (k) { var M = EF.MISSIONS[k], c = card(M, k, M.soon ? 'soon' : ''); cards.appendChild(c); cvs.push([c.querySelector('canvas'), M.g]); });
-EF.PLANETS.forEach(function (P) { var c = card(P, null, 'planet'); planets.appendChild(c); cvs.push([c.querySelector('canvas'), P.g]); });
+Object.keys(EF.MISSIONS).forEach(function (k) { var M = EF.MISSIONS[k]; if (M.planet) return; var c = card(M, k, M.soon ? 'soon' : ''); cards.appendChild(c); cvs.push([c.querySelector('canvas'), M.g]); });
+EF.PLANETS.forEach(function (P) { var M = P.id && EF.MISSIONS[P.id], c = M ? card(M, P.id, 'planet live') : card(P, null, 'planet'); planets.appendChild(c); cvs.push([c.querySelector('canvas'), P.g]); });
 
 /* ---------- 元素起源周期表 ---------- */
 var pt = document.getElementById('pt'), side = document.getElementById('side'), sel = 26;

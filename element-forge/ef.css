@@ -200,3 +200,11 @@ body.mission.stone .cn{border-color:#d6bcff;filter:drop-shadow(0 0 6px #c9a6ff88
 body.mission.stone .m-stage{border-color:rgba(201,166,255,.26);background:rgba(18,12,26,.46)}
 body.mission.stone .m-stage .ctl{border-color:rgba(201,166,255,.22)}
 body.mission.stone .m-guide{box-shadow:0 0 40px rgba(201,166,255,.1)}
+/* v0.9 mars 锈红舞台(奥加) */
+body.rust{--line:rgba(224,112,58,.28)}
+body.mission.rust .cn{border-color:#f0905a;filter:drop-shadow(0 0 6px #e0703a88)}
+body.mission.rust .m-stage{border-color:rgba(224,112,58,.28);background:rgba(24,10,8,.46)}
+body.mission.rust .m-stage .ctl{border-color:rgba(224,112,58,.24)}
+body.mission.rust .m-guide{box-shadow:0 0 40px rgba(224,112,58,.12)}
+.card.planet.live{opacity:1;pointer-events:auto}.card.planet.live::after{content:"星球篇 · 已点亮";color:#ffb35c;border-color:#ffb35c66}
+.m-stage .ctl:empty{display:none}
