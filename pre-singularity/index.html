@@ -332,7 +332,7 @@ document.addEventListener('ps-skin',()=>{ if(window.PSGL&&PSGL.on) PSGL.skin(PS.
 /* v0.7 · 萤的贾维斯式全息神经核(Three.js r169 本地)。失败或低画质 → 保持 v0.6 Canvas 2D */
 import { createStage, pickTier, reducedMotion } from './ps-scene.js?v=10';
 import { buildCore } from './ps-lobby3d.js?v=10';
-import { buildPenthouse } from './ps-penthouse.js?v=10';
+import { buildPenthouse } from './ps-penthouse.js?v=11';
 try{
   const tier = pickTier();
   if(tier==='low') throw 0;
@@ -351,6 +351,11 @@ try{
       const fg=document.getElementById('fg'); fg.hidden=false; document.getElementById('aimark').hidden=false;
       if(!reduce && matchMedia('(pointer:fine)').matches) addEventListener('pointermove',e=>{ const x=e.clientX/innerWidth-.5, y=e.clientY/innerHeight-.5; fg.style.transform=`translate(${(-x*14).toFixed(1)}px,${(-y*6).toFixed(1)}px)`; });
     }catch(err){ console.warn('[奇点前夜] 套房场景未启用:', err); room=null; } }
+  /* v0.9.3 黎明天色:p = 已过关/29;回大厅进度变大时 3 秒天亮一格(?dawn=0..1 预览) */
+  function dawnP(){ const v=q0.get('dawn'); return v!==null ? Math.max(0,Math.min(1,+v||0)) : PS.total()/PS.TOTAL; }
+  if(room&&room.setDawn){ const p=dawnP(), seen=+(PS.get('dawnSeen')??-1);
+    if(seen>=0 && p>seen && !reduce && !q0.has('dawn')){ room.setDawn(seen,false); setTimeout(()=>{ room.setDawn(p,true); PS.sfx&&PS.sfx('boot'); },6600); } else room.setDawn(p,false);
+    if(!q0.has('dawn')) PS.set('dawnSeen',p); }
   const upd=(dt,fr)=>{ core.update(dt,fr); room&&room.update(fr?0.0001:dt); };
   stage.precompile();   /* v0.9.2:着色器预编译,避免开场首秒卡顿 */
   const cineT=document.getElementById('cineT'); let cineCb=null, cineOn=false, cineAt=0;

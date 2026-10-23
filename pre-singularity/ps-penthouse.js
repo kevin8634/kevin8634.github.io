@@ -16,23 +16,30 @@ const HORIZON = new THREE.Color(0x0e2a3c);          // 雾 / 地平线色(黎明
 function makeSky() {
   const mat = new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false, fog: false,
-    uniforms: { uFade: { value: 0 }, uTime: { value: 0 } },
+    uniforms: { uFade: { value: 0 }, uTime: { value: 0 }, uDawn: { value: 0 } },
     vertexShader: `varying vec3 vD; void main(){ vD = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
-    fragmentShader: `uniform float uFade,uTime; varying vec3 vD;
+    fragmentShader: `uniform float uFade,uTime,uDawn; varying vec3 vD;
       float h(vec3 p){ return fract(sin(dot(p,vec3(12.9898,78.233,37.719)))*43758.5453); }
       void main(){
         float y = vD.y;
         vec3 zen = vec3(0.008,0.020,0.042), mid = vec3(0.022,0.066,0.105), hor = vec3(0.045,0.130,0.185);
+        // v0.9.3 黎明天色:uDawn = 已过关/29;深夜 → 泛蓝 → 蓝调 → 橙红一线(太阳留给终章)
+        float d1 = smoothstep(0.0,0.6,uDawn), d2 = smoothstep(0.55,1.0,uDawn);
+        zen = mix(zen, vec3(0.012,0.030,0.060), d1); zen = mix(zen, vec3(0.030,0.060,0.105), d2);
+        mid = mix(mid, vec3(0.032,0.088,0.135), d1); mid = mix(mid, vec3(0.085,0.105,0.150), d2);
+        hor = mix(hor, vec3(0.060,0.150,0.205), d1); hor = mix(hor, vec3(0.260,0.150,0.100), d2);
         vec3 c = mix(hor, mid, smoothstep(0.0, 0.18, y)); c = mix(c, zen, smoothstep(0.15, 0.7, y));
         // 黎明:固定方位的一抹暖橙(朝 -Z 偏右)
         float az = dot(normalize(vD.xz+1e-4), normalize(vec2(0.55,-1.0)));
         float dawn = pow(max(0.,az),6.) * exp(-abs(y-0.01)*28.);
-        c += vec3(0.55,0.24,0.08) * dawn * 0.55 + vec3(0.20,0.10,0.05)*pow(max(0.,az),3.)*exp(-abs(y)*9.)*0.35;
+        float gk = 0.55 + 0.7*d2;
+        c += vec3(0.55,0.24,0.08) * dawn * gk + vec3(0.20,0.10,0.05)*pow(max(0.,az),3.)*exp(-abs(y)*(9.-4.*d2))*(0.35+0.5*d2);
+        c += vec3(0.95,0.55,0.25) * pow(max(0.,az),14.) * exp(-abs(y-0.02)*60.) * 0.5 * smoothstep(0.85,1.0,uDawn);
         // 地平线下:远处城市光雾
-        if(y < 0.0) c = mix(hor*1.05, vec3(0.03,0.05,0.07), smoothstep(0.0,-0.25,y));
+        if(y < 0.0) c = mix(hor*1.05, mix(vec3(0.03,0.05,0.07), vec3(0.05,0.055,0.065), d2), smoothstep(0.0,-0.25,y));
         // 星点
         vec3 q = floor(vD*420.); float s = h(q); float tw = 0.6+0.4*sin(uTime*1.7+s*40.);
-        c += vec3(0.6,0.8,1.0) * step(0.9975, s) * smoothstep(0.08,0.5,y) * tw * 0.5;
+        c += vec3(0.6,0.8,1.0) * step(0.9975, s) * smoothstep(0.08,0.5,y) * tw * 0.5 * (1.-smoothstep(0.35,0.75,uDawn));
         gl_FragColor = vec4(c*uFade, 1.);
       }`
   });
@@ -46,15 +53,15 @@ function makeCity(count, seed = 7) {
   const r = rng(seed);
   const geo = new THREE.BoxGeometry(1, 1, 1); geo.translate(0, 0.5, 0);
   const mat = new THREE.ShaderMaterial({
-    uniforms: { uFade: { value: 0 }, uTime: { value: 0 }, uFog: { value: HORIZON } },
+    uniforms: { uFade: { value: 0 }, uTime: { value: 0 }, uFog: { value: HORIZON.clone() }, uDawn: { value: 0 } },
     vertexShader: `attribute float aSeed; varying vec3 vW; varying vec3 vN; varying float vS; varying vec3 vL;
       void main(){ vec4 w = modelMatrix * instanceMatrix * vec4(position,1.); vW = w.xyz; vS = aSeed;
         vN = normalize(mat3(modelMatrix*instanceMatrix)*normal); vL = position;
         gl_Position = projectionMatrix * viewMatrix * w; }`,
-    fragmentShader: `uniform float uFade,uTime; uniform vec3 uFog; varying vec3 vW; varying vec3 vN; varying float vS; varying vec3 vL;
+    fragmentShader: `uniform float uFade,uTime,uDawn; uniform vec3 uFog; varying vec3 vW; varying vec3 vN; varying float vS; varying vec3 vL;
       float h(vec2 p){ return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
       void main(){
-        vec3 c = vec3(0.010,0.016,0.026);
+        vec3 c = mix(vec3(0.010,0.016,0.026), vec3(0.024,0.030,0.040), smoothstep(0.4,1.,uDawn));
         if(abs(vN.y) < 0.5){
           float u = abs(vN.x) > 0.5 ? vW.z : vW.x;
           vec2 cell = vec2(floor(u/2.6), floor((vW.y+110.)/3.3));
@@ -62,11 +69,11 @@ function makeCity(count, seed = 7) {
           float win = step(0.18,f.x)*step(f.x,0.82)*step(0.25,f.y)*step(f.y,0.78);
           float k = h(cell + vS*91.7);
           float slow = floor(uTime/7. + k*13.);                      // 窗灯缓慢随机明灭
-          float on = step(0.58, h(cell*1.7 + vS*13. + slow*0.37));
+          float on = step(mix(0.58,0.88,smoothstep(0.,1.,uDawn)), h(cell*1.7 + vS*13. + slow*0.37));   // 窗灯 ~42% → ~12%
           vec3 lc = mix(vec3(1.0,0.72,0.38), vec3(0.62,0.86,1.0), step(0.72,k));  // 暖黄为主,少量冷白
           lc = mix(lc, vec3(1.0,0.92,0.78), step(0.93,k));
           c += lc * win * on * (0.28 + 0.22*k);
-        } else { c = vec3(0.016,0.022,0.032); }
+        } else { c = mix(vec3(0.016,0.022,0.032), vec3(0.040,0.042,0.050), smoothstep(0.5,1.,uDawn)); }
         float d = length(vW.xz);
         float fog = 1. - exp(-pow(d/1500., 1.6));
         c = mix(c, uFog*0.9, clamp(fog,0.,0.92));
@@ -274,8 +281,21 @@ export function buildPenthouse(stage, core, opts = {}) {
   const halo = makeHalo(); scene.add(halo.group);
   if (core.bg && core.bg.group) core.bg.group.visible = false;   // 套房开启时隐藏原星云背景(背景,不属天命之瞳光效)
 
+  // v0.9.3 黎明天色
+  const FOG0 = HORIZON.clone(), FOG1 = new THREE.Color(0x2c2a33);
+  const dw = { cur: 0, from: 0, to: 0, k: 1 };
+  function applyDawn(p) {
+    sky.mat.uniforms.uDawn.value = p; city.mat.uniforms.uDawn.value = p;
+    city.mat.uniforms.uFog.value.copy(FOG0).lerp(FOG1, Math.pow(p, 1.6));
+  }
+  function setDawn(p, animate) {
+    p = Math.max(0, Math.min(1, +p || 0));
+    if (!animate || reduce) { dw.cur = dw.to = dw.from = p; dw.k = 1; applyDawn(p); return; }
+    dw.from = dw.cur; dw.to = p; dw.k = 0;
+  }
   let t = 0;
   function update(dt) {
+    if (dw.k < 1) { dw.k = Math.min(1, dw.k + dt / 3); const e = dw.k * dw.k * (3 - 2 * dw.k); dw.cur = dw.from + (dw.to - dw.from) * e; applyDawn(dw.cur); }
     const s = core.state, pr = stage.renderer.getPixelRatio();
     if (!reduce) t += dt;
     const I = s.intro, m = s.morph, ms = m * m * (3 - 2 * m);
@@ -297,5 +317,5 @@ export function buildPenthouse(stage, core, opts = {}) {
     halo.ringC.rotation.z = -t * 0.12;
     halo.sub.rotation.y = 0.5 + t * 0.05;
   }
-  return { update, plane };
+  return { update, plane, setDawn, dawn: () => dw.cur };
 }
