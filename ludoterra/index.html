@@ -46,6 +46,9 @@ html,body{height:100%;overflow:hidden}
 .layer p{margin:0;color:var(--mute);font-size:12.5px;line-height:1.55}
 .row2{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
 .priv{font-size:12px;color:var(--mute)}
+#mRole .box{overflow-x:hidden}.ages>*,.layers>*{min-width:0}
+.route{border:1px solid rgba(245,194,107,.45);border-radius:14px;padding:10px 14px;margin:0 0 12px;background:rgba(245,194,107,.06);font-size:13.5px;line-height:1.7}
+.route b{color:var(--gold)}.route .st{color:var(--mute);font-size:12.5px}
 table.map{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
 table.map th,table.map td{border-bottom:1px solid rgba(245,194,107,.15);padding:6px 4px;text-align:left;vertical-align:top}
 table.map th{color:var(--gold);font-weight:600;font-size:12px}
@@ -130,7 +133,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   </div>
   <div id="pNote" aria-live="polite"></div>
 </aside>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.31</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.32</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -143,6 +146,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
     <h2>规则是谁写的?</h2>
     <p class="lead">地球Online 的规则由三位作者先后写成。越古老的规则越难改,但都可以被看见。最后一层,由你自己来写。</p>
     <div class="layers" id="layers"></div>
+    <div class="route" id="route"></div>
     <p class="lead" style="margin:0">每一关都分三步:<b style="color:var(--gold)">先中招</b>(凭直觉玩)→ <b style="color:var(--gold)">再看见</b>(揭晓规则)→ <b style="color:var(--gold)">改写规则</b>(坐到庄家那一边)。</p>
     <div class="row2"><button class="lt-btn" id="back1" type="button">← 换年龄段</button><button class="lt-btn primary" id="enter" type="button">进入地球Online</button></div>
   </div>
@@ -203,8 +207,13 @@ const agesEl = document.getElementById('ages');
 agesEl.innerHTML = AGES.map(a => `<button class="age" type="button" data-a="${a.id}"><span class="i" aria-hidden="true">${a.icon}</span><b>${a.name}</b><span class="r">${a.range}</span><span class="l">${a.line}</span></button>`).join('');
 document.getElementById('layers').innerHTML = LAYERS.map(l => `<div class="layer"><b>${l.no} 作者:${l.author} · ${l.era}</b><h4>${l.name}</h4><p>${l.q}</p></div>`).join('');
 agesEl.onclick = e => { const b = e.target.closest('.age'); if (!b) return; setAge(b.dataset.a); sound.bell(3);
-  agesEl.querySelectorAll('.age').forEach(x => x.classList.toggle('on', x === b)); ch.paintAge(); paintRec();
+  agesEl.querySelectorAll('.age').forEach(x => x.classList.toggle('on', x === b)); ch.paintAge(); paintRec(); paintRoute();
   document.getElementById('step1').hidden = true; document.getElementById('step2').hidden = false; document.getElementById('enter').focus(); };
+function routeOf(a) { const levels = TASKS.filter(t => t.live && !t.finale);
+  const r = (a.route || []).map(id => levels.find(t => t.id === id)).filter(Boolean);
+  return r.concat(levels.filter(t => !r.includes(t))); }
+function paintRoute() { const a = AGES.find(x => x.id === getAge()) || AGES[1]; const r = routeOf(a);
+  document.getElementById('route').innerHTML = `<b>${a.icon} 为${a.name} · ${a.range} 排的路线</b><br>${a.hint}<br><span class="st">${r.slice(0, 4).map((t, i) => `${i + 1}. ${t.name}`).join(' → ')} → …… → 意义终章</span>`; }
 document.getElementById('back1').onclick = () => { document.getElementById('step1').hidden = false; document.getElementById('step2').hidden = true; agesEl.querySelector('.age').focus(); };
 document.getElementById('enter').onclick = () => { store.set('_intro', 1); closeM(document.getElementById('mRole')); sound.bell(5); };
 ch.chip.onclick = () => { document.getElementById('step1').hidden = false; document.getElementById('step2').hidden = true; openM('mRole'); };
@@ -284,12 +293,12 @@ document.getElementById('bMap').onclick = () => { sel = null; showMap(); };
 function paintRec() {
   const a = AGES.find(x => x.id === getAge()) || AGES[1]; const rec = document.getElementById('rec');
   const levels = TASKS.filter(t => t.live && !t.finale), fin = TASKS.find(t => t.finale);
-  const first = a.id === 'spark' ? TASKS.find(t => t.id === 'prisoner') : TASKS.find(t => t.id === 'compound');
+  const route = routeOf(a), first = route[0];
   const doneN = levels.filter(t => isDone(t.id)).length;
-  if (!doneN) { rec.innerHTML = `<div class="q"><small>给 ${a.name} · ${a.range} 的第一关</small>${first.q}</div><a class="lt-btn primary" href="${first.path}">开始 →</a>`; return; }
-  const next = levels.find(t => !isDone(t.id) && t.age <= a.min) || levels.find(t => !isDone(t.id));
-  if (next) { rec.innerHTML = `<div class="q"><small>下一关 · 已看见 ${doneN}/${levels.length} 条规则${next.age > a.min ? ' · 建议和家长一起' : ''}</small>${next.q}</div><a class="lt-btn primary" href="${next.path}">进入 →</a>`; return; }
-  if (fin && !isDone(fin.id)) { rec.innerHTML = `<div class="q"><small>✦ 六条规则都看见了 · 意义终章${a.min < 16 ? '(入门版)' : ''}</small>${fin.q}</div><a class="lt-btn primary" href="${fin.path}">走进终章 →</a>`; return; }
+  if (!doneN) { rec.innerHTML = `<div class="q"><small>${a.name}路线 · 第 1 站 · ${first.name}${first.age > a.min && !first.intro ? ' · 建议和家长一起' : ''}</small>${first.q}</div><a class="lt-btn primary" href="${first.path}">开始 →</a>`; return; }
+  const next = route.find(t => !isDone(t.id));
+  if (next) { rec.innerHTML = `<div class="q"><small>${a.name}路线 · 第 ${route.indexOf(next) + 1} 站 · 已看见 ${doneN}/${levels.length} 条规则${next.age > a.min && !(next.intro && next.intro <= a.min) ? ' · 建议和家长一起' : ''}</small>${next.q}</div><a class="lt-btn primary" href="${next.path}">进入 →</a>`; return; }
+  if (fin && !isDone(fin.id)) { rec.innerHTML = `<div class="q"><small>✦ ${levels.length} 条规则都看见了 · 意义终章${a.min < 16 ? '(入门版)' : ''}</small>${fin.q}</div><a class="lt-btn primary" href="${fin.path}">走进终章 →</a>`; return; }
   rec.innerHTML = `<div class="q"><small>✦ 全部通关 · 莲心已点亮</small>规则由你写,也可以由你改。</div><a class="lt-btn" href="${fin.path}">重玩终章</a><button class="lt-btn primary" type="button" id="recSave">⤓ 保存手册</button>`;
   document.getElementById('recSave').onclick = () => document.getElementById('saveImg').click();
 }
