@@ -132,7 +132,7 @@ document.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
   document.querySelectorAll(`[data-a="${q}"]`).forEach(x => x.classList.toggle('pick', x === b));
   if (q === '1') { logChoice('sunk', v === 'stay' ? '电影很难看,因为票已买了选择看完' : '电影很难看,选择离场去做别的', v === 'stay' ? '若离场:40 元一样回不来,但多出 75 分钟' : '若看完:40 元一样回不来,还多搭进 75 分钟');
     $('q2').hidden = false; $('g0').innerHTML = '再来一个。还是凭第一感觉。' + Q; sound.bell(1); }
-  else { logChoice('sunk', v === 'more' ? '积木不合心意,又花 30 元拼完' : '积木不合心意,停下留住 30 元', v === 'more' ? '若停下:60 元一样回不来,30 元可以换别的' : '若拼完:多花 30 元,换来一个不想要的模型');
+  else { logChoice('sunk', v === 'more' ? '第二件事不合心意,又花 30 元继续' : '第二件事不合心意,停下留住 30 元', v === 'more' ? '若停下:60 元一样回不来,30 元可以换别的' : '若拼完:多花 30 元,换来一个不想要的模型');
     const n = (ans[1] === 'stay') + (ans[2] === 'more');
     $('g0').innerHTML = (n ? `两道题里,你有 ${n} 次因为「已经付了」继续投入。` : '两次你都选择了停下。') + '如果那 40 元和 60 元从来没花过,你的选择还会一样吗?' + Q;
     $('n0').hidden = false; n ? sound.clash() : sound.bell(3); }
