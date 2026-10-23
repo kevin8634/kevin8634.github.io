@@ -110,7 +110,7 @@ canvas.lotus{width:100%;max-width:420px;aspect-ratio:4/3;display:block;margin:4p
 
   <!-- ④ 玩家手册 -->
   <section class="card lt-panel" data-step="3" hidden>
-    <div class="handbook"><span class="b">✦</span><div class="no">地球Online 玩家手册 · 第 7 页 · 意义(终章)</div>
+    <div class="handbook"><span class="b">✦</span><div class="no">地球Online 玩家手册 · 第 10 页 · 意义(终章)</div>
       <h2>知行合一:看见了,还要做到</h2>
       <canvas class="lotus" id="lotus" aria-label="光之莲全开,一只蝴蝶从莲心飞出"></canvas>
       <p id="hbText"></p>
@@ -167,6 +167,9 @@ const ITEMS = [
   { L: 1, id: 'judge', task: 'nature', t: '我们常用「性格」解释别人', rule: '先看人、后看处境,是很老的习惯。', can: '评价之前多问一句:换我在他的处境呢?' },
   { L: 2, id: 'interest', task: 'compound', t: '利息按复利滚动', rule: '数学规则,对谁都一样。', can: '让好事早点开始乘,让欠款早点停下。' },
   { L: 2, id: 'algo', task: 'cocoon', t: '推荐算法想留住你的时间', rule: '它按你点过的东西推更多。', can: '你喂给它什么,它就给你什么;你也能主动去搜新的。' },
+  { L: 0, id: 'sleepdebt', task: 'sleep', t: '熬夜时,总觉得自己还挺清醒', rule: '睡不够时专注力在掉,自我感觉却跟不上。', can: '到点关屏;欠了觉就连着几晚早睡一点,慢慢还。' },
+  { L: 0, id: 'wave', task: 'wave', t: '气头上,特别想马上回击', rule: '情绪像一股浪,先冲到顶,再慢慢落下。', can: '浪尖上先给情绪起个名字,等它过了顶点再回应。' },
+  { L: 1, id: 'curse', task: 'echo', t: '我们总以为自己说得很清楚', rule: '知道答案的人,很难想象不知道的感觉。', can: '说之前补上「为什么」和「我的心情」;听完先复述确认。' },
   { L: 2, id: 'stage', task: 'survivor', t: '台上站着的多半是幸存者', rule: '失败的人很少被请上台讲话。', can: '追问一句:失败的人里,有多少也这么做?' }
 ];
 const LAY = [{ n: 'Ⅰ 自我', a: '作者:进化' }, { n: 'Ⅱ 他人', a: '作者:人性' }, { n: 'Ⅲ 世界', a: '作者:文明' }];
@@ -180,9 +183,9 @@ function see() {
       <div class="ab"><button class="lt-btn" type="button" data-j="fix" aria-pressed="${j === 'fix'}">改不了</button><button class="lt-btn" type="button" data-j="can" aria-pressed="${j === 'can'}">能改</button></div>
       ${j ? `<div class="rv"><b>规则本身:</b>${i.rule}<br><i>能动的部分:</i>${i.can}</div>` : ''}</div>`; }).join('')}</div>`).join('');
   const k = Object.keys(judge).length, fix = Object.values(judge).filter(v => v === 'fix').length;
-  $('g1').innerHTML = (k ? `你判断了 ${k}/9 条,其中 ${fix} 条你觉得改不了。` : '') +
+  $('g1').innerHTML = (k ? `你判断了 ${k}/${ITEMS.length} 条,其中 ${fix} 条你觉得改不了。` : '') +
     (young ? '有些规则改不了,就像下雨改不了。那你还能决定什么呢?'
-      : (k < 5 ? '试着多判断几条。哪些是你改不了的,哪些其实一直握在你手里?' : '规则改不了的地方,你还剩下什么?是看它的方式,还是下一步的动作?如果只看见、不去做,这份「看见」算是你的吗?')) + QW;
+      : (k < 6 ? '试着多判断几条。哪些是你改不了的,哪些其实一直握在你手里?' : '规则改不了的地方,你还剩下什么?是看它的方式,还是下一步的动作?如果只看见、不去做,这份「看见」算是你的吗?')) + QW;
 }
 $('layers3').addEventListener('click', e => { const b = e.target.closest('[data-j]'); if (!b) return; const id = b.closest('[data-i]').dataset.i;
   judge[id] = b.dataset.j; store.set('meaning_judge', judge); sound.bell(b.dataset.j === 'fix' ? 1 : 4); see(); });
@@ -272,7 +275,7 @@ $('saveCard').onclick = () => {
   const c = document.createElement('canvas'); c.width = 1080; c.height = 1350; const x = c.getContext('2d'); const ff = getComputedStyle(document.body).fontFamily;
   const g = x.createLinearGradient(0, 0, 0, 1350); g.addColorStop(0, '#15163a'); g.addColorStop(1, '#070814'); x.fillStyle = g; x.fillRect(0, 0, 1080, 1350);
   x.strokeStyle = '#f5c26b'; x.lineWidth = 3; x.strokeRect(40, 40, 1000, 1270);
-  x.fillStyle = '#f5c26b'; x.font = `600 30px ${ff}`; x.fillText('觉弈 LUDOTERRA · 玩家手册 第 7 页 · 意义', 90, 120);
+  x.fillStyle = '#f5c26b'; x.font = `600 30px ${ff}`; x.fillText('觉弈 LUDOTERRA · 玩家手册 第 10 页 · 意义', 90, 120);
   x.fillStyle = '#f3eee2'; x.font = `800 66px ${ff}`; x.fillText('知行合一', 90, 210);
   x.font = `30px ${ff}`; x.fillStyle = 'rgba(243,238,226,.7)'; x.fillText('看见了,还要做到。我的三条规则:', 90, 270);
   const wrap = (s, y, max, lh) => { let line = ''; for (const ch of s) { if (x.measureText(line + ch).width > max) { x.fillText(line, 120, y); y += lh; line = ch; } else line += ch; } if (line) { x.fillText(line, 120, y); y += lh; } return y; };
