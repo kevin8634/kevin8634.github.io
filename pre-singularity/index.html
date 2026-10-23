@@ -1,7 +1,7 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><script>/* §5.12 门户坠入大气 → 同色接入 */(function(){try{var s=sessionStorage.getItem('gn:portal:arrive');if(!s)return;sessionStorage.removeItem('gn:portal:arrive');var a=JSON.parse(s);if(!a||!(Date.now()-a.t<5000)||!/^#[0-9a-fA-F]{3,8}$/.test(a.c||''))return;var ms=matchMedia('(prefers-reduced-motion: reduce)').matches?200:600;var d=document.createElement('div');d.setAttribute('aria-hidden','true');d.style.cssText='position:fixed;inset:0;z-index:2147483000;pointer-events:none;background:linear-gradient(rgba(4,6,15,.82),rgba(4,6,15,.82)),'+a.c+';transition:opacity '+ms+'ms ease-out';document.documentElement.appendChild(d);var go=function(){requestAnimationFrame(function(){requestAnimationFrame(function(){d.style.opacity='0';setTimeout(function(){d.remove()},ms+80)})})};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',go):go()}catch(e){}})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>奇点前夜 Pre-Singularity · 超级智能 SI</title>
-<meta name="description" content="奇点前夜 Pre-Singularity · 创世计划 Genesis 05 · 超级智能：亲手训练、测试、约束 AI，弄懂 AI 是怎么学会的。免费、免注册。"><link rel="stylesheet" href="ps.css?v=9">
+<meta name="description" content="奇点前夜 Pre-Singularity · 创世计划 Genesis 05 · 超级智能：亲手训练、测试、约束 AI，弄懂 AI 是怎么学会的。免费、免注册。"><link rel="stylesheet" href="ps.css?v=10">
 <style>
 /* v0.7 · WebGL 神经核舞台 */
 #gl{position:fixed;inset:0;width:100vw;height:100vh;display:block;z-index:0;background:#05060a}
@@ -29,14 +29,17 @@ body.r2 #hudB{transform:translateX(-50%) perspective(900px) rotateX(12deg);trans
 body.r2.cine #hudL{transform:perspective(1100px) translateX(-120%) rotateY(16deg)} body.r2.cine #hudR{transform:perspective(1100px) translateX(120%) rotateY(-16deg)} body.r2.cine #hudB{transform:translate(-50%,160%)}
 body.r2.skin-horizon .hud{background:linear-gradient(180deg,rgba(150,210,220,.08),rgba(20,30,36,.20)),repeating-linear-gradient(0deg,rgba(150,210,220,.03) 0 1px,transparent 1px 3px)}
 @keyframes holo{0%,100%{opacity:1}61%{opacity:.93}62%{opacity:1}88%{opacity:.96}89%{opacity:1}}
-@media(max-width:900px){ #fg{display:none} body.r2 .hud,body.r2 #hudL,body.r2 #hudR,body.r2 #hudB{transform:none;animation:none} }
+#aimark{position:fixed;right:14px;bottom:10px;z-index:2;pointer-events:none;font:12px/1.4 system-ui,sans-serif;letter-spacing:.04em;color:rgba(220,245,255,.72);background:rgba(4,10,16,.45);padding:2px 8px;border-radius:4px;opacity:0;transition:opacity 1.6s ease .2s}
+body.r2 #aimark{opacity:1} body.r2.cine #aimark{opacity:0;transition:opacity .3s}
+@media(max-width:900px){ #fg,#aimark{display:none} body.r2 .hud,body.r2 #hudL,body.r2 #hudR,body.r2 #hudB{transform:none;animation:none} }
 @media (prefers-reduced-motion:reduce){ body.r2 .hud{animation:none} #fg{transition:none} }
 </style></head>
 <body class="lobby" data-nostars="1">
 <header class="top lobbytop"></header>
 <canvas id="gl" aria-hidden="true"></canvas>
 <canvas id="world"></canvas>
-<img id="fg" src="fg_sofa.webp?v=9" alt="" aria-hidden="true" decoding="async" hidden>
+<img id="fg" src="fg_sofa.webp?v=9" alt="AI 生成的示意人物" aria-hidden="true" decoding="async" hidden>
+<div id="aimark" hidden>画面含 AI 生成内容</div>
 <div id="cine"><div id="cineT"><b>奇点前夜</b><i>PRE-SINGULARITY · 超级智能 SI</i></div><div id="cineS">点任意处或 Esc 跳过</div></div>
 
 <div class="hud" id="hudL">
@@ -76,7 +79,7 @@ body.r2.skin-horizon .hud{background:linear-gradient(180deg,rgba(150,210,220,.08
   <div class="tiers" id="itiers"></div>
 </div>
 
-<script src="ps.js?v=83"></script>
+<script src="ps.js?v=10"></script>
 <script>
 /* ========= 数据 ========= */
 const TH = PS.THEMES; let NODES=[], EDGES=[], hiTheme=-1, hover=null, sel=null, burst=0, speakAmp=0;
@@ -286,8 +289,8 @@ const QUIPS={ core:['天命之瞳,全系统在线。我在这里,随时为你服
 const quipI={core:0,horizon:0}; let quipBusy=0;
 function coreQuip(){ const now=performance.now(); if(now<quipBusy) return; const sk=PS.skin()==='horizon'?'horizon':'core'; const i=quipI[sk]++%5; quipBusy=now+1500;
   burst=Math.max(burst,.6); if(window.PSGL&&PSGL.ping) PSGL.ping();
-  PS.playVO(sk,i).then(d=>{ if(d) quipBusy=performance.now()+d*1000; });
-  const el=document.getElementById('say'); if(el){ el.textContent=''; } say(QUIPS[sk][i], null, true); }
+  const tts=PS.voiceOn()&&!!window.speechSynthesis; if(!tts) PS.playVO(sk,i).then(d=>{ if(d) quipBusy=performance.now()+d*1000; });
+  const el=document.getElementById('say'); if(el){ el.textContent=''; } say(QUIPS[sk][i], null, !tts); }
 
 /* 声波 */
 const wv=document.getElementById('wave'), WX=wv.getContext('2d');
@@ -343,7 +346,7 @@ try{
   /* v0.9 · R2 全息屏墙:顶层套房 + 3D 城市(?room=0 关闭) */
   let room=null; const q0=new URLSearchParams(location.search);
   if(q0.get('room')!=='0'){ try{ room=buildPenthouse(stage, core, { reduce }); document.body.classList.add('r2');
-      const fg=document.getElementById('fg'); fg.hidden=false;
+      const fg=document.getElementById('fg'); fg.hidden=false; document.getElementById('aimark').hidden=false;
       if(!reduce && matchMedia('(pointer:fine)').matches) addEventListener('pointermove',e=>{ const x=e.clientX/innerWidth-.5, y=e.clientY/innerHeight-.5; fg.style.transform=`translate(${(-x*14).toFixed(1)}px,${(-y*6).toFixed(1)}px)`; });
     }catch(err){ console.warn('[奇点前夜] 套房场景未启用:', err); room=null; } }
   const upd=(dt,fr)=>{ core.update(dt,fr); room&&room.update(fr?0.0001:dt); };
