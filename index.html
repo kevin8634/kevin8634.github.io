@@ -1147,7 +1147,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.8.10</b></span>
+            <span>创世计划总门户 <b>v0.8.11</b></span>
           </footer>
         </div>
       </div>
@@ -1286,11 +1286,11 @@
           age: ["ya","huo","chen","he"], tags: ["math"], why: "喜欢找规律、解谜题？每想通一个问题，就点亮一颗知识星。" },
         { id: "02", star: "天玑", name: "宙律", en: "Nomoverse", field: "物理",
           desc: "改写物理常数，看宇宙怎么变。", color: "#a78bfa", live: true,
-          meta: ["已上线 v0.3-α3", "3 个任务 13 关"], href: "nomoverse/", prefix: ["gn:nv:"],
+          meta: ["已上线 v0.3-α4 · 星球实景", "3 个任务 13 关"], href: "nomoverse/", prefix: ["gn:nv:"],
           age: ["huo","chen","he"], tags: ["space","matter"], why: "好奇宇宙为什么是现在这样？亲手改一改物理常数，看会发生什么。" },
         { id: "03", star: "天权", name: "元素工坊", en: "Element Forge", field: "化学",
           desc: "用元素锻造物质，配方即反应。", color: "#ff9a3c", live: true,
-          meta: ["已上线 v0.8.1", "7 个任务 28 关"], href: "element-forge/", prefix: ["gn:ef:"],
+          meta: ["已上线 v0.9 · 星球篇启航", "8 个任务 32 关"], href: "element-forge/", prefix: ["gn:ef:"],
           age: ["huo","chen","he"], tags: ["matter"], why: "想知道东西由什么组成、怎样变化？它会带你用元素锻造物质。" },
         { id: "04", star: "玉衡", name: "生命源码", en: "Life Source", field: "生物",
           desc: "读、改、调试生命的「源码」。", color: "#34d399", live: true,
@@ -1299,12 +1299,12 @@
           age: ["ya","huo","chen","he"], tags: ["life"], why: "对动物、身体和遗传好奇？来读一读、改一改生命的源码。" },
         { id: "05", star: "开阳", name: "奇点前夜", en: "Pre-Singularity", field: "超级智能 SI",
           desc: "亲手训练、测试、约束 AI。", color: "#22d3ee", live: true,
-          meta: ["已上线 v0.9 · 全息屏墙", "10 个任务 29 关"], href: "pre-singularity/",
+          meta: ["已上线 v0.9.2 · 全息屏墙", "10 个任务 29 关"], href: "pre-singularity/",
           prefix: ["gn:ps:"],
           age: ["huo","chen","he"], tags: ["ai","math"], why: "想弄懂 AI 是怎么学会的？亲手训练它、考考它，再给它立规矩。" },
         { id: "06", star: "摇光", name: "觉弈", en: "Ludoterra", field: "认知觉醒",
           desc: "看见自己的思维，做出更清醒的选择。", color: "#f5c26b", live: true,
-          meta: ["已上线 v0.29 · 心莲星盘", "10 个关卡 · 八域全开"], href: "ludoterra/", prefix: ["gn:lt:"],
+          meta: ["已上线 v0.30 · 3D 背景舞台", "10 个关卡 · 八域全开"], href: "ludoterra/", prefix: ["gn:lt:"],
           age: ["huo","chen","he"], tags: ["society"], why: "想看清自己怎么思考、怎么做选择？把每一次选择当成一局棋来复盘。", ageTxt: "星火 12+ · 星芽可试入门关" },
         { id: "07", star: "天枢", name: "天枢", en: "Starhelm", field: "天文",
           desc: "北斗第一星 · 用真实实时数据看见此刻的天空。", color: "#dfe6f3", live: true,
@@ -2344,7 +2344,9 @@
         { a: { w: "03", id: "ef.cabbage", title: "紫甘蓝汁为什么会变色？", href: "element-forge/cabbage/" },
           b: { w: "01", id: "ma.scale", title: "比例与数量级", href: null } },
         { a: { w: "03", id: "ef.battery", title: "怎样造一块会发电的电池？", href: "element-forge/battery/" },
-          b: { w: "02", id: "nv.circuit", title: "电路与能量", href: null } }
+          b: { w: "02", id: "nv.circuit", title: "电路与能量", href: null } },
+        { a: { w: "03", id: "ef.mars", title: "火星为什么是红的？", href: "element-forge/mars/" },
+          b: { w: "07", id: "sh.marsday", title: "火星上的一天有多长？", href: "starhelm/?task=marsday", label: "去天枢 →" } }
       ];
       // 同一对世界之间有多座桥时，让弧线错开，避免重叠
       (function () {
@@ -3025,7 +3027,7 @@
         var TASKS = {
           "01": { p: ["ma:v1:", "gn:ma:"], t: { chord: "为什么有的和弦好听？", cat: "怎样让 AI 认出一只猫？", casino: "赌场为什么总是赢？", secret: "怎样把秘密藏进数字里？", epidemic: "传染病为什么会爆发？", rocket: "火箭怎样飞上月球？", cube: "魔方为什么能复原？", bee: "为什么蜜蜂选六边形？", nim: "先拿的人一定赢吗？", nav: "导航怎么找到最短的路？" } },
           "02": { p: ["gn:nv:"], t: { orbit: "为什么宇航员在空间站会飘起来？", sound: "为什么救护车经过时声音会变？", hoop: "如果引力变成两倍，篮球还能投进吗？" } },
-          "03": { p: ["gn:ef:"], t: { stars: "你身体里的铁是从哪颗星来的？", carbon: "为什么钻石和铅笔芯是同一种东西？", crystal: "晶体为什么那么整齐？", cabbage: "紫甘蓝汁为什么会变色？", fireworks: "烟花为什么五颜六色？", battery: "怎样造一块会发电的电池？", rocks: "岩石是怎么“长”出来的？" } },
+          "03": { p: ["gn:ef:"], t: { stars: "你身体里的铁是从哪颗星来的？", carbon: "为什么钻石和铅笔芯是同一种东西？", crystal: "晶体为什么那么整齐？", cabbage: "紫甘蓝汁为什么会变色？", fireworks: "烟花为什么五颜六色？", battery: "怎样造一块会发电的电池？", rocks: "岩石是怎么“长”出来的？", mars: "火星为什么是红的？" } },
           "04": { p: ["gn:ls:"], t: { dna: "四个字母怎么写出一个人？", parents: "为什么你长得像爸妈，又不完全像？", zebra: "为什么斑马会有条纹？", virus: "一场感冒是怎么在班里传开的？", wolf: "狼回来之后，河流为什么变了？" } },
           "05": { p: ["gn:ps:"], t: { ask: "AI 会思考吗？", write: "AI 是怎么写作文的？", cat: "怎样让 AI 认出一只猫？", attn: "AI 在「看」哪里？", panda: "怎样让 AI 把熊猫认成长臂猿？", truth: "这段话是 AI 写的吗？", robot: "为什么扫地机器人会偷懒？", scale: "把 AI 放大会怎样？", together: "我们和 AI 怎么一起生活？" } },
           "06": { p: ["gn:lt:"], t: { sleep: "今晚偷走的睡眠，明天谁来还？", wave: "生气的时候，是谁在替你做决定？", echo: "你说的那句话，他听到的是什么？", compound: "每天多进步 1%，一年后会怎样？", prisoner: "为什么好人不一定吃亏？", sunk: "电影看了一半很难看，要不要看完？", cocoon: "为什么你刷到的视频越来越像？", survivor: "为什么「成功经验」常常骗人？", nature: "人性本善，还是本恶？", meaning: "看见了这些规则，我想成为怎样的玩家？" } },
@@ -3268,6 +3270,12 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.11", d: "2026-10-23", t: "星历补记宙律 v0.3-α4、元素工坊 v0.9、奇点前夜 v0.9.1–v0.9.2、觉弈 v0.30；元素工坊新任务「火星为什么是红的？」进入创世护照，星桥开通 火星红 ⇄ 火星一天，共 29 座。" },
+        { w: "05", v: "v0.9.2", d: "2026-10-23", t: "中低端手机开场更快：新增「省」画质档，按设备自动分档，开场卡顿会当场降档并记住，手机约 5 秒进入。" },
+        { w: "02", v: "v0.3-α4", d: "2026-10-23", t: "「如果引力变成两倍，篮球还能投进吗？」换上 3D 星球实景球场：在地球、月球、火星、木星上投篮，高清贴图全部本地加载，设备不支持时回到 2D。" },
+        { w: "06", v: "v0.30", d: "2026-10-23", t: "九个关卡和终章各有自己的 3D 背景舞台，随四步变化；从心莲星盘进关会穿过金色粒子隧道，顶栏可切换画质。" },
+        { y: "task", w: "03", v: "v0.9", d: "2026-10-23", t: "星球篇第一站「火星为什么是红的？」：亲手让铁慢慢生锈，看火星怎样变成一颗红色星球；和天枢「火星上的一天有多长？」连成星桥。" },
+        { w: "05", v: "v0.9.1", d: "2026-10-23", t: "角色语音换成原创合成声效和设备自带朗读，AI 生成的画面都加上了标注，新增素材许可台账。" },
         { w: "gn", v: "v0.8.10", d: "2026-10-23", t: "星历补记生命源码 v0.9–v0.9.3、觉弈 v0.23–v0.29：觉弈三个新关卡进入创世护照，八域全部有关卡。" },
         { y: "task", w: "06", v: "v0.29", d: "2026-10-23", t: "新关卡「你说的那句话，他听到的是什么？」：回声，看一句话在别人心里怎么变形。" },
         { y: "task", w: "06", v: "v0.28", d: "2026-10-23", t: "新关卡「生气的时候，是谁在替你做决定？」：情绪浪，看一股怒气怎样涨起又退去。" },
