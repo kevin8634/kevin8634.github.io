@@ -152,3 +152,14 @@
 | pluto.webp | 冥王星 新视野号 2015 | NASA/JHUAPL/SwRI · 公有领域 |
 | c67p.webp | 67P 彗星 罗塞塔号 NAVCAM 2014 | ESA/Rosetta/NAVCAM · CC BY-SA 3.0 IGO |
 | n159.webp | N159 恒星形成区 韦布 NIRCam 2026-10-22 | ESA/Webb, NASA & CSA, E. Sabbi, M. Zamani;致谢 M. H. Özsaraç · CC BY 4.0 |
+
+## 星域 V「群星」(v1.0-M4)
+| 数据 / 素材 | 来源 | 许可 / 用法 |
+|---|---|---|
+| sh-stars-data.js:100 光年内 4 062 颗恒星(含太阳)+ 100–3000 光年视星等 ≤3.5 的亮星 206 颗(共 4 268 条;位置、绝对星等、B−V 色指数、北斗七星空间速度) | HYG 恒星库 v4.1(hygdata_v41.csv,David Nash / astronexus,github.com/astronexus/HYG-Database,2026-10-23 下载) | **CC BY-SA 4.0**(注:任务单写的 2.5 为旧版本号,仓库现行 LICENSE 为 4.0)。页面角注与此刻卡署名「HYG 恒星库 v4.1(CC BY-SA 4.0)」;派生数据文件同样以 CC BY-SA 4.0 发布(文件头已注明);构建脚本 docs/build/build_stars.py |
+| TRAPPIST-1、蒂加登星的位置与距离(HYG 未收录,补入星表) | NASA Exoplanet Archive pscomppars(ra、dec、sy_dist) | NASA/Caltech-IPAC 公开数据;V 星等取公开文献值 18.8、15.1 |
+| 系外行星宿主光环(星表中匹配到的 171 个宿主)、行星数;统计数字「全天已确认 6 451 颗」「100 光年内 541 颗 / 327 个系统」(2026-10-23 查询) | NASA Exoplanet Archive TAP(pscomppars) | 公开数据,署名「NASA 系外行星档案」;致谢:This research has made use of the NASA Exoplanet Archive, which is operated by the California Institute of Technology, under contract with the National Aeronautics and Space Administration under the Exoplanet Exploration Program. 不使用 NASA 标志,不暗示背书 |
+| sh.exoearth 凌星:TRAPPIST-1 半径 0.1192 R☉、行星半径 | NASA Exoplanet Archive pscomppars | 同上;光变曲线为教学近似(临边昏暗简化) |
+| sh.sundie 太阳演化轨迹(温度、光度、半径随年龄) | 1 倍太阳质量恒星演化模型的公开取整值(主序约 100 亿年、红巨星顶点约 3100 K / 2700 L☉ / 约 180 R☉、白矮星约 0.012 R☉) | 教学取整,画面注「示意」;不引入第三方图表 |
+| 恒星特写(三层着色器)、颜色(B−V → 温度 Ballesteros 2012 公式 → 黑体近似色) | 本世界程序生成 | 原创代码;特写大小为示意 |
+| 背景星空 | 沿用 SHFX3D.skyMesh(NASA SVS Deep Star Maps 2020,见上文) | 同上 |

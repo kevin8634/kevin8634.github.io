@@ -52,6 +52,8 @@
     var key, km;
     if (window.SHD2 && SHD2.isOpen()) {
       km = SHD2.camKm(); key = '2|日-地-月';
+    } else if (window.SHD5 && SHD5.isOpen()) {   // v1.0-M4 星域 V 独立视图
+      km = SHD5.camKm(); key = '5|' + SHD5.crumb();
     } else if (S.mode === 'solar') {
       var c = S.solarCam.position.distanceTo(S.solarCtl.target), r = Math.pow(c / 14, 2);
       km = r * AU; var fo = LE.solar && LE.solar.follow; key = '3|' + (fo && fo.zh ? fo.zh : '太阳系');
@@ -71,6 +73,9 @@
   D.go = function (n, o) {
     var S = LE.scene; o = o || {};
     if (n !== 2 && window.SHD2) SHD2.close();
+    if (n !== 5 && window.SHD5) SHD5.close();
+    if (n === 5 && !window.SHD5) { var k5 = 0; (function w5() { if (window.SHD5) D.go(5, o); else if (k5++ < 150) setTimeout(w5, 100); })(); return; }   // 深链时 sh-domain5.js 可能还没载入
+    if (n === 5) { if (window.SHFOCUS && SHFOCUS.focused) SHFOCUS.back(); if (!(window.SHD5 && SHD5.go())) toast('星域 V 的 3D 场景暂时打不开'); tick(true); return; }
     if (n === 1 && o.quiet) { if (S.mode !== 'earth' && LE.ui.setMode) LE.ui.setMode('earth'); tick(true); return; }
     if (n === 1) {
       if (S.mode !== 'earth' && LE.ui.setMode) LE.ui.setMode('earth');
@@ -94,8 +99,8 @@
   function deepLink() {
     var m = /[?&]domain=(\d)/.exec(location.search); if (!m) return;
     var n = +m[1];
-    if (n >= 2 && n <= 4) setTimeout(function () { D.go(n); }, n === 4 ? 1600 : 900);
-    else if (n > 4) toast('星域 ' + ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][n] + ' 还在建造中,先从家园出发');
+    if (n >= 2 && n <= 5) setTimeout(function () { D.go(n); }, n >= 4 ? 1600 : 900);
+    else if (n > 5) toast('星域 ' + ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][n] + ' 还在建造中,先从家园出发');
   }
 
   (function wait(k) {

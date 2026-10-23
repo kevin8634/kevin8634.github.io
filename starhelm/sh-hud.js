@@ -10,7 +10,7 @@
   var AU = 149597870.7, C = 299792.458, LY = 9460730472580.8;
   var DOM = [ // 七星域(scale = 航图对数半径 log10 米,与 sh-data.js 一致)
     { n: 1, zh: '家园', g: '北辰', scale: 7, open: true }, { n: 2, zh: '日与月', g: '羲和与望舒', scale: 9, open: true },
-    { n: 3, zh: '行星世界', g: '岁星', scale: 12, open: true }, { n: 4, zh: '太阳系边疆', g: '星槎', scale: 14, open: true }, { n: 5, zh: '群星', g: '织女', scale: 17 },
+    { n: 3, zh: '行星世界', g: '岁星', scale: 12, open: true }, { n: 4, zh: '太阳系边疆', g: '星槎', scale: 14, open: true }, { n: 5, zh: '群星', g: '织女', scale: 17, open: true },
     { n: 6, zh: '银河', g: '银汉', scale: 21 }, { n: 7, zh: '宇宙', g: '太一', scale: 26 }];
   var ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
   // 星域 II(M1):四个已有实验室 + 两个新任务;星域 I 读 SH.TASKS
@@ -23,12 +23,14 @@
     { id: 'aurora', d: 2, q: '极光是太阳寄来的信吗?', isNew: true, lab: 'auroraLab', key: 'aurora' }];
   // 星域 III(M2a/M2b):四个任务全部开放
   var TASKS4 = [{ id: 'voyager', d: 4, q: '旅行者号此刻飞到哪了?', isNew: true, lab: 'voyagerLab', key: 'voyager' }, { id: 'comet', d: 4, q: '彗星的尾巴为什么总背着太阳?', isNew: true, lab: 'cometLab', key: 'comet' }, { id: 'dino', d: 4, q: '恐龙那天到底发生了什么?', isNew: true, lab: 'dinoLab', key: 'dino' }];
+  // 星域 V(v1.0-M4):四个任务,实现见 sh-d5-tasks.js
+  var TASKS5 = [{ id: 'starlight', d: 5, q: '你看到的星光有多老?', isNew: true, lab: 'starlightLab', key: 'starlight' }, { id: 'exoearth', d: 5, q: '宇宙里还有别的地球吗?', isNew: true, lab: 'exoearthLab', key: 'exoearth' }, { id: 'sundie', d: 5, q: '太阳会死吗?', isNew: true, lab: 'sundieLab', key: 'sundie' }, { id: 'constel', d: 5, q: '星座为什么会变形?', isNew: true, lab: 'constelLab', key: 'constel' }];
   var TASKS3 = [
     { id: 'marsday', d: 3, q: '火星上的一天有多长?', isNew: true, lab: 'marsdayLab', key: 'marsday' },
     { id: 'tonight', d: 3, q: '今晚抬头能看到哪颗行星?', isNew: true, lab: 'tonightLab', key: 'tonight' },
     { id: 'jupiter', d: 3, q: '木星为什么没变成太阳?', isNew: true, lab: 'jupiterLab', key: 'jupiter' },
     { id: 'retro', d: 3, q: '行星为什么有时会倒着走?', isNew: true, lab: 'retroLab', key: 'retro' }];
-  var GUIDES = { xingcha: { zh: '星槎', sub: '星域 IV 太阳系边疆', av: '' }, suixing: { zh: '岁星', sub: '星域 III 行星世界', av: '' }, tianshu: { zh: '北辰', sub: '星域 I 家园' }, xihe: { zh: '羲和', sub: '管太阳这一边', av: '' }, wangshu: { zh: '望舒', sub: '管月亮这一边', av: 'moon' } };
+  var GUIDES = { zhinv: { zh: '织女', sub: '星域 V 群星', av: '' }, xingcha: { zh: '星槎', sub: '星域 IV 太阳系边疆', av: '' }, suixing: { zh: '岁星', sub: '星域 III 行星世界', av: '' }, tianshu: { zh: '北辰', sub: '星域 I 家园' }, xihe: { zh: '羲和', sub: '管太阳这一边', av: '' }, wangshu: { zh: '望舒', sub: '管月亮这一边', av: 'moon' } };
 
   var nowT = 0, H = {}, subs = {}, st = { dom: 1, body: '', km: 4e5, task: '', nowBody: null, nowPt: null, hints: [], hintN: 0 };
   function $(s, r) { return (r || document).querySelector(s); }
@@ -72,6 +74,7 @@
     if (d === 2) return TASKS2;
     if (d === 3) return TASKS3;
     if (d === 4) return TASKS4;
+    if (d === 5) return TASKS5;
     return [];
   }
   function lit(t) { // ★:每关至少 1 星
@@ -86,14 +89,14 @@
   }
   function drawTasks() {
     var all = 0, on = 0, h = '';
-    [1, 2, 3, 4].forEach(function (d) {
+    [1, 2, 3, 4, 5].forEach(function (d) {
       var ts = tasksOf(d), n = ts.filter(lit).length; all += ts.length; on += n;
       h += '<div class="shh-dom" id="shh-dom' + d + '"><span>星域 ' + ROMAN[d] + ' · ' + DOM[d - 1].zh + ' · ' + DOM[d - 1].g + '</span><span>' + n + '/' + ts.length + '</span></div>';
       ts.forEach(function (t) {
         h += '<button type="button" class="shh-task' + (t.id === st.task ? ' cur' : '') + '" data-id="' + t.id + '" data-d="' + d + '"><i>' + (lit(t) ? '★' : '☆') + '</i><span>' + esc(t.q) + (t.isNew ? '<span class="shh-new">新</span>' : t.soon ? '<span class="shh-new is-soon">即将</span>' : '') + '</span></button>';
       });
     });
-    h += '<div class="shh-lock">星域 V–VII · 即将开放</div>';
+    h += '<div class="shh-lock">星域 VI–VII · 即将开放</div>';
     H.list.innerHTML = '<div class="shh-list__h">任务<small>' + on + '/' + all + ' 已点亮</small></div>' + h;
     var rb = H.rail.querySelectorAll('button[data-d]');
     for (var i = 0; i < rb.length; i++) rb[i].classList.toggle('cur', +rb[i].dataset.d === st.dom);
@@ -103,6 +106,7 @@
     var t = tasksOf(d).filter(function (x) { return x.id === id; })[0];
     if (!t || (subs.task && subs.task.length)) return;   // 有外部接管时不自动打开
     if (t.soon) { emit('soon', t); return; }
+    if (d !== 5 && window.SHD5 && SHD5.isOpen()) SHD5.close();   // v1.0-M4:离开星域 V 独立视图
     try {
       if (t.fw && window.SH && SH.play && SH.levels && SH.levels[id]) {   // 打开第一个还没拿星的关卡
         var n = 1, L = SH.levels[id].length; for (var i = 1; i <= L; i++) { if (SH.progress.stars(id, i) < 1) { n = i; break; } n = i; }
@@ -325,6 +329,6 @@
     setTask: function (id) { st.task = id; drawTasks(); },
     refreshTasks: drawTasks,
     drawer: function (open) { setDrawer(open, true); },
-    fmtKm: fmtKm, fmtLight: fmtLight, DOMAINS: DOM, TASKS2: TASKS2, TASKS3: TASKS3, TASKS4: TASKS4, tasksOf: tasksOf, lit: lit
+    fmtKm: fmtKm, fmtLight: fmtLight, DOMAINS: DOM, TASKS2: TASKS2, TASKS3: TASKS3, TASKS4: TASKS4, TASKS5: TASKS5, tasksOf: tasksOf, lit: lit
   };
 })();
