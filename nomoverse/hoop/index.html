@@ -118,7 +118,7 @@
   var CTL_V = { id: "v", label: "出手速度", min: 2, max: 16, step: 0.05, value: 6.5, unit: " m/s", fmt: function (x) { return x.toFixed(2); } };
   var CTL_A = { id: "ang", label: "出手角度", min: 15, max: 80, step: 0.5, value: 50, unit: "°" };
   function clone(o, patch) { var r = {}; for (var k in o) r[k] = o[k]; for (var j in patch) r[j] = patch[j]; return r; }
-  var NOTE = "篮球视为质点,不计篮板与篮筐碰撞、旋转;阻力为二次阻力(篮球 Cd≈0.47)。";
+  var NOTE = "篮球视为质点,不计篮板与篮筐碰撞、旋转;阻力为二次阻力(篮球 Cd≈0.47);进球判定比真实篮筐略宽松。";
 
   /* ================= 第 1 关 地球投篮 ================= */
   var H1 = {
