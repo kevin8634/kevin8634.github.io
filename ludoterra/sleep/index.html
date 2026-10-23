@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><script src="/ludoterra/gn-arrive.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>今晚偷走的睡眠,明天谁来还? · 觉弈 Ludoterra</title>
+<meta name="description" content="觉弈 Ludoterra 关卡:睡眠负债。先凭直觉熬一次夜,再看见欠下的睡眠怎样利滚利,最后坐到 App 设计师那边,看一个按钮怎样把一千个人的入睡时间往后推。">
+<meta name="theme-color" content="#070814">
+<link rel="stylesheet" href="../lt.css">
+<style>
+body{min-height:100vh}
+main{max-width:860px;margin:0 auto;padding:70px 16px 40px}
+.steps{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.steps span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--mute)}
+.steps span.on{color:#1a1206;background:var(--gold);border-color:var(--gold)}
+.card{padding:18px;margin-bottom:12px}
+h1{font-size:clamp(20px,4vw,28px);margin:0 0 6px}
+h3{margin:12px 0 6px;font-size:16px}
+.guide{display:flex;gap:10px;align-items:flex-start;margin:10px 0}
+.guide .m{flex:none;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--gold2);display:flex;align-items:center;justify-content:center;color:#ffe9b8;font-weight:700;background:#14163a}
+.guide p{margin:0;font-size:14.5px;line-height:1.7}
+.guide small{display:block;color:var(--mute);font-size:11px}
+.scene{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0;background:rgba(255,255,255,.025)}
+.scene p{margin:0 0 8px;line-height:1.7;font-size:14.5px}
+.two{display:flex;gap:10px;flex-wrap:wrap}
+.two .lt-btn{font-size:15px;padding:9px 16px;white-space:normal;text-align:left}
+.two .lt-btn.pick{border-color:var(--gold);box-shadow:0 0 16px rgba(245,194,107,.35)}
+.nights{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:10px 0}
+.nights div{border:1px solid var(--line);border-radius:10px;padding:6px 4px;text-align:center;font-size:12px}
+.nights b{display:block;font-size:16px;color:var(--gold);margin:2px 0}
+.nights button{background:none;border:1px solid var(--line);color:inherit;border-radius:6px;width:26px;height:24px;cursor:pointer;font-size:14px}
+canvas.ch{width:100%;height:210px;display:block;border-radius:12px;background:rgba(0,0,0,.25)}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mute);margin:6px 0}
+.leg i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.pair{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.pair div{border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:12.5px;line-height:1.5}
+.big{font-size:clamp(18px,4vw,24px);font-weight:800;color:var(--gold)}
+.tog{display:flex;gap:10px 16px;flex-wrap:wrap;margin:8px 0 4px;font-size:14px}
+.tog label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.tog input{accent-color:#f5c26b;width:18px;height:18px}
+.note{font-size:12px;color:var(--mute);line-height:1.6}
+.nav{display:flex;gap:8px;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+.handbook{border:1.5px solid var(--gold);border-radius:18px;padding:18px;background:radial-gradient(circle at 20% 0,rgba(245,194,107,.18),transparent 60%),#0f1130;position:relative;overflow:hidden}
+.handbook .no{font-size:12px;color:var(--gold);letter-spacing:2px;padding-right:44px}
+.handbook h2{margin:6px 0 8px;font-size:22px}
+.handbook p{margin:6px 0;line-height:1.7;font-size:14.5px}
+.handbook .b{position:absolute;right:14px;top:10px;font-size:34px;opacity:.5}
+[hidden]{display:none!important}
+@media (max-width:1100px){.lt-hud{display:none}}
+@media (max-width:640px){.nights{gap:3px}.nights div{padding:4px 1px;font-size:11px}.nights b{font-size:14px}.nights button{width:20px;height:20px;font-size:12px}.pair div{padding:6px 7px;font-size:11.5px}canvas.ch{height:180px}}
+</style></head><body>
+<main>
+  <div class="steps" id="steps"><span>① 先中招</span><span>② 看见欠账</span><span>③ 坐到 App 那边</span><span>④ 玩家手册</span></div>
+  <section class="card lt-panel" data-step="0">
+    <h1>今晚偷走的睡眠,明天谁来还?</h1>
+    <div class="scene" id="q1"><p id="s1"></p>
+      <div class="two"><button class="lt-btn" data-a="1" data-v="stay" id="b1a"></button><button class="lt-btn" data-a="1" data-v="sleep" id="b1b"></button></div></div>
+    <div class="scene" id="q2" hidden><p id="s2"></p>
+      <div class="two"><button class="lt-btn" data-a="2" data-v="full">😴 能,一次就补回来</button><button class="lt-btn" data-a="2" data-v="part">🤔 只能补回一部分</button><button class="lt-btn" data-a="2" data-v="none">🙃 少睡点没影响</button></div></div>
+    <div class="guide"><span class="m">詹</span><p id="g0">别想太久,凭第一感觉选。<small>威廉·詹姆斯 · 仿其思想的提问</small></p></div>
+    <div class="nav" id="n0" hidden><span></span><button class="lt-btn primary" data-go="1">看看这一周的账 →</button></div>
+  </section>
+  <section class="card lt-panel" data-step="1" hidden>
+    <h1>睡眠账本:一周七个晚上</h1>
+    <p class="note" style="font-size:13.5px" id="needNote"></p>
+    <div class="nights" id="nights"></div>
+    <canvas class="ch" id="ch" aria-label="一周里欠下的睡眠、真实专注力和自我感觉的变化"></canvas>
+    <div class="leg"><span><i style="background:#ff9a7a"></i>累计欠账(小时)</span><span><i style="background:#7ee2a8"></i>真实专注力</span><span><i style="background:#9fb8ff"></i>自我感觉</span></div>
+    <div class="pair" id="out1"></div>
+    <div class="two" style="margin:6px 0"><button class="lt-btn" id="pWeek">📅 平时少睡,周末补觉</button><button class="lt-btn" id="pEven">🌙 每晚都睡够</button><button class="lt-btn" id="pMe">↺ 按我的选择</button></div>
+    <div class="guide"><span class="m">詹</span><p id="g1"></p></div>
+    <p class="note">教学模型,不是医学建议:每晚少睡的部分记为欠账;多睡只能还上约六成。研究发现,连续两周每晚只睡 6 小时的人,注意力测验的失误一路上升,自己却觉得「只是有点困」(范东恩等,2003)。各年龄的推荐睡眠时长参考美国睡眠医学会 2016 年共识。</p>
+    <div class="nav"><button class="lt-btn" data-go="0">← 重新选</button><button class="lt-btn primary" data-go="2">坐到 App 那边 →</button></div>
+  </section>
+  <section class="card lt-panel" data-step="2" hidden>
+    <h1 id="appT"></h1>
+    <p class="note" style="font-size:13.5px" id="appN"></p>
+    <div class="tog">
+      <label><input type="checkbox" id="tAuto" checked> 自动播放下一个(倒计时 5 秒)</label>
+      <label><input type="checkbox" id="tFeed" checked> 无限下拉,没有尽头</label>
+      <label><input type="checkbox" id="tPush"> 深夜推送「你关注的更新了」</label>
+      <label><input type="checkbox" id="tStop"> 过了睡觉时间,提醒并停止自动播放</label>
+    </div>
+    <canvas class="ch" id="ch2" aria-label="1000 位用户的入睡时间分布"></canvas>
+    <div class="pair" id="out2"></div>
+    <div class="guide"><span class="m">詹</span><p id="g2"></p></div>
+    <p class="note">教学模型:1000 位虚拟用户,每个功能带来的「多看几分钟」是示意数值,用来看清方向,不是某个真实 App 的数据。</p>
+    <div class="nav"><button class="lt-btn" data-go="1">← 回到账本</button><button class="lt-btn primary" data-go="3">领取玩家手册 →</button></div>
+  </section>
+  <section class="card lt-panel" data-step="3" hidden>
+    <div class="handbook"><span class="b">🌙</span><div class="no">地球Online 玩家手册 · 第 8 页 · 习惯与时间 × 情绪与身体</div>
+      <h2>隐藏规则:睡眠是一笔贷款,利息由明天的你来付</h2>
+      <p>少睡的每一小时都记在账上。欠得越多,专注、记忆和脾气越差;更麻烦的是,几天之后你会「习惯」这种困,感觉还行,真实表现却在一路往下掉。周末补觉只能还上一部分。</p>
+      <p><b style="color:var(--gold)">反制技巧:</b>给自己定一个「关屏时间」,到点把手机放到够不着的地方;关掉自动播放。欠了觉,就连着几晚早睡一会儿慢慢还,而不是一次睡到中午。</p>
+      <p class="note">你解锁了隐藏数值「精力」:地球Online 里每天的体力条,是前一晚充的电。如果长期睡不好、白天总是撑不住,请告诉家人或咨询医生。</p></div>
+    <div class="guide"><span class="m">詹</span><p id="g3"></p></div>
+    <div class="nav"><a class="lt-btn" href="../">← 回到认知星盘</a><button class="lt-btn" data-go="0">再玩一次</button></div>
+  </section>
+</main>
+<script type="module">
+import { chrome, hud, store, markDone, isDone, sound, reducedMotion, offline, getAge, logChoice } from '../lt.js';
+chrome({ home: '../' }); const H = hud(); offline();
+const $ = id => document.getElementById(id);
+const Q = '<small>威廉·詹姆斯 · 仿其思想的提问</small>';
+const AGE = ['sprout', 'spark', 'star', 'galaxy'].includes(getAge()) ? getAge() : 'spark';
+/* 各年龄段:推荐睡眠(美国睡眠医学会 2016:6–12 岁 9–12 小时、13–18 岁 8–10 小时、成人 7 小时以上)与熬夜情境 */
+const A = {
+  sprout: { need: 10, bed: '21:00', s1: '📺 晚上 9 点,该睡觉了,可平板上的动画片还差两集。再看两集,就要晚睡 <b>2 小时</b>。', a: '📺 再看两集,明天早点起也行', b: '🛏 关掉平板,去睡觉',
+    s2: '少睡了 2 小时,周末多睡个懒觉,能把精神补回来吗?', app: '你是「动画星球」App 的设计师', appN: '老板说:小朋友每天多看一会儿,我们就多赚一点。你来决定要不要开这些功能:' },
+  spark: { need: 9, bed: '22:30', s1: '📚 晚上 10 点半,作业刚写完,游戏里朋友喊你「再来两局」。再玩两局,就要晚睡 <b>2 小时</b>。', a: '🎮 再来两局,明天课上补觉', b: '🛏 下线,去睡觉',
+    s2: '这周天天少睡 2 小时,周末睡到中午,能把这一周补回来吗?', app: '你是「刷刷」短视频 App 的设计师', appN: '公司的目标是「每人每天多看 10 分钟」。你来决定要不要开这些功能:' },
+  star: { need: 8, bed: '23:30', s1: '📱 晚上 11 点半,明早 8 点有课,剧还剩最后两集,群里也聊得正热。看完聊完,就要晚睡 <b>2 小时</b>。', a: '🍿 看完再睡,年轻扛得住', b: '🛏 放下手机,去睡觉',
+    s2: '这周天天少睡 2 小时,周末睡个够,能把这一周补回来吗?', app: '你是「追追」视频 App 的产品经理', appN: '你的绩效看「人均使用时长」。你来决定要不要开这些功能:' },
+  galaxy: { need: 7.5, bed: '23:00', s1: '🌃 晚上 11 点,孩子睡了、工作消息回完了,终于有一点自己的时间。刷一会儿,就要晚睡 <b>2 小时</b>。', a: '📱 这是我自己的时间,刷!', b: '🛏 算了,去睡觉',
+    s2: '这周天天少睡 2 小时,周末补个觉,能把这一周补回来吗?', app: '你是一款资讯视频 App 的产品负责人', appN: '这个季度的考核是「夜间活跃时长」。你来决定要不要开这些功能:' }
+}[AGE];
+$('s1').innerHTML = A.s1; $('b1a').textContent = A.a; $('b1b').textContent = A.b; $('s2').textContent = A.s2;
+$('appT').textContent = A.app + ':一个按钮,一千个人晚睡'; $('appN').textContent = A.appN;
+$('needNote').innerHTML = `你这个年龄段建议每晚睡约 <b style="color:var(--gold)">${A.need} 小时</b>。点 + / − 改每晚睡了多久,看欠账、真实专注力和「自我感觉」怎么走。`;
+const secs = [...document.querySelectorAll('[data-step]')], tabs = [...document.querySelectorAll('#steps span')];
+function go(n) { secs.forEach((s, i) => s.hidden = i !== n); tabs.forEach((t, i) => t.classList.toggle('on', i === n));
+  window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }); if (n === 0) reset0(); if (n === 1) enter1(); if (n === 2) enter2(); if (n === 3) finish(); }
+window.ltGo = go;
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) { sound.tick(); go(+g.dataset.go); } });
+/* ① */
+let ans = store.get('sleep_pick', {}) || {};
+function reset0() { document.querySelectorAll('[data-a]').forEach(b => b.classList.toggle('pick', ans[b.dataset.a] === b.dataset.v)); $('q2').hidden = !ans[1]; $('n0').hidden = !(ans[1] && ans[2]); }
+document.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+  const q = b.dataset.a, v = b.dataset.v; ans[q] = v; store.set('sleep_pick', ans);
+  document.querySelectorAll(`[data-a="${q}"]`).forEach(x => x.classList.toggle('pick', x === b));
+  if (q === '1') { logChoice('sleep', v === 'stay' ? '该睡觉时选择再熬 2 小时' : '该睡觉时选择放下屏幕去睡', v === 'stay' ? '若去睡:明天的专注力满格开局' : '若熬夜:欠下 2 小时,明天连本带利地还');
+    $('q2').hidden = false; $('g0').innerHTML = '再想一步。凭第一感觉。' + Q; sound.bell(1); }
+  else { logChoice('sleep', v === 'full' ? '以为周末一次就能把觉补回来' : v === 'part' ? '猜到补觉只能还上一部分' : '以为少睡一点没影响', '账本显示:周末补觉只还上一部分,专注力的欠账还在');
+    $('g0').innerHTML = (v === 'part' ? '你的直觉很准。' : '先别急着下结论。') + '下一步,我们把这一周的账一笔笔记下来。' + Q; $('n0').hidden = false; v === 'part' ? sound.bell(3) : sound.clash(); }
+});
+/* ② 睡眠账本 */
+const DAYS = ['一', '二', '三', '四', '五', '六', '日'];
+let hrs = [];
+const preset = k => { const n = A.need; hrs = k === 'even' ? DAYS.map(() => n) : k === 'week' ? [n - 2, n - 2, n - 2, n - 2, n - 2, n + 2, n + 2] : DAYS.map((d, i) => i < 5 ? (ans[1] === 'sleep' ? n - .5 : n - 2) : n + 2); };
+function sim() { let D = 0; const debt = [], real = [], feel = [];
+  hrs.forEach(h => { const d = A.need - h; D = Math.max(0, d > 0 ? D + d : D + d * .6); debt.push(D);
+    real.push(Math.max(15, 100 - 7.5 * D)); feel.push(Math.max(40, 100 - 9 * Math.min(D, 3.5))); }); return { debt, real, feel }; }
+function cctx(c) { const d = Math.min(2, devicePixelRatio || 1); const w = c.clientWidth, h = c.clientHeight; c.width = w * d; c.height = h * d; const x = c.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); return [x, w, h]; }
+function draw1() {
+  const r = sim(), [x, w, h] = cctx($('ch')), L = 34, R = w - 12, T = 14, B = h - 26, X = i => L + (R - L) * i / 6;
+  x.strokeStyle = 'rgba(255,255,255,.08)'; x.fillStyle = 'rgba(255,255,255,.45)'; x.font = '11px system-ui';
+  for (let v = 0; v <= 100; v += 25) { const y = B - (B - T) * v / 100; x.beginPath(); x.moveTo(L, y); x.lineTo(R, y); x.stroke(); x.fillText(v, 6, y + 4); }
+  DAYS.forEach((d, i) => x.fillText('周' + d, X(i) - 10, h - 8));
+  const mx = Math.max(10, ...r.debt); r.debt.forEach((v, i) => { const bh = (B - T) * v / mx * .9; x.fillStyle = 'rgba(255,154,122,.35)'; x.fillRect(X(i) - 10, B - bh, 20, bh); });
+  const line = (arr, c) => { x.strokeStyle = c; x.lineWidth = 2.5; x.beginPath(); arr.forEach((v, i) => { const y = B - (B - T) * v / 100; i ? x.lineTo(X(i), y) : x.moveTo(X(i), y); }); x.stroke();
+    arr.forEach((v, i) => { x.fillStyle = c; x.beginPath(); x.arc(X(i), B - (B - T) * v / 100, 3, 0, 7); x.fill(); }); x.lineWidth = 1; };
+  line(r.feel, '#9fb8ff'); line(r.real, '#7ee2a8');
+  const last = r.debt[6], gap = Math.round(r.feel[6] - r.real[6]), sum = hrs.reduce((a, b) => a + b, 0), short = Math.max(0, A.need * 5 - hrs.slice(0, 5).reduce((a, b) => a + b, 0));
+  $('out1').innerHTML = `<div>周日晚上还欠<br><span class="big">${last.toFixed(1)}</span> 小时</div><div>周日的真实专注力<br><span class="big">${Math.round(r.real[6])}</span> / 100</div><div>感觉比实际好<br><span class="big">${Math.max(0, gap)}</span> 分</div>`;
+  $('g1').innerHTML = (last > .5 ? `工作日少睡了 ${short.toFixed(1)} 小时,周末补了觉,账上还欠 ${last.toFixed(1)} 小时。` : '账本是平的:每晚都睡够,专注力一直满格。') + (gap > 5 ? '注意蓝线:几天后你「感觉还行」,绿线却还在往下走——困久了,人会察觉不到自己有多累。' : '') + '你觉得,哪一晚最值得先「还」?' + Q;
+}
+function renderN() { $('nights').innerHTML = hrs.map((v, i) => `<div>周${DAYS[i]}<b>${v}</b>小时<br><button data-n="${i}" data-d="-0.5" aria-label="周${DAYS[i]}少睡半小时">−</button> <button data-n="${i}" data-d="0.5" aria-label="周${DAYS[i]}多睡半小时">+</button></div>`).join(''); draw1(); }
+$('nights').onclick = e => { const b = e.target.closest('button[data-n]'); if (!b) return; const i = +b.dataset.n; hrs[i] = Math.min(13, Math.max(3, hrs[i] + +b.dataset.d)); sound.tick(); renderN(); };
+$('pWeek').onclick = () => { preset('week'); renderN(); }; $('pEven').onclick = () => { preset('even'); renderN(); }; $('pMe').onclick = () => { preset('me'); renderN(); };
+function enter1() { if (!hrs.length) preset('me'); renderN(); }
+/* ③ App 设计师 */
+const U = (() => { let s = 7; const r = () => (s = (s * 16807) % 2147483647) / 2147483647; return Array.from({ length: 1000 }, () => ({ base: (r() + r() + r() - 1.5) * 50, pull: r() })); })();
+const [bh, bm] = A.bed.split(':').map(Number), BED = bh * 60 + bm;
+let used = false;
+function enter2() {
+  const on = id => $(id).checked; const add = u => { let m = 0; if (on('tAuto')) m += 30 * u.pull + 10; if (on('tFeed')) m += 35 * u.pull + 5; if (on('tPush')) m += 15 * u.pull; if (on('tStop')) m *= .4; return m; };
+  const late = U.map(u => u.base + add(u)), avg = late.reduce((a, b) => a + b, 0) / 1000, minutes = U.reduce((a, u) => a + add(u), 0) / 1000, over = late.filter(v => v > 60).length;
+  const [x, w, h] = cctx($('ch2')), L = 10, R = w - 10, B = h - 24, bins = new Array(16).fill(0); late.forEach(v => { const k = Math.max(0, Math.min(15, Math.floor((v + 120) / 15))); bins[k]++; });
+  const mx = Math.max(...bins, 1), bw = (R - L) / 16; x.font = '11px system-ui';
+  bins.forEach((n, i) => { const bh2 = (B - 14) * n / mx, t = i * 15 - 120; x.fillStyle = t >= 60 ? 'rgba(255,154,122,.75)' : t >= 0 ? 'rgba(245,194,107,.7)' : 'rgba(126,226,168,.6)'; x.fillRect(L + i * bw + 2, B - bh2, bw - 4, bh2); });
+  const tl = m => { const t = (BED + m + 1440) % 1440; return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(Math.round(t % 60)).padStart(2, '0')}`; };
+  x.fillStyle = 'rgba(255,255,255,.55)'; [-120, -60, 0, 60, 120].forEach(m => x.fillText(tl(m), L + (m + 120) / 15 * bw - 14, h - 8));
+  x.strokeStyle = 'rgba(255,255,255,.5)'; x.setLineDash([4, 4]); const X0 = L + 120 / 15 * bw; x.beginPath(); x.moveTo(X0, 6); x.lineTo(X0, B); x.stroke(); x.setLineDash([]); x.fillText('该睡了', X0 + 4, 16);
+  $('out2').innerHTML = `<div>平均入睡<br><span class="big">${tl(avg)}</span></div><div>人均每晚多看<br><span class="big">${Math.round(minutes)}</span> 分钟</div><div>晚睡 1 小时以上<br><span class="big">${over}</span> 人</div>`;
+  $('g2').innerHTML = (on('tStop') ? '你给用户留了一个「出口」:使用时长少了一些,可晚睡一小时以上的人也少了很多。' : on('tAuto') || on('tFeed') || on('tPush') ? `这些功能每晚帮 App 多拿到 ${Math.round(minutes)} 分钟,代价是 ${over} 个人第二天带着欠账上学、上班。` : '全部关掉:App 少赚了时长,用户按自己的节奏入睡。') + '现在再看你自己的屏幕:是谁,替你决定了「再看一个」?' + Q;
+  if (!used && (on('tStop') || !on('tAuto'))) { used = true; logChoice('sleep', '当 App 设计师时,给用户留了「停下来」的出口', '若全开:人均每晚多看半小时以上,很多人晚睡一小时'); }
+}
+['tAuto', 'tFeed', 'tPush', 'tStop'].forEach(id => $(id).onchange = () => { sound.tick(); enter2(); });
+/* ④ */
+function finish() {
+  const first = !isDone('sleep'); markDone('sleep', { pick: ans });
+  if (store.get('stat_energy', null) == null) store.set('stat_energy', ans[1] === 'sleep' ? 70 : 45);
+  $('g3').innerHTML = '你每天最常「再看一个」的时刻是几点?如果把那一刻提前设一个闹钟提醒自己关屏,会发生什么?' + Q;
+  H.render(); if (first) [0, 2, 4, 7].forEach((s, i) => setTimeout(() => sound.bell(s), i * 180));
+}
+addEventListener('resize', () => { if (!secs[1].hidden) draw1(); if (!secs[2].hidden) enter2(); });
+go(0);
+</script>
+</body></html>
