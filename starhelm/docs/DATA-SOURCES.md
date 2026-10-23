@@ -151,3 +151,4 @@
 | europa.webp | 木卫二 伽利略号 | NASA/JPL/DLR · 公有领域 |
 | pluto.webp | 冥王星 新视野号 2015 | NASA/JHUAPL/SwRI · 公有领域 |
 | c67p.webp | 67P 彗星 罗塞塔号 NAVCAM 2014 | ESA/Rosetta/NAVCAM · CC BY-SA 3.0 IGO |
+| n159.webp | N159 恒星形成区 韦布 NIRCam 2026-10-22 | ESA/Webb, NASA & CSA, E. Sabbi, M. Zamani;致谢 M. H. Özsaraç · CC BY 4.0 |

@@ -25,7 +25,7 @@
   ];
   var CAT_OF = { sun: 'sun', earth: 'sun', pbd: 'edge', jupiter: 'pl', pillars: 'neb', crab: 'neb', cliffs: 'neb', m87: 'gal', deep: 'deep' };
   var SCOPE_OF = { sun: '太阳动力学天文台 SDO', earth: '阿波罗 17 号 · 哈苏相机', pbd: '旅行者 1 号', jupiter: '哈勃空间望远镜', pillars: '哈勃 / 韦布空间望远镜', crab: '哈勃 / 韦布 / 钱德拉', cliffs: '韦布空间望远镜', m87: '事件视界望远镜 EHT', deep: '韦布空间望远镜' };
-  var RADEC = { pillars: [274.70, -13.84], crab: [83.63, 22.01], cliffs: [159.20, -58.62], m87: [187.71, 12.39], deep: [110.83, -73.45] };
+  var RADEC = { n159: [84.9, -69.77], pillars: [274.70, -13.84], crab: [83.63, 22.01], cliffs: [159.20, -58.62], m87: [187.71, 12.39], deep: [110.83, -73.45] };
   var BODY = { sun: 'Sun', moon: 'Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto', io: 'Jupiter', europa: 'Jupiter' };
   function V(zh, k, img, t, cr) { return { zh: zh, k: k, img: img, t: t, cr: cr }; }
   var NEW = [
@@ -73,6 +73,10 @@
       how: '2015 年 7 月 14 日新视野号飞掠冥王星前约 45 万 km 处拍摄,LORRI 黑白相机叠加 Ralph 彩色数据。',
       bands: [V('真彩色', 'vis', 'pluto', '右下那块心形的亮区是氮冰平原「斯普特尼克平原」。', 'NASA / JHUAPL / SwRI(公有领域)')],
       fact: '新视野号飞了 9 年半才到冥王星。' },
+    { id: 'n159', cat: 'neb', zh: 'N159 恒星摇篮', en: 'N159 · LMC', dist: '约 16.1 万光年', light: '约 16.1 万年', scope: '韦布空间望远镜 NIRCam',
+      how: '韦布近红外相机拍摄,ESA/Webb 2026 年 10 月 22 日发布的「本月图片」。N159 在银河系的卫星星系大麦哲伦云里,画面宽约 230 光年。',
+      bands: [V('近红外', 'nir', 'n159', '橙色云是含碳大分子(PAH)发光,淡蓝是被大质量星紫外线电离的氢,横穿中央的暗红细丝是最冷最密的分子氢,护着刚出生的恒星。', 'ESA/Webb, NASA & CSA, E. Sabbi, M. Zamani (ESA/Webb);致谢 M. H. Özsaraç(CC BY 4.0)')],
+      fact: '这里的恒星不到 300 万岁,是邻居星系里最年轻的恒星摇篮之一。' },
     { id: 'c67p', cat: 'edge', zh: '67P 彗星', en: 'COMET 67P', dist: '拍摄时约 4 亿 km', light: '约 22 分钟', scope: '罗塞塔号导航相机',
       how: '2014 年 9 月 19 日罗塞塔号在约 28 km 外环绕拍摄的拼接图。两个月后它放下了「菲莱」着陆器。',
       bands: [V('可见光', 'vis', 'c67p', '像一只「橡皮鸭」的彗核,约 4 km 长,右上方已经有淡淡的喷流。', 'ESA / Rosetta / NAVCAM(CC BY-SA 3.0 IGO)')],
