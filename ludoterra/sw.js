@@ -1,7 +1,7 @@
 /* 觉弈 Ludoterra · Service Worker(作用域仅 /ludoterra/)
  * 只缓存本世界自己的文件,断网时可继续玩已打开过的内容。
  * 页面:先走网络,失败用缓存;脚本/样式:先用缓存,后台更新。不碰根目录、门户或其他世界的缓存。 */
-const VER = 'lt-v0.31';
+const VER = 'lt-v0.32';
 const BASE = '/ludoterra/';
 const CORE = ['', 'lt.css', 'lt.js', 'lt-data.js', 'lt-disc-gl.js', 'lt-intro.js', 'lt-lotus.js', 'lt-age.js', 'lt-stage.js', 'gn-arrive.js', 'vendor/three.module.min.js', 'compound/', 'prisoner/', 'sunk/', 'cocoon/', 'survivor/', 'nature/', 'sleep/', 'wave/', 'echo/', 'meaning/'].map(p => BASE + p);
 self.addEventListener('install', e => { e.waitUntil(caches.open(VER).then(c => c.addAll(CORE)).catch(() => {}).then(() => self.skipWaiting())); });
