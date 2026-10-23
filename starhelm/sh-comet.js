@@ -76,7 +76,7 @@
     var C = new T.Vector3(), C2 = new T.Vector3(), wp = new T.Vector3(), t0 = performance.now();
     K.pos = C;
     S.addUpdater(function () {
-      var on = S.mode === 'solar' && (K.on || (window.SHD4 && SHD4.ready && SHD4.visible()));
+      var on = S.mode === 'solar' && (K.on || K.cine || K.follow || (window.SHD4 && SHD4.ready && SHD4.visible()));   // 特写/跟随时镜头会推近到 95 以内,不能因星域 IV 视图隐藏而冻结
       G.visible = on; if (!on) { lbl.style.visibility = 'hidden'; return; }
       var nowp = performance.now(), dtp = K.last ? Math.min(0.1, (nowp - K.last) / 1000) : 0; K.last = nowp;
       if (K.play && !K.drag) {   // 回归动画:每秒约 6 天,在近日点前后 400 天之间循环
