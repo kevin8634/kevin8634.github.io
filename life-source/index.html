@@ -137,7 +137,9 @@ mountAlbum(C.top);
 } catch (e) {} })();
 const pre = () => document.getElementById('lsi-pre')?.remove();
 // 每次进入都播放开场;系统开启「减少动态效果」时直接进入
-if (reducedMotion()) { pre(); hudIn(); } else startIntro(store.get('intro', false)); // 王磊 10-21:每次进入都播放开场;首次带声音门屏,之后静音自动播放(可点跳过)
+// 王磊 10-23:从任务里「回到图谱」不播开场;直接进网站(门户/书签/刷新)照常播放
+const fromLab = sessionStorage.getItem('gn:ls:fromLab') === '1'; sessionStorage.removeItem('gn:ls:fromLab');
+if (reducedMotion() || fromLab) { pre(); hudIn(); } else startIntro(store.get('intro', false)); // 王磊 10-21:每次进入都播放开场;首次带声音门屏,之后静音自动播放(可点跳过)
 /* ---------- 向导气泡:只提问 ---------- */
 const ASK = ['从哪一层开始探索?拖动右边的「穿越尺度」试试。', '一颗星点亮了——你猜它属于哪个尺度?', '从指纹放大到碱基对,要放大多少倍?点左下角的显微镜看看。'];
 let ai = 0; const gd = $('#gd'), say = () => { $('#gd .say').textContent = ASK[ai % ASK.length]; gd.classList.remove('talk'); void gd.offsetWidth; gd.classList.add('talk'); };

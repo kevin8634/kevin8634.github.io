@@ -52,10 +52,12 @@ export function runTask(taskId, levels) {
     tasks: () => { setLog(false); setDrawer(!drawer.classList.contains('on')); },
     album: () => document.querySelector('.ls-albtn')?.click(),
     log: () => { setDrawer(false); setLog(!log.classList.contains('on')); },
-    home: () => { location.href = '/life-source/'; },
+    home: () => { sessionStorage.setItem('gn:ls:fromLab', '1'); location.href = '/life-source/'; },
     again: () => go(cur, true),
     set: () => [...document.querySelectorAll('.ls-top .ls-icn')].pop()?.click(),
   };
+  // 任务页内所有回图谱的链接(抽屉、顶栏品牌)都不重播开场
+  document.addEventListener('click', e => { const a = e.target.closest('a[href]'); if (a && new URL(a.href, location.href).pathname === '/life-source/') sessionStorage.setItem('gn:ls:fromLab', '1'); }, true);
   rail.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { RA[b.dataset.a](); sound.tone(660, .15, { gain: .05 }); } });
   addEventListener('keydown', e => { if (e.key === 'Escape') { setLog(false); setDrawer(false); } });
   stage.addEventListener('pointerdown', () => { setDrawer(false); });
