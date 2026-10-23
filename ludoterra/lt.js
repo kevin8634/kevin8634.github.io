@@ -1,6 +1,6 @@
 /* 觉弈 Ludoterra · 共用模块:本机存储、年龄段、HUD、顶栏、声音(默认关)、离线
  * 存储键统一 gn:lt:*;不收集任何个人信息,不发外部请求。 */
-import { AGES, STATS, TASKS, TRACKS, ageLabel } from './lt-data.js';
+import { AGES, STATS, TASKS, TRACKS, DOMAINS, ageLabel } from './lt-data.js';
 
 export const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const K = k => 'gn:lt:' + k;
@@ -78,16 +78,27 @@ export function chrome({ home = './', extra = '' } = {}) {
   return { top, chip, paintAge };
 }
 
-/* ---------- HUD:隐藏数值 ---------- */
+/* ---------- HUD 2.0(v0.23):八域小星环 + 可展开的隐藏数值 ---------- */
 export function hud(parent = document.body) {
-  const el = document.createElement('aside'); el.className = 'lt-hud lt-panel'; el.setAttribute('aria-label', '隐藏数值');
+  const el = document.createElement('aside'); el.className = 'lt-hud lt-panel ring'; el.setAttribute('aria-label', '八域星环与隐藏数值');
+  let open = false;
+  const domLit = d => TASKS.some(t => t.live && isDone(t.id) && t.domains.includes(d.id));
+  const arc = (i, n, r, gap) => { const a0 = -Math.PI / 2 + i * 2 * Math.PI / n + gap, a1 = a0 + 2 * Math.PI / n - 2 * gap;
+    const p = a => [(24 + r * Math.cos(a)).toFixed(2), (24 + r * Math.sin(a)).toFixed(2)]; const [x0, y0] = p(a0), [x1, y1] = p(a1);
+    return `M${x0} ${y0}A${r} ${r} 0 0 1 ${x1} ${y1}`; };
   const render = (hold = [], flip = []) => {
+    const litN = DOMAINS.filter(domLit).length;
+    const svg = `<svg viewBox="0 0 48 48" width="48" height="48" aria-hidden="true"><circle cx="24" cy="24" r="21.5" fill="none" stroke="rgba(245,194,107,.18)" stroke-width=".6"/>${DOMAINS.map((d, i) => `<path d="${arc(i, DOMAINS.length, 18, 0.07)}" class="${domLit(d) ? 'on' : ''}"><title>${d.name}${domLit(d) ? ' · 已点亮' : ' · 迷雾中'}</title></path>`).join('')}<circle cx="24" cy="24" r="2" class="${isDone('meaning') ? 'core on' : 'core'}"/></svg>`;
     const rows = STATS.map(s => {
-      const open = isDone(s.by) && !hold.includes(s.id); const v = open ? (store.get('stat_' + s.id, 60) || 60) : 0;
-      return `<div class="row ${open ? '' : 'locked'}${open && flip.includes(s.id) ? ' flip' : ''}" data-id="${s.id}" title="${open ? s.name : '通关后显形'}"><span class="n">${open ? s.name : '???'}</span><span class="bar"><i style="width:${v}%"></i></span></div>`;
+      const on = isDone(s.by) && !hold.includes(s.id); const v = on ? (store.get('stat_' + s.id, 60) || 60) : 0;
+      return `<div class="row ${on ? '' : 'locked'}${on && flip.includes(s.id) ? ' flip' : ''}" data-id="${s.id}" title="${on ? s.name : '通关后显形'}"><span class="n">${on ? s.name : '???'}</span><span class="bar"><i style="width:${v}%"></i></span></div>`;
     }).join('');
     const n = STATS.filter(s => isDone(s.by) && !hold.includes(s.id)).length;
-    el.innerHTML = `<h4>隐藏数值 ${n}/${STATS.length}</h4>${rows}<div class="tip">地球Online 不显示这些数值。每看见一条规则,就显形一条。</div>`;
+    el.classList.toggle('open', open); el.classList.toggle('pulse', flip.length > 0);
+    el.innerHTML = `<button class="rt" type="button" aria-expanded="${open}">${svg}<span class="rl"><b>${litN}/${DOMAINS.length}</b><small>域已点亮</small></span></button>
+      <div class="rd"><div class="doms">${DOMAINS.map(d => `<span class="${domLit(d) ? 'on' : ''}">${d.icon} ${d.short}</span>`).join('')}</div>
+      <h4>隐藏数值 ${n}/${STATS.length}</h4>${rows}<div class="tip">地球Online 不显示这些数值。每看见一条规则,就显形一条。</div></div>`;
+    el.querySelector('.rt').onclick = () => { open = !open; el.classList.toggle('open', open); el.querySelector('.rt').setAttribute('aria-expanded', open); };
   };
   render(); parent.appendChild(el); return { el, render };
 }
