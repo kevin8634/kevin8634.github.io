@@ -97,7 +97,7 @@ function makeParticles(T) {
   const tilt = new THREE.Matrix3().setFromMatrix4(new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0.36, 0, -0.32)));
   const mat = new THREE.ShaderMaterial({
     ...add,
-    uniforms: { uTime: { value: 0 }, uMorph: { value: 0 }, uExpand: { value: 1 }, uSize: { value: 15 }, uPR: { value: 1 }, uTilt: { value: tilt }, uBeat: { value: 0 }, uGain: { value: T.particles > 60000 ? 0.10 : 0.17 } },
+    uniforms: { uTime: { value: 0 }, uMorph: { value: 0 }, uExpand: { value: 1 }, uSize: { value: 15 }, uPR: { value: 1 }, uTilt: { value: tilt }, uBeat: { value: 0 }, uGain: { value: T.particles > 60000 ? 0.10 : T.particles > 30000 ? 0.17 : 0.24 } },
     vertexShader: `
       attribute vec3 aSphere, aDisk; attribute vec4 aRand;
       uniform float uTime,uMorph,uExpand,uSize,uPR,uBeat,uGain; uniform mat3 uTilt;
@@ -438,6 +438,7 @@ export function buildCore(stage, opts = {}) {
   const probes = makeProbes(10); root.add(probes.group);
   const shock = makeShock(); root.add(shock);
 
+  const introSpeed = opts.introSpeed || 1;   // v0.9.2:手机开场压缩到约 5 秒
   const st = { t: 0, intro: opts.skipIntro ? 99 : 0, morph: 0, morphTarget: 0, mx: 0, my: 0, beat: 0 };
   addEventListener('pointermove', e => { st.mx = e.clientX / innerWidth - 0.5; st.my = e.clientY / innerHeight - 0.5; });
 
@@ -445,7 +446,7 @@ export function buildCore(stage, opts = {}) {
   const camTmp = new THREE.Vector3();
 
   function update(dt, freeze) {
-    st.t += dt; if (st.intro < 99) st.intro += dt;
+    st.t += dt; if (st.intro < 99) st.intro += dt * introSpeed;
     const t = st.t, I = st.intro, pr = stage.renderer.getPixelRatio();
     // 形态变形
     const k = 1 - Math.pow(0.001, dt / 2.4);
@@ -518,6 +519,14 @@ export function buildCore(stage, opts = {}) {
     camTmp.set(Math.sin(az) * Math.cos(el) * dist, Math.sin(el) * dist, Math.cos(az) * Math.cos(el) * dist);
     camera.position.lerp(camTmp, freeze ? 1 : 0.08); camera.lookAt(0, 0, 0);
   }
+
+  // v0.9.2 自动降档第 2 步:粒子与神经丛减半(粒子各自随机,截取前一半即均匀抽样),亮度补偿
+  const gain0 = parts.u.uGain.value;
+  stage.onDegrade && stage.onDegrade(lv => {
+    if (lv !== 2) return;
+    const g = parts.obj.geometry; g.setDrawRange(0, Math.floor(tier.particles / 2)); parts.u.uGain.value = gain0 * 1.6;
+    bg.group.traverse(o => { if (o.isPoints && o.geometry) o.geometry.setDrawRange(0, Math.floor(o.geometry.attributes.position.count / 2)); });
+  });
 
   return {
     update,
