@@ -1,6 +1,7 @@
 /* 觉弈 Ludoterra · 共用模块:本机存储、年龄段、HUD、顶栏、声音(默认关)、离线
  * 存储键统一 gn:lt:*;不收集任何个人信息,不发外部请求。 */
 import { AGES, STATS, TASKS, TRACKS, DOMAINS, ageLabel } from './lt-data.js';
+import { applyAge } from './lt-age.js';
 
 export const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const K = k => 'gn:lt:' + k;
@@ -50,6 +51,7 @@ export const sound = {
 
 /* ---------- 顶栏 ---------- */
 export function chrome({ home = './', extra = '' } = {}) {
+  try { const seg = location.pathname.split('/').filter(Boolean).pop(); applyAge(seg, getAge()); } catch (_) {}
   const top = document.createElement('header'); top.className = 'lt-top';
   top.innerHTML = `<a class="brand" href="${home}" aria-label="觉弈 Ludoterra 首页"><b>觉弈</b><span>LUDOTERRA · 06 · 认知觉醒</span></a>
     <span class="sp"></span>${extra}
