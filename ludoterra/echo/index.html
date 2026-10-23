@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><script src="/ludoterra/gn-arrive.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>你说的那句话,他听到的是什么? · 觉弈 Ludoterra</title>
+<meta name="description" content="觉弈 Ludoterra 关卡:回声。先猜对方能不能听懂你,再亲手敲一首歌,看见「我脑子里有,他耳朵里没有」的知识诅咒,最后设计一款聊天 App,看规则怎样制造或减少误会。">
+<meta name="theme-color" content="#070814">
+<link rel="stylesheet" href="../lt.css">
+<style>
+body{min-height:100vh}
+main{max-width:860px;margin:0 auto;padding:70px 16px 40px}
+.steps{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.steps span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--mute)}
+.steps span.on{color:#1a1206;background:var(--gold);border-color:var(--gold)}
+.card{padding:18px;margin-bottom:12px}
+h1{font-size:clamp(20px,4vw,28px);margin:0 0 6px}
+h3{margin:12px 0 6px;font-size:16px}
+.guide{display:flex;gap:10px;align-items:flex-start;margin:10px 0}
+.guide .m{flex:none;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--gold2);display:flex;align-items:center;justify-content:center;color:#ffe9b8;font-weight:700;background:#14163a}
+.guide p{margin:0;font-size:14.5px;line-height:1.7}
+.guide small{display:block;color:var(--mute);font-size:11px}
+.scene{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0;background:rgba(255,255,255,.025)}
+.scene p{margin:0 0 8px;line-height:1.7;font-size:14.5px}
+.two{display:flex;gap:10px;flex-wrap:wrap}
+.two .lt-btn{font-size:15px;padding:9px 16px;white-space:normal;text-align:left}
+.two .lt-btn.pick{border-color:var(--gold);box-shadow:0 0 16px rgba(245,194,107,.35)}
+.nights{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:10px 0}
+.nights div{border:1px solid var(--line);border-radius:10px;padding:6px 4px;text-align:center;font-size:12px}
+.nights b{display:block;font-size:16px;color:var(--gold);margin:2px 0}
+.nights button{background:none;border:1px solid var(--line);color:inherit;border-radius:6px;width:26px;height:24px;cursor:pointer;font-size:14px}
+canvas.ch{width:100%;height:210px;display:block;border-radius:12px;background:rgba(0,0,0,.25)}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mute);margin:6px 0}
+.leg i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.pair{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.pair div{border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:12.5px;line-height:1.5}
+.big{font-size:clamp(18px,4vw,24px);font-weight:800;color:var(--gold)}
+.tog{display:flex;gap:10px 16px;flex-wrap:wrap;margin:8px 0 4px;font-size:14px}
+.tog label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.tog input{accent-color:#f5c26b;width:18px;height:18px}
+.note{font-size:12px;color:var(--mute);line-height:1.6}
+.nav{display:flex;gap:8px;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+.handbook{border:1.5px solid var(--gold);border-radius:18px;padding:18px;background:radial-gradient(circle at 20% 0,rgba(245,194,107,.18),transparent 60%),#0f1130;position:relative;overflow:hidden}
+.handbook .no{font-size:12px;color:var(--gold);letter-spacing:2px;padding-right:44px}
+.handbook h2{margin:6px 0 8px;font-size:22px}
+.handbook p{margin:6px 0;line-height:1.7;font-size:14.5px}
+.handbook .b{position:absolute;right:14px;top:10px;font-size:34px;opacity:.5}
+[hidden]{display:none!important}
+@media (max-width:1100px){.lt-hud{display:none}}
+@media (max-width:640px){.nights{gap:3px}.nights div{padding:4px 1px;font-size:11px}.nights b{font-size:14px}.nights button{width:20px;height:20px;font-size:12px}.pair div{padding:6px 7px;font-size:11.5px}canvas.ch{height:180px}}
+.tapbox{border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;background:rgba(0,0,0,.25)}
+.lyr{display:flex;flex-wrap:wrap;gap:4px;min-height:48px;align-items:flex-end}
+.lyr span{display:inline-flex;flex-direction:column;align-items:center;min-width:22px;font-size:15px;color:rgba(255,255,255,.25);transition:color .15s}
+.lyr span i{display:block;width:8px;border-radius:3px;background:rgba(245,194,107,.25);margin-bottom:3px}
+.lyr span.on{color:#ffe9b8}.lyr span.on i{background:var(--gold)}
+.lyr.listen span{color:transparent}.lyr.listen span i{height:6px!important;width:6px;border-radius:50%;background:rgba(255,255,255,.15)}.lyr.listen span.on i{background:#fff}
+.tap{font-size:20px;padding:14px 26px}
+.reads{display:grid;gap:6px;margin:8px 0}
+.reads div{display:grid;grid-template-columns:120px 1fr 44px;gap:8px;align-items:center;font-size:13px}
+.reads .t{height:12px;border-radius:6px;background:rgba(255,255,255,.06);overflow:hidden}.reads .t i{display:block;height:100%;background:linear-gradient(90deg,#d99a3e,#f5c26b);transition:width .35s}
+.reads div.me .t i{background:linear-gradient(90deg,#3fae78,#7ee2a8)}
+.msg{display:inline-block;background:#2a6f4e;color:#fff;border-radius:14px 14px 4px 14px;padding:8px 14px;font-size:15px;margin:6px 0}
+@media (max-width:640px){.reads div{grid-template-columns:92px 1fr 38px;font-size:12px}}
+</style></head><body>
+<main>
+  <div class="steps" id="steps"><span>① 先中招</span><span>② 听见回声</span><span>③ 坐到 App 那边</span><span>④ 玩家手册</span></div>
+  <section class="card lt-panel" data-step="0">
+    <h1>你说的那句话,他听到的是什么?</h1>
+    <div class="scene" id="q1"><p id="s1"></p><div class="msg" id="m1"></div><p>你觉得对方能读懂你真正的意思吗?</p>
+      <div class="two"><button class="lt-btn" data-a="1" data-v="90">💯 肯定懂(九成)</button><button class="lt-btn" data-a="1" data-v="60">🤔 大概懂(六成)</button><button class="lt-btn" data-a="1" data-v="30">😶 很可能误会</button></div></div>
+    <div class="scene" id="q2" hidden><p>🥁 再来一个:你用手指在桌上敲出《生日快乐》的节奏(不哼、不唱),让朋友猜是哪首歌。你猜,100 个听的人里,能猜中多少个?</p>
+      <div class="two"><button class="lt-btn" data-a="2" data-v="50">50 个左右</button><button class="lt-btn" data-a="2" data-v="25">25 个左右</button><button class="lt-btn" data-a="2" data-v="3">不到 5 个</button></div></div>
+    <div class="guide"><span class="m">阿</span><p id="g0">凭第一感觉选。<small>阿德勒 · 仿其思想的提问</small></p></div>
+    <div class="nav" id="n0" hidden><span></span><button class="lt-btn primary" data-go="1">亲手敲一次 →</button></div>
+  </section>
+  <section class="card lt-panel" data-step="1" hidden>
+    <h1>知识的诅咒:你脑子里有歌,他耳朵里只有「哒哒哒」</h1>
+    <div class="two"><button class="lt-btn" id="vMe" aria-pressed="true">🎵 敲的人看到的</button><button class="lt-btn" id="vHe" aria-pressed="false">👂 听的人看到的</button></div>
+    <div class="tapbox"><div class="lyr" id="lyr"></div>
+      <div class="nav" style="margin-top:10px"><button class="lt-btn primary tap" id="tap">👆 敲</button><span><button class="lt-btn" id="auto">▶ 自动敲一遍</button> <button class="lt-btn" id="clr">↺</button></span></div></div>
+    <div class="guide"><span class="m">阿</span><p id="g1a"></p></div>
+    <h3>同一句话的回声</h3>
+    <p class="note" style="font-size:13.5px">你发出的是一行字,对方收到时没有你的表情、语气和前因后果。加点信息,看对方怎么读:</p>
+    <div class="msg" id="m2"></div>
+    <div class="tog" id="adds"></div>
+    <div class="reads" id="reads"></div>
+    <div class="guide"><span class="m">阿</span><p id="g1"></p></div>
+    <p class="note">1990 年,斯坦福的研究生伊丽莎白·牛顿做过「敲歌实验」:敲的人预计一半听者能猜中,实际 120 首里只猜中了 3 首。2005 年的一项研究发现,发邮件的人以为约八成收件人能读出自己是在开玩笑还是认真,实际只有 56% 左右读对(克鲁格等)。下面的比例是教学示意。</p>
+    <div class="nav"><button class="lt-btn" data-go="0">← 重新选</button><button class="lt-btn primary" data-go="2">坐到 App 那边 →</button></div>
+  </section>
+  <section class="card lt-panel" data-step="2" hidden>
+    <h1>你是聊天 App 的设计师:规则会制造误会,也能减少误会</h1>
+    <p class="note" style="font-size:13.5px">1000 段虚拟对话。你来决定要不要开这些功能:</p>
+    <div class="tog">
+      <label><input type="checkbox" id="tRead" checked> 显示「已读」</label>
+      <label><input type="checkbox" id="tTyping" checked> 显示「对方正在输入…」(打了又删也看得见)</label>
+      <label><input type="checkbox" id="tTone"> 发送前提示「这句话可能被读成生气」</label>
+      <label><input type="checkbox" id="tVoice"> 一键改成语音或加一句语气说明</label>
+    </div>
+    <div class="pair" id="out2"></div>
+    <div class="guide"><span class="m">阿</span><p id="g2"></p></div>
+    <p class="note">教学模型:数值只示意方向,不是某个真实 App 的数据。</p>
+    <div class="nav"><button class="lt-btn" data-go="1">← 回到回声</button><button class="lt-btn primary" data-go="3">领取玩家手册 →</button></div>
+  </section>
+  <section class="card lt-panel" data-step="3" hidden>
+    <div class="handbook"><span class="b">🔔</span><div class="no">地球Online 玩家手册 · 第 10 页 · 关系与表达</div>
+      <h2>隐藏规则:你知道的,对方不一定知道</h2>
+      <p>说话的人脑子里有旋律、有前因后果、有自己的语气,所以总觉得「我已经说得很清楚了」——这叫「知识的诅咒」。听的人只收到几个字,剩下的全靠他自己的心情和经历去补。很多吵架,不是谁坏,而是两个人听到了不同的回声。</p>
+      <p><b style="color:var(--gold)">反制技巧:</b>说之前补上「为什么」和「我的心情」;重要的话当面或用语音说;听到刺耳的话,先复述一遍确认:「你的意思是……吗?」阿德勒提醒我们:很多烦恼都和人与人的关系有关,而关系从听懂彼此开始。</p>
+      <p class="note">你解锁了隐藏数值「理解」。</p></div>
+    <div class="guide"><span class="m">阿</span><p id="g3"></p></div>
+    <div class="nav"><a class="lt-btn" href="../">← 回到认知星盘</a><button class="lt-btn" data-go="0">再玩一次</button></div>
+  </section>
+</main>
+<script type="module">
+import { chrome, hud, store, markDone, isDone, sound, reducedMotion, offline, getAge, logChoice } from '../lt.js';
+chrome({ home: '../' }); const H = hud(); offline();
+const $ = id => document.getElementById(id);
+const Q = '<small>阿德勒 · 仿其思想的提问</small>';
+const AGE = ['sprout', 'spark', 'star', 'galaxy'].includes(getAge()) ? getAge() : 'spark';
+/* 每个年龄段:一句话 + 你的本意 + 对方可能读成的四种意思(基础比例) */
+const A = {
+  sprout: { s1: '🧸 好朋友问你周末要不要去他家玩。你其实很想去,只是要先问妈妈,就回了一句:', m: '不知道。', me: '想去,要先问妈妈',
+    r: [['想去,要先问妈妈', 20], ['不想跟我玩', 45], ['在生我的气', 20], ['随便敷衍我', 15]] },
+  spark: { s1: '📱 同学在群里发了一个自己剪的视频,问大家觉得怎么样。你正忙着写作业,只回了一个字:', m: '哦。', me: '在忙,晚点认真看',
+    r: [['在忙,晚点认真看', 18], ['觉得很一般', 42], ['看不起我', 25], ['在生我的气', 15]] },
+  star: { s1: '💬 朋友约你周末出去,你很想去,只是还没确定那天要不要加班,就回了一句:', m: '再说吧。', me: '想去,等我确认时间',
+    r: [['想去,等我确认时间', 20], ['不想去,委婉拒绝', 50], ['对我有意见', 18], ['随便敷衍', 12]] },
+  galaxy: { s1: '🏠 家人发消息问你今晚几点回家。你在开会,想着「会后马上回」,就回了两个字:', m: '不清楚。', me: '在开会,结束就回',
+    r: [['在开会,结束就回', 22], ['又要加班到很晚', 40], ['不耐烦,别烦我', 28], ['不想回家', 10]] }
+}[AGE];
+$('s1').textContent = A.s1; $('m1').textContent = A.m; $('m2').textContent = A.m;
+const secs = [...document.querySelectorAll('[data-step]')], tabs = [...document.querySelectorAll('#steps span')];
+function go(n) { secs.forEach((s, i) => s.hidden = i !== n); tabs.forEach((t, i) => t.classList.toggle('on', i === n));
+  window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }); if (n === 0) reset0(); if (n === 1) enter1(); if (n === 2) enter2(); if (n === 3) finish(); }
+window.ltGo = go;
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) { sound.tick(); go(+g.dataset.go); } });
+let ans = store.get('echo_pick', {}) || {};
+function reset0() { document.querySelectorAll('[data-a]').forEach(b => b.classList.toggle('pick', ans[b.dataset.a] === b.dataset.v)); $('q2').hidden = !ans[1]; $('n0').hidden = !(ans[1] && ans[2]); }
+document.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+  const q = b.dataset.a, v = b.dataset.v; ans[q] = v; store.set('echo_pick', ans);
+  document.querySelectorAll(`[data-a="${q}"]`).forEach(x => x.classList.toggle('pick', x === b));
+  if (q === '1') { logChoice('echo', `回了一句「${A.m}」,估计对方 ${v === '30' ? '很可能误会' : `有${v === '90' ? '九' : '六'}成能懂`}`, `示意:只有约 ${A.r[0][1]}% 的人读成「${A.me}」`);
+    $('q2').hidden = false; $('g0').innerHTML = '再来一个。' + Q; sound.bell(1); }
+  else { $('g0').innerHTML = (v === '3' ? '你的直觉很准。' : '先别急着下结论。') + '下一步,你亲手敲一次。' + Q; $('n0').hidden = false; sound.bell(3); }
+});
+/* ② 敲歌 */
+const SONG = [['祝', 67, 1], ['你', 67, 1], ['生', 69, 2], ['日', 67, 2], ['快', 72, 2], ['乐', 71, 4], ['祝', 67, 1], ['你', 67, 1], ['生', 69, 2], ['日', 67, 2], ['快', 74, 2], ['乐', 72, 4],
+  ['祝', 67, 1], ['你', 67, 1], ['生', 79, 2], ['日', 76, 2], ['快', 72, 2], ['乐', 71, 2], ['', 69, 4], ['祝', 77, 1], ['你', 77, 1], ['生', 76, 2], ['日', 72, 2], ['快', 74, 2], ['乐', 72, 4]];
+let ti = 0, view = 'me', ac = null;
+function note(m) { try { if (localStorage.getItem('gn:lt:sound') !== 'true') return; ac = ac || new (window.AudioContext || window.webkitAudioContext)(); const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+  o.type = view === 'me' ? 'triangle' : 'square'; o.frequency.value = view === 'me' ? 440 * Math.pow(2, (m - 69) / 12) : 180; g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(view === 'me' ? .18 : .08, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + (view === 'me' ? .35 : .06));
+  o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + .4); } catch (_) {} }
+function paintL() { const L = $('lyr'); L.classList.toggle('listen', view === 'he');
+  L.innerHTML = SONG.map(([w, m], i) => `<span class="${i < ti ? 'on' : ''}"><i style="height:${(m - 62) * 2.2}px"></i>${w || '~'}</span>`).join('');
+  $('vMe').setAttribute('aria-pressed', view === 'me'); $('vHe').setAttribute('aria-pressed', view === 'he');
+  $('g1a').innerHTML = view === 'me' ? (ti ? '你敲的时候,脑子里自动响着旋律和歌词,每一下都「明明这么明显」。现在切到「听的人看到的」。' : '点「敲」,一下一个字,把《生日快乐》敲出来。') + Q
+    : '听的人没有旋律,只有一串长短不一的「哒」。它可能是任何一首歌。这就是「知识的诅咒」:一旦知道了,就很难想象不知道的感觉。' + Q; }
+$('tap').onclick = () => { if (ti >= SONG.length) ti = 0; note(SONG[ti][1]); ti++; paintL(); };
+let autoT = 0;
+$('auto').onclick = () => { clearTimeout(autoT); ti = 0; paintL(); const run = () => { if (ti >= SONG.length || secs[1].hidden) return; note(SONG[ti][1]); const d = SONG[ti][2]; ti++; paintL(); autoT = setTimeout(run, d * 170); }; run(); };
+$('clr').onclick = () => { clearTimeout(autoT); ti = 0; paintL(); };
+$('vMe').onclick = () => { view = 'me'; paintL(); }; $('vHe').onclick = () => { view = 'he'; paintL(); };
+/* 回声:加信息后,读对的比例 */
+const ADDS = [['why', '补一句原因'], ['feel', '加上我的心情'], ['face', '当面说 / 发语音'], ['ask', '问一句「你觉得呢?」']];
+let on = {};
+function readsNow() { const k = (on.why ? 1.9 : 1) * (on.feel ? 1.5 : 1) * (on.face ? 1.6 : 1) * (on.ask ? 1.25 : 1); const v = A.r.map(([n, p], i) => [n, i ? p : p * k]); const s = v.reduce((a, b) => a + b[1], 0); return v.map(([n, p]) => [n, Math.round(100 * p / s)]); }
+function paintR() { $('adds').innerHTML = ADDS.map(([k, n]) => `<label><input type="checkbox" data-k="${k}" ${on[k] ? 'checked' : ''}> ${n}</label>`).join('');
+  const r = readsNow(); $('reads').innerHTML = r.map(([n, p], i) => `<div class="${i ? '' : 'me'}"><span>${i ? '' : '✓ '}${n}</span><span class="t"><i style="width:${p}%"></i></span><span>${p}%</span></div>`).join('');
+  const c = Object.values(on).filter(Boolean).length;
+  $('g1').innerHTML = (c ? `加了 ${c} 样信息后,读对你本意的人从 ${A.r[0][1]}% 变成 ${r[0][1]}%。` : `只发「${A.m}」:只有约 ${r[0][1]}% 的人读成你的本意「${A.me}」,其余的人用自己的心情把空白补上了。`) + '你最近有没有一句话,被人听成了完全不同的意思?' + Q; }
+$('adds').onchange = e => { const k = e.target.dataset.k; if (!k) return; on[k] = e.target.checked; sound.tick(); paintR();
+  if (Object.values(on).filter(Boolean).length === 3) logChoice('echo', '给一句短回复补上了原因、心情和语气', `读对本意的比例从 ${A.r[0][1]}% 升到 ${readsNow()[0][1]}%`); };
+function enter1() { paintL(); paintR(); }
+/* ③ 聊天 App 设计师 */
+let used = false;
+function enter2() { const c = id => $(id).checked;
+  let mis = 300 + (c('tRead') ? 90 : 0) + (c('tTyping') ? 60 : 0); mis *= (c('tTone') ? .7 : 1) * (c('tVoice') ? .75 : 1); mis = Math.round(mis);
+  const fight = Math.round(mis * .35), time = Math.round(100 + (c('tRead') ? 8 : 0) + (c('tTyping') ? 12 : 0) - (c('tTone') ? 3 : 0));
+  $('out2').innerHTML = `<div>产生误会的对话<br><span class="big">${mis}</span> 段</div><div>因此吵起来的<br><span class="big">${fight}</span> 段</div><div>用户停留时长<br><span class="big">${time}</span> %</div>`;
+  $('g2').innerHTML = (c('tTone') || c('tVoice') ? '你给文字补回了一点「语气」,误会少了,停留时长几乎没变。' : '「已读不回」和「打了又删」会让人反复猜,猜着猜着就补出了最坏的意思——而反复打开 App 去看,正好拉长了停留时长。') + '下次你盯着「已读」两个字难受时,能不能先问一句,而不是先猜?' + Q;
+  if (!used && (c('tTone') || c('tVoice'))) { used = true; logChoice('echo', '当聊天 App 设计师时,给文字加回了「语气」', '若只留已读和正在输入:误会和吵架更多'); } }
+['tRead', 'tTyping', 'tTone', 'tVoice'].forEach(id => $(id).onchange = () => { sound.tick(); enter2(); });
+function finish() { const first = !isDone('echo'); markDone('echo', { pick: ans });
+  if (store.get('stat_understand', null) == null) store.set('stat_understand', ans[1] === '30' ? 70 : 50);
+  $('g3').innerHTML = '想一个你在意的人。你最近一句让他误会的话是什么?如果补上「为什么」和「我的心情」,你会怎么重新说?' + Q;
+  H.render(); if (first) [0, 2, 4, 7].forEach((s, i) => setTimeout(() => sound.bell(s), i * 180)); }
+go(0);
+</script>
+</body></html>
