@@ -77,6 +77,8 @@ export function chrome({ home = './', extra = '' } = {}) {
   const chip = top.querySelector('#ltAgeChip');
   const paintAge = () => { const a = getAge(); chip.textContent = a ? ageLabel(a) : '选择年龄段'; };
   paintAge(); chip.addEventListener('lt-age', paintAge);
+  /* v0.30 R1 任务背景舞台:关卡页自动挂上本关 3D 背景(首页不挂) */
+  if (seg && home !== './') import('./lt-stage.js').then(m => m.initStage(seg)).catch(() => {});
   return { top, chip, paintAge };
 }
 
