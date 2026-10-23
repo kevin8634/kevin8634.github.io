@@ -80,6 +80,9 @@ export const TASKS = [
   { id: 'cocoon', q: '为什么你刷到的视频越来越像?', domains: ['info', 'habit'], age: 12, guide: 'sagan', path: 'cocoon/', ver: 'v0.6', live: true },
   { id: 'survivor', q: '为什么「成功经验」常常骗人?', domains: ['wealth', 'info'], age: 12, guide: 'sagan', path: 'survivor/', ver: 'v0.7', live: true },
   { id: 'nature', q: '人性本善,还是本恶?', domains: ['nature'], age: 12, guide: 'mengxun', path: 'nature/', ver: 'v0.8', live: true },
+  { id: 'sleep', q: '今晚偷走的睡眠,明天谁来还?', domains: ['habit', 'emotion'], age: 12, guide: 'james', path: 'sleep/', ver: 'v0.25', live: false },
+  { id: 'wave', q: '生气的时候,是谁在替你做决定?', domains: ['emotion'], age: 12, guide: 'aurelius', path: 'wave/', ver: 'v0.26', live: false },
+  { id: 'echo', q: '你说的那句话,他听到的是什么?', domains: ['relation'], age: 12, guide: 'adler', path: 'echo/', ver: 'v0.27', live: false },
   { id: 'meaning', q: '看见了这些规则,我想成为怎样的玩家?', domains: ['meaning'], age: 16, guide: 'wang', path: 'meaning/', ver: 'v0.9', live: true, finale: true }
 ];
 
