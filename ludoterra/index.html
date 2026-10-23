@@ -98,7 +98,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
 @media (max-height:480px){.trk:not(.on) .lg,#player .lead{display:none}}
 @media (max-height:480px){#player{top:56px;bottom:56px;max-height:none}}
 </style></head><body>
-<canvas id="disc" tabindex="0" aria-label="光之莲认知星盘:四层八域。左右拖动或用方向键旋转,点扇区查看。"></canvas>
+<canvas id="disc" tabindex="0" aria-label="心莲认知星盘:八瓣八域,中心是意义。左右拖动或用方向键旋转,点花瓣展开这一域的关卡。"></canvas>
 <div id="hero"><h1>地球Online 没有新手教程。这里补上。</h1><p>看见自己的思维,就是觉醒的开始</p></div>
 <aside id="side" class="lt-panel" aria-live="polite"></aside>
 <div id="rec" class="lt-panel"></div>
@@ -130,7 +130,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   </div>
   <div id="pNote" aria-live="polite"></div>
 </aside>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.21</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.23</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -358,6 +358,12 @@ let glTry = 0; const glOK = () => !!(GLD && GLD.ok);
 function initGL() { if (GLD || glTry > 6) return; glTry++;
   import('./lt-disc-gl.js').then(m => m.makeDiscGL()).then(g => { if (g) GLD = g; else setTimeout(initGL, 800); }).catch(() => setTimeout(initGL, 800)); }
 initGL(); addEventListener('lt:intro-done', () => setTimeout(initGL, 100));
+/* v0.23 心莲星盘(A4 通关绽放 + A2 点瓣展开);不支持 WebGL 时仍用旧星盘 */
+let LOT = null, lotTry = 0, hoverTask = null, lotOut = null; const lotOK = () => !!(LOT && LOT.ok);
+function initLotus() { if (LOT || lotTry > 6) return; lotTry++;
+  import('./lt-lotus.js').then(m => m.makeLotus()).then(g => { if (!g) return setTimeout(initLotus, 800); LOT = g;
+    SECT.forEach((s, i) => { s.a0 = i * Math.PI / 4 - Math.PI / 8; s.a1 = s.a0 + Math.PI / 4; }); document.body.classList.add('lotus'); }).catch(() => setTimeout(initLotus, 800)); }
+initLotus(); addEventListener('lt:intro-done', () => setTimeout(initLotus, 100));
 const bloomCv = document.createElement('canvas'); const bcx = bloomCv.getContext('2d');
 function armMats(t) { return ARM.map(g => { const sp = reducedMotion ? g.ph : g.ph + t * g.sp; const ct = Math.cos(g.tilt), st = Math.sin(g.tilt), cs = Math.cos(sp), ss = Math.sin(sp);
   /* N = Ry·Rx(行主序),按列主序传入即 M = Nᵀ = 世界→环局部 */
@@ -439,6 +445,44 @@ function sectorPath(s, grow = 0) {
   for (let i = N; i >= 0; i--) { const [x, y] = P(s.r0, s.a0 + (s.a1 - s.a0) * i / N, s.h); cx2.lineTo(x, y); }
   cx2.closePath();
 }
+const lotBloom = document.createElement('canvas'); const lbx = lotBloom.getContext('2d');
+const domIdx = id => DOMAINS.findIndex(d => d.id === id);
+function lotusFrame(t) {
+  const fi = sel ? domIdx(sel) : -1;
+  if (fi >= 0 && !drag && !rite && !reducedMotion) { let th1 = Math.PI / 2 - fi * Math.PI / 4; while (th1 - theta > Math.PI) th1 -= 2 * Math.PI; while (theta - th1 > Math.PI) th1 += 2 * Math.PI; theta += (th1 - theta) * 0.06; vel = 0; }
+  const ts = fi >= 0 ? TASKS.filter(x => x.domains.includes(DOMAINS[fi].id)).map(x => ({ id: x.id, live: !!x.live, done: x.live && isDone(x.id) })) : [];
+  LOT.size(W, Hh, DPR);
+  lotOut = LOT.render({ CX, CY, R, ES, EC, theta, t: reducedMotion ? 0 : t, rm: reducedMotion, lit: SECT.map(s => litK(s)), meaning: isDone('meaning') ? 1 : 0,
+    hover: hover ? domIdx(hover) : null, focus: fi >= 0 ? fi : null, planets: ts, hoverTask });
+  cx2.drawImage(LOT.c, 0, 0, W, Hh);
+  const bw = Math.max(1, W >> 2), bh = Math.max(1, Hh >> 2); if (lotBloom.width !== bw) { lotBloom.width = bw; lotBloom.height = bh; }
+  lbx.clearRect(0, 0, bw, bh); lbx.filter = 'brightness(.8) contrast(2.6) blur(4px)'; lbx.drawImage(LOT.c, 0, 0, bw, bh); lbx.filter = 'none';
+  cx2.save(); cx2.globalCompositeOperation = 'lighter'; cx2.globalAlpha = .4; cx2.drawImage(lotBloom, 0, 0, W, Hh); cx2.restore();
+  /* 点亮仪式的金色粒子 */
+  if (burst.length) { for (let i = burst.length - 1; i >= 0; i--) { const b = burst[i]; b.life = (b.life || 0) + 0.016; if (b.life > 1.6) { burst.splice(i, 1); continue; }
+    b.r += b.vr * 0.016; b.a += b.va * 0.016; const [x, y] = P(b.r, b.a, 0.04 + b.life * 0.12); glint(x, y, 1 + (b.s || .05) * 20, Math.max(0, 1 - b.life / 1.6)); } }
+  /* 花瓣标签:图标 + 域名,花苞时淡 */
+  const fs = Math.max(11, Math.min(14, R * 0.042)); cx2.textAlign = 'center'; cx2.textBaseline = 'middle';
+  lotOut.labels.forEach(l => { const d = DOMAINS[l.i]; const a = (0.42 + 0.58 * l.k) * (1 - 0.6 * l.dim);
+    cx2.globalAlpha = a; cx2.font = `${l.foc > .5 ? 600 : 400} ${fs + (l.foc > .5 ? 2 : 0)}px ${FF}`; cx2.fillStyle = l.k > .5 ? '#ffe7b8' : '#c9c6d6';
+    cx2.fillText(`${d.icon} ${d.short}`, l.x, l.y - 4); });
+  cx2.globalAlpha = 1;
+  /* 星球标签 */
+  let tip = null;
+  lotOut.planets.forEach(p => { if (p.f < .3) return; const tk = TASKS.find(x => x.id === p.id); const y = p.y + p.r * R * 1.9 + 10;
+    cx2.globalAlpha = p.f; cx2.font = `${fs - 1}px ${FF}`; cx2.fillStyle = tk.live ? (isDone(tk.id) ? '#ffd27a' : '#f3eee2') : 'rgba(200,200,215,.7)';
+    const lab = tk.live ? (isDone(tk.id) ? '✦ 已看见' : '进入 →') : '即将点亮'; cx2.fillText(lab, p.x, y);
+    if (hoverTask === p.id) tip = { q: tk.q, x: p.x, y: p.y - p.r * R * 2.2 - 14 }; });
+  cx2.globalAlpha = 1;
+  if (!tip && hover && !sel) { const l = lotOut.labels[domIdx(hover)]; if (l) tip = { q: DOMAINS[l.i].q, x: l.x, y: l.y + 18 }; }
+  if (tip) { cx2.font = `${fs - 1}px ${FF}`; const w = cx2.measureText(tip.q).width + 18; const x = Math.min(Math.max(tip.x, w / 2 + 6), W - w / 2 - 6);
+    cx2.fillStyle = 'rgba(10,11,30,.85)'; cx2.strokeStyle = 'rgba(245,194,107,.55)'; cx2.lineWidth = 1; cx2.beginPath();
+    cx2.roundRect ? cx2.roundRect(x - w / 2, tip.y - 12, w, 24, 12) : cx2.rect(x - w / 2, tip.y - 12, w, 24); cx2.fill(); cx2.stroke(); cx2.fillStyle = '#fff3d6'; cx2.fillText(tip.q, x, tip.y + .5); }
+  if (fi >= 0 && W < 640 && !side.classList.contains('on')) { const l = lotOut.labels[fi]; cx2.font = `${fs - 2}px ${FF}`; cx2.fillStyle = 'rgba(255,231,184,.8)'; cx2.fillText('再点花瓣看详情 · 点空白处收起', CX, Math.min(Hh - 20, CY + R * 0.75)); }
+  if (fi >= 0 && lotOut.planets.length === 0) { const l = lotOut.labels[fi]; cx2.font = `${fs - 1}px ${FF}`; cx2.fillStyle = 'rgba(200,200,215,.75)'; cx2.fillText('这一域的关卡筹备中', l.x, l.y + 22); }
+}
+function goTask(id) { const tk = TASKS.find(x => x.id === id); if (!tk || !tk.live) { sound.tick && sound.tick(); return; }
+  const a = document.createElement('a'); a.href = tk.path; a.style.display = 'none'; document.body.appendChild(a); a.click(); }
 function draw(now) {
   if (document.hidden) { requestAnimationFrame(draw); return; } /* 页面隐藏时暂停渲染 */
   requestAnimationFrame(draw); /* v0.20.1 先排下一帧:某帧出错也不会冻结在旧星盘 */
@@ -453,6 +497,7 @@ function draw(now) {
     if (!reducedMotion && s.r > 1.25 && tw > .68) glint(s.x * W - mx * 10, s.y * Hh - my * 6, 1.1, (tw - .68) * 3); });
   cx2.globalAlpha = 1;
   ES = TILT; EC = Math.sqrt(1 - TILT * TILT);
+  if (lotOK()) { lotusFrame(t); return; }
   /* 星宿盘:外缘厚度(细金侧壁)+ 半透明玻璃盘面 + 盘底青色辉光 */
   if (glOK()) glDraw(t, 0); else {
   wall(1.035, -0.045, 0, .65);
@@ -578,6 +623,7 @@ let medHits = [], qTip = null; const FF = getComputedStyle(document.body).fontFa
 
 /* 命中:反投影到盘面 */
 function hit(x, y) {
+  if (lotOK()) { const h = LOT.pick(x, y); if (!h) return null; if (h.dom != null) return { dom: DOMAINS[h.dom].id }; return h; }
   for (const m of [...medHits].reverse()) if (Math.hypot(x - m.x, y - m.y) <= m.r + 4) return { guide: m.k };
   const [lx0, ly0] = P(0, 0, LH.self); if (Math.hypot((x - lx0) / R, (y - ly0) / R / TILT) < 0.22) return { lotus: true };
   for (const L of ['self', 'others', 'world']) for (const s of SECT) { if (s.d.layer !== L) continue; sectorPath(s); if (cx2.isPointInPath(x * DPR, y * DPR)) return { dom: s.d.id }; }
@@ -588,10 +634,10 @@ cv.addEventListener('pointerdown', e => { pid = e.pointerId; drag = true; sx = l
 cv.addEventListener('pointermove', e => {
   if (drag && e.pointerId === pid) { const dx = e.clientX - lx; lx = e.clientX; moved = Math.max(moved, Math.abs(e.clientX - sx));
     if (moved > 6) { cv.classList.add('drag'); try { cv.setPointerCapture(pid); } catch (_) {} theta += dx / (R * 1.4); vel = dx / (R * 1.4); } }
-  else { const h = hit(e.clientX, e.clientY); const id = h && (h.dom || (h.guide && 'g') || (h.lotus && 'l')); hover = h && h.dom; cv.style.cursor = h ? 'pointer' : 'grab'; }
+  else { const h = hit(e.clientX, e.clientY); const id = h && (h.dom || (h.guide && 'g') || (h.lotus && 'l')); hover = h && h.dom; hoverTask = h && h.task || null; cv.style.cursor = h ? 'pointer' : 'grab'; }
 });
 const up = e => { if (!drag) return; drag = false; cv.classList.remove('drag'); if (reducedMotion) vel = 0;
-  if (moved <= 6) { const h = hit(e.clientX, e.clientY); if (h && h.dom) { sel = h.dom; showDomain(h.dom); } else if (h && h.guide) showGuide(h.guide); else if (h && h.lotus) showDomain('meaning'); } };
+  if (moved <= 6) { const h = hit(e.clientX, e.clientY); if (lotOK() && h && h.task) { goTask(h.task); return; } if (lotOK() && !h && sel) { sel = null; side.classList.remove('on'); return; } if (h && h.dom && lotOK() && W < 640 && sel !== h.dom) { sel = h.dom; side.classList.remove('on'); sound.bell(domIdx(h.dom) + 1); } else if (h && h.dom) { sel = h.dom; showDomain(h.dom); } else if (h && h.guide) showGuide(h.guide); else if (h && h.lotus) showDomain('meaning'); } };
 cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', () => { drag = false; cv.classList.remove('drag'); });
 cv.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') { theta -= 0.15; sound.tick(); } if (e.key === 'ArrowRight') { theta += 0.15; sound.tick(); }
   if (e.key === 'Enter') showMap(); });
