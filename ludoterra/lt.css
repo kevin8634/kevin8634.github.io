@@ -90,3 +90,15 @@ body.diving #hero,body.diving #rec,body.diving #side,body.diving #dock,body.divi
 @media (max-width:640px){.lt-hud.ring{display:block;left:auto;right:8px;transform:none;top:108px;padding:4px}.lt-hud.ring .rl{display:none}.lt-hud.ring svg{width:40px;height:40px}.lt-hud.ring.open .rl{display:flex}.lt-hud.ring .rd{width:170px}.lt-hud.ring .row{flex-direction:row;font-size:12px;margin:5px 0}.lt-hud.ring .row .bar{width:auto;flex:1}.lt-hud.ring h4,.lt-hud.ring .tip{display:block}}
 @media (prefers-reduced-motion:reduce){.lt-hud.ring.pulse svg{animation:none}}
 .lt-agever{display:inline-block;font-size:12px;color:var(--gold);border:1px solid rgba(245,194,107,.4);border-radius:999px;padding:2px 10px;margin:0 0 8px}
+
+/* v0.30 R1 任务背景舞台 */
+.lt-stage{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0;transition:opacity .9s ease}
+.lt-stage.on{opacity:1}
+.lt-vig{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 70% 60% at 50% 30%,rgba(7,8,20,.62),rgba(7,8,20,.18) 70%,rgba(7,8,20,.05)),linear-gradient(rgba(7,8,20,.7),rgba(7,8,20,0) 90px)}
+body>main{position:relative;z-index:1;transition:opacity .6s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
+html.lt-warping body>main{opacity:0;transform:scale(.97)}html.lt-warping .lt-hud{opacity:0}
+html.lt-stage-css body{background:radial-gradient(ellipse 60% 50% at 78% 88%,var(--st-d),transparent 70%),radial-gradient(ellipse 50% 40% at 15% 8%,var(--st-d),transparent 70%),var(--bg);background-attachment:fixed}
+.lt-q{font-size:12px}
+@media (max-width:640px){.lt-q{padding:6px 8px}}
+#ltWarp{position:fixed;inset:0;z-index:50;pointer-events:none;background:radial-gradient(circle at var(--wx,50%) var(--wy,50%),rgba(255,236,190,.95),rgba(245,194,107,.55) 18%,rgba(7,8,20,0) 55%);opacity:0;animation:ltWarpIn .52s cubic-bezier(.5,0,.75,0) forwards}
+@keyframes ltWarpIn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(2.2)}}
