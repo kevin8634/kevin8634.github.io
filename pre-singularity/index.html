@@ -65,7 +65,7 @@ body.r2 #aimark{opacity:1} body.r2.cine #aimark{opacity:0;transition:opacity .3s
   <b id="dawnt" class="mono"></b>
   <a class="btn hb" href="giant/">🌌 接入巨人</a>
   <button class="btn hb" id="replay">重看开场</button>
-  <button class="btn hb" id="gfxb" title="画质:高 / 中 / 低(低 = 2D 省电)">画质</button>
+  <button class="btn hb" id="gfxb" title="画质:高 / 中 / 省 / 低(省 = 手机流畅档,低 = 2D 省电)">画质</button>
 </div>
 
 <div class="card" id="info"></div>
@@ -316,8 +316,8 @@ document.getElementById('skip').onclick=()=>{ if(!PS.tier()) PS.setTier('first')
 function afterCine(){ if(!PS.get('intro',0)){ if(!PS.tier()) PS.setTier('first'); finish(); } else { PS.music(PS.skin()); speakNext(); } }
 function replayAll(){ if(window.PSGL&&PSGL.on) PSGL.cine(afterCine); else intro(); }
 document.getElementById('replay').onclick=()=>replayAll();
-document.addEventListener('DOMContentLoaded',function(){ const b=document.getElementById('gfxb'); const cur=(window.PSGL&&PSGL.tier)||'low'; const N={high:'高',mid:'中',low:'低'}; b.textContent='画质 · '+N[cur];
-  b.onclick=()=>{ const nx={high:'mid',mid:'low',low:'high'}[cur]; PS.set('gfx',nx); PS.set('cineSeen',0); location.reload(); }; });
+document.addEventListener('DOMContentLoaded',function(){ const b=document.getElementById('gfxb'); const cur=(window.PSGL&&PSGL.tier)||'low'; const N={high:'高',mid:'中',lite:'省',low:'低'}; b.textContent='画质 · '+N[cur];
+  b.onclick=()=>{ const nx={high:'mid',mid:'lite',lite:'low',low:'high'}[cur]; PS.set('gfx',nx); PS.set('cineSeen',0); location.reload(); }; });
 
 /* ========= 主循环 ========= */
 const yc=document.getElementById('yingc');
@@ -330,9 +330,9 @@ document.addEventListener('ps-skin',()=>{ if(window.PSGL&&PSGL.on) PSGL.skin(PS.
 <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 <script type="module">
 /* v0.7 · 萤的贾维斯式全息神经核(Three.js r169 本地)。失败或低画质 → 保持 v0.6 Canvas 2D */
-import { createStage, pickTier, reducedMotion } from './ps-scene.js';
-import { buildCore } from './ps-lobby3d.js?v=9';
-import { buildPenthouse } from './ps-penthouse.js?v=9';
+import { createStage, pickTier, reducedMotion } from './ps-scene.js?v=10';
+import { buildCore } from './ps-lobby3d.js?v=10';
+import { buildPenthouse } from './ps-penthouse.js?v=10';
 try{
   const tier = pickTier();
   if(tier==='low') throw 0;
@@ -340,7 +340,9 @@ try{
   const states = PS.THEMES.flatMap(t=>t.k.map(k=>PS.nodeState(k)));
   const stage = createStage(document.getElementById('gl'), tier);
   const reduce = reducedMotion();
-  const core = buildCore(stage, { layers, states, skipIntro:true });
+  const coarse = matchMedia('(pointer:coarse)').matches;
+  const introSpeed = coarse ? 6.2/5 : 1;   /* v0.9.2:手机开场约 5 秒 */
+  const core = buildCore(stage, { layers, states, skipIntro:true, introSpeed });
   if(PS.skin()==='horizon') core.jump(99,1);
   document.body.classList.add('gl');
   /* v0.9 · R2 全息屏墙:顶层套房 + 3D 城市(?room=0 关闭) */
@@ -350,6 +352,7 @@ try{
       if(!reduce && matchMedia('(pointer:fine)').matches) addEventListener('pointermove',e=>{ const x=e.clientX/innerWidth-.5, y=e.clientY/innerHeight-.5; fg.style.transform=`translate(${(-x*14).toFixed(1)}px,${(-y*6).toFixed(1)}px)`; });
     }catch(err){ console.warn('[奇点前夜] 套房场景未启用:', err); room=null; } }
   const upd=(dt,fr)=>{ core.update(dt,fr); room&&room.update(fr?0.0001:dt); };
+  stage.precompile();   /* v0.9.2:着色器预编译,避免开场首秒卡顿 */
   const cineT=document.getElementById('cineT'); let cineCb=null, cineOn=false, cineAt=0;
   function endCine(){ if(!cineOn) return; cineOn=false; core.skipIntro(); document.body.classList.remove('cine'); cineT.style.opacity=0; PS.set('cineSeen',1); try{sessionStorage.setItem('gn:ps:cine','1');}catch(e){} const f=cineCb; cineCb=null; f&&setTimeout(f,400); }
   function cine(cb){ cineCb=cb; if(reduce){ cineOn=true; endCine(); return; } cineOn=true; cineAt=performance.now(); core.replay(); document.body.classList.add('cine'); }
@@ -372,6 +375,6 @@ try{
   if(q.has('t')||q.has('m')){ const T=+(q.get('t')??99), M=+(q.get('m')??0); core.jump(Math.max(0,T-3),M); for(let i=0;i<180;i++) upd(1/60,i>170); core.jump(T,M); upd(0.0001,true);
     if(T<6){ document.body.classList.add('cine'); cineT.style.opacity=(T>4.3&&T<6.4)?1:0; }
     stage.start(()=>{}); window.__ready=true; }
-  else stage.start((dt)=>{ upd(dt); const I=core.state.intro; if(cineOn){ cineT.style.opacity=(I>4.3&&I<6.4)?1:0; if(I>=6.2 || performance.now()-cineAt>8500) endCine(); } });
+  else stage.start((dt)=>{ upd(dt); const I=core.state.intro; if(cineOn){ cineT.style.opacity=(I>4.3&&I<6.4)?1:0; if(I>=6.2 || performance.now()-cineAt>8500/introSpeed) endCine(); } });
 }catch(e){ if(e) console.warn('[奇点前夜] WebGL 场景未启用,使用 2D:', e); document.getElementById('gl').style.display='none'; }
 </script></body></html>
