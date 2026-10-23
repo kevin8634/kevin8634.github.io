@@ -117,6 +117,7 @@
     K.cine = { t0: performance.now(), ms: 4200, d0: d0, d1: 3.2, u0: off.normalize(), u1: u1, c0: S.solarCtl.target.clone() };
     K.play = true; K.had = true; S.solarCtl.minDistance = 0.6; snd('arrive');
     if (U.pp) U.pp.textContent = '❚❚ 暂停';
+    if (SH.cometLab.onFly) SH.cometLab.onFly();   // M3h:特写后弹出信息窗口
   }
 
   /* ---------------- 任务面板 ---------------- */
@@ -185,7 +186,7 @@
     L.q = ST.stars.indexOf(0); if (L.q < 0) L.q = 3; showQ(); setTimeout(fly, 900); snd('open');
   }
   function close() { if (U.root) U.root.hidden = true; K.on = false; snd('close'); }
-  window.SH = window.SH || {}; SH.cometLab = { open: open, close: close, _K: K };
+  window.SH = window.SH || {}; SH.cometLab = { open: open, close: close, _K: K, fly: function () { fly(); }, helioAt: helioAt, T_PERI: T_PERI };
   (function wait(k) {
     if (window.LE && LE.solar && LE.solar.helio && LE.scene && LE.scene.solarScene && LE.solar.labels !== undefined && window.SH_READY) { try { build(); } catch (e) { console.error('[SHCOMET]', e); } return; }
     if (k > 900) return; setTimeout(function () { wait(k + 1); }, 150);

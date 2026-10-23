@@ -8,6 +8,7 @@
   function boot() {
     var SKY = window.SH && SH.sky, LE = window.LE;
     if (!SKY || !SKY.setShells || !SKY.geo || !LE || !LE.models || !LE.scene || !LE.scene.addUpdater || !window.satellite) return false;
+    if (!LE.scene.renderer || !LE.scene.renderer.compile) return true;   // 无 WebGL(2D 回退)时不建 3D 卫星模型
     var T = THREE, S = LE.scene, M = LE.models, E = M.envMap();
     var mat = {
       white: new T.MeshStandardMaterial({ color: 0xe8ebef, metalness: 0.25, roughness: 0.5, envMap: E, envMapIntensity: 0.8 }),

@@ -188,7 +188,7 @@
     H.big.innerHTML = '<div><small>离地球</small><b>' + a[0] + '<em>' + a[1] + '</em></b></div><div class="shh-cyan"><small>' + (o.id === 'sun' ? '光到地球' : '光从这里到你') + '</small><b>' + b[0] + '<em>' + b[1] + '</em></b></div>';
     // 大读数已显示距离与光行时,行内去重
     [].forEach.call(H.nowRows.querySelectorAll('.shnow-r'), function (r) { var k = r.firstChild.textContent; if (/^离地球$|^光/.test(k)) r.remove(); });
-    H.nowLive.textContent = window.SHTIME && !SHTIME.isLive() ? '模拟时间' : '实时';
+    H.nowLive.textContent = o.badge || (window.SHTIME && !SHTIME.isLive() ? '模拟时间' : '实时');
   }
   function place() {
     if (!st.nowBody || H.now.hidden) return;
