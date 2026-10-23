@@ -3,13 +3,17 @@
 
 export const AGES = [
   { id: 'sprout', name: '星芽', range: '7–11 岁', min: 7, icon: '🌱',
-    line: '看得见、摸得着,才会相信', hint: '先玩入门关:存钱罐里的复利、分糖果的合作。' },
+    line: '看得见、摸得着,才会相信', hint: '从存钱罐里的复利入门,再到看了一半的电影、今晚的睡眠和生气的时候。',
+    route: ['compound', 'sunk', 'sleep', 'wave', 'echo', 'prisoner'] },
   { id: 'spark', name: '星火', range: '12–15 岁', min: 12, icon: '🔥',
-    line: '开始抽象思考,最在意同伴', hint: '从「为什么好人不一定吃亏」开始,看清人性与合作。' },
+    line: '开始抽象思考,最在意同伴', hint: '从「为什么好人不一定吃亏」开始,再看你刷到的视频、同伴之间的话。',
+    route: ['prisoner', 'cocoon', 'echo', 'wave', 'nature', 'sunk', 'sleep', 'compound', 'survivor'] },
   { id: 'star', name: '星辰', range: '16–22 岁', min: 16, icon: '✦',
-    line: '开始独立:钱、关系、选择', hint: '从「每天多进步 1%」开始,看懂复利怎么改写人生。' },
+    line: '开始独立:钱、关系、选择', hint: '从「成功经验为什么常常骗人」开始,再看复利怎样改写钱和选择。',
+    route: ['survivor', 'compound', 'cocoon', 'sunk', 'echo', 'prisoner', 'nature', 'sleep', 'wave'] },
   { id: 'galaxy', name: '星河', range: '23 岁以上', min: 23, icon: '🌌',
-    line: '职场、家庭、长期决策', hint: '从复利与重复博弈开始,它们决定长期的输赢。' }
+    line: '职场、家庭、长期决策', hint: '从「看了一半的电影」开始,看清沉没成本和重复博弈怎样决定长期输赢。',
+    route: ['sunk', 'prisoner', 'compound', 'survivor', 'echo', 'nature', 'wave', 'sleep', 'cocoon'] }
 ];
 export const ageLabel = id => { const a = AGES.find(x => x.id === id); return a ? `${a.name} · ${a.range}` : ''; };
 export const ageByMin = m => AGES.find(a => a.min === m) || AGES[1];
@@ -77,16 +81,16 @@ export const STATS = [
 
 /* 任务:id 一经上线不再更改 */
 export const TASKS = [
-  { id: 'compound', q: '每天多进步 1%,一年后会怎样?', domains: ['wealth', 'habit'], age: 7, guide: 'franklin', path: 'compound/', ver: 'v0.2', live: true },
-  { id: 'prisoner', q: '为什么好人不一定吃亏?', domains: ['coop', 'nature'], age: 12, guide: 'neumann', path: 'prisoner/', ver: 'v0.3', live: true },
-  { id: 'sunk', q: '电影看了一半很难看,要不要看完?', domains: ['mind'], age: 7, guide: 'kahneman', path: 'sunk/', ver: 'v0.5', live: true },
-  { id: 'cocoon', q: '为什么你刷到的视频越来越像?', domains: ['info', 'habit'], age: 12, guide: 'sagan', path: 'cocoon/', ver: 'v0.6', live: true },
-  { id: 'survivor', q: '为什么「成功经验」常常骗人?', domains: ['wealth', 'info'], age: 12, guide: 'sagan', path: 'survivor/', ver: 'v0.7', live: true },
-  { id: 'nature', q: '人性本善,还是本恶?', domains: ['nature'], age: 12, guide: 'mengxun', path: 'nature/', ver: 'v0.8', live: true },
-  { id: 'sleep', q: '今晚偷走的睡眠,明天谁来还?', domains: ['habit', 'emotion'], age: 7, guide: 'james', path: 'sleep/', ver: 'v0.27', live: true },
-  { id: 'wave', q: '生气的时候,是谁在替你做决定?', domains: ['emotion'], age: 7, guide: 'aurelius', path: 'wave/', ver: 'v0.28', live: true },
-  { id: 'echo', q: '你说的那句话,他听到的是什么?', domains: ['relation'], age: 7, guide: 'adler', path: 'echo/', ver: 'v0.29', live: true },
-  { id: 'meaning', q: '看见了这些规则,我想成为怎样的玩家?', domains: ['meaning'], age: 16, guide: 'wang', path: 'meaning/', ver: 'v0.9', live: true, finale: true }
+  { id: 'compound', name: '复利', q: '每天多进步 1%,一年后会怎样?', domains: ['wealth', 'habit'], age: 7, guide: 'franklin', path: 'compound/', ver: 'v0.2', live: true },
+  { id: 'prisoner', name: '囚徒困境', q: '为什么好人不一定吃亏?', domains: ['coop', 'nature'], age: 12, guide: 'neumann', path: 'prisoner/', ver: 'v0.3', live: true },
+  { id: 'sunk', name: '沉没成本', q: '电影看了一半很难看,要不要看完?', domains: ['mind'], age: 7, guide: 'kahneman', path: 'sunk/', ver: 'v0.5', live: true },
+  { id: 'cocoon', name: '信息茧房', q: '为什么你刷到的视频越来越像?', domains: ['info', 'habit'], age: 12, guide: 'sagan', path: 'cocoon/', ver: 'v0.6', live: true },
+  { id: 'survivor', name: '幸存者偏差', q: '为什么「成功经验」常常骗人?', domains: ['wealth', 'info'], age: 12, guide: 'sagan', path: 'survivor/', ver: 'v0.7', live: true },
+  { id: 'nature', name: '人性善恶', q: '人性本善,还是本恶?', domains: ['nature'], age: 12, guide: 'mengxun', path: 'nature/', ver: 'v0.8', live: true },
+  { id: 'sleep', name: '睡眠债', q: '今晚偷走的睡眠,明天谁来还?', domains: ['habit', 'emotion'], age: 7, guide: 'james', path: 'sleep/', ver: 'v0.27', live: true },
+  { id: 'wave', name: '情绪浪', q: '生气的时候,是谁在替你做决定?', domains: ['emotion'], age: 7, guide: 'aurelius', path: 'wave/', ver: 'v0.28', live: true },
+  { id: 'echo', name: '言外之音', q: '你说的那句话,他听到的是什么?', domains: ['relation'], age: 7, guide: 'adler', path: 'echo/', ver: 'v0.29', live: true },
+  { id: 'meaning', name: '意义终章', q: '看见了这些规则,我想成为怎样的玩家?', domains: ['meaning'], age: 16, guide: 'wang', path: 'meaning/', ver: 'v0.9', live: true, finale: true }
 ];
 
 /* 星桥意向(已登记,未上线) */
