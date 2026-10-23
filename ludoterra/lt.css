@@ -89,3 +89,4 @@ body.diving #hero,body.diving #rec,body.diving #side,body.diving #dock,body.divi
 .lt-hud.ring.pulse svg{animation:ltRingP 1.6s ease-out}@keyframes ltRingP{0%{filter:drop-shadow(0 0 0 #ffd27a)}40%{filter:drop-shadow(0 0 8px #ffd27a)}100%{filter:none}}
 @media (max-width:640px){.lt-hud.ring{display:block;left:auto;right:8px;transform:none;top:108px;padding:4px}.lt-hud.ring .rl{display:none}.lt-hud.ring svg{width:40px;height:40px}.lt-hud.ring.open .rl{display:flex}.lt-hud.ring .rd{width:170px}.lt-hud.ring .row{flex-direction:row;font-size:12px;margin:5px 0}.lt-hud.ring .row .bar{width:auto;flex:1}.lt-hud.ring h4,.lt-hud.ring .tip{display:block}}
 @media (prefers-reduced-motion:reduce){.lt-hud.ring.pulse svg{animation:none}}
+.lt-agever{display:inline-block;font-size:12px;color:var(--gold);border:1px solid rgba(245,194,107,.4);border-radius:999px;padding:2px 10px;margin:0 0 8px}
