@@ -69,7 +69,8 @@ export const STATS = [
   { id: 'trust', name: '信任', by: 'prisoner' },
   { id: 'attention', name: '注意力', by: 'cocoon' },
   { id: 'fog', name: '迷雾值', by: 'sunk' },
-  { id: 'time', name: '时间', by: 'compound' }
+  { id: 'time', name: '时间', by: 'compound' },
+  { id: 'energy', name: '精力', by: 'sleep' }
 ];
 
 /* 任务:id 一经上线不再更改 */
@@ -80,7 +81,7 @@ export const TASKS = [
   { id: 'cocoon', q: '为什么你刷到的视频越来越像?', domains: ['info', 'habit'], age: 12, guide: 'sagan', path: 'cocoon/', ver: 'v0.6', live: true },
   { id: 'survivor', q: '为什么「成功经验」常常骗人?', domains: ['wealth', 'info'], age: 12, guide: 'sagan', path: 'survivor/', ver: 'v0.7', live: true },
   { id: 'nature', q: '人性本善,还是本恶?', domains: ['nature'], age: 12, guide: 'mengxun', path: 'nature/', ver: 'v0.8', live: true },
-  { id: 'sleep', q: '今晚偷走的睡眠,明天谁来还?', domains: ['habit', 'emotion'], age: 12, guide: 'james', path: 'sleep/', ver: 'v0.25', live: false },
+  { id: 'sleep', q: '今晚偷走的睡眠,明天谁来还?', domains: ['habit', 'emotion'], age: 7, guide: 'james', path: 'sleep/', ver: 'v0.27', live: true },
   { id: 'wave', q: '生气的时候,是谁在替你做决定?', domains: ['emotion'], age: 12, guide: 'aurelius', path: 'wave/', ver: 'v0.26', live: false },
   { id: 'echo', q: '你说的那句话,他听到的是什么?', domains: ['relation'], age: 12, guide: 'adler', path: 'echo/', ver: 'v0.27', live: false },
   { id: 'meaning', q: '看见了这些规则,我想成为怎样的玩家?', domains: ['meaning'], age: 16, guide: 'wang', path: 'meaning/', ver: 'v0.9', live: true, finale: true }
@@ -109,6 +110,8 @@ export const HANDBOOK = [
     counter: '听到「成功的人都……」时追问:「失败的人里,有多少也这么做?」再问:「我看到的是全部人,还是被挑出来的人?」(只讲统计规律,不构成投资建议)' },
   { task: 'nature', no: 6, domain: '人性', title: '人性和规则,一起决定人怎么做',
     counter: '评价一个人之前,先问「换我在他的处境,会怎么做?」想让人变好,既养护善意(榜样、被善待),也设计规则——让做好事更容易,做坏事更难。' },
+  { task: 'sleep', no: 8, domain: '习惯与时间 × 情绪与身体', title: '睡眠是一笔贷款,利息由明天的你来付',
+    counter: '给自己定一个「关屏时间」,到点把手机放到够不着的地方,关掉自动播放;欠了觉就连着几晚早睡一会儿慢慢还,别指望一次睡到中午。' },
   { task: 'meaning', no: 7, domain: '意义(终章)', title: '知行合一:看见了,还要做到',
     counter: '把你写下的规则变成一个能在路口问出口的问题。做完选择回看一眼:「我是按自己写的规则玩的吗?」没做到也没关系,下一次再试——规则由你写,也可以由你改。' }
 ];
