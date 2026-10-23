@@ -138,7 +138,7 @@ window.ltGo = go;
 document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) { sound.tick(); go(+g.dataset.go); } });
 $('ageHint').hidden = !young;
 
-const LEVELS = TASKS.filter(t => t.id !== 'meaning');
+const LEVELS = TASKS.filter(t => t.id !== 'meaning' && t.live);
 const seenPages = () => HANDBOOK.filter(h => h.task !== 'meaning' && isDone(h.task));
 
 /* ① 回看:时间线 + 已通关的手册页 */
