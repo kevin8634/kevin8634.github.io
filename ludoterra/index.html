@@ -130,7 +130,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   </div>
   <div id="pNote" aria-live="polite"></div>
 </aside>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.29</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.30</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -701,9 +701,11 @@ document.addEventListener('click', e => { const a = e.target.closest('a[href]');
   if (!document.body.classList.contains('pmode')) { /* 播放器开着时不打断 */ }
   sound.bell(4, 0.08, 1.2); document.body.classList.add('diving');
   cv.style.transformOrigin = `${ox}px ${oy}px`; cv.style.transform = 'scale(3.2)'; cv.classList.add('dive');
+  try { sessionStorage.setItem('gn:lt:dive', String(Date.now())); } catch (_) {} /* v0.30 R1:关卡页接粒子隧道 */
+  const wp = document.createElement('div'); wp.id = 'ltWarp'; wp.style.setProperty('--wx', ox + 'px'); wp.style.setProperty('--wy', oy + 'px'); document.body.appendChild(wp);
   setTimeout(() => { location.href = href; }, 520);
 });
-addEventListener('pageshow', e => { if (e.persisted) { document.body.classList.remove('diving'); cv.classList.remove('dive'); cv.style.transform = ''; } });
+addEventListener('pageshow', e => { if (e.persisted) { document.getElementById('ltWarp')?.remove(); document.body.classList.remove('diving'); cv.classList.remove('dive'); cv.style.transform = ''; } });
 try { const ref = document.referrer && new URL(document.referrer); if (ref && ref.origin === location.origin && TASKS.some(t => ref.pathname.endsWith('/ludoterra/' + t.path)) && !reducedMotion) {
   cv.classList.add('back'); cv.addEventListener('animationend', () => cv.classList.remove('back'), { once: true }); } } catch (_) {}
 
