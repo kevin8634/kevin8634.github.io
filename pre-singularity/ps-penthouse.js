@@ -261,9 +261,14 @@ export function buildPenthouse(stage, core, opts = {}) {
   camera.far = 3000; camera.updateProjectionMatrix();
 
   const sky = makeSky(); scene.add(sky.obj);
-  const city = makeCity(high ? 4200 : 2100); scene.add(city.obj);
+  const T = stage.tier || {};
+  const nCity = T.city || (high ? 4200 : 2100);
+  const city = makeCity(nCity); scene.add(city.obj);
   const bea = makeBeacons(city.tall); scene.add(bea.obj);
-  const traffic = high ? makeTraffic(5200) : null; if (traffic) scene.add(traffic.obj);
+  const nTraffic = T.traffic ?? (high ? 5200 : 0);
+  const traffic = nTraffic ? makeTraffic(nTraffic) : null; if (traffic) scene.add(traffic.obj);
+  // v0.9.2 自动降档第 2 步:关车流、城市楼群减到 55%
+  stage.onDegrade && stage.onDegrade(lv => { if (lv !== 2) return; if (traffic) traffic.obj.visible = false; city.obj.count = Math.floor(nCity * 0.55); });
   const plane = makePlane(); scene.add(plane.obj);
   const room = makeRoom(); scene.add(room.group);
   const halo = makeHalo(); scene.add(halo.group);
