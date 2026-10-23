@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><script src="/ludoterra/gn-arrive.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>生气的时候,是谁在替你做决定? · 觉弈 Ludoterra</title>
+<meta name="description" content="觉弈 Ludoterra 关卡:情绪浪。先在气头上做一次选择,再看见情绪像浪一样升起又落下,最后坐到平台设计师那边,看规则怎样放大或平息一千个人的怒气。">
+<meta name="theme-color" content="#070814">
+<link rel="stylesheet" href="../lt.css">
+<style>
+body{min-height:100vh}
+main{max-width:860px;margin:0 auto;padding:70px 16px 40px}
+.steps{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.steps span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--mute)}
+.steps span.on{color:#1a1206;background:var(--gold);border-color:var(--gold)}
+.card{padding:18px;margin-bottom:12px}
+h1{font-size:clamp(20px,4vw,28px);margin:0 0 6px}
+h3{margin:12px 0 6px;font-size:16px}
+.guide{display:flex;gap:10px;align-items:flex-start;margin:10px 0}
+.guide .m{flex:none;width:38px;height:38px;border-radius:50%;border:1.5px solid var(--gold2);display:flex;align-items:center;justify-content:center;color:#ffe9b8;font-weight:700;background:#14163a}
+.guide p{margin:0;font-size:14.5px;line-height:1.7}
+.guide small{display:block;color:var(--mute);font-size:11px}
+.scene{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0;background:rgba(255,255,255,.025)}
+.scene p{margin:0 0 8px;line-height:1.7;font-size:14.5px}
+.two{display:flex;gap:10px;flex-wrap:wrap}
+.two .lt-btn{font-size:15px;padding:9px 16px;white-space:normal;text-align:left}
+.two .lt-btn.pick{border-color:var(--gold);box-shadow:0 0 16px rgba(245,194,107,.35)}
+.nights{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:10px 0}
+.nights div{border:1px solid var(--line);border-radius:10px;padding:6px 4px;text-align:center;font-size:12px}
+.nights b{display:block;font-size:16px;color:var(--gold);margin:2px 0}
+.nights button{background:none;border:1px solid var(--line);color:inherit;border-radius:6px;width:26px;height:24px;cursor:pointer;font-size:14px}
+canvas.ch{width:100%;height:210px;display:block;border-radius:12px;background:rgba(0,0,0,.25)}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mute);margin:6px 0}
+.leg i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.pair{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.pair div{border:1px solid var(--line);border-radius:12px;padding:8px 10px;font-size:12.5px;line-height:1.5}
+.big{font-size:clamp(18px,4vw,24px);font-weight:800;color:var(--gold)}
+.tog{display:flex;gap:10px 16px;flex-wrap:wrap;margin:8px 0 4px;font-size:14px}
+.tog label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.tog input{accent-color:#f5c26b;width:18px;height:18px}
+.note{font-size:12px;color:var(--mute);line-height:1.6}
+.nav{display:flex;gap:8px;justify-content:space-between;margin-top:12px;flex-wrap:wrap}
+.handbook{border:1.5px solid var(--gold);border-radius:18px;padding:18px;background:radial-gradient(circle at 20% 0,rgba(245,194,107,.18),transparent 60%),#0f1130;position:relative;overflow:hidden}
+.handbook .no{font-size:12px;color:var(--gold);letter-spacing:2px;padding-right:44px}
+.handbook h2{margin:6px 0 8px;font-size:22px}
+.handbook p{margin:6px 0;line-height:1.7;font-size:14.5px}
+.handbook .b{position:absolute;right:14px;top:10px;font-size:34px;opacity:.5}
+[hidden]{display:none!important}
+@media (max-width:1100px){.lt-hud{display:none}}
+@media (max-width:640px){.nights{gap:3px}.nights div{padding:4px 1px;font-size:11px}.nights b{font-size:14px}.nights button{width:20px;height:20px;font-size:12px}.pair div{padding:6px 7px;font-size:11.5px}canvas.ch{height:180px}}
+.wbtn{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.wbtn .lt-btn{font-size:13.5px;padding:7px 12px}
+.meter{font-size:13px;color:var(--mute);margin:4px 0}.meter b{color:var(--gold);font-size:18px}
+</style></head><body>
+<main>
+  <div class="steps" id="steps"><span>① 先中招</span><span>② 看见情绪浪</span><span>③ 坐到平台那边</span><span>④ 玩家手册</span></div>
+  <section class="card lt-panel" data-step="0">
+    <h1>生气的时候,是谁在替你做决定?</h1>
+    <div class="scene" id="q1"><p id="s1"></p>
+      <div class="two"><button class="lt-btn" data-a="1" data-v="hit" id="b1a"></button><button class="lt-btn" data-a="1" data-v="wait" id="b1b"></button></div></div>
+    <div class="scene" id="q2" hidden><p>🌊 凭感觉:如果你不去反复想那件事,这股火气大概多久会明显降下来?</p>
+      <div class="two"><button class="lt-btn" data-a="2" data-v="min">⏱ 几分钟到十几分钟</button><button class="lt-btn" data-a="2" data-v="day">📅 一整天都消不了</button><button class="lt-btn" data-a="2" data-v="never">🔥 不发出来就一直憋着</button></div></div>
+    <div class="guide"><span class="m">奥</span><p id="g0">别想太久,凭第一反应选。<small>马可·奥勒留 · 仿其思想的提问</small></p></div>
+    <div class="nav" id="n0" hidden><span></span><button class="lt-btn primary" data-go="1">看看这股浪 →</button></div>
+  </section>
+  <section class="card lt-panel" data-step="1" hidden>
+    <h1>情绪浪:三十分钟里发生了什么</h1>
+    <p class="note" style="font-size:13.5px">时间自动往前走(1 秒 = 1 分钟)。你可以在任何时候点下面的按钮,看浪怎么变;想好了就点「现在回应」。</p>
+    <canvas class="ch" id="ch" aria-label="30 分钟内怒气强度的变化曲线"></canvas>
+    <div class="meter">第 <b id="tm">0</b> 分钟 · 怒气 <b id="lv">0</b> / 100 <span id="zone"></span></div>
+    <div class="wbtn"><button class="lt-btn" id="aRum">💭 再想一遍那句话</button><button class="lt-btn" id="aName">🏷 给情绪起名字:「我现在很生气」</button><button class="lt-btn" id="aBreath">🌬 慢慢呼吸 6 次</button><button class="lt-btn primary" id="aAct">📨 现在回应</button><button class="lt-btn" id="aRe">↺ 重来</button></div>
+    <div class="guide"><span class="m">奥</span><p id="g1"></p></div>
+    <p class="note">教学模型,不是心理诊断:没有新的刺激时,怒气会自己慢慢回落;反复回想会让它一次次重新涨起来。研究发现,把感受说成词语(「我很生气」)能降低大脑里与情绪反应相关区域的活跃度(利伯曼等,2007)。</p>
+    <div class="nav"><button class="lt-btn" data-go="0">← 重新选</button><button class="lt-btn primary" data-go="2">坐到平台那边 →</button></div>
+  </section>
+  <section class="card lt-panel" data-step="2" hidden>
+    <h1 id="appT"></h1>
+    <p class="note" style="font-size:13.5px" id="appN"></p>
+    <div class="tog">
+      <label><input type="checkbox" id="tHot" checked> 评论按「互动最多」排序(吵得越凶越靠前)</label>
+      <label><input type="checkbox" id="tFast" checked> 一键秒回,不用读完</label>
+      <label><input type="checkbox" id="tCool"> 发送带攻击性的话前,提示「要不要等 10 秒?」</label>
+      <label><input type="checkbox" id="tRead"> 转发前先提示「你读完了吗?」</label>
+    </div>
+    <canvas class="ch" id="ch2" aria-label="1000 位用户的怒气分布"></canvas>
+    <div class="pair" id="out2"></div>
+    <div class="guide"><span class="m">奥</span><p id="g2"></p></div>
+    <p class="note">教学模型:1000 位虚拟用户,数值只示意方向,不是某个真实平台的数据。</p>
+    <div class="nav"><button class="lt-btn" data-go="1">← 回到情绪浪</button><button class="lt-btn primary" data-go="3">领取玩家手册 →</button></div>
+  </section>
+  <section class="card lt-panel" data-step="3" hidden>
+    <div class="handbook"><span class="b">🌊</span><div class="no">地球Online 玩家手册 · 第 9 页 · 情绪与身体</div>
+      <h2>隐藏规则:情绪是一股浪,不是一道命令</h2>
+      <p>情绪会来,这是身体在报警,本身没有错。可在浪尖上,大脑最擅长的是「马上反击」,最不擅长的是「想想后果」。浪不被反复喂养,就会自己回落;一遍遍回想,它就一次次重新涨起来。</p>
+      <p><b style="color:var(--gold)">反制技巧:</b>浪尖上不做决定。先给情绪起个名字(「我现在很生气」),慢慢呼吸几次,等它过了顶点再回应。马可·奥勒留的老问题仍然好用:这件事里,哪些我能控制,哪些不能?</p>
+      <p class="note">你解锁了隐藏数值「平静」。如果你经常被情绪压得喘不过气,请告诉一位信任的人,或拨打全国统一心理援助热线 12356。</p></div>
+    <div class="guide"><span class="m">奥</span><p id="g3"></p></div>
+    <div class="nav"><a class="lt-btn" href="../">← 回到认知星盘</a><button class="lt-btn" data-go="0">再玩一次</button></div>
+  </section>
+</main>
+<script type="module">
+import { chrome, hud, store, markDone, isDone, sound, reducedMotion, offline, getAge, logChoice } from '../lt.js';
+chrome({ home: '../' }); const H = hud(); offline();
+const $ = id => document.getElementById(id);
+const Q = '<small>马可·奥勒留 · 仿其思想的提问</small>';
+const AGE = ['sprout', 'spark', 'star', 'galaxy'].includes(getAge()) ? getAge() : 'spark';
+const A = {
+  sprout: { s1: '🎨 你画了一下午的画,同桌不小心把果汁洒在上面,还笑了一声。你一下子火冒三丈:', a: '😡 马上把他的本子也弄湿', b: '✋ 先走开一下,等会儿再说', who: '那个同学', reply: '去找他理论',
+    app: '你是「班级小队」聊天群的规则设计员', appN: '群里经常吵架。你来决定这个群用哪些规则:' },
+  spark: { s1: '💬 有同学在班级群里拿你的照片开玩笑,一堆人跟着发「哈哈哈」。你的手已经放在键盘上:', a: '⌨️ 立刻发一大段狠话怼回去', b: '✋ 先放下手机,过会儿再回', who: '群里的同学', reply: '在群里回复',
+    app: '你是一个校园社区 App 的设计师', appN: '公司看「每天的评论数」。你来决定要不要开这些功能:' },
+  star: { s1: '📱 你认真发的一条动态,下面有陌生人留言嘲讽,还有人点赞。你越看越气:', a: '⌨️ 马上回一句更狠的', b: '✋ 先关掉 App,过会儿再看', who: '那个陌生人', reply: '回复评论',
+    app: '你是一个社交平台的产品经理', appN: '你的考核是「评论区互动量」。你来决定要不要开这些功能:' },
+  galaxy: { s1: '🏢 会上,领导当着大家的面说你的方案「完全没想清楚」,可明明有一部分是别人的问题。散会后你打开了对话框:', a: '⌨️ 马上发一段长消息说清楚', b: '✋ 先去倒杯水,下午再谈', who: '领导', reply: '发出那段消息',
+    app: '你是一款职场社区 App 的产品负责人', appN: '这个季度的考核是「讨论热度」。你来决定要不要开这些功能:' }
+}[AGE];
+$('s1').textContent = A.s1; $('b1a').textContent = A.a; $('b1b').textContent = A.b;
+$('appT').textContent = A.app + ':规则能放大怒气,也能让它平息'; $('appN').textContent = A.appN;
+const secs = [...document.querySelectorAll('[data-step]')], tabs = [...document.querySelectorAll('#steps span')];
+function go(n) { secs.forEach((s, i) => s.hidden = i !== n); tabs.forEach((t, i) => t.classList.toggle('on', i === n));
+  window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }); if (n === 0) reset0(); if (n === 1) enter1(); else stopW(); if (n === 2) enter2(); if (n === 3) finish(); }
+window.ltGo = go;
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g) { sound.tick(); go(+g.dataset.go); } });
+let ans = store.get('wave_pick', {}) || {};
+function reset0() { document.querySelectorAll('[data-a]').forEach(b => b.classList.toggle('pick', ans[b.dataset.a] === b.dataset.v)); $('q2').hidden = !ans[1]; $('n0').hidden = !(ans[1] && ans[2]); }
+document.querySelectorAll('[data-a]').forEach(b => b.onclick = () => {
+  const q = b.dataset.a, v = b.dataset.v; ans[q] = v; store.set('wave_pick', ans);
+  document.querySelectorAll(`[data-a="${q}"]`).forEach(x => x.classList.toggle('pick', x === b));
+  if (q === '1') { logChoice('wave', v === 'hit' ? '气头上选择立刻反击' : '气头上选择先停一下', v === 'hit' ? '若先停一下:几分钟后怒气回落,能想清楚要说什么' : '若立刻反击:在浪尖上做决定,话往往比想的更重');
+    $('q2').hidden = false; $('g0').innerHTML = '再想一步。' + Q; v === 'hit' ? sound.clash() : sound.bell(1); }
+  else { $('g0').innerHTML = (v === 'min' ? '你的直觉很准。' : '先别急着下结论。') + '下一步,我们把这股火气画成一条浪。' + Q; $('n0').hidden = false; sound.bell(3); }
+});
+/* ② 情绪浪模拟:I' = 触发 − 自然回落;回想会重新推高;命名与呼吸加快回落 */
+let W = null;
+function newW() { return { t: 0, I: 0, pts: [], hit: [], acted: null, decay: .2, run: true }; }
+function stepW(dt) { const w = W; if (!w || !w.run) return; const tm = w.t; w.t = Math.min(30, w.t + dt);
+  const trig = tm < 1.5 ? 60 * dt : 0; w.I = Math.max(0, Math.min(100, w.I + trig - w.I * w.decay * dt * (w.t > 1.5 ? 1 : 0)));
+  w.pts.push([w.t, w.I]); if (w.t >= 30) w.run = false; }
+function cctx(c) { const d = Math.min(2, devicePixelRatio || 1); const w = c.clientWidth, h = c.clientHeight; c.width = w * d; c.height = h * d; const x = c.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); return [x, w, h]; }
+function draw1() { const [x, w, h] = cctx($('ch')), L = 30, R = w - 10, T = 12, B = h - 22, X = t => L + (R - L) * t / 30, Y = v => B - (B - T) * v / 100;
+  x.fillStyle = 'rgba(255,154,122,.08)'; x.fillRect(L, Y(100), R - L, Y(70) - Y(100)); x.fillStyle = 'rgba(255,154,122,.7)'; x.font = '11px system-ui'; x.fillText('浪尖区:冲动接管', L + 6, Y(100) + 14);
+  x.strokeStyle = 'rgba(255,255,255,.08)'; x.fillStyle = 'rgba(255,255,255,.45)';
+  [0, 50, 100].forEach(v => { x.beginPath(); x.moveTo(L, Y(v)); x.lineTo(R, Y(v)); x.stroke(); x.fillText(v, 4, Y(v) + 4); }); [0, 10, 20, 30].forEach(t => x.fillText(t + ' 分', X(t) - 8, h - 6));
+  const p = W.pts; if (p.length > 1) { const g = x.createLinearGradient(0, T, 0, B); g.addColorStop(0, '#ff9a7a'); g.addColorStop(.5, '#f5c26b'); g.addColorStop(1, '#7ee2a8');
+    x.beginPath(); x.moveTo(X(p[0][0]), B); p.forEach(([t, v]) => x.lineTo(X(t), Y(v))); x.lineTo(X(p[p.length - 1][0]), B); x.closePath(); x.globalAlpha = .25; x.fillStyle = g; x.fill(); x.globalAlpha = 1;
+    x.strokeStyle = g; x.lineWidth = 2.5; x.beginPath(); p.forEach(([t, v], i) => i ? x.lineTo(X(t), Y(v)) : x.moveTo(X(t), Y(v))); x.stroke(); x.lineWidth = 1; }
+  W.hit.forEach(([t, s]) => { x.fillStyle = '#fff'; x.fillText(s, X(t) - 6, Y(Math.min(96, W.pts.find(q => q[0] >= t)?.[1] ?? 50)) - 8); });
+  if (W.acted) { const [t, v] = W.acted; x.fillStyle = v >= 70 ? '#ff9a7a' : '#7ee2a8'; x.beginPath(); x.arc(X(t), Y(v), 6, 0, 7); x.fill(); x.fillStyle = '#fff'; x.fillText('📨', X(t) - 7, Y(v) - 10); }
+  $('tm').textContent = Math.floor(W.t); $('lv').textContent = Math.round(W.I); $('zone').textContent = W.I >= 70 ? ' · 浪尖上' : W.I >= 35 ? ' · 正在回落' : ' · 已经平静'; }
+let raf = 0, lastT = 0;
+function loop(now) { raf = requestAnimationFrame(loop); const dt = Math.min(.1, (now - lastT) / 1000); lastT = now; if (!W.run) return; stepW(reducedMotion ? .5 : dt); draw1(); if (!W.run) msg(); }
+function stopW() { cancelAnimationFrame(raf); raf = 0; }
+function enter1() { if (!W) W = newW(); stopW(); lastT = performance.now(); raf = requestAnimationFrame(loop); draw1(); msg(); }
+function msg() { const w = W, rum = w.hit.filter(h => h[1] === '💭').length;
+  if (w.acted) { const v = Math.round(w.acted[1]); $('g1').innerHTML = (v >= 70 ? `你在怒气 ${v} 的浪尖上${A.reply}。这时候说出的话,往往比你本来想的更重,也最容易后悔。` : `你等到怒气降到 ${v} 才${A.reply}。这时你更可能说清楚自己真正想要什么。`) + (rum ? `中途你回想了 ${rum} 次,每次都把浪重新推高。` : '') + '如果明天再遇到,你想在第几分钟回应?' + Q; }
+  else if (!w.run) $('g1').innerHTML = `三十分钟过去了,怒气停在 ${Math.round(w.I)}。` + (rum ? '每次回想,浪都重新涨起来。' : '没人再去喂它,它自己落下来了。') + '你还没回应,试试点「重来」,在不同时刻点「现在回应」。' + Q;
+  else $('g1').innerHTML = `${A.who}的那句话刚刚击中了你。看着曲线,你想在什么时候回应?` + Q; }
+$('aRum').onclick = () => { if (!W.run) return; W.I = Math.min(100, W.I + 30); W.decay = Math.max(.12, W.decay - .02); W.hit.push([W.t, '💭']); sound.clash(); draw1(); };
+$('aName').onclick = () => { if (!W.run) return; W.I *= .85; W.decay += .08; W.hit.push([W.t, '🏷']); sound.bell(2); draw1(); };
+$('aBreath').onclick = () => { if (!W.run) return; W.I *= .9; W.decay += .06; W.hit.push([W.t, '🌬']); sound.bell(4); draw1(); };
+$('aAct').onclick = () => { if (W.acted) return; W.acted = [W.t, W.I]; W.run = false; const v = Math.round(W.I);
+  logChoice('wave', `在怒气 ${v} 时回应`, v >= 70 ? '若等几分钟:浪会自己落到 50 以下' : '若在浪尖回应:话会比想的更重'); v >= 70 ? sound.clash() : sound.bell(5); draw1(); msg(); };
+$('aRe').onclick = () => { W = newW(); draw1(); msg(); };
+/* ③ 平台设计师 */
+const U = (() => { let s = 11; const r = () => (s = (s * 16807) % 2147483647) / 2147483647; return Array.from({ length: 1000 }, () => ({ base: 15 + r() * 35, hot: r(), fast: r() })); })();
+let used = false;
+function enter2() { const on = id => $(id).checked;
+  const ang = U.map(u => { let v = u.base; if (on('tHot')) v += 30 * u.hot; if (on('tFast')) v += 15 * u.fast; if (on('tCool')) v -= 12 + 10 * u.fast; if (on('tRead')) v -= 6; return Math.max(0, Math.min(100, v)); });
+  const fights = ang.filter(v => v >= 70).length, eng = Math.round(100 * (1 + (on('tHot') ? .45 : 0) + (on('tFast') ? .2 : 0) - (on('tCool') ? .12 : 0) - (on('tRead') ? .05 : 0))), regret = Math.round(fights * .6);
+  const [x, w, h] = cctx($('ch2')), L = 10, R = w - 10, B = h - 22, bins = new Array(10).fill(0); ang.forEach(v => bins[Math.min(9, Math.floor(v / 10))]++);
+  const mx = Math.max(...bins, 1), bw = (R - L) / 10; x.font = '11px system-ui';
+  bins.forEach((n, i) => { const bh = (B - 14) * n / mx; x.fillStyle = i >= 7 ? 'rgba(255,154,122,.8)' : i >= 4 ? 'rgba(245,194,107,.7)' : 'rgba(126,226,168,.6)'; x.fillRect(L + i * bw + 2, B - bh, bw - 4, bh); });
+  x.fillStyle = 'rgba(255,255,255,.55)'; [0, 50, 100].forEach(v => x.fillText('怒气 ' + v, L + v / 10 * bw - (v ? 26 : 0), h - 6));
+  $('out2').innerHTML = `<div>互动量<br><span class="big">${eng}</span> %</div><div>浪尖上发出的回复<br><span class="big">${fights}</span> 条</div><div>事后想删掉的<br><span class="big">${regret}</span> 条</div>`;
+  $('g2').innerHTML = (on('tCool') ? '一个 10 秒的提示,没拦住谁说话,却让很多人从浪尖上退下来半步。' : on('tHot') ? `「吵得越凶越靠前」让互动量涨到 ${eng}%,也让 ${fights} 条回复在浪尖上发出。` : '没有放大器,也没有冷静键:怒气大多停在中间。') + '你刷到让你特别生气的内容时,它是被谁、按什么规则推到你面前的?' + Q;
+  if (!used && on('tCool')) { used = true; logChoice('wave', '当平台设计师时,加上了「发送前等 10 秒」', '若只按互动排序:互动更多,浪尖上的回复也更多'); }
+}
+['tHot', 'tFast', 'tCool', 'tRead'].forEach(id => $(id).onchange = () => { sound.tick(); enter2(); });
+function finish() { const first = !isDone('wave'); markDone('wave', { pick: ans });
+  if (store.get('stat_calm', null) == null) store.set('stat_calm', ans[1] === 'wait' ? 70 : 45);
+  $('g3').innerHTML = '最近一次你在气头上说出或发出的话,是什么?如果当时等五分钟,你会换成哪句?' + Q;
+  H.render(); if (first) [0, 2, 4, 7].forEach((s, i) => setTimeout(() => sound.bell(s), i * 180)); }
+addEventListener('resize', () => { if (!secs[1].hidden) draw1(); if (!secs[2].hidden) enter2(); });
+go(0);
+</script>
+</body></html>
