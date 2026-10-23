@@ -13,7 +13,7 @@ export function saveCard(task, i, title, msg) {
 /* 头部「源码卡」按钮 + 卡册 */
 export function mountAlbum(top) {
   const b = document.createElement('button'); b.className = 'ls-btn ls-albtn'; b.setAttribute('aria-label', '源码卡册');
-  const paint = () => { b.textContent = `🃏 ${cardCount()}/${TOTAL()}`; };
+  const paint = () => { b.innerHTML = `🃏 <span class="al-t">源码卡 </span>${cardCount()}/${TOTAL()}`; b.title = '源码卡册:每通过一关收一张'; };
   paint(); addEventListener('ls-cards', paint);
   b.onclick = openAlbum;
   const snd = top.querySelector('#ls-snd'); top.insertBefore(b, snd);
@@ -65,6 +65,7 @@ export function helixMap(nav, levels, cur, saved, go) {
     const b = document.createElement('button'); b.textContent = i + 1; b.title = L.title;
     b.className = (i === cur ? 'cur ' : '') + (saved[i] ? 'done' : '');
     b.disabled = i > 0 && !saved[i - 1] && !saved[i] && i !== cur;
+    b.title = b.disabled ? `第 ${i + 1} 关 · ${L.title}(先通过第 ${i} 关)` : `第 ${i + 1} 关 · ${L.title}`; b.setAttribute('aria-label', b.title);
     b.style.left = (10 + step * (i + .5)) + 'px';
     b.onclick = () => go(i); box.append(b);
   });

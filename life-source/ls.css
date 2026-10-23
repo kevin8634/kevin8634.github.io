@@ -152,13 +152,6 @@ body.lab #ls-stars{display:none}            /* 定稿:去掉奖杯计数,不排�
 .lab-phase li.on{color:#03130d;background:var(--gold);border-color:var(--gold);font-weight:700;box-shadow:0 0 10px rgba(226,190,120,.6)}
 .lab-phase li+li::before{content:"→ ";opacity:.5}
 /* 左侧观察记录抽屉 */
-.lab-logtab{position:absolute;left:-1px;top:50%;transform:translateY(-50%);z-index:6;width:30px;padding:12px 0;border:1.5px solid rgba(110,231,183,.42);border-left:0;
-  border-radius:0 14px 14px 0;background:linear-gradient(90deg,#07130f,rgba(12,32,28,.92));color:var(--em2);font-size:12px;line-height:1.2;writing-mode:vertical-rl;letter-spacing:3px}
-.lab-logtab{display:flex;flex-direction:column;align-items:center;gap:6px;writing-mode:horizontal-tb;padding:10px 0;min-height:118px}
-.lab-logtab span{writing-mode:vertical-rl;white-space:nowrap}
-.lab-logtab::after{content:"»";display:block}
-.lab-logtab[aria-expanded="true"]::after{content:"«"}
-.lab-logtab.new{color:var(--gold);box-shadow:0 0 12px rgba(226,190,120,.6)}
 .lab-log{position:absolute;left:30px;top:44px;bottom:12px;z-index:7;width:min(300px,calc(100% - 44px));display:none;flex-direction:column;padding:12px}
 .lab-log.on{display:flex;animation:hudL .3s ease-out}
 .lab-log h4{margin:0 0 8px;color:var(--gold);font-size:14px}
@@ -208,3 +201,38 @@ body.lab #ls-stars{display:none}            /* 定稿:去掉奖杯计数,不排�
 .hx-flat div{display:flex;gap:6px}.hx-flat span{width:28px;text-align:center}.hx-flat .sel{outline:2px solid var(--gold);border-radius:6px}
 .ls-modal .ls-panel{max-height:calc(100dvh - 32px);overflow:auto}
 .ls-lab .ls-center>.ls-note{background:rgba(6,14,14,.72);border-radius:10px;padding:6px 10px;text-shadow:0 1px 3px #000}
+
+/* ===== v0.9.1 任务页左侧工具栏(王磊 10-23:进任务后也能一键回图谱/换任务) ===== */
+.ls-lab{grid-template-columns:44px minmax(0,1fr);grid-template-areas:"rail nav" "rail stage" "rail dock" "rail tray"}
+.lab-rail{grid-area:rail;z-index:6;align-self:center;display:flex;flex-direction:column;gap:6px;padding:8px 3px;margin-left:-1.5px;
+  border:1px solid rgba(110,231,183,.4);border-left:3px solid rgba(110,231,183,.7);border-radius:0 16px 16px 0;
+  background:linear-gradient(180deg,rgba(10,34,28,.85),rgba(6,16,14,.8));box-shadow:0 0 18px rgba(52,211,153,.18)}
+.lab-rail button{width:36px;height:36px;border-radius:10px;border:1px solid transparent;background:none;color:#a7f3d0;font-size:17px;display:flex;align-items:center;justify-content:center;position:relative;padding:0}
+.lab-rail button:hover,.lab-rail button.on{border-color:rgba(110,231,183,.6);background:rgba(52,211,153,.12);color:#eefcf6;box-shadow:0 0 12px rgba(52,211,153,.35)}
+.lab-rail button.new{border-color:var(--gold);box-shadow:0 0 12px rgba(226,190,120,.6)}
+.lab-rail button span{position:absolute;left:46px;white-space:nowrap;font-size:12px;color:#cfe9df;background:rgba(6,10,18,.9);border:1px solid var(--line);border-radius:8px;padding:3px 8px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}
+.lab-rail button:hover span,.lab-rail button:focus-visible span{opacity:1}
+.lab-log,.lab-drawer{left:52px}
+.lab-drawer{position:absolute;top:44px;z-index:8;width:min(320px,calc(100% - 64px));max-height:calc(100% - 56px);overflow:auto;display:none;flex-direction:column;gap:6px;padding:12px}
+.lab-drawer.on{display:flex;animation:hudL .3s ease-out}
+.lab-drawer h4{margin:0 0 4px;color:var(--gold);font-size:14px}
+.lab-drawer a{display:block;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:8px 10px;background:rgba(255,255,255,.03)}
+.lab-drawer a:hover{border-color:var(--em);background:rgba(52,211,153,.1)}
+.lab-drawer a.me{border-color:var(--gold);box-shadow:0 0 10px rgba(226,190,120,.35)}
+.lab-drawer a b{display:block;font-size:13px;font-weight:600}
+.lab-drawer a small{color:var(--mute);font-size:11px}
+.lab-drawer a.home b{color:var(--em2)}
+@media (min-width:900px) and (min-height:560px){
+  .ls-lab{grid-template-columns:56px minmax(0,1fr) 300px;grid-template-areas:"rail nav nav" "rail stage dock" "rail tray dock"}
+  .lab-rail{padding:10px 5px;gap:8px}.lab-rail button{width:42px;height:42px;font-size:19px;border-radius:12px}
+  .lab-rail button span{left:52px}
+  .lab-log,.lab-drawer{left:64px}
+}
+@media (max-height:480px) and (orientation:landscape){
+  .ls-lab{grid-template-columns:44px minmax(0,1fr) 260px;grid-template-areas:"rail nav dock" "rail stage dock" "rail tray dock"}
+  .lab-rail{gap:2px;padding:4px 3px}.lab-rail button{width:32px;height:30px;font-size:15px}
+}
+@media (max-width:520px){.lab-rail button{width:32px;height:34px;font-size:15px}.lab-rail{gap:3px;padding:6px 2px}body.lab .ls-foot{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+/* 键盘可达:统一焦点光圈 */
+.ls-btn:focus-visible,.lab-rail button:focus-visible,.ls-map button:focus-visible,.bkey:focus-visible,.lab-drawer a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+@media (max-width:520px){.ls-albtn .al-t{display:none}}

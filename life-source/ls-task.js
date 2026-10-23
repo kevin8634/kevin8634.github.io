@@ -16,12 +16,22 @@ export function runTask(taskId, levels) {
   const actions = document.createElement('div'); actions.className = 'ls-actions'; actions.setAttribute('aria-label', '工具槽');
   const phase = document.createElement('ol'); phase.className = 'lab-phase'; phase.setAttribute('aria-label', '本关进度');
   phase.innerHTML = '<li data-p="0">猜</li><li data-p="1">跑</li><li data-p="2">收</li>';
-  const logTab = document.createElement('button'); logTab.className = 'lab-logtab'; logTab.setAttribute('aria-expanded', 'false');
-  logTab.innerHTML = '<span>观察记录</span>';
+  // v0.9.1 左侧工具栏(与图谱首页同款):任务抽屉 / 卡册 / 观察记录 / 回到图谱 / 重玩本关 / 设置
+  const rail = document.createElement('nav'); rail.className = 'lab-rail'; rail.setAttribute('aria-label', '工具栏');
+  rail.innerHTML = [['tasks', '📂', '任务抽屉'], ['album', '🃏', '源码卡册'], ['log', '📝', '观察记录'], ['home', '🌐', '回到图谱'], ['again', '↺', '重玩本关'], ['set', '⚙', '设置']]
+    .map(([a, i, t]) => `<button data-a="${a}" aria-label="${t}" title="${t}">${i}<span>${t}</span></button>`).join('');
+  const logTab = rail.querySelector('[data-a=log]'); logTab.setAttribute('aria-expanded', 'false');
+  const drawer = document.createElement('div'); drawer.className = 'lab-drawer ls-panel'; drawer.setAttribute('aria-label', '任务抽屉');
+  const paintDrawer = () => {
+    drawer.innerHTML = '<h4>生命源码 · 任务</h4>' + Object.entries(TASKS).map(([id, t]) => {
+      const n = Object.keys(store.get(id, { levels: {} }).levels).length, me = id === taskId;
+      return `<a href="${t.path}" class="${me ? 'me' : ''}"><b>${t.title}</b><small>${me ? '当前 · ' : ''}已通关 ${n}/${t.levels}</small></a>`;
+    }).join('') + '<a href="/life-source/" class="home"><b>🌐 回到生命图谱</b></a><a href="/" class="home"><b>← 返回创世总门户</b></a>';
+  };
   const log = document.createElement('aside'); log.className = 'lab-log ls-panel'; log.setAttribute('aria-label', '观察记录');
   log.innerHTML = '<h4>观察记录</h4><div class="lg"></div>';
   const foot = document.querySelector('.ls-foot');
-  lab.append(nav, phase, stage, dock, actions, logTab, log);
+  lab.append(rail, nav, phase, stage, dock, actions, drawer, log);
   document.body.insertBefore(lab, foot);
   const g0 = guide(meta.guide); dock.append(document.querySelector('.ls-guide'));
   import('./ls-lab.js').then(m => m.mountBench(lab, GUIDES[meta.guide]?.color)).catch(() => {});
@@ -36,9 +46,19 @@ export function runTask(taskId, levels) {
     lg.append(d); lg.scrollTop = lg.scrollHeight;
     if (kind === 'w' && !log.classList.contains('on')) logTab.classList.add('new');
   };
-  const setLog = v => { log.classList.toggle('on', v); logTab.setAttribute('aria-expanded', v); logTab.classList.remove('new'); };
-  logTab.onclick = () => setLog(!log.classList.contains('on'));
-  addEventListener('keydown', e => { if (e.key === 'Escape') setLog(false); });
+  const setDrawer = v => { if (v) paintDrawer(); drawer.classList.toggle('on', v); rail.querySelector('[data-a=tasks]').classList.toggle('on', v); };
+  const setLog = v => { log.classList.toggle('on', v); logTab.classList.toggle('on', v); logTab.setAttribute('aria-expanded', v); logTab.classList.remove('new'); };
+  const RA = {
+    tasks: () => { setLog(false); setDrawer(!drawer.classList.contains('on')); },
+    album: () => document.querySelector('.ls-albtn')?.click(),
+    log: () => { setDrawer(false); setLog(!log.classList.contains('on')); },
+    home: () => { location.href = '/life-source/'; },
+    again: () => go(cur, true),
+    set: () => [...document.querySelectorAll('.ls-top .ls-icn')].pop()?.click(),
+  };
+  rail.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { RA[b.dataset.a](); sound.tone(660, .15, { gain: .05 }); } });
+  addEventListener('keydown', e => { if (e.key === 'Escape') { setLog(false); setDrawer(false); } });
+  stage.addEventListener('pointerdown', () => { setDrawer(false); });
   const g = Object.create(g0);
   g.ask = (t, h) => { note('q', t); g0.ask(t, h); };
   g.say = t => { note('s', t); g0.say(t); };
@@ -46,7 +66,7 @@ export function runTask(taskId, levels) {
   let ph = 0;
   const setPhase = p => { ph = p; phase.querySelectorAll('li').forEach((li, k) => { li.classList.toggle('on', k === p); li.classList.toggle('done', k < p); }); stage.dataset.phase = p; };
   // 学习者第一次动手(点选项、拖工具、按按钮)= 进入「跑」
-  const toRun = e => { if (ph === 0 && !e.target.closest('.ls-guide,.lab-log,.lab-logtab,.ls-levels')) setPhase(1); };
+  const toRun = e => { if (ph === 0 && !e.target.closest('.ls-guide,.lab-log,.lab-rail,.lab-drawer,.ls-levels')) setPhase(1); };
   lab.addEventListener('pointerdown', toRun, true);
 
   let cur = 0, cleanup = null;
@@ -79,11 +99,11 @@ export function runTask(taskId, levels) {
         const last = i === levels.length - 1;
         m.innerHTML = `<div class="ls-panel"><div class="fc-slot"></div><div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
           <p class="ls-note">★ 通关 · ★ 先预测再验证 · ★ 没用到第 3 级提示 · 收获已记进左侧「观察记录」</p>
-          <div class="ls-actions"><button class="ls-btn" data-a="again">再玩一次</button><button class="ls-btn primary" data-a="next">${last ? '回到图谱' : '下一关'}</button></div></div>`;
+          <div class="ls-actions"><button class="ls-btn" data-a="again">再玩一次</button><button class="ls-btn" data-a="tasks">换个任务</button><button class="ls-btn primary" data-a="next">${last ? '回到图谱' : '下一关'}</button></div></div>`;
         m.querySelector('.fc-slot').append(flipCard(taskId, i, levels[i].title, msg, full));
         m.onclick = e => {
           const a = e.target.dataset.a; if (!a) return; m.remove();
-          if (a === 'again') go(i, true); else if (last) location.href = '/life-source/'; else go(i + 1, true);
+          if (a === 'again') go(i, true); else if (a === 'tasks') RA.tasks(); else if (last) location.href = '/life-source/'; else go(i + 1, true);
         };
         document.body.append(m);
       },
