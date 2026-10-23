@@ -138,6 +138,17 @@
   var RING_FS = 'uniform vec3 uC;uniform float uA;void main(){vec2 p=gl_PointCoord-.5;float r=length(p)*2.;float a=smoothstep(.62,.74,r)*(1.-smoothstep(.86,1.,r));gl_FragColor=vec4(uC*a*uA,1.);}';
   var RING_VS = 'uniform float uPx,uS;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);gl_PointSize=uS*uPx;gl_Position=projectionMatrix*mv;}';
 
+  function fxColor(t) {   // 色温 → 特写色:黑体近似 + 提饱和(冷星更橙红、热星更蓝)
+    var c = new T.Color(), hsl = {}, x = t / 100, r, g, b;
+    r = x <= 66 ? 255 : 329.7 * Math.pow(x - 60, -0.1332);
+    g = x <= 66 ? 99.47 * Math.log(x) - 161.12 : 288.12 * Math.pow(x - 60, -0.0755);
+    b = x >= 66 ? 255 : x <= 19 ? 0 : 138.52 * Math.log(x - 10) - 305.04;
+    c.setRGB(Math.min(255, Math.max(0, r)) / 255, Math.min(255, Math.max(0, g)) / 255, Math.min(255, Math.max(0, b)) / 255);
+    c.getHSL(hsl);
+    var sat = t < 5300 ? Math.min(1, hsl.s * 2.4 + 0.25) : t < 6500 ? Math.min(1, hsl.s * 1.6) : Math.min(1, hsl.s * 1.8 + 0.1);
+    c.setHSL(hsl.h, sat, t < 5300 ? 0.52 : t < 6500 ? 0.6 : 0.62);
+    return [c.r, c.g, c.b];
+  }
   function starFx(rgb) {   // 特写恒星:着色器光球(噪声纹理 + 临边昏暗)+ 边缘壳层 + 面向镜头的冕(规范 §2)
     var g = new T.Group(), U = { uT: { value: 0 }, uC: { value: new T.Color(rgb[0], rgb[1], rgb[2]) } };
     var noise = 'float hs(vec3 p){p=fract(p*.3183099+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}' +
@@ -363,7 +374,7 @@
   function push(i) {
     var p = wpos(i), r = rVis(i), cp = G.cam.position, dir = cp.clone().sub(p).normalize();
     if (i === 0) dir = new T.Vector3(0.4, 0.3, 0.86).normalize();
-    var rgb = [S.col[i * 3], S.col[i * 3 + 1], S.col[i * 3 + 2]].map(function (c) { return Math.pow(c, 1.8); });   // 特写时加深色相,温度差异更明显
+    var rgb = fxColor(i === 0 ? 5772 : teff(S.ci[i], S.am[i]));   // M4b:特写按温度取饱和色(橙巨星要真橙,不再奶油色)
     if (G.fx) { G.fx.set(rgb); G.fx.group.position.set(S.pos[i * 3], S.pos[i * 3 + 1], S.pos[i * 3 + 2]); G.fx.group.scale.setScalar(r); G.fx.group.visible = true; } G.fxIdx = i;
     setMode(D5.mode === 'sky' ? 'sky' : 'overview'); D5.mode = 'focus';
     flyTo(p, r * 4.2, 3200, dir.add(new T.Vector3(0, 0.25, 0)).normalize());
@@ -407,12 +418,16 @@
       if (show && n >= cap && k !== 'dubhe') show = false;
       if (show) {
         wpos(i, v); var dd = v.distanceTo(cp); if (dd < 0.03 || (i === D5.focus && dd < 0.6)) show = false;
-        v.project(G.cam); if (v.z > 1 || Math.abs(v.x) > 1.02 || Math.abs(v.y) > 1.02) show = false;
+        v.project(G.cam); if (v.z > 1 || (k !== 'dubhe' && (Math.abs(v.x) > 1.02 || Math.abs(v.y) > 1.02))) show = false;
       }
       if (show) {
         var x = (v.x + 1) / 2 * W, y = (1 - v.y) / 2 * H, bw = (k === 'dubhe' ? 130 : 22 + m[0].length * 14), b = [x + 8, y - 22, x + 8 + bw, y];
-        var safeTop = (sm ? 100 : 122), safeBot = H - (sm ? 90 : 120);
-        if (y < safeTop || y > safeBot) show = false;
+        var safeTop = (sm ? 100 : 122), safeBot = H - (sm ? 90 : 120), edge = false;
+        if (k === 'dubhe') {   // M4b:天枢标签不再被顶栏/边缘吞掉 —— 出了安全区就贴边显示并加方向箭头
+          var y0 = y, x0 = x; y = Math.max(safeTop + 22, Math.min(safeBot, y)); x = Math.max(8, Math.min(W - bw - 24, x));
+          edge = y !== y0 || x !== x0; el.classList.toggle('is-edge', edge); el.dataset.dir = y0 < y ? 'up' : y0 > y ? 'down' : x0 < x ? 'left' : 'right';
+          b = [x + 8, y - 22, x + 8 + bw, y]; boxes.push(b); n++; el.style.transform = 'translate(' + Math.round(x + 8) + 'px,' + Math.round(y - 22) + 'px)';
+        } else if (y < safeTop || y > safeBot) show = false;
         else if (k !== 'dubhe' && boxes.some(function (q) { return b[0] < q[2] && b[2] > q[0] && b[1] < q[3] && b[3] > q[1]; })) show = false;
         else { boxes.push(b); n++; el.style.transform = 'translate(' + Math.round(x + 8) + 'px,' + Math.round(y - 22) + 'px)'; }
       }
@@ -515,6 +530,7 @@
     '.sh5-cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}' +
     'body.sh5-on .le-actions,body.sh5-on .le-bottom,body.sh5-on .le-labels,body.sh5-on .le-sheet,body.sh5-on .le-foot,body.sh5-on .le-hint,body.sh5-on .sh-now,body.sh5-on .le-card,body.sh5-on .le-chips,body.sh5-on .sh-cast{visibility:hidden!important}' +
     '.sh5-lbls{position:absolute;inset:0;pointer-events:none;overflow:hidden}' +
+    '.sh5-l.is-edge::before{content:"↑ ";color:#f0c97a}.sh5-l.is-edge[data-dir=down]::before{content:"↓ "}.sh5-l.is-edge[data-dir=left]::before{content:"← "}.sh5-l.is-edge[data-dir=right]::before{content:"→ "}' +
     '.sh5-l{position:absolute;left:0;top:0;pointer-events:auto;background:rgba(8,14,30,.62);border:1px solid rgba(200,214,235,.32);color:#dfe8f6;border-radius:11px;padding:1px 8px;font:12px "Noto Sans SC","PingFang SC",sans-serif;cursor:pointer;white-space:nowrap;line-height:18px}' +
     '.sh5-l small{font-size:10px;opacity:.8;margin-left:3px}.sh5-l--exo{border-color:rgba(127,214,255,.55);color:#cfefff}.sh5-l--far{opacity:.75}' +
     '.sh5-l--dubhe{border-color:#f0c97a;color:#f6e2b0;background:rgba(40,30,8,.7);box-shadow:0 0 12px rgba(240,201,122,.35);font-weight:600}.sh5-l--dip{border-color:rgba(240,201,122,.45);color:#f6e2b0}' +

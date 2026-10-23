@@ -39,3 +39,7 @@
 - 赫罗图亮度用 V 波段绝对星等近似光度(未做热改正),画面注「示意」。
 - sh.constel「时间」只移动北斗七星。
 - 星桥端点(上线后回报总指挥):sh.starlight|你看到的星光有多老?|/starhelm/?task=starlight;sh.exoearth|宇宙里还有别的地球吗?|/starhelm/?task=exoearth;sh.sundie|太阳会死吗?|/starhelm/?task=sundie;sh.constel|星座为什么会变形?|/starhelm/?task=constel。
+
+## v1.0-M4b(2026-10-23 23:0x)
+- 王磊:修两处遗留。① 恒星特写改用 fxColor(色温→黑体近似+提饱和),天枢 4600 K 橙巨星显示为真橙色,热星更蓝。② 天枢标签出安全区/出屏时不再隐藏,贴边显示并加方向箭头(is-edge,↑↓←→)。
+- 自测:1600×900、390×844 全景天枢标签可见;天枢推近为橙色;pageerror 0。
