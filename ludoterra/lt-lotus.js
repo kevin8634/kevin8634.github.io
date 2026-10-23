@@ -1,4 +1,6 @@
-/* 觉弈 Ludoterra · 心莲星盘(v0.23,Three.js r169 本地 vendor/)
+/* 觉弈 Ludoterra · 心莲星盘(v0.26,Three.js r169 本地 vendor/)
+ * A1 粒子金莲:每片花瓣里有一股金色粒子从根部流向瓣尖,通关越多流得越亮。
+ * A3 神经星流:玻璃盘上一张神经网,光脉冲从中心大脑流向各域、再在相邻域之间传递;两端都点亮的通路才亮起。
  * 八瓣金莲 = 八个认知域,中心金色大脑 = 意义。
  * A4 通关绽放:未通关的域花瓣合拢成花苞、暗淡;通关后展开、鎏金点亮;意义点亮后大脑上方升起光冠。
  * A2 点瓣展开:点一片花瓣,它在 3D 中抬起,其余七瓣暗下去,该域的关卡化作小星球浮起,再点星球进入关卡。
@@ -50,6 +52,12 @@ gl_PointSize=uSize*uPx*(0.6+0.8*fract(aSeed*7.13))*tw/(-mv.z);gl_Position=projec
 const STAR_FS = `uniform vec3 uCol;uniform float uOp;varying float vA;
 void main(){vec2 p=gl_PointCoord-.5;float d=length(p);float core=smoothstep(.5,.0,d);float cr=smoothstep(.06,.0,abs(p.x))*smoothstep(.5,.0,abs(p.y))+smoothstep(.06,.0,abs(p.y))*smoothstep(.5,.0,abs(p.x));
 float a=(pow(core,2.6)+cr*.55)*vA*uOp;if(a<.01)discard;gl_FragColor=vec4(uCol*a,a);}`;
+const FLOW_VS = `attribute vec3 aP;uniform float uT,uSize,uPx,uSp;varying float vA;
+float pw(float u){return .2*pow(max(sin(3.14159*pow(u,.72)),0.),.75)*(1.-.1*u);}
+void main(){float u=fract(aP.x+uT*uSp*(.6+.8*aP.z));float w=pw(u)*aP.y*.92;vec3 p=vec3(u*0.7,.006+.01*sin(u*9.+aP.z*30.),w);
+vec4 mv=modelViewMatrix*vec4(p,1.);vA=smoothstep(0.,.12,u)*smoothstep(1.,.8,u)*(.55+.45*sin(uT*3.+aP.z*40.));
+gl_PointSize=uSize*uPx*(.5+.9*aP.z)/(-mv.z);gl_Position=projectionMatrix*mv;}`;
+const FLOW_FS = `uniform vec3 uCol;uniform float uOp;varying float vA;void main(){float d=length(gl_PointCoord-.5);float a=pow(smoothstep(.5,0.,d),2.)*vA*uOp;if(a<.01)discard;gl_FragColor=vec4(uCol*a,a);}`;
 const PLANET_VS = `varying vec3 vN;varying vec3 vV;void main(){vec4 mv=modelViewMatrix*vec4(position,1.);vN=normalize(normalMatrix*normal);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`;
 const PLANET_FS = `uniform vec3 uA,uB;uniform float uT,uOp;varying vec3 vN;varying vec3 vV;
 void main(){float l=max(dot(vN,normalize(vec3(-.4,.7,.6))),0.);float fr=pow(1.-max(dot(vN,vV),0.),2.5);
@@ -107,7 +115,12 @@ export async function makeLotus(opt = {}) {
       sp.push(u * LEN, 0.004, w); seeds.push(((k + 1) * (i + 3) * 0.6180339) % 1); }
     const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3)); sg.setAttribute('aSeed', new THREE.Float32BufferAttribute(seeds, 1));
     const stars = new THREE.Points(sg, starMat(1)); hinge.add(stars);
-    petals.push({ pivot, hinge, fill, out, inn, vein, stars, k: -1, foc: 0, hov: 0 });
+    const FN = small ? 70 : 140, fa = new Float32Array(FN * 3); for (let k = 0; k < FN; k++) fa.set([Math.random(), Math.random() * 2 - 1, Math.random()], k * 3);
+    const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(FN * 3), 3)); fg.setAttribute('aP', new THREE.BufferAttribute(fa, 3));
+    const flowP = new THREE.Points(fg, new THREE.ShaderMaterial({ vertexShader: FLOW_VS, fragmentShader: FLOW_FS, ...ADD,
+      uniforms: { uT: { value: 0 }, uSize: { value: 0.03 }, uPx: { value: 600 }, uSp: { value: 0.12 }, uCol: { value: new THREE.Color(1, .82, .48) }, uOp: { value: 0 } } }));
+    flowP.frustumCulled = false; hinge.add(flowP);
+    petals.push({ pivot, hinge, fill, out, inn, vein, stars, flowP, k: -1, foc: 0, hov: 0 });
   }
   /* 第二层装饰小花瓣(错开 22.5°),随整体进度舒展 */
   const back = [];
@@ -133,6 +146,24 @@ export async function makeLotus(opt = {}) {
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(p, 3)); g.setAttribute('aSeed', new THREE.BufferAttribute(s, 1));
     const m = starMat(.5); m.uniforms.uSize.value = 0.022; return new THREE.Points(g, m); })();
   disc.add(dust);
+
+  /* A3 神经星流:中心 → 各域(8 条)+ 相邻域之间(8 条),光脉冲沿通路流动 */
+  const NODE = i => { const a = i / N8 * TAU; return new THREE.Vector3(Math.cos(a) * 0.93, 0.003, Math.sin(a) * 0.93); };
+  const nerves = [];
+  for (let i = 0; i < N8; i++) {
+    const A = NODE(i), B = NODE((i + 1) % N8), mid = A.clone().multiplyScalar(0.5); const side = new THREE.Vector3(-A.z, 0, A.x).multiplyScalar(0.18 * (i % 2 ? 1 : -1));
+    const c1 = new THREE.QuadraticBezierCurve3(new THREE.Vector3(0, 0.003, 0).add(A.clone().multiplyScalar(R0 * 1.2 / 0.93)), mid.add(side), A);
+    const c2 = new THREE.QuadraticBezierCurve3(A, A.clone().add(B).multiplyScalar(0.5 * 1.12), B);
+    [[c1, i, i], [c2, i, (i + 1) % N8]].forEach(([c, a, b]) => { const pts = c.getPoints(48); const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat(0)); disc.add(l);
+      nerves.push({ c, l, a, b, ph: Math.random() }); });
+  }
+  const PN = nerves.length * 3, pulseP = new Float32Array(PN * 3), pulseS = new Float32Array(PN);
+  for (let i = 0; i < PN; i++) pulseS[i] = i / PN;
+  const pulseG = new THREE.BufferGeometry(); pulseG.setAttribute('position', new THREE.BufferAttribute(pulseP, 3)); pulseG.setAttribute('aSeed', new THREE.BufferAttribute(pulseS, 1));
+  const pulseM = starMat(1); pulseM.uniforms.uSize.value = 0.075; const pulses = new THREE.Points(pulseG, pulseM); pulses.frustumCulled = false; disc.add(pulses);
+  const nodeG = new THREE.BufferGeometry(); { const np = [], ns = []; for (let i = 0; i < N8; i++) { const v = NODE(i); np.push(v.x, v.y, v.z); ns.push(i / 8); }
+    nodeG.setAttribute('position', new THREE.Float32BufferAttribute(np, 3)); nodeG.setAttribute('aSeed', new THREE.Float32BufferAttribute(ns, 1)); }
+  const nodeM = starMat(.6); nodeM.uniforms.uSize.value = 0.06; disc.add(new THREE.Points(nodeG, nodeM));
 
   /* A2 关卡星球 */
   const planetGeo = new THREE.SphereGeometry(1, 28, 20);
@@ -186,9 +217,18 @@ export async function makeLotus(opt = {}) {
         p.out.material.color.copy(c.clone().lerp(IVORY, 0.25 * p.k)); p.out.material.opacity = (0.45 + 0.5 * p.k + 0.3 * p.hov) * vis;
         p.inn.material.color.copy(c); p.inn.material.opacity = (0.12 + 0.3 * p.k) * vis;
         p.vein.material.color.copy(c); p.vein.material.opacity = (0.1 + 0.25 * p.k) * vis;
+        const fu = p.flowP.material.uniforms; fu.uT.value = o.rm ? 2 : t; fu.uPx.value = fpx; fu.uOp.value = (0.12 + 0.88 * p.k) * vis * (1 + 0.4 * p.hov);
+        fu.uSp.value = 0.06 + 0.12 * p.k; fu.uCol.value.copy(DIM.clone().lerp(new THREE.Color(1, .82, .48), p.k));
         const su = p.stars.material.uniforms; su.uT.value = o.rm ? 1 : t; su.uPx.value = fpx; su.uOp.value = (0.15 + 0.85 * p.k) * vis; su.uCol.value.copy(DIM.clone().lerp(new THREE.Color(1, .9, .66), p.k));
       });
       const prog = allK / N8;
+      { const lk = i => Math.max(0, Math.min(1, petals[i].k)); let pi = 0;
+        nerves.forEach(n => { const on = n.a === n.b ? lk(n.a) : Math.min(lk(n.a), lk(n.b)); const fd = fi >= 0 && n.a !== fi && n.b !== fi ? 0.3 : 1;
+          n.l.material.opacity = (0.1 + 0.55 * on) * fd;
+          for (let q = 0; q < 3; q++) { const u = o.rm ? (q + 1) / 4 : (n.ph + q / 3 + t * (0.08 + 0.1 * on)) % 1; const v = n.c.getPoint(u); pulseP.set([v.x, v.y + 0.002, v.z], pi * 3);
+            pi++; } n.on = on * fd; });
+        pulseG.attributes.position.needsUpdate = true; pulseM.uniforms.uT.value = t; pulseM.uniforms.uPx.value = fpx; pulseM.uniforms.uOp.value = 0.25 + 0.75 * prog;
+        nodeM.uniforms.uT.value = t; nodeM.uniforms.uPx.value = fpx; nodeM.uniforms.uOp.value = 0.3 + 0.6 * prog; }
       back.forEach((b, i) => { b.pivot.rotation.y = -(i + 0.5) / N8 * TAU; b.hinge.rotation.z = 1.0 - 0.75 * prog; b.l.material.opacity = 0.1 + 0.25 * prog; });
       const m = Math.max(0, Math.min(1, o.meaning || 0));
       core.material.opacity = 0.18 + 0.2 * prog + 0.3 * m; core.scale.setScalar(0.4 + 0.15 * prog + (o.rm ? 0 : 0.03 * Math.sin(t * 1.6)));
