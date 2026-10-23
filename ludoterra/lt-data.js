@@ -70,7 +70,8 @@ export const STATS = [
   { id: 'attention', name: '注意力', by: 'cocoon' },
   { id: 'fog', name: '迷雾值', by: 'sunk' },
   { id: 'time', name: '时间', by: 'compound' },
-  { id: 'energy', name: '精力', by: 'sleep' }
+  { id: 'energy', name: '精力', by: 'sleep' },
+  { id: 'calm', name: '平静', by: 'wave' }
 ];
 
 /* 任务:id 一经上线不再更改 */
@@ -82,7 +83,7 @@ export const TASKS = [
   { id: 'survivor', q: '为什么「成功经验」常常骗人?', domains: ['wealth', 'info'], age: 12, guide: 'sagan', path: 'survivor/', ver: 'v0.7', live: true },
   { id: 'nature', q: '人性本善,还是本恶?', domains: ['nature'], age: 12, guide: 'mengxun', path: 'nature/', ver: 'v0.8', live: true },
   { id: 'sleep', q: '今晚偷走的睡眠,明天谁来还?', domains: ['habit', 'emotion'], age: 7, guide: 'james', path: 'sleep/', ver: 'v0.27', live: true },
-  { id: 'wave', q: '生气的时候,是谁在替你做决定?', domains: ['emotion'], age: 12, guide: 'aurelius', path: 'wave/', ver: 'v0.26', live: false },
+  { id: 'wave', q: '生气的时候,是谁在替你做决定?', domains: ['emotion'], age: 7, guide: 'aurelius', path: 'wave/', ver: 'v0.28', live: true },
   { id: 'echo', q: '你说的那句话,他听到的是什么?', domains: ['relation'], age: 12, guide: 'adler', path: 'echo/', ver: 'v0.27', live: false },
   { id: 'meaning', q: '看见了这些规则,我想成为怎样的玩家?', domains: ['meaning'], age: 16, guide: 'wang', path: 'meaning/', ver: 'v0.9', live: true, finale: true }
 ];
@@ -112,6 +113,8 @@ export const HANDBOOK = [
     counter: '评价一个人之前,先问「换我在他的处境,会怎么做?」想让人变好,既养护善意(榜样、被善待),也设计规则——让做好事更容易,做坏事更难。' },
   { task: 'sleep', no: 8, domain: '习惯与时间 × 情绪与身体', title: '睡眠是一笔贷款,利息由明天的你来付',
     counter: '给自己定一个「关屏时间」,到点把手机放到够不着的地方,关掉自动播放;欠了觉就连着几晚早睡一会儿慢慢还,别指望一次睡到中午。' },
+  { task: 'wave', no: 9, domain: '情绪与身体', title: '情绪是一股浪,不是一道命令',
+    counter: '浪尖上不做决定:先给情绪起个名字(「我现在很生气」),慢慢呼吸几次,等它过了顶点再回应;再问一句,这件事里哪些我能控制?' },
   { task: 'meaning', no: 7, domain: '意义(终章)', title: '知行合一:看见了,还要做到',
     counter: '把你写下的规则变成一个能在路口问出口的问题。做完选择回看一眼:「我是按自己写的规则玩的吗?」没做到也没关系,下一次再试——规则由你写,也可以由你改。' }
 ];
