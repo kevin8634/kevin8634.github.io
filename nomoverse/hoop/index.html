@@ -57,7 +57,15 @@
     return n >= 5 ? sum / n : Infinity;
   }
   function court(L, V, gLabel) {
-    var c = L.ctx; c.clearRect(0, 0, L.w, L.h); Dr.stars(c, L.w, L.h, 3, Math.round(L.w * L.h / 7000));
+    var c = L.ctx; c.clearRect(0, 0, L.w, L.h);
+    if (L.d3) {
+      // 3D 舞台(v0.3-α4 星球实景):球场、篮架、投篮者、篮球由 WebGL 绘制;2D 只叠轨迹、预测线与标签(加暗描边保证实景上可读)
+      L.d3.view(V);
+      c.shadowColor = "rgba(8,6,26,.75)"; c.shadowBlur = 4;
+      Dr.label(c, gLabel, L.w - 8, 16, "#ede9fe", 12, "right");
+      return;
+    }
+    Dr.stars(c, L.w, L.h, 3, Math.round(L.w * L.h / 7000));
     c.fillStyle = "#231d52"; c.fillRect(0, V.gy, L.w, L.h - V.gy);
     c.strokeStyle = "#7c5cf0"; c.lineWidth = 2; c.beginPath(); c.moveTo(0, V.gy); c.lineTo(L.w, V.gy); c.stroke();
     // 篮架
@@ -81,7 +89,7 @@
     var air = L.v.air ? P.K_BALL : 0;
     return { v: L.v.v, ang: L.v.ang, g: g, x0: X0, y0: Y0, k: air, wind: air ? (L.v.wind || 0) : 0, hoopX: HX, rimY: RIM, tol: 0.13, dt: 1 / 240, tMax: 12, xMax: 14 };
   }
-  function startShot(L, g) { var r = P.shoot(shotOpts(L, g)); L.st.shot = r; L.st.t = 0; L.st.g = g; L.st.done = false; return r; }
+  function startShot(L, g) { var r = P.shoot(shotOpts(L, g)); L.st.shot = r; L.st.ball3 = null; L.st.t = 0; L.st.g = g; L.st.done = false; return r; }
   function animShot(L, V, dt, onEnd) {
     var c = L.ctx, st = L.st, r = st.shot; if (!r) return;
     if (L.phase === "running") st.t += dt * (L.RM ? 2.5 : 1);
@@ -90,8 +98,9 @@
     var last = r.pts[n - 1]; pts.push(S(V, last[0], last[1]));
     Dr.path(c, pts, "#c4b5fd", 2.5);
     var bp = S(V, last[0], last[1]);
+    st.ball3 = last;                                   // 3D 舞台读取当前球位
     if (bp[1] < 0) { Dr.label(c, "↑ 球在 " + last[1].toFixed(1) + " m 高", Math.max(40, Math.min(L.w - 40, bp[0])), 30, "#fbbf24", 12, "center"); }
-    else { c.fillStyle = "#f97316"; c.beginPath(); c.arc(bp[0], bp[1], Math.max(4, BALL * V.s), 0, 7); c.fill(); c.strokeStyle = "#1f1147"; c.lineWidth = 1; c.beginPath(); c.moveTo(bp[0] - BALL * V.s, bp[1]); c.lineTo(bp[0] + BALL * V.s, bp[1]); c.stroke(); }
+    else if (!L.d3) { c.fillStyle = "#f97316"; c.beginPath(); c.arc(bp[0], bp[1], Math.max(4, BALL * V.s), 0, 7); c.fill(); c.strokeStyle = "#1f1147"; c.lineWidth = 1; c.beginPath(); c.moveTo(bp[0] - BALL * V.s, bp[1]); c.lineTo(bp[0] + BALL * V.s, bp[1]); c.stroke(); }
     if (L.phase === "running") {
       // 声音即规律:球越高音越高(E 利底亚音域内连续滑动)
       if (!st.vo || !st.vo.alive) st.vo = L.snd.voice("sine", 3000);
@@ -113,7 +122,7 @@
 
   /* ================= 第 1 关 地球投篮 ================= */
   var H1 = {
-    name: "地球投篮",
+    name: "地球投篮", d3: true, env: "earth",
     goal: "先用手指画出你猜的球的路线,再调速度和角度,把球投进。",
     note: NOTE,
     ask: "你猜,球飞出去的路线是什么形状?",
@@ -148,7 +157,7 @@
 
   /* ================= 第 2 关 引力 ×2 ================= */
   var H2 = {
-    name: "引力 ×2",
+    name: "引力 ×2", d3: true, env: "heavy",
     goal: "引力变成地球的两倍。先用刚才进球的出手试一次,再调整,在 2g 下投进。",
     note: NOTE,
     ask: "引力变成两倍,同样的出手,球会怎样?",
@@ -185,7 +194,7 @@
   /* ================= 第 3 关 月球与木星 ================= */
   var PLANETS = [["月球", 1.62], ["火星", 3.71], ["木星", 24.79]];
   var H3 = {
-    name: "月球与木星",
+    name: "月球与木星", d3: true, env: function (L) { return ["moon", "mars", "jupiter"][L.v.pl] || "moon"; },
     goal: "换到月球、火星、木星上,每个星球都投进一球。",
     note: NOTE + "各星球按表面重力计,忽略大气差异。",
     ask: "同一个篮筐搬到月球上,你会更用力还是更轻地投?",
@@ -218,7 +227,7 @@
 
   /* ================= 第 4 关 荒谬宇宙 ================= */
   var H4 = {
-    name: "荒谬宇宙",
+    name: "荒谬宇宙", d3: true, env: "void",
     goal: "自由沙盒:把 g 调到 0 到 5 倍,开风试试。在不是地球的 g 下投进一球;三星:三种不同的 g 都投进。",
     note: NOTE + "风只在开启空气时起作用。",
     ask: "如果 g 变成 0,球还会落进篮筐吗?",
@@ -260,7 +269,7 @@
   };
 
   NV.task({
-    id: "hoop", guide: "quark",
+    id: "hoop", guide: "quark", scene3d: "core/hoop3d.js",
     bridge: { href: "../../math-atlas/rocket/", label: "星图 Math Atlas「火箭怎样飞上月球?」" },
     title: "如果引力变成两倍,篮球还能投进吗?",
     safety: "请勿在现实中模仿:不要从高处抛掷篮球或其他物体。",
