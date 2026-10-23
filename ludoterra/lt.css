@@ -102,3 +102,5 @@ html.lt-stage-css body{background:radial-gradient(ellipse 60% 50% at 78% 88%,var
 @media (max-width:640px){.lt-q{padding:6px 8px}}
 #ltWarp{position:fixed;inset:0;z-index:50;pointer-events:none;background:radial-gradient(circle at var(--wx,50%) var(--wy,50%),rgba(255,236,190,.95),rgba(245,194,107,.55) 18%,rgba(7,8,20,0) 55%);opacity:0;animation:ltWarpIn .52s cubic-bezier(.5,0,.75,0) forwards}
 @keyframes ltWarpIn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(2.2)}}
+/* v0.32:弹窗内描边伪元素外扩 1px 会撑出滚动条(Windows 常显滚动条可见),弹窗内收回 */
+.lt-modal .box.lt-panel::before{inset:0}
