@@ -566,6 +566,7 @@
       el("label", { class: "nv-tog" }, [sndT, "声音(背景音乐与「声音即规律」音效)"]),
       el("h3", { class: "nv-q", text: "画面质量" }),
       perfRow, perfNote,
+      el("label", { class: "nv-tog" }, [el("input", { type: "checkbox", checked: FPS.on, onchange: function (e) { FPS.set(e.target.checked); } }), "显示帧率读数(真机测试用)"]),
       el("div", { class: "nv-row", style: "margin:0 0 8px" }, [el("button", { class: "nv-btn sm", type: "button", text: "▶ 重播开场动画", onclick: function () {
         closeModal(); if (W.NVIntro && W.NVIntro.replay) W.NVIntro.replay(); else location.href = ROOT + "?intro=1";
       } })]),
@@ -1198,6 +1199,74 @@
     };
   })();
 
+  /* ---------- v0.4-α4 帧率读数(真机测试用;?fps=1 开启并记住,?fps=0 或面板 × 关闭;设置里也可开关) ---------- */
+  var FPS = (function () {
+    var box = null, raf = 0, last = 0, ft = [], test = null, upd = 0;
+    function qv() { try { return new URLSearchParams(location.search).get("fps"); } catch (e) { return null; } }
+    function want() { var q = qv(); if (q === "1") { lsSet("gn:nv:_fps", "1"); return true; } if (q === "0") { lsDel("gn:nv:_fps"); return false; } return lsGet("gn:nv:_fps") === "1"; }
+    function stats(a) {
+      if (!a.length) return null;
+      var sum = 0, s = a.slice().sort(function (x, y) { return y - x; }), k = Math.max(1, Math.round(a.length * 0.05)), w = 0, slow = 0;
+      a.forEach(function (d) { sum += d; if (d > 1000 / 30 + 0.5) slow += d; });
+      for (var i = 0; i < k; i++) w += s[i];
+      return { avg: 1000 * a.length / sum, low: 1000 * k / w, ms: sum / a.length, slow: slow / sum };
+    }
+    function env() {
+      var t = PERF.tier, g = GL3D.ok ? (D.querySelector("canvas.nv-cv3, .nv-gl canvas, canvas[data-engine]") || D.body.classList.contains("hud3d") ? "3D" : "3D 待机") : "2D";
+      return "画质 " + ({ high: "高", mid: "中", low: "低" })[t] + " · " + g + " · 像素比 " + Math.min(W.devicePixelRatio || 1, PERF.prCap).toFixed(1) + "/" + (W.devicePixelRatio || 1) + " · " + W.innerWidth + "×" + W.innerHeight;
+    }
+    function draw(now) {
+      var st = stats(ft.slice(-120)), out = box.querySelector(".nv-fps-v"), res = box.querySelector(".nv-fps-r");
+      if (st) {
+        out.innerHTML = "<b class='" + (st.avg >= 30 ? "ok" : "no") + "'>" + Math.round(st.avg) + "</b> fps · 5%低 <b>" + Math.round(st.low) + "</b> · <b>" + st.ms.toFixed(1) + "</b> ms";
+      }
+      box.querySelector(".nv-fps-e").textContent = env();
+      if (test) {
+        var left = Math.max(0, 30 - (now - test.t0) / 1000);
+        res.textContent = "测试中……剩 " + Math.ceil(left) + " 秒,请正常操作(点运行、拖动)";
+        if (left <= 0) {
+          var r = stats(test.d); test = null; box.querySelector(".nv-fps-b").disabled = false;
+          res.innerHTML = r ? "30 秒:均值 <b>" + r.avg.toFixed(1) + "</b> fps · 5%低 <b>" + r.low.toFixed(1) + "</b> · 低于 30fps 时间 <b>" + Math.round(r.slow * 100) + "%</b> → " + (r.avg >= 30 && r.low >= 24 ? "<b class=ok>达标</b>" : "<b class=no>未达标</b>") + "<br><small>" + (location.pathname.replace(/^.*nomoverse/, "") || "/") + (location.hash || "") + " · 截图发给开发即可</small>" : "没有采到帧(页面在后台?)";
+        }
+      }
+    }
+    function tick(now) {
+      raf = W.requestAnimationFrame(tick);
+      if (last) { var d = now - last; if (d < 1000) { ft.push(d); if (ft.length > 600) ft.shift(); if (test) test.d.push(d); } }
+      last = now;
+      if (now - upd > 500) { upd = now; draw(now); }
+    }
+    function show() {
+      if (box) return;
+      box = el("div", { class: "nv-fps", role: "status", "aria-label": "帧率读数" }, [
+        el("div", { class: "nv-fps-h" }, [el("button", { class: "nv-fps-v", type: "button", title: "点一下收起 / 展开", "aria-label": "收起或展开帧率读数", text: "测量中…", onclick: function () { box.classList.toggle("min"); lsSet("gn:nv:_fpsMin", box.classList.contains("min") ? "1" : "0"); } }),
+          el("button", { class: "nv-fps-x", type: "button", "aria-label": "关闭帧率读数", text: "×", onclick: function () { set(false); } })]),
+        el("div", { class: "nv-fps-e" }),
+        el("div", { class: "nv-fps-a" }, [el("button", { class: "nv-btn sm nv-fps-b", type: "button", text: "测 30 秒", onclick: function (e) { test = { t0: performance.now(), d: [] }; e.target.disabled = true; } })]),
+        el("div", { class: "nv-fps-r" })
+      ]);
+      var m0 = lsGet("gn:nv:_fpsMin"); if (m0 === "1" || (m0 == null && W.innerHeight < 500)) box.classList.add("min");
+      D.body.appendChild(box); last = 0; raf = W.requestAnimationFrame(tick);
+    }
+    function hide() { if (!box) return; W.cancelAnimationFrame(raf); box.remove(); box = null; test = null; ft = []; }
+    function set(on) { if (on) { lsSet("gn:nv:_fps", "1"); show(); } else { lsDel("gn:nv:_fps"); hide(); } }
+    D.addEventListener("visibilitychange", function () { last = 0; });
+    function boot() { if (want()) show(); }
+    if (D.readyState === "loading") D.addEventListener("DOMContentLoaded", boot); else boot();
+    return { set: set, get on() { return !!box; } };
+  })();
+
+  /* ---------- v0.4-α4 Service Worker(作用域仅本世界 /nomoverse/;?nosw=1 注销并清 nv- 缓存) ---------- */
+  try {
+    if ("serviceWorker" in W.navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+      var nosw = /[?&]nosw=1/.test(location.search);
+      if (nosw) {
+        W.navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { if (r.scope === ROOT) r.unregister(); }); });
+        if (W.caches) W.caches.keys().then(function (k) { k.filter(function (x) { return x.indexOf("nv-") === 0; }).forEach(function (x) { W.caches.delete(x); }); });
+      } else W.addEventListener("load", function () { W.navigator.serviceWorker.register(ROOT + "sw.js", { scope: ROOT }).catch(function () {}); });
+    }
+  } catch (e) {}
+
   /* 世界内跳转标记(页面禁用 referrer,改用会话标记):点本世界内链接时记一笔,首页据此不重复播开场 */
   try {
     D.addEventListener("click", function (e) {
@@ -1206,7 +1275,7 @@
     }, true);
   } catch (e) {}
 
-  var NV = { Phys: Phys, gl3d: GL3D, perf: PERF, RM: RM, ROOT: ROOT, store: Store, lsGet: lsGet, lsSet: lsSet, jGet: jGet, el: el, fit: fit, fmt: fmt, esc: esc, starsTxt: starsTxt,
+  var NV = { Phys: Phys, gl3d: GL3D, perf: PERF, fps: FPS, RM: RM, ROOT: ROOT, store: Store, lsGet: lsGet, lsSet: lsSet, jGet: jGet, el: el, fit: fit, fmt: fmt, esc: esc, starsTxt: starsTxt,
     snd: SND, ai: AI, settings: settings, header: header, avatar: avatar, drawGuide: drawGuide, GUIDES: GUIDES, modal: modal, closeModal: closeModal, task: task, Draw: Draw, ICON: ICON };
   G.NV = NV;
 })(typeof window !== "undefined" ? window : this);
