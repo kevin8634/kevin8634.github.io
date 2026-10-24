@@ -447,7 +447,7 @@
   }
   function tickAvatars(now) {
     avatars.forEach(function (a) {
-      if (!a.cv.isConnected) return;
+      if (!a.cv.isConnected || !a.cv.offsetWidth) return;     // 隐藏(抽屉收起)时不画,避免 0 尺寸画布算出负半径
       var f = fit(a.cv); drawGuide(f.ctx, a.kind, f.w, f.h, now / 1000, now < a.talkUntil);
     });
   }
@@ -611,11 +611,17 @@
 
   /* ======================= 任务框架 ======================= */
   var STEPS = ["观察", "预测", "运行", "对比", "改规则"];
+  var TASKMETA = [   // 与首页 TASKS 保持一致(id 上线后不改)
+    { id: "hoop", n: 4, guide: "quark", q: "如果引力变成两倍,篮球还能投进吗?" },
+    { id: "orbit", n: 5, guide: "abyss", q: "为什么宇航员在空间站会飘起来?" },
+    { id: "sound", n: 4, guide: "ripple", q: "为什么救护车经过时声音会变?" }
+  ];
   function task(def) {
     var N = def.levels.length, prog = Store.task(def.id, N), gd = GUIDES[def.guide];
     var app = el("div", { class: "nv-app nv-im" });
     var tabs = el("div", { class: "nv-tabs", role: "tablist", "aria-label": "关卡" });
     var top = header({ links: [["../", "← 宙律"], ["../../", "创世计划"]], brand: "宙律 · 物理", tabs: tabs });
+    var nav = top.querySelector(".nv-nav");
     var progFill = el("i"), progTxt = el("span", { class: "t" });
     var progBar = el("div", { class: "bar", role: "progressbar", "aria-label": "本任务星数", "aria-valuemin": "0", "aria-valuemax": String(N * 3) }, progFill);
     top.appendChild(el("div", { class: "nv-prog" }, [progBar, progTxt]));
@@ -645,6 +651,43 @@
     var bubble = el("div", { class: "nv-bubble", "aria-live": "polite" });
     var guideEl = el("div", { class: "nv-guide nv-glass nv-hudc", role: "region", "aria-label": "向导 " + gd.name }, [av.cv, bubble]);
     app.appendChild(guideEl);
+    // v0.4 统一 HUD:左侧任务抽屉(与首页同款),切换 3 个任务;手机/小横屏收成顶栏「任务」按钮弹出
+    var tdList = el("div", { class: "hd-list" });
+    var tdTog = el("button", { class: "hd-tog", type: "button", "aria-controls": "nv-td-" + def.id, text: "‹" });
+    var td = el("nav", { class: "nv-td", id: "nv-td-" + def.id, "aria-label": "三个探究任务" }, [
+      el("div", { class: "hd-h" }, [el("span", { text: "探究任务 · 13 关" }), tdTog]), tdList
+    ]);
+    var tdBtn = el("button", { class: "nv-btn nv-td-b", type: "button", "aria-controls": td.id, "aria-expanded": "false", text: "任务 ▾" });
+    nav.appendChild(tdBtn);
+    app.appendChild(td);
+    ["tl", "tr", "bl", "br"].forEach(function (k) { stage.appendChild(el("i", { class: "nv-hc " + k, "aria-hidden": "true" })); });
+    function tdOpen() { return !td.classList.contains("closed"); }
+    function setTd(open, user) {
+      td.classList.toggle("closed", !open);
+      tdTog.textContent = open ? "‹" : "›";
+      tdTog.setAttribute("aria-expanded", open ? "true" : "false"); tdTog.setAttribute("aria-label", open ? "收起任务抽屉" : "展开任务抽屉");
+      tdBtn.setAttribute("aria-expanded", open ? "true" : "false"); tdBtn.textContent = open ? "任务 ▴" : "任务 ▾";
+      if (user) { try { W.sessionStorage.setItem("gn:nv:_td", open ? "1" : "0"); } catch (e) {} }
+      measure();
+    }
+    tdTog.addEventListener("click", function () { setTd(!tdOpen(), true); SND.play("select"); });
+    tdBtn.addEventListener("click", function () { setTd(!tdOpen(), true); SND.play("select"); });
+    td.addEventListener("keydown", function (e) { if (e.key === "Escape" && tdOpen() && (portrait() || (landMQ && landMQ.matches))) { setTd(false, true); tdBtn.focus(); } });
+    function renderTD() {
+      tdList.innerHTML = "";
+      TASKMETA.forEach(function (t) {
+        var me = t.id === def.id, p = me ? prog : Store.task(t.id, t.n);
+        var got = p.reduce(function (a, b) { return a + b; }, 0), done = p.filter(function (x) { return x >= 1; }).length;
+        var dots = el("span", { class: "hd-dots", "aria-hidden": "true" });
+        for (var i = 0; i < t.n; i++) dots.appendChild(el("i", { class: (p[i] >= 1 ? "on" : "") + (me && i === cur ? " cur" : "") }));
+        var a2 = avatar(t.guide, 40);
+        tdList.appendChild(el("a", { class: "hd-card" + (me ? " me" : ""), href: me ? "#l" + (cur + 1) : "../" + t.id + "/", "aria-current": me ? "page" : null,
+          "aria-label": (me ? "当前任务:" : "") + t.q + ",已通 " + done + " / " + t.n + " 关,已得 " + got + " 颗星",
+          onclick: function (e) { if (me) { e.preventDefault(); if (portrait() || (landMQ && landMQ.matches)) setTd(false, true); } else SND.play("whoosh"); } }, [
+          a2.cv, el("span", { class: "hd-txt" }, [el("b", { text: t.q }), el("span", { class: "hd-meta" }, [dots, el("em", { text: got + "/" + (t.n * 3) + "★" })])])
+        ]));
+      });
+    }
     // 侧列 / 抽屉:关卡卡片(目标 + 预测)、对比卡、提示卡、页脚
     var side = el("aside", { class: "nv-side", "aria-label": "关卡面板" });
     var body = el("div", { class: "nv-body", id: "nv-body-" + def.id });
@@ -685,20 +728,29 @@
         y0 = gr.bottom - sr.top + 4;
         var bodyR = body.getBoundingClientRect();
         y1 = (app.classList.contains("nv-collapsed") || !bodyR.height ? br.top : bodyR.top) - sr.top + 2;
-      } else { x1 = Math.min(rr.left, gr.left) - sr.left + 4; y0 = tr.bottom - sr.top - 4; y1 = br.top - sr.top - 8; }
+      } else { var dr = td.getBoundingClientRect(); x0 = dr.right - sr.left + 6; x1 = Math.min(rr.left, gr.left) - sr.left + 4; y0 = tr.bottom - sr.top - 4; y1 = br.top - sr.top - 8; }
+      app.style.setProperty("--dw", (portrait() || (landMQ && landMQ.matches) ? 0 : Math.round(td.getBoundingClientRect().right - sr.left)) + "px");
       SZ = { x: Math.round(x0), y: Math.round(Math.max(0, y0)), w: Math.max(80, Math.round(x1 - x0)), h: Math.max(80, Math.round(y1 - Math.max(0, y0))) };
       var css = "left:" + SZ.x + "px;top:" + SZ.y + "px;width:" + SZ.w + "px;height:" + SZ.h + "px";
       if (css !== zone._css) { zone._css = css; zone.style.cssText = css; }
     }
-    if (W.ResizeObserver) { var ro = new ResizeObserver(function () { measure(); }); [top, guideEl, bar, side, body].forEach(function (x) { ro.observe(x); }); }
+    if (W.ResizeObserver) { var ro = new ResizeObserver(function () { measure(); }); [top, guideEl, bar, side, body, td].forEach(function (x) { ro.observe(x); }); }
     W.addEventListener("resize", measure);
     var L = null, cur = 0;
     var hashL = /#l(\d)/.exec(location.hash); 
     function unlocked(i) { return i === 0 || prog[i - 1] >= 1; }
     if (hashL && +hashL[1] >= 1 && +hashL[1] <= N && unlocked(+hashL[1] - 1)) cur = +hashL[1] - 1;
     else { cur = 0; while (cur < N - 1 && prog[cur] >= 1) cur++; }
+    (function () {
+      var v = null; try { v = W.sessionStorage.getItem("gn:nv:_td"); } catch (e) {}
+      var small = portrait() || (landMQ && landMQ.matches);
+      setTd(small ? false : (v != null ? v === "1" : W.innerWidth >= 1200), false);
+      var lastSmall = small;
+      W.addEventListener("resize", function () { var sm = portrait() || (landMQ && landMQ.matches); if (sm !== lastSmall) { lastSmall = sm; if (sm) setTd(false, false); } });
+    })();
 
     function renderTabs() {
+      renderTD();
       tabs.innerHTML = "";
       var got = prog.reduce(function (a, b) { return a + b; }, 0);
       progFill.style.width = (100 * got / (N * 3)).toFixed(1) + "%";
