@@ -811,6 +811,7 @@
     foot.appendChild(el("div", { class: "nv-row" }, [el("a", { href: "../", text: "返回宙律首页" }), el("a", { href: "../../", text: "← 返回创世计划" })]));
     if (def.safety) foot.appendChild(el("p", { class: "nv-safe", text: def.safety }));
     foot.appendChild(el("p", { text: "科普探究小实验。画面中的数字来自简化模型,单位见各仪表。" }));
+    if (def.credits) foot.appendChild(el("p", { class: "nv-cred" }, ["图像来源:" + def.credits + "。", el("a", { href: ROOT + "LICENSES.md", text: "素材台账" })]));
 
     // 测量各浮层,得到 CSS 变量与画面安全区
     var SZ = { x: 0, y: 0, w: 1, h: 1 };

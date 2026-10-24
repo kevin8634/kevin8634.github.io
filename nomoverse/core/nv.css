@@ -408,3 +408,6 @@ button, input, select { font: inherit; color: inherit; }
 .nv-fps.min { width: auto; padding: 2px 4px 2px 8px; }
 .nv-fps.min .nv-fps-e, .nv-fps.min .nv-fps-a { display: none; }
 @media (max-height: 500px) { .nv-fps { top: auto; right: auto; left: max(8px, env(safe-area-inset-left)); bottom: max(8px, env(safe-area-inset-bottom)); } }
+
+.nv-cred { font-size: 11.5px; opacity: .72; line-height: 1.5; }
+.nv-cred a { margin-left: 4px; }

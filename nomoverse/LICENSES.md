@@ -1,6 +1,44 @@
 # 宙律 Nomoverse · 许可与素材台账
 
-更新:2026-10-24(核对至线上 v0.4-α4,commit 50d4f70)
+更新:2026-10-24(按《1.0 素材与 AI 标注台账规范》重排;核对至 v0.6-α1 + 1.0 台账补丁)
+
+## 总表(1.0 规范)
+
+| 素材 | 用在哪(任务/页面) | 来源与链接 | 许可 | 署名要求 | 是否 AI 生成 | 页面标注位置 |
+|---|---|---|---|---|---|---|
+| Three.js r169 `vendor/three.module.min.js` | hoop/sound/orbit/stars/tide 3D 舞台、首页 3D 星图(按需加载) | npm `three@0.169.0` https://threejs.org | MIT | 保留许可全文(`vendor/three.LICENSE`,文件头 @license) | 否 | 文件头 + 本台账 |
+| `assets/hoop/asphalt_*` | hoop 地球 / 2g 球场地面 | Poly Haven「Asphalt 02」https://polyhaven.com/a/asphalt_02 | CC0 1.0 | 无 | 否 | 任务页脚「图像来源」+ 本台账 |
+| `assets/hoop/moon_*` | hoop 月面 | Poly Haven「Moon Dusted 01」https://polyhaven.com/a/moon_dusted_01 | CC0 1.0 | 无 | 否 | 同上 |
+| `assets/hoop/mars_*` | hoop 火星地面 | Poly Haven「Red Laterite Soil Stones」https://polyhaven.com/a/red_laterite_soil_stones | CC0 1.0 | 无 | 否 | 同上 |
+| `assets/hoop/deck_*` | hoop 木星悬浮平台 | Poly Haven「Hexagonal Concrete Paving」https://polyhaven.com/a/hexagonal_concrete_paving | CC0 1.0 | 无 | 否 | 同上 |
+| `assets/hoop/pad_*` | hoop 荒谬宇宙平台 | Poly Haven「Rubber Tiles」https://polyhaven.com/a/rubber_tiles | CC0 1.0 | 无 | 否 | 同上 |
+| `assets/hoop/sky_day_*` | hoop 地球白天天空 | Poly Haven「Kloofendal 48d Partly Cloudy (Pure Sky)」https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky | CC0 1.0 | 无 | 否 | 同上 |
+| `assets/hoop/sky_dusk_*` | hoop 2g 黄昏天空;tide 海岸天空(复用) | Poly Haven「Qwantani Dusk 2 (Pure Sky)」https://polyhaven.com/a/qwantani_dusk_2_puresky | CC0 1.0 | 无 | 否 | hoop、tide 页脚 + 本台账 |
+| `assets/hoop/sky_space_*` | hoop 太空星空;stars、tide 星空(复用) | NASA/Goddard SVS「Deep Star Maps 2020」https://svs.gsfc.nasa.gov/4851(含 Gaia DR2、Hipparcos-2、Tycho-2 数据) | NASA 素材(教育用途) | 署名 NASA/Goddard SVS;不暗示 NASA 认可 | 否 | hoop、stars、tide 页脚 + 本台账 |
+| `assets/hoop/planet_earth_*` | hoop 月面天空中的地球 | NASA Goddard Blue Marble「Whole world – land and oceans」via Wikimedia Commons | 公有领域(NASA) | 建议署名 NASA | 否 | hoop 页脚 + 本台账 |
+| `assets/hoop/planet_jupiter_*` | hoop 木星 | NASA/JPL/SSI PIA07782 Cassini「Jupiter Cylindrical Map」https://photojournal.jpl.nasa.gov/catalog/PIA07782 | 公有领域(NASA) | 建议署名 NASA/JPL/SSI | 否 | 同上 |
+| `assets/stars/sun_4k.jpg`、`sun_2k.jpg` | stars 太阳 3D 剖面表面 | Solar System Scope「8k sun」via Wikimedia Commons https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_8k_sun.jpg | CC BY 4.0 | 必须署名「Solar System Scope」+ 许可链接 + 注明已缩放 | 否 | stars 页脚「图像来源」+ 本台账 |
+| `assets/tide/earth_4k.jpg`、`earth_2k.jpg` | tide 太空视角地球 | Solar System Scope「8k earth daymap」via Wikimedia Commons https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_8k_earth_daymap.jpg | CC BY 4.0 | 必须署名「Solar System Scope」+ 许可链接 + 注明已缩放 | 否 | tide 页脚「图像来源」+ 本台账 |
+| `assets/tide/clouds_4k.jpg`、`clouds_2k.jpg` | tide 地球云层 | Solar System Scope「8k earth clouds」via Wikimedia Commons https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_8k_earth_clouds.jpg | CC BY 4.0 | 同上(已缩放、转灰度) | 否 | 同上 |
+| `assets/tide/moon_4k.jpg`、`moon_2k.jpg` | tide 太空月球、海岸天空中的月亮 | Solar System Scope「8k moon」via Wikimedia Commons https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_8k_moon.jpg | CC BY 4.0 | 同上 | 否 | 同上 |
+| `assets/tide/sand_d*`、`sand_n*` | tide 海岸沙滩 | Poly Haven「Coast Sand Rocks 02」https://polyhaven.com/a/coast_sand_rocks_02 | CC0 1.0 | 无 | 否 | 同上 |
+| `assets/tide/rock_d*`、`rock_n*` | tide 海岸礁石 | Poly Haven「Rock Face」https://polyhaven.com/a/rock_face | CC0 1.0 | 无 | 否 | 同上 |
+| 程序生成画面:`core/orbit3d.js`、`sound3d.js`、`stars3d.js`(剖面/日冕/日珥)、`tide3d.js`(海水壳/海面/灯塔/标尺/碎片环)、`starmap3d.js`、`intro.js`、`nvscene.js`、向导徽标 | 全部任务页与首页 | 本项目原创代码 | 自制 | 无 | 否 | 本台账 |
+| 3D 模型 | — | 本世界不使用任何外部 3D 模型文件;所有几何体由 Three.js 代码生成 | 自制 | 无 | 否 | 本台账 |
+| 背景音乐与音效 `audio/*.m4a` | 首页与任务页(声音默认关) | `audio/synth.py` 纯程序合成;实时音效由 Web Audio 振荡器生成 | 自制 | 无 | 否 | 本台账 |
+| 语音 / 配音 | — | 本世界无语音、无配音 | — | — | — | — |
+| 字体 | 全站 | 只用系统字体栈,不下载、不内置网络字体 | — | 无 | 否 | 本台账 |
+| 物理常数 | NV.Phys 与各关读数 | CODATA(g、G)、IERS/WGS-84(GM⊕)、JPL DE440(GM☾)、IAU 2012(AU)、IAU 2015(L☉、R☉) | 公开数据 | 文字出处 | 否 | 知识卡出处 + 本台账 |
+| 数据与资料出处 | 知识卡 | NASA 行星/太阳/月球 Fact Sheet、ISS 轨道数据;NOAA《Tides and Water Levels》;激光测月 Williams & Boggs 2016(3.83 cm/年);Wells 1963《Nature》珊瑚生长纹;OpenStax《University Physics Vol. 1》《Astronomy 2e》 | 仅文字引用,未复制内容 | 文字出处 | 否 | 各关知识卡「出处」行 |
+| AI 讲解文字(可选第 3 层,默认关闭) | 任务页「AI 讲解」框 | 用户自带钥匙调用其自选的 OpenAI 兼容模型(本站不内置、不调用任何默认 AI 服务) | — | — | 是(用户开启时实时生成文字) | AI 讲解框内「AI 生成内容可能有误,以知识卡与实验为准」 |
+
+- 图片素材均本地打包,零外部请求;按画质档位加载 4K/2K/1K 版本(由原图缩放、重新压缩,除注明外未做其他改动)。
+- 本世界页面上**没有 AI 生成的画面、人物或语音**;方案阶段的效果图只存放在开发文档中,不上线。
+- NASA 图像按 NASA 媒体使用指南作为教育科普用途使用,不暗示 NASA 认可本站。
+
+---
+
+# 附:分版本详细记录
 
 ## 第三方代码
 | 组件 | 版本 | 许可 | 位置 | 说明 |
