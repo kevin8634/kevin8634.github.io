@@ -7,7 +7,7 @@
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#07061a">
 <title>宙律 Nomoverse · 亲手改写宇宙的规律 · 创世计划 Genesis</title>
-<meta name="description" content="宙律 Nomoverse · 创世计划 Genesis 02 · 物理:把引力调大一点、把声速调慢一点,在改写规律中理解规律。四个探究任务、十七关、宇宙尺度知识星图。">
+<meta name="description" content="宙律 Nomoverse · 创世计划 Genesis 02 · 物理:把引力调大一点、把声速调慢一点,在改写规律中理解规律。五个探究任务、二十一关、宇宙尺度知识星图。">
 <script>
 /* v0.3-α3 · HANDOFF §5.12 门户→世界接力:最早执行。读临时键 gn:portal:arrive(<5 秒有效,读后即删,不计进度),
    先铺「世界色 + rgba(4,6,15,.82)」同色遮罩,开场就绪后约 600 ms 淡出(减少动态 200 ms);无键照旧。 */
@@ -265,7 +265,7 @@
     body.hud3d .sm3 { height: calc(100svh - 52px); }
     .hm-drawer { left: 6px; right: 6px; top: auto; bottom: 96px; width: auto; padding: 6px; }
     .hm-drawer .hd-h { display: none; }
-    .hd-list { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+    .hd-list { grid-template-columns: repeat(5, 1fr); gap: 3px; }
     .hd-card { flex-direction: column; gap: 3px; padding: 6px 4px; text-align: center; }
     .hd-card canvas { width: 34px; height: 34px; }
     .hd-txt b { display: none; }
@@ -301,7 +301,8 @@
     { id: "hoop", n: 4, guide: "quark", diff: 1, href: "hoop/", q: "如果引力变成两倍,篮球还能投进吗?", lv: ["地球投篮", "引力 ×2", "月球与木星", "荒谬宇宙"] },
     { id: "orbit", n: 5, guide: "abyss", diff: 2, href: "orbit/", q: "为什么宇航员在空间站会飘起来?", lv: ["扔得更远", "牛顿大炮", "电梯里的苹果", "改宇宙", "追上空间站"] },
     { id: "sound", n: 4, guide: "ripple", diff: 2, href: "sound/", q: "为什么救护车经过时声音会变?", lv: ["声音是振动", "救护车驶过", "改声速", "和声与拍频"] },
-    { id: "stars", n: 4, guide: "quark", diff: 2, href: "stars/", q: "恒星为什么会发光?", lv: ["烧煤的太阳", "少了一点点质量", "压不扁的火球", "更重的星,更短的命"] }
+    { id: "stars", n: 4, guide: "quark", diff: 2, href: "stars/", q: "恒星为什么会发光?", lv: ["烧煤的太阳", "少了一点点质量", "压不扁的火球", "更重的星,更短的命"] },
+    { id: "tide", n: 4, guide: "abyss", diff: 2, href: "tide/", q: "月亮怎样拉动整片大海?", lv: ["背面也鼓起来", "太阳更重,为啥月亮更管用", "被拉长的一天", "靠太近会被撕碎"] }
   ];
   var CONS = ["运动", "力与能量", "引力与天体", "波与声", "光", "热与熵", "电与磁", "现代物理"];
   var CCOL = ["#5eead4", "#fbbf24", "#a78bfa", "#86efac", "#f0abfc", "#fb923c", "#60a5fa", "#f87171"];   // 3D 星图星座色
@@ -328,8 +329,8 @@
     [2, "表面重力", 5.2, "月球表面约 0.17 g、火星约 0.38 g、木星云顶约 2.5 g:同一规律,不同参数。", "hoop:2"],
     [2, "环绕速度", 6.8, "近地轨道约 7.9 km/s:快到「一直在下落,却总也落不到地面」。", "orbit:1"],
     [2, "逃逸速度", 7.8, "从地面出发约 11.2 km/s(不计空气)才能彻底摆脱地球引力。"],
-    [2, "万有引力", 3.6, "任何两个有质量的物体都相互吸引,距离变为 2 倍,引力变为 1/4。"],
-    [2, "潮汐", 8.6, "月球对地球近侧和远侧的引力不一样大,拉出两个潮汐隆起。"],
+    [2, "万有引力", 3.6, "任何两个有质量的物体都相互吸引,距离变为 2 倍,引力变为 1/4。", "tide:1"],
+    [2, "潮汐", 8.6, "月球对地球近侧和远侧的引力不一样大,拉出两个潮汐隆起。", "tide:0"],
     [2, "开普勒第三定律", 11.2, "轨道越高,绕一圈的周期越长:周期的平方与轨道半长轴的立方成正比。", "orbit:3"],
     [2, "恒星", 9.8, "太阳靠自身引力把自己压紧,核心的核聚变让它发光发热。", "stars:2"],
     [2, "银河系", 20.9, "直径约 10 万光年(约 10²¹ m),数千亿颗恒星绕着中心旋转。"],
@@ -440,7 +441,7 @@
   /* ② 任务卡 */
   var cardsBox = el("div", { class: "cards" });
   main.appendChild(el("section", { class: "hm-sec", "aria-labelledby": "h-tasks" }, [
-    el("h2", { class: "hm-h", id: "h-tasks", text: "四个探究任务" }),
+    el("h2", { class: "hm-h", id: "h-tasks", text: "五个探究任务" }),
     el("p", { class: "hm-sub", text: "每关都是:观察 → 预测 → 运行 → 对比 → 改规则。拿到 1 颗星就能解锁下一关。" }),
     cardsBox
   ]));
@@ -615,8 +616,8 @@
   function mountHud(stage) {
     if (!stage || stage.querySelector(".hm-drawer")) return;
     var tog = el("button", { class: "hd-tog", type: "button", "aria-expanded": "true", "aria-label": "收起任务抽屉", text: "‹" });
-    hudDrawer = el("nav", { class: "hm-drawer", "aria-label": "四个探究任务" }, [
-      el("div", { class: "hd-h" }, [el("span", { text: "探究任务 · 17 关" }), tog]),
+    hudDrawer = el("nav", { class: "hm-drawer", "aria-label": "五个探究任务" }, [
+      el("div", { class: "hd-h" }, [el("span", { text: "探究任务 · 21 关" }), tog]),
       el("div", { class: "hd-list" })
     ]);
     tog.addEventListener("click", function () { var c = hudDrawer.classList.toggle("closed"); tog.setAttribute("aria-expanded", c ? "false" : "true"); tog.setAttribute("aria-label", c ? "展开任务抽屉" : "收起任务抽屉"); tog.textContent = c ? "›" : "‹"; });

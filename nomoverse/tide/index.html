@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#07061a">
+<title>月亮怎样拉动整片大海? · 宙律 Nomoverse</title>
+<meta name="description" content="宙律 Nomoverse · 物理探究:一边看太空里的地球和月亮,一边看海边的潮水涨落。为什么背面也涨潮?太阳那么重为什么不如月亮管用?潮汐怎样拉长了一天?月亮靠太近会怎样?">
+<link rel="stylesheet" href="../core/nv.css">
+<style>
+  .tv-tog { position: absolute; z-index: 6; display: none; pointer-events: auto; gap: 0; border-radius: 999px; overflow: hidden; border: 1px solid rgba(167,139,250,.55); background: rgba(14,11,40,.78); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .tv-tog button { appearance: none; border: 0; background: transparent; color: #c4b5fd; font: 600 13px/1 system-ui, sans-serif; padding: 8px 14px; min-height: 34px; cursor: pointer; }
+  .tv-tog button[aria-pressed="true"] { background: rgba(167,139,250,.9); color: #0e0b28; }
+  .tv-tog button:focus-visible { outline: 2px solid #67e8f9; outline-offset: -2px; }
+</style>
+</head>
+<body>
+<noscript><p style="padding:16px">这个小实验需要开启 JavaScript。<a href="../">返回宙律首页</a></p></noscript>
+<script src="../core/nv.js"></script>
+<script>
+"use strict";
+(function () {
+  var P = NV.Phys, Dr = NV.Draw, TAU = Math.PI * 2;
+  var LUNAR_DAY = 24.84;                                   // 小时:同一地点两次「月上中天」的间隔
+  var AMP_M = P.tideAmp(P.GM_MOON_SI, P.D_MOON);           // 月亮平衡潮振幅 ≈ 0.357 m
+  var AMP_S = P.tideAmp(P.GM_SUN_SI(), P.AU);              // 太阳 ≈ 0.164 m
+  var D_ER = P.D_MOON / P.R_EARTH_M;                       // 月地距离 ≈ 60.3 个地球半径
+
+  /* ---------- 通用 ---------- */
+  function m2(h) { return (h >= 0 ? "+" : "−") + Math.abs(h).toFixed(2) + " m"; }
+  function clock(hh) { hh = ((hh % 24) + 24) % 24; var h = Math.floor(hh), m = Math.floor((hh - h) * 60); return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m; }
+  function era(y) { if (Math.abs(y) < 1e6) return "今天"; var e = Math.abs(y) / 1e8; return (e >= 10 ? Math.round(e) : +e.toFixed(1)) + " 亿年" + (y < 0 ? "前" : "后"); }
+  function km(m) { return (m / 1e3 >= 1e4 ? (m / 1e7).toFixed(1) + " 万 km" : Math.round(m / 1e3).toLocaleString("zh-CN") + " km"); }
+  function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+  function chip(c, x, y, text, col) {
+    c.save(); c.font = "12px system-ui, sans-serif"; var w = c.measureText(text).width + 14;
+    c.fillStyle = "rgba(14,11,40,.78)"; c.strokeStyle = "rgba(167,139,250,.55)"; rr(c, x, y, w, 22, 11); c.fill(); c.stroke();
+    c.fillStyle = col || "#ede9fe"; c.textBaseline = "middle"; c.fillText(text, x + 7, y + 11); c.restore(); return w;
+  }
+
+  /* ---------- 分屏 / 切换:电脑大屏左右分屏,手机用按钮在「太空」与「海岸」间切换 ---------- */
+  var VIEW = "space", tog = null;
+  function ensureTog() {
+    if (tog) return tog;
+    var zone = document.querySelector(".nv-zone"); if (!zone) return null;
+    tog = NV.el("div", { class: "tv-tog", role: "group", "aria-label": "切换视角" });
+    [["space", "太空"], ["coast", "海岸"]].forEach(function (v) {
+      var b = NV.el("button", { type: "button", "aria-pressed": v[0] === VIEW ? "true" : "false", text: v[1], onclick: function () {
+        VIEW = v[0]; [].forEach.call(tog.children, function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      } });
+      tog.appendChild(b);
+    });
+    zone.appendChild(tog); return tog;
+  }
+  function layout(L, o) {
+    o = o || {};
+    var split = L.w >= 700 && L.w > L.h * 1.1, t = ensureTog(), S = null, C = null;
+    if (t) { t.style.display = split ? "none" : "inline-flex"; t.style.right = "8px"; t.style.left = "auto"; t.style.top = Math.max(60, L.h - 46) + "px"; }
+    var bot = split ? 34 : 80;
+    if (split) {
+      var sw = Math.round(L.w * 0.55), gap = 14;
+      S = { x: 0, y: 0, w: sw, h: L.h };
+      C = { x: sw + gap, y: Math.round(L.h * 0.05), w: L.w - sw - gap, h: Math.round(L.h * 0.74) };
+      S.R = Math.min(sw * (o.rk || 0.19), L.h * 0.24); S.cx = sw * (o.fx || 0.3); S.cy = L.h * 0.5;
+    } else if (VIEW === "space") {
+      S = { x: 0, y: 0, w: L.w, h: L.h };
+      S.R = Math.min(L.w * (o.rk || 0.19) * 0.95, L.h * 0.2); S.cx = L.w * (o.fx || 0.3) * 0.95; S.cy = L.h * 0.46;
+    } else {
+      C = { x: 0, y: 40, w: L.w, h: Math.round(L.h * 0.72) };
+    }
+    if (S) S.bot = bot;
+    return { split: split, S: S, C: C };
+  }
+  /* 太空视角的投影(3D 用相机投影;2D 回退用同样的前倾角近似) */
+  function PA(L, S, a, r) {
+    if (L.d3 && L.d3.projA) return L.d3.projA(a, r);
+    return [S.cx + Math.cos(a) * r * S.R, S.cy - Math.sin(a) * r * S.R * Math.sin(TILT)];
+  }
+  function PX(L, S, x, y, z) {
+    if (L.d3 && L.d3.proj) return L.d3.proj(x, y, z);
+    return [S.cx + x * S.R, S.cy - y * S.R * Math.cos(TILT) + z * S.R * Math.sin(TILT)];
+  }
+  var TILT = 0.2;
+
+  /* ---------- 2D 回退画法 ---------- */
+  function space2d(L, S, s) {
+    var c = L.ctx; c.save(); c.beginPath(); c.rect(S.x, S.y, S.w, S.h); c.clip();
+    var R = S.R, cx = S.cx, cy = S.cy;
+    var sd = s.sunAng == null ? Math.PI : s.sunAng, lx = Math.cos(sd), ly = Math.sin(sd) * 0.2;
+    // 海水壳
+    c.beginPath();
+    for (var i = 0; i <= 96; i++) {
+      var a = i / 96 * TAU, r = 1.035 + s.Am * P.P2(Math.cos(a - (s.moonAng + (s.lag || 0)))) + (s.As || 0) * P.P2(Math.cos(a - sd));
+      var x = cx + Math.cos(a) * r * R, y = cy + Math.sin(a) * r * R * (0.6 + 0.4 * Math.cos(TILT)); i ? c.lineTo(x, y) : c.moveTo(x, y);
+    }
+    c.closePath(); c.fillStyle = "rgba(56,189,248,.28)"; c.fill(); c.strokeStyle = "rgba(125,211,252,.85)"; c.lineWidth = 1.5; c.stroke();
+    var g = c.createRadialGradient(cx + lx * R * 0.5, cy - ly * R, R * 0.1, cx, cy, R);
+    g.addColorStop(0, "#5fa8e8"); g.addColorStop(0.6, "#1d4f8f"); g.addColorStop(1, "#071a33");
+    c.fillStyle = g; c.beginPath(); c.arc(cx, cy, R, 0, TAU); c.fill();
+    c.fillStyle = "rgba(74,160,90,.55)"; for (var k = 0; k < 5; k++) { var a2 = (s.spin || 0) + k * 1.3; var px = Math.cos(a2); if (Math.sin(a2) < 0) { c.beginPath(); c.ellipse(cx + px * R * 0.7, cy + (k - 2) * R * 0.25, R * 0.16 * (1 - Math.abs(px) * 0.6), R * 0.12, 0, 0, TAU); c.fill(); } }
+    var tw = (s.spin || 0) + (s.town || 0), tx = Math.cos(tw), tz = -Math.sin(tw);
+    if (tz > -0.2) { c.fillStyle = "#ffd36b"; c.beginPath(); c.arc(cx + tx * R, cy + tz * R * 0.2, 4, 0, TAU); c.fill(); }
+    // 月亮 / 碎片
+    var mp = [cx + Math.cos(s.moonAng) * s.moonD * R, cy - Math.sin(s.moonAng) * s.moonD * R * Math.sin(TILT)], mr = R * 0.2727 * (s.moonS || 1.6);
+    if ((s.brk || 0) < 0.08) {
+      var gm = c.createRadialGradient(mp[0] + lx * mr * 0.4, mp[1], mr * 0.1, mp[0], mp[1], mr);
+      gm.addColorStop(0, "#e5e2da"); gm.addColorStop(1, "#5d5a55"); c.fillStyle = gm; c.beginPath(); c.arc(mp[0], mp[1], mr, 0, TAU); c.fill();
+    }
+    if ((s.brk || 0) > 0.02) {
+      var sp = Math.pow(s.brk, 1.4), seed = 3; c.fillStyle = "rgba(220,214,200,.85)";
+      for (var j = 0; j < 220; j++) { seed = (seed * 16807) % 2147483647; var u = seed / 2147483647; seed = (seed * 16807) % 2147483647; var v = seed / 2147483647;
+        var ang = s.moonAng + (u - 0.5) * (0.1 + sp * TAU), rad = s.moonD * (1 + (v - 0.5) * (0.05 + 0.15 * sp));
+        c.fillRect(cx + Math.cos(ang) * rad * R - 1, cy - Math.sin(ang) * rad * R * Math.sin(TILT) - 1, 2, 2); }
+    }
+    c.restore();
+  }
+  function coast2d(L, C, s) {
+    var c = L.ctx; c.save(); rr(c, C.x, C.y, C.w, C.h, 14); c.clip();
+    var hz = C.y + C.h * 0.46;
+    var gs = c.createLinearGradient(0, C.y, 0, hz); gs.addColorStop(0, "#1a2350"); gs.addColorStop(0.7, "#53507e"); gs.addColorStop(1, "#d98e6c");
+    c.fillStyle = gs; c.fillRect(C.x, C.y, C.w, hz - C.y);
+    var alt = s.moonAlt == null ? 25 : s.moonAlt, az = s.moonAz || 0;
+    if (alt > -3) {
+      var mx = C.x + C.w * (0.5 + az / 90), my = hz - (alt / 45) * (hz - C.y) * 0.9, mr = Math.max(8, C.w * 0.035), ph = s.phase == null ? Math.PI : s.phase;
+      c.fillStyle = "#1c1f33"; c.beginPath(); c.arc(mx, my, mr, 0, TAU); c.fill();
+      c.fillStyle = "#f1eedf"; c.beginPath(); var k = Math.cos(ph);       // 月相:亮边在右(北半球上弦)
+      c.arc(mx, my, mr, -Math.PI / 2, Math.PI / 2, ph > Math.PI); c.ellipse(mx, my, Math.abs(k) * mr, mr, 0, Math.PI / 2, -Math.PI / 2, (k > 0) !== (ph > Math.PI)); c.fill();
+    }
+    var lev = s.level || 0, wl = hz + C.h * 0.16 - lev * C.h * 0.1;
+    var gw = c.createLinearGradient(0, hz, 0, C.y + C.h); gw.addColorStop(0, "#3b4a76"); gw.addColorStop(1, "#0b2433");
+    c.fillStyle = gw; c.fillRect(C.x, hz, C.w, C.y + C.h - hz);
+    c.fillStyle = "#b9a17d"; c.beginPath(); c.moveTo(C.x, C.y + C.h); c.lineTo(C.x, wl + 18); c.quadraticCurveTo(C.x + C.w * 0.5, wl - 6, C.x + C.w, wl + 18); c.lineTo(C.x + C.w, C.y + C.h); c.fill();
+    c.fillStyle = "rgba(11,36,51,.88)"; c.fillRect(C.x, hz, C.w, Math.max(0, wl - hz)); c.strokeStyle = "rgba(235,245,255,.8)"; c.lineWidth = 2; c.beginPath(); c.moveTo(C.x, wl); c.lineTo(C.x + C.w, wl); c.stroke();
+    var gx = C.x + C.w * 0.62; c.fillStyle = "#efece2"; c.fillRect(gx, hz - C.h * 0.12, 8, C.h * 0.42);
+    c.fillStyle = "#c0392b"; for (var i = 0; i < 8; i++) c.fillRect(gx, hz - C.h * 0.12 + i * C.h * 0.052, 8, 3);
+    c.restore();
+  }
+  /* 每帧:写 3D 参数,2D 回退时自己画;再画两个视角的框与标题 */
+  function scene(L, Lay, s, opt) {
+    opt = opt || {};
+    s.space = Lay.S ? { x: Lay.S.x, y: Lay.S.y, w: Lay.S.w, h: Lay.S.h, cx: Lay.S.cx, cy: Lay.S.cy, R: Lay.S.R } : null;
+    s.coast = Lay.C ? { x: Lay.C.x, y: Lay.C.y, w: Lay.C.w, h: Lay.C.h } : null;
+    s.tilt = TILT = opt.tilt == null ? 0.2 : opt.tilt;
+    L.st.tide3 = s;
+    var c = L.ctx;
+    if (!L.d3) { if (Lay.S) space2d(L, Lay.S, s); if (Lay.C) coast2d(L, Lay.C, s); }
+    if (Lay.C) {
+      var C = Lay.C; c.save(); c.strokeStyle = "rgba(167,139,250,.6)"; c.lineWidth = 1.5; rr(c, C.x + 0.5, C.y + 0.5, C.w - 1, C.h - 1, 14); c.stroke(); c.restore();
+      chip(c, C.x + 10, C.y + 10, opt.coastTitle || "海边小镇 · 实景");
+    }
+    if (Lay.S) { c.save(); c.font = "12px system-ui, sans-serif"; var ttl = opt.spaceTitle || "太空视角 · 地月距离已压缩"; var tw0 = c.measureText(ttl).width + 14; c.restore(); chip(c, Lay.S.x + Lay.S.w - tw0 - 8, Lay.split ? Lay.S.y + 8 : Lay.S.y + 48, ttl); }
+    if (Lay.split && Lay.S && Lay.C) {   // 中间的「同步」引线:小镇 ↔ 海岸
+      var tp = PX(L, Lay.S, Math.cos((s.spin || 0) + (s.town || 0)) * 1.05, 0, -Math.sin((s.spin || 0) + (s.town || 0)) * 1.05);
+      c.save(); c.setLineDash([3, 5]); c.strokeStyle = "rgba(255,211,107,.55)"; c.beginPath(); c.moveTo(tp[0], tp[1]); c.lineTo(Lay.C.x - 2, Lay.C.y + 22); c.stroke(); c.restore();
+    }
+  }
+  /* 海岸底部的潮高曲线 */
+  function tideChart(L, C, fn, tNow, span, label) {
+    var c = L.ctx, x0 = C.x + 12, w = C.w - 24, h = Math.min(64, C.h * 0.2), y0 = C.y + C.h - h - 10;
+    c.save(); c.fillStyle = "rgba(14,11,40,.72)"; rr(c, x0 - 6, y0 - 18, w + 12, h + 26, 10); c.fill();
+    c.font = "11px system-ui, sans-serif"; c.fillStyle = "#c4b5fd"; c.fillText(label || "潮高曲线", x0, y0 - 5);
+    var mid = y0 + h * 0.5, k = h * 0.42;
+    c.strokeStyle = "rgba(196,181,253,.3)"; c.beginPath(); c.moveTo(x0, mid); c.lineTo(x0 + w, mid); c.stroke();
+    c.strokeStyle = "#67e8f9"; c.lineWidth = 2; c.beginPath();
+    for (var i = 0; i <= 120; i++) { var tt = i / 120 * span, y = mid - fn(tt) * k; i ? c.lineTo(x0 + i / 120 * w, y) : c.moveTo(x0, y); } c.stroke();
+    if (tNow != null) { var xn = x0 + Math.max(0, Math.min(1, tNow / span)) * w; c.fillStyle = "#ffd36b"; c.fillRect(xn - 1, y0, 2, h); c.beginPath(); c.arc(xn, mid - fn(tNow) * k, 4, 0, TAU); c.fill(); }
+    c.restore();
+  }
+  function town(L) { return 0; }
+  var NOTE = "简化模型:平衡潮理论(开阔大洋、月亮在赤道面上);画面里的鼓包、地月距离和海岸潮差都按比例放大或压缩,数字以读数为准。";
+
+  /* ================= 第 1 关 背面也鼓起来 ================= */
+  var A0 = -1.1;                                        // 运行开始时小镇离「正对月亮」差的角度
+  var T1 = {
+    name: "背面也鼓起来", d3: true,
+    goal: "让地球自转一整个「月亮日」(24 小时 50 分),数一数海边小镇一天涨几次潮,并找出背对月亮那一侧为什么也会涨潮。",
+    note: NOTE,
+    ask: "月亮在地球这一边,背对月亮的那一侧海水为什么也会鼓起来?",
+    predict: { type: "choice", q: "海边小镇一天之内会涨几次潮?", options: ["1 次:正对月亮时", "2 次", "4 次"] },
+    controls: [{ id: "diff", type: "seg", label: "箭头显示", options: ["月亮的引力", "减去地心那份 = 引潮力"], value: 1 }],
+    runLabel: "转一天",
+    crit: ["用「引潮力」视角转完一整天", "预测正确", "两种箭头都看过"],
+    hints: ["月亮对地球近侧、地心、远侧的引力,哪个最大?哪个最小?", "整个地球(地心)都在被月亮拉着走。站在地心看,近侧的水和远侧的水各自往哪边「跑」?", "近侧被拉得比地心多,远侧被拉得比地心少——两边都离地心更远了。小镇一天会经过几个鼓包?"],
+    summary: "月亮拉近侧比拉地心多、拉地心比拉远侧多;减去地心那份,两边的海水都被「拉开」,所以有两个鼓包,海边一天涨两次潮。",
+    lights: "潮汐",
+    card: { t: "引潮力:引力的「差」", b: "海水感受到的不是月亮引力本身,而是它与地心所受引力的差。近侧多出一点,指向月亮;远侧少了一点,相当于背离月亮。所以地球两侧各有一个鼓包,地球自转一圈(相对月亮约 24 小时 50 分),小镇会经过两次高潮、两次低潮。", f: "a潮 ≈ 2GM·r / d³(近侧、远侧大小近似相等,方向都朝外)", src: "NOAA Tides and Currents《Tides and Water Levels》;OpenStax《University Physics Volume 1》13.6 潮汐力" },
+    init: function (L) { L.st = { th: 0, tried: {}, highs: 0, prev: null, rise: false }; },
+    run: function (L) { var st = L.st; st.th = 0; st.done = false; st.highs = 0; st.prev = null; st.rise = false; st.mode = L.v.diff; st.tried[L.v.diff] = true; L.sfx("whoosh"); },
+    frame: function (L, dt) {
+      var st = L.st, c = L.ctx, run = L.phase === "running";
+      if (run) st.th = Math.min(LUNAR_DAY, st.th + dt * (L.RM ? 16 : 3.6));
+      var a = A0 + TAU * st.th / LUNAR_DAY, h = AMP_M * P.P2(Math.cos(a));
+      if (run) { if (st.prev != null) { var up = h > st.prev; if (st.rise && !up) st.highs++; st.rise = up; } st.prev = h; }
+      var Lay = layout(L, { fx: 0.3 });
+      scene(L, Lay, { spin: a, town: 0, moonAng: 0, moonD: 3.0, Am: 0.17, As: 0, sunAng: Math.PI, level: P.P2(Math.cos(a)) * 1.15, moonAlt: 3 + 15 * Math.cos(a), moonAz: 15 * Math.sin(a), phase: Math.PI });
+      if (Lay.S) {   // 箭头
+        var S = Lay.S, mode = run ? st.mode : L.v.diff;
+        if (mode === 0) {
+          [[1, 1.45], [0, 1], [-1, 0.72]].forEach(function (q) { var p = PX(L, S, q[0], 0, 0), len = S.R * 0.55 * q[1]; Dr.arrow(c, p[0], p[1], p[0] + len, p[1], "rgba(250,204,21,.95)", 2.6); });
+          chip(c, S.x + 8, S.y + S.h - S.bot, "近侧被拉得最多,地心其次,远侧最少", "#fde68a");
+        } else {
+          for (var k = 0; k < 12; k++) {
+            var ang = k / 12 * TAU, f = 1.0 * P.P2(Math.cos(ang)) * 2 / 3;   // 径向分量 ∝ 3cos²−1
+            var fr = Math.cos(ang) * Math.cos(ang) * 2 - Math.sin(ang) * Math.sin(ang);   // 2cos² − sin²
+            var ft = -3 * Math.cos(ang) * Math.sin(ang);
+            var x0 = Math.cos(ang) * 1.12, z0 = -Math.sin(ang) * 1.12;
+            var vx = (fr * Math.cos(ang) - ft * Math.sin(ang)) * 0.32, vz = -(fr * Math.sin(ang) + ft * Math.cos(ang)) * 0.32;
+            var p0 = PX(L, S, x0, 0, z0), p1 = PX(L, S, x0 + vx, 0, z0 + vz);
+            Dr.arrow(c, p0[0], p0[1], p1[0], p1[1], "rgba(248,113,113,.95)", 2.2);
+          }
+          chip(c, S.x + 8, S.y + S.h - S.bot, "减去地心那份:两侧都被拉开", "#fecaca");
+        }
+      }
+      if (Lay.C) tideChart(L, Lay.C, function (tt) { return P.P2(Math.cos(A0 + TAU * tt / LUNAR_DAY)) / 1; }, st.th, LUNAR_DAY, "小镇潮高 · 一个月亮日(24 小时 50 分)");
+      if (run && st.th >= LUNAR_DAY && !st.done) { st.done = true; T1.report(L); }
+      L.hud.innerHTML = "小镇时刻 <b>" + clock(6 + st.th) + "</b> · 潮位 <b>" + m2(h) + "</b><br>今天涨潮 <b>" + st.highs + "</b> 次";
+    },
+    report: function (L) {
+      var st = L.st, ok = st.mode === 1 && st.highs === 2;
+      L.finishRun({ pass: ok, predText: "预测「" + T1.predict.options[L.firstChoice] + "」", resultText: "一个月亮日涨潮 " + st.highs + " 次",
+        html: "一个月亮日里,小镇涨潮 <b>" + st.highs + " 次</b>:正对月亮一次,背对月亮又一次。" + (st.mode === 1 ? "" : "<br>换成「引潮力」箭头再转一天,看看远侧的箭头指向哪边?"),
+        say: st.mode === 1 ? "" : "黄色箭头都指向月亮,可远侧的水也鼓起来了。减去地心那份,远侧的箭头会指向哪里?" });
+    },
+    predictGood: function (L) { return L.firstChoice === 1; },
+    star3: function (L) { return !!(L.st.tried[0] && L.st.tried[1]); }
+  };
+
+  /* ================= 第 2 关 太阳更重,为啥月亮更管用 ================= */
+  var PH = [["新月", 0], ["上弦月", Math.PI / 2], ["满月", Math.PI], ["下弦月", Math.PI * 1.5]];
+  var GRAV_RATIO = (P.GM_SUN_SI() / (P.AU * P.AU)) / (P.GM_MOON_SI / (P.D_MOON * P.D_MOON));
+  var TIDE_RATIO = P.tidalAccel(P.GM_SUN_SI(), P.AU, P.R_EARTH_M) / P.tidalAccel(P.GM_MOON_SI, P.D_MOON, P.R_EARTH_M);
+  function rangeOf(E, sunOn) { var hi = -9, lo = 9; for (var i = 0; i < 180; i++) { var h = P.tideHeight(i / 180 * TAU, 0, E, sunOn); if (h > hi) hi = h; if (h < lo) lo = h; } return hi - lo; }
+  var T2 = {
+    name: "太阳更重,为啥月亮更管用", d3: true,
+    goal: "太阳对地球的引力是月亮的约 179 倍。换月相、开关太阳,完成两张任务卡:① 找到潮差最大的「大潮」;② 找到潮差最小的「小潮」。",
+    note: NOTE + "太阳 GM = 1.3271×10²⁰ m³/s²、1 AU;月亮 GM = 4.9028×10¹² m³/s²、38.44 万 km。",
+    ask: "太阳的引力比月亮大得多,为什么潮水主要跟着月亮走?",
+    predict: { type: "choice", q: "太阳对地球的引力约是月亮的 179 倍,那太阳掀起的潮汐是月亮的……", options: ["约 179 倍", "约一半", "一样大"] },
+    controls: [
+      { id: "ph", type: "seg", label: "月相", options: PH.map(function (p) { return p[0]; }), value: 1 },
+      { id: "sun", type: "toggle", label: "太阳也拉海水", value: true }
+    ],
+    runLabel: "转一天",
+    crit: ["两张任务卡都完成", "预测正确", "关掉太阳看过月亮单独的潮汐"],
+    hints: ["引潮力是「近侧与远侧引力之差」。离得越远,两侧的差越小还是越大?", "引力 ∝ 1/d²,引潮力 ∝ 1/d³。太阳虽重,却远了约 390 倍。", "太阳、月亮、地球排成一条线时,两个鼓包会叠在一起还是互相抵消?"],
+    summary: "引潮力按距离的三次方减小:太阳重 2,700 万倍、远 390 倍,掀起的潮汐只有月亮的 46%。新月、满月日月同向用力是大潮,上下弦互相抵消是小潮。",
+    lights: "万有引力",
+    card: { t: "1/d³:大潮与小潮", b: "引力随距离平方减小,引潮力随距离立方减小。所以太阳虽然把地球拉得比月亮用力 179 倍,潮汐却只有月亮的约 0.46 倍。新月和满月时太阳、月亮、地球排成一线,两个鼓包叠加成大潮;上弦、下弦时两者成直角,互相抵消成小潮。", f: "a潮 ∝ M/d³;太阳 : 月亮 ≈ 0.46 : 1;平衡潮差 月亮 0.54 m、太阳 0.25 m", src: "NOAA《Tides and Water Levels》;NASA Moon / Sun Fact Sheet" },
+    init: function (L) { L.st = { th: 0, a: false, b: false, sunOff: false, rng: null }; },
+    run: function (L) {
+      var st = L.st; st.th = 0; st.done = false; st.E = PH[L.v.ph][1]; st.sunOn = !!L.v.sun; st.rng = rangeOf(st.E, st.sunOn);
+      if (!st.sunOn) st.sunOff = true;
+      if (st.sunOn && st.rng > 0.75) st.a = true; if (st.sunOn && st.rng < 0.32) st.b = true;
+      L.sfx("whoosh");
+    },
+    frame: function (L, dt) {
+      var st = L.st, c = L.ctx, run = L.phase === "running";
+      if (run) st.th = Math.min(LUNAR_DAY, st.th + dt * (L.RM ? 16 : 4.2));
+      var E = run ? st.E : PH[L.v.ph][1], sunOn = run ? st.sunOn : !!L.v.sun;
+      var a = A0 + TAU * st.th / LUNAR_DAY, h = P.tideHeight(a, 0, E, sunOn), maxR = AMP_M + AMP_S;
+      var Lay = layout(L, { fx: 0.42, rk: 0.15 }), mA = Math.PI - E;      // 太阳固定在左边远处,月亮按月相绕到不同位置
+      scene(L, Lay, { spin: mA + a, town: 0, moonAng: mA, moonD: 2.6, Am: 0.22, As: sunOn ? 0.22 * TIDE_RATIO : 0, sunAng: Math.PI, level: h / AMP_M * 1.15, moonAlt: 3 + 15 * Math.cos(a), moonAz: 15 * Math.sin(a), phase: E === 0 ? 0.12 : E }, { tilt: 0.85, spaceTitle: "太空视角 · 从北极上方斜看" });
+      if (Lay.S) {
+        var S = Lay.S;
+        chip(c, S.x + 6, S.cy - 11, sunOn ? "☀ 太阳(很远)" : "☀ 太阳(不拉海水)", "#fde68a");
+        // 引力 vs 引潮力 对比条
+        var bx = S.x + 10, by = S.y + S.h - 78, bw = Math.min(220, S.w - 30);
+        c.save(); c.fillStyle = "rgba(14,11,40,.75)"; rr(c, bx - 4, by - 6, bw + 8, 68, 8); c.fill(); c.font = "11px system-ui, sans-serif";
+        c.fillStyle = "#ede9fe"; c.fillText("引力  太阳 : 月亮 = " + GRAV_RATIO.toFixed(0) + " : 1", bx + 2, by + 8);
+        c.fillStyle = "#fbbf24"; c.fillRect(bx + 2, by + 13, bw - 4, 6); c.fillStyle = "#cbd5e1"; c.fillRect(bx + 2, by + 21, Math.max(2, (bw - 4) / GRAV_RATIO), 6);
+        c.fillStyle = "#ede9fe"; c.fillText("引潮力  太阳 : 月亮 = " + TIDE_RATIO.toFixed(2) + " : 1", bx + 2, by + 42);
+        c.fillStyle = "#fbbf24"; c.fillRect(bx + 2, by + 47, (bw - 4) * TIDE_RATIO, 6); c.fillStyle = "#cbd5e1"; c.fillRect(bx + 2, by + 55, bw - 4, 4);
+        c.restore();
+      }
+      if (Lay.C) tideChart(L, Lay.C, function (tt) { return P.tideHeight(A0 + TAU * tt / LUNAR_DAY, 0, E, sunOn) / maxR; }, st.th, LUNAR_DAY, "小镇潮高 · " + PH[L.v.ph][0] + (sunOn ? " · 日月合力" : " · 只有月亮"));
+      if (run && st.th >= LUNAR_DAY && !st.done) { st.done = true; T2.report(L); }
+      L.hud.innerHTML = "潮位 <b>" + m2(h) + "</b> · 潮差 <b>" + rangeOf(E, sunOn).toFixed(2) + " m</b>(平衡潮)<br>任务卡 " + (st.a ? "✓" : "○") + " 大潮 · " + (st.b ? "✓" : "○") + " 小潮";
+    },
+    report: function (L) {
+      var st = L.st, ok = st.a && st.b, nm = PH[L.v.ph][0];
+      L.finishRun({ pass: ok, predText: "预测「" + T2.predict.options[L.firstChoice] + "」", resultText: nm + (st.sunOn ? "(日月合力)" : "(只有月亮)") + ":潮差 " + st.rng.toFixed(2) + " m",
+        html: nm + (st.sunOn ? ",日月合力" : ",只有月亮") + ":潮差 <b>" + st.rng.toFixed(2) + " m</b>。<br>" + (st.a ? "✓" : "○") + " 大潮(> 0.75 m) " + (st.b ? "✓" : "○") + " 小潮(< 0.32 m)",
+        say: ok ? "" : !st.sunOn ? "月亮单独是 0.54 m。把太阳加回来,它会帮忙还是捣乱?" : !st.a ? "还差大潮。太阳和月亮在哪个方向时,两个鼓包会叠在一起?" : "还差小潮。太阳和月亮成直角时,会怎样?" });
+    },
+    predictGood: function (L) { return L.firstChoice === 1; },
+    star3: function (L) { return L.st.sunOff; }
+  };
+
+  /* ================= 第 3 关 被拉长的一天 ================= */
+  var EVO0 = P.tideEvo(0), T_LOCK = EVO0.tLock;
+  var T3 = {
+    name: "被拉长的一天", d3: true,
+    goal: "地球转得比月亮绕得快,鼓包被带到月亮前方,月亮又把它往回拽。拖动时间轴,找到「一年约 400 天」的年代(珊瑚化石里记着它),再看看最远的未来。",
+    note: NOTE + "常数 Q 潮汐演化:按今天月亮每年远离 3.83 cm 标定,地月角动量守恒;远古的细节(大陆位置、海洋共振)会让真实速度有变化。",
+    ask: "海水和海底摩擦会消耗能量。地球的自转会因此变快还是变慢?",
+    predict: { type: "choice", q: "潮汐摩擦让地球的一天……", options: ["越来越长", "越来越短", "一直不变"] },
+    controls: [{ id: "ty", label: "时间", min: -10, max: 160, step: 0.5, value: 0, fmt: function (x) { return era(x * 1e8); } }],
+    runLabel: "穿越",
+    crit: ["找到一年约 400 天的年代(390–420 天)", "预测正确", "一直走到地球被「锁定」"],
+    hints: ["鼓包跑在月亮前面,月亮拉住鼓包——这个力对地球的自转是推一把还是拽一下?", "地球转慢了,失去的角动量去了哪?月亮会离近还是离远?", "一天变短意味着一年的天数变多。往过去走几亿年试试?"],
+    summary: "潮汐像刹车一样让地球越转越慢:4 亿年前一年约 400 天,一天约 21.5 小时;月亮拿走角动量,每年远离约 3.8 厘米。真正走到「一天 = 一个月」之前,太阳会先老去。",
+    lights: "潮汐",
+    card: { t: "潮汐摩擦与角动量守恒", b: "地球自转比月亮公转快,鼓包被带到月亮前方约 3°。月亮拉住鼓包,对地球形成刹车力矩:一天每世纪变长约 2 毫秒(潮汐部分)。角动量不会消失,它传给了月亮,月亮因此每年远离约 3.8 厘米(激光测月测得)。泥盆纪珊瑚的日纹和年纹显示,当时一年约 400 天。", f: "I⊕·ω + m☾·√(G·M⊕·a) = 常数;今天 da/dt ≈ 3.83 cm/年", src: "Williams & Boggs 2016 激光测月;Wells 1963《Nature》珊瑚生长纹;NASA Moon Fact Sheet" },
+    init: function (L) { L.st = { tv: 0, from: 0, to: 0, k: 1, card: false, lock: false, spin: 0, mAng: 0 }; },
+    run: function (L) {
+      var st = L.st; st.from = st.tv; st.to = Math.min(L.v.ty * 1e8, T_LOCK + 1e8); st.k = 0; st.done = false; L.sfx("whoosh");
+    },
+    frame: function (L, dt) {
+      var st = L.st, c = L.ctx, run = L.phase === "running";
+      if (run) { st.k = Math.min(1, st.k + dt * (L.RM ? 2 : 0.45)); var e = 1 - Math.pow(1 - st.k, 3); st.tv = st.from + (st.to - st.from) * e; }
+      var E = P.tideEvo(st.tv), ratio = E.a / P.D_MOON;
+      // 画面:自转按「一天的长短」变快变慢(示意,1 秒 ≈ 6 小时),锁定后与公转同步
+      var hrs = dt * (L.RM ? 0 : 6);
+      st.mAng += TAU * hrs / (E.monthD * 24);
+      st.spin += E.locked ? TAU * hrs / (E.monthD * 24) : TAU * hrs / E.dayH;
+      var lag = E.locked ? 0 : 0.26;
+      var Lay = layout(L, { fx: 0.28, rk: 0.14 });
+      var ta = st.spin - st.mAng;                      // 小镇相对月亮的角
+      scene(L, Lay, { spin: st.spin, town: 0, moonAng: st.mAng, moonD: 2.9 * Math.pow(ratio, 0.9), Am: 0.15, As: 0, lag: lag, sunAng: Math.PI,
+        level: E.locked ? 0.3 : P.P2(Math.cos(ta - lag)) * 1.1, moonAlt: 3 + 15 * Math.cos(ta), moonAz: 15 * Math.sin(ta), phase: Math.PI * 0.8 });
+      if (Lay.S && !E.locked) {   // 力矩示意:月亮拽住领先的鼓包
+        var S = Lay.S, bp = PA(L, S, st.mAng + lag, 1.25), mp = PA(L, S, st.mAng, 2.9 * Math.pow(ratio, 0.9) - 0.55);
+        Dr.arrow(c, bp[0], bp[1], bp[0] + (mp[0] - bp[0]) * 0.55, bp[1] + (mp[1] - bp[1]) * 0.55, "rgba(248,113,113,.95)", 2.4);
+        var sp0 = PA(L, S, st.mAng + 2.2, 1.35), sp1 = PA(L, S, st.mAng + 2.55, 1.35);
+        Dr.arrow(c, sp0[0], sp0[1], sp1[0], sp1[1], "rgba(167,139,250,.95)", 2.4);
+        chip(c, S.x + 8, S.y + S.h - S.bot, "红:月亮拽住领先的鼓包 → 地球自转被刹慢", "#fecaca");
+      }
+      if (Lay.C) {   // 海岸上的「地质日历」
+        var C = Lay.C, cw = Math.min(250, C.w - 24), cx0 = C.x + 12, cy0 = C.y + C.h - 112;
+        c.save(); c.fillStyle = "rgba(14,11,40,.8)"; c.strokeStyle = "rgba(167,139,250,.5)"; rr(c, cx0, cy0, cw, 100, 10); c.fill(); c.stroke();
+        c.font = "12px system-ui, sans-serif"; c.fillStyle = "#ede9fe";
+        c.fillText("年代  " + era(st.tv) + (E.locked ? " · 已锁定" : ""), cx0 + 10, cy0 + 20);
+        c.fillText("一天  " + (E.locked ? (E.monthD.toFixed(1) + " 天(= 一个月)") : E.dayH.toFixed(2) + " 小时"), cx0 + 10, cy0 + 40);
+        c.fillText("一年  " + (E.locked ? (365.25 / E.monthD).toFixed(1) : E.yearDays.toFixed(1)) + " 天", cx0 + 10, cy0 + 60);
+        c.fillText("月地距离  " + km(E.a) + " · 月亮每年远离 " + (E.recede * 100).toFixed(2) + " cm", cx0 + 10, cy0 + 80);
+        c.restore();
+      }
+      if (run && st.k >= 1 && !st.done) {
+        st.done = true;
+        if (E.yearDays > 390 && E.yearDays < 420 && st.tv < 0) st.card = true;
+        if (E.locked) st.lock = true;
+        T3.report(L);
+      }
+      L.hud.innerHTML = era(st.tv) + " · 一天 <b>" + (E.locked ? E.monthD.toFixed(1) + " 天" : E.dayH.toFixed(2) + " 小时") + "</b> · 一年 <b>" + (E.locked ? (365.25 / E.monthD).toFixed(1) : E.yearDays.toFixed(0)) + " 天</b><br>任务卡 " + (st.card ? "✓" : "○") + " 一年约 400 天";
+    },
+    report: function (L) {
+      var st = L.st, E = P.tideEvo(st.tv), ok = st.card;
+      L.finishRun({ pass: ok, predText: "预测「" + T3.predict.options[L.firstChoice] + "」", resultText: era(st.tv) + ":一天 " + (E.locked ? E.monthD.toFixed(1) + " 天" : E.dayH.toFixed(2) + " 小时") + ",一年 " + (E.locked ? (365.25 / E.monthD).toFixed(1) : E.yearDays.toFixed(1)) + " 天",
+        html: E.locked ? "约 " + era(st.tv) + ",地球的一天拉长到 <b>" + E.monthD.toFixed(1) + " 天</b>,正好等于一个月:地球也被月亮<span class=ok>潮汐锁定</span>,只用一面对着月亮。(真实世界里,太阳约 50 亿年后就会先老去。)"
+          : era(st.tv) + ":一天 <b>" + E.dayH.toFixed(2) + " 小时</b>,一年 <b>" + E.yearDays.toFixed(1) + " 天</b>,月亮在 " + km(E.a) + " 外。" + (st.card ? "<br><span class=ok>✓ 找到了一年约 400 天的年代</span>:泥盆纪珊瑚的生长纹正是这样记录的。" : ""),
+        say: ok ? (st.lock ? "" : "要是一直走下去,一天会长到多长?") : st.tv >= 0 ? "往未来走,一年的天数在变少。要一年 400 天,该往哪个方向走?" : "方向对了。离 400 天还差一点,再调调?" });
+    },
+    predictGood: function (L) { return L.firstChoice === 0; },
+    star3: function (L) { return L.st.lock; }
+  };
+
+  /* ================= 第 4 关 靠太近会被撕碎 ================= */
+  var MAT = [["岩石月亮 3.3 g/cm³", P.RHO_MOON], ["冰月亮 0.93 g/cm³", P.RHO_ICE]];
+  var LG0 = Math.log10(1.6), LG1 = Math.log10(D_ER);
+  function visD(dER) { return 1.3 + (Math.log10(dER) - LG0) / (LG1 - LG0) * 2.1; }
+  var T4 = {
+    name: "靠太近会被撕碎", d3: true,
+    goal: "把月亮往地球推近:潮汐越来越大,直到月亮自己的引力再也拉不住自己。找出月亮被潮汐撕碎的距离(洛希极限),看它碎成一圈光环。",
+    note: NOTE + "洛希极限按流体卫星 d = 2.44·R⊕·(ρ⊕/ρ卫)^(1/3);地球平均密度 5.51 g/cm³。真正的岩石月亮有内部强度,会更近一点才碎。",
+    ask: "月亮离我们越近,潮水会涨多高?近到什么程度,月亮自己会被拉碎?",
+    predict: { type: "choice", q: "把月亮拉近到现在距离的一半,海边潮差会变成……", options: ["2 倍", "4 倍", "8 倍"] },
+    controls: [
+      { id: "lg", label: "月地距离", min: LG0, max: LG1, step: 0.005, value: LG1, fmt: function (x) { var d = Math.pow(10, x); return d.toFixed(d < 10 ? 1 : 0) + " 个地球半径(" + km(d * P.R_EARTH_M) + ")"; } },
+      { id: "mat", type: "seg", label: "月亮材质", options: MAT.map(function (m) { return m[0]; }), value: 0 },
+      { id: "g2", type: "toggle", label: "荒谬宇宙:引力 ×2", value: false }
+    ],
+    runLabel: "推过去",
+    crit: ["让月亮越过洛希极限、碎成光环", "预测正确", "在「引力 ×2」宇宙里也撕碎过一颗月亮"],
+    hints: ["潮汐 ∝ 1/d³:距离变成一半,潮汐变成几倍?", "月亮自己的引力把它聚在一起,地球的引潮力想把它拉长。哪一个随距离变化更快?", "冰比岩石松,它会在更远还是更近的地方被撕碎?洛希极限在地球半径的 2–5 倍之间找找。"],
+    summary: "潮汐随距离三次方暴涨:月亮近一半,潮差 8 倍。近到洛希极限以内,引潮力胜过月亮的自身引力,月亮被撕成碎片、铺成光环——土星环就在土星的洛希极限以内。引力加倍时两边同比变大,极限不变。",
+    lights: "潮汐",
+    card: { t: "洛希极限", b: "卫星靠自身引力聚在一起;行星的引潮力想把它拉长。卫星越靠近,引潮力按 1/d³ 迅速增大,到洛希极限(流体卫星约为行星半径的 2.44 倍 × 密度比的立方根)时,卫星被撕碎。地球对月亮的洛希极限约 1.8 万 km,对冰卫星约 2.8 万 km;土星的主环就在它对冰的洛希极限(约 2.2 个土星半径)以内。", f: "d洛希 = 2.44·R行星·(ρ行星/ρ卫星)^(1/3);平衡潮差 ∝ (M/M⊕)(R/d)³·R,与 G 无关", src: "OpenStax《Astronomy 2e》12.5 行星环;NASA Saturn Fact Sheet" },
+    init: function (L) { L.st = { dv: D_ER, from: D_ER, to: D_ER, k: 1, brk: 0, broke: false, g2broke: false }; },
+    run: function (L) {
+      var st = L.st; st.from = D_ER; st.to = Math.pow(10, L.v.lg); st.k = 0; st.brk = 0; st.done = false;
+      st.rho = MAT[L.v.mat][1]; st.g2 = !!L.v.g2; st.lim = P.roche(1, P.RHO_EARTH, st.rho);
+      L.sfx("whoosh");
+    },
+    frame: function (L, dt) {
+      var st = L.st, c = L.ctx, run = L.phase === "running";
+      var rho = run ? st.rho : MAT[L.v.mat][1], lim = P.roche(1, P.RHO_EARTH, rho);
+      if (run) {
+        if (st.k < 1) { st.k = Math.min(1, st.k + dt * (L.RM ? 2 : 0.5)); var e = 1 - Math.pow(1 - st.k, 3); st.dv = Math.exp(Math.log(st.from) + (Math.log(st.to) - Math.log(st.from)) * e); }
+        if (st.dv < lim) st.brk = Math.min(1, st.brk + dt * (L.RM ? 2 : 0.4));
+      } else if (L.phase !== "compare") { st.dv = Math.pow(10, L.v.lg); st.brk = 0; }
+      var d = st.dv, rng = 0.535 * Math.pow(D_ER / d, 3), lvl = Math.min(1.7, 1.15 * Math.pow(D_ER / d, 3));
+      var Lay = layout(L, { fx: 0.28, rk: 0.15 });
+      var tA = (performance.now() / 1000) * (L.RM ? 0 : 0.35);
+      scene(L, Lay, { spin: tA, town: 0, moonAng: 0, moonD: visD(d), moonS: 1.25, Am: Math.min(0.42, 0.13 * Math.pow(D_ER / d, 0.75)), As: 0, sunAng: Math.PI * 0.85, brk: st.brk,
+        level: (P.P2(Math.cos(tA)) * 0.6 + 0.4) * lvl, moonAlt: 9 + 6 * Math.min(1, 3 / Math.max(1, d / 6)), moonAz: 0, phase: Math.PI * 0.9 });
+      if (Lay.S) {   // 洛希极限圈
+        var S = Lay.S, vd = visD(lim);
+        c.save(); c.setLineDash([5, 5]); c.strokeStyle = "rgba(248,113,113,.85)"; c.lineWidth = 1.5; c.beginPath();
+        for (var i = 0; i <= 72; i++) { var p = PA(L, S, i / 72 * TAU, vd); i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1]); } c.stroke(); c.restore();
+        var lp = PA(L, S, Math.PI * 0.6, vd);
+        chip(c, lp[0] - 40, lp[1] - 30, "洛希极限 " + lim.toFixed(2) + " R⊕", "#fecaca");
+      }
+      if (Lay.C) {
+        var C = Lay.C; c.save(); c.font = "12px system-ui, sans-serif";
+        var tx = "平衡潮差 " + (rng < 10 ? rng.toFixed(2) + " m" : rng < 1e4 ? Math.round(rng).toLocaleString("zh-CN") + " m" : (rng / 1000).toFixed(0) + " km"), w = c.measureText(tx).width + 16;
+        c.fillStyle = "rgba(14,11,40,.8)"; rr(c, C.x + 10, C.y + C.h - 40, w, 28, 8); c.fill(); c.fillStyle = rng > 5 ? "#fca5a5" : "#ede9fe"; c.fillText(tx, C.x + 18, C.y + C.h - 21); c.restore();
+      }
+      if (run && st.k >= 1 && !st.done && (st.dv >= lim || st.brk >= 1)) {
+        st.done = true;
+        if (st.dv < lim) { st.broke = true; if (st.g2) st.g2broke = true; }
+        T4.report(L);
+      }
+      L.hud.innerHTML = "月地距离 <b>" + d.toFixed(d < 10 ? 2 : 1) + " R⊕</b> · 潮差 <b>" + (rng < 100 ? rng.toFixed(2) : Math.round(rng).toLocaleString("zh-CN")) + " m</b><br>洛希极限 <b>" + lim.toFixed(2) + " R⊕</b>(" + km(lim * P.R_EARTH_M) + ")" + (L.v.g2 ? " · <span style='color:#fca5a5'>引力 ×2</span>" : "");
+    },
+    report: function (L) {
+      var st = L.st, d = st.dv, broke = d < st.lim, rng = 0.535 * Math.pow(D_ER / d, 3);
+      L.finishRun({ pass: broke, predText: "预测「" + T4.predict.options[L.firstChoice] + "」", resultText: d.toFixed(2) + " 个地球半径:" + (broke ? "月亮被撕碎" : "月亮完好,潮差 " + rng.toFixed(1) + " m"),
+        html: broke ? "月亮推到 <b>" + d.toFixed(2) + " R⊕</b>,进了洛希极限(" + st.lim.toFixed(2) + " R⊕):<span class=ok>被潮汐撕碎,铺成一圈光环</span>。" + (st.g2 ? "<br>引力 ×2 时极限还是 " + st.lim.toFixed(2) + " R⊕:两边一起变大,比值不变。" : "")
+          : "月亮在 <b>" + d.toFixed(2) + " R⊕</b> 还撑得住,海边平衡潮差已经是 <b>" + (rng < 100 ? rng.toFixed(1) : Math.round(rng).toLocaleString("zh-CN")) + " m</b>。",
+        say: broke ? (st.g2 ? "" : "要是引力翻倍,月亮会在更远的地方就被撕碎吗?") : "还完好。离洛希极限的红色虚线还差多少?" });
+    },
+    predictGood: function (L) { return L.firstChoice === 2; },
+    star3: function (L) { return L.st.g2broke; }
+  };
+
+  NV.task({
+    id: "tide", guide: "abyss", scene3d: "core/tide3d.js",
+    bridge: { href: "../../starhelm/", label: "天枢 Starhelm「月亮为什么总用同一面对着我们?」" },
+    title: "月亮怎样拉动整片大海?",
+    safety: "海边看潮请留意涨潮时间,不要在礁石和滩涂上久留。",
+    levels: [T1, T2, T3, T4]
+  });
+})();
+</script>
+</body>
+</html>

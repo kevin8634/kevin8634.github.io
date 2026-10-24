@@ -172,6 +172,36 @@ truthy("亚音速无马赫锥", P.machHalfAngle(100, 343) === null);
   check("无聚变:按 x = 1/(1+2t) 收缩", y, 1 / (1 + 2 * 1.0), 2e-4);
 })();
 
+/* ---- 潮汐(v0.6 nv.tide)---- */
+(function () {
+  var GMm = P.GM_MOON_SI, GMs = P.GM_SUN_SI(), R = P.R_EARTH_M, d = P.D_MOON;
+  check("引潮力近似 2GMr/d³:月亮 ≈ 1.10×10⁻⁶ m/s²", P.tidalAccel(GMm, d, R), 1.0998e-6, 2e-3);
+  truthy("近侧引潮力略大于远侧(都朝外)", P.tidalAccel(GMm, d, R, "near") > P.tidalAccel(GMm, d, R, "far") && P.tidalAccel(GMm, d, R, "far") > 0);
+  check("近侧精确值 ≈ 近似值(差 < 5%)", P.tidalAccel(GMm, d, R, "near"), P.tidalAccel(GMm, d, R), 0.05);
+  var gr = (GMs / (P.AU * P.AU)) / (GMm / (d * d)), tr = P.tidalAccel(GMs, P.AU, R) / P.tidalAccel(GMm, d, R);
+  check("太阳引力 / 月亮引力 ≈ 179", gr, 178.7, 5e-3);
+  check("太阳引潮力 / 月亮引潮力 ≈ 0.46", tr, 0.4593, 5e-3);
+  check("月亮平衡潮潮差 ≈ 0.54 m", P.tideRange(GMm, d), 0.535, 5e-3);
+  check("太阳平衡潮潮差 ≈ 0.25 m", P.tideRange(GMs, P.AU), 0.246, 5e-3);
+  var sp = P.tideHeight(0, 0, 0, true) - P.tideHeight(Math.PI / 2, 0, 0, true), np = P.tideHeight(0, 0, Math.PI / 2, true) - P.tideHeight(Math.PI / 2, 0, Math.PI / 2, true);
+  check("大潮潮差 = 月 + 日 ≈ 0.78 m", sp, 0.535 + 0.246, 5e-3);
+  check("小潮潮差 = 月 − 日 ≈ 0.29 m", np, 0.535 - 0.246, 1e-2);
+  check("月亮近一半 → 潮差 × 8(1/d³)", P.tideRange(GMm, d / 2) / P.tideRange(GMm, d), 8, 1e-12);
+  check("近侧与远侧水位相同(两个鼓包)", P.tideHeight(0, 0, 0, false), P.tideHeight(Math.PI, 0, 0, false), 1e-12);
+  var e0 = P.tideEvo(0), e4 = P.tideEvo(-4e8), eL = P.tideEvo(1e12);
+  check("今天:一天 ≈ 23.93 h(恒星日)", e0.dayH, 23.9345, 1e-4);
+  check("今天:一年 ≈ 365.25 天", e0.yearDays, 365.25, 1e-4);
+  check("今天:月亮远离 3.83 cm/年", e0.recede, 0.0383, 1e-9);
+  truthy("4 亿年前:一年约 400 天(390–420,珊瑚生长纹)", e4.yearDays > 390 && e4.yearDays < 420, e4.yearDays.toFixed(1) + " 天");
+  truthy("4 亿年前:一天约 21–22 小时", e4.dayH > 21 && e4.dayH < 22.5, e4.dayH.toFixed(2) + " h");
+  truthy("潮汐锁定:一天 = 一个月 ≈ 47 天(44–50)", eL.locked && Math.abs(eL.dayH / 24 - eL.monthD) < 0.5 && eL.monthD > 44 && eL.monthD < 50, eL.monthD.toFixed(1) + " 天");
+  truthy("锁定时月地距离 ≈ 55 万 km(52–58 万)", eL.aLock > 5.2e8 && eL.aLock < 5.8e8, (eL.aLock / 1e3).toFixed(0) + " km");
+  var rl = P.roche(6371, P.RHO_EARTH, P.RHO_MOON);
+  check("地球对月亮的洛希极限(流体)≈ 1.84 万 km", rl, 18365, 2e-3);
+  truthy("冰卫星的洛希极限更远", P.roche(6371, P.RHO_EARTH, P.RHO_ICE) > rl);
+  check("土星对冰的洛希极限 ≈ 2.2 R♄(主环在其内)", P.roche(1, 0.687, P.RHO_ICE), 2.2, 2e-2);
+})();
+
 console.log(rows.join("\n"));
 console.log("\n合计:" + pass + " 通过," + fail + " 失败");
 process.exit(fail ? 1 : 0);

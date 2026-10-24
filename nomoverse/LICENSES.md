@@ -46,6 +46,12 @@
 - **恒星 3D 舞台 `core/stars3d.js`(v0.5-α1「写实太阳剖面」)**:剖面切口、核心/辐射区/对流区着色器、光子随机游走、聚变闪光、日冕、日珥、星空背景均为原创代码程序生成;仅太阳表面使用上述贴图。
 - 恒星任务知识卡仅以文字引用 NASA Sun Fact Sheet、OpenStax《Astronomy 2e》,未复制其内容。
 
+## v0.6 起新增内容的来源(2026-10-24 核对)
+- **潮汐任务 `assets/tide/earth_4k.jpg`、`earth_2k.jpg`、`clouds_4k.jpg`、`clouds_2k.jpg`、`moon_4k.jpg`、`moon_2k.jpg`**:Solar System Scope「Solarsystemscope texture 8k earth daymap / earth clouds / moon」,经 Wikimedia Commons 获取(https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_8k_earth_daymap.jpg 、…_earth_clouds.jpg 、…_moon.jpg),缩放为 4096×2048 / 2048×1024 的 JPG(云层转灰度)。作者:Solar System Scope(https://www.solarsystemscope.com/textures/)。许可:**CC BY 4.0**(https://creativecommons.org/licenses/by/4.0/),已缩放,未作其他修改。
+- **潮汐任务 `assets/tide/sand_*`、`rock_*`**:Poly Haven「Coast Sand Rocks 02」「Rock Face」漫反射与法线贴图(1K / 2K),https://polyhaven.com/a/coast_sand_rocks_02 、https://polyhaven.com/a/rock_face 。许可:**CC0 1.0**。
+- 海岸天空复用投篮任务的 Poly Haven「Qwantani Dusk 2」(CC0),太空星空复用 NASA SVS Deep Star Maps(见上表)。
+- **潮汐 3D 舞台 `core/tide3d.js`(v0.6-α1「太空地月 × 海岸实景」)**:海水壳(引潮势位移)、海面(菲涅耳反射、月光碎影)、湿沙与白沫、岩石造型、灯塔、潮位标尺、月相着色、月球碎片环、点状星空均为原创代码程序生成。
+
 ## 引用与链接
 - **NASA**:知识卡里以文字形式引用其官方公开资料(如行星数据表、ISS 轨道数据);v0.3-α4 起投篮 3D 舞台使用上表所列 NASA 公有领域 / 署名图像。
 - OpenStax《University Physics Volume 1》:知识卡中仅做文字出处标注,未复制其内容。

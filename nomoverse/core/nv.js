@@ -201,7 +201,52 @@
       var k1 = 2 * x * x * (F - 1);
       var xm = x + k1 * dt / 2, Fm = fusion ? Math.pow(1 / xm, n || 4) : 0;
       return x + 2 * xm * xm * (Fm - 1) * dt;
-    }
+    },
+
+    /* ---------- 潮汐(v0.6 nv.tide「月亮怎样拉动整片大海?」)----------
+       GM⊕ 取 IERS;GM☾ = 4.9028×10¹² m³/s²(JPL DE440);月地平均距离 384,400 km;1 AU = 1.495978707×10¹¹ m(IAU 2012)。
+       潮高为「平衡潮」理论值(开阔大洋,不含海岸放大);潮汐演化为常数 Q 简化模型,按今天月亮每年远离 3.83 cm(激光测月)标定。 */
+    GM_MOON_SI: 4.9028e12,
+    D_MOON: 3.844e8,                    // m
+    AU: 1.495978707e11,                 // m
+    R_EARTH_M: 6.371e6,                 // m
+    R_MOON_M: 1.7374e6,                 // m
+    I_EARTH: 0.3307,                    // 地球转动惯量因子 I = 0.3307·M·R²
+    OMEGA_EARTH: 7.2921159e-5,          // rad/s(恒星日)
+    MOON_RECEDE: 0.0383,                // m/年
+    RHO_EARTH: 5.514, RHO_MOON: 3.344, RHO_ICE: 0.93,   // g/cm³
+    /* 引潮加速度:沿连线方向,近侧精确值 GM/(d−r)² − GM/d²;远侧 GM/d² − GM/(d+r)²;近似 2GMr/d³ */
+    tidalAccel: function (GM, d, r, side) {
+      if (side === "near") return GM / ((d - r) * (d - r)) - GM / (d * d);
+      if (side === "far") return GM / (d * d) - GM / ((d + r) * (d + r));
+      return 2 * GM * r / (d * d * d);
+    },
+    /* 平衡潮:h(θ) = (M/M⊕)(R/d)³·R·P₂(cosθ);高潮到低潮的潮差 = 1.5·(M/M⊕)(R/d)³·R */
+    tideAmp: function (GM, d) { var R = Phys.R_EARTH_M; return GM / Phys.GM_EARTH_SI * Math.pow(R / d, 3) * R; },
+    tideRange: function (GM, d) { return 1.5 * Phys.tideAmp(GM, d); },
+    P2: function (x) { return 0.5 * (3 * x * x - 1); },
+    /* 月亮 + 太阳合成水位(m):月亮方向角 am、太阳方向角 as、小镇方向角 a(都在赤道面,rad);dm 月地距离倍数 */
+    tideHeight: function (a, am, as, sunOn, dm) {
+      var hm = Phys.tideAmp(Phys.GM_MOON_SI, Phys.D_MOON * (dm || 1)) * Phys.P2(Math.cos(a - am));
+      var hs = sunOn ? Phys.tideAmp(Phys.GM_SUN_SI(), Phys.AU) * Phys.P2(Math.cos(a - as)) : 0;
+      return hm + hs;
+    },
+    GM_SUN_SI: function () { return 1.3271244e20; },
+    /* 地月潮汐演化(常数 Q):da/dt = K·a^(−11/2),K 由今天 3.83 cm/年 标定;
+       角动量守恒 I⊕ω + μ√(G(M⊕+M☾)a) = 常数 → 求地球自转。t 单位:年(负 = 过去)。到「潮汐锁定」(自转 = 公转)为止。 */
+    tideEvo: function (t) {
+      var G = Phys.G_NEWTON, Me = Phys.GM_EARTH_SI / G, Mm = Phys.GM_MOON_SI / G, R = Phys.R_EARTH_M, a0 = Phys.D_MOON, Y = Phys.YEAR;
+      var K = Phys.MOON_RECEDE / Y * Math.pow(a0, 5.5), I = Phys.I_EARTH * Me * R * R, mu = Me * Mm / (Me + Mm), GMt = G * (Me + Mm);
+      var Lt = I * Phys.OMEGA_EARTH + mu * Math.sqrt(GMt * a0);
+      function at(a) { var w = (Lt - mu * Math.sqrt(GMt * a)) / I, n = Math.sqrt(GMt / (a * a * a)); return { w: w, n: n }; }
+      var lo = a0, hi = a0 * 3; for (var i = 0; i < 80; i++) { var m = (lo + hi) / 2, q = at(m); if (q.w > q.n) lo = m; else hi = m; }
+      var aLock = lo, tLock = (Math.pow(aLock, 6.5) - Math.pow(a0, 6.5)) / (6.5 * K) / Y;
+      var x = Math.pow(a0, 6.5) + 6.5 * K * Math.min(t, tLock) * Y, a = x > 0 ? Math.pow(x, 1 / 6.5) : 0, s = at(a);
+      return { t: t, a: a, aLock: aLock, tLock: tLock, locked: t >= tLock, dayH: 2 * Math.PI / s.w / 3600, monthD: 2 * Math.PI / s.n / 86400,
+        yearDays: Y * s.w / (2 * Math.PI) - 1, recede: K * Math.pow(a, -5.5) * Y };
+    },
+    /* 洛希极限(流体卫星):d = 2.44·R_p·(ρ_p/ρ_s)^(1/3);刚体近似系数 1.26。与 G 无关(两边同比放大)。 */
+    roche: function (Rp, rhoP, rhoS, rigid) { return (rigid ? 1.26 : 2.44) * Rp * Math.pow(rhoP / rhoS, 1 / 3); }
   };
 
   if (typeof module === "object" && module.exports) { module.exports = { Phys: Phys }; return; }
@@ -665,7 +710,8 @@
     { id: "hoop", n: 4, guide: "quark", q: "如果引力变成两倍,篮球还能投进吗?" },
     { id: "orbit", n: 5, guide: "abyss", q: "为什么宇航员在空间站会飘起来?" },
     { id: "sound", n: 4, guide: "ripple", q: "为什么救护车经过时声音会变?" },
-    { id: "stars", n: 4, guide: "quark", q: "恒星为什么会发光?" }
+    { id: "stars", n: 4, guide: "quark", q: "恒星为什么会发光?" },
+    { id: "tide", n: 4, guide: "abyss", q: "月亮怎样拉动整片大海?" }
   ];
   function task(def) {
     var N = def.levels.length, prog = Store.task(def.id, N), gd = GUIDES[def.guide];
@@ -702,11 +748,11 @@
     var bubble = el("div", { class: "nv-bubble", "aria-live": "polite" });
     var guideEl = el("div", { class: "nv-guide nv-glass nv-hudc", role: "region", "aria-label": "向导 " + gd.name }, [av.cv, bubble]);
     app.appendChild(guideEl);
-    // v0.4 统一 HUD:左侧任务抽屉(与首页同款),切换 4 个任务;手机/小横屏收成顶栏「任务」按钮弹出
+    // v0.4 统一 HUD:左侧任务抽屉(与首页同款),切换 5 个任务;手机/小横屏收成顶栏「任务」按钮弹出
     var tdList = el("div", { class: "hd-list" });
     var tdTog = el("button", { class: "hd-tog", type: "button", "aria-controls": "nv-td-" + def.id, text: "‹" });
-    var td = el("nav", { class: "nv-td", id: "nv-td-" + def.id, "aria-label": "四个探究任务" }, [
-      el("div", { class: "hd-h" }, [el("span", { text: "探究任务 · 17 关" }), tdTog]), tdList
+    var td = el("nav", { class: "nv-td", id: "nv-td-" + def.id, "aria-label": "五个探究任务" }, [
+      el("div", { class: "hd-h" }, [el("span", { text: "探究任务 · 21 关" }), tdTog]), tdList
     ]);
     var tdBtn = el("button", { class: "nv-btn nv-td-b", type: "button", "aria-controls": td.id, "aria-expanded": "false", text: "任务 ▾" });
     nav.appendChild(tdBtn);
