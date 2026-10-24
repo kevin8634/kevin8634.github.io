@@ -331,3 +331,62 @@ button, input, select { font: inherit; color: inherit; }
   .nv-im .nv-top .nv-nav a.nv-home { font-size: 0; padding: 2px 6px; }
   .nv-im .nv-top .nv-nav a.nv-home::before { content: "创世"; font-size: 11.5px; }
 }
+
+/* ======================= v0.4 任务页统一 HUD:左任务抽屉 + 四角 HUD 线(与首页 .hm-drawer 同款) ======================= */
+.nv-td { position: absolute; z-index: 17; left: 12px; top: calc(var(--toph, 80px) + 4px); width: 252px; padding: 10px 10px 8px;
+  background: var(--glass); -webkit-backdrop-filter: blur(var(--blur)); backdrop-filter: blur(var(--blur));
+  border: 1px solid var(--glass-bd); border-radius: var(--r-lg); box-shadow: var(--sh-1); transition: transform .35s var(--ease), opacity .3s; }
+.nv-td.closed { transform: translateX(calc(-100% + 40px)); }
+.nv-td.closed .hd-list { opacity: 0; pointer-events: none; visibility: hidden; }
+.nv-td .hd-h { display: flex; justify-content: space-between; align-items: center; font-size: 12px; letter-spacing: 1px; color: var(--cy2); margin: 0 0 6px 4px; }
+.nv-td .hd-tog { width: 30px; height: 30px; flex: none; border-radius: 50%; border: 1px solid var(--glass-bd); background: var(--btn); color: var(--tx); font-size: 18px; line-height: 1; cursor: pointer; }
+.nv-td .hd-tog:hover, .nv-td .hd-tog:focus-visible { border-color: var(--ac); }
+.nv-td .hd-list { display: grid; gap: 6px; transition: opacity .25s; }
+.nv-td .hd-card { display: flex; gap: 10px; align-items: center; padding: 7px 8px; border-radius: 12px; text-decoration: none; color: var(--tx); border: 1px solid transparent; background: rgba(167,139,250,.06); }
+.nv-td .hd-card:hover, .nv-td .hd-card:focus-visible { border-color: var(--ac); background: rgba(124,92,240,.18); }
+.nv-td .hd-card.me { border-color: var(--ac); background: rgba(124,92,240,.22); box-shadow: inset 3px 0 0 var(--ac); }
+.nv-td .hd-card canvas { width: 40px; height: 40px; flex: none; }
+.nv-td .hd-txt { min-width: 0; display: grid; gap: 3px; }
+.nv-td .hd-txt b { font-size: 13px; font-weight: 600; line-height: 1.35; }
+.nv-td .hd-meta { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--mu); }
+.nv-td .hd-meta em { font-style: normal; color: var(--pred); font-family: var(--mono); }
+.nv-td .hd-dots { display: inline-flex; gap: 3px; }
+.nv-td .hd-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--star-off); }
+.nv-td .hd-dots i.on { background: var(--star-on); box-shadow: 0 0 5px var(--ac); }
+.nv-td .hd-dots i.cur { outline: 1.5px solid var(--cy); outline-offset: 1px; }
+.nv-td-b { display: none; }
+.nv-hc { position: absolute; z-index: 2; width: 22px; height: 22px; border: 2px solid rgba(165,243,252,.45); pointer-events: none; }
+.nv-hc.tl { left: 6px; top: 6px; border-right: 0; border-bottom: 0; } .nv-hc.tr { right: 6px; top: 6px; border-left: 0; border-bottom: 0; }
+.nv-hc.bl { left: 6px; bottom: 6px; border-right: 0; border-top: 0; } .nv-hc.br { right: 6px; bottom: 6px; border-left: 0; border-top: 0; }
+.nv-im .nv-guide .nv-bubble .who { color: var(--cy2); }
+@media (min-width: 900px) and (min-height: 520px) {
+  .nv-im .nv-bar { left: calc(var(--dw, 0px) + (100% - var(--side) - 24px - var(--dw, 0px)) / 2); width: min(720px, calc(100% - var(--side) - var(--dw, 0px) - 60px)); }
+  .nv-im .nv-top { padding-left: 14px; }
+}
+/* 手机竖屏 / 小横屏:抽屉收成顶栏「任务」按钮,点开在画面上方弹出三格任务卡 */
+@media not all and (min-width: 900px) and (min-height: 520px) {
+  .nv-td-b { display: inline-flex; min-height: 30px; padding: 2px 10px; font-size: 12.5px; border-radius: var(--r-pill); margin-left: 2px; }
+  .nv-td { left: 6px; right: 6px; width: auto; top: calc(var(--toph, 80px) + 2px); padding: 6px; z-index: 25; }
+  .nv-td.closed { transform: translateY(-8px); opacity: 0; pointer-events: none; visibility: hidden; }
+  .nv-td .hd-h { display: none; }
+  .nv-td .hd-list { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .nv-td .hd-card { flex-direction: column; gap: 3px; padding: 6px 4px; text-align: center; }
+  .nv-td .hd-card.me { box-shadow: none; }
+  .nv-td .hd-card canvas { width: 34px; height: 34px; }
+  .nv-td .hd-txt b { font-size: 11.5px; line-height: 1.3; }
+  .nv-td .hd-meta { flex-direction: column; gap: 2px; }
+  .nv-hc { display: none; }
+}
+@media (orientation: landscape) and (max-height: 519px) {
+  .nv-td { left: 6px; right: auto; width: min(420px, calc(100% - var(--side) - 12px)); top: 40px; }
+  .nv-td .hd-txt b { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .nv-td { transition: none; } }
+.nv-td.closed .hd-list { display: none; }
+.nv-td.closed { padding-bottom: 6px; }
+.nv-td.closed .hd-h span { opacity: 0; }
+@media not all and (min-width: 900px) and (min-height: 520px) {
+  .nv-im .nv-prog { min-width: 0; overflow: hidden; }
+  .nv-im .nv-prog .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+}
+@media (max-width: 400px) { .nv-td-b { padding: 2px 8px; } }
