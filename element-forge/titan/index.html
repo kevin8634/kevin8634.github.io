@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>土卫六为什么是橙色的? · 元素工坊 Element Forge</title>
+<meta name="description" content="元素工坊 · 星球篇第二站:把温度拖到零下 179 摄氏度,看水冰硬得像石头、甲烷变成雨;用阳光打碎分子拼出橙色的雾,再跟着探测器穿过雾层落到冰卵石滩上。创世计划 Genesis 化学世界。">
+<meta name="theme-color" content="#1a1006">
+<link rel="stylesheet" href="../ef.css?v=13">
+</head>
+<body class="haze">
+<div id="app"></div>
+<script src="../ef.js?v=13"></script>
+<script src="../ef-tri.js?v=1"></script>
+<script>
+/* ---------- 共享数据:四种物质的熔点沸点、温度控制器(2D/3D 共用) ---------- */
+(function () {
+function rnd(seed) { var s = seed || 7; return function () { s = (s * 16807) % 2147483647; return s / 2147483647; }; }
+/* 熔点、沸点:摄氏度,按地球海平面气压(1 个大气压)的数值;土卫六地面气压约为地球的 1.5 倍,数值会略有不同 */
+var SUBS = [
+  { k: 'w', n: '水', f: 'H₂O', mp: 0, bp: 100, c: '#8fd0ff' },
+  { k: 'm', n: '甲烷', f: 'CH₄', mp: -182.5, bp: -161.5, c: '#ffd27a' },
+  { k: 'e', n: '乙烷', f: 'C₂H₆', mp: -182.8, bp: -88.6, c: '#ffb35c' },
+  { k: 'n', n: '氮气', f: 'N₂', mp: -210, bp: -195.8, c: '#c9a6ff' }
+];
+var PH = ['固体', '液体', '气体'];
+function phase(S, T) { return T <= S.mp ? 0 : T < S.bp ? 1 : 2; }
+var TMIN = -200, TMAX = 30, TITAN = -179;
+function goal(T) { return phase(SUBS[0], T) === 0 && phase(SUBS[1], T) === 1 && phase(SUBS[2], T) === 1 && phase(SUBS[3], T) === 2; }
+var SAFE = '<b style="color:#ff9a7a">安全常识</b>:甲烷就是家里天然气的主要成分,<b>易燃易爆</b>。甲烷本身没有气味,燃气公司专门往里加了难闻的"警示气味"。不要拿燃气灶、打火机、气罐做任何"实验";闻到燃气味,马上告诉大人,开窗通风,不点火、不开关电器。液氮、干冰这类极冷的东西会冻伤皮肤,只能由专业人员使用。';
+var HOME = '<b style="color:#ffd27a">可以在家试</b>(请大人陪同):往一个干的玻璃杯里放满冰块,加点冷水,擦干杯子外壁,等几分钟——外壁会冒出一层小水珠。那是空气里看不见的水蒸气,碰到冷杯子<b>凝结</b>成了液体。土卫六上的甲烷云,也是这样"凝结"出来的,只是主角换成了甲烷。实验只用冰和水,做完把水倒掉。<br>' + SAFE;
+var DANGER = '<b style="color:#ff7a7a">请勿在现实中尝试!</b><br>这里的雾、云和探测器都是虚拟的。甲烷易燃,紫外线灯会伤眼睛和皮肤,都不能拿来玩。';
+function txt(stage, h, cls) { var p = document.createElement('p'); p.className = cls || 'note-sm'; p.innerHTML = h || ''; stage.appendChild(p); return p; }
+function card(stage, h, warn) { var d = document.createElement('div'); d.className = 'cab-card' + (warn ? ' warn' : ''); d.innerHTML = h; stage.appendChild(d); return d; }
+
+/* 温度控制器:view.mount(stage) / view.draw(st) */
+function temp(stage, api, view) {
+  var st = { T: 15, reached: false, done: false, wrong: 0, seen: {} };
+  view.mount(stage);
+  var ctl = document.createElement('div'); ctl.className = 'ctl';
+  ctl.innerHTML = '<span>温度</span><input type="range" id="tT" min="' + TMIN + '" max="' + TMAX + '" step="1" value="15" style="flex:1;min-width:150px" aria-label="温度(摄氏度)"><b id="tN" style="min-width:6.5em">15 °C</b>';
+  stage.appendChild(ctl);
+  var opts = document.createElement('div'); opts.className = 'ctl chips'; stage.appendChild(opts);
+  var msg = txt(stage, '现在是地球上一个凉快的春天,约 15 °C。把温度一路往下拖,看四个瓶子里的东西怎样变化。<b>目标</b>:找到"水是固体、甲烷和乙烷是液体、氮气还是气体"的温度。');
+  card(stage, '<b style="color:#ffd27a">读瓶子</b>:每个瓶子下面写着它现在是固体、液体还是气体。熔点、沸点用的是地球海平面气压下的数值(土卫六地面气压约为地球的 1.5 倍,数值会略有不同)。');
+  function set(T) {
+    if (st.done) return; st.T = T; ctl.querySelector('#tT').value = T; ctl.querySelector('#tN').textContent = T + ' °C';
+    SUBS.forEach(function (S) { var p = phase(S, T), key = S.k + p; if (!st.seen[key]) { st.seen[key] = 1; if (T < 15) EF.play('tick'); } });
+    if (!st.reached) {
+      if (goal(T)) { st.reached = true; EF.play('fuse'); setTimeout(function () { set(TITAN); ask(); }, 900);
+        msg.innerHTML = '找到了!在约 −182 °C 到 −162 °C 之间,水冻成了硬邦邦的冰,甲烷和乙烷却是液体,氮气仍是气体。'; }
+      else msg.innerHTML = T > 0 ? '还太暖:水还是液体。继续往下拖。' : T > -88.6 ? '水已经结冰了。可甲烷、乙烷、氮气都还是气体,继续降温。' : T > -162 ? '乙烷变成液体了!甲烷还是气体,再冷一点。' : T < -182 ? '太冷了:甲烷和乙烷也冻成了固体。往回拖一点。' : msg.innerHTML;
+    }
+    view.draw(st);
+  }
+  function ask() {
+    msg.innerHTML = '土卫六的地面大约就是 <b>−179 °C</b>,正好落在这个区间里。<br>那么,土卫六上的"石头"是什么做的?';
+    opts.innerHTML = [['冻得硬邦邦的水冰', 1], ['冻住的甲烷', 0], ['和地球一样的花岗岩', 0]].map(function (o) { return '<button class="ef-btn ghost chip" data-ok="' + o[1] + '">' + o[0] + '</button>'; }).join('');
+    opts.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () { if (st.done) return;
+      if (b.dataset.ok === '1') { st.done = true; EF.play('fuse'); opts.innerHTML = ''; ctl.querySelector('#tT').disabled = true;
+        msg.innerHTML = '对!在 −179 °C,水冰硬得像岩石,土卫六的地壳主要就是水冰;甲烷和乙烷则像地球上的水一样流淌、下雨、汇成湖海。同一种物质是固体、液体还是气体,要看温度。'; setTimeout(api.complete, 2600); }
+      else { st.wrong++; EF.play('tick'); msg.innerHTML = b.dataset.ok === '0' && /甲烷/.test(b.textContent) ? '−179 °C 时甲烷还是液体(它的熔点约 −182 °C),冻不住。' : '土卫六的地表下埋着大量的冰。看看第一个瓶子:水在这里是什么状态?'; if (st.wrong >= 2) api.say('看第一个瓶子:水在 −179 °C 是什么状态?'); } }; });
+  }
+  ctl.querySelector('#tT').oninput = function () { set(+this.value); };
+  set(15);
+  EF.TT._temp = { set: set, st: st, answer: function (ok) { var b = opts.querySelector('[data-ok="' + (ok ? 1 : 0) + '"]'); if (b) b.click(); } };
+}
+/* 2D 画法:左温度计 + 右四瓶 */
+var R0 = rnd(5), DOTS = []; for (var i = 0; i < 200; i++) DOTS.push([R0(), R0(), R0(), R0()]);
+function jar2D(x, S, p, cx, top, w, h, t) {
+  var b = top + h;
+  x.strokeStyle = 'rgba(220,235,255,.7)'; x.lineWidth = 2; x.beginPath(); x.moveTo(cx - w / 2, top); x.lineTo(cx - w / 2, b - 8); x.quadraticCurveTo(cx - w / 2, b, cx - w / 2 + 8, b); x.lineTo(cx + w / 2 - 8, b); x.quadraticCurveTo(cx + w / 2, b, cx + w / 2, b - 8); x.lineTo(cx + w / 2, top); x.stroke(); x.lineWidth = 1;
+  if (p === 0) { x.fillStyle = S.c; x.globalAlpha = 0.85; x.beginPath(); x.moveTo(cx - w * 0.32, b - 4); x.lineTo(cx - w * 0.28, b - h * 0.32); x.lineTo(cx + w * 0.05, b - h * 0.4); x.lineTo(cx + w * 0.3, b - h * 0.28); x.lineTo(cx + w * 0.34, b - 4); x.closePath(); x.fill(); x.globalAlpha = 1;
+    x.strokeStyle = 'rgba(255,255,255,.6)'; x.beginPath(); x.moveTo(cx - w * 0.2, b - h * 0.3); x.lineTo(cx + w * 0.02, b - h * 0.36); x.stroke(); }
+  else if (p === 1) { var lv = b - h * 0.36, wob = EF.reduced ? 0 : Math.sin(t / 600 + cx) * 2; x.fillStyle = S.c; x.globalAlpha = 0.55; x.beginPath(); x.moveTo(cx - w / 2 + 2, lv + wob); x.quadraticCurveTo(cx, lv - wob, cx + w / 2 - 2, lv + wob); x.lineTo(cx + w / 2 - 2, b - 2); x.lineTo(cx - w / 2 + 2, b - 2); x.fill(); x.globalAlpha = 1; }
+  else { for (var i = 0; i < 26; i++) { var d = DOTS[i + (S.k.charCodeAt(0) % 7) * 20], px = cx - w / 2 + 6 + ((d[0] + (EF.reduced ? 0 : t / 4000 * (d[2] - 0.5))) % 1 + 1) % 1 * (w - 12), py = top + 6 + ((d[1] + (EF.reduced ? 0 : t / 5000 * (d[3] - 0.5))) % 1 + 1) % 1 * (h - 12); x.fillStyle = S.c; x.globalAlpha = 0.8; x.beginPath(); x.arc(px, py, 2.2, 0, 7); x.fill(); } x.globalAlpha = 1; }
+  x.fillStyle = '#f4ede1'; x.font = '700 13px system-ui'; x.textAlign = 'center'; x.fillText(S.n + ' ' + S.f, cx, top - 8);
+  x.fillStyle = p === 0 ? '#bfe9ff' : p === 1 ? '#ffd27a' : '#c9a6ff'; x.font = '12px system-ui'; x.fillText(PH[p], cx, b + 16);
+}
+function temp2D() {
+  var C, st = { T: 15 };
+  return {
+    mount: function (stage) { C = EF.canvas(stage, 280);
+      (function loop(t) { if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+        var warm = Math.max(0, Math.min(1, (st.T - TMIN) / (TMAX - TMIN))), g = x.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, 'rgba(' + (40 + warm * 30 | 0) + ',' + (24 + warm * 40 | 0) + ',' + (20 + warm * 40 | 0) + ',.9)'); g.addColorStop(1, 'rgba(26,16,6,.9)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+        var tx = 46, t0 = 22, t1 = H - 30, ty = function (T) { return t0 + (TMAX - T) / (TMAX - TMIN) * (t1 - t0); };
+        x.fillStyle = 'rgba(255,255,255,.1)'; x.fillRect(tx - 7, t0, 14, t1 - t0);
+        var gg = x.createLinearGradient(0, t0, 0, t1); gg.addColorStop(0, '#ff9a5c'); gg.addColorStop(0.5, '#7ad7ff'); gg.addColorStop(1, '#c9a6ff'); x.fillStyle = gg; x.fillRect(tx - 4, ty(st.T), 8, t1 - ty(st.T));
+        x.fillStyle = '#fff'; x.beginPath(); x.arc(tx, ty(st.T), 7, 0, 7); x.fill();
+        x.font = '10px system-ui'; x.textAlign = 'left';
+        [[15, '地球约 15 °C', '#9fe870'], [0, '0 °C 水结冰', '#8fd0ff'], [-88.6, '−89 乙烷变液', '#ffb35c'], [-161.5, '−162 甲烷变液', '#ffd27a'], [TITAN, '土卫六 −179', '#ff9a5c'], [-195.8, '−196 氮气变液', '#c9a6ff']].forEach(function (m, i) {
+          var yy = ty(m[0]); x.fillStyle = m[2]; x.fillRect(tx + 9, yy - 0.5, 8, 1); x.fillText(m[1], tx + 20, yy + (i === 4 ? 9 : 3)); });
+        var L = Math.max(150, W * 0.3), w = Math.min(64, (W - L - 20) / 4 - 16), top = 50, h = H - 100;
+        SUBS.forEach(function (S, i) { var cx = L + (W - L - 10) * (i + 0.5) / 4; jar2D(x, S, phase(S, st.T), cx, top, w, h, t); });
+        if (goal(st.T)) { x.strokeStyle = 'rgba(255,210,122,.7)'; x.setLineDash([5, 4]); x.strokeRect(L - 6, 30, W - L - 4, H - 46); x.setLineDash([]); }
+        requestAnimationFrame(loop); })(0); },
+    draw: function (s) { st = s; }
+  };
+}
+EF.TT = { SUBS: SUBS, PH: PH, phase: phase, goal: goal, TITAN: TITAN, TMIN: TMIN, TMAX: TMAX, SAFE: SAFE, HOME: HOME, DANGER: DANGER, txt: txt, card: card, rnd: rnd, temp: temp, temp2D: temp2D };
+})();
+</script>
+<script>if (EF.glTier !== 'low') { var t3 = document.createElement('script'); t3.type = 'module'; t3.src = '../ef-titan3d.js?v=1'; document.head.appendChild(t3); }</script>
+<script>
+(function () {
+var TT = EF.TT, txt = TT.txt, card = TT.card;
+
+/* ---------- L0 −179 °C 的世界(平面版) ---------- */
+function L0(stage, api) { TT.temp(stage, api, TT.temp2D()); }
+
+/* ---------- L1 下甲烷雨的地方(三窗联动) ---------- */
+var STEP = [
+  { n: '湖面', d: '湖里是液态的甲烷(还溶着乙烷和一些氮气)', b: '' },
+  { n: '蒸发', d: '甲烷分子从湖面跑进空气,变成看不见的气体,往上升(不到沸点也会蒸发,就像地球上的水不到 100 °C 也能晒干)', b: '蒸发' },
+  { n: '凝结成云', d: '越往高处越冷,甲烷气体聚成小液滴,变成云', b: '凝结成云' },
+  { n: '下雨', d: '小液滴越聚越大,落下来——最大的雨滴能比地球上的还大,落得却慢得多,像地球上的雪花那样慢慢飘', b: '下雨' }
+];
+function L1(stage, api) {
+  var T = EF.tri(stage, { state: { ph: 0, cyc: 0 }, h: 250 }), st = T.state, done = false, asked = false, t0 = 0;
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips';
+  var order = [3, 1, 2];
+  ctl.innerHTML = order.map(function (i) { return '<button class="ef-btn ghost chip" data-i="' + i + '">' + STEP[i].b + '</button>'; }).join('');
+  stage.appendChild(ctl);
+  var msg = txt(stage, '这里是土卫六上的一片甲烷湖。按正确的顺序点按钮,让甲烷走完一整圈循环:湖 → ? → ? → ? → 回到湖。');
+  var ans = document.createElement('div'); ans.className = 'ctl chips'; stage.appendChild(ans);
+  card(stage, TT.HOME);
+  ctl.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () { if (done || asked) return; var i = +b.dataset.i, want = (st.ph + 1) % 4;
+    if (st.ph === 3) { EF.play('tick'); msg.innerHTML = '雨正在落回湖里,稍等一下。'; return; }
+    if (i === want) { EF.play('whoosh'); T.set({ ph: i }, 'ctl'); msg.innerHTML = '<b>' + STEP[i].n + '</b>:' + STEP[i].d + '。';
+      if (i === 3) setTimeout(function () { if (done) return; T.set({ ph: 0, cyc: st.cyc + 1 }, 'ctl'); msg.innerHTML = '雨水汇进河流,流回湖里——甲烷走完了一整圈!'; EF.play('fuse'); if (!asked) { asked = true; setTimeout(ask, 1200); } }, EF.reduced ? 300 : 2200); }
+    else { EF.play('tick'); msg.innerHTML = '顺序不对:现在甲烷在"' + STEP[st.ph].n + '",下一步该是什么?'; api.say(st.ph === 0 ? '湖里的液体要先变成气体,才能飞上天。' : st.ph === 1 ? '气体升到高处变冷,会怎样?' : '云里的小液滴越聚越大,就……'); } }; });
+  function ask() {
+    msg.innerHTML += '<br><b>想一想:土卫六的这场循环,和地球的水循环比,有什么相同、有什么不同?</b>';
+    ans.innerHTML = [['道理一样,只是主角从水换成了甲烷', 1], ['土卫六的雨是往天上下的', 0], ['蒸发和下雨时,甲烷变成了别的物质', 0]].map(function (o) { return '<button class="ef-btn ghost chip" data-ok="' + o[1] + '">' + o[0] + '</button>'; }).join('');
+    ans.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () { if (done) return;
+      if (b.dataset.ok === '1') { done = true; EF.play('fuse'); ans.innerHTML = ''; msg.innerHTML = '对!蒸发、凝结、降雨,都只是甲烷在<b>气体和液体之间来回</b>,分子本身没有变,属于<b>物理变化</b>。地球上的主角是水,土卫六冷到 −179 °C,水冻成了岩石,主角就换成了甲烷。土卫六是太阳系里除地球外,唯一已知地表有稳定液体湖海的天体。(不过在几百千米的高空,一部分甲烷会被阳光里的紫外线打碎、变成别的物质——那是化学变化,下一关就去看。)'; setTimeout(api.complete, 2600); }
+      else { EF.play('tick'); msg.innerHTML = /别的物质/.test(b.textContent) ? '看看中间那一窗:蒸发、下雨时,甲烷分子一直是"一个碳、四个氢",只是挨得近或远。' : '雨还是往下落的,只是落得慢。'; api.say('看"看不见"那一窗:分子变了吗?'); } }; });
+  }
+  /* 宏观:天空、湖、云、雨 */
+  var CM = EF.canvas(T.pane.macro, 250), rr = TT.rnd(11), DR = []; for (var i = 0; i < 40; i++) DR.push([rr(), rr(), rr()]);
+  var since = 0, lastPh = -1;
+  (function loop(t) {
+    if (!CM.c.isConnected) return; var x = CM.x, W = CM.W, H = CM.H; x.clearRect(0, 0, W, H);
+    if (st.ph !== lastPh) { lastPh = st.ph; since = t; } var age = EF.reduced ? 1 : Math.min(1, (t - since) / 1500);
+    var sky = x.createLinearGradient(0, 0, 0, H); sky.addColorStop(0, '#5a3610'); sky.addColorStop(0.6, '#c98a3a'); sky.addColorStop(1, '#e0a85a'); x.fillStyle = sky; x.fillRect(0, 0, W, H);
+    var ly = H * 0.74; x.fillStyle = '#3a2a1a'; x.fillRect(0, ly, W, H - ly);
+    x.fillStyle = '#1a1410'; x.beginPath(); x.ellipse(W * 0.5, ly + 14, W * 0.34, 14, 0, 0, 7); x.fill();
+    x.strokeStyle = 'rgba(255,210,140,.35)'; for (var k = 0; k < 3; k++) { x.beginPath(); x.ellipse(W * 0.5, ly + 14, W * (0.1 + k * 0.08) + (EF.reduced ? 0 : (t / 80) % 20), 4 + k * 2, 0, 0, 7); x.stroke(); }
+    [[0.12, 0.86, 9], [0.85, 0.9, 7], [0.92, 0.82, 5]].forEach(function (p) { x.fillStyle = '#c8c4bc'; x.beginPath(); x.ellipse(p[0] * W, p[1] * H, p[2], p[2] * 0.6, 0, 0, 7); x.fill(); });
+    var cloud = st.ph === 2 ? age : st.ph === 3 ? 1 : st.ph === 0 && st.cyc ? Math.max(0, 1 - age) : 0;
+    if (cloud > 0) { x.fillStyle = 'rgba(70,50,36,' + 0.85 * cloud + ')'; [[0.3, 0.16, 50], [0.5, 0.12, 64], [0.7, 0.17, 48]].forEach(function (c) { x.beginPath(); x.ellipse(c[0] * W, c[1] * H, c[2] * W / 300, 22, 0, 0, 7); x.fill(); }); }
+    if (st.ph === 1) for (var j = 0; j < 14; j++) { var d = DR[j], px = W * (0.25 + d[0] * 0.5) + Math.sin(t / 700 + j) * 6, py = ly - ((d[1] + (EF.reduced ? 0.5 : t / 5000)) % 1) * (ly - H * 0.2); x.strokeStyle = 'rgba(255,240,220,.35)'; x.beginPath(); x.moveTo(px, py); x.quadraticCurveTo(px + 6, py - 8, px, py - 16); x.stroke(); }
+    if (st.ph === 3) for (var m = 0; m < 26; m++) { var e = DR[m], qx = W * (0.2 + e[0] * 0.6), qy = H * 0.22 + ((e[1] + (EF.reduced ? 0.5 : t / 3800 * (0.7 + e[2] * 0.3))) % 1) * (ly - H * 0.22); x.fillStyle = 'rgba(255,220,150,.75)'; x.beginPath(); x.ellipse(qx, qy, 2.6, 3.6, 0, 0, 7); x.fill(); }
+    x.fillStyle = '#f4ede1'; x.font = '12px system-ui'; x.textAlign = 'center'; x.fillText('现在:' + STEP[st.ph].n + (st.cyc ? ' · 已循环 ' + st.cyc + ' 圈' : ''), W / 2, H - 8);
+    x.fillStyle = 'rgba(255,255,255,.7)'; x.font = '10px system-ui'; x.textAlign = 'left'; x.fillText('约 −179 °C · 土卫六(示意)', 6, 14);
+    requestAnimationFrame(loop);
+  })(0);
+  /* 微观:甲烷分子挨得近(液体)/ 散得开(气体) */
+  var CU = EF.canvas(T.pane.micro, 250), P = [], r2 = TT.rnd(23);
+  for (var n = 0; n < 22; n++) P.push({ lx: r2(), ly: r2(), gx: r2(), gy: r2(), cx: 0.5, cy: 0.5, x: 0.5, y: 0.8, ph: r2() * 6 });
+  function mol(x, px, py, s) { EF.ball(x, px, py, s, '#3a3a3a', ''); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (q) { EF.ball(x, px + q[0] * s * 0.8, py + q[1] * s * 0.8, s * 0.5, '#f4f4f4', ''); }); }
+  (function loop(t) {
+    if (!CU.c.isConnected) return; var x = CU.x, W = CU.W, H = CU.H; x.clearRect(0, 0, W, H);
+    P.forEach(function (p, i) { var tx, ty;
+      if (st.ph === 1) { tx = 0.1 + ((p.gx + (EF.reduced ? 0 : t / 9000 * (p.ph - 3) / 3)) % 1 + 1) % 1 * 0.8; ty = 0.1 + p.gy * 0.6; }
+      else if (st.ph === 2) { var c = i % 4; tx = 0.2 + c * 0.2 + (p.lx - 0.5) * 0.08; ty = 0.25 + (p.ly - 0.5) * 0.1; }
+      else if (st.ph === 3) { var c2 = i % 3; tx = 0.25 + c2 * 0.25 + (p.lx - 0.5) * 0.1; ty = 0.3 + ((EF.reduced ? 0.3 : t / 3000) + c2 * 0.3) % 1 * 0.5 + (p.ly - 0.5) * 0.1; }
+      else { tx = 0.15 + p.lx * 0.7; ty = 0.68 + p.ly * 0.2; }
+      p.x += (tx - p.x) * (EF.reduced ? 1 : 0.06); p.y += (ty - p.y) * (EF.reduced ? 1 : 0.06);
+      var j = EF.reduced ? 0 : Math.sin(t / 200 + p.ph) * 1.5; mol(x, p.x * W + j, p.y * H, 6); });
+    x.fillStyle = 'rgba(255,255,255,.75)'; x.font = '10px system-ui'; x.textAlign = 'left';
+    x.fillText(st.ph === 1 ? '气体:甲烷分子散得很开,到处乱飞' : st.ph === 2 ? '云:分子重新挤在一起,聚成小液滴' : st.ph === 3 ? '雨:小液滴并成大雨滴落下' : '液体:分子挨得很近,能流动', 4, H - 6);
+    x.fillText('黑球:碳 C · 白球:氢 H · 一个甲烷分子 CH₄(示意)', 4, 12);
+    requestAnimationFrame(loop);
+  })(0);
+  /* 符号 */
+  var sy = document.createElement('div'); sy.className = 'tri-sym'; T.pane.sym.appendChild(sy);
+  T.on(function (s) {
+    var up = s.ph === 1, down = s.ph === 2 || s.ph === 3;
+    sy.innerHTML = '<div class="eq" style="font-size:17px"><span class="' + (up ? 'hot' : 'dim') + '">CH₄(液) → CH₄(气)</span></div><p class="note-sm">蒸发:从湖面跑进空气,要<b>吸收热量</b>。</p>' +
+      '<div class="eq" style="font-size:17px"><span class="' + (down ? 'hot' : 'dim') + '">CH₄(气) → CH₄(液)</span></div><p class="note-sm">凝结:在高空变冷,聚成液滴,会<b>放出热量</b>。</p>' +
+      '<p class="note-sm">箭头两边都是 CH₄:分子没有变成别的物质,只是从"挤在一起"变成"散开",或者反过来,这是<b>物理变化</b>。地球上的水循环,是 H₂O 在做同样的事。</p>';
+  });
+}
+
+/* ---------- L2 橙色的雾从哪来?(打碎与拼接) ---------- */
+var BUILD = [
+  { n: '甲烷 CH₄ 和氮气 N₂', d: '高空里飘着氮气和少量甲烷,都是无色的气体。', sky: 0 },
+  { n: '乙烷 C₂H₆', d: '两个甲烷碎片拼在一起,成了乙烷:两个碳的小分子,还是无色的。总的结果可以写成 2CH₄ → C₂H₆ + H₂(示意)。', sky: 0.12 },
+  { n: '更大的分子(比如苯 C₆H₆)', d: '碎片越拼越多,出现了六个碳连成一圈的苯,还有含氮的分子。卡西尼号探测器在土卫六高空测到过苯。', sky: 0.38 },
+  { n: '又长又复杂的大分子', d: '碳、氢、氮连成长链和网,成分复杂。科学家在实验室里模拟出过类似的橙褐色物质,把它们叫"托林"。', sky: 0.7 },
+  { n: '橙色雾粒', d: '许多大分子聚成小颗粒,再粘成松松的团,飘满高空——这就是给土卫六罩上橙色外衣的雾。', sky: 1 }
+];
+function L2(stage, api) {
+  var C = EF.canvas(stage, 290), st = { lv: 0, frag: 0, uv: 0 }, done = false, asked = false;
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips';
+  ctl.innerHTML = '<button class="ef-btn" id="uv">☀ 紫外线照射</button><button class="ef-btn ghost" id="join" disabled>拼接碎片</button><b id="lvN" style="align-self:center"></b>';
+  stage.appendChild(ctl);
+  var ans = document.createElement('div'); ans.className = 'ctl chips'; stage.appendChild(ans);
+  var msg = txt(stage, '这里是土卫六几百到一千多千米的高空。先用<b>紫外线</b>把分子打碎,再把碎片<b>拼接</b>成更大的分子,一步步拼出橙色的雾。');
+  card(stage, TT.DANGER, true);
+  var uv = ctl.querySelector('#uv'), jn = ctl.querySelector('#join');
+  function sync() { ctl.querySelector('#lvN').textContent = '第 ' + st.lv + '/4 步 · ' + BUILD[st.lv].n; jn.disabled = st.frag < 2 || st.lv >= 4; uv.disabled = st.lv >= 4; }
+  uv.onclick = function () { if (done || st.lv >= 4) return; EF.play('whoosh'); st.uv = 1; st.frag = Math.min(4, st.frag + 2); sync();
+    msg.innerHTML = '阳光里的紫外线(还有来自土星的高能粒子)把甲烷、氮气打碎成活泼的<b>碎片</b>;轻飘飘的氢会慢慢逃到太空。现在有 ' + st.frag + ' 块碎片,试试拼接。'; };
+  jn.onclick = function () { if (done || st.frag < 2 || st.lv >= 4) return; EF.play('fuse'); st.frag -= 2; st.lv++; sync(); msg.innerHTML = '<b>' + BUILD[st.lv].n + '</b>:' + BUILD[st.lv].d;
+    if (st.lv >= 4 && !asked) { asked = true; setTimeout(ask, 1600); } else if (st.frag < 2) msg.innerHTML += ' 碎片用完了,再照一次紫外线。'; };
+  function ask() {
+    msg.innerHTML += '<br><b>为什么这些雾粒让土卫六看起来是橙色的?</b>';
+    ans.innerHTML = [['它们自己会发出橙色的光', 0], ['它们吸收较多蓝紫光,剩下的光偏橙红', 1], ['它们正在燃烧', 0]].map(function (o) { return '<button class="ef-btn ghost chip" data-ok="' + o[1] + '">' + o[0] + '</button>'; }).join('');
+    ans.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () { if (done) return;
+      if (b.dataset.ok === '1') { done = true; EF.play('fuse'); ans.innerHTML = ''; msg.innerHTML = '对!这些有机大分子把阳光里较多的蓝紫光吸收掉,反射、透过的光偏橙红,于是整颗星球裹在一层橙色的雾里。土卫六上几乎没有氧气,雾粒不会燃烧。雾粒的具体成分,科学家还在研究。'; setTimeout(api.complete, 2600); }
+      else { EF.play('tick'); msg.innerHTML = /燃烧/.test(b.textContent) ? '燃烧需要氧气,土卫六的大气里几乎没有氧气。' : '雾粒自己不发光,它们是被太阳照亮的。'; api.say('想想火星那一站:物质的颜色,和它吸收、反射哪些光有关。'); } }; });
+  }
+  sync();
+  var rr = TT.rnd(31), M = []; for (var i = 0; i < 30; i++) M.push([rr(), rr(), rr(), i % 5 === 0 ? 'm' : 'n']);
+  function chain(x, cx, cy, n, s, t) { for (var k = 0; k < n; k++) { var a = k / n * 6.283 + (EF.reduced ? 0 : t / 3000), r = n > 2 ? s * n * 0.28 : s * 0.7 * k; var px = cx + (n > 2 ? Math.cos(a) * r : (k - (n - 1) / 2) * s * 1.6), py = cy + (n > 2 ? Math.sin(a) * r * 0.7 : 0); EF.ball(x, px, py, s, k % 4 === 3 && n > 6 ? '#7a8cff' : '#3a3a3a', ''); } }
+  (function loop(t) {
+    if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+    var s = BUILD[st.lv].sky, g = x.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, 'rgb(' + (20 + s * 60 | 0) + ',' + (16 + s * 34 | 0) + ',' + (30 - s * 18 | 0) + ')'); g.addColorStop(1, 'rgb(' + (40 + s * 170 | 0) + ',' + (40 + s * 100 | 0) + ',' + (60 - s * 30 | 0) + ')');
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
+    if (st.uv && !EF.reduced) { for (var u = 0; u < 5; u++) { var ux = ((u * 0.23 + t / 2600) % 1) * W; x.strokeStyle = 'rgba(190,140,255,.45)'; x.beginPath(); x.moveTo(ux, 0); x.lineTo(ux - 40, H * 0.45); x.stroke(); } }
+    M.forEach(function (m, i) { var px = (m[0] + (EF.reduced ? 0 : t / 30000 * (m[2] - 0.5))) % 1 * W, py = 20 + m[1] * H * 0.5; px = (px + W) % W;
+      if (m[3] === 'm') { EF.ball(x, px, py, 5, '#3a3a3a', ''); EF.ball(x, px + 5, py - 4, 2.5, '#f4f4f4', ''); EF.ball(x, px - 5, py + 4, 2.5, '#f4f4f4', ''); }
+      else { EF.ball(x, px - 3.5, py, 4, '#7a8cff', ''); EF.ball(x, px + 3.5, py, 4, '#7a8cff', ''); } });
+    for (var f = 0; f < st.frag; f++) { var fx = W * (0.15 + f * 0.1), fy = H * 0.62 + Math.sin(t / 300 + f) * 3; x.strokeStyle = '#ffe066'; x.beginPath(); x.arc(fx, fy, 9, 0, 7); x.stroke(); EF.ball(x, fx, fy, 5, '#3a3a3a', ''); }
+    var cx = W * 0.66, cy = H * 0.66, n = [1, 2, 6, 12, 0][st.lv];
+    if (st.lv < 4) chain(x, cx, cy, n, 7, t);
+    else { var r3 = TT.rnd(5); for (var q = 0; q < 40; q++) { var a = r3() * 6.283, d = r3() * 34; x.fillStyle = 'rgba(' + (200 + r3() * 40 | 0) + ',' + (110 + r3() * 40 | 0) + ',40,.9)'; x.beginPath(); x.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d * 0.8, 5 + r3() * 4, 0, 7); x.fill(); } }
+    x.fillStyle = '#f4ede1'; x.font = '12px system-ui'; x.textAlign = 'center'; x.fillText(BUILD[st.lv].n, cx, H - 12);
+    x.fillStyle = 'rgba(255,255,255,.7)'; x.font = '10px system-ui'; x.textAlign = 'left'; x.fillText('黑:碳 C · 白:氢 H · 蓝:氮 N · 黄圈:活泼的碎片(示意,未按比例)', 6, 14);
+    requestAnimationFrame(loop);
+  })(0);
+  EF.TT._haze = function () { while (st.lv < 4) { st.frag = 2; jn.disabled = false; jn.click(); } };
+}
+
+/* ---------- L3 穿过雾层落地(跟着探测器下降) ---------- */
+var STOPS = [
+  { at: 300, n: '雾层', q: '这些橙色雾粒,最后会去哪里?', opts: [['一直悬在天上不动', 0], ['慢慢落到地面', 1], ['飞回太阳', 0]], ok: '对!雾粒很轻,要花很长时间才飘落下来。科学家认为,赤道附近一道道长长的沙丘,主要就是这类有机物落地后粘结成的"沙粒"堆成的;也有一些落进了湖里。' },
+  { at: 20, n: '低空的云', q: '低空飘着的这些云,主要是什么变成的?', opts: [['水蒸气', 0], ['甲烷', 1], ['二氧化碳', 0]], ok: '对!这里的云主要是甲烷凝结成的(还混着少量乙烷)。水在这里早就冻成冰了,变不成云。' },
+  { at: 0, n: '地面', q: '着陆点散落着圆圆的"小石头",它们最可能是什么?', opts: [['铁块', 0], ['冻得硬硬的水冰', 1], ['甲烷冰', 0]], ok: '对!惠更斯号 2005 年 1 月 14 日降落时拍到了它们:小的只有几毫米,大的约 15 厘米,边角圆润,科学家认为主要是水冰。圆润的外形说明,它们曾被流动的液体(甲烷)冲刷、搬运过。' }
+];
+function L3(stage, api) {
+  var C = EF.canvas(stage, 300), st = { alt: 1270, down: false, stop: 0, wait: false }, done = false;
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips';
+  ctl.innerHTML = '<button class="ef-btn" id="dn">按住下降</button><b id="alt" style="align-self:center"></b>';
+  stage.appendChild(ctl);
+  var ans = document.createElement('div'); ans.className = 'ctl chips'; stage.appendChild(ans);
+  var msg = txt(stage, '探测器在约 1270 千米高的地方冲进土卫六的大气,先靠隔热罩减速,降到约 180 千米时才打开降落伞。按住"按住下降",沿途会停三次回答问题。');
+  card(stage, '<b style="color:#ffd27a">真实的旅程</b>:2005 年,欧洲空间局的惠更斯号探测器搭乘美国的卡西尼号来到土星,降落伞下飘了约两个半小时,落到土卫六地面,这是人类第一次、也是至今唯一一次在外太阳系的天体上着陆。这里的探测器是通用造型(示意)。');
+  var dn = ctl.querySelector('#dn');
+  function on(e) { if (e) e.preventDefault(); if (st.wait || done) return; st.down = true; }
+  function off() { st.down = false; }
+  dn.addEventListener('pointerdown', on); dn.addEventListener('pointerup', off); dn.addEventListener('pointerleave', off);
+  dn.addEventListener('keydown', function (e) { if (e.key === ' ' || e.key === 'Enter') { on(e); if (EF.reduced) st.alt = Math.max(STOPS[st.stop].at, 0); } }); dn.addEventListener('keyup', off);
+  function stopAt(k) { var S = STOPS[k]; st.wait = true; st.down = false; dn.disabled = true; EF.play('select');
+    msg.innerHTML = '<b>' + S.n + '</b>(约 ' + S.at + ' 千米):' + S.q;
+    ans.innerHTML = S.opts.map(function (o) { return '<button class="ef-btn ghost chip" data-ok="' + o[1] + '">' + o[0] + '</button>'; }).join('');
+    ans.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () { if (done) return;
+      if (b.dataset.ok === '1') { EF.play('fuse'); ans.innerHTML = ''; msg.innerHTML = S.ok; st.stop++; st.wait = false;
+        if (st.stop >= STOPS.length) { done = true; setTimeout(function () { msg.innerHTML = S.ok + '<br>下一位访客:美国国家航空航天局(NASA)的"蜻蜓号"旋翼飞行器,计划最早 2028 年 7 月发射,预计 2034 年抵达,要在这里飞来飞去,研究土卫六上的有机化学。'; }, 2600); setTimeout(api.complete, 4400); }
+        else dn.disabled = false; }
+      else { EF.play('tick'); api.say(k === 0 ? '雾粒有重量,只是很轻。' : k === 1 ? '−179 °C 时,水是什么状态?' : '回想第 1 关:土卫六的"石头"是什么做的?'); } }; });
+  }
+  (function loop() {
+    if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+    if (st.down && !st.wait && st.stop < STOPS.length) { var tgt = STOPS[st.stop].at, sp = Math.max(1.2, st.alt * 0.012); st.alt = Math.max(tgt, st.alt - (EF.reduced ? 9999 : sp)); if (st.alt <= tgt) { st.alt = tgt; stopAt(st.stop); } }
+    var a = st.alt, f = 1 - Math.min(1, a / 1270);
+    var g = x.createLinearGradient(0, 0, 0, H); g.addColorStop(0, a > 500 ? '#100c18' : '#3a240c'); g.addColorStop(1, a > 500 ? '#5a3a14' : a > 30 ? '#c98a3a' : '#d8a060'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+    var r = TT.rnd(9); for (var i = 0; i < 70; i++) { var py = ((r() * H * 1.6 + (1270 - a) * 0.9) % (H * 1.6)) - H * 0.3, px = r() * W; x.fillStyle = 'rgba(230,150,60,' + (a < 30 ? 0.05 : 0.25 + r() * 0.3) + ')'; x.beginPath(); x.arc(px, H - py, 2 + r() * 5, 0, 7); x.fill(); }
+    if (a < 60) { var cl = Math.min(1, (60 - a) / 40) * (a > 5 ? 1 : a / 5 + 0.2); x.fillStyle = 'rgba(80,58,40,' + 0.7 * cl + ')'; [[0.2, 0.3], [0.55, 0.22], [0.85, 0.34]].forEach(function (c) { x.beginPath(); x.ellipse(c[0] * W, c[1] * H + a * 2, 70, 18, 0, 0, 7); x.fill(); }); }
+    var gy = H - 40 + Math.max(0, a - 0) * 3; if (gy < H + 10) { x.fillStyle = '#5a4630'; x.fillRect(0, gy, W, H - gy); x.fillStyle = '#1a1410'; x.beginPath(); x.ellipse(W * 0.18, gy + 16, W * 0.16, 8, 0, 0, 7); x.fill();
+      var r2 = TT.rnd(3); for (var p = 0; p < 18; p++) { x.fillStyle = '#cfc8bc'; x.beginPath(); x.ellipse(W * (0.4 + r2() * 0.58), gy + 8 + r2() * 26, 3 + r2() * 6, 2 + r2() * 3, 0, 0, 7); x.fill(); } }
+    var px2 = W * 0.5, py2 = a > 0 ? H * 0.42 : gy - 12;
+    x.strokeStyle = 'rgba(240,220,200,.7)'; for (var l = -2; l <= 2; l++) { x.beginPath(); x.moveTo(px2 + l * 9, py2 - 62); x.lineTo(px2 + l * 3, py2 - 8); x.stroke(); }
+    if (a > 0 && a <= 180) { x.fillStyle = '#d07a3a'; x.beginPath(); x.ellipse(px2, py2 - 64, 28, 14, 0, Math.PI, 0); x.fill(); }
+    x.fillStyle = '#c8b89a'; x.beginPath(); x.ellipse(px2, py2, 18, 7, 0, 0, 7); x.fill(); x.fillStyle = '#8a7a60'; x.fillRect(px2 - 14, py2 - 4, 28, 4);
+    x.fillStyle = '#f4ede1'; x.font = '12px system-ui'; x.textAlign = 'left'; x.fillText('高度 约 ' + Math.round(a) + ' 千米', 8, 18);
+    x.fillStyle = 'rgba(255,255,255,.6)'; x.font = '10px system-ui'; x.fillText(a > 300 ? '高空:雾粒在这里生成' : a > 20 ? '雾层下方:越来越暗、越来越橙' : a > 0 ? '低空:甲烷云' : '着陆:冰卵石滩', 8, 34);
+    ctl.querySelector('#alt').textContent = '约 ' + Math.round(a) + ' 千米';
+    requestAnimationFrame(loop);
+  })();
+  EF.TT._land = function () { st.alt = STOPS[st.stop] ? STOPS[st.stop].at + 1 : 0; st.down = true; };
+}
+
+function guard(stage, api) { var tok = {}, fired = false; stage._tok = tok; return { say: api.say, complete: function () { if (fired || stage._tok !== tok) return; fired = true; api.complete(); } }; }
+function pick(f2, k) { return function (stage, api0) { var api = guard(stage, api0); if (EF.T3 && EF.T3[k]) { try { return EF.T3[k](stage, api); } catch (e) { console.warn('[ef] 3D 玩法出错,回落平面版', e); stage.innerHTML = ''; } } return f2(stage, api); }; }
+var LEVELS = [
+  { title: '−179 °C 的世界', setup: pick(L0, 'L0'), task: '把温度往下拖,找到"水是固体、甲烷和乙烷是液体、氮气还是气体"的温度。',
+    ask: { q: '如果一个地方冷到零下 179 摄氏度,你猜那里还会下雨吗?', opts: ['不会,什么都冻住了', '会,只是下的不是水', '只会下雪'], ok: 1 },
+    hints: ['一种物质在熔点以下是固体,熔点和沸点之间是液体,沸点以上是气体。', '甲烷的沸点约 −162 °C,熔点约 −182 °C。', '把温度拖到 −170 °C 到 −180 °C 之间试试。'],
+    explain: '物质是固体、液体还是气体,取决于温度(也和气压有关)。水在 0 °C 结冰;甲烷要到约 −162 °C 才变成液体,约 −182 °C 才冻住。土卫六地面约 <b>−179 °C</b>:水冰硬得像岩石,构成了它的地壳;甲烷和乙烷是液体,会下雨、汇成湖海;氮气仍是气体,是大气的主要成分。不过液体在沸点以下也会慢慢蒸发,所以土卫六的空气里也飘着少量甲烷气体。' },
+  { title: '下甲烷雨的地方', setup: pick(L1, 'L1'), task: '按正确顺序点按钮,让湖里的甲烷走完一整圈,再回到湖里。',
+    ask: { q: '土卫六的湖和河里流的是什么?', opts: ['水', '液态的甲烷和乙烷', '熔化的岩浆'], ok: 1 },
+    hints: ['液体要先变成气体,才能升上天。', '气体在高处变冷,会重新聚成液滴。', '液滴越聚越大,就落下来了。'],
+    explain: '土卫六有一套和地球水循环一样的"甲烷循环":湖里的甲烷<b>蒸发</b>成气体,升到高处变冷<b>凝结</b>成云,再<b>降雨</b>落回地面,汇入河流和湖海。整个过程中甲烷分子没有变成别的物质,只在气体和液体之间来回,是<b>物理变化</b>;蒸发吸热、凝结放热。土卫六是太阳系里除地球外唯一已知地表有稳定液体的天体,北极附近最大的"海"——克拉肯海,面积和地球上最大的湖泊里海差不多。(不过在几百千米的高空,一部分甲烷会被阳光里的紫外线打碎、变成别的物质——那是化学变化,下一关就去看。)' },
+  { title: '橙色的雾从哪来?', setup: pick(L2, 'L2'), task: '用紫外线打碎分子,再把碎片拼接起来,一步步拼出橙色的雾粒。',
+    ask: { q: '土卫六的橙色,最可能来自哪里?', opts: ['地面上的铁锈', '高空大气里的雾', '土星的反光'], ok: 1 },
+    hints: ['先照紫外线,得到碎片。', '每次拼接要两块碎片。', '分子越大、越复杂,往往越容易吸收可见光,颜色就越深。'],
+    explain: '在土卫六几百到一千多千米的高空,阳光里的<b>紫外线</b>和来自土星的高能粒子把氮气、甲烷打碎成活泼的碎片;碎片重新拼接,先生成乙烷等小分子,再长成苯这类更大的分子,最后连成又长又复杂的大分子,聚成雾粒。这些有机大分子吸收较多蓝紫光,所以雾和整颗星球看起来是橙色的。实验室里模拟出的类似物质被叫作"托林",它是许多种分子的混合物,具体成分仍在研究。' },
+  { title: '穿过雾层落地', setup: pick(L3, 'L3'), task: '按住下降,跟着探测器穿过雾层和云,沿途回答三个问题。',
+    ask: { q: '探测器为什么能在土卫六上靠降落伞慢慢飘下来?', opts: ['土卫六的大气比地球的还浓', '土卫六没有大气', '探测器很轻,像羽毛'], ok: 0 },
+    hints: ['雾粒很轻,会慢慢往下落。', '−179 °C 时水已经冻住了。', '回想第 1 关:土卫六的"石头"是什么做的?'],
+    explain: '土卫六的大气以氮气为主,地面气压约为地球的 1.5 倍,而引力只有地球的约七分之一,所以降落伞、甚至旋翼飞行器都很好用。2005 年 1 月 14 日,惠更斯号在降落伞下飘了约两个半小时着陆,拍到了圆润的冰卵石。高空生成的雾粒慢慢飘落,堆成沙丘、落进湖海;低空的云主要是甲烷。NASA 的"蜻蜓号"计划最早 2028 年 7 月发射,预计 2034 年抵达,继续研究这里的有机化学。' }
+];
+var NOTES = { title: '元素工坊 · 土卫六为什么是橙色的?', items: [
+  '土卫六是土星最大的卫星,地面约 −179 °C,地面气压约为地球的 1.5 倍,大气主要是氮气,还有少量甲烷。',
+  '物质的状态取决于温度(也和气压有关):在土卫六上,水冰硬得像岩石,甲烷和乙烷是液体,氮气是气体。',
+  '土卫六有"甲烷循环":蒸发 → 凝结成云 → 降雨 → 汇入河湖,和地球的水循环道理相同,都是物理变化;蒸发吸热、凝结放热。',
+  '土卫六是太阳系里除地球外,唯一已知地表有稳定液体湖海的天体,湖里主要是甲烷和乙烷。',
+  '橙色来自高空的雾:紫外线和高能粒子打碎氮气、甲烷,碎片拼成乙烷、苯等,再连成复杂的大分子并聚成雾粒;它们吸收较多蓝紫光,看起来是橙色。实验室模拟物叫"托林",成分仍在研究。',
+  '雾粒慢慢飘落,科学家认为赤道沙丘主要由这类有机颗粒组成。',
+  '2005 年 1 月 14 日,惠更斯号降落在土卫六,拍到圆润的冰卵石;"蜻蜓号"计划最早 2028 年 7 月发射,预计 2034 年抵达。',
+  '安全:甲烷是天然气的主要成分,易燃易爆,不要拿燃气、打火机做实验;在家只做冰水杯外壁凝结小水珠的观察,请大人陪同。'],
+  bridge: '土卫六的橙色是它的"化学";星桥对岸的任务即将点亮。' };
+EF.mission('titan', LEVELS, NOTES);
+})();
+</script>
+</body>
+</html>

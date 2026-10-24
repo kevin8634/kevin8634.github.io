@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.9(crystal 霜镜舞台、cabbage 染色台、fireworks 夜空焰色台、battery 电光实验台、rocks 岩石标本台、mars 锈红舞台)
+/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.10(crystal 霜镜舞台、cabbage 染色台、fireworks 夜空焰色台、battery 电光实验台、rocks 岩石标本台、mars 锈红舞台、titan 橙雾舞台)
    每关一个 3D 场景,随关卡切换淡入淡出;关卡玩法仍在前景面板里进行。低档不加载(保留 v0.1 星空背景)。 */
 import { THREE, makeGL, P, glowSprite, starMaterial, fresnelMaterial } from './ef-gl.js?v=2';
 const EF = window.EF;
@@ -52,7 +52,11 @@ function boot() {
   if (isM) { /* v0.9:锈红舞台——暗赭 + 铁锈橙边光(奥加) */
     scene.fog = new THREE.FogExp2(0x180a06, 0.03); key.color.set(0xfff0e0); rim.color.set(0xe0703a);
   }
-  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : isK ? cabbageScenes() : isF ? fireScenes() : isB ? voltScenes() : isR ? rockScenes() : isM ? marsScenes() : [];
+  const isT = EF.missionId === 'titan';
+  if (isT) { /* v0.10:橙雾舞台——暗琥珀 + 雾橙边光(奥加) */
+    scene.fog = new THREE.FogExp2(0x1a1006, 0.03); key.color.set(0xfff0d8); rim.color.set(0xffa040);
+  }
+  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : isK ? cabbageScenes() : isF ? fireScenes() : isB ? voltScenes() : isR ? rockScenes() : isM ? marsScenes() : isT ? titanScenes() : [];
   LV.forEach(s => { scene.add(s.g); setA(s, 0); });
 
   /* ---------- stars:主序星 → 洋葱分层的大质量恒星 → 铁核心 → 超新星遗迹 ---------- */
@@ -279,6 +283,32 @@ function boot() {
       const skin = new THREE.Mesh(new THREE.CylinderGeometry(0.47, 0.47, 0.12, 32), reg(s, new THREE.MeshStandardMaterial({ color: 0xb4552c, roughness: 1 }))); skin.position.y = 0.92; s.g.add(skin);
       const fe = glowSprite([[0, 'rgba(255,220,160,.9)'], [0.3, 'rgba(255,160,80,.4)'], [1, 'rgba(0,0,0,0)']], 1.2); reg(s, fe.material); fe.position.set(0, 1.9, 0); s.g.add(fe);
       s.upd = t => { s.g.rotation.y = t * 0.25; s.g.rotation.x = 0.35; fe.position.y = 1.9 - ((t * 0.15) % 1) * 0.9; }; out.push(s); }
+    return out;
+  }
+
+  /* ---------- titan(奥加):裹着雾的土卫六 → 甲烷云与雨 → 越拼越长的碳链 → 降落伞下的探测器与冰卵石 ---------- */
+  function titanScenes() {
+    const out = [], add = THREE.AdditiveBlending;
+    { const s = SC(), m = new THREE.Mesh(new THREE.SphereGeometry(1.2, 64, 48), reg(s, new THREE.MeshStandardMaterial({ color: 0xd88a30, roughness: 1 }))); s.g.add(m);
+      const hz = new THREE.Mesh(new THREE.SphereGeometry(1.32, 48, 32), reg(s, new THREE.MeshBasicMaterial({ color: 0xffb050, side: THREE.BackSide }), 0.22)); s.g.add(hz);
+      const g = glowSprite([[0, 'rgba(255,180,90,.4)'], [0.5, 'rgba(255,140,60,.1)'], [1, 'rgba(0,0,0,0)']], 4.4); reg(s, g.material); s.g.add(g);
+      s.upd = t => { s.g.rotation.y = t * 0.06; }; out.push(s); }
+    { const s = SC(), cl = new THREE.Group(); [[-0.6, 0.9, 0.5], [0.2, 1.05, 0.65], [0.9, 0.85, 0.45]].forEach(([x, y, r]) => { const c = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), reg(s, new THREE.MeshStandardMaterial({ color: 0x5a4030, roughness: 1 }), 0.9)); c.position.set(x, y, 0); c.scale.y = 0.5; cl.add(c); }); s.g.add(cl);
+      const lake = new THREE.Mesh(new THREE.CircleGeometry(1.4, 48), reg(s, new THREE.MeshStandardMaterial({ color: 0x1a1410, roughness: 0.1, metalness: 0.3 }))); lake.rotation.x = -Math.PI / 2; lake.position.y = -1.1; s.g.add(lake);
+      const N = 60, pp = new Float32Array(N * 3); for (let i = 0; i < N; i++) pp.set([-1.2 + rnd() * 2.4, rnd() * 1.8 - 1, rnd() * 0.6 - 0.3], i * 3);
+      const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pp, 3)); const pm = reg(s, new THREE.PointsMaterial({ color: 0xffd08a, size: 0.07, depthWrite: false })); const rain = new THREE.Points(pg, pm); s.g.add(rain);
+      s.upd = t => { rain.position.y = -((t * 0.25) % 0.9); s.g.rotation.y = Math.sin(t * 0.15) * 0.4; }; out.push(s); }
+    { const s = SC(), c = reg(s, new THREE.MeshStandardMaterial({ color: 0x3a3a3a, roughness: 0.4 })), n = reg(s, new THREE.MeshStandardMaterial({ color: 0x7a8cff, roughness: 0.4 })), sp = new THREE.SphereGeometry(0.16, 18, 12);
+      for (let i = 0; i < 14; i++) { const m = new THREE.Mesh(sp, i % 5 === 4 ? n : c); m.position.set(Math.cos(i * 0.9) * (0.4 + i * 0.07), (i - 7) * 0.16, Math.sin(i * 0.9) * (0.4 + i * 0.07)); s.g.add(m); }
+      const g = glowSprite([[0, 'rgba(255,170,80,.5)'], [0.5, 'rgba(255,120,40,.12)'], [1, 'rgba(0,0,0,0)']], 3); reg(s, g.material); s.g.add(g);
+      s.upd = t => { s.g.rotation.y = t * 0.3; }; out.push(s); }
+    { const s = SC(), probe = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.4, 0.14, 24), reg(s, new THREE.MeshStandardMaterial({ color: 0xc8b89a, metalness: 0.4, roughness: 0.5 }))); probe.add(body);
+      const chute = new THREE.Mesh(new THREE.SphereGeometry(0.75, 24, 12, 0, 6.283, 0, 1.2), reg(s, new THREE.MeshStandardMaterial({ color: 0xd07a3a, roughness: 0.8, side: THREE.DoubleSide }))); chute.position.y = 1.3; probe.add(chute);
+      const lm = reg(s, new THREE.LineBasicMaterial({ color: 0xf0dcc8 }), 0.6); for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283, lg = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0.07, 0), new THREE.Vector3(Math.cos(a) * 0.68, 0.95, Math.sin(a) * 0.68)]); probe.add(new THREE.Line(lg, lm)); }
+      s.g.add(probe);
+      const pb = reg(s, new THREE.MeshStandardMaterial({ color: 0xd8d2c6, roughness: 0.7 })); for (let i = 0; i < 9; i++) { const p = new THREE.Mesh(new THREE.SphereGeometry(0.08 + rnd() * 0.1, 12, 8), pb); p.scale.y = 0.6; p.position.set(-1.2 + rnd() * 2.4, -1.25, -0.4 + rnd() * 0.8); s.g.add(p); }
+      s.upd = t => { probe.position.y = 0.3 - ((t * 0.08) % 1) * 0.9; probe.rotation.y = t * 0.2; }; out.push(s); }
     return out;
   }
 

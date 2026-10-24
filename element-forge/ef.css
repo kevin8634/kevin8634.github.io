@@ -208,3 +208,29 @@ body.mission.rust .m-stage .ctl{border-color:rgba(224,112,58,.24)}
 body.mission.rust .m-guide{box-shadow:0 0 40px rgba(224,112,58,.12)}
 .card.planet.live{opacity:1;pointer-events:auto}.card.planet.live::after{content:"星球篇 · 已点亮";color:#ffb35c;border-color:#ffb35c66}
 .m-stage .ctl:empty{display:none}
+
+/* v0.10 titan:橙雾主题 + 首页火星基地概念图动效 */
+body.haze{--line:rgba(240,160,64,.28)}
+body.mission.haze .cn{border-color:#f0a040;filter:drop-shadow(0 0 6px #f0a04088)}
+body.mission.haze .m-stage{border-color:rgba(240,160,64,.28);background:rgba(26,16,6,.46)}
+body.mission.haze .m-stage .ctl{border-color:rgba(240,160,64,.24)}
+body.mission.haze .m-guide{box-shadow:0 0 40px rgba(240,160,64,.12)}
+.mb{position:relative;overflow:hidden;max-height:360px}.mb img{display:block}
+.mb svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.mb .fl{fill:none;stroke:#fff1b0;stroke-width:3.2;stroke-linecap:round;stroke-dasharray:7 30;opacity:.85;animation:mbFlow 2.6s linear infinite;filter:url(#mbG)}
+.mb .fl.b{animation-delay:-.9s}.mb .fl.c{animation-delay:-1.7s}
+.mb .bu{fill:#e8fbff;opacity:0;animation:mbUp 3.2s ease-in infinite}
+.mb .gl{animation:mbGlow 3s ease-in-out infinite;mix-blend-mode:screen}
+.mb .fan{transform-box:fill-box;transform-origin:center;animation:mbSpin 1.4s linear infinite}
+.mb .du{fill:#e8b88a;opacity:0;animation:mbDust 9s linear infinite}
+.mb .ic{fill:none;stroke:#ffe6a8;stroke-width:3;opacity:0;animation:mbIc 4s ease-out infinite;transform-box:fill-box;transform-origin:center}
+.mb .dr{fill:#dff6ff;opacity:0;animation:mbDrip 2.4s ease-in infinite}
+@keyframes mbFlow{to{stroke-dashoffset:-37}}
+@keyframes mbUp{0%{opacity:0;transform:translateY(0)}15%{opacity:.9}100%{opacity:0;transform:translateY(-180px)}}
+@keyframes mbGlow{0%,100%{opacity:.25}50%{opacity:.75}}
+@keyframes mbSpin{to{transform:rotate(360deg)}}
+@keyframes mbDust{0%{opacity:0;transform:translate(0,0)}15%{opacity:.7}100%{opacity:0;transform:translate(170px,-24px)}}
+@keyframes mbIc{0%{opacity:.9;transform:scale(.8)}70%,100%{opacity:0;transform:scale(1.35)}}
+@keyframes mbDrip{0%{opacity:0;transform:translateY(0)}20%{opacity:.9}100%{opacity:0;transform:translateY(40px)}}
+.mb.still svg *,.mb.still svg{animation:none!important}.mb.still .bu,.mb.still .du,.mb.still .ic,.mb.still .dr{display:none}
+@media (prefers-reduced-motion:reduce){.mb svg *{animation:none!important}.mb .bu,.mb .du,.mb .ic,.mb .dr{display:none}}
