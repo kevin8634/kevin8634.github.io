@@ -17,7 +17,7 @@
 "use strict";
 (function () {
   var P = NV.Phys, Dr = NV.Draw;
-  function bg(L) { L.ctx.clearRect(0, 0, L.w, L.h); Dr.stars(L.ctx, L.w, L.h, 5, Math.round(L.w * L.h / 9000)); }
+  function bg(L) { L.ctx.clearRect(0, 0, L.w, L.h); if (L.d3) { L.ctx.shadowColor = "rgba(8,6,26,.8)"; L.ctx.shadowBlur = 4; return; } Dr.stars(L.ctx, L.w, L.h, 5, Math.round(L.w * L.h / 9000)); }
   function duck(L, on) { if (!!L.st.ducked !== on) { L.st.ducked = on; L.snd.duck(on); } }
 
   /* ---------- 示波器 ---------- */
@@ -37,7 +37,7 @@
   /* ================= 第 1 关 声音是振动 ================= */
   var TARGET = 440;
   var S1 = {
-    name: "声音是振动",
+    name: "声音是振动", d3: true, env3: "city",
     goal: "绿色虚线是一个更高的音(440 Hz)。拖动「振动快慢」,让你的波形和它重合,再点「比较」。",
     note: "理想弦,只画基频;示波器窗口 10 ms。",
     ask: "弦振得快一点或慢一点,声音会有什么不同?",
@@ -101,10 +101,11 @@
   }
   function streetFrame(L, dt, opts) {
     var c = L.ctx, st = L.st, V = streetView(L); bg(L);
-    function S(x, y) { return [V.cx + x * V.s, V.ry - y * V.s]; }
-    // 路
-    c.fillStyle = "#1d1a46"; c.fillRect(0, V.ry - 9 * V.s - 4, L.w, 18 * V.s + 8);
-    c.strokeStyle = "rgba(238,235,255,.3)"; c.setLineDash([12, 10]); c.beginPath(); c.moveTo(0, V.ry); c.lineTo(L.w, V.ry); c.stroke(); c.setLineDash([]);
+    var D3 = !!L.d3; if (D3) L.d3.view(V);
+    function S(x, y) { return D3 ? L.d3.project(x, y) : [V.cx + x * V.s, V.ry - y * V.s]; }
+    // 路(3D 舞台时由 WebGL 画街道、车、听者与声波圈,2D 只留标签、马赫锥辅助线与频率曲线)
+    if (!D3) { c.fillStyle = "#1d1a46"; c.fillRect(0, V.ry - 9 * V.s - 4, L.w, 18 * V.s + 8);
+    c.strokeStyle = "rgba(238,235,255,.3)"; c.setLineDash([12, 10]); c.beginPath(); c.moveTo(0, V.ry); c.lineTo(L.w, V.ry); c.stroke(); c.setLineDash([]); }
     var running = st.mode === "run" && L.phase === "running", dragging = st.mode === "drag";
     if (running) {
       st.t += dt * st.rate;
@@ -120,6 +121,7 @@
       var ex = typeof e === "number" ? st.x0 + st.v * e : e.x, te = typeof e === "number" ? e : e.t;
       var r = st.c * (st.t - te);
       if (r > maxR) return; keep.push(e);
+      if (D3) return;
       var p = S(ex, 0), a = Math.max(0, 0.8 - r / maxR);
       c.strokeStyle = "rgba(196,181,253," + a.toFixed(3) + ")"; c.beginPath(); c.arc(p[0], p[1], Math.max(0.5, r * V.s), 0, 7); c.stroke();
     });
@@ -133,12 +135,16 @@
     }
     // 救护车
     var cp2 = S(xs, 0), cw = Math.max(26, 9 * V.s), chh = cw * 0.5;
+    var lp;
+    if (!D3) {
     c.fillStyle = "#f5f3ff"; c.fillRect(cp2[0] - cw / 2, cp2[1] - chh / 2, cw, chh);
     c.fillStyle = "#ef4444"; c.fillRect(cp2[0] - 3, cp2[1] - chh / 2 + 3, 6, chh - 6); c.fillRect(cp2[0] - 8, cp2[1] - 3, 16, 6);
     c.fillStyle = (Math.floor(st.t * 8) % 2) ? "#60a5fa" : "#ef4444"; c.fillRect(cp2[0] - 4, cp2[1] - chh / 2 - 4, 8, 4);
     // 听者
-    var lp = S(0, -DL);
+    lp = S(0, -DL);
     c.strokeStyle = "#fbbf24"; c.lineWidth = 2; c.beginPath(); c.arc(lp[0], lp[1] - 12, 5, 0, 7); c.moveTo(lp[0], lp[1] - 7); c.lineTo(lp[0], lp[1] + 6); c.moveTo(lp[0] - 6, lp[1]); c.lineTo(lp[0] + 6, lp[1]); c.stroke();
+    }
+    lp = S(0, -DL);
     Dr.label(c, "你", lp[0] + 9, lp[1] + 4, "#fbbf24", 12);
     // 听到的频率
     var fr = [];
@@ -187,7 +193,7 @@
 
   /* ================= 第 2 关 救护车驶过 ================= */
   var S2 = {
-    name: "救护车驶过",
+    name: "救护车驶过", d3: true, env3: "street",
     goal: "救护车鸣笛驶过你身边。先猜你听到的音高怎么变,再运行。不运行时也可以用手指拖着车走。",
     note: "声源匀速直线、空气静止;画面时间按比例压缩,音高按 f′ = f·c/(c − v) 实时计算。",
     ask: "救护车靠近你和离开你的时候,声波有什么不一样?",
@@ -237,7 +243,7 @@
 
   /* ================= 第 3 关 改声速 ================= */
   var S3 = {
-    name: "改声速",
+    name: "改声速", d3: true, env3: "street",
     goal: "在「荒谬宇宙」里把声速调到比车还慢,看车头前的波纹发生了什么。",
     note: "二维几何模型;真实音爆与空气的非线性有关,这里只示意波前叠加。",
     ask: "如果声音跑得比车还慢,车前面的人什么时候才能听到它?",
@@ -280,7 +286,8 @@
     return best;
   }
   var S4 = {
-    name: "和声与拍频",
+    name: "和声与拍频", d3: true, env3: "city",
+    lampBeat: function (L) { var df = Math.abs(L.v.f2 - F1); return df >= 0.5 && df <= 12 ? Math.abs(Math.cos(Math.PI * df * L.st.t)) : null; },
     goal: "左边音叉固定 220 Hz。调右边音叉,分别找到并「锁定」:① 2:1 ② 3:2 ③ 每秒 1–5 次的「哇哇」拍频。",
     note: "两个纯音叠加;拍频 = |f₁ − f₂|。",
     ask: "两个音一起响,什么时候听起来最融洽?",
@@ -345,7 +352,7 @@
   };
 
   NV.task({
-    id: "sound", guide: "ripple",
+    id: "sound", guide: "ripple", scene3d: "core/sound3d.js",
     title: "为什么救护车经过时声音会变?",
     bridge: { href: "../../math-atlas/chord/", label: "星图 Math Atlas「为什么有的和弦好听」" },
     safety: "实验时请把音量调小;不要长时间听高音量的声音。",
