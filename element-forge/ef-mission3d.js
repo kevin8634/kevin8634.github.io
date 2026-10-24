@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.10(crystal 霜镜舞台、cabbage 染色台、fireworks 夜空焰色台、battery 电光实验台、rocks 岩石标本台、mars 锈红舞台、titan 橙雾舞台)
+/* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.11(crystal 霜镜舞台、cabbage 染色台、fireworks 夜空焰色台、battery 电光实验台、rocks 岩石标本台、mars 锈红舞台、titan 橙雾舞台、spectra 光谱舞台)
    每关一个 3D 场景,随关卡切换淡入淡出;关卡玩法仍在前景面板里进行。低档不加载(保留 v0.1 星空背景)。 */
 import { THREE, makeGL, P, glowSprite, starMaterial, fresnelMaterial } from './ef-gl.js?v=2';
 const EF = window.EF;
@@ -56,7 +56,11 @@ function boot() {
   if (isT) { /* v0.10:橙雾舞台——暗琥珀 + 雾橙边光(奥加) */
     scene.fog = new THREE.FogExp2(0x1a1006, 0.03); key.color.set(0xfff0d8); rim.color.set(0xffa040);
   }
-  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : isK ? cabbageScenes() : isF ? fireScenes() : isB ? voltScenes() : isR ? rockScenes() : isM ? marsScenes() : isT ? titanScenes() : [];
+  const isP = EF.missionId === 'spectra';
+  if (isP) { /* v0.11:光谱舞台——深海军蓝 + 熔金橙光谱(小点) */
+    scene.fog = new THREE.FogExp2(0x060a1c, 0.028); key.color.set(0xfff4e6); rim.color.set(0xffa040);
+  }
+  const LV = EF.missionId === 'carbon' ? carbonScenes() : EF.missionId === 'stars' ? starScenes() : isX ? crystalScenes() : isK ? cabbageScenes() : isF ? fireScenes() : isB ? voltScenes() : isR ? rockScenes() : isM ? marsScenes() : isT ? titanScenes() : isP ? spectraScenes() : [];
   LV.forEach(s => { scene.add(s.g); setA(s, 0); });
 
   /* ---------- stars:主序星 → 洋葱分层的大质量恒星 → 铁核心 → 超新星遗迹 ---------- */
@@ -309,6 +313,33 @@ function boot() {
       s.g.add(probe);
       const pb = reg(s, new THREE.MeshStandardMaterial({ color: 0xd8d2c6, roughness: 0.7 })); for (let i = 0; i < 9; i++) { const p = new THREE.Mesh(new THREE.SphereGeometry(0.08 + rnd() * 0.1, 12, 8), pb); p.scale.y = 0.6; p.position.set(-1.2 + rnd() * 2.4, -1.25, -0.4 + rnd() * 0.8); s.g.add(p); }
       s.upd = t => { probe.position.y = 0.3 - ((t * 0.08) % 1) * 0.9; probe.rotation.y = t * 0.2; }; out.push(s); }
+    return out;
+  }
+
+  /* ---------- spectra(小点):三棱镜与彩虹扇 → 三个振动的分子 → 凌星 → 六边形镜面望远镜 ---------- */
+  function spectraScenes() {
+    const out = [], add = THREE.AdditiveBlending, wl = EF.SP ? EF.SP.wl : (() => [255, 200, 120]);
+    { const s = SC(), tri = new THREE.Shape(); tri.moveTo(0, 0.8); tri.lineTo(-0.7, -0.45); tri.lineTo(0.7, -0.45); tri.closePath();
+      const pg = new THREE.ExtrudeGeometry(tri, { depth: 0.7, bevelEnabled: false }); pg.translate(-0.9, 0, -0.35);
+      s.g.add(new THREE.Mesh(pg, reg(s, new THREE.MeshStandardMaterial({ color: 0xfff0dd, roughness: 0.05, emissive: 0x3a2a10, depthWrite: false }), 0.3)));
+      const N = 40; for (let i = 0; i < N; i++) { const nm = 700 - i / N * 300, c = wl(nm), dark = Math.abs(nm - 589) < 4 || Math.abs(nm - 656) < 3 || Math.abs(nm - 486) < 3;
+        if (dark) continue; const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-0.6, 0, 0), new THREE.Vector3(1.9, 1.0 - i / N * 2, 0), new THREE.Vector3(1.9, 1.0 - (i + 1) / N * 2, 0)]);
+        s.g.add(new THREE.Mesh(g, reg(s, new THREE.MeshBasicMaterial({ color: new THREE.Color(c[0] / 255, c[1] / 255, c[2] / 255), blending: add, depthWrite: false, side: THREE.DoubleSide }), 0.75))); }
+      s.upd = t => { s.g.rotation.y = Math.sin(t * 0.25) * 0.4; }; out.push(s); }
+    { const s = SC(), at = (c, r, x, y, z, g) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), reg(s, new THREE.MeshStandardMaterial({ color: c, roughness: 0.35 }))); m.position.set(x, y, z); g.add(m); return m; };
+      const w = new THREE.Group(); at(0xff4a4a, 0.28, 0, 0, 0, w); at(0xf4f4f4, 0.18, 0.6, -0.45, 0, w); at(0xf4f4f4, 0.18, -0.6, -0.45, 0, w); w.position.set(-1.1, 0.9, 0); s.g.add(w);
+      const c = new THREE.Group(); at(0x3a3a3a, 0.26, 0, 0, 0, c); const o1 = at(0xff4a4a, 0.28, 0.9, 0, 0, c), o2 = at(0xff4a4a, 0.28, -0.9, 0, 0, c); s.g.add(c);
+      const m = new THREE.Group(); at(0x3a3a3a, 0.26, 0, 0, 0, m); [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]].forEach(d => at(0xf4f4f4, 0.16, d[0] * 0.42, d[1] * 0.42, d[2] * 0.42, m)); m.position.set(1.1, -0.9, 0); s.g.add(m);
+      s.upd = t => { o1.position.x = 0.9 + Math.sin(t * 6) * 0.1; o2.position.x = -0.9 + Math.sin(t * 6) * 0.1; c.children[0].position.x = -Math.sin(t * 6) * 0.08; w.rotation.y = t * 0.4; m.rotation.y = t * 0.3; m.rotation.x = t * 0.2; }; out.push(s); }
+    { const s = SC(), st = new THREE.Mesh(new THREE.SphereGeometry(1.1, 64, 48), reg(s, starMaterial())); s.g.add(st);
+      const g = glowW(4.6); reg(s, g.material); s.g.add(g);
+      const pl = new THREE.Mesh(new THREE.SphereGeometry(0.22, 32, 24), reg(s, new THREE.MeshBasicMaterial({ color: 0x050508 }))); s.g.add(pl);
+      const at2 = new THREE.Mesh(new THREE.SphereGeometry(0.27, 32, 24), reg(s, fresnelMaterial(0xff9a4a, 1.6, 0.03))); pl.add(at2);
+      s.upd = t => { st.material.uniforms.uT.value = t; const p = ((t * 0.12) % 1) * 3.4 - 1.7; pl.position.set(p, 0.1, 1.4); }; out.push(s); }
+    { const s = SC(), gold = reg(s, new THREE.MeshStandardMaterial({ color: 0xffc04a, metalness: 0.9, roughness: 0.22, emissive: 0x6a3a08, emissiveIntensity: 0.7 })), hex = new THREE.CylinderGeometry(0.26, 0.26, 0.05, 6);
+      for (let q = -2; q <= 2; q++) for (let r = -2; r <= 2; r++) { const u = -q - r; if (Math.max(Math.abs(q), Math.abs(r), Math.abs(u)) > 2 || (!q && !r)) continue; const m = new THREE.Mesh(hex, gold); m.rotation.x = Math.PI / 2; m.rotation.y = Math.PI / 6; m.position.set(0.47 * (q + r / 2), 0.47 * Math.sqrt(3) / 2 * r, 0); s.g.add(m); }
+      const g = glowSprite([[0, 'rgba(255,200,110,.45)'], [1, 'rgba(0,0,0,0)']], 4); reg(s, g.material); s.g.add(g);
+      s.upd = t => { s.g.rotation.y = Math.sin(t * 0.3) * 0.5; s.g.rotation.x = 0.15; }; out.push(s); }
     return out;
   }
 

@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>隔着几百光年,怎么知道一颗星球的空气? · 元素工坊 Element Forge</title>
+<meta name="description" content="元素工坊 · 星球篇第三站:用三棱镜找出彩虹里的黑线,拨动红外光让分子振动,拖着行星从恒星前面走过,再像天文学家一样读出约 700 光年外 WASP-39 b 的空气。创世计划 Genesis 化学世界。">
+<meta name="theme-color" content="#060a1c">
+<link rel="stylesheet" href="../ef.css?v=14">
+</head>
+<body class="prism">
+<div id="app"></div>
+<script src="../ef.js?v=14"></script>
+<script src="../ef-tri.js?v=1"></script>
+<script>
+/* ---------- 共享数据与控制器(2D/3D 共用):谱线、分子振动、凌星、透射光谱 ---------- */
+(function () {
+function rnd(seed) { var s = seed || 7; return function () { s = (s * 16807) % 2147483647; return s / 2147483647; }; }
+/* 波长(nm)→ 近似 RGB(可见光,示意;与烟花关同一算法) */
+function wl(nm) {
+  var r = 0, g = 0, b = 0;
+  if (nm < 440) { r = (440 - nm) / 60; b = 1; } else if (nm < 490) { g = (nm - 440) / 50; b = 1; } else if (nm < 510) { g = 1; b = (510 - nm) / 20; }
+  else if (nm < 580) { r = (nm - 510) / 70; g = 1; } else if (nm < 645) { r = 1; g = (645 - nm) / 65; } else { r = 1; }
+  var f = nm < 420 ? 0.3 + 0.7 * (nm - 380) / 40 : nm > 700 ? 0.3 + 0.7 * (780 - nm) / 80 : 1; f = Math.max(0, Math.min(1, f));
+  return [r, g, b].map(function (v) { return Math.round(255 * Math.pow(Math.max(0, v) * f, 0.8)); });
+}
+function css(c, a) { return a == null ? 'rgb(' + c.join(',') + ')' : 'rgba(' + c.join(',') + ',' + a + ')'; }
+function txt(stage, h, cls) { var p = document.createElement('p'); p.className = cls || 'note-sm'; p.innerHTML = h || ''; stage.appendChild(p); return p; }
+function card(stage, h, warn) { var d = document.createElement('div'); d.className = 'cab-card' + (warn ? ' warn' : ''); d.innerHTML = h; stage.appendChild(d); return d; }
+function chips(box, list, cb) { box.innerHTML = list.map(function (o) { return '<button class="ef-btn ghost chip" data-ok="' + o[1] + '">' + o[0] + '</button>'; }).join(''); box.querySelectorAll('.chip').forEach(function (b) { b.onclick = function () { cb(b.dataset.ok === '1', b); }; }); }
+var HOME = '<b style="color:#ffd27a">可以在家试</b>(请大人陪同):找一张不用的旧光盘,在台灯(或手机手电筒)下斜着看它的背面,慢慢转动,就能看到一道道彩虹——光盘上密密的细纹把白光分成了各种颜色,和三棱镜的作用很像。<br><b style="color:#ff9a7a">安全红线</b>:<b>绝对不要直视太阳</b>,也<b>不要用光盘、三棱镜、望远镜或任何镜片对着太阳看</b>,会严重伤害眼睛;不要用激光笔做这个实验。画面里让太阳光穿过三棱镜,是科学家用专门仪器、借助狭缝和屏幕完成的,这里只是示意,请勿模仿。';
+var SIM = '<b style="color:#ffd27a">说明</b>:画面里的恒星、行星、望远镜和曲线都是示意,大小和距离没有按比例;望远镜为通用造型。';
+
+/* ===== L0 谱线数据 =====
+   太阳光谱里的暗线(夫琅禾费线,可见光部分):钠 D 双线 589.0 / 589.6 nm(这里合成一条画),氢 656.3、486.1、434.0 nm。
+   1868 年日食时,日珥(太阳边缘喷出的气体)发出的亮线:氢 656.3、486.1 nm,以及一条约 587.6 nm 的黄线(氦 D3 线;NIST 空气中波长约 587.56 nm,部分史料记作 587.49 nm)——后来证认为氦。 */
+var ELS = {
+  Na: { n: '钠', s: 'Na', c: '#ffd02a', z: 11 },
+  H: { n: '氢', s: 'H', c: '#f6f6f6', z: 1 },
+  He: { n: '氦', s: 'He', c: '#9ec8ff', z: 2 }
+};
+var LINES = [
+  [{ nm: 589.3, el: 'Na', w: 3.2, t: '约 589 nm' }, { nm: 656.3, el: 'H', w: 2.4, t: '656 nm' }, { nm: 486.1, el: 'H', w: 2.4, t: '486 nm' }, { nm: 434.0, el: 'H', w: 2, t: '434 nm' }],
+  [{ nm: 656.3, el: 'H', w: 3, t: '656 nm' }, { nm: 587.6, el: 'He', w: 3, t: '587.6 nm' }, { nm: 486.1, el: 'H', w: 3, t: '486 nm' }]
+];
+var NM0 = 400, NM1 = 700;
+function nmX(nm, X, W) { return X + (nm - NM0) / (NM1 - NM0) * W; }
+/* 画一条"屏幕上的光谱":ph=0 太阳光(彩虹 + 暗线),ph=1 日珥(黑底 + 亮线) */
+function strip(x, X, Y, W, H, st) {
+  var ph = st.ph, L = LINES[ph];
+  x.save();
+  x.fillStyle = '#05060c'; x.fillRect(X, Y, W, H);
+  if (ph === 0) for (var nm = NM0; nm < NM1; nm += 1) { x.fillStyle = css(wl(nm)); x.fillRect(nmX(nm, X, W), Y, W / (NM1 - NM0) + 0.8, H); }
+  else for (var n2 = NM0; n2 < NM1; n2 += 2) { x.fillStyle = css(wl(n2), 0.07); x.fillRect(nmX(n2, X, W), Y, W / 150 + 0.6, H); }
+  L.forEach(function (l, i) {
+    var px = nmX(l.nm, X, W), ok = st.ok[l.el];
+    if (ph === 0) { x.fillStyle = '#05060c'; x.fillRect(px - l.w / 2, Y, l.w, H); }
+    else { var c = wl(l.nm); x.save(); x.shadowColor = css(c); x.shadowBlur = 10; x.fillStyle = css(c); x.fillRect(px - l.w / 2, Y + 1, l.w, H - 2); x.restore(); }
+    if (st.sel && !ok) { x.strokeStyle = 'rgba(255,255,255,.35)'; x.setLineDash([3, 3]); x.strokeRect(px - 7, Y - 2, 14, H + 4); x.setLineDash([]); }
+    if (ok) { var E = ELS[l.el]; x.fillStyle = E.c; x.beginPath(); x.arc(px, Y - 9, 6, 0, 7); x.fill(); x.fillStyle = '#1b1208'; x.font = '700 8px system-ui'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(E.s, px, Y - 8.5); }
+  });
+  if (ph === 0 && st.naGlow) { var c2 = wl(589.3), p2 = nmX(589.3, X, W); x.save(); x.shadowColor = css(c2); x.shadowBlur = 14; x.fillStyle = 'rgba(255,230,120,.95)'; x.fillRect(p2 - 1.2, Y - 14, 2.4, 12); x.fillRect(p2 - 1.2, Y + H + 2, 2.4, 12); x.restore(); }
+  x.fillStyle = 'rgba(220,220,235,.7)'; x.font = '10px system-ui'; x.textAlign = 'center'; x.textBaseline = 'top';
+  [400, 450, 500, 550, 600, 650, 700].forEach(function (t) { var px = nmX(t, X, W); x.fillRect(px - 0.5, Y + H, 1, 4); x.fillText(t, px, Y + H + 5); });
+  x.textAlign = 'right'; x.fillText('波长(纳米 nm)', X + W, Y + H + 18);
+  x.restore();
+}
+/* L0 控制器:view.mount(host, ctl) / view.draw(st) */
+function lines(stage, api, view) {
+  var st = { ph: 0, ok: { Na: false, H: false, He: false }, sel: null, naGlow: false, done: false, wrong: 0 };
+  var host = document.createElement('div'); host.className = 'sp-view'; stage.appendChild(host); view.mount(host, st);
+  var bub = document.createElement('div'); bub.className = 'sp-bubble'; bub.innerHTML = '小点:彩虹里怎么会有黑线?'; host.appendChild(bub);
+  var S = EF.canvas(stage, 74);
+  var tray = document.createElement('div'); tray.className = 'ctl sp-tray';
+  tray.innerHTML = '<span class="sp-lab">元素:</span>' + Object.keys(ELS).map(function (k) { var E = ELS[k]; return '<button class="sp-ball" data-el="' + k + '" style="--c:' + E.c + '" aria-label="' + E.n + '"><i></i><b>' + E.n + '</b></button>'; }).join('') + '<span class="sp-lab dim">拖去和线配对(或先点元素、再点线)</span>';
+  stage.appendChild(tray);
+  var ctl = document.createElement('div'); ctl.className = 'ctl chips'; stage.appendChild(ctl);
+  var msg = txt(stage, '三棱镜把<b>太阳光</b>分成了彩虹。仔细看,彩虹里有几条细细的<b>黑线</b>——有些颜色被"吸走"了。把<b>钠</b>和<b>氢</b>拖到它们各自的黑线上。');
+  var ans = document.createElement('div'); ans.className = 'ctl chips'; stage.appendChild(ans);
+  card(stage, HOME, true);
+  function X0() { return 14; } function WW() { return S.W - 28; }
+  function paint() { var x = S.x; x.clearRect(0, 0, S.W, S.H); strip(x, X0(), 16, WW(), 30, st); view.draw(st); }
+  (function loop() { if (!S.c.isConnected) return; paint(); requestAnimationFrame(loop); })();
+  function pick(px) { var L = LINES[st.ph], best = -1, bd = 18; L.forEach(function (l, i) { var d = Math.abs(nmX(l.nm, X0(), WW()) - px); if (d < bd) { bd = d; best = i; } }); return best; }
+  function drop(el, i) {
+    if (st.done || i < 0) return; var l = LINES[st.ph][i]; st.sel = null; syncTray();
+    if (st.ok[l.el] && l.el === el) { msg.innerHTML = '这条线已经配好啦。'; return; }
+    if (l.el === el) {
+      st.ok[el] = true; EF.play('fuse');
+      if (el === 'Na') { msg.innerHTML = '对!这条约 <b>589 nm</b> 的黄色黑线是<b>钠</b>的指纹(其实是靠得很近的两条:589.0 和 589.6 nm)。还记得烟花关吗?钠在火焰里"发"的黄光,正好在同一个位置——点下面的按钮对照一下。';
+        ctl.innerHTML = '<button class="ef-btn ghost chip" id="naBtn">🎆 点燃钠(烟花关)</button>'; ctl.querySelector('#naBtn').onclick = function () { st.naGlow = !st.naGlow; EF.play('whoosh'); msg.innerHTML = st.naGlow ? '看:钠<b>发出</b>的黄色亮线(上下的小亮条),和太阳光里被<b>吸走</b>的黑线,位置一模一样。原子会吸收哪几种颜色,就会发出哪几种颜色。' : '亮线收起来了。'; }; }
+      else if (el === 'H') msg.innerHTML = '对!氢一下子认领了<b>三条</b>黑线:656、486、434 nm。一种原子吸收的颜色往往不止一种,这一组线合起来才是它的完整<b>指纹</b>。';
+      else msg.innerHTML = '对!这条 587.6 nm 的黄线,就是<b>氦</b>的指纹。';
+      if (st.ph === 0 && st.ok.Na && st.ok.H) setTimeout(stage1, 1400);
+      if (st.ph === 1 && el === 'He') setTimeout(ask, 1200);
+    } else {
+      st.wrong++; EF.play('tick');
+      if (st.ph === 0 && el === 'He') msg.innerHTML = '这条线不是氦的。氦的指纹线在 <b>587.6 nm</b>,可普通的太阳光谱里,那里几乎看不到黑线。先给钠和氢配对,氦的故事等会儿揭晓。';
+      else if (st.ph === 1 && el === 'Na' && l.el === 'He') msg.innerHTML = '差一点!这条黄线在 <b>587.6 nm</b>,钠的线在 589.0 和 589.6 nm——很近,但<b>对不上</b>。所以它不是钠。';
+      else if (st.ph === 1 && l.el === 'H') msg.innerHTML = '这是氢的亮线:它和刚才那条氢的黑线在同一个位置。再找找别的线。';
+      else msg.innerHTML = '位置对不上。每种原子的线都在固定的位置,换一条线试试。';
+      if (st.wrong >= 2) api.say(st.ph === 0 ? '钠的线是黄色区域里的那条;氢有三条,最红的那条在 656 nm。' : '只剩那条黄线没有主人了。');
+    }
+  }
+  function stage1() {
+    if (st.ph === 1) return; st.ph = 1; st.naGlow = false; EF.play('whoosh'); bub.innerHTML = '小点:这条黄线是谁的?';
+    ctl.innerHTML = '';
+    msg.innerHTML = '<b>回到 1868 年 8 月的一次日全食。</b>月亮挡住太阳的瞬间,天文学家把分光镜对准太阳边缘喷出的气体(日珥),看到的不是彩虹,而是几条<b>亮线</b>。其中一条黄线在 <b>587.6 nm</b>,紧挨着钠却对不上。把剩下的元素拖到这条黄线上。';
+    paint();
+  }
+  function ask() {
+    msg.innerHTML = '这条黄线属于当时<b>地球上还没发现</b>的元素。英国天文学家洛克耶和化学家弗兰克兰给它起名 helium(来自希腊语"太阳"),中文叫<b>氦</b>。直到 1895 年,化学家拉姆齐才从地球上的一种铀矿石里分离出氦气。<br><b>为什么一条黄线就能让人想到"新元素"?</b>';
+    chips(ans, [['它和所有已知元素的线都对不上', 1], ['它特别亮', 0], ['因为它是黄色的', 0]], function (ok, b) { if (st.done) return;
+      if (ok) { st.done = true; EF.play('fuse'); ans.innerHTML = ''; msg.innerHTML = '对!每种元素的谱线位置都是固定的"指纹"。一条线和已知元素的指纹全都对不上,就说明光里藏着一种还不认识的元素。<b>黑线(吸收)和亮线(发射)在同一位置</b>,所以无论哪一种,都能用来认元素。'; setTimeout(api.complete, 2600); }
+      else { EF.play('tick'); msg.innerHTML = /黄色/.test(b.textContent) ? '钠的线也是黄色的。关键不在颜色,而在<b>位置</b>。' : '很亮的线也可能属于已知元素。关键是它的<b>位置</b>。'; } });
+  }
+  /* 拖放 / 点选 */
+  var drag = null, ghost = null;
+  function syncTray() { tray.querySelectorAll('.sp-ball').forEach(function (b) { b.classList.toggle('on', b.dataset.el === st.sel); }); }
+  tray.querySelectorAll('.sp-ball').forEach(function (b) {
+    b.addEventListener('pointerdown', function (e) { if (st.done) return; drag = { el: b.dataset.el, x: e.clientX, y: e.clientY, moved: false }; b.setPointerCapture && b.setPointerCapture(e.pointerId); });
+    b.addEventListener('pointermove', function (e) { if (!drag) return; if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 6) { drag.moved = true; ghost = document.createElement('div'); ghost.className = 'sp-ghost'; ghost.style.setProperty('--c', ELS[drag.el].c); ghost.textContent = ELS[drag.el].n; document.body.appendChild(ghost); }
+      if (ghost) { ghost.style.left = e.clientX + 'px'; ghost.style.top = e.clientY + 'px'; } });
+    b.addEventListener('pointerup', function (e) { if (!drag) return; var d = drag; drag = null; if (ghost) { ghost.remove(); ghost = null; }
+      if (!d.moved) { st.sel = st.sel === d.el ? null : d.el; EF.play('select'); syncTray(); if (st.sel) msg.innerHTML = '选中了<b>' + ELS[d.el].n + '</b>,现在点它对应的那条线。'; return; }
+      var r = S.c.getBoundingClientRect(); if (e.clientY > r.top - 30 && e.clientY < r.bottom + 10 && e.clientX >= r.left && e.clientX <= r.right) { var i = pick(e.clientX - r.left); if (i < 0) { msg.innerHTML = '没对准线,再靠近一点放下。'; return; } drop(d.el, i); } });
+    b.addEventListener('pointercancel', function () { drag = null; if (ghost) { ghost.remove(); ghost = null; } });
+  });
+  S.c.addEventListener('pointerdown', function (e) { if (!st.sel) return; var i = pick(S.pt(e).x); if (i < 0) { msg.innerHTML = '点准一点:点在细线上。'; return; } drop(st.sel, i); });
+  EF.SP._l0 = { st: st, drop: function (el, nm) { var i = -1; LINES[st.ph].forEach(function (l, k) { if (Math.abs(l.nm - nm) < 0.5) i = k; }); drop(el, i); }, glow: function () { var b = document.getElementById('naBtn'); if (b) b.click(); } };
+  paint();
+}
+/* L0 平面画法:三棱镜 + 白光 + 扇形彩虹(每种颜色朝一个方向走,被吸走的颜色变成一道暗"缝") */
+function lines2D() {
+  var C, st;
+  return {
+    mount: function (host, s) { st = s; C = EF.canvas(host, EF.mobile ? 220 : 270);
+      (function loop(t) { if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+        var bg = x.createRadialGradient(W * 0.3, H * 0.5, 10, W * 0.3, H * 0.5, W * 0.7); bg.addColorStop(0, 'rgba(255,170,80,.12)'); bg.addColorStop(1, 'rgba(6,10,28,0)'); x.fillStyle = bg; x.fillRect(0, 0, W, H);
+        var px = W * 0.26, py = H * 0.58, s = Math.min(W * 0.14, H * 0.42);
+        var A = [px, py - s], B = [px - s * 0.62, py + s * 0.5], Cc = [px + s * 0.62, py + s * 0.5], hit = [px - s * 0.25, py - s * 0.05], out = [px + s * 0.22, py - s * 0.1];
+        if (st.ph === 0) { x.save(); x.shadowColor = '#fff'; x.shadowBlur = 12; x.strokeStyle = 'rgba(255,255,240,.95)'; x.lineWidth = 5; x.beginPath(); x.moveTo(0, H * 0.78); x.lineTo(hit[0], hit[1]); x.stroke(); x.restore(); }
+        var ex = W - 8, top = H * 0.06, bot = H * 0.8, N = 150;
+        for (var i = 0; i < N; i++) { var nm = 700 - i / N * 300, y0 = top + (bot - top) * i / N, y1 = top + (bot - top) * (i + 1) / N, dark = false, bright = false;
+          LINES[st.ph].forEach(function (l) { if (Math.abs(l.nm - nm) < 1.4) { if (st.ph === 0) dark = true; else bright = true; } });
+          if (st.ph === 1 && !bright) continue;
+          x.fillStyle = dark ? 'rgba(5,6,12,.95)' : css(wl(nm), st.ph === 1 ? 0.95 : 0.85);
+          x.beginPath(); x.moveTo(out[0], out[1] + (i / N - 0.5) * 6); x.lineTo(ex, y0); x.lineTo(ex, y1 + 0.6); x.closePath(); x.fill(); }
+        var g = x.createLinearGradient(B[0], B[1], A[0], A[1]); g.addColorStop(0, 'rgba(255,230,190,.18)'); g.addColorStop(1, 'rgba(255,250,235,.4)');
+        x.fillStyle = g; x.beginPath(); x.moveTo(A[0], A[1]); x.lineTo(B[0], B[1]); x.lineTo(Cc[0], Cc[1]); x.closePath(); x.fill();
+        x.save(); x.shadowColor = '#ffc46b'; x.shadowBlur = 14; x.strokeStyle = '#ffd9a0'; x.lineWidth = 2.5; x.stroke(); x.restore();
+        x.fillStyle = '#f4ede1'; x.font = '12px system-ui'; x.textAlign = 'center'; x.fillText(st.ph === 0 ? '太阳光 → 三棱镜' : '1868 年日食 · 日珥的光 → 分光镜', px, Math.min(H - 6, py + s * 0.5 + 20));
+        x.textAlign = 'left'; x.fillStyle = 'rgba(255,255,255,.7)'; x.font = '10px system-ui'; x.fillText(st.ph === 0 ? '黑缝 = 被"吸走"的颜色(示意)' : '亮线 = 气体自己发出的颜色(示意)', 8, 14);
+        requestAnimationFrame(loop); })(0); },
+    draw: function (s) { st = s; }
+  };
+}
+
+/* ===== L1 红外光与分子振动 =====
+   气态分子的主要红外吸收(约值,微米 µm):水 约 2.7(伸缩)、约 6.3(弯曲);二氧化碳 约 4.3(不对称伸缩)、约 15(弯曲);甲烷 约 3.3(伸缩)、约 7.7(弯曲)。
+   二氧化碳的对称伸缩(约 7.2 µm 处)不改变分子的电荷分布,不吸收红外。 */
+var MOL = {
+  w: { n: '水', f: 'H₂O', at: [['O', 0, 0, 0], ['H', 0.76, -0.59, 0], ['H', -0.76, -0.59, 0]], b: [[0, 1, 1], [0, 2, 1]],
+       modes: { s: [[0, 0.04, 0], [0.13, -0.1, 0], [-0.13, -0.1, 0]], b: [[0, 0.05, 0], [-0.14, -0.12, 0], [0.14, -0.12, 0]] } },
+  c: { n: '二氧化碳', f: 'CO₂', at: [['C', 0, 0, 0], ['O', 1.16, 0, 0], ['O', -1.16, 0, 0]], b: [[0, 1, 2], [0, 2, 2]],
+       modes: { a: [[-0.3, 0, 0], [0.13, 0, 0], [0.13, 0, 0]], b: [[0, 0.28, 0], [0, -0.13, 0], [0, -0.13, 0]] } },
+  m: { n: '甲烷', f: 'CH₄', at: [['C', 0, 0, 0], ['H', 0.63, 0.63, 0.63], ['H', 0.63, -0.63, -0.63], ['H', -0.63, 0.63, -0.63], ['H', -0.63, -0.63, 0.63]], b: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1]],
+       modes: { s: [[-0.08, 0, 0], [0.09, 0.09, 0.09], [0.09, -0.09, -0.09], [0.09, -0.09, 0.09], [0.09, 0.09, -0.09]], b: [[0, 0, 0], [0.1, -0.1, 0], [-0.1, 0.1, 0], [0.1, 0.1, 0], [-0.1, -0.1, 0]] } }
+};
+var ACOL = { O: '#ff4a4a', H: '#f4f4f4', C: '#3a3a3a' };
+var BANDS = [
+  { m: 'w', lam: 2.7, mode: 's', mn: '伸缩', d: '两根 O–H 键一起拉长、缩短(二氧化碳在这附近也有较弱的吸收,这里只画水)' },
+  { m: 'm', lam: 3.3, mode: 's', mn: '伸缩', d: 'C–H 键有的拉长、有的缩短' },
+  { m: 'c', lam: 4.3, mode: 'a', mn: '不对称伸缩', d: '一边的 C=O 键拉长时,另一边缩短' },
+  { m: 'w', lam: 6.3, mode: 'b', mn: '弯曲', d: 'H–O–H 的夹角一张一合' },
+  { m: 'm', lam: 7.7, mode: 'b', mn: '弯曲', d: '氢原子之间的夹角来回变化' },
+  { m: 'c', lam: 15, mode: 'b', mn: '弯曲', d: '直直的分子像弓一样一弯一直' }
+];
+var INACT = { m: 'c', lam: 7.2 };
+var LMIN = 2.5, LMAX = 16;
+function s2l(s) { return LMIN * Math.pow(LMAX / LMIN, s / 1000); }
+function l2s(l) { return Math.round(Math.log(l / LMIN) / Math.log(LMAX / LMIN) * 1000); }
+function bandAt(l) { for (var i = 0; i < BANDS.length; i++) if (Math.abs(Math.log(l / BANDS[i].lam)) < 0.04) return i; return -1; }
+function inactAt(l) { return Math.abs(Math.log(l / INACT.lam)) < 0.025; }
+/* 平面版分子:简单斜投影 + 球棍 */
+function mol2D(x, k, cx, cy, sc, amp, mode) {
+  var M = MOL[k], D = mode ? M.modes[mode] : null, ry = 0.5, rx = 0.35;
+  var P = M.at.map(function (a, i) { var X = a[1] + (D ? D[i][0] * amp : 0), Y = a[2] + (D ? D[i][1] * amp : 0), Z = a[3] + (D ? D[i][2] * amp : 0);
+    var x1 = X * Math.cos(ry) + Z * Math.sin(ry), z1 = -X * Math.sin(ry) + Z * Math.cos(ry), y1 = Y * Math.cos(rx) - z1 * Math.sin(rx), z2 = Y * Math.sin(rx) + z1 * Math.cos(rx);
+    return [cx + x1 * sc, cy - y1 * sc, z2, a[0]]; });
+  M.b.forEach(function (b) { var p = P[b[0]], q = P[b[1]]; x.strokeStyle = 'rgba(230,230,240,.85)'; x.lineWidth = sc * 0.09;
+    if (b[2] === 2) { var dx = q[1] - p[1], dy = q[0] - p[0], L = Math.hypot(dx, dy) || 1, ox = dx / L * sc * 0.07, oy = -dy / L * sc * 0.07; [-1, 1].forEach(function (s) { x.beginPath(); x.moveTo(p[0] + ox * s, p[1] + oy * s); x.lineTo(q[0] + ox * s, q[1] + oy * s); x.stroke(); }); }
+    else { x.beginPath(); x.moveTo(p[0], p[1]); x.lineTo(q[0], q[1]); x.stroke(); } });
+  P.map(function (p, i) { return [p, i]; }).sort(function (a, b) { return a[0][2] - b[0][2]; }).forEach(function (e) { var p = e[0]; EF.ball(x, p[0], p[1], sc * (p[3] === 'H' ? 0.22 : 0.33), ACOL[p[3]], ''); });
+}
+function ir2D() {
+  var C, st = { lam: 10, hit: -1 };
+  var POS = { w: [0.3, 0.2], c: [0.5, 0.52], m: [0.7, 0.8] };
+  return {
+    mount: function (host) { C = EF.canvas(host, 250);
+      (function loop(t) { if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+        var B = st.hit >= 0 ? BANDS[st.hit] : null, sc = Math.min(W, H) * 0.16;
+        Object.keys(MOL).forEach(function (k) { var p = POS[k], on = B && B.m === k, amp = on ? (EF.reduced ? 0.8 : Math.sin(t / 90)) * 1 : 0;
+          if (on) { x.save(); x.strokeStyle = 'rgba(255,140,60,.5)'; x.lineWidth = 2; for (var r = 0; r < 2; r++) { x.beginPath(); x.arc(p[0] * W, p[1] * H, sc * (1.25 + r * 0.25 + (EF.reduced ? 0 : (t / 900) % 0.25)), -0.6, 0.6); x.stroke(); x.beginPath(); x.arc(p[0] * W, p[1] * H, sc * (1.25 + r * 0.25), 2.5, 3.8); x.stroke(); } x.restore(); }
+          mol2D(x, k, p[0] * W, p[1] * H, sc, amp, on ? B.mode : null);
+          x.fillStyle = on ? '#ffd27a' : '#f4ede1'; x.font = (on ? '700 ' : '') + '12px system-ui'; x.textAlign = 'center'; x.fillText(MOL[k].n + ' ' + MOL[k].f, p[0] * W, p[1] * H + sc * 1.05 + 4); });
+        /* 红外波:从右上射来,波长越长,波纹越稀 */
+        var k2 = 6.283 / (14 + st.lam * 3.2), A0 = 7; x.save(); x.shadowColor = '#ff5a3a'; x.shadowBlur = 8; x.strokeStyle = 'rgba(255,110,80,.9)'; x.lineWidth = 2; x.beginPath();
+        for (var s = 0; s <= 120; s++) { var u = s / 120, px = W * (0.98 - u * 0.36), py = H * (0.06 + u * 0.3); x[s ? 'lineTo' : 'moveTo'](px, py + Math.sin(u * W * 0.4 * k2 - (EF.reduced ? 0 : t / 150)) * A0); }
+        x.stroke(); x.restore();
+        x.fillStyle = 'rgba(255,255,255,.75)'; x.font = '10px system-ui'; x.textAlign = 'left'; x.fillText('红:氧 O · 黑:碳 C · 白:氢 H(示意)', 4, H - 6);
+        requestAnimationFrame(loop); })(0); },
+    draw: function (s) { st = s; }
+  };
+}
+/* L1 控制器(三窗联动;微观窗用 view,可换 3D) */
+function ir(stage, api, view) {
+  var T = EF.tri(stage, { state: { lam: 10, hit: -1, found: '' }, h: 250 }), st = T.state, done = false, asked = false, found = {}, foundB = {};
+  var ctl = document.createElement('div'); ctl.className = 'ctl';
+  ctl.innerHTML = '<span>红外光波长</span><button class="ef-btn ghost chip" id="irL" aria-label="波长变短一点">◀</button><input type="range" id="irS" min="0" max="1000" step="1" value="' + l2s(10) + '" style="flex:1;min-width:140px" aria-label="红外光波长"><button class="ef-btn ghost chip" id="irR" aria-label="波长变长一点">▶</button><b id="irN" style="min-width:5.5em">10.0 µm</b>';
+  stage.appendChild(ctl);
+  var msg = txt(stage, '人眼看不见<b>红外光</b>,但分子"看得见"。慢慢拖动波长,让红外光照着水、二氧化碳、甲烷。<b>目标</b>:给三种分子<b>各找到至少一个</b>"会振动"的波长。');
+  var ans = document.createElement('div'); ans.className = 'ctl chips'; stage.appendChild(ans);
+  card(stage, '<b style="color:#ffd27a">读图</b>:左窗那条发光的线是"透过来的红外光",哪里出现缺口,哪里的光就被分子吞掉了。单位 µm(微米)= 千分之一毫米;可见光只有约 0.4–0.7 µm,这里的红外光波长要长得多。');
+  /* 宏观:发光的透射线 + 缺口 */
+  var CM = EF.canvas(T.pane.macro, 250);
+  function lx(l, W) { return 10 + Math.log(l / LMIN) / Math.log(LMAX / LMIN) * (W - 20); }
+  (function loop(t) { if (!CM.c.isConnected) return; var x = CM.x, W = CM.W, H = CM.H; x.clearRect(0, 0, W, H);
+    var y0 = H * 0.3, dep = H * 0.34;
+    x.fillStyle = 'rgba(255,140,60,.06)'; x.fillRect(0, y0, W, dep + 8);
+    x.save(); x.shadowColor = '#ff8a3a'; x.shadowBlur = 12; x.strokeStyle = '#ffb066'; x.lineWidth = 2.4; x.beginPath();
+    for (var i = 0; i <= 400; i++) { var l = s2l(i * 2.5), px = lx(l, W), d = 0;
+      BANDS.forEach(function (B, k) { if (!foundB[k] && st.hit !== k) return; var g = Math.exp(-Math.pow(Math.log(l / B.lam) / 0.022, 2)); d = Math.max(d, g * (B.m === 'c' && B.lam < 5 ? 1 : 0.8)); });
+      x[i ? 'lineTo' : 'moveTo'](px, y0 + d * dep); }
+    x.stroke(); x.restore();
+    BANDS.forEach(function (B, k) { if (!foundB[k]) return; x.fillStyle = '#f4ede1'; x.font = '11px system-ui'; x.textAlign = 'center'; x.fillText(MOL[B.m].n, lx(B.lam, W), y0 + dep + 16 + (k % 2) * 14); });
+    var cx = lx(st.lam, W); x.strokeStyle = 'rgba(255,90,70,.85)'; x.setLineDash([4, 4]); x.beginPath(); x.moveTo(cx, 8); x.lineTo(cx, H - 30); x.stroke(); x.setLineDash([]);
+    x.fillStyle = 'rgba(220,220,235,.75)'; x.font = '10px system-ui'; x.textAlign = 'center';
+    [3, 4, 5, 7, 10, 15].forEach(function (v) { var px = lx(v, W); x.fillRect(px - 0.5, H - 26, 1, 4); x.fillText(v, px, H - 12); });
+    x.textAlign = 'left'; x.fillText('透过来的红外光(示意)', 6, 14); x.textAlign = 'right'; x.fillText('波长 µm →', W - 6, H - 2);
+    requestAnimationFrame(loop); })(0);
+  /* 微观 */
+  view.mount(T.pane.micro); view.draw(st);
+  /* 符号 */
+  var sy = document.createElement('div'); sy.className = 'tri-sym'; T.pane.sym.appendChild(sy);
+  T.on(function (s) { var B = s.hit >= 0 ? BANDS[s.hit] : null, M = B ? MOL[B.m] : null;
+    sy.innerHTML = '<div class="eq" style="font-size:16px"><span class="' + (B ? 'hot' : 'dim') + '">红外光 + ' + (M ? M.n + '分子' : '分子') + '<br>→ 振动起来的分子</span></div>' +
+      (B ? '<p class="note-sm"><b>' + M.n + ' ' + M.f + '</b> · ' + B.mn + '振动(约 ' + B.lam + ' µm):' + B.d + '。</p>' : inactAt(s.lam) ? '<p class="note-sm">约 7.2 µm:二氧化碳有一种<b>对称伸缩</b>——两个氧原子同时向外、同时向内,分子两头始终对称,电荷分布不变,红外光"推"不动它,所以这里<b>没有缺口</b>。</p>' : '<p class="note-sm">这个波长,没有分子"会"跟着振动,光就直接穿过去了。</p>') +
+      '<p class="note-sm">每种分子只吞下自己"会振动"的那几种红外光。<b>波长越短,光的能量越大</b>:拉伸化学键(伸缩)要的能量较大,对应较短的波长;改变键的夹角(弯曲)要的能量较小,对应较长的波长。</p>' +
+      '<p class="note-sm" style="color:#ffd27a;font-weight:700;text-align:center;font-size:14px">缺口 = 分子的指纹</p>'; });
+  function set(l) {
+    if (done) return; l = Math.max(LMIN, Math.min(LMAX, l)); var h = bandAt(l);
+    ctl.querySelector('#irS').value = l2s(l); ctl.querySelector('#irN').textContent = l.toFixed(l < 10 ? 2 : 1) + ' µm';
+    T.set({ lam: l, hit: h }, 'ctl'); view.draw(st);
+    if (h >= 0) { var B = BANDS[h];
+      if (!foundB[h]) { foundB[h] = 1; EF.play('absorb'); }
+      if (!found[B.m]) { found[B.m] = 1; T.set({ found: Object.keys(found).join('') }, 'ctl'); }
+      msg.innerHTML = '缺口!约 <b>' + B.lam + ' µm</b> 的红外光被<b>' + MOL[B.m].n + '</b>吞掉了,它正在做<b>' + B.mn + '</b>振动。已找到:' + ['w', 'c', 'm'].map(function (k) { return (found[k] ? '✔' : '○') + MOL[k].n; }).join(' · ');
+      if (found.w && found.c && found.m && !asked) { asked = true; setTimeout(ask, 1400); } }
+    else if (!asked) msg.innerHTML = inactAt(l) ? '这里是二氧化碳"对称伸缩"的位置,可是光谱上<b>没有缺口</b>——看右窗的解释。' : '这个波长没有分子吸收,光直接穿过去了。继续拖。已找到:' + ['w', 'c', 'm'].map(function (k) { return (found[k] ? '✔' : '○') + MOL[k].n; }).join(' · ');
+  }
+  function ask() {
+    msg.innerHTML += '<br><b>想一想:空气里最多的氮气 N₂、氧气 O₂,在这条红外光谱上几乎不留缺口,为什么?</b>';
+    chips(ans, [['它们是两个相同原子连成的分子,振动时电荷分布不变,几乎不吸收红外光', 1], ['空气里它们太少了', 0], ['它们根本不会振动', 0]], function (ok, b) { if (done) return;
+      if (ok) { done = true; EF.play('fuse'); ans.innerHTML = ''; msg.innerHTML = '对!分子振动时,只有让<b>正负电荷的分布</b>跟着变化(化学上叫"偶极矩"变化)的振动,才能被红外光"推"动。N₂、O₂ 两头一模一样,怎么振都对称,所以几乎不吸收红外;水、二氧化碳、甲烷就不一样。这也是它们被叫作"温室气体"的原因之一。'; setTimeout(api.complete, 2600); }
+      else { EF.play('tick'); msg.innerHTML = /太少/.test(b.textContent) ? '恰恰相反:氮气约占空气的 78%,氧气约 21%。' : '它们也会振动,只是振动时两头始终一样。'; api.say('想想二氧化碳的"对称伸缩":为什么它也推不动?'); } });
+  }
+  var sl = ctl.querySelector('#irS'); sl.oninput = function () { set(s2l(+this.value)); };
+  ctl.querySelector('#irL').onclick = function () { set(st.lam / 1.012); }; ctl.querySelector('#irR').onclick = function () { set(st.lam * 1.012); };
+  EF.SP._l1 = { set: set, st: st };
+  set(10);
+}
+
+/* ===== L2 凌星 =====
+   示意参数(按恒星半径为 1):行星半径 0.3;在被大气吸收的波长,行星连同大气挡光的"有效半径"变为 0.37(真实差别小得多,这里放大)。 */
+var RP = [0.3, 0.37];
+var WAVES = [{ n: '大气几乎不吸收的光', c: '#ffd27a' }, { n: '被二氧化碳吸收的光(约 4.3 µm)', c: '#ff7a4a' }];
+function overlap(d, r) { d = Math.abs(d); if (d >= 1 + r) return 0; if (d <= 1 - r) return Math.PI * r * r;
+  var a = r * r * Math.acos((d * d + r * r - 1) / (2 * d * r)), b = Math.acos((d * d + 1 - r * r) / (2 * d)), c = 0.5 * Math.sqrt((-d + r + 1) * (d + r - 1) * (d - r + 1) * (d + r + 1)); return a + b - c; }
+function flux(p, m) { return 1 - overlap(p, RP[m]) / Math.PI; }
+/* 亮度曲线面板(L2 与 L3 下半部分的发光曲线风格) */
+function curveBox(stage, h) { var C = EF.canvas(stage, h); C.c.classList.add('sp-curve'); return C; }
+function transit(stage, api, view) {
+  var st = { p: -1.5, m: 0, rec: [{}, {}], pass: [0, 0], done: false };
+  var host = document.createElement('div'); host.className = 'sp-view'; stage.appendChild(host);
+  var C = curveBox(stage, EF.mobile ? 130 : 150);
+  var ctl = document.createElement('div'); ctl.className = 'ctl';
+  ctl.innerHTML = '<span>行星位置</span><input type="range" id="pS" min="-160" max="160" step="1" value="-150" style="flex:1;min-width:150px" aria-label="行星位置">';
+  stage.appendChild(ctl);
+  var wv = document.createElement('div'); wv.className = 'ctl chips'; wv.innerHTML = '<span>用哪种光看:</span>' + WAVES.map(function (w, i) { return '<button class="ef-btn ghost chip' + (i ? '' : ' on') + '" data-m="' + i + '" style="--c:' + w.c + '">' + w.n + '</button>'; }).join(''); stage.appendChild(wv);
+  var msg = txt(stage, '行星从恒星前面经过,叫<b>凌星</b>。拖动行星(拖画面或滑块),让它从左边一路走到右边,看下面的<b>亮度曲线</b>怎么变。');
+  var ans = document.createElement('div'); ans.className = 'ctl chips'; stage.appendChild(ans);
+  card(stage, SIM);
+  var ctlApi = { setP: function (p) { set(p); } };
+  view.mount(host, st, ctlApi);
+  function passed(m) { var ks = Object.keys(st.rec[m]).map(Number); if (ks.length < 16) return false; return Math.min.apply(null, ks) <= -115 && Math.max.apply(null, ks) >= 115 && ks.some(function (k) { return Math.abs(k) < 12; }); }
+  function set(p) {
+    if (st.done) return; p = Math.max(-1.6, Math.min(1.6, p)); st.p = p; ctl.querySelector('#pS').value = Math.round(p * 100);
+    st.rec[st.m][Math.round(p * 100)] = flux(p, st.m); view.draw(st);
+    if (!st.pass[st.m] && passed(st.m)) { st.pass[st.m] = 1; EF.play('fuse');
+      if (st.m === 0) msg.innerHTML = '看到了吗?行星挡住恒星的一小部分,<b>星光变暗了一点</b>,曲线往下陷;走出去后又恢复。现在把光换成<b>"被二氧化碳吸收的光"</b>,再拖一遍。';
+      else if (!st.pass[0]) msg.innerHTML = '这种光下的曲线记下了。再换成"大气几乎不吸收的光",拖一遍对比。'; }
+    if (st.pass[0] && st.pass[1] && !st.asked) { st.asked = true; setTimeout(ask, 1000); }
+    else if (!st.asked && overlap(p, RP[st.m]) > 0 && !st.pass[st.m]) msg.innerHTML = '行星正挡在恒星前面:星光<b>变暗</b>了。继续拖到右边。';
+  }
+  function ask() {
+    msg.innerHTML = '两条曲线对比:在被二氧化碳吸收的光里,下陷<b>更深</b>。<br><b>为什么?</b>';
+    chips(ans, [['行星的大气在这种光下也挡光,行星看起来"更大"', 1], ['在这种光下恒星变亮了', 0], ['行星在这种光下走得更慢', 0]], function (ok, b) { if (st.done) return;
+      if (ok) { st.done = true; EF.play('fuse'); ans.innerHTML = ''; msg.innerHTML = '对!在大气"不吃"的光里,大气是透明的,只有行星本身挡光;在二氧化碳"吃"的那几种光里,外面那圈大气也变得不透明,行星连同大气挡住的面积更大,好像<b>有效半径变大</b>了,所以<b>挡住的星光更多、下陷更深</b>。把每种波长的下陷深度画成一条线,就是这颗行星的<b>透射光谱</b>。'; setTimeout(api.complete, 2800); }
+      else { EF.play('tick'); msg.innerHTML = /变亮/.test(b.textContent) ? '恒星没有变。是挡光的东西变"大"了。' : '行星的速度和用哪种光看没有关系。'; api.say('看画面:在被吸收的光里,行星外面那圈大气怎么样了?'); } });
+  }
+  (function loop() { if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+    var X0 = 40, W0 = W - 52, Y0 = 24, H0 = H - 48, fy = function (f) { return Y0 + (1 - f) / 0.15 * H0; }, px = function (p) { return X0 + (p + 1.6) / 3.2 * W0; };
+    x.strokeStyle = 'rgba(255,255,255,.12)'; x.beginPath(); x.moveTo(X0, fy(1)); x.lineTo(X0 + W0, fy(1)); x.stroke();
+    [0, 1].forEach(function (m) { var ks = Object.keys(st.rec[m]).map(Number).sort(function (a, b) { return a - b; }); if (!ks.length) return;
+      x.save(); x.shadowColor = WAVES[m].c; x.shadowBlur = 10; x.strokeStyle = WAVES[m].c; x.lineWidth = 2.2; x.beginPath();
+      ks.forEach(function (k, i) { x[i ? 'lineTo' : 'moveTo'](px(k / 100), fy(st.rec[m][k])); }); x.stroke(); x.restore(); });
+    x.fillStyle = '#fff'; x.beginPath(); x.arc(px(st.p), fy(flux(st.p, st.m)), 4, 0, 7); x.fill();
+    x.fillStyle = 'rgba(220,220,235,.75)'; x.font = '10px system-ui'; x.textAlign = 'right'; x.fillText('亮', X0 - 6, fy(1) + 3); x.fillText('暗', X0 - 6, Y0 + H0);
+    x.textAlign = 'left'; x.fillText('星光亮度(下陷已放大,示意)', X0, H - 6);
+    WAVES.forEach(function (w, i) { if (!Object.keys(st.rec[i]).length) return; x.fillStyle = w.c; x.fillRect(W - 190 + i * 96, 9, 10, 3); x.fillStyle = 'rgba(220,220,235,.75)'; x.fillText(i ? '被吸收的光' : '不被吸收的光', W - 176 + i * 96, 13); });
+    requestAnimationFrame(loop); })();
+  ctl.querySelector('#pS').oninput = function () { set(+this.value / 100); };
+  wv.querySelectorAll('[data-m]').forEach(function (b) { b.onclick = function () { if (st.done) return; st.m = +b.dataset.m; EF.play('select'); wv.querySelectorAll('[data-m]').forEach(function (c) { c.classList.toggle('on', c === b); }); view.draw(st);
+    if (!st.pass[st.m]) msg.innerHTML = '换成了<b>' + WAVES[st.m].n + '</b>。把行星拖回左边,再走一遍。'; }; });
+  EF.SP._l2 = { st: st, set: set, mode: function (m) { wv.querySelector('[data-m="' + m + '"]').click(); }, sweep: function () { for (var p = -160; p <= 160; p += 8) set(p / 100); } };
+  set(-1.5);
+}
+/* 平面画法:恒星 + 行星 + 望远镜 */
+function sky2D(h, o) {
+  o = o || {};
+  var C, st, R = rnd(41), SP = []; for (var i = 0; i < 120; i++) SP.push([R(), R(), R()]);
+  function draw(x, W, H, t) {
+    var cx = W * (o.sx || 0.4), cy = H * 0.5, Rs = Math.min(W * 0.3, H * 0.44);
+    var g = x.createRadialGradient(cx, cy, Rs * 0.2, cx, cy, Rs * 1.5); g.addColorStop(0, 'rgba(255,160,60,.35)'); g.addColorStop(1, 'rgba(255,120,40,0)'); x.fillStyle = g; x.fillRect(0, 0, W, H);
+    var g2 = x.createRadialGradient(cx - Rs * 0.2, cy - Rs * 0.2, Rs * 0.1, cx, cy, Rs); g2.addColorStop(0, '#ffe7a0'); g2.addColorStop(0.55, '#ffa030'); g2.addColorStop(1, '#c84a10');
+    x.fillStyle = g2; x.beginPath(); x.arc(cx, cy, Rs, 0, 7); x.fill();
+    x.save(); x.beginPath(); x.arc(cx, cy, Rs, 0, 7); x.clip(); SP.forEach(function (s) { x.fillStyle = 'rgba(255,240,180,' + (0.08 + s[2] * 0.14) + ')'; x.beginPath(); x.arc(cx + (s[0] - 0.5) * 2 * Rs, cy + (s[1] - 0.5) * 2 * Rs, 2 + s[2] * 5, 0, 7); x.fill(); }); x.restore();
+    var park = !st || st.p == null, p = park ? 0.18 + (EF.reduced ? 0 : Math.sin(t / 4000) * 0.22) : st.p, m = park ? 1 : st.m, px = cx + p * Rs, rp = RP[0] * Rs, ra = RP[1] * Rs;
+    var ga = x.createRadialGradient(px, cy, rp, px, cy, ra * 1.15); ga.addColorStop(0, m ? 'rgba(20,14,30,.95)' : 'rgba(140,200,255,.55)'); ga.addColorStop(0.7, m ? 'rgba(60,30,30,.7)' : 'rgba(140,200,255,.15)'); ga.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = ga; x.beginPath(); x.arc(px, cy, ra * 1.15, 0, 7); x.fill();
+    x.fillStyle = '#05060a'; x.beginPath(); x.arc(px, cy, rp, 0, 7); x.fill(); x.strokeStyle = 'rgba(255,190,120,.6)'; x.lineWidth = 1.2; x.stroke();
+    var tx = W * (o.tx || 0.86), ty = H * 0.48, hs = Math.min(W, H) * 0.035;
+    x.fillStyle = 'rgba(120,110,150,.5)'; x.beginPath(); x.moveTo(tx - hs * 4, ty + hs * 3); x.lineTo(tx + hs * 4, ty + hs * 2.4); x.lineTo(tx + hs * 3, ty + hs * 4); x.lineTo(tx - hs * 3.4, ty + hs * 4.4); x.closePath(); x.fill();
+    [[0, 0], [1.5, 0.87], [-1.5, 0.87], [0, 1.73], [1.5, -0.87], [-1.5, -0.87], [0, -1.73]].forEach(function (o) { var hx = tx + o[0] * hs, hy = ty + o[1] * hs; x.beginPath(); for (var k = 0; k < 6; k++) { var a = k / 6 * 6.283; x[k ? 'lineTo' : 'moveTo'](hx + Math.cos(a) * hs * 0.95, hy + Math.sin(a) * hs * 0.95); } x.closePath(); var gg = x.createLinearGradient(hx - hs, hy - hs, hx + hs, hy + hs); gg.addColorStop(0, '#ffe08a'); gg.addColorStop(1, '#b8781c'); x.fillStyle = gg; x.fill(); });
+    x.fillStyle = 'rgba(244,237,225,.85)'; x.font = '11px system-ui'; x.textAlign = 'center'; x.fillText('太空望远镜(示意)', tx, ty + hs * 5.6); x.fillText('恒星', cx - Rs * 0.7, cy + Rs * 0.95);
+    if (m) { x.fillStyle = '#ffd27a'; x.fillText('大气在这种光下也挡光', px, cy - ra - 8); }
+  }
+  return {
+    mount: function (host, s, api) { st = s; C = EF.canvas(host, h || (EF.mobile ? 230 : 290));
+      if (api) { var dn = false; C.c.addEventListener('pointerdown', function (e) { dn = true; C.c.setPointerCapture && C.c.setPointerCapture(e.pointerId); });
+        C.c.addEventListener('pointermove', function (e) { if (!dn) return; var Rs = Math.min(C.W * 0.3, C.H * 0.44); api.setP((C.pt(e).x - C.W * (o.sx || 0.4)) / Rs); });
+        C.c.addEventListener('pointerup', function () { dn = false; }); }
+      (function loop(t) { if (!C.c.isConnected) return; C.x.clearRect(0, 0, C.W, C.H); draw(C.x, C.W, C.H, t); requestAnimationFrame(loop); })(0); },
+    draw: function (s) { st = s; }
+  };
+}
+
+/* ===== L3 WASP-39 b 透射光谱(示意) =====
+   形状参考韦布太空望远镜公布的 WASP-39 b 透射光谱:钠 约 0.59 µm,水 约 1.15/1.4/1.85/2.7 µm,二氧化碳 约 4.3 µm(另有 2.7–2.9 µm 的较弱特征),二氧化硫 约 4.05 µm;
+   甲烷的特征在 约 2.3、3.3 µm,观测中没有明显看到。数值为示意,不是真实数据。 */
+var CAND = [
+  { k: 'h2o', n: '水', f: 'H₂O', c: '#7ad7ff', g: [[1.15, 0.05, 0.035], [1.4, 0.08, 0.07], [1.85, 0.1, 0.08], [2.7, 0.17, 0.09]] },
+  { k: 'co2', n: '二氧化碳', f: 'CO₂', c: '#ffb35c', g: [[4.3, 0.11, 0.2], [2.8, 0.06, 0.035]] },
+  { k: 'so2', n: '二氧化硫', f: 'SO₂', c: '#ffe066', g: [[4.05, 0.045, 0.075]] },
+  { k: 'na', n: '钠原子', f: 'Na', c: '#ffd02a', g: [[0.59, 0.014, 0.09]] },
+  { k: 'ch4', n: '甲烷', f: 'CH₄', c: '#9fe870', g: [[3.3, 0.12, 0.14], [2.3, 0.07, 0.06]] }
+];
+var CBY = {}; CAND.forEach(function (c) { CBY[c.k] = c; });
+var ANS = ['h2o', 'co2', 'so2', 'na'], BASE = 2.12, XM0 = 0.5, XM1 = 5.5;
+function model(ks, l) { var v = BASE; ks.forEach(function (k) { CBY[k].g.forEach(function (g) { v += g[2] * Math.exp(-Math.pow((l - g[0]) / g[1], 2) / 2); }); }); return v; }
+var OBS = (function () { var r = rnd(77), o = []; for (var i = 0; i <= 150; i++) { var l = XM0 + (XM1 - XM0) * i / 150; o.push([l, model(ANS, l) + (r() - 0.5) * 0.022]); } return o; })();
+function read(stage, api, view) {
+  var st = { sel: [], done: false, ok: false };
+  var wrap = document.createElement('div'); wrap.className = 'sp-wrap'; stage.appendChild(wrap);
+  var host = document.createElement('div'); host.className = 'sp-view'; wrap.appendChild(host);
+  var cand = document.createElement('div'); cand.className = 'sp-cand'; wrap.appendChild(cand);
+  cand.innerHTML = '<b>候选分子</b>' + CAND.map(function (c) { return '<button class="sp-cbtn" data-k="' + c.k + '" style="--c:' + c.c + '">' + c.n + ' ' + c.f + '</button>'; }).join('');
+  var C = curveBox(stage, EF.mobile ? 150 : 170);
+  var slots = document.createElement('div'); slots.className = 'sp-slots'; stage.appendChild(slots);
+  var msg = txt(stage, '这是系外行星 <b>WASP-39 b</b>:离我们约 <b>700 光年</b>。望远镜记下了它凌星时、每种波长的光被挡掉多少——就是下面那条发光的<b>观测曲线</b>。点候选分子把它们<b>放进卡槽</b>,拼出和观测对得上的曲线。');
+  var ans = document.createElement('div'); ans.className = 'ctl chips'; stage.appendChild(ans);
+  card(stage, '<b style="color:#ffd27a">真实的故事</b>:2022 年 7 月,韦布太空望远镜观测了 WASP-39 b 的凌星;8 月,科学家宣布在它的大气里第一次明确找到<b>二氧化碳</b>——这也是第一次在太阳系外行星的大气里明确找到它。11 月公布的更多结果<b>确认</b>了此前用其他望远镜发现过的<b>水、钠、钾</b>,还找到了<b>一氧化碳</b>,以及第一次在系外行星上找到的<b>二氧化硫</b>。曲线形状参考真实结果,但已简化(示意)。');
+  view.mount(host, st);
+  function diff() { var miss = ANS.filter(function (k) { return st.sel.indexOf(k) < 0; }), extra = st.sel.filter(function (k) { return ANS.indexOf(k) < 0; }); return { miss: miss, extra: extra }; }
+  function sync() {
+    cand.querySelectorAll('.sp-cbtn').forEach(function (b) { b.classList.toggle('on', st.sel.indexOf(b.dataset.k) > -1); });
+    slots.innerHTML = [0, 1, 2, 3].map(function (i) { var k = st.sel[i], c = k && CBY[k]; return '<button class="sp-slot' + (c ? ' full' : '') + '" data-i="' + i + '"' + (c ? ' style="--c:' + c.c + '"' : '') + ' aria-label="卡槽 ' + (i + 1) + '">' + (c ? '<b>' + c.f + '</b><small>' + c.n + '</small>' : '') + '</button>'; }).join('') + '<span class="sp-lab">把分子放进卡槽,拼出这条曲线</span>';
+    slots.querySelectorAll('.sp-slot.full').forEach(function (b) { b.onclick = function () { toggle(st.sel[+b.dataset.i]); }; });
+    view.draw(st);
+  }
+  var WHERE = { h2o: '1.4、1.9、2.7 µm', co2: '4.3 µm', so2: '4.05 µm(二氧化碳大鼓包左边的小肩膀)', na: '0.59 µm(最左边那个尖尖的小峰)' };
+  function judge() {
+    var d = diff();
+    if (!d.miss.length && !d.extra.length) { st.ok = true; EF.play('fuse'); msg.innerHTML = '对上了!<b>水、二氧化碳、二氧化硫、钠</b>叠在一起,和观测曲线吻合。二氧化硫很特别:它不是行星"天生"就有的,而是强烈的星光把大气里的分子打碎、再重新组合出来的——这叫<b>光化学</b>,和土卫六高空用紫外线"打碎再拼接"出橙色雾是同一类事情。'; setTimeout(ask, 1800); return; }
+    if (d.extra.length) msg.innerHTML = '模型在 <b>' + (d.extra[0] === 'ch4' ? '3.3 µm' : '') + '</b> 附近多出一个鼓包,观测里却没有——<b>甲烷</b>在这颗行星上并没有被明显看到。把它从卡槽里拿出来(点卡槽)。';
+    else if (st.sel.length) msg.innerHTML = '还没对齐:观测曲线在 <b>' + WHERE[d.miss[0]] + '</b> 附近有鼓包,模型还没有。红色阴影标出了对不上的地方。';
+  }
+  function toggle(k) {
+    if (st.done || st.ok) return; var i = st.sel.indexOf(k);
+    if (i > -1) { st.sel.splice(i, 1); EF.play('tick'); }
+    else { if (st.sel.length >= 4) { msg.innerHTML = '卡槽满了。先点一个卡槽,把放错的分子拿出来。'; EF.play('tick'); return; } st.sel.push(k); EF.play('select'); }
+    sync(); judge();
+  }
+  function ask() {
+    msg.innerHTML += '<br><b>最后一问:WASP-39 b 的空气里有水和二氧化碳,能说明那里有生命吗?</b>';
+    chips(ans, [['能,有水就有生命', 0], ['不能:找到某种气体 ≠ 找到生命,还要更多证据', 1], ['能,因为它和地球一模一样', 0]], function (ok, b) { if (st.done) return;
+      if (ok) { st.done = true; EF.play('fuse'); ans.innerHTML = ''; msg.innerHTML = '对!WASP-39 b 是一颗和土星差不多重的<b>气态巨行星</b>,绕恒星一圈只要约 4 天,大气估计有八百多摄氏度,不是生命的家园。即使将来在一颗岩石行星上找到某种"像是生命留下"的气体,科学家也要排除火山、光化学等<b>非生命</b>的来源,用多台望远镜、多种证据反复核对,才敢下结论。<b>找到某种气体 ≠ 找到生命。</b>'; setTimeout(api.complete, 3000); }
+      else { EF.play('tick'); msg.innerHTML = /一模一样/.test(b.textContent) ? '它是一颗离恒星很近、非常热的气态巨行星,和地球很不一样。' : '水和二氧化碳在许多没有生命的地方都有,比如彗星、火星。'; api.say('想想:没有生命的地方,也能有水和二氧化碳吗?'); } });
+  }
+  cand.querySelectorAll('.sp-cbtn').forEach(function (b) { b.onclick = function () { toggle(b.dataset.k); }; });
+  (function loop() { if (!C.c.isConnected) return; var x = C.x, W = C.W, H = C.H; x.clearRect(0, 0, W, H);
+    var X0 = 36, W0 = W - 46, Y0 = 16, H0 = H - 44, lx = function (l) { return X0 + (l - XM0) / (XM1 - XM0) * W0; }, vy = function (v) { return Y0 + (1 - (v - 2.08) / 0.3) * H0; };
+    /* 对不上的地方:红色阴影 */
+    if (st.sel.length) for (var i = 0; i < OBS.length; i += 1) { var l = OBS[i][0], dv = Math.abs(model(st.sel, l) - model(ANS, l)); if (dv > 0.03) { x.fillStyle = 'rgba(255,70,70,' + Math.min(0.28, dv) + ')'; x.fillRect(lx(l) - W0 / 300, Y0, W0 / 150 + 1, H0); } }
+    /* 观测点(发光) */
+    x.save(); x.shadowColor = '#ffb050'; x.shadowBlur = 8; x.fillStyle = '#ffd08a'; OBS.forEach(function (o) { x.fillRect(lx(o[0]) - 1.2, vy(o[1]) - 1.2, 2.4, 2.4); }); x.restore();
+    x.strokeStyle = 'rgba(255,208,138,.35)'; x.lineWidth = 1; x.beginPath(); OBS.forEach(function (o, i) { x[i ? 'lineTo' : 'moveTo'](lx(o[0]), vy(o[1])); }); x.stroke();
+    /* 模型曲线 */
+    if (st.sel.length) { x.save(); x.shadowColor = '#ff7a3a'; x.shadowBlur = 10; x.strokeStyle = st.ok ? '#9fe870' : '#ff8a4a'; x.lineWidth = 2.2; x.beginPath(); for (var j = 0; j <= 300; j++) { var l2 = XM0 + (XM1 - XM0) * j / 300; x[j ? 'lineTo' : 'moveTo'](lx(l2), vy(model(st.sel, l2))); } x.stroke(); x.restore(); }
+    if (st.ok) { x.fillStyle = '#f4ede1'; x.font = '10px system-ui'; x.textAlign = 'center'; [[0.59, 'Na'], [1.4, 'H₂O'], [1.85, 'H₂O'], [2.7, 'H₂O'], [3.98, 'SO₂'], [4.38, 'CO₂']].forEach(function (a) { x.fillText(a[1], lx(a[0]), vy(model(ANS, a[0])) - 8); }); }
+    x.fillStyle = 'rgba(220,220,235,.75)'; x.font = '10px system-ui'; x.textAlign = 'center'; for (var t = 1; t <= 5; t++) { x.fillRect(lx(t) - 0.5, Y0 + H0, 1, 4); x.fillText(t, lx(t), Y0 + H0 + 14); }
+    x.textAlign = 'right'; x.fillText('波长 µm →', W - 6, H - 4); x.textAlign = 'left'; x.fillText('越高 = 行星在这种光下看起来越"大"(挡光越多)', X0, 10);
+    x.fillStyle = '#ffd08a'; x.fillRect(X0, H - 9, 8, 3); x.fillStyle = 'rgba(220,220,235,.75)'; x.fillText('观测(示意)', X0 + 12, H - 5);
+    if (st.sel.length) { x.fillStyle = '#ff8a4a'; x.fillRect(X0 + 84, H - 9, 8, 3); x.fillStyle = 'rgba(220,220,235,.75)'; x.fillText('你的模型', X0 + 96, H - 5); }
+    requestAnimationFrame(loop); })();
+  EF.SP._l3 = { st: st, toggle: toggle };
+  sync();
+}
+
+EF.SP = { wl: wl, css: css, rnd: rnd, txt: txt, card: card, ELS: ELS, LINES: LINES, MOL: MOL, ACOL: ACOL, BANDS: BANDS, RP: RP, CAND: CAND, ANS: ANS, flux: flux, model: model, strip: strip,
+  lines: lines, lines2D: lines2D, ir: ir, ir2D: ir2D, transit: transit, read: read, sky2D: sky2D };
+})();
+</script>
+<script>if (EF.glTier !== 'low') { var p3 = document.createElement('script'); p3.type = 'module'; p3.src = '../ef-spectra3d.js?v=1'; document.head.appendChild(p3); }</script>
+<script>
+(function () {
+var SP = EF.SP;
+function L0(stage, api) { SP.lines(stage, api, SP.lines2D()); }
+function L1(stage, api) { SP.ir(stage, api, SP.ir2D()); }
+function L2(stage, api) { SP.transit(stage, api, SP.sky2D()); }
+function L3(stage, api) { SP.read(stage, api, SP.sky2D(EF.mobile ? 200 : 250, EF.mobile ? {} : { sx: 0.3, tx: 0.66 })); }
+function guard(stage, api) { var tok = {}, fired = false; stage._tok = tok; return { say: api.say, complete: function () { if (fired || stage._tok !== tok) return; fired = true; api.complete(); } }; }
+function pick(f2, k) { return function (stage, api0) { var api = guard(stage, api0); if (EF.P3 && EF.P3[k]) { try { return EF.P3[k](stage, api); } catch (e) { console.warn('[ef] 3D 玩法出错,回落平面版', e); stage.innerHTML = ''; } } return f2(stage, api); }; }
+var LEVELS = [
+  { title: '彩虹里的黑线', setup: pick(L0, 'L0'), task: '把钠、氢拖到太阳光谱里各自的黑线上;再回到 1868 年的日食,给那条神秘的黄线找主人。',
+    ask: { q: '用三棱镜把太阳光分成彩虹,仔细看,彩虹里会有什么?', opts: ['只有连续的颜色,什么都没有', '有一些细细的黑线', '有一些白色的亮点'], ok: 1 },
+    hints: ['每种原子只吸收几种固定颜色的光,在彩虹里留下黑线。', '钠的线在黄色区域(约 589 nm);氢有三条:656、486、434 nm。', '1868 年那条黄线在 587.6 nm,和钠的 589 nm 很近却对不上。'],
+    explain: '阳光穿过太阳外层较冷的气体时,气体里的原子把一些特定颜色的光<b>吸收</b>掉,彩虹里就留下一条条<b>黑线</b>(吸收线)。同一种原子发光时(比如烟花里的钠),亮线(发射线)出现在<b>完全相同</b>的位置。每种元素的这组线位置固定,就像<b>指纹</b>。1868 年 8 月的日全食中,天文学家在日珥的光里看到一条 587.6 nm 的黄色亮线,和已知元素都对不上;后来人们认定它来自一种新元素——<b>氦</b>,而直到 1895 年,化学家才在地球上的矿石里分离出氦气。' },
+  { title: '分子的指纹', setup: pick(L1, 'L1'), task: '拖动红外光的波长,给水、二氧化碳、甲烷各找到至少一个"会振动"的波长。',
+    ask: { q: '空气里的分子,会"吃掉"红外光吗?', opts: ['都不会,红外光直接穿过去', '有的分子会,而且只吃特定的几种', '所有分子会吃掉所有红外光'], ok: 1 },
+    hints: ['只有对上分子"会振动"的波长,光才会被吞掉。', '短一些的波长(约 2–5 µm)常让化学键伸缩;长一些的(约 6–15 µm)常让分子弯曲。', '试试 2.7、4.3、3.3 µm 附近。'],
+    explain: '分子里的原子像用弹簧连着的小球,可以<b>伸缩</b>和<b>弯曲</b>。一种分子只会以几种固定的方式振动,所以只吸收几种固定波长的红外光,在红外光谱上留下一组<b>缺口</b>——这就是<b>分子的指纹</b>。波长越短,光的能量越大:伸缩振动通常对应较短的波长,弯曲振动对应较长的波长。只有让分子电荷分布跟着变化的振动才吸收红外光,所以氮气、氧气几乎不吸收,而水、二氧化碳、甲烷吸收明显。' },
+  { title: '星光穿过大气', setup: pick(L2, 'L2'), task: '拖动行星走过恒星,看亮度曲线;再换成被二氧化碳吸收的光,比一比下陷的深浅。',
+    ask: { q: '一颗行星从恒星前面经过时,我们看到的恒星会怎样?', opts: ['变亮一点', '变暗一点', '完全看不见'], ok: 1 },
+    hints: ['行星挡住了恒星的一小部分。', '两种光都要各拖一遍,完整走过恒星。', '在被吸收的光里,大气也变得不透明。'],
+    explain: '行星从恒星前面经过(<b>凌星</b>)时,挡住一小部分星光,恒星看起来<b>暗了一点</b>。星光擦过行星边缘时会穿过它的大气:在大气分子"会吸收"的波长,大气也挡光,行星连同大气挡住的面积更大(有效半径更大),<b>下陷就更深</b>。把每种波长的下陷深度连起来,就是行星的<b>透射光谱</b>——曲线上的鼓包,就是大气里分子的指纹。真实的差别非常小:像 WASP-39 b 这样的行星约挡住 2% 的星光,大气只让它在某些波长多挡约千分之一到千分之二。' },
+  { title: '隔着几百光年读空气', setup: pick(L3, 'L3'), task: '把候选分子放进卡槽,叠出和 WASP-39 b 观测曲线吻合的组合。',
+    ask: { q: '隔着约 700 光年,科学家能知道那颗行星的空气里有什么吗?', opts: ['不能,太远了', '能,靠穿过它大气的星光留下的指纹', '只能派飞船飞过去'], ok: 1 },
+    hints: ['观测曲线上每个鼓包,都对应一种分子的指纹。', '最大的鼓包在 4.3 µm;它左边 4.05 µm 还有个小肩膀。', '最左边 0.59 µm 的尖峰,是第 1 关见过的钠。'],
+    explain: 'WASP-39 b 离我们约 <b>700 光年</b>,是一颗和土星差不多重、绕恒星一圈只要约 4 天的炽热气态巨行星。2022 年,韦布太空望远镜在它的透射光谱里第一次明确找到了系外行星大气中的<b>二氧化碳</b>(8 月公布),11 月公布的结果又确认了此前已被发现的<b>水、钠、钾</b>,找到了<b>一氧化碳</b>,以及由星光驱动的<b>光化学</b>产生的<b>二氧化硫</b>;而甲烷没有被明显看到。读出空气的成分,不等于找到生命:<b>找到某种气体 ≠ 找到生命</b>,科学家需要多条证据、反复核对。' }
+];
+var NOTES = { title: '元素工坊 · 隔着几百光年,怎么知道一颗星球的空气?', items: [
+  '三棱镜能把白光分成彩虹(光谱)。阳光的光谱里有许多细黑线:大多是太阳外层较冷的气体里的原子吸收掉的颜色(吸收线),也有少数来自地球大气。',
+  '同一种原子吸收和发出的光在同一位置:钠的黄线约 589 nm(589.0 与 589.6 nm 两条),氢的可见光线有 656、486、434 nm 等。谱线的位置就是元素的"指纹"。',
+  '1868 年 8 月的日全食中,天文学家在日珥的光谱里看到一条 587.6 nm 的黄色亮线,与已知元素都对不上,后来被认定属于新元素氦;1895 年,化学家才在地球上的矿石里分离出氦气。',
+  '分子会伸缩、弯曲振动,只吸收几种固定波长的红外光,在红外光谱上留下缺口(分子的指纹):如水约 2.7、6.3 µm,二氧化碳约 4.3、15 µm,甲烷约 3.3、7.7 µm。',
+  '只有让分子电荷分布(偶极矩)发生变化的振动才吸收红外光;氮气、氧气这样由两个相同原子组成的分子几乎不吸收红外,二氧化碳的对称伸缩振动也不吸收。',
+  '凌星:行星挡住一点星光,恒星变暗;在大气会吸收的波长,行星的"有效半径"更大,挡光更多,下陷更深——把各波长的下陷画出来就是透射光谱。',
+  'WASP-39 b 距我们约 700 光年。2022 年 8 月,韦布太空望远镜公布在它大气中明确找到二氧化碳;11 月的结果确认了此前已发现的水、钠、钾,并找到一氧化碳和由光化学产生的二氧化硫;甲烷没有被明显看到。',
+  '找到某种气体 ≠ 找到生命:还要排除非生命来源、需要多条证据反复核对。',
+  '在家试:旧光盘斜对台灯看彩虹,请大人陪同。绝对不要直视太阳,不要用光盘、三棱镜或任何镜片对着太阳看。'],
+  bridge: '用星光读出一颗行星的空气,是寻找"另一个地球"的关键一步——星桥通往天枢「宇宙里还有别的地球吗?」<a href="../../starhelm/?task=exoearth">去看看 →</a>' };
+EF.mission('spectra', LEVELS, NOTES);
+})();
+</script>
+</body>
+</html>

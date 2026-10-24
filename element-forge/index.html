@@ -9,7 +9,7 @@
 <meta property="og:title" content="元素工坊 Element Forge · 化学 · 创世计划 Genesis">
 <meta property="og:description" content="从一颗恒星里,炼出整个世界。亲手聚变出元素、把石墨压成钻石。免费、免注册。">
 <meta name="theme-color" content="#070a14">
-<link rel="stylesheet" href="ef.css?v=13">
+<link rel="stylesheet" href="ef.css?v=14">
 <link rel="stylesheet" href="ef-hud.css?v=2">
 </head>
 <body class="home pre">
@@ -53,7 +53,7 @@
 
   <section class="sec">
     <h2>星球篇</h2>
-    <p class="sub">元素离开恒星,变成岩石和行星。不同的星球,有不同的化学。火星、土卫六已点亮,其余陆续开放。</p>
+    <p class="sub">元素离开恒星,变成岩石和行星。不同的星球,有不同的化学。火星、土卫六,还有"隔着几百光年读空气"已点亮,其余陆续开放。</p>
     <figure class="mars glass"><div class="mb" id="mbase"><img src="img/mars-base.webp" alt="火星基地概念图:冰化成水,水被分解成氧气和燃料,再送进温室" loading="lazy"><svg viewBox="0 0 960 536" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><filter id="mbG" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="1.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle class="gl" cx="182" cy="97" r="20" fill="#fff0c0" opacity=".3"/><path class="fan" d="M187 268V308M167 288H207M173 274L201 302M201 274L173 302" stroke="#f0e6d6" stroke-width="2.4" opacity=".35"/><path class="fl" d="M233 286C247 303 238 334 270 337L330 331C346 328 352 322 358 319"/><path class="fl b" d="M445 314C468 318 488 334 492 318L493 228C494 214 505 213 520 213L538 214C548 216 550 226 550 236"/><path class="fl c" d="M566 236C566 220 568 214 580 214L688 214C693 216 693 230 693 262M612 252C622 244 640 242 644 270"/><path class="fl" d="M560 324C566 341 580 345 600 345L790 345C812 345 823 339 825 324"/><circle class="bu" cx="392" cy="322" r="2.5" style="animation-delay:-0.0s"/><circle class="bu" cx="401" cy="318" r="1.8" style="animation-delay:-0.5s"/><circle class="bu" cx="410" cy="324" r="2.2" style="animation-delay:-1.1s"/><circle class="bu" cx="396" cy="320" r="1.6" style="animation-delay:-1.7s"/><circle class="bu" cx="414" cy="316" r="2.6" style="animation-delay:-2.2s"/><circle class="bu" cx="404" cy="322" r="1.9" style="animation-delay:-2.8s"/><circle class="bu" cx="406" cy="408" r="2.0" style="animation-delay:-0.3s"/><circle class="bu" cx="402" cy="412" r="1.6" style="animation-delay:-1.4s"/><circle class="bu" cx="408" cy="404" r="2.2" style="animation-delay:-2.4s"/><rect class="gl" x="545" y="262" width="33" height="50" rx="6" fill="#ffb040"/><rect class="gl" x="631" y="283" width="14" height="28" rx="5" fill="#ff9a30" style="animation-delay:-1s"/><rect class="gl" x="671" y="283" width="14" height="28" rx="5" fill="#ff9a30" style="animation-delay:-2s"/><rect class="gl" x="735" y="237" width="100" height="6" rx="3" fill="#f4fff0" style="animation-duration:4s"/><circle class="dr" cx="662" cy="180" r="2"/><circle class="dr" cx="676" cy="176" r="1.6" style="animation-delay:-1.2s"/><circle class="du" cx="40" cy="290" r="1.8" style="animation-delay:-0.0s"/><circle class="du" cx="70" cy="268" r="1.4" style="animation-delay:-2.0s"/><circle class="du" cx="55" cy="300" r="2.2" style="animation-delay:-4.0s"/><circle class="du" cx="95" cy="280" r="1.6" style="animation-delay:-6.0s"/><circle class="du" cx="30" cy="262" r="1.3" style="animation-delay:-7.5s"/><circle class="ic" cx="352" cy="490" r="29" style="animation-delay:0s"/><circle class="ic" cx="437" cy="490" r="29" style="animation-delay:1s"/><circle class="ic" cx="521" cy="490" r="29" style="animation-delay:2s"/><circle class="ic" cx="606" cy="490" r="29" style="animation-delay:3s"/></svg></div><figcaption>终章「火星基地」:只用火星上的空气、冰和岩石,造出氧气、水和燃料。<small>概念图,非实景;画面动效为示意</small></figcaption></figure>
     <div class="cards" id="planets"></div>
   </section>
@@ -83,7 +83,7 @@
     创世计划 Genesis · 科学素养 / 科普探究
   </footer>
 </main>
-<script src="ef.js?v=13"></script>
+<script src="ef.js?v=14"></script>
 <script>
 (function () {
 if (EF.reduced) document.body.classList.remove('pre');
@@ -169,10 +169,12 @@ document.getElementById('drTasks').innerHTML = Object.keys(EF.MISSIONS).map(func
 EF.BRIDGES = [
   { a: 'ef.stars', b: 'sh.where', w: '天枢 Starhelm', t: '此刻,你在宇宙的哪里?', href: '../starhelm/', why: '你身体里的铁来自远古的星星;天枢带你看清自己在宇宙中的位置。' },
   { a: 'ef.carbon', b: 'ma.bee', w: '星图 Math Atlas', t: '为什么蜜蜂选六边形', href: '../math-atlas/bee/', why: '石墨的每一层都是六边形网格,蜂巢也是。' },
-  { a: 'ef.stars', b: 'nv.stars', w: '宙律 Nomoverse', t: '恒星的一生', href: null, why: '恒星怎样诞生、燃烧、死亡。' },
+  { a: 'ef.stars', b: 'nv.stars', w: '宙律 Nomoverse', t: '恒星为什么会发光?', href: '../nomoverse/stars/', why: '恒星靠核聚变发光,也在聚变里炼出新的元素。' },
   { a: 'ef.crystal', b: 'ma.cube', w: '星图 Math Atlas', t: '魔方为什么能复原?', href: '../math-atlas/cube/', why: '晶体的对称,和魔方的对称是同一种数学。' },
   { a: 'ef.rocks', b: 'sh.quakes', w: '天枢 Starhelm', t: '地震在告诉我们什么?', href: '../starhelm/?task=quakes', why: '岩石怎样"长"出来,和地球内部的运动有关。' },
-  { a: 'ef.mars', b: 'sh.marsday', w: '天枢 Starhelm', t: '火星上的一天有多长?', href: '../starhelm/?task=marsday', why: '火星为什么红是它的化学,火星的一天多长是它的天文。' }
+  { a: 'ef.mars', b: 'sh.marsday', w: '天枢 Starhelm', t: '火星上的一天有多长?', href: '../starhelm/?task=marsday', why: '火星为什么红是它的化学,火星的一天多长是它的天文。' },
+  { a: 'ef.titan', b: 'sh.voyager', w: '天枢 Starhelm', t: '旅行者号此刻飞到哪了?', href: '../starhelm/?task=voyager', why: '旅行者 1 号 1980 年飞掠土卫六,只看见一团橙色的雾;如今它已飞出日球层,在星际空间里继续前进。' },
+  { a: 'ef.spectra', b: 'sh.exoearth', w: '天枢 Starhelm', t: '宇宙里还有别的地球吗?', href: '../starhelm/?task=exoearth', why: '用星光读出系外行星的空气,是寻找"另一个地球"的关键一步。' }
 ];
 document.getElementById('drBridges').innerHTML = EF.BRIDGES.map(function (B) {
   var on = B.href && !B.soon;
