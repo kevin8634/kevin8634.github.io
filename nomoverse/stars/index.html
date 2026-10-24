@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#07061a">
+<title>恒星为什么会发光? · 宙律 Nomoverse</title>
+<meta name="description" content="宙律 Nomoverse · 物理探究:给太阳换燃料、称一称核聚变少掉的质量、让引力和压力打个平手、把恒星变重变轻,看它为什么能亮几十亿年。">
+<link rel="stylesheet" href="../core/nv.css">
+</head>
+<body>
+<noscript><p style="padding:16px">这个小实验需要开启 JavaScript。<a href="../">返回宙律首页</a></p></noscript>
+<script src="../core/nv.js"></script>
+<script>
+"use strict";
+(function () {
+  var P = NV.Phys, Dr = NV.Draw;
+  var MD = P.massDefect();
+
+  /* ---------- 通用:数字与颜色 ---------- */
+  function yrs(y) {
+    if (y >= 1e8) return (y / 1e8 >= 100 ? Math.round(y / 1e8) : (y / 1e8).toFixed(y / 1e8 >= 10 ? 0 : 1)) + " 亿年";
+    if (y >= 1e4) return (y / 1e4 >= 100 ? Math.round(y / 1e4) : (y / 1e4).toFixed(1)) + " 万年";
+    return Math.round(y).toLocaleString("zh-CN") + " 年";
+  }
+  function tons(kg) {   // kg → 万吨 / 亿吨
+    var t = kg / 1000;
+    if (t >= 1e8) return (t / 1e8).toFixed(t / 1e8 >= 10 ? 0 : 2) + " 亿吨";
+    if (t >= 1e4) return (t / 1e4).toFixed(t / 1e4 >= 100 ? 0 : 1) + " 万吨";
+    return t.toFixed(t >= 10 ? 0 : 2) + " 吨";
+  }
+  function sci(x, d) { var e = Math.floor(Math.log10(x)), m = x / Math.pow(10, e); return m.toFixed(d == null ? 2 : d) + "×10" + sup(e); }
+  function sup(n) { var m = "⁰¹²³⁴⁵⁶⁷⁸⁹"; return String(n).replace(/-/g, "⁻").replace(/\d/g, function (d) { return m[+d]; }); }
+  /* 黑体颜色(近似,1000–40000 K)→ [r, g, b] 0–255 */
+  function bbRGB(T) {
+    var t = Math.max(1000, Math.min(40000, T)) / 100, r, g, b;
+    r = t <= 66 ? 255 : 329.698727446 * Math.pow(t - 60, -0.1332047592);
+    g = t <= 66 ? 99.4708025861 * Math.log(t) - 161.1195681661 : 288.1221695283 * Math.pow(t - 60, -0.0755148492);
+    b = t >= 66 ? 255 : (t <= 19 ? 0 : 138.5177312231 * Math.log(t - 10) - 305.0447927307);
+    return [r, g, b].map(function (v) { return Math.max(0, Math.min(255, Math.round(v))); });
+  }
+  function rgbS(c, a) { return "rgba(" + c[0] + "," + c[1] + "," + c[2] + "," + (a == null ? 1 : a) + ")"; }
+  function colorName(T) { return T < 3700 ? "红色" : T < 5200 ? "橙色" : T < 6000 ? "黄白色" : T < 7500 ? "白色" : T < 10000 ? "蓝白色" : "蓝色"; }
+
+  /* ---------- 舞台几何:太阳在安全区中的位置与大小(2D/3D 共用) ---------- */
+  function view(L, scale, opt) {
+    opt = opt || {};
+    var cx = L.w * (opt.fx || 0.5), cy = L.h * (opt.fy || 0.47), R0 = Math.min(L.w * 0.3, L.h * 0.36);
+    var V = { cx: cx, cy: cy, R0: R0, R: R0 * (scale || 1) };
+    if (L.d3) L.d3.view(V);
+    return V;
+  }
+  /* 剖面标签锚点:3D 给出投影点,2D 用同样的约定(切口朝右上) */
+  function anchors(L, V) {
+    if (L.d3 && L.d3.anchors) return L.d3.anchors();
+    var R = V.R, k = 0.62;
+    return { core: [V.cx + R * 0.1 * k, V.cy - R * 0.1 * k], rad: [V.cx + R * 0.45 * k, V.cy - R * 0.5 * k], conv: [V.cx + R * 0.86 * 0.71, V.cy - R * 0.86 * 0.71], surf: [V.cx - R * 0.72, V.cy + R * 0.72] };
+  }
+  /* 2D 回退画法:有光晕的日面 + 右上四分之一剖面 */
+  function sun2d(L, V, s) {
+    var c = L.ctx, R = V.R, col = bbRGB(s.T || 5772), dim = s.dim == null ? 1 : s.dim, t = performance.now() / 1000;
+    var g = c.createRadialGradient(V.cx, V.cy, R * 0.9, V.cx, V.cy, R * 2.1);
+    g.addColorStop(0, rgbS(col, 0.35 * dim)); g.addColorStop(1, rgbS(col, 0));
+    c.fillStyle = g; c.beginPath(); c.arc(V.cx, V.cy, R * 2.1, 0, 7); c.fill();
+    var g2 = c.createRadialGradient(V.cx - R * 0.2, V.cy - R * 0.2, R * 0.1, V.cx, V.cy, R);
+    g2.addColorStop(0, rgbS([255, Math.min(255, col[1] + 40), Math.min(255, col[2] + 40)], dim));
+    g2.addColorStop(0.75, rgbS(col, dim)); g2.addColorStop(1, rgbS([col[0] * 0.7, col[1] * 0.45, col[2] * 0.35], dim));
+    c.fillStyle = g2; c.beginPath(); c.arc(V.cx, V.cy, R, 0, 7); c.fill();
+    if (s.cut !== false) {
+      c.save(); c.beginPath(); c.moveTo(V.cx, V.cy); c.arc(V.cx, V.cy, R, -Math.PI / 2, 0); c.closePath(); c.clip();
+      var zones = [[1, "#a8370c"], [0.7, "#e2621b"], [0.25, "#fff4d6"]];
+      zones.forEach(function (z) { c.fillStyle = z[1]; c.beginPath(); c.arc(V.cx, V.cy, R * z[0], 0, 7); c.fill(); });
+      var gc = c.createRadialGradient(V.cx, V.cy, 0, V.cx, V.cy, R * 0.32 * (0.6 + 0.4 * (s.core == null ? 1 : s.core)));
+      gc.addColorStop(0, "rgba(255,255,255,1)"); gc.addColorStop(1, "rgba(255,230,160,0)"); c.fillStyle = gc; c.fillRect(V.cx, V.cy - R, R, R);
+      c.strokeStyle = "rgba(255,240,200,.7)"; c.lineWidth = 1;          // 光子乱走(示意)
+      var seed = 7; function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+      for (var k = 0; k < 3; k++) { var x = V.cx + R * 0.22, y = V.cy - R * 0.08 * (k + 1); c.beginPath(); c.moveTo(x, y); for (var j = 0; j < 22; j++) { x += (rnd() - 0.35) * R * 0.08; y -= (rnd() - 0.4) * R * 0.08; if (Math.hypot(x - V.cx, y - V.cy) > R * 0.69) break; c.lineTo(x, y); } c.stroke(); }
+      c.restore();
+    }
+    if (s.flash && !L.RM) { var a = 0.5 + 0.5 * Math.sin(t * 20); c.fillStyle = "rgba(255,255,255," + (0.4 * a * s.flash).toFixed(2) + ")"; c.beginPath(); c.arc(V.cx + R * 0.06, V.cy - R * 0.06, R * 0.12, 0, 7); c.fill(); }
+  }
+  function stage(L, V, s) {
+    L.st.sun3 = s;                      // 3D 舞台每帧读取
+    var c = L.ctx;
+    if (!L.d3) sun2d(L, V, s);
+    else { c.shadowColor = "rgba(8,6,26,.85)"; c.shadowBlur = 4; }
+  }
+  /* 标签:锚点 p → 标签框放在日面右侧(像剖面图的引线标注) */
+  function tag(L, p, text, tx, ty, color) {
+    var c = L.ctx;
+    c.save(); c.font = "12px system-ui, sans-serif"; var w = c.measureText(text).width + 12;
+    tx = Math.min(tx, L.w - w - 4);
+    c.strokeStyle = "rgba(237,233,254,.6)"; c.lineWidth = 1; c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(tx, ty); c.stroke();
+    c.fillStyle = "rgba(237,233,254,.9)"; c.beginPath(); c.arc(p[0], p[1], 2.2, 0, 7); c.fill();
+    c.fillStyle = "rgba(14,11,40,.8)"; c.strokeStyle = "rgba(167,139,250,.65)"; c.beginPath(); c.rect(tx, ty - 10, w, 20); c.fill(); c.stroke();
+    c.fillStyle = color || "#ede9fe"; c.textBaseline = "middle"; c.fillText(text, tx + 6, ty); c.restore();
+  }
+  function layerTags(L, V) {
+    if (V.R < 70) return;
+    var A = anchors(L, V), sm = L.w < 520, tx = V.cx + V.R * (sm ? 0.55 : 1.02);
+    tag(L, A.core, sm ? "核心" : "核心 · 约 1,570 万 K", tx, V.cy - V.R * 0.86, "#fff7d6");
+    tag(L, A.rad, sm ? "辐射区" : "辐射区 · 光子乱走", tx + V.R * 0.1, V.cy - V.R * 0.62);
+    tag(L, A.conv, sm ? "对流区" : "对流区 · 热气翻滚", tx + V.R * 0.12, V.cy - V.R * 0.38);
+  }
+
+  var NOTE = "简化模型:太阳按今天的亮度 3.828×10²⁶ W 计;数值用于理解规律,不代表恒星演化的精确计算。";
+
+  /* ================= 第 1 关 烧煤的太阳 ================= */
+  var FUELS = [["coal", "化学燃烧(煤)"], ["gravity", "引力收缩"], ["fusion", "核聚变"]];
+  var LIFE = FUELS.map(function (f) { return P.sunFuelYears(f[0]); });
+  var S1 = {
+    name: "烧煤的太阳", d3: true,
+    goal: "给太阳换一种「燃料」,让它以今天的亮度一直亮到地球诞生至今(45.4 亿年)。",
+    note: NOTE + "煤按热值 29.3 MJ/kg;引力收缩按 GM²/R;核聚变按烧掉 10% 质量的氢、每次少掉 0.712% 质量。",
+    ask: "要是整个太阳都是一大块煤,它能烧多久?",
+    predict: { type: "choice", q: "哪种燃料能让太阳亮过地球的年龄(45.4 亿年)?", options: ["化学燃烧(煤)", "引力收缩", "核聚变"] },
+    controls: [{ id: "fuel", type: "seg", label: "太阳的燃料", options: ["煤", "引力收缩", "核聚变"], value: 0 }],
+    runLabel: "点燃",
+    crit: ["找到能亮过 45.4 亿年的燃料", "预测正确", "三种燃料都试过"],
+    hints: ["煤每千克能放出多少热?太阳每秒要放出多少能量?", "引力收缩能让太阳亮几千万年。地球上的岩石有多老?", "什么反应,能从同样多的物质里放出比燃烧多几百万倍的能量?"],
+    summary: "燃烧只能撑几千年,收缩只能撑几千万年;只有核聚变,能让太阳稳定地亮上百亿年。",
+    lights: "能量守恒",
+    card: { t: "太阳的能量从哪来", b: "19 世纪的物理学家算过:就算太阳是一整块煤,也只能烧几千年;靠引力收缩也只够几千万年,比岩石记录的地球年龄短得多。答案是核聚变——把氢聚成氦,放出的能量是燃烧的上百万倍。", f: "t = E / L;E煤 = M·29.3 MJ/kg,E收缩 ≈ GM²/R,E聚变 ≈ 0.1 × 0.712% × Mc²", src: "NASA Sun Fact Sheet;OpenStax《Astronomy 2e》16.1 太阳能量的来源" },
+    init: function (L) { L.st = { tried: {} }; },
+    run: function (L) { var st = L.st; st.f = L.v.fuel; st.t = 0; st.done = false; st.tried[st.f] = true; L.sfx("whoosh"); },
+    frame: function (L, dt) {
+      var st = L.st, run = L.phase === "running" || L.phase === "compare";
+      var lifeLog = Math.log10(LIFE[st.f == null ? L.v.fuel : st.f]), ageLog = Math.log10(P.AGE_EARTH);
+      if (L.phase === "running") st.t += dt * (L.RM ? 4 : 1);
+      var span = 11, now = run && st.f != null ? Math.min(span, st.t / 6 * span) : 0;
+      var dim = run && st.f != null ? Math.max(0, Math.min(1, 1 - (now - lifeLog) / 0.4)) : 1;
+      var V = view(L, 1, { fy: 0.42 });
+      stage(L, V, { T: 5772, dim: 0.08 + 0.92 * dim, cut: true, core: dim, photons: dim > 0.3, flash: (st.f === 2 && run ? 1 : 0) * dim });
+      if (dim > 0.5) layerTags(L, V);
+      /* 时间轴(对数) */
+      var c = L.ctx, x0 = 24, x1 = L.w - 24, y = L.h - 30;
+      function X(lg) { return x0 + (x1 - x0) * lg / span; }
+      c.save(); c.strokeStyle = "rgba(196,181,253,.6)"; c.lineWidth = 2; c.beginPath(); c.moveTo(x0, y); c.lineTo(x1, y); c.stroke();
+      c.font = "11px system-ui, sans-serif"; c.fillStyle = "#c4b5fd"; c.textAlign = "center";
+      [0, 2, 4, 6, 8, 10].forEach(function (k) { var x = X(k); c.fillRect(x - 0.5, y - 4, 1, 8); c.fillText(k === 0 ? "1 年" : k === 2 ? "100 年" : k === 4 ? "1 万年" : k === 6 ? "100 万年" : k === 8 ? "1 亿年" : "100 亿年", x, y + 16); });
+      c.strokeStyle = "#67e8f9"; c.setLineDash([4, 4]); c.beginPath(); c.moveTo(X(ageLog), y - 26); c.lineTo(X(ageLog), y + 4); c.stroke(); c.setLineDash([]);
+      c.fillStyle = "#67e8f9"; c.fillText("地球 45.4 亿岁", X(ageLog), y - 30);
+      if (run && st.f != null) {
+        c.strokeStyle = "#fbbf24"; c.lineWidth = 4; c.beginPath(); c.moveTo(x0, y); c.lineTo(X(Math.min(now, lifeLog)), y); c.stroke();
+        if (now >= lifeLog) { c.fillStyle = "#f87171"; c.fillText("燃料耗尽:" + yrs(LIFE[st.f]), Math.min(x1 - 50, Math.max(x0 + 50, X(lifeLog))), y - 12); }
+      }
+      c.restore();
+      if (L.phase === "running" && now >= Math.min(span, lifeLog + 0.5) && !st.done) { st.done = true; S1.report(L); }
+      L.hud.innerHTML = "燃料 <b>" + FUELS[L.v.fuel][1] + "</b><br>能亮 <b>" + yrs(LIFE[L.v.fuel]) + "</b>";
+    },
+    report: function (L) {
+      var st = L.st, ok = LIFE[st.f] > P.AGE_EARTH;
+      L.finishRun({ pass: ok, predText: "预测「" + S1.predict.options[L.firstChoice] + "」", resultText: FUELS[st.f][1] + ":太阳能亮 " + yrs(LIFE[st.f]),
+        html: FUELS[st.f][1] + ":太阳能亮 <b>" + yrs(LIFE[st.f]) + "</b>," + (ok ? "<span class=ok>比地球年龄还长</span>。" : "<span class=no>远远撑不到 45.4 亿年</span>。"),
+        say: st.f === 0 ? "几千年就烧完了。那古埃及人看到的太阳,和今天一样亮吗?还有什么办法放出更多能量?" : st.f === 1 ? "几千万年,还是比恐龙出现得更晚就熄了。有没有比收缩更「猛」的能源?" : "" });
+    },
+    predictGood: function (L) { return L.firstChoice === 2; },
+    star3: function (L) { return Object.keys(L.st.tried).length >= 3; }
+  };
+
+  /* ================= 第 2 关 少了一点点质量 ================= */
+  var M_TRUE = P.massToLight();
+  var S2 = {
+    name: "少了一点点质量", d3: true,
+    goal: "4 个氢核聚成 1 个氦核,会少掉一点点质量,变成光。调节「每秒变成光的质量」,让太阳的输出功率对上实测的 3.828×10²⁶ W。",
+    note: NOTE + "原子质量:¹H 1.00782503 u,⁴He 4.00260325 u;忽略中微子带走的约 2% 能量。",
+    ask: "4 个氢核加起来,和聚成的 1 个氦核,哪边更重?",
+    predict: { type: "choice", q: "太阳每秒钟「消失」变成光的质量,大约是……", options: ["约 4 吨", "约 400 万吨", "约 4 万亿亿吨"] },
+    controls: [{ id: "lg", label: "每秒变成光的质量", min: 3, max: 12, step: 0.01, value: 6, fmt: function (x) { return tons(Math.pow(10, x)) + " / 秒"; } }],
+    runLabel: "称一称",
+    crit: ["功率误差 < 10%", "预测正确", "误差 < 3%"],
+    hints: ["E = mc²:c 是光速,约 3×10⁸ m/s。1 千克质量能变出多少焦耳?", "3.828×10²⁶ W 就是每秒 3.828×10²⁶ J。除以 c² 是多少千克?", "答案在几百万吨这一档。慢慢拖滑杆,看误差变小?"],
+    summary: "太阳每秒把约 426 万吨质量变成光,对应约 6 亿吨氢聚成氦;E = mc² 让一点点质量变成巨大的能量。",
+    lights: "原子核",
+    card: { t: "E = mc²:质量亏损", b: "4 个 ¹H 原子共 4.0313 u,1 个 ⁴He 原子只有 4.0026 u,少了约 0.712%。少掉的质量按 E = mc² 变成能量。太阳每秒少掉约 426 万吨,却已经这样亮了 46 亿年,只用掉了自身质量的万分之几。", f: "L = Δm·c²/Δt ⇒ Δm/Δt = L/c² ≈ 4.26×10⁹ kg/s", src: "OpenStax《University Physics Volume 3》10.3 结合能;IAU 2015 B3 太阳标称值" },
+    init: function (L) { L.st = {}; },
+    run: function (L) { L.st.t = 0; L.st.done = false; L.st.m = Math.pow(10, L.v.lg); L.sfx("whoosh"); },
+    frame: function (L, dt) {
+      var st = L.st, c = L.ctx, m = Math.pow(10, L.v.lg), Pw = P.powerFromMass(m);
+      if (L.phase === "running") st.t += dt * (L.RM ? 4 : 1);
+      var V = view(L, 0.82, { fx: L.w > 640 ? 0.62 : 0.5, fy: L.w > 640 ? 0.48 : 0.36 });
+      var ratio = Pw / P.L_SUN, glow = Math.max(0.15, Math.min(1.25, 0.55 + 0.25 * Math.log10(ratio)));
+      stage(L, V, { T: 5772, dim: Math.min(1, glow), cut: true, core: Math.min(1.4, glow), flash: L.phase === "running" ? 1 : 0.35 });
+      /* 天平:4 个 ¹H vs 1 个 ⁴He */
+      var bx = L.w > 640 ? Math.max(110, L.w * 0.2) : L.w * 0.5, by = L.w > 640 ? L.h * 0.3 : L.h * 0.8, bw = Math.min(150, L.w * 0.18 + 40);
+      var tilt = 0.12;
+      c.save(); c.translate(bx, by);
+      c.strokeStyle = "#c4b5fd"; c.lineWidth = 2; c.beginPath(); c.moveTo(0, 46); c.lineTo(0, 0); c.moveTo(-14, 46); c.lineTo(14, 46); c.stroke();
+      c.rotate(tilt); c.beginPath(); c.moveTo(-bw / 2, 0); c.lineTo(bw / 2, 0); c.stroke();
+      function pan(x, label, sub, n, col) {
+        c.save(); c.translate(x, 0); c.rotate(-tilt);
+        c.strokeStyle = "rgba(196,181,253,.7)"; c.beginPath(); c.moveTo(0, 0); c.lineTo(-20, 22); c.moveTo(0, 0); c.lineTo(20, 22); c.moveTo(-24, 22); c.lineTo(24, 22); c.stroke();
+        for (var i = 0; i < n.length; i++) { c.fillStyle = n[i]; c.beginPath(); c.arc(-12 + i * 8 + (n.length === 4 ? 0 : 0), 14 - (i % 2) * 6, 5, 0, 7); c.fill(); }
+        c.fillStyle = col; c.font = "12px system-ui, sans-serif"; c.textAlign = "center"; c.fillText(label, 0, 40); c.fillStyle = "#a5b4fc"; c.fillText(sub, 0, 55);
+        c.restore();
+      }
+      pan(-bw / 2, "4 个 ¹H", "4.0313 u", ["#f87171", "#f87171", "#f87171", "#f87171"], "#fecaca");
+      pan(bw / 2, "1 个 ⁴He", "4.0026 u", ["#f87171", "#60a5fa", "#f87171", "#60a5fa"], "#bfdbfe");
+      c.restore();
+      c.save(); c.font = "12px system-ui, sans-serif"; c.textAlign = "center"; c.fillStyle = "#fde68a";
+      c.fillText("少了 0.712% → 变成光", bx, by + 80); c.restore();
+      /* 功率表:你的 vs 太阳实测(对数) */
+      var gx = 20, gy = L.w > 640 ? L.h - 64 : 64, gw = Math.min(260, L.w - 40);
+      c.save(); c.font = "11px system-ui, sans-serif";
+      c.fillStyle = "rgba(14,11,40,.7)"; c.fillRect(gx - 8, gy - 6, gw + 16, 52);
+      function G(v) { return gx + gw * Math.max(0, Math.min(1, (Math.log10(v) - 18) / 16)); }
+      c.fillStyle = "#3b3470"; c.fillRect(gx, gy + 14, gw, 8);
+      c.fillStyle = "#fbbf24"; c.fillRect(gx, gy + 14, G(Pw) - gx, 8);
+      c.fillStyle = "#67e8f9"; c.fillRect(G(P.L_SUN) - 1, gy + 8, 2, 20);
+      c.fillStyle = "#ede9fe"; c.fillText("你的功率 " + sci(Pw) + " W", gx, gy + 6);
+      c.fillStyle = "#67e8f9"; c.fillText("太阳实测 3.83×10²⁶ W", gx, gy + 40);
+      c.restore();
+      if (L.phase === "running" && st.t > 1.4 && !st.done) { st.done = true; S2.report(L); }
+      L.hud.innerHTML = "每秒变成光 <b>" + tons(m) + "</b><br>对应每秒烧掉氢 <b>" + tons(m / MD) + "</b>";
+    },
+    report: function (L) {
+      var m = L.st.m, err = Math.abs(m - M_TRUE) / M_TRUE, ok = err < 0.1;
+      L.st.err = err;
+      L.finishRun({ pass: ok, predText: "预测「" + S2.predict.options[L.firstChoice] + "」", resultText: "每秒 " + tons(m) + ",功率误差 " + (err * 100).toFixed(1) + "%",
+        html: "功率 <b>" + sci(P.powerFromMass(m)) + " W</b>,误差 " + (ok ? "<span class=ok>" : "<span class=no>") + (err > 9.99 ? "超过 1000%" : (err * 100).toFixed(1) + "%") + "</span>" + (ok ? "。太阳每秒真的要少掉约 <b>426 万吨</b>。" : ""),
+        say: m < M_TRUE ? "太暗了。要再亮几倍、几十倍,质量要乘几?" : "太亮了。要是太阳这么亮,地球会怎样?往回调一点?" });
+    },
+    predictGood: function (L) { return L.firstChoice === 1; },
+    star3: function (L) { return L.st.err < 0.03; }
+  };
+
+  /* ================= 第 3 关 压不扁的火球 ================= */
+  var S3 = {
+    name: "压不扁的火球", d3: true,
+    goal: "引力想把太阳压扁,压力想把它撑开。突然让核心变热一点,看太阳会不会失控;再关掉核聚变试试。",
+    note: NOTE + "准静态维里平衡模型:核心温度 ∝ 1/半径,聚变产能 ∝ 温度⁴,太阳的真实反应时间以百万年计,这里大大加快。",
+    ask: "引力一直往里压,太阳为什么没被压扁?",
+    predict: { type: "choice", q: "核心突然热了 20%,太阳会……", options: ["先胀大,再自己变回原样", "一直胀大,直到炸开", "缩小、变暗"] },
+    controls: [
+      { id: "kick", label: "核心温度突然变化", min: -30, max: 30, step: 1, value: 20, fmt: function (x) { return (x > 0 ? "+" : "") + x + "%"; } },
+      { id: "fusion", type: "toggle", label: "核聚变(开)", value: true }
+    ],
+    runLabel: "扰动",
+    crit: ["开着核聚变,扰动 ≥ 10% 后太阳回到平衡", "预测正确", "也试过关掉核聚变"],
+    hints: ["核心更热,压力变大还是变小?太阳会往哪边动?", "太阳胀大以后,核心会变热还是变冷?核聚变会变快还是变慢?", "关掉核聚变以后,太阳只能靠什么发光?它会怎样?"],
+    summary: "引力与压力互相牵制:核心太热就胀大降温,太冷就收缩升温。核聚变像一个恒温器,让太阳稳定地亮几十亿年。",
+    lights: "恒星",
+    card: { t: "流体静力平衡与恒星恒温器", b: "恒星每一层都受向内的引力和向外的压力。如果核心变热、聚变加快,恒星会膨胀,核心随之降温、聚变又慢下来;反过来也一样。所以恒星能长期稳定。没有聚变,恒星只能边收缩边发光,越缩越热。", f: "dP/dr = −G·M(r)·ρ / r²;聚变产能 ε ∝ T⁴(质子–质子链)", src: "OpenStax《Astronomy 2e》16.2–16.3 太阳内部" },
+    init: function (L) { L.st = { x: 1, hist: [], triedOff: false }; },
+    run: function (L) {
+      var st = L.st; st.f = !!L.v.fusion; st.k = L.v.kick / 100; st.x = st.f ? 1 / (1 + st.k) : 1; st.t = 0; st.hist = []; st.done = false;
+      if (!st.f) st.triedOff = true;
+      L.sfx("whoosh");
+    },
+    frame: function (L, dt) {
+      var st = L.st, c = L.ctx;
+      if (L.phase === "running") {
+        var step = dt * (L.RM ? 3 : 1), n = 8;
+        for (var i = 0; i < n; i++) st.x = Math.max(0.2, P.thermoStep(st.x, step * 0.14 / n, st.f));
+        st.t += step;
+        if (st.hist.length === 0 || st.t - st.hist[st.hist.length - 1][0] > 0.05) st.hist.push([st.t, st.x]);
+      }
+      var wob = (L.phase === "running" && st.f && !L.RM) ? 0.03 * st.k * Math.exp(-st.t / 1.6) * Math.sin(st.t * 7) : 0;
+      var xv = Math.max(0.3, Math.min(1.35, st.x + wob)), Tc = P.TCORE_SUN / st.x;
+      var V = view(L, xv, { fy: 0.45 });
+      var fusing = L.phase === "running" ? st.f : !!L.v.fusion;
+      stage(L, V, { T: 5772 * Math.pow(1 / st.x, 0.25), dim: fusing ? 1 : 0.85, cut: true, core: fusing ? Math.min(1.5, Math.pow(1 / st.x, 4)) : 0.35, photons: true, flash: fusing ? 0.5 : 0, arrows: 1, scale: xv });
+      /* 力的箭头:紫=引力向内,橙=压力向外(2D 叠加,随不平衡程度变长) */
+      var imb = st.f ? (Math.pow(1 / st.x, 4) - 1) : -1, k = Math.max(-1, Math.min(1, imb));
+      for (var a = 0; a < 12; a++) {
+        var ang = a / 12 * Math.PI * 2 + 0.26, ca = Math.cos(ang), sa = Math.sin(ang), R = V.R;
+        var gin = R * (0.26 - 0.1 * k), pout = R * (0.26 + 0.1 * k);
+        Dr.arrow(c, V.cx + ca * (R * 1.12 + gin), V.cy + sa * (R * 1.12 + gin), V.cx + ca * R * 1.06, V.cy + sa * R * 1.06, "rgba(167,139,250,.95)", 2.4);
+        if (a % 2 === 0) Dr.arrow(c, V.cx + ca * R * 0.78, V.cy + sa * R * 0.78, V.cx + ca * (R * 0.78 + pout * 0.75), V.cy + sa * (R * 0.78 + pout * 0.75), "rgba(251,146,60,.95)", 2.4);
+      }
+      /* 半径 – 时间小图 */
+      var gw = Math.min(220, L.w * 0.42), gh = 70, gx = L.w - gw - 14, gy = L.h - gh - 14;
+      c.save(); c.fillStyle = "rgba(14,11,40,.72)"; c.fillRect(gx - 8, gy - 20, gw + 16, gh + 30);
+      c.font = "11px system-ui, sans-serif"; c.fillStyle = "#c4b5fd"; c.fillText("半径(太阳 = 1)", gx, gy - 6);
+      function GY(x) { return gy + gh - (Math.min(1.4, x) - 0.2) / 1.2 * gh; }
+      c.strokeStyle = "rgba(103,232,249,.5)"; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(gx, GY(1)); c.lineTo(gx + gw, GY(1)); c.stroke(); c.setLineDash([]);
+      c.strokeStyle = "#fbbf24"; c.lineWidth = 2; c.beginPath();
+      st.hist.forEach(function (h, i) { var X = gx + gw * Math.min(1, h[0] / 8); if (i) c.lineTo(X, GY(h[1])); else c.moveTo(X, GY(h[1])); }); c.stroke();
+      c.restore();
+      if (L.phase === "running" && st.t >= 8 && !st.done) { st.done = true; S3.report(L); }
+      L.hud.innerHTML = "半径 <b>" + st.x.toFixed(3) + "</b> 倍 · 核心 <b>" + (Tc / 1e4).toFixed(0) + " 万 K</b><br>" + (fusing ? "核聚变 开" : "<span style='color:#fca5a5'>核聚变 关:只能靠收缩发光</span>");
+    },
+    report: function (L) {
+      var st = L.st, back = Math.abs(st.x - 1) < 0.02, big = Math.abs(st.k) >= 0.1, ok = st.f && back && big;
+      L.finishRun({ pass: ok, predText: "预测「" + S3.predict.options[L.firstChoice] + "」", resultText: st.f ? "核心变化 " + Math.round(st.k * 100) + "%,太阳半径回到 " + st.x.toFixed(3) : "关掉核聚变,太阳缩到 " + st.x.toFixed(2) + " 倍",
+        html: st.f ? ("核心 " + (st.k >= 0 ? "变热 " : "变冷 ") + Math.abs(Math.round(st.k * 100)) + "%:太阳" + (st.k >= 0 ? "先胀大" : "先收缩") + ",最后<span class=ok>回到平衡</span>(半径 " + st.x.toFixed(3) + ")。" + (big ? "" : "扰动再大一点(≥10%)试试?"))
+          : "没有核聚变,太阳<span class=no>一直收缩</span>,缩到 " + st.x.toFixed(2) + " 倍,核心升到 " + (P.TCORE_SUN / st.x / 1e4).toFixed(0) + " 万 K。",
+        say: !st.f ? "越缩越热。热到什么程度,氢核才能聚变?" : !big ? "扰动太小了,看不清。把核心温度变化调到 10% 以上?" : "" });
+    },
+    predictGood: function (L) { return L.firstChoice === 0; },
+    star3: function (L) { return L.st.triedOff; }
+  };
+
+  /* ================= 第 4 关 更重的星,更短的命 ================= */
+  var S4 = {
+    name: "更重的星,更短的命", d3: true,
+    goal: "改变恒星的质量,完成两张任务卡:① 找一颗能亮 40 亿年以上、让行星上的生命慢慢演化的恒星;② 找一颗活不过 1,000 万年的恒星。",
+    note: "简化模型:主序星 L ∝ M³·⁵、R ∝ M⁰·⁸、寿命 ∝ M/L;颜色按黑体温度近似。「荒谬宇宙」引力 ×2 用同调关系 L ∝ G⁴ 近似。",
+    ask: "质量大的恒星燃料更多,它会活得更久吗?",
+    predict: { type: "choice", q: "质量是太阳 10 倍的恒星,寿命会……", options: ["更长:燃料多 10 倍", "更短:烧得快得多", "差不多"] },
+    controls: [
+      { id: "lm", label: "恒星质量", min: -1, max: 1.7, step: 0.01, value: 0, fmt: function (x) { var m = Math.pow(10, x); return (m < 1 ? m.toFixed(2) : m < 10 ? m.toFixed(1) : m.toFixed(0)) + " 倍太阳"; } },
+      { id: "g2", type: "toggle", label: "荒谬宇宙:引力 ×2", value: false }
+    ],
+    runLabel: "点亮",
+    crit: ["两张任务卡都完成", "预测正确", "在「引力 ×2」宇宙里也点亮过一颗星"],
+    hints: ["光度 L ∝ M³·⁵:质量翻倍,光度变成几倍?", "寿命 ≈ 燃料 / 消耗速度 ∝ M / L。质量变成 10 倍,寿命变成几分之一?", "任务卡 ① 要寿命 ≥ 40 亿年,质量要比太阳略大还是略小?"],
+    summary: "越重的恒星引力越强、核心越热,燃烧得飞快:更亮、更蓝,却更短命。太阳这样的黄矮星,才给了地球足够长的时间。",
+    lights: "可见光谱",
+    card: { t: "质量决定恒星的一生", b: "主序星的光度大约与质量的 3.5 次方成正比:10 倍质量的恒星亮约 3,000 倍,寿命却只有太阳的约 1/300。越热的恒星发出的光越偏蓝,维恩定律给出峰值波长 λ = b/T(太阳约 502 nm)。", f: "L ∝ M³·⁵,t ∝ M⁻²·⁵,λmax = 2.898×10⁻³ m·K / T", src: "OpenStax《Astronomy 2e》18.2 质量–光度关系、5.2 黑体辐射" },
+    init: function (L) { L.st = { a: false, b: false, g2: false, last: null }; },
+    run: function (L) {
+      var st = L.st, s = P.mainSeq(Math.pow(10, L.v.lm), L.v.g2 ? 2 : 1);
+      st.last = s; st.t = 0; st.done = false; if (L.v.g2) st.g2 = true;
+      if (s.life >= 4e9) st.a = true; if (s.life < 1e7) st.b = true;
+      L.sfx("whoosh");
+    },
+    frame: function (L, dt) {
+      var st = L.st, c = L.ctx, m = Math.pow(10, L.v.lm), s = P.mainSeq(m, L.v.g2 ? 2 : 1);
+      if (L.phase === "running") st.t += dt * (L.RM ? 4 : 1);
+      var vis = Math.max(0.42, Math.min(1.3, 0.78 + 0.33 * Math.log10(s.R)));
+      var V = view(L, vis, { fx: L.w > 640 ? 0.42 : 0.5, fy: L.w > 640 ? 0.47 : 0.4 });
+      var bright = Math.max(0.55, Math.min(1.3, 0.85 + 0.08 * Math.log10(s.L)));
+      stage(L, V, { T: s.T, dim: bright, cut: true, core: Math.min(1.6, 0.6 + 0.15 * Math.log10(s.L + 1)), flash: L.phase === "running" ? 1 : 0.3, scale: vis });
+      /* 读数卡 + 光谱条 */
+      var cw = Math.min(230, L.w - 28), cx0 = L.w > 640 ? L.w - cw - 16 : 14, cy0 = L.w > 640 ? 22 : L.h - 128;
+      c.save(); c.fillStyle = "rgba(14,11,40,.78)"; c.strokeStyle = "rgba(167,139,250,.5)"; c.beginPath(); c.rect(cx0, cy0, cw, 112); c.fill(); c.stroke();
+      c.font = "12px system-ui, sans-serif"; c.fillStyle = "#ede9fe";
+      var col = bbRGB(s.T);
+      c.fillText("表面温度 " + Math.round(s.T).toLocaleString("zh-CN") + " K · " + colorName(s.T), cx0 + 10, cy0 + 20);
+      c.fillText("亮度 " + (s.L < 0.01 ? s.L.toExponential(1) : s.L < 100 ? s.L.toFixed(2) : Math.round(s.L).toLocaleString("zh-CN")) + " 倍太阳", cx0 + 10, cy0 + 40);
+      c.fillText("寿命 约 " + yrs(s.life), cx0 + 10, cy0 + 60);
+      var sx = cx0 + 10, sw = cw - 20, sy = cy0 + 74;
+      var gr = c.createLinearGradient(sx, 0, sx + sw, 0);
+      [[0, "#7c3aed"], [0.17, "#3b82f6"], [0.33, "#22c55e"], [0.5, "#eab308"], [0.67, "#f97316"], [0.83, "#ef4444"], [1, "#7f1d1d"]].forEach(function (z) { gr.addColorStop(z[0], z[1]); });
+      c.fillStyle = gr; c.fillRect(sx, sy, sw, 8);
+      var nm = s.peak * 1e9, px = sx + sw * Math.max(0, Math.min(1, (nm - 380) / (750 - 380)));
+      c.fillStyle = rgbS(col); c.beginPath(); c.moveTo(px, sy - 2); c.lineTo(px - 5, sy - 9); c.lineTo(px + 5, sy - 9); c.fill();
+      c.fillStyle = "#c4b5fd"; c.font = "11px system-ui, sans-serif";
+      c.fillText("峰值波长 " + Math.round(nm) + " nm" + (nm < 380 ? "(紫外)" : nm > 750 ? "(红外)" : ""), sx, sy + 24);
+      c.restore();
+      if (L.phase === "running" && st.t > 1 && !st.done) { st.done = true; S4.report(L); }
+      L.hud.innerHTML = "任务卡 " + (st.a ? "✓" : "○") + " 亮 40 亿年以上 · " + (st.b ? "✓" : "○") + " 活不过 1,000 万年" + (L.v.g2 ? "<br><span style='color:#fca5a5'>荒谬宇宙:引力 ×2</span>" : "");
+    },
+    report: function (L) {
+      var st = L.st, s = st.last, ok = st.a && st.b;
+      L.finishRun({ pass: ok, predText: "预测「" + S4.predict.options[L.firstChoice] + "」", resultText: s.m.toFixed(2) + " 倍太阳质量:寿命约 " + yrs(s.life) + "," + colorName(s.T),
+        html: "这颗 " + (s.m < 10 ? s.m.toFixed(2) : Math.round(s.m)) + " 倍太阳质量的" + colorName(s.T) + "恒星,能亮约 <b>" + yrs(s.life) + "</b>。<br>" + (st.a ? "✓" : "○") + " 亮 40 亿年以上 " + (st.b ? "✓" : "○") + " 活不过 1,000 万年",
+        say: ok ? "" : !st.a ? "还差任务卡 ①。要活得更久,质量该往哪边调?" : "还差任务卡 ②。多重的恒星,寿命才会短到 1,000 万年以下?" });
+    },
+    predictGood: function (L) { return L.firstChoice === 1; },
+    star3: function (L) { return L.st.g2; }
+  };
+
+  NV.task({
+    id: "stars", guide: "quark", scene3d: "core/stars3d.js",
+    bridge: { href: "../../element-forge/stars/", label: "元素工坊「你身体里的铁是从哪颗星来的?」" },
+    title: "恒星为什么会发光?",
+    safety: "请勿用肉眼或普通相机、望远镜直视太阳。",
+    levels: [S1, S2, S3, S4]
+  });
+})();
+</script>
+</body>
+</html>

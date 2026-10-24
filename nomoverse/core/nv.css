@@ -369,7 +369,7 @@ button, input, select { font: inherit; color: inherit; }
   .nv-td { left: 6px; right: 6px; width: auto; top: calc(var(--toph, 80px) + 2px); padding: 6px; z-index: 25; }
   .nv-td.closed { transform: translateY(-8px); opacity: 0; pointer-events: none; visibility: hidden; }
   .nv-td .hd-h { display: none; }
-  .nv-td .hd-list { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .nv-td .hd-list { grid-template-columns: repeat(4, 1fr); gap: 4px; }
   .nv-td .hd-card { flex-direction: column; gap: 3px; padding: 6px 4px; text-align: center; }
   .nv-td .hd-card.me { box-shadow: none; }
   .nv-td .hd-card canvas { width: 34px; height: 34px; }

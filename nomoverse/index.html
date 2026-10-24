@@ -7,7 +7,7 @@
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#07061a">
 <title>宙律 Nomoverse · 亲手改写宇宙的规律 · 创世计划 Genesis</title>
-<meta name="description" content="宙律 Nomoverse · 创世计划 Genesis 02 · 物理:把引力调大一点、把声速调慢一点,在改写规律中理解规律。三个探究任务、十三关、宇宙尺度知识星图。">
+<meta name="description" content="宙律 Nomoverse · 创世计划 Genesis 02 · 物理:把引力调大一点、把声速调慢一点,在改写规律中理解规律。四个探究任务、十七关、宇宙尺度知识星图。">
 <script>
 /* v0.3-α3 · HANDOFF §5.12 门户→世界接力:最早执行。读临时键 gn:portal:arrive(<5 秒有效,读后即删,不计进度),
    先铺「世界色 + rgba(4,6,15,.82)」同色遮罩,开场就绪后约 600 ms 淡出(减少动态 200 ms);无键照旧。 */
@@ -265,7 +265,7 @@
     body.hud3d .sm3 { height: calc(100svh - 52px); }
     .hm-drawer { left: 6px; right: 6px; top: auto; bottom: 96px; width: auto; padding: 6px; }
     .hm-drawer .hd-h { display: none; }
-    .hd-list { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .hd-list { grid-template-columns: repeat(4, 1fr); gap: 4px; }
     .hd-card { flex-direction: column; gap: 3px; padding: 6px 4px; text-align: center; }
     .hd-card canvas { width: 34px; height: 34px; }
     .hd-txt b { display: none; }
@@ -300,7 +300,8 @@
   var TASKS = [
     { id: "hoop", n: 4, guide: "quark", diff: 1, href: "hoop/", q: "如果引力变成两倍,篮球还能投进吗?", lv: ["地球投篮", "引力 ×2", "月球与木星", "荒谬宇宙"] },
     { id: "orbit", n: 5, guide: "abyss", diff: 2, href: "orbit/", q: "为什么宇航员在空间站会飘起来?", lv: ["扔得更远", "牛顿大炮", "电梯里的苹果", "改宇宙", "追上空间站"] },
-    { id: "sound", n: 4, guide: "ripple", diff: 2, href: "sound/", q: "为什么救护车经过时声音会变?", lv: ["声音是振动", "救护车驶过", "改声速", "和声与拍频"] }
+    { id: "sound", n: 4, guide: "ripple", diff: 2, href: "sound/", q: "为什么救护车经过时声音会变?", lv: ["声音是振动", "救护车驶过", "改声速", "和声与拍频"] },
+    { id: "stars", n: 4, guide: "quark", diff: 2, href: "stars/", q: "恒星为什么会发光?", lv: ["烧煤的太阳", "少了一点点质量", "压不扁的火球", "更重的星,更短的命"] }
   ];
   var CONS = ["运动", "力与能量", "引力与天体", "波与声", "光", "热与熵", "电与磁", "现代物理"];
   var CCOL = ["#5eead4", "#fbbf24", "#a78bfa", "#86efac", "#f0abfc", "#fb923c", "#60a5fa", "#f87171"];   // 3D 星图星座色
@@ -320,7 +321,7 @@
     [1, "作用与反作用", -2, "你推墙,墙也以同样大小的力推你;火箭向后喷气,自己向前飞。"],
     [1, "摩擦力", -4.5, "接触面上微小的凹凸互相阻碍;没有摩擦,人连路都走不了。"],
     [1, "动能与势能", 1.9, "高处的物体有势能,落下时变成动能:越高落下越快。"],
-    [1, "能量守恒", 2.8, "能量不会凭空产生或消失,只会从一种形式变成另一种。"],
+    [1, "能量守恒", 2.8, "能量不会凭空产生或消失,只会从一种形式变成另一种。", "stars:0"],
     [1, "变轨与轨道能量", 6.4, "想追上前面的航天器,反而要先减速降到更低、更快的轨道。", "orbit:4"],
 
     [2, "失重", 0.1, "空间站里的人和舱一起绕地球「自由下落」,所以飘起来;引力并没有消失。", "orbit:2"],
@@ -330,7 +331,7 @@
     [2, "万有引力", 3.6, "任何两个有质量的物体都相互吸引,距离变为 2 倍,引力变为 1/4。"],
     [2, "潮汐", 8.6, "月球对地球近侧和远侧的引力不一样大,拉出两个潮汐隆起。"],
     [2, "开普勒第三定律", 11.2, "轨道越高,绕一圈的周期越长:周期的平方与轨道半长轴的立方成正比。", "orbit:3"],
-    [2, "恒星", 9.8, "太阳靠自身引力把自己压紧,核心的核聚变让它发光发热。"],
+    [2, "恒星", 9.8, "太阳靠自身引力把自己压紧,核心的核聚变让它发光发热。", "stars:2"],
     [2, "银河系", 20.9, "直径约 10 万光年(约 10²¹ m),数千亿颗恒星绕着中心旋转。"],
 
     [3, "频率与音高", -0.6, "振动越快,频率越高,听到的音越高。", "sound:0"],
@@ -345,7 +346,7 @@
     [4, "光速", 8.5, "真空中约 30 万 km/s,1 秒钟能绕地球约 7.5 圈。"],
     [4, "光年", 16, "光走一年的距离,约 9.46 × 10¹⁵ m,用来量恒星之间的距离。"],
     [4, "反射与折射", -0.8, "光碰到镜面会反射,穿过水和玻璃会拐弯,所以筷子在水里像折断了。"],
-    [4, "可见光谱", -6.3, "可见光波长约 400–700 纳米,从紫到红;白光是多种颜色混合的。"],
+    [4, "可见光谱", -6.3, "可见光波长约 400–700 纳米,从紫到红;恒星越热,发出的光越偏蓝。", "stars:3"],
     [4, "干涉与衍射", -4.4, "两束光叠加会出现明暗条纹,这是光具有波动性的证据。"],
     [4, "X 射线", -10, "波长和原子差不多大的电磁波,能穿透人体软组织,用来拍片。"],
     [4, "无线电波", 1.4, "波长从毫米到千米的电磁波,手机、广播和雷达都靠它传信。"],
@@ -367,7 +368,7 @@
     [6, "地磁场与极光", 7.2, "地球像一块大磁铁,把太阳风的带电粒子引向两极,点亮极光。"],
 
     [7, "夸克", -15, "质子和中子各由 3 个夸克组成,夸克从不单独出现。"],
-    [7, "原子核", -13.6, "质子和中子靠强相互作用挤在一起,只占原子极小的一部分。"],
+    [7, "原子核", -13.6, "质子和中子靠强相互作用挤在一起,只占原子极小的一部分;4 个质子聚成 1 个氦核,会少掉约 0.7% 的质量。", "stars:1"],
     [7, "量子能级", -10.4, "原子里的电子只能处在一级一级的能级上,跳跃时放出特定颜色的光。"],
     [7, "引力波探测", 3.6, "2015 年首次直接探测到:臂长 4 公里的探测器,量出了比质子还小的伸缩。"],
     [7, "黑洞", 4.7, "引力强到连光都逃不出去;恒星级黑洞的视界半径约几十公里。"],
@@ -439,7 +440,7 @@
   /* ② 任务卡 */
   var cardsBox = el("div", { class: "cards" });
   main.appendChild(el("section", { class: "hm-sec", "aria-labelledby": "h-tasks" }, [
-    el("h2", { class: "hm-h", id: "h-tasks", text: "三个探究任务" }),
+    el("h2", { class: "hm-h", id: "h-tasks", text: "四个探究任务" }),
     el("p", { class: "hm-sub", text: "每关都是:观察 → 预测 → 运行 → 对比 → 改规则。拿到 1 颗星就能解锁下一关。" }),
     cardsBox
   ]));
@@ -614,8 +615,8 @@
   function mountHud(stage) {
     if (!stage || stage.querySelector(".hm-drawer")) return;
     var tog = el("button", { class: "hd-tog", type: "button", "aria-expanded": "true", "aria-label": "收起任务抽屉", text: "‹" });
-    hudDrawer = el("nav", { class: "hm-drawer", "aria-label": "三个探究任务" }, [
-      el("div", { class: "hd-h" }, [el("span", { text: "探究任务 · 13 关" }), tog]),
+    hudDrawer = el("nav", { class: "hm-drawer", "aria-label": "四个探究任务" }, [
+      el("div", { class: "hd-h" }, [el("span", { text: "探究任务 · 17 关" }), tog]),
       el("div", { class: "hd-list" })
     ]);
     tog.addEventListener("click", function () { var c = hudDrawer.classList.toggle("closed"); tog.setAttribute("aria-expanded", c ? "false" : "true"); tog.setAttribute("aria-label", c ? "展开任务抽屉" : "收起任务抽屉"); tog.textContent = c ? "›" : "‹"; });

@@ -147,6 +147,31 @@ truthy("亚音速无马赫锥", P.machHalfAngle(100, 343) === null);
   truthy("超音速:锥面扫过后同时收到两段声音(2 个解)", late.length === 2, "n=" + late.length);
 })();
 
+/* ---- 恒星(v0.5 nv.stars)---- */
+(function () {
+  check("M☉ = GM☉/G ≈ 1.9884e30 kg", P.M_SUN, 1.98841e30, 1e-4);
+  check("4¹H→⁴He 质量亏损 ≈ 0.712%", P.massDefect(), 0.0071185, 1e-4);
+  check("每秒变成光的质量 L/c² ≈ 4.26e9 kg(426 万吨)", P.massToLight(), 3.828e26 / Math.pow(299792458, 2), 1e-12);
+  truthy("每秒烧掉的氢 ≈ 6.0 亿吨(5.9–6.1e11 kg)", P.hydrogenBurnRate() > 5.9e11 && P.hydrogenBurnRate() < 6.1e11, P.hydrogenBurnRate().toExponential(4));
+  check("E=mc²:power(L/c²) 还原 L☉", P.powerFromMass(P.massToLight()), 3.828e26, 1e-12);
+  var coal = P.sunFuelYears("coal"), kh = P.sunFuelYears("gravity"), nuc = P.sunFuelYears("fusion");
+  truthy("煤:约 5 千年(3e3–8e3 年)", coal > 3e3 && coal < 8e3, coal.toFixed(0) + " 年");
+  truthy("引力收缩 GM²/RL:约 3 千万年(2e7–5e7)", kh > 2e7 && kh < 5e7, kh.toExponential(3) + " 年");
+  truthy("核聚变:约 100 亿年(0.8e10–1.3e10)", nuc > 8e9 && nuc < 1.3e10, nuc.toExponential(3) + " 年");
+  truthy("只有核聚变撑过地球年龄 45.4 亿年", nuc > P.AGE_EARTH && kh < P.AGE_EARTH && coal < P.AGE_EARTH);
+  check("维恩:太阳 5772 K 峰值 ≈ 502 nm", P.wienPeak(5772) * 1e9, 502.04, 1e-4);
+  check("斯特藩–玻尔兹曼:4πR²σT⁴ 与 L☉ 相符(±0.5%)", P.stefanL(P.R_SUN, P.T_SUN), 3.828e26, 5e-3);
+  var s1 = P.mainSeq(1), s10 = P.mainSeq(10), s2g = P.mainSeq(1, 2);
+  check("主序简化:太阳寿命 100 亿年", s1.life, 1e10, 1e-12);
+  check("主序简化:10 M☉ 寿命 = 1e10·10^-2.5", s10.life, 1e10 * Math.pow(10, -2.5), 1e-12);
+  truthy("更重 → 更热更蓝:10 M☉ 表面温度 > 1.5 万 K(蓝白色)", s10.T > 1.5e4, s10.T.toFixed(0) + " K");
+  check("引力 ×2:L × 16,寿命 ÷ 16", s2g.life, 1e10 / 16, 1e-12);
+  var x = 1 / 1.2; for (var i = 0; i < 2000; i++) x = P.thermoStep(x, 0.005, true);
+  check("恒温器:核心热 20% 后回到平衡半径 1", x, 1, 0, 1e-6);
+  var y = 1; for (var j = 0; j < 200; j++) y = P.thermoStep(y, 0.005, false);
+  check("无聚变:按 x = 1/(1+2t) 收缩", y, 1 / (1 + 2 * 1.0), 2e-4);
+})();
+
 console.log(rows.join("\n"));
 console.log("\n合计:" + pass + " 通过," + fail + " 失败");
 process.exit(fail ? 1 : 0);

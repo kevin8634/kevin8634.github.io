@@ -1,6 +1,6 @@
 # 宙律 Nomoverse · 许可与素材台账
 
-更新:2026-10-23(v0.3-α4)
+更新:2026-10-24(核对至线上 v0.4-α4,commit 50d4f70)
 
 ## 第三方代码
 | 组件 | 版本 | 许可 | 位置 | 说明 |
@@ -34,6 +34,17 @@
 | `planet_jupiter_*` | NASA/JPL/Space Science Institute「Jupiter Cylindrical Map」PIA07782(Cassini,2000-12) | 公有领域(NASA) | 木星 |
 
 - NASA 图像按 NASA 媒体使用指南作为教育科普用途使用,不暗示 NASA 认可本站。火星天空、篮球皮纹、球场线、篮架与人物均为程序绘制(原创)。
+
+## v0.4 起新增内容的来源(2026-10-24 核对)
+- **声音任务 3D 舞台 `core/sound3d.js`(v0.4-α2「夜间城市街景」)**:天空、楼宇灯窗、路面、路灯光晕、救护车与警灯、听者、声波圈全部由代码程序生成(Canvas 贴图 + Three.js 几何),**未使用任何外部图片、模型或字体**。
+- **任务页统一 HUD(v0.4-α1)、帧率读数 `NV.fps`(v0.4-α4)**:原创代码与 CSS,无第三方素材。
+- **Service Worker `sw.js`(v0.4-α4)**:原创代码,作用域仅 `/nomoverse/`,只缓存本世界同源文件,不引入第三方资源。
+- 本表「图像素材」所列 NASA 与 Poly Haven 贴图仍只用于投篮任务 `assets/hoop/`;截至 v0.4-α4,本世界没有其他第三方图像;v0.5-α1 起另有恒星任务太阳贴图(见下节)。
+
+## v0.5 起新增内容的来源(2026-10-24 核对)
+- **恒星任务 `assets/stars/sun_4k.jpg`、`sun_2k.jpg`**:Solar System Scope「Solarsystemscope texture 8k sun.jpg」,经 Wikimedia Commons 获取(https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_8k_sun.jpg),缩放为 4096×2048 / 2048×1024 的 JPG。作者:Solar System Scope(https://www.solarsystemscope.com/textures/)。许可:**CC BY 4.0**(https://creativecommons.org/licenses/by/4.0/),已缩放,未作其他修改。用于太阳 3D 剖面表面。
+- **恒星 3D 舞台 `core/stars3d.js`(v0.5-α1「写实太阳剖面」)**:剖面切口、核心/辐射区/对流区着色器、光子随机游走、聚变闪光、日冕、日珥、星空背景均为原创代码程序生成;仅太阳表面使用上述贴图。
+- 恒星任务知识卡仅以文字引用 NASA Sun Fact Sheet、OpenStax《Astronomy 2e》,未复制其内容。
 
 ## 引用与链接
 - **NASA**:知识卡里以文字形式引用其官方公开资料(如行星数据表、ISS 轨道数据);v0.3-α4 起投篮 3D 舞台使用上表所列 NASA 公有领域 / 署名图像。

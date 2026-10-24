@@ -152,6 +152,55 @@
     receivedFreq: function (f, c, te, x0, v, xl, yl) {
       var dx = xl - (x0 + v * te), d = Math.hypot(dx, yl), vToward = v * dx / d;
       return f * c / Math.abs(c - vToward);
+    },
+
+    /* ---------- 恒星(v0.5 nv.stars「恒星为什么会发光?」)----------
+       常数:c、G、σ、维恩常数 b 取 CODATA 2018;太阳 L、R、T 取 IAU 2015 B3 标称值;M☉ 由 IAU 标称 GM☉ / G。
+       原子质量(u):¹H 1.00782503、⁴He 4.00260325(AME2020)。幂律与平衡模型均为简化模型。 */
+    C_LIGHT: 299792458,                 // m/s
+    G_NEWTON: 6.67430e-11,              // m^3 kg^-1 s^-2
+    SIGMA_SB: 5.670374419e-8,           // W m^-2 K^-4
+    WIEN_B: 2.897771955e-3,             // m·K
+    L_SUN: 3.828e26,                    // W
+    R_SUN: 6.957e8,                     // m
+    T_SUN: 5772,                        // K(有效温度)
+    M_SUN: 1.3271244e20 / 6.67430e-11,  // kg ≈ 1.9884e30
+    YEAR: 365.25 * 86400,               // s(儒略年)
+    AGE_EARTH: 4.54e9,                  // 年
+    TCORE_SUN: 1.57e7,                  // K(太阳核心温度,标准太阳模型约值)
+    COAL_J_PER_KG: 2.93e7,              // J/kg(标准煤热值 29.3 MJ/kg)
+    H_FRACTION_BURNED: 0.1,             // 主序阶段约烧掉 10% 质量的氢(简化)
+    /* 4 个 ¹H → 1 个 ⁴He 损失的质量比例 ≈ 0.712% */
+    massDefect: function () { var mH = 1.00782503, mHe = 4.00260325; return (4 * mH - mHe) / (4 * mH); },
+    /* 三种「燃料」能让太阳以今天的亮度发光多少年(简化模型) */
+    sunFuelYears: function (kind, M, R, L) {
+      M = M || Phys.M_SUN; R = R || Phys.R_SUN; L = L || Phys.L_SUN;
+      var E = kind === "coal" ? M * Phys.COAL_J_PER_KG
+        : kind === "gravity" ? Phys.G_NEWTON * M * M / R                                   // 开尔文–亥姆霍兹时标 GM²/R
+        : Phys.H_FRACTION_BURNED * Phys.massDefect() * M * Phys.C_LIGHT * Phys.C_LIGHT;  // 核聚变
+      return E / L / Phys.YEAR;
+    },
+    /* 每秒变成光的质量 L/c²(kg/s);每秒烧掉的氢 L/(0.712% c²) */
+    massToLight: function (L) { return (L == null ? Phys.L_SUN : L) / (Phys.C_LIGHT * Phys.C_LIGHT); },
+    hydrogenBurnRate: function (L) { return Phys.massToLight(L) / Phys.massDefect(); },
+    powerFromMass: function (kgPerS) { return kgPerS * Phys.C_LIGHT * Phys.C_LIGHT; },
+    wienPeak: function (T) { return Phys.WIEN_B / T; },              // m
+    stefanL: function (R, T) { return 4 * Math.PI * R * R * Phys.SIGMA_SB * Math.pow(T, 4); },
+    /* 主序星简化关系(以太阳为 1):L ∝ M^3.5、R ∝ M^0.8、寿命 ∝ M/L = M^-2.5(太阳 100 亿年);
+       「荒谬宇宙」引力 × gMul:同调关系近似 L ∝ G⁴,寿命 ∝ 1/L */
+    mainSeq: function (m, gMul) {
+      var g4 = Math.pow(gMul || 1, 4), L = Math.pow(m, 3.5) * g4, R = Math.pow(m, 0.8);
+      var T = Phys.T_SUN * Math.pow(L / (R * R), 0.25);
+      return { m: m, L: L, R: R, T: T, life: 1e10 * m / L, peak: Phys.wienPeak(T) };
+    },
+    /* 恒星恒温器(准静态维里平衡,无量纲):半径 x(太阳 = 1),总能量 E = −1/(2x),
+       核心温度 ∝ 1/x;聚变产能 F = (1/x)^n(n ≈ 4,质子–质子链),向外辐射 1。
+       dE/dt = F − 1 ⇒ dx/dt = 2x²(F − 1)。fusion=false 时 F = 0:只能靠收缩发光。 */
+    thermoStep: function (x, dt, fusion, n) {
+      var F = fusion ? Math.pow(1 / x, n || 4) : 0;
+      var k1 = 2 * x * x * (F - 1);
+      var xm = x + k1 * dt / 2, Fm = fusion ? Math.pow(1 / xm, n || 4) : 0;
+      return x + 2 * xm * xm * (Fm - 1) * dt;
     }
   };
 
@@ -615,7 +664,8 @@
   var TASKMETA = [   // 与首页 TASKS 保持一致(id 上线后不改)
     { id: "hoop", n: 4, guide: "quark", q: "如果引力变成两倍,篮球还能投进吗?" },
     { id: "orbit", n: 5, guide: "abyss", q: "为什么宇航员在空间站会飘起来?" },
-    { id: "sound", n: 4, guide: "ripple", q: "为什么救护车经过时声音会变?" }
+    { id: "sound", n: 4, guide: "ripple", q: "为什么救护车经过时声音会变?" },
+    { id: "stars", n: 4, guide: "quark", q: "恒星为什么会发光?" }
   ];
   function task(def) {
     var N = def.levels.length, prog = Store.task(def.id, N), gd = GUIDES[def.guide];
@@ -652,11 +702,11 @@
     var bubble = el("div", { class: "nv-bubble", "aria-live": "polite" });
     var guideEl = el("div", { class: "nv-guide nv-glass nv-hudc", role: "region", "aria-label": "向导 " + gd.name }, [av.cv, bubble]);
     app.appendChild(guideEl);
-    // v0.4 统一 HUD:左侧任务抽屉(与首页同款),切换 3 个任务;手机/小横屏收成顶栏「任务」按钮弹出
+    // v0.4 统一 HUD:左侧任务抽屉(与首页同款),切换 4 个任务;手机/小横屏收成顶栏「任务」按钮弹出
     var tdList = el("div", { class: "hd-list" });
     var tdTog = el("button", { class: "hd-tog", type: "button", "aria-controls": "nv-td-" + def.id, text: "‹" });
-    var td = el("nav", { class: "nv-td", id: "nv-td-" + def.id, "aria-label": "三个探究任务" }, [
-      el("div", { class: "hd-h" }, [el("span", { text: "探究任务 · 13 关" }), tdTog]), tdList
+    var td = el("nav", { class: "nv-td", id: "nv-td-" + def.id, "aria-label": "四个探究任务" }, [
+      el("div", { class: "hd-h" }, [el("span", { text: "探究任务 · 17 关" }), tdTog]), tdList
     ]);
     var tdBtn = el("button", { class: "nv-btn nv-td-b", type: "button", "aria-controls": td.id, "aria-expanded": "false", text: "任务 ▾" });
     nav.appendChild(tdBtn);

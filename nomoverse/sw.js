@@ -1,10 +1,10 @@
-/* 宙律 Nomoverse · Service Worker(v0.4-α4;作用域仅 /nomoverse/;缓存名统一前缀 nv-,只清理自己的旧版本)
+/* 宙律 Nomoverse · Service Worker(v0.5-α1;作用域仅 /nomoverse/;缓存名统一前缀 nv-,只清理自己的旧版本)
  * 页面与代码(导航、.html/.js/.css):网络优先,离线时回缓存 —— 发新版后在线用户立即拿到新代码,不会新旧混用
  * 大件静态资源(vendor/、audio/、assets/):缓存优先,首次用到时再存(不预缓存 2k/4k 贴图与背景音乐)
  * 只处理同源、本作用域内的 GET;不碰根目录、门户和其他世界。?nosw=1 打开任意页面即注销本 SW 并清掉 nv- 缓存。 */
-const C = 'nv-v0.4-a4';
-const F = ['./', 'index.html', 'orbit/', 'sound/', 'hoop/', 'core/nv.css', 'core/nv.js', 'core/nvscene.js', 'core/intro.js',
-  'core/starmap3d.js', 'core/orbit3d.js', 'core/sound3d.js', 'core/hoop3d.js', 'vendor/three.module.min.js',
+const C = 'nv-v0.5-a1';
+const F = ['./', 'index.html', 'orbit/', 'sound/', 'hoop/', 'stars/', 'core/nv.css', 'core/nv.js', 'core/nvscene.js', 'core/intro.js',
+  'core/starmap3d.js', 'core/orbit3d.js', 'core/sound3d.js', 'core/hoop3d.js', 'core/stars3d.js', 'vendor/three.module.min.js',
   'audio/close.m4a', 'audio/select.m4a', 'audio/star.m4a', 'audio/swish.m4a', 'audio/thud.m4a', 'audio/tick.m4a', 'audio/unlock.m4a', 'audio/whoosh.m4a'];
 self.addEventListener('install', e => {
   // 单个文件失败不阻止安装(离线能力逐步补齐)
