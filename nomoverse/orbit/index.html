@@ -390,8 +390,10 @@
       L.snd.glide(dir > 0 ? 110 : 220, dir > 0 ? 220 : 110, 0.25, 0.2);
     },
     rel: function (st) {
-      var dx = st.tgt.x - st.me.x, dy = st.tgt.y - st.me.y;
-      return { d: Math.hypot(dx, dy), dv: Math.hypot(st.tgt.vx - st.me.vx, st.tgt.vy - st.me.vy) * 1000, dx: dx, dy: dy };
+      var dx = st.tgt.x - st.me.x, dy = st.tgt.y - st.me.y, m = st.me;
+      // v0.4-α3:相对速度在随飞船转动的本地参考系里算(减去 ω×Δr),同轨并肩时≈0,不再因位置不同而虚高
+      var w = (m.x * m.vy - m.y * m.vx) / (m.x * m.x + m.y * m.y);
+      return { d: Math.hypot(dx, dy), dv: Math.hypot(st.tgt.vx - m.vx + w * dy, st.tgt.vy - m.vy - w * dx) * 1000, dx: dx, dy: dy };
     },
     frame: function (L, dt) {
       var c = L.ctx, st = L.st; bg(L);
