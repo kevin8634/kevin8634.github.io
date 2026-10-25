@@ -46,7 +46,7 @@ body.rm #c,body.rm #meter,body.rm #hud,body.rm #dive{display:none}body.rm #cards
 #sideX{position:absolute;right:16px;top:16px}
 #sideS ol{margin:12px 0 0 18px;color:var(--ink);font-size:14px;line-height:1.7}#sideS li{margin-top:8px}#sideS li.h{display:none}#sideS .k{margin-top:4px}
 #sideQ{margin-top:16px;padding:12px;border:1px dashed rgba(232,194,122,.4);border-radius:10px}#sideQ b{color:var(--gold);font-weight:500}#sideQ .btn{margin:8px 8px 0 0;font-size:13px}
-#sideQ .ok{color:#7fe3a8}#chainBox{margin-top:14px;padding-top:12px;border-top:1px dashed rgba(232,194,122,.3)}#chainBox .cdim{font-size:12px;color:var(--dim);margin:4px 0}#sideQ .no{color:#ff9a9a}#sideL{margin-top:16px;padding:12px;border:1px dashed rgba(127,178,255,.4);border-radius:10px}#sideL b{color:var(--gold);font-weight:500}#sideL .cdim{font-size:12px;color:var(--dim);margin:4px 0 8px}#labC{width:100%;height:auto;background:rgba(2,4,12,.6);border-radius:8px;margin-top:8px}#sideR{margin-top:12px;font-size:12px;color:#6c7a9c;line-height:1.6}#sideR a{color:var(--dim)}
+#sideQ .ok{color:#7fe3a8}#chainBox{margin-top:14px;padding-top:12px;border-top:1px dashed rgba(232,194,122,.3)}#chainBox .cdim{font-size:12px;color:var(--dim);margin:4px 0}#sideQ .no{color:#ff9a9a}#sideL{margin-top:16px;padding:12px;border:1px dashed rgba(127,178,255,.4);border-radius:10px}#sideL b{color:var(--gold);font-weight:500}#sideL .cdim{font-size:12px;color:var(--dim);margin:4px 0 8px}#labV{margin:8px 0;padding:8px 10px;border-left:3px solid #ffb36b;color:#ffd9b0;font-size:14px;line-height:1.6}#labV:empty{display:none}#sideR b.pf{color:#ffb36b;font-weight:500}#sideR ul.pf{margin:4px 0 8px 18px;color:#c9d3ea}#sideR i{display:block;color:#ffb36b;margin-bottom:6px}#labC{width:100%;height:auto;background:rgba(2,4,12,.6);border-radius:8px;margin-top:8px}#sideR{margin-top:12px;font-size:12px;color:#6c7a9c;line-height:1.6}#sideR a{color:var(--dim)}
 @media (max-width:600px){#side{top:auto;left:0;right:0;width:auto;height:70vh;border-left:0;border-top:1px solid rgba(232,194,122,.35);border-radius:16px 16px 0 0;transform:translateY(105%)}#side.open{transform:none}}
 @media (prefers-reduced-motion:reduce){#side{transition:none}}
 </style>
@@ -83,19 +83,19 @@ const L=[
  {k:"水面",t:"七世界 · 水面",s:"1.0 的七个世界在头顶闪烁",g:"已开放",z:0,c:0x8fb4ff,open:1},
  {k:"星辰·高中",t:"星辰",s:"为什么这条公式成立?推导它",g:"1.1 点亮",z:-260,c:0x7fd0ff,open:1},
  {k:"星系·大学",t:"星系",s:"把模型做出来,和真实数据比误差",g:"即将点亮 · 1.2",z:-480,c:0xb08cff,open:0},
- {k:"星河·成人",t:"星河",s:"用世界的规则,拆解生活里的决定",g:"即将点亮 · 1.3",z:-700,c:0xffb36b,open:0},
+ {k:"星河·成人",t:"星河",s:"用世界的规则,拆解生活里的决定",g:"1.3 试点",z:-700,c:0xffb36b,open:1},
  {k:"星穹·研究者",t:"星穹",s:"人类还没解开的地方在哪里",g:"即将点亮 · 1.4",z:-920,c:0xff7fa8,open:0}];
 const KEY="gn:deep:pos";
 const rm=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $=id=>document.getElementById(id);
 // 分层卡片(减少动态 / 无 WebGL)
-$("cards").innerHTML=L.map((l,i)=>`<section><h2>${l.k}</h2><p>${l.s}</p><p>${l.g}</p>${i===1?WORLDS.map((w,j)=>`<p><button class="btn" data-w="${j}">${w.n} · ${w.fn}</button></p>`).join(""):""}</section>`).join("");
-$("cards").addEventListener("click",e=>{const b=e.target.closest("[data-w]");if(b)openSide(+b.dataset.w);});
+$("cards").innerHTML=L.map((l,i)=>`<section><h2>${l.k}</h2><p>${l.s}</p><p>${l.g}</p>${i===1||i===3?WORLDS.map((w,j)=>`<p><button class="btn" data-w="${j}" data-l="${i}">${w.n} · ${i===3?"生活决策":w.fn}</button></p>`).join(""):""}</section>`).join("");
+$("cards").addEventListener("click",e=>{const b=e.target.closest("[data-w]");if(b)openSide(+b.dataset.w,+b.dataset.l);});
 let gl=null;try{gl=document.createElement("canvas").getContext("webgl2")}catch(e){}
 if(rm||!gl){document.body.classList.add("rm");}
 // 深度计
 const meter=$("meter");
-const btns=L.map((l,i)=>{const b=document.createElement("button");b.innerHTML=`<span>${l.k}</span><i></i>`;b.setAttribute("aria-label",`${l.k}${l.open?"":"(未开放)"}`);if(!l.open)b.classList.add("lock");b.onclick=()=>go(i);meter.appendChild(b);return b;});
+const btns=L.map((l,i)=>{const b=document.createElement("button");b.innerHTML=`<span>${l.k}</span><i></i>`;b.setAttribute("aria-label",`${l.k}${l.open?"":"(未开放)"}`);if(!l.open)b.classList.add("lock");b.onclick=()=>go(i,true);meter.appendChild(b);return b;});
 // 场景
 const W=()=>innerWidth,H=()=>innerHeight;
 const mob=W()<600,tab=W()<1100;
@@ -132,29 +132,32 @@ const clusters=WORLDS.map((w,k)=>{const grp=new THREE.Group();const a=k/7*6.283+
  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,color:w.c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.setScalar(9);grp.add(s);
  sc.add(grp);const d=document.createElement("div");d.style.color="#"+w.c.toString(16).padStart(6,"0");d.innerHTML=`${w.n}<small>${w.e} · ${w.sub}</small>`;namesEl.appendChild(d);return {grp,d};});
 // L1 星辰:公式星座(可悬停/点击 → 侧栏)
-const L1z=L[1].z-40,stars=[];
-const cons=new THREE.Group();cons.position.set(0,0,L1z+6);sc.add(cons);
-WORLDS.forEach((w,k)=>{const a=k/7*6.283-1.571,rx=mob?15:40,ry=mob?24:22;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,color:w.c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
- s.position.set(Math.cos(a)*rx,Math.sin(a)*ry,0);s.scale.setScalar(6);s.userData={k,base:6};cons.add(s);stars.push(s);});
-{const lp=[];for(let k=0;k<7;k++){const A=stars[k].position,B=stars[(k+1)%7].position;lp.push(A.x,A.y,0,B.x,B.y,0);}
- const lg=new THREE.BufferGeometry();lg.setAttribute("position",new THREE.Float32BufferAttribute(lp,3));cons.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0x7fd0ff,transparent:true,opacity:.25})));}
+const stars=[];
+[1,3].forEach(li=>{const cons=new THREE.Group();cons.position.set(0,0,L[li].z-34);sc.add(cons);const my=[];
+WORLDS.forEach((w,k)=>{const a=k/7*6.283-1.571+(li===3?.45:0),rx=mob?15:40,ry=mob?24:22;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,color:w.c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+ s.position.set(Math.cos(a)*rx,Math.sin(a)*ry,0);s.scale.setScalar(6);s.userData={k,L:li,base:6};cons.add(s);stars.push(s);my.push(s);});
+{const lp=[];for(let k=0;k<7;k++){const A=my[k].position,B=my[(k+1)%7].position;lp.push(A.x,A.y,0,B.x,B.y,0);}
+ const lg=new THREE.BufferGeometry();lg.setAttribute("position",new THREE.Float32BufferAttribute(lp,3));cons.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:L[li].c,transparent:true,opacity:.25})));}});
 // 课本卡:deep/cards/index.json 列出已交付的 <世界>.l1.json;无卡世界显示占位
-const CARDS={};fetch("cards/index.json").then(r=>r.ok?r.json():[]).then(list=>Promise.all(list.map(f=>fetch("cards/"+f).then(r=>r.json()).then(c=>{CARDS[c.world]=c;}).catch(()=>{})))).then(()=>{if(sideW>=0&&CARDS[WORLDS[sideW].id])openSide(sideW);}).catch(()=>{});
+const CARDS={1:{},3:{}};fetch("cards/index.json").then(r=>r.ok?r.json():[]).then(list=>Promise.all(list.map(f=>fetch("cards/"+f).then(r=>r.json()).then(c=>{const li=/\.he\./.test(f)?3:1;c.layer=li;CARDS[li][c.world]=c;}).catch(()=>{})))).then(()=>{if(sideW>=0&&CARDS[sideL][WORLDS[sideW].id])openSide(sideW,sideL);}).catch(()=>{});
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function renderCard(c){$("sideT").textContent=c.title;$("sideP").textContent=c.hook||"";
  const S=$("sideS");S.innerHTML=`<ol>${c.steps.map((st,i)=>`<li class="${i?"h":""}">${esc(st.text)}${st.tex?`<div class="k" data-tex="${esc(st.tex)}"></div>`:""}</li>`).join("")}</ol><div class="row"><button class="btn" id="nextStep">下一步 ▼</button></div>`;
  S.querySelectorAll("[data-tex]").forEach(el=>Formula.render(el,el.dataset.tex,{display:false}));
- let n=1;$("nextStep").onclick=()=>{const li=S.querySelectorAll("li");if(n<li.length){li[n++].classList.remove("h");}if(n>=li.length){$("nextStep").remove();showQ(c);}};
- if(c.steps.length<2){$("nextStep").remove();showQ(c);}
- $("sideR").innerHTML=[c.textbook?`教材:${esc(c.textbook)}`:"",(c.sources||[]).map(x=>x.url&&/^https:\/\//.test(x.url)?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`:esc(x.name)).join(" · "),c.review?`审核:${esc(c.review)}`:"",c.ai_generated?`AI 标注:${esc(c.ai_generated)}`:""].filter(Boolean).join("<br>");}
+ let n=1;$("nextStep").onclick=()=>{const li=S.querySelectorAll("li");if(n<li.length){li[n++].classList.remove("h");}if(n>=li.length){$("nextStep").remove();afterSteps(c);}};
+ if(c.steps.length<2){$("nextStep").remove();afterSteps(c);}
+ $("sideR").innerHTML=[c.pitfalls&&c.pitfalls.length?`<b class="pf">别踩的坑</b><ul class="pf">${c.pitfalls.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:"",c.disclaimer?`<i>${esc(c.disclaimer)}</i>`:"",c.uses?`用到:${esc(c.uses)}`:"",c.textbook?`教材:${esc(c.textbook)}`:"",(c.sources||[]).map(x=>x.url&&/^https:\/\//.test(x.url)?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`:esc(x.name)).join(" · "),c.review?`审核:${esc(c.review)}`:"",c.ai_generated?`AI 标注:${esc(c.ai_generated)}`:""].filter(Boolean).join("<br>");}
+function afterSteps(c){if(c.layer===3){if(bar)bar.markDone("d1");showLab(c);}showQ(c);}
 function showQ(c){const Q=$("sideQ");if(!c.check){Q.hidden=true;return;}Q.hidden=false;Q.innerHTML=`<b>检查一下</b><div>${esc(c.check.q)}</div>${c.check.options.map((o,i)=>`<button class="btn" data-o="${i}">${esc(o)}</button>`).join("")}<div id="qa" aria-live="polite"></div>`;
- Q.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{const ok=+b.dataset.o===c.check.answer;$("qa").innerHTML=`<p class="${ok?"ok":"no"}">${ok?"对了。":"再想想。"}${ok?esc(c.check.why):""}</p>`;if(ok&&bar)bar.markDone("d1");if(ok)showChain(c);});}
+ Q.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{const ok=+b.dataset.o===c.check.answer;$("qa").innerHTML=`<p class="${ok?"ok":"no"}">${ok?"对了。":"再想想。"}${ok?esc(c.check.why):""}</p>`;if(ok&&bar)bar.markDone(c.layer===3?"d3":"d1");if(ok&&c.layer!==3)showChain(c);});}
 // D3 参数实验台(core 0.2 ParamPanel + Sim):卡片可选 lab 字段,数值积分画轨迹,运行一次写入 d3
 function showLab(c){const L=$("sideL");if(!c.lab||L.dataset.on)return;const lab=c.lab,F=lab.fn;L.hidden=false;L.dataset.on=1;
- L.innerHTML=`<b>参数实验台</b><div class="cdim">${esc(lab.note||"")}</div><div id="labP"></div><div id="labR" class="cdim" aria-live="polite"></div><canvas id="labC" width="720" height="440" role="img" aria-label="${esc(lab.title||"图像")}"></canvas><div id="labK" class="cdim"></div><div class="row"><button class="btn" id="labGo">运行 ▶</button></div>`;
+ L.innerHTML=`<b>参数实验台</b><div class="cdim">${esc(lab.note||"")}</div><div id="labP"></div><div id="labR" class="cdim" aria-live="polite"></div><div id="labV" aria-live="polite"></div><canvas id="labC" width="720" height="440" role="img" aria-label="${esc(lab.title||"图像")}"></canvas><div id="labK" class="cdim"></div><div class="row"><button class="btn" id="labGo">运行 ▶</button></div>`;
  const pk=lab.params.map(q=>q.k);let vals=Object.fromEntries(lab.params.map(q=>[q.k,+(q.value??q.min??0)]));const ro=(lab.readout||[]).map(r=>({...r,f:Expr.compile(r.expr,pk)}));
  const fmt=v=>!isFinite(v)?"—":Math.abs(v)>=1e6||(Math.abs(v)<1e-3&&v!==0)?(+v).toExponential(2):Math.abs(v)>=100?String(Math.round(v)):String(+(+v).toPrecision(3));
- const rd=()=>{$("labR").textContent=ro.map(r=>`${r.label} = ${fmt(+r.f(vals))}${r.unit?" "+r.unit:""}`).join("  ·  ");};
+ const vd=(lab.verdict||[]).map(v=>({f:Expr.compile(v.when||"1",pk),t:v.text,parts:String(v.text).split(/\{\{(.+?)\}\}/).map((p,i)=>i%2?Expr.compile(p,pk):p)}));let vk=null;
+ const rd=()=>{$("labR").textContent=ro.map(r=>`${r.label} = ${fmt(+r.f(vals))}${r.unit?" "+r.unit:""}`).join("  ·  ");
+  if(vd.length){const i=vd.findIndex(v=>+v.f(vals)>0);const v=vd[i];$("labV").textContent=v?"结论:"+v.parts.map(p=>typeof p==="function"?fmt(+p(vals)):p).join(""):"";if(vk!==null&&i!==vk&&bar&&c.layer===3)bar.markDone("d2");vk=i;}};
  const cv=$("labC"),g=cv.getContext("2d"),COL=["#e8c27a","#7fb2ff","#ff9a9a","#7fe3a8"];
  const plot=(series,o={})=>{const W=cv.width,H=cv.height,pd=48;g.clearRect(0,0,W,H);let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
   series.forEach(S=>S.pts.forEach(([x,y])=>{if(!isFinite(x)||!isFinite(y))return;x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}));
@@ -171,34 +174,34 @@ function showLab(c){const L=$("sideL");if(!c.lab||L.dataset.on)return;const lab=
   if(F.step)for(let x=a;x<=b+1e-9;x+=F.step)xs.push(x);else for(let i=0;i<n;i++)xs.push(a+(b-a)*i/(n-1));
   plot(fy.map(y=>({label:y.label,dots:y.dots,pts:xs.map(x=>[x,+y.f({...vals,[F.x]:x})])})),{y0:F.y0,mark:fm?[+fm[0](vals),+fm[1](vals)]:null});};
  ParamPanel.mount($("labP"),{params:lab.params,vars:[],onInput:v=>{vals={...vals,...v};rd();if(F)runFn();}});rd();
- $("labGo").onclick=async()=>{if(F){runFn();if(bar)bar.markDone("d3");return;}const st={};for(const[k,e]of Object.entries(lab.state))st[k]=Expr.compile(e,pk)(vals);$("labGo").disabled=true;
+ $("labGo").onclick=async()=>{if(F){runFn();if(bar&&c.layer!==3)bar.markDone("d3");return;}const st={};for(const[k,e]of Object.entries(lab.state))st[k]=Expr.compile(e,pk)(vals);$("labGo").disabled=true;
   try{const out=await Sim.run({state:st,rhs:lab.rhs,params:vals,dt:lab.dt||.01,steps:lab.steps||2000,every:lab.every||10});const ix=lab.plot.map(n=>n==="t"?0:1+Object.keys(lab.state).indexOf(n));
    plot([{pts:out.map(p=>[p[ix[0]],p[ix[1]]])}],{square:!!lab.center,center:lab.center,mark:[out[0][ix[0]],out[0][ix[1]]]});if(bar)bar.markDone("d3");}catch(e){$("labR").textContent="计算出错:"+e.message;}$("labGo").disabled=false;};}
 // D2 推导排序挑战(core 0.2 ChainDrag):答对检查题后出现,排对写入 d2
 function showChain(c){if(c.steps.length<3||$("chainBox"))return;const Q=$("sideQ"),d=document.createElement("div");d.id="chainBox";d.innerHTML=`<b>推导排序挑战</b><div class="cdim">把打乱的步骤排回正确顺序(可拖拽,或选中后按 ↑↓)。</div>`;Q.appendChild(d);ChainDrag.mount(d,{steps:c.steps.map(x=>x.text),onDone:ok=>{if(ok&&bar)bar.markDone("d2");if(ok)showLab(c);}});}
 // 侧栏
-const side=$("side");let sideW=-1,bar=null;
-function openSide(k){const w=WORLDS[k];sideW=k;$("sideT").textContent=w.fn;$("sideW").textContent=`${w.n} ${w.e} · ${w.sub} · 星辰层 · 高中`;
- const cd=CARDS[w.id];Formula.render($("sideF"),cd&&cd.formula||w.f);$("sideD").innerHTML="";bar=DepthBar.mount($("sideD"),{task:cd?cd.id:`${w.id}.deep-demo`,levels:["d1","d2","d3"],start:"d1",onChange:()=>{}});
+const side=$("side");let sideW=-1,bar=null,sideL=1;
+function openSide(k,li=1){li=li===3?3:1;const w=WORLDS[k];sideW=k;sideL=li;$("sideT").textContent=li===3?"生活决策":w.fn;$("sideW").textContent=`${w.n} ${w.e} · ${w.sub} · ${li===3?"星河层 · 成人":"星辰层 · 高中"}`;
+ const cd=CARDS[li][w.id];Formula.render($("sideF"),cd&&cd.formula||w.f);$("sideD").innerHTML="";bar=DepthBar.mount($("sideD"),{task:cd?cd.id:`${w.id}.deep-demo`,levels:["d1","d2","d3"],start:"d1",onChange:()=>{}});
  $("sideS").innerHTML="";$("sideQ").hidden=true;$("sideL").hidden=true;$("sideL").innerHTML="";delete $("sideL").dataset.on;$("sideR").innerHTML="";
  if(cd){renderCard(cd);side.classList.add("open");side.setAttribute("aria-hidden","false");$("sideX").focus();return;}
- $("sideP").textContent="占位卡:1.1 起每个世界在这里放 1 张课本卡(为什么这条公式成立,推导它)。题目由各世界提交,总指挥审核后点亮。";
+ $("sideP").textContent=li===3?"占位卡:1.3 起每个世界在这里放 1 张生活决策卡(用这个世界的规则,算清一个真实选择)。题目由各世界提交,总指挥审核后点亮。":"占位卡:1.1 起每个世界在这里放 1 张课本卡(为什么这条公式成立,推导它)。题目由各世界提交,总指挥审核后点亮。";
  side.classList.add("open");side.setAttribute("aria-hidden","false");$("sideX").focus();}
-function closeSide(){if(!side.classList.contains("open"))return false;side.classList.remove("open");side.setAttribute("aria-hidden","true");sideW=-1;return true;}
+function closeSide(){if(!side.classList.contains("open"))return false;side.classList.remove("open");side.setAttribute("aria-hidden","true");if(side.contains(document.activeElement))document.activeElement.blur();sideW=-1;return true;}
 $("sideX").onclick=closeSide;
-$("sideC").onclick=async()=>{if(sideW<0)return;const w=WORLDS[sideW],cd=CARDS[w.id];const b=await Card.make(cd?{kind:"derive",task:cd.id,title:cd.title,lines:[cd.hook||"",...cd.steps.map((x,i)=>`${i+1}. ${x.text}`)]}:{kind:"derive",task:`${w.id}.deep-demo`,title:w.fn,lines:[w.n+" · 星辰层示例卡","正式课本卡 1.1 上线"]});Card.share(b,`genesis-${w.id}-card.png`);};
+$("sideC").onclick=async()=>{if(sideW<0)return;const w=WORLDS[sideW],cd=CARDS[sideL][w.id];const b=await Card.make(cd?{kind:"derive",task:cd.id,title:cd.title,lines:[cd.hook||"",...cd.steps.map((x,i)=>`${i+1}. ${x.text}`)]}:{kind:"derive",task:`${w.id}.deep-demo`,title:w.fn,lines:[w.n+" · 星辰层示例卡","正式课本卡 1.1 上线"]});Card.share(b,`genesis-${w.id}-card.png`);};
 // 悬停/点击拾取
 const ray=new THREE.Raycaster(),mp=new THREE.Vector2(),tip=$("tip");let hov=-1;
-function pick(x,y){if(cur!==1||anim)return -1;mp.set(x/W()*2-1,-(y/H())*2+1);ray.setFromCamera(mp,cam);const h=ray.intersectObjects(stars,false)[0];return h?h.object.userData.k:-1;}
+function pick(x,y){if((cur!==1&&cur!==3)||anim)return -1;mp.set(x/W()*2-1,-(y/H())*2+1);ray.setFromCamera(mp,cam);const h=ray.intersectObjects(stars.filter(s=>s.userData.L===cur),false)[0];return h?h.object.userData.k:-1;}
 addEventListener("pointermove",e=>{if(e.pointerType==="touch")return;hov=pick(e.clientX,e.clientY);$("c").style.cursor=hov>=0?"pointer":"";
  if(hov>=0){tip.style.display="block";tip.style.left=e.clientX+14+"px";tip.style.top=e.clientY+12+"px";tip.textContent=`${WORLDS[hov].n} · ${WORLDS[hov].fn}`;}else tip.style.display="none";});
-$("c").addEventListener("click",e=>{const k=pick(e.clientX,e.clientY);if(k>=0)openSide(k);});
+$("c").addEventListener("click",e=>{const k=pick(e.clientX,e.clientY);if(k>=0)openSide(k,cur);});
 // 状态
 let cur=0,tz=cam.position.z,anim=null;
 const zOf=i=>L[i].z+60;
 function setHud(i){$("t").textContent=L[i].t;$("s").textContent=L[i].s;$("g").textContent=`${L[i].k} · ${L[i].g}`;btns.forEach((b,j)=>b.classList.toggle("on",j===i));$("dive").textContent=i<L.length-1?"▼ 继续下潜":"▲ 回到水面";history.replaceState(null,"",`#deep=${i}`);try{localStorage.setItem(KEY,i)}catch(e){}music(i);}
-function go(i){i=Math.max(0,Math.min(L.length-1,i));if(!L[i].open&&i>cur){const o=L.findIndex(l=>!l.open);i=Math.max(cur,o-1);if(i===cur){flash();setHud(cur);$("g").textContent=`${L[o].k} · ${L[o].g}`;return;}}
- const prev=cur;if(i!==1)closeSide();cur=i;setHud(i);const from=cam.position.z,to=zOf(i),t0=performance.now();anim={from,to,t0,d:(Math.min(cur,prev)===0&&Math.max(cur,prev)===1)?3200:1200};}
+function go(i,strict){i=Math.max(0,Math.min(L.length-1,i));if(!L[i].open){const o=i,d=i>cur?1:-1;let j=i;if(!strict)while(j>=0&&j<L.length&&!L[j].open)j+=d;if(strict||j<0||j>=L.length||j===cur){flash();setHud(cur);$("g").textContent=`${L[o].k} · ${L[o].g}`;return;}i=j;}
+ const prev=cur;if(i!==prev)closeSide();cur=i;setHud(i);const from=cam.position.z,to=zOf(i),t0=performance.now();anim={from,to,t0,d:(Math.min(cur,prev)===0&&Math.max(cur,prev)===1)?3200:1200};}
 function flash(){const h=$("hud");h.animate([{opacity:.4},{opacity:1}],{duration:500});}
 $("dive").onclick=()=>go(cur<L.length-1?cur+1:0);
 // 滚轮/触摸/键盘
@@ -220,7 +223,7 @@ bloom=new UnrealBloomPass(new THREE.Vector2(W(),H()),mob?.45:.6,.55,.2);comp.add
 // 近距淡出:相机穿过星体时不过曝
 const fadeList=[...cores,...clusters.map(c=>c.grp)];fadeList.forEach(g=>g.traverse(o=>{if(o.material)o.userData.op=o.material.opacity;}));
 function nearFade(cz){fadeList.forEach(g=>{const dz=cz-g.position.z;const f=dz<0?0:Math.min(1,Math.max(0,(dz-6)/34));if(g.userData.f===f)return;g.userData.f=f;g.traverse(o=>{if(o.material&&o.userData.op!=null)o.material.opacity=o.userData.op*f;});});}
-if(/debug/.test(location.search))window.__d={stars,cam,W,H,openSide};
+if(/debug/.test(location.search))window.__d={stars,cam,W,H,openSide,go};
 // 初始
 const h=location.hash.match(/deep=(\d)/);let start=h?+h[1]:0;if(!L[start]||!L[start].open)start=0;
 cur=start;cam.position.z=zOf(start);setHud(start);
@@ -236,7 +239,7 @@ function loop(t){requestAnimationFrame(loop);
  pts.rotation.z=t*.00001;nearFade(cam.position.z);
  const cz=cam.position.z;clusters.forEach(({grp,d})=>{const dz=cz-grp.position.z;const o=dz>4&&dz<70?Math.sin((dz-4)/66*Math.PI):0;d.style.opacity=o.toFixed(2);
   if(o>0){const v=grp.position.clone().project(cam);d.style.left=(v.x*.5+.5)*W()+"px";d.style.top=(-v.y*.5+.5)*H()-26+"px";}grp.rotation.y=t*.0003;});
- stars.forEach(s=>{const tg=s.userData.k===hov?10:s.userData.base*(1+.08*Math.sin(t*.002+s.userData.k));s.scale.setScalar(s.scale.x+(tg-s.scale.x)*.15);});
+ stars.forEach(s=>{const tg=(s.userData.L===cur&&s.userData.k===hov)?10:s.userData.base*(1+.08*Math.sin(t*.002+s.userData.k));s.scale.setScalar(s.scale.x+(tg-s.scale.x)*.15);});
  comp.render();}
 if(!document.body.classList.contains("rm"))requestAnimationFrame(loop);
 </script>
