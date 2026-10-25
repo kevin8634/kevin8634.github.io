@@ -157,7 +157,7 @@
       U.rp.oninput = function () { L.rp = Math.pow(10, -0.3 + (+U.rp.value) * 1.4); L.moved = true; read(); Q.check(); };
       [].forEach.call(r.querySelectorAll('.ex-s'), function (b) { b.onclick = function () { L.star = b.dataset.s; P('click'); read(); Q.check(); }; });
       r.querySelector('.ex-go').onclick = function () { close(); enterD5('keep'); setTimeout(function () { D5().pick('trappist1', true); }, 300); };
-      Q = Quiz('exoearth', U, '天文学家正是用这种「看星光变暗」的办法,找到了几千颗系外行星。截至 2026-10-23,NASA 系外行星档案已确认 6451 颗;离我们 100 光年内就有 300 多个行星系统。下一颗「另一个地球」,也许就在其中。');
+      Q = Quiz('exoearth', U, '天文学家正是用这种「看星光变暗」的办法,找到了几千颗系外行星。截至 2026-10-23,NASA 系外行星档案已确认 6451 颗;离我们 100 光年内就有 300 多个行星系统。下一颗「另一个地球」,也许就在其中。<br><a class="sh-bridge-a" href="../element-forge/spectra/">✦ 星桥 → 元素工坊:隔着几百光年,怎么知道一颗星球的空气?</a>');
     }
     function read() {
       U.rv.textContent = (L.rp < 2 ? L.rp.toFixed(1) : Math.round(L.rp)) + ' 个地球' + (L.rp > 9 ? '(木星级)' : '');
