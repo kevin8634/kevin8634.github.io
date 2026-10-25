@@ -34,7 +34,20 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:-apple-s
 body.rm #c,body.rm #meter,body.rm #hud,body.rm #dive{display:none}body.rm #cards{display:block}
 @media (max-width:600px){#meter span{display:none}#hud{bottom:12vh}#note{display:none}}
 @media (max-height:420px){#hud{bottom:16px}#hud p,#hud .tag{display:none}#dive{display:none}#meter{gap:4px}}
+#names{position:fixed;inset:0;pointer-events:none;z-index:3}
+#names div{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;font-size:clamp(14px,2vw,20px);letter-spacing:.18em;opacity:0;text-shadow:0 0 14px currentColor}
+#names div small{display:block;font-size:11px;letter-spacing:.12em;color:var(--dim);text-align:center;margin-top:2px}
+#tip{position:fixed;z-index:6;pointer-events:none;padding:6px 10px;border-radius:8px;background:rgba(10,16,36,.85);border:1px solid rgba(232,194,122,.4);font-size:12px;color:var(--ink);display:none}
+#side{position:fixed;z-index:8;right:0;top:0;bottom:0;width:420px;max-width:100vw;background:rgba(8,13,30,.94);border-left:1px solid rgba(232,194,122,.35);padding:64px 24px 24px;overflow:auto;transform:translateX(105%);transition:transform .35s ease;backdrop-filter:blur(8px)}
+#side.open{transform:none}
+#side h2{color:var(--gold);font-size:20px;letter-spacing:.1em}#side .w{color:var(--dim);font-size:12px;margin-top:4px}
+#side .fx{margin:18px 0;padding:12px;border:1px solid rgba(143,160,196,.25);border-radius:10px;background:rgba(2,4,12,.5)}
+#side p{color:var(--dim);font-size:14px;line-height:1.7;margin-top:10px}#side .row{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
+#sideX{position:absolute;right:16px;top:16px}
+@media (max-width:600px){#side{top:auto;left:0;right:0;width:auto;height:70vh;border-left:0;border-top:1px solid rgba(232,194,122,.35);border-radius:16px 16px 0 0;transform:translateY(105%)}#side.open{transform:none}}
+@media (prefers-reduced-motion:reduce){#side{transition:none}}
 </style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
 </head>
 <body>
 <canvas id="c" aria-hidden="true"></canvas>
@@ -43,10 +56,26 @@ body.rm #c,body.rm #meter,body.rm #hud,body.rm #dive{display:none}body.rm #cards
 <nav id="meter" aria-label="深度计"><div id="rail"></div></nav>
 <div id="hud" aria-live="polite"><h1 id="t"></h1><p id="s"></p><span id="g" class="tag"></span></div>
 <button id="dive" class="btn">▼ 潜入深空</button>
-<div id="note">深空层 D1 骨架 · 开发中 · 内容为占位</div>
+<div id="note">深空层 D1.1 · 开发中 · 内容为占位</div>
+<div id="names" aria-hidden="true"></div><div id="tip" aria-hidden="true"></div>
+<aside id="side" role="dialog" aria-modal="false" aria-labelledby="sideT" aria-hidden="true"><button id="sideX" class="btn" aria-label="关闭">✕</button><h2 id="sideT"></h2><div class="w" id="sideW"></div><div class="fx" id="sideF"></div><div id="sideD"></div><p id="sideP"></p><div class="row"><button id="sideC" class="btn">生成推导卡(示例)</button></div></aside>
 <main id="cards" aria-label="深空层分层列表"></main>
 <script type="module">
-import * as THREE from "./vendor/three.module.min.js";
+import * as THREE from "three";
+import { EffectComposer } from "./vendor/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "./vendor/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "./vendor/jsm/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "./vendor/jsm/postprocessing/OutputPass.js";
+import { DepthBar, Formula, Card } from "../core/deep/core.js";
+// 七世界(F2 穿越)与星辰层公式星座占位(1.1 由各世界提交课本卡替换)
+const WORLDS=[
+ {id:"ma",n:"星图",e:"Math Atlas",sub:"数学",c:0x6fb6ff,f:"e^{i\\pi}+1=0",fn:"欧拉恒等式"},
+ {id:"nv",n:"宙律",e:"Nomoverse",sub:"物理",c:0x8f9cff,f:"F=G\\frac{Mm}{r^2}",fn:"万有引力定律"},
+ {id:"ef",n:"元素工坊",e:"Element Forge",sub:"化学",c:0xffa65c,f:"pV=nRT",fn:"理想气体状态方程"},
+ {id:"ls",n:"生命源码",e:"Life Source",sub:"生物",c:0x5fe0a8,f:"p^2+2pq+q^2=1",fn:"哈迪-温伯格平衡"},
+ {id:"ps",n:"奇点前夜",e:"Pre-Singularity",sub:"超级智能",c:0xd38cff,f:"P(A\\mid B)=\\frac{P(B\\mid A)\\,P(A)}{P(B)}",fn:"贝叶斯定理"},
+ {id:"lt",n:"觉弈",e:"Ludoterra",sub:"认知觉醒",c:0xffd46b,f:"E[X]=\\sum_i p_i\\,x_i",fn:"期望值"},
+ {id:"sh",n:"天枢",e:"Starhelm",sub:"天文",c:0x7fe3ff,f:"\\frac{T^2}{a^3}=\\frac{4\\pi^2}{G(M+m)}",fn:"开普勒第三定律(牛顿形式)"}];
 const L=[
  {k:"水面",t:"七世界 · 水面",s:"1.0 的七个世界在头顶闪烁",g:"已开放",z:0,c:0x8fb4ff,open:1},
  {k:"星辰·高中",t:"星辰",s:"为什么这条公式成立?推导它",g:"1.1 点亮",z:-260,c:0x7fd0ff,open:1},
@@ -57,7 +86,8 @@ const KEY="gn:deep:pos";
 const rm=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $=id=>document.getElementById(id);
 // 分层卡片(减少动态 / 无 WebGL)
-$("cards").innerHTML=L.map(l=>`<section><h2>${l.k}</h2><p>${l.s}</p><p>${l.g}</p></section>`).join("");
+$("cards").innerHTML=L.map((l,i)=>`<section><h2>${l.k}</h2><p>${l.s}</p><p>${l.g}</p>${i===1?WORLDS.map((w,j)=>`<p><button class="btn" data-w="${j}">${w.n} · ${w.fn}</button></p>`).join(""):""}</section>`).join("");
+$("cards").addEventListener("click",e=>{const b=e.target.closest("[data-w]");if(b)openSide(+b.dataset.w);});
 let gl=null;try{gl=document.createElement("canvas").getContext("webgl2")}catch(e){}
 if(rm||!gl){document.body.classList.add("rm");}
 // 深度计
@@ -69,6 +99,8 @@ const mob=W()<600,tab=W()<1100;
 const N=mob?6000:tab?15000:30000;
 const r=new THREE.WebGLRenderer({canvas:$("c"),antialias:!mob,powerPreference:"high-performance"});
 r.setPixelRatio(Math.min(devicePixelRatio,mob?1.5:2));r.setSize(W(),H());
+const comp=new EffectComposer(r,new THREE.WebGLRenderTarget(W(),H(),{type:THREE.HalfFloatType,samples:mob?0:4}));
+let bloom=null;
 const sc=new THREE.Scene();sc.fog=new THREE.FogExp2(0x02040c,0.0022);
 const cam=new THREE.PerspectiveCamera(60,W()/H(),0.1,2000);cam.position.set(0,0,60);
 // 星尘
@@ -88,12 +120,42 @@ const cores=L.map((l,i)=>{const grp=new THREE.Group();grp.position.set(0,0,l.z-4
  grp.add(ring,ring2,core);
  if(i===0){for(let k=0;k<7;k++){const s=new THREE.Sprite(core.material.clone());const a=k/7*6.283;s.position.set(Math.cos(a)*44,Math.sin(a)*26,0);s.scale.setScalar(7);s.material.color.setHSL(k/7,.6,.65);s.material.opacity=.9;grp.add(s);}}
  sc.add(grp);return grp;});
+// F2 穿越:七世界星团(z 0→-200),世界名掠过浮现
+const namesEl=$("names");
+const clusters=WORLDS.map((w,k)=>{const grp=new THREE.Group();const a=k/7*6.283+.4,rad=mob?16:30;grp.position.set(Math.cos(a)*rad,Math.sin(a)*rad*.6,-30-k*24);
+ const n=mob?60:160,p=new Float32Array(n*3);for(let i=0;i<n;i++){const u=Math.random()*6.283,v=Math.acos(2*Math.random()-1),q=Math.pow(Math.random(),2)*7;p[i*3]=q*Math.sin(v)*Math.cos(u);p[i*3+1]=q*Math.sin(v)*Math.sin(u);p[i*3+2]=q*Math.cos(v);}
+ const gg=new THREE.BufferGeometry();gg.setAttribute("position",new THREE.BufferAttribute(p,3));
+ grp.add(new THREE.Points(gg,new THREE.PointsMaterial({size:mob?1.6:1.2,map:tex,color:w.c,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending})));
+ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,color:w.c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.setScalar(9);grp.add(s);
+ sc.add(grp);const d=document.createElement("div");d.style.color="#"+w.c.toString(16).padStart(6,"0");d.innerHTML=`${w.n}<small>${w.e} · ${w.sub}</small>`;namesEl.appendChild(d);return {grp,d};});
+// L1 星辰:公式星座(可悬停/点击 → 侧栏)
+const L1z=L[1].z-40,stars=[];
+const cons=new THREE.Group();cons.position.set(0,0,L1z+6);sc.add(cons);
+WORLDS.forEach((w,k)=>{const a=k/7*6.283-1.571,rx=mob?15:40,ry=mob?24:22;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,color:w.c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+ s.position.set(Math.cos(a)*rx,Math.sin(a)*ry,0);s.scale.setScalar(6);s.userData={k,base:6};cons.add(s);stars.push(s);});
+{const lp=[];for(let k=0;k<7;k++){const A=stars[k].position,B=stars[(k+1)%7].position;lp.push(A.x,A.y,0,B.x,B.y,0);}
+ const lg=new THREE.BufferGeometry();lg.setAttribute("position",new THREE.Float32BufferAttribute(lp,3));cons.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0x7fd0ff,transparent:true,opacity:.25})));}
+// 侧栏
+const side=$("side");let sideW=-1,bar=null;
+function openSide(k){const w=WORLDS[k];sideW=k;$("sideT").textContent=w.fn;$("sideW").textContent=`${w.n} ${w.e} · ${w.sub} · 星辰层 · 高中`;
+ Formula.render($("sideF"),w.f);$("sideD").innerHTML="";bar=DepthBar.mount($("sideD"),{task:`${w.id}.deep-demo`,levels:["d1","d2","d3"],start:"d1",onChange:()=>{}});
+ $("sideP").textContent="占位卡:1.1 起每个世界在这里放 1 张课本卡(为什么这条公式成立,推导它)。题目由各世界提交,总指挥审核后点亮。";
+ side.classList.add("open");side.setAttribute("aria-hidden","false");$("sideX").focus();}
+function closeSide(){if(!side.classList.contains("open"))return false;side.classList.remove("open");side.setAttribute("aria-hidden","true");sideW=-1;return true;}
+$("sideX").onclick=closeSide;
+$("sideC").onclick=async()=>{if(sideW<0)return;const w=WORLDS[sideW];const b=await Card.make({kind:"derive",task:`${w.id}.deep-demo`,title:w.fn,lines:[w.n+" · 星辰层示例卡","正式课本卡 1.1 上线"]});Card.share(b,`genesis-${w.id}-card.png`);};
+// 悬停/点击拾取
+const ray=new THREE.Raycaster(),mp=new THREE.Vector2(),tip=$("tip");let hov=-1;
+function pick(x,y){if(cur!==1||anim)return -1;mp.set(x/W()*2-1,-(y/H())*2+1);ray.setFromCamera(mp,cam);const h=ray.intersectObjects(stars,false)[0];return h?h.object.userData.k:-1;}
+addEventListener("pointermove",e=>{if(e.pointerType==="touch")return;hov=pick(e.clientX,e.clientY);$("c").style.cursor=hov>=0?"pointer":"";
+ if(hov>=0){tip.style.display="block";tip.style.left=e.clientX+14+"px";tip.style.top=e.clientY+12+"px";tip.textContent=`${WORLDS[hov].n} · ${WORLDS[hov].fn}`;}else tip.style.display="none";});
+$("c").addEventListener("click",e=>{const k=pick(e.clientX,e.clientY);if(k>=0)openSide(k);});
 // 状态
 let cur=0,tz=cam.position.z,anim=null;
 const zOf=i=>L[i].z+60;
 function setHud(i){$("t").textContent=L[i].t;$("s").textContent=L[i].s;$("g").textContent=`${L[i].k} · ${L[i].g}`;btns.forEach((b,j)=>b.classList.toggle("on",j===i));$("dive").textContent=i<L.length-1?"▼ 继续下潜":"▲ 回到水面";history.replaceState(null,"",`#deep=${i}`);try{localStorage.setItem(KEY,i)}catch(e){}music(i);}
 function go(i){i=Math.max(0,Math.min(L.length-1,i));if(!L[i].open&&i>cur){const o=L.findIndex(l=>!l.open);i=Math.max(cur,o-1);if(i===cur){flash();setHud(cur);$("g").textContent=`${L[o].k} · ${L[o].g}`;return;}}
- cur=i;setHud(i);const from=cam.position.z,to=zOf(i),t0=performance.now();anim={from,to,t0,d:1200};}
+ const prev=cur;if(i!==1)closeSide();cur=i;setHud(i);const from=cam.position.z,to=zOf(i),t0=performance.now();anim={from,to,t0,d:(Math.min(cur,prev)===0&&Math.max(cur,prev)===1)?3200:1200};}
 function flash(){const h=$("hud");h.animate([{opacity:.4},{opacity:1}],{duration:500});}
 $("dive").onclick=()=>go(cur<L.length-1?cur+1:0);
 // 滚轮/触摸/键盘
@@ -101,7 +163,7 @@ let acc=0,lock=0;
 addEventListener("wheel",e=>{if(performance.now()<lock)return;acc+=e.deltaY;if(Math.abs(acc)>80){go(cur+(acc>0?1:-1));acc=0;lock=performance.now()+900;}},{passive:true});
 let ty=null;addEventListener("touchstart",e=>ty=e.touches[0].clientY,{passive:true});
 addEventListener("touchend",e=>{if(ty==null)return;const d=ty-e.changedTouches[0].clientY;if(Math.abs(d)>50)go(cur+(d>0?1:-1));ty=null;},{passive:true});
-addEventListener("keydown",e=>{if(e.key==="ArrowDown"||e.key==="PageDown"){go(cur+1);e.preventDefault()}else if(e.key==="ArrowUp"||e.key==="PageUp"){go(cur-1);e.preventDefault()}else if(e.key==="Escape")go(0);});
+addEventListener("keydown",e=>{if(e.key==="ArrowDown"||e.key==="PageDown"){go(cur+1);e.preventDefault()}else if(e.key==="ArrowUp"||e.key==="PageUp"){go(cur-1);e.preventDefault()}else if(e.key==="Escape"){if(!closeSide())go(0);}});
 // 音乐:L0–L2 群星闪耀,L3–L4 宇宙闪烁,默认关
 const au={a:null,b:null},MK="gn:deep:snd";let on=false;
 function mk(src){const a=new Audio(src);a.loop=true;a.volume=0;a.preload="none";return a}
@@ -109,19 +171,30 @@ function fade(a,v){if(!a)return;if(v>0&&a.paused)a.play().catch(()=>{});const s=
 function music(i){if(!on)return;const useB=i>=3;fade(au.a,useB?0:.55);fade(au.b,useB?.55:0);}
 $("snd").onclick=()=>{on=!on;$("snd").textContent=on?"♪ 音乐 开":"♪ 音乐 关";$("snd").setAttribute("aria-pressed",on);
  if(on){au.a=au.a||mk("deep-a.m4a");au.b=au.b||mk("deep-b.m4a");music(cur);}else{fade(au.a,0);fade(au.b,0);}};
+// 后期:Bloom(低帧自动关闭)
+comp.setPixelRatio(r.getPixelRatio());comp.addPass(new RenderPass(sc,cam));
+bloom=new UnrealBloomPass(new THREE.Vector2(W(),H()),mob?.45:.6,.55,.2);comp.addPass(bloom);comp.addPass(new OutputPass());
+// 近距淡出:相机穿过星体时不过曝
+const fadeList=[...cores,...clusters.map(c=>c.grp)];fadeList.forEach(g=>g.traverse(o=>{if(o.material)o.userData.op=o.material.opacity;}));
+function nearFade(cz){fadeList.forEach(g=>{const dz=cz-g.position.z;const f=dz<0?0:Math.min(1,Math.max(0,(dz-6)/34));if(g.userData.f===f)return;g.userData.f=f;g.traverse(o=>{if(o.material&&o.userData.op!=null)o.material.opacity=o.userData.op*f;});});}
+if(/debug/.test(location.search))window.__d={stars,cam,W,H};
 // 初始
 const h=location.hash.match(/deep=(\d)/);let start=h?+h[1]:0;if(!L[start]||!L[start].open)start=0;
 cur=start;cam.position.z=zOf(start);setHud(start);
 // 渲染循环 + 低帧降级
 let slow=0,lt=performance.now();
-addEventListener("resize",()=>{cam.aspect=W()/H();cam.updateProjectionMatrix();r.setSize(W(),H());});
+addEventListener("resize",()=>{cam.aspect=W()/H();cam.updateProjectionMatrix();r.setSize(W(),H());comp.setSize(W(),H());});
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 function loop(t){requestAnimationFrame(loop);
- const dt=t-lt;lt=t;if(dt>42){if(++slow>90&&r.getPixelRatio()>1){r.setPixelRatio(1);slow=0;}}else slow=Math.max(0,slow-1);
+ const dt=t-lt;lt=t;if(dt>42){if(++slow>72){if(bloom&&bloom.enabled){bloom.enabled=false;}else if(r.getPixelRatio()>1){r.setPixelRatio(1);comp.setPixelRatio(1);}slow=0;}}else slow=Math.max(0,slow-1);
  if(anim){const k=Math.min(1,(t-anim.t0)/anim.d);cam.position.z=anim.from+(anim.to-anim.from)*ease(k);if(k>=1)anim=null;}
  cam.position.x=Math.sin(t*.00013)*4;cam.position.y=Math.cos(t*.00011)*3;cam.lookAt(0,0,cam.position.z-100);
  cores.forEach((c,i)=>{c.rotation.z=t*.00008*(i%2?-1:1);c.children[1].rotation.y=t*.0002;});
- pts.rotation.z=t*.00001;r.render(sc,cam);}
+ pts.rotation.z=t*.00001;nearFade(cam.position.z);
+ const cz=cam.position.z;clusters.forEach(({grp,d})=>{const dz=cz-grp.position.z;const o=dz>4&&dz<70?Math.sin((dz-4)/66*Math.PI):0;d.style.opacity=o.toFixed(2);
+  if(o>0){const v=grp.position.clone().project(cam);d.style.left=(v.x*.5+.5)*W()+"px";d.style.top=(-v.y*.5+.5)*H()-26+"px";}grp.rotation.y=t*.0003;});
+ stars.forEach(s=>{const tg=s.userData.k===hov?10:s.userData.base*(1+.08*Math.sin(t*.002+s.userData.k));s.scale.setScalar(s.scale.x+(tg-s.scale.x)*.15);});
+ comp.render();}
 if(!document.body.classList.contains("rm"))requestAnimationFrame(loop);
 </script>
 </body>
