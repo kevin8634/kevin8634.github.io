@@ -138,7 +138,7 @@
   function showQ() {
     stars(); L.hints = 0; U.hs.textContent = ''; U.ch.innerHTML = ''; U.hint.hidden = false;
     if (L.q >= QS.length) {
-      U.q.innerHTML = '<b>三关完成!</b>你弄明白了月亮的「一面之缘」。去 3D 里飞近真正的月亮看看那张永远朝着我们的脸吧。'; U.hint.hidden = true;
+      U.q.innerHTML = '<b>三关完成!</b>你弄明白了月亮的「一面之缘」。去 3D 里飞近真正的月亮看看那张永远朝着我们的脸吧。<br><a class="sh-bridge-a" href="../nomoverse/tide/">✦ 星桥 → 宙律:月亮怎样拉动整片大海?</a>'; U.hint.hidden = true;
       var go = h('button', 'ml-c ml-c--go', '🌕 飞近月亮'); go.type = 'button'; go.onclick = function () { U.go3d.onclick(); }; U.ch.appendChild(go);
       if (SH.tideLab) { var t = h('button', 'ml-c', '🌊 潮汐实验室'); t.type = 'button'; t.onclick = function () { close(); SH.tideLab.open(); }; U.ch.appendChild(t); }
       return;
