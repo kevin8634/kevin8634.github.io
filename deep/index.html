@@ -46,7 +46,7 @@ body.rm #c,body.rm #meter,body.rm #hud,body.rm #dive{display:none}body.rm #cards
 #sideX{position:absolute;right:16px;top:16px}
 #sideS ol{margin:12px 0 0 18px;color:var(--ink);font-size:14px;line-height:1.7}#sideS li{margin-top:8px}#sideS li.h{display:none}#sideS .k{margin-top:4px}
 #sideQ{margin-top:16px;padding:12px;border:1px dashed rgba(232,194,122,.4);border-radius:10px}#sideQ b{color:var(--gold);font-weight:500}#sideQ .btn{margin:8px 8px 0 0;font-size:13px}
-#sideQ .ok{color:#7fe3a8}#sideQ .no{color:#ff9a9a}#sideR{margin-top:12px;font-size:12px;color:#6c7a9c;line-height:1.6}#sideR a{color:var(--dim)}
+#sideQ .ok{color:#7fe3a8}#chainBox{margin-top:14px;padding-top:12px;border-top:1px dashed rgba(232,194,122,.3)}#chainBox .cdim{font-size:12px;color:var(--dim);margin:4px 0}#sideQ .no{color:#ff9a9a}#sideR{margin-top:12px;font-size:12px;color:#6c7a9c;line-height:1.6}#sideR a{color:var(--dim)}
 @media (max-width:600px){#side{top:auto;left:0;right:0;width:auto;height:70vh;border-left:0;border-top:1px solid rgba(232,194,122,.35);border-radius:16px 16px 0 0;transform:translateY(105%)}#side.open{transform:none}}
 @media (prefers-reduced-motion:reduce){#side{transition:none}}
 </style>
@@ -69,7 +69,7 @@ import { EffectComposer } from "./vendor/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "./vendor/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "./vendor/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "./vendor/jsm/postprocessing/OutputPass.js";
-import { DepthBar, Formula, Card } from "../core/deep/core.js";
+import { DepthBar, Formula, Card, ChainDrag } from "../core/deep/core.js";
 // 七世界(F2 穿越)与星辰层公式星座占位(1.1 由各世界提交课本卡替换)
 const WORLDS=[
  {id:"ma",n:"星图",e:"Math Atlas",sub:"数学",c:0x6fb6ff,f:"e^{i\\pi}+1=0",fn:"欧拉恒等式"},
@@ -148,7 +148,9 @@ function renderCard(c){$("sideT").textContent=c.title;$("sideP").textContent=c.h
  if(c.steps.length<2){$("nextStep").remove();showQ(c);}
  $("sideR").innerHTML=[c.textbook?`教材:${esc(c.textbook)}`:"",(c.sources||[]).map(x=>x.url&&/^https:\/\//.test(x.url)?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`:esc(x.name)).join(" · "),c.review?`审核:${esc(c.review)}`:"",c.ai_generated?`AI 标注:${esc(c.ai_generated)}`:""].filter(Boolean).join("<br>");}
 function showQ(c){const Q=$("sideQ");if(!c.check){Q.hidden=true;return;}Q.hidden=false;Q.innerHTML=`<b>检查一下</b><div>${esc(c.check.q)}</div>${c.check.options.map((o,i)=>`<button class="btn" data-o="${i}">${esc(o)}</button>`).join("")}<div id="qa" aria-live="polite"></div>`;
- Q.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{const ok=+b.dataset.o===c.check.answer;$("qa").innerHTML=`<p class="${ok?"ok":"no"}">${ok?"对了。":"再想想。"}${ok?esc(c.check.why):""}</p>`;if(ok&&bar)bar.markDone("d1");});}
+ Q.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{const ok=+b.dataset.o===c.check.answer;$("qa").innerHTML=`<p class="${ok?"ok":"no"}">${ok?"对了。":"再想想。"}${ok?esc(c.check.why):""}</p>`;if(ok&&bar)bar.markDone("d1");if(ok)showChain(c);});}
+// D2 推导排序挑战(core 0.2 ChainDrag):答对检查题后出现,排对写入 d2
+function showChain(c){if(c.steps.length<3||$("chainBox"))return;const Q=$("sideQ"),d=document.createElement("div");d.id="chainBox";d.innerHTML=`<b>推导排序挑战</b><div class="cdim">把打乱的步骤排回正确顺序(可拖拽,或选中后按 ↑↓)。</div>`;Q.appendChild(d);ChainDrag.mount(d,{steps:c.steps.map(x=>x.text),onDone:ok=>{if(ok&&bar)bar.markDone("d2");}});}
 // 侧栏
 const side=$("side");let sideW=-1,bar=null;
 function openSide(k){const w=WORLDS[k];sideW=k;$("sideT").textContent=w.fn;$("sideW").textContent=`${w.n} ${w.e} · ${w.sub} · 星辰层 · 高中`;
@@ -193,7 +195,7 @@ bloom=new UnrealBloomPass(new THREE.Vector2(W(),H()),mob?.45:.6,.55,.2);comp.add
 // 近距淡出:相机穿过星体时不过曝
 const fadeList=[...cores,...clusters.map(c=>c.grp)];fadeList.forEach(g=>g.traverse(o=>{if(o.material)o.userData.op=o.material.opacity;}));
 function nearFade(cz){fadeList.forEach(g=>{const dz=cz-g.position.z;const f=dz<0?0:Math.min(1,Math.max(0,(dz-6)/34));if(g.userData.f===f)return;g.userData.f=f;g.traverse(o=>{if(o.material&&o.userData.op!=null)o.material.opacity=o.userData.op*f;});});}
-if(/debug/.test(location.search))window.__d={stars,cam,W,H};
+if(/debug/.test(location.search))window.__d={stars,cam,W,H,openSide};
 // 初始
 const h=location.hash.match(/deep=(\d)/);let start=h?+h[1]:0;if(!L[start]||!L[start].open)start=0;
 cur=start;cam.position.z=zOf(start);setHud(start);
