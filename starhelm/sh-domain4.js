@@ -234,7 +234,7 @@
   function stars() { U.st.textContent = '★ ' + ST.stars.reduce(function (s, x) { return s + x; }, 0) + ' / 9'; }
   function showQ() {
     stars(); L.hints = 0; U.hs.textContent = ''; U.ch.innerHTML = ''; U.hint.hidden = false;
-    if (L.q >= QS.length) { U.q.innerHTML = '<b>三关完成!</b>旅行者号带着一张镀金唱片,录着地球的声音和 55 种语言的问候。它会比地球上的一切都更长久。'; U.hint.hidden = true; return; }
+    if (L.q >= QS.length) { U.q.innerHTML = '<b>三关完成!</b>旅行者号带着一张镀金唱片,录着地球的声音和 55 种语言的问候。它会比地球上的一切都更长久。<br><a class="sh-bridge-a" href="../element-forge/titan/">✦ 星桥 → 元素工坊:土卫六为什么是橙色的?</a>'; U.hint.hidden = true; return; }
     var Q = QS[L.q]; U.q.innerHTML = '<small>第 ' + (L.q + 1) + ' / 3 关</small>' + Q.q;
     Q.ch.map(function (t, i) { return i; }).sort(function () { return Math.random() - 0.5; }).forEach(function (i) {
       var b = h('button', 'ml-c', Q.ch[i]); b.type = 'button'; b.onclick = function () { answer(i === Q.ok, b); }; U.ch.appendChild(b);
