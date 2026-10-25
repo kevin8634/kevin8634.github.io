@@ -24,11 +24,11 @@
 | **六、第三方库** | | | | | | |
 | Three.js r169(three.module.min.js) | 大厅 3D 场景(vendor/) | https://github.com/mrdoob/three.js | MIT | 保留版权与许可声明(vendor/three.LICENSE) | 否 | — |
 | Three.js addons:EffectComposer、RenderPass、ShaderPass、MaskPass、OutputPass、UnrealBloomPass、CopyShader、LuminosityHighPassShader、OutputShader | 辉光等后期效果(vendor/addons/) | 同上,随 r169 | MIT | 同上 | 否 | — |
-| Transformers.js 4.3.1 | 接入巨人页「离线巨人」(giant/llm-worker.js) | https://github.com/huggingface/transformers.js ;用户点击后才从公共 CDN 加载(jsdelivr 及其镜像),不随站分发 | Apache-2.0 | 保留许可声明 | 否 | — |
-| ONNX Runtime Web | Transformers.js 推理后端 | https://github.com/microsoft/onnxruntime ;随 Transformers.js 由 CDN 加载 | MIT | 保留许可声明 | 否 | — |
+| Transformers.js 4.3.1 | 接入巨人页「离线巨人」(giant/llm-worker.js) | https://github.com/huggingface/transformers.js ;用户点击「下载并唤醒」后才从第三方 CDN 加载,按序探测 cdn.jsdmirror.com、s4.zstatic.net、jsd.onmicrosoft.cn、cdn.jsdelivr.net、fastly.jsdelivr.net、unpkg.com,不随站分发 | Apache-2.0 | 保留许可声明 | 否 | — |
+| ONNX Runtime Web 1.31.0-dev.20260914-8d85527a0(开发版,随 Transformers.js 4.3.1) | Transformers.js 推理后端 | https://github.com/microsoft/onnxruntime ;随 Transformers.js 由上述同一组 CDN 加载 | MIT | 保留许可声明 | 否 | — |
 | **七、模型与外部服务** | | | | | | |
-| Qwen2.5-0.5B-Instruct(ONNX 版) | 接入巨人页「离线巨人」 | 用户点击后从魔搭 ModelScope(备用 Hugging Face 镜像)下载到本机;giant/qwen/ 只自带 4 个配置 json | Apache-2.0(阿里云通义千问) | 保留许可声明 | 模型本身是 AI;其回答为用户本机实时生成 | 接入巨人页卡片标明「QWEN2.5-0.5B · 在你的电脑上运行」「一个真实的 5 亿参数语言模型」 |
-| 自带大模型钥匙对照(DeepSeek、Kimi/月之暗面、阿里云百炼、火山方舟、硅基流动) | 接入巨人页 | 用户自行持有钥匙,浏览器直连对应服务商接口 | 各服务商条款 | — | 回答为 AI 生成 | 接入巨人页卡片标明「BYOK · 你的浏览器直连厂商」;本站不保存、不转发钥匙 |
+| Qwen2.5-0.5B-Instruct(ONNX 版,onnx-community) | 接入巨人页「离线巨人」;「下载并唤醒」按钮旁注明将从第三方 CDN 与魔搭下载约数百 MB | 用户点击「下载并唤醒」后按序从 modelscope.cn → hf-mirror.com → huggingface.co 下载到本机(约数百 MB);giant/qwen/ 只自带 4 个配置 json | Apache-2.0(阿里云通义千问) | 保留许可声明 | 模型本身是 AI;其回答为用户本机实时生成 | 接入巨人页卡片标明「QWEN2.5-0.5B · 在你的电脑上运行」「一个真实的 5 亿参数语言模型」 |
+| 自带大模型钥匙对照(DeepSeek、Kimi/月之暗面、阿里云百炼、火山方舟、硅基流动) | 接入巨人页 | 用户自行持有钥匙,浏览器直连:api.deepseek.com、api.moonshot.cn、dashscope.aliyuncs.com、ark.cn-beijing.volces.com、api.siliconflow.cn | 各服务商条款 | — | 回答为 AI 生成 | 接入巨人页卡片标明「BYOK · 你的浏览器直连厂商」;本站不保存、不转发钥匙 |
 | **八、数据来源** | | | | | | |
 | 熊猫被认成长臂猿的对抗样本实验(2014) | panda 任务导语 | Goodfellow, Shlens, Szegedy《Explaining and Harnessing Adversarial Examples》,arXiv:1412.6572 | 学术事实引用 | 引用出处 | 否 | 页面内为自制小模型重现,不使用原论文图片 |
 | 图灵 1950《计算机器与智能》、模仿游戏 | ask、truth 任务 | Turing, A. M. (1950). Computing Machinery and Intelligence. Mind 59(236) | 公有历史事实 | 引用出处 | 否 | — |
@@ -41,4 +41,9 @@
 
 - 页面里每个外部素材都在台账里:线上目录仅 fg_sofa.webp 一个图片文件,无音频、字体、3D 模型文件;vendor/ 全部列出。
 - 零外部请求:大厅与 10 个任务页加载时零外部请求(Three.js 随站自带,无 CDN 字体/统计)。**唯一例外**是接入巨人页:用户主动点击「离线巨人」才从 CDN/ModelScope 下载库与模型,或用户填入自己的钥匙后直连服务商。
+- 外部域名全清单(仅接入巨人页、均需用户主动操作,2026-10-25 按总审补全):
+  - 推理库 CDN:cdn.jsdmirror.com、s4.zstatic.net、jsd.onmicrosoft.cn、cdn.jsdelivr.net、fastly.jsdelivr.net、unpkg.com
+  - 模型源:modelscope.cn、hf-mirror.com、huggingface.co
+  - BYOK 直连(用户填入自己的钥匙后):api.deepseek.com、api.moonshot.cn、dashscope.aliyuncs.com、ark.cn-beijing.volces.com、api.siliconflow.cn
+  - 页面上另有各服务商「申请钥匙」控制台外链(用户点击才打开):platform.deepseek.com、platform.moonshot.cn、bailian.console.aliyun.com、console.volcengine.com、cloud.siliconflow.cn
 - AI 标注:3 处(大厅右下角可见角标、图片 alt、探索笔记页说明)。
