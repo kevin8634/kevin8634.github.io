@@ -17,7 +17,7 @@ export const Depth = {
     return out;
   },
   set(task, level, val = true) {
-    if (!/^[a-z]{2}\.[a-z0-9_-]+$/.test(task) || !/^d[123]$/.test(level)) throw new Error("Depth.set: 参数不合法");
+    if (!/^[a-z]{2}\.[a-z0-9_.-]+$/.test(task) || !/^d[123]$/.test(level)) throw new Error("Depth.set: 参数不合法");
     const cur = this.get(task); cur[level] = !!val; delete cur.tier;
     try { localStorage.setItem(this.key(task), JSON.stringify(cur)); } catch (e) {}
     return this.get(task);

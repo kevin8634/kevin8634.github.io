@@ -44,6 +44,9 @@ body.rm #c,body.rm #meter,body.rm #hud,body.rm #dive{display:none}body.rm #cards
 #side .fx{margin:18px 0;padding:12px;border:1px solid rgba(143,160,196,.25);border-radius:10px;background:rgba(2,4,12,.5)}
 #side p{color:var(--dim);font-size:14px;line-height:1.7;margin-top:10px}#side .row{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
 #sideX{position:absolute;right:16px;top:16px}
+#sideS ol{margin:12px 0 0 18px;color:var(--ink);font-size:14px;line-height:1.7}#sideS li{margin-top:8px}#sideS li.h{display:none}#sideS .k{margin-top:4px}
+#sideQ{margin-top:16px;padding:12px;border:1px dashed rgba(232,194,122,.4);border-radius:10px}#sideQ b{color:var(--gold);font-weight:500}#sideQ .btn{margin:8px 8px 0 0;font-size:13px}
+#sideQ .ok{color:#7fe3a8}#sideQ .no{color:#ff9a9a}#sideR{margin-top:12px;font-size:12px;color:#6c7a9c;line-height:1.6}#sideR a{color:var(--dim)}
 @media (max-width:600px){#side{top:auto;left:0;right:0;width:auto;height:70vh;border-left:0;border-top:1px solid rgba(232,194,122,.35);border-radius:16px 16px 0 0;transform:translateY(105%)}#side.open{transform:none}}
 @media (prefers-reduced-motion:reduce){#side{transition:none}}
 </style>
@@ -58,7 +61,7 @@ body.rm #c,body.rm #meter,body.rm #hud,body.rm #dive{display:none}body.rm #cards
 <button id="dive" class="btn">▼ 潜入深空</button>
 <div id="note">深空层 D1.1 · 开发中 · 内容为占位</div>
 <div id="names" aria-hidden="true"></div><div id="tip" aria-hidden="true"></div>
-<aside id="side" role="dialog" aria-modal="false" aria-labelledby="sideT" aria-hidden="true"><button id="sideX" class="btn" aria-label="关闭">✕</button><h2 id="sideT"></h2><div class="w" id="sideW"></div><div class="fx" id="sideF"></div><div id="sideD"></div><p id="sideP"></p><div class="row"><button id="sideC" class="btn">生成推导卡(示例)</button></div></aside>
+<aside id="side" role="dialog" aria-modal="false" aria-labelledby="sideT" aria-hidden="true"><button id="sideX" class="btn" aria-label="关闭">✕</button><h2 id="sideT"></h2><div class="w" id="sideW"></div><div class="fx" id="sideF"></div><div id="sideD"></div><p id="sideP"></p><div id="sideS"></div><div id="sideQ" hidden></div><div id="sideR"></div><div class="row"><button id="sideC" class="btn">生成推导卡(示例)</button></div></aside>
 <main id="cards" aria-label="深空层分层列表"></main>
 <script type="module">
 import * as THREE from "three";
@@ -135,15 +138,28 @@ WORLDS.forEach((w,k)=>{const a=k/7*6.283-1.571,rx=mob?15:40,ry=mob?24:22;const s
  s.position.set(Math.cos(a)*rx,Math.sin(a)*ry,0);s.scale.setScalar(6);s.userData={k,base:6};cons.add(s);stars.push(s);});
 {const lp=[];for(let k=0;k<7;k++){const A=stars[k].position,B=stars[(k+1)%7].position;lp.push(A.x,A.y,0,B.x,B.y,0);}
  const lg=new THREE.BufferGeometry();lg.setAttribute("position",new THREE.Float32BufferAttribute(lp,3));cons.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0x7fd0ff,transparent:true,opacity:.25})));}
+// 课本卡:deep/cards/index.json 列出已交付的 <世界>.l1.json;无卡世界显示占位
+const CARDS={};fetch("cards/index.json").then(r=>r.ok?r.json():[]).then(list=>Promise.all(list.map(f=>fetch("cards/"+f).then(r=>r.json()).then(c=>{CARDS[c.world]=c;})))).catch(()=>{});
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function renderCard(c){$("sideT").textContent=c.title;$("sideP").textContent=c.hook||"";
+ const S=$("sideS");S.innerHTML=`<ol>${c.steps.map((st,i)=>`<li class="${i?"h":""}">${esc(st.text)}${st.tex?`<div class="k" data-tex="${esc(st.tex)}"></div>`:""}</li>`).join("")}</ol><div class="row"><button class="btn" id="nextStep">下一步 ▼</button></div>`;
+ S.querySelectorAll("[data-tex]").forEach(el=>Formula.render(el,el.dataset.tex,{display:false}));
+ let n=1;$("nextStep").onclick=()=>{const li=S.querySelectorAll("li");if(n<li.length){li[n++].classList.remove("h");}if(n>=li.length){$("nextStep").remove();showQ(c);}};
+ if(c.steps.length<2){$("nextStep").remove();showQ(c);}
+ $("sideR").innerHTML=[c.textbook?`教材:${esc(c.textbook)}`:"",(c.sources||[]).map(x=>x.url&&/^https:\/\//.test(x.url)?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`:esc(x.name)).join(" · "),c.review?`审核:${esc(c.review)}`:"",c.ai_generated?`AI 标注:${esc(c.ai_generated)}`:""].filter(Boolean).join("<br>");}
+function showQ(c){const Q=$("sideQ");if(!c.check){Q.hidden=true;return;}Q.hidden=false;Q.innerHTML=`<b>检查一下</b><div>${esc(c.check.q)}</div>${c.check.options.map((o,i)=>`<button class="btn" data-o="${i}">${esc(o)}</button>`).join("")}<div id="qa" aria-live="polite"></div>`;
+ Q.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{const ok=+b.dataset.o===c.check.answer;$("qa").innerHTML=`<p class="${ok?"ok":"no"}">${ok?"对了。":"再想想。"}${ok?esc(c.check.why):""}</p>`;if(ok&&bar)bar.markDone("d1");});}
 // 侧栏
 const side=$("side");let sideW=-1,bar=null;
 function openSide(k){const w=WORLDS[k];sideW=k;$("sideT").textContent=w.fn;$("sideW").textContent=`${w.n} ${w.e} · ${w.sub} · 星辰层 · 高中`;
- Formula.render($("sideF"),w.f);$("sideD").innerHTML="";bar=DepthBar.mount($("sideD"),{task:`${w.id}.deep-demo`,levels:["d1","d2","d3"],start:"d1",onChange:()=>{}});
+ const cd=CARDS[w.id];Formula.render($("sideF"),cd&&cd.formula||w.f);$("sideD").innerHTML="";bar=DepthBar.mount($("sideD"),{task:cd?cd.id:`${w.id}.deep-demo`,levels:["d1","d2","d3"],start:"d1",onChange:()=>{}});
+ $("sideS").innerHTML="";$("sideQ").hidden=true;$("sideR").innerHTML="";
+ if(cd){renderCard(cd);side.classList.add("open");side.setAttribute("aria-hidden","false");$("sideX").focus();return;}
  $("sideP").textContent="占位卡:1.1 起每个世界在这里放 1 张课本卡(为什么这条公式成立,推导它)。题目由各世界提交,总指挥审核后点亮。";
  side.classList.add("open");side.setAttribute("aria-hidden","false");$("sideX").focus();}
 function closeSide(){if(!side.classList.contains("open"))return false;side.classList.remove("open");side.setAttribute("aria-hidden","true");sideW=-1;return true;}
 $("sideX").onclick=closeSide;
-$("sideC").onclick=async()=>{if(sideW<0)return;const w=WORLDS[sideW];const b=await Card.make({kind:"derive",task:`${w.id}.deep-demo`,title:w.fn,lines:[w.n+" · 星辰层示例卡","正式课本卡 1.1 上线"]});Card.share(b,`genesis-${w.id}-card.png`);};
+$("sideC").onclick=async()=>{if(sideW<0)return;const w=WORLDS[sideW],cd=CARDS[w.id];const b=await Card.make(cd?{kind:"derive",task:cd.id,title:cd.title,lines:[cd.hook||"",...cd.steps.map((x,i)=>`${i+1}. ${x.text}`)]}:{kind:"derive",task:`${w.id}.deep-demo`,title:w.fn,lines:[w.n+" · 星辰层示例卡","正式课本卡 1.1 上线"]});Card.share(b,`genesis-${w.id}-card.png`);};
 // 悬停/点击拾取
 const ray=new THREE.Raycaster(),mp=new THREE.Vector2(),tip=$("tip");let hov=-1;
 function pick(x,y){if(cur!==1||anim)return -1;mp.set(x/W()*2-1,-(y/H())*2+1);ray.setFromCamera(mp,cam);const h=ray.intersectObjects(stars,false)[0];return h?h.object.userData.k:-1;}
