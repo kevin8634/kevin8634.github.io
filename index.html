@@ -887,6 +887,28 @@
       #dive canvas { width: 100%; height: 100%; display: block; }
       #stage.is-diving { transition: none; will-change: transform, filter; }
       .ui.is-diving { transition: opacity .35s ease; opacity: 0 !important; pointer-events: none; }
+
+      /* v0.8.21 · 2.0 深空层预告位（暂不可点）：深空之下 · 宇宙将为你闪烁 */
+      .x-deep { position: absolute; left: 50%; bottom: 300px; transform: translateX(-50%); z-index: 0; width: 420px; height: 150px; pointer-events: none !important; cursor: default; user-select: none; }
+      .x-deep canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+      .x-deep__beam { position: absolute; left: 50%; bottom: 62px; width: 2px; height: 70px; margin-left: -1px; background: linear-gradient(to top, rgba(160,200,255,.55), rgba(160,200,255,0)); filter: blur(1px); animation: xdBeam 4.6s ease-in-out infinite; }
+      .x-deep__pill { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); white-space: nowrap; padding: 11px 26px 12px; border-radius: 999px;
+        font: 500 15px/1 var(--sans); letter-spacing: .22em; color: rgba(214,224,248,.78);
+        background: radial-gradient(120% 160% at 50% 120%, rgba(90,130,220,.20), rgba(10,14,36,.62) 62%); border: 1px solid rgba(170,190,235,.26);
+        box-shadow: inset 0 0 22px -8px rgba(130,170,255,.45), 0 0 30px -10px rgba(110,150,255,.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+      .x-deep__pill::before { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; background: conic-gradient(from var(--xd-a, 0deg), transparent 0 70%, rgba(233,199,121,.75) 80%, transparent 90%);
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: xdSpin 7s linear infinite; }
+      .x-deep__pill b { font-weight: 500; color: rgba(233,199,121,.85); }
+      .x-deep__pill i { font-style: normal; display: inline-block; animation: xdFlick 9s steps(1) infinite; animation-delay: calc(var(--i) * 45ms); }
+      .x-deep__tag { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); font: 10px/1 var(--sans); letter-spacing: .5em; color: rgba(160,175,210,.42); white-space: nowrap; padding-left: .5em; }
+      @property --xd-a { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+      @keyframes xdSpin { to { --xd-a: 360deg; } }
+      @keyframes xdBeam { 0%,100% { opacity: .35; transform: scaleY(.85); transform-origin: bottom; } 50% { opacity: 1; transform: scaleY(1.1); transform-origin: bottom; } }
+      @keyframes xdFlick { 0%, 86%, 100% { opacity: 1; text-shadow: none; } 87% { opacity: .25; } 88% { opacity: 1; text-shadow: 0 0 10px rgba(190,215,255,.95); } 89.5% { opacity: .5; } 90.5% { opacity: 1; text-shadow: 0 0 6px rgba(190,215,255,.6); } }
+      @media (max-width: 1180px) and (min-width: 861px) and (min-height: 481px) { .x-deep { left: auto; right: 24px; transform: none; bottom: 196px; width: 380px; } }
+      @media (max-width: 860px) { .x-deep { bottom: 112px; width: 340px; height: 120px; } .x-deep__pill { font-size: 12.5px; letter-spacing: .14em; padding: 9px 18px 10px; bottom: 10px; } .x-deep__beam { height: 44px; bottom: 46px; } .x-deep__tag { display: none; } }
+      @media (max-height: 480px) and (orientation: landscape) { .x-deep { display: none; } }
+      @media (prefers-reduced-motion: reduce) { .x-deep__beam, .x-deep__pill::before, .x-deep__pill i { animation: none; } }
     </style>
   </head>
   <body>
@@ -958,6 +980,7 @@
         <button class="btn x-home" id="homeBtn" aria-keyshortcuts="Home 0">⟲ 回到地球视角</button>
       </div>
       <div class="demo-tag" id="demoTag">演示进度</div>
+      <div class="x-deep" id="deepTease" aria-hidden="true"><canvas id="deepCv"></canvas><span class="x-deep__beam"></span><span class="x-deep__pill"><i style="--i:0">深</i><i style="--i:1">空</i><i style="--i:2">之</i><i style="--i:3">下</i> <b>·</b> <i style="--i:6">宇</i><i style="--i:7">宙</i><i style="--i:8">将</i><i style="--i:9">为</i><i style="--i:10">你</i><i style="--i:11">闪</i><i style="--i:12">烁</i></span><span class="x-deep__tag">COMING · 2.0</span></div>
 
       <section class="x-news" id="news" aria-label="重要公告">
         <button type="button" class="x-news__bar" id="newsBar" aria-expanded="false" aria-controls="ann"><em id="newsBarK">公告</em><span class="x-news__tk" id="newsTk"></span><i aria-hidden="true">⌃</i></button>
@@ -1147,7 +1170,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.8.20</b></span>
+            <span>创世计划总门户 <b>v0.8.21</b></span>
           </footer>
         </div>
       </div>
@@ -2250,6 +2273,40 @@
         lsSet("gn:portal:seen", "1"); ssSet("gn:portal:intro", "1");
       }
       if (intro.done) { revealUI(); }
+      /* v0.8.21 · 深空预告位粒子：从下方深处缓缓上浮、偶尔整体「闪烁」；看不见时停 */
+      (function () {
+        var box = document.getElementById("deepTease"), cv = document.getElementById("deepCv");
+        if (!box || !cv || !cv.getContext) return;
+        var cx = cv.getContext("2d"), P = [], W = 0, H = 0, dpr = Math.min(2, window.devicePixelRatio || 1), t0 = 0, flash = 0, nextF = 4000;
+        var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+        function size() { var r = box.getBoundingClientRect(); W = r.width; H = r.height; cv.width = Math.max(1, W * dpr); cv.height = Math.max(1, H * dpr); cx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+        function born(p, any) { p.x = W / 2 + (Math.random() - .5) * W * .9; p.y = any ? Math.random() * H : H + 4; p.v = .12 + Math.random() * .35; p.r = .5 + Math.random() * 1.3; p.a = 0; p.l = 0; p.L = 220 + Math.random() * 260; p.g = Math.random() < .22; p.ph = Math.random() * 6.28; return p; }
+        function draw(dt, now) {
+          cx.clearRect(0, 0, W, H);
+          if (now > nextF) { flash = 1; nextF = now + 6500 + Math.random() * 5000; }
+          flash *= .93;
+          for (var i = 0; i < P.length; i++) {
+            var p = P[i]; p.l += dt / 16; p.y -= p.v * dt / 16; p.x += Math.sin(p.ph + p.l * .02) * .15 + (W / 2 - p.x) * .0009;
+            var k = p.l / p.L; var a = Math.min(1, k * 4) * (1 - k);
+            var tw = .6 + .4 * Math.sin(p.ph + now * .004);
+            a = Math.max(0, a * tw + flash * .7);
+            if (k >= 1 || p.y < -4) born(p, false);
+            cx.globalAlpha = a; cx.fillStyle = p.g ? "#e9c779" : "#bcd3ff";
+            cx.beginPath(); cx.arc(p.x, p.y, p.r * (1 + flash * .8), 0, 6.283); cx.fill();
+            if (p.r > 1.4) { cx.globalAlpha = a * .25; cx.beginPath(); cx.arc(p.x, p.y, p.r * 3.2, 0, 6.283); cx.fill(); }
+          }
+          cx.globalAlpha = 1;
+        }
+        function loop(now) {
+          requestAnimationFrame(loop);
+          if (document.hidden || ui.hidden || box.offsetParent === null) { t0 = now; return; }
+          if (!W) size();
+          var dt = Math.min(50, now - (t0 || now)); t0 = now; draw(dt, now);
+        }
+        size(); var n = W < 380 ? 34 : 54; for (var i = 0; i < n; i++) P.push(born({}, true));
+        window.addEventListener("resize", function () { W = 0; });
+        if (reduce) { setTimeout(function () { size(); draw(16, 0); }, 1200); } else requestAnimationFrame(loop);
+      })();
 
       var scrim = document.getElementById("scrim"), drawer = document.getElementById("drawer");
       var trailer = document.getElementById("trailer"), laws = document.getElementById("laws");
@@ -3277,6 +3334,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.21", d: "2026-10-25", t: "首屏新增「深空之下 · 宇宙将为你闪烁」预告位：2.0 深空层的入口位置先点亮一盏暗灯，带粒子和偶发闪烁，暂不可点击。" },
         { w: "gn", v: "v0.8.20", d: "2026-10-25", t: "修复：开场「北斗点灯」没播完就点击跳过时，界面停在星图不出操作栏，现在会立即弹出。星历补记：七个世界都补齐了素材许可与 AI 标注台账（星图 v0.8.4.1、宙律 v0.6-α2–α3、生命源码 v0.9.3.1、奇点前夜、天枢 v1.0-M4d 等）。" },
         { w: "gn", v: "v0.8.19", d: "2026-10-24", t: "星历补记元素工坊 v0.11：新任务进入创世护照；新通星桥 读星光 ⇄ 别的地球，共 32 座。" },
         { y: "task", w: "03", v: "v0.11", d: "2026-10-24", t: "新任务「隔着几百光年，怎么知道一颗星球的空气？」：用彩虹里的黑线认原子、用红外缺口认分子，再跟韦布望远镜读出 WASP-39 b 大气里的二氧化碳。" },
