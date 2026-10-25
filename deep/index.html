@@ -150,19 +150,30 @@ function renderCard(c){$("sideT").textContent=c.title;$("sideP").textContent=c.h
 function showQ(c){const Q=$("sideQ");if(!c.check){Q.hidden=true;return;}Q.hidden=false;Q.innerHTML=`<b>检查一下</b><div>${esc(c.check.q)}</div>${c.check.options.map((o,i)=>`<button class="btn" data-o="${i}">${esc(o)}</button>`).join("")}<div id="qa" aria-live="polite"></div>`;
  Q.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{const ok=+b.dataset.o===c.check.answer;$("qa").innerHTML=`<p class="${ok?"ok":"no"}">${ok?"对了。":"再想想。"}${ok?esc(c.check.why):""}</p>`;if(ok&&bar)bar.markDone("d1");if(ok)showChain(c);});}
 // D3 参数实验台(core 0.2 ParamPanel + Sim):卡片可选 lab 字段,数值积分画轨迹,运行一次写入 d3
-function showLab(c){const L=$("sideL");if(!c.lab||L.dataset.on)return;const lab=c.lab;L.hidden=false;L.dataset.on=1;
- L.innerHTML=`<b>参数实验台</b><div class="cdim">${esc(lab.note||"")}</div><div id="labP"></div><div id="labR" class="cdim" aria-live="polite"></div><canvas id="labC" width="720" height="440" role="img" aria-label="${esc(lab.title||"轨迹图")}"></canvas><div class="row"><button class="btn" id="labGo">运行 ▶</button></div>`;
- let vals={};const pk=lab.params.map(q=>q.k);const ro=(lab.readout||[]).map(r=>({...r,f:Expr.compile(r.expr,pk)}));
- const rd=()=>{$("labR").textContent=ro.map(r=>`${r.label} = ${(+r.f(vals)).toPrecision(3)}${r.unit?" "+r.unit:""}`).join("  ·  ");};
- ParamPanel.mount($("labP"),{params:lab.params,vars:[],onInput:v=>{vals=v;rd();}});
- const cv=$("labC"),g=cv.getContext("2d");
- const draw=(out)=>{const [xi,yi]=lab.plot.map(n=>1+Object.keys(lab.state).indexOf(n));g.clearRect(0,0,cv.width,cv.height);
-  let m=0;out.forEach(p=>{m=Math.max(m,Math.abs(p[xi]),Math.abs(p[yi]));});m=m*1.1||1;const sc=Math.min(cv.width,cv.height)/2/m,cx=cv.width/2,cy=cv.height/2;
-  g.fillStyle="#7fb2ff";g.beginPath();g.arc(cx,cy,Math.max(4,(lab.center||0)*sc),0,7);g.fill();
-  g.strokeStyle="#e8c27a";g.lineWidth=2;g.beginPath();out.forEach((p,i)=>{const X=cx+p[xi]*sc,Y=cy-p[yi]*sc;i?g.lineTo(X,Y):g.moveTo(X,Y);});g.stroke();
-  const l=out[0];g.fillStyle="#fff";g.beginPath();g.arc(cx+l[xi]*sc,cy-l[yi]*sc,4,0,7);g.fill();};
- $("labGo").onclick=async()=>{const st={};for(const[k,e]of Object.entries(lab.state))st[k]=Expr.compile(e,pk)(vals);$("labGo").disabled=true;
-  try{const out=await Sim.run({state:st,rhs:lab.rhs,params:vals,dt:lab.dt||.01,steps:lab.steps||2000,every:lab.every||10});draw(out);if(bar)bar.markDone("d3");}catch(e){$("labR").textContent="计算出错:"+e.message;}$("labGo").disabled=false;};}
+function showLab(c){const L=$("sideL");if(!c.lab||L.dataset.on)return;const lab=c.lab,F=lab.fn;L.hidden=false;L.dataset.on=1;
+ L.innerHTML=`<b>参数实验台</b><div class="cdim">${esc(lab.note||"")}</div><div id="labP"></div><div id="labR" class="cdim" aria-live="polite"></div><canvas id="labC" width="720" height="440" role="img" aria-label="${esc(lab.title||"图像")}"></canvas><div id="labK" class="cdim"></div><div class="row"><button class="btn" id="labGo">运行 ▶</button></div>`;
+ const pk=lab.params.map(q=>q.k);let vals=Object.fromEntries(lab.params.map(q=>[q.k,+(q.value??q.min??0)]));const ro=(lab.readout||[]).map(r=>({...r,f:Expr.compile(r.expr,pk)}));
+ const fmt=v=>!isFinite(v)?"—":Math.abs(v)>=1e6||(Math.abs(v)<1e-3&&v!==0)?(+v).toExponential(2):Math.abs(v)>=100?String(Math.round(v)):String(+(+v).toPrecision(3));
+ const rd=()=>{$("labR").textContent=ro.map(r=>`${r.label} = ${fmt(+r.f(vals))}${r.unit?" "+r.unit:""}`).join("  ·  ");};
+ const cv=$("labC"),g=cv.getContext("2d"),COL=["#e8c27a","#7fb2ff","#ff9a9a","#7fe3a8"];
+ const plot=(series,o={})=>{const W=cv.width,H=cv.height,pd=48;g.clearRect(0,0,W,H);let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity;
+  series.forEach(S=>S.pts.forEach(([x,y])=>{if(!isFinite(x)||!isFinite(y))return;x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}));
+  if(!isFinite(x0))return;if(o.y0!=null)y0=Math.min(y0,o.y0);if(o.square){const m=Math.max(Math.abs(x0),Math.abs(x1),Math.abs(y0),Math.abs(y1))*1.1;x0=y0=-m;x1=y1=m;}
+  if(x1===x0)x1=x0+1;if(y1===y0)y1=y0+1;const X=x=>pd+(x-x0)/(x1-x0)*(W-2*pd),Y=y=>H-pd-(y-y0)/(y1-y0)*(H-2*pd);
+  g.strokeStyle="rgba(255,255,255,.25)";g.lineWidth=1;g.beginPath();g.moveTo(pd,H-pd);g.lineTo(W-pd,H-pd);g.moveTo(pd,pd);g.lineTo(pd,H-pd);if(y0<0&&y1>0){g.moveTo(pd,Y(0));g.lineTo(W-pd,Y(0));}g.stroke();
+  g.fillStyle="#8ea0c4";g.font="20px sans-serif";g.fillText(fmt(x0),pd,H-pd+26);g.fillText(fmt(x1),W-pd-50,H-pd+26);g.fillText(fmt(y1),4,pd-8);g.fillText(fmt(y0),4,H-pd-4);
+  if(o.center){g.fillStyle="#7fb2ff";g.beginPath();g.arc(X(0),Y(0),Math.max(4,o.center*(W-2*pd)/(x1-x0)),0,7);g.fill();}
+  series.forEach((S,k)=>{g.strokeStyle=g.fillStyle=COL[k%4];g.lineWidth=2;g.beginPath();let st=false;S.pts.forEach(([x,y])=>{if(!isFinite(y)){st=false;return;}st?g.lineTo(X(x),Y(y)):g.moveTo(X(x),Y(y));st=true;});if(!S.dots)g.stroke();if(S.dots)S.pts.forEach(([x,y])=>{if(isFinite(y)){g.beginPath();g.arc(X(x),Y(y),5,0,7);g.fill();}});});
+  if(o.mark){g.fillStyle="#fff";g.beginPath();g.arc(X(o.mark[0]),Y(o.mark[1]),5,0,7);g.fill();}
+  $("labK").innerHTML=series.map((S,k)=>S.label?`<span style="color:${COL[k%4]}">■</span> ${esc(S.label)}`:"").filter(Boolean).join("  ");};
+ let fy=[],fm=null;if(F){const v=pk.concat([F.x]);fy=F.ys.map(y=>({...y,f:Expr.compile(y.expr,v)}));if(F.mark)fm=[Expr.compile(F.mark[0],pk),Expr.compile(F.mark[1],pk)];}
+ const runFn=()=>{const n=F.points||121,xs=[];const a=+Expr.compile(String(F.from),pk)(vals),b=+Expr.compile(String(F.to),pk)(vals);
+  if(F.step)for(let x=a;x<=b+1e-9;x+=F.step)xs.push(x);else for(let i=0;i<n;i++)xs.push(a+(b-a)*i/(n-1));
+  plot(fy.map(y=>({label:y.label,dots:y.dots,pts:xs.map(x=>[x,+y.f({...vals,[F.x]:x})])})),{y0:F.y0,mark:fm?[+fm[0](vals),+fm[1](vals)]:null});};
+ ParamPanel.mount($("labP"),{params:lab.params,vars:[],onInput:v=>{vals={...vals,...v};rd();if(F)runFn();}});rd();
+ $("labGo").onclick=async()=>{if(F){runFn();if(bar)bar.markDone("d3");return;}const st={};for(const[k,e]of Object.entries(lab.state))st[k]=Expr.compile(e,pk)(vals);$("labGo").disabled=true;
+  try{const out=await Sim.run({state:st,rhs:lab.rhs,params:vals,dt:lab.dt||.01,steps:lab.steps||2000,every:lab.every||10});const ix=lab.plot.map(n=>n==="t"?0:1+Object.keys(lab.state).indexOf(n));
+   plot([{pts:out.map(p=>[p[ix[0]],p[ix[1]]])}],{square:!!lab.center,center:lab.center,mark:[out[0][ix[0]],out[0][ix[1]]]});if(bar)bar.markDone("d3");}catch(e){$("labR").textContent="计算出错:"+e.message;}$("labGo").disabled=false;};}
 // D2 推导排序挑战(core 0.2 ChainDrag):答对检查题后出现,排对写入 d2
 function showChain(c){if(c.steps.length<3||$("chainBox"))return;const Q=$("sideQ"),d=document.createElement("div");d.id="chainBox";d.innerHTML=`<b>推导排序挑战</b><div class="cdim">把打乱的步骤排回正确顺序(可拖拽,或选中后按 ↑↓)。</div>`;Q.appendChild(d);ChainDrag.mount(d,{steps:c.steps.map(x=>x.text),onDone:ok=>{if(ok&&bar)bar.markDone("d2");if(ok)showLab(c);}});}
 // 侧栏
