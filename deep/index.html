@@ -168,11 +168,12 @@ function showLab(c){const L=$("sideL");if(!c.lab||L.dataset.on)return;const lab=
   if(o.center){g.fillStyle="#7fb2ff";g.beginPath();g.arc(X(0),Y(0),Math.max(4,o.center*(W-2*pd)/(x1-x0)),0,7);g.fill();}
   series.forEach((S,k)=>{g.strokeStyle=g.fillStyle=COL[k%4];g.lineWidth=2;g.beginPath();let st=false;S.pts.forEach(([x,y])=>{if(!isFinite(y)){st=false;return;}st?g.lineTo(X(x),Y(y)):g.moveTo(X(x),Y(y));st=true;});if(!S.dots)g.stroke();if(S.dots)S.pts.forEach(([x,y])=>{if(isFinite(y)){g.beginPath();g.arc(X(x),Y(y),5,0,7);g.fill();}});});
   if(o.mark){g.fillStyle="#fff";g.beginPath();g.arc(X(o.mark[0]),Y(o.mark[1]),5,0,7);g.fill();}
+  (o.vl||[]).forEach(m=>{if(!isFinite(m.x))return;const px=X(m.x);g.strokeStyle="rgba(255,255,255,.7)";g.lineWidth=1.5;g.setLineDash([6,5]);g.beginPath();g.moveTo(px,pd);g.lineTo(px,H-pd);g.stroke();g.setLineDash([]);g.fillStyle="#fff";g.font="18px sans-serif";g.fillText(fmt(m.x)+(m.label?" "+m.label:""),Math.min(px+4,W-pd-90),pd+18+m.i*22);if(m.y!=null&&isFinite(m.y)){g.beginPath();g.arc(px,Y(m.y),5,0,7);g.fill();}});
   $("labK").innerHTML=series.map((S,k)=>S.label?`<span style="color:${COL[k%4]}">■</span> ${esc(S.label)}`:"").filter(Boolean).join("  ");};
- let fy=[],fm=null;if(F){const v=pk.concat([F.x]);fy=F.ys.map(y=>({...y,f:Expr.compile(y.expr,v)}));if(F.mark)fm=[Expr.compile(F.mark[0],pk),Expr.compile(F.mark[1],pk)];}
+ let fy=[],fm=null,fv=[];if(F){const v=pk.concat([F.x]);fy=F.ys.map(y=>({...y,f:Expr.compile(y.expr,v)}));const M=F.mark;if(Array.isArray(M)&&M.length===2&&M.every(m=>typeof m!=="object"))fm=[Expr.compile(String(M[0]),pk),Expr.compile(String(M[1]),pk)];else if(M)fv=(Array.isArray(M)?M:[M]).map(m=>typeof m==="object"?m:{x:m}).map((m,i)=>({label:m.label||"",i,x:Expr.compile(String(m.x),pk),y:m.y!=null?Expr.compile(String(m.y),pk):null}));}
  const runFn=()=>{const n=F.points||121,xs=[];const a=+Expr.compile(String(F.from),pk)(vals),b=+Expr.compile(String(F.to),pk)(vals);
   if(F.step)for(let x=a;x<=b+1e-9;x+=F.step)xs.push(x);else for(let i=0;i<n;i++)xs.push(a+(b-a)*i/(n-1));
-  plot(fy.map(y=>({label:y.label,dots:y.dots,pts:xs.map(x=>[x,+y.f({...vals,[F.x]:x})])})),{y0:F.y0,mark:fm?[+fm[0](vals),+fm[1](vals)]:null});};
+  plot(fy.map(y=>({label:y.label,dots:y.dots,pts:xs.map(x=>[x,+y.f({...vals,[F.x]:x})])})),{y0:F.y0,mark:fm?[+fm[0](vals),+fm[1](vals)]:null,vl:fv.map(m=>({label:m.label,i:m.i,x:+m.x(vals),y:m.y?+m.y(vals):null}))});};
  ParamPanel.mount($("labP"),{params:lab.params,vars:[],onInput:v=>{vals={...vals,...v};rd();if(F)runFn();}});rd();
  $("labGo").onclick=async()=>{if(F){runFn();if(bar&&c.layer!==3)bar.markDone("d3");return;}const st={};for(const[k,e]of Object.entries(lab.state))st[k]=Expr.compile(e,pk)(vals);$("labGo").disabled=true;
   try{const out=await Sim.run({state:st,rhs:lab.rhs,params:vals,dt:lab.dt||.01,steps:lab.steps||2000,every:lab.every||10});const ix=lab.plot.map(n=>n==="t"?0:1+Object.keys(lab.state).indexOf(n));
