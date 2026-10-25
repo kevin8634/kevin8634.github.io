@@ -1,0 +1,57 @@
+{
+  "id": "ps.l1.adversarial",
+  "world": "ps",
+  "link_task": "ps.panda",
+  "title": "为什么每个像素只改一点点,AI 就会认错?",
+  "formula": "\\Delta z=-\\varepsilon\\sum_{i=1}^{n}|w_i|",
+  "hook": "每格只改不到 1%,十几万格一起推,熊猫就成了长臂猿。",
+  "steps": [
+    {
+      "text": "线性模型给图片打分:每个像素值乘一个权重再相加。分数大于 0 判熊猫,小于 0 判长臂猿。",
+      "tex": "z=\\sum_{i=1}^{n}w_ix_i+b"
+    },
+    {
+      "text": "给每个像素加一点改动 η_i,但规定每格最多改 ε。新分数只比原来多出改动那一部分。",
+      "tex": "z'-z=\\sum_{i=1}^{n}w_i\\eta_i,\\quad |\\eta_i|\\le\\varepsilon"
+    },
+    {
+      "text": "想让分数降得最多:权重为正的像素就减 ε,为负的就加 ε,让每一项都取到最小值。",
+      "tex": "\\eta_i=-\\varepsilon\\,\\mathrm{sign}(w_i)\\Rightarrow w_i\\eta_i=-\\varepsilon|w_i|"
+    },
+    {
+      "text": "把 n 项加起来,得到分数的总变化。设权重绝对值平均为 m。",
+      "tex": "\\Delta z=-\\varepsilon\\sum_{i=1}^{n}|w_i|=-\\varepsilon nm"
+    },
+    {
+      "text": "ε 固定很小,但 n 很大:一张 224×224 彩图约 15 万个数。总变化随 n 变大,足以让分数变号。",
+      "tex": "n=224\\times224\\times3=150528"
+    },
+    {
+      "text": "随机噪点的正负会互相抵消;专门朝权重反方向改,每一项都往同一边推。所以人眼看不出,模型却认错。",
+      "tex": ""
+    }
+  ],
+  "check": {
+    "q": "n=1000,|w_i| 平均 0.02,ε=0.05,原分数 0.8。按此法改动后判成什么?",
+    "options": [
+      "z=0.7,仍是熊猫",
+      "z=-0.2,认成长臂猿",
+      "z=0.8,分数不变"
+    ],
+    "answer": 1,
+    "why": "Δz=-0.05×1000×0.02=-1,新分数 0.8-1=-0.2<0,判为长臂猿。每格只改一点,但千格齐推。"
+  },
+  "textbook": "人教A版高中数学必修第二册 第六章 平面向量及其应用(6.2.4 向量的数量积)",
+  "sources": [
+    {
+      "name": "Goodfellow, Shlens, Szegedy. Explaining and Harnessing Adversarial Examples (2014), arXiv:1412.6572,§3 线性解释",
+      "url": "https://arxiv.org/abs/1412.6572"
+    },
+    {
+      "name": "Wikipedia: Adversarial machine learning(Fast gradient sign method)",
+      "url": "https://en.wikipedia.org/wiki/Adversarial_machine_learning"
+    }
+  ],
+  "review": "AI 审(数值已用脚本复核);待人工审稿人;总指挥审:钩子幅度按原论文 ε=0.007 修正(原写 5%)",
+  "ai_generated": "全卡文字(标题、钩子、6 步推导、检查题与解析)由 AI 起草;无图片"
+}

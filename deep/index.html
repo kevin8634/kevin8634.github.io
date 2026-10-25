@@ -139,7 +139,7 @@ WORLDS.forEach((w,k)=>{const a=k/7*6.283-1.571,rx=mob?15:40,ry=mob?24:22;const s
 {const lp=[];for(let k=0;k<7;k++){const A=stars[k].position,B=stars[(k+1)%7].position;lp.push(A.x,A.y,0,B.x,B.y,0);}
  const lg=new THREE.BufferGeometry();lg.setAttribute("position",new THREE.Float32BufferAttribute(lp,3));cons.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:0x7fd0ff,transparent:true,opacity:.25})));}
 // 课本卡:deep/cards/index.json 列出已交付的 <世界>.l1.json;无卡世界显示占位
-const CARDS={};fetch("cards/index.json").then(r=>r.ok?r.json():[]).then(list=>Promise.all(list.map(f=>fetch("cards/"+f).then(r=>r.json()).then(c=>{CARDS[c.world]=c;})))).catch(()=>{});
+const CARDS={};fetch("cards/index.json").then(r=>r.ok?r.json():[]).then(list=>Promise.all(list.map(f=>fetch("cards/"+f).then(r=>r.json()).then(c=>{CARDS[c.world]=c;}).catch(()=>{})))).then(()=>{if(sideW>=0&&CARDS[WORLDS[sideW].id])openSide(sideW);}).catch(()=>{});
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function renderCard(c){$("sideT").textContent=c.title;$("sideP").textContent=c.hook||"";
  const S=$("sideS");S.innerHTML=`<ol>${c.steps.map((st,i)=>`<li class="${i?"h":""}">${esc(st.text)}${st.tex?`<div class="k" data-tex="${esc(st.tex)}"></div>`:""}</li>`).join("")}</ol><div class="row"><button class="btn" id="nextStep">下一步 ▼</button></div>`;

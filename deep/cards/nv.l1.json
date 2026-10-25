@@ -1,0 +1,61 @@
+{
+  "id": "nv.l1.orbitspeed",
+  "world": "nv",
+  "link_task": "nv.orbit",
+  "title": "空间站的速度为什么是 v=√(GM/r)?",
+  "formula": "v=\\sqrt{\\frac{GM}{r}}",
+  "hook": "空间站一直在往下掉,为什么永远掉不到地上?",
+  "steps": [
+    {
+      "text": "物体做半径为 r 的匀速圆周运动,必须有指向圆心的合力,大小等于向心力。",
+      "tex": "F_{\\text{向}}=m\\frac{v^2}{r}"
+    },
+    {
+      "text": "在轨道上,空间站只受地球引力,引力指向地心,正好充当向心力。",
+      "tex": "F_{\\text{引}}=G\\frac{Mm}{r^2}"
+    },
+    {
+      "text": "引力等于所需向心力,列出方程。",
+      "tex": "G\\frac{Mm}{r^2}=m\\frac{v^2}{r}"
+    },
+    {
+      "text": "两边约去空间站质量 m,再乘以 r 并开方。轨道速度与空间站自身质量无关。",
+      "tex": "v=\\sqrt{\\frac{GM}{r}}"
+    },
+    {
+      "text": "贴近地面时 r≈R,又因地面上 mg=GMm/R²,得 GM=gR²,代入得第一宇宙速度。",
+      "tex": "v_1=\\sqrt{gR}\\approx 7.9\\ \\text{km/s}"
+    },
+    {
+      "text": "空间站离地约 420 km,r≈6791 km,代入得约 7.66 km/s,约 93 分钟绕地球一圈。",
+      "tex": "v=\\sqrt{\\frac{3.986\\times10^{14}}{6.791\\times10^{6}}}\\approx 7.66\\ \\text{km/s}"
+    }
+  ],
+  "check": {
+    "q": "把卫星的圆轨道半径变成原来的 4 倍,它的轨道速度变成原来的几倍?",
+    "options": [
+      "2 倍",
+      "1/2",
+      "1/4"
+    ],
+    "answer": 1,
+    "why": "v 与 √r 成反比,r 变 4 倍,√r 变 2 倍,v 变为原来的 1/2。越高的轨道跑得越慢。"
+  },
+  "textbook": "人教版(2019)高中物理必修第二册 第七章 万有引力与宇宙航行 第4节 宇宙航行",
+  "sources": [
+    {
+      "name": "OpenStax《University Physics Volume 1》13.4 Satellite Orbits and Energy(式 13.7、例 13.9)",
+      "url": "https://openstax.org/books/university-physics-volume-1/pages/13-4-satellite-orbits-and-energy"
+    },
+    {
+      "name": "NASA Earth Fact Sheet(地球 GM、半径)",
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html"
+    },
+    {
+      "name": "NASA Space Station Facts and Figures(轨道高度约 400 km 量级)",
+      "url": "https://www.nasa.gov/international-space-station/space-station-facts-and-figures/"
+    }
+  ],
+  "review": "AI 审(待指定审稿人复核);总指挥审:数值复核通过(r≈6791 km,v≈7.66 km/s,T≈92.8 min)",
+  "ai_generated": "标题、钩子、6 步推导文字、检查题与解析均由 AI 撰写;数值由脚本复算;无图片"
+}
