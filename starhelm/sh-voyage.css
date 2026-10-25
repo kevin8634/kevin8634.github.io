@@ -137,6 +137,7 @@ body.voy-on .le-actions,body.voy-on .le-hud-top{visibility:hidden}
 .ml-c.no{border-color:#c66;color:#f2b0b0;opacity:.6}.ml-c--go{background:rgba(127,227,196,.15);border-color:#7fe3c4;color:#cff8ea}
 .ml-gb{display:flex;align-items:center;gap:10px}.ml-hint{background:none;border-color:rgba(255,255,255,.25);color:#b9c7da}.ml-hint[hidden]{display:none}
 .ml-hs{font-size:13px;color:#9fd9c6;line-height:1.5}
+.sh-bridge-a{display:inline-block;margin-top:8px;color:#9fd9c6;font-size:13px;text-decoration:none;border-bottom:1px dashed rgba(159,217,198,.6)}.sh-bridge-a:hover{color:#f3cf7a;border-color:#f3cf7a}
 @media (max-width:760px),(orientation:portrait){.ml-body{grid-template-columns:1fr;grid-template-rows:1.2fr 1fr}.ml-earth{flex-direction:row;padding-top:24px;gap:6px}.ml-cv2{width:auto;height:min(100%,190px)}.ml-q{font-size:14px}.ml{padding:8px 10px}}
 /* 登舰动画 */
 .voy-top,.voy-eng,.voy-say,.voy-dash,.voy-credit{transition:opacity .6s}
