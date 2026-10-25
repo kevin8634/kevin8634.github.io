@@ -116,7 +116,7 @@
   function showQ() {
     stars(); L.hints = 0; U.hs.textContent = ''; U.ch.innerHTML = ''; U.hint.hidden = false;
     if (L.q >= QS.length) {
-      U.q.innerHTML = '<b>三关完成!</b>你已经会算外星球的一天了。去太阳系里点开别的行星,看看它们的一天和一年。'; U.hint.hidden = true;
+      U.q.innerHTML = '<b>三关完成!</b>你已经会算外星球的一天了。去太阳系里点开别的行星,看看它们的一天和一年。<br><a class="sh-bridge-a" href="../element-forge/mars/">✦ 星桥 → 元素工坊:火星为什么是红的?</a>'; U.hint.hidden = true;
       if (window.SHDOM) { var go = h('button', 'ml-c ml-c--go', '🪐 去行星世界'); go.type = 'button'; go.onclick = function () { close(); SHDOM.go(3); }; U.ch.appendChild(go); }
       return;
     }
