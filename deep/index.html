@@ -46,7 +46,7 @@ body.rm #c,body.rm #meter,body.rm #hud,body.rm #dive{display:none}body.rm #cards
 #sideX{position:absolute;right:16px;top:16px}
 #sideS ol{margin:12px 0 0 18px;color:var(--ink);font-size:14px;line-height:1.7}#sideS li{margin-top:8px}#sideS li.h{display:none}#sideS .k{margin-top:4px}
 #sideQ{margin-top:16px;padding:12px;border:1px dashed rgba(232,194,122,.4);border-radius:10px}#sideQ b{color:var(--gold);font-weight:500}#sideQ .btn{margin:8px 8px 0 0;font-size:13px}
-#sideQ .ok{color:#7fe3a8}#chainBox{margin-top:14px;padding-top:12px;border-top:1px dashed rgba(232,194,122,.3)}#chainBox .cdim{font-size:12px;color:var(--dim);margin:4px 0}#sideQ .no{color:#ff9a9a}#sideR{margin-top:12px;font-size:12px;color:#6c7a9c;line-height:1.6}#sideR a{color:var(--dim)}
+#sideQ .ok{color:#7fe3a8}#chainBox{margin-top:14px;padding-top:12px;border-top:1px dashed rgba(232,194,122,.3)}#chainBox .cdim{font-size:12px;color:var(--dim);margin:4px 0}#sideQ .no{color:#ff9a9a}#sideL{margin-top:16px;padding:12px;border:1px dashed rgba(127,178,255,.4);border-radius:10px}#sideL b{color:var(--gold);font-weight:500}#sideL .cdim{font-size:12px;color:var(--dim);margin:4px 0 8px}#labC{width:100%;height:auto;background:rgba(2,4,12,.6);border-radius:8px;margin-top:8px}#sideR{margin-top:12px;font-size:12px;color:#6c7a9c;line-height:1.6}#sideR a{color:var(--dim)}
 @media (max-width:600px){#side{top:auto;left:0;right:0;width:auto;height:70vh;border-left:0;border-top:1px solid rgba(232,194,122,.35);border-radius:16px 16px 0 0;transform:translateY(105%)}#side.open{transform:none}}
 @media (prefers-reduced-motion:reduce){#side{transition:none}}
 </style>
@@ -61,7 +61,7 @@ body.rm #c,body.rm #meter,body.rm #hud,body.rm #dive{display:none}body.rm #cards
 <button id="dive" class="btn">▼ 潜入深空</button>
 <div id="note">深空层 D1.1 · 开发中 · 内容为占位</div>
 <div id="names" aria-hidden="true"></div><div id="tip" aria-hidden="true"></div>
-<aside id="side" role="dialog" aria-modal="false" aria-labelledby="sideT" aria-hidden="true"><button id="sideX" class="btn" aria-label="关闭">✕</button><h2 id="sideT"></h2><div class="w" id="sideW"></div><div class="fx" id="sideF"></div><div id="sideD"></div><p id="sideP"></p><div id="sideS"></div><div id="sideQ" hidden></div><div id="sideR"></div><div class="row"><button id="sideC" class="btn">生成推导卡(示例)</button></div></aside>
+<aside id="side" role="dialog" aria-modal="false" aria-labelledby="sideT" aria-hidden="true"><button id="sideX" class="btn" aria-label="关闭">✕</button><h2 id="sideT"></h2><div class="w" id="sideW"></div><div class="fx" id="sideF"></div><div id="sideD"></div><p id="sideP"></p><div id="sideS"></div><div id="sideQ" hidden></div><div id="sideL" hidden></div><div id="sideR"></div><div class="row"><button id="sideC" class="btn">生成推导卡(示例)</button></div></aside>
 <main id="cards" aria-label="深空层分层列表"></main>
 <script type="module">
 import * as THREE from "three";
@@ -69,7 +69,7 @@ import { EffectComposer } from "./vendor/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "./vendor/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "./vendor/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "./vendor/jsm/postprocessing/OutputPass.js";
-import { DepthBar, Formula, Card, ChainDrag } from "../core/deep/core.js";
+import { DepthBar, Formula, Card, ChainDrag, ParamPanel, Sim, Expr } from "../core/deep/core.js";
 // 七世界(F2 穿越)与星辰层公式星座占位(1.1 由各世界提交课本卡替换)
 const WORLDS=[
  {id:"ma",n:"星图",e:"Math Atlas",sub:"数学",c:0x6fb6ff,f:"e^{i\\pi}+1=0",fn:"欧拉恒等式"},
@@ -149,13 +149,27 @@ function renderCard(c){$("sideT").textContent=c.title;$("sideP").textContent=c.h
  $("sideR").innerHTML=[c.textbook?`教材:${esc(c.textbook)}`:"",(c.sources||[]).map(x=>x.url&&/^https:\/\//.test(x.url)?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.name)}</a>`:esc(x.name)).join(" · "),c.review?`审核:${esc(c.review)}`:"",c.ai_generated?`AI 标注:${esc(c.ai_generated)}`:""].filter(Boolean).join("<br>");}
 function showQ(c){const Q=$("sideQ");if(!c.check){Q.hidden=true;return;}Q.hidden=false;Q.innerHTML=`<b>检查一下</b><div>${esc(c.check.q)}</div>${c.check.options.map((o,i)=>`<button class="btn" data-o="${i}">${esc(o)}</button>`).join("")}<div id="qa" aria-live="polite"></div>`;
  Q.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{const ok=+b.dataset.o===c.check.answer;$("qa").innerHTML=`<p class="${ok?"ok":"no"}">${ok?"对了。":"再想想。"}${ok?esc(c.check.why):""}</p>`;if(ok&&bar)bar.markDone("d1");if(ok)showChain(c);});}
+// D3 参数实验台(core 0.2 ParamPanel + Sim):卡片可选 lab 字段,数值积分画轨迹,运行一次写入 d3
+function showLab(c){const L=$("sideL");if(!c.lab||L.dataset.on)return;const lab=c.lab;L.hidden=false;L.dataset.on=1;
+ L.innerHTML=`<b>参数实验台</b><div class="cdim">${esc(lab.note||"")}</div><div id="labP"></div><div id="labR" class="cdim" aria-live="polite"></div><canvas id="labC" width="720" height="440" role="img" aria-label="${esc(lab.title||"轨迹图")}"></canvas><div class="row"><button class="btn" id="labGo">运行 ▶</button></div>`;
+ let vals={};const pk=lab.params.map(q=>q.k);const ro=(lab.readout||[]).map(r=>({...r,f:Expr.compile(r.expr,pk)}));
+ const rd=()=>{$("labR").textContent=ro.map(r=>`${r.label} = ${(+r.f(vals)).toPrecision(3)}${r.unit?" "+r.unit:""}`).join("  ·  ");};
+ ParamPanel.mount($("labP"),{params:lab.params,vars:[],onInput:v=>{vals=v;rd();}});
+ const cv=$("labC"),g=cv.getContext("2d");
+ const draw=(out)=>{const [xi,yi]=lab.plot.map(n=>1+Object.keys(lab.state).indexOf(n));g.clearRect(0,0,cv.width,cv.height);
+  let m=0;out.forEach(p=>{m=Math.max(m,Math.abs(p[xi]),Math.abs(p[yi]));});m=m*1.1||1;const sc=Math.min(cv.width,cv.height)/2/m,cx=cv.width/2,cy=cv.height/2;
+  g.fillStyle="#7fb2ff";g.beginPath();g.arc(cx,cy,Math.max(4,(lab.center||0)*sc),0,7);g.fill();
+  g.strokeStyle="#e8c27a";g.lineWidth=2;g.beginPath();out.forEach((p,i)=>{const X=cx+p[xi]*sc,Y=cy-p[yi]*sc;i?g.lineTo(X,Y):g.moveTo(X,Y);});g.stroke();
+  const l=out[0];g.fillStyle="#fff";g.beginPath();g.arc(cx+l[xi]*sc,cy-l[yi]*sc,4,0,7);g.fill();};
+ $("labGo").onclick=async()=>{const st={};for(const[k,e]of Object.entries(lab.state))st[k]=Expr.compile(e,pk)(vals);$("labGo").disabled=true;
+  try{const out=await Sim.run({state:st,rhs:lab.rhs,params:vals,dt:lab.dt||.01,steps:lab.steps||2000,every:lab.every||10});draw(out);if(bar)bar.markDone("d3");}catch(e){$("labR").textContent="计算出错:"+e.message;}$("labGo").disabled=false;};}
 // D2 推导排序挑战(core 0.2 ChainDrag):答对检查题后出现,排对写入 d2
-function showChain(c){if(c.steps.length<3||$("chainBox"))return;const Q=$("sideQ"),d=document.createElement("div");d.id="chainBox";d.innerHTML=`<b>推导排序挑战</b><div class="cdim">把打乱的步骤排回正确顺序(可拖拽,或选中后按 ↑↓)。</div>`;Q.appendChild(d);ChainDrag.mount(d,{steps:c.steps.map(x=>x.text),onDone:ok=>{if(ok&&bar)bar.markDone("d2");}});}
+function showChain(c){if(c.steps.length<3||$("chainBox"))return;const Q=$("sideQ"),d=document.createElement("div");d.id="chainBox";d.innerHTML=`<b>推导排序挑战</b><div class="cdim">把打乱的步骤排回正确顺序(可拖拽,或选中后按 ↑↓)。</div>`;Q.appendChild(d);ChainDrag.mount(d,{steps:c.steps.map(x=>x.text),onDone:ok=>{if(ok&&bar)bar.markDone("d2");if(ok)showLab(c);}});}
 // 侧栏
 const side=$("side");let sideW=-1,bar=null;
 function openSide(k){const w=WORLDS[k];sideW=k;$("sideT").textContent=w.fn;$("sideW").textContent=`${w.n} ${w.e} · ${w.sub} · 星辰层 · 高中`;
  const cd=CARDS[w.id];Formula.render($("sideF"),cd&&cd.formula||w.f);$("sideD").innerHTML="";bar=DepthBar.mount($("sideD"),{task:cd?cd.id:`${w.id}.deep-demo`,levels:["d1","d2","d3"],start:"d1",onChange:()=>{}});
- $("sideS").innerHTML="";$("sideQ").hidden=true;$("sideR").innerHTML="";
+ $("sideS").innerHTML="";$("sideQ").hidden=true;$("sideL").hidden=true;$("sideL").innerHTML="";delete $("sideL").dataset.on;$("sideR").innerHTML="";
  if(cd){renderCard(cd);side.classList.add("open");side.setAttribute("aria-hidden","false");$("sideX").focus();return;}
  $("sideP").textContent="占位卡:1.1 起每个世界在这里放 1 张课本卡(为什么这条公式成立,推导它)。题目由各世界提交,总指挥审核后点亮。";
  side.classList.add("open");side.setAttribute("aria-hidden","false");$("sideX").focus();}
@@ -178,10 +192,10 @@ function flash(){const h=$("hud");h.animate([{opacity:.4},{opacity:1}],{duration
 $("dive").onclick=()=>go(cur<L.length-1?cur+1:0);
 // 滚轮/触摸/键盘
 let acc=0,lock=0;
-addEventListener("wheel",e=>{if(performance.now()<lock)return;acc+=e.deltaY;if(Math.abs(acc)>80){go(cur+(acc>0?1:-1));acc=0;lock=performance.now()+900;}},{passive:true});
-let ty=null;addEventListener("touchstart",e=>ty=e.touches[0].clientY,{passive:true});
+addEventListener("wheel",e=>{if(e.target.closest&&e.target.closest("#side"))return;if(performance.now()<lock)return;acc+=e.deltaY;if(Math.abs(acc)>80){go(cur+(acc>0?1:-1));acc=0;lock=performance.now()+900;}},{passive:true});
+let ty=null;addEventListener("touchstart",e=>{ty=e.target.closest&&e.target.closest("#side")?null:e.touches[0].clientY;},{passive:true});
 addEventListener("touchend",e=>{if(ty==null)return;const d=ty-e.changedTouches[0].clientY;if(Math.abs(d)>50)go(cur+(d>0?1:-1));ty=null;},{passive:true});
-addEventListener("keydown",e=>{if(e.key==="ArrowDown"||e.key==="PageDown"){go(cur+1);e.preventDefault()}else if(e.key==="ArrowUp"||e.key==="PageUp"){go(cur-1);e.preventDefault()}else if(e.key==="Escape"){if(!closeSide())go(0);}});
+addEventListener("keydown",e=>{if(e.defaultPrevented)return;if(e.key!=="Escape"&&e.target.closest&&e.target.closest("#side"))return;if(e.key==="ArrowDown"||e.key==="PageDown"){go(cur+1);e.preventDefault()}else if(e.key==="ArrowUp"||e.key==="PageUp"){go(cur-1);e.preventDefault()}else if(e.key==="Escape"){if(!closeSide())go(0);}});
 // 音乐:L0–L2 群星闪耀,L3–L4 宇宙闪烁,默认关
 const au={a:null,b:null},MK="gn:deep:snd";let on=false;
 function mk(src){const a=new Audio(src);a.loop=true;a.volume=0;a.preload="none";return a}

@@ -1,7 +1,7 @@
 /* 创世计划 Genesis · 深度组件库 /core/deep/ v0.1(D0-2)
  * 总指挥维护,七世界只引用不改。零外部依赖;KaTeX 本地 vendor(MIT)按需加载。
  * 0.1 = DepthBar / Formula / Card / Depth;0.2 = ParamPanel / ChainDrag / Expr / Sim(worker-sim.js)。DataChart 见 0.3。 */
-export const VERSION = "0.2.0";
+export const VERSION = "0.2.1";
 const BASE = new URL(".", import.meta.url).href;
 const RM = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -178,7 +178,7 @@ export const ChainDrag = {
     function draw(focus) {
       ol.innerHTML = ""; order.forEach((si, pos) => {
         const li = document.createElement("li"); li.tabIndex = 0; li.draggable = true; li.textContent = steps[si]; li.dataset.pos = pos;
-        li.addEventListener("keydown", (e) => { const d = e.key === "ArrowUp" ? -1 : e.key === "ArrowDown" ? 1 : 0; if (!d) return; const np = pos + d; if (np < 0 || np >= order.length) return; [order[pos], order[np]] = [order[np], order[pos]]; draw(np); e.preventDefault(); });
+        li.addEventListener("keydown", (e) => { const d = e.key === "ArrowUp" ? -1 : e.key === "ArrowDown" ? 1 : 0; if (!d) return; const np = pos + d; if (np < 0 || np >= order.length) return; [order[pos], order[np]] = [order[np], order[pos]]; e.preventDefault(); e.stopPropagation(); draw(np); });
         li.addEventListener("dragstart", () => { drag = pos; li.classList.add("drag"); });
         li.addEventListener("dragover", (e) => e.preventDefault());
         li.addEventListener("drop", (e) => { e.preventDefault(); if (drag == null) return; const [v] = order.splice(drag, 1); order.splice(pos, 0, v); drag = null; draw(pos); });
