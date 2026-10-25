@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>深空层 · 创世计划 2.0(开发中)</title>
+<style>
+:root{--gold:#e8c27a;--ink:#e9eefb;--dim:#8fa0c4;--bg:#02040c}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+.btn{font:inherit;color:var(--gold);background:rgba(10,16,36,.55);border:1px solid rgba(232,194,122,.45);border-radius:999px;padding:8px 16px;cursor:pointer;backdrop-filter:blur(6px);text-decoration:none;font-size:14px}
+.btn:hover,.btn:focus-visible{background:rgba(232,194,122,.15);outline:none}
+#back{position:fixed;left:16px;top:16px;z-index:5}
+#snd{position:fixed;right:16px;top:16px;z-index:5}
+#meter{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:5;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+#meter button{all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--dim);padding:4px 2px}
+#meter button i{width:10px;height:10px;border-radius:50%;border:1px solid var(--dim);display:block;transition:.3s}
+#meter button.on{color:var(--gold)}#meter button.on i{background:var(--gold);border-color:var(--gold);box-shadow:0 0 10px var(--gold)}
+#meter button.lock{opacity:.55}
+#meter button:focus-visible{outline:1px dashed var(--gold)}
+#rail{position:absolute;right:4px;top:6px;bottom:6px;width:1px;background:linear-gradient(var(--gold),transparent);opacity:.3;z-index:-1}
+#hud{position:fixed;left:50%;bottom:9vh;transform:translateX(-50%);text-align:center;z-index:4;pointer-events:none;width:min(92vw,640px)}
+#hud h1{font-size:clamp(22px,4vw,38px);letter-spacing:.2em;font-weight:500;text-shadow:0 0 18px rgba(120,160,255,.5)}
+#hud p{margin-top:8px;color:var(--dim);font-size:14px;letter-spacing:.08em}
+#hud .tag{display:inline-block;margin-top:10px;font-size:12px;color:var(--gold);border:1px solid rgba(232,194,122,.4);border-radius:999px;padding:3px 10px}
+#dive{position:fixed;left:50%;bottom:3vh;transform:translateX(-50%);z-index:5}
+#surface{display:none}
+#note{position:fixed;left:16px;bottom:12px;font-size:11px;color:#5d6b8c;z-index:4}
+#cards{display:none;position:fixed;inset:0;overflow:auto;padding:72px 16px 40px;z-index:3}
+#cards section{max-width:640px;margin:0 auto 16px;border:1px solid rgba(232,194,122,.3);border-radius:14px;padding:18px;background:rgba(12,18,40,.7)}
+#cards h2{font-size:18px;color:var(--gold)}#cards p{color:var(--dim);margin-top:6px;font-size:14px;line-height:1.6}
+body.rm #c,body.rm #meter,body.rm #hud,body.rm #dive{display:none}body.rm #cards{display:block}
+@media (max-width:600px){#meter span{display:none}#hud{bottom:12vh}#note{display:none}}
+@media (max-height:420px){#hud{bottom:16px}#hud p,#hud .tag{display:none}#dive{display:none}#meter{gap:4px}}
+</style>
+</head>
+<body>
+<canvas id="c" aria-hidden="true"></canvas>
+<a id="back" class="btn" href="../">▲ 搭便车回到七世界</a>
+<button id="snd" class="btn" aria-pressed="false">♪ 音乐 关</button>
+<nav id="meter" aria-label="深度计"><div id="rail"></div></nav>
+<div id="hud" aria-live="polite"><h1 id="t"></h1><p id="s"></p><span id="g" class="tag"></span></div>
+<button id="dive" class="btn">▼ 潜入深空</button>
+<div id="note">深空层 D1 骨架 · 开发中 · 内容为占位</div>
+<main id="cards" aria-label="深空层分层列表"></main>
+<script type="module">
+import * as THREE from "./vendor/three.module.min.js";
+const L=[
+ {k:"水面",t:"七世界 · 水面",s:"1.0 的七个世界在头顶闪烁",g:"已开放",z:0,c:0x8fb4ff,open:1},
+ {k:"星辰·高中",t:"星辰",s:"为什么这条公式成立?推导它",g:"1.1 点亮",z:-260,c:0x7fd0ff,open:1},
+ {k:"星系·大学",t:"星系",s:"把模型做出来,和真实数据比误差",g:"即将点亮 · 1.2",z:-480,c:0xb08cff,open:0},
+ {k:"星河·成人",t:"星河",s:"用世界的规则,拆解生活里的决定",g:"即将点亮 · 1.3",z:-700,c:0xffb36b,open:0},
+ {k:"星穹·研究者",t:"星穹",s:"人类还没解开的地方在哪里",g:"即将点亮 · 1.4",z:-920,c:0xff7fa8,open:0}];
+const KEY="gn:deep:pos";
+const rm=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $=id=>document.getElementById(id);
+// 分层卡片(减少动态 / 无 WebGL)
+$("cards").innerHTML=L.map(l=>`<section><h2>${l.k}</h2><p>${l.s}</p><p>${l.g}</p></section>`).join("");
+let gl=null;try{gl=document.createElement("canvas").getContext("webgl2")}catch(e){}
+if(rm||!gl){document.body.classList.add("rm");}
+// 深度计
+const meter=$("meter");
+const btns=L.map((l,i)=>{const b=document.createElement("button");b.innerHTML=`<span>${l.k}</span><i></i>`;b.setAttribute("aria-label",`${l.k}${l.open?"":"(未开放)"}`);if(!l.open)b.classList.add("lock");b.onclick=()=>go(i);meter.appendChild(b);return b;});
+// 场景
+const W=()=>innerWidth,H=()=>innerHeight;
+const mob=W()<600,tab=W()<1100;
+const N=mob?6000:tab?15000:30000;
+const r=new THREE.WebGLRenderer({canvas:$("c"),antialias:!mob,powerPreference:"high-performance"});
+r.setPixelRatio(Math.min(devicePixelRatio,mob?1.5:2));r.setSize(W(),H());
+const sc=new THREE.Scene();sc.fog=new THREE.FogExp2(0x02040c,0.0022);
+const cam=new THREE.PerspectiveCamera(60,W()/H(),0.1,2000);cam.position.set(0,0,60);
+// 星尘
+const pos=new Float32Array(N*3),col=new Float32Array(N*3),cc=new THREE.Color();
+for(let i=0;i<N;i++){const z=60-Math.random()*1080;const a=Math.random()*6.283,rr=20+Math.pow(Math.random(),.6)*220;
+ pos[i*3]=Math.cos(a)*rr;pos[i*3+1]=Math.sin(a)*rr*.62;pos[i*3+2]=z;
+ const li=L.reduce((b,l,j)=>Math.abs(l.z-z)<Math.abs(L[b].z-z)?j:b,0);cc.setHex(L[li].c).lerp(new THREE.Color(0xffffff),Math.random()*.6);
+ col[i*3]=cc.r;col[i*3+1]=cc.g;col[i*3+2]=cc.b;}
+const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(pos,3));g.setAttribute("color",new THREE.BufferAttribute(col,3));
+const tex=(()=>{const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d");const gr=x.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,"rgba(255,255,255,1)");gr.addColorStop(.3,"rgba(255,255,255,.5)");gr.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=gr;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
+const pts=new THREE.Points(g,new THREE.PointsMaterial({size:mob?2.2:1.8,map:tex,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));sc.add(pts);
+// 各层核心(未开放层=暗轮廓)
+const cores=L.map((l,i)=>{const grp=new THREE.Group();grp.position.set(0,0,l.z-40);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(26,.18,8,160),new THREE.MeshBasicMaterial({color:l.c,transparent:true,opacity:l.open?.85:.18}));
+ const ring2=ring.clone();ring2.scale.setScalar(1.45);ring2.material=ring.material.clone();ring2.material.opacity*=.5;ring2.rotation.x=1.1;
+ const core=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,color:l.c,transparent:true,opacity:l.open?.9:.15,blending:THREE.AdditiveBlending,depthWrite:false}));core.scale.setScalar(l.open?22:14);
+ grp.add(ring,ring2,core);
+ if(i===0){for(let k=0;k<7;k++){const s=new THREE.Sprite(core.material.clone());const a=k/7*6.283;s.position.set(Math.cos(a)*44,Math.sin(a)*26,0);s.scale.setScalar(7);s.material.color.setHSL(k/7,.6,.65);s.material.opacity=.9;grp.add(s);}}
+ sc.add(grp);return grp;});
+// 状态
+let cur=0,tz=cam.position.z,anim=null;
+const zOf=i=>L[i].z+60;
+function setHud(i){$("t").textContent=L[i].t;$("s").textContent=L[i].s;$("g").textContent=`${L[i].k} · ${L[i].g}`;btns.forEach((b,j)=>b.classList.toggle("on",j===i));$("dive").textContent=i<L.length-1?"▼ 继续下潜":"▲ 回到水面";history.replaceState(null,"",`#deep=${i}`);try{localStorage.setItem(KEY,i)}catch(e){}music(i);}
+function go(i){i=Math.max(0,Math.min(L.length-1,i));if(!L[i].open&&i>cur){const o=L.findIndex(l=>!l.open);i=Math.max(cur,o-1);if(i===cur){flash();setHud(cur);$("g").textContent=`${L[o].k} · ${L[o].g}`;return;}}
+ cur=i;setHud(i);const from=cam.position.z,to=zOf(i),t0=performance.now();anim={from,to,t0,d:1200};}
+function flash(){const h=$("hud");h.animate([{opacity:.4},{opacity:1}],{duration:500});}
+$("dive").onclick=()=>go(cur<L.length-1?cur+1:0);
+// 滚轮/触摸/键盘
+let acc=0,lock=0;
+addEventListener("wheel",e=>{if(performance.now()<lock)return;acc+=e.deltaY;if(Math.abs(acc)>80){go(cur+(acc>0?1:-1));acc=0;lock=performance.now()+900;}},{passive:true});
+let ty=null;addEventListener("touchstart",e=>ty=e.touches[0].clientY,{passive:true});
+addEventListener("touchend",e=>{if(ty==null)return;const d=ty-e.changedTouches[0].clientY;if(Math.abs(d)>50)go(cur+(d>0?1:-1));ty=null;},{passive:true});
+addEventListener("keydown",e=>{if(e.key==="ArrowDown"||e.key==="PageDown"){go(cur+1);e.preventDefault()}else if(e.key==="ArrowUp"||e.key==="PageUp"){go(cur-1);e.preventDefault()}else if(e.key==="Escape")go(0);});
+// 音乐:L0–L2 群星闪耀,L3–L4 宇宙闪烁,默认关
+const au={a:null,b:null},MK="gn:deep:snd";let on=false;
+function mk(src){const a=new Audio(src);a.loop=true;a.volume=0;a.preload="none";return a}
+function fade(a,v){if(!a)return;if(v>0&&a.paused)a.play().catch(()=>{});const s=a.volume,t0=performance.now();const f=()=>{const k=Math.min(1,(performance.now()-t0)/2000);a.volume=s+(v-s)*k;if(k<1)requestAnimationFrame(f);else if(v===0)a.pause();};f();}
+function music(i){if(!on)return;const useB=i>=3;fade(au.a,useB?0:.55);fade(au.b,useB?.55:0);}
+$("snd").onclick=()=>{on=!on;$("snd").textContent=on?"♪ 音乐 开":"♪ 音乐 关";$("snd").setAttribute("aria-pressed",on);
+ if(on){au.a=au.a||mk("deep-a.m4a");au.b=au.b||mk("deep-b.m4a");music(cur);}else{fade(au.a,0);fade(au.b,0);}};
+// 初始
+const h=location.hash.match(/deep=(\d)/);let start=h?+h[1]:0;if(!L[start]||!L[start].open)start=0;
+cur=start;cam.position.z=zOf(start);setHud(start);
+// 渲染循环 + 低帧降级
+let slow=0,lt=performance.now();
+addEventListener("resize",()=>{cam.aspect=W()/H();cam.updateProjectionMatrix();r.setSize(W(),H());});
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function loop(t){requestAnimationFrame(loop);
+ const dt=t-lt;lt=t;if(dt>42){if(++slow>90&&r.getPixelRatio()>1){r.setPixelRatio(1);slow=0;}}else slow=Math.max(0,slow-1);
+ if(anim){const k=Math.min(1,(t-anim.t0)/anim.d);cam.position.z=anim.from+(anim.to-anim.from)*ease(k);if(k>=1)anim=null;}
+ cam.position.x=Math.sin(t*.00013)*4;cam.position.y=Math.cos(t*.00011)*3;cam.lookAt(0,0,cam.position.z-100);
+ cores.forEach((c,i)=>{c.rotation.z=t*.00008*(i%2?-1:1);c.children[1].rotation.y=t*.0002;});
+ pts.rotation.z=t*.00001;r.render(sc,cam);}
+if(!document.body.classList.contains("rm"))requestAnimationFrame(loop);
+</script>
+</body>
+</html>
