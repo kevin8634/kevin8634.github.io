@@ -1170,7 +1170,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.8.22</b></span>
+            <span>创世计划总门户 <b>v0.8.23</b></span>
           </footer>
         </div>
       </div>
@@ -3335,6 +3335,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.23", d: "2026-10-25", t: "重要公告更新天枢 1.0 进度：星域 V「群星」已开放，七星域开放 5 / 7，下一站星域 VI 银河。" },
         { w: "gn", v: "v0.8.22", d: "2026-10-25", t: "新增原创背景音乐「深空之下」并设为第一首：低沉的声呐回响、潮汐般的气流和远处的星光，为即将到来的 2.0 深空层预热。曲目列表现为四首。" },
         { w: "gn", v: "v0.8.21", d: "2026-10-25", t: "首屏新增「深空之下 · 宇宙将为你闪烁」预告位：2.0 深空层的入口位置先点亮一盏暗灯，带粒子和偶发闪烁，暂不可点击。" },
         { w: "gn", v: "v0.8.20", d: "2026-10-25", t: "修复：开场「北斗点灯」没播完就点击跳过时，界面停在星图不出操作栏，现在会立即弹出。星历补记：七个世界都补齐了素材许可与 AI 标注台账（星图 v0.8.4.1、宙律 v0.6-α2–α3、生命源码 v0.9.3.1、奇点前夜、天枢 v1.0-M4d 等）。" },
@@ -4252,9 +4253,9 @@
       /* ---------- v0.8.5 首屏「重要公告」：ANN 只在王磊下令时改；ANN = null 时只显示新任务滚动条 ----------
          已读键 gn:portal:_ann = 公告 id；收起偏好 gn:portal:_news；新任务单条轮播（悬停 / 聚焦暂停）。 */
       var ANN = {
-        id: "sh-1.0-m3a", d: "2026-10-23", w: "07", tag: "开发进度",
+        id: "sh-1.0-m3a", d: "2026-10-25", w: "07", tag: "开发进度",
         title: "天枢 1.0「七星域」开发进度",
-        text: "从地球一路飞到太阳系边疆，看旅行者号此刻飞到了哪里。",
+        text: "从地球一路飞出太阳系，来到 100 光年内的真实群星，看你看到的星光有多老。",
         imgs: [
           { src: "ann-sh-d1.webp", cap: "星域 I · 家园" },
           { src: "ann-sh-d2.webp", cap: "星域 II · 日与月" },
@@ -4262,8 +4263,8 @@
           { src: "ann-sh-d4.webp", cap: "星域 IV · 太阳系边疆" }
         ],
         alt: "天枢已开放星域实拍画面", cap: "",
-        domains: ["I 家园", "II 日与月", "III 行星世界", "IV 太阳系边疆", "V 群星", "VI 银河", "VII 宇宙"], on: 4,
-        stat: "18 个任务", foot: "下一站：星域 V 群星", cta: "去天枢 →"
+        domains: ["I 家园", "II 日与月", "III 行星世界", "IV 太阳系边疆", "V 群星", "VI 银河", "VII 宇宙"], on: 5,
+        stat: "18 个任务", foot: "下一站：星域 VI 银河", cta: "去天枢 →"
       };
       var NW = { el: document.getElementById("news"), bar: document.getElementById("newsBar"), tk: document.getElementById("newsTk"),
         one: document.getElementById("newsOne"), oneT: document.getElementById("newsOneT"), ann: document.getElementById("ann"),
