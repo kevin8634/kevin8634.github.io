@@ -8,3 +8,10 @@
 .gd-depthbar button:focus-visible{outline:1px dashed var(--gd-gold);outline-offset:2px}
 .gd-formula{color:var(--gd-ink);font-size:1.15em;overflow-x:auto;overflow-y:hidden;padding:6px 0}
 @media (prefers-reduced-motion:reduce){.gd-depthbar button{transition:none}}
+.gd-params{display:grid;gap:10px}.gd-prow{display:grid;grid-template-columns:7em 1fr 6em;gap:8px;align-items:center;font-size:13px;color:var(--gd-dim)}
+.gd-prow input[type=range]{accent-color:var(--gd-gold)}.gd-prow input[type=text]{grid-column:2/4;background:rgba(2,4,12,.6);border:1px solid rgba(143,160,196,.35);border-radius:8px;color:var(--gd-ink);padding:6px 8px;font:13px ui-monospace,monospace}
+.gd-prow input[aria-invalid=true]{border-color:#ff9a9a}.gd-prow small{grid-column:2/4;color:#ff9a9a}.gd-prow output{color:var(--gd-ink);text-align:right}
+.gd-chain ol{list-style:decimal;margin-left:20px}.gd-chain li{margin:6px 0;padding:8px 10px;border:1px solid rgba(143,160,196,.3);border-radius:8px;background:rgba(12,18,40,.6);color:var(--gd-ink);cursor:grab;font-size:14px}
+.gd-chain li:focus-visible{outline:1px dashed var(--gd-gold)}.gd-chain li.drag{opacity:.5}
+.gd-chk{all:unset;cursor:pointer;margin-top:8px;padding:6px 14px;border-radius:999px;border:1px solid rgba(232,194,122,.45);color:var(--gd-gold);font-size:13px}
+.gd-chain .ok{color:#7fe3a8}.gd-chain .no{color:#ff9a9a}

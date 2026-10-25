@@ -1,7 +1,7 @@
 /* 创世计划 Genesis · 深度组件库 /core/deep/ v0.1(D0-2)
  * 总指挥维护,七世界只引用不改。零外部依赖;KaTeX 本地 vendor(MIT)按需加载。
- * 0.1 = DepthBar / Formula / Card / Depth。ParamPanel、ChainDrag、worker 见 0.2。 */
-export const VERSION = "0.1.0";
+ * 0.1 = DepthBar / Formula / Card / Depth;0.2 = ParamPanel / ChainDrag / Expr / Sim(worker-sim.js)。DataChart 见 0.3。 */
+export const VERSION = "0.2.0";
 const BASE = new URL(".", import.meta.url).href;
 const RM = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -109,6 +109,99 @@ export const Card = {
     const file = new File([blob], name, { type: "image/png" });
     if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: "创世计划" }); return "shared"; } catch (e) { if (e && e.name === "AbortError") return "cancel"; } }
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); return "download";
+  }
+};
+
+/* ---------- Expr:安全表达式(白名单函数,无 eval/Function) ---------- */
+const FN = { sin: Math.sin, cos: Math.cos, tan: Math.tan, exp: Math.exp, log: Math.log, sqrt: Math.sqrt, pow: Math.pow, abs: Math.abs, min: Math.min, max: Math.max };
+const CONST = { pi: Math.PI, e: Math.E };
+export const Expr = {
+  compile(src, vars = []) {
+    const tk = []; const re = /\s*(?:(\d+\.?\d*(?:e[+-]?\d+)?|\.\d+)|([a-zA-Z_]\w*)|(\*\*|[-+*/^(),]))/gy; let m, i = 0;
+    src = String(src); while (i < src.length) { re.lastIndex = i; m = re.exec(src); if (!m || m[0].length === 0) { if (/^\s*$/.test(src.slice(i))) break; throw new Error("无法识别:" + src.slice(i, i + 8)); } i = re.lastIndex; tk.push(m[1] != null ? { n: +m[1] } : m[2] != null ? { id: m[2] } : { op: m[3] === "**" ? "^" : m[3] }); }
+    let p = 0; const peek = () => tk[p], eat = (op) => { if (tk[p] && tk[p].op === op) { p++; return true; } return false; };
+    const V = new Set(vars);
+    function prim() {
+      const t = tk[p++]; if (!t) throw new Error("表达式不完整");
+      if (t.n != null) return () => t.n;
+      if (t.op === "(") { const e = add(); if (!eat(")")) throw new Error("缺少 )"); return e; }
+      if (t.op === "-") { const e = pw(); return (s) => -e(s); }
+      if (t.op === "+") return pw();
+      if (t.id) {
+        if (FN[t.id] && eat("(")) { const args = [add()]; while (eat(",")) args.push(add()); if (!eat(")")) throw new Error("缺少 )"); const f = FN[t.id]; return (s) => f(...args.map((a) => a(s))); }
+        if (V.has(t.id)) return (s) => s[t.id];
+        if (t.id in CONST) return () => CONST[t.id];
+        throw new Error("未知变量:" + t.id);
+      }
+      throw new Error("意外符号:" + t.op);
+    }
+    function pw() { const b = prim(); if (eat("^")) { const e = un(); return (s) => Math.pow(b(s), e(s)); } return b; }
+    function un() { if (eat("-")) { const e = un(); return (s) => -e(s); } if (eat("+")) return un(); return pw(); }
+    function mul() { let l = un(); for (;;) { if (eat("*")) { const a = l, b = un(); l = (s) => a(s) * b(s); } else if (eat("/")) { const a = l, b = un(); l = (s) => a(s) / b(s); } else if (peek() && (peek().id || peek().op === "(" || peek().n != null)) { const a = l, b = un(); l = (s) => a(s) * b(s); } else return l; } }
+    function add() { let l = mul(); for (;;) { if (eat("+")) { const a = l, b = mul(); l = (s) => a(s) + b(s); } else if (eat("-")) { const a = l, b = mul(); l = (s) => a(s) - b(s); } else return l; } }
+    const f = add(); if (p < tk.length) throw new Error("多余内容"); return f;
+  }
+};
+
+/* ---------- ParamPanel:参数面板(滑杆 + 安全表达式) ---------- */
+let uid = 0;
+export const ParamPanel = {
+  mount(el, { params = [], vars = ["t", "x"], onInput = () => {} } = {}) {
+    css(); const box = document.createElement("div"); box.className = "gd-params"; const vals = {}, fns = {};
+    const fire = () => onInput({ ...vals }, fns);
+    for (const q of params) {
+      const id = `gdp${++uid}`, row = document.createElement("div"); row.className = "gd-prow";
+      if (q.type === "expr") {
+        row.innerHTML = `<label for="${id}">${q.label || q.k}</label><input id="${id}" type="text" spellcheck="false" autocomplete="off"><small aria-live="polite"></small>`;
+        const inp = row.querySelector("input"), msg = row.querySelector("small"); inp.value = q.value || "";
+        const upd = () => { try { fns[q.k] = Expr.compile(inp.value, q.vars || vars.concat(params.filter((x) => x.type !== "expr").map((x) => x.k))); vals[q.k] = inp.value; msg.textContent = ""; inp.removeAttribute("aria-invalid"); fire(); } catch (e) { msg.textContent = e.message; inp.setAttribute("aria-invalid", "true"); } };
+        inp.addEventListener("input", upd); box.appendChild(row); upd.call(); continue;
+      }
+      row.innerHTML = `<label for="${id}">${q.label || q.k}</label><input id="${id}" type="range" min="${q.min ?? 0}" max="${q.max ?? 1}" step="${q.step ?? "any"}"><output for="${id}"></output>`;
+      const inp = row.querySelector("input"), out = row.querySelector("output"); inp.value = q.value ?? q.min ?? 0;
+      const upd = () => { vals[q.k] = +inp.value; out.textContent = `${inp.value}${q.unit ? " " + q.unit : ""}`; inp.setAttribute("aria-valuetext", out.textContent); fire(); };
+      inp.addEventListener("input", upd); vals[q.k] = +inp.value; out.textContent = `${inp.value}${q.unit ? " " + q.unit : ""}`; box.appendChild(row);
+    }
+    el.appendChild(box); fire();
+    return { values: () => ({ ...vals }), fns: () => ({ ...fns }), destroy: () => box.remove() };
+  }
+};
+
+/* ---------- ChainDrag:推导链排序(拖拽 + 键盘 ↑↓) ---------- */
+export const ChainDrag = {
+  mount(el, { steps = [], answer, onDone = () => {}, shuffle = true } = {}) {
+    css(); const ans = answer || steps.map((_, i) => i);
+    let order = steps.map((_, i) => i); if (shuffle) { for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; } if (order.every((v, i) => v === ans[i]) && order.length > 1) [order[0], order[1]] = [order[1], order[0]]; }
+    const box = document.createElement("div"); box.className = "gd-chain"; const ol = document.createElement("ol"); ol.setAttribute("aria-label", "推导步骤排序:选中后按上下键移动");
+    const chk = document.createElement("button"); chk.type = "button"; chk.className = "gd-chk"; chk.textContent = "检查顺序"; const msg = document.createElement("p"); msg.setAttribute("aria-live", "polite");
+    let drag = null;
+    function draw(focus) {
+      ol.innerHTML = ""; order.forEach((si, pos) => {
+        const li = document.createElement("li"); li.tabIndex = 0; li.draggable = true; li.textContent = steps[si]; li.dataset.pos = pos;
+        li.addEventListener("keydown", (e) => { const d = e.key === "ArrowUp" ? -1 : e.key === "ArrowDown" ? 1 : 0; if (!d) return; const np = pos + d; if (np < 0 || np >= order.length) return; [order[pos], order[np]] = [order[np], order[pos]]; draw(np); e.preventDefault(); });
+        li.addEventListener("dragstart", () => { drag = pos; li.classList.add("drag"); });
+        li.addEventListener("dragover", (e) => e.preventDefault());
+        li.addEventListener("drop", (e) => { e.preventDefault(); if (drag == null) return; const [v] = order.splice(drag, 1); order.splice(pos, 0, v); drag = null; draw(pos); });
+        li.addEventListener("dragend", () => li.classList.remove("drag"));
+        ol.appendChild(li); if (focus === pos) li.focus();
+      });
+    }
+    chk.onclick = () => { const ok = order.every((v, i) => v === ans[i]); msg.textContent = ok ? "顺序正确。" : "还不对,看看哪一步要先成立。"; msg.className = ok ? "ok" : "no"; onDone(ok); };
+    box.append(ol, chk, msg); el.appendChild(box); draw();
+    return { order: () => order.slice(), destroy: () => box.remove() };
+  }
+};
+
+/* ---------- Sim:通用数值积分 Worker(RK4) ---------- */
+export const Sim = {
+  /* rhs:安全表达式数组,变量为 t 与状态名;返回 Promise<[[t,...y]]> */
+  run({ state = {}, rhs = {}, params = {}, dt = 0.01, steps = 1000, every = 10 } = {}) {
+    return new Promise((res, rej) => {
+      const w = new Worker(BASE + "worker-sim.js");
+      w.onmessage = (e) => { w.terminate(); e.data.error ? rej(new Error(e.data.error)) : res(e.data.out); };
+      w.onerror = (e) => { w.terminate(); rej(e); };
+      w.postMessage({ state, rhs, params, dt, steps, every, expr: BASE + "core.js" });
+    });
   }
 };
 
