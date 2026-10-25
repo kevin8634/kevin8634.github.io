@@ -74,7 +74,7 @@
         '<div><small>信号回地球</small><b class="d-sig">—</b></div>' +
         '<div class="d-x-w"><small>演示快进</small><b class="d-x">—</b></div>' +
       '</footer>' +
-      '<div class="voy-credit">影像:NASA, ESA, CSA, STScI(CC BY 4.0)· 驾驶舱、飞船与星璃形象:天枢原创设计图(AI 辅助生成)· 不代表任何机构背书</div>' +
+      '<div class="voy-credit">影像:NASA, ESA, CSA, STScI(CC BY 4.0)· 驾驶舱、飞船、指令台与星璃形象:天枢原创设计图(AI 辅助生成)· 不代表任何机构背书</div>' +
       '<section class="voy-map" hidden><div class="voy-map__bar"><div><small>STARHELM · ATLAS</small><h2>航图 <span>选择目的地</span></h2></div><button type="button" class="voy-b voy-map__x">×</button></div>' +
         '<canvas></canvas><div class="voy-map__legend"><i class="lg-open"></i>已测绘 <i class="lg-un"></i>未测绘星域 <i class="lg-cj"></i>猜想 <i class="lg-here"></i>当前位置</div><div class="voy-map__hint">拖动旋转 · 滚轮/双指缩放 · 越往外越远(对数尺度)</div><div class="voy-map__card" hidden></div></section>' +
       '<div class="voy-holotag" hidden><b>航图</b><small>ATLAS · 点击星图选择目的地</small><i></i></div>' +
