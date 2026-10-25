@@ -811,7 +811,11 @@
     foot.appendChild(el("div", { class: "nv-row" }, [el("a", { href: "../", text: "返回宙律首页" }), el("a", { href: "../../", text: "← 返回创世计划" })]));
     if (def.safety) foot.appendChild(el("p", { class: "nv-safe", text: def.safety }));
     foot.appendChild(el("p", { text: "科普探究小实验。画面中的数字来自简化模型,单位见各仪表。" }));
-    if (def.credits) foot.appendChild(el("p", { class: "nv-cred" }, ["图像来源:" + def.credits + "。", el("a", { href: ROOT + "LICENSES.md", text: "素材台账" })]));
+    if (def.credits) {   // 「CC BY 4.0」字样自动链到许可正文
+      var cp = ("图像来源:" + def.credits + "。").split("CC BY 4.0"), cred = el("p", { class: "nv-cred" });
+      cp.forEach(function (t, i) { if (i) cred.appendChild(el("a", { href: "https://creativecommons.org/licenses/by/4.0/deed.zh-hans", target: "_blank", rel: "noopener license", text: "CC BY 4.0" })); cred.appendChild(D.createTextNode(t)); });
+      cred.appendChild(el("a", { href: ROOT + "LICENSES.md", text: "素材台账" })); foot.appendChild(cred);
+    }
 
     // 测量各浮层,得到 CSS 变量与画面安全区
     var SZ = { x: 0, y: 0, w: 1, h: 1 };

@@ -1,6 +1,6 @@
 # 宙律 Nomoverse · 许可与素材台账
 
-更新:2026-10-24(按《1.0 素材与 AI 标注台账规范》重排;核对至 v0.6-α1 + 1.0 台账补丁)
+更新:2026-10-25(按《1.0 素材与 AI 标注台账规范》;总审小修:BYOK 例外、页脚 CC BY 许可链接)
 
 ## 总表(1.0 规范)
 
@@ -17,9 +17,9 @@
 | `assets/hoop/sky_space_*` | hoop 太空星空;stars、tide 星空(复用) | NASA/Goddard SVS「Deep Star Maps 2020」https://svs.gsfc.nasa.gov/4851(含 Gaia DR2、Hipparcos-2、Tycho-2 数据) | NASA 素材(教育用途) | 署名 NASA/Goddard SVS;不暗示 NASA 认可 | 否 | hoop、stars、tide 页脚 + 本台账 |
 | `assets/hoop/planet_earth_*` | hoop 月面天空中的地球 | NASA Goddard Blue Marble「Whole world – land and oceans」via Wikimedia Commons | 公有领域(NASA) | 建议署名 NASA | 否 | hoop 页脚 + 本台账 |
 | `assets/hoop/planet_jupiter_*` | hoop 木星 | NASA/JPL/SSI PIA07782 Cassini「Jupiter Cylindrical Map」https://photojournal.jpl.nasa.gov/catalog/PIA07782 | 公有领域(NASA) | 建议署名 NASA/JPL/SSI | 否 | 同上 |
-| `assets/stars/sun_4k.jpg`、`sun_2k.jpg` | stars 太阳 3D 剖面表面 | Solar System Scope「8k sun」via Wikimedia Commons https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_8k_sun.jpg | CC BY 4.0 | 必须署名「Solar System Scope」+ 许可链接 + 注明已缩放 | 否 | stars 页脚「图像来源」+ 本台账 |
-| `assets/tide/earth_4k.jpg`、`earth_2k.jpg` | tide 太空视角地球 | Solar System Scope「8k earth daymap」via Wikimedia Commons https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_8k_earth_daymap.jpg | CC BY 4.0 | 必须署名「Solar System Scope」+ 许可链接 + 注明已缩放 | 否 | tide 页脚「图像来源」+ 本台账 |
-| `assets/tide/clouds_4k.jpg`、`clouds_2k.jpg` | tide 地球云层 | Solar System Scope「8k earth clouds」via Wikimedia Commons https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_8k_earth_clouds.jpg | CC BY 4.0 | 同上(已缩放、转灰度) | 否 | 同上 |
+| `assets/stars/sun_4k.jpg`、`sun_2k.jpg` | stars 太阳 3D 剖面表面 | Solar System Scope「8k sun」via Wikimedia Commons https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_8k_sun.jpg | CC BY 4.0 | 必须署名「Solar System Scope」+ 许可链接 + 注明已缩放 | 否 | stars 页脚「图像来源」(含 CC BY 4.0 许可链接)+ 本台账 |
+| `assets/tide/earth_4k.jpg`、`earth_2k.jpg` | tide 太空视角地球 | Solar System Scope「8k earth daymap」via Wikimedia Commons https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_8k_earth_daymap.jpg | CC BY 4.0 | 必须署名「Solar System Scope」+ 许可链接 + 注明已缩放 | 否 | tide 页脚「图像来源」(含 CC BY 4.0 许可链接、修改说明)+ 本台账 |
+| `assets/tide/clouds_4k.jpg`、`clouds_2k.jpg` | tide 地球云层 | Solar System Scope「8k earth clouds」via Wikimedia Commons https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_8k_earth_clouds.jpg | CC BY 4.0 | 必须署名「Solar System Scope」+ 许可链接 + 注明已缩放、转灰度 | 否 | 同上 |
 | `assets/tide/moon_4k.jpg`、`moon_2k.jpg` | tide 太空月球、海岸天空中的月亮 | Solar System Scope「8k moon」via Wikimedia Commons https://commons.wikimedia.org/wiki/File:Solarsystemscope_texture_8k_moon.jpg | CC BY 4.0 | 同上 | 否 | 同上 |
 | `assets/tide/sand_d*`、`sand_n*` | tide 海岸沙滩 | Poly Haven「Coast Sand Rocks 02」https://polyhaven.com/a/coast_sand_rocks_02 | CC0 1.0 | 无 | 否 | 同上 |
 | `assets/tide/rock_d*`、`rock_n*` | tide 海岸礁石 | Poly Haven「Rock Face」https://polyhaven.com/a/rock_face | CC0 1.0 | 无 | 否 | 同上 |
@@ -32,6 +32,7 @@
 | 数据与资料出处 | 知识卡 | NASA 行星/太阳/月球 Fact Sheet、ISS 轨道数据;NOAA《Tides and Water Levels》;激光测月 Williams & Boggs 2016(3.83 cm/年);Wells 1963《Nature》珊瑚生长纹;OpenStax《University Physics Vol. 1》《Astronomy 2e》 | 仅文字引用,未复制内容 | 文字出处 | 否 | 各关知识卡「出处」行 |
 | AI 讲解文字(可选第 3 层,默认关闭) | 任务页「AI 讲解」框 | 用户自带钥匙调用其自选的 OpenAI 兼容模型(本站不内置、不调用任何默认 AI 服务) | — | — | 是(用户开启时实时生成文字) | AI 讲解框内「AI 生成内容可能有误,以知识卡与实验为准」 |
 
+- 自查(1.0):页面里每个外部素材都在本表;静态资源零外部请求。**例外**:用户自行开启「AI 讲解」并填入自己的接口地址与钥匙(BYOK)时,浏览器会直连该接口(故 CSP `connect-src` 放开 `https:` 与本机 localhost);默认关闭,本站不内置、不代发任何 AI 请求。
 - 图片素材均本地打包,零外部请求;按画质档位加载 4K/2K/1K 版本(由原图缩放、重新压缩,除注明外未做其他改动)。
 - 本世界页面上**没有 AI 生成的画面、人物或语音**;方案阶段的效果图只存放在开发文档中,不上线。
 - NASA 图像按 NASA 媒体使用指南作为教育科普用途使用,不暗示 NASA 认可本站。
