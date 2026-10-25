@@ -1,0 +1,61 @@
+{
+  "id": "ls.l1.segregation",
+  "world": "ls",
+  "link_task": "ls.parents",
+  "title": "杂种豌豆自交,为什么圆粒和皱粒是 3:1?",
+  "formula": "Rr\\times Rr\\rightarrow \\tfrac14RR+\\tfrac12Rr+\\tfrac14rr,\\quad \\text{圆}:\\text{皱}=3:1",
+  "hook": "两株圆豌豆,为什么会结出皱豆?",
+  "steps": [
+    {
+      "text": "性状由成对的遗传因子决定。纯种圆粒是 RR,纯种皱粒是 rr;杂交后 F1 都是 Rr,R 为显性,所以全是圆粒。",
+      "tex": "RR\\times rr\\rightarrow Rr"
+    },
+    {
+      "text": "F1 形成配子时,成对的 R 和 r 彼此分离,各进入一个配子,所以带 R 和带 r 的配子各占一半。",
+      "tex": "P(R)=P(r)=\\frac12"
+    },
+    {
+      "text": "受精时雌雄配子随机结合,两次抽取互不影响,用乘法原理算出某一种组合的概率。",
+      "tex": "P(RR)=\\frac12\\times\\frac12=\\frac14,\\quad P(rr)=\\frac14"
+    },
+    {
+      "text": "Rr 有两条路:雌 R 配雄 r,或雌 r 配雄 R,两种情况互斥,用加法相加。",
+      "tex": "P(Rr)=\\frac14+\\frac14=\\frac12\\ \\Rightarrow\\ RR:Rr:rr=1:2:1"
+    },
+    {
+      "text": "只要有一个 R 就表现圆粒,所以 RR 和 Rr 都是圆粒,只有 rr 是皱粒。",
+      "tex": "\\text{圆}=\\frac14+\\frac12=\\frac34,\\quad \\text{皱}=\\frac14\\ \\Rightarrow\\ 3:1"
+    },
+    {
+      "text": "孟德尔实测 F2 圆粒 5474 粒、皱粒 1850 粒,约 2.96:1,圆粒占 74.7%,与 3/4 很接近。",
+      "tex": "\\frac{5474}{1850}\\approx 2.96,\\quad \\frac{5474}{7324}\\approx 0.747"
+    }
+  ],
+  "check": {
+    "q": "把 F1 圆粒豌豆(Rr)和皱粒豌豆(rr)杂交,后代中圆粒约占多少?",
+    "options": [
+      "3/4",
+      "1/2",
+      "1/4"
+    ],
+    "answer": 1,
+    "why": "Rr 产生 R、r 两种配子各 1/2,rr 只产生 r,后代 Rr 与 rr 各占 1/2,所以圆粒约占一半。"
+  },
+  "textbook": "人教版(2019)高中生物学必修2《遗传与进化》第1章 遗传因子的发现 第1节 孟德尔的豌豆杂交实验(一)",
+  "sources": [
+    {
+      "name": "OpenStax《Biology 2e》12.1 Mendel's Experiments and the Laws of Probability(表 12.1 实测数据、乘法与加法原理)",
+      "url": "https://openstax.org/books/biology-2e/pages/12-1-mendels-experiments-and-the-laws-of-probability"
+    },
+    {
+      "name": "OpenStax《Biology 2e》12.2 Characteristics and Traits(分离定律、棋盘法)",
+      "url": "https://openstax.org/books/biology-2e/pages/12-2-characteristics-and-traits"
+    },
+    {
+      "name": "人教版高中生物学必修2《遗传与进化》(2019)目录",
+      "url": "https://keben.app/book/0277"
+    }
+  ],
+  "review": "AI 审(待指定生物审稿人复核);数值脚本复算通过(F2 基因型 1:2:1,表型 3:1;5474/1850≈2.96;七组 F2 合计 19959 株)",
+  "ai_generated": "标题、钩子、6 步推导文字、检查题与解析均由 AI 撰写;实测数据引自 OpenStax 表 12.1;数值由脚本复算;无图片"
+}

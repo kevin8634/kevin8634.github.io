@@ -1,0 +1,65 @@
+{
+  "id": "lt.l1.compound",
+  "world": "lt",
+  "link_task": "lt.compound",
+  "title": "每天进步 1%,为什么一年后是 37.8 倍?",
+  "formula": "A=P(1+r)^n",
+  "hook": "每天只多 1%,一年后为什么不是 4.65 倍?",
+  "steps": [
+    {
+      "text": "复利的意思是:每过一期,新的量 = 旧的量 ×(1+r),涨出来的部分下一期也跟着涨。",
+      "tex": "a_{k+1}=a_k(1+r)"
+    },
+    {
+      "text": "每一期都乘同一个数 1+r,所以这是公比为 1+r 的等比数列,n 期后得到通项。",
+      "tex": "a_n=a_0(1+r)^n"
+    },
+    {
+      "text": "每天进步 1%,一年 365 天:r=0.01,n=365。每天退步 1% 则只剩约 2.6%。",
+      "tex": "1.01^{365}\\approx 37.78,\\quad 0.99^{365}\\approx 0.026"
+    },
+    {
+      "text": "按「加」来想只有 1+365×0.01=4.65。伯努利不等式说明「乘」总不小于「加」,n 越大差得越多。",
+      "tex": "(1+r)^n\\ge 1+nr\\quad(r>-1,\\ n\\in\\mathbb{N}^*)"
+    },
+    {
+      "text": "翻一倍要多少期?令 (1+r)^n=2,两边取自然对数解出 n。",
+      "tex": "n=\\frac{\\ln 2}{\\ln(1+r)}"
+    },
+    {
+      "text": "r 小时 ln(1+r)≈r,n≈69.3/(100r),取好除的 72 即「72 法则」;7% 精确是 10.24 年。",
+      "tex": "n\\approx\\frac{72}{100r},\\quad \\frac{72}{7}\\approx 10.29"
+    }
+  ],
+  "check": {
+    "q": "一笔钱按年利率 6% 复利增长,大约多少年翻一倍?",
+    "options": [
+      "6 年",
+      "12 年",
+      "24 年"
+    ],
+    "answer": 1,
+    "why": "72÷6=12。精确值 ln2/ln1.06≈11.9 年,与估算很接近。"
+  },
+  "textbook": "人教 A 版(2019)高中数学必修第一册 第四章 指数函数与对数函数;选择性必修第二册 第四章 数列 4.3 等比数列",
+  "sources": [
+    {
+      "name": "OpenStax《College Algebra 2e》6.1 Exponential Functions(复利公式 A=P(1+r/n)^{nt})",
+      "url": "https://openstax.org/books/college-algebra-2e/pages/6-1-exponential-functions"
+    },
+    {
+      "name": "OpenStax《College Algebra 2e》6.4 Graphs of Logarithmic Functions(对数与指数互逆)",
+      "url": "https://openstax.org/books/college-algebra-2e/pages/6-4-graphs-of-logarithmic-functions"
+    },
+    {
+      "name": "Wikipedia: Bernoulli's inequality",
+      "url": "https://en.wikipedia.org/wiki/Bernoulli%27s_inequality"
+    },
+    {
+      "name": "Wikipedia: Rule of 72(由 ln2≈0.693 推出,取 72 便于整除)",
+      "url": "https://en.wikipedia.org/wiki/Rule_of_72"
+    }
+  ],
+  "review": "AI 审(待指定审稿人复核);数值脚本复算通过:1.01^365≈37.783,0.99^365≈0.0255,ln2/ln1.07≈10.245,ln2/ln1.06≈11.896",
+  "ai_generated": "标题、钩子、6 步推导文字、检查题与解析均由 AI 撰写;数值由脚本复算;无图片"
+}

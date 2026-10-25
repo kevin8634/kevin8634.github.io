@@ -1,0 +1,61 @@
+{
+  "id": "ma.l1.geosum",
+  "world": "ma",
+  "link_task": "ma.epidemic",
+  "title": "为什么 1+R+R²+…+Rⁿ = (Rⁿ⁺¹−1)/(R−1)?",
+  "formula": "1+R+R^2+\\cdots+R^n=\\frac{R^{n+1}-1}{R-1}\\quad(R\\neq1)",
+  "hook": "一个人传两个,传到第 10 代,一共病了多少人?",
+  "steps": [
+    {
+      "text": "每个病人平均传给 R 人。从零号病人算起,第 k 代有 Rᵏ 人。把第 0 代到第 n 代全加起来,记作 S。",
+      "tex": "S=1+R+R^2+\\cdots+R^n"
+    },
+    {
+      "text": "两边同乘 R:每一项都往后挪一代,最后多出一项 Rⁿ⁺¹,开头的 1 没有了。",
+      "tex": "RS=R+R^2+\\cdots+R^n+R^{n+1}"
+    },
+    {
+      "text": "用下式减上式:中间 R 到 Rⁿ 两边都有,全部抵消,只剩头尾两项。",
+      "tex": "RS-S=R^{n+1}-1"
+    },
+    {
+      "text": "左边提出公因式 S。只要 R≠1,就能两边除以 R−1。",
+      "tex": "S=\\frac{R^{n+1}-1}{R-1}"
+    },
+    {
+      "text": "R=2、n=10:2047 人,和传播树数出来的一样。R=1 时不能除,但每代都是 1 人,共 n+1 人。",
+      "tex": "S_{10}=\\frac{2^{11}-1}{2-1}=2047"
+    },
+    {
+      "text": "0<R<1 时 Rⁿ⁺¹ 趋近 0,累计人数逼近 1/(1−R)。R=1/2 时总数永远不到 2 人,传播自己熄灭。",
+      "tex": "S\\to\\frac{1}{1-R}\\quad(0<R<1)"
+    }
+  ],
+  "check": {
+    "q": "R=3,从零号病人算到第 4 代,累计一共多少人?",
+    "options": [
+      "81",
+      "121",
+      "243"
+    ],
+    "answer": 1,
+    "why": "S=(3⁵−1)/(3−1)=242/2=121。81 只是第 4 代一代的人数,243 是第 5 代。"
+  },
+  "textbook": "人教A版(2019)高中数学选择性必修第二册 第四章 数列 4.3.2 等比数列的前n项和公式",
+  "sources": [
+    {
+      "name": "OpenStax《Precalculus 2e》11.4 Series and Their Notations(等比数列前 n 项和的乘公比相减推导、无穷等比级数求和)",
+      "url": "https://openstax.org/books/precalculus-2e/pages/11-4-series-and-their-notations"
+    },
+    {
+      "name": "维基百科「等比数列」· 等比数列和(公式证明及 r=1、|r|<1 情形)",
+      "url": "https://zh.wikipedia.org/wiki/等比数列"
+    },
+    {
+      "name": "星图 Math Atlas · 传染病为什么会爆发?(R=2 第 10 代 1024 人、累计 2047 人)",
+      "url": "https://kevin8634.github.io/math-atlas/epidemic/"
+    }
+  ],
+  "review": "AI 审(待指定审稿人复核);数值由脚本复算通过:S₁₀(R=2)=2047,S₄(R=3)=121,R=1/2 部分和趋近 2,公式在 R=2、3、1/2、3/2,n=0–15 逐项相加核对一致",
+  "ai_generated": "标题、钩子、6 步推导文字、检查题与解析均由 AI 撰写;数值由脚本复算;无图片"
+}

@@ -1,0 +1,65 @@
+{
+  "id": "ef.l1.linespectra",
+  "world": "ef",
+  "link_task": "ef.fireworks",
+  "title": "每种元素的光为什么只有几条固定颜色?",
+  "formula": "\\lambda=\\frac{hc}{E_{\\text{高}}-E_{\\text{低}}}",
+  "hook": "钠总是黄、锶总是红,原子的颜色是谁定的?",
+  "steps": [
+    {
+      "text": "原子里的电子只能待在一些确定的能级上,能量不能连续取值。氢原子最简单,能级可写成下式。",
+      "tex": "E_n=-\\frac{13.6\\ \\text{eV}}{n^2},\\quad n=1,2,3,\\dots"
+    },
+    {
+      "text": "受热或放电时,电子吸收能量跳到高能级;它不能久留,会落回较低能级,把多出的能量放出来。",
+      "tex": "\\Delta E=E_{\\text{高}}-E_{\\text{低}}"
+    },
+    {
+      "text": "能量守恒:放出的能量全部变成一个光子。光子能量与频率成正比,频率又等于光速除以波长。",
+      "tex": "\\Delta E=h\\nu=\\frac{hc}{\\lambda}"
+    },
+    {
+      "text": "两式联立解出波长。能级是分立的,能级差只有几种,所以只能发出几种固定波长,看到的是一条条亮线。",
+      "tex": "\\lambda=\\frac{hc}{E_{\\text{高}}-E_{\\text{低}}}"
+    },
+    {
+      "text": "代入氢的 n=3→2:能级差约 1.89 eV,hc≈1240 eV·nm,得约 656 nm,正是氢的红色谱线。",
+      "tex": "\\lambda=\\frac{1240}{13.6\\left(\\frac{1}{2^2}-\\frac{1}{3^2}\\right)}\\approx 656\\ \\text{nm}"
+    },
+    {
+      "text": "不同元素能级阶梯不同,亮线也不同。钠的黄线在 589.0、589.6 nm,能级差约 2.10 eV,是焰色指纹。",
+      "tex": "\\Delta E_{\\text{Na}}=\\frac{1240}{589}\\approx 2.10\\ \\text{eV}"
+    }
+  ],
+  "check": {
+    "q": "氢原子电子从 n=4 落到 n=2,和从 n=3 落到 n=2 相比,发出的光波长怎样?",
+    "options": [
+      "n=3→2 的更短",
+      "n=4→2 的更短",
+      "两者一样长"
+    ],
+    "answer": 1,
+    "why": "n=4→2 的能级差更大(约 2.55 eV),由 λ=hc/ΔE,能级差越大波长越短,约 486 nm,呈青蓝色。"
+  },
+  "textbook": "人教版(2019)高中化学选择性必修 2《物质结构与性质》第一章 原子结构与性质 第一节 原子结构(能层与能级、基态与激发态、原子光谱)",
+  "sources": [
+    {
+      "name": "OpenStax《Chemistry 2e》6.2 The Bohr Model(|ΔE|=hν=hc/λ;En=−k/n²,k=2.179×10⁻¹⁸ J)",
+      "url": "https://openstax.org/books/chemistry-2e/pages/6-2-the-bohr-model"
+    },
+    {
+      "name": "NIST Handbook of Basic Atomic Spectroscopic Data · Strong Lines of Hydrogen(Hα 6562.85 Å、Hβ 4861.36 Å,空气波长)",
+      "url": "https://physics.nist.gov/PhysRefData/Handbook/Tables/hydrogentable2.htm"
+    },
+    {
+      "name": "NIST Handbook of Basic Atomic Spectroscopic Data · Strong Lines of Sodium(Na I 5889.950 Å、5895.924 Å,空气波长)",
+      "url": "https://physics.nist.gov/PhysRefData/Handbook/Tables/sodiumtable2.htm"
+    },
+    {
+      "name": "NIST CODATA 推荐值 hc(1239.841984 eV·nm)",
+      "url": "https://physics.nist.gov/cgi-bin/cuu/Value?hc"
+    }
+  ],
+  "review": "AI 审(待指定审稿人复核);数值脚本复算:n=3→2 ΔE=1.8897 eV→656.11 nm(NIST 实测 656.28 nm,差异来自约化质量与空气折射);n=4→2 ΔE=2.5511 eV→486.01 nm(实测 486.13 nm);Na 588.995/589.592 nm→2.105/2.103 eV",
+  "ai_generated": "标题、钩子、6 步推导文字、检查题与解析均由 AI 撰写;数值由脚本复算;无图片"
+}
