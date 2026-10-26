@@ -1,0 +1,35 @@
+/* 天枢 Starhelm · 2.0 · sh-x-style.css —— 巡天 X 页按钮统一光效(王磊 10-26 23:39)
+ * 保留现有方框/切角框架,不用圆形;借用旋转光环按钮(shx-ring)的特效:金/青双色弧光沿边框旋转 + 内侧虚线框,悬停加速并发光。仅 /starhelm/x/ 加载。 */
+@property --xa { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes xaspin { to { --xa: 360deg; } }
+:root { --xa-arc: conic-gradient(from var(--xa), rgba(127,214,255,0) 0deg, rgba(127,214,255,.95) 60deg, rgba(127,214,255,0) 130deg, rgba(240,201,122,0) 190deg, rgba(240,201,122,.9) 250deg, rgba(240,201,122,0) 320deg); }
+
+/* 1.0 切角按钮(顶栏 航行/天文台/星链…):--bd 本身就是 1px 边框色,换成旋转弧光 */
+.le-btn { background: var(--xa-arc), var(--bd); animation: xaspin 9s linear infinite; }
+.le-btn:hover, .le-btn:focus-visible { animation-duration: 2.6s; filter: drop-shadow(0 0 8px rgba(127,214,255,.45)); }
+.le-btn[aria-pressed="true"] { animation-duration: 4s; }
+.le-btn > .le-btn__txt, .le-btn > .le-btn__ico { position: relative; }
+.le-btn { outline: 1px dashed rgba(200,215,240,.16); outline-offset: -5px; }
+
+/* 分段按钮、底部图层芯片 */
+.le-seg button, .le-chip { border: 1px solid transparent !important; background: linear-gradient(rgba(8,16,30,.82), rgba(8,16,30,.82)) padding-box, var(--xa-arc) border-box, linear-gradient(rgba(127,214,255,.16), rgba(127,214,255,.16)) border-box; animation: xaspin 11s linear infinite; }
+.le-seg button:hover, .le-chip:hover { animation-duration: 2.6s; box-shadow: 0 0 12px rgba(127,214,255,.25); }
+.le-seg button[aria-selected="true"] { background: linear-gradient(var(--cyan), var(--cyan)) padding-box, var(--xa-arc) border-box; }
+.le-chip[aria-pressed="true"] { background: linear-gradient(rgba(127,214,255,.12), rgba(127,214,255,.12)) padding-box, var(--xa-arc) border-box, linear-gradient(rgba(127,214,255,.3), rgba(127,214,255,.3)) border-box; }
+
+/* 驾驶舱 HUD 按钮 + 底部控制台(方形,不用圆) */
+#shxc .btn, #xa-dock .ib, .xs-card button:not(.xc), #xe-dlg button {
+  border: 1px solid transparent !important; border-radius: 6px !important;
+  background: linear-gradient(rgba(10,16,30,.78), rgba(10,16,30,.78)) padding-box, var(--xa-arc) border-box, linear-gradient(rgba(150,180,220,.22), rgba(150,180,220,.22)) border-box !important;
+  animation: xaspin 9s linear infinite; outline: 1px dashed rgba(200,215,240,.14); outline-offset: -4px; }
+#shxc .btn:hover, #xa-dock .ib:hover, .xs-card button:not(.xc):hover, #xe-dlg button:hover { animation-duration: 2.6s; box-shadow: 0 0 12px rgba(127,214,255,.3); color: #fff; }
+#shxc .btn.on, #xa-dock .ib.on { animation-duration: 4s; color: #f0c97a; box-shadow: 0 0 12px rgba(240,201,122,.3); }
+#xa-dock .ib { border-radius: 8px !important; }
+
+@media (prefers-reduced-motion: reduce) { .le-btn, .le-seg button, .le-chip, #shxc .btn, #xa-dock .ib, .xs-card button, #xe-dlg button { animation: none; } }
+
+/* 自动驾驶:两侧窗口渐隐,抵达后渐显(用 filter/translate,避开面板入场动画对 opacity 的占用) */
+#shxc .p.clk,#shxc .p.nav,#shxc .p.tgt,#shxc .p.lst{transition:filter 1.4s ease,translate 1.4s ease}
+#shxc.xc-ap .p.clk,#shxc.xc-ap .p.nav{filter:opacity(0);translate:-16px 0;pointer-events:none}
+#shxc.xc-ap .p.tgt,#shxc.xc-ap .p.lst{filter:opacity(0);translate:16px 0;pointer-events:none}
+@media (prefers-reduced-motion:reduce){#shxc .p.clk,#shxc .p.nav,#shxc .p.tgt,#shxc .p.lst{transition:filter .4s}#shxc.xc-ap .p{translate:none}}

@@ -433,6 +433,8 @@
   var prevQ = null, hx = 0, hy = 0, warnSun = false, tAcc = 0, lastV = 0;
   function frame(f) {
     var dt = f.dt; tAcc += dt;
+    // 自动驾驶时左右两侧面板渐隐,抵达(减速缓冲结束、S.auto 关闭)后渐显
+    var rt = SHXC._.root && SHXC._.root(); if (rt) { var ap = !!S.auto; if (rt._ap !== ap) { rt._ap = ap; rt.classList.toggle('xc-ap', ap); } }
     if (MODE === 'cruise' && S.mult > 1000) S.mult = 1000;
     // 卫星式巡航:位置绕目标转,机头缓慢看向星球(侧舷窗视角),拖动可临时环视
     if (O) {
@@ -494,6 +496,15 @@
   /* 取消 1.0 弦穹号飞船入口:巡天子页里统一进天枢号驾驶舱 */
   function takeover() {
     if (!window.SH) return;
+    // Esc 分层:侧舷窗/卫星巡航 → 回驾驶舱原位;摄影模式 → 退出摄影;面板 → 收起;都没有 → 交给驾驶舱弹「结束探索」确认
+    window.SHXC._esc = function () {
+      if (O || (R && R.classList.contains('port'))) { stopOrbit(); return true; }
+      if (R && R.classList.contains('photo')) { photo(false); return true; }
+      if (R && R.querySelector('.xs-card')) { closeCards(); return true; }
+      return false;
+    };
+    // 驾驶舱入口装进顶栏「航行」方框(圆形视图条里的驾驶舱按钮取消)
+    (function lab(k) { var b = document.querySelector('.sh-btn-voy'); if (b) { var t = b.querySelector('.le-btn__txt'); if (t) t.innerHTML = '航行<small>天枢号 · F</small>'; b.title = '进入天枢号驾驶舱(F)'; b.addEventListener('click', function (e) { e.stopImmediatePropagation(); e.preventDefault(); if (window.SHXV) SHXV.go('fly'); else SHXC.open(); }, true); return; } if (k < 300) setTimeout(function () { lab(k + 1); }, 100); })(0);
     SH.voyEnter = function () { if (window.SHXV) SHXV.go('fly'); else SHXC.open(); };
     SH.voySetTarget = function () { if (window.SHXV) SHXV.go('fly'); else SHXC.open(); setTimeout(togglePlan, 400); };
   }

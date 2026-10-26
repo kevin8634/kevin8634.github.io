@@ -28,5 +28,12 @@ setTimeout(function(){fetch('index.html',{cache:'no-store'}).then(function(r){if
 add = '<script src="x/sh-x-views.js"></script>\n<script src="x/sh-x-cockpit.js"></script>\n<script src="x/sh-x-armilla.js"></script>\n<script src="x/sh-x-ship.js"></script>\n'
 assert '</body>' in s
 s = s.replace('</body>', add + '</body>', 1)
+# C0.7 2.0 开场:1.0 两个开场(开机日志 loader 由 2.0 开场覆盖、sh-opening.js 学科开场)在 X 页归档停用
+assert '<script src="sh-opening.js"></script>' in s
+s = s.replace('<script src="sh-opening.js"></script>', '<!-- 1.0 sh-opening.js 已在 2.0 X 页归档停用,改用 x/sh-x-open.js -->\n  <script src="x/sh-x-open.js"></script>', 1)
+# 1.0 开机日志 loader 在 X 页只留纯黑底(归档),2.0 开场脚本就绪后覆盖
+s = s.replace('</head>', '<style>/* 2.0:1.0 开机日志归档 */#loader{background:#010208!important}#loader>*{visibility:hidden!important}</style>\n</head>', 1)
+# 2.0 按钮统一光效(只在 x/)
+s = s.replace('</head>', '<link rel="stylesheet" href="x/sh-x-style.css" />\n</head>', 1)
 open('x/index.html', 'w', encoding='utf-8').write(s)
 print('ok', len(s))

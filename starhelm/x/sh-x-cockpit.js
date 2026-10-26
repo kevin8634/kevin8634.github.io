@@ -279,7 +279,7 @@
     root = el('div'); root.id = 'shxc'; root.setAttribute('role', 'application'); root.setAttribute('aria-label', '天枢 Starhelm 驾驶舱');
     root.innerHTML =
       '<div class="p clk"><div class="cap">真实比例飞行 · 任务时间</div><div class="t mono" id="xc-t">T+ 00:00:00</div><div class="mono" style="font-size:10.5px;color:rgba(190,202,225,.6)" id="xc-utc"></div>' +
-      '<div class="row"><button class="btn" id="xc-more" type="button">数据</button><button class="btn" id="xc-exit" type="button">退出驾驶舱 Esc</button></div></div>' +
+      '<div class="row"><button class="btn" id="xc-more" type="button">数据</button><button class="btn" id="xc-exit" type="button">结束探索</button></div></div>' +
       '<div class="p nav mono" id="xc-nav"></div>' +
       '<div class="p tgt"><div class="cap" id="xc-tt">目标 · 行星</div><h3 id="xc-tn">地球</h3><div class="g2 mono" id="xc-tg"></div><div class="blurb" id="xc-tb"></div>' +
       '<div class="row"><button class="btn" id="xc-al" type="button">对准 · Z</button><button class="btn" id="xc-ap" type="button">自动驾驶 · G</button></div></div>' +
@@ -295,7 +295,7 @@
       '<div class="gauges gl-r">' + gauge('xc-g3', 'km', '距目标') + gauge('xc-g4', '倍', '倍率', true) + '</div>' +
       '<div class="ctr"><div class="cap">目标</div><div class="nm" id="xc-cn">地球</div><div class="sub mono" id="xc-cs"></div></div>' +
       '<canvas class="strip" id="xc-strip" width="1120" height="80"></canvas>' +
-      '<div class="mob"><button class="btn" data-k="x" type="button">退出</button><button class="btn" data-k="-" type="button">减速</button><button class="btn" data-k="+" type="button">加速</button><button class="btn" data-k="m" type="button">倍率×10</button><button class="btn" data-k="g" type="button">自动驾驶</button></div>' +
+      '<div class="mob"><button class="btn" data-k="end" type="button">结束探索</button><button class="btn" data-k="-" type="button">减速</button><button class="btn" data-k="+" type="button">加速</button><button class="btn" data-k="m" type="button">倍率×10</button><button class="btn" data-k="g" type="button">自动驾驶</button></div>' +
       '<div class="toast" id="xc-toast"></div>' +
       '<div class="credit">星历 astronomy-engine(MIT)· 贴图 Solar System Scope(CC BY 4.0)· 星空 NASA SVS · 距离与大小为真实比例,远处天体按视角大小压缩绘制</div>';
     document.body.appendChild(root);
@@ -306,13 +306,13 @@
       it.addEventListener('click', function () { setTarget(b.id); });
       it.addEventListener('dblclick', function () { setTarget(b.id); autopilot(true); });
     });
-    $('#xc-exit', root).onclick = function () { X.close(); };
+    $('#xc-exit', root).onclick = function () { confirmEnd(); };
     $('#xc-more', root).onclick = function () { root.classList.toggle('more'); };
     $('#xc-al', root).onclick = function () { S.align = !S.align; if (S.align) S.auto = false; };
     $('#xc-ap', root).onclick = function () { autopilot(!S.auto); };
     $('#xc-kt', root).onclick = function () { $('#xc-keys', root).classList.toggle('min'); };
     root.querySelectorAll('.mob .btn').forEach(function (b) {
-      b.onclick = function () { var k = b.getAttribute('data-k'); if (k === 'x') { X.close(); return; } if (k === '+') S.base = Math.min(MAXV, S.base * 1.6 + .5); if (k === '-') S.base = Math.max(0, S.base / 1.6 - .2); if (k === 'm') S.mult = S.mult >= 1e6 ? 1 : S.mult * 10; if (k === 'g') autopilot(!S.auto); S.auto = k === 'g' ? S.auto : false; };
+      b.onclick = function () { var k = b.getAttribute('data-k'); if (k === 'end') { confirmEnd(); return; } if (k === '+') S.base = Math.min(MAXV, S.base * 1.6 + .5); if (k === '-') S.base = Math.max(0, S.base / 1.6 - .2); if (k === 'm') S.mult = S.mult >= 1e6 ? 1 : S.mult * 10; if (k === 'g') autopilot(!S.auto); S.auto = k === 'g' ? S.auto : false; };
     });
     B.forEach(function (b) { var l = el('div', 'lbl', b.zh + '<i></i>'); l.onclick = function () { setTarget(b.id); }; $('#xc-lbls', root).appendChild(l); b.lb = l; });
   }
@@ -331,10 +331,13 @@
   }
   function onKey(e) {
     if (!K.open) return; var k = e.key.length === 1 ? e.key.toLowerCase() : e.key, down = e.type === 'keydown';
+    if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); }
+    if (dlg && e.key !== 'Escape' && e.key !== 'Enter') return;
     if (e.key === 'Shift') S.boost = down ? 10 : 1;
     S.keys[k] = down;
     if (!down) return;
-    if (k === 'Escape') { X.close(); }
+    if (k === 'Escape') { if (dlg) { endDlg(false); return; } if (X._esc && X._esc()) return; confirmEnd(); }
+    else if (dlg && k === 'Enter') { endDlg(true); }
     else if (k === 'x') { S.base = 0; S.mult = 1; S.auto = false; toast('急停'); }
     else if (k === 't') { var i = B.map(function (b) { return b.id; }).indexOf(S.target); setTarget(B[(i + 1) % B.length].id); }
     else if (k === 'z') { S.align = !S.align; S.auto = false; }
@@ -555,18 +558,50 @@
     if (!window.THREE || !window.Astronomy) { if (window.LE && LE.ui && LE.ui.toast) LE.ui.toast('这台设备暂时开不了驾驶舱(需要 WebGL)'); return false; }
     try { if (!K.built) build(); } catch (e) { console.warn('[SHXC]', e); if (window.LE && LE.ui && LE.ui.toast) LE.ui.toast('驾驶舱载入失败'); return false; }
     root.style.display = 'block'; K.open = true; document.body.classList.add('shx-flying');
-    size(); startPose(o.target || 'earth'); setTarget(S.target);
+    size(); if (K.resume && !o.fresh) { toast('从上次结束探索的位置继续'); } else startPose(o.target || 'earth'); K.resume = false; setTarget(S.target);
     addEventListener('resize', size); addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true);
     last = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
     toast('驾驶舱已就位 · 拖动转视角,W/S 加减速,G 自动驾驶'); emit('open', o);
     try { var u = new URL(location.href); u.searchParams.set('view', 'fly'); history.replaceState(null, '', u.pathname + u.search); } catch (e) { }
     return true;
   };
+  /* 结束探索:驾驶舱风格确认窗;Esc 只关窗/回驾驶舱,不会把人送回地球或任务页 */
+  var dlg = null;
+  function nearest() {
+    var ok = ['sun', 'mercury', 'venus', 'earth', 'moon', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'], best = null, bd = Infinity;
+    B.forEach(function (b) { if (ok.indexOf(b.id) < 0 || !b.wp) return; var d = Math.hypot(b.wp[0] - S.pos[0], b.wp[1] - S.pos[1], b.wp[2] - S.pos[2]) - (b.R || 0); if (d < bd) { bd = d; best = b; } });
+    return best ? { b: best, d: Math.max(0, bd) } : null;
+  }
+  function confirmEnd() {
+    if (dlg) return; var n = nearest(), where = n ? (n.b.zh || n.b.id) + '附近 · 距离 ' + fkm(n.d) : '星际空间';
+    dlg = document.createElement('div'); dlg.id = 'xe-dlg';
+    dlg.innerHTML = '<div class="bx"><div class="hd">结束本次探索? <small>END EXPLORATION</small></div><p>天枢号当前位于<b>' + where + '</b>。结束后视角停在这里的太阳系,下次进入驾驶舱会从这个位置继续。</p>' +
+      '<div class="ac"><button type="button" data-a="0">继续航行 <small>Esc</small></button><button type="button" class="pri" data-a="1">结束探索 <small>Enter</small></button></div></div>';
+    dlg.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) endDlg(b.getAttribute('data-a') === '1'); else if (e.target === dlg) endDlg(false); });
+    root.appendChild(dlg); S.keys = {};
+    if (!document.getElementById('xe-css')) { var st = document.createElement('style'); st.id = 'xe-css'; st.textContent = '#xe-dlg{position:absolute;inset:0;z-index:60;display:grid;place-items:center;background:rgba(1,3,10,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}#xe-dlg .bx{width:min(440px,90vw);padding:20px 22px 18px;border:1px solid rgba(127,214,255,.45);background:linear-gradient(180deg,rgba(12,22,40,.92),rgba(5,10,22,.94));box-shadow:0 0 30px rgba(127,214,255,.18),inset 0 0 24px rgba(127,214,255,.06);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);color:#dfe7f5}#xe-dlg .hd{font-size:18px;letter-spacing:.12em;color:#f0c97a}#xe-dlg .hd small{display:block;font-size:10px;letter-spacing:.4em;color:#7fd6ff;margin-top:4px}#xe-dlg p{font-size:15px;line-height:1.7;margin:14px 0 18px;color:#cfd8ea}#xe-dlg p b{color:#fff;font-weight:600;margin:0 .2em}#xe-dlg .ac{display:flex;gap:12px;justify-content:flex-end}#xe-dlg button{font:inherit;font-size:15px;color:#dfe7f5;padding:9px 18px;cursor:pointer}#xe-dlg button small{font-size:11px;opacity:.6;margin-left:6px}#xe-dlg button.pri{color:#f0c97a}'; document.head.appendChild(st); }
+    var pb = dlg.querySelector('.pri'); if (pb) pb.focus();
+    emit('confirm', true);
+  }
+  function endDlg(yes) {
+    if (!dlg) return; dlg.remove(); dlg = null; emit('confirm', false);
+    if (yes) endExplore();
+  }
+  function endExplore() {
+    var n = nearest(); K.resume = true;
+    X.close(true);
+    if (!window.SHXV) return;
+    if (n && (n.b.id === 'earth' || n.b.id === 'moon') && n.d < 2e6) { SHXV.go('leo'); return; }
+    SHXV.go('solar');
+    if (n && window.LE && LE.solar && LE.solar.select) { var id = n.b.id === 'moon' ? 'earth' : n.b.id; setTimeout(function () { try { LE.solar.select(id); } catch (e) { } }, 700); }
+  }
+  X.confirmEnd = confirmEnd; X.endExplore = endExplore;
   X.close = function (quiet) {
     if (!K.open) return; K.open = false; cancelAnimationFrame(raf); root.style.display = 'none'; document.body.classList.remove('shx-flying');
     removeEventListener('resize', size); removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true); S.keys = {};
     emit('close');
-    if (!quiet && window.SHXV) SHXV.go('solar');
+    if (dlg) { dlg.remove(); dlg = null; }
+    if (!quiet) { K.resume = true; if (window.SHXV) SHXV.go('solar'); }
   };
   X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, fdur: fdur, fkm: fkm };
   X.state = function () { return { pos: S.pos.slice(), target: S.target, base: S.base, mult: S.mult, auto: S.auto, sunVis: sunVis }; };

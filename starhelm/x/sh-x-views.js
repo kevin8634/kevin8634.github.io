@@ -66,7 +66,7 @@
     root = document.createElement('div'); root.id = 'shx-nav';
     var row = document.createElement('div'); row.className = 'row'; row.setAttribute('role', 'toolbar'); row.setAttribute('aria-label', '四级视图');
     V.forEach(function (v) { row.appendChild(btn(v)); });
-    var sep = document.createElement('span'); sep.className = 'shx-sep'; row.appendChild(sep); row.appendChild(btn(FLY));
+    // 10-26 23:39 王磊:驾驶舱按钮从圆形视图条取消,改装进顶栏「航行」方框(F 键仍可用)
     crumb = document.createElement('nav'); crumb.id = 'shx-crumb'; crumb.setAttribute('aria-label', '面包屑');
     crumb.innerHTML = V.map(function (v, i) { return (i ? '<i>›</i>' : '') + '<a data-v="' + v.id + '">' + v.zh + '</a>'; }).join('');
     crumb.addEventListener('click', function (e) { var a = e.target.closest('a'); if (a) X.go(a.getAttribute('data-v')); });
