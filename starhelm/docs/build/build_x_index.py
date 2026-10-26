@@ -25,7 +25,7 @@ setTimeout(function(){fetch('index.html',{cache:'no-store'}).then(function(r){if
 <div id="shx-badge" style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99999;pointer-events:none;font:11px/1.4 system-ui,sans-serif;color:#6FE3FF;opacity:.75;letter-spacing:.06em;text-shadow:0 0 6px #000">巡天 X0b · C0.5 天枢号 · 开发预览 · three <span id="shx-r">r186</span></div>
 <script>setTimeout(function(){var e=document.getElementById('shx-r');if(e)e.textContent=window.THREE&&THREE.__r?('r'+THREE.__r):'2D';},500);</script>''', 1)
 # X0b 四级视图 + C0 驾驶舱(只在 x/ 下)
-add = '<script src="x/sh-x-views.js"></script>\n<script src="x/sh-x-cockpit.js"></script>\n<script src="x/sh-x-armilla.js"></script>\n<script src="x/sh-x-ship.js"></script>\n'
+add = '<script src="x/sh-x-views.js"></script>\n<script src="x/sh-x-cockpit.js"></script>\n<script src="x/sh-x-armilla.js"></script>\n<script src="x/armilla/voice.js"></script>\n<script src="x/sh-x-ship.js"></script>\n'
 assert '</body>' in s
 s = s.replace('</body>', add + '</body>', 1)
 

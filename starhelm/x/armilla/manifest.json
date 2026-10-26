@@ -1,0 +1,966 @@
+{
+ "name": "Armilla 舰载语音包（天枢号）",
+ "version": "1.1.0",
+ "script": "07_Armilla语音脚本 v1.1",
+ "voice": "ARMILLA-A1（MiniMax 音色设计）",
+ "model": "MiniMax speech-2.8-hd（网页版 MiniMax Audio）",
+ "language": "zh-CN",
+ "format": {
+  "codec": "mp3",
+  "sample_rate": 44100,
+  "dry": "mono 96 kbps",
+  "fx": "stereo 128 kbps，预渲染「AI 空间感」"
+ },
+ "variants": {
+  "dry": "原声（配合 armilla-spacefx.js 实时开关空间感，推荐）",
+  "fx": "已烘焙「AI 空间感」，无 Web Audio 时使用"
+ },
+ "spaceFx": {
+  "default": true,
+  "label_zh": "AI 空间感",
+  "label_en": "Spatial FX",
+  "module": "armilla-spacefx.js",
+  "storage_key": "armilla.voice.spaceFx"
+ },
+ "avatar": {
+  "idle": "avatar/armilla_idle.svg",
+  "speaking": "avatar/armilla_speaking.svg",
+  "idle_png": "avatar/armilla_idle.png",
+  "speaking_png": "avatar/armilla_speaking.png"
+ },
+ "concat_examples": [
+  [
+   "b01",
+   "tech08"
+  ],
+  [
+   "b02",
+   "act02"
+  ],
+  [
+   "b03",
+   "b08",
+   "num06",
+   "num17",
+   "num03",
+   "unit03"
+  ],
+  [
+   "b04",
+   "num05",
+   "unit05"
+  ]
+ ],
+ "count": 101,
+ "items": [
+  {
+   "id": "a01",
+   "group": "sentence",
+   "text": "欢迎登上天枢号,探索者。我是 Armilla,你的舰载智能。星海已就绪,随时可以出发。",
+   "file": "dry/a01.mp3",
+   "duration_ms": 8411,
+   "file_fx": "fx/a01.mp3",
+   "duration_fx_ms": 8385
+  },
+  {
+   "id": "a02",
+   "group": "sentence",
+   "text": "请在航图上选定目标星域,或者告诉我你想去的星球。",
+   "file": "dry/a02.mp3",
+   "duration_ms": 4989,
+   "file_fx": "fx/a02.mp3",
+   "duration_fx_ms": 4911
+  },
+  {
+   "id": "a03",
+   "group": "sentence",
+   "text": "请系好安全带。天枢号即将离港。",
+   "file": "dry/a03.mp3",
+   "duration_ms": 3030,
+   "file_fx": "fx/a03.mp3",
+   "duration_fx_ms": 3004
+  },
+  {
+   "id": "a04",
+   "group": "sentence",
+   "text": "已切换至巡航模式。放慢脚步,看看我们身边的星辰。",
+   "file": "dry/a04.mp3",
+   "duration_ms": 4911,
+   "file_fx": "fx/a04.mp3",
+   "duration_fx_ms": 4911
+  },
+  {
+   "id": "a05",
+   "group": "sentence",
+   "text": "引擎加速模式已启动。抓稳了,我们要追上光的影子。",
+   "file": "dry/a05.mp3",
+   "duration_ms": 4389,
+   "file_fx": "fx/a05.mp3",
+   "duration_fx_ms": 4362
+  },
+  {
+   "id": "a06",
+   "group": "sentence",
+   "text": "点火倒计时:三,二,一。出发!",
+   "file": "dry/a06.mp3",
+   "duration_ms": 4467,
+   "file_fx": "fx/a06.mp3",
+   "duration_fx_ms": 4467
+  },
+  {
+   "id": "a07",
+   "group": "sentence",
+   "text": "正在减速,目标就在前方。",
+   "file": "dry/a07.mp3",
+   "duration_ms": 2168,
+   "file_fx": "fx/a07.mp3",
+   "duration_fx_ms": 2142
+  },
+  {
+   "id": "a08",
+   "group": "sentence",
+   "text": "已抵达,正在进入环绕轨道。欢迎来到新的世界。",
+   "file": "dry/a08.mp3",
+   "duration_ms": 4258,
+   "file_fx": "fx/a08.mp3",
+   "duration_fx_ms": 4258
+  },
+  {
+   "id": "a09",
+   "group": "sentence",
+   "text": "航行已由我接管。请移步侧舷窗,尽情观测吧。",
+   "file": "dry/a09.mp3",
+   "duration_ms": 4650,
+   "file_fx": "fx/a09.mp3",
+   "duration_fx_ms": 4650
+  },
+  {
+   "id": "a10",
+   "group": "sentence",
+   "text": "卫星式巡航已启动,我们将绕它飞行一周。",
+   "file": "dry/a10.mp3",
+   "duration_ms": 3527,
+   "file_fx": "fx/a10.mp3",
+   "duration_fx_ms": 3553
+  },
+  {
+   "id": "a11",
+   "group": "sentence",
+   "text": "控制权已交还给你,探索者。",
+   "file": "dry/a11.mp3",
+   "duration_ms": 2847,
+   "file_fx": "fx/a11.mp3",
+   "duration_fx_ms": 2847
+  },
+  {
+   "id": "a12",
+   "group": "sentence",
+   "text": "警告:前方温度过高。已自动保持安全距离。",
+   "file": "dry/a12.mp3",
+   "duration_ms": 3918,
+   "file_fx": "fx/a12.mp3",
+   "duration_fx_ms": 3918
+  },
+  {
+   "id": "a13",
+   "group": "sentence",
+   "text": "我们离这颗星球太近了,已为你悬停。",
+   "file": "dry/a13.mp3",
+   "duration_ms": 3318,
+   "file_fx": "fx/a13.mp3",
+   "duration_fx_ms": 3318
+  },
+  {
+   "id": "a14",
+   "group": "sentence",
+   "text": "引力弹弓航线已规划。借行星之力,再快一程。",
+   "file": "dry/a14.mp3",
+   "duration_ms": 4624,
+   "file_fx": "fx/a14.mp3",
+   "duration_fx_ms": 4624
+  },
+  {
+   "id": "a15",
+   "group": "sentence",
+   "text": "跃迁引擎充能完毕。星光即将拉成长线,请不要眨眼。",
+   "file": "dry/a15.mp3",
+   "duration_ms": 4571,
+   "file_fx": "fx/a15.mp3",
+   "duration_fx_ms": 4571
+  },
+  {
+   "id": "a16",
+   "group": "sentence",
+   "text": "跃迁完成。我们已穿越星域边界。",
+   "file": "dry/a16.mp3",
+   "duration_ms": 2926,
+   "file_fx": "fx/a16.mp3",
+   "duration_fx_ms": 2900
+  },
+  {
+   "id": "a17",
+   "group": "sentence",
+   "text": "虫洞已稳定。前方,是另一片宇宙的入口。",
+   "file": "dry/a17.mp3",
+   "duration_ms": 3866,
+   "file_fx": "fx/a17.mp3",
+   "duration_fx_ms": 3788
+  },
+  {
+   "id": "a18",
+   "group": "sentence",
+   "text": "航行已取消,天枢号原地待命。",
+   "file": "dry/a18.mp3",
+   "duration_ms": 3187,
+   "file_fx": "fx/a18.mp3",
+   "duration_fx_ms": 3239
+  },
+  {
+   "id": "a19",
+   "group": "sentence",
+   "text": "仪表已隐藏。好好记住这一幕吧。",
+   "file": "dry/a19.mp3",
+   "duration_ms": 2717,
+   "file_fx": "fx/a19.mp3",
+   "duration_fx_ms": 2691
+  },
+  {
+   "id": "a20",
+   "group": "sentence",
+   "text": "下次见,探索者。星星会等你回来。",
+   "file": "dry/a20.mp3",
+   "duration_ms": 4023,
+   "file_fx": "fx/a20.mp3",
+   "duration_fx_ms": 3997
+  },
+  {
+   "id": "b01",
+   "group": "lead",
+   "text": "本次航行将使用",
+   "file": "dry/b01.mp3",
+   "duration_ms": 1750,
+   "file_fx": "fx/b01.mp3",
+   "duration_fx_ms": 1750
+  },
+  {
+   "id": "b02",
+   "group": "lead",
+   "text": "即将进行",
+   "file": "dry/b02.mp3",
+   "duration_ms": 862,
+   "file_fx": "fx/b02.mp3",
+   "duration_fx_ms": 862
+  },
+  {
+   "id": "b03",
+   "group": "lead",
+   "text": "航程",
+   "file": "dry/b03.mp3",
+   "duration_ms": 627,
+   "file_fx": "fx/b03.mp3",
+   "duration_fx_ms": 627
+  },
+  {
+   "id": "b04",
+   "group": "lead",
+   "text": "预计耗时",
+   "file": "dry/b04.mp3",
+   "duration_ms": 914,
+   "file_fx": "fx/b04.mp3",
+   "duration_fx_ms": 914
+  },
+  {
+   "id": "b05",
+   "group": "lead",
+   "text": "前方是",
+   "file": "dry/b05.mp3",
+   "duration_ms": 967,
+   "file_fx": "fx/b05.mp3",
+   "duration_fx_ms": 914
+  },
+  {
+   "id": "b06",
+   "group": "lead",
+   "text": "目标已锁定",
+   "file": "dry/b06.mp3",
+   "duration_ms": 1019,
+   "file_fx": "fx/b06.mp3",
+   "duration_fx_ms": 1045
+  },
+  {
+   "id": "b07",
+   "group": "lead",
+   "text": "途经",
+   "file": "dry/b07.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/b07.mp3",
+   "duration_fx_ms": 627
+  },
+  {
+   "id": "b08",
+   "group": "lead",
+   "text": "约",
+   "file": "dry/b08.mp3",
+   "duration_ms": 418,
+   "file_fx": "fx/b08.mp3",
+   "duration_fx_ms": 496
+  },
+  {
+   "id": "tech01",
+   "group": "tech",
+   "text": "化学火箭",
+   "file": "dry/tech01.mp3",
+   "duration_ms": 1097,
+   "file_fx": "fx/tech01.mp3",
+   "duration_fx_ms": 914
+  },
+  {
+   "id": "tech02",
+   "group": "tech",
+   "text": "离子电推进",
+   "file": "dry/tech02.mp3",
+   "duration_ms": 1019,
+   "file_fx": "fx/tech02.mp3",
+   "duration_fx_ms": 967
+  },
+  {
+   "id": "tech03",
+   "group": "tech",
+   "text": "引力弹射",
+   "file": "dry/tech03.mp3",
+   "duration_ms": 1202,
+   "file_fx": "fx/tech03.mp3",
+   "duration_fx_ms": 993
+  },
+  {
+   "id": "tech04",
+   "group": "tech",
+   "text": "太阳帆",
+   "file": "dry/tech04.mp3",
+   "duration_ms": 862,
+   "file_fx": "fx/tech04.mp3",
+   "duration_fx_ms": 862
+  },
+  {
+   "id": "tech05",
+   "group": "tech",
+   "text": "核聚变推进",
+   "file": "dry/tech05.mp3",
+   "duration_ms": 1149,
+   "file_fx": "fx/tech05.mp3",
+   "duration_fx_ms": 1149
+  },
+  {
+   "id": "tech06",
+   "group": "tech",
+   "text": "激光光帆",
+   "file": "dry/tech06.mp3",
+   "duration_ms": 940,
+   "file_fx": "fx/tech06.mp3",
+   "duration_fx_ms": 940
+  },
+  {
+   "id": "tech07",
+   "group": "tech",
+   "text": "近光速航行",
+   "file": "dry/tech07.mp3",
+   "duration_ms": 1071,
+   "file_fx": "fx/tech07.mp3",
+   "duration_fx_ms": 1071
+  },
+  {
+   "id": "tech08",
+   "group": "tech",
+   "text": "曲率驱动",
+   "file": "dry/tech08.mp3",
+   "duration_ms": 940,
+   "file_fx": "fx/tech08.mp3",
+   "duration_fx_ms": 940
+  },
+  {
+   "id": "tech09",
+   "group": "tech",
+   "text": "虫洞",
+   "file": "dry/tech09.mp3",
+   "duration_ms": 627,
+   "file_fx": "fx/tech09.mp3",
+   "duration_fx_ms": 653
+  },
+  {
+   "id": "tech10",
+   "group": "tech",
+   "text": "思想实验",
+   "file": "dry/tech10.mp3",
+   "duration_ms": 888,
+   "file_fx": "fx/tech10.mp3",
+   "duration_fx_ms": 967
+  },
+  {
+   "id": "cred01",
+   "group": "credibility",
+   "text": "实测",
+   "file": "dry/cred01.mp3",
+   "duration_ms": 705,
+   "file_fx": "fx/cred01.mp3",
+   "duration_fx_ms": 705
+  },
+  {
+   "id": "cred02",
+   "group": "credibility",
+   "text": "推断",
+   "file": "dry/cred02.mp3",
+   "duration_ms": 575,
+   "file_fx": "fx/cred02.mp3",
+   "duration_fx_ms": 575
+  },
+  {
+   "id": "cred03",
+   "group": "credibility",
+   "text": "猜想",
+   "file": "dry/cred03.mp3",
+   "duration_ms": 575,
+   "file_fx": "fx/cred03.mp3",
+   "duration_fx_ms": 601
+  },
+  {
+   "id": "act01",
+   "group": "action",
+   "text": "星域内穿梭",
+   "file": "dry/act01.mp3",
+   "duration_ms": 1149,
+   "file_fx": "fx/act01.mp3",
+   "duration_fx_ms": 1149
+  },
+  {
+   "id": "act02",
+   "group": "action",
+   "text": "星际跃迁",
+   "file": "dry/act02.mp3",
+   "duration_ms": 993,
+   "file_fx": "fx/act02.mp3",
+   "duration_fx_ms": 993
+  },
+  {
+   "id": "act03",
+   "group": "action",
+   "text": "虫洞穿越",
+   "file": "dry/act03.mp3",
+   "duration_ms": 1045,
+   "file_fx": "fx/act03.mp3",
+   "duration_fx_ms": 1071
+  },
+  {
+   "id": "act04",
+   "group": "action",
+   "text": "引力弹弓",
+   "file": "dry/act04.mp3",
+   "duration_ms": 914,
+   "file_fx": "fx/act04.mp3",
+   "duration_fx_ms": 914
+  },
+  {
+   "id": "body01",
+   "group": "body",
+   "text": "太阳",
+   "file": "dry/body01.mp3",
+   "duration_ms": 653,
+   "file_fx": "fx/body01.mp3",
+   "duration_fx_ms": 627
+  },
+  {
+   "id": "body02",
+   "group": "body",
+   "text": "水星",
+   "file": "dry/body02.mp3",
+   "duration_ms": 627,
+   "file_fx": "fx/body02.mp3",
+   "duration_fx_ms": 705
+  },
+  {
+   "id": "body03",
+   "group": "body",
+   "text": "金星",
+   "file": "dry/body03.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/body03.mp3",
+   "duration_fx_ms": 731
+  },
+  {
+   "id": "body04",
+   "group": "body",
+   "text": "地球",
+   "file": "dry/body04.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/body04.mp3",
+   "duration_fx_ms": 601
+  },
+  {
+   "id": "body05",
+   "group": "body",
+   "text": "月球",
+   "file": "dry/body05.mp3",
+   "duration_ms": 679,
+   "file_fx": "fx/body05.mp3",
+   "duration_fx_ms": 679
+  },
+  {
+   "id": "body06",
+   "group": "body",
+   "text": "火星",
+   "file": "dry/body06.mp3",
+   "duration_ms": 627,
+   "file_fx": "fx/body06.mp3",
+   "duration_fx_ms": 601
+  },
+  {
+   "id": "body07",
+   "group": "body",
+   "text": "木星",
+   "file": "dry/body07.mp3",
+   "duration_ms": 627,
+   "file_fx": "fx/body07.mp3",
+   "duration_fx_ms": 601
+  },
+  {
+   "id": "body08",
+   "group": "body",
+   "text": "土星",
+   "file": "dry/body08.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/body08.mp3",
+   "duration_fx_ms": 679
+  },
+  {
+   "id": "body09",
+   "group": "body",
+   "text": "天王星",
+   "file": "dry/body09.mp3",
+   "duration_ms": 940,
+   "file_fx": "fx/body09.mp3",
+   "duration_fx_ms": 810
+  },
+  {
+   "id": "body10",
+   "group": "body",
+   "text": "海王星",
+   "file": "dry/body10.mp3",
+   "duration_ms": 836,
+   "file_fx": "fx/body10.mp3",
+   "duration_fx_ms": 836
+  },
+  {
+   "id": "body11",
+   "group": "body",
+   "text": "冥王星",
+   "file": "dry/body11.mp3",
+   "duration_ms": 705,
+   "file_fx": "fx/body11.mp3",
+   "duration_fx_ms": 758
+  },
+  {
+   "id": "body12",
+   "group": "body",
+   "text": "谷神星",
+   "file": "dry/body12.mp3",
+   "duration_ms": 731,
+   "file_fx": "fx/body12.mp3",
+   "duration_fx_ms": 731
+  },
+  {
+   "id": "body13",
+   "group": "body",
+   "text": "哈雷彗星",
+   "file": "dry/body13.mp3",
+   "duration_ms": 1019,
+   "file_fx": "fx/body13.mp3",
+   "duration_fx_ms": 888
+  },
+  {
+   "id": "body14",
+   "group": "body",
+   "text": "木卫一",
+   "file": "dry/body14.mp3",
+   "duration_ms": 888,
+   "file_fx": "fx/body14.mp3",
+   "duration_fx_ms": 758
+  },
+  {
+   "id": "body15",
+   "group": "body",
+   "text": "木卫二",
+   "file": "dry/body15.mp3",
+   "duration_ms": 758,
+   "file_fx": "fx/body15.mp3",
+   "duration_fx_ms": 758
+  },
+  {
+   "id": "body16",
+   "group": "body",
+   "text": "木卫三",
+   "file": "dry/body16.mp3",
+   "duration_ms": 731,
+   "file_fx": "fx/body16.mp3",
+   "duration_fx_ms": 758
+  },
+  {
+   "id": "body17",
+   "group": "body",
+   "text": "木卫四",
+   "file": "dry/body17.mp3",
+   "duration_ms": 810,
+   "file_fx": "fx/body17.mp3",
+   "duration_fx_ms": 810
+  },
+  {
+   "id": "body18",
+   "group": "body",
+   "text": "土卫六",
+   "file": "dry/body18.mp3",
+   "duration_ms": 731,
+   "file_fx": "fx/body18.mp3",
+   "duration_fx_ms": 705
+  },
+  {
+   "id": "body19",
+   "group": "body",
+   "text": "半人马座比邻星",
+   "file": "dry/body19.mp3",
+   "duration_ms": 1567,
+   "file_fx": "fx/body19.mp3",
+   "duration_fx_ms": 1567
+  },
+  {
+   "id": "body20",
+   "group": "body",
+   "text": "天狼星",
+   "file": "dry/body20.mp3",
+   "duration_ms": 705,
+   "file_fx": "fx/body20.mp3",
+   "duration_fx_ms": 679
+  },
+  {
+   "id": "body21",
+   "group": "body",
+   "text": "织女星",
+   "file": "dry/body21.mp3",
+   "duration_ms": 810,
+   "file_fx": "fx/body21.mp3",
+   "duration_fx_ms": 888
+  },
+  {
+   "id": "body22",
+   "group": "body",
+   "text": "参宿四",
+   "file": "dry/body22.mp3",
+   "duration_ms": 888,
+   "file_fx": "fx/body22.mp3",
+   "duration_fx_ms": 888
+  },
+  {
+   "id": "body23",
+   "group": "body",
+   "text": "银河系中心",
+   "file": "dry/body23.mp3",
+   "duration_ms": 1045,
+   "file_fx": "fx/body23.mp3",
+   "duration_fx_ms": 1071
+  },
+  {
+   "id": "body24",
+   "group": "body",
+   "text": "仙女座星系",
+   "file": "dry/body24.mp3",
+   "duration_ms": 1149,
+   "file_fx": "fx/body24.mp3",
+   "duration_fx_ms": 1149
+  },
+  {
+   "id": "zone01",
+   "group": "zone",
+   "text": "家园",
+   "file": "dry/zone01.mp3",
+   "duration_ms": 679,
+   "file_fx": "fx/zone01.mp3",
+   "duration_fx_ms": 705
+  },
+  {
+   "id": "zone02",
+   "group": "zone",
+   "text": "日与月",
+   "file": "dry/zone02.mp3",
+   "duration_ms": 731,
+   "file_fx": "fx/zone02.mp3",
+   "duration_fx_ms": 758
+  },
+  {
+   "id": "zone03",
+   "group": "zone",
+   "text": "行星世界",
+   "file": "dry/zone03.mp3",
+   "duration_ms": 940,
+   "file_fx": "fx/zone03.mp3",
+   "duration_fx_ms": 940
+  },
+  {
+   "id": "zone04",
+   "group": "zone",
+   "text": "太阳系边疆",
+   "file": "dry/zone04.mp3",
+   "duration_ms": 1045,
+   "file_fx": "fx/zone04.mp3",
+   "duration_fx_ms": 1045
+  },
+  {
+   "id": "zone05",
+   "group": "zone",
+   "text": "群星",
+   "file": "dry/zone05.mp3",
+   "duration_ms": 653,
+   "file_fx": "fx/zone05.mp3",
+   "duration_fx_ms": 758
+  },
+  {
+   "id": "zone06",
+   "group": "zone",
+   "text": "银河",
+   "file": "dry/zone06.mp3",
+   "duration_ms": 627,
+   "file_fx": "fx/zone06.mp3",
+   "duration_fx_ms": 627
+  },
+  {
+   "id": "zone07",
+   "group": "zone",
+   "text": "宇宙",
+   "file": "dry/zone07.mp3",
+   "duration_ms": 627,
+   "file_fx": "fx/zone07.mp3",
+   "duration_fx_ms": 575
+  },
+  {
+   "id": "num01",
+   "group": "number",
+   "text": "零",
+   "file": "dry/num01.mp3",
+   "duration_ms": 444,
+   "file_fx": "fx/num01.mp3",
+   "duration_fx_ms": 470
+  },
+  {
+   "id": "num02",
+   "group": "number",
+   "text": "一",
+   "file": "dry/num02.mp3",
+   "duration_ms": 522,
+   "file_fx": "fx/num02.mp3",
+   "duration_fx_ms": 418
+  },
+  {
+   "id": "num03",
+   "group": "number",
+   "text": "二",
+   "file": "dry/num03.mp3",
+   "duration_ms": 340,
+   "file_fx": "fx/num03.mp3",
+   "duration_fx_ms": 340
+  },
+  {
+   "id": "num04",
+   "group": "number",
+   "text": "两",
+   "file": "dry/num04.mp3",
+   "duration_ms": 549,
+   "file_fx": "fx/num04.mp3",
+   "duration_fx_ms": 549
+  },
+  {
+   "id": "num05",
+   "group": "number",
+   "text": "三",
+   "file": "dry/num05.mp3",
+   "duration_ms": 444,
+   "file_fx": "fx/num05.mp3",
+   "duration_fx_ms": 496
+  },
+  {
+   "id": "num06",
+   "group": "number",
+   "text": "四",
+   "file": "dry/num06.mp3",
+   "duration_ms": 418,
+   "file_fx": "fx/num06.mp3",
+   "duration_fx_ms": 496
+  },
+  {
+   "id": "num07",
+   "group": "number",
+   "text": "五",
+   "file": "dry/num07.mp3",
+   "duration_ms": 653,
+   "file_fx": "fx/num07.mp3",
+   "duration_fx_ms": 444
+  },
+  {
+   "id": "num08",
+   "group": "number",
+   "text": "六",
+   "file": "dry/num08.mp3",
+   "duration_ms": 496,
+   "file_fx": "fx/num08.mp3",
+   "duration_fx_ms": 496
+  },
+  {
+   "id": "num09",
+   "group": "number",
+   "text": "七",
+   "file": "dry/num09.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/num09.mp3",
+   "duration_fx_ms": 470
+  },
+  {
+   "id": "num10",
+   "group": "number",
+   "text": "八",
+   "file": "dry/num10.mp3",
+   "duration_ms": 313,
+   "file_fx": "fx/num10.mp3",
+   "duration_fx_ms": 340
+  },
+  {
+   "id": "num11",
+   "group": "number",
+   "text": "九",
+   "file": "dry/num11.mp3",
+   "duration_ms": 705,
+   "file_fx": "fx/num11.mp3",
+   "duration_fx_ms": 705
+  },
+  {
+   "id": "num12",
+   "group": "number",
+   "text": "十",
+   "file": "dry/num12.mp3",
+   "duration_ms": 496,
+   "file_fx": "fx/num12.mp3",
+   "duration_fx_ms": 549
+  },
+  {
+   "id": "num13",
+   "group": "number",
+   "text": "百",
+   "file": "dry/num13.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/num13.mp3",
+   "duration_fx_ms": 601
+  },
+  {
+   "id": "num14",
+   "group": "number",
+   "text": "千",
+   "file": "dry/num14.mp3",
+   "duration_ms": 549,
+   "file_fx": "fx/num14.mp3",
+   "duration_fx_ms": 575
+  },
+  {
+   "id": "num15",
+   "group": "number",
+   "text": "万",
+   "file": "dry/num15.mp3",
+   "duration_ms": 522,
+   "file_fx": "fx/num15.mp3",
+   "duration_fx_ms": 601
+  },
+  {
+   "id": "num16",
+   "group": "number",
+   "text": "亿",
+   "file": "dry/num16.mp3",
+   "duration_ms": 549,
+   "file_fx": "fx/num16.mp3",
+   "duration_fx_ms": 418
+  },
+  {
+   "id": "num17",
+   "group": "number",
+   "text": "点",
+   "file": "dry/num17.mp3",
+   "duration_ms": 444,
+   "file_fx": "fx/num17.mp3",
+   "duration_fx_ms": 418
+  },
+  {
+   "id": "unit01",
+   "group": "unit",
+   "text": "公里",
+   "file": "dry/unit01.mp3",
+   "duration_ms": 549,
+   "file_fx": "fx/unit01.mp3",
+   "duration_fx_ms": 575
+  },
+  {
+   "id": "unit02",
+   "group": "unit",
+   "text": "天文单位",
+   "file": "dry/unit02.mp3",
+   "duration_ms": 888,
+   "file_fx": "fx/unit02.mp3",
+   "duration_fx_ms": 888
+  },
+  {
+   "id": "unit03",
+   "group": "unit",
+   "text": "光年",
+   "file": "dry/unit03.mp3",
+   "duration_ms": 862,
+   "file_fx": "fx/unit03.mp3",
+   "duration_fx_ms": 679
+  },
+  {
+   "id": "unit04",
+   "group": "unit",
+   "text": "秒",
+   "file": "dry/unit04.mp3",
+   "duration_ms": 522,
+   "file_fx": "fx/unit04.mp3",
+   "duration_fx_ms": 522
+  },
+  {
+   "id": "unit05",
+   "group": "unit",
+   "text": "分钟",
+   "file": "dry/unit05.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/unit05.mp3",
+   "duration_fx_ms": 549
+  },
+  {
+   "id": "unit06",
+   "group": "unit",
+   "text": "小时",
+   "file": "dry/unit06.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/unit06.mp3",
+   "duration_fx_ms": 653
+  },
+  {
+   "id": "unit07",
+   "group": "unit",
+   "text": "天",
+   "file": "dry/unit07.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/unit07.mp3",
+   "duration_fx_ms": 601
+  },
+  {
+   "id": "unit08",
+   "group": "unit",
+   "text": "年",
+   "file": "dry/unit08.mp3",
+   "duration_ms": 496,
+   "file_fx": "fx/unit08.mp3",
+   "duration_fx_ms": 549
+  }
+ ]
+}

@@ -32,3 +32,4 @@
 
 | Armilla 浑天仪形象(x/sh-x-armilla.js) | 移植自同系列项目 09_armilla「ARMILLA · 浑天」v2.2.1(创世计划原创) | 系列内部原创,随本项目 | 王磊 / 创世计划 | 驾驶舱底部 Armilla 形象 | 代码重写,参数与着色器沿用 09 |  2026-10-26 |
 | x/cursor/star.svg, frame.svg | 天枢 Starhelm 自绘鼠标指针(E 星芒罗盘 / D 全息取景框) | 原创 | 本项目 | 本项目 | 2026-10-27 | 驾驶舱鼠标 |
+| x/armilla/(dry/、fx/、manifest.json) | Armilla 舰载语音包 v1.1.0(101 条) | AI 生成(MiniMax speech-2.8-hd,音色设计 ARMILLA-A1,非真人克隆) | 创世计划 09_armilla | 本项目自制 | 2026-10-27 | 驾驶舱 Armilla 语音;详见 x/armilla/LICENSE |

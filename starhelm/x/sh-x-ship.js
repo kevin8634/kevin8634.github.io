@@ -76,6 +76,30 @@
 
   /* ---------------- 语音播放(manifest 到位后自动启用) ---------------- */
   var VOICE = { on: ls('gn:sh:x-voice') === '1', clips: null, q: [], busy: false, last: null };
+  // 「AI 空间感 / Spatial FX」—— 与 ARMILLA PWA v2.2.1 同参数(x/armilla/armilla-spacefx.js 的 ES5 移植),偏好键 armilla.voice.spaceFx,默认开
+  var SFX = { on: (function () { try { return localStorage.getItem('armilla.voice.spaceFx') !== '0'; } catch (e) { return true; } })(), node: null };
+  function sfxChain() {
+    if (SFX.node) return SFX.node; var c = ac(); if (!c) return null;
+    var inp = c.createGain(), out = c.createGain(), byp = c.createGain(), fxIn = c.createGain();
+    inp.connect(byp); inp.connect(fxIn); byp.connect(out);
+    function bq(t, f, q, g) { var b = c.createBiquadFilter(); b.type = t; b.frequency.value = f; if (q != null) b.Q.value = q; if (g != null) b.gain.value = g; return b; }
+    var hp = bq('highpass', 85, .7), lsf = bq('lowshelf', 220, null, -1.5), pk = bq('peaking', 3200, .9, 2.4), hs = bq('highshelf', 9000, null, 3);
+    fxIn.connect(hp); hp.connect(lsf); lsf.connect(pk); pk.connect(hs);
+    var dir = c.createGain(); dir.gain.value = .92; var pre = c.createDelay(.1); pre.delayTime.value = .018;
+    var cv = c.createConvolver(), rate = c.sampleRate, len = Math.floor(rate * 1.05), buf = c.createBuffer(2, len, rate);
+    for (var ch = 0; ch < 2; ch++) { var d = buf.getChannelData(ch), lp = 0; for (var i = 0; i < len; i++) { var p = i / len; lp += (Math.random() * 2 - 1 - lp) * (.55 - .35 * p); d[i] = lp * Math.pow(1 - p, 3.2) * .9; }
+      [.011, .019, .027, .041].forEach(function (t, k) { var ix = Math.floor((t + ch * .003) * rate); if (ix < len) d[ix] += .5 / (k + 1.4); }); }
+    cv.buffer = buf; var wet = c.createGain(); wet.gain.value = .2;
+    hs.connect(dir); dir.connect(out); hs.connect(pre); pre.connect(cv); cv.connect(wet); wet.connect(out); out.connect(c.destination);
+    SFX.node = { input: inp, set: function (on, now) { var t = c.currentTime, tc = now ? .001 : .12; byp.gain.cancelScheduledValues(t); fxIn.gain.cancelScheduledValues(t); byp.gain.setTargetAtTime(on ? 0 : 1, t, tc); fxIn.gain.setTargetAtTime(on ? 1 : 0, t, tc); } };
+    SFX.node.set(SFX.on, true); return SFX.node;
+  }
+  function setSpaceFx(on) { SFX.on = !!on; try { localStorage.setItem('armilla.voice.spaceFx', on ? '1' : '0'); } catch (e) { } if (SFX.node) SFX.node.set(SFX.on); }
+  function voiceAudio(it) {   // 有 Web Audio:原声 dry/ 走实时空间感链;没有:开=fx/ 预烘焙、关=dry/
+    var ch = sfxChain(), a = new Audio('x/armilla/' + (ch ? it.file : (SFX.on && it.file_fx ? it.file_fx : it.file)));
+    if (ch) { try { if (AC.state === 'suspended') AC.resume(); AC.createMediaElementSource(a).connect(ch.input); } catch (e) { } }
+    return a;
+  }
   function loadVoice() {   // 09_armilla 交付后:x/armilla/manifest.json + window.SHX_VOICE = true(由 x/armilla/voice.js 设置)
     if (VOICE.clips || !window.SHX_VOICE) return;
     fetch('x/armilla/manifest.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
@@ -106,7 +130,7 @@
     if (clips && clips.length) {
       var i = 0, play = function () {
         if (i >= clips.length) { done(); return; }
-        var a = new Audio('x/armilla/' + clips[i++].file); a.volume = 0.95; a.onended = play; a.onerror = play; a.play().catch(play);
+        var a = voiceAudio(clips[i++]); a.volume = 0.95; a.onended = play; a.onerror = play; a.play().catch(play);
       }; play();
     } else setTimeout(done, Math.min(7000, 900 + txt.length * 150));
   }
@@ -267,7 +291,7 @@
     if (window.SHXARM && SHXARM.ok()) { try { var h3 = el('div', 'xa-3d'); U.orb.appendChild(h3); U.arm = SHXARM.mount(h3, { small: innerWidth < 700 || innerHeight < 480 }); U.orb.classList.add('gl'); } catch (e) { console.warn('[Armilla 3D]', e); U.arm = null; } }
     dock.querySelectorAll('.ib').forEach(function (b) { b.onclick = function () { blip(880, .08, .05); act(b.getAttribute('data-a')); }; });
     U.orb.onclick = function () {
-      if (!VOICE.on) { VOICE.on = true; ls('gn:sh:x-voice', '1'); loadVoice(); if (!VOICE.clips) I.toast('Armilla 的声音正在录制中,先看字幕'); }
+      if (!VOICE.on) { VOICE.on = true; ls('gn:sh:x-voice', '1'); loadVoice(); if (!VOICE.clips) I.toast('Armilla 语音载入中…'); }
       say(VOICE.last || ['a02']);
     };
     var kp = $('#xc-keys', R); if (kp && !ls('gn:sh:x-keys')) kp.classList.add('min');
@@ -354,7 +378,7 @@
   }
   function countdown(cb) {
     sub(L.a06); armState('think');
-    var clips = VOICE.on ? seqClips(['a06']) : null; if (clips) { var a = new Audio('x/armilla/' + clips[0].file); a.play().catch(function () { }); }
+    var clips = VOICE.on ? seqClips(['a06']) : null; if (clips) { var a = voiceAudio(clips[0]); a.play().catch(function () { }); }
     var n = 3, tick = function () {
       if (n === 0) { U.cd.textContent = ''; U.cd.style.opacity = 0; blip(1320, .5, .09); armState(''); cb(); return; }
       U.cd.textContent = n; U.cd.style.opacity = 1; blip(880, .15, .07); n--; setTimeout(tick, 900);
@@ -397,6 +421,7 @@
       '<label>舱内音乐<input class="xs-sw" type="checkbox" id="xs-m"' + (SND.music ? ' checked' : '') + '></label>' +
       '<label>航行与引擎音效<input class="xs-sw" type="checkbox" id="xs-f"' + (SND.sfx ? ' checked' : '') + '></label>' +
       '<label>Armilla 语音<input class="xs-sw" type="checkbox" id="xs-v"' + (VOICE.on ? ' checked' : '') + '></label>' +
+      '<label title="与 Armilla PWA 同款的舰载空间声场">AI 空间感 · Spatial FX<input class="xs-sw" type="checkbox" id="xs-sfx"' + (SFX.on ? ' checked' : '') + '></label>' +
       '<label>音量<input type="range" min="0" max="1" step="0.05" id="xs-vol" value="' + SND.vol + '"></label>' +
       '<div class="xs-row" style="justify-content:space-between"><span class="np" id="xs-np">' + (MUS.cur ? TRACKS[MUS.cur].zh : '音乐按航行状态自动切换:待命 / 巡航 / 加速 / 环绕') + '</span><button class="xs-no" type="button" id="xs-nx">下一首</button></div>' +
       '<div class="cr">音乐:OpenGameArt.org 公有领域(CC0)曲目 —— Space Echo(Centurion_of_war)、Space Music: Out There(yd)、Magic Space(CodeManu)、Outer Space Loop(wipics)。音效为程序实时合成。</div>';
@@ -404,7 +429,8 @@
     $('.xc', c).onclick = function () { closeCards(); };
     $('#xs-m', c).onchange = function () { SND.music = this.checked; ls('gn:sh:x-music', SND.music ? '1' : '0'); if (SND.music) musPlay(MUS.want); else musStop(); };
     $('#xs-f', c).onchange = function () { SND.sfx = this.checked; ls('gn:sh:x-sfx', SND.sfx ? '1' : '0'); if (SND.sfx) { ac(); if (AC.state === 'suspended') AC.resume(); humOn(); blip(880, .1, .06); } else { humOff(); engStop(); } };
-    $('#xs-v', c).onchange = function () { VOICE.on = this.checked; ls('gn:sh:x-voice', VOICE.on ? '1' : '0'); if (VOICE.on) { loadVoice(); if (!VOICE.clips) I.toast('Armilla 的声音正在录制中,先看字幕'); } };
+    $('#xs-sfx', c).onchange = function () { setSpaceFx(this.checked); if (VOICE.on) say(['a06']); };
+    $('#xs-v', c).onchange = function () { VOICE.on = this.checked; ls('gn:sh:x-voice', VOICE.on ? '1' : '0'); if (VOICE.on) { loadVoice(); if (!VOICE.clips) I.toast('Armilla 语音载入中…'); } };
     $('#xs-vol', c).oninput = function () { SND.vol = +this.value; ls('gn:sh:x-vol', SND.vol); if (M) M.gain.value = SND.vol; if (MUS.a) MUS.a.volume = SND.vol * 0.55; };
     $('#xs-nx', c).onclick = function () { if (!SND.music) { SND.music = true; ls('gn:sh:x-music', '1'); $('#xs-m', c).checked = true; } var i = MUS.order.indexOf(MUS.cur || 'idle'); MUS.lock = performance.now() + 120000; musPlay(MUS.order[(i + 1) % MUS.order.length]); };
   }
@@ -539,5 +565,5 @@
   }
   takeover(); addEventListener('load', takeover);
 
-  window.SHXS = { say: say, lines: L, zhNum: zhNum, sayDist: sayDist, sayTime: sayTime, plan: function () { if (X.isOpen()) togglePlan(); }, orbit: function () { if (X.isOpen()) portAct(); }, mode: function (m) { setMode(m); }, state: function () { return { mode: MODE, engine: ENGID, orbit: !!O, music: SND.music, sfx: SND.sfx, voice: VOICE.on, clips: !!VOICE.clips }; } };
+  window.SHXS = { voiceDbg: function () { return { on: VOICE.on, n: VOICE.clips ? Object.keys(VOICE.clips).length : 0, sfx: SFX.on }; }, spaceFx: setSpaceFx, say: say, lines: L, zhNum: zhNum, sayDist: sayDist, sayTime: sayTime, plan: function () { if (X.isOpen()) togglePlan(); }, orbit: function () { if (X.isOpen()) portAct(); }, mode: function (m) { setMode(m); }, state: function () { return { mode: MODE, engine: ENGID, orbit: !!O, music: SND.music, sfx: SND.sfx, voice: VOICE.on, clips: !!VOICE.clips }; } };
 })();

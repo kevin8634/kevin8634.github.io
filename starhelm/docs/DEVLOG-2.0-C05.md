@@ -55,3 +55,7 @@
 - 按钮:顶栏方框旋转光环加强,底部图层芯片改成同款切角方框;圆形视图条去掉悬停第二行名字。
 - 进入驾驶舱自动关 1.0 背景音乐、开舱内音乐;离开后恢复。
 - 鼠标:平时 x/cursor/star.svg(E 星芒罗盘),拖动环视 x/cursor/frame.svg(D 全息取景框)。
+
+## C0.9(2026-10-27 00:4x)
+- 接入 Armilla 语音包 v1.1.0(x/armilla/,voice.js 设 SHX_VOICE)。
+- 「AI 空间感 · Spatial FX」开关(音响面板 M):与 ARMILLA PWA v2.2.1 同参数 ES5 移植,dry/ 走实时链;无 Web Audio 时开=fx/、关=dry/;偏好键 armilla.voice.spaceFx,默认开。
