@@ -292,7 +292,8 @@
     dock.querySelectorAll('.ib').forEach(function (b) { b.onclick = function () { blip(880, .08, .05); act(b.getAttribute('data-a')); }; });
     U.orb.onclick = function () {
       if (!VOICE.on) { VOICE.on = true; ls('gn:sh:x-voice', '1'); loadVoice(); if (!VOICE.clips) I.toast('Armilla 语音载入中…'); }
-      say(VOICE.last || ['a02']);
+      // 10-27 王磊反馈①:到达/悬停后再点 AI 不再催选星域
+      if (O) say(['a10']); else if (ARR && ARR === S.target) say(['a09']); else say(VOICE.last && VOICE.last[0] !== 'a02' ? VOICE.last : ['a02']);
     };
     var kp = $('#xc-keys', R); if (kp && !ls('gn:sh:x-keys')) kp.classList.add('min');
     setMode(MODE, true);
@@ -366,10 +367,10 @@
       '<div>引擎 <b style="color:' + TIER[p.e.tier] + '">' + p.e.zh + '</b>(' + p.e.tier + ')· 真实预计耗时 <b>' + ft(p.tr.earthS) + '</b>' + ship + '</div>' +
       '<div class="f">' + esc(p.e.fact || '') + '</div><div class="f">演示中天枢号会压缩时间,约 ' + p.demo + ' 秒抵达;读数里的时间按真实物理计算。</div>';
   }
-  var LAUNCH = null;
+  var LAUNCH = null, ARR = null;
   function launch() {
     var p = plan(); closeCards(); if (p.km < 1) { I.toast('已经在 ' + p.b.zh + ' 附近了'); return; }
-    LAUNCH = p; I.setTarget(p.b.id); S.auto = false; S.base = 0; S.mult = 1; stopOrbit(true);
+    LAUNCH = p; ARR = null; I.setTarget(p.b.id); S.auto = false; S.base = 0; S.mult = 1; stopOrbit(true);
     var seq = ['a03', { t: '本次航行将使用' }, { t: p.e.zh }, { t: ',即将进行' }, { t: p.act }, { t: '。航程约' }].concat(sayDist(p.km).map(function (t) { return { t: t }; }), [{ t: ',预计耗时' }], sayTime(p.tr.earthS).map(function (t) { return { t: t }; }), [{ t: '。' }]);
     if (p.e.id === 'assist') say(['a14']);
     if (p.e.model === 'warp') say(['a15']);
@@ -378,11 +379,16 @@
   }
   function countdown(cb) {
     sub(L.a06); armState('think');
-    var clips = VOICE.on ? seqClips(['a06']) : null; if (clips) { var a = voiceAudio(clips[0]); a.play().catch(function () { }); }
-    var n = 3, tick = function () {
+    var a = null, clips = VOICE.on ? seqClips(['a06']) : null; if (clips) { a = voiceAudio(clips[0]); a.play().catch(function () { }); }
+    var n = 3, step = 900, tick = function () {
       if (n === 0) { U.cd.textContent = ''; U.cd.style.opacity = 0; blip(1320, .5, .09); armState(''); cb(); return; }
-      U.cd.textContent = n; U.cd.style.opacity = 1; blip(880, .15, .07); n--; setTimeout(tick, 900);
-    }; tick();
+      U.cd.textContent = n; U.cd.style.opacity = 1; blip(880, .15, .07); n--; setTimeout(tick, step);
+    }, go = function () { if (go.d) return; go.d = 1; tick(); };
+    // 10-27 王磊反馈③:3-2-1 跟播报同步。"点火倒计时:"约占语音前 40%,其后 三/二/一/出发 四拍均分
+    if (a) {
+      var arm = function () { var d = isFinite(a.duration) && a.duration > 1 ? a.duration * 1000 : 3600; step = Math.max(500, d * .6 / 4); setTimeout(go, d * .4); };
+      if (a.readyState >= 1) arm(); else { a.addEventListener('loadedmetadata', arm, { once: true }); setTimeout(go, 2500); }
+    } else tick();
   }
 
   /* ---------------- 侧舷窗 + 卫星式巡航 ---------------- */
@@ -530,8 +536,8 @@
     } else if (ev === 'close') { if (U.arm) U.arm.stop(); stopOrbit(true); engStop(); humOff(); musStop(); closeCards(); if (R) R.classList.remove('photo'); if (MUS.bgm) { MUS.bgm = false; var bm2 = document.getElementById('btn-music'); if (bm2 && bm2.getAttribute('aria-pressed') !== 'true') bm2.click(); } }
     else if (ev === 'frame') frame(a);
     else if (ev === 'decel') say(['a07']);
-    else if (ev === 'arrive') { engStop(); blip(660, .3, .06); if (LAUNCH && LAUNCH.b.id === a.id) { log('抵达', a, LAUNCH.e); LAUNCH = null; } if (PEND_PORT) { PEND_PORT = false; say(['a08']); startOrbit(a); } else { say(['a08']); offer(a); } }
-    else if (ev === 'hover') { alarm(); alertOrb(); say(['a13']); }
+    else if (ev === 'arrive') { ARR = a.id; engStop(); blip(660, .3, .06); if (LAUNCH && LAUNCH.b.id === a.id) { log('抵达', a, LAUNCH.e); LAUNCH = null; } if (PEND_PORT) { PEND_PORT = false; say(['a08']); startOrbit(a); } else { say(['a08']); offer(a); } }
+    else if (ev === 'hover') { ARR = S.target; alarm(); alertOrb(); say(['a13']); }
   });
   addEventListener('keydown', onKey, true);
 
