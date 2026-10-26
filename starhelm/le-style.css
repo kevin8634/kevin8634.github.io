@@ -255,3 +255,4 @@ body[data-mode="solar"] #labels { display: none; }
   .le-readout { font-size: 10px; }
 }
 @media (prefers-reduced-motion: reduce) { .le-live, .le-fx::after { animation: none; } .le-btn::after { display: none; } }
+#sheet-live .le-dl dd { text-align: left; font-weight: 400; line-height: 1.5; }
