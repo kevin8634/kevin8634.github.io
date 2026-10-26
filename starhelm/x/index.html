@@ -14,7 +14,7 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();}catch(e){}})();</script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <title>天枢 Starhelm · 巡天 X0a 开发预览(three r186)</title>
+  <title>天枢 Starhelm · 巡天 X0b · C0 开发预览(three r186)</title>
 <meta name="description" content="天枢 Starhelm · 创世计划 Genesis 07 · 天文：用真实实时数据看见此刻的天空，月相实验室、弦穹号星际航行。免费、免注册。">
   <!--
     天枢 Starhelm（创世计划 Genesis 07 · 天文；由 Live Earth 2.1 迁入 /starhelm/）—— 文件结构（全部为经典脚本，按顺序加载，不使用 ES module / importmap）
@@ -218,7 +218,7 @@
   <!-- v0.9.0:共享场景模块按设备选 Three.js(WebGL2 → vendor/three-r169;否则 r147 降级;无 WebGL → 2D) -->
   <script src="sh-scene.js"></script>
   <script>/* 巡天 X0a:r169 路径换成 r186(同一兼容层);r147 / 无 WebGL 走 1.0 原路径 */
-(function(){window.SHX={stage:'X0a',three:186};if(!window.SHGFX)return;
+(function(){window.SHX={stage:'X0b+C0',three:186};if(!window.SHGFX)return;
 if(SHGFX.lib!=='r169'||/[?&]three=169\b/.test(location.search)){SHGFX.writeThree();return;}
 var h='';for(var i=1;i<=14;i++)h+='<script src="x/vendor/three-r186/three.p'+i+'.js"><\/script>';
 h+='<script>(function(){var s=document.createElement("script");s.text=window.__C["three.js"];document.head.appendChild(s);delete window.__C["three.js"];})();<\/script>';
@@ -395,7 +395,9 @@ document.write(h);})();</script>
 <script>/* 巡天 X0a:不注册 SW。1.0 的 SW 会把导航页写进缓存 ./index.html,这里把它恢复为 1.0 首页,避免离线时打开 1.0 看到本预览页 */
 (function(){if(!('caches'in window)||!navigator.serviceWorker||!navigator.serviceWorker.controller)return;
 setTimeout(function(){fetch('index.html',{cache:'no-store'}).then(function(r){if(!r.ok)return;caches.keys().then(function(ks){ks.filter(function(k){return /^sh-/.test(k);}).forEach(function(k){caches.open(k).then(function(c){c.put(new URL('index.html',document.baseURI).href,r.clone());});});});}).catch(function(){});},4000);})();</script>
-<div id="shx-badge" style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99999;pointer-events:none;font:11px/1.4 system-ui,sans-serif;color:#6FE3FF;opacity:.75;letter-spacing:.06em;text-shadow:0 0 6px #000">巡天 X0a · 开发预览 · three <span id="shx-r">r186</span></div>
+<div id="shx-badge" style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99999;pointer-events:none;font:11px/1.4 system-ui,sans-serif;color:#6FE3FF;opacity:.75;letter-spacing:.06em;text-shadow:0 0 6px #000">巡天 X0b · C0 驾驶舱 · 开发预览 · three <span id="shx-r">r186</span></div>
 <script>setTimeout(function(){var e=document.getElementById('shx-r');if(e)e.textContent=window.THREE&&THREE.__r?('r'+THREE.__r):'2D';},500);</script>
+<script src="x/sh-x-views.js"></script>
+<script src="x/sh-x-cockpit.js"></script>
 </body>
 </html>

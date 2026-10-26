@@ -9,3 +9,14 @@
 
 - 数据:X0a 没有新增数据源;实时数据开关 gn:sh:live 与 1.0 共用,语义不变。
 - AI:X0a 没有新增 AI 生成的画面、人物或语音。
+
+## X0b 四级视图 + C0 驾驶舱(2026-10-26)
+
+| 素材 | 用在哪(任务/页面) | 来源与链接 | 许可 | 署名要求 | 是否 AI 生成 | 页面标注位置 |
+|---|---|---|---|---|---|---|
+| 行星引力参数 GM | 驾驶舱引力读数、目标资料卡质量/表面重力 | JPL Solar System Dynamics · Planetary physical parameters https://ssd.jpl.nasa.gov/planets/phys_par.html | 美国政府作品(公有领域) | 无强制,注明 JPL | 否 | 代码注释 |
+| 行星平均温度 | 目标资料卡 | NASA Planetary Fact Sheet https://nssdc.gsfc.nasa.gov/planetary/factsheet/ | 美国政府作品(公有领域) | 无强制,注明 NASA | 否 | 代码注释 |
+| 星历、贴图、星空、太阳着色器 | 驾驶舱全部 3D | 复用 1.0:astronomy-engine(MIT)、Solar System Scope(CC BY 4.0)、NASA SVS 星空、SHFX3D | 见 ../LICENSES.md | 同 1.0 | 否 | 驾驶舱底部署名行 |
+
+- 交互参考:solar-system-atlas.pages.dev 的「模拟」模式,只参考交互与版式思路;代码、贴图、音效、数据均未取用(其 Gaia 星表为 CC BY-NC,不适用)。
+- 太阳光晕、镜头光斑、仪表、旋转光环按钮均为本项目手写着色器 / CSS / SVG,无新增第三方素材,无 AI 生成内容。
