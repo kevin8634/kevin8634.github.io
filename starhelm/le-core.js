@@ -7,6 +7,26 @@
   'use strict';
   var LE = (window.LE = window.LE || {});
 
+  /* ------------------------------ LE.live ------------------------------ */
+  // 实时数据总开关(天枢 1.0 小改,2026-10-26):开 = 浏览器直连 CelesTrak / USGS / Open-Meteo 取公开数据;
+  // 关 = 不再请求这三家,改用站内快照/示意。状态只存本机 localStorage gn:sh:live,默认开;切换后页面重新载入。
+  var LIVE_KEY = 'gn:sh:live', LIVE_HOSTS = /(^|\.)(celestrak\.org|earthquake\.usgs\.gov|open-meteo\.com)$/i;
+  LE.live = {
+    on: (function () { try { return localStorage.getItem(LIVE_KEY) !== '0'; } catch (e) { return true; } })(),
+    isExt: function (url) { try { return LIVE_HOSTS.test(new URL(String(url), location.href).hostname); } catch (e) { return false; } },
+    blocked: function (url) { return !LE.live.on && LE.live.isExt(url); },
+    set: function (on) { LE.live.on = !!on; try { localStorage.setItem(LIVE_KEY, on ? '1' : '0'); } catch (e) {} }
+  };
+  if (typeof window.fetch === 'function' && !window.fetch.__shLive) {
+    var _fetch = window.fetch;
+    window.fetch = function (input, init) {
+      var u = typeof input === 'string' ? input : (input && input.url) || String(input || '');
+      if (LE.live.blocked(u)) return Promise.reject(new Error('live-off'));
+      return _fetch.apply(this, arguments);
+    };
+    window.fetch.__shLive = true;
+  }
+
   /* ----------------------------- LE.config ----------------------------- */
   LE.config = {
     VERSION: '2.0.0',
@@ -122,6 +142,7 @@
   var DCACHE = 'shdata-v1';
   LE.netcache = {
     text: function (url, maxAgeMs, timeoutMs, validate) {
+      if (LE.live && LE.live.blocked(url)) return Promise.reject(new Error('live-off'));   // 实时数据已关:不读旧缓存、不记失败
       var now = Date.now(), failKey = 'gn:sh:netfail:' + url;
       var hasCache = typeof caches !== 'undefined';
       function readCache() {
