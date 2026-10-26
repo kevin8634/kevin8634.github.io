@@ -31,3 +31,10 @@
 - 09_armilla 语音包与形象到位后接入(manifest)。
 - C1 引力弹弓、C2 跃迁(a15/a16/a17 已留接口)。
 - 2.0 开场动画:概念图已出(build/opening2/),待王磊确认。
+
+## C0.6 · Armilla 形象对齐 09(2026-10-26 22:5x CST)
+- 王磊反馈:驾驶舱 Armilla 光环太敷衍,要求与 09_armilla「ARMILLA · 浑天」v2.2.1 一致,可缩小。
+- 新增 x/sh-x-armilla.js(SHXARM):按 09 移植七道环参数、环面流光着色器、星云粒子(桌面 9000 / 手机 4500,09 原为 6 万)、核心光晕与线框、天轴、二十四节气刻度(当前节气朱红)、状态参数 IDLE/LISTENING/THINKING/SPEAKING/NIGHT,另加 ALERT(核心朱红)。
+- 独立透明小 WebGLRenderer,不进主场景;09 的辉光后期用叠加光晕精灵代替;无 WebGL 退回原 SVG。
+- 状态联动:规划面板=聆听,倒计时=思考,字幕=说话,警报=ALERT。
+- 自测:1440/375/568/减少动态/无 WebGL 零报错零 404;1920 截图在 SwiftShader 下超时(非页面错误)。

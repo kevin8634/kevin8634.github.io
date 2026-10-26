@@ -203,21 +203,22 @@
       '@media (min-width:1600px) and (min-height:900px){#shxc .p,#shxc .gauges,#shxc .hdg{zoom:1.3}#shxc .lst{top:320px;max-height:max(110px,calc(100vh/1.3 - 525px))}}',
       '#shxc .ctr{display:none}',
       /* Armilla 坞 */
-      '#xa-dock{position:absolute;left:50%;bottom:58px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;pointer-events:auto}',
+      '#xa-dock{position:absolute;left:50%;bottom:40px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;pointer-events:auto}',
       '#xa-dock .side{display:flex;gap:8px}',
       '#xa-dock .ib{width:46px;height:46px;border-radius:50%;border:1px solid rgba(150,180,220,.3);background:rgba(10,16,30,.6);color:#cfe0f5;display:grid;place-items:center;cursor:pointer;position:relative;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:0}',
       '#xa-dock .ib svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}',
       '#xa-dock .ib:hover,#xa-dock .ib:focus-visible{border-color:#7fd6ff;color:#fff;outline:none}#xa-dock .ib.on{border-color:#f0c97a;color:#f0c97a;box-shadow:0 0 12px rgba(240,201,122,.28)}',
       '#xa-dock .ib small{position:absolute;top:50px;left:50%;transform:translateX(-50%);font-size:11.5px;color:rgba(200,214,236,.75);white-space:nowrap;pointer-events:none}',
-      '#xa-orb{width:92px;height:92px;border-radius:50%;cursor:pointer;position:relative;border:0;background:radial-gradient(circle at 50% 50%,rgba(240,201,122,.22),rgba(10,16,30,.7) 62%);box-shadow:0 0 24px rgba(127,214,255,.18),inset 0 0 18px rgba(127,214,255,.12);padding:0}',
+      '#xa-orb{width:190px;height:150px;border-radius:50%;cursor:pointer;position:relative;border:0;background:radial-gradient(circle at 50% 50%,rgba(240,201,122,.22),rgba(10,16,30,.7) 62%);box-shadow:0 0 24px rgba(127,214,255,.18),inset 0 0 18px rgba(127,214,255,.12);padding:0}',
       '#xa-orb svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}',
       '#xa-orb .r1{animation:xaS 14s linear infinite;transform-origin:50% 50%}#xa-orb .r2{animation:xaS 22s linear infinite reverse;transform-origin:50% 50%}#xa-orb .r3{animation:xaS 9s linear infinite;transform-origin:50% 50%}',
       '#xa-orb .core{transform-origin:50% 50%;animation:xaP 3.2s ease-in-out infinite}',
       '#xa-orb.speak .r1{animation-duration:3.5s}#xa-orb.speak .r2{animation-duration:5s}#xa-orb.speak .r3{animation-duration:2.2s}#xa-orb.speak .core{animation:xaT .42s ease-in-out infinite alternate}',
       '#xa-orb.alert{box-shadow:0 0 26px rgba(255,140,90,.45),inset 0 0 18px rgba(255,140,90,.25)}',
-      '#xa-orb .nm{position:absolute;left:50%;bottom:-19px;transform:translateX(-50%);font:600 11px/1 Orbitron,system-ui,sans-serif;letter-spacing:.24em;color:#9fdcff;white-space:nowrap}',
+      '#xa-orb .xa-3d{position:absolute;left:50%;top:50%;width:210px;height:210px;transform:translate(-50%,-54%);pointer-events:none}#xa-orb .xa-3d canvas{width:100%!important;height:100%!important;display:block}#xa-orb.gl{background:radial-gradient(circle,rgba(232,194,122,.10),rgba(5,6,15,.35) 55%,transparent 72%);box-shadow:none}#xa-orb.gl>svg{display:none}#xa-orb.gl.alert{background:radial-gradient(circle,rgba(229,72,58,.22),transparent 70%)}',
+      '#xa-orb .nm{position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);font:600 11px/1 Orbitron,system-ui,sans-serif;letter-spacing:.24em;color:#9fdcff;white-space:nowrap}',
       '@keyframes xaS{to{transform:rotate(360deg)}}@keyframes xaP{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.12);opacity:1}}@keyframes xaT{from{transform:scale(.9)}to{transform:scale(1.35)}}',
-      '#xa-sub{position:absolute;left:50%;bottom:172px;transform:translateX(-50%);max-width:min(760px,80vw);padding:8px 18px;border-radius:14px;background:rgba(6,10,20,.66);border:1px solid rgba(127,214,255,.22);color:#eaf2ff;font-size:16px;line-height:1.55;text-align:center;opacity:0;transition:opacity .35s;pointer-events:none}',
+      '#xa-sub{position:absolute;left:50%;bottom:204px;transform:translateX(-50%);max-width:min(760px,80vw);padding:8px 18px;border-radius:14px;background:rgba(6,10,20,.66);border:1px solid rgba(127,214,255,.22);color:#eaf2ff;font-size:16px;line-height:1.55;text-align:center;opacity:0;transition:opacity .35s;pointer-events:none}',
       '#xa-sub b{color:#9fdcff;font-weight:500;margin-right:8px;font-family:Orbitron,system-ui,sans-serif;font-size:12px;letter-spacing:.18em}#xa-sub.on{opacity:1}',
       '#xa-mode{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);font-size:12px;color:rgba(200,214,236,.7);white-space:nowrap;pointer-events:none;display:none}',
       /* 全息卡片 */
@@ -232,7 +233,7 @@
       '.xs-log{font-size:12.5px;color:rgba(200,212,235,.65);margin-top:8px}',
       '#xs-snd{width:min(380px,92vw)}#xs-snd label{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(150,180,220,.1)}#xs-snd input[type=range]{width:160px}#xs-snd .np{font-size:12px;color:rgba(200,212,235,.6);margin-top:8px}#xs-snd .cr{font-size:11px;color:rgba(200,212,235,.45);margin-top:8px;line-height:1.5}',
       '.xs-sw{appearance:none;-webkit-appearance:none;width:42px;height:22px;border-radius:12px;background:rgba(150,170,200,.25);position:relative;cursor:pointer;outline:none}.xs-sw::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#dfe7f5;transition:left .2s}.xs-sw:checked{background:rgba(240,201,122,.6)}.xs-sw:checked::after{left:23px}',
-      '#xs-offer{position:absolute;left:50%;bottom:226px;transform:translateX(-50%);display:flex;gap:10px;z-index:4}',
+      '#xs-offer{position:absolute;left:50%;bottom:290px;transform:translateX(-50%);display:flex;gap:10px;z-index:4}',
       '#xs-cd{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font:200 120px/1 Orbitron,system-ui,sans-serif;color:#fff;text-shadow:0 0 30px rgba(127,214,255,.8);pointer-events:none;opacity:0;transition:opacity .2s}',
       /* 侧舷窗 */
       '#xs-port{position:absolute;inset:0;pointer-events:none;display:none;background:radial-gradient(ellipse 44% 46% at 50% 48%,transparent 0 96%,rgba(127,214,255,.5) 96.6%,#141b27 97.4%,#2a3344 98.6%,#0a0d14 100%),radial-gradient(ellipse 60% 64% at 50% 48%,transparent 0 69%,#0b0f17 70%,#161d2a 88%,#05070b 100%)}',
@@ -240,8 +241,8 @@
       '#shxc.port .p,#shxc.port .gauges,#shxc.port .arc,#shxc.port .hdg,#shxc.port .strip,#shxc.port .ret,#shxc.port .ctr,#shxc.port .mob{opacity:0;pointer-events:none;transition:opacity .6s}#shxc.port #xs-port{display:block}',
       '#shxc.photo>*:not(canvas):not(#xs-photo){display:none!important}#shxc.photo::after{display:none}#xs-photo{display:none;position:absolute;right:14px;bottom:12px;font-size:12px;color:rgba(220,230,245,.55);cursor:pointer;padding:6px 10px}#shxc.photo #xs-photo{display:block}',
       /* 手机 / 矮屏 */
-      '@media (max-width:640px){#xa-dock{bottom:6px;gap:6px}#xa-dock .ib{width:38px;height:38px}#xa-dock .ib svg{width:19px;height:19px}#xa-dock .ib small{display:none}#xa-orb{width:58px;height:58px}#xa-orb .nm{display:none}#xa-sub{bottom:214px;font-size:14px;max-width:92vw}#shxc .strip,#shxc .ctr{display:none}#shxc .gauges{bottom:72px}#shxc .mob{bottom:170px}#xs-offer{bottom:246px}#xs-cd{font-size:84px}}',
-      '@media (max-height:420px){#xa-dock{bottom:4px}#xa-dock .ib{width:34px;height:34px}#xa-dock .ib small,#xa-orb .nm{display:none}#xa-orb{width:50px;height:50px}#xa-sub{bottom:auto;top:8px;font-size:13px;max-width:60vw}#shxc .ctr{display:none}#xs-offer{bottom:64px}.xs-card{max-height:90vh}}',
+      '@media (max-width:640px){#xa-dock{bottom:6px;gap:3px}#xa-dock .side{gap:4px}#xa-dock .ib{width:36px;height:36px}#xa-dock .ib svg{width:19px;height:19px}#xa-dock .ib small{display:none}#xa-orb{width:88px;height:80px}#xa-orb .xa-3d{width:112px;height:112px}#xa-orb .nm{display:none}#xa-sub{bottom:236px;font-size:14px;max-width:92vw}#shxc .strip,#shxc .ctr{display:none}#shxc .gauges{bottom:72px}#shxc .mob{bottom:170px}#xs-offer{bottom:256px}#xs-cd{font-size:84px}}',
+      '@media (max-height:420px){#xa-dock{bottom:4px}#xa-dock .ib{width:34px;height:34px}#xa-dock .ib small,#xa-orb .nm{display:none}#xa-orb{width:84px;height:70px}#xa-orb .xa-3d{width:100px;height:100px}#xa-sub{bottom:auto;top:8px;font-size:13px;max-width:60vw}#shxc .ctr{display:none}#xs-offer{bottom:64px}.xs-card{max-height:90vh}}',
       '@media (prefers-reduced-motion:reduce){#xa-orb *{animation:none!important}}'
     ].join('\n');
     document.head.appendChild(s);
@@ -263,6 +264,7 @@
     var port = el('div', '', '<div class="tag">侧舷窗 · ARMILLA 接管</div>'); port.id = 'xs-port'; R.appendChild(port);
     var ph = el('div', '', '摄影模式 · 点这里或按 P 退出'); ph.id = 'xs-photo'; ph.onclick = function () { photo(false); }; R.appendChild(ph);
     U.orb = $('#xa-orb', R); U.sub = $('#xa-sub', R); U.cd = cd;
+    if (window.SHXARM && SHXARM.ok()) { try { var h3 = el('div', 'xa-3d'); U.orb.appendChild(h3); U.arm = SHXARM.mount(h3, { small: innerWidth < 700 || innerHeight < 480 }); U.orb.classList.add('gl'); } catch (e) { console.warn('[Armilla 3D]', e); U.arm = null; } }
     dock.querySelectorAll('.ib').forEach(function (b) { b.onclick = function () { blip(880, .08, .05); act(b.getAttribute('data-a')); }; });
     U.orb.onclick = function () {
       if (!VOICE.on) { VOICE.on = true; ls('gn:sh:x-voice', '1'); loadVoice(); if (!VOICE.clips) I.toast('Armilla 的声音正在录制中,先看字幕'); }
@@ -271,10 +273,10 @@
     var kp = $('#xc-keys', R); if (kp && !ls('gn:sh:x-keys')) kp.classList.add('min');
     setMode(MODE, true);
   }
-  function armState(s) { if (!U.orb) return; U.orb.classList.toggle('speak', s === 'speak'); }
+  function armState(s) { if (!U.orb) return; U.orb.classList.toggle('speak', s === 'speak'); if (U.arm && U.arm.state !== 'ALERT') U.arm.set(s === 'speak' ? 'SPEAKING' : s === 'think' ? 'THINKING' : s === 'listen' ? 'LISTENING' : 'IDLE'); }
   var subT = 0;
   function sub(t) { if (!U.sub) return; U.sub.innerHTML = '<b>ARMILLA</b>' + esc(t); U.sub.classList.add('on'); clearTimeout(subT); subT = setTimeout(function () { U.sub.classList.remove('on'); }, Math.min(9000, 2600 + t.length * 160)); }
-  function alertOrb() { if (!U.orb) return; U.orb.classList.add('alert'); setTimeout(function () { U.orb.classList.remove('alert'); }, 3000); }
+  function alertOrb() { if (!U.orb) return; U.orb.classList.add('alert'); if (U.arm) U.arm.set('ALERT'); setTimeout(function () { U.orb.classList.remove('alert'); if (U.arm) U.arm.set(VOICE.busy ? 'SPEAKING' : 'IDLE'); }, 3000); }
   function btn(a) { return R && $('#xa-dock .ib[data-a="' + a + '"]', R); }
 
   function act(a) {
@@ -292,7 +294,7 @@
     if (m === 'cruise' && S.mult > 1000) S.mult = 1000;
     if (!quiet) { say([m === 'cruise' ? 'a04' : 'a05']); blip(m === 'cruise' ? 520 : 780, .18, .06); }
   }
-  function closeCards(except) { ['xs-plan', 'xs-snd', 'xs-log'].forEach(function (id) { if (id !== except) { var c = $('#' + id, R); if (c) c.remove(); } }); }
+  function closeCards(except) { if (U.arm && U.arm.state === 'LISTENING') U.arm.set('IDLE'); ['xs-plan', 'xs-snd', 'xs-log'].forEach(function (id) { if (id !== except) { var c = $('#' + id, R); if (c) c.remove(); } }); }
 
   /* ---------------- 航行规划 ---------------- */
   var PL = { tgt: null };
@@ -315,7 +317,7 @@
     $('#xs-q', c).oninput = function () { var q = this.value.trim().toLowerCase(), first = null; bd.querySelectorAll('.xs-chip').forEach(function (x) { var ok = !q || x.dataset.k.indexOf(q) >= 0; x.style.display = ok ? '' : 'none'; if (ok && !first) first = x; }); if (q && first) { PL.tgt = first.dataset.id; refreshPlan(); } };
     $('.xc', c).onclick = $('.xs-no', c).onclick = function () { closeCards(); };
     $('.xs-go', c).onclick = launch;
-    refreshPlan();
+    refreshPlan(); if (U.arm && !VOICE.busy) U.arm.set('LISTENING');
     if (!PL.greeted) { PL.greeted = true; say(['a02']); }
   }
   function plan() {
@@ -346,7 +348,7 @@
     say(seq, function () { countdown(function () { if (MODE !== 'boost') setMode('boost', true); I.autopilot(true); engStart(p.e.id); log('出发', p.b, p.e); }); });
   }
   function countdown(cb) {
-    sub(L.a06); armState('speak');
+    sub(L.a06); armState('think');
     var clips = VOICE.on ? seqClips(['a06']) : null; if (clips) { var a = new Audio('x/armilla/' + clips[0].file); a.play().catch(function () { }); }
     var n = 3, tick = function () {
       if (n === 0) { U.cd.textContent = ''; U.cd.style.opacity = 0; blip(1320, .5, .09); armState(''); cb(); return; }
@@ -477,11 +479,11 @@
   }
   X.on(function (ev, a) {
     if (ev === 'open') {
-      build(); loadVoice(); setMode(MODE, true);
+      build(); loadVoice(); setMode(MODE, true); if (U.arm) { U.arm.resize(); U.arm.reveal(); U.arm.start(); }
       if (SND.sfx) { ac(); if (AC && AC.state === 'suspended') AC.resume(); humOn(); }
       if (SND.music) musPlay('idle');
       if (!sessionStorage.getItem('gn:sh:x-hello')) { sessionStorage.setItem('gn:sh:x-hello', '1'); setTimeout(function () { say(['a01']); say(['a02']); }, 900); }
-    } else if (ev === 'close') { stopOrbit(true); engStop(); humOff(); musStop(); closeCards(); if (R) R.classList.remove('photo'); }
+    } else if (ev === 'close') { if (U.arm) U.arm.stop(); stopOrbit(true); engStop(); humOff(); musStop(); closeCards(); if (R) R.classList.remove('photo'); }
     else if (ev === 'frame') frame(a);
     else if (ev === 'decel') say(['a07']);
     else if (ev === 'arrive') { engStop(); blip(660, .3, .06); if (LAUNCH && LAUNCH.b.id === a.id) { log('抵达', a, LAUNCH.e); LAUNCH = null; } if (PEND_PORT) { PEND_PORT = false; say(['a08']); startOrbit(a); } else { say(['a08']); offer(a); } }
