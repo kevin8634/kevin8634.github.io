@@ -1,0 +1,27 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>深空层 WebGPU 基准(T1,不挂入口)</title>
+<style>body{margin:0;background:#050814;color:#e6ecff;font:13px/1.6 system-ui,sans-serif}canvas{display:block;width:100vw;height:60vh}#o{padding:10px 14px;white-space:pre-wrap}button{background:none;border:1px solid #e8c27a;color:#e8c27a;border-radius:16px;padding:4px 12px;margin:8px 14px;cursor:pointer}</style></head><body>
+<canvas id="c"></canvas><button id="go">运行基准(约 30 秒)</button><div id="o">r186 WebGLRenderer vs WebGPURenderer(星尘粒子,加法混合)。?auto 自动运行。</div>
+<script type="module">
+/* 每档:粒子数 N × 后端;预热 1 s 后采样 3 s 的帧间隔,报告平均 ms、p95 ms、首帧(初始化+编译)ms */
+const O=document.getElementById("o");let cv=document.getElementById("c"),log=t=>{O.textContent+="\n"+t};
+const NS=[20000,80000,200000],DUR=3000,WARM=1000;
+async function scene(T,N){const s=new T.Scene(),cam=new T.PerspectiveCamera(60,cv.clientWidth/cv.clientHeight,.1,2000);cam.position.z=300;
+ const p=new Float32Array(N*3),c=new Float32Array(N*3);for(let i=0;i<N;i++){const r=400*Math.cbrt(Math.random()),a=Math.random()*6.283,b=Math.acos(2*Math.random()-1);p.set([r*Math.sin(b)*Math.cos(a),r*Math.sin(b)*Math.sin(a),r*Math.cos(b)],i*3);c.set([.6+.4*Math.random(),.7,1],i*3);}
+ const g=new T.BufferGeometry();g.setAttribute("position",new T.BufferAttribute(p,3));g.setAttribute("color",new T.BufferAttribute(c,3));
+ const m=new T.PointsMaterial({size:2,vertexColors:true,transparent:true,depthWrite:false,blending:T.AdditiveBlending,sizeAttenuation:true});const pts=new T.Points(g,m);s.add(pts);return{s,cam,pts,dispose(){g.dispose();m.dispose();}};}
+async function run(kind,N){let T,r;const nc=document.createElement("canvas");nc.id="c";cv.replaceWith(nc);cv=nc;const t0=performance.now();
+ if(kind==="webgl"){T=await import("../vendor/r186/three.module.min.js");r=new T.WebGLRenderer({canvas:cv,antialias:true});}
+ else{T=await import("../vendor/r186/three.webgpu.min.js");r=new T.WebGPURenderer({canvas:cv,antialias:true,forceWebGL:kind==="gpu-gl"});await r.init();}
+ r.setPixelRatio(Math.min(2,devicePixelRatio));r.setSize(cv.clientWidth,cv.clientHeight,false);
+ const be=kind==="webgl"?"WebGL2":(r.backend&&r.backend.isWebGPUBackend?"WebGPU":"WebGL2(回退)");
+ const S=await scene(T,N);r.render(S.s,S.cam);const first=performance.now()-t0;const dts=[];
+ await new Promise(res=>{let last=performance.now(),st=last;const f=()=>{const now=performance.now();S.pts.rotation.y+=.002;r.render(S.s,S.cam);if(now-st>WARM)dts.push(now-last);last=now;now-st<WARM+DUR?requestAnimationFrame(f):res();};requestAnimationFrame(f);});
+ S.dispose();r.dispose();dts.sort((a,b)=>a-b);const avg=dts.reduce((a,b)=>a+b,0)/dts.length,p95=dts[Math.floor(dts.length*.95)];
+ return{kind,backend:be,N,first:+first.toFixed(0),avg:+avg.toFixed(2),p95:+p95.toFixed(2),fps:+(1000/avg).toFixed(1)};}
+async function all(){document.getElementById("go").disabled=true;const R=[];const gpu=!!navigator.gpu;let ad=null;if(gpu){try{ad=await navigator.gpu.requestAdapter();}catch(e){}}
+ const info={ua:navigator.userAgent,webgpu:gpu,adapter:!!ad,dpr:devicePixelRatio,w:cv.clientWidth,h:cv.clientHeight};log("环境 "+JSON.stringify(info));
+ for(const N of NS)for(const k of ["webgl",ad?"webgpu":null,"gpu-gl"].filter(Boolean)){try{const x=await run(k,N);R.push(x);log(`${x.backend.padEnd(10)} N=${N} 首帧 ${x.first} ms · 平均 ${x.avg} ms(${x.fps} fps)· p95 ${x.p95} ms`);}catch(e){R.push({kind:k,N,error:String(e)});log(`${k} N=${N} 失败:${e}`);}}
+ window.__bench={info,R};log("完成。");}
+document.getElementById("go").onclick=all;if(/auto/.test(location.search))all();
+</script></body></html>

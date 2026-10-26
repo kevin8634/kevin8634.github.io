@@ -1,0 +1,17 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>core/deep 0.3 DataChart 自测</title><style>body{background:#050814;color:#e6ecff;font:14px/1.6 system-ui,sans-serif;max-width:640px;margin:24px auto;padding:0 16px}pre{font-size:11px;white-space:pre-wrap;color:#9fb0d8}</style></head><body>
+<h1 style="font-weight:500;font-size:18px">core/deep 0.3 · DataChart + 数据台账接口 自测(不挂入口)</h1>
+<div id="a"></div><div id="b"></div><p id="bad"></p><pre id="md"></pre>
+<script type="module">
+import { VERSION, DataSet, DataChart, Ledger } from "./core.js";
+window.__t = { VERSION };
+const D = await DataSet.load("../../deep/data/noaa.co2.mlo.annual.json");
+window.__t.line = DataChart.mount(document.getElementById("a"), { data: D, x: "year", ys: [{ col: "co2", label: "CO₂ 年均" }], xlabel: "年份", ylabel: "ppm", marks: [{ x: 1988, label: "IPCC 成立" }] });
+const rows = D.rows.slice(1).map((r, i) => [r[0], +(r[1] - D.rows[i][1]).toFixed(2)]);
+const G = DataSet.from({ meta: { ...D.meta, id: "noaa.co2.mlo.growth", title: "CO₂ 年增量(由年均值相减)", note: "派生自 noaa.co2.mlo.annual" }, columns: ["year", "dy"], rows });
+window.__t.bar = DataChart.mount(document.getElementById("b"), { data: G, x: "year", ys: [{ col: "dy", label: "年增量 ppm" }], type: "bar", from: 2000, xlabel: "年份", ylabel: "ppm/年" });
+try { DataSet.from({ meta: { id: "x", title: "缺许可" }, columns: ["a"], rows: [[1]] }); window.__t.reject = false; } catch (e) { window.__t.reject = e.message; document.getElementById("bad").textContent = "拒收示例:" + e.message; }
+try { await DataSet.load("https://example.com/x.json"); window.__t.ext = false; } catch (e) { window.__t.ext = e.message; }
+document.getElementById("md").textContent = Ledger.toMarkdown();
+window.__t.ready = true;
+</script></body></html>
