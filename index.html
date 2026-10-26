@@ -1170,7 +1170,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v0.8.24</b></span>
+            <span>创世计划总门户 <b>v0.8.25</b></span>
           </footer>
         </div>
       </div>
@@ -3335,6 +3335,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v0.8.25", d: "2026-10-26", t: "创世计划 1.0 正式发布：七个学习世界全部开放，67 个任务；重要公告换为 1.0 发布，可直接观看发布片。" },
         { w: "gn", v: "v0.8.24", d: "2026-10-25", t: "重要公告补上星域 V「群星」实拍图：100 光年内真实恒星场，公告轮播增至 5 张。" },
         { w: "gn", v: "v0.8.23", d: "2026-10-25", t: "重要公告更新天枢 1.0 进度：星域 V「群星」已开放，七星域开放 5 / 7，下一站星域 VI 银河。" },
         { w: "gn", v: "v0.8.22", d: "2026-10-25", t: "新增原创背景音乐「深空之下」并设为第一首：低沉的声呐回响、潮汐般的气流和远处的星光，为即将到来的 2.0 深空层预热。曲目列表现为四首。" },
@@ -4254,19 +4255,16 @@
       /* ---------- v0.8.5 首屏「重要公告」：ANN 只在王磊下令时改；ANN = null 时只显示新任务滚动条 ----------
          已读键 gn:portal:_ann = 公告 id；收起偏好 gn:portal:_news；新任务单条轮播（悬停 / 聚焦暂停）。 */
       var ANN = {
-        id: "sh-1.0-m3a", d: "2026-10-25", w: "07", tag: "开发进度",
-        title: "天枢 1.0「七星域」开发进度",
-        text: "从地球一路飞出太阳系，来到 100 光年内的真实群星，看你看到的星光有多老。",
+        id: "gn-1.0", d: "2026-10-26", w: "gn", tag: "正式发布",
+        title: "创世计划 1.0 正式发布",
+        text: "七个学习世界全部开放：数学、物理、化学、生物、超级智能、认知觉醒、天文。点亮星桥，收集你的创世护照星阶。",
         imgs: [
-          { src: "ann-sh-d1.webp", cap: "星域 I · 家园" },
-          { src: "ann-sh-d2.webp", cap: "星域 II · 日与月" },
-          { src: "ann-sh-d3.webp", cap: "星域 III · 行星世界" },
-          { src: "ann-sh-d4.webp", cap: "星域 IV · 太阳系边疆" },
-          { src: "ann-sh-d5.webp", cap: "星域 V · 群星" }
+          { src: "ann-gn-1.0.webp", cap: "北斗七世界 · 1.0" },
+          { src: "ann-sh-d5.webp", cap: "天枢 · 星域 V 群星" }
         ],
-        alt: "天枢已开放星域实拍画面", cap: "",
-        domains: ["I 家园", "II 日与月", "III 行星世界", "IV 太阳系边疆", "V 群星", "VI 银河", "VII 宇宙"], on: 5,
-        stat: "18 个任务", foot: "下一站：星域 VI 银河", cta: "去天枢 →"
+        alt: "创世计划七个学习世界", cap: "",
+        domains: ["星图", "宙律", "元素工坊", "生命源码", "奇点前夜", "觉弈", "天枢"], on: 7, unit: " 个世界已开放", label: "七世界开放进度",
+        stat: "67 个任务", foot: "下一站：2.0 深空之下", cta: "▶ 看发布片", trailer: true
       };
       var NW = { el: document.getElementById("news"), bar: document.getElementById("newsBar"), tk: document.getElementById("newsTk"),
         one: document.getElementById("newsOne"), oneT: document.getElementById("newsOneT"), ann: document.getElementById("ann"),
@@ -4303,13 +4301,13 @@
           '<span class="x-ann__tag">' + brEsc(ANN.tag) + '</span><span class="x-ann__w" id="annCap">' + brEsc(IM[0].cap || (ANN.w + " " + W0.name)) + '</span>' +
           (IM.length > 1 ? '<span class="x-ann__dots" aria-hidden="true">' + IM.map(function (m, i) { return '<i' + (i ? "" : ' class="on"') + '></i>'; }).join("") + '</span>' : "") + '</figure>' +
           '<h3>' + brEsc(ANN.title) + '</h3><p>' + brEsc(ANN.text) + '</p>' +
-          (ANN.domains ? '<div class="x-ann__prog"><div class="x-ann__pt"><b>' + ANN.on + '</b> / ' + ANN.domains.length + ' 星域已开放' + (ANN.stat ? ' · ' + brEsc(ANN.stat) : "") + '<span>' + pct + '%</span></div>' +
-            '<div class="x-ann__bar" role="progressbar" aria-label="七星域开放进度" aria-valuemin="0" aria-valuemax="' + ANN.domains.length + '" aria-valuenow="' + ANN.on + '"><i style="width:' + pct + '%"></i></div>' +
-            '<ul class="x-ann__dom" aria-label="七个星域">' + ANN.domains.map(function (d, i) { return '<li' + (i < ANN.on ? ' class="on"' : "") + '>' + brEsc(d) + '</li>'; }).join("") + '</ul></div>' : "") +
+          (ANN.domains ? '<div class="x-ann__prog"><div class="x-ann__pt"><b>' + ANN.on + '</b> / ' + ANN.domains.length + (ANN.unit || ' 星域已开放') + (ANN.stat ? ' · ' + brEsc(ANN.stat) : "") + '<span>' + pct + '%</span></div>' +
+            '<div class="x-ann__bar" role="progressbar" aria-label="' + brEsc(ANN.label || "七星域开放进度") + '" aria-valuemin="0" aria-valuemax="' + ANN.domains.length + '" aria-valuenow="' + ANN.on + '"><i style="width:' + pct + '%"></i></div>' +
+            '<ul class="x-ann__dom" aria-label="' + brEsc(ANN.label || "七个星域") + '">' + ANN.domains.map(function (d, i) { return '<li' + (i < ANN.on ? ' class="on"' : "") + '>' + brEsc(d) + '</li>'; }).join("") + '</ul></div>' : "") +
           '<div class="x-ann__ft"><small>' + brEsc(ANN.foot) + " · " + ANN.d.slice(5).replace("-", "/") + '</small><button type="button" class="x-ann__go" id="annGo">' + brEsc(ANN.cta) + '</button></div>';
         annSlides(IM);
         NW.ann.hidden = false;
-        document.getElementById("annGo").addEventListener("click", function () { lsSet(NW.AK, ANN.id); var w = lgW(ANN.w); enterWorld(ANN.w, w.href); });
+        document.getElementById("annGo").addEventListener("click", function () { lsSet(NW.AK, ANN.id); if (ANN.trailer) { document.getElementById("trailerBtn").click(); return; } var w = lgW(ANN.w); enterWorld(ANN.w, w.href); });
       }
       function nwRender() {
         var un = nwUnread();
