@@ -47,3 +47,11 @@
 - x/sh-x-style.css:全页按钮保持切角方框,加旋转青金双弧光环光效。
 - 自动驾驶时左右两侧面板渐隐(filter+translate),抵达后渐显。
 - 测试 build/c07_test.py、build/c07b.py:1440/390/无 WebGL 零 pageerror、零 404。
+
+## C0.8(2026-10-27 00:2x)
+- X 页归档 1.0 弦穹号航行:不再加载 sh-voyage.js/fx/fx2/css(保留 sh-voyage-data.js 给引擎表);「航行」方框由 sh-x-ship.js 自建;SH.voySetTarget/voyLand/voyExit/?voy=1 全部转进天枢号驾驶舱;航图文案改「天枢号」。
+- 航行规划:目的地直接沿用驾驶舱已选定目标,不再重选;只选星域(I–IV 可达,V–VII 跃迁即将)。
+- 右侧导航目标列表自动排在目标卡下方、不压「操作」面板;左侧导航面板限高不压仪表。
+- 按钮:顶栏方框旋转光环加强,底部图层芯片改成同款切角方框;圆形视图条去掉悬停第二行名字。
+- 进入驾驶舱自动关 1.0 背景音乐、开舱内音乐;离开后恢复。
+- 鼠标:平时 x/cursor/star.svg(E 星芒罗盘),拖动环视 x/cursor/frame.svg(D 全息取景框)。

@@ -28,6 +28,11 @@ setTimeout(function(){fetch('index.html',{cache:'no-store'}).then(function(r){if
 add = '<script src="x/sh-x-views.js"></script>\n<script src="x/sh-x-cockpit.js"></script>\n<script src="x/sh-x-armilla.js"></script>\n<script src="x/sh-x-ship.js"></script>\n'
 assert '</body>' in s
 s = s.replace('</body>', add + '</body>', 1)
+
+# C0.8 归档 1.0 弦穹号航行:X 页不再加载 sh-voyage.js / fx / fx2 / css,所有航行入口统一进天枢号驾驶舱(sh-voyage-data.js 保留,驾驶舱引擎表要用)
+for tag in ['<link rel="stylesheet" href="sh-voyage.css" />', '<script src="sh-voyage-fx.js"></script>', '<script src="sh-voyage-fx2.js"></script>', '<script src="sh-voyage.js"></script>']:
+    assert tag in s, tag
+    s = s.replace(tag, '<!-- 1.0 已归档(X 页停用):' + tag.replace('<', '').replace('>', '').replace('"', "'") + ' -->', 1)
 # C0.7 2.0 开场:1.0 两个开场(开机日志 loader 由 2.0 开场覆盖、sh-opening.js 学科开场)在 X 页归档停用
 assert '<script src="sh-opening.js"></script>' in s
 s = s.replace('<script src="sh-opening.js"></script>', '<!-- 1.0 sh-opening.js 已在 2.0 X 页归档停用,改用 x/sh-x-open.js -->\n  <script src="x/sh-x-open.js"></script>', 1)

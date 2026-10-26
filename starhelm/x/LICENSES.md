@@ -31,3 +31,4 @@
 - C0.5:音乐原文件已转码为 64–80 kbps MP3(只改码率,未剪辑)。Armilla 光环形象为手写 SVG。
 
 | Armilla 浑天仪形象(x/sh-x-armilla.js) | 移植自同系列项目 09_armilla「ARMILLA · 浑天」v2.2.1(创世计划原创) | 系列内部原创,随本项目 | 王磊 / 创世计划 | 驾驶舱底部 Armilla 形象 | 代码重写,参数与着色器沿用 09 |  2026-10-26 |
+| x/cursor/star.svg, frame.svg | 天枢 Starhelm 自绘鼠标指针(E 星芒罗盘 / D 全息取景框) | 原创 | 本项目 | 本项目 | 2026-10-27 | 驾驶舱鼠标 |

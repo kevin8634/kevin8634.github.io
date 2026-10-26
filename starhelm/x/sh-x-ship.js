@@ -301,20 +301,23 @@
   function distTo(b) { var p = b.wp || [0, 0, 0]; return Math.max(0, Math.hypot(p[0] - S.pos[0], p[1] - S.pos[1], p[2] - S.pos[2]) - b.R * (b.id === 'sun' ? 6 : 4)); }
   function togglePlan() {
     if ($('#xs-plan', R)) { closeCards(); return; }
-    closeCards(); PL.tgt = PL.tgt || (S.target !== 'earth' ? S.target : 'mars');
+    closeCards(); PL.tgt = S.target;   // 王磊 10-27:目标沿用驾驶舱里已选定的星球,不再重选
     var c = el('div', 'xs-card', ''); c.id = 'xs-plan'; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', '航行规划');
     c.innerHTML = '<h4><span>航行规划 · 天枢号 <small>NAV PLAN</small></span><button class="xc" type="button" aria-label="关闭">×</button></h4>' +
-      '<input type="search" id="xs-q" placeholder="检索目的地星球,例如:火星 / Saturn" autocomplete="off">' +
-      '<div class="xs-sec">太阳系 · 目标</div><div class="xs-grid" id="xs-bodies"></div>' +
+      '<div class="xs-sec">目的地 · 已在导航目标中选定(右侧列表可换)</div><div class="xs-dst" id="xs-dst"></div><div id="xs-bodies" hidden></div>' +
+      '<div class="xs-sec">星域 · 航图只选星域</div><div class="xs-grid" id="xs-doms"></div>' +
       '<div class="xs-sec">引擎 · 继承弦穹号 · <span style="color:#7fe3c4">实测</span> / <span style="color:#ffd27a">推断</span> / <span style="color:#c9a6ff">猜想</span></div><div class="xs-grid" id="xs-engs"></div>' +
       '<div class="xs-pre" id="xs-pre"></div>' +
       '<div class="xs-row"><button class="xs-no" type="button">取消</button><button class="xs-go" type="button">出发</button></div>' +
-      '<div class="xs-sec" style="margin-top:14px">跨星域跃迁(群星、银河、宇宙)将在 C2 开放</div>';
+      '';
     R.appendChild(c);
     var bd = $('#xs-bodies', c), eg = $('#xs-engs', c);
-    B.forEach(function (b) { var x = el('button', 'xs-chip', '<span style="color:' + b.col + '">●</span> ' + b.zh); x.type = 'button'; x.dataset.id = b.id; x.dataset.k = (b.zh + ' ' + b.en).toLowerCase(); x.onclick = function () { PL.tgt = b.id; I.setTarget(b.id); blip(700, .06, .04); refreshPlan(); }; bd.appendChild(x); });
     ENG.forEach(function (e) { if (e.model === 'none') return; var x = el('button', 'xs-chip', e.zh + '<i style="color:' + TIER[e.tier] + '">' + e.tier + '</i>'); x.type = 'button'; x.dataset.id = e.id; x.onclick = function () { ENGID = e.id; ls('gn:sh:x-engine', e.id); blip(600, .06, .04); refreshPlan(); }; eg.appendChild(x); });
-    $('#xs-q', c).oninput = function () { var q = this.value.trim().toLowerCase(), first = null; bd.querySelectorAll('.xs-chip').forEach(function (x) { var ok = !q || x.dataset.k.indexOf(q) >= 0; x.style.display = ok ? '' : 'none'; if (ok && !first) first = x; }); if (q && first) { PL.tgt = first.dataset.id; refreshPlan(); } };
+    var DOMS = [['I', '家园', 'earth'], ['II', '日与月', 'moon'], ['III', '行星世界', null], ['IV', '太阳系边疆', 'pluto'], ['V', '群星', 0], ['VI', '银河', 0], ['VII', '宇宙', 0]], dg = $('#xs-doms', c);
+    function domOf(id) { return id === 'earth' ? 0 : id === 'moon' || id === 'sun' ? 1 : id === 'pluto' ? 3 : 2; }
+    DOMS.forEach(function (d, i) { var x = el('button', 'xs-chip' + (d[2] === 0 ? ' off' : ''), '<i style="color:#f0c97a;font-style:normal">' + d[0] + '</i> ' + d[1] + (d[2] === 0 ? '<i>跃迁 · 即将</i>' : '')); x.type = 'button'; x.dataset.d = i;
+      x.onclick = function () { if (d[2] === 0) { I.toast('星域 ' + d[0] + ' ' + d[1] + ':跨星域跃迁即将开放'); return; } if (domOf(PL.tgt) !== i) { PL.tgt = d[2] || 'mars'; I.setTarget(PL.tgt); } refreshPlan(); }; dg.appendChild(x); });
+    PL.domOf = domOf;
     $('.xc', c).onclick = $('.xs-no', c).onclick = function () { closeCards(); };
     $('.xs-go', c).onclick = launch;
     refreshPlan(); if (U.arm && !VOICE.busy) U.arm.set('LISTENING');
@@ -329,6 +332,8 @@
   }
   function refreshPlan() {
     var c = $('#xs-plan', R); if (!c) return; var p = plan();
+    var dd = $('#xs-dst', R); if (dd) dd.innerHTML = '<span style="color:' + (p.b.col || '#7fd6ff') + '">●</span> <b>' + p.b.zh + '</b> <small>' + (p.km < 1 ? '就在附近' : I.fkm(p.km)) + '</small>';
+    R.querySelectorAll('#xs-doms .xs-chip').forEach(function (x) { x.classList.toggle('on', PL.domOf && +x.dataset.d === PL.domOf(p.b.id)); });
     c.querySelectorAll('#xs-bodies .xs-chip').forEach(function (x) { x.classList.toggle('on', x.dataset.id === p.b.id); });
     c.querySelectorAll('#xs-engs .xs-chip').forEach(function (x) { x.classList.toggle('on', x.dataset.id === p.e.id); });
     var ft = VD ? VD.fmtTime : I.fdur, fd = VD ? VD.fmtDist : I.fkm;
@@ -431,8 +436,12 @@
 
   /* ---------------- 每帧 ---------------- */
   var prevQ = null, hx = 0, hy = 0, warnSun = false, tAcc = 0, lastV = 0;
+  var LAY = 0;
   function frame(f) {
     var dt = f.dt; tAcc += dt;
+    // 右侧:导航目标列表紧跟在目标卡下方(目标卡高度随星球变化,避免两窗重叠)
+    if ((LAY = (LAY || 0) + 1) % 10 === 1) { var rr = SHXC._.root && SHXC._.root(), tg = rr && rr.querySelector('.p.tgt'), ls2 = rr && rr.querySelector('.p.lst'); if (tg && ls2 && getComputedStyle(ls2).display !== 'none') { var ky = rr.querySelector('.p.keys'), gb = innerHeight - 175, kb = ky && ky.offsetHeight ? Math.min(gb, ky.offsetTop) : gb, top = tg.offsetTop + tg.offsetHeight + 12, mh = Math.max(90, kb - 12 - top); if (ls2._t !== top + ':' + mh) { ls2._t = top + ':' + mh; ls2.style.top = top + 'px'; ls2.style.maxHeight = mh + 'px'; ls2.style.minHeight = '0'; } }
+      var nv = rr && rr.querySelector('.p.nav'); if (nv) { var nmh = Math.max(120, innerHeight - 175 - nv.offsetTop); if (nv._m !== nmh) { nv._m = nmh; nv.style.maxHeight = nmh + 'px'; nv.style.overflowY = 'auto'; } } }
     // 自动驾驶时左右两侧面板渐隐,抵达(减速缓冲结束、S.auto 关闭)后渐显
     var rt = SHXC._.root && SHXC._.root(); if (rt) { var ap = !!S.auto; if (rt._ap !== ap) { rt._ap = ap; rt.classList.toggle('xc-ap', ap); } }
     if (MODE === 'cruise' && S.mult > 1000) S.mult = 1000;
@@ -481,11 +490,18 @@
   }
   X.on(function (ev, a) {
     if (ev === 'open') {
+      var rq = SHXC._.root && SHXC._.root(); if (rq && !rq._cur) { rq._cur = 1; var dn = null;
+        rq.addEventListener('pointerdown', function (e) { if (e.target.closest('button,input,label,.xs-card,.p')) return; dn = [e.clientX, e.clientY]; });
+        addEventListener('pointermove', function (e) { if (dn && Math.abs(e.clientX - dn[0]) + Math.abs(e.clientY - dn[1]) > 4) rq.classList.add('xc-drag'); });
+        addEventListener('pointerup', function () { dn = null; rq.classList.remove('xc-drag'); }); }
       build(); loadVoice(); setMode(MODE, true); if (U.arm) { U.arm.resize(); U.arm.reveal(); U.arm.start(); }
       if (SND.sfx) { ac(); if (AC && AC.state === 'suspended') AC.resume(); humOn(); }
-      if (SND.music) musPlay('idle');
+      // 王磊 10-27 00:10:进入航行时自动关掉 1.0 背景音乐,开启驾驶舱音乐系统;离开驾驶舱再恢复原背景音乐
+      var bm = document.getElementById('btn-music'); MUS.bgm = !!(bm && bm.getAttribute('aria-pressed') === 'true'); if (MUS.bgm) bm.click();
+      SND.music = true; var mc = R && R.querySelector('#xs-m'); if (mc) mc.checked = true;
+      musPlay('idle');
       if (!sessionStorage.getItem('gn:sh:x-hello')) { sessionStorage.setItem('gn:sh:x-hello', '1'); setTimeout(function () { say(['a01']); say(['a02']); }, 900); }
-    } else if (ev === 'close') { if (U.arm) U.arm.stop(); stopOrbit(true); engStop(); humOff(); musStop(); closeCards(); if (R) R.classList.remove('photo'); }
+    } else if (ev === 'close') { if (U.arm) U.arm.stop(); stopOrbit(true); engStop(); humOff(); musStop(); closeCards(); if (R) R.classList.remove('photo'); if (MUS.bgm) { MUS.bgm = false; var bm2 = document.getElementById('btn-music'); if (bm2 && bm2.getAttribute('aria-pressed') !== 'true') bm2.click(); } }
     else if (ev === 'frame') frame(a);
     else if (ev === 'decel') say(['a07']);
     else if (ev === 'arrive') { engStop(); blip(660, .3, .06); if (LAUNCH && LAUNCH.b.id === a.id) { log('抵达', a, LAUNCH.e); LAUNCH = null; } if (PEND_PORT) { PEND_PORT = false; say(['a08']); startOrbit(a); } else { say(['a08']); offer(a); } }
@@ -495,7 +511,7 @@
 
   /* 取消 1.0 弦穹号飞船入口:巡天子页里统一进天枢号驾驶舱 */
   function takeover() {
-    if (!window.SH) return;
+    if (!window.SH || takeover.done) return; takeover.done = true;
     // Esc 分层:侧舷窗/卫星巡航 → 回驾驶舱原位;摄影模式 → 退出摄影;面板 → 收起;都没有 → 交给驾驶舱弹「结束探索」确认
     window.SHXC._esc = function () {
       if (O || (R && R.classList.contains('port'))) { stopOrbit(); return true; }
@@ -504,9 +520,22 @@
       return false;
     };
     // 驾驶舱入口装进顶栏「航行」方框(圆形视图条里的驾驶舱按钮取消)
+    // 1.0 sh-voyage.js 已归档,「航行」方框由这里自己建(位置同 1.0:任务按钮之后)
+    (function mk(n) { if (document.querySelector('.sh-btn-voy')) return; var nav = document.querySelector('.le-actions'), bq = nav && nav.querySelector('.sh-btn-quest'); if (!bq) { if (n < 600) setTimeout(function () { mk(n + 1); }, 100); return; } var b = document.createElement('button'); b.type = 'button'; b.className = 'le-btn le-btn--hero sh-btn-voy'; b.innerHTML = '<span class="le-btn__ico">🚀</span><span class="le-btn__txt">航行<small>VOYAGE</small></span>'; nav.insertBefore(b, bq.nextSibling); })(0);
+    if (/[?&]voy=1/.test(location.search)) (function w3(n) { if (window.SH_READY && window.SHXV) return SHXV.go('fly'); if (n < 600) setTimeout(function () { w3(n + 1); }, 100); })(0);
     (function lab(k) { var b = document.querySelector('.sh-btn-voy'); if (b) { var t = b.querySelector('.le-btn__txt'); if (t) t.innerHTML = '航行<small>天枢号 · F</small>'; b.title = '进入天枢号驾驶舱(F)'; b.addEventListener('click', function (e) { e.stopImmediatePropagation(); e.preventDefault(); if (window.SHXV) SHXV.go('fly'); else SHXC.open(); }, true); return; } if (k < 300) setTimeout(function () { lab(k + 1); }, 100); })(0);
     SH.voyEnter = function () { if (window.SHXV) SHXV.go('fly'); else SHXC.open(); };
-    SH.voySetTarget = function () { if (window.SHXV) SHXV.go('fly'); else SHXC.open(); setTimeout(togglePlan, 400); };
+    // 1.0 弦穹号航行已在 X 页归档:航图「前往」等旧入口全部转进驾驶舱;能直达的星域映射成驾驶舱目标
+    var SEC2T = { home: 'earth', moon: 'moon', planets: 'mars', edge: 'pluto', outer: 'pluto' };
+    SH.voyReady = function () { return !!(window.SHXC && SHXC.isOpen && SHXC.isOpen()); };
+    SH.voySetTarget = function (id) {
+      if (!SH.voyReady()) { if (window.SHXV) SHXV.go('fly'); else SHXC.open(); }
+      var n = 0; (function go() { if (!SH.voyReady() && n++ < 40) { setTimeout(go, 150); return; } setTimeout(function () { var t = SEC2T[id] || id, BY = SHXC._ && SHXC._.BY; if (BY && BY[t]) { SHXC.setTarget(t); setTimeout(function () { if (SHXC.state().target !== t) SHXC.setTarget(t); }, 1200); SHXC._.toast('航图目的地:' + BY[t].zh + ' · 按 G 自动驾驶'); } else togglePlan(); }, 300); })();
+    };
+    SH.voyLand = function (id) { SH.voySetTarget(id); };
+    SH.voyExit = function () { if (window.SHXC && SHXC.confirmEnd) SHXC.confirmEnd(); };
+    // 航图里的旧文案「弦穹号」→「天枢号」
+    (function relabel(k) { var A = document.querySelector('section.sha'); if (!A) { if (k < 600) setTimeout(function () { relabel(k + 1); }, 200); return; } var mo = new MutationObserver(function () { document.querySelectorAll('.sha button').forEach(function (b) { if (b.textContent.indexOf('弦穹号') >= 0) b.textContent = b.textContent.replace('驾驶弦穹号前往', '驾驶天枢号前往').replace('弦穹号', '天枢号'); }); }); mo.observe(A, { childList: true, subtree: true }); })(0);
   }
   takeover(); addEventListener('load', takeover);
 

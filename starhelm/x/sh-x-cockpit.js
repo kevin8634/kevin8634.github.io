@@ -283,7 +283,7 @@
       '<div class="p nav mono" id="xc-nav"></div>' +
       '<div class="p tgt"><div class="cap" id="xc-tt">目标 · 行星</div><h3 id="xc-tn">地球</h3><div class="g2 mono" id="xc-tg"></div><div class="blurb" id="xc-tb"></div>' +
       '<div class="row"><button class="btn" id="xc-al" type="button">对准 · Z</button><button class="btn" id="xc-ap" type="button">自动驾驶 · G</button></div></div>' +
-      '<div class="p lst" id="xc-lst"><div class="cap" style="margin:0 6px 4px">导航目标 · 单击选中 · 双击飞往 · T 轮换</div></div>' +
+      '<div class="p lst" id="xc-lst"><div class="cap" style="margin:0 6px 4px">导航目标 · 单击选中 · 双击飞往 · T</div></div>' +
       '<div class="p keys" id="xc-keys"><div class="cap" style="display:flex;justify-content:space-between;margin-bottom:4px"><span>操作</span><a id="xc-kt" style="cursor:pointer">收起 · H</a></div><div class="kg">' +
       '<kbd>W</kbd><span>加速</span><kbd>S</kbd><span>减速</span><kbd>A</kbd><span>左转</span><kbd>D</kbd><span>右转</span><kbd>R</kbd><span>抬头</span><kbd>F</kbd><span>低头</span>' +
       '<kbd>Q</kbd><span>左滚</span><kbd>E</kbd><span>右滚</span><kbd>Shift</kbd><span>×10 推进</span><kbd>X</kbd><span>急停</span><kbd>[ ]</kbd><span>倍率</span><kbd>滚轮</kbd><span>巡航速度</span>' +
