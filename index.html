@@ -3335,7 +3335,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
-        { w: "gn", v: "v0.8.25", d: "2026-10-26", t: "创世计划 1.0 正式发布：七个学习世界全部开放，67 个任务；重要公告换为 1.0 发布，可直接观看发布片。" },
+        { w: "gn", v: "v0.8.25", d: "2026-10-26", t: "创世计划 1.0 正式发布：七个学习世界全部开放，67 个任务；重要公告换为 1.0 发布，可一键展开知识星桥。" },
         { w: "gn", v: "v0.8.24", d: "2026-10-25", t: "重要公告补上星域 V「群星」实拍图：100 光年内真实恒星场，公告轮播增至 5 张。" },
         { w: "gn", v: "v0.8.23", d: "2026-10-25", t: "重要公告更新天枢 1.0 进度：星域 V「群星」已开放，七星域开放 5 / 7，下一站星域 VI 银河。" },
         { w: "gn", v: "v0.8.22", d: "2026-10-25", t: "新增原创背景音乐「深空之下」并设为第一首：低沉的声呐回响、潮汐般的气流和远处的星光，为即将到来的 2.0 深空层预热。曲目列表现为四首。" },
@@ -4264,7 +4264,7 @@
         ],
         alt: "创世计划七个学习世界", cap: "",
         domains: ["星图", "宙律", "元素工坊", "生命源码", "奇点前夜", "觉弈", "天枢"], on: 7, unit: " 个世界已开放", label: "七世界开放进度",
-        stat: "67 个任务", foot: "下一站：2.0 深空之下", cta: "▶ 看发布片", trailer: true
+        stat: "67 个任务", foot: "下一站：2.0 深空之下", cta: "展开星桥 ✦", act: "bridges"
       };
       var NW = { el: document.getElementById("news"), bar: document.getElementById("newsBar"), tk: document.getElementById("newsTk"),
         one: document.getElementById("newsOne"), oneT: document.getElementById("newsOneT"), ann: document.getElementById("ann"),
@@ -4307,7 +4307,7 @@
           '<div class="x-ann__ft"><small>' + brEsc(ANN.foot) + " · " + ANN.d.slice(5).replace("-", "/") + '</small><button type="button" class="x-ann__go" id="annGo">' + brEsc(ANN.cta) + '</button></div>';
         annSlides(IM);
         NW.ann.hidden = false;
-        document.getElementById("annGo").addEventListener("click", function () { lsSet(NW.AK, ANN.id); if (ANN.trailer) { document.getElementById("trailerBtn").click(); return; } var w = lgW(ANN.w); enterWorld(ANN.w, w.href); });
+        document.getElementById("annGo").addEventListener("click", function () { lsSet(NW.AK, ANN.id); if (ANN.trailer) { document.getElementById("trailerBtn").click(); return; } if (ANN.act === "bridges") { showBridges(); return; } var w = lgW(ANN.w); enterWorld(ANN.w, w.href); });
       }
       function nwRender() {
         var un = nwUnread();
