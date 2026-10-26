@@ -110,7 +110,7 @@
   function keyOf(b) { return b.dataset.layer || b.dataset.eye || b.dataset.sw || ''; }
   function group() {
     var bar = $('chips'); if (!bar || bar.dataset.grouped) return; bar.dataset.grouped = '1';
-    var chips = [].slice.call(bar.querySelectorAll('.le-chip')), cur = 'sun';
+    var chips = [].slice.call(bar.querySelectorAll('.le-chip:not(.sh-nogroup)')), cur = 'sun';   // .sh-nogroup(实时数据开关)常驻,不进分组
     try { cur = localStorage.getItem(MK) || 'space'; } catch (e) { }
     var mods = {};
     GROUPS.forEach(function (g) {
@@ -124,7 +124,7 @@
     chips.forEach(function (b) { if (!b.parentNode.classList.contains('sh-mod__in')) place(b); });
     function count() { GROUPS.forEach(function (g) { var m = mods[g.id], all = m.querySelectorAll('.le-chip'), on = m.querySelectorAll('.le-chip[aria-pressed="true"]'); var tx = on.length + '/' + all.length, ic = m.querySelector('i'); if (ic.textContent !== tx) ic.textContent = tx; }); }
     function open(id) { cur = id; GROUPS.forEach(function (g) { mods[g.id].classList.toggle('is-open', g.id === id); }); try { localStorage.setItem(MK, id); } catch (e) { } count(); }
-    new MutationObserver(function (ms) { ms.forEach(function (m) { [].forEach.call(m.addedNodes, function (n) { if (n.classList && n.classList.contains('le-chip') && n.parentNode === bar) place(n); }); }); count(); }).observe(bar, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-pressed'] });
+    new MutationObserver(function (ms) { ms.forEach(function (m) { [].forEach.call(m.addedNodes, function (n) { if (n.classList && n.classList.contains('le-chip') && !n.classList.contains('sh-nogroup') && n.parentNode === bar) place(n); }); }); count(); }).observe(bar, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-pressed'] });
     open(cur);
   }
   function addChip() {
