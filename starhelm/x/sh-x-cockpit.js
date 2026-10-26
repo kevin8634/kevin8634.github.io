@@ -27,6 +27,8 @@
   var BY = {}; B.forEach(function (b) { BY[b.id] = b; });
   var K = { open: false, built: false };
   var X = window.SHXC = { isOpen: function () { return K.open; } };
+  X.hooks = []; X.on = function (f) { X.hooks.push(f); };
+  function emit(ev, a) { for (var i = 0; i < X.hooks.length; i++) { try { X.hooks[i](ev, a); } catch (e) { console.warn('[SHXC hook]', e); } } }
 
   function reduced() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
   function $(s, r) { return (r || document).querySelector(s); }
@@ -375,15 +377,17 @@
       var stopAt = tb.R * (tb.id === 'sun' ? 6 : 4), rem = Math.max(0, dT - stopAt), fw0 = new T.Vector3(0, 0, -1).applyQuaternion(S.q), ali = Math.max(0, fw0.dot(toT.clone().normalize()));
       veff = Math.max(0.5, rem * 0.9) * Math.pow(ali, 8);
       S.base = Math.min(veff, 30); S.mult = Math.max(1, veff / Math.max(S.base, 1e-6));
-      if (rem < 1) { S.auto = false; S.base = 0; S.mult = 1; toast('已抵达 ' + tb.zh + ' 附近'); }
+      if (rem < 1) { S.auto = false; S.base = 0; S.mult = 1; toast('已抵达 ' + tb.zh + ' 附近'); emit('arrive', tb); }
+      else if (rem < tb.R * 25 && S._decel !== tb.id) { S._decel = tb.id; emit('decel', tb); }
     }
     veff = S.base * S.mult * (S.auto ? 1 : S.boost);
+    if (S.capV && veff > S.capV) veff = S.capV;
     fwd = new T.Vector3(0, 0, -1).applyQuaternion(S.q);
     var step = veff * dt;
     // 防撞:不进入天体表面
     var nx = S.pos[0] + fwd.x * step, ny = S.pos[1] + fwd.y * step, nz = S.pos[2] + fwd.z * step, hit = null;
     B.forEach(function (b) { var d = Math.hypot(nx - b.wp[0], ny - b.wp[1], nz - b.wp[2]); if (d < b.R * (b.id === 'sun' ? 1.6 : 1.004)) hit = b; });
-    if (hit) { S.base = 0; S.mult = 1; S.auto = false; step = 0; toast('靠得太近了:已在 ' + hit.zh + ' 上空悬停'); }
+    if (hit) { S.base = 0; S.mult = 1; S.auto = false; step = 0; toast('靠得太近了:已在 ' + hit.zh + ' 上空悬停'); emit('hover', hit); }
     else { S.pos = [nx, ny, nz]; S.trip += step; }
     // 随最近天体一起运动(在行星附近悬停时,不会被它甩在身后)
     var near = null, nd = Infinity;
@@ -391,6 +395,7 @@
     var bsun = BY.sun; if (bsun.surf < nd) { near = bsun; nd = bsun.surf; }
     var soi = near.id === 'sun' ? 0 : near.R * (near.id === 'moon' ? 30 : near.id === 'earth' ? 140 : 300);
     if (near.dist < soi) { S.pos[0] += near.v[0] * dt; S.pos[1] += near.v[1] * dt; S.pos[2] += near.v[2] * dt; }
+    emit('frame', { dt: dt, veff: veff, near: near, nd: nd, tb: tb, dT: dT, surfT: surfT, ms: ms });
     // --- 相机 ---
     cam.position.set(0, 0, 0); cam.quaternion.copy(S.q);   // 浮动原点:相机永远在原点,天体按相对位置摆放(GPU float32 精度够用)
     cam.near = Math.max(0.05, Math.min(2000, nd * 0.35)); cam.far = 5e6; cam.aspect = W / Hh; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
@@ -553,15 +558,17 @@
     size(); startPose(o.target || 'earth'); setTarget(S.target);
     addEventListener('resize', size); addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true);
     last = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
-    toast('驾驶舱已就位 · 拖动转视角,W/S 加减速,G 自动驾驶');
+    toast('驾驶舱已就位 · 拖动转视角,W/S 加减速,G 自动驾驶'); emit('open', o);
     try { var u = new URL(location.href); u.searchParams.set('view', 'fly'); history.replaceState(null, '', u.pathname + u.search); } catch (e) { }
     return true;
   };
   X.close = function (quiet) {
     if (!K.open) return; K.open = false; cancelAnimationFrame(raf); root.style.display = 'none'; document.body.classList.remove('shx-flying');
     removeEventListener('resize', size); removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true); S.keys = {};
+    emit('close');
     if (!quiet && window.SHXV) SHXV.go('solar');
   };
+  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, fdur: fdur, fkm: fkm };
   X.state = function () { return { pos: S.pos.slice(), target: S.target, base: S.base, mult: S.mult, auto: S.auto, sunVis: sunVis }; };
   X.setTarget = function (id) { if (BY[id]) setTarget(id); };
   X.autopilot = function (on) { autopilot(on !== false); };
