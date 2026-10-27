@@ -22,7 +22,10 @@
     { id: 'saturn', zh: '土星', en: 'Saturn', type: '行星', R: 58232, GM: 37931187, temp: '-140(云顶)', ab: 'Saturn', col: '#e6cf98', hd: 'hd/saturn-4k.jpg', lo: 'planet-saturn.jpg', per: 10.66, ring: true, atm: [1, .92, .7] },
     { id: 'uranus', zh: '天王星', en: 'Uranus', type: '行星', R: 25362, GM: 5793939, temp: '-195', ab: 'Uranus', col: '#9fe0e8', lo: 'planet-uranus.jpg', per: -17.24, atm: [.6, .95, 1] },
     { id: 'neptune', zh: '海王星', en: 'Neptune', type: '行星', R: 24622, GM: 6836529, temp: '-200', ab: 'Neptune', col: '#5d86ff', lo: 'planet-neptune.jpg', per: 16.11, atm: [.4, .6, 1] },
-    { id: 'pluto', zh: '冥王星', en: 'Pluto', type: '矮行星', R: 1188.3, GM: 869.6, temp: '-225', ab: 'Pluto', col: '#d9c3a8', hd: 'hd/pluto-2k.jpg', lo: 'planet-pluto.jpg', per: -153.3 }
+    { id: 'pluto', zh: '冥王星', en: 'Pluto', type: '矮行星', R: 1188.3, GM: 869.6, temp: '-225', ab: 'Pluto', col: '#d9c3a8', hd: 'hd/pluto-2k.jpg', lo: 'planet-pluto.jpg', per: -153.3 },
+    // C1.8 出太阳系航点:固定方向(赤经/赤纬,J2000)+ 日心距离;不画星球,只有标签与目标框
+    { id: 'voyager1', zh: '旅行者 1 号', en: 'Voyager 1', type: '探测器', R: 0.02, GM: 722 * 6.674e-20, temp: '约 -270(星际空间)', col: '#9fd0e8', fix: [258.3, 12.0, 170], ghost: true, info: [['发射', '1977 年 9 月 5 日'], ['日心距离', '约 170 AU(2026)'], ['速度', '约 17 km/s(相对太阳)'], ['2012 年 8 月', '穿越日球层顶']] },
+    { id: 'oort', zh: '奥尔特云内缘', en: 'Inner Oort Cloud', type: '推测区域', R: 0.02, GM: 0, temp: '约 -268', col: '#b8c8e0', fix: [258.3, 12.0, 2000], ghost: true, info: [['距离', '内缘约 2,000 AU(推测)'], ['外缘', '可达约 10 万 AU'], ['组成', '数以万亿计的冰质天体'], ['证据', '长周期彗星轨道反推,尚无直接观测']] }
   ];
   var BY = {}; B.forEach(function (b) { BY[b.id] = b; });
   var K = { open: false, built: false };
@@ -45,7 +48,9 @@
     out[0] = v.x * AU; out[1] = z * AU; out[2] = -y * AU; return out;
   }
   function helio(b, d) {
-    var A = window.Astronomy, o = [0, 0, 0]; if (!A || b.id === 'sun') return o;
+    var A = window.Astronomy, o = [0, 0, 0];
+    if (b.fix) { var ra = b.fix[0] * Math.PI / 180, de = b.fix[1] * Math.PI / 180; return eq2three({ x: Math.cos(de) * Math.cos(ra) * b.fix[2], y: Math.cos(de) * Math.sin(ra) * b.fix[2], z: Math.sin(de) * b.fix[2] }, o); }
+    if (!A || b.id === 'sun') return o;
     if (b.id === 'moon') { var e = eq2three(A.HelioVector(A.Body.Earth, d), [0, 0, 0]), m = eq2three(A.GeoVector(A.Body.Moon, d, true), [0, 0, 0]); return [e[0] + m[0], e[1] + m[1], e[2] + m[2]]; }
     return eq2three(A.HelioVector(A.Body[b.ab], d), o);
   }
@@ -87,7 +92,7 @@
     b.U = U;
     var seg = b.R > 20000 ? 160 : 128;
     var m = new T.Mesh(new T.SphereGeometry(b.R, seg, seg / 2), new T.ShaderMaterial({ uniforms: U, vertexShader: PV, fragmentShader: PF }));
-    spin.add(m); b.mesh = m;
+    spin.add(m); b.mesh = m; if (b.ghost) m.visible = false;
     if (b.id === 'earth') {   // 云层
       var ct = tex(b, Math.min(screen.width, screen.height) >= 700 ? 'hd/earth-clouds-4k.jpg' : (window.LE_TEX && LE_TEX['earth-clouds-1k.jpg'])); ct.encoding = T.LinearEncoding;
       var cu = { map: { value: ct }, sunP: U.sunP };
@@ -123,7 +128,7 @@
   function orbits() {
     var grp = new T.Group(), A = window.Astronomy; if (!A) return grp;
     B.forEach(function (b) {
-      if (b.id === 'sun' || b.id === 'moon') return;
+      if (b.id === 'sun' || b.id === 'moon' || b.fix) return;
       var per = { mercury: 88, venus: 225, earth: 365.25, mars: 687, jupiter: 4333, saturn: 10759, uranus: 30687, neptune: 60190, pluto: 90560 }[b.id], N = 360, arr = new Float32Array(N * 3), d0 = now().getTime();
       for (var i = 0; i < N; i++) { var p = helio(b, new Date(d0 + i / N * per * 864e5)); arr[i * 3] = p[0]; arr[i * 3 + 1] = p[1]; arr[i * 3 + 2] = p[2]; }
       var g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(arr, 3));
@@ -488,8 +493,9 @@
     var sd = window.SOLAR && (tb.id === 'sun' ? SOLAR.sun : SOLAR.bodies.filter(function (x) { return x.id === tb.id; })[0]);
     var rate = prevDT == null ? 0 : (dT - prevDT) / hdt; prevDT = dT;
     $('#xc-tt', root).textContent = '目标 · ' + tb.type; $('#xc-tn', root).textContent = tb.zh;
-    $('#xc-tg', root).innerHTML = g2('距离', fkm(dT)) + g2('接近率', (rate <= 0 ? '−' : '+') + sig(Math.abs(rate), 3) + ' km/s') + g2('预计到达', rate < -1e-6 ? fdur(surfT / -rate) : '—') + g2('半径', nf(tb.R) + ' km') +
-      g2('质量', sig(tb.GM / G, 3).replace(/e(\d+)/, '×10^$1') + ' kg', 'x2') + g2('表面重力', sig(tb.GM / (tb.R * tb.R) * 1000, 3) + ' m/s²', 'x2') + g2('平均温度', tb.temp + ' °C', 'x2') + g2('光行时', fdur(dT / C), 'x2');
+    $('#xc-tg', root).innerHTML = g2('距离', fkm(dT)) + g2('接近率', (rate <= 0 ? '−' : '+') + sig(Math.abs(rate), 3) + ' km/s') + g2('预计到达', rate < -1e-6 ? fdur(surfT / -rate) : '—') + (tb.info ? '' : g2('半径', nf(tb.R) + ' km')) +
+      (tb.info ? tb.info.map(function (r) { return g2(r[0], r[1], 'x2'); }).join('') + g2('光行时', fdur(dT / C), 'x2') :
+      g2('质量', sig(tb.GM / G, 3).replace(/e(\d+)/, '×10^$1') + ' kg', 'x2') + g2('表面重力', sig(tb.GM / (tb.R * tb.R) * 1000, 3) + ' m/s²', 'x2') + g2('平均温度', tb.temp + ' °C', 'x2') + g2('光行时', fdur(dT / C), 'x2'));
     $('#xc-tb', root).textContent = sd && sd.blurb ? sd.blurb : '';
     $('#xc-al', root).classList.toggle('on', S.align); $('#xc-ap', root).classList.toggle('on', S.auto);
     $('#xc-cn', root).textContent = tb.zh; $('#xc-cs', root).textContent = fkm(dT) + ' · ETA ' + (rate < -1e-6 ? fdur(surfT / -rate) : '—');
@@ -531,11 +537,12 @@
   }
   function drawStrip() {
     var cv = H.strip || (H.strip = $('#xc-strip', root)), g = cv.getContext('2d'), w = cv.width, h = cv.height;
-    g.clearRect(0, 0, w, h); var lx = function (au) { return 30 + (Math.log10(Math.max(au, .2)) - Math.log10(.2)) / (Math.log10(50) - Math.log10(.2)) * (w - 60); };
+    g.clearRect(0, 0, w, h); var HI = BY.sun.dist / AU > 45 || (BY[S.target] && BY[S.target].fix) ? 3000 : 50;   // C1.8 出太阳系时刻度延伸到 3,000 AU
+    var lx = function (au) { return 30 + (Math.log10(Math.min(HI, Math.max(au, .2))) - Math.log10(.2)) / (Math.log10(HI) - Math.log10(.2)) * (w - 60); };
     g.strokeStyle = 'rgba(200,215,240,.35)'; g.beginPath(); g.moveTo(20, 40); g.lineTo(w - 20, 40); g.stroke();
-    for (var a = .2; a < 50; a *= 1.12) { var x = lx(a); g.beginPath(); g.moveTo(x, 37); g.lineTo(x, 43); g.stroke(); }
+    for (var a = .2; a < HI; a *= HI > 50 ? 1.25 : 1.12) { var x = lx(a); g.beginPath(); g.moveTo(x, 37); g.lineTo(x, 43); g.stroke(); }
     g.font = '18px "Noto Sans SC",sans-serif'; g.textAlign = 'center';
-    B.forEach(function (b) { if (b.id === 'sun' || b.id === 'moon') return; var r = Math.hypot(b.wp[0] - BY.sun.wp[0], b.wp[1] - BY.sun.wp[1], b.wp[2] - BY.sun.wp[2]) / AU, x = lx(r); g.fillStyle = b.col; g.beginPath(); g.arc(x, 40, b.id === S.target ? 7 : 5, 0, 7); g.fill(); g.fillStyle = b.id === S.target ? '#7fd6ff' : 'rgba(210,220,238,.7)'; g.fillText(b.zh, x, 72); });
+    B.forEach(function (b) { if (b.id === 'sun' || b.id === 'moon' || (b.fix && HI <= 50)) return; var r = Math.hypot(b.wp[0] - BY.sun.wp[0], b.wp[1] - BY.sun.wp[1], b.wp[2] - BY.sun.wp[2]) / AU, x = lx(r); g.fillStyle = b.col; g.beginPath(); g.arc(x, 40, b.id === S.target ? 7 : 5, 0, 7); g.fill(); g.fillStyle = b.id === S.target ? '#7fd6ff' : 'rgba(210,220,238,.7)'; g.fillText(b.zh, x, 72); });
     var me = lx(BY.sun.dist / AU); g.fillStyle = '#fff'; g.beginPath(); g.moveTo(me, 30); g.lineTo(me - 7, 16); g.lineTo(me + 7, 16); g.fill(); g.font = '16px sans-serif'; g.fillText('你', me, 12);
   }
 
@@ -548,7 +555,7 @@
     rd.setPixelRatio(window.devicePixelRatio || 1); rd.outputEncoding = T.sRGBEncoding;
     cam = new T.PerspectiveCamera(60, 1, 1, 1e7); cam0 = new T.PerspectiveCamera(60, 1, 0.1, 5000); camO = new T.PerspectiveCamera(60, 1, 1e3, 2e11);
     sSky = new T.Scene(); sOrb = new T.Scene(); sMain = new T.Scene(); sDust = new T.Scene();
-    if (window.SHFX3D && SHFX3D.skyMesh) sSky.add(SHFX3D.skyMesh(rd, 1000, 0x9aa0ae));
+    if (window.SHFX3D && SHFX3D.skyMesh) { K.skyG = SHFX3D.skyMesh(rd, 1000, 0x9aa0ae); sSky.add(K.skyG); }
     sOrb.add(orbits());
     ephem(true); B.forEach(function (b) { sMain.add(body3d(b)); });
     dust = dustField(); if (dust.N) sDust.add(dust.m);
@@ -606,7 +613,7 @@
     if (dlg) { dlg.remove(); dlg = null; }
     if (!quiet) { K.resume = true; if (window.SHXV) SHXV.go('solar'); }
   };
-  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, fdur: fdur, fkm: fkm };
+  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, fdur: fdur, fkm: fkm, sky: function () { return sSky; }, skyG: function () { return K.skyG; }, emit: function (e, a) { emit(e, a); } };
   X.state = function () { return { pos: S.pos.slice(), target: S.target, base: S.base, mult: S.mult, auto: S.auto, sunVis: sunVis }; };
   X.setTarget = function (id) { if (BY[id]) setTarget(id); };
   X.autopilot = function (on) { autopilot(on !== false); };
