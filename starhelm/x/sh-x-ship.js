@@ -1,4 +1,5 @@
 /* 天枢 Starhelm · 2.0 穿梭 C0.5 · sh-x-ship.js(SHXS)
+ * C1.4:三引擎电影化特效挂钩(近光速 / 曲率 / 虫洞,见 sh-x-fx.js)
  * C1.3:悬停/待命音乐 3 首轮播(+2 首程序合成原创)
  * C1.2:Armilla ⇄ JARVIS 人格切换(偏好 starhelm.voice.persona,默认 armilla;JARVIS 英文台词/拼读 + 奇点形象;两人格共用 AI 空间感)
  * 天枢号舰载系统:挂在 SHXC 驾驶舱上(SHXC.on 钩子),不改 1.0 文件。
@@ -271,8 +272,10 @@
     P.stop = function () { var t2 = AC.currentTime; out.gain.cancelScheduledValues(t2); out.gain.setValueAtTime(out.gain.value, t2); out.gain.linearRampToValueAtTime(0, t2 + 1.6); setTimeout(function () { nodes.forEach(function (n) { try { n.stop(); } catch (e) { } }); out.disconnect(); }, 1900); };
     return P;
   }
-  function engStart(id) { engStop(); ENGV = engineSound(id); }
-  function engStop() { if (ENGV) { ENGV.stop(); ENGV = null; } }
+  // C1.4:三引擎电影化特效(SHXFX,sh-x-fx.js)与引擎启停同步;音效关时也照常出画面
+  var FXM = { rel: [1, '近光速航行(推断)'], warp: [2, '曲率驱动(猜想)'], gate: [3, '虫洞(猜想)'] }, FXON = null;
+  function engStart(id) { engStop(); ENGV = engineSound(id); var m = FXM[id]; if (m && window.SHXFX) { FXON = id; SHXFX.set(m[0], m[1]); } }
+  function engStop() { if (ENGV) { ENGV.stop(); ENGV = null; } if (FXON) { FXON = null; if (window.SHXFX) SHXFX.set(0); } }
 
   /* ---------------- 界面 ---------------- */
   var R, U = {}, MODE = ls('gn:sh:x-mode') || 'cruise', ENGID = ls('gn:sh:x-engine') || 'ion';
@@ -601,7 +604,7 @@
       if (sun.surf > sun.R * 30) warnSun = false;
     }
     // 引擎音:自动驾驶结束 / 急停后关停
-    if (ENGV && !S.auto && !PEND_PORT) engStop();
+    if ((ENGV || FXON) && !S.auto && !PEND_PORT) engStop();
     // 航行底噪随速度
     if (HUM) { var lv = Math.log10(1 + f.veff); HUM.g.gain.setTargetAtTime(Math.min(.14, lv * .025), AC.currentTime, .4); HUM.f.frequency.setTargetAtTime(90 + lv * 70, AC.currentTime, .4); }
     // 音乐场景
@@ -640,7 +643,7 @@
       if (!sessionStorage.getItem('gn:sh:x-hello')) { sessionStorage.setItem('gn:sh:x-hello', '1'); setTimeout(function () { say(['a01']); say(['a02']); }, 900); }
     } else if (ev === 'close') { if (U.arm) U.arm.stop(); stopOrbit(true); engStop(); humOff(); musStop(); closeCards(); if (R) R.classList.remove('photo'); if (MUS.bgm) { MUS.bgm = false; var bm2 = document.getElementById('btn-music'); if (bm2 && bm2.getAttribute('aria-pressed') !== 'true') bm2.click(); } }
     else if (ev === 'frame') frame(a);
-    else if (ev === 'decel') say(['a07']);
+    else if (ev === 'decel') { say(['a07']); if (FXON && window.SHXFX) SHXFX.set(0); }
     else if (ev === 'arrive') { ARR = a.id; engStop(); blip(660, .3, .06); if (LAUNCH && LAUNCH.b.id === a.id) { log('抵达', a, LAUNCH.e); LAUNCH = null; } if (PEND_PORT) { PEND_PORT = false; say(['a08']); startOrbit(a); } else { say(['a08']); offer(a); } }
     else if (ev === 'hover') { ARR = S.target; alarm(); alertOrb(); say(['a13']); }
   });

@@ -434,6 +434,8 @@
       dust.m.quaternion.copy(S.q);   // 尘埃在船体坐标里
     }
     // --- 渲染 ---
+    // C1.4:三引擎电影化特效 —— 激活时先画到离屏 RT,末尾由 SHXFX 全屏 pass 上屏
+    var PF = window.SHXFX && SHXFX.begin(rd);
     rd.autoClear = false; rd.clear();
     rd.render(sSky, cam0);
     if (S.orb) { sOrb.visible = true; rd.render(sOrb, camO); }
@@ -441,6 +443,7 @@
     if (dust.N) rd.render(sDust, cam0);
     var fx = updFx(W, Hh, [sunLocal.x, sunLocal.y, sunLocal.z]);
     rd.clearDepth(); rd.render(sFx, camFx);
+    if (PF) SHXFX.end(rd, dt);
     // --- HUD ---
     hud(dt, W, Hh, veff, near, nd, tb, dT, surfT, fx);
   }
