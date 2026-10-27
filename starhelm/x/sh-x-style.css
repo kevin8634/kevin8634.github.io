@@ -77,3 +77,8 @@
 #xa-board.open .bd-mid{opacity:0}
 @keyframes bdp{50%{opacity:.6}}
 @media (prefers-reduced-motion:reduce){#xa-board .bd-door{transition:none}}
+/* C1.9e 王磊 10-27 23:19:倒计时去背景框;仪表盘数字改液晶字体,黄色半透明 */
+#xs-cd{background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+#shxc .gau .v,#shxc .gau.warm .v{font-family:DSEG7,ui-monospace,monospace!important;font-weight:700;color:rgba(255,206,84,.72)!important;text-shadow:0 0 6px rgba(255,190,60,.45);letter-spacing:.02em}
+#shxc .gau .v{font-size:15px!important;top:37px!important}
+@media (max-width:640px){#shxc .gau .v{font-size:11px!important;top:27px!important}}
