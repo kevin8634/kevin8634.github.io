@@ -352,6 +352,21 @@
   function setTarget(id) { S.target = id; if (S.auto) autopilot(true); B.forEach(function (b) { b.li.classList.toggle('on', b.id === id); }); }
   function autopilot(on) { S.auto = on; S.align = false; if (on) toast('自动驾驶:飞往 ' + BY[S.target].zh); }
 
+  /* C1.9c 日球层读数(30 AU 以外显示):按旅行者 1/2 号实测剖面插值的示意值
+   * 终端激波 ~94 AU(V1 2004-12;V2 ~84 AU 2007-08):太阳风由超音速 ~400 km/s 骤降到 ~130 km/s,等离子体被压缩加热、磁场增强
+   * 日球层顶 121.6 AU(V1 2012-08-25;V2 119 AU 2018-11-05):太阳风粒子几乎消失,银河宇宙线骤增,等离子体密度跳升约 40 倍(V1 等离子体波测得 ~0.08 /cm³) */
+  function helioHud(r) {
+    if (r < 30) return '';
+    var TS = 94, HP = 121.6, zone, v, n, B, gcr, hp;
+    function L(a, b, t) { t = Math.max(0, Math.min(1, t)); return a + (b - a) * t; }
+    if (r < TS) { zone = '超音速太阳风区'; v = 400; n = 7 / (r * r); B = 0.1 * 30 / r + .03; gcr = L(55, 70, (r - 30) / (TS - 30)); hp = 100; }
+    else if (r < HP) { var t = (r - TS) / (HP - TS); zone = '日鞘(亚音速)'; v = L(130, 20, t); n = L(.002, .004, t); B = L(.12, .2, t); gcr = L(72, 80, t); hp = L(100, 90, t); }
+    else { var u = Math.min(1, (r - HP) / 30); zone = r < 2000 ? '本地星际介质' : '星际空间'; v = L(20, 0, u * 3); n = .08; B = .5; gcr = 100; hp = L(2, 1, u); }
+    function bar(x) { return '<span style="display:inline-block;width:60px;height:5px;border-radius:3px;background:linear-gradient(90deg,#f0c97a ' + x + '%,rgba(150,180,220,.18) ' + x + '%);vertical-align:middle"></span> ' + Math.round(x); }
+    return '<div class="sec">日球层 · 旅行者号实测剖面(示意)</div>' + kv('所在区域', zone) + kv('太阳风径向速度', v < 1 ? '≈ 0' : Math.round(v), 'km/s') +
+      kv('等离子体密度', sig(n, 2), '/cm³') + kv('磁场强度', sig(B, 2), 'nT') + kv('银河宇宙线(相对)', bar(gcr)) + kv('太阳风粒子(相对)', bar(hp));
+  }
+
   /* ---------------- 输入 ---------------- */
   var drag = null;
   function bindInput(cv) {
@@ -531,7 +546,7 @@
     $('#xc-nav', root).innerHTML =
       '<div class="sec">导航</div>' + kv('日心距离', rau.toFixed(4), 'AU') + kv('参考系', near.dist < (near.R * 300) && near.id !== 'sun' ? near.zh : '日心') + kv('最近天体', near.zh) + kv('本次航程', fkm(S.trip)) +
       '<div class="sec">环境</div>' + kv(hn + '辐照', sig(1361 * hL / (hau * hau), 4), 'W/m²') + kv('舱外平衡温度', nf(Math.max(-270.4, tempC)), '°C') + kv(hn + '视直径', sunD >= 1 ? sunD.toFixed(1) + '′' : (sunD * 60).toFixed(1) + '″') + kv('光行时 · 太阳', fdur(lt)) +
-      '<div class="sec">引力</div>' + kv('合引力加速度', sig(accT, 4), 'm/s²') + kv('来自' + near.zh, sig(accN * 1000, 4), 'm/s²') + kv('逃逸速度', sig(vesc, 3), 'km/s') + kv('圆轨道速度', sig(vcir, 3), 'km/s') + kv('洛伦兹因子 γ', gam.toFixed(6)) +
+      '<div class="sec">引力</div>' + kv('合引力加速度', sig(accT, 4), 'm/s²') + kv('来自' + near.zh, sig(accN * 1000, 4), 'm/s²') + kv('逃逸速度', sig(vesc, 3), 'km/s') + kv('圆轨道速度', sig(vcir, 3), 'km/s') + kv('洛伦兹因子 γ', gam.toFixed(6)) + helioHud(rau) +
       '<div class="sec">航速</div>' + kv('实际速度', sig(S.base, 4), 'km/s') + kv('等效速度', veff / C >= 0.01 ? sig(veff / C, 3) + ' c' : sig(veff, 4) + ' km/s') + kv('倍率(模拟)', '×' + sig(S.mult * (S.auto ? 1 : S.boost), 3));
     // 目标卡
     var sd = window.SOLAR && (tb.id === 'sun' ? SOLAR.sun : SOLAR.bodies.filter(function (x) { return x.id === tb.id; })[0]);
