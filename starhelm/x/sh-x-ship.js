@@ -652,6 +652,45 @@
     else return;
     e.preventDefault(); e.stopPropagation();
   }
+  /* C1.9 登舰:舱门遮罩 + 「舰载智能语音 / 舱内音响」两条真实下载进度;最短 3.2 s、最长 12 s(超时也放行),可跳过 */
+  function pull(url, onp) {   // 带进度的预取(写入浏览器缓存,随后 new Audio 直接命中)
+    return fetch(url).then(function (r) {
+      if (!r.ok) throw 0; var tot = +r.headers.get('content-length') || 0, got = 0;
+      if (!r.body || !r.body.getReader) return r.blob().then(function () { onp(1); });
+      var rd = r.body.getReader();
+      return (function pump() { return rd.read().then(function (x) { if (x.done) { onp(1); return; } got += x.value.length; onp(tot ? Math.min(.99, got / tot) : .5); return pump(); }); })();
+    }).catch(function () { onp(1); });
+  }
+  function board(hg, done) {
+    var root = R || (I.root && I.root()); if (!root) { done(); return; }
+    var ov = $('#xa-board', root); if (ov) ov.remove();
+    ov = el('div', '', '<div class="bd-door l"></div><div class="bd-door r"></div><div class="bd-mid"><div class="bd-k">BOARDING · 登舰</div><div class="bd-t">天枢号 STARHELM</div>' +
+      '<div class="bd-row"><span>舰载智能语音 · ' + pname() + '</span><i><b id="bd-v"></b></i><em id="bd-vp">0%</em></div>' +
+      '<div class="bd-row"><span>舱内音响系统</span><i><b id="bd-m"></b></i><em id="bd-mp">0%</em></div>' +
+      '<div class="bd-s" id="bd-s">气闸加压中…</div><button type="button" class="bd-skip">跳过 ›</button></div>');
+    ov.id = 'xa-board'; root.appendChild(ov);
+    var pv = { v: 0, m: 0 }, t0 = performance.now(), fin = false, ok = { v: false, m: false };
+    function bar(k, f) { pv[k] = Math.max(pv[k], f); var b = $('#bd-' + k, ov), e = $('#bd-' + k + 'p', ov); if (b) b.style.width = (pv[k] * 100).toFixed(0) + '%'; if (e) e.textContent = (pv[k] * 100).toFixed(0) + '%'; if (pv[k] >= 1) ok[k] = true; check(); }
+    function finish() {
+      if (fin) return; fin = true; var st = $('#bd-s', ov); if (st) st.textContent = '舱门开启';
+      blip(520, .25, .05); ov.classList.add('open'); setTimeout(function () { ov.remove(); }, 1600);
+      if (hg === VOICE.gen) done();
+    }
+    function check() { if (fin) return; if (ok.v && ok.m) { var st = $('#bd-s', ov); if (st) st.textContent = '系统就绪'; setTimeout(finish, Math.max(400, 3200 - (performance.now() - t0))); } }
+    $('.bd-skip', ov).onclick = finish; setTimeout(finish, 12000);
+    setTimeout(function () { var st = $('#bd-s', ov); if (st && !fin) st.textContent = '校准星图 · 唤醒舰载智能…'; }, 1300);
+    // 音乐:当前待命曲
+    if (SND.music !== false) pull(IDLE[MUS.ii % IDLE.length].f, function (f) { bar('m', f); }); else bar('m', 1);
+    // 语音:清单 + 欢迎语两句(a01/a02)
+    if (!VOICE.on) bar('v', 1);
+    else fetch('x/' + PER.id + '/manifest.json').then(function (r) { return r.json(); }).then(function (m) {
+      var c = {}; m.items.forEach(function (it) { c[it.id] = it; c['t:' + it.text] = it; }); if (!VOICE.clips) { VOICE.clips = c; VOICE.pack = PER.id; }
+      var fs = ['a01', 'a02'].map(function (id) { var it = c[id]; return it && ('x/' + PER.id + '/' + (sfxChain() ? it.file : (SFX.on && it.file_fx ? it.file_fx : it.file))); }).filter(Boolean);
+      var part = fs.map(function () { return 0; }); bar('v', .1);
+      if (!fs.length) { bar('v', 1); return; }
+      fs.forEach(function (u, k) { pull(u, function (f) { part[k] = f; bar('v', .1 + .9 * part.reduce(function (x, y) { return x + y; }, 0) / fs.length); }); });
+    }).catch(function () { bar('v', 1); });
+  }
   X.on(function (ev, a) {
     if (ev === 'open') {
       var rq = SHXC._.root && SHXC._.root(); if (rq && !rq._cur) { rq._cur = 1; var dn = null;
@@ -663,9 +702,9 @@
       // 王磊 10-27 00:10:进入航行时自动关掉 1.0 背景音乐,开启驾驶舱音乐系统;离开驾驶舱再恢复原背景音乐
       var bm = document.getElementById('btn-music'); MUS.bgm = !!(bm && bm.getAttribute('aria-pressed') === 'true'); if (MUS.bgm) bm.click();
       SND.music = true; var mc = R && R.querySelector('#xs-m'); if (mc) mc.checked = true;
-      musPlay('idle');
-      // 王磊 10-27 17:09:每次进入天枢号都要语音欢迎(语音默认开,用户在音响面板关掉才静音);等语音包到位最多 3 s
-      hush(); PL.greeted = true; var hg = ++VOICE.gen; (function w(n) { if (hg !== VOICE.gen) return; if (VOICE.on && !VOICE.clips && n < 12) { setTimeout(function () { w(n + 1); }, 250); return; } say(['a01']); say(['a02']); })(0);
+      // 王磊 10-27 22:16:先登舰 —— 舱门动画期间预载语音与音乐(带进度条),都就绪后音乐淡入、再播欢迎语,不再突然冒出声音
+      hush(); PL.greeted = true; var hg = ++VOICE.gen;
+      board(hg, function () { if (hg !== VOICE.gen) return; musPlay('idle'); setTimeout(function () { if (hg !== VOICE.gen) return; say(['a01']); say(['a02']); }, 1200); });
     } else if (ev === 'close') { hush(); if (window.SHXE) SHXE.hide(); if (U.arm) U.arm.stop(); stopOrbit(true); engStop(); humOff(); musStop(); closeCards(); if (R) R.classList.remove('photo'); if (MUS.bgm) { MUS.bgm = false; var bm2 = document.getElementById('btn-music'); if (bm2 && bm2.getAttribute('aria-pressed') !== 'true') bm2.click(); } }
     else if (ev === 'frame') frame(a);
     else if (ev === 'decel') { say(['a07']); if (FXON && window.SHXFX) SHXFX.set(0); }
