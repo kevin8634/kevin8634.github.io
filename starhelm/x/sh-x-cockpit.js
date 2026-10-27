@@ -410,8 +410,14 @@
     var step = veff * dt;
     // 防撞:不进入天体表面
     var nx = S.pos[0] + fwd.x * step, ny = S.pos[1] + fwd.y * step, nz = S.pos[2] + fwd.z * step, hit = null;
-    B.forEach(function (b) { var d = Math.hypot(nx - b.wp[0], ny - b.wp[1], nz - b.wp[2]); if (d < b.R * (b.id === 'sun' ? 1.6 : 1.004)) hit = b; });
-    if (hit) { S.base = 0; S.mult = 1; S.auto = false; step = 0; toast('靠得太近了:已在 ' + hit.zh + ' 上空悬停'); emit('hover', hit); }
+    // C1.8c:只拦「继续往里飞」的一步;停着被天体追上时轻推到表面外,不再每帧重复报警。同一天体离开 1.5 倍警戒距离前只播报一次
+    B.forEach(function (b) {
+      var lim = b.R * (b.id === 'sun' ? 1.6 : 1.004), d0 = Math.hypot(S.pos[0] - b.wp[0], S.pos[1] - b.wp[1], S.pos[2] - b.wp[2]), d = Math.hypot(nx - b.wp[0], ny - b.wp[1], nz - b.wp[2]);
+      if (step > 0 && d < lim && d < d0) hit = b;
+      if (d0 < lim && d0 > 0) { var k = lim * 1.0005 / d0; S.pos = [b.wp[0] + (S.pos[0] - b.wp[0]) * k, b.wp[1] + (S.pos[1] - b.wp[1]) * k, b.wp[2] + (S.pos[2] - b.wp[2]) * k]; nx = S.pos[0] + fwd.x * step; ny = S.pos[1] + fwd.y * step; nz = S.pos[2] + fwd.z * step; }
+      if (S._hov === b.id && d0 > lim * 1.5) S._hov = null;
+    });
+    if (hit) { S.base = 0; S.mult = 1; S.auto = false; step = 0; if (S._hov !== hit.id) { S._hov = hit.id; toast('靠得太近了:已在 ' + hit.zh + ' 上空悬停'); emit('hover', hit); } }
     else { S.pos = [nx, ny, nz]; S.trip += step; }
     // 随最近天体一起运动(在行星附近悬停时,不会被它甩在身后)
     var near = null, nd = Infinity;
