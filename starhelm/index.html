@@ -182,15 +182,18 @@
   <!-- 面板：实时数据开关与使用说明(1.0 小改 2026-10-26) -->
   <section class="le-sheet le-hud" id="sheet-live" hidden aria-label="实时数据">
     <div class="le-sheet__head"><h2>实时数据 <small>LIVE</small></h2><span class="le-tag" id="live-tag">已打开</span><button class="le-close" data-close type="button" aria-label="关闭">×</button></div>
-    <p class="le-hint">打开时,浏览器会直接向下面三家机构请求公开数据(不经天枢服务器,不上传你的位置或任何个人信息):</p>
-    <dl class="le-dl">
-      <dt>空间站 · 星链</dt><dd>CelesTrak 公开轨道根数,约 2 小时更新一次,本机缓存 2 小时。位置是按根数推算的,不是实时遥测。</dd>
-      <dt>地震</dt><dd>USGS 过去 7 天 M2.5 以上地震(地震实验室取 M4.5 以上),每次打开页面时请求。</dd>
-      <dt>城市搜索</dt><dd>Open-Meteo 地名检索(数据 CC BY 4.0,按非商业使用),只在站内城市表搜不到、你继续输入时才请求。</dd>
-    </dl>
-    <p class="le-hint">关闭后不再请求这三家,改用站内快照:地震截至 2026-10-08(地震实验室为截至 2026-10-22 的一年快照),星链为 2026-10-08 历元的 1/8 抽样,空间站为 2026-10-12 历元轨道,城市只搜站内城市表。快照离今天越久,卫星位置偏差越大,只作示意。</p>
-    <div class="le-row"><button class="le-btn le-btn--sm" id="live-toggle" type="button">关闭实时数据</button></div>
-    <p class="le-hint">切换后页面会重新载入;选择只保存在这台设备上。太阳、极光、台风等实验室打开时另取 NOAA、GDACS 等数据,详见页脚素材台账。</p>
+    <p class="le-hint">打开时,浏览器直接向下列机构请求公开数据(不经天枢服务器,不上传你的位置或任何个人信息):</p>
+    <div class="sh-live-master"><span><b>总开关</b><em>全部实时数据</em></span><button class="sh-tg" id="live-toggle" type="button" role="switch" aria-checked="true" aria-label="总开关:全部实时数据"></button></div>
+    <div class="sh-live-sec">单项 · LAYERS</div>
+    <div class="sh-live-list" id="live-items">
+      <div class="sh-live-row" style="--c:#ffb46a"><i></i><span><b>空间站 ISS · 天宫 · 哈勃</b><em data-on="CelesTrak 单星轨道根数,约 2 小时更新,本机缓存 2 小时;位置按根数推算,不是实时遥测。" data-off="已关 · 用站内轨道快照(ISS 为 2026-10-12 历元,示意)。"></em></span><button class="sh-tg" type="button" role="switch" data-live-item="iss" aria-label="空间站实时数据"></button></div>
+      <div class="sh-live-row" style="--c:#ff6b6b"><i></i><span><b>地震</b><em data-on="USGS 过去 7 天 M2.5 以上(地震实验室取 M4.5 以上),每次打开页面时请求。" data-off="已关 · 用截至 2026-10-08 的站内快照(地震实验室为截至 2026-10-22 的一年快照)。"></em></span><button class="sh-tg" type="button" role="switch" data-live-item="quakes" aria-label="地震实时数据"></button></div>
+      <div class="sh-live-row" style="--c:#7fdcff"><i></i><span><b>星链</b><em data-on="CelesTrak 星链轨道根数,约 2 小时更新,本机缓存 2 小时。" data-off="已关 · 用 2026-10-08 历元 1/8 抽样快照(示意)。"></em></span><button class="sh-tg" type="button" role="switch" data-live-item="starlink" aria-label="星链实时数据"></button></div>
+      <div class="sh-live-row" style="--c:#b48cff"><i></i><span><b>城市在线搜索</b><em data-on="Open-Meteo 地名检索(数据 CC BY 4.0,按非商业使用),站内城市表搜不到、你继续输入时才请求。" data-off="已关 · 只搜站内城市表。"></em></span><button class="sh-tg" type="button" role="switch" data-live-item="geo" aria-label="城市在线搜索"></button></div>
+    </div>
+    <div class="le-row" id="live-apply-row" hidden><button class="le-btn le-btn--sm" id="live-apply" type="button">应用并重新载入</button></div>
+    <p class="le-hint">关闭的项不再请求,改用站内快照;快照离今天越久,卫星位置偏差越大,只作示意。切换后重新载入一次生效;选择只保存在这台设备上,默认全开。</p>
+    <p class="le-hint">太阳、极光、台风等实验室打开时另取 NOAA、GDACS 等数据,不受这里控制,详见页脚素材台账。</p>
   </section>
 
   <div class="le-toast" id="toast" role="status"></div>

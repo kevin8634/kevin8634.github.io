@@ -10,12 +10,31 @@
   /* ------------------------------ LE.live ------------------------------ */
   // 实时数据总开关(天枢 1.0 小改,2026-10-26):开 = 浏览器直连 CelesTrak / USGS / Open-Meteo 取公开数据;
   // 关 = 不再请求这三家,改用站内快照/示意。状态只存本机 localStorage gn:sh:live,默认开;切换后页面重新载入。
+  // v1.0-M4f(2026-10-27,总指挥令 A):总开关下加单项开关 gn:sh:live.iss / .quakes / .starlink / .geo(默认开)。
+  // 单项关 = 只停该项请求(改站内快照);总开关关 = 全停。切换后重新载入一次生效。
   var LIVE_KEY = 'gn:sh:live', LIVE_HOSTS = /(^|\.)(celestrak\.org|earthquake\.usgs\.gov|open-meteo\.com)$/i;
+  var LIVE_ITEMS = ['iss', 'quakes', 'starlink', 'geo'];
+  function lsOn(k) { try { return localStorage.getItem(k) !== '0'; } catch (e) { return true; } }
+  function lsSet(k, on) { try { localStorage.setItem(k, on ? '1' : '0'); } catch (e) {} }
   LE.live = {
-    on: (function () { try { return localStorage.getItem(LIVE_KEY) !== '0'; } catch (e) { return true; } })(),
+    on: lsOn(LIVE_KEY),
+    ITEMS: LIVE_ITEMS,
+    items: (function () { var o = {}; LIVE_ITEMS.forEach(function (id) { o[id] = lsOn(LIVE_KEY + '.' + id); }); return o; })(),
     isExt: function (url) { try { return LIVE_HOSTS.test(new URL(String(url), location.href).hostname); } catch (e) { return false; } },
-    blocked: function (url) { return !LE.live.on && LE.live.isExt(url); },
-    set: function (on) { LE.live.on = !!on; try { localStorage.setItem(LIVE_KEY, on ? '1' : '0'); } catch (e) {} }
+    // 请求归属哪一项:USGS→地震;Open-Meteo→城市搜索;CelesTrak 星链组→星链;其余 CelesTrak(空间站与单星轨道)→空间站
+    itemOf: function (url) {
+      var u; try { u = new URL(String(url), location.href); } catch (e) { return null; }
+      var h = u.hostname;
+      if (/usgs\.gov$/i.test(h)) return 'quakes';
+      if (/open-meteo\.com$/i.test(h)) return 'geo';
+      if (/celestrak\.org$/i.test(h)) return /GROUP=starlink/i.test(u.search) ? 'starlink' : 'iss';
+      return null;
+    },
+    itemOn: function (id) { return LE.live.on && LE.live.items[id] !== false; },
+    count: function () { return LE.live.on ? LIVE_ITEMS.filter(function (id) { return LE.live.items[id]; }).length : 0; },
+    blocked: function (url) { if (!LE.live.isExt(url)) return false; if (!LE.live.on) return true; var id = LE.live.itemOf(url); return !!id && LE.live.items[id] === false; },
+    set: function (on) { LE.live.on = !!on; lsSet(LIVE_KEY, LE.live.on); },
+    setItem: function (id, on) { if (LIVE_ITEMS.indexOf(id) < 0) return; LE.live.items[id] = !!on; lsSet(LIVE_KEY + '.' + id, !!on); }
   };
   if (typeof window.fetch === 'function' && !window.fetch.__shLive) {
     var _fetch = window.fetch;

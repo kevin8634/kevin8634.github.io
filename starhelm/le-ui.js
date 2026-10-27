@@ -155,19 +155,41 @@
     document.querySelectorAll('#chips .le-chip[data-layer]').forEach(function (c) {
       c.addEventListener('click', function () { setLayer(c.dataset.layer, !layerState[c.dataset.layer]); });
     });
-    /* ---- 实时数据开关 + 使用说明(gn:sh:live,默认开;切换后重新载入) ---- */
+    /* ---- 实时数据:总开关 + 单项开关 + 使用说明(gn:sh:live[.iss/.quakes/.starlink/.geo],默认开;应用后重新载入,v1.0-M4f) ---- */
     (function () {
-      var chip = $('chip-live'), btn = $('live-toggle'), tag = $('live-tag'), on = !LE.live || LE.live.on;
+      var chip = $('chip-live'), master = $('live-toggle'), tag = $('live-tag'), apply = $('live-apply'), applyRow = $('live-apply-row');
       if (!chip) return;
-      chip.setAttribute('aria-pressed', on ? 'true' : 'false');
-      chip.querySelector('b').textContent = on ? '实时数据' : '实时已关';
-      if (tag) { tag.textContent = on ? '已打开' : '已关闭 · 站内快照'; tag.classList.toggle('is-warn', !on); }
-      if (btn) btn.textContent = on ? '关闭实时数据' : '打开实时数据';
+      var LV = LE.live || { on: true, ITEMS: [], items: {}, count: function () { return 0; } };
+      var ids = LV.ITEMS || [], total = ids.length;
+      var cur = { on: LV.on, items: {} }, want;
+      ids.forEach(function (id) { cur.items[id] = LV.items[id] !== false; });
+      want = JSON.parse(JSON.stringify(cur));
+      var n = LV.count ? LV.count() : 0;
+      chip.setAttribute('aria-pressed', LV.on && n > 0 ? 'true' : 'false');
+      chip.querySelector('b').textContent = !LV.on ? '实时已关' : (n === total ? '实时数据' : '实时 ' + n + '/' + total);
+      function paint() {
+        var cnt = want.on ? ids.filter(function (id) { return want.items[id]; }).length : 0;
+        if (tag) { tag.textContent = !want.on ? '已关闭 · 站内快照' : (cnt === total ? '已打开' : '已打开 · ' + cnt + '/' + total + ' 项'); tag.classList.toggle('is-warn', !want.on || cnt < total); }
+        if (master) master.setAttribute('aria-checked', want.on ? 'true' : 'false');
+        document.querySelectorAll('#live-items [data-live-item]').forEach(function (b) {
+          var id = b.dataset.liveItem, on = want.on && want.items[id], row = b.closest('.sh-live-row'), em = row && row.querySelector('em');
+          b.setAttribute('aria-checked', on ? 'true' : 'false'); b.disabled = !want.on;
+          if (row) row.classList.toggle('is-off', !on);
+          if (em) em.textContent = on ? em.dataset.on : em.dataset.off;
+        });
+        var dirty = JSON.stringify(want) !== JSON.stringify(cur);
+        if (applyRow) applyRow.hidden = !dirty;
+      }
+      paint();
       chip.addEventListener('click', function () { UI.toggleSheet('sheet-live'); });
-      if (btn) btn.addEventListener('click', function () {
-        var next = !(LE.live && LE.live.on); if (LE.live) LE.live.set(next);
-        btn.disabled = true;
-        UI.toast(next ? '已打开实时数据,正在重新载入…' : '已关闭实时数据,改用站内快照,正在重新载入…');
+      if (master) master.addEventListener('click', function () { want.on = !want.on; paint(); });
+      document.querySelectorAll('#live-items [data-live-item]').forEach(function (b) {
+        b.addEventListener('click', function () { if (!want.on) return; var id = b.dataset.liveItem; want.items[id] = !want.items[id]; paint(); });
+      });
+      if (apply) apply.addEventListener('click', function () {
+        if (LE.live) { LE.live.set(want.on); ids.forEach(function (id) { LE.live.setItem(id, want.items[id]); }); }
+        apply.disabled = true;
+        UI.toast(want.on ? '实时数据设置已保存,正在重新载入…' : '已关闭实时数据,改用站内快照,正在重新载入…');
         setTimeout(function () { location.reload(); }, 900);
       });
     })();
@@ -289,13 +311,13 @@
       $('st-count').textContent = U.fmtNum(d.list.length);
       var top = d.list.reduce(function (a, b) { return !a || b.mag > a.mag ? b : a; }, null);
       if (top) { $('st-max').textContent = 'M' + top.mag.toFixed(1); $('st-max').style.color = Q.color(top.mag); $('st-max').title = top.place; }
-      var tag = $('st-tag'); tag.textContent = d.live ? '地震 · 实时' : (LE.live && !LE.live.on ? '地震 · 站内快照(实时已关)' : '地震 · 离线快照'); tag.classList.toggle('is-warn', !d.live);
+      var tag = $('st-tag'); tag.textContent = d.live ? '地震 · 实时' : (LE.live && !LE.live.itemOn('quakes') ? '地震 · 站内快照(实时已关)' : '地震 · 离线快照'); tag.classList.toggle('is-warn', !d.live);
       UI.refreshLocation();
     });
     LE.bus.on('data:starlink', function (d) {
       $('sat-count').textContent = d.count ? U.fmtNum(d.count) : '—';
       var tag = $('sat-tag');
-      tag.textContent = d.error ? '星链加载失败' : d.live ? '星链 · 实时 CelesTrak' : (LE.live && !LE.live.on ? '星链 · 站内样本(实时已关)' : '星链 · 离线样本');
+      tag.textContent = d.error ? '星链加载失败' : d.live ? '星链 · 实时 CelesTrak' : (LE.live && !LE.live.itemOn('starlink') ? '星链 · 站内样本(实时已关)' : '星链 · 离线样本');
       tag.title = d.live ? '' : '离线样本为 2026-10-08 历元的 1/8 抽样，在轨实际约 10,000 颗';
       tag.classList.toggle('is-warn', !d.live);
       UI.refreshLocation();
