@@ -1,13 +1,14 @@
 /* 天枢 Starhelm 2.0 · 穿梭 C1.8 —— 跨星域航图第 3 步:出太阳系(SHXD)
  * - 真实 3D 星空:sh-stars-data.js(HYG v4.1,CC BY-SA 4.0,4,268 颗)按飞船位置实时算方向与视星等;
  *   在太阳系里与原星空贴图一致,飞得越远近星(<100 光年)视差越明显。离日 60–300 AU 逐渐接管,星空贴图压暗成银河背景。
- * - 星座连线:x/sh-x-constel-data.js(d3-celestial,BSD-3),顶点挂在 HYG 星上一起视差移位;穿越日球层顶后淡入,K 键开/关。
+ * - 星座连线:x/sh-x-constel-data.js(d3-celestial,BSD-3),顶点挂在 HYG 星上一起视差移位;穿越日球层顶后淡入。
+ *   C2.0:K 键三档循环 连线 → 连线+插画 → 关(插画与名称标签见 x/sh-x-constart.js);按过 K 后连线在太阳系内也显示(无穷远天球)。
  * - 航段事件:终端激波 ~94 AU、日球层顶 ~121.6 AU(旅行者 1 号 2012 实测)、奥尔特云内缘 ~2,000 AU(推测):光环 + 现象解读屏。
  */
 (function () {
   'use strict';
   var AU = 149597870.7, LY = 9.4607304725808e12, EPS = 23.4392911 * Math.PI / 180, PC = 3.26156;
-  var T, X, inited = false, ST = null, pts, lines, segs = [], lastP = null, lastT = 0, f = 0, linesOn = true, prevR = 0, fired = {}, skyCol = null;
+  var T, X, inited = false, ST = null, pts, lines, segs = [], lastP = null, lastT = 0, f = 0, cmode = 0, touched = false, lf = 0, prevR = 0, fired = {}, skyCol = null;
 
   // 现象解读补充条目
   function addEx() {
@@ -64,10 +65,14 @@
     lines = new T.LineSegments(lg, new T.LineBasicMaterial({ color: 0x6fb6ff, transparent: true, opacity: 0, depthWrite: false, depthTest: false }));
     lines.frustumCulled = false; lines.renderOrder = -4; lines.visible = false; sky.add(lines);
     var sg = X._.skyG && X._.skyG(); if (sg) sg.traverse(function (o) { if (o.isMesh && o.material && o.material.color) skyCol = { m: o.material, c: o.material.color.clone() }; });
-    addEventListener('keydown', function (e) { if ((e.key === 'k' || e.key === 'K') && X.isOpen() && !/INPUT|TEXTAREA/.test((e.target && e.target.tagName) || '')) { linesOn = !linesOn; X._.toast('星座连线 · ' + (linesOn ? '开' : '关') + '(K)'); } });
+    // C2.0 修正:NASA SVS Deep Star Maps 贴图以赤经 0h 为图像中心,而 SHFX3D.skyMesh 的球面 UV 把 0h 放在接缝,驾驶舱星空与 HYG/行星坐标差 180°(看猎户座时出现银心)。
+    // 只在驾驶舱的天空球上绕赤道极轴(网格本地 y)转 180°;1.0 场景不受影响。
+    if (sg && !sg.userData.raFix) { sg.userData.raFix = 1; sg.children.forEach(function (m) { if (m.isMesh) m.rotation.y += Math.PI; }); }
+    addEventListener('keydown', function (e) { if ((e.key === 'k' || e.key === 'K') && X.isOpen() && !/INPUT|TEXTAREA/.test((e.target && e.target.tagName) || '')) { setMode((cmode + 1) % 3); X._.toast('星座 · ' + ['连线', '连线 + 插画', '关'][cmode] + '(K)'); } });
     inited = true; return true;
   }
 
+  function setMode(m) { cmode = m; touched = true; lastP = null; }
   function sstep(a, b, x) { var t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
   var dpr = Math.min(2, window.devicePixelRatio || 1);
   function update(S) {
@@ -127,10 +132,10 @@
     var S = X._.S, r = Math.hypot(S.pos[0], S.pos[1], S.pos[2]) / AU;
     f = sstep(60, 300, r);
     pts.visible = f > 0.001; pts.material.uniforms.uF.value = f;
-    var lf = linesOn ? sstep(121.6, 500, r) : 0; lines.visible = lf > 0.001; lines.material.opacity = 0.3 * lf;
+    lf = cmode === 2 ? 0 : touched ? 1 : sstep(121.6, 500, r); lines.visible = lf > 0.001; lines.material.opacity = 0.3 * lf;
     if (skyCol) skyCol.m.color.copy(skyCol.c).multiplyScalar(1 - 0.72 * f);
     var now = performance.now();
-    if (pts.visible && (!lastP || now - lastT > 200)) {
+    if ((pts.visible || lines.visible) && (!lastP || now - lastT > 200)) {
       var mv = lastP ? Math.hypot(S.pos[0] - lastP[0], S.pos[1] - lastP[1], S.pos[2] - lastP[2]) : Infinity;
       if (mv > 0.5 * AU || !lastP) { update(S); lastP = S.pos.slice(); }
       lastT = now;
@@ -138,5 +143,6 @@
     events(r);
   }
   (function wait(n) { if (window.SHXC && SHXC.on) { SHXC.on(hook); return; } if (n < 100) setTimeout(function () { wait(n + 1); }, 100); })(0);
-  window.SHXD = { lines: function (on) { if (on != null) linesOn = !!on; return linesOn; }, state: function () { return { inited: inited, f: f, lines: linesOn, stars: ST ? ST.n : 0, segs: segs.length }; } };
+  window.SHXD = { lines: function (on) { if (on != null) setMode(on ? 0 : 2); return cmode !== 2; }, mode: function (m) { if (m != null) setMode(((m | 0) % 3 + 3) % 3); return cmode; }, lf: function () { return lf; }, cycle: function () { setMode((cmode + 1) % 3); if (X && X._) X._.toast('星座 · ' + ['连线', '连线 + 插画', '关'][cmode] + '(K)'); return cmode; },
+    state: function () { return { inited: inited, f: f, lines: cmode !== 2, mode: cmode, touched: touched, lf: lf, stars: ST ? ST.n : 0, segs: segs.length }; } };
 })();

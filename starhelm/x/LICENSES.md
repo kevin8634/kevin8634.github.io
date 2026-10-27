@@ -49,3 +49,14 @@
 ## C1.9b 点选恒星(2026-10-27)
 - x/sh-x-pick.js 读取站内 sh-stars-data.js(HYG v4.1,David Nash / astronexus,CC BY-SA 4.0),资料卡注明来源。
 - x/sh-x-starnames.js:中文星名由 1.0 sh-domain5.js 标注表派生(本项目原创文本)。
+
+## C2.0 星座插画(2026-10-28)
+
+| 素材 | 用在哪(任务/页面) | 来源与链接 | 许可 | 署名要求 | 是否 AI 生成 | 页面标注位置 |
+|---|---|---|---|---|---|---|
+| x/constart/*.webp(85 幅,446 KB)+ x/constart/s/*.webp(手机版 31 幅,104 KB) | 驾驶舱 K 键「连线 + 插画」档的古典星座插画 | Johan Meuris(Jomejome,johanmeuris.eu)为 Stellarium 绘制的西方星座插画;取自 Stellarium 仓库 skycultures/modern/illustrations(旧名 western),提交 210b7cc:https://github.com/Stellarium/stellarium/tree/210b7ccbaa174b673a48fa9ff57ebd37239c1cb4/skycultures/modern/illustrations ;作者署名见该仓库 CREDITS.md 4.10 | Free Art License 1.3,许可原文 x/vendor/FAL-1.3.txt;修改版同许可发布 | 署名 Johan Meuris / Stellarium,注明 FAL 1.3 并附许可文本 | 否(手绘) | 驾驶舱底部署名行「星座插画 Johan Meuris / Stellarium(Free Art License 1.3)」 |
+| x/sh-x-constart-data.js(锚点像素坐标、HIP 号、锚星 3D 坐标、标签位置) | 插画三点仿射对齐、星座名标签 | 锚点与连线星:Stellarium skycultures/modern/index.json(Stellarium's team);锚星位置:HYG v4.1 hygdata_v41.csv(David Nash / astronexus,github.com/astronexus/HYG-Database);中文星座名为 IAU 88 星座通用译名 | index.json 文本与数据 CC BY-SA 4.0;HYG CC BY-SA 4.0;派生文件同以 CC BY-SA 4.0 发布 | 文件头注明;页面署名行「星表 HYG v4.1(CC BY-SA 4.0)」 | 否 | 2026-10-28 |
+| docs/build/build_constart.py | 生成上面两项(构建脚本,不随页面加载) | 本项目原创 | 本项目 | 无 | 否 | — |
+
+- 修改说明(FAL 要求):原 PNG 转为灰度 WebP(质量 82,尺寸不变 128/256/512 px);手机版为 512 px 原图缩到 256 px。未裁剪、未改画面内容。
+- 构建输入(index.json、PNG、HYG csv)只在构建时下载,不入库。
