@@ -25,7 +25,12 @@
     { id: 'pluto', zh: '冥王星', en: 'Pluto', type: '矮行星', R: 1188.3, GM: 869.6, temp: '-225', ab: 'Pluto', col: '#d9c3a8', hd: 'hd/pluto-2k.jpg', lo: 'planet-pluto.jpg', per: -153.3 },
     // C1.8 出太阳系航点:固定方向(赤经/赤纬,J2000)+ 日心距离;不画星球,只有标签与目标框
     { id: 'voyager1', zh: '旅行者 1 号', en: 'Voyager 1', type: '探测器', R: 0.02, GM: 722 * 6.674e-20, temp: '约 -270(星际空间)', col: '#9fd0e8', fix: [258.3, 12.0, 170], ghost: true, info: [['发射', '1977 年 9 月 5 日'], ['日心距离', '约 170 AU(2026)'], ['速度', '约 17 km/s(相对太阳)'], ['2012 年 8 月', '穿越日球层顶']] },
-    { id: 'oort', zh: '奥尔特云内缘', en: 'Inner Oort Cloud', type: '推测区域', R: 0.02, GM: 0, temp: '约 -268', col: '#b8c8e0', fix: [258.3, 12.0, 2000], ghost: true, info: [['距离', '内缘约 2,000 AU(推测)'], ['外缘', '可达约 10 万 AU'], ['组成', '数以万亿计的冰质天体'], ['证据', '长周期彗星轨道反推,尚无直接观测']] }
+    { id: 'oort', zh: '奥尔特云内缘', en: 'Inner Oort Cloud', type: '推测区域', R: 0.02, GM: 0, temp: '约 -268', col: '#b8c8e0', fix: [258.3, 12.0, 2000], ghost: true, info: [['距离', '内缘约 2,000 AU(推测)'], ['外缘', '可达约 10 万 AU'], ['组成', '数以万亿计的冰质天体'], ['证据', '长周期彗星轨道反推,尚无直接观测']] },
+    // C1.8b 群星航点(位置取自 HYG v4.1 星表,与星空点完全重合);GM 置 0 免得引力干扰演示
+    { id: 'proxima', zh: '比邻星', en: 'Proxima Centauri', type: '红矮星', R: 107280, GM: 0, temp: '—', col: '#ff8a5c', fix: [218.6598, -63.183, 269281], star: true, info: [['光谱型', 'M5.5 V 红矮星'], ['半径', '约 0.15 个太阳'], ['行星', '比邻星 b、d(宜居带内有 b)'], ['距离', '4.25 光年(离太阳最近)']] },
+    { id: 'sirius', zh: '天狼星', en: 'Sirius', type: '恒星', R: 1191000, GM: 0, temp: '—', col: '#cfe0ff', fix: [101.1738, -16.8459, 545581], star: true, info: [['光谱型', 'A1 V(主星)+ 白矮星伴星'], ['半径', '约 1.7 个太阳'], ['亮度', '约 25 个太阳'], ['距离', '8.6 光年']] },
+    { id: 'vega', zh: '织女星', en: 'Vega', type: '恒星', R: 1640000, GM: 0, temp: '—', col: '#dfe8ff', fix: [279.125, 38.7706, 1585580], star: true, info: [['光谱型', 'A0 V'], ['半径', '约 2.4 个太阳(快速自转,赤道更宽)'], ['亮度', '约 40 个太阳'], ['距离', '25 光年']] },
+    { id: 'trappist1', zh: 'TRAPPIST-1', en: 'TRAPPIST-1', type: '红矮星', R: 82900, GM: 0, temp: '—', col: '#ff7046', fix: [346.6864, -5.0939, 2564173], star: true, info: [['光谱型', 'M8 V 超冷红矮星'], ['半径', '约 0.12 个太阳'], ['行星', '7 颗岩质行星,3 颗在宜居带'], ['距离', '约 40.5 光年']] }
   ];
   var BY = {}; B.forEach(function (b) { BY[b.id] = b; });
   var K = { open: false, built: false };
@@ -82,6 +87,17 @@
     'c+=base*emis;c=c/(1.+c*.15);gl_FragColor=vec4(pow(c,vec3(1./2.2)),1.);}';
   function body3d(b) {
     var g = new T.Group(), tilt = new T.Group(), spin = new T.Group(); g.add(tilt); tilt.add(spin);
+    if (b.star) {   // C1.8b 恒星航点:发光球 + 辉光 + 远距离亮点
+      var cc = new T.Color(b.col);
+      g.add(new T.Mesh(new T.SphereGeometry(b.R, 64, 32), new T.MeshBasicMaterial({ color: cc.clone().lerp(new T.Color(1, 1, 1), .35), toneMapped: false })));
+      var gc = document.createElement('canvas'); gc.width = gc.height = 128; var gx = gc.getContext('2d'), gr = gx.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.12, 'rgba(255,255,255,.85)'); gr.addColorStop(.3, '#' + cc.getHexString()); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      gx.fillStyle = gr; gx.fillRect(0, 0, 128, 128); var gt = new T.CanvasTexture(gc);
+      var sp = new T.Sprite(new T.SpriteMaterial({ map: gt, color: cc, blending: T.AdditiveBlending, transparent: true, opacity: .55, depthWrite: false })); sp.scale.setScalar(b.R * 4.5); g.add(sp);
+      var pg = new T.BufferGeometry(); pg.setAttribute('position', new T.BufferAttribute(new Float32Array(3), 3));
+      b.pt = new T.Points(pg, new T.PointsMaterial({ map: gt, color: cc, size: 14 * Math.min(2, window.devicePixelRatio || 1), sizeAttenuation: false, transparent: true, depthWrite: false, blending: T.AdditiveBlending }));
+      b.pt.frustumCulled = false; g.add(b.pt); b.g = g; return g;
+    }
     if (b.id === 'sun') {
       var s = window.SHFX3D && SHFX3D.sun ? SHFX3D.sun({ radius: b.R }) : null;
       if (s) { g.add(s.group); b.fx = s; } else g.add(new T.Mesh(new T.SphereGeometry(b.R, 48, 24), new T.MeshBasicMaterial({ color: 0xffe2a0 })));
@@ -382,7 +398,7 @@
     if (kk.s) { S.base = Math.max(0, S.base - (S.base * 0.9 + 0.5) * dt * S.boost); S.auto = false; }
     var veff;
     if (S.auto) {
-      var stopAt = tb.R * (tb.id === 'sun' ? 6 : 4), rem = Math.max(0, dT - stopAt), fw0 = new T.Vector3(0, 0, -1).applyQuaternion(S.q), ali = Math.max(0, fw0.dot(toT.clone().normalize()));
+      var stopAt = tb.R * (tb.id === 'sun' || tb.star ? 6 : 4), rem = Math.max(0, dT - stopAt), fw0 = new T.Vector3(0, 0, -1).applyQuaternion(S.q), ali = Math.max(0, fw0.dot(toT.clone().normalize()));
       veff = Math.max(0.5, rem * 0.9) * Math.pow(ali, 8);
       S.base = Math.min(veff, 30); S.mult = Math.max(1, veff / Math.max(S.base, 1e-6));
       if (rem < 1) { S.auto = false; S.base = 0; S.mult = 1; toast('已抵达 ' + tb.zh + ' 附近'); emit('arrive', tb); }
@@ -424,6 +440,7 @@
       else if (b.id === 'moon') { var e = BY.earth.g.position; b.spin.lookAt(e.x, e.y, e.z); b.spin.rotateY(-Math.PI / 2); }
       else if (b.per && b.spin) b.spin.rotation.y = (ms / 3.6e6 / b.per) * 2 * Math.PI % (2 * Math.PI);
       if (b.cloud) b.cloud.rotation.y += dt * 0.004;
+      if (b.pt) b.pt.visible = b.dist < 2.8e11;   // 0.03 光年内由航点亮点接管(远处交给 HYG 星空)
     });
     if (BY.sun.fx) BY.sun.fx.update(dt, cam);
     // --- 尘埃拖影 ---
@@ -537,12 +554,12 @@
   }
   function drawStrip() {
     var cv = H.strip || (H.strip = $('#xc-strip', root)), g = cv.getContext('2d'), w = cv.width, h = cv.height;
-    g.clearRect(0, 0, w, h); var HI = BY.sun.dist / AU > 45 || (BY[S.target] && BY[S.target].fix) ? 3000 : 50;   // C1.8 出太阳系时刻度延伸到 3,000 AU
+    g.clearRect(0, 0, w, h); var tgS = BY[S.target] || {}, HI = BY.sun.dist / AU > 2500 || tgS.star ? 3e6 : BY.sun.dist / AU > 45 || tgS.fix ? 3000 : 50;   // C1.8b 群星:延伸到约 47 光年   // C1.8 出太阳系时刻度延伸到 3,000 AU
     var lx = function (au) { return 30 + (Math.log10(Math.min(HI, Math.max(au, .2))) - Math.log10(.2)) / (Math.log10(HI) - Math.log10(.2)) * (w - 60); };
     g.strokeStyle = 'rgba(200,215,240,.35)'; g.beginPath(); g.moveTo(20, 40); g.lineTo(w - 20, 40); g.stroke();
-    for (var a = .2; a < HI; a *= HI > 50 ? 1.25 : 1.12) { var x = lx(a); g.beginPath(); g.moveTo(x, 37); g.lineTo(x, 43); g.stroke(); }
+    for (var a = .2; a < HI; a *= HI > 3000 ? 1.6 : HI > 50 ? 1.25 : 1.12) { var x = lx(a); g.beginPath(); g.moveTo(x, 37); g.lineTo(x, 43); g.stroke(); }
     g.font = '18px "Noto Sans SC",sans-serif'; g.textAlign = 'center';
-    B.forEach(function (b) { if (b.id === 'sun' || b.id === 'moon' || (b.fix && HI <= 50)) return; var r = Math.hypot(b.wp[0] - BY.sun.wp[0], b.wp[1] - BY.sun.wp[1], b.wp[2] - BY.sun.wp[2]) / AU, x = lx(r); g.fillStyle = b.col; g.beginPath(); g.arc(x, 40, b.id === S.target ? 7 : 5, 0, 7); g.fill(); g.fillStyle = b.id === S.target ? '#7fd6ff' : 'rgba(210,220,238,.7)'; g.fillText(b.zh, x, 72); });
+    B.forEach(function (b) { if (b.id === 'sun' || b.id === 'moon' || (b.fix && HI <= 50) || (b.star && HI <= 3000) || (HI > 3000 && !b.fix && b.id !== 'earth')) return; var r = Math.hypot(b.wp[0] - BY.sun.wp[0], b.wp[1] - BY.sun.wp[1], b.wp[2] - BY.sun.wp[2]) / AU, x = lx(r); g.fillStyle = b.col; g.beginPath(); g.arc(x, 40, b.id === S.target ? 7 : 5, 0, 7); g.fill(); g.fillStyle = b.id === S.target ? '#7fd6ff' : 'rgba(210,220,238,.7)'; g.fillText(b.zh, x, 72); });
     var me = lx(BY.sun.dist / AU); g.fillStyle = '#fff'; g.beginPath(); g.moveTo(me, 30); g.lineTo(me - 7, 16); g.lineTo(me + 7, 16); g.fill(); g.font = '16px sans-serif'; g.fillText('你', me, 12);
   }
 

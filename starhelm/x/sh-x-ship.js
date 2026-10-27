@@ -468,7 +468,7 @@
     var far = !BY[PL.tgt] && window.SHXL && SHXL.get(PL.tgt), e = eng(ENGID);
     var b = far ? { id: far.id, zh: far.zh, R: 1, far: true, col: SHXL.DOMS[far.dom].c1, note: far.note } : (BY[PL.tgt] || BY.mars), km = far ? far.km : distTo(b);
     var tr = VD && VD.travel ? VD.travel(e, km, e.model === 'warp' ? 3 : null) : { earthS: km / (e.v || 15), shipS: km / (e.v || 15) };
-    var act = e.id === 'assist' ? '引力弹弓' : e.id === 'gate' ? '虫洞穿越' : b.far && (window.SHXL ? SHXL.dom(b.id) : 2) >= 4 ? '跨星域航行' : '星域内穿梭';
+    var act = e.id === 'assist' ? '引力弹弓' : e.id === 'gate' ? '虫洞穿越' : (window.SHXL ? SHXL.dom(b.id) : 2) >= 4 ? (e.model === 'warp' ? '跨星域跃迁' : '跨星域航行') : '星域内穿梭';
     var demo = Math.round(Math.log(Math.max(2, km / Math.max(1, b.R))) / 0.9 + 4);
     return { b: b, e: e, km: km, tr: tr, act: act, demo: demo };
   }

@@ -75,7 +75,7 @@
       var dx = P[k * 3] - sx, dy = P[k * 3 + 1] - sy, dz = P[k * 3 + 2] - sz, d = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1e-6;
       var m = M[k] + 5 * Math.log10(Math.max(1e-6, d / PC)) - 5;
       pa[k * 3] = dx / d * 900; pa[k * 3 + 1] = dy / d * 900; pa[k * 3 + 2] = dz / d * 900;
-      var vis = m < 6.8 ? 1 : 0, b = Math.max(0, Math.min(1, (6.8 - m) / 6));
+      var vis = m < 6.8 && d > 0.02 ? 1 : 0, b = Math.max(0, Math.min(1, (6.8 - m) / 6));
       za[k] = vis ? (1.4 + Math.min(8, Math.pow(Math.max(0, 6.8 - m), 1.25) * 0.9)) * dpr : 0;
       ca[k * 4] = C[k * 3]; ca[k * 4 + 1] = C[k * 3 + 1]; ca[k * 4 + 2] = C[k * 3 + 2]; ca[k * 4 + 3] = vis ? 0.35 + 0.65 * b : 0;
     }
