@@ -139,7 +139,7 @@
   }
 
   /* ---------------- 语音播放(manifest 到位后自动启用) ---------------- */
-  var VOICE = { on: ls('gn:sh:x-voice') === '1', clips: null, pack: null, q: [], busy: false, last: null, cur: null, gen: 0 };
+  var VOICE = { on: ls('gn:sh:x-voice') !== '0', clips: null, pack: null, q: [], busy: false, last: null, cur: null, gen: 0 };
   // 「AI 空间感 / Spatial FX」—— 与 ARMILLA PWA v2.2.1 同参数(x/armilla/armilla-spacefx.js 的 ES5 移植),偏好键 armilla.voice.spaceFx,默认开
   var SFX = { on: (function () { try { return localStorage.getItem('armilla.voice.spaceFx') !== '0'; } catch (e) { return true; } })(), node: null };
   function sfxChain() {
@@ -168,11 +168,15 @@
     var pk = PER.id; if ((VOICE.clips && VOICE.pack === pk) || (pk === 'armilla' && !window.SHX_VOICE)) return;
     VOICE.clips = null; VOICE.pack = pk;
     fetch('x/' + pk + '/manifest.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
-      if (!m || !m.items || VOICE.pack !== pk) return; var c = {}; m.items.forEach(function (it) { c[it.id] = it; c['t:' + it.text] = it; }); VOICE.clips = c;
+      if (!m || !m.items || VOICE.pack !== pk) return; var c = {};
+      // 10-27:09 交付的 JARVIS 包只有 50 条有音频(tech/num/unit/body19+ 等 67 条缺文件,线上 404),缺的不入表 → 整句改字幕,不再断断续续;补齐后删掉 JV_HAVE 即可
+      var JV_HAVE = pk === 'jarvis' ? /^(a\d\d|b0[1-8]|act0[1-4]|body(0\d|1[0-8]))$/ : null;
+      m.items.forEach(function (it) { if (JV_HAVE && !JV_HAVE.test(it.id)) return; c[it.id] = it; c['t:' + it.text] = it; }); VOICE.clips = c;
     }).catch(function () { });
   }
   function clipOf(tok) { if (!VOICE.clips) return null; return VOICE.clips[tok] || VOICE.clips['t:' + tok] || null; }
   /* say(['a03', {t:'本次航行将使用'}, ...]) —— 字符串 a01..a20 为整句;{t:} 为拼接片段,数字按字拆开 */
+  function hush() { VOICE.gen++; VOICE.q = []; VOICE.busy = false; if (VOICE.cur) { try { VOICE.cur.onended = null; VOICE.cur.pause(); } catch (e) { } VOICE.cur = null; } }
   function say(seq, cb) { VOICE.q.push({ seq: seq, cb: cb }); if (!VOICE.busy) next(); }
   function seqText(seq) { var a = seq.map(function (k) { return typeof k === 'string' ? (line(k) || k) : k.t; }); return isJ() ? a.join(' ').replace(/\s+([,.!?])/g, '$1') : a.join(''); }
   function seqClips(seq) {
@@ -194,11 +198,12 @@
     var it = VOICE.q.shift(); if (!it) { VOICE.busy = false; armState(''); return; }
     VOICE.busy = true; VOICE.last = it.seq; var gen = VOICE.gen;
     var txt = seqText(it.seq); sub(txt); armState('speak');
-    var clips = VOICE.on ? seqClips(it.seq) : null, done = function () { setTimeout(function () { if (gen !== VOICE.gen) return; if (it.cb) it.cb(); next(); }, 260); };
+    var clips = VOICE.on ? seqClips(it.seq) : null; if (VOICE.on && !clips && typeof it.seq[0] === 'string') { var c0 = clipOf(it.seq[0]); if (c0) clips = [c0]; }   // 拼接句缺片段时只播开头整句,字幕给全文
+    var done = function () { if (done.d) return; done.d = 1; setTimeout(function () { if (gen !== VOICE.gen) return; if (it.cb) it.cb(); next(); }, 260); };
     if (clips && clips.length) {
       var i = 0, play = function () {
         if (i >= clips.length) { done(); return; }
-        if (gen !== VOICE.gen) return; var a = VOICE.cur = voiceAudio(clips[i++]); a.volume = 0.95; a.onended = play; a.onerror = play; a.play().catch(play);
+        if (gen !== VOICE.gen) return; var a = VOICE.cur = voiceAudio(clips[i++]), adv = function () { if (adv.d) return; adv.d = 1; play(); }; a.volume = 0.95; a.onended = a.onerror = adv; a.play().catch(adv);   // 10-27 修:onerror 与 catch 同时触发会重复推进 → 重复语音/两次倒计时
       }; play();
     } else setTimeout(done, Math.min(7000, 900 + txt.length * 150));
   }
@@ -340,7 +345,11 @@
       '#xs-snd{width:min(380px,92vw)}#xs-snd label{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(150,180,220,.1)}#xs-snd input[type=range]{width:160px}#xs-snd .np{font-size:12px;color:rgba(200,212,235,.6);margin-top:8px}#xs-snd .cr{font-size:11px;color:rgba(200,212,235,.45);margin-top:8px;line-height:1.5}',
       '.xs-sw{appearance:none;-webkit-appearance:none;width:42px;height:22px;border-radius:12px;background:rgba(150,170,200,.25);position:relative;cursor:pointer;outline:none}.xs-sw::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#dfe7f5;transition:left .2s}.xs-sw:checked{background:rgba(240,201,122,.6)}.xs-sw:checked::after{left:23px}',
       '#xs-offer{position:absolute;left:50%;bottom:290px;transform:translateX(-50%);display:flex;gap:10px;z-index:4}',
-      '#xs-cd{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font:200 120px/1 Orbitron,system-ui,sans-serif;color:#fff;text-shadow:0 0 30px rgba(127,214,255,.8);pointer-events:none;opacity:0;transition:opacity .2s}',
+      '@font-face{font-family:"DSEG7";src:url(x/font/DSEG7Classic-Bold.woff2) format("woff2");font-display:swap}',
+      // 王磊 10-27 17:13:倒计时改液晶七段字体,蓝色半透明科技感(背后淡淡的 8 为未点亮段)
+      '#xs-cd{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);font:700 128px/1 DSEG7,Orbitron,system-ui,monospace;color:rgba(120,214,255,.78);text-shadow:0 0 6px rgba(120,214,255,.9),0 0 26px rgba(60,160,255,.6),0 0 60px rgba(40,120,255,.35);padding:22px 34px;border:1px solid rgba(120,200,255,.28);border-radius:14px;background:linear-gradient(180deg,rgba(40,120,200,.14),rgba(10,40,80,.08));backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);box-shadow:inset 0 0 24px rgba(90,180,255,.15),0 0 30px rgba(60,150,255,.15);pointer-events:none;opacity:0;transition:opacity .2s}',
+      '#xs-cd::before{content:"8";position:absolute;left:34px;top:22px;color:rgba(120,214,255,.07);text-shadow:none}',
+      '#xs-cd:empty{padding:0;border:0;background:none;box-shadow:none}',
       /* 侧舷窗 */
       '#xs-port{position:absolute;inset:0;pointer-events:none;display:none;background:radial-gradient(ellipse 44% 46% at 50% 48%,transparent 0 96%,rgba(127,214,255,.5) 96.6%,#141b27 97.4%,#2a3344 98.6%,#0a0d14 100%),radial-gradient(ellipse 60% 64% at 50% 48%,transparent 0 69%,#0b0f17 70%,#161d2a 88%,#05070b 100%)}',
       '#xs-port .tag{position:absolute;left:50%;top:22px;transform:translateX(-50%);font-size:13px;letter-spacing:.3em;color:#9fdcff}',
@@ -484,6 +493,7 @@
       .concat(enDist(p.km), [{ t: '.', p: 1 }, { t: 'Estimated time', id: 'b04' }, { t: ',', p: 1 }, { t: 'approximately', id: 'b08' }], enTime(p.tr.earthS), [{ t: '.', p: 1 }]);
   }
   function countdown(cb) {
+    if (VOICE.cd) return; VOICE.cd = 1; var cb0 = cb; cb = function () { VOICE.cd = 0; cb0(); };
     sub(line('a06')); armState('think');
     var a = null, clips = VOICE.on ? seqClips(['a06']) : null; if (clips) { a = voiceAudio(clips[0]); a.play().catch(function () { }); }
     var n = 3, step = 900, tick = function () {
@@ -640,8 +650,9 @@
       var bm = document.getElementById('btn-music'); MUS.bgm = !!(bm && bm.getAttribute('aria-pressed') === 'true'); if (MUS.bgm) bm.click();
       SND.music = true; var mc = R && R.querySelector('#xs-m'); if (mc) mc.checked = true;
       musPlay('idle');
-      if (!sessionStorage.getItem('gn:sh:x-hello')) { sessionStorage.setItem('gn:sh:x-hello', '1'); setTimeout(function () { say(['a01']); say(['a02']); }, 900); }
-    } else if (ev === 'close') { if (U.arm) U.arm.stop(); stopOrbit(true); engStop(); humOff(); musStop(); closeCards(); if (R) R.classList.remove('photo'); if (MUS.bgm) { MUS.bgm = false; var bm2 = document.getElementById('btn-music'); if (bm2 && bm2.getAttribute('aria-pressed') !== 'true') bm2.click(); } }
+      // 王磊 10-27 17:09:每次进入天枢号都要语音欢迎(语音默认开,用户在音响面板关掉才静音);等语音包到位最多 3 s
+      hush(); PL.greeted = true; var hg = ++VOICE.gen; (function w(n) { if (hg !== VOICE.gen) return; if (VOICE.on && !VOICE.clips && n < 12) { setTimeout(function () { w(n + 1); }, 250); return; } say(['a01']); say(['a02']); })(0);
+    } else if (ev === 'close') { hush(); if (U.arm) U.arm.stop(); stopOrbit(true); engStop(); humOff(); musStop(); closeCards(); if (R) R.classList.remove('photo'); if (MUS.bgm) { MUS.bgm = false; var bm2 = document.getElementById('btn-music'); if (bm2 && bm2.getAttribute('aria-pressed') !== 'true') bm2.click(); } }
     else if (ev === 'frame') frame(a);
     else if (ev === 'decel') { say(['a07']); if (FXON && window.SHXFX) SHXFX.set(0); }
     else if (ev === 'arrive') { ARR = a.id; engStop(); blip(660, .3, .06); if (LAUNCH && LAUNCH.b.id === a.id) { log('抵达', a, LAUNCH.e); LAUNCH = null; } if (PEND_PORT) { PEND_PORT = false; say(['a08']); startOrbit(a); } else { say(['a08']); offer(a); } }

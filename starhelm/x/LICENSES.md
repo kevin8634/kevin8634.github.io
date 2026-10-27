@@ -40,3 +40,4 @@
 | 气象监测 · 云图 | 「云图 GIBS」图层 | NASA GIBS WMS,VIIRS SNPP 真彩当日影像 | NASA EOSDIS GIBS,公有领域(注明 NASA) | 图例标「NASA GIBS VIIRS · 日期」 | 否 | 2026-10-27 | 同上,需开实时数据 |
 | 气象监测 · 热带气旋 | 「气旋」图层 | GDACS 事件 API(TC) | GDACS(欧盟 JRC/联合国 OCHA),注明来源可用 | 图例「GDACS」 | 否 | 2026-10-27 | 同上 |
 | 气象监测 · 三圈环流/急流/气候风带 | 「环流」「风场」示意层 | 本项目按教科书气候学(哈德来/费雷尔/极地环流)手写程序生成 | 本项目原创 | 无 | 否 | 2026-10-27 | 图例标「示意」 |
+| x/font/DSEG7Classic-Bold.woff2 | 驾驶舱点火倒计时液晶七段数字(C1.5a) | DSEG v0.46(keshikan,github.com/keshikan/DSEG) | SIL Open Font License 1.1,许可原文 x/font/DSEG-LICENSE.txt | 随字体附许可文件 | 否 | 2026-10-27 | 未修改字体文件 |
