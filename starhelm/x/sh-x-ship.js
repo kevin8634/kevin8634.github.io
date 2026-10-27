@@ -169,9 +169,7 @@
     VOICE.clips = null; VOICE.pack = pk;
     fetch('x/' + pk + '/manifest.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
       if (!m || !m.items || VOICE.pack !== pk) return; var c = {};
-      // 10-27:09 交付的 JARVIS 包只有 50 条有音频(tech/num/unit/body19+ 等 67 条缺文件,线上 404),缺的不入表 → 整句改字幕,不再断断续续;补齐后删掉 JV_HAVE 即可
-      var JV_HAVE = pk === 'jarvis' ? /^(a\d\d|b0[1-8]|act0[1-4]|body(0\d|1[0-8]))$/ : null;
-      m.items.forEach(function (it) { if (JV_HAVE && !JV_HAVE.test(it.id)) return; c[it.id] = it; c['t:' + it.text] = it; }); VOICE.clips = c;
+      m.items.forEach(function (it) { c[it.id] = it; c['t:' + it.text] = it; }); VOICE.clips = c;
     }).catch(function () { });
   }
   function clipOf(tok) { if (!VOICE.clips) return null; return VOICE.clips[tok] || VOICE.clips['t:' + tok] || null; }
@@ -337,7 +335,7 @@
       '.xs-card h4{margin:0 0 10px;font-size:18px;font-weight:500;color:#fff;letter-spacing:.08em;display:flex;justify-content:space-between;align-items:center}.xs-card h4 small{font-size:11px;color:#7fd6ff;letter-spacing:.2em}',
       '.xs-card .xc{cursor:pointer;color:#aab;font-size:20px;line-height:1;background:none;border:0}',
       '.xs-card input[type=search]{width:100%;box-sizing:border-box;padding:9px 12px;border-radius:10px;border:1px solid rgba(150,180,220,.3);background:rgba(255,255,255,.04);color:#fff;font:inherit;font-size:15px;outline:none}.xs-card input[type=search]:focus{border-color:#7fd6ff}',
-      '.xs-grid{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.xs-chip{padding:6px 12px;border-radius:16px;border:1px solid rgba(150,180,220,.28);background:rgba(20,30,52,.5);color:#dfe7f5;cursor:pointer;font:inherit;font-size:14px}.xs-chip:hover{border-color:#7fd6ff}.xs-chip.on{border-color:#f0c97a;color:#f0c97a}.xs-chip i{font-style:normal;font-size:11px;margin-left:5px;opacity:.8}',
+      '.xs-grid{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.xs-chip{padding:6px 12px;border-radius:16px;border:1px solid rgba(150,180,220,.28);background:rgba(20,30,52,.5);color:#dfe7f5;cursor:pointer;font:inherit;font-size:14px}.xs-chip:hover{border-color:#7fd6ff}.xs-chip.on{border-color:#f0c97a;color:#f0c97a}.xs-chip.lock{opacity:.38;filter:grayscale(1);cursor:not-allowed}.xs-chip.lock::after{content:" 🔒";font-size:11px}.xs-chip i{font-style:normal;font-size:11px;margin-left:5px;opacity:.8}',
       '.xs-sec{margin:12px 0 4px;font-size:12px;letter-spacing:.14em;color:rgba(180,195,220,.6)}',
       '.xs-pre{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(127,214,255,.06);border:1px solid rgba(127,214,255,.16);line-height:1.75}.xs-pre b{color:#fff;font-weight:500}.xs-pre .f{color:rgba(205,216,236,.75);font-size:13px}',
       '.xs-row{display:flex;gap:10px;margin-top:12px;justify-content:flex-end}.xs-go{padding:9px 22px;border-radius:20px;border:1px solid #f0c97a;background:rgba(240,201,122,.12);color:#f6d999;font:inherit;font-size:15px;cursor:pointer;letter-spacing:.1em}.xs-go:hover{background:rgba(240,201,122,.22)}.xs-no{padding:9px 18px;border-radius:20px;border:1px solid rgba(150,180,220,.3);background:none;color:#cfd8ea;font:inherit;cursor:pointer}',
@@ -447,7 +445,7 @@
       '';
     R.appendChild(c);
     var bd = $('#xs-bodies', c), eg = $('#xs-engs', c);
-    ENG.forEach(function (e) { if (e.model === 'none') return; var x = el('button', 'xs-chip', e.zh + '<i style="color:' + TIER[e.tier] + '">' + e.tier + '</i>'); x.type = 'button'; x.dataset.id = e.id; x.onclick = function () { ENGID = e.id; ls('gn:sh:x-engine', e.id); blip(600, .06, .04); refreshPlan(); }; eg.appendChild(x); });
+    ENG.forEach(function (e) { if (e.model === 'none') return; var x = el('button', 'xs-chip', e.zh + '<i style="color:' + TIER[e.tier] + '">' + e.tier + '</i>'); x.type = 'button'; x.dataset.id = e.id; x.onclick = function () { var r = engRule(e.id); if (!r.ok) { I.toast('🔒 ' + e.zh + ':' + r.why); return; } ENGID = e.id; ls('gn:sh:x-engine', e.id); blip(600, .06, .04); refreshPlan(); }; eg.appendChild(x); });
     var DOMS = [['I', '家园', 'earth'], ['II', '日与月', 'moon'], ['III', '行星世界', null], ['IV', '太阳系边疆', 'pluto'], ['V', '群星', 0], ['VI', '银河', 0], ['VII', '宇宙', 0]], dg = $('#xs-doms', c);
     function domOf(id) { return id === 'earth' ? 0 : id === 'moon' || id === 'sun' ? 1 : id === 'pluto' ? 3 : 2; }
     DOMS.forEach(function (d, i) { var x = el('button', 'xs-chip' + (d[2] === 0 ? ' off' : ''), '<i style="color:#f0c97a;font-style:normal">' + d[0] + '</i> ' + d[1] + (d[2] === 0 ? '<i>跃迁 · 即将</i>' : '')); x.type = 'button'; x.dataset.d = i;
@@ -465,21 +463,26 @@
     var demo = Math.round(Math.log(Math.max(2, km / Math.max(1, b.R))) / 0.9 + 4);
     return { b: b, e: e, km: km, tr: tr, act: act, demo: demo };
   }
+  // C1.6 引擎可达范围(SHXE.rule):目标星域超出引擎能力则锁定;当前引擎被锁时自动换成第一个可用的
+  function engRule(id) { if (!window.SHXE) return { ok: true }; var d = PL.domOf ? PL.domOf(PL.tgt) : 2; return SHXE.rule(id, d); }
   function refreshPlan() {
-    var c = $('#xs-plan', R); if (!c) return; var p = plan();
+    var c = $('#xs-plan', R); if (!c) return;
+    if (!engRule(ENGID).ok) { var alt = ENG.filter(function (e) { return e.model !== 'none' && engRule(e.id).ok; })[0]; if (alt) { I.toast('🔒 ' + eng(ENGID).zh + ':' + engRule(ENGID).why + ' · 已换成 ' + alt.zh); ENGID = alt.id; } }
+    var p = plan();
     var dd = $('#xs-dst', R); if (dd) dd.innerHTML = '<span style="color:' + (p.b.col || '#7fd6ff') + '">●</span> <b>' + p.b.zh + '</b> <small>' + (p.km < 1 ? '就在附近' : I.fkm(p.km)) + '</small>';
     R.querySelectorAll('#xs-doms .xs-chip').forEach(function (x) { x.classList.toggle('on', PL.domOf && +x.dataset.d === PL.domOf(p.b.id)); });
     c.querySelectorAll('#xs-bodies .xs-chip').forEach(function (x) { x.classList.toggle('on', x.dataset.id === p.b.id); });
-    c.querySelectorAll('#xs-engs .xs-chip').forEach(function (x) { x.classList.toggle('on', x.dataset.id === p.e.id); });
+    c.querySelectorAll('#xs-engs .xs-chip').forEach(function (x) { var r = engRule(x.dataset.id); x.classList.toggle('lock', !r.ok); x.title = r.ok ? (r.note || '') : '🔒 ' + r.why; x.classList.toggle('on', x.dataset.id === p.e.id); });
+    var er = engRule(p.e.id);
     var ft = VD ? VD.fmtTime : I.fdur, fd = VD ? VD.fmtDist : I.fkm;
     var ship = p.tr.shipS && Math.abs(p.tr.shipS - p.tr.earthS) / p.tr.earthS > 0.01 ? '(船上 ' + ft(p.tr.shipS) + ')' : '';
     $('#xs-pre', c).innerHTML = '<div>目标 <b>' + p.b.zh + '</b> · ' + p.act + ' · 航程 <b>' + fd(p.km) + '</b></div>' +
       '<div>引擎 <b style="color:' + TIER[p.e.tier] + '">' + p.e.zh + '</b>(' + p.e.tier + ')· 真实预计耗时 <b>' + ft(p.tr.earthS) + '</b>' + ship + '</div>' +
-      '<div class="f">' + esc(p.e.fact || '') + '</div><div class="f">演示中天枢号会压缩时间,约 ' + p.demo + ' 秒抵达;读数里的时间按真实物理计算。</div>';
+      (er.note ? '<div class="f" style="color:#f0c97a">⚠ ' + esc(er.note) + '</div>' : '') + '<div class="f">' + esc(p.e.fact || '') + '</div><div class="f">演示中天枢号会压缩时间,约 ' + p.demo + ' 秒抵达;读数里的时间按真实物理计算。</div>';
   }
   var LAUNCH = null, ARR = null;
   function launch() {
-    var p = plan(); closeCards(); if (p.km < 1) { I.toast('已经在 ' + p.b.zh + ' 附近了'); return; }
+    var p = plan(); if (!engRule(p.e.id).ok) { I.toast('🔒 ' + p.e.zh + ':' + engRule(p.e.id).why); return; } closeCards(); if (p.km < 1) { I.toast('已经在 ' + p.b.zh + ' 附近了'); return; }
     LAUNCH = p; ARR = null; I.setTarget(p.b.id); S.auto = false; S.base = 0; S.mult = 1; stopOrbit(true);
     var seq = isJ() ? enLaunch(p) : ['a03', { t: '本次航行将使用' }, { t: p.e.zh }, { t: ',即将进行' }, { t: p.act }, { t: '。航程约' }].concat(sayDist(p.km).map(function (t) { return { t: t }; }), [{ t: ',预计耗时' }], sayTime(p.tr.earthS).map(function (t) { return { t: t }; }), [{ t: '。' }]);
     if (p.e.id === 'assist') say(['a14']);
@@ -652,10 +655,10 @@
       musPlay('idle');
       // 王磊 10-27 17:09:每次进入天枢号都要语音欢迎(语音默认开,用户在音响面板关掉才静音);等语音包到位最多 3 s
       hush(); PL.greeted = true; var hg = ++VOICE.gen; (function w(n) { if (hg !== VOICE.gen) return; if (VOICE.on && !VOICE.clips && n < 12) { setTimeout(function () { w(n + 1); }, 250); return; } say(['a01']); say(['a02']); })(0);
-    } else if (ev === 'close') { hush(); if (U.arm) U.arm.stop(); stopOrbit(true); engStop(); humOff(); musStop(); closeCards(); if (R) R.classList.remove('photo'); if (MUS.bgm) { MUS.bgm = false; var bm2 = document.getElementById('btn-music'); if (bm2 && bm2.getAttribute('aria-pressed') !== 'true') bm2.click(); } }
+    } else if (ev === 'close') { hush(); if (window.SHXE) SHXE.hide(); if (U.arm) U.arm.stop(); stopOrbit(true); engStop(); humOff(); musStop(); closeCards(); if (R) R.classList.remove('photo'); if (MUS.bgm) { MUS.bgm = false; var bm2 = document.getElementById('btn-music'); if (bm2 && bm2.getAttribute('aria-pressed') !== 'true') bm2.click(); } }
     else if (ev === 'frame') frame(a);
     else if (ev === 'decel') { say(['a07']); if (FXON && window.SHXFX) SHXFX.set(0); }
-    else if (ev === 'arrive') { ARR = a.id; engStop(); blip(660, .3, .06); if (LAUNCH && LAUNCH.b.id === a.id) { log('抵达', a, LAUNCH.e); LAUNCH = null; } if (PEND_PORT) { PEND_PORT = false; say(['a08']); startOrbit(a); } else { say(['a08']); offer(a); } }
+    else if (ev === 'arrive') { ARR = a.id; engStop(); blip(660, .3, .06); if (LAUNCH && LAUNCH.b.id === a.id) { log('抵达', a, LAUNCH.e); var xk = LAUNCH.e.id; if (window.SHXE) setTimeout(function () { SHXE.show(xk); }, 1800); LAUNCH = null; } if (PEND_PORT) { PEND_PORT = false; say(['a08']); startOrbit(a); } else { say(['a08']); offer(a); } }
     else if (ev === 'hover') { ARR = S.target; alarm(); alertOrb(); say(['a13']); }
   });
   addEventListener('keydown', onKey, true);
