@@ -252,7 +252,7 @@
     var s = el('style'); s.id = 'shxc-css';
     s.textContent = [
       '#shxc{position:fixed;inset:0;z-index:2000;background:#000;color:#d6deee;font:12px/1.45 "Noto Sans SC",system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:none}',
-      '#shxc canvas.gl{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}',
+      '#shxc canvas.gl{position:absolute;inset:0;width:100%;height:100%;display:block}',
       '#shxc .p{position:absolute;background:rgba(8,12,22,.52);border:1px solid rgba(150,180,220,.16);border-radius:10px;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);box-shadow:inset 0 0 18px rgba(127,214,255,.04)}',
       '#shxc .mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums}',
       '#shxc .cap{font-size:10px;letter-spacing:.14em;color:rgba(180,195,220,.55);text-transform:uppercase}',
@@ -355,9 +355,9 @@
   /* ---------------- 输入 ---------------- */
   var drag = null;
   function bindInput(cv) {
-    cv.addEventListener('pointerdown', function (e) { drag = { x: e.clientX, y: e.clientY, id: e.pointerId }; cv.setPointerCapture(e.pointerId); cv.style.cursor = 'grabbing'; });
+    cv.addEventListener('pointerdown', function (e) { drag = { x: e.clientX, y: e.clientY, id: e.pointerId }; cv.setPointerCapture(e.pointerId); });
     cv.addEventListener('pointermove', function (e) { if (!drag || drag.id !== e.pointerId) return; S.look[0] += (e.clientX - drag.x) * 0.0032; S.look[1] += (e.clientY - drag.y) * 0.0032; drag.x = e.clientX; drag.y = e.clientY; S.auto = false; S.align = false; });
-    function up() { drag = null; cv.style.cursor = 'grab'; }
+    function up() { drag = null; }
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
     cv.addEventListener('wheel', function (e) { e.preventDefault(); var f = e.deltaY < 0 ? 1.25 : 0.8; if (e.ctrlKey) S.mult = Math.max(1, Math.min(1e6, S.mult * f)); else S.base = Math.max(0, Math.min(MAXV, S.base * f + (f > 1 ? .05 : 0))); S.auto = false; }, { passive: false });
   }
@@ -657,7 +657,7 @@
     if (dlg) { dlg.remove(); dlg = null; }
     if (!quiet) { K.resume = true; if (window.SHXV) SHXV.go('solar'); }
   };
-  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, fdur: fdur, fkm: fkm, sky: function () { return sSky; }, skyG: function () { return K.skyG; }, emit: function (e, a) { emit(e, a); } };
+  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, fdur: fdur, fkm: fkm, sky: function () { return sSky; }, cam: function () { return cam; }, skyG: function () { return K.skyG; }, emit: function (e, a) { emit(e, a); } };
   X.state = function () { return { pos: S.pos.slice(), target: S.target, base: S.base, mult: S.mult, auto: S.auto, sunVis: sunVis }; };
   X.setTarget = function (id) { if (BY[id]) setTarget(id); };
   X.autopilot = function (on) { autopilot(on !== false); };

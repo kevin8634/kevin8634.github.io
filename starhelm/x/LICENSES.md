@@ -45,3 +45,7 @@
 - C1.7 尺度阶梯航图(x/sh-x-ladder.js):自写代码与 CSS 圆环,无新增素材/库;快捷目的地距离为公开事实数据(NASA/JPL、ESA、IAU 资料的约数),不涉及版权。
 | x/sh-x-constel-data.js | 出太阳系后的星座连线(C1.8) | d3-celestial data/constellations.lines.json(Olaf Frohn,github.com/ofrohn/d3-celestial);顶点匹配到 HYG 星序号 | BSD-3-Clause,许可原文 x/vendor/d3-celestial.LICENSE | 文件头注明 | 否 | 2026-10-27 | 派生数据,保留版权声明 |
 - C1.8 出太阳系 3D 星空(x/sh-x-deep.js):星位复用 1.0 已登记的 sh-stars-data.js(HYG v4.1,CC BY-SA 4.0),仅运行时读取、未产生新派生文件;旅行者 1 号/日球层顶/奥尔特云数值为 NASA/JPL 公开事实数据。
+
+## C1.9b 点选恒星(2026-10-27)
+- x/sh-x-pick.js 读取站内 sh-stars-data.js(HYG v4.1,David Nash / astronexus,CC BY-SA 4.0),资料卡注明来源。
+- x/sh-x-starnames.js:中文星名由 1.0 sh-domain5.js 标注表派生(本项目原创文本)。
