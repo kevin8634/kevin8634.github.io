@@ -60,3 +60,15 @@
 
 - 修改说明(FAL 要求):原 PNG 转为灰度 WebP(质量 82,尺寸不变 128/256/512 px);手机版为 512 px 原图缩到 256 px。未裁剪、未改画面内容。
 - 构建输入(index.json、PNG、HYG csv)只在构建时下载,不入库。
+
+## C2.1 日球层穿越增强(2026-10-28)
+
+| 素材 | 用在哪(任务/页面) | 来源与链接 | 许可 | 署名要求 | 是否 AI 生成 | 页面标注位置 |
+|---|---|---|---|---|---|---|
+| x/audio/v1-pws-interstellar.mp3(12.3 s,单声道 22.05 kHz 48 kbps,74 KB) | 驾驶舱穿越日球层顶(121.6 AU)时播放「等离子体波之声」;「日球层顶」「等离子体波之声」讲解卡可点播 | 旅行者 1 号等离子体波仪(PWS)实测录音,NASA Photojournal PIA17045「Voyager Captures Sounds of Interstellar Space」(2013-09-12),页面 https://science.nasa.gov/photojournal/voyager-captures-sounds-of-interstellar-space ,原文件 https://assets.science.nasa.gov/content/dam/science/psd/photojournal/pia/pia17/pia17045/PIA17045_20130906-640.mp4 (SHA-256 fcdec8d9…3bdf);Credit: NASA/JPL-Caltech/University of Iowa | NASA 媒体使用准则:NASA 图像/音频/视频一般不受美国版权保护,可用于教育与信息用途(https://www.nasa.gov/nasa-brand-center/images-and-media/);JPL Image Use Policy:除另有注明外可用于任何目的,需署名(https://www.jpl.nasa.gov/jpl-image-use-policy/)。未使用 NASA 标志,不暗示 NASA 认可 | 署名「NASA/JPL-Caltech/University of Iowa」 | 否(实测数据声化) | 音响面板底部署名行;播放时字幕;「等离子体波之声」讲解卡 |
+| 太阳风剖面、终端激波/日球层顶距离、等离子体振荡频率与密度 | sh-x-helio.js 粒子流参数、外形标定、讲解卡 | Richardson 等 2008 Nature 454:63;Decker 等 2005 Science 309:2020;Krimigis 等 2011 Nature 474:359;Gurnett 等 2013 Science 341:1489(f_p = 8980√n Hz;2.2 kHz→0.06、2.6 kHz→0.08 /cm³) | 事实数据,不涉版权 | 讲解卡「依据」行 | 否 | 讲解卡 |
+| 日球层外形模型参数 | 外形示意(彗星状 / 气泡羊角状)、IBEX 丝带 | 鼻端方向 黄经 255.59° 黄纬 5.14°(IBEX 12 年拟合,Galli 等 2022 Space Sci Rev 综述 https://pmc.ncbi.nlm.nih.gov/articles/PMC9165285 );IBEX 丝带 中心 (219.2°, 39.9°) 半径 74.5°(Funsten 等 2013 ApJ 776:30);彗星状外形 Parker 1961 半无限体;羊角状参照 Opher & Drake 2015 ApJL 800:L28(两瓣间尾部 ~250 AU)、Opher 等 2020 Nature Astronomy 4:675;V1/V2 穿越距离(NASA/JPL) | 事实数据与公开论文结论,代码与几何为本项目原创 | 讲解卡、小窗底注 | 否 | 讲解卡小窗「示意 · 形状仍有争议(推测)」 |
+| 太阳风粒子流、激波面网格、日球层外形网格/着色器(x/sh-x-helio.js) | 驾驶舱 70–140 AU 粒子流、>150 AU 外形示意、讲解卡小窗 | 本项目手写 JS/GLSL | 本项目原创 | 无 | 否 | 画面顶部「太阳风粒子流 · 模拟示意」字幕 |
+
+- 修改说明:原 MP4 音轨把同一段 11.8 s 录音播放两遍(两段互相关 0.999),只截取第一遍(11.9–24.1 s),整体增益 +4.5 dB、首尾 0.4/0.6 s 淡入淡出,未做压缩、均衡或变调,保留原有振幅变化(PIA17045 说明:声轨再现了等离子体波的振幅与频率)。
+- 未采用:NASA SoundCloud 上的同类音轨标注为 CC BY-NC 3.0,不使用;找到可靠官方录音,故未启用程序合成方案。

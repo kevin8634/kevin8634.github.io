@@ -36,6 +36,7 @@
   var K = { open: false, built: false };
   var X = window.SHXC = { isOpen: function () { return K.open; } };
   X.hooks = []; X.on = function (f) { X.hooks.push(f); };
+  X.layers = { bg: [], fg: [] };   // C2.1:每帧在主场景前(bg)/尘埃后(fg)调用 f({rd,cam0,W,H,dt,pf})
   function emit(ev, a) { for (var i = 0; i < X.hooks.length; i++) { try { X.hooks[i](ev, a); } catch (e) { console.warn('[SHXC hook]', e); } } }
 
   function reduced() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
@@ -364,7 +365,8 @@
     else { var u = Math.min(1, (r - HP) / 30); zone = r < 2000 ? '本地星际介质' : '星际空间'; v = L(20, 0, u * 3); n = .08; B = .5; gcr = 100; hp = L(2, 1, u); }
     function bar(x) { return '<span style="display:inline-block;width:60px;height:5px;border-radius:3px;background:linear-gradient(90deg,#f0c97a ' + x + '%,rgba(150,180,220,.18) ' + x + '%);vertical-align:middle"></span> ' + Math.round(x); }
     return '<div class="sec">日球层 · 旅行者号实测剖面(示意) <a onclick="window.SHXE&&SHXE.show(\'heliosphere\',1)" style="cursor:pointer;color:#f0c97a;pointer-events:auto">?</a></div>' + kv('所在区域', zone) + kv('太阳风径向速度', v < 1 ? '≈ 0' : Math.round(v), 'km/s') +
-      kv('等离子体密度', sig(n, 2), '/cm³') + kv('磁场强度', sig(B, 2), 'nT') + kv('银河宇宙线(相对)', bar(gcr)) + kv('太阳风粒子(相对)', bar(hp));
+      kv('等离子体密度', sig(n, 2), '/cm³') + kv('磁场强度', sig(B, 2), 'nT') + kv('银河宇宙线(相对)', bar(gcr)) + kv('太阳风粒子(相对)', bar(hp)) +
+      (window.SHXH ? kv('外形示意 · 推测', '<a onclick="window.SHXH&&SHXH.model()" style="cursor:pointer;color:#f0c97a;pointer-events:auto" title="切换日球层外形模型(形状仍有争议)">' + SHXH.modelName() + ' ⇄</a>') : '');
   }
 
   /* ---------------- 输入 ---------------- */
@@ -500,8 +502,11 @@
     rd.autoClear = false; rd.clear();
     rd.render(sSky, cam0);
     if (S.orb) { sOrb.visible = true; rd.render(sOrb, camO); }
+    var LI = { rd: rd, cam0: cam0, W: W, H: Hh, dt: dt, pf: !!PF };   // C2.1 外挂渲染层(日球层外形 bg / 太阳风粒子流 fg,见 sh-x-helio.js)
+    for (var li = 0; li < X.layers.bg.length; li++) { try { X.layers.bg[li](LI); } catch (e) { console.warn('[SHXC layer]', e); X.layers.bg.splice(li--, 1); } }
     rd.clearDepth(); rd.render(sMain, cam);
     if (dust.N) rd.render(sDust, cam0);
+    for (li = 0; li < X.layers.fg.length; li++) { try { X.layers.fg[li](LI); } catch (e) { console.warn('[SHXC layer]', e); X.layers.fg.splice(li--, 1); } }
     var fx = updFx(W, Hh, [sunLocal.x, sunLocal.y, sunLocal.z]);
     rd.clearDepth(); rd.render(sFx, camFx);
     if (PF) SHXFX.end(rd, dt);
@@ -611,7 +616,7 @@
     css(); buildHud();
     var cv = el('canvas', 'gl'); root.insertBefore(cv, root.firstChild);
     rd = new T.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
-    rd.setPixelRatio(window.devicePixelRatio || 1); rd.outputEncoding = T.sRGBEncoding;
+    rd.setPixelRatio(Math.min(window.devicePixelRatio || 1, Math.min(screen.width, screen.height) < 700 ? 1.5 : 3)); rd.outputEncoding = T.sRGBEncoding;   // C2.1:手机像素比 ≤1.5
     cam = new T.PerspectiveCamera(60, 1, 1, 1e7); cam0 = new T.PerspectiveCamera(60, 1, 0.1, 5000); camO = new T.PerspectiveCamera(60, 1, 1e3, 2e11);
     sSky = new T.Scene(); sOrb = new T.Scene(); sMain = new T.Scene(); sDust = new T.Scene();
     if (window.SHFX3D && SHFX3D.skyMesh) { K.skyG = SHFX3D.skyMesh(rd, 1000, 0x9aa0ae); sSky.add(K.skyG); }

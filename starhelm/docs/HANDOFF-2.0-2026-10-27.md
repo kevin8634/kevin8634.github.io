@@ -1,6 +1,6 @@
 # 天枢 Starhelm 2.0 穿梭 · 交接与排期(2026-10-27 22:5x CST)
 
-接手者先读:本文件 → docs/DEVLOG-2.0-C09.md(最新)→ docs/DEVLOG-2.0-C08.md → x/LICENSES.md。OneDrive 不再修改/上传,一切以 GitHub 为准。
+接手者先读:本文件 → docs/DEVLOG-2.0-C10.md(最新)→ docs/DEVLOG-2.0-C09.md → docs/DEVLOG-2.0-C08.md → x/LICENSES.md。OneDrive 不再修改/上传,一切以 GitHub 为准。
 
 ## 1. 仓库与边界
 - 仓库 kevin8634/kevin8634.github.io,分支 main;2.0 在 /starhelm/x/(noindex)。只改 x/ 与 starhelm/docs/(含 docs/build/build_x_index.py)。1.0 文件(starhelm/ 根下)不动。
@@ -11,7 +11,8 @@
 ## 2. 当前线上(最新在上)
 | 提交 | 内容 |
 |---|---|
-| (本提交) | C2.0 星座插画(Stellarium 西方/modern,Johan Meuris,FAL 1.3)85 幅 + 88 星座中英标签;K 键 连线/连线+插画/关;修正驾驶舱星空贴图 180° 赤经偏差 |
+| (本提交) | C2.1 日球层穿越增强:终端激波太阳风粒子流(400→130 km/s,湍动加热,随飞船位置过渡)、日球层顶旅行者 1 号 PWS 实测等离子体波录音(NASA PIA17045)、日球层外形示意(彗星状 / 气泡羊角状可切换,V1/V2 穿越点标定,IBEX 丝带);新文件 x/sh-x-helio.js;手机像素比 ≤1.5 |
+| f20accb | C2.0 星座插画(Stellarium 西方/modern,Johan Meuris,FAL 1.3)85 幅 + 88 星座中英标签;K 键 连线/连线+插画/关;修正驾驶舱星空贴图 180° 赤经偏差 |
 | 6f1d3b3 | C1.9e 倒计时去背景、仪表盘 DSEG7 黄色液晶字 |
 | d988ab7 | C1.9d 日球层科普讲解卡(终端激波/日鞘/日球层顶/总览)|
 | 2a58167 | C1.9c 30 AU 外 HUD「日球层」栏(旅行者号剖面示意) |
@@ -27,6 +28,8 @@
 - x/sh-x-ship.js 舰载系统(语音 Armilla/JARVIS、音乐、引擎、侧舷窗入口、登舰遮罩 board())。
 - x/sh-x-deep.js HYG 星空 + 星座连线 + 深空事件(K 三档 SHXD.mode);x/sh-x-constart.js 星座插画+标签(SHXCA),数据 x/sh-x-constart-data.js 由 docs/build/build_constart.py 生成;x/sh-x-pick.js 点选恒星;x/sh-x-starnames.js 中文星名。
 - x/sh-x-port.js 侧舷窗独立 renderer;x/sh-x-fx.js 曲率/近光速/虫洞特效。
+- x/sh-x-helio.js 日球层穿越(SHXH:粒子流 fg 层、外形 bg 层、讲解卡小窗;调试 SHXH.place(au,'side'|'sun'));驾驶舱外挂渲染层 SHXC.layers.bg/fg;PWS 音频 SHXS.pws。
+- 自测补充:work/t_t8.py(C2.1 四档 + reduced + r169,端口用 T8PORT,默认 8797)。
 - 自测(work/ 下,不在仓库):t_t1.py 星座插画四档+对齐截图、t_arr.py 恒星抵达、t_hover.py 悬停播报、t_board.py 登舰、t_pick.py 点选。均为 Playwright + SwiftShader,本地 http.server 于仓库根,拦截外网。
 
 ## 4. 王磊的视觉规则(必须遵守)
@@ -64,9 +67,11 @@
 - 视觉(遵守第 4 节):黑洞用屏幕空间引力透镜着色器(背景星空弯曲 + 光子环)、吸积盘多普勒增亮与红移;Sgr A* 参照 EHT 1.3 mm 射电影像;中子星为小而极亮的热球 + X 射线伪彩;脉冲星双锥辐射束按真实周期旋转(可降速观看),射电/X 射线波段标注。蟹状星云脉冲星需配星云(与 T6 合并)。
 - 接近效果:潮汐力、时间膨胀读数(引力 γ)、事件视界警戒距离,自动驾驶不得进入。
 
-### T8 日球层穿越增强(10-27 22:40)
+### T8 日球层穿越增强 ✅ 已完成(C2.1,2026-10-28,见 DEVLOG-2.0-C10.md)(10-27 22:40)
 - C1.9c 已有读数;可加:终端激波处太阳风粒子流减速变乱的视觉、日球层顶处等离子体波「声音」(旅行者 1 号 PWS 公开音频,NASA 公共领域)、日球层整体形状(彗星状尾/气泡争议标注)。
+- 完成情况:三项全部上线;音频用 NASA PIA17045 实测录音(74 KB,登记见 x/LICENSES.md),未用合成方案。待王磊真机看粒子密度/亮度是否合适;外形模型其他方向为外推。
 
 ## 6. 额度
 - 10-27 23:05 本账号日额度已用约 88%,停工交接;10-28 20:07 CST 重置;月池 17%。
+- 10-28 02:1x–03:xx CST:T8(C2.1)由 Hark 代理按交接执行完成;本次未读取该账号的额度面板,具体用量以总指挥面板为准。下一项按排期为 T2(补卫星与彗星)。
 - 科普内容写法:讲解卡在 x/sh-x-explain.js(EX 表)与 x/sh-x-deep.js addEx();每条含 t 标题、k 证据等级(已证实/推测/猜想)、b 要点、s 依据。新增天体/现象时同步写一张。

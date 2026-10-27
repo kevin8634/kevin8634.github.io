@@ -2,6 +2,7 @@
  * 王磊 10-27 17:36:飞行结束后在合适处弹出显示屏解释视觉现象,并注明 已证实 / 推测 / 猜想。
  * - SHXE.rule(engId, domIdx) → { ok, note, why } 引擎能否飞往该星域(0=I 家园 … 6=VII 宇宙)
  * - SHXE.show(key) 右侧玻璃显示屏;key 为引擎 id 或现象 id(heliopause / lens / pulsar …,后续星域用)
+ * - C2.1:条目可带 x(附加 HTML,字符串或函数)与 on(el)(渲染后回调,如日球层外形小窗);SHXE.cur() 返回当前显示的条目 key
  */
 (function () {
   'use strict';
@@ -60,7 +61,7 @@
     dyson: { t: '戴森群', k: '猜想', b: ['设想高级文明用大量设备包围恒星收集能量。', '塔比星的怪异变暗曾引发猜测,主流解释是尘埃。'], s: '依据:Dyson 1960 年设想,无观测证据' }
   };
 
-  var el, tm;
+  var el, tm, cur = null;
   function css() {
     if (document.getElementById('xe-css')) return;
     var s = document.createElement('style'); s.id = 'xe-css';
@@ -69,7 +70,8 @@
       '#xe-box .tg{font-size:11px;font-weight:600;padding:1px 7px;border-radius:9px;border:1px solid currentColor;letter-spacing:.1em}' +
       '#xe-box .hd{font-size:10.5px;letter-spacing:.2em;color:#7fb6dd;opacity:.8;margin-bottom:4px}#xe-box ul{margin:0;padding-left:17px}#xe-box li{margin:2px 0}' +
       '#xe-box .s{margin-top:7px;font-size:11px;opacity:.6}#xe-box .x{position:absolute;right:8px;top:6px;background:none;border:0;color:#9ab;font-size:18px;cursor:pointer;line-height:1}' +
-      '@media (max-width:640px){#xe-box{top:120px;font-size:12px}}';
+      '#xe-box{max-height:calc(100vh - 190px);overflow-y:auto}#xe-box .xx{margin-top:8px}' +
+      '@media (max-width:640px){#xe-box{top:120px;font-size:12px;max-height:calc(100vh - 130px)}}';
     document.head.appendChild(s);
   }
   function tag(k) { return '<span class="tg" style="color:' + (TAG[k] || TAG['推测']) + '">' + k + '</span>'; }
@@ -78,11 +80,12 @@
     if (!el) { el = document.createElement('div'); el.id = 'xe-box'; el.setAttribute('role', 'note'); document.body.appendChild(el); }
     var k2 = e.k2 ? e.k2.split(' ') : null;
     el.innerHTML = '<button class="x" type="button" aria-label="关闭">×</button><div class="hd">现象解读 · PHENOMENON</div><h5>' + e.t + ' ' + tag(e.k) + (k2 ? '<small style="font-size:11px;opacity:.7">' + k2[0] + '</small>' + tag(k2[1]) : '') + '</h5><ul>' +
-      e.b.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul><div class="s">' + e.s + '</div>';
-    el.querySelector('.x').onclick = hide;
+      e.b.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul>' + (e.x ? '<div class="xx">' + (typeof e.x === 'function' ? e.x() : e.x) + '</div>' : '') + '<div class="s">' + e.s + '</div>';
+    el.querySelector('.x').onclick = hide; cur = key;
+    if (e.on) { try { e.on(el); } catch (er) { console.warn('[SHXE]', er); } }
     requestAnimationFrame(function () { el.classList.add('on'); });
     clearTimeout(tm); if (!hold) tm = setTimeout(hide, 22000);
   }
-  function hide() { clearTimeout(tm); if (el) el.classList.remove('on'); }
-  window.SHXE = { rule: rule, show: show, hide: hide, ex: EX, tagColor: TAG };
+  function hide() { clearTimeout(tm); cur = null; if (el) el.classList.remove('on'); }
+  window.SHXE = { rule: rule, show: show, hide: hide, ex: EX, tagColor: TAG, cur: function () { return el && el.classList.contains('on') ? cur : null; } };
 })();

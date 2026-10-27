@@ -9,7 +9,9 @@
  *  - 侧舷窗观测:Armilla 接管;到达后卫星式环绕巡航
  *  - 安全提示(太阳高温、贴近悬停)、航行日志(只存本机)、摄影模式
  *  - 舱内音响:CC0 音乐按场景切换;音效(航行底噪 + 十种引擎 启动/持续/关停)Web Audio 程序合成;全部默认关
- *  - 第一人称 HUD:左右面板带透视,转向时有视差与轻微晃动;桌面放大字号 */
+ *  - 第一人称 HUD:左右面板带透视,转向时有视差与轻微晃动;桌面放大字号
+ *  - C2.1:日球层顶「等离子体波之声」—— 旅行者 1 号 PWS 实测录音(NASA/JPL-Caltech/University of Iowa,PIA17045);
+ *    接近 100 AU 预加载(整段下载完才可播),穿越时淡入、压低音乐、不与语音重叠;跟随音量;开关默认跟随舰载语音开关 */
 (function () {
   'use strict';
   if (!window.SHXC) return;
@@ -231,6 +233,32 @@
     }
     MUS.a = n; MUS.cur = scene; fade(n, SND.vol * 0.55, 2500); if (old) fade(old, 0, 2500, function () { old.pause(); });
     var np = $('#xs-np'); if (np) np.textContent = tr.zh + ' · ' + tr.by + '(' + (tr.lic || 'CC0') + ')';
+  }
+  /* C2.1 等离子体波之声(SHXS.pws) */
+  var PWS = { f: 'x/audio/v1-pws-interstellar.mp3', url: null, ready: false, loading: false, cbs: [], a: null, playing: false, on: ls('gn:sh:x-pws') == null ? VOICE.on : ls('gn:sh:x-pws') === '1' };
+  function pwsLoad(cb) {
+    if (PWS.ready) { if (cb) cb(true); return; } if (cb) PWS.cbs.push(cb); if (PWS.loading) return; PWS.loading = true;
+    fetch(PWS.f).then(function (r) { if (!r.ok) throw 0; return r.blob(); }).then(function (b) { PWS.url = URL.createObjectURL(b); PWS.ready = true; })
+      .catch(function () { }).then(function () { PWS.loading = false; var c = PWS.cbs; PWS.cbs = []; c.forEach(function (f) { try { f(PWS.ready); } catch (e) { } }); });
+  }
+  function pwsVol() { return Math.max(0, Math.min(1, SND.vol * 0.85)); }
+  function pwsStop(fast) { var a = PWS.a; if (!a) return; PWS.a = null; PWS.playing = false; fade(a, 0, fast ? 200 : 900, function () { a.pause(); }); if (MUS.a) fade(MUS.a, SND.vol * 0.55, 1500); }
+  function pwsPlay(user, tries) {
+    if (!user && (!PWS.on || SND.vol <= 0 || !X.isOpen())) return false;
+    if (!PWS.ready) { if (user) { I.toast('等离子体波录音载入中…'); pwsLoad(function (ok) { if (ok) pwsPlay(true); else I.toast('等离子体波录音载入失败'); }); } return false; }
+    if (!user && VOICE.busy && (tries || 0) < 12) { setTimeout(function () { pwsPlay(false, (tries || 0) + 1); }, 700); return true; }   // 不与语音播报重叠
+    pwsStop(true);
+    var a = new Audio(PWS.url); a.volume = 0; PWS.a = a; PWS.playing = true;
+    a.onended = function () { if (PWS.a === a) { PWS.a = null; PWS.playing = false; if (MUS.a) fade(MUS.a, SND.vol * 0.55, 1800); } };
+    a.play().then(function () { fade(a, pwsVol(), 1500); if (MUS.a) fade(MUS.a, SND.vol * 0.55 * 0.25, 1200); }).catch(function () { PWS.a = null; PWS.playing = false; });
+    sub(isJ() ? 'Playing Voyager 1 plasma wave data (2012–13, 2–3 kHz): electron plasma oscillations of interstellar space. NASA/JPL-Caltech/University of Iowa.' : '正在播放旅行者 1 号等离子体波仪实测录音(2012–13 年,2–3 kHz 电子等离子体振荡)· NASA/JPL-Caltech/University of Iowa');
+    return true;
+  }
+  function pwsCue() {   // 穿越日球层顶:已预加载则 2.6 s 后淡入;6 s 内仍未就绪就不播(避免迟到的声音突然冒出),讲解卡里可点播
+    if (!PWS.on || SND.vol <= 0) return;
+    var t0 = performance.now();
+    if (PWS.ready) { setTimeout(function () { pwsPlay(false); }, 2600); return; }
+    pwsLoad(function (ok) { if (ok && performance.now() - t0 < 6000) setTimeout(function () { pwsPlay(false); }, Math.max(400, 2600 - (performance.now() - t0))); else I.toast('等离子体波录音未就绪 · 可在「日球层顶」讲解卡中点播'); });
   }
   function musStop() { if (MUS.a) { var a = MUS.a; fade(a, 0, 900, function () { a.pause(); }); } MUS.a = null; MUS.cur = null; }
   function fade(a, to, ms, cb) { var from = a.volume, t0 = performance.now(); (function st() { var k = Math.min(1, (performance.now() - t0) / ms); try { a.volume = Math.max(0, Math.min(1, from + (to - from) * k)); } catch (e) { } if (k < 1) requestAnimationFrame(st); else if (cb) cb(); })(); }
@@ -559,9 +587,10 @@
       '<label>舰载智能 · Persona<span id="xs-per"><button type="button" class="xs-chip' + (isJ() ? '' : ' on') + '" data-p="armilla">Armilla</button><button type="button" class="xs-chip' + (isJ() ? ' on' : '') + '" data-p="jarvis">JARVIS</button></span></label>' +
       '<label>舰载语音<input class="xs-sw" type="checkbox" id="xs-v"' + (VOICE.on ? ' checked' : '') + '></label>' +
       '<label title="与 Armilla PWA 同款的舰载空间声场">AI 空间感 · Spatial FX<input class="xs-sw" type="checkbox" id="xs-sfx"' + (SFX.on ? ' checked' : '') + '></label>' +
+      '<label title="穿越日球层顶时播放旅行者 1 号等离子体波仪实测录音">等离子体波之声 · Voyager PWS<input class="xs-sw" type="checkbox" id="xs-pws"' + (PWS.on ? ' checked' : '') + '></label>' +
       '<label>音量<input type="range" min="0" max="1" step="0.05" id="xs-vol" value="' + SND.vol + '"></label>' +
       '<div class="xs-row" style="justify-content:space-between"><span class="np" id="xs-np">' + (MUS.cur ? (MUS.cur === 'idle' ? IDLE[MUS.ii % IDLE.length] : TRACKS[MUS.cur]).zh : '音乐按航行状态自动切换:待命(3 首轮播)/ 巡航 / 加速 / 环绕') + '</span><button class="xs-no" type="button" id="xs-nx">下一首</button></div>' +
-      '<div class="cr">音乐:OpenGameArt.org 公有领域(CC0)曲目 —— Space Echo(Centurion_of_war)、Space Music: Out There(yd)、Magic Space(CodeManu)、Outer Space Loop(wipics);待命轮播另含 Starhelm Drift、Starhelm Halo 两首本项目程序合成原创曲。音效为程序实时合成。<br>舰载语音:Armilla(中文)与 JARVIS(英文)均由 AI 合成 · Voice generated by AI (MiniMax)。</div>';
+      '<div class="cr">音乐:OpenGameArt.org 公有领域(CC0)曲目 —— Space Echo(Centurion_of_war)、Space Music: Out There(yd)、Magic Space(CodeManu)、Outer Space Loop(wipics);待命轮播另含 Starhelm Drift、Starhelm Halo 两首本项目程序合成原创曲。音效为程序实时合成。<br>等离子体波之声:旅行者 1 号 PWS 实测录音(2012–13),NASA/JPL-Caltech/University of Iowa · PIA17045。<br>舰载语音:Armilla(中文)与 JARVIS(英文)均由 AI 合成 · Voice generated by AI (MiniMax)。</div>';
     R.appendChild(c);
     $('.xc', c).onclick = function () { closeCards(); };
     $('#xs-m', c).onchange = function () { SND.music = this.checked; ls('gn:sh:x-music', SND.music ? '1' : '0'); if (SND.music) musPlay(MUS.want); else musStop(); };
@@ -569,7 +598,8 @@
     $('#xs-sfx', c).onchange = function () { setSpaceFx(this.checked); if (VOICE.on) say(['a06']); };
     $('#xs-v', c).onchange = function () { VOICE.on = this.checked; ls('gn:sh:x-voice', VOICE.on ? '1' : '0'); if (VOICE.on) { loadVoice(); if (!VOICE.clips) I.toast(pnice() + ' 语音载入中…'); } };
     c.querySelectorAll('#xs-per .xs-chip').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); setPersona(b.dataset.p); c.querySelectorAll('#xs-per .xs-chip').forEach(function (x) { x.classList.toggle('on', x.dataset.p === PER.id); }); }; });
-    $('#xs-vol', c).oninput = function () { SND.vol = +this.value; ls('gn:sh:x-vol', SND.vol); if (M) M.gain.value = SND.vol; if (MUS.a) MUS.a.volume = SND.vol * 0.55; };
+    $('#xs-vol', c).oninput = function () { SND.vol = +this.value; ls('gn:sh:x-vol', SND.vol); if (M) M.gain.value = SND.vol; if (MUS.a) MUS.a.volume = SND.vol * 0.55 * (PWS.playing ? 0.25 : 1); if (PWS.a) PWS.a.volume = pwsVol(); };
+    $('#xs-pws', c).onchange = function () { PWS.on = this.checked; ls('gn:sh:x-pws', PWS.on ? '1' : '0'); if (PWS.on) pwsLoad(); else pwsStop(); };
     $('#xs-nx', c).onclick = function () { if (!SND.music) { SND.music = true; ls('gn:sh:x-music', '1'); $('#xs-m', c).checked = true; } var i = MUS.order.indexOf(MUS.cur || 'idle'); MUS.lock = performance.now() + 120000; if (MUS.cur === 'idle' && (MUS.ii + 1) % IDLE.length) { MUS.ii++; MUS.cur = null; musPlay('idle'); } else { if (MUS.cur === 'idle') MUS.ii++; musPlay(MUS.order[(i + 1) % MUS.order.length]); } };
   }
 
@@ -705,7 +735,7 @@
       // 王磊 10-27 22:16:先登舰 —— 舱门动画期间预载语音与音乐(带进度条),都就绪后音乐淡入、再播欢迎语,不再突然冒出声音
       hush(); PL.greeted = true; var hg = ++VOICE.gen;
       board(hg, function () { if (hg !== VOICE.gen) return; musPlay('idle'); setTimeout(function () { if (hg !== VOICE.gen) return; say(['a01']); say(['a02']); }, 1200); });
-    } else if (ev === 'close') { hush(); if (window.SHXE) SHXE.hide(); if (U.arm) U.arm.stop(); stopOrbit(true); engStop(); humOff(); musStop(); closeCards(); if (R) R.classList.remove('photo'); if (MUS.bgm) { MUS.bgm = false; var bm2 = document.getElementById('btn-music'); if (bm2 && bm2.getAttribute('aria-pressed') !== 'true') bm2.click(); } }
+    } else if (ev === 'close') { pwsStop(true); hush(); if (window.SHXE) SHXE.hide(); if (U.arm) U.arm.stop(); stopOrbit(true); engStop(); humOff(); musStop(); closeCards(); if (R) R.classList.remove('photo'); if (MUS.bgm) { MUS.bgm = false; var bm2 = document.getElementById('btn-music'); if (bm2 && bm2.getAttribute('aria-pressed') !== 'true') bm2.click(); } }
     else if (ev === 'frame') frame(a);
     else if (ev === 'decel') { say(['a07']); if (FXON && window.SHXFX) SHXFX.set(0); }
     else if (ev === 'arrive') { ARR = a.id; engStop(); blip(660, .3, .06); if (LAUNCH && LAUNCH.b.id === a.id) { log('抵达', a, LAUNCH.e); var xk = LAUNCH.e.id; if (window.SHXE) setTimeout(function () { SHXE.show(xk); }, 1800); LAUNCH = null; } if (PEND_PORT) { PEND_PORT = false; say(['a08']); startOrbit(a); } else { say(['a08']); offer(a); } }
@@ -743,5 +773,5 @@
   }
   takeover(); addEventListener('load', takeover);
 
-  window.SHXS = { persona: function (id) { if (id) setPersona(id); return PER.id; }, enDist: enDist, enTime: enTime, voiceDbg: function () { return { on: VOICE.on, persona: PER.id, pack: VOICE.pack, n: VOICE.clips ? Object.keys(VOICE.clips).length : 0, sfx: SFX.on }; }, spaceFx: setSpaceFx, say: say, lines: L, zhNum: zhNum, sayDist: sayDist, sayTime: sayTime, plan: function () { if (X.isOpen()) togglePlan(); }, orbit: function () { if (X.isOpen()) portAct(); }, mode: function (m) { setMode(m); }, state: function () { return { mode: MODE, engine: ENGID, orbit: !!O, music: SND.music, sfx: SND.sfx, voice: VOICE.on, clips: !!VOICE.clips }; } };
+  window.SHXS = { pws: { load: pwsLoad, play: pwsPlay, stop: pwsStop, cue: pwsCue, state: function () { return { ready: PWS.ready, loading: PWS.loading, on: PWS.on, playing: PWS.playing, vol: pwsVol() }; } }, persona: function (id) { if (id) setPersona(id); return PER.id; }, enDist: enDist, enTime: enTime, voiceDbg: function () { return { on: VOICE.on, persona: PER.id, pack: VOICE.pack, n: VOICE.clips ? Object.keys(VOICE.clips).length : 0, sfx: SFX.on }; }, spaceFx: setSpaceFx, say: say, lines: L, zhNum: zhNum, sayDist: sayDist, sayTime: sayTime, plan: function () { if (X.isOpen()) togglePlan(); }, orbit: function () { if (X.isOpen()) portAct(); }, mode: function (m) { setMode(m); }, state: function () { return { mode: MODE, engine: ENGID, orbit: !!O, music: SND.music, sfx: SND.sfx, voice: VOICE.on, clips: !!VOICE.clips }; } };
 })();
