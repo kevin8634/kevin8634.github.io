@@ -22,7 +22,7 @@ assert sw in s
 s = s.replace(sw, '''<script>/* 巡天 X0a:不注册 SW。1.0 的 SW 会把导航页写进缓存 ./index.html,这里把它恢复为 1.0 首页,避免离线时打开 1.0 看到本预览页 */
 (function(){if(!('caches'in window)||!navigator.serviceWorker||!navigator.serviceWorker.controller)return;
 setTimeout(function(){fetch('index.html',{cache:'no-store'}).then(function(r){if(!r.ok)return;caches.keys().then(function(ks){ks.filter(function(k){return /^sh-/.test(k);}).forEach(function(k){caches.open(k).then(function(c){c.put(new URL('index.html',document.baseURI).href,r.clone());});});});}).catch(function(){});},4000);})();</script>
-<div id="shx-badge" style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99999;pointer-events:none;font:11px/1.4 system-ui,sans-serif;color:#6FE3FF;opacity:.75;letter-spacing:.06em;text-shadow:0 0 6px #000">巡天 X0b · 穿梭 C1.1 天枢号 · 开发预览 · three <span id="shx-r">r186</span></div>
+<div id="shx-badge" style="position:fixed;left:50%;bottom:6px;transform:translateX(-50%);z-index:99999;pointer-events:none;font:11px/1.4 system-ui,sans-serif;color:#6FE3FF;opacity:.75;letter-spacing:.06em;text-shadow:0 0 6px #000">巡天 X0b · 穿梭 C1.2 天枢号 · 开发预览 · three <span id="shx-r">r186</span></div>
 <script>setTimeout(function(){var e=document.getElementById('shx-r');if(e)e.textContent=window.THREE&&THREE.__r?('r'+THREE.__r):'2D';},500);</script>''', 1)
 # X0b 四级视图 + C0 驾驶舱(只在 x/ 下)
 add = '<script src="x/sh-x-views.js"></script>\n<script src="x/sh-x-cockpit.js"></script>\n<script src="x/sh-x-armilla.js"></script>\n<script src="x/sh-x-port.js"></script>\n<script src="x/armilla/voice.js"></script>\n<script src="x/sh-x-ship.js"></script>\n'

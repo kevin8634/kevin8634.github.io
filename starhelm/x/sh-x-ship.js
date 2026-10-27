@@ -1,4 +1,5 @@
 /* 天枢 Starhelm · 2.0 穿梭 C0.5 · sh-x-ship.js(SHXS)
+ * C1.2:Armilla ⇄ JARVIS 人格切换(偏好 starhelm.voice.persona,默认 armilla;JARVIS 英文台词/拼读 + 奇点形象;两人格共用 AI 空间感)
  * 天枢号舰载系统:挂在 SHXC 驾驶舱上(SHXC.on 钩子),不改 1.0 文件。
  *  - Armilla 舰载智能:底部正中的光环形象 + 字幕;既定语音(09_armilla 合成,未到位前只显示字幕)
  *  - 航行规划:航图选目标 / 检索星球 → 选引擎(继承 1.0 弦穹号十种引擎)→ 航程预览 → 播报 → 倒计时出发
@@ -48,6 +49,67 @@
     a19: '仪表已隐藏。好好记住这一幕吧。',
     a20: '下次见,探索者。星星会等你回来。'
   };
+  /* ---------------- JARVIS 英文台词(09 交付 jarvis_voice v1.0.0,脚本 v1.1 英文版)+ 人格切换 ---------------- */
+  var LE = {
+    a01: "Welcome aboard the Starhelm, Explorer. I am JARVIS, your onboard intelligence. The stars are ready whenever you are.",
+    a02: "Please select a target region on the star chart, or tell me which world you'd like to visit.",
+    a03: "Please fasten your seatbelt. The Starhelm is about to depart.",
+    a04: "Switching to cruise mode. Let's slow down and take in the stars around us.",
+    a05: "Engine boost engaged. Hold on tight, we're about to chase the shadow of light.",
+    a06: "Ignition in three, two, one. Launch!",
+    a07: "Decelerating. Our destination is just ahead.",
+    a08: "We have arrived and are entering orbit. Welcome to a new world.",
+    a09: "I have the helm. Please make your way to the side viewport and enjoy the view.",
+    a10: "Satellite cruise engaged. We'll complete one full orbit.",
+    a11: "Control has been returned to you, Explorer.",
+    a12: "Warning: extreme temperature ahead. Holding a safe distance automatically.",
+    a13: "We're a little too close to this planet. Holding position for you.",
+    a14: "Gravity slingshot trajectory plotted. Borrowing a planet's pull for a little extra speed.",
+    a15: "Jump drive fully charged. Starlight is about to stretch into lines, so try not to blink.",
+    a16: "Jump complete. We have crossed the regional boundary.",
+    a17: "The wormhole is stable. Ahead lies the entrance to another universe.",
+    a18: "Voyage cancelled. The Starhelm is standing by.",
+    a19: "Instruments hidden. Take a moment to remember this.",
+    a20: "Until next time, Explorer. The stars will wait for you."
+  };
+  var PER = { id: ls('starhelm.voice.persona') === 'jarvis' ? 'jarvis' : 'armilla' };   // 偏好 starhelm.voice.persona,默认 armilla
+  function isJ() { return PER.id === 'jarvis'; }
+  function pname() { return isJ() ? 'JARVIS' : 'ARMILLA'; }
+  function pnice() { return isJ() ? 'JARVIS' : 'Armilla'; }
+  function line(k) { return (isJ() ? LE : L)[k]; }
+  /* 英文数字 → num 片段(42 = forty two;1,300 = one thousand three hundred;不读 and) */
+  var EN1 = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'],
+    EN10 = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'], ENW = {};
+  EN1.concat(['twenty'], EN10.slice(3), ['hundred', 'thousand', 'million', 'billion', 'point']).forEach(function (w, i) { ENW[w] = 'num' + String(i + 1).padStart(2, '0'); });
+  function enInt(n) {
+    n = Math.round(n); if (n === 0) return ['zero'];
+    function h3(x) { var o = [], hh = Math.floor(x / 100), r = x % 100; if (hh) o.push(EN1[hh], 'hundred'); if (r) { if (r < 20) o.push(EN1[r]); else { o.push(EN10[Math.floor(r / 10)]); if (r % 10) o.push(EN1[r % 10]); } } return o; }
+    var o = [], G = [[1e9, 'billion'], [1e6, 'million'], [1e3, 'thousand'], [1, '']];
+    G.forEach(function (g) { var q = Math.floor(n / g[0]); n -= q * g[0]; if (q) { o = o.concat(h3(q)); if (g[1]) o.push(g[1]); } });
+    return o;
+  }
+  function enNum(x, dec) { var i = Math.floor(x), f = dec ? Math.round((x - i) * Math.pow(10, dec)) : 0; if (f >= Math.pow(10, dec || 0)) { i++; f = 0; } var o = enInt(i); if (dec && f) { var fs = String(f).padStart(dec, '0').replace(/0+$/, ''); o.push('point'); for (var k = 0; k < fs.length; k++) o.push(EN1[+fs[k]]); } return o; }
+  function sig3(x) { if (x < 1000) return Math.round(x); var p = Math.pow(10, Math.floor(Math.log10(x)) - 2); return Math.round(x / p) * p; }
+  function enTok(words, unit, uid) { return words.map(function (w) { return { t: w, id: ENW[w] }; }).concat([{ t: unit, id: uid }]); }
+  function enDist(km) {
+    if (km < 1e6) return enTok(enInt(sig3(Math.max(1, km))), 'kilometers', 'unit01');
+    if (km < 1e8) { var mm = km / 1e6; return enTok(enNum(mm, mm < 10 ? 1 : 0).concat(['million']), 'kilometers', 'unit01'); }
+    if (km < 0.05 * LY) { var au = km / AU; return enTok(enNum(au, au < 10 ? 2 : au < 100 ? 1 : 0), 'astronomical units', 'unit02'); }
+    var ly = km / LY; return enTok(ly < 10 ? enNum(ly, 2) : enInt(sig3(ly)), 'light-years', 'unit03');
+  }
+  function enTime(s) {
+    var yr = 365.25 * 86400;
+    if (!isFinite(s)) return [{ t: 'beyond reach' }];
+    if (s < 90) return enTok(enInt(Math.max(1, s)), 'seconds', 'unit04');
+    if (s < 5400) return enTok(enInt(s / 60), 'minutes', 'unit05');
+    if (s < 172800) return enTok(enNum(s / 3600, s < 36000 ? 1 : 0), 'hours', 'unit06');
+    if (s < 2 * yr) return enTok(enInt(s / 86400), 'days', 'unit07');
+    return enTok(s < 10 * yr ? enNum(s / yr, 1) : enInt(sig3(s / yr)), 'years', 'unit08');
+  }
+  var TECH = { chem: 'tech01', ion: 'tech02', assist: 'tech03', sail: 'tech04', fusion: 'tech05', laser: 'tech06', rel: 'tech07', warp: 'tech08', gate: 'tech09', mind: 'tech10' };
+  var TECH_EN = { tech01: 'chemical rocket', tech02: 'ion propulsion', tech03: 'gravity assist', tech04: 'solar sail', tech05: 'fusion drive', tech06: 'laser light sail', tech07: 'near-light-speed travel', tech08: 'warp drive', tech09: 'wormhole', tech10: 'thought experiment' };
+  var ACT = { '星域内穿梭': ['act01', 'in-region transit'], '星际跃迁': ['act02', 'interstellar jump'], '虫洞穿越': ['act03', 'wormhole transit'], '引力弹弓': ['act04', 'gravity slingshot'] };
+
   /* 数字 → 中文读法(每个字都是一个可拼接片段) */
   function zhInt(n) {
     n = Math.round(n); if (n === 0) return '零';
@@ -75,7 +137,7 @@
   }
 
   /* ---------------- 语音播放(manifest 到位后自动启用) ---------------- */
-  var VOICE = { on: ls('gn:sh:x-voice') === '1', clips: null, q: [], busy: false, last: null };
+  var VOICE = { on: ls('gn:sh:x-voice') === '1', clips: null, pack: null, q: [], busy: false, last: null, cur: null, gen: 0 };
   // 「AI 空间感 / Spatial FX」—— 与 ARMILLA PWA v2.2.1 同参数(x/armilla/armilla-spacefx.js 的 ES5 移植),偏好键 armilla.voice.spaceFx,默认开
   var SFX = { on: (function () { try { return localStorage.getItem('armilla.voice.spaceFx') !== '0'; } catch (e) { return true; } })(), node: null };
   function sfxChain() {
@@ -96,24 +158,28 @@
   }
   function setSpaceFx(on) { SFX.on = !!on; try { localStorage.setItem('armilla.voice.spaceFx', on ? '1' : '0'); } catch (e) { } if (SFX.node) SFX.node.set(SFX.on); }
   function voiceAudio(it) {   // 有 Web Audio:原声 dry/ 走实时空间感链;没有:开=fx/ 预烘焙、关=dry/
-    var ch = sfxChain(), a = new Audio('x/armilla/' + (ch ? it.file : (SFX.on && it.file_fx ? it.file_fx : it.file)));
+    var ch = sfxChain(), a = new Audio('x/' + PER.id + '/' + (ch ? it.file : (SFX.on && it.file_fx ? it.file_fx : it.file)));
     if (ch) { try { if (AC.state === 'suspended') AC.resume(); AC.createMediaElementSource(a).connect(ch.input); } catch (e) { } }
     return a;
   }
-  function loadVoice() {   // 09_armilla 交付后:x/armilla/manifest.json + window.SHX_VOICE = true(由 x/armilla/voice.js 设置)
-    if (VOICE.clips || !window.SHX_VOICE) return;
-    fetch('x/armilla/manifest.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
-      if (!m || !m.items) return; var c = {}; m.items.forEach(function (it) { c[it.id] = it; c['t:' + it.text] = it; }); VOICE.clips = c;
+  function loadVoice() {   // 语音包:x/armilla/(中文,window.SHX_VOICE 由 x/armilla/voice.js 设置)/ x/jarvis/(英文)
+    var pk = PER.id; if ((VOICE.clips && VOICE.pack === pk) || (pk === 'armilla' && !window.SHX_VOICE)) return;
+    VOICE.clips = null; VOICE.pack = pk;
+    fetch('x/' + pk + '/manifest.json').then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
+      if (!m || !m.items || VOICE.pack !== pk) return; var c = {}; m.items.forEach(function (it) { c[it.id] = it; c['t:' + it.text] = it; }); VOICE.clips = c;
     }).catch(function () { });
   }
   function clipOf(tok) { if (!VOICE.clips) return null; return VOICE.clips[tok] || VOICE.clips['t:' + tok] || null; }
   /* say(['a03', {t:'本次航行将使用'}, ...]) —— 字符串 a01..a20 为整句;{t:} 为拼接片段,数字按字拆开 */
   function say(seq, cb) { VOICE.q.push({ seq: seq, cb: cb }); if (!VOICE.busy) next(); }
-  function seqText(seq) { return seq.map(function (k) { return typeof k === 'string' ? (L[k] || k) : k.t; }).join(''); }
+  function seqText(seq) { var a = seq.map(function (k) { return typeof k === 'string' ? (line(k) || k) : k.t; }); return isJ() ? a.join(' ').replace(/\s+([,.!?])/g, '$1') : a.join(''); }
   function seqClips(seq) {
     var out = [];
     for (var i = 0; i < seq.length; i++) {
       var k = seq[i];
+      if (k && k.p) continue;                                   // 纯标点
+      if (k && k.id) { var ci = clipOf(k.id); if (!ci) return null; out.push(ci); continue; }
+      if (isJ()) { if (typeof k === 'string' && LE[k]) { var cj = clipOf(k); if (!cj) return null; out.push(cj); continue; } return null; }
       if (typeof k === 'string' && L[k]) { var c = clipOf(k); if (!c) return null; out.push(c); continue; }
       var t = typeof k === 'string' ? k : k.t, c2 = clipOf(t);
       if (c2) { out.push(c2); continue; }
@@ -124,13 +190,13 @@
   }
   function next() {
     var it = VOICE.q.shift(); if (!it) { VOICE.busy = false; armState(''); return; }
-    VOICE.busy = true; VOICE.last = it.seq;
+    VOICE.busy = true; VOICE.last = it.seq; var gen = VOICE.gen;
     var txt = seqText(it.seq); sub(txt); armState('speak');
-    var clips = VOICE.on ? seqClips(it.seq) : null, done = function () { setTimeout(function () { if (it.cb) it.cb(); next(); }, 260); };
+    var clips = VOICE.on ? seqClips(it.seq) : null, done = function () { setTimeout(function () { if (gen !== VOICE.gen) return; if (it.cb) it.cb(); next(); }, 260); };
     if (clips && clips.length) {
       var i = 0, play = function () {
         if (i >= clips.length) { done(); return; }
-        var a = voiceAudio(clips[i++]); a.volume = 0.95; a.onended = play; a.onerror = play; a.play().catch(play);
+        if (gen !== VOICE.gen) return; var a = VOICE.cur = voiceAudio(clips[i++]); a.volume = 0.95; a.onended = play; a.onerror = play; a.play().catch(play);
       }; play();
     } else setTimeout(done, Math.min(7000, 900 + txt.length * 150));
   }
@@ -240,6 +306,9 @@
       '#xa-orb.speak .r1{animation-duration:3.5s}#xa-orb.speak .r2{animation-duration:5s}#xa-orb.speak .r3{animation-duration:2.2s}#xa-orb.speak .core{animation:xaT .42s ease-in-out infinite alternate}',
       '#xa-orb.alert{box-shadow:0 0 26px rgba(255,140,90,.45),inset 0 0 18px rgba(255,140,90,.25)}',
       '#xa-orb .xa-3d{position:absolute;left:50%;top:50%;width:210px;height:210px;transform:translate(-50%,-54%);pointer-events:none}#xa-orb .xa-3d canvas{width:100%!important;height:100%!important;display:block}#xa-orb.gl{background:radial-gradient(circle,rgba(232,194,122,.10),rgba(5,6,15,.35) 55%,transparent 72%);box-shadow:none}#xa-orb.gl>svg{display:none}#xa-orb.gl.alert{background:radial-gradient(circle,rgba(229,72,58,.22),transparent 70%)}',
+      /* JARVIS 奇点形象(09 交付 avatar/,SVG 自带 SMIL 动画;speaking 态换图) */
+      '#xa-orb .xa-jv{display:none;position:absolute;left:50%;top:50%;width:176px;height:176px;transform:translate(-50%,-55%);pointer-events:none;filter:drop-shadow(0 0 14px rgba(255,170,90,.28))}#xa-orb.jv .xa-jv.i{display:block}#xa-orb.jv.speak .xa-jv.i{display:none}#xa-orb.jv.speak .xa-jv.s{display:block}#xa-orb.jv>svg,#xa-orb.jv .xa-3d{display:none!important}#xa-orb.jv{background:radial-gradient(circle,rgba(255,170,90,.10),rgba(5,6,15,.35) 55%,transparent 72%)!important;box-shadow:none!important}#xa-orb.jv .nm{color:#ffc98a}#xa-sub.jv b{color:#ffc98a}',
+      '#xs-per{display:flex;gap:6px}#xs-per .xs-chip{padding:4px 12px;font-size:13px;white-space:nowrap}',
       '#xa-orb .nm{position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);font:600 11px/1 Orbitron,system-ui,sans-serif;letter-spacing:.24em;color:#9fdcff;white-space:nowrap}',
       '@keyframes xaS{to{transform:rotate(360deg)}}@keyframes xaP{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.12);opacity:1}}@keyframes xaT{from{transform:scale(.9)}to{transform:scale(1.35)}}',
       '#xa-sub{position:absolute;left:50%;bottom:204px;transform:translateX(-50%);max-width:min(760px,80vw);padding:8px 18px;border-radius:14px;background:rgba(6,10,20,.66);border:1px solid rgba(127,214,255,.22);color:#eaf2ff;font-size:16px;line-height:1.55;text-align:center;opacity:0;transition:opacity .35s;pointer-events:none}',
@@ -265,8 +334,8 @@
       '#shxc.port .p,#shxc.port .gauges,#shxc.port .arc,#shxc.port .hdg,#shxc.port .strip,#shxc.port .ret,#shxc.port .ctr,#shxc.port .mob{opacity:0;pointer-events:none;transition:opacity .6s}#shxc.port #xs-port{display:block}',
       '#shxc.photo>*:not(canvas):not(#xs-photo){display:none!important}#shxc.photo::after{display:none}#xs-photo{display:none;position:absolute;right:14px;bottom:12px;font-size:12px;color:rgba(220,230,245,.55);cursor:pointer;padding:6px 10px}#shxc.photo #xs-photo{display:block}',
       /* 手机 / 矮屏 */
-      '@media (max-width:640px){#xa-dock{bottom:6px;gap:3px}#xa-dock .side{gap:4px}#xa-dock .ib{width:36px;height:36px}#xa-dock .ib svg{width:19px;height:19px}#xa-dock .ib small{display:none}#xa-orb{width:88px;height:80px}#xa-orb .xa-3d{width:112px;height:112px}#xa-orb .nm{display:none}#xa-sub{bottom:236px;font-size:14px;max-width:92vw}#shxc .strip,#shxc .ctr{display:none}#shxc .gauges{bottom:72px}#shxc .mob{bottom:170px}#xs-offer{bottom:256px}#xs-cd{font-size:84px}}',
-      '@media (max-height:420px){#xa-dock{bottom:4px}#xa-dock .ib{width:34px;height:34px}#xa-dock .ib small,#xa-orb .nm{display:none}#xa-orb{width:84px;height:70px}#xa-orb .xa-3d{width:100px;height:100px}#xa-sub{bottom:auto;top:8px;font-size:13px;max-width:60vw}#shxc .ctr{display:none}#xs-offer{bottom:64px}.xs-card{max-height:90vh}}',
+      '@media (max-width:640px){#xa-dock{bottom:6px;gap:3px}#xa-dock .side{gap:4px}#xa-dock .ib{width:36px;height:36px}#xa-dock .ib svg{width:19px;height:19px}#xa-dock .ib small{display:none}#xa-orb{width:88px;height:80px}#xa-orb .xa-3d{width:112px;height:112px}#xa-orb .xa-jv{width:96px;height:96px}#xa-orb .nm{display:none}#xa-sub{bottom:236px;font-size:14px;max-width:92vw}#shxc .strip,#shxc .ctr{display:none}#shxc .gauges{bottom:72px}#shxc .mob{bottom:170px}#xs-offer{bottom:256px}#xs-cd{font-size:84px}}',
+      '@media (max-height:420px){#xa-dock{bottom:4px}#xa-dock .ib{width:34px;height:34px}#xa-dock .ib small,#xa-orb .nm{display:none}#xa-orb{width:84px;height:70px}#xa-orb .xa-3d{width:100px;height:100px}#xa-orb .xa-jv{width:86px;height:86px}#xa-sub{bottom:auto;top:8px;font-size:13px;max-width:60vw}#shxc .ctr{display:none}#xs-offer{bottom:64px}.xs-card{max-height:90vh}}',
       '@media (prefers-reduced-motion:reduce){#xa-orb *{animation:none!important}}'
     ].join('\n');
     document.head.appendChild(s);
@@ -287,20 +356,39 @@
     var cd = el('div', '', ''); cd.id = 'xs-cd'; R.appendChild(cd);
     var port = el('div', '', '<div class="tag">侧舷窗 · ARMILLA 接管</div>'); port.id = 'xs-port'; R.appendChild(port);
     var ph = el('div', '', '摄影模式 · 点这里或按 P 退出'); ph.id = 'xs-photo'; ph.onclick = function () { photo(false); }; R.appendChild(ph);
-    U.orb = $('#xa-orb', R); U.sub = $('#xa-sub', R); U.cd = cd;
+    U.orb = $('#xa-orb', R); U.sub = $('#xa-sub', R); U.cd = cd; U.port = port;
+    ['i', 's'].forEach(function (k) { var im = el('img', 'xa-jv ' + k); im.alt = ''; im.decoding = 'async'; im.dataset.src = 'x/jarvis/avatar/jarvis_' + (k === 'i' ? 'idle' : 'speaking') + '.svg'; U.orb.appendChild(im); });
     if (window.SHXARM && SHXARM.ok()) { try { var h3 = el('div', 'xa-3d'); U.orb.appendChild(h3); U.arm = SHXARM.mount(h3, { small: innerWidth < 700 || innerHeight < 480 }); U.orb.classList.add('gl'); } catch (e) { console.warn('[Armilla 3D]', e); U.arm = null; } }
     dock.querySelectorAll('.ib').forEach(function (b) { b.onclick = function () { blip(880, .08, .05); act(b.getAttribute('data-a')); }; });
     U.orb.onclick = function () {
-      if (!VOICE.on) { VOICE.on = true; ls('gn:sh:x-voice', '1'); loadVoice(); if (!VOICE.clips) I.toast('Armilla 语音载入中…'); }
+      if (!VOICE.on) { VOICE.on = true; ls('gn:sh:x-voice', '1'); loadVoice(); if (!VOICE.clips) I.toast(pnice() + ' 语音载入中…'); }
       // 10-27 王磊反馈①:到达/悬停后再点 AI 不再催选星域
       if (O) say(['a10']); else if (ARR && ARR === S.target) say(['a09']); else say(VOICE.last && VOICE.last[0] !== 'a02' ? VOICE.last : ['a02']);
     };
+    applyPersona();
     var kp = $('#xc-keys', R); if (kp && !ls('gn:sh:x-keys')) kp.classList.add('min');
     setMode(MODE, true);
   }
+  function applyPersona() {
+    if (!U.orb) return; var j = isJ();
+    U.orb.classList.toggle('jv', j);
+    if (j) U.orb.querySelectorAll('.xa-jv').forEach(function (im) { if (!im.src) im.src = im.dataset.src; });
+    var nm = U.orb.querySelector('.nm'); if (nm) nm.textContent = pname();
+    U.orb.setAttribute('aria-label', pnice() + ' 舰载智能 · 点我重播 / 开启语音');
+    if (U.sub) U.sub.classList.toggle('jv', j);
+    if (U.port) { var tg = U.port.querySelector('.tag'); if (tg) tg.textContent = '侧舷窗 · ' + pname() + ' 接管'; }
+    if (U.arm) { if (j) U.arm.stop(); else if (X.isOpen && X.isOpen()) U.arm.start(); }
+  }
+  function setPersona(id) {
+    id = id === 'jarvis' ? 'jarvis' : 'armilla'; if (id === PER.id) return;
+    PER.id = id; ls('starhelm.voice.persona', id);
+    VOICE.gen++; VOICE.q = []; VOICE.busy = false; if (VOICE.cur) { try { VOICE.cur.onended = null; VOICE.cur.pause(); } catch (e) { } VOICE.cur = null; }
+    VOICE.clips = null; loadVoice(); applyPersona(); armState('');
+    setTimeout(function () { say(['a01']); }, VOICE.on ? 500 : 0);
+  }
   function armState(s) { if (!U.orb) return; U.orb.classList.toggle('speak', s === 'speak'); if (U.arm && U.arm.state !== 'ALERT') U.arm.set(s === 'speak' ? 'SPEAKING' : s === 'think' ? 'THINKING' : s === 'listen' ? 'LISTENING' : 'IDLE'); }
   var subT = 0;
-  function sub(t) { if (!U.sub) return; U.sub.innerHTML = '<b>ARMILLA</b>' + esc(t); U.sub.classList.add('on'); clearTimeout(subT); subT = setTimeout(function () { U.sub.classList.remove('on'); }, Math.min(9000, 2600 + t.length * 160)); }
+  function sub(t) { if (!U.sub) return; U.sub.innerHTML = '<b>' + pname() + '</b>' + esc(t); U.sub.classList.add('on'); clearTimeout(subT); subT = setTimeout(function () { U.sub.classList.remove('on'); }, Math.min(9000, 2600 + t.length * 160)); }
   function alertOrb() { if (!U.orb) return; U.orb.classList.add('alert'); if (U.arm) U.arm.set('ALERT'); setTimeout(function () { U.orb.classList.remove('alert'); if (U.arm) U.arm.set(VOICE.busy ? 'SPEAKING' : 'IDLE'); }, 3000); }
   function btn(a) { return R && $('#xa-dock .ib[data-a="' + a + '"]', R); }
 
@@ -371,14 +459,19 @@
   function launch() {
     var p = plan(); closeCards(); if (p.km < 1) { I.toast('已经在 ' + p.b.zh + ' 附近了'); return; }
     LAUNCH = p; ARR = null; I.setTarget(p.b.id); S.auto = false; S.base = 0; S.mult = 1; stopOrbit(true);
-    var seq = ['a03', { t: '本次航行将使用' }, { t: p.e.zh }, { t: ',即将进行' }, { t: p.act }, { t: '。航程约' }].concat(sayDist(p.km).map(function (t) { return { t: t }; }), [{ t: ',预计耗时' }], sayTime(p.tr.earthS).map(function (t) { return { t: t }; }), [{ t: '。' }]);
+    var seq = isJ() ? enLaunch(p) : ['a03', { t: '本次航行将使用' }, { t: p.e.zh }, { t: ',即将进行' }, { t: p.act }, { t: '。航程约' }].concat(sayDist(p.km).map(function (t) { return { t: t }; }), [{ t: ',预计耗时' }], sayTime(p.tr.earthS).map(function (t) { return { t: t }; }), [{ t: '。' }]);
     if (p.e.id === 'assist') say(['a14']);
     if (p.e.model === 'warp') say(['a15']);
     if (p.e.model === 'gate') say(['a17']);
     say(seq, function () { countdown(function () { if (MODE !== 'boost') setMode('boost', true); I.autopilot(true); engStart(p.e.id); log('出发', p.b, p.e); }); });
   }
+  function enLaunch(p) {
+    var tk = TECH[p.e.id] || 'tech10', ac2 = ACT[p.act] || ACT['星域内穿梭'];
+    return ['a03', { t: 'This voyage will use', id: 'b01' }, { t: TECH_EN[tk], id: tk }, { t: '.', p: 1 }, { t: 'Now initiating', id: 'b02' }, { t: ac2[1], id: ac2[0] }, { t: '.', p: 1 }, { t: 'Distance', id: 'b03' }, { t: ',', p: 1 }, { t: 'approximately', id: 'b08' }]
+      .concat(enDist(p.km), [{ t: '.', p: 1 }, { t: 'Estimated time', id: 'b04' }, { t: ',', p: 1 }, { t: 'approximately', id: 'b08' }], enTime(p.tr.earthS), [{ t: '.', p: 1 }]);
+  }
   function countdown(cb) {
-    sub(L.a06); armState('think');
+    sub(line('a06')); armState('think');
     var a = null, clips = VOICE.on ? seqClips(['a06']) : null; if (clips) { a = voiceAudio(clips[0]); a.play().catch(function () { }); }
     var n = 3, step = 900, tick = function () {
       if (n === 0) { U.cd.textContent = ''; U.cd.style.opacity = 0; blip(1320, .5, .09); armState(''); cb(); return; }
@@ -426,17 +519,19 @@
     c.innerHTML = '<h4><span>舱内音响 <small>AUDIO</small></span><button class="xc" type="button" aria-label="关闭">×</button></h4>' +
       '<label>舱内音乐<input class="xs-sw" type="checkbox" id="xs-m"' + (SND.music ? ' checked' : '') + '></label>' +
       '<label>航行与引擎音效<input class="xs-sw" type="checkbox" id="xs-f"' + (SND.sfx ? ' checked' : '') + '></label>' +
-      '<label>Armilla 语音<input class="xs-sw" type="checkbox" id="xs-v"' + (VOICE.on ? ' checked' : '') + '></label>' +
+      '<label>舰载智能 · Persona<span id="xs-per"><button type="button" class="xs-chip' + (isJ() ? '' : ' on') + '" data-p="armilla">Armilla</button><button type="button" class="xs-chip' + (isJ() ? ' on' : '') + '" data-p="jarvis">JARVIS</button></span></label>' +
+      '<label>舰载语音<input class="xs-sw" type="checkbox" id="xs-v"' + (VOICE.on ? ' checked' : '') + '></label>' +
       '<label title="与 Armilla PWA 同款的舰载空间声场">AI 空间感 · Spatial FX<input class="xs-sw" type="checkbox" id="xs-sfx"' + (SFX.on ? ' checked' : '') + '></label>' +
       '<label>音量<input type="range" min="0" max="1" step="0.05" id="xs-vol" value="' + SND.vol + '"></label>' +
       '<div class="xs-row" style="justify-content:space-between"><span class="np" id="xs-np">' + (MUS.cur ? TRACKS[MUS.cur].zh : '音乐按航行状态自动切换:待命 / 巡航 / 加速 / 环绕') + '</span><button class="xs-no" type="button" id="xs-nx">下一首</button></div>' +
-      '<div class="cr">音乐:OpenGameArt.org 公有领域(CC0)曲目 —— Space Echo(Centurion_of_war)、Space Music: Out There(yd)、Magic Space(CodeManu)、Outer Space Loop(wipics)。音效为程序实时合成。</div>';
+      '<div class="cr">音乐:OpenGameArt.org 公有领域(CC0)曲目 —— Space Echo(Centurion_of_war)、Space Music: Out There(yd)、Magic Space(CodeManu)、Outer Space Loop(wipics)。音效为程序实时合成。<br>舰载语音:Armilla(中文)与 JARVIS(英文)均由 AI 合成 · Voice generated by AI (MiniMax)。</div>';
     R.appendChild(c);
     $('.xc', c).onclick = function () { closeCards(); };
     $('#xs-m', c).onchange = function () { SND.music = this.checked; ls('gn:sh:x-music', SND.music ? '1' : '0'); if (SND.music) musPlay(MUS.want); else musStop(); };
     $('#xs-f', c).onchange = function () { SND.sfx = this.checked; ls('gn:sh:x-sfx', SND.sfx ? '1' : '0'); if (SND.sfx) { ac(); if (AC.state === 'suspended') AC.resume(); humOn(); blip(880, .1, .06); } else { humOff(); engStop(); } };
     $('#xs-sfx', c).onchange = function () { setSpaceFx(this.checked); if (VOICE.on) say(['a06']); };
-    $('#xs-v', c).onchange = function () { VOICE.on = this.checked; ls('gn:sh:x-voice', VOICE.on ? '1' : '0'); if (VOICE.on) { loadVoice(); if (!VOICE.clips) I.toast('Armilla 语音载入中…'); } };
+    $('#xs-v', c).onchange = function () { VOICE.on = this.checked; ls('gn:sh:x-voice', VOICE.on ? '1' : '0'); if (VOICE.on) { loadVoice(); if (!VOICE.clips) I.toast(pnice() + ' 语音载入中…'); } };
+    c.querySelectorAll('#xs-per .xs-chip').forEach(function (b) { b.onclick = function (e) { e.preventDefault(); setPersona(b.dataset.p); c.querySelectorAll('#xs-per .xs-chip').forEach(function (x) { x.classList.toggle('on', x.dataset.p === PER.id); }); }; });
     $('#xs-vol', c).oninput = function () { SND.vol = +this.value; ls('gn:sh:x-vol', SND.vol); if (M) M.gain.value = SND.vol; if (MUS.a) MUS.a.volume = SND.vol * 0.55; };
     $('#xs-nx', c).onclick = function () { if (!SND.music) { SND.music = true; ls('gn:sh:x-music', '1'); $('#xs-m', c).checked = true; } var i = MUS.order.indexOf(MUS.cur || 'idle'); MUS.lock = performance.now() + 120000; musPlay(MUS.order[(i + 1) % MUS.order.length]); };
   }
@@ -515,7 +610,7 @@
   function onKey(e) {
     if (!X.isOpen() || e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
     var k = e.key.toLowerCase();
-    if (k === 'n') togglePlan(); else if (k === 'c') act('mode'); else if (k === 'v') portAct(); else if (k === 'p') photo(!R.classList.contains('photo')); else if (k === 'm') toggleSnd();
+    if (k === 'n') togglePlan(); else if (k === 'c') act('mode'); else if (k === 'v') portAct(); else if (k === 'p') photo(!R.classList.contains('photo')); else if (k === 'm') toggleSnd(); else if (k === 'j') setPersona(isJ() ? 'armilla' : 'jarvis');
     else if (k === 'escape' && (R.classList.contains('photo') || $('.xs-card', R))) { photo(false); closeCards(); e.stopImmediatePropagation(); e.preventDefault(); return; }
     else return;
     e.preventDefault(); e.stopPropagation();
@@ -526,7 +621,7 @@
         rq.addEventListener('pointerdown', function (e) { if (e.target.closest('button,input,label,.xs-card,.p')) return; dn = [e.clientX, e.clientY]; });
         addEventListener('pointermove', function (e) { if (dn && Math.abs(e.clientX - dn[0]) + Math.abs(e.clientY - dn[1]) > 4) rq.classList.add('xc-drag'); });
         addEventListener('pointerup', function () { dn = null; rq.classList.remove('xc-drag'); }); }
-      build(); loadVoice(); setMode(MODE, true); if (U.arm) { U.arm.resize(); U.arm.reveal(); U.arm.start(); }
+      build(); loadVoice(); setMode(MODE, true); if (U.arm && !isJ()) { U.arm.resize(); U.arm.reveal(); U.arm.start(); }
       if (SND.sfx) { ac(); if (AC && AC.state === 'suspended') AC.resume(); humOn(); }
       // 王磊 10-27 00:10:进入航行时自动关掉 1.0 背景音乐,开启驾驶舱音乐系统;离开驾驶舱再恢复原背景音乐
       var bm = document.getElementById('btn-music'); MUS.bgm = !!(bm && bm.getAttribute('aria-pressed') === 'true'); if (MUS.bgm) bm.click();
@@ -571,5 +666,5 @@
   }
   takeover(); addEventListener('load', takeover);
 
-  window.SHXS = { voiceDbg: function () { return { on: VOICE.on, n: VOICE.clips ? Object.keys(VOICE.clips).length : 0, sfx: SFX.on }; }, spaceFx: setSpaceFx, say: say, lines: L, zhNum: zhNum, sayDist: sayDist, sayTime: sayTime, plan: function () { if (X.isOpen()) togglePlan(); }, orbit: function () { if (X.isOpen()) portAct(); }, mode: function (m) { setMode(m); }, state: function () { return { mode: MODE, engine: ENGID, orbit: !!O, music: SND.music, sfx: SND.sfx, voice: VOICE.on, clips: !!VOICE.clips }; } };
+  window.SHXS = { persona: function (id) { if (id) setPersona(id); return PER.id; }, enDist: enDist, enTime: enTime, voiceDbg: function () { return { on: VOICE.on, persona: PER.id, pack: VOICE.pack, n: VOICE.clips ? Object.keys(VOICE.clips).length : 0, sfx: SFX.on }; }, spaceFx: setSpaceFx, say: say, lines: L, zhNum: zhNum, sayDist: sayDist, sayTime: sayTime, plan: function () { if (X.isOpen()) togglePlan(); }, orbit: function () { if (X.isOpen()) portAct(); }, mode: function (m) { setMode(m); }, state: function () { return { mode: MODE, engine: ENGID, orbit: !!O, music: SND.music, sfx: SND.sfx, voice: VOICE.on, clips: !!VOICE.clips }; } };
 })();

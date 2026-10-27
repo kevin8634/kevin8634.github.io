@@ -1,0 +1,1123 @@
+{
+ "name": "JARVIS Shipboard Voice Pack (Starhelm)",
+ "id": "jarvis-en",
+ "version": "1.0.0",
+ "script": "Armilla 语音脚本 v1.1 英文版",
+ "voice": "JARVIS-EN (MiniMax voice design, original synthetic voice)",
+ "model": "MiniMax speech-2.8-hd (MiniMax Audio web app)",
+ "language": "en-GB",
+ "format": {
+  "codec": "mp3",
+  "sample_rate": 44100,
+  "dry": "mono 96 kbps",
+  "fx": "stereo 128 kbps, pre-rendered Spatial FX"
+ },
+ "variants": {
+  "dry": "原声（配合 jarvis-spacefx.js 实时开关空间感，推荐）",
+  "fx": "已烘焙「AI 空间感」"
+ },
+ "spaceFx": {
+  "default": true,
+  "label_zh": "AI 空间感",
+  "label_en": "Spatial FX",
+  "module": "jarvis-spacefx.js",
+  "storage_key": "armilla.voice.spaceFx",
+  "note": "与 Armilla 共用同一开关偏好"
+ },
+ "persona_switch": {
+  "storage_key": "starhelm.voice.persona",
+  "options": [
+   {
+    "id": "armilla",
+    "label": "Armilla",
+    "pack": "../armilla_voice/manifest.json"
+   },
+   {
+    "id": "jarvis",
+    "label": "JARVIS",
+    "pack": "manifest.json"
+   }
+  ],
+  "default": "armilla"
+ },
+ "avatar": {
+  "style": "singularity / black hole (event horizon, photon ring, accretion disk, lensing arcs)",
+  "idle": "avatar/jarvis_idle.svg",
+  "speaking": "avatar/jarvis_speaking.svg",
+  "idle_png": "avatar/jarvis_idle.png",
+  "speaking_png": "avatar/jarvis_speaking.png"
+ },
+ "number_rules": "英文数字组合：42 = num23+num03; 1,300 = num02+num30+num04+num29; 4.2 = num05+num33+num03. 13–19 有独立录音；不读 'and'。",
+ "concat_examples": [
+  [
+   "b01",
+   "tech08"
+  ],
+  [
+   "b02",
+   "act02"
+  ],
+  [
+   "b03",
+   "num05",
+   "num30",
+   "unit01"
+  ]
+ ],
+ "count": 117,
+ "items": [
+  {
+   "id": "a01",
+   "group": "sentence",
+   "text": "Welcome aboard the Starhelm, Explorer. I am JARVIS, your onboard intelligence. The stars are ready whenever you are.",
+   "file": "dry/a01.mp3",
+   "duration_ms": 7340,
+   "file_fx": "fx/a01.mp3",
+   "duration_fx_ms": 7314
+  },
+  {
+   "id": "a02",
+   "group": "sentence",
+   "text": "Please select a target region on the star chart, or tell me which world you'd like to visit.",
+   "file": "dry/a02.mp3",
+   "duration_ms": 4885,
+   "file_fx": "fx/a02.mp3",
+   "duration_fx_ms": 4885
+  },
+  {
+   "id": "a03",
+   "group": "sentence",
+   "text": "Please fasten your seatbelt. The Starhelm is about to depart.",
+   "file": "dry/a03.mp3",
+   "duration_ms": 3605,
+   "file_fx": "fx/a03.mp3",
+   "duration_fx_ms": 3579
+  },
+  {
+   "id": "a04",
+   "group": "sentence",
+   "text": "Switching to cruise mode. Let's slow down and take in the stars around us.",
+   "file": "dry/a04.mp3",
+   "duration_ms": 4258,
+   "file_fx": "fx/a04.mp3",
+   "duration_fx_ms": 4258
+  },
+  {
+   "id": "a05",
+   "group": "sentence",
+   "text": "Engine boost engaged. Hold on tight, we're about to chase the shadow of light.",
+   "file": "dry/a05.mp3",
+   "duration_ms": 4545,
+   "file_fx": "fx/a05.mp3",
+   "duration_fx_ms": 4571
+  },
+  {
+   "id": "a06",
+   "group": "sentence",
+   "text": "Ignition in three, two, one. Launch!",
+   "file": "dry/a06.mp3",
+   "duration_ms": 3318,
+   "file_fx": "fx/a06.mp3",
+   "duration_fx_ms": 3318
+  },
+  {
+   "id": "a07",
+   "group": "sentence",
+   "text": "Decelerating. Our destination is just ahead.",
+   "file": "dry/a07.mp3",
+   "duration_ms": 3527,
+   "file_fx": "fx/a07.mp3",
+   "duration_fx_ms": 3527
+  },
+  {
+   "id": "a08",
+   "group": "sentence",
+   "text": "We have arrived and are entering orbit. Welcome to a new world.",
+   "file": "dry/a08.mp3",
+   "duration_ms": 4049,
+   "file_fx": "fx/a08.mp3",
+   "duration_fx_ms": 4049
+  },
+  {
+   "id": "a09",
+   "group": "sentence",
+   "text": "I have the helm. Please make your way to the side viewport and enjoy the view.",
+   "file": "dry/a09.mp3",
+   "duration_ms": 5042,
+   "file_fx": "fx/a09.mp3",
+   "duration_fx_ms": 5016
+  },
+  {
+   "id": "a10",
+   "group": "sentence",
+   "text": "Satellite cruise engaged. We'll complete one full orbit.",
+   "file": "dry/a10.mp3",
+   "duration_ms": 3944,
+   "file_fx": "fx/a10.mp3",
+   "duration_fx_ms": 3971
+  },
+  {
+   "id": "a11",
+   "group": "sentence",
+   "text": "Control has been returned to you, Explorer.",
+   "file": "dry/a11.mp3",
+   "duration_ms": 2168,
+   "file_fx": "fx/a11.mp3",
+   "duration_fx_ms": 2168
+  },
+  {
+   "id": "a12",
+   "group": "sentence",
+   "text": "Warning: extreme temperature ahead. Holding a safe distance automatically.",
+   "file": "dry/a12.mp3",
+   "duration_ms": 4624,
+   "file_fx": "fx/a12.mp3",
+   "duration_fx_ms": 4624
+  },
+  {
+   "id": "a13",
+   "group": "sentence",
+   "text": "We're a little too close to this planet. Holding position for you.",
+   "file": "dry/a13.mp3",
+   "duration_ms": 3657,
+   "file_fx": "fx/a13.mp3",
+   "duration_fx_ms": 3657
+  },
+  {
+   "id": "a14",
+   "group": "sentence",
+   "text": "Gravity slingshot trajectory plotted. Borrowing a planet's pull for a little extra speed.",
+   "file": "dry/a14.mp3",
+   "duration_ms": 5460,
+   "file_fx": "fx/a14.mp3",
+   "duration_fx_ms": 5460
+  },
+  {
+   "id": "a15",
+   "group": "sentence",
+   "text": "Jump drive fully charged. Starlight is about to stretch into lines, so try not to blink.",
+   "file": "dry/a15.mp3",
+   "duration_ms": 5956,
+   "file_fx": "fx/a15.mp3",
+   "duration_fx_ms": 5956
+  },
+  {
+   "id": "a16",
+   "group": "sentence",
+   "text": "Jump complete. We have crossed the regional boundary.",
+   "file": "dry/a16.mp3",
+   "duration_ms": 3318,
+   "file_fx": "fx/a16.mp3",
+   "duration_fx_ms": 3318
+  },
+  {
+   "id": "a17",
+   "group": "sentence",
+   "text": "The wormhole is stable. Ahead lies the entrance to another universe.",
+   "file": "dry/a17.mp3",
+   "duration_ms": 4075,
+   "file_fx": "fx/a17.mp3",
+   "duration_fx_ms": 4075
+  },
+  {
+   "id": "a18",
+   "group": "sentence",
+   "text": "Voyage cancelled. The Starhelm is standing by.",
+   "file": "dry/a18.mp3",
+   "duration_ms": 3161,
+   "file_fx": "fx/a18.mp3",
+   "duration_fx_ms": 3161
+  },
+  {
+   "id": "a19",
+   "group": "sentence",
+   "text": "Instruments hidden. Take a moment to remember this.",
+   "file": "dry/a19.mp3",
+   "duration_ms": 2952,
+   "file_fx": "fx/a19.mp3",
+   "duration_fx_ms": 2952
+  },
+  {
+   "id": "a20",
+   "group": "sentence",
+   "text": "Until next time, Explorer. The stars will wait for you.",
+   "file": "dry/a20.mp3",
+   "duration_ms": 3709,
+   "file_fx": "fx/a20.mp3",
+   "duration_fx_ms": 3709
+  },
+  {
+   "id": "b01",
+   "group": "lead",
+   "text": "This voyage will use",
+   "file": "dry/b01.mp3",
+   "duration_ms": 1541,
+   "file_fx": "fx/b01.mp3",
+   "duration_fx_ms": 1515
+  },
+  {
+   "id": "b02",
+   "group": "lead",
+   "text": "Now initiating",
+   "file": "dry/b02.mp3",
+   "duration_ms": 1306,
+   "file_fx": "fx/b02.mp3",
+   "duration_fx_ms": 1306
+  },
+  {
+   "id": "b03",
+   "group": "lead",
+   "text": "Distance",
+   "file": "dry/b03.mp3",
+   "duration_ms": 758,
+   "file_fx": "fx/b03.mp3",
+   "duration_fx_ms": 758
+  },
+  {
+   "id": "b04",
+   "group": "lead",
+   "text": "Estimated time",
+   "file": "dry/b04.mp3",
+   "duration_ms": 1254,
+   "file_fx": "fx/b04.mp3",
+   "duration_fx_ms": 1254
+  },
+  {
+   "id": "b05",
+   "group": "lead",
+   "text": "Ahead is",
+   "file": "dry/b05.mp3",
+   "duration_ms": 810,
+   "file_fx": "fx/b05.mp3",
+   "duration_fx_ms": 784
+  },
+  {
+   "id": "b06",
+   "group": "lead",
+   "text": "Target locked",
+   "file": "dry/b06.mp3",
+   "duration_ms": 914,
+   "file_fx": "fx/b06.mp3",
+   "duration_fx_ms": 914
+  },
+  {
+   "id": "b07",
+   "group": "lead",
+   "text": "Passing by",
+   "file": "dry/b07.mp3",
+   "duration_ms": 993,
+   "file_fx": "fx/b07.mp3",
+   "duration_fx_ms": 993
+  },
+  {
+   "id": "b08",
+   "group": "lead",
+   "text": "approximately",
+   "file": "dry/b08.mp3",
+   "duration_ms": 967,
+   "file_fx": "fx/b08.mp3",
+   "duration_fx_ms": 967
+  },
+  {
+   "id": "tech01",
+   "group": "tech",
+   "text": "Chemical rocket",
+   "file": "dry/tech01.mp3",
+   "duration_ms": 993,
+   "file_fx": "fx/tech01.mp3",
+   "duration_fx_ms": 993
+  },
+  {
+   "id": "tech02",
+   "group": "tech",
+   "text": "Ion propulsion",
+   "file": "dry/tech02.mp3",
+   "duration_ms": 1306,
+   "file_fx": "fx/tech02.mp3",
+   "duration_fx_ms": 1306
+  },
+  {
+   "id": "tech03",
+   "group": "tech",
+   "text": "Gravity assist",
+   "file": "dry/tech03.mp3",
+   "duration_ms": 1071,
+   "file_fx": "fx/tech03.mp3",
+   "duration_fx_ms": 1071
+  },
+  {
+   "id": "tech04",
+   "group": "tech",
+   "text": "Solar sail",
+   "file": "dry/tech04.mp3",
+   "duration_ms": 1202,
+   "file_fx": "fx/tech04.mp3",
+   "duration_fx_ms": 1202
+  },
+  {
+   "id": "tech05",
+   "group": "tech",
+   "text": "Fusion drive",
+   "file": "dry/tech05.mp3",
+   "duration_ms": 862,
+   "file_fx": "fx/tech05.mp3",
+   "duration_fx_ms": 888
+  },
+  {
+   "id": "tech06",
+   "group": "tech",
+   "text": "Laser light sail",
+   "file": "dry/tech06.mp3",
+   "duration_ms": 1228,
+   "file_fx": "fx/tech06.mp3",
+   "duration_fx_ms": 1228
+  },
+  {
+   "id": "tech07",
+   "group": "tech",
+   "text": "Near-light-speed travel",
+   "file": "dry/tech07.mp3",
+   "duration_ms": 1437,
+   "file_fx": "fx/tech07.mp3",
+   "duration_fx_ms": 1437
+  },
+  {
+   "id": "tech08",
+   "group": "tech",
+   "text": "Warp drive",
+   "file": "dry/tech08.mp3",
+   "duration_ms": 862,
+   "file_fx": "fx/tech08.mp3",
+   "duration_fx_ms": 888
+  },
+  {
+   "id": "tech09",
+   "group": "tech",
+   "text": "Wormhole",
+   "file": "dry/tech09.mp3",
+   "duration_ms": 810,
+   "file_fx": "fx/tech09.mp3",
+   "duration_fx_ms": 810
+  },
+  {
+   "id": "tech10",
+   "group": "tech",
+   "text": "Thought experiment",
+   "file": "dry/tech10.mp3",
+   "duration_ms": 1045,
+   "file_fx": "fx/tech10.mp3",
+   "duration_fx_ms": 1045
+  },
+  {
+   "id": "cred01",
+   "group": "credibility",
+   "text": "Measured",
+   "file": "dry/cred01.mp3",
+   "duration_ms": 522,
+   "file_fx": "fx/cred01.mp3",
+   "duration_fx_ms": 522
+  },
+  {
+   "id": "cred02",
+   "group": "credibility",
+   "text": "Inferred",
+   "file": "dry/cred02.mp3",
+   "duration_ms": 731,
+   "file_fx": "fx/cred02.mp3",
+   "duration_fx_ms": 731
+  },
+  {
+   "id": "cred03",
+   "group": "credibility",
+   "text": "Speculative",
+   "file": "dry/cred03.mp3",
+   "duration_ms": 888,
+   "file_fx": "fx/cred03.mp3",
+   "duration_fx_ms": 914
+  },
+  {
+   "id": "act01",
+   "group": "action",
+   "text": "In-region transit",
+   "file": "dry/act01.mp3",
+   "duration_ms": 1280,
+   "file_fx": "fx/act01.mp3",
+   "duration_fx_ms": 1280
+  },
+  {
+   "id": "act02",
+   "group": "action",
+   "text": "Interstellar jump",
+   "file": "dry/act02.mp3",
+   "duration_ms": 1176,
+   "file_fx": "fx/act02.mp3",
+   "duration_fx_ms": 1097
+  },
+  {
+   "id": "act03",
+   "group": "action",
+   "text": "Wormhole transit",
+   "file": "dry/act03.mp3",
+   "duration_ms": 1541,
+   "file_fx": "fx/act03.mp3",
+   "duration_fx_ms": 1541
+  },
+  {
+   "id": "act04",
+   "group": "action",
+   "text": "Gravity slingshot",
+   "file": "dry/act04.mp3",
+   "duration_ms": 1280,
+   "file_fx": "fx/act04.mp3",
+   "duration_fx_ms": 1280
+  },
+  {
+   "id": "body01",
+   "group": "body",
+   "text": "the Sun",
+   "file": "dry/body01.mp3",
+   "duration_ms": 575,
+   "file_fx": "fx/body01.mp3",
+   "duration_fx_ms": 575
+  },
+  {
+   "id": "body02",
+   "group": "body",
+   "text": "Mercury",
+   "file": "dry/body02.mp3",
+   "duration_ms": 679,
+   "file_fx": "fx/body02.mp3",
+   "duration_fx_ms": 679
+  },
+  {
+   "id": "body03",
+   "group": "body",
+   "text": "Venus",
+   "file": "dry/body03.mp3",
+   "duration_ms": 705,
+   "file_fx": "fx/body03.mp3",
+   "duration_fx_ms": 705
+  },
+  {
+   "id": "body04",
+   "group": "body",
+   "text": "Earth",
+   "file": "dry/body04.mp3",
+   "duration_ms": 549,
+   "file_fx": "fx/body04.mp3",
+   "duration_fx_ms": 549
+  },
+  {
+   "id": "body05",
+   "group": "body",
+   "text": "the Moon",
+   "file": "dry/body05.mp3",
+   "duration_ms": 705,
+   "file_fx": "fx/body05.mp3",
+   "duration_fx_ms": 679
+  },
+  {
+   "id": "body06",
+   "group": "body",
+   "text": "Mars",
+   "file": "dry/body06.mp3",
+   "duration_ms": 627,
+   "file_fx": "fx/body06.mp3",
+   "duration_fx_ms": 627
+  },
+  {
+   "id": "body07",
+   "group": "body",
+   "text": "Jupiter",
+   "file": "dry/body07.mp3",
+   "duration_ms": 627,
+   "file_fx": "fx/body07.mp3",
+   "duration_fx_ms": 653
+  },
+  {
+   "id": "body08",
+   "group": "body",
+   "text": "Saturn",
+   "file": "dry/body08.mp3",
+   "duration_ms": 810,
+   "file_fx": "fx/body08.mp3",
+   "duration_fx_ms": 810
+  },
+  {
+   "id": "body09",
+   "group": "body",
+   "text": "Uranus",
+   "file": "dry/body09.mp3",
+   "duration_ms": 1019,
+   "file_fx": "fx/body09.mp3",
+   "duration_fx_ms": 1019
+  },
+  {
+   "id": "body10",
+   "group": "body",
+   "text": "Neptune",
+   "file": "dry/body10.mp3",
+   "duration_ms": 784,
+   "file_fx": "fx/body10.mp3",
+   "duration_fx_ms": 784
+  },
+  {
+   "id": "body11",
+   "group": "body",
+   "text": "Pluto",
+   "file": "dry/body11.mp3",
+   "duration_ms": 627,
+   "file_fx": "fx/body11.mp3",
+   "duration_fx_ms": 627
+  },
+  {
+   "id": "body12",
+   "group": "body",
+   "text": "Ceres",
+   "file": "dry/body12.mp3",
+   "duration_ms": 810,
+   "file_fx": "fx/body12.mp3",
+   "duration_fx_ms": 784
+  },
+  {
+   "id": "body13",
+   "group": "body",
+   "text": "Halley's Comet",
+   "file": "dry/body13.mp3",
+   "duration_ms": 993,
+   "file_fx": "fx/body13.mp3",
+   "duration_fx_ms": 993
+  },
+  {
+   "id": "body14",
+   "group": "body",
+   "text": "Io",
+   "file": "dry/body14.mp3",
+   "duration_ms": 549,
+   "file_fx": "fx/body14.mp3",
+   "duration_fx_ms": 549
+  },
+  {
+   "id": "body15",
+   "group": "body",
+   "text": "Europa",
+   "file": "dry/body15.mp3",
+   "duration_ms": 731,
+   "file_fx": "fx/body15.mp3",
+   "duration_fx_ms": 731
+  },
+  {
+   "id": "body16",
+   "group": "body",
+   "text": "Ganymede",
+   "file": "dry/body16.mp3",
+   "duration_ms": 705,
+   "file_fx": "fx/body16.mp3",
+   "duration_fx_ms": 705
+  },
+  {
+   "id": "body17",
+   "group": "body",
+   "text": "Callisto",
+   "file": "dry/body17.mp3",
+   "duration_ms": 731,
+   "file_fx": "fx/body17.mp3",
+   "duration_fx_ms": 731
+  },
+  {
+   "id": "body18",
+   "group": "body",
+   "text": "Titan",
+   "file": "dry/body18.mp3",
+   "duration_ms": 627,
+   "file_fx": "fx/body18.mp3",
+   "duration_fx_ms": 627
+  },
+  {
+   "id": "body19",
+   "group": "body",
+   "text": "Proxima Centauri",
+   "file": "dry/body19.mp3",
+   "duration_ms": 1437,
+   "file_fx": "fx/body19.mp3",
+   "duration_fx_ms": 1411
+  },
+  {
+   "id": "body20",
+   "group": "body",
+   "text": "Sirius",
+   "file": "dry/body20.mp3",
+   "duration_ms": 810,
+   "file_fx": "fx/body20.mp3",
+   "duration_fx_ms": 758
+  },
+  {
+   "id": "body21",
+   "group": "body",
+   "text": "Vega",
+   "file": "dry/body21.mp3",
+   "duration_ms": 653,
+   "file_fx": "fx/body21.mp3",
+   "duration_fx_ms": 653
+  },
+  {
+   "id": "body22",
+   "group": "body",
+   "text": "Betelgeuse",
+   "file": "dry/body22.mp3",
+   "duration_ms": 836,
+   "file_fx": "fx/body22.mp3",
+   "duration_fx_ms": 836
+  },
+  {
+   "id": "body23",
+   "group": "body",
+   "text": "the Galactic Center",
+   "file": "dry/body23.mp3",
+   "duration_ms": 1254,
+   "file_fx": "fx/body23.mp3",
+   "duration_fx_ms": 1254
+  },
+  {
+   "id": "body24",
+   "group": "body",
+   "text": "the Andromeda Galaxy",
+   "file": "dry/body24.mp3",
+   "duration_ms": 1437,
+   "file_fx": "fx/body24.mp3",
+   "duration_fx_ms": 1437
+  },
+  {
+   "id": "zone01",
+   "group": "zone",
+   "text": "Home",
+   "file": "dry/zone01.mp3",
+   "duration_ms": 496,
+   "file_fx": "fx/zone01.mp3",
+   "duration_fx_ms": 522
+  },
+  {
+   "id": "zone02",
+   "group": "zone",
+   "text": "Sun and Moon",
+   "file": "dry/zone02.mp3",
+   "duration_ms": 1254,
+   "file_fx": "fx/zone02.mp3",
+   "duration_fx_ms": 1254
+  },
+  {
+   "id": "zone03",
+   "group": "zone",
+   "text": "Planetary Worlds",
+   "file": "dry/zone03.mp3",
+   "duration_ms": 1202,
+   "file_fx": "fx/zone03.mp3",
+   "duration_fx_ms": 1202
+  },
+  {
+   "id": "zone04",
+   "group": "zone",
+   "text": "Solar Frontier",
+   "file": "dry/zone04.mp3",
+   "duration_ms": 1228,
+   "file_fx": "fx/zone04.mp3",
+   "duration_fx_ms": 1228
+  },
+  {
+   "id": "zone05",
+   "group": "zone",
+   "text": "The Stars",
+   "file": "dry/zone05.mp3",
+   "duration_ms": 784,
+   "file_fx": "fx/zone05.mp3",
+   "duration_fx_ms": 758
+  },
+  {
+   "id": "zone06",
+   "group": "zone",
+   "text": "The Milky Way",
+   "file": "dry/zone06.mp3",
+   "duration_ms": 914,
+   "file_fx": "fx/zone06.mp3",
+   "duration_fx_ms": 888
+  },
+  {
+   "id": "zone07",
+   "group": "zone",
+   "text": "The Universe",
+   "file": "dry/zone07.mp3",
+   "duration_ms": 810,
+   "file_fx": "fx/zone07.mp3",
+   "duration_fx_ms": 810
+  },
+  {
+   "id": "num01",
+   "group": "number",
+   "text": "zero",
+   "file": "dry/num01.mp3",
+   "duration_ms": 705,
+   "file_fx": "fx/num01.mp3",
+   "duration_fx_ms": 705
+  },
+  {
+   "id": "num02",
+   "group": "number",
+   "text": "one",
+   "file": "dry/num02.mp3",
+   "duration_ms": 496,
+   "file_fx": "fx/num02.mp3",
+   "duration_fx_ms": 496
+  },
+  {
+   "id": "num03",
+   "group": "number",
+   "text": "two",
+   "file": "dry/num03.mp3",
+   "duration_ms": 418,
+   "file_fx": "fx/num03.mp3",
+   "duration_fx_ms": 418
+  },
+  {
+   "id": "num04",
+   "group": "number",
+   "text": "three",
+   "file": "dry/num04.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/num04.mp3",
+   "duration_fx_ms": 601
+  },
+  {
+   "id": "num05",
+   "group": "number",
+   "text": "four",
+   "file": "dry/num05.mp3",
+   "duration_ms": 470,
+   "file_fx": "fx/num05.mp3",
+   "duration_fx_ms": 470
+  },
+  {
+   "id": "num06",
+   "group": "number",
+   "text": "five",
+   "file": "dry/num06.mp3",
+   "duration_ms": 784,
+   "file_fx": "fx/num06.mp3",
+   "duration_fx_ms": 758
+  },
+  {
+   "id": "num07",
+   "group": "number",
+   "text": "six",
+   "file": "dry/num07.mp3",
+   "duration_ms": 653,
+   "file_fx": "fx/num07.mp3",
+   "duration_fx_ms": 653
+  },
+  {
+   "id": "num08",
+   "group": "number",
+   "text": "seven",
+   "file": "dry/num08.mp3",
+   "duration_ms": 653,
+   "file_fx": "fx/num08.mp3",
+   "duration_fx_ms": 627
+  },
+  {
+   "id": "num09",
+   "group": "number",
+   "text": "eight",
+   "file": "dry/num09.mp3",
+   "duration_ms": 470,
+   "file_fx": "fx/num09.mp3",
+   "duration_fx_ms": 470
+  },
+  {
+   "id": "num10",
+   "group": "number",
+   "text": "nine",
+   "file": "dry/num10.mp3",
+   "duration_ms": 627,
+   "file_fx": "fx/num10.mp3",
+   "duration_fx_ms": 627
+  },
+  {
+   "id": "num11",
+   "group": "number",
+   "text": "ten",
+   "file": "dry/num11.mp3",
+   "duration_ms": 470,
+   "file_fx": "fx/num11.mp3",
+   "duration_fx_ms": 470
+  },
+  {
+   "id": "num12",
+   "group": "number",
+   "text": "eleven",
+   "file": "dry/num12.mp3",
+   "duration_ms": 653,
+   "file_fx": "fx/num12.mp3",
+   "duration_fx_ms": 653
+  },
+  {
+   "id": "num13",
+   "group": "number",
+   "text": "twelve",
+   "file": "dry/num13.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/num13.mp3",
+   "duration_fx_ms": 601
+  },
+  {
+   "id": "num14",
+   "group": "number",
+   "text": "thirteen",
+   "file": "dry/num14.mp3",
+   "duration_ms": 758,
+   "file_fx": "fx/num14.mp3",
+   "duration_fx_ms": 758
+  },
+  {
+   "id": "num15",
+   "group": "number",
+   "text": "fourteen",
+   "file": "dry/num15.mp3",
+   "duration_ms": 679,
+   "file_fx": "fx/num15.mp3",
+   "duration_fx_ms": 679
+  },
+  {
+   "id": "num16",
+   "group": "number",
+   "text": "fifteen",
+   "file": "dry/num16.mp3",
+   "duration_ms": 653,
+   "file_fx": "fx/num16.mp3",
+   "duration_fx_ms": 653
+  },
+  {
+   "id": "num17",
+   "group": "number",
+   "text": "sixteen",
+   "file": "dry/num17.mp3",
+   "duration_ms": 810,
+   "file_fx": "fx/num17.mp3",
+   "duration_fx_ms": 810
+  },
+  {
+   "id": "num18",
+   "group": "number",
+   "text": "seventeen",
+   "file": "dry/num18.mp3",
+   "duration_ms": 810,
+   "file_fx": "fx/num18.mp3",
+   "duration_fx_ms": 810
+  },
+  {
+   "id": "num19",
+   "group": "number",
+   "text": "eighteen",
+   "file": "dry/num19.mp3",
+   "duration_ms": 758,
+   "file_fx": "fx/num19.mp3",
+   "duration_fx_ms": 758
+  },
+  {
+   "id": "num20",
+   "group": "number",
+   "text": "nineteen",
+   "file": "dry/num20.mp3",
+   "duration_ms": 758,
+   "file_fx": "fx/num20.mp3",
+   "duration_fx_ms": 758
+  },
+  {
+   "id": "num21",
+   "group": "number",
+   "text": "twenty",
+   "file": "dry/num21.mp3",
+   "duration_ms": 653,
+   "file_fx": "fx/num21.mp3",
+   "duration_fx_ms": 653
+  },
+  {
+   "id": "num22",
+   "group": "number",
+   "text": "thirty",
+   "file": "dry/num22.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/num22.mp3",
+   "duration_fx_ms": 575
+  },
+  {
+   "id": "num23",
+   "group": "number",
+   "text": "forty",
+   "file": "dry/num23.mp3",
+   "duration_ms": 549,
+   "file_fx": "fx/num23.mp3",
+   "duration_fx_ms": 549
+  },
+  {
+   "id": "num24",
+   "group": "number",
+   "text": "fifty",
+   "file": "dry/num24.mp3",
+   "duration_ms": 522,
+   "file_fx": "fx/num24.mp3",
+   "duration_fx_ms": 522
+  },
+  {
+   "id": "num25",
+   "group": "number",
+   "text": "sixty",
+   "file": "dry/num25.mp3",
+   "duration_ms": 758,
+   "file_fx": "fx/num25.mp3",
+   "duration_fx_ms": 784
+  },
+  {
+   "id": "num26",
+   "group": "number",
+   "text": "seventy",
+   "file": "dry/num26.mp3",
+   "duration_ms": 862,
+   "file_fx": "fx/num26.mp3",
+   "duration_fx_ms": 862
+  },
+  {
+   "id": "num27",
+   "group": "number",
+   "text": "eighty",
+   "file": "dry/num27.mp3",
+   "duration_ms": 575,
+   "file_fx": "fx/num27.mp3",
+   "duration_fx_ms": 601
+  },
+  {
+   "id": "num28",
+   "group": "number",
+   "text": "ninety",
+   "file": "dry/num28.mp3",
+   "duration_ms": 679,
+   "file_fx": "fx/num28.mp3",
+   "duration_fx_ms": 679
+  },
+  {
+   "id": "num29",
+   "group": "number",
+   "text": "hundred",
+   "file": "dry/num29.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/num29.mp3",
+   "duration_fx_ms": 601
+  },
+  {
+   "id": "num30",
+   "group": "number",
+   "text": "thousand",
+   "file": "dry/num30.mp3",
+   "duration_ms": 705,
+   "file_fx": "fx/num30.mp3",
+   "duration_fx_ms": 705
+  },
+  {
+   "id": "num31",
+   "group": "number",
+   "text": "million",
+   "file": "dry/num31.mp3",
+   "duration_ms": 522,
+   "file_fx": "fx/num31.mp3",
+   "duration_fx_ms": 522
+  },
+  {
+   "id": "num32",
+   "group": "number",
+   "text": "billion",
+   "file": "dry/num32.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/num32.mp3",
+   "duration_fx_ms": 601
+  },
+  {
+   "id": "num33",
+   "group": "number",
+   "text": "point",
+   "file": "dry/num33.mp3",
+   "duration_ms": 444,
+   "file_fx": "fx/num33.mp3",
+   "duration_fx_ms": 444
+  },
+  {
+   "id": "unit01",
+   "group": "unit",
+   "text": "kilometers",
+   "file": "dry/unit01.mp3",
+   "duration_ms": 914,
+   "file_fx": "fx/unit01.mp3",
+   "duration_fx_ms": 914
+  },
+  {
+   "id": "unit02",
+   "group": "unit",
+   "text": "astronomical units",
+   "file": "dry/unit02.mp3",
+   "duration_ms": 1567,
+   "file_fx": "fx/unit02.mp3",
+   "duration_fx_ms": 1567
+  },
+  {
+   "id": "unit03",
+   "group": "unit",
+   "text": "light-years",
+   "file": "dry/unit03.mp3",
+   "duration_ms": 836,
+   "file_fx": "fx/unit03.mp3",
+   "duration_fx_ms": 836
+  },
+  {
+   "id": "unit04",
+   "group": "unit",
+   "text": "seconds",
+   "file": "dry/unit04.mp3",
+   "duration_ms": 705,
+   "file_fx": "fx/unit04.mp3",
+   "duration_fx_ms": 705
+  },
+  {
+   "id": "unit05",
+   "group": "unit",
+   "text": "minutes",
+   "file": "dry/unit05.mp3",
+   "duration_ms": 627,
+   "file_fx": "fx/unit05.mp3",
+   "duration_fx_ms": 601
+  },
+  {
+   "id": "unit06",
+   "group": "unit",
+   "text": "hours",
+   "file": "dry/unit06.mp3",
+   "duration_ms": 653,
+   "file_fx": "fx/unit06.mp3",
+   "duration_fx_ms": 653
+  },
+  {
+   "id": "unit07",
+   "group": "unit",
+   "text": "days",
+   "file": "dry/unit07.mp3",
+   "duration_ms": 601,
+   "file_fx": "fx/unit07.mp3",
+   "duration_fx_ms": 575
+  },
+  {
+   "id": "unit08",
+   "group": "unit",
+   "text": "years",
+   "file": "dry/unit08.mp3",
+   "duration_ms": 575,
+   "file_fx": "fx/unit08.mp3",
+   "duration_fx_ms": 575
+  }
+ ]
+}
