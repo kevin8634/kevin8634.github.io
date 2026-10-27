@@ -363,7 +363,7 @@
     else if (r < HP) { var t = (r - TS) / (HP - TS); zone = '日鞘(亚音速)'; v = L(130, 20, t); n = L(.002, .004, t); B = L(.12, .2, t); gcr = L(72, 80, t); hp = L(100, 90, t); }
     else { var u = Math.min(1, (r - HP) / 30); zone = r < 2000 ? '本地星际介质' : '星际空间'; v = L(20, 0, u * 3); n = .08; B = .5; gcr = 100; hp = L(2, 1, u); }
     function bar(x) { return '<span style="display:inline-block;width:60px;height:5px;border-radius:3px;background:linear-gradient(90deg,#f0c97a ' + x + '%,rgba(150,180,220,.18) ' + x + '%);vertical-align:middle"></span> ' + Math.round(x); }
-    return '<div class="sec">日球层 · 旅行者号实测剖面(示意)</div>' + kv('所在区域', zone) + kv('太阳风径向速度', v < 1 ? '≈ 0' : Math.round(v), 'km/s') +
+    return '<div class="sec">日球层 · 旅行者号实测剖面(示意) <a onclick="window.SHXE&&SHXE.show(\'heliosphere\',1)" style="cursor:pointer;color:#f0c97a;pointer-events:auto">?</a></div>' + kv('所在区域', zone) + kv('太阳风径向速度', v < 1 ? '≈ 0' : Math.round(v), 'km/s') +
       kv('等离子体密度', sig(n, 2), '/cm³') + kv('磁场强度', sig(B, 2), 'nT') + kv('银河宇宙线(相对)', bar(gcr)) + kv('太阳风粒子(相对)', bar(hp));
   }
 
