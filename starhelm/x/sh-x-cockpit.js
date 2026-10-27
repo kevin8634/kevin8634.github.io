@@ -26,11 +26,11 @@
     // C1.8 出太阳系航点:固定方向(赤经/赤纬,J2000)+ 日心距离;不画星球,只有标签与目标框
     { id: 'voyager1', zh: '旅行者 1 号', en: 'Voyager 1', type: '探测器', R: 0.02, GM: 722 * 6.674e-20, temp: '约 -270(星际空间)', col: '#9fd0e8', fix: [258.3, 12.0, 170], ghost: true, info: [['发射', '1977 年 9 月 5 日'], ['日心距离', '约 170 AU(2026)'], ['速度', '约 17 km/s(相对太阳)'], ['2012 年 8 月', '穿越日球层顶']] },
     { id: 'oort', zh: '奥尔特云内缘', en: 'Inner Oort Cloud', type: '推测区域', R: 0.02, GM: 0, temp: '约 -268', col: '#b8c8e0', fix: [258.3, 12.0, 2000], ghost: true, info: [['距离', '内缘约 2,000 AU(推测)'], ['外缘', '可达约 10 万 AU'], ['组成', '数以万亿计的冰质天体'], ['证据', '长周期彗星轨道反推,尚无直接观测']] },
-    // C1.8b 群星航点(位置取自 HYG v4.1 星表,与星空点完全重合);GM 置 0 免得引力干扰演示
-    { id: 'proxima', zh: '比邻星', en: 'Proxima Centauri', type: '红矮星', R: 107280, GM: 0, temp: '—', col: '#ff8a5c', fix: [218.6598, -63.183, 269281], star: true, info: [['光谱型', 'M5.5 V 红矮星'], ['半径', '约 0.15 个太阳'], ['行星', '比邻星 b、d(宜居带内有 b)'], ['距离', '4.25 光年(离太阳最近)']] },
-    { id: 'sirius', zh: '天狼星', en: 'Sirius', type: '恒星', R: 1191000, GM: 0, temp: '—', col: '#cfe0ff', fix: [101.1738, -16.8459, 545581], star: true, info: [['光谱型', 'A1 V(主星)+ 白矮星伴星'], ['半径', '约 1.7 个太阳'], ['亮度', '约 25 个太阳'], ['距离', '8.6 光年']] },
-    { id: 'vega', zh: '织女星', en: 'Vega', type: '恒星', R: 1640000, GM: 0, temp: '—', col: '#dfe8ff', fix: [279.125, 38.7706, 1585580], star: true, info: [['光谱型', 'A0 V'], ['半径', '约 2.4 个太阳(快速自转,赤道更宽)'], ['亮度', '约 40 个太阳'], ['距离', '25 光年']] },
-    { id: 'trappist1', zh: 'TRAPPIST-1', en: 'TRAPPIST-1', type: '红矮星', R: 82900, GM: 0, temp: '—', col: '#ff7046', fix: [346.6864, -5.0939, 2564173], star: true, info: [['光谱型', 'M8 V 超冷红矮星'], ['半径', '约 0.12 个太阳'], ['行星', '7 颗岩质行星,3 颗在宜居带'], ['距离', '约 40.5 光年']] }
+    // C1.8b 群星航点(位置取自 HYG v4.1 星表,与星空点完全重合);GM=质量×太阳GM、L=光度(太阳=1),公开资料约数
+    { id: 'proxima', zh: '比邻星', en: 'Proxima Centauri', type: '红矮星', R: 107280, GM: 1.62042e+10, L: 0.00155, temp: '—', col: '#ff8a5c', fix: [218.6598, -63.183, 269281], star: true, tint: [1.25, .62, .4], info: [['光谱型', 'M5.5 V 红矮星'], ['半径', '约 0.15 个太阳'], ['行星', '比邻星 b、d(宜居带内有 b)'], ['距离', '4.25 光年(离太阳最近)']] },
+    { id: 'sirius', zh: '天狼星', en: 'Sirius', type: '恒星', R: 1191000, GM: 2.73786e+11, L: 25.4, temp: '—', col: '#cfe0ff', fix: [101.1738, -16.8459, 545581], star: true, tint: [1.05, 1.22, 1.6], sat: .1, info: [['光谱型', 'A1 V(主星)+ 白矮星伴星'], ['半径', '约 1.7 个太阳'], ['亮度', '约 25 个太阳'], ['距离', '8.6 光年']] },
+    { id: 'vega', zh: '织女星', en: 'Vega', type: '恒星', R: 1640000, GM: 2.83341e+11, L: 40.1, temp: '—', col: '#dfe8ff', fix: [279.125, 38.7706, 1585580], star: true, tint: [1.08, 1.22, 1.55], sat: .1, info: [['光谱型', 'A0 V'], ['半径', '约 2.4 个太阳(快速自转,赤道更宽)'], ['亮度', '约 40 个太阳'], ['距离', '25 光年']] },
+    { id: 'trappist1', zh: 'TRAPPIST-1', en: 'TRAPPIST-1', type: '红矮星', R: 82900, GM: 1.19176e+10, L: 0.000553, temp: '—', col: '#ff7046', fix: [346.6864, -5.0939, 2564173], star: true, tint: [1.2, .5, .3], info: [['光谱型', 'M8 V 超冷红矮星'], ['半径', '约 0.12 个太阳'], ['行星', '7 颗岩质行星,3 颗在宜居带'], ['距离', '约 40.5 光年']] }
   ];
   var BY = {}; B.forEach(function (b) { BY[b.id] = b; });
   var K = { open: false, built: false };
@@ -88,12 +88,23 @@
   function body3d(b) {
     var g = new T.Group(), tilt = new T.Group(), spin = new T.Group(); g.add(tilt); tilt.add(spin);
     if (b.star) {   // C1.8b 恒星航点:发光球 + 辉光 + 远距离亮点
-      var cc = new T.Color(b.col);
-      g.add(new T.Mesh(new T.SphereGeometry(b.R, 64, 32), new T.MeshBasicMaterial({ color: cc.clone().lerp(new T.Color(1, 1, 1), .35), toneMapped: false })));
+      var cc = new T.Color(b.col), tint = new T.Vector3().fromArray(b.tint || [1, 1, 1]);
+      // C1.8d 恒星表面:复用 1.0 太阳着色器(米粒组织/临边昏暗/日冕/日珥),按光谱型整体染色;红矮星偏橙红、A 型星偏蓝白
+      var sf = window.SHFX3D && SHFX3D.sun ? SHFX3D.sun({ radius: b.R, wind: false }) : null;
+      if (sf) {
+        sf.group.traverse(function (o) {
+          var m = o.material; if (!m) return;
+          if (m.isShaderMaterial) { m.uniforms.uTint = { value: tint }; m.uniforms.uSat = { value: b.sat == null ? 1 : b.sat };
+            m.fragmentShader = 'uniform vec3 uTint;uniform float uSat;' + m.fragmentShader.replace(/\}\s*$/, 'float shL=dot(gl_FragColor.rgb,vec3(.3,.59,.11));gl_FragColor.rgb=mix(vec3(shL),gl_FragColor.rgb,uSat)*uTint;}'); m.needsUpdate = true; }
+          else if ((b.sat == null ? 1 : b.sat) < .5) o.visible = false;   // A 型星:不画橙色日珥
+          else if (m.color) m.color.multiply(new T.Color(tint.x, tint.y, tint.z));
+        });
+        g.add(sf.group); b.fx = sf;
+      } else g.add(new T.Mesh(new T.SphereGeometry(b.R, 64, 32), new T.MeshBasicMaterial({ color: cc.clone().lerp(new T.Color(1, 1, 1), .35), toneMapped: false })));
       var gc = document.createElement('canvas'); gc.width = gc.height = 128; var gx = gc.getContext('2d'), gr = gx.createRadialGradient(64, 64, 0, 64, 64, 64);
       gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.12, 'rgba(255,255,255,.85)'); gr.addColorStop(.3, '#' + cc.getHexString()); gr.addColorStop(1, 'rgba(0,0,0,0)');
       gx.fillStyle = gr; gx.fillRect(0, 0, 128, 128); var gt = new T.CanvasTexture(gc);
-      var sp = new T.Sprite(new T.SpriteMaterial({ map: gt, color: cc, blending: T.AdditiveBlending, transparent: true, opacity: .55, depthWrite: false })); sp.scale.setScalar(b.R * 4.5); g.add(sp);
+      var sp = new T.Sprite(new T.SpriteMaterial({ map: gt, color: cc, blending: T.AdditiveBlending, transparent: true, opacity: .35, depthWrite: false })); sp.scale.setScalar(b.R * 4); g.add(sp);
       var pg = new T.BufferGeometry(); pg.setAttribute('position', new T.BufferAttribute(new Float32Array(3), 3));
       b.pt = new T.Points(pg, new T.PointsMaterial({ map: gt, color: cc, size: 14 * Math.min(2, window.devicePixelRatio || 1), sizeAttenuation: false, transparent: true, depthWrite: false, blending: T.AdditiveBlending }));
       b.pt.frustumCulled = false; g.add(b.pt); b.g = g; return g;
@@ -417,7 +428,13 @@
       if (d0 < lim && d0 > 0) { var k = lim * 1.0005 / d0; S.pos = [b.wp[0] + (S.pos[0] - b.wp[0]) * k, b.wp[1] + (S.pos[1] - b.wp[1]) * k, b.wp[2] + (S.pos[2] - b.wp[2]) * k]; nx = S.pos[0] + fwd.x * step; ny = S.pos[1] + fwd.y * step; nz = S.pos[2] + fwd.z * step; }
       if (S._hov === b.id && d0 > lim * 1.5) S._hov = null;
     });
-    if (hit) { S.base = 0; S.mult = 1; S.auto = false; step = 0; if (S._hov !== hit.id) { S._hov = hit.id; toast('靠得太近了:已在 ' + hit.zh + ' 上空悬停'); emit('hover', hit); } }
+    if (hit && S.auto && hit.id !== S.target) {   // C1.8d 自动驾驶途中挡路的天体:贴着表面绕过去,不停船
+      var hn0 = new T.Vector3(S.pos[0] - hit.wp[0], S.pos[1] - hit.wp[1], S.pos[2] - hit.wp[2]).normalize(), tg0 = fwd.clone().addScaledVector(hn0, -fwd.dot(hn0));
+      if (tg0.lengthSq() < 1e-8) tg0.set(hn0.y, -hn0.x, 0); tg0.normalize().addScaledVector(hn0, .35).normalize();
+      S.pos = [S.pos[0] + tg0.x * step, S.pos[1] + tg0.y * step, S.pos[2] + tg0.z * step]; S.trip += step; hit = null; step = -1;
+    }
+    if (step === -1) { }
+    else if (hit) { S.base = 0; S.mult = 1; S.auto = false; step = 0; if (S._hov !== hit.id) { S._hov = hit.id; toast('靠得太近了:已在 ' + hit.zh + ' 上空悬停'); emit('hover', hit); } }
     else { S.pos = [nx, ny, nz]; S.trip += step; }
     // 随最近天体一起运动(在行星附近悬停时,不会被它甩在身后)
     var near = null, nd = Infinity;
@@ -449,6 +466,7 @@
       if (b.pt) b.pt.visible = b.dist < 2.8e11;   // 0.03 光年内由航点亮点接管(远处交给 HYG 星空)
     });
     if (BY.sun.fx) BY.sun.fx.update(dt, cam);
+    B.forEach(function (b) { if (b.star && b.fx && b.dist < b.R * 400) b.fx.update(dt, cam); });
     // --- 尘埃拖影 ---
     if (dust.N) {
       var vis = Math.min(1, Math.log10(1 + veff) / 3), sv = Math.min(160, 6 + Math.log10(1 + veff) * 25) * dt, len = Math.min(26, 0.4 + Math.log10(1 + veff) * 4);
@@ -506,10 +524,13 @@
     B.forEach(function (b) { var dx = b.wp[0] - S.pos[0], dy = b.wp[1] - S.pos[1], dz = b.wp[2] - S.pos[2], d = Math.hypot(dx, dy, dz), a = b.GM / (d * d); acc[0] += a * dx / d; acc[1] += a * dy / d; acc[2] += a * dz / d; if (b === near) accN = a; });
     var accT = Math.hypot(acc[0], acc[1], acc[2]) * 1000, gam = 1 / Math.sqrt(1 - Math.min(.999999, Math.pow(S.base / C, 2)));
     var vesc = Math.sqrt(2 * near.GM / near.dist), vcir = Math.sqrt(near.GM / near.dist), lt = rs / C;
-    var tempC = 278.6 / Math.sqrt(rau) - 273.15, sunD = 2 * Math.atan(sun.R / rs) * 180 / Math.PI * 60;
+    // C1.8d 主星:太阳或最近的恒星航点(辐照/温度/视直径按它算)
+    var hs = sun; B.forEach(function (b) { if (b.star && b.dist < hs.dist) hs = b; });
+    var hau = hs.dist / AU, hL = hs.L || 1, hn = hs === sun ? '太阳' : hs.zh;
+    var tempC = 278.6 * Math.pow(hL, .25) / Math.sqrt(hau) - 273.15, sunD = 2 * Math.atan(hs.R / hs.dist) * 180 / Math.PI * 60;
     $('#xc-nav', root).innerHTML =
       '<div class="sec">导航</div>' + kv('日心距离', rau.toFixed(4), 'AU') + kv('参考系', near.dist < (near.R * 300) && near.id !== 'sun' ? near.zh : '日心') + kv('最近天体', near.zh) + kv('本次航程', fkm(S.trip)) +
-      '<div class="sec">环境</div>' + kv('太阳辐照', nf(1361 / (rau * rau)), 'W/m²') + kv('舱外平衡温度', nf(tempC), '°C') + kv('太阳视直径', sunD >= 1 ? sunD.toFixed(1) + '′' : (sunD * 60).toFixed(1) + '″') + kv('光行时 · 太阳', fdur(lt)) +
+      '<div class="sec">环境</div>' + kv(hn + '辐照', sig(1361 * hL / (hau * hau), 4), 'W/m²') + kv('舱外平衡温度', nf(Math.max(-270.4, tempC)), '°C') + kv(hn + '视直径', sunD >= 1 ? sunD.toFixed(1) + '′' : (sunD * 60).toFixed(1) + '″') + kv('光行时 · 太阳', fdur(lt)) +
       '<div class="sec">引力</div>' + kv('合引力加速度', sig(accT, 4), 'm/s²') + kv('来自' + near.zh, sig(accN * 1000, 4), 'm/s²') + kv('逃逸速度', sig(vesc, 3), 'km/s') + kv('圆轨道速度', sig(vcir, 3), 'km/s') + kv('洛伦兹因子 γ', gam.toFixed(6)) +
       '<div class="sec">航速</div>' + kv('实际速度', sig(S.base, 4), 'km/s') + kv('等效速度', veff / C >= 0.01 ? sig(veff / C, 3) + ' c' : sig(veff, 4) + ' km/s') + kv('倍率(模拟)', '×' + sig(S.mult * (S.auto ? 1 : S.boost), 3));
     // 目标卡
