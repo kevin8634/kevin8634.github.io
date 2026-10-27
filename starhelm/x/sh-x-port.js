@@ -1,4 +1,5 @@
 /* 天枢 Starhelm · 2.0 穿梭 C1.0 · sh-x-port.js(SHXPORT)
+ * C1.1:窗台控制台键位/托盘按 DOM 按钮组实测布置,DOM 按钮逐帧吸附到 3D 键位投影,Armilla 坐上金色光环托盘。
  * 侧舷窗全景舱(王磊 10-27 00:52 确认方案 C2:无中柱单一超宽窗、近景、幽蓝荧光、Armilla + 控制台 + 按钮)。
  * 实时 3D:独立透明 WebGLRenderer 叠在驾驶舱主场景之上,只画舱壁、窗框、顶部灯带、窗台控制台、反光地面;
  * 窗洞透明,窗外就是主场景里的真实星空与星球(不用概念图做素材)。
@@ -7,7 +8,7 @@
   'use strict';
   if (!window.SHXC) return;
   var X = SHXC, I = X._, T = null;
-  var P = { on: false, ok: null, R: null, host: null, gl: null, scene: null, cam: null, grp: null, raf: 0, t: 0, lt: 0, mx: 0, my: 0, px: 0, py: 0, key: '', btns: null, glass: null, sheen: null, hud: null };
+  var P = { anchors: null, keys: null, deck: null, on: false, ok: null, R: null, host: null, gl: null, scene: null, cam: null, grp: null, raf: 0, t: 0, lt: 0, mx: 0, my: 0, px: 0, py: 0, key: '', btns: null, glass: null, sheen: null, hud: null };
   function reduced() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
   function mobile() { return innerWidth < 700 || innerHeight < 480; }
   function canGL() {
@@ -75,7 +76,7 @@
       var fill = new T.DirectionalLight(0x6f7fc8, .5); fill.position.set(0, 3, 8); P.scene.add(fill);
       P.ok = true; P.host.classList.add('gl');
       addEventListener('pointermove', function (e) { P.mx = e.clientX / innerWidth * 2 - 1; P.my = e.clientY / innerHeight * 2 - 1; }, { passive: true });
-      addEventListener('resize', function () { if (P.on) layout(); });
+      addEventListener('resize', function () { if (P.on) { P.key = ''; layout(); } });
       document.addEventListener('visibilitychange', function () { if (!document.hidden && P.on) loop(); });
       g.domElement.addEventListener('webglcontextlost', function (e) { e.preventDefault(); P.ok = false; P.host.classList.remove('gl'); stop(); });
       return true;
@@ -121,23 +122,39 @@
     var sillT = .14, sillD = 2.2, sill = new T.Mesh(new T.BoxGeometry(WW + .9, sillT, sillD), new T.MeshStandardMaterial({ color: 0x232a48, metalness: .8, roughness: .35 }));
     sill.position.set(0, wy0 - .26 - sillT / 2, sillD / 2); G.add(sill);
     var lip = new T.Mesh(new T.BoxGeometry(WW + .9, .018, .02), new T.MeshBasicMaterial({ color: 0x5fd0ff, transparent: true, opacity: .6 })); lip.position.set(0, wy0 - .26, sillD); G.add(lip);
-    // 控制台:斜面台 + 两组按钮 + 中央 Armilla 托盘
-    var cw = Math.min(WW * (mob ? .7 : .34), vw * .8), ch = mob ? .34 : .42, cd = 1.05, cz = sillD - .25;
+    // 控制台(C1.1 王磊 02:51 反馈②):键位与 Armilla 托盘按 DOM 按钮组实测尺寸布置,并逐帧把 DOM 吸附到 3D 键位/托盘的投影上
+    var dm = measureDock(), zk = sillD - .25, sc = u * (D - zk) / D; // 控制台深度处 每像素世界长度
+    var maxDx = 0; dm.ib.forEach(function (d) { maxDx = Math.max(maxDx, Math.abs(d.dx) + d.w / 2); });
+    var padR = Math.max(28, dm.orb ? dm.orb.w * .43 : 60) * sc;
+    var cw = Math.min(Math.max(WW * (mob ? .7 : .34), (maxDx + (mob ? 18 : 46)) * 2 * sc), vw * .98 * (D - zk) / D), ch = mob ? .34 : .42, cd = Math.max(1.05, padR * 2 + .36), cz = sillD - cd / 2 + .22;
     var cy0 = wy0 - .26 + ch / 2 - .02;
-    var cbox = new T.Mesh(new T.BoxGeometry(cw, ch, cd, 1, 1, 1), new T.MeshStandardMaterial({ color: 0x161b30, metalness: .7, roughness: .3 })); cbox.position.set(0, cy0, cz); cbox.rotation.x = -.18; G.add(cbox);
-    var ctrim = new T.Mesh(new T.BoxGeometry(cw * .98, .02, .02), new T.MeshBasicMaterial({ color: 0x5fd0ff })); ctrim.position.set(0, cy0 - ch / 2 + .05, cz + cd / 2 + .01); G.add(ctrim);
-    var top = cy0 + ch / 2, nb = 8, bw = cw * .052, bgap = cw * .018;
-    var bg = new T.BoxGeometry(bw, .03, bw * .62), bm = new T.MeshBasicMaterial({ color: 0xffffff });
-    var inst = new T.InstancedMesh(bg, bm, nb * 2), m4 = new T.Matrix4(), q = new T.Quaternion().setFromEuler(new T.Euler(-.18, 0, 0)), n = 0;
-    [-1, 1].forEach(function (side) {
-      for (var r = 0; r < 2; r++) for (var c = 0; c < 4; c++) {
-        var x = side * (cw * .2 + c * (bw + bgap)), zz = cz - .12 + r * (bw * .62 + bgap * 1.4);
-        m4.compose(new T.Vector3(x, top + .02 - r * .04, zz), q, new T.Vector3(1, 1, 1)); inst.setMatrixAt(n, m4); inst.setColorAt(n, new T.Color(0x3fc4ff)); n++;
-      }
+    if (dm.ib[0]) { var yt = dm.ib[0].cy + dm.ib[0].h * .25; cy0 = Math.min(cy0, (h / 2 - yt) * u * (D - cz) / D - ch / 2 + .02); } // 台面落在按钮组原有高度,不压窗沿
+    var deck = new T.Group(); deck.position.set(0, cy0, cz); deck.rotation.x = -.18; G.add(deck); P.deck = deck;
+    deck.add(new T.Mesh(new T.BoxGeometry(cw, ch, cd, 1, 1, 1), new T.MeshStandardMaterial({ color: 0x161b30, metalness: .7, roughness: .3 })));
+    var ctrim = new T.Mesh(new T.BoxGeometry(cw * .98, .02, .02), new T.MeshBasicMaterial({ color: 0x5fd0ff })); ctrim.position.set(0, -ch / 2 + .05, cd / 2 + .01); deck.add(ctrim);
+    var etrim = new T.Mesh(new T.BoxGeometry(cw * .985, .012, .012), new T.MeshBasicMaterial({ color: 0x5fd0ff, transparent: true, opacity: .55 })); etrim.position.set(0, ch / 2 + .006, cd / 2 - .01); deck.add(etrim);
+    var ty = ch / 2 + .014, kz = cd * .08;
+    // 主键位:一颗 DOM 按钮一个,发光底座 + 光晕
+    P.keys = []; P.anchors = [];
+    dm.ib.forEach(function (d) {
+      var kw = d.w * 1.12 * sc, kd = kw * .78, x = d.dx * sc;
+      var base = new T.Mesh(new T.BoxGeometry(kw * 1.14, .02, kd * 1.14), new T.MeshStandardMaterial({ color: 0x0c1226, metalness: .85, roughness: .3 })); base.position.set(x, ty - .004, kz); deck.add(base);
+      var km = new T.MeshBasicMaterial({ color: 0x3fc4ff, transparent: true, opacity: .9 }), key = new T.Mesh(new T.BoxGeometry(kw, .022, kd), km); key.position.set(x, ty + .008, kz); deck.add(key);
+      var gm = new T.MeshBasicMaterial(Object.assign({ map: gt, color: 0x3fc4ff, opacity: .6 }, add)), glow = new T.Mesh(new T.PlaneGeometry(kw * 2.3, kd * 2.3), gm); glow.rotation.x = -Math.PI / 2; glow.position.set(x, ty + .03, kz); deck.add(glow);
+      P.keys.push({ el: d.el, km: km, gm: gm }); P.anchors.push({ el: d.el, cx: d.cx, cy: d.cy, h: d.h, p: new T.Vector3(x, ty + .02, kz), lift: .18 });
     });
-    inst.instanceMatrix.needsUpdate = true; if (inst.instanceColor) inst.instanceColor.needsUpdate = true; G.add(inst); P.btns = inst;
-    var pad = new T.Mesh(new T.TorusGeometry(cw * .085, .018, 8, 48), new T.MeshBasicMaterial({ color: 0xf0c97a })); pad.rotation.x = Math.PI / 2 - .18; pad.position.set(0, top + .03, cz); G.add(pad);
-    var padg = new T.Mesh(new T.PlaneGeometry(cw * .5, cw * .5), new T.MeshBasicMaterial(Object.assign({ map: gt, color: 0xe8b860, opacity: .55 }, add))); padg.rotation.x = -Math.PI / 2 - .18; padg.position.set(0, top + .04, cz); G.add(padg); P.pad = padg;
+    // 后排小键(装饰,随机闪烁)
+    var nb = 5, bw = Math.max(10, (dm.ib[0] ? dm.ib[0].w : 46) * .42) * sc, inst = new T.InstancedMesh(new T.BoxGeometry(bw, .016, bw * .6), new T.MeshBasicMaterial({ color: 0xffffff }), nb * 2), m4 = new T.Matrix4(), q0 = new T.Quaternion(), n = 0;
+    var x0 = padR + 10 * sc + bw;
+    [-1, 1].forEach(function (side) { for (var c = 0; c < nb; c++) { m4.compose(new T.Vector3(side * (x0 + c * bw * 1.6), ty + .004, -cd * .32), q0, new T.Vector3(1, 1, 1)); inst.setMatrixAt(n, m4); inst.setColorAt(n, new T.Color(0x3fc4ff)); n++; } });
+    inst.instanceMatrix.needsUpdate = true; if (inst.instanceColor) inst.instanceColor.needsUpdate = true; deck.add(inst); P.btns = inst;
+    // Armilla 金色光环托盘:双环 + 刻度 + 托盘辉光,Armilla 球坐在其上
+    var pad = new T.Mesh(new T.TorusGeometry(padR, .02, 8, 96), new T.MeshBasicMaterial({ color: 0xf0c97a })); pad.rotation.x = Math.PI / 2; pad.position.set(0, ty + .03, 0); deck.add(pad);
+    var pad2 = new T.Mesh(new T.TorusGeometry(padR * .8, .009, 6, 96), new T.MeshBasicMaterial({ color: 0xc9a46a, transparent: true, opacity: .8 })); pad2.rotation.x = Math.PI / 2; pad2.position.set(0, ty + .026, 0); deck.add(pad2);
+    var disc = new T.Mesh(new T.CircleGeometry(padR * 1.02, 64), new T.MeshStandardMaterial({ color: 0x1b1a24, metalness: .9, roughness: .25 })); disc.rotation.x = -Math.PI / 2; disc.position.set(0, ty + .012, 0); deck.add(disc);
+    var padg = new T.Mesh(new T.PlaneGeometry(padR * 3.2, padR * 3.2), new T.MeshBasicMaterial(Object.assign({ map: gt, color: 0xe8b860, opacity: .55 }, add))); padg.rotation.x = -Math.PI / 2; padg.position.set(0, ty + .04, 0); deck.add(padg); P.pad = padg;
+    if (dm.orb) P.anchors.push({ el: dm.orb.el, cx: dm.orb.cx, cy: dm.orb.cy, h: dm.orb.h, p: new T.Vector3(0, ty + .03, 0), lift: .34 });
+    var top = cy0 + ch / 2;
     // 地面:深色高光 + 灯带/托盘倒影(加色渐变)
     var fy = -vh / 2 - .6, floor = new T.Mesh(new T.PlaneGeometry(vw * 3, 12), new T.MeshStandardMaterial({ color: 0x07090f, metalness: .9, roughness: .18 }));
     floor.rotation.x = -Math.PI / 2; floor.position.set(0, fy, 4); G.add(floor);
@@ -151,6 +168,30 @@
     var pc = new T.PointLight(0x4fbfff, 3, 9, 1.4); pc.position.set(0, wy0 + .2, 1.2); G.add(pc);
     P.sillZ = sillD;
   }
+
+
+  // DOM 按钮组实测:先清掉吸附位移,读取自然位置(相对屏幕中心)
+  function measureDock() {
+    var r = { ib: [], orb: null }; if (!P.R) return r;
+    var els = [].slice.call(P.R.querySelectorAll('#xa-dock .ib')), orb = P.R.querySelector('#xa-orb');
+    els.concat(orb ? [orb] : []).forEach(function (e) { e.style.transform = ''; });
+    var W2 = innerWidth / 2;
+    els.forEach(function (e) { var b = e.getBoundingClientRect(); if (!b.width) return; r.ib.push({ el: e, dx: b.left + b.width / 2 - W2, cx: b.left + b.width / 2, cy: b.top + b.height / 2, w: b.width, h: b.height }); });
+    if (orb) { var b = orb.getBoundingClientRect(); if (b.width) r.orb = { el: orb, cx: b.left + b.width / 2, cy: b.top + b.height / 2, w: b.width, h: b.height }; }
+    return r;
+  }
+  var v3 = null;
+  function snap() {
+    if (!P.anchors || !P.deck) return; v3 = v3 || new T.Vector3();
+    P.deck.updateMatrixWorld(true); var w = innerWidth, h = innerHeight;
+    for (var i = 0; i < P.anchors.length; i++) {
+      var A = P.anchors[i]; v3.copy(A.p); P.deck.localToWorld(v3); v3.project(P.cam);
+      var sx = (v3.x + 1) / 2 * w, sy = (1 - v3.y) / 2 * h - A.h * A.lift;
+      A.el.style.transform = 'translate(' + (sx - A.cx).toFixed(1) + 'px,' + (sy - A.cy).toFixed(1) + 'px)';
+    }
+    if (P.keys) for (var k = 0; k < P.keys.length; k++) { var K = P.keys[k], on = K.el.classList.contains('on'), c = on ? 0xf0c97a : (K.el.matches(':hover') ? 0x9fe6ff : 0x3fc4ff); if (K.c !== c) { K.c = c; K.km.color.setHex(c); K.gm.color.setHex(c); } }
+  }
+  function unsnap() { if (!P.anchors) return; P.anchors.forEach(function (A) { A.el.style.transform = ''; }); }
 
   function frame(now) {
     if (!P.on || !P.gl) return;
@@ -171,6 +212,7 @@
         P.tb = 0; var c = new T.Color(); for (var i = 0; i < P.btns.count; i++) { var hi = Math.random() < .12; c.set(hi ? 0xbff0ff : (Math.random() < .08 ? 0xf0c97a : 0x3fc4ff)); P.btns.setColorAt(i, c); } P.btns.instanceColor.needsUpdate = true;
       }
     }
+    P.cam.updateMatrixWorld(); snap();
     P.gl.render(P.scene, P.cam);
   }
   function loop() { if (!P.raf && P.on) { P.lt = 0; P.raf = requestAnimationFrame(frame); } }
@@ -178,7 +220,7 @@
   function set(on) {
     if (on === P.on) return; P.on = on;
     if (on) { if (!mount()) { P.on = false; return; } layout(); loop(); }
-    else stop();
+    else { stop(); unsnap(); }
   }
   function watch() {
     var R = I.root(); if (!R) return false; if (R._portObs) return true; R._portObs = 1;
@@ -187,7 +229,7 @@
   }
   X.on(function (ev) { if (ev === 'open') watch(); else if (ev === 'close') set(false); });
   var css = document.createElement('style');
-  css.textContent = '#xs-port .xs-port-gl{position:absolute;inset:0;width:100%;height:100%;display:block}#xs-port.gl{background:none!important}#xs-port{z-index:1}#xs-port .tag{z-index:2;text-shadow:0 0 8px rgba(0,0,0,.8)}#shxc.port #xa-dock,#shxc.port #xa-sub{z-index:3}';
+  css.textContent = '#xs-port .xs-port-gl{position:absolute;inset:0;width:100%;height:100%;display:block}#xs-port.gl{background:none!important}#xs-port{z-index:1}#xs-port .tag{z-index:2;text-shadow:0 0 8px rgba(0,0,0,.8)}#shxc.port #xa-dock,#shxc.port #xa-sub{z-index:3}#shxc.port #xa-sub{bottom:262px}@media (max-width:640px){#shxc.port #xa-sub{bottom:236px}}';
   document.head.appendChild(css);
   window.SHXPORT = { state: function () { return { on: P.on, gl: P.ok, win: P.win || null }; } };
 })();
