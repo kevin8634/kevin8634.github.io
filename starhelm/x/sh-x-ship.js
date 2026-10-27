@@ -434,11 +434,11 @@
   function distTo(b) { var p = b.wp || [0, 0, 0]; return Math.max(0, Math.hypot(p[0] - S.pos[0], p[1] - S.pos[1], p[2] - S.pos[2]) - b.R * (b.id === 'sun' ? 6 : 4)); }
   function togglePlan() {
     if ($('#xs-plan', R)) { closeCards(); return; }
-    closeCards(); PL.tgt = S.target;   // 王磊 10-27:目标沿用驾驶舱里已选定的星球,不再重选
+    closeCards(); PL.tgt = S.target; PL.pick = null;   // 王磊 10-27:目标沿用驾驶舱里已选定的星球,不再重选
     var c = el('div', 'xs-card', ''); c.id = 'xs-plan'; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', '航行规划');
     c.innerHTML = '<h4><span>航行规划 · 天枢号 <small>NAV PLAN</small></span><button class="xc" type="button" aria-label="关闭">×</button></h4>' +
       '<div class="xs-sec">目的地 · 已在导航目标中选定(右侧列表可换)</div><div class="xs-dst" id="xs-dst"></div><div id="xs-bodies" hidden></div>' +
-      '<div class="xs-sec">星域 · 航图只选星域</div><div class="xs-grid" id="xs-doms"></div>' +
+      '<div class="xs-sec">' + (window.SHXL ? '航图 · 尺度阶梯 · 七星域与快捷目的地' : '星域 · 航图只选星域') + '</div><div class="' + (window.SHXL ? '' : 'xs-grid') + '" id="xs-doms"></div>' +
       '<div class="xs-sec">引擎 · 继承弦穹号 · <span style="color:#7fe3c4">实测</span> / <span style="color:#ffd27a">推断</span> / <span style="color:#c9a6ff">猜想</span></div><div class="xs-grid" id="xs-engs"></div>' +
       '<div class="xs-pre" id="xs-pre"></div>' +
       '<div class="xs-row"><button class="xs-no" type="button">取消</button><button class="xs-go" type="button">出发</button></div>' +
@@ -446,20 +446,29 @@
     R.appendChild(c);
     var bd = $('#xs-bodies', c), eg = $('#xs-engs', c);
     ENG.forEach(function (e) { if (e.model === 'none') return; var x = el('button', 'xs-chip', e.zh + '<i style="color:' + TIER[e.tier] + '">' + e.tier + '</i>'); x.type = 'button'; x.dataset.id = e.id; x.onclick = function () { var r = engRule(e.id); if (!r.ok) { I.toast('🔒 ' + e.zh + ':' + r.why); return; } ENGID = e.id; ls('gn:sh:x-engine', e.id); blip(600, .06, .04); refreshPlan(); }; eg.appendChild(x); });
+    if (window.SHXL) {
+      // C1.7 尺度阶梯航图:选快捷目的地;太阳系内有星球的直接设为驾驶舱目标,其余只做规划(跃迁第 4 步开放)
+      PL.domOf = SHXL.dom;
+      PL.lad = SHXL.render($('#xs-doms', c), PL.tgt, function (x) {
+        PL.pick = x; PL.tgt = x.body || x.id; if (x.body && S.target !== x.body) I.setTarget(x.body); blip(560, .06, .04); refreshPlan();
+      }, function (x) { return x.body && BY[x.body] ? (x.id === 'iss' ? 420 : distTo(BY[x.body])) : x.km; });
+    } else {
     var DOMS = [['I', '家园', 'earth'], ['II', '日与月', 'moon'], ['III', '行星世界', null], ['IV', '太阳系边疆', 'pluto'], ['V', '群星', 0], ['VI', '银河', 0], ['VII', '宇宙', 0]], dg = $('#xs-doms', c);
-    function domOf(id) { return id === 'earth' ? 0 : id === 'moon' || id === 'sun' ? 1 : id === 'pluto' ? 3 : 2; }
-    DOMS.forEach(function (d, i) { var x = el('button', 'xs-chip' + (d[2] === 0 ? ' off' : ''), '<i style="color:#f0c97a;font-style:normal">' + d[0] + '</i> ' + d[1] + (d[2] === 0 ? '<i>跃迁 · 即将</i>' : '')); x.type = 'button'; x.dataset.d = i;
-      x.onclick = function () { if (d[2] === 0) { I.toast('星域 ' + d[0] + ' ' + d[1] + ':跨星域跃迁即将开放'); return; } if (domOf(PL.tgt) !== i) { PL.tgt = d[2] || 'mars'; I.setTarget(PL.tgt); } refreshPlan(); }; dg.appendChild(x); });
-    PL.domOf = domOf;
+      function domOf(id) { return id === 'earth' ? 0 : id === 'moon' || id === 'sun' ? 1 : id === 'pluto' ? 3 : 2; }
+      DOMS.forEach(function (d, i) { var x = el('button', 'xs-chip' + (d[2] === 0 ? ' off' : ''), '<i style="color:#f0c97a;font-style:normal">' + d[0] + '</i> ' + d[1] + (d[2] === 0 ? '<i>跃迁 · 即将</i>' : '')); x.type = 'button'; x.dataset.d = i;
+        x.onclick = function () { if (d[2] === 0) { I.toast('星域 ' + d[0] + ' ' + d[1] + ':跨星域跃迁即将开放'); return; } if (domOf(PL.tgt) !== i) { PL.tgt = d[2] || 'mars'; I.setTarget(PL.tgt); } refreshPlan(); }; dg.appendChild(x); });
+      PL.domOf = domOf;
+    }
     $('.xc', c).onclick = $('.xs-no', c).onclick = function () { closeCards(); };
     $('.xs-go', c).onclick = launch;
     refreshPlan(); if (U.arm && !VOICE.busy) U.arm.set('LISTENING');
     if (!PL.greeted) { PL.greeted = true; say(['a02']); }
   }
   function plan() {
-    var b = BY[PL.tgt] || BY.mars, e = eng(ENGID), km = distTo(b);
+    var far = !BY[PL.tgt] && window.SHXL && SHXL.get(PL.tgt), e = eng(ENGID);
+    var b = far ? { id: far.id, zh: far.zh, R: 1, far: true, col: SHXL.DOMS[far.dom].c1, note: far.note } : (BY[PL.tgt] || BY.mars), km = far ? far.km : distTo(b);
     var tr = VD && VD.travel ? VD.travel(e, km, e.model === 'warp' ? 3 : null) : { earthS: km / (e.v || 15), shipS: km / (e.v || 15) };
-    var act = e.id === 'assist' ? '引力弹弓' : e.id === 'gate' ? '虫洞穿越' : '星域内穿梭';
+    var act = e.id === 'assist' ? '引力弹弓' : e.id === 'gate' ? '虫洞穿越' : b.far && (window.SHXL ? SHXL.dom(b.id) : 2) >= 4 ? '跨星域航行' : '星域内穿梭';
     var demo = Math.round(Math.log(Math.max(2, km / Math.max(1, b.R))) / 0.9 + 4);
     return { b: b, e: e, km: km, tr: tr, act: act, demo: demo };
   }
@@ -469,7 +478,9 @@
     var c = $('#xs-plan', R); if (!c) return;
     if (!engRule(ENGID).ok) { var alt = ENG.filter(function (e) { return e.model !== 'none' && engRule(e.id).ok; })[0]; if (alt) { I.toast('🔒 ' + eng(ENGID).zh + ':' + engRule(ENGID).why + ' · 已换成 ' + alt.zh); ENGID = alt.id; } }
     var p = plan();
-    var dd = $('#xs-dst', R); if (dd) dd.innerHTML = '<span style="color:' + (p.b.col || '#7fd6ff') + '">●</span> <b>' + p.b.zh + '</b> <small>' + (p.km < 1 ? '就在附近' : I.fkm(p.km)) + '</small>';
+    var nm = PL.pick && PL.pick.body === p.b.id ? PL.pick.zh : p.b.zh;
+    var dd = $('#xs-dst', R); if (dd) dd.innerHTML = '<span style="color:' + (p.b.col || '#7fd6ff') + '">●</span> <b>' + nm + '</b> <small>' + (p.km < 1 ? '就在附近' : (VD ? VD.fmtDist(p.km) : I.fkm(p.km))) + (p.b.far ? ' · 自地球' : '') + '</small>';
+    var go = $('.xs-go', c); if (go) { go.textContent = p.b.far ? '跃迁 · 即将开放' : '出发'; go.style.opacity = p.b.far ? '.55' : ''; }
     R.querySelectorAll('#xs-doms .xs-chip').forEach(function (x) { x.classList.toggle('on', PL.domOf && +x.dataset.d === PL.domOf(p.b.id)); });
     c.querySelectorAll('#xs-bodies .xs-chip').forEach(function (x) { x.classList.toggle('on', x.dataset.id === p.b.id); });
     c.querySelectorAll('#xs-engs .xs-chip').forEach(function (x) { var r = engRule(x.dataset.id); x.classList.toggle('lock', !r.ok); x.title = r.ok ? (r.note || '') : '🔒 ' + r.why; x.classList.toggle('on', x.dataset.id === p.e.id); });
@@ -478,11 +489,11 @@
     var ship = p.tr.shipS && Math.abs(p.tr.shipS - p.tr.earthS) / p.tr.earthS > 0.01 ? '(船上 ' + ft(p.tr.shipS) + ')' : '';
     $('#xs-pre', c).innerHTML = '<div>目标 <b>' + p.b.zh + '</b> · ' + p.act + ' · 航程 <b>' + fd(p.km) + '</b></div>' +
       '<div>引擎 <b style="color:' + TIER[p.e.tier] + '">' + p.e.zh + '</b>(' + p.e.tier + ')· 真实预计耗时 <b>' + ft(p.tr.earthS) + '</b>' + ship + '</div>' +
-      (er.note ? '<div class="f" style="color:#f0c97a">⚠ ' + esc(er.note) + '</div>' : '') + '<div class="f">' + esc(p.e.fact || '') + '</div><div class="f">演示中天枢号会压缩时间,约 ' + p.demo + ' 秒抵达;读数里的时间按真实物理计算。</div>';
+      (er.note ? '<div class="f" style="color:#f0c97a">⚠ ' + esc(er.note) + '</div>' : '') + (p.b.far ? '<div class="f" style="color:#9fd0e8">' + esc(p.b.note || '') + '。本阶段只做航线规划:出太阳系星空(第 3 步)和跃迁序列(第 4 步)开放后即可出发。</div>' : '') + '<div class="f">' + esc(p.e.fact || '') + '</div>' + (p.b.far ? '' : '<div class="f">演示中天枢号会压缩时间,约 ' + p.demo + ' 秒抵达;读数里的时间按真实物理计算。</div>');
   }
   var LAUNCH = null, ARR = null;
   function launch() {
-    var p = plan(); if (!engRule(p.e.id).ok) { I.toast('🔒 ' + p.e.zh + ':' + engRule(p.e.id).why); return; } closeCards(); if (p.km < 1) { I.toast('已经在 ' + p.b.zh + ' 附近了'); return; }
+    var p = plan(); if (p.b.far) { I.toast('已规划航线:' + p.b.zh + ' · 跨星域跃迁即将开放'); blip(420, .12, .05); return; } if (!engRule(p.e.id).ok) { I.toast('🔒 ' + p.e.zh + ':' + engRule(p.e.id).why); return; } closeCards(); if (p.km < 1) { I.toast('已经在 ' + p.b.zh + ' 附近了'); return; }
     LAUNCH = p; ARR = null; I.setTarget(p.b.id); S.auto = false; S.base = 0; S.mult = 1; stopOrbit(true);
     var seq = isJ() ? enLaunch(p) : ['a03', { t: '本次航行将使用' }, { t: p.e.zh }, { t: ',即将进行' }, { t: p.act }, { t: '。航程约' }].concat(sayDist(p.km).map(function (t) { return { t: t }; }), [{ t: ',预计耗时' }], sayTime(p.tr.earthS).map(function (t) { return { t: t }; }), [{ t: '。' }]);
     if (p.e.id === 'assist') say(['a14']);
