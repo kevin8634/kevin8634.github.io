@@ -122,7 +122,9 @@
     }
     var U = { map: { value: tex(b) }, night: { value: null }, hasMap: { value: 0 }, hasNight: { value: 0 }, emis: { value: 0 }, sunP: { value: new T.Vector3() }, col: { value: new T.Color(b.col) }, atm: { value: new T.Vector3().fromArray(b.atm || [0, 0, 0]) } };
     if (b.id === 'earth') { U.night.value = tex(b, rd.capabilities.maxTextureSize >= 4096 && Math.min(screen.width, screen.height) >= 700 ? 'hd/earth-night-4k.jpg' : (window.LE_TEX && LE_TEX['earth-night-2k.jpg'])); U.hasNight.value = 1; }
-    if (b.proc && window.SHXB) { var pt0 = new T.CanvasTexture(SHXB.tex(b)); pt0.encoding = T.sRGBEncoding; pt0.anisotropy = Math.min(8, rd.capabilities.getMaxAnisotropy()); pt0.ok = 1; U.map.value = pt0; }
+    // C2.2e 卫星:优先用 NASA/JPL/USGS 公有领域全球拼图(x/tex/,已着色、缺测区程序化填充);土卫六可见光下只见橙色雾霾,仍用程序化
+    if (b.proc && window.SHXB && SHXB.img && SHXB.img[b.id]) { U.map.value = tex(b, SHXB.img[b.id]); }
+    else if (b.proc && window.SHXB) { var pt0 = new T.CanvasTexture(SHXB.tex(b)); pt0.encoding = T.sRGBEncoding; pt0.anisotropy = Math.min(8, rd.capabilities.getMaxAnisotropy()); pt0.ok = 1; U.map.value = pt0; }
     b.U = U;
     var seg = b.R > 20000 ? 160 : 128;
     var m = new T.Mesh(new T.SphereGeometry(b.R, seg, seg / 2), new T.ShaderMaterial({ uniforms: U, vertexShader: PV, fragmentShader: PF }));
@@ -404,7 +406,15 @@
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
     cv.addEventListener('wheel', function (e) { e.preventDefault(); var f = e.deltaY < 0 ? 1.25 : 0.8; if (e.ctrlKey) S.mult = Math.max(1, Math.min(1e6, S.mult * f)); else S.base = Math.max(0, Math.min(MAXV, S.base * f + (f > 1 ? .05 : 0))); S.auto = false; }, { passive: false });
   }
+  function onBlur() { S.keys = {}; S.boost = 1; }   // C2.2f 切走窗口时按键松开事件会丢,避免「卡键」
+  function onEndUp(e) {   // C2.2f 兜底:「结束探索」按钮即使被重绘/被半透明层压住,也在捕获阶段响应
+    var t = e.target && e.target.closest ? e.target.closest('#xc-exit,#shxc .mob [data-k=end]') : null;
+    if (!t && !(e.target && e.target.closest && e.target.closest('button,a,input,select,.it,.lbl,#xe-dlg,.xs-card'))) { var ex = $('#xc-exit', root); if (ex && ex.offsetParent) { var r = ex.getBoundingClientRect(); if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom && !(dlg && dlg.isConnected)) t = ex; } }
+    if (t) setTimeout(confirmEnd, 0);
+  }
   function onKey(e) {
+    if (dlg && !dlg.isConnected) dlg = null;   // C2.2f 对话框已被移除但引用残留 → 会吞掉所有按键
+    if (S.tour && !(window.SHXT && SHXT.on())) S.tour = false;
     if (!K.open || S.tour) return; var k = e.key.length === 1 ? e.key.toLowerCase() : e.key, down = e.type === 'keydown';
     if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); }
     if (dlg && e.key !== 'Escape' && e.key !== 'Enter') return;
@@ -428,8 +438,24 @@
 
   /* ---------------- 循环 ---------------- */
   var raf = 0, last = 0, fwd, upv, rgt, frame = 0;
+  // C2.2f 防卡死:每帧整体 try/catch;目标失效、位置/姿态/速度出现 NaN 时回退到上一帧的有效状态并解除自动驾驶
+  var GOOD = null, ERRN = 0;
+  function sane() {
+    if (!BY[S.target]) S.target = 'sun';
+    var ok = isFinite(S.base) && isFinite(S.mult) && S.pos.every(isFinite) && S.q && isFinite(S.q.x + S.q.y + S.q.z + S.q.w);
+    if (ok) { GOOD = { pos: S.pos.slice(), q: S.q.clone() }; return; }
+    if (GOOD) { S.pos = GOOD.pos.slice(); S.q.copy(GOOD.q); }
+    S.base = 0; S.mult = 1; S.auto = false; S.align = false; S.keys = {};
+    console.warn('[SHXC] 状态出现 NaN,已回退'); toast('导航数据异常,已复位到上一位置');
+  }
   function loop(t) {
     raf = requestAnimationFrame(loop);
+    try { sane(); loop1(t); ERRN = 0; } catch (e) {
+      ERRN++; if (ERRN < 4 || ERRN % 300 === 0) console.warn('[SHXC loop]', e);
+      if (ERRN === 3) { S.auto = false; S.align = false; S.base = 0; S.mult = 1; S.keys = {}; toast('导航出错,已解除自动驾驶'); }
+    }
+  }
+  function loop1(t) {
     var dt = Math.min(0.1, (t - (last || t)) / 1000); last = t; frame++;
     // C2.2a:上下文丢失期间 / 视口尺寸为 0(手机旋转、地址栏塌缩、宿主被隐藏)时不渲染;尺寸与画布不一致时先补 setSize
     if (K.lost) return;
@@ -707,7 +733,7 @@
     try { if (!K.built) build(); } catch (e) { console.warn('[SHXC]', e); if (window.LE && LE.ui && LE.ui.toast) LE.ui.toast('驾驶舱载入失败'); return false; }
     root.style.display = 'block'; K.open = true; document.body.classList.add('shx-flying');
     size(); if (K.resume && !o.fresh) { toast('从上次结束探索的位置继续'); } else startPose(o.target || 'earth'); K.resume = false; setTarget(S.target);
-    addEventListener('resize', size); document.addEventListener('visibilitychange', onVis); addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true);
+    addEventListener('resize', size); document.addEventListener('visibilitychange', onVis); addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true); addEventListener('blur', onBlur); document.addEventListener('pointerup', onEndUp, true);
     last = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
     toast('驾驶舱已就位 · 拖动转视角,W/S 加减速,G 自动驾驶'); emit('open', o);
     try { var u = new URL(location.href); u.searchParams.set('view', 'fly'); history.replaceState(null, '', u.pathname + u.search); } catch (e) { }
@@ -722,7 +748,8 @@
     return best ? { b: best, d: Math.max(0, bd) } : null;
   }
   function confirmEnd() {
-    if (dlg) return; var n = nearest(), where = n ? (n.b.zh || n.b.id) + '附近 · 距离 ' + fkm(n.d) : '星际空间';
+    if (dlg && !dlg.isConnected) dlg = null; if (dlg) return; var n = null; try { n = nearest(); } catch (e) { }
+    var where = n ? (n.b.zh || n.b.id) + '附近 · 距离 ' + fkm(n.d) : '星际空间';
     dlg = document.createElement('div'); dlg.id = 'xe-dlg';
     dlg.innerHTML = '<div class="bx"><div class="hd">结束本次探索? <small>END EXPLORATION</small></div><p>天枢号当前位于<b>' + where + '</b>。结束后视角停在这里的太阳系,下次进入驾驶舱会从这个位置继续。</p>' +
       '<div class="ac"><button type="button" data-a="0">继续航行 <small>Esc</small></button><button type="button" class="pri" data-a="1">结束探索 <small>Enter</small></button></div></div>';
@@ -747,7 +774,7 @@
   X.confirmEnd = confirmEnd; X.endExplore = endExplore;
   X.close = function (quiet) {
     if (!K.open) return; K.open = false; cancelAnimationFrame(raf); root.style.display = 'none'; document.body.classList.remove('shx-flying');
-    removeEventListener('resize', size); document.removeEventListener('visibilitychange', onVis); removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true); S.keys = {};
+    removeEventListener('resize', size); document.removeEventListener('visibilitychange', onVis); removeEventListener('blur', onBlur); document.removeEventListener('pointerup', onEndUp, true); removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true); S.keys = {};
     emit('close');
     if (dlg) { dlg.remove(); dlg = null; }
     if (!quiet) { K.resume = true; if (window.SHXV) SHXV.go('solar'); }

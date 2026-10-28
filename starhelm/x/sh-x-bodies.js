@@ -226,7 +226,8 @@
     });
   }
 
-  window.SHXB = { list: L, pos: pos, orbit: orbit, tex: tex, nucleus: nucleus, cometFx: cometFx, update: update, nextPeri: nextPeri, activity: activity, jd: jd };
+  var IMG = { io: 'x/tex/moon-io.jpg', europa: 'x/tex/moon-europa.jpg', ganymede: 'x/tex/moon-ganymede.jpg', callisto: 'x/tex/moon-callisto.jpg', enceladus: 'x/tex/moon-enceladus.jpg' };
+  window.SHXB = { img: IMG, list: L, pos: pos, orbit: orbit, tex: tex, nucleus: nucleus, cometFx: cometFx, update: update, nextPeri: nextPeri, activity: activity, jd: jd };
 })();
 /* 抵达卫星/彗星后,在引擎现象解读屏收起之后补一张天体讲解卡 */
 (function () {

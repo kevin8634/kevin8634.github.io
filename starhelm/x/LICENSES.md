@@ -80,3 +80,11 @@
 | 五个逃逸飞行器的方位(赤经/赤纬)、日心距离、日心速度、工作状态 | sh-x-tour.js「太阳系导览」飞行器段:位置点与外段直线轨迹,按速度线性外推 | Heavens-Above「Spacecraft escaping the Solar System」https://www.heavens-above.com/SolarEscape.aspx(2026-10 读取) | 事实数据(数值),非受版权保护的表达;只取数值,不复制页面内容 | 无强制要求;代码注释注明来源 | 否 | 代码注释;导览字幕标「已证实」,轨迹为示意直线 |
 | 柯伊伯带 30–50 AU、小行星带 2.1–3.3 AU、彗星周期等科普数值 | 导览字幕 | 公开科普常识(NASA Solar System Exploration 等) | 事实数据 | 无 | 否 | 字幕;带状粒子标「粒子示意」 |
 | 标签去重叠(x/sh-x-lod.js)、导览镜头/粒子带/字幕(x/sh-x-tour.js) | 驾驶舱 | 本项目手写 JS | 本项目 | — | 否 | — |
+
+## C2.2e 卫星全球贴图(2026-10-28)
+| 文件 | 来源 | 许可 |
+|---|---|---|
+| x/tex/moon-io.jpg | NASA 3D Resources「Jupiter - Io (A)」(github.com/nasa/NASA-3D-Resources),Voyager/Galileo 拼图;两极缺测区按邻近色程序化填充 | NASA 公有领域(NASA 媒体使用指南) |
+| x/tex/moon-europa.jpg / moon-ganymede.jpg / moon-callisto.jpg | JPL Solar System Simulator 纹理(space.jpl.nasa.gov/tmaps,jup2/3/4vss2,Caltech/JPL/USGS,Voyager+Galileo 灰度拼图);按 Galileo 真彩着色,木卫四缺测条带程序化填充 | 美国政府公有领域 |
+| x/tex/moon-enceladus.jpg | 同上 sat2vss2(Voyager);缺测区以高反照率冰面程序化填充 | 美国政府公有领域 |
+处理脚本:work/mk_moontex.py(不入库)。土卫六仍为程序化橙色雾霾(可见光下看不到地表)。
