@@ -162,12 +162,12 @@
     var grp = new T.Group(), A = window.Astronomy; if (!A) return grp;
     B.forEach(function (b) {
       if (b.id === 'sun' || b.id === 'moon' || b.fix || b.parent) return;
-      if (b.comet && window.SHXB) { var cg = new T.BufferGeometry(); cg.setAttribute('position', new T.BufferAttribute(SHXB.orbit(b), 3)); grp.add(new T.LineLoop(cg, new T.LineBasicMaterial({ color: new T.Color(b.col), transparent: true, opacity: .22, depthWrite: false }))); return; }
+      if (b.comet && window.SHXB) { var cg = new T.BufferGeometry(); cg.setAttribute('position', new T.BufferAttribute(SHXB.orbit(b), 3)); var cl = new T.LineLoop(cg, new T.LineBasicMaterial({ color: new T.Color(b.col), transparent: true, opacity: .22, depthWrite: false })); cl.userData.id = b.id; cl.userData.op = .22; cl.userData.comet = 1; grp.add(cl); return; }
       var per = { mercury: 88, venus: 225, earth: 365.25, mars: 687, jupiter: 4333, saturn: 10759, uranus: 30687, neptune: 60190, pluto: 90560 }[b.id], N = 360, arr = new Float32Array(N * 3), d0 = now().getTime();
       for (var i = 0; i < N; i++) { var p = helio(b, new Date(d0 + i / N * per * 864e5)); arr[i * 3] = p[0]; arr[i * 3 + 1] = p[1]; arr[i * 3 + 2] = p[2]; }
       var g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(arr, 3));
       var l = new T.LineLoop(g, new T.LineBasicMaterial({ color: new T.Color(b.col), transparent: true, opacity: .32, depthWrite: false }));
-      grp.add(l);
+      l.userData.id = b.id; l.userData.op = .32; grp.add(l);
     });
     return grp;
   }
@@ -393,7 +393,7 @@
     cv.addEventListener('wheel', function (e) { e.preventDefault(); var f = e.deltaY < 0 ? 1.25 : 0.8; if (e.ctrlKey) S.mult = Math.max(1, Math.min(1e6, S.mult * f)); else S.base = Math.max(0, Math.min(MAXV, S.base * f + (f > 1 ? .05 : 0))); S.auto = false; }, { passive: false });
   }
   function onKey(e) {
-    if (!K.open) return; var k = e.key.length === 1 ? e.key.toLowerCase() : e.key, down = e.type === 'keydown';
+    if (!K.open || S.tour) return; var k = e.key.length === 1 ? e.key.toLowerCase() : e.key, down = e.type === 'keydown';
     if (e.key === 'Escape') { e.stopPropagation(); e.preventDefault(); }
     if (dlg && e.key !== 'Escape' && e.key !== 'Enter') return;
     if (e.key === 'Shift') S.boost = down ? 10 : 1;
@@ -740,7 +740,7 @@
     if (dlg) { dlg.remove(); dlg = null; }
     if (!quiet) { K.resume = true; if (window.SHXV) SHXV.go('solar'); }
   };
-  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, rd: function () { return rd; }, fdur: fdur, fkm: fkm, sky: function () { return sSky; }, cam: function () { return cam; }, skyG: function () { return K.skyG; }, emit: function (e, a) { emit(e, a); } };
+  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, rd: function () { return rd; }, fdur: fdur, fkm: fkm, sky: function () { return sSky; }, orb: function () { return sOrb; }, cam: function () { return cam; }, skyG: function () { return K.skyG; }, emit: function (e, a) { emit(e, a); } };
   X.state = function () { return { pos: S.pos.slice(), target: S.target, base: S.base, mult: S.mult, auto: S.auto, sunVis: sunVis }; };
   X.health = function () { return { lost: !!K.lost, nLost: K.nLost || 0, restored: K.nRest || 0, rebuilt: K.nRebuild || 0, heal: BK.heal, w: rd ? rd.domElement.width : 0, h: rd ? rd.domElement.height : 0 }; };
   X._rebuild = function () { rebuildRd(); };

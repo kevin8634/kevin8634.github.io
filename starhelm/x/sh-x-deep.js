@@ -117,6 +117,7 @@
     { au: 2000, id: 'oort', out: '抵达奥尔特云内缘(推测)', inn: '离开奥尔特云内缘', col: 'rgba(190,210,240,.7)' }
   ];
   function events(r) {
+    if (X._.S.tour) { prevR = r; return; }   // C2.2c 导览中不触发航段事件
     EV.forEach(function (e) {
       if (prevR && prevR < e.au && r >= e.au) { ring(e.out, e.col); X._.toast(e.out); if (window.SHXE && !fired[e.id]) { fired[e.id] = 1; setTimeout(function () { SHXE.show(e.id); }, 1200); } }
       else if (prevR && prevR >= e.au && r < e.au) X._.toast(e.inn);

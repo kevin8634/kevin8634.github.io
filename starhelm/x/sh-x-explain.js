@@ -85,6 +85,7 @@
   }
   function tag(k) { return '<span class="tg" style="color:' + (TAG[k] || TAG['推测']) + '">' + k + '</span>'; }
   function show(key, hold) {
+    if (!hold && window.SHXC && SHXC._ && SHXC._.S.tour) return;   // C2.2c 导览中不弹讲解卡
     var e = EX[key]; if (!e) return; css();
     if (!el) { el = document.createElement('div'); el.id = 'xe-box'; el.setAttribute('role', 'note'); document.body.appendChild(el); }
     var k2 = e.k2 ? e.k2.split(' ') : null;

@@ -728,6 +728,7 @@
     lastV = f.veff;
   }
   function onKey(e) {
+    if (window.SHXT && SHXT.on()) return;
     if (!X.isOpen() || e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
     var k = e.key.toLowerCase();
     if (k === 'n') togglePlan(); else if (k === 'c') act('mode'); else if (k === 'v') portAct(); else if (k === 'p') photo(!R.classList.contains('photo')); else if (k === 'm') toggleSnd(); else if (k === 'j') setPersona(isJ() ? 'armilla' : 'jarvis');
