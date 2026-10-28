@@ -442,6 +442,7 @@
     if (t) setTimeout(confirmEnd, 0);
   }
   function onKey(e) {
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName || '')) return;   // C2.4 目录搜索框里打字不操纵飞船
     if (dlg && !dlg.isConnected) dlg = null;   // C2.2f 对话框已被移除但引用残留 → 会吞掉所有按键
     if (S.tour && !(window.SHXT && SHXT.on())) S.tour = false;
     if (!K.open || S.tour) return; var k = e.key.length === 1 ? e.key.toLowerCase() : e.key, down = e.type === 'keydown';

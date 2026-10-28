@@ -197,5 +197,5 @@
   }
   function hook(ev) { if (ev === 'open') { T = window.THREE; if (!ST) ST = decode(); dsoInit(); bind(); } else if (ev === 'frame') frame(); else if (ev === 'close') hide(); }
   (function wait(n) { if (window.SHXC && SHXC.on) { X = SHXC; SHXC.on(hook); return; } if (n < 100) setTimeout(function () { wait(n + 1); }, 100); })(0);
-  window.SHXK = { dso: function (i) { if (!DS) dsoInit(); showD(i); }, dsoList: function () { return DS; }, pick: pick, show: function (k) { show(k); }, hide: hide, sel: function () { return SEL; } };
+  window.SHXK = { starDir: function (k) { if (!ST) ST = decode(); var sh = shipLy(), P = ST.P; return [P[k * 3] - sh[0], P[k * 3 + 1] - sh[1], P[k * 3 + 2] - sh[2]]; }, mag0: function (k) { if (!ST) ST = decode(); return appMag(k, [0, 0, 0]); }, eq2p: function (x, y, z) { return [x, -y * Math.sin(EPS) + z * Math.cos(EPS), -(y * Math.cos(EPS) + z * Math.sin(EPS))]; }, dso: function (i) { if (!DS) dsoInit(); showD(i); }, dsoList: function () { return DS; }, pick: pick, show: function (k) { show(k); }, hide: hide, sel: function () { return SEL; } };
 })();
