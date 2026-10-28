@@ -61,9 +61,22 @@
       '<div class="r"><span>赤经(J2000)</span><b>' + hms(ra) + '</b></div><div class="r"><span>赤纬(J2000)</span><b>' + dms(de) + '</b></div>' +
       '<div class="r"><span>所需器材(地球上)</span><b>' + eye(appMag(k, [0, 0, 0])) + '</b></div>' +
       '<div class="n">位置、亮度与颜色来自 HYG v4.1 星表(Hipparcos / Yale / Gliese 汇编)。光谱型与温度只凭颜色估算,巨星与主序星会有偏差。</div>' +
-      (wp ? '<button class="go" type="button">设为航行目标</button>' : '');
+      (wp ? '<button class="go" type="button">设为航行目标</button>' : (k > 0 && dSun > 0.01 && X._.tempStar ? '<button class="go" type="button">前往 · 生成临时航点</button>' : ''));
     root.appendChild(card); place(); clearInterval(PT); PT = setInterval(place, 700);
-    card.querySelector('.x').onclick = hide; var g = card.querySelector('.go'); if (g) g.onclick = function () { X._.setTarget(wp.id); hide(); };
+    card.querySelector('.x').onclick = hide; var g = card.querySelector('.go'); if (g) g.onclick = wp ? function () { X._.setTarget(wp.id); hide(); } : function () { go(k, nm, m, t, c, col, dSun, ra, de); };
+  }
+  /* C2.2d T5:任意 HYG 恒星「前往」——按星表数值估算外观参数,装进驾驶舱临时航点槽,随后自动驾驶(远距沿用曲率跃迁) */
+  function go(k, nm, m, t, c, col, dSun, ra, de) {
+    var L = Math.pow(10, (4.83 - ST.M[k]) / 2.5), T0 = t || 5800, Rs = Math.max(.08, Math.min(1500, Math.sqrt(L) * Math.pow(5772 / T0, 2))), Ms = Math.max(.08, Math.min(60, Math.pow(L, 1 / 3.5)));
+    var u = Math.max(0, Math.min(1, (Math.log(T0) - Math.log(3000)) / (Math.log(12000) - Math.log(3000))));
+    var tint = [1.25 + (1.05 - 1.25) * u, .62 + (1.22 - .62) * u, .4 + (1.55 - .4) * u];
+    var name = nm ? nm[0] : 'HYG #' + k, ly = dSun < 100 ? dSun.toFixed(2) : Math.round(dSun).toLocaleString();
+    var b = X._.tempStar({ zh: name, en: nm ? nm[1] : 'HYG ' + k, type: nm ? nm[2] : (c ? c[0] + ' 型恒星' : '恒星'), R: Rs * 696340, GM: Ms * 1.32712e11, L: L, temp: t ? '≈ ' + (Math.round(t / 100) * 100).toLocaleString() + '(按颜色估算)' : '—',
+      col: col, tint: tint, sat: T0 > 8000 ? .1 : 1, fix: [(ra + 360) % 360, de, dSun * 63241.077], hyg: k,
+      info: [['光谱型', c ? c[0] + ' · ' + c[1] + '(按颜色估算)' : '—'], ['光度', '约 ' + (L < 10 ? L.toFixed(2) : Math.round(L).toLocaleString()) + ' 个太阳'], ['半径', '约 ' + (Rs < 10 ? Rs.toFixed(2) : Math.round(Rs)) + ' 个太阳(估算)'], ['距离', ly + ' 光年'], ['外观', '程序化模拟 · 数值来自 HYG v4.1']] });
+    hide(); if (!b) return;
+    if (window.SHXS && SHXS.mode) SHXS.mode('boost'); else X._.S.capV = 0;   // 恒星际距离:切到引擎加速(曲率跃迁),否则巡航 100 km/s 上限
+    X._.autopilot(true); X._.toast('已生成临时航点「' + name + '」· ' + ly + ' 光年 · 自动驾驶出发');
   }
   function hide() { SEL = -1; clearInterval(PT); if (box) box.remove(); if (card) { card.remove(); card = null; } }
   /* C2.2b 信息卡避让:不与目标面板(含日球层栏)、仪表、底部按钮条、讲解卡重叠。

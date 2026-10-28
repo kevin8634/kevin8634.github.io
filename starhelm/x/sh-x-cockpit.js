@@ -34,6 +34,8 @@
   ];
   // C2.2 卫星插在母行星之后、彗星插在冥王星之后(数据与传播见 sh-x-bodies.js)
   if (window.SHXB) (function () { var cm = []; SHXB.list.forEach(function (b) { if (b.parent) { var j = -1; B.forEach(function (x, k) { if (x.id === b.parent || x.parent === b.parent) j = k; }); B.splice(j + 1, 0, b); } else cm.push(b); }); var pj = B.map(function (x) { return x.id; }).indexOf('pluto'); Array.prototype.splice.apply(B, [pj + 1, 0].concat(cm)); })();
+  // C2.2d T5 临时恒星航点槽:点选任意 HYG 恒星「前往」时填入(off 时不显示、不进列表)
+  B.push({ id: 'tmpstar', zh: '临时航点', en: 'Temporary waypoint', type: '恒星', R: 696340, GM: 1.32712e11, L: 1, temp: '—', col: '#ffffff', fix: [0, 0, 1e9], star: true, off: true, tint: [1, 1, 1], info: [] });
   var BY = {}; B.forEach(function (b) { BY[b.id] = b; });
   var K = { open: false, built: false };
   var X = window.SHXC = { isOpen: function () { return K.open; } };
@@ -342,7 +344,7 @@
     B.forEach(function (b) {
       if (b.comet && !lst.querySelector('.grp')) lst.appendChild(el('div', 'grp', '彗星 · COMETS'));
       var it = el('div', 'it' + (b.parent ? ' sub' : ''), '<span class="dot" style="background:' + b.col + '"></span><span class="nm">' + b.zh + '</span><span class="ds mono"></span>');
-      it.setAttribute('data-id', b.id); b.li = it; lst.appendChild(it);
+      it.setAttribute('data-id', b.id); b.li = it; lst.appendChild(it); if (b.off) it.style.display = 'none';
       it.addEventListener('click', function () { setTarget(b.id); });
       it.addEventListener('dblclick', function () { setTarget(b.id); autopilot(true); });
     });
@@ -364,6 +366,16 @@
     B.forEach(function (b) { var l = el('div', 'lbl', b.zh + '<i></i>'); l.dataset.id = b.id; l.dataset.p = b.id === 'sun' ? 800 : b.ghost ? 760 : b.star ? 700 : b.comet ? 380 : b.parent ? 300 : b.type === '矮行星' ? 480 : 650; l.onclick = function () { setTarget(b.id); }; $('#xc-lbls', root).appendChild(l); b.lb = l; });
   }
   function toast(m) { var t = $('#xc-toast', root); t.textContent = m; t.style.opacity = 1; clearTimeout(t._h); t._h = setTimeout(function () { t.style.opacity = 0; }, 2400); }
+  function tempStar(o) {   // C2.2d:把任意恒星装进临时航点槽,重建恒星外观
+    var b = BY.tmpstar; if (!b || !sMain) return null;
+    ['zh', 'en', 'type', 'R', 'GM', 'L', 'temp', 'col', 'fix', 'tint', 'sat', 'info', 'hyg'].forEach(function (k) { if (o[k] != null) b[k] = o[k]; });
+    b.off = false;
+    if (b.g) { if (b.g.parent) b.g.parent.remove(b.g); b.g.traverse(function (x) { if (x.geometry) x.geometry.dispose(); if (x.material && x.material.dispose) x.material.dispose(); }); }
+    b.fx = null; sMain.add(body3d(b)); ephem(true);
+    b.li.style.display = ''; b.li.querySelector('.nm').textContent = b.zh + ' · 临时'; b.li.querySelector('.dot').style.background = b.col;
+    b.lb.innerHTML = b.zh + '<i></i>';
+    setTarget('tmpstar'); return b;
+  }
   function setTarget(id) { S.target = id; if (S.auto) autopilot(true); B.forEach(function (b) { b.li.classList.toggle('on', b.id === id); }); }
   function autopilot(on) { S.auto = on; S.align = false; if (on) toast('自动驾驶:飞往 ' + BY[S.target].zh); }
 
@@ -540,7 +552,7 @@
     // 每帧:标签 / 目标框 / 箭头
     var tg = null;
     B.forEach(function (b) {
-      var p = proj(b.g.position, W, Hh), on = S.labels && p.front && p.x > -50 && p.x < W + 50 && p.y > -20 && p.y < Hh + 20;
+      var p = proj(b.g.position, W, Hh), on = !b.off && S.labels && p.front && p.x > -50 && p.x < W + 50 && p.y > -20 && p.y < Hh + 20;
       b.pp = p; if (on && b.parent && b.id !== S.target) { var pq = BY[b.parent].pp; if (pq && pq.front && Math.hypot(p.x - pq.x, p.y - pq.y) < 40) on = false; }   // C2.2 卫星离母星屏幕距离 <40 px 时让位
       b.lb.style.display = on ? 'block' : 'none';
       if (on) { b.lb.style.transform = 'translate(' + (p.x - 9) + 'px,' + (p.y - 9) + 'px)'; b.lb.classList.toggle('t', b.id === S.target); }
@@ -631,7 +643,7 @@
     g.strokeStyle = 'rgba(200,215,240,.35)'; g.beginPath(); g.moveTo(20, 40); g.lineTo(w - 20, 40); g.stroke();
     for (var a = .2; a < HI; a *= HI > 3000 ? 1.6 : HI > 50 ? 1.25 : 1.12) { var x = lx(a); g.beginPath(); g.moveTo(x, 37); g.lineTo(x, 43); g.stroke(); }
     g.font = '18px "Noto Sans SC",sans-serif'; g.textAlign = 'center';
-    B.forEach(function (b) { if (b.id === 'sun' || b.id === 'moon' || b.parent || (b.fix && HI <= 50) || (b.star && HI <= 3000) || (HI > 3000 && !b.fix && b.id !== 'earth')) return; var r = Math.hypot(b.wp[0] - BY.sun.wp[0], b.wp[1] - BY.sun.wp[1], b.wp[2] - BY.sun.wp[2]) / AU, x = lx(r); g.fillStyle = b.col; g.beginPath(); g.arc(x, 40, b.id === S.target ? 7 : 5, 0, 7); g.fill(); g.fillStyle = b.id === S.target ? '#7fd6ff' : 'rgba(210,220,238,.7)'; g.fillText(b.zh, x, 72); });
+    B.forEach(function (b) { if (b.off || b.id === 'sun' || b.id === 'moon' || b.parent || (b.fix && HI <= 50) || (b.star && HI <= 3000) || (HI > 3000 && !b.fix && b.id !== 'earth')) return; var r = Math.hypot(b.wp[0] - BY.sun.wp[0], b.wp[1] - BY.sun.wp[1], b.wp[2] - BY.sun.wp[2]) / AU, x = lx(r); g.fillStyle = b.col; g.beginPath(); g.arc(x, 40, b.id === S.target ? 7 : 5, 0, 7); g.fill(); g.fillStyle = b.id === S.target ? '#7fd6ff' : 'rgba(210,220,238,.7)'; g.fillText(b.zh, x, 72); });
     var me = lx(BY.sun.dist / AU); g.fillStyle = '#fff'; g.beginPath(); g.moveTo(me, 30); g.lineTo(me - 7, 16); g.lineTo(me + 7, 16); g.fill(); g.font = '16px sans-serif'; g.fillText('你', me, 12);
   }
 
@@ -740,7 +752,7 @@
     if (dlg) { dlg.remove(); dlg = null; }
     if (!quiet) { K.resume = true; if (window.SHXV) SHXV.go('solar'); }
   };
-  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, rd: function () { return rd; }, fdur: fdur, fkm: fkm, sky: function () { return sSky; }, orb: function () { return sOrb; }, cam: function () { return cam; }, skyG: function () { return K.skyG; }, emit: function (e, a) { emit(e, a); } };
+  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, tempStar: function (o) { return tempStar(o); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, rd: function () { return rd; }, fdur: fdur, fkm: fkm, sky: function () { return sSky; }, orb: function () { return sOrb; }, cam: function () { return cam; }, skyG: function () { return K.skyG; }, emit: function (e, a) { emit(e, a); } };
   X.state = function () { return { pos: S.pos.slice(), target: S.target, base: S.base, mult: S.mult, auto: S.auto, sunVis: sunVis }; };
   X.health = function () { return { lost: !!K.lost, nLost: K.nLost || 0, restored: K.nRest || 0, rebuilt: K.nRebuild || 0, heal: BK.heal, w: rd ? rd.domElement.width : 0, h: rd ? rd.domElement.height : 0 }; };
   X._rebuild = function () { rebuildRd(); };
