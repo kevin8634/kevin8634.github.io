@@ -210,7 +210,7 @@
     { k: 'sh', t: function () { return '天枢号'; }, p: function () { return HS.shipP; }, c: '#80ffe6' }
   ];
   function placeLabels(box, cam, W, H, fade, skip) {
-    if (!box._lb) { box._lb = {}; LBL.forEach(function (l) { var d = document.createElement('div'); d.className = 'xh-lb'; d.style.color = l.c; box.appendChild(d); box._lb[l.k] = d; }); }
+    if (!box._lb) { box._lb = {}; LBL.forEach(function (l) { var d = document.createElement('div'); d.className = 'xh-lb'; d.dataset.k = l.k; d.style.color = l.c; box.appendChild(d); box._lb[l.k] = d; }); }
     var v = new T.Vector3();
     LBL.forEach(function (l) {
       var d = box._lb[l.k], p = l.p(), on = fade > .05 && p && (!l.on || l.on()) && !(skip && skip[l.k]);

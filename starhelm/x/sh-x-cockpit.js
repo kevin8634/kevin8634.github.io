@@ -361,7 +361,7 @@
     root.querySelectorAll('.mob .btn').forEach(function (b) {
       b.onclick = function () { var k = b.getAttribute('data-k'); if (k === 'end') { confirmEnd(); return; } if (k === '+') S.base = Math.min(MAXV, S.base * 1.6 + .5); if (k === '-') S.base = Math.max(0, S.base / 1.6 - .2); if (k === 'm') S.mult = S.mult >= 1e6 ? 1 : S.mult * 10; if (k === 'g') autopilot(!S.auto); S.auto = k === 'g' ? S.auto : false; };
     });
-    B.forEach(function (b) { var l = el('div', 'lbl', b.zh + '<i></i>'); l.onclick = function () { setTarget(b.id); }; $('#xc-lbls', root).appendChild(l); b.lb = l; });
+    B.forEach(function (b) { var l = el('div', 'lbl', b.zh + '<i></i>'); l.dataset.id = b.id; l.dataset.p = b.id === 'sun' ? 800 : b.ghost ? 760 : b.star ? 700 : b.comet ? 380 : b.parent ? 300 : b.type === '矮行星' ? 480 : 650; l.onclick = function () { setTarget(b.id); }; $('#xc-lbls', root).appendChild(l); b.lb = l; });
   }
   function toast(m) { var t = $('#xc-toast', root); t.textContent = m; t.style.opacity = 1; clearTimeout(t._h); t._h = setTimeout(function () { t.style.opacity = 0; }, 2400); }
   function setTarget(id) { S.target = id; if (S.auto) autopilot(true); B.forEach(function (b) { b.li.classList.toggle('on', b.id === id); }); }
@@ -586,7 +586,7 @@
       if (tb.ex && window.SHXE && SHXE.ex[tb.ex]) { var xa = el('a', '', ' 讲解 ›'); xa.style.cssText = 'cursor:pointer;color:#f0c97a;pointer-events:auto;white-space:nowrap'; xa.onclick = function () { SHXE.show(tb.ex, 1); }; tbe.appendChild(xa); } }
     $('#xc-al', root).classList.toggle('on', S.align); $('#xc-ap', root).classList.toggle('on', S.auto);
     $('#xc-cn', root).textContent = tb.zh; $('#xc-cs', root).textContent = fkm(dT) + ' · ETA ' + (rate < -1e-6 ? fdur(surfT / -rate) : '—');
-    B.forEach(function (b) { b.li.querySelector('.ds').textContent = fkm(b.dist); b.li.classList.toggle('on', b.id === S.target); if (b.lb.style.display !== 'none') b.lb.querySelector('i').textContent = fkm(b.dist); });
+    B.forEach(function (b) { b.li.querySelector('.ds').textContent = fkm(b.dist); b.li.classList.toggle('on', b.id === S.target); if (b.lb.style.display !== 'none') b.lb.querySelector('i').textContent = b.id === S.target ? fkm(b.dist) : fkmL(b.dist); });
     // 表盘(对数刻度)
     var lg = function (v, a, b) { return (Math.log10(Math.max(v, Math.pow(10, a))) - a) / (b - a); };
     setG('xc-g1', lg(S.base, -1, 5), sig(S.base, 3), '速度 · 等效 ' + (veff / C >= 0.01 ? sig(veff / C, 2) + 'c' : sig(veff, 3) + ' km/s'));
@@ -595,6 +595,8 @@
     setG('xc-g4', lg(S.mult * (S.auto ? 1 : S.boost), 0, 6), '×' + sig(S.mult * (S.auto ? 1 : S.boost), 2), S.auto ? '倍率 · 自动驾驶' : '倍率 · [ ] 调节');
     drawStrip();
   }
+  /* C2.2c 非目标标签用短距离:远看只留两三位有效数字 */
+  function fkmL(km) { if (km < 1e5) return nf(km) + ' km'; if (km < 1e6) return Math.round(km / 1e4) + ' 万 km'; var au = km / AU; if (au < 1e4) return (au < 10 ? au.toFixed(1) : nf(Math.round(au))) + ' AU'; var ly = km / 9.4607e12; return (ly < 10 ? ly.toFixed(2) : ly.toFixed(1)) + ' 光年'; }
   function fkmS(km) { if (km < 1e5) return nf(km); if (km < 1e6) return nf(km / 1e3) + 'k'; return (km / AU).toFixed(km < 10 * AU ? 3 : 1); }
   function kv(k, v, u) { return '<div class="kv"><span>' + k + '</span><b>' + v + (u ? '<i>' + u + '</i>' : '') + '</b></div>'; }
   function g2(k, v, c) { return '<div' + (c ? ' class="' + c + '"' : '') + '><span>' + k + '</span><b>' + v + '</b></div>'; }
