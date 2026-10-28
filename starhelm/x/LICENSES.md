@@ -108,3 +108,6 @@
 | 文件 | 来源 | 许可 | 处理 |
 |---|---|---|---|
 | x/dsoimg/m42-0…5.webp、m42-s.webp | ESA/Hubble heic0601a「Orion Nebula」— NASA, ESA, M. Robberto (STScI/ESA) and the Hubble Space Telescope Orion Treasury Project Team | CC BY 4.0(esahubble.org/copyright) | 缩至 1400 px,中值滤波去星后按亮度分 6 层 + 星点层(work/mk_dsolayers.py);纵深为示意 |
+| x/dsoimg/m1-*.webp | ESA/Hubble heic0515a「Crab Nebula」— NASA, ESA, J. Hester and A. Loll (Arizona State University) | CC BY 4.0 | 同上(去星阈值 0.2) |
+| x/dsoimg/m16-*.webp | ESA/Hubble heic1501a「Pillars of Creation」— NASA, ESA and the Hubble Heritage Team (STScI/AURA) | CC BY 4.0 | 同上(暗处为前景,反向分层) |
+| x/dsoimg/m51-*.webp | ESA/Hubble heic0506a「Whirlpool Galaxy」— NASA, ESA, S. Beckwith (STScI) and the Hubble Heritage Team (STScI/AURA) | CC BY 4.0 | 同上 |

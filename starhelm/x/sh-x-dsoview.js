@@ -7,7 +7,19 @@
     M42: { zh: '猎户座大星云', en: 'Orion Nebula · M42', n: 6, dist: '约 1,344 光年', size: '约 24 光年', band: '可见光 + Hα(哈勃 ACS)', type: '发射星云 · 恒星形成区',
       facts: [['距离', '约 1,344 光年'], ['直径', '约 24 光年'], ['核心', '猎户四边形星团(Trapezium)'], ['年龄', '核心恒星约 30 万年'], ['观测波段', '可见光 + Hα(哈勃 ACS)']],
       blurb: '离地球最近的大型恒星形成区。中心四颗年轻大质量恒星的紫外辐射把周围氢气电离发光,暗带是尚未被吹散的尘埃。',
-      cr: 'NASA, ESA, M. Robberto(STScI/ESA)及哈勃猎户座宝库项目组 · ESA/Hubble CC BY 4.0' }
+      cr: 'NASA, ESA, M. Robberto(STScI/ESA)及哈勃猎户座宝库项目组 · ESA/Hubble CC BY 4.0' },
+    M1: { zh: '蟹状星云', en: 'Crab Nebula · M1', n: 6, dist: '约 6,500 光年', type: '超新星遗迹 · 脉冲星风云',
+      facts: [['距离', '约 6,500 光年'], ['直径', '约 11 光年'], ['来历', '1054 年超新星(《宋会要》记载「天关客星」)'], ['核心', '蟹状星云脉冲星,每秒自转约 30 圈'], ['观测波段', '可见光多滤镜合成(哈勃 WFPC2)']],
+      blurb: '宋代天文学家记录的「客星」爆发后留下的残骸,至今仍以约 1,500 km/s 向外膨胀;中心脉冲星的高能粒子让内部发出蓝白色同步辐射。',
+      cr: 'NASA, ESA, J. Hester, A. Loll(亚利桑那州立大学) · ESA/Hubble CC BY 4.0' },
+    M16: { zh: '鹰状星云 · 创生之柱', en: 'Eagle Nebula · Pillars of Creation · M16', n: 6, dist: '约 6,500 光年', type: '发射星云 · 恒星形成区',
+      facts: [['距离', '约 6,500 光年'], ['最高柱长', '约 4 光年'], ['成因', '附近大质量恒星的紫外辐射侵蚀分子云'], ['柱顶', '正在形成新恒星的致密气团'], ['观测波段', '可见光 + Hα(哈勃 WFC3,2014)']],
+      blurb: '气柱由冷的氢气和尘埃组成,顶端被附近年轻恒星照亮并被一点点吹散。这里分层时按「越暗越近」处理,让气柱浮在前景。',
+      cr: 'NASA, ESA 及哈勃传承团队(STScI/AURA) · ESA/Hubble CC BY 4.0' },
+    M51: { zh: '涡状星系', en: 'Whirlpool Galaxy · M51', n: 6, dist: '约 2,300 万光年', type: '旋涡星系 · 与伴星系 NGC 5195 互动',
+      facts: [['距离', '约 2,300 万光年'], ['直径', '约 7.6 万光年'], ['伴星系', 'NGC 5195(右上黄色)'], ['旋臂', '粉红色为电离氢恒星形成区'], ['观测波段', '可见光 + Hα(哈勃 ACS,2005)']],
+      blurb: '最早被看出旋涡结构的星系(罗斯伯爵 1845 年手绘)。伴星系的引力扰动让旋臂格外清晰,也触发了大量新恒星诞生。',
+      cr: 'NASA, ESA, S. Beckwith(STScI)及哈勃传承团队(STScI/AURA) · ESA/Hubble CC BY 4.0' }
   };
   var X, ov = null, cv, ctx, imgs = [], star = null, raf = 0, t0 = 0, mx = 0, my = 0, tx = 0, ty = 0, cur = null;
   function el(t, c, h) { var e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; }
@@ -35,12 +47,12 @@
     var base = Math.max(W, H) / imgs[0].naturalWidth * 1.08;
     function layer(im, depth, alpha) {
       if (!im.complete || !im.naturalWidth) return;
-      var sc = base * (0.9 + ease * (0.25 + depth * 0.55) + Math.sin(t * .05) * .01), w = im.naturalWidth * sc, h = im.naturalHeight * sc;
-      var px = -tx * depth * W * .06, py = -ty * depth * H * .06;
+      var sc = base * (0.9 + ease * (0.2 + depth * 0.22) + Math.sin(t * .05) * .01), w = im.naturalWidth * sc, h = im.naturalHeight * sc;
+      var px = -tx * depth * W * .035, py = -ty * depth * H * .035;
       ctx.globalAlpha = alpha; ctx.drawImage(im, (W - w) / 2 + px, (H - h) / 2 + py, w, h);
     }
     for (var i = 0; i < n; i++) layer(imgs[i], i / (n - 1), i === 0 ? 1 : .92);
-    if (star) { ctx.globalCompositeOperation = 'lighter'; layer(star, .35, 1); }
+    if (star) layer(star, .35, 1);
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
   function open(key) {
