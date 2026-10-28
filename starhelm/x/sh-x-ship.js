@@ -377,7 +377,7 @@
       '#xs-cd::before{content:"8";position:absolute;left:34px;top:22px;color:rgba(120,214,255,.07);text-shadow:none}',
       '#xs-cd:empty{padding:0;border:0;background:none;box-shadow:none}',
       /* 侧舷窗 */
-      '#xs-port{position:absolute;inset:0;pointer-events:none;display:none;background:radial-gradient(ellipse 44% 46% at 50% 48%,transparent 0 96%,rgba(127,214,255,.5) 96.6%,#141b27 97.4%,#2a3344 98.6%,#0a0d14 100%),radial-gradient(ellipse 60% 64% at 50% 48%,transparent 0 69%,#0b0f17 70%,#161d2a 88%,#05070b 100%)}',
+      '#xs-port{position:absolute;inset:0;pointer-events:none;display:none}',
       '#xs-port .tag{position:absolute;left:50%;top:22px;transform:translateX(-50%);font-size:13px;letter-spacing:.3em;color:#9fdcff}',
       '#shxc.port .p,#shxc.port .gauges,#shxc.port .arc,#shxc.port .hdg,#shxc.port .strip,#shxc.port .ret,#shxc.port .ctr,#shxc.port .mob{opacity:0;pointer-events:none;transition:opacity .6s}#shxc.port #xs-port{display:block}',
       '#shxc.photo>*:not(canvas):not(#xs-photo){display:none!important}#shxc.photo::after{display:none}#xs-photo{display:none;position:absolute;right:14px;bottom:12px;font-size:12px;color:rgba(220,230,245,.55);cursor:pointer;padding:6px 10px}#shxc.photo #xs-photo{display:block}',
@@ -394,13 +394,15 @@
   function deck() {
     if ($('#xc-deck', R)) return;
     var d = el('div', '', '<div class="gl"></div><svg aria-hidden="true"><defs>' +
-      '<linearGradient id="xdk-rim" x1="0" x2="1"><stop offset="0" stop-color="#7fd6ff" stop-opacity=".25"/><stop offset=".3" stop-color="#7fd6ff" stop-opacity=".85"/><stop offset=".5" stop-color="#b48cff" stop-opacity=".95"/><stop offset=".7" stop-color="#7fd6ff" stop-opacity=".85"/><stop offset="1" stop-color="#7fd6ff" stop-opacity=".25"/></linearGradient>' +
+      '<linearGradient id="xdk-rim" x1="0" x2="1"><stop offset="0" stop-color="#3fd0ff" stop-opacity=".5"/><stop offset=".22" stop-color="#5fe1ff"/><stop offset=".4" stop-color="#b46cff"/><stop offset=".5" stop-color="#ff6ad5"/><stop offset=".6" stop-color="#ffb347"/><stop offset=".78" stop-color="#5fe1ff"/><stop offset="1" stop-color="#3fd0ff" stop-opacity=".5"/></linearGradient>' +
       '<linearGradient id="xdk-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a3a6a" stop-opacity=".16"/><stop offset="1" stop-color="#050c1c" stop-opacity=".42"/></linearGradient>' +
       '<filter id="xdk-glow" x="-5%" y="-50%" width="110%" height="200%"><feGaussianBlur stdDeviation="3"/></filter></defs>' +
       '<path class="fill" fill="url(#xdk-fill)"/><path class="halo" fill="none" stroke="url(#xdk-rim)" stroke-width="5" filter="url(#xdk-glow)" opacity=".55"/>' +
       '<path class="rim" fill="none" stroke="url(#xdk-rim)" stroke-width="1.4"/>' +
       '<path class="fl l" pathLength="1000" fill="none"/><path class="fl r" pathLength="1000" fill="none"/>' +
-      '<path class="fl l b" pathLength="1000" fill="none"/><path class="fl r b" pathLength="1000" fill="none"/></svg>');
+      '<path class="fl l b" pathLength="1000" fill="none"/><path class="fl r b" pathLength="1000" fill="none"/>' +
+      '<path class="fl l c" pathLength="1000" fill="none"/><path class="fl r c" pathLength="1000" fill="none"/>' +
+      '<path class="fl l d" pathLength="1000" fill="none"/><path class="fl r d" pathLength="1000" fill="none"/></svg>');
     d.id = 'xc-deck';
     var g = $('.gauges', R); R.insertBefore(d, g || R.firstChild);
     U.deck = d; deckLay(); addEventListener('resize', function () { clearTimeout(U.dkT); U.dkT = setTimeout(deckLay, 60); });
