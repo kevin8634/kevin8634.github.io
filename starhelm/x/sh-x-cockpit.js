@@ -24,7 +24,11 @@
     { id: 'neptune', zh: '海王星', en: 'Neptune', type: '行星', R: 24622, GM: 6836529, temp: '-200', ab: 'Neptune', col: '#5d86ff', lo: 'planet-neptune.jpg', per: 16.11, atm: [.4, .6, 1] },
     { id: 'pluto', zh: '冥王星', en: 'Pluto', type: '矮行星', R: 1188.3, GM: 869.6, temp: '-225', ab: 'Pluto', col: '#d9c3a8', hd: 'hd/pluto-2k.jpg', lo: 'planet-pluto.jpg', per: -153.3 },
     // C1.8 出太阳系航点:固定方向(赤经/赤纬,J2000)+ 日心距离;不画星球,只有标签与目标框
-    { id: 'voyager1', zh: '旅行者 1 号', en: 'Voyager 1', type: '探测器', R: 0.02, GM: 722 * 6.674e-20, temp: '约 -270(星际空间)', col: '#9fd0e8', fix: [258.3, 12.0, 170], ghost: true, info: [['发射', '1977 年 9 月 5 日'], ['日心距离', '约 170 AU(2026)'], ['速度', '约 17 km/s(相对太阳)'], ['2012 年 8 月', '穿越日球层顶']] },
+    { id: 'voyager1', zh: '旅行者 1 号', en: 'Voyager 1', type: '探测器', R: 0.0065, GM: 722 * 6.674e-20, temp: '约 -270(星际空间)', col: '#9fd0e8', fix: [258.75, 12.13, 172.2], ghost: true, craft: 'x/models/voyager.glb', span: 13, info: [['发射', '1977 年 9 月 5 日'], ['日心距离', '约 172 AU(2026-10)'], ['速度', '约 17 km/s(相对太阳)'], ['2012 年 8 月', '穿越日球层顶'], ['状态', '仍在工作'], ['模型', 'NASA 3D Resources · 光照按曝光拉伸']] },
+    { id: 'voyager2', zh: '旅行者 2 号', en: 'Voyager 2', type: '探测器', R: 0.0065, GM: 722 * 6.674e-20, temp: '约 -270(星际空间)', col: '#9fd0e8', fix: [301.245, -59.8, 144.24], ghost: true, craft: 'x/models/voyager.glb', span: 13, info: [['发射', '1977 年 8 月 20 日'], ['日心距离', '约 144 AU(2026-10)'], ['速度', '约 15 km/s(相对太阳)'], ['2018 年 11 月', '穿越日球层顶'], ['唯一', '飞掠过天王星与海王星的探测器'], ['模型', 'NASA 3D Resources(与 1 号同型)']] },
+    { id: 'newhorizons', zh: '新视野号', en: 'New Horizons', type: '探测器', R: 0.0014, GM: 478 * 6.674e-20, temp: '约 -230', col: '#9fd0e8', fix: [288.75, -20.3, 65.88], ghost: true, craft: 'x/models/newhorizons.glb', span: 2.7, info: [['发射', '2006 年 1 月 19 日'], ['日心距离', '约 66 AU(2026-10)'], ['速度', '约 13.6 km/s(相对太阳)'], ['2015 年 7 月', '飞掠冥王星'], ['2019 年 1 月', '飞掠柯伊伯带天体 阿罗科斯'], ['模型', 'NASA VTAD 3D 模型']] },
+    { id: 'pioneer10', zh: '先驱者 10 号', en: 'Pioneer 10', type: '探测器', R: 0.0045, GM: 258 * 6.674e-20, temp: '约 -270', col: '#8fa6b8', fix: [78.75, 26.03, 142.14], ghost: true, craft: 'x/models/pioneer.glb', span: 9, info: [['发射', '1972 年 3 月 3 日'], ['日心距离', '约 142 AU(2026-10,推算)'], ['速度', '约 11.9 km/s(相对太阳)'], ['1973 年 12 月', '首个飞掠木星的探测器'], ['状态', '2003 年 1 月失联'], ['模型', 'NASA 3D Resources']] },
+    { id: 'pioneer11', zh: '先驱者 11 号', en: 'Pioneer 11', type: '探测器', R: 0.0045, GM: 259 * 6.674e-20, temp: '约 -270', col: '#8fa6b8', fix: [283.5, -8.98, 119.53], ghost: true, craft: 'x/models/pioneer.glb', span: 9, info: [['发射', '1973 年 4 月 6 日'], ['日心距离', '约 120 AU(2026-10,推算)'], ['速度', '约 11.1 km/s(相对太阳)'], ['1979 年 9 月', '首个飞掠土星的探测器'], ['状态', '1995 年 9 月失联'], ['模型', 'NASA 3D Resources(与 10 号同型)']] },
     { id: 'oort', zh: '奥尔特云内缘', en: 'Inner Oort Cloud', type: '推测区域', R: 0.02, GM: 0, temp: '约 -268', col: '#b8c8e0', fix: [258.3, 12.0, 2000], ghost: true, info: [['距离', '内缘约 2,000 AU(推测)'], ['外缘', '可达约 10 万 AU'], ['组成', '数以万亿计的冰质天体'], ['证据', '长周期彗星轨道反推,尚无直接观测']] },
     // C1.8b 群星航点(位置取自 HYG v4.1 星表,与星空点完全重合);GM=质量×太阳GM、L=光度(太阳=1),公开资料约数
     { id: 'proxima', zh: '比邻星', en: 'Proxima Centauri', type: '红矮星', R: 107280, GM: 1.62042e+10, L: 0.00155, temp: '—', col: '#ff8a5c', fix: [218.6598, -63.183, 269281], star: true, tint: [1.25, .62, .4], info: [['光谱型', 'M5.5 V 红矮星'], ['半径', '约 0.15 个太阳'], ['行星', '比邻星 b、d(宜居带内有 b)'], ['距离', '4.25 光年(离太阳最近)']] },
@@ -129,6 +133,7 @@
     var seg = b.R > 20000 ? 160 : 128;
     var m = new T.Mesh(new T.SphereGeometry(b.R, seg, seg / 2), new T.ShaderMaterial({ uniforms: U, vertexShader: PV, fragmentShader: PF }));
     spin.add(m); b.mesh = m; if (b.ghost) m.visible = false;
+    if (b.craft) { b.cg = new T.Group(); g.add(b.cg); }   // C2.2g 探测器:靠近时再懒加载 GLB 模型
     if (b.id === 'earth') {   // 云层
       var ct = tex(b, Math.min(screen.width, screen.height) >= 700 ? 'hd/earth-clouds-4k.jpg' : (window.LE_TEX && LE_TEX['earth-clouds-1k.jpg'])); ct.encoding = T.LinearEncoding;
       var cu = { map: { value: ct }, sunP: U.sunP };
@@ -378,6 +383,30 @@
     b.lb.innerHTML = b.zh + '<i></i>';
     setTarget('tmpstar'); return b;
   }
+  var GLP = null, GLC = {};
+  function gltf() {
+    if (GLP) return GLP;
+    GLP = window.SHX_GLTFLoader ? Promise.resolve() : new Promise(function (res, rej) { var sc = document.createElement('script'); sc.src = 'x/vendor/three-r186/GLTFLoader.min.js'; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
+    return GLP;
+  }
+  function loadCraft(b) {
+    b.cReq = true;
+    gltf().then(function () {
+      if (!GLC[b.craft]) GLC[b.craft] = new Promise(function (res, rej) { new window.SHX_GLTFLoader().load(b.craft, function (g) { res(g.scene); }, null, rej); });
+      return GLC[b.craft];
+    }).then(function (sc0) {
+      if (!b.cg) return;
+      var sc = sc0.clone(true), box = new T.Box3().setFromObject(sc), sz = box.getSize(new T.Vector3()), c = box.getCenter(new T.Vector3());
+      var k = (b.span / 1000) / Math.max(sz.x, sz.y, sz.z, 1e-9);   // 按真实最大尺寸(米)缩放到 km
+      sc.position.copy(c).multiplyScalar(-k); sc.scale.setScalar(k);
+      var piv = new T.Group(); piv.add(sc); b.cg.add(piv);
+      sc.traverse(function (o) { if (o.isMesh && o.material) { o.frustumCulled = false; var ms = Array.isArray(o.material) ? o.material : [o.material]; ms.forEach(function (m) { if (m.envMapIntensity != null) m.envMapIntensity = 0; }); } });
+      // 远离太阳处真实光照极弱,这里按曝光拉伸:一束指向太阳的平行光 + 很弱的环境光(示意)
+      var L = new T.DirectionalLight(0xfff4e6, 3.2); L.target = b.cg; b.cg.add(L); b.cL = L;
+      b.cg.add(new T.AmbientLight(0x8aa0c0, .25));
+      b.cMesh = piv;
+    }).catch(function (e) { console.warn('[SHXC craft]', b.id, e); });
+  }
   function setTarget(id) { S.target = id; if (S.auto) autopilot(true); B.forEach(function (b) { b.li.classList.toggle('on', b.id === id); }); }
   function autopilot(on) { S.auto = on; S.align = false; if (on) toast('自动驾驶:飞往 ' + BY[S.target].zh); }
 
@@ -518,7 +547,7 @@
     emit('frame', { dt: dt, veff: veff, near: near, nd: nd, tb: tb, dT: dT, surfT: surfT, ms: ms });
     // --- 相机 ---
     cam.position.set(0, 0, 0); cam.quaternion.copy(S.q);   // 浮动原点:相机永远在原点,天体按相对位置摆放(GPU float32 精度够用)
-    cam.near = Math.max(0.05, Math.min(2000, nd * 0.35)); cam.far = 5e6; cam.aspect = W / Hh; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+    cam.near = Math.max(near && near.craft ? 0.0005 : 0.05, Math.min(2000, nd * 0.35)); cam.far = 5e6; cam.aspect = W / Hh; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
     cam0.quaternion.copy(S.q); cam0.aspect = W / Hh; cam0.updateProjectionMatrix();
     camO.position.set(S.pos[0], S.pos[1], S.pos[2]); camO.quaternion.copy(S.q); camO.aspect = W / Hh; camO.updateProjectionMatrix();
     // --- 天体:近处真实位置;远处对数压缩距离、按比例缩小(视角大小不变)---
@@ -541,6 +570,11 @@
     });
     if (BY.sun.fx) BY.sun.fx.update(dt, cam);
     B.forEach(function (b) { if (b.star && b.fx && b.dist < b.R * 400) b.fx.update(dt, cam); });
+    B.forEach(function (b) {   // C2.2g 探测器:500 万 km 内懒加载模型;光源始终指向太阳
+      if (!b.craft || !b.cg) return;
+      if (!b.cReq && b.dist < 5e6) loadCraft(b);
+      if (b.cL) { var sd = new T.Vector3(BY.sun.wp[0] - b.wp[0], BY.sun.wp[1] - b.wp[1], BY.sun.wp[2] - b.wp[2]).normalize(); b.cL.position.copy(sd); }
+    });
     // --- 尘埃拖影 ---
     if (dust.N) {
       var vis = Math.min(1, Math.log10(1 + veff) / 3), sv = Math.min(160, 6 + Math.log10(1 + veff) * 25) * dt, len = Math.min(26, 0.4 + Math.log10(1 + veff) * 4);

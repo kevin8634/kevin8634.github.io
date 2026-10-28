@@ -88,3 +88,12 @@
 | x/tex/moon-europa.jpg / moon-ganymede.jpg / moon-callisto.jpg | JPL Solar System Simulator 纹理(space.jpl.nasa.gov/tmaps,jup2/3/4vss2,Caltech/JPL/USGS,Voyager+Galileo 灰度拼图);按 Galileo 真彩着色,木卫四缺测条带程序化填充 | 美国政府公有领域 |
 | x/tex/moon-enceladus.jpg | 同上 sat2vss2(Voyager);缺测区以高反照率冰面程序化填充 | 美国政府公有领域 |
 处理脚本:work/mk_moontex.py(不入库)。土卫六仍为程序化橙色雾霾(可见光下看不到地表)。
+
+## C2.2g 探测器 3D 模型(2026-10-29)
+| 文件 | 来源 | 许可 |
+|---|---|---|
+| x/models/voyager.glb | NASA 3D Resources「Voyager Probe (A)」(github.com/nasa/NASA-3D-Resources);gltf-transform 解 Draco + 量化 + WebP 贴图 | NASA 公有领域(NASA 媒体使用指南) |
+| x/models/pioneer.glb | NASA 3D Resources「Pioneer 10」;同上处理(先驱者 11 号同型复用) | 同上 |
+| x/models/newhorizons.glb | NASA Science「New Horizons 3D Model」(science.nasa.gov/resource/new-horizons-3d-model,NASA VTAD) | 同上 |
+| x/vendor/three-r186/GLTFLoader.min.js | three.js r186 examples/jsm GLTFLoader,esbuild 打包(three 指向页面全局 THREE) | MIT(见同目录 LICENSE) |
+探测器位置:Heavens-Above「Spacecraft escaping the Solar System」2026-10 读数(与导览同源,已登记)。
