@@ -97,3 +97,9 @@
 | x/models/newhorizons.glb | NASA Science「New Horizons 3D Model」(science.nasa.gov/resource/new-horizons-3d-model,NASA VTAD) | 同上 |
 | x/vendor/three-r186/GLTFLoader.min.js | three.js r186 examples/jsm GLTFLoader,esbuild 打包(three 指向页面全局 THREE) | MIT(见同目录 LICENSE) |
 探测器位置:Heavens-Above「Spacecraft escaping the Solar System」2026-10 读数(与导览同源,已登记)。
+
+## C2.3 深空天体点选(2026-10-29)
+| 文件 | 来源 | 许可 |
+|---|---|---|
+| x/sh-x-dso-data.js | OpenNGC(Mattia Verga,github.com/mattiaverga/OpenNGC,NGC.csv + addendum.csv):梅西耶 110 个 + V≤9 的 NGC/IC,共 396 个;字段经裁剪,中文名与星座中文名为本站译名 | CC BY-SA 4.0(本数据文件按同协议提供) |
+生成脚本:work/mk_dso.py(不入库)。

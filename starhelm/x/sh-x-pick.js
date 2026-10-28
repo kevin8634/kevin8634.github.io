@@ -38,6 +38,7 @@
       '#xk-card .k{font-size:10px;letter-spacing:.2em;color:#8fa3c2;padding-right:22px}#xk-card h3{margin:6px 0 2px;font-size:20px;font-weight:500}#xk-card .en{color:#9aaccc;font-size:11px}' +
       '#xk-card .sw{display:flex;align-items:center;gap:10px;margin:10px 0}#xk-card .dot{width:26px;height:26px;border-radius:50%;flex:none}#xk-card .bar{flex:1;height:5px;border-radius:3px;background:linear-gradient(90deg,#9bb0ff,#cad7ff,#fff,#fff4ea,#ffd2a1,#ffb56c);position:relative}#xk-card .bar i{position:absolute;top:-3px;width:2px;height:11px;background:#fff}' +
       '#xk-card .r{display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid rgba(150,180,220,.1)}#xk-card .r b{font-weight:400;color:#f0d9a8}#xk-card .n{color:#8fa3c2;font-size:11px;margin-top:8px;line-height:1.5}' +
+      '#xk-dso{position:absolute;inset:0;pointer-events:none;z-index:7;overflow:hidden}#xk-dso .m{position:absolute;left:0;top:0;opacity:.55;transition:opacity .3s}#xk-dso .m i{position:absolute;border:1px dashed rgba(170,200,255,.55);border-radius:50%}#xk-dso .m span{position:absolute;top:-7px;white-space:nowrap;font-size:10.5px;color:#b9c8e6;text-shadow:0 0 4px #000}#xk-dso .m.sel{opacity:1}#xk-dso .m.sel i{border:1.5px solid #f0c97a}' +
       '#xk-card .x{position:absolute;right:10px;top:8px;background:none;border:0;color:#aab;font-size:18px}#xk-card .go{margin-top:10px;width:100%;padding:7px;border-radius:16px;border:1px solid #f0c97a;background:rgba(240,201,122,.1);color:#f6d999;font:inherit}';
     document.head.appendChild(st);
   }
@@ -78,7 +79,68 @@
     if (window.SHXS && SHXS.mode) SHXS.mode('boost'); else X._.S.capV = 0;   // 恒星际距离:切到引擎加速(曲率跃迁),否则巡航 100 km/s 上限
     X._.autopilot(true); X._.toast('已生成临时航点「' + name + '」· ' + ly + ' 光年 · 自动驾驶出发');
   }
-  function hide() { SEL = -1; clearInterval(PT); if (box) box.remove(); if (card) { card.remove(); card = null; } }
+  /* C2.3 T5 第二部分:深空天体(OpenNGC,CC BY-SA 4.0)——梅西耶 110 + 视星等 ≤ 9 的 NGC/IC,天球上淡圈标注,可点选看资料 */
+  var DS = null, SELD = -1, mk = null, MKP = [], mkN = 0;
+  function dsoInit() {
+    var R = window.SH_DSO; if (!R || DS) return;
+    DS = R.d.map(function (o) { var a = o[4] * Math.PI / 180, d = o[5] * Math.PI / 180, x = Math.cos(d) * Math.cos(a), y = Math.cos(d) * Math.sin(a), z = Math.sin(d);
+      return { o: o, v: [x, -y * Math.sin(EPS) + z * Math.cos(EPS), -(y * Math.cos(EPS) + z * Math.sin(EPS))] }; });
+  }
+  function dscr(i, cam, W, H) {
+    var v = new T.Vector3(DS[i].v[0], DS[i].v[1], DS[i].v[2]).transformDirection(cam.matrixWorldInverse);
+    if (v.z >= 0) return null; var e = cam.projectionMatrix.elements;
+    return [(e[0] * v.x / -v.z + 1) * W / 2, (1 - e[5] * v.y / -v.z) * H / 2, e[5] * H / 2];
+  }
+  function dsoOn() {   // 离太阳 3000 光年内天球方向才近似成立;导览/拍照/标签关闭时隐藏
+    var root = X._.root(); if (!root || !DS || X._.S.tour || root.classList.contains('photo')) return false;
+    var lb = root.querySelector('#xc-lbls'); if (lb && getComputedStyle(lb).display === 'none') return false;
+    var s = shipLy(); return Math.hypot(s[0], s[1], s[2]) < 3000;
+  }
+  function dsoRad(i, f) { var a = DS[i].o[7] || 2; return Math.max(7, Math.min(70, a / 60 * Math.PI / 180 * f / 2)); }
+  function dsoMarks() {
+    var root = X._.root(), cam = X._.cam && X._.cam(); if (!root || !cam) return;
+    if (!mk) { css(); mk = document.createElement('div'); mk.id = 'xk-dso'; }
+    if (!mk.isConnected) root.appendChild(mk);
+    var on = dsoOn(); mk.style.display = on ? '' : 'none'; if (!on) return;
+    var rc = root.getBoundingClientRect(), W = rc.width, H = rc.height, n = 0, lim = W < 640 ? 12 : 20;
+    for (var i = 0; i < DS.length && n < lim; i++) {
+      var o = DS[i].o; if (!(o[9] != null && o[9] <= 7.5) && !o[1]) continue;
+      var p = dscr(i, cam, W, H); if (!p || p[0] < -40 || p[0] > W + 40 || p[1] < -40 || p[1] > H + 40) continue;
+      var el = MKP[n]; if (!el) { el = MKP[n] = document.createElement('div'); el.className = 'm'; el.innerHTML = '<i></i><span></span>'; mk.appendChild(el); }
+      var r = dsoRad(i, p[2]); el.style.display = ''; el.style.transform = 'translate(' + p[0].toFixed(1) + 'px,' + p[1].toFixed(1) + 'px)';
+      var ii = el.firstChild; ii.style.width = ii.style.height = (r * 2).toFixed(0) + 'px'; ii.style.margin = (-r).toFixed(0) + 'px 0 0 ' + (-r).toFixed(0) + 'px';
+      var sp = el.lastChild, t = o[1] ? (o[1].indexOf(o[0]) === 0 ? o[1] : o[0] + ' ' + o[1]) : o[0]; if (sp.textContent !== t) sp.textContent = t; sp.style.left = (r + 3).toFixed(0) + 'px';
+      el.classList.toggle('sel', i === SELD); n++;
+    }
+    for (var j = n; j < MKP.length; j++) MKP[j].style.display = 'none';
+  }
+  function dsoHit(x, y, cam, W, H) {
+    if (!dsoOn()) return null; var best = null;
+    for (var i = 0; i < DS.length; i++) {
+      var p = dscr(i, cam, W, H); if (!p) continue; var d = Math.hypot(p[0] - x, p[1] - y), r = Math.max(14, dsoRad(i, p[2]));
+      if (d > r) continue; var sc = d / r + (DS[i].o[9] || 10) * .05 - (DS[i].o[1] ? .2 : 0); if (!best || sc < best.sc) best = { i: i, d: d, sc: sc };
+    }
+    return best;
+  }
+  function showD(i) {
+    var root = X._.root(); if (!root) return; css(); hide(); SELD = i;
+    var o = DS[i].o, R = window.SH_DSO, ty = R.ty[o[3]] || o[3], nm = o[1] || o[2] || o[0];
+    card = document.createElement('div'); card.id = 'xk-card';
+    var sz = o[7] ? (o[7] >= 60 ? (o[7] / 60).toFixed(1) + '°' : o[7].toFixed(1) + '′') + (o[8] && o[8] !== o[7] ? ' × ' + (o[8] >= 60 ? (o[8] / 60).toFixed(1) + '°' : o[8].toFixed(1) + '′') : '') : '—';
+    var moon = o[7] ? (o[7] / 31).toFixed(o[7] > 62 ? 0 : 1) : 0;
+    card.innerHTML = '<button class="x" type="button" aria-label="关闭">×</button><div class="k">OpenNGC · ' + ty + '</div>' +
+      '<h3>' + nm + '</h3><div class="en">' + o[0] + (o[11] ? ' · ' + o[11] : '') + (o[2] && o[2] !== nm ? ' · ' + o[2] : '') + '</div>' +
+      '<div class="r"><span>类型</span><b>' + ty + (o[10] ? '(' + o[10] + ')' : '') + '</b></div>' +
+      '<div class="r"><span>所在星座</span><b>' + ((R.con || {})[o[6]] || o[6]) + '</b></div>' +
+      '<div class="r"><span>视星等(地球上)</span><b>' + (o[9] != null ? o[9].toFixed(1) : '—') + '</b></div>' +
+      '<div class="r"><span>视大小</span><b>' + sz + '</b></div>' + (moon >= 0.5 ? '<div class="r"><span>相当于</span><b>约 ' + moon + ' 个满月宽</b></div>' : '') +
+      '<div class="r"><span>赤经(J2000)</span><b>' + hms(o[4]) + '</b></div><div class="r"><span>赤纬(J2000)</span><b>' + dms(o[5]) + '</b></div>' +
+      '<div class="r"><span>所需器材(地球上)</span><b>' + (o[9] != null ? eye(o[9] + (o[7] > 20 ? 1 : 0)) : '—') + '</b></div>' +
+      '<div class="n">数据来自 OpenNGC(CC BY-SA 4.0)。深空天体远在千光年以外,天枢号目前只能远观;飞抵星云、星系的真实影像将在下一版上线。</div>';
+    root.appendChild(card); place(); clearInterval(PT); PT = setInterval(place, 700);
+    card.querySelector('.x').onclick = hide; dsoMarks();
+  }
+  function hide() { SELD = -1; SEL = -1; clearInterval(PT); if (box) box.remove(); if (card) { card.remove(); card = null; } }
   /* C2.2b 信息卡避让:不与目标面板(含日球层栏)、仪表、底部按钮条、讲解卡重叠。
      桌面:目标面板下方空间够就同列堆叠;不够就停靠在目标面板左侧;卡内限高滚动。
      窄屏(≤640px):底部抽屉,上沿不越过屏幕中线(准星)。 */
@@ -118,9 +180,12 @@
       var d = Math.hypot(p[0] - x, p[1] - y); if (d > 14) continue;
       var sc = d + m * 2; if (sc < bs) { bs = sc; best = k; }
     }
+    var h = DS ? dsoHit(x, y, cam, rc.width, rc.height) : null;
+    if (h && (best < 0 || h.d + 4 < Math.hypot.apply(null, (function () { var p = scr(best, s, cam, rc.width, rc.height); return [p[0] - x, p[1] - y]; })()))) { showD(h.i); return; }
     if (best >= 0) show(best); else hide();
   }
   function frame() {
+    if (DS && (++mkN % 2 === 0 || SELD >= 0)) dsoMarks();
     if (SEL < 0 || !box) return; var cam = X._.cam(), root = X._.root(); if (!cam || !root) return;
     var rc = root.getBoundingClientRect(), p = scr(SEL, shipLy(), cam, rc.width, rc.height);
     if (!p) { box.style.display = 'none'; return; } box.style.display = ''; box.style.left = p[0] + 'px'; box.style.top = p[1] + 'px';
@@ -130,7 +195,7 @@
     root.addEventListener('pointerdown', function (e) { dn = e.target.tagName === 'CANVAS' ? [e.clientX, e.clientY] : null; });
     root.addEventListener('pointerup', function (e) { if (dn && Math.abs(e.clientX - dn[0]) + Math.abs(e.clientY - dn[1]) < 5) pick(e.clientX, e.clientY); dn = null; });
   }
-  function hook(ev) { if (ev === 'open') { T = window.THREE; if (!ST) ST = decode(); bind(); } else if (ev === 'frame') frame(); else if (ev === 'close') hide(); }
+  function hook(ev) { if (ev === 'open') { T = window.THREE; if (!ST) ST = decode(); dsoInit(); bind(); } else if (ev === 'frame') frame(); else if (ev === 'close') hide(); }
   (function wait(n) { if (window.SHXC && SHXC.on) { X = SHXC; SHXC.on(hook); return; } if (n < 100) setTimeout(function () { wait(n + 1); }, 100); })(0);
-  window.SHXK = { pick: pick, show: function (k) { show(k); }, hide: hide, sel: function () { return SEL; } };
+  window.SHXK = { dso: function (i) { if (!DS) dsoInit(); showD(i); }, dsoList: function () { return DS; }, pick: pick, show: function (k) { show(k); }, hide: hide, sel: function () { return SEL; } };
 })();
