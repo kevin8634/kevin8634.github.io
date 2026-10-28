@@ -69,7 +69,7 @@
     for (var j = 0; j <= N; j++) for (var i = 0; i <= N; i++) { var o = (j * (N + 1) + i) * 2; uv[o] = i / N; uv[o + 1] = 1 - j / N; }
     for (j = 0; j < N; j++) for (i = 0; i < N; i++) { var a = j * (N + 1) + i, b = a + 1, c = a + N + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
     g.setAttribute('position', new T.BufferAttribute(new Float32Array(n * 3), 3)); g.setAttribute('uv', new T.BufferAttribute(uv, 2)); g.setIndex(idx);
-    var m = new T.MeshBasicMaterial({ map: it.tex, color: 0xc2cff0, transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false, depthTest: false, side: T.DoubleSide, toneMapped: false });
+    var m = new T.MeshBasicMaterial({ map: it.tex, color: 0xf2e6d2, transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false, depthTest: false, side: T.DoubleSide, toneMapped: false });
     it.mesh = new T.Mesh(g, m); it.mesh.renderOrder = -6; grp.add(it.mesh);
     if (it.s) place(it);
   }
@@ -147,7 +147,7 @@
     }
     pump();
     grp.visible = artA > 0.001;
-    if (grp.visible) items.forEach(function (it) { if (it.mesh) { it.mesh.visible = it.k > 0.001; it.mesh.material.opacity = 0.34 * artA * it.k; } });
+    if (grp.visible) items.forEach(function (it) { if (it.mesh) { it.mesh.visible = it.k > 0.001; it.mesh.material.opacity = 0.6 * artA * it.k; } });
     var root = X._.root(); labels(root.clientWidth || innerWidth, root.clientHeight || innerHeight);
   }
   (function wait(n) { if (window.SHXC && SHXC.on) { SHXC.on(hook); return; } if (n < 100) setTimeout(function () { wait(n + 1); }, 100); })(0);
