@@ -103,3 +103,8 @@
 |---|---|---|
 | x/sh-x-dso-data.js | OpenNGC(Mattia Verga,github.com/mattiaverga/OpenNGC,NGC.csv + addendum.csv):梅西耶 110 个 + V≤9 的 NGC/IC,共 396 个;字段经裁剪,中文名与星座中文名为本站译名 | CC BY-SA 4.0(本数据文件按同协议提供) |
 生成脚本:work/mk_dso.py(不入库)。
+
+## C2.5 · T6 深空抵达影像(2026-10-29)
+| 文件 | 来源 | 许可 | 处理 |
+|---|---|---|---|
+| x/dsoimg/m42-0…5.webp、m42-s.webp | ESA/Hubble heic0601a「Orion Nebula」— NASA, ESA, M. Robberto (STScI/ESA) and the Hubble Space Telescope Orion Treasury Project Team | CC BY 4.0(esahubble.org/copyright) | 缩至 1400 px,中值滤波去星后按亮度分 6 层 + 星点层(work/mk_dsolayers.py);纵深为示意 |
