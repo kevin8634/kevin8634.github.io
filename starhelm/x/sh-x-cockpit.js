@@ -32,6 +32,8 @@
     { id: 'vega', zh: '织女星', en: 'Vega', type: '恒星', R: 1640000, GM: 2.83341e+11, L: 40.1, temp: '—', col: '#dfe8ff', fix: [279.125, 38.7706, 1585580], star: true, tint: [1.08, 1.22, 1.55], sat: .1, info: [['光谱型', 'A0 V'], ['半径', '约 2.4 个太阳(快速自转,赤道更宽)'], ['亮度', '约 40 个太阳'], ['距离', '25 光年']] },
     { id: 'trappist1', zh: 'TRAPPIST-1', en: 'TRAPPIST-1', type: '红矮星', R: 82900, GM: 1.19176e+10, L: 0.000553, temp: '—', col: '#ff7046', fix: [346.6864, -5.0939, 2564173], star: true, tint: [1.2, .5, .3], info: [['光谱型', 'M8 V 超冷红矮星'], ['半径', '约 0.12 个太阳'], ['行星', '7 颗岩质行星,3 颗在宜居带'], ['距离', '约 40.5 光年']] }
   ];
+  // C2.2 卫星插在母行星之后、彗星插在冥王星之后(数据与传播见 sh-x-bodies.js)
+  if (window.SHXB) (function () { var cm = []; SHXB.list.forEach(function (b) { if (b.parent) { var j = -1; B.forEach(function (x, k) { if (x.id === b.parent || x.parent === b.parent) j = k; }); B.splice(j + 1, 0, b); } else cm.push(b); }); var pj = B.map(function (x) { return x.id; }).indexOf('pluto'); Array.prototype.splice.apply(B, [pj + 1, 0].concat(cm)); })();
   var BY = {}; B.forEach(function (b) { BY[b.id] = b; });
   var K = { open: false, built: false };
   var X = window.SHXC = { isOpen: function () { return K.open; } };
@@ -56,6 +58,7 @@
   function helio(b, d) {
     var A = window.Astronomy, o = [0, 0, 0];
     if (b.fix) { var ra = b.fix[0] * Math.PI / 180, de = b.fix[1] * Math.PI / 180; return eq2three({ x: Math.cos(de) * Math.cos(ra) * b.fix[2], y: Math.cos(de) * Math.sin(ra) * b.fix[2], z: Math.sin(de) * b.fix[2] }, o); }
+    if (b.el && window.SHXB) return SHXB.pos(b, d, b.parent ? helio(BY[b.parent], d) : null);
     if (!A || b.id === 'sun') return o;
     if (b.id === 'moon') { var e = eq2three(A.HelioVector(A.Body.Earth, d), [0, 0, 0]), m = eq2three(A.GeoVector(A.Body.Moon, d, true), [0, 0, 0]); return [e[0] + m[0], e[1] + m[1], e[2] + m[2]]; }
     return eq2three(A.HelioVector(A.Body[b.ab], d), o);
@@ -64,7 +67,7 @@
   function ephem(force) {   // 每 2 秒重算位置与速度,其余帧线性外推
     var t = Date.now(); if (!force && t - ephT < 2000) return; ephT = t;
     var d = now(), d2 = new Date(d.getTime() + 10000);
-    B.forEach(function (b) { var p = helio(b, d), q = helio(b, d2); b.p0 = p; b.v = [(q[0] - p[0]) / 10, (q[1] - p[1]) / 10, (q[2] - p[2]) / 10]; b.t0 = d.getTime(); });
+    B.forEach(function (b) { var p = helio(b, d), q = helio(b, d2); b.p0 = p; b.v = [(q[0] - p[0]) / 10, (q[1] - p[1]) / 10, (q[2] - p[2]) / 10]; b.t0 = t; });   // C2.2:外推基准用真实时钟(SHTIME 被调到别的年代时也不会外推到天边)
   }
   function bpos(b, ms) { var dt = (ms - b.t0) / 1000; return [b.p0[0] + b.v[0] * dt, b.p0[1] + b.v[1] * dt, b.p0[2] + b.v[2] * dt]; }
 
@@ -117,6 +120,7 @@
     }
     var U = { map: { value: tex(b) }, night: { value: null }, hasMap: { value: 0 }, hasNight: { value: 0 }, emis: { value: 0 }, sunP: { value: new T.Vector3() }, col: { value: new T.Color(b.col) }, atm: { value: new T.Vector3().fromArray(b.atm || [0, 0, 0]) } };
     if (b.id === 'earth') { U.night.value = tex(b, rd.capabilities.maxTextureSize >= 4096 && Math.min(screen.width, screen.height) >= 700 ? 'hd/earth-night-4k.jpg' : (window.LE_TEX && LE_TEX['earth-night-2k.jpg'])); U.hasNight.value = 1; }
+    if (b.proc && window.SHXB) { var pt0 = new T.CanvasTexture(SHXB.tex(b)); pt0.encoding = T.sRGBEncoding; pt0.anisotropy = Math.min(8, rd.capabilities.getMaxAnisotropy()); pt0.ok = 1; U.map.value = pt0; }
     b.U = U;
     var seg = b.R > 20000 ? 160 : 128;
     var m = new T.Mesh(new T.SphereGeometry(b.R, seg, seg / 2), new T.ShaderMaterial({ uniforms: U, vertexShader: PV, fragmentShader: PF }));
@@ -148,15 +152,17 @@
       }));
       ring.rotation.x = -Math.PI / 2; spin.add(ring); b.ringU = ru;
     }
+    if (b.comet && window.SHXB) { m.geometry.dispose(); m.geometry = SHXB.nucleus(T, b); SHXB.cometFx(T, b, g); }
     // 自转轴:地球用真实恒星时;其余按黄道倾角近似
     if (b.id === 'earth') tilt.rotation.x = -EPS;
-    else if (b.id !== 'moon') { var sd = window.SOLAR && SOLAR.bodies.filter(function (x) { return x.id === b.id; })[0]; tilt.rotation.x = -((sd && sd.tilt) || 0) * Math.PI / 180; }
+    else if (b.id !== 'moon' && !b.parent && !b.comet) { var sd = window.SOLAR && SOLAR.bodies.filter(function (x) { return x.id === b.id; })[0]; tilt.rotation.x = -((sd && sd.tilt) || 0) * Math.PI / 180; }
     b.tilt = tilt; b.spin = spin; b.g = g; return g;
   }
   function orbits() {
     var grp = new T.Group(), A = window.Astronomy; if (!A) return grp;
     B.forEach(function (b) {
-      if (b.id === 'sun' || b.id === 'moon' || b.fix) return;
+      if (b.id === 'sun' || b.id === 'moon' || b.fix || b.parent) return;
+      if (b.comet && window.SHXB) { var cg = new T.BufferGeometry(); cg.setAttribute('position', new T.BufferAttribute(SHXB.orbit(b), 3)); grp.add(new T.LineLoop(cg, new T.LineBasicMaterial({ color: new T.Color(b.col), transparent: true, opacity: .22, depthWrite: false }))); return; }
       var per = { mercury: 88, venus: 225, earth: 365.25, mars: 687, jupiter: 4333, saturn: 10759, uranus: 30687, neptune: 60190, pluto: 90560 }[b.id], N = 360, arr = new Float32Array(N * 3), d0 = now().getTime();
       for (var i = 0; i < N; i++) { var p = helio(b, new Date(d0 + i / N * per * 864e5)); arr[i * 3] = p[0]; arr[i * 3 + 1] = p[1]; arr[i * 3 + 2] = p[2]; }
       var g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(arr, 3));
@@ -267,7 +273,7 @@
       '#shxc .btn{border:1px solid rgba(150,180,220,.3);background:rgba(20,30,52,.55);color:#dfe7f5;border-radius:16px;padding:4px 10px;font:inherit;font-size:11px;cursor:pointer}#shxc .btn:hover{border-color:#7fd6ff;color:#fff}#shxc .btn.on{border-color:#f0c97a;color:#f0c97a;box-shadow:0 0 10px rgba(240,201,122,.25)}',
       '#shxc .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}',
       '#shxc .lst{right:16px;top:300px;width:258px;padding:8px 6px 8px 10px;max-height:calc(100vh - 650px);min-height:110px;overflow:auto}',
-      '#shxc .lst .it{display:flex;align-items:center;gap:8px;padding:3px 8px;border-radius:6px;cursor:pointer;line-height:1.6}#shxc .lst .it:hover{background:rgba(127,214,255,.08)}#shxc .lst .it.on{background:rgba(127,214,255,.13);box-shadow:inset 2px 0 #7fd6ff}',
+      '#shxc .lst .it{display:flex;align-items:center;gap:8px;padding:3px 8px;border-radius:6px;cursor:pointer;line-height:1.6}#shxc .lst .it:hover{background:rgba(127,214,255,.08)}#shxc .lst .it.on{background:rgba(127,214,255,.13);box-shadow:inset 2px 0 #7fd6ff}#shxc .lst .it.sub{padding-left:22px;font-size:.92em;opacity:.88}#shxc .lst .grp{font-size:10.5px;letter-spacing:.14em;color:#7fb6dd;opacity:.75;padding:6px 8px 2px}',
       '#shxc .lst .dot{width:7px;height:7px;border-radius:50%}#shxc .lst .nm{flex:1}#shxc .lst .ds{color:rgba(190,202,225,.6);font-size:10.5px}',
       '#shxc .keys{right:16px;bottom:120px;width:258px;padding:8px 12px;font-size:11px}#shxc .keys .kg{display:grid;grid-template-columns:auto 1fr auto 1fr;gap:3px 8px;align-items:center}#shxc kbd{font:10px ui-monospace,monospace;border:1px solid rgba(180,200,230,.35);border-radius:4px;padding:0 4px;color:#e8eef9;background:rgba(255,255,255,.04)}#shxc .keys.min .kg{display:none}',
       '#shxc .arc{left:50%;top:10px;transform:translateX(-50%);position:absolute;pointer-events:none}',
@@ -334,7 +340,8 @@
     document.body.appendChild(root);
     var lst = $('#xc-lst', root);
     B.forEach(function (b) {
-      var it = el('div', 'it', '<span class="dot" style="background:' + b.col + '"></span><span class="nm">' + b.zh + '</span><span class="ds mono"></span>');
+      if (b.comet && !lst.querySelector('.grp')) lst.appendChild(el('div', 'grp', '彗星 · COMETS'));
+      var it = el('div', 'it' + (b.parent ? ' sub' : ''), '<span class="dot" style="background:' + b.col + '"></span><span class="nm">' + b.zh + '</span><span class="ds mono"></span>');
       it.setAttribute('data-id', b.id); b.li = it; lst.appendChild(it);
       it.addEventListener('click', function () { setTarget(b.id); });
       it.addEventListener('dblclick', function () { setTarget(b.id); autopilot(true); });
@@ -461,7 +468,7 @@
     var near = null, nd = Infinity;
     B.forEach(function (b) { var d = Math.hypot(S.pos[0] - b.wp[0], S.pos[1] - b.wp[1], S.pos[2] - b.wp[2]) - b.R; b.dist = d + b.R; b.surf = d; if (d < nd && b.id !== 'sun') { nd = d; near = b; } });
     var bsun = BY.sun; if (bsun.surf < nd) { near = bsun; nd = bsun.surf; }
-    var soi = near.id === 'sun' ? 0 : near.R * (near.id === 'moon' ? 30 : near.id === 'earth' ? 140 : 300);
+    var soi = near.id === 'sun' ? 0 : near.R * (near.id === 'moon' ? 30 : near.id === 'earth' ? 140 : near.parent ? 40 : 300);
     if (near.dist < soi) { S.pos[0] += near.v[0] * dt; S.pos[1] += near.v[1] * dt; S.pos[2] += near.v[2] * dt; }
     emit('frame', { dt: dt, veff: veff, near: near, nd: nd, tb: tb, dT: dT, surfT: surfT, ms: ms });
     // --- 相机 ---
@@ -481,9 +488,10 @@
       if (b.U) { b.U.sunP.value.copy(sunLocal); b.U.hasMap.value = b.U.map.value.ok ? 1 : 0; b.U.hasNight.value = b.U.night.value && b.U.night.value.ok ? 1 : 0; }
       if (b.ringU) b.ringU.pc.value.copy(b.g.position), b.ringU.pr.value = b.R * b.sc;
       if (b.id === 'earth' && window.Astronomy) { b.spin.rotation.y = Astronomy.SiderealTime(now()) / 24 * 2 * Math.PI; }
-      else if (b.id === 'moon') { var e = BY.earth.g.position; b.spin.lookAt(e.x, e.y, e.z); b.spin.rotateY(-Math.PI / 2); }
+      else if (b.id === 'moon' || b.parent) { var e = BY[b.parent || 'earth'].g.position; b.spin.lookAt(e.x, e.y, e.z); b.spin.rotateY(-Math.PI / 2); }
       else if (b.per && b.spin) b.spin.rotation.y = (ms / 3.6e6 / b.per) * 2 * Math.PI % (2 * Math.PI);
       if (b.cloud) b.cloud.rotation.y += dt * 0.004;
+      if (b.cf) SHXB.update(b, BY.sun.wp, dt, reduced());
       if (b.pt) b.pt.visible = b.dist < 2.8e11;   // 0.03 光年内由航点亮点接管(远处交给 HYG 星空)
     });
     if (BY.sun.fx) BY.sun.fx.update(dt, cam);
@@ -526,6 +534,7 @@
     var tg = null;
     B.forEach(function (b) {
       var p = proj(b.g.position, W, Hh), on = S.labels && p.front && p.x > -50 && p.x < W + 50 && p.y > -20 && p.y < Hh + 20;
+      b.pp = p; if (on && b.parent && b.id !== S.target) { var pq = BY[b.parent].pp; if (pq && pq.front && Math.hypot(p.x - pq.x, p.y - pq.y) < 40) on = false; }   // C2.2 卫星离母星屏幕距离 <40 px 时让位
       b.lb.style.display = on ? 'block' : 'none';
       if (on) { b.lb.style.transform = 'translate(' + (p.x - 9) + 'px,' + (p.y - 9) + 'px)'; b.lb.classList.toggle('t', b.id === S.target); }
       if (b.id === S.target) tg = p;
@@ -564,9 +573,10 @@
     var rate = prevDT == null ? 0 : (dT - prevDT) / hdt; prevDT = dT;
     $('#xc-tt', root).textContent = '目标 · ' + tb.type; $('#xc-tn', root).textContent = tb.zh;
     $('#xc-tg', root).innerHTML = g2('距离', fkm(dT)) + g2('接近率', (rate <= 0 ? '−' : '+') + sig(Math.abs(rate), 3) + ' km/s') + g2('预计到达', rate < -1e-6 ? fdur(surfT / -rate) : '—') + (tb.info ? '' : g2('半径', nf(tb.R) + ' km')) +
-      (tb.info ? tb.info.map(function (r) { return g2(r[0], r[1], 'x2'); }).join('') + g2('光行时', fdur(dT / C), 'x2') :
+      (tb.info ? tb.info.map(function (r) { return g2(r[0], r[1], 'x2'); }).join('') + (tb.comet ? g2('此刻日心距离', (tb.rau || 0).toFixed(2) + ' AU', 'x2') : '') + g2('光行时', fdur(dT / C), 'x2') :
       g2('质量', sig(tb.GM / G, 3).replace(/e(\d+)/, '×10^$1') + ' kg', 'x2') + g2('表面重力', sig(tb.GM / (tb.R * tb.R) * 1000, 3) + ' m/s²', 'x2') + g2('平均温度', tb.temp + ' °C', 'x2') + g2('光行时', fdur(dT / C), 'x2'));
-    $('#xc-tb', root).textContent = sd && sd.blurb ? sd.blurb : '';
+    if (H.tbId !== tb.id) { H.tbId = tb.id; var tbe = $('#xc-tb', root); tbe.textContent = sd && sd.blurb ? sd.blurb : (tb.comet ? '彗尾为示意:离子尾背向太阳、尘埃尾背日并向轨道后方弯曲,长度随日距变化;远离太阳(>4 AU)时彗核冻结、没有彗尾。' : tb.parent ? (tb.parent === 'jupiter' ? '位置按 astronomy-engine 伽利略卫星理论实时推算' : '位置按 JPL 平均轨道根数实时推算') + ';与母星同一尺度绘制。' : '');
+      if (tb.ex && window.SHXE && SHXE.ex[tb.ex]) { var xa = el('a', '', ' 讲解 ›'); xa.style.cssText = 'cursor:pointer;color:#f0c97a;pointer-events:auto;white-space:nowrap'; xa.onclick = function () { SHXE.show(tb.ex, 1); }; tbe.appendChild(xa); } }
     $('#xc-al', root).classList.toggle('on', S.align); $('#xc-ap', root).classList.toggle('on', S.auto);
     $('#xc-cn', root).textContent = tb.zh; $('#xc-cs', root).textContent = fkm(dT) + ' · ETA ' + (rate < -1e-6 ? fdur(surfT / -rate) : '—');
     B.forEach(function (b) { b.li.querySelector('.ds').textContent = fkm(b.dist); b.li.classList.toggle('on', b.id === S.target); if (b.lb.style.display !== 'none') b.lb.querySelector('i').textContent = fkm(b.dist); });
@@ -598,7 +608,7 @@
     var inv = S.q.clone().invert();
     B.forEach(function (b) {
       var v = tmpV.set(b.g.position.x, b.g.position.y, b.g.position.z).sub(cam.position).applyQuaternion(inv), az = Math.atan2(v.x, -v.z) * 180 / Math.PI, el = Math.atan2(v.y, Math.hypot(v.x, v.z)) * 180 / Math.PI;
-      if (Math.abs(az) > 150) return; var a = map(az), x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R;
+      if (Math.abs(az) > 150 || (b.parent && b.id !== S.target)) return; var a = map(az), x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R;
       g.fillStyle = b.col; g.strokeStyle = b.id === S.target ? '#7fd6ff' : 'rgba(0,0,0,0)'; g.beginPath(); g.arc(x, y - 1, b.id === S.target ? 4.5 : 3, 0, 7); g.fill(); g.stroke();
       if (b.id === S.target || b.id === 'sun' || Math.abs(az) < 60) { g.fillStyle = 'rgba(230,236,248,.8)'; g.fillText(b.zh, x, y - 10); g.fillStyle = 'rgba(200,212,235,.5)'; g.fillText((el >= 0 ? '▲' : '▼') + Math.abs(el).toFixed(0) + '°', x, y + 12); }
     });
@@ -612,7 +622,7 @@
     g.strokeStyle = 'rgba(200,215,240,.35)'; g.beginPath(); g.moveTo(20, 40); g.lineTo(w - 20, 40); g.stroke();
     for (var a = .2; a < HI; a *= HI > 3000 ? 1.6 : HI > 50 ? 1.25 : 1.12) { var x = lx(a); g.beginPath(); g.moveTo(x, 37); g.lineTo(x, 43); g.stroke(); }
     g.font = '18px "Noto Sans SC",sans-serif'; g.textAlign = 'center';
-    B.forEach(function (b) { if (b.id === 'sun' || b.id === 'moon' || (b.fix && HI <= 50) || (b.star && HI <= 3000) || (HI > 3000 && !b.fix && b.id !== 'earth')) return; var r = Math.hypot(b.wp[0] - BY.sun.wp[0], b.wp[1] - BY.sun.wp[1], b.wp[2] - BY.sun.wp[2]) / AU, x = lx(r); g.fillStyle = b.col; g.beginPath(); g.arc(x, 40, b.id === S.target ? 7 : 5, 0, 7); g.fill(); g.fillStyle = b.id === S.target ? '#7fd6ff' : 'rgba(210,220,238,.7)'; g.fillText(b.zh, x, 72); });
+    B.forEach(function (b) { if (b.id === 'sun' || b.id === 'moon' || b.parent || (b.fix && HI <= 50) || (b.star && HI <= 3000) || (HI > 3000 && !b.fix && b.id !== 'earth')) return; var r = Math.hypot(b.wp[0] - BY.sun.wp[0], b.wp[1] - BY.sun.wp[1], b.wp[2] - BY.sun.wp[2]) / AU, x = lx(r); g.fillStyle = b.col; g.beginPath(); g.arc(x, 40, b.id === S.target ? 7 : 5, 0, 7); g.fill(); g.fillStyle = b.id === S.target ? '#7fd6ff' : 'rgba(210,220,238,.7)'; g.fillText(b.zh, x, 72); });
     var me = lx(BY.sun.dist / AU); g.fillStyle = '#fff'; g.beginPath(); g.moveTo(me, 30); g.lineTo(me - 7, 16); g.lineTo(me + 7, 16); g.fill(); g.font = '16px sans-serif'; g.fillText('你', me, 12);
   }
 
