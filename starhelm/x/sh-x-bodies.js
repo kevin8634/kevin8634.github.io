@@ -55,7 +55,7 @@
   // 彗星:JPL SBDB(e, q AU, i°, Ω°, ω°, tp JD, P d);Lmax 彗尾长度上限 km
   function comet(id, zh, en, R, el, Lmax, col, info, per) {
     el.a = el.q / (1 - el.e);
-    return { id: id, zh: zh, en: en, type: '彗星', R: R, GM: 6.674e-20 * R * R * R * 4.19 * 5e11, col: col, comet: true, el: el, Lmax: Lmax, temp: '—', per: per, info: info, ex: id };
+    return { id: id, zh: zh, en: en, type: '彗星', R: R, GM: 6.674e-20 * R * R * R * 4.19 * 5e11, col: col, comet: true, proc: id, el: el, Lmax: Lmax, temp: '—', per: per, info: info, ex: id };
   }
   L.push(
     comet('c67p', '67P 彗星', '67P/Churyumov–Gerasimenko', 2.0, { e: .6409081308996354, q: 1.243265640702404, i: 7.040294937543767, O: 50.13557377155012, w: 12.79824970228189, tp: 2457247.588657812098, P: 2353.076067903661, lobe: 1 }, 1e6, '#b9c7d6',
@@ -128,6 +128,15 @@
       var gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#b98a3e'); gr.addColorStop(.2, '#d29d4b'); gr.addColorStop(.5, '#d9a654'); gr.addColorStop(.8, '#cf984a'); gr.addColorStop(1, '#a8803e');
       g.fillStyle = gr; g.fillRect(0, 0, W, H);
       for (i = 0; i < 50; i++) blot(g, W, R() * W, H * (.3 + R() * .4), 30 + R() * 90, 'rgba(150,100,45,.18)', 'rgba(0,0,0,0)');
+    } else if (b.comet) {   // C2.2e 彗核:按球面方向烘焙 3D 噪声(无极点拉伸/接缝);深灰偏暖,尘埃平原较亮、崖面较暗,少量裸露冰斑。
+      // 实际反照率仅 4–6%(罗塞塔实测),这里按 OSIRIS 公开图像的拉伸曝光呈现,否则肉眼几乎全黑
+      var cw = 512, ch = 256, ci = g.createImageData(cw, ch), cd = ci.data, sd = 0; for (i = 0; i < b.id.length; i++) sd += b.id.charCodeAt(i) * (i + 1);
+      for (y = 0; y < ch; y++) { var th = (y + .5) / ch * Math.PI, st = Math.sin(th), ct = Math.cos(th);
+        for (x = 0; x < cw; x++) { var ph = (x + .5) / cw * 2 * Math.PI, dx = -Math.cos(ph) * st, dz = Math.sin(ph) * st;
+          var a = fbm(dx * 2.2, ct * 2.2, dz * 2.2, sd + 40, 4), f = fbm(dx * 12, ct * 12, dz * 12, sd + 50, 3), ice = fbm(dx * 7, ct * 7, dz * 7, sd + 60, 2);
+          var v = 140 + a * 55 + f * 28, k = (y * cw + x) * 4; if (ice > .5) v = Math.min(205, v + (ice - .5) * 420);
+          cd[k] = v * 1.03; cd[k + 1] = v; cd[k + 2] = v * .94; cd[k + 3] = 255; } }
+      g.putImageData(ci, 0, 0); g.drawImage(cv, 0, 0, cw, ch, 0, 0, W, H);
     } else base(b.col);
     var im = g.getImageData(0, 0, W, H), dd = im.data;   // 细颗粒噪声
     for (i = 0; i < dd.length; i += 4) { var n = (R() - .5) * 14; dd[i] += n; dd[i + 1] += n; dd[i + 2] += n; }
@@ -135,15 +144,36 @@
   }
 
   /* ---------- 彗核 / 彗发 / 彗尾 ---------- */
+  /* C2.2e:彗核改为高分辨率「带索引」球面 + 3D 噪声位移(平滑法线,不再是低多边形折面)。
+     形态参照罗塞塔号 67P 实拍:不规则外形、陡崖与台地、浅坑、巨砾;各彗星按 id 取不同种子。海尔-波普/哈雷无近距影像,为按观测参数的程序化模拟 */
+  function h3(x, y, z, s) { var n = Math.sin(x * 127.1 + y * 311.7 + z * 74.7 + s * 19.19) * 43758.5453; return n - Math.floor(n); }
+  function vn(x, y, z, s) {
+    var xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), xf = x - xi, yf = y - yi, zf = z - zi;
+    var u = xf * xf * (3 - 2 * xf), w = yf * yf * (3 - 2 * yf), t = zf * zf * (3 - 2 * zf);
+    function L(a, b, f) { return a + (b - a) * f; }
+    return L(L(L(h3(xi, yi, zi, s), h3(xi + 1, yi, zi, s), u), L(h3(xi, yi + 1, zi, s), h3(xi + 1, yi + 1, zi, s), u), w),
+             L(L(h3(xi, yi, zi + 1, s), h3(xi + 1, yi, zi + 1, s), u), L(h3(xi, yi + 1, zi + 1, s), h3(xi + 1, yi + 1, zi + 1, s), u), w), t) * 2 - 1;
+  }
+  function fbm(x, y, z, s, o) { var a = 0, m = .5, f = 1; for (var i = 0; i < o; i++) { a += m * vn(x * f, y * f, z * f, s + i * 7); f *= 2.03; m *= .5; } return a; }
   function nucleus(T, b) {
-    var geo = new T.IcosahedronGeometry(b.R, 4), p = geo.attributes.position, v = new T.Vector3(), lobe = b.el.lobe;
+    var mob = Math.min(screen.width, screen.height) < 700, geo = new T.SphereGeometry(1, mob ? 120 : 200, mob ? 80 : 130), p = geo.attributes.position, v = new T.Vector3(), lobe = b.el.lobe;
+    var ex = b.id === 'halley' ? 1.45 : lobe ? 1 : 1.12;   // 哈雷彗核为花生形约 15×8 km(乔托号 1986 实拍);海尔-波普未近距观测,取轻度拉长
+    var sd = 0; for (var c = 0; c < b.id.length; c++) sd += b.id.charCodeAt(c) * (c + 1); var R = rng(sd * 977 + 13), cr = [];
+    for (var c2 = 0; c2 < 34; c2++) { var cz = R() * 2 - 1, ca = R() * 6.283, cs = Math.sqrt(1 - cz * cz); cr.push([cs * Math.cos(ca), cs * Math.sin(ca), cz, .05 + Math.pow(R(), 2) * .22, .25 + R() * .5]); }
     for (var k = 0; k < p.count; k++) {
       v.fromBufferAttribute(p, k).normalize();
-      var n = 1 + .12 * Math.sin(v.x * 7.1 + 1.3) * Math.sin(v.y * 5.3 + .4) + .07 * Math.sin(v.z * 11.7 + v.x * 3.1) + .04 * Math.sin(v.y * 19 + v.z * 13);
-      if (lobe) { var ax = Math.abs(v.x); n *= (v.x > 0 ? 1 : .8) * (.5 + .5 * Math.pow(ax, .45)) + .08; }   // 双瓣(示意)
-      v.multiplyScalar(b.R * n); p.setXYZ(k, v.x, v.y, v.z);
+      var n = 1 + .28 * fbm(v.x * 1.3, v.y * 1.3, v.z * 1.3, sd, 3);                        // 大尺度不规则外形
+      var rdg = 1 - Math.abs(fbm(v.x * 3.2 + 5, v.y * 3.2, v.z * 3.2, sd + 3, 3)); n += .07 * rdg * rdg;   // 陡崖/台地(脊状噪声)
+      n += .025 * fbm(v.x * 9, v.y * 9, v.z * 9, sd + 9, 3) + .008 * fbm(v.x * 30, v.y * 30, v.z * 30, sd + 21, 2);   // 粗糙表面与巨砾
+      for (var j = 0; j < cr.length; j++) { var q = cr[j], dd = 1 - (v.x * q[0] + v.y * q[1] + v.z * q[2]); if (dd < q[3] * q[3] * 1.6) { var r2 = dd / (q[3] * q[3] * .5); n += r2 < 1 ? -q[4] * q[3] * .35 * (1 - r2) : q[4] * q[3] * .08 * Math.max(0, 1 - (r2 - 1) / 2.2); } }   // 浅坑(彗核坑多为塌陷坑,较浅)
+      if (lobe) { var ax = Math.abs(v.x); n *= (v.x > 0 ? 1 : .8) * (.5 + .5 * Math.pow(ax, .45)) + .08; }   // 双瓣(67P)
+      v.multiplyScalar(b.R * n); v.x *= ex; v.y /= Math.sqrt(ex); v.z /= Math.sqrt(ex); p.setXYZ(k, v.x, v.y, v.z);
     }
-    geo.computeVertexNormals(); return geo;
+    geo.computeVertexNormals();
+    var nm = geo.attributes.normal, ws = geo.parameters.widthSegments, hs = geo.parameters.heightSegments, W1 = ws + 1, t3 = new T.Vector3(), t4 = new T.Vector3();
+    for (var r = 0; r <= hs; r++) { var i0 = r * W1, i1 = r * W1 + ws; t3.fromBufferAttribute(nm, i0).add(t4.fromBufferAttribute(nm, i1)).normalize(); nm.setXYZ(i0, t3.x, t3.y, t3.z); nm.setXYZ(i1, t3.x, t3.y, t3.z); }   // 接缝法线取平均
+    [0, hs].forEach(function (r) { t3.set(0, 0, 0); for (var c = 0; c <= ws; c++) t3.add(t4.fromBufferAttribute(nm, r * W1 + c)); t3.normalize(); for (c = 0; c <= ws; c++) nm.setXYZ(r * W1 + c, t3.x, t3.y, t3.z); });   // 两极
+    nm.needsUpdate = true; return geo;
   }
   function tier() { var mob = Math.min(screen.width, screen.height) < 700 || (navigator.deviceMemory && navigator.deviceMemory < 4); return mob ? 600 : (navigator.hardwareConcurrency || 4) >= 8 ? 2400 : 1400; }
   function glow(T) {
