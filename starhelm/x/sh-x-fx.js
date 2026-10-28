@@ -68,13 +68,16 @@
       if (mode) { st.mode = mode; st.label = '电影化示意 · ' + (label || ''); st.tk = red ? .45 : 1; } else st.tk = 0;
       try { showTag(); } catch (e) { }
     },
+    /* C2.2a:主 renderer 上下文恢复 / 重建后调用 —— 旧 RT 属于旧上下文,丢掉,下次 begin 重新创建 */
+    reset: function () { try { if (rt) rt.dispose(); if (mat) mat.dispose(); if (q) q.geometry.dispose(); } catch (e) { } rt = null; mat = null; q = null; sc = null; ok = true; },
     state: function () { return { mode: st.mode, k: +st.k.toFixed(3), tk: st.tk, ok: ok }; },
     active: function () { return ok && (st.k > 0.002 || st.tk > 0); },
     /* cockpit 侧:渲染前 begin(rd) 把输出改到 RT;渲染后 end(rd, dt) 全屏 pass 上屏 */
     begin: function (rd) {
       if (!ok || !(st.k > 0.002 || st.tk > 0)) { st.last = 0; return false; }
       if (!rt && !init(rd)) return false;
-      var v = rd.getDrawingBufferSize(new T.Vector2()); if (rt.width !== v.x || rt.height !== v.y) rt.setSize(v.x, v.y);
+      var v = rd.getDrawingBufferSize(new T.Vector2()); if (v.x < 2 || v.y < 2) return false;   // C2.2a:尺寸为 0 时不走 RT(否则上屏的是 0×0 纹理 → 全黑)
+      if (rt.width !== v.x || rt.height !== v.y) rt.setSize(v.x, v.y);
       rd.setRenderTarget(rt); return true;
     },
     end: function (rd, dt) {

@@ -1,6 +1,6 @@
 # 天枢 Starhelm 2.0 穿梭 · 交接与排期(2026-10-27 22:5x CST)
 
-接手者先读:本文件 → docs/DEVLOG-2.0-C10.md(最新)→ docs/DEVLOG-2.0-C09.md → docs/DEVLOG-2.0-C08.md → x/LICENSES.md。OneDrive 不再修改/上传,一切以 GitHub 为准。
+接手者先读:本文件 → docs/DEVLOG-2.0-C11.md(最新)→ docs/DEVLOG-2.0-C10.md→ docs/DEVLOG-2.0-C09.md → docs/DEVLOG-2.0-C08.md → x/LICENSES.md。OneDrive 不再修改/上传,一切以 GitHub 为准。
 
 ## 1. 仓库与边界
 - 仓库 kevin8634/kevin8634.github.io,分支 main;2.0 在 /starhelm/x/(noindex)。只改 x/ 与 starhelm/docs/(含 docs/build/build_x_index.py)。1.0 文件(starhelm/ 根下)不动。
@@ -11,7 +11,8 @@
 ## 2. 当前线上(最新在上)
 | 提交 | 内容 |
 |---|---|
-| (本提交) | C2.1 日球层穿越增强:终端激波太阳风粒子流(400→130 km/s,湍动加热,随飞船位置过渡)、日球层顶旅行者 1 号 PWS 实测等离子体波录音(NASA PIA17045)、日球层外形示意(彗星状 / 气泡羊角状可切换,V1/V2 穿越点标定,IBEX 丝带);新文件 x/sh-x-helio.js;手机像素比 ≤1.5 |
+| (本提交) | C2.2a 修侧舷窗偶发全黑:根因 WebGL 上下文预算耗尽(进侧舷窗新建的独立 renderer 把驾驶舱主画布挤掉);舱体改由主 renderer 画、probe/开场/小窗释放上下文、主 renderer 丢失自动恢复/重建、0 尺寸不渲染、全黑采样自愈 |
+| 4d69339 | C2.1 日球层穿越增强:终端激波太阳风粒子流(400→130 km/s,湍动加热,随飞船位置过渡)、日球层顶旅行者 1 号 PWS 实测等离子体波录音(NASA PIA17045)、日球层外形示意(彗星状 / 气泡羊角状可切换,V1/V2 穿越点标定,IBEX 丝带);新文件 x/sh-x-helio.js;手机像素比 ≤1.5 |
 | f20accb | C2.0 星座插画(Stellarium 西方/modern,Johan Meuris,FAL 1.3)85 幅 + 88 星座中英标签;K 键 连线/连线+插画/关;修正驾驶舱星空贴图 180° 赤经偏差 |
 | 6f1d3b3 | C1.9e 倒计时去背景、仪表盘 DSEG7 黄色液晶字 |
 | d988ab7 | C1.9d 日球层科普讲解卡(终端激波/日鞘/日球层顶/总览)|
@@ -27,7 +28,7 @@
 - x/sh-x-cockpit.js 驾驶舱核心(航点表 B、物理、HUD、X._ 调试接口:S/B/BY/cam/root/setTarget/autopilot)。
 - x/sh-x-ship.js 舰载系统(语音 Armilla/JARVIS、音乐、引擎、侧舷窗入口、登舰遮罩 board())。
 - x/sh-x-deep.js HYG 星空 + 星座连线 + 深空事件(K 三档 SHXD.mode);x/sh-x-constart.js 星座插画+标签(SHXCA),数据 x/sh-x-constart-data.js 由 docs/build/build_constart.py 生成;x/sh-x-pick.js 点选恒星;x/sh-x-starnames.js 中文星名。
-- x/sh-x-port.js 侧舷窗独立 renderer;x/sh-x-fx.js 曲率/近光速/虫洞特效。
+- x/sh-x-port.js 侧舷窗舱体(C2.2a 起由驾驶舱主 renderer 在 SHXC.layers.post 画,不再新建上下文;新增 WebGL 上下文前先想想预算);x/sh-x-fx.js 曲率/近光速/虫洞特效。
 - x/sh-x-helio.js 日球层穿越(SHXH:粒子流 fg 层、外形 bg 层、讲解卡小窗;调试 SHXH.place(au,'side'|'sun'));驾驶舱外挂渲染层 SHXC.layers.bg/fg;PWS 音频 SHXS.pws。
 - 自测补充:work/t_t8.py(C2.1 四档 + reduced + r169,端口用 T8PORT,默认 8797)。
 - 自测(work/ 下,不在仓库):t_t1.py 星座插画四档+对齐截图、t_arr.py 恒星抵达、t_hover.py 悬停播报、t_board.py 登舰、t_pick.py 点选。均为 Playwright + SwiftShader,本地 http.server 于仓库根,拦截外网。
@@ -53,7 +54,7 @@
 ### T3 完整登舰动画(效果图已出,待王磊确认)
 - 现有 C1.9a 只是舱门遮罩。目标:约 6 s 可跳过:地球轨道远景 → 天枢号靠近 → 穿过舱门 → 驾驶舱亮起;加载进度条保留在底部。先出效果图给王磊。
 
-### T4 侧舷窗偶发全黑(未复现)
+### T4 侧舷窗偶发全黑 ✅ 已完成(C2.2a,2026-10-28,见 DEVLOG-2.0-C11.md;根因:WebGL 上下文预算耗尽)
 - 王磊截图:侧舷窗中只见黑色与细线。推断为自动驾驶被行星挡住贴在夜面,C1.8d 已改为绕行。若仍出现,检查 x/sh-x-port.js 的 setClearColor alpha、主场景在 #shxc.port 下是否被隐藏。
 
 ### T5 点选扩展

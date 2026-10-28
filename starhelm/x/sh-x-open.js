@@ -12,7 +12,7 @@
   // 北斗七星 J2000:赤经(小时)、赤纬(度)、视星等
   var DIPPER = [['天枢', 11.0621, 61.751, 1.8], ['天璇', 11.0307, 56.382, 2.4], ['天玑', 11.8972, 53.695, 2.4], ['天权', 12.2571, 57.033, 3.3], ['玉衡', 12.9005, 55.960, 1.8], ['开阳', 13.3987, 54.925, 2.2], ['摇光', 13.7923, 49.313, 1.9]];
   function reduced() { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
-  function glOK() { try { var c = document.createElement('canvas'); return !!(window.THREE && (c.getContext('webgl2') || c.getContext('webgl'))); } catch (e) { return false; } }
+  function glOK() { try { var c = document.createElement('canvas'), g = window.THREE && (c.getContext('webgl2') || c.getContext('webgl')); if (g) { var x = g.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); } return !!g; } catch (e) { return false; } }   // C2.2a:探测完立即释放上下文
   function sm(x, a, b) { var t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
   function css() {
     if (document.getElementById('xo-css')) return;
@@ -216,9 +216,11 @@
     if (!playing) return; playing = false; cancelAnimationFrame(raf); removeEventListener('keydown', onKey, true);
     try { localStorage.setItem(KEY, '1'); } catch (e) { }
     root.classList.add('out'); document.body.classList.remove('xo-on');
-    setTimeout(function () { if (!playing && root) { root.style.display = 'none'; root.querySelectorAll('.cap').forEach(function (c) { c.classList.remove('on'); }); } }, 750);
+    setTimeout(function () { if (!playing && root) { root.style.display = 'none'; root.querySelectorAll('.cap').forEach(function (c) { c.classList.remove('on'); }); release(); } }, 750);
     var f = done; done = []; f.forEach(function (fn) { try { fn(); } catch (e) { } });
   }
+  // C2.2a:开场结束后释放它的 WebGL 上下文(原来一直占着一个全屏上下文,挤压驾驶舱的上下文预算);重播时 setup() 重建
+  function release() { if (!R) return; try { if (scene) scene.traverse(function (o) { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach(function (m) { if (m.map) m.map.dispose(); m.dispose(); }); }); R.dispose(); R.forceContextLoss(); if (R.domElement.parentNode) R.domElement.remove(); } catch (e) { } R = null; scene = null; objs = {}; }
   addEventListener('resize', size);
   window.SHXOPEN = { play: play, end: end, seen: seen, get playing() { return playing; } };
   // 兼容 1.0 接口:HUD「↺ 开场」等调用 SHOPEN.play 时改播 2.0 开场;1.0 开场脚本在 X 页已不加载(归档)

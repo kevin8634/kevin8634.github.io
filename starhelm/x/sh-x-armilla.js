@@ -159,7 +159,7 @@
   Armilla.prototype.dispose = function () { this.stop(); this.renderer.dispose(); if (this.renderer.domElement.parentNode) this.renderer.domElement.remove(); };
 
   window.SHXARM = {
-    ok: function () { T = window.THREE; try { if (!T || !T.WebGLRenderer) return false; var c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } },
+    ok: function () { T = window.THREE; try { if (!T || !T.WebGLRenderer) return false; var c = document.createElement('canvas'), g = c.getContext('webgl2') || c.getContext('webgl'); if (g) { var x = g.getExtension('WEBGL_lose_context'); if (x) x.loseContext(); } return !!g; } catch (e) { return false; } },   // C2.2a:探测完立即释放
     mount: function (host, opt) { T = window.THREE; var a = new Armilla(host, opt); a.reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; a.start(); return a; }
   };
 })();

@@ -353,7 +353,8 @@
     shapeF = sstep(140, 160, r);
     if (HS && root && ov) placeLabels(ov, HS.cam, root.clientWidth, root.clientHeight, shapeF, { sh: 1, rb: !ribbonOn });
     HS.shipP = [S.pos[0] / AU, S.pos[1] / AU, S.pos[2] / AU]; HS.ship.geometry.attributes.position.array.set(HS.shipP); HS.ship.geometry.attributes.position.needsUpdate = true;
-    if (window.SHXE && SHXE.cur && SHXE.cur() === 'heliosphere') insetFrame(S);
+    if (window.SHXE && SHXE.cur && SHXE.cur() === 'heliosphere') { insetFrame(S); if (INS) INS.off = 0; }
+    else if (INS) { var tn = performance.now(); if (!INS.off) INS.off = tn; else if (tn - INS.off > 1500) { try { INS.r.dispose(); INS.r.forceContextLoss(); } catch (e) { } INS = null; } }   // C2.2a:卡片关闭 1.5 s 后释放小窗上下文(卡片淡入的那一帧不算关闭)
   }
   function setModel(m) { if (!SH[m] || m === model) return model; model = m; try { localStorage.setItem('gn:sh:x-helio-model', m); } catch (e) { } if (HS) rebuildShape(); if (X && X._) X._.toast('日球层外形示意 · ' + MN[m] + '(形状仍有争议)'); return model; }
   function setRibbon(on) { ribbonOn = !!on; try { localStorage.setItem('gn:sh:x-helio-ribbon', on ? '1' : '0'); } catch (e) { } return ribbonOn; }

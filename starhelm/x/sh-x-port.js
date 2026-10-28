@@ -1,7 +1,9 @@
 /* 天枢 Starhelm · 2.0 穿梭 C1.0 · sh-x-port.js(SHXPORT)
  * C1.1:窗台控制台键位/托盘按 DOM 按钮组实测布置,DOM 按钮逐帧吸附到 3D 键位投影,Armilla 坐上金色光环托盘。
  * 侧舷窗全景舱(王磊 10-27 00:52 确认方案 C2:无中柱单一超宽窗、近景、幽蓝荧光、Armilla + 控制台 + 按钮)。
- * 实时 3D:独立透明 WebGLRenderer 叠在驾驶舱主场景之上,只画舱壁、窗框、顶部灯带、窗台控制台、反光地面;
+ * 实时 3D:只画舱壁、窗框、顶部灯带、窗台控制台、反光地面;
+ * C2.2a:不再新建独立 WebGLRenderer(多一个上下文会把驾驶舱主画布挤掉 → 侧舷窗全黑),改由驾驶舱主 renderer 在引擎特效上屏后
+ *        作为 SHXC.layers.post 叠画;窗外 DOM 标签/目标框按窗洞裁剪(原来靠独立画布遮挡)。
  * 窗洞透明,窗外就是主场景里的真实星空与星球(不用概念图做素材)。
  * 鼠标 / 转向带视差;减少动态时静止;页面隐藏或离开侧舷窗时停止渲染;无 WebGL 时退回原 CSS 舷窗。 */
 (function () {
@@ -11,9 +13,9 @@
   var P = { anchors: null, keys: null, deck: null, on: false, ok: null, R: null, host: null, gl: null, scene: null, cam: null, grp: null, raf: 0, t: 0, lt: 0, mx: 0, my: 0, px: 0, py: 0, key: '', btns: null, glass: null, sheen: null, hud: null };
   function reduced() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
   function mobile() { return innerWidth < 700 || innerHeight < 480; }
-  function canGL() {
+  function canGL() {   // C2.2a:不再用 probe 画布探测(探测上下文不释放也占预算),直接看驾驶舱主 renderer 是否在
     T = window.THREE; if (!T || !T.WebGLRenderer || !T.ExtrudeGeometry) return false;
-    try { var c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; }
+    return !!(I.rd && I.rd());
   }
   function rr(path, x, y, w, h, r) { // 圆角矩形(左下角 x,y)
     path.moveTo(x + r, y); path.lineTo(x + w - r, y); path.quadraticCurveTo(x + w, y, x + w, y + r);
@@ -66,10 +68,7 @@
     if (P.ok === false) return false; if (P.gl) return true;
     if (!canGL()) { P.ok = false; return false; }
     try {
-      var g = P.gl = new T.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'low-power' });
-      g.setClearColor(0, 0); g.domElement.className = 'xs-port-gl';
-      if (T.ACESFilmicToneMapping) { g.toneMapping = T.ACESFilmicToneMapping; g.toneMappingExposure = 1.05; }
-      P.host.insertBefore(g.domElement, P.host.firstChild);
+      P.gl = true;
       P.scene = new T.Scene(); P.cam = new T.PerspectiveCamera(50, 1, .1, 200);
       P.scene.add(new T.HemisphereLight(0x8fb4ff, 0x10131f, .9));
       var key = new T.DirectionalLight(0xbcd6ff, 1.1); key.position.set(0, 2, -6); P.scene.add(key); // 窗外星光
@@ -77,8 +76,8 @@
       P.ok = true; P.host.classList.add('gl');
       addEventListener('pointermove', function (e) { P.mx = e.clientX / innerWidth * 2 - 1; P.my = e.clientY / innerHeight * 2 - 1; }, { passive: true });
       addEventListener('resize', function () { if (P.on) { P.key = ''; layout(); } });
-      document.addEventListener('visibilitychange', function () { if (!document.hidden && P.on) loop(); });
-      g.domElement.addEventListener('webglcontextlost', function (e) { e.preventDefault(); P.ok = false; P.host.classList.remove('gl'); stop(); });
+      X.layers.post.push(draw);
+      X.on(function (ev) { if (ev === 'renderer') P.key = ''; });   // 主 renderer 重建后舱体按新上下文重建一次(几何/纹理随之重新上传)
       return true;
     } catch (e) { console.warn('[侧舷窗 3D]', e); P.ok = false; if (P.host) P.host.classList.remove('gl'); return false; }
   }
@@ -88,7 +87,6 @@
   // 依视口重建舱体(视口 = 相机在 z=0 平面看到的范围)
   function layout() {
     var w = innerWidth, h = innerHeight, mob = mobile(), k = w + 'x' + h + (mob ? 'm' : '');
-    P.gl.setPixelRatio(Math.min(devicePixelRatio || 1, mob ? 1.5 : 2)); P.gl.setSize(w, h, false);
     P.cam.aspect = w / h; P.cam.updateProjectionMatrix();
     if (P.key === k && P.grp) return; P.key = k;
     if (P.grp) { P.scene.remove(P.grp); dispose(P.grp); }
@@ -167,6 +165,9 @@
     var pl = new T.PointLight(0xffc46a, 2.2, 6, 1.6); pl.position.set(0, top + .5, cz + .4); G.add(pl); P.pl = pl;
     var pc = new T.PointLight(0x4fbfff, 3, 9, 1.4); pc.position.set(0, wy0 + .2, 1.2); G.add(pc);
     P.sillZ = sillD;
+    // 窗洞在屏幕上的像素范围(DOM 标签按此裁剪)
+    var sx = (w - WW / u) / 2; P.hole = { l: sx, r: w - sx, t: topPx, b: h - botPx };
+    var lb = P.R.querySelector('#xc-lbls'); if (lb) lb.style.clipPath = 'inset(' + topPx.toFixed(0) + 'px ' + sx.toFixed(0) + 'px ' + botPx.toFixed(0) + 'px ' + sx.toFixed(0) + 'px round ' + (rad / u).toFixed(0) + 'px)';
   }
 
 
@@ -193,11 +194,10 @@
   }
   function unsnap() { if (!P.anchors) return; P.anchors.forEach(function (A) { A.el.style.transform = ''; }); }
 
-  function frame(now) {
-    if (!P.on || !P.gl) return;
-    if (document.hidden) { P.raf = 0; return; }
-    P.raf = requestAnimationFrame(frame);
-    var dt = Math.min(.1, ((now - (P.lt || now)) / 1000) || .016); P.lt = now; P.t += dt;
+  function draw(li) {   // 驾驶舱主循环每帧调用(引擎特效上屏后)
+    if (!P.on || !P.ok) return;
+    if (!P.key || !P.grp) layout();
+    var dt = Math.min(.1, li.dt || .016); P.t += dt;
     var rm = reduced() ? 0 : 1;
     // 视差:鼠标 + 驾驶舱转向(--hx/--hy 由 sh-x-ship.js 每帧写入)
     var hx = parseFloat(P.R.style.getPropertyValue('--hx')) || 0, hy = parseFloat(P.R.style.getPropertyValue('--hy')) || 0;
@@ -212,15 +212,23 @@
         P.tb = 0; var c = new T.Color(); for (var i = 0; i < P.btns.count; i++) { var hi = Math.random() < .12; c.set(hi ? 0xbff0ff : (Math.random() < .08 ? 0xf0c97a : 0x3fc4ff)); P.btns.setColorAt(i, c); } P.btns.instanceColor.needsUpdate = true;
       }
     }
-    P.cam.updateMatrixWorld(); snap();
-    P.gl.render(P.scene, P.cam);
+    P.cam.updateMatrixWorld(); snap(); clipMarks();
+    var rd = li.rd, tm = rd.toneMapping, te = rd.toneMappingExposure;
+    if (T.ACESFilmicToneMapping) { rd.toneMapping = T.ACESFilmicToneMapping; rd.toneMappingExposure = 1.05; }
+    rd.clearDepth(); rd.render(P.scene, P.cam);
+    rd.toneMapping = tm; rd.toneMappingExposure = te;
   }
-  function loop() { if (!P.raf && P.on) { P.lt = 0; P.raf = requestAnimationFrame(frame); } }
-  function stop() { if (P.raf) cancelAnimationFrame(P.raf); P.raf = 0; }
+  // 目标框 / 屏边箭头落在舱壁上时隐藏(原来由独立画布盖住)
+  function clipMarks() {
+    var H = P.hole; if (!H) return; var a = P.R.querySelector('#xc-arw'), m = P.R.querySelector('#xc-tmk');
+    if (a) a.style.visibility = 'hidden';
+    if (m) { var x = parseFloat(m.style.left), y = parseFloat(m.style.top); m.style.visibility = (x > H.l && x < H.r && y > H.t && y < H.b) ? '' : 'hidden'; }
+  }
+  function unclip() { if (!P.R) return; var lb = P.R.querySelector('#xc-lbls'); if (lb) lb.style.clipPath = ''; ['#xc-arw', '#xc-tmk'].forEach(function (q) { var e = P.R.querySelector(q); if (e) e.style.visibility = ''; }); }
   function set(on) {
     if (on === P.on) return; P.on = on;
-    if (on) { if (!mount()) { P.on = false; return; } layout(); loop(); }
-    else { stop(); unsnap(); }
+    if (on) { if (!mount()) { P.on = false; return; } P.key = ''; layout(); }
+    else { unsnap(); unclip(); }
   }
   function watch() {
     var R = I.root(); if (!R) return false; if (R._portObs) return true; R._portObs = 1;
@@ -229,7 +237,7 @@
   }
   X.on(function (ev) { if (ev === 'open') watch(); else if (ev === 'close') set(false); });
   var css = document.createElement('style');
-  css.textContent = '#xs-port .xs-port-gl{position:absolute;inset:0;width:100%;height:100%;display:block}#xs-port.gl{background:none!important}#xs-port{z-index:1}#xs-port .tag{z-index:2;text-shadow:0 0 8px rgba(0,0,0,.8)}#shxc.port #xa-dock,#shxc.port #xa-sub{z-index:3}#shxc.port #xa-sub{bottom:262px}@media (max-width:640px){#shxc.port #xa-sub{bottom:236px}}';
+  css.textContent = '#shxc.port .credit{opacity:0}#shxc.port #xc-lbls{position:absolute;inset:0;pointer-events:none}#shxc.port #xc-lbls .lbl{pointer-events:auto}#xs-port.gl{background:none!important}#xs-port{z-index:1}#xs-port .tag{z-index:2;text-shadow:0 0 8px rgba(0,0,0,.8)}#shxc.port #xa-dock,#shxc.port #xa-sub{z-index:3}#shxc.port #xa-sub{bottom:262px}@media (max-width:640px){#shxc.port #xa-sub{bottom:236px}}';
   document.head.appendChild(css);
-  window.SHXPORT = { state: function () { return { on: P.on, gl: P.ok, win: P.win || null }; } };
+  window.SHXPORT = { state: function () { return { on: P.on, gl: P.ok, win: P.win || null, hole: P.hole || null }; } };
 })();

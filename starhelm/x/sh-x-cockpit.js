@@ -36,7 +36,7 @@
   var K = { open: false, built: false };
   var X = window.SHXC = { isOpen: function () { return K.open; } };
   X.hooks = []; X.on = function (f) { X.hooks.push(f); };
-  X.layers = { bg: [], fg: [] };   // C2.1:每帧在主场景前(bg)/尘埃后(fg)调用 f({rd,cam0,W,H,dt,pf})
+  X.layers = { bg: [], fg: [], post: [] };   // C2.1:每帧在主场景前(bg)/尘埃后(fg)调用 f({rd,cam0,W,H,dt,pf});C2.2a post:引擎特效上屏之后(侧舷窗舱体,不被特效扭曲)
   function emit(ev, a) { for (var i = 0; i < X.hooks.length; i++) { try { X.hooks[i](ev, a); } catch (e) { console.warn('[SHXC hook]', e); } } }
 
   function reduced() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
@@ -405,6 +405,10 @@
   function loop(t) {
     raf = requestAnimationFrame(loop);
     var dt = Math.min(0.1, (t - (last || t)) / 1000); last = t; frame++;
+    // C2.2a:上下文丢失期间 / 视口尺寸为 0(手机旋转、地址栏塌缩、宿主被隐藏)时不渲染;尺寸与画布不一致时先补 setSize
+    if (K.lost) return;
+    if (root.clientWidth < 2 || root.clientHeight < 2) return;
+    if (rd.domElement.width !== Math.floor(root.clientWidth * rd.getPixelRatio()) || rd.domElement.height !== Math.floor(root.clientHeight * rd.getPixelRatio())) size();
     ephem(false);
     var ms = Date.now(), W = root.clientWidth, Hh = root.clientHeight;
     B.forEach(function (b) { b.wp = bpos(b, ms); });
@@ -510,6 +514,8 @@
     var fx = updFx(W, Hh, [sunLocal.x, sunLocal.y, sunLocal.z]);
     rd.clearDepth(); rd.render(sFx, camFx);
     if (PF) SHXFX.end(rd, dt);
+    for (li = 0; li < X.layers.post.length; li++) { try { X.layers.post[li](LI); } catch (e) { console.warn('[SHXC layer]', e); X.layers.post.splice(li--, 1); } }
+    blackCheck(t);
     // --- HUD ---
     hud(dt, W, Hh, veff, near, nd, tb, dT, surfT, fx);
   }
@@ -614,31 +620,69 @@
   function build() {
     T = window.THREE; tmpV = new T.Vector3(); tmpQ = new T.Quaternion();
     css(); buildHud();
-    var cv = el('canvas', 'gl'); root.insertBefore(cv, root.firstChild);
-    rd = new T.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
-    rd.setPixelRatio(Math.min(window.devicePixelRatio || 1, Math.min(screen.width, screen.height) < 700 ? 1.5 : 3)); rd.outputEncoding = T.sRGBEncoding;   // C2.1:手机像素比 ≤1.5
+    var cv = makeRd();
     cam = new T.PerspectiveCamera(60, 1, 1, 1e7); cam0 = new T.PerspectiveCamera(60, 1, 0.1, 5000); camO = new T.PerspectiveCamera(60, 1, 1e3, 2e11);
     sSky = new T.Scene(); sOrb = new T.Scene(); sMain = new T.Scene(); sDust = new T.Scene();
     if (window.SHFX3D && SHFX3D.skyMesh) { K.skyG = SHFX3D.skyMesh(rd, 1000, 0x9aa0ae); sSky.add(K.skyG); }
     sOrb.add(orbits());
     ephem(true); B.forEach(function (b) { sMain.add(body3d(b)); });
     dust = dustField(); if (dust.N) sDust.add(dust.m);
-    buildFx(); bindInput(cv);
+    buildFx();
     K.built = true;
   }
-  function size() { if (!rd) return; rd.setSize(root.clientWidth, root.clientHeight, false); }
+  /* C2.2a 侧舷窗偶发全黑 —— 根因:WebGL 上下文预算耗尽。页面里同时存活的上下文(1.0 舞台、开场、三处只探测不释放的 probe、
+   * Armilla、侧舷窗独立 renderer、讲解卡小窗……)超过浏览器上限(手机常见 8、桌面 16)时,浏览器强制丢失「最旧」的上下文,
+   * 驾驶舱主画布正是较早创建的那个;首次进侧舷窗会再新建一个 renderer,正好成为压垮它的那一个,且这种丢失不会自动恢复。
+   * 修法:侧舷窗改由主 renderer 画(不再新建上下文)、probe 用完立即释放、开场结束释放、小窗关闭释放;
+   * 主 renderer 监听丢失:可恢复就等 restored,2.5 s 内没恢复就换新画布重建;尺寸为 0 不渲染;全黑采样自愈。 */
+  function makeRd() {
+    var cv = el('canvas', 'gl'), old = rd && rd.domElement;
+    if (old && old.parentNode) old.parentNode.replaceChild(cv, old); else root.insertBefore(cv, root.firstChild);
+    rd = new T.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' });
+    rd.setPixelRatio(Math.min(window.devicePixelRatio || 1, Math.min(screen.width, screen.height) < 700 ? 1.5 : 3)); rd.outputEncoding = T.sRGBEncoding;   // C2.1:手机像素比 ≤1.5
+    cv.addEventListener('webglcontextlost', function (e) {
+      e.preventDefault(); if (cv !== rd.domElement) return; K.lost = true; K.nLost = (K.nLost || 0) + 1; clearTimeout(K.lostT);
+      K.lostT = setTimeout(function () { if (K.lost && cv === rd.domElement) rebuildRd(); }, 2500);
+    }, false);
+    cv.addEventListener('webglcontextrestored', function () { if (cv !== rd.domElement) return; K.lost = false; clearTimeout(K.lostT); K.nRest = (K.nRest || 0) + 1; if (window.SHXFX && SHXFX.reset) SHXFX.reset(); size(); }, false);
+    bindInput(cv); return cv;
+  }
+  function rebuildRd() {   // 被浏览器强制回收的上下文不会再 restored:换新画布、新 renderer;纹理/几何体由 three 按需重新上传
+    var o = rd; try { o.dispose(); } catch (e) { }
+    try { makeRd(); } catch (e) { console.warn('[SHXC rebuild]', e); K.lostT = setTimeout(rebuildRd, 4000); return; }
+    K.lost = false; K.nRebuild = (K.nRebuild || 0) + 1; if (window.SHXFX && SHXFX.reset) SHXFX.reset(); size();
+    if (K.skyG) K.skyG.traverse(function (n) { var m = n.material; if (m && m.map) m.map.needsUpdate = !!m.map.image; });
+    emit('renderer', rd);
+  }
+  function size() { if (!rd) return; var w = root.clientWidth, h = root.clientHeight; if (w < 2 || h < 2) return; rd.setSize(w, h, false); }
+  function checkCtx() { if (!rd || !K.open) return; try { var g = rd.getContext(); if (g && g.isContextLost() && !K.lost) { K.lost = true; clearTimeout(K.lostT); K.lostT = setTimeout(function () { if (K.lost) rebuildRd(); }, 2500); } } catch (e) { } size(); }
+  // 全黑采样(每 3 s 读 9 个 4×4 小块,同一帧内读默认帧缓冲):连续 3 次全为 0 → 软复位(释放特效 RT、复位渲染状态、重设尺寸);再黑 → 重建 renderer
+  var BK = { t: 0, n: 0, heal: 0, px: null };
+  function blackCheck(t) {
+    if (t - BK.t < 3000) return; BK.t = t;
+    try {
+      var g = rd.getContext(), w = g.drawingBufferWidth, h = g.drawingBufferHeight, mx = 0; if (w < 16 || h < 16) return;
+      BK.px = BK.px || new Uint8Array(64);
+      for (var i = 0; i < 9; i++) { g.readPixels(Math.floor(w * (.2 + .3 * (i % 3))), Math.floor(h * (.2 + .3 * Math.floor(i / 3))), 4, 4, g.RGBA, g.UNSIGNED_BYTE, BK.px); for (var k = 0; k < 64; k++) if ((k & 3) !== 3 && BK.px[k] > mx) mx = BK.px[k]; }
+      if (mx > 0) { BK.n = 0; return; }
+      if (++BK.n < 3) return; BK.n = 0; BK.heal++;
+      if (BK.heal % 2) { if (window.SHXFX && SHXFX.reset) SHXFX.reset(); rd.setRenderTarget(null); if (rd.resetState) rd.resetState(); size(); }
+      else rebuildRd();
+    } catch (e) { }
+  }
   X.open = function (o) {
     o = o || {};
     if (!window.THREE || !window.Astronomy) { if (window.LE && LE.ui && LE.ui.toast) LE.ui.toast('这台设备暂时开不了驾驶舱(需要 WebGL)'); return false; }
     try { if (!K.built) build(); } catch (e) { console.warn('[SHXC]', e); if (window.LE && LE.ui && LE.ui.toast) LE.ui.toast('驾驶舱载入失败'); return false; }
     root.style.display = 'block'; K.open = true; document.body.classList.add('shx-flying');
     size(); if (K.resume && !o.fresh) { toast('从上次结束探索的位置继续'); } else startPose(o.target || 'earth'); K.resume = false; setTarget(S.target);
-    addEventListener('resize', size); addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true);
+    addEventListener('resize', size); document.addEventListener('visibilitychange', onVis); addEventListener('keydown', onKey, true); addEventListener('keyup', onKey, true);
     last = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
     toast('驾驶舱已就位 · 拖动转视角,W/S 加减速,G 自动驾驶'); emit('open', o);
     try { var u = new URL(location.href); u.searchParams.set('view', 'fly'); history.replaceState(null, '', u.pathname + u.search); } catch (e) { }
     return true;
   };
+  function onVis() { if (!document.hidden) { last = 0; checkCtx(); } }
   /* 结束探索:驾驶舱风格确认窗;Esc 只关窗/回驾驶舱,不会把人送回地球或任务页 */
   var dlg = null;
   function nearest() {
@@ -672,13 +716,15 @@
   X.confirmEnd = confirmEnd; X.endExplore = endExplore;
   X.close = function (quiet) {
     if (!K.open) return; K.open = false; cancelAnimationFrame(raf); root.style.display = 'none'; document.body.classList.remove('shx-flying');
-    removeEventListener('resize', size); removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true); S.keys = {};
+    removeEventListener('resize', size); document.removeEventListener('visibilitychange', onVis); removeEventListener('keydown', onKey, true); removeEventListener('keyup', onKey, true); S.keys = {};
     emit('close');
     if (dlg) { dlg.remove(); dlg = null; }
     if (!quiet) { K.resume = true; if (window.SHXV) SHXV.go('solar'); }
   };
-  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, fdur: fdur, fkm: fkm, sky: function () { return sSky; }, cam: function () { return cam; }, skyG: function () { return K.skyG; }, emit: function (e, a) { emit(e, a); } };
+  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, rd: function () { return rd; }, fdur: fdur, fkm: fkm, sky: function () { return sSky; }, cam: function () { return cam; }, skyG: function () { return K.skyG; }, emit: function (e, a) { emit(e, a); } };
   X.state = function () { return { pos: S.pos.slice(), target: S.target, base: S.base, mult: S.mult, auto: S.auto, sunVis: sunVis }; };
+  X.health = function () { return { lost: !!K.lost, nLost: K.nLost || 0, restored: K.nRest || 0, rebuilt: K.nRebuild || 0, heal: BK.heal, w: rd ? rd.domElement.width : 0, h: rd ? rd.domElement.height : 0 }; };
+  X._rebuild = function () { rebuildRd(); };
   X.setTarget = function (id) { if (BY[id]) setTarget(id); };
   X.autopilot = function (on) { autopilot(on !== false); };
 })();
