@@ -1,0 +1,97 @@
+/* 天枢 2.0 · x/sh-x-tasks.css —— C2.2b:任务实验室面板基础样式
+ * C0.8 归档 sh-voyage.css 时,.ml 系列(任务面板、实验室)的基础样式一并被停用,X 页任务面板失去 position:fixed,
+ * 掉到页面左上角被顶栏和星域栏压住(王磊 10-28 16:25 截图)。这里只摘回 sh-voyage.css 中 .ml 与各实验室部分(原 114–141、224–289 行),航行舱样式仍停用。 */
+.ml{position:fixed;inset:0;z-index:80;background:radial-gradient(120% 90% at 50% 0%,#0b1626,#02040a 70%);color:#e8f2ff;font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;display:flex;flex-direction:column;padding:10px 14px 12px;gap:8px}
+.ml[hidden]{display:none}
+.ml-hd{display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(214,178,94,.35);padding-bottom:6px}
+.ml-hd small{display:block;font-size:11px;color:#9fb3cc;letter-spacing:.08em}.ml-hd b{font-size:19px;letter-spacing:.06em}
+.ml-st{margin-left:auto;color:#f3cf7a;font-size:14px}
+.ml-x{background:none;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:50%;width:32px;height:32px;cursor:pointer}
+.ml-body{flex:1;min-height:0;display:grid;grid-template-columns:3fr 2fr;gap:10px}
+.ml-pane{position:relative;border:1px solid rgba(127,227,196,.22);border-radius:14px;background:rgba(8,16,30,.55);overflow:hidden;display:flex;flex-direction:column}
+.ml-cap{position:absolute;top:8px;left:12px;font-size:12px;color:#9fd9c6;z-index:2;display:flex;gap:8px;align-items:center}
+.ml-space canvas{position:absolute;inset:0;display:block;touch-action:none;cursor:grab}
+.ml-sun{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:#ffd27a;font-size:12px;opacity:.85;pointer-events:none}
+.ml-note{position:absolute;left:12px;bottom:8px;font-size:11px;color:#7f93ad;pointer-events:none}
+.ml-earth{align-items:center;justify-content:center;padding-top:28px}
+.ml-cv2{width:min(100%,300px);height:auto;aspect-ratio:1}
+.ml-hemi{background:rgba(127,227,196,.12);border:1px solid rgba(127,227,196,.4);color:#bff3e2;border-radius:10px;font-size:11px;padding:1px 8px;cursor:pointer}
+.ml-info{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 10px;font-size:13px;color:#c9d6e8}
+.ml-nm{font-size:20px;color:#f3cf7a;letter-spacing:.08em}
+.ml-ctl{display:flex;align-items:center;gap:10px;font-size:13px;color:#c9d6e8}
+.ml-rng{flex:1;accent-color:#d6b25e}
+.ml-ctl button,.ml-c,.ml-hint{background:rgba(214,178,94,.12);border:1px solid rgba(214,178,94,.55);color:#f6e2b0;border-radius:10px;padding:6px 12px;cursor:pointer;font:inherit;font-size:13px}
+.ml-guide{border:1px solid rgba(214,178,94,.35);border-radius:14px;background:rgba(20,18,10,.35);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.ml-q{font-size:15px;line-height:1.55}.ml-q small{display:block;font-size:11px;color:#d6b25e;margin-bottom:2px}.ml-q b{color:#f3cf7a;margin-right:6px}
+.ml-ch{display:flex;flex-wrap:wrap;gap:8px}
+.ml-c.no{border-color:#c66;color:#f2b0b0;opacity:.6}.ml-c--go{background:rgba(127,227,196,.15);border-color:#7fe3c4;color:#cff8ea}
+.ml-gb{display:flex;align-items:center;gap:10px}.ml-hint{background:none;border-color:rgba(255,255,255,.25);color:#b9c7da}.ml-hint[hidden]{display:none}
+.ml-hs{font-size:13px;color:#9fd9c6;line-height:1.5}
+.sh-bridge-a{display:inline-block;margin-top:8px;color:#9fd9c6;font-size:13px;text-decoration:none;border-bottom:1px dashed rgba(159,217,198,.6)}.sh-bridge-a:hover{color:#f3cf7a;border-color:#f3cf7a}
+@media (max-width:760px),(orientation:portrait){.ml-body{grid-template-columns:1fr;grid-template-rows:1.2fr 1fr}.ml-earth{flex-direction:row;padding-top:24px;gap:6px}.ml-cv2{width:auto;height:min(100%,190px)}.ml-q{font-size:14px}.ml{padding:8px 10px}}
+/* v0.5.0 日月食实验室 */
+.ec-ctl label{display:flex;align-items:center;gap:6px;flex:1;white-space:nowrap}
+.ec-ctl .ml-rng{min-width:80px}
+@media (max-width:760px){.ec-ctl{flex-wrap:wrap}.ec-ctl label{flex:1 1 45%}}
+@media (max-height:480px){.ml{padding:6px 10px;gap:5px}.ml-hd{padding-bottom:3px}.ml-hd small{display:none}.ml-hd b{font-size:15px}.ml-x{width:26px;height:26px}.ml-guide{padding:6px 10px;gap:4px}.ml-q{font-size:13px;line-height:1.4}.ml-c,.ml-ctl button,.ml-hint{padding:3px 9px;font-size:12px}.ml-gb{gap:6px}.ml-ctl{gap:6px;font-size:12px}}
+
+/* ---- M2 #2 四季实验室 ---- */
+.ml--sea .ml-body{grid-template-columns:3fr 2.2fr}
+.sea-r{align-items:center;justify-content:flex-start;padding-top:30px}
+.sea-cvw{flex:1;min-height:0;width:100%;position:relative}.sea-cv{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.sea-info{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:100%;padding:4px 10px 10px;box-sizing:border-box}
+.sea-info span{display:flex;flex-direction:column;align-items:center;background:rgba(214,178,94,.07);border:1px solid rgba(214,178,94,.25);border-radius:10px;padding:4px 2px}
+.sea-info small{font-size:10.5px;color:#9fb3cc}.sea-info b{font-size:15px;color:#f3cf7a;font-weight:600;white-space:nowrap}
+.sea-ctl{flex-wrap:wrap}.sea-ctl label{display:flex;align-items:center;gap:6px;flex:1;min-width:180px}.sea-ctl .sea-l2{flex:0 1 auto;min-width:0}
+.sea-ctl .sea-l2 .ml-rng{width:110px}
+.sea-city{background:rgba(8,16,30,.8);color:#f6e2b0;border:1px solid rgba(214,178,94,.55);border-radius:8px;padding:4px 6px;font:inherit;font-size:13px}
+.sea-md,.sea-tv{min-width:62px;color:#f3cf7a}
+@media (max-width:760px),(orientation:portrait){.ml--sea .ml-body{grid-template-columns:1fr}.sea-r{flex-direction:column;padding-top:24px}.sea-info b{font-size:13px}}
+@media (max-height:520px){.ml--sea{padding:6px 10px;gap:5px}.ml--sea .ml-hd{padding-bottom:3px}.ml--sea .ml-hd b{font-size:15px}.ml--sea .ml-hd small{display:none}
+.ml--sea .sea-ctl{flex-wrap:nowrap;gap:6px;font-size:12px}.ml--sea .sea-ctl label{min-width:0}.ml--sea .sea-ctl .sea-l2 .ml-rng{width:64px}.ml--sea .sea-ctl button{padding:4px 8px;font-size:12px}.ml--sea .sea-md,.ml--sea .sea-tv{min-width:0;white-space:nowrap}
+.ml--sea .ml-guide{padding:6px 10px;gap:5px}.ml--sea .ml-q{font-size:13px;line-height:1.4}.ml--sea .ml-c,.ml--sea .ml-hint{padding:3px 8px;font-size:12px}.ml--sea .ml-note{display:none}
+.ml--sea .ml-body{grid-template-columns:3fr 2.4fr}.ml--sea .sea-info{padding:2px 6px 6px;gap:3px}.ml--sea .sea-info b{font-size:12px}.ml--sea .sea-info small{font-size:9.5px}.sea-r{padding-top:22px}}
+
+/* ---- M2 #4 卫星星海 ---- */
+.ml--sat .ml-body{grid-template-columns:3fr 2fr}
+.sat-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9fd9c6;font-size:14px;pointer-events:none}.sat-load[hidden]{display:none}
+.sat-leg{position:absolute;right:12px;top:8px;font-size:11px;color:#b9c7da;display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:60%}
+.sat-leg i,.sat-k i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c);margin-left:4px}
+.sat-r{padding:10px;gap:8px;justify-content:flex-start;overflow:auto}
+.sat-kinds{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.sat-k{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:6px 8px;color:#8c98aa;cursor:pointer;font:inherit;font-size:12px;text-align:left}
+.sat-k span{flex:1}.sat-k b{font-size:15px;color:#7f8a9c}
+.sat-k.on{border-color:rgba(127,227,196,.6);background:rgba(127,227,196,.08);color:#dff6ee}.sat-k.on b{color:#f3cf7a}
+.sat-orb{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:11.5px;color:#9fb3cc;align-items:center}
+.sat-orb span{width:100%}.sat-orb em{font-style:normal;border-left:3px solid var(--c);padding-left:5px}.sat-orb em b{color:#f3cf7a;margin-left:4px}
+.sat-cv{width:100%;height:auto;aspect-ratio:440/200}
+.sat-src{font-size:10.5px;color:#6f8099}
+.sat-ctl label{display:flex;align-items:center;gap:6px;flex:1;min-width:160px}
+.sat-yv{color:#f3cf7a;min-width:120px;font-size:12px}
+.sat-sp{display:flex;gap:4px}.sat-ctl .sat-spb{padding:4px 8px;font-size:12px;opacity:.7}.sat-ctl .sat-spb.on{opacity:1;background:rgba(127,227,196,.18);border-color:#7fe3c4;color:#cff8ea}
+@media (max-width:760px),(orientation:portrait){.ml--sat .ml-body{grid-template-columns:1fr}}
+@media (max-height:520px){.ml--sat{padding:6px 10px;gap:5px}.ml--sat .ml-hd b{font-size:15px}.ml--sat .ml-hd small,.ml--sat .ml-note,.ml--sat .sat-leg{display:none}
+.ml--sat .sat-ctl{flex-wrap:nowrap;gap:6px;font-size:12px}.ml--sat .sat-ctl label{min-width:0}.ml--sat .sat-yv{min-width:0;white-space:nowrap;font-size:11px}.ml--sat .sat-ctl button{padding:3px 6px;font-size:11px}
+.ml--sat .ml-guide{padding:6px 10px;gap:5px}.ml--sat .ml-q{font-size:13px;line-height:1.4}.ml--sat .ml-c,.ml--sat .ml-hint{padding:3px 8px;font-size:12px}
+.ml--sat .sat-r{padding:6px;gap:4px}.ml--sat .sat-k{padding:3px 6px;font-size:11px}.ml--sat .sat-k b{font-size:12px}.ml--sat .sat-orb,.ml--sat .sat-src{display:none}}
+
+/* ---- M2 #5 地震实验室 ---- */
+.ml--qk .ml-body{grid-template-columns:3fr 2fr}
+.qk-load{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9fd9c6;font-size:14px;pointer-events:none}.qk-load[hidden]{display:none}
+.qk-leg{position:absolute;right:12px;top:8px;font-size:11px;color:#b9c7da;display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:62%}
+.qk-leg i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c);margin-left:4px}
+.qk-r{padding:10px;gap:8px;justify-content:flex-start;overflow:auto}
+.qk-tiles{display:grid;grid-template-columns:1fr 1.6fr;gap:6px}
+.qk-tiles div{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:6px 10px;display:flex;flex-direction:column}
+.qk-tiles span{font-size:11.5px;color:#9fb3cc}.qk-tiles b{font-size:20px;color:#f3cf7a}.qk-tiles small{font-size:11px;color:#b9c7da;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qk-cv{width:100%;height:auto;aspect-ratio:440/190}
+.qk-dep{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px;color:#9fb3cc;align-items:center}.qk-dep span{width:100%}.qk-dep em{font-style:normal;border-left:3px solid var(--c);padding-left:5px}.qk-dep em b{color:#f3cf7a;margin-left:4px}
+.qk-src{font-size:10.5px;color:#6f8099}
+.qk-ctl{gap:10px;flex-wrap:wrap}.qk-md,.qk-tg,.qk-vw{display:flex;gap:4px}.qk-ctl .qk-b{padding:4px 9px;font-size:12px;opacity:.75}.qk-ctl .qk-b.on{opacity:1;background:rgba(127,227,196,.18);border-color:#7fe3c4;color:#cff8ea}
+.qk-vw{margin-left:auto}
+@media (max-width:760px),(orientation:portrait){.ml--qk .ml-body{grid-template-columns:1fr}}
+@media (max-height:520px){.ml--qk{padding:6px 10px;gap:5px}.ml--qk .ml-hd b{font-size:15px}.ml--qk .ml-hd small,.ml--qk .ml-note,.ml--qk .qk-leg,.ml--qk .qk-src,.ml--qk .qk-dep{display:none}
+.ml--qk .qk-ctl{flex-wrap:nowrap;gap:5px}.ml--qk .qk-ctl .qk-b{padding:3px 6px;font-size:11px}
+.ml--qk .ml-guide{padding:6px 10px;gap:5px}.ml--qk .ml-q{font-size:13px;line-height:1.4}.ml--qk .ml-c,.ml--qk .ml-hint{padding:3px 8px;font-size:12px}
+.ml--qk .qk-r{padding:6px;gap:4px}.ml--qk .qk-tiles b{font-size:15px}.ml--qk .qk-tiles div{padding:3px 8px}}
+@media (max-height:520px){.ml--qk .qk-tiles small{display:none}.ml--qk .qk-tiles span{font-size:10.5px}}

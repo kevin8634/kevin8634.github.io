@@ -388,6 +388,58 @@
     ].join('\n');
     document.head.appendChild(s);
   }
+  /* C2.2b 仪表台(王磊 10-28 16:25 定稿 C:弧形半透明玻璃台 + 边框流动光条 + 弧形玻璃键)
+   * 台面轮廓按仪表/按钮/Armilla 的实际位置实时计算:两角托住仪表、中段压低让出前方视野、中央隆起托住 Armilla。
+   * 玻璃 = clip-path 的 div(backdrop-filter 轻模糊)+ 同轮廓 SVG 边框;流光从 Armilla 向两侧循环,减少动态时静止。 */
+  function deck() {
+    if ($('#xc-deck', R)) return;
+    var d = el('div', '', '<div class="gl"></div><svg aria-hidden="true"><defs>' +
+      '<linearGradient id="xdk-rim" x1="0" x2="1"><stop offset="0" stop-color="#7fd6ff" stop-opacity=".25"/><stop offset=".3" stop-color="#7fd6ff" stop-opacity=".85"/><stop offset=".5" stop-color="#b48cff" stop-opacity=".95"/><stop offset=".7" stop-color="#7fd6ff" stop-opacity=".85"/><stop offset="1" stop-color="#7fd6ff" stop-opacity=".25"/></linearGradient>' +
+      '<linearGradient id="xdk-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a3a6a" stop-opacity=".16"/><stop offset="1" stop-color="#050c1c" stop-opacity=".42"/></linearGradient>' +
+      '<filter id="xdk-glow" x="-5%" y="-50%" width="110%" height="200%"><feGaussianBlur stdDeviation="3"/></filter></defs>' +
+      '<path class="fill" fill="url(#xdk-fill)"/><path class="halo" fill="none" stroke="url(#xdk-rim)" stroke-width="5" filter="url(#xdk-glow)" opacity=".55"/>' +
+      '<path class="rim" fill="none" stroke="url(#xdk-rim)" stroke-width="1.4"/>' +
+      '<path class="fl l" pathLength="1000" fill="none"/><path class="fl r" pathLength="1000" fill="none"/>' +
+      '<path class="fl l b" pathLength="1000" fill="none"/><path class="fl r b" pathLength="1000" fill="none"/></svg>');
+    d.id = 'xc-deck';
+    var g = $('.gauges', R); R.insertBefore(d, g || R.firstChild);
+    U.deck = d; deckLay(); addEventListener('resize', function () { clearTimeout(U.dkT); U.dkT = setTimeout(deckLay, 60); });
+    setTimeout(deckLay, 600); setTimeout(deckLay, 2500);
+  }
+  function deckLay() {
+    var d = U.deck; if (!d) return;
+    var W = innerWidth, H = innerHeight, q = function (s) { var e = $(s, R); return e && e.getBoundingClientRect(); };
+    var gl = q('.gl-l'), gr = q('.gl-r'), sd = R.querySelectorAll('#xa-dock .side'), orb = q('#xa-orb');
+    if (!gl || !gr || !orb || sd.length < 2 || !gl.height) return;
+    var sl = sd[0].getBoundingClientRect(), sr = sd[1].getBoundingClientRect();
+    var yG = Math.min(gl.top, gr.top) - 12, yK = Math.min(sl.top, sr.top) - 12, yB = orb.top + orb.height * 0.12;
+    if (W <= 640 || yK > yG + 60) { yK = Math.min(yK, yG); yB = Math.min(yB, yK); }   // 手机:仪表在按钮上方,台面改成平直上沿
+    var top = Math.max(0, Math.min(yG, yK, yB) - 12), h = H - top;
+    yG -= top; yK -= top; yB -= top;
+    var cx = (orb.left + orb.right) / 2, bw = orb.width / 2 + 18;
+    var a = Math.max(gl.right, 0) + 22, b = sl.left - 26, a2 = Math.min(gr.left, W) - 22, b2 = sr.right + 26;
+    if (b < a + 40) b = a + 40; if (b2 > a2 - 40) b2 = a2 - 40;
+    var c1 = cx - bw, c2 = cx + bw, r = 16, f = function (n) { return Math.round(n * 10) / 10; };
+    if (c1 < b + 20) { b = c1 - 20; } if (c2 > b2 - 20) { b2 = c2 + 20; }
+    // 左半(由中心向左)与右半(由中心向右),供流光从 Armilla 向两侧流动
+    var L = 'M' + f(cx) + ',' + f(yB) + ' C' + f(cx - bw * .55) + ',' + f(yB) + ' ' + f(c1 + 10) + ',' + f(yK) + ' ' + f(c1 - 34) + ',' + f(yK) +
+      ' L' + f(b) + ',' + f(yK) + ' C' + f(b - 70) + ',' + f(yK) + ' ' + f(a + 70) + ',' + f(yG) + ' ' + f(a) + ',' + f(yG) + ' L' + r + ',' + f(yG) + ' Q0,' + f(yG) + ' 0,' + f(yG + r);
+    var Rr = 'M' + f(cx) + ',' + f(yB) + ' C' + f(cx + bw * .55) + ',' + f(yB) + ' ' + f(c2 - 10) + ',' + f(yK) + ' ' + f(c2 + 34) + ',' + f(yK) +
+      ' L' + f(b2) + ',' + f(yK) + ' C' + f(b2 + 70) + ',' + f(yK) + ' ' + f(a2 - 70) + ',' + f(yG) + ' ' + f(a2) + ',' + f(yG) + ' L' + f(W - r) + ',' + f(yG) + ' Q' + W + ',' + f(yG) + ' ' + W + ',' + f(yG + r);
+    // 闭合轮廓(左下 → 左上 → 中心 → 右上 → 右下)
+    var Lrev = 'M0,' + f(h) + ' L0,' + f(yG + r) + ' Q0,' + f(yG) + ' ' + r + ',' + f(yG) + ' L' + f(a) + ',' + f(yG) + ' C' + f(a + 70) + ',' + f(yG) + ' ' + f(b - 70) + ',' + f(yK) + ' ' + f(b) + ',' + f(yK) +
+      ' L' + f(c1 - 34) + ',' + f(yK) + ' C' + f(c1 + 10) + ',' + f(yK) + ' ' + f(cx - bw * .55) + ',' + f(yB) + ' ' + f(cx) + ',' + f(yB);
+    var close = Lrev + ' C' + f(cx + bw * .55) + ',' + f(yB) + ' ' + f(c2 - 10) + ',' + f(yK) + ' ' + f(c2 + 34) + ',' + f(yK) + ' L' + f(b2) + ',' + f(yK) +
+      ' C' + f(b2 + 70) + ',' + f(yK) + ' ' + f(a2 - 70) + ',' + f(yG) + ' ' + f(a2) + ',' + f(yG) + ' L' + f(W - r) + ',' + f(yG) + ' Q' + W + ',' + f(yG) + ' ' + W + ',' + f(yG + r) + ' L' + W + ',' + f(h) + ' Z';
+    d.style.height = h + 'px';
+    var sv = d.querySelector('svg'); sv.setAttribute('viewBox', '0 0 ' + W + ' ' + f(h)); sv.setAttribute('width', W); sv.setAttribute('height', f(h));
+    d.querySelector('.fill').setAttribute('d', close);
+    d.querySelector('.rim').setAttribute('d', Lrev.replace(/^M0,[\d.]+ L/, 'M') + ' ' + Rr.replace(/^M[\d.]+,[\d.]+ /, ''));
+    d.querySelector('.halo').setAttribute('d', d.querySelector('.rim').getAttribute('d'));
+    d.querySelectorAll('.fl.l').forEach(function (p) { p.setAttribute('d', L); });
+    d.querySelectorAll('.fl.r').forEach(function (p) { p.setAttribute('d', Rr); });
+    var gp = "path('" + close + "')"; d.querySelector('.gl').style.clipPath = gp; d.querySelector('.gl').style.webkitClipPath = gp;
+  }
   function ib(k, ic, label, title) { return '<button class="ib" type="button" data-a="' + k + '" title="' + title + '" aria-label="' + title + '">' + ICON[ic] + '<small>' + label + '</small></button>'; }
   function build() {
     R = I.root(); if (!R || $('#xa-dock', R)) return;
@@ -405,6 +457,7 @@
     var port = el('div', '', '<div class="tag">侧舷窗 · ARMILLA 接管</div>'); port.id = 'xs-port'; R.appendChild(port);
     var ph = el('div', '', '摄影模式 · 点这里或按 P 退出'); ph.id = 'xs-photo'; ph.onclick = function () { photo(false); }; R.appendChild(ph);
     U.orb = $('#xa-orb', R); U.sub = $('#xa-sub', R); U.cd = cd; U.port = port;
+    deck();
     ['i', 's'].forEach(function (k) { var im = el('img', 'xa-jv ' + k); im.alt = ''; im.decoding = 'async'; im.dataset.src = 'x/jarvis/avatar/jarvis_' + (k === 'i' ? 'idle' : 'speaking') + '.svg'; U.orb.appendChild(im); });
     if (window.SHXARM && SHXARM.ok()) { try { var h3 = el('div', 'xa-3d'); U.orb.appendChild(h3); U.arm = SHXARM.mount(h3, { small: innerWidth < 700 || innerHeight < 480 }); U.orb.classList.add('gl'); } catch (e) { console.warn('[Armilla 3D]', e); U.arm = null; } }
     dock.querySelectorAll('.ib').forEach(function (b) { b.onclick = function () { blip(880, .08, .05); act(b.getAttribute('data-a')); }; });
