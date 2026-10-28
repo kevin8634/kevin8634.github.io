@@ -47,6 +47,9 @@
     var tex = LE.assets.texture;
     // 星空
     var sky = window.SHFX3D ? SHFX3D.skyMesh(rd, 900) : new T.Mesh(new T.SphereGeometry(900, 48, 24), new T.MeshBasicMaterial({ map: tex(LE.config.TEX.milkyway, true), side: T.BackSide, color: 0x8899aa }));
+    // v1.0-M4h 赤经修正(10-28 只读核实确认):NASA SVS 星图以赤经 0h 为图像中心,SHFX3D.skyMesh 把它放在 -x(春分点反方向),本视图的日地月方向是真实黄道坐标,
+    // 背景星空差 180°;与 2.0 驾驶舱同法,只把星空球绕赤道极轴转 180°(星域 V 的恒星粒子已按贴图同向校准,不改;共用的 sh-fx3d.js 不改)。
+    if (window.SHFX3D && sky.children) sky.children.forEach(function (m) { if (m.isMesh) m.rotation.y += Math.PI; });
     sc.add(sky);
     // 太阳
     var sunFx = window.SHFX3D ? SHFX3D.sun({ radius: 1.6 }) : null, sun;   // v1.0-M2c:着色器太阳 + 日冕 + 日珥/太阳风粒子
