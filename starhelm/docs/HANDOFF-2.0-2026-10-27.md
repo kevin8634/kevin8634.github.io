@@ -78,8 +78,8 @@
 ### 待办顺序(王磊 10-28 定,10:55 暂停时)
 1. ~~T4 侧舷窗全黑~~ ✅ C2.2a(86b1c76)。
 2. T2 卫星与彗星(C2.2)。
-3. 恒星信息卡布局(C2.2b):点选恒星卡 #xk-card 不得与目标面板、HUD 日球层栏、讲解卡、底部按钮条重叠(同列堆叠或自动停靠空闲区,不够时限高卡内滚动);390×844 改底部抽屉不挡准星;不增加 Esc/关闭负担;卫星、彗星点选卡同套布局;截图 work/out/tcard_*.png(三档)。王磊截图 files/uploads/image-4f1e17d7dca3.webp(在项目工作区)。
-4. 「结束探索」偶发点不动 + 「数据」按钮无反应(并入 C2.2b):先 Playwright 长时间随机操作 + elementFromPoint 复现找根因;全屏装饰层一律 pointer-events:none;「数据」查清本意(初判见 DEVLOG-2.0-C11.md 暂停时状态),弱则点开给明确反馈(面板 + 数据源与开关状态),若多余报总指挥请王磊定,不擅删;截图 work/out/tbtn_*.png。王磊截图 files/uploads/image-54c55b006906.webp。
+3. ✅(C2.2b 第二批,10-28 23:0x)恒星信息卡布局(C2.2b):点选恒星卡 #xk-card 不得与目标面板、HUD 日球层栏、讲解卡、底部按钮条重叠(同列堆叠或自动停靠空闲区,不够时限高卡内滚动);390×844 改底部抽屉不挡准星;不增加 Esc/关闭负担;卫星、彗星点选卡同套布局;截图 work/out/tcard_*.png(三档)。王磊截图 files/uploads/image-4f1e17d7dca3.webp(在项目工作区)。
+4. ✅(C2.2b 第二批:根因自动驾驶淡出面板即不可点;「数据」改为数据栏开关)「结束探索」偶发点不动 + 「数据」按钮无反应(并入 C2.2b):先 Playwright 长时间随机操作 + elementFromPoint 复现找根因;全屏装饰层一律 pointer-events:none;「数据」查清本意(初判见 DEVLOG-2.0-C11.md 暂停时状态),弱则点开给明确反馈(面板 + 数据源与开关状态),若多余报总指挥请王磊定,不擅删;截图 work/out/tbtn_*.png。王磊截图 files/uploads/image-54c55b006906.webp。
 5. C2.2c 远景标签 LOD(重点:日球层顶/终端激波/太阳系整体/V1·V2;屏幕空间碰撞、低优先级让位、距离数字远看缩短、星座标签让位)+ 点选「太阳系」→ 推近 → 30–45 s 一镜到底(日球层各层、奥尔特云内缘「推测」、柯伊伯带与冥王星、八大行星轨道依次点亮、小行星带、哈雷/67P/海尔-波普轨道、旅行者 1/2·新视野号·先驱者 10/11 位置与轨迹;每段 1–2 个标签 + 短字幕;点击/Esc/滚轮可打断;减少动态改分段静态;结束停在全景可操作);截图 work/out/tsol_*.png。王磊截图 files/uploads/image-3075266dfff2.webp。
 - 无未推送补丁:暂停时工作区干净(T2 以后各项都还没动代码)。
 - 自测环境提示:沙箱需先 `pip install playwright`、`playwright install chromium` 与 `install-deps`,中文截图需 fonts-wqy-microhei;http.server 用 setsid 后台起(本轮用 8813);t_t1.py 已支持 T1PORT,t_t4.py(侧舷窗压测,含 --max-active-webgl-contexts 模拟手机上限,T4ARGS/T4PORT/T4Q)在 work/。

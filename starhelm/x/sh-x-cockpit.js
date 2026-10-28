@@ -266,7 +266,7 @@
       '#shxc .sec{margin:8px 0 3px;font-size:10px;letter-spacing:.14em;color:rgba(180,195,220,.5);border-bottom:1px solid rgba(150,180,220,.12);padding-bottom:2px}',
       '#shxc .kv{display:flex;justify-content:space-between;gap:10px;line-height:1.75}#shxc .kv b{font-weight:500;color:#eef3fb}#shxc .kv span{color:rgba(190,202,225,.62);font-size:11px}#shxc .kv i{font-style:normal;color:rgba(190,202,225,.5);font-size:10px;margin-left:3px}',
       '#shxc .clk{left:16px;top:14px;width:224px;padding:10px 14px}#shxc .clk .t{font-size:24px;letter-spacing:.04em;color:#fff;margin:2px 0}',
-      '#shxc .nav{left:16px;top:134px;width:224px;padding:6px 14px 10px;max-height:calc(100vh - 300px);overflow:auto}',
+      '#shxc.nodata .nav{display:none!important}#shxc #xc-more.on{border-color:rgba(255,206,84,.6);color:#ffd27a}#shxc .nav{left:16px;top:134px;width:224px;padding:6px 14px 10px;max-height:calc(100vh - 300px);overflow:auto}',
       '#shxc .tgt{right:16px;top:14px;width:258px;padding:10px 14px}#shxc .tgt h3{margin:2px 0 6px;font-size:22px;font-weight:500;color:#fff;letter-spacing:.06em}#shxc .tgt h3::before{content:"◆ ";color:#7fd6ff;font-size:13px;vertical-align:3px}',
       '#shxc .g2{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}#shxc .g2 div{line-height:1.25;margin:3px 0}#shxc .g2 span{display:block;font-size:10px;color:rgba(190,202,225,.55)}#shxc .g2 b{font-weight:500;color:#eef3fb}',
       '#shxc .blurb{margin:6px 0 2px;color:rgba(210,220,238,.78);font-size:11.5px;line-height:1.55}',
@@ -347,7 +347,14 @@
       it.addEventListener('dblclick', function () { setTarget(b.id); autopilot(true); });
     });
     $('#xc-exit', root).onclick = function () { confirmEnd(); };
-    $('#xc-more', root).onclick = function () { root.classList.toggle('more'); };
+    $('#xc-more', root).onclick = function () {
+      /* C2.2b:「数据」= 航行数据栏开/关。窄屏默认隐藏 → 点开;桌面默认显示 → 点收起。按钮高亮 + 提示,避免“点了没反应” */
+      var narrow = matchMedia('(max-width:900px),(max-height:560px)').matches, b = this;
+      if (narrow) root.classList.toggle('more'); else root.classList.toggle('nodata');
+      var shown = narrow ? root.classList.contains('more') : !root.classList.contains('nodata');
+      b.classList.toggle('on', shown); b.setAttribute('aria-pressed', shown ? 'true' : 'false');
+      toast(shown ? '航行数据栏已展开(各天体距离 · 光行时 · 数据来源)' : '航行数据栏已收起 · 再点「数据」展开');
+    };
     $('#xc-al', root).onclick = function () { S.align = !S.align; if (S.align) S.auto = false; };
     $('#xc-ap', root).onclick = function () { autopilot(!S.auto); };
     $('#xc-kt', root).onclick = function () { $('#xc-keys', root).classList.toggle('min'); };

@@ -34,7 +34,7 @@
   function css() {
     if (document.getElementById('xk-css')) return; var st = document.createElement('style'); st.id = 'xk-css';
     st.textContent = '#xk-box{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;z-index:8;border:1.5px solid transparent;border-image:linear-gradient(#f0c97a,#f0c97a) 1;clip-path:polygon(0 0,35% 0,35% 2px,2px 2px,2px 35%,0 35%,0 65%,2px 65%,2px calc(100% - 2px),35% calc(100% - 2px),35% 100%,65% 100%,65% calc(100% - 2px),calc(100% - 2px) calc(100% - 2px),calc(100% - 2px) 65%,100% 65%,100% 35%,calc(100% - 2px) 35%,calc(100% - 2px) 2px,65% 2px,65% 0,100% 0,100% 0)}' +
-      '#xk-card{position:absolute;right:14px;top:64px;width:min(300px,86vw);z-index:30;background:rgba(8,13,24,.9);border:1px solid rgba(240,201,122,.28);border-radius:12px;padding:14px 16px;color:#dfe7f5;font-size:12px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}' +
+      '#xk-card{position:absolute;right:14px;top:64px;width:min(300px,86vw);z-index:30;background:rgba(8,13,24,.9);border:1px solid rgba(240,201,122,.28);border-radius:12px;padding:14px 16px;color:#dfe7f5;font-size:12px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);overflow:auto;overscroll-behavior:contain;transition:opacity .25s}#xk-card.dim{opacity:.3;pointer-events:none}#xk-card.drawer{border-radius:14px;padding:10px 14px;font-size:11.5px}#xk-card.drawer h3{font-size:17px;margin:3px 0 0}#xk-card.drawer .n{display:none}' +
       '#xk-card .k{font-size:10px;letter-spacing:.2em;color:#8fa3c2;padding-right:22px}#xk-card h3{margin:6px 0 2px;font-size:20px;font-weight:500}#xk-card .en{color:#9aaccc;font-size:11px}' +
       '#xk-card .sw{display:flex;align-items:center;gap:10px;margin:10px 0}#xk-card .dot{width:26px;height:26px;border-radius:50%;flex:none}#xk-card .bar{flex:1;height:5px;border-radius:3px;background:linear-gradient(90deg,#9bb0ff,#cad7ff,#fff,#fff4ea,#ffd2a1,#ffb56c);position:relative}#xk-card .bar i{position:absolute;top:-3px;width:2px;height:11px;background:#fff}' +
       '#xk-card .r{display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid rgba(150,180,220,.1)}#xk-card .r b{font-weight:400;color:#f0d9a8}#xk-card .n{color:#8fa3c2;font-size:11px;margin-top:8px;line-height:1.5}' +
@@ -62,10 +62,39 @@
       '<div class="r"><span>所需器材(地球上)</span><b>' + eye(appMag(k, [0, 0, 0])) + '</b></div>' +
       '<div class="n">位置、亮度与颜色来自 HYG v4.1 星表(Hipparcos / Yale / Gliese 汇编)。光谱型与温度只凭颜色估算,巨星与主序星会有偏差。</div>' +
       (wp ? '<button class="go" type="button">设为航行目标</button>' : '');
-    root.appendChild(card);
+    root.appendChild(card); place(); clearInterval(PT); PT = setInterval(place, 700);
     card.querySelector('.x').onclick = hide; var g = card.querySelector('.go'); if (g) g.onclick = function () { X._.setTarget(wp.id); hide(); };
   }
-  function hide() { SEL = -1; if (box) box.remove(); if (card) { card.remove(); card = null; } }
+  function hide() { SEL = -1; clearInterval(PT); if (box) box.remove(); if (card) { card.remove(); card = null; } }
+  /* C2.2b 信息卡避让:不与目标面板(含日球层栏)、仪表、底部按钮条、讲解卡重叠。
+     桌面:目标面板下方空间够就同列堆叠;不够就停靠在目标面板左侧;卡内限高滚动。
+     窄屏(≤640px):底部抽屉,上沿不越过屏幕中线(准星)。 */
+  var PT = 0;
+  function rc(q) { var e = document.querySelector(q); if (!e || e.offsetParent === null && getComputedStyle(e).position !== 'fixed') return null; var r = e.getBoundingClientRect(); return r.width && r.height ? r : null; }
+  function place() {
+    if (!card || !card.isConnected) { clearInterval(PT); return; }
+    var R = card.parentNode.getBoundingClientRect(), W = R.width, H = R.height, st = card.style;
+    var low = H; ['#xa-dock', '#shxc .gauges', '#xc-deck .top', '#shxc .mob'].forEach(function (q) { var r = rc(q); if (r && r.top - R.top > H * .45) low = Math.min(low, r.top - R.top); });
+    st.left = st.right = st.top = st.bottom = st.width = st.maxHeight = ''; card.classList.remove('drawer');
+    if (W <= 640) {
+      card.classList.add('drawer'); st.top = 'auto'; st.left = '8px'; st.right = '8px'; st.width = 'auto';
+      st.bottom = Math.round(H - low + 8) + 'px'; st.maxHeight = Math.max(150, Math.round(low - 8 - (H / 2 + 34))) + 'px';
+    } else {
+      var t = rc('#shxc .tgt'), l = rc('#shxc .lst');
+      if (t && l && l.left < t.right && l.right > t.left) t = { left: Math.min(t.left, l.left), right: Math.max(t.right, l.right), top: Math.min(t.top, l.top), bottom: Math.max(t.bottom, l.bottom) };
+      else if (!t && l) t = l;
+      var lim = low - 10, cw = Math.min(300, W * .86);
+      if (!t) { st.right = '14px'; st.top = '64px'; st.maxHeight = Math.max(160, lim - 64) + 'px'; }
+      else {
+        var top = t.bottom - R.top + 10;
+        if (lim - top >= 280) { st.right = Math.round(R.right - t.right) + 'px'; st.top = Math.round(top) + 'px'; st.maxHeight = Math.round(lim - top) + 'px'; }
+        else { st.right = Math.round(R.right - t.left + 10) + 'px'; st.top = Math.round(t.top - R.top) + 'px'; st.maxHeight = Math.max(160, Math.round(lim - (t.top - R.top))) + 'px'; }
+      }
+      st.width = cw + 'px';
+    }
+    var x = rc('#xe-box'), c = card.getBoundingClientRect();
+    card.classList.toggle('dim', !!(x && x.left < c.right && x.right > c.left && x.top < c.bottom && x.bottom > c.top));
+  }
   function pick(cx, cy) {
     var cam = X._.cam && X._.cam(), root = X._.root(); if (!cam || !root || !ST) return;
     var rc = root.getBoundingClientRect(), x = cx - rc.left, y = cy - rc.top, s = shipLy(), out = Math.hypot(s[0], s[1], s[2]) * 63241 > 121;
