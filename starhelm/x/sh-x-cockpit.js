@@ -800,6 +800,7 @@
     return best ? { b: best, d: Math.max(0, bd) } : null;
   }
   function confirmEnd() {
+    if (window.SHXEX) { SHXEX.open(); return; }   // C2.7d:结束探索已重做为 body 层独立按钮 + 确认框(x/sh-x-exit.js)
     if (dlg && !dlg.isConnected) dlg = null; if (dlg) { root.appendChild(dlg); var pb0 = dlg.querySelector('.pri'); if (pb0) pb0.focus(); return; } var n = null; try { n = nearest(); } catch (e) { }
     var where = n ? (n.b.zh || n.b.id) + '附近 · 距离 ' + fkm(n.d) : '星际空间';
     dlg = document.createElement('div'); dlg.id = 'xe-dlg';
