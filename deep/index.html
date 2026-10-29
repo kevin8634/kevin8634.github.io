@@ -31,7 +31,11 @@ html,body{height:100%;background:var(--bg);color:var(--ink);font-family:-apple-s
 #cards{display:none;position:fixed;inset:0;overflow:auto;padding:72px 16px 40px;z-index:3}
 #cards section{max-width:640px;margin:0 auto 16px;border:1px solid rgba(232,194,122,.3);border-radius:14px;padding:18px;background:rgba(12,18,40,.7)}
 #cards h2{font-size:18px;color:var(--gold)}#cards p{color:var(--dim);margin-top:6px;font-size:14px;line-height:1.6}
-body.rm #c,body.rm #meter,body.rm #hud,body.rm #dive{display:none}body.rm #cards{display:block}
+body.rm #nav,body.rm #hud,body.rm #dive{display:none}body.nogl #c{display:none}body.rm #cards{display:block}body.rm #cards section{background:rgba(8,12,28,.82)}
+#nav{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:5}#nav .gd-depthbar{background:rgba(6,10,24,.45);backdrop-filter:blur(6px)}#nav .gd-depthbar button{padding:5px 11px;font-size:12px;letter-spacing:.12em}#nav .gd-depthbar button.lock{opacity:.45}
+body.l0 #hud{animation:hq 1s 3.5s forwards}@keyframes hq{to{opacity:0}}body.l0 #note{opacity:.5}
+body.clean #nav,body.clean #hud,body.clean #dive,body.clean #note,body.clean #back,body.clean #snd{display:none}
+@media (max-width:600px){#nav{top:62px;max-width:96vw}#nav .gd-depthbar button{padding:5px 7px;letter-spacing:.04em}}
 @media (max-width:600px){#meter span{display:none}#hud{bottom:12vh}#note{display:none}}
 @media (max-height:420px){#hud{bottom:16px}#hud p,#hud .tag{display:none}#dive{display:none}#meter{gap:4px}}
 #names{position:fixed;inset:0;pointer-events:none;z-index:3}
@@ -56,16 +60,17 @@ body.rm #c,body.rm #meter,body.rm #hud,body.rm #dive{display:none}body.rm #cards
 <canvas id="c" aria-hidden="true"></canvas>
 <a id="back" class="btn" href="../">▲ 搭便车回到七世界</a>
 <button id="snd" class="btn" aria-pressed="false">♪ 音乐 关</button>
-<nav id="meter" aria-label="深度计"><div id="rail"></div></nav>
+<nav id="nav" aria-label="深度导航"></nav>
 <div id="hud" aria-live="polite"><h1 id="t"></h1><p id="s"></p><span id="g" class="tag"></span></div>
 <button id="dive" class="btn">▼ 潜入深空</button>
-<div id="note">深空层 D1.1 · 开发中 · 内容为占位</div>
+<div id="note">深空层 V1 · 开发中 · 影像:ESO/S. Brunier、ESA/Hubble、ESA/Webb、NASA(CC BY 4.0,详见 LICENSES.md)</div>
 <div id="names" aria-hidden="true"></div><div id="tip" aria-hidden="true"></div>
 <aside id="side" role="dialog" aria-modal="false" aria-labelledby="sideT" aria-hidden="true"><button id="sideX" class="btn" aria-label="关闭">✕</button><h2 id="sideT"></h2><div class="w" id="sideW"></div><div class="fx" id="sideF"></div><div id="sideD"></div><p id="sideP"></p><div id="sideG"></div><div id="sideS"></div><div id="sideQ" hidden></div><div id="sideL" hidden></div><div id="sideR"></div><div class="row"><button id="sideC" class="btn">生成推导卡(示例)</button></div></aside>
 <main id="cards" aria-label="深空层分层列表"></main>
 <script type="module">
 import * as THREE from "three";
 import { EffectComposer, RenderPass, UnrealBloomPass, OutputPass } from "deep-post";
+import { createOpening, createComposite, WL0 } from "./opening.js";
 import { DepthBar, Formula, Card, ChainDrag, ParamPanel, Sim, Expr, DataSet, DataChart } from "../core/deep/core.js";
 // 七世界(F2 穿越)与星辰层公式星座占位(1.1 由各世界提交课本卡替换)
 const WORLDS=[
@@ -89,17 +94,26 @@ const $=id=>document.getElementById(id);
 $("cards").innerHTML=L.map((l,i)=>`<section><h2>${l.k}</h2><p>${l.s}</p><p>${l.g}</p>${i===1||i===3?WORLDS.map((w,j)=>`<p><button class="btn" data-w="${j}" data-l="${i}">${w.n} · ${i===3?"生活决策":w.fn}</button></p>`).join(""):""}</section>`).join("");
 $("cards").addEventListener("click",e=>{const b=e.target.closest("[data-w]");if(b)openSide(+b.dataset.w,+b.dataset.l);});
 let gl=null;try{gl=document.createElement("canvas").getContext("webgl2")}catch(e){}
-if(rm||!gl){document.body.classList.add("rm");}
-// 深度计
-const meter=$("meter");
-const btns=L.map((l,i)=>{const b=document.createElement("button");b.innerHTML=`<span>${l.k}</span><i></i>`;b.setAttribute("aria-label",`${l.k}${l.open?"":"(未开放)"}`);if(!l.open)b.classList.add("lock");b.onclick=()=>go(i,true);meter.appendChild(b);return b;});
+if(rm||!gl){document.body.classList.add("rm");}if(!gl)document.body.classList.add("nogl");
+if(/[?&]clean\b/.test(location.search))document.body.classList.add("clean");
+// 主导航:core/deep DepthBar(水面/星辰/星系/星河/星穹)
+const LK=L.map((l,i)=>"L"+i);
+const nav=DepthBar.mount($("nav"),{levels:LK,start:"L0",labels:Object.fromEntries(L.map((l,i)=>["L"+i,l.k.split("·")[0]])),onChange:lv=>go(LK.indexOf(lv),true)});
+const btns=[...$("nav").querySelectorAll("button")];btns.forEach((b,i)=>{b.setAttribute("aria-label",`${L[i].k}${L[i].open?"":"(未开放)"}`);if(!L[i].open)b.classList.add("lock");});
 // 场景
 const W=()=>innerWidth,H=()=>innerHeight;
 const mob=W()<600,tab=W()<1100;
 const N=mob?6000:tab?15000:30000;
-const r=new THREE.WebGLRenderer({canvas:$("c"),antialias:!mob,powerPreference:"high-performance"});
-r.setPixelRatio(Math.min(devicePixelRatio,mob?1.5:2));r.setSize(W(),H());
-const comp=new EffectComposer(r,new THREE.WebGLRenderTarget(W(),H(),{type:THREE.HalfFloatType,samples:mob?0:4}));
+const r=new THREE.WebGLRenderer({canvas:$("c"),antialias:false,powerPreference:"high-performance"});
+r.setPixelRatio(Math.min(devicePixelRatio,mob?1.25:1.75));r.setSize(W(),H());
+r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.0;
+const comp=new EffectComposer(r,new THREE.WebGLRenderTarget(W(),H(),{type:THREE.HalfFloatType}));
+// V1 开场(01c):水上 A / 水下 B / 原深空场景 C 三路渲染,合成后统一 Bloom + ACES
+const op=createOpening(THREE,{mob});const cmp=createComposite(THREE);
+const mkRT=()=>new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:mob?0:4});const rtA=mkRT(),rtB=mkRT(),rtC=mkRT();
+cmp.uniforms.tA.value=rtA.texture;cmp.uniforms.tB.value=rtB.texture;cmp.uniforms.tC.value=rtC.texture;
+function sizeAll(){const pr=r.getPixelRatio(),w=Math.round(W()*pr),h=Math.round(H()*pr);[rtA,rtB,rtC].forEach(t=>t.setSize(w,h));cmp.uniforms.uRes.value.set(w,h);op.layout(W(),H(),pr);}
+sizeAll();
 let bloom=null;
 const sc=new THREE.Scene();sc.fog=new THREE.FogExp2(0x02040c,0.0022);
 const cam=new THREE.PerspectiveCamera(60,W()/H(),0.1,2000);cam.position.set(0,0,60);
@@ -120,6 +134,7 @@ const cores=L.map((l,i)=>{const grp=new THREE.Group();grp.position.set(0,0,l.z-4
  grp.add(ring,ring2,core);
  if(i===0){for(let k=0;k<7;k++){const s=new THREE.Sprite(core.material.clone());const a=k/7*6.283;s.position.set(Math.cos(a)*44,Math.sin(a)*26,0);s.scale.setScalar(7);s.material.color.setHSL(k/7,.6,.65);s.material.opacity=.9;grp.add(s);}}
  sc.add(grp);return grp;});
+cores[0].visible=false; // 水面层由 V1 开场接管
 // F2 穿越:七世界星团(z 0→-200),世界名掠过浮现
 const namesEl=$("names");
 const clusters=WORLDS.map((w,k)=>{const grp=new THREE.Group();const a=k/7*6.283+.4,rad=mob?16:30;grp.position.set(Math.cos(a)*rad,Math.sin(a)*rad*.6,-30-k*24);
@@ -199,7 +214,7 @@ $("c").addEventListener("click",e=>{const k=pick(e.clientX,e.clientY);if(k>=0)op
 // 状态
 let cur=0,tz=cam.position.z,anim=null;
 const zOf=i=>L[i].z+60;
-function setHud(i){$("t").textContent=L[i].t;$("s").textContent=L[i].s;$("g").textContent=`${L[i].k} · ${L[i].g}`;btns.forEach((b,j)=>b.classList.toggle("on",j===i));$("dive").textContent=i<L.length-1?"▼ 继续下潜":"▲ 回到水面";history.replaceState(null,"",`#deep=${i}`);try{localStorage.setItem(KEY,i)}catch(e){}music(i);}
+function setHud(i){document.body.classList.toggle("l0",i===0);if(nav)nav.set("L"+i);$("t").textContent=L[i].t;$("s").textContent=L[i].s;$("g").textContent=`${L[i].k} · ${L[i].g}`;btns.forEach((b,j)=>b.classList.toggle("on",j===i));$("dive").textContent=i<L.length-1?"▼ 继续下潜":"▲ 回到水面";history.replaceState(null,"",`#deep=${i}`);try{localStorage.setItem(KEY,i)}catch(e){}music(i);}
 function go(i,strict){i=Math.max(0,Math.min(L.length-1,i));if(!L[i].open){const o=i,d=i>cur?1:-1;let j=i;if(!strict)while(j>=0&&j<L.length&&!L[j].open)j+=d;if(strict||j<0||j>=L.length||j===cur){flash();setHud(cur);$("g").textContent=`${L[o].k} · ${L[o].g}`;return;}i=j;}
  const prev=cur;if(i!==prev)closeSide();cur=i;setHud(i);const from=cam.position.z,to=zOf(i),t0=performance.now();anim={from,to,t0,d:(Math.min(cur,prev)===0&&Math.max(cur,prev)===1)?3200:1200};}
 function flash(){const h=$("hud");h.animate([{opacity:.4},{opacity:1}],{duration:500});}
@@ -218,21 +233,22 @@ function music(i){if(!on)return;const useB=i>=3;fade(au.a,useB?0:.55);fade(au.b,
 $("snd").onclick=()=>{on=!on;$("snd").textContent=on?"♪ 音乐 开":"♪ 音乐 关";$("snd").setAttribute("aria-pressed",on);
  if(on){au.a=au.a||mk("deep-a.m4a");au.b=au.b||mk("deep-b.m4a");music(cur);}else{fade(au.a,0);fade(au.b,0);}};
 // 后期:Bloom(低帧自动关闭)
-comp.setPixelRatio(r.getPixelRatio());comp.addPass(new RenderPass(sc,cam));
-bloom=new UnrealBloomPass(new THREE.Vector2(W(),H()),mob?.45:.6,.55,.2);comp.addPass(bloom);comp.addPass(new OutputPass());
+comp.setPixelRatio(r.getPixelRatio());comp.addPass(new RenderPass(cmp.scene,cmp.cam));
+bloom=new UnrealBloomPass(new THREE.Vector2(W(),H()),.7,.5,.5);comp.addPass(bloom);comp.addPass(new OutputPass());
 // 近距淡出:相机穿过星体时不过曝
 const fadeList=[...cores,...clusters.map(c=>c.grp)];fadeList.forEach(g=>g.traverse(o=>{if(o.material)o.userData.op=o.material.opacity;}));
 function nearFade(cz){fadeList.forEach(g=>{const dz=cz-g.position.z;const f=dz<0?0:Math.min(1,Math.max(0,(dz-6)/34));if(g.userData.f===f)return;g.userData.f=f;g.traverse(o=>{if(o.material&&o.userData.op!=null)o.material.opacity=o.userData.op*f;});});}
-if(/debug/.test(location.search))window.__d={stars,cam,W,H,openSide,go,rev:THREE.REVISION};
+if(/debug/.test(location.search))window.__d={stars,cam,W,H,openSide,go,rev:THREE.REVISION,op};
 // 初始
 const h=location.hash.match(/deep=(\d)/);let start=h?+h[1]:0;if(!L[start]||!L[start].open)start=0;
 cur=start;cam.position.z=zOf(start);setHud(start);
 // 渲染循环 + 低帧降级
 let slow=0,lt=performance.now();
-addEventListener("resize",()=>{cam.aspect=W()/H();cam.updateProjectionMatrix();r.setSize(W(),H());comp.setSize(W(),H());});
+addEventListener("resize",()=>{cam.aspect=W()/H();cam.updateProjectionMatrix();r.setSize(W(),H());comp.setSize(W(),H());sizeAll();});
+const ss=(a,b,x)=>{x=Math.min(1,Math.max(0,(x-a)/(b-a)));return x*x*(3-2*x)};
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 function loop(t){requestAnimationFrame(loop);
- const dt=t-lt;lt=t;if(dt>42){if(++slow>72){if(bloom&&bloom.enabled){bloom.enabled=false;}else if(r.getPixelRatio()>1){r.setPixelRatio(1);comp.setPixelRatio(1);}slow=0;}}else slow=Math.max(0,slow-1);
+ const dt=t-lt;lt=t;if(dt>42){if(++slow>72){if(bloom&&bloom.enabled){bloom.enabled=false;}else if(r.getPixelRatio()>1){r.setPixelRatio(1);comp.setPixelRatio(1);sizeAll();}slow=0;}}else slow=Math.max(0,slow-1);
  if(anim){const k=Math.min(1,(t-anim.t0)/anim.d);cam.position.z=anim.from+(anim.to-anim.from)*ease(k);if(k>=1)anim=null;}
  cam.position.x=Math.sin(t*.00013)*4;cam.position.y=Math.cos(t*.00011)*3;cam.lookAt(0,0,cam.position.z-100);
  cores.forEach((c,i)=>{c.rotation.z=t*.00008*(i%2?-1:1);c.children[1].rotation.y=t*.0002;});
@@ -240,8 +256,18 @@ function loop(t){requestAnimationFrame(loop);
  const cz=cam.position.z;clusters.forEach(({grp,d})=>{const dz=cz-grp.position.z;const o=dz>4&&dz<70?Math.sin((dz-4)/66*Math.PI):0;d.style.opacity=o.toFixed(2);
   if(o>0){const v=grp.position.clone().project(cam);d.style.left=(v.x*.5+.5)*W()+"px";d.style.top=(-v.y*.5+.5)*H()-26+"px";}grp.rotation.y=t*.0003;});
  stars.forEach(s=>{const tg=(s.userData.L===cur&&s.userData.k===hov)?10:s.userData.base*(1+.08*Math.sin(t*.002+s.userData.k));s.scale.setScalar(s.scale.x+(tg-s.scale.x)*.15);});
- comp.render();}
-if(!document.body.classList.contains("rm"))requestAnimationFrame(loop);
+ frame(t);}
+// 一帧:按相机深度推进水线(0=水面构图,1=已入深空)
+function frame(t){const d=Math.min(1,Math.max(0,(60-cam.position.z)/260));const wl=WL0+ss(0,.5,d)*(1.16-WL0),mc=ss(.35,.85,d);const s=t*.001;
+ op.update(s,d);const U=cmp.uniforms;U.uWl.value=wl;U.uMixC.value=mc;U.uTime.value=s;
+ if(wl<1.05){r.setRenderTarget(rtA);r.render(op.sceneA,op.camA);}
+ if(mc<1){r.setRenderTarget(rtB);r.render(op.sceneB,op.camB);}
+ if(mc>0){r.setRenderTarget(rtC);r.render(sc,cam);}
+ r.setRenderTarget(null);if(bloom){bloom.threshold=.85-.65*mc;bloom.strength=.5+.1*mc;bloom.radius=.4+.15*mc;}comp.render();}
+const still=/[?&]still\b/.test(location.search); // 验收截图:只渲染一帧(可加 &z= 指定相机深度)
+if(still&&gl)op.ready.then(()=>{const z=location.search.match(/[?&]z=(-?\d+)/);if(z)cam.position.z=+z[1];cam.lookAt(0,0,cam.position.z-100);frame(3000);window.__shot=1;});
+else if(!document.body.classList.contains("rm"))requestAnimationFrame(loop);
+else if(gl)op.ready.then(()=>{cam.position.z=zOf(0);frame(3000);}); // 减少动态:静态一帧
 </script>
 </body>
 </html>

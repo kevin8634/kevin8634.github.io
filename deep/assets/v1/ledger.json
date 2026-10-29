@@ -1,0 +1,104 @@
+{
+ "format": "core/deep Ledger meta(id,title,source,license,retrieved,url)",
+ "items": [
+  {
+   "id": "v1.sky",
+   "title": "银河全景(GigaGalaxy Zoom,裁银道带 ±36°)",
+   "file": "deep/assets/v1/sky-milkyway.webp",
+   "source": "ESO/S. Brunier",
+   "url": "https://www.eso.org/public/images/eso0932a/",
+   "license": "CC BY 4.0",
+   "retrieved": "2026-10-29",
+   "ai_generated": false,
+   "note": "处理:eso0932a 6000×3000 → 裁行 900–2100 → 4096×820;黑场裁切+径向羽化(加法混合用);webp"
+  },
+  {
+   "id": "v1.m51",
+   "title": "涡状星系 M51 及伴星系",
+   "file": "deep/assets/v1/gx-m51.webp",
+   "source": "NASA, ESA, S. Beckwith (STScI), and The Hubble Heritage Team (STScI/AURA)",
+   "url": "https://esahubble.org/images/heic0506a/",
+   "license": "CC BY 4.0",
+   "retrieved": "2026-10-29",
+   "ai_generated": false,
+   "note": "处理:heic0506a screen 1280 → 768;黑场裁切+径向羽化(加法混合用);webp"
+  },
+  {
+   "id": "v1.m101",
+   "title": "风车星系 M101",
+   "file": "deep/assets/v1/gx-m101.webp",
+   "source": "European Space Agency & NASA(致谢见原页:K.D. Kuntz 等;图像处理 Davide De Martin)",
+   "url": "https://esahubble.org/images/heic0602a/",
+   "license": "CC BY 4.0",
+   "retrieved": "2026-10-29",
+   "ai_generated": false,
+   "note": "处理:heic0602a screen → 768;部分 billboard 倾斜作透视;黑场裁切+径向羽化(加法混合用);webp"
+  },
+  {
+   "id": "v1.sombrero",
+   "title": "草帽星系 M104",
+   "file": "deep/assets/v1/gx-sombrero.webp",
+   "source": "NASA/ESA and The Hubble Heritage Team (STScI/AURA)",
+   "url": "https://esahubble.org/images/opo0328a/",
+   "license": "CC BY 4.0",
+   "retrieved": "2026-10-29",
+   "ai_generated": false,
+   "note": "处理:opo0328a screen 裁中部 → 768;黑场裁切+径向羽化(加法混合用);webp"
+  },
+  {
+   "id": "v1.potw1719a",
+   "title": "Close encounter(小星系)",
+   "file": "deep/assets/v1/gx-small.webp",
+   "source": "ESA/Hubble & NASA",
+   "url": "https://esahubble.org/images/potw1719a/",
+   "license": "CC BY 4.0",
+   "retrieved": "2026-10-29",
+   "ai_generated": false,
+   "note": "处理:potw1719a screen 裁中心 400² → 256;黑场裁切+径向羽化(加法混合用);webp"
+  },
+  {
+   "id": "v1.helix",
+   "title": "VISTA 螺旋星云 NGC 7293",
+   "file": "deep/assets/v1/nb-helix.webp",
+   "source": "ESO/VISTA/J. Emerson. Acknowledgment: Cambridge Astronomical Survey Unit",
+   "url": "https://www.eso.org/public/images/eso1205a/",
+   "license": "CC BY 4.0",
+   "retrieved": "2026-10-29",
+   "ai_generated": false,
+   "note": "处理:eso1205a screen 裁中心 → 768;黑场裁切+径向羽化(加法混合用);webp"
+  },
+  {
+   "id": "v1.carina",
+   "title": "船底座“宇宙悬崖”(NIRCam)",
+   "file": "deep/assets/v1/nb-carina.webp",
+   "source": "NASA, ESA, CSA, and STScI",
+   "url": "https://esawebb.org/images/weic2205a/",
+   "license": "CC BY 4.0",
+   "retrieved": "2026-10-29",
+   "ai_generated": false,
+   "note": "处理:weic2205a screen → 1024;黑场裁切+径向羽化(加法混合用);webp"
+  },
+  {
+   "id": "v1.tarantula",
+   "title": "蜘蛛星云(NIRCam)",
+   "file": "deep/assets/v1/nb-tarantula.webp",
+   "source": "NASA, ESA, CSA, and STScI",
+   "url": "https://esawebb.org/images/weic2212a/",
+   "license": "CC BY 4.0",
+   "retrieved": "2026-10-29",
+   "ai_generated": false,
+   "note": "处理:weic2212a screen → 1024;黑场裁切+径向羽化(加法混合用);webp"
+  },
+  {
+   "id": "v1.pillars",
+   "title": "创生之柱(Webb,裁切版)",
+   "file": "deep/assets/v1/nb-pillars.webp",
+   "source": "NASA, ESA, CSA, STScI; J. DePasquale, A. Koekemoer, A. Pagan (STScI)",
+   "url": "https://esawebb.org/images/weic2216a/",
+   "license": "CC BY 4.0",
+   "retrieved": "2026-10-29",
+   "ai_generated": false,
+   "note": "处理:weic2216a screen → 768;黑场裁切+径向羽化(加法混合用);webp"
+  }
+ ]
+}
