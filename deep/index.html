@@ -48,6 +48,7 @@ body.clean #nav,body.clean #hud,body.clean #dive,body.clean #note,body.clean #ba
 #side .fx{margin:18px 0;padding:12px;border:1px solid rgba(143,160,196,.25);border-radius:10px;background:rgba(2,4,12,.5)}
 #side p{color:var(--dim);font-size:14px;line-height:1.7;margin-top:10px}#side .row{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
 #sideX{position:absolute;right:16px;top:16px}
+#sideTh{margin-top:12px;padding:10px 12px;border-left:2px solid var(--pc,#e8c27a);background:linear-gradient(90deg,rgba(255,255,255,.05),transparent);border-radius:0 10px 10px 0}#sideTh b{display:block;font-weight:500;font-size:13px;color:var(--ink);letter-spacing:.04em}#sideTh ol{list-style:none;margin-top:6px}#sideTh li{display:flex;gap:8px;align-items:baseline;font-size:12px;color:var(--dim);padding:3px 0}#sideTh li i{flex:none;width:7px;height:7px;border-radius:50%;border:1px solid currentColor;transform:translateY(-1px)}#sideTh li.on{color:var(--gold)}#sideTh li.on i{background:var(--gold)}#sideTh li.lk{opacity:.5}#sideTh button{all:unset;cursor:pointer;color:var(--ink);text-decoration:underline dotted rgba(232,194,122,.6);text-underline-offset:3px}#sideTh button:focus-visible{outline:1px dashed var(--gold)}#sideTh .lv{flex:none;width:3.2em;color:var(--dim)}
 #sideS ol{margin:12px 0 0 18px;color:var(--ink);font-size:14px;line-height:1.7}#sideS li{margin-top:8px}#sideS li.h{display:none}#sideS .k{margin-top:4px}
 #sideQ{margin-top:16px;padding:12px;border:1px dashed rgba(232,194,122,.4);border-radius:10px}#sideQ b{color:var(--gold);font-weight:500}#sideQ .btn{margin:8px 8px 0 0;font-size:13px}
 #sideQ .ok{color:#7fe3a8}#chainBox{margin-top:14px;padding-top:12px;border-top:1px dashed rgba(232,194,122,.3)}#chainBox .cdim{font-size:12px;color:var(--dim);margin:4px 0}#sideQ .no{color:#ff9a9a}#sideL{margin-top:16px;padding:12px;border:1px dashed rgba(127,178,255,.4);border-radius:10px}#sideL b{color:var(--gold);font-weight:500}#sideL .cdim{font-size:12px;color:var(--dim);margin:4px 0 8px}#labV{margin:8px 0;padding:8px 10px;border-left:3px solid #ffb36b;color:#ffd9b0;font-size:14px;line-height:1.6}#labV:empty{display:none}#sideR b.pf{color:#ffb36b;font-weight:500}#sideR ul.pf{margin:4px 0 8px 18px;color:#c9d3ea}#sideR i{display:block;color:#ffb36b;margin-bottom:6px}#labC{width:100%;height:auto;background:rgba(2,4,12,.6);border-radius:8px;margin-top:8px}#sideR{margin-top:12px;font-size:12px;color:#6c7a9c;line-height:1.6}#sideR a{color:var(--dim)}
@@ -63,9 +64,9 @@ body.clean #nav,body.clean #hud,body.clean #dive,body.clean #note,body.clean #ba
 <nav id="nav" aria-label="深度导航"></nav>
 <div id="hud" aria-live="polite"><h1 id="t"></h1><p id="s"></p><span id="g" class="tag"></span></div>
 <button id="dive" class="btn">▼ 潜入深空</button>
-<div id="note">深空层 V1 · 开发中 · 影像:ESO/S. Brunier、ESA/Hubble、ESA/Webb、NASA(CC BY 4.0,详见 LICENSES.md)</div>
+<div id="note">深空层 V2 · 开发中 · 影像:ESO/S. Brunier、ESA/Hubble、ESA/Webb、NASA(CC BY 4.0,详见 LICENSES.md)</div>
 <div id="names" aria-hidden="true"></div><div id="tip" aria-hidden="true"></div>
-<aside id="side" role="dialog" aria-modal="false" aria-labelledby="sideT" aria-hidden="true"><button id="sideX" class="btn" aria-label="关闭">✕</button><h2 id="sideT"></h2><div class="w" id="sideW"></div><div class="fx" id="sideF"></div><div id="sideD"></div><p id="sideP"></p><div id="sideG"></div><div id="sideS"></div><div id="sideQ" hidden></div><div id="sideL" hidden></div><div id="sideR"></div><div class="row"><button id="sideC" class="btn">生成推导卡(示例)</button></div></aside>
+<aside id="side" role="dialog" aria-modal="false" aria-labelledby="sideT" aria-hidden="true"><button id="sideX" class="btn" aria-label="关闭">✕</button><h2 id="sideT"></h2><div class="w" id="sideW"></div><div id="sideTh"></div><div class="fx" id="sideF"></div><div id="sideD"></div><p id="sideP"></p><div id="sideG"></div><div id="sideS"></div><div id="sideQ" hidden></div><div id="sideL" hidden></div><div id="sideR"></div><div class="row"><button id="sideC" class="btn">生成推导卡(示例)</button></div></aside>
 <main id="cards" aria-label="深空层分层列表"></main>
 <script type="module">
 import * as THREE from "three";
@@ -81,6 +82,11 @@ const WORLDS=[
  {id:"ps",n:"奇点前夜",e:"Pre-Singularity",sub:"超级智能",c:0xd38cff,f:"P(A\\mid B)=\\frac{P(B\\mid A)\\,P(A)}{P(B)}",fn:"贝叶斯定理"},
  {id:"lt",n:"觉弈",e:"Ludoterra",sub:"认知觉醒",c:0xffd46b,f:"E[X]=\\sum_i p_i\\,x_i",fn:"期望值"},
  {id:"sh",n:"天枢",e:"Starhelm",sub:"天文",c:0x7fe3ff,f:"\\frac{T^2}{a^3}=\\frac{4\\pi^2}{G(M+m)}",fn:"开普勒第三定律(牛顿形式)"}];
+// V2 一题一光柱:七道光柱按 01c 自左向右的颜色对应七世界(蓝 星图/紫 宙律/橙 元素工坊/绿 生命源码/青 天枢/金 觉弈/白 奇点前夜);每道光柱=该世界一个贯穿四层的问题
+const PILLAR=["ma","nv","ef","ls","sh","lt","ps"];
+const PCOL={ma:0x5a96ff,nv:0xb07cff,ef:0xff8a3c,ls:0x48ff7c,sh:0x30e8e0,lt:0xffc24a,ps:0xf2f5ff};
+const THREAD={ma:"一传二、利滚利:数列为什么会爆炸?",nv:"速度只多一点,后果为什么多很多?",ef:"能量藏在哪里,又怎样算清?",ls:"概率怎样决定一个群体?",sh:"天空的节律,能算到多准?",lt:"每天一点点,差距为什么大到离谱?",ps:"AI 的判断,能信几分?"};
+WORLDS.forEach(w=>{w.c=PCOL[w.id];w.p=PILLAR.indexOf(w.id);w.q=THREAD[w.id];});
 const L=[
  {k:"水面",t:"七世界 · 水面",s:"1.0 的七个世界在头顶闪烁",g:"已开放",z:0,c:0x8fb4ff,open:1},
  {k:"星辰·高中",t:"星辰",s:"为什么这条公式成立?推导它",g:"1.1 点亮",z:-260,c:0x7fd0ff,open:1},
@@ -91,7 +97,7 @@ const KEY="gn:deep:pos";
 const rm=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $=id=>document.getElementById(id);
 // 分层卡片(减少动态 / 无 WebGL)
-$("cards").innerHTML=L.map((l,i)=>`<section><h2>${l.k}</h2><p>${l.s}</p><p>${l.g}</p>${i===1||i===3?WORLDS.map((w,j)=>`<p><button class="btn" data-w="${j}" data-l="${i}">${w.n} · ${i===3?"生活决策":w.fn}</button></p>`).join(""):""}</section>`).join("");
+$("cards").innerHTML=`<section><h2>一题一光柱</h2><p>七道光柱各是一个世界的问题,顺着光柱往下,同一个问题逐层加深。</p>${PILLAR.map(id=>{const j=WORLDS.findIndex(w=>w.id===id),w=WORLDS[j];return `<p style="color:#${w.c.toString(16).padStart(6,"0")}">${w.n} · ${w.q}</p><p><button class="btn" data-w="${j}" data-l="1">星辰 ▸</button> <button class="btn" data-w="${j}" data-l="3">星河 ▸</button></p>`}).join("")}</section>`+L.map((l,i)=>`<section><h2>${l.k}</h2><p>${l.s}</p><p>${l.g}</p>${i===1||i===3?WORLDS.map((w,j)=>`<p><button class="btn" data-w="${j}" data-l="${i}">${w.n} · ${i===3?"生活决策":w.fn}</button></p>`).join(""):""}</section>`).join("");
 $("cards").addEventListener("click",e=>{const b=e.target.closest("[data-w]");if(b)openSide(+b.dataset.w,+b.dataset.l);});
 let gl=null;try{gl=document.createElement("canvas").getContext("webgl2")}catch(e){}
 if(rm||!gl){document.body.classList.add("rm");}if(!gl)document.body.classList.add("nogl");
@@ -143,13 +149,29 @@ const clusters=WORLDS.map((w,k)=>{const grp=new THREE.Group();const a=k/7*6.283+
  grp.add(new THREE.Points(gg,new THREE.PointsMaterial({size:mob?1.6:1.2,map:tex,color:w.c,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending})));
  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,color:w.c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.setScalar(9);grp.add(s);
  sc.add(grp);const d=document.createElement("div");d.style.color="#"+w.c.toString(16).padStart(6,"0");d.innerHTML=`${w.n}<small>${w.e} · ${w.sub}</small>`;namesEl.appendChild(d);return {grp,d};});
-// L1 星辰:公式星座(可悬停/点击 → 侧栏)
+// V2 一题一光柱:每个世界一颗星/层,四层同一 (x,y),由一道纵深光柱串起;已开放层(星辰/星河)可点,未开放层(星系/星穹)为暗星与「?」
 const stars=[];
-[1,3].forEach(li=>{const cons=new THREE.Group();cons.position.set(0,0,L[li].z-34);sc.add(cons);const my=[];
-WORLDS.forEach((w,k)=>{const a=k/7*6.283-1.571+(li===3?.45:0),rx=mob?15:40,ry=mob?24:22;const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,color:w.c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
- s.position.set(Math.cos(a)*rx,Math.sin(a)*ry,0);s.scale.setScalar(6);s.userData={k,L:li,base:6};cons.add(s);stars.push(s);my.push(s);});
-{const lp=[];for(let k=0;k<7;k++){const A=my[k].position,B=my[(k+1)%7].position;lp.push(A.x,A.y,0,B.x,B.y,0);}
- const lg=new THREE.BufferGeometry();lg.setAttribute("position",new THREE.Float32BufferAttribute(lp,3));cons.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:L[li].c,transparent:true,opacity:.25})));}});
+const PX=j=>{const a=Math.PI-j/6*Math.PI,rx=mob?15:44,ry=mob?30:26;return [Math.cos(a)*rx,Math.sin(a)*ry-ry*.38];};
+const qTex=(()=>{const c=document.createElement("canvas");c.width=c.height=128;const x=c.getContext("2d");const gr=x.createRadialGradient(64,64,0,64,64,64);gr.addColorStop(0,"rgba(255,255,255,.35)");gr.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=gr;x.fillRect(0,0,128,128);x.fillStyle="#fff";x.font="300 78px sans-serif";x.textAlign="center";x.textBaseline="middle";x.fillText("?",64,70);return new THREE.CanvasTexture(c)})();
+const SZ=i=>L[i].z-34;
+[1,2,3,4].forEach(li=>{const cons=new THREE.Group();cons.position.set(0,0,SZ(li));sc.add(cons);const lock=!L[li].open;const my=[];
+ WORLDS.forEach((w,k)=>{const [x,y]=PX(w.p);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:li===4?qTex:tex,color:w.c,transparent:true,opacity:lock?(li===4?.55:.3):1,blending:THREE.AdditiveBlending,depthWrite:false}));
+  s.position.set(x,y,0);const base=lock?(li===4?4.2:3.2):6;s.scale.setScalar(base);s.userData={k,L:li,base,lock};cons.add(s);stars.push(s);my[w.p]=s;
+  if(!lock){const ring=new THREE.Mesh(new THREE.TorusGeometry(3.4,.07,6,72),new THREE.MeshBasicMaterial({color:w.c,transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));ring.position.set(x,y,0);cons.add(ring);}});
+ const lp=[];for(let j=0;j<6;j++){const A=my[j].position,B=my[j+1].position;lp.push(A.x,A.y,0,B.x,B.y,0);}
+ const lg=new THREE.BufferGeometry();lg.setAttribute("position",new THREE.Float32BufferAttribute(lp,3));cons.add(new THREE.LineSegments(lg,new THREE.LineBasicMaterial({color:L[li].c,transparent:true,opacity:lock?.08:.22})));});
+// 纵深光柱:细芯 + 柔光两层圆柱,菲涅尔取芯、沿深度向下流动的光脉冲;过最后一个开放层后变暗;各层节点处增亮
+const BZ0=40,BZ1=SZ(4)-160,uBT={value:0};
+const beamMat=(c,rad,I,P)=>new THREE.ShaderMaterial({uniforms:{uT:uBT,uC:{value:new THREE.Color(c)},uI:{value:I},uP:{value:P},uZL:{value:SZ(3)},uZn:{value:[1,2,3,4].map(SZ)},uNo:{value:[1,.35,1,.45]}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,
+ vertexShader:`varying vec3 vN,vV;varying float vZ;void main(){vec4 wp=modelMatrix*vec4(position,1.);vZ=wp.z;vec4 mv=viewMatrix*wp;vV=-mv.xyz;vN=normalize(mat3(viewMatrix)*mat3(modelMatrix)*normal);gl_Position=projectionMatrix*mv;}`,
+ fragmentShader:`uniform float uT,uI,uP,uZL,uZn[4],uNo[4];uniform vec3 uC;varying vec3 vN,vV;varying float vZ;
+void main(){float d=length(vV);float f=abs(dot(normalize(vN),vV/d));float core=pow(f,uP);
+ float seg=mix(.25,1.,smoothstep(uZL-60.,uZL+10.,vZ));float n=0.;for(int i=0;i<4;i++)n+=exp(-pow((vZ-uZn[i])/9.,2.))*uNo[i];
+ float ph=fract(vZ*.0045+uT*.16);float pulse=exp(-pow((ph-.5)/.018,2.))*seg;
+ float fade=exp(-d/520.)*smoothstep(3.,22.,d)*smoothstep(${BZ1.toFixed(1)},${(BZ1+120).toFixed(1)},vZ)*(1.-smoothstep(${(BZ0-50).toFixed(1)},${BZ0.toFixed(1)},vZ));
+ vec3 col=mix(uC,vec3(1.),.25)*core*(seg*.55+pulse*1.4+n*1.6)*fade*uI;gl_FragColor=vec4(col,1.);}`});
+const beams=WORLDS.map(w=>{const [x,y]=PX(w.p);const grp=new THREE.Group();grp.position.set(x,y,(BZ0+BZ1)/2);
+ [[.32,1.0,2.],[1.5,.32,4.]].forEach(([rad,I,P])=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(rad,rad,BZ0-BZ1,14,1,true),beamMat(w.c,rad,I,P));m.rotation.x=Math.PI/2;m.renderOrder=1;grp.add(m);});sc.add(grp);return grp;});
 // 课本卡:deep/cards/index.json 列出已交付的 <世界>.l1.json;无卡世界显示占位
 const CARDS={1:{},3:{}};fetch("cards/index.json").then(r=>r.ok?r.json():[]).then(list=>Promise.all(list.map(f=>fetch("cards/"+f).then(r=>r.json()).then(c=>{const li=/\.he\./.test(f)?3:1;c.layer=li;CARDS[li][c.world]=c;}).catch(()=>{})))).then(()=>{if(sideW>=0&&CARDS[sideL][WORLDS[sideW].id])openSide(sideW,sideL);}).catch(()=>{});
 const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -197,19 +219,25 @@ const side=$("side");let sideW=-1,bar=null,sideL=1;
 /* core/deep 0.3:卡片可选 chart 字段 {data:"<file>.json"(deep/data/ 下本地快照),x,ys:[{col,label}],type,xlabel,ylabel,from,to,marks} */
 let chartTok=0;function showChart(c){const G=$("sideG"),t=++chartTok;if(!c.chart||!/^[\w.-]+\.json$/.test(c.chart.data||""))return;DataSet.load("data/"+c.chart.data).then(D=>{if(t!==chartTok)return;DataChart.mount(G,{...c.chart,data:D});}).catch(e=>{if(t===chartTok)G.textContent="数据未通过台账校验:"+e.message;});}
 function openSide(k,li=1){chartTok++;li=li===3?3:1;const w=WORLDS[k];sideW=k;sideL=li;$("sideT").textContent=li===3?"生活决策":w.fn;$("sideW").textContent=`${w.n} ${w.e} · ${w.sub} · ${li===3?"星河层 · 成人":"星辰层 · 高中"}`;
- const cd=CARDS[li][w.id];Formula.render($("sideF"),cd&&cd.formula||w.f);$("sideD").innerHTML="";bar=DepthBar.mount($("sideD"),{task:cd?cd.id:`${w.id}.deep-demo`,levels:["d1","d2","d3"],start:"d1",onChange:()=>{}});
+ const cd=CARDS[li][w.id];renderThread(k,li);Formula.render($("sideF"),cd&&cd.formula||w.f);$("sideD").innerHTML="";bar=DepthBar.mount($("sideD"),{task:cd?cd.id:`${w.id}.deep-demo`,levels:["d1","d2","d3"],start:"d1",onChange:()=>{}});
  $("sideG").innerHTML="";$("sideS").innerHTML="";$("sideQ").hidden=true;$("sideL").hidden=true;$("sideL").innerHTML="";delete $("sideL").dataset.on;$("sideR").innerHTML="";
  if(cd){renderCard(cd);side.classList.add("open");side.setAttribute("aria-hidden","false");$("sideX").focus();return;}
  $("sideP").textContent=li===3?"占位卡:1.3 起每个世界在这里放 1 张生活决策卡(用这个世界的规则,算清一个真实选择)。题目由各世界提交,总指挥审核后点亮。":"占位卡:1.1 起每个世界在这里放 1 张课本卡(为什么这条公式成立,推导它)。题目由各世界提交,总指挥审核后点亮。";
  side.classList.add("open");side.setAttribute("aria-hidden","false");$("sideX").focus();}
+// 光柱路线:同一世界四层一列,已开放层可沿光柱直达
+function renderThread(k,li){const w=WORLDS[k],T=$("sideTh");T.style.setProperty("--pc","#"+w.c.toString(16).padStart(6,"0"));
+ T.innerHTML=`<b>光柱 · ${esc(w.q)}</b><ol>${[1,2,3,4].map(i=>{const c=CARDS[i]&&CARDS[i][w.id],lv=L[i].k.split("·")[0];
+  if(!L[i].open)return `<li class="lk"><i></i><span class="lv">${lv}</span><span>${esc(L[i].g)}</span></li>`;
+  const t=c?c.title:(i===3?"生活决策(待点亮)":w.fn);return i===li?`<li class="on"><i></i><span class="lv">${lv}</span><span>${esc(t)}</span></li>`:`<li><i></i><span class="lv">${lv}</span><button data-th="${i}">${esc(t)} ${i>li?"▼":"▲"}</button></li>`;}).join("")}</ol>`;
+ T.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{const i=+b.dataset.th;go(i,true);setTimeout(()=>openSide(k,i),rm||document.body.classList.contains("rm")?0:1250);});}
 function closeSide(){if(!side.classList.contains("open"))return false;side.classList.remove("open");side.setAttribute("aria-hidden","true");if(side.contains(document.activeElement))document.activeElement.blur();sideW=-1;return true;}
 $("sideX").onclick=closeSide;
 $("sideC").onclick=async()=>{if(sideW<0)return;const w=WORLDS[sideW],cd=CARDS[sideL][w.id];const b=await Card.make(cd?{kind:"derive",task:cd.id,title:cd.title,lines:[cd.hook||"",...cd.steps.map((x,i)=>`${i+1}. ${x.text}`)]}:{kind:"derive",task:`${w.id}.deep-demo`,title:w.fn,lines:[w.n+" · 星辰层示例卡","正式课本卡 1.1 上线"]});Card.share(b,`genesis-${w.id}-card.png`);};
 // 悬停/点击拾取
 const ray=new THREE.Raycaster(),mp=new THREE.Vector2(),tip=$("tip");let hov=-1;
-function pick(x,y){if((cur!==1&&cur!==3)||anim)return -1;mp.set(x/W()*2-1,-(y/H())*2+1);ray.setFromCamera(mp,cam);const h=ray.intersectObjects(stars.filter(s=>s.userData.L===cur),false)[0];return h?h.object.userData.k:-1;}
+function pick(x,y){if((cur!==1&&cur!==3)||anim)return -1;mp.set(x/W()*2-1,-(y/H())*2+1);ray.setFromCamera(mp,cam);const h=ray.intersectObjects(stars.filter(s=>s.userData.L===cur&&!s.userData.lock),false)[0];return h?h.object.userData.k:-1;}
 addEventListener("pointermove",e=>{if(e.pointerType==="touch")return;hov=pick(e.clientX,e.clientY);$("c").style.cursor=hov>=0?"pointer":"";
- if(hov>=0){tip.style.display="block";tip.style.left=e.clientX+14+"px";tip.style.top=e.clientY+12+"px";tip.textContent=`${WORLDS[hov].n} · ${WORLDS[hov].fn}`;}else tip.style.display="none";});
+ if(hov>=0){tip.style.display="block";tip.style.left=e.clientX+14+"px";tip.style.top=e.clientY+12+"px";{const w=WORLDS[hov],cd=CARDS[cur]&&CARDS[cur][w.id];tip.textContent=`${w.n} · ${cd?cd.title:(cur===3?"生活决策":w.fn)}`;}}else tip.style.display="none";});
 $("c").addEventListener("click",e=>{const k=pick(e.clientX,e.clientY);if(k>=0)openSide(k,cur);});
 // 状态
 let cur=0,tz=cam.position.z,anim=null;
@@ -252,7 +280,7 @@ function loop(t){requestAnimationFrame(loop);
  if(anim){const k=Math.min(1,(t-anim.t0)/anim.d);cam.position.z=anim.from+(anim.to-anim.from)*ease(k);if(k>=1)anim=null;}
  cam.position.x=Math.sin(t*.00013)*4;cam.position.y=Math.cos(t*.00011)*3;cam.lookAt(0,0,cam.position.z-100);
  cores.forEach((c,i)=>{c.rotation.z=t*.00008*(i%2?-1:1);c.children[1].rotation.y=t*.0002;});
- pts.rotation.z=t*.00001;nearFade(cam.position.z);
+ pts.rotation.z=t*.00001;uBT.value=t*.001;nearFade(cam.position.z);
  const cz=cam.position.z;clusters.forEach(({grp,d})=>{const dz=cz-grp.position.z;const o=dz>4&&dz<70?Math.sin((dz-4)/66*Math.PI):0;d.style.opacity=o.toFixed(2);
   if(o>0){const v=grp.position.clone().project(cam);d.style.left=(v.x*.5+.5)*W()+"px";d.style.top=(-v.y*.5+.5)*H()-26+"px";}grp.rotation.y=t*.0003;});
  stars.forEach(s=>{const tg=(s.userData.L===cur&&s.userData.k===hov)?10:s.userData.base*(1+.08*Math.sin(t*.002+s.userData.k));s.scale.setScalar(s.scale.x+(tg-s.scale.x)*.15);});
