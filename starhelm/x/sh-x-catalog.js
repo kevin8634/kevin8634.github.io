@@ -18,7 +18,7 @@
     root = X._.root(); lst = root && root.querySelector('#xc-lst'); if (!lst || lst.querySelector('#xg-bar')) return; css();
     var cap = lst.querySelector('.cap');
     bar = el('div'); bar.id = 'xg-bar'; bar.innerHTML = TABS.map(function (t) { return '<button type="button" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('');
-    inp = el('input'); inp.id = 'xg-q'; inp.type = 'search'; inp.placeholder = '搜索:中文 / 拉丁名 / M31 / NGC 7000'; inp.setAttribute('autocomplete', 'off');
+    inp = el('input'); inp.id = 'xg-q'; inp.type = 'search'; inp.placeholder = '搜索:中文 / 拉丁名 / M31 / NGC 7000'; inp.setAttribute('autocomplete', 'off'); inp.addEventListener('blur', function () { setTimeout(function () { if (document.activeElement && document.activeElement.tagName === 'INPUT') return; window.scrollTo(0, 0); }, 60); });
     box = el('div'); box.id = 'xg-box';
     cap.after(bar); bar.after(inp); lst.appendChild(box);
     bar.addEventListener('click', function (e) { var b = e.target.closest('button'); if (b) set(b.getAttribute('data-t')); });

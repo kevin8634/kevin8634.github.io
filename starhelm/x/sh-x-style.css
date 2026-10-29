@@ -176,3 +176,4 @@ body:has(.ml--dock:not([hidden])) .le-foot:hover{opacity:1}
 }
 @media (max-width:820px){.shh-c-guide{display:none}}
 #shxc.port>#xa-dock,#shxc.port>#xc-deck,#shxc.port>#xa-orb{z-index:2}
+@media (pointer:coarse),(max-width:900px){#shxc input[type=search],#shxc input[type=text],input#xg-q,input#loc-q,input#r-from,input#r-to,input#p-q,select,textarea{font-size:16px!important}}
