@@ -70,13 +70,13 @@
     crumb = document.createElement('nav'); crumb.id = 'shx-crumb'; crumb.setAttribute('aria-label', '面包屑');
     crumb.innerHTML = V.map(function (v, i) { return (i ? '<i>›</i>' : '') + '<a data-v="' + v.id + '">' + v.zh + '</a>'; }).join('');
     crumb.addEventListener('click', function (e) { var a = e.target.closest('a'); if (a) X.go(a.getAttribute('data-v')); });
-    root.appendChild(row); root.appendChild(crumb); document.body.appendChild(root);
+    root.appendChild(row); document.body.appendChild(root);   // C2.7-AUDIT ③(10-29 16:51):面包屑不再显示,只留圆环
     scale = document.createElement('div'); scale.id = 'shx-scale'; scale.setAttribute('aria-hidden', 'true');
     var h = '<div class="bar"></div>';
     ANCH.forEach(function (a, i) { var t = (1 - pos(a.km)) * 100; h += '<div class="n" data-v="' + a.id + '" style="top:' + t + '%"></div><div class="nl" data-v="' + a.id + '" style="top:' + t + '%">' + V[i].zh + '</div>'; });
     h += '<div class="ind"></div><div class="lab"></div>';
     scale.innerHTML = h; document.body.appendChild(scale);
-    scale.addEventListener('click', function (e) { var n = e.target.closest('[data-v]'); if (n) X.go(n.getAttribute('data-v')); });
+    // C2.7-AUDIT ③:尺度栏只作当前尺度指示,节点不可点(切视图用圆环)
     ind = scale.querySelector('.ind'); lab = scale.querySelector('.lab');
   }
   function fmt(km) {

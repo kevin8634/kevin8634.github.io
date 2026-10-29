@@ -181,3 +181,16 @@ body:has(.ml--dock:not([hidden])) .le-foot:hover{opacity:1}
 #xa-board .bd-d{margin-top:6px;min-height:16px;font-size:11px;color:#6f84a6;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #xa-board .bd-go[hidden]{display:none}
 #xa-board .bd-go{padding:7px 18px;font-size:13px;border-color:rgba(240,201,122,.6);background:rgba(240,201,122,.08)}
+/* C2.7-AUDIT ④(王磊 10-29 16:51):出发入口只留锚点卡与航图;自动驾驶不再单独占按钮,G 键保留为快捷键 */
+#shxc #xc-ap,#shxc .mob .btn[data-k="g"]{display:none}
+/* C2.7-AUDIT ③:尺度栏只作指示 */
+#shx-scale,#shx-scale .n,#shx-scale .nl{cursor:default!important}#shx-scale{pointer-events:none!important}
+/* C2.7-AUDIT ① 星空标签资料卡 */
+#shxc #xs-lcard{position:fixed;z-index:58;width:min(280px,86vw);max-height:60vh;overflow:auto;right:auto;bottom:auto;transform:none}
+#xs-lcard .lc-t{font-size:11px;color:#f0c97a;letter-spacing:.08em;margin:2px 0 8px}
+#xs-lcard .lc-r{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:#a9b8d0;padding:3px 0;border-bottom:1px solid rgba(140,170,220,.1)}
+#xs-lcard .lc-r b{color:#e8eef9;font-weight:500;text-align:right}
+#xs-lcard .lc-b{font-size:12px;color:#c4d0e4;line-height:1.55;margin-top:8px}
+#xs-lcard .lc-n{font-size:10px;color:#6f84a6;margin-top:8px}
+#xs-lcard .lc-a{margin-top:10px;text-align:right}
+#xs-lcard .lc-lock{background:rgba(240,201,122,.08);border:1px solid rgba(240,201,122,.5);color:#f0c97a;font-size:12px;padding:5px 14px;border-radius:14px;cursor:pointer}

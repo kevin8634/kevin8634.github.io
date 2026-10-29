@@ -374,7 +374,7 @@
     root.querySelectorAll('.mob .btn').forEach(function (b) {
       b.onclick = function () { var k = b.getAttribute('data-k'); if (k === 'end') { confirmEnd(); return; } if (k === '+') S.base = Math.min(MAXV, S.base * 1.6 + .5); if (k === '-') S.base = Math.max(0, S.base / 1.6 - .2); if (k === 'm') S.mult = S.mult >= 1e6 ? 1 : S.mult * 10; if (k === 'g') autopilot(!S.auto); S.auto = k === 'g' ? S.auto : false; };
     });
-    B.forEach(function (b) { var l = el('div', 'lbl', b.zh + '<i></i>'); l.dataset.id = b.id; l.dataset.p = b.id === 'sun' ? 800 : b.ghost ? 760 : b.star ? 700 : b.comet ? 380 : b.parent ? 300 : b.type === '矮行星' ? 480 : 650; l.onclick = function () { setTarget(b.id, '星空标签'); }; $('#xc-lbls', root).appendChild(l); b.lb = l; });
+    B.forEach(function (b) { var l = el('div', 'lbl', b.zh + '<i></i>'); l.dataset.id = b.id; l.dataset.p = b.id === 'sun' ? 800 : b.ghost ? 760 : b.star ? 700 : b.comet ? 380 : b.parent ? 300 : b.type === '矮行星' ? 480 : 650; l.onclick = function (e) { if (e) e.stopPropagation(); lblCard(b, l); }; /* C2.7-AUDIT ① 标签只看资料,不改目标 */ $('#xc-lbls', root).appendChild(l); b.lb = l; });
   }
   function toast(m) { var t = $('#xc-toast', root); t.textContent = m; t.style.opacity = 1; clearTimeout(t._h); t._h = setTimeout(function () { t.style.opacity = 0; }, 2400); }
   function tempStar(o) {   // C2.2d:把任意恒星装进临时航点槽,重建恒星外观
@@ -728,6 +728,24 @@
   }
 
   /* ---------------- 开/关 ---------------- */
+  /* C2.7-AUDIT ① 星空标签资料卡:只看资料;要改目标须点卡里「锁定为目标」(不出发,出发仍走锚点卡 / 航图 / Enter) */
+  function lblCard(b, l) {
+    if (!root) return;
+    var old = document.getElementById('xs-lcard'); if (old) { old.remove(); if (old._id === b.id) return; }
+    var f = window.SHXI && SHXI.facts(b.id), rows = f ? f.rows.slice(0, 4) : [];
+    var c = el('div', 'xs-card', '<h4><span>' + b.zh + ' <small>' + ((f && f.en) || b.en || '') + '</small></span><button class="xc" type="button" aria-label="关闭">×</button></h4>' +
+      '<div class="lc-t">' + ((f && f.type) || b.type || '') + (S.target === b.id ? ' · 当前目标' : '') + '</div>' +
+      rows.map(function (r) { return '<div class="lc-r"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>'; }).join('') +
+      (f && f.blurb ? '<div class="lc-b">' + f.blurb + '</div>' : '') +
+      (f ? '<div class="lc-n">' + f.nature + ' · ' + f.src + '</div>' : '') +
+      '<div class="lc-a">' + (S.target === b.id ? '' : '<button type="button" class="lc-lock">锁定为目标</button>') + '</div>');
+    c.id = 'xs-lcard'; c._id = b.id; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', b.zh + ' 资料');
+    c.querySelector('.xc').onclick = function () { c.remove(); };
+    var lk = c.querySelector('.lc-lock'); if (lk) lk.onclick = function () { c.remove(); setTarget(b.id, '星空标签'); };
+    root.appendChild(c);
+    var r = l.getBoundingClientRect(), W = innerWidth, H = innerHeight, cw = c.offsetWidth, ch = c.offsetHeight;
+    c.style.left = Math.max(8, Math.min(W - cw - 8, r.left + 14)) + 'px'; c.style.top = Math.max(8, Math.min(H - ch - 8, r.bottom + 8)) + 'px';
+  }
   function build() {
     T = window.THREE; tmpV = new T.Vector3(); tmpQ = new T.Quaternion();
     css(); buildHud();

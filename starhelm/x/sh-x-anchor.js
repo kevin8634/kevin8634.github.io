@@ -105,6 +105,14 @@
     card.classList.add('out'); hideT = setTimeout(function () { if (card) { card.classList.remove('on', 'out', 'flash'); card.style.display = 'none'; } }, 950);
   }
   function fade() { hide(false); }
+  // C2.7-AUDIT ⑤(10-29 16:51):锁定目标、锚点卡显示中按 Enter = 点「出发」(焦点在输入框 / 按钮上时不接管)
+  addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (!X || !X.isOpen || !X.isOpen() || !card || !cur || !card.classList.contains('on') || card.style.display === 'none' || card.classList.contains('out')) return;
+    var t = e.target && e.target.tagName; if (/^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t || '') || (e.target && e.target.isContentEditable)) return;
+    var go = card.querySelector('.go'); if (!go || go.disabled || go.textContent !== '出发') return;
+    e.preventDefault(); e.stopPropagation(); depart();
+  }, true);
   window.SHXAN = { lock: lock, fade: fade, hide: function () { hide(true); }, state: function () { return { on: !!(card && card.classList.contains('on') && card.style.display !== 'none' && !card.classList.contains('out')), id: cur && cur.b.id, zh: cur && cur.b.zh, src: cur && cur.src, prev: prev }; } };
   (function hook(n) { if (window.SHXC && SHXC.on) { SHXC.on(function (ev) { if (ev === 'close') hide(true); }); return; } if (n < 200) setTimeout(function () { hook(n + 1); }, 100); })(0);
 })();

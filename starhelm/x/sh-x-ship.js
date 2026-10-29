@@ -510,7 +510,7 @@
     if (m === 'cruise' && S.mult > 1000) S.mult = 1000;
     if (!quiet) { say([m === 'cruise' ? 'a04' : 'a05']); blip(m === 'cruise' ? 520 : 780, .18, .06); }
   }
-  function closeCards(except) { if (U.arm && U.arm.state === 'LISTENING') U.arm.set('IDLE'); ['xs-plan', 'xs-snd', 'xs-log'].forEach(function (id) { if (id !== except) { var c = $('#' + id, R); if (c) c.remove(); } }); }
+  function closeCards(except) { if (U.arm && U.arm.state === 'LISTENING') U.arm.set('IDLE'); ['xs-plan', 'xs-snd', 'xs-log', 'xs-lcard'].forEach(function (id) { if (id !== except) { var c = $('#' + id, R); if (c) c.remove(); } }); }
 
   /* ---------------- 航行规划 ---------------- */
   var PL = { tgt: null };
@@ -861,12 +861,12 @@
     SH.voyReady = function () { return !!(window.SHXC && SHXC.isOpen && SHXC.isOpen()); };
     SH.voySetTarget = function (id) {
       if (!SH.voyReady()) { if (window.SHXV) SHXV.go('fly'); else SHXC.open(); }
-      var n = 0; (function go() { if (!SH.voyReady() && n++ < 40) { setTimeout(go, 150); return; } setTimeout(function () { var t = SEC2T[id] || id, BY = SHXC._ && SHXC._.BY; if (BY && BY[t]) { SHXC.setTarget(t, '星域页航图'); setTimeout(function () { if (SHXC.state().target !== t) SHXC.setTarget(t); }, 1200); SHXC._.toast('航图目的地:' + BY[t].zh + ' · 按 G 自动驾驶'); } else togglePlan(); }, 300); })();
+      var n = 0; (function go() { if (!SH.voyReady() && n++ < 40) { setTimeout(go, 150); return; } setTimeout(function () { var t = SEC2T[id] || id, BY = SHXC._ && SHXC._.BY; if (BY && BY[t]) { SHXC.setTarget(t, '星域页航图'); setTimeout(function () { if (SHXC.state().target !== t) SHXC.setTarget(t); if (!$('#xs-plan', R)) togglePlan(); }, 1200); SHXC._.toast('已打开驾驶舱航图 · 目的地 ' + BY[t].zh + ' 已锁定 · 点「出发」或按 Enter'); } else if (!$('#xs-plan', R)) togglePlan(); }, 300); })();   // C2.7-AUDIT ②:旧航图入口 = 打开驾驶舱航图
     };
     SH.voyLand = function (id) { SH.voySetTarget(id); };
     SH.voyExit = function () { if (window.SHXC && SHXC.confirmEnd) SHXC.confirmEnd(); };
     // 航图里的旧文案「弦穹号」→「天枢号」
-    (function relabel(k) { var A = document.querySelector('section.sha'); if (!A) { if (k < 600) setTimeout(function () { relabel(k + 1); }, 200); return; } var mo = new MutationObserver(function () { document.querySelectorAll('.sha button').forEach(function (b) { if (b.textContent.indexOf('弦穹号') >= 0) b.textContent = b.textContent.replace('驾驶弦穹号前往', '驾驶天枢号前往').replace('弦穹号', '天枢号'); }); }); mo.observe(A, { childList: true, subtree: true }); })(0);
+    (function relabel(k) { var A = document.querySelector('section.sha'); if (!A) { if (k < 600) setTimeout(function () { relabel(k + 1); }, 200); return; } var mo = new MutationObserver(function () { document.querySelectorAll('.sha button').forEach(function (b) { if (b.textContent.indexOf('弦穹号') >= 0) b.textContent = b.textContent.replace('驾驶弦穹号前往', '打开驾驶舱航图').replace('驾驶天枢号前往', '打开驾驶舱航图').replace('弦穹号', '天枢号'); }); }); mo.observe(A, { childList: true, subtree: true }); })(0);
   }
   takeover(); addEventListener('load', takeover);
 
