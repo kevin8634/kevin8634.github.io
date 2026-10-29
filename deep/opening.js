@@ -222,19 +222,20 @@ void main(){vec2 uv=vUv;float asp=uRes.x/uRes.y;float wx=uv.x*asp;
   b+=vec3(.8,.92,1.)*tw*min(dot(b,vec3(.33))*5.,1.)*.45;
   // 斯涅尔窗:水下仰视,天空压缩进临界角 θc=asin(1/n)≈48.6° 的圆锥(全视角≈97°),窗外为全内反射的暗面
   float sn=smoothstep(1.,1.12,uWl)*(1.-smoothstep(.12,.6,uMixC));
-  if(sn>0.){vec2 zq=vec2((uv.x-.5)*asp,uv.y-1.06);float tw2=length(zq)*1.9; // 与天顶夹角(rad)
+  if(sn>0.){float tc=asin(1./NW);float rW=min(.19,.40*asp);float kW=tc/rW;const float cyW=.785; // V1.1:窗心移入画面、半径按屏宽收,桌面/手机都完整可见
+   vec2 zq=vec2((uv.x-.5)*asp,uv.y-cyW);float tw2=length(zq)*kW; // 与天顶夹角(rad)
    tw2+=.018*sin(uv.x*40.+uTime*1.3)*sin(uv.y*31.-uTime);
-   float tc=asin(1./NW);vec3 sw;
+   vec3 sw;
    if(tw2<tc){float ta=asin(min(NW*sin(tw2),1.)); // 斯涅尔:sinθa=n·sinθw
     vec2 dir=zq/max(length(zq),1e-4);float rr=1.-ta/1.5708;
     vec2 su=vec2(.5+dir.x*(1.-rr)*.55,.73+.27*rr);
     float ct=cos(ta),ctw=cos(tw2);float Tf=1.-(F0W+(1.-F0W)*pow(1.-ct,5.)); // 透射率随入射角
     sw=texture2D(tA,su).rgb*Tf*1.6+vec3(.1,.16,.18)*smoothstep(tc-.12,tc,tw2)*.35; // 窗边压缩的地平线亮环
     sw*=T*.4+.6;
-   }else{vec2 mu=vec2(uv.x,clamp(2.*(1.06-tc/1.9)-uv.y,0.,1.)); // 全内反射:镜像水下场景
+   }else{vec2 mu=vec2(uv.x,clamp(2.*(cyW-rW)-uv.y,0.,1.)); // 全内反射:镜像水下场景
     sw=texture2D(tB,mu).rgb*.35*T+WC*.006;}
    float ew=smoothstep(.02,0.,abs(tw2-tc))*.4;sw+=vec3(.5,.7,.75)*ew*.15;
-   b=mix(b,sw,sn*smoothstep(.3,.6,uv.y));}
+   b=mix(b,sw,sn*(1.-smoothstep(tc*1.15,tc*1.9,tw2)));}
   col=mix(b,c,uMixC);
   vec3 bg=mix(vec3(.008,.012,.02),vec3(.0015,.002,.005),smoothstep(0.,.32,dd));col+=bg*wa;
   col*=mix(1.,.45,exp(-dd*uRes.y/7.)*(1.-uMixC));
