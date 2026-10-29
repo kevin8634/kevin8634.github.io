@@ -260,7 +260,7 @@ function loop(t){requestAnimationFrame(loop);
 // 一帧:按相机深度推进水线(0=水面构图,1=已入深空)
 function frame(t){const d=Math.min(1,Math.max(0,(60-cam.position.z)/260));const wl=WL0+ss(0,.5,d)*(1.16-WL0),mc=ss(.35,.85,d);const s=t*.001;
  op.update(s,d);const U=cmp.uniforms;U.uWl.value=wl;U.uMixC.value=mc;U.uTime.value=s;
- if(wl<1.05){r.setRenderTarget(rtA);r.render(op.sceneA,op.camA);}
+ if(wl<1.05||mc<.6){r.setRenderTarget(rtA);r.render(op.sceneA,op.camA);}
  if(mc<1){r.setRenderTarget(rtB);r.render(op.sceneB,op.camB);}
  if(mc>0){r.setRenderTarget(rtC);r.render(sc,cam);}
  r.setRenderTarget(null);if(bloom){bloom.threshold=.85-.65*mc;bloom.strength=.5+.1*mc;bloom.radius=.4+.15*mc;}comp.render();}

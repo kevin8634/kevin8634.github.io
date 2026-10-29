@@ -75,18 +75,18 @@ export function createOpening(THREE, { mob = false, base = "./assets/v1/" } = {}
     uniforms: WU, depthWrite: true,
     vertexShader: `varying vec3 vW;void main(){vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}`,
     fragmentShader: SKY_GLSL + `
-uniform float uTime;uniform vec3 uSD[7];uniform vec3 uSC[7];varying vec3 vW;
+const float F0W=.0201;uniform float uTime;uniform vec3 uSD[7];uniform vec3 uSC[7];varying vec3 vW;
 void main(){
   vec2 p=vW.xz;float dist=length(vW-cameraPosition);vec2 g=vec2(0.);
   for(int i=0;i<9;i++){float fi=float(i);float a=fi*2.39996+.4;vec2 dir=normalize(mix(vec2(cos(a),sin(a)),vec2(.15,1.),.45));
     float k=.13*pow(1.6,fi);float amp=.2/pow(1.7,fi)*exp(-k*dist*.003);
     float ph=dot(dir,p)*k-uTime*sqrt(9.8*k)*.55+fi*1.7;g+=dir*k*amp*cos(ph);}
   vec3 N=normalize(vec3(-g.x,1.,-g.y));vec3 V=normalize(vW-cameraPosition);vec3 R=reflect(V,N);R.y=abs(R.y);
-  float fr=.02+.98*pow(1.-max(dot(-V,N),0.),5.);
+  float fr=F0W+(1.-F0W)*pow(1.-max(dot(-V,N),0.),5.); // Schlick, n=1.33 → F0=((n-1)/(n+1))^2≈0.0201
   vec3 refl=skyCol(R)*.45;
   for(int i=0;i<7;i++){float c=max(dot(R,uSD[i]),0.);refl+=uSC[i]*(pow(c,6000.)*.8+pow(c,900.)*.05+pow(c,150.)*.012);}
   vec3 body=vec3(.004,.008,.012);
-  vec3 col=mix(body,refl,clamp(fr,0.,1.));
+  vec3 col=body*(1.-fr)+refl*fr; // 透射(水体)+反射,能量守恒
   float hz=smoothstep(600.,3800.,dist);col=mix(col,skyCol(normalize(vec3(V.x,.004,V.z)))*.5,hz*.6);
   gl_FragColor=vec4(col,1.);
 }` }));
@@ -99,27 +99,37 @@ void main(){
   deepStars.renderOrder = -5; sceneB.add(deepStars);
   const items = []; // {obj, sx, sy, D, w, h(px 01c), spin}
   const plane = (mat) => new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat);
-  const img = (f, k = 1.25, soft = .3) => new THREE.ShaderMaterial({ uniforms: { map: { value: T(f) }, uK: { value: k }, uS: { value: soft } }, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+  const img = (f, k = 1.25, soft = .3, band = 0) => new THREE.ShaderMaterial({ uniforms: { map: { value: T(f) }, uK: { value: k }, uS: { value: soft }, uB: { value: band } }, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
     vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-    fragmentShader: `uniform sampler2D map;uniform float uK,uS;varying vec2 vUv;void main(){float r=length(vUv*2.-1.);vec3 c=texture2D(map,vUv).rgb;gl_FragColor=vec4(c*uK*mix(1.,smoothstep(1.,.15,r),uS),1.);}` });
+    fragmentShader: `uniform sampler2D map;uniform float uK,uS,uB;varying vec2 vUv;void main(){vec2 q=vUv*2.-1.;float r=length(q);vec3 c=texture2D(map,vUv).rgb;
+ float m=mix(smoothstep(1.,.15,r),pow(smoothstep(1.,.05,abs(q.x)),1.4)*smoothstep(1.,.25,abs(q.y)),uB); // uB=1:星云带横向长羽化,相邻块重叠成连续带
+ gl_FragColor=vec4(c*uK*mix(1.,m,uS),1.);}` });
   const add = (o, sx, sy, D, w, h, extra = {}) => { const grp = new THREE.Group(); grp.add(o); sceneB.add(grp); items.push({ grp, o, sx, sy, D, w, h, ...extra }); return o; };
   // 七道体积光柱(加法混合锥体 + 噪声 + 随深度衰减)
-  const pillarMat = (seed, inten) => new THREE.ShaderMaterial({ uniforms: { uTime: U.uTime, uSeed: { value: seed }, uI: { value: inten } }, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+  // 水体物理常数(见 docs/V1_对比说明.md「水体物理」):折射率 n、Beer–Lambert 吸收系数 K(1/m, R/G/B≈650/550/450nm)
+  const NW = 1.33, KW = new THREE.Vector3(.38, .07, .035);
+  const pillarMat = (seed, inten, col, skew, lenM) => new THREE.ShaderMaterial({ uniforms: { uTime: U.uTime, uSeed: { value: seed }, uI: { value: inten }, uC: { value: new THREE.Color(col) }, uSk: { value: skew }, uLen: { value: lenM }, uK: { value: KW } }, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
     vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-    fragmentShader: `uniform float uTime,uSeed,uI;varying vec2 vUv;
+    fragmentShader: `uniform float uTime,uSeed,uI,uSk,uLen;uniform vec3 uC,uK;varying vec2 vUv;
 float h1(float x){return fract(sin(x*127.1+uSeed*31.7)*43758.5453);}
 float vn(float x){float i=floor(x),f=fract(x);return mix(h1(i),h1(i+1.),f*f*(3.-2.*f));}
-void main(){float x=vUv.x*2.-1.;float y=1.-vUv.y;float w=mix(.16,.26,y);
- float core=exp(-pow(x/(w*.55),2.));float halo=exp(-pow(x/w,2.))*.36+exp(-pow(x/(w*2.6),2.))*.14;
- float fall=pow(max(1.-y,0.),1.5)*smoothstep(0.,.025,y);
+void main(){float y=1.-vUv.y;float x=(vUv.x*2.-1.)*1.6-uSk*y; // 折射后的入水方向(斜率 tanθt)
+ float w=mix(.2,.42,pow(y,.8)); // 前向散射:随深度展宽
+ float core=exp(-pow(x/(w*.8),2.));float halo=exp(-pow(x/w,2.))*.4+exp(-pow(x/(w*2.6),2.))*.16;
+ float fall=pow(max(1.-y,0.),1.1)*smoothstep(0.,.025,y)*(1.-.5*y); // 几何发散+散射损失
+ vec3 T=exp(-uK*uLen*y); // Beer–Lambert:I(z)=I0·e^(−K·z),按通道
+ vec3 src=mix(vec3(1.,.87,.68),uC,.3);
  float nz=.72+.28*vn(y*11.-uTime*.5)*(.6+.4*vn(y*3.7+uTime*.17+x*2.));
- float I=(core*.75+halo)*fall*nz*uI;gl_FragColor=vec4(vec3(1.,.87,.68)*I,1.);}` });
+ float I=(core*.9+halo)*fall*nz*uI;gl_FragColor=vec4(src*mix(vec3(1.),T,.8)*I*1.1,1.);}` });
   const PL = [310, 330, 300, 350, 330, 310, 330]; // 光柱长度(01c 像素)
-  STAR7.forEach((s, i) => add(plane(pillarMat(i + 1, .7 + .08 * Math.sin(i * 1.7))), s.x, 305, 90, 120, PL[i], { top: 1 }));
+  STAR7.forEach((s, i) => { // 斯涅尔:sinθi = n·sinθt;θi 取光线相对竖直的方位扩张(画面两侧更斜)
+    const ai = (s.x - REF.w / 2) / (REF.w / 2) * .42, at = Math.asin(Math.sin(ai) / NW);
+    add(plane(pillarMat(i + 1, .78 + .08 * Math.sin(i * 1.7), s.c, Math.tan(at) * PL[i] / 96, 5)), s.x, 305, 90, 192, PL[i], { top: 1, kink: ai - at });
+  });
   // 星云带(真实影像)
   const NB = [["nb-pillars.webp", 170, 598, 180, 180, .8, .3], ["nb-tarantula.webp", 315, 600, 190, 120, 1.05, 0], ["nb-carina.webp", 505, 590, 300, 175, 1.15, 0],
     ["nb-tarantula.webp", 745, 592, 270, 160, 1.2, 3.14], ["nb-helix.webp", 990, 590, 180, 180, 1.35, 0], ["nb-carina.webp", 1205, 588, 230, 140, 1.0, 3.14], ["nb-pillars.webp", 60, 600, 140, 140, .7, -.4]];
-  NB.forEach(([f, sx, sy, w, h, k, rot]) => { const m = add(plane(img(f, k * .8, 1)), sx, sy, 130, w * 1.3, h * 1.25); m.rotation.z = rot; });
+  NB.forEach(([f, sx, sy, w, h, k, rot]) => { const m = add(plane(img(f, k * .66, 1, 1)), sx, sy, 130, w * 1.85, h * 1.3); m.rotation.z = rot; });
   // 星系(真实影像,部分倾斜为透视)
   const GX = [["gx-m51.webp", 435, 485, 130, 90, 1.35, 0, -.2, .02], ["gx-m101.webp", 868, 478, 175, 137, 1.3, 1.15, -.42, .01], ["gx-m101.webp", 240, 492, 64, 50, 1.2, 1.05, .7, .015],
     ["gx-sombrero.webp", 90, 474, 72, 35, 1.1, 0, .25, 0], ["gx-m101.webp", 1095, 468, 90, 70, 1.15, 1.2, .55, .012], ["gx-small.webp", 1310, 466, 60, 60, 1.3, 0, 0, 0],
@@ -190,14 +200,43 @@ export function createComposite(THREE) {
     vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`,
     fragmentShader: `uniform sampler2D tA,tB,tC;uniform float uWl,uWl0,uMixC,uTime,uGrain,uVig;uniform vec2 uRes;varying vec2 vUv;
 float hs(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}
+const float NW=1.33,F0W=.0201;const vec3 KW=vec3(.38,.07,.035),WC=vec3(.05,.42,.55);
 void main(){vec2 uv=vUv;float asp=uRes.x/uRes.y;float wx=uv.x*asp;
  float wl=uWl+.0055*sin(wx*7.+uTime*.9)+.0028*sin(wx*19.-uTime*1.6)+.0012*sin(wx*53.+uTime*2.4);
  vec3 col;
  if(uv.y>wl){vec2 a=uv-vec2(0.,uWl-uWl0);col=a.y>1.?vec3(0.):texture2D(tA,a).rgb;
   float m=exp(-pow((uv.y-wl)*uRes.y/2.2,2.));col=col*(1.-.7*exp(-(uv.y-wl)*uRes.y/14.))+vec3(.42,.52,.56)*m*.22;}
  else{float dd=wl-uv.y;vec2 r=uv+vec2(.004*sin(uv.x*70.+uTime*2.)*exp(-dd*28.),0.);
-  vec3 b=texture2D(tB,r).rgb;vec3 c=uMixC>0.?texture2D(tC,uv).rgb:vec3(0.);col=mix(b,c,uMixC);
-  vec3 bg=mix(vec3(.008,.012,.02),vec3(.0015,.002,.005),smoothstep(0.,.32,dd));col+=bg*(1.-uMixC);
+  vec3 b=texture2D(tB,r).rgb;vec3 c=uMixC>0.?texture2D(tC,uv).rgb:vec3(0.);
+  float wa=1.-smoothstep(.15,.75,uMixC); // 水体占比:进入深空层后逐步「离开水体」,恢复真空色彩
+  float zm=dd*6.+max(uWl-uWl0,0.)*24.; // 该像素对应水深(m)
+  vec3 T=exp(-KW*zm); // Beer–Lambert 按波长
+  b=b*mix(vec3(1.),mix(T,vec3(dot(T,vec3(.3,.4,.3))),.35),.6); // 保留35%中性以护住深处星系星云的辨识度
+  b+=WC*(1.-T.g)*.018; // 内散射:水体本色(青蓝)
+  // 焦散:水面下几米内的光纹,强度随深度 e^(−z/2.5)
+  vec2 cp=vec2(uv.x*asp,dd)*vec2(14.,26.);float ca=0.;vec2 cq=cp;
+  for(int i=0;i<3;i++){cq+=vec2(sin(cq.y*1.3+uTime*.7+float(i)),cos(cq.x*1.1-uTime*.6))*.55;ca+=1./(.12+abs(sin(cq.x)*sin(cq.y)));}
+  b+=vec3(.55,.8,.85)*pow(ca*.1,4.)*.004*exp(-zm/1.2)*smoothstep(0.,.012,dd);
+  // 丁达尔:悬浮微粒在光柱中被照亮(亮度∝所在处光柱亮度)
+  vec2 gp=floor(uv*uRes/3.);float hh=hs(gp+floor(uTime*.5)*.0);float tw=step(.9988,hh)*(.5+.5*sin(uTime*1.5+hh*40.));
+  b+=vec3(.8,.92,1.)*tw*min(dot(b,vec3(.33))*5.,1.)*.45;
+  // 斯涅尔窗:水下仰视,天空压缩进临界角 θc=asin(1/n)≈48.6° 的圆锥(全视角≈97°),窗外为全内反射的暗面
+  float sn=smoothstep(1.,1.12,uWl)*(1.-smoothstep(.12,.6,uMixC));
+  if(sn>0.){vec2 zq=vec2((uv.x-.5)*asp,uv.y-1.06);float tw2=length(zq)*1.9; // 与天顶夹角(rad)
+   tw2+=.018*sin(uv.x*40.+uTime*1.3)*sin(uv.y*31.-uTime);
+   float tc=asin(1./NW);vec3 sw;
+   if(tw2<tc){float ta=asin(min(NW*sin(tw2),1.)); // 斯涅尔:sinθa=n·sinθw
+    vec2 dir=zq/max(length(zq),1e-4);float rr=1.-ta/1.5708;
+    vec2 su=vec2(.5+dir.x*(1.-rr)*.55,.73+.27*rr);
+    float ct=cos(ta),ctw=cos(tw2);float Tf=1.-(F0W+(1.-F0W)*pow(1.-ct,5.)); // 透射率随入射角
+    sw=texture2D(tA,su).rgb*Tf*1.6+vec3(.1,.16,.18)*smoothstep(tc-.12,tc,tw2)*.35; // 窗边压缩的地平线亮环
+    sw*=T*.4+.6;
+   }else{vec2 mu=vec2(uv.x,clamp(2.*(1.06-tc/1.9)-uv.y,0.,1.)); // 全内反射:镜像水下场景
+    sw=texture2D(tB,mu).rgb*.35*T+WC*.006;}
+   float ew=smoothstep(.02,0.,abs(tw2-tc))*.4;sw+=vec3(.5,.7,.75)*ew*.15;
+   b=mix(b,sw,sn*smoothstep(.3,.6,uv.y));}
+  col=mix(b,c,uMixC);
+  vec3 bg=mix(vec3(.008,.012,.02),vec3(.0015,.002,.005),smoothstep(0.,.32,dd));col+=bg*wa;
   col*=mix(1.,.45,exp(-dd*uRes.y/7.)*(1.-uMixC));
   float m=exp(-pow(dd*uRes.y/1.6,2.));col+=vec3(.38,.48,.5)*m*.28*(1.-uMixC);}
  vec2 q=uv-.5;q.x*=min(asp,1.8)*.62;col*=mix(1.,smoothstep(.92,.18,length(q)),uVig);
