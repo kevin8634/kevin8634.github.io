@@ -11,7 +11,7 @@
   reg('dsoview', 100, function () { return !!(window.SHXDV && SHXDV.isOpen()); }, function () { SHXDV.close(); });
   reg('arrive', 80, function () { return vis(q('#xr-rep')); }, function () { if (window.SHXR) SHXR.hide(); });
   reg('card', 70, function () { return vis(q('#xk-card')); }, function () { if (window.SHXK) SHXK.hide(); });
-  reg('explain', 60, function () { return !!(window.SHXE && SHXE.cur && SHXE.cur()); }, function () { SHXE.hide(); });
+  reg('explain', 60, function () { var b = q('#xe-box'); return !!(window.SHXE && ((b && b.classList.contains('on')) || (SHXE.cur && SHXE.cur()))); }, function () { SHXE.hide(); });
   reg('catalog', 50, function () { var r = q('#shxc'); return !!(r && r.classList.contains('xg-cat')); }, function () { q('#shxc').classList.remove('xg-cat'); });
   function top() { for (var i = 0; i < L.length; i++) { try { if (L[i].on()) return L[i]; } catch (e) { } } return null; }
   addEventListener('keydown', function (e) {

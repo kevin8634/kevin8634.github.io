@@ -713,7 +713,7 @@
       if (sun.surf > sun.R * 30) warnSun = false;
     }
     // 引擎音:自动驾驶结束 / 急停后关停
-    if ((ENGV || FXON) && !S.auto && !PEND_PORT) engStop();
+    if ((ENGV || FXON) && !S.auto && !S.voy && !PEND_PORT) engStop();   // C2.6b S.voy:深空跃迁控制器接管期间不关引擎
     // 航行底噪随速度
     if (HUM) { var lv = Math.log10(1 + f.veff); HUM.g.gain.setTargetAtTime(Math.min(.14, lv * .025), AC.currentTime, .4); HUM.f.frequency.setTargetAtTime(90 + lv * 70, AC.currentTime, .4); }
     // 音乐场景
@@ -829,5 +829,5 @@
   }
   takeover(); addEventListener('load', takeover);
 
-  window.SHXS = { orbitState: function () { return O ? { id: O.b.id, r: O.r, ang: O.ang } : PEND_PORT ? { pend: true } : null; }, pws: { load: pwsLoad, play: pwsPlay, stop: pwsStop, cue: pwsCue, state: function () { return { ready: PWS.ready, loading: PWS.loading, on: PWS.on, playing: PWS.playing, vol: pwsVol() }; } }, persona: function (id) { if (id) setPersona(id); return PER.id; }, enDist: enDist, enTime: enTime, voiceDbg: function () { return { on: VOICE.on, persona: PER.id, pack: VOICE.pack, n: VOICE.clips ? Object.keys(VOICE.clips).length : 0, sfx: SFX.on }; }, spaceFx: setSpaceFx, say: say, lines: L, zhNum: zhNum, sayDist: sayDist, sayTime: sayTime, plan: function () { if (X.isOpen()) togglePlan(); }, orbit: function () { if (X.isOpen()) portAct(); }, mode: function (m) { setMode(m); }, state: function () { return { mode: MODE, engine: ENGID, orbit: !!O, music: SND.music, sfx: SND.sfx, voice: VOICE.on, clips: !!VOICE.clips }; } };
+  window.SHXS = { eng: function (id) { if (id) engStart(id); else engStop(); }, orbitState: function () { return O ? { id: O.b.id, r: O.r, ang: O.ang } : PEND_PORT ? { pend: true } : null; }, pws: { load: pwsLoad, play: pwsPlay, stop: pwsStop, cue: pwsCue, state: function () { return { ready: PWS.ready, loading: PWS.loading, on: PWS.on, playing: PWS.playing, vol: pwsVol() }; } }, persona: function (id) { if (id) setPersona(id); return PER.id; }, enDist: enDist, enTime: enTime, voiceDbg: function () { return { on: VOICE.on, persona: PER.id, pack: VOICE.pack, n: VOICE.clips ? Object.keys(VOICE.clips).length : 0, sfx: SFX.on }; }, spaceFx: setSpaceFx, say: say, lines: L, zhNum: zhNum, sayDist: sayDist, sayTime: sayTime, plan: function () { if (X.isOpen()) togglePlan(); }, orbit: function () { if (X.isOpen()) portAct(); }, mode: function (m) { setMode(m); }, state: function () { return { mode: MODE, engine: ENGID, orbit: !!O, music: SND.music, sfx: SND.sfx, voice: VOICE.on, clips: !!VOICE.clips }; } };
 })();

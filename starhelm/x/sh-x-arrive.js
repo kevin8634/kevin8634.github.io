@@ -40,7 +40,8 @@
   }
   function fmtAU(a) { return a < 0.1 ? (a * 149.6).toFixed(1) + ' 百万 km' : a.toFixed(2) + ' AU'; }
   function hook(ev, a) {
-    if (ev === 'arrive' && a && a.id) { var id = a.id; setTimeout(function () { var S = X._.S; if (S.target === id && !S.tour) show(id); }, 1200); }
+    if (ev === 'arrive' && a && a.id && !a.dso) {   // C2.6b 深空航点抵达由深空视图接管
+    var id = a.id; setTimeout(function () { var S = X._.S; if (S.target === id && !S.tour) show(id); }, 1200); }
     else if (ev === 'close') hide();
   }
   (function wait(n) { if (window.SHXC && SHXC.on) { X = SHXC; SHXC.on(hook); return; } if (n < 100) setTimeout(function () { wait(n + 1); }, 100); })(0);

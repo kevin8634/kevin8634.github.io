@@ -40,6 +40,8 @@
   if (window.SHXB) (function () { var cm = []; SHXB.list.forEach(function (b) { if (b.parent) { var j = -1; B.forEach(function (x, k) { if (x.id === b.parent || x.parent === b.parent) j = k; }); B.splice(j + 1, 0, b); } else cm.push(b); }); var pj = B.map(function (x) { return x.id; }).indexOf('pluto'); Array.prototype.splice.apply(B, [pj + 1, 0].concat(cm)); })();
   // C2.2d T5 临时恒星航点槽:点选任意 HYG 恒星「前往」时填入(off 时不显示、不进列表)
   B.push({ id: 'tmpstar', zh: '临时航点', en: 'Temporary waypoint', type: '恒星', R: 696340, GM: 1.32712e11, L: 1, temp: '—', col: '#ffffff', fix: [0, 0, 1e9], star: true, off: true, tint: [1, 1, 1], info: [] });
+  // C2.6b T6 深空航点槽:星云 / 星系(真实方向 J2000 + 真实距离);不画球体,只有标签与目标框,飞行由 sh-x-dsoview.js 的跃迁控制器接管
+  B.push({ id: 'tmpdso', zh: '深空航点', en: 'Deep-sky waypoint', type: '深空天体', R: 1e13, GM: 0, temp: '—', col: '#f0c97a', fix: [0, 0, 1e12], ghost: true, dso: true, off: true, info: [] });
   var BY = {}; B.forEach(function (b) { BY[b.id] = b; });
   var K = { open: false, built: false };
   var X = window.SHXC = { isOpen: function () { return K.open; } };
@@ -382,6 +384,14 @@
     b.li.style.display = ''; b.li.querySelector('.nm').textContent = b.zh + ' · 临时'; b.li.querySelector('.dot').style.background = b.col;
     b.lb.innerHTML = b.zh + '<i></i>';
     setTarget('tmpstar'); return b;
+  }
+  function tempDso(o) {   // C2.6b:把深空天体装进深空航点槽
+    var b = BY.tmpdso; if (!b || !b.li) return null;
+    ['zh', 'en', 'type', 'R', 'fix', 'info', 'key'].forEach(function (k) { if (o[k] != null) b[k] = o[k]; });
+    b.off = false; ephem(true);
+    b.li.style.display = ''; b.li.querySelector('.nm').textContent = b.zh + ' · 深空'; b.li.querySelector('.dot').style.background = b.col;
+    b.lb.innerHTML = b.zh + '<i></i>';
+    setTarget('tmpdso'); return b;
   }
   var GLP = null, GLC = {};
   function gltf() {
@@ -814,7 +824,7 @@
     if (dlg) { dlg.remove(); dlg = null; }
     if (!quiet) { K.resume = true; if (window.SHXV) SHXV.go('solar'); }
   };
-  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, tempStar: function (o) { return tempStar(o); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, rd: function () { return rd; }, fdur: fdur, fkm: fkm, sky: function () { return sSky; }, orb: function () { return sOrb; }, cam: function () { return cam; }, skyG: function () { return K.skyG; }, emit: function (e, a) { emit(e, a); } };
+  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, tempStar: function (o) { return tempStar(o); }, tempDso: function (o) { return tempDso(o); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, rd: function () { return rd; }, fdur: fdur, fkm: fkm, sky: function () { return sSky; }, orb: function () { return sOrb; }, cam: function () { return cam; }, skyG: function () { return K.skyG; }, emit: function (e, a) { emit(e, a); } };
   X.state = function () { return { pos: S.pos.slice(), target: S.target, base: S.base, mult: S.mult, auto: S.auto, sunVis: sunVis }; };
   X.health = function () { return { lost: !!K.lost, nLost: K.nLost || 0, restored: K.nRest || 0, rebuilt: K.nRebuild || 0, heal: BK.heal, w: rd ? rd.domElement.width : 0, h: rd ? rd.domElement.height : 0 }; };
   X._rebuild = function () { rebuildRd(); };

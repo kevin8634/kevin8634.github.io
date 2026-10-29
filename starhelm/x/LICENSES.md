@@ -111,3 +111,8 @@
 | x/dsoimg/m1-*.webp | ESA/Hubble heic0515a「Crab Nebula」— NASA, ESA, J. Hester and A. Loll (Arizona State University) | CC BY 4.0 | 同上(去星阈值 0.2) |
 | x/dsoimg/m16-*.webp | ESA/Hubble heic1501a「Pillars of Creation」— NASA, ESA and the Hubble Heritage Team (STScI/AURA) | CC BY 4.0 | 同上(暗处为前景,反向分层) |
 | x/dsoimg/m51-*.webp | ESA/Hubble heic0506a「Whirlpool Galaxy」— NASA, ESA, S. Beckwith (STScI) and the Hubble Heritage Team (STScI/AURA) | CC BY 4.0 | 同上 |
+
+## C2.6b · 手机小图(2026-10-29)
+| 文件 | 来源 | 许可 | 处理 |
+|---|---|---|---|
+| x/dsoimg/m42-*m.webp、m1-*m.webp、m16-*m.webp、m51-*m.webp | 与上表同名桌面层同源(ESA/Hubble heic0601a / heic0515a / heic1501a / heic0506a) | CC BY 4.0 | 由桌面层缩至 700 px 宽(WebP q60),窄屏 / 低内存设备读取 |
