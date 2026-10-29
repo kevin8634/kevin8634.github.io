@@ -24,3 +24,10 @@
 ## 10-29 16:4x 更新(C16)
 - 上线 5de1fb6:C2.7b 登舰真实载入进度,详见 DEVLOG-2.0-C16.md。注意全局名为 **SHXLD**(SHXP 已被侧舷窗占用);星空与 1.0 共用 SHFX3D 贴图缓存,不另下载。
 - 下一步:C2.7c → C2.6d → 程序化体积 → T7;C2.7-AUDIT 5 项仍待王磊定。测试脚本 work/t27b.py(参数 WxH 限速kbps 标签),1440 档在 SwiftShader 下过慢,用 1024 / 390 档判定。
+
+## 10-29 18:3x 更新(C17)
+- 上线:C2.7e cc1da78(AUDIT 五项按建议,王磊 16:51 定,见 docs/C2.7-AUDIT.md 第四节);T3 dd3e49b 登舰一镜到底(王磊 17:27 选效果图 B,x/sh-x-board.js 全局 SHXBD,canvas 程序化,进度跟 SHXLD,最快 6.5 s,终点从中心开孔亮起驾驶舱)。详见 DEVLOG-2.0-C17.md。
+- BUG 清单 docs/BUGS-2.0.md(云盘 开发文档/BUG/BUG清单.md):BUG-01 星座里选的恒星到不了 + 远距(约 539 ly)恒星光晕叠成三叶草、球体错位。王磊定「先记录,回头慢慢修」——报 BUG 先登记,不立即修。
+- 远端出现别处提交 3e59971(starhelm/deep/ 深空层 V0+V1),07 未动其文件;push 前务必 fetch + rebase。已报总指挥确认归属。
+- 下一步:C2.7c 深空抵达二选一 + 程序化星云 → C2.6d → 程序化体积 → T7;BUG-01 待王磊发话再修。
+- 测试:tbd3.py 用 SHXBD.seek(q) 逐段截图(需临时 starhelm/bdtest.html,勿提交);沙箱重置后 playwright 需 install-deps,http 服务用 nohup。
