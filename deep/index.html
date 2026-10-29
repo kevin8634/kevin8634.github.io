@@ -35,7 +35,7 @@ body.rm #nav,body.rm #hud,body.rm #dive{display:none}body.nogl #c{display:none}b
 #nav{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:5}#nav .gd-depthbar{background:rgba(6,10,24,.45);backdrop-filter:blur(6px)}#nav .gd-depthbar button{padding:5px 11px;font-size:12px;letter-spacing:.12em}#nav .gd-depthbar button.lock{opacity:.45}
 body.l0 #hud{animation:hq 1s 3.5s forwards}@keyframes hq{to{opacity:0}}body.l0 #note{opacity:.5}
 body.clean #nav,body.clean #hud,body.clean #dive,body.clean #note,body.clean #back,body.clean #snd{display:none}
-@media (max-width:600px){#nav{top:62px;max-width:96vw}#nav .gd-depthbar button{padding:5px 7px;letter-spacing:.04em}}
+@media (max-width:600px){#nav{top:62px;max-width:96vw}#nav .gd-depthbar button{padding:5px 8px;letter-spacing:.02em;white-space:nowrap;font-size:12px}}
 @media (max-width:600px){#meter span{display:none}#hud{bottom:12vh}#note{display:none}}
 @media (max-height:420px){#hud{bottom:16px}#hud p,#hud .tag{display:none}#dive{display:none}#meter{gap:4px}}
 #names{position:fixed;inset:0;pointer-events:none;z-index:3}
@@ -349,7 +349,7 @@ $("c").addEventListener("pointermove",e=>{if(!islOn)return;if(islPt.has(e.pointe
 // 悬停/点击拾取
 const ray=new THREE.Raycaster(),mp=new THREE.Vector2(),tip=$("tip");let hov=-1;
 function openQ(k){chartTok++;const w=WORLDS[k],q=OPENQ[w.id];sideW=-1;$("sideT").textContent=q.t;$("sideW").textContent=`${w.n} ${w.e} · 星穹层 · 研究者 · 人类尚未解开`;
- $("sideTh").innerHTML=`<div class="cdim" style="border-left:2px solid #${w.c.toString(16).padStart(6,"0")};padding-left:8px;margin:6px 0">光柱 · ${esc(w.q)}<br>${esc(q.b)}</div>`;
+ $("sideTh").style.setProperty("--pc","#"+w.c.toString(16).padStart(6,"0"));$("sideTh").innerHTML=`<b>光柱 · ${esc(w.q)}</b><div style="font-size:12px;line-height:1.7;color:var(--dim);margin-top:6px">${esc(q.b)}</div>`;
  Formula.render($("sideF"),q.tex);$("sideD").innerHTML="";$("sideP").textContent=q.p;$("sideG").innerHTML="";$("sideS").innerHTML=`<p class="cdim" style="line-height:1.8">${esc(q.h)}</p><p class="cdim" style="margin-top:10px">星穹层 1.4 将把这些问题做成「研究者卡」:前人走到哪、卡在哪、你能先算什么。</p>`;
  $("sideQ").hidden=true;$("sideL").hidden=true;$("sideL").innerHTML="";$("sideR").innerHTML="";$("sideLab").hidden=true;$("sideIsl").hidden=true;$("sideC").hidden=true;
  side.classList.add("open");side.setAttribute("aria-hidden","false");$("sideX").focus();}
