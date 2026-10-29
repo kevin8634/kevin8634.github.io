@@ -131,3 +131,10 @@
 
 ### C2.7c 驾驶舱程序化星云 / 星系(x/sh-x-neb.js)
 纯程序生成(噪声 shader + 粒子),本项目原创代码,无新增素材文件。配色:从上表各目标 ESA/Hubble 影像小图离线取三档亮度色(仅取色值,不复制影像内容)。画面标「模拟渲染 · 非照片」。
+
+## C2.6d · 波段切换 可见光 ⇄ 近红外(2026-10-29)
+| 文件 | 来源页 | 文件 URL | 署名 | 许可 | 处理 |
+|---|---|---|---|---|---|
+| x/dsoimg/m16ir-0…2.webp、m16ir-s.webp(手机 *m.webp) | https://esawebb.org/images/weic2216e/ 「Webb's New View of the Pillars of Creation (2022)」(JWST NIRCam,6780×7071,与哈勃 2014 heic1501a 同一视场) | https://cdn.esawebb.org/archives/images/publicationjpg/weic2216e.jpg | NASA, ESA, CSA, STScI; J. DePasquale, A. Koekemoer, A. Pagan (STScI) | CC BY 4.0(ESA/Webb,https://esawebb.org/copyright/) | OpenCV ECC 仿射配准到可见光底图 m16-0.webp(位移约 1 px、缩放误差 <0.7%),缩至 1200 px(手机 700 px),去星阈值 0.22,底图 + 2 个前景层 + 星点层,WebP q56;桌面约 0.74 MB,首次切换时才下载 |
+核对记录:weic2216a 是 1200×1200 的裁切版(上一轮下错的就是这张),weic2216b 为 8423×14589 全幅竖版;只有 weic2216e 与哈勃画面一致,已逐张核对标题、尺寸与画面(三根气柱、锈红色半透明、背景星密集)。
+船底座未做波段切换:esawebb weic2205a「Cosmic Cliffs」是 NGC 3324(船底座星云西北边缘),与本站船底座视图(heic0707a,船底座 η 附近核心区)不是同一区域,叠在一起会误导。

@@ -19,7 +19,11 @@
     M16: { zh: '鹰状星云 · 创生之柱', en: 'Eagle Nebula · Pillars of Creation · M16', n: 6, ly: 7000, rly: 35, type: '发射星云 · 恒星形成区',
       facts: [['距离', '约 7,000 光年', '证'], ['最高柱长', '约 4 光年', '证'], ['成因', '附近大质量恒星的紫外辐射侵蚀分子云', '证'], ['柱顶', '致密气团中可能正在形成新恒星', '推'], ['观测波段', '可见光 + Hα(哈勃 WFC3,2014)']],
       blurb: '气柱由冷的氢气和尘埃组成,顶端被附近年轻恒星照亮并被一点点吹散。这里分层时按「越暗越近」处理,让气柱浮在前景。',
-      cr: 'NASA, ESA 及哈勃传承团队(STScI/AURA) · ESA/Hubble CC BY 4.0' },
+      cr: 'NASA, ESA 及哈勃传承团队(STScI/AURA) · ESA/Hubble CC BY 4.0',
+      // C2.6d 波段切换:JWST NIRCam 近红外(esawebb.org weic2216e,与哈勃 2014 同一视场;已用 ECC 仿射配准到可见光底图)
+      ir: { f: 'm16ir', n: 3, band: '近红外(JWST NIRCam,2022)', fact: ['红外下', '尘埃变得半透明,柱内新生恒星与背景恒星显现', '证'],
+        blurb: '近红外光能穿透大部分尘埃:气柱变成半透明的锈红色,背景里多出成千上万颗恒星;柱缘一些波浪状红色亮线来自正在形成的恒星喷出的物质。',
+        cr: 'NASA, ESA, CSA, STScI;J. DePasquale, A. Koekemoer, A. Pagan(STScI) · ESA/Webb CC BY 4.0' } },
     M51: { zh: '涡状星系', en: 'Whirlpool Galaxy · M51', n: 6, ly: 23e6, rly: 38000, type: '旋涡星系 · 与伴星系 NGC 5195 互动',
       facts: [['距离', '约 2,300 万光年', '证'], ['直径', '约 7.6 万光年', '证'], ['伴星系', 'NGC 5195(右上黄色)', '证'], ['旋臂', '粉红色为电离氢恒星形成区', '证'], ['观测波段', '可见光 + Hα(哈勃 ACS,2005)']],
       blurb: '最早被看出旋涡结构的星系(罗斯伯爵 1845 年手绘)。伴星系的引力扰动让旋臂格外清晰,也触发了大量新恒星诞生。',
@@ -51,7 +55,7 @@
       cr: 'NASA/ESA 及哈勃传承团队(STScI/AURA) · ESA/Hubble CC BY 4.0' }
   };
   var WS = [], WT = 2.6;
-  var X, ov = null, cv, ctx, imgs = [], star = null, raf = 0, t0 = 0, mx = 0, my = 0, tx = 0, ty = 0, cur = null, OPT = {};
+  var X, ov = null, cv, ctx, imgs = [], star = null, irs = null, irst = null, bm = 0, bmT = 0, bmL = 0, raf = 0, t0 = 0, mx = 0, my = 0, tx = 0, ty = 0, cur = null, OPT = {};
   function el(t, c, h) { var e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; }
   function red() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
   function small() { return Math.min(screen.width, screen.height) < 700 || innerWidth <= 760 || (navigator.deviceMemory && navigator.deviceMemory < 4); }
@@ -100,16 +104,18 @@
     }
     var n = imgs.length; if (!n || !imgs[0].complete || !imgs[0].naturalWidth) return;
     var fade = rm ? 1 : Math.max(0, Math.min(1, (t - wt + .5) / 1.3)); if (fade <= 0) return;
-    var d = DV[cur], i0 = imgs[0], base = (d && d.fit === 'contain' ? Math.min(W / i0.naturalWidth, H / i0.naturalHeight) * (d.zoom || 1) : Math.max(W / i0.naturalWidth, H / i0.naturalHeight) * 1.08);
+    if (bm !== bmT) { var nw = performance.now(); bm = rm ? bmT : bmT > bm ? Math.min(bmT, bm + (nw - bmL) / 1200) : Math.max(bmT, bm - (nw - bmL) / 1200); bmL = nw; }
+    var d = DV[cur], i0 = imgs[0], base = (d && d.fit === 'contain' ? Math.min(W / i0.naturalWidth, H / i0.naturalHeight) * (d.zoom || 1) : Math.max(W / i0.naturalWidth, H / i0.naturalHeight) * 1.08), BA = 1;
     function layer(im, depth, alpha) {
       if (!im.complete || !im.naturalWidth) return;
       var k = i0.naturalWidth / im.naturalWidth, sc = base * k * (rm ? 1 : (0.6 + 0.3 * fade + ease * (0.2 + depth * 0.22) + Math.sin(t * .05) * .01)), w = im.naturalWidth * sc, h = im.naturalHeight * sc;
       var px = -tx * depth * W * .035, py = -ty * depth * H * .035;
-      ctx.globalAlpha = alpha * fade; ctx.drawImage(im, (W - w) / 2 + px, (H - h) / 2 + py, w, h);
+      ctx.globalAlpha = alpha * fade * BA; ctx.drawImage(im, (W - w) / 2 + px, (H - h) / 2 + py, w, h);
     }
     var pk = (d && d.par) || 1;   // 星系等致密亮核目标减小层间视差,避免重影
-    for (var i = 0; i < n; i++) layer(imgs[i], i / (n - 1) * pk, i === 0 ? 1 : .92);
-    if (star) layer(star, .35 * pk, 1);
+    function stack(L, st) { for (var i = 0; i < L.length; i++) layer(L[i], i / (L.length - 1) * pk, i === 0 ? 1 : .92); if (st) layer(st, .35 * pk, 1); }
+    if (bm < 1 || !irs || !irs[0].naturalWidth) stack(imgs, star);
+    if (bm > 0 && irs && irs[0].complete && irs[0].naturalWidth) { BA = bm; stack(irs, irst); BA = 1; }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
   /* o: { arrived: {ly, sec} }(由跃迁控制器飞抵时传入) */
@@ -118,18 +124,19 @@
     var S = X._.S; S.auto = false; S.base = 0; S.mult = 1; if (window.SHXE) SHXE.hide();
     var rm = red(), arr = o.arrived; OPT = { rm: rm, wt: rm ? 0 : arr ? 0.3 : WT };
     var f = d.f || key.toLowerCase(), sm = small() ? 'm' : '';
-    ov = el('div', (arr ? 'arr' : '') + (rm ? ' rm' : '')); ov.id = 'xv';
+    ov = el('div', (arr ? 'arr' : '') + (rm ? ' rm' : '')); ov.id = 'xv'; irs = irst = null; bm = bmT = 0;
     ov.innerHTML = '<canvas></canvas><div class="wp"></div><div class="hd">' + (arr ? '已抵达 → ' + d.zh + ' · 距地球 ' + fly0(d.ly) : '曲率跃迁 → ' + d.zh + ' · ' + fly0(d.ly)) + '</div>' +
-      '<div class="pn"><h5>抵达报告 · ' + d.type + '</h5><h4>' + d.zh + '<small>' + d.en + '</small></h4>' + d.facts.map(function (r) { return kv(r[0], r[1], r[2]); }).join('') +
+      '<div class="pn"><h5>抵达报告 · ' + d.type + '</h5><h4>' + d.zh + '<small>' + d.en + '</small></h4>' + d.facts.map(function (r) { return kv(r[0], r[1], r[2]); }).join('') + (d.ir ? '<div class="irf" hidden>' + kv(d.ir.fact[0], d.ir.fact[1], d.ir.fact[2]) + '</div>' : '') +
       (arr ? '<div class="tr"><em>时间已压缩</em>本次航程 ' + fly0(arr.ly) + ',演示用时 ' + Math.round(arr.sec) + ' 秒;以光速飞行需约 ' + fly0(arr.ly).replace('光年', '年').replace(' AU', ' AU 光程') + '。<span style="white-space:nowrap">曲率驱动属<b style="color:#ff9fb2;font-weight:500">猜想</b>。</span></div>' : '') +
-      '<div class="bl">' + d.blurb + '</div><div class="nt"><em>影像</em>' + d.cr + '。去星后按亮度分 ' + d.n + ' 层形成视差,纵深为示意。</div></div>' +
-      '<div class="bt"><button type="button" data-a="back">返回驾驶舱</button>' + (obsOk(key) ? '<button type="button" data-a="obs">舷窗观测 · 模拟渲染</button>' : '') + (arr ? '<button type="button" data-a="home">返航 · 太阳系</button>' : '') + '</div>';
+      '<div class="bl">' + d.blurb + '</div><div class="nt"><em>影像</em><span class="crt">' + d.cr + '</span>。去星后按亮度分层形成视差,纵深为示意。</div></div>' +
+      '<div class="bt"><button type="button" data-a="back">返回驾驶舱</button>' + (d.ir ? '<button type="button" data-a="band" aria-pressed="false">波段 · 近红外(JWST)</button>' : '') + (obsOk(key) ? '<button type="button" data-a="obs">舷窗观测 · 模拟渲染</button>' : '') + (arr ? '<button type="button" data-a="home">返航 · 太阳系</button>' : '') + '</div>';
     root.appendChild(ov); cv = ov.querySelector('canvas'); ctx = cv.getContext('2d'); size();
     imgs = []; for (var i = 0; i < d.n; i++) { var im = new Image(); im.decoding = 'async'; im.src = 'x/dsoimg/' + f + '-' + i + sm + '.webp'; if (rm) im.onload = kick; imgs.push(im); }
     star = new Image(); star.src = 'x/dsoimg/' + f + '-s' + sm + '.webp'; if (rm) star.onload = kick;
     ov.querySelector('[data-a=back]').onclick = function () { close(); if (arr) X._.toast('天枢号停泊在 ' + d.zh + ' 附近 · 可在目录选新目标,或按「返航」'); };
     var ob = ov.querySelector('[data-a=obs]'); if (ob) ob.onclick = function () { close(); SHXNB.observe(key); };
     var hb = ov.querySelector('[data-a=home]'); if (hb) hb.onclick = function () { close(); home(); };
+    var bb = ov.querySelector('[data-a=band]'); if (bb) bb.onclick = function () { band(); };
     if (!rm) {
       ov.addEventListener('pointermove', function (e) { var r = ov.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width * 2 - 1; my = (e.clientY - r.top) / r.height * 2 - 1; });
       ov.addEventListener('pointerleave', function () { mx = my = 0; });
@@ -141,7 +148,20 @@
     if (!arr && X._.toast) X._.toast('曲率跃迁 · 抵达 ' + d.zh + '(' + fly0(d.ly) + ')');
   }
   function obsOk(key) { var b = X && X._ && X._.BY && X._.BY.tmpdso; return !!(window.SHXNB && SHXNB.has(key) && X.isOpen && X.isOpen() && b && !b.off && b.key === key); }
-  function kick() { if (ov && OPT.rm) requestAnimationFrame(draw); }
+  /* C2.6d 可见光 ⇄ 近红外:1.2 秒交叉淡化(减少动态时直接切换);红外层首次切换时才下载 */
+  function band() {
+    var d = DV[cur]; if (!d || !d.ir || !ov) return; var ir = d.ir, sm = small() ? 'm' : '';
+    if (!irs) { irs = []; for (var i = 0; i < ir.n; i++) { var im = new Image(); im.decoding = 'async'; im.onload = kick; im.src = 'x/dsoimg/' + ir.f + '-' + i + sm + '.webp'; irs.push(im); } irst = new Image(); irst.onload = kick; irst.src = 'x/dsoimg/' + ir.f + '-s' + sm + '.webp'; }
+    bmT = bmT ? 0 : 1; bmL = performance.now(); var on = !!bmT;
+    var b = ov.querySelector('[data-a=band]'); if (b) { b.textContent = on ? '波段 · 可见光(哈勃)' : '波段 · 近红外(JWST)'; b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+    var kvs = ov.querySelectorAll('.pn .kv'); kvs.forEach(function (k) { if (k.firstChild && k.firstChild.textContent === '观测波段') k.querySelector('b').innerHTML = on ? ir.band : d.facts.filter(function (r) { return r[0] === '观测波段'; })[0][1]; });
+    var f = ov.querySelector('.irf'); if (f) f.hidden = !on;
+    ov.querySelector('.bl').textContent = on ? ir.blurb : d.blurb; ov.querySelector('.crt').textContent = on ? ir.cr : d.cr;
+    var hd = ov.querySelector('.hd'); if (hd) hd.setAttribute('data-band', on ? 'ir' : 'vis');
+    if (X && X._.toast) X._.toast(on ? '切换到近红外 · JWST NIRCam' : '切换到可见光 · 哈勃 WFC3');
+    kick();
+  }
+  function kick() { if (ov && OPT.rm) requestAnimationFrame(draw); }   // 减少动态:静态帧,只在素材到达 / 切换时重绘
   function onRs() { size(); kick(); }
   function close(quick) {
     cancelAnimationFrame(raf); removeEventListener('resize', onRs); if (!ov) return; var o = ov; ov = null; cur = null;
@@ -259,5 +279,5 @@
   (function w2(n) { if (window.SHXESC) { SHXESC.reg('dsofly', 90, function () { return !!V; }, function () { abort(); }); return; } if (n < 100) setTimeout(function () { w2(n + 1); }, 100); })(0);
   // C2.6a:原先误用 window.SHXV,会覆盖四级视图 sh-x-views.js 的 SHXV(go/step),导致退出驾驶舱、数字键切视图报错 → 改名 SHXDV
   window.SHXDV = { has: function (k) { return !!DV[k]; }, open: open, close: close, fly: fly, lock: lock, home: home, abort: function () { abort(); }, flying: function () { return V ? { key: V.key, ph: V.ph, rem: V.rem, home: !!V.home } : null; },
-    list: function () { return Object.keys(DV); }, lastArr: function (k) { return ARR[k] || null; }, arrived: function (k, a) { if (DV[k]) arrived(k, a || { ly: DV[k].ly, sec: 0 }); }, isOpen: function () { return !!ov; }, info: function (k) { var d = DV[k]; return d ? { zh: d.zh, ly: d.ly, dist: fly0(d.ly) } : null; } };
+    list: function () { return Object.keys(DV); }, lastArr: function (k) { return ARR[k] || null; }, arrived: function (k, a) { if (DV[k]) arrived(k, a || { ly: DV[k].ly, sec: 0 }); }, isOpen: function () { return !!ov; }, band: function () { band(); return bmT; }, info: function (k) { var d = DV[k]; return d ? { zh: d.zh, ly: d.ly, dist: fly0(d.ly) } : null; } };
 })();
