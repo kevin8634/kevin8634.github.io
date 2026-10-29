@@ -89,7 +89,7 @@ body.nogl #labx{background:radial-gradient(ellipse at 50% 40%,#10202c,#02040c 70
 <nav id="nav" aria-label="深度导航"></nav>
 <div id="hud" aria-live="polite"><h1 id="t"></h1><p id="s"></p><span id="g" class="tag"></span></div>
 <button id="dive" class="btn">▼ 潜入深空</button>
-<div id="note">深空层 V6 · 开发中 · 影像:ESO/S. Brunier、ESA/Hubble、ESA/Webb、NASA(CC BY 4.0,详见 LICENSES.md)</div>
+<div id="note">深空层 V7 · 开发中 · 影像:ESO/S. Brunier、ESA/Hubble、ESA/Webb、NASA(CC BY 4.0,详见 LICENSES.md)</div>
 <div id="names" aria-hidden="true"></div><div id="tip" aria-hidden="true"></div>
 <aside id="side" role="dialog" aria-modal="false" aria-labelledby="sideT" aria-hidden="true"><button id="sideX" class="btn" aria-label="关闭">✕</button><h2 id="sideT"></h2><div class="w" id="sideW"></div><div id="sideTh"></div><div class="fx" id="sideF"></div><div id="sideD"></div><p id="sideP"></p><div id="sideG"></div><div id="sideS"></div><div id="sideQ" hidden></div><div id="sideL" hidden></div><div id="sideR"></div><div class="row"><button id="sideLab" class="btn" hidden>▣ 坠入实验舱</button><button id="sideIsl" class="btn" hidden>◈ 登上核素岛</button><button id="sideC" class="btn">生成推导卡(示例)</button></div></aside>
 <div id="labx" role="dialog" aria-modal="true" aria-labelledby="labT" aria-hidden="true"><div class="lh"><b id="labT"></b><span id="labW"></span></div><button id="labX" class="btn">✕ 返回深空</button>
@@ -151,9 +151,12 @@ const btns=[...$("nav").querySelectorAll("button")];btns.forEach((b,i)=>{b.setAt
 // 场景
 const W=()=>innerWidth,H=()=>innerHeight;
 const mob=W()<600,tab=W()<1100;
-const N=mob?6000:tab?15000:30000;
+// V7 LOD 三档:2 高(桌面 ≥8 核)/1 中(手机、平板或 ≤4 核)/0 低(≤2 核或内存 ≤2GB);?lod=0|1|2 可强制;运行中掉帧再自动降
+const LOD=(()=>{const q=location.search.match(/[?&]lod=([012])/);if(q)return +q[1];const hc=navigator.hardwareConcurrency||4,dm=navigator.deviceMemory||8;if(hc<=2||dm<=2)return 0;if(mob||tab||hc<=4)return 1;return 2;})(),LODK=[.4,.7,1][LOD];
+document.documentElement.dataset.lod=LOD;
+const N=[5000,mob?6000:15000,tab?15000:30000][LOD];
 const r=new THREE.WebGLRenderer({canvas:$("c"),antialias:false,powerPreference:"high-performance"});
-r.setPixelRatio(Math.min(devicePixelRatio,mob?1.25:1.75));r.setSize(W(),H());
+r.setPixelRatio(Math.min(devicePixelRatio,[1,1.25,1.75][LOD]));r.setSize(W(),H());
 r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.0;
 const comp=new EffectComposer(r,new THREE.WebGLRenderTarget(W(),H(),{type:THREE.HalfFloatType}));
 // V1 开场(01c):水上 A / 水下 B / 原深空场景 C 三路渲染,合成后统一 Bloom + ACES
@@ -215,7 +218,7 @@ void main(){float d=length(vV);float f=abs(dot(normalize(vN),vV/d));float core=p
 const beams=WORLDS.map(w=>{const [x,y]=PX(w.p);const grp=new THREE.Group();grp.position.set(x,y,(BZ0+BZ1)/2);
  [[.32,1.0,2.],[1.5,.32,4.]].forEach(([rad,I,P])=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(rad,rad,BZ0-BZ1,14,1,true),beamMat(w.c,rad,I,P));m.rotation.x=Math.PI/2;m.renderOrder=1;grp.add(m);});sc.add(grp);return grp;});
 // V5 星穹数据带:流动的粒子丝带(对照概念图04),位于星穹层「?」星下方
-const ribbon=(()=>{const NS=mob?18:34,NP=mob?260:560,P=new Float32Array(NS*NP*3);let i=0;for(let s=0;s<NS;s++)for(let j=0;j<NP;j++){P[i++]=j/(NP-1);P[i++]=s/(NS-1);P[i++]=Math.random();}
+const ribbon=(()=>{const NS=Math.round((mob?18:34)*Math.sqrt(LODK)),NP=Math.round((mob?260:560)*Math.sqrt(LODK)),P=new Float32Array(NS*NP*3);let i=0;for(let s=0;s<NS;s++)for(let j=0;j<NP;j++){P[i++]=j/(NP-1);P[i++]=s/(NS-1);P[i++]=Math.random();}
  const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(P,3));
  const m=new THREE.ShaderMaterial({uniforms:{uT:uBT,uMap:{value:tex},uW:{value:mob?34:100},uPx:{value:mob?2.6:2.2}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
   vertexShader:`uniform float uT,uW,uPx;varying float vA;void main(){float u=position.x,v=position.y,r=position.z;float x=(u-.5)*uW;
@@ -374,7 +377,7 @@ bloom=new UnrealBloomPass(new THREE.Vector2(W(),H()),.7,.5,.5);comp.addPass(bloo
 // 近距淡出:相机穿过星体时不过曝
 // V6 星系层:方程节点连成旋臂(两臂粒子 + 16 个方程节点沿臂串联);星河层:生活剪影星云(房子/一家人/存钱/时钟/学位帽)
 (()=>{const g2=cores[2];g2.children.forEach(o=>{if(o.isSprite)o.visible=false;else o.material.opacity=.08;});
- const N=mob?3200:8000,P=new Float32Array(N*3),C=new Float32Array(N*3),c1=new THREE.Color(0xb08cff),c2=new THREE.Color(0xfff2e0),cc=new THREE.Color();
+ const N=Math.round((mob?3200:8000)*LODK),P=new Float32Array(N*3),C=new Float32Array(N*3),c1=new THREE.Color(0xb08cff),c2=new THREE.Color(0xfff2e0),cc=new THREE.Color();
  const arm=(t,k)=>{const a=t*4.2+k*Math.PI,r=3+t*34;return [Math.cos(a)*r,Math.sin(a)*r*.62];};
  for(let i=0;i<N;i++){const t=Math.pow(Math.random(),.8),k=i&1,[x,y]=arm(t,k),sp=(1.5+t*5)*(Math.random()-.5)*2;P[i*3]=x+sp*Math.random();P[i*3+1]=y+sp*.6*Math.random();P[i*3+2]=(Math.random()-.5)*3;
   cc.copy(c2).lerp(c1,Math.min(1,t*1.4));C[i*3]=cc.r;C[i*3+1]=cc.g;C[i*3+2]=cc.b;}
@@ -417,8 +420,9 @@ let slow=0,lt=performance.now();
 addEventListener("resize",()=>{if(lab)lab.resize(W(),H());if(isl)isl.resize(W(),H());cam.aspect=W()/H();cam.updateProjectionMatrix();r.setSize(W(),H());comp.setSize(W(),H());sizeAll();});
 const ss=(a,b,x)=>{x=Math.min(1,Math.max(0,(x-a)/(b-a)));return x*x*(3-2*x)};
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-function loop(t){requestAnimationFrame(loop);
- const dt=t-lt;lt=t;if(dt>42){if(++slow>72){if(bloom&&bloom.enabled){bloom.enabled=false;}else if(r.getPixelRatio()>1){r.setPixelRatio(1);comp.setPixelRatio(1);sizeAll();}slow=0;}}else slow=Math.max(0,slow-1);
+const fpsEl=/[?&]fps\b/.test(location.search)?Object.assign(document.body.appendChild(document.createElement("div")),{style:"position:fixed;left:8px;top:60px;z-index:20;font:12px monospace;color:#9f9;pointer-events:none"}):null;let fpsN=0,fpsT=0;
+function loop(t){requestAnimationFrame(loop);if(fpsEl){fpsN++;if(t-fpsT>1000){fpsEl.textContent=`LOD ${LOD} · ${Math.round(fpsN*1000/(t-fpsT))} fps · pr ${r.getPixelRatio()}`;fpsN=0;fpsT=t;}}
+ const dt=t-lt;lt=t;if(dt>42){if(++slow>72){if(bloom&&bloom.enabled){bloom.enabled=false;}else if(r.getPixelRatio()>1){r.setPixelRatio(1);comp.setPixelRatio(1);sizeAll();}else if(ribbon.visible){ribbon.visible=false;}slow=0;}}else slow=Math.max(0,slow-1);
  if(anim){const k=Math.min(1,(t-anim.t0)/anim.d);cam.position.z=anim.from+(anim.to-anim.from)*ease(k);if(k>=1)anim=null;}
  if(labFly){const k=Math.min(1,(t-labFly.t0)/labFly.d),e=k*k*k;cam.position.lerpVectors(labFly.from,labFly.to,e);cam.lookAt(labFly.to.x,labFly.to.y,labFly.to.z-40);}
  else if(!labOn){cam.position.x=Math.sin(t*.00013)*4;cam.position.y=Math.cos(t*.00011)*3;cam.lookAt(0,0,cam.position.z-100);}
