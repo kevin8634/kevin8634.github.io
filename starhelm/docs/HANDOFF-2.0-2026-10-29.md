@@ -55,3 +55,7 @@
 - 下一窗口接手:先 git status + 看项目根 AGENT_COORD.md;沙箱若重置,playwright 需重装(pip --user playwright、install chromium-headless-shell、sudo env PYTHONPATH=~/.local/lib/python3.12/site-packages python3 -m playwright install-deps chromium、fonts-wqy-microhei),http.server 在 repo 根起 8130。
 - 待王磊定:先修 BUG-02(抵达后误弹「奥尔特云」讲解卡),还是直接做 T7 第二批(蟹状星云脉冲星 / Geminga / 磁星;Sgr A* 接 EHT 影像)。BUG-01 仍未发话。
 - 额度 10-30 18:36 CST 重置。
+
+## 10-30 00:0x 更新(C22,Hark 项目「天枢 Starhelm」窗口)
+- 上线 3d19070 C2.8b:蟹状星云脉冲星 / Geminga / 磁星 SGR 1806−20 可飞抵;Sgr A* 接 EHT 真实影像;BUG-02 已修(含跃迁越过日球层顶自动播 PWS)。详见 DEVLOG-2.0-C22.md。测试 work/t28b.py(W H rm 标签 目标列表 [169])。
+- 七星域现状:I–VI 完成。下一步 VII 宇宙(王磊 23:48 问):大小麦哲伦云、室女座星系团、哈勃深场、宇宙网 + 普朗克 CMB 末端(M31/M51/M104 已可飞抵)。按流程先出方案 + 效果图给王磊确认再开发。BUG-01 仍待发话。
