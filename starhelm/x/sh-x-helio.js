@@ -347,8 +347,8 @@
     var P = window.SHXS && SHXS.pws;
     if (P && !preloaded && r > 100) { preloaded = true; P.load(); }
     var TOUR = X._.S.tour;   // C2.2c 导览中不触发穿越事件
-    if (P && prevR && prevR < HP && r >= HP && !TOUR) P.cue();
-    if (!TOUR && prevR && prevR < 88 && r >= 88 && window.SHXE && !fired.sw) { fired.sw = 1; X._.toast('前方终端激波 · 留意太阳风粒子流的变化'); SHXE.show('swflow'); }
+    if (P && prevR && prevR < HP && r >= HP && r < HP * 4 && !TOUR) P.cue();   // C2.8b:跃迁一帧越过不自动播 PWS
+    if (!TOUR && prevR && prevR < 88 && r >= 88 && r < 350 && window.SHXE && !fired.sw) { fired.sw = 1; X._.toast('前方终端激波 · 留意太阳风粒子流的变化'); SHXE.show('swflow'); }
     prevR = r;
     // 3 外形:主视野 140→160 AU 淡入;讲解卡打开时小窗
     shapeF = sstep(140, 160, r);

@@ -118,11 +118,12 @@
   ];
   function events(r) {
     if (X._.S.tour) { prevR = r; return; }   // C2.2c 导览中不触发航段事件
+    if (window.SHXDV && SHXDV.flying && SHXDV.flying()) { prevR = r; return; }   // C2.8b BUG-02:曲率跃迁途中不触发太阳系航段事件
     EV.forEach(function (e) {
-      if (prevR && prevR < e.au && r >= e.au) { ring(e.out, e.col); X._.toast(e.out); if (window.SHXE && !fired[e.id]) { fired[e.id] = 1; setTimeout(function () { SHXE.show(e.id); }, 1200); } }
+      if (prevR && prevR < e.au && r >= e.au && r < e.au * 4) { ring(e.out, e.col); X._.toast(e.out); if (window.SHXE && !fired[e.id]) { fired[e.id] = 1; setTimeout(function () { if (prevR < e.au * 4) SHXE.show(e.id); }, 1200); } }
       else if (prevR && prevR >= e.au && r < e.au) X._.toast(e.inn);
     });
-    if (prevR && prevR < 400 && r >= 400 && window.SHXE && !fired.parallax) { fired.parallax = 1; setTimeout(function () { SHXE.show('parallax'); }, 600); }
+    if (prevR && prevR < 400 && r >= 400 && r < 1600 && window.SHXE && !fired.parallax) { fired.parallax = 1; setTimeout(function () { SHXE.show('parallax'); }, 600); }
     prevR = r;
   }
 

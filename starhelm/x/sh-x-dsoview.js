@@ -113,7 +113,7 @@
       ctx.globalAlpha = alpha * fade * BA; ctx.drawImage(im, (W - w) / 2 + px, (H - h) / 2 + py, w, h);
     }
     var pk = (d && d.par) || 1;   // 星系等致密亮核目标减小层间视差,避免重影
-    function stack(L, st) { for (var i = 0; i < L.length; i++) layer(L[i], i / (L.length - 1) * pk, i === 0 ? 1 : .92); if (st) layer(st, .35 * pk, 1); }
+    function stack(L, st) { for (var i = 0; i < L.length; i++) layer(L[i], (L.length > 1 ? i / (L.length - 1) : 0) * pk, i === 0 ? 1 : .92); if (st) layer(st, .35 * pk, 1); }
     if (bm < 1 || !irs || !irs[0].naturalWidth) stack(imgs, star);
     if (bm > 0 && irs && irs[0].complete && irs[0].naturalWidth) { BA = bm; stack(irs, irst); BA = 1; }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
@@ -128,7 +128,7 @@
     ov.innerHTML = '<canvas></canvas><div class="wp"></div><div class="hd">' + (arr ? '已抵达 → ' + d.zh + ' · 距地球 ' + fly0(d.ly) : '曲率跃迁 → ' + d.zh + ' · ' + fly0(d.ly)) + '</div>' +
       '<div class="pn"><h5>抵达报告 · ' + d.type + '</h5><h4>' + d.zh + '<small>' + d.en + '</small></h4>' + d.facts.map(function (r) { return kv(r[0], r[1], r[2]); }).join('') + (d.ir ? '<div class="irf" hidden>' + kv(d.ir.fact[0], d.ir.fact[1], d.ir.fact[2]) + '</div>' : '') +
       (arr ? '<div class="tr"><em>时间已压缩</em>本次航程 ' + fly0(arr.ly) + ',演示用时 ' + Math.round(arr.sec) + ' 秒;以光速飞行需约 ' + fly0(arr.ly).replace('光年', '年').replace(' AU', ' AU 光程') + '。<span style="white-space:nowrap">曲率驱动属<b style="color:#ff9fb2;font-weight:500">猜想</b>。</span></div>' : '') +
-      '<div class="bl">' + d.blurb + '</div><div class="nt"><em>' + (d.exo ? '来源' : '影像') + '</em><span class="crt">' + d.cr + '</span>' + (d.exo ? '。这类天体太小太远,望远镜里只是一个点,没有可用的分层照片。' : '。去星后按亮度分层形成视差,纵深为示意。') + '</div></div>' +
+      '<div class="bl">' + d.blurb + '</div><div class="nt"><em>' + (d.exo ? '来源' : '影像') + '</em><span class="crt">' + d.cr + '</span>' + (d.exo ? (d.pnote ? d.pnote + '。' : '。这类天体太小太远,望远镜里只是一个点,没有可用的分层照片。') : '。去星后按亮度分层形成视差,纵深为示意。') + '</div></div>' +
       '<div class="bt"><button type="button" data-a="back">返回驾驶舱</button>' + (d.ir ? '<button type="button" data-a="band" aria-pressed="false">波段 · 近红外(JWST)</button>' : '') + (obsOk(key) ? '<button type="button" data-a="obs">舷窗观测 · 模拟渲染</button>' : '') + (arr ? '<button type="button" data-a="home">返航 · 太阳系</button>' : '') + '</div>';
     root.appendChild(ov); cv = ov.querySelector('canvas'); ctx = cv.getContext('2d'); size();
     imgs = []; for (var i = 0; i < d.n; i++) { var im = new Image(); im.decoding = 'async'; im.src = 'x/dsoimg/' + f + '-' + i + sm + '.webp'; if (rm) im.onload = kick; imgs.push(im); }
@@ -269,7 +269,7 @@
   var ARR = {};
   function arrived(key, arr) {
     ARR[key] = arr;
-    if (window.SHXAN && SHXAN.arrive) { var d = DV[key]; SHXAN.arrive({ key: key, zh: d.zh, en: d.en, type: d.type, earth: fly0(d.ly), trip: arr.ly ? fly0(arr.ly) : '', sec: arr.sec, obs: hasObs(key), phl: d.exo ? '资料卡<small>无照片 · 只有一个光点</small>' : '', photo: function () { open(key, { arrived: arr }); }, see: function () { var o = OBS(key); if (o) o.observe(key); }, home: function () { home(); } }); return; }
+    if (window.SHXAN && SHXAN.arrive) { var d = DV[key]; SHXAN.arrive({ key: key, zh: d.zh, en: d.en, type: d.type, earth: fly0(d.ly), trip: arr.ly ? fly0(arr.ly) : '', sec: arr.sec, obs: hasObs(key), phl: d.exo ? (d.phl || '资料卡<small>无照片 · 只有一个光点</small>') : '', photo: function () { open(key, { arrived: arr }); }, see: function () { var o = OBS(key); if (o) o.observe(key); }, home: function () { home(); } }); return; }
     open(key, { arrived: arr });
   }
   function hook(ev, a) {

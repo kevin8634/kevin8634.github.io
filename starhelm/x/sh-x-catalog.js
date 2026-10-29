@@ -48,7 +48,7 @@
       .forEach(function (c) { rows.push(['con', c[0], c[2], c[1], '#c9b78f']); });
     if (tab === 'dso' || q) {
       var D = window.SHXK && SHXK.dsoList ? SHXK.dsoList() : null, ty = (window.SH_DSO || {}).ty || {};
-      if (window.SHXEO) SHXEO.list().forEach(function (k) { var e = SHXEO.get(k); if (hit(q, [k, e.zh, e.en])) rows.push(['exo', k, e.zh, '✦ 可飞抵 · ' + (e.k === 'bh' ? '黑洞' : e.k === 'psr' ? '脉冲星' : '中子星'), '#ff9fb2']); });   // C2.8a 特殊天体置顶
+      if (window.SHXEO) SHXEO.list().forEach(function (k) { var e = SHXEO.get(k); if (hit(q, [k, e.zh, e.en])) rows.push(['exo', k, e.zh, '✦ 可飞抵 · ' + (e.lab || (e.k === 'bh' ? '黑洞' : e.k === 'psr' ? '脉冲星' : '中子星')), '#ff9fb2']); });   // C2.8a 特殊天体置顶
       var nf = rows.length; if (D) D.forEach(function (d, i) { var o = d.o; if (!q && !o[1] && o[0].charAt(0) !== 'M') return; if (!hit(q, [o[0], o[1], o[2], o[11]])) return; var fly = window.SHXDV && SHXDV.has(o[0]), rw = ['dso', i, o[1] && o[1].indexOf(o[0]) !== 0 ? o[0] + ' ' + o[1] : (o[1] || o[0]), (fly ? '✦ 可飞抵 · ' : '') + (ty[o[3]] || ''), fly ? '#f0c97a' : '#9fc3ff']; if (fly) rows.splice(nf++, 0, rw); else rows.push(rw); });
     }
     rows.slice(0, lim).forEach(function (r) {

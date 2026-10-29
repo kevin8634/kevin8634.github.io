@@ -138,3 +138,9 @@
 | x/dsoimg/m16ir-0…2.webp、m16ir-s.webp(手机 *m.webp) | https://esawebb.org/images/weic2216e/ 「Webb's New View of the Pillars of Creation (2022)」(JWST NIRCam,6780×7071,与哈勃 2014 heic1501a 同一视场) | https://cdn.esawebb.org/archives/images/publicationjpg/weic2216e.jpg | NASA, ESA, CSA, STScI; J. DePasquale, A. Koekemoer, A. Pagan (STScI) | CC BY 4.0(ESA/Webb,https://esawebb.org/copyright/) | OpenCV ECC 仿射配准到可见光底图 m16-0.webp(位移约 1 px、缩放误差 <0.7%),缩至 1200 px(手机 700 px),去星阈值 0.22,底图 + 2 个前景层 + 星点层,WebP q56;桌面约 0.74 MB,首次切换时才下载 |
 核对记录:weic2216a 是 1200×1200 的裁切版(上一轮下错的就是这张),weic2216b 为 8423×14589 全幅竖版;只有 weic2216e 与哈勃画面一致,已逐张核对标题、尺寸与画面(三根气柱、锈红色半透明、背景星密集)。
 船底座未做波段切换:esawebb weic2205a「Cosmic Cliffs」是 NGC 3324(船底座星云西北边缘),与本站船底座视图(heic0707a,船底座 η 附近核心区)不是同一区域,叠在一起会误导。
+
+## C2.8b · T7 第二批(2026-10-30)
+| 文件 | 来源页 | 文件 URL | 署名 | 许可 | 处理 |
+|---|---|---|---|---|---|
+| x/dsoimg/sgra-0.webp、sgra-0m.webp | https://www.eso.org/public/images/eso2208-eht-mwa/ 「First image of the black hole at the heart of the Milky Way」(EHT 2022,1.3 mm 射电) | https://cdn.eso.org/images/large/eso2208-eht-mwa.jpg | EHT Collaboration | CC BY 4.0(ESO,https://www.eso.org/public/outreach/copyright/) | 缩至 1400 px(手机 720 px),外圈 25% 羽化到黑(整幅显示不露方框),WebP q82/q80;约 18 KB / 7 KB,只在打开 Sgr A* 照片时加载 |
+蟹状星云脉冲星、杰敏卡、磁星 SGR 1806−20:纯程序渲染(sh-x-exo.js 光线追踪),无新增素材文件;物理参数来源写在各自资料卡「来源」行。
