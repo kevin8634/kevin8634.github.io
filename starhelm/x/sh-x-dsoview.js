@@ -21,13 +21,14 @@
       blurb: '最早被看出旋涡结构的星系(罗斯伯爵 1845 年手绘)。伴星系的引力扰动让旋臂格外清晰,也触发了大量新恒星诞生。',
       cr: 'NASA, ESA, S. Beckwith(STScI)及哈勃传承团队(STScI/AURA) · ESA/Hubble CC BY 4.0' }
   };
+  var WS = [], WT = 2.6;
   var X, ov = null, cv, ctx, imgs = [], star = null, raf = 0, t0 = 0, mx = 0, my = 0, tx = 0, ty = 0, cur = null;
   function el(t, c, h) { var e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; }
   function css() {
     if (document.getElementById('xv-css')) return; var s = el('style'); s.id = 'xv-css';
     s.textContent = '#xv{position:absolute;inset:0;z-index:40;background:#000;overflow:hidden;opacity:0;transition:opacity 1.2s;pointer-events:auto;cursor:grab}#xv.in{opacity:1}#xv canvas{position:absolute;inset:0;width:100%;height:100%}' +
-      '#xv .wp{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.9),rgba(140,200,255,.35) 20%,transparent 60%);opacity:0;animation:xvW 1.6s ease-out}@keyframes xvW{0%{opacity:0;transform:scale(.2)}35%{opacity:1}100%{opacity:0;transform:scale(3)}}' +
-      '#xv .pn{position:absolute;right:max(18px,3vw);top:50%;transform:translateY(-50%);width:min(300px,26vw);padding:14px 16px;color:#d6e2f4;font:12px/1.5 "Noto Sans SC",system-ui,sans-serif;background:linear-gradient(180deg,rgba(14,26,46,.55),rgba(6,12,24,.62));-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1px solid rgba(127,214,255,.25);border-radius:10px;cursor:default}' +
+      '#xv .wp{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.9),rgba(140,200,255,.35) 20%,transparent 60%);opacity:0;animation:xvW 1.4s 2.2s ease-out}@keyframes xvP{to{opacity:1}}@keyframes xvW{0%{opacity:0;transform:scale(.2)}35%{opacity:1}100%{opacity:0;transform:scale(3)}}' +
+      '#xv .pn{opacity:0;animation:xvP .8s 2.8s forwards;position:absolute;right:max(18px,3vw);top:50%;transform:translateY(-50%);width:min(300px,26vw);padding:14px 16px;color:#d6e2f4;font:12px/1.5 "Noto Sans SC",system-ui,sans-serif;background:linear-gradient(180deg,rgba(14,26,46,.55),rgba(6,12,24,.62));-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1px solid rgba(127,214,255,.25);border-radius:10px;cursor:default}' +
       '#xv .pn h5{margin:0;font-size:10px;letter-spacing:.24em;color:#7fd6ff;font-weight:500}#xv .pn h4{margin:3px 0 8px;font-size:19px;color:#f3f7ff}#xv .pn h4 small{display:block;font-size:11px;color:#8fa3c2;font-weight:400;letter-spacing:.08em}' +
       '#xv .kv{display:flex;justify-content:space-between;gap:10px;padding:3px 0;border-bottom:1px dashed rgba(127,214,255,.1)}#xv .kv span{color:#8fa3c2;white-space:nowrap}#xv .kv b{font-weight:500;color:#e8f0fb;text-align:right}' +
       '#xv .bl{margin-top:8px;color:#b9c6dc}#xv .nt{margin-top:8px;font-size:10.5px;color:#8fa3c2}#xv .nt em{font-style:normal;color:#0a0d14;background:#f0c97a;border-radius:3px;padding:0 5px;margin-right:6px;font-size:10px}' +
@@ -40,16 +41,25 @@
   function size() { if (!cv) return; var d = Math.min(2, devicePixelRatio || 1); cv.width = ov.clientWidth * d; cv.height = ov.clientHeight * d; }
   function draw(now) {
     if (!ov) return; raf = requestAnimationFrame(draw);
-    var W = cv.width, H = cv.height, t = (now - t0) / 1000, ease = 1 - Math.exp(-t / 9);
+    var W = cv.width, H = cv.height, t = (now - t0) / 1000, ease = 1 - Math.exp(-Math.max(0, t - WT) / 9);
     tx += (mx - tx) * .05; ty += (my - ty) * .05;
     ctx.globalCompositeOperation = 'source-over'; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+    if (t < WT + .6) {
+      var cx = W / 2, cy = H / 2, R0 = Math.hypot(W, H) / 2, sp = Math.pow(Math.min(1, t / WT), 2.2);
+      ctx.lineCap = 'round';
+      for (var j = 0; j < WS.length; j++) { var q = WS[j], r = ((q.r + t * q.v * (0.15 + sp * 3)) % 1.2) * R0, len = r * (0.02 + sp * 0.5), al = Math.min(1, r / R0 * 2) * (t > WT ? Math.max(0, 1 - (t - WT) / .6) : 1);
+        ctx.strokeStyle = 'hsla(' + q.h + ',90%,' + (70 + sp * 25) + '%,' + al + ')'; ctx.lineWidth = (1 + sp * 2.5) * (W / 1400 + .5);
+        ctx.beginPath(); ctx.moveTo(cx + q.c * r, cy + q.s * r); ctx.lineTo(cx + q.c * (r + len), cy + q.s * (r + len)); ctx.stroke(); }
+      ctx.globalAlpha = 1;
+    }
     var n = imgs.length; if (!n || !imgs[0].complete) return;
+    var fade = Math.max(0, Math.min(1, (t - WT + .5) / 1.3)); if (fade <= 0) return;
     var base = Math.max(W, H) / imgs[0].naturalWidth * 1.08;
     function layer(im, depth, alpha) {
       if (!im.complete || !im.naturalWidth) return;
-      var sc = base * (0.9 + ease * (0.2 + depth * 0.22) + Math.sin(t * .05) * .01), w = im.naturalWidth * sc, h = im.naturalHeight * sc;
+      var sc = base * (0.6 + 0.3 * fade + ease * (0.2 + depth * 0.22) + Math.sin(t * .05) * .01), w = im.naturalWidth * sc, h = im.naturalHeight * sc;
       var px = -tx * depth * W * .035, py = -ty * depth * H * .035;
-      ctx.globalAlpha = alpha; ctx.drawImage(im, (W - w) / 2 + px, (H - h) / 2 + py, w, h);
+      ctx.globalAlpha = alpha * fade; ctx.drawImage(im, (W - w) / 2 + px, (H - h) / 2 + py, w, h);
     }
     for (var i = 0; i < n; i++) layer(imgs[i], i / (n - 1), i === 0 ? 1 : .92);
     if (star) layer(star, .35, 1);
@@ -59,7 +69,7 @@
     var d = DV[key], root = X && X._.root(); if (!d || !root) return; css(); close(true); cur = key;
     var S = X._.S; S.auto = false; S.base = 0; S.mult = 1;
     ov = el('div'); ov.id = 'xv';
-    ov.innerHTML = '<canvas></canvas><div class="wp"></div><div class="hd">深空抵达 · ' + d.zh + '</div>' +
+    ov.innerHTML = '<canvas></canvas><div class="wp"></div><div class="hd">曲率跃迁 → ' + d.zh + ' · ' + d.dist + '</div>' +
       '<div class="pn"><h5>抵达报告 · ' + d.type + '</h5><h4>' + d.zh + '<small>' + d.en + '</small></h4>' + d.facts.map(function (r) { return kv(r[0], r[1]); }).join('') +
       '<div class="bl">' + d.blurb + '</div><div class="nt"><em>影像</em>' + d.cr + '。去星后按亮度分 ' + d.n + ' 层形成视差,纵深为示意。</div></div>' +
       '<div class="bt"><button type="button" data-a="back">返回天枢号</button></div>';
@@ -70,6 +80,7 @@
     ov.addEventListener('pointermove', function (e) { var r = ov.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width * 2 - 1; my = (e.clientY - r.top) / r.height * 2 - 1; });
     ov.addEventListener('pointerleave', function () { mx = my = 0; });
     addEventListener('resize', size);
+    WS = []; for (var k = 0; k < 420; k++) { var an = Math.random() * 6.2832; WS.push({ c: Math.cos(an), s: Math.sin(an), r: Math.random() * 1.2, v: .3 + Math.random() * .7, h: [200, 190, 270, 320, 40][k % 5] }); }
     t0 = performance.now(); requestAnimationFrame(function () { if (ov) ov.classList.add('in'); }); raf = requestAnimationFrame(draw);
     if (X._.toast) X._.toast('曲率跃迁 · 抵达 ' + d.zh + '(' + d.dist + ')');
   }

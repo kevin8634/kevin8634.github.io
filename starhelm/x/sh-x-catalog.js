@@ -48,7 +48,7 @@
       .forEach(function (c) { rows.push(['con', c[0], c[2], c[1], '#c9b78f']); });
     if (tab === 'dso' || q) {
       var D = window.SHXK && SHXK.dsoList ? SHXK.dsoList() : null, ty = (window.SH_DSO || {}).ty || {};
-      if (D) D.forEach(function (d, i) { var o = d.o; if (!q && !o[1] && o[0].charAt(0) !== 'M') return; if (!hit(q, [o[0], o[1], o[2], o[11]])) return; rows.push(['dso', i, o[1] && o[1].indexOf(o[0]) !== 0 ? o[0] + ' ' + o[1] : (o[1] || o[0]), ty[o[3]] || '', '#9fc3ff']); });
+      var nf = rows.length; if (D) D.forEach(function (d, i) { var o = d.o; if (!q && !o[1] && o[0].charAt(0) !== 'M') return; if (!hit(q, [o[0], o[1], o[2], o[11]])) return; var fly = window.SHXV && SHXV.has(o[0]), rw = ['dso', i, o[1] && o[1].indexOf(o[0]) !== 0 ? o[0] + ' ' + o[1] : (o[1] || o[0]), (fly ? '✦ 可飞抵 · ' : '') + (ty[o[3]] || ''), fly ? '#f0c97a' : '#9fc3ff']; if (fly) rows.splice(nf++, 0, rw); else rows.push(rw); });
     }
     rows.slice(0, lim).forEach(function (r) {
       var it = el('div', 'it', '<span class="dot" style="background:' + r[4] + '"></span><span class="nm">' + r[2] + '</span><span class="ds">' + r[3] + '</span>');
