@@ -194,3 +194,12 @@ body:has(.ml--dock:not([hidden])) .le-foot:hover{opacity:1}
 #xs-lcard .lc-n{font-size:10px;color:#6f84a6;margin-top:8px}
 #xs-lcard .lc-a{margin-top:10px;text-align:right}
 #xs-lcard .lc-lock{background:rgba(240,201,122,.08);border:1px solid rgba(240,201,122,.5);color:#f0c97a;font-size:12px;padding:5px 14px;border-radius:14px;cursor:pointer}
+/* T3 一镜到底(王磊 10-29 17:27 选 B):画面铺满,进度卡移到底部小卡 */
+#xa-board .bd-cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+#xa-board.bd3 .bd-door{display:none}
+#xa-board.bd3 .bd-mid{top:auto;bottom:max(18px,4vh);transform:translateX(-50%);padding:12px 18px 12px;width:min(380px,90vw);background:rgba(6,11,22,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#xa-board.bd3 .bd-k{font-size:10px}#xa-board.bd3 .bd-t{font-size:15px;margin:4px 0 8px}
+#xa-board.bd3 .bd-row{margin:8px 0}#xa-board.bd3 .bd-s{margin-top:8px}
+#xa-board.bd3.open .bd-mid{opacity:0;transition:opacity .5s}
+#xa-board.bd3{z-index:90}
+#shxc.xa-boarding #xk-dso,#shxc.xa-boarding #xk-box,#shxc.xa-boarding #xk-card,#shxc.xa-boarding #xc-lbls{visibility:hidden!important}

@@ -770,14 +770,15 @@
       '<div class="bd-s" id="bd-s">气闸加压中…</div><div class="bd-d" id="bd-d"></div><button type="button" class="bd-skip bd-go" hidden></button></div>');
     ov.id = 'xa-board'; root.appendChild(ov);
     var t0 = performance.now(), fin = false, sndReg = false, iv = 0, cap = 0, pv = { g: 0, a: 0 }, go = $('.bd-go', ov);
+    if (window.SHXBD && P) SHXBD.start(ov, function () { return pv; });   // T3 一镜到底(方案 B)
     function bar(k, f) { pv[k] = Math.max(pv[k], Math.min(1, f)); var b = $('#bd-' + k, ov), e = $('#bd-' + k + 'p', ov); if (b) b.style.width = (pv[k] * 100).toFixed(0) + '%'; if (e) e.textContent = Math.floor(pv[k] * 100) + '%'; }
     function txt(id, t) { var e = $('#' + id, ov); if (e && e.textContent !== t) e.textContent = t; }
     function finish(why) {
       if (fin) return; fin = true; clearInterval(iv); clearTimeout(cap); if (P) P.last = { why: why, ms: Math.round(performance.now() - t0) }; txt('bd-s', '舱门开启'); go.hidden = true;
       if (why === 'tap' || why === 'go') { var c = ac(); if (c && c.state === 'suspended') c.resume(); }
       if (why === 'cap') I.toast('部分资源仍在载入 · 已先开舱门');
-      blip(520, .25, .05); ov.classList.add('open'); setTimeout(function () { ov.remove(); }, 1600);
-      if (hg === VOICE.gen) done();
+      var tail = function () { blip(520, .25, .05); ov.classList.add('open'); setTimeout(function () { ov.remove(); }, 1600); if (hg === VOICE.gen) done(); };
+      if (window.SHXBD && SHXBD.on(ov)) SHXBD.end(ov, tail); else tail();   // T3:镜头走到驾驶舱门后再开舱
     }
     if (!P) {   // 无登记表:退回旧逻辑(两条按下载进度,12 s 放行)
       bar('g', 1); var ok = { m: false, v: false };
