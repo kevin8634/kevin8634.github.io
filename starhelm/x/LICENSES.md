@@ -116,3 +116,15 @@
 | 文件 | 来源 | 许可 | 处理 |
 |---|---|---|---|
 | x/dsoimg/m42-*m.webp、m1-*m.webp、m16-*m.webp、m51-*m.webp | 与上表同名桌面层同源(ESA/Hubble heic0601a / heic0515a / heic1501a / heic0506a) | CC BY 4.0 | 由桌面层缩至 700 px 宽(WebP q60),窄屏 / 低内存设备读取 |
+
+## C2.6c · T6 深空第二批(2026-10-29)
+均为 ESA/Hubble 影像,许可 CC BY 4.0(https://esahubble.org/copyright/),署名按来源页完整给出,并在抵达报告卡内显示。
+| 文件 | 来源页 | 文件 URL | 署名 | 处理 |
+|---|---|---|---|---|
+| x/dsoimg/car-0…3.webp、car-s.webp(手机 *m.webp) | https://esahubble.org/images/heic0707a/ 「Star birth in the extreme」(船底座星云 NGC 3372) | https://cdn.esahubble.org/archives/images/publicationjpg/heic0707a.jpg | NASA, ESA, N. Smith (University of California, Berkeley), and The Hubble Heritage Team (STScI/AURA) | 缩至 1600 px(手机 800 px),去星 + 按亮度分 3 个前景层(work/mk_dsolayers.py,THR 0.12),WebP q62 |
+| x/dsoimg/m31-*.webp(去星阈值 THR 0.35,保住伴星系 M32) | https://esahubble.org/images/heic2501a/ 「Hubble’s panoramic view of the Andromeda Galaxy」 | https://cdn.esahubble.org/archives/images/publicationjpg/heic2501a.jpg | NASA, ESA, B. Williams (University of Washington) | 横向裁去两端各 13%,缩至 1800 px(手机 900 px);同上 |
+| x/dsoimg/m8-*.webp | https://esahubble.org/images/heic1808a/ 「Hubble's 28th birthday picture: The Lagoon Nebula」 | https://cdn.esahubble.org/archives/images/publicationjpg/heic1808a.jpg | NASA, ESA, STScI | 纵向取 12%–78%,缩至 1300 px(手机 700 px);同上 |
+| x/dsoimg/m20-*.webp | https://esahubble.org/images/heic2608a/ 「Trifid Nebula (Wide Field Camera 3 Image)」 | https://cdn.esahubble.org/archives/images/publicationjpg/heic2608a.jpg | NASA, ESA, STScI. Image processing: J. DePasquale (STScI) | 纵向取上 85%,缩至 1300 px(手机 700 px);暗处为前景(反向分层) |
+| x/dsoimg/m57-*.webp | https://esahubble.org/images/heic1310a/ 「Hubble image of the Ring Nebula (Messier 57)」 | https://cdn.esahubble.org/archives/images/large/heic1310a.jpg | NASA, ESA, and C. Robert O’Dell (Vanderbilt University) | 四边各裁 8%,缩至 1100 px(手机 600 px);WebP q64;四周 8% 羽化到黑(整幅显示时不露方框) |
+| x/dsoimg/m104-*.webp | https://esahubble.org/images/opo0328a/ 「Hubble mosaic of the majestic Sombrero Galaxy」 | https://cdn.esahubble.org/archives/images/publicationjpg/opo0328a.jpg | NASA/ESA and The Hubble Heritage Team (STScI/AURA) | 裁去左右 5%、上下 10%,缩至 1600 px(手机 800 px);WebP q64;四周 8% 羽化到黑 |
+桌面端新增合计约 1.58 MB(手机小图另计约 0.54 MB),只在打开该目标影像视图时加载。资料卡数值取自上述来源页说明与 OpenNGC 视大小;「按视大小推算」的项标为推测。

@@ -23,7 +23,32 @@
     M51: { zh: '涡状星系', en: 'Whirlpool Galaxy · M51', n: 6, ly: 23e6, rly: 38000, type: '旋涡星系 · 与伴星系 NGC 5195 互动',
       facts: [['距离', '约 2,300 万光年', '证'], ['直径', '约 7.6 万光年', '证'], ['伴星系', 'NGC 5195(右上黄色)', '证'], ['旋臂', '粉红色为电离氢恒星形成区', '证'], ['观测波段', '可见光 + Hα(哈勃 ACS,2005)']],
       blurb: '最早被看出旋涡结构的星系(罗斯伯爵 1845 年手绘)。伴星系的引力扰动让旋臂格外清晰,也触发了大量新恒星诞生。',
-      cr: 'NASA, ESA, S. Beckwith(STScI)及哈勃传承团队(STScI/AURA) · ESA/Hubble CC BY 4.0' }
+      cr: 'NASA, ESA, S. Beckwith(STScI)及哈勃传承团队(STScI/AURA) · ESA/Hubble CC BY 4.0' },
+    // C2.6c 第二批:船底座星云、M31、M8、M20、M57、M104(去星后 3 个前景层 + 底图 + 星点层)
+    'NGC 3372': { zh: '船底座星云', en: 'Carina Nebula · NGC 3372', f: 'car', n: 4, ly: 7500, rly: 40, type: '发射星云 · 大质量恒星形成区',
+      facts: [['距离', '约 7,500 光年', '证'], ['大小', '约 260 光年(按视大小约 2° 推算)', '推'], ['明星', '船底座 η:大质量双星,1840 年代曾「大爆发」', '证'], ['未来', '船底座 η 可能以超新星结束一生', '推'], ['观测波段', 'Hα(哈勃 ACS,48 帧拼接)+ 地面 S II / O III 着色']],
+      blurb: '星云被极端大质量恒星的星风和紫外辐射雕刻成峭壁与尘埃柱;这些恒星正在撕碎孕育它们的母云。红 = 硫,绿 = 氢,蓝 = 氧。',
+      cr: 'NASA, ESA, N. Smith(加州大学伯克利分校)及哈勃传承团队(STScI/AURA) · ESA/Hubble CC BY 4.0' },
+    M31: { zh: '仙女座星系', en: 'Andromeda Galaxy · M31', f: 'm31', n: 4, ly: 2.5e6, rly: 76000, fit: 'contain', zoom: 1.0, par: .25, type: '旋涡星系(Sb)· 本星系群最大成员',
+      facts: [['距离', '约 250 万光年', '证'], ['大小', '可见盘面直径约 15 万光年', '证'], ['本图', '哈勃 600 余张拼接,约 2 亿颗恒星被单独分辨(PHAST)', '证'], ['恒星总数', '约 1 万亿颗', '推'], ['未来', '约 40–50 亿年后可能与银河系并合', '推']],
+      blurb: '肉眼可见的最远天体之一,视大小约为满月的 6 倍。左上角模糊的黄色团块是它的伴星系;锯齿状边缘是拼接影像的边界。',
+      cr: 'NASA, ESA, B. Williams(华盛顿大学) · ESA/Hubble CC BY 4.0' },
+    M8: { zh: '礁湖星云', en: 'Lagoon Nebula · M8', f: 'm8', n: 4, ly: 4000, rly: 27, type: '发射星云 · 恒星形成区',
+      facts: [['距离', '约 4,000 光年', '证'], ['大小', '约 55 × 20 光年', '证'], ['本图', '中心区约 4 光年(哈勃 WFC3,2018)', '证'], ['成因', '年轻大质量恒星的辐射与星风吹散、雕刻周围气体', '证'], ['发现', '1654 年霍迪尔纳首次编目', '证']],
+      blurb: '哈勃 28 周年影像只拍下了这片湍流恒星形成区的一小块:年轻恒星的强光与星风把气体吹出空腔、雕成丝缕。',
+      cr: 'NASA, ESA, STScI · ESA/Hubble CC BY 4.0' },
+    M20: { zh: '三叶星云', en: 'Trifid Nebula · M20', f: 'm20', n: 4, ly: 5000, rly: 20, type: '发射 + 反射 + 暗星云 · 恒星形成区',
+      facts: [['距离', '约 5,000 光年(各家估计 2,200–9,000 不等)', '推'], ['本图视场', '中心区约 4 光年(哈勃 WFC3,2026)', '证'], ['组成', '发射星云(粉)、反射星云(蓝)、暗星云三合一', '证'], ['变化', '与 1997 年哈勃影像对比,可见结构在人类时间尺度上变化', '证'], ['未来', '数百万年后气体尘埃散尽,只剩恒星', '推']],
+      blurb: '颜色反映密度:左上亮蓝处气体稀薄,棕色尘埃带最浓处几乎全黑。这里分层按「越暗越近」处理,让尘埃柱浮在前景。',
+      cr: 'NASA, ESA, STScI;图像处理 J. DePasquale(STScI) · ESA/Hubble CC BY 4.0' },
+    M57: { zh: '环状星云', en: 'Ring Nebula · M57', f: 'm57', n: 4, ly: 2500, rly: 0.6, par: .6, fit: 'contain', zoom: .82, type: '行星状星云',
+      facts: [['距离', '约 2,500 光年', '证'], ['大小', '约 1 光年(按视大小推算)', '推'], ['结构', '扭曲的「甜甜圈」,中间塞着橄榄球状低密度物质', '证'], ['核心', '中心白矮星:类太阳恒星抛掉外层后的残核', '证'], ['太阳的未来', '约 50 亿年后太阳也可能形成类似星云', '推']],
+      blurb: '我们恰好沿「甜甜圈」的轴向看过去,所以它像一个环。蓝色主要来自中心高温区的氦,外圈的红色来自氢和氮。',
+      cr: 'NASA, ESA, C. Robert O’Dell(范德堡大学) · ESA/Hubble CC BY 4.0' },
+    M104: { zh: '草帽星系', en: 'Sombrero Galaxy · M104', f: 'm104', n: 4, ly: 3e7, rly: 25000, par: .45, fit: 'contain', zoom: .92, type: '旋涡星系(Sa)· 室女星系团南缘',
+      facts: [['距离', '约 3,000 万光年', '证'], ['直径', '约 5 万光年', '证'], ['视角', '从赤道面以北仅约 6° 看去,近乎侧向', '证'], ['质量', '约 8,000 亿个太阳', '推'], ['观测波段', '可见光(哈勃 ACS 拼接,2003)']],
+      blurb: '明亮的白色核球被厚厚的尘埃带环绕,像一顶宽边草帽。视星等约 8 等,小望远镜就能看到。',
+      cr: 'NASA/ESA 及哈勃传承团队(STScI/AURA) · ESA/Hubble CC BY 4.0' }
   };
   var WS = [], WT = 2.6;
   var X, ov = null, cv, ctx, imgs = [], star = null, raf = 0, t0 = 0, mx = 0, my = 0, tx = 0, ty = 0, cur = null, OPT = {};
@@ -53,6 +78,7 @@
       '#xdv-hud .bar{height:4px;border-radius:2px;background:rgba(127,214,255,.15);overflow:hidden;margin:4px 0 6px}#xdv-hud .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7fd6ff,#b58cff,#f0c97a)}' +
       '#xdv-hud .s{font-size:11px;color:#a9b8d0}#xdv-hud .tc{display:inline-block;margin-top:5px;font-size:10.5px;color:#0a0d14;background:#f0c97a;border-radius:3px;padding:1px 6px}#xdv-hud .tc+.tc{background:#ff9fb2;margin-left:6px}' +
       '#xdv-hud button{margin-top:6px;padding:4px 12px;border-radius:6px;border:1px solid rgba(127,214,255,.3);background:rgba(8,16,30,.6);color:#c9d6ea;font:inherit;font-size:11px;cursor:pointer}#xdv-hud button:hover{border-color:#f0c97a;color:#ffd98a}' +
+      '#shxc>#xv{z-index:45}#shxc>#xdv-hud{z-index:31}' +   /* sh-x-ship.js 的 #shxc>*:not(canvas){z-index:1} 会压平层级,这里用更高优先级恢复 */
       '.xdv-on #xc-toast,.xdv-on .xd-cap,.xdv-on .xd-ring{visibility:hidden}' +   /* 跃迁中由 HUD 统一播报,航段提示让位 */
       '@media (max-width:760px){#xdv-hud{top:262px;padding:6px 10px;width:calc(100vw - 20px)}#xdv-hud .h{font-size:9.5px;letter-spacing:.1em}#xdv-hud .d{font-size:19px}#xdv-hud .n{font-size:12.5px}#xdv-hud .n small{display:none}#xdv-hud .s{font-size:10px;line-height:1.35}#xdv-hud .tc{margin-top:3px;font-size:9.5px}#xdv-hud button{margin-top:4px;padding:3px 10px}.xdv-on #xfx-tag{display:none}}';
     document.head.appendChild(s);
@@ -81,8 +107,9 @@
       var px = -tx * depth * W * .035, py = -ty * depth * H * .035;
       ctx.globalAlpha = alpha * fade; ctx.drawImage(im, (W - w) / 2 + px, (H - h) / 2 + py, w, h);
     }
-    for (var i = 0; i < n; i++) layer(imgs[i], i / (n - 1), i === 0 ? 1 : .92);
-    if (star) layer(star, .35, 1);
+    var pk = (d && d.par) || 1;   // 星系等致密亮核目标减小层间视差,避免重影
+    for (var i = 0; i < n; i++) layer(imgs[i], i / (n - 1) * pk, i === 0 ? 1 : .92);
+    if (star) layer(star, .35 * pk, 1);
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
   /* o: { arrived: {ly, sec} }(由跃迁控制器飞抵时传入) */
