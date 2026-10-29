@@ -88,8 +88,9 @@
     cancelAnimationFrame(raf); removeEventListener('resize', size); if (!ov) return; var o = ov; ov = null; cur = null;
     if (quick) o.remove(); else { o.classList.remove('in'); setTimeout(function () { o.remove(); }, 1200); }
   }
-  addEventListener('keydown', function (e) { if (ov && e.key === 'Escape') { e.stopImmediatePropagation(); e.preventDefault(); close(); } }, true);
+  // C2.6a Esc 由 sh-x-esc.js 统一分层处理(深空视图为最上层)
   function hook(ev) { if (ev === 'close') close(true); }
   (function wait(n) { if (window.SHXC && SHXC.on) { X = SHXC; SHXC.on(hook); return; } if (n < 100) setTimeout(function () { wait(n + 1); }, 100); })(0);
-  window.SHXV = { has: function (k) { return !!DV[k]; }, open: open, close: close, list: function () { return Object.keys(DV); }, isOpen: function () { return !!ov; } };
+  // C2.6a 原先误用 window.SHXV,会覆盖四级视图 sh-x-views.js 的 SHXV(go/step),导致退出驾驶舱、数字键切视图报错 → 改名 SHXDV
+  window.SHXDV = { has: function (k) { return !!DV[k]; }, open: open, close: close, list: function () { return Object.keys(DV); }, isOpen: function () { return !!ov; } };
 })();

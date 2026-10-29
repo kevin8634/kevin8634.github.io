@@ -136,9 +136,9 @@
       '<div class="r"><span>视大小</span><b>' + sz + '</b></div>' + (moon >= 0.5 ? '<div class="r"><span>相当于</span><b>约 ' + moon + ' 个满月宽</b></div>' : '') +
       '<div class="r"><span>赤经(J2000)</span><b>' + hms(o[4]) + '</b></div><div class="r"><span>赤纬(J2000)</span><b>' + dms(o[5]) + '</b></div>' +
       '<div class="r"><span>所需器材(地球上)</span><b>' + (o[9] != null ? eye(o[9] + (o[7] > 20 ? 1 : 0)) : '—') + '</b></div>' +
-      '<div class="n">数据来自 OpenNGC(CC BY-SA 4.0)。深空天体远在千光年以外,天枢号目前只能远观;' + (window.SHXV && SHXV.has(o[0]) ? '飞抵后为真实影像分层呈现。</div><button class="go" type="button">前往 · 深空抵达</button>' : '飞抵星云、星系的真实影像正在逐个上线。</div>');
+      '<div class="n">数据来自 OpenNGC(CC BY-SA 4.0)。深空天体远在千光年以外,天枢号目前只能远观;' + (window.SHXDV && SHXDV.has(o[0]) ? '飞抵后为真实影像分层呈现。</div><button class="go" type="button">前往 · 深空抵达</button>' : '飞抵星云、星系的真实影像正在逐个上线。</div>');
     root.appendChild(card); place(); clearInterval(PT); PT = setInterval(place, 700);
-    card.querySelector('.x').onclick = hide; dsoMarks(); var gd = card.querySelector('.go'); if (gd) gd.onclick = function () { hide(); SHXV.open(o[0]); };
+    card.querySelector('.x').onclick = hide; dsoMarks(); var gd = card.querySelector('.go'); if (gd) gd.onclick = function () { hide(); SHXDV.open(o[0]); };
   }
   function hide() { SELD = -1; SEL = -1; clearInterval(PT); if (box) box.remove(); if (card) { card.remove(); card = null; } }
   /* C2.2b 信息卡避让:不与目标面板(含日球层栏)、仪表、底部按钮条、讲解卡重叠。

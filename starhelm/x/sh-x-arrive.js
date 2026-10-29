@@ -44,6 +44,6 @@
     else if (ev === 'close') hide();
   }
   (function wait(n) { if (window.SHXC && SHXC.on) { X = SHXC; SHXC.on(hook); return; } if (n < 100) setTimeout(function () { wait(n + 1); }, 100); })(0);
-  addEventListener('keydown', function (e) { if (card && e.key === 'Escape') { hide(); } }, true);
+  // C2.6a Esc 由 sh-x-esc.js 统一分层处理
   window.SHXR = { show: function (id) { show(id); }, hide: hide };
 })();
