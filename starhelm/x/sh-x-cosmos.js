@@ -26,13 +26,41 @@
       blurb: '室女座星系团中心最重的星系之一,几乎是一个没有旋臂、发着黄光的巨大恒星球。中心的黑洞 M87* 就是 2019 年人类拍下的第一个黑洞,它的喷流沿途还会触发新星爆发。',
       cr: 'NASA, ESA, A. Lessing, E. Baltz(斯坦福大学), M. Shara(AMNH), J. DePasquale(STScI) · ESA/Hubble CC BY 4.0', cat: 'M87' }
   };
+  // C2.9b 星系团 / 深场
+  DV['Virgo Cl'] = { zh: '室女座星系团', en: 'Virgo Cluster', f: 'virgo', n: 4, ly: 5.4e7, rly: 4e6, ra: 186.75, dec: 12.72, par: .3, fit: 'contain', zoom: 1.0, vii: 1, type: '星系团 · 星域 VII · 本超星系团的中心',
+    facts: [['距离', '约 5,400 万光年(16.5 百万秒差距)', '证'], ['回看时间', '你看到的是约 5,400 万年前发出的光', '证'], ['成员', '1,300 多个(可能约 2,000 个)星系', '证'], ['大小', '天上跨约 8°(16 个满月宽),实际直径约 1,500 万光年', '推'], ['质量', '约 1.2 千万亿个太阳(1.2×10¹⁵,大部分是暗物质)', '推'], ['观测波段', '可见光(薇拉·鲁宾天文台首批影像,2025)']],
+    blurb: '离我们最近的大型星系团。图中最亮的几团是巨椭圆星系 M84、M86,右侧一串是「马卡良星系链」;整个星系团正以平均约 1,100 km/s 的速度远离我们,而本星系群也正被它的引力往那边拉。舷窗模拟里 16 个梅西耶星系按真实角距摆放,大小放大约 6 倍以便看清。',
+    cr: 'NSF–DOE Vera C. Rubin Observatory / NOIRLab / SLAC / AURA · CC BY 4.0' };
+  DV['SMACS 0723'] = { zh: '韦布深场 · SMACS 0723', en: "Webb's First Deep Field · SMACS J0723.3−7327", f: 'smacs', n: 4, ly: 4.33e9, rly: 1.2e6, ra: 110.83, dec: -73.4543, par: .25, fit: 'contain', zoom: 1.0, vii: 1, type: '星系团 + 引力透镜 · 星域 VII · 深空',
+    facts: [['红移', 'z ≈ 0.39(星系团本身)', '证'], ['光行距离', '约 43 亿光年(= 回看时间约 43 亿年)', '证'], ['共动距离', '约 51 亿光年:光在路上时宇宙还在膨胀,星系团「此刻」已在更远处', '推'], ['透镜', '星系团质量把背后更远星系的光弯成弧;最远的像来自约 131 亿年前', '证'], ['视场', '只有一粒沙子举在一臂远处那么大', '证'], ['观测波段', '近红外(JWST NIRCam,2022 年 7 月首批科学影像)']],
+    blurb: '韦布望远镜的第一张科学深场。前景是 43 亿年前的星系团,它的引力像放大镜,把身后更远、更古老的星系拉成橙红色的细弧;带六芒衍射芒的是银河系里的前景恒星。距离用 Planck 2018 宇宙学参数换算。',
+    cr: 'NASA, ESA, CSA, STScI · ESA/Webb CC BY 4.0', lookback: 1 };
+  function rnd(s) { return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  function virgoMem() {   // 16 个梅西耶成员按真实角距(相对星系团中心)摆放;大小按视直径换算后 ×2 便于看清;另加暗弱矮星系
+    var L = (window.SH_DSO && SH_DSO.d) || [], ids = ['M87', 'M84', 'M86', 'M49', 'M60', 'M59', 'M58', 'M89', 'M90', 'M88', 'M91', 'M99', 'M100', 'M98', 'M85', 'M61'], m = [], R = rnd(4486), c = DV['Virgo Cl'];
+    var k = Math.PI / 180 * c.ly / c.rly, cd = Math.cos(c.dec * Math.PI / 180);
+    L.forEach(function (o) { if (ids.indexOf(o[0]) < 0) return; var dx = -(o[4] - c.ra) * cd * k, dy = (o[5] - c.dec) * k, sz = Math.max(.03, (o[7] || 4) / 60 * k * .5 * 6), ell = o[8] && o[7] ? Math.max(.25, o[8] / o[7]) : .8, sp = /^S[abcdm]|^SAB|^SB/.test(o[10] || '');
+      m.push([dx, dy, sz * (sp ? 1 : 1.3), ell, R() * 180, sp ? 1 : 0, sp ? 1 : 0, o[0] === 'M87' ? 1.4 : 1]); });
+    for (var i = 0; i < 160; i++) { var a = R() * 6.283, r = Math.pow(R(), .7) * 1.05; m.push([Math.cos(a) * r - .05, Math.sin(a) * r * .8, (.01 + R() * .016), .6 + R() * .4, R() * 180, 2, 0, .8]); }
+    return m;
+  }
+  function smacsMem() {
+    var m = [[0, 0, .13, .78, 30, 0, 0, 1.6]], R = rnd(723);
+    function gs() { return (R() + R() + R() - 1.5) * .25; }
+    for (var i = 0; i < 38; i++) m.push([gs(), gs() * .85, .016 + R() * .035, .55 + R() * .45, R() * 180, 0, 0, 1.2]);
+    for (i = 0; i < 70; i++) { var a = R() * 6.283, r = .15 + Math.sqrt(R()) * .85, sp = R() < .45; m.push([Math.cos(a) * r, Math.sin(a) * r, .01 + R() * .03, .3 + R() * .6, R() * 180, sp ? 1 : 2, sp ? 1 : 0, 1]); }
+    return m;
+  }
   var NB = {
     LMC: { k: 'gal', c: ['#4d4a58', '#b08ab8', '#fff2e0'], inc: 30, arms: 0, wind: 0, sat: 1.4, pa: 150, bulge: .5, bar: [.42, .12], ell: .85 },
     'NGC 292': { k: 'gal', c: ['#444655', '#9aa8d0', '#f4f0ff'], inc: 65, arms: 0, wind: 0, sat: 1.3, pa: 45, bulge: .4, bar: [.5, .16] },
-    M87: { k: 'gal', c: ['#4a4038', '#b8a080', '#ffe8c0'], inc: 0, arms: 0, wind: 0, sat: 1.1, bulge: 2.2, ell: .94, jet: -70 }
+    M87: { k: 'gal', c: ['#4a4038', '#b8a080', '#ffe8c0'], inc: 0, arms: 0, wind: 0, sat: 1.1, bulge: 2.2, ell: .94, jet: -70 },
+    'Virgo Cl': { k: 'clu', c: ['#000', '#000', '#000'], sat: 1.15, nbg: 700, bgC: [[1, .85, .6], [.7, .8, 1]], pal: [['#3a3530', '#c8b090', '#fff0d0'], ['#303848', '#8aa0d0', '#fff4e0'], ['#201e1c', '#9a8a78', '#d8ccb8']], mem: null },
+    'SMACS 0723': { k: 'clu', c: ['#000', '#000', '#000'], sat: 1.3, nbg: 1600, bgC: [[1, .62, .35], [.65, .72, 1], [1, .4, .3], [1, .85, .6]], pal: [['#3a2a18', '#d8a060', '#fff0c0'], ['#202838', '#7f90ff', '#ffd0a0'], ['#200808', '#c05030', '#ffa070']], mem: null, arcC: ['#000000', '#ff8a50', '#ffd8b0'],
+      arcs: [[.24, 20, .35], [.28, 135, .25], [.33, 250, .4], [.38, 80, .2], [.41, 310, .3], [.45, 190, .22], [.3, 350, .18], [.5, 40, .15]] }
   };
   (function reg(n) {
-    if (window.SHXDV && SHXDV.add && window.SHXNB && SHXNB.add) { Object.keys(DV).forEach(function (k) { SHXDV.add(k, DV[k]); }); Object.keys(NB).forEach(function (k) { SHXNB.add(k, NB[k]); }); return; }
+    if (window.SHXDV && SHXDV.add && window.SHXNB && SHXNB.add && window.SH_DSO) { Object.keys(DV).forEach(function (k) { SHXDV.add(k, DV[k]); }); NB['Virgo Cl'].mem = virgoMem(); NB['SMACS 0723'].mem = smacsMem(); Object.keys(NB).forEach(function (k) { SHXNB.add(k, NB[k]); }); return; }
     if (n < 150) setTimeout(function () { reg(n + 1); }, 100);
   })(0);
 
@@ -145,5 +173,5 @@
     if (ev === 'close') { if (hud) hud.style.display = 'none'; if (tag) tag.style.display = 'none'; }
   }
   (function wait(n) { if (window.SHXC && SHXC.on) { SHXC.on(hook); return; } if (n < 150) setTimeout(function () { wait(n + 1); }, 100); })(0);
-  window.SHXCO = { gc: function () { return GC.slice(); }, list: function () { return Object.keys(DV); }, state: function () { return { a: +st.a.toFixed(3), dgc: Math.round(st.dgc), dsun: Math.round(st.dsun), sky: +skyF.toFixed(2), hud: !!(hud && hud.style.display !== 'none'), tag: !!(tag && tag.style.display === 'block') }; } };
+  window.SHXCO = { extra: function () { return ['Virgo Cl', 'SMACS 0723']; }, get: function (k) { return DV[k]; }, gc: function () { return GC.slice(); }, list: function () { return Object.keys(DV); }, state: function () { return { a: +st.a.toFixed(3), dgc: Math.round(st.dgc), dsun: Math.round(st.dsun), sky: +skyF.toFixed(2), hud: !!(hud && hud.style.display !== 'none'), tag: !!(tag && tag.style.display === 'block') }; } };
 })();

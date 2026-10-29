@@ -49,7 +49,8 @@
     ' else if(uK<2.5){e=smoothstep(1.0,.2,r+(n-.5)*.5);float f=1.0-abs(w*2.0-1.0);d=e*(pow(f,5.0)*1.6+.18*w);}',
     ' else if(uK<3.5){e=exp(-r*3.2);d=e*(.5+.8*w)*1.2;}',
     ' else if(uK<4.5){e=exp(-r*r*9.0);d=e*1.4+exp(-r*26.0);gl_FragColor=vec4(mix(c1,c2,e)*d*uA,1.0);return;}',
-    ' else{float lane=exp(-pow(p.y/.07,2.0))*smoothstep(1.0,.5,abs(p.x));float k=lane*(.75+.25*n);gl_FragColor=vec4(c0*.25,k*uA*.85);return;}',
+    ' else if(uK<5.5){float lane=exp(-pow(p.y/.07,2.0))*smoothstep(1.0,.5,abs(p.x));float k=lane*(.75+.25*n);gl_FragColor=vec4(c0*.25,k*uA*.85);return;}',
+    ' else{float aa=atan(p.y,p.x);float e2=exp(-pow((r-.85)/.035,2.0))*smoothstep(uD,0.0,abs(aa))*(.55+.8*w);gl_FragColor=vec4(mix(c1,c2,smoothstep(.3,.8,w))*e2*uA,1.0);return;}',   // C2.9b 引力透镜弧(uD = 半弧长,弧度)
     ' c=mix(c0,c1,smoothstep(.25,.6,w));c=mix(c,c2,smoothstep(.55,.95,w*e+.15*e));',
     ' gl_FragColor=vec4(c*d*uA,1.0);}'
   ].join('\n');
@@ -79,7 +80,21 @@
     var oct = [3, 4, 5][tier], NL = [2, 3, 5][tier], NP = [900, 2600, 6000][tier], R0 = rnd(key.length * 7919 + key.charCodeAt(1) * 104729);
     grp = new T.Group(); var body = new T.Group(); grp.add(body);
     var c = d.c, sat = d.sat || 1.5;
-    if (d.k === 'gal') {
+    if (d.k === 'clu') {   // C2.9b 星系团 / 深场:成员星系精灵(椭圆 = 核球 shader,旋涡 = 盘 + 核球)+ 背景星系点 + 透镜弧
+      var mem = d.mem || [], nm = tier === 0 ? Math.min(mem.length, 70) : mem.length;
+      for (var j = 0; j < nm; j++) {
+        var g = mem[j], gr = new T.Group(); gr.position.set(g[0], g[1], 0); gr.rotation.z = (g[4] || 0) * Math.PI / 180; body.add(gr);
+        var gc = d.pal[g[5] || 0], gs = g[2];
+        if (g[6]) { var sd = cloud(3, R0() * 40, gc, sat, Math.min(oct, 3)); sd.scale.set(gs, gs * g[3], 1); sd.material.userData.a = 1.1; gr.add(sd); var sb = cloud(4, 0, gc, sat, 2); sb.scale.set(gs * .35, gs * .35 * Math.max(g[3], .5), 1); gr.add(sb); }
+        else { var se = cloud(4, 0, gc, sat, 2); se.scale.set(gs, gs * g[3], 1); se.material.userData.a = g[7] || 1; gr.add(se); }
+      }
+      (d.arcs || []).forEach(function (a) { var am = cloud(6, R0() * 20, d.arcC || ['#000000', '#ff9a70', '#ffe0c0'], sat, Math.min(oct, 3)); am.material.uniforms.uD.value = a[2]; am.scale.setScalar(a[0] / .85); am.rotation.z = a[1] * Math.PI / 180; body.add(am); });
+      var bgc = d.bgC || [[1, .7, .45], [.6, .75, 1], [1, .45, .35]];
+      body.add(points(Math.round((d.nbg || 800) * [.4, .7, 1][tier]), function (i, o) {
+        var a = R0() * 6.2832, rr = Math.sqrt(R0()) * 1.0; o.p[0] = Math.cos(a) * rr; o.p[1] = Math.sin(a) * rr; o.p[2] = 0;
+        var cc = bgc[i % bgc.length], br = .25 + R0() * .7; o.c[0] = cc[0] * br; o.c[1] = cc[1] * br; o.c[2] = cc[2] * br; o.s = 1 + R0() * 1.8;
+      }, .9));
+    } else if (d.k === 'gal') {
       var disk = new T.Group(); disk.rotation.z = (d.pa || 0) * Math.PI / 180; var tilt = new T.Group(); tilt.rotation.x = -(d.inc || 0) * Math.PI / 180; disk.add(tilt); body.add(disk);
       var dk = cloud(3, R0() * 50, c, sat, oct); if (d.ell) { dk.scale.set(1, d.ell, 1); dk.material.userData.a = 1.3; } tilt.add(dk);
       var cA = col(c[2], sat), cB = col(c[1], sat * 1.2), arms = d.arms || 0, wind = d.wind || 0;
@@ -165,7 +180,7 @@
     vsc.children[0].material = vm; vq = key;
   }
   function volume(LI, b, dx, dy, dz, tn, tt) {
-    var d = P[b.key]; if (!d || d.k === 'gal') return 0;
+    var d = P[b.key]; if (!d || d.k === 'gal' || d.k === 'clu') return 0;
     var a = sstep(0.5, 0.95, tn); if (a <= 0.004) return 0;
     if (vq !== b.key || !vm) volMat(b.key);
     var u = vm.uniforms, Rb = b.R || 1, c = LI.cam0; c.updateMatrixWorld();

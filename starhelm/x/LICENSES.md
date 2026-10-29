@@ -154,3 +154,10 @@
 | x/dsoimg/m87bh-0.webp、m87bh-0m.webp | https://www.eso.org/public/images/eso1907a/ 「First image of a black hole」(EHT 2019,1.3 mm 射电) | https://cdn.eso.org/images/large/eso1907a.jpg | EHT Collaboration | CC BY 4.0(ESO) | 居中裁方,缩至 1400 px(手机 720 px),WebP q82 |
 回望银河(x/sh-x-cosmos.js):纯程序生成(对数螺旋臂 + 棒 + 核球 + 尘埃带 shader),无新增素材;盘面朝向用 IAU 银河坐标定义(北银极 RA 192.85948°、Dec +27.12825°,银心 RA 266.405°、Dec −28.936°),银心距离 GRAVITY 2019(8.277 kpc),棒角约 27°、旋臂俯仰角约 12–16°(画面取约 15°) 取自公开综述的典型值。画面标「模拟渲染 · 非照片」。
 距离:LMC 49.59 kpc(Pietrzyński 等 2019《Nature》),SMC 62.44 kpc(Graczyk 等 2020),M87 16.4 Mpc / M87* 质量 6.5×10⁹ M☉(EHT 2019 论文 I、VI)。
+
+## C2.9b 星域 VII 第二批(2026-10-30)
+| 文件 | 来源 | 署名 | 许可 |
+|---|---|---|---|
+| x/dsoimg/virgo-0..3 / -s(+ m 手机版) | NOIRLab noirlab2521a(薇拉·鲁宾天文台首批影像,室女座星系团南部) | NSF–DOE Vera C. Rubin Observatory / NOIRLab / SLAC / AURA | CC BY 4.0 |
+| x/dsoimg/smacs-0..3 / -s(+ m 手机版) | ESA/Webb weic2209a(韦布第一深场 SMACS 0723) | NASA, ESA, CSA, STScI | CC BY 4.0 |
+分层处理(去星/视差层)为本站加工,经 work/mk_dsolayers7.py 生成。

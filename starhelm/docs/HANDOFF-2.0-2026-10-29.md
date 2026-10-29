@@ -59,3 +59,9 @@
 ## 10-30 00:0x 更新(C22,Hark 项目「天枢 Starhelm」窗口)
 - 上线 3d19070 C2.8b:蟹状星云脉冲星 / Geminga / 磁星 SGR 1806−20 可飞抵;Sgr A* 接 EHT 真实影像;BUG-02 已修(含跃迁越过日球层顶自动播 PWS)。详见 DEVLOG-2.0-C22.md。测试 work/t28b.py(W H rm 标签 目标列表 [169])。
 - 七星域现状:I–VI 完成。下一步 VII 宇宙(王磊 23:48 问):大小麦哲伦云、室女座星系团、哈勃深场、宇宙网 + 普朗克 CMB 末端(M31/M51/M104 已可飞抵)。按流程先出方案 + 效果图给王磊确认再开发。BUG-01 仍待发话。
+
+## 2026-10-30 01:2x 追加 · C2.9b
+- C2.9b 上线:室女座星系团 + 韦布深场 SMACS 0723(见 docs/DEVLOG-2.0-C29b.md)。航图 VI/VII 现有 11 个可飞抵深空目标。
+- 下一步候选:C2.9c 宇宙网 + CMB(星域 VII 收尾,先方案+效果图);BUG-01 待王磊发话。
+- 环境:沙盒重置后需 `pip install --user numpy pillow playwright && python3 -m playwright install chromium`。
+- push 前必 `git fetch origin main && git rebase origin/main`(多窗口并行)。
