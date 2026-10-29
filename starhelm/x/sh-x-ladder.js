@@ -40,15 +40,19 @@
     ['sirius', '天狼星', 4, 8.6 * LY, 'sirius', '夜空中最亮的恒星'],
     ['vega', '织女星', 4, 25 * LY, 'vega', '夏季大三角之一'],
     ['trappist1', 'TRAPPIST-1', 4, 40.7 * LY, 'trappist1', '7 颗岩质行星的红矮星系统'],
-    ['orion', '猎户座大星云', 5, 1344 * LY, null, '离我们最近的大型恒星诞生区'],
-    ['crab', '蟹状星云', 5, 6500 * LY, null, '1054 年超新星遗迹,中心有脉冲星'],
-    ['eagle', '鹰状星云', 5, 7000 * LY, null, '「创生之柱」所在'],
-    ['sgra', '银心 人马座 A*', 5, 26700 * LY, null, '银河中心的超大质量黑洞'],
-    ['mc', '大小麦哲伦云', 6, 160000 * LY, null, '银河的两个卫星星系(约 16 万 / 20 万光年)'],
-    ['andromeda', '仙女座星系', 6, 2.5e6 * LY, null, '离我们最近的大型旋涡星系'],
-    ['virgo', '室女座星系团', 6, 5.4e7 * LY, null, '上千个星系组成的星系团'],
-    ['hdf', '哈勃深场', 6, 1.3e10 * LY, null, '最远的星系光行距离约 130 亿光年']
-  ].map(function (r) { return { id: r[0], zh: r[1], dom: r[2], km: r[3], body: r[4], note: r[5], gate: r[2] >= 4 }; });
+    ['orion', '猎户座大星云', 5, 1344 * LY, null, '离我们最近的大型恒星诞生区', 'M42'],
+    ['crab', '蟹状星云', 5, 6500 * LY, null, '1054 年超新星遗迹,中心有脉冲星', 'M1'],
+    ['eagle', '鹰状星云', 5, 7000 * LY, null, '「创生之柱」所在', 'M16'],
+    ['sgra', '银心 人马座 A*', 5, 26996 * LY, null, '银河中心的超大质量黑洞', 'Sgr A*'],
+    // C2.9a 星域 VII:可飞抵的接深空航点(SHXDV);室女座星系团、深场在 C2.9b
+    ['lmc', '大麦哲伦云', 6, 161700 * LY, null, '银河系最大的卫星星系;飞出银河后可回望银河', 'LMC'],
+    ['smc', '小麦哲伦云', 6, 203500 * LY, null, '被大麦哲伦云和银河系一起撕扯的矮星系', 'NGC 292'],
+    ['andromeda', '仙女座星系', 6, 2.5e6 * LY, null, '离我们最近的大型旋涡星系', 'M31'],
+    ['m87', '室女座 A · M87', 6, 5.35e7 * LY, null, '室女座星系团中心的巨椭圆星系', 'M87'],
+    ['m87bh', 'M87* 黑洞', 6, 5.35e7 * LY, null, '2019 年人类第一张黑洞照片的主角', 'M87*'],
+    ['virgo', '室女座星系团', 6, 5.4e7 * LY, null, '上千个星系组成的星系团(C2.9b 开放)'],
+    ['hdf', '韦布深场', 6, 4.24e9 * LY, null, 'SMACS 0723 星系团,光行距离约 42 亿光年(C2.9b 开放)']
+  ].map(function (r) { return { id: r[0], zh: r[1], dom: r[2], km: r[3], body: r[4], note: r[5], dso: r[6] || null, gate: r[2] >= 4 && !r[6] }; });
   var BY = {}; D.forEach(function (d) { BY[d.id] = d; });
   // 驾驶舱里有、但阶梯未列出的星球(水星、金星、天王星、海王星)归 III 行星世界
   function dom(id) { var d = BY[id]; if (d) return d.dom; return id === 'earth' ? 0 : id === 'moon' || id === 'sun' ? 1 : id === 'pluto' ? 3 : 2; }
@@ -91,12 +95,12 @@
     });
     function paint() {
       lad.querySelectorAll('.xl-r').forEach(function (b) { var on = +b.dataset.d === sel; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
-      var d = DOMS[sel]; sc.textContent = '星域 ' + d.n + ' ' + d.zh + ' · 尺度 ' + d.scale + (sel >= 4 ? ' · 快捷目的地都设有虫洞门' : '');
+      var d = DOMS[sel]; sc.textContent = '星域 ' + d.n + ' ' + d.zh + ' · 尺度 ' + d.scale + (sel >= 5 ? ' · ✦ 标记的目的地可真实飞抵(曲率跃迁,时间已压缩)' : sel >= 4 ? ' · 快捷目的地都设有虫洞门' : '');
       dst.innerHTML = '';
       D.filter(function (x) { return x.dom === sel; }).forEach(function (x) {
         var b = document.createElement('button'); b.type = 'button'; b.className = 'xl-d'; b.dataset.id = x.id; b.title = x.note;
         b.classList.toggle('on', x.id === curId || (x.body && x.body === curId && !BY[curId]));
-        b.innerHTML = '<span class="t">' + x.zh + (x.gate ? '<span class="xl-g">虫洞门</span>' : '') + (x.body ? '' : '<span class="xl-p">规划</span>') + '</span><small>' + (function () { var k = distOf ? distOf(x) : x.km; return k >= 1 ? '约 ' + fd(k) : '就在附近'; })() + '</small>';
+        b.innerHTML = '<span class="t">' + x.zh + (x.gate ? '<span class="xl-g">虫洞门</span>' : '') + (x.body ? '' : x.dso && window.SHXDV && SHXDV.has(x.dso) ? '<span class="xl-p" style="color:#f0c97a">✦ 可飞抵</span>' : '<span class="xl-p">规划</span>') + '</span><small>' + (function () { var k = distOf ? distOf(x) : x.km; return k >= 1 ? '约 ' + fd(k) : '就在附近'; })() + '</small>';
         b.onclick = function () { curId = x.id; paint(); if (onPick) onPick(x); };
         dst.appendChild(b);
       });

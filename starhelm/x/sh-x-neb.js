@@ -21,7 +21,7 @@
     M20: { k: 'neb', c: ['#684a46', '#d06070', '#8fb0ff'], dust: .85, sat: 1.6, st: '#dfe8ff' },
     M57: { k: 'ring', c: ['#7a3a2a', '#e08060', '#a8e0d8'], dust: 0, sat: 1.5, st: '#ffffff' },
     M104: { k: 'gal', c: ['#534f49', '#a8a0a8', '#fff0d8'], inc: 84, arms: 0, wind: 0, sat: 1.1, lane: 1, bulge: 1.8 }
-  };
+  };   // C2.9a 起星域 VII 目标由 sh-x-cosmos.js 经 SHXNB.add 注册(bar 棒状核球 [长,宽] · jet 喷流位置角 · ell 椭圆星系无盘面)
   var R = 600;
   var T, X, scn = null, grp = null, cur = null, mats = [], tier = 1, tag = null, obs = false, t0 = 0, added = false, warned = false, vis = 0, ang = 0;
 
@@ -81,16 +81,18 @@
     var c = d.c, sat = d.sat || 1.5;
     if (d.k === 'gal') {
       var disk = new T.Group(); disk.rotation.z = (d.pa || 0) * Math.PI / 180; var tilt = new T.Group(); tilt.rotation.x = -(d.inc || 0) * Math.PI / 180; disk.add(tilt); body.add(disk);
-      tilt.add(cloud(3, R0() * 50, c, sat, oct));
+      var dk = cloud(3, R0() * 50, c, sat, oct); if (d.ell) { dk.scale.set(1, d.ell, 1); dk.material.userData.a = 1.3; } tilt.add(dk);
       var cA = col(c[2], sat), cB = col(c[1], sat * 1.2), arms = d.arms || 0, wind = d.wind || 0;
       tilt.add(points(NP, function (i, o) {
         var t = Math.pow(R0(), .75), a;
         if (arms && R0() < .78) a = (i % arms) * 2 * Math.PI / arms + t * wind * Math.PI + (R0() - .5) * .55 * (1.2 - t); else a = R0() * 6.2832;
-        var rr = .08 + t * .9; o.p[0] = Math.cos(a) * rr; o.p[1] = Math.sin(a) * rr; o.p[2] = (R0() - .5) * .04 * (1 - t);
+        var rr = .08 + t * .9; o.p[0] = Math.cos(a) * rr; o.p[1] = Math.sin(a) * rr * (d.ell || 1); o.p[2] = (R0() - .5) * .04 * (1 - t);
         var m = Math.min(1, t * 1.4), br = .35 + .65 * R0();
         o.c[0] = (cA.r + (cB.r - cA.r) * m) * br; o.c[1] = (cA.g + (cB.g - cA.g) * m) * br; o.c[2] = (cA.b + (cB.b - cA.b) * m) * br; o.s = 1 + R0() * 2.2;
       }, .9));
       var bu = cloud(4, 0, c, sat, oct); bu.scale.setScalar(.34 * (d.bulge || 1)); body.add(bu);
+      if (d.bar) { var br2 = cloud(4, 0, c, sat, oct); br2.scale.set(d.bar[0], d.bar[1], 1); br2.material.userData.a = .8; tilt.add(br2); }   // C2.9a 棒旋 / 不规则星系的棒
+      if (d.jet != null) { var jt = cloud(4, 0, ['#000000', '#6fa8ff', '#e8f2ff'], 1.2, oct); jt.scale.set(.018, .42, 1); jt.material.userData.a = .9; var jg = new T.Group(); jg.rotation.z = d.jet * Math.PI / 180; jt.position.y = .4; jg.add(jt); body.add(jg); }   // M87 喷流
       if (d.lane) { var ln = cloud(5, R0() * 9, c, sat, oct, 'lane'); ln.rotation.z = (d.pa || 0) * Math.PI / 180; body.add(ln); }
     } else {
       var kk = d.k === 'ring' ? 1 : d.k === 'snr' ? 2 : 0;
@@ -230,6 +232,6 @@
     if (ev === 'close') { obs = false; if (tag) tag.style.display = 'none'; }
   }
   (function wait(n) { if (window.SHXC && SHXC.on) { SHXC.on(hook); return; } if (n < 150) setTimeout(function () { wait(n + 1); }, 100); })(0);
-  window.SHXNB = { has: function (k) { return !!P[k]; }, observe: observe, endObs: function () { obs = false; },
+  window.SHXNB = { has: function (k) { return !!P[k]; }, add: function (k, d) { P[k] = d; }, observe: observe, endObs: function () { obs = false; },
     state: function () { return { cur: cur, vis: +vis.toFixed(3), angDeg: +(ang * 180 / Math.PI).toFixed(2), tier: tier, obs: obs, n: mats.length, va: +va.toFixed(3), tag: !!(tag && tag.style.display === 'flex') }; } };
 })();

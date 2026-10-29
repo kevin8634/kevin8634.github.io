@@ -144,3 +144,13 @@
 |---|---|---|---|---|---|
 | x/dsoimg/sgra-0.webp、sgra-0m.webp | https://www.eso.org/public/images/eso2208-eht-mwa/ 「First image of the black hole at the heart of the Milky Way」(EHT 2022,1.3 mm 射电) | https://cdn.eso.org/images/large/eso2208-eht-mwa.jpg | EHT Collaboration | CC BY 4.0(ESO,https://www.eso.org/public/outreach/copyright/) | 缩至 1400 px(手机 720 px),外圈 25% 羽化到黑(整幅显示不露方框),WebP q82/q80;约 18 KB / 7 KB,只在打开 Sgr A* 照片时加载 |
 蟹状星云脉冲星、杰敏卡、磁星 SGR 1806−20:纯程序渲染(sh-x-exo.js 光线追踪),无新增素材文件;物理参数来源写在各自资料卡「来源」行。
+
+## C2.9a · 星域 VII 宇宙第一批(2026-10-30)
+| 文件 | 来源页 | 文件 URL | 署名 | 许可 | 处理 |
+|---|---|---|---|---|---|
+| x/dsoimg/lmc-0…3.webp、lmc-s.webp(手机 *m.webp) | https://www.eso.org/public/images/magellan-ch17-bardon-cc/ 「Large Magellanic Cloud」(拉西拉,单反,2848×1881) | https://cdn.eso.org/images/large/magellan-ch17-bardon-cc.jpg | Zdeněk Bardon/ESO | CC BY 4.0(ESO,https://www.eso.org/public/outreach/copyright/) | 缩至 1600 px(手机 800 px),work/mk_dsolayers7.py 去星(THR 0.10)按亮度分 4 层 + 星点层 |
+| x/dsoimg/smc-0…3.webp、smc-s.webp(手机 *m.webp) | https://www.eso.org/public/images/eso1008b/ 「The Small Magellanic Cloud」(DSS2 红 + 蓝) | https://cdn.eso.org/images/large/eso1008b.jpg | ESO/Digitized Sky Survey 2. Acknowledgement: Davide De Martin | CC BY 4.0(ESO) | 缩至 1600 px,3×3 中值降噪 + 黑场压低(底片颗粒),再分 4 层 + 星点层 |
+| x/dsoimg/m87-0…3.webp、m87-s.webp(手机 *m.webp) | https://esahubble.org/images/heic2411b/ 「M87」(哈勃,2024) | https://cdn.esahubble.org/archives/images/large/heic2411b.jpg | NASA, ESA, A. Lessing (Stanford University), E. Baltz (Stanford University), M. Shara (AMNH), J. DePasquale (STScI) | CC BY 4.0(ESA/Hubble,https://esahubble.org/copyright/) | 缩至 1600 px,分 4 层 + 星点层 |
+| x/dsoimg/m87bh-0.webp、m87bh-0m.webp | https://www.eso.org/public/images/eso1907a/ 「First image of a black hole」(EHT 2019,1.3 mm 射电) | https://cdn.eso.org/images/large/eso1907a.jpg | EHT Collaboration | CC BY 4.0(ESO) | 居中裁方,缩至 1400 px(手机 720 px),WebP q82 |
+回望银河(x/sh-x-cosmos.js):纯程序生成(对数螺旋臂 + 棒 + 核球 + 尘埃带 shader),无新增素材;盘面朝向用 IAU 银河坐标定义(北银极 RA 192.85948°、Dec +27.12825°,银心 RA 266.405°、Dec −28.936°),银心距离 GRAVITY 2019(8.277 kpc),棒角约 27°、旋臂俯仰角约 12–16°(画面取约 15°) 取自公开综述的典型值。画面标「模拟渲染 · 非照片」。
+距离:LMC 49.59 kpc(Pietrzyński 等 2019《Nature》),SMC 62.44 kpc(Graczyk 等 2020),M87 16.4 Mpc / M87* 质量 6.5×10⁹ M☉(EHT 2019 论文 I、VI)。

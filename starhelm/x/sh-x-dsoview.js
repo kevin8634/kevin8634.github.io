@@ -218,7 +218,7 @@
   function hudShow() {
     css(); if (hud) hud.remove(); var root = X._.root(); if (!root) return;
     hud = el('div'); hud.id = 'xdv-hud';
-    hud.innerHTML = '<div class="h"><span>' + (V.home ? '返航 · 曲率跃迁' : '银河星域 · 曲率跃迁') + '</span><b class="ph">转向</b></div><div class="n">' + V.name + ' <small style="color:#8fa3c2">' + (V.en || '') + '</small></div>' +
+    hud.innerHTML = '<div class="h"><span>' + (V.home ? '返航 · 曲率跃迁' : V.d && V.d.vii ? '星域 VII 宇宙 · 曲率跃迁' : '银河星域 · 曲率跃迁') + '</span><b class="ph">转向</b></div><div class="n">' + V.name + ' <small style="color:#8fa3c2">' + (V.en || '') + '</small></div>' +
       '<div class="d">—</div><div class="bar"><i></i></div><div class="s">—</div><span class="tc">时间已压缩</span><span class="tc">曲率驱动 · 猜想</span><br><button type="button">中止跃迁 · Esc</button>';
     hud.querySelector('button').onclick = function () { abort(); };
     root.appendChild(hud); root.classList.add('xdv-on');

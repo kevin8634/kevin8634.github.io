@@ -533,6 +533,7 @@
       // C1.7 尺度阶梯航图:选快捷目的地;太阳系内有星球的直接设为驾驶舱目标,其余只做规划(跃迁第 4 步开放)
       PL.domOf = SHXL.dom;
       PL.lad = SHXL.render($('#xs-doms', c), PL.tgt, function (x) {
+        if (x.dso && window.SHXDV && SHXDV.has(x.dso) && SHXDV.lock(x.dso, '航图')) { closeCards(); blip(560, .06, .04); return; }   // C2.9a:VI / VII 可飞抵目的地 → 深空航点(锚点卡「出发」)
         PL.pick = x; PL.tgt = x.body || x.id; if (x.body && BY[x.body]) I.setTarget(x.body, '航图'); else if (window.SHXAN) SHXAN.lock({ id: x.id, zh: x.zh, type: '星域 ' + SHXL.DOMS[x.dom].n + ' ' + SHXL.DOMS[x.dom].zh + ' · 仅规划', km: x.km, far: true }, '航图', true); blip(560, .06, .04); refreshPlan();
       }, function (x) { return x.body && BY[x.body] ? (x.id === 'iss' ? 420 : distTo(BY[x.body])) : x.km; });
     } else {
