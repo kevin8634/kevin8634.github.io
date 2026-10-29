@@ -133,24 +133,75 @@
   function dist(b) { var S = X._.S; return Math.hypot(b.wp[0] - S.pos[0], b.wp[1] - S.pos[1], b.wp[2] - S.pos[2]); }
   function sstep(a, b, x) { var t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
 
-  var tv = null, tq = null;
+
+  /* C2.6e 近处程序化体积:张角大到 billboard 失真时(进入/贴近星云),全屏光线步进一个以目标为心的球体,
+     发射 + 吸收(暗尘遮挡背景星),颜色沿用 P[key];仅星云类(neb/snr/ring),星系不做。仍是模拟渲染。 */
+  var VVS = 'varying vec2 vN;void main(){vN=position.xy;gl_Position=vec4(position.xy,0.0,1.0);}';
+  var VFS = [
+    'precision highp float;varying vec2 vN;uniform mat4 uIP,uMW;uniform vec3 uC,c0,c1,c2,cS;uniform float uT,uS,uA,uK,uD,uN;', NOISE,
+    'float dens(vec3 q,out float w,out float du){float r=length(q);vec3 s=q*1.7+uS;float n=fbm(s+vec3(0.,0.,uT*.02));w=fbm(q*3.3+n*2.2+uS*1.3);',
+    ' float e;if(uK<.5){e=smoothstep(1.0,.15,r+(n-.5)*.6);du=uD>0.0?uD*1.6*smoothstep(.48,.66,fbm(q*2.4+n*1.5+uS*2.1))*e:0.0;float g=smoothstep(.38,.85,w);return e*g*g*3.2;}',
+    ' if(uK<1.5){float rr=r+(n-.5)*.1;e=exp(-pow((rr-.56)/.1,2.0));du=0.0;return e*pow(w,1.5)*1.6+.08*smoothstep(.55,0.,r)*w;}',
+    ' e=exp(-pow((r-.7+(n-.5)*.3)/.25,2.0))+.3*smoothstep(.9,0.,r);float f=1.0-abs(w*2.0-1.0);du=0.0;return e*(pow(f,6.0)*1.1+.05*w);}',
+    'void main(){vec4 v=uIP*vec4(vN,1.0,1.0);vec3 rd=normalize(mat3(uMW)*normalize(v.xyz/v.w));',
+    ' float b=dot(rd,uC),c=dot(uC,uC)-1.0,h=b*b-c;if(h<0.0)discard;h=sqrt(h);float t0=max(b-h,0.0),t1=b+h;if(t1<=0.0)discard;',
+    ' float dt=(t1-t0)/uN,j=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453);vec3 acc=vec3(0.);float tr=1.0;',
+    ' for(int i=0;i<64;i++){if(float(i)>=uN||tr<.03)break;float t=t0+(float(i)+j)*dt;vec3 q=t*rd-uC;float w,du;float d=dens(q,w,du);',
+    '  vec3 col=mix(c0,c1,smoothstep(.25,.6,w));col=mix(col,c2,smoothstep(.55,.95,w*d*.6+.1));',
+    '  acc+=tr*col*d*dt*1.3;tr*=exp(-du*dt*6.0);}',
+    ' acc=1.0-exp(-acc*1.15);gl_FragColor=vec4(acc*uA,(1.0-tr)*uA);}'
+  ].join('\n');
+  var vsc = null, vm = null, vq = 0, vRT = null, bsc = null, bm2 = null, vcc = null;   // 体积画在半分辨率离屏缓冲,再叠回屏幕(省约 3/4 像素)
+  function volMat(key) {
+    var d = P[key], kk = d.k === 'ring' ? 1 : d.k === 'snr' ? 2 : 0, sat = d.sat || 1.5;
+    if (!vsc) { vsc = new T.Scene(); var g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(new Float32Array([-1, -1, 0, 3, -1, 0, -1, 3, 0]), 3)); var me = new T.Mesh(g); me.frustumCulled = false; vsc.add(me); }
+    if (vm) vm.dispose();
+    vm = new T.ShaderMaterial({ vertexShader: VVS, fragmentShader: VFS, transparent: true, depthWrite: false, depthTest: false,
+      blending: T.CustomBlending, blendSrc: T.OneFactor, blendDst: T.OneMinusSrcAlphaFactor,
+      uniforms: { uIP: { value: new T.Matrix4() }, uMW: { value: new T.Matrix4() }, uC: { value: new T.Vector3() }, uT: { value: 0 }, uS: { value: key.length * 3.7 }, uA: { value: 0 }, uK: { value: kk }, uD: { value: d.dust || 0 },
+        uN: { value: [12, 20, 32][tier] }, uOct: { value: [3, 4, 5][tier] }, c0: { value: col(d.c[0], sat) }, c1: { value: col(d.c[1], sat) }, c2: { value: col(d.c[2], sat) }, cS: { value: col(d.st || '#dfe8ff', 1) } } });
+    vsc.children[0].material = vm; vq = key;
+  }
+  function volume(LI, b, dx, dy, dz, tn, tt) {
+    var d = P[b.key]; if (!d || d.k === 'gal') return 0;
+    var a = sstep(0.5, 0.95, tn); if (a <= 0.004) return 0;
+    if (vq !== b.key || !vm) volMat(b.key);
+    var u = vm.uniforms, Rb = b.R || 1, c = LI.cam0; c.updateMatrixWorld();
+    u.uIP.value.copy(c.projectionMatrixInverse || new T.Matrix4().copy(c.projectionMatrix).invert()); u.uMW.value.copy(c.matrixWorld);
+    u.uC.value.set(dx / Rb, dy / Rb, dz / Rb); u.uT.value = tt; u.uA.value = a;
+    var rd = LI.rd, sz = rd.getDrawingBufferSize ? rd.getDrawingBufferSize(new T.Vector2()) : { x: innerWidth, y: innerHeight }, w = Math.max(64, sz.x >> 1), h = Math.max(64, sz.y >> 1);
+    if (!vRT) {
+      vRT = new T.WebGLRenderTarget(w, h, { depthBuffer: false }); vcc = new T.Color();
+      bsc = new T.Scene(); var g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(new Float32Array([-1, -1, 0, 3, -1, 0, -1, 3, 0]), 3));
+      bm2 = new T.ShaderMaterial({ vertexShader: 'varying vec2 vU;void main(){vU=position.xy*.5+.5;gl_Position=vec4(position.xy,0.0,1.0);}', fragmentShader: 'precision highp float;varying vec2 vU;uniform sampler2D tV;void main(){gl_FragColor=texture2D(tV,vU);}',
+        transparent: true, depthWrite: false, depthTest: false, blending: T.CustomBlending, blendSrc: T.OneFactor, blendDst: T.OneMinusSrcAlphaFactor, uniforms: { tV: { value: vRT.texture } } });
+      var bq = new T.Mesh(g, bm2); bq.frustumCulled = false; bsc.add(bq);
+    } else if (vRT.width !== w || vRT.height !== h) vRT.setSize(w, h);
+    var prev = rd.getRenderTarget(), ca = rd.getClearAlpha(); rd.getClearColor(vcc);
+    rd.setRenderTarget(vRT); rd.setClearColor(0x000000, 0); rd.clear(true, false, false); rd.render(vsc, c);
+    rd.setRenderTarget(prev); rd.setClearColor(vcc, ca); rd.render(bsc, c); return a;
+  }
+
+  var tv = null, tq = null, va = 0;
   function layer(LI) {
     var BY = X._.BY, b = BY && BY.tmpdso, root = X._.root && X._.root();
     var ok = b && !b.off && b.key && P[b.key] && b.wp, want = ok && (X._.S.target === 'tmpdso' || obs);
-    if (!want) { if (grp) grp.visible = false; if (tag) tag.style.display = 'none'; vis = 0; return; }
+    if (!want) { if (grp) grp.visible = false; if (tag) tag.style.display = 'none'; vis = 0; va = 0; return; }
     if (cur !== b.key) build(b.key);
     if (!grp) return;
     var S = X._.S, dx = b.wp[0] - S.pos[0], dy = b.wp[1] - S.pos[1], dz = b.wp[2] - S.pos[2], dd = Math.hypot(dx, dy, dz);
     if (!(dd > 0)) { grp.visible = false; return; }
     var tn = (b.R || 1) / dd, ta = Math.max(Math.min(tn, 1.6), 0.0022); ang = Math.atan(tn);   // 半张角正切;远处至少约 0.25°
     grp.visible = true; grp.position.set(dx / dd * R, dy / dd * R, dz / dd * R); grp.lookAt(0, 0, 0); grp.scale.setScalar(R * ta);
-    var a = (0.35 + 0.65 * sstep(0.004, 0.06, tn)) * (1 - sstep(1.0, 1.7, tn));   // 远时偏暗;飞进星云内部(张角过大)淡出
+    var a = (0.35 + 0.65 * sstep(0.004, 0.06, tn)) * (1 - sstep(0.6, 1.0, tn));   // 远时偏暗;贴近/进入星云时淡出,交给近处体积(C2.6e)
     var tt = rm() ? 0 : (performance.now() - t0) / 1000, pr = LI.rd.getPixelRatio ? LI.rd.getPixelRatio() : 1, H = LI.H || innerHeight;
     var px = ta / Math.tan(Math.PI / 6) * H / 2;   // 星云半径的屏幕像素(cam0 竖直视场 60°)
     for (var i = 0; i < mats.length; i++) { var m = mats[i], u = m.uniforms; u.uA.value = a * m.userData.a; if (u.uT) u.uT.value = tt; if (m.userData.pt) u.uSz.value = pr * Math.max(.6, Math.min(2.2, px / 160)); }
     vis = a;
-    LI.rd.render(scn, LI.cam0);
+    if (a > .003) LI.rd.render(scn, LI.cam0);
+    va = volume(LI, b, dx, dy, dz, tn, tt);
     if (!root) return; var tg = mkTag(root);
+    if (va > .3) { var W0 = root.clientWidth || innerWidth, H0 = root.clientHeight || innerHeight; tg.style.display = 'flex'; tg.style.transform = 'translate(' + (W0 / 2).toFixed(0) + 'px,' + Math.min(170, H0 * .22).toFixed(0) + 'px) translate(-50%,0)'; var n0 = tg.querySelector('i'), z0 = (b.zh || '') + (dd < (b.R || 1) ? ' 内部' : ' 近处'); if (n0.textContent !== z0) n0.textContent = z0; return; }
     if (px < 26 || a < .2) { tg.style.display = 'none'; return; }
     if (!tv) { tv = new T.Vector3(); tq = new T.Quaternion(); }
     tq.copy(S.q).invert(); tv.set(dx / dd, dy / dd, dz / dd).applyQuaternion(tq);
@@ -180,5 +231,5 @@
   }
   (function wait(n) { if (window.SHXC && SHXC.on) { SHXC.on(hook); return; } if (n < 150) setTimeout(function () { wait(n + 1); }, 100); })(0);
   window.SHXNB = { has: function (k) { return !!P[k]; }, observe: observe, endObs: function () { obs = false; },
-    state: function () { return { cur: cur, vis: +vis.toFixed(3), angDeg: +(ang * 180 / Math.PI).toFixed(2), tier: tier, obs: obs, n: mats.length, tag: !!(tag && tag.style.display === 'flex') }; } };
+    state: function () { return { cur: cur, vis: +vis.toFixed(3), angDeg: +(ang * 180 / Math.PI).toFixed(2), tier: tier, obs: obs, n: mats.length, va: +va.toFixed(3), tag: !!(tag && tag.style.display === 'flex') }; } };
 })();
