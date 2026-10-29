@@ -135,7 +135,7 @@
     if (!inited && !init()) return;
     if (!tv) { tv = new T.Vector3(); tq = new T.Quaternion(); }
     var S = X._.S, mode = SHXD.mode(), lf = SHXD.lf ? SHXD.lf() : 0, dt = Math.min(0.1, (a && a.dt) || 0.016), rm = reduced();
-    var tA = mode === 1 ? 1 : 0;
+    var rr = Math.hypot(S.pos[0], S.pos[1], S.pos[2]) / AU, far = rr > 80000 ? 0 : rr < 40000 ? 1 : 1 - (rr - 40000) / 40000, tA = mode === 1 ? far : 0;   // C2.7c:离日 >约 1 光年插画同步淡出
     artA = rm ? tA : artA + (tA - artA) * Math.min(1, dt * 3);
     labA = lf;
     if (tA && !wantLoad) wantLoad = true;

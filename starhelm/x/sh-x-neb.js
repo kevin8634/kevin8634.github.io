@@ -1,0 +1,184 @@
+/* 天枢 Starhelm 2.0 · C2.7c 驾驶舱程序化星云 / 星系(SHXNB)—— 模拟渲染,非照片
+ * 王磊 10-29 11:57:抵达深空目标后不自动弹影像,改为二选一「真实照片 / 舷窗观测(模拟渲染)」;驾驶舱里目标方位要有程序化星云。
+ * - 锁定深空航点(BY.tmpdso)后,在目标真实方向画一团程序化星云 / 星系,半张角 = 半径 ÷ 当前距离(越飞越近越大;抵达约 3 倍半径处约 18°)。
+ * - 画在只随相机旋转的天空层(cam0),不用天文尺度坐标,避开远距离 float32 精度问题;挂 SHXC.layers.bg(星空之后、主场景之前)。
+ * - 星云:billboard 层叠 + fBm 域扭曲噪声 shader(发光层加法混合 + 普通混合的暗尘层)+ 嵌入星点粒子;
+ *   M57 环状、M1 纤维状;星系(M31 / M51 / M104)= 旋臂粒子盘 + 弥散盘 + 核球,按真实倾角 / 位置角倾斜,M104 加尘埃带。
+ * - 配色:各目标 ESA/Hubble 影像小图离线取三档亮度色(work/ 取样脚本),只取颜色;shader 里提饱和度。
+ * - 性能三档:高(桌面 ≥8 线程)5 层 / 6000 粒子 / 5 阶噪声 · 中 3 / 2600 / 4 · 低(手机、内存 <4 GB)2 / 900 / 3。减少动态:静止不漂移。
+ * - 星云下方标「模拟渲染 · 非照片」+「真实照片」按钮。只用 ShaderMaterial / Points / PlaneGeometry,r186 与 ?three=169 通用。
+ */
+(function () {
+  'use strict';
+  var P = {
+    M42: { k: 'neb', c: ['#5c3e38', '#b0606a', '#ffb3c4'], dust: .55, sat: 1.7, st: '#cfe2ff' },
+    M1: { k: 'snr', c: ['#706f4e', '#d07a50', '#b8d8ff'], dust: 0, sat: 1.6, st: '#cfe2ff' },
+    M16: { k: 'neb', c: ['#565c61', '#7f9a88', '#e8c79a'], dust: .8, sat: 1.5, st: '#dfe8ff' },
+    M51: { k: 'gal', c: ['#444445', '#8a7cc0', '#ffdcb8'], inc: 20, arms: 2, wind: 3.2, sat: 1.4 },
+    'NGC 3372': { k: 'neb', c: ['#937b60', '#c98b5a', '#9fd0ff'], dust: .7, sat: 1.6, st: '#e6efff' },
+    M31: { k: 'gal', c: ['#635356', '#9a8ab8', '#ffe2b0'], inc: 77, arms: 2, wind: 2.4, sat: 1.3, pa: 38 },
+    M8: { k: 'neb', c: ['#7a655d', '#d07088', '#ffd0dc'], dust: .6, sat: 1.7, st: '#dfe8ff' },
+    M20: { k: 'neb', c: ['#684a46', '#d06070', '#8fb0ff'], dust: .85, sat: 1.6, st: '#dfe8ff' },
+    M57: { k: 'ring', c: ['#7a3a2a', '#e08060', '#a8e0d8'], dust: 0, sat: 1.5, st: '#ffffff' },
+    M104: { k: 'gal', c: ['#534f49', '#a8a0a8', '#fff0d8'], inc: 84, arms: 0, wind: 0, sat: 1.1, lane: 1, bulge: 1.8 }
+  };
+  var R = 600;
+  var T, X, scn = null, grp = null, cur = null, mats = [], tier = 1, tag = null, obs = false, t0 = 0, added = false, warned = false, vis = 0, ang = 0;
+
+  function rm() { return matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  function small() { return Math.min(screen.width, screen.height) < 700 || innerWidth <= 760 || (navigator.deviceMemory && navigator.deviceMemory < 4); }
+  function pickTier() { if (small()) return 0; return (navigator.hardwareConcurrency || 4) >= 8 ? 2 : 1; }
+  function col(h, sat) { var c = new T.Color(h), m = (c.r + c.g + c.b) / 3; c.r = Math.max(0, m + (c.r - m) * sat); c.g = Math.max(0, m + (c.g - m) * sat); c.b = Math.max(0, m + (c.b - m) * sat); return c; }
+  function rnd(s) { s = s % 2147483647; if (s <= 0) s += 2147483646; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+
+  var NOISE = [
+    'float h3(vec3 p){p=fract(p*0.3183099+.1);p*=17.0;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}',
+    'float n3(vec3 x){vec3 i=floor(x);vec3 f=fract(x);f=f*f*(3.0-2.0*f);',
+    ' return mix(mix(mix(h3(i),h3(i+vec3(1,0,0)),f.x),mix(h3(i+vec3(0,1,0)),h3(i+vec3(1,1,0)),f.x),f.y),mix(mix(h3(i+vec3(0,0,1)),h3(i+vec3(1,0,1)),f.x),mix(h3(i+vec3(0,1,1)),h3(i+vec3(1,1,1)),f.x),f.y),f.z);}',
+    'uniform float uOct;',
+    'float fbm(vec3 p){float a=.5,s=0.0;for(int i=0;i<6;i++){if(float(i)>=uOct)break;s+=a*n3(p);p=p*2.03+vec3(1.7,9.2,4.1);a*=.5;}return s;}'
+  ].join('\n');
+  var VS = 'varying vec2 vU;void main(){vU=uv*2.0-1.0;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}';
+  // uK:0 星云 1 环状 2 超新星遗迹纤维 3 星系弥散盘 4 核球 5 尘埃带(普通混合)
+  var FS = [
+    'precision highp float;varying vec2 vU;uniform float uT,uS,uA,uK,uD;uniform vec3 c0,c1,c2;', NOISE,
+    'void main(){vec2 p=vU;float r=length(p);if(r>1.0)discard;',
+    ' float n=fbm(vec3(p*2.1+uS,uT*.03+uS));float w=fbm(vec3(p*3.6+n*1.6,uS*1.7+uT*.02));float e,d;vec3 c;',
+    ' if(uK<.5){e=smoothstep(1.0,.12,r+(n-.5)*.75);d=e*pow(w,1.7)*1.9;}',
+    ' else if(uK<1.5){float rr=r+(n-.5)*.12;e=exp(-pow((rr-.56)/.15,2.0))+.18*smoothstep(.6,.0,r);d=e*(.55+.9*w);}',
+    ' else if(uK<2.5){e=smoothstep(1.0,.2,r+(n-.5)*.5);float f=1.0-abs(w*2.0-1.0);d=e*(pow(f,5.0)*1.6+.18*w);}',
+    ' else if(uK<3.5){e=exp(-r*3.2);d=e*(.5+.8*w)*1.2;}',
+    ' else if(uK<4.5){e=exp(-r*r*9.0);d=e*1.4+exp(-r*26.0);gl_FragColor=vec4(mix(c1,c2,e)*d*uA,1.0);return;}',
+    ' else{float lane=exp(-pow(p.y/.07,2.0))*smoothstep(1.0,.5,abs(p.x));float k=lane*(.75+.25*n);gl_FragColor=vec4(c0*.25,k*uA*.85);return;}',
+    ' c=mix(c0,c1,smoothstep(.25,.6,w));c=mix(c,c2,smoothstep(.55,.95,w*e+.15*e));',
+    ' gl_FragColor=vec4(c*d*uA,1.0);}'
+  ].join('\n');
+  var FSD = [
+    'precision highp float;varying vec2 vU;uniform float uT,uS,uA,uD;uniform vec3 c0;', NOISE,
+    'void main(){vec2 p=vU;float r=length(p);if(r>1.0)discard;float n=fbm(vec3(p*2.6+uS*3.1,uS+uT*.02));float m=fbm(vec3(p*5.0+n*2.0,uS*.7));',
+    ' float a=smoothstep(.52,.7,n*.6+m*.55)*smoothstep(1.0,.35,r)*uD;gl_FragColor=vec4(c0*.18,a*uA);}'
+  ].join('\n');
+  var PVS = 'attribute float aS;attribute vec3 aC;varying vec3 vC;uniform float uSz;void main(){vC=aC;vec4 mv=modelViewMatrix*vec4(position,1.0);gl_PointSize=max(1.0,aS*uSz);gl_Position=projectionMatrix*mv;}';
+  var PFS = 'precision highp float;varying vec3 vC;uniform float uA;void main(){vec2 q=gl_PointCoord*2.0-1.0;float r=dot(q,q);if(r>1.0)discard;gl_FragColor=vec4(vC*exp(-r*3.0)*uA,1.0);}';
+
+  function cloud(k, s, c, sat, oct, mode) {   // mode:'dust' 暗尘遮挡层 · 'lane' 星系尘埃带(都用普通混合)
+    var m = new T.ShaderMaterial({ vertexShader: VS, fragmentShader: mode === 'dust' ? FSD : FS, transparent: true, depthWrite: false, depthTest: false, blending: mode ? T.NormalBlending : T.AdditiveBlending,
+      uniforms: { uT: { value: 0 }, uS: { value: s }, uA: { value: 1 }, uK: { value: k }, uD: { value: 1 }, uOct: { value: oct }, c0: { value: col(c[0], sat) }, c1: { value: col(c[1], sat) }, c2: { value: col(c[2], sat) } } });
+    m.userData.a = 1; mats.push(m); var me = new T.Mesh(new T.PlaneGeometry(2, 2), m); me.frustumCulled = false; return me;
+  }
+  function points(n, gen, base) {
+    var g = new T.BufferGeometry(), pos = new Float32Array(n * 3), cs = new Float32Array(n * 3), ss = new Float32Array(n), o = { p: [0, 0, 0], c: [1, 1, 1], s: 1 };
+    for (var i = 0; i < n; i++) { gen(i, o); pos.set(o.p, i * 3); cs.set(o.c, i * 3); ss[i] = o.s; }
+    g.setAttribute('position', new T.BufferAttribute(pos, 3)); g.setAttribute('aC', new T.BufferAttribute(cs, 3)); g.setAttribute('aS', new T.BufferAttribute(ss, 1));
+    var m = new T.ShaderMaterial({ vertexShader: PVS, fragmentShader: PFS, transparent: true, depthWrite: false, depthTest: false, blending: T.AdditiveBlending, uniforms: { uSz: { value: 1 }, uA: { value: 1 } } });
+    m.userData.a = base || 1; m.userData.pt = 1; mats.push(m); var p = new T.Points(g, m); p.frustumCulled = false; return p;
+  }
+
+  function build(key) {
+    clear(); var d = P[key]; if (!d) return; tier = pickTier(); cur = key;
+    var oct = [3, 4, 5][tier], NL = [2, 3, 5][tier], NP = [900, 2600, 6000][tier], R0 = rnd(key.length * 7919 + key.charCodeAt(1) * 104729);
+    grp = new T.Group(); var body = new T.Group(); grp.add(body);
+    var c = d.c, sat = d.sat || 1.5;
+    if (d.k === 'gal') {
+      var disk = new T.Group(); disk.rotation.z = (d.pa || 0) * Math.PI / 180; var tilt = new T.Group(); tilt.rotation.x = -(d.inc || 0) * Math.PI / 180; disk.add(tilt); body.add(disk);
+      tilt.add(cloud(3, R0() * 50, c, sat, oct));
+      var cA = col(c[2], sat), cB = col(c[1], sat * 1.2), arms = d.arms || 0, wind = d.wind || 0;
+      tilt.add(points(NP, function (i, o) {
+        var t = Math.pow(R0(), .75), a;
+        if (arms && R0() < .78) a = (i % arms) * 2 * Math.PI / arms + t * wind * Math.PI + (R0() - .5) * .55 * (1.2 - t); else a = R0() * 6.2832;
+        var rr = .08 + t * .9; o.p[0] = Math.cos(a) * rr; o.p[1] = Math.sin(a) * rr; o.p[2] = (R0() - .5) * .04 * (1 - t);
+        var m = Math.min(1, t * 1.4), br = .35 + .65 * R0();
+        o.c[0] = (cA.r + (cB.r - cA.r) * m) * br; o.c[1] = (cA.g + (cB.g - cA.g) * m) * br; o.c[2] = (cA.b + (cB.b - cA.b) * m) * br; o.s = 1 + R0() * 2.2;
+      }, .9));
+      var bu = cloud(4, 0, c, sat, oct); bu.scale.setScalar(.34 * (d.bulge || 1)); body.add(bu);
+      if (d.lane) { var ln = cloud(5, R0() * 9, c, sat, oct, 'lane'); ln.rotation.z = (d.pa || 0) * Math.PI / 180; body.add(ln); }
+    } else {
+      var kk = d.k === 'ring' ? 1 : d.k === 'snr' ? 2 : 0;
+      for (var i = 0; i < NL; i++) {
+        var l = cloud(kk, R0() * 40 + i * 3.1, c, sat, oct), s = 1 - i * .09;
+        l.scale.set(s * (1 + (R0() - .5) * .25), s * (1 + (R0() - .5) * .25), 1); l.rotation.z = R0() * 6.28; l.position.z = (i - NL / 2) * .02;
+        l.material.userData.a = kk === 1 ? .8 : .9 / Math.sqrt(NL / 2); body.add(l);
+      }
+      if (d.dust) { var du = cloud(0, R0() * 30, ['#2a1e18', '#000000', '#000000'], 1, oct, 'dust'); du.material.uniforms.uD.value = d.dust; du.position.z = .05; body.add(du); }
+      var sc = col(d.st || '#dfe8ff', 1);
+      body.add(points(Math.round(NP * (kk === 1 ? .15 : .35)), function (i, o) {
+        var a = R0() * 6.2832, rr = Math.pow(R0(), .6) * .95; o.p[0] = Math.cos(a) * rr; o.p[1] = Math.sin(a) * rr; o.p[2] = (R0() - .5) * .2;
+        var br = R0() < .04 ? 2.2 : .4 + R0() * .8; o.c[0] = sc.r * br; o.c[1] = sc.g * br; o.c[2] = sc.b * br; o.s = br > 2 ? 3.2 : 1 + R0() * 1.4;
+      }, .8));
+      if (kk === 1) { var cs = cloud(4, 0, ['#000000', '#9fd8ff', '#ffffff'], 1, oct); cs.scale.setScalar(.05); body.add(cs); }   // M57 中心白矮星
+    }
+    scn.add(grp); t0 = performance.now();
+  }
+  function clear() {
+    if (grp) { scn.remove(grp); grp.traverse(function (o) { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); }
+    grp = null; mats = []; cur = null;
+  }
+  function css() {
+    if (document.getElementById('xnb-css')) return; var s = document.createElement('style'); s.id = 'xnb-css';
+    s.textContent = '#xnb-tag{position:absolute;left:0;top:0;z-index:5;pointer-events:auto;display:none;align-items:center;gap:6px;padding:3px 4px 3px 9px;border-radius:12px;font:11px/1.3 "Noto Sans SC",system-ui,sans-serif;color:#e8eef9;background:rgba(8,12,22,.66);border:1px solid rgba(255,159,178,.45);white-space:nowrap}' +
+      '#xnb-tag b{color:#ff9fb2;font-weight:500}#xnb-tag i{font-style:normal;color:#a9bad3}#xnb-tag button{font:inherit;cursor:pointer;border-radius:9px;padding:2px 9px;border:1px solid rgba(240,201,122,.6);background:rgba(240,201,122,.14);color:#ffe2a0}' +
+      '@media (max-width:640px){#xnb-tag{font-size:10.5px}#xnb-tag i{display:none}}';
+    document.head.appendChild(s);
+  }
+  function mkTag(root) {
+    if (tag && tag.parentNode === root) return tag; css(); if (tag) tag.remove();
+    tag = document.createElement('div'); tag.id = 'xnb-tag'; tag.innerHTML = '<span><b>模拟渲染 · 非照片</b> <i></i></span><button type="button">真实照片</button>';
+    tag.querySelector('button').onclick = function (e) {
+      e.stopPropagation(); if (!cur || !window.SHXDV) return;
+      var b = X._.BY.tmpdso, near = b && b.wp && dist(b) < (b.R || 0) * 12, la = near && SHXDV.lastArr && SHXDV.lastArr(cur);
+      SHXDV.open(cur, la ? { arrived: la } : {});
+    };
+    root.appendChild(tag); return tag;
+  }
+  function dist(b) { var S = X._.S; return Math.hypot(b.wp[0] - S.pos[0], b.wp[1] - S.pos[1], b.wp[2] - S.pos[2]); }
+  function sstep(a, b, x) { var t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+
+  var tv = null, tq = null;
+  function layer(LI) {
+    var BY = X._.BY, b = BY && BY.tmpdso, root = X._.root && X._.root();
+    var ok = b && !b.off && b.key && P[b.key] && b.wp, want = ok && (X._.S.target === 'tmpdso' || obs);
+    if (!want) { if (grp) grp.visible = false; if (tag) tag.style.display = 'none'; vis = 0; return; }
+    if (cur !== b.key) build(b.key);
+    if (!grp) return;
+    var S = X._.S, dx = b.wp[0] - S.pos[0], dy = b.wp[1] - S.pos[1], dz = b.wp[2] - S.pos[2], dd = Math.hypot(dx, dy, dz);
+    if (!(dd > 0)) { grp.visible = false; return; }
+    var tn = (b.R || 1) / dd, ta = Math.max(Math.min(tn, 1.6), 0.0022); ang = Math.atan(tn);   // 半张角正切;远处至少约 0.25°
+    grp.visible = true; grp.position.set(dx / dd * R, dy / dd * R, dz / dd * R); grp.lookAt(0, 0, 0); grp.scale.setScalar(R * ta);
+    var a = (0.35 + 0.65 * sstep(0.004, 0.06, tn)) * (1 - sstep(1.0, 1.7, tn));   // 远时偏暗;飞进星云内部(张角过大)淡出
+    var tt = rm() ? 0 : (performance.now() - t0) / 1000, pr = LI.rd.getPixelRatio ? LI.rd.getPixelRatio() : 1, H = LI.H || innerHeight;
+    var px = ta / Math.tan(Math.PI / 6) * H / 2;   // 星云半径的屏幕像素(cam0 竖直视场 60°)
+    for (var i = 0; i < mats.length; i++) { var m = mats[i], u = m.uniforms; u.uA.value = a * m.userData.a; if (u.uT) u.uT.value = tt; if (m.userData.pt) u.uSz.value = pr * Math.max(.6, Math.min(2.2, px / 160)); }
+    vis = a;
+    LI.rd.render(scn, LI.cam0);
+    if (!root) return; var tg = mkTag(root);
+    if (px < 26 || a < .2) { tg.style.display = 'none'; return; }
+    if (!tv) { tv = new T.Vector3(); tq = new T.Quaternion(); }
+    tq.copy(S.q).invert(); tv.set(dx / dd, dy / dd, dz / dd).applyQuaternion(tq);
+    var W = root.clientWidth || innerWidth, Hh = root.clientHeight || innerHeight;
+    if (tv.z > -0.05) { tg.style.display = 'none'; return; }
+    var fy = 1 / Math.tan(Math.PI / 6), fx = fy * Hh / W, x = (tv.x / -tv.z * fx + 1) * W / 2, y = (1 - tv.y / -tv.z * fy) * Hh / 2 + Math.min(px, Hh * .3) + 8;
+    if (x < 0 || x > W) { tg.style.display = 'none'; return; }
+    x = Math.max(110, Math.min(W - 110, x)); y = Math.max(150, Math.min(Hh - 250, y));   // 星云很大时标签夹在视野内(避开顶部航向条与底部控制台)
+    tg.style.display = 'flex'; tg.style.transform = 'translate(' + x.toFixed(0) + 'px,' + y.toFixed(0) + 'px) translate(-50%,0)';
+    var nm = tg.querySelector('i'), zh = b.zh || ''; if (nm.textContent !== zh) nm.textContent = zh;
+  }
+  function observe(key) {
+    if (!X || !X.isOpen || !X.isOpen()) return false; var b = X._.BY.tmpdso;
+    if (!b || b.off || b.key !== key) { if (!window.SHXDV || !SHXDV.lock(key, '抵达')) return false; }
+    obs = true; var S = X._.S; S.auto = false; S.base = 0; S.mult = 1; S.align = true;
+    if (window.SHXAN) SHXAN.hide();
+    X._.toast('舷窗观测 · 模拟渲染(程序生成,非照片)· 拖动环视,星云下方可看「真实照片」');
+    return true;
+  }
+  function init() {
+    T = window.THREE; X = window.SHXC; if (!T || !X || !X.layers || added) return; added = true;
+    scn = new T.Scene(); X.layers.bg.push(function (LI) { try { layer(LI); } catch (e) { if (!warned) { warned = true; console.warn('[SHXNB]', e); } } });
+  }
+  function hook(ev) {
+    if (ev === 'open' || ev === 'renderer' || ev === 'frame') { if (!added) init(); }
+    if (ev === 'close') { obs = false; if (tag) tag.style.display = 'none'; }
+  }
+  (function wait(n) { if (window.SHXC && SHXC.on) { SHXC.on(hook); return; } if (n < 150) setTimeout(function () { wait(n + 1); }, 100); })(0);
+  window.SHXNB = { has: function (k) { return !!P[k]; }, observe: observe, endObs: function () { obs = false; },
+    state: function () { return { cur: cur, vis: +vis.toFixed(3), angDeg: +(ang * 180 / Math.PI).toFixed(2), tier: tier, obs: obs, n: mats.length, tag: !!(tag && tag.style.display === 'flex') }; } };
+})();

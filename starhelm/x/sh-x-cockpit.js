@@ -54,7 +54,7 @@
   function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function nf(x, d) { return x.toLocaleString('zh-CN', { maximumFractionDigits: d == null ? 0 : d, minimumFractionDigits: d == null ? 0 : d }); }
   function sig(x, n) { if (!isFinite(x)) return '—'; if (x === 0) return '0'; var a = Math.abs(x); if (a >= 1e5 || a < 1e-3) return x.toExponential(n - 1).replace('e+', 'e'); return nf(x, Math.max(0, n - 1 - Math.floor(Math.log10(a)))); }
-  function fkm(km) { if (km < 1e6) return nf(km) + ' km'; var au = km / AU; if (au < 1e4) return (au < 10 ? au.toFixed(3) : au.toFixed(2)) + ' AU'; return (km / 9.4607e12).toFixed(3) + ' 光年'; }
+  function fkm(km) { if (km < 1e6) return nf(km) + ' km'; var au = km / AU; if (au < 1e4) return (au < 10 ? au.toFixed(3) : au.toFixed(2)) + ' AU'; var ly = km / 9.4607e12; return (ly < 10 ? ly.toFixed(3) : ly < 1000 ? nf(ly, 1) : nf(ly)) + ' 光年'; }   // C2.7c:>1000 光年用千分位整数(原 toFixed(3) 的「120.000 光年」易被读成 12 万)
   function fdur(s) { if (!isFinite(s) || s < 0) return '—'; if (s < 10) return s.toFixed(2) + ' 秒'; if (s < 60) return s.toFixed(0) + ' 秒'; if (s < 3600) return Math.floor(s / 60) + ' 分 ' + Math.round(s % 60) + ' 秒'; if (s < 86400) return Math.floor(s / 3600) + ' 时 ' + Math.round(s % 3600 / 60) + ' 分'; return (s / 86400).toFixed(1) + ' 天'; }
   function now() { return window.SHTIME && SHTIME.now ? SHTIME.now() : new Date(); }
 
@@ -382,7 +382,7 @@
     ['zh', 'en', 'type', 'R', 'GM', 'L', 'temp', 'col', 'fix', 'tint', 'sat', 'info', 'hyg'].forEach(function (k) { if (o[k] != null) b[k] = o[k]; });
     b.off = false;
     if (b.g) { if (b.g.parent) b.g.parent.remove(b.g); b.g.traverse(function (x) { if (x.geometry) x.geometry.dispose(); if (x.material && x.material.dispose) x.material.dispose(); }); }
-    b.fx = null; sMain.add(body3d(b)); ephem(true);
+    b.fx = null; sMain.add(body3d(b)); ephem(true); b.wp = bpos(b, Date.now());
     b.li.style.display = ''; b.li.querySelector('.nm').textContent = b.zh + ' · 临时'; b.li.querySelector('.dot').style.background = b.col;
     b.lb.innerHTML = b.zh + '<i></i>';
     setTarget('tmpstar', o.src); return b;
@@ -390,7 +390,7 @@
   function tempDso(o) {   // C2.6b:把深空天体装进深空航点槽
     var b = BY.tmpdso; if (!b || !b.li) return null;
     ['zh', 'en', 'type', 'R', 'fix', 'info', 'key'].forEach(function (k) { if (o[k] != null) b[k] = o[k]; });
-    b.off = false; ephem(true);
+    b.off = false; ephem(true); b.wp = bpos(b, Date.now());   // C2.7c:立即刷新航点位置 —— 否则锚点卡首帧读到占位 fix(1e12 AU ≈ 1,581 万光年)
     b.li.style.display = ''; b.li.querySelector('.nm').textContent = b.zh + ' · 深空'; b.li.querySelector('.dot').style.background = b.col;
     b.lb.innerHTML = b.zh + '<i></i>';
     setTarget('tmpdso', o.src); return b;
@@ -678,7 +678,7 @@
       if (tb.ex && window.SHXE && SHXE.ex[tb.ex]) { var xa = el('a', '', ' 讲解 ›'); xa.style.cssText = 'cursor:pointer;color:#f0c97a;pointer-events:auto;white-space:nowrap'; xa.onclick = function () { SHXE.show(tb.ex, 1); }; tbe.appendChild(xa); } }
     $('#xc-al', root).classList.toggle('on', S.align); $('#xc-ap', root).classList.toggle('on', S.auto);
     $('#xc-cn', root).textContent = tb.zh; $('#xc-cs', root).textContent = fkm(dT) + ' · ETA ' + (rate < -1e-6 ? fdur(surfT / -rate) : '—');
-    B.forEach(function (b) { b.li.querySelector('.ds').textContent = fkm(b.dist); b.li.classList.toggle('on', b.id === S.target); if (b.lb.style.display !== 'none') b.lb.querySelector('i').textContent = b.id === S.target ? fkm(b.dist) : fkmL(b.dist); });
+    B.forEach(function (b) { b.li.querySelector('.ds').textContent = fkm(b.dist); b.li.classList.toggle('on', b.id === S.target); if (b.lb.style.display !== 'none') b.lb.querySelector('i').textContent = (b.id === S.target ? fkm(b.dist) : fkmL(b.dist)) + (b.dso && b.fix && b.fix[2] * AU > 9.4607e13 ? ' · 距地球 ' + fkmL(b.fix[2] * AU) : ''); });   // C2.7c:深空航点同时标距地球(抵达后「距此」只剩约 3 倍半径)
     // 表盘(对数刻度)
     var lg = function (v, a, b) { return (Math.log10(Math.max(v, Math.pow(10, a))) - a) / (b - a); };
     setG('xc-g1', lg(S.base, -1, 5), sig(S.base, 3), '速度 · 等效 ' + (veff / C >= 0.01 ? sig(veff / C, 2) + 'c' : sig(veff, 3) + ' km/s'));
@@ -688,7 +688,7 @@
     drawStrip();
   }
   /* C2.2c 非目标标签用短距离:远看只留两三位有效数字 */
-  function fkmL(km) { if (km < 1e5) return nf(km) + ' km'; if (km < 1e6) return Math.round(km / 1e4) + ' 万 km'; var au = km / AU; if (au < 1e4) return (au < 10 ? au.toFixed(1) : nf(Math.round(au))) + ' AU'; var ly = km / 9.4607e12; return (ly < 10 ? ly.toFixed(2) : ly.toFixed(1)) + ' 光年'; }
+  function fkmL(km) { if (km < 1e5) return nf(km) + ' km'; if (km < 1e6) return Math.round(km / 1e4) + ' 万 km'; var au = km / AU; if (au < 1e4) return (au < 10 ? au.toFixed(1) : nf(Math.round(au))) + ' AU'; var ly = km / 9.4607e12; return (ly < 10 ? ly.toFixed(2) : ly < 1000 ? ly.toFixed(1) : nf(Math.round(ly))) + ' 光年'; }
   function fkmS(km) { if (km < 1e5) return nf(km); if (km < 1e6) return nf(km / 1e3) + 'k'; return (km / AU).toFixed(km < 10 * AU ? 3 : 1); }
   function kv(k, v, u) { return '<div class="kv"><span>' + k + '</span><b>' + v + (u ? '<i>' + u + '</i>' : '') + '</b></div>'; }
   function g2(k, v, c) { return '<div' + (c ? ' class="' + c + '"' : '') + '><span>' + k + '</span><b>' + v + '</b></div>'; }

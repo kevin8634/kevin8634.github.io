@@ -30,6 +30,9 @@
       '#xan .h span,#xan .h i,#xan .m,#xan .sw,#xan.chg .sw{display:none}#xan .n{margin:0;font-size:13px;flex:1;min-width:0}#xan .n small{display:none}#xan .src{display:inline!important;font-size:10.5px;color:#9fdcff;margin-left:2px}',
       '#xan .r{margin:0}#xan .h{order:3}#xan button{padding:3px 9px}#xan button.go{letter-spacing:.06em}#xan:after{display:none}}',
       '#xan .src{display:none}',
+      '#xan.arr .r button{flex:1;display:flex;flex-direction:column;align-items:center;line-height:1.25;padding:5px 8px}#xan.arr .r button small{font-size:9.5px;color:#8fa3c2;letter-spacing:0}#xan.arr .r button.hm{flex:0 0 auto;justify-content:center}',
+      '#xan.arr .r button.df{border-color:rgba(240,201,122,.75);background:rgba(240,201,122,.16);color:#ffe2a0;font-weight:600}#xan.arr .r button.se small{color:#ff9fb2}',
+      '@media (max-width:640px),(max-height:420px){#xan.arr{flex-wrap:wrap}#xan.arr .n{flex:1 1 100%}#xan.arr .r{flex:1 1 100%}#xan.arr .r button small{display:none}#xan.arr .h{display:none}}',
       '@media (prefers-reduced-motion:reduce){#xan,#xan.out{transition:none}#xan.flash{animation:none}#xan.chg{border-color:#ffd27a}}'
     ].join('');
     document.head.appendChild(s);
@@ -62,7 +65,8 @@
   function paint(chg) {
     var i = info();
     card.querySelector('.n').innerHTML = esc(i.zh) + (i.en ? '<small>' + esc(i.en) + '</small>' : '') + '<span class="src">· ' + esc(cur.src) + '</span>';
-    card.querySelector('.m').innerHTML = esc(i.type) + ' · 距离 <b>' + fd(i.d) + '</b>' + (cur.b.far ? ' · 自地球' : '');
+    var ed = cur.b.id === 'tmpdso' && cur.b.key && window.SHXDV && SHXDV.info(cur.b.key);   // C2.7c bug(a):深空航点同时给「距地球」,免得把「距此」误读成到地球的距离
+    card.querySelector('.m').innerHTML = esc(i.type) + ' · 距离 <b>' + fd(i.d) + '</b>' + (cur.b.far ? ' · 自地球' : '') + (ed ? ' · 距地球 ' + ed.dist : '');
     card.querySelector('.h i').textContent = '来自 ' + cur.src;
     var sw = card.querySelector('.sw'); sw.innerHTML = chg && prev ? '已切换 <s>' + esc(prev) + '</s> → <b>' + esc(i.zh) + '</b>' : '';
     card.classList.toggle('chg', !!(chg && prev));
@@ -72,7 +76,7 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function build() {
     var R = X._.root && X._.root(); if (!R) return null; css();
-    if (card && card.parentNode === R) return card; if (card) card.remove();
+    if (card && card.parentNode === R && !card.classList.contains('arr')) return card; if (card) card.remove();
     card = document.createElement('div'); card.id = 'xan'; card.setAttribute('role', 'status'); card.setAttribute('aria-live', 'polite');
     card.innerHTML = '<div class="h"><span>◎ 目标锁定 · TARGET LOCK</span><i></i><button type="button" class="x" aria-label="收起锚点卡">×</button></div><div class="sw"></div><div class="n"></div><div class="m"></div>' +
       '<div class="r"><button type="button" class="go">出发</button></div>';
@@ -98,6 +102,26 @@
     else { void card.offsetWidth; card.classList.add('on'); if (changed && prev) card.classList.add('flash'); }
     clearInterval(tm); tm = setInterval(function () { if (!card || !cur || !card.classList.contains('on')) return; var dd = card.querySelector('.m b'); if (dd) dd.textContent = fd(dist(cur.b)); place(); }, 1000);
   }
+  // C2.7c:抵达深空目标 —— 同一位置给二选一「真实照片 / 舷窗观测(模拟渲染)」+ 返航;减少动态(或该目标无模拟渲染)时默认照片,Enter = 默认项
+  function arrive(o) {
+    X = window.SHXC; if (!X || !X._) return; var R = X._.root && X._.root(); if (!R) return; css();
+    if (card) card.remove(); clearInterval(tm); clearTimeout(hideT);
+    var def = rm() || !o.obs ? 'ph' : 'se';
+    cur = { b: X._.BY.tmpdso, src: '抵达', zh: o.zh, arr: o, def: def, t: performance.now() }; prev = null;
+    card = document.createElement('div'); card.id = 'xan'; card.className = 'arr'; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', '已抵达 ' + o.zh + ' · 选择观看方式');
+    card.innerHTML = '<div class="h"><span>✦ 已抵达 · ARRIVED</span><i>选择观看方式</i><button type="button" class="x" aria-label="收起">×</button></div>' +
+      '<div class="n">' + esc(o.zh) + '<small>' + esc(o.en || '') + '</small></div>' +
+      '<div class="m">' + esc(o.type || '') + ' · 距地球 <b>' + esc(o.earth) + '</b>' + (o.trip ? ' · 本次航程 ' + esc(o.trip) : '') + '</div>' +
+      '<div class="r"><button type="button" class="ph">真实照片<small>哈勃影像 · ESA/Hubble</small></button>' + (o.obs ? '<button type="button" class="se">舷窗观测<small>模拟渲染 · 非照片</small></button>' : '') + '<button type="button" class="hm" title="返航 · 太阳系">返航</button></div>';
+    var df = card.querySelector('.' + def); if (df) df.classList.add('df');
+    card.querySelector('.x').onclick = function () { hide(true); X._.toast('天枢号停泊在 ' + o.zh + ' 附近 · 星云下方「真实照片」随时可看'); };
+    card.querySelector('.ph').onclick = function () { hide(true); o.photo && o.photo(); };
+    var se = card.querySelector('.se'); if (se) se.onclick = function () { hide(true); o.see && o.see(); };
+    card.querySelector('.hm').onclick = function () { hide(true); o.home && o.home(); };
+    R.appendChild(card); place();
+    if (rm()) card.classList.add('on'); else { void card.offsetWidth; card.classList.add('on', 'flash'); }
+    tm = setInterval(function () { if (card && card.classList.contains('on')) place(); }, 1000);
+  }
   function hide(now) {
     if (!card) return; clearInterval(tm); clearTimeout(hideT);
     if (now || rm()) { card.classList.remove('on', 'out', 'flash'); card.style.display = 'none'; return; }
@@ -110,9 +134,10 @@
     if (e.key !== 'Enter' || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
     if (!X || !X.isOpen || !X.isOpen() || !card || !cur || !card.classList.contains('on') || card.style.display === 'none' || card.classList.contains('out')) return;
     var t = e.target && e.target.tagName; if (/^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t || '') || (e.target && e.target.isContentEditable)) return;
+    if (cur.arr) { var db = card.querySelector('.' + cur.def); if (db) { e.preventDefault(); e.stopPropagation(); db.click(); } return; }
     var go = card.querySelector('.go'); if (!go || go.disabled || go.textContent !== '出发') return;
     e.preventDefault(); e.stopPropagation(); depart();
   }, true);
-  window.SHXAN = { lock: lock, fade: fade, hide: function () { hide(true); }, state: function () { return { on: !!(card && card.classList.contains('on') && card.style.display !== 'none' && !card.classList.contains('out')), id: cur && cur.b.id, zh: cur && cur.b.zh, src: cur && cur.src, prev: prev }; } };
+  window.SHXAN = { lock: lock, arrive: arrive, fade: fade, hide: function () { hide(true); }, state: function () { return { arr: !!(cur && cur.arr), def: cur && cur.def, on: !!(card && card.classList.contains('on') && card.style.display !== 'none' && !card.classList.contains('out')), id: cur && cur.b.id, zh: cur && cur.b.zh, src: cur && cur.src, prev: prev }; } };
   (function hook(n) { if (window.SHXC && SHXC.on) { SHXC.on(function (ev) { if (ev === 'close') hide(true); }); return; } if (n < 200) setTimeout(function () { hook(n + 1); }, 100); })(0);
 })();

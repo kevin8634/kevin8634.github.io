@@ -133,7 +133,7 @@
     var S = X._.S, r = Math.hypot(S.pos[0], S.pos[1], S.pos[2]) / AU;
     f = sstep(60, 300, r);
     pts.visible = f > 0.001; pts.material.uniforms.uF.value = f;
-    lf = cmode === 2 ? 0 : touched ? 1 : sstep(121.6, 500, r); lines.visible = lf > 0.001; lines.material.opacity = 0.3 * lf;
+    lf = (cmode === 2 ? 0 : touched ? 1 : sstep(121.6, 500, r)) * (1 - sstep(40000, 80000, r)); lines.visible = lf > 0.001; lines.material.opacity = 0.3 * lf;   // C2.7c:离日 >约 1 光年(4–8 万 AU)淡出连线与星座名(远处古典星座已失真,会拉成满屏平行线)
     if (skyCol) skyCol.m.color.copy(skyCol.c).multiplyScalar(1 - 0.72 * f);
     var now = performance.now();
     if ((pts.visible || lines.visible) && (!lastP || now - lastT > 200)) {

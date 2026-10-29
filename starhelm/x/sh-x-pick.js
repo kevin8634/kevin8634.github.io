@@ -39,7 +39,8 @@
       '#xk-card .sw{display:flex;align-items:center;gap:10px;margin:10px 0}#xk-card .dot{width:26px;height:26px;border-radius:50%;flex:none}#xk-card .bar{flex:1;height:5px;border-radius:3px;background:linear-gradient(90deg,#9bb0ff,#cad7ff,#fff,#fff4ea,#ffd2a1,#ffb56c);position:relative}#xk-card .bar i{position:absolute;top:-3px;width:2px;height:11px;background:#fff}' +
       '#xk-card .r{display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid rgba(150,180,220,.1)}#xk-card .r b{font-weight:400;color:#f0d9a8}#xk-card .n{color:#8fa3c2;font-size:11px;margin-top:8px;line-height:1.5}' +
       '#xk-dso{position:absolute;inset:0;pointer-events:none;z-index:7;overflow:hidden}#xk-dso .m{position:absolute;left:0;top:0;opacity:.55;transition:opacity .3s}#xk-dso .m i{position:absolute;border:1px dashed rgba(170,200,255,.55);border-radius:50%}#xk-dso .m span{position:absolute;top:-7px;white-space:nowrap;font-size:10.5px;color:#b9c8e6;text-shadow:0 0 4px #000}#xk-dso .m.sel{opacity:1}#xk-dso .m.sel i{border:1.5px solid #f0c97a}' +
-      '#xk-card .x{position:absolute;right:10px;top:8px;background:none;border:0;color:#aab;font-size:18px}#xk-card .go{margin-top:10px;width:100%;padding:7px;border-radius:16px;border:1px solid #f0c97a;background:rgba(240,201,122,.1);color:#f6d999;font:inherit}';
+      '#xk-card .x{position:absolute;right:10px;top:8px;background:none;border:0;color:#aab;font-size:18px}#xk-card .go{margin-top:10px;width:100%;padding:7px;border-radius:16px;border:1px solid #f0c97a;background:rgba(240,201,122,.1);color:#f6d999;font:inherit}' +
+      '#xk-card .g2{display:flex;gap:6px;margin-top:6px}#xk-card .g2 button{flex:1;padding:5px;border-radius:14px;border:1px solid rgba(127,214,255,.4);background:rgba(127,214,255,.08);color:#cfe6ff;font:inherit;font-size:12px}#xk-card .g2 .se{border-color:rgba(255,159,178,.45);color:#ffc6d2}';
     document.head.appendChild(st);
   }
   function show(k) {
@@ -137,9 +138,11 @@
       '<div class="r"><span>视大小</span><b>' + sz + '</b></div>' + (moon >= 0.5 ? '<div class="r"><span>相当于</span><b>约 ' + moon + ' 个满月宽</b></div>' : '') +
       '<div class="r"><span>赤经(J2000)</span><b>' + hms(o[4]) + '</b></div><div class="r"><span>赤纬(J2000)</span><b>' + dms(o[5]) + '</b></div>' +
       '<div class="r"><span>所需器材(地球上)</span><b>' + (o[9] != null ? eye(o[9] + (o[7] > 20 ? 1 : 0)) : '—') + '</b></div>' +
-      '<div class="n">数据来自 OpenNGC(CC BY-SA 4.0)。深空天体远在千光年以外,天枢号目前只能远观;' + (window.SHXDV && SHXDV.has(o[0]) ? '可作为银河星域航点真实飞抵(真实方向与距离,航行时间已压缩),抵达后为真实影像分层呈现。</div><button class="go" type="button">锁定为航点 · ' + SHXDV.info(o[0]).dist + '</button>' : '飞抵星云、星系的真实影像正在逐个上线。</div>');
+      '<div class="n">数据来自 OpenNGC(CC BY-SA 4.0)。深空天体远在千光年以外,天枢号目前只能远观;' + (window.SHXDV && SHXDV.has(o[0]) ? '可作为银河星域航点真实飞抵(真实方向与距离,航行时间已压缩),抵达后可选「真实照片」或「舷窗观测(模拟渲染)」。</div><button class="go" type="button">锁定为航点 · ' + SHXDV.info(o[0]).dist + '</button><div class="g2"><button class="ph" type="button">真实照片 · 哈勃</button>' + (window.SHXNB && SHXNB.has(o[0]) ? '<button class="se" type="button">舷窗观测 · 模拟</button>' : '') + '</div>' : '飞抵星云、星系的真实影像正在逐个上线。</div>');
     root.appendChild(card); place(); clearInterval(PT); PT = setInterval(place, 700);
     card.querySelector('.x').onclick = hide; dsoMarks(); var gd = card.querySelector('.go'); if (gd) gd.onclick = function () { hide(); SHXDV.lock(o[0], src); };
+    var gp = card.querySelector('.ph'); if (gp) gp.onclick = function () { hide(); SHXDV.open(o[0], SHXDV.lastArr && SHXDV.lastArr(o[0]) && X._.BY.tmpdso && X._.BY.tmpdso.key === o[0] ? { arrived: SHXDV.lastArr(o[0]) } : {}); };   // C2.7c 资料卡两入口
+    var gs = card.querySelector('.se'); if (gs) gs.onclick = function () { hide(); SHXNB.observe(o[0]); };
   }
   function hide() { SELD = -1; SEL = -1; clearInterval(PT); if (box) box.remove(); if (card) { card.remove(); card = null; } }
   /* C2.2b 信息卡避让:不与目标面板(含日球层栏)、仪表、底部按钮条、讲解卡重叠。

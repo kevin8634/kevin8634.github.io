@@ -128,3 +128,6 @@
 | x/dsoimg/m57-*.webp | https://esahubble.org/images/heic1310a/ 「Hubble image of the Ring Nebula (Messier 57)」 | https://cdn.esahubble.org/archives/images/large/heic1310a.jpg | NASA, ESA, and C. Robert O’Dell (Vanderbilt University) | 四边各裁 8%,缩至 1100 px(手机 600 px);WebP q64;四周 8% 羽化到黑(整幅显示时不露方框) |
 | x/dsoimg/m104-*.webp | https://esahubble.org/images/opo0328a/ 「Hubble mosaic of the majestic Sombrero Galaxy」 | https://cdn.esahubble.org/archives/images/publicationjpg/opo0328a.jpg | NASA/ESA and The Hubble Heritage Team (STScI/AURA) | 裁去左右 5%、上下 10%,缩至 1600 px(手机 800 px);WebP q64;四周 8% 羽化到黑 |
 桌面端新增合计约 1.58 MB(手机小图另计约 0.54 MB),只在打开该目标影像视图时加载。资料卡数值取自上述来源页说明与 OpenNGC 视大小;「按视大小推算」的项标为推测。
+
+### C2.7c 驾驶舱程序化星云 / 星系(x/sh-x-neb.js)
+纯程序生成(噪声 shader + 粒子),本项目原创代码,无新增素材文件。配色:从上表各目标 ESA/Hubble 影像小图离线取三档亮度色(仅取色值,不复制影像内容)。画面标「模拟渲染 · 非照片」。
