@@ -77,7 +77,7 @@ void main(){vec2 p=vW.xz*.06;float w=fb(p+fb(p*1.7+uT*.04)*1.6);float rg=1.-abs(
   const sun = new THREE.DirectionalLight(0xffe2c0, 1.4); sun.position.set(30, 60, 20); scene.add(sun);
   const rim = new THREE.DirectionalLight(0x6f8cff, .8); rim.position.set(-40, 20, -60); scene.add(rim);
   // 相机:拖拽环绕、滚轮缩放
-  const orb = { yaw: -.55, pitch: .62, dist: mob ? 150 : 118, ty: 0 }, tgt = new THREE.Vector3(px(70), 4, pz(45));
+  const orb = { yaw: -.55, pitch: .62, dist: mob ? 122 : 118, ty: 0 }, tgt = new THREE.Vector3(px(70), 4, pz(45));
   function placeCam(t) { const yw = orb.yaw + Math.sin(t * .05) * .04; cam.position.set(tgt.x + Math.sin(yw) * Math.cos(orb.pitch) * orb.dist, tgt.y + Math.sin(orb.pitch) * orb.dist, tgt.z + Math.cos(yw) * Math.cos(orb.pitch) * orb.dist); cam.lookAt(tgt); }
   // 拾取
   const ray = new THREE.Raycaster(), v2 = new THREE.Vector2();

@@ -74,6 +74,7 @@ body.labon #nav,body.labon #hud,body.labon #dive,body.labon #back,body.labon #sn
 #islx{position:fixed;inset:0;z-index:9;display:none;pointer-events:none}#islx.on{display:block}#islx .lh{position:absolute;left:50%;top:14px;transform:translateX(-50%);text-align:center}
 #islx .lh b{display:block;font-weight:500;font-size:clamp(15px,1.6vw,20px);letter-spacing:.14em;color:var(--ink);text-shadow:0 0 14px rgba(255,170,90,.5)}#islx .lh span{font-size:11px;color:var(--dim);letter-spacing:.1em}
 #islX{position:absolute;right:16px;top:14px;pointer-events:auto}#islG{left:16px;bottom:14px;width:min(300px,80vw);pointer-events:auto;font-size:12px;color:var(--dim);line-height:1.7}
+body.islon #c{touch-action:none}
 #labTabs{display:none}#islG .mo{display:none}
 @media (max-width:760px){#labTabs{display:flex;gap:6px;position:sticky;top:0;z-index:2;padding:6px 8px;background:rgba(4,12,20,.85);backdrop-filter:blur(6px)}#labTabs button{flex:1;font:inherit;font-size:12px;padding:6px 0;border-radius:8px;border:1px solid rgba(160,235,255,.3);background:transparent;color:#9fdcec}#labTabs button.on{background:rgba(120,220,255,.18);color:#e8fbff;border-color:rgba(160,235,255,.7)}
 #labx .wrap>section:not(.act){display:none}#labx .wrap{max-height:40vh}#islx .lh{top:60px;width:90vw}#islG{bottom:10px;left:10px;width:auto;right:10px;padding:8px 12px}#islG .mo{display:inline}#islG:not(.open) #islGb{display:none}#islGh{cursor:pointer;margin:0}}
@@ -339,9 +340,10 @@ async function openIsl(){if(islOn||islBusy||!gl)return;islBusy=true;try{if(!isl)
  islOn=true;document.body.classList.add("islon");const X=$("islx");X.classList.add("on");X.setAttribute("aria-hidden","false");$("islS").textContent=`元素工坊 · ${isl.count} 个已知核素 · 真实数据`;$("islX").focus();if(rmOne)setTimeout(rmOne,50);}
 function closeIsl(){if(!islOn)return;islOn=false;islDrag=null;document.body.classList.remove("islon");const X=$("islx");X.classList.remove("on");X.setAttribute("aria-hidden","true");$("islTip").style.display="none";$("sideIsl").focus();if(rmOne)rmOne();}
 $("sideIsl").onclick=openIsl;$("islX").onclick=closeIsl;
-$("c").addEventListener("pointerdown",e=>{if(!islOn)return;islDrag={x:e.clientX,y:e.clientY,yaw:isl.orb.yaw,pitch:isl.orb.pitch};$("c").setPointerCapture(e.pointerId);});
-$("c").addEventListener("pointerup",()=>{islDrag=null;});
-$("c").addEventListener("pointermove",e=>{if(!islOn)return;if(islDrag){isl.orb.yaw=islDrag.yaw-(e.clientX-islDrag.x)*.005;isl.orb.pitch=Math.min(1.35,Math.max(.12,islDrag.pitch+(e.clientY-islDrag.y)*.004));if(rmOne)rmOne();return;}
+const islPt=new Map();let islPinch=null;const ptD=()=>{const[a,b]=[...islPt.values()];return Math.hypot(a.x-b.x,a.y-b.y);};
+$("c").addEventListener("pointerdown",e=>{if(!islOn)return;islPt.set(e.pointerId,{x:e.clientX,y:e.clientY});if(islPt.size===2){islDrag=null;islPinch={d:ptD(),dist:isl.orb.dist};return;}islDrag={x:e.clientX,y:e.clientY,yaw:isl.orb.yaw,pitch:isl.orb.pitch};$("c").setPointerCapture(e.pointerId);});
+["pointerup","pointercancel"].forEach(ev=>$("c").addEventListener(ev,e=>{islPt.delete(e.pointerId);if(islPt.size<2)islPinch=null;islDrag=null;}));
+$("c").addEventListener("pointermove",e=>{if(!islOn)return;if(islPt.has(e.pointerId))islPt.set(e.pointerId,{x:e.clientX,y:e.clientY});if(islPinch&&islPt.size===2){isl.orb.dist=Math.min(260,Math.max(40,islPinch.dist*islPinch.d/Math.max(20,ptD())));if(rmOne)rmOne();return;}if(islDrag){isl.orb.yaw=islDrag.yaw-(e.clientX-islDrag.x)*.005;isl.orb.pitch=Math.min(1.35,Math.max(.12,islDrag.pitch+(e.clientY-islDrag.y)*.004));if(rmOne)rmOne();return;}
  if(e.pointerType==="touch")return;const h=isl.pick(e.clientX,e.clientY,W(),H()),T=$("islTip");if(!h){T.style.display="none";return;}
  T.innerHTML=`<b>${h.sym}-${h.a}</b> · Z=${h.z} N=${h.n} · B/A ${h.ba.toFixed(3)} MeV · ${hlTxt(h.lg)}`;T.style.display="block";T.style.left=Math.min(e.clientX+14,W()-T.offsetWidth-8)+"px";T.style.top=(e.clientY+14)+"px";});
 // 悬停/点击拾取
