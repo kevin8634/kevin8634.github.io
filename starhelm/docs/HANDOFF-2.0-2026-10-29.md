@@ -49,3 +49,9 @@
 ## 10-29 23:2x 更新(C21)
 - 上线 C2.8a T7 第一批:新 x/sh-x-exo.js(SHXEO,state() 含 on/key/D/tier/hud/obs),五个特殊天体(Sgr A*、Cyg X-1、Gaia BH1、RX J1856、Vela PSR)可飞抵,驾驶舱 GR 光线追踪 + 读数条。详见 DEVLOG-2.0-C21.md。测试 work/t28a.py(W H rm 标签 [?three] 目标列表 [fly])。
 - 新登记 BUG-02(抵达后弹「奥尔特云」讲解卡),未修。下一步:T7 第二批(蟹状星云脉冲星 / Geminga / 磁星;Sgr A* 接 EHT 影像)。
+
+## 10-29 23:2x 停工交接(日额度已用 89%,按停工线停手)
+- 线上:2fce222(C2.8a),工作区干净,无未推送补丁。
+- 下一窗口接手:先 git status + 看项目根 AGENT_COORD.md;沙箱若重置,playwright 需重装(pip --user playwright、install chromium-headless-shell、sudo env PYTHONPATH=~/.local/lib/python3.12/site-packages python3 -m playwright install-deps chromium、fonts-wqy-microhei),http.server 在 repo 根起 8130。
+- 待王磊定:先修 BUG-02(抵达后误弹「奥尔特云」讲解卡),还是直接做 T7 第二批(蟹状星云脉冲星 / Geminga / 磁星;Sgr A* 接 EHT 影像)。BUG-01 仍未发话。
+- 额度 10-30 18:36 CST 重置。
