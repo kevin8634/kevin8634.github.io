@@ -29,6 +29,8 @@
 | 20 | 蜘蛛星云(NIRCam) | deep/assets/v1/nb-tarantula.webp | [NASA, ESA, CSA, and STScI](https://esawebb.org/images/weic2212a/),取于 2026-10-29 | CC BY 4.0(署名,原文不改) | 否;仅缩放/裁切/黑场/羽化 |
 | 21 | 创生之柱(Webb,裁切版) | deep/assets/v1/nb-pillars.webp | [NASA, ESA, CSA, STScI; J. DePasquale, A. Koekemoer, A. Pagan (STScI)](https://esawebb.org/images/weic2216a/),取于 2026-10-29 | CC BY 4.0(署名,原文不改) | 否;仅缩放/裁切/黑场/羽化 |
 | 22 | 海面/光柱/黑洞/七色世界星/星点着色器 | deep/opening.js 运行时生成 | 自有代码 | 自有 | AI 协助编写代码;画面为艺术示意 |
+| 23 | 核素基态数据快照(3355 核素:Z、N、每核子结合能、半衰期) | deep/data/nuclides.json | [IAEA Nuclear Data Section · Live Chart of Nuclides API](https://nds.iaea.org/relnsd/v1/data?fields=ground_states&nuclides=all)(底层 AME2020 / ENSDF),取于 2026-10-30 | IAEA NDS 数据免费公开使用,须注明出处(页面图例已署名) | 否;仅精简字段、换算单位 |
+| 24 | 实验舱(V3)/核素岛(V4)场景:舱体、投影光锥、全息曲线、核素地形、不稳定之海、稳定岛、r 过程金雨 | deep/lab.js、deep/island.js 运行时生成 | 自有代码 | 自有 | AI 协助编写代码;稳定岛与金雨为理论示意,页面已标注 |
 
 许可依据:ESO https://www.eso.org/public/copyright/ ;ESA/Hubble https://esahubble.org/copyright/ ;ESA/Webb https://esawebb.org/copyright/ (均为 CC BY 4.0,须清晰署名)。页面左下角 #note 常驻署名并指向本台账。
 未用 KTX2:沙箱无 toktx/basisu 且需额外 vendor basis 转码 wasm;改用 webp(q82–88),9 张合计约 1.6 MB,长边 ≤4096。

@@ -71,6 +71,13 @@ body.clean #nav,body.clean #hud,body.clean #dive,body.clean #note,body.clean #ba
 #labFl{position:fixed;inset:0;z-index:10;pointer-events:none;background:radial-gradient(circle at var(--fx,50%) var(--fy,50%),rgba(220,245,255,.95),rgba(120,200,255,.35) 30%,transparent 70%);opacity:0}
 body.labon #nav,body.labon #hud,body.labon #dive,body.labon #back,body.labon #snd,body.labon #note,body.labon #names,body.labon #side,body.labon #cards{visibility:hidden}
 @media (max-width:760px){#labL,#labRt,#labB{position:static;width:auto;max-height:none;transform:none;margin:8px}#labx .wrap{position:absolute;left:0;right:0;bottom:0;max-height:44vh;overflow:auto}#labx .lh{top:58px}}
+#islx{position:fixed;inset:0;z-index:9;display:none;pointer-events:none}#islx.on{display:block}#islx .lh{position:absolute;left:50%;top:14px;transform:translateX(-50%);text-align:center}
+#islx .lh b{display:block;font-weight:500;font-size:clamp(15px,1.6vw,20px);letter-spacing:.14em;color:var(--ink);text-shadow:0 0 14px rgba(255,170,90,.5)}#islx .lh span{font-size:11px;color:var(--dim);letter-spacing:.1em}
+#islX{position:absolute;right:16px;top:14px;pointer-events:auto}#islG{left:16px;bottom:14px;width:min(300px,80vw);pointer-events:auto;font-size:12px;color:var(--dim);line-height:1.7}
+#islG i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+#islTip{position:fixed;z-index:10;pointer-events:none;display:none;font-size:12px;padding:6px 10px;border-radius:6px;background:rgba(6,10,20,.85);border:1px solid rgba(255,190,120,.4);color:var(--ink);white-space:nowrap}
+.isl-a{position:absolute;transform:translate(-50%,-100%);font-size:11px;letter-spacing:.08em;color:#ffe2b0;text-shadow:0 0 8px #000,0 0 3px #000;white-space:nowrap;pointer-events:none}.isl-a:after{content:"";display:block;width:1px;height:16px;margin:2px auto 0;background:linear-gradient(#ffe2b0,transparent)}
+body.islon #nav,body.islon #hud,body.islon #dive,body.islon #back,body.islon #snd,body.islon #note,body.islon #names,body.islon #side,body.islon #cards{visibility:hidden}
 body.nogl #labx{background:radial-gradient(ellipse at 50% 40%,#10202c,#02040c 70%)}
 </style>
 <script>/* three 版本:默认 r186;?three=169 回滚 r169(2.0 发布前保留) */(function(){var v=/[?&]three=169\b/.test(location.search)?"169":"186";window.__THREE_V=v;var m=v==="169"?{"three":"./vendor/three.module.min.js","deep-post":"./vendor/post-r169.js"}:{"three":"./vendor/r186/three.module.min.js","deep-post":"./vendor/r186/post.min.js"};var e=document.createElement("script");e.type="importmap";e.textContent=JSON.stringify({imports:m});document.currentScript.after(e);})();</script>
@@ -84,17 +91,20 @@ body.nogl #labx{background:radial-gradient(ellipse at 50% 40%,#10202c,#02040c 70
 <button id="dive" class="btn">▼ 潜入深空</button>
 <div id="note">深空层 V2 · 开发中 · 影像:ESO/S. Brunier、ESA/Hubble、ESA/Webb、NASA(CC BY 4.0,详见 LICENSES.md)</div>
 <div id="names" aria-hidden="true"></div><div id="tip" aria-hidden="true"></div>
-<aside id="side" role="dialog" aria-modal="false" aria-labelledby="sideT" aria-hidden="true"><button id="sideX" class="btn" aria-label="关闭">✕</button><h2 id="sideT"></h2><div class="w" id="sideW"></div><div id="sideTh"></div><div class="fx" id="sideF"></div><div id="sideD"></div><p id="sideP"></p><div id="sideG"></div><div id="sideS"></div><div id="sideQ" hidden></div><div id="sideL" hidden></div><div id="sideR"></div><div class="row"><button id="sideLab" class="btn" hidden>▣ 坠入实验舱</button><button id="sideC" class="btn">生成推导卡(示例)</button></div></aside>
+<aside id="side" role="dialog" aria-modal="false" aria-labelledby="sideT" aria-hidden="true"><button id="sideX" class="btn" aria-label="关闭">✕</button><h2 id="sideT"></h2><div class="w" id="sideW"></div><div id="sideTh"></div><div class="fx" id="sideF"></div><div id="sideD"></div><p id="sideP"></p><div id="sideG"></div><div id="sideS"></div><div id="sideQ" hidden></div><div id="sideL" hidden></div><div id="sideR"></div><div class="row"><button id="sideLab" class="btn" hidden>▣ 坠入实验舱</button><button id="sideIsl" class="btn" hidden>◈ 登上核素岛</button><button id="sideC" class="btn">生成推导卡(示例)</button></div></aside>
 <div id="labx" role="dialog" aria-modal="true" aria-labelledby="labT" aria-hidden="true"><div class="lh"><b id="labT"></b><span id="labW"></span></div><button id="labX" class="btn">✕ 返回深空</button>
 <div class="wrap"><section class="gp" id="labL" aria-label="参数"><h3>参 数</h3><div id="labPh"></div><div class="row"><button class="btn" id="labRun">运行 ▶</button></div></section>
 <section class="gp" id="labRt" aria-label="公式与 A/B 对照"><h3>公 式 · A / B 对 照</h3><div class="fx2" id="labF"></div><canvas id="labAB" width="600" height="300" role="img" aria-label="A/B 对照图"></canvas><div class="k2" id="labABk">先「存为 A」,再改参数,对照 A 与当前 B。</div><div class="row"><button class="btn" id="labSaveA">存为 A</button><button class="btn" id="labClrA">清除 A</button></div></section>
 <section class="gp" id="labB" aria-label="记录本"><h3>记 录 本 · 时 间 轴</h3><div id="labLog" aria-live="polite"></div></section></div></div><div id="labFl"></div>
+<div id="islx" role="dialog" aria-modal="true" aria-labelledby="islT" aria-hidden="true"><div class="lh"><b id="islT">核 素 岛</b><span id="islS"></span></div><button id="islX" class="btn">✕ 返回深空</button>
+<div id="islA"></div><section class="gp" id="islG" aria-label="图例"><h3>图 例</h3><i style="background:#ffd180"></i>稳定核素(金白亮点)<br><i style="background:#c99a5a"></i>长寿命 → <i style="background:#2f5fbf"></i>短寿命(沉入不稳定之海)<br>柱高 = 每核子结合能 B/A × 寿命;横轴中子数 N,纵深质子数 Z<br>青线 = 幻数 8 · 20 · 28 · 50 · 82 · 126<br><span style="color:#ffb070">稳定岛</span>与<span style="color:#ffe2b0">金雨</span>为理论示意,非实测<br>拖动旋转 · 滚轮缩放 · 悬停看核素<div style="margin-top:6px;font-size:10px">数据:IAEA Live Chart of Nuclides(AME2020/ENSDF),2026-10-30 快照</div></section></div><div id="islTip"></div>
 <main id="cards" aria-label="深空层分层列表"></main>
 <script type="module">
 import * as THREE from "three";
 import { EffectComposer, RenderPass, UnrealBloomPass, OutputPass } from "deep-post";
 import { createOpening, createComposite, WL0 } from "./opening.js";
 import { createLab } from "./lab.js";
+import { createIsland } from "./island.js";
 import { DepthBar, Formula, Card, ChainDrag, ParamPanel, Sim, Expr, DataSet, DataChart } from "../core/deep/core.js";
 // 七世界(F2 穿越)与星辰层公式星座占位(1.1 由各世界提交课本卡替换)
 const WORLDS=[
@@ -245,7 +255,7 @@ let chartTok=0;function showChart(c){const G=$("sideG"),t=++chartTok;if(!c.chart
 function openSide(k,li=1){chartTok++;li=li===3?3:1;const w=WORLDS[k];sideW=k;sideL=li;$("sideT").textContent=li===3?"生活决策":w.fn;$("sideW").textContent=`${w.n} ${w.e} · ${w.sub} · ${li===3?"星河层 · 成人":"星辰层 · 高中"}`;
  const cd=CARDS[li][w.id];renderThread(k,li);Formula.render($("sideF"),cd&&cd.formula||w.f);$("sideD").innerHTML="";bar=DepthBar.mount($("sideD"),{task:cd?cd.id:`${w.id}.deep-demo`,levels:["d1","d2","d3"],start:"d1",onChange:()=>{}});
  $("sideG").innerHTML="";$("sideS").innerHTML="";$("sideQ").hidden=true;$("sideL").hidden=true;$("sideL").innerHTML="";delete $("sideL").dataset.on;$("sideR").innerHTML="";
- $("sideLab").hidden=!(cd&&cd.lab);if(cd){renderCard(cd);side.classList.add("open");side.setAttribute("aria-hidden","false");$("sideX").focus();return;}
+ $("sideLab").hidden=!(cd&&cd.lab);$("sideIsl").hidden=!(gl&&WORLDS[k]&&WORLDS[k].id==="ef");if(cd){renderCard(cd);side.classList.add("open");side.setAttribute("aria-hidden","false");$("sideX").focus();return;}
  $("sideP").textContent=li===3?"占位卡:1.3 起每个世界在这里放 1 张生活决策卡(用这个世界的规则,算清一个真实选择)。题目由各世界提交,总指挥审核后点亮。":"占位卡:1.1 起每个世界在这里放 1 张课本卡(为什么这条公式成立,推导它)。题目由各世界提交,总指挥审核后点亮。";
  side.classList.add("open");side.setAttribute("aria-hidden","false");$("sideX").focus();}
 // 光柱路线:同一世界四层一列,已开放层可沿光柱直达
@@ -290,9 +300,24 @@ $("labRun").onclick=()=>{const g=$("labGo");if(g)g.click();labLog("运行");};
 $("labSaveA").onclick=()=>{if(!labLast)return;labA=labLast.map(S=>({...S,pts:S.pts.slice()}));if(lab)lab.setSeries(labLast,labA,labEq());drawAB();labLog("存为 A");$("labABk").textContent="金色虚线 = A,青色 = 当前 B。改参数看两者差别。";};
 $("labClrA").onclick=()=>{labA=null;if(lab)lab.setSeries(labLast,null,labEq());drawAB();$("labABk").textContent="先「存为 A」,再改参数,对照 A 与当前 B。";};
 let rmOne=null;
+// V4 核素岛(元素工坊):IAEA 真实核素表 → Z×N 地形;拖动环绕/滚轮缩放/悬停看核素
+let isl=null,islOn=false,islBusy=false,islDrag=null;
+const ISLA=[["fe","铁-56 · 结合能之巅"],["pb","铅-208 · 双幻数"],["isl","稳定岛 · 理论预言"],["r","双中子星并合 · r 过程"]];
+function islLabels(){const A=$("islA");if(!A.children.length)A.innerHTML=ISLA.map(([k,t])=>`<div class="isl-a" data-k="${k}">${t}</div>`).join("");
+ [...A.children].forEach(e=>{const p=isl.anchors[e.dataset.k].clone().project(isl.cam);const on=p.z<1&&Math.abs(p.x)<1.05&&Math.abs(p.y)<1.05;e.style.display=on?"":"none";if(on){e.style.left=(p.x*.5+.5)*W()+"px";e.style.top=(-p.y*.5+.5)*H()+"px";}});}
+const hlTxt=lg=>lg>=99?"稳定":lg<=-99?"半衰期未知":lg>7.5?`半衰期约 10^${lg.toFixed(1)} 秒(${(10**lg/3.156e7).toPrecision(2)} 年)`:lg>-3?`半衰期约 ${(10**lg).toPrecision(3)} 秒`:`半衰期约 10^${lg.toFixed(1)} 秒`;
+async function openIsl(){if(islOn||islBusy||!gl)return;islBusy=true;try{if(!isl){isl=await createIsland(THREE,{mob,tex});isl.resize(W(),H());}}catch(e){islBusy=false;console.warn("核素岛加载失败",e);return;}islBusy=false;
+ islOn=true;document.body.classList.add("islon");const X=$("islx");X.classList.add("on");X.setAttribute("aria-hidden","false");$("islS").textContent=`元素工坊 · ${isl.count} 个已知核素 · 真实数据`;$("islX").focus();if(rmOne)setTimeout(rmOne,50);}
+function closeIsl(){if(!islOn)return;islOn=false;islDrag=null;document.body.classList.remove("islon");const X=$("islx");X.classList.remove("on");X.setAttribute("aria-hidden","true");$("islTip").style.display="none";$("sideIsl").focus();if(rmOne)rmOne();}
+$("sideIsl").onclick=openIsl;$("islX").onclick=closeIsl;
+$("c").addEventListener("pointerdown",e=>{if(!islOn)return;islDrag={x:e.clientX,y:e.clientY,yaw:isl.orb.yaw,pitch:isl.orb.pitch};$("c").setPointerCapture(e.pointerId);});
+$("c").addEventListener("pointerup",()=>{islDrag=null;});
+$("c").addEventListener("pointermove",e=>{if(!islOn)return;if(islDrag){isl.orb.yaw=islDrag.yaw-(e.clientX-islDrag.x)*.005;isl.orb.pitch=Math.min(1.35,Math.max(.12,islDrag.pitch+(e.clientY-islDrag.y)*.004));if(rmOne)rmOne();return;}
+ if(e.pointerType==="touch")return;const h=isl.pick(e.clientX,e.clientY,W(),H()),T=$("islTip");if(!h){T.style.display="none";return;}
+ T.innerHTML=`<b>${h.sym}-${h.a}</b> · Z=${h.z} N=${h.n} · B/A ${h.ba.toFixed(3)} MeV · ${hlTxt(h.lg)}`;T.style.display="block";T.style.left=Math.min(e.clientX+14,W()-T.offsetWidth-8)+"px";T.style.top=(e.clientY+14)+"px";});
 // 悬停/点击拾取
 const ray=new THREE.Raycaster(),mp=new THREE.Vector2(),tip=$("tip");let hov=-1;
-function pick(x,y){if((cur!==1&&cur!==3)||anim||labOn||labFly)return -1;mp.set(x/W()*2-1,-(y/H())*2+1);ray.setFromCamera(mp,cam);const h=ray.intersectObjects(stars.filter(s=>s.userData.L===cur&&!s.userData.lock),false)[0];return h?h.object.userData.k:-1;}
+function pick(x,y){if((cur!==1&&cur!==3)||anim||labOn||labFly||islOn)return -1;mp.set(x/W()*2-1,-(y/H())*2+1);ray.setFromCamera(mp,cam);const h=ray.intersectObjects(stars.filter(s=>s.userData.L===cur&&!s.userData.lock),false)[0];return h?h.object.userData.k:-1;}
 addEventListener("pointermove",e=>{if(e.pointerType==="touch")return;hov=pick(e.clientX,e.clientY);$("c").style.cursor=hov>=0?"pointer":"";
  if(hov>=0){tip.style.display="block";tip.style.left=e.clientX+14+"px";tip.style.top=e.clientY+12+"px";{const w=WORLDS[hov],cd=CARDS[cur]&&CARDS[cur][w.id];tip.textContent=`${w.n} · ${cd?cd.title:(cur===3?"生活决策":w.fn)}`;}}else tip.style.display="none";});
 $("c").addEventListener("click",e=>{const k=pick(e.clientX,e.clientY);if(k>=0)openSide(k,cur);});
@@ -306,10 +331,10 @@ function flash(){const h=$("hud");h.animate([{opacity:.4},{opacity:1}],{duration
 $("dive").onclick=()=>go(cur<L.length-1?cur+1:0);
 // 滚轮/触摸/键盘
 let acc=0,lock=0;
-addEventListener("wheel",e=>{if(labOn||labFly||(e.target.closest&&e.target.closest("#side")))return;if(performance.now()<lock)return;acc+=e.deltaY;if(Math.abs(acc)>80){go(cur+(acc>0?1:-1));acc=0;lock=performance.now()+900;}},{passive:true});
+addEventListener("wheel",e=>{if(islOn&&isl){isl.orb.dist=Math.min(260,Math.max(40,isl.orb.dist*(1+e.deltaY*.001)));return;}if(labOn||labFly||(e.target.closest&&e.target.closest("#side")))return;if(performance.now()<lock)return;acc+=e.deltaY;if(Math.abs(acc)>80){go(cur+(acc>0?1:-1));acc=0;lock=performance.now()+900;}},{passive:true});
 let ty=null;addEventListener("touchstart",e=>{ty=labOn||(e.target.closest&&e.target.closest("#side"))?null:e.touches[0].clientY;},{passive:true});
 addEventListener("touchend",e=>{if(ty==null)return;const d=ty-e.changedTouches[0].clientY;if(Math.abs(d)>50)go(cur+(d>0?1:-1));ty=null;},{passive:true});
-addEventListener("keydown",e=>{if(e.defaultPrevented)return;if(labOn){if(e.key==="Escape"){closeLab();e.preventDefault();}return;}if(e.key!=="Escape"&&e.target.closest&&e.target.closest("#side"))return;if(e.key==="ArrowDown"||e.key==="PageDown"){go(cur+1);e.preventDefault()}else if(e.key==="ArrowUp"||e.key==="PageUp"){go(cur-1);e.preventDefault()}else if(e.key==="Escape"){if(!closeSide())go(0);}});
+addEventListener("keydown",e=>{if(e.defaultPrevented)return;if(islOn){if(e.key==="Escape"){closeIsl();e.preventDefault();}return;}if(labOn){if(e.key==="Escape"){closeLab();e.preventDefault();}return;}if(e.key!=="Escape"&&e.target.closest&&e.target.closest("#side"))return;if(e.key==="ArrowDown"||e.key==="PageDown"){go(cur+1);e.preventDefault()}else if(e.key==="ArrowUp"||e.key==="PageUp"){go(cur-1);e.preventDefault()}else if(e.key==="Escape"){if(!closeSide())go(0);}});
 // 音乐:L0–L2 群星闪耀,L3–L4 宇宙闪烁,默认关
 const au={a:null,b:null},MK="gn:deep:snd";let on=false;
 function mk(src){const a=new Audio(src);a.loop=true;a.volume=0;a.preload="none";return a}
@@ -323,13 +348,13 @@ bloom=new UnrealBloomPass(new THREE.Vector2(W(),H()),.7,.5,.5);comp.addPass(bloo
 // 近距淡出:相机穿过星体时不过曝
 const fadeList=[...cores,...clusters.map(c=>c.grp)];fadeList.forEach(g=>g.traverse(o=>{if(o.material)o.userData.op=o.material.opacity;}));
 function nearFade(cz){fadeList.forEach(g=>{const dz=cz-g.position.z;const f=dz<0?0:Math.min(1,Math.max(0,(dz-6)/34));if(g.userData.f===f)return;g.userData.f=f;g.traverse(o=>{if(o.material&&o.userData.op!=null)o.material.opacity=o.userData.op*f;});});}
-if(/debug/.test(location.search))window.__d={stars,cam,W,H,openSide,go,rev:THREE.REVISION,op,enterLab,closeLab};
+if(/debug/.test(location.search))window.__d={stars,cam,W,H,openSide,go,rev:THREE.REVISION,op,enterLab,closeLab,openIsl,closeIsl,get isl(){return isl;}};
 // 初始
 const h=location.hash.match(/deep=(\d)/);let start=h?+h[1]:0;if(!L[start]||!L[start].open)start=0;
 cur=start;cam.position.z=zOf(start);setHud(start);
 // 渲染循环 + 低帧降级
 let slow=0,lt=performance.now();
-addEventListener("resize",()=>{if(lab)lab.resize(W(),H());cam.aspect=W()/H();cam.updateProjectionMatrix();r.setSize(W(),H());comp.setSize(W(),H());sizeAll();});
+addEventListener("resize",()=>{if(lab)lab.resize(W(),H());if(isl)isl.resize(W(),H());cam.aspect=W()/H();cam.updateProjectionMatrix();r.setSize(W(),H());comp.setSize(W(),H());sizeAll();});
 const ss=(a,b,x)=>{x=Math.min(1,Math.max(0,(x-a)/(b-a)));return x*x*(3-2*x)};
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 function loop(t){requestAnimationFrame(loop);
@@ -344,7 +369,8 @@ function loop(t){requestAnimationFrame(loop);
  stars.forEach(s=>{const tg=(s.userData.L===cur&&s.userData.k===hov)?10:s.userData.base*(1+.08*Math.sin(t*.002+s.userData.k));s.scale.setScalar(s.scale.x+(tg-s.scale.x)*.15);});
  frame(t);}
 // 一帧:按相机深度推进水线(0=水面构图,1=已入深空)
-function frame(t){if(labOn&&lab){const s=t*.001,U=cmp.uniforms;lab.update(s);U.uWl.value=1.2;U.uMixC.value=1;U.uTime.value=s;r.setRenderTarget(rtC);r.render(lab.scene,lab.cam);r.setRenderTarget(null);if(bloom){bloom.threshold=.55;bloom.strength=.65;bloom.radius=.5;}comp.render();return;}
+function frame(t){if(islOn&&isl){const s=t*.001,U=cmp.uniforms;isl.update(s);U.uWl.value=1.2;U.uMixC.value=1;U.uTime.value=s;r.setRenderTarget(rtC);r.render(isl.scene,isl.cam);r.setRenderTarget(null);if(bloom){bloom.threshold=.5;bloom.strength=.75;bloom.radius=.55;}comp.render();islLabels();return;}
+if(labOn&&lab){const s=t*.001,U=cmp.uniforms;lab.update(s);U.uWl.value=1.2;U.uMixC.value=1;U.uTime.value=s;r.setRenderTarget(rtC);r.render(lab.scene,lab.cam);r.setRenderTarget(null);if(bloom){bloom.threshold=.55;bloom.strength=.65;bloom.radius=.5;}comp.render();return;}
 const d=Math.min(1,Math.max(0,(60-cam.position.z)/260));const wl=WL0+ss(0,.5,d)*(1.16-WL0),mc=ss(.35,.85,d);const s=t*.001;
  op.update(s,d);const U=cmp.uniforms;U.uWl.value=wl;U.uMixC.value=mc;U.uTime.value=s;
  if(wl<1.05||mc<.6){r.setRenderTarget(rtA);r.render(op.sceneA,op.camA);}
