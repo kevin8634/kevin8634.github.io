@@ -533,13 +533,13 @@
       // C1.7 尺度阶梯航图:选快捷目的地;太阳系内有星球的直接设为驾驶舱目标,其余只做规划(跃迁第 4 步开放)
       PL.domOf = SHXL.dom;
       PL.lad = SHXL.render($('#xs-doms', c), PL.tgt, function (x) {
-        PL.pick = x; PL.tgt = x.body || x.id; if (x.body && S.target !== x.body) I.setTarget(x.body); blip(560, .06, .04); refreshPlan();
+        PL.pick = x; PL.tgt = x.body || x.id; if (x.body && BY[x.body]) I.setTarget(x.body, '航图'); else if (window.SHXAN) SHXAN.lock({ id: x.id, zh: x.zh, type: '星域 ' + SHXL.DOMS[x.dom].n + ' ' + SHXL.DOMS[x.dom].zh + ' · 仅规划', km: x.km, far: true }, '航图', true); blip(560, .06, .04); refreshPlan();
       }, function (x) { return x.body && BY[x.body] ? (x.id === 'iss' ? 420 : distTo(BY[x.body])) : x.km; });
     } else {
     var DOMS = [['I', '家园', 'earth'], ['II', '日与月', 'moon'], ['III', '行星世界', null], ['IV', '太阳系边疆', 'pluto'], ['V', '群星', 0], ['VI', '银河', 0], ['VII', '宇宙', 0]], dg = $('#xs-doms', c);
       function domOf(id) { return id === 'earth' ? 0 : id === 'moon' || id === 'sun' ? 1 : id === 'pluto' ? 3 : 2; }
       DOMS.forEach(function (d, i) { var x = el('button', 'xs-chip' + (d[2] === 0 ? ' off' : ''), '<i style="color:#f0c97a;font-style:normal">' + d[0] + '</i> ' + d[1] + (d[2] === 0 ? '<i>跃迁 · 即将</i>' : '')); x.type = 'button'; x.dataset.d = i;
-        x.onclick = function () { if (d[2] === 0) { I.toast('星域 ' + d[0] + ' ' + d[1] + ':跨星域跃迁即将开放'); return; } if (domOf(PL.tgt) !== i) { PL.tgt = d[2] || 'mars'; I.setTarget(PL.tgt); } refreshPlan(); }; dg.appendChild(x); });
+        x.onclick = function () { if (d[2] === 0) { I.toast('星域 ' + d[0] + ' ' + d[1] + ':跨星域跃迁即将开放'); return; } if (domOf(PL.tgt) !== i) { PL.tgt = d[2] || 'mars'; I.setTarget(PL.tgt, '航图'); } refreshPlan(); }; dg.appendChild(x); });
       PL.domOf = domOf;
     }
     $('.xc', c).onclick = $('.xs-no', c).onclick = function () { closeCards(); };
@@ -590,7 +590,7 @@
       .concat(enDist(p.km), [{ t: '.', p: 1 }, { t: 'Estimated time', id: 'b04' }, { t: ',', p: 1 }, { t: 'approximately', id: 'b08' }], enTime(p.tr.earthS), [{ t: '.', p: 1 }]);
   }
   function countdown(cb) {
-    if (VOICE.cd) return; VOICE.cd = 1; var cb0 = cb; cb = function () { VOICE.cd = 0; cb0(); };
+    if (VOICE.cd) return; VOICE.cd = 1; if (window.SHXAN) SHXAN.fade(); var cb0 = cb; cb = function () { VOICE.cd = 0; cb0(); };
     sub(line('a06')); armState('think');
     var a = null, clips = VOICE.on ? seqClips(['a06']) : null; if (clips) { a = voiceAudio(clips[0]); a.play().catch(function () { }); }
     var n = 3, step = 900, tick = function () {
@@ -820,7 +820,7 @@
     SH.voyReady = function () { return !!(window.SHXC && SHXC.isOpen && SHXC.isOpen()); };
     SH.voySetTarget = function (id) {
       if (!SH.voyReady()) { if (window.SHXV) SHXV.go('fly'); else SHXC.open(); }
-      var n = 0; (function go() { if (!SH.voyReady() && n++ < 40) { setTimeout(go, 150); return; } setTimeout(function () { var t = SEC2T[id] || id, BY = SHXC._ && SHXC._.BY; if (BY && BY[t]) { SHXC.setTarget(t); setTimeout(function () { if (SHXC.state().target !== t) SHXC.setTarget(t); }, 1200); SHXC._.toast('航图目的地:' + BY[t].zh + ' · 按 G 自动驾驶'); } else togglePlan(); }, 300); })();
+      var n = 0; (function go() { if (!SH.voyReady() && n++ < 40) { setTimeout(go, 150); return; } setTimeout(function () { var t = SEC2T[id] || id, BY = SHXC._ && SHXC._.BY; if (BY && BY[t]) { SHXC.setTarget(t, '星域页航图'); setTimeout(function () { if (SHXC.state().target !== t) SHXC.setTarget(t); }, 1200); SHXC._.toast('航图目的地:' + BY[t].zh + ' · 按 G 自动驾驶'); } else togglePlan(); }, 300); })();
     };
     SH.voyLand = function (id) { SH.voySetTarget(id); };
     SH.voyExit = function () { if (window.SHXC && SHXC.confirmEnd) SHXC.confirmEnd(); };
@@ -829,5 +829,7 @@
   }
   takeover(); addEventListener('load', takeover);
 
-  window.SHXS = { eng: function (id) { if (id) engStart(id); else engStop(); }, orbitState: function () { return O ? { id: O.b.id, r: O.r, ang: O.ang } : PEND_PORT ? { pend: true } : null; }, pws: { load: pwsLoad, play: pwsPlay, stop: pwsStop, cue: pwsCue, state: function () { return { ready: PWS.ready, loading: PWS.loading, on: PWS.on, playing: PWS.playing, vol: pwsVol() }; } }, persona: function (id) { if (id) setPersona(id); return PER.id; }, enDist: enDist, enTime: enTime, voiceDbg: function () { return { on: VOICE.on, persona: PER.id, pack: VOICE.pack, n: VOICE.clips ? Object.keys(VOICE.clips).length : 0, sfx: SFX.on }; }, spaceFx: setSpaceFx, say: say, lines: L, zhNum: zhNum, sayDist: sayDist, sayTime: sayTime, plan: function () { if (X.isOpen()) togglePlan(); }, orbit: function () { if (X.isOpen()) portAct(); }, mode: function (m) { setMode(m); }, state: function () { return { mode: MODE, engine: ENGID, orbit: !!O, music: SND.music, sfx: SND.sfx, voice: VOICE.on, clips: !!VOICE.clips }; } };
+  window.SHXS = { eng: function (id) { if (id) engStart(id); else engStop(); }, orbitState: function () { return O ? { id: O.b.id, r: O.r, ang: O.ang } : PEND_PORT ? { pend: true } : null; }, pws: { load: pwsLoad, play: pwsPlay, stop: pwsStop, cue: pwsCue, state: function () { return { ready: PWS.ready, loading: PWS.loading, on: PWS.on, playing: PWS.playing, vol: pwsVol() }; } }, persona: function (id) { if (id) setPersona(id); return PER.id; }, enDist: enDist, enTime: enTime, voiceDbg: function () { return { on: VOICE.on, persona: PER.id, pack: VOICE.pack, n: VOICE.clips ? Object.keys(VOICE.clips).length : 0, sfx: SFX.on }; }, spaceFx: setSpaceFx, say: say, lines: L, zhNum: zhNum, sayDist: sayDist, sayTime: sayTime, plan: function () { if (X.isOpen()) togglePlan(); },
+    // C2.7a 锚点卡「出发」:按已锁定目标走航行规划同一出发流程(播报 → 3-2-1 → 引擎),当前引擎不够远时换第一个可用引擎
+    depart: function (id) { if (!X.isOpen()) return; PL.tgt = id || S.target; PL.pick = null; PL.domOf = window.SHXL ? SHXL.dom : PL.domOf; if (!engRule(ENGID).ok) { var alt = ENG.filter(function (e) { return e.model !== 'none' && engRule(e.id).ok; })[0]; if (alt) { I.toast('🔒 ' + eng(ENGID).zh + ':' + engRule(ENGID).why + ' · 已换成 ' + alt.zh); ENGID = alt.id; } } launch(); }, orbit: function () { if (X.isOpen()) portAct(); }, mode: function (m) { setMode(m); }, state: function () { return { mode: MODE, engine: ENGID, orbit: !!O, music: SND.music, sfx: SND.sfx, voice: VOICE.on, clips: !!VOICE.clips }; } };
 })();

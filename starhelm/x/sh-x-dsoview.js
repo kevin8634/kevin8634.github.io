@@ -165,6 +165,12 @@
     go({ key: key, d: d, tid: 'tmpdso', stop: d.rly * LY * 3, name: d.zh, en: d.en });
     return true;
   }
+  // C2.7a:资料卡只「锁定」深空航点(装进航点槽、弹锚点卡),出发由锚点卡「出发」→ fly(key)
+  function lock(key, src) {
+    var d = DV[key]; if (!d || !X || !X.isOpen || !X.isOpen() || !X._.tempDso) { open(key); return false; }
+    var rd = dir(key); if (!rd) { open(key); return false; }
+    var AU = X._.AU; return !!X._.tempDso({ zh: d.zh, en: d.en, type: d.type, R: d.rly * LY, fix: [rd[0], rd[1], d.ly * LY / AU], key: key, src: src || '星空点选', info: d.facts.map(function (r) { return [r[0], r[1]]; }) });
+  }
   function home() {
     if (!X || !X.isOpen()) return;
     abort(true); X._.setTarget('earth');
@@ -174,6 +180,7 @@
     var S = X._.S, rm = red();
     if (window.SHXS && SHXS.mode) SHXS.mode('boost');
     S.auto = false; S.base = 0; S.mult = 1; S.align = true; S.voy = o.key || 'home';
+    if (window.SHXAN) SHXAN.fade();
     V = o; V.rm = rm; V.ph = 'turn'; V.t = 0; V.p0 = S.pos.slice(); V.sec = 0;
     hudShow(); X._.toast((o.home ? '返航:' : '深空航点:') + o.name + ' · 机头转向中');
   }
@@ -242,6 +249,6 @@
   (function wait(n) { if (window.SHXC && SHXC.on) { X = SHXC; SHXC.on(hook); return; } if (n < 100) setTimeout(function () { wait(n + 1); }, 100); })(0);
   (function w2(n) { if (window.SHXESC) { SHXESC.reg('dsofly', 90, function () { return !!V; }, function () { abort(); }); return; } if (n < 100) setTimeout(function () { w2(n + 1); }, 100); })(0);
   // C2.6a:原先误用 window.SHXV,会覆盖四级视图 sh-x-views.js 的 SHXV(go/step),导致退出驾驶舱、数字键切视图报错 → 改名 SHXDV
-  window.SHXDV = { has: function (k) { return !!DV[k]; }, open: open, close: close, fly: fly, home: home, abort: function () { abort(); }, flying: function () { return V ? { key: V.key, ph: V.ph, rem: V.rem, home: !!V.home } : null; },
+  window.SHXDV = { has: function (k) { return !!DV[k]; }, open: open, close: close, fly: fly, lock: lock, home: home, abort: function () { abort(); }, flying: function () { return V ? { key: V.key, ph: V.ph, rem: V.rem, home: !!V.home } : null; },
     list: function () { return Object.keys(DV); }, isOpen: function () { return !!ov; }, info: function (k) { var d = DV[k]; return d ? { zh: d.zh, ly: d.ly, dist: fly0(d.ly) } : null; } };
 })();

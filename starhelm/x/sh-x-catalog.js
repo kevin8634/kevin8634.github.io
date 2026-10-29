@@ -1,5 +1,5 @@
 /* 天枢 C2.4 · 目标目录:导航目标栏分页(太阳系 / 恒星 / 星座 / 深空 / 探测器)+ 搜索
- * 太阳系与探测器沿用驾驶舱航点(单击选中、双击飞往);恒星、星座、深空天体单击后机头转向并弹资料卡。 */
+ * 太阳系与探测器沿用驾驶舱航点(单击锁定;C2.7a 起双击不再直接飞往,出发走锚点卡);恒星、星座、深空天体单击后机头转向并弹资料卡。 */
 (function () {
   'use strict';
   var X, T, root, lst, bar, box, inp, tab = 'sol', built = false, aim = null;
@@ -60,8 +60,8 @@
   function norm(v) { var l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; }
   function go(kind, id) {
     var v = null;
-    if (kind === 'star') { v = SHXK.starDir(id); SHXK.show(id); }
-    else if (kind === 'dso') { var D = SHXK.dsoList(); if (!D) return; v = D[id].v; SHXK.dso(id); }
+    if (kind === 'star') { v = SHXK.starDir(id); X._.cardSrc = '目录'; SHXK.show(id); }
+    else if (kind === 'dso') { var D = SHXK.dsoList(); if (!D) return; v = D[id].v; X._.cardSrc = '目录'; SHXK.dso(id); }
     else if (kind === 'con') {
       var c = (window.SHX_CONSTART || []).filter(function (c) { return c[0] === id; })[0]; if (!c) return; var s = [0, 0, 0];
       c[7].forEach(function (a) { var n = norm(SHXK.eq2p(a[2], a[3], a[4])); s[0] += n[0]; s[1] += n[1]; s[2] += n[2]; });

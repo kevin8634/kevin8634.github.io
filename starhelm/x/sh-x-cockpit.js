@@ -333,7 +333,7 @@
       '<div class="p nav mono" id="xc-nav"></div>' +
       '<div class="p tgt"><div class="cap" id="xc-tt">目标 · 行星</div><h3 id="xc-tn">地球</h3><div class="g2 mono" id="xc-tg"></div><div class="blurb" id="xc-tb"></div>' +
       '<div class="row"><button class="btn" id="xc-al" type="button">对准 · Z</button><button class="btn" id="xc-ap" type="button">自动驾驶 · G</button></div></div>' +
-      '<div class="p lst" id="xc-lst"><div class="cap" style="margin:0 6px 4px">导航目标 · 单击选中 · 双击飞往 · T</div></div>' +
+      '<div class="p lst" id="xc-lst"><div class="cap" style="margin:0 6px 4px">导航目标 · 单击锁定 · 出发见锚点卡 · T</div></div>' +
       '<div class="p keys" id="xc-keys"><div class="cap" style="display:flex;justify-content:space-between;margin-bottom:4px"><span>操作</span><a id="xc-kt" style="cursor:pointer">收起 · H</a></div><div class="kg">' +
       '<kbd>W</kbd><span>加速</span><kbd>S</kbd><span>减速</span><kbd>A</kbd><span>左转</span><kbd>D</kbd><span>右转</span><kbd>R</kbd><span>抬头</span><kbd>F</kbd><span>低头</span>' +
       '<kbd>Q</kbd><span>左滚</span><kbd>E</kbd><span>右滚</span><kbd>Shift</kbd><span>×10 推进</span><kbd>X</kbd><span>急停</span><kbd>[ ]</kbd><span>倍率</span><kbd>滚轮</kbd><span>巡航速度</span>' +
@@ -354,8 +354,8 @@
       if (b.comet && !lst.querySelector('.grp')) lst.appendChild(el('div', 'grp', '彗星 · COMETS'));
       var it = el('div', 'it' + (b.parent ? ' sub' : ''), '<span class="dot" style="background:' + b.col + '"></span><span class="nm">' + b.zh + '</span><span class="ds mono"></span>');
       it.setAttribute('data-id', b.id); b.li = it; lst.appendChild(it); if (b.off) it.style.display = 'none';
-      it.addEventListener('click', function () { setTarget(b.id); });
-      it.addEventListener('dblclick', function () { setTarget(b.id); autopilot(true); });
+      // C2.7a:单击/双击都只锁定目标(双击不再直接自动驾驶);出发统一走锚点卡「出发」/ 航行规划「出发」/ G
+      it.addEventListener('click', function () { setTarget(b.id, root.classList.contains('xg-cat') ? '目录' : '快捷目的地'); });
     });
     $('#xc-exit', root).onclick = function () { confirmEnd(); };
     $('#xc-more', root).onclick = function () {
@@ -372,7 +372,7 @@
     root.querySelectorAll('.mob .btn').forEach(function (b) {
       b.onclick = function () { var k = b.getAttribute('data-k'); if (k === 'end') { confirmEnd(); return; } if (k === '+') S.base = Math.min(MAXV, S.base * 1.6 + .5); if (k === '-') S.base = Math.max(0, S.base / 1.6 - .2); if (k === 'm') S.mult = S.mult >= 1e6 ? 1 : S.mult * 10; if (k === 'g') autopilot(!S.auto); S.auto = k === 'g' ? S.auto : false; };
     });
-    B.forEach(function (b) { var l = el('div', 'lbl', b.zh + '<i></i>'); l.dataset.id = b.id; l.dataset.p = b.id === 'sun' ? 800 : b.ghost ? 760 : b.star ? 700 : b.comet ? 380 : b.parent ? 300 : b.type === '矮行星' ? 480 : 650; l.onclick = function () { setTarget(b.id); }; $('#xc-lbls', root).appendChild(l); b.lb = l; });
+    B.forEach(function (b) { var l = el('div', 'lbl', b.zh + '<i></i>'); l.dataset.id = b.id; l.dataset.p = b.id === 'sun' ? 800 : b.ghost ? 760 : b.star ? 700 : b.comet ? 380 : b.parent ? 300 : b.type === '矮行星' ? 480 : 650; l.onclick = function () { setTarget(b.id, '星空标签'); }; $('#xc-lbls', root).appendChild(l); b.lb = l; });
   }
   function toast(m) { var t = $('#xc-toast', root); t.textContent = m; t.style.opacity = 1; clearTimeout(t._h); t._h = setTimeout(function () { t.style.opacity = 0; }, 2400); }
   function tempStar(o) {   // C2.2d:把任意恒星装进临时航点槽,重建恒星外观
@@ -383,7 +383,7 @@
     b.fx = null; sMain.add(body3d(b)); ephem(true);
     b.li.style.display = ''; b.li.querySelector('.nm').textContent = b.zh + ' · 临时'; b.li.querySelector('.dot').style.background = b.col;
     b.lb.innerHTML = b.zh + '<i></i>';
-    setTarget('tmpstar'); return b;
+    setTarget('tmpstar', o.src); return b;
   }
   function tempDso(o) {   // C2.6b:把深空天体装进深空航点槽
     var b = BY.tmpdso; if (!b || !b.li) return null;
@@ -391,7 +391,7 @@
     b.off = false; ephem(true);
     b.li.style.display = ''; b.li.querySelector('.nm').textContent = b.zh + ' · 深空'; b.li.querySelector('.dot').style.background = b.col;
     b.lb.innerHTML = b.zh + '<i></i>';
-    setTarget('tmpdso'); return b;
+    setTarget('tmpdso', o.src); return b;
   }
   var GLP = null, GLC = {};
   function gltf() {
@@ -417,8 +417,15 @@
       b.cMesh = piv;
     }).catch(function (e) { console.warn('[SHXC craft]', b.id, e); });
   }
-  function setTarget(id) { S.target = id; if (S.auto) autopilot(true); B.forEach(function (b) { b.li.classList.toggle('on', b.id === id); }); }
-  function autopilot(on) { S.auto = on; S.align = false; if (on) toast('自动驾驶:飞往 ' + BY[S.target].zh); }
+  /* C2.7a 王磊 10-29:选定目标只「锁定」,不自动出发。带来源(src)的切换:自动驾驶中换目标 → 暂停自动驾驶,并在 Armilla 上方弹目标锚点卡 */
+  function setTarget(id, src) {
+    var old = S.target; S.target = id;
+    if (S.auto && src && old !== id) { S.auto = false; if (root) root.classList.remove('xc-ap'); toast('目标已切换为 ' + BY[id].zh + ' · 自动驾驶已暂停,确认后再点「出发」'); }
+    else if (S.auto) autopilot(true);
+    B.forEach(function (b) { b.li.classList.toggle('on', b.id === id); });
+    if (src && window.SHXAN) SHXAN.lock(BY[id], src, old !== id);
+  }
+  function autopilot(on) { S.auto = on; S.align = false; if (on) { toast('自动驾驶:飞往 ' + BY[S.target].zh); if (window.SHXAN) SHXAN.fade(); } }
 
   /* C1.9c 日球层读数(30 AU 以外显示):按旅行者 1/2 号实测剖面插值的示意值
    * 终端激波 ~94 AU(V1 2004-12;V2 ~84 AU 2007-08):太阳风由超音速 ~400 km/s 骤降到 ~130 km/s,等离子体被压缩加热、磁场增强
@@ -464,7 +471,7 @@
     if (k === 'Escape') { if (dlg) { endDlg(false); return; } if (X._esc && X._esc()) return; confirmEnd(); }
     else if (dlg && k === 'Enter') { endDlg(true); }
     else if (k === 'x') { S.base = 0; S.mult = 1; S.auto = false; toast('急停'); }
-    else if (k === 't') { var i = B.map(function (b) { return b.id; }).indexOf(S.target); setTarget(B[(i + 1) % B.length].id); }
+    else if (k === 't') { var i = B.map(function (b) { return b.id; }).indexOf(S.target); setTarget(B[(i + 1) % B.length].id, '键盘 T'); }
     else if (k === 'z') { S.align = !S.align; S.auto = false; }
     else if (k === 'g') autopilot(!S.auto);
     else if (k === 'l') S.labels = !S.labels;
@@ -824,10 +831,10 @@
     if (dlg) { dlg.remove(); dlg = null; }
     if (!quiet) { K.resume = true; if (window.SHXV) SHXV.go('solar'); }
   };
-  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id) { setTarget(id); }, tempStar: function (o) { return tempStar(o); }, tempDso: function (o) { return tempDso(o); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, rd: function () { return rd; }, fdur: fdur, fkm: fkm, sky: function () { return sSky; }, orb: function () { return sOrb; }, cam: function () { return cam; }, skyG: function () { return K.skyG; }, emit: function (e, a) { emit(e, a); } };
+  X._ = { S: S, B: B, BY: BY, AU: AU, C: C, MAXV: MAXV, toast: function (m) { toast(m); }, setTarget: function (id, src) { setTarget(id, src); }, tempStar: function (o) { return tempStar(o); }, tempDso: function (o) { return tempDso(o); }, autopilot: function (on) { autopilot(on); }, root: function () { return root; }, rd: function () { return rd; }, fdur: fdur, fkm: fkm, sky: function () { return sSky; }, orb: function () { return sOrb; }, cam: function () { return cam; }, skyG: function () { return K.skyG; }, emit: function (e, a) { emit(e, a); } };
   X.state = function () { return { pos: S.pos.slice(), target: S.target, base: S.base, mult: S.mult, auto: S.auto, sunVis: sunVis }; };
   X.health = function () { return { lost: !!K.lost, nLost: K.nLost || 0, restored: K.nRest || 0, rebuilt: K.nRebuild || 0, heal: BK.heal, w: rd ? rd.domElement.width : 0, h: rd ? rd.domElement.height : 0 }; };
   X._rebuild = function () { rebuildRd(); };
-  X.setTarget = function (id) { if (BY[id]) setTarget(id); };
+  X.setTarget = function (id, src) { if (BY[id]) setTarget(id, src); };
   X.autopilot = function (on) { autopilot(on !== false); };
 })();

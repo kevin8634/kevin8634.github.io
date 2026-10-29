@@ -45,7 +45,8 @@
   function show(k) {
     var root = X._.root(); if (!root) return; css(); SEL = k;
     if (!box) { box = document.createElement('div'); box.id = 'xk-box'; } root.appendChild(box);
-    if (card) card.remove(); card = document.createElement('div'); card.id = 'xk-card';
+    if (card) card.remove(); card = document.createElement('div'); card.id = 'xk-card'; var src = X._.cardSrc || '星空点选'; X._.cardSrc = null;   // C2.7a 来源:目录打开的卡标「目录」
+   
     var s = shipLy(), m = appMag(k, s), bv = ST.BV[k], nm = (window.SHX_STARNAMES || {})[k], Q = ST.Q;
     var dSun = Math.hypot(Q[k * 3], Q[k * 3 + 1], Q[k * 3 + 2]), dShip = Math.hypot(ST.P[k * 3] - s[0], ST.P[k * 3 + 1] - s[1], ST.P[k * 3 + 2] - s[2]);
     var ra = Math.atan2(Q[k * 3 + 1], Q[k * 3]) * 180 / Math.PI, de = Math.asin(Q[k * 3 + 2] / (dSun || 1)) * 180 / Math.PI;
@@ -62,22 +63,21 @@
       '<div class="r"><span>赤经(J2000)</span><b>' + hms(ra) + '</b></div><div class="r"><span>赤纬(J2000)</span><b>' + dms(de) + '</b></div>' +
       '<div class="r"><span>所需器材(地球上)</span><b>' + eye(appMag(k, [0, 0, 0])) + '</b></div>' +
       '<div class="n">位置、亮度与颜色来自 HYG v4.1 星表(Hipparcos / Yale / Gliese 汇编)。光谱型与温度只凭颜色估算,巨星与主序星会有偏差。</div>' +
-      (wp ? '<button class="go" type="button">设为航行目标</button>' : (k > 0 && dSun > 0.01 && X._.tempStar ? '<button class="go" type="button">前往 · 生成临时航点</button>' : ''));
+      (wp ? '<button class="go" type="button">设为航行目标</button>' : (k > 0 && dSun > 0.01 && X._.tempStar ? '<button class="go" type="button">锁定为航点 · 生成临时航点</button>' : ''));
     root.appendChild(card); place(); clearInterval(PT); PT = setInterval(place, 700);
-    card.querySelector('.x').onclick = hide; var g = card.querySelector('.go'); if (g) g.onclick = wp ? function () { X._.setTarget(wp.id); hide(); } : function () { go(k, nm, m, t, c, col, dSun, ra, de); };
+    card.querySelector('.x').onclick = hide; var g = card.querySelector('.go'); if (g) g.onclick = wp ? function () { X._.setTarget(wp.id, src); hide(); } : function () { go(k, nm, m, t, c, col, dSun, ra, de, src); };
   }
   /* C2.2d T5:任意 HYG 恒星「前往」——按星表数值估算外观参数,装进驾驶舱临时航点槽,随后自动驾驶(远距沿用曲率跃迁) */
-  function go(k, nm, m, t, c, col, dSun, ra, de) {
+  function go(k, nm, m, t, c, col, dSun, ra, de, src) {
     var L = Math.pow(10, (4.83 - ST.M[k]) / 2.5), T0 = t || 5800, Rs = Math.max(.08, Math.min(1500, Math.sqrt(L) * Math.pow(5772 / T0, 2))), Ms = Math.max(.08, Math.min(60, Math.pow(L, 1 / 3.5)));
     var u = Math.max(0, Math.min(1, (Math.log(T0) - Math.log(3000)) / (Math.log(12000) - Math.log(3000))));
     var tint = [1.25 + (1.05 - 1.25) * u, .62 + (1.22 - .62) * u, .4 + (1.55 - .4) * u];
     var name = nm ? nm[0] : 'HYG #' + k, ly = dSun < 100 ? dSun.toFixed(2) : Math.round(dSun).toLocaleString();
     var b = X._.tempStar({ zh: name, en: nm ? nm[1] : 'HYG ' + k, type: nm ? nm[2] : (c ? c[0] + ' 型恒星' : '恒星'), R: Rs * 696340, GM: Ms * 1.32712e11, L: L, temp: t ? '≈ ' + (Math.round(t / 100) * 100).toLocaleString() + '(按颜色估算)' : '—',
-      col: col, tint: tint, sat: T0 > 8000 ? .1 : 1, fix: [(ra + 360) % 360, de, dSun * 63241.077], hyg: k,
+      col: col, tint: tint, sat: T0 > 8000 ? .1 : 1, fix: [(ra + 360) % 360, de, dSun * 63241.077], hyg: k, src: src,
       info: [['光谱型', c ? c[0] + ' · ' + c[1] + '(按颜色估算)' : '—'], ['光度', '约 ' + (L < 10 ? L.toFixed(2) : Math.round(L).toLocaleString()) + ' 个太阳'], ['半径', '约 ' + (Rs < 10 ? Rs.toFixed(2) : Math.round(Rs)) + ' 个太阳(估算)'], ['距离', ly + ' 光年'], ['外观', '程序化模拟 · 数值来自 HYG v4.1']] });
     hide(); if (!b) return;
-    if (window.SHXS && SHXS.mode) SHXS.mode('boost'); else X._.S.capV = 0;   // 恒星际距离:切到引擎加速(曲率跃迁),否则巡航 100 km/s 上限
-    X._.autopilot(true); X._.toast('已生成临时航点「' + name + '」· ' + ly + ' 光年 · 自动驾驶出发');
+    X._.toast('已锁定临时航点「' + name + '」· ' + ly + ' 光年 · 点锚点卡「出发」前往');   // C2.7a:只锁定,不再一点就走
   }
   /* C2.3 T5 第二部分:深空天体(OpenNGC,CC BY-SA 4.0)——梅西耶 110 + 视星等 ≤ 9 的 NGC/IC,天球上淡圈标注,可点选看资料 */
   var DS = null, SELD = -1, mk = null, MKP = [], mkN = 0;
@@ -125,7 +125,8 @@
   function showD(i) {
     var root = X._.root(); if (!root) return; css(); hide(); SELD = i;
     var o = DS[i].o, R = window.SH_DSO, ty = R.ty[o[3]] || o[3], nm = o[1] || o[2] || o[0];
-    card = document.createElement('div'); card.id = 'xk-card';
+    card = document.createElement('div'); card.id = 'xk-card'; var src = X._.cardSrc || '星空点选'; X._.cardSrc = null;   // C2.7a 来源:目录打开的卡标「目录」
+   
     var sz = o[7] ? (o[7] >= 60 ? (o[7] / 60).toFixed(1) + '°' : o[7].toFixed(1) + '′') + (o[8] && o[8] !== o[7] ? ' × ' + (o[8] >= 60 ? (o[8] / 60).toFixed(1) + '°' : o[8].toFixed(1) + '′') : '') : '—';
     var moon = o[7] ? (o[7] / 31).toFixed(o[7] > 62 ? 0 : 1) : 0;
     card.innerHTML = '<button class="x" type="button" aria-label="关闭">×</button><div class="k">OpenNGC · ' + ty + '</div>' +
@@ -136,9 +137,9 @@
       '<div class="r"><span>视大小</span><b>' + sz + '</b></div>' + (moon >= 0.5 ? '<div class="r"><span>相当于</span><b>约 ' + moon + ' 个满月宽</b></div>' : '') +
       '<div class="r"><span>赤经(J2000)</span><b>' + hms(o[4]) + '</b></div><div class="r"><span>赤纬(J2000)</span><b>' + dms(o[5]) + '</b></div>' +
       '<div class="r"><span>所需器材(地球上)</span><b>' + (o[9] != null ? eye(o[9] + (o[7] > 20 ? 1 : 0)) : '—') + '</b></div>' +
-      '<div class="n">数据来自 OpenNGC(CC BY-SA 4.0)。深空天体远在千光年以外,天枢号目前只能远观;' + (window.SHXDV && SHXDV.has(o[0]) ? '可作为银河星域航点真实飞抵(真实方向与距离,航行时间已压缩),抵达后为真实影像分层呈现。</div><button class="go" type="button">航行前往 · 曲率跃迁 · ' + SHXDV.info(o[0]).dist + '</button>' : '飞抵星云、星系的真实影像正在逐个上线。</div>');
+      '<div class="n">数据来自 OpenNGC(CC BY-SA 4.0)。深空天体远在千光年以外,天枢号目前只能远观;' + (window.SHXDV && SHXDV.has(o[0]) ? '可作为银河星域航点真实飞抵(真实方向与距离,航行时间已压缩),抵达后为真实影像分层呈现。</div><button class="go" type="button">锁定为航点 · ' + SHXDV.info(o[0]).dist + '</button>' : '飞抵星云、星系的真实影像正在逐个上线。</div>');
     root.appendChild(card); place(); clearInterval(PT); PT = setInterval(place, 700);
-    card.querySelector('.x').onclick = hide; dsoMarks(); var gd = card.querySelector('.go'); if (gd) gd.onclick = function () { hide(); SHXDV.fly(o[0]); };
+    card.querySelector('.x').onclick = hide; dsoMarks(); var gd = card.querySelector('.go'); if (gd) gd.onclick = function () { hide(); SHXDV.lock(o[0], src); };
   }
   function hide() { SELD = -1; SEL = -1; clearInterval(PT); if (box) box.remove(); if (card) { card.remove(); card = null; } }
   /* C2.2b 信息卡避让:不与目标面板(含日球层栏)、仪表、底部按钮条、讲解卡重叠。
