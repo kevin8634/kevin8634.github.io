@@ -86,7 +86,9 @@
     var src = null, small = Math.min(screen.width, screen.height) < 700 || (navigator.deviceMemory && navigator.deviceMemory < 4);
     if (key) src = key; else if (b.hd && !small && rd.capabilities.maxTextureSize >= 4096) src = b.hd; else if (b.lo && window.LE_TEX) src = LE_TEX[b.lo];
     if (!src && b.lo && window.LE_TEX) src = LE_TEX[b.lo];
-    if (src) { var im = new Image(); im.decoding = 'async'; im.onload = function () { t.image = im; t.needsUpdate = true; t.ok = 1; }; im.onerror = function () { if (b.lo && window.LE_TEX && src !== LE_TEX[b.lo]) { src = LE_TEX[b.lo]; im.src = src; } }; im.src = src; }
+    if (src) { var im = new Image(); im.decoding = 'async'; im.onload = function () { t.image = im; t.needsUpdate = true; t.ok = 1; }; im.onerror = function () { if (b.lo && window.LE_TEX && src !== LE_TEX[b.lo]) { src = LE_TEX[b.lo]; im.src = src; } };
+      // C2.7b:地球昼/夜/云贴图计入登舰「模型 · 贴图」真实进度(字节 + onload 才算就绪);其余贴图照旧后台载入
+      if (window.SHXLD && b.id === 'earth') SHXLD.img(im, src, { id: 'tex:earth-' + (key ? (/^data:/.test(key) ? 'inl' + (++K.texN || (K.texN = 1)) : String(key).slice(0, 60)) : 'day'), grp: 'vis', label: '地球贴图', est: 1.6e6 }); else im.src = src; }
     return t;
   }
   var PV = 'varying vec2 vU;varying vec3 vN;varying vec3 vW;void main(){vU=uv;vN=normalize(mat3(modelMatrix)*normal);vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}';
@@ -732,7 +734,16 @@
     var cv = makeRd();
     cam = new T.PerspectiveCamera(60, 1, 1, 1e7); cam0 = new T.PerspectiveCamera(60, 1, 0.1, 5000); camO = new T.PerspectiveCamera(60, 1, 1e3, 2e11);
     sSky = new T.Scene(); sOrb = new T.Scene(); sMain = new T.Scene(); sDust = new T.Scene();
-    if (window.SHFX3D && SHFX3D.skyMesh) { K.skyG = SHFX3D.skyMesh(rd, 1000, 0x9aa0ae); sSky.add(K.skyG); }
+    // C2.7b:星空球照旧用 SHFX3D.skyMesh —— 贴图与 1.0 场景共用同一份(1.0 首页启动时 upgradeSkies 已在下载/已下好),
+    // 另起带进度的 fetch 会在无缓存头的服务器上重复下载 6 MB。登舰门以贴图 ready(已解码上传)为准:已就绪立即记 ok。
+    if (window.SHFX3D && SHFX3D.skyMesh) {
+      K.skyG = SHFX3D.skyMesh(rd, 1000, 0x9aa0ae); sSky.add(K.skyG);
+      var skyT = SHFX3D.skyTexture && SHFX3D.skyTexture(rd);
+      if (window.SHXLD && skyT) {
+        var big = /8k/.test(SHXLD.skyUrl(rd)); SHXLD.add('sky', { grp: 'vis', label: '星空', est: big ? 6.1e6 : 1.55e6 });
+        if (skyT.image) SHXLD.set('sky', 'ok'); else { SHXLD.get('sky').st = 'load'; (skyT.ready || Promise.resolve()).then(function () { SHXLD.set('sky', 'ok'); }); }
+      }
+    }
     sOrb.add(orbits());
     ephem(true); B.forEach(function (b) { sMain.add(body3d(b)); });
     dust = dustField(); if (dust.N) sDust.add(dust.m);

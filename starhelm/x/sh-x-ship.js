@@ -738,8 +738,11 @@
     else return;
     e.preventDefault(); e.stopPropagation();
   }
-  /* C1.9 登舰:舱门遮罩 + 「舰载智能语音 / 舱内音响」两条真实下载进度;最短 3.2 s、最长 12 s(超时也放行),可跳过 */
-  function pull(url, onp) {   // 带进度的预取(写入浏览器缓存,随后 new Audio 直接命中)
+  /* C1.9 登舰 → C2.7b 真实载入进度(王磊 10-29 11:43:「进场登录的画面 2 个载入进度要真实,不要进去以后还是模型没加载好、声音没加载好」)
+   * 两条进度读 SHXLD 登记表:「模型 · 贴图」= 星空 + 地球昼/夜/云(手机为内置贴图);「声音」= 当前待命曲 + 欢迎语与常用语音(a01 a02 a03 a06)。
+   * 下载完不算数:贴图要 onload/ready,音频要 canplaythrough;需要用户手势才能启用的记「待点击启用」并出「进入驾驶舱 · 启用声音」。
+   * 失败已自动重试一次;仍失败显示「部分资源未载入 · 继续」。最短 3.2 s,最长 45 s;已去掉 12 s 强制放行与「跳过」。 */
+  function pull(url, onp) {   // 旧预取(无 SHXLD 时退回)
     return fetch(url).then(function (r) {
       if (!r.ok) throw 0; var tot = +r.headers.get('content-length') || 0, got = 0;
       if (!r.body || !r.body.getReader) return r.blob().then(function () { onp(1); });
@@ -747,35 +750,73 @@
       return (function pump() { return rd.read().then(function (x) { if (x.done) { onp(1); return; } got += x.value.length; onp(tot ? Math.min(.99, got / tot) : .5); return pump(); }); })();
     }).catch(function () { onp(1); });
   }
+  function audReady(P, id, url, label) {   // 带进度下载 → <audio> canplaythrough 才算可用;8 s 内不就绪(手机未授权预载)记「待点击启用」
+    P.pull(id, url, { grp: 'snd', label: label, est: 3.5e5 }).then(function () {
+      var it = P.get(id); if (it && (it.st === 'ok' || it.st === 'tap')) return;
+      var a = new Audio(); a.preload = 'auto'; a.muted = true;
+      var to = setTimeout(function () { P.set(id, 'tap'); }, 8000);
+      a.addEventListener('canplaythrough', function () { clearTimeout(to); P.set(id, 'ok'); }, { once: true });
+      a.addEventListener('error', function () { clearTimeout(to); P.set(id, 'fail'); }, { once: true });
+      a.src = url; try { a.load(); } catch (e) { }
+    }, function () { });
+  }
   function board(hg, done) {
     var root = R || (I.root && I.root()); if (!root) { done(); return; }
+    var P = window.SHXLD;
     var ov = $('#xa-board', root); if (ov) ov.remove();
     ov = el('div', '', '<div class="bd-door l"></div><div class="bd-door r"></div><div class="bd-mid"><div class="bd-k">BOARDING · 登舰</div><div class="bd-t">天枢号 STARHELM</div>' +
-      '<div class="bd-row"><span>舰载智能语音 · ' + pname() + '</span><i><b id="bd-v"></b></i><em id="bd-vp">0%</em></div>' +
-      '<div class="bd-row"><span>舱内音响系统</span><i><b id="bd-m"></b></i><em id="bd-mp">0%</em></div>' +
-      '<div class="bd-s" id="bd-s">气闸加压中…</div><button type="button" class="bd-skip">跳过 ›</button></div>');
+      '<div class="bd-row"><span>模型 · 贴图</span><i><b id="bd-g"></b></i><em id="bd-gp">0%</em></div>' +
+      '<div class="bd-row"><span>声音 · ' + pname() + ' 语音与舱内音乐</span><i><b id="bd-a"></b></i><em id="bd-ap">0%</em></div>' +
+      '<div class="bd-s" id="bd-s">气闸加压中…</div><div class="bd-d" id="bd-d"></div><button type="button" class="bd-skip bd-go" hidden></button></div>');
     ov.id = 'xa-board'; root.appendChild(ov);
-    var pv = { v: 0, m: 0 }, t0 = performance.now(), fin = false, ok = { v: false, m: false };
-    function bar(k, f) { pv[k] = Math.max(pv[k], f); var b = $('#bd-' + k, ov), e = $('#bd-' + k + 'p', ov); if (b) b.style.width = (pv[k] * 100).toFixed(0) + '%'; if (e) e.textContent = (pv[k] * 100).toFixed(0) + '%'; if (pv[k] >= 1) ok[k] = true; check(); }
-    function finish() {
-      if (fin) return; fin = true; var st = $('#bd-s', ov); if (st) st.textContent = '舱门开启';
+    var t0 = performance.now(), fin = false, sndReg = false, iv = 0, cap = 0, pv = { g: 0, a: 0 }, go = $('.bd-go', ov);
+    function bar(k, f) { pv[k] = Math.max(pv[k], Math.min(1, f)); var b = $('#bd-' + k, ov), e = $('#bd-' + k + 'p', ov); if (b) b.style.width = (pv[k] * 100).toFixed(0) + '%'; if (e) e.textContent = Math.floor(pv[k] * 100) + '%'; }
+    function txt(id, t) { var e = $('#' + id, ov); if (e && e.textContent !== t) e.textContent = t; }
+    function finish(why) {
+      if (fin) return; fin = true; clearInterval(iv); clearTimeout(cap); if (P) P.last = { why: why, ms: Math.round(performance.now() - t0) }; txt('bd-s', '舱门开启'); go.hidden = true;
+      if (why === 'tap' || why === 'go') { var c = ac(); if (c && c.state === 'suspended') c.resume(); }
+      if (why === 'cap') I.toast('部分资源仍在载入 · 已先开舱门');
       blip(520, .25, .05); ov.classList.add('open'); setTimeout(function () { ov.remove(); }, 1600);
       if (hg === VOICE.gen) done();
     }
-    function check() { if (fin) return; if (ok.v && ok.m) { var st = $('#bd-s', ov); if (st) st.textContent = '系统就绪'; setTimeout(finish, Math.max(400, 3200 - (performance.now() - t0))); } }
-    $('.bd-skip', ov).onclick = finish; setTimeout(finish, 12000);
-    setTimeout(function () { var st = $('#bd-s', ov); if (st && !fin) st.textContent = '校准星图 · 唤醒舰载智能…'; }, 1300);
-    // 音乐:当前待命曲
-    if (SND.music !== false) pull(IDLE[MUS.ii % IDLE.length].f, function (f) { bar('m', f); }); else bar('m', 1);
-    // 语音:清单 + 欢迎语两句(a01/a02)
-    if (!VOICE.on) bar('v', 1);
-    else fetch('x/' + PER.id + '/manifest.json').then(function (r) { return r.json(); }).then(function (m) {
-      var c = {}; m.items.forEach(function (it) { c[it.id] = it; c['t:' + it.text] = it; }); if (!VOICE.clips) { VOICE.clips = c; VOICE.pack = PER.id; }
-      var fs = ['a01', 'a02'].map(function (id) { var it = c[id]; return it && ('x/' + PER.id + '/' + (sfxChain() ? it.file : (SFX.on && it.file_fx ? it.file_fx : it.file))); }).filter(Boolean);
-      var part = fs.map(function () { return 0; }); bar('v', .1);
-      if (!fs.length) { bar('v', 1); return; }
-      fs.forEach(function (u, k) { pull(u, function (f) { part[k] = f; bar('v', .1 + .9 * part.reduce(function (x, y) { return x + y; }, 0) / fs.length); }); });
-    }).catch(function () { bar('v', 1); });
+    if (!P) {   // 无登记表:退回旧逻辑(两条按下载进度,12 s 放行)
+      bar('g', 1); var ok = { m: false, v: false };
+      var chk = function () { if (ok.m && ok.v) setTimeout(finish, Math.max(400, 3200 - (performance.now() - t0))); };
+      if (SND.music !== false) pull(IDLE[MUS.ii % IDLE.length].f, function (f) { bar('a', f * .5); if (f >= 1) { ok.m = true; chk(); } }); else ok.m = true;
+      ok.v = true; chk(); setTimeout(finish, 12000); return;
+    }
+    go.onclick = function () { finish(go.dataset.k || 'go'); };
+    // 声音登记
+    var acNeed = SND.sfx && AC && AC.state !== 'running';
+    if (acNeed) {   // 进入那一下通常已解锁;给 1.2 s 等它转为 running,仍未运行才记「待点击启用」
+      P.add('ac', { grp: 'snd', label: '音效引擎', est: 1 });
+      var acChk = function () { if (AC && AC.state === 'running') P.set('ac', 'ok'); };
+      try { AC.addEventListener('statechange', acChk); } catch (e) { }
+      setTimeout(function () { acChk(); if (!(AC && AC.state === 'running')) P.set('ac', 'tap'); }, 1200);
+    }
+    if (SND.music !== false) { var mf = IDLE[MUS.ii % IDLE.length].f; audReady(P, 'mus:' + mf, mf, '舱内音乐'); }
+    if (!VOICE.on) sndReg = true;
+    else {
+      P.add('vman:' + PER.id, { grp: 'snd', label: '语音清单', est: 2e4 });
+      fetch('x/' + PER.id + '/manifest.json').then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (m) {
+        var c = {}; m.items.forEach(function (it) { c[it.id] = it; c['t:' + it.text] = it; }); if (!VOICE.clips) { VOICE.clips = c; VOICE.pack = PER.id; }
+        P.set('vman:' + PER.id, 'ok');
+        ['a01', 'a02', 'a03', 'a06'].forEach(function (id) { var it = c[id]; if (!it) return; var u = 'x/' + PER.id + '/' + (sfxChain() ? it.file : (SFX.on && it.file_fx ? it.file_fx : it.file)); audReady(P, 'v:' + u, u, pname() + ' 语音 ' + id); });
+        sndReg = true;
+      }).catch(function () { P.set('vman:' + PER.id, 'fail'); sndReg = true; });
+    }
+    function tick() {
+      if (fin) return;
+      var g = P.prog('vis'), a = P.prog('snd'); bar('g', g.f); bar('a', sndReg ? a.f : Math.min(a.f, .1));
+      var pend = g.pend.concat(a.pend), el2 = performance.now() - t0;
+      if (pend.length || !sndReg) { txt('bd-s', el2 < 1300 ? '气闸加压中…' : '校准星图 · 唤醒舰载智能…'); txt('bd-d', pend.length ? '载入中:' + pend.slice(0, 3).map(function (x) { return x.label; }).join('、') : ''); return; }
+      var fail = g.fail + a.fail, tap = a.tap;
+      if (fail) { txt('bd-s', '部分资源未载入'); txt('bd-d', '已自动重试一次;可先进入,稍后会继续尝试'); go.textContent = '继续 ›'; go.dataset.k = tap ? 'tap' : 'go'; go.hidden = false; return; }
+      if (tap) { txt('bd-s', '系统就绪 · 声音待点击启用'); txt('bd-d', ''); go.textContent = '进入驾驶舱 · 启用声音'; go.dataset.k = 'tap'; go.hidden = false; return; }
+      txt('bd-s', '系统就绪'); txt('bd-d', ''); clearInterval(iv); setTimeout(function () { finish('ok'); }, Math.max(400, 3200 - el2));
+    }
+    iv = setInterval(tick, 150); tick();
+    cap = setTimeout(function () { finish('cap'); }, 45000);
   }
   X.on(function (ev, a) {
     if (ev === 'open') {
