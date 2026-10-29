@@ -128,13 +128,13 @@
     ov.innerHTML = '<canvas></canvas><div class="wp"></div><div class="hd">' + (arr ? '已抵达 → ' + d.zh + ' · 距地球 ' + fly0(d.ly) : '曲率跃迁 → ' + d.zh + ' · ' + fly0(d.ly)) + '</div>' +
       '<div class="pn"><h5>抵达报告 · ' + d.type + '</h5><h4>' + d.zh + '<small>' + d.en + '</small></h4>' + d.facts.map(function (r) { return kv(r[0], r[1], r[2]); }).join('') + (d.ir ? '<div class="irf" hidden>' + kv(d.ir.fact[0], d.ir.fact[1], d.ir.fact[2]) + '</div>' : '') +
       (arr ? '<div class="tr"><em>时间已压缩</em>本次航程 ' + fly0(arr.ly) + ',演示用时 ' + Math.round(arr.sec) + ' 秒;以光速飞行需约 ' + fly0(arr.ly).replace('光年', '年').replace(' AU', ' AU 光程') + '。<span style="white-space:nowrap">曲率驱动属<b style="color:#ff9fb2;font-weight:500">猜想</b>。</span></div>' : '') +
-      '<div class="bl">' + d.blurb + '</div><div class="nt"><em>影像</em><span class="crt">' + d.cr + '</span>。去星后按亮度分层形成视差,纵深为示意。</div></div>' +
+      '<div class="bl">' + d.blurb + '</div><div class="nt"><em>' + (d.exo ? '来源' : '影像') + '</em><span class="crt">' + d.cr + '</span>' + (d.exo ? '。这类天体太小太远,望远镜里只是一个点,没有可用的分层照片。' : '。去星后按亮度分层形成视差,纵深为示意。') + '</div></div>' +
       '<div class="bt"><button type="button" data-a="back">返回驾驶舱</button>' + (d.ir ? '<button type="button" data-a="band" aria-pressed="false">波段 · 近红外(JWST)</button>' : '') + (obsOk(key) ? '<button type="button" data-a="obs">舷窗观测 · 模拟渲染</button>' : '') + (arr ? '<button type="button" data-a="home">返航 · 太阳系</button>' : '') + '</div>';
     root.appendChild(ov); cv = ov.querySelector('canvas'); ctx = cv.getContext('2d'); size();
     imgs = []; for (var i = 0; i < d.n; i++) { var im = new Image(); im.decoding = 'async'; im.src = 'x/dsoimg/' + f + '-' + i + sm + '.webp'; if (rm) im.onload = kick; imgs.push(im); }
-    star = new Image(); star.src = 'x/dsoimg/' + f + '-s' + sm + '.webp'; if (rm) star.onload = kick;
+    star = new Image(); if (!d.exo) { star.src = 'x/dsoimg/' + f + '-s' + sm + '.webp'; if (rm) star.onload = kick; }
     ov.querySelector('[data-a=back]').onclick = function () { close(); if (arr) X._.toast('天枢号停泊在 ' + d.zh + ' 附近 · 可在目录选新目标,或按「返航」'); };
-    var ob = ov.querySelector('[data-a=obs]'); if (ob) ob.onclick = function () { close(); SHXNB.observe(key); };
+    var ob = ov.querySelector('[data-a=obs]'); if (ob) ob.onclick = function () { close(); OBS(key).observe(key); };
     var hb = ov.querySelector('[data-a=home]'); if (hb) hb.onclick = function () { close(); home(); };
     var bb = ov.querySelector('[data-a=band]'); if (bb) bb.onclick = function () { band(); };
     if (!rm) {
@@ -147,7 +147,9 @@
     t0 = performance.now(); requestAnimationFrame(function () { if (ov) ov.classList.add('in'); }); raf = requestAnimationFrame(draw);
     if (!arr && X._.toast) X._.toast('曲率跃迁 · 抵达 ' + d.zh + '(' + fly0(d.ly) + ')');
   }
-  function obsOk(key) { var b = X && X._ && X._.BY && X._.BY.tmpdso; return !!(window.SHXNB && SHXNB.has(key) && X.isOpen && X.isOpen() && b && !b.off && b.key === key); }
+  function OBS(key) { return window.SHXEO && SHXEO.has(key) ? SHXEO : window.SHXNB; }   // C2.8a:特殊天体走 SHXEO(光线追踪),星云星系走 SHXNB
+  function hasObs(key) { var o = OBS(key); return !!(o && o.has(key)); }
+  function obsOk(key) { var b = X && X._ && X._.BY && X._.BY.tmpdso; return !!(hasObs(key) && X.isOpen && X.isOpen() && b && !b.off && b.key === key); }
   /* C2.6d 可见光 ⇄ 近红外:1.2 秒交叉淡化(减少动态时直接切换);红外层首次切换时才下载 */
   function band() {
     var d = DV[cur]; if (!d || !d.ir || !ov) return; var ir = d.ir, sm = small() ? 'm' : '';
@@ -202,7 +204,7 @@
     var S = X._.S, rm = red();
     if (window.SHXS && SHXS.mode) SHXS.mode('boost');
     S.auto = false; S.base = 0; S.mult = 1; S.align = true; S.voy = o.key || 'home';
-    if (window.SHXAN) SHXAN.fade(); if (window.SHXNB) SHXNB.endObs();
+    if (window.SHXAN) SHXAN.fade(); if (window.SHXNB) SHXNB.endObs(); if (window.SHXEO) SHXEO.endObs();
     V = o; V.rm = rm; V.ph = 'turn'; V.t = 0; V.p0 = S.pos.slice(); V.sec = 0;
     hudShow(); X._.toast((o.home ? '返航:' : '深空航点:') + o.name + ' · 机头转向中');
   }
@@ -267,7 +269,7 @@
   var ARR = {};
   function arrived(key, arr) {
     ARR[key] = arr;
-    if (window.SHXAN && SHXAN.arrive) { var d = DV[key]; SHXAN.arrive({ key: key, zh: d.zh, en: d.en, type: d.type, earth: fly0(d.ly), trip: arr.ly ? fly0(arr.ly) : '', sec: arr.sec, obs: !!(window.SHXNB && SHXNB.has(key)), photo: function () { open(key, { arrived: arr }); }, see: function () { if (window.SHXNB) SHXNB.observe(key); }, home: function () { home(); } }); return; }
+    if (window.SHXAN && SHXAN.arrive) { var d = DV[key]; SHXAN.arrive({ key: key, zh: d.zh, en: d.en, type: d.type, earth: fly0(d.ly), trip: arr.ly ? fly0(arr.ly) : '', sec: arr.sec, obs: hasObs(key), phl: d.exo ? '资料卡<small>无照片 · 只有一个光点</small>' : '', photo: function () { open(key, { arrived: arr }); }, see: function () { var o = OBS(key); if (o) o.observe(key); }, home: function () { home(); } }); return; }
     open(key, { arrived: arr });
   }
   function hook(ev, a) {
@@ -278,6 +280,6 @@
   (function wait(n) { if (window.SHXC && SHXC.on) { X = SHXC; SHXC.on(hook); return; } if (n < 100) setTimeout(function () { wait(n + 1); }, 100); })(0);
   (function w2(n) { if (window.SHXESC) { SHXESC.reg('dsofly', 90, function () { return !!V; }, function () { abort(); }); return; } if (n < 100) setTimeout(function () { w2(n + 1); }, 100); })(0);
   // C2.6a:原先误用 window.SHXV,会覆盖四级视图 sh-x-views.js 的 SHXV(go/step),导致退出驾驶舱、数字键切视图报错 → 改名 SHXDV
-  window.SHXDV = { has: function (k) { return !!DV[k]; }, open: open, close: close, fly: fly, lock: lock, home: home, abort: function () { abort(); }, flying: function () { return V ? { key: V.key, ph: V.ph, rem: V.rem, home: !!V.home } : null; },
+  window.SHXDV = { add: function (k, d) { DV[k] = d; }, has: function (k) { return !!DV[k]; }, open: open, close: close, fly: fly, lock: lock, home: home, abort: function () { abort(); }, flying: function () { return V ? { key: V.key, ph: V.ph, rem: V.rem, home: !!V.home } : null; },
     list: function () { return Object.keys(DV); }, lastArr: function (k) { return ARR[k] || null; }, arrived: function (k, a) { if (DV[k]) arrived(k, a || { ly: DV[k].ly, sec: 0 }); }, isOpen: function () { return !!ov; }, band: function () { band(); return bmT; }, info: function (k) { var d = DV[k]; return d ? { zh: d.zh, ly: d.ly, dist: fly0(d.ly) } : null; } };
 })();

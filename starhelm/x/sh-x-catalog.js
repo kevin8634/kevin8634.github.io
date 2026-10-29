@@ -48,6 +48,7 @@
       .forEach(function (c) { rows.push(['con', c[0], c[2], c[1], '#c9b78f']); });
     if (tab === 'dso' || q) {
       var D = window.SHXK && SHXK.dsoList ? SHXK.dsoList() : null, ty = (window.SH_DSO || {}).ty || {};
+      if (window.SHXEO) SHXEO.list().forEach(function (k) { var e = SHXEO.get(k); if (hit(q, [k, e.zh, e.en])) rows.push(['exo', k, e.zh, '✦ 可飞抵 · ' + (e.k === 'bh' ? '黑洞' : e.k === 'psr' ? '脉冲星' : '中子星'), '#ff9fb2']); });   // C2.8a 特殊天体置顶
       var nf = rows.length; if (D) D.forEach(function (d, i) { var o = d.o; if (!q && !o[1] && o[0].charAt(0) !== 'M') return; if (!hit(q, [o[0], o[1], o[2], o[11]])) return; var fly = window.SHXDV && SHXDV.has(o[0]), rw = ['dso', i, o[1] && o[1].indexOf(o[0]) !== 0 ? o[0] + ' ' + o[1] : (o[1] || o[0]), (fly ? '✦ 可飞抵 · ' : '') + (ty[o[3]] || ''), fly ? '#f0c97a' : '#9fc3ff']; if (fly) rows.splice(nf++, 0, rw); else rows.push(rw); });
     }
     rows.slice(0, lim).forEach(function (r) {
@@ -60,6 +61,7 @@
   function norm(v) { var l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; }
   function go(kind, id) {
     var v = null;
+    if (kind === 'exo') { if (window.SHXK) SHXK.hide(); if (window.SHXDV) SHXDV.lock(id, '目录'); return; }
     if (kind === 'star') { v = SHXK.starDir(id); X._.cardSrc = '目录'; SHXK.show(id); }
     else if (kind === 'dso') { var D = SHXK.dsoList(); if (!D) return; v = D[id].v; X._.cardSrc = '目录'; SHXK.dso(id); }
     else if (kind === 'con') {

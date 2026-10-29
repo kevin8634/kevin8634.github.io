@@ -45,3 +45,7 @@
 ## 10-29 20:5x 更新(C20)
 - 上线 C2.6e 近处程序化体积(sh-x-neb.js volume(),半分辨率光线步进,SHXNB.state().va 为体积强度)。详见 DEVLOG-2.0-C20.md。测试 work/t26e.py(W H rm 标签 [?three] 目标列表)。
 - T6 深空影像全部完成。下一步:T7 黑洞/中子星/脉冲星。BUG-01 仍待王磊发话。
+
+## 10-29 23:2x 更新(C21)
+- 上线 C2.8a T7 第一批:新 x/sh-x-exo.js(SHXEO,state() 含 on/key/D/tier/hud/obs),五个特殊天体(Sgr A*、Cyg X-1、Gaia BH1、RX J1856、Vela PSR)可飞抵,驾驶舱 GR 光线追踪 + 读数条。详见 DEVLOG-2.0-C21.md。测试 work/t28a.py(W H rm 标签 [?three] 目标列表 [fly])。
+- 新登记 BUG-02(抵达后弹「奥尔特云」讲解卡),未修。下一步:T7 第二批(蟹状星云脉冲星 / Geminga / 磁星;Sgr A* 接 EHT 影像)。

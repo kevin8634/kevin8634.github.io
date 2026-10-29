@@ -112,7 +112,7 @@
     card.innerHTML = '<div class="h"><span>✦ 已抵达 · ARRIVED</span><i>选择观看方式</i><button type="button" class="x" aria-label="收起">×</button></div>' +
       '<div class="n">' + esc(o.zh) + '<small>' + esc(o.en || '') + '</small></div>' +
       '<div class="m">' + esc(o.type || '') + ' · 距地球 <b>' + esc(o.earth) + '</b>' + (o.trip ? ' · 本次航程 ' + esc(o.trip) : '') + '</div>' +
-      '<div class="r"><button type="button" class="ph">真实照片<small>哈勃影像 · ESA/Hubble</small></button>' + (o.obs ? '<button type="button" class="se">舷窗观测<small>模拟渲染 · 非照片</small></button>' : '') + '<button type="button" class="hm" title="返航 · 太阳系">返航</button></div>';
+      '<div class="r"><button type="button" class="ph">' + (o.phl || '真实照片<small>哈勃影像 · ESA/Hubble</small>') + '</button>' + (o.obs ? '<button type="button" class="se">舷窗观测<small>模拟渲染 · 非照片</small></button>' : '') + '<button type="button" class="hm" title="返航 · 太阳系">返航</button></div>';
     var df = card.querySelector('.' + def); if (df) df.classList.add('df');
     card.querySelector('.x').onclick = function () { hide(true); X._.toast('天枢号停泊在 ' + o.zh + ' 附近 · 星云下方「真实照片」随时可看'); };
     card.querySelector('.ph').onclick = function () { hide(true); o.photo && o.photo(); };
