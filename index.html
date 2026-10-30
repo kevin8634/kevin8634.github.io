@@ -983,6 +983,50 @@
       @media (max-width: 860px) { .x-deep--orb { width: 160px; height: 160px; left: auto; right: 4px; transform: none; bottom: 100px; } .x-orb__img { width: 160px; height: 160px; margin: -80px 0 0 -80px; } .x-orb__core { width: 100px; height: 100px; margin: -50px 0 0 -50px; } .x-orb__ring { width: 114px; height: 114px; margin: -57px 0 0 -57px; }
         a.x-deep__pill.x-orb { width: 96px; height: 96px; margin: -48px 0 0 -48px; gap: 2px; } a.x-deep__pill.x-orb::after { top: 0; right: -10px; font-size: 8.5px; padding: 2px 5px; } .x-orb__v { font-size: 32px; } .x-orb__go { font-size: 10.5px; letter-spacing: .12em; padding-left: .12em; } .x-orb__side { display: none; } .x-deep--orb .x-deep__beam { display: none; } }
       @media (prefers-reduced-motion: reduce) { .x-orb__img, .x-orb__core, .x-orb__ring { animation: none; } }
+
+      /* v2.2.0 · 星历 2.0：深空四层纵深（Three.js 玻璃圆盘 + 程序叠中文；1.0 星历收为归档球） */
+      .x-l2 { position: fixed; inset: 0; z-index: 70; background: radial-gradient(120% 90% at 30% 40%, #0b1430 0%, #04060f 60%, #010208 100%); opacity: 0; transition: opacity .6s ease; overflow: hidden; color: #eaf0ff; }
+      .x-l2.on { opacity: 1; } .x-l2[hidden] { display: none; }
+      .x-l2 canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+      .x-l2__top { position: absolute; left: 0; right: 0; top: 0; z-index: 2; display: flex; align-items: center; gap: 28px; padding: 18px 28px; }
+      .x-l2__top .x-br__back { position: static; }
+      .x-l2__h { margin: 0; font: 700 40px/1 var(--sans); letter-spacing: .06em; color: #f4f8ff; text-shadow: 0 0 24px rgba(160,200,255,.35); display: flex; align-items: baseline; gap: 14px; }
+      .x-l2__h b { color: #ffd27a; font-weight: 700; } .x-l2__h small { font: 400 15px/1 var(--sans); letter-spacing: .24em; color: #9cb6dc; }
+      .x-l2__arc { margin-left: auto; display: flex; align-items: center; gap: 10px; padding: 6px 16px 6px 6px; border-radius: 999px; cursor: pointer; color: #dbe7ff; text-align: left;
+        background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.02)); border: 1px solid rgba(200,215,255,.28); box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 8px 30px -12px rgba(80,120,255,.6); backdrop-filter: blur(14px) saturate(1.3); -webkit-backdrop-filter: blur(14px) saturate(1.3); transition: transform .25s, border-color .25s; }
+      .x-l2__arc img { width: 46px; height: 46px; border-radius: 50%; -webkit-mask: radial-gradient(circle, #000 56%, transparent 70%); mask: radial-gradient(circle, #000 56%, transparent 70%); mix-blend-mode: screen; filter: hue-rotate(185deg) saturate(.7); transform: scale(1.35); }
+      .x-l2__arc b { display: block; font: 600 14px/1.2 var(--sans); letter-spacing: .08em; } .x-l2__arc small { font: 400 11.5px/1.2 var(--sans); color: #8fb3dd; letter-spacing: .12em; }
+      .x-l2__arc:hover, .x-l2__arc:focus-visible { transform: translateY(-1px); border-color: #e9c779; outline: none; }
+      .x-l2__surf { position: absolute; z-index: 2; left: 28px; right: 28px; top: 86px; display: flex; align-items: center; gap: 18px; padding-bottom: 12px; border-bottom: 1px solid rgba(140,180,255,.55); box-shadow: 0 1px 0 rgba(140,180,255,.15), 0 10px 30px -18px rgba(120,170,255,.8); }
+      .x-l2__surf h3 { margin: 0; flex: none; font: 600 15px/1 var(--sans); letter-spacing: .14em; color: #b9d4ff; }
+      .x-l2__chips { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; } .x-l2__chips::-webkit-scrollbar { display: none; }
+      .x-l2__chip { flex: none; display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; cursor: pointer; font: 400 13px/1 var(--sans); color: #e8eefc; white-space: nowrap;
+        background: linear-gradient(135deg, rgba(255,255,255,.09), rgba(255,255,255,.02)); border: 1px solid rgba(200,215,255,.22); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+      .x-l2__chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--c, #e9c779); box-shadow: 0 0 8px var(--c, #e9c779); }
+      .x-l2__chip b { font-weight: 600; color: var(--c, #e9c779); }
+      .x-l2__chip:hover, .x-l2__chip:focus-visible, .x-l2__chip[aria-pressed="true"] { border-color: var(--c, #e9c779); color: #fff; outline: none; }
+      .x-l2__cards { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+      .x-l2__card { position: absolute; width: min(430px, 34vw); padding: 14px 18px 14px; border-radius: 16px; pointer-events: auto; display: grid; grid-template-columns: auto 1fr; column-gap: 18px; row-gap: 6px; align-items: start; text-decoration: none; color: #eef4ff;
+        background: linear-gradient(140deg, rgba(255,255,255,.11), rgba(255,255,255,.025) 55%, rgba(255,255,255,.06)); border: 1px solid rgba(220,230,255,.22); border-top-color: rgba(255,255,255,.4);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.18), inset 0 0 30px -12px var(--c), 0 18px 40px -20px rgba(0,0,0,.9), 0 0 36px -18px var(--c); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); transition: transform .3s, border-color .3s; will-change: transform; }
+      .x-l2__card::before { content: ""; position: absolute; left: -64px; top: 50%; width: 64px; height: 1px; background: linear-gradient(to left, var(--c), transparent); opacity: .7; }
+      .x-l2__card:hover, .x-l2__card:focus-visible { border-color: var(--c); outline: none; }
+      .x-l2__nm { grid-row: span 3; } .x-l2__nm b { display: block; font: 700 34px/1 var(--sans); color: var(--c); text-shadow: 0 0 18px var(--c); letter-spacing: .04em; } .x-l2__nm small { display: block; margin-top: 6px; font: 500 10.5px/1 var(--sans); letter-spacing: .2em; color: #7f93b8; }
+      .x-l2__age { display: flex; justify-content: space-between; font: 500 13px/1.2 var(--sans); color: #cfdcf2; letter-spacing: .1em; } .x-l2__age em { font-style: normal; color: var(--c); font-weight: 600; letter-spacing: .04em; }
+      .x-l2__card ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; } .x-l2__card li { font: 400 14.5px/1.35 var(--sans); } .x-l2__card li::before { content: "●"; color: var(--c); margin-right: 8px; font-size: 10px; vertical-align: 2px; }
+      .x-l2__det { position: absolute; z-index: 3; left: 50%; bottom: 26px; transform: translateX(-50%); width: min(720px, calc(100% - 40px)); padding: 16px 20px; border-radius: 16px; font: 400 15px/1.6 var(--sans); color: #eef4ff;
+        background: linear-gradient(140deg, rgba(255,255,255,.12), rgba(255,255,255,.03)); border: 1px solid rgba(220,230,255,.25); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); box-shadow: 0 20px 50px -20px #000; }
+      .x-l2__det b { color: var(--c, #e9c779); margin-right: 10px; } .x-l2__det small { display: block; color: #8fa6cc; font-size: 12px; letter-spacing: .1em; margin-bottom: 4px; }
+      .x-l2.nogl { background: linear-gradient(180deg, #071029 0%, #0a0a26 30%, #120d1e 55%, #06151a 80%, #02040a 100%); }
+      @media (max-width: 860px), (max-height: 560px) {
+        .x-l2 { overflow-y: auto; } .x-l2 canvas { position: fixed; opacity: .55; }
+        .x-l2__top { position: relative; flex-wrap: wrap; gap: 12px; padding: 14px 16px; } .x-l2__h { font-size: 28px; } .x-l2__h small { display: none; } .x-l2__arc small { display: none; }
+        .x-l2__surf { position: relative; left: auto; right: auto; top: auto; margin: 0 16px; flex-direction: column; align-items: flex-start; gap: 10px; } .x-l2__chips { max-width: 100%; }
+        .x-l2__cards { position: relative; inset: auto; display: grid; gap: 14px; padding: 18px 16px 120px; }
+        .x-l2__card { position: relative; left: auto !important; top: auto !important; width: auto; transform: none !important; } .x-l2__card::before { display: none; }
+        .x-l2__det { position: fixed; bottom: 12px; }
+      }
+      @media (prefers-reduced-motion: reduce) { .x-l2 { transition: none; } }
     </style>
   </head>
   <body>
@@ -1166,6 +1210,20 @@
       <aside class="card" id="logCard" aria-live="polite"></aside>
     </div>
 
+
+    <!-- v2.2.0 · 星历 2.0：深空四层纵深（王磊 2026-10-30 09:14 定；1.0 星历 #log 收为归档，仅主动点开） -->
+    <div class="x-l2" id="log2" hidden role="dialog" aria-modal="true" aria-label="星历 2.0 · 深空纪年">
+      <canvas id="l2Cv" aria-hidden="true"></canvas>
+      <div class="x-l2__top">
+        <button class="btn x-br__back" id="l2Back">← 回到北斗</button>
+        <h2 class="x-l2__h">星历 <b>2.0</b><small>深空纪年 · 越往下越深</small></h2>
+        <button type="button" class="x-l2__arc" id="l2Arc" aria-label="打开 1.0 星历（已归档）"><img src="orb-gn-2.0.webp" alt="" width="64" height="64"><span><b>1.0 星历 · 已归档</b><small>点开查看 七星连桥</small></span></button>
+      </div>
+      <section class="x-l2__surf" aria-label="水面 · 七个世界的 2.0 更新"><h3>水面 · 七个世界</h3><div class="x-l2__chips" id="l2Chips" role="list"></div></section>
+      <div class="x-l2__cards" id="l2Cards" role="list" aria-label="深空四层"></div>
+      <aside class="x-l2__det" id="l2Det" aria-live="polite" hidden></aside>
+    </div>
+
     <div class="x-ab" id="about" hidden role="dialog" aria-modal="true" aria-label="关于创世计划">
       <div class="x-hud" aria-hidden="true"><svg class="x-hud__frame" id="hudFrame"></svg><i></i><i></i><i></i><i></i><div class="x-hud__bar" id="hudBar"></div><div class="x-hud__tick" id="hudTick"></div></div>
       <button class="btn x-br__back" id="abBack">← 回到北斗</button>
@@ -1244,7 +1302,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v2.1.0</b></span>
+            <span>创世计划总门户 <b>v2.2.0</b></span>
           </footer>
         </div>
       </div>
@@ -1689,8 +1747,8 @@
       function onSkip() { if (!intro.done) finishIntro(); }
       addEventListener("keydown", function (e) {
         if (!intro.done) { onSkip(); return; }
-        if (e.key === "Escape") { if (AB.open) { hideAbout(); return; } if (LG.open) { hideLog(); return; } if (BR.open) { hideBridges(); return; } closeAll(); }
-        if (LG.open || AB.open) return;
+        if (e.key === "Escape") { if (L2.open) { hideLog2(); return; } if (AB.open) { hideAbout(); return; } if (LG.open) { hideLog(); return; } if (BR.open) { hideBridges(); return; } closeAll(); }
+        if (LG.open || AB.open || L2.open) return;
         // v0.3：键盘操作 3D 北斗（无弹层、焦点不在输入框/链接时）
         if (!BR.open && !scrim.classList.contains("on") && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT|A)$/.test(e.target.tagName)) {
           var K = { ArrowLeft: [-18, 0], ArrowRight: [18, 0], ArrowUp: [0, -18], ArrowDown: [0, 18] }[e.key];
@@ -1699,7 +1757,7 @@
           if (e.key === "+" || e.key === "=") { zoom3D(1 / 1.12); return; }
           if (e.key === "-" || e.key === "_") { zoom3D(1.12); return; }
         }
-        if ((e.key === "n" || e.key === "N") && !e.ctrlKey && !e.metaKey && !e.altKey && !/INPUT|TEXTAREA/.test(e.target.tagName)) { showLog(); return; }
+        if ((e.key === "n" || e.key === "N") && !e.ctrlKey && !e.metaKey && !e.altKey && !/INPUT|TEXTAREA/.test(e.target.tagName)) { showLog2(); return; }
         if (e.key === "d" || e.key === "D") toggleDemo();
       });
       /* v0.3：拖动旋转 / 双指缩放 / 点按（移动 < 6px）才算点击 */
@@ -3412,6 +3470,9 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v2.2.0", d: "2026-10-30", t: "星历升级 2.0：更新记录变成一座深空纵深——水面是七个世界，往下是星辰、星系、星河、星穹四层，每层亮着这一层已经开放的内容；1.0 的星历收进右上角的归档球，想看随时点开。" },
+        { w: "07", v: "2.0 C2.11a", d: "2026-10-30", t: "星域 VI「银河」全景开放：核球、中央棒和四条旋臂，20 个天体按真实位置标注，点资料卡就能设为目的地。" },
+        { w: "07", v: "2.0 C2.10a", d: "2026-10-30", t: "登舰更像电影：穿云升空、冲上平流层，推进天枢号的霓虹机库，一路走进驾驶舱。" },
         { w: "gn", v: "v2.1.0", d: "2026-10-30", t: "首页 2.0 入口换成玻璃光门：一颗实拍质感的玻璃球，中央亮着「2.0」，点它就潜入深空；左右两侧分别是创世计划 2.0 深空层和天枢 Starhelm 2.0 巡天。" },
         { w: "gn", v: "v2.0.1", d: "2026-10-30", t: "2.0 音乐升级：新原创主题曲「宇宙将为你闪烁」置顶曲目单；深空层五层各有一段原创合成主题（水面声呐、星辰钢片琴、星系旋臂琶音、星河暖垫与心跳、星穹悬而未决的「？」），换层自动交叉淡入。音乐改为默认打开（首次点击页面后响起，关掉会记住）。修复深空层「生成推导卡」在手机上像闪退：改为先预览，再保存或分享。" },
         { w: "gn", v: "v2.0.0", d: "2026-10-30", t: "创世计划 2.0 联合发布：门户挂上「▼ 潜入深空」，深空层（光柱、核素岛、坠入实验舱、星穹开放问题）正式开放；天枢 2.0 同步启航，门户天枢入口改到 2.0。" },
@@ -3811,8 +3872,141 @@
         setTimeout(function () { if (!LG.open) LG.el.hidden = true; }, RM ? 10 : 600);
         var p = LG.prev; (p && p !== document.body && p.focus ? p : LG.btn).focus();
       }
-      LG.btn.addEventListener("click", showLog);
+      LG.btn.addEventListener("click", showLog2);   // v2.2.0：星历按钮打开 2.0 星历；1.0（showLog）只从归档球进入
       document.getElementById("logBack").addEventListener("click", hideLog);
+      /* ---------- v2.2.0 · 星历 2.0：水面（2.0 起的更新）+ 星辰/星系/星河/星穹四层（深空已上线内容）；1.0 星历（#log）只在点归档球时打开 ---------- */
+      var L2 = { open: false, el: document.getElementById("log2"), cv: document.getElementById("l2Cv"), raf: 0, gl: null, prev: null, built: false,
+        ERA: "2026-10-30",
+        LY: [
+          { n: "星辰", en: "STARS", age: "高中 · 推导", c: "#9cc8ff", rgb: [.55, .8, 1.6], k: "c", it: ["V2 一题一光柱：同一道题在四层各有一颗星", "V3 坠入实验舱：点一颗星，飞进全息实验舱"] },
+          { n: "星系", en: "GALAXY", age: "大学 · 建模", c: "#c4a8ff", rgb: [.75, .55, 1.6], k: "g", it: ["V4 核素岛：3355 个真实核素堆成稳定岛", "V6 星系方程旋臂：方程是节点，变量是连线"] },
+          { n: "星河", en: "MILKY WAY", age: "成人 · 生活决策", c: "#ffcf8a", rgb: [1.5, .95, .45], k: "r", it: ["V6 星河生活剪影：房子、车、药瓶里的科学"] },
+          { n: "星穹", en: "FIRMAMENT", age: "研究者 · 前沿", c: "#8fe8e0", rgb: [.35, 1.2, 1.15], k: "q", it: ["V5 星穹七个「？」：还没有答案的开放问题"] }
+        ] };
+      function l2Build() {
+        if (L2.built) return; L2.built = true;
+        var chips = document.getElementById("l2Chips"), det = document.getElementById("l2Det");
+        LOG.filter(function (e) { return e.d >= L2.ERA; }).forEach(function (e) {
+          var w = lgW(e.w) || GN, b = document.createElement("button");
+          b.type = "button"; b.className = "x-l2__chip"; b.setAttribute("role", "listitem"); b.setAttribute("aria-pressed", "false"); b.style.setProperty("--c", w.color || "#e9c779");
+          b.innerHTML = "<i></i><b></b><span></span>"; b.children[1].textContent = w.name; b.children[2].textContent = e.v;
+          b.addEventListener("click", function () {
+            var on = b.getAttribute("aria-pressed") !== "true";
+            [].forEach.call(chips.children, function (x) { x.setAttribute("aria-pressed", "false"); });
+            if (!on) { det.hidden = true; return; }
+            b.setAttribute("aria-pressed", "true"); det.style.setProperty("--c", w.color || "#e9c779");
+            det.innerHTML = "<small></small><b></b><span></span>"; det.children[0].textContent = e.d + " · 北京时间"; det.children[1].textContent = w.name + " " + e.v; det.children[2].textContent = e.t; det.hidden = false;
+          });
+          chips.appendChild(b);
+        });
+        var box = document.getElementById("l2Cards");
+        L2.LY.forEach(function (L) {
+          var a = document.createElement("a"); a.className = "x-l2__card"; a.href = "deep/"; a.setAttribute("role", "listitem"); a.style.setProperty("--c", L.c);
+          a.setAttribute("aria-label", L.n + "层，" + L.age + "，已上线 " + L.it.length + " 项，进入深空");
+          a.innerHTML = '<div class="x-l2__nm"><b></b><small></small></div><div class="x-l2__age"><span></span><em></em></div><ul></ul>';
+          a.querySelector("b").textContent = L.n; a.querySelector("small").textContent = L.en; a.querySelector(".x-l2__age span").textContent = L.age; a.querySelector("em").textContent = "已上线 " + L.it.length;
+          var ul = a.querySelector("ul"); L.it.forEach(function (t) { var li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
+          L.card = a; box.appendChild(a);
+        });
+        document.getElementById("l2Arc").addEventListener("click", function () { hideLog2(true); setTimeout(showLog, RM ? 20 : 380); });
+        document.getElementById("l2Back").addEventListener("click", function () { hideLog2(); });
+      }
+      function l2GL() {
+        if (L2.gl || L2.glFail) return;
+        try { var t = document.createElement("canvas"); if (!(t.getContext("webgl2") || t.getContext("webgl"))) throw 0; } catch (e) { L2.glFail = true; L2.el.classList.add("nogl"); return; }
+        if (!window.THREE) { if (L2.loading) return; L2.loading = true; var sc = document.createElement("script"); sc.src = "vendor/three.min.js"; sc.onload = function () { L2.loading = false; if (L2.open) l2GL(); }; sc.onerror = function () { L2.glFail = true; L2.el.classList.add("nogl"); }; document.head.appendChild(sc); return; }
+        try { l2Scene(); } catch (e) { L2.glFail = true; L2.gl = null; L2.el.classList.add("nogl"); }
+      }
+      function l2Scene() {
+        var T = THREE, mob = Math.min(innerWidth, innerHeight) < 600, tier = mob ? 1 : 2;
+        var R = new T.WebGLRenderer({ canvas: L2.cv, antialias: !mob, alpha: false, powerPreference: "high-performance" });
+        R.setPixelRatio(Math.min(devicePixelRatio || 1, mob ? 1.5 : 2)); R.toneMapping = T.ACESFilmicToneMapping; R.toneMappingExposure = 1.05; R.outputColorSpace = T.SRGBColorSpace;
+        var S = new T.Scene(), C = new T.PerspectiveCamera(33, 1, .1, 200); S.background = new T.Color(0x040816);
+        // 柔光箱环境（玻璃高光来源）
+        var pm = new T.PMREMGenerator(R), ES = new T.Scene();
+        ES.add(new T.Mesh(new T.SphereGeometry(50, 32, 16), new T.MeshBasicMaterial({ color: 0x050a18, side: T.BackSide })));
+        [[60, 3, [3, 3.1, 3.4], 0, 18, 10], [14, 40, [.25, .45, 1.2], -25, 0, 8], [14, 40, [1.2, .75, .3], 25, 0, 8], [40, 1.2, [1.2, 1.5, 2.2], 0, -6, 20]].forEach(function (q) {
+          var m = new T.Mesh(new T.PlaneGeometry(q[0], q[1]), new T.MeshBasicMaterial({ color: new T.Color(q[2][0], q[2][1], q[2][2]), side: 2 })); m.position.set(q[3], q[4], q[5]); m.lookAt(0, 0, 0); ES.add(m); });
+        S.environment = pm.fromScene(ES, .04).texture;
+        // 背景星
+        var n = mob ? 1800 : 4000, P = new Float32Array(n * 3); for (var i = 0; i < n; i++) { P[i * 3] = (Math.random() - .5) * 120; P[i * 3 + 1] = (Math.random() - .5) * 70; P[i * 3 + 2] = -20 - Math.random() * 40; }
+        var sg = new T.BufferGeometry(); sg.setAttribute("position", new T.BufferAttribute(P, 3)); S.add(new T.Points(sg, new T.PointsMaterial({ size: .12, color: 0xc8d6ff, transparent: true, opacity: .8 })));
+        var G = new T.Group(); S.add(G);
+        var Y = [2.25, .55, -1.25, -3.0], RR = Math.random;
+        function pts(a, col, size) { var g = new T.BufferGeometry(); g.setAttribute("position", new T.Float32BufferAttribute(a, 3)); return new T.Points(g, new T.PointsMaterial({ color: new T.Color(col[0], col[1], col[2]), size: size, transparent: true, depthWrite: false, blending: T.AdditiveBlending, toneMapped: false })); }
+        function glass(col) { return new T.MeshPhysicalMaterial({ color: 0xffffff, metalness: 0, roughness: .12, transmission: tier > 1 ? 1 : 0, opacity: tier > 1 ? 1 : .35, transparent: tier <= 1, thickness: .25, ior: 1.45, iridescence: .6, iridescenceIOR: 1.3, clearcoat: 1, clearcoatRoughness: .05, attenuationColor: new T.Color(col[0] * .5, col[1] * .5, col[2] * .5), attenuationDistance: 3, envMapIntensity: .8 }); }
+        L2.spin = []; L2.anchor = [];
+        L2.LY.forEach(function (L, li) {
+          var y = Y[li], c = L.rgb, layer = new T.Group(); layer.position.y = y; G.add(layer);
+          layer.add(new T.Mesh(new T.CylinderGeometry(3.1, 3.1, .12, 96, 1), glass(c)));
+          var rim = new T.Mesh(new T.TorusGeometry(3.12, .018, 10, 200), new T.MeshBasicMaterial({ color: new T.Color(c[0] * 1.2, c[1] * 1.2, c[2] * 1.2), toneMapped: false })); rim.rotation.x = Math.PI / 2; rim.position.y = .06; layer.add(rim);
+          var m = new T.Group(); layer.add(m); L2.spin.push(m); var a = [], j;
+          if (L.k === "c") { var st = []; for (j = 0; j < 14; j++) { var r = .6 + RR() * 2.2, t = RR() * 6.28; st.push([Math.cos(t) * r, .1, Math.sin(t) * r]); } st.forEach(function (p) { a.push(p[0], p[1], p[2]); }); m.add(pts(a, [1.6, 1.8, 2.4], .16));
+            var lp = []; for (j = 0; j < st.length - 1; j++) if (j % 3 !== 2) lp.push(st[j][0], st[j][1], st[j][2], st[j + 1][0], st[j + 1][1], st[j + 1][2]);
+            var lg = new T.BufferGeometry(); lg.setAttribute("position", new T.Float32BufferAttribute(lp, 3)); m.add(new T.LineSegments(lg, new T.LineBasicMaterial({ color: new T.Color(.5, .8, 1.8), transparent: true, opacity: .7, toneMapped: false })));
+            var f = []; for (j = 0; j < 300; j++) { var r2 = RR() * 3, t2 = RR() * 6.28; f.push(Math.cos(t2) * r2, .08, Math.sin(t2) * r2); } m.add(pts(f, [.5, .7, 1.3], .035)); }
+          if (L.k === "g") { for (var arm = 0; arm < 2; arm++) for (j = 0; j < 900; j++) { var u = j / 900, t3 = u * 7 + arm * Math.PI, r3 = .15 + u * 2.8, sp = (RR() - .5) * .35 * (1 - u * .4); a.push(Math.cos(t3) * r3 + sp, .09, Math.sin(t3) * r3 + sp); } m.add(pts(a, [1.1, .85, 2], .045));
+            var nd = []; for (j = 0; j < 10; j++) { var u2 = (j + 1) / 11, t4 = u2 * 7 + (j % 2) * Math.PI, r4 = .15 + u2 * 2.8; nd.push(Math.cos(t4) * r4, .11, Math.sin(t4) * r4); } m.add(pts(nd, [2, 1.7, 2.4], .14)); }
+          if (L.k === "r") { for (j = 0; j < 1400; j++) { var x = (RR() - .5) * 5.6, z = (RR() - .5) * 1.1 * (1 - Math.abs(x) / 3.2) + x * .18; if (x * x + z * z < 9.3) a.push(x, .09, z); } m.add(pts(a, [1.6, 1.05, .55], .05));
+            var h = []; [[-1.8, .1], [-.6, -.2], [.7, .25], [1.7, -.1]].forEach(function (q) { for (var k = 0; k < 40; k++) h.push(q[0] + (RR() - .5) * .35, .1, q[1] + (RR() - .5) * .35); }); m.add(pts(h, [2, 1.5, .9], .07)); }
+          if (L.k === "q") { for (j = 0; j < 500; j++) { var t5 = RR() * 6.28, r5 = RR() * 3; a.push(Math.cos(t5) * r5, .08, Math.sin(t5) * r5); } m.add(pts(a, [.3, .9, .85], .03));
+            var cv = document.createElement("canvas"); cv.width = cv.height = 128; var x2 = cv.getContext("2d"); x2.font = "700 100px sans-serif"; x2.textAlign = "center"; x2.textBaseline = "middle"; x2.shadowColor = "#5ff"; x2.shadowBlur = 16; x2.fillStyle = "#9ff5ec"; x2.fillText("?", 64, 70);
+            var qt = new T.CanvasTexture(cv); for (j = 0; j < 7; j++) { var t6 = j / 7 * 6.28 + .4, r6 = 1.2 + (j % 3) * .6, s6 = new T.Sprite(new T.SpriteMaterial({ map: qt, transparent: true, depthWrite: false, blending: T.AdditiveBlending, toneMapped: false, opacity: .75 })); s6.position.set(Math.cos(t6) * r6, .42, Math.sin(t6) * r6); s6.scale.set(.5, .5, 1); s6.userData.ph = j; m.add(s6); }
+            var bd = []; for (j = 0; j < 600; j++) { var u3 = RR(); bd.push(-3 + u3 * 6, .1 + Math.sin(u3 * 9) * .05, Math.sin(u3 * 6) * .6 + (RR() - .5) * .08); } layer.add(pts(bd, [.4, 1.5, 1.4], .03)); }
+          L2.anchor.push(new T.Vector3(3.12, y + .06, 0));
+          var dot = new T.Mesh(new T.SphereGeometry(.09, 20, 12), new T.MeshBasicMaterial({ color: new T.Color(2.4, 2, 1.4), toneMapped: false })); dot.position.y = .12; layer.add(dot);
+        });
+        // 一题一光柱
+        var pc = document.createElement("canvas"); pc.width = 64; pc.height = 4; var px = pc.getContext("2d"), pg = px.createLinearGradient(0, 0, 64, 0); pg.addColorStop(0, "rgba(0,0,0,0)"); pg.addColorStop(.5, "#fff"); pg.addColorStop(1, "rgba(0,0,0,0)"); px.fillStyle = pg; px.fillRect(0, 0, 64, 4);
+        var ptx = new T.CanvasTexture(pc); L2.beam = [];
+        [[.12, [2.2, 2, 1.6]], [.6, [.5, .45, .3]]].forEach(function (q) { var b = new T.Mesh(new T.PlaneGeometry(q[0], 7.6), new T.MeshBasicMaterial({ map: ptx, color: new T.Color(q[1][0], q[1][1], q[1][2]), transparent: true, blending: T.AdditiveBlending, depthWrite: false, toneMapped: false })); b.position.y = -.1; G.add(b); L2.beam.push(b); });
+        var kl = new T.DirectionalLight(0xbfd8ff, 1.6); kl.position.set(-4, 6, 6); S.add(kl);
+        L2.gl = { R: R, S: S, C: C, G: G, T: T, mx: 0, my: 0, t0: performance.now() };
+        L2.el.addEventListener("pointermove", function (e) { L2.gl.mx = e.clientX / innerWidth - .5; L2.gl.my = e.clientY / innerHeight - .5; });
+        l2Size();
+      }
+      function l2Size() {
+        var g = L2.gl; if (!g) return; var w = innerWidth, h = innerHeight, narrow = w <= 860 || h <= 560;
+        g.R.setSize(w, h, false); g.C.aspect = w / h;
+        var dist = 16.5, half = Math.tan(g.C.fov * Math.PI / 360) * dist * g.C.aspect;
+        g.cx = narrow ? 0 : -Math.min(2.6, half * .42); g.G.position.x = g.cx; g.narrow = narrow;
+        g.C.position.set(.4, 4.2, dist); g.C.lookAt(.4, .1, 0); g.C.updateProjectionMatrix();
+      }
+      function l2Frame(now) {
+        var g = L2.gl;
+        if (g) {
+          var t = (now - g.t0) / 1000, k = RM ? 0 : 1;
+          L2.spin.forEach(function (m, i) { m.rotation.y = k * t * (.04 + i * .012) * (i % 2 ? -1 : 1);
+            m.children.forEach(function (c) { if (c.isSprite) c.material.opacity = .45 + .4 * (.5 + .5 * Math.sin(t * 1.3 + c.userData.ph)); }); });
+          L2.beam.forEach(function (b, i) { b.material.opacity = i ? .7 + .3 * Math.sin(t * 1.6) * k : 1; });
+          g.C.position.x = .4 + g.mx * 1.2 * k; g.C.position.y = 4.2 - g.my * .8 * k; g.C.lookAt(.4, .1, 0);
+          g.R.render(g.S, g.C);
+          if (!g.narrow) { var v = new g.T.Vector3(), w = innerWidth, h = innerHeight;
+            L2.LY.forEach(function (L, i) { v.copy(L2.anchor[i]); v.x += g.cx; v.project(g.C); var x = (v.x * .5 + .5) * w, y = (-v.y * .5 + .5) * h;
+              L.card.style.transform = "translate(" + Math.round(x + 64) + "px," + Math.round(y - L.card.offsetHeight / 2 + 10) + "px)"; L.card.style.left = "0"; L.card.style.top = "0"; }); }
+        } else if (L2.LY[0].card && !(innerWidth <= 860 || innerHeight <= 560)) {
+          L2.LY.forEach(function (L, i) { L.card.style.left = "52%"; L.card.style.top = (19 + i * 19) + "%"; L.card.style.transform = "none"; });
+        }
+        if (L2.open && !(RM && g && L2.drawn > 2)) L2.raf = requestAnimationFrame(l2Frame); L2.drawn = (L2.drawn || 0) + 1;
+      }
+      function showLog2() {
+        if (L2.open || LG.open || BR.open || AB.open || !intro.done) return;
+        closeAll(); L2.prev = document.activeElement; l2Build();
+        L2.open = true; L2.el.hidden = false; L2.drawn = 0; l2GL(); l2Size();
+        lsSet("gn:portal:log", LG_SIG); LG.dot.hidden = true;
+        requestAnimationFrame(function () { L2.el.classList.add("on"); }); SND.play("bridge-open");
+        L2.raf = requestAnimationFrame(l2Frame);
+        document.getElementById("l2Back").focus();
+      }
+      function hideLog2(quiet) {
+        if (!L2.open) return; if (!quiet) SND.play("close");
+        L2.open = false; cancelAnimationFrame(L2.raf); L2.el.classList.remove("on");
+        setTimeout(function () { if (!L2.open) L2.el.hidden = true; }, RM ? 10 : 600);
+        if (!quiet) { var p = L2.prev; (p && p !== document.body && p.focus ? p : LG.btn).focus(); }
+      }
+      addEventListener("resize", function () { if (L2.open) l2Size(); });
+      L2.el.addEventListener("keydown", function (e) { if (e.key === "Escape") { e.stopPropagation(); hideLog2(); } });
+
       addEventListener("resize", function () { if (LG.open) lgResize(); });
 
       /* ---------- v0.3 关于创世计划 ---------- */
@@ -4446,7 +4640,7 @@
       });
       ["mouseenter", "focusin"].forEach(function (t) { NW.el.addEventListener(t, function () { NW.hold = true; }); });
       ["mouseleave", "focusout"].forEach(function (t) { NW.el.addEventListener(t, function () { NW.hold = false; }); });
-      document.getElementById("newsAll").addEventListener("click", function () { showLog(); nwRender(); });
+      document.getElementById("newsAll").addEventListener("click", function () { showLog2(); nwRender(); });
       document.getElementById("newsMin").addEventListener("click", function () { nwMin(true); });
       document.getElementById("newsPin").addEventListener("click", function () { nwMin(false); });
       NW.bar.addEventListener("click", function () {
