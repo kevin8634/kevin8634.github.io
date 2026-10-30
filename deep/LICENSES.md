@@ -36,3 +36,4 @@
 未用 KTX2:沙箱无 toktx/basisu 且需额外 vendor basis 转码 wasm;改用 webp(q82–88),9 张合计约 1.6 MB,长边 ≤4096。
 
 | deep/music/l0–l4.m4a | 原创合成(numpy 程序生成,无采样;2026-10-30 门户 2.0.1) | 创世计划 Genesis | 自有 |
+| deep/data/nasa.planets.kepler.json | NASA NSSDCA Planetary Fact Sheet(2025-03-18 版,https://nssdc.gsfc.nasa.gov/planetary/factsheet/;2026-10-30 取数,换算 AU/年并取对数) | NASA | 公有领域(美国联邦政府),署名 NSSDCA |

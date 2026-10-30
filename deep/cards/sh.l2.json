@@ -1,0 +1,122 @@
+{
+ "id": "sh.l2.kepler-fit",
+ "world": "sh",
+ "link_task": "sh.retro",
+ "title": "用八大行星的真实数据,拟合出 T∝aᵖ",
+ "formula": "\\log T=p\\,\\log a+b",
+ "hook": "星辰层推出了 p=3/2。真实的行星会不会听话?把模型和 NASA 数据摆在一起,量一量误差。",
+ "steps": [
+  {
+   "text": "建模:假设周期 T 与半长轴 a 是幂律关系,p 和 C 待定。两边取对数,幂律就变成直线。",
+   "tex": "T=C\\,a^{p}\\;\\Rightarrow\\;\\log T=p\\log a+\\log C"
+  },
+  {
+   "text": "数据:NASA 行星表给出八颗行星的日距与公转周期。换算成天文单位和年,再取以 10 为底的对数,得到 8 个点。",
+   "tex": "(x_i,y_i)=(\\log a_i,\\;\\log T_i),\\;i=1..8"
+  },
+  {
+   "text": "最小二乘:找让残差平方和最小的直线。斜率公式对 8 个点直接可算。",
+   "tex": "p=\\frac{\\sum (x_i-\\bar x)(y_i-\\bar y)}{\\sum (x_i-\\bar x)^2}"
+  },
+  {
+   "text": "结果:p≈1.498,截距 b≈−0.00006(几乎为 0,说明 C≈1)。数据自己给出了 3/2,误差约千分之一。",
+   "tex": "p\\approx1.498,\\;b\\approx-6\\times10^{-5}"
+  },
+  {
+   "text": "比误差:用 p=1.5 预测,对数残差的均方根只有约 0.0022,相当于周期平均差约 0.5%。水星到天王星都在 0.7% 以内,海王星偏差最大,约 1.3%。",
+   "tex": "\\mathrm{RMS}=\\sqrt{\\tfrac18\\sum (y_i-1.5x_i)^2}\\approx0.0022"
+  },
+  {
+   "text": "误差从哪来:表里的「日距」是平均距离,不完全等于半长轴;外行星周期还受木星、土星相互摄动。精确的开普勒定律要把行星质量加进去。",
+   "tex": "T^2=\\frac{4\\pi^2}{G(M_\\odot+m)}a^3"
+  }
+ ],
+ "check": {
+  "q": "取对数后,数据点几乎落在一条直线上。这条直线的斜率代表什么?",
+  "options": [
+   "太阳的质量",
+   "幂律指数 p",
+   "行星的数量"
+  ],
+  "answer": 1,
+  "why": "log T = p·log a + b,斜率就是指数 p。真实数据算出 p≈1.498,和推导的 3/2 吻合。"
+ },
+ "chart": {
+  "data": "nasa.planets.kepler.json",
+  "x": "log_a",
+  "ys": [
+   {
+    "col": "log_T",
+    "label": "实测 log T"
+   },
+   {
+    "col": "model",
+    "label": "模型 1.5·log a"
+   }
+  ],
+  "type": "scatter",
+  "xlabel": "log₁₀ a (AU)",
+  "ylabel": "log₁₀ T (年)"
+ },
+ "uses": "对数、线性回归(最小二乘)、残差与均方根误差",
+ "textbook": "大学《普通物理》万有引力与开普勒定律;《概率论与数理统计》线性回归",
+ "sources": [
+  {
+   "name": "NASA NSSDCA Planetary Fact Sheet(2025-03-18 版:日距、公转周期)",
+   "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/"
+  },
+  {
+   "name": "OpenStax《University Physics Volume 1》13.5 Kepler's Laws",
+   "url": "https://openstax.org/books/university-physics-volume-1/pages/13-5-keplers-laws-of-planetary-motion"
+  }
+ ],
+ "review": "AI 审(待指定审稿人复核);脚本复算:最小二乘 p=1.4978、b=−5.7e−5、自由截距 RMS=0.0012;p=1.5 RMS=0.0022;周期偏差 水星 −0.06%、土星 +0.65%、海王星 +1.27%",
+ "ai_generated": "标题、钩子、推导文字、检查题由 AI 撰写;数值由脚本从 NASA 表复算;无图片",
+ "lab": {
+  "title": "拟合指数 p",
+  "note": "由总指挥添加,AI 协助编写;拖 p,看八颗行星的对数残差均方根。p=1.5 附近最小。",
+  "params": [
+   {
+    "k": "p",
+    "label": "指数 p",
+    "min": 1,
+    "max": 2,
+    "step": 0.005,
+    "value": 1.3,
+    "unit": ""
+   }
+  ],
+  "fn": {
+   "x": "x",
+   "from": 0,
+   "to": "1.6",
+   "y0": 0,
+   "ys": [
+    {
+     "label": "模型 log T = p·log a",
+     "expr": "p*x"
+    },
+    {
+     "label": "开普勒 3/2",
+     "expr": "1.5*x"
+    }
+   ],
+   "mark": [
+    "1.47973",
+    "2.21411"
+   ]
+  },
+  "readout": [
+   {
+    "label": "对数残差 RMS",
+    "expr": "sqrt(((-0.61811-p*-0.41225)^2+(-0.21099-p*-0.14070)^2+(-0.00006-p*0.00000)^2+(0.27437-p*0.18300)^2+(1.07400-p*0.71633)^2+(1.46870-p*0.98101)^2+(1.92298-p*1.28250)^2+(2.21411-p*1.47973)^2)/8)",
+    "unit": ""
+   },
+   {
+    "label": "海王星预测周期",
+    "expr": "30.1805^p",
+    "unit": "年(实测 163.7)"
+   }
+  ]
+ }
+}
