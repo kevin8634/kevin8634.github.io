@@ -66,3 +66,6 @@
 |---|---|---|---|
 | iaea.binding.curve | 每 A 最大 B/A 曲线 + 液滴模型列(计算值,非观测) | IAEA NDS Live Chart(nuclides.json 导出) | IAEA 公开核数据,署名 |
 | deep/routes/iron.json | 四站航线卡(宙律→元素工坊→天枢→生命源码);常数引自 NNDC/ENSDF、Nadyozhin 1994、Arnett 1989、NIH ODS | 创世计划(AI 协助) | 自有;卡内 sources 列出处 |
+
+## 深空 1.6 航线「潮汐锁定」(2026-10-30)
+- routes/tide.json:文字 AI 撰写,数值由 tide_build.py 复算;引用 NASA Fact Sheet(公有领域)、Gladman 1996、Dickey 1994、Wells 1963、Stephenson 2016 的公开数值(事实数据,注明出处);无图片、无新数据集。

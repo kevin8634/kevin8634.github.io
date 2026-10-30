@@ -1499,21 +1499,24 @@
       var byId = {}; WORLDS.forEach(function (w) { byId[w.id] = w; });
       // v2.3 · 星网：在七颗星之间画出跨世界航线；进度与深空层共用 localStorage gn:deep:route:iron
       (function () {
-        var NETR = [{ t: "铁从哪里来", p: ["02", "03", "07", "04"], k: "gn:deep:route:iron", href: "deep/?net=1" }],
-          NETF = [{ t: "一场疫情的数学", p: ["01", "04", "06", "05"] }, { t: "潮汐锁定", p: ["02", "07", "04"] }];
+        var NETR = [{ t: "铁从哪里来", p: ["02", "03", "07", "04"], k: "gn:deep:route:iron", href: "deep/?net=1&route=iron", c: "#7fe3a8" }, { t: "潮汐锁定", p: ["02", "07", "04"], k: "gn:deep:route:tide", href: "deep/?net=1&route=tide", c: "#8fd3ff" }],
+          NETF = [{ t: "一场疫情的数学", p: ["01", "04", "06", "05"] }];
         var on = false, raf = 0, svg = null, pan = null, chip = document.getElementById("netChip");
         function done(r) { try { return JSON.parse(localStorage.getItem(r.k) || "[]"); } catch (e) { return []; } }
         function nm(id) { return byId[id] ? byId[id].name : id; }
         function draw() {
           if (!on) return; var h = "";
           NETF.forEach(function (f) { h += '<polyline class="fu" points="' + f.p.map(function (id) { var w = byId[id]; return (w.x || 0) + "," + (w.y || 0); }).join(" ") + '"/>'; });
-          NETR.forEach(function (r) { var d = done(r);
+          NETR.forEach(function (r, k) { var d = done(r), o = k * 5;
             for (var i = 0; i < r.p.length - 1; i++) { var a = byId[r.p[i]], b = byId[r.p[i + 1]]; var lit = d.indexOf(i) >= 0 && d.indexOf(i + 1) >= 0;
-              h += '<line class="rt' + (lit ? " lit" : "") + '" x1="' + a.x + '" y1="' + a.y + '" x2="' + b.x + '" y2="' + b.y + '"/>'; } });
+              var dx = b.x - a.x, dy = b.y - a.y, L = Math.sqrt(dx * dx + dy * dy) || 1, ox = -dy / L * o, oy = dx / L * o;
+              h += '<line class="rt' + (lit ? " lit" : "") + '" style="stroke:' + r.c + '" x1="' + (a.x + ox) + '" y1="' + (a.y + oy) + '" x2="' + (b.x + ox) + '" y2="' + (b.y + oy) + '"/>'; } });
           svg.innerHTML = h; raf = requestAnimationFrame(draw);
         }
-        function panel() { var r = NETR[0], d = done(r), all = d.length >= r.p.length;
-          pan.innerHTML = '<b>✦ 星网 · 跨世界航线</b><div>' + (all ? "🏅 " : "") + r.t + " · " + r.p.map(nm).join(" → ") + ' · 已走 ' + d.length + "/" + r.p.length + '</div><div class="k">' + NETF.map(function (f) { return f.t + " · " + f.p.map(nm).join(" → "); }).join("<br>") + ' · 即将点亮</div><div class="row"><a href="' + r.href + '">' + (d.length ? "继续航行 ▸" : "启航 ▸") + '</a><button type="button" id="netOff">收起星网</button></div>';
+        function panel() {
+          pan.innerHTML = '<b>✦ 星网 · 跨世界航线</b>' + NETR.map(function (r) { var d = done(r), all = d.length >= r.p.length;
+            return '<div class="row" style="margin-top:6px"><span style="flex:1;min-width:0"><span style="color:' + r.c + '">' + (all ? "🏅 " : "") + r.t + '</span> · ' + r.p.map(nm).join(" → ") + ' · ' + d.length + "/" + r.p.length + '</span><a href="' + r.href + '" style="background:' + r.c + '">' + (d.length ? "继续 ▸" : "启航 ▸") + '</a></div>'; }).join("") +
+            '<div class="k" style="margin-top:6px">' + NETF.map(function (f) { return f.t + " · " + f.p.map(nm).join(" → "); }).join("<br>") + ' · 即将点亮</div><div class="row"><button type="button" id="netOff">收起星网</button></div>';
           document.getElementById("netOff").onclick = toggle; }
         function toggle() { on = !on; chip.setAttribute("aria-pressed", on); document.body.classList.toggle("x-neton", on);
           if (!svg) { svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.id = "netSvg"; svg.setAttribute("aria-hidden", "true"); document.body.appendChild(svg);
@@ -3513,6 +3516,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "深空 1.6", d: "2026-10-30", t: "第二条跨世界航线「潮汐锁定」点亮：宙律算出月潮为何是日潮的 2.18 倍，天枢推演月亮为何永远一面朝向地球（锁定时间 ∝ a⁶），生命源码数泥盆纪珊瑚的 400 条日纹，回到一天只有约 22 小时的远古。三站各有实验台，走完点亮「潮汐之锁」徽章；门户与深空的星网同步亮起第二条航线。" },
         { w: "gn", v: "门户 v2.3", d: "2026-10-30", t: "门户首页新增「✦ 星网」：点开后七颗星之间画出跨世界航线，「铁从哪里来」走过的段亮成实线，另两条「一场疫情的数学」「潮汐锁定」即将点亮；面板一键启航进入深空层航线。" },
         { w: "gn", v: "深空 1.5", d: "2026-10-30", t: "深空层首条跨世界航线「铁从哪里来」点亮：从宙律的结合能曲线出发，经元素工坊的镍—钴—铁衰变链、天枢的超新星光变曲线，到生命源码血红蛋白里的铁，四站各有实验台，走完点亮「铁之航线」徽章并生成航线卡。新增星网视图，另两条航线即将点亮。" },
         { w: "gn", v: "深空 1.4", d: "2026-10-30", t: "深空层星穹层七张研究者卡点亮：黎曼猜想、暗物质、超重元素稳定岛、生命起源、AI 可解释性、不确定下的长期决策、暗能量。每张卡讲清前人走到哪、卡在哪、你能先算什么，用真实公开数据（自算素数表、SPARC 旋转曲线、IAEA 核素表、Union2.1 超新星等）上手实验；没有标准答案，选一个你押的假设，生成假设卡带走，不排名不打分。" },
