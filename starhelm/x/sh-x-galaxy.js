@@ -227,6 +227,7 @@
       });
       scn.add(WLN);
     }
+    hk('build', T, scn);
     return true;
   }
 
@@ -265,9 +266,11 @@
       '@media (max-width:760px){#xgx .tsg{top:136px;left:12px;font-size:10.5px;line-height:1.4}#xgx .lv{display:none}#xgx .lg{top:194px!important}#xgx .wl small{display:none}#xgx .hd{left:12px;top:10px;right:60px}#xgx .hd h2{font-size:18px}#xgx .hd p{font-size:11px}#xgx .lg{bottom:auto;top:132px;left:10px}#xgx .sc{bottom:118px}#xgx .bar{bottom:12px}#xgx .bar button{padding:5px 10px;font-size:12px}#xgx .cd{top:auto;bottom:64px;right:10px}}';
     document.head.appendChild(s);
   }
-  var MK = [], ARML = [], SUNM = null, WLB = [], GLB = [], GRID = null, WLN = null, WSEL = null, LAYS = { grid: false, wb: true }, LASTM = null, HUDS = '';
+  var MK = [], ARML = [], SUNM = null, WLB = [], GLB = [], GRID = null, WLN = null, WSEL = null, LAYS = { grid: false, wb: true, jr: true }, LASTM = null, HUDS = '';
   var TS = window.SHXTSG, GW = window.SHXGW, KEYL = 'gn:sh:x-gxlay';
-  try { var _l = JSON.parse(localStorage.getItem(KEYL) || 'null'); if (_l) { LAYS.grid = !!_l.grid; LAYS.wb = _l.wb !== false; } } catch (e) { }
+  var HK = { build: [], frame: [], labels: [], close: [], flat: [], card: [], step: [], skip3d: [] };   // C2.12c 扩展钩子(sh-x-gal-jump.js)
+  function hk(n) { var a = [].slice.call(arguments, 1), r = false; HK[n].forEach(function (f) { try { if (f.apply(null, a)) r = true; } catch (e) { if (window.console) console.warn('xgx hook', n, e); } }); return r; }
+  try { var _l = JSON.parse(localStorage.getItem(KEYL) || 'null'); if (_l) { LAYS.grid = !!_l.grid; LAYS.wb = _l.wb !== false; LAYS.jr = _l.jr !== false; } } catch (e) { }
   function dom() {
     css();
     ov = document.createElement('div'); ov.id = 'xgx'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', '银河全景');
@@ -285,7 +288,7 @@
     var lg = ov.querySelector('.lg');
     Object.keys(CAT).forEach(function (k) { if (k === 'sun') return; var b = document.createElement('button'); b.type = 'button'; b.innerHTML = '<i style="background:' + CAT[k].c + '"></i>' + CAT[k].zh; b.onclick = function () { hidden[k] = !hidden[k]; b.classList.toggle('off', !!hidden[k]); }; lg.appendChild(b); });
     // C2.12b 图层开关:扇区网格 / 世界边界
-    [['grid', '▦ TSG 网格'], ['wb', '◇ 世界边界']].forEach(function (q) { var b = document.createElement('button'); b.type = 'button'; b.dataset.l = q[0]; b.textContent = q[1]; b.classList.toggle('off', !LAYS[q[0]]); b.onclick = function () { LAYS[q[0]] = !LAYS[q[0]]; b.classList.toggle('off', !LAYS[q[0]]); try { localStorage.setItem(KEYL, JSON.stringify(LAYS)); } catch (e) { } if (mode === '2d') flat(); }; lg.appendChild(b); });
+    [['grid', '▦ TSG 网格'], ['wb', '◇ 世界边界'], ['jr', '┅ 天枢航道']].forEach(function (q) { var b = document.createElement('button'); b.type = 'button'; b.dataset.l = q[0]; b.textContent = q[1]; b.classList.toggle('off', !LAYS[q[0]]); b.onclick = function () { LAYS[q[0]] = !LAYS[q[0]]; b.classList.toggle('off', !LAYS[q[0]]); try { localStorage.setItem(KEYL, JSON.stringify(LAYS)); } catch (e) { } if (mode === '2d') flat(); }; lg.appendChild(b); });
     // 六级尺度
     var lv = ov.querySelector('.lv'); if (TS) { TS.LV.forEach(function (L, i) { var b = document.createElement('button'); b.type = 'button'; b.dataset.i = i; b.title = L.sc; b.innerHTML = '<b>' + L.k + '</b>' + L.zh; if (i >= 3) b.classList.add('ext'); b.onclick = function () { lvGo(i); }; lv.appendChild(b); }); var hh = document.createElement('div'); hh.className = 'h'; lv.appendChild(hh); }
     // 世界标签 + 网格标签
@@ -344,6 +347,7 @@
     card.querySelectorAll('li a').forEach(function (a) { a.onclick = function () { var m = mkByKey(a.dataset.k); if (m) { focus(m.p, Math.max(2500, Math.min(60000, m.ly > 1e5 ? 60000 : 9000))); show(m); } }; });
     card.querySelector('.go').onclick = function () { enterWorld(w); };
     card.querySelector('.wa').onclick = function () { worldList(); };
+    hk('card', card, w);
   }
   function enterWorld(w) { if (w.id === 'GATE') { preset('mc'); return; } if (w.id === 'VI-9') { tween(TS.toScene(w.anc), 30000, .25); return; } focus(TS.toScene(w.anc), w.id === 'VI-7' ? 9000 : 15000); }
   function worldList() {
@@ -387,6 +391,7 @@
   }
   function step(now) {
     if (INTRO) { introStep(now); return; }
+    if (hk('step', now)) return;
     if (TW) { var k = Math.min(1, (now - TW.t0) / TW.dur), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; ['tx', 'ty', 'tz', 'pit', 'yaw'].forEach(function (n) { C[n] = TW.a[n] + (TW.b[n] - TW.a[n]) * e; }); C.d = TW.a.d * Math.pow(TW.b.d / TW.a.d, e); if (k >= 1) TW = null; }
     else if (!rm() && now > idle) C.yaw += Math.min(.05, (now - last) / 1000) * .025;
   }
@@ -461,11 +466,12 @@
     var far = mode === '3d' ? C.d : 150000;
     WLB.forEach(function (o) {
       var q = LAYS.wb ? proj(o.p) : null, sel = WSEL === o.w;
-      if (!q || (o.w.id === 'GATE' && far < 150000 && !sel) || (o.w.id !== 'GATE' && far > 380000) || q[0] < -60 || q[0] > W + 20 || q[1] < 40 || q[1] > H - 80 || (q[1] < 120 && q[0] < Math.min(W - 60, 660))) { o.el.style.display = 'none'; return; }
+      if (!q || (o.w.id === 'GATE' && far < 150000 && !sel && !(window.SHXGJ && SHXGJ.busy())) || (o.w.id !== 'GATE' && far > 380000) || q[0] < -60 || q[0] > W + 20 || q[1] < 40 || q[1] > H - 80 || (q[1] < 120 && q[0] < Math.min(W - 60, 660))) { o.el.style.display = 'none'; return; }
       var cl = placed.some(function (z) { return Math.abs(z[0] - q[0] - 30) < 100 && Math.abs(z[1] - q[1] - 10) < 22; }); placed.push([q[0] + 30, q[1] + 10]);
       o.el.style.display = ''; o.el.classList.toggle('on', sel); o.el.classList.toggle('cp', cl && !sel); o.el.style.transform = 'translate(' + (q[0] + 8) + 'px,' + (q[1] + 6) + 'px)';
     });
     GLB.forEach(function (o) { var q = LAYS.grid ? proj(o.p) : null; if (!q || far > 400000 || q[0] < 0 || q[0] > W || q[1] < 0 || q[1] > H) { o.el.style.display = 'none'; return; } o.el.style.display = ''; o.el.style.transform = 'translate(' + q[0] + 'px,' + q[1] + 'px) translate(-50%,-50%)'; });
+    hk('labels', proj, W, H, far);
     hud();
     ARML.forEach(function (a) { var q = proj(a.p); if (!q || far < 20000 || far > 380000) { a.el.style.display = 'none'; return; } a.el.style.display = ''; a.el.style.transform = 'translate(' + q[0] + 'px,' + q[1] + 'px) translate(-50%,-50%)'; });
     // 比例尺
@@ -492,8 +498,9 @@
       if (HALO) { HALO.quaternion.copy(cam.quaternion); HALO.material.uniforms.uA.value = .06 * Math.min(1, C.d / 30000) * (1 - .4 * sp); }
       if (TFon) { TF = Math.min(230, TF + Math.min(.05, (now - (frame.lt || now)) / 1000) * 20); if (TF >= 230) TF = 230; tfShow(); }
       var ov2 = !INTRO && !TFon; if (GRID) GRID.visible = ov2 && LAYS.grid; if (WLN) { WLN.visible = ov2 && LAYS.wb; WLN.children.forEach(function (l) { var se = WSEL && WSEL.id === l.userData.w; l.material.opacity = se ? .85 : .3; if (l.userData.w === 'GATE') l.visible = se || C.d > 120000; }); }
+      hk('frame', now, ov2);
       frame.lt = now; mats[0].uniforms.uT.value = TF; mats[1].uniforms.uT.value = TF;
-      rd.render(scn, cam);
+      if (!hk('skip3d', now)) rd.render(scn, cam);   // C2.12c:跃迁隧道全遮挡时跳过银河粒子绘制(近盘过度绘制是不出帧主因)
     }
     labels();
     raf = requestAnimationFrame(frame);
@@ -507,6 +514,7 @@
     for (var i = 0; i < built.n; i += 2) { var x = W / 2 + P[i * 3] * s, y = H / 2 + P[i * 3 + 2] * s; g.fillStyle = 'rgba(' + (Cc[i * 3] * 255 | 0) + ',' + (Cc[i * 3 + 1] * 255 | 0) + ',' + (Cc[i * 3 + 2] * 255 | 0) + ',.35)'; g.fillRect(x, y, 1.3, 1.3); }
     g.globalCompositeOperation = 'source-over';
     if (TS && LAYS.grid) { g.strokeStyle = 'rgba(127,214,255,.22)'; g.lineWidth = 1; for (var k = 1; k <= 12; k++) { g.beginPath(); g.arc(W / 2, H / 2, k * 5000 * s, 0, 6.2832); g.stroke(); } for (k = 0; k < 12; k++) { g.beginPath(); g.moveTo(W / 2, H / 2); g.lineTo(W / 2 + 60000 * s * Math.cos(k * 30 * D2R), H / 2 + 60000 * s * Math.sin(k * 30 * D2R)); g.stroke(); } }
+    hk('flat', g, s, W, H);
     if (GW && LAYS.wb) GW.list.forEach(function (w) { if (w.reg.gate) return; g.strokeStyle = w.id === 'VI-10' ? 'rgba(159,179,207,.5)' : 'rgba(240,201,122,.45)'; GW.outline(w).forEach(function (L) { g.beginPath(); L.forEach(function (p, i) { var x = W / 2 + p[0] * s, y = H / 2 + p[1] * s; if (i) g.lineTo(x, y); else g.moveTo(x, y); }); g.stroke(); }); });
   }
 
@@ -530,12 +538,12 @@
   function close() {
     if (!open_) return; open_ = false; document.body.classList.remove('xgx-on'); cancelAnimationFrame(raf); removeEventListener('resize', onR);
     if (card) { card.remove(); card = null; } WSEL = null; LASTM = null;
-    if (INTRO) endIntro(); if (TFon) tfToggle();
+    if (INTRO) endIntro(); if (TFon) tfToggle(); hk('close');
     ov.classList.remove('on'); var o = ov; setTimeout(function () { if (!open_) o.style.display = 'none'; }, 500);
     if (rd) { try { rd.dispose(); if (rd.forceContextLoss) rd.forceContextLoss(); } catch (e) { } rd = null; mats = []; scn = null; GRID = null; WLN = null; var nc = cv.cloneNode(false); cv.parentNode.replaceChild(nc, cv); cv = nc; input(); }
     try { if (/[?&]view=galaxy/.test(location.search)) history.replaceState(null, '', setQ('view', null)); } catch (e) { }
   }
   VP = { set: function (x, y, z) { this.v = this.v || new window.THREE.Vector3(); this.v.set(x, y, z); return this; }, project: function (c) { this.v.project(c); this.x = this.v.x; this.y = this.v.y; this.z = this.v.z; return this; } };
   if (window.SHXESC) SHXESC.reg('galaxy', 110, function () { return open_; }, function () { if (INTRO) endIntro(true); else if (card) { card.remove(); card = null; } else close(); });
-  window.SHXGX = { open: open, close: close, isOpen: function () { return open_; }, preset: function (k) { if (open_) preset(k); }, show: function (key) { var m = MK.filter(function (x) { return x.key === key; })[0]; if (m) show(m); }, mode: function () { return mode; }, intro: function () { return !!INTRO; }, skip: function () { endIntro(true); }, n: function () { return built ? built.n : 0; }, tf: function () { if (open_) tfToggle(); return TFon; }, world: function (id) { if (open_ && GW) { if (id) showWorld(GW.get(id)); else worldList(); } return !!card; }, enter: function (id) { if (open_ && GW && GW.get(id)) enterWorld(GW.get(id)); }, lv: function (i) { if (open_) lvGo(i); return TS ? TS.level(C.d) : -1; }, layers: function (o) { if (o) { for (var k in o) LAYS[k] = !!o[k]; if (ov) ov.querySelectorAll('.lg button[data-l]').forEach(function (b) { b.classList.toggle('off', !LAYS[b.dataset.l]); }); if (mode === '2d' && open_) flat(); } return { grid: LAYS.grid, wb: LAYS.wb }; }, hud: function () { return ov ? ov.querySelector('.tsg').textContent : ''; }, card: function () { return card ? card.textContent : ''; }, objs: function () { return OBJ.map(function (o) { return { key: o[0], zh: o[1], p: pos(o[3], o[4], o[5]) }; }); } };
+  window.SHXGX = { open: open, close: close, isOpen: function () { return open_; }, preset: function (k) { if (open_) preset(k); }, show: function (key) { var m = MK.filter(function (x) { return x.key === key; })[0]; if (m) show(m); }, mode: function () { return mode; }, intro: function () { return !!INTRO; }, skip: function () { endIntro(true); }, n: function () { return built ? built.n : 0; }, tf: function () { if (open_) tfToggle(); return TFon; }, world: function (id) { if (open_ && GW) { if (id) showWorld(GW.get(id)); else worldList(); } return !!card; }, enter: function (id) { if (open_ && GW && GW.get(id)) enterWorld(GW.get(id)); }, lv: function (i) { if (open_) lvGo(i); return TS ? TS.level(C.d) : -1; }, layers: function (o) { if (o) { for (var k in o) LAYS[k] = !!o[k]; if (ov) ov.querySelectorAll('.lg button[data-l]').forEach(function (b) { b.classList.toggle('off', !LAYS[b.dataset.l]); }); if (mode === '2d' && open_) flat(); } return { grid: LAYS.grid, wb: LAYS.wb, jr: LAYS.jr }; }, hud: function () { return ov ? ov.querySelector('.tsg').textContent : ''; }, card: function () { return card ? card.textContent : ''; }, _: { hook: function (n, f) { HK[n].push(f); }, C: C, tween: tween, showWorld: function (w) { showWorld(w); }, enterWorld: function (w) { enterWorld(w); }, ov: function () { return ov; }, lay: function () { return lay; }, rm: rm, mode: function () { return mode; }, fly: fly, small: small, layers: LAYS, closeCard: function () { if (card) { card.remove(); card = null; } WSEL = null; }, setSel: function (w) { WSEL = w; } }, objs: function () { return OBJ.map(function (o) { return { key: o[0], zh: o[1], p: pos(o[3], o[4], o[5]) }; }); } };
 })();
