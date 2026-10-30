@@ -6,6 +6,8 @@
  * - 天体标记:按真实赤经赤纬 + 距离换算到银心坐标(J2000 → 银道,IAU 1958 旋转矩阵)。可飞抵的点「设为目的地」= SHXDV.lock。
  * - 相机:拖动旋转、滚轮 / 双指缩放;预设「全景 / 俯视 / 侧视 / 太阳附近 / 卫星星系」;空闲时缓慢绕转(减少动态时不转)。
  * - 入口:驾驶舱航图 VI「进入银河全景」;视图圆环「5 银河」;深链 ?view=galaxy。Esc 先关资料卡再关全景。
+ * C2.12a2b(10-30 17:1x 调参):旋臂改团块+碎段、星团离开臂脊散开、暗尘纯吸收(不再发亮)、核球/棒/弥散光降亮露出中央棒与尘道、核区光晕减弱。
+ * C2.12a2(10-30 15:40 王磊:要像设计 PDF 第 1 页、真 3D):平面光底与尘埃切片全部换成 3D 粒子 —— 弥散星光大粒子、丝状暗尘吸收粒子(含中央棒尘道)、电离氢粉团与蓝色年轻星团、旋臂碎段。
  * C2.12a 银河震撼版(王磊 10-30 13:53 批准《银河与宇宙世界层总体设计 v1.0》,PC 优先,手机适配延后):
  * - 粒子分档:高 80 万 / 中 30 万 / 低(手机)3.2 万;?gxn= 可覆盖。太阳周围加局部星场 + 猎户座大星云光团,近看不再空。
  * - 尘埃切片:12 层(中档 8 层)盘面切片叠出旋臂内侧暗尘带,侧视即见中央暗带;核区双层辉光 + 光晕。
@@ -79,17 +81,18 @@
     var bar = [Math.cos(27 * D2R), Math.sin(27 * D2R)];
     var SF = Math.max(.45, Math.pow(90000 / N, .35));   // C2.12a 粒子越多单颗越小,颗粒感代替糊成白带
     function put(x, y, z, r, g, b, s) { if (i >= N) return; P[i * 3] = x; P[i * 3 + 1] = y; P[i * 3 + 2] = z; Cc[i * 3] = r; Cc[i * 3 + 1] = g; Cc[i * 3 + 2] = b; S[i] = s * SF; i++; }
-    var nLoc = Math.min(40000, N * .05), nB = N * .11, nBar = N * .08, nD = N * .36, nA = N * .33, nL = N * .03 - 0, k;
-    for (k = 0; k < nB; k++) { var rr = Math.abs(gauss(R)) * 2600, th = R() * 6.283, ph = Math.acos(2 * R() - 1); put(rr * Math.sin(ph) * Math.cos(th), rr * Math.cos(ph) * .62, rr * Math.sin(ph) * Math.sin(th), 1, .82 + R() * .08, .55 + R() * .1, 260 + R() * 200); }
-    for (k = 0; k < nBar; k++) { var u = gauss(R) * 4200, v = gauss(R) * 1300; if (Math.abs(u) > 9000) u *= .5; put(u * bar[0] - v * bar[1], gauss(R) * 500, u * bar[1] + v * bar[0], 1, .85, .62, 240 + R() * 160); }
-    for (k = 0; k < nD; k++) { var r = -Math.log(1 - R() * .985) * 10500 + 2500, a = R() * 6.283, c = R(); if (r > RG) r = RG * R(); put(r * Math.cos(a), gauss(R) * (300 + r * .006), r * Math.sin(a), c < .5 ? .85 : .7, c < .5 ? .8 : .78, c < .5 ? .78 : .95, 200 + R() * 150); }
+    var nLoc = Math.min(40000, N * .05), nB = N * .08, nBar = N * .13, nD = N * .36, nA = N * .33, nL = N * .03 - 0, k;
+    for (k = 0; k < nB; k++) { var rr = Math.abs(gauss(R)) * 1900, th = R() * 6.283, ph = Math.acos(2 * R() - 1); put(rr * Math.sin(ph) * Math.cos(th), rr * Math.cos(ph) * .62, rr * Math.sin(ph) * Math.sin(th), .3, .2 + R() * .03, .1 + R() * .03, 260 + R() * 200); }
+    for (k = 0; k < nBar; k++) { var u = gauss(R) * 5200, v = gauss(R) * (900 - Math.min(500, Math.abs(u) * .04)); if (Math.abs(u) > 9500) u *= .5; put(u * bar[0] - v * bar[1], gauss(R) * 380, u * bar[1] + v * bar[0], .42, .29 + R() * .03, .16 + R() * .04, 240 + R() * 160); }
+    for (k = 0; k < nD; k++) { var r = -Math.log(1 - R() * .985) * 10500 + 2500, a = R() * 6.283, c = R(); if (r > RG) r = RG * R(); var dm = .4 + .6 * Math.min(1, r / 13000); put(r * Math.cos(a), gauss(R) * (300 + r * .006), r * Math.sin(a), (c < .5 ? .85 : .7) * dm, (c < .5 ? .8 : .78) * dm, (c < .5 ? .78 : .95) * dm, 200 + R() * 150); }
+    // C2.12a2b 旋臂 = 团块 + 碎段(对照 gx_c1:不是平滑彩带)。每条臂预生成团块中心,70% 恒星落在团块里,30% 为臂间薄雾
+    var CL = ARMS.map(function (A, ai) { var a = [], nc = ai < 2 ? 260 : 150; for (var c = 0; c < nc; c++) { var ph, r; do { ph = -R() * 5.2 + 1.0; r = armR(A, ph); } while (r < 8500 || r > 56000); var w = 350 + R() * 1400; a.push([r * Math.cos(ph + gauss(R) * (900 + r * .03) / r), r * Math.sin(ph + gauss(R) * (900 + r * .03) / r), w, R() < .5 ? 1 : .55 + R() * .45]); } return a; });
     for (k = 0; k < nA; k++) {
-      var A = ARMS[R() < .62 ? (R() < .5 ? 0 : 1) : (R() < .5 ? 2 : 3)], phi, rr2;
-      do { phi = -R() * 5.2 + 1.0; rr2 = armR(A, phi); } while (rr2 < 9000 || rr2 > 56000);
-      var sp = 900 + rr2 * .03, off = gauss(R) * sp, ang = phi + off / rr2, hii = R() < .055, blue = R();
-      var x = rr2 * Math.cos(ang), z = rr2 * Math.sin(ang);
-      if (hii) put(x, gauss(R) * 150, z, 1, .42 + R() * .15, .62, 700 + R() * 700);
-      else put(x, gauss(R) * 220, z, .62 + blue * .25, .74 + blue * .14, 1, 220 + R() * 180);
+      var ai2 = R() < .62 ? (R() < .5 ? 0 : 1) : (R() < .5 ? 2 : 3), A = ARMS[ai2], x, z, hii = R() < .05, blue = R();
+      if (R() < .7) { var cc = CL[ai2][R() * CL[ai2].length | 0], wv = cc[2] * (R() < .3 ? 2.2 : 1); x = cc[0] + gauss(R) * wv; z = cc[1] + gauss(R) * wv * .8; if (R() > cc[3]) { k--; continue; } }
+      else { var phi, rr2; do { phi = -R() * 5.2 + 1.0; rr2 = armR(A, phi); } while (rr2 < 9000 || rr2 > 56000); var ang = phi + gauss(R) * (1600 + rr2 * .05) / rr2; x = rr2 * Math.cos(ang); z = rr2 * Math.sin(ang); }
+      if (hii) put(x, gauss(R) * 150, z, 1, .42 + R() * .15, .62, 600 + R() * 600);
+      else put(x, gauss(R) * 220, z, .62 + blue * .25, .74 + blue * .14, 1, 200 + R() * 160);
     }
     for (k = 0; k < nL; k++) {   // 猎户臂(本地臂):穿过太阳的一小段,俯仰约 12°
       var t = (R() - .5) * 0.75, rl = R0 * Math.exp(-t * Math.tan(12 * D2R)) + gauss(R) * 700, al = t + gauss(R) * .012;
@@ -102,13 +105,36 @@
     var o42 = pos(83.8187, -5.3897, 1344);   // 猎户座大星云光团
     for (k = 0; k < 600; k++) put(o42[0] + gauss(R) * 45, o42[1] + gauss(R) * 30, o42[2] + gauss(R) * 45, 1, .45 + R() * .2, .7, 60 + R() * 120);
     // 尘埃(暗,普通混合):沿主臂内侧
-    var ND = small() ? 2500 : N > 400000 ? 14000 : 8000, DP = new Float32Array(ND * 3), DS = new Float32Array(ND);
-    for (k = 0; k < ND; k++) { var A2 = ARMS[k % 4 < 3 ? k % 2 : 2 + (k % 2)], ph2, r2; do { ph2 = -R() * 6.5 + 1; r2 = armR(A2, ph2) * .93; } while (r2 < 8000 || r2 > 50000); var an2 = ph2 + gauss(R) * 500 / r2; DP[k * 3] = r2 * Math.cos(an2); DP[k * 3 + 1] = gauss(R) * 120; DP[k * 3 + 2] = r2 * Math.sin(an2); DS[k] = 900 + R() * 900; }
-    return { P: P, C: Cc, S: S, n: i, DP: DP, DS: DS };
+    // C2.12a2 电离氢团块(粉)+ 年轻星团(蓝):3D 小团,贴旋臂外缘
+    var nK = Math.min(700, N / 900) | 0;
+    for (k = 0; k < nK && i < N - 60; k++) {
+      var Ak = ARMS[R() < .65 ? (R() < .5 ? 0 : 1) : (R() < .5 ? 2 : 3)], pk, rk; do { pk = -R() * 5.2 + 1.0; rk = armR(Ak, pk); } while (rk < 7000 || rk > 52000);
+      pk += gauss(R) * (1500 + rk * .045) / rk; rk *= 1 + gauss(R) * .03; var cx = rk * Math.cos(pk), cz = rk * Math.sin(pk), cy = gauss(R) * 90, pink = R() < .55, m = pink ? 14 + R() * 18 | 0 : 16 + R() * 22 | 0, w = pink ? 110 : 220;
+      for (var j = 0; j < m; j++) { if (pink) put(cx + gauss(R) * w, cy + gauss(R) * w * .6, cz + gauss(R) * w, 1, .3 + R() * .15, .55 + R() * .12, 260 + R() * 420); else put(cx + gauss(R) * w, cy + gauss(R) * w * .5, cz + gauss(R) * w, .62, .76, 1, 160 + R() * 220); }
+    }
+    // C2.12a2 暗尘:全部是 3D 吸收粒子 —— 旋臂内缘丝状尘带 + 支刺 + 中央棒前缘两条尘道
+    var ND = small() ? 6000 : N > 400000 ? 90000 : 45000, DP = new Float32Array(ND * 3), DS = new Float32Array(ND), d = 0;
+    function dput(x, y, z, sz) { if (d >= ND) return; DP[d * 3] = x; DP[d * 3 + 1] = y; DP[d * 3 + 2] = z; DS[d] = sz; d++; }
+    var nBarD = ND * .07;
+    for (k = 0; k < nBarD; k++) { var ub = (R() * 2 - 1) * 9000, sd = k % 2 ? 1 : -1; if (R() > .35 + .65 * Math.pow(.5 + .5 * Math.sin(ub * .0011 * (sd > 0 ? 1.3 : 1) + sd * 2.1), 2)) { k--; continue; } var vb = sd * (900 + Math.abs(ub) * .05) + gauss(R) * 520 * (.6 + Math.abs(ub) / 9000), ux = ub + sd * Math.abs(ub) * .0; var curl = Math.max(0, Math.abs(ub) - 6500) / 2500; vb += curl * curl * 1200 * Math.sign(ub);
+      dput(ux * bar[0] - vb * bar[1], gauss(R) * 80, ux * bar[1] + vb * bar[0], 350 + R() * 500); }
+    while (d < ND) {   // 丝状:每根 18–40 粒,沿与旋臂成 20–60° 的短弧
+      var Ad = ARMS[R() < .62 ? (R() < .5 ? 0 : 1) : (R() < .5 ? 2 : 3)], pd, rd2; do { pd = -R() * 5.6 + 1.0; rd2 = armR(Ad, pd); } while (rd2 < 6500 || rd2 > 50000);
+      rd2 *= .955 + gauss(R) * .02; var L = 1200 + R() * 3800, ang0 = pd + Math.PI / 2 + (R() < .5 ? 1 : -1) * (0.35 + R() * .7), cnt = 18 + R() * 22 | 0, x0 = rd2 * Math.cos(pd), z0 = rd2 * Math.sin(pd), y0 = gauss(R) * 60, bend = gauss(R) * .4;
+      for (var q = 0; q < cnt; q++) { var t = q / cnt - .5, aa = ang0 + bend * t; dput(x0 + Math.cos(aa) * L * t + gauss(R) * 70, y0 + gauss(R) * 45, z0 + Math.sin(aa) * L * t + gauss(R) * 70, 220 + R() * 480 * (1 - Math.abs(t))); }
+    }
+    // C2.12a2 弥散星光:大号柔光粒子按盘/核球密度 3D 分布(取代平面光底)
+    var NG = small() ? 3000 : 16000, GP = new Float32Array(NG * 3), GC = new Float32Array(NG * 3), GS = new Float32Array(NG);
+    for (k = 0; k < NG; k++) {
+      var gx, gy, gz, wr; if (k < NG * .3) { var rb = Math.abs(gauss(R)) * 3200, tb = R() * 6.283, pb = Math.acos(2 * R() - 1), ub2 = gauss(R) * 4500 * (R() < .5 ? 1 : 0); gx = rb * Math.sin(pb) * Math.cos(tb) + ub2 * bar[0]; gy = rb * Math.cos(pb) * .55; gz = rb * Math.sin(pb) * Math.sin(tb) + ub2 * bar[1]; wr = 1; }
+      else { var rg = -Math.log(1 - R() * .97) * 9000 + 1500, ag = R() * 6.283; gx = rg * Math.cos(ag); gz = rg * Math.sin(ag); gy = gauss(R) * (250 + rg * .004); wr = Math.max(0, 1 - rg / 30000); }
+      GP[k * 3] = gx; GP[k * 3 + 1] = gy; GP[k * 3 + 2] = gz; var gk = k < NG * .3 ? .55 : 1; GC[k * 3] = (.75 + .25 * wr) * gk; GC[k * 3 + 1] = (.72 + .1 * wr) * gk; GC[k * 3 + 2] = (.9 - .4 * wr) * gk; GS[k] = k < NG * .3 ? 2600 + R() * 2600 : 3000 + R() * 4000;
+    }
+    return { P: P, C: Cc, S: S, n: i, DP: DP, DS: DS, dn: d, GP: GP, GC: GC, GS: GS };
   }
   var VSP = 'attribute float aS;attribute vec3 aC;varying vec3 vC;varying float vA;uniform float uK,uB,uM,uT;void main(){vec3 p=position;if(uT>0.0){float r=length(p.xz);float a=uT*767.0/max(r,1500.0);float c=cos(a),s=sin(a);p.xz=vec2(p.x*c-p.z*s,p.x*s+p.z*c);}vec4 mv=modelViewMatrix*vec4(p,1.0);float s=aS*uK/max(-mv.z,1.0);vA=clamp(s,0.15,1.0)*uB*clamp(uM/max(s,1.0)*1.6,.35,1.0);gl_PointSize=clamp(s,1.0,uM);vC=aC;gl_Position=projectionMatrix*mv;}';
   var FSP = 'precision mediump float;varying vec3 vC;varying float vA;void main(){vec2 d=gl_PointCoord-.5;float r=dot(d,d)*4.0;if(r>1.0)discard;float a=exp(-r*3.0)*vA;gl_FragColor=vec4(vC*a,1.0);}';
-  var FSDU = 'precision mediump float;varying float vA;void main(){vec2 d=gl_PointCoord-.5;float r=dot(d,d)*4.0;if(r>1.0)discard;gl_FragColor=vec4(.05,.03,.02,(1.0-r)*.22*vA);}';
+  var FSDU = 'precision mediump float;varying float vA;void main(){vec2 d=gl_PointCoord-.5;float r=dot(d,d)*4.0;if(r>1.0)discard;gl_FragColor=vec4(0.0,0.0,0.0,(1.0-r)*(1.0-r)*.16*vA);}';
   var VSG = 'varying vec2 vU;void main(){vU=uv*2.0-1.0;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}';
   var FSG = [   // 弥散光底(与回望银河同一张盘面公式,只取柔光)
     'precision mediump float;varying vec2 vU;uniform float uA;const float K=3.6;',
@@ -139,18 +165,19 @@
     scn = new T.Scene(); cam = new T.PerspectiveCamera(60, 1, 20, 3e6);
     if (!built) built = gen();
     var g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(built.P, 3)); g.setAttribute('aC', new T.BufferAttribute(built.C, 3)); g.setAttribute('aS', new T.BufferAttribute(built.S, 1)); g.setDrawRange(0, built.n);
-    var ms = new T.ShaderMaterial({ vertexShader: VSP, fragmentShader: FSP, transparent: true, depthWrite: false, depthTest: false, blending: T.AdditiveBlending, uniforms: { uK: { value: 800 }, uB: { value: (small() ? .62 : .42) * Math.max(.3, Math.sqrt(90000 / built.n)) * 1.15 }, uM: { value: 28 }, uT: { value: 0 } } });
+    var ms = new T.ShaderMaterial({ vertexShader: VSP, fragmentShader: FSP, transparent: true, depthWrite: false, depthTest: false, blending: T.AdditiveBlending, uniforms: { uK: { value: 800 }, uB: { value: (small() ? .62 : .42) * Math.max(.3, Math.sqrt(90000 / built.n)) * .8 }, uM: { value: 28 }, uT: { value: 0 } } });
     var pts = new T.Points(g, ms); pts.frustumCulled = false; pts.renderOrder = 1; scn.add(pts); mats.push(ms);
-    var gd = new T.BufferGeometry(); gd.setAttribute('position', new T.BufferAttribute(built.DP, 3)); gd.setAttribute('aS', new T.BufferAttribute(built.DS, 1)); gd.setAttribute('aC', new T.BufferAttribute(new Float32Array(built.DS.length * 3), 3));
+    var gd = new T.BufferGeometry(); gd.setAttribute('position', new T.BufferAttribute(built.DP, 3)); gd.setAttribute('aS', new T.BufferAttribute(built.DS, 1)); gd.setAttribute('aC', new T.BufferAttribute(new Float32Array(built.DS.length * 3), 3)); gd.setDrawRange(0, built.dn);
     var md = new T.ShaderMaterial({ vertexShader: VSP, fragmentShader: FSDU, transparent: true, depthWrite: false, depthTest: false, blending: T.NormalBlending, uniforms: { uK: { value: 800 }, uB: { value: 1 }, uM: { value: 28 }, uT: { value: 0 } } });
     var dp = new T.Points(gd, md); dp.frustumCulled = false; dp.renderOrder = 2; scn.add(dp); mats.push(md);
-    var mg = new T.ShaderMaterial({ vertexShader: VSG, fragmentShader: FSG, transparent: true, depthWrite: false, depthTest: false, side: T.DoubleSide, blending: T.AdditiveBlending, uniforms: { uA: { value: .9 } } });
-    var pl = new T.Mesh(new T.PlaneGeometry(2 * RG, 2 * RG), mg); pl.rotation.x = -Math.PI / 2; pl.renderOrder = 0; pl.frustumCulled = false; scn.add(pl); mats.push(mg);
+    var gg = new T.BufferGeometry(); gg.setAttribute('position', new T.BufferAttribute(built.GP, 3)); gg.setAttribute('aC', new T.BufferAttribute(built.GC, 3)); gg.setAttribute('aS', new T.BufferAttribute(built.GS, 1));
+    var mg = new T.ShaderMaterial({ vertexShader: VSP, fragmentShader: FSP, transparent: true, depthWrite: false, depthTest: false, blending: T.AdditiveBlending, uniforms: { uK: { value: 800 }, uB: { value: .05 }, uM: { value: 900 }, uT: { value: 0 } } });
+    var gpn = new T.Points(gg, mg); gpn.frustumCulled = false; gpn.renderOrder = 0; scn.add(gpn); mats.push(mg);
     var FG = 'precision mediump float;varying vec2 vU;uniform float uA;void main(){float r=length(vU);if(r>1.0)discard;float g=exp(-r*r*10.0)*.85+exp(-r*4.5)*.22;gl_FragColor=vec4(vec3(1.0,.86,.64)*g*uA,1.0);}';
     var mb = new T.ShaderMaterial({ vertexShader: VSG, fragmentShader: FG, transparent: true, depthWrite: false, depthTest: false, blending: T.AdditiveBlending, uniforms: { uA: { value: .55 } } });
     GLOW = new T.Mesh(new T.PlaneGeometry(22000, 22000), mb); GLOW.frustumCulled = false; GLOW.renderOrder = 3; scn.add(GLOW); mats.push(mb);
     // C2.12a 尘埃切片(mats[4]...)+ 核区大光晕(HALO)
-    var NS = small() ? 0 : built.n > 400000 ? 12 : 8; DSL = [];
+    var NS = 0; DSL = [];   // C2.12a2 平面尘埃切片停用(渲染标准:主体一律 3D 粒子)
     for (var si = 0; si < NS; si++) {
       var yy = (si / Math.max(1, NS - 1) - .5) * 700, wv = Math.exp(-Math.pow(yy / 260, 2));
       var msl = new T.ShaderMaterial({ vertexShader: VSG, fragmentShader: FSDS, transparent: true, depthWrite: false, depthTest: false, side: T.DoubleSide, blending: T.NormalBlending, uniforms: { uA: { value: 0 }, uY: { value: si * 1.7 } } });
@@ -350,12 +377,12 @@
     if (mode === '3d') {
       var cp = Math.cos(C.pit), x = C.tx + C.d * cp * Math.cos(C.yaw), y = C.ty + C.d * Math.sin(C.pit), z = C.tz + C.d * cp * Math.sin(C.yaw);
       cam.position.set(x, y, z); cam.up.set(0, 1, 0); if (C.pit > 1.5) cam.up.set(-Math.cos(C.yaw), 0, -Math.sin(C.yaw)); cam.lookAt(C.tx, C.ty, C.tz);
-      var kk = H / (2 * Math.tan(30 * D2R)), um = C.d < 40000 ? 2.2 + 5.8 * C.d / 40000 : 28; mats[0].uniforms.uK.value = kk; mats[1].uniforms.uK.value = kk; mats[0].uniforms.uM.value = um; mats[1].uniforms.uM.value = Math.max(um * 3, 6);
-      if (GLOW) { GLOW.quaternion.copy(cam.quaternion); mats[3].uniforms.uA.value = .55 * (1 - .55 * Math.abs(Math.sin(C.pit))); }
-      mats[2].uniforms.uA.value = .9 * (.45 + .55 * Math.min(1, C.d / 100000)) * Math.min(1, Math.max(.15, Math.abs(Math.sin(C.pit)) * 1.4)) * (C.d < 20000 ? C.d / 20000 : 1);
+      var kk = H / (2 * Math.tan(30 * D2R)), um = C.d < 40000 ? 2.2 + 5.8 * C.d / 40000 : 28; mats[0].uniforms.uK.value = kk; mats[1].uniforms.uK.value = kk; mats[0].uniforms.uM.value = um; mats[1].uniforms.uM.value = Math.max(um * 8, 14);
+      if (GLOW) { GLOW.quaternion.copy(cam.quaternion); mats[3].uniforms.uA.value = .14 * (1 - .55 * Math.abs(Math.sin(C.pit))); }
+      mats[2].uniforms.uK.value = kk; mats[2].uniforms.uB.value = (small() ? .007 : .0045) * Math.min(1, C.d / 25000); mats[2].uniforms.uT.value = TF;
       var dsf = Math.max(0, Math.min(1, (C.d - 6000) / 14000)), sp = Math.abs(Math.sin(C.pit));
       DSL.forEach(function (q) { q.m.uniforms.uA.value = q.w * dsf * (sp < .12 ? 1.4 : .55 + .45 * sp); });
-      if (HALO) { HALO.quaternion.copy(cam.quaternion); HALO.material.uniforms.uA.value = .5 * Math.min(1, C.d / 30000) * (1 - .4 * sp); }
+      if (HALO) { HALO.quaternion.copy(cam.quaternion); HALO.material.uniforms.uA.value = .08 * Math.min(1, C.d / 30000) * (1 - .4 * sp); }
       if (TFon) { TF = Math.min(230, TF + Math.min(.05, (now - (frame.lt || now)) / 1000) * 20); if (TF >= 230) TF = 230; tfShow(); }
       frame.lt = now; mats[0].uniforms.uT.value = TF; mats[1].uniforms.uT.value = TF;
       rd.render(scn, cam);
