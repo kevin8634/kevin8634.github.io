@@ -27,7 +27,7 @@
    "tex": "\\mathrm{RMS}=\\sqrt{\\tfrac18\\sum (y_i-1.5x_i)^2}\\approx0.0022"
   },
   {
-   "text": "误差从哪来:表里的「日距」是平均距离,不完全等于半长轴;外行星周期还受木星、土星相互摄动。精确的开普勒定律要把行星质量加进去。",
+   "text": "误差从哪来:NASA 表的周期是回归周期(春分到春分),比相对恒星的恒星周期略短,越远的行星差得越多(海王星约 0.65%),这是外行星偏差变大的主因;其次是行星间摄动和表值只有 3–4 位有效数字。行星质量修正最大只有约 0.05%(木星)。",
    "tex": "T^2=\\frac{4\\pi^2}{G(M_\\odot+m)}a^3"
   }
  ],
@@ -66,11 +66,15 @@
    "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/"
   },
   {
+   "name": "NASA Planetary Fact Sheet Notes(Orbital Period 为回归周期;Distance from Sun 即半长轴)",
+   "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/planetfact_notes.html"
+  },
+  {
    "name": "OpenStax《University Physics Volume 1》13.5 Kepler's Laws",
    "url": "https://openstax.org/books/university-physics-volume-1/pages/13-5-keplers-laws-of-planetary-motion"
   }
  ],
- "review": "AI 审(待指定审稿人复核);脚本复算:最小二乘 p=1.4978、b=−5.7e−5、自由截距 RMS=0.0012;p=1.5 RMS=0.0022;周期偏差 水星 −0.06%、土星 +0.65%、海王星 +1.27%",
+ "review": "AI 审(待指定审稿人复核);脚本复算:最小二乘 p=1.4978、b=−5.7e−5、自由截距 RMS=0.0012;p=1.5 RMS=0.0022;周期偏差 水星 −0.06%、土星 +0.65%、海王星 +1.27%;误差来源经 07 天枢窗口交叉审阅并按 NASA Notes 核实(回归周期)",
  "ai_generated": "标题、钩子、推导文字、检查题由 AI 撰写;数值由脚本从 NASA 表复算;无图片",
  "lab": {
   "title": "拟合指数 p",
