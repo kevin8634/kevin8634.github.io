@@ -37,4 +37,10 @@
 - L2–L5 的新内容属 C2.12d;本批 L3–L5 交给驾驶舱 ✦ 航点。
 
 ## 5. 结果
-(上线后补:commit、六档结果、线上 md5)
+- 代码 commit 91006d1(已 rebase 到 66cfad7 深空层 1.4 之上推送 main)。
+- tgx_reg.py 六档 b2:desk / 80 万 / rm / t169 / mob / nogl 全部 0 pageerror、0 本站 4xx(外部请求为既有的 NOAA/USGS/CelesTrak/GIBS 实时图层,测试中拦截)。
+- tgx_b.py:1440×900、1440×900 无 WebGL、390×844 三档 PASS(11 张世界卡、24 个天体卡 TSG 齐全)。
+- 本地 md5:sh-x-galaxy.js 67f2717e74573127c8dfa57ad27cf77e · sh-x-gal-core.js f1dbb040e9aa83366753ff76fefb86c7 · sh-x-gal-worlds.js 2888398688f67346ed2b0bb7fa5e182f。
+- 截图:云盘 开发文档/上线截图_2.0-C2.12b/。
+- 未做:手机端世界卡占满屏幕、手机尺度梯隐藏(手机适配按 13:53 决定延后)。
+- 下一步 C2.12c 天枢航道(信标站、航道图、曲率跃迁序列、点亮状态、自由探索开关);设计稿第 08 节要求每批先出该批效果图给王磊过目。
