@@ -83,6 +83,12 @@ body.islon #c{touch-action:none}
 .isl-a{position:absolute;transform:translate(-50%,-100%);font-size:11px;letter-spacing:.08em;color:#ffe2b0;text-shadow:0 0 8px #000,0 0 3px #000;white-space:nowrap;pointer-events:none}.isl-a:after{content:"";display:block;width:1px;height:16px;margin:2px auto 0;background:linear-gradient(#ffe2b0,transparent)}
 body.islon #nav,body.islon #hud,body.islon #dive,body.islon #back,body.islon #snd,body.islon #note,body.islon #names,body.islon #side,body.islon #cards{visibility:hidden}
 body.nogl #labx{background:radial-gradient(ellipse at 50% 40%,#10202c,#02040c 70%)}
+#cv{position:fixed;inset:0;z-index:20;display:none;place-items:center;background:rgba(2,4,12,.86);backdrop-filter:blur(6px)}
+#cv.on{display:grid}
+#cv .cvb{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px;max-width:100vw}
+#cv img{max-height:72vh;max-width:min(88vw,520px);border-radius:10px;border:1px solid rgba(232,194,122,.4);box-shadow:0 0 60px -10px rgba(232,194,122,.35)}
+#cv p{margin:0;font-size:12px;color:#8fa0c4}
+#cv .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
 </style>
 <script>/* three 版本:默认 r186;?three=169 回滚 r169(2.0 发布前保留) */(function(){var v=/[?&]three=169\b/.test(location.search)?"169":"186";window.__THREE_V=v;var m=v==="169"?{"three":"./vendor/three.module.min.js","deep-post":"./vendor/post-r169.js"}:{"three":"./vendor/r186/three.module.min.js","deep-post":"./vendor/r186/post.min.js"};var e=document.createElement("script");e.type="importmap";e.textContent=JSON.stringify({imports:m});document.currentScript.after(e);})();</script>
 </head>
@@ -93,9 +99,10 @@ body.nogl #labx{background:radial-gradient(ellipse at 50% 40%,#10202c,#02040c 70
 <nav id="nav" aria-label="深度导航"></nav>
 <div id="hud" aria-live="polite"><h1 id="t"></h1><p id="s"></p><span id="g" class="tag"></span></div>
 <button id="dive" class="btn">▼ 潜入深空</button>
-<div id="note">深空层 2.0 · 正式发布 · 影像:ESO/S. Brunier、ESA/Hubble、ESA/Webb、NASA(CC BY 4.0,详见 LICENSES.md)</div>
+<div id="note">深空层 2.0 · 正式发布 · 音乐:原创合成 · 影像:ESO/S. Brunier、ESA/Hubble、ESA/Webb、NASA(CC BY 4.0,详见 LICENSES.md)</div>
 <div id="names" aria-hidden="true"></div><div id="tip" aria-hidden="true"></div>
 <aside id="side" role="dialog" aria-modal="false" aria-labelledby="sideT" aria-hidden="true"><button id="sideX" class="btn" aria-label="关闭">✕</button><h2 id="sideT"></h2><div class="w" id="sideW"></div><div id="sideTh"></div><div class="fx" id="sideF"></div><div id="sideD"></div><p id="sideP"></p><div id="sideG"></div><div id="sideS"></div><div id="sideQ" hidden></div><div id="sideL" hidden></div><div id="sideR"></div><div class="row"><button id="sideLab" class="btn" hidden>▣ 坠入实验舱</button><button id="sideIsl" class="btn" hidden>◈ 登上核素岛</button><button id="sideC" class="btn">生成推导卡(示例)</button></div></aside>
+<div id="cv" role="dialog" aria-modal="true" aria-label="推导卡预览" aria-hidden="true"><div class="cvb"><img id="cvImg" alt="推导卡"><p>手机可长按图片保存</p><div class="row"><button id="cvSave" class="btn">保存图片</button><button id="cvShare" class="btn" hidden>分享</button><button id="cvX" class="btn">关闭</button></div></div></div>
 <div id="labx" role="dialog" aria-modal="true" aria-labelledby="labT" aria-hidden="true"><div class="lh"><b id="labT"></b><span id="labW"></span></div><button id="labX" class="btn">✕ 返回深空</button>
 <div class="wrap"><div id="labTabs" role="tablist"><button data-t="labL" class="on">参数</button><button data-t="labRt">公式 · A/B</button><button data-t="labB">记录本</button></div><section class="gp act" id="labL" aria-label="参数"><h3>参 数</h3><div id="labPh"></div><div class="row"><button class="btn" id="labRun">运行 ▶</button></div></section>
 <section class="gp" id="labRt" aria-label="公式与 A/B 对照"><h3>公 式 · A / B 对 照</h3><div class="fx2" id="labF"></div><canvas id="labAB" width="600" height="300" role="img" aria-label="A/B 对照图"></canvas><div class="k2" id="labABk">先「存为 A」,再改参数,对照 A 与当前 B。</div><div class="row"><button class="btn" id="labSaveA">存为 A</button><button class="btn" id="labClrA">清除 A</button></div></section>
@@ -294,7 +301,16 @@ function renderThread(k,li){const w=WORLDS[k],T=$("sideTh");T.style.setProperty(
  T.querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{const i=+b.dataset.th;go(i,true);setTimeout(()=>openSide(k,i),rm||document.body.classList.contains("rm")?0:1250);});}
 function closeSide(){if(!side.classList.contains("open"))return false;side.classList.remove("open");side.setAttribute("aria-hidden","true");if(side.contains(document.activeElement))document.activeElement.blur();sideW=-1;return true;}
 $("sideX").onclick=closeSide;
-$("sideC").onclick=async()=>{if(sideW<0)return;const w=WORLDS[sideW],cd=CARDS[sideL][w.id];const b=await Card.make(cd?{kind:"derive",task:cd.id,title:cd.title,lines:[cd.hook||"",...cd.steps.map((x,i)=>`${i+1}. ${x.text}`)]}:{kind:"derive",task:`${w.id}.deep-demo`,title:w.fn,lines:[w.n+" · 星辰层示例卡","正式课本卡 1.1 上线"]});Card.share(b,`genesis-${w.id}-card.png`);};
+// 推导卡:先页内预览,再由用户选「保存 / 分享」(原先直接下载,手机与 App 内浏览器会像闪退)
+let cvUrl=null,cvBlob=null,cvName="";
+function cardView(b,name){if(!b)return;cvBlob=b;cvName=name;if(cvUrl)URL.revokeObjectURL(cvUrl);cvUrl=URL.createObjectURL(b);$("cvImg").src=cvUrl;
+ const f=new File([b],name,{type:"image/png"});$("cvShare").hidden=!(navigator.canShare&&navigator.canShare({files:[f]}));$("cv").classList.add("on");$("cv").setAttribute("aria-hidden","false");$("cvSave").focus();}
+function cardClose(){$("cv").classList.remove("on");$("cv").setAttribute("aria-hidden","true");$("sideC").focus();}
+$("cvX").onclick=cardClose;$("cv").addEventListener("click",e=>{if(e.target.id==="cv")cardClose();});
+addEventListener("keydown",e=>{if(e.key==="Escape"&&$("cv").classList.contains("on")){e.stopImmediatePropagation();cardClose();}},true);
+$("cvSave").onclick=()=>{const a=document.createElement("a");a.href=cvUrl;a.download=cvName;document.body.appendChild(a);a.click();a.remove();};
+$("cvShare").onclick=async()=>{try{await navigator.share({files:[new File([cvBlob],cvName,{type:"image/png"})],title:"创世计划 · 推导卡"});}catch(e){}};
+$("sideC").onclick=async()=>{if(sideW<0)return;const w=WORLDS[sideW],cd=CARDS[sideL][w.id];const b=await Card.make(cd?{kind:"derive",task:cd.id,title:cd.title,lines:[cd.hook||"",...cd.steps.map((x,i)=>`${i+1}. ${x.text}`)]}:{kind:"derive",task:`${w.id}.deep-demo`,title:w.fn,lines:[w.n+" · 星辰层示例卡","正式课本卡 1.1 上线"]});cardView(b,`genesis-${w.id}-card.png`);};
 // V3 坠入实验舱:点「坠入实验舱」→ 镜头冲向该星 + 闪光 → 全息舱(中央舞台=实验台计算结果的 3D 曲线;左参数;右公式+A/B;底记录本)
 let lab=null,labOn=false,labA=null,labCur=null,labLast=null,labCard=null,labN=0;const labHome={};
 const fmtT=()=>{const d=new Date();return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}:${String(d.getSeconds()).padStart(2,"0")}`;};
@@ -371,13 +387,16 @@ addEventListener("wheel",e=>{if(islOn&&isl){isl.orb.dist=Math.min(260,Math.max(4
 let ty=null;addEventListener("touchstart",e=>{ty=labOn||(e.target.closest&&e.target.closest("#side"))?null:e.touches[0].clientY;},{passive:true});
 addEventListener("touchend",e=>{if(ty==null)return;const d=ty-e.changedTouches[0].clientY;if(Math.abs(d)>50)go(cur+(d>0?1:-1));ty=null;},{passive:true});
 addEventListener("keydown",e=>{if(e.defaultPrevented)return;if(islOn){if(e.key==="Escape"){closeIsl();e.preventDefault();}return;}if(labOn){if(e.key==="Escape"){closeLab();e.preventDefault();}return;}if(e.key!=="Escape"&&e.target.closest&&e.target.closest("#side"))return;if(e.key==="ArrowDown"||e.key==="PageDown"){go(cur+1);e.preventDefault()}else if(e.key==="ArrowUp"||e.key==="PageUp"){go(cur-1);e.preventDefault()}else if(e.key==="Escape"){if(!closeSide())go(0);}});
-// 音乐:L0–L2 群星闪耀,L3–L4 宇宙闪烁,默认关
-const au={a:null,b:null},MK="gn:deep:snd";let on=false;
+// 音乐 2.0:五层各一段原创合成主题(music/l0–l4.m4a,64s 无缝循环),换层 2s 交叉淡入;默认关
+const au=[],MK="gn:deep:snd";let on=(()=>{try{return localStorage.getItem(MK)!=="0"}catch(e){return true}})();   // 王磊 10-30:默认打开;关过则记住
 function mk(src){const a=new Audio(src);a.loop=true;a.volume=0;a.preload="none";return a}
 function fade(a,v){if(!a)return;if(v>0&&a.paused)a.play().catch(()=>{});const s=a.volume,t0=performance.now();const f=()=>{const k=Math.min(1,(performance.now()-t0)/2000);a.volume=s+(v-s)*k;if(k<1)requestAnimationFrame(f);else if(v===0)a.pause();};f();}
-function music(i){if(!on)return;const useB=i>=3;fade(au.a,useB?0:.55);fade(au.b,useB?.55:0);}
-$("snd").onclick=()=>{on=!on;$("snd").textContent=on?"♪ 音乐 开":"♪ 音乐 关";$("snd").setAttribute("aria-pressed",on);
- if(on){au.a=au.a||mk("deep-a.m4a");au.b=au.b||mk("deep-b.m4a");music(cur);}else{fade(au.a,0);fade(au.b,0);}};
+function music(i){if(!on)return;for(let j=0;j<L.length;j++){if(j===i){au[j]=au[j]||mk(`music/l${j}.m4a`);fade(au[j],.55);}else fade(au[j],0);}}
+function sndUi(){$("snd").textContent=on?"♪ 音乐 开":"♪ 音乐 关";$("snd").setAttribute("aria-pressed",on);}
+$("snd").onclick=()=>{on=!on;try{localStorage.setItem(MK,on?"1":"0")}catch(e){}sndUi();
+ if(on){music(cur);}else{au.forEach(a=>fade(a,0));}};
+sndUi();if(on)setTimeout(()=>music(cur),0);   // 浏览器允许时直接响起
+{const g=e=>{removeEventListener("pointerdown",g,true);removeEventListener("keydown",g,true);if(on&&e.target!==$("snd"))music(cur);};addEventListener("pointerdown",g,true);addEventListener("keydown",g,true);}
 // 后期:Bloom(低帧自动关闭)
 comp.setPixelRatio(r.getPixelRatio());comp.addPass(new RenderPass(cmp.scene,cmp.cam));
 bloom=new UnrealBloomPass(new THREE.Vector2(W(),H()),.7,.5,.5);comp.addPass(bloom);comp.addPass(new OutputPass());

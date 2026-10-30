@@ -34,3 +34,5 @@
 
 许可依据:ESO https://www.eso.org/public/copyright/ ;ESA/Hubble https://esahubble.org/copyright/ ;ESA/Webb https://esawebb.org/copyright/ (均为 CC BY 4.0,须清晰署名)。页面左下角 #note 常驻署名并指向本台账。
 未用 KTX2:沙箱无 toktx/basisu 且需额外 vendor basis 转码 wasm;改用 webp(q82–88),9 张合计约 1.6 MB,长边 ≤4096。
+
+| deep/music/l0–l4.m4a | 原创合成(numpy 程序生成,无采样;2026-10-30 门户 2.0.1) | 创世计划 Genesis | 自有 |
