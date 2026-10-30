@@ -290,7 +290,7 @@ function showLab(c){const L=$("sideL");if(!c.lab||L.dataset.on)return;const lab=
 // D2 推导排序挑战(core 0.2 ChainDrag):答对检查题后出现,排对写入 d2
 function showChain(c){if(c.steps.length<3||$("chainBox"))return;const Q=$("sideQ"),d=document.createElement("div");d.id="chainBox";d.innerHTML=`<b>推导排序挑战</b><div class="cdim">把打乱的步骤排回正确顺序(可拖拽,或选中后按 ↑↓)。</div>`;Q.appendChild(d);ChainDrag.mount(d,{steps:c.steps.map(x=>x.text),onDone:ok=>{if(ok&&bar)bar.markDone("d2");if(ok)showLab(c);}});}
 // 1.5 星网与航线:routes/<id>.json;进度存 gn:deep:route:<id>;走完得航线徽章,生成航线卡
-let ROUTE=null,rtCur=-1;fetch("routes/iron.json").then(r=>r.ok?r.json():null).then(j=>{if(j){ROUTE=j;j.stops.forEach((c,i)=>{c.layer=2;c.route=i;});}}).catch(()=>{});
+let ROUTE=null,rtCur=-1;fetch("routes/iron.json").then(r=>r.ok?r.json():null).then(j=>{if(j){ROUTE=j;j.stops.forEach((c,i)=>{c.layer=2;c.route=i;});const q=new URLSearchParams(location.search);if(q.has("net"))setTimeout(()=>{const st=q.get("stop");st!=null&&st!==""&&j.stops[+st]?openStop(+st):openNet();},1200);}}).catch(()=>{});
 const RK="gn:deep:route:iron";const rtGet=()=>{try{return new Set(JSON.parse(localStorage.getItem(RK)||"[]"))}catch(e){return new Set()}};
 const rtSave=d=>{try{localStorage.setItem(RK,JSON.stringify([...d]))}catch(e){}};
 function rtBar(){if(!ROUTE)return"";const d=rtGet();return `<div id="rtBar">${ROUTE.stops.map((c,i)=>{const w=WORLDS.find(x=>x.id===c.world);return `<button class="btn${d.has(i)?" dn":""}" data-rs="${i}" ${i===rtCur?'aria-current="step"':""}>${i+1} ${esc(w?w.n:c.world)}${d.has(i)?" ✓":""}</button>`}).join("")}</div>`;}

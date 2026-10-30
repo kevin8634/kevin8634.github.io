@@ -329,6 +329,23 @@
         .acts { gap: 8px; }
         .acts .btn { padding: 10px 14px; font-size: 12px; }
       }
+      /* v2.3 · 星网（深空 1.5 航线在门户首页的视图） */
+      #netSvg { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 3; pointer-events: none; opacity: 0; transition: opacity .6s ease; }
+      body.x-neton #netSvg { opacity: 1; }
+      #netSvg .rt { fill: none; stroke: #7fe3a8; stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 8 10; animation: xNetDash 1.6s linear infinite; filter: drop-shadow(0 0 6px rgba(127,227,168,.8)); }
+      #netSvg .rt.lit { stroke-dasharray: none; stroke-width: 3.4; animation: none; }
+      #netSvg .fu { fill: none; stroke: rgba(200,215,255,.32); stroke-width: 1.4; stroke-dasharray: 3 8; }
+      @keyframes xNetDash { to { stroke-dashoffset: -36; } }
+      .passport-btn#netChip { left: 24px; right: auto; top: 66px; padding: 6px 14px; font-size: 12px; }
+      #netPanel { position: fixed; right: 24px; top: 84px; z-index: 30; width: min(380px, 92vw); padding: 14px 18px; border-radius: 16px; border: 1px solid rgba(127,227,168,.4); background: rgba(8,14,30,.78); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #eaf0ff; font-size: 13px; line-height: 1.7; }
+      #netPanel b { color: #7fe3a8; font-weight: 500; letter-spacing: .06em; }
+      #netPanel .k { color: rgba(234,240,255,.6); font-size: 12px; }
+      #netPanel .row { display: flex; gap: 10px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+      #netPanel a { color: #0a0e1c; background: #7fe3a8; padding: 6px 14px; border-radius: 999px; text-decoration: none; font-weight: 600; }
+      #netPanel button { background: none; border: 1px solid rgba(234,240,255,.25); color: #eaf0ff; border-radius: 999px; padding: 5px 12px; cursor: pointer; font: inherit; }
+      #netChip[aria-pressed="true"] { border-color: #7fe3a8; color: #7fe3a8; }
+      @media (prefers-reduced-motion: reduce) { #netSvg .rt { animation: none; } }
+      @media (max-width: 860px) { .passport-btn#netChip { top: 54px; left: 18px; padding: 3px 10px; font-size: 11.5px; min-height: 0; height: 26px; line-height: 1; z-index: 31; } #netPanel { top: auto; bottom: 124px; left: 12px; right: 12px; width: auto; padding: 10px 14px; font-size: 12.5px; } }
       /* 星桥 */
       .x-br { position: fixed; inset: 0; z-index: 9; background: #03050d; opacity: 0; transition: opacity .8s ease; touch-action: none; }
       .x-br.on { opacity: 1; }
@@ -1046,6 +1063,7 @@
     <div class="ui" id="ui" hidden>
       <div class="brand">创世计划 Genesis<small>七个世界 · 一张星图</small></div>
       <button class="passport-btn" id="passportBtn">创世护照</button>
+      <button class="passport-btn x-logbtn" id="netChip" aria-pressed="false" title="星网 · 跨世界航线">✦ 星网</button>
       <button class="passport-btn x-logbtn" id="logBtn" aria-keyshortcuts="N">星历<i class="x-dot" id="logDot" hidden></i></button>
       <button class="passport-btn x-trkbtn" id="trkBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="trkPop" aria-label="背景音乐曲目"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg><span id="trkName">宇宙将为你闪烁</span><svg class="x-trk__chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>
       <button class="passport-btn x-sndbtn" id="sndBtn" aria-pressed="false" aria-label="声音"></button>
@@ -1479,6 +1497,31 @@
       // 真实连法：斗口闭合四边形 + 斗柄
       var LINKS = [["07", "01"], ["01", "02"], ["02", "03"], ["03", "07"], ["03", "04"], ["04", "05"], ["05", "06"]];
       var byId = {}; WORLDS.forEach(function (w) { byId[w.id] = w; });
+      // v2.3 · 星网：在七颗星之间画出跨世界航线；进度与深空层共用 localStorage gn:deep:route:iron
+      (function () {
+        var NETR = [{ t: "铁从哪里来", p: ["02", "03", "07", "04"], k: "gn:deep:route:iron", href: "deep/?net=1" }],
+          NETF = [{ t: "一场疫情的数学", p: ["01", "04", "06", "05"] }, { t: "潮汐锁定", p: ["02", "07", "04"] }];
+        var on = false, raf = 0, svg = null, pan = null, chip = document.getElementById("netChip");
+        function done(r) { try { return JSON.parse(localStorage.getItem(r.k) || "[]"); } catch (e) { return []; } }
+        function nm(id) { return byId[id] ? byId[id].name : id; }
+        function draw() {
+          if (!on) return; var h = "";
+          NETF.forEach(function (f) { h += '<polyline class="fu" points="' + f.p.map(function (id) { var w = byId[id]; return (w.x || 0) + "," + (w.y || 0); }).join(" ") + '"/>'; });
+          NETR.forEach(function (r) { var d = done(r);
+            for (var i = 0; i < r.p.length - 1; i++) { var a = byId[r.p[i]], b = byId[r.p[i + 1]]; var lit = d.indexOf(i) >= 0 && d.indexOf(i + 1) >= 0;
+              h += '<line class="rt' + (lit ? " lit" : "") + '" x1="' + a.x + '" y1="' + a.y + '" x2="' + b.x + '" y2="' + b.y + '"/>'; } });
+          svg.innerHTML = h; raf = requestAnimationFrame(draw);
+        }
+        function panel() { var r = NETR[0], d = done(r), all = d.length >= r.p.length;
+          pan.innerHTML = '<b>✦ 星网 · 跨世界航线</b><div>' + (all ? "🏅 " : "") + r.t + " · " + r.p.map(nm).join(" → ") + ' · 已走 ' + d.length + "/" + r.p.length + '</div><div class="k">' + NETF.map(function (f) { return f.t + " · " + f.p.map(nm).join(" → "); }).join("<br>") + ' · 即将点亮</div><div class="row"><a href="' + r.href + '">' + (d.length ? "继续航行 ▸" : "启航 ▸") + '</a><button type="button" id="netOff">收起星网</button></div>';
+          document.getElementById("netOff").onclick = toggle; }
+        function toggle() { on = !on; chip.setAttribute("aria-pressed", on); document.body.classList.toggle("x-neton", on);
+          if (!svg) { svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.id = "netSvg"; svg.setAttribute("aria-hidden", "true"); document.body.appendChild(svg);
+            pan = document.createElement("div"); pan.id = "netPanel"; pan.setAttribute("role", "region"); pan.setAttribute("aria-label", "星网"); document.body.appendChild(pan); }
+          pan.hidden = !on; if (on) { panel(); draw(); } else cancelAnimationFrame(raf); }
+        if (chip) chip.addEventListener("click", toggle);
+        if (/[?&]net\b/.test(location.search)) setTimeout(toggle, 1200);
+      })();
       // v0.5 全系列统一年龄段（王磊 10-20 采纳）与六类兴趣
       var AGES = { ya: ["星芽", "7–11"], huo: ["星火", "12–15"], chen: ["星辰", "16–22"], he: ["星河", "23+"] };
       var TAGS = [["space", "宇宙"], ["life", "自然与身体"], ["matter", "物质"], ["ai", "机器与智能"], ["math", "数字与规律"], ["society", "人与社会"]];
@@ -3470,6 +3513,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "门户 v2.3", d: "2026-10-30", t: "门户首页新增「✦ 星网」：点开后七颗星之间画出跨世界航线，「铁从哪里来」走过的段亮成实线，另两条「一场疫情的数学」「潮汐锁定」即将点亮；面板一键启航进入深空层航线。" },
         { w: "gn", v: "深空 1.5", d: "2026-10-30", t: "深空层首条跨世界航线「铁从哪里来」点亮：从宙律的结合能曲线出发，经元素工坊的镍—钴—铁衰变链、天枢的超新星光变曲线，到生命源码血红蛋白里的铁，四站各有实验台，走完点亮「铁之航线」徽章并生成航线卡。新增星网视图，另两条航线即将点亮。" },
         { w: "gn", v: "深空 1.4", d: "2026-10-30", t: "深空层星穹层七张研究者卡点亮：黎曼猜想、暗物质、超重元素稳定岛、生命起源、AI 可解释性、不确定下的长期决策、暗能量。每张卡讲清前人走到哪、卡在哪、你能先算什么，用真实公开数据（自算素数表、SPARC 旋转曲线、IAEA 核素表、Union2.1 超新星等）上手实验；没有标准答案，选一个你押的假设，生成假设卡带走，不排名不打分。" },
         { w: "gn", v: "深空 1.2.1", d: "2026-10-30", t: "深空层星系层七张建模卡全部点亮：数学拟合意大利 2020 年 3 月疫情初期的指数增长，物理用八颗木卫称出木星质量，化学用 NIST 氢谱线算出里德伯常数，生物用孟德尔原始计数做卡方检验，超级智能在真实手写数字上验证对抗攻击的裕度模型，认知觉醒拟合美国 112 年的平均通胀率；每张卡都能拖参数看误差。新增《深空层法律与版权声明》。" },
