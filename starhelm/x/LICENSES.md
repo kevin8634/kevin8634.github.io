@@ -161,3 +161,11 @@
 | x/dsoimg/virgo-0..3 / -s(+ m 手机版) | NOIRLab noirlab2521a(薇拉·鲁宾天文台首批影像,室女座星系团南部) | NSF–DOE Vera C. Rubin Observatory / NOIRLab / SLAC / AURA | CC BY 4.0 |
 | x/dsoimg/smacs-0..3 / -s(+ m 手机版) | ESA/Webb weic2209a(韦布第一深场 SMACS 0723) | NASA, ESA, CSA, STScI | CC BY 4.0 |
 分层处理(去星/视差层)为本站加工,经 work/mk_dsolayers7.py 生成。
+
+## C2.10a 登舰动画写实化(2026-10-30)
+| 文件 | 来源 | 署名 | 许可 | 是否 AI 生成 |
+|---|---|---|---|---|
+| x/board/climb(-m).webp、edge(-m).webp、puffs.webp | 本项目用图像生成模型制作的概念图(穿越积云、平流层地球弧、云团精灵) | 本项目自制 | 创世计划自有 | 是(AI 生成,非真实影像) |
+| x/board/ship(-m).webp、hangar(-m).webp | 登舰写实效果图 v2(王磊 10-30 08:57 确认) | 本项目自制 | 创世计划自有 | 是(AI 生成概念图) |
+| x/board/ship-glow.webp、hangar-glow.webp | 由上两图按饱和度/亮度提取的灯带发光层(work/bd/build.py) | 本项目自制 | 创世计划自有 | 衍生自 AI 概念图 |
+登舰动画为艺术表现,不是天文影像;灯带流光、呼吸、云团穿越为 canvas 程序化叠加。
