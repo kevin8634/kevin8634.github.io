@@ -48,3 +48,15 @@
 | deep/data/bls.cpiu.annual.json | U.S. BLS Historical CPI-U(December 2024 补充表,https://www.bls.gov/cpi/tables/supplemental-files/historical-cpi-u-202412.pdf;1913–2024 年均指数,取对数,model 列为拟合值非观测) | U.S. Bureau of Labor Statistics | 公有领域(美国联邦政府),署名 BLS |
 | deep/cards/ma/nv/ef/ls/ps/lt.l2.json | 星系层建模卡 1.2 第 2–7 张(总指挥 2026-10-30 编写,AI 协助;按王磊 10-30 18:27 确认的选题与许可口径) | 创世计划 | 自有;卡内 sources 列出处 |
 | deep/legal.html | 深空层法律与版权声明(王磊 10-30 18:27 确认第 9 条) | 创世计划 | 自有 |
+
+## 深空 1.4 星穹研究者卡数据(2026-10-30,总指挥)
+| 台账 id | 内容 | 来源 | 许可 / 署名 |
+|---|---|---|---|
+| math.primes.pi_li | π(x)、li(x) 误差 10²–10⁸ | 本站脚本计算(筛法 + Ramanujan 级数);RH 上界据 Schoenfeld 1976 | 本站计算,CC BY 4.0 |
+| sparc.ngc3198.rotmod | NGC 3198 旋转曲线 | SPARC,Lelli, McGaugh & Schombert 2016, AJ 152:157 | 公开科研数据,按要求引用原论文 |
+| iaea.superheavy.halflife | Z≥104 半衰期 | IAEA NDS Live Chart(nuclides.json 子集) | IAEA 公开核数据,署名 |
+| ls.origin.timeline | 生命起源年代 5 条 | Moody 2024、Wilde 2001、Djokic 2017 | 论文事实摘录,署名 |
+| scp.union21.binned | 580 颗 Ia 超新星分 20 组 | Supernova Cosmology Project Union2.1,Suzuki et al. 2012 | 公开科研数据,按要求引用 |
+| bls.cpiu.inflation | 美国年通胀率 1914–2024 | 由 BLS Historical CPI-U 计算 | 公有领域,署名 BLS |
+| ai.model.params | 8 个代表性模型参数量 | 各模型原论文/技术报告 | 论文公开数值摘录,署名 |
+拟合/模型列均在 meta.note 标注「非观测」。七张卡文字由 AI 撰写,审稿状态「AI 审 + 脚本复算」,待指定领域审稿人。

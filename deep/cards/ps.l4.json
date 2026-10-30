@@ -1,0 +1,130 @@
+{
+ "id": "ps.l4.interpret",
+ "world": "ps",
+ "title": "AI 的判断能解释吗?",
+ "formula": "y=f_\\theta(x),\\;\\theta\\in\\mathbb{R}^{10^{11}}",
+ "hook": "星系层那个手写数字分类器只有 64 个权重,你能一个个看懂。今天的大模型有几千亿个。看懂它为什么这样回答,是 AI 安全的核心难题。",
+ "steps": [
+  {
+   "text": "前人走到哪:线性模型的每个权重都能直接读;深度网络出现后,研究者用显著图、探针等方法「从外面猜」。2020 年起,「机制可解释性」尝试像拆电路一样拆开网络内部。",
+   "tex": "\\text{特征}\\;\\to\\;\\text{回路}"
+  },
+  {
+   "text": "你能先算什么:参数量在 26 年里涨了约一千万倍(LeNet-5 约 6 万,GPT-3 约 1750 亿,DeepSeek-V3 总参数 6710 亿)。假设一秒看一个参数,看完 GPT-3 要五千多年。",
+   "tex": "1.75\\times10^{11}\\,\\mathrm{s}\\approx5500\\,\\text{年}"
+  },
+  {
+   "text": "关键进展:神经元常常「一个管好几件事」(叠加)。2024 年 Anthropic 用稀疏自编码器从 Claude 3 Sonnet 中分解出数百万个可解释的特征;2025 年又用归因图追踪了模型完成具体任务的内部步骤。",
+   "tex": "x\\approx\\sum_i a_i\\,d_i,\\;a\\;\\text{稀疏}"
+  },
+  {
+   "text": "卡在哪:现有方法只能解释一部分行为,无法保证覆盖全部;而且「解释」本身怎样验证,还没有公认标准。能否在模型变得更强之前看懂它,是对齐研究争论的焦点。",
+   "tex": "\\text{解释覆盖率}\\;?"
+  }
+ ],
+ "chart": {
+  "data": "ai.model.params.json",
+  "x": "year",
+  "ys": [
+   {
+    "col": "log_params",
+    "label": "log₁₀ 参数量"
+   }
+  ],
+  "type": "scatter",
+  "xlabel": "年份",
+  "ylabel": "log₁₀ 参数个数"
+ },
+ "lab": {
+  "title": "人工逐个看参数要多久",
+  "note": "由总指挥添加,AI 协助编写。s 是看懂一个参数要几秒;横轴是模型参数量的数量级。",
+  "params": [
+   {
+    "k": "s",
+    "label": "每个参数用时 s(秒)",
+    "min": 0.01,
+    "max": 10,
+    "step": 0.01,
+    "value": 1,
+    "unit": "秒"
+   }
+  ],
+  "fn": {
+   "x": "x",
+   "from": 1.8,
+   "to": 12,
+   "ys": [
+    {
+     "label": "log₁₀ 需要的年数",
+     "expr": "x+log(s)/log(10)-7.4991"
+    },
+    {
+     "label": "一辈子(80 年)",
+     "expr": "1.9031+0*x"
+    }
+   ],
+   "mark": [
+    {
+     "x": "1.806",
+     "label": "64 权重"
+    },
+    {
+     "x": "11.243",
+     "label": "GPT-3"
+    }
+   ]
+  },
+  "readout": [
+   {
+    "label": "看完 64 个权重",
+    "expr": "64*s",
+    "unit": "秒"
+   },
+   {
+    "label": "看完 GPT-3",
+    "expr": "1.75e11*s/3.156e7",
+    "unit": "年"
+   }
+  ]
+ },
+ "hypos": [
+  {
+   "t": "机制可解释性能扩展到完整解释",
+   "claim": "只要工具足够好,终能像读电路图一样读懂大模型。",
+   "for": "特征与回路的发现在越来越大的模型上重复成功。",
+   "against": "规模增长快于解释进度;覆盖率无法证明。"
+  },
+  {
+   "t": "只能抽查关键部分",
+   "claim": "完整解释不现实,但能对高风险行为做针对性检查。",
+   "for": "工程上可行,已用于发现欺骗、偏见等特征。",
+   "against": "没被检查到的地方仍是黑箱。"
+  },
+  {
+   "t": "需要从设计上可验证",
+   "claim": "与其事后解释,不如训练时就约束模型结构,让它天生可检验。",
+   "for": "形式化验证在小网络上可行。",
+   "against": "目前会明显牺牲性能,难以用于前沿模型。"
+  }
+ ],
+ "uses": "数量级估算、线性模型、特征分解",
+ "textbook": "研究生《深度学习》可解释性专题",
+ "sources": [
+  {
+   "name": "Olah et al. 2020, Distill「Zoom In: An Introduction to Circuits」",
+   "url": "https://distill.pub/2020/circuits/zoom-in/"
+  },
+  {
+   "name": "Templeton et al. 2024, Anthropic「Scaling Monosemanticity」",
+   "url": "https://transformer-circuits.pub/2024/scaling-monosemanticity/"
+  },
+  {
+   "name": "Brown et al. 2020, GPT-3 论文(1750 亿参数)",
+   "url": "https://arxiv.org/abs/2005.14165"
+  }
+ ],
+ "review": "AI 审(星穹题目待指定领域审稿人复核);数值脚本复算见 l4_build.py",
+ "ai_generated": "标题、钩子、步骤文字、假设陈述由 AI 撰写;数值由脚本从公开数据复算;无图片",
+ "layer_name": "星穹 · 研究者",
+ "sandbox": "没有标准答案:选一个你押的假设,生成假设卡带走。不排名,不打分。"
+}

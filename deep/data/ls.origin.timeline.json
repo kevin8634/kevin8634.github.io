@@ -1,0 +1,45 @@
+{
+ "meta": {
+  "id": "ls.origin.timeline",
+  "title": "生命起源关键年代(十亿年前)",
+  "source": "Moody et al. 2024 Nat. Ecol. Evol. 8:1654;Wilde et al. 2001 Nature 409:175;Djokic et al. 2017 Nat. Commun. 8:15263;USGS 地球年龄",
+  "url": "https://doi.org/10.1038/s41559-024-02461-1",
+  "license": "论文事实数据摘录,按原文署名",
+  "retrieved": "2026-10-30",
+  "unit": "十亿年(负号=距今)",
+  "ai_generated": false,
+  "note": "年代为文献中值,各有误差;仅作时间轴"
+ },
+ "columns": [
+  "ga",
+  "k",
+  "event"
+ ],
+ "rows": [
+  [
+   -4.54,
+   0,
+   "地球形成"
+  ],
+  [
+   -4.4,
+   1,
+   "最早的锆石显示有液态水"
+  ],
+  [
+   -4.2,
+   2,
+   "LUCA 估计年代(Moody 等 2024)"
+  ],
+  [
+   -3.48,
+   3,
+   "最早叠层石(Dresser 组)"
+  ],
+  [
+   -0.54,
+   4,
+   "寒武纪大爆发"
+  ]
+ ]
+}

@@ -1,0 +1,60 @@
+{
+ "meta": {
+  "id": "ai.model.params",
+  "title": "代表性神经网络参数量(公开论文)",
+  "source": "各模型原论文/技术报告:LeCun 1998、Krizhevsky 2012、Devlin 2018、Radford 2019、Brown 2020、Chowdhery 2022、Meta 2024、DeepSeek-AI 2024",
+  "url": "",
+  "license": "论文公开数值摘录,按原文署名",
+  "retrieved": "2026-10-30",
+  "unit": "log10(参数个数)",
+  "ai_generated": false,
+  "note": "DeepSeek-V3 为总参数(MoE,每 token 激活约 370 亿);仅列开源或论文公开参数量的模型"
+ },
+ "columns": [
+  "year",
+  "log_params",
+  "model"
+ ],
+ "rows": [
+  [
+   1998,
+   4.77815,
+   "LeNet-5"
+  ],
+  [
+   2012,
+   7.77815,
+   "AlexNet"
+  ],
+  [
+   2018,
+   8.53148,
+   "BERT-Large"
+  ],
+  [
+   2019,
+   9.17609,
+   "GPT-2"
+  ],
+  [
+   2020,
+   11.24304,
+   "GPT-3"
+  ],
+  [
+   2022,
+   11.73239,
+   "PaLM"
+  ],
+  [
+   2024,
+   11.60746,
+   "Llama 3.1 405B"
+  ],
+  [
+   2024,
+   11.82672,
+   "DeepSeek-V3"
+  ]
+ ]
+}

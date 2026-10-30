@@ -1,0 +1,129 @@
+{
+ "id": "ma.l4.riemann",
+ "world": "ma",
+ "title": "黎曼猜想:素数误差会不会一直「乖」下去?",
+ "formula": "\\pi(x)=\\mathrm{li}(x)+O\\!\\left(\\sqrt{x}\\,\\log x\\right)\\;\\Longleftrightarrow\\;\\text{RH}",
+ "hook": "数到一亿,素数有 5761455 个。用 li(x) 去猜,只差 754。这种「准」能一直保持吗?没人知道,但你可以先量一量。",
+ "steps": [
+  {
+   "text": "前人走到哪:高斯猜出素数密度约 1/ln x;1896 年阿达马与德拉瓦莱-普桑证明素数定理 π(x)~x/ln x。黎曼 1859 年指出,误差有多大取决于 ζ 函数零点的位置。",
+   "tex": "\\pi(x)\\sim\\frac{x}{\\ln x}"
+  },
+  {
+   "text": "黎曼猜想等价于:误差项不超过约 √x·ln x 的量级。Schoenfeld 1976 年给出精确版本:若 RH 成立,则 x≥2657 时 |π(x)−li(x)| < √x·ln x/(8π)。",
+   "tex": "|\\pi(x)-\\mathrm{li}(x)|<\\frac{\\sqrt{x}\\,\\ln x}{8\\pi}"
+  },
+  {
+   "text": "你能先算什么:本站脚本筛出 10⁸ 以内全部素数,π(10⁸)=5761455。li(10⁸) 只差约 754,而 x/ln x 差了约 332774。图表里三条线的斜率,就是误差增长的「指数」。",
+   "tex": "\\log|\\pi-\\mathrm{li}|\\;\\text{的斜率}\\approx\\tfrac12"
+  },
+  {
+   "text": "卡在哪:Platt 与 Trudgian 2021 年已严格验证前 3×10¹² 个零点都在实部 1/2 的线上,但数值再多也不是证明;而且已知 π(x)−li(x) 会在极大的 x 处变号(Littlewood 1914),小范围的规律可能骗人。",
+   "tex": "\\zeta(\\tfrac12+it)=0\\;?"
+  }
+ ],
+ "chart": {
+  "data": "math.primes.pi_li.json",
+  "x": "log_x",
+  "ys": [
+   {
+    "col": "err_li",
+    "label": "|π−li| 实测"
+   },
+   {
+    "col": "err_xlnx",
+    "label": "|π−x/ln x| 实测"
+   },
+   {
+    "col": "rh_bound",
+    "label": "RH 上界(若成立)"
+   }
+  ],
+  "type": "scatter",
+  "xlabel": "log₁₀ x",
+  "ylabel": "log₁₀ 误差"
+ },
+ "lab": {
+  "title": "误差指数 θ",
+  "note": "由总指挥添加,AI 协助编写。假设误差 ≈ x^θ,拖 θ 和实测比。RH 说的是 θ 可以取 1/2(再乘个对数)。",
+  "params": [
+   {
+    "k": "t",
+    "label": "误差指数 θ",
+    "min": 0.3,
+    "max": 1,
+    "step": 0.01,
+    "value": 0.7,
+    "unit": ""
+   }
+  ],
+  "fn": {
+   "x": "x",
+   "from": 2,
+   "to": 8,
+   "y0": 0,
+   "ys": [
+    {
+     "label": "你的假设 θ·log x",
+     "expr": "t*x"
+    },
+    {
+     "label": "RH 量级 ½·log x",
+     "expr": "0.5*x"
+    }
+   ]
+  },
+  "readout": [
+   {
+    "label": "按 θ 预测 10⁸ 处误差",
+    "expr": "10^(8*t)",
+    "unit": "(实测 754)"
+   },
+   {
+    "label": "实测误差的指数",
+    "expr": "0.3597+0*t",
+    "unit": ""
+   }
+  ]
+ },
+ "hypos": [
+  {
+   "t": "黎曼猜想成立",
+   "claim": "所有非平凡零点都在 1/2 线上,误差永远是 √x 量级。",
+   "for": "数万亿零点无一例外;大量推论与数值吻合。",
+   "against": "数值证据对「极大 x」无能为力。"
+  },
+  {
+   "t": "黎曼猜想不成立",
+   "claim": "存在离线零点,误差在某个极大尺度上会超过 √x·ln x。",
+   "for": "Littlewood 证明 π−li 会变号,小范围规律确实会骗人。",
+   "against": "至今没有任何离线零点的迹象。"
+  },
+  {
+   "t": "它在现有公理下无法判定",
+   "claim": "既证不出真,也证不出假。",
+   "for": "哥德尔不完全性说明这类命题可能存在。",
+   "against": "RH 是可被反例否定的算术命题:若不可判定,通常会推出它为真,所以多数人认为这种可能很小。"
+  }
+ ],
+ "uses": "对数坐标、渐近量级、数值验证与证明的区别",
+ "textbook": "研究生《解析数论》素数定理与 ζ 函数",
+ "sources": [
+  {
+   "name": "克雷数学研究所:Riemann Hypothesis(千禧年问题)",
+   "url": "https://www.claymath.org/millennium/riemann-hypothesis/"
+  },
+  {
+   "name": "Schoenfeld 1976, Math. Comp. 30:337(RH 下的显式误差界)",
+   "url": "https://doi.org/10.1090/S0025-5718-1976-0457374-X"
+  },
+  {
+   "name": "Platt & Trudgian 2021, Bull. LMS 53:792(前 3×10¹² 零点验证)",
+   "url": "https://doi.org/10.1112/blms.12460"
+  }
+ ],
+ "review": "AI 审(星穹题目待指定领域审稿人复核);数值脚本复算见 l4_build.py;π(10⁸)=5761455,|π−li|=754.4,|π−x/ln x|=332774",
+ "ai_generated": "标题、钩子、步骤文字、假设陈述由 AI 撰写;数值由脚本从公开数据复算;无图片",
+ "layer_name": "星穹 · 研究者",
+ "sandbox": "没有标准答案:选一个你押的假设,生成假设卡带走。不排名,不打分。"
+}
