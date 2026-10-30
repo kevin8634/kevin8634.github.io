@@ -8,7 +8,7 @@ import re
 src = open('index.html', encoding='utf-8').read()
 s = src.replace('<meta charset="utf-8" />',
   '<meta charset="utf-8" />\n  <base href="../" />\n  <meta name="robots" content="noindex,nofollow" />', 1)
-s = re.sub(r'<title>.*?</title>', '<title>天枢 Starhelm · 巡天 X0b · C0 开发预览(three r186)</title>', s, 1)
+s = re.sub(r'<title>.*?</title>', '<title>天枢 Starhelm 2.0 · 巡天</title>', s, 1)
 old = '<script>window.SHGFX&&SHGFX.writeThree();</script>'
 assert old in s
 s = s.replace(old, '''<script>/* 巡天 X0a:r169 路径换成 r186(同一兼容层);r147 / 无 WebGL 走 1.0 原路径 */
