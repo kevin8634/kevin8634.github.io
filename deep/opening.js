@@ -137,36 +137,47 @@ void main(){float y=1.-vUv.y;float x=(vUv.x*2.-1.)*1.6-uSk*y; // 折射后的入
     ["gx-small.webp", 768, 718, 40, 40, 1.2, 0, 0, 0], ["gx-small.webp", 1172, 700, 46, 46, 1.2, 0, 1, 0], ["gx-small.webp", 437, 688, 34, 34, 1.0, 0, 2, 0],
     ["gx-small.webp", 64, 720, 30, 30, 1.0, 0, .5, 0], ["gx-sombrero.webp", 1300, 728, 40, 19, .9, 0, -.5, 0]];
   GX.forEach(([f, sx, sy, w, h, k, tilt, roll, spin]) => { const m = add(plane(img(f, k)), sx, sy, 110, w, h, { spin }); m.rotation.set(tilt, 0, 0); m.parent.rotation.z = roll; });
-  // 黑洞:暗影 + 光子环 + 吸积盘(近侧横穿阴影、远侧经引力透镜绕到上下方)+ 多普勒增亮(左侧朝向观者)
-  const bhOcc = plane(new THREE.ShaderMaterial({ transparent: true, depthWrite: false, depthTest: false,
+  // 黑洞 V1.3:逐像素史瓦西测地线光线追踪(rs=1;光子轨道 d²p/dt² = −1.5·h²·p/r⁵,与 Binet 方程 u''+u=1.5u² 等价)
+  // 薄吸积盘 r∈[3,13]rs(ISCO=3rs),Novikov–Thorne 型温度 T∝r^−¾(1−√(r_in/r))^¼;
+  // 多普勒 δ=1/(γ(1−β·n))、引力红移 √(1−rs/r),观测强度 ∝ g⁴、色温 ∝ g;盘可多次穿越(远侧盘经透镜绕到上下方、次级像)。
+  // 预乘 alpha:被视界捕获=不透明黑影,盘=半透明发光,逃逸光线=透明(露出后方真实影像)。
+  const bhRing = plane(new THREE.ShaderMaterial({ uniforms: { uTime: U.uTime, uSteps: { value: mob ? 120 : 220 } }, transparent: true, depthWrite: false, depthTest: false,
+    blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
     vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-    fragmentShader: `varying vec2 vUv;void main(){vec2 q=vUv*2.-1.;float r=length(q);float a=1.-smoothstep(.40,.47,r);vec3 c=vec3(.006,.007,.01)+vec3(.02,.024,.03)*smoothstep(.2,.45,r)*(.6+.4*q.y);gl_FragColor=vec4(c,a);}` }));
-  bhOcc.renderOrder = 8; add(bhOcc, 995, 708, 100, 92, 92);
-  const bhRing = plane(new THREE.ShaderMaterial({ uniforms: { uTime: U.uTime }, transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
-    vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
-    fragmentShader: `uniform float uTime;varying vec2 vUv;
+    fragmentShader: `uniform float uTime,uSteps;varying vec2 vUv;
 float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float vn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
-void main(){vec2 q=vUv*2.-1.;float r=length(q);float a=atan(q.y,q.x);
- const float RS=.188; // 阴影半径(= bhOcc 0.47×92/230)
- float vis=smoothstep(RS-.006,RS+.004,r); // 阴影内只留近侧盘
- // 多普勒:盘左侧朝向观者 → 增亮、偏蓝白;右侧远离 → 变暗、偏红
- float beta=clamp(-q.x/max(r,.22),-1.,1.);float D=pow(1.+.5*beta,3.);
- vec3 hot=mix(vec3(1.,.62,.36),vec3(.92,.95,1.),smoothstep(-.4,1.,beta));
- float flow=.75+.25*vn(vec2(a*6.-uTime*(.9+.6*beta),r*18.));
- // 光子环(细、偏蓝白,略随方位起伏)
- float ring=exp(-pow((r-.205)/.007,2.))*(.55+.25*beta)*vis;
- // 远侧盘经引力透镜成像:上方弧厚、下方弧细
- float up=step(0.,q.y);float Rl=mix(.235,.29,up),Wl=mix(.012,.05,up);
- float lens=exp(-pow((r-Rl)/Wl,2.))*mix(.35,.8,up)*vis*smoothstep(.0,.25,abs(q.y)+.05);
- // 近侧盘:略低于中心的薄带,横穿阴影,向外渐暗
- float ny=q.y+.018;float thick=mix(.022,.034,smoothstep(.1,.9,abs(q.x)));
- float near=exp(-pow(ny/thick,2.))*smoothstep(.97,.3,abs(q.x))*(.55+.45*smoothstep(.0,.3,abs(q.x)));
- float glow=exp(-pow((r-.3)/.18,2.))*.05*vis;
- vec3 c=hot*D*flow*(near*.9+lens)+vec3(.75,.85,1.)*ring*D+vec3(1.,.8,.6)*glow;
- c*=smoothstep(1.,.8,r);
- gl_FragColor=vec4(c*.75,1.);}` }));
-  bhRing.renderOrder = 9; add(bhRing, 995, 708, 100, 230, 230);
+vec3 bb(float T){T=clamp(T,1000.,30000.)/100.; // 黑体色(Tanner Helland 近似,线性化)
+ float r=T<=66.?1.:clamp(1.293*pow(T-60.,-.1332),0.,1.);
+ float g=T<=66.?clamp(.3901*log(T)-.6318,0.,1.):clamp(1.13*pow(T-60.,-.0755),0.,1.);
+ float b=T>=66.?1.:(T<=19.?0.:clamp(.5432*log(T-10.)-1.1963,0.,1.));return pow(vec3(r,g,b),vec3(2.2));}
+const float RIN=3.,ROUT=13.,BMAX=12.,DC=22.,EL=.105; // 观者仰角约 6°(近侧视,电影常用机位)
+void main(){vec2 q=vUv*2.-1.;float edge=smoothstep(1.,.82,length(q));
+ vec3 fw=vec3(0.,-sin(EL),cos(EL)),up=vec3(0.,cos(EL),sin(EL));
+ vec3 p=vec3(q.x*BMAX,0.,0.)+up*(q.y*BMAX)-fw*DC,v=fw;
+ float h2=dot(cross(p,v),cross(p,v));
+ vec3 col=vec3(0.);float al=0.;
+ for(int i=0;i<240;i++){ if(float(i)>=uSteps) break;
+  float r=length(p);float dt=clamp(.06*r,.025,2.4);
+  vec3 a=-1.5*h2*p/pow(r,5.);
+  vec3 pn=p+v*dt+.5*a*dt*dt;vec3 an=-1.5*h2*pn/pow(length(pn),5.);v+= .5*(a+an)*dt; // 速度 Verlet
+  if(p.y*pn.y<0.){vec3 x=mix(p,pn,p.y/(p.y-pn.y));float rr=length(x.xz);
+   if(rr>RIN&&rr<ROUT){vec3 ph=normalize(vec3(-x.z,0.,x.x)); // 盘自转方向:左侧朝向观者
+    float be=sqrt(.5/(rr-1.)),ga=inversesqrt(1.-be*be);
+    float mu=dot(ph,-normalize(v)); // 光子出射方向 = 反向追踪方向取反
+    float g=sqrt(1.-1./rr)/(ga*(1.-be*mu));
+    float prof=pow(RIN/rr,.75)*pow(max(1.-sqrt(RIN/rr),0.),.25)/.488; // 归一到峰值≈1
+    float om=pow(rr,-1.5)*2.2;float ang=atan(x.z,x.x);
+    float tex=.55+.45*vn(vec2(ang*7.+uTime*om*3.,rr*2.6))*(.6+.4*vn(vec2(ang*23.-uTime*om*5.,rr*9.)));
+    float T=4600.*prof*g;float I=pow(g,4.)*prof*prof*tex*smoothstep(ROUT,ROUT-4.,rr)*smoothstep(RIN,RIN+.35,rr);
+    float op=clamp(.95*smoothstep(ROUT,RIN+1.,rr),0.,1.)*(.55+.45*tex);
+    col+=(1.-al)*bb(T)*I*1.35*op;al+=(1.-al)*op*.85;}}
+  p=pn;float rn=length(p);
+  if(rn<1.0){al=1.;break;} // 越过视界
+  if(rn>DC+2.&&dot(p,v)>0.)break; // 逃逸
+ }
+ gl_FragColor=vec4(col*edge,al*edge);}` }));
+  bhRing.renderOrder = 9; add(bhRing, mob ? 840 : 995, mob ? 690 : 708, 100, 250, 250); // 手机竖屏可视宽度窄,黑洞内移避免被裁
   items.forEach((it) => { if (it.o.renderOrder === 0) it.o.renderOrder = it.top ? 6 : 2; });
 
   /* ---------- 机位与布局(每次 resize 重算,构图按 01c 像素比例) ---------- */
