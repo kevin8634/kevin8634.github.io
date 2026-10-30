@@ -953,6 +953,36 @@
         #l2, #l2 * { animation: none !important; transition: none !important; }
         .l2__k, .l2__box h2, .l2__s1, .l2__s2, .l2__cta, .l2__hole, .l2__gal { opacity: 1; } .l2__beam { height: 40vh; } .l2__trail { width: 40vw; } .l2__ring { display: none; }
       }
+
+      /* v2.1.0 · 2.0 入口改为玻璃光门（王磊 2026-10-30 09:15 选概念 B）：Three.js 实渲玻璃球（orb-gn-2.0.webp，screen 叠加）+ 程序叠中文；入口高亮表达「已升级 2.0」 */
+      .x-deep--orb { width: 860px; height: 300px; bottom: 214px; }
+      .x-deep--orb .x-deep__beam { bottom: 0; height: 60px; width: 3px; margin-left: -1.5px; background: linear-gradient(to top, rgba(160,200,255,0), rgba(170,205,255,.75)); }
+      .x-orb__img { position: absolute; left: 50%; top: 50%; width: 300px; height: 300px; margin: -150px 0 0 -150px; mix-blend-mode: screen; pointer-events: none; animation: xoBreath 5.2s ease-in-out infinite; -webkit-mask: radial-gradient(circle, #000 58%, transparent 71%); mask: radial-gradient(circle, #000 58%, transparent 71%); }
+      .x-orb__core { position: absolute; left: 50%; top: 50%; width: 190px; height: 190px; margin: -95px 0 0 -95px; border-radius: 50%; pointer-events: none; mix-blend-mode: screen;
+        background: radial-gradient(circle at 38% 62%, rgba(70,130,255,.42), rgba(70,130,255,0) 55%), radial-gradient(circle at 64% 34%, rgba(255,190,110,.22), rgba(255,190,110,0) 50%); animation: xoCore 7s ease-in-out infinite; }
+      .x-orb__ring { position: absolute; left: 50%; top: 50%; width: 214px; height: 214px; margin: -107px 0 0 -107px; border-radius: 50%; pointer-events: none; padding: 2px;
+        background: conic-gradient(from var(--xd-a, 0deg), transparent 0 64%, rgba(255,226,160,.95) 76%, transparent 88%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; animation: xdSpin 6s linear infinite; filter: blur(.4px) drop-shadow(0 0 6px rgba(255,210,130,.8)); }
+      a.x-deep__pill.x-orb { left: 50%; top: 50%; bottom: auto; width: 176px; height: 176px; margin: -88px 0 0 -88px; transform: none; padding: 0; border: 0; border-radius: 50%; background: transparent; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; letter-spacing: 0; transition: transform .35s cubic-bezier(.2,.8,.2,1), filter .35s; }
+      a.x-deep__pill.x-orb::before { display: none; }
+      a.x-deep__pill.x-orb::after { top: 6px; right: -4px; font-size: 10px; padding: 3px 7px; box-shadow: 0 0 14px rgba(233,199,121,.7); }
+      .x-orb__v { font: 700 60px/1 var(--sans); letter-spacing: .02em; color: #ffd98a !important; background: linear-gradient(180deg, #fff4d6 0%, #ffd27a 55%, #d9a24a 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 14px rgba(255,200,110,.55)); }
+      .x-orb__go { font: 500 14px/1 var(--sans); letter-spacing: .26em; padding-left: .26em; color: #eef4ff; text-shadow: 0 0 10px rgba(150,190,255,.9); }
+      a.x-deep__pill.x-orb:hover, a.x-deep__pill.x-orb:focus-visible { transform: scale(1.06); filter: brightness(1.18); box-shadow: none; outline: none; }
+      a.x-deep__pill.x-orb:focus-visible .x-orb__go { text-decoration: underline; text-underline-offset: 5px; }
+      .x-deep--orb:has(a.x-orb:hover) .x-orb__img, .x-deep--orb:has(a.x-orb:focus-visible) .x-orb__img { filter: brightness(1.25) saturate(1.1); }
+      .x-orb__side { position: absolute; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 8px; white-space: nowrap; text-decoration: none; pointer-events: none; }
+      .x-orb__side b { font: 600 25px/1.1 var(--sans); letter-spacing: .06em; }
+      .x-orb__side small { font: 400 14px/1.2 var(--sans); letter-spacing: .2em; color: rgba(156,195,238,.92); }
+      .x-orb__side--l { right: calc(50% + 172px); align-items: flex-end; text-align: right; } .x-orb__side--l b { color: #ffdca0; text-shadow: 0 0 18px rgba(255,200,120,.35); }
+      .x-orb__side--r { left: calc(50% + 172px); align-items: flex-start; } .x-orb__side--r b { color: #e2eeff; text-shadow: 0 0 18px rgba(140,190,255,.4); }
+      a.x-orb__side--r { pointer-events: auto !important; cursor: pointer; transition: transform .3s; } a.x-orb__side--r:hover, a.x-orb__side--r:focus-visible { transform: translateY(-50%) translateX(4px); outline: none; } a.x-orb__side--r:hover b, a.x-orb__side--r:focus-visible b { color: #fff; }
+      @keyframes xoBreath { 0%,100% { transform: scale(1) rotate(0deg); filter: brightness(1); } 50% { transform: scale(1.025) rotate(-2deg); filter: brightness(1.14); } }
+      @keyframes xoCore { 0%,100% { opacity: .75; } 50% { opacity: 1; } }
+      @media (max-width: 1180px) and (min-width: 861px) and (min-height: 481px) { .x-deep--orb { width: 200px; height: 200px; bottom: 196px; right: 40px; } .x-orb__img { width: 200px; height: 200px; margin: -100px 0 0 -100px; } .x-orb__core { width: 126px; height: 126px; margin: -63px 0 0 -63px; } .x-orb__ring { width: 142px; height: 142px; margin: -71px 0 0 -71px; } a.x-deep__pill.x-orb { width: 120px; height: 120px; margin: -60px 0 0 -60px; } .x-orb__v { font-size: 40px; } .x-orb__go { font-size: 12px; letter-spacing: .16em; } .x-orb__side, .x-deep--orb .x-deep__beam { display: none; } }
+      @media (max-width: 860px) { .x-deep--orb { width: 160px; height: 160px; left: auto; right: 4px; transform: none; bottom: 100px; } .x-orb__img { width: 160px; height: 160px; margin: -80px 0 0 -80px; } .x-orb__core { width: 100px; height: 100px; margin: -50px 0 0 -50px; } .x-orb__ring { width: 114px; height: 114px; margin: -57px 0 0 -57px; }
+        a.x-deep__pill.x-orb { width: 96px; height: 96px; margin: -48px 0 0 -48px; gap: 2px; } a.x-deep__pill.x-orb::after { top: 0; right: -10px; font-size: 8.5px; padding: 2px 5px; } .x-orb__v { font-size: 32px; } .x-orb__go { font-size: 10.5px; letter-spacing: .12em; padding-left: .12em; } .x-orb__side { display: none; } .x-deep--orb .x-deep__beam { display: none; } }
+      @media (prefers-reduced-motion: reduce) { .x-orb__img, .x-orb__core, .x-orb__ring { animation: none; } }
     </style>
   </head>
   <body>
@@ -1024,7 +1054,7 @@
         <button class="btn x-home" id="homeBtn" aria-keyshortcuts="Home 0">⟲ 回到地球视角</button>
       </div>
       <div class="demo-tag" id="demoTag">演示进度</div>
-      <div class="x-deep" id="deepTease"><canvas id="deepCv" aria-hidden="true"></canvas><span class="x-deep__beam" aria-hidden="true"></span><a class="x-deep__pill" href="deep/" aria-label="潜入深空 · 2.0"><i style="--i:0">▼</i> <i style="--i:2">潜</i><i style="--i:3">入</i><i style="--i:4">深</i><i style="--i:5">空</i> <b>·</b> <i style="--i:8">2</i><i style="--i:9">.</i><i style="--i:10">0</i></a><span class="x-deep__tag" aria-hidden="true">DEEP · 2.0</span></div>
+      <div class="x-deep x-deep--orb" id="deepTease"><canvas id="deepCv" aria-hidden="true"></canvas><span class="x-deep__beam" aria-hidden="true"></span><img class="x-orb__img" src="orb-gn-2.0.webp" alt="" aria-hidden="true" width="640" height="640" decoding="async"><span class="x-orb__core" aria-hidden="true"></span><span class="x-orb__ring" aria-hidden="true"></span><a class="x-deep__pill x-orb" href="deep/" aria-label="创世计划 2.0 · 潜入深空"><b class="x-orb__v">2.0</b><span class="x-orb__go">▼ 潜入深空</span></a><div class="x-orb__side x-orb__side--l" aria-hidden="true"><b>创世计划 2.0</b><small>深空层 · 全新上线</small></div><a class="x-orb__side x-orb__side--r" href="starhelm/x/"><b>天枢 Starhelm 2.0</b><small>巡天 · 同步启航 ↗</small></a></div>
 
       <section class="x-news" id="news" aria-label="重要公告">
         <button type="button" class="x-news__bar" id="newsBar" aria-expanded="false" aria-controls="ann"><em id="newsBarK">公告</em><span class="x-news__tk" id="newsTk"></span><i aria-hidden="true">⌃</i></button>
@@ -1214,7 +1244,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v2.0.1</b></span>
+            <span>创世计划总门户 <b>v2.1.0</b></span>
           </footer>
         </div>
       </div>
@@ -3382,6 +3412,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "v2.1.0", d: "2026-10-30", t: "首页 2.0 入口换成玻璃光门：一颗实拍质感的玻璃球，中央亮着「2.0」，点它就潜入深空；左右两侧分别是创世计划 2.0 深空层和天枢 Starhelm 2.0 巡天。" },
         { w: "gn", v: "v2.0.1", d: "2026-10-30", t: "2.0 音乐升级：新原创主题曲「宇宙将为你闪烁」置顶曲目单；深空层五层各有一段原创合成主题（水面声呐、星辰钢片琴、星系旋臂琶音、星河暖垫与心跳、星穹悬而未决的「？」），换层自动交叉淡入。音乐改为默认打开（首次点击页面后响起，关掉会记住）。修复深空层「生成推导卡」在手机上像闪退：改为先预览，再保存或分享。" },
         { w: "gn", v: "v2.0.0", d: "2026-10-30", t: "创世计划 2.0 联合发布：门户挂上「▼ 潜入深空」，深空层（光柱、核素岛、坠入实验舱、星穹开放问题）正式开放；天枢 2.0 同步启航，门户天枢入口改到 2.0。" },
         { w: "gn", v: "v0.8.25", d: "2026-10-26", t: "创世计划 1.0 正式发布：七个学习世界全部开放，67 个任务；重要公告换为 1.0 发布，可一键展开知识星桥。" },
