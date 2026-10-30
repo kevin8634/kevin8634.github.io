@@ -6,6 +6,9 @@
  *   M57 环状、M1 纤维状;星系(M31 / M51 / M104)= 旋臂粒子盘 + 弥散盘 + 核球,按真实倾角 / 位置角倾斜,M104 加尘埃带。
  * - 配色:各目标 ESA/Hubble 影像小图离线取三档亮度色(work/ 取样脚本),只取颜色;shader 里提饱和度。
  * - 性能三档:高(桌面 ≥8 线程)5 层 / 6000 粒子 / 5 阶噪声 · 中 3 / 2600 / 4 · 低(手机、内存 <4 GB)2 / 900 / 3。减少动态:静止不漂移。
+ * C2.12a5(10-30 王磊渲染标准:星云/星系主体必须真 3D 粒子体积,禁平面贴图/切片/billboard):星云、环状星云、超新星遗迹、星系
+ *   的主体全部改为 3D 柔光粒子体积(JS 端 fBm 噪声决定粒子分布与颜色,发光粒子加法混合 + 暗尘粒子乘法吸收);星系 = 盘面粒子(旋臂调制)
+ *   + 核球/棒椭球粒子 + 喷流粒子 + 尘埃带吸收粒子。旧 billboard 噪声层只剩星系团成员(待 C2.13)。近处光线步进体积(C2.6e)保留。
  * - 星云下方标「模拟渲染 · 非照片」+「真实照片」按钮。只用 ShaderMaterial / Points / PlaneGeometry,r186 与 ?three=169 通用。
  */
 (function () {
@@ -75,6 +78,89 @@
     m.userData.a = base || 1; m.userData.pt = 1; mats.push(m); var p = new T.Points(g, m); p.frustumCulled = false; return p;
   }
 
+  /* ---------- C2.12a5 真 3D 粒子体积 ---------- */
+  function jh(x, y, z) { var p = Math.sin(x * 127.1 + y * 311.7 + z * 74.7) * 43758.5453; return p - Math.floor(p); }
+  function jn(x, y, z) {
+    var ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z), fx = x - ix, fy = y - iy, fz = z - iz;
+    fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy); fz = fz * fz * (3 - 2 * fz);
+    function l(a, b, t) { return a + (b - a) * t; }
+    return l(l(l(jh(ix, iy, iz), jh(ix + 1, iy, iz), fx), l(jh(ix, iy + 1, iz), jh(ix + 1, iy + 1, iz), fx), fy),
+      l(l(jh(ix, iy, iz + 1), jh(ix + 1, iy, iz + 1), fx), l(jh(ix, iy + 1, iz + 1), jh(ix + 1, iy + 1, iz + 1), fx), fy), fz);
+  }
+  function jf(x, y, z, o) { var a = .5, t = 0; for (var i = 0; i < o; i++) { t += a * jn(x, y, z); x = x * 2.03 + 1.7; y = y * 2.03 + 9.2; z = z * 2.03 + 4.1; a *= .5; } return t; }
+  function jss(a, b, x) { var t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+  var QVS = 'attribute float aS;attribute vec3 aC;varying vec3 vC;varying float vK;uniform float uPx,uMax;void main(){vC=aC;vec4 mv=modelViewMatrix*vec4(position,1.0);float s=aS*uPx;float ps=clamp(s,1.5,uMax);vK=clamp(s*s/(ps*ps),.2,4.0);gl_PointSize=ps;gl_Position=projectionMatrix*mv;}';
+  var QFS = 'precision mediump float;varying vec3 vC;varying float vK;uniform float uA;void main(){vec2 q=gl_PointCoord*2.0-1.0;float r=dot(q,q);if(r>1.0)discard;gl_FragColor=vec4(vC*exp(-r*3.5)*uA*vK,1.0);}';
+  var QFD = 'precision mediump float;varying vec3 vC;varying float vK;uniform float uA;void main(){vec2 q=gl_PointCoord*2.0-1.0;float r=dot(q,q);if(r>1.0)discard;float a=clamp((1.0-r)*(1.0-r)*uA*min(vK,1.5),0.0,.92);gl_FragColor=vec4(mix(vec3(1.0),vC,a),1.0);}';
+  // gen(o) 填 o.p / o.c / o.s;返回 false 表示拒绝采样。dust=true → 乘法吸收(o.c 为吸收后的透射色)
+  function vol(n, gen, base, dust) {
+    var g = new T.BufferGeometry(), pos = new Float32Array(n * 3), cs = new Float32Array(n * 3), ss = new Float32Array(n), o = { p: [0, 0, 0], c: [1, 1, 1], s: .1 }, k = 0, tries = 0;
+    while (k < n && tries < n * 40) { tries++; if (gen(o) === false) continue; pos.set(o.p, k * 3); cs.set(o.c, k * 3); ss[k] = o.s; k++; }
+    g.setAttribute('position', new T.BufferAttribute(pos, 3)); g.setAttribute('aC', new T.BufferAttribute(cs, 3)); g.setAttribute('aS', new T.BufferAttribute(ss, 1)); g.setDrawRange(0, k);
+    var m = new T.ShaderMaterial({ vertexShader: QVS, fragmentShader: dust ? QFD : QFS, transparent: true, depthWrite: false, depthTest: false,
+      blending: dust ? T.CustomBlending : T.AdditiveBlending, uniforms: { uPx: { value: 100 }, uMax: { value: 160 }, uA: { value: 1 } } });
+    if (dust) { m.blendEquation = T.AddEquation; m.blendSrc = T.ZeroFactor; m.blendDst = T.SrcColorFactor; }
+    m.userData.a = base || 1; m.userData.vol = 1; mats.push(m); var p = new T.Points(g, m); p.frustumCulled = false; p.renderOrder = dust ? 2 : 1; return p;
+  }
+  function inBall(R0, o, zs) { var x, y, z; do { x = R0() * 2 - 1; y = R0() * 2 - 1; z = R0() * 2 - 1; } while (x * x + y * y + z * z > 1); o.p[0] = x; o.p[1] = y; o.p[2] = z * (zs || 1); return Math.sqrt(x * x + y * y + z * z); }
+  function mixc(o, A, B, C, w, e, br) {
+    var t1 = jss(.25, .6, w), t2 = jss(.55, .95, w * e + .15 * e), r = A.r + (B.r - A.r) * t1, g = A.g + (B.g - A.g) * t1, b = A.b + (B.b - A.b) * t1;
+    o.c[0] = (r + (C.r - r) * t2) * br; o.c[1] = (g + (C.g - g) * t2) * br; o.c[2] = (b + (C.b - b) * t2) * br;
+  }
+  function nebVol(body, d, kk, R0, tier, sd) {   // 发射星云 / 环状 / 超新星遗迹:3D 发光粒子 + 暗尘吸收粒子
+    var sat = d.sat || 1.5, A = col(d.c[0], sat), B = col(d.c[1], sat), C = col(d.c[2], sat), oc = [3, 4, 4][tier];
+    var NE = [1600, 5000, 11000][tier], kB = Math.sqrt(5000 / NE);
+    body.add(vol(NE, function (o) {
+      var r = inBall(R0, o, kk === 1 ? .75 : .8);
+      if (kk === 1) { var ra = Math.sqrt(o.p[0] * o.p[0] + o.p[1] * o.p[1]); if (Math.abs(o.p[2]) > .32 * (1 - Math.abs(ra - .58) * 1.5)) return false; r = ra; }   // 环状星云 = 粗环面(近乎正对视线)
+      var x = o.p[0], y = o.p[1], z = o.p[2], n = jf(x * 1.7 + sd, y * 1.7 + sd, z * 1.7 + sd, oc), w = jf(x * 3.3 + n * 2.2 + sd * 1.3, y * 3.3 + n * 2.2, z * 3.3 + n * 2.2, oc), e, dd;
+      if (kk === 0) { e = jss(1, .15, r + (n - .5) * .6); var gg = jss(.38, .85, w); dd = e * (gg * gg * 1.4 + .1); }
+      else if (kk === 1) { var rr = r + (n - .5) * .1; e = Math.exp(-Math.pow((rr - .58) / .13, 2)); dd = e * (.3 + Math.pow(w, 1.2) * 1.2) + .04 * jss(.45, 0, r); }
+      else { e = Math.exp(-Math.pow((r - .7 + (n - .5) * .3) / .25, 2)) + .3 * jss(.9, 0, r); var f = 1 - Math.abs(w * 2 - 1); dd = e * (Math.pow(f, 6) * 1.6 + .08 * w); }
+      if (R0() > dd) return false;
+      if (kk === 1) { var tr = jss(.45, .72, r); o.c[0] = (C.r + (A.r * 1.6 - C.r) * tr) * .9; o.c[1] = (C.g + (A.g * 1.6 - C.g) * tr) * .9; o.c[2] = (C.b + (A.b * 1.6 - C.b) * tr) * .9; }
+      else mixc(o, A, B, C, w, e, 1);
+      var br = (.6 + .5 * R0()) * kB * (kk === 2 ? .5 : kk === 1 ? .16 : .2); o.c[0] *= br; o.c[1] *= br; o.c[2] *= br;
+      o.s = (kk === 2 ? .035 : kk === 1 ? .03 : .06) + R0() * (kk === 2 ? .06 : kk === 1 ? .05 : .12);
+    }, kk === 1 ? .8 : .9));
+    if (kk === 2) {   // 蟹状星云中心同步辐射蓝光(3D 椭球)
+      body.add(vol(Math.round(NE * .18), function (o) { var r = inBall(R0, o, .8); o.p[0] *= .55; o.p[1] *= .45; o.p[2] *= .45; if (R0() > Math.exp(-r * r * 3)) return false; var br = .04 * kB; o.c[0] = .55 * br; o.c[1] = .7 * br; o.c[2] = 1.1 * br; o.s = .08 + R0() * .12; }, .9));
+    }
+    if (d.dust) {
+      var ND = Math.round([500, 1600, 3600][tier] * d.dust), tint = [.30, .22, .17];
+      body.add(vol(ND, function (o) {
+        var r = inBall(R0, o, .7), x = o.p[0], y = o.p[1], z = o.p[2], n = jf(x * 1.7 + sd, y * 1.7 + sd, z * 1.7 + sd, oc), e = jss(1, .15, r + (n - .5) * .6), m2 = jf(x * 2.4 + n * 1.5 + sd * 2.1, y * 2.4 + n * 1.5, z * 2.4 + n * 1.5, oc);
+        if (R0() > jss(.48, .66, m2) * e * 1.3) return false; o.c[0] = tint[0]; o.c[1] = tint[1]; o.c[2] = tint[2]; o.s = .05 + R0() * .1;
+      }, .55 * Math.min(1.2, d.dust + .3), true));
+    }
+  }
+  function galVol(body, tilt, d, R0, tier, sd) {   // 星系:盘面粒子 + 核球 / 棒椭球 + 喷流 + 尘埃带
+    var sat = d.sat || 1.4, A = col(d.c[0], sat), B = col(d.c[1], sat * 1.2), C = col(d.c[2], sat), arms = d.arms || 0, wind = d.wind || 0, el = d.ell || 1, oc = [3, 3, 4][tier];
+    if (!(arms === 0 && d.ell && !d.bar)) {   // 有盘面的星系
+      var ND = [1400, 4200, 9000][tier], kB = Math.sqrt(4200 / ND);
+      tilt.add(vol(ND, function (o) {
+        var rr = Math.min(1, -Math.log(1 - R0() * .98) * .28 + .03), a = R0() * 6.2832, am = 1;
+        if (arms) { var ph = Math.log(Math.max(rr, .05)) * wind * 1.1; am = .25 + .75 * Math.pow(Math.max(0, Math.cos(arms * (a - ph))), 2.5); }
+        var nz = jf(Math.cos(a) * rr * 4 + sd, Math.sin(a) * rr * 4, sd, oc); if (R0() > am * (.4 + nz)) return false;
+        o.p[0] = Math.cos(a) * rr; o.p[1] = Math.sin(a) * rr * el; o.p[2] = (R0() - .5) * (.05 + .04 * (1 - rr));
+        var t = Math.min(1, rr * 1.5), br = (.5 + .5 * R0()) * kB * .17 * (.2 + .8 * jss(0, .4, rr)) * (1 - .45 * Math.sin((d.inc || 0) * Math.PI / 180)) * (am > .6 ? 1.25 : .8);
+        o.c[0] = (C.r + (B.r - C.r) * t) * br; o.c[1] = (C.g + (B.g - C.g) * t) * br; o.c[2] = (C.b + (B.b - C.b) * t) * br; o.s = .05 + R0() * .08;
+      }, 1));
+    }
+    var bs = .2 * (d.bulge || 1), NB2 = [600, 1800, 3600][tier], kb = Math.sqrt(1800 / NB2);
+    body.add(vol(NB2, function (o) {   // 核球(3D 高斯椭球,暖色)
+      var x = gsn(R0), y = gsn(R0), z = gsn(R0); o.p[0] = x * bs * .5; o.p[1] = y * bs * .5 * (d.ell ? el : .85); o.p[2] = z * bs * .5;
+      var rr = Math.sqrt(x * x + y * y + z * z), br = kb * .09 * (.6 + .4 * R0()) * Math.exp(-rr * .3); o.c[0] = (C.r * .9 + .1) * br; o.c[1] = C.g * .85 * br; o.c[2] = C.b * .65 * br; o.s = .04 + R0() * .07 * (d.bulge || 1);
+    }, 1));
+    if (d.bar) tilt.add(vol(Math.round(NB2 * .6), function (o) { o.p[0] = gsn(R0) * d.bar[0] * .45; o.p[1] = gsn(R0) * d.bar[1] * .45; o.p[2] = gsn(R0) * .02; var br = kb * .085 * (.6 + .4 * R0()); o.c[0] = C.r * br; o.c[1] = C.g * .9 * br; o.c[2] = C.b * .75 * br; o.s = .04 + R0() * .05; }, 1));
+    if (d.jet != null) { var jg = new T.Group(); jg.rotation.z = d.jet * Math.PI / 180; body.add(jg); jg.add(vol([150, 400, 800][tier], function (o) { var t = Math.pow(R0(), .8); o.p[0] = gsn(R0) * .008 * (1 + t * 2); o.p[1] = .03 + t * .8; o.p[2] = gsn(R0) * .008; var br = .22 * (1 - .6 * t) * (jn(t * 30, 0, sd) > .45 ? 1.4 : .6); o.c[0] = .5 * br; o.c[1] = .7 * br; o.c[2] = 1.1 * br; o.s = .015 + R0() * .02; }, .9)); }   // M87 喷流:节点状粒子线
+    if (d.lane) tilt.add(vol([500, 1500, 3200][tier], function (o) {   // 尘埃带:盘面薄环吸收粒子(侧视即暗带)
+      var rr = .3 + R0() * .68, a = R0() * 6.2832; o.p[0] = Math.cos(a) * rr; o.p[1] = Math.sin(a) * rr; o.p[2] = gsn(R0) * .012; if (R0() > .5 + jn(Math.cos(a) * 6, Math.sin(a) * 6, sd)) return false;
+      o.c[0] = .32; o.c[1] = .24; o.c[2] = .18; o.s = .03 + R0() * .05;
+    }, .5, true));
+  }
+  function gsn(R) { var u = R() || 1e-9, v = R(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(6.2832 * v); }
+
   function build(key) {
     clear(); var d = P[key]; if (!d) return; tier = pickTier(); cur = key;
     var oct = [3, 4, 5][tier], NL = [2, 3, 5][tier], NP = [900, 2600, 6000][tier], R0 = rnd(key.length * 7919 + key.charCodeAt(1) * 104729);
@@ -96,7 +182,6 @@
       }, .9));
     } else if (d.k === 'gal') {
       var disk = new T.Group(); disk.rotation.z = (d.pa || 0) * Math.PI / 180; var tilt = new T.Group(); tilt.rotation.x = -(d.inc || 0) * Math.PI / 180; disk.add(tilt); body.add(disk);
-      var dk = cloud(3, R0() * 50, c, sat, oct); if (d.ell) { dk.scale.set(1, d.ell, 1); dk.material.userData.a = 1.3; } tilt.add(dk);
       var cA = col(c[2], sat), cB = col(c[1], sat * 1.2), arms = d.arms || 0, wind = d.wind || 0;
       tilt.add(points(NP, function (i, o) {
         var t = Math.pow(R0(), .75), a;
@@ -105,24 +190,16 @@
         var m = Math.min(1, t * 1.4), br = .35 + .65 * R0();
         o.c[0] = (cA.r + (cB.r - cA.r) * m) * br; o.c[1] = (cA.g + (cB.g - cA.g) * m) * br; o.c[2] = (cA.b + (cB.b - cA.b) * m) * br; o.s = 1 + R0() * 2.2;
       }, .9));
-      var bu = cloud(4, 0, c, sat, oct); bu.scale.setScalar(.34 * (d.bulge || 1)); body.add(bu);
-      if (d.bar) { var br2 = cloud(4, 0, c, sat, oct); br2.scale.set(d.bar[0], d.bar[1], 1); br2.material.userData.a = .8; tilt.add(br2); }   // C2.9a 棒旋 / 不规则星系的棒
-      if (d.jet != null) { var jt = cloud(4, 0, ['#000000', '#6fa8ff', '#e8f2ff'], 1.2, oct); jt.scale.set(.018, .42, 1); jt.material.userData.a = .9; var jg = new T.Group(); jg.rotation.z = d.jet * Math.PI / 180; jt.position.y = .4; jg.add(jt); body.add(jg); }   // M87 喷流
-      if (d.lane) { var ln = cloud(5, R0() * 9, c, sat, oct, 'lane'); ln.rotation.z = (d.pa || 0) * Math.PI / 180; body.add(ln); }
+      galVol(body, tilt, d, R0, tier, key.length * 3.7);
     } else {
       var kk = d.k === 'ring' ? 1 : d.k === 'snr' ? 2 : 0;
-      for (var i = 0; i < NL; i++) {
-        var l = cloud(kk, R0() * 40 + i * 3.1, c, sat, oct), s = 1 - i * .09;
-        l.scale.set(s * (1 + (R0() - .5) * .25), s * (1 + (R0() - .5) * .25), 1); l.rotation.z = R0() * 6.28; l.position.z = (i - NL / 2) * .02;
-        l.material.userData.a = kk === 1 ? .8 : .9 / Math.sqrt(NL / 2); body.add(l);
-      }
-      if (d.dust) { var du = cloud(0, R0() * 30, ['#2a1e18', '#000000', '#000000'], 1, oct, 'dust'); du.material.uniforms.uD.value = d.dust; du.position.z = .05; body.add(du); }
+      nebVol(body, d, kk, R0, tier, key.length * 3.7);
       var sc = col(d.st || '#dfe8ff', 1);
       body.add(points(Math.round(NP * (kk === 1 ? .15 : .35)), function (i, o) {
         var a = R0() * 6.2832, rr = Math.pow(R0(), .6) * .95; o.p[0] = Math.cos(a) * rr; o.p[1] = Math.sin(a) * rr; o.p[2] = (R0() - .5) * .2;
         var br = R0() < .04 ? 2.2 : .4 + R0() * .8; o.c[0] = sc.r * br; o.c[1] = sc.g * br; o.c[2] = sc.b * br; o.s = br > 2 ? 3.2 : 1 + R0() * 1.4;
       }, .8));
-      if (kk === 1) { var cs = cloud(4, 0, ['#000000', '#9fd8ff', '#ffffff'], 1, oct); cs.scale.setScalar(.05); body.add(cs); }   // M57 中心白矮星
+      if (kk === 1) body.add(vol(40, function (o) { o.p[0] = gsn(R0) * .01; o.p[1] = gsn(R0) * .01; o.p[2] = gsn(R0) * .01; o.c[0] = .5; o.c[1] = .55; o.c[2] = .6; o.s = .02 + R0() * .02; }, 1));   // M57 中心白矮星(粒子)
     }
     scn.add(grp); t0 = performance.now();
   }
@@ -213,7 +290,7 @@
     var a = (0.35 + 0.65 * sstep(0.004, 0.06, tn)) * (1 - sstep(0.6, 1.0, tn));   // 远时偏暗;贴近/进入星云时淡出,交给近处体积(C2.6e)
     var tt = rm() ? 0 : (performance.now() - t0) / 1000, pr = LI.rd.getPixelRatio ? LI.rd.getPixelRatio() : 1, H = LI.H || innerHeight;
     var px = ta / Math.tan(Math.PI / 6) * H / 2;   // 星云半径的屏幕像素(cam0 竖直视场 60°)
-    for (var i = 0; i < mats.length; i++) { var m = mats[i], u = m.uniforms; u.uA.value = a * m.userData.a; if (u.uT) u.uT.value = tt; if (m.userData.pt) u.uSz.value = pr * Math.max(.6, Math.min(2.2, px / 160)); }
+    for (var i = 0; i < mats.length; i++) { var m = mats[i], u = m.uniforms; u.uA.value = a * m.userData.a; if (u.uT) u.uT.value = tt; if (m.userData.pt) u.uSz.value = pr * Math.max(.6, Math.min(2.2, px / 160)); if (m.userData.vol) { u.uPx.value = px * pr; u.uMax.value = 180 * pr; } }
     vis = a;
     if (a > .003) LI.rd.render(scn, LI.cam0);
     va = volume(LI, b, dx, dy, dz, tn, tt);
