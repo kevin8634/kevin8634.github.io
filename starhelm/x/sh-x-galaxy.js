@@ -6,6 +6,8 @@
  * - 天体标记:按真实赤经赤纬 + 距离换算到银心坐标(J2000 → 银道,IAU 1958 旋转矩阵)。可飞抵的点「设为目的地」= SHXDV.lock。
  * - 相机:拖动旋转、滚轮 / 双指缩放;预设「全景 / 俯视 / 侧视 / 太阳附近 / 卫星星系」;空闲时缓慢绕转(减少动态时不转)。
  * - 入口:驾驶舱航图 VI「进入银河全景」;视图圆环「5 银河」;深链 ?view=galaxy。Esc 先关资料卡再关全景。
+ * C2.12b(10-30 21:xx,设计稿第 02–04 节):天枢银河坐标 TSG(sh-x-gal-core.js SHXTSG)读数、扇区网格开关、十大银河世界 + 麦哲伦门边界与 11 张世界卡
+ *   (sh-x-gal-worlds.js SHXGW)、六级尺度 L0–L5 读数与切换(L3–L5 交给驾驶舱 ✦ 航点);天体卡加 TSG 地址 / 银经银纬 / 所属世界。
  * C2.12a4(10-30 20:xx):压核心过曝(核球/棒/内盘星点与弥散光降亮、核区辉光减半并移到尘埃之前绘制,让棒尘道能吸收它)、棒尘道 nBarD 回 6% 且单颗缩小。
  * C2.12a2b(10-30 17:1x 调参):旋臂改团块+碎段、星团离开臂脊散开、暗尘纯吸收(不再发亮)、核球/棒/弥散光降亮露出中央棒与尘道、核区光晕减弱。
  * C2.12a2(10-30 15:40 王磊:要像设计 PDF 第 1 页、真 3D):平面光底与尘埃切片全部换成 3D 粒子 —— 弥散星光大粒子、丝状暗尘吸收粒子(含中央棒尘道)、电离氢粉团与蓝色年轻星团、旋臂碎段。
@@ -52,6 +54,10 @@
     ['NGC 5139', '半人马座 ω', 'cl', 201.6912, -47.4769, 17090, '银河系最大的球状星团,约 1000 万颗恒星,可能是被吞并矮星系的核心。', 4],
     ['NGC 104', '杜鹃座 47', 'cl', 6.0223, -72.0814, 14700, '南天第二亮的球状星团,年龄约 120 亿年。', 5],
     ['M13', '武仙座球状星团', 'cl', 250.4235, 36.4613, 22200, '北天最亮的球状星团;1974 年阿雷西博信息就是发往这里。', 5],
+    ['Cas A', '仙后座 A', 'neb', 350.85, 58.815, 11000, '最年轻的已知银河超新星遗迹之一,爆发的光约 340 年前到达地球。', 6],
+    ['Wd 1', '韦斯特隆德 1', 'cl', 251.7667, -45.8514, 13000, '银河系里质量最大的年轻星团之一,挤满红超巨星和沃尔夫-拉叶星。', 6],
+    ['h Per', '英仙座双星团', 'cl', 34.75, 57.15, 7500, '肉眼可见的一对年轻疏散星团,约 1,300 万岁。', 7],
+    ['NGC 7000', '北美洲星云', 'neb', 314.82, 44.53, 2590, '形状像北美洲的发射星云,天鹅座方向。', 7],
     ['LMC', '大麦哲伦云', 'gal', 80.8938, -69.7561, 161700, '银河系最大的卫星星系,约 16 万光年外。', 2],
     ['NGC 292', '小麦哲伦云', 'gal', 13.1866, -72.8286, 203500, '被大麦哲伦云和银河系一起撕扯的矮星系。', 2]
   ];
@@ -202,6 +208,25 @@
       gm.setAttribute('position', new T.BufferAttribute(a, 3)); gm.setAttribute('aC', new T.BufferAttribute(cc, 3)); gm.setAttribute('aS', new T.BufferAttribute(ss, 1));
       var pp = new T.Points(gm, ms.clone()); pp.frustumCulled = false; scn.add(pp);
     });
+    // C2.12b TSG 扇区网格 + 世界边界(线框叠加层,非天体渲染)
+    if (TS) {
+      var gp = [], k, j;
+      for (k = 1; k <= 12; k++) for (j = 0; j < 120; j++) { var a1 = j * 3 * D2R, a2 = (j + 1) * 3 * D2R, rr = k * 5000; gp.push(rr * Math.cos(a1), 0, rr * Math.sin(a1), rr * Math.cos(a2), 0, rr * Math.sin(a2)); }
+      for (k = 0; k < 12; k++) { var fa = k * 30 * D2R; gp.push(0, 0, 0, 60000 * Math.cos(fa), 0, 60000 * Math.sin(fa)); }
+      var gg2 = new T.BufferGeometry(); gg2.setAttribute('position', new T.BufferAttribute(new Float32Array(gp), 3));
+      GRID = new T.LineSegments(gg2, new T.LineBasicMaterial({ color: 0x7fd6ff, transparent: true, opacity: .2, depthTest: false, depthWrite: false })); GRID.frustumCulled = false; GRID.renderOrder = 3; scn.add(GRID);
+    }
+    if (GW) {
+      WLN = new T.Group(); WLN.renderOrder = 3;
+      GW.list.forEach(function (w) {
+        var lp = [], ys = w.reg.halo ? [1500, -1500] : [0];
+        ys.forEach(function (yy) { GW.outline(w).forEach(function (L) { for (var i = 0; i < L.length - 1; i++) lp.push(L[i][0], yy, L[i][1], L[i + 1][0], yy, L[i + 1][1]); }); });
+        var g3 = new T.BufferGeometry(); g3.setAttribute('position', new T.BufferAttribute(new Float32Array(lp), 3));
+        var ln = new T.LineSegments(g3, new T.LineBasicMaterial({ color: w.id === 'VI-10' ? 0x9fb3cf : w.id === 'GATE' ? 0xc9b4ff : 0xf0c97a, transparent: true, opacity: .34, depthTest: false, depthWrite: false }));
+        ln.frustumCulled = false; ln.renderOrder = 3; ln.userData.w = w.id; WLN.add(ln);
+      });
+      scn.add(WLN);
+    }
     return true;
   }
 
@@ -230,10 +255,19 @@
       '#xgx .cap{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);max-width:min(720px,90vw);text-align:center;font-size:19px;letter-spacing:.06em;color:#eef3ff;text-shadow:0 0 10px #000,0 0 22px #000;opacity:0;transition:opacity .8s;pointer-events:none}#xgx .cap.on{opacity:1}#xgx .cap small{display:block;font-size:11px;letter-spacing:.3em;color:#b8a8ff;margin-bottom:4px}' +
       '#xgx .skip{position:absolute;right:18px;bottom:72px;display:none;border:1px solid rgba(150,180,220,.4);background:rgba(10,16,30,.7);color:#dfe9f7;border-radius:16px;padding:6px 14px;font:inherit;font-size:12.5px;cursor:pointer}#xgx.intro .skip{display:block}#xgx.intro .bar,#xgx.intro .lg,#xgx.intro .sc,#xgx.intro .lay,#xgx.intro .hd p,#xgx.intro .badge{opacity:0;pointer-events:none}#xgx .bar,#xgx .lg,#xgx .sc,#xgx .lay{transition:opacity .8s}' +
       '#xgx .tfc{position:absolute;left:50%;top:76px;transform:translateX(-50%);font-size:13px;color:#f0c97a;text-shadow:0 0 8px #000;display:none;text-align:center}#xgx.tf .tfc{display:block}#xgx.tf .lay{opacity:0}#xgx .tfc small{display:block;color:#a8b8d0;font-size:11px}' +
-      '@media (max-width:760px){#xgx .hd{left:12px;top:10px;right:60px}#xgx .hd h2{font-size:18px}#xgx .hd p{font-size:11px}#xgx .lg{bottom:auto;top:132px;left:10px}#xgx .sc{bottom:118px}#xgx .bar{bottom:12px}#xgx .bar button{padding:5px 10px;font-size:12px}#xgx .cd{top:auto;bottom:64px;right:10px}}';
+      '#xgx .tsg{position:absolute;left:18px;top:132px;font-size:11.5px;line-height:1.55;color:#a8b8d0;pointer-events:none;text-shadow:0 0 6px #000}#xgx .tsg b{color:#7fd6ff;font-weight:600;letter-spacing:.04em}#xgx .tsg em{font-style:normal;color:#f0c97a}' +
+      '#xgx .lv{position:absolute;left:16px;top:212px;display:flex;flex-direction:column;gap:3px}#xgx .lv button{display:flex;gap:6px;align-items:center;border:1px solid rgba(150,180,220,.22);background:rgba(10,16,30,.55);color:#9fb3cf;border-radius:10px;padding:2px 9px;font:inherit;font-size:11px;cursor:pointer;text-align:left}#xgx .lv button b{color:#dfe9f7;width:18px}#xgx .lv button.on{border-color:#7fd6ff;color:#dfe9f7;background:rgba(20,40,70,.7)}#xgx .lv button.ext{opacity:.62}#xgx .lv .h{font-size:10.5px;color:#8fa3c0;max-width:200px;margin-top:2px;min-height:14px}' +
+      '#xgx .wl{position:absolute;left:0;top:0;pointer-events:auto;cursor:pointer;white-space:nowrap;font-size:11px;letter-spacing:.06em;color:rgba(240,201,122,.82);text-shadow:0 0 5px #000,0 0 10px #000;padding:2px 4px}#xgx .wl small{display:block;font-size:9.5px;letter-spacing:.12em;color:rgba(160,190,230,.7)}#xgx .wl:hover,#xgx .wl.on{color:#ffe2a0}#xgx .wl.cp small,#xgx .wl.cp .n{display:none}#xgx .wl.cp:hover .n{display:inline}#xgx .wl::before{content:"\\25C7";margin-right:4px;color:#f0c97a}' +
+      '#xgx .gl{position:absolute;left:0;top:0;transform:translate(-50%,-50%);font-size:10px;letter-spacing:.08em;color:rgba(127,214,255,.6);text-shadow:0 0 4px #000;pointer-events:none}' +
+      '#xgx .cd .tsgv{font-family:ui-monospace,Consolas,monospace;color:#7fd6ff;letter-spacing:.03em}#xgx .cd a.wk{color:#f0c97a;cursor:pointer;text-decoration:underline dotted}#xgx .cd .q{margin:8px 0;padding:6px 10px;border-left:2px solid #b8a8ff;background:rgba(40,30,80,.25);font-size:12.5px;color:#e8eefa}#xgx .cd .tg{display:inline-block;font-size:10.5px;color:#f0c97a;border:1px solid rgba(240,201,122,.4);border-radius:8px;padding:0 6px;margin:4px 4px 0 0}' +
+      '#xgx .cd ul{margin:4px 0 6px;padding-left:18px;font-size:12px;color:#c8d4e8}#xgx .cd ul li a{color:#dfe9f7;cursor:pointer;text-decoration:underline dotted}#xgx .cd .nt{font-size:11px;color:#8fa3c0;margin-top:6px}#xgx .cd.wc{max-height:calc(100vh - 160px);overflow:auto}#xgx .cd .wlist button{display:block;width:100%;text-align:left;margin:3px 0;border:1px solid rgba(150,180,220,.25);background:rgba(20,30,52,.5);color:#dfe9f7;border-radius:10px;padding:5px 9px;font:inherit;font-size:12px;cursor:pointer}#xgx .cd .wlist button small{color:#8fa3c0;margin-left:6px}' +
+      '#xgx.m2d .lv{display:none}#xgx.intro .tsg,#xgx.intro .lv,#xgx.tf .tsg,#xgx.tf .lv{opacity:0;pointer-events:none}' +
+      '@media (max-width:760px){#xgx .tsg{top:136px;left:12px;font-size:10.5px;line-height:1.4}#xgx .lv{display:none}#xgx .lg{top:194px!important}#xgx .wl small{display:none}#xgx .hd{left:12px;top:10px;right:60px}#xgx .hd h2{font-size:18px}#xgx .hd p{font-size:11px}#xgx .lg{bottom:auto;top:132px;left:10px}#xgx .sc{bottom:118px}#xgx .bar{bottom:12px}#xgx .bar button{padding:5px 10px;font-size:12px}#xgx .cd{top:auto;bottom:64px;right:10px}}';
     document.head.appendChild(s);
   }
-  var MK = [], ARML = [], SUNM = null;
+  var MK = [], ARML = [], SUNM = null, WLB = [], GLB = [], GRID = null, WLN = null, WSEL = null, LAYS = { grid: false, wb: true }, LASTM = null, HUDS = '';
+  var TS = window.SHXTSG, GW = window.SHXGW, KEYL = 'gn:sh:x-gxlay';
+  try { var _l = JSON.parse(localStorage.getItem(KEYL) || 'null'); if (_l) { LAYS.grid = !!_l.grid; LAYS.wb = _l.wb !== false; } } catch (e) { }
   function dom() {
     css();
     ov = document.createElement('div'); ov.id = 'xgx'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', '银河全景');
@@ -241,15 +275,24 @@
       '<div class="hd"><div class="k">星域 VI · MILKY WAY</div><h2>银河全景<small>THE MILKY WAY</small></h2>' +
       '<p>直径约 10 万光年,约 1,000–4,000 亿颗恒星。太阳在猎户臂上,距银心约 2.7 万光年,绕银心一圈约 2.3 亿年。</p>' +
       '<span class="badge">模拟渲染 · 非照片 · 旋臂为示意模型(对数螺旋)· 天体位置按真实方向与距离</span></div>' +
-      '<button class="x" type="button" aria-label="关闭银河全景(Esc)">×</button><div class="lg"></div><div class="sc"><span></span><b></b></div>' +
-      '<div class="bar"><button data-p="all" type="button">全景</button><button data-p="whole" type="button">整盘</button><button data-p="top" type="button">俯视</button><button data-p="side" type="button">侧视</button><button data-p="sun" type="button">太阳附近</button><button data-p="mc" type="button">卫星星系</button><button data-p="tf" type="button" title="恒星内快外慢,看旋臂与恒星如何相对运动">差速自转</button><button data-p="intro" type="button">重播开场</button><button data-p="fly" type="button">回驾驶舱</button></div><div class="cap" aria-live="polite"></div><button class="skip" type="button">跳过 ›</button><div class="tfc"></div>';
+      '<button class="x" type="button" aria-label="关闭银河全景(Esc)">×</button><div class="tsg" aria-live="off"></div><div class="lv" role="group" aria-label="六级尺度"></div><div class="lg"></div><div class="sc"><span></span><b></b></div>' +
+      '<div class="bar"><button data-p="all" type="button">全景</button><button data-p="whole" type="button">整盘</button><button data-p="top" type="button">俯视</button><button data-p="side" type="button">侧视</button><button data-p="sun" type="button">太阳附近</button><button data-p="mc" type="button">卫星星系</button><button data-p="worlds" type="button" title="十大银河世界 + 麦哲伦门">十大世界</button><button data-p="tf" type="button" title="恒星内快外慢,看旋臂与恒星如何相对运动">差速自转</button><button data-p="intro" type="button">重播开场</button><button data-p="fly" type="button">回驾驶舱</button></div><div class="cap" aria-live="polite"></div><button class="skip" type="button">跳过 ›</button><div class="tfc"></div>';
     document.body.appendChild(ov);
     cv = ov.querySelector('.cv'); lay = ov.querySelector('.lay');
     ov.querySelector('.x').onclick = function () { close(); };
     ov.querySelector('.skip').onclick = function () { endIntro(true); };
-    ov.querySelectorAll('.bar button').forEach(function (b) { b.onclick = function () { if (b.dataset.p === 'fly') { cockpit(); return; } if (b.dataset.p === 'tf') { tfToggle(); return; } if (b.dataset.p === 'intro') { intro(true); return; } endIntro(); preset(b.dataset.p); }; });
+    ov.querySelectorAll('.bar button').forEach(function (b) { b.onclick = function () { if (b.dataset.p === 'fly') { cockpit(); return; } if (b.dataset.p === 'tf') { tfToggle(); return; } if (b.dataset.p === 'intro') { intro(true); return; } if (b.dataset.p === 'worlds') { endIntro(); worldList(); return; } endIntro(); preset(b.dataset.p); }; });
     var lg = ov.querySelector('.lg');
     Object.keys(CAT).forEach(function (k) { if (k === 'sun') return; var b = document.createElement('button'); b.type = 'button'; b.innerHTML = '<i style="background:' + CAT[k].c + '"></i>' + CAT[k].zh; b.onclick = function () { hidden[k] = !hidden[k]; b.classList.toggle('off', !!hidden[k]); }; lg.appendChild(b); });
+    // C2.12b 图层开关:扇区网格 / 世界边界
+    [['grid', '▦ TSG 网格'], ['wb', '◇ 世界边界']].forEach(function (q) { var b = document.createElement('button'); b.type = 'button'; b.dataset.l = q[0]; b.textContent = q[1]; b.classList.toggle('off', !LAYS[q[0]]); b.onclick = function () { LAYS[q[0]] = !LAYS[q[0]]; b.classList.toggle('off', !LAYS[q[0]]); try { localStorage.setItem(KEYL, JSON.stringify(LAYS)); } catch (e) { } if (mode === '2d') flat(); }; lg.appendChild(b); });
+    // 六级尺度
+    var lv = ov.querySelector('.lv'); if (TS) { TS.LV.forEach(function (L, i) { var b = document.createElement('button'); b.type = 'button'; b.dataset.i = i; b.title = L.sc; b.innerHTML = '<b>' + L.k + '</b>' + L.zh; if (i >= 3) b.classList.add('ext'); b.onclick = function () { lvGo(i); }; lv.appendChild(b); }); var hh = document.createElement('div'); hh.className = 'h'; lv.appendChild(hh); }
+    // 世界标签 + 网格标签
+    WLB = []; GLB = [];
+    if (GW) GW.list.forEach(function (w) { var e = document.createElement('div'); e.className = 'wl'; e.innerHTML = w.id + '<span class="n"> ' + w.im + '</span><small>' + w.zh + '</small>'; e.title = w.name + ' · ' + w.a.addr; e.onclick = function (ev) { ev.stopPropagation(); showWorld(w); }; lay.appendChild(e); WLB.push({ el: e, w: w, p: TS.toScene(w.anc) }); });
+    if (TS) { for (var ri = 1; ri <= 12; ri++) { var ge = document.createElement('div'); ge.className = 'gl'; ge.textContent = 'R' + ri; lay.appendChild(ge); var f = -4 * D2R, rr = (ri - .5) * 5000; GLB.push({ el: ge, p: [rr * Math.cos(f), 0, rr * Math.sin(f)] }); }
+      for (var si = 0; si < 12; si++) { var ge2 = document.createElement('div'); ge2.className = 'gl'; ge2.textContent = 'S' + (si < 10 ? '0' : '') + si; lay.appendChild(ge2); var f2 = (si * 30 + 15) * D2R; GLB.push({ el: ge2, p: [63000 * Math.cos(f2), 0, 63000 * Math.sin(f2)] }); } }
     // 标记
     MK = [];
     var sun = { key: 'sun', zh: '太阳系 · 你在这里', cat: 'sun', p: [R0, 55, 0], pri: 0, ly: 0 };
@@ -266,18 +309,61 @@
     var bl = document.createElement('div'); bl.className = 'arm'; bl.textContent = '中央棒'; lay.appendChild(bl); ARML.push({ el: bl, p: [6500 * Math.cos(27 * D2R) * -1, 0, 6500 * Math.sin(27 * D2R) * -1] });
     input();
   }
+  function tsgRows(t, wk) {   // C2.12b TSG 地址 + 银经银纬 + 所属世界
+    if (!TS) return ''; var a = TS.addr(t), w = GW ? GW.ofKey(wk, t) : null;
+    return '<dt>TSG 地址</dt><dd class="tsgv">' + a.addr + '</dd><dt>银经 / 银纬</dt><dd>' + TS.fmtLB(TS.lb(t)) + '</dd><dt>所属世界</dt><dd>' + (w ? '<a class="wk" data-w="' + w.id + '">' + w.id + ' ' + w.name + '</a>' : '世界之间 · 航道空域') + '</dd>';
+  }
+  function wire(c) { c.querySelectorAll('a.wk').forEach(function (a) { a.onclick = function () { showWorld(GW.get(a.dataset.w)); }; }); }
   function show(m) {
-    if (card) card.remove();
+    if (card) card.remove(); LASTM = m;
     card = document.createElement('div'); card.className = 'cd'; card.setAttribute('role', 'dialog');
     var dgc = Math.hypot(m.p[0], m.p[1], m.p[2]), h;
-    if (m.cat === 'sun') h = '<h3>太阳系</h3><div class="ty">我们的家 · 猎户臂</div><p>太阳带着八大行星以约 230 km/s 绕银心公转,转一圈约 2.3 亿年 —— 上一次在这个位置时,地球上刚出现最早的恐龙。</p><dl><dt>距银心</dt><dd>约 26,996 光年</dd><dt>离银盘中面</dt><dd>约 55 光年(北侧)</dd></dl><div class="row"><button class="go" type="button">回驾驶舱</button></div>';
-    else h = '<h3>' + m.zh + '</h3><div class="ty">' + CAT[m.cat].zh + (m.fl ? ' · ✦ 可飞抵' : '') + '</div><p>' + m.txt + '</p><dl><dt>距地球</dt><dd>约 ' + fly(m.ly) + '</dd><dt>距银心</dt><dd>约 ' + fly(dgc) + '</dd><dt>光的回看</dt><dd>你看到的是约 ' + fly(m.ly).replace('光年', '年') + '前发出的光</dd></dl>' +
+    if (m.cat === 'sun') h = '<h3>太阳系</h3><div class="ty">我们的家 · 猎户臂</div><p>太阳带着八大行星以约 230 km/s 绕银心公转,转一圈约 2.3 亿年 —— 上一次在这个位置时,地球上刚出现最早的恐龙。</p><dl><dt>距银心</dt><dd>约 26,996 光年</dd><dt>离银盘中面</dt><dd>约 55 光年(北侧)</dd>' + tsgRows(TS ? TS.sun : null, 'sun') + '</dl><div class="row"><button class="go" type="button">回驾驶舱</button></div>';
+    else h = '<h3>' + m.zh + '</h3><div class="ty">' + CAT[m.cat].zh + (m.fl ? ' · ✦ 可飞抵' : '') + '</div><p>' + m.txt + '</p><dl><dt>距地球</dt><dd>约 ' + fly(m.ly) + '</dd><dt>距银心</dt><dd>约 ' + fly(dgc) + '</dd><dt>光的回看</dt><dd>你看到的是约 ' + fly(m.ly).replace('光年', '年') + '前发出的光</dd>' + tsgRows(TS ? TS.fromScene(m.p) : null, m.key) + '</dl>' +
       '<div class="row">' + (m.fl ? '<button class="go" type="button">设为目的地</button>' : '') + '<button class="fo" type="button">飞近看看</button></div>';
     card.innerHTML = '<button class="c" type="button" aria-label="关闭">×</button>' + h; ov.appendChild(card);
-    card.querySelector('.c').onclick = function () { card.remove(); card = null; };
+    card.querySelector('.c').onclick = function () { card.remove(); card = null; }; wire(card);
     var go = card.querySelector('.go'), fo = card.querySelector('.fo');
     if (go) go.onclick = function () { if (m.cat === 'sun') cockpit(); else target(m); };
     if (fo) fo.onclick = function () { focus(m.p, Math.max(2500, Math.min(60000, m.ly > 1e5 ? 60000 : 9000))); };
+  }
+  function mkByKey(k) { return MK.filter(function (x) { return x.key === k; })[0]; }
+  function showWorld(w) {   // C2.12b 世界卡(11 张:VI-1…VI-10 + 麦哲伦门)
+    if (!w) return; if (card) card.remove(); WSEL = w; LASTM = null;
+    card = document.createElement('div'); card.className = 'cd wc'; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', '世界卡 ' + w.name);
+    var lbv = TS.lb(w.anc), li = w.o.map(function (o) { var m = o[1] && mkByKey(o[1]); return '<li>' + (m ? '<a data-k="' + o[1] + '">' + o[0] + '</a>' + (m.fl ? ' ✦' : '') : o[0]) + '</li>'; }).join('');
+    card.innerHTML = '<button class="c" type="button" aria-label="关闭">×</button><h3>' + w.id + ' · ' + w.im + '<small style="font-size:12px;color:#9fb3cf;margin-left:6px">' + w.zh + '</small></h3>' +
+      '<div class="ty">' + (w.id === 'GATE' ? '星域 VI 门槛' : '星域 VI · 银河世界') + '</div><div>' + w.tag.map(function (t) { return '<span class="tg">' + t + '</span>'; }).join('') + '</div>' +
+      '<div class="q">❓ ' + w.q + (w.q2 ? '<br><small style="color:#b8c6dc">' + w.q2 + '</small>' : '') + '</div><p>' + w.land + '</p>' +
+      '<dl><dt>TSG 地址</dt><dd class="tsgv">' + w.a.addr + '</dd><dt>锚点</dt><dd>' + w.an + '</dd><dt>银经 / 银纬</dt><dd>' + TS.fmtLB(lbv) + '</dd><dt>距太阳</dt><dd>' + w.dist + '</dd><dt>距银心</dt><dd>约 ' + fly(w.a.rs) + '</dd></dl>' +
+      '<div class="ty" style="margin-top:6px">代表天体(✦ 已可飞抵)</div><ul>' + li + '</ul>' + (w.br ? '<div class="nt">星桥:' + w.br + '</div>' : '') +
+      '<div class="nt">信标站与' + (w.id === 'GATE' ? '虫洞门:C2.13a 开放' : '曲率跃迁航道:C2.12c 开放') + ' · 自由探索,信标只做收集。距离为约数,来源 NASA / ESA / ESO 公开资料、Gaia DR3、Reid et al. 2019。</div>' +
+      '<div class="row"><button class="go" type="button">进入世界 · L1</button><button class="wa" type="button">十大世界</button></div>';
+    ov.appendChild(card);
+    card.querySelector('.c').onclick = function () { card.remove(); card = null; WSEL = null; };
+    card.querySelectorAll('li a').forEach(function (a) { a.onclick = function () { var m = mkByKey(a.dataset.k); if (m) { focus(m.p, Math.max(2500, Math.min(60000, m.ly > 1e5 ? 60000 : 9000))); show(m); } }; });
+    card.querySelector('.go').onclick = function () { enterWorld(w); };
+    card.querySelector('.wa').onclick = function () { worldList(); };
+  }
+  function enterWorld(w) { if (w.id === 'GATE') { preset('mc'); return; } if (w.id === 'VI-9') { tween(TS.toScene(w.anc), 30000, .25); return; } focus(TS.toScene(w.anc), w.id === 'VI-7' ? 9000 : 15000); }
+  function worldList() {
+    if (!GW) return; if (card) card.remove(); WSEL = null; LASTM = null;
+    card = document.createElement('div'); card.className = 'cd wc'; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', '十大银河世界');
+    card.innerHTML = '<button class="c" type="button" aria-label="关闭">×</button><h3>十大银河世界</h3><div class="ty">星域 VI · 天枢银河坐标 TSG(环带 R × 扇区 S × 层)</div><div class="wlist">' +
+      GW.list.map(function (w) { return '<button type="button" data-w="' + w.id + '">' + w.id + ' ' + w.name + '<small>' + w.a.addr + '</small></button>'; }).join('') + '</div><div class="nt">点世界看世界卡;边界为示意划分,跨世界的航道与跃迁在 C2.12c 开放。</div>';
+    ov.appendChild(card);
+    card.querySelector('.c').onclick = function () { card.remove(); card = null; };
+    card.querySelectorAll('.wlist button').forEach(function (b) { b.onclick = function () { showWorld(GW.get(b.dataset.w)); }; });
+  }
+  function lvHint(t) { var h = ov && ov.querySelector('.lv .h'); if (h) h.textContent = t || ''; }
+  function lvGo(i) {   // 六级尺度切换:L0–L2 在全景里缩放;L3–L5 交给驾驶舱的 ✦ 航点(近景复用 SHXDV / T7)
+    endIntro(); var tg = [C.tx, C.ty, C.tz], w = GW && GW.at(TS.fromScene(tg));
+    if (i === 0) { preset('whole'); lvHint(''); return; }
+    if (i === 1) { var ww = WSEL || w || GW.get('VI-1'); enterWorld(ww); lvHint('L1 · ' + ww.id + ' ' + ww.name); return; }
+    if (i === 2) { focus(LASTM ? LASTM.p : tg, 2200); lvHint('L2 星区:盘内立体星场在 C2.12d 加入'); return; }
+    var m = LASTM && LASTM.fl ? LASTM : null;
+    if (m) { lvHint(''); target(m); return; }
+    lvHint('L3–L5:先点一个带 ✦ 的天体,再从这里进驾驶舱飞抵');
   }
   function cockpit(after) {
     close();
@@ -317,7 +403,7 @@
     cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
     cv.addEventListener('wheel', function (e) { e.preventDefault(); if (INTRO) endIntro(true); zoom(Math.exp(e.deltaY * .0012)); idle = performance.now() + 6000; }, { passive: false });
   }
-  function zoom(f) { TW = null; C.d = Math.max(1500, Math.min(600000, C.d * f)); }
+  function zoom(f) { TW = null; C.d = Math.max(800, Math.min(600000, C.d * f)); }
 
   /* ---------- C2.12a 开场镜头 · 差速自转 ---------- */
   var KEY = 'gn:sh:x-gxintro';
@@ -367,17 +453,30 @@
   function labels() {
     var placed = [], mob = small();
     MK.forEach(function (m) {
-      var e = m.el, q = hidden[m.cat] ? null : proj(m.p); if (!q || q[0] < -40 || q[0] > W + 40 || q[1] < -20 || q[1] > H - (small() ? 64 : 70)) { e.style.display = 'none'; return; }
+      var e = m.el, q = hidden[m.cat] ? null : proj(m.p); if (!q || q[0] < -40 || q[0] > W + 40 || q[1] < -20 || q[1] > H - (small() ? 64 : 70) || (q[1] < 120 && q[0] < Math.min(W - 60, 660))) { e.style.display = 'none'; return; }
       e.style.display = ''; e.style.transform = 'translate(' + (q[0] - 8) + 'px,' + (q[1] - 10) + 'px)';
       var clash = placed.some(function (o) { return Math.abs(o[0] - q[0]) < (mob ? 70 : 96) && Math.abs(o[1] - q[1]) < 16; });
       e.classList.toggle('nl', clash); if (!clash) placed.push(q);
     });
     var far = mode === '3d' ? C.d : 150000;
+    WLB.forEach(function (o) {
+      var q = LAYS.wb ? proj(o.p) : null, sel = WSEL === o.w;
+      if (!q || (o.w.id === 'GATE' && far < 150000 && !sel) || (o.w.id !== 'GATE' && far > 380000) || q[0] < -60 || q[0] > W + 20 || q[1] < 40 || q[1] > H - 80 || (q[1] < 120 && q[0] < Math.min(W - 60, 660))) { o.el.style.display = 'none'; return; }
+      var cl = placed.some(function (z) { return Math.abs(z[0] - q[0] - 30) < 100 && Math.abs(z[1] - q[1] - 10) < 22; }); placed.push([q[0] + 30, q[1] + 10]);
+      o.el.style.display = ''; o.el.classList.toggle('on', sel); o.el.classList.toggle('cp', cl && !sel); o.el.style.transform = 'translate(' + (q[0] + 8) + 'px,' + (q[1] + 6) + 'px)';
+    });
+    GLB.forEach(function (o) { var q = LAYS.grid ? proj(o.p) : null; if (!q || far > 400000 || q[0] < 0 || q[0] > W || q[1] < 0 || q[1] > H) { o.el.style.display = 'none'; return; } o.el.style.display = ''; o.el.style.transform = 'translate(' + q[0] + 'px,' + q[1] + 'px) translate(-50%,-50%)'; });
+    hud();
     ARML.forEach(function (a) { var q = proj(a.p); if (!q || far < 20000 || far > 380000) { a.el.style.display = 'none'; return; } a.el.style.display = ''; a.el.style.transform = 'translate(' + q[0] + 'px,' + q[1] + 'px) translate(-50%,-50%)'; });
     // 比例尺
     var lyPerPx = mode === '3d' ? 2 * C.d * Math.tan(30 * D2R) / H : 2.3 * RG / Math.min(W, H), steps = [100, 500, 1000, 5000, 10000, 20000, 50000, 100000], L = 100, px = 100;
     for (var i = 0; i < steps.length; i++) { px = steps[i] / lyPerPx; L = steps[i]; if (px > 60) break; }
     var sc = ov.querySelector('.sc'); sc.querySelector('span').textContent = fly(L); sc.querySelector('b').style.width = Math.round(px) + 'px';
+  }
+  function hud() {   // C2.12b 视点 TSG 读数 + 尺度层级
+    if (!TS || !ov) return; var tg = TS.fromScene([C.tx, C.ty, C.tz]), a = TS.addr(tg), w = GW && GW.at(tg), d = mode === '3d' ? C.d : 150000, li = TS.level(d), L = TS.LV[li];
+    var s = '<b>TSG 视点 ' + a.addr + '</b><br>' + (w ? '<em>' + w.id + ' ' + w.name + '</em>' : '世界之间 · 航道空域') + '<br>尺度 ' + L.k + ' ' + L.zh + ' · 视距约 ' + fly(d);
+    if (s !== HUDS) { HUDS = s; ov.querySelector('.tsg').innerHTML = s; ov.querySelectorAll('.lv button').forEach(function (b) { b.classList.toggle('on', +b.dataset.i === li); }); }
   }
   function frame(now) {
     if (!open_) return;
@@ -392,6 +491,7 @@
       DSL.forEach(function (q) { q.m.uniforms.uA.value = q.w * dsf * (sp < .12 ? 1.4 : .55 + .45 * sp); });
       if (HALO) { HALO.quaternion.copy(cam.quaternion); HALO.material.uniforms.uA.value = .06 * Math.min(1, C.d / 30000) * (1 - .4 * sp); }
       if (TFon) { TF = Math.min(230, TF + Math.min(.05, (now - (frame.lt || now)) / 1000) * 20); if (TF >= 230) TF = 230; tfShow(); }
+      var ov2 = !INTRO && !TFon; if (GRID) GRID.visible = ov2 && LAYS.grid; if (WLN) { WLN.visible = ov2 && LAYS.wb; WLN.children.forEach(function (l) { var se = WSEL && WSEL.id === l.userData.w; l.material.opacity = se ? .85 : .3; if (l.userData.w === 'GATE') l.visible = se || C.d > 120000; }); }
       frame.lt = now; mats[0].uniforms.uT.value = TF; mats[1].uniforms.uT.value = TF;
       rd.render(scn, cam);
     }
@@ -399,13 +499,15 @@
     raf = requestAnimationFrame(frame);
   }
   function flat() {   // 无 WebGL:2D 俯视静图
-    mode = '2d'; ov.querySelectorAll('.bar button').forEach(function (b) { if (b.dataset.p !== 'fly') b.style.display = 'none'; });
+    mode = '2d'; ov.classList.add('m2d'); ov.querySelectorAll('.bar button').forEach(function (b) { if (b.dataset.p !== 'fly') b.style.display = 'none'; });
     if (!built) built = gen();
     var g = cv.getContext('2d'), D = Math.min(devicePixelRatio || 1, 1.5); cv.width = W * D; cv.height = H * D; g.scale(D, D);
     g.fillStyle = '#010208'; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'lighter';
     var s = Math.min(W, H) / (2.3 * RG), P = built.P, Cc = built.C;
     for (var i = 0; i < built.n; i += 2) { var x = W / 2 + P[i * 3] * s, y = H / 2 + P[i * 3 + 2] * s; g.fillStyle = 'rgba(' + (Cc[i * 3] * 255 | 0) + ',' + (Cc[i * 3 + 1] * 255 | 0) + ',' + (Cc[i * 3 + 2] * 255 | 0) + ',.35)'; g.fillRect(x, y, 1.3, 1.3); }
     g.globalCompositeOperation = 'source-over';
+    if (TS && LAYS.grid) { g.strokeStyle = 'rgba(127,214,255,.22)'; g.lineWidth = 1; for (var k = 1; k <= 12; k++) { g.beginPath(); g.arc(W / 2, H / 2, k * 5000 * s, 0, 6.2832); g.stroke(); } for (k = 0; k < 12; k++) { g.beginPath(); g.moveTo(W / 2, H / 2); g.lineTo(W / 2 + 60000 * s * Math.cos(k * 30 * D2R), H / 2 + 60000 * s * Math.sin(k * 30 * D2R)); g.stroke(); } }
+    if (GW && LAYS.wb) GW.list.forEach(function (w) { if (w.reg.gate) return; g.strokeStyle = w.id === 'VI-10' ? 'rgba(159,179,207,.5)' : 'rgba(240,201,122,.45)'; GW.outline(w).forEach(function (L) { g.beginPath(); L.forEach(function (p, i) { var x = W / 2 + p[0] * s, y = H / 2 + p[1] * s; if (i) g.lineTo(x, y); else g.moveTo(x, y); }); g.stroke(); }); });
   }
 
   function open(o) {
@@ -427,13 +529,13 @@
   function setQ(k, v) { var u = new URL(location.href); if (v) u.searchParams.set(k, v); else u.searchParams.delete(k); return u.pathname + u.search + u.hash; }
   function close() {
     if (!open_) return; open_ = false; document.body.classList.remove('xgx-on'); cancelAnimationFrame(raf); removeEventListener('resize', onR);
-    if (card) { card.remove(); card = null; }
+    if (card) { card.remove(); card = null; } WSEL = null; LASTM = null;
     if (INTRO) endIntro(); if (TFon) tfToggle();
     ov.classList.remove('on'); var o = ov; setTimeout(function () { if (!open_) o.style.display = 'none'; }, 500);
-    if (rd) { try { rd.dispose(); if (rd.forceContextLoss) rd.forceContextLoss(); } catch (e) { } rd = null; mats = []; scn = null; var nc = cv.cloneNode(false); cv.parentNode.replaceChild(nc, cv); cv = nc; input(); }
+    if (rd) { try { rd.dispose(); if (rd.forceContextLoss) rd.forceContextLoss(); } catch (e) { } rd = null; mats = []; scn = null; GRID = null; WLN = null; var nc = cv.cloneNode(false); cv.parentNode.replaceChild(nc, cv); cv = nc; input(); }
     try { if (/[?&]view=galaxy/.test(location.search)) history.replaceState(null, '', setQ('view', null)); } catch (e) { }
   }
   VP = { set: function (x, y, z) { this.v = this.v || new window.THREE.Vector3(); this.v.set(x, y, z); return this; }, project: function (c) { this.v.project(c); this.x = this.v.x; this.y = this.v.y; this.z = this.v.z; return this; } };
   if (window.SHXESC) SHXESC.reg('galaxy', 110, function () { return open_; }, function () { if (INTRO) endIntro(true); else if (card) { card.remove(); card = null; } else close(); });
-  window.SHXGX = { open: open, close: close, isOpen: function () { return open_; }, preset: function (k) { if (open_) preset(k); }, show: function (key) { var m = MK.filter(function (x) { return x.key === key; })[0]; if (m) show(m); }, mode: function () { return mode; }, intro: function () { return !!INTRO; }, skip: function () { endIntro(true); }, n: function () { return built ? built.n : 0; }, tf: function () { if (open_) tfToggle(); return TFon; }, objs: function () { return OBJ.map(function (o) { return { key: o[0], zh: o[1], p: pos(o[3], o[4], o[5]) }; }); } };
+  window.SHXGX = { open: open, close: close, isOpen: function () { return open_; }, preset: function (k) { if (open_) preset(k); }, show: function (key) { var m = MK.filter(function (x) { return x.key === key; })[0]; if (m) show(m); }, mode: function () { return mode; }, intro: function () { return !!INTRO; }, skip: function () { endIntro(true); }, n: function () { return built ? built.n : 0; }, tf: function () { if (open_) tfToggle(); return TFon; }, world: function (id) { if (open_ && GW) { if (id) showWorld(GW.get(id)); else worldList(); } return !!card; }, enter: function (id) { if (open_ && GW && GW.get(id)) enterWorld(GW.get(id)); }, lv: function (i) { if (open_) lvGo(i); return TS ? TS.level(C.d) : -1; }, layers: function (o) { if (o) { for (var k in o) LAYS[k] = !!o[k]; if (ov) ov.querySelectorAll('.lg button[data-l]').forEach(function (b) { b.classList.toggle('off', !LAYS[b.dataset.l]); }); if (mode === '2d' && open_) flat(); } return { grid: LAYS.grid, wb: LAYS.wb }; }, hud: function () { return ov ? ov.querySelector('.tsg').textContent : ''; }, card: function () { return card ? card.textContent : ''; }, objs: function () { return OBJ.map(function (o) { return { key: o[0], zh: o[1], p: pos(o[3], o[4], o[5]) }; }); } };
 })();
