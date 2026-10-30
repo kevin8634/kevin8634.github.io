@@ -9,7 +9,8 @@
     { id: 'earth', zh: '地球', en: 'EARTH', key: '1', ic: '<circle cx="12" cy="12" r="6.2"/><path d="M6.5 10.5c2.5 1 4-1 6-.2s2.2 2.6 5 2.2M8.5 15.8c1.6-.6 3.1.1 4.2 1.3"/>' },
     { id: 'leo', zh: '近地轨道', en: 'LEO', key: '2', ic: '<circle cx="12" cy="12" r="3.6"/><ellipse cx="12" cy="12" rx="9.4" ry="3.6" transform="rotate(-24 12 12)"/><circle cx="19.6" cy="8.6" r="1.2" class="f"/>' },
     { id: 'solar', zh: '太阳系', en: 'SOLAR', key: '3', ic: '<circle cx="12" cy="12" r="2.4" class="f"/><circle cx="12" cy="12" r="5.6"/><circle cx="12" cy="12" r="9.2"/><circle cx="17.6" cy="12" r="1.1" class="f"/><circle cx="5.5" cy="8.5" r="1.1" class="f"/>' },
-    { id: 'sky', zh: '星空', en: 'SKY', key: '4', ic: '<path d="M12 3.5l1.6 4.8 4.9.1-3.9 3 1.4 4.8-4-2.9-4 2.9 1.4-4.8-3.9-3 4.9-.1z"/><circle cx="4.5" cy="19" r=".9" class="f"/><circle cx="19.5" cy="18" r=".9" class="f"/>' }
+    { id: 'sky', zh: '星空', en: 'SKY', key: '4', ic: '<path d="M12 3.5l1.6 4.8 4.9.1-3.9 3 1.4 4.8-4-2.9-4 2.9 1.4-4.8-3.9-3 4.9-.1z"/><circle cx="4.5" cy="19" r=".9" class="f"/><circle cx="19.5" cy="18" r=".9" class="f"/>' },
+    { id: 'galaxy', zh: '银河', en: 'GALAXY', key: '5', ic: '<ellipse cx="12" cy="12" rx="9.5" ry="3.4"/><path d="M5 13.5c2-3.5 5.5-5 9.5-4.2M19 10.5c-2 3.5-5.5 5-9.5 4.2"/><circle cx="12" cy="12" r="1.6" class="f"/>' }
   ];
   var FLY = { id: 'fly', zh: '驾驶舱', en: 'FLIGHT', key: 'F', ic: '<path d="M12 3l3.2 8.6L12 10l-3.2 1.6z" class="f"/><path d="M4 15.5c2.5-1.8 5.2-2.6 8-2.6s5.5.8 8 2.6M7 19.5c1.6-1 3.2-1.4 5-1.4s3.4.4 5 1.4"/>' };
   var X = window.SHXV = { cur: null, views: V };
@@ -126,6 +127,8 @@
   }
   X.go = function (id) {
     var D = window.SHDOM;
+    if (id === 'galaxy') { if (window.SHXGX) SHXGX.open({ src: '视图' }); else toast('银河全景还在载入'); return; }   // C2.11a 星域 VI
+    if (window.SHXGX && SHXGX.isOpen()) SHXGX.close();
     if (id === 'fly') { if (window.SHXC) SHXC.open({ target: X.cur === 'leo' || X.cur === 'earth' ? 'earth' : null }); else toast('驾驶舱还在载入'); return; }
     if (window.SHXC && SHXC.isOpen()) SHXC.close(true);
     if (!D || !D.go) return;
@@ -149,7 +152,7 @@
     if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
     var t = e.target; if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
     if (window.SHXC && SHXC.isOpen()) return;
-    var i = '1234'.indexOf(e.key);
+    var i = '12345'.indexOf(e.key);
     if (i >= 0) { X.go(V[i].id); e.preventDefault(); return; }
     if (e.key === '-' || e.key === '_') { X.step(1); e.preventDefault(); }
     else if (e.key === '=' || e.key === '+') { X.step(-1); e.preventDefault(); }

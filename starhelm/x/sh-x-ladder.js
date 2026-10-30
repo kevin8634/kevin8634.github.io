@@ -73,6 +73,7 @@
       '.xl-d{display:inline-flex;flex-direction:column;align-items:flex-start;padding:6px 12px;border-radius:16px;border:1px solid rgba(150,180,220,.28);background:rgba(20,30,52,.5);color:#dfe7f5;cursor:pointer;font:inherit;font-size:14px;text-align:left;line-height:1.25}' +
       '.xl-d:hover{border-color:#7fd6ff}.xl-d.on{border-color:#f0c97a;color:#f0c97a}.xl-d small{display:block;font-size:10.5px;opacity:.6}' +
       '.xl-d .t{white-space:nowrap}.xl-d .xl-g{font-size:10px;color:#c49bff;margin-left:5px;border:1px solid currentColor;border-radius:8px;padding:0 5px}' +
+      '.xl-d.xl-gx{border-color:#b8a8ff;color:#e4dcff;background:linear-gradient(90deg,rgba(60,40,120,.55),rgba(20,30,52,.5));box-shadow:0 0 12px rgba(184,168,255,.3)}.xl-d.xl-gx:hover{border-color:#f0c97a}' +
       '.xl-d .xl-p{font-size:10px;color:#9ab;margin-left:5px}' +
       '@media (max-width:640px){.xl-lad{gap:2px}.xl-r{min-width:0;flex:1 1 0;padding:0}.xl-r span{font-size:10.5px}.xl-r span em{display:none}.xl-r.on span em{display:inline}.xl-r small{display:none}.xl-d{font-size:13px;padding:5px 10px}}';
     document.head.appendChild(s);
@@ -97,6 +98,12 @@
       lad.querySelectorAll('.xl-r').forEach(function (b) { var on = +b.dataset.d === sel; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); });
       var d = DOMS[sel]; sc.textContent = '星域 ' + d.n + ' ' + d.zh + ' · 尺度 ' + d.scale + (sel >= 5 ? ' · ✦ 标记的目的地可真实飞抵(曲率跃迁,时间已压缩)' : sel >= 4 ? ' · 快捷目的地都设有虫洞门' : '');
       dst.innerHTML = '';
+      if (sel === 5 && window.SHXGX) {   // C2.11a 星域 VI 银河全景入口
+        var gx = document.createElement('button'); gx.type = 'button'; gx.className = 'xl-d xl-gx';
+        gx.innerHTML = '<span class="t">◉ 进入银河全景</span><small>模拟渲染 · 可旋转缩放 · 点天体设目的地</small>';
+        gx.onclick = function () { SHXGX.open({ src: '航图' }); };
+        dst.appendChild(gx);
+      }
       D.filter(function (x) { return x.dom === sel; }).forEach(function (x) {
         var b = document.createElement('button'); b.type = 'button'; b.className = 'xl-d'; b.dataset.id = x.id; b.title = x.note;
         b.classList.toggle('on', x.id === curId || (x.body && x.body === curId && !BY[curId]));
