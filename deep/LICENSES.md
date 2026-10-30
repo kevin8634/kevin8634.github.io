@@ -60,3 +60,9 @@
 | bls.cpiu.inflation | 美国年通胀率 1914–2024 | 由 BLS Historical CPI-U 计算 | 公有领域,署名 BLS |
 | ai.model.params | 8 个代表性模型参数量 | 各模型原论文/技术报告 | 论文公开数值摘录,署名 |
 拟合/模型列均在 meta.note 标注「非观测」。七张卡文字由 AI 撰写,审稿状态「AI 审 + 脚本复算」,待指定领域审稿人。
+
+## 深空 1.5 航线「铁从哪里来」(2026-10-30,总指挥)
+| 台账 id | 内容 | 来源 | 许可 / 署名 |
+|---|---|---|---|
+| iaea.binding.curve | 每 A 最大 B/A 曲线 + 液滴模型列(计算值,非观测) | IAEA NDS Live Chart(nuclides.json 导出) | IAEA 公开核数据,署名 |
+| deep/routes/iron.json | 四站航线卡(宙律→元素工坊→天枢→生命源码);常数引自 NNDC/ENSDF、Nadyozhin 1994、Arnett 1989、NIH ODS | 创世计划(AI 协助) | 自有;卡内 sources 列出处 |

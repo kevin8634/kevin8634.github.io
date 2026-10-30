@@ -1,0 +1,435 @@
+{
+ "id": "iron",
+ "title": "铁从哪里来",
+ "badge": "铁之航线",
+ "stops": [
+  {
+   "world": "nv",
+   "id": "rt.iron.1",
+   "title": "第 1 站 · 宙律:恒星的炉子为什么烧到铁就熄火?",
+   "formula": "\\frac{B}{A}\\;\\text{在 }A\\approx56\\text{–}62\\text{ 处最大}",
+   "hook": "太阳靠把氢聚成氦发光。更重的恒星一路烧到碳、氧、硅,最后在核心堆出一团铁。为什么偏偏停在铁?",
+   "steps": [
+    {
+     "text": "聚变放能的前提是:产物比原料「绑得更紧」,也就是每个核子的结合能 B/A 更大。",
+     "tex": "\\Delta E=A_{\\rm 产}\\,\\tfrac{B}{A}\\Big|_{\\rm 产}-\\sum A_i\\,\\tfrac{B}{A}\\Big|_i>0"
+    },
+    {
+     "text": "IAEA 核素表里,B/A 在铁镍附近到顶:最大的是 A=62(Ni-62,8.7946 MeV),Fe-56 为 8.7904 MeV,几乎并列。",
+     "tex": "\\text{Ni-62}\\;8.7946\\;>\\;\\text{Fe-56}\\;8.7904\\;\\text{MeV}"
+    },
+    {
+     "text": "过了峰顶,再把核子往里塞,B/A 反而下降:聚变要倒贴能量。铁核心不再产能,压力撑不住,几分之一秒内坍缩——超新星就从这里开始。",
+     "tex": "\\frac{d(B/A)}{dA}<0\\;\\Rightarrow\\;\\text{聚变吸能}"
+    }
+   ],
+   "chart": {
+    "data": "iaea.binding.curve.json",
+    "x": "A",
+    "ys": [
+     {
+      "col": "ba",
+      "label": "实测 B/A"
+     },
+     {
+      "col": "semf",
+      "label": "液滴模型"
+     }
+    ],
+    "type": "scatter",
+    "xlabel": "质量数 A",
+    "ylabel": "B/A (MeV)"
+   },
+   "lab": {
+    "title": "两核聚变放不放能",
+    "note": "由总指挥添加,AI 协助编写。用 N=Z 的液滴模型:两个质量数 A 的核聚成 2A,每核子能量变化多少?",
+    "params": [
+     {
+      "k": "A",
+      "label": "原料质量数 A",
+      "min": 2,
+      "max": 120,
+      "step": 1,
+      "value": 12,
+      "unit": ""
+     }
+    ],
+    "fn": {
+     "x": "x",
+     "from": 4,
+     "to": 240,
+     "ys": [
+      {
+       "label": "液滴模型 B/A",
+       "expr": "15.75-17.8*x^(-1/3)-0.17775*x^(2/3)"
+      }
+     ],
+     "mark": [
+      {
+       "x": "A",
+       "label": "原料"
+      },
+      {
+       "x": "2*A",
+       "label": "产物"
+      }
+     ]
+    },
+    "readout": [
+     {
+      "label": "每核子放能",
+      "expr": "(15.75-17.8*(2*A)^(-1/3)-0.17775*(2*A)^(2/3))-(15.75-17.8*A^(-1/3)-0.17775*A^(2/3))",
+      "unit": "MeV"
+     }
+    ],
+    "verdict": [
+     {
+      "when": "(15.75-17.8*(2*A)^(-1/3)-0.17775*(2*A)^(2/3))-(15.75-17.8*A^(-1/3)-0.17775*A^(2/3))",
+      "text": "放能:恒星还能靠它发光。"
+     },
+     {
+      "when": "1",
+      "text": "吸能:炉子在这里熄火。"
+     }
+    ]
+   },
+   "check": {
+    "q": "为什么恒星核心烧到铁就停了?",
+    "options": [
+     "铁太重,搬不动",
+     "再聚变不放能、反而吸能",
+     "核心的氢用完了"
+    ],
+    "answer": 1,
+    "why": "铁镍附近 B/A 最大,再聚变产物绑得更松,反应要吸能。"
+   },
+   "uses": "结合能、液滴模型",
+   "textbook": "大学《原子核物理》",
+   "sources": [
+    {
+     "name": "IAEA Live Chart of Nuclides(AME2020)",
+     "url": "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html"
+    },
+    {
+     "name": "Fewell 1995, Am. J. Phys. 63:653(结合能最大的是 Ni-62)",
+     "url": "https://doi.org/10.1119/1.17828"
+    }
+   ],
+   "review": "AI 审 + 脚本复算(待有领域审稿人再复核)",
+   "ai_generated": "文字由 AI 撰写;数值由脚本复算(route_build.py);无图片"
+  },
+  {
+   "world": "ef",
+   "id": "rt.iron.2",
+   "title": "第 2 站 · 元素工坊:铁其实是「镍」变来的",
+   "formula": "^{56}\\mathrm{Ni}\\xrightarrow{6.075\\,\\mathrm d}{}^{56}\\mathrm{Co}\\xrightarrow{77.24\\,\\mathrm d}{}^{56}\\mathrm{Fe}",
+   "hook": "恒星最后的硅燃烧和超新星爆炸里,大量直接生成的并不是铁,而是镍-56。它要经过两次衰变,才成为你身上的铁-56。",
+   "steps": [
+    {
+     "text": "硅燃烧阶段质子数与中子数相等(N=Z)的产物最容易生成,所以主产物是 Ni-56(28 个质子、28 个中子),而不是 Fe-56。",
+     "tex": "^{28}\\mathrm{Si}+{}^{28}\\mathrm{Si}\\to\\cdots\\to{}^{56}\\mathrm{Ni}"
+    },
+    {
+     "text": "Ni-56 半衰期 6.075 天,变成 Co-56;Co-56 半衰期 77.24 天,再变成稳定的 Fe-56。两步衰变用贝特曼方程算。",
+     "tex": "N_{\\rm Co}(t)=\\frac{\\lambda_{\\rm Ni}}{\\lambda_{\\rm Co}-\\lambda_{\\rm Ni}}\\big(e^{-\\lambda_{\\rm Ni}t}-e^{-\\lambda_{\\rm Co}t}\\big)"
+    },
+    {
+     "text": "大约一年后,超过九成已经是铁。拖动时间,看三种原子的比例怎样交接。",
+     "tex": "N_{\\rm Fe}=1-N_{\\rm Ni}-N_{\\rm Co}"
+    }
+   ],
+   "lab": {
+    "title": "镍 → 钴 → 铁",
+    "note": "由总指挥添加,AI 协助编写。纵轴是比例;M 是超新星造出的 Ni-56 质量(太阳质量)。",
+    "params": [
+     {
+      "k": "t",
+      "label": "爆发后天数 t",
+      "min": 0,
+      "max": 600,
+      "step": 1,
+      "value": 60,
+      "unit": "天"
+     },
+     {
+      "k": "M",
+      "label": "Ni-56 质量 M",
+      "min": 0.01,
+      "max": 1,
+      "step": 0.01,
+      "value": 0.6,
+      "unit": "M☉"
+     }
+    ],
+    "fn": {
+     "x": "x",
+     "from": 0,
+     "to": 600,
+     "y0": 0,
+     "ys": [
+      {
+       "label": "Ni-56",
+       "expr": "exp(-x/8.7644)"
+      },
+      {
+       "label": "Co-56",
+       "expr": "1.08537*(exp(-x/111.4280)-exp(-x/8.7644))"
+      },
+      {
+       "label": "Fe-56",
+       "expr": "1-exp(-x/8.7644)-1.08537*(exp(-x/111.4280)-exp(-x/8.7644))"
+      }
+     ],
+     "mark": [
+      {
+       "x": "t",
+       "label": "t"
+      }
+     ]
+    },
+    "readout": [
+     {
+      "label": "此刻已成铁",
+      "expr": "M*(1-exp(-t/8.7644)-1.08537*(exp(-t/111.4280)-exp(-t/8.7644)))",
+      "unit": "M☉"
+     },
+     {
+      "label": "约等于几个地球",
+      "expr": "M*(1-exp(-t/8.7644)-1.08537*(exp(-t/111.4280)-exp(-t/8.7644)))*332946",
+      "unit": "个地球质量"
+     }
+    ]
+   },
+   "check": {
+    "q": "超新星里新生成的镍-56,最后变成了什么?",
+    "options": [
+     "钴-59",
+     "铁-56",
+     "镍-58"
+    ],
+    "answer": 1,
+    "why": "Ni-56 → Co-56 → Fe-56,两次 β⁺/电子俘获衰变,质量数 56 不变。"
+   },
+   "uses": "指数衰减、贝特曼方程",
+   "textbook": "大学《原子核物理》放射性衰变",
+   "sources": [
+    {
+     "name": "NNDC/ENSDF:Ni-56 半衰期 6.075 d,Co-56 半衰期 77.236 d",
+     "url": "https://www.nndc.bnl.gov/nudat3/"
+    },
+    {
+     "name": "IAEA Live Chart of Nuclides",
+     "url": "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html"
+    }
+   ],
+   "review": "AI 审 + 脚本复算(待有领域审稿人再复核)",
+   "ai_generated": "文字由 AI 撰写;数值由脚本复算(route_build.py);无图片"
+  },
+  {
+   "world": "sh",
+   "id": "rt.iron.3",
+   "title": "第 3 站 · 天枢:超新星为什么能亮好几个月?",
+   "formula": "L(t)=M_{\\rm Ni}\\big[\\epsilon_{\\rm Ni}e^{-t/\\tau_{\\rm Ni}}+\\epsilon_{\\rm Co}(e^{-t/\\tau_{\\rm Co}}-e^{-t/\\tau_{\\rm Ni}})\\big]",
+   "hook": "爆炸只是一瞬,超新星却能亮几个月。1987 年大麦哲伦云的 SN 1987A 给了答案:它的光,一大半是上一站那串衰变在发热。",
+   "steps": [
+    {
+     "text": "大质量恒星的铁核心坍缩,外层被弹开,爆炸冲击波里合成出 Ni-56。Ia 型超新星(白矮星爆炸)一次能造出约 0.6 个太阳质量的 Ni-56。",
+     "tex": "M_{\\rm Ni}\\sim0.6\\,M_\\odot\\;(\\text{Ia})"
+    },
+    {
+     "text": "每克 Ni-56 衰变每秒放热约 3.9×10¹⁰ 尔格,Co-56 约 6.78×10⁹ 尔格(Nadyozhin 1994)。几个月后,光变曲线的尾巴就是钴的衰变曲线。",
+     "tex": "\\epsilon_{\\rm Ni}=3.9\\times10^{10},\\;\\epsilon_{\\rm Co}=6.78\\times10^{9}\\;\\mathrm{erg\\,g^{-1}s^{-1}}"
+    },
+    {
+     "text": "SN 1987A 的尾巴对应约 0.07 个太阳质量的 Ni-56,后来还直接探测到了 Co-56 的 γ 射线谱线。铁在宇宙里撒出去,就是靠这样一次次爆炸。",
+     "tex": "M_{\\rm Ni}(\\text{1987A})\\approx0.07\\,M_\\odot"
+    }
+   ],
+   "lab": {
+    "title": "放射性点亮的光变曲线",
+    "note": "由总指挥添加,AI 协助编写。纵轴是 log₁₀ 光度(尔格/秒),只算衰变加热、假设光子全部被吸收。",
+    "params": [
+     {
+      "k": "M",
+      "label": "Ni-56 质量 M",
+      "min": 0.01,
+      "max": 1,
+      "step": 0.01,
+      "value": 0.07,
+      "unit": "M☉"
+     }
+    ],
+    "fn": {
+     "x": "x",
+     "from": 1,
+     "to": 600,
+     "ys": [
+      {
+       "label": "log₁₀ L 衰变加热",
+       "expr": "log(M*1.989e33*(3.9e10*exp(-x/8.7644)+6.78e9*(exp(-x/111.4280)-exp(-x/8.7644))))/log(10)"
+      }
+     ]
+    },
+    "readout": [
+     {
+      "label": "第 300 天光度",
+      "expr": "M*1.989e33*(3.9e10*exp(-300/8.7644)+6.78e9*(exp(-300/111.4280)-exp(-300/8.7644)))",
+      "unit": "erg/s"
+     },
+     {
+      "label": "约等于几个太阳",
+      "expr": "M*1.989e33*(3.9e10*exp(-300/8.7644)+6.78e9*(exp(-300/111.4280)-exp(-300/8.7644)))/3.828e33",
+      "unit": "L☉"
+     }
+    ]
+   },
+   "check": {
+    "q": "超新星爆发几个月后仍在发光,主要能源是什么?",
+    "options": [
+     "核心还在核聚变",
+     "钴-56 的放射性衰变",
+     "恒星残骸在自转"
+    ],
+    "answer": 1,
+    "why": "光变曲线尾部按 Co-56 的 77 天半衰期衰减,SN 1987A 还测到了 Co-56 的 γ 射线。"
+   },
+   "uses": "指数衰减、对数坐标、能量守恒",
+   "textbook": "大学《天体物理》超新星",
+   "sources": [
+    {
+     "name": "Nadyozhin 1994, ApJS 92:527(Ni/Co 衰变能量率)",
+     "url": "https://doi.org/10.1086/192008"
+    },
+    {
+     "name": "Arnett et al. 1989, ARA&A 27:629(SN 1987A 综述)",
+     "url": "https://doi.org/10.1146/annurev.aa.27.090189.003213"
+    }
+   ],
+   "review": "AI 审 + 脚本复算(待有领域审稿人再复核)",
+   "ai_generated": "文字由 AI 撰写;数值由脚本复算(route_build.py);无图片"
+  },
+  {
+   "world": "ls",
+   "id": "rt.iron.4",
+   "title": "第 4 站 · 生命源码:你血里的铁,来自一颗死去的星",
+   "formula": "\\mathrm{Hb}=4\\times\\text{血红素}(\\mathrm{Fe^{2+}})",
+   "hook": "成年人体内有 3–4 克铁,大部分在血红蛋白里,负责把氧从肺送到全身。每一个铁原子,都曾在恒星核心或超新星里诞生。",
+   "steps": [
+    {
+     "text": "血红蛋白由 4 条肽链组成,每条带一个血红素,血红素中心是一个铁原子,能可逆地结合一个氧分子。",
+     "tex": "\\mathrm{Hb}+4\\,\\mathrm O_2\\rightleftharpoons\\mathrm{Hb(O_2)_4}"
+    },
+    {
+     "text": "铁原子数 = 质量 ÷ 摩尔质量 × 阿伏伽德罗常数。3.5 克铁约是 3.8×10²² 个原子。",
+     "tex": "N=\\frac{m}{55.845\\,\\mathrm{g/mol}}\\times6.022\\times10^{23}"
+    },
+    {
+     "text": "太阳系的铁在 46 亿年前就已存在,来自更早的超新星和恒星风。所以这条航线的终点是:你身上的铁,比太阳还老。",
+     "tex": "t_{\\rm Fe}>t_\\odot\\approx4.6\\times10^{9}\\,\\text{年}"
+    }
+   ],
+   "lab": {
+    "title": "数一数你身上的铁",
+    "note": "由总指挥添加,AI 协助编写。全身铁量与血红蛋白占比为可调假设(成人约 3–4 克,大部分在血红蛋白)。不构成医疗建议。",
+    "params": [
+     {
+      "k": "m",
+      "label": "全身铁量",
+      "min": 2,
+      "max": 5,
+      "step": 0.1,
+      "value": 3.5,
+      "unit": "克"
+     },
+     {
+      "k": "f",
+      "label": "在血红蛋白中的比例",
+      "min": 0.5,
+      "max": 0.8,
+      "step": 0.01,
+      "value": 0.65,
+      "unit": ""
+     }
+    ],
+    "fn": {
+     "x": "x",
+     "from": 0.5,
+     "to": 5,
+     "ys": [
+      {
+       "label": "log₁₀ 铁原子数",
+       "expr": "log(x/55.845*6.022e23)/log(10)"
+      }
+     ],
+     "mark": [
+      {
+       "x": "m",
+       "label": "你"
+      }
+     ]
+    },
+    "readout": [
+     {
+      "label": "铁原子",
+      "expr": "m/55.845*6.022e23",
+      "unit": "个"
+     },
+     {
+      "label": "血红蛋白分子",
+      "expr": "m*f/55.845*6.022e23/4",
+      "unit": "个"
+     },
+     {
+      "label": "若 0.07 M☉ 的铁平分",
+      "expr": "0.07*1.989e33/(m)",
+      "unit": "份(够这么多人)"
+     }
+    ]
+   },
+   "check": {
+    "q": "一个血红蛋白分子里有几个铁原子?",
+    "options": [
+     "1 个",
+     "2 个",
+     "4 个"
+    ],
+    "answer": 2,
+    "why": "4 条肽链各带一个血红素,每个血红素中心一个铁。"
+   },
+   "disclaimer": "仅为科学科普计算,不构成医疗建议。",
+   "uses": "摩尔与阿伏伽德罗常数、比例",
+   "textbook": "大学《生物化学》血红蛋白",
+   "sources": [
+    {
+     "name": "NIH ODS Iron Fact Sheet(成人约 3–4 克铁,大部分在血红蛋白)",
+     "url": "https://ods.od.nih.gov/factsheets/Iron-HealthProfessional/"
+    },
+    {
+     "name": "Perutz 诺贝尔讲演 1962:血红蛋白结构",
+     "url": "https://www.nobelprize.org/prizes/chemistry/1962/perutz/lecture/"
+    }
+   ],
+   "review": "AI 审 + 脚本复算(待有领域审稿人再复核)",
+   "ai_generated": "文字由 AI 撰写;数值由脚本复算(route_build.py);无图片"
+  }
+ ],
+ "future": [
+  {
+   "t": "一场疫情的数学",
+   "path": [
+    "ma",
+    "ls",
+    "lt",
+    "ps"
+   ]
+  },
+  {
+   "t": "潮汐锁定",
+   "path": [
+    "nv",
+    "sh",
+    "ls"
+   ]
+  }
+ ]
+}

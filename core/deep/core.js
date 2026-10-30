@@ -80,7 +80,7 @@ export const Formula = {
 };
 
 /* ---------- Card:本机生成 PNG,系统分享,不上传 ---------- */
-const KIND = { derive: ["推导卡", "#7fd0ff"], model: ["模型卡", "#b08cff"], decide: ["决策卡", "#ffb36b"], hypo: ["假设卡", "#ff7fa8"] };
+const KIND = { derive: ["推导卡", "#7fd0ff"], model: ["模型卡", "#b08cff"], decide: ["决策卡", "#ffb36b"], hypo: ["假设卡", "#ff7fa8"], route: ["航线卡", "#7fe3a8"] };
 function wrap(x, text, maxW) {
   const out = []; let line = "";
   for (const ch of String(text)) { if (x.measureText(line + ch).width > maxW && line) { out.push(line); line = ch; } else line += ch; }
