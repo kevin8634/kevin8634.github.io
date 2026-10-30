@@ -1,0 +1,127 @@
+{
+ "id": "lt.l2.cpifit",
+ "world": "lt",
+ "link_task": "lt.compound",
+ "title": "用美国 112 年的 CPI,拟合出「平均通胀率」",
+ "formula": "\\ln P_t=\\ln P_0+g\\,t,\\quad \\pi=e^{g}-1",
+ "hook": "星辰层推出了复利 A=P(1+r)ⁿ。物价也像复利一样涨吗?用美国劳工统计局 1913–2024 年的 CPI 拟合一条线,看看 112 年里它有多不听话。",
+ "steps": [
+  {
+   "text": "建模:若物价每年按固定比例 π 上涨,Pₜ=P₀(1+π)ᵗ。取对数,令 g=ln(1+π),就是一条直线。",
+   "tex": "P_t=P_0(1+\\pi)^t\\;\\Rightarrow\\;\\ln P_t=\\ln P_0+g\\,t"
+  },
+  {
+   "text": "数据:BLS 公布 CPI-U 年均指数(1982–84=100):1913 年 9.9,1950 年 24.1,1980 年 82.4,2024 年 313.689。共 112 个点。",
+   "tex": "\\frac{313.689}{9.9}\\approx31.7"
+  },
+  {
+   "text": "最小二乘:斜率 g≈0.0329,对应平均通胀率 π≈3.35%/年。只用首尾两点算的年复合增长率是 3.16%,两者接近但不相同。",
+   "tex": "\\pi=e^{g}-1\\approx3.35\\%"
+  },
+  {
+   "text": "比误差:对数残差的均方根约 0.24,远大于行星或谱线卡。1920 年物价比趋势线高约 93%,1967 年低约 31%。",
+   "tex": "\\mathrm{RMS}\\approx0.24"
+  },
+  {
+   "text": "误差从哪来:通胀率本身随时代大幅变化——一战后通胀、1930 年代大萧条通缩、1970 年代石油危机两位数通胀、2021–22 年再度走高。单一常数 g 只能描述「长期平均」,分段拟合更贴切:1983 年以来约 2.6%/年。",
+   "tex": "g=g(t)\\;\\Rightarrow\\;\\ln P_t=\\ln P_0+\\int_0^t g(s)\\,ds"
+  },
+  {
+   "text": "用法提醒:用平均通胀率估算未来购买力时,结果对 π 很敏感——30 年里 2.5% 和 3.5% 的差距,会让价格水平相差约 34%。",
+   "tex": "\\Big(\\frac{1.035}{1.025}\\Big)^{30}\\approx1.34"
+  }
+ ],
+ "check": {
+  "q": "在 ln CPI–年份图上,1930 年代的数据点落在拟合线下方并向下弯,这说明什么?",
+  "options": [
+   "那几年物价在下跌(通缩)",
+   "那几年通胀特别高",
+   "数据缺失"
+  ],
+  "answer": 0,
+  "why": "ln P 的斜率就是当年的通胀率。曲线向下,说明物价在下降,即大萧条时期的通缩。"
+ },
+ "chart": {
+  "data": "bls.cpiu.annual.json",
+  "x": "year",
+  "ys": [
+   {
+    "col": "log10_cpi",
+    "label": "实测 log₁₀CPI"
+   },
+   {
+    "col": "model",
+    "label": "指数拟合"
+   }
+  ],
+  "type": "line",
+  "xlabel": "年份",
+  "ylabel": "log₁₀ CPI-U"
+ },
+ "disclaimer": "只作数学演示,不构成财务建议。",
+ "uses": "指数与对数、线性回归、复合增长率、分段模型",
+ "textbook": "大学《宏观经济学》价格指数与通货膨胀;《概率论与数理统计》线性回归",
+ "sources": [
+  {
+   "name": "U.S. BLS Historical CPI-U, December 2024(年均指数 1913–2024)",
+   "url": "https://www.bls.gov/cpi/tables/supplemental-files/historical-cpi-u-202412.pdf"
+  },
+  {
+   "name": "U.S. BLS Consumer Price Index 首页",
+   "url": "https://www.bls.gov/cpi/"
+  },
+  {
+   "name": "OpenStax《Principles of Macroeconomics 3e》9.2 How to Measure Changes in the Cost of Living",
+   "url": "https://openstax.org/books/principles-macroeconomics-3e/pages/9-2-how-to-measure-changes-in-the-cost-of-living"
+  }
+ ],
+ "review": "AI 审(待指定审稿人复核);脚本复算:g=0.03292、π=3.347%、截距 P₀=8.236、对数 RMS=0.2396;首尾 CAGR 3.162%;1983–2024 分段 2.59%",
+ "ai_generated": "标题、钩子、推导文字、检查题由 AI 撰写;CPI 摘自 BLS 历史表,数值由脚本复算;无图片",
+ "lab": {
+  "title": "拟合平均通胀率",
+  "note": "由总指挥添加,AI 协助编写;拖 π,看从 1913 年的 9.9 按固定通胀涨到 2024 年会是多少。白点是 2024 年实测。",
+  "params": [
+   {
+    "k": "r",
+    "label": "平均通胀率 π",
+    "min": 0.01,
+    "max": 0.06,
+    "step": 0.0005,
+    "value": 0.02,
+    "unit": "/年"
+   }
+  ],
+  "fn": {
+   "x": "x",
+   "from": 1913,
+   "to": 2024,
+   "y0": 0.8,
+   "ys": [
+    {
+     "label": "模型 log₁₀(9.9·(1+π)^(年−1913))",
+     "expr": "log(9.9*(1+r)^(x-1913))/log(10)"
+    },
+    {
+     "label": "最小二乘拟合 π=3.35%",
+     "expr": "(2.10855+0.032924*(x-1913))/log(10)"
+    }
+   ],
+   "mark": [
+    "2024",
+    "2.49650"
+   ]
+  },
+  "readout": [
+   {
+    "label": "2024 年预测 CPI",
+    "expr": "9.9*(1+r)^111",
+    "unit": "(实测 313.689)"
+   },
+   {
+    "label": "物价翻倍需要",
+    "expr": "log(2)/log(1+r)",
+    "unit": "年"
+   }
+  ]
+ }
+}

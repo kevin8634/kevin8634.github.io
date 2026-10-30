@@ -1,0 +1,131 @@
+{
+ "id": "ef.l2.rydberg",
+ "world": "ef",
+ "link_task": "ef.fireworks",
+ "title": "用 NIST 的氢谱线,拟合出里德伯常数",
+ "formula": "\\frac1\\lambda=R_H\\Big(\\frac1{2^2}-\\frac1{n^2}\\Big)",
+ "hook": "星辰层推出了 λ=hc/ΔE:谱线颜色由能级差决定。氢的可见光谱线真的整齐地排成一条直线吗?用 NIST 实测波长算一算斜率。",
+ "steps": [
+  {
+   "text": "建模:玻尔模型给出氢能级 Eₙ=−hcR/n²。电子从 n 跳回 2,放出光子的波数等于能级差除以 hc。",
+   "tex": "\\frac1\\lambda=\\frac{E_n-E_2}{hc}=R\\Big(\\frac14-\\frac1{n^2}\\Big)"
+  },
+  {
+   "text": "数据:NIST 原子光谱数据库列出了巴耳末系 n=3 到 10 的真空波长,从 656.46 nm(红色 Hα)到 379.90 nm(近紫外)。令 x=1/4−1/n²、y=1/λ,得到 8 个点。",
+   "tex": "(x_n,y_n)=\\Big(\\tfrac14-\\tfrac1{n^2},\\;\\tfrac1{\\lambda_n}\\Big)"
+  },
+  {
+   "text": "最小二乘:自由截距拟合的截距只有 2.0e-05 μm⁻¹,几乎为 0,说明模型形式对了。过原点拟合斜率 R≈10.967848 μm⁻¹。",
+   "tex": "R\\approx10.967848\\,\\mu\\text{m}^{-1}=1.0968\\times10^{7}\\,\\text{m}^{-1}"
+  },
+  {
+   "text": "比误差:每条线的相对残差都在 7×10⁻⁶ 以内。和理论值 R_H=R∞/(1+mₑ/mₚ)≈1.0967758×10⁷ m⁻¹ 相比,差约 8×10⁻⁶。",
+   "tex": "\\max\\Big|\\frac{y_n-Rx_n}{y_n}\\Big|<7\\times10^{-6}"
+  },
+  {
+   "text": "为什么不是 R∞:原子核并非不动,电子和质子绕共同质心转,要用约化质量,R_H 比 R∞ 小约 0.054%。数据精度足以分辨这一点。",
+   "tex": "R_H=\\frac{R_\\infty}{1+m_e/m_p}"
+  },
+  {
+   "text": "剩下的误差从哪来:精细结构(相对论修正与自旋–轨道耦合)把每条线劈成几条相距 ~0.01 nm 的子线,观测值是它们的混合;兰姆位移更小。所以残差在 10⁻⁶ 量级,而不是 0。",
+   "tex": "\\Delta E_{\\text{fs}}\\sim\\alpha^2E_n"
+  }
+ ],
+ "check": {
+  "q": "把 1/λ 画成 1/4−1/n² 的函数,这条直线的斜率代表什么?",
+  "options": [
+   "光速",
+   "里德伯常数 R_H",
+   "电子的电荷"
+  ],
+  "answer": 1,
+  "why": "1/λ=R_H(1/4−1/n²),斜率就是 R_H。8 条 NIST 谱线算出 R_H≈1.09678×10⁷ m⁻¹。"
+ },
+ "chart": {
+  "data": "nist.h1.balmer.json",
+  "x": "x",
+  "ys": [
+   {
+    "col": "inv_lambda",
+    "label": "实测 1/λ"
+   },
+   {
+    "col": "model",
+    "label": "模型 R·x"
+   }
+  ],
+  "type": "scatter",
+  "xlabel": "1/4 − 1/n²",
+  "ylabel": "1/λ(μm⁻¹)"
+ },
+ "uses": "线性回归、波数与能级、约化质量、相对误差",
+ "textbook": "大学《原子物理学》玻尔模型与氢光谱;《大学物理》量子物理基础",
+ "sources": [
+  {
+   "name": "NIST Atomic Spectra Database Lines(H I,观测真空波长)",
+   "url": "https://physics.nist.gov/PhysRefData/ASD/lines_form.html"
+  },
+  {
+   "name": "NIST CODATA 2018:Rydberg constant R∞=10 973 731.568 160 m⁻¹",
+   "url": "https://physics.nist.gov/cgi-bin/cuu/Value?ryd"
+  },
+  {
+   "name": "OpenStax《University Physics Volume 3》6.4 Bohr's Model of the Hydrogen Atom",
+   "url": "https://openstax.org/books/university-physics-volume-3/pages/6-4-bohrs-model-of-the-hydrogen-atom"
+  }
+ ],
+ "review": "AI 审(待指定审稿人复核);脚本复算:过原点 R=10967848.0 m⁻¹、自由截距斜率 10967754.9 m⁻¹ 截距 2.02e-05 μm⁻¹;R_H 理论 10967758.3 m⁻¹;逐线相对残差 6.5e-06、-2.5e-06、6.2e-07、2.3e-06、1.4e-06、-1.9e-06、-1.5e-06、-1.1e-06",
+ "ai_generated": "标题、钩子、推导文字、检查题由 AI 撰写;波长摘自 NIST ASD,数值由脚本复算;无图片",
+ "lab": {
+  "title": "拟合里德伯常数",
+  "note": "由总指挥添加,AI 协助编写;拖 R,看 8 条谱线的残差。白点是 Hα(656.46 nm)。",
+  "params": [
+   {
+    "k": "R",
+    "label": "R",
+    "min": 10.5,
+    "max": 11.5,
+    "step": 0.0005,
+    "value": 10.8,
+    "unit": "μm⁻¹"
+   }
+  ],
+  "fn": {
+   "x": "x",
+   "from": 0,
+   "to": 0.25,
+   "y0": 0,
+   "ys": [
+    {
+     "label": "模型 1/λ = R·x",
+     "expr": "R*x"
+    },
+    {
+     "label": "拟合 R=10.96785",
+     "expr": "10.96785*x"
+    }
+   ],
+   "mark": [
+    "0.138889",
+    "1.523322"
+   ]
+  },
+  "readout": [
+   {
+    "label": "1/λ 残差 RMS",
+    "expr": "sqrt(((1.52332-R*0.138889)^2+(2.05647-R*0.187500)^2+(2.30325-R*0.210000)^2+(2.43731-R*0.222222)^2+(2.51813-R*0.229592)^2+(2.57058-R*0.234375)^2+(2.60655-R*0.237654)^2+(2.63228-R*0.240000)^2)/8)",
+    "unit": "μm⁻¹"
+   },
+   {
+    "label": "Hα 预测波长",
+    "expr": "1000/(R*5/36)",
+    "unit": "nm(实测 656.46)"
+   },
+   {
+    "label": "系列极限",
+    "expr": "4000/R",
+    "unit": "nm"
+   }
+  ]
+ }
+}

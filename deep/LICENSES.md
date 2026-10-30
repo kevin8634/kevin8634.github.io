@@ -1,4 +1,7 @@
 # 深空层 /deep/ 与 /core/deep/ 素材台账(1.0 台账规范格式)
+
+> 法律与版权声明:[legal.html](legal.html)(免费、非商业、教育用途;逐项署名,数据保留原许可;接权利人通知即下架)。
+
 | # | 素材 | 位置 | 来源 | 许可 | AI 生成/标注 |
 |---|---|---|---|---|---|
 | 1 | three.js r169 | deep/vendor/three.module.min.js | npm three@0.169.0 | MIT | 否 |
@@ -37,3 +40,11 @@
 
 | deep/music/l0–l4.m4a | 原创合成(numpy 程序生成,无采样;2026-10-30 门户 2.0.1) | 创世计划 Genesis | 自有 |
 | deep/data/nasa.planets.kepler.json | NASA NSSDCA Planetary Fact Sheet(2025-03-18 版,https://nssdc.gsfc.nasa.gov/planetary/factsheet/;2026-10-30 取数,换算 AU/年并取对数) | NASA | 公有领域(美国联邦政府),署名 NSSDCA |
+| deep/data/jhu.covid.italy.2020mar.json | JHU CSSE COVID-19 Data Repository(https://github.com/CSSEGISandData/COVID-19,time_series_covid19_confirmed_global.csv 意大利 2020-02-24 至 03-25;2026-10-30 取数,取对数,model 列为拟合值非观测) | Johns Hopkins University CSSE | CC BY 4.0(署名) |
+| deep/data/nasa.nssdc.jovian.sats.json | NASA NSSDCA Jovian Satellite Fact Sheet(2023-12-06 版,https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html;8 颗规则卫星半长轴/周期,M_est 为脚本反推值,M_ref 取 Jupiter Fact Sheet 1898.13×10²⁴ kg) | NASA | 公有领域(美国联邦政府),署名 NSSDCA |
+| deep/data/nist.h1.balmer.json | NIST Atomic Spectra Database(https://physics.nist.gov/PhysRefData/ASD/lines_form.html;H I 巴耳末系 n=3–10 观测真空波长,2026-10-30 取数;model 列为拟合值非观测) | NIST | NIST 标准参考数据,摘录数值并署名 |
+| deep/data/mendel1866.f2.json | Mendel 1866《Versuche über Pflanzen-Hybriden》第 5 节 F2 计数(英译 Druery & Bateson 1901,MendelWeb 存档 https://web.archive.org/web/2024/http://www.mendelweb.org/Mendel.html;model 列为理论值 3) | Gregor Mendel | 公有领域 |
+| deep/data/uci.optdigits.fgsm38.json | UCI ML Repository · Optical Recognition of Handwritten Digits(Alpaydin & Kaynak 1998,doi:10.24432/C50P49,https://archive.ics.uci.edu/dataset/80/optical+recognition+of+handwritten+digits);本站脚本训练逻辑回归并做 FGSM 攻击的实测结果(衍生数据) | UCI / 原作者;衍生实测 创世计划 | CC BY 4.0 衍生(署名,已标注为实测衍生) |
+| deep/data/bls.cpiu.annual.json | U.S. BLS Historical CPI-U(December 2024 补充表,https://www.bls.gov/cpi/tables/supplemental-files/historical-cpi-u-202412.pdf;1913–2024 年均指数,取对数,model 列为拟合值非观测) | U.S. Bureau of Labor Statistics | 公有领域(美国联邦政府),署名 BLS |
+| deep/cards/ma/nv/ef/ls/ps/lt.l2.json | 星系层建模卡 1.2 第 2–7 张(总指挥 2026-10-30 编写,AI 协助;按王磊 10-30 18:27 确认的选题与许可口径) | 创世计划 | 自有;卡内 sources 列出处 |
+| deep/legal.html | 深空层法律与版权声明(王磊 10-30 18:27 确认第 9 条) | 创世计划 | 自有 |

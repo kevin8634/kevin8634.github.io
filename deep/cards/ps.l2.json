@@ -1,0 +1,129 @@
+{
+ "id": "ps.l2.fgsm_margin",
+ "world": "ps",
+ "link_task": "ps.panda",
+ "title": "在真实手写数字上做对抗攻击,验证「裕度模型」",
+ "formula": "\\text{翻转}\\iff y(\\mathbf w^\\top\\mathbf x+b)<\\varepsilon\\lVert\\mathbf w\\rVert_1",
+ "hook": "星辰层推出了 Δz=−ε·Σ|wᵢ|:每个像素改一点,得分就掉一大截。在 UCI 手写数字上训练一个真分类器,攻击它,看推导能不能预测准确率。",
+ "steps": [
+  {
+   "text": "建模:线性分类器给出得分 z=w·x+b,符号决定判成 3 还是 8。样本的裕度 m=y·z(y=±1)表示离判错还有多远。",
+   "tex": "m=y\\,(\\mathbf w^\\top\\mathbf x+b)"
+  },
+  {
+   "text": "数据:UCI 光学手写数字库里取出全部 3 和 8:训练 769 张、测试 357 张,每张 8×8 像素,灰度缩放到 0–1。用逻辑回归训练,测试准确率 97.8%,权重 ‖w‖₁≈34.7。",
+   "tex": "\\lVert\\mathbf w\\rVert_1\\approx34.7"
+  },
+  {
+   "text": "FGSM 攻击:每个像素朝让得分变差的方向改 ε,即 x′=x−ε·y·sign(w)。得分恰好下降 ε‖w‖₁,于是裕度小于它的样本会被翻转。",
+   "tex": "m'=m-\\varepsilon\\lVert\\mathbf w\\rVert_1"
+  },
+  {
+   "text": "预测 vs 实测:裕度模型预测「准确率=裕度大于 ε‖w‖₁ 的比例」。ε=0.10(约 1.6 个灰度级)时模型预测 72.8%、实测 77.6%;ε=0.16 时预测 41.2%、实测 52.9%。",
+   "tex": "\\hat{\\text{acc}}(\\varepsilon)=\\frac1N\\#\\{i:m_i>\\varepsilon\\lVert\\mathbf w\\rVert_1\\}"
+  },
+  {
+   "text": "比误差:实测总比预测高几个百分点。正确样本的中位裕度约 5.15,对应 ε≈0.149 时一半样本被翻转——这时每个像素只改了约 2.4 个灰度级。",
+   "tex": "\\varepsilon_{50\\%}\\approx\\frac{5.15}{34.7}\\approx0.149"
+  },
+  {
+   "text": "误差从哪来:像素不能小于 0 或大于 1,扰动被裁剪掉一部分(纯黑像素无法再变黑),得分实际下降不到 ε‖w‖₁,所以模型给出的是准确率的下界。对深度网络,得分只在局部近似线性,这个模型就只能作粗估。",
+   "tex": "x'_j=\\mathrm{clip}(x_j-\\varepsilon\\,y\\,\\mathrm{sign}\\,w_j,\\;0,\\;1)"
+  }
+ ],
+ "check": {
+  "q": "为什么实测准确率总比裕度模型的预测略高?",
+  "options": [
+   "像素被裁剪在 [0,1],一部分扰动加不上去",
+   "攻击者故意手下留情",
+   "测试集比训练集大"
+  ],
+  "answer": 0,
+  "why": "裕度模型假设每个像素都能改满 ε。灰度到了 0 或 1 就不能再改,得分下降不足 ε‖w‖₁,所以被翻转的样本更少。"
+ },
+ "chart": {
+  "data": "uci.optdigits.fgsm38.json",
+  "x": "eps",
+  "ys": [
+   {
+    "col": "acc_measured",
+    "label": "实测准确率"
+   },
+   {
+    "col": "acc_model",
+    "label": "裕度模型预测"
+   }
+  ],
+  "type": "line",
+  "xlabel": "每像素扰动 ε(0–1)",
+  "ylabel": "准确率"
+ },
+ "uses": "线性分类器、范数(L1/L∞)对偶、逻辑回归、模型下界",
+ "textbook": "大学《机器学习》线性模型与逻辑回归;Goodfellow 等《Explaining and Harnessing Adversarial Examples》(ICLR 2015)",
+ "sources": [
+  {
+   "name": "UCI ML Repository: Optical Recognition of Handwritten Digits(Alpaydin & Kaynak 1998,CC BY 4.0)",
+   "url": "https://archive.ics.uci.edu/dataset/80/optical+recognition+of+handwritten+digits"
+  },
+  {
+   "name": "Goodfellow I.J., Shlens J., Szegedy C. Explaining and Harnessing Adversarial Examples. ICLR 2015",
+   "url": "https://arxiv.org/abs/1412.6572"
+  }
+ ],
+ "review": "AI 审(待指定审稿人复核);脚本复算:逻辑回归 λ=1e-3、20000 步梯度下降,训练 769/测试 357,测试准确率 0.9776,‖w‖₁=34.684,正确样本中位裕度 5.154;16 档 ε 的实测/模型见数据表",
+ "ai_generated": "标题、钩子、推导文字、检查题由 AI 撰写;分类器与攻击结果由脚本在 UCI 数据上实测生成;无图片",
+ "lab": {
+  "title": "扰动多大才够",
+  "note": "由总指挥添加,AI 协助编写;拖 ε,看得分被压低多少。蓝线是正确样本的中位裕度 5.15,红线越过它,约一半样本被翻转。",
+  "params": [
+   {
+    "k": "eps",
+    "label": "每像素扰动 ε",
+    "min": 0,
+    "max": 0.3,
+    "step": 0.005,
+    "value": 0.05,
+    "unit": ""
+   }
+  ],
+  "fn": {
+   "x": "x",
+   "from": 0,
+   "to": 0.3,
+   "y0": 0,
+   "ys": [
+    {
+     "label": "得分下降 Δz = ε‖w‖₁",
+     "expr": "34.684*x"
+    },
+    {
+     "label": "中位裕度 5.15",
+     "expr": "5.154+0*x"
+    }
+   ],
+   "mark": [
+    {
+     "x": "eps",
+     "label": "ε"
+    }
+   ]
+  },
+  "readout": [
+   {
+    "label": "得分下降 Δz",
+    "expr": "34.684*eps",
+    "unit": ""
+   },
+   {
+    "label": "相当于灰度级",
+    "expr": "16*eps",
+    "unit": "/16"
+   },
+   {
+    "label": "Δz ÷ 中位裕度",
+    "expr": "34.684*eps/5.154",
+    "unit": "(>1 约半数翻转)"
+   }
+  ]
+ }
+}

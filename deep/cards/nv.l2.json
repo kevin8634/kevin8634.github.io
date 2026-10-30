@@ -1,0 +1,126 @@
+{
+ "id": "nv.l2.weighjupiter",
+ "world": "nv",
+ "link_task": "nv.orbit",
+ "title": "用 8 颗木卫的真实轨道,称出木星的质量",
+ "formula": "M=\\frac{4\\pi^2a^3}{GT^2}",
+ "hook": "星辰层推出了 v=√(GM/r)。反过来用:只要量出卫星的轨道半径和周期,就能「称」出中心天体。用 NASA 的木卫数据称一称木星。",
+ "steps": [
+  {
+   "text": "建模:卫星绕木星做近圆轨道,万有引力提供向心力。把速度换成 2πa/T,解出木星质量。",
+   "tex": "\\frac{GMm}{a^2}=m\\frac{4\\pi^2a}{T^2}\\;\\Rightarrow\\;M=\\frac{4\\pi^2a^3}{GT^2}"
+  },
+  {
+   "text": "数据:NASA 木卫表给出 4 颗内卫星(木卫十六、十五、五、十四)和 4 颗伽利略卫星的半长轴与公转周期。换成米和秒,每颗卫星都能单独算出一个 M。",
+   "tex": "a\\;[10^3\\,\\text{km}]\\to\\text{m},\\quad T\\;[\\text{天}]\\to\\text{s}"
+  },
+  {
+   "text": "先验证幂律:对 8 颗卫星拟合 log T = p·log a + b,得 p≈1.5013,和开普勒第三定律的 3/2 只差千分之一。",
+   "tex": "p\\approx1.5013"
+  },
+  {
+   "text": "称重结果:4 颗伽利略卫星给出的平均值 M≈1.8990×10²⁷ kg,与 NASA 木星质量 1.8981×10²⁷ kg 相差约 0.04%。",
+   "tex": "\\bar M_{\\text{伽利略}}\\approx1.8990\\times10^{27}\\,\\text{kg}"
+  },
+  {
+   "text": "比误差:4 颗内卫星算出的平均值约 1.908×10²⁷ kg,系统性偏大约 0.5%;离木星越近偏得越多(木卫十六 1.912)。",
+   "tex": "\\frac{\\Delta M}{M}\\sim+0.2\\%\\;\\text{到}\\;+0.75\\%"
+  },
+  {
+   "text": "误差从哪来:木星自转快、赤道鼓起(扁率约 6.5%),近处的卫星感到的引力比「点质量」更强,按点质量公式反推就会偏大;卫星自身质量(木卫三约为木星的 0.008%)和表值有效数字只带来很小的偏差。",
+   "tex": "T^2=\\frac{4\\pi^2a^3}{G(M+m)}"
+  }
+ ],
+ "check": {
+  "q": "同一个公式,为什么离木星最近的几颗卫星算出的木星质量偏大?",
+  "options": [
+   "木星赤道鼓起,近处引力比点质量更强",
+   "近处卫星的质量更大",
+   "近处卫星离太阳更远"
+  ],
+  "answer": 0,
+  "why": "M=4π²a³/(GT²) 假设木星是点质量(或正球)。木星扁,近处卫星实际受到的引力更强、周期更短,反推出的 M 就偏大。"
+ },
+ "chart": {
+  "data": "nasa.nssdc.jovian.sats.json",
+  "x": "a_1e3km",
+  "ys": [
+   {
+    "col": "M_est",
+    "label": "每颗卫星反推的 M"
+   },
+   {
+    "col": "M_ref",
+    "label": "NASA 木星质量"
+   }
+  ],
+  "type": "scatter",
+  "xlabel": "半长轴 a(10³ km)",
+  "ylabel": "木星质量(10²⁷ kg)"
+ },
+ "uses": "万有引力、圆周运动、单位换算、对数拟合、系统误差分析",
+ "textbook": "大学《普通物理》万有引力与开普勒定律;《天体力学基础》中心天体质量测定",
+ "sources": [
+  {
+   "name": "NASA NSSDCA Jovian Satellite Fact Sheet(2023-12-06 版:半长轴、公转周期)",
+   "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/joviansatfact.html"
+  },
+  {
+   "name": "NASA NSSDCA Jupiter Fact Sheet(木星质量 1898.13×10²⁴ kg、扁率)",
+   "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/jupiterfact.html"
+  },
+  {
+   "name": "OpenStax《University Physics Volume 1》13.4 Satellite Orbits and Energy",
+   "url": "https://openstax.org/books/university-physics-volume-1/pages/13-4-satellite-orbits-and-energy"
+  }
+ ],
+ "review": "AI 审(待指定审稿人复核);脚本复算:G=6.67430e-11;逐颗 M(10²⁷ kg)=1.9123、1.9121、1.9058、1.9030、1.8999、1.8991、1.8984、1.8985;伽利略平均 1.89897、内卫星平均 1.9083;log–log 拟合 p=1.5013",
+ "ai_generated": "标题、钩子、推导文字、检查题由 AI 撰写;数值由脚本从 NASA 表复算;无图片",
+ "lab": {
+  "title": "给木星称重",
+  "note": "由总指挥添加,AI 协助编写;拖 M,看 8 颗卫星周期的对数残差。M≈1.90×10²⁷ kg 附近最小;白点是木卫四实测。",
+  "params": [
+   {
+    "k": "M",
+    "label": "木星质量 M",
+    "min": 1.5,
+    "max": 2.3,
+    "step": 0.001,
+    "value": 1.7,
+    "unit": "×10²⁷ kg"
+   }
+  ],
+  "fn": {
+   "x": "a",
+   "from": 100,
+   "to": 1900,
+   "y0": 0,
+   "ys": [
+    {
+     "label": "模型周期 T(a)(天)",
+     "expr": "2*pi*sqrt((a*1e6)^3/(6.6743e-11*M*1e27))/86400"
+    },
+    {
+     "label": "NASA 质量 1.8981",
+     "expr": "2*pi*sqrt((a*1e6)^3/(6.6743e-11*1.89813e27))/86400"
+    }
+   ],
+   "mark": [
+    "1882.7",
+    "16.689017"
+   ]
+  },
+  "readout": [
+   {
+    "label": "8 颗卫星周期对数残差 RMS",
+    "expr": "sqrt(((-0.324162+0.5*log(M))^2+(-0.324095+0.5*log(M))^2+(-0.322440+0.5*log(M))^2+(-0.321711+0.5*log(M))^2+(-0.320892+0.5*log(M))^2+(-0.320684+0.5*log(M))^2+(-0.320520+0.5*log(M))^2+(-0.320529+0.5*log(M))^2)/8)",
+    "unit": ""
+   },
+   {
+    "label": "木卫四预测周期",
+    "expr": "2*pi*sqrt((1882.7e6)^3/(6.6743e-11*M*1e27))/86400",
+    "unit": "天(实测 16.689)"
+   }
+  ]
+ }
+}
