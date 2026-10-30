@@ -65,3 +65,22 @@
 - 下一步候选:C2.9c 宇宙网 + CMB(星域 VII 收尾,先方案+效果图);BUG-01 待王磊发话。
 - 环境:沙盒重置后需 `pip install --user numpy pillow playwright && python3 -m playwright install chromium`。
 - push 前必 `git fetch origin main && git rebase origin/main`(多窗口并行)。
+## 交接 · 07 天枢 Starhelm · 2026-10-30 08:4x(日额度 86%,停工)
+
+## 线上
+- main 1e1e21b:x/ 标题改为「天枢 Starhelm 2.0 · 巡天」(总指挥 10-30 联合发布待办)。
+- 8449533 C2.9b 室女座星系团 + 韦布深场 SMACS 0723(详见 交接_07天枢_20261030_01.md、DEVLOG-2.0-C29b.md)。
+- 总指挥 c0788f2 门户 v2.0.0 已上线,天枢入口指向 starhelm/x/。
+
+## 待办(优先序)
+1. 登舰动画写实化(王磊 10-30 08:3x 已认可流程,要求写实风、类星球大战,并配合操作台的写实+科技风,特别是流动灯带、呼吸效果)。
+   - 效果图第二版:开发文档/效果图_登舰写实_v2_{ship,hangar}.png(第一版 v1 三张为纯写实参考)。等王磊确认第二版后开工。
+   - 方案:保留 x/sh-x-board.js 一镜到底与 SHXBD 接口(start/end/stop/seek,进度跟 SHXLD 载入),把 2D 矢量换成写实底图(webp,桌面 1600、手机半尺寸,共约 1.5 MB,预载)+ 2.5D 推镜/分层视差/拉丝;灯带用 canvas 叠加:青 #7fd6ff→紫 #b48cff→粉 #ff9fd0→琥珀 #f0c97a 流光沿灯带往机库深处跑 + 正弦呼吸,与操作台同步;减少动态用静帧;结尾仍从中心开孔露出真实驾驶舱。
+   - 素材为 AI 生成概念图,登记 x/LICENSES.md 为本站自制。四档自测后上线。
+2. 总指挥待办:补 2.0 发布星历/台账。
+3. C2.9c 宇宙网 + CMB(先方案)。BUG-01 待发话。
+
+## 环境
+- 沙盒重置后:pip install --user numpy pillow playwright && python3 -m playwright install chromium。
+- push 前必 git fetch origin main && git rebase origin/main。
+- 额度 08:35:日用 86%(20:07 重置)、月池用 58%(11-01 08:00 重置)。
