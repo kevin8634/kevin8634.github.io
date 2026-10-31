@@ -75,3 +75,6 @@
 
 ## 深空 1.8 航线「一次提问的能量」(2026-10-31)
 - routes/ask.json:文字 AI 撰写,数值由 docs/ask_build.py 复算;引用 Hoffmann 等 2022、Kaplan 等 2020(arXiv)、NVIDIA H100 官方规格、Landauer 1961、NIST CODATA、Goodenough & Park 2013 的公开数值与公式(事实数据,注明出处,不用 logo、不暗示背书);无图片、无新数据集。各站标注能耗为量级估算。
+
+## 深空 1.9 航线「卫星钟为什么要调慢」(2026-10-31)
+- routes/gps.json:文字 AI 撰写,数值由 docs/gps_build.py 复算;引用 GPS.gov(美国政府公开信息)、NASA Earth Fact Sheet、Ashby 2003(Living Reviews in Relativity)的公开数值与公式(注明出处,不用 logo、不暗示背书);无图片、无新数据集。
