@@ -258,10 +258,11 @@
     card = document.createElement('div'); card.className = 'cd'; card.setAttribute('role', 'dialog');
     card.innerHTML = '<button class="c" type="button" aria-label="关闭">×</button><h3>' + g.zh + '</h3><div class="ty">' + (g.en || '') + ' · 所属 ' + g.vii + '</div><dl>' +
       '<dt>VII 地址</dt><dd>' + v.addr + '</dd><dt>距本星系群质心</dt><dd>约 ' + fly(v.d) + '</dd>' + (g.k !== 'MW' ? '<dt>距太阳</dt><dd>约 ' + fly(dsun) + '</dd><dt>回看时间</dt><dd>你看到的是约 ' + yrs(dsun) + '前的光</dd>' : '') +
-      (g.fx || []).map(function (f) { return '<dt>' + f[0] + '</dt><dd>' + f[1] + '</dd>'; }).join('') + '</dl><div class="row"><button type="button" class="go">飞近看</button>' + (g.dv ? '<button type="button" class="dv">驾驶舱 ✦ 航点</button>' : '') + '</div>' +
+      (g.fx || []).map(function (f) { return '<dt>' + f[0] + '</dt><dd>' + f[1] + '</dd>'; }).join('') + '</dl><div class="row"><button type="button" class="go">飞近看</button>' + (g.k === 'M31' && window.SHXGW ? '<button type="button" class="gw">✦ 进入星系世界</button>' : '') + (g.dv ? '<button type="button" class="dv">驾驶舱 ✦ 航点</button>' : '') + '</div>' +
       '<div class="nt">模拟渲染(3D 粒子),非照片;距离为约数,来源 NASA / ESA / McConnachie 2012。' + (g.dv ? '✦ = 可在驾驶舱锁定飞抵的深空航点。' : '') + '</div>';
     ov.appendChild(card); card.querySelector('.c').onclick = closeCard;
     card.querySelector('.go').onclick = function () { tween(g.p, Math.max(8, (g.R || 2) * 3.2), null, null, 1600); };
+    var gw = card.querySelector('.gw'); if (gw) gw.onclick = function () { closeCard(); if (!SHXGW.enter()) hint('星系世界需要 WebGL'); };   // C2.13b
     var dv = card.querySelector('.dv'); if (dv) dv.onclick = function () { var key = g.dv; close(true); if (window.SHXDV && SHXDV.lock) try { SHXDV.lock(key); } catch (e) { } };
   }
   function world(id) {
@@ -429,6 +430,6 @@
   // 深链 ?view=lg
   try { if (/[?&]view=lg\b/.test(location.search)) (function w2(n) { if (window.SHXTSG && document.body && (window.SHDOM ? SHDOM.ready : true)) { setTimeout(function () { open(); }, 400); return; } if (n < 200) setTimeout(function () { w2(n + 1); }, 100); })(0); } catch (e) { }
 
-  window.SHXLG = { open: open, close: close, enter: enter, back: back, isOpen: function () { return open_; }, busy: function () { return !!WH; }, mode: function () { return mode; }, preset: function (k) { if (open_) preset(k); }, show: function (k) { if (open_) show(k); return card ? card.textContent : ''; }, world: function (id) { if (open_) world(id); return card ? card.textContent : ''; }, t: function (gy) { if (open_) { if (ov.querySelector('.tl').style.display !== 'block') tl(); ov.querySelector('.tl input').value = Math.round(gy * 10); setT(gy); } return demo; }, hud: function () { return ov ? ov.querySelector('.rd').textContent : ''; },
+  window.SHXLG = { geo: function (k) { if (!BARY && window.SHXTSG) { TS = SHXTSG; layout(); } var g = find(k); return g && g.p ? { p: g.p, n: g.n, spin: g.k === 'MW' ? 0 : g.d * .01 } : null; }, open: open, close: close, enter: enter, back: back, isOpen: function () { return open_; }, busy: function () { return !!WH; }, mode: function () { return mode; }, preset: function (k) { if (open_) preset(k); }, show: function (k) { if (open_) show(k); return card ? card.textContent : ''; }, world: function (id) { if (open_) world(id); return card ? card.textContent : ''; }, t: function (gy) { if (open_) { if (ov.querySelector('.tl').style.display !== 'block') tl(); ov.querySelector('.tl input').value = Math.round(gy * 10); setT(gy); } return demo; }, hud: function () { return ov ? ov.querySelector('.rd').textContent : ''; },
     list: function () { if (!BARY && window.SHXTSG) { TS = SHXTSG; layout(); } return G.map(function (g) { return { k: g.k, zh: g.zh, p: g.p, d: g.d }; }).concat(DW.map(function (d, i) { return { k: 'D' + i, zh: d[0], p: d.p, d: d[3] }; })); }, gate: function () { return GATE; } };
 })();
