@@ -120,10 +120,32 @@
       if (R0() > dd) return false;
       if (kk === 1) { var tr = jss(.45, .72, r); o.c[0] = (C.r + (A.r * 1.6 - C.r) * tr) * .9; o.c[1] = (C.g + (A.g * 1.6 - C.g) * tr) * .9; o.c[2] = (C.b + (A.b * 1.6 - C.b) * tr) * .9; }
       else mixc(o, A, B, C, w, e, 1);
-      var br = (.6 + .5 * R0()) * kB * (kk === 2 ? .5 : kk === 1 ? .16 : .2); o.c[0] *= br; o.c[1] *= br; o.c[2] *= br;
+      var br = (.6 + .5 * R0()) * kB * (kk === 2 ? .28 : kk === 1 ? .16 : .2); o.c[0] *= br; o.c[1] *= br; o.c[2] *= br;
       o.s = (kk === 2 ? .035 : kk === 1 ? .03 : .06) + R0() * (kk === 2 ? .06 : kk === 1 ? .05 : .12);
     }, kk === 1 ? .8 : .9));
-    if (kk === 2) {   // 蟹状星云中心同步辐射蓝光(3D 椭球)
+    if (kk === 2) {   // C2.13a6 蟹状星云纤维网:椭球壳上沿噪声流场生长的 3D 细丝(曲线粒子),比纯噪声阈值更易辨认
+      var NS = [24, 52, 90][tier], STP = 34, SL = [];
+      for (var si = 0; si < NS; si++) {
+        var px0 = 0, py0 = 0, pz0 = 0, rr0; do { px0 = R0() * 2 - 1; py0 = R0() * 2 - 1; pz0 = R0() * 2 - 1; rr0 = px0 * px0 + py0 * py0 + pz0 * pz0; } while (rr0 > 1 || rr0 < .01);
+        var ln = Math.sqrt(rr0), sh = .55 + R0() * .4; px0 = px0 / ln * sh; py0 = py0 / ln * sh * .72; pz0 = pz0 / ln * sh * .72;
+        var vx = R0() - .5, vy = R0() - .5, vz = R0() - .5, pl = [];
+        for (var st = 0; st < STP; st++) {
+          pl.push(px0, py0, pz0);
+          var gx = jn(px0 * 3 + sd, py0 * 3, pz0 * 3) - .5, gy = jn(px0 * 3, py0 * 3 + sd + 7, pz0 * 3) - .5, gz = jn(px0 * 3, py0 * 3, pz0 * 3 + sd + 13) - .5;
+          vx = vx * .7 + gx; vy = vy * .7 + gy; vz = vz * .7 + gz;
+          var rl = Math.sqrt(px0 * px0 + py0 * py0 / .52 + pz0 * pz0 / .52) || 1, dot = (vx * px0 + vy * py0 / .52 + vz * pz0 / .52) / rl; vx -= dot * px0 / rl * .8; vy -= dot * py0 / rl * .8; vz -= dot * pz0 / rl * .8;   // 贴着壳面走
+          var vl = Math.sqrt(vx * vx + vy * vy + vz * vz) || 1; px0 += vx / vl * .045; py0 += vy / vl * .045; pz0 += vz / vl * .045;
+        }
+        SL.push(pl);
+      }
+      var NF = Math.round(NE * 1.1);
+      body.add(vol(NF, function (o) {
+        var pl = SL[Math.floor(R0() * SL.length)], t = R0() * (STP - 1), i0 = Math.floor(t), f0 = t - i0, a = i0 * 3, b2 = Math.min(STP - 1, i0 + 1) * 3, j = .008;
+        o.p[0] = pl[a] + (pl[b2] - pl[a]) * f0 + gsn(R0) * j; o.p[1] = pl[a + 1] + (pl[b2 + 1] - pl[a + 1]) * f0 + gsn(R0) * j; o.p[2] = pl[a + 2] + (pl[b2 + 2] - pl[a + 2]) * f0 + gsn(R0) * j;
+        var hot = R0() < .18, k2 = Math.sin(t / (STP - 1) * Math.PI), br = (.5 + .6 * R0()) * kB * .55 * (.4 + .6 * k2);
+        var CA = hot ? C : B; o.c[0] = (CA.r * (hot ? .7 : 1.15) + .08) * br; o.c[1] = CA.g * (hot ? .8 : .62) * br; o.c[2] = CA.b * (hot ? .9 : .45) * br; o.s = .018 + R0() * .03;
+      }, 1));
+      // 中心同步辐射蓝光(3D 椭球)
       body.add(vol(Math.round(NE * .18), function (o) { var r = inBall(R0, o, .8); o.p[0] *= .55; o.p[1] *= .45; o.p[2] *= .45; if (R0() > Math.exp(-r * r * 3)) return false; var br = .04 * kB; o.c[0] = .55 * br; o.c[1] = .7 * br; o.c[2] = 1.1 * br; o.s = .08 + R0() * .12; }, .9));
     }
     if (d.dust) {
