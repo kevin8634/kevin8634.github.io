@@ -104,6 +104,12 @@
         gx.onclick = function () { SHXGX.open({ src: '航图' }); };
         dst.appendChild(gx);
       }
+      if (sel === 6 && window.SHXLG) {   // C2.13a4 星域 VII 宇宙全景(本星系群)入口
+        var lg = document.createElement('button'); lg.type = 'button'; lg.className = 'xl-d xl-gx';
+        lg.innerHTML = '<span class="t">◉ 进入宇宙全景</span><small>本星系群 · 可旋转缩放 · 点星系看资料</small>';
+        lg.onclick = function () { SHXLG.open({ src: '航图' }); };
+        dst.appendChild(lg);
+      }
       D.filter(function (x) { return x.dom === sel; }).forEach(function (x) {
         var b = document.createElement('button'); b.type = 'button'; b.className = 'xl-d'; b.dataset.id = x.id; b.title = x.note;
         b.classList.toggle('on', x.id === curId || (x.body && x.body === curId && !BY[curId]));

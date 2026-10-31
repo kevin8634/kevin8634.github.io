@@ -23,3 +23,10 @@
 - BUG:C2.13a 起,银河全景构建时会预建本星系群 #xlg 浮层(opacity 0、z-index 97、未隐藏),透明层盖住全景,吃掉所有点击/拖动/滚轮 → 王磊反馈「进去后无法操作」。修:#xlg 创建即 display:none,且 :not(.on) pointer-events:none。
 - 深链 ?view=galaxy 从未被处理(views.js 只认 earth|leo|solar|sky|fly),1.0 星域 VI 跳转后只停在地球页。修:sh-x-galaxy.js 自行识别 ?view=galaxy,页面就绪后打开全景(无 WebGL 时约 12 秒后打开 2D)。
 - 测试 work/t_vg.py / t_vg2.py:真实鼠标拖动、滚轮、预设按钮、关闭按钮均生效;desk/nogl/t169 0 错误。
+
+## C2.13a4 七星域圆环(王磊 10-31 13:52)
+- 视图圆环改为七星域总入口:I 家园 · II 地月(新增,走 1.0 SHD2) · III 行星 · IV 边疆(SHD4) · V 群星 · VI 银河(SHXGX) · VII 宇宙(SHXLG);角标改罗马数字,数字键 1–7;近地轨道并入 I(?view=leo 深链保留);尺度栏锚点改为 家园/地月/行星/边疆/群星。
+- 删除(X 页隐藏)顶栏「地球/太阳系」方块与右上「航图」按钮,1.0 宇宙航图在 2.0 不再出现;无 WebGL 2D 降级仍保留 1.0 原样。
+- BUG:银河全景 z-index 96 < 驾驶舱 2000,从天枢号航行规划点「进入银河全景」被压在驾驶舱底下看不见 → #xgx 2100、#xlg 2101。航行规划星域 VII 新增「进入宇宙全景」。
+- 行星(III):1.0 overview 镜头距 105.7 超过边疆阈值 95 会被识别为 IV,X 页落点改 (0,44,76)。
+- 测试 work/t_ring.py desk home|seq|ship:真实鼠标点圆环 7 档、驾驶舱两个全景入口、Esc 返回驾驶舱;0 错误。

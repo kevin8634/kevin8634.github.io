@@ -184,7 +184,7 @@
   /* ---------- 视图 DOM ---------- */
   function css() {
     if (document.getElementById('xlg-css')) return; var s = document.createElement('style'); s.id = 'xlg-css';
-    s.textContent = '#xlg{position:fixed;inset:0;z-index:97;background:#010208;color:#dfe9f7;font:13px/1.5 "Noto Sans SC",system-ui,"PingFang SC","Microsoft YaHei",sans-serif;opacity:0;transition:opacity .5s;touch-action:none;user-select:none;-webkit-user-select:none}#xlg.on{opacity:1}#xlg:not(.on){pointer-events:none}' +
+    s.textContent = '#xlg{position:fixed;inset:0;z-index:2101;background:#010208;color:#dfe9f7;font:13px/1.5 "Noto Sans SC",system-ui,"PingFang SC","Microsoft YaHei",sans-serif;opacity:0;transition:opacity .5s;touch-action:none;user-select:none;-webkit-user-select:none}#xlg.on{opacity:1}#xlg:not(.on){pointer-events:none}' +
       'body.xlg-on #shx-badge,body.xlg-on #xvt-tip{display:none!important}#xlg canvas.cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}#xlg canvas.wh{position:absolute;inset:0;width:100%;height:100%;display:none;pointer-events:none;z-index:6}' +
       '#xlg .hd{position:absolute;left:18px;top:14px;right:70px;pointer-events:none}#xlg .hd .k{font-size:11px;letter-spacing:.18em;color:#b8a8ff}#xlg .hd h2{margin:2px 0;font-size:22px;font-weight:600;letter-spacing:.04em}#xlg .hd h2 small{font-size:12px;color:#9fb3cf;margin-left:8px;letter-spacing:.14em;font-weight:400}' +
       '#xlg .hd p{margin:0;color:#b8c6dc;font-size:12px}#xlg .rd{display:inline-block;margin-top:6px;padding:3px 10px;border:1px solid rgba(127,214,255,.35);border-radius:10px;background:rgba(4,10,24,.6);color:#bfe6ff;font-size:12px;font-variant-numeric:tabular-nums}' +

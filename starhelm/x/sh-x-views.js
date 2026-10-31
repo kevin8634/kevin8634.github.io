@@ -5,13 +5,17 @@
  */
 (function () {
   'use strict';
+  // C2.13a4(王磊 10-31 13:52):圆环 = 七星域总入口(取代顶栏「地球/太阳系」方块与「航图」);数字键 1–7
   var V = [
-    { id: 'earth', zh: '地球', en: 'EARTH', key: '1', ic: '<circle cx="12" cy="12" r="6.2"/><path d="M6.5 10.5c2.5 1 4-1 6-.2s2.2 2.6 5 2.2M8.5 15.8c1.6-.6 3.1.1 4.2 1.3"/>' },
-    { id: 'leo', zh: '近地轨道', en: 'LEO', key: '2', ic: '<circle cx="12" cy="12" r="3.6"/><ellipse cx="12" cy="12" rx="9.4" ry="3.6" transform="rotate(-24 12 12)"/><circle cx="19.6" cy="8.6" r="1.2" class="f"/>' },
-    { id: 'solar', zh: '太阳系', en: 'SOLAR', key: '3', ic: '<circle cx="12" cy="12" r="2.4" class="f"/><circle cx="12" cy="12" r="5.6"/><circle cx="12" cy="12" r="9.2"/><circle cx="17.6" cy="12" r="1.1" class="f"/><circle cx="5.5" cy="8.5" r="1.1" class="f"/>' },
-    { id: 'sky', zh: '星空', en: 'SKY', key: '4', ic: '<path d="M12 3.5l1.6 4.8 4.9.1-3.9 3 1.4 4.8-4-2.9-4 2.9 1.4-4.8-3.9-3 4.9-.1z"/><circle cx="4.5" cy="19" r=".9" class="f"/><circle cx="19.5" cy="18" r=".9" class="f"/>' },
-    { id: 'galaxy', zh: '银河', en: 'GALAXY', key: '5', ic: '<ellipse cx="12" cy="12" rx="9.5" ry="3.4"/><path d="M5 13.5c2-3.5 5.5-5 9.5-4.2M19 10.5c-2 3.5-5.5 5-9.5 4.2"/><circle cx="12" cy="12" r="1.6" class="f"/>' }
+    { id: 'earth', n: 'I', zh: '家园', en: 'HOME', key: '1', ic: '<circle cx="12" cy="12" r="6.2"/><path d="M6.5 10.5c2.5 1 4-1 6-.2s2.2 2.6 5 2.2M8.5 15.8c1.6-.6 3.1.1 4.2 1.3"/>' },
+    { id: 'moon', n: 'II', zh: '地月', en: 'EARTH·MOON', key: '2', ic: '<circle cx="9" cy="12" r="5.2"/><path d="M5.2 10.6c1.8.8 3-.6 4.6 0s1.6 1.8 3.4 1.6"/><circle cx="19" cy="7.5" r="2" class="f"/><path d="M3.5 17.5c4.5 3 11 3 16-1.5" stroke-dasharray="1.6 1.8"/>' },
+    { id: 'solar', n: 'III', zh: '行星', en: 'PLANETS', key: '3', ic: '<circle cx="12" cy="12" r="2.4" class="f"/><circle cx="12" cy="12" r="5.6"/><circle cx="12" cy="12" r="9.2"/><circle cx="17.6" cy="12" r="1.1" class="f"/><circle cx="5.5" cy="8.5" r="1.1" class="f"/>' },
+    { id: 'edge', n: 'IV', zh: '边疆', en: 'FRONTIER', key: '4', ic: '<circle cx="12" cy="12" r="1.8" class="f"/><path d="M12 3.2a8.8 8.8 0 1 1-8.3 5.9" stroke-dasharray="2 1.6"/><path d="M15.5 4.2l5.3-1.6-1.6 5.3"/><path d="M14 10l6.6-7.2"/>' },
+    { id: 'sky', n: 'V', zh: '群星', en: 'STARS', key: '5', ic: '<path d="M12 3.5l1.6 4.8 4.9.1-3.9 3 1.4 4.8-4-2.9-4 2.9 1.4-4.8-3.9-3 4.9-.1z"/><circle cx="4.5" cy="19" r=".9" class="f"/><circle cx="19.5" cy="18" r=".9" class="f"/>' },
+    { id: 'galaxy', n: 'VI', zh: '银河', en: 'MILKY WAY', key: '6', ic: '<ellipse cx="12" cy="12" rx="9.5" ry="3.4"/><path d="M5 13.5c2-3.5 5.5-5 9.5-4.2M19 10.5c-2 3.5-5.5 5-9.5 4.2"/><circle cx="12" cy="12" r="1.6" class="f"/>' },
+    { id: 'lg', n: 'VII', zh: '宇宙', en: 'UNIVERSE', key: '7', ic: '<circle cx="12" cy="12" r="1.5" class="f"/><ellipse cx="7" cy="8" rx="3" ry="1.3" transform="rotate(-20 7 8)"/><ellipse cx="17.5" cy="15.5" rx="3.2" ry="1.4" transform="rotate(25 17.5 15.5)"/><circle cx="17" cy="6" r=".9" class="f"/><circle cx="6" cy="17" r=".9" class="f"/><circle cx="12" cy="12" r="9.5" stroke-dasharray="1.2 2.2"/>' }
   ];
+  var LEO = { id: 'leo', zh: '近地轨道' };
   var FLY = { id: 'fly', zh: '驾驶舱', en: 'FLIGHT', key: 'F', ic: '<path d="M12 3l3.2 8.6L12 10l-3.2 1.6z" class="f"/><path d="M4 15.5c2.5-1.8 5.2-2.6 8-2.6s5.5.8 8 2.6M7 19.5c1.6-1 3.2-1.4 5-1.4s3.4.4 5 1.4"/>' };
   var X = window.SHXV = { cur: null, views: V };
   var root, crumb, scale, ind, lab, lastKm = 0;
@@ -26,8 +30,8 @@
       '.shx-ring::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(127,214,255,0) 0deg,rgba(127,214,255,.85) 70deg,rgba(127,214,255,0) 140deg,rgba(240,201,122,0) 200deg,rgba(240,201,122,.7) 260deg,rgba(240,201,122,0) 330deg);-webkit-mask:radial-gradient(circle,transparent 19px,#000 20px,#000 22px,transparent 23px);mask:radial-gradient(circle,transparent 19px,#000 20px,#000 22px,transparent 23px);animation:shxspin 9s linear infinite;opacity:.55;transition:opacity .25s}',
       '.shx-ring::after{content:"";position:absolute;inset:6px;border-radius:50%;border:1px dashed rgba(200,215,240,.22);animation:shxspin 24s linear infinite reverse}',
       '.shx-ring svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:1}.shx-ring svg .f{fill:currentColor;stroke:none}',
-      '.shx-ring .k{position:absolute;right:-1px;bottom:-1px;font:600 9px/1 ui-monospace,monospace;color:rgba(200,215,240,.6);z-index:1}',
-      '.shx-ring .t{position:absolute;top:50px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;letter-spacing:.08em;color:rgba(220,228,245,.0);transition:color .2s;pointer-events:none}',
+      '.shx-ring .k{position:absolute;right:-4px;bottom:-2px;font:600 9px/1 ui-monospace,monospace;letter-spacing:-.02em;color:rgba(200,215,240,.6);z-index:1}',
+      '.shx-ring .t{position:absolute;top:50px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;letter-spacing:.08em;color:rgba(200,212,235,.55);transition:color .2s;pointer-events:none;text-shadow:0 0 6px #000}.shx-ring .t b{font:600 9px/1 ui-monospace,monospace;color:rgba(127,214,255,.7);letter-spacing:0}.shx-ring.on .t{color:#f0c97a}.shx-ring.on .t b{color:#f0c97a}',
       '.shx-ring:hover .t,.shx-ring:focus-visible .t{color:rgba(220,228,245,.85)}',
       '.shx-ring:hover::before,.shx-ring:focus-visible::before{opacity:1;animation-duration:3s}',
       '.shx-ring.on{color:#f0c97a}.shx-ring.on::before{opacity:1;animation-duration:4s;background:conic-gradient(from 0deg,rgba(240,201,122,0),rgba(240,201,122,1) 90deg,rgba(240,201,122,0) 180deg,rgba(127,214,255,0) 200deg,rgba(127,214,255,.9) 280deg,rgba(127,214,255,0) 350deg)}',
@@ -47,25 +51,27 @@
       '@media (max-width:640px){#shx-nav{top:50%;left:auto;right:4px;transform:translateY(-50%)}#shx-nav .row{flex-direction:column}#shx-crumb{display:none}.shx-sep{width:22px;height:1px}.shx-ring{width:38px;height:38px}.shx-ring::before{-webkit-mask:radial-gradient(circle,transparent 15px,#000 16px,#000 18px,transparent 19px);mask:radial-gradient(circle,transparent 15px,#000 16px,#000 18px,transparent 19px)}.shx-ring svg{width:18px;height:18px}#shx-nav .row{gap:4px;padding:4px 6px}#shx-crumb{font-size:10.5px}#shx-scale{display:none}.shx-ring .t{display:none}}',
       '@media (max-height:420px){#shx-nav{top:6px}#shx-crumb{display:none}#shx-scale{display:none}.shx-ring .t{display:none}}',
       '@media (prefers-reduced-motion:reduce){.shx-ring::before,.shx-ring::after{animation:none}}',
+      '.le-seg.le-hud,#shh-atlas{display:none!important}',   // C2.13a4:顶栏「地球/太阳系」方块与「航图」按钮由圆环取代
+      'body.xgx-on #shx-nav,body.xlg-on #shx-nav{display:none}',
       'body.shx-flying #shx-nav,body.shx-flying #shx-scale,body.shx-flying #shx-badge{display:none}'
     ].join('\n');
     document.head.appendChild(s);
   }
   function btn(v) {
     var b = document.createElement('button'); b.className = 'shx-ring' + (v.id === 'fly' ? ' fly' : ''); b.type = 'button';
-    b.setAttribute('data-v', v.id); b.setAttribute('aria-label', v.zh + '(' + v.key + ')'); b.title = v.zh + ' · ' + v.key;
-    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + v.ic + '</svg><span class="k">' + v.key + '</span><span class="t">' + v.zh + '</span>';
+    b.setAttribute('data-v', v.id); b.setAttribute('aria-label', '星域 ' + v.n + ' ' + v.zh + '(' + v.key + ')'); b.title = '星域 ' + v.n + ' ' + v.zh + ' · ' + v.en + ' · 键 ' + v.key;
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + v.ic + '</svg><span class="k">' + v.n + '</span><span class="t"><b>' + v.n + '</b> ' + v.zh + '</span>';
     b.addEventListener('click', function () { X.go(v.id); });
     return b;
   }
   // 尺度栏:对数位置,四级各占一个锚点(km)
-  var ANCH = [{ id: 'earth', km: 2e4 }, { id: 'leo', km: 9e4 }, { id: 'solar', km: 3e9 }, { id: 'sky', km: 4e14 }];
+  var ANCH = [{ id: 'earth', km: 2e4, zh: '家园' }, { id: 'moon', km: 8e5, zh: '地月' }, { id: 'solar', km: 3e9, zh: '行星' }, { id: 'edge', km: 3e10, zh: '边疆' }, { id: 'sky', km: 4e14, zh: '群星' }];
   var LMIN = Math.log10(5e3), LMAX = Math.log10(1e16);
   function pos(km) { var l = Math.log10(Math.max(km, 1)); return Math.max(0, Math.min(1, (l - LMIN) / (LMAX - LMIN))); }
   function build() {
     css();
     root = document.createElement('div'); root.id = 'shx-nav';
-    var row = document.createElement('div'); row.className = 'row'; row.setAttribute('role', 'toolbar'); row.setAttribute('aria-label', '四级视图');
+    var row = document.createElement('div'); row.className = 'row'; row.setAttribute('role', 'toolbar'); row.setAttribute('aria-label', '七星域');
     V.forEach(function (v) { row.appendChild(btn(v)); });
     // 10-26 23:39 王磊:驾驶舱按钮从圆形视图条取消,改装进顶栏「航行」方框(F 键仍可用)
     crumb = document.createElement('nav'); crumb.id = 'shx-crumb'; crumb.setAttribute('aria-label', '面包屑');
@@ -90,11 +96,12 @@
   function earthR() { var S = window.LE && LE.scene; return S && S.earthCam ? S.earthCam.position.length() : 3; }
   function detect() {
     if (window.SHXC && SHXC.isOpen()) return 'fly';
+    if (window.SHXLG && SHXLG.isOpen()) return 'lg';
+    if (window.SHXGX && SHXGX.isOpen()) return 'galaxy';
     var D = window.SHDOM; if (!D) return 'earth';
     var c = D.cur || 1;
-    if (c === 1) return earthR() < 4.4 ? 'earth' : 'leo';
-    if (c >= 5) return 'sky';
-    return 'solar';
+    if (c === 1) return 'earth';   // 近地轨道(leo)归入星域 I 家园
+    return ['', 'earth', 'moon', 'solar', 'edge', 'sky'][Math.min(5, c)];
   }
   function camKm() {
     var S = window.LE && LE.scene; if (!S) return 2e4;
@@ -127,15 +134,23 @@
   }
   X.go = function (id) {
     var D = window.SHDOM;
-    if (id === 'galaxy') { if (window.SHXGX) SHXGX.open({ src: '视图' }); else toast('银河全景还在载入'); return; }   // C2.11a 星域 VI
+    if (window.SHXC && SHXC.isOpen() && id !== 'fly') SHXC.close(true);
+    if (id !== 'lg' && window.SHXLG && SHXLG.isOpen()) SHXLG.close();
+    if (id === 'galaxy') { if (window.SHXGX) SHXGX.open({ src: '视图' }); else toast('银河全景还在载入'); setTimeout(paint, 60); return; }   // C2.11a 星域 VI
     if (window.SHXGX && SHXGX.isOpen()) SHXGX.close();
+    if (id === 'lg') { if (!(window.SHXLG && SHXLG.open())) toast('宇宙全景还在载入'); setTimeout(paint, 60); return; }   // C2.13a 星域 VII
     if (id === 'fly') { if (window.SHXC) SHXC.open({ target: X.cur === 'leo' || X.cur === 'earth' ? 'earth' : null }); else toast('驾驶舱还在载入'); return; }
     if (window.SHXC && SHXC.isOpen()) SHXC.close(true);
     if (!D || !D.go) return;
     if (window.SHFOCUS && SHFOCUS.focused && SHFOCUS.back) try { SHFOCUS.back(); } catch (e) { }
     if (id === 'earth') { D.go(1, { quiet: true }); tweenEarth(2.8); }
     else if (id === 'leo') { D.go(1, { quiet: true }); tweenEarth(7.5); }
-    else if (id === 'solar') D.go(3);
+    else if (id === 'moon') D.go(2);
+    else if (id === 'solar') {   // 1.0 overview 镜头距 105.7 > 边疆阈值 95,会被识别成星域 IV;X 页改落在 85 以内
+      D.go(3); if (window.SHD4) SHD4.focus = null;
+      setTimeout(function () { var S = window.LE && LE.scene; if (S && S.flyTo && S.mode === 'solar' && window.THREE) S.flyTo({ target: new THREE.Vector3(), position: new THREE.Vector3(0, 44, 76), ms: 900, arc: false }); }, 2200);
+    }
+    else if (id === 'edge') D.go(4);
     else if (id === 'sky') D.go(5);
     X.cur = id;
     try { history.replaceState(null, '', setQ('view', id)); } catch (e) { }
@@ -152,7 +167,8 @@
     if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
     var t = e.target; if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
     if (window.SHXC && SHXC.isOpen()) return;
-    var i = '12345'.indexOf(e.key);
+    if ((window.SHXGX && SHXGX.isOpen()) || (window.SHXLG && SHXLG.isOpen())) return;   // 全景内的按键归全景
+    var i = '1234567'.indexOf(e.key);
     if (i >= 0) { X.go(V[i].id); e.preventDefault(); return; }
     if (e.key === '-' || e.key === '_') { X.step(1); e.preventDefault(); }
     else if (e.key === '=' || e.key === '+') { X.step(-1); e.preventDefault(); }
@@ -165,7 +181,7 @@
     build(); addEventListener('keydown', keys);
     setInterval(paint, 400); paint();
     var q = new URLSearchParams(location.search).get('view');
-    if (q && /^(earth|leo|solar|sky|fly)$/.test(q)) {
+    if (q && /^(earth|leo|moon|solar|edge|sky|fly)$/.test(q)) {
       var n = 0; (function wait() {
         var ok = window.SHDOM && SHDOM.ready && (q !== 'fly' || window.SHXC);
         if (ok) { setTimeout(function () { X.go(q); }, 300); if (q === 'earth' || q === 'leo') setTimeout(function () { if (detect() !== q) X.go(q); }, 3500); } else if (n++ < 200) setTimeout(wait, 100);

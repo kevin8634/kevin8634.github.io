@@ -235,7 +235,7 @@
   function css() {
     if (document.getElementById('xgx-css')) return; var s = document.createElement('style'); s.id = 'xgx-css';
     s.textContent =
-      '#xgx{position:fixed;inset:0;z-index:96;background:#010208;color:#dfe9f7;font:13px/1.5 "Noto Sans SC",system-ui,"PingFang SC","Microsoft YaHei",sans-serif;opacity:0;transition:opacity .5s;touch-action:none;user-select:none;-webkit-user-select:none}#xgx.on{opacity:1}' +
+      '#xgx{position:fixed;inset:0;z-index:2100;background:#010208;color:#dfe9f7;font:13px/1.5 "Noto Sans SC",system-ui,"PingFang SC","Microsoft YaHei",sans-serif;opacity:0;transition:opacity .5s;touch-action:none;user-select:none;-webkit-user-select:none}#xgx.on{opacity:1}' +
       'body.xgx-on #shx-badge,body.xgx-on #xvt-tip{display:none!important}#xgx canvas.cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}#xgx canvas.cv:active{cursor:grabbing}' +
       '#xgx .hd{position:absolute;left:18px;top:14px;right:70px;pointer-events:none}#xgx .hd .k{font-size:11px;letter-spacing:.18em;color:#b8a8ff}#xgx .hd h2{margin:2px 0 2px;font-size:22px;font-weight:600;letter-spacing:.04em}#xgx .hd h2 small{font-size:12px;color:#9fb3cf;margin-left:8px;letter-spacing:.14em;font-weight:400}' +
       '#xgx .hd p{margin:0;font-size:12px;color:#a8b8d0;max-width:640px}#xgx .badge{display:inline-block;margin-top:6px;font-size:11px;color:#ff9fb2;border:1px solid rgba(255,159,178,.45);border-radius:10px;padding:1px 8px;background:rgba(20,8,16,.5)}' +
