@@ -1,6 +1,6 @@
 # 元素工坊 Element Forge · 素材与 AI 标注台账
 
-> 创世计划 Genesis 第 03 世界(化学)。按《1.0 素材与 AI 标注台账规范》(总指挥 2026-10-24)。最后更新:2026-10-24(v0.11,10 任务 40 关)。
+> 创世计划 Genesis 第 03 世界(化学)。按《1.0 素材与 AI 标注台账规范》(总指挥 2026-10-24)。最后更新:2026-11-01(v2.0,11 任务 44 关;新增超重元素岛 island)。
 > 零外部请求:页面运行时不加载任何外部资源(无 CDN、无外部字体、无外部图片/贴图、无统计脚本);下表「来源与链接」里的网址只作出处或页面上的文字引用链接。
 
 ## 一、图片、贴图、3D 模型
@@ -30,7 +30,9 @@
 |---|---|---|---|---|---|---|
 | 字体 | 全站 | 只调用设备系统字体(-apple-system、PingFang SC、Noto Sans SC、Microsoft YaHei、system-ui),不打包、不外链任何字体文件 | 各系统自带 | 无 | 否 | 无需标注 |
 | 元素中文名拼合显示(钅+声旁) | ef.js EF.zhDraw / ef.css .zc | 本项目原创,用于缺字形设备的显示兜底 | 自制 | 无 | 否 | 无需标注 |
-| Three.js r169 | vendor/three.module.min.js(经 ef-gl.js,全站 3D) | https://threejs.org | MIT | 保留版权声明:vendor/three.LICENSE.txt 随附 | 否 | 无需页面标注 |
+| Three.js r186 | vendor/three.module.min.js(经 ef-gl.js,全站 3D;v2.0 起,与 /deep/vendor/r186 同一构建) | https://threejs.org | MIT | 保留版权声明:vendor/three.LICENSE.txt 随附 | 否 | 无需页面标注 |
+| Three.js r169(回落) | vendor/three.r169.module.min.js(仅 WebGL1 设备或 ?three=169 时经导入映射加载,保留到 2.0 发布) | https://threejs.org | MIT | 同上 | 否 | 无需页面标注 |
+| 创世实验室 Lab Kit(/core/deep 0.4:lab.js、core.js、lab.css、deep.css) | island 第 2–4 关实验台 | 创世计划总指挥维护,同站 /core/deep/ | 自有 | 无 | AI 协助编写 | 无需标注 |
 | 全部代码(ef.js、ef.css、ef-hud.css、ef-*.js、各任务页) | 全站 | 本项目原创 | 随创世计划仓库 | 无 | 否 | — |
 
 ## 四、数据来源
@@ -54,9 +56,23 @@
 | 钠 D 线约 589 nm、氢 656/486/434 nm、氦约 587.6 nm;1868 年发现氦、1895 年分离 | spectra L0 | NIST 原子光谱数据库;化学史公开资料 | 公共事实 | 无 | 否 | — |
 | H₂O、CO₂、CH₄ 红外振动吸收位置 | spectra L1 | 分子光谱标准数据(定性) | 公共事实 | 无 | 否 | 页面标「示意」 |
 | WASP-39 b(约 700 光年)透射光谱:CO₂(2022 年 8 月)、H₂O/Na/K 确认与 CO、SO₂(2022 年 11 月) | spectra L2–L3 | JWST Transiting Exoplanet ERS Team, Nature 614 (2023) 系列论文;NASA 公开新闻稿 | 事实数据,曲线自绘未复制原图 | 无 | 否 | 页面标「观测(示意)」「示意,未按比例」 |
+| 核素基态数据快照(3355 核素:Z、N、每核子结合能、log10 半衰期) | island 第 1 关 3D 地形与 2D 核素图(data/ef.island.chart.json) | IAEA Nuclear Data Services Live Chart of Nuclides(底层 AME2020/NUBASE2020/ENSDF)https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html ;复制自深空层快照 deep/data/nuclides.json(取于 2026-10-30,sha256 ac242737…87bed),由 tools/build_island.py 导出 | IAEA NDS 数据免费公开使用,须注明出处 | 页面标注「IAEA 数据」,实验台图下自动署名 | 否 | 地形右上角「3355 个已知原子核 · IAEA 数据」 |
+| 锡同位素链 B/A(data/ef.island.sn.json) | island 第 2 关 | 同上快照子集(Z=50) | 同上 | 实验台图下自动署名 | 否 | 实验台署名 |
+| 实测−液滴模型残差(data/ef.island.shell.json) | island 第 3 关 | 同上快照(A≥16)对五项液滴模型最小二乘拟合后的残差,按 N 平均;计算值,非直接观测 | 同上 | 实验台图下自动署名,meta.note 写明为计算值 | 否 | 实验台署名;曲线名「实测 − 液滴模型(计算值)」 |
+| Z≥100 每种元素最长寿同位素半衰期(data/ef.island.edge.json) | island 第 4 关 | 同上快照;119–126 号记「未合成」 | 同上 | 实验台图下自动署名 | 否 | 实验台署名 |
+| 液滴模型系数 aV 15.75、aS 17.8、aC 0.711、aA 23.7、aP 11.18 MeV | island 第 2 关、实验台公式 | 教科书常用值(与 /core/deep/labs/ef.lab.iron 一致;OpenStax University Physics Vol.3 §10.3 讲解) | 公共事实 | 无 | 否 | — |
+| 幻数、核壳层模型(1963 诺贝尔物理学奖)、稳定岛理论预言(Z≈114–126、N≈184) | island 第 3–4 关结论 | 核物理教材公认结论;NobelPrize.org 1963 物理学奖页 | 公共事实 | 无 | 否 | 稳定岛标「猜想」 |
+| Og 2016 年 IUPAC 命名;2024 年 Berkeley Lab 钛-50 束流造 116 号;截至 2026-09 119/120 号未有公认合成 | island 第 4 关结论 | IUPAC 2016 公告;LBNL 新闻 2024-07-23;Annual Review of Nuclear and Particle Science 2026 综述 | 公共事实(只引事实,未复制原文与图片,未用机构 logo) | 无 | 否 | 结论标「已证实」,实验台来源链接 |
+| 稳定岛「高度」与位置、平滑外推斜率 | island 第 4 关模型 | 本项目教学示意模型,非理论计算结果 | 自制 | 无 | 否 | 曲线名「加上稳定岛(猜想)」、证据等级「猜想」 |
+| 3D 核素地形、不稳定之海、稳定岛虚光、r 过程金雨 | island(ef-island3d.js) | 本项目 Three.js 程序生成,无外部贴图 | 自制 | 无 | 否 | 地形卡片注「示意」「猜想」 |
 
 ## 五、自查(2026-10-24)
 - 页面引用的本地文件:img/mars-base.webp、audio/*.m4a(10 个)、vendor/three.module.min.js,均已登记;无其他图片、贴图、模型、字体文件。
 - 外部网络请求:0(代码中出现的外部网址只有两条 <a> 文字引用链接与 SVG 命名空间)。
 - AI 生成内容:线上 1 项(火星基地概念图),页面可见标注 1 处(首页图注「概念图,非实景;画面动效为示意」)。
 - 未使用任何机构 logo,不暗示任何机构背书。
+
+## 六、自查(2026-11-01,v2.0)
+- 新增本地文件:vendor/three.r169.module.min.js、ef-island3d.js、island/、island/labs/*.json(3 份 gn-lab/1 协议)、data/ef.island.*.json(4 份)、tools/build_island.py、tools/protos.py(复算脚本),均已登记。
+- 外部网络请求:0。实验台来源链接为文字引用。
+- AI 生成内容:实验台问题、猜测题、结论文字由 AI 撰写(协议 ai_generated 字段写明);数值全部由脚本复算并有模型自动校验(7 项)。

@@ -1,0 +1,159 @@
+{
+ "schema": "gn-lab/1",
+ "world": "ef",
+ "color": "#FF9A3C",
+ "updated": "2026-11-01",
+ "ai_generated": "问题、猜测题、结论文字由 AI 撰写(元素工坊 2.0 窗口);数值由脚本 build/protos.py 复算;实测数据见数据台账",
+ "id": "ef.lab.island_chain",
+ "title": "锡的同位素链 · 中子多少才稳?",
+ "question": "同一种元素,中子太少或太多会怎样?为什么锡(Sn)的稳定同位素特别多?",
+ "evidence": "confirmed",
+ "safety": "green",
+ "bridges": [
+  "ef.stars"
+ ],
+ "unit": "MeV",
+ "params": [
+  {
+   "k": "aa",
+   "label": "不对称项 aA(中子质子不平衡的代价)",
+   "min": 10,
+   "max": 35,
+   "step": 0.1,
+   "value": 23.7,
+   "unit": "MeV"
+  },
+  {
+   "k": "ap",
+   "label": "配对项 aP(成对更稳)",
+   "min": 0,
+   "max": 20,
+   "step": 0.1,
+   "value": 11.18,
+   "unit": "MeV"
+  },
+  {
+   "k": "ac",
+   "label": "库仑项 aC(质子互相排斥)",
+   "min": 0.4,
+   "max": 1.0,
+   "step": 0.01,
+   "value": 0.711,
+   "unit": "MeV"
+  }
+ ],
+ "model": {
+  "type": "fn",
+  "x": {
+   "k": "N",
+   "from": "data"
+  },
+  "defs": [
+   {
+    "k": "A",
+    "expr": "50+N"
+   },
+   {
+    "k": "P",
+    "expr": "ap*(1+(-1)^N)/2/A^(1/2)"
+   },
+   {
+    "k": "B",
+    "expr": "15.75*A-17.8*A^(2/3)-ac*50*49/A^(1/3)-aa*(A-100)^2/A+P"
+   }
+  ],
+  "ys": [
+   {
+    "label": "液滴模型",
+    "expr": "B/A"
+   }
+  ]
+ },
+ "data": {
+  "src": "../../data/ef.island.sn.json",
+  "x": "N",
+  "ys": [
+   {
+    "col": "ba",
+    "label": "实测(锡 Z=50)",
+    "color": "#e9eefb"
+   }
+  ]
+ },
+ "chart": {
+  "xlabel": "中子数 N",
+  "ylabel": "每核子结合能 B/A (MeV)",
+  "marks": [
+   {
+    "x": 62,
+    "label": "Sn-112"
+   },
+   {
+    "x": 74,
+    "label": "Sn-124"
+   }
+  ]
+ },
+ "readout": "max",
+ "ab": {
+  "vary": "ap"
+ },
+ "predict": {
+  "q": "锡(Sn,50 个质子)一共有几种稳定同位素?",
+  "options": [
+   "只有 1 种",
+   "3 种左右",
+   "10 种,所有元素里最多"
+  ],
+  "answer": 2,
+  "why": "锡有 10 种稳定同位素(Sn-112 到 Sn-124),是所有元素里最多的。曲线顶部那段平缓的「山脊」上都是稳定核素;50 是质子的「幻数」,让锡格外能容纳不同数目的中子。"
+ },
+ "conclusions": [
+  {
+   "text": "中子太少或太多,每核子结合能都会下降,稳定的同位素挤在中间一小段。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "不对称项把曲线弯成「山脊」:中子和质子越不平衡,代价越大。把它调小,山脊变宽。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "配对项让偶数个中子更稳,曲线出现锯齿;锡的 10 种稳定同位素里 7 种是偶数中子。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "50 是幻数,锡的稳定同位素数量居首,与壳层效应有关。",
+   "evidence": "confirmed"
+  }
+ ],
+ "checks": [
+  {
+   "label": "Sn-120 液滴模型",
+   "x": 70,
+   "expect": 8.5484,
+   "tol": 0.005
+  },
+  {
+   "label": "Sn-100 液滴模型",
+   "x": 50,
+   "expect": 8.1734,
+   "tol": 0.005
+  },
+  {
+   "label": "Sn-133 液滴模型",
+   "x": 83,
+   "expect": 8.2379,
+   "tol": 0.005
+  }
+ ],
+ "sources": [
+  {
+   "name": "IAEA Live Chart of Nuclides(AME2020/NUBASE2020/ENSDF)",
+   "url": "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html"
+  },
+  {
+   "name": "OpenStax《University Physics Vol.3》10.3 Nuclear Binding Energy",
+   "url": "https://openstax.org/books/university-physics-volume-3/pages/10-3-nuclear-binding-energy"
+  }
+ ]
+}

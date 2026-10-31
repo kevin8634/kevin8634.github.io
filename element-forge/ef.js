@@ -18,7 +18,8 @@ EF.mobile = (window.matchMedia && matchMedia('(hover: none)').matches) || innerW
 EF.glTier = (function () {
   var q = (location.search.match(/[?&]q=(high|mid|low)/) || [])[1] || EF.get('_quality', 'auto');
   var ok = false, soft = false;
-  try { var c = document.createElement('canvas'), g = c.getContext('webgl2') || c.getContext('webgl');
+  try { var c = document.createElement('canvas'), g2 = c.getContext('webgl2'), g = g2 || c.getContext('webgl');
+    EF.gl2 = !!g2;
     if (g) { ok = true; var d = g.getExtension('WEBGL_debug_renderer_info'); var r = d ? String(g.getParameter(d.UNMASKED_RENDERER_WEBGL)) : ''; soft = /swiftshader|llvmpipe|software/i.test(r); var lc = g.getExtension('WEBGL_lose_context'); if (lc) lc.loseContext(); } } catch (e) {}
   if (!ok) return 'low';
   if (q !== 'auto') return q;
@@ -28,6 +29,9 @@ EF.glTier = (function () {
   if (EF.mobile || mem <= 4 || cpu <= 4) return 'mid';
   return 'high';
 })();
+/* v2.0:Three.js r186(需 WebGL2)。只有 WebGL1 的设备或 ?three=169 → 导入映射回落到 vendor/three.r169.module.min.js(保留到 2.0 发布) */
+if (EF.glTier !== 'low' && (!EF.gl2 || /[?&]three=169/.test(location.search))) { try { var im = document.createElement('script'); im.type = 'importmap'; var mp = {}; mp[new URL(BASE + 'vendor/three.module.min.js', location.href).href] = new URL(BASE + 'vendor/three.r169.module.min.js', location.href).href; im.textContent = JSON.stringify({ imports: mp }); (document.head || document.documentElement).appendChild(im); EF.three = '169'; } catch (e) {} }
+EF.three = EF.three || '186';
 EF.dpr = function () { var d = window.devicePixelRatio || 1; return Math.min(d, EF.mobile ? 1.5 : (EF.glTier === 'high' ? 2 : 1.5)); };
 /* v0.3.1:工坊七匠 3D 形象(低档不加载,继续用 2D 版) */
 if (EF.glTier !== 'low') addEventListener('DOMContentLoaded', function () { var g = document.createElement('script'); g.type = 'module'; g.src = BASE + 'ef-guide3d.js?v=1'; document.body.appendChild(g); });
@@ -101,7 +105,8 @@ EF.MISSIONS = {
   rocks: { q: '岩石是怎么"长"出来的?', n: 4, g: 'mof', href: 'rocks/', lv: '★★☆', scale: '岩石 · 矿物', unlock: [6, 8, 11, 12, 13, 14, 19, 20, 26] },
   mars: { q: '火星为什么是红的?', n: 4, g: 'oga', href: 'mars/', lv: '★★☆', scale: '行星 · 矿物 · 原子', unlock: [1, 8, 12, 14, 16, 26], planet: 1 },
   titan: { q: '土卫六为什么是橙色的?', n: 4, g: 'oga', href: 'titan/', lv: '★★☆', scale: '卫星 · 分子', unlock: [1, 6, 7, 8], planet: 1 },
-  spectra: { q: '隔着几百光年,怎么知道一颗星球的空气?', n: 4, g: 'dot', href: 'spectra/', lv: '★★☆', scale: '光 · 原子 · 分子', unlock: [1, 2, 6, 8, 11, 16], planet: 1 }
+  spectra: { q: '隔着几百光年,怎么知道一颗星球的空气?', n: 4, g: 'dot', href: 'spectra/', lv: '★★☆', scale: '光 · 原子 · 分子', unlock: [1, 2, 6, 8, 11, 16], planet: 1 },
+  island: { q: '元素周期表的尽头在哪里?', n: 4, g: 'oga', href: 'island/', lv: '★★★', scale: '原子核 · 元素', unlock: [26, 50, 82, 114, 118], v2: 1 }
 };
 EF.PLANETS = [
   { id: 'mars', q: '火星为什么是红的?', g: 'oga' }, { id: 'titan', q: '土卫六为什么是橙色的?', g: 'oga' },

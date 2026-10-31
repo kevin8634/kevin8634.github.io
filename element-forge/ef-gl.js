@@ -1,5 +1,5 @@
 /* 元素工坊 Element Forge · 共享场景模块 ef-gl.js v0.2
-   §5.3.1:统一管理渲染器、相机、性能分级、降级判定、页面隐藏暂停。Three.js r169 本地自带(vendor/,MIT)。 */
+   §5.3.1:统一管理渲染器、相机、性能分级、降级判定、页面隐藏暂停。Three.js r186 本地自带(WebGL1 回落 r169)(vendor/,MIT)。 */
 import * as THREE from './vendor/three.module.min.js';
 export { THREE };
 const EF = window.EF;

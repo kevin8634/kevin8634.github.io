@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>元素周期表的尽头在哪里? · 元素工坊 Element Forge</title>
+<meta name="description" content="元素工坊 2.0 · 超重元素岛:在 3355 个已知原子核组成的地形上,亲手改原子核公式,找幻数,去周期表的尽头看传说中的稳定岛。创世计划 Genesis 化学世界。">
+<meta name="theme-color" content="#070a14">
+<link rel="stylesheet" href="../ef.css?v=14">
+<style>
+.isl-view{position:relative;height:440px;border-radius:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,#0b1630,#03060f 70%)}
+.isl-view.short{height:280px;margin-bottom:12px}
+.isl-gl,.isl-cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.isl-card{position:absolute;z-index:2;left:12px;bottom:12px;max-width:min(320px,80%);background:rgba(6,9,20,.86);border:1px solid rgba(255,154,60,.6);border-radius:10px;padding:8px 12px;font-size:13px;line-height:1.55;pointer-events:none}
+.isl-card b{color:#ffb56b;font-size:15px}
+.isl-tag{position:absolute;z-index:2;right:12px;top:10px;font-size:11px;color:#c9d2ea;background:rgba(0,0,0,.45);padding:3px 8px;border-radius:6px}
+.isl-find{display:flex;gap:6px;flex-wrap:wrap;margin:8px 2px 0;align-items:center;font-size:13px}
+.isl-find input{width:9em;background:#0a1124;border:1px solid rgba(255,154,60,.5);color:#fff;border-radius:8px;padding:6px 8px;font:inherit}
+.isl-got{font-size:13px;margin:6px 2px 0;color:#e9eefb}
+.isl-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:#aab4cf;margin:6px 2px 0}
+.isl-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.isl-lab{min-height:200px}
+.isl-lab .gl{margin:0}
+.m-stage.isl-wide{padding:10px}
+@media (max-width:860px){.isl-view{height:340px}.isl-view.short{height:220px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="../ef.js?v=15"></script>
+<script>
+(function () {
+var SYM = {}, CHART = null, LABS = '../island/labs/';
+var BIG = { 'Fe-56': [26, 30], 'U-238': [92, 146], 'Pb-208': [82, 126], 'Sn-120': [50, 70], 'Og-294': [118, 176], 'Au-197': [79, 118], 'H-1': [1, 0], 'He-4': [2, 2] };
+function name(z, n) { return (SYM[z] || ('Z' + z)) + '-' + (z + n); }
+function life(lt) { if (lt === 99) return '稳定'; if (lt === -99) return '半衰期未知'; var s = Math.pow(10, lt);
+  if (s >= 3.156e7) return '约 ' + fmtN(s / 3.156e7) + ' 年'; if (s >= 86400) return '约 ' + fmtN(s / 86400) + ' 天'; if (s >= 3600) return '约 ' + fmtN(s / 3600) + ' 小时';
+  if (s >= 60) return '约 ' + fmtN(s / 60) + ' 分钟'; if (s >= 1) return '约 ' + fmtN(s) + ' 秒'; if (s >= 1e-3) return '约 ' + fmtN(s * 1e3) + ' 毫秒'; if (s >= 1e-6) return '约 ' + fmtN(s * 1e6) + ' 微秒'; return '比微秒还短'; }
+function fmtN(v) { return v >= 1e6 ? v.toExponential(1).replace('e+', '×10^') : v >= 100 ? Math.round(v).toLocaleString('zh-CN') : String(+v.toPrecision(2)); }
+function loadChart() { return CHART ? Promise.resolve(CHART) : fetch('../data/ef.island.chart.json').then(function (r) { return r.json(); }).then(function (j) { CHART = j.rows; return CHART; }); }
+EF.ELEM.forEach(function (e) { SYM[e.z] = e.sym; });
+var symP = Promise.resolve();
+
+/* 2D 核素图:低档 / 无 WebGL 时的完整替代(功能不减) */
+function chart2D(host, onPick) {
+  var cv = document.createElement('canvas'); cv.className = 'isl-cv'; host.appendChild(cv); var x = cv.getContext('2d'), rows = [], sel = null;
+  function col(lt) { if (lt === 99) return '#ffeebd'; if (lt === -99) return '#1e2942'; var t = Math.max(0, Math.min(1, (lt + 8) / 22)); return 'rgb(' + Math.round(40 + t * 215) + ',' + Math.round(46 + t * 108) + ',' + Math.round(107 - t * 46) + ')'; }
+  function geo() { var W = cv.clientWidth, H = cv.clientHeight, s = Math.min((W - 30) / 180, (H - 30) / 122); return { W: W, H: H, s: s, ox: 20, oy: H - 16 }; }
+  function draw() { var d = window.devicePixelRatio || 1, g = geo(); if (!(g.s > 0)) return; cv.width = g.W * d; cv.height = g.H * d; x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, g.W, g.H);
+    x.strokeStyle = 'rgba(255,154,60,.28)'; [8, 20, 28, 50, 82, 126].forEach(function (n) { x.beginPath(); x.moveTo(g.ox + n * g.s, g.oy); x.lineTo(g.ox + n * g.s, g.oy - 120 * g.s); x.stroke(); });
+    rows.forEach(function (r) { x.fillStyle = col(r[3]); x.fillRect(g.ox + r[1] * g.s, g.oy - (r[0] + 1) * g.s, Math.max(1, g.s * 0.92), Math.max(1, g.s * 0.92)); });
+    x.strokeStyle = 'rgba(255,154,60,.7)'; x.setLineDash([4, 3]); x.beginPath(); x.ellipse(g.ox + 184 * g.s, g.oy - 117 * g.s, 7 * g.s, 9 * g.s, 0, 0, 6.283); x.stroke(); x.setLineDash([]);
+    x.fillStyle = '#aab4cf'; x.font = '11px system-ui,sans-serif'; x.fillText('中子数 N →', g.W - 80, g.H - 2); x.save(); x.translate(10, 60); x.rotate(-Math.PI / 2); x.fillText('质子数 Z →', -40, 0); x.restore();
+    if (sel) { x.strokeStyle = '#fff'; x.lineWidth = 2; x.strokeRect(g.ox + sel[1] * g.s - 3, g.oy - (sel[0] + 1) * g.s - 3, g.s + 6, g.s + 6); x.lineWidth = 1; } }
+  loadChart().then(function (r) { rows = r; draw(); });
+  if (window.ResizeObserver) new ResizeObserver(draw).observe(host);
+  cv.addEventListener('pointerdown', function (e) { var b = cv.getBoundingClientRect(), g = geo(), n = Math.floor((e.clientX - b.left - g.ox) / g.s), z = Math.floor((g.oy - (e.clientY - b.top)) / g.s), best = null, bd = 9;
+    rows.forEach(function (r) { var d = Math.abs(r[0] - z) + Math.abs(r[1] - n); if (d < bd) { bd = d; best = r; } }); if (best) api.focus(best[0], best[1]); });
+  var api = { focus: function (z, n) { var r = rows.filter(function (q) { return q[0] === z && q[1] === n; })[0]; if (!r) return null; sel = r; draw(); onPick(r); return r; } };
+  return api;
+}
+
+/* 地形视图:高/中档 3D,低档 2D */
+function terrain(stage, mode, onPick) {
+  var v = document.createElement('div'); v.className = 'isl-view' + (mode === 'edge' ? ' short' : ''); stage.appendChild(v);
+  var card = document.createElement('div'); card.className = 'isl-card'; card.innerHTML = mode === 'edge' ? '<b>周期表的尽头</b><br>金雨 = 中子星并合里的 r 过程(示意)<br>虚光 = 理论预言的稳定岛(猜想)' : '拖动旋转 · 滚轮或双指缩放 · 点一根柱子看看它是谁'; v.appendChild(card);
+  var tag = document.createElement('span'); tag.className = 'isl-tag'; tag.textContent = '3355 个已知原子核 · IAEA 数据'; v.appendChild(tag);
+  var view = { focus: function () {} }, ready;
+  function show(r) { card.innerHTML = '<b>' + name(r[0], r[1]) + '</b> · ' + (EF.ELEM[r[0] - 1] ? EF.zhHTML(EF.ELEM[r[0] - 1]) : '') + '<br>' + r[0] + ' 个质子 · ' + r[1] + ' 个中子<br>每核子结合能 <b>' + r[2].toFixed(3) + '</b> MeV<br>寿命:' + life(r[3]); onPick && onPick(r); }
+  if (EF.glTier !== 'low') {
+    ready = import('../ef-island3d.js?v=1').then(function (m) { return m.mountIsland(v, { mode: mode, onPick: show }); })
+      .then(function (a) { view = a; return a; })
+      .catch(function (e) { console.warn('[ef] 3D 地形启动失败,改用 2D 核素图', e); view = chart2D(v, show); return view; });
+  } else { view = chart2D(v, show); ready = Promise.resolve(view); }
+  return { el: v, focus: function (z, n) { return ready.then(function () { return view.focus(z, n); }); } };
+}
+
+/* 第 1 关:核素地形 */
+function L0(stage, api) {
+  var got = {}, need = ['Fe-56', 'U-238'];
+  var out = document.createElement('p'); out.className = 'isl-got';
+  var t = terrain(stage, 'chart', function (r) { var k = name(r[0], r[1]); if (need.indexOf(k) > -1 && !got[k]) { got[k] = r; EF.play('select'); } upd(); });
+  var f = document.createElement('div'); f.className = 'isl-find';
+  f.innerHTML = '<label>找原子核 <input id="islQ" placeholder="如 Fe-56" aria-label="输入元素符号和质量数"></label><button class="ef-btn ghost" id="islGo">找</button><span class="note-sm">也可以直接在地形上点。</span>';
+  stage.appendChild(f); stage.appendChild(out);
+  var lg = document.createElement('div'); lg.className = 'isl-legend';
+  lg.innerHTML = '<span><i style="background:#ffeebd"></i>稳定(最高)</span><span><i style="background:#ff9a3c"></i>长寿</span><span><i style="background:#2c3a7a"></i>短命(沉入不稳定之海)</span><span><i style="border:1px dashed #ff9a3c"></i>稳定岛:理论预言</span><span>橙线:幻数</span>';
+  stage.appendChild(lg);
+  function go() { var s = (document.getElementById('islQ').value || '').trim().replace(/\s+/g, '').replace(/^([a-z])/, function (c) { return c.toUpperCase(); }); var m = s.match(/^([A-Z][a-z]?)-?(\d+)$/);
+    if (!m) { EF.toast('格式:元素符号-质量数,如 U-238'); return; } var z = +Object.keys(SYM).filter(function (k) { return SYM[k] === m[1]; })[0]; if (!z) { EF.toast('没找到元素 ' + m[1]); return; }
+    t.focus(z, +m[2] - z).then(function (r) { if (!r) EF.toast('数据里没有 ' + s + '(可能还没被发现)'); }); }
+  document.getElementById('islGo').onclick = go; document.getElementById('islQ').addEventListener('keydown', function (e) { if (e.key === 'Enter') go(); });
+  function upd() {
+    out.innerHTML = need.map(function (k) { var r = got[k]; return r ? k + ':<b>' + r[2].toFixed(3) + ' MeV</b>/核子' : k + ':还没找到'; }).join(' · ');
+    if (got['Fe-56'] && got['U-238']) { out.innerHTML += '<br>铁-56 每个核子多被「抱紧」约 <b>' + (got['Fe-56'][2] - got['U-238'][2]).toFixed(2) + ' MeV</b>。'; api.complete(); }
+  }
+  symP.then(upd);
+}
+
+/* 实验关:把 Lab Kit 实验台装进舞台;先猜由关卡框架负责,协议里的猜测题只用一次 */
+function labLevel(id, opts) {
+  return function (stage, api) {
+    stage.classList.add('isl-wide');
+    if (opts && opts.terrain) terrain(stage, 'edge');
+    var box = document.createElement('div'); box.className = 'isl-lab'; stage.appendChild(box);
+    var P = PROTO[id], p = JSON.parse(JSON.stringify(P)); delete p.predict; p.__base = new URL(LABS + id + '.json', location.href).href;
+    import('../../core/deep/lab.js').then(function (m) {
+      return m.Lab.mount(box, p, { color: '#FF9A3C', onRecord: function () { api.complete(); }, onBridge: bridge });
+    }).then(function (L) {
+      if (opts && opts.fit) { var h = setInterval(function () { if (!box.isConnected) { clearInterval(h); return; } var a = L.values().A; if (opts.fit(a)) { clearInterval(h); EF.toast('你的模型贴上实测了!'); api.complete(); } }, 500); }
+    }).catch(function (e) { console.warn('[ef] 实验台加载失败', e); box.innerHTML = '<p class="note-sm">实验台暂时没加载出来(需要联网打开一次)。可以先读下面的讲解,稍后再来。</p>'; api.complete(); });
+  };
+}
+function bridge(b) { if (b === 'ef.stars') location.href = '../stars/'; }
+var PROTO = {};
+function ask(id, yes) { var p = PROTO[id].predict; return { q: p.q, opts: p.options, ok: p.answer, yes: yes, no: '和你猜的不一样也没关系,动手看看曲线。' }; }
+
+Promise.all(['ef.lab.island_chain', 'ef.lab.island_shell', 'ef.lab.island_edge'].map(function (id) { return fetch(LABS + id + '.json').then(function (r) { return r.json(); }).then(function (j) { PROTO[id] = j; }); })).then(start, function () { start(); });
+
+function start() {
+var LEVELS = [
+  { title: '核素地形', setup: L0, task: '在地形里找到铁-56 和铀-238(点柱子,或在下面输入),比一比谁的原子核抱得更紧。',
+    ask: { q: '铁-56 和铀-238,谁的原子核「抱得更紧」(平均每个核子的结合能更大)?', opts: ['铀-238,它更大更重', '铁-56', '一样紧'], ok: 1 },
+    hints: ['「更大」不等于「抱得更紧」——要看平均到每个质子、中子身上。', '在下面输入 Fe-56 和 U-238,看卡片上的「每核子结合能」。', '铀太大,质子之间的电排斥越来越强,把它往外推。'],
+    explain: '铁-56 每个核子的结合能约 8.79 MeV,铀-238 约 7.57 MeV。铁和镍站在结合能的山顶:比它轻的核聚变放能,比它重的核裂变放能。地形上金白色的高柱是稳定核,只占已知原子核的一小部分;其余的都会衰变,越往两边越短命,最后沉入「不稳定之海」。' },
+  { title: '中子多少才稳', setup: labLevel('ef.lab.island_chain'), task: '看锡的同位素链:调「不对称项」和「配对项」,再打开 A/B 对照比一比。满意后点「记入实验记录本」。',
+    ask: PROTO['ef.lab.island_chain'] ? ask('ef.lab.island_chain', '猜得好,动手看看为什么。') : { q: '锡一共有几种稳定同位素?', opts: ['1 种', '3 种左右', '10 种'], ok: 2 },
+    hints: ['曲线顶部平缓的一段,就是稳定同位素的「山脊」。', '把「不对称项」调小,山脊会变宽还是变窄?', '打开 A/B 对照,只改「配对项」,看锯齿怎么变。'],
+    explain: '锡有 10 种稳定同位素,所有元素里最多。中子太少或太多,原子核都会变得不稳;不对称项把曲线弯成山脊,配对项让偶数个中子更稳。50 是质子的幻数,锡因此格外「宽容」。' },
+  { title: '幻数', setup: labLevel('ef.lab.island_shell', { fit: function (a) { return Math.abs(a.m2 - 50) <= 3 && Math.abs(a.m3 - 82) <= 3 && Math.abs(a.m4 - 126) <= 3; } }),
+    task: '白线是「实测减去公式」多出来的结合能。拖三个尖峰滑块,让你的模型贴上白线的尖峰。',
+    ask: PROTO['ef.lab.island_shell'] ? ask('ef.lab.island_shell', '有眼光!把尖峰拖到它们该在的地方。') : { q: '多出来的结合能会在哪里冒尖?', opts: ['没有规律', '28、50、82、126 附近', '每隔 10 个'], ok: 1 },
+    hints: ['先找白线最高的三座峰,大概在横轴哪里?', '第 2 座峰在 50 附近,第 3 座在 80 多。', '把三个滑块分别拖到 50、82、126。'],
+    explain: '中子(或质子)数是 2、8、20、28、50、82、126 时,原子核格外稳——它们正好填满一层「壳」,就像稀有气体的电子填满一层。这叫幻数。铅-208 有 82 个质子、126 个中子,是「双幻数」,特别稳。物理学家用同样的思路预言:下一个中子幻数可能是 184。' },
+  { title: '周期表的尽头', setup: labLevel('ef.lab.island_edge', { terrain: true }), task: '把稳定岛的高度和位置调一调,和「没有岛」的平滑外推对比(打开 A/B 对照)。想清楚后点「记入实验记录本」。',
+    ask: PROTO['ef.lab.island_edge'] ? ask('ef.lab.island_edge', '对,沿着趋势走,120 号会非常短命。') : { q: '120 号最长寿的同位素大约能活多久?', opts: ['几十亿年', '不到 1 毫秒', '一天左右'], ok: 1 },
+    hints: ['看白点:越往右(越重),寿命大体是升还是降?', '118 号 Og 只活约 0.6 毫秒。', '黄线是「如果有稳定岛」的猜想,它没被实验证实。'],
+    explain: '目前最重的已命名元素是 118 号 Og,第 7 周期已经填满。越往尽头越短命,但理论预言在质子约 114–126、中子约 184 处可能有一座「稳定岛」。问题是:岛上的原子核中子太多,现有的加速器还造不出来。119、120 号正在寻找中,截至 2026 年 9 月还没有公认的合成报告。宇宙里最重的天然元素,则是中子星并合等事件里 r 过程「下金雨」造出来的。' }
+];
+var NOTES = { title: '元素工坊 · 元素周期表的尽头在哪里?', items: [
+  '原子核靠强相互作用抱在一起;铁、镍附近平均每个核子抱得最紧(约 8.8 MeV)。',
+  '已知约 3300 多种原子核,稳定的只有约 250 种;中子太多或太少都会衰变。',
+  '液滴模型(五项公式)能算出大致趋势;它算不准的地方藏着幻数 2、8、20、28、50、82、126。',
+  '锡有 10 种稳定同位素,所有元素里最多;铅-208 是「双幻数」核。',
+  '目前最重的已命名元素是 118 号 Og(2016 年命名);119、120 号仍在寻找中。',
+  '稳定岛(质子约 114–126、中子约 184)是理论预言,还没被实验证实。',
+  '比铁重的元素大约一半来自 r 过程,中子星并合是重要来源之一(仍在研究其占比)。'],
+  bridge: '<a href="../stars/">你身体里的铁是从哪颗星来的?</a> · 深空层航线「铁从哪里来」' };
+EF.mission('island', LEVELS, NOTES);
+}
+})();
+</script>
+</body>
+</html>

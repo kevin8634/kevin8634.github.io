@@ -1,0 +1,168 @@
+{
+ "schema": "gn-lab/1",
+ "world": "ef",
+ "color": "#FF9A3C",
+ "updated": "2026-11-01",
+ "ai_generated": "问题、猜测题、结论文字由 AI 撰写(元素工坊 2.0 窗口);数值由脚本 build/protos.py 复算;实测数据见数据台账",
+ "id": "ef.lab.island_edge",
+ "title": "周期表的尽头 · 稳定岛在哪?",
+ "question": "元素越重越短命,周期表会在哪里结束?传说中的「稳定岛」真的存在吗?",
+ "evidence": "conjecture",
+ "safety": "red",
+ "safetyNote": "超重原子核只能在重离子加速器里一个一个地造出来,且有强放射性;这里全部是数据与模型的虚拟实验。",
+ "bridges": [
+  "ef.stars"
+ ],
+ "unit": "log10(秒)",
+ "params": [
+  {
+   "k": "b",
+   "label": "每多 1 个质子,寿命掉几个数量级",
+   "min": 0.2,
+   "max": 0.9,
+   "step": 0.01,
+   "value": 0.55
+  },
+  {
+   "k": "h",
+   "label": "稳定岛高度(多活几个数量级)",
+   "min": 0,
+   "max": 10,
+   "step": 0.1,
+   "value": 3
+  },
+  {
+   "k": "zi",
+   "label": "稳定岛中心(质子数)",
+   "min": 110,
+   "max": 126,
+   "step": 1,
+   "value": 120
+  }
+ ],
+ "model": {
+  "type": "fn",
+  "x": {
+   "k": "Z",
+   "from": "data"
+  },
+  "defs": [
+   {
+    "k": "s",
+    "expr": "7-b*(Z-100)"
+   }
+  ],
+  "ys": [
+   {
+    "label": "平滑外推(没有岛)",
+    "expr": "s"
+   },
+   {
+    "label": "加上稳定岛(猜想)",
+    "expr": "s+h*exp(-((Z-zi)/4)^2)",
+    "color": "#ffd27a"
+   }
+  ]
+ },
+ "data": {
+  "src": "../../data/ef.island.edge.json",
+  "x": "Z",
+  "ys": [
+   {
+    "col": "best",
+    "label": "已知最长寿同位素(实测)",
+    "color": "#e9eefb"
+   }
+  ]
+ },
+ "chart": {
+  "xlabel": "质子数 Z",
+  "ylabel": "log10(半衰期/秒)",
+  "marks": [
+   {
+    "x": 114,
+    "label": "Fl 114"
+   },
+   {
+    "x": 118,
+    "label": "Og 118"
+   },
+   {
+    "x": 120,
+    "label": "120?"
+   },
+   {
+    "x": 126,
+    "label": "126?"
+   }
+  ]
+ },
+ "ab": {
+  "vary": "h"
+ },
+ "predict": {
+  "q": "按现在的趋势外推,120 号元素最长寿的同位素大约能活多久?",
+  "options": [
+   "像铀一样几十亿年",
+   "不到 1 毫秒",
+   "正好一天左右"
+  ],
+  "answer": 1,
+  "why": "118 号 Og 最长寿的同位素只活约 0.6 毫秒(IAEA 收录值约 10^−3.2 秒)。沿这条线外推,120 号大约在万分之一秒量级。稳定岛如果存在,中子数接近 184 的核可能活得长得多——但它们中子太多,现有的束流和靶都造不出来。"
+ },
+ "conclusions": [
+  {
+   "text": "目前命名的最重元素是 118 号 Og(2016 年由 IUPAC 命名),第 7 周期已经填满。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "越往周期表尽头,已知最长寿同位素的寿命大体越短,但 110–112 号附近有一段「变平」。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "截至 2026 年 9 月,119、120 号仍在寻找中,尚无公认的合成报告;2024 年用钛-50 束流造出 116 号,为合成 120 号铺路。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "理论计算认为 Og 受相对论效应影响,化学性质可能不像典型的稀有气体。",
+   "evidence": "inferred"
+  },
+  {
+   "text": "稳定岛(质子约 114–126、中子约 184)是理论预言,能活多久、在哪里,都还没有被实验证实。",
+   "evidence": "conjecture"
+  }
+ ],
+ "checks": [
+  {
+   "label": "Z=118 平滑外推",
+   "x": 118,
+   "expect": -2.9,
+   "tol": 0.005
+  },
+  {
+   "label": "Z=120 加岛",
+   "x": 120,
+   "expect": -1.0,
+   "tol": 0.005,
+   "y": 1
+  }
+ ],
+ "sources": [
+  {
+   "name": "IAEA Live Chart of Nuclides(AME2020/NUBASE2020/ENSDF)",
+   "url": "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html"
+  },
+  {
+   "name": "IUPAC · 113、115、117、118 号元素命名(2016)",
+   "url": "https://iupac.org/iupac-announces-the-names-of-the-elements-113-115-117-and-118/"
+  },
+  {
+   "name": "Berkeley Lab · 用钛-50 造出 116 号(2024)",
+   "url": "https://newscenter.lbl.gov/2024/07/23/a-new-way-to-make-element-116-opens-the-door-to-heavier-atoms/"
+  },
+  {
+   "name": "Annual Review of Nuclear and Particle Science · The Quest for Superheavy Nuclei(2026)",
+   "url": "https://www.annualreviews.org/content/journals/10.1146/annurev-nucl-100324-103404"
+  }
+ ]
+}
