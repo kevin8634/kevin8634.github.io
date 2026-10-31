@@ -92,14 +92,23 @@
         var fr = Math.min(1, r / Rg), x = r * Math.cos(t), z = r * Math.sin(t), y = gauss(R) * Rg * (.008 + .012 * fr), young = onArm && R() < .55, pink = onArm && R() < .06;
         if (pink) { for (i = 0; i < 6; i++) put(x + gauss(R) * Rg * .004, y + gauss(R) * Rg * .002, z + gauss(R) * Rg * .004, 1, .35, .62, Rg * .006); continue; }
         put(x, y, z, young ? .62 + R() * .1 : .95 - fr * .2, young ? .74 + R() * .08 : .86 - fr * .1, young ? 1 : .7 + fr * .2, Rg * (young ? .0055 : .0045) * (1 + R() * .6));
-        if (onArm && R() < .35) { var td = t - .07 - R() * .05; dust(r * Math.cos(td), gauss(R) * Rg * .004, r * Math.sin(td), Rg * (.008 + R() * .01)); }
+        if (onArm && R() < .35 * Math.min(1, Math.pow(r / (Rg * .4), 2))) { var td = t - .07 - R() * .05; dust(r * Math.cos(td), gauss(R) * Rg * .004, r * Math.sin(td), Rg * (.008 + R() * .01)); }
       }
       for (k = 0; k < N * .05; k++) {   // 弥散星光:大而淡的 3D 光粒子,给盘面体积感(核区暖、外盘冷)
         var rd2 = Math.min(Rg, -Math.log(1 - R() * .97) * Rg * .22), td2 = R() < .6 ? Math.log(Math.max(rd2, Rg * .08) / (Rg * .08)) / tp + Math.floor(R() * g.arms) * 6.283 / g.arms + gauss(R) * .3 : R() * 6.283, f2 = rd2 / Rg;
         put(rd2 * Math.cos(td2), gauss(R) * Rg * (.01 + .03 * (1 - f2)), rd2 * Math.sin(td2), .16 - f2 * .06, .13 - f2 * .03, .1 + f2 * .04, Rg * (.05 - f2 * .02));
       }
+      for (k = 0; k < N * .025; k++) {   // C2.13a2 恒星晕:3D 椭球淡光,侧看不再是薄片
+        var rh = Math.abs(gauss(R)) * Rg * .35, th2 = R() * 6.283, ph2 = Math.acos(2 * R() - 1), fh = Math.min(1, rh / Rg);
+        put(rh * Math.sin(ph2) * Math.cos(th2), rh * Math.cos(ph2) * .55, rh * Math.sin(ph2) * Math.sin(th2), .12 - fh * .05, .1 - fh * .03, .08, Rg * (.07 - fh * .03));
+      }
+      for (k = 0; k < N * .012; k++) {   // C2.13a2 丝状暗尘体积:沿旋臂内缘的成串吸收粒子,带厚度
+        var rd3 = Rg * (.3 + R() * .6), ai3 = Math.floor(R() * g.arms), t5 = Math.log(rd3 / (Rg * .08)) / tp + ai3 * 6.283 / g.arms - .1 + gauss(R) * .05;
+        for (i = 0; i < 2; i++) { var j3 = (i - .5) * .015; dust((rd3 + gauss(R) * Rg * .01) * Math.cos(t5 + j3), gauss(R) * Rg * .007, (rd3 + gauss(R) * Rg * .01) * Math.sin(t5 + j3), Rg * (.007 + R() * .007)); }
+      }
     } else if (g.ty === 'el') {
       for (k = 0; k < N; k++) { var su = Math.sqrt(R() * .97), rr2 = Rg * .25 * su / (1 - su), t2 = R() * 6.283, p2 = Math.acos(2 * R() - 1); put(rr2 * Math.sin(p2) * Math.cos(t2), rr2 * Math.cos(p2) * g.q, rr2 * Math.sin(p2) * Math.sin(t2), 1, .84, .62, Rg * .02 * (1 + R())); }
+      for (k = 0; k < N * .06; k++) { var su3 = Math.sqrt(R() * .9), rr4 = Rg * .35 * su3 / (1 - su3), t6 = R() * 6.283, p6 = Math.acos(2 * R() - 1), f6 = Math.min(1, rr4 / Rg); put(rr4 * Math.sin(p6) * Math.cos(t6), rr4 * Math.cos(p6) * g.q, rr4 * Math.sin(p6) * Math.sin(t6), .14 - f6 * .06, .11 - f6 * .05, .08 - f6 * .04, Rg * (.09 - f6 * .04)); }   // C2.13a2 弥散体积光
     } else if (g.ty === 'ir') {   // 偏心棒 + 团块盘 + 一端的粉色巨型电离氢区(LMC = 蜘蛛星云)
       for (k = 0; k < N; k++) {
         var mode_ = R(), x2, y2, z2, cc = [.9, .85, .8], ss = Rg * .012;
@@ -109,6 +118,7 @@
         put(x2, y2, z2, cc[0], cc[1], cc[2], ss * (1 + R()));
         if (R() < .08) dust(x2 + gauss(R) * Rg * .03, y2, z2 + gauss(R) * Rg * .03, Rg * .03);
       }
+      for (k = 0; k < N * .05; k++) { var r7 = Math.abs(gauss(R)) * Rg * .45, t7 = R() * 6.283; put(r7 * Math.cos(t7) + Rg * .05, gauss(R) * Rg * .08, r7 * Math.sin(t7) * .85, .12, .11, .12, Rg * .06); }   // C2.13a2 弥散体积光
     } else {   // dSph:Plummer 球,稀疏暗淡
       for (k = 0; k < N; k++) { var su2 = R(), rp = Rg / Math.sqrt(Math.pow(su2 * .98, -2 / 3) - 1), t4 = R() * 6.283, p4 = Math.acos(2 * R() - 1); put(rp * Math.sin(p4) * Math.cos(t4), rp * Math.cos(p4) * .8, rp * Math.sin(p4) * Math.sin(t4), .95, .88, .75, Rg * .12); }
     }

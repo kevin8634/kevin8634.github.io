@@ -167,14 +167,30 @@
     grp = new T.Group(); var body = new T.Group(); grp.add(body);
     var c = d.c, sat = d.sat || 1.5;
     if (d.k === 'clu') {   // C2.9b 星系团 / 深场:成员星系精灵(椭圆 = 核球 shader,旋涡 = 盘 + 核球)+ 背景星系点 + 透镜弧
-      var mem = d.mem || [], nm = tier === 0 ? Math.min(mem.length, 70) : mem.length;
-      for (var j = 0; j < nm; j++) {
-        var g = mem[j], gr = new T.Group(); gr.position.set(g[0], g[1], 0); gr.rotation.z = (g[4] || 0) * Math.PI / 180; body.add(gr);
-        var gc = d.pal[g[5] || 0], gs = g[2];
-        if (g[6]) { var sd = cloud(3, R0() * 40, gc, sat, Math.min(oct, 3)); sd.scale.set(gs, gs * g[3], 1); sd.material.userData.a = 1.1; gr.add(sd); var sb = cloud(4, 0, gc, sat, 2); sb.scale.set(gs * .35, gs * .35 * Math.max(g[3], .5), 1); gr.add(sb); }
-        else { var se = cloud(4, 0, gc, sat, 2); se.scale.set(gs, gs * g[3], 1); se.material.userData.a = g[7] || 1; gr.add(se); }
+      // C2.13a2:成员星系改真 3D 粒子(不再用平面精灵)—— 椭圆 = 3D 高斯椭球星点;旋涡 = 随机 3D 倾斜的盘面星点 + 核球 + 暗尘;透镜弧 = 弧形 3D 粒子带
+      var mem = d.mem || [], nm = tier === 0 ? Math.min(mem.length, 70) : mem.length, MB = [];
+      for (var j = 0; j < nm; j++) { var g = mem[j], a1 = (g[4] || 0) * Math.PI / 180, ti = Math.acos(Math.max(.15, g[3] || .8)), cz = Math.cos(a1), sz2 = Math.sin(a1); MB.push({ x: g[0], y: g[1], s: g[2], q: g[3] || .8, ca: cz, sa: sz2, ct: Math.cos(ti), st: Math.sin(ti), sp: !!g[6], pc: d.pal[g[5] || 0], b: g[7] || 1, w: g[6] ? 1 : g[2] * g[2] }); }
+      var EL = MB.filter(function (m) { return !m.sp; }), SP = MB.filter(function (m) { return m.sp; }), kq = [.35, .7, 1][tier];
+      function wpick(L) { var t = 0, i; for (i = 0; i < L.length; i++) t += L[i].w + .002; var r = R0() * t; for (i = 0; i < L.length; i++) { r -= L[i].w + .002; if (r <= 0) return L[i]; } return L[L.length - 1]; }
+      function place(m, x, y, z, o) { var x1 = x, y1 = y * m.ct - z * m.st, z1 = y * m.st + z * m.ct; o.p[0] = m.x + (x1 * m.ca - y1 * m.sa) * m.s; o.p[1] = m.y + (x1 * m.sa + y1 * m.ca) * m.s; o.p[2] = z1 * m.s; }
+      if (EL.length) body.add(vol(Math.round(14000 * kq), function (o) {
+        var m = wpick(EL), u = Math.sqrt(R0() * .96), rr = .22 * u / (1 - u), x = gsn(R0), y = gsn(R0), z = gsn(R0), l = Math.sqrt(x * x + y * y + z * z) || 1; x = x / l * rr; y = y / l * rr * m.q; z = z / l * rr * m.q;
+        o.p[0] = m.x + (x * m.ca - y * m.sa) * m.s; o.p[1] = m.y + (x * m.sa + y * m.ca) * m.s; o.p[2] = z * m.s;
+        var C3 = col(m.pc[2], 1), br = .28 * m.b * (.5 + .5 * R0()) * Math.exp(-rr * .5); o.c[0] = C3.r * br; o.c[1] = C3.g * .95 * br; o.c[2] = C3.b * .85 * br; o.s = m.s * (.12 + R0() * .2);
+      }, 1));
+      if (SP.length) {
+        body.add(vol(Math.round(12000 * kq), function (o) {
+          var m = SP[Math.floor(R0() * SP.length)], t = Math.pow(R0(), .7), core = R0() < .22, a;
+          if (core) { place(m, gsn(R0) * .1, gsn(R0) * .1, gsn(R0) * .07, o); var C4 = col(m.pc[2], 1), b4 = .3 * m.b; o.c[0] = C4.r * b4; o.c[1] = C4.g * .9 * b4; o.c[2] = C4.b * .7 * b4; o.s = m.s * .16; return; }
+          a = R0() < .7 ? (R0() < .5 ? 0 : Math.PI) + t * 5 + gsn(R0) * .3 : R0() * 6.2832; var rr = .08 + t * .9;
+          place(m, Math.cos(a) * rr, Math.sin(a) * rr, gsn(R0) * .02, o); var C5 = col(m.pc[1], 1.2), b5 = .2 * m.b * (.5 + .5 * R0()) * (1.1 - t * .5); o.c[0] = C5.r * b5; o.c[1] = C5.g * b5; o.c[2] = C5.b * b5; o.s = m.s * (.1 + R0() * .12);
+        }, 1));
+        body.add(vol(Math.round(3000 * kq), function (o) { var m = SP[Math.floor(R0() * SP.length)], t = .2 + R0() * .6, a = (R0() < .5 ? 0 : Math.PI) + t * 5 - .25 + gsn(R0) * .15, rr = .08 + t * .9; place(m, Math.cos(a) * rr, Math.sin(a) * rr, gsn(R0) * .01, o); o.c[0] = .35; o.c[1] = .27; o.c[2] = .2; o.s = m.s * (.12 + R0() * .1); }, .6, true));
       }
-      (d.arcs || []).forEach(function (a) { var am = cloud(6, R0() * 20, d.arcC || ['#000000', '#ff9a70', '#ffe0c0'], sat, Math.min(oct, 3)); am.material.uniforms.uD.value = a[2]; am.scale.setScalar(a[0] / .85); am.rotation.z = a[1] * Math.PI / 180; body.add(am); });
+      (d.arcs || []).forEach(function (a) {   // 引力透镜弧:绕团中心的薄弧形 3D 粒子带
+        var C6 = col((d.arcC || ['#000', '#ff9a70', '#ffe0c0'])[1], 1.2), C7 = col((d.arcC || ['#000', '#ff9a70', '#ffe0c0'])[2], 1), a0 = a[1] * Math.PI / 180, span = a[2] * 1.4;
+        body.add(vol(Math.round(900 * kq), function (o) { var f = (R0() - .5) * span, rr = a[0] * (1 + gsn(R0) * .012), w = 1 - Math.abs(f) / (span / 2); if (R0() > .25 + w) return false; o.p[0] = Math.cos(a0 + f) * rr; o.p[1] = Math.sin(a0 + f) * rr; o.p[2] = gsn(R0) * .006; if (R0() > .55 + .45 * Math.sin(f * 37 + a0 * 5)) return false; var hot = R0() < .3, br = .04 * (.4 + w); o.c[0] = (hot ? C7.r : C6.r) * br; o.c[1] = (hot ? C7.g : C6.g) * br; o.c[2] = (hot ? C7.b : C6.b) * br; o.s = .012 + R0() * .016; }, 1));
+      });
       var bgc = d.bgC || [[1, .7, .45], [.6, .75, 1], [1, .45, .35]];
       body.add(points(Math.round((d.nbg || 800) * [.4, .7, 1][tier]), function (i, o) {
         var a = R0() * 6.2832, rr = Math.sqrt(R0()) * 1.0; o.p[0] = Math.cos(a) * rr; o.p[1] = Math.sin(a) * rr; o.p[2] = 0;
