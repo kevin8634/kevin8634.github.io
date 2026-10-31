@@ -24,6 +24,15 @@
   function ok(k) { var im = IMG[k]; return !!(im && im.ok && im.naturalWidth); }
   try { pre(); } catch (e) { }
 
+  // C2.14a 登舰视频(王磊 10-31 15:58 确认;08 视频宣发《深空之下》,AI 生成画面,画面右上角标识保留):
+  // 横屏 16:9 9.125 s(720p / 大屏 1080p,带 BGM);竖屏手机用 720×1280 版。视频播完停在舱内末帧,载入完成后开孔进驾驶舱;
+  // 视频 5 s 内起不来或出错 → 退回下面的程序动画;减少动态仍用静帧。
+  function vidSrc() {
+    try { if (!document.createElement('video').canPlayType('video/mp4; codecs="avc1.640028"')) return null; } catch (e) { return null; }
+    var w = innerWidth || 1200, h = innerHeight || 800, dpr = devicePixelRatio || 1;
+    if (h > w * 1.15) return BASE + 'v/board-v.mp4';
+    return BASE + (w * dpr >= 1700 ? 'v/board-1080.mp4' : 'v/board-720.mp4');
+  }
   function sprite() {   // 一朵柔和云团的离屏贴图
     var c = document.createElement('canvas'); c.width = c.height = 128; var g = c.getContext('2d');
     var r = g.createRadialGradient(64, 64, 4, 64, 64, 62);
@@ -40,6 +49,12 @@
     for (i = 0; i < 46; i++) clouds.push({ x: R() * 1.6 - .3, y: R() * 1.5, z: .35 + R() * .9, r: .12 + R() * .22, a: .5 + R() * .5 });
     for (i = 0; i < 260; i++) stars.push({ x: R(), y: R(), m: R() });
     A = { ov: ov, cv: cv, g: g, getP: getP, q: 0, t0: performance.now(), last: performance.now(), raf: 0, end: null, endT: 0, rev: 0, ph: 0, spr: sprite(), clouds: clouds, stars: stars, rm: rm() };
+    var vs = A.rm ? null : vidSrc();
+    if (vs) { var vd = document.createElement('video'); A.vid = vd; A.vT0 = performance.now(); vd.setAttribute('playsinline', ''); vd.playsInline = true; vd.preload = 'auto'; vd.src = vs;
+      vd.addEventListener('playing', function () { if (A && A.vid === vd) A.vOK = 1; });
+      vd.addEventListener('ended', function () { if (A && A.vid === vd) A.vEnd = 1; });
+      vd.addEventListener('error', function () { if (A && A.vid === vd && !A.vOK) A.vid = null; });
+      var pr = vd.play(); if (pr && pr.catch) pr.catch(function () { if (!A || A.vid !== vd) return; vd.muted = true; var p2 = vd.play(); if (p2 && p2.catch) p2.catch(function () { if (A && A.vid === vd) A.vid = null; }); }); }
     function size() { D = Math.min(devicePixelRatio || 1, innerWidth < 700 ? 1.25 : 1.5); W = cv.clientWidth || innerWidth; H = cv.clientHeight || innerHeight; cv.width = Math.round(W * D); cv.height = Math.round(H * D); }
     size(); A.size = size; addEventListener('resize', size);
     function tick(now) {
@@ -48,6 +63,15 @@
       var p = 0; try { var v = getP() || {}; p = Math.min(1, (v.g || 0) * .7 + (v.a || 0) * .3); } catch (e) { }
       if (A.end) p = 1;
       if (A.frozen) { draw(now / 1000, dt); A.raf = requestAnimationFrame(tick); return; }
+      if (A.vid && !A.vOK && now - A.vT0 > 5000) { try { A.vid.pause(); } catch (e) { } A.vid = null; }   // 视频起不来 → 程序动画
+      if (A.vid) {   // 视频模式:进度跟视频时间走;播完停在舱内末帧,等载入完成
+        var vd = A.vid, du = vd.duration || 9.125; if (A.vOK) A.q = Math.min(.999, (vd.currentTime || 0) / du);
+        var fin = A.vEnd || (A.vOK && vd.currentTime >= du - .06);
+        draw(now / 1000, dt);
+        if (A.end && fin && !A.endT) { A.q = 1; A.endT = now; var cbv = A.end; A.end = function () { }; A.end.done = true; try { cbv(); } catch (e) { } }
+        if (A.endT) { A.rev = Math.min(1, (now - A.endT) / 1300); if (A.rev >= 1) { stop(); return; } }
+        A.raf = requestAnimationFrame(tick); return;
+      }
       var vmax = A.end ? 1 / 2.2 : 1 / 6.5;              // 最快 6.5 s;收尾(载入已完成/点了继续)时加速
       var tgt = Math.min(p, 1);
       if (!A.end && tgt < 1) tgt = Math.min(tgt, .985);   // 未完成前不走到终点
@@ -64,6 +88,7 @@
       g.setTransform(D, 0, 0, D, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1;
       g.fillStyle = '#02040a'; g.fillRect(0, 0, W, H);
       if (A.rm) { still(q); return; }
+      if (A.vid) { var vd = A.vid; if (A.vOK && vd.videoWidth) { var k = Math.max(W / vd.videoWidth, H / vd.videoHeight), vw = vd.videoWidth * k, vh = vd.videoHeight * k; g.drawImage(vd, (W - vw) / 2, (H - vh) / 2, vw, vh); } if (A.endT) reveal(); return; }
       var s1 = ease(seg(q, 0, .3)), s2 = seg(q, .26, .64), s3 = seg(q, .6, .94), s4 = seg(q, .9, 1);
       if (q < .34) { if (ok('climb') && ok('edge')) climbR(t, dt, q); else sky(t, s1, seg(q, 0, .3)); }
       if (q > .24 && q < .66) { if (ok('ship')) shipR(t, q); else space(t, s2, q < .3 ? seg(q, .24, .3) : q > .6 ? 1 - seg(q, .6, .66) : 1); }
@@ -300,6 +325,6 @@
     if (!A || A.ov !== ov) { cb(); return; }
     if (A.end) return; A.end = cb;
   }
-  function stop() { if (!A) return; if (A.ov && A.ov.parentNode) A.ov.parentNode.classList.remove('xa-boarding'); var r0 = document.getElementById('shxc'); if (r0) r0.classList.remove('xa-boarding'); cancelAnimationFrame(A.raf); removeEventListener('resize', A.size); if (A.cv && A.cv.parentNode) A.cv.remove(); A = null; }
-  window.SHXBD = { start: start, end: end, stop: stop, on: function (ov) { return !!(A && A.ov === ov); }, q: function () { return A ? A.q : -1; }, seek: function (v) { if (A) { A.q = v; A.frozen = v != null; } } };   // seek 仅供截图测试
+  function stop() { if (!A) return; if (A.ov && A.ov.parentNode) A.ov.parentNode.classList.remove('xa-boarding'); var r0 = document.getElementById('shxc'); if (r0) r0.classList.remove('xa-boarding'); if (A.vid) { try { A.vid.pause(); A.vid.removeAttribute('src'); A.vid.load(); } catch (e) { } } cancelAnimationFrame(A.raf); removeEventListener('resize', A.size); if (A.cv && A.cv.parentNode) A.cv.remove(); A = null; }
+  window.SHXBD = { start: start, end: end, stop: stop, on: function (ov) { return !!(A && A.ov === ov); }, q: function () { return A ? A.q : -1; }, vid: function () { return A ? { on: !!A.vid, ok: !!A.vOK, t: A.vid ? A.vid.currentTime : -1, muted: A.vid ? A.vid.muted : null, src: A.vid ? A.vid.currentSrc : '' } : null; }, seek: function (v) { if (A) { A.q = v; A.frozen = v != null; } } };   // seek 仅供截图测试
 })();

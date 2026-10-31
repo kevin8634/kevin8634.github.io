@@ -13,6 +13,10 @@
   function hms(h, m, s) { return (h + m / 60 + s / 3600) * 15; }
   function dms(d, m, s) { var g = d < 0 || Object.is(d, -0) ? -1 : 1; return g * (Math.abs(d) + m / 60 + s / 3600); }
   // k: bh 黑洞 / ns 中子星 / psr 脉冲星;m 质量(太阳);inc 吸积盘(或自转轴)与视线夹角(度);T0 示意色温(K)
+  function magSp(t) {   // 磁星:多块热斑缓慢游走、合并、缩小(仿 NASA NICER 对 SGR 1830−0645 的观测;时间大幅压缩)
+    var c = (t / 40) % 1, a = Math.sin(c * Math.PI);
+    return [[50 + 18 * Math.sin(t / 23), 0 + 40 * Math.sin(t / 31), 14 * (0.6 + 0.4 * a), 1.2], [70 + 14 * Math.sin(t / 19 + 1), 50 - 35 * c, 10 * (0.5 + 0.5 * a), 1.0], [60 + 20 * Math.cos(t / 27), 95 - 70 * c, 8 * (0.4 + 0.6 * a), .9], [130, 200, 25, .25]];
+  }
   var EX = {
     'Sgr A*': { k: 'bh', m: 4.297e6, ly: 26996, ra: hms(17, 45, 40.0409), dec: dms(-29, 0, 28.118), inc: 30, disk: [3, 12], T0: 3600, br: .8,
       img: 1, f: 'sgra', fit: 'contain', zoom: .92, phl: '真实照片<small>EHT 射电影像 · 2022</small>', pnote: '。照片为事件视界望远镜 EHT 2022 年发布的真实影像(1.3 mm 射电,多台望远镜组成地球大小的干涉阵),颜色为伪彩,不是可见光',
@@ -37,31 +41,37 @@
       facts: [['距离', '约 1,560 光年(478 秒差距)', '证'], ['质量', '约 9.3 倍太阳', '证'], ['伴星', '类太阳 G 型星,轨道周期约 185.4 天', '证'], ['状态', '「沉睡」黑洞:没有吸积盘,几乎不发光', '证'], ['发现', '2022 年由盖亚卫星天体测量发现', '证']],
       blurb: '它不吃东西,所以不发光,只能靠引力被发现:盖亚卫星测出伴星在天上画出一个小椭圆,而那个看不见的伴侣有 9 倍太阳质量。舷窗里看到的只有被它弯曲的星空和一圈漆黑的阴影;约 1.4 AU 外那颗黄色亮星就是它的伴星。',
       cr: '数据:El-Badry 等 2023《MNRAS》;Nagarajan 等 2024(质量)。舷窗画面为广义相对论光线追踪模拟' },
-    'RX J1856': { k: 'ns', m: 1.5, rk: 12.1, ly: 400, ra: hms(18, 56, 35.41), dec: dms(-37, 54, 35.8), inc: 50, T0: 434000, br: 1.3,
+    'RX J1856': { P: 7.055, mag: 40, spots: [[40, 0, 30, .18], [150, 190, 25, .14]], an: .2, k: 'ns', m: 1.5, rk: 12.1, ly: 400, ra: hms(18, 56, 35.41), dec: dms(-37, 54, 35.8), inc: 50, T0: 434000, br: 1.3,
       zh: '孤立中子星 RX J1856.5−3754', en: 'RX J1856.5−3754', type: '孤立中子星 · 已知最近',
       facts: [['距离', '约 400 光年', '证'], ['半径', '约 12 km(+1.3/−1.6)', '证'], ['质量', '约 1.5 倍太阳', '推'], ['表面温度', '约 43.4 万 °C(主要发 X 射线)', '证'], ['磁场', '约 10¹³ 高斯;VLT 2016 见真空双折射迹象', '推']],
       blurb: '超新星留下的城市大小的残核,一茶匙物质重约十亿吨。它不是脉冲星,只是靠余热发光。光线在它表面附近被强烈弯曲,所以你能同时看到它超过一半的表面。',
       cr: '数据:Walter 等;Potekhin 2014(半径);Ho 等 2007。舷窗画面为广义相对论光线追踪模拟,表面颜色为示意' },
-    'Vela PSR': { k: 'psr', m: 1.4, rk: 12, P: 0.089328385, ly: 959, ra: hms(8, 35, 20.65525), dec: dms(-45, 10, 35.1545), inc: 63.6, mag: 50, T0: 680000, br: 1.1,
+    'J0030': { k: 'psr', m: 1.34, rk: 12.71, P: 0.004865453, ly: 1060, ra: hms(0, 30, 27.4303), dec: dms(4, 51, 39.707), inc: 140, mag: 128, T0: 3.2e5, br: 1.1, bc: [.1, .16, .32], an: .1, sf: 0.0005, sf0: 1, st: [.35, .55, 1.15], pa: 2.6, bwd: 18,
+      spots: [[128, 0, 4.3, 2.6], [157, 166, 22, 1.5, 147, 166, 19]],   // Riley 等 2019 ST+PST 最佳拟合近似:小圆斑 + 月牙,都在南半球;我们从北半球方向看
+      zh: '毫秒脉冲星 J0030+0451', en: 'PSR J0030+0451', type: '毫秒脉冲星 · NICER 首张中子星表面图', lab: '脉冲星',
+      facts: [['距离', '约 1,060 光年(325 秒差距)', '证'], ['自转周期', '4.87 毫秒(每秒约 205 圈)', '证'], ['质量 / 半径', '约 1.34 倍太阳、12.7 km(NICER,Riley 等 2019)', '证'], ['热斑', '一个小圆斑 + 一条长月牙,全在南半球,约百万度', '证'], ['磁场', '不是教科书式的对称偶极,而是偏心 / 多极', '推']],
+      blurb: '(舷窗从南半球一侧看,和 NASA 的可视化一样;从地球方向看,热斑都挤在下缘。)NASA 的 NICER 望远镜盯着它的 X 射线随自转起伏,反推出了人类第一张中子星表面图:热斑不在南北两极正对,而是一个小圆斑和一条弯弯的月牙,全挤在南半球。舷窗里的热斑位置按这次拟合摆放;其余表面没有测到,这里像 NASA 的示意图一样填了斑驳的底色。光线弯曲让你能看到大半个星球。',
+      cr: '数据:Riley 等 2019、Miller 等 2019《ApJL》887 L21/L24;NASA SVS 13240 可视化。舷窗画面为广义相对论光线追踪模拟,底色与辐射束为示意' },
+    'Vela PSR': { spots: [[50, 0, 3.0, 1.6], [155, 205, 3.0, 1.4], [150, 200, 11, .5, 143, 200, 10]], an: .3, k: 'psr', m: 1.4, rk: 12, P: 0.089328385, ly: 959, ra: hms(8, 35, 20.65525), dec: dms(-45, 10, 35.1545), inc: 63.6, mag: 50, T0: 680000, br: 1.1,
       zh: '船帆座脉冲星', en: 'Vela Pulsar · PSR B0833−45', type: '脉冲星 · 船帆座超新星遗迹',
       facts: [['距离', '约 959 光年(哈勃视差)', '证'], ['自转周期', '89.33 毫秒(每秒约 11.2 圈)', '证'], ['身世', '约 1.1–1.2 万年前的超新星留下', '推'], ['自转突变', '平均约 3 年一次「glitch」突然加速', '证'], ['亮度', '高能伽马射线天空中最亮的持续源', '证']],
       blurb: '磁轴与自转轴不重合,两束辐射像灯塔一样扫过太空,扫到地球时我们就收到一个脉冲。质量与半径按典型中子星取值(约 1.4 倍太阳、12 km)。辐射束本身主要在射电与伽马波段,肉眼看不见,这里用伪彩画出,半宽按周期估算约 18°。表面约 68 万 K,在可见光里是刺眼的蓝白色,两极热斑更亮。',
-      cr: '数据:ATNF 脉冲星表(周期);Caraveo 等 2001(距离)。舷窗画面为广义相对论光线追踪模拟,辐射束为伪彩示意' },
-    'Crab PSR': { k: 'psr', m: 1.4, rk: 12, P: 0.0337, ly: 6500, ra: hms(5, 34, 31.94), dec: dms(22, 0, 52.2), inc: 61.3, mag: 55, T0: 1.5e6, br: 1.1, bc: [.7, .85, 1],
+      cr: '数据:ATNF 脉冲星表(周期);Caraveo 等 2001(距离)。舷窗画面为广义相对论光线追踪模拟,辐射束为伪彩示意;热斑位置无实测,按偏心偶极 + 极旁小尺度多极推测(参照 NICER 对 J0030 的结果)' },
+    'Crab PSR': { spots: [[55, 0, 4.9, 1.6], [150, 200, 4.9, 1.4], [146, 196, 14, .5, 138, 196, 13]], an: .3, k: 'psr', m: 1.4, rk: 12, P: 0.0337, ly: 6500, ra: hms(5, 34, 31.94), dec: dms(22, 0, 52.2), inc: 61.3, mag: 55, T0: 1.5e6, br: 1.1, bc: [.7, .85, 1],
       zh: '蟹状星云脉冲星', en: 'Crab Pulsar · PSR B0531+21', type: '脉冲星 · 蟹状星云(M1)中心', lab: '脉冲星',
       facts: [['距离', '约 6,500 光年(约 2 千秒差距,与 M1 相同)', '证'], ['自转周期', '约 33.7 毫秒(每秒约 30 圈)', '证'], ['身世', '1054 年中国宋代记录的「天关客星」超新星留下', '证'], ['能量', '自转变慢释放的能量点亮整个蟹状星云', '证'], ['质量 / 半径', '按典型中子星取约 1.4 倍太阳、12 km', '推']],
       blurb: '它就藏在蟹状星云(M1)正中央:九百多年前爆发的超新星,把恒星核心压成这颗每秒自转约 30 圈的中子星。它在变慢,丢掉的转动能量变成高速粒子风,让整团星云至今仍在发光。辐射束在射电到伽马波段,这里用伪彩画出。',
-      cr: '数据:ATNF 脉冲星表 / Jodrell Bank 蟹状脉冲星月历(周期);Trimble 1973、Kaplan 等 2008(距离);《宋会要》客星记录。舷窗画面为广义相对论光线追踪模拟,辐射束为伪彩示意' },
-    'Geminga': { k: 'psr', m: 1.4, rk: 12, P: 0.2371, ly: 815, ra: hms(6, 33, 54.153), dec: dms(17, 46, 12.91), inc: 55, mag: 40, T0: 490000, br: 1.1, bc: [.75, .65, 1],
+      cr: '数据:ATNF 脉冲星表 / Jodrell Bank 蟹状脉冲星月历(周期);Trimble 1973、Kaplan 等 2008(距离);《宋会要》客星记录。舷窗画面为广义相对论光线追踪模拟,辐射束为伪彩示意;热斑位置无实测,按偏心偶极 + 极旁小尺度多极推测(参照 NICER 对 J0030 的结果)' },
+    'Geminga': { spots: [[40, 0, 1.9, 1.6], [160, 210, 1.9, 1.4], [154, 205, 9, .45, 148, 205, 8]], an: .3, k: 'psr', m: 1.4, rk: 12, P: 0.2371, ly: 815, ra: hms(6, 33, 54.153), dec: dms(17, 46, 12.91), inc: 55, mag: 40, T0: 490000, br: 1.1, bc: [.75, .65, 1],
       zh: '杰敏卡(Geminga)', en: 'Geminga · PSR J0633+1746', type: '脉冲星 · 射电宁静的伽马射线源', lab: '脉冲星',
       facts: [['距离', '约 815 光年(250 秒差距,哈勃视差)', '推'], ['自转周期', '约 237 毫秒(每秒约 4.2 圈)', '证'], ['年龄', '约 34 万年', '推'], ['特点', '几乎没有射电脉冲,主要在 X 射线与伽马射线可见', '证'], ['发现', '1972 年 SAS-2 卫星发现的伽马射线源,1992 年才确认是脉冲星', '证']],
       blurb: '名字来自米兰方言「它不在那儿」:多年来天文学家只看到伽马射线,却找不到对应的天体。它的射电束没有扫过地球,所以几乎「静音」。离我们只有八百多光年,是最近的脉冲星之一,周围还拖着一圈数光年宽的高能粒子晕。',
-      cr: '数据:Faherty 等 2007(距离);Bignami & Caraveo 1996;Fermi-LAT(周期)。舷窗画面为广义相对论光线追踪模拟,辐射束为伪彩示意' },
-    'SGR 1806': { k: 'mag', m: 1.4, rk: 12, P: 7.6022, ly: 28400, ra: hms(18, 8, 39.32), dec: dms(-20, 24, 39.5), inc: 50, mag: 35, T0: 7e6, br: 1.2, bc: [1, .55, .78],
+      cr: '数据:Faherty 等 2007(距离);Bignami & Caraveo 1996;Fermi-LAT(周期)。舷窗画面为广义相对论光线追踪模拟,辐射束为伪彩示意;热斑位置无实测,按偏心偶极 + 极旁小尺度多极推测(参照 NICER 对 J0030 的结果)' },
+    'SGR 1806': { spots: magSp, an: .25, k: 'mag', m: 1.4, rk: 12, P: 7.6022, ly: 28400, ra: hms(18, 8, 39.32), dec: dms(-20, 24, 39.5), inc: 50, mag: 35, T0: 7e6, br: 1.2, bc: [1, .55, .78],
       zh: '磁星 SGR 1806−20', en: 'SGR 1806−20 · magnetar', type: '磁星 · 已知磁场最强的天体之一', lab: '磁星',
       facts: [['距离', '约 2.8 万光年(8.7 千秒差距)', '推'], ['自转周期', '约 7.6 秒', '证'], ['磁场', '表面约 2×10¹⁵ 高斯,约为地磁的千万亿倍', '推'], ['巨耀发', '2004 年 12 月 27 日,0.2 秒内放出相当于太阳数十万年的能量,扰动了地球电离层', '证'], ['质量 / 半径', '按典型中子星取约 1.4 倍太阳、12 km', '推']],
-      blurb: '磁星是磁场最强的一类中子星。它的磁场强到会撕裂自己的外壳,引发「星震」并喷出伽马射线耀发。2004 年那次巨耀发远在 2.8 万光年外,却仍让地球上的卫星探测器饱和。它没有灯塔式的射电束:舷窗里是一颗约 700 万 K 的蓝白色星体,一块大热斑随 7.6 秒的自转转过来又转过去。',
-      cr: '数据:Kaplan 等 2002(Chandra 定位);Tendulkar 等 2012(周期、磁场);Bibby 等 2008(距离);Hurley 等 2005(巨耀发)。舷窗画面为广义相对论光线追踪模拟,辐射束为伪彩示意' }
+      blurb: '磁星是磁场最强的一类中子星。它的磁场强到会撕裂自己的外壳,引发「星震」并喷出伽马射线耀发。2004 年那次巨耀发远在 2.8 万光年外,却仍让地球上的卫星探测器饱和。它没有灯塔式的射电束:舷窗里是一颗约 700 万 K 的蓝白色星体,几块大热斑随 7.6 秒的自转转过来又转过去,还会慢慢游走、合并、缩小——NASA 的 NICER 在另一颗磁星上真的看到过这一幕。',
+      cr: '数据:Kaplan 等 2002(Chandra 定位);Tendulkar 等 2012(周期、磁场);Bibby 等 2008(距离);Hurley 等 2005(巨耀发)。舷窗画面为广义相对论光线追踪模拟;多块热斑游走合并仿 NASA NICER 对磁星 SGR 1830−0645 的观测,时间大幅压缩' }
   };
   Object.keys(EX).forEach(function (k) { var e = EX[k]; e.rs = RS1 * e.m; e.rsurf = e.k === 'bh' ? 1 : e.rk / e.rs; e.R = 15 * e.rs; e.rly = e.R / LY; e.exo = e.k; e.n = e.img ? 1 : 0; });
 
@@ -75,7 +85,7 @@
   var FS = [
     'precision highp float;varying vec2 vN;',
     'uniform mat4 uIP,uMW;uniform mat3 uSkyM;uniform vec3 uC,uN,uS,uMg,uTint,uBc,uCo,uCoC;uniform sampler2D tSky;',
-    'uniform float uT,uSteps,uRb,uSurf,uK,uRin,uRo,uT0,uBr,uHas,uH,uLod,uHasD,uBw,uHs,uCoA,uTw;', NOISE,
+    'uniform float uT,uSteps,uRb,uSurf,uK,uRin,uRo,uT0,uBr,uHas,uH,uLod,uHasD,uBw,uHs,uCoA,uTw,uAn;uniform vec4 uSp[4],uSm[4];uniform vec3 uSt;uniform float uPa;uniform float uSw[4];', NOISE,
     'vec3 sky(vec3 d,float lod){float cz=dot(normalize(d),uCo);if(cz>uCoA){float q=clamp((cz-uCoA)/(1.0-uCoA),0.0,1.0);float mu=sqrt(1.0-(1.0-q)*(1.0-q));return uCoC*(0.4+0.6*mu);}vec3 l=normalize(uSkyM*d);float th=acos(clamp(l.y,-1.0,1.0));float ph=atan(l.z,-l.x);return textureLod(tSky,vec2(fract(ph/6.2831853),1.0-th/3.1415927),lod).rgb*uTint;}',
     // Tanner Helland 黑体色近似(T 单位 K)
     'vec3 bb(float T){T=clamp(T,1000.0,40000.0)/100.0;float r=T<=66.0?1.0:clamp(1.292936*pow(T-60.0,-0.1332047),0.0,1.0);',
@@ -107,11 +117,14 @@
     '    float a=smoothstep(uRin,uRin*1.25,rr)*(1.0-smoothstep(uRo*0.55,uRo,rr))*(0.55+0.45*nz);',
     '    vec3 em=bb(uT0*f*g)*pow(f*g,3.0)*uBr*2.6*(0.5+0.9*nz);col+=tr*a*em;tr*=1.0-a*0.85;}}}',
     '  if(uK>1.5&&uK<2.5){vec3 pm=0.5*(p+pn);float rm=length(pm);float ca=abs(dot(pm/rm,uMg));float an2=acos(min(ca,1.0));',   // 脉冲星辐射束(伪彩)
-    '   float bm=exp(-pow(an2/uBw,2.0))*smoothstep(uSurf,uSurf*1.6,rm)*exp(-rm/22.0);col+=tr*uBc*bm*hs*0.14;}',
+    '   float bm=exp(-pow(an2/uBw,2.0))*smoothstep(uSurf,uSurf*1.6,rm)*exp(-rm/22.0);col+=tr*uBc*bm*hs*0.09;}',
     '  if(rn<uSurf){hit=true;',
     '   if(uK>0.5){vec3 q=normalize(mix(p,pn,clamp((r-uSurf)/max(r-rn,1e-4),0.0,1.0)));float mu=max(dot(q,-normalize(v)),0.0);float g=sqrt(1.0-1.0/uSurf);',
-    '    float sp=uK>1.5?exp(-pow(acos(min(abs(dot(q,uMg)),1.0))/uHs,2.0))*(uK>2.5?1.0:1.6):0.0;',
-    '    float gr=n3(q*9.0)*0.15;col+=tr*bb(uT0*g)*(0.55+0.45*mu+gr+sp)*uBr;}',
+    // C2.8d 表面温度图(仿 NASA/NICER):各向异性壳层导热 → 磁极暖、磁赤道冷(Greenstein & Hartke 1983);热斑 = 球冠减遮挡球冠(可成月牙,X-PSI);底色斑驳为示意
+    '    float sp=0.0;for(int i=0;i<4;i++){float w=uSw[i];if(w<=0.0)continue;float ce=uSp[i].w,cm=uSm[i].w,ed=max(1.0-ce,1e-4)*0.25+0.002;',
+    '     float a1=smoothstep(ce-ed,ce+ed,dot(q,uSp[i].xyz));float a2=cm<1.5?smoothstep(cm-ed,cm+ed,dot(q,uSm[i].xyz)):0.0;sp+=w*a1*(1.0-a2);}',
+    '    float tf=1.0-uAn*(1.0-sqrt(abs(dot(q,uMg))));float gr=((n3(q*4.0)-0.5)*0.16+(n3(q*11.0)-0.5)*0.08)*uPa;',
+    '    col+=tr*mix(uSt,vec3(1.0),min(sp,1.0))*bb(uT0*g*(1.0+0.6*sp))*(0.6+0.4*mu)*(tf+gr+sp*2.2)*uBr;}',
     '   tr=0.0;break;}',
     '  p=pn;v=vn;if(rn>uRb&&dot(p,v)>0.0){esc=true;break;}',
     ' }',
@@ -135,7 +148,7 @@
     scn = new T.Scene(); var g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(new Float32Array([-1, -1, 0, 3, -1, 0, -1, 3, 0]), 3));
     mat = new T.ShaderMaterial({ vertexShader: VS, fragmentShader: FS, depthWrite: false, depthTest: false, transparent: false,
       uniforms: { uIP: { value: new T.Matrix4() }, uMW: { value: new T.Matrix4() }, uSkyM: { value: new T.Matrix3() }, uC: { value: new T.Vector3() }, uN: { value: new T.Vector3(0, 1, 0) }, uS: { value: new T.Vector3(0, 1, 0) }, uMg: { value: new T.Vector3(0, 1, 0) }, uBc: { value: new T.Vector3(.55, .62, 1) },
-        uTint: { value: new T.Color(0x9aa0ae) }, tSky: { value: null }, uT: { value: 0 }, uSteps: { value: 120 }, uRb: { value: 80 }, uSurf: { value: 1 }, uK: { value: 0 }, uRin: { value: 3 }, uRo: { value: 14 }, uT0: { value: 6000 }, uBr: { value: 1 }, uHas: { value: 0 }, uH: { value: .07 }, uLod: { value: 0 }, uHasD: { value: 6 }, uBw: { value: .1 }, uHs: { value: .25 }, uCoA: { value: 2 }, uTw: { value: 4096 }, uCo: { value: new T.Vector3(0, 0, 1) }, uCoC: { value: new T.Vector3() } } });
+        uTint: { value: new T.Color(0x9aa0ae) }, tSky: { value: null }, uT: { value: 0 }, uSteps: { value: 120 }, uRb: { value: 80 }, uSurf: { value: 1 }, uK: { value: 0 }, uAn: { value: 0 }, uSt: { value: new T.Vector3(1, 1, 1) }, uPa: { value: 1 }, uSp: { value: [0, 1, 2, 3].map(function () { return new T.Vector4(0, 0, 1, 2); }) }, uSm: { value: [0, 1, 2, 3].map(function () { return new T.Vector4(0, 0, 1, 2); }) }, uSw: { value: [0, 0, 0, 0] }, uRin: { value: 3 }, uRo: { value: 14 }, uT0: { value: 6000 }, uBr: { value: 1 }, uHas: { value: 0 }, uH: { value: .07 }, uLod: { value: 0 }, uHasD: { value: 6 }, uBw: { value: .1 }, uHs: { value: .25 }, uCoA: { value: 2 }, uTw: { value: 4096 }, uCo: { value: new T.Vector3(0, 0, 1) }, uCoC: { value: new T.Vector3() } } });
     var me = new T.Mesh(g, mat); me.frustumCulled = false; scn.add(me);
   }
   // 吸积盘法线 / 自转轴:与「从地球方向来的视线」成 inc 角(观测倾角),方位固定
@@ -153,8 +166,12 @@
     u.uSteps.value = [100, 150, 200][tier]; u.uH.value = [.12, .08, .06][tier]; u.uHasD.value = e.disk ? [1.6, 1.0, .7][tier] : 6;   // 有吸积盘时限制最大步长,避免盘面出现同心条纹
     // C2.8c 修:下面一行曾被误并进上一行注释,导致中子星/脉冲星/磁星全部按黑洞渲染(只有阴影和透镜,没有表面和辐射束)
     u.uK.value = e.k === 'bh' ? 0 : e.k === 'ns' ? 1 : e.k === 'mag' ? 3 : 2; u.uSurf.value = e.k === 'bh' ? 1 : e.rsurf;
-    u.uBw.value = e.P ? Math.min(35, 5.4 / Math.sqrt(e.P)) * Math.PI / 180 : .1;   // 辐射束半宽 ρ ≈ 5.4° P^-1/2(Rankin 1993 经验关系)
+    u.uBw.value = e.bwd ? e.bwd * Math.PI / 180 : e.P ? Math.min(35, 5.4 / Math.sqrt(e.P)) * Math.PI / 180 : .1;   // 辐射束半宽 ρ ≈ 5.4° P^-1/2(Rankin 1993 经验关系)
     u.uHs.value = e.k === 'mag' ? .55 : .25;   // 极冠热斑角半径(磁星热斑大)
+    slow = e.sf0 ? e.sf : 1;   // 毫秒脉冲星每秒数百圈,默认先慢放,否则热斑糊成环
+    var nsk = e.k === 'psr' || e.k === 'mag' || e.k === 'ns';   // 中子星表面:仿 NASA 示意图的斑驳蓝假色,热斑白热
+    u.uSt.value.fromArray(e.st || (nsk ? [.42, .6, 1.1] : [1, 1, 1])); u.uPa.value = e.pa || (nsk ? 2 : 1);
+    u.uAn.value = e.an == null ? (e.k === 'bh' ? 0 : .3) : e.an;   // 磁赤道相对磁极变暗幅度
     var co = e.co; u.uCoA.value = co ? Math.cos(Math.asin(Math.min(.99, co.R / co.a))) : 2; if (co) { var cc = bbJS(co.T); u.uCoC.value.set(cc[0] * co.br, cc[1] * co.br, cc[2] * co.br); }
     u.uHas.value = e.disk ? 1 : 0; if (e.disk) { u.uRin.value = e.disk[0]; u.uRo.value = e.disk[1]; } u.uT0.value = e.T0 || 6000; u.uBr.value = e.br || 1; var bc = e.bc || [.55, .62, 1]; u.uBc.value.set(bc[0], bc[1], bc[2]);
   }
@@ -177,8 +194,13 @@
     u.uN.value.copy(ax.n);
     if (e.co) { var pu = new T.Vector3(-dx, -dy, -dz).normalize().negate(), pr = pu.clone().addScaledVector(ax.n, -pu.dot(ax.n)); if (pr.lengthSq() < 1e-6) pr.copy(ax.e1); pr.normalize(); var ps = e.co.ph * Math.PI / 180; u.uCo.value.copy(pr.multiplyScalar(Math.cos(ps)).addScaledVector(new T.Vector3().crossVectors(ax.n, pr), Math.sin(ps))).normalize(); }
     var tt = rm() ? 0 : (performance.now() - t0) / 1000; u.uT.value = tt;
-    if (e.k === 'psr' || e.k === 'mag') { var w = 2 * Math.PI / e.P * slow * tt, mi = (e.mag || 45) * Math.PI / 180;   // 磁轴绕自转轴(取 ax.n)旋转
-      u.uMg.value.copy(ax.n).multiplyScalar(Math.cos(mi)).add(ax.e1.clone().multiplyScalar(Math.sin(mi) * Math.cos(w))).add(ax.e2.clone().multiplyScalar(Math.sin(mi) * Math.sin(w))).normalize(); }
+    var w = e.P ? 2 * Math.PI / e.P * slow * tt : 0, mi = (e.mag || 45) * Math.PI / 180;   // 磁轴绕自转轴(取 ax.n)旋转
+    function bv(th, ph) { th *= Math.PI / 180; ph = ph * Math.PI / 180 + w; return ax.n.clone().multiplyScalar(Math.cos(th)).add(ax.e1.clone().multiplyScalar(Math.sin(th) * Math.cos(ph))).add(ax.e2.clone().multiplyScalar(Math.sin(th) * Math.sin(ph))); }
+    if (e.k !== 'bh') { u.uMg.value.copy(bv(e.mag || 45, 0)).normalize();
+      var sps = typeof e.spots === 'function' ? e.spots(tt) : (e.spots || []);   // [余纬°, 经度°, 角半径°, 权重, 遮挡余纬°, 遮挡经度°, 遮挡角半径°]
+      for (var si = 0; si < 4; si++) { var q = sps[si]; if (!q) { u.uSw.value[si] = 0; continue; }
+        var d1 = bv(q[0], q[1]); u.uSp.value[si].set(d1.x, d1.y, d1.z, Math.cos(q[2] * Math.PI / 180)); u.uSw.value[si] = q[3];
+        if (q[6]) { var d2 = bv(q[4], q[5]); u.uSm.value[si].set(d2.x, d2.y, d2.z, Math.cos(q[6] * Math.PI / 180)); } else u.uSm.value[si].w = 2; } }
     LI.rd.render(scn, c); st.on = true;
   }
   /* ---------- 读数 HUD ---------- */
@@ -196,9 +218,9 @@
   function hudUpd(e, dd, D) {
     var root = X._.root && X._.root(); if (!root) return;
     if (D > 3000 || (window.SHXDV && SHXDV.flying && SHXDV.flying())) { hudOff(); return; }
-    css(); if (!hud || hud.parentNode !== root) { if (hud) hud.remove(); hud = document.createElement('div'); hud.id = 'xeo-hud'; root.appendChild(hud); hud.addEventListener('click', function (ev) { var bt = ev.target.closest('button'); if (bt) { slow = slow === 1 ? 0.02 : 1; X._.toast(slow === 1 ? '辐射束恢复真实转速 · ' + (EX[cur].P >= 1 ? '每 ' + EX[cur].P.toFixed(1) + ' 秒一圈' : '每秒约 ' + (1 / EX[cur].P).toFixed(1) + ' 圈') : '慢放 ×1/50 · 便于看清两束辐射扫过'); hud.dataset.k = ''; } }); }
+    css(); if (!hud || hud.parentNode !== root) { if (hud) hud.remove(); hud = document.createElement('div'); hud.id = 'xeo-hud'; root.appendChild(hud); hud.addEventListener('click', function (ev) { var bt = ev.target.closest('button'); if (bt) { slow = slow === 1 ? (EX[cur].sf || 0.02) : 1; X._.toast(slow === 1 ? '辐射束恢复真实转速 · ' + (EX[cur].P >= 1 ? '每 ' + EX[cur].P.toFixed(1) + ' 秒一圈' : '每秒约 ' + (1 / EX[cur].P).toFixed(1) + ' 圈') : '慢放 ×1/' + Math.round(1 / slow) + ' · 便于看清热斑与辐射束扫过'); hud.dataset.k = ''; } }); }
     var r = dd * 1000, M = e.m * MSUN, dil = Math.sqrt(Math.max(0, 1 - 1 / D)), tid = 2 * G * M * 2 / (r * r * r), gs = tid / 9.81;
-    var html = '<div class="t">模拟渲染 · 广义相对论光线追踪 · 非照片<i>' + e.zh + '</i>' + ((e.k === 'psr' || e.k === 'mag') ? '<button type="button">' + (slow === 1 ? '慢放 ×1/50' : '真实转速') + '</button>' : '') + '</div>' +
+    var html = '<div class="t">模拟渲染 · 广义相对论光线追踪 · 非照片<i>' + e.zh + '</i>' + ((e.k === 'psr' || e.k === 'mag') ? '<button type="button">' + (slow === 1 ? '慢放 ×1/' + Math.round(1 / (e.sf || 0.02)) : '真实转速') + '</button>' : '') + '</div>' +
       '<div class="r"><span>距中心 <b>' + km(dd) + '</b>(' + nf(D, 1) + ' Rs)</span><span>时间流速 <b>' + dil.toFixed(4) + '×</b></span>' +
       '<span' + (gs > 10 ? ' class="w"' : '') + '>潮汐(2 m 身长)<b>' + sci(gs) + ' g</b>' + (gs > 10 ? ' · 致命' : gs > 1 ? ' · 危险' : '') + '</span>' +
       (e.k === 'bh' ? '<span>距事件视界 <b>' + km(Math.max(0, dd - e.rs)) + '</b></span>' : '<span>表面重力 <b>' + sci(G * M / Math.pow(e.rk * 1000, 2) / 9.81) + ' g</b></span>') +
