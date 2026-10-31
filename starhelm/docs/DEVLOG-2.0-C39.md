@@ -18,3 +18,8 @@
 
 ## 遗留
 - LMC 中心偏亮、M1 纤维辨识度;`?view=galaxy` 自动打开全景旧遗留;OneDrive 归档 C38/C39 待用户方便时。
+
+## C2.13a3 热修(12:5x)
+- BUG:C2.13a 起,银河全景构建时会预建本星系群 #xlg 浮层(opacity 0、z-index 97、未隐藏),透明层盖住全景,吃掉所有点击/拖动/滚轮 → 王磊反馈「进去后无法操作」。修:#xlg 创建即 display:none,且 :not(.on) pointer-events:none。
+- 深链 ?view=galaxy 从未被处理(views.js 只认 earth|leo|solar|sky|fly),1.0 星域 VI 跳转后只停在地球页。修:sh-x-galaxy.js 自行识别 ?view=galaxy,页面就绪后打开全景(无 WebGL 时约 12 秒后打开 2D)。
+- 测试 work/t_vg.py / t_vg2.py:真实鼠标拖动、滚轮、预设按钮、关闭按钮均生效;desk/nogl/t169 0 错误。

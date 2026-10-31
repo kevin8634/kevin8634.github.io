@@ -184,7 +184,7 @@
   /* ---------- 视图 DOM ---------- */
   function css() {
     if (document.getElementById('xlg-css')) return; var s = document.createElement('style'); s.id = 'xlg-css';
-    s.textContent = '#xlg{position:fixed;inset:0;z-index:97;background:#010208;color:#dfe9f7;font:13px/1.5 "Noto Sans SC",system-ui,"PingFang SC","Microsoft YaHei",sans-serif;opacity:0;transition:opacity .5s;touch-action:none;user-select:none;-webkit-user-select:none}#xlg.on{opacity:1}' +
+    s.textContent = '#xlg{position:fixed;inset:0;z-index:97;background:#010208;color:#dfe9f7;font:13px/1.5 "Noto Sans SC",system-ui,"PingFang SC","Microsoft YaHei",sans-serif;opacity:0;transition:opacity .5s;touch-action:none;user-select:none;-webkit-user-select:none}#xlg.on{opacity:1}#xlg:not(.on){pointer-events:none}' +
       'body.xlg-on #shx-badge,body.xlg-on #xvt-tip{display:none!important}#xlg canvas.cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}#xlg canvas.wh{position:absolute;inset:0;width:100%;height:100%;display:none;pointer-events:none;z-index:6}' +
       '#xlg .hd{position:absolute;left:18px;top:14px;right:70px;pointer-events:none}#xlg .hd .k{font-size:11px;letter-spacing:.18em;color:#b8a8ff}#xlg .hd h2{margin:2px 0;font-size:22px;font-weight:600;letter-spacing:.04em}#xlg .hd h2 small{font-size:12px;color:#9fb3cf;margin-left:8px;letter-spacing:.14em;font-weight:400}' +
       '#xlg .hd p{margin:0;color:#b8c6dc;font-size:12px}#xlg .rd{display:inline-block;margin-top:6px;padding:3px 10px;border:1px solid rgba(127,214,255,.35);border-radius:10px;background:rgba(4,10,24,.6);color:#bfe6ff;font-size:12px;font-variant-numeric:tabular-nums}' +
@@ -201,7 +201,7 @@
     document.head.appendChild(s);
   }
   function dom() {
-    css(); ov = document.createElement('div'); ov.id = 'xlg'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', '星域 VII 本星系群');
+    css(); ov = document.createElement('div'); ov.id = 'xlg'; ov.style.display = 'none';   /* C2.13a3:未打开时必须隐藏,否则透明层盖住银河全景吃掉所有点击/拖动 */ ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', '星域 VII 本星系群');
     ov.innerHTML = '<canvas class="cv"></canvas><canvas class="wh"></canvas><div class="lay"></div>' +
       '<div class="hd"><div class="k">星域 VII · 宇宙 · L0</div><h2>本星系群<small>THE LOCAL GROUP</small></h2><p>直径约 1,000 万光年 · 银河系、仙女座、三角座 + 约 80 个矮星系 · 模拟渲染(位置与倾角按实测)</p><div class="rd"></div></div>' +
       '<button class="x" type="button" aria-label="返回银河">×</button><div class="lv"></div><div class="tl"><div class="v"></div><input type="range" min="0" max="80" value="0" step="1" aria-label="时间"><small>模拟示意:按 van der Marel 等 2012 模型约 40–45 亿年后首次近距掠过、约 60 亿年后并合;2025 年 Gaia / 哈勃新测量认为 100 亿年内相撞概率约一半。</small></div>' +
