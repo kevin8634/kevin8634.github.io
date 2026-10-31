@@ -72,3 +72,6 @@
 
 ## 深空 1.7 航线「一场疫情的数学」(2026-10-31)
 - routes/epi.json:文字 AI 撰写,数值由 docs/epi_build.py 复算;第 1 站图表复用 data/jhu.covid.italy.2020mar.json(JHU CSSE,CC BY 4.0,见上);引用 Roizman《Medical Microbiology》第 42 章(NCBI Bookshelf)、Fine 等 2011(Clin Infect Dis)、Holmdahl & Buckee 2020(NEJM)的公开概念与公式(注明出处);无图片、无新数据集。各站标注「不构成医疗或公共卫生建议」。
+
+## 深空 1.8 航线「一次提问的能量」(2026-10-31)
+- routes/ask.json:文字 AI 撰写,数值由 docs/ask_build.py 复算;引用 Hoffmann 等 2022、Kaplan 等 2020(arXiv)、NVIDIA H100 官方规格、Landauer 1961、NIST CODATA、Goodenough & Park 2013 的公开数值与公式(事实数据,注明出处,不用 logo、不暗示背书);无图片、无新数据集。各站标注能耗为量级估算。
