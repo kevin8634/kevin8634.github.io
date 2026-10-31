@@ -111,14 +111,14 @@
       for (k = 0; k < N * .06; k++) { var su3 = Math.sqrt(R() * .9), rr4 = Rg * .35 * su3 / (1 - su3), t6 = R() * 6.283, p6 = Math.acos(2 * R() - 1), f6 = Math.min(1, rr4 / Rg); put(rr4 * Math.sin(p6) * Math.cos(t6), rr4 * Math.cos(p6) * g.q, rr4 * Math.sin(p6) * Math.sin(t6), .14 - f6 * .06, .11 - f6 * .05, .08 - f6 * .04, Rg * (.09 - f6 * .04)); }   // C2.13a2 弥散体积光
     } else if (g.ty === 'ir') {   // 偏心棒 + 团块盘 + 一端的粉色巨型电离氢区(LMC = 蜘蛛星云)
       for (k = 0; k < N; k++) {
-        var mode_ = R(), x2, y2, z2, cc = [.9, .85, .8], ss = Rg * .012;
-        if (mode_ < .3) { x2 = gauss(R) * Rg * .38 + Rg * .1; z2 = gauss(R) * Rg * .1; y2 = gauss(R) * Rg * .05; cc = [1, .86, .64]; }
-        else if (mode_ < .9) { var r3 = Math.abs(gauss(R)) * Rg * .5, t3 = R() * 6.283; x2 = r3 * Math.cos(t3); z2 = r3 * Math.sin(t3) * .85; y2 = gauss(R) * Rg * .06; if (R() < .5) cc = [.66, .76, 1]; }
+        var mode_ = R(), x2, y2, z2, cc = [.6, .57, .54], ss = Rg * .012;   // C2.13a5 LMC 中心降亮:盘/棒整体压暗、棒占比 30%→22% 并拉长
+        if (mode_ < .22) { x2 = gauss(R) * Rg * .42 + Rg * .1; z2 = gauss(R) * Rg * .12; y2 = gauss(R) * Rg * .05; cc = [.62, .54, .42]; }
+        else if (mode_ < .9) { var r3 = Math.abs(gauss(R)) * Rg * .6, t3 = R() * 6.283; x2 = r3 * Math.cos(t3); z2 = r3 * Math.sin(t3) * .85; y2 = gauss(R) * Rg * .06; if (R() < .5) cc = [.46, .54, .74]; }
         else { var cx = Rg * .55, cz = Rg * .25; if (g.k === 'SMC') { cx = -Rg * .3; cz = Rg * .2; } x2 = cx + gauss(R) * Rg * .06; z2 = cz + gauss(R) * Rg * .06; y2 = gauss(R) * Rg * .03; cc = R() < .7 ? [1, .4, .66] : [.7, .8, 1]; ss = Rg * .014; }
         put(x2, y2, z2, cc[0], cc[1], cc[2], ss * (1 + R()));
         if (R() < .08) dust(x2 + gauss(R) * Rg * .03, y2, z2 + gauss(R) * Rg * .03, Rg * .03);
       }
-      for (k = 0; k < N * .05; k++) { var r7 = Math.abs(gauss(R)) * Rg * .45, t7 = R() * 6.283; put(r7 * Math.cos(t7) + Rg * .05, gauss(R) * Rg * .08, r7 * Math.sin(t7) * .85, .12, .11, .12, Rg * .06); }   // C2.13a2 弥散体积光
+      for (k = 0; k < N * .05; k++) { var r7 = Math.abs(gauss(R)) * Rg * .45, t7 = R() * 6.283; put(r7 * Math.cos(t7) + Rg * .05, gauss(R) * Rg * .08, r7 * Math.sin(t7) * .85, .07, .065, .075, Rg * .06); }   // C2.13a2 弥散体积光
     } else {   // dSph:Plummer 球,稀疏暗淡
       for (k = 0; k < N; k++) { var su2 = R(), rp = Rg / Math.sqrt(Math.pow(su2 * .98, -2 / 3) - 1), t4 = R() * 6.283, p4 = Math.acos(2 * R() - 1); put(rp * Math.sin(p4) * Math.cos(t4), rp * Math.cos(p4) * .8, rp * Math.sin(p4) * Math.sin(t4), .95, .88, .75, Rg * .12); }
     }
@@ -156,7 +156,7 @@
     scn = new T.Scene(); cam = new T.PerspectiveCamera(55, 1, .5, 2e5);
     var sf = small() ? .22 : 1; mats = []; GR = {};
     G.forEach(function (g) {
-      var b = genGal(g, sf), grp = new T.Group(); grp.add(pts(b)); if (b.DS.length) { var dd = pts(b, true); dd.renderOrder = 2; grp.add(dd); }
+      var b = genGal(g, sf), grp = new T.Group(), pm = pts(b); if (g.ty === 'ir') pm.material.uniforms.uB.value = .3; grp.add(pm); /* C2.13a5 麦哲伦云粒子密集,远看叠加过曝,单独降亮 */ if (b.DS.length) { var dd = pts(b, true); dd.renderOrder = 2; grp.add(dd); }
       grp.position.set(g.p[0], g.p[1], g.p[2]); orient(grp, g.n, g.k === 'MW' ? 0 : g.d * .01); scn.add(grp); GR[g.k] = grp;
     });
     DW.forEach(function (d, i) { var b = genGal({ k: 'D' + i, ty: 'ds', R: d[3] > 1000 ? 1.6 : 1.1, N: d[3] > 1000 ? 900 : 600 }, sf), o = pts(b); o.position.set(d.p[0], d.p[1], d.p[2]); scn.add(o); });
