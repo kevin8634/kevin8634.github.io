@@ -1,0 +1,15 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lab Kit 0.4 示例 · 铁从哪里来</title><style>body{background:#02040c;color:#e9eefb;font:14px/1.6 system-ui,sans-serif;max-width:1100px;margin:20px auto;padding:0 14px}h1{font-weight:500;font-size:17px;color:#e8c27a}p.s{color:#8fa0c4;font-size:12px}</style></head><body>
+<h1>创世实验室 Lab Kit 0.4 · 示例实验(自测页,不挂入口)</h1>
+<div id="lab"></div><p class="s" id="st"></p>
+<script type="module">
+import { Lab } from "./lab.js";
+import { VERSION } from "./core.js";
+window.__t = { VERSION };
+try { window.__t.lab = await Lab.mount(document.getElementById("lab"), "./labs/ef.lab.iron.json"); window.__t.checks = await Lab.selfCheck(window.__t.lab.protocol); window.__t.bad = Lab.validate({ schema: "x" });
+  const ode = { schema: "gn-lab/1", id: "ef.lab.decay", world: "ef", title: "放射性衰变(ODE 自测)", question: "半衰期是什么意思?", evidence: "confirmed", safety: "green", params: [{ k: "k", label: "衰变常数 λ", min: 0.1, max: 2, step: 0.01, value: 0.693 }], model: { type: "ode", state: { N: 1000 }, rhs: { N: "-k*N" }, dt: 0.01, steps: 500, every: 5, labels: { N: "剩余核数" } }, chart: { xlabel: "时间", ylabel: "N" }, checks: [{ label: "1 个半衰期", x: 1, expect: 500.1, tol: 1 }] };
+  const od = document.createElement("div"); od.style.marginTop = "18px"; document.body.appendChild(od);
+  window.__t.ode = await Lab.mount(od, ode); window.__t.odeChecks = await Lab.selfCheck(ode); window.__t.ready = true;
+  document.getElementById("st").textContent = "core/deep " + VERSION + " · 校验 " + window.__t.checks.filter(c => c.ok).length + "/" + window.__t.checks.length;
+} catch (e) { window.__t.err = e.message; document.getElementById("st").textContent = e.message; }
+</script></body></html>

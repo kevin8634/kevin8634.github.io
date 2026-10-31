@@ -1,0 +1,55 @@
+{
+ "schema": "gn-lab/1",
+ "id": "ef.lab.iron",
+ "world": "ef",
+ "title": "铁从哪里来 · 结合能曲线实验台",
+ "question": "为什么恒星烧到铁就停了?比铁重的元素又是怎么来的?",
+ "color": "#FF9A3C",
+ "evidence": "confirmed",
+ "safety": "green",
+ "bridges": ["sh.supernova", "ef.stars"],
+ "updated": "2026-10-31",
+ "unit": "MeV",
+ "params": [
+  {"k": "av", "label": "体积项 aV", "min": 12, "max": 19, "step": 0.05, "value": 15.75, "unit": "MeV"},
+  {"k": "as", "label": "表面项 aS", "min": 10, "max": 25, "step": 0.1, "value": 17.8, "unit": "MeV"},
+  {"k": "ac", "label": "库仑项 aC", "min": 0.2, "max": 1.6, "step": 0.01, "value": 0.711, "unit": "MeV"},
+  {"k": "aa", "label": "不对称项 aA", "min": 10, "max": 35, "step": 0.1, "value": 23.7, "unit": "MeV"}
+ ],
+ "model": {
+  "type": "fn",
+  "x": {"k": "A", "from": "data"},
+  "defs": [
+   {"k": "Z", "expr": "A/(1.98+0.0155*A^(2/3))"},
+   {"k": "B", "expr": "av*A - as*A^(2/3) - ac*Z*(Z-1)/A^(1/3) - aa*(A-2*Z)^2/A"}
+  ],
+  "ys": [{"label": "模型", "expr": "B/A"}]
+ },
+ "data": {"src": "../../../deep/data/iaea.binding.curve.json", "x": "A", "ys": [{"col": "ba", "label": "实测", "color": "#e9eefb"}]},
+ "chart": {"xlabel": "质量数 A", "ylabel": "B/A (MeV)", "marks": [{"x": 56, "label": "Fe-56"}, {"x": 238, "label": "U-238"}]},
+ "readout": "max",
+ "ab": {"vary": "ac"},
+ "predict": {
+  "q": "原子核里每个核子「抱得最紧」(每核子结合能 B/A 最高)的,大约是哪一类原子核?",
+  "options": ["最轻的氢、氦附近", "铁、镍附近(A≈56–62)", "最重的铀附近"],
+  "answer": 1,
+  "why": "实测最高的是镍-62(8.795 MeV),铁-56 紧随其后(8.790 MeV)。比它轻的核聚变、比它重的核裂变都会放出能量;恒星靠聚变一路烧到铁族就再也榨不出能量,更重的元素要靠中子俘获来造。"
+ },
+ "conclusions": [
+  {"text": "每核子结合能在铁、镍附近(A≈56–62)最高,约 8.8 MeV。", "evidence": "confirmed"},
+  {"text": "恒星核心的聚变链止于铁族;再往上聚变要吸收能量,大质量恒星的铁核因此塌缩、爆发成超新星。", "evidence": "confirmed"},
+  {"text": "比铁重的元素主要靠中子俘获:慢过程(s 过程,渐近巨星支恒星)和快过程(r 过程,中子星并合等),两者大约各占一半。", "evidence": "confirmed"},
+  {"text": "r 过程有多少来自超新星、多少来自中子星并合,仍在研究中。", "evidence": "inferred"},
+  {"text": "液滴模型只有 4 个系数,轻核和幻数核附近偏差明显,这些偏差正是壳层模型要解释的。把 A/B 对照打开,只改库仑项,看曲线峰值怎么移动。", "evidence": "confirmed"}
+ ],
+ "checks": [
+  {"label": "Fe-56 液滴模型", "x": 56, "expect": 8.8366, "tol": 0.005},
+  {"label": "U-238 液滴模型", "x": 238, "expect": 7.6224, "tol": 0.005},
+  {"label": "C-12 液滴模型", "x": 12, "expect": 7.2277, "tol": 0.005}
+ ],
+ "sources": [
+  {"name": "IAEA Live Chart of Nuclides(AME2020)", "url": "https://www-nds.iaea.org/relnsd/vcharthtml/VChartHTML.html"},
+  {"name": "OpenStax《University Physics Vol.3》10.3 Nuclear Binding Energy", "url": "https://openstax.org/books/university-physics-volume-3/pages/10-3-nuclear-binding-energy"}
+ ],
+ "ai_generated": "问题、猜测题、结论文字由 AI 撰写(总指挥);数值由脚本复算;实测数据见数据台账"
+}

@@ -1,7 +1,7 @@
 /* 创世计划 Genesis · 深度组件库 /core/deep/ v0.1(D0-2)
  * 总指挥维护,七世界只引用不改。零外部依赖;KaTeX 本地 vendor(MIT)按需加载。
  * 0.1 = DepthBar / Formula / Card / Depth;0.2 = ParamPanel / ChainDrag / Expr / Sim(worker-sim.js)。DataChart 见 0.3。 */
-export const VERSION = "0.3.0";
+export const VERSION = "0.4.0";
 const BASE = new URL(".", import.meta.url).href;
 const RM = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
