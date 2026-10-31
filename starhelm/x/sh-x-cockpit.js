@@ -32,8 +32,8 @@
     { id: 'oort', zh: '奥尔特云内缘', en: 'Inner Oort Cloud', type: '推测区域', R: 0.02, GM: 0, temp: '约 -268', col: '#b8c8e0', fix: [258.3, 12.0, 2000], ghost: true, info: [['距离', '内缘约 2,000 AU(推测)'], ['外缘', '可达约 10 万 AU'], ['组成', '数以万亿计的冰质天体'], ['证据', '长周期彗星轨道反推,尚无直接观测']] },
     // C1.8b 群星航点(位置取自 HYG v4.1 星表,与星空点完全重合);GM=质量×太阳GM、L=光度(太阳=1),公开资料约数
     { id: 'proxima', zh: '比邻星', en: 'Proxima Centauri', type: '红矮星', R: 107280, GM: 1.62042e+10, L: 0.00155, temp: '—', col: '#ff8a5c', fix: [218.6598, -63.183, 269281], star: true, tint: [1.25, .62, .4], info: [['光谱型', 'M5.5 V 红矮星'], ['半径', '约 0.15 个太阳'], ['行星', '比邻星 b、d(宜居带内有 b)'], ['距离', '4.25 光年(离太阳最近)']] },
-    { id: 'sirius', zh: '天狼星', en: 'Sirius', type: '恒星', R: 1191000, GM: 2.73786e+11, L: 25.4, temp: '—', col: '#cfe0ff', fix: [101.1738, -16.8459, 545581], star: true, tint: [1.05, 1.22, 1.6], sat: .1, info: [['光谱型', 'A1 V(主星)+ 白矮星伴星'], ['半径', '约 1.7 个太阳'], ['亮度', '约 25 个太阳'], ['距离', '8.6 光年']] },
-    { id: 'vega', zh: '织女星', en: 'Vega', type: '恒星', R: 1640000, GM: 2.83341e+11, L: 40.1, temp: '—', col: '#dfe8ff', fix: [279.125, 38.7706, 1585580], star: true, tint: [1.08, 1.22, 1.55], sat: .1, info: [['光谱型', 'A0 V'], ['半径', '约 2.4 个太阳(快速自转,赤道更宽)'], ['亮度', '约 40 个太阳'], ['距离', '25 光年']] },
+    { id: 'sirius', zh: '天狼星', en: 'Sirius', type: '恒星', R: 1191000, GM: 2.73786e+11, L: 25.4, temp: '—', col: '#cfe0ff', fix: [101.1738, -16.8459, 545581], star: true, tint: [1.05, 1.22, 1.6], sat: .1, ga: .15, info: [['光谱型', 'A1 V(主星)+ 白矮星伴星'], ['半径', '约 1.7 个太阳'], ['亮度', '约 25 个太阳'], ['距离', '8.6 光年']] },
+    { id: 'vega', zh: '织女星', en: 'Vega', type: '恒星', R: 1640000, GM: 2.83341e+11, L: 40.1, temp: '—', col: '#dfe8ff', fix: [279.125, 38.7706, 1585580], star: true, tint: [1.08, 1.22, 1.55], sat: .1, ga: .15, obl: 1.13, info: [['光谱型', 'A0 V'], ['半径', '约 2.4 个太阳(快速自转,赤道更宽)'], ['亮度', '约 40 个太阳'], ['距离', '25 光年']] },
     { id: 'trappist1', zh: 'TRAPPIST-1', en: 'TRAPPIST-1', type: '红矮星', R: 82900, GM: 1.19176e+10, L: 0.000553, temp: '—', col: '#ff7046', fix: [346.6864, -5.0939, 2564173], star: true, tint: [1.2, .5, .3], info: [['光谱型', 'M8 V 超冷红矮星'], ['半径', '约 0.12 个太阳'], ['行星', '7 颗岩质行星,3 颗在宜居带'], ['距离', '约 40.5 光年']] }
   ];
   // C2.2 卫星插在母行星之后、彗星插在冥王星之后(数据与传播见 sh-x-bodies.js)
@@ -104,8 +104,14 @@
     if (b.star) {   // C1.8b 恒星航点:发光球 + 辉光 + 远距离亮点
       var cc = new T.Color(b.col), tint = new T.Vector3().fromArray(b.tint || [1, 1, 1]);
       // C1.8d 恒星表面:复用 1.0 太阳着色器(米粒组织/临边昏暗/日冕/日珥),按光谱型整体染色;红矮星偏橙红、A 型星偏蓝白
-      var sf = window.SHFX3D && SHFX3D.sun ? SHFX3D.sun({ radius: b.R, wind: false }) : null;
+      // C2.8c 按星种修正:白矮星表面光滑(无米粒、无日冕日珥);热星(>约 8,000 K,辐射包层)米粒与黑子淡去;巨星/超巨星对流元按半径放大(参宿四只有少数巨大对流元)
+      var sf = !b.wd && window.SHFX3D && SHFX3D.sun ? SHFX3D.sun({ radius: b.R, wind: false }) : null;
       if (sf) {
+        var gs = b.gs == null ? 1 : b.gs, ga = b.ga == null ? 1 : b.ga;
+        sf.group.traverse(function (o) { var m = o.material; if (!m || !m.isShaderMaterial || m.fragmentShader.indexOf('p*55.') < 0) return;
+          m.fragmentShader = m.fragmentShader.replace('p*55.', 'p*' + (55 * gs).toFixed(2)).replace('p*110.', 'p*' + (110 * gs).toFixed(2))
+            .replace('float k=.58+.42*gr+.12*sg;', 'float k=.58+(.42*gr+.12*sg)*' + ga.toFixed(2) + ';').replace('float spot=band*', 'float spot=' + ga.toFixed(2) + '*band*').replace('float pen=band*', 'float pen=' + ga.toFixed(2) + '*band*'); });
+        if (b.obl) sf.group.children[0].scale.set(b.obl, 1, b.obl);
         sf.group.traverse(function (o) {
           var m = o.material; if (!m) return;
           if (m.isShaderMaterial) { m.uniforms.uTint = { value: tint }; m.uniforms.uSat = { value: b.sat == null ? 1 : b.sat };
@@ -114,6 +120,11 @@
           else if (m.color) m.color.multiply(new T.Color(tint.x, tint.y, tint.z));
         });
         g.add(sf.group); b.fx = sf;
+      } else if (b.wd) {   // 白矮星:光滑球面 + 临边昏暗,颜色按温度
+        var wc = new T.Color(1, 1, 1).multiply(new T.Color(tint.x / 1.6, tint.y / 1.6, tint.z / 1.6));
+        g.add(new T.Mesh(new T.SphereGeometry(b.R, 64, 32), new T.ShaderMaterial({ uniforms: { c: { value: new T.Vector3(Math.min(1, tint.x / 1.3), Math.min(1, tint.y / 1.3), Math.min(1, tint.z / 1.3)) } },
+          vertexShader: 'varying vec3 vN;varying vec3 vV;void main(){vN=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}',
+          fragmentShader: 'uniform vec3 c;varying vec3 vN;varying vec3 vV;void main(){float mu=clamp(dot(vN,vV),0.,1.);gl_FragColor=vec4(c*(.45+.55*mu),1.);}' })));
       } else g.add(new T.Mesh(new T.SphereGeometry(b.R, 64, 32), new T.MeshBasicMaterial({ color: cc.clone().lerp(new T.Color(1, 1, 1), .35), toneMapped: false })));
       var gc = document.createElement('canvas'); gc.width = gc.height = 128; var gx = gc.getContext('2d'), gr = gx.createRadialGradient(64, 64, 0, 64, 64, 64);
       gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.12, 'rgba(255,255,255,.85)'); gr.addColorStop(.3, '#' + cc.getHexString()); gr.addColorStop(1, 'rgba(0,0,0,0)');
@@ -380,6 +391,7 @@
   function tempStar(o) {   // C2.2d:把任意恒星装进临时航点槽,重建恒星外观
     var b = BY.tmpstar; if (!b || !sMain) return null;
     ['zh', 'en', 'type', 'R', 'GM', 'L', 'temp', 'col', 'fix', 'tint', 'sat', 'info', 'hyg'].forEach(function (k) { if (o[k] != null) b[k] = o[k]; });
+    ['gs', 'ga', 'wd', 'obl'].forEach(function (k) { b[k] = o[k]; });   // C2.8c 外观:对流元尺度 / 米粒幅度 / 白矮星 / 自转扁率
     b.off = false;
     if (b.g) { if (b.g.parent) b.g.parent.remove(b.g); b.g.traverse(function (x) { if (x.geometry) x.geometry.dispose(); if (x.material && x.material.dispose) x.material.dispose(); }); }
     b.fx = null; sMain.add(body3d(b)); ephem(true); b.wp = bpos(b, Date.now());

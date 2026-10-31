@@ -26,6 +26,17 @@
     if (v.z >= 0) return null; var e = cam.projectionMatrix.elements;
     return [(e[0] * v.x / -v.z + 1) * W / 2, (1 - e[5] * v.y / -v.z) * H / 2];
   }
+  function bbJS(T) { T = Math.min(40000, Math.max(1000, T)) / 100; var r = T <= 66 ? 1 : Math.min(1, 1.292936 * Math.pow(T - 60, -.1332047)), g = T <= 66 ? Math.min(1, Math.max(0, .3900816 * Math.log(T) - .6318414)) : Math.min(1, 1.1298909 * Math.pow(T - 60, -.0755148)), b = T >= 66 ? 1 : T <= 19 ? 0 : Math.min(1, Math.max(0, .5432068 * Math.log(T - 10) - 1.1962541)); return [r, g, b]; }
+  function bcV(T) {   // V 波段热改正 BC_V(log Teff),Torres 2010 PASP 122, 1158 表 1(Flower 1996 重拟合)
+    var x = Math.log10(Math.max(2500, Math.min(50000, T))), c = x < 3.70 ? [-0.190537291496456e5, 0.155144866764412e5, -0.421278819301717e4, 0.381476328422343e3] : x < 3.90 ? [-0.370510203809015e5, 0.385672629965804e5, -0.150651486316025e5, 0.261724637119416e4, -0.170623810323864e3] : [-0.118115450538963e6, 0.137145973583929e6, -0.636233812100225e5, 0.147412923562646e5, -0.170587278406872e4, 0.788731721804990e2];
+    var s = 0, p = 1; for (var i = 0; i < c.length; i++) { s += c[i] * p; p *= x; } return s; }
+  function lumCls(Mv, T, R) {   // 赫罗图粗分:白矮星(比主序暗 >5 等)/ 主序 / 巨星 / 超巨星;gs = 对流元尺度系数(巨星对流元相对星体更大)
+    var lt = Math.log10(T), ms = lt > 3.9 ? 15.5 - 3.6 * lt + (lt > 4.2 ? -(lt - 4.2) * 6 : 0) : 46.1 - 11.1 * lt; ms = Math.max(-6, Math.min(17, ms));   // 主序 Mv(log T) 分段近似
+    if (Mv > ms + 5 && R < .05) return { k: 'wd', zh: ' · 白矮星', gs: 1 };
+    if (R > 100 || (R > 30 && T >= 7500)) return { k: 'sg', zh: ' · 超巨星', gs: T < 7500 ? .12 : 1 };
+    if (R > 8 && T < 7500) return { k: 'g', zh: ' · 巨星', gs: .35 };
+    if (R > 15) return { k: 'g', zh: ' · 亮巨星', gs: 1 };
+    return { k: 'v', zh: '', gs: 1 }; }
   function teff(bv) { return 4600 * (1 / (0.92 * bv + 1.7) + 1 / (0.92 * bv + 0.62)); }
   function cls(t) { return t > 30000 ? ['O', '蓝色'] : t > 10000 ? ['B', '蓝白色'] : t > 7500 ? ['A', '白色'] : t > 6000 ? ['F', '黄白色'] : t > 5200 ? ['G', '黄色'] : t > 3700 ? ['K', '橙色'] : ['M', '红色']; }
   function hms(ra) { ra = (ra + 360) % 360 / 15; var h = Math.floor(ra), m = Math.floor((ra - h) * 60), s = ((ra - h) * 60 - m) * 60; return h + 'h ' + m + 'm ' + s.toFixed(1) + 's'; }
@@ -70,11 +81,13 @@
   }
   /* C2.2d T5:任意 HYG 恒星「前往」——按星表数值估算外观参数,装进驾驶舱临时航点槽,随后自动驾驶(远距沿用曲率跃迁) */
   function go(k, nm, m, t, c, col, dSun, ra, de, src) {
-    var L = Math.pow(10, (4.83 - ST.M[k]) / 2.5), T0 = t || 5800, Rs = Math.max(.08, Math.min(1500, Math.sqrt(L) * Math.pow(5772 / T0, 2))), Ms = Math.max(.08, Math.min(60, Math.pow(L, 1 / 3.5)));
-    var u = Math.max(0, Math.min(1, (Math.log(T0) - Math.log(3000)) / (Math.log(12000) - Math.log(3000))));
-    var tint = [1.25 + (1.05 - 1.25) * u, .62 + (1.22 - .62) * u, .4 + (1.55 - .4) * u];
+    // C2.8c:光度改用热光度(V 星等 + 热改正 BC,Torres 2010 / Flower 1996),冷红巨星与热星不再被低估;按赫罗图位置判星种
+    var T0 = t || 5800, Mv = ST.M[k], Mb = Mv + bcV(T0), L = Math.pow(10, (4.74 - Mb) / 2.5), Rs = Math.max(.005, Math.min(1500, Math.sqrt(L) * Math.pow(5772 / T0, 2)));
+    var cl = lumCls(Mv, T0, Rs), Ms = cl.k === 'wd' ? .6 : cl.k === 'v' ? Math.max(.08, Math.min(60, Math.pow(L, 1 / 3.5))) : Math.max(.8, Math.min(25, Math.pow(L, 1 / 3.5) * .5));
+    var bb = bbJS(T0), b0 = bbJS(5772), tint = [bb[0] / b0[0], bb[1] / b0[1], bb[2] / b0[2]], tm = Math.max(tint[0], tint[1], tint[2]); tint = tint.map(function (x) { return x / tm * 1.35; });   // 相对太阳的黑体色比
+    if (c && cl.zh) c = [c[0], c[1] + cl.zh];
     var name = nm ? nm[0] : 'HYG #' + k, ly = dSun < 100 ? dSun.toFixed(2) : Math.round(dSun).toLocaleString();
-    var b = X._.tempStar({ zh: name, en: nm ? nm[1] : 'HYG ' + k, type: nm ? nm[2] : (c ? c[0] + ' 型恒星' : '恒星'), R: Rs * 696340, GM: Ms * 1.32712e11, L: L, temp: t ? '≈ ' + (Math.round(t / 100) * 100).toLocaleString() + '(按颜色估算)' : '—',
+    var b = X._.tempStar({ wd: cl.k === 'wd', gs: cl.gs, ga: T0 > 8000 ? .15 : T0 > 7000 ? .5 : 1, zh: name, en: nm ? nm[1] : 'HYG ' + k, type: nm ? nm[2] : (cl.k === 'wd' ? '白矮星' : c ? c[0] + ' 型' + (cl.k === 'v' ? '主序星' : cl.zh.replace(' · ', '')) : '恒星'), R: Rs * 696340, GM: Ms * 1.32712e11, L: L, temp: t ? '≈ ' + (Math.round(t / 100) * 100).toLocaleString() + '(按颜色估算)' : '—',
       col: col, tint: tint, sat: T0 > 8000 ? .1 : 1, fix: [(ra + 360) % 360, de, dSun * 63241.077], hyg: k, src: src,
       info: [['光谱型', c ? c[0] + ' · ' + c[1] + '(按颜色估算)' : '—'], ['光度', '约 ' + (L < 10 ? L.toFixed(2) : Math.round(L).toLocaleString()) + ' 个太阳'], ['半径', '约 ' + (Rs < 10 ? Rs.toFixed(2) : Math.round(Rs)) + ' 个太阳(估算)'], ['距离', ly + ' 光年'], ['外观', '程序化模拟 · 数值来自 HYG v4.1']] });
     hide(); if (!b) return;
