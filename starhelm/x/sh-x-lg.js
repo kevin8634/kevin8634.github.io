@@ -197,7 +197,9 @@
       '#xlg .cd .q{margin:8px 0;padding:6px 10px;border-radius:10px;background:rgba(240,201,122,.1);color:#f6dfa9}#xlg .cd .c{position:absolute;right:8px;top:6px;border:0;background:none;color:#fff;font-size:18px;cursor:pointer}#xlg .cd .nt{color:#8ea0bb;font-size:11px;margin-top:6px}#xlg .cd .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}#xlg .cd .row button{padding:6px 12px;border-radius:12px;border:1px solid rgba(240,201,122,.6);background:rgba(240,201,122,.12);color:#f6dfa9;font:inherit;cursor:pointer}#xlg .cd ul{margin:4px 0;padding-left:18px}#xlg .cd li a{color:#7fd6ff;cursor:pointer}' +
       '#xlg .tl{position:absolute;left:50%;bottom:58px;transform:translateX(-50%);width:min(520px,90vw);display:none;padding:8px 14px;border-radius:12px;background:rgba(6,12,28,.85);border:1px solid rgba(240,201,122,.4);z-index:4;text-align:center}#xlg .tl input{width:100%}#xlg .tl .v{color:#f6dfa9;font-variant-numeric:tabular-nums}#xlg .tl small{color:#8ea0bb}' +
       '#xlg .whr{position:absolute;left:50%;top:62%;transform:translateX(-50%);z-index:7;display:none;padding:8px 16px;border-radius:12px;background:rgba(4,8,20,.7);border:1px solid rgba(184,168,255,.45);text-align:center;font-variant-numeric:tabular-nums;color:#e4dcff}#xlg .whr b{font-size:16px;color:#fff}' +
-      '@media (max-width:760px){#xlg .lv{display:none}#xlg .cd{top:auto;bottom:110px;left:8px;width:auto;right:8px;max-height:45vh}#xlg .hd h2{font-size:18px}}';
+      '@media (max-width:760px){#xlg .lv{display:none}#xlg .cd{top:auto;bottom:calc(54px + env(safe-area-inset-bottom,0px));left:8px;width:auto;right:8px;max-height:45vh}' +
+      '#xlg .bar{left:0;right:0;bottom:calc(8px + env(safe-area-inset-bottom,0px));transform:none;max-width:none;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;padding:0 10px;scrollbar-width:none;touch-action:pan-x;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 10px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,transparent 0,#000 10px,#000 calc(100% - 28px),transparent)}#xlg .bar::-webkit-scrollbar{display:none}#xlg .bar button{flex:0 0 auto}' +
+      '#xlg .hd h2{font-size:18px}}';
     document.head.appendChild(s);
   }
   function dom() {
@@ -207,12 +209,12 @@
       '<button class="x" type="button" aria-label="返回银河">×</button><div class="lv"></div><div class="tl"><div class="v"></div><input type="range" min="0" max="80" value="0" step="1" aria-label="时间"><small>模拟示意:按 van der Marel 等 2012 模型约 40–45 亿年后首次近距掠过、约 60 亿年后并合;2025 年 Gaia / 哈勃新测量认为 100 亿年内相撞概率约一半。</small></div>' +
       '<div class="whr"></div><div class="bar">' +
       '<button type="button" data-p="all" class="on">本星系群</button><button type="button" data-p="MW">银河系</button><button type="button" data-p="M31">仙女座</button><button type="button" data-p="M33">三角座</button><button type="button" data-p="mc">麦哲伦云</button>' +
-      '<button type="button" data-a="w1">VII-1</button><button type="button" data-a="w2">VII-2</button><button type="button" data-a="tl">45 亿年后</button><button type="button" data-a="back" class="bk">↩ 穿门回银河</button></div>';
+      '<button type="button" data-a="w1">VII-1</button><button type="button" data-a="w2">VII-2</button><button type="button" data-a="tl">45 亿年后</button><button type="button" data-a="gw">✦ 星系世界</button><button type="button" data-a="back" class="bk">↩ 穿门回银河</button></div>';
     document.body.appendChild(ov); cv = ov.querySelector('canvas.cv'); lay = ov.querySelector('.lay');
     ov.querySelector('.x').onclick = function () { back(); };
     ov.querySelectorAll('.bar button[data-p]').forEach(function (b) { b.onclick = function () { preset(b.dataset.p); }; });
-    ov.querySelectorAll('.bar button[data-a]').forEach(function (b) { b.onclick = function () { var a = b.dataset.a; if (a === 'w1') world('VII-1'); else if (a === 'w2') world('VII-2'); else if (a === 'tl') tl(); else back(); }; });
-    var lv = ov.querySelector('.lv'); LV7.forEach(function (L, i) { var b = document.createElement('button'); b.type = 'button'; b.title = L.sc; b.innerHTML = '<b>' + L.k + '</b>' + L.zh; if (i === 1) b.title += ' —— 进入 M87 星系世界(C2.13b)'; else if (i) { b.classList.add('ext'); b.title += '(C2.13c 开放)'; } else b.classList.add('on'); b.onclick = function () { if (!i) preset('all'); else if (i === 1 && window.SHXGW) { if (!SHXGW.enter('M87')) hint('星系世界需要 WebGL'); } else hint(L.k + ' ' + L.zh + ':' + L.sc + ' —— C2.13b/c 开放'); }; lv.appendChild(b); });
+    ov.querySelectorAll('.bar button[data-a]').forEach(function (b) { b.onclick = function () { var a = b.dataset.a; if (a === 'w1') world('VII-1'); else if (a === 'w2') world('VII-2'); else if (a === 'tl') tl(); else if (a === 'gw') gwPick(); else back(); }; });
+    var lv = ov.querySelector('.lv'); LV7.forEach(function (L, i) { var b = document.createElement('button'); b.type = 'button'; b.title = L.sc; b.innerHTML = '<b>' + L.k + '</b>' + L.zh; if (i === 1) b.title += ' —— 进入 M87 星系世界(C2.13b;M51 见下方「✦ 星系世界」)'; else if (i) { b.classList.add('ext'); b.title += '(C2.13c 开放)'; } else b.classList.add('on'); b.onclick = function () { if (!i) preset('all'); else if (i === 1 && window.SHXGW) { if (!SHXGW.enter('M87')) hint('星系世界需要 WebGL'); } else hint(L.k + ' ' + L.zh + ':' + L.sc + ' —— C2.13b/c 开放'); }; lv.appendChild(b); });
     var tr = ov.querySelector('.tl input'); tr.oninput = function () { setT(+tr.value / 10); };
     // 标签
     LBL = [];
@@ -264,6 +266,15 @@
     card.querySelector('.go').onclick = function () { tween(g.p, Math.max(8, (g.R || 2) * 3.2), null, null, 1600); };
     var gw = card.querySelector('.gw'); if (gw) gw.onclick = function () { closeCard(); if (!SHXGW.enter(g.k)) hint('星系世界需要 WebGL'); };   // C2.13b
     var dv = card.querySelector('.dv'); if (dv) dv.onclick = function () { var key = g.dv; close(true); if (window.SHXDV && SHXDV.lock) try { SHXDV.lock(key); } catch (e) { } };
+  }
+  function gwPick() {   // C2.13b5 星系世界入口(桌面 / 手机通用;手机上层级栏隐藏)
+    closeCard(); if (!window.SHXGW || !SHXGW.enter) { hint('星系世界未加载'); return; }
+    var L = [['M31', '仙女座 M31', '254 万光年 · 本星系群'], ['LMC', '大麦哲伦云', '16 万光年 · 银河卫星'], ['M87', 'M87 室女座 A', '5,350 万光年 · 室女座星系团'], ['M51', '涡状星系 M51', '2,300 万光年 · M51 星系群']];
+    card = document.createElement('div'); card.className = 'cd'; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', '星系世界');
+    card.innerHTML = '<button class="c" type="button" aria-label="关闭">×</button><h3>✦ 星系世界</h3><div class="ty">选一个星系,进入它的 3D 粒子世界</div><div class="row">' +
+      L.map(function (g) { return '<button type="button" data-g="' + g[0] + '">' + g[1] + '<small style="display:block;font-size:11px;opacity:.75">' + g[2] + '</small></button>'; }).join('') + '</div><div class="nt">模拟渲染(3D 粒子),结构按观测;距离为约数。</div>';
+    ov.appendChild(card); card.querySelector('.c').onclick = closeCard;
+    card.querySelectorAll('button[data-g]').forEach(function (b) { b.onclick = function () { var k = b.dataset.g; closeCard(); if (!SHXGW.enter(k)) hint('星系世界需要 WebGL'); }; });
   }
   function world(id) {
     var w = W7.filter(function (x) { return x.id === id; })[0]; if (!w) return; closeCard();
