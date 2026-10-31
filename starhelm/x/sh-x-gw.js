@@ -6,13 +6,14 @@
  *   + 10 kpc 尘埃环(约 3.3 万光年,斯皮策红外最醒目)+ 紧绕旋臂碎段 + NGC 206 蓝色星云 + 恒星晕 + M32 / M110 + 巨型南方星流。
  * - 区域世界(双名):G-M31-1 双核之心 · G-M31-2 火环 · G-M31-3 NGC 206 · G-M31-4 伴星与星流;每个有核心问题与讲解。
  * - 回望银河:按真实方向(由 SHXLG.geo 给出的 M31 位置与盘面朝向换算)在 254 万光年外画出银河系,并标「你看到的是 254 万年前的银河」。
+ * - C2.13b2 模板化:GAL 表(M31、LMC);大麦哲伦云 = 偏心棒 + 单旋臂 + 蜘蛛星云/R136 + SN 1987A 三环 + N11 + 小麦哲伦云/麦哲伦桥/麦哲伦流;近距自动降亮防核区过曝。
  * - 无 WebGL 时不进入(按钮提示);减少动态时相机直接切换。Esc / × 回本星系群。深链 ?view=gw。
  * - 数字为约数:距离 254 万光年(NASA)、倾角 77°、10 kpc 环、NGC 206 约 4,000 光年宽、M32 投影距中心约 2.4 万光年、巨型星流长约 40 万光年。
  */
 (function () {
   'use strict';
   var D2R = Math.PI / 180, DIST = 2537;
-  var T, rd, scn, cam, cv, ov, lay, card, raf = 0, open_ = false, mats = [], LBL = [], last = 0, idle = 0, TW = null, MWP = null, FOV = 55, fovT = 55;
+  var GMAIN = null, T, rd, scn, cam, cv, ov, lay, card, raf = 0, open_ = false, mats = [], LBL = [], last = 0, idle = 0, TW = null, MWP = null, FOV = 55, fovT = 55;
   var C = { tx: 0, ty: 0, tz: 0, d: 260, pit: .5, yaw: -.8 };
   function rm() { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
   function small() { return Math.min(screen.width, screen.height) < 700 || innerWidth <= 760; }
@@ -40,8 +41,8 @@
     // 核球:金色 3D 椭球
     for (k = 0; k < N * .16; k++) { var rb = Math.abs(gs(R)) * RG * .055, th = R() * 6.283, ph = Math.acos(2 * R() - 1); put(rb * Math.sin(ph) * Math.cos(th), rb * Math.cos(ph) * .7, rb * Math.sin(ph) * Math.sin(th), .95, .78 + R() * .08, .5 + R() * .1, .03 + rb * .012 + R() * .03); }
     // 双核:P1(偏心盘远心点,老年红黄)、P2(中心 + 蓝色年轻星团)
-    for (k = 0; k < N * .012; k++) { put(.0016 + gs(R) * .0011, gs(R) * .0006, gs(R) * .0009, 1, .8, .55, .0012 + R() * .001); }
-    for (k = 0; k < N * .008; k++) { put(gs(R) * .0008, gs(R) * .0005, gs(R) * .0008, .7, .8, 1, .001 + R() * .0008); }
+    for (k = 0; k < N * .012; k++) { put(.0016 + gs(R) * .0011, gs(R) * .0006, gs(R) * .0009, 3, 2.4, 1.6, .0012 + R() * .001); }
+    for (k = 0; k < N * .008; k++) { put(gs(R) * .0008, gs(R) * .0005, gs(R) * .0008, 2.1, 2.4, 3, .001 + R() * .0008); }
     for (k = 0; k < N * .02; k++) { var rn = Math.abs(gs(R)) * .02; var tn = R() * 6.283; put(rn * Math.cos(tn) + .0006, gs(R) * .004, rn * Math.sin(tn) * .8, .9, .75, .55, .003 + R() * .003); }
     // 内环(偏心,约 1.5 kpc ≈ 5 千光年)
     for (k = 0; k < N * .025; k++) { var ti = R() * 6.283, ri = 4.9 * (1 + gs(R) * .12) + .8 * Math.sin(ti * 2 + 1); put(ri * Math.cos(ti) + .8, gs(R) * .08, ri * Math.sin(ti) * .78 - .4, .75, .6, .55, .04 + R() * .04); if (R() < .5) dust(ri * .99 * Math.cos(ti) + .8, gs(R) * .05, ri * .99 * Math.sin(ti) * .78 - .4, .3); }
@@ -71,6 +72,53 @@
     for (k = 0; k < N * .04; k++) { var s = Math.pow(R(), .8), w = 3 + s * 14; put(-6 - s * 60 + gs(R) * w, -10 - s * 120 + gs(R) * w * .6, -20 - s * 260 + gs(R) * w, .75, .65, .55, .5 + R() * .7); }
     return { P: new Float32Array(P), C: new Float32Array(Cc), S: new Float32Array(S), DP: new Float32Array(DP), DS: new Float32Array(DS) };
   }
+
+  /* ---------- 大麦哲伦云(局部坐标千光年;盘半径约 1.5 万光年) ---------- */
+  var D30 = [4, 0, 3], SN87 = [3.1, .05, 2.3], N11 = [-6, 0, 6], SMCP = null;
+  function genLMC(sf) {
+    var R = rnd(1987), P = [], Cc = [], S = [], DP = [], DS = [], k, j, N = Math.round(200000 * sf), tp = Math.tan(20 * D2R), a0 = 12 * D2R;
+    function put(x, y, z, r, g, b, s) { P.push(x, y, z); Cc.push(r, g, b); S.push(s); }
+    function dust(x, y, z, s) { DP.push(x, y, z); DS.push(s); }
+    for (k = 0; k < N * .2; k++) { var u = gs(R) * 2.6, v = gs(R) * .55; put(-1.2 + u * Math.cos(a0) - v * Math.sin(a0), gs(R) * .25, .4 + u * Math.sin(a0) + v * Math.cos(a0), .85, .74, .55, .03 + R() * .04); }   // 偏心棒(约 1 万光年长)
+    for (k = 0; k < N * .5; k++) {   // 盘 + 单旋臂
+      var r = Math.min(16, -Math.log(1 - R() * .98) * 4.2 + .5), arm = R() < .35 && r > 4, t = arm ? Math.log(r / 4) / tp + .6 + gs(R) * .22 : R() * 6.283, x = r * Math.cos(t), z = r * Math.sin(t) * .9, bl = R() < (arm ? .6 : .3);
+      put(x, gs(R) * (.2 + r * .03), z, bl ? .55 : .8, bl ? .66 : .74, bl ? 1 : .62, .03 + R() * .05);
+      if (R() < .06) dust(x + gs(R) * .3, gs(R) * .1, z + gs(R) * .3, .25 + R() * .3);
+    }
+    for (k = 0; k < N * .04; k++) { var rd2 = Math.abs(gs(R)) * 5, td = R() * 6.283; put(rd2 * Math.cos(td) - .6, gs(R) * .7, rd2 * Math.sin(td) * .9, .09, .08, .085, .9 + R() * .6); }   // 弥散光
+    function neb(c, sc, n, col) { for (j = 0; j < n; j++) { var th = R() * 6.283, ph = Math.acos(2 * R() - 1), rr = sc * (.4 + .6 * Math.pow(R(), .5)) * (1 + .35 * Math.sin(th * 5 + ph * 3)); put(c[0] + rr * Math.sin(ph) * Math.cos(th), c[1] + rr * Math.cos(ph) * .45, c[2] + rr * Math.sin(ph) * Math.sin(th), col[0], col[1], col[2], sc * (.1 + R() * .16)); } }
+    neb(D30, .5, N * .05, [2.2, .8, 1.35]); neb(D30, .32, N * .015, [.8, 1.8, 1.6]); neb(N11, .4, N * .015, [2, .8, 1.3]);   // 蜘蛛星云(30 Dor,宽约 1,000 光年)+ N11
+    for (k = 0; k < N * .006; k++) put(D30[0] + gs(R) * .006, D30[1] + gs(R) * .004, D30[2] + gs(R) * .006, 2.2, 2.6, 3, .002 + R() * .003);   // R136 星团
+    for (k = 0; k < N * .0015; k++) dust(D30[0] + gs(R) * .6, gs(R) * .12, D30[2] + gs(R) * .6, .05 + R() * .06);
+    function ring(c, r0, dy, n, col) { for (j = 0; j < n; j++) { var t2 = R() * 6.283, rr = r0 * (1 + gs(R) * .04), x = rr * Math.cos(t2), z = rr * Math.sin(t2), y = dy; put(c[0] + x, c[1] + y * .8 + z * .6, c[2] + z * .8 - y * .6, col[0], col[1], col[2], .00006 + R() * .00005); } }
+    ring(SN87, .00065, 0, 900, [3, 2.5, 1.9]); ring(SN87, .0016, .0006, 700, [2.4, .9, 1]); ring(SN87, .0016, -.0006, 700, [2.4, .9, 1]);   // SN 1987A 三环(内环直径约 1.3 光年)
+    for (k = 0; k < 300; k++) put(SN87[0] + gs(R) * .00012, SN87[1] + gs(R) * .00009, SN87[2] + gs(R) * .00012, 2, 1.4, 1, .00005);
+    if (SMCP) {   // 小麦哲伦云 + 麦哲伦桥
+      for (k = 0; k < N * .08; k++) { var rs = Math.abs(gs(R)) * 2.4; put(SMCP[0] + gs(R) * 2.2, SMCP[1] + gs(R) * 1.2, SMCP[2] + gs(R) * 1.6, .6, .65, .85, .05 + R() * .05); }
+      for (k = 0; k < N * .02; k++) { var tb = R(); put(SMCP[0] * tb + gs(R) * 2.5, SMCP[1] * tb + gs(R) * 2, SMCP[2] * tb + gs(R) * 2.5, .35, .3, .45, .4 + R() * .4); }
+      for (k = 0; k < N * .02; k++) { var tf = 1 + R() * 2.5; put(SMCP[0] * tf + gs(R) * 4 * tf, SMCP[1] * tf + tf * tf * 6 + gs(R) * 4, SMCP[2] * tf + gs(R) * 4 * tf, .45, .25, .4, 1 + R()); }   // 麦哲伦流(拖尾,示意)
+    }
+    return { P: new Float32Array(P), C: new Float32Array(Cc), S: new Float32Array(S), DP: new Float32Array(DP), DS: new Float32Array(DS) };
+  }
+  var RWL = [
+    { id: 'G-LMC-1', im: '偏心棒', zh: '星系棒与单旋臂', t: [-1, 0, .3], d: 30, pit: 1.15, yaw: .3, q: '它的棒为什么不在中心?', q2: '矮星系也能有旋臂吗?',
+      land: '大麦哲伦云是「麦哲伦型」棒旋矮星系:一条约 1 万光年长的恒星棒明显偏离盘心,只有一条旋臂。哈勃与 Gaia 数据显示,数亿年前小麦哲伦云从它盘中穿过,可能把棒和盘扯得错位。', tag: ['偏心棒已证实', '碰撞成因(推测)'] },
+    { id: 'G-LMC-2', im: '蜘蛛星云', zh: '30 Dor · R136', t: D30, d: 2.6, pit: .7, yaw: -.5, q: '本星系群最猛的恒星工厂长什么样?', q2: '已知最重的恒星住在哪里?',
+      land: '蜘蛛星云(剑鱼座 30)宽约 1,000 光年,是本星系群最大最亮的恒星形成区。中心星团 R136 只有几光年宽,却挤着 R136a1 等约 200 倍太阳质量的恒星,它们的星风把气体吹成一条条蛛腿。', tag: ['已证实', 'R136a1 质量约 170–230 倍(测量仍有误差)'] },
+    { id: 'G-LMC-3', im: '超新星 1987A', zh: 'SN 1987A', t: SN87, d: .006, pit: 1.05, yaw: .8, q: '近 400 年最近的肉眼超新星留下了什么?', q2: '三个光环是怎么来的?',
+      land: '1987 年 2 月 23 日,一颗蓝超巨星在这里爆发,是开普勒 1604 年以来最近的肉眼超新星;中微子比光早约 3 小时到达地球。三个光环是恒星死前抛出的气体环被闪光照亮,内环直径约 1.3 光年。2024 年韦布望远镜在中心找到中子星存在的强证据。', tag: ['已证实', '中心中子星(2024 韦布强证据)'] },
+    { id: 'G-LMC-4', im: '麦哲伦桥', zh: '大小云 · 麦哲伦流', t: null, d: 140, pit: .5, yaw: -1, q: '银河会把它们吞掉吗?', q2: '大小麦哲伦云是第一次来吗?',
+      land: '小麦哲伦云在约 7.5 万光年外,两云之间由气体与年轻恒星组成的麦哲伦桥相连,身后拖着横跨天空 100° 以上的麦哲伦流。它们可能是第一次掠过银河;模拟认为约 20–25 亿年后大麦哲伦云会并入银河。', tag: ['桥与流已证实', '首次掠过(主流观点)', '20–25 亿年后并合(推测)'] }
+  ];
+  var GAL = {
+    M31: { k: 'M31', zh: '仙女座星系', en: 'ANDROMEDA · M31', vii: 'VII·G-M31', sub: '距太阳约 254 万光年 · 直径约 15 万光年以上 · 倾角 77° · 模拟渲染(3D 粒子,结构按观测)', dist: DIST, rw: RW, home: [190, .5, -.8], ref: 3, lgp: 'M31',
+      lab: function () { return [['双核 P1 / P2', [0, 0, 0], '#f0c97a', 0, 3], ['10 kpc 尘埃环', [0, 0, 33], '#7fd6ff', 1, 400], ['NGC 206', NGC206, '#9fc8ff', 2, 150], ['M32', M32, '#f0c97a', 3, 500], ['M110', M110, '#f0c97a', 3, 900], ['巨型南方星流', [-40, -90, -190], '#cdb8ff', 3, 2000], ['银河系 · 254 万年前的光', null, '#f0c97a', -1, 1e5]]; },
+      look: { up: 40, fov: 4, h: '从仙女座看向家园', p: '那一小团旋涡就是银河系,太阳系在它的一条旋臂里。你看到的是 <b>约 254 万年前</b> 发出的光 —— 那时地球上人属刚刚出现。', tg: ['方向按真实位置换算', '窄视场放大约 14 倍'] } },
+    LMC: { k: 'LMC', zh: '大麦哲伦云', en: 'LARGE MAGELLANIC CLOUD', vii: 'VII·G-LMC', sub: '距太阳约 16.2 万光年 · 盘直径约 3 万光年 · 倾角约 25° · 模拟渲染(3D 粒子,结构按观测)', dist: 161.7, rw: RWL, home: [42, .75, .5], ref: 1.2, lgp: 'mc',
+      lab: function () { return [['偏心棒', [-1.2, 0, .4], '#f0c97a', 0, 60], ['蜘蛛星云 30 Dor', D30, '#ff9fd0', 1, 40], ['R136', D30, '#bfe6ff', 1, .3], ['SN 1987A', SN87, '#ffd9a0', 2, 2], ['N11', N11, '#ff9fd0', 0, 40], ['小麦哲伦云', SMCP, '#bfe6ff', 3, 600], ['银河系 · 16 万年前的光', null, '#f0c97a', -1, 1e5]]; },
+      look: { up: 6, fov: 55, h: '从大麦哲伦云看银河', p: '银河系横跨半个天空,侧着向你展开。你看到的是 <b>约 16 万年前</b> 发出的光 —— 那时现代人类的祖先还生活在非洲。', tg: ['方向按真实位置换算'] } }
+  };
+  var G0 = GAL.M31;
   function genMW(sf) {   // 回望用的远方银河:棒旋 4 臂(小粒子数)
     var R = rnd(4242), P = [], Cc = [], S = [], N = Math.round(40000 * sf), tp = Math.tan(13 * D2R);
     for (var k = 0; k < N; k++) {
@@ -92,9 +140,9 @@
   }
   function mwDir() {   // 从 M31 看银河的方向(M31 局部坐标)
     try {
-      var G = window.SHXLG && SHXLG.geo && SHXLG.geo('M31'); if (!G) return null;
+      var G = window.SHXLG && SHXLG.geo && SHXLG.geo(G0.k); if (!G) return null;
       var q = new T.Quaternion().setFromUnitVectors(new T.Vector3(0, 1, 0), new T.Vector3(G.n[0], G.n[1], G.n[2])).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), G.spin || 0));
-      var v = new T.Vector3(-G.p[0], -G.p[1], -G.p[2]).normalize().applyQuaternion(q.invert()); return [v.x, v.y, v.z];
+      var qi = q.clone().invert(), v = new T.Vector3(-G.p[0], -G.p[1], -G.p[2]).normalize().applyQuaternion(qi); if (G0.k === 'LMC') { var S2 = SHXLG.geo('SMC'); if (S2) { var w = new T.Vector3(S2.p[0] - G.p[0], S2.p[1] - G.p[1], S2.p[2] - G.p[2]).applyQuaternion(qi); SMCP = [w.x, w.y, w.z]; } } return [v.x, v.y, v.z];
     } catch (e) { return null; }
   }
   function build() {
@@ -102,10 +150,10 @@
     try { rd = new T.WebGLRenderer({ canvas: cv, antialias: false, alpha: false, powerPreference: 'high-performance' }); } catch (e) { rd = null; return false; }
     rd.setPixelRatio(Math.min(devicePixelRatio || 1, small() ? 1.25 : 1.5)); rd.setClearColor(0x010208, 1);
     scn = new T.Scene(); cam = new T.PerspectiveCamera(FOV, 1, .001, 1e4); mats = [];
-    var sf = small() ? .25 : 1, b = gen(sf);
-    scn.add(pts(b.P, b.C, b.S, false, .5, 26)); scn.add(pts(b.DP, null, b.DS, true, 1, 60));
-    var d = mwDir() || [.3, -.2, .93]; MWP = [d[0] * DIST, d[1] * DIST, d[2] * DIST];
-    var mw = genMW(sf), mo = pts(mw.P, mw.C, mw.S, false, .9, 6); mo.position.set(MWP[0], MWP[1], MWP[2]); mo.rotation.set(.9, .3, .4); scn.add(mo);
+    var sf = small() ? .25 : 1, d = mwDir() || [.3, -.2, .93]; if (G0.k === 'LMC' && !SMCP) SMCP = [-50, -20, -50];
+    var b = G0.k === 'LMC' ? genLMC(sf) : gen(sf), main = pts(b.P, b.C, b.S, false, .5, 26); main.userData.b0 = .5; GMAIN = main; scn.add(main); scn.add(pts(b.DP, null, b.DS, true, 1, 60));
+    MWP = [d[0] * G0.dist, d[1] * G0.dist, d[2] * G0.dist];
+    var mw = genMW(sf * (G0.k === 'LMC' ? 1.5 : 1)), mo = pts(mw.P, mw.C, mw.S, false, G0.k === 'LMC' ? .09 : .9, G0.k === 'LMC' ? 20 : 6); mo.position.set(MWP[0], MWP[1], MWP[2]); mo.rotation.set(.9, .3, .4); scn.add(mo);
     var bp = [], bc = [], bs = [], R2 = rnd(77);
     for (var k = 0; k < (small() ? 1500 : 5000); k++) { var th = R2() * 6.283, ph = Math.acos(2 * R2() - 1), rr = 5000 + R2() * 3000; bp.push(rr * Math.sin(ph) * Math.cos(th), rr * Math.cos(ph), rr * Math.sin(ph) * Math.sin(th)); var w = R2(); bc.push(.8 + w * .2, .78, .75 + (1 - w) * .25); bs.push(4 + R2() * 8); }
     scn.add(pts(new Float32Array(bp), new Float32Array(bc), new Float32Array(bs), false, .3, 2.5));
@@ -126,35 +174,36 @@
     document.head.appendChild(s);
   }
   function dom() {
-    css(); ov = document.createElement('div'); ov.id = 'xgw'; ov.style.display = 'none'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', '星系世界 仙女座 M31');
-    ov.innerHTML = '<canvas></canvas><div class="lay"></div><div class="hd"><div class="k">星域 VII · 星系世界 · VII·G-M31</div><h2>仙女座星系<small>ANDROMEDA · M31</small></h2><p>距太阳约 254 万光年 · 直径约 15 万光年以上 · 倾角 77° · 模拟渲染(3D 粒子,结构按观测)</p><div class="rd"></div></div>' +
+    css(); ov = document.createElement('div'); ov.id = 'xgw'; ov.style.display = 'none'; ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', '星系世界 ' + G0.zh);
+    ov.innerHTML = '<canvas></canvas><div class="lay"></div><div class="hd"><div class="k">星域 VII · 星系世界 · ' + G0.vii + '</div><h2>' + G0.zh + '<small>' + G0.en + '</small></h2><p>' + G0.sub + '</p><div class="rd"></div></div>' +
       '<button class="x" type="button" aria-label="返回本星系群">×</button><div class="bar"><button type="button" data-p="all" class="on">全貌</button>' +
-      RW.map(function (w, i) { return '<button type="button" data-w="' + i + '">' + w.im + '</button>'; }).join('') + '<button type="button" data-a="mw">回望银河</button><button type="button" data-a="back" class="bk">↩ 回本星系群</button></div>';
+      G0.rw.map(function (w, i) { return '<button type="button" data-w="' + i + '">' + w.im + '</button>'; }).join('') + '<button type="button" data-a="mw">回望银河</button><button type="button" data-a="back" class="bk">↩ 回本星系群</button></div>';
     document.body.appendChild(ov); cv = ov.querySelector('canvas'); lay = ov.querySelector('.lay');
     ov.querySelector('.x').onclick = back;
-    ov.querySelectorAll('.bar button').forEach(function (b) { b.onclick = function () { mark(b); if (b.dataset.p) { closeCard(); go(0, 0, 0, 190, .5, -.8); } else if (b.dataset.w) region(+b.dataset.w); else if (b.dataset.a === 'mw') look(); else back(); }; });
-    LBL = []; [['双核 P1 / P2', [0, 0, 0], '#f0c97a', 0, 3], ['10 kpc 尘埃环', [0, 0, 33], '#7fd6ff', 1, 400], ['NGC 206', NGC206, '#9fc8ff', 2, 150], ['M32', M32, '#f0c97a', 3, 500], ['M110', M110, '#f0c97a', 3, 900], ['巨型南方星流', [-40, -90, -190], '#cdb8ff', 3, 2000], ['银河系 · 254 万年前的光', null, '#f0c97a', -1, 1e5]].forEach(function (a) {
+    ov.querySelectorAll('.bar button').forEach(function (b) { b.onclick = function () { mark(b); if (b.dataset.p) { closeCard(); home(); } else if (b.dataset.w) region(+b.dataset.w); else if (b.dataset.a === 'mw') look(); else back(); }; });
+    LBL = []; G0.lab().forEach(function (a) {
       var e = document.createElement('div'); e.className = 'm'; e.style.color = a[2]; e.textContent = a[0]; e.onclick = function (ev) { ev.stopPropagation(); if (a[3] >= 0) region(a[3]); else look(); }; lay.appendChild(e); LBL.push({ el: e, p: a[1], max: a[4], mw: a[3] < 0 });
     });
     input();
   }
+  function home() { go(0, 0, 0, G0.home[0], G0.home[1], G0.home[2]); }
   function mark(b) { ov.querySelectorAll('.bar button').forEach(function (x) { x.classList.toggle('on', x === b); }); }
   function closeCard() { if (card) { card.remove(); card = null; } }
   function go(x, y, z, d, pit, yaw, fov) { fovT = fov || 55; if (rm()) { C.tx = x; C.ty = y; C.tz = z; C.d = d; C.pit = pit; C.yaw = yaw; TW = null; return; } TW = { a: [C.tx, C.ty, C.tz, C.d, C.pit, C.yaw], b: [x, y, z, d, pit, yaw], t0: performance.now(), ms: 2000 }; idle = performance.now() + 6000; }
   function region(i) {
-    var w = RW[i]; if (!w) return; closeCard(); var b = ov.querySelector('.bar button[data-w="' + i + '"]'); if (b) mark(b);
-    go(w.t[0], w.t[1], w.t[2], w.d, w.pit, w.yaw);
+    var w = G0.rw[i]; if (!w) return; var wt = w.t || SMCP.map(function (x) { return x * .5; }); closeCard(); var b = ov.querySelector('.bar button[data-w="' + i + '"]'); if (b) mark(b);
+    go(wt[0], wt[1], wt[2], w.d, w.pit, w.yaw);
     card = document.createElement('div'); card.className = 'cd'; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', '区域世界 ' + w.id);
-    card.innerHTML = '<button class="c" type="button" aria-label="关闭">×</button><h3>' + w.id + ' · ' + w.im + '<small style="font-size:12px;color:#9fb3cf;margin-left:6px">' + w.zh + '</small></h3><div class="ty">仙女座星系 · 区域世界</div>' +
+    card.innerHTML = '<button class="c" type="button" aria-label="关闭">×</button><h3>' + w.id + ' · ' + w.im + '<small style="font-size:12px;color:#9fb3cf;margin-left:6px">' + w.zh + '</small></h3><div class="ty">' + G0.zh + ' · 区域世界</div>' +
       '<div class="q">❓ ' + w.q + '<br><small style="color:#b8c6dc">' + w.q2 + '</small></div><p>' + w.land + '</p>' + w.tag.map(function (t) { return '<span class="tg">' + t + '</span>'; }).join('') +
       '<div class="nt">模拟渲染(3D 粒子),非照片;数据为约数,来源 NASA / ESA / 哈勃 / 斯皮策。</div>';
     ov.appendChild(card); card.querySelector('.c').onclick = closeCard;
   }
   function look() {   // 回望银河:相机放在 M31 盘面上方,望向 254 万光年外的银河(窄视场)
     if (!MWP) return; closeCard(); var b = ov.querySelector('.bar button[data-a="mw"]'); if (b) mark(b);
-    var cp = [0, 40, 0], v = [cp[0] - MWP[0], cp[1] - MWP[1], cp[2] - MWP[2]], d = Math.hypot(v[0], v[1], v[2]);
-    go(MWP[0], MWP[1], MWP[2], d, Math.asin(v[1] / d), Math.atan2(v[0], v[2]), 4);
-    card = document.createElement('div'); card.className = 'cd'; card.innerHTML = '<button class="c" type="button" aria-label="关闭">×</button><h3>回望银河</h3><div class="ty">从仙女座看向家园</div><p>那一小团旋涡就是银河系,太阳系在它的一条旋臂里。你看到的是 <b>约 254 万年前</b> 发出的光 —— 那时地球上人属刚刚出现。</p><span class="tg">方向按真实位置换算</span><span class="tg">窄视场放大约 14 倍</span><div class="nt">银河外形为模拟渲染。</div>';
+    var L = G0.look, cp = [0, L.up, 0], v = [cp[0] - MWP[0], cp[1] - MWP[1], cp[2] - MWP[2]], d = Math.hypot(v[0], v[1], v[2]);
+    go(MWP[0], MWP[1], MWP[2], d, Math.asin(v[1] / d), Math.atan2(v[0], v[2]), L.fov);
+    card = document.createElement('div'); card.className = 'cd'; card.innerHTML = '<button class="c" type="button" aria-label="关闭">×</button><h3>回望银河</h3><div class="ty">' + L.h + '</div><p>' + L.p + '</p>' + L.tg.map(function (t) { return '<span class="tg">' + t + '</span>'; }).join('') + '<div class="nt">银河外形为模拟渲染。</div>';
     ov.appendChild(card); card.querySelector('.c').onclick = closeCard;
   }
   function input() {
@@ -179,7 +228,7 @@
     else if (!rm() && now > idle && fovT > 10) C.yaw += dt * .02;
     FOV += (fovT - FOV) * Math.min(1, dt * 3); if (Math.abs(FOV - fovT) < .01) FOV = fovT;
     var p = camPos(); cam.fov = FOV; cam.position.set(p[0], p[1], p[2]); cam.near = Math.max(.0005, Math.min(C.d * .002, 5)); cam.far = Math.max(1e4, C.d * 3); cam.updateProjectionMatrix(); cam.lookAt(C.tx, C.ty, C.tz);
-    var kk = innerHeight / (2 * Math.tan(FOV * D2R / 2)) * Math.min(devicePixelRatio || 1, small() ? 1.25 : 1.5); mats.forEach(function (m) { m.uniforms.uK.value = kk; });
+    var kk = innerHeight / (2 * Math.tan(FOV * D2R / 2)) * Math.min(devicePixelRatio || 1, small() ? 1.25 : 1.5); mats.forEach(function (m) { m.uniforms.uK.value = kk; }); if (GMAIN) GMAIN.material.uniforms.uB.value = GMAIN.userData.b0 * Math.max(.12, Math.min(1, Math.sqrt(C.d / G0.ref)));
     rd.render(scn, cam);
     LBL.forEach(function (Lb) {
       var q = Lb.mw ? MWP : Lb.p; if (!q) { Lb.el.style.display = 'none'; return; } var dd = Math.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]);
@@ -188,32 +237,33 @@
       Lb.el.style.display = ''; Lb.el.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(y) + 'px)';
     });
     var r = ov.querySelector('.rd'), dc = Math.hypot(p[0], p[1], p[2]);
-    r.textContent = '视点距 M31 中心 ' + ly(dc) + ' · 视野约 ' + ly(C.d * 1.04 * Math.tan(FOV * D2R / 2) / Math.tan(27.5 * D2R)) + (fovT < 10 ? ' · 窄视场' : '');
+    r.textContent = '视点距' + G0.zh + '中心 ' + ly(dc) + ' · 视野约 ' + ly(C.d * 1.04 * Math.tan(FOV * D2R / 2) / Math.tan(27.5 * D2R)) + (fovT < 10 ? ' · 窄视场' : '');
   }
   function open(o) {
-    o = o || {}; if (open_) return true; if (!window.THREE) return false; if (!ov) dom();
+    o = o || {}; if (open_) return true; if (!window.THREE) return false; var ng = GAL[o.k] || GAL.M31; if (ng !== G0 || !ov) { if (rd) { try { rd.dispose(); } catch (e) { } rd = null; } if (ov) ov.remove(); G0 = ng; SMCP = null; dom(); }
     if (!rd && !build()) return false;
+    LBL.forEach(function (L) { if (L.el.textContent === '小麦哲伦云') L.p = SMCP; });
     open_ = true; ov.style.display = ''; document.body.classList.add('xgw-on'); size(); closeCard();
-    C.tx = 0; C.ty = 0; C.tz = 0; C.d = o.fast || rm() ? 190 : 1600; C.pit = .5; C.yaw = -.8; FOV = fovT = 55; mark(ov.querySelector('.bar button[data-p]'));
-    if (!o.fast) go(0, 0, 0, 190, .5, -.8);
+    C.tx = 0; C.ty = 0; C.tz = 0; C.d = o.fast || rm() ? G0.home[0] : G0.home[0] * 8; C.pit = G0.home[1]; C.yaw = G0.home[2]; FOV = fovT = 55; mark(ov.querySelector('.bar button[data-p]'));
+    if (!o.fast) home();
     last = performance.now(); idle = last + 5000; requestAnimationFrame(function () { ov.classList.add('on'); });
     addEventListener('resize', size); raf = requestAnimationFrame(frame);
-    try { var u = new URL(location.href); u.searchParams.set('view', 'gw'); history.replaceState(null, '', u.pathname + u.search + u.hash); } catch (e) { }
+    try { var u = new URL(location.href); u.searchParams.set('view', 'gw'); u.searchParams.set('g', G0.k); history.replaceState(null, '', u.pathname + u.search + u.hash); } catch (e) { }
     return true;
   }
   function close() {
     if (!open_) return; open_ = false; document.body.classList.remove('xgw-on'); cancelAnimationFrame(raf); removeEventListener('resize', size); closeCard();
     ov.classList.remove('on'); var o = ov; setTimeout(function () { if (!open_) o.style.display = 'none'; }, 600);
     if (rd) { try { rd.dispose(); if (rd.forceContextLoss) rd.forceContextLoss(); } catch (e) { } rd = null; mats = []; scn = null; var nc = cv.cloneNode(false); cv.parentNode.replaceChild(nc, cv); cv = nc; input(); }
-    try { var u = new URL(location.href); if (u.searchParams.get('view') === 'gw') { u.searchParams.delete('view'); history.replaceState(null, '', u.pathname + u.search + u.hash); } } catch (e) { }
+    try { var u = new URL(location.href); if (u.searchParams.get('view') === 'gw') { u.searchParams.delete('view'); u.searchParams.delete('g'); history.replaceState(null, '', u.pathname + u.search + u.hash); } } catch (e) { }
   }
   function back() {   // 回本星系群仙女座视角
-    var lg = window.SHXLG; if (lg && !lg.isOpen()) lg.open(); close(); if (lg) setTimeout(function () { lg.preset('M31'); }, 80);
+    var lg = window.SHXLG; if (lg && !lg.isOpen()) lg.open(); close(); if (lg) setTimeout(function () { lg.preset(G0.lgp); }, 80);
   }
-  function enter() {   // 从本星系群进入:先开本视图再关 L0
-    if (!open()) return false; var lg = window.SHXLG; if (lg && lg.isOpen()) setTimeout(function () { try { lg.close(true); } catch (e) { } }, rm() ? 200 : 650); return true;
+  function enter(k) {   // 从本星系群进入:先开本视图再关 L0
+    if (!open({ k: k })) return false; var lg = window.SHXLG; if (lg && lg.isOpen()) setTimeout(function () { try { lg.close(true); } catch (e) { } }, rm() ? 200 : 650); return true;
   }
   (function w(n) { if (window.SHXESC) { SHXESC.reg('gw', 114, function () { return open_; }, function () { if (card) closeCard(); else back(); }); return; } if (n < 100) setTimeout(function () { w(n + 1); }, 100); })(0);
-  try { if (/[?&]view=gw\b/.test(location.search)) (function w2(n) { if (window.THREE && window.SHXLG && document.body) { setTimeout(function () { open({ fast: 1 }); }, 600); return; } if (n < 200) setTimeout(function () { w2(n + 1); }, 100); })(0); } catch (e) { }
-  window.SHXGW = { open: open, enter: enter, close: close, back: back, isOpen: function () { return open_; }, region: function (i) { if (open_) region(i); return card ? card.textContent : ''; }, look: function () { if (open_) look(); }, all: function () { if (open_) { closeCard(); go(0, 0, 0, 190, .5, -.8); } }, mw: function () { return MWP; }, worlds: function () { return RW.map(function (w) { return w.id + ' ' + w.im; }); } };
+  try { if (/[?&]view=gw\b/.test(location.search)) (function w2(n) { if (window.THREE && window.SHXLG && document.body) { setTimeout(function () { var m = /[?&]g=(\w+)/.exec(location.search); open({ fast: 1, k: m && m[1] }); }, 600); return; } if (n < 200) setTimeout(function () { w2(n + 1); }, 100); })(0); } catch (e) { }
+  window.SHXGW = { open: open, enter: enter, close: close, back: back, isOpen: function () { return open_; }, region: function (i) { if (open_) region(i); return card ? card.textContent : ''; }, look: function () { if (open_) look(); }, all: function () { if (open_) { closeCard(); home(); } }, cur: function () { return G0.k; }, mw: function () { return MWP; }, worlds: function () { return G0.rw.map(function (w) { return w.id + ' ' + w.im; }); } };
 })();
