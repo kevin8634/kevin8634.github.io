@@ -69,3 +69,6 @@
 
 ## 深空 1.6 航线「潮汐锁定」(2026-10-30)
 - routes/tide.json:文字 AI 撰写,数值由 tide_build.py 复算;引用 NASA Fact Sheet(公有领域)、Gladman 1996、Dickey 1994、Wells 1963、Stephenson 2016 的公开数值(事实数据,注明出处);无图片、无新数据集。
+
+## 深空 1.7 航线「一场疫情的数学」(2026-10-31)
+- routes/epi.json:文字 AI 撰写,数值由 docs/epi_build.py 复算;第 1 站图表复用 data/jhu.covid.italy.2020mar.json(JHU CSSE,CC BY 4.0,见上);引用 Roizman《Medical Microbiology》第 42 章(NCBI Bookshelf)、Fine 等 2011(Clin Infect Dis)、Holmdahl & Buckee 2020(NEJM)的公开概念与公式(注明出处);无图片、无新数据集。各站标注「不构成医疗或公共卫生建议」。

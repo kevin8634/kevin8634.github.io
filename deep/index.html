@@ -290,7 +290,7 @@ function showLab(c){const L=$("sideL");if(!c.lab||L.dataset.on)return;const lab=
 // D2 推导排序挑战(core 0.2 ChainDrag):答对检查题后出现,排对写入 d2
 function showChain(c){if(c.steps.length<3||$("chainBox"))return;const Q=$("sideQ"),d=document.createElement("div");d.id="chainBox";d.innerHTML=`<b>推导排序挑战</b><div class="cdim">把打乱的步骤排回正确顺序(可拖拽,或选中后按 ↑↓)。</div>`;Q.appendChild(d);ChainDrag.mount(d,{steps:c.steps.map(x=>x.text),onDone:ok=>{if(ok&&bar)bar.markDone("d2");if(ok)showLab(c);}});}
 // 1.5 星网与航线:routes/<id>.json;进度存 gn:deep:route:<id>;走完得航线徽章,生成航线卡
-let ROUTE=null,rtCur=-1;const ROUTES=[],RIDS=["iron","tide"];
+let ROUTE=null,rtCur=-1;const ROUTES=[],RIDS=["iron","tide","epi"];
 Promise.all(RIDS.map(id=>fetch("routes/"+id+".json").then(r=>r.ok?r.json():null).catch(()=>null))).then(a=>{a.forEach(j=>{if(j){j.stops.forEach((c,i)=>{c.layer=2;c.route=i;});ROUTES.push(j);}});ROUTE=ROUTES[0]||null;
  const q=new URLSearchParams(location.search);if(ROUTE&&q.has("net"))setTimeout(()=>{const r=ROUTES.find(x=>x.id===q.get("route"));if(r)ROUTE=r;const st=q.get("stop");st!=null&&st!==""&&ROUTE.stops[+st]?openStop(+st):openNet();},1200);});
 const rkOf=r=>"gn:deep:route:"+r.id;const rtGetR=r=>{try{return new Set(JSON.parse(localStorage.getItem(rkOf(r))||"[]"))}catch(e){return new Set()}};const rtGet=()=>rtGetR(ROUTE);
@@ -306,7 +306,7 @@ function openStop(i,rid){if(rid){const r=ROUTES.find(x=>x.id===rid);if(r)ROUTE=r
  rtTh();renderCard(c);side.classList.add("open");side.setAttribute("aria-hidden","false");side.scrollTop=0;$("sideX").focus();}
 function rtDone(i){const d=rtGet();if(d.has(i))return;d.add(i);rtSave(d);if(sideL===5&&rtCur===i)rtTh();if(ROUTE.stops.every((_,j)=>d.has(j))&&$("qa"))$("qa").insertAdjacentHTML("beforeend",`<p class="ok">🏅 航线点亮:${esc(ROUTE.badge)}。可以生成航线卡了。</p>`);}
 const NP=(()=>{const o={};["nv","ef","sh","ls","ma","lt","ps"].forEach((id,i)=>{const a=-Math.PI/2+i*2*Math.PI/7;o[id]=[200+150*Math.cos(a),200+150*Math.sin(a)];});return o;})();
-const RFUT=[{t:"一场疫情的数学",path:["ma","ls","lt","ps"]}];
+const RFUT=[];
 function openNet(){if(!ROUTE)return;const S=$("netS"),col=w=>"#"+WORLDS.find(x=>x.id===w).c.toString(16).padStart(6,"0"),nm=id=>esc(WORLDS.find(w=>w.id===id).n);
  const seg=(p,lit,dash,c,off)=>p.slice(1).map((id,i)=>{let[a,b]=[NP[p[i]],NP[id]];const dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy)||1,ox=-dy/L*off,oy=dx/L*off;return `<line x1="${a[0]+ox}" y1="${a[1]+oy}" x2="${b[0]+ox}" y2="${b[1]+oy}" stroke="${lit(i)?c:"rgba(160,180,220,.35)"}" stroke-width="${lit(i)?3:1.5}" ${dash?'stroke-dasharray="5 6"':""}/>`}).join("");
  const on=new Set();ROUTES.forEach(r=>r.stops.forEach(c=>on.add(c.world)));

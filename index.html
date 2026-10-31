@@ -1499,8 +1499,8 @@
       var byId = {}; WORLDS.forEach(function (w) { byId[w.id] = w; });
       // v2.3 · 星网：在七颗星之间画出跨世界航线；进度与深空层共用 localStorage gn:deep:route:iron
       (function () {
-        var NETR = [{ t: "铁从哪里来", p: ["02", "03", "07", "04"], k: "gn:deep:route:iron", href: "deep/?net=1&route=iron", c: "#7fe3a8" }, { t: "潮汐锁定", p: ["02", "07", "04"], k: "gn:deep:route:tide", href: "deep/?net=1&route=tide", c: "#8fd3ff" }],
-          NETF = [{ t: "一场疫情的数学", p: ["01", "04", "06", "05"] }];
+        var NETR = [{ t: "铁从哪里来", p: ["02", "03", "07", "04"], k: "gn:deep:route:iron", href: "deep/?net=1&route=iron", c: "#7fe3a8" }, { t: "潮汐锁定", p: ["02", "07", "04"], k: "gn:deep:route:tide", href: "deep/?net=1&route=tide", c: "#8fd3ff" }, { t: "一场疫情的数学", p: ["01", "04", "06", "05"], k: "gn:deep:route:epi", href: "deep/?net=1&route=epi", c: "#ff9a8f" }],
+          NETF = [];
         var on = false, raf = 0, svg = null, pan = null, chip = document.getElementById("netChip");
         function done(r) { try { return JSON.parse(localStorage.getItem(r.k) || "[]"); } catch (e) { return []; } }
         function nm(id) { return byId[id] ? byId[id].name : id; }
@@ -1516,7 +1516,7 @@
         function panel() {
           pan.innerHTML = '<b>✦ 星网 · 跨世界航线</b>' + NETR.map(function (r) { var d = done(r), all = d.length >= r.p.length;
             return '<div class="row" style="margin-top:6px"><span style="flex:1;min-width:0"><span style="color:' + r.c + '">' + (all ? "🏅 " : "") + r.t + '</span> · ' + r.p.map(nm).join(" → ") + ' · ' + d.length + "/" + r.p.length + '</span><a href="' + r.href + '" style="background:' + r.c + '">' + (d.length ? "继续 ▸" : "启航 ▸") + '</a></div>'; }).join("") +
-            '<div class="k" style="margin-top:6px">' + NETF.map(function (f) { return f.t + " · " + f.p.map(nm).join(" → "); }).join("<br>") + ' · 即将点亮</div><div class="row"><button type="button" id="netOff">收起星网</button></div>';
+            (NETF.length ? '<div class="k" style="margin-top:6px">' + NETF.map(function (f) { return f.t + " · " + f.p.map(nm).join(" → "); }).join("<br>") + ' · 即将点亮</div>' : '') + '<div class="row"><button type="button" id="netOff">收起星网</button></div>';
           document.getElementById("netOff").onclick = toggle; }
         function toggle() { on = !on; chip.setAttribute("aria-pressed", on); document.body.classList.toggle("x-neton", on);
           if (!svg) { svg = document.createElementNS("http://www.w3.org/2000/svg", "svg"); svg.id = "netSvg"; svg.setAttribute("aria-hidden", "true"); document.body.appendChild(svg);
@@ -3516,6 +3516,8 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "深空 1.7", d: "2026-10-31", t: "第三条跨世界航线「一场疫情的数学」点亮：星图用意大利 2020 年的真实数据算出翻倍只要 2.6 天，生命源码看一个细胞怎样放出成百上千个病毒，觉弈算出群体免疫门槛 1−1/R₀，奇点前夜解释模型为什么总给区间。门户星网三条航线全部可走。" },
+        { w: "07", v: "2.0 C2.13a", d: "2026-10-31", t: "星域 VII「本星系群」开放：从银河的麦哲伦门穿过虫洞，飞到仙女座、三角座和 31 个矮星系之间，还能看银河与仙女座 45 亿年后的相撞。" },
         { w: "gn", v: "门户 v2.3.1", d: "2026-10-31", t: "星历补登天枢 C2.12a5–C2.12c 与深空星穹层研究者卡；天枢 1.0 的星域 VI「银河」不再显示即将开放，点它直接飞进 2.0 银河全景。" },
         { w: "07", v: "1.0-M4i", d: "2026-10-31", t: "1.0 的星域 VI「银河」开门了：任务栏、航图卡片和星域按钮都能一键跳到 2.0 银河全景。" },
         { w: "07", v: "2.0 C2.12c", d: "2026-10-30", t: "天枢航道开通：银河里 11 座信标站连成 12 段航道，锁定目标、转向、跃迁、抵达，一站站点亮收集。" },
