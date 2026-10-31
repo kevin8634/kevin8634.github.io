@@ -23,6 +23,7 @@
     H.on('gfx', function () { var b = document.getElementById('btn-gfx'); if (b) b.click(); });
     H.on('sound', function (on) { toggleSound(on); });
     H.on('domain', function (e) {
+      if (e.locked && e.n === 6) { location.href = 'x/?view=galaxy'; return; }   // v1.0-M4i:星域 VI 银河已在 2.0 开放(王磊 2026-10-30 13:53)
       if (e.locked) { toast('星域 ' + ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][e.n] + ' 还在建造中,即将开放'); return; }
       D.go(e.n);
     });

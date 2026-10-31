@@ -58,6 +58,7 @@
 .shh-new{font-size:11px;color:var(--shh-ink);background:var(--shh-cyan);border-radius:4px;padding:0 4px;margin-left:4px;white-space:nowrap}
 .shh-new.is-soon{background:rgba(140,180,230,.25);color:#c9d4e6}
 .shh-lock{font-size:12px;color:var(--shh-mut);margin-top:12px}
+a.shh-lock.is-go{display:block;color:#e9c779;text-decoration:none}a.shh-lock.is-go:hover{text-decoration:underline}
 .shh-drawer.is-closed{width:44px}
 .shh-drawer.is-closed .shh-list{display:none}
 .shh-drawer.is-closed .shh-rail{border-right:0}

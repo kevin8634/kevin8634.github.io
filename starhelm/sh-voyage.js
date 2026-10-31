@@ -296,6 +296,7 @@
     var b = h('button', 'voy-go', here ? '你在这里' : '设为航线目标 →'); b.type = 'button'; b.disabled = here || VY.state === 'travel';
     b.addEventListener('click', function () { UI.map.hidden = true; setTarget(best.id); });
     UI.mapCard.appendChild(b);
+    if (best.id === 'galaxy') { var gx = h('a', 'voy-go', '✦ 在 2.0 打开银河全景 →'); gx.href = 'x/?view=galaxy'; gx.style.textDecoration = 'none'; UI.mapCard.appendChild(gx); }   // v1.0-M4i
     if (here && best.id === 'home' && SH.quakesLab) { var qk = h('button', 'voy-go', '🌋 进入地震实验室'); qk.type = 'button'; qk.addEventListener('click', function () { UI.map.hidden = true; SH.quakesLab.open(); }); UI.mapCard.appendChild(qk); }
     if (here && best.id === 'home' && SH.satsLab) { var st = h('button', 'voy-go', '🛰 进入卫星星海'); st.type = 'button'; st.addEventListener('click', function () { UI.map.hidden = true; SH.satsLab.open(); }); UI.mapCard.appendChild(st); }
     if (here && best.id === 'home' && SH.seasonsLab) { var sl = h('button', 'voy-go', '🌍 进入四季实验室'); sl.type = 'button'; sl.addEventListener('click', function () { UI.map.hidden = true; SH.seasonsLab.open(); }); UI.mapCard.appendChild(sl); }

@@ -96,7 +96,7 @@
         h += '<button type="button" class="shh-task' + (t.id === st.task ? ' cur' : '') + '" data-id="' + t.id + '" data-d="' + d + '"><i>' + (lit(t) ? '★' : '☆') + '</i><span>' + esc(t.q) + (t.isNew ? '<span class="shh-new">新</span>' : t.soon ? '<span class="shh-new is-soon">即将</span>' : '') + '</span></button>';
       });
     });
-    h += '<div class="shh-lock">星域 VI–VII · 即将开放</div>';
+    h += '<a class="shh-lock is-go" href="x/?view=galaxy">星域 VI · 银河 · 已在 2.0 开放 →</a><div class="shh-lock">星域 VII · 即将开放</div>';
     H.list.innerHTML = '<div class="shh-list__h">任务<small>' + on + '/' + all + ' 已点亮</small></div>' + h;
     var rb = H.rail.querySelectorAll('button[data-d]');
     for (var i = 0; i < rb.length; i++) rb[i].classList.toggle('cur', +rb[i].dataset.d === st.dom);
@@ -236,7 +236,7 @@
         (opts.noOpening ? '' : '<button type="button" class="shh-btn is-x" data-ev="opening" title="重播开场">↺ <span class="t">开场</span></button>') +
       '</header>' +
       '<nav class="shh-drawer shh-glass" id="shh-drawer" aria-label="任务抽屉"><div class="shh-rail">' +
-        DOM.map(function (d) { return '<button type="button" data-d="' + d.n + '" class="' + (d.open ? 'on' : '') + '" title="星域 ' + ROMAN[d.n] + ' · ' + d.zh + (d.open ? '' : ' · 即将开放') + '"' + (d.open ? '' : ' aria-disabled="true"') + '>' + ROMAN[d.n] + '</button>'; }).join('') +
+        DOM.map(function (d) { return '<button type="button" data-d="' + d.n + '" class="' + (d.open ? 'on' : '') + '" title="星域 ' + ROMAN[d.n] + ' · ' + d.zh + (d.open ? '' : d.n === 6 ? ' · 已在 2.0 开放' : ' · 即将开放') + '"' + (d.open ? '' : ' aria-disabled="true"') + '>' + ROMAN[d.n] + '</button>'; }).join('') +
         '<button type="button" class="shh-vlabel" id="shh-vl">任务 ›</button><button type="button" class="shh-tog" id="shh-tog">‹</button>' +
       '</div><div class="shh-list" id="shh-list"></div></nav>' +
       '<section class="shh-console shh-glass" aria-label="时间与尺度">' +
