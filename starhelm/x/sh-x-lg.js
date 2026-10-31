@@ -212,7 +212,7 @@
     ov.querySelector('.x').onclick = function () { back(); };
     ov.querySelectorAll('.bar button[data-p]').forEach(function (b) { b.onclick = function () { preset(b.dataset.p); }; });
     ov.querySelectorAll('.bar button[data-a]').forEach(function (b) { b.onclick = function () { var a = b.dataset.a; if (a === 'w1') world('VII-1'); else if (a === 'w2') world('VII-2'); else if (a === 'tl') tl(); else back(); }; });
-    var lv = ov.querySelector('.lv'); LV7.forEach(function (L, i) { var b = document.createElement('button'); b.type = 'button'; b.title = L.sc; b.innerHTML = '<b>' + L.k + '</b>' + L.zh; if (i) { b.classList.add('ext'); b.title += '(C2.13b/c 开放)'; } else b.classList.add('on'); b.onclick = function () { if (!i) preset('all'); else hint(L.k + ' ' + L.zh + ':' + L.sc + ' —— C2.13b/c 开放'); }; lv.appendChild(b); });
+    var lv = ov.querySelector('.lv'); LV7.forEach(function (L, i) { var b = document.createElement('button'); b.type = 'button'; b.title = L.sc; b.innerHTML = '<b>' + L.k + '</b>' + L.zh; if (i === 1) b.title += ' —— 进入 M87 星系世界(C2.13b)'; else if (i) { b.classList.add('ext'); b.title += '(C2.13c 开放)'; } else b.classList.add('on'); b.onclick = function () { if (!i) preset('all'); else if (i === 1 && window.SHXGW) { if (!SHXGW.enter('M87')) hint('星系世界需要 WebGL'); } else hint(L.k + ' ' + L.zh + ':' + L.sc + ' —— C2.13b/c 开放'); }; lv.appendChild(b); });
     var tr = ov.querySelector('.tl input'); tr.oninput = function () { setT(+tr.value / 10); };
     // 标签
     LBL = [];

@@ -7,6 +7,7 @@
  * - 区域世界(双名):G-M31-1 双核之心 · G-M31-2 火环 · G-M31-3 NGC 206 · G-M31-4 伴星与星流;每个有核心问题与讲解。
  * - 回望银河:按真实方向(由 SHXLG.geo 给出的 M31 位置与盘面朝向换算)在 254 万光年外画出银河系,并标「你看到的是 254 万年前的银河」。
  * - C2.13b2 模板化:GAL 表(M31、LMC);大麦哲伦云 = 偏心棒 + 单旋臂 + 蜘蛛星云/R136 + SN 1987A 三环 + N11 + 小麦哲伦云/麦哲伦桥/麦哲伦流;近距自动降亮防核区过曝。
+ * - C2.13b3 M87:巨椭圆 + 中心尖峰 + 约 1.3 万球状星团 + 5,000 光年喷流(对数分布,一直连到视界附近,HST-1/A/B 等亮结示意)+ M87* 光环(EHT 2019,南侧多普勒增亮);入口 L0 层级栏 L1。
  * - 无 WebGL 时不进入(按钮提示);减少动态时相机直接切换。Esc / × 回本星系群。深链 ?view=gw。
  * - 数字为约数:距离 254 万光年(NASA)、倾角 77°、10 kpc 环、NGC 206 约 4,000 光年宽、M32 投影距中心约 2.4 万光年、巨型星流长约 40 万光年。
  */
@@ -110,6 +111,39 @@
     { id: 'G-LMC-4', im: '麦哲伦桥', zh: '大小云 · 麦哲伦流', t: null, d: 140, pit: .5, yaw: -1, q: '银河会把它们吞掉吗?', q2: '大小麦哲伦云是第一次来吗?',
       land: '小麦哲伦云在约 7.5 万光年外,两云之间由气体与年轻恒星组成的麦哲伦桥相连,身后拖着横跨天空 100° 以上的麦哲伦流。它们可能是第一次掠过银河;模拟认为约 20–25 亿年后大麦哲伦云会并入银河。', tag: ['桥与流已证实', '首次掠过(主流观点)', '20–25 亿年后并合(推测)'] }
   ];
+
+  /* ---------- M87 巨椭圆(局部千光年;按天球真实方向放置,椭圆无盘面朝向) ---------- */
+  var JD = [.82, .3, -.48];   // 喷流方向(示意)
+  function genM87(sf) {
+    var R = rnd(8787), P = [], Cc = [], S = [], k, j, N = Math.round(220000 * sf);
+    function put(x, y, z, r, g, b, s) { P.push(x, y, z); Cc.push(r, g, b); S.push(s); }
+    for (k = 0; k < N * .62; k++) { var su = Math.sqrt(R() * .985), rr = 60 * .25 * su / (1 - su), t = R() * 6.283, ph = Math.acos(2 * R() - 1); put(rr * Math.sin(ph) * Math.cos(t), rr * Math.cos(ph) * .86, rr * Math.sin(ph) * Math.sin(t), 1, .82 + R() * .06, .58 + R() * .1, .05 + Math.min(rr, 40) * .006 + R() * .05); }
+    for (k = 0; k < N * .05; k++) { var rd = Math.abs(gs(R)) * 30, t2 = R() * 6.283, p2 = Math.acos(2 * R() - 1); put(rd * Math.sin(p2) * Math.cos(t2), rd * Math.cos(p2) * .86, rd * Math.sin(p2) * Math.sin(t2), .13, .11, .08, 3 + R() * 3); }   // 弥散体积光
+    for (k = 0; k < N * .08; k++) { var lr = Math.pow(10, -4 + R() * 4), t3 = R() * 6.283, p3 = Math.acos(2 * R() - 1); put(lr * Math.sin(p3) * Math.cos(t3), lr * Math.cos(p3) * .86, lr * Math.sin(p3) * Math.sin(t3), 1, .85, .65, lr * .04); }   // 中心星团尖峰(对数分布,放大时仍有星)
+    for (k = 0; k < Math.round(13000 * Math.max(sf, .4)); k++) { var gr = 4 + Math.pow(R(), 2.2) * 320, t4 = R() * 6.283, p4 = Math.acos(2 * R() - 1); put(gr * Math.sin(p4) * Math.cos(t4), gr * Math.cos(p4), gr * Math.sin(p4) * Math.sin(t4), 2, 1.75, 1.3, .12 + R() * .1); }   // 约 1.3 万个球状星团
+    var ex = [-JD[1], JD[0], 0], el = Math.hypot(ex[0], ex[1]); ex = [ex[0] / el, ex[1] / el, 0]; var ey = [JD[1] * ex[2] - JD[2] * ex[1], JD[2] * ex[0] - JD[0] * ex[2], JD[0] * ex[1] - JD[1] * ex[0]];
+    var KN = [.02, .17, .3, .42, .55, .7, .86];   // HST-1、D、E、F、A、B、C 结(示意位置,占 5,000 光年长度比例)
+    for (k = 0; k < N * .06; k++) {   // 喷流:从黑洞视界附近到 5,000 光年,对数分布,宽度随距离张开
+      var L = Math.pow(10, -5.5 + R() * 6.2), w = .00002 + L * .028, a = R() * 6.283, rr2 = Math.abs(gs(R)) * w, br = 1;
+      var f = L / 5; KN.forEach(function (q) { if (Math.abs(f - q) < .025) br = 2.4; });
+      put(JD[0] * L + (ex[0] * Math.cos(a) + ey[0] * Math.sin(a)) * rr2, JD[1] * L + (ex[1] * Math.cos(a) + ey[1] * Math.sin(a)) * rr2, JD[2] * L + (ex[2] * Math.cos(a) + ey[2] * Math.sin(a)) * rr2, .55 * br, .75 * br, 1.3 * br, Math.max(L * .012, .0000015));
+    }
+    for (k = 0; k < 4000; k++) {   // M87* 阴影外的光环(EHT 2019;环直径约 0.006 光年,南侧更亮)
+      var t5 = R() * 6.283, r5 = .0000032 * (1 + gs(R) * .07), b5 = 1.2 + 1.3 * Math.max(0, -Math.sin(t5));
+      put(ex[0] * r5 * Math.cos(t5) + ey[0] * r5 * Math.sin(t5), ex[1] * r5 * Math.cos(t5) + ey[1] * r5 * Math.sin(t5), ex[2] * r5 * Math.cos(t5) + ey[2] * r5 * Math.sin(t5), 2.6 * b5, 1.3 * b5, .45 * b5, .0000007);
+    }
+    return { P: new Float32Array(P), C: new Float32Array(Cc), S: new Float32Array(S), DP: new Float32Array(0), DS: new Float32Array(0) };
+  }
+  var RWM = [
+    { id: 'G-M87-1', im: '巨椭圆', zh: '室女座星系团中心', t: [0, 0, 0], d: 320, pit: .4, yaw: -.6, q: '为什么它是一个光滑的大球?', q2: '它为什么几乎不再造新恒星?',
+      land: 'M87 是室女座星系团中心的巨椭圆星系,质量约是银河系的数倍,由数万亿颗老年恒星组成。它很可能是许多星系一次次并合的产物:旋臂被搅散,气体被中心黑洞加热,新恒星几乎不再诞生。', tag: ['已证实', '并合成因(主流观点)'] },
+    { id: 'G-M87-2', im: '喷流', zh: '5,000 光年的等离子体束', t: [JD[0] * 2.5, JD[1] * 2.5, JD[2] * 2.5], d: 7, pit: .2, yaw: .9, q: '黑洞怎样射出 5,000 光年长的喷流?', q2: '为什么哈勃看到它「超光速」?',
+      land: '1918 年柯蒂斯首次记下这条「奇特的直线光束」。它是黑洞附近磁场把物质加速到接近光速后射出的等离子体束,沿途一个个亮结。哈勃测到亮结的视速度达光速的 4–6 倍 —— 这是接近光速、几乎朝我们运动造成的视觉效应,并非真的超光速。', tag: ['已证实', '磁场驱动机制(主流观点)'] },
+    { id: 'G-M87-3', im: '黑洞 M87*', zh: '人类第一张黑洞照片', t: [0, 0, 0], d: .000022, pit: .1, yaw: .3, q: '黑洞长什么样?', q2: '为什么光环一边更亮?',
+      land: '2019 年事件视界望远镜公布 M87* 的照片:约 65 亿倍太阳质量,中间的暗影是光无法逃出的区域,周围光环直径约 0.006 光年(约 400 天文单位)。光环南侧更亮,是绕黑洞高速旋转的物质朝我们运动造成的多普勒增亮。', tag: ['已证实', '光环亮区随年份移动(2018 数据)'] },
+    { id: 'G-M87-4', im: '球状星团群', zh: '约 1.3 万个球状星团', t: [0, 0, 0], d: 900, pit: .7, yaw: -1.4, q: '一个星系怎么会有上万个球状星团?', q2: '银河系有多少个?',
+      land: 'M87 周围约有 1.2–1.5 万个球状星团,银河系只有约 160 个。它们大多是被 M87 吞并的星系带进来的,像化石一样记录着它的成长史。', tag: ['数量已证实', '吞并来源(主流观点)'] }
+  ];
   var GAL = {
     M31: { k: 'M31', zh: '仙女座星系', en: 'ANDROMEDA · M31', vii: 'VII·G-M31', sub: '距太阳约 254 万光年 · 直径约 15 万光年以上 · 倾角 77° · 模拟渲染(3D 粒子,结构按观测)', dist: DIST, rw: RW, home: [190, .5, -.8], ref: 3, lgp: 'M31',
       lab: function () { return [['双核 P1 / P2', [0, 0, 0], '#f0c97a', 0, 3], ['10 kpc 尘埃环', [0, 0, 33], '#7fd6ff', 1, 400], ['NGC 206', NGC206, '#9fc8ff', 2, 150], ['M32', M32, '#f0c97a', 3, 500], ['M110', M110, '#f0c97a', 3, 900], ['巨型南方星流', [-40, -90, -190], '#cdb8ff', 3, 2000], ['银河系 · 254 万年前的光', null, '#f0c97a', -1, 1e5]]; },
@@ -118,6 +152,9 @@
       lab: function () { return [['偏心棒', [-1.2, 0, .4], '#f0c97a', 0, 60], ['蜘蛛星云 30 Dor', D30, '#ff9fd0', 1, 40], ['R136', D30, '#bfe6ff', 1, .3], ['SN 1987A', SN87, '#ffd9a0', 2, 2], ['N11', N11, '#ff9fd0', 0, 40], ['小麦哲伦云', SMCP, '#bfe6ff', 3, 600], ['银河系 · 16 万年前的光', null, '#f0c97a', -1, 1e5]]; },
       look: { up: 6, fov: 55, h: '从大麦哲伦云看银河', p: '银河系横跨半个天空,侧着向你展开。你看到的是 <b>约 16 万年前</b> 发出的光 —— 那时现代人类的祖先还生活在非洲。', tg: ['方向按真实位置换算'] } }
   };
+  GAL.M87 = { k: 'M87', zh: 'M87 室女座 A', en: 'VIRGO A · M87', vii: 'VII·G-M87', sub: '距太阳约 5,350 万光年 · 巨椭圆星系 E0–1 · 中心黑洞 M87* 约 65 亿倍太阳质量 · 模拟渲染(3D 粒子)', dist: 53500, ra: 187.706, de: 12.391, rw: RWM, home: [320, .4, -.6], ref: 40, lgp: 'all',
+      lab: function () { return [['M87* 黑洞', [0, 0, 0], '#ffb070', 2, .02], ['喷流 · 约 5,000 光年', [JD[0] * 3, JD[1] * 3, JD[2] * 3], '#9fc8ff', 1, 80], ['球状星团群', [150, 60, 0], '#f0c97a', 3, 3000], ['银河系 · 5,350 万年前的光', null, '#f0c97a', -1, 1e9]]; },
+      look: { up: 20, fov: .35, h: '从室女座星系团看本星系群', p: '那颗几乎看不见的小光点就是银河系。你看到的是 <b>约 5,350 万年前</b> 发出的光 —— 那时恐龙灭绝才过去约 1,300 万年。', tg: ['方向按真实位置换算', '窄视场放大约 150 倍'] } };
   var G0 = GAL.M31;
   function genMW(sf) {   // 回望用的远方银河:棒旋 4 臂(小粒子数)
     var R = rnd(4242), P = [], Cc = [], S = [], N = Math.round(40000 * sf), tp = Math.tan(13 * D2R);
@@ -140,6 +177,7 @@
   }
   function mwDir() {   // 从 M31 看银河的方向(M31 局部坐标)
     try {
+      if (G0.ra != null && window.SHXTSG) { var a = SHXTSG.scene(G0.ra, G0.de, 1e9), o = SHXTSG.scene(G0.ra, G0.de, 0), l = Math.hypot(a[0] - o[0], a[1] - o[1], a[2] - o[2]); return [-(a[0] - o[0]) / l, -(a[1] - o[1]) / l, -(a[2] - o[2]) / l]; }
       var G = window.SHXLG && SHXLG.geo && SHXLG.geo(G0.k); if (!G) return null;
       var q = new T.Quaternion().setFromUnitVectors(new T.Vector3(0, 1, 0), new T.Vector3(G.n[0], G.n[1], G.n[2])).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), G.spin || 0));
       var qi = q.clone().invert(), v = new T.Vector3(-G.p[0], -G.p[1], -G.p[2]).normalize().applyQuaternion(qi); if (G0.k === 'LMC') { var S2 = SHXLG.geo('SMC'); if (S2) { var w = new T.Vector3(S2.p[0] - G.p[0], S2.p[1] - G.p[1], S2.p[2] - G.p[2]).applyQuaternion(qi); SMCP = [w.x, w.y, w.z]; } } return [v.x, v.y, v.z];
@@ -151,7 +189,7 @@
     rd.setPixelRatio(Math.min(devicePixelRatio || 1, small() ? 1.25 : 1.5)); rd.setClearColor(0x010208, 1);
     scn = new T.Scene(); cam = new T.PerspectiveCamera(FOV, 1, .001, 1e4); mats = [];
     var sf = small() ? .25 : 1, d = mwDir() || [.3, -.2, .93]; if (G0.k === 'LMC' && !SMCP) SMCP = [-50, -20, -50];
-    var b = G0.k === 'LMC' ? genLMC(sf) : gen(sf), main = pts(b.P, b.C, b.S, false, .5, 26); main.userData.b0 = .5; GMAIN = main; scn.add(main); scn.add(pts(b.DP, null, b.DS, true, 1, 60));
+    var b = G0.k === 'LMC' ? genLMC(sf) : G0.k === 'M87' ? genM87(sf) : gen(sf), main = pts(b.P, b.C, b.S, false, .5, 26); main.userData.b0 = .5; GMAIN = main; scn.add(main); scn.add(pts(b.DP, null, b.DS, true, 1, 60));
     MWP = [d[0] * G0.dist, d[1] * G0.dist, d[2] * G0.dist];
     var mw = genMW(sf * (G0.k === 'LMC' ? 1.5 : 1)), mo = pts(mw.P, mw.C, mw.S, false, G0.k === 'LMC' ? .09 : .9, G0.k === 'LMC' ? 20 : 6); mo.position.set(MWP[0], MWP[1], MWP[2]); mo.rotation.set(.9, .3, .4); scn.add(mo);
     var bp = [], bc = [], bs = [], R2 = rnd(77);
@@ -218,16 +256,16 @@
     function up(e) { delete P[e.pointerId]; } cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
     cv.addEventListener('wheel', function (e) { e.preventDefault(); zoom(Math.exp(e.deltaY * .0012)); idle = performance.now() + 6000; }, { passive: false });
   }
-  function zoom(f) { C.d = Math.max(.02, Math.min(4000, C.d * f)); }
+  function zoom(f) { C.d = Math.max(G0.k === 'M87' ? .000008 : .002, Math.min(G0.k === 'M87' ? 3000 : 4000, C.d * f)); }
   function camPos() { var cp = Math.cos(C.pit); return [C.tx + C.d * cp * Math.sin(C.yaw), C.ty + C.d * Math.sin(C.pit), C.tz + C.d * cp * Math.cos(C.yaw)]; }
   function size() { if (!rd) return; rd.setSize(innerWidth, innerHeight, false); cam.aspect = innerWidth / innerHeight; cam.updateProjectionMatrix(); }
-  function ly(k) { return k >= 10 ? (k / 10).toFixed(k >= 1000 ? 0 : 1) + ' 万光年' : Math.round(k * 1000).toLocaleString('zh-CN') + ' 光年'; }
+  function ly(k) { if (k < .001) return (k * 6.324e7).toFixed(0) + ' 天文单位'; return k >= 10 ? (k / 10).toFixed(k >= 1000 ? 0 : 1) + ' 万光年' : Math.round(k * 1000).toLocaleString('zh-CN') + ' 光年'; }
   function frame(now) {
     raf = requestAnimationFrame(frame); if (!open_) return; var dt = Math.min(.1, (now - last) / 1000); last = now;
     if (TW) { var k = Math.min(1, (now - TW.t0) / TW.ms), e = k * k * (3 - 2 * k), L = function (a, b) { return Math.exp(Math.log(a) + (Math.log(b) - Math.log(a)) * e); }; C.tx = TW.a[0] + (TW.b[0] - TW.a[0]) * e; C.ty = TW.a[1] + (TW.b[1] - TW.a[1]) * e; C.tz = TW.a[2] + (TW.b[2] - TW.a[2]) * e; C.d = L(TW.a[3], TW.b[3]); C.pit = TW.a[4] + (TW.b[4] - TW.a[4]) * e; var dy = TW.b[5] - TW.a[5]; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); C.yaw = TW.a[5] + dy * e; if (k >= 1) TW = null; }
     else if (!rm() && now > idle && fovT > 10) C.yaw += dt * .02;
     FOV += (fovT - FOV) * Math.min(1, dt * 3); if (Math.abs(FOV - fovT) < .01) FOV = fovT;
-    var p = camPos(); cam.fov = FOV; cam.position.set(p[0], p[1], p[2]); cam.near = Math.max(.0005, Math.min(C.d * .002, 5)); cam.far = Math.max(1e4, C.d * 3); cam.updateProjectionMatrix(); cam.lookAt(C.tx, C.ty, C.tz);
+    var p = camPos(); cam.fov = FOV; cam.position.set(p[0], p[1], p[2]); cam.near = Math.max(1e-9, Math.min(C.d * .002, 5)); cam.far = Math.max(1e4, C.d * 3); cam.updateProjectionMatrix(); cam.lookAt(C.tx, C.ty, C.tz);
     var kk = innerHeight / (2 * Math.tan(FOV * D2R / 2)) * Math.min(devicePixelRatio || 1, small() ? 1.25 : 1.5); mats.forEach(function (m) { m.uniforms.uK.value = kk; }); if (GMAIN) GMAIN.material.uniforms.uB.value = GMAIN.userData.b0 * Math.max(.12, Math.min(1, Math.sqrt(C.d / G0.ref)));
     rd.render(scn, cam);
     LBL.forEach(function (Lb) {
