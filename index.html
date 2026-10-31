@@ -214,6 +214,7 @@
       .modal li { font-size: 13.5px; line-height: 1.9; margin-bottom: 10px; color: rgba(234,240,255,.86); }
       .modal li b { color: var(--ink); font-weight: 600; }
       .modal video { width: 100%; border-radius: 14px; display: block; background: #04060f; }
+      #trailer video, #trailer .fallback img { width: auto; max-width: 100%; max-height: 72vh; aspect-ratio: 9 / 16; margin: 0 auto; display: block; object-fit: contain; }
       .modal .fallback { position: relative; display: none; }
       .modal .fallback img { width: 100%; border-radius: 14px; display: block; opacity: .5; }
       .modal .fallback span {
@@ -1170,11 +1171,11 @@
 
     <div class="modal" id="trailer" role="dialog" aria-label="宣传片">
       <button class="close" data-close aria-label="关闭">×</button>
-      <h2>创世计划 · 宣传片</h2>
-      <video id="video" controls playsinline preload="none" poster="trailer-poster.jpg" src="genesis-trailer.mp4" style="display:none"></video>
+      <h2>创世计划 2.0 · 深空之下</h2>
+      <video id="video" controls playsinline preload="none" poster="trailer-2.0-poster.jpg" src="genesis-trailer-2.0.mp4" style="display:none"></video>
       <div class="fallback" id="videoFallback" style="display:block">
-        <img src="trailer-poster.jpg" alt="创世计划宣传片海报" />
-        <span>七个世界 · 76 秒</span>
+        <img src="trailer-2.0-poster.jpg" alt="创世计划 2.0 宣传片海报" />
+        <span>深空之下 · 62 秒</span>
       </div>
     </div>
 
@@ -1329,7 +1330,7 @@
     <script>
       "use strict";
       /** 宣传片地址（与 <video src> 保持一致）；为空或加载失败时弹窗只显示海报 */
-      const TRAILER_SRC = 'genesis-trailer.mp4';
+      const TRAILER_SRC = 'genesis-trailer-2.0.mp4';
       var RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
       function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
       function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -3520,6 +3521,7 @@
         { w: "gn", v: "深空 1.8", d: "2026-10-31", t: "第四条跨世界航线「一次提问的能量」点亮：星图算训练大模型要做 10²³ 次运算，奇点前夜算问 AI 一句话花多少电，宙律找到计算的物理下限兰道尔极限，元素工坊解释为什么电要存进锂电池。" },
         { w: "gn", v: "深空 1.7", d: "2026-10-31", t: "第三条跨世界航线「一场疫情的数学」点亮：星图用意大利 2020 年的真实数据算出翻倍只要 2.6 天，生命源码看一个细胞怎样放出成百上千个病毒，觉弈算出群体免疫门槛 1−1/R₀，奇点前夜解释模型为什么总给区间。门户星网三条航线全部可走。" },
         { w: "07", v: "2.0 C2.13a", d: "2026-10-31", t: "星域 VII「本星系群」开放：从银河的麦哲伦门穿过虫洞，飞到仙女座、三角座和 31 个矮星系之间，还能看银河与仙女座 45 亿年后的相撞。" },
+        { w: "gn", v: "门户 v2.3.2", d: "2026-10-31", t: "主页宣传片换成 2.0《深空之下》竖屏 60 帧版（1080×1920，62 秒）。" },
         { w: "gn", v: "门户 v2.3.1", d: "2026-10-31", t: "星历补登天枢 C2.12a5–C2.12c 与深空星穹层研究者卡；天枢 1.0 的星域 VI「银河」不再显示即将开放，点它直接飞进 2.0 银河全景。" },
         { w: "07", v: "1.0-M4i", d: "2026-10-31", t: "1.0 的星域 VI「银河」开门了：任务栏、航图卡片和星域按钮都能一键跳到 2.0 银河全景。" },
         { w: "07", v: "2.0 C2.12c", d: "2026-10-30", t: "天枢航道开通：银河里 11 座信标站连成 12 段航道，锁定目标、转向、跃迁、抵达，一站站点亮收集。" },
