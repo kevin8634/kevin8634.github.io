@@ -807,7 +807,10 @@
     D.body.appendChild(app);
 
     var foot = el("div", { class: "nv-foot nv-glass nv-card2" });
-    if (def.bridge) foot.appendChild(el("div", { class: "nv-row" }, [el("a", { class: "nv-btn sm", href: def.bridge.href, text: "星桥 → " + def.bridge.label, onpointerenter: SND.hover, onclick: function () { SND.play("whoosh"); } })]));
+    // v0.7-α2:bridge 可为数组(一个任务多座星桥)
+    (Array.isArray(def.bridge) ? def.bridge : def.bridge ? [def.bridge] : []).forEach(function (bg) {
+      foot.appendChild(el("div", { class: "nv-row" }, [el("a", { class: "nv-btn sm", href: bg.href, text: "星桥 → " + bg.label, onpointerenter: SND.hover, onclick: function () { SND.play("whoosh"); } })]));
+    });
     foot.appendChild(el("div", { class: "nv-row" }, [el("a", { href: "../", text: "返回宙律首页" }), el("a", { href: "../../", text: "← 返回创世计划" })]));
     if (def.safety) foot.appendChild(el("p", { class: "nv-safe", text: def.safety }));
     foot.appendChild(el("p", { text: "科普探究小实验。画面中的数字来自简化模型,单位见各仪表。" }));
