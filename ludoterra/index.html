@@ -133,7 +133,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   </div>
   <div id="pNote" aria-live="polite"></div>
 </aside>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.32</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.33</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -283,7 +283,7 @@ function showDomain(id) {
     <p style="color:var(--mute)">知识地基:${d.base}</p>
     <p>向导:<b style="color:var(--gold)">${g.name}</b>(${g.era})——${g.why}</p>
     ${ts.length ? `<div class="k" style="margin-top:8px">这一域的关卡</div>${ts.map(taskRow).join('')}` : `<p style="color:var(--mute)">关卡筹备中,先在其他域看见规则。</p>`}
-    ${br.length ? `<div class="k" style="margin-top:10px">星桥(连到其他世界)</div>${br.map(b => `<p style="font-size:12.5px;margin:4px 0">✦ ${b.from === 'meaning' && b.href ? `<a href="${b.href}">${b.to}</a>` : b.to}</p>`).join('')}` : ''}`;
+    ${br.length ? `<div class="k" style="margin-top:10px">星桥(连到其他世界)</div>${br.map(b => `<p style="font-size:12.5px;margin:4px 0">✦ ${b.href ? `<a href="${b.href}">${b.to}</a>` : b.to}</p>`).join('')}` : ''}`;
   side.classList.add('on'); sound.bell(DOMAINS.indexOf(d) + 1);
 }
 side.addEventListener('click', e => { const b = e.target.closest('[data-d]'); if (b) showDomain(b.dataset.d); if (e.target.closest('[data-map]')) { sel = null; showMap(); } if (e.target.closest('[data-hide]')) { sel = null; side.classList.remove('on'); } });
