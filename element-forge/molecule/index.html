@@ -11,6 +11,7 @@
 body.mission.molecule .m-stage{border-color:rgba(214,170,90,.32);background:rgba(10,9,8,.5)}
 .mb-wrap{position:relative}
 .mb-view{position:relative;height:420px;border-radius:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 38%,#2a2218 0%,#100d0a 55%,#050403 100%)}
+.mb-gl{position:absolute;inset:0;width:100%;height:100%;display:none;z-index:1;cursor:grab;touch-action:none}
 .mb-cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 .mb-cv:focus-visible{outline:2px solid #ffb56b;outline-offset:-2px}
 .mb-hud{position:absolute;z-index:2;left:10px;top:10px;max-width:min(380px,80%);background:rgba(12,10,8,.78);border:1px solid rgba(214,170,90,.45);border-radius:10px;padding:6px 12px;font-size:13px;line-height:1.6;pointer-events:none;backdrop-filter:blur(6px)}
@@ -71,7 +72,7 @@ function Builder(stage, opt) {
   stage.insertAdjacentHTML('beforeend',
     '<div class="mb-wrap"><div class="mb-view"><canvas class="mb-cv" tabindex="0" aria-label="分子搭建台。用托盘添加原子;Tab 切换选中原子;按元素字母在选中原子上接一个新原子;按 1 2 3 设置与上一个选中原子之间的键;Delete 删除。"></canvas>' +
     '<div class="mb-hud"><b class="f">—</b><div class="st">台上还没有原子</div></div>' +
-    '<div class="mb-views" role="group" aria-label="视图"><button data-v="ball" class="on">球棍</button><button data-v="line">结构式</button><button data-v="dot">电子式</button></div></div>' +
+    '<div class="mb-views" role="group" aria-label="视图"><button data-v="ball" class="on">球棍</button><button data-v="line">结构式</button><button data-v="dot">电子式</button>' + (EF.glTier !== 'low' ? '<button data-v="3d" title="3D 球棍模型(示意构象,可拖动旋转)">3D</button>' : '') + '</div></div>' +
     '<div class="mb-tray" role="toolbar" aria-label="元素托盘"><span class="lab">元素托盘</span>' +
     (opt.els || ['H', 'C', 'N', 'O']).map(function (e) { return '<button class="mb-at" data-e="' + e + '" style="background:' + COL[e] + ';color:' + (e === 'H' || e === 'S' || e === 'F' ? '#222' : '#fff') + '" title="' + ZH[e] + ' · 化合价 ' + M.VAL[e] + '" aria-label="添加' + ZH[e] + '原子,化合价 ' + M.VAL[e] + '">' + e + '<small>' + M.VAL[e] + '</small></button>'; }).join('') +
     '</div><div class="mb-row">' + (opt.fillH ? '<button class="ef-btn ghost" data-a="fill">自动补氢</button>' : '') +
@@ -142,7 +143,7 @@ function Builder(stage, opt) {
     wrap.querySelector('.f').textContent = fm(f);
     var se = wrap.querySelector('.st'); se.textContent = STX[st]; se.className = 'st' + (st === 'ok' ? ' ok' : '');
     if (st === 'ok') EF.play && EF.play('unlock');
-    say('分子式 ' + f + ',' + STX[st]); draw(); opt.onChange && opt.onChange(api);
+    say('分子式 ' + f + ',' + STX[st]); draw(); if (view === '3d' && g3) g3.set(mol); opt.onChange && opt.onChange(api);
   }
   /* 绘制 */
   function draw() {
@@ -152,6 +153,7 @@ function Builder(stage, opt) {
     ctx.strokeStyle = 'rgba(214,170,90,.22)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke();
     ctx.strokeStyle = 'rgba(214,170,90,.12)'; ctx.beginPath(); ctx.arc(cx, cy, R * .62, 0, 7); ctx.stroke();
     for (var t = 0; t < 72; t++) { var a = t / 72 * Math.PI * 2, l = t % 6 ? 5 : 10; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); ctx.lineTo(cx + Math.cos(a) * (R - l), cy + Math.sin(a) * (R - l)); ctx.stroke(); }
+    if (view === '3d') return;
     var dot = view === 'dot', line = view === 'line';
     /* 键 */
     mol.bonds.forEach(function (b) {
@@ -244,7 +246,13 @@ function Builder(stage, opt) {
     if ((k === 'Delete' || k === 'Backspace') && sel > -1) { ev.preventDefault(); del(sel); }
   });
   wrap.querySelectorAll('.mb-at').forEach(function (b) { b.onclick = function () { add(b.dataset.e); }; });
-  wrap.querySelectorAll('.mb-views button').forEach(function (b) { b.onclick = function () { view = b.dataset.v; wrap.querySelectorAll('.mb-views button').forEach(function (x) { x.classList.toggle('on', x === b); }); draw(); }; });
+  var g3 = null, g3p = null;
+  function show3d(on) {
+    if (!on) { if (g3) g3.show(false); return; }
+    if (!g3p) g3p = import('../ef-molecule3d.js?v=1').then(function (m) { g3 = m.mountMol3D(wrap.querySelector('.mb-view')); return g3; }, function (e) { console.warn('[ef] 3D 视图加载失败', e); });
+    g3p.then(function (g) { if (g && view === '3d') { g.set(mol); g.show(true); } });
+  }
+  wrap.querySelectorAll('.mb-views button').forEach(function (b) { b.onclick = function () { view = b.dataset.v; wrap.querySelectorAll('.mb-views button').forEach(function (x) { x.classList.toggle('on', x === b); }); show3d(view === '3d'); say(view === '3d' ? '3D 视图:拖动旋转;要继续搭建请切回球棍。' : ''); draw(); }; });
   wrap.querySelectorAll('[data-a]').forEach(function (b) {
     b.onclick = function () { var a = b.dataset.a;
       if (a === 'fill') fill(); else if (a === 'undo') { if (hist.length) { mol = JSON.parse(hist.pop()); sel = -1; changed(); } }
