@@ -55,6 +55,7 @@ for r in csv.DictReader(open('raw.csv')):
         if m is None or m.GetNumHeavyAtoms()<1: continue
         k=key(m)
         if not k or k in seen or int(r['CID']) in BLOCKCID or blocked(m,r['Title']+' '+r['IUPACName']): continue
+        if re.match(r'(CID |GlyTouCan|Npc|SCHEMBL|NSC|DTXSID|CHEMBL)',r['Title']) or 'mg/ml' in r['Title'].lower() or r['Title'].count('(')!=r['Title'].count(')'): continue
         if not re.search('[A-Za-z]{3}',r['Title']) or re.fullmatch(r'[A-Z0-9\-]+',r['Title']): continue
         seen.add(k); auto.append([k,r['Title'][:60],formula(m),int(r['CID'])])
         if len(auto)>=3000: break

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>随手拼一个分子,世界上真的有吗? · 元素工坊 Element Forge</title>
-<meta name="description" content="元素工坊 2.0 · 分子搭建台:把原子拖上黄铜台,插满化合价插槽就稳定;拼好后和离线分子库(3000 多个 PubChem 小分子)比对,看看世界上是不是真有它。同分异构、键能估算。创世计划 Genesis 化学世界。">
+<meta name="description" content="元素工坊 2.0 · 分子搭建台:把原子拖上黄铜台,插满化合价插槽就满足成键规则;拼好后和离线分子库(3000 多个 PubChem 小分子)比对,看看世界上是不是真有它。同分异构、键能估算。创世计划 Genesis 化学世界。">
 <meta name="theme-color" content="#070a14">
 <link rel="stylesheet" href="../ef.css?v=14">
 <style>
@@ -70,7 +70,7 @@ function Builder(stage, opt) {
   opt = opt || {};
   var mol = { atoms: [], bonds: [] }, sel = -1, view = 'ball', hist = [];
   stage.insertAdjacentHTML('beforeend',
-    '<div class="mb-wrap"><div class="mb-view"><canvas class="mb-cv" tabindex="0" aria-label="分子搭建台。用托盘添加原子;Tab 切换选中原子;按元素字母在选中原子上接一个新原子;按 1 2 3 设置与上一个选中原子之间的键;Delete 删除。"></canvas>' +
+    '<div class="mb-wrap"><div class="mb-view"><canvas class="mb-cv" tabindex="0" aria-label="分子搭建台。用托盘添加原子;方向键切换选中原子(Tab 离开搭建台);按元素字母在选中原子上接一个新原子;按 1 2 3 设置与上一个选中原子之间的键;Delete 删除。"></canvas>' +
     '<div class="mb-hud"><b class="f">—</b><div class="st">台上还没有原子</div></div>' +
     '<div class="mb-views" role="group" aria-label="视图"><button data-v="ball" class="on">球棍</button><button data-v="line">结构式</button><button data-v="dot">电子式</button>' + (EF.glTier !== 'low' ? '<button data-v="3d" title="3D 球棍模型(示意构象,可拖动旋转)">3D</button>' : '') + '</div></div>' +
     '<div class="mb-tray" role="toolbar" aria-label="元素托盘"><span class="lab">元素托盘</span>' +
@@ -239,7 +239,8 @@ function Builder(stage, opt) {
   var prev = -1;
   cv.addEventListener('keydown', function (ev) {
     var k = ev.key;
-    if (k === 'Tab' && mol.atoms.length) { ev.preventDefault(); prev = sel; sel = (sel + (ev.shiftKey ? mol.atoms.length - 1 : 1)) % mol.atoms.length; if (sel < 0) sel = 0; var A = mol.atoms[sel]; say('选中 ' + ZH[A.e] + ' 原子,空插槽 ' + M.free(mol, sel)); draw(); return; }
+    var dir = (k === 'ArrowRight' || k === 'ArrowDown') ? 1 : (k === 'ArrowLeft' || k === 'ArrowUp') ? -1 : 0;
+    if (dir && mol.atoms.length) { ev.preventDefault(); prev = sel; sel = (sel + (dir < 0 ? mol.atoms.length - 1 : 1)) % mol.atoms.length; if (sel < 0) sel = 0; var A = mol.atoms[sel]; say('选中 ' + ZH[A.e] + ' 原子,空插槽 ' + M.free(mol, sel)); draw(); return; }
     var up = k.length === 1 ? k.toUpperCase() : k; if (up === 'L') up = 'Cl';
     if ((opt.els || ['H', 'C', 'N', 'O']).indexOf(up) > -1) { ev.preventDefault(); add(up); return; }
     if ((k === '1' || k === '2' || k === '3') && sel > -1 && prev > -1 && prev !== sel) { ev.preventDefault(); setOrder(prev, sel, +k); return; }
@@ -270,7 +271,7 @@ function resultHTML(b) {
   var k = b.key(), r = lookup(k), f = fm(b.formula());
   if (r && r.core) { var c = r.core; return '<b>已知 · ' + EF.esc(c.zh) + '</b> ' + f + '<br>' + EF.esc(c.u) + '<br>' + safeTag(c.s) + (c.w ? '<span style="color:#d9cbb0">为什么要小心:' + EF.esc(c.w) + '</span>' : ''); }
   if (r && r.auto) return '<b>已知 · 数据库收录</b> ' + f + '<br>英文名:' + EF.esc(r.auto[1]) + '<br><small style="color:#a8a090">来自 NCBI PubChem(编号 CID ' + r.auto[3] + ')。本台只显示名称,不提供用途和制法。</small>';
-  return '<b>库中未收录</b> ' + f + '<br>能画出来 ≠ 能合成,也 ≠ 世界上不存在:本台离线库只收了 3000 多个常见小分子。真实世界还要看这个结构稳不稳定、有没有人做出来过。';
+  return '<b>库中未收录</b> ' + f + '<br>能画出来 ≠ 能合成,也 ≠ 世界上不存在:本台离线库只收了 3000 多个 PubChem 早期登记的小分子。真实世界还要看这个结构稳不稳定、有没有人做出来过。';
 }
 
 /* ---------- 四关 ---------- */
@@ -310,7 +311,7 @@ function L2(stage, api) {
   } });
   function table() {
     var rows = DB.pairs.map(function (p) { var a = CORE[p[0]], c = CORE[p[1]]; return '<tr><td>' + fm(a.f) + '</td><td>' + a.zh + ' ' + a.bp + ' °C</td><td>' + c.zh + ' ' + c.bp + ' °C</td></tr>'; }).join('');
-    stage.insertAdjacentHTML('beforeend', '<div class="mb-res"><b>同一个分子式,沸点(1 个大气压)</b><table class="mb-tbl"><tr><th>分子式</th><th>A</th><th>B</th></tr>' + rows + '</table><small style="color:#a8a090">数据来源:NCBI PubChem / CRC 手册,。</small></div>');
+    stage.insertAdjacentHTML('beforeend', '<div class="mb-res"><b>同一个分子式,沸点(1 个大气压)</b><table class="mb-tbl"><tr><th>分子式</th><th>A</th><th>B</th></tr>' + rows + '</table><small style="color:#a8a090">数据来源:CRC Handbook / NCBI PubChem(1 atm)</small></div>');
   }
 }
 /* 平均键能(kJ/mol,教材常用值) */
@@ -336,7 +337,7 @@ function L3(stage, api) {
       '<tr><td>拆(吸热)</td><td>C=C ×1 + H–H ×1</td><td>614 + 436 = 1050</td></tr>' +
       '<tr><td>成(放热)</td><td>C–C ×1 + C–H ×2</td><td>348 + 826 = 1174</td></tr>' +
       '<tr><td>估算 ΔH</td><td>1050 − 1174</td><td><b>≈ −124</b></td></tr><tr><td>实测 ΔH</td><td>标准状态</td><td><b>−137</b></td></tr></table>' +
-      '<small style="color:#a8a090">平均键能是许多分子的平均值,估算误差约 10%;实测值来自生成焓数据,。</small>';
+      '<small style="color:#a8a090">平均键能是许多分子的平均值,估算误差约 10%;实测值由 298 K 气态标准生成焓计算(NIST:乙烷 −84.0、乙烯 +52.4 kJ/mol,得 −136,教材常取 −137)。</small>';
   }
 }
 
@@ -347,7 +348,7 @@ var LEVELS = [
     explain: '原子靠共用电子对成键。每种原子能成的键数大致固定(这里叫"插槽",课本里叫化合价或成键数):H 1、O 2、N 3、C 4。所有插槽都配上了对,就满足了成键规则,这是成为稳定分子的第一步;双键算 2 个插槽,三键算 3 个。CO₂ 里碳用两根双键,正好插满。' },
   { title: '世界上真的有吗', setup: L1, task: '自由拼一个分子(可以用 S、Cl、F、Br),插满后点「查一查」,和离线分子库比对。查两次,其中一次的分子要有 3 个以上非氢原子。',
     ask: { q: '一个分子,只要能在纸上画出来(每个原子都插满),现实中就一定存在吗?', opts: ['一定存在', '不一定'], ok: 1, yes: '对,画得出 ≠ 做得出。我们查查看。', no: '先别急,查查数据库就知道了。' },
-    hints: ['拼好骨架后点「自动补氢」,空插槽会全部补上 H。', '试试 3 个碳连成一串再加一个 O——有几种连法?', '查不到也是一种结果:本台库只收 3000 多个常见小分子。'],
+    hints: ['拼好骨架后点「自动补氢」,空插槽会全部补上 H。', '试试 3 个碳连成一串再加一个 O——有几种连法?', '查不到也是一种结果:本台库只收 3000 多个 PubChem 早期登记的小分子;有些分子(比如 CO、SO₂)要用到本台没有的成键方式,拼不出来。'],
     explain: '化学家把已知物质登记在数据库里,PubChem 收录了一亿多种。可光是 13 个以内的 C、N、O、S、Cl 原子,按成键规则能画出的合理分子就有近 10 亿种,绝大多数还没人做出来过。"能画出来"只说明成键规则允许;它能不能稳定存在,还要看键的强弱、环的张力等。危险物质本台只告诉你为什么危险,不提供任何制法。' },
   { title: '同一个公式,两种性格', setup: L2, task: '用 2 个 C、6 个 H、1 个 O,拼出两种不同的分子(连法不同)。',
     ask: { q: '乙醇和二甲醚的分子式都是 C₂H₆O,谁的沸点更高?', opts: ['乙醇', '二甲醚', '一样高'], ok: 0, yes: '直觉很准!拼出来看看为什么。', no: '分子式一样,性质可不一定一样。拼出来看看。' },
