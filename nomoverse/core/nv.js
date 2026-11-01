@@ -811,6 +811,32 @@
     foot.appendChild(el("div", { class: "nv-row" }, [el("a", { href: "../", text: "返回宙律首页" }), el("a", { href: "../../", text: "← 返回创世计划" })]));
     if (def.safety) foot.appendChild(el("p", { class: "nv-safe", text: def.safety }));
     foot.appendChild(el("p", { text: "科普探究小实验。画面中的数字来自简化模型,单位见各仪表。" }));
+    // v0.6-α4 纠错入口(深空层方案 §十):不在站内收集任何信息,走 GitHub Issue(预填本关)或复制模板自行发送
+    foot.appendChild(el("p", { class: "nv-fix" }, [el("span", { class: "nv-fix-tag", text: "AI 审稿 · 欢迎纠错" }),
+      el("button", { class: "nv-link", type: "button", text: "发现错误?", onclick: function () { reportErr(); } })]));
+    function reportErr() {
+      var lv = def.levels[cur] || {}, tid = "nv." + def.id;
+      var where = "宙律 Nomoverse · " + tid + " · 第 " + (cur + 1) + " 关「" + (lv.name || "") + "」";
+      var url = location.origin + location.pathname + "#l" + (cur + 1);
+      var tpl = "【纠错】" + where + "\n页面:" + url + "\n\n哪里不对:\n\n你认为正确的是:\n\n出处(论文 / 教材 / 权威机构资料):\n\n是否愿意署名(可选,姓名与单位,仅在你明确同意后公开):\n";
+      var gh = "https://github.com/kevin8634/kevin8634.github.io/issues/new?title=" + encodeURIComponent("[纠错] " + where) + "&body=" + encodeURIComponent(tpl);
+      var msg = el("p", { style: "font-size:12px;color:var(--dim);min-height:1.2em;margin:0;white-space:pre-wrap", role: "status" });
+      modal("发现错误?", [
+        el("p", { text: "这里讲得不对?请告诉我们。附上出处(论文、教材、权威机构资料)会帮我们更快核实。核实后会在本页更正,并在星历记录。" }),
+        el("p", { style: "font-size:13px;color:var(--dim)", text: "如果你是该领域的科学家或学者,可以选择署名。经核实后,我们会在本题「审读与纠错」中注明你的姓名与单位,感谢你让这道题更准确。" }),
+        el("p", { style: "font-size:13px", text: "本关:" + where }),
+        el("p", { style: "font-size:12px;color:var(--dim)", text: "隐私:本站不收集任何个人信息;纠错走 GitHub(需要 GitHub 账号),署名仅在你明确同意后公开。" }),
+        msg,
+        el("div", { class: "nv-actions" }, [
+          el("a", { class: "nv-btn pri", href: gh, target: "_blank", rel: "noopener", text: "在 GitHub 提交(已预填本关)" }),
+          el("button", { class: "nv-btn", type: "button", text: "复制纠错模板", onclick: function () {
+            var done = function () { msg.textContent = "已复制,可粘贴到 GitHub 或邮件里发给我们。"; };
+            try { W.navigator.clipboard.writeText(tpl).then(done, function () { msg.textContent = tpl; }); } catch (e) { msg.textContent = tpl; }
+          } }),
+          el("button", { class: "nv-btn", type: "button", text: "关闭", onclick: closeModal })
+        ])
+      ]);
+    }
     if (def.credits) {   // 「CC BY 4.0」字样自动链到许可正文
       var cp = ("图像来源:" + def.credits + "。").split("CC BY 4.0"), cred = el("p", { class: "nv-cred" });
       cp.forEach(function (t, i) { if (i) cred.appendChild(el("a", { href: "https://creativecommons.org/licenses/by/4.0/deed.zh-hans", target: "_blank", rel: "noopener license", text: "CC BY 4.0" })); cred.appendChild(D.createTextNode(t)); });

@@ -411,3 +411,8 @@ button, input, select { font: inherit; color: inherit; }
 
 .nv-cred { font-size: 11.5px; opacity: .72; line-height: 1.5; }
 .nv-cred a { margin-left: 4px; }
+
+/* v0.6-α4 纠错入口 */
+.nv-fix { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 12px; }
+.nv-fix-tag { padding: 1px 8px; border-radius: 999px; border: 1px solid rgba(196,181,253,.35); color: var(--dim); }
+.nv-link { background: none; border: 0; padding: 4px 2px; color: var(--cy2, #67e8f9); font: inherit; text-decoration: underline; cursor: pointer; min-height: 32px; }
