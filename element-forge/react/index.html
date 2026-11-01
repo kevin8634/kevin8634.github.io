@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>把两种东西混在一起,会发生什么? · 元素工坊 Element Forge</title>
+<meta name="description" content="元素工坊 2.0 · 反应台:60 条课本级化学反应,在全息反应环上看颜色、气泡、沉淀和热量四种证据,调速率、配平方程式、推动化学平衡。所有实验只在虚拟中发生。创世计划 Genesis 化学世界。">
+<meta name="theme-color" content="#070a14">
+<link rel="stylesheet" href="../ef.css?v=14">
+<style>
+body.mission.react .m-stage{border-color:rgba(63,224,200,.26);background:rgba(6,14,20,.46)}
+.rx-view{position:relative;height:400px;border-radius:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 70%,#0c2228,#03070d 72%)}
+.rx-gl,.rx-cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.rx-card{position:absolute;z-index:2;left:10px;top:10px;max-width:min(360px,78%);background:rgba(5,10,16,.86);border:1px solid rgba(63,224,200,.45);border-radius:10px;padding:8px 12px;font-size:13px;line-height:1.6;pointer-events:none}
+.rx-card b{color:#ffb56b;font-size:15px}
+.rx-eq{font-size:15px;color:#fff;letter-spacing:.2px}
+.rx-eq small{font-size:11px;color:#9fe8da;display:block;margin-top:2px}
+.rx-micro{position:absolute;z-index:2;right:10px;bottom:10px;width:132px;height:100px;border-radius:10px;border:1px solid rgba(255,154,60,.45);background:rgba(4,8,14,.8)}
+.rx-micro span{position:absolute;left:8px;top:4px;font-size:10.5px;color:#aab4cf}
+.rx-safe{display:inline-block;font-size:11.5px;border-radius:6px;padding:1px 7px;margin:2px 4px 2px 0;line-height:1.6}
+.rx-safe.g{background:rgba(80,200,120,.18);color:#9ff0b4;border:1px solid rgba(80,200,120,.5)}
+.rx-safe.y{background:rgba(255,200,60,.14);color:#ffe08a;border:1px solid rgba(255,200,60,.5)}
+.rx-safe.r{background:rgba(255,70,70,.16);color:#ffb0a8;border:1px solid rgba(255,90,80,.6)}
+.rx-why{font-size:12px;color:#c9d2ea;margin-top:4px}
+.rx-bottles{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+.rx-bot{display:flex;align-items:center;gap:5px;background:#0a1420;border:1px solid rgba(63,224,200,.35);color:#e9eefb;border-radius:18px;padding:5px 10px 5px 6px;font:inherit;font-size:13px;cursor:pointer}
+.rx-bot i{width:12px;height:18px;border-radius:3px 3px 5px 5px;border:1px solid rgba(255,255,255,.5);display:inline-block}
+.rx-bot.on{border-color:#ff9a3c;background:rgba(255,154,60,.18)}
+.rx-ev{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 2px;font-size:13px}
+.rx-ev span{border:1px dashed rgba(255,255,255,.3);border-radius:8px;padding:3px 9px;color:#8f9ab8}
+.rx-ev span.got{border-style:solid;border-color:#ff9a3c;color:#ffd2a0;background:rgba(255,154,60,.12)}
+.rx-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
+.rx-dex{display:none;margin-top:8px;max-height:300px;overflow:auto;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:6px}
+.rx-dex.on{display:block}
+.rx-dex button.it{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid rgba(255,255,255,.06);color:#e9eefb;font:inherit;font-size:13px;padding:6px 4px;cursor:pointer}
+.rx-dex button.it:hover{background:rgba(255,154,60,.1)}
+.rx-dex .f{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.rx-dex .f button{font-size:12px;padding:3px 9px}
+.rx-dex .f button.on{background:rgba(255,154,60,.25)}
+/* 配平 */
+.bal-eq{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;font-size:20px;margin:14px 0 8px}
+.bal-sp{display:flex;flex-direction:column;align-items:center;gap:2px}
+.bal-sp .k{display:flex;align-items:center;gap:3px}
+.bal-sp button{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,154,60,.55);background:#0a1420;color:#ffb56b;font-size:16px;line-height:1;cursor:pointer}
+.bal-sp b{min-width:1.2em;text-align:center;color:#ffb56b}
+.bal-bars{display:grid;grid-template-columns:3em 1fr 1fr;gap:4px 8px;font-size:12.5px;max-width:520px;margin:6px auto;align-items:center}
+.bal-bars .l,.bal-bars .r{height:12px;border-radius:6px;background:rgba(255,255,255,.08);position:relative;overflow:hidden}
+.bal-bars .l i,.bal-bars .r i{position:absolute;top:0;bottom:0;background:#3fe0c8}
+.bal-bars .l i{right:0}.bal-bars .r i{left:0}
+.bal-bars .bad i{background:#ff7a5a}
+.bal-cv{display:block;width:100%;max-width:520px;height:130px;margin:0 auto}
+.bal-prog{text-align:center;font-size:13px;color:#c9d2ea}
+/* 平衡 */
+.eqm{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.eqm .tube{position:relative;height:200px;border-radius:12px;background:#050a12;border:1px solid rgba(255,255,255,.1);overflow:hidden}
+.eqm canvas{width:100%;height:100%;display:block}
+.eqm h4{margin:6px 0 4px;font-size:14px}
+.eqm .rx-row button{font-size:12.5px}
+.rx-lab{min-height:200px;margin-top:10px}
+.rx-lab .gl{margin:0}
+.m-stage.rx-wide{padding:10px}
+@media (max-width:860px){.rx-view{height:320px}.eqm{grid-template-columns:1fr}.rx-micro{width:100px;height:76px}}
+</style>
+</head>
+<body class="react">
+<div id="app"></div>
+<script src="../ef.js?v=16"></script>
+<script>
+(function () {
+document.body.classList.add('react');
+var LABS = '../react/labs/', D = null, BY = {}, PROTO = {};
+var SUB = { '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉' }, SUP = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '+': '⁺', '-': '⁻' };
+function fm(f) { var m = f.match(/^(.*?)(?:\^(\d*[+-]))?$/), b = m[1], c = m[2] || '';
+  b = b.replace(/\.(\d*)/, function (_, n) { return '·' + n; }).replace(/([A-Za-z\)\]])(\d+)/g, function (_, a, n) { return a + n.replace(/\d/g, function (d) { return SUB[d]; }); });
+  return b + (c === '1+' ? '⁺' : c === '1-' ? '⁻' : c.replace(/./g, function (d) { return SUP[d]; })); }
+function sideTxt(sp) { return sp.map(function (x) { return (x[0] > 1 ? x[0] : '') + fm(x[1]) + (x[3] === 'up' || x[2] === 'up' ? '↑' : x[3] === 'down' || x[2] === 'down' ? '↓' : ''); }).join(' + '); }
+function eqTxt(r) { return sideTxt(r.l) + (r.rev ? ' ⇌ ' : ' → ') + sideTxt(r.r); }
+function ionTxt(r) { return r.ion ? sideTxt(r.ion[0]) + (r.rev ? ' ⇌ ' : ' → ') + sideTxt(r.ion[1]) : ''; }
+var SAFE = { g: '🟢 家中可安全观察(须家长知情)', y: '🟡 只在学校实验室、由老师指导', r: '🔴 只限专业实验室 · 请勿在现实中尝试' };
+function safeTag(s) { return '<span class="rx-safe ' + s + '">' + SAFE[s] + '</span>'; }
+function cardHTML(r) {
+  if (r.id.charAt(0) === 'x') return '<b>' + r.name + '</b> <span class="rx-safe y">对照 · 物理变化</span><br>' + r.see + '<div class="rx-why">' + safeTag(r.safe) + r.why + '</div>';
+  return '<b>' + r.name + '</b> <small>' + (r.lv === 'j' ? '初中' : '高中') + '</small><div class="rx-eq">' + eqTxt(r) + (r.cond ? '<small>条件:' + r.cond + '</small>' : '') + (r.ion ? '<small>离子方程式:' + ionTxt(r) + '</small>' : '') + '</div>' +
+    '现象:' + r.see + (r.note ? '<br><span class="note-sm">' + r.note + '</span>' : '') + '<div class="rx-why">' + safeTag(r.safe) + (r.safe === 'g' ? '' : '为什么要小心:') + r.why + '</div>';
+}
+
+/* 2D 烧杯:低档 / 无 WebGL 时的完整替代 */
+function beaker2D(host) {
+  var cv = document.createElement('canvas'); cv.className = 'rx-cv'; host.appendChild(cv); var x = cv.getContext('2d');
+  var S = { c0: [207, 227, 255], c1: [207, 227, 255], t: 1, gas: 0, ppt: 0, pc: '#fff', heat: 0, hc: '255,90,42', gc: '#fff' }, B = [], P = [], T = 0, last = performance.now();
+  function hex(h) { h = (h || '#cfe3ff').replace('#', ''); return [parseInt(h.substr(0, 2), 16), parseInt(h.substr(2, 2), 16), parseInt(h.substr(4, 2), 16)]; }
+  function loop(now) { if (!host.isConnected) return; requestAnimationFrame(loop); if (document.hidden) return; var dt = Math.min(0.05, (now - last) / 1000); last = now; T += dt;
+    var d = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight; if (!W) return; if (cv.width !== W * d) { cv.width = W * d; cv.height = H * d; } x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, W, H);
+    var cx = W / 2, bw = Math.min(W * 0.36, 190), bh = Math.min(H * 0.62, 230), by = H * 0.86, lv = bh * 0.62;
+    /* 全息环 */
+    x.save(); x.translate(cx, by + 4); x.scale(1, 0.28); [1.6, 1.25, 0.8].forEach(function (k, i) { x.beginPath(); x.arc(0, 0, bw * k, 0, 6.283); x.strokeStyle = i === 1 ? 'rgba(63,224,200,.6)' : 'rgba(255,154,60,' + (0.75 - i * 0.2) + ')'; x.lineWidth = 2; x.stroke(); });
+    x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, bw * 1.5, T * 0.6, T * 0.6 + 0.5); x.fillStyle = 'rgba(63,224,200,.12)'; x.fill(); x.restore();
+    if (S.heat) { var g = x.createRadialGradient(cx, by - bh / 2, 10, cx, by - bh / 2, bw * 1.2); g.addColorStop(0, 'rgba(' + S.hc + ',' + (0.35 + 0.1 * Math.sin(T * 3)) + ')'); g.addColorStop(1, 'rgba(' + S.hc + ',0)'); x.fillStyle = g; x.fillRect(0, 0, W, H); }
+    S.t = Math.min(1, S.t + dt / (EF.reduced ? 0.01 : 2.4)); var c = S.c0.map(function (v, i) { return Math.round(v + (S.c1[i] - v) * S.t); });
+    x.fillStyle = 'rgba(' + c.join(',') + ',.75)'; x.fillRect(cx - bw / 2 + 3, by - lv, bw - 6, lv - 3);
+    if (S.gas && Math.random() < 0.6) B.push({ x: cx - bw / 2 + 8 + Math.random() * (bw - 16), y: by - 6, r: 2 + Math.random() * 4, v: 30 + Math.random() * 50 });
+    x.strokeStyle = S.gc === '#ffffff' ? 'rgba(255,255,255,.8)' : S.gc; B = B.filter(function (b) { b.y -= b.v * dt; x.beginPath(); x.arc(b.x + Math.sin(T * 6 + b.r) * 1.5, b.y, b.r, 0, 6.283); x.stroke(); return b.y > by - lv; });
+    if (S.ppt && P.length < 160 && Math.random() < 0.5) P.push({ x: cx - bw / 2 + 8 + Math.random() * (bw - 16), y: by - lv * (0.3 + Math.random() * 0.6), v: 8 + Math.random() * 18, s: 2 + Math.random() * 2.5, rest: by - 5 - Math.random() * 10 });
+    x.fillStyle = S.pc; P.forEach(function (p) { if (p.y < p.rest) p.y += p.v * dt; x.fillRect(p.x, p.y, p.s, p.s); });
+    x.strokeStyle = 'rgba(220,240,255,.7)'; x.lineWidth = 2; x.beginPath(); x.moveTo(cx - bw / 2, by - bh); x.lineTo(cx - bw / 2, by); x.lineTo(cx + bw / 2, by); x.lineTo(cx + bw / 2, by - bh); x.stroke(); }
+  requestAnimationFrame(loop);
+  return { run: function (r, o) { var v = r.viz || {}, ob = r.obs || {}, q = o && o.quiet; S.c0 = hex(v.c0); S.c1 = hex(v.c1 || v.c0); S.t = 0; S.gas = !q && ob.g; S.ppt = !q && !!ob.p; P = []; B = []; S.pc = v.p || '#fff'; S.gc = v.g || '#ffffff'; S.heat = !q && ob.h; S.hc = ob.h === 'endo' ? '95,180,255' : '255,90,42';
+    clearTimeout(this._h); this._h = setTimeout(function () { S.gas = 0; S.ppt = 0; }, 9000); } };
+}
+
+/* 微观小窗:粒子碰撞示意 */
+function micro(host) {
+  var w = document.createElement('div'); w.className = 'rx-micro'; w.innerHTML = '<span>微观示意</span>'; var cv = document.createElement('canvas'); cv.style.cssText = 'width:100%;height:100%;display:block'; w.appendChild(cv); host.appendChild(w);
+  var x = cv.getContext('2d'), N = [], on = 0, last = performance.now();
+  for (var i = 0; i < 14; i++) N.push({ x: Math.random(), y: Math.random(), vx: Math.random() - 0.5, vy: Math.random() - 0.5, k: i % 2, b: -1 });
+  function loop(now) { if (!host.isConnected) return; requestAnimationFrame(loop); if (document.hidden) return; var dt = Math.min(0.05, (now - last) / 1000); last = now;
+    var d = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight; if (!W) return; if (cv.width !== W * d) { cv.width = W * d; cv.height = H * d; } x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, W, H);
+    var sp = EF.reduced ? 0 : (on ? 0.5 : 0.18);
+    N.forEach(function (p, i) { if (p.b < 0) { p.x += p.vx * dt * sp; p.y += p.vy * dt * sp; if (p.x < 0.05 || p.x > 0.95) p.vx *= -1; if (p.y < 0.2 || p.y > 0.95) p.vy *= -1;
+        if (on && p.k === 0) N.forEach(function (q, j) { if (q.b < 0 && q.k === 1 && j !== i && Math.hypot(p.x - q.x, p.y - q.y) < 0.08) { p.b = j; q.b = i; } }); }
+      else if (p.k === 1) { var q = N[p.b]; p.x = q.x + 0.05; p.y = q.y; } else { p.x += p.vx * dt * sp * 0.6; p.y += p.vy * dt * sp * 0.6; if (p.x < 0.05 || p.x > 0.9) p.vx *= -1; if (p.y < 0.2 || p.y > 0.95) p.vy *= -1; }
+      x.beginPath(); x.arc(p.x * W, p.y * H, 5, 0, 6.283); x.fillStyle = p.b >= 0 ? '#ffb56b' : p.k ? '#3fe0c8' : '#a8b8ff'; x.fill(); }); }
+  requestAnimationFrame(loop);
+  return { go: function () { on = 1; N.forEach(function (p) { p.b = -1; }); }, stop: function () { on = 0; } };
+}
+
+function benchView(stage) {
+  var v = document.createElement('div'); v.className = 'rx-view'; stage.appendChild(v);
+  var card = document.createElement('div'); card.className = 'rx-card'; card.innerHTML = '<b>全息反应环</b><br>选两瓶试剂倒进烧杯,看看会发生什么。<br><span class="note-sm">拖动可旋转视角</span>'; v.appendChild(card);
+  var mi = micro(v), view = null, ready;
+  if (EF.glTier !== 'low') ready = import('../ef-react3d.js?v=1').then(function (m) { return m.mountReact(v); }).then(function (a) { view = a; }).catch(function (e) { console.warn('[ef] 反应台 3D 启动失败,改用 2D', e); view = beaker2D(v); });
+  else { view = beaker2D(v); ready = Promise.resolve(); }
+  return { run: function (r) { var quiet = EF.campus && r.safe === 'r'; card.innerHTML = cardHTML(r) + (quiet ? '<div class="note-sm">校园版:🔴 条目只显示文字,不播放特效。</div>' : '');
+      ready.then(function () { view.run(r, { quiet: quiet }); }); if (r.id.charAt(0) === 'x') mi.stop(); else mi.go(); if (!quiet) EF.play(r.obs.g ? 'bubble' : r.obs.p ? 'settle' : r.obs.h === 'exo' ? 'fuse' : r.obs.h === 'endo' ? 'absorb' : 'select'); } };
+}
+
+/* 第 1 关:四种证据 */
+function L0(stage, api) {
+  var bench = benchView(stage), sel = [], got = {}, K = { c: '颜色变化', g: '产生气体', p: '生成沉淀', h: '放热或吸热' };
+  var bt = document.createElement('div'); bt.className = 'rx-bottles'; stage.appendChild(bt);
+  var BC = { '硫酸铜溶液': '#3d8fe0', '氯化铁溶液': '#e8c34a', '大理石': '#eceae4', '铁钉': '#9aa1ac', '生石灰': '#f3f3f0', '白醋': '#f5f1e6', '氢氧化钠固体': '#ffffff' };
+  bt.innerHTML = D.bottles.map(function (b, i) { return '<button class="rx-bot" data-i="' + i + '"><i style="background:' + (BC[b] || 'rgba(200,225,255,.35)') + '"></i>' + b + '</button>'; }).join('');
+  var ev = document.createElement('div'); ev.className = 'rx-ev'; stage.appendChild(ev);
+  var row = document.createElement('div'); row.className = 'rx-row'; row.innerHTML = '<button class="ef-btn ghost" id="dexBtn">反应图鉴 · 60 条</button><span class="note-sm">也可以从图鉴里任选一条放上反应台。</span>'; stage.appendChild(row);
+  var dex = document.createElement('div'); dex.className = 'rx-dex'; stage.appendChild(dex);
+  function upd() { ev.innerHTML = Object.keys(K).map(function (k) { return '<span class="' + (got[k] ? 'got' : '') + '">' + (got[k] ? '✓ ' : '') + K[k] + '</span>'; }).join('');
+    if (Object.keys(K).every(function (k) { return got[k]; })) api.complete(); }
+  function run(r) { bench.run(r); if (r.id.charAt(0) === 'x') { EF.toast('放热了,可没有新物质生成——这是物理变化,不算化学变化的证据。'); return; }
+    var o = r.obs; ['c', 'g', 'p', 'h'].forEach(function (k) { if (o[k]) got[k] = 1; }); upd(); }
+  Array.prototype.forEach.call(bt.children, function (b) { b.onclick = function () {
+    var n = D.bottles[+b.dataset.i], k = sel.indexOf(n); if (k > -1) { sel.splice(k, 1); b.classList.remove('on'); return; }
+    sel.push(n); b.classList.add('on'); EF.play('tick'); if (sel.length < 2) return;
+    var m = D.mix.filter(function (q) { return (q[0] === sel[0] && q[1] === sel[1]) || (q[0] === sel[1] && q[1] === sel[0]); })[0];
+    if (m && m[2]) run(BY[m[2]]); else if (m) EF.toast(sel.join(' + ') + ':这一对本台还没收录,不代表它们不反应。'); else EF.toast(sel.join(' + ') + ':这一对本台还没收录,不代表它们不反应。换一组试试。');
+    sel = []; setTimeout(function () { Array.prototype.forEach.call(bt.children, function (x) { x.classList.remove('on'); }); }, 400); }; });
+  var flt = 'all';
+  function dexDraw() { var list = D.rows.concat(D.contrast).filter(function (r) { return flt === 'all' || r.lv === flt || r.safe === flt || (flt === 'x' && r.id.charAt(0) === 'x'); });
+    dex.innerHTML = '<div class="f">' + [['all', '全部'], ['j', '初中'], ['s', '高中'], ['g', '🟢'], ['y', '🟡'], ['r', '🔴'], ['x', '对照']].map(function (f) { return '<button class="ef-btn ghost' + (f[0] === flt ? ' on' : '') + '" data-f="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>' +
+      list.map(function (r) { return '<button class="it" data-id="' + r.id + '">' + (SAFE[r.safe] || '').slice(0, 2) + ' ' + r.name + (r.l ? ' <span class="note-sm">' + eqTxt(r) + '</span>' : '') + '</button>'; }).join('');
+    Array.prototype.forEach.call(dex.querySelectorAll('.f button'), function (b) { b.onclick = function () { flt = b.dataset.f; dexDraw(); }; });
+    Array.prototype.forEach.call(dex.querySelectorAll('button.it'), function (b) { b.onclick = function () { run(BY[b.dataset.id]); stage.scrollIntoView({ behavior: EF.reduced ? 'auto' : 'smooth', block: 'start' }); }; }); }
+  document.getElementById('dexBtn').onclick = function () { dex.classList.toggle('on'); if (dex.classList.contains('on')) dexDraw(); };
+  upd();
+}
+
+/* 第 3 关:配平天平 */
+var EQS = [
+  { l: [['H2', 2], ['O2', 1]], r: [['H2O', 2]], t: '氢气燃烧' },
+  { l: [['Fe', 3], ['O2', 2]], r: [['Fe3O4', 1]], t: '铁丝在氧气中燃烧' },
+  { l: [['CH4', 1], ['O2', 2]], r: [['CO2', 1], ['H2O', 2]], t: '甲烷燃烧' },
+  { l: [['Al', 2], ['HCl', 6]], r: [['AlCl3', 2], ['H2', 3]], t: '铝与盐酸' },
+  { l: [['Cu', 1], ['Ag^+', 2]], r: [['Cu^2+', 1], ['Ag', 2]], t: '离子方程式 · 铜置换银', ion: 1 },
+  { l: [['Fe^3+', 2], ['Cu', 1]], r: [['Fe^2+', 2], ['Cu^2+', 1]], t: '离子方程式 · 氯化铁腐蚀铜', ion: 1 }];
+var MASS = { H: 1.008, O: 16.00, Fe: 55.85, C: 12.01, Al: 26.98, Cl: 35.45, Cu: 63.55, Ag: 107.87 };
+function atoms(f) { var m = f.match(/^(.*?)(?:\^(\d*)([+-]))?$/), out = {}, q = m[3] ? (m[2] ? +m[2] : 1) * (m[3] === '+' ? 1 : -1) : 0;
+  m[1].replace(/([A-Z][a-z]?)(\d*)/g, function (_, e, n) { out[e] = (out[e] || 0) + (+n || 1); }); return { a: out, q: q }; }
+function L2(stage, api) {
+  var k = 0, solved = 0, C = null;
+  var box = document.createElement('div'); stage.appendChild(box);
+  function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+  function draw() {
+    var E = EQS[k]; if (!C) C = E.l.concat(E.r).map(function () { return 1; });
+    var sp = E.l.concat(E.r), L = {}, R = {}, ql = 0, qr = 0;
+    sp.forEach(function (s, i) { var t = atoms(s[0]); for (var e in t.a) { var tgt = i < E.l.length ? L : R; tgt[e] = (tgt[e] || 0) + t.a[e] * C[i]; } if (i < E.l.length) ql += t.q * C[i]; else qr += t.q * C[i]; });
+    var els = Object.keys(Object.assign({}, L, R)), ok = els.every(function (e) { return L[e] === R[e]; }) && ql === qr, g = C.reduce(gcd);
+    var html = '<p class="bal-prog">第 ' + (k + 1) + ' / ' + EQS.length + ' 道 · ' + E.t + '(已配平 ' + solved + ' 道)</p><div class="bal-eq">';
+    sp.forEach(function (s, i) { if (i === E.l.length) html += '<span>→</span>'; else if (i) html += '<span>+</span>';
+      html += '<div class="bal-sp"><div class="k"><button data-i="' + i + '" data-d="-1" aria-label="减少系数">−</button><b>' + C[i] + '</b><button data-i="' + i + '" data-d="1" aria-label="增加系数">+</button></div><span>' + fm(s[0]) + '</span></div>'; });
+    html += '</div><canvas class="bal-cv"></canvas><div class="bal-bars">';
+    var mx = Math.max.apply(null, els.map(function (e) { return Math.max(L[e] || 0, R[e] || 0); }).concat([1]));
+    els.forEach(function (e) { var bad = (L[e] || 0) !== (R[e] || 0) ? ' bad' : ''; html += '<span>' + e + '</span><div class="l' + bad + '"><i style="width:' + ((L[e] || 0) / mx * 100) + '%"></i></div><div class="r' + bad + '"><i style="width:' + ((R[e] || 0) / mx * 100) + '%"></i></div>'; });
+    if (E.ion) { var bq = ql !== qr ? ' bad' : ''; html += '<span>电荷</span><div class="l' + bq + '" style="background:none">' + (ql > 0 ? '+' : '') + ql + '</div><div class="r' + bq + '" style="background:none">' + (qr > 0 ? '+' : '') + qr + '</div>'; }
+    html += '</div><p class="bal-prog" id="balMsg">' + (ok && g === 1 ? '<b style="color:#9ff0b4">平衡了!</b> 两边每种原子一样多' + (E.ion ? ',电荷也相等' : '') + '。' : ok ? '原子守恒了,但系数还能约分:要用最简整数比。' : '每种原子左右要一样多' + (E.ion ? ',离子方程式两边电荷也要相等' : '') + '。') + '</p>' +
+      '<div class="rx-row" style="justify-content:center">' + (ok && g === 1 && k < EQS.length - 1 ? '<button class="ef-btn" id="balNext">下一道 →</button>' : '') + '</div>';
+    box.innerHTML = html;
+    /* 元素天平:按总质量倾斜 */
+    var cv = box.querySelector('.bal-cv'), x = cv.getContext('2d'), d = window.devicePixelRatio || 1, W = cv.clientWidth || 400, H = 130; cv.width = W * d; cv.height = H * d; x.setTransform(d, 0, 0, d, 0, 0);
+    var ml = 0, mr = 0; for (var e in L) ml += L[e] * (MASS[e] || 10); for (var e2 in R) mr += R[e2] * (MASS[e2] || 10);
+    var ang = Math.max(-0.28, Math.min(0.28, (mr - ml) / Math.max(ml, mr) * 0.9)), cx = W / 2, cy = 40, arm = Math.min(W * 0.36, 170);
+    x.strokeStyle = '#ffb56b'; x.lineWidth = 3; x.beginPath(); x.moveTo(cx, cy); x.lineTo(cx, H - 10); x.moveTo(cx - 30, H - 10); x.lineTo(cx + 30, H - 10); x.stroke();
+    var lx = cx - Math.cos(ang) * arm, ly = cy - Math.sin(ang) * arm, rx2 = cx + Math.cos(ang) * arm, ry = cy + Math.sin(ang) * arm;
+    x.strokeStyle = ok ? '#3fe0c8' : '#ff9a3c'; x.beginPath(); x.moveTo(lx, ly); x.lineTo(rx2, ry); x.stroke();
+    [[lx, ly, ml, '反应物'], [rx2, ry, mr, '生成物']].forEach(function (p) { x.beginPath(); x.moveTo(p[0] - 34, p[1] + 34); x.lineTo(p[0] + 34, p[1] + 34); x.strokeStyle = '#c9d2ea'; x.lineWidth = 2; x.stroke(); x.beginPath(); x.moveTo(p[0], p[1]); x.lineTo(p[0] - 30, p[1] + 34); x.moveTo(p[0], p[1]); x.lineTo(p[0] + 30, p[1] + 34); x.lineWidth = 1; x.stroke();
+      x.fillStyle = '#e9eefb'; x.font = '12px system-ui,sans-serif'; x.textAlign = 'center'; x.fillText(p[3] + ' ' + p[2].toFixed(1), p[0], p[1] + 50); });
+    Array.prototype.forEach.call(box.querySelectorAll('.bal-sp button'), function (b) { b.onclick = function () { var i = +b.dataset.i; C[i] = Math.max(1, Math.min(12, C[i] + +b.dataset.d)); EF.play('tick'); draw(); }; });
+    if (ok && g === 1 && !EQS[k].done) { EQS[k].done = 1; solved++; EF.play('balance'); box.querySelector('.bal-prog').innerHTML = '第 ' + (k + 1) + ' / ' + EQS.length + ' 道 · ' + E.t + '(已配平 ' + solved + ' 道)'; if (solved >= EQS.length) api.complete(); }
+    var nb = document.getElementById('balNext'); if (nb) nb.onclick = function () { k++; C = null; draw(); };
+  }
+  EQS.forEach(function (e) { e.done = 0; }); draw();
+}
+
+/* 实验关:Lab Kit;先猜由关卡框架负责 */
+function labInto(stage, id, onRec) {
+  var box = document.createElement('div'); box.className = 'rx-lab'; stage.appendChild(box);
+  var P = PROTO[id]; if (!P) { box.innerHTML = '<p class="note-sm">实验台暂时没加载出来(需要联网打开一次)。</p>'; onRec(); return; }
+  var p = JSON.parse(JSON.stringify(P)); delete p.predict; p.__base = new URL(LABS + id + '.json', location.href).href;
+  import('../../core/deep/lab.js').then(function (m) { return m.Lab.mount(box, p, { color: '#FF9A3C', onRecord: onRec, onBridge: function () {} }); })
+    .catch(function (e) { console.warn('[ef] 实验台加载失败', e); box.innerHTML = '<p class="note-sm">实验台暂时没加载出来(需要联网打开一次)。可以先读下面的讲解,稍后再来。</p>'; onRec(); });
+}
+function L1(stage, api) { stage.classList.add('rx-wide'); labInto(stage, 'ef.lab.react_rate', function () { api.complete(); }); }
+
+/* 第 4 关:平衡往哪边走 */
+function L3(stage, api) {
+  stage.classList.add('rx-wide');
+  var w = document.createElement('div'); w.className = 'eqm'; stage.appendChild(w);
+  w.innerHTML = '<div><h4>密封管:2NO₂(红棕) ⇌ N₂O₄(无色) <span class="rx-safe r">🔴 只限专业实验室</span></h4><div class="tube"><canvas id="t1"></canvas></div><div class="rx-row"><button class="ef-btn ghost" data-a="hot">放进热水</button><button class="ef-btn ghost" data-a="cold">放进冰水</button><button class="ef-btn ghost" data-a="push">推活塞(加压)</button><button class="ef-btn ghost" data-a="pull">拉活塞(减压)</button></div><p class="note-sm" id="t1m">NO₂ 有毒:这里只做虚拟演示。</p></div>' +
+    '<div><h4>试管:Fe³⁺ + 3SCN⁻ ⇌ Fe(SCN)₃(血红) <span class="rx-safe y">🟡 学校实验室</span></h4><div class="tube"><canvas id="t2"></canvas></div><div class="rx-row"><button class="ef-btn ghost" data-b="fe">再加 FeCl₃</button><button class="ef-btn ghost" data-b="scn">再加 KSCN</button><button class="ef-btn ghost" data-b="iron">加少量铁粉</button><button class="ef-btn ghost" data-b="r">重来</button></div><p class="note-sm" id="t2m">颜色越红,Fe(SCN)₃ 越多。</p></div>';
+  var R = 8.314, T = 298, Pr = 1, cShow = 0, tried = {}, fe = 1, scn = 1, K2 = 3;
+  function yN(T, P) { var K = Math.exp(57200 / (R * T) - 175.8 / R), a = K * P; return (Math.sqrt(1 + 4 * a) - 1) / (2 * a); }
+  function col1() { return yN(T, Pr) * Pr * 298 / T; }
+  cShow = col1();
+  function eqFe() { /* 定性:x = Fe(SCN)3 生成量,K2·(fe−x)(scn−x)=x 的近似 */ var a = K2, b = -(K2 * (fe + scn) + 1), c = K2 * fe * scn; return (-b - Math.sqrt(b * b - 4 * a * c)) / (2 * a); }
+  var x2 = eqFe(), x2s = x2;
+  function paint(id, fill, lab) { var cv = document.getElementById(id); if (!cv) return false; var d = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight; if (cv.width !== W * d) { cv.width = W * d; cv.height = H * d; } var x = cv.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); x.clearRect(0, 0, W, H);
+    var tw = Math.min(90, W * 0.3), th = H - 40, tx = W / 2 - tw / 2; x.fillStyle = fill; x.beginPath(); x.roundRect ? x.roundRect(tx, 20, tw, th, [8, 8, tw / 2, tw / 2]) : x.rect(tx, 20, tw, th); x.fill();
+    x.strokeStyle = 'rgba(220,240,255,.7)'; x.lineWidth = 2; x.stroke(); x.fillStyle = '#c9d2ea'; x.font = '12px system-ui,sans-serif'; x.fillText(lab, 8, H - 8); return true; }
+  function loop() { if (!w.isConnected) return; requestAnimationFrame(loop);
+    var tgt = col1(); cShow += (tgt - cShow) * (EF.reduced ? 1 : 0.04); var a = Math.max(0, Math.min(1, cShow / 1.2));
+    paint('t1', 'rgba(' + Math.round(205 - 35 * a) + ',' + Math.round(215 - 155 * a) + ',' + Math.round(225 - 205 * a) + ',' + (0.3 + 0.65 * a).toFixed(2) + ')', (T > 320 ? '热水' : T < 280 ? '冰水' : '室温') + ' · 压强 ' + Pr.toFixed(1) + ' bar · NO₂ 占 ' + Math.round(yN(T, Pr) * 100) + '%');
+    x2s += (x2 - x2s) * (EF.reduced ? 1 : 0.05); var b = Math.max(0, Math.min(1, x2s / 1.6));
+    b = Math.sqrt(b); paint('t2', 'rgba(' + Math.round(235 - 85 * b) + ',' + Math.round(205 - 190 * b) + ',' + Math.round(95 - 65 * b) + ',' + (0.4 + 0.55 * b).toFixed(2) + ')', 'Fe(SCN)₃ 相对量 ' + x2.toFixed(2)); }
+  loop();
+  function done() { if (tried.hot && tried.cold && (tried.push || tried.pull) && tried.fe2) api.complete(); }
+  Array.prototype.forEach.call(w.querySelectorAll('[data-a]'), function (b) { b.onclick = function () { var a = b.dataset.a, m = document.getElementById('t1m'); tried[a] = 1; EF.play('select');
+    if (a === 'hot') { T = 353; m.textContent = '加热:正反应放热,平衡向吸热的方向(生成 NO₂)移动——颜色变深。'; }
+    if (a === 'cold') { T = 273; m.textContent = '降温:平衡向放热的方向(生成 N₂O₄)移动——颜色变浅。'; }
+    if (a === 'push') { var c0 = col1(); Pr = Math.min(4, Pr * 2); cShow = c0 * 2; m.textContent = '加压:体积一缩,颜色先猛地变深;平衡再向分子数少的 N₂O₄ 一侧移动,颜色稍稍变浅,但仍比原来深。'; }
+    if (a === 'pull') { var c1 = col1(); Pr = Math.max(0.25, Pr / 2); cShow = c1 / 2; m.textContent = '减压:颜色先变浅;平衡向分子数多的 NO₂ 一侧移动,颜色稍稍回深,但仍比原来浅。'; }
+    done(); }; });
+  Array.prototype.forEach.call(w.querySelectorAll('[data-b]'), function (b) { b.onclick = function () { var a = b.dataset.b, m = document.getElementById('t2m'); EF.play('select');
+    if (a === 'fe') { fe += 0.6; m.textContent = '增大 Fe³⁺ 浓度:平衡正向移动,红色加深。'; tried.fe2 = 1; }
+    if (a === 'scn') { scn += 0.6; m.textContent = '增大 SCN⁻ 浓度:平衡正向移动,红色加深。'; tried.fe2 = 1; }
+    if (a === 'iron') { fe = Math.max(0.1, fe - 0.6); m.textContent = '铁粉把 Fe³⁺ 还原成 Fe²⁺(2Fe³⁺ + Fe → 3Fe²⁺),Fe³⁺ 变少,平衡逆向移动,红色变浅。'; tried.fe2 = 1; }
+    if (a === 'r') { fe = 1; scn = 1; m.textContent = '回到起点。'; }
+    x2 = eqFe(); done(); }; });
+  var more = document.createElement('p'); more.className = 'note-sm'; more.style.marginTop = '10px'; more.innerHTML = '想看定量曲线?下面的实验台可以拖压强、做 A/B 对照,记入实验记录本也算过关。'; stage.appendChild(more);
+  labInto(stage, 'ef.lab.react_eq', function () { api.complete(); });
+}
+
+function ask(id, yes) { var p = PROTO[id] && PROTO[id].predict; return p ? { q: p.q, opts: p.options, ok: p.answer, yes: yes, no: '和你猜的不一样也没关系,动手看看曲线。' } : null; }
+Promise.all([fetch('../data/ef.react.json').then(function (r) { return r.json(); }).then(function (j) { D = j; D.rows.concat(D.contrast).forEach(function (r) { BY[r.id] = r; }); })]
+  .concat(['ef.lab.react_rate', 'ef.lab.react_eq'].map(function (id) { return fetch(LABS + id + '.json').then(function (r) { return r.json(); }).then(function (j) { PROTO[id] = j; }).catch(function () {}); })))
+  .then(start, function (e) { console.warn('[ef] 反应数据加载失败', e); document.getElementById('app').innerHTML = '<p style="padding:40px">反应台数据没加载出来,请联网后刷新。</p>'; });
+
+function start() {
+var LEVELS = [
+  { title: '四种证据', setup: L0, task: '从试剂瓶里选两瓶倒进烧杯(或打开「反应图鉴」),集齐四种化学变化的证据:颜色变化、产生气体、生成沉淀、放热或吸热。',
+    ask: { q: '硫酸铜溶液和氢氧化钠溶液混在一起,会看到什么?', opts: ['冒出很多气泡', '出现蓝色沉淀', '什么也不发生'], ok: 1, yes: '眼力不错!去反应环上验证一下。' },
+    hints: ['硫酸铜 + 氢氧化钠 → 沉淀;铁钉 + 硫酸铜 → 颜色变化。', '大理石或小苏打碰上酸,会冒气泡。', '生石灰 + 水会明显放热。氢氧化钠固体溶于水也放热,但那是物理变化,不算!'],
+    explain: '化学变化会生成新物质,常伴随四种证据:颜色变化、产生气体、生成沉淀、放热或吸热。但证据不等于结论:氢氧化钠固体溶于水也放热,冰水瓶外壁也会「冒水珠」,它们都没有新物质生成,是物理变化;中和反应几乎看不出现象,却实实在在生成了水。判断化学变化,关键看有没有新物质。' },
+  { title: '快一点,慢一点', setup: L1, task: '大理石和稀盐酸的 A/B 对照台:打开 A/B 对照,一次只改一个变量(温度、浓度或颗粒大小),比较两条曲线。满意后点「记入实验记录本」。',
+    ask: ask('ef.lab.react_rate', '有数感!动手看看曲线有多陡。') || { q: '只把温度从 20 °C 提到 60 °C,反应大约会快几倍?', opts: ['1.5 倍左右', '大约 10 倍', '100 倍以上'], ok: 1 },
+    hints: ['打开 A/B 对照,让 B 组只改温度。', '曲线越陡,反应越快;看看同样 60 秒两组各收集了多少气体。', '把颗粒从「块状」调到「粉末」,接触面积变大,也会变快。'],
+    explain: '升高温度、增大浓度、增大接触面积(块状换粉末)、使用催化剂,都能加快反应。按碰撞理论,粒子要碰得够多、够「狠」(超过活化能)才会反应;温度的影响最大,速率大致随温度指数增长。本台的活化能是示意值,只看趋势和数量级。' },
+  { title: '配平天平', setup: L2, task: '用 + − 调整每种物质前的系数,让元素天平两边每种原子一样多;离子方程式还要电荷相等。一共 6 道。',
+    ask: { q: '氢气和氧气生成水:2H₂ + ?O₂ → 2H₂O,问号处应该是几?', opts: ['1', '2', '4'], ok: 0, yes: '对!化学反应只是原子重新组合,一个也不会多、一个也不会少。' },
+    hints: ['先数最复杂的那种物质里的原子,再去调别的。', '氧原子不够?给 O₂ 加系数;氢原子不够?给 H₂ 加系数。', '离子方程式:Cu 变成 Cu²⁺ 失去 2 个电子,所以要 2 个 Ag⁺ 来接。'],
+    explain: '质量守恒:化学反应只是原子重新组合,反应前后每种原子的种类和数目都不变,所以总质量不变。配平就是让方程式体现这一点,系数取最简整数比。离子方程式还要满足电荷守恒——这背后是电子的得失相等。' },
+  { title: '平衡往哪边走', setup: L3, task: '左边加热、降温、加压或减压,右边改变 Fe³⁺、SCN⁻ 的多少,观察颜色往哪边走。四种操作都试过就过关。',
+    ask: ask('ef.lab.react_eq', '对,加热让平衡往吸热方向走。') || { q: '把装着 NO₂ 的密封管从冰水移到热水里,颜色会?', opts: ['变深', '变浅', '不变'], ok: 0 },
+    hints: ['2NO₂ → N₂O₄ 是放热反应。', '加压时,平衡往气体分子数少的一边走——但别忘了浓度本身也变大了。', '铁粉会把 Fe³⁺ 变成 Fe²⁺,Fe³⁺ 少了,平衡往哪边?'],
+    explain: '可逆反应在一定条件下达到化学平衡。改变温度、压强或浓度,平衡会朝「减弱这种改变」的方向移动(勒夏特列原理),但不能完全抵消:加热时 NO₂ 变多、颜色变深;加压时平衡向 N₂O₄ 移动,但颜色仍比加压前深;加入 Fe³⁺ 或 SCN⁻ 红色加深,用铁粉消耗 Fe³⁺ 则红色变浅。' }
+];
+var NOTES = { title: '元素工坊 · 把两种东西混在一起,会发生什么?', items: [
+  '化学变化生成新物质,常见证据:颜色变化、产生气体、生成沉淀、放热或吸热;有现象不一定是化学变化(如氢氧化钠溶于水放热)。',
+  '温度、浓度、接触面积、催化剂都会影响反应速率;很多反应温度每升高 10 °C 速率变为原来的 2–4 倍。',
+  '质量守恒:反应前后原子种类和数目不变;方程式要配平,离子方程式还要电荷守恒。',
+  '化学平衡会朝减弱外界改变的方向移动(勒夏特列原理),但不能完全抵消。',
+  '实验安全:🟢 家中可观察(须家长知情);🟡 只在学校实验室由老师指导;🔴 只限专业实验室,本站只做虚拟演示,不提供任何用量、步骤和获取渠道。'],
+  bridge: '宙律「能量去哪儿了?——能量守恒」(即将开通) · <a href="../fireworks/">为什么烟花有不同的颜色?</a> · <a href="../cabbage/">为什么紫甘蓝汁会变色?</a>' };
+EF.mission('react', LEVELS, NOTES);
+}
+})();
+</script>
+</body>
+</html>

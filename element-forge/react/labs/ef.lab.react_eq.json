@@ -1,0 +1,136 @@
+{
+ "schema": "gn-lab/1",
+ "world": "ef",
+ "color": "#FF9A3C",
+ "updated": "2026-11-01",
+ "ai_generated": "问题、猜测题、结论文字由 AI 撰写(元素工坊 v2.1 窗口);数值由脚本 tools/react_protos.py 复算",
+ "id": "ef.lab.react_eq",
+ "title": "平衡往哪边走 · 2NO₂ ⇌ N₂O₄",
+ "question": "把装着红棕色 NO₂ 的密封管加热或加压,颜色会怎样变?为什么?",
+ "evidence": "confirmed",
+ "safety": "red",
+ "safetyNote": "二氧化氮有毒。只限专业实验室;这里只做虚拟演示,不提供任何制取或操作方法。",
+ "unit": "",
+ "params": [
+  {
+   "k": "P",
+   "label": "总压 P",
+   "min": 0.2,
+   "max": 5,
+   "step": 0.1,
+   "value": 1,
+   "unit": "bar"
+  }
+ ],
+ "model": {
+  "type": "fn",
+  "x": {
+   "k": "T",
+   "from": 260,
+   "to": 420,
+   "step": 2
+  },
+  "defs": [
+   {
+    "k": "K",
+    "expr": "exp(57200/(8.314*T)-175.8/8.314)"
+   },
+   {
+    "k": "a",
+    "expr": "K*P"
+   },
+   {
+    "k": "y",
+    "expr": "(sqrt(1+4*a)-1)/(2*a)"
+   }
+  ],
+  "ys": [
+   {
+    "label": "NO₂ 所占比例",
+    "expr": "y"
+   },
+   {
+    "label": "红棕色深浅(∝ NO₂ 浓度,相对值)",
+    "expr": "y*P*298/T",
+    "color": "#ff7a3c"
+   }
+  ]
+ },
+ "chart": {
+  "xlabel": "温度 T (K)",
+  "ylabel": "比例 / 相对深浅",
+  "marks": [
+   {
+    "x": 273,
+    "label": "冰水"
+   },
+   {
+    "x": 353,
+    "label": "热水"
+   }
+  ]
+ },
+ "ab": {
+  "vary": "P"
+ },
+ "predict": {
+  "q": "把这管气体从冰水移到热水里,颜色会?",
+  "options": [
+   "变深",
+   "变浅",
+   "不变"
+  ],
+  "answer": 0,
+  "why": "2NO₂ → N₂O₄ 放热。加热时平衡向吸热方向(生成 NO₂)移动,红棕色变深;放进冰水则变浅。"
+ },
+ "conclusions": [
+  {
+   "text": "升高温度,平衡向吸热反应方向移动:NO₂ 变多,颜色变深。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "增大压强,平衡向气体分子数减少的方向(生成 N₂O₄)移动;但因为浓度整体变大,颜色仍比加压前深(先明显变深,再稍稍变浅)。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "勒夏特列原理:平衡总朝着「减弱这种改变」的方向移动,但不能完全抵消。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "本台的数值用标准焓变与熵变近似计算(ΔH°≈−57.2 kJ/mol),只作定性对照。",
+   "evidence": "inferred"
+  }
+ ],
+ "checks": [
+  {
+   "label": "298 K,1 bar",
+   "x": 298,
+   "expect": 0.3137,
+   "tol": 0.01
+  },
+  {
+   "label": "350 K,1 bar",
+   "x": 350,
+   "expect": 0.8405,
+   "tol": 0.01
+  },
+  {
+   "label": "298 K,4 bar",
+   "x": 298,
+   "expect": 0.1723,
+   "tol": 0.01,
+   "params": {
+    "P": 4
+   }
+  }
+ ],
+ "sources": [
+  {
+   "name": "人教版高中《化学》选择性必修1 第二章 化学平衡(定性介绍)"
+  },
+  {
+   "name": "NIST Chemistry WebBook:NO₂、N₂O₄ 标准生成焓与熵",
+   "url": "https://webbook.nist.gov/chemistry/"
+  }
+ ]
+}

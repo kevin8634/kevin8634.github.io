@@ -11,6 +11,20 @@
 <meta name="theme-color" content="#070a14">
 <link rel="stylesheet" href="ef.css?v=14">
 <link rel="stylesheet" href="ef-hud.css?v=2">
+<style>
+.labrow{display:grid;grid-template-columns:1.15fr 1.15fr .8fr;gap:14px}
+.labc{position:relative;border-radius:14px;overflow:hidden;border:1px solid rgba(63,224,200,.4);background:#0a1420;text-decoration:none;color:var(--ink);display:block;transition:transform .2s,border-color .2s}
+.labc:hover{transform:translateY(-3px);border-color:#ff9a3c}
+.labc img{display:block;width:100%;aspect-ratio:16/8;object-fit:cover;background:#0b1222}
+.labc .tx{padding:10px 12px}.labc b{font-size:16px;display:block}.labc small{color:#aab4cf;font-size:12.5px}
+.labc .bd{position:absolute;top:8px;left:8px;font-size:11px;background:#ff9a3c;color:#1a0e00;border-radius:6px;padding:1px 7px;font-weight:700}
+.labc .ct{position:absolute;top:8px;right:8px;font-size:11px;background:rgba(5,10,16,.85);border:1px solid #3fe0c8;color:#9fe8da;border-radius:6px;padding:1px 7px}
+.labc.soon{border-style:dashed;border-color:rgba(255,255,255,.25);opacity:.7}
+.labc.soon .ph{aspect-ratio:16/8;background:repeating-linear-gradient(45deg,#121827 0 10px,#0e1320 10px 20px);display:flex;align-items:center;justify-content:center;color:#8f9ab8}
+.lab-hall{margin-top:12px;display:inline-block}
+.dr-g{display:block;margin:10px 0 4px;color:#9fe8da;font-size:12.5px}
+@media (max-width:760px){.labrow{grid-template-columns:1fr}.labc.soon .ph{aspect-ratio:auto;height:56px}}
+</style>
 </head>
 <body class="home pre">
 <section class="stage" id="stage" aria-label="尺度镜舞台">
@@ -45,6 +59,13 @@
   <div class="intro" id="intro" hidden><h1 class="i-title" id="iTitle">元素工坊</h1><p class="i-sub" id="iSub">从一颗恒星里,炼出整个世界</p><button class="i-skip" id="iSkip">跳过 ›</button></div>
 </section>
 <main class="wrap" id="more">
+  <section class="sec" id="labs">
+    <h2>⚗ 旗舰实验室</h2>
+    <p class="sub">2.0 · 每座实验室都能亲手调参数、做 A/B 对照,自己得出结论。</p>
+    <div class="labrow" id="labrow"></div>
+    <a class="ef-btn ghost lab-hall" href="lab/">进入实验室大厅 · 实验记录本 →</a>
+  </section>
+
   <section class="sec">
     <h2>第一期任务</h2>
     <p class="sub">每个任务从一个问题出发:先猜,再动手,最后揭晓。不排名、不计时。</p>
@@ -83,7 +104,7 @@
     创世计划 Genesis · 科学素养 / 科普探究
   </footer>
 </main>
-<script src="ef.js?v=15"></script>
+<script src="ef.js?v=16"></script>
 <script>
 (function () {
 if (EF.reduced) document.body.classList.remove('pre');
@@ -162,10 +183,13 @@ function hudSet(k) {
 var drawer = document.getElementById('drawer'), dTab = document.getElementById('drawerTab');
 function openDr(o) { drawer.classList.toggle('open', o); dTab.setAttribute('aria-expanded', o ? 'true' : 'false'); EF.play(o ? 'slide' : 'tick'); }
 dTab.onclick = function () { openDr(!drawer.classList.contains('open')); }; document.getElementById('drawerX').onclick = function () { openDr(false); };
-document.getElementById('drTasks').innerHTML = Object.keys(EF.MISSIONS).map(function (k) {
+document.getElementById('drTasks').innerHTML = Object.keys(EF.MISSIONS).filter(function (k) { return !EF.MISSIONS[k].v2; }).map(function (k) {
   var M = EF.MISSIONS[k], p = M.n ? EF.prog(k) : null, s = p ? Object.keys(p.stars).reduce(function (t, i) { return t + p.stars[i]; }, 0) : 0;
   return (M.soon ? '<div class="dr-t soon">' : '<a class="dr-t" href="' + M.href + '">') + '<b>' + M.q + '</b><small>' + EF.GUIDES[M.g].n + (M.soon ? ' · 锻造中' : ' · ' + p.done.length + '/' + M.n + ' 关 · ★' + s) + '</small>' + (M.soon ? '</div>' : '</a>');
 }).join('');
+document.getElementById('drTasks').insertAdjacentHTML('beforeend', '<b class="dr-g">⚗ 实验室</b>' + ['island', 'react'].map(function (k) { var M = EF.MISSIONS[k], p = EF.prog(k);
+  return '<a class="dr-t" href="' + M.href + '"><b>' + M.q + '</b><small>' + (k === 'island' ? '超重元素岛' : '反应台') + ' · ' + p.done.length + '/' + M.n + ' 关</small></a>'; }).join('') +
+  '<div class="dr-t soon"><b>分子搭建台</b><small>锻造中</small></div><a class="dr-t" href="lab/"><b>实验室大厅 · 实验记录本</b><small>复现 · 导出图片卡</small></a>');
 EF.BRIDGES = [
   { a: 'ef.stars', b: 'sh.where', w: '天枢 Starhelm', t: '此刻,你在宇宙的哪里?', href: '../starhelm/', why: '你身体里的铁来自远古的星星;天枢带你看清自己在宇宙中的位置。' },
   { a: 'ef.carbon', b: 'ma.bee', w: '星图 Math Atlas', t: '为什么蜜蜂选六边形', href: '../math-atlas/bee/', why: '石墨的每一层都是六边形网格,蜂巢也是。' },
@@ -175,11 +199,12 @@ EF.BRIDGES = [
   { a: 'ef.fireworks', b: 'sh.aurora', w: '天枢 Starhelm', t: '极光是太阳寄来的信吗?', href: '../starhelm/?task=aurora', why: '烟花的颜色和极光的颜色,都是原子里的电子跳回低能级时放出的光。' },
   { a: 'ef.mars', b: 'sh.marsday', w: '天枢 Starhelm', t: '火星上的一天有多长?', href: '../starhelm/?task=marsday', why: '火星为什么红是它的化学,火星的一天多长是它的天文。' },
   { a: 'ef.titan', b: 'sh.voyager', w: '天枢 Starhelm', t: '旅行者号此刻飞到哪了?', href: '../starhelm/?task=voyager', why: '旅行者 1 号 1980 年飞掠土卫六,只看见一团橙色的雾;如今它已飞出日球层,在星际空间里继续前进。' },
+  { a: 'ef.react', b: 'nv.energy', w: '宙律 Nomoverse', t: '能量去哪儿了?——能量守恒', href: null, why: '反应放热、吸热,能量只是换了形式;宙律这一站即将开通。' },
   { a: 'ef.spectra', b: 'sh.exoearth', w: '天枢 Starhelm', t: '宇宙里还有别的地球吗?', href: '../starhelm/?task=exoearth', why: '用星光读出系外行星的空气,是寻找"另一个地球"的关键一步。' }
 ];
 document.getElementById('drBridges').innerHTML = EF.BRIDGES.map(function (B) {
   var on = B.href && !B.soon;
-  return (on ? '<a class="dr-b" href="' + B.href + '">' : '<div class="dr-b off">') + '<small>' + B.a + ' ⇄ ' + B.b + '</small><b>' + B.w + '「' + B.t + '」</b><span>' + (B.soon ? '本端任务锻造中' : (B.href ? B.why : '对岸即将点亮')) + '</span>' + (on ? '</a>' : '</div>');
+  return (on ? '<a class="dr-b" href="' + B.href + '">' : '<div class="dr-b off">') + '<small>' + B.a + ' ⇄ ' + B.b + '</small><b>' + B.w + '「' + B.t + '」</b><span>' + (B.soon ? '本端任务锻造中' : (B.href ? B.why : '即将开通')) + '</span>' + (on ? '</a>' : '</div>');
 }).join('');
 /* 设置 */
 var pop = document.getElementById('setPop');
@@ -272,8 +297,15 @@ function card(M, k, cls) {
     (p ? '<div class="prog">' + p.done.length + ' / ' + M.n + ' 关 · ★ ' + s + '</div>' : '') + '</div>';
   a.onmouseenter = EF.hover; return a;
 }
+(function () { var nb = []; try { nb = JSON.parse(localStorage.getItem('gn:ef:lab') || '[]'); } catch (e) {}
+  function c(pre) { return nb.filter(function (e) { return e && String(e.id).indexOf(pre) === 0; }).length; }
+  var L = [['island', 'img/lab-island.webp', '2.0', '超重元素岛', c('ef.lab.island')], ['react', 'img/lab-react.webp', '新 · v2.1', '反应台', c('ef.lab.react')]];
+  document.getElementById('labrow').innerHTML = L.map(function (x) { var M = EF.MISSIONS[x[0]], p = EF.prog(x[0]);
+    return '<a class="labc" href="' + M.href + '"><img src="' + x[1] + '" alt="' + x[3] + '实验室画面" loading="lazy"><span class="bd">' + x[2] + '</span><span class="ct">' + (x[4] ? '已记 ' + x[4] + ' 条实验' : p.done.length + '/' + M.n + ' 关') + '</span><div class="tx"><b>' + x[3] + '</b><small>' + M.q + '</small></div></a>'; }).join('') +
+    '<div class="labc soon"><div class="ph">🧪 锻造中</div><div class="tx"><b>分子搭建台</b><small>v2.2</small></div></div>';
+})();
 var cards = document.getElementById('cards'), planets = document.getElementById('planets'), cvs = [];
-Object.keys(EF.MISSIONS).forEach(function (k) { var M = EF.MISSIONS[k]; if (M.planet) return; var c = card(M, k, M.soon ? 'soon' : ''); cards.appendChild(c); cvs.push([c.querySelector('canvas'), M.g]); });
+Object.keys(EF.MISSIONS).forEach(function (k) { var M = EF.MISSIONS[k]; if (M.planet || M.v2) return; var c = card(M, k, M.soon ? 'soon' : ''); cards.appendChild(c); cvs.push([c.querySelector('canvas'), M.g]); });
 EF.PLANETS.forEach(function (P) { var M = P.id && EF.MISSIONS[P.id], c = M ? card(M, P.id, 'planet live') : card(P, null, 'planet'); planets.appendChild(c); cvs.push([c.querySelector('canvas'), P.g]); });
 
 /* ---------- 元素起源周期表 ---------- */

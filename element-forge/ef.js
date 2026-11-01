@@ -106,7 +106,8 @@ EF.MISSIONS = {
   mars: { q: '火星为什么是红的?', n: 4, g: 'oga', href: 'mars/', lv: '★★☆', scale: '行星 · 矿物 · 原子', unlock: [1, 8, 12, 14, 16, 26], planet: 1 },
   titan: { q: '土卫六为什么是橙色的?', n: 4, g: 'oga', href: 'titan/', lv: '★★☆', scale: '卫星 · 分子', unlock: [1, 6, 7, 8], planet: 1 },
   spectra: { q: '隔着几百光年,怎么知道一颗星球的空气?', n: 4, g: 'dot', href: 'spectra/', lv: '★★☆', scale: '光 · 原子 · 分子', unlock: [1, 2, 6, 8, 11, 16], planet: 1 },
-  island: { q: '元素周期表的尽头在哪里?', n: 4, g: 'oga', href: 'island/', lv: '★★★', scale: '原子核 · 元素', unlock: [26, 50, 82, 114, 118], v2: 1 }
+  island: { q: '元素周期表的尽头在哪里?', n: 4, g: 'oga', href: 'island/', lv: '★★★', scale: '原子核 · 元素', unlock: [26, 50, 82, 114, 118], v2: 1 },
+  react: { q: '把两种东西混在一起,会发生什么?', n: 4, g: 'bucky', href: 'react/', lv: '★★☆', scale: '分子 · 离子 · 原子', unlock: [1, 6, 8, 11, 20, 26, 29], v2: 1 }
 };
 EF.PLANETS = [
   { id: 'mars', q: '火星为什么是红的?', g: 'oga' }, { id: 'titan', q: '土卫六为什么是橙色的?', g: 'oga' },
@@ -159,7 +160,7 @@ EF.drawGuide = function (cv, id, t, talk) {
 
 /* ---------- 声音:默认关闭,手势后才创建 AudioContext ---------- */
 var SND = EF.snd = { on: EF.get('_sound', 0) === 1, ctx: null, buf: {}, last: {}, music: null, mG: null, sG: null };
-var NAMES = ['tick', 'select', 'unlock', 'fuse', 'absorb', 'anvil', 'whoosh', 'boom', 'slide'];
+var NAMES = ['tick', 'select', 'unlock', 'fuse', 'absorb', 'anvil', 'whoosh', 'boom', 'slide', 'bubble', 'settle', 'balance'];
 function initAudio() {
   if (SND.ctx) return true;
   var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;

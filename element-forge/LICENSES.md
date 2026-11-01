@@ -76,3 +76,8 @@
 - 新增本地文件:vendor/three.r169.module.min.js、ef-island3d.js、island/、island/labs/*.json(3 份 gn-lab/1 协议)、data/ef.island.*.json(4 份)、tools/build_island.py、tools/protos.py(复算脚本),均已登记。
 - 外部网络请求:0。实验台来源链接为文字引用。
 - AI 生成内容:实验台问题、猜测题、结论文字由 AI 撰写(协议 ai_generated 字段写明);数值全部由脚本复算并有模型自动校验(7 项)。
+
+## 七、自查(2026-11-01,v2.1)
+- 新增本地文件:ef-react3d.js、react/、react/labs/*.json(2 份 gn-lab/1 协议)、data/ef.react.json、lab/(实验室大厅)、img/lab-island.webp 与 img/lab-react.webp(本站页面截图缩略)、audio/bubble|settle|balance.m4a(audio/synth_react.py 纯程序合成原创,固定种子)、tools/build_react.py、tools/react_check.py、tools/react_protos.py,均为本项目原创。
+- 反应数据依据人教版教材公开章节与 NIST WebBook 公开热力学数据(仅引用数值与名称,文字为原创);外部网络请求:0。
+- AI 生成内容:反应现象/安全说明/题目文字由 AI 撰写并经独立化学审校;协议 ai_generated 字段写明。
