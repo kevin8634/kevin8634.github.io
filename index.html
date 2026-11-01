@@ -1069,6 +1069,7 @@
       .x-orb__play:hover, .x-orb__play:focus-visible { color: #fff; border-color: #e9c779; outline: none; }
       @media (max-width: 860px) { .x-orb__play { top: -10px; bottom: auto; font-size: 11px; padding: 5px 10px; letter-spacing: .08em; } }
       /* v2.4.5 版式修正 */
+      @media (max-width: 860px) and (orientation: portrait) { .acts { flex-wrap: nowrap; gap: 6px; } .acts .btn { padding: 0 10px; font-size: 12.5px; white-space: nowrap; } }
       @media (max-width: 1679px) and (min-width: 861px) { .x-orb__side { display: none; } }
       @media (min-width: 861px) { .x-orb__play { bottom: auto; top: -2px; } }
       @media (max-width: 860px) { .x-orb__play { display: none; } #v3Note { display: none; }
@@ -1361,7 +1362,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v2.4.6</b></span>
+            <span>创世计划总门户 <b>v2.4.7</b></span>
           </footer>
         </div>
       </div>
@@ -1730,7 +1731,7 @@
       function layoutLabels() {
         if (performance.now() - uiRectT > 500) {
           uiRectT = performance.now();
-          uiRects = [].map.call(document.querySelectorAll(".titleblock, .brand, .passport-btn, .foot, .x-3d p, .x-home.on, .x-news"), function (el) {
+          uiRects = [].map.call(document.querySelectorAll(".titleblock, .brand, .passport-btn, .foot, .x-3d p, .x-home.on, .x-news, .x-devb, .x-orb__ring, .x-orb__play, .x-orb__side"), function (el) {
             var r = el.getBoundingClientRect(); return r.width && getComputedStyle(el).visibility !== "hidden" ? [r.left - 4, r.top - 4, r.right + 4, r.bottom + 4] : null;
           }).filter(Boolean);
         }
@@ -1749,7 +1750,8 @@
             var b = c[i], bad = 0;
             if (b[0] < 0 || b[2] > W || b[1] < 0 || b[3] > H) bad += 50;
             WORLDS.forEach(function (o) { var k = o.r * 0.85; if (o !== w && o.x + k > b[0] && o.x - k < b[2] && o.y + k > b[1] && o.y - k < b[3]) bad += 10; });
-            placed.concat(uiRects).forEach(function (o) { if (b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]) bad += 8; });
+            placed.forEach(function (o) { if (b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]) bad += 14; });
+            uiRects.forEach(function (o) { if (b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]) bad += 25; });
             if (bad < bestBad) { bestBad = bad; best = i; }
             if (!bad) break;
           }
@@ -1811,7 +1813,7 @@
           layers.push(arr);
         }
         // 星球布局
-        var R = Math.min(W, H) * (portrait ? 0.085 : 0.062);
+        var R = Math.min(W, H) * (portrait ? 0.074 : 0.062);
         R = Math.max(26, Math.min(R, 62));
         // 横屏：纵向跨度不越过标题区（标题块约占底部 330px，另留星名标签高度）
         var spanY = Math.max(H * 0.22, Math.min(H * 0.40, H - 330 - R * 2.4 - 34 - H * 0.17));
@@ -3601,6 +3603,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "门户 v2.4.7", d: "2026-11-01", t: "星名避让升级：转动北斗时，星名会主动躲开「联系开发者」卡片、2.0 光门和公告条，星名之间也不再互相叠住；手机竖屏三个按钮并成一行、星球略缩小，给北斗腾出空间。" },
         { w: "gn", v: "门户 v2.4.6", d: "2026-11-01", t: "电脑版页脚新增「发现错误？」（可纠错，也可提新题目），「关于创世计划」写明内容由 AI 审稿、欢迎纠错，学者可署名。" },
         { w: "gn", v: "门户 v2.4.5", d: "2026-11-01", t: "版式修正：电脑上 2.0 光门两侧文字不再压住标题和星名，「▶ 宣传片」移到光门上方；手机上光门缩小、不再挡星名；矮横屏收起曲目选择、星网按钮移到标题旁；元素工坊反应台、分子搭建台进入「新任务」公告。" },
         { w: "gn", v: "门户 v2.4.4", d: "2026-11-01", t: "数据校准：宙律世界卡更新到 v0.6-α3；两座对端尚未建成的星桥改为「单端开放」，不再把人带回对方首页；元素工坊烟花任务统一为「为什么烟花有不同的颜色？」。" },
