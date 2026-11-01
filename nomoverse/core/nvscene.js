@@ -1,7 +1,7 @@
 /* 宙律 Nomoverse · 共享场景模块 nvscene(v0.3,HANDOFF §5.3.1)
    集中管理:渲染器创建、性能分级(高/中/低)、像素比上限(桌面 ≤2 / 手机 ≤1.5)、
    页面隐藏暂停、context lost 回调、通用贴图与网格工具。开场动画、星图、任务 3D 场景都走这里。
-   THREE 由调用方传入(同一份本地 vendor/three.module.min.js,r169)。 */
+   THREE 由调用方传入(同一份本地 vendor/three.module.min.js,r186)。 */
 "use strict";
 
 export function tierInfo() {

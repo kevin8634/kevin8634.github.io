@@ -6,7 +6,7 @@
 
 | 素材 | 用在哪(任务/页面) | 来源与链接 | 许可 | 署名要求 | 是否 AI 生成 | 页面标注位置 |
 |---|---|---|---|---|---|---|
-| Three.js r169 `vendor/three.module.min.js` | hoop/sound/orbit/stars/tide 3D 舞台、首页 3D 星图(按需加载) | npm `three@0.169.0` https://threejs.org | MIT | 保留许可全文(`vendor/three.LICENSE`,文件头 @license) | 否 | 文件头 + 本台账 |
+| Three.js r186 `vendor/three.module.min.js`(v0.7-α1 起;r169 备份 `vendor/three.r169.module.min.js` 保留一个版本) | hoop/sound/orbit/stars/tide 3D 舞台、首页 3D 星图(按需加载) | npm `three@0.169.0` https://threejs.org | MIT | 保留许可全文(`vendor/three.LICENSE`,文件头 @license) | 否 | 文件头 + 本台账 |
 | `assets/hoop/asphalt_*` | hoop 地球 / 2g 球场地面 | Poly Haven「Asphalt 02」https://polyhaven.com/a/asphalt_02 | CC0 1.0 | 无 | 否 | 任务页脚「图像来源」+ 本台账 |
 | `assets/hoop/moon_*` | hoop 月面 | Poly Haven「Moon Dusted 01」https://polyhaven.com/a/moon_dusted_01 | CC0 1.0 | 无 | 否 | 同上 |
 | `assets/hoop/mars_*` | hoop 火星地面 | Poly Haven「Red Laterite Soil Stones」https://polyhaven.com/a/red_laterite_soil_stones | CC0 1.0 | 无 | 否 | 同上 |
@@ -44,7 +44,7 @@
 ## 第三方代码
 | 组件 | 版本 | 许可 | 位置 | 说明 |
 |---|---|---|---|---|
-| Three.js | r169(npm `three@0.169.0`) | MIT | `vendor/three.module.min.js`;许可全文 `vendor/three.LICENSE` | v0.3 起按 HANDOFF §5.3.1 统一对齐 r169(原 r186 已替换)。来自 npm 官方包 `build/three.module.min.js`(单文件,未改动,文件头保留 `@license`)。sha256 `f7cee3c7533449a1505cc12cb5128b89e3d4fd3d7ea62b05f9f5464a217472ee`。只在支持 WebGL 且画质非「低」时按需加载,不走 CDN。 |
+| Three.js | r186(与 /deep/vendor/r186 同一文件) | MIT | `vendor/three.module.min.js`;许可全文 `vendor/three.LICENSE` | v0.7-α1(2026-11-01)按《宙律 2.0 开发计划》由 r169 升到 r186,文件取自本仓库 /deep/vendor/r186/three.module.min.js(单文件,未改动,文件头保留 `@license`)。sha256 `396d4f5595d135ad5b26be391327dabfdc130cedff91a1c89cec91ac68ee6dbb`。r169 备份 `vendor/three.r169.module.min.js`(sha256 f7cee3c7…)保留一个版本。只在支持 WebGL 且画质非「低」时按需加载,不走 CDN。 |
 
 除此之外,**本站没有其他第三方代码**:`core/nv.js`、`core/nv.css`、各任务页与首页的脚本和样式都是本项目原创。
 

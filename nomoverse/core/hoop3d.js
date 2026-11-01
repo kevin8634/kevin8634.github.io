@@ -29,7 +29,7 @@ export function mount(THREE, canvas, opts) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = hi ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap; // r186:PCFSoftShadowMap 已弃用
   var ANISO = Math.min(hi ? 16 : 8, renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 4);
   // 贴图分辨率:高档 地面 2K + 法线 2K + 天空 4K;中档(含手机)地面仍 2K,法线 1K,天空 2K —— 都是实拍高清,不用低质图
   var RES = { d: "d2k", n: hi ? "n2k" : "n1k", sky: hi ? "4k" : "2k", planet: "2k" };

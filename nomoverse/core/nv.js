@@ -1288,7 +1288,7 @@
     };
   })();
 
-  /* ---------- 3D 能力检测与按需加载(Three.js r169 本地内置,失败自动回 2D) ---------- */
+  /* ---------- 3D 能力检测与按需加载(Three.js r186 本地内置,失败自动回 2D) ---------- */
   var GL3D = (function () {
     var cache = null, pending = null, why = "";
     function q(k) { try { return new URLSearchParams(location.search).get(k); } catch (e) { return null; } }
