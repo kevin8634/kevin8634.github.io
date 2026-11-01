@@ -1065,6 +1065,13 @@
       .x-orb__play { position: absolute; left: 50%; bottom: -14px; transform: translateX(-50%); z-index: 3; white-space: nowrap; padding: 6px 13px; border-radius: 999px; border: 1px solid rgba(233,199,121,.45); background: rgba(6,9,20,.6); color: rgba(240,228,200,.92); font: 400 12px/1 var(--sans); letter-spacing: .14em; cursor: pointer; pointer-events: auto; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
       .x-orb__play:hover, .x-orb__play:focus-visible { color: #fff; border-color: #e9c779; outline: none; }
       @media (max-width: 860px) { .x-orb__play { top: -10px; bottom: auto; font-size: 11px; padding: 5px 10px; letter-spacing: .08em; } }
+      /* v2.4.5 版式修正 */
+      @media (max-width: 1679px) and (min-width: 861px) { .x-orb__side { display: none; } }
+      @media (min-width: 861px) { .x-orb__play { bottom: auto; top: -2px; } }
+      @media (max-width: 860px) { .x-orb__play { display: none; } #v3Note { display: none; }
+        .x-deep--orb { width: 128px; height: 128px; } .x-orb__img { width: 128px; height: 128px; margin: -64px 0 0 -64px; } .x-orb__core { width: 80px; height: 80px; margin: -40px 0 0 -40px; } .x-orb__ring { width: 92px; height: 92px; margin: -46px 0 0 -46px; }
+        a.x-deep__pill.x-orb { width: 78px; height: 78px; margin: -39px 0 0 -39px; } .x-orb__v { font-size: 26px; } .x-orb__go { font-size: 9.5px; letter-spacing: .08em; padding-left: .08em; } }
+      @media (max-height: 480px) and (orientation: landscape) { #trkBtn { display: none; } .passport-btn#netChip { top: 16px; left: 196px; } }
     </style>
   </head>
   <body>
@@ -1349,7 +1356,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v2.4.4</b></span>
+            <span>创世计划总门户 <b>v2.4.5</b></span>
           </footer>
         </div>
       </div>
@@ -3589,12 +3596,13 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "门户 v2.4.5", d: "2026-11-01", t: "版式修正：电脑上 2.0 光门两侧文字不再压住标题和星名，「▶ 宣传片」移到光门上方；手机上光门缩小、不再挡星名；矮横屏收起曲目选择、星网按钮移到标题旁；元素工坊反应台、分子搭建台进入「新任务」公告。" },
         { w: "gn", v: "门户 v2.4.4", d: "2026-11-01", t: "数据校准：宙律世界卡更新到 v0.6-α3；两座对端尚未建成的星桥改为「单端开放」，不再把人带回对方首页；元素工坊烟花任务统一为「为什么烟花有不同的颜色？」。" },
         { w: "gn", v: "门户 v2.4.3", d: "2026-11-01", t: "新星桥开通：「随手拼一个分子，世界上真的有吗？」⇄ 生命源码「四个字母怎么写出一个人？」——DNA 也是一个分子。" },
         { w: "gn", v: "门户 v2.4.2", d: "2026-11-01", t: "星历登记元素工坊 v2.2，护照新增任务「随手拼一个分子，世界上真的有吗？」。" },
-        { w: "03", v: "v2.2", d: "2026-11-01", t: "首页变成一张会转的锻炉星盘，还能在新的分子搭建台上亲手拼分子，查查世界上是不是真有它。" },
+        { y: "task", w: "03", v: "v2.2", d: "2026-11-01", t: "首页变成一张会转的锻炉星盘，还能在新的分子搭建台上亲手拼分子，查查世界上是不是真有它。" },
         { w: "gn", v: "门户 v2.4.1", d: "2026-11-01", t: "元素工坊世界卡旁新增「实验室 ⚗」入口；新星桥「把两种东西混在一起，会发生什么？⇄ 能量去哪儿了？」预留，等宙律任务上线即点亮。" },
-        { w: "03", v: "v2.1", d: "2026-11-01", t: "新任务「反应台」：60 条真实反应、四关由浅入深，看温度、颗粒大小和浓度怎样改变反应快慢；新开实验室大厅，旗舰实验一键进入，记录只存在本机。危险反应只看现象和原理。" },
+        { y: "task", w: "03", v: "v2.1", d: "2026-11-01", t: "新任务「反应台」：60 条真实反应、四关由浅入深，看温度、颗粒大小和浓度怎样改变反应快慢；新开实验室大厅，旗舰实验一键进入，记录只存在本机。危险反应只看现象和原理。" },
         { w: "06", v: "v0.34", d: "2026-11-01", t: "睡眠债关加上通往生命源码「季节与生物节律」的星桥（对端即将开通）；觉弈 1.0 全部完成。" },
         { w: "06", v: "v0.33", d: "2026-11-01", t: "囚徒困境连到星图「先拿的人一定赢吗？」，信息茧房连到奇点前夜「这段话是 AI 写的吗」；新三关配上专属配乐。" },
         { w: "03", v: "v2.0.1", d: "2026-11-01", t: "工坊首页补上通往天枢「极光是太阳寄来的信吗？」的星桥入口。" },
