@@ -98,28 +98,29 @@ footer{margin-top:30px;color:var(--mute);font-size:12px;border-top:1px solid var
 
 <script>
 var BOARD = {
- asOf: "2026-10-31 23:50 北京时间",
- portal: "总门户 v2.4.0 · 创世计划 2.0",
+ asOf: "2026-11-01 18:50 北京时间",
+ portal: "总门户 v2.4.6 · 创世计划 2.0",
  worlds: [
   { id:"01", name:"星图", en:"Math Atlas", c:"#7cc8ff", ver:"v0.8.4", tasks:10, levels:"55 关 · 197 星", relay:true, href:"../math-atlas/",
     plan:[{p:"P2",t:"新任务:为什么酸碱、声音、地震都按级来量?"}], dev:[], review:[], done:[{t:"v0.8.4",m:"关于与隐私 · 10-22"},{t:"v0.8.3",m:"10-21"}] },
-  { id:"02", name:"宙律", en:"Nomoverse", c:"#a78bfa", ver:"v0.6-α1", tasks:5, levels:"21 关 · 1.0 任务数已达", relay:true, href:"../nomoverse/",
-    plan:[{p:"P1",t:"物理复核送审"}], dev:[], review:[{p:"P0",t:"真机帧率验收(中端机 ≥30fps,王磊发截图)"}], done:[{t:"v0.6-α1",m:"月亮怎样拉动整片大海? · 10-24"},{t:"v0.5-α1",m:"恒星为什么会发光? · 10-24"},{t:"v0.4-α1~α4",m:"统一 HUD · 声音 3D · 离线 · 10-24"}] },
-  { id:"03", name:"元素工坊", en:"Element Forge", c:"#ff9a3c", ver:"v0.11", tasks:10, levels:"40 关 · 星球篇 3 / 5", relay:true, href:"../element-forge/",
-    plan:[{p:"P2",t:"星球篇:isru"},{p:"P2",t:"星桥对岸:紫甘蓝 ⇄ 星图数量级、电池 ⇄ 宙律电路"}], dev:[{p:"P2",t:"v0.12 meteorite 方案 + 效果图"}], review:[], done:[{t:"v0.11",m:"隔着几百光年读空气 · 10-24"},{t:"v0.10",m:"土卫六为什么是橙色的? · 10-24"},{t:"v0.9",m:"火星为什么是红的? · 10-23"}] },
-  { id:"04", name:"生命源码", en:"Life Source", c:"#34d399", ver:"v0.9.3", tasks:5, levels:"全息实验台", relay:true, href:"../life-source/",
+  { id:"02", name:"宙律", en:"Nomoverse", c:"#a78bfa", ver:"v0.6-α3", tasks:5, levels:"21 关 · 1.0 已发布", relay:true, href:"../nomoverse/",
+    plan:[{p:"P1",t:"宙律 2.0:规则改写台 → 新任务「能量去哪了?」→ 深空层"},{p:"P2",t:"星桥:恒星 ⇄ 天枢「太阳会死吗?」"}], dev:[{p:"P1",t:"1.0 尾项与 Three.js 升级"}], review:[{p:"P1",t:"真机帧率验收(中端机 ≥30fps)"}], done:[{t:"v0.6-α2~α3",m:"1.0 台账收口 · 11-01"},{t:"v0.6-α1",m:"月亮怎样拉动整片大海? · 10-24"},{t:"v0.5-α1",m:"恒星为什么会发光? · 10-24"},{t:"v0.4-α1~α4",m:"统一 HUD · 声音 3D · 离线 · 10-24"}] },
+  { id:"03", name:"元素工坊", en:"Element Forge", c:"#ff9a3c", ver:"v2.2", tasks:13, levels:"52 关 · 实验室已开", relay:true, href:"../element-forge/",
+    plan:[{p:"P2",t:"星桥对岸:紫甘蓝 ⇄ 星图数量级、电池 ⇄ 宙律电路"}], dev:[{p:"P1",t:"分子搭建台 ⇄ 生命源码 任务页回链"}], review:[], done:[{t:"v2.2",m:"锻炉星盘 · 分子搭建台 · 11-01"},{t:"v2.1",m:"反应台 · 11-01"},{t:"v0.11",m:"隔着几百光年读空气 · 10-24"},{t:"v0.10",m:"土卫六为什么是橙色的? · 10-24"},{t:"v0.9",m:"火星为什么是红的? · 10-23"}] },
+  { id:"04", name:"生命源码", en:"Life Source", c:"#34d399", ver:"v0.9.3.1", tasks:5, levels:"全息实验台", relay:true, href:"../life-source/",
     plan:[{p:"P1",t:"其余三个任务迁入全息实验台"},{p:"P1",t:"新任务:为什么一到晚上就犯困?(方案+效果图已出)"}], dev:[{p:"P1",t:"v0.9.4 界面细节:手机阶段点、顶栏精简、向导框"}], review:[], done:[{t:"v0.9–v0.9.3",m:"全息实验台 · 工具栏 · 开场 · 10-23"},{t:"v0.8",m:"源码五灵头像 · 10-21"}] },
   { id:"05", name:"奇点前夜", en:"Pre-Singularity", c:"#22d3ee", ver:"v0.9.3", tasks:10, levels:"29 关", relay:true, href:"../pre-singularity/",
     plan:[{p:"P1",t:"主页 HUD 改版(A/B/C 待选)"},{p:"P1",t:"v1.0 终章「奇点门口」ps.gate(待总指挥星桥规范)"}], dev:[], review:[{p:"P1",t:"中低端机开场:王磊真机实测"}], done:[{t:"v0.9.3",m:"黎明天色 · 10-24"},{t:"v0.9.2",m:"中低端机开场 5 秒 · 10-23"},{t:"v0.9.1",m:"合规收口 · 10-23"}] },
-  { id:"06", name:"觉弈", en:"Ludoterra", c:"#f5c26b", ver:"v0.32", tasks:10, levels:"10 关 · 八域全开", relay:true, href:"../ludoterra/",
-    plan:[{p:"P2",t:"R3 新三关配乐"},{p:"P3",t:"星桥:睡眠 ⇄ 生物钟"}], dev:[], review:[], done:[{t:"v0.32",m:"年龄段专属路线 · 10-24"},{t:"v0.31",m:"意义终章纳入新三关 · 10-23"},{t:"v0.30",m:"每关 3D 背景舞台 · 10-23"}] },
-  { id:"07", name:"天枢", en:"Starhelm", c:"#dfe6f3", ver:"2.0 C2.13b3", tasks:22, levels:"1.0 七星域 · 2.0 巡天 星域 I–VII", relay:true, href:"../starhelm/x/",
+  { id:"06", name:"觉弈", en:"Ludoterra", c:"#f5c26b", ver:"v0.34", tasks:10, levels:"10 关 · 1.0 完成", relay:true, href:"../ludoterra/",
+    plan:[{p:"P2",t:"R3 新三关配乐"},{p:"P3",t:"星桥:睡眠 ⇄ 生物钟(等生命源码对端)"}], dev:[], review:[], done:[{t:"v0.33–v0.34",m:"星桥补齐 · 1.0 收口 · 11-01"},{t:"v0.32",m:"年龄段专属路线 · 10-24"},{t:"v0.31",m:"意义终章纳入新三关 · 10-23"},{t:"v0.30",m:"每关 3D 背景舞台 · 10-23"}] },
+  { id:"07", name:"天枢", en:"Starhelm", c:"#dfe6f3", ver:"2.0 C2.13b5", tasks:22, levels:"1.0 七星域 · 2.0 巡天 星域 I–VII", relay:true, href:"../starhelm/x/",
     plan:[{p:"P1",t:"C2.13b 更多星系世界"},{p:"P2",t:"真机验收:iOS Safari / Android Chrome"}], dev:[{p:"P1",t:"本星系群与星系世界"}], review:[{p:"P1",t:"登舰视频真机观看(王磊)"}], done:[{t:"2.0 C2.13b3",m:"M87 星系世界 · 10-31"},{t:"2.0 C2.13b2",m:"大麦哲伦云世界 · 10-31"},{t:"2.0 C2.13b1",m:"仙女座 M31 · 10-31"},{t:"2.0 C2.13a6",m:"蟹状星云纤维 · 10-31"},{t:"2.0 C2.8c–e",m:"中子星观测级渲染 · 10-31"}] }
  ],
  command: [
   {p:"P1",t:"深空层:真机中端手机 ≥30fps 实测(/deep/?fps)"},
   {p:"P1",t:"深空层:星系层课本卡、星穹研究者卡内容(各世界提交)"},
-  {p:"P1",t:"2.0 子项目计划 v1.0:Lab Kit 框架 → 03→02→04→01→06→05(待王磊拍板)"},
+  {p:"P1",t:"Lab Kit 0.4.1 已上线,元素工坊实验室已开;宙律规则改写台下一个接入"},
+  {p:"P1",t:"门户:纠错入口已上线(v2.4.6);后续四层级筛选、双语框架待定"},
   {p:"P1",t:"深空层五条航线已上线:铁 · 潮 · 疫情 · 提问能量 · 卫星钟"},
   {p:"P2",t:"深空层持续打磨:贴近概念图 01c–04"},
   {p:"P2",t:"中英双语:先做门户框架,星图试点"}
