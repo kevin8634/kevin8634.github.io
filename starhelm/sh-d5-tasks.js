@@ -250,7 +250,7 @@
       U.x.onclick = close; U.hint.onclick = function () { Q.hint(); };
       U.age.oninput = function () { L.age = aOf(+U.age.value); read(); Q.check(); };
       r.querySelector('.sd-now').onclick = function () { P('click'); U.age.value = vOf(4.6); U.age.oninput(); };
-      Q = Quiz('sundie', U, '太阳会「死」,但很温和:不会爆炸,也不会变成黑洞,而是在约 50 亿年后膨胀成红巨星,最后留下一颗白矮星和一朵行星状星云。那是非常非常遥远的事——比地球上有恐龙到今天还要长 70 多倍。');
+      Q = Quiz('sundie', U, '太阳会「死」,但很温和:不会爆炸,也不会变成黑洞,而是在约 50 亿年后膨胀成红巨星,最后留下一颗白矮星和一朵行星状星云。那是非常非常遥远的事——比地球上有恐龙到今天还要长 70 多倍。<br><a class="sh-bridge-a" href="../nomoverse/stars/">✦ 星桥 → 宙律:恒星为什么会发光?</a>');
     }
     function read() {
       var s = at(L.age), sg = STAGE[s.st];
