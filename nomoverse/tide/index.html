@@ -169,7 +169,7 @@
     c.restore();
   }
   function town(L) { return 0; }
-  var NOTE = "简化模型:平衡潮理论(开阔大洋、月亮在赤道面上);画面里的鼓包、地月距离和海岸潮差都按比例放大或压缩,数字以读数为准。";
+  var NOTE = "平衡潮理论(开阔大洋、月亮在赤道面上);画面里的鼓包、地月距离和海岸潮差都按比例放大或压缩,数字以读数为准。";
 
   /* ================= 第 1 关 背面也鼓起来 ================= */
   var A0 = -1.1;                                        // 运行开始时小镇离「正对月亮」差的角度
@@ -183,7 +183,7 @@
     runLabel: "转一天",
     crit: ["用「引潮力」视角转完一整天", "预测正确", "两种箭头都看过"],
     hints: ["月亮对地球近侧、地心、远侧的引力,哪个最大?哪个最小?", "整个地球(地心)都在被月亮拉着走。站在地心看,近侧的水和远侧的水各自往哪边「跑」?", "近侧被拉得比地心多,远侧被拉得比地心少——两边都离地心更远了。小镇一天会经过几个鼓包?"],
-    summary: "月亮拉近侧比拉地心多、拉地心比拉远侧多;减去地心那份,两边的海水都被「拉开」,所以有两个鼓包,海边一天涨两次潮。",
+    summary: "月亮拉近侧比拉地心多、拉地心比拉远侧多;减去地心那份,两边的海水都被「拉开」,所以有两个鼓包,在这个平衡潮模型里海边一天涨两次潮。(真实海洋受海岸和海盆影响,像北部湾就是一天只涨一次的全日潮。)",
     lights: "潮汐",
     card: { t: "引潮力:引力的「差」", b: "海水感受到的不是月亮引力本身,而是它与地心所受引力的差。近侧多出一点,指向月亮;远侧少了一点,相当于背离月亮。所以地球两侧各有一个鼓包,地球自转一圈(相对月亮约 24 小时 50 分),小镇会经过两次高潮、两次低潮。", f: "a潮 ≈ 2GM·r / d³(近侧、远侧大小近似相等,方向都朝外)", src: "NOAA Tides and Currents《Tides and Water Levels》;OpenStax《University Physics Volume 1》13.6 潮汐力" },
     init: function (L) { L.st = { th: 0, tried: {}, highs: 0, prev: null, rise: false }; },
@@ -244,10 +244,10 @@
     ],
     runLabel: "转一天",
     crit: ["两张任务卡都完成", "预测正确", "关掉太阳看过月亮单独的潮汐"],
-    hints: ["引潮力是「近侧与远侧引力之差」。离得越远,两侧的差越小还是越大?", "引力 ∝ 1/d²,引潮力 ∝ 1/d³。太阳虽重,却远了约 390 倍。", "太阳、月亮、地球排成一条线时,两个鼓包会叠在一起还是互相抵消?"],
-    summary: "引潮力按距离的三次方减小:太阳重 2,700 万倍、远 390 倍,掀起的潮汐只有月亮的 46%。新月、满月日月同向用力是大潮,上下弦互相抵消是小潮。",
+    hints: ["引潮力是「某处与地心所受引力之差」。离得越远,两侧的差越小还是越大?", "引力 ∝ 1/d²,引潮力 ∝ 1/d³。太阳虽重,却远了约 390 倍。", "太阳、月亮、地球排成一条线时,两个鼓包会叠在一起还是互相抵消?"],
+    summary: "引潮力按距离的三次方减小:太阳重 2,700 万倍、远 390 倍,掀起的潮汐只有月亮的 46%。新月、满月日月同向用力是大潮,上下弦互相削弱(部分抵消)是小潮。",
     lights: "万有引力",
-    card: { t: "1/d³:大潮与小潮", b: "引力随距离平方减小,引潮力随距离立方减小。所以太阳虽然把地球拉得比月亮用力 179 倍,潮汐却只有月亮的约 0.46 倍。新月和满月时太阳、月亮、地球排成一线,两个鼓包叠加成大潮;上弦、下弦时两者成直角,互相抵消成小潮。", f: "a潮 ∝ M/d³;太阳 : 月亮 ≈ 0.46 : 1;平衡潮差 月亮 0.54 m、太阳 0.25 m", src: "NOAA《Tides and Water Levels》;NASA Moon / Sun Fact Sheet" },
+    card: { t: "1/d³:大潮与小潮", b: "引力随距离平方减小,引潮力随距离立方减小。所以太阳虽然把地球拉得比月亮用力 179 倍,潮汐却只有月亮的约 0.46 倍。新月和满月时太阳、月亮、地球排成一线,两个鼓包叠加成大潮;上弦、下弦时两者成直角,互相削弱(部分抵消)成小潮。", f: "a潮 ∝ M/d³;太阳 : 月亮 ≈ 0.46 : 1;平衡潮差 月亮 0.54 m、太阳 0.25 m", src: "NOAA《Tides and Water Levels》;NASA Moon / Sun Fact Sheet" },
     init: function (L) { L.st = { th: 0, a: false, b: false, sunOff: false, rng: null }; },
     run: function (L) {
       var st = L.st; st.th = 0; st.done = false; st.E = PH[L.v.ph][1]; st.sunOn = !!L.v.sun; st.rng = rangeOf(st.E, st.sunOn);
@@ -293,16 +293,16 @@
   var T3 = {
     name: "被拉长的一天", d3: true,
     goal: "地球转得比月亮绕得快,鼓包被带到月亮前方,月亮又把它往回拽。拖动时间轴,找到「一年约 400 天」的年代(珊瑚化石里记着它),再看看最远的未来。",
-    note: NOTE + "常数 Q 潮汐演化:按今天月亮每年远离 3.83 cm 标定,地月角动量守恒;远古的细节(大陆位置、海洋共振)会让真实速度有变化。",
+    note: NOTE + "常数 Q 潮汐演化:按今天月亮每年远离 3.83 cm 标定,地月角动量守恒;远古的细节(大陆位置、海洋共振)会让真实速度有变化;越往过去推越不准。",
     ask: "海水和海底摩擦会消耗能量。地球的自转会因此变快还是变慢?",
     predict: { type: "choice", q: "潮汐摩擦让地球的一天……", options: ["越来越长", "越来越短", "一直不变"] },
     controls: [{ id: "ty", label: "时间", min: -10, max: 160, step: 0.5, value: 0, fmt: function (x) { return era(x * 1e8); } }],
     runLabel: "穿越",
     crit: ["找到一年约 400 天的年代(390–420 天)", "预测正确", "一直走到地球被「锁定」"],
     hints: ["鼓包跑在月亮前面,月亮拉住鼓包——这个力对地球的自转是推一把还是拽一下?", "地球转慢了,失去的角动量去了哪?月亮会离近还是离远?", "一天变短意味着一年的天数变多。往过去走几亿年试试?"],
-    summary: "潮汐像刹车一样让地球越转越慢:4 亿年前一年约 400 天,一天约 21.5 小时;月亮拿走角动量,每年远离约 3.8 厘米。真正走到「一天 = 一个月」之前,太阳会先老去。",
+    summary: "潮汐像刹车一样让地球越转越慢:4 亿年前一年约 400 天,一天约 22 小时;月亮拿走角动量,每年远离约 3.8 厘米。真正走到「一天 = 一个月」之前,太阳会先老去。",
     lights: "潮汐",
-    card: { t: "潮汐摩擦与角动量守恒", b: "地球自转比月亮公转快,鼓包被带到月亮前方约 3°。月亮拉住鼓包,对地球形成刹车力矩:一天每世纪变长约 2 毫秒(潮汐部分)。角动量不会消失,它传给了月亮,月亮因此每年远离约 3.8 厘米(激光测月测得)。泥盆纪珊瑚的日纹和年纹显示,当时一年约 400 天。", f: "I⊕·ω + m☾·√(G·M⊕·a) = 常数;今天 da/dt ≈ 3.83 cm/年", src: "Williams & Boggs 2016 激光测月;Wells 1963《Nature》珊瑚生长纹;NASA Moon Fact Sheet" },
+    card: { t: "潮汐摩擦与角动量守恒", b: "地球自转比月亮公转快,鼓包被带到月亮前方约 3°。月亮拉住鼓包,对地球形成刹车力矩:一天每世纪变长约 2.3 毫秒(潮汐部分;扣除其他因素后实测约 1.8 毫秒)。角动量不会消失,它传给了月亮,月亮因此每年远离约 3.8 厘米(激光测月测得)。泥盆纪珊瑚的日纹和年纹显示,当时一年约 400 天。", f: "I⊕·ω + m☾·√(G·M⊕·a) = 常数;今天 da/dt ≈ 3.83 cm/年", src: "Williams & Boggs 2016 激光测月;Wells 1963《Nature》珊瑚生长纹;NASA Moon Fact Sheet" },
     init: function (L) { L.st = { tv: 0, from: 0, to: 0, k: 1, card: false, lock: false, spin: 0, mAng: 0 }; },
     run: function (L) {
       var st = L.st; st.from = st.tv; st.to = Math.min(L.v.ty * 1e8, T_LOCK + 1e8); st.k = 0; st.done = false; L.sfx("whoosh");
@@ -332,8 +332,8 @@
         c.save(); c.fillStyle = "rgba(14,11,40,.8)"; c.strokeStyle = "rgba(167,139,250,.5)"; rr(c, cx0, cy0, cw, 100, 10); c.fill(); c.stroke();
         c.font = "12px system-ui, sans-serif"; c.fillStyle = "#ede9fe";
         c.fillText("年代  " + era(st.tv) + (E.locked ? " · 已锁定" : ""), cx0 + 10, cy0 + 20);
-        c.fillText("一天  " + (E.locked ? (E.monthD.toFixed(1) + " 天(= 一个月)") : E.dayH.toFixed(2) + " 小时"), cx0 + 10, cy0 + 40);
-        c.fillText("一年  " + (E.locked ? (365.25 / E.monthD).toFixed(1) : E.yearDays.toFixed(1)) + " 天", cx0 + 10, cy0 + 60);
+        c.fillText("一天  " + (E.locked ? (E.monthD.toFixed(1) + " 天(= 一个月)") : (8766 / E.yearDays).toFixed(2) + " 小时"), cx0 + 10, cy0 + 40);
+        c.fillText("一年  " + (E.locked ? E.yearDays.toFixed(1) : E.yearDays.toFixed(1)) + " 天", cx0 + 10, cy0 + 60);
         c.fillText("月地距离  " + km(E.a) + " · 月亮每年远离 " + (E.recede * 100).toFixed(2) + " cm", cx0 + 10, cy0 + 80);
         c.restore();
       }
@@ -343,13 +343,13 @@
         if (E.locked) st.lock = true;
         T3.report(L);
       }
-      L.hud.innerHTML = era(st.tv) + " · 一天 <b>" + (E.locked ? E.monthD.toFixed(1) + " 天" : E.dayH.toFixed(2) + " 小时") + "</b> · 一年 <b>" + (E.locked ? (365.25 / E.monthD).toFixed(1) : E.yearDays.toFixed(0)) + " 天</b><br>任务卡 " + (st.card ? "✓" : "○") + " 一年约 400 天";
+      L.hud.innerHTML = era(st.tv) + " · 一天 <b>" + (E.locked ? E.monthD.toFixed(1) + " 天" : (8766 / E.yearDays).toFixed(2) + " 小时") + "</b> · 一年 <b>" + (E.locked ? E.yearDays.toFixed(1) : E.yearDays.toFixed(0)) + " 天</b><br>任务卡 " + (st.card ? "✓" : "○") + " 一年约 400 天";
     },
     report: function (L) {
       var st = L.st, E = P.tideEvo(st.tv), ok = st.card;
-      L.finishRun({ pass: ok, predText: "预测「" + T3.predict.options[L.firstChoice] + "」", resultText: era(st.tv) + ":一天 " + (E.locked ? E.monthD.toFixed(1) + " 天" : E.dayH.toFixed(2) + " 小时") + ",一年 " + (E.locked ? (365.25 / E.monthD).toFixed(1) : E.yearDays.toFixed(1)) + " 天",
+      L.finishRun({ pass: ok, predText: "预测「" + T3.predict.options[L.firstChoice] + "」", resultText: era(st.tv) + ":一天 " + (E.locked ? E.monthD.toFixed(1) + " 天" : (8766 / E.yearDays).toFixed(2) + " 小时") + ",一年 " + (E.locked ? E.yearDays.toFixed(1) : E.yearDays.toFixed(1)) + " 天",
         html: E.locked ? "约 " + era(st.tv) + ",地球的一天拉长到 <b>" + E.monthD.toFixed(1) + " 天</b>,正好等于一个月:地球也被月亮<span class=ok>潮汐锁定</span>,只用一面对着月亮。(真实世界里,太阳约 50 亿年后就会先老去。)"
-          : era(st.tv) + ":一天 <b>" + E.dayH.toFixed(2) + " 小时</b>,一年 <b>" + E.yearDays.toFixed(1) + " 天</b>,月亮在 " + km(E.a) + " 外。" + (st.card ? "<br><span class=ok>✓ 找到了一年约 400 天的年代</span>:泥盆纪珊瑚的生长纹正是这样记录的。" : ""),
+          : era(st.tv) + ":一天 <b>" + (8766 / E.yearDays).toFixed(2) + " 小时</b>,一年 <b>" + E.yearDays.toFixed(1) + " 天</b>,月亮在 " + km(E.a) + " 外。" + (st.card ? "<br><span class=ok>✓ 找到了一年约 400 天的年代</span>:泥盆纪珊瑚的生长纹正是这样记录的。" : ""),
         say: ok ? (st.lock ? "" : "要是一直走下去,一天会长到多长?") : st.tv >= 0 ? "往未来走,一年的天数在变少。要一年 400 天,该往哪个方向走?" : "方向对了。离 400 天还差一点,再调调?" });
     },
     predictGood: function (L) { return L.firstChoice === 0; },
@@ -376,7 +376,7 @@
     hints: ["潮汐 ∝ 1/d³:距离变成一半,潮汐变成几倍?", "月亮自己的引力把它聚在一起,地球的引潮力想把它拉长。哪一个随距离变化更快?", "冰比岩石松,它会在更远还是更近的地方被撕碎?洛希极限在地球半径的 2–5 倍之间找找。"],
     summary: "潮汐随距离三次方暴涨:月亮近一半,潮差 8 倍。近到洛希极限以内,引潮力胜过月亮的自身引力,月亮被撕成碎片、铺成光环——土星环就在土星的洛希极限以内。引力加倍时两边同比变大,极限不变。",
     lights: "潮汐",
-    card: { t: "洛希极限", b: "卫星靠自身引力聚在一起;行星的引潮力想把它拉长。卫星越靠近,引潮力按 1/d³ 迅速增大,到洛希极限(流体卫星约为行星半径的 2.44 倍 × 密度比的立方根)时,卫星被撕碎。地球对月亮的洛希极限约 1.8 万 km,对冰卫星约 2.8 万 km;土星的主环就在它对冰的洛希极限(约 2.2 个土星半径)以内。", f: "d洛希 = 2.44·R行星·(ρ行星/ρ卫星)^(1/3);平衡潮差 ∝ (M/M⊕)(R/d)³·R,与 G 无关", src: "OpenStax《Astronomy 2e》12.5 行星环;NASA Saturn Fact Sheet" },
+    card: { t: "洛希极限", b: "卫星靠自身引力聚在一起;行星的引潮力想把它拉长。卫星越靠近,引潮力按 1/d³ 迅速增大,到洛希极限(流体卫星约为行星半径的 2.44 倍 × 密度比的立方根)时,卫星被撕碎。地球对月亮的洛希极限约 1.8 万 km,对冰卫星约 2.8 万 km;土星的主环大部分都在它对冰的洛希极限(约 2.2 个土星半径)附近及以内。", f: "d洛希 = 2.44·R行星·(ρ行星/ρ卫星)^(1/3);平衡潮差 ∝ (M/M⊕)(R/d)³·R,与 G 无关", src: "OpenStax《Astronomy 2e》12.5 行星环;NASA Saturn Fact Sheet" },
     init: function (L) { L.st = { dv: D_ER, from: D_ER, to: D_ER, k: 1, brk: 0, broke: false, g2broke: false }; },
     run: function (L) {
       var st = L.st; st.from = D_ER; st.to = Math.pow(10, L.v.lg); st.k = 0; st.brk = 0; st.done = false;

@@ -207,7 +207,7 @@
     hints: ["看车头前面和车尾后面的波纹,哪边挤得更密?", "车速 10 m/s 和 50 m/s 时,曲线的「台阶」哪个更高?", "只动「车速」,能让靠近时的音高比原音高出一成吗?"],
     summary: "声源朝你来,波被挤密、音变高;离你而去,波被拉疏、音变低。",
     lights: "多普勒效应、波长",
-    card: { t: "多普勒效应", b: "声源向你运动时,后发出的波离你更近,波长变短、频率变高;远离时相反。救护车车速约 25 m/s 时,音高变化约 7%。", f: "f′ = f · c / (c ∓ v_s)", src: "OpenStax《University Physics Volume 1》17.7 多普勒效应" },
+    card: { t: "多普勒效应", b: "声源向你运动时,后发出的波离你更近,波长变短、频率变高;远离时相反。救护车车速约 25 m/s 时,靠近时音高高约 8%,远离时低约 7%。", f: "f′ = f · c / (c ∓ v_s)", src: "OpenStax《University Physics Volume 1》17.7 多普勒效应" },
     init: function (L) { L.st = {}; streetSetup(L); L.st.t = 0; L.st.mode = "run"; },
     onControl: function (L) { if (L.phase !== "running") { var d = L.st.ducked; streetSetup(L); L.st.ducked = d; } },
     leave: function (L) { (L.st.vo || []).forEach(function (v) { v && v.stop(); }); duck(L, false); },
@@ -254,11 +254,11 @@
       { id: "v", label: "车速", min: 10, max: 60, step: 1, value: 30, unit: " m/s" }
     ],
     runLabel: "开过来",
-    crit: ["让车比声音快(马赫数 ≥ 1)", "预测正确", "做出马赫数 ≥ 2 的锥"],
+    crit: ["让车比声音快(马赫数 > 1)", "预测正确", "做出马赫数 ≥ 2 的锥"],
     hints: ["车头前面的波纹,一圈和下一圈之间的距离在变大还是变小?", "马赫数 0.5 和 1.5 时,车前面还有波纹吗?", "只动「声速」,让它比「车速」小,看看车前方?"],
     summary: "声源比声速还快时,波前在后方叠成锥面,锥扫过你才听到「轰」的一声。",
     lights: "声速、马赫锥与音爆",
-    card: { t: "声速与马赫锥", b: "声速由介质决定:20 °C 空气约 343 m/s,水约 1480 m/s。声源快过声速时,波前在身后叠成锥,速度越快锥越尖。", f: "sin θ = c / v = 1 / M", src: "OpenStax《University Physics Volume 1》17.2 声速、17.7 冲击波" },
+    card: { t: "声速与马赫锥", b: "声速由介质决定:20 °C 空气约 343 m/s,水约 1480 m/s。声源快过声速时,波前在身后叠成锥,速度越快锥越尖。", f: "sin θ = c / v = 1 / M", src: "OpenStax《University Physics Volume 1》17.2 声速、17.8 冲击波" },
     init: function (L) { L.st = {}; streetSetup(L); L.st.best = 0; },
     onControl: function (L, id, v) {
       if (id === "med") L.setControl("c", [343, 1480, 20][v]);
@@ -269,7 +269,7 @@
     frame: function (L, dt) { streetFrame(L, dt, { cone: true, onEnd: function () { S3.report(L); } }); },
     report: function (L) {
       var st = L.st, M = st.v / st.c; st.best = Math.max(st.best || 0, M);
-      var ok = M >= 1;
+      var ok = M > 1;
       L.finishRun({ pass: ok, predText: "选择「" + S3.predict.options[L.firstChoice] + "」", resultText: "车速 " + st.v + " m/s、声速 " + st.c + " m/s,马赫数 " + M.toFixed(2),
         html: "马赫数 <b>" + M.toFixed(2) + "</b>。" + (ok ? "<span class=ok>波纹在车后叠成锥" + (M > 1 ? ",半顶角约 " + Math.round(Math.asin(1 / M) * 180 / Math.PI) + "°" : "") + "。</span>" : "<span class=no>车还没快过声音。</span>"),
         say: ok ? "锥扫过你之前,你听得到车吗?" : "车头前的波纹被挤得更密了。声速再慢下去会怎样?" });

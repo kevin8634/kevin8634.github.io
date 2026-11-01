@@ -160,7 +160,7 @@
           if (st.trail.length === 0 || i % 3 === 0) st.trail.push([b.x, b.y]);
           if (st.ang >= 2 * Math.PI * (st.orbits + 1)) { st.orbits++; L.snd.pulse(pulseHz(gHere(MU, r))); }
           if (r < R) { st.out = "crash"; st.done = true; L.snd.glide(330, 70, 0.9); }
-          else if (r > 5.5 * R) { st.out = "escape"; st.done = true; L.sfx("whoosh"); }
+          else if (r > 5.5 * R) { st.out = (b.vx * b.vx + b.vy * b.vy) / 2 - MU / r >= 0 ? "escape" : "far"; st.done = true; L.sfx("whoosh"); }
           else if (st.orbits >= 3) { st.out = "orbit"; st.done = true; }
           if (L.phase === "running" && (st.out || st.orbits >= 1)) this.report(L);
         }
@@ -175,10 +175,10 @@
     },
     report: function (L) {
       var st = L.st, out = st.orbits >= 1 ? "orbit" : st.out, pv = L.runPred;
-      var txt = out === "orbit" ? "绕地球一整圈!" : out === "crash" ? "落地了(绕了 " + Math.round(st.ang * 180 / Math.PI) + "°)" : "飞离地球了";
+      var txt = out === "orbit" ? "绕地球一整圈!" : out === "crash" ? "落地了(绕了 " + Math.round(st.ang * 180 / Math.PI) + "°)" : out === "far" ? "飞出了画面(很扁的椭圆轨道,几小时后还会回来)" : "飞离地球了";
       L.finishRun({ pass: out === "orbit", predText: "猜要 " + pv.toFixed(1) + " km/s", resultText: "以 " + L.v.v.toFixed(2) + " km/s 开炮:" + txt + (L.v.drag ? "(开了阻力)" : ""),
         html: "你猜要 <b>" + pv.toFixed(1) + " km/s</b>;这一炮 <b>" + L.v.v.toFixed(2) + " km/s</b> → " + (out === "orbit" ? "<span class=ok>" + txt + "</span>" : "<span class=no>" + txt + "</span>"),
-        say: out === "crash" ? "它绕了 " + Math.round(st.ang * 180 / Math.PI) + "° 就落地了。再快一点,落点会跑到哪里去?" : "它飞走了!是不是快过头了?慢一点会怎样?" });
+        say: out === "crash" ? "它绕了 " + Math.round(st.ang * 180 / Math.PI) + "° 就落地了。再快一点,落点会跑到哪里去?" : out === "far" ? "它没逃走,只是绕进了一个很扁的椭圆,飞出了画面。慢一点,就能在画面里看它绕一整圈。" : "它飞走了!是不是快过头了?慢一点会怎样?" });
     },
     predictGood: function (L) { return Math.abs(L.runPred - P.vCirc(MU, R + H2)) <= 0.6; },
     star3: function (L) { return L.attempts <= 3; }
@@ -195,9 +195,9 @@
     runLabel: "松手",
     crit: ["在轨道情形里松手", "预测正确", "也试了「悬停」情形"],
     hints: ["右边画面里,苹果和空间站各自在做什么运动?", "地面房间里的苹果和空间站里的苹果,受的引力差多少?(看右上角的数)", "只把情形换成「悬停的空间站」,苹果相对宇航员还动吗?空间站自己呢?"],
-    summary: "失重不是没有引力,而是你和身边的东西在一起下落。",
-    lights: "失重",
-    card: { t: "失重 = 一起自由下落", b: "约 400 km 高处的引力仍有地面的约 89%。空间站、宇航员和苹果以同样的加速度一起「掉」向地球,彼此之间就没有挤压,看起来像飘着。", f: "g(r) = GM/r²,g(400 km) ≈ 8.7 m/s²", src: "OpenStax《University Physics Volume 1》13.2;NASA ISS 轨道数据" },
+    summary: "完全失重不是没有引力:重力仍在,只是你和身边的东西一起自由下落,彼此没有挤压(视重为 0)。",
+    lights: "完全失重",
+    card: { t: "完全失重 = 一起自由下落", b: "约 400 km 高处的引力仍有地面的约 89%。空间站、宇航员和苹果以同样的加速度一起「掉」向地球,彼此之间就没有挤压,看起来像飘着。", f: "g(r) = GM/r²,g(400 km) ≈ 8.7 m/s²", src: "OpenStax《University Physics Volume 1》13.2;NASA ISS 轨道数据" },
     init: function (L) { L.st = { t: 0, ran: {}, rel: 0, ext: null }; },
     // 切换情形:清空上一次松手的画面状态(保留已试过的情形记录)
     onControl: function (L, id) { if (id === "sc" && L.phase !== "running") L.st = { t: 0, ran: L.st.ran || {}, rel: 0, ext: null }; },
@@ -353,22 +353,22 @@
     goal: "你的飞船在同一轨道上,落后空间站 10°。点火变轨,靠到 30 km 内且相对速度 < 30 m/s 就算会合。燃料 250 m/s。",
     note: "二体模型,冲量式点火(瞬间改变速度);飞船与空间站互不吸引。",
     ask: "空间站就在前面,你想追上它。直接踩油门加速,会更快追上吗?",
-    predict: { type: "choice", q: "想追上前方的空间站,第一步应该……", options: ["向前点火,加速", "向后点火,减速", "什么都不做,等它"] },
+    predict: { type: "choice", q: "想追上前方的空间站,第一步应该……", options: ["加速点火", "减速点火", "什么都不做,等它"] },
     controls: [
       { id: "dv", type: "seg", label: "每次点火", options: ["5 m/s", "10 m/s", "20 m/s"], value: 1, live: true },
       { id: "fast", type: "seg", label: "时间", options: ["慢放", "快进"], value: 1, live: true }
     ],
     runLabel: "开始任务",
     crit: ["与空间站会合", "预测正确", "燃料用量 ≤ 80 m/s"],
-    hints: ["点火以后,飞船的轨道形状变了吗?点火的那个位置变了吗?", "向前点火和向后点火,哪一种让飞船绕一圈用的时间更短?", "只用「向后点火」一次,看飞船回到点火处时,比空间站早到还是晚到?"],
+    hints: ["点火以后,飞船的轨道形状变了吗?点火的那个位置变了吗?", "加速点火和减速点火,哪一种让飞船绕一圈用的时间更短?", "只用「减速点火」一次,看飞船回到点火处时,比空间站早到还是晚到?"],
     summary: "想追上前面的,先减速降低轨道:低轨道绕得更快。",
     lights: "变轨与会合",
-    card: { t: "变轨与会合", b: "向后点火让飞船掉到更低的椭圆轨道,绕一圈更快,于是慢慢追上;回到原高度时再向前点火,把轨道变回圆形,与空间站并肩。", f: "T ∝ a^(3/2):a 变小 → 周期变短", src: "OpenStax《University Physics Volume 1》13.5;NASA 交会对接科普资料" },
+    card: { t: "变轨与会合", b: "减速点火(朝飞行方向喷气)让飞船掉到更低的椭圆轨道,绕一圈更快,于是慢慢追上;回到原高度时再加速点火,把轨道变回圆形,与空间站并肩。", f: "T ∝ a^(3/2):a 变小 → 周期变短", src: "OpenStax《University Physics Volume 1》13.5;NASA 交会对接科普资料" },
     extra: function (L) {
       var box = NV.el("div", { class: "nv-actions", role: "group", "aria-label": "点火" });
       var fire = function (dir) { return function () { L.lv.burn(L, dir); }; };
-      L.st.bF = NV.el("button", { class: "nv-btn", type: "button", text: "向前点火 ⇢", onclick: fire(1), disabled: true });
-      L.st.bB = NV.el("button", { class: "nv-btn", type: "button", text: "⇠ 向后点火", onclick: fire(-1), disabled: true });
+      L.st.bF = NV.el("button", { class: "nv-btn", type: "button", text: "加速点火 ⇢", onclick: fire(1), disabled: true });
+      L.st.bB = NV.el("button", { class: "nv-btn", type: "button", text: "⇠ 减速点火", onclick: fire(-1), disabled: true });
       box.appendChild(L.st.bB); box.appendChild(L.st.bF); return box;
     },
     init: function (L) { this.setup(L, false); },

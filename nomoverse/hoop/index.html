@@ -132,9 +132,9 @@
     runLabel: "投篮",
     crit: ["投进一球", "画的路线与实际接近(平均差 ≤ 0.35 m)", "3 次以内投进"],
     hints: ["球在哪一刻最高?最高点在篮筐的左边还是右边?", "速度不变、角度从 40° 变成 60°,最高点高了还是低了?落点呢?", "先把角度定在 50° 左右不动,只调「出手速度」?"],
-    summary: "抛出去的球走的是一条抛物线:水平匀速,竖直方向被 g 一直往下拉。",
+    summary: "抛出去的球走的是一条抛物线:水平匀速,竖直方向被重力一直往下拉(加速度 g)。",
     lights: "抛体运动",
-    card: { t: "抛体轨迹是抛物线", b: "不计空气阻力时,水平速度不变,竖直速度每秒减少 g ≈ 9.8 m/s,合起来就是一条抛物线。", f: "y = y₀ + x·tanθ − g·x² / (2v²cos²θ)", src: "OpenStax《University Physics Volume 1》4.3 抛体运动" },
+    card: { t: "抛体轨迹是抛物线", b: "不计空气阻力时,水平速度不变;竖直方向的速度每秒都向下改变约 9.8 m/s(上升时越来越慢,下落时越来越快),合起来就是一条抛物线。", f: "y = y₀ + x·tanθ − g·x² / (2v²cos²θ)", src: "OpenStax《University Physics Volume 1》4.3 抛体运动" },
     init: function (L) { L.st = {}; },
     run: function (L) { L.st.swished = false; startShot(L, G0); },
     frame: function (L, dt) {

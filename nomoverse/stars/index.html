@@ -105,24 +105,24 @@
     tag(L, A.conv, sm ? "对流区" : "对流区 · 热气翻滚", tx + V.R * 0.12, V.cy - V.R * 0.38);
   }
 
-  var NOTE = "简化模型:太阳按今天的亮度 3.828×10²⁶ W 计;数值用于理解规律,不代表恒星演化的精确计算。";
+  var NOTE = "太阳按今天的光度(每秒向外辐射的总能量)3.828×10²⁶ W 计;数值用于理解规律,不代表恒星演化的精确计算。";
 
   /* ================= 第 1 关 烧煤的太阳 ================= */
   var FUELS = [["coal", "化学燃烧(煤)"], ["gravity", "引力收缩"], ["fusion", "核聚变"]];
   var LIFE = FUELS.map(function (f) { return P.sunFuelYears(f[0]); });
   var S1 = {
     name: "烧煤的太阳", d3: true,
-    goal: "给太阳换一种「燃料」,让它以今天的亮度一直亮到地球诞生至今(45.4 亿年)。",
+    goal: "给太阳换一种「燃料」,让它以今天的光度一直亮到地球诞生至今(45.4 亿年)。",
     note: NOTE + "煤按热值 29.3 MJ/kg;引力收缩按 GM²/R;核聚变按烧掉 10% 质量的氢、每次少掉 0.712% 质量。",
     ask: "要是整个太阳都是一大块煤,它能烧多久?",
     predict: { type: "choice", q: "哪种燃料能让太阳亮过地球的年龄(45.4 亿年)?", options: ["化学燃烧(煤)", "引力收缩", "核聚变"] },
     controls: [{ id: "fuel", type: "seg", label: "太阳的燃料", options: ["煤", "引力收缩", "核聚变"], value: 0 }],
     runLabel: "点燃",
     crit: ["找到能亮过 45.4 亿年的燃料", "预测正确", "三种燃料都试过"],
-    hints: ["煤每千克能放出多少热?太阳每秒要放出多少能量?", "引力收缩能让太阳亮几千万年。地球上的岩石有多老?", "什么反应,能从同样多的物质里放出比燃烧多几百万倍的能量?"],
-    summary: "燃烧只能撑几千年,收缩只能撑几千万年;只有核聚变,能让太阳稳定地亮上百亿年。",
+    hints: ["煤每千克能放出多少热?太阳每秒要放出多少能量?", "引力收缩能让太阳亮几千万年。地球上的岩石有多老?", "什么反应,能从同样多的物质里放出比燃烧多上千万倍的能量?"],
+    summary: "燃烧只能撑几千年,收缩只能撑几千万年;只有核聚变,能让太阳稳定地亮约一百亿年。(太阳并不是在「燃烧」:燃烧是化学反应,太阳靠的是原子核的聚变。)",
     lights: "能量守恒",
-    card: { t: "太阳的能量从哪来", b: "19 世纪的物理学家算过:就算太阳是一整块煤,也只能烧几千年;靠引力收缩也只够几千万年,比岩石记录的地球年龄短得多。答案是核聚变——把氢聚成氦,放出的能量是燃烧的上百万倍。", f: "t = E / L;E煤 = M·29.3 MJ/kg,E收缩 ≈ GM²/R,E聚变 ≈ 0.1 × 0.712% × Mc²", src: "NASA Sun Fact Sheet;OpenStax《Astronomy 2e》16.1 太阳能量的来源" },
+    card: { t: "太阳的能量从哪来", b: "19 世纪的物理学家算过:就算太阳是一整块煤,也只能烧几千年;靠引力收缩也只够几千万年(估算从 1,000 万到 1 亿年不等,这里按 GM²/R)。地质学家当时就觉得不够;后来放射性测年测出地球约 45 亿岁。答案是核聚变——把氢聚成氦,同样质量放出的能量约是燃烧的两千万倍。", f: "t = E / L;E煤 = M·29.3 MJ/kg,E收缩 ≈ GM²/R,E聚变 ≈ 0.1 × 0.712% × Mc²", src: "NASA Sun Fact Sheet;OpenStax《Astronomy 2e》16.1 太阳能量的来源" },
     init: function (L) { L.st = { tried: {} }; },
     run: function (L) { var st = L.st; st.f = L.v.fuel; st.t = 0; st.done = false; st.tried[st.f] = true; L.sfx("whoosh"); },
     frame: function (L, dt) {
@@ -154,7 +154,7 @@
       var st = L.st, ok = LIFE[st.f] > P.AGE_EARTH;
       L.finishRun({ pass: ok, predText: "预测「" + S1.predict.options[L.firstChoice] + "」", resultText: FUELS[st.f][1] + ":太阳能亮 " + yrs(LIFE[st.f]),
         html: FUELS[st.f][1] + ":太阳能亮 <b>" + yrs(LIFE[st.f]) + "</b>," + (ok ? "<span class=ok>比地球年龄还长</span>。" : "<span class=no>远远撑不到 45.4 亿年</span>。"),
-        say: st.f === 0 ? "几千年就烧完了。那古埃及人看到的太阳,和今天一样亮吗?还有什么办法放出更多能量?" : st.f === 1 ? "几千万年,还是比恐龙出现得更晚就熄了。有没有比收缩更「猛」的能源?" : "" });
+        say: st.f === 0 ? "几千年就烧完了。那古埃及人看到的太阳,和今天一样亮吗?还有什么办法放出更多能量?" : st.f === 1 ? "只有约 3,000 万年——要是这样,太阳早在恐龙出现之前很久就熄灭了。有没有比收缩更「猛」的能源?" : "" });
     },
     predictGood: function (L) { return L.firstChoice === 2; },
     star3: function (L) { return Object.keys(L.st.tried).length >= 3; }
@@ -164,17 +164,17 @@
   var M_TRUE = P.massToLight();
   var S2 = {
     name: "少了一点点质量", d3: true,
-    goal: "4 个氢核聚成 1 个氦核,会少掉一点点质量,变成光。调节「每秒变成光的质量」,让太阳的输出功率对上实测的 3.828×10²⁶ W。",
+    goal: "4 个氢原子核聚成 1 个氦核,总质量会少一点点(质量亏损),对应的能量 Δmc² 以光和热放出。调节「每秒亏损的质量」,让太阳的光度对上 3.828×10²⁶ W(IAU 标称值)。",
     note: NOTE + "原子质量:¹H 1.00782503 u,⁴He 4.00260325 u;忽略中微子带走的约 2% 能量。",
-    ask: "4 个氢核加起来,和聚成的 1 个氦核,哪边更重?",
-    predict: { type: "choice", q: "太阳每秒钟「消失」变成光的质量,大约是……", options: ["约 4 吨", "约 400 万吨", "约 4 万亿亿吨"] },
-    controls: [{ id: "lg", label: "每秒变成光的质量", min: 3, max: 12, step: 0.01, value: 6, fmt: function (x) { return tons(Math.pow(10, x)) + " / 秒"; } }],
+    ask: "4 个氢原子核加起来,和聚成的 1 个氦核,哪边更重?",
+    predict: { type: "choice", q: "太阳每秒钟亏损的质量(对应放出的能量),大约是……", options: ["约 4 吨", "约 400 万吨", "约 4 万亿亿吨"] },
+    controls: [{ id: "lg", label: "每秒亏损的质量", min: 3, max: 12, step: 0.01, value: 6, fmt: function (x) { return tons(Math.pow(10, x)) + " / 秒"; } }],
     runLabel: "称一称",
     crit: ["功率误差 < 10%", "预测正确", "误差 < 3%"],
     hints: ["E = mc²:c 是光速,约 3×10⁸ m/s。1 千克质量能变出多少焦耳?", "3.828×10²⁶ W 就是每秒 3.828×10²⁶ J。除以 c² 是多少千克?", "答案在几百万吨这一档。慢慢拖滑杆,看误差变小?"],
-    summary: "太阳每秒把约 426 万吨质量变成光,对应约 6 亿吨氢聚成氦;E = mc² 让一点点质量变成巨大的能量。",
+    summary: "太阳每秒约有 6 亿吨氢聚成氦,质量亏损约 426 万吨;按 E = mc²,这一点点亏损的质量对应着巨大的能量。",
     lights: "原子核",
-    card: { t: "E = mc²:质量亏损", b: "4 个 ¹H 原子共 4.0313 u,1 个 ⁴He 原子只有 4.0026 u,少了约 0.712%。少掉的质量按 E = mc² 变成能量。太阳每秒少掉约 426 万吨,却已经这样亮了 46 亿年,只用掉了自身质量的万分之几。", f: "L = Δm·c²/Δt ⇒ Δm/Δt = L/c² ≈ 4.26×10⁹ kg/s", src: "OpenStax《University Physics Volume 3》10.3 结合能;IAU 2015 B3 太阳标称值" },
+    card: { t: "E = mc²:质量亏损", b: "4 个 ¹H 原子共 4.0313 u,1 个 ⁴He 原子只有 4.0026 u,少了约 0.712%。少掉的质量按 E = mc² 变成能量。太阳每秒少掉约 426 万吨,却已经这样亮了 46 亿年,只用掉了自身质量的万分之几。", f: "L = Δm·c²/Δt ⇒ Δm/Δt = L/c² ≈ 4.26×10⁹ kg/s", src: "OpenStax《University Physics Volume 3》10.2 结合能、10.6 核聚变;IAU 2015 B3 太阳标称值" },
     init: function (L) { L.st = {}; },
     run: function (L) { L.st.t = 0; L.st.done = false; L.st.m = Math.pow(10, L.v.lg); L.sfx("whoosh"); },
     frame: function (L, dt) {
@@ -200,7 +200,7 @@
       pan(bw / 2, "1 个 ⁴He", "4.0026 u", ["#f87171", "#60a5fa", "#f87171", "#60a5fa"], "#bfdbfe");
       c.restore();
       c.save(); c.font = "12px system-ui, sans-serif"; c.textAlign = "center"; c.fillStyle = "#fde68a";
-      c.fillText("少了 0.712% → 变成光", bx, by + 80); c.restore();
+      c.fillText("少了 0.712% → 放出 Δmc²", bx, by + 80); c.restore();
       /* 功率表:你的 vs 太阳实测(对数) */
       var gx = 20, gy = L.w > 640 ? L.h - 64 : 64, gw = Math.min(260, L.w - 40);
       c.save(); c.font = "11px system-ui, sans-serif";
@@ -228,9 +228,9 @@
 
   /* ================= 第 3 关 压不扁的火球 ================= */
   var S3 = {
-    name: "压不扁的火球", d3: true,
+    name: "压不扁的太阳", d3: true,
     goal: "引力想把太阳压扁,压力想把它撑开。突然让核心变热一点,看太阳会不会失控;再关掉核聚变试试。",
-    note: NOTE + "准静态维里平衡模型:核心温度 ∝ 1/半径,聚变产能 ∝ 温度⁴,太阳的真实反应时间以百万年计,这里大大加快。",
+    note: NOTE + "准静态维里平衡模型:核心温度 ∝ 1/半径,聚变产能 ∝ 温度⁴,太阳的真实调整时间以千万年计,这里大大加快。",
     ask: "引力一直往里压,太阳为什么没被压扁?",
     predict: { type: "choice", q: "核心突然热了 20%,太阳会……", options: ["先胀大,再自己变回原样", "一直胀大,直到炸开", "缩小、变暗"] },
     controls: [
@@ -242,7 +242,7 @@
     hints: ["核心更热,压力变大还是变小?太阳会往哪边动?", "太阳胀大以后,核心会变热还是变冷?核聚变会变快还是变慢?", "关掉核聚变以后,太阳只能靠什么发光?它会怎样?"],
     summary: "引力与压力互相牵制:核心太热就胀大降温,太冷就收缩升温。核聚变像一个恒温器,让太阳稳定地亮几十亿年。",
     lights: "恒星",
-    card: { t: "流体静力平衡与恒星恒温器", b: "恒星每一层都受向内的引力和向外的压力。如果核心变热、聚变加快,恒星会膨胀,核心随之降温、聚变又慢下来;反过来也一样。所以恒星能长期稳定。没有聚变,恒星只能边收缩边发光,越缩越热。", f: "dP/dr = −G·M(r)·ρ / r²;聚变产能 ε ∝ T⁴(质子–质子链)", src: "OpenStax《Astronomy 2e》16.2–16.3 太阳内部" },
+    card: { t: "流体静力平衡与恒星恒温器", b: "恒星每一层都受向内的引力和向外的压力。如果核心变热、聚变加快,恒星会膨胀,核心随之降温、聚变又慢下来;反过来也一样。所以恒星能长期稳定。没有聚变,恒星只能边收缩边发光,越缩越热。", f: "dP/dr = −G·M(r)·ρ / r²;聚变产能 ε ∝ T⁴(质子–质子链)", src: "OpenStax《Astronomy 2e》16.3 太阳内部" },
     init: function (L) { L.st = { x: 1, hist: [], triedOff: false }; },
     run: function (L) {
       var st = L.st; st.f = !!L.v.fusion; st.k = L.v.kick / 100; st.x = st.f ? 1 / (1 + st.k) : 1; st.t = 0; st.hist = []; st.done = false;
@@ -261,7 +261,7 @@
       var xv = Math.max(0.3, Math.min(1.35, st.x + wob)), Tc = P.TCORE_SUN / st.x;
       var V = view(L, xv, { fy: 0.45 });
       var fusing = L.phase === "running" ? st.f : !!L.v.fusion;
-      stage(L, V, { T: 5772 * Math.pow(1 / st.x, 0.25), dim: fusing ? 1 : 0.85, cut: true, core: fusing ? Math.min(1.5, Math.pow(1 / st.x, 4)) : 0.35, photons: true, flash: fusing ? 0.5 : 0, arrows: 1, scale: xv });
+      stage(L, V, { T: 5772 * Math.pow(1 / st.x, 0.5), dim: fusing ? 1 : 0.85, cut: true, core: fusing ? Math.min(1.5, Math.pow(1 / st.x, 4)) : 0.35, photons: true, flash: fusing ? 0.5 : 0, arrows: 1, scale: xv });
       /* 力的箭头:紫=引力向内,橙=压力向外(2D 叠加,随不平衡程度变长) */
       var imb = st.f ? (Math.pow(1 / st.x, 4) - 1) : -1, k = Math.max(-1, Math.min(1, imb));
       for (var a = 0; a < 12; a++) {
@@ -307,7 +307,7 @@
     runLabel: "点亮",
     crit: ["两张任务卡都完成", "预测正确", "在「引力 ×2」宇宙里也点亮过一颗星"],
     hints: ["光度 L ∝ M³·⁵:质量翻倍,光度变成几倍?", "寿命 ≈ 燃料 / 消耗速度 ∝ M / L。质量变成 10 倍,寿命变成几分之一?", "任务卡 ① 要寿命 ≥ 40 亿年,质量要比太阳略大还是略小?"],
-    summary: "越重的恒星引力越强、核心越热,燃烧得飞快:更亮、更蓝,却更短命。太阳这样的黄矮星,才给了地球足够长的时间。",
+    summary: "越重的恒星引力越强、核心越热,核聚变进行得飞快:更亮、更蓝,却更短命。太阳这样的黄矮星,才给了地球足够长的时间。",
     lights: "可见光谱",
     card: { t: "质量决定恒星的一生", b: "主序星的光度大约与质量的 3.5 次方成正比:10 倍质量的恒星亮约 3,000 倍,寿命却只有太阳的约 1/300。越热的恒星发出的光越偏蓝,维恩定律给出峰值波长 λ = b/T(太阳约 502 nm)。", f: "L ∝ M³·⁵,t ∝ M⁻²·⁵,λmax = 2.898×10⁻³ m·K / T", src: "OpenStax《Astronomy 2e》18.2 质量–光度关系、5.2 黑体辐射" },
     init: function (L) { L.st = { a: false, b: false, g2: false, last: null }; },
@@ -330,7 +330,7 @@
       c.font = "12px system-ui, sans-serif"; c.fillStyle = "#ede9fe";
       var col = bbRGB(s.T);
       c.fillText("表面温度 " + Math.round(s.T).toLocaleString("zh-CN") + " K · " + colorName(s.T), cx0 + 10, cy0 + 20);
-      c.fillText("亮度 " + (s.L < 0.01 ? s.L.toExponential(1) : s.L < 100 ? s.L.toFixed(2) : Math.round(s.L).toLocaleString("zh-CN")) + " 倍太阳", cx0 + 10, cy0 + 40);
+      c.fillText("光度 " + (s.L < 0.01 ? s.L.toExponential(1) : s.L < 100 ? s.L.toFixed(2) : Math.round(s.L).toLocaleString("zh-CN")) + " 倍太阳", cx0 + 10, cy0 + 40);
       c.fillText("寿命 约 " + yrs(s.life), cx0 + 10, cy0 + 60);
       var sx = cx0 + 10, sw = cw - 20, sy = cy0 + 74;
       var gr = c.createLinearGradient(sx, 0, sx + sw, 0);
