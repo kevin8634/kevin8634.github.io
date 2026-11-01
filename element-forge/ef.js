@@ -34,7 +34,7 @@ if (EF.glTier !== 'low' && (!EF.gl2 || /[?&]three=169/.test(location.search))) {
 EF.three = EF.three || '186';
 EF.dpr = function () { var d = window.devicePixelRatio || 1; return Math.min(d, EF.mobile ? 1.5 : (EF.glTier === 'high' ? 2 : 1.5)); };
 /* v0.3.1:工坊七匠 3D 形象(低档不加载,继续用 2D 版) */
-if (EF.glTier !== 'low') addEventListener('DOMContentLoaded', function () { var g = document.createElement('script'); g.type = 'module'; g.src = BASE + 'ef-guide3d.js?v=1'; document.body.appendChild(g); });
+if (EF.glTier !== 'low') addEventListener('DOMContentLoaded', function () { var g = document.createElement('script'); g.type = 'module'; g.src = BASE + 'ef-guide3d.js?v=2'; document.body.appendChild(g); });
 
 /* ---------- 元素与来源(主要来源,简化示意;许多元素有多个来源) ---------- */
 EF.ORIGIN = {
@@ -126,37 +126,19 @@ EF.litSet = function () {
 
 /* ---------- 向导形象(程序绘制) ---------- */
 EF.drawGuide = function (cv, id, t, talk) {
-  if (EF.g3 && EF.g3(cv, id, t || 0, talk || 0)) return;   /* v0.3.1:有 WebGL 时用 3D 形象 */
-  var x = cv.getContext('2d'), W = cv.width, H = cv.height, cx = W / 2, cy = H / 2, R = Math.min(W, H) * 0.3;
-  x.clearRect(0, 0, W, H); t = t || 0; talk = talk || 0;
-  var g0 = x.createRadialGradient(cx, cy, 0, cx, cy, R * 2.2); var c = EF.GUIDES[id].c;
-  g0.addColorStop(0, c + '55'); g0.addColorStop(1, c + '00'); x.fillStyle = g0; x.fillRect(0, 0, W, H);
-  var bob = Math.sin(t / 500) * R * 0.06; cy += bob;
-  function eyes(dy, col) {
-    var blink = (Math.floor(t / 2800) % 7 === 0 && (t % 2800) < 140) ? 0.15 : 1;
-    x.fillStyle = col || '#1a1206';
-    [-1, 1].forEach(function (s) { x.beginPath(); x.ellipse(cx + s * R * 0.32, cy + (dy || -R * 0.05), R * 0.1, R * 0.13 * blink, 0, 0, 7); x.fill(); });
-    x.strokeStyle = col || '#1a1206'; x.lineWidth = Math.max(1.5, R * 0.05); x.beginPath();
-    x.arc(cx, cy + R * 0.22, R * (0.14 + talk * 0.06), 0.15 * Math.PI, 0.85 * Math.PI); x.stroke();
-  }
-  if (id === 'oga') {
-    for (var i = 0; i < 3; i++) { x.strokeStyle = 'rgba(255,190,110,.45)'; x.lineWidth = 1.5; x.beginPath(); x.ellipse(cx, cy, R * 1.5, R * 0.5, t / (900 + i * 400) + i * 1.05, 0, 7); x.stroke(); }
-    var g = x.createRadialGradient(cx - R * 0.3, cy - R * 0.3, R * 0.1, cx, cy, R);
-    g.addColorStop(0, '#fff4d6'); g.addColorStop(0.5, '#ffb35c'); g.addColorStop(1, '#c4521a');
-    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, R, 0, 7); x.fill(); eyes();
-  } else if (id === 'bucky') {
-    var g2 = x.createRadialGradient(cx - R * 0.3, cy - R * 0.3, R * 0.1, cx, cy, R);
-    g2.addColorStop(0, '#fffaf0'); g2.addColorStop(1, '#e0b867'); x.fillStyle = g2; x.beginPath(); x.arc(cx, cy, R, 0, 7); x.fill();
-    x.save(); x.beginPath(); x.arc(cx, cy, R, 0, 7); x.clip(); x.fillStyle = '#3a2a14';
-    var rot = t / 3000;
-    for (var k = 0; k < 6; k++) { var a = rot + k * 1.047, px = cx + Math.cos(a) * R * 0.78, py = cy + Math.sin(a) * R * 0.62; poly(px, py, R * 0.2, 5, a); }
-    x.restore(); eyes(-R * 0.08, '#2a1a08');
-  } else {
-    var g3 = x.createRadialGradient(cx - R * 0.3, cy - R * 0.3, R * 0.1, cx, cy, R);
-    g3.addColorStop(0, '#ffffff'); g3.addColorStop(1, c); x.fillStyle = g3; x.beginPath(); x.arc(cx, cy, R, 0, 7); x.fill(); eyes();
-  }
-  function poly(px, py, r, n, a) { x.beginPath(); for (var j = 0; j < n; j++) { var b = a + j * 2 * Math.PI / n; x[j ? 'lineTo' : 'moveTo'](px + Math.cos(b) * r, py + Math.sin(b) * r); } x.closePath(); x.fill(); }
+  if (EF.g3 && EF.g3(cv, id, t || 0, talk || 0)) return;   /* v2.2:有 WebGL 时实时写实 3D(ef-guide3d.js) */
+  /* 低档 / 无 WebGL:同一模型预渲染的静态图 img/guides/<id>.webp,加悬浮与底部元素色光 */
+  var x = cv.getContext('2d'), W = cv.width, H = cv.height; t = t || 0; talk = talk || 0;
+  var G = EF.GUIDES[id] || EF.GUIDES.oga, c = G.c, im = EF._gImg[id];
+  if (!im) { im = EF._gImg[id] = new Image(); im.src = BASE + 'img/guides/' + id + '.webp'; }
+  x.clearRect(0, 0, W, H);
+  var bob = EF.reduced ? 0 : Math.sin(t / 620) * H * 0.018;
+  x.save(); x.translate(0, H * 0.93); x.scale(1, 0.28); var g0 = x.createRadialGradient(W / 2, 0, 0, W / 2, 0, W * 0.42);
+  g0.addColorStop(0, c + (talk > 0.3 ? '88' : '55')); g0.addColorStop(1, c + '00'); x.fillStyle = g0; x.fillRect(0, -H, W, H * 2); x.restore();
+  if (im.complete && im.naturalWidth) x.drawImage(im, 0, bob, W, H);
+  if (talk > 0.3) { var g1 = x.createRadialGradient(W / 2, H / 2 + bob, 0, W / 2, H / 2 + bob, W * 0.12); g1.addColorStop(0, c + '66'); g1.addColorStop(1, c + '00'); x.fillStyle = g1; x.fillRect(0, 0, W, H); }
 };
+EF._gImg = {};
 
 /* ---------- 声音:默认关闭,手势后才创建 AudioContext ---------- */
 var SND = EF.snd = { on: EF.get('_sound', 0) === 1, ctx: null, buf: {}, last: {}, music: null, mG: null, sG: null };
@@ -301,7 +283,7 @@ EF.mission = function (id, LEVELS, NOTES) {
       if (st.done) return; st.done = true; var L = LEVELS[cur];
       var s = 1 + (st.guessed ? 1 : 0) + (st.hints <= 1 ? 1 : 0);
       if (P.done.indexOf(cur) < 0) P.done.push(cur); P.stars[cur] = Math.max(P.stars[cur] || 0, s); EF.set(id, P);
-      EF.play('unlock'); dots(); if (EF.onComplete) EF.onComplete(cur);
+      EF.play('unlock'); dots(); if (EF.guidePulse) EF.guidePulse(M.g); if (EF.onComplete) EF.onComplete(cur);
       var last = cur === LEVELS.length - 1, ov = document.getElementById('over');
       ov.innerHTML = '<div class="m-card"><div class="m-stars">' + '★'.repeat(s) + '<span>' + '☆'.repeat(3 - s) + '</span></div>' +
         '<p class="m-explain">' + L.explain + '</p><div class="m-row">' +
