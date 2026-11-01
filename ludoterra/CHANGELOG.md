@@ -1,5 +1,9 @@
 # 觉弈 Ludoterra · CHANGELOG
 
+## v0.34 · 2026-11-01 · R4 星桥 lt.sleep ⇄ ls.rhythm(觉弈侧预留)
+- BRIDGES 新增 lt.sleep ⇄ ls.rhythm,对端「生命源码 · 季节与生物节律」未上线,标「即将开通」不带链接;睡眠负债关第 ④ 步加星桥预告。对端上线后只需把 href 改为对端路径。
+- 任务 id、进度键不变。SW 缓存 lt-v0.34。
+
 ## v0.33 · 2026-11-01 · 星桥补齐 + 新三关配乐 07–09
 - 星桥:新增 lt.prisoner ⇄ ma.nim(/math-atlas/nim/「先拿的人一定赢吗」)与 lt.cocoon ⇄ ps.truth(/pre-singularity/truth/「这段话是 AI 写的吗」);首页域面板所有带 href 的星桥均可点击(原仅终章);囚徒困境、信息茧房关内加星桥说明;复利、人性善恶、幸存者偏差关「星桥(即将开通)」改为「星桥」。
 - 配乐:07 欠下的夜(sleep,2:14)、08 九十秒的浪(wave,2:03)、09 敲出来的歌(echo,1:52),首页播放器 10 首,三关顶栏「♪ 本关」自动切曲;作曲原创,音色 VSCO 2 CE(CC0),响度约 -16 LUFS。LICENSES 台账同步。
