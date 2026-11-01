@@ -73,6 +73,8 @@ R('s67','碳酸钠与氯化钙',[[1,'Na2CO3'],[1,'CaCl2']],[[1,'CaCO3','s','down
 R('s68','硫酸亚铁与氢氧化钠',[[1,'FeSO4'],[2,'NaOH']],[[1,'Fe(OH)2','s','down'],[1,'Na2SO4','aq','']],'',(None,False,'白色',None),'先生成白色絮状沉淀,迅速变成灰绿色,最后变成红褐色(被空气中的氧气氧化,见「氢氧化亚铁被氧化」)','y','氢氧化钠有强腐蚀性。',S3a,dict(W,c0='#cfe8c0',p='#e8eee0'),[[[1,'Fe^2+'],[2,'OH^-']],[[1,'Fe(OH)2','down']]])
 R('s69','二氧化硫与氢氧化钠(尾气吸收)',[[1,'SO2'],[2,'NaOH']],[[1,'Na2SO3','aq',''],[1,'H2O','l','']],'',(None,False,None,None),'用碱液吸收二氧化硫,防止污染空气','r','二氧化硫有毒。',S5a,None,[[[1,'SO2'],[2,'OH^-']],[[1,'SO3^2-',''],[1,'H2O','']]])
 R('s70','浓硝酸见光分解',[[4,'HNO3']],[[4,'NO2','g','up'],[1,'O2','g','up'],[2,'H2O','l','']],'光照或加热',('无色→黄',False,None,None),'浓硝酸久置变黄,是因为分解出的二氧化氮溶在里面','r','浓硝酸强腐蚀,二氧化氮有毒。',S5b,dict(W,c1='#e8d070'))
-meta=dict(id='ef.react.more',title='元素工坊 · 反应台 v2.3 扩充(批次 A 初中补全 + 批次 B 高中必修补全)',source='据人教版初中《化学》九年级上下册(2024 版)、高中《化学》必修第一/二册(2019 版)知识点自写',license='CC BY 4.0(创世计划自写内容)',retrieved='2026-11-01',ai_generated='方程式、现象、安全说明由 AI 撰写,经 tools/react_check.py 校验,并经独立化学审校与安全专项审校(批次 AB 报告 2026-11-01,高/中/低项已落地);ev=likely 的条目章节待人工对照课本(见 chk)',batch='A+B',eq_note='本站方程式统一用箭头,课本中无机反应写等号')
+import sys,os;sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)));import react_more_C
+rows+=react_more_C.rows(W,LAB,PRO)
+meta=dict(id='ef.react.more',title='元素工坊 · 反应台 v2.3 扩充(批次 A 初中补全 + 批次 B 高中必修补全 + 批次 C 选择性必修1)',source='据人教版初中《化学》九年级上下册(2024 版)、高中《化学》必修第一/二册与选择性必修1《化学反应原理》(2019 版)知识点自写',license='CC BY 4.0(创世计划自写内容)',retrieved='2026-11-01',ai_generated='方程式、现象、安全说明由 AI 撰写,经 tools/react_check.py 校验,并经独立化学审校与安全专项审校(批次 AB 报告 2026-11-01,高/中/低项已落地);ev=likely 的条目章节待人工对照课本(见 chk);批次 C(e01–e40)待第二批独立审校',batch='A+B+C',eq_note='本站方程式统一用箭头,课本中无机反应写等号')
 json.dump(dict(meta=meta,rows=rows),open(''+__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'..','data')+'/ef.react.more.json','w'),ensure_ascii=False,indent=0)
 print(len(rows))

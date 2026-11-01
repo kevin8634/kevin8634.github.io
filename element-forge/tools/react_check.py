@@ -68,4 +68,4 @@ for m in D['mix']:
 n = len(D['rows'])
 print('条目', n, '初中', sum(r['lv'] == 'j' for r in D['rows']), '高中', sum(r['lv'] == 's' for r in D['rows']), '选必', sum(r['lv'] == 'e' for r in D['rows']), '安全', Counter(r['safe'] for r in D['rows']))
 print('问题', len(bad)); [print(' ', *b) for b in bad]
-sys.exit(1 if bad or BASE != 60 or n not in (60, 120, 140) else 0)
+sys.exit(1 if bad or BASE != 60 or n not in (60, 120, 140, 160, 200) else 0)
