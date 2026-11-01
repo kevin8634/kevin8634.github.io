@@ -1069,6 +1069,7 @@
       .x-orb__play:hover, .x-orb__play:focus-visible { color: #fff; border-color: #e9c779; outline: none; }
       @media (max-width: 860px) { .x-orb__play { top: -10px; bottom: auto; font-size: 11px; padding: 5px 10px; letter-spacing: .08em; } }
       /* v2.4.5 版式修正 */
+      .x-gd__deep { margin: 10px 0 0; font-size: 12.5px; line-height: 1.6; color: rgba(234,240,255,.7); } .x-gd__deep a { color: var(--gold); white-space: nowrap; }
       @media (max-width: 860px) and (orientation: portrait) { .acts { flex-wrap: nowrap; gap: 6px; } .acts .btn { padding: 0 10px; font-size: 12.5px; white-space: nowrap; } }
       @media (max-width: 1679px) and (min-width: 861px) { .x-orb__side { display: none; } }
       @media (min-width: 861px) { .x-orb__play { bottom: auto; top: -2px; } }
@@ -1362,7 +1363,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v2.4.7</b></span>
+            <span>创世计划总门户 <b>v2.4.8</b></span>
           </footer>
         </div>
       </div>
@@ -1607,7 +1608,10 @@
         if (/[?&]net\b/.test(location.search)) setTimeout(toggle, 1200);
       })();
       // v0.5 全系列统一年龄段（王磊 10-20 采纳）与六类兴趣
-      var AGES = { ya: ["星芽", "7–11"], huo: ["星火", "12–15"], chen: ["星辰", "16–22"], he: ["星河", "23+"] };
+      var AGES = { ya: ["星芽", "7–11"], huo: ["星火", "12–15"], chen: ["星辰·高中", "16–18"], xi: ["星系·大学", "18–22"], he: ["星河·成人", "23+"], qiong: ["星穹·研究者", "专业"] };
+      // v2.4.8 四层级：星系按星辰、星穹按星河匹配世界；深度内容在深空层
+      var AGE_EQ = { xi: "chen", qiong: "he" };
+      var AGE_DEEP = { chen: "深空层已开放「星辰·高中」推导卡：拖动变量、补全推导链。", xi: "「星系·大学」建模卡正在制作，先从推荐的世界玩起，深空层会陆续开放。", he: "深空层已开放「星河·成人」决策卡：用世界规则拆解生活里的真问题。", qiong: "「星穹·研究者」前沿沙盒在规划中，先潜入深空看看已开放的航线。" };
       var TAGS = [["space", "宇宙"], ["life", "自然与身体"], ["matter", "物质"], ["ai", "机器与智能"], ["math", "数字与规律"], ["society", "人与社会"]];
       function ageTxt(w) {
         if (w.ageTxt) return w.ageTxt;
@@ -3603,6 +3607,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "门户 v2.4.8", d: "2026-11-01", t: "「帮我选一颗星」升级为六档：星芽 7–11 · 星火 12–15 · 星辰·高中 16–18 · 星系·大学 18–22 · 星河·成人 23+ · 星穹·研究者；选高阶层级时会指向深空层的对应内容。" },
         { w: "gn", v: "门户 v2.4.7", d: "2026-11-01", t: "星名避让升级：转动北斗时，星名会主动躲开「联系开发者」卡片、2.0 光门和公告条，星名之间也不再互相叠住；手机竖屏三个按钮并成一行、星球略缩小，给北斗腾出空间。" },
         { w: "gn", v: "门户 v2.4.6", d: "2026-11-01", t: "电脑版页脚新增「发现错误？」（可纠错，也可提新题目），「关于创世计划」写明内容由 AI 审稿、欢迎纠错，学者可署名。" },
         { w: "gn", v: "门户 v2.4.5", d: "2026-11-01", t: "版式修正：电脑上 2.0 光门两侧文字不再压住标题和星名，「▶ 宣传片」移到光门上方；手机上光门缩小、不再挡星名；矮横屏收起曲目选择、星网按钮移到标题旁；元素工坊反应台、分子搭建台进入「新任务」公告。" },
@@ -4634,7 +4639,8 @@
         var t = s.t || [], a = AGES[s.a] ? s.a : "";
         var list = ORDER.map(function (id, i) {
           var w = byId[id], hit = w.tags.filter(function (x) { return t.indexOf(x) > -1; }).length;
-          return { id: id, i: i, hit: hit, sc: hit * 2 + (a && w.age.indexOf(a) > -1 ? 1 : 0) + (w.live ? 0.5 : 0) };
+          var aa = AGE_EQ[a] || a;
+          return { id: id, i: i, hit: hit, sc: hit * 2 + (aa && w.age.indexOf(aa) > -1 ? 1 : 0) + (w.live ? 0.5 : 0) };
         });
         if (t.length) list = list.filter(function (x) { return x.hit > 0; });
         else list = list.filter(function (x) { return byId[x.id].live; });
@@ -4644,14 +4650,14 @@
       function gdShow(s, act) {
         GD.rec = gdPick(s); gdMark();
         var a = AGES[s.a], tn = (s.t || []).map(function (k) { return TAGS.filter(function (x) { return x[0] === k; })[0][1]; });
-        var head = (a ? a[0] + "（" + a[1] + " 岁）" : "") + (tn.length ? (a ? "，" : "") + "好奇" + tn.join("、") : "");
+        var head = (a ? a[0] + (/\d/.test(a[1]) ? "（" + a[1] + " 岁）" : "") : "") + (tn.length ? (a ? "，" : "") + "好奇" + tn.join("、") : "");
         document.getElementById("gdOut").innerHTML = '<span>' + (head ? head + "：" : "") + '推荐你从<b style="color:var(--gold)">' + byId[GD.rec[0]].name + '</b>开始' +
           (GD.rec.length > 1 ? '，再去看看另外 ' + (GD.rec.length - 1) + ' 个。' : '。') + '点一下转到它。</span><div class="x-gd__recs">' +
           GD.rec.map(function (id, k) {
             var w = byId[id];
             return '<button type="button" class="x-gd__rec' + (w.live ? "" : " soon") + '" data-w="' + id + '" style="--accent:' + w.color + '"><img src="world-' + id + '.webp" alt="">' +
               (k + 1) + ' · ' + w.name + ' <small>' + (w.live ? "适合 " + ageTxt(w) : "即将点亮") + '</small></button>';
-          }).join("") + '</div>';
+          }).join("") + '</div>' + (AGE_DEEP[s.a] ? '<p class="x-gd__deep">' + AGE_DEEP[s.a] + ' <a href="deep/">潜入深空 →</a></p>' : '');
         document.getElementById("gdReset").hidden = false;
         if (act) { SND.play("unlock"); gdFocus(GD.rec[0], false); }
         else dkGo(ORDER.indexOf(GD.rec[0]));
