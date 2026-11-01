@@ -1,6 +1,6 @@
 /* 元素工坊 Element Forge · 首页 3D v0.2
    熔炉开场动画 + 尺度镜七档 3D 舞台 + 元素起源周期表 3D 台面。状态由页面内 EF.stage 管理;无 WebGL 时不会加载到这里。 */
-import { THREE, makeGL, P, glowSprite, NOISE, VS_SURF, starMaterial, fresnelMaterial, tier } from './ef-gl.js?v=2';
+import { THREE, makeGL, P, glowSprite, NOISE, VS_SURF, starMaterial, fresnelMaterial, tier } from './ef-gl.js?v=3';
 const EF = window.EF, ST = EF.stage;
 if (ST.mode !== '2d') EF.glReady = 'loading';   /* 模块已到达:取消平面版兜底计时 */
 const rnd = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(20261020);

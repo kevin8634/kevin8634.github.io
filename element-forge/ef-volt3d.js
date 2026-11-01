@@ -2,7 +2,7 @@
    「怎样造一块会发电的电池?」:L0 柠檬电池(3D 水果电池台:柠檬、两片金属、串联导线、电压表、红色 LED)。
    状态与判定由页面里的 EF.BT.lemon 控制器负责(与平面版共用);低档或出错时回落 battery/index.html 平面版。
    减少动态:指针直接到位、柠檬不晃。 */
-import { THREE } from './ef-gl.js?v=2';
+import { THREE } from './ef-gl.js?v=3';
 const EF = window.EF, BT = EF.BT;
 const RM = () => EF.reduced;
 const c3 = h => new THREE.Color(h);

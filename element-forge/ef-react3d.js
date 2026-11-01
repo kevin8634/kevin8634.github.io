@@ -2,7 +2,7 @@
    视觉方向 A「全息反应环」:圆形全息台 + 两圈熔金橙/青绿光环 + 中央烧杯。
    run(rx):烧杯液面颜色渐变(颜色证据)、气泡上升(气体证据)、沉淀絮状下落(沉淀证据)、热浪光晕(放热红 / 吸热蓝)。
    独立渲染器;页面隐藏暂停;减少动态时只切换最终状态;校园版 + 🔴 条目不播特效(由页面传 quiet)。 */
-import { THREE, glowSprite } from './ef-gl.js?v=2';
+import { THREE, glowSprite } from './ef-gl.js?v=3';
 const EF = window.EF;
 
 export async function mountReact(host, opt = {}) {

@@ -6,7 +6,7 @@
    L3 读空气:同一舞台,行星停在凌星中,配合透射光谱与分子卡槽。
    状态与判定全部由页面里的 EF.SP 控制器负责(与平面版共用);低档或出错时回落 spectra/index.html 平面版。
    减少动态:不自转、分子不振动(改为静止的振动姿态 + 光环)、恒星表面不流动。 */
-import { THREE, glowSprite, starMaterial, fresnelMaterial } from './ef-gl.js?v=2';
+import { THREE, glowSprite, starMaterial, fresnelMaterial } from './ef-gl.js?v=3';
 const EF = window.EF, SP = EF.SP;
 const RM = () => EF.reduced;
 

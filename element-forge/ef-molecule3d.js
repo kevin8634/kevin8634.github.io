@@ -2,7 +2,7 @@
    由 molecule/index.html 在中/高档按需 import;低档不加载(2D 球棍 / 结构式 / 电子式功能不减)。
    3D 坐标:由 2D 草图出发做简单力导向(键长弹簧 + 1-3 距离弹簧近似键角 + 非键排斥),只为直观,不代表精确构象【示意】。
    材质:CPK 色 PBR 球 + 黄铜键,studioEnv 环境反射;拖拽旋转、闲置自转(减少动态时不自转)。 */
-import { THREE } from './ef-gl.js?v=2';
+import { THREE } from './ef-gl.js?v=3';
 import { studioEnv, M as PBR } from './ef-pbr.js?v=1';
 const EF = window.EF;
 const COL = { H: '#f2f2ee', C: '#4a4d52', N: '#3b6fe0', O: '#e0322b', S: '#e8c832', F: '#8fe07a', Cl: '#3fbf4a', Br: '#a8402a' };

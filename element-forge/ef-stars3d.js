@@ -1,7 +1,7 @@
 /* 元素工坊 Element Forge · stars 任务玩法 3D 化 ef-stars3d.js v0.3.1
    「你身体里的铁是从哪颗星来的?」四关的动手部分搬进 3D 舞台:拖、点、调规则都在 3D 里发生。
    关卡判定、提示、三星仍由 ef.js 框架负责;低档或这里出错时,stars/index.html 回落 v0.3 平面版。 */
-import { THREE, starMaterial, fresnelMaterial, glowSprite, P } from './ef-gl.js?v=2';
+import { THREE, starMaterial, fresnelMaterial, glowSprite, P } from './ef-gl.js?v=3';
 const EF = window.EF;
 const COL = { H: 0xff8a5c, n: 0x9aa6b8, He: 0xffd27a, C: 0x8a8f99, O: 0x7ad7ff, Ne: 0xff7ad9, Mg: 0xc9e4a0, Si: 0xd9c49a, S: 0xf0e070, Ca: 0xe8e8f0, Fe: 0xc86b3c, Kr: 0x9fd0ff, Ag: 0xd0d6e0, Au: 0xffc640, U: 0x7fdc7f };
 const Z = { H: 1, He: 2, C: 6, O: 8, Ne: 10, Mg: 12, Si: 14, Fe: 26, Kr: 36 };

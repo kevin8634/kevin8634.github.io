@@ -2,7 +2,7 @@
    「为什么紫甘蓝汁会变色?」:L0 厨房调色盘(3D 台面滴汁、排队),L2/L3 微观窗口的花青素分子(可拖转)。
    颜色与 pH 的对应、分子骨架示意都来自页面里的 EF.CAB(2D/3D 共用一份数据)。
    关卡判定、提示、三星由 ef.js 负责;低档或这里出错时回落 cabbage/index.html 里的平面版。 */
-import { THREE } from './ef-gl.js?v=2';
+import { THREE } from './ef-gl.js?v=3';
 const EF = window.EF, CAB = EF.CAB;
 const RM = () => EF.reduced;
 const col3 = ph => { const c = CAB.rgb(ph); return new THREE.Color(c[0] / 255, c[1] / 255, c[2] / 255); };

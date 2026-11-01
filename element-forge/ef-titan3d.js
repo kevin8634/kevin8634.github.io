@@ -2,7 +2,7 @@
    「土卫六为什么是橙色的?」:L0 −179 °C 的世界(3D 四瓶物态台 + 背后的土卫六,可拖动转看)。
    状态与判定由页面里的 EF.TT.temp 控制器负责(与平面版共用);低档或出错时回落 titan/index.html 平面版。
    减少动态:不自转、液面不晃、气体粒子静止。 */
-import { THREE } from './ef-gl.js?v=2';
+import { THREE } from './ef-gl.js?v=3';
 const EF = window.EF, TT = EF.TT, MR = { rnd: TT.rnd };
 const RM = () => EF.reduced;
 
