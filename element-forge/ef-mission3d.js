@@ -1,6 +1,6 @@
 /* 元素工坊 Element Forge · 任务页 3D 舞台背景 v0.11(crystal 霜镜舞台、cabbage 染色台、fireworks 夜空焰色台、battery 电光实验台、rocks 岩石标本台、mars 锈红舞台、titan 橙雾舞台、spectra 光谱舞台)
    每关一个 3D 场景,随关卡切换淡入淡出;关卡玩法仍在前景面板里进行。低档不加载(保留 v0.1 星空背景)。 */
-import { THREE, makeGL, P, glowSprite, starMaterial, fresnelMaterial } from './ef-gl.js?v=2';
+import { THREE, makeGL, P, glowSprite, starMaterial, fresnelMaterial } from './ef-gl.js?v=3';
 const EF = window.EF;
 const rnd = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(303);
 const ease = x => x < 0 ? 0 : x > 1 ? 1 : x * x * (3 - 2 * x);

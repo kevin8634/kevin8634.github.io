@@ -1,0 +1,10 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>七匠测试</title>
+<style>body{background:#0b0c10;color:#ccc;font:14px sans-serif;display:flex;flex-wrap:wrap;gap:8px;padding:12px}figure{margin:0;text-align:center}canvas{width:180px;height:180px;background:#111318}</style>
+<script src="../ef.js"></script>
+<body>
+<script>
+var ids=Object.keys(EF.GUIDES);
+ids.forEach(function(id){var f=document.createElement('figure');f.innerHTML='<canvas width="256" height="256" data-id="'+id+'"></canvas><figcaption>'+EF.GUIDES[id].n+'</figcaption>';document.body.appendChild(f);});
+var talk=/talk/.test(location.search)?1:0;
+(function loop(t){document.querySelectorAll('canvas').forEach(function(c){EF.drawGuide(c,c.dataset.id,t,talk);});requestAnimationFrame(loop);})(0);
+</script>

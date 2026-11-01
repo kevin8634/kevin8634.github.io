@@ -2,7 +2,7 @@
    「为什么钻石和铅笔芯是同一种东西?」四关的动手部分搬进 3D:尺度镜、数键、刮一刮、压机。
    晶格几何沿用 carbon/index.html(金刚石键长 1.545 Å、四面体;石墨层内 1.42 Å、层距 3.35 Å)。
    关卡判定、提示、三星仍由 ef.js 负责;低档或这里出错时回落 v0.3 平面版。 */
-import { THREE } from './ef-gl.js?v=2';
+import { THREE } from './ef-gl.js?v=3';
 const EF = window.EF;
 const ease = x => x < 0 ? 0 : x > 1 ? 1 : x * x * (3 - 2 * x);
 const RM = () => EF.reduced;

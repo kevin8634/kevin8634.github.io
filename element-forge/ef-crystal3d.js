@@ -3,7 +3,7 @@
    几何:NaCl 岩盐结构(面心立方),Na–Cl 间距 2.82 Å,配位数 6;离子半径 Cl⁻(1.81 Å)> Na⁺(1.02 Å)。
    冰为六方冰 Ih,雪花形态随温度/湿度变化只做定性(参照中谷宇吉郎雪晶图)。
    关卡判定、提示、三星由 ef.js 负责;低档或这里出错时回落 crystal/index.html 里的平面版。 */
-import { THREE } from './ef-gl.js?v=2';
+import { THREE } from './ef-gl.js?v=3';
 const EF = window.EF;
 const ease = x => x < 0 ? 0 : x > 1 ? 1 : x * x * (3 - 2 * x);
 const RM = () => EF.reduced;

@@ -1,6 +1,6 @@
 /* 元素工坊 Element Forge · 首页 3D v0.2
    熔炉开场动画 + 尺度镜七档 3D 舞台 + 元素起源周期表 3D 台面。状态由页面内 EF.stage 管理;无 WebGL 时不会加载到这里。 */
-import { THREE, makeGL, P, glowSprite, NOISE, VS_SURF, starMaterial, fresnelMaterial, tier } from './ef-gl.js?v=2';
+import { THREE, makeGL, P, glowSprite, NOISE, VS_SURF, starMaterial, fresnelMaterial, tier } from './ef-gl.js?v=3';
 const EF = window.EF, ST = EF.stage;
 if (ST.mode !== '2d') EF.glReady = 'loading';   /* 模块已到达:取消平面版兜底计时 */
 const rnd = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(20261020);
@@ -165,12 +165,14 @@ function bootStage() {
     s.spin = 0.16; scenes.push(s);
   })();
 
-  scenes.forEach(s => stageScene.add(s.g));
+  scenes.forEach(s => stageScene.add(s.g)); EF._stageGroups = scenes.map(s => s.g);
+  /* v2.2 锻炉星盘:写实实验桌 + 黄铜星盘 + 器皿,与尺度镜同场景 */
+  import('./ef-hud3d.js?v=11').then(m => m.install(gl, stageScene, cam, ST)).catch(e => console.warn('[ef] 锻炉星盘启动失败,保留平面 HUD', e));
 
   /* 拖动旋转当前档 */
   let drag = null, yawV = 0, mx = 0, my = 0;
   const cv = renderer.domElement;
-  cv.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') return; drag = { x: e.clientX }; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointerdown', e => { if (e.pointerType === 'touch' || EF._dialDrag) return; drag = { x: e.clientX }; cv.setPointerCapture(e.pointerId); });
   cv.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width - 0.5; my = (e.clientY - r.top) / r.height - 0.5; if (drag) { yawV = (e.clientX - drag.x) * 0.01; drag.x = e.clientX; } });
   cv.addEventListener('pointerup', () => { drag = null; });
 
@@ -190,6 +192,7 @@ function bootStage() {
     });
     yawV *= 0.9;
     stars.material.opacity = 0.85 - 0.5 * ease(ST.val - 1); stars.rotation.y = t * 0.004;
+    if (EF.hud3d) return;   /* v2.2 锻炉星盘接管相机 */
     cam.position.x = lerp(cam.position.x, mx * 0.5, 0.05); cam.position.y = lerp(cam.position.y, -my * 0.35, 0.05);
     camZ = lerp(camZ, 6 * Math.pow(Math.max(1, 1.0 / cam.aspect), 0.85), 0.1); cam.position.z = camZ + (gl._pull || 0);
     cam.lookAt(0, 0, 0);

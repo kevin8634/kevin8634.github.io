@@ -88,3 +88,38 @@ body.gl3d .pt-scene .pt{display:none}body.gl3d .pt-scene{overflow:visible;perspe
  .drawer.open{transform:none}
 }
 @media (max-height:620px) and (min-width:761px){.gbox{max-width:340px}.bubble{font-size:13px}}
+
+/* ===== v2.2 锻炉星盘 HUD(body.hud3d,仅高/中档;3D 在画布,这里只是文字与可聚焦层) ===== */
+body.hud3d .ruler{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+body.hud3d .scale-cap{bottom:26px}
+body.hud3d .scale-cap b{color:#e9c98f;letter-spacing:.3em;font-size:18px}
+body.hud3d .dive{opacity:.7}
+body.hud3d .hud-top{background:none;border-color:transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+body.hud3d .cn{opacity:.35}
+/* 气体玻璃球:按钮本身透明,球在画布里;图标淡白 */
+body.hud3d .hud-btns{gap:18px;padding:0 10px}
+body.hud3d .hud-btns .ef-icon{background:none;border-color:transparent;box-shadow:none;color:rgba(255,255,255,.7);width:42px;height:42px}
+body.hud3d .hud-btns .ef-icon:focus-visible{outline:2px solid #ffd27a;outline-offset:3px}
+/* 磨砂铭牌文字(玻璃片在画布里) */
+.h3-plate{position:absolute;left:70px;top:84px;width:300px;padding:13px 18px 14px;border-radius:12px;color:#fff;
+  background:linear-gradient(160deg,rgba(255,255,255,.10),rgba(255,255,255,.03));-webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 0 0 1px rgba(255,255,255,.12),0 14px 34px rgba(0,0,0,.45);text-shadow:0 1px 2px rgba(0,0,0,.55)}
+.h3-plate small{display:block;font-size:11px;letter-spacing:.2em;color:#e9c98f}
+.h3-plate b{display:block;font-size:16px;line-height:1.4;margin:4px 0 6px;font-weight:700;color:#fff}
+.h3-plate span{font-size:12px;color:rgba(255,255,255,.78)}.h3-plate span em{font-style:normal;color:#ffc35c;letter-spacing:.1em}.h3-plate i{font-style:normal;color:rgba(255,255,255,.35);letter-spacing:.1em}
+/* 任务卡阵:透明可聚焦层,悬停/聚焦时在卡右侧显示问题 */
+.h3-spiral{position:absolute;left:0;top:0;bottom:0;width:250px;z-index:2}
+.h3-card{position:absolute;left:0;top:0;width:150px;height:100px;border-radius:12px;outline:none}
+.h3-card span{position:absolute;left:158px;top:50%;transform:translateY(-50%);width:max-content;max-width:220px;padding:7px 11px;border-radius:9px;font-size:13px;line-height:1.35;color:#fff;
+  background:rgba(14,14,18,.72);border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s}
+.h3-card:hover span,.h3-card:focus-visible span{opacity:1}
+.h3-card:focus-visible{box-shadow:0 0 0 2px #ffd27a}
+/* 向导:右下,黄铜小匠 + 磨砂对话框 */
+body.hud3d .gbox{top:auto;bottom:34px;right:24px;transform:none;align-items:flex-end;max-width:360px}
+body.hud3d .bubble{max-width:230px;font-size:13px}
+body.hud3d .gbox canvas{width:132px;height:132px;background:none;border:0;box-shadow:none}
+body.hud3d .bubble{background:linear-gradient(160deg,rgba(235,240,245,.2),rgba(235,240,245,.08));border:1px solid rgba(255,255,255,.22);border-radius:14px;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 12px 30px rgba(0,0,0,.45);margin-bottom:40px}
+body.hud3d .bubble::after{border-left-color:rgba(255,255,255,.22)}
+body.pre .h3-spiral,body.pre .h3-plate{opacity:0;pointer-events:none}
+@media (max-width:900px),(max-height:620px){body.hud3d .gbox{bottom:70px;right:8px;left:8px}body.hud3d .gbox canvas{width:84px;height:84px}body.hud3d .bubble{margin-bottom:10px}}
+@media (max-width:600px){.h3-plate{display:none}}

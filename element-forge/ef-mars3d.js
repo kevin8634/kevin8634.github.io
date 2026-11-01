@@ -2,7 +2,7 @@
    「火星为什么是红的?」:L0 红色藏在哪一层?(3D 尺度镜:火星 → 地表 → 尘粒 → 原子,可拖动转看)。
    状态与判定由页面里的 EF.MR.lens 控制器负责(与平面版共用);低档或出错时回落 mars/index.html 平面版。
    减少动态:不自转、不过渡。 */
-import { THREE } from './ef-gl.js?v=2';
+import { THREE } from './ef-gl.js?v=3';
 const EF = window.EF, MR = EF.MR;
 const RM = () => EF.reduced;
 

@@ -2,7 +2,7 @@
    「岩石是怎么"长"出来的?」:L0 岩石三兄弟(3D 标本架:六块程序纹理岩石,可拖动转看、点选后分类)。
    状态与判定由页面里的 EF.RK.sorter 控制器负责(与平面版共用);低档或出错时回落 rocks/index.html 平面版。
    减少动态:岩石不自转。 */
-import { THREE } from './ef-gl.js?v=2';
+import { THREE } from './ef-gl.js?v=3';
 const EF = window.EF, RK = EF.RK;
 const RM = () => EF.reduced;
 

@@ -2,7 +2,7 @@
    「为什么烟花有不同的颜色?」:L0 夜空点单(3D 夜空,七颗颜色星放虚拟烟花)。
    颜色数据来自页面里的 EF.FW;关卡判定、提示、三星由 ef.js 负责;低档或出错时回落 fireworks/index.html 平面版。
    校园版:无白色闪光、粒子更少;减少动态:直接炸开、粒子不飞散。 */
-import { THREE } from './ef-gl.js?v=2';
+import { THREE } from './ef-gl.js?v=3';
 const EF = window.EF, FW = EF.FW;
 const RM = () => EF.reduced;
 const c3 = h => new THREE.Color(h);

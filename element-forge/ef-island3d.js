@@ -3,7 +3,7 @@
    每个核素一根柱:横轴中子数 N,纵深质子数 Z,高度 = 寿命(稳定核最高,短命核沉入「不稳定之海」)。
    稳定岛(Z≈114–126、N≈184)为理论预言,只画成虚光,页面另有文字标注。
    独立渲染器(不走 makeGL),离开页面或换关即释放;页面隐藏暂停;减少动态时静止。 */
-import { THREE } from './ef-gl.js?v=2';
+import { THREE } from './ef-gl.js?v=3';
 const EF = window.EF;
 const NX = 92, ZX = 60, S = 0.1;
 const px = n => (n - NX) * S, pz = z => -(z - ZX) * S;
