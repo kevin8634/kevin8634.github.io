@@ -40,6 +40,34 @@ export async function install(gl, scene, cam, ST) {
   const key = new THREE.SpotLight(0xffe2bf, hi ? 60 : 45, 14, 0.62, 0.7, 1.6); key.position.set(0.4, 4.6, 2.2); key.target.position.set(0, D, -0.2); root.add(key, key.target);
   const fill = new THREE.HemisphereLight(0x2a3040, 0x0a0806, 0.6); root.add(fill);
 
+  /* ---------- 背景:暗色工坊墙(程序纹理)——暖色顶光晕、远处虚化的仪器柜剪影与散景灯 ---------- */
+  const wallTex = (() => {
+    const w = 2048, h = 1024, c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
+    x.fillStyle = '#07070a'; x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 9000; i++) { const g = 10 + rnd() * 14 | 0; x.fillStyle = `rgba(${g + 4},${g + 2},${g},.6)`; x.fillRect(rnd() * w, rnd() * h, 2 + rnd() * 3, 2 + rnd() * 3); }
+    /* 远处仪器柜:几列暗色搁板与瓶罐剪影 */
+    x.save(); x.filter = 'blur(5px)';
+    [[90, 520], [560, 420], [1490, 420], [1960, 520]].forEach(([cx, cw]) => {
+      const l = cx - cw / 2; x.fillStyle = 'rgba(20,16,13,.9)'; x.fillRect(l, 120, cw, 900);
+      for (let r = 0; r < 4; r++) { const y = 260 + r * 190; x.fillStyle = 'rgba(48,36,24,.85)'; x.fillRect(l + 10, y, cw - 20, 10);
+        for (let k = 0; k < 7; k++) { const bw = 22 + rnd() * 34, bh = 50 + rnd() * 90, bx = l + 24 + rnd() * (cw - 70); x.fillStyle = `rgba(${26 + rnd() * 22 | 0},${23 + rnd() * 18 | 0},${20 + rnd() * 14 | 0},.9)`; x.fillRect(bx, y - bh, bw, bh); x.fillRect(bx + bw * 0.3, y - bh - 18, bw * 0.4, 18); } }
+    });
+    x.restore();
+    /* 暖色顶光晕(星盘上方)+ 两侧冷暖余光 */
+    const halo = (cx, cy, r, col, a) => { const g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`); x.fillStyle = g; x.fillRect(0, 0, w, h); };
+    halo(w / 2, h * 0.7, 620, '255,140,50', 0.13); halo(w * 0.15, h * 0.35, 460, '255,170,90', 0.04); halo(w * 0.86, h * 0.38, 460, '110,170,255', 0.04);
+    /* 散景:远处实验灯与试剂反光 */
+    const cols = ['255,190,110', '255,140,70', '120,200,255', '200,120,255', '120,230,170'];
+    for (let i = 0; i < 46; i++) { const cx = rnd() * w, cy = 140 + rnd() * 700, r = 10 + rnd() * 34, cc = cols[rnd() * cols.length | 0]; const g = x.createRadialGradient(cx, cy, 0, cx, cy, r); g.addColorStop(0, `rgba(${cc},${0.06 + rnd() * 0.1})`); g.addColorStop(0.7, `rgba(${cc},${0.03 + rnd() * 0.04})`); g.addColorStop(1, `rgba(${cc},0)`); x.fillStyle = g; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill(); }
+    /* 底部压暗,与台面后沿自然衔接 */
+    const fl = x.createLinearGradient(0, h * 0.55, 0, h); fl.addColorStop(0, 'rgba(0,0,0,0)'); fl.addColorStop(1, 'rgba(0,0,0,.95)'); x.fillStyle = fl; x.fillRect(0, 0, w, h);
+    /* 四周暗角 */
+    const v = x.createRadialGradient(w / 2, h * 0.55, h * 0.3, w / 2, h * 0.55, w * 0.62); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.85)'); x.fillStyle = v; x.fillRect(0, 0, w, h);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  })();
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(44, 22), new THREE.MeshBasicMaterial({ map: wallTex, color: 0x9a9a9a, depthWrite: false, toneMapped: false, fog: false }));
+  wall.position.set(0, D + 6.2, -10.5); wall.renderOrder = -10; root.add(wall);
+
   /* ---------- 黄铜星盘:平放在台面,刻度环 + 外侧厚环 + 玻璃珠 ---------- */
   const R0 = 1.3, R1 = 1.62, H = 0.13;
   const dial = new THREE.Group(); dial.position.set(0, D, 0.35); decor.add(dial);
