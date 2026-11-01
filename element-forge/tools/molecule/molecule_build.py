@@ -1,3 +1,4 @@
+import re
 import csv,json,sys
 from rdkit import Chem, RDLogger
 RDLogger.DisableLog('rdApp.*')
@@ -32,6 +33,9 @@ def key(m):
 from rdkit.Chem.rdMolDescriptors import CalcMolFormula as formula
 BLOCKNAME=['amphetamine','cathinone','hydroxybutanoic','butyrolactone','phenylacetone','phenyl-2-propanone','ephedrine','safrole','piperonal','cyanogen','mustard','sarin','lewisite','phenethylamine','methylenedioxy','nitroglycer','hexogen','lysergic']
 BLOCKSMA=[Chem.MolFromSmarts(s) for s in ['ClCCSCCCl','ClCCNCCCl','ClCCSCC','OO','c1ccccc1CC(C)N','c1ccccc1CC(=O)C','ClC#N','BrC#N']]
+BLOCKNAME+=['safrol','anthranil','phenylacet','ethchlorvynol','ethinamate','propylhexedrine','thiodiglycol','pinacolyl','diisopropylamino','hexamethylenetetramine','pentaerythritol','hydrazin','phosgene','fluoroacet','nitrite','cyanohydrin','benzodioxol']
+BLOCKSMA+=[Chem.MolFromSmarts(s) for s in ['FCC(=O)','ClC(=O)Cl','ClC(=O)OC(Cl)(Cl)Cl','[NX3][NX3]','[O][N]=O','c1cc2OCOc2cc1','ClCC[NX3]','[OH]CC[NX3](CCO)','N#CC(C)(C)O']]
+BLOCKCID={int(x) for x in open('blocklist_cids.txt') if x.strip().isdigit()}
 def blocked(m,name):
     nl=name.lower()
     if any(b in nl for b in BLOCKNAME): return True
@@ -50,7 +54,8 @@ for r in csv.DictReader(open('raw.csv')):
         m=Chem.MolFromSmiles(smi)
         if m is None or m.GetNumHeavyAtoms()<1: continue
         k=key(m)
-        if not k or k in seen or blocked(m,r['Title']+' '+r['IUPACName']): continue
+        if not k or k in seen or int(r['CID']) in BLOCKCID or blocked(m,r['Title']+' '+r['IUPACName']): continue
+        if not re.search('[A-Za-z]{3}',r['Title']) or re.fullmatch(r'[A-Z0-9\-]+',r['Title']): continue
         seen.add(k); auto.append([k,r['Title'][:60],formula(m),int(r['CID'])])
         if len(auto)>=3000: break
     except Exception as e: pass
