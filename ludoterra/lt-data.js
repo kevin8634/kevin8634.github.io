@@ -100,6 +100,7 @@ export const BRIDGES = [
   { from: 'nature', href: '/life-source/parents/', to: '生命源码 · 为什么你长得像爸妈,又不完全像?', id: 'lt.nature ⇄ ls.parents' },
   { from: 'prisoner', href: '/math-atlas/nim/', to: '星图 · 先拿的人一定赢吗?', id: 'lt.prisoner ⇄ ma.nim' },
   { from: 'cocoon', href: '/pre-singularity/truth/', to: '奇点前夜 · 这段话是 AI 写的吗', id: 'lt.cocoon ⇄ ps.truth' },
+  { from: 'sleep', href: null, to: '生命源码 · 季节与生物节律(即将开通)', id: 'lt.sleep ⇄ ls.rhythm' },
   { from: 'meaning', href: '/starhelm/', to: '天枢 · 此刻,你在宇宙的哪里?', id: 'lt.meaning ⇄ sh.where' }
 ];
 
