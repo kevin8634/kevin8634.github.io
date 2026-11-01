@@ -166,11 +166,13 @@ function bootStage() {
   })();
 
   scenes.forEach(s => stageScene.add(s.g));
+  /* v2.2 锻炉星盘:写实实验桌 + 黄铜星盘 + 器皿,与尺度镜同场景 */
+  import('./ef-hud3d.js?v=1').then(m => m.install(gl, stageScene, cam, ST)).catch(e => console.warn('[ef] 锻炉星盘启动失败,保留平面 HUD', e));
 
   /* 拖动旋转当前档 */
   let drag = null, yawV = 0, mx = 0, my = 0;
   const cv = renderer.domElement;
-  cv.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') return; drag = { x: e.clientX }; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointerdown', e => { if (e.pointerType === 'touch' || EF._dialDrag) return; drag = { x: e.clientX }; cv.setPointerCapture(e.pointerId); });
   cv.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(); mx = (e.clientX - r.left) / r.width - 0.5; my = (e.clientY - r.top) / r.height - 0.5; if (drag) { yawV = (e.clientX - drag.x) * 0.01; drag.x = e.clientX; } });
   cv.addEventListener('pointerup', () => { drag = null; });
 
