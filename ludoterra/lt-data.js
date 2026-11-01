@@ -98,7 +98,8 @@ export const BRIDGES = [
   { from: 'compound', href: '/math-atlas/epidemic/', to: '星图 · 传染病为什么会爆发?', id: 'lt.compound ⇄ ma.epidemic' },
   { from: 'survivor', href: '/math-atlas/casino/', to: '星图 · 赌场为什么总是赢?', id: 'lt.survivor ⇄ ma.casino' },
   { from: 'nature', href: '/life-source/parents/', to: '生命源码 · 为什么你长得像爸妈,又不完全像?', id: 'lt.nature ⇄ ls.parents' },
-  { from: 'cocoon', to: '奇点前夜 · AI 会不会骗人', id: 'lt.cocoon ⇄ 奇点前夜' },
+  { from: 'prisoner', href: '/math-atlas/nim/', to: '星图 · 先拿的人一定赢吗?', id: 'lt.prisoner ⇄ ma.nim' },
+  { from: 'cocoon', href: '/pre-singularity/truth/', to: '奇点前夜 · 这段话是 AI 写的吗', id: 'lt.cocoon ⇄ ps.truth' },
   { from: 'meaning', href: '/starhelm/', to: '天枢 · 此刻,你在宇宙的哪里?', id: 'lt.meaning ⇄ sh.where' }
 ];
 
@@ -141,5 +142,11 @@ export const TRACKS = [
   { no: '05', name: '沉默的大多数', file: 'music/05_survivor.m4a', task: 'survivor', dur: '2:00', where: '「成功经验」常常骗人',
     logic: '十个声部一起出发,一个接一个悄悄消失,只剩一个听起来像「唯一正确的路」。尾声里那九个回来了——它们一直都在,只是没人听见。' },
   { no: '06', name: '两座小镇', file: 'music/06_nature.m4a', task: 'nature', dur: '2:00', where: '人性本善还是本恶',
-    logic: '同一段旋律先住进「猜疑镇」,再住进「互助镇」。旋律一个音都没改,改的只是规则(和声)。' }
+    logic: '同一段旋律先住进「猜疑镇」,再住进「互助镇」。旋律一个音都没改,改的只是规则(和声)。' },
+  { no: '07', name: '欠下的夜', file: 'music/07_sleep.m4a', task: 'sleep', dur: '2:14', where: '今晚偷走的睡眠',
+    logic: '八夜,每夜一段摇篮曲。前四夜每晚被剪短一点,剪掉的音没有消失,变成越来越厚、越来越走调的低音;后四夜睡足了,低音才一夜退一层。' },
+  { no: '08', name: '九十秒的浪', file: 'music/08_wave.m4a', task: 'wave', dur: '2:03', where: '生气的时候谁在做决定',
+    logic: '一声刺耳之后,弦乐涨成一道浪,大约九十秒自己退去。钢琴在浪顶一直没开口;浪退了它才回答——还是原来那句旋律,只是更慢、更稳。' },
+  { no: '09', name: '敲出来的歌', file: 'music/09_echo.m4a', task: 'echo', dur: '1:52', where: '你说的话他听到什么',
+    logic: '左边钢琴是「敲的人」脑子里完整的歌,右边只听得见敲击声。每一遍右边多补一样:先补音高,再补和声,最后补强弱,两边才合成同一首。' }
 ];
