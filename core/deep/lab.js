@@ -1,4 +1,5 @@
-/* 创世计划 Genesis · Lab Kit(创世实验室通用实验台)/core/deep/lab.js v0.4
+/* 创世计划 Genesis · Lab Kit(创世实验室通用实验台)/core/deep/lab.js v0.4.1
+ * 0.4.1(2026-11-01):busy 提前声明修 &b= 链接 TDZ;fn 数值 x 区间 selfCheck 按 c.x 取值;新增安全类 virtual(纯虚拟/计算)。
  * 总指挥维护,七世界只引用、只写 JSON 协议,不改本文件。零外部依赖,运行时零外部请求。
  * 复用 core.js:Expr(白名单表达式,无 eval)、ParamPanel、DataSet/Ledger、DataChart、Sim(RK4)、Card。
  * 协议格式见 README「Lab 协议 gn-lab/1」。 */
@@ -7,7 +8,7 @@ import { Expr, ParamPanel, DataSet, DataChart, Ledger, Sim, Card } from "./core.
 export const LAB_SCHEMA = "gn-lab/1";
 const BASE = new URL(".", import.meta.url).href;
 const EVID = { confirmed: ["已证实", "#7fe3a8"], inferred: ["推测", "#ffd27a"], conjecture: ["猜想", "#ff9ab8"] };
-const SAFE = { green: ["🟢 可在家安全做", "#7fe3a8"], yellow: ["🟡 需成人陪同 / 实验室条件", "#ffd27a"], red: ["🔴 危险 · 仅虚拟演示,切勿模仿", "#ff8a8a"] };
+const SAFE = { green: ["🟢 可在家安全做", "#7fe3a8"], yellow: ["🟡 需成人陪同 / 实验室条件", "#ffd27a"], red: ["🔴 危险 · 仅虚拟演示,切勿模仿", "#ff8a8a"], virtual: ["⚪ 纯虚拟 / 计算实验", "#a9b8d8"] };
 const WORLD = /^[a-z]{2}$/;
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmt = (v) => !isFinite(v) ? "—" : Math.abs(v) >= 1e4 || (Math.abs(v) < 1e-2 && v !== 0) ? v.toExponential(2) : String(+v.toFixed(3));
@@ -27,7 +28,7 @@ export function validate(p) {
   if (!WORLD.test(p.world || "") || (p.id && !p.id.startsWith(p.world + "."))) bad.push("world 须为两位世界码且与 id 前缀一致");
   for (const k of ["title", "question"]) if (!p[k]) bad.push(k + " 缺失");
   if (!EVID[p.evidence]) bad.push("evidence 须为 confirmed / inferred / conjecture");
-  if (!SAFE[p.safety]) bad.push("safety 须为 green / yellow / red");
+  if (!SAFE[p.safety]) bad.push("safety 须为 green / yellow / red / virtual");
   if (!Array.isArray(p.params)) bad.push("params 须为数组");
   else for (const q of p.params) { if (!/^[a-zA-Z_]\w*$/.test(q.k || "")) bad.push("参数名不合法:" + q.k); if (!(+q.max > +q.min)) bad.push(`参数 ${q.k} 需 min < max`); }
   const m = p.model || {};
@@ -64,7 +65,9 @@ export async function selfCheck(p) {
   const fn = p.model.type === "fn" ? compileFn(p) : null, def = Object.fromEntries(p.params.map((q) => [q.k, +(q.value ?? q.min)]));
   const res = [];
   for (const c of p.checks || []) {
-    const r = await runModel(p, fn, { ...def, ...(c.params || {}) }, [c.x]);
+    const vals = { ...def, ...(c.params || {}) };
+    /* fn 模型一律按检查点 c.x 单点计算(数值区间与 data 两种 x 都适用) */
+    const r = fn ? fn(vals, [c.x]) : await runModel(p, fn, vals, [c.x]);
     let got; const s = r.ys[c.y || 0];
     if (p.model.type === "fn") got = s.v[0];
     else { let bi = 0; r.xs.forEach((x, i) => { if (Math.abs(x - c.x) < Math.abs(r.xs[bi] - c.x)) bi = i; }); got = s.v[bi]; }
@@ -115,7 +118,7 @@ export const Lab = {
     const hashed = readHash(p.id);
     const def = Object.fromEntries(p.params.map((q) => [q.k, +(q.value ?? q.min)]));
     const A = { ...def, ...(hashed?.a || {}) }, B = { ...A };
-    let vary = p.ab?.vary || p.params[0]?.k, abOn = !!hashed?.b, guess = null, revealed = !p.predict, chart = null, last = null;
+    let vary = p.ab?.vary || p.params[0]?.k, abOn = !!hashed?.b, guess = null, revealed = !p.predict, chart = null, last = null, busy = 0; /* busy 须在 mountB→draw 之前声明(0.4.1 修 TDZ) */
     if (hashed?.b) { const k = Object.keys(hashed.b).find((k) => hashed.b[k] !== A[k]); if (k) { vary = k; B[k] = hashed.b[k]; } }
 
     const root = document.createElement("section"); root.className = "gl"; root.style.setProperty("--gl-c", color);
@@ -124,7 +127,7 @@ export const Lab = {
     root.innerHTML = `
       <header class="gl-h"><div class="gl-t"><b>${esc(p.title)}</b><span class="gl-q">${esc(p.question)}</span></div>
         <div class="gl-tags"><span class="gl-tag" style="--tc:${ec}" title="证据等级">${en}</span><span class="gl-tag" style="--tc:${sc}" title="安全标签">${sn}</span><span class="gl-chk" hidden></span></div>
-        ${p.safety !== "green" && p.safetyNote ? `<p class="gl-safe">${esc(p.safetyNote)}</p>` : ""}</header>
+        ${!["green", "virtual"].includes(p.safety) && p.safetyNote ? `<p class="gl-safe">${esc(p.safetyNote)}</p>` : ""}</header>
       <div class="gl-body">
         <aside class="gl-left">
           <div class="gl-pred" ${p.predict ? "" : "hidden"}><h4>① 先猜一猜</h4><p>${esc(p.predict?.q)}</p><div class="gl-opts" role="radiogroup"></div></div>
@@ -176,7 +179,6 @@ export const Lab = {
     }
 
     /* 绘图(DataChart 复用;模型曲线 + 可选实测数据,同一 x 轴) */
-    let busy = 0;
     async function draw() {
       const tk = ++busy;
       let ra, rb;

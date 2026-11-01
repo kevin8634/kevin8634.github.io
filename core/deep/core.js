@@ -1,7 +1,7 @@
 /* 创世计划 Genesis · 深度组件库 /core/deep/ v0.1(D0-2)
  * 总指挥维护,七世界只引用不改。零外部依赖;KaTeX 本地 vendor(MIT)按需加载。
  * 0.1 = DepthBar / Formula / Card / Depth;0.2 = ParamPanel / ChainDrag / Expr / Sim(worker-sim.js)。DataChart 见 0.3。 */
-export const VERSION = "0.4.0";
+export const VERSION = "0.4.1";
 const BASE = new URL(".", import.meta.url).href;
 const RM = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -253,7 +253,7 @@ export const DataSet = {
     if (!d || !Array.isArray(d.columns) || !Array.isArray(d.rows)) throw new Error("DataSet 需要 columns 与 rows");
     const meta = Ledger.register(d.meta);
     const idx = Object.fromEntries(d.columns.map((c, i) => [c, i]));
-    return { meta, columns: d.columns, rows: d.rows, col: (c) => d.rows.map((r) => +r[idx[c]]) };
+    return { meta, columns: d.columns, rows: d.rows, col: (c) => d.rows.map((r) => { const v = r[idx[c]]; return v == null || v === "" ? NaN : +v; }) }; /* 0.4.1:null/空 = 缺测 NaN,不再当 0 */
   }
 };
 
@@ -272,7 +272,7 @@ export const DataChart = {
   /* el:容器;opts:{data:DataSet, x:"列名", ys:[{col,label?,color?}], type:"line"|"bar"|"scatter", xlabel?, ylabel?, height?, from?, to?, marks?:[{x,label}]} */
   mount(el, opts) {
     css();
-    const o = Object.assign({ type: "line", height: 220 }, opts), D = o.data;
+    const o = Object.assign({ type: "line", height: 220 }, opts); let D = o.data;
     if (!D || !D.meta) throw new Error("DataChart 需要 DataSet(先过数据台账)");
     const box = document.createElement("figure"); box.className = "dc";
     box.style.cssText = "margin:10px 0;position:relative";
@@ -282,15 +282,17 @@ export const DataChart = {
     tip.style.cssText = "position:absolute;pointer-events:none;font:12px/1.4 system-ui,sans-serif;background:rgba(10,14,30,.92);color:#e6ecff;border:1px solid rgba(232,194,122,.4);border-radius:6px;padding:4px 7px;display:none;white-space:nowrap";
     const cap = document.createElement("figcaption"); cap.style.cssText = "font-size:11px;color:#6c7a9c;margin-top:4px;line-height:1.5";
     cap.textContent = Ledger.credit(D.meta.id) + (D.meta.nc ? "(非商业使用)" : "");
-    const tbl = document.createElement("table"); tbl.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)";
-    box.append(cv, tip, cap, tbl); el.appendChild(box);
+    /* 0.4.1:读屏表格放进视觉隐藏容器(table 自身不受 height/overflow 约束,会撑高页面) */
+    const srw = document.createElement("div"); srw.style.cssText = "position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap";
+    const tbl = document.createElement("table"); srw.appendChild(tbl);
+    box.append(cv, tip, cap, srw); el.appendChild(box);
     let X, YS, cur = -1, geo;
     const prep = () => {
       let xs = D.col(o.x), keep = xs.map((v, i) => (o.from == null || v >= o.from) && (o.to == null || v <= o.to) ? i : -1).filter((i) => i >= 0);
       X = keep.map((i) => xs[i]);
       YS = o.ys.map((y, k) => ({ label: y.label || y.col, color: y.color || PAL[k % PAL.length], v: keep.map((i) => D.col(y.col)[i]) }));
       cv.setAttribute("aria-label", `${D.meta.title}:${o.ylabel || ""},${o.xlabel || o.x} ${fmt(X[0])}–${fmt(X[X.length - 1])},` + YS.map((s) => `${s.label} ${fmt(s.v[0])} 到 ${fmt(s.v[s.v.length - 1])}`).join(";"));
-      tbl.innerHTML = `<caption>${D.meta.title}</caption><tr><th>${o.xlabel || o.x}</th>${YS.map((s) => `<th>${s.label}</th>`).join("")}</tr>` + X.map((x, i) => `<tr><td>${x}</td>${YS.map((s) => `<td>${s.v[i]}</td>`).join("")}</tr>`).join("");
+      tbl.innerHTML = `<caption>${D.meta.title}</caption><tr><th>${o.xlabel || o.x}</th>${YS.map((s) => `<th>${s.label}</th>`).join("")}</tr>` + X.map((x, i) => `<tr><td>${x}</td>${YS.map((s) => `<td>${Number.isFinite(s.v[i]) ? s.v[i] : "—"}</td>`).join("")}</tr>`).join("");
     };
     const draw = () => {
       const dpr = Math.min(2, window.devicePixelRatio || 1), W = Math.max(200, box.clientWidth || 360), H = o.height;
@@ -339,7 +341,7 @@ export const DataChart = {
     prep(); draw();
     return {
       el: box, get cursor() { return cur; },
-      update(p) { Object.assign(o, p); prep(); draw(); },
+      update(p) { Object.assign(o, p); if (p && p.data) { if (!p.data.meta) throw new Error("DataChart 需要 DataSet(先过数据台账)"); D = p.data; cap.textContent = Ledger.credit(D.meta.id) + (D.meta.nc ? "(非商业使用)" : ""); } prep(); draw(); }, /* 0.4.1:可替换数据源 */
       destroy() { ro && ro.disconnect(); box.remove(); }
     };
   }
