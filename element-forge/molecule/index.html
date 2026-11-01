@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>随手拼一个分子,世界上真的有吗? · 元素工坊 Element Forge</title>
+<meta name="description" content="元素工坊 2.0 · 分子搭建台:把原子拖上黄铜台,插满化合价插槽就稳定;拼好后和离线分子库(3000 多个 PubChem 小分子)比对,看看世界上是不是真有它。同分异构、键能估算。创世计划 Genesis 化学世界。">
+<meta name="theme-color" content="#070a14">
+<link rel="stylesheet" href="../ef.css?v=14">
+<style>
+body.mission.molecule .m-stage{border-color:rgba(214,170,90,.32);background:rgba(10,9,8,.5)}
+.mb-wrap{position:relative}
+.mb-view{position:relative;height:420px;border-radius:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 38%,#2a2218 0%,#100d0a 55%,#050403 100%)}
+.mb-cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.mb-cv:focus-visible{outline:2px solid #ffb56b;outline-offset:-2px}
+.mb-hud{position:absolute;z-index:2;left:10px;top:10px;max-width:min(380px,80%);background:rgba(12,10,8,.78);border:1px solid rgba(214,170,90,.45);border-radius:10px;padding:6px 12px;font-size:13px;line-height:1.6;pointer-events:none;backdrop-filter:blur(6px)}
+.mb-hud b{color:#ffcf8a;font-size:17px;letter-spacing:.3px}
+.mb-hud .st{font-size:12px;color:#c9c0ae}
+.mb-hud .st.ok{color:#9ff0b4}
+.mb-views{position:absolute;z-index:2;right:10px;top:10px;display:flex;gap:4px}
+.mb-views button{font:inherit;font-size:12px;padding:3px 9px;border-radius:14px;border:1px solid rgba(214,170,90,.45);background:rgba(12,10,8,.7);color:#e9e2d2;cursor:pointer}
+.mb-views button.on{background:rgba(214,170,90,.3);color:#fff}
+.mb-tray{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 4px}
+.mb-tray .lab{font-size:12px;color:#a8a090;margin-right:2px}
+.mb-at{width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.35);font:inherit;font-weight:600;font-size:14px;cursor:pointer;box-shadow:inset -4px -6px 10px rgba(0,0,0,.45),inset 3px 4px 8px rgba(255,255,255,.35)}
+.mb-at:focus-visible{outline:2px solid #ffb56b;outline-offset:2px}
+.mb-at small{display:block;font-size:9px;font-weight:400;opacity:.8;margin-top:-3px}
+.mb-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}
+.mb-row button{font-size:13px}
+.mb-res{margin-top:8px;border:1px solid rgba(214,170,90,.3);border-radius:10px;padding:8px 12px;font-size:13.5px;line-height:1.7;min-height:1em;background:rgba(14,12,10,.6)}
+.mb-res:empty{display:none}
+.mb-res b{color:#ffcf8a}
+.mb-safe{display:inline-block;font-size:11.5px;border-radius:6px;padding:1px 7px;margin:2px 4px 2px 0;line-height:1.6}
+.mb-safe.g{background:rgba(80,200,120,.18);color:#9ff0b4;border:1px solid rgba(80,200,120,.5)}
+.mb-safe.y{background:rgba(255,200,60,.14);color:#ffe08a;border:1px solid rgba(255,200,60,.5)}
+.mb-safe.r{background:rgba(255,70,70,.16);color:#ffb0a8;border:1px solid rgba(255,90,80,.6)}
+.mb-goals{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 2px;font-size:13px}
+.mb-goals span{border:1px dashed rgba(255,255,255,.3);border-radius:8px;padding:3px 9px;color:#9a927f}
+.mb-goals span.got{border-style:solid;border-color:#d6aa5a;color:#ffe0a8;background:rgba(214,170,90,.14)}
+.mb-tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+.mb-tbl th,.mb-tbl td{border-bottom:1px solid rgba(255,255,255,.08);padding:4px 6px;text-align:left}
+.mb-tbl th{color:#c9b98f;font-weight:500}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:860px){.mb-view{height:340px}.mb-at{width:34px;height:34px}}
+</style>
+</head>
+<body class="molecule">
+<div id="app"></div>
+<script src="../ef.js?v=17"></script>
+<script src="../ef-molcore.js?v=1"></script>
+<script>
+(function () {
+'use strict';
+document.body.classList.add('molecule');
+var M = window.EFM, DB = null, CORE = {}, AUTO = {}, PAIRS = [];
+var SUB = '₀₁₂₃₄₅₆₇₈₉';
+function fm(f) { return f.replace(/\d/g, function (d) { return SUB[+d]; }); }
+/* CPK 惯例色(与 data/ef.colors.json atoms 一致) */
+var COL = { H: '#f2f2ee', C: '#4a4d52', N: '#3b6fe0', O: '#e0322b', S: '#e8c832', F: '#8fe07a', Cl: '#3fbf4a', Br: '#a8402a' };
+var RAD = { H: 13, C: 19, N: 18, O: 18, S: 21, F: 15, Cl: 20, Br: 22 };
+var VE = { H: 1, C: 4, N: 5, O: 6, S: 6, F: 7, Cl: 7, Br: 7 };
+var ZH = { H: '氢', C: '碳', N: '氮', O: '氧', S: '硫', F: '氟', Cl: '氯', Br: '溴' };
+var SAFE = { g: '🟢 日常常见', y: '🟡 使用需注意', r: '🔴 危险物质 · 请勿在现实中接触或尝试' };
+function safeTag(s) { return '<span class="mb-safe ' + s + '">' + SAFE[s] + '</span>'; }
+function lookup(k) { if (CORE[k]) return { core: CORE[k] }; if (AUTO[k]) return { auto: AUTO[k] }; return null; }
+
+/* ---------- 搭建台组件 ---------- */
+function Builder(stage, opt) {
+  opt = opt || {};
+  var mol = { atoms: [], bonds: [] }, sel = -1, view = 'ball', hist = [];
+  stage.insertAdjacentHTML('beforeend',
+    '<div class="mb-wrap"><div class="mb-view"><canvas class="mb-cv" tabindex="0" aria-label="分子搭建台。用托盘添加原子;Tab 切换选中原子;按元素字母在选中原子上接一个新原子;按 1 2 3 设置与上一个选中原子之间的键;Delete 删除。"></canvas>' +
+    '<div class="mb-hud"><b class="f">—</b><div class="st">台上还没有原子</div></div>' +
+    '<div class="mb-views" role="group" aria-label="视图"><button data-v="ball" class="on">球棍</button><button data-v="line">结构式</button><button data-v="dot">电子式</button></div></div>' +
+    '<div class="mb-tray" role="toolbar" aria-label="元素托盘"><span class="lab">元素托盘</span>' +
+    (opt.els || ['H', 'C', 'N', 'O']).map(function (e) { return '<button class="mb-at" data-e="' + e + '" style="background:' + COL[e] + ';color:' + (e === 'H' || e === 'S' || e === 'F' ? '#222' : '#fff') + '" title="' + ZH[e] + ' · 化合价 ' + M.VAL[e] + '" aria-label="添加' + ZH[e] + '原子,化合价 ' + M.VAL[e] + '">' + e + '<small>' + M.VAL[e] + '</small></button>'; }).join('') +
+    '</div><div class="mb-row">' + (opt.fillH ? '<button class="ef-btn ghost" data-a="fill">自动补氢</button>' : '') +
+    '<button class="ef-btn ghost" data-a="undo">撤销</button><button class="ef-btn ghost" data-a="del">删除选中</button><button class="ef-btn ghost" data-a="clear">清空</button>' + (opt.extra || '') + '</div>' +
+    '<div class="sr" aria-live="polite"></div></div>');
+  var wrap = stage.lastElementChild, cv = wrap.querySelector('canvas'), ctx = cv.getContext('2d'), live = wrap.querySelector('.sr');
+  var W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  function rs() { var r = cv.getBoundingClientRect(); W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr; draw(); }
+  function snap() { hist.push(JSON.stringify(mol)); if (hist.length > 40) hist.shift(); }
+  function bondOf(a, b) { for (var i = 0; i < mol.bonds.length; i++) { var x = mol.bonds[i]; if ((x.a === a && x.b === b) || (x.a === b && x.b === a)) return i; } return -1; }
+  function place(i) {
+    var A = mol.atoms[i], used = [];
+    mol.bonds.forEach(function (b) { var j = b.a === i ? b.b : b.b === i ? b.a : -1; if (j > -1) used.push(Math.atan2(mol.atoms[j].y - A.y, mol.atoms[j].x - A.x)); });
+    var best = 0, bs = -1;
+    for (var k = 0; k < 24; k++) {
+      var t = k / 24 * Math.PI * 2, s = 9;
+      used.forEach(function (u) { var d = Math.abs(Math.atan2(Math.sin(t - u), Math.cos(t - u))); s = Math.min(s, d); });
+      var L = 62, x = A.x + Math.cos(t) * L, y = A.y + Math.sin(t) * L;
+      mol.atoms.forEach(function (o) { var dd = Math.hypot(o.x - x, o.y - y); if (dd < 40) s -= (40 - dd) / 20; });
+      if (x < 30 || x > W - 30 || y < 30 || y > H - 30) s -= 2;
+      if (s > bs) { bs = s; best = t; }
+    }
+    return { x: A.x + Math.cos(best) * 62, y: A.y + Math.sin(best) * 62 };
+  }
+  function add(e) {
+    snap();
+    if (sel > -1 && M.free(mol, sel) > 0 && M.free({ atoms: [{ e: e }], bonds: [] }, 0) > 0) {
+      var p = place(sel); mol.atoms.push({ e: e, x: p.x, y: p.y }); mol.bonds.push({ a: sel, b: mol.atoms.length - 1, o: 1 });
+      if (e !== 'H') sel = mol.atoms.length - 1;
+      EF.play && EF.play('tick');
+    } else {
+      var n = mol.atoms.length; mol.atoms.push({ e: e, x: W / 2 + (n ? (Math.random() - .5) * W * .5 : 0), y: H / 2 + (n ? (Math.random() - .5) * H * .4 : 0) });
+      sel = mol.atoms.length - 1;
+    }
+    changed();
+  }
+  function bond(a, b) {
+    if (a === b || a < 0 || b < 0) return;
+    var i = bondOf(a, b);
+    if (i > -1) {
+      var o = mol.bonds[i].o, room = Math.min(M.free(mol, a), M.free(mol, b));
+      snap(); if (room > 0 && o < 3) mol.bonds[i].o++; else if (o > 1) mol.bonds[i].o = 1; else mol.bonds.splice(i, 1);
+    } else {
+      if (M.free(mol, a) < 1 || M.free(mol, b) < 1) { say('这两个原子已经没有空插槽了。'); return; }
+      snap(); mol.bonds.push({ a: a, b: b, o: 1 });
+    }
+    EF.play && EF.play('select'); changed();
+  }
+  function setOrder(a, b, o) {
+    var i = bondOf(a, b), cur = i > -1 ? mol.bonds[i].o : 0;
+    if (Math.min(M.free(mol, a), M.free(mol, b)) < o - cur) { say('插槽不够,接不了 ' + o + ' 键。'); return; }
+    snap(); if (i > -1) mol.bonds[i].o = o; else mol.bonds.push({ a: a, b: b, o: o }); changed();
+  }
+  function del(i) {
+    if (i < 0) return; snap();
+    mol.bonds = mol.bonds.filter(function (b) { return b.a !== i && b.b !== i; }).map(function (b) { return { a: b.a > i ? b.a - 1 : b.a, b: b.b > i ? b.b - 1 : b.b, o: b.o }; });
+    mol.atoms.splice(i, 1); sel = -1; changed();
+  }
+  function fill() {
+    snap(); var n = mol.atoms.length;
+    for (var i = 0; i < n; i++) { while (M.free(mol, i) > 0) { var p = place(i); mol.atoms.push({ e: 'H', x: p.x, y: p.y }); mol.bonds.push({ a: i, b: mol.atoms.length - 1, o: 1 }); } }
+    changed();
+  }
+  function say(s) { live.textContent = s; }
+  var STX = { empty: '台上还没有原子', open: '还有亮着的空插槽', split: '插满了,但分成了几块,连起来才是一个分子', ok: '插满了 · 稳定的分子' };
+  function changed() {
+    var st = M.status(mol), f = mol.atoms.length ? M.formula(mol) : '—';
+    wrap.querySelector('.f').textContent = fm(f);
+    var se = wrap.querySelector('.st'); se.textContent = STX[st]; se.className = 'st' + (st === 'ok' ? ' ok' : '');
+    if (st === 'ok') EF.play && EF.play('unlock');
+    say('分子式 ' + f + ',' + STX[st]); draw(); opt.onChange && opt.onChange(api);
+  }
+  /* 绘制 */
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    /* 黄铜星盘刻度 */
+    var cx = W / 2, cy = H / 2, R = Math.min(W, H) * .44;
+    ctx.strokeStyle = 'rgba(214,170,90,.22)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke();
+    ctx.strokeStyle = 'rgba(214,170,90,.12)'; ctx.beginPath(); ctx.arc(cx, cy, R * .62, 0, 7); ctx.stroke();
+    for (var t = 0; t < 72; t++) { var a = t / 72 * Math.PI * 2, l = t % 6 ? 5 : 10; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); ctx.lineTo(cx + Math.cos(a) * (R - l), cy + Math.sin(a) * (R - l)); ctx.stroke(); }
+    var dot = view === 'dot', line = view === 'line';
+    /* 键 */
+    mol.bonds.forEach(function (b) {
+      var A = mol.atoms[b.a], B = mol.atoms[b.b], dx = B.x - A.x, dy = B.y - A.y, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+      if (dot) {
+        for (var k = 0; k < b.o; k++) {
+          var off = (k - (b.o - 1) / 2) * 7, mx = (A.x + B.x) / 2 + nx * off, my = (A.y + B.y) / 2 + ny * off;
+          ctx.fillStyle = '#ffd27a'; [-3.5, 3.5].forEach(function (s) { ctx.beginPath(); ctx.arc(mx + dx / L * s, my + dy / L * s, 2.2, 0, 7); ctx.fill(); });
+        }
+        return;
+      }
+      for (var k2 = 0; k2 < b.o; k2++) {
+        var o2 = (k2 - (b.o - 1) / 2) * (line ? 5 : 7);
+        ctx.strokeStyle = line ? '#e9e2d2' : '#c8a060'; ctx.lineWidth = line ? 2 : 4.5; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(A.x + nx * o2, A.y + ny * o2); ctx.lineTo(B.x + nx * o2, B.y + ny * o2); ctx.stroke();
+        if (!line) { ctx.strokeStyle = 'rgba(255,240,200,.45)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(A.x + nx * (o2 - 1), A.y + ny * (o2 - 1)); ctx.lineTo(B.x + nx * (o2 - 1), B.y + ny * (o2 - 1)); ctx.stroke(); }
+      }
+    });
+    if (drag && drag.link) { ctx.strokeStyle = 'rgba(255,190,110,.8)'; ctx.setLineDash([5, 5]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(mol.atoms[drag.i].x, mol.atoms[drag.i].y); ctx.lineTo(drag.mx, drag.my); ctx.stroke(); ctx.setLineDash([]); }
+    /* 原子 */
+    mol.atoms.forEach(function (A, i) {
+      var r = line || dot ? 12 : RAD[A.e], fr = M.free(mol, i);
+      if (line || dot) {
+        ctx.fillStyle = '#0d0b09'; ctx.beginPath(); ctx.arc(A.x, A.y, r, 0, 7); ctx.fill();
+        ctx.fillStyle = A.e === 'C' ? '#e9e2d2' : COL[A.e]; ctx.font = '600 15px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(A.e, A.x, A.y + 1);
+        if (dot) { /* 孤对电子 */
+          var lp = (VE[A.e] - M.used(mol, i) - fr) / 2 | 0, ang = [], k3;
+          mol.bonds.forEach(function (b) { var j = b.a === i ? b.b : b.b === i ? b.a : -1; if (j > -1) ang.push(Math.atan2(mol.atoms[j].y - A.y, mol.atoms[j].x - A.x)); });
+          var slots = []; for (k3 = 0; k3 < 8; k3++) { var tt = k3 / 8 * Math.PI * 2, s = 9; ang.forEach(function (u) { s = Math.min(s, Math.abs(Math.atan2(Math.sin(tt - u), Math.cos(tt - u)))); }); slots.push([s, tt]); }
+          slots.sort(function (p, q) { return q[0] - p[0]; });
+          var chosen = []; slots.forEach(function (sl) { if (chosen.length < lp && chosen.every(function (c) { return Math.abs(Math.atan2(Math.sin(c - sl[1]), Math.cos(c - sl[1]))) > .9; })) chosen.push(sl[1]); });
+          ctx.fillStyle = '#ffd27a';
+          chosen.forEach(function (tt) { var px = A.x + Math.cos(tt) * 19, py = A.y + Math.sin(tt) * 19, qx = -Math.sin(tt) * 3.5, qy = Math.cos(tt) * 3.5; ctx.beginPath(); ctx.arc(px + qx, py + qy, 2.2, 0, 7); ctx.arc(px - qx, py - qy, 2.2, 0, 7); ctx.fill(); });
+        }
+      } else {
+        var g = ctx.createRadialGradient(A.x - r * .35, A.y - r * .4, r * .1, A.x, A.y, r);
+        g.addColorStop(0, '#fff'); g.addColorStop(.25, COL[A.e]); g.addColorStop(1, shade(COL[A.e], .35));
+        ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(A.x + 3, A.y + r * .85, r * .9, r * .3, 0, 0, 7); ctx.fill();
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(A.x, A.y, r, 0, 7); ctx.fill();
+        ctx.fillStyle = A.e === 'H' || A.e === 'S' || A.e === 'F' ? 'rgba(30,30,30,.8)' : 'rgba(255,255,255,.9)'; ctx.font = '600 ' + (r > 15 ? 13 : 11) + 'px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(A.e, A.x, A.y + 1);
+      }
+      /* 化合价插槽:空槽亮琥珀光点 */
+      if (fr > 0 && !dot) {
+        var used = []; mol.bonds.forEach(function (b) { var j = b.a === i ? b.b : b.b === i ? b.a : -1; if (j > -1) used.push(Math.atan2(mol.atoms[j].y - A.y, mol.atoms[j].x - A.x)); });
+        var base = used.length ? used[0] + Math.PI : -Math.PI / 2, tot = M.VAL[A.e];
+        for (var s2 = 0; s2 < fr; s2++) {
+          var aa = base + (s2 - (fr - 1) / 2) * (Math.PI * 2 / Math.max(tot, 3)) * (used.length ? .8 : 1), px2 = A.x + Math.cos(aa) * (r + 6), py2 = A.y + Math.sin(aa) * (r + 6);
+          var pulse = .6 + .4 * Math.sin(performance.now() / 300 + s2);
+          var gg = ctx.createRadialGradient(px2, py2, 0, px2, py2, 7); gg.addColorStop(0, 'rgba(255,200,110,' + pulse + ')'); gg.addColorStop(1, 'rgba(255,150,40,0)');
+          ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(px2, py2, 7, 0, 7); ctx.fill();
+        }
+      }
+      if (i === sel) { ctx.strokeStyle = '#ffb56b'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.arc(A.x, A.y, r + 5, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
+    });
+    if (!mol.atoms.length) { ctx.fillStyle = 'rgba(233,226,210,.45)'; ctx.font = '14px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('从下面的元素托盘选一个原子放上台', cx, cy); }
+  }
+  function shade(h, k) { var n = parseInt(h.slice(1), 16), r = (n >> 16) * k | 0, g = (n >> 8 & 255) * k | 0, b = (n & 255) * k | 0; return 'rgb(' + r + ',' + g + ',' + b + ')'; }
+  /* 插槽呼吸动画(减少动态时不循环) */
+  var raf = 0; function loop() { if (!document.hidden && mol.atoms.some(function (a, i) { return M.free(mol, i) > 0; })) draw(); raf = requestAnimationFrame(loop); }
+  if (!EF.reduced) loop();
+  /* 指针:点选 / 拖动移动 / 从选中原子拖到另一个原子 = 成键;点空白处取消选中 */
+  var drag = null;
+  function hit(x, y) { for (var i = mol.atoms.length - 1; i >= 0; i--) { var A = mol.atoms[i]; if (Math.hypot(A.x - x, A.y - y) < (RAD[A.e] + 6)) return i; } return -1; }
+  function hitBond(x, y) { for (var i = 0; i < mol.bonds.length; i++) { var b = mol.bonds[i], A = mol.atoms[b.a], B = mol.atoms[b.b], dx = B.x - A.x, dy = B.y - A.y, L2 = dx * dx + dy * dy, t = Math.max(0, Math.min(1, ((x - A.x) * dx + (y - A.y) * dy) / L2)); if (Math.hypot(A.x + dx * t - x, A.y + dy * t - y) < 7 && t > .2 && t < .8) return i; } return -1; }
+  function pos(ev) { var r = cv.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; }
+  cv.addEventListener('pointerdown', function (ev) {
+    var p = pos(ev), i = hit(p.x, p.y); cv.setPointerCapture(ev.pointerId);
+    if (i > -1) { drag = { i: i, sx: p.x, sy: p.y, mx: p.x, my: p.y, moved: false, link: i === sel && M.free(mol, i) > 0 }; if (!drag.link) snap(); }
+    else { var bi = hitBond(p.x, p.y); if (bi > -1) { var b = mol.bonds[bi]; bond(b.a, b.b); } else { sel = -1; draw(); } }
+  });
+  cv.addEventListener('pointermove', function (ev) {
+    if (!drag) return; var p = pos(ev); drag.mx = p.x; drag.my = p.y;
+    if (Math.hypot(p.x - drag.sx, p.y - drag.sy) > 4) drag.moved = true;
+    if (!drag.link && drag.moved) { var A = mol.atoms[drag.i]; A.x = Math.max(16, Math.min(W - 16, p.x)); A.y = Math.max(16, Math.min(H - 16, p.y)); }
+    draw();
+  });
+  cv.addEventListener('pointerup', function (ev) {
+    if (!drag) return; var p = pos(ev), d = drag; drag = null;
+    if (d.link) { var j = hit(p.x, p.y); if (d.moved && j > -1 && j !== d.i) bond(d.i, j); else if (!d.moved) { sel = -1; } draw(); return; }
+    if (!d.moved) { hist.pop(); sel = sel === d.i ? -1 : d.i; draw(); }
+  });
+  /* 键盘 */
+  var prev = -1;
+  cv.addEventListener('keydown', function (ev) {
+    var k = ev.key;
+    if (k === 'Tab' && mol.atoms.length) { ev.preventDefault(); prev = sel; sel = (sel + (ev.shiftKey ? mol.atoms.length - 1 : 1)) % mol.atoms.length; if (sel < 0) sel = 0; var A = mol.atoms[sel]; say('选中 ' + ZH[A.e] + ' 原子,空插槽 ' + M.free(mol, sel)); draw(); return; }
+    var up = k.length === 1 ? k.toUpperCase() : k; if (up === 'L') up = 'Cl';
+    if ((opt.els || ['H', 'C', 'N', 'O']).indexOf(up) > -1) { ev.preventDefault(); add(up); return; }
+    if ((k === '1' || k === '2' || k === '3') && sel > -1 && prev > -1 && prev !== sel) { ev.preventDefault(); setOrder(prev, sel, +k); return; }
+    if ((k === 'Delete' || k === 'Backspace') && sel > -1) { ev.preventDefault(); del(sel); }
+  });
+  wrap.querySelectorAll('.mb-at').forEach(function (b) { b.onclick = function () { add(b.dataset.e); }; });
+  wrap.querySelectorAll('.mb-views button').forEach(function (b) { b.onclick = function () { view = b.dataset.v; wrap.querySelectorAll('.mb-views button').forEach(function (x) { x.classList.toggle('on', x === b); }); draw(); }; });
+  wrap.querySelectorAll('[data-a]').forEach(function (b) {
+    b.onclick = function () { var a = b.dataset.a;
+      if (a === 'fill') fill(); else if (a === 'undo') { if (hist.length) { mol = JSON.parse(hist.pop()); sel = -1; changed(); } }
+      else if (a === 'del') del(sel); else if (a === 'clear') { snap(); mol = { atoms: [], bonds: [] }; sel = -1; changed(); } };
+  });
+  var ro = window.ResizeObserver ? new ResizeObserver(rs) : null; ro ? ro.observe(cv) : window.addEventListener('resize', rs); setTimeout(rs, 0);
+  var api = { get mol() { return mol; }, key: function () { return M.key(mol); }, status: function () { return M.status(mol); }, formula: function () { return M.formula(mol); }, wrap: wrap,
+    load: function (m) { mol = JSON.parse(JSON.stringify(m)); sel = -1; changed(); }, stop: function () { cancelAnimationFrame(raf); ro && ro.disconnect(); } };
+  window.EFMB = api; /* 自测钩子 */
+  return api;
+}
+
+/* ---------- 结果卡 ---------- */
+function resultHTML(b) {
+  var k = b.key(), r = lookup(k), f = fm(b.formula());
+  if (r && r.core) { var c = r.core; return '<b>已知 · ' + EF.esc(c.zh) + '</b> ' + f + '<br>' + EF.esc(c.u) + '<br>' + safeTag(c.s) + (c.w ? '<span style="color:#d9cbb0">为什么要小心:' + EF.esc(c.w) + '</span>' : ''); }
+  if (r && r.auto) return '<b>已知 · 数据库收录</b> ' + f + '<br>英文名:' + EF.esc(r.auto[1]) + '<br><small style="color:#a8a090">来自 NCBI PubChem(编号 CID ' + r.auto[3] + ')。本台只显示名称,不提供用途和制法。</small>';
+  return '<b>库中未收录</b> ' + f + '<br>能画出来 ≠ 能合成,也 ≠ 世界上不存在:本台离线库只收了 3000 多个常见小分子。真实世界还要看这个结构稳不稳定、有没有人做出来过。';
+}
+
+/* ---------- 四关 ---------- */
+var GOAL0 = [['H2O', '水 H₂O'], ['H3N', '氨 NH₃'], ['CH4', '甲烷 CH₄'], ['CO2', '二氧化碳 CO₂']];
+function L0(stage, api) {
+  var got = {}, keys = {};
+  GOAL0.forEach(function (g) { var c = DB.core.filter(function (x) { return x.f === g[0] && x.b; })[0]; if (c) keys[c.k] = g[0]; });
+  stage.insertAdjacentHTML('beforeend', '<div class="mb-goals">' + GOAL0.map(function (g) { return '<span data-g="' + g[0] + '">' + g[1] + '</span>'; }).join('') + '</div>');
+  var b = Builder(stage, { els: ['H', 'C', 'N', 'O'], onChange: function (B) {
+    if (B.status() !== 'ok') return; var f = keys[B.key()]; if (!f || got[f]) return;
+    got[f] = 1; stage.querySelector('[data-g="' + f + '"]').classList.add('got');
+    api.say('咔哒!' + fm(f) + ' 插满了,所有插槽都配上了对。' + (Object.keys(got).length < 4 ? '清空再拼下一个。' : ''));
+    if (Object.keys(got).length === 4) { b.stop(); api.complete(); }
+  } });
+}
+function L1(stage, api) {
+  var n = 0;
+  var b = Builder(stage, { els: ['H', 'C', 'N', 'O', 'S', 'Cl', 'F', 'Br'], fillH: 1, extra: '<button class="ef-btn" data-q>查一查</button>' });
+  stage.insertAdjacentHTML('beforeend', '<div class="mb-res" aria-live="polite"></div>');
+  var res = stage.querySelector('.mb-res');
+  b.wrap.querySelector('[data-q]').onclick = function () {
+    var st = b.status(); if (st !== 'ok') { res.innerHTML = st === 'open' ? '还有空插槽亮着:先插满(可以点「自动补氢」)。' : st === 'split' ? '台上是几块分开的碎片,连成一个分子再查。' : '先拼一个分子。'; return; }
+    res.innerHTML = resultHTML(b); EF.play && EF.play('select'); n++;
+    var heavy = b.mol.atoms.filter(function (a) { return a.e !== 'H'; }).length;
+    if (heavy >= 3 && n >= 2) { b.stop(); api.complete(); } else if (n >= 1) api.say('再拼一个重原子(非氢)≥ 3 个的分子查查看,试试库里有没有它。');
+  };
+}
+function L2(stage, api) {
+  var P = DB.pairs[0], seen = {};
+  stage.insertAdjacentHTML('beforeend', '<div class="mb-goals"><span data-k="' + P[0] + '">C₂H₆O · 第一种</span><span data-k="' + P[1] + '">C₂H₆O · 第二种</span></div>');
+  var b = Builder(stage, { els: ['H', 'C', 'O'], fillH: 1, onChange: function (B) {
+    if (B.status() !== 'ok' || B.formula() !== 'C2H6O') return; var k = B.key(); if (seen[k]) return;
+    if (k !== P[0] && k !== P[1]) return; seen[k] = 1;
+    var sp = stage.querySelectorAll('.mb-goals span'), i = Object.keys(seen).length - 1; sp[i].classList.add('got'); sp[i].textContent = 'C₂H₆O · ' + CORE[k].zh;
+    if (i === 0) api.say('拼出了 ' + CORE[k].zh + '!同样 2 个 C、6 个 H、1 个 O,还能换一种连法吗?');
+    else { b.stop(); table(); api.complete(); }
+  } });
+  function table() {
+    var rows = DB.pairs.map(function (p) { var a = CORE[p[0]], c = CORE[p[1]]; return '<tr><td>' + fm(a.f) + '</td><td>' + a.zh + ' ' + a.bp + ' °C</td><td>' + c.zh + ' ' + c.bp + ' °C</td></tr>'; }).join('');
+    stage.insertAdjacentHTML('beforeend', '<div class="mb-res"><b>同一个分子式,沸点(1 个大气压)</b><table class="mb-tbl"><tr><th>分子式</th><th>A</th><th>B</th></tr>' + rows + '</table><small style="color:#a8a090">数据来源:NCBI PubChem / CRC 手册,待审校核对。</small></div>');
+  }
+}
+/* 平均键能(kJ/mol,教材常用值) */
+var BE = { 'C-H': 413, 'C-C': 348, 'C=C': 614, 'C#C': 839, 'H-H': 436, 'O-H': 463, 'C-O': 358, 'C=O': 799, 'N-H': 391, 'O=O': 498 };
+function ledger(mol) {
+  var c = {}, sum = 0, miss = 0;
+  mol.bonds.forEach(function (b) { var e = [mol.atoms[b.a].e, mol.atoms[b.b].e].sort(function (x, y) { return x === 'C' ? -1 : y === 'C' ? 1 : x < y ? -1 : 1; }); var t = e[0] + ['', '-', '=', '#'][b.o] + e[1]; c[t] = (c[t] || 0) + 1; if (BE[t]) sum += BE[t]; else miss++; });
+  return { c: c, sum: sum, miss: miss };
+}
+function L3(stage, api) {
+  var stepE = false;
+  stage.insertAdjacentHTML('beforeend', '<div class="mb-goals"><span data-s="1">① 拼乙烯 C₂H₄</span><span data-s="2">② 加氢变乙烷 C₂H₆</span></div>');
+  var b = Builder(stage, { els: ['H', 'C'], onChange: function (B) {
+    var L = ledger(B.mol); res.innerHTML = '<b>键的账本</b> ' + (Object.keys(L.c).map(function (t) { return t.replace('-', '–').replace('#', '≡') + ' ×' + L.c[t]; }).join(' · ') || '—') + '<br>拆开全部的键,约需 ' + L.sum + ' kJ/mol(平均键能估算)';
+    if (B.status() !== 'ok') return; var f = B.formula();
+    if (f === 'C2H4' && !stepE) { stepE = true; stage.querySelector('[data-s="1"]').classList.add('got'); api.say('乙烯有一根 C=C 双键。现在点一下双键把它变回单键,再给两个碳各接一个 H。'); }
+    else if (f === 'C2H6' && stepE) { stage.querySelector('[data-s="2"]').classList.add('got'); b.stop(); acct(); api.complete(); }
+  } });
+  stage.insertAdjacentHTML('beforeend', '<div class="mb-res" aria-live="polite"></div>');
+  var res = stage.querySelector('.mb-res:last-child');
+  function acct() {
+    res.innerHTML = '<b>账本结算:C₂H₄ + H₂ → C₂H₆</b><table class="mb-tbl"><tr><th></th><th>键</th><th>kJ/mol</th></tr>' +
+      '<tr><td>拆(吸热)</td><td>C=C ×1 + H–H ×1</td><td>614 + 436 = 1050</td></tr>' +
+      '<tr><td>成(放热)</td><td>C–C ×1 + C–H ×2</td><td>348 + 826 = 1174</td></tr>' +
+      '<tr><td>估算 ΔH</td><td>1050 − 1174</td><td><b>≈ −124</b></td></tr><tr><td>实测 ΔH</td><td>标准状态</td><td><b>−137</b></td></tr></table>' +
+      '<small style="color:#a8a090">平均键能是许多分子的平均值,估算误差约 10%;实测值来自生成焓数据,待审校核对。</small>';
+  }
+}
+
+var LEVELS = [
+  { title: '插满就稳', setup: L0, task: '从元素托盘把原子放上台:点一下台上的原子选中它,再点托盘里的元素,新原子就接在它的空插槽上;按住选中的原子拖到另一个原子上,可以把两者连起来。拼出水、氨、甲烷、二氧化碳四个分子(点键可以变成双键)。',
+    ask: { q: '一个碳原子(C)最多能连几个氢原子(H)?', opts: ['2 个', '3 个', '4 个', '6 个'], ok: 2, yes: '没错,碳有 4 个插槽。上台验证一下。' },
+    hints: ['亮着的琥珀色光点 = 空插槽。H 有 1 个,O 有 2 个,N 有 3 个,C 有 4 个。', '选中一个原子,再点托盘里的 H,氢会自动接上去。', '二氧化碳:C 在中间,两边各一个 O;点一下 C–O 键,它会变成双键 C=O。'],
+    explain: '原子靠共用电子对成键。每种原子能成的键数大致固定(这里叫"插槽",课本里叫化合价或成键数):H 1、O 2、N 3、C 4。所有插槽都配上了对,分子就稳定;双键算 2 个插槽,三键算 3 个。CO₂ 里碳用两根双键,正好插满。' },
+  { title: '世界上真的有吗', setup: L1, task: '自由拼一个分子(可以用 S、Cl、F、Br),插满后点「查一查」,和离线分子库比对。查两次,其中一次的分子要有 3 个以上非氢原子。',
+    ask: { q: '一个分子,只要能在纸上画出来(每个原子都插满),现实中就一定存在吗?', opts: ['一定存在', '不一定'], ok: 1, yes: '对,画得出 ≠ 做得出。我们查查看。', no: '先别急,查查数据库就知道了。' },
+    hints: ['拼好骨架后点「自动补氢」,空插槽会全部补上 H。', '试试 3 个碳连成一串再加一个 O——有几种连法?', '查不到也是一种结果:本台库只收 3000 多个常见小分子。'],
+    explain: '化学家把已知物质登记在数据库里,PubChem 收录了一亿多种。小分子的大部分合理连法都已经有人做出来过,但"能画出来"只说明成键规则允许;它能不能稳定存在、能不能被合成,还要看键的强弱、环的张力、反应条件等。危险物质本台只告诉你为什么危险,不提供任何制法。' },
+  { title: '同一个公式,两种性格', setup: L2, task: '用 2 个 C、6 个 H、1 个 O,拼出两种不同的分子(连法不同)。',
+    ask: { q: '乙醇和二甲醚的分子式都是 C₂H₆O,谁的沸点更高?', opts: ['乙醇', '二甲醚', '一样高'], ok: 0, yes: '直觉很准!拼出来看看为什么。', no: '分子式一样,性质可不一定一样。拼出来看看。' },
+    hints: ['O 有 2 个插槽:可以夹在两个 C 中间,也可以挂在一端。', 'C–C–O–H 是一种,C–O–C 是另一种。', '点「自动补氢」把剩下的插槽补满。'],
+    explain: '分子式相同、结构不同的物质叫同分异构体。乙醇有 O–H,分子之间能形成氢键,要更多能量才能分开,沸点 78 °C;二甲醚没有 O–H,沸点约 −25 °C,常温是气体。正丁烷和异丁烷也一样:支链越多、分子越"圆",分子间接触越少,沸点越低。结构决定性质。' },
+  { title: '键的账本', setup: L3, task: '先拼乙烯 C₂H₄(碳碳双键),再把它变成乙烷 C₂H₆:点双键变单键,再补两个 H。看账本怎么算热量。可以切换「电子式」看共用电子对。',
+    ask: { q: '乙烯和氢气反应生成乙烷,是放热还是吸热?', opts: ['放热', '吸热', '不放热也不吸热'], ok: 0, yes: '对!新成的键比拆掉的键更"牢"。', no: '我们用键能记一笔账看看。' },
+    hints: ['拆键要吸收能量,成键会放出能量。', '拆:1 根 C=C、1 根 H–H;成:1 根 C–C、2 根 C–H。', '成键放出的比拆键吸收的多,差值就是放出的热。'],
+    explain: '化学反应 = 旧键断开 + 新键形成。拆键吸热,成键放热;用平均键能可以估算反应热:乙烯加氢约 −124 kJ/mol,实测 −137 kJ/mol,负号表示放热。估算有误差,因为同一种键在不同分子里强弱略有不同。电子式里每对点是一对共用电子:单键 1 对,双键 2 对。' }
+];
+var NOTES = { title: '元素工坊 · 随手拼一个分子,世界上真的有吗?', items: [
+  '共价键 = 共用电子对。成键数:H 1、O 2、N 3、C 4;双键占 2、三键占 3。插满即稳定。',
+  '能画出来的结构不一定存在或能合成;已知物质登记在 PubChem 等数据库里。',
+  '同分异构体:分子式相同、结构不同,性质可以差很多(乙醇 78 °C vs 二甲醚 −25 °C)。',
+  '反应热 ≈ 拆键吸收的能量 − 成键放出的能量;平均键能估算有误差。',
+  '安全:🔴 危险物质本台只说明为什么危险,不提供用途细节、制法、用量或获取渠道。请勿在现实中尝试。'],
+  bridge: '<a href="../react/">把两种东西混在一起,会发生什么?</a> · <a href="../carbon/">为什么钻石和铅笔芯是同一种东西?</a>' };
+
+fetch('../data/ef.molecule.json').then(function (r) { return r.json(); }).then(function (j) {
+  DB = j; j.core.forEach(function (c) { if (c.b) CORE[c.k] = c; }); j.db.forEach(function (d) { AUTO[d[0]] = d; });
+  EF.mission('molecule', LEVELS, NOTES);
+}, function (e) { console.warn('[ef] 分子库加载失败', e); document.getElementById('app').innerHTML = '<p style="padding:40px">分子库没加载出来,请联网后刷新。</p>'; });
+})();
+</script>
+</body>
+</html>

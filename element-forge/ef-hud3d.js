@@ -12,7 +12,7 @@ import { M, COL, studioEnv } from './ef-pbr.js?v=1';
 const EF = window.EF;
 const rnd = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
 
-const CARD_OBJ = { stars: 'star', carbon: 'graphite', crystal: 'quartz', cabbage: 'flask', fireworks: 'sparkler', battery: 'battery', rocks: 'rock', mars: 'mars', titan: 'titan', spectra: 'prism', island: 'nucleus', react: 'beaker' };
+const CARD_OBJ = { stars: 'star', carbon: 'graphite', crystal: 'quartz', cabbage: 'flask', fireworks: 'sparkler', battery: 'battery', rocks: 'rock', mars: 'mars', titan: 'titan', spectra: 'prism', island: 'nucleus', react: 'beaker', molecule: 'mol' };
 
 export async function install(gl, scene, cam, ST) {
   let C = null;
@@ -225,6 +225,13 @@ export async function install(gl, scene, cam, ST) {
     } else if (kind === 'nucleus') {
       const pm = E(new THREE.MeshPhysicalMaterial({ color: '#c8402a', roughness: 0.3, clearcoat: 0.8 }), 1.3), nm = E(new THREE.MeshPhysicalMaterial({ color: '#8a8f99', roughness: 0.3, clearcoat: 0.8 }), 1.3), sg = new THREE.SphereGeometry(7, 20, 14);
       for (let i = 0; i < 26; i++) { const m = new THREE.Mesh(sg, i % 2 ? pm : nm), a = i * 2.39996, y = 1 - (i / 25) * 2, r = Math.sqrt(1 - y * y) * 15; m.position.set(Math.cos(a) * r, 30 + y * 15, Math.sin(a) * r); g.add(m); }
+    } else if (kind === 'mol') {
+      /* 球棍水分子:CPK 色 + 黄铜键(颜色取 colors.json atoms) */
+      const A = (C && C.atoms) || {}, om = E(new THREE.MeshPhysicalMaterial({ color: A.O || '#e0322b', roughness: 0.28, clearcoat: 0.9 }), 1.3), hm = E(new THREE.MeshPhysicalMaterial({ color: A.H || '#f2f2ee', roughness: 0.3, clearcoat: 0.9 }), 1.2);
+      const bm = E(M.brass ? M.brass() : new THREE.MeshStandardMaterial({ color: '#b08a4a', metalness: 0.9, roughness: 0.3 }), 1.2);
+      const o = add(new THREE.SphereGeometry(15, 28, 20), om, 34);
+      [-1, 1].forEach(sg => { const a = sg * 0.912, h = new THREE.Mesh(new THREE.SphereGeometry(10, 24, 16), hm); h.position.set(Math.sin(a) * 32, 34 - Math.cos(a) * 32, 0); g.add(h);
+        const r = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 30, 12), bm); r.position.set(Math.sin(a) * 16, 34 - Math.cos(a) * 16, 0); r.rotation.z = a; g.add(r); });
     }
     g.scale.setScalar(s); return g;
   }

@@ -126,7 +126,8 @@
     "titan": "#e0902a",
     "spectra": "#ffd27a",
     "island": "#ffb35c",
-    "react": "#2f8fd8"
+    "react": "#2f8fd8",
+    "molecule": "#9fe870"
   },
   "decor": {
     "stone": "#14161a",
@@ -151,6 +152,18 @@
     "titan": "#e0902a",
     "spectra": "#d8b020",
     "island": "#ff8a3c",
-    "react": "#2f8fd8"
+    "react": "#2f8fd8",
+    "molecule": "#b0e04a"
+  },
+  "atoms": {
+    "_": "分子搭建台 CPK 惯例色(molecule/index.html COL 同值)",
+    "H": "#f2f2ee",
+    "C": "#4a4d52",
+    "N": "#3b6fe0",
+    "O": "#e0322b",
+    "S": "#e8c832",
+    "F": "#8fe07a",
+    "Cl": "#3fbf4a",
+    "Br": "#a8402a"
   }
 }
