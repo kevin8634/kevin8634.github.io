@@ -12,7 +12,7 @@ export function makeGL(host, opt = {}) {
   renderer.setPixelRatio(EF.dpr());
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   host.appendChild(renderer.domElement);
-  const api = { THREE, renderer, scene: new THREE.Scene(), camera: new THREE.PerspectiveCamera(opt.fov || 45, 1, 0.01, 300), cbs: [], visible: true };
+  const api = { THREE, renderer, scene: new THREE.Scene(), camera: new THREE.PerspectiveCamera(opt.fov || 45, 1, 0.01, 300), cbs: [], post: [], visible: true };
   function rs() { const w = host.clientWidth || 1, h = host.clientHeight || 1; renderer.setSize(w, h, false); api.camera.aspect = w / h; api.camera.updateProjectionMatrix(); if (api.onresize) api.onresize(w, h); }
   rs();
   if (window.ResizeObserver) new ResizeObserver(rs).observe(host); else addEventListener('resize', rs);
@@ -25,6 +25,7 @@ export function makeGL(host, opt = {}) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     for (const f of api.cbs) f(now / 1000, dt);
     renderer.render(api.scene, api.camera);
+    for (const f of api.post) f(now / 1000, dt);   /* v2.2:叠加层(锻炉星盘 HUD)第二遍渲染 */
   }
   api.onFrame = f => api.cbs.push(f);
   api.resize = rs;

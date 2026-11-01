@@ -2,44 +2,155 @@
   "_": "元素工坊 v2.2 颜色表 · 单一来源(HUD3D、向导、反应台、分子台共用)。颜色为常见教学实验所见的近似显示色(sRGB),示意用,非比色标准。",
   "version": "1.0",
   "guides": {
-    "oga": "#ffb35c", "bucky": "#ffd27a", "dot": "#ff7ad9", "lili": "#7ad7ff",
-    "mof": "#c9a6ff", "click": "#9fe870", "cryo": "#bfe9ff"
+    "oga": "#ffb35c",
+    "bucky": "#ffd27a",
+    "dot": "#ff7ad9",
+    "lili": "#7ad7ff",
+    "mof": "#c9a6ff",
+    "click": "#9fe870",
+    "cryo": "#bfe9ff"
   },
   "ions": {
-    "Cu2+": { "c": "#2f8fd8", "n": "铜离子(水合)", "note": "硫酸铜溶液蓝色" },
-    "MnO4-": { "c": "#8a1f8f", "n": "高锰酸根", "note": "紫红色" },
-    "Cr3+": { "c": "#3f8f5a", "n": "铬离子(水合)", "note": "暗绿/蓝绿" },
-    "Fe3+": { "c": "#c9862a", "n": "铁离子", "note": "黄棕色" },
-    "Fe2+": { "c": "#a9c98a", "n": "亚铁离子", "note": "浅绿色" },
-    "Co2+": { "c": "#e07aa0", "n": "钴离子(水合)", "note": "粉红色" },
-    "Ni2+": { "c": "#58b06a", "n": "镍离子(水合)", "note": "绿色" },
-    "FeSCN": { "c": "#a3121c", "n": "硫氰合铁", "note": "血红色" },
-    "I2": { "c": "#7a3b12", "n": "碘水", "note": "棕黄;遇淀粉变蓝" },
-    "water": { "c": "#cfe6f2", "n": "水", "note": "无色(显示极浅)" }
+    "Cu2+": {
+      "c": "#2f8fd8",
+      "n": "铜离子(水合)",
+      "note": "硫酸铜溶液蓝色"
+    },
+    "MnO4-": {
+      "c": "#8a1f8f",
+      "n": "高锰酸根",
+      "note": "紫红色"
+    },
+    "Cr3+": {
+      "c": "#3f8f5a",
+      "n": "铬离子(水合)",
+      "note": "暗绿/蓝绿"
+    },
+    "Fe3+": {
+      "c": "#c9862a",
+      "n": "铁离子",
+      "note": "黄棕色"
+    },
+    "Fe2+": {
+      "c": "#a9c98a",
+      "n": "亚铁离子",
+      "note": "浅绿色"
+    },
+    "Co2+": {
+      "c": "#e07aa0",
+      "n": "钴离子(水合)",
+      "note": "粉红色"
+    },
+    "Ni2+": {
+      "c": "#58b06a",
+      "n": "镍离子(水合)",
+      "note": "绿色"
+    },
+    "FeSCN": {
+      "c": "#a3121c",
+      "n": "硫氰合铁",
+      "note": "血红色"
+    },
+    "I2": {
+      "c": "#7a3b12",
+      "n": "碘水",
+      "note": "棕黄;遇淀粉变蓝"
+    },
+    "water": {
+      "c": "#cfe6f2",
+      "n": "水",
+      "note": "无色(显示极浅)"
+    }
   },
   "flame": {
-    "Li": { "c": "#e8304a", "n": "锂 · 紫红" },
-    "Na": { "c": "#ffb21f", "n": "钠 · 黄" },
-    "K": { "c": "#b48ce8", "n": "钾 · 浅紫(透过蓝色钴玻璃)" },
-    "Ca": { "c": "#ff6a2b", "n": "钙 · 砖红" },
-    "Sr": { "c": "#ff2448", "n": "锶 · 洋红" },
-    "Ba": { "c": "#b8e04a", "n": "钡 · 黄绿" },
-    "Cu": { "c": "#2fd0a0", "n": "铜 · 绿(含氯时偏蓝)" }
+    "Li": {
+      "c": "#e8304a",
+      "n": "锂 · 紫红"
+    },
+    "Na": {
+      "c": "#ffb21f",
+      "n": "钠 · 黄"
+    },
+    "K": {
+      "c": "#b48ce8",
+      "n": "钾 · 浅紫(透过蓝色钴玻璃)"
+    },
+    "Ca": {
+      "c": "#ff6a2b",
+      "n": "钙 · 砖红"
+    },
+    "Sr": {
+      "c": "#ff2448",
+      "n": "锶 · 洋红"
+    },
+    "Ba": {
+      "c": "#b8e04a",
+      "n": "钡 · 黄绿"
+    },
+    "Cu": {
+      "c": "#2fd0a0",
+      "n": "铜 · 绿(含氯时偏蓝)"
+    }
   },
   "gas": {
-    "Ne": { "c": "#ff4a2a", "n": "氖 · 橙红辉光" },
-    "Na": { "c": "#ffb21f", "n": "钠灯 · 琥珀" },
-    "Cu": { "c": "#2fd0a0", "n": "铜焰色 · 青绿" },
-    "Ar": { "c": "#9a6bff", "n": "氩 · 淡紫辉光" },
-    "Hg": { "c": "#8fd3ff", "n": "汞 · 蓝白" }
+    "Ne": {
+      "c": "#ff4a2a",
+      "n": "氖 · 橙红辉光"
+    },
+    "Na": {
+      "c": "#ffb21f",
+      "n": "钠灯 · 琥珀"
+    },
+    "Cu": {
+      "c": "#2fd0a0",
+      "n": "铜焰色 · 青绿"
+    },
+    "Ar": {
+      "c": "#9a6bff",
+      "n": "氩 · 淡紫辉光"
+    },
+    "Hg": {
+      "c": "#8fd3ff",
+      "n": "汞 · 蓝白"
+    }
   },
   "missions": {
-    "stars": "#ff9a3c", "carbon": "#5b6170", "crystal": "#bfe9ff", "cabbage": "#8a4fd8",
-    "fireworks": "#ff2448", "battery": "#7ad7ff", "rocks": "#a8794c", "mars": "#c8502a",
-    "titan": "#e0902a", "spectra": "#ffd27a", "island": "#ffb35c", "react": "#2f8fd8"
+    "stars": "#ff9a3c",
+    "carbon": "#5b6170",
+    "crystal": "#bfe9ff",
+    "cabbage": "#8a4fd8",
+    "fireworks": "#ff2448",
+    "battery": "#7ad7ff",
+    "rocks": "#a8794c",
+    "mars": "#c8502a",
+    "titan": "#e0902a",
+    "spectra": "#ffd27a",
+    "island": "#ffb35c",
+    "react": "#2f8fd8"
   },
   "decor": {
-    "stone": "#14161a", "brass": "#b08a4a", "brassOld": "#8a6a36", "steel": "#9aa1aa",
-    "ceramic": "#e9e6df", "copper": "#b8673a", "aluminum": "#c9ccd1", "frost": "#eef6fb"
+    "stone": "#14161a",
+    "brass": "#b08a4a",
+    "brassOld": "#8a6a36",
+    "steel": "#9aa1aa",
+    "ceramic": "#e9e6df",
+    "copper": "#b8673a",
+    "aluminum": "#c9ccd1",
+    "frost": "#eef6fb"
+  },
+  "hudCards": {
+    "_": "HUD3D 任务卡玻璃色,按 11:50 定调概念图 v2 顺序(红橙黄绿青蓝紫),每张一种元素色",
+    "stars": "#d42a3c",
+    "carbon": "#e0701e",
+    "crystal": "#e8c21e",
+    "cabbage": "#3aa63a",
+    "fireworks": "#22b8c4",
+    "battery": "#2852d8",
+    "rocks": "#7a32c8",
+    "mars": "#c8402a",
+    "titan": "#e0902a",
+    "spectra": "#d8b020",
+    "island": "#ff8a3c",
+    "react": "#2f8fd8"
   }
 }
