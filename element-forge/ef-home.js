@@ -167,7 +167,7 @@ function bootStage() {
 
   scenes.forEach(s => stageScene.add(s.g)); EF._stageGroups = scenes.map(s => s.g);
   /* v2.2 锻炉星盘:写实实验桌 + 黄铜星盘 + 器皿,与尺度镜同场景 */
-  import('./ef-hud3d.js?v=6').then(m => m.install(gl, stageScene, cam, ST)).catch(e => console.warn('[ef] 锻炉星盘启动失败,保留平面 HUD', e));
+  import('./ef-hud3d.js?v=9').then(m => m.install(gl, stageScene, cam, ST)).catch(e => console.warn('[ef] 锻炉星盘启动失败,保留平面 HUD', e));
 
   /* 拖动旋转当前档 */
   let drag = null, yawV = 0, mx = 0, my = 0;

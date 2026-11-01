@@ -150,7 +150,7 @@ export async function install(gl, scene, cam, ST) {
     const col = (C.hudCards && C.hudCards[k]) || '#ff9a3c';
     const g = new THREE.Group();
     /* 叠加层没有可折射的背景,厚玻璃用:半透明 + 清漆 + 体色自发光(边缘更亮由菲涅耳清漆给出) */
-    const mat = E(new THREE.MeshPhysicalMaterial({ color: col, metalness: 0, roughness: 0.05, transparent: true, opacity: 0.88, clearcoat: 1, clearcoatRoughness: 0.03, emissive: col, emissiveIntensity: 0.7, specularIntensity: 0.6 }), 0.55);
+    const mat = E(new THREE.MeshPhysicalMaterial({ color: col, metalness: 0, roughness: 0.05, transparent: true, opacity: 0.5, clearcoat: 1, clearcoatRoughness: 0.03, emissive: col, emissiveIntensity: 0.62, specularIntensity: 0.8, depthWrite: false, toneMapped: false }), 0.45);
     const slab = new THREE.Mesh(cardGeo, mat); g.add(slab);
     const obj = cardObject(CARD_OBJ[k], col); obj.position.y = CT + 2; g.add(obj);
     const p = EF.prog(k), Mi = EF.MISSIONS[k]; g.userData = { k, obj, done: p.done && p.done.length >= Mi.n, mat };
@@ -215,10 +215,10 @@ export async function install(gl, scene, cam, ST) {
   nav.addEventListener('touchmove', e => { if (ty == null) return; const dy = ty - e.touches[0].clientY; if (Math.abs(dy) > 30) { scroll(Math.sign(dy) * 0.5); ty = e.touches[0].clientY; } }, { passive: true });
 
   /* ---------- 磨砂玻璃铭牌(两片叠层) ---------- */
-  const frost = (o = {}) => E(new THREE.MeshPhysicalMaterial(Object.assign({ color: '#e8eef4', metalness: 0, roughness: 0.5, transparent: true, opacity: 0.52, clearcoat: 0.6, emissive: '#c8ccd2', emissiveIntensity: 0.25, depthWrite: false }, o)), 1.4);
+  const frost = (o = {}) => E(new THREE.MeshPhysicalMaterial(Object.assign({ color: '#f4f7fa', metalness: 0, roughness: 0.45, transparent: true, opacity: 0.3, clearcoat: 1, clearcoatRoughness: 0.2, emissive: '#e9edf2', emissiveIntensity: 0.12, depthWrite: false }, o)), 1.4);
   const slabGeo = (w, h, d) => { const s = new THREE.Shape(), r = 10; s.moveTo(-w / 2 + r, -h / 2); s.lineTo(w / 2 - r, -h / 2); s.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r); s.lineTo(w / 2, h / 2 - r); s.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2); s.lineTo(-w / 2 + r, h / 2); s.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r); s.lineTo(-w / 2, -h / 2 + r); s.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2); const g = new THREE.ExtrudeGeometry(s, { depth: d, bevelEnabled: true, bevelThickness: 2, bevelSize: 2, bevelSegments: 3 }); g.translate(0, 0, -d / 2); return g; };
   const plate3 = new THREE.Group(); ov.add(plate3);
-  const pB = new THREE.Mesh(slabGeo(300, 90, 8), frost({ color: '#dfe6ee' })), pF = new THREE.Mesh(slabGeo(300, 90, 8), frost()); plate3.add(pB, pF); let plateWH = '';
+  const pB = new THREE.Mesh(slabGeo(300, 90, 8), frost({ opacity: 0.14 })), pF = new THREE.Mesh(slabGeo(300, 90, 8), frost()); plate3.add(pB, pF); let plateWH = '';
   const plate = document.createElement('div'); plate.className = 'h3-plate'; plate.id = 'h3plate'; plate.setAttribute('aria-live', 'polite'); hud.appendChild(plate);
 
   /* ---------- 气体玻璃球按钮(钠琥珀 / 氖橙红 / 铜焰青绿)+ 黄铜轨道 ---------- */
@@ -258,7 +258,7 @@ export async function install(gl, scene, cam, ST) {
     if (xs.length) { const a = xs[0], z = xs[xs.length - 1], w = Math.abs(z.x - a.x) / 2 + 58; orbit.position.set((a.x + z.x) / 2, a.y - 4, -10); orb1.scale.set(w, w * 0.34, w); orb1.rotation.z = 0.06; orb2.scale.set(w * 0.88, w * 0.27, w); orb2.rotation.z = -0.05; orb2.position.y = 3; }
     /* 铭牌:叠在 HTML 铭牌后 */
     const pr = plate.getBoundingClientRect(); plate3.visible = pr.width > 0 && getComputedStyle(plate).display !== 'none';
-    if (plate3.visible) { const c = px(pr.left - cr.left + pr.width / 2, pr.top - cr.top + pr.height / 2); const wh = Math.round(pr.width) + 'x' + Math.round(pr.height); if (wh !== plateWH) { plateWH = wh; pF.geometry.dispose(); pB.geometry.dispose(); pF.geometry = slabGeo(pr.width, pr.height, 8); pB.geometry = slabGeo(pr.width * 0.96, pr.height * 0.92, 8); } pF.position.set(c.x, c.y, 0); pB.position.set(c.x + 16, c.y + 12, -14); }
+    if (plate3.visible) { const c = px(pr.left - cr.left + pr.width / 2, pr.top - cr.top + pr.height / 2); const wh = Math.round(pr.width) + 'x' + Math.round(pr.height); if (wh !== plateWH) { plateWH = wh; pF.geometry.dispose(); pB.geometry.dispose(); pF.geometry = slabGeo(pr.width, pr.height, 8); pB.geometry = slabGeo(pr.width * 0.96, pr.height * 0.92, 8); } pF.position.set(c.x, c.y, 0); pB.position.set(c.x + 18, c.y + 10, -16); }
     rows = Math.max(3, Math.floor((Hh - 250) / 96));
     const show = !mobile(); cards.forEach(c => c.visible = show); nav.style.display = show ? '' : 'none';
   }
@@ -270,7 +270,7 @@ export async function install(gl, scene, cam, ST) {
     const s = (EF.SC || [])[Math.round(ST.target)], k = hot >= 0 ? keys[hot] : s && s.t; if (!k) return;
     const key2 = k + '|' + (s && s.n) + '|' + hot; if (key2 === plateKey) return; plateKey = key2;
     const Mi = EF.MISSIONS[k], p = EF.prog(k), n = (p.done || []).length;
-    plate.innerHTML = '<small>' + (hot >= 0 ? '任务卡' : '尺度镜 · ' + s.n) + '</small><b>' + Mi.q + '</b><span>' + (n >= Mi.n ? '已通关' : '第 ' + (n + 1) + ' / ' + Mi.n + ' 关') + ' · ' + '★'.repeat(Math.min(n, Mi.n)) + '<i>' + '☆'.repeat(Math.max(0, Mi.n - n)) + '</i></span>';
+    plate.innerHTML = '<small>' + (hot >= 0 ? '任务卡' : '尺度镜 · ' + s.n) + '</small><b>' + Mi.q + '</b><span>' + (n >= Mi.n ? '已通关' : '第 ' + (n + 1) + ' / ' + Mi.n + ' 关') + ' · <em>' + '★'.repeat(Math.min(n, Mi.n)) + '</em><i>' + '☆'.repeat(Math.max(0, Mi.n - n)) + '</i></span>';
     setTimeout(layout, 0);
   }
 
@@ -310,7 +310,7 @@ export async function install(gl, scene, cam, ST) {
       c.position.copy(px(x, y)); c.position.z = z;
       c.rotation.set(0.88 + (i === hot ? -0.1 : 0), Math.sin(d * 0.85 + 0.6) * 0.32 - 0.18, Math.sin(d * 0.85) * 0.06);
       const fade = Math.max(0, Math.min(1, Math.min(d + 0.8, rows - 0.2 - d)));
-      c.scale.setScalar(0.62 + 0.26 * fade); c.userData.mat.opacity = c.userData.mat.transparent ? 0.86 * fade : 1;
+      c.scale.setScalar(0.62 + 0.26 * fade); c.userData.mat.opacity = 0.5 * fade;
       c.visible = vis || fade > 0.02;
       c.userData.obj.rotation.y = rm ? 0.4 : t * 0.35 + i;
       if (c.userData.obj.userData.spark) c.userData.obj.userData.spark.material.size = 2.2 + Math.sin(t * 9 + i) * (rm ? 0 : 0.8);
