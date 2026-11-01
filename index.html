@@ -145,6 +145,7 @@
         gap: 16px; align-items: center; flex-wrap: wrap; font-size: 11.5px; color: rgba(234,240,255,.5);
       }
       .ui > .foot { pointer-events: none; } /* v0.3：页脚整行不再挡住画布拖动，只有按钮可点 */
+      .x-lang { letter-spacing: .04em; } .x-lang--ab { pointer-events: auto; cursor: pointer; background: none; border: 1px solid rgba(232,200,120,.45); color: var(--gold); border-radius: 999px; padding: 4px 10px; font: inherit; margin-right: 8px; }
       .foot .x-fix { pointer-events: auto; color: var(--gold); text-decoration: underline; text-underline-offset: 3px; padding: 10px 2px; }
       @media (max-width: 860px), (max-height: 480px) { .foot .x-fix { display: none; } }
       .foot button { pointer-events: auto;
@@ -1080,6 +1081,168 @@
     </style>
   </head>
   <body>
+    <script>
+/* ---------- v2.5.0 中英双语框架（王磊 11-01 18:56 同意方案 v0.1）----------
+ * 语言来源：URL ?lang= > 本机键 gn:lang（全站共享）> 默认中文；不按浏览器语言自动跳转。
+ * 英文模式下逐个替换文本节点与 aria-label/title/placeholder/alt；缺英文的地方保留中文。
+ * 切换语言写入 gn:lang 并重新载入页面（世界码、星桥 ID、存储键不变）。 */
+(function () {
+  var q = /[?&]lang=(zh|en)\b/.exec(location.search), L = "zh";
+  try { if (q) localStorage.setItem("gn:lang", q[1]); L = q ? q[1] : (localStorage.getItem("gn:lang") || "zh"); } catch (e) { L = q ? q[1] : "zh"; }
+  if (L !== "en") L = "zh";
+  window.GN_LANG = L;
+  window.gnSetLang = function (l) {
+    try { localStorage.setItem("gn:lang", l); } catch (e) {}
+    var u = location.pathname + location.search.replace(/([?&])lang=(zh|en)&?/, "$1").replace(/[?&]$/, "");
+    u += (u.indexOf("?") > -1 ? "&" : "?") + "lang=" + l;
+    location.replace(u + location.hash);
+  };
+  var W = { "星图": "Math Atlas", "宙律": "Nomoverse", "元素工坊": "Element Forge", "生命源码": "Life Source", "奇点前夜": "Pre-Singularity", "觉弈": "Ludoterra", "天枢": "Starhelm", "总门户": "Portal" };
+  var E = {
+    "创世计划 Genesis": "Genesis", "七个世界 · 一张星图": "Seven worlds · one star map", "✦ 星网": "✦ Star Web", "星历": "Star Log",
+    "宇宙将为你闪烁": "The Universe Will Twinkle for You", "背景音乐": "Music", "原创合成 · 四首": "Original synth · 4 tracks", "列表循环": "Loop all", "单曲循环": "Loop one", "关闭声音": "Sound off",
+    "如果世界是一款游戏": "What if the world were a game?", "七个互相连通的学习世界 · 把世界当成一款游戏来拆解": "Seven connected learning worlds · take the world apart like a game",
+    "了解更多 →": "Learn more →", "帮我选一颗星 ✦": "Pick a star for me ✦", "帮我选一颗星": "Pick a star for me",
+    "七个世界，一张星图。让一个普通人，用玩游戏的热情，在一生中走过人类知识的全图。": "Seven worlds, one star map. Bring the passion of play to a lifelong walk across the whole map of human knowledge.",
+    "▶ 观看宣传片": "▶ Watch the trailer", "展开星桥 ✦": "Open Star Bridges ✦", "关于创世计划": "About Genesis",
+    "免费 · 无需注册 · 进度只保存在你的设备上": "Free · no sign-up · progress stays on your device", "网站更新较快，按": "We update often. Press", "强制刷新，查看最新效果": "to force-refresh.",
+    "⛶ 按": "⛶ Press", "全屏，体验更好": "for full screen.", "创世七律": "Seven Laws", "发现错误？": "Spot an error?",
+    "北斗七星并不在同一平面：天枢距我们约": "The Big Dipper isn't flat: Dubhe is about", "，天璇约": " away, Merak about", "。拖动看看它们在太空中的真实位置。": ". Drag to see where they really sit in space.",
+    "123 光年": "123 light-years", "80 光年": "80 light-years", "⟲ 回到地球视角": "⟲ Back to Earth view", "演示进度": "Demo progress",
+    "▼ 潜入深空": "▼ Dive into Deep Space", "▶ 宣传片": "▶ Trailer", "创世计划 2.0": "Genesis 2.0", "深空层 · 全新上线": "Deep Space layer · new", "天枢 Starhelm 2.0": "Starhelm 2.0", "巡天 · 同步启航 ↗": "Sky survey · launching together ↗",
+    "公告": "Notice", "新任务": "New quest", "全部更新 · 星历": "All updates · Star Log", "开发看板 →": "Dev board →", "点击或按任意键跳过": "Click or press any key to skip",
+    "这里没有分数，只记录你点亮过的世界。": "No scores here — just the worlds you've lit.", "我的星阶 · 只和自己比": "My star tier · only against myself", "个任务": "quests", "个世界": "worlds", "座星桥": "bridges",
+    "七级星阶怎么升": "How the seven tiers work", "昵称（可不填，别写真名）": "Nickname (optional, not your real name)", "我最近弄懂的问题": "A question I recently figured out",
+    "生成成就卡": "Make achievement card", "生成挑战卡": "Make challenge card", "下载图片": "Download image", "分享": "Share",
+    "卡片在本机生成，不含姓名、学校、年龄、网址或二维码；不设排行榜，不用连续打卡。数据只存在本机浏览器。": "Cards are made on your device with no name, school, age, URL or QR code. No leaderboards, no streaks. Data stays in this browser.",
+    "创世计划 2.0 · 深空之下": "Genesis 2.0 · Beneath Deep Space", "深空之下 · 62 秒": "Beneath Deep Space · 62 s", "🔊 开声音": "🔊 Sound on", "跳过 ›": "Skip ›", "跳过 →": "Skip →",
+    "联系开发者": "Contact the developer", "DEVELOPER · 领航员": "DEVELOPER · Navigator", "创世计划开发者": "Genesis developer", "想聊学习世界的点子、合作，或反馈问题，欢迎加我微信。": "Ideas, partnerships or feedback? Add me on WeChat.",
+    "微信": "WeChat", "复制": "Copy", "添加时请注明来意，例如「创世计划 · 合作」或「创世计划 · 反馈」。": "Please say why you're adding me, e.g. “Genesis · partnership” or “Genesis · feedback”.",
+    "📖 我的开发心得 · 开发攻略书 第一卷 →": "📖 Dev notes · Handbook vol. 1 (Chinese) →",
+    "一问一世界": "One question, one world", "规则可改": "Rules you can change", "一张总图": "One map", "向导只提问": "Guides only ask", "非文字优先": "Beyond words first", "声音即规律": "Sound is law", "零门槛、零打扰": "No barriers, no nagging", "零门槛零打扰": "No barriers, no nagging",
+    "：每个任务从一个好奇的真实问题出发。": ": every quest starts from a real, curious question.", "：不是看世界，而是改世界。": ": don't just watch the world — change it.", "：七个世界的知识星由星桥相连。": ": the seven worlds' stars are linked by bridges.",
+    "：只给分级提示，不给答案。": ": graded hints, never answers.", "：能用图像、模拟、声音表达的不用文字。": ": if a picture, simulation or sound can say it, skip the words.", "：声音由学科规律实时合成。": ": sound is synthesized live from the science.", "：免费、免注册、不刷题、不排名。": ": free, no sign-up, no drills, no rankings.",
+    "← 回到北斗": "← Back to the Dipper", "星桥：在一个问题里，自然地走进另一个世界": "Star Bridges: one question leads naturally into another world", "纪年": "Timeline",
+    "由新到旧 · 日期为北京时间 · 按 N 打开": "Newest first · Beijing time · press N", "开发看板 · 七个世界的下一步 →": "Dev board · what's next for the seven worlds →",
+    "深空纪年 · 越往下越深": "Deep-space timeline · deeper as you scroll", "1.0 星历 · 已归档": "1.0 Star Log · archived", "点开查看 七星连桥": "Open · seven-star bridges", "水面 · 七个世界": "Surface · seven worlds",
+    "七世界航线": "Seven-world routes", "拖动星盘旋转 · 点卡片翻面 · 卡顶金线是北斗连线，已上线的世界会点亮": "Drag to spin · tap a card to flip · gold lines trace the Dipper; live worlds glow",
+    "说说你多大、对什么好奇，我从七个世界里挑 1–3 个给你。都可以不选。": "Tell me your age and what you're curious about, and I'll pick 1–3 worlds. Both are optional.",
+    "年龄段": "Age", "对什么好奇（可多选）": "Curious about (pick any)", "看看推荐 ✦": "Show picks ✦", "重新选": "Start over", "不说": "Skip",
+    "年龄只是建议，每个世界都对所有人开放。选择只保存在这台设备上。": "Ages are only a guide — every world is open to everyone. Your choices stay on this device.",
+    "是什么": "What it is", "为什么是七颗星": "Why seven stars", "世界怎么相连": "How worlds connect", "把世界当成一款游戏来拆解": "Take the world apart like a game",
+    "创世计划是": "Genesis is", "七个互相连通的学习世界": "seven connected learning worlds",
+    "。每个世界都从一个让人忍不住想知道答案的真实问题出发，让你亲手把规则拆开、改动、再装回去。": ". Each world starts from a real question you can't help wanting answered, and lets you take its rules apart, change them and put them back together.",
+    "不按年级": "No grade levels", "问题先行": "Questions first", "向导只提问，不给答案": "Guides ask, never answer", "免费 · 免注册": "Free · no sign-up", "不刷题 · 不排名": "No drills · no rankings",
+    "内容目前由 AI 审稿，欢迎纠错。觉得哪里讲得不对，点页脚「发现错误？」告诉我们，附上出处（论文、教材、权威机构资料）会更快核实；核实后会在原页更正，并记进星历。如果你是该领域的科学家或学者，可以选择署名。想到好问题，也可以在同一处提给我们。": "Content is currently reviewed by AI, and corrections are welcome. If something looks wrong, tap “Spot an error?” in the footer; a source (paper, textbook, official data) helps us verify faster. Verified fixes are made in place and logged in the Star Log. Scientists and scholars may be credited by name. Good questions are welcome there too.",
+    "七个世界": "Seven worlds", "北斗七星，夜空里的指路者": "The Big Dipper, the night sky's guide",
+    "北斗七星自古为人指路。七颗星对应七个世界，也对应每个世界都遵守的「创世七律」：": "The Big Dipper has guided people for millennia. Its seven stars stand for the seven worlds, and for the Seven Laws every world follows:",
+    "从宇宙到心智的一条路": "One road from cosmos to mind", "星图 · 数学 —— 贯穿所有世界的语言": "Math Atlas · math — the language running through every world",
+    "天枢是北斗第一星，也是第一个看向真实天空的世界。": "Dubhe is the Dipper's first star — and Starhelm is the first world to look at the real sky.",
+    "一个问题，走进另一个世界": "One question, into another world", "在知识星桥里看 ✦": "See it in Star Bridges ✦", "最近更新": "Latest updates",
+    "无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。": "No account, no tracking. Your progress stays in this device's browser.", "创世计划总门户": "Genesis portal",
+    "宇宙": "Cosmos", "自然与身体": "Nature & body", "物质": "Matter", "机器与智能": "Machines & AI", "数字与规律": "Numbers & patterns", "人与社会": "People & society",
+    "星芽": "Sprout", "星火": "Spark", "星辰·高中": "Stardust · high school", "星系·大学": "Galaxy · university", "星河·成人": "River · adult", "星穹·研究者": "Firmament · researcher", "专业": "Expert",
+    "星芽 7+": "Sprout 7+", "星火 12+": "Spark 12+", "星火 12+ · 星芽可试入门关": "Spark 12+ · Sprouts can try the intro levels", "即将点亮": "Coming soon", "所有人": "Everyone",
+    "用问题点亮知识星。": "Light knowledge stars with questions.", "改写物理常数，看宇宙怎么变。": "Rewrite physical constants and watch the universe change.", "用元素锻造物质，配方即反应。": "Forge matter from elements — every recipe is a reaction.",
+    "读、改、调试生命的「源码」。": "Read, edit and debug life's source code.", "亲手训练、测试、约束 AI。": "Train, test and set limits for AI yourself.", "看见自己的思维，做出更清醒的选择。": "See your own thinking and make clearer choices.",
+    "北斗第一星 · 用真实实时数据看见此刻的天空。": "The Dipper's first star · see tonight's sky with real live data.",
+    "喜欢找规律、解谜题？每想通一个问题，就点亮一颗知识星。": "Love patterns and puzzles? Every question you crack lights a knowledge star.",
+    "好奇宇宙为什么是现在这样？亲手改一改物理常数，看会发生什么。": "Wonder why the universe is the way it is? Change a physical constant and see what happens.",
+    "想知道东西由什么组成、怎样变化？它会带你用元素锻造物质。": "Want to know what things are made of and how they change? Forge matter from the elements.",
+    "对动物、身体和遗传好奇？来读一读、改一改生命的源码。": "Curious about animals, bodies and genes? Come read and edit life's source code.",
+    "想弄懂 AI 是怎么学会的？亲手训练它、考考它，再给它立规矩。": "Want to know how AI learns? Train it, test it, then give it rules.",
+    "想看清自己怎么思考、怎么做选择？把每一次选择当成一局棋来复盘。": "Want to see how you think and choose? Review each choice like a game of chess.",
+    "想知道此刻头顶的天空是什么样？用真实数据去看。": "Want to know what the sky above you looks like right now? See it with real data.",
+    "数学": "Math", "物理": "Physics", "化学": "Chemistry", "生物": "Biology", "超级智能": "Superintelligence", "超级智能 SI": "Superintelligence", "认知觉醒": "Cognition", "天文": "Astronomy",
+    "数学 · 天璇": "Math · Merak", "物理 · 天玑": "Physics · Phecda", "化学 · 天权": "Chemistry · Megrez", "生物 · 玉衡": "Biology · Alioth", "超级智能 · 开阳": "Superintelligence · Mizar", "认知觉醒 · 摇光": "Cognition · Alkaid", "天文 · 天枢": "Astronomy · Dubhe",
+    "天璇": "Merak", "天玑": "Phecda", "天权": "Megrez", "玉衡": "Alioth", "开阳": "Mizar", "摇光": "Alkaid",
+    "已开张": "Open", "已上线": "Live", "进入世界 →": "Enter world →", "去看 →": "Take a look →", "从这里出发": "Start here", "全部": "All", "全部类型": "All types", "内容": "Content", "状态": "Status", "体验升级": "Upgrade",
+    "星桥": "Star Bridge", "座": "", "门户": "Portal", "星尘": "Stardust", "1 星尘": "1 Stardust", "2 星云": "2 Nebula", "3 初星": "3 Protostar", "4 恒星": "4 Star", "5 双星": "5 Binary", "6 星团": "6 Cluster", "7 星系": "7 Galaxy",
+    "先去任意世界点亮一个任务": "Light a quest in any world first", "七个世界全部点亮": "All seven worlds lit", "联合发布": "Joint release", "GENESIS 2.0 · 联合发布": "GENESIS 2.0 · joint release",
+    "深空之下": "Beneath Deep Space", "· 深空之下": "· Beneath Deep Space", "深空层 · 星穹": "Deep Space · Firmament", "登上天枢 2.0 ↗": "Board Starhelm 2.0 ↗", "天枢 2.0 · 飞出银河": "Starhelm 2.0 · beyond the Milky Way",
+    "日球层 · 旅行者 1 号 · 卫星与彗星 · 室女座星系团 · 韦布深场": "Heliosphere · Voyager 1 · satellites & comets · Virgo Cluster · Webb deep field",
+    "✦ 创世计划 2.0 已开放": "✦ Genesis 2.0 is open", "实验室 ⚗": "Lab ⚗", "重要公告": "Notice", "演示": "Demo",
+    "星历登记宙律 v0.6-α4 至 v0.7-α1，宙律世界卡更新到 v0.7-α1。": "Star Log adds Nomoverse v0.6-α4 to v0.7-α1; Nomoverse card updated to v0.7-α1.",
+    "门户支持中英双语：页脚「中 / EN」一键切换，切一次全站记住。": "The portal is now bilingual: tap “中 / EN” in the footer; your choice is remembered site-wide.",
+    "深空层已开放「星辰·高中」推导卡：拖动变量、补全推导链。": "Deep Space now has “Stardust · high school” derivation cards: drag variables and complete the chain.",
+    "「星系·大学」建模卡正在制作，先从推荐的世界玩起，深空层会陆续开放。": "“Galaxy · university” modelling cards are in the works. Start with the worlds below; Deep Space opens step by step.",
+    "深空层已开放「星河·成人」决策卡：用世界规则拆解生活里的真问题。": "Deep Space now has “River · adult” decision cards: use each world's rules on real-life questions.",
+    "「星穹·研究者」前沿沙盒在规划中，先潜入深空看看已开放的航线。": "“Firmament · researcher” frontier sandboxes are planned. Dive into Deep Space to see the routes already open.",
+    "潜入深空 →": "Dive into Deep Space →",
+    "星云": "Nebula", "初星": "Protostar", "恒星": "Star", "双星": "Binary", "星团": "Cluster",
+    "· 深空之下 × 天枢 2.0": "· Beneath Deep Space × Starhelm 2.0", "创世计划 2.0：深空之下 × 天枢 2.0": "Genesis 2.0: Beneath Deep Space × Starhelm 2.0", "门户 2.0 · 天枢 2.0 同步发布 · 10/30": "Portal 2.0 · Starhelm 2.0 joint release · 10/30",
+    "2.0 主题 · 声呐 → 星光上行 → 全奏": "2.0 theme · sonar → rising starlight → tutti", "声呐回响 · 深海气流 · 2.0 预告": "Sonar echoes · deep-sea currents · 2.0 teaser", "利底亚和弦 · 钢片琴星光": "Lydian chords · celesta starlight", "慢速暖垫 · 七星音阶上行": "Slow warm pad · rising seven-star scale", "玻璃钟琶音 · 长混响": "Glass-bell arpeggios · long reverb",
+    "北斗夜航": "Night Sail by the Dipper", "星尘回响": "Stardust Echoes", "创世星海": "Sea of Genesis", "深空之下 · 宇宙将为你闪烁": "Beneath Deep Space · The Universe Will Twinkle for You",
+    "宇宙的规则": "The rules of the universe", "规则造出物质": "Rules make matter", "物质组成生命": "Matter builds life", "生命创造智能": "Life creates intelligence", "智能看见自己": "Intelligence sees itself", "我们在宇宙哪里": "Where we are in the universe",
+    "@创世计划 2.0 深空层与天枢 2.0": "Genesis 2.0 Deep Space and Starhelm 2.0", "@水面 · 七个世界的 2.0 更新": "Surface · the seven worlds' 2.0 updates", "@深空层 · 核素岛 · 3355 个核素": "Deep Space · Nuclide Island · 3355 nuclides",
+    "总门户": "Portal", "@中文 / English": "中文 / English",
+    "你已点亮": "You lit it", "天枢 2.0 同步启航 · 飞出银河": "Starhelm 2.0 sets sail · beyond the Milky Way", "创世护照": "Passport",
+    "深空之下，宇宙将为你闪烁：顺着光柱潜入水面，登上核素岛、坠入实验舱、仰望星穹里人类还没解开的问题。天枢 2.0 同步启航，飞出日球层，穿过银河，一直看到室女座星系团与韦布深场。": "Beneath deep space, the universe will twinkle for you: follow the beam below the surface, land on Nuclide Island, drop into the lab capsule and look up at questions humanity hasn't solved. Starhelm 2.0 sets sail with it — out of the heliosphere, across the Milky Way, all the way to the Virgo Cluster and the Webb deep field.",
+    "@创世护照": "Genesis Passport",
+    "@关闭": "Close", "@声音": "Sound", "@复位": "Reset", "@放大": "Zoom in", "@缩小": "Zoom out", "@收起": "Collapse", "@筛选": "Filter", "@按类型筛选": "Filter by type", "@搜索世界或问题": "Search worlds or questions", "@搜索世界或问题…": "Search worlds or questions…",
+    "@播放方式": "Playback mode", "@曲目": "Track", "@背景音乐曲目": "Music track", "@翻回正面": "Flip back", "@世界简介": "World intro", "@星盘向右转，下一个世界": "Spin right, next world", "@星盘向左转，上一个世界": "Spin left, previous world",
+    "@开发者头像": "Developer avatar", "@例如：小航": "e.g. Nova", "@展开重要公告": "Expand notice", "@收起重要公告": "Collapse notice", "@知识星桥": "Star Bridges", "@全息北斗星盘：七个世界": "Holographic Dipper dial: seven worlds",
+    "@AI 审稿 · 欢迎纠错：附上出处会帮我们更快核实": "AI-reviewed · corrections welcome; a source helps us verify faster", "@复制微信号 kevinwong8634": "Copy WeChat ID kevinwong8634",
+    "@从地球看到的北斗七星，七颗星对应七个世界": "The Big Dipper seen from Earth; seven stars, seven worlds", "@星网 · 跨世界航线": "Star Web · cross-world routes", "@星阶与分享卡": "Tiers & share cards", "@距下一阶": "To next tier", "@连通": "Connected",
+    "@宣传片": "Trailer", "@重播宣传片《深空之下》": "Replay trailer “Beneath Deep Space”", "@创世计划 2.0 宣传片 · 深空之下": "Genesis 2.0 trailer · Beneath Deep Space", "@创世计划 2.0 宣传片海报": "Genesis 2.0 trailer poster", "@创世计划 2.0 · 潜入深空": "Genesis 2.0 · dive into Deep Space",
+    "@北斗七星的真实三维位置，七颗星是七个世界的入口。拖动或用方向键旋转，滚轮或加减号缩放，按 0 或 Home 回到地球视角。": "The Big Dipper in true 3D; each star is a world's entrance. Drag or use arrow keys to rotate, scroll or +/− to zoom, 0 or Home to return to Earth view.",
+    "@星历 · 更新公告": "Star Log · updates", "@星历 2.0 · 深空纪年": "Star Log 2.0 · deep-space timeline", "@打开 1.0 星历（已归档）": "Open 1.0 Star Log (archived)", "@深空四层": "Four deep-space layers"
+  };
+  var SUBJ = { "数学": "Math", "物理": "Physics", "化学": "Chemistry", "生物": "Biology", "超级智能 SI": "Superintelligence", "超级智能": "Superintelligence", "认知觉醒": "Cognition", "天文": "Astronomy" };
+  var CJK = /[\u3400-\u9fff\u3000-\u303f\uff01-\uff5e]/;
+  function wn(x) { return W[x] || x; }
+  var RX = [
+    [/^(·\s*)?已上线( v[^\s→]+)?( · .+?)?( →)?$/, function (m, a, v, t, r) { return (a || "") + "Live" + (v || "") + (t ? " · " + (tr(t.slice(3)) || t.slice(3)) : "") + (r || ""); }],
+    [/^(\d+) 个任务 (\d+) 关$/, "$1 quests · $2 levels"], [/^(\d+) 个任务已开放$/, "$1 quests open"], [/^(\d+) 颗知识星$/, "$1 knowledge stars"], [/^(\d+) 个关卡 · 星桥六座已通$/, "$1 levels · six bridges open"],
+    [/^已点亮 (\d+) \/ 7 个世界$/, "$1 / 7 worlds lit"], [/^第 (\d+) 阶 \/ 7$/, "Tier $1 / 7"], [/^点亮 (\d+) 个任务$/, function (m, n) { return "Light " + n + (n === "1" ? " quest" : " quests"); }],
+    [/^(\d+) 个世界 · 走通 (\d+) 座星桥$/, function (m, a, b) { return a + " worlds · cross " + b + (b === "1" ? " bridge" : " bridges"); }], [/^(\d+) 个世界 · (\d+) 个任务$/, "$1 worlds · $2 quests"],
+    [/^再点亮 (\d+) 个任务，升到第 (\d+) 阶「(.+)」。$/, function (m, n, k, t) { return "Light " + n + " more to reach tier " + k + " “" + (E[t] || t) + "”."; }],
+    [/^适合 (.+)$/, function (m, a) { return "For " + (E[a] || a); }],
+    [/^(星图|宙律|元素工坊|生命源码|奇点前夜|觉弈|天枢) · 未点亮$/, function (m, a) { return W[a] + " · not yet lit"; }],
+    [/^进入(星图|宙律|元素工坊|生命源码|奇点前夜|觉弈|天枢)( →)?$/, function (m, a, r) { return "Enter " + W[a] + (r || ""); }],
+    [/^(\d\d) (星图|宙律|元素工坊|生命源码|奇点前夜|觉弈|天枢)$/, function (m, a, b) { return a + " " + W[b]; }],
+    [/^进入([A-Za-z][A-Za-z\- ]+?)( →)?$/, "Enter $1$2"], [/^适合$/, "For"],
+    [/^进入元素工坊实验室$/, "Enter the Element Forge lab"], [/^当前世界 · (.+)$/, function (m, a) { return "Current world · " + wn(a); }],
+    [/^(.+?) ([A-Za-z\- ]+)，(.+?)，已上线( v[^。]+)?。翻面查看简介$/, function (m, a, en, s, v) { return en + ", " + (SUBJ[s] || s) + ", live" + (v || "") + ". Flip for details"; }],
+    [/^(星图|宙律|元素工坊|生命源码|奇点前夜|觉弈|天枢|总门户)( 门户| 深空| 实验室)?( .+)?$/, function (m, a, k, r) { return W[a] + (k && !(a === "总门户" && k === " 门户") ? ({ " 门户": " Portal", " 深空": " Deep Space", " 实验室": " Lab" })[k] : "") + (r ? (r === " 立项" ? " · kickoff" : r) : ""); }]
+  ];
+  function seg(t) { // 「A · B」逐段翻
+    if (t.indexOf(" · ") < 0) return null;
+    var p = t.split(" · "), ok = true;
+    p = p.map(function (x) { if (!CJK.test(x)) return x; var y = E[x] || SUBJ[x] || W[x] || rx(x); if (y == null) ok = false; return y; });
+    return ok ? p.join(" · ") : null;
+  }
+  function rx(t) { for (var i = 0; i < RX.length; i++) { var m = RX[i][0].exec(t); if (m) { var r = t.replace(RX[i][0], RX[i][1]); if (!CJK.test(r) || r !== t) return r; } } return null; }
+  function tr(t) { if (!t || !CJK.test(t)) return null; var y = E[t]; if (y != null) return y; if (W[t]) return W[t]; y = rx(t); if (y != null && y !== t) return y; return seg(t); }
+  window.gnT = function (t) { if (L !== "en") return t; var y = tr(t); return y == null ? t : y; };
+  if (L !== "en") return;
+  document.documentElement.lang = "en";
+  document.title = "Genesis · Learning starts with a question · Seven worlds, one star map";
+  function node(n) {
+    var v = n.nodeValue, t = v.trim(); if (!t || !CJK.test(t)) return;
+    var y = tr(t); if (y == null) return;
+    n.nodeValue = v.replace(t, y);
+  }
+  var AT = ["aria-label", "title", "placeholder", "alt"];
+  function attrs(el) { for (var i = 0; i < AT.length; i++) { var v = el.getAttribute && el.getAttribute(AT[i]); if (v && CJK.test(v)) { var y = E["@" + v]; if (y == null) y = tr(v); if (y != null) el.setAttribute(AT[i], y); } } }
+  function walk(root) {
+    if (root.nodeType === 3) return node(root);
+    if (root.nodeType !== 1 || /^(SCRIPT|STYLE|CODE|KBD)$/.test(root.nodeName)) return;
+    attrs(root);
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT), n;
+    while ((n = w.nextNode())) { if (n.nodeType === 3) { if (!/^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName)) node(n); } else attrs(n); }
+  }
+  function go() {
+    walk(document.body);
+    new MutationObserver(function (ms) { ms.forEach(function (m) {
+      if (m.type === "characterData") node(m.target);
+      else if (m.type === "attributes") attrs(m.target);
+      else [].forEach.call(m.addedNodes, walk);
+    }); }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: AT });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", go); else go();
+})();
+    </script>
     <div id="stage">
       <canvas id="sky" tabindex="0" role="img" aria-label="北斗七星的真实三维位置，七颗星是七个世界的入口。拖动或用方向键旋转，滚轮或加减号缩放，按 0 或 Home 回到地球视角。"></canvas>
     </div>
@@ -1144,6 +1307,7 @@
         <button type="button" id="fsTip" class="x-fs" hidden>⛶ 按 <kbd>F11</kbd> 全屏，体验更好</button>
         <button id="lawBtn">创世七律</button>
         <a class="x-fix" href="https://github.com/kevin8634/kevin8634.github.io/issues/new?title=%E3%80%90%E7%BA%A0%E9%94%99%E3%80%91" target="_blank" rel="noopener" title="AI 审稿 · 欢迎纠错：附上出处会帮我们更快核实">发现错误？</a>
+        <button type="button" class="x-lang" onclick="gnSetLang(GN_LANG==='en'?'zh':'en')" aria-label="中文 / English" lang="">中 / EN</button>
               </div>
       <div class="x-3d" id="v3Box">
         <p id="v3Note">北斗七星并不在同一平面：天枢距我们约 <b>123 光年</b>，天璇约 <b>80 光年</b>。拖动看看它们在太空中的真实位置。</p>
@@ -1363,7 +1527,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v2.4.9</b></span>
+            <span><button type="button" class="x-lang x-lang--ab" onclick="gnSetLang(GN_LANG==='en'?'zh':'en')" aria-label="中文 / English">中 / EN</button> 创世计划总门户 <b>v2.5.0</b></span>
           </footer>
         </div>
       </div>
@@ -1569,6 +1733,8 @@
           meta: ["天枢 2.0 · 飞出银河", "日球层 · 旅行者 1 号 · 卫星与彗星 · 室女座星系团 · 韦布深场"], href: "starhelm/x/", prefix: ["gn:sh:"],
           age: ["ya","huo","chen","he"], tags: ["space"], why: "想知道此刻头顶的天空是什么样？用真实数据去看。" }
       ];
+      if (window.GN_LANG === "en") (function () { var ST = { "天枢": "Dubhe", "天璇": "Merak", "天玑": "Phecda", "天权": "Megrez", "玉衡": "Alioth", "开阳": "Mizar", "摇光": "Alkaid" };
+        WORLDS.forEach(function (w) { w.star = ST[w.star] || w.star; ["name", "desc", "why", "ageTxt", "field"].forEach(function (k) { if (w[k]) w[k] = gnT(w[k]); }); if (w.meta) w.meta = w.meta.map(gnT); }); })();
       // 北斗位置（归一化，斗口左上，斗柄右下）：天枢→天璇→天玑→天权→玉衡→开阳→摇光
       var DIPPER = {
         "07": [0.00, 0.00], "01": [-0.01, 0.43], "02": [0.30, 0.64], "03": [0.43, 0.38],
@@ -1742,7 +1908,7 @@
         var placed = [], list = WORLDS.slice().sort(function (a, b) { return a.z - b.z; });
         list.forEach(function (w) {
           var r = w.r, x = w.x, y = w.y;
-          var tw = Math.max(measure(w.id + " " + w.name, "500 13px " + FONT), measure(V3.off ? w.star + " · 约 " + Math.round(w.ly) + " 光年" : "Awakening Soon", "400 10.5px " + FONT)) + 6;
+          var tw = Math.max(measure(w.id + " " + w.name, "500 13px " + FONT), measure(V3.off ? w.star + (window.GN_LANG === "en" ? " · ~" + Math.round(w.ly) + " ly" : " · 约 " + Math.round(w.ly) + " 光年") : "Awakening Soon", "400 10.5px " + FONT)) + 6;
           var c = [
             [x - tw / 2, y + r * 2 + 1, x + tw / 2, y + r * 2 + 34],
             [x - tw / 2, y - r * 1.85 - 35, x + tw / 2, y - r * 1.85 - 2],
@@ -2379,11 +2545,11 @@
           var lk = V3.lyK;
           if (lk < 0.99) {
             ctx.globalAlpha = fade * 0.6 * (1 - lk);
-            ctx.fillText(alive ? (w.lit ? "你已点亮" : w.star) : "Awakening Soon", lx, ly2);
+            ctx.fillText(alive ? (w.lit ? gnT("你已点亮") : w.star) : "Awakening Soon", lx, ly2);
           }
           if (lk > 0.01) {
             ctx.globalAlpha = Math.max(fade, 0.5) * 0.9 * lk; ctx.fillStyle = "#e9c779";
-            ctx.fillText(w.star + " · 约 " + Math.round(w.ly) + " 光年", lx, ly2);
+            ctx.fillText(w.star + (window.GN_LANG === "en" ? " · ~" + Math.round(w.ly) + " ly" : " · 约 " + Math.round(w.ly) + " 光年"), lx, ly2);
           }
           ctx.globalAlpha = 1;
         }
@@ -3607,6 +3773,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "门户 v2.5.0", d: "2026-11-01", t: "门户支持中英双语：页脚「中 / EN」一键切换，切一次全站记住。" },
         { w: "gn", v: "门户 v2.4.9", d: "2026-11-01", t: "星历登记宙律 v0.6-α4 至 v0.7-α1，宙律世界卡更新到 v0.7-α1。" },
         { w: "02", v: "v0.7-α1", d: "2026-11-01", t: "三维引擎升级到 Three.js r186，21 关在四种屏幕尺寸下全部重测通过。" },
         { w: "02", v: "v0.6-α5", d: "2026-11-01", t: "物理复核修订 22 处：轨道逃逸改用能量判断、多普勒与马赫数表述、太阳光度与潮汐细节都更准确了。" },
@@ -4654,9 +4821,13 @@
       function gdShow(s, act) {
         GD.rec = gdPick(s); gdMark();
         var a = AGES[s.a], tn = (s.t || []).map(function (k) { return TAGS.filter(function (x) { return x[0] === k; })[0][1]; });
-        var head = (a ? a[0] + (/\d/.test(a[1]) ? "（" + a[1] + " 岁）" : "") : "") + (tn.length ? (a ? "，" : "") + "好奇" + tn.join("、") : "");
-        document.getElementById("gdOut").innerHTML = '<span>' + (head ? head + "：" : "") + '推荐你从<b style="color:var(--gold)">' + byId[GD.rec[0]].name + '</b>开始' +
-          (GD.rec.length > 1 ? '，再去看看另外 ' + (GD.rec.length - 1) + ' 个。' : '。') + '点一下转到它。</span><div class="x-gd__recs">' +
+        var EN = window.GN_LANG === "en", head = EN ?
+          (a ? gnT(a[0]) + (/\d/.test(a[1]) ? " (" + a[1] + ")" : "") : "") + (tn.length ? (a ? ", " : "") + "curious about " + tn.map(gnT).join(", ") : "") :
+          (a ? a[0] + (/\d/.test(a[1]) ? "（" + a[1] + " 岁）" : "") : "") + (tn.length ? (a ? "，" : "") + "好奇" + tn.join("、") : "");
+        document.getElementById("gdOut").innerHTML = '<span>' + (EN ?
+          (head ? head + ": " : "") + 'start with <b style="color:var(--gold)">' + gnT(byId[GD.rec[0]].name) + '</b>' + (GD.rec.length > 1 ? ', then try ' + (GD.rec.length - 1) + ' more.' : '.') + ' Tap one to jump to it.' :
+          (head ? head + "：" : "") + '推荐你从<b style="color:var(--gold)">' + byId[GD.rec[0]].name + '</b>开始' +
+          (GD.rec.length > 1 ? '，再去看看另外 ' + (GD.rec.length - 1) + ' 个。' : '。') + '点一下转到它。') + '</span><div class="x-gd__recs">' +
           GD.rec.map(function (id, k) {
             var w = byId[id];
             return '<button type="button" class="x-gd__rec' + (w.live ? "" : " soon") + '" data-w="' + id + '" style="--accent:' + w.color + '"><img src="world-' + id + '.webp" alt="">' +
