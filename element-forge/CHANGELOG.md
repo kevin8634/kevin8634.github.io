@@ -1,5 +1,9 @@
 # 元素工坊 Element Forge · 变更记录
 
+## v2.0.1 · 2026-11-01(北京时间)
+- 星桥 ef.fireworks ⇄ sh.aurora 工坊端补链(../starhelm/?task=aurora;门户 v0.8.8 已点亮);SW ef-v2.0.1。
+- 线上四档复测 island 与老任务。
+
 ## v2.0 · 2026-11-01(北京时间)· 2.0 首台旗舰实验室「超重元素岛」
 - 0 号任务:Three.js r169 → **r186**(vendor/three.module.min.js 与 /deep/vendor/r186 同一构建,MIT 声明随附);只有 WebGL1 的设备或 `?three=169` 时,ef.js 在任何模块加载前写入导入映射,回落到 vendor/three.r169.module.min.js(保留到 2.0 发布);EF.three 记录实际版本。10 任务 40 关回归通过。
 - 新任务 island「元素周期表的尽头在哪里?」(奥加,★★★,原子核 · 元素,进度键 gn:ef:island,解锁 Fe Sn Pb Fl Og):L0 核素地形(3D:3355 个已知原子核成柱,高度 = 寿命,稳定岛虚光,幻数网格;找铁-56 与铀-238 比结合能;低档为 2D 核素图,功能不减)、L1 锡的同位素链(Lab Kit:不对称/配对/库仑三项,A/B 对照)、L2 幻数(拖三个尖峰贴上「实测−液滴模型」残差,贴上即过关)、L3 周期表的尽头(平滑外推 vs 稳定岛猜想,A/B;上方 3D 地形尽头 + r 过程金雨)。
