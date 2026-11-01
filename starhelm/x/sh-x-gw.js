@@ -203,6 +203,14 @@
       if (R() < .11 && r > 3.5) { var rd = r - w * (.8 + R() * .5); dust(rd * Math.cos(th) + gs(R) * .3, gs(R) * .12, rd * Math.sin(th) + gs(R) * .3, .3 + R() * .35); }   // 尘埃带沿臂内侧
       if (R() < .004 && r > 5) hii.push([x, y, z, .25 + R() * .45]);
     }
+    /* C2.15b 王磊:M51 尘埃加浓(参照哈勃 2005 M51 照片):独立随机序列,不改原有星点分布
+     * ① 臂内侧窄而连续的主暗带 ② 斜穿旋臂的羽状尘埃支(feathers/spurs)③ 核区卷入核心的尘埃旋涡 ④ 潮汐桥尘埃压在 NGC 5195 前方 */
+    var R2 = rnd(51951), q2, t2;
+    for (q2 = 0; q2 < N * .035; q2++) { var i2 = R2() < .5 ? 0 : 1, r2 = 3 + Math.pow(R2(), .85) * (RG2 - 7), th2 = arm(i2, r2), w2 = .7 + r2 * .06, rd2 = r2 - w2 * (.95 + gs(R2) * .22); dust(rd2 * Math.cos(th2) + gs(R2) * .28, gs(R2) * .09, rd2 * Math.sin(th2) + gs(R2) * .28, .25 + R2() * .32); }
+    for (q2 = 0; q2 < 110; q2++) { var i3 = q2 & 1, r3 = 5 + R2() * (RG2 - 12), w3 = .7 + r3 * .06, L3 = 1.6 + R2() * 3.2, th3 = arm(i3, r3), n3 = Math.round(N * .00018 * L3);
+      for (t2 = 0; t2 < n3; t2++) { var u3 = R2(), rr3 = r3 - w3 + u3 * L3, tt3 = th3 - u3 * L3 * .55 / r3; dust(rr3 * Math.cos(tt3) + gs(R2) * .1, gs(R2) * .06, rr3 * Math.sin(tt3) + gs(R2) * .1, .18 + R2() * .22); } }
+    for (q2 = 0; q2 < N * .006; q2++) { var i4 = R2() < .5 ? 0 : 1, r4 = .6 + Math.pow(R2(), .7) * 2.9, th4 = arm(i4, Math.max(r4, 1)) - .35 + gs(R2) * .12; dust(r4 * Math.cos(th4) + gs(R2) * .08, gs(R2) * .05, r4 * Math.sin(th4) + gs(R2) * .08, .12 + R2() * .18); }
+    for (q2 = 0; q2 < N * .004; q2++) { var u5 = R2(); dust(N5195[0] * (.72 + u5 * .3) + gs(R2) * .9, N5195[1] * (.72 + u5 * .3) + 1 + gs(R2) * .25, N5195[2] * (.72 + u5 * .3) + gs(R2) * .9, .25 + R2() * .35); }
     hii.forEach(function (h, j) { var n = Math.round(60 + h[3] * 160); for (var q = 0; q < n; q++) { var p = R() < .7; put(h[0] + gs(R) * h[3], h[1] + gs(R) * h[3] * .3, h[2] + gs(R) * h[3], p ? 1.25 : .7, p ? .45 : .85, p ? .8 : 1.2, .06 + R() * .07); } });
     if (hii.length) { var hb = hii[Math.floor(hii.length * .35)]; set3(M51HII, hb); }
     var rdl = 13, tdl = arm(1, rdl); set3(M51DL, [(rdl - 1) * Math.cos(tdl), 0, (rdl - 1) * Math.sin(tdl)]);
@@ -240,7 +248,7 @@
   GAL.M87 = { k: 'M87', zh: 'M87 室女座 A', en: 'VIRGO A · M87', vii: 'VII·G-M87', sub: '距太阳约 5,350 万光年 · 巨椭圆星系 E0–1 · 中心黑洞 M87* 约 65 亿倍太阳质量 · 模拟渲染(3D 粒子)', dist: 53500, ra: 187.706, de: 12.391, rw: RWM, home: [320, .4, -.6], ref: 40, lgp: 'all',
       lab: function () { return [['M87* 黑洞', [0, 0, 0], '#ffb070', 2, .02], ['喷流 · 投影约 5,000 光年', [JD[0] * JL * .6, JD[1] * JL * .6, JD[2] * JL * .6], '#9fc8ff', 1, 120], ['球状星团群', [150, 60, 0], '#f0c97a', 3, 3000], ['银河系 · 5,350 万年前的光', null, '#f0c97a', -1, 1e9]]; },
       look: { up: 20, fov: .35, h: '从室女座星系团看本星系群', p: '那颗几乎看不见的小光点就是银河系。你看到的是 <b>约 5,350 万年前</b> 发出的光 —— 那时恐龙灭绝才过去约 1,300 万年。', tg: ['方向按真实位置换算', '窄视场放大约 150 倍'] } };
-  GAL.M51 = { k: 'M51', zh: '涡状星系 M51', en: 'WHIRLPOOL · M51', vii: 'VII·G-M51', sub: '距太阳约 2,300 万光年 · 直径约 7.6 万光年 · 宏象旋涡 + 伴星系 NGC 5195 · 模拟渲染(3D 粒子,外观依哈勃照片)', dist: 23000, ra: 202.4696, de: 47.1953, rw: RW51, home: [120, 1.15, -.5], ref: 8, dB: .6, lgp: 'all',
+  GAL.M51 = { k: 'M51', zh: '涡状星系 M51', en: 'WHIRLPOOL · M51', vii: 'VII·G-M51', sub: '距太阳约 2,300 万光年 · 直径约 7.6 万光年 · 宏象旋涡 + 伴星系 NGC 5195 · 模拟渲染(3D 粒子,外观依哈勃照片)', dist: 23000, ra: 202.4696, de: 47.1953, rw: RW51, home: [120, 1.15, -.5], ref: 8, dB: .8, lgp: 'all',
       lab: function () { return [['活动核', [0, 0, 0], '#f0c97a', 0, 25], ['旋臂尘埃带', M51DL, '#d9b48a', 1, 120], ['HII 区 · 年轻星团', M51HII, '#ff9fd0', 2, 80], ['NGC 5195', N5195, '#f0c97a', 3, 600], ['潮汐桥', [N5195[0] * .8, N5195[1] * .8, N5195[2] * .8], '#cdb8ff', 3, 300], ['银河系 · 2,300 万年前的光', null, '#f0c97a', -1, 1e9]]; },
       look: { up: 20, fov: .5, h: '从 M51 看本星系群', p: '那一小点模糊的光就是银河系。你看到的是 <b>约 2,300 万年前</b> 发出的光 —— 那时地球上还没有人类,猿类刚刚在非洲和欧亚大陆兴起。', tg: ['方向按真实位置换算(RA 13h29m52.7s Dec +47°11′43″)', '窄视场放大约 110 倍'] } };
   var G0 = GAL.M31;
@@ -372,7 +380,7 @@
     r.textContent = '视点距' + G0.zh + '中心 ' + ly(dc) + ' · 视野约 ' + ly(C.d * 1.04 * Math.tan(FOV * D2R / 2) / Math.tan(27.5 * D2R)) + (fovT < 10 ? ' · 窄视场' : '');
   }
   function open(o) {
-    o = o || {}; if (open_) return true; if (!window.THREE) return false; var ng = GAL[o.k] || GAL.M31; if (ng.k === 'M87') m87Axes(); if (ng.k === 'M51') m51Basis(); if (ng !== G0 || !ov) { if (rd) { try { rd.dispose(); } catch (e) { } rd = null; } if (ov) ov.remove(); G0 = ng; SMCP = null; dom(); }
+    o = o || {}; if (open_) return true; if (!window.THREE) return false; var ng = GAL[o.k] || GAL.M31; try { localStorage.setItem('shx.gw.last', ng.k); } catch (e) { }   /* C2.15b L1 记住最近一次进入的星系世界 */ if (ng.k === 'M87') m87Axes(); if (ng.k === 'M51') m51Basis(); if (ng !== G0 || !ov) { if (rd) { try { rd.dispose(); } catch (e) { } rd = null; } if (ov) ov.remove(); G0 = ng; SMCP = null; dom(); }
     if (!rd && !build()) return false;
     LBL.forEach(function (L) { if (L.el.textContent === '小麦哲伦云') L.p = SMCP; });
     open_ = true; ov.style.display = ''; document.body.classList.add('xgw-on'); size(); closeCard();

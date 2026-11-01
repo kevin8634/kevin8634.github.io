@@ -114,6 +114,8 @@
         if (b.obl) sf.group.children[0].scale.set(b.obl, 1, b.obl);
         sf.group.traverse(function (o) {
           var m = o.material; if (!m) return;
+          if (m.isShaderMaterial && m.fragmentShader.indexOf('float ray=fbm') >= 0 && m.fragmentShader.indexOf('uCA') < 0) {   // C2.15a BUG-01:日冕单独一份亮度系数,近距(几倍半径内)压暗,不再叠成白色「三叶草」
+            b.cA = { value: 1 }; m.uniforms = Object.assign({}, m.uniforms, { uCA: b.cA }); m.fragmentShader = 'uniform float uCA;' + m.fragmentShader.replace('gl_FragColor=vec4(c*s,s);', 'gl_FragColor=vec4(c*s,s)*uCA;'); }
           if (m.isShaderMaterial) { m.uniforms.uTint = { value: tint }; m.uniforms.uSat = { value: b.sat == null ? 1 : b.sat };
             m.fragmentShader = 'uniform vec3 uTint;uniform float uSat;' + m.fragmentShader.replace(/\}\s*$/, 'float shL=dot(gl_FragColor.rgb,vec3(.3,.59,.11));gl_FragColor.rgb=mix(vec3(shL),gl_FragColor.rgb,uSat)*uTint;}'); m.needsUpdate = true; }
           else if ((b.sat == null ? 1 : b.sat) < .5) o.visible = false;   // A 型星:不画橙色日珥
@@ -129,7 +131,7 @@
       var gc = document.createElement('canvas'); gc.width = gc.height = 128; var gx = gc.getContext('2d'), gr = gx.createRadialGradient(64, 64, 0, 64, 64, 64);
       gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(.12, 'rgba(255,255,255,.85)'); gr.addColorStop(.3, '#' + cc.getHexString()); gr.addColorStop(1, 'rgba(0,0,0,0)');
       gx.fillStyle = gr; gx.fillRect(0, 0, 128, 128); var gt = new T.CanvasTexture(gc);
-      var sp = new T.Sprite(new T.SpriteMaterial({ map: gt, color: cc, blending: T.AdditiveBlending, transparent: true, opacity: .35, depthWrite: false })); sp.scale.setScalar(b.R * 4); g.add(sp);
+      var sp = new T.Sprite(new T.SpriteMaterial({ map: gt, color: cc, blending: T.AdditiveBlending, transparent: true, opacity: .35, depthWrite: false })); sp.scale.setScalar(b.R * 4); g.add(sp); b.sp = sp;
       var pg = new T.BufferGeometry(); pg.setAttribute('position', new T.BufferAttribute(new Float32Array(3), 3));
       b.pt = new T.Points(pg, new T.PointsMaterial({ map: gt, color: cc, size: 14 * Math.min(2, window.devicePixelRatio || 1), sizeAttenuation: false, transparent: true, depthWrite: false, blending: T.AdditiveBlending }));
       b.pt.frustumCulled = false; g.add(b.pt); b.g = g; return g;
@@ -394,7 +396,7 @@
     ['gs', 'ga', 'wd', 'obl'].forEach(function (k) { b[k] = o[k]; });   // C2.8c 外观:对流元尺度 / 米粒幅度 / 白矮星 / 自转扁率
     b.off = false;
     if (b.g) { if (b.g.parent) b.g.parent.remove(b.g); b.g.traverse(function (x) { if (x.geometry) x.geometry.dispose(); if (x.material && x.material.dispose) x.material.dispose(); }); }
-    b.fx = null; sMain.add(body3d(b)); ephem(true); b.wp = bpos(b, Date.now());
+    b.fx = null; b.fxPts = null; b.cA = null; sMain.add(body3d(b)); ephem(true); b.wp = bpos(b, Date.now());
     b.li.style.display = ''; b.li.querySelector('.nm').textContent = b.zh + ' · 临时'; b.li.querySelector('.dot').style.background = b.col;
     b.lb.innerHTML = b.zh + '<i></i>';
     setTarget('tmpstar', o.src); return b;
@@ -607,6 +609,10 @@
     });
     if (BY.sun.fx) BY.sun.fx.update(dt, cam);
     B.forEach(function (b) { if (b.star && b.fx && b.dist < b.R * 400) b.fx.update(dt, cam); });
+    B.forEach(function (b) {   // C2.15a BUG-01 根因:远处天体按对数压缩缩小(b.sc),但 PointsMaterial 的 size 不随物体缩放 —— 巨星近旁 sc≈0.01 时日珥粒子放大约 100 倍,叠成白色三叶草与错位的橙色「月牙」
+      if (!b.fx || !b.fx.group || b.sc == null) return; if (!b.fxPts) { b.fxPts = []; b.fx.group.traverse(function (o) { if (o.isPoints && o.material && o.material.sizeAttenuation) b.fxPts.push([o.material, o.material.size]); }); }
+      for (var q = 0; q < b.fxPts.length; q++) b.fxPts[q][0].size = b.fxPts[q][1] * b.sc; });
+    B.forEach(function (b) { if (!b.star || !b.dist) return; var xr = b.dist / b.R; if (b.cA) b.cA.value = Math.max(.12, Math.min(1, (xr - 3) / 30)); if (b.sp) b.sp.material.opacity = .35 * Math.max(0, Math.min(1, (xr - 10) / 50)); });   // C2.15a 近距淡出辉光精灵与日冕(它们是远看的光晕)
     B.forEach(function (b) {   // C2.2g 探测器:500 万 km 内懒加载模型;光源始终指向太阳
       if (!b.craft || !b.cg) return;
       if (!b.cReq && b.dist < 5e6) loadCraft(b);

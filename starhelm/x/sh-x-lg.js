@@ -214,7 +214,7 @@
     ov.querySelector('.x').onclick = function () { back(); };
     ov.querySelectorAll('.bar button[data-p]').forEach(function (b) { b.onclick = function () { preset(b.dataset.p); }; });
     ov.querySelectorAll('.bar button[data-a]').forEach(function (b) { b.onclick = function () { var a = b.dataset.a; if (a === 'w1') world('VII-1'); else if (a === 'w2') world('VII-2'); else if (a === 'tl') tl(); else if (a === 'gw') gwPick(); else back(); }; });
-    var lv = ov.querySelector('.lv'); LV7.forEach(function (L, i) { var b = document.createElement('button'); b.type = 'button'; b.title = L.sc; b.innerHTML = '<b>' + L.k + '</b>' + L.zh; if (i === 1) b.title += ' —— 进入 M87 星系世界(C2.13b;M51 见下方「✦ 星系世界」)'; else if (i) { b.classList.add('ext'); b.title += '(C2.13c 开放)'; } else b.classList.add('on'); b.onclick = function () { if (!i) preset('all'); else if (i === 1 && window.SHXGW) { if (!SHXGW.enter('M87')) hint('星系世界需要 WebGL'); } else hint(L.k + ' ' + L.zh + ':' + L.sc + ' —— C2.13b/c 开放'); }; lv.appendChild(b); });
+    var lv = ov.querySelector('.lv'); LV7.forEach(function (L, i) { var b = document.createElement('button'); b.type = 'button'; b.title = L.sc; b.innerHTML = '<b>' + L.k + '</b>' + L.zh; if (i === 1) b.title += ' —— 直接进入最近一次去过的星系世界(默认 M87;换星系用下方「✦ 星系世界」)'; else if (i) { b.classList.add('ext'); b.title += '(C2.13c 开放)'; } else b.classList.add('on'); b.onclick = function () { if (!i) preset('all'); else if (i === 1 && window.SHXGW) { if (!SHXGW.enter(lastGW())) hint('星系世界需要 WebGL'); } else hint(L.k + ' ' + L.zh + ':' + L.sc + ' —— C2.13b/c 开放'); }; lv.appendChild(b); });
     var tr = ov.querySelector('.tl input'); tr.oninput = function () { setT(+tr.value / 10); };
     // 标签
     LBL = [];
@@ -267,6 +267,7 @@
     var gw = card.querySelector('.gw'); if (gw) gw.onclick = function () { closeCard(); if (!SHXGW.enter(g.k)) hint('星系世界需要 WebGL'); };   // C2.13b
     var dv = card.querySelector('.dv'); if (dv) dv.onclick = function () { var key = g.dv; close(true); if (window.SHXDV && SHXDV.lock) try { SHXDV.lock(key); } catch (e) { } };
   }
+  function lastGW() { var k = null; try { k = localStorage.getItem('shx.gw.last'); } catch (e) { } return /^(M31|LMC|M87|M51)$/.test(k || '') ? k : 'M87'; }   // C2.15b 王磊:L1 不弹选择,直接进最近一次选的星系世界
   function gwPick() {   // C2.13b5 星系世界入口(桌面 / 手机通用;手机上层级栏隐藏)
     closeCard(); if (!window.SHXGW || !SHXGW.enter) { hint('星系世界未加载'); return; }
     var L = [['M31', '仙女座 M31', '254 万光年 · 本星系群'], ['LMC', '大麦哲伦云', '16 万光年 · 银河卫星'], ['M87', 'M87 室女座 A', '5,350 万光年 · 室女座星系团'], ['M51', '涡状星系 M51', '2,300 万光年 · M51 星系群']];
