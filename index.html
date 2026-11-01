@@ -870,6 +870,7 @@
       .x-dk__b i { font-style: normal; font-size: 10.5px; color: var(--gold); line-height: 1.45; }
       .x-dk__b a, .x-dk__b span.soon { display: block; margin-top: 3px; padding: 5px 0; border-radius: 999px; text-align: center; font-size: 11.5px; font-weight: 600; text-decoration: none; }
       .x-dk__b a { background: var(--accent); color: #0a1030; }
+      .x-dk__b a.lab, .x-dk__info a.lab { background: transparent; color: var(--accent, var(--gold)); border: 1px solid currentColor; box-shadow: none; margin-top: 6px; } /* v2.4.1 世界实验室入口 */
       .x-dk__b span.soon { border: 1px dashed rgba(234,240,255,.3); color: var(--dim); font-weight: 400; }
       .x-dk__b button { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: none; color: var(--dim); font-size: 14px; cursor: pointer; }
       .x-dk__nav { position: absolute; top: 50%; z-index: 400; width: 40px; height: 40px; margin-top: -20px; border-radius: 50%; border: 1px solid rgba(233,199,121,.35);
@@ -1348,7 +1349,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span>创世计划总门户 <b>v2.2.1</b></span>
+            <span>创世计划总门户 <b>v2.4.1</b></span>
           </footer>
         </div>
       </div>
@@ -1533,7 +1534,7 @@
           age: ["huo","chen","he"], tags: ["space","matter"], why: "好奇宇宙为什么是现在这样？亲手改一改物理常数，看会发生什么。" },
         { id: "03", star: "天权", name: "元素工坊", en: "Element Forge", field: "化学",
           desc: "用元素锻造物质，配方即反应。", color: "#ff9a3c", live: true,
-          meta: ["已上线 v2.0.1 · 超重元素岛", "11 个任务 44 关"], href: "element-forge/", prefix: ["gn:ef:"],
+          meta: ["已上线 v2.1 · 反应台与实验室", "12 个任务 48 关"], href: "element-forge/", lab: "element-forge/lab/", prefix: ["gn:ef:"],
           age: ["huo","chen","he"], tags: ["matter"], why: "想知道东西由什么组成、怎样变化？它会带你用元素锻造物质。" },
         { id: "04", star: "玉衡", name: "生命源码", en: "Life Source", field: "生物",
           desc: "读、改、调试生命的「源码」。", color: "#34d399", live: true,
@@ -2422,7 +2423,7 @@
           '<p class="desc">' + w.desc + '</p>' +
           '<dl>' + meta + '</dl>' +
           (w.live
-            ? '<a class="btn btn--solid" data-enter="' + w.id + '" href="' + w.href + '">进入世界 →</a>'
+            ? '<a class="btn btn--solid" data-enter="' + w.id + '" href="' + w.href + '">进入世界 →</a>' + (w.lab ? ' <a class="btn" href="' + w.lab + '">实验室 ⚗</a>' : '')
             : '<button class="btn" disabled>即将觉醒</button>');
         var x = Math.min(Math.max(w.px + w.pr * 1.9, 16), W - 326);
         var y = Math.min(Math.max(w.py - 110, 16), H - 320);
@@ -2660,7 +2661,9 @@
         { a: { w: "02", id: "nv.tide", title: "月亮怎样拉动整片大海？", href: "nomoverse/tide/" },
           b: { w: "07", id: "sh.tidelock", title: "月亮为什么总用同一面对着我们？", href: "starhelm/?task=tidelock", label: "去天枢 →" } },
         { a: { w: "03", id: "ef.spectra", title: "隔着几百光年，怎么知道一颗星球的空气？", href: "element-forge/spectra/" },
-          b: { w: "07", id: "sh.exoearth", title: "宇宙里还有别的地球吗？", href: "starhelm/?task=exoearth", label: "去天枢 →" } }
+          b: { w: "07", id: "sh.exoearth", title: "宇宙里还有别的地球吗？", href: "starhelm/?task=exoearth", label: "去天枢 →" } },
+        { a: { w: "03", id: "ef.react", title: "把两种东西混在一起，会发生什么？", href: "element-forge/react/" },
+          b: { w: "02", id: "nv.energy", title: "能量去哪儿了？——能量守恒", href: null } }
       ];
       // 同一对世界之间有多座桥时，让弧线错开，避免重叠
       (function () {
@@ -3341,7 +3344,7 @@
         var TASKS = {
           "01": { p: ["ma:v1:", "gn:ma:"], t: { chord: "为什么有的和弦好听？", cat: "怎样让 AI 认出一只猫？", casino: "赌场为什么总是赢？", secret: "怎样把秘密藏进数字里？", epidemic: "传染病为什么会爆发？", rocket: "火箭怎样飞上月球？", cube: "魔方为什么能复原？", bee: "为什么蜜蜂选六边形？", nim: "先拿的人一定赢吗？", nav: "导航怎么找到最短的路？" } },
           "02": { p: ["gn:nv:"], t: { orbit: "为什么宇航员在空间站会飘起来？", sound: "为什么救护车经过时声音会变？", hoop: "如果引力变成两倍，篮球还能投进吗？", stars: "恒星为什么会发光？", tide: "月亮怎样拉动整片大海？" } },
-          "03": { p: ["gn:ef:"], t: { stars: "你身体里的铁是从哪颗星来的？", carbon: "为什么钻石和铅笔芯是同一种东西？", crystal: "晶体为什么那么整齐？", cabbage: "紫甘蓝汁为什么会变色？", fireworks: "烟花为什么五颜六色？", battery: "怎样造一块会发电的电池？", rocks: "岩石是怎么“长”出来的？", mars: "火星为什么是红的？", titan: "土卫六为什么是橙色的？", spectra: "隔着几百光年，怎么知道一颗星球的空气？" } },
+          "03": { p: ["gn:ef:"], t: { stars: "你身体里的铁是从哪颗星来的？", carbon: "为什么钻石和铅笔芯是同一种东西？", crystal: "晶体为什么那么整齐？", cabbage: "紫甘蓝汁为什么会变色？", fireworks: "烟花为什么五颜六色？", battery: "怎样造一块会发电的电池？", rocks: "岩石是怎么“长”出来的？", mars: "火星为什么是红的？", titan: "土卫六为什么是橙色的？", spectra: "隔着几百光年，怎么知道一颗星球的空气？", island: "元素周期表的尽头在哪里？", react: "把两种东西混在一起，会发生什么？" } },
           "04": { p: ["gn:ls:"], t: { dna: "四个字母怎么写出一个人？", parents: "为什么你长得像爸妈，又不完全像？", zebra: "为什么斑马会有条纹？", virus: "一场感冒是怎么在班里传开的？", wolf: "狼回来之后，河流为什么变了？" } },
           "05": { p: ["gn:ps:"], t: { ask: "AI 会思考吗？", write: "AI 是怎么写作文的？", cat: "怎样让 AI 认出一只猫？", attn: "AI 在「看」哪里？", panda: "怎样让 AI 把熊猫认成长臂猿？", truth: "这段话是 AI 写的吗？", robot: "为什么扫地机器人会偷懒？", scale: "把 AI 放大会怎样？", together: "我们和 AI 怎么一起生活？" } },
           "06": { p: ["gn:lt:"], t: { sleep: "今晚偷走的睡眠，明天谁来还？", wave: "生气的时候，是谁在替你做决定？", echo: "你说的那句话，他听到的是什么？", compound: "每天多进步 1%，一年后会怎样？", prisoner: "为什么好人不一定吃亏？", sunk: "电影看了一半很难看，要不要看完？", cocoon: "为什么你刷到的视频越来越像？", survivor: "为什么「成功经验」常常骗人？", nature: "人性本善，还是本恶？", meaning: "看见了这些规则，我想成为怎样的玩家？" } },
@@ -3584,6 +3587,8 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "门户 v2.4.1", d: "2026-11-01", t: "元素工坊世界卡旁新增「实验室 ⚗」入口；新星桥「把两种东西混在一起，会发生什么？⇄ 能量去哪儿了？」预留，等宙律任务上线即点亮。" },
+        { w: "03", v: "v2.1", d: "2026-11-01", t: "新任务「反应台」：60 条真实反应、四关由浅入深，看温度、颗粒大小和浓度怎样改变反应快慢；新开实验室大厅，旗舰实验一键进入，记录只存在本机。危险反应只看现象和原理。" },
         { w: "06", v: "v0.34", d: "2026-11-01", t: "睡眠债关加上通往生命源码「季节与生物节律」的星桥（对端即将开通）；觉弈 1.0 全部完成。" },
         { w: "06", v: "v0.33", d: "2026-11-01", t: "囚徒困境连到星图「先拿的人一定赢吗？」，信息茧房连到奇点前夜「这段话是 AI 写的吗」；新三关配上专属配乐。" },
         { w: "03", v: "v2.0.1", d: "2026-11-01", t: "工坊首页补上通往天枢「极光是太阳寄来的信吗？」的星桥入口。" },
@@ -4257,7 +4262,7 @@
             '<img src="world-' + id + '.webp" alt="" draggable="false" /><small>' + w.star + '</small><b>' + w.name + '</b><em>' + w.field.replace(" SI", "") + '<span> · ' + st + '</span></em></button>' +
             '<div class="x-dk__b"><button type="button" tabindex="-1" aria-label="翻回正面">×</button><b>' + w.name + '</b><small>' + w.en + ' · ' + w.field + '</small>' +
             '<p>' + brEsc(w.desc) + '</p><i class="x-dk__age" hidden>适合 ' + ageTxt(w) + '</i><i>' + st + (more ? '<span><br>' + more + '</span>' : '') + '</i>' +
-            (w.live ? '<a data-enter="' + id + '" href="' + w.href + '" tabindex="-1" aria-label="进入' + w.name + '">进入世界 →</a>' : '<span class="soon">即将点亮</span>') +
+            (w.live ? '<a data-enter="' + id + '" href="' + w.href + '" tabindex="-1" aria-label="进入' + w.name + '">进入世界 →</a>' + (w.lab ? '<a class="lab" href="' + w.lab + '" tabindex="-1" aria-label="进入' + w.name + '实验室">实验室 ⚗</a>' : '') : '<span class="soon">即将点亮</span>') +
             '</div></div></div>';
         }).join("");
         DK.cards = [].map.call(DK.box.children, function (c) { return c; });
@@ -4303,7 +4308,7 @@
         el.innerHTML = '<h4>当前世界 · ' + w.star + '</h4><div class="pic"><img src="world-' + ORDER[i] + '.webp" alt=""></div><b class="n">' + w.name + '</b><small class="e">' + w.en + ' · ' + w.field + '</small>' +
           '<dl><dt>状态</dt><dd>' + wStat(w) + '</dd>' + (w.meta[1] ? '<dt>内容</dt><dd>' + brEsc(w.meta[1]) + '</dd>' : '') + '<dt>适合</dt><dd>' + ageTxt(w) + '</dd></dl>' +
           dkGauges(ORDER[i], w) + '<p>' + brEsc(w.why || w.desc) + '</p>' +
-          (w.live ? '<a data-enter="' + ORDER[i] + '" href="' + w.href + '">进入' + w.name + ' →</a>' : '<span class="soon">即将点亮</span>');
+          (w.live ? '<a data-enter="' + ORDER[i] + '" href="' + w.href + '">进入' + w.name + ' →</a>' + (w.lab ? '<a class="lab" href="' + w.lab + '">' + w.name + '实验室 ⚗</a>' : '') : '<span class="soon">即将点亮</span>');
         if (had) { var nf = el.querySelector("a"); if (nf) nf.focus({ preventScroll: true }); else { el.tabIndex = -1; el.focus({ preventScroll: true }); } } // 重绘时不丢焦点
       }
       function dkGauges(id, w) {
