@@ -590,9 +590,9 @@
         const gs = el("div", "x-opts"); root.append(gs);
         const rest = el("div", "x-sub"); rest.hidden = true; root.append(rest);
         [20, 100, 1024].forEach((v) => {
-          const b = el("button", "x-opt x-qopt", v + " 人"); gs.append(b);
+          const b = el("button", "x-opt x-qopt", v + " 人"); b.dataset.v = v; gs.append(b);
           b.addEventListener("click", () => {
-            gs.querySelectorAll("button").forEach((x) => { x.disabled = true; if (x.textContent === "1024 人") x.classList.add("good"); });
+            gs.querySelectorAll("button").forEach((x) => { x.disabled = true; if (x.dataset.v === "1024") x.classList.add("good"); });
             b.classList.add("is-sel"); rest.hidden = false; draw();
             if (v === 1024) { Audio_.play("correct"); say("直觉很准！大多数人会猜 20。为什么只要 10 代就到 1024？点「下一代 ▶」亲眼看看。"); }
             else { Audio_.play("pop"); say(`答案是 1024，比 ${v} 多得多。每一代是上一代「加 2」还是「乘 2」？点「下一代 ▶」验证。`, "猜错不扣分。"); }
@@ -780,9 +780,9 @@
         const gs = el("div", "x-opts"); root.append(gs);
         const rest = el("div", "x-sub"); rest.hidden = true; root.append(rest);
         [5, 7, 10, 14].forEach((v) => {
-          const b = el("button", "x-opt x-qopt", v + " 天"); gs.append(b);
+          const b = el("button", "x-opt x-qopt", v + " 天"); b.dataset.v = v; gs.append(b);
           b.addEventListener("click", () => {
-            gs.querySelectorAll("button").forEach((x) => { x.disabled = true; if (x.textContent === "7 天") x.classList.add("good"); });
+            gs.querySelectorAll("button").forEach((x) => { x.disabled = true; if (x.dataset.v === "7") x.classList.add("good"); });
             b.classList.add("is-sel"); rest.hidden = false; mkA(); mkB();
             Audio_.play(v === 7 ? "correct" : "pop");
             say(v === 7 ? "猜得准！答案 ≈ 7 天：ln2 / ln1.1 ≈ 7.3。拖下面的滑块，看翻倍时间怎么随增长率变。"

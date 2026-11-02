@@ -1,4 +1,4 @@
-/* 星图 Math Atlas · 中英双语(英文版试点 v0.8.5,2026-11-01)
+/* 星图 Math Atlas · 中英双语(英文版 v0.8.6,2026-11-02;关内文字见 i18n/<任务>.js)
  * 规范同门户 v2.5.0:语言来源 URL ?lang= > 全站共享本机键 gn:lang(zh/en)> 默认中文;不按浏览器语言跳转;?lang= 会写回 gn:lang。
  * 英文模式逐个替换文本节点与 aria-label/title/placeholder/alt;词典没有的保留中文(不留空白)。
  * 公式、图示(svg/canvas)不翻译;世界码、星桥 ID、存储键(ma:v1:* / gn:ma:*)一律不变。
@@ -515,6 +515,8 @@
     [/^已点亮 (\d+) \/ (\d+) 颗星。$/, "$1 / $2 stars lit."],
     [/^☆ (.+)$/, function (m, a) { return "☆ " + T(a); }], [/^⭐ (.+)$/, function (m, a) { return "⭐ " + T(a); }]
   ];
+  /* 任务语言包:英文模式下由 i18n/<任务>.js 追加词条与句式(只在英文模式加载,中文用户不下载) */
+  window.MA_I18N = { add: function (d, r) { for (var k in d) if (Object.prototype.hasOwnProperty.call(d, k)) E[k] = d[k]; if (r) RX = r.concat(RX); }, T: function (s) { return window.MA_T(s); } };
   function rx(t) { for (var i = 0; i < RX.length; i++) { if (RX[i][0].test(t)) { var r = t.replace(RX[i][0], RX[i][1]); if (r !== t && r.indexOf("null") < 0) return r; } } return null; }
   function seg(t) { /* 「A · B」逐段翻,任何一段缺译则整句回退 */
     if (t.indexOf(" · ") < 0) return null;
@@ -552,6 +554,10 @@
 
   /* ---------- 英文模式:逐节点替换 ---------- */
   document.documentElement.lang = "en";
+  (function () { /* 任务页同步加载本任务语言包(解析 head 时 document.write,避免先闪中文) */
+    var m = /\/math-atlas\/([a-z]+)\/(index\.html)?$/.exec(location.pathname), PK = { nim: 1, bee: 1, nav: 1, secret: 1, chord: 1, cat: 1, casino: 1, epidemic: 1, rocket: 1, cube: 1 };
+    if (m && PK[m[1]] && document.readyState === "loading") document.write('<script src="../i18n/' + m[1] + '.js"><\/script>');
+  })();
   var SKIP = /^(SCRIPT|STYLE|CODE|KBD|PRE|TEXTAREA|svg|SVG|CANVAS|MATH)$/;
   function skip(el) { for (var p = el; p && p.nodeType === 1; p = p.parentNode) { if (SKIP.test(p.nodeName) || p.hasAttribute("data-noi18n") || p.namespaceURI === "http://www.w3.org/2000/svg") return true; } return false; }
   function node(n) {

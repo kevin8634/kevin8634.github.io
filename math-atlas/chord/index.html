@@ -622,9 +622,9 @@
           i.oninput = () => { amps[k] = +i.value; touched++; mark6(null); live6(); check6(); };
           l.append(i, `${k + 1}×`); $("#harms").appendChild(l); return i;
         });
-        const mark6 = (name) => $$("#pre6 button").forEach((b) => b.setAttribute("aria-pressed", b.textContent === name));
+        const mark6 = (name) => $$("#pre6 button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.name === name));
         Object.keys(presets).forEach((name) => {
-          const b = document.createElement("button"); b.className = "x-opt"; b.textContent = name;
+          const b = document.createElement("button"); b.className = "x-opt"; b.textContent = name; b.dataset.name = name;
           b.onclick = () => { presets[name].forEach((v, k) => { amps[k] = v; sliders[k].value = v; }); touched++; mark6(name); live6(); if (!hold) playWave(220, 1.2, amps); heard = true; check6(); };
           $("#pre6").appendChild(b);
         });

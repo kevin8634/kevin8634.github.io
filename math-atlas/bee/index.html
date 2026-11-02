@@ -729,7 +729,7 @@
             const box = el("div", "x-opts"); qBox.append(box);
             say("最后一个问题:为什么正五边形铺不满地面?", "想想放大镜里，一个顶点周围的角。");
             ch.forEach(([t, ok]) => {
-              const b = el("button", "x-opt x-qopt", t); b.type = "button"; box.append(b);
+              const b = el("button", "x-opt x-qopt", t); b.type = "button"; if (ok) b.dataset.ok = "1"; box.append(b);
               b.addEventListener("click", () => {
                 if (got.q || qTries >= 2 || b.classList.contains("bad")) return;
                 qTries++;
@@ -739,7 +739,7 @@
                 } else {
                   b.classList.add("bad"); Audio_.play("wrong");
                   if (qTries < 2) say("再想想:一个顶点周围的角加起来，必须正好是多少度?", "提示:正五边形的内角是 108°。");
-                  else { box.querySelectorAll(".x-qopt").forEach((x) => x.textContent.startsWith("108") && x.classList.add("good")); say("答案是:108° × 3 = 324° 不够，× 4 = 432° 太多。凑不出 360°。", "这颗星这次没拿到，下次再来!"); }
+                  else { box.querySelectorAll(".x-qopt").forEach((x) => x.dataset.ok && x.classList.add("good")); say("答案是:108° × 3 = 324° 不够，× 4 = 432° 太多。凑不出 360°。", "这颗星这次没拿到，下次再来!"); }
                 }
                 renderTasks(); if (got.q || qTries >= 2) endRow.hidden = false;
               });
@@ -985,7 +985,7 @@
             const box = el("div", "x-opts"); qBox.append(box);
             say("看见黄色的缝了吗?圆排得再紧，也有约 9.3% 的空间空着。", "回答球堆积的问题。");
             [["圆铺不满，会有缝隙浪费空间和蜡", true], ["圆的墙其实更费蜡", false], ["圆太难画了", false], ["圆装不下蜂蜜", false]].sort(() => Math.random() - 0.5).forEach(([t, ok]) => {
-              const b = el("button", "x-opt x-qopt", t); b.type = "button"; box.append(b);
+              const b = el("button", "x-opt x-qopt", t); b.type = "button"; if (ok) b.dataset.ok = "1"; box.append(b);
               b.addEventListener("click", () => {
                 if (got.circle || qTries >= 2 || b.classList.contains("bad")) return;
                 qTries++;
@@ -993,7 +993,7 @@
                 else {
                   b.classList.add("bad"); Audio_.play("wrong");
                   if (qTries < 2) say("再看看那些黄色的地方:它们是什么?", "提示:第 1 关说过，蜂巢要一条缝都没有。");
-                  else { box.querySelectorAll(".x-qopt").forEach((x) => x.textContent.startsWith("圆铺不满") && x.classList.add("good")); say("答案是:圆铺不满，会有缝隙浪费空间和蜡。", "这颗星这次没拿到，去游戏 3 吧。"); }
+                  else { box.querySelectorAll(".x-qopt").forEach((x) => x.dataset.ok && x.classList.add("good")); say("答案是:圆铺不满，会有缝隙浪费空间和蜡。", "这颗星这次没拿到，去游戏 3 吧。"); }
                 }
                 renderTasks(); if (got.circle || qTries >= 2) { g3.hidden = false; g3.style.display = "grid"; }
               });
@@ -1213,7 +1213,7 @@
             const opts = el("div", "x-opts"); qBox.append(opts);
             say("最后一个问题:没有谁画图纸，泡泡为什么会排成六边形?", "想想总墙长是怎么变的。");
             [[RIGHT, true], ["有人偷偷把它们修成了六边形", false], ["泡泡天生就是六边形的", false], ["盒子的形状决定的", false]].sort(() => Math.random() - 0.5).forEach(([t, ok]) => {
-              const b = el("button", "x-opt x-qopt", t); b.type = "button"; opts.append(b);
+              const b = el("button", "x-opt x-qopt", t); b.type = "button"; if (ok) b.dataset.ok = "1"; opts.append(b);
               b.addEventListener("click", () => {
                 if (got.q || qTries >= 2 || b.classList.contains("bad")) return;
                 qTries++;
@@ -1221,7 +1221,7 @@
                 else {
                   b.classList.add("bad"); Audio_.play("wrong");
                   if (qTries < 2) say("再想想:放松的时候，总墙长是变长还是变短?", "每个泡泡都在「省力」。");
-                  else { opts.querySelectorAll(".x-qopt").forEach((x) => x.textContent === RIGHT && x.classList.add("good")); say(`答案是:${RIGHT}。`, "这颗星这次没拿到，下次再来!"); }
+                  else { opts.querySelectorAll(".x-qopt").forEach((x) => x.dataset.ok && x.classList.add("good")); say(`答案是:${RIGHT}。`, "这颗星这次没拿到，下次再来!"); }
                 }
                 renderTasks(); if (got.q || qTries >= 2) endRow.hidden = false;
               });
