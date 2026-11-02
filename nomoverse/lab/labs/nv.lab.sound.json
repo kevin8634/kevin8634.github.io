@@ -1,0 +1,145 @@
+{
+ "schema": "gn-lab/1",
+ "id": "nv.lab.sound",
+ "world": "nv",
+ "title": "声速 · 规则改写台",
+ "question": "如果声音变慢,救护车会追上自己的声音吗?",
+ "color": "#8b5cf6",
+ "evidence": "confirmed",
+ "safety": "virtual",
+ "updated": "2026-11-01",
+ "params": [
+  {
+   "k": "c",
+   "label": "声速 c",
+   "min": 5,
+   "max": 1600,
+   "step": 1,
+   "value": 343,
+   "unit": "m/s"
+  },
+  {
+   "k": "v",
+   "label": "车速",
+   "min": 0,
+   "max": 60,
+   "step": 1,
+   "value": 25,
+   "unit": "m/s"
+  },
+  {
+   "k": "f",
+   "label": "警笛频率",
+   "min": 200,
+   "max": 1500,
+   "step": 10,
+   "value": 700,
+   "unit": "Hz"
+  }
+ ],
+ "model": {
+  "type": "fn",
+  "x": {
+   "k": "v",
+   "from": 0,
+   "to": 60,
+   "step": 1
+  },
+  "ys": [
+   {
+    "label": "迎面频率 (Hz)",
+    "expr": "f*c/(c-v)"
+   },
+   {
+    "label": "远离频率 (Hz)",
+    "expr": "f*c/(c+v)"
+   }
+  ]
+ },
+ "chart": {
+  "xlabel": "车速 (m/s)",
+  "ylabel": "听到的频率 (Hz)"
+ },
+ "ab": {
+  "vary": "c"
+ },
+ "presets": [
+  {
+   "id": "air",
+   "label": "空气 343",
+   "set": {
+    "c": 343
+   },
+   "vary": "c"
+  },
+  {
+   "id": "water",
+   "label": "水 1480",
+   "set": {
+    "c": 1480
+   },
+   "vary": "c"
+  },
+  {
+   "id": "helium",
+   "label": "氦气 1007",
+   "set": {
+    "c": 1007
+   },
+   "vary": "c"
+  },
+  {
+   "id": "slow",
+   "label": "慢声速",
+   "set": {
+    "c": 20
+   },
+   "vary": "c"
+  }
+ ],
+ "default_preset": "slow",
+ "predict": {
+  "q": "如果声速只有 20 m/s,车速 25 m/s 的救护车开过来,前方的人会听到?",
+  "options": [
+   "更高的警笛",
+   "什么也听不到,然后一声巨响",
+   "和原来一样"
+  ],
+  "answer": 1,
+  "why": "车比声音快(马赫 1.25),声波来不及跑到前面,在身后叠成锥面;锥面扫过时才一下子听到,像音爆。"
+ },
+ "conclusions": [
+  {
+   "text": "声源靠近音调升高、远离降低;声速越快,变化越小。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "超过声速时出现马赫锥,sinθ = c/v。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "「慢声速街道」是假想世界,用来看清马赫锥的形成。",
+   "evidence": "inferred"
+  }
+ ],
+ "checks": [
+  {
+   "label": "空气 25 m/s 迎面",
+   "x": 25,
+   "expect": 755.03,
+   "tol": 0.001
+  }
+ ],
+ "bridges": [
+  "nv.sound",
+  "ma.chord"
+ ],
+ "sources": [
+  {
+   "name": "OpenStax《University Physics Vol.1》17.7 The Doppler Effect、17.8 Shock Waves",
+   "url": "https://openstax.org/books/university-physics-volume-1/pages/17-7-the-doppler-effect"
+  }
+ ],
+ "ai_generated": "问题、猜测题、结论文字由 AI 撰写(宙律 02 窗口);数值由 core/labmodel.js 与 tests/physics.test.js 复算",
+ "page": "/nomoverse/lab/?lab=sound&preset=slow"
+}

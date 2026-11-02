@@ -202,6 +202,28 @@ truthy("亚音速无马赫锥", P.machHalfAngle(100, 343) === null);
   check("土星对冰的洛希极限 ≈ 2.2 R♄(主环在其内)", P.roche(1, 0.687, P.RHO_ICE), 2.2, 2e-2);
 })();
 
+/* ---- 规则改写台(v0.8-α1 core/labmodel.js)---- */
+(function () {
+  var X = require("../core/labmodel.js");
+  var sc = X.selfCheck(); truthy("改写台模型校验 " + sc.ok + "/" + sc.n, sc.ok === sc.n && sc.n === 9);
+  var gp = X.pair("gravity", "moon"); check("月球预设:A=地球 9.81、B=月球 1.62,只差 g", gp.B.g - gp.A.g, 1.62 - 9.81, 1e-12);
+  truthy("A/B 只差一个变量(重力)", gp.A.v === gp.B.v && gp.A.ang === gp.B.ang);
+  var ge = X.evaluate("gravity", gp.A, gp.B); truthy("地球这一投进筐、月球飞过篮板", ge.A[3] === "进筐 ✓" && ge.B[3] === "飞过篮板");
+  check("射程与 g 成反比:木星 ×0.396", X.evaluate("gravity", X.pair("gravity", "jupiter").A, X.pair("gravity", "jupiter").B).ratio, 9.81 / 24.79, 1e-9);
+  var fp = X.pair("friction", "speed20"); truthy("车速 +20% 预设只改车速", fp.B.kmh === 60 && fp.B.mu === fp.A.mu && fp.vary === "kmh");
+  var fe = X.evaluate("friction", X.pair("friction", "ice").A, X.pair("friction", "ice").B); check("冰面制动 ×7", fe.ratio, 7, 1e-9);
+  truthy("干燥停在线前、冰面冲过路口", fe.A[3] === "停在线前 ✓" && fe.B[3] === "冲过路口");
+  check("湿滑制动 ×1.75", X.evaluate("friction", X.pair("friction", "wet").A, X.pair("friction", "wet").B).ratio, 1.75, 1e-9);
+  var sw = X.evaluate("sound", X.pair("sound", "water").A, X.pair("sound", "water").B);
+  check("水中靠近升高 +1.72%", (sw.b.fNear - 700) / 700, 25 / 1455, 1e-9);
+  truthy("氦气靠近升高 ≈ +2.5%", Math.abs(X.sound(1007, 25, 700).fNear / 700 - 1 - 0.0255) < 0.001);
+  var ss = X.evaluate("sound", X.pair("sound", "slow").A, X.pair("sound", "slow").B); truthy("慢声速:车比声快,马赫 1.25", ss.b.sup && Math.abs(ss.b.M - 1.25) < 1e-9);
+  var pr = X.predict("gravity", gp.A, gp.B); truthy("先猜再看:正确选项是 ≈ 6.1 倍", pr.options[pr.answer] === "≈ 6.1 倍", pr.options.join(" / "));
+  truthy("先猜再看:慢声速答案是「什么也听不到,然后一声巨响」", X.predict("sound", X.pair("sound", "slow").A, X.pair("sound", "slow").B).answer === 1);
+  truthy("未知预设回退默认(重力→月球)", X.preset("gravity", "pluto").id === "moon" && X.preset("sound", "").id === "slow");
+  truthy("A、B 相同时不出猜测题", X.predict("gravity", X.pair("gravity", "earth").A, X.pair("gravity", "earth").B) === null);
+})();
+
 console.log(rows.join("\n"));
 console.log("\n合计:" + pass + " 通过," + fail + " 失败");
 process.exit(fail ? 1 : 0);

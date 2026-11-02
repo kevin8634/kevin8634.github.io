@@ -240,6 +240,11 @@
   .hd-h { display: flex; justify-content: space-between; align-items: center; font-size: 12px; letter-spacing: 1px; color: var(--cy2); margin: 0 0 6px 4px; }
   .hd-tog { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--glass-bd); background: var(--btn); color: var(--tx); font-size: 18px; line-height: 1; cursor: pointer; }
   .hd-tog:hover, .hd-tog:focus-visible { border-color: var(--ac); }
+  .hm-lab { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 14px; padding: 14px 16px; border-radius: 14px; text-decoration: none; color: var(--tx); border: 1px solid rgba(167,139,250,.55); background: linear-gradient(100deg, rgba(139,92,246,.22), rgba(103,232,249,.08)); }
+  .hm-lab:hover { border-color: #c4b5fd; }
+  .hm-lab b { font-size: 16px; color: #fff; }
+  .hm-lab span { flex: 1 1 280px; font-size: 13.5px; color: var(--tx2, #c4c0e6); }
+  .hm-lab i { font-style: normal; color: #67e8f9; font-weight: 600; }
   .hd-list { display: grid; gap: 6px; transition: opacity .25s; }
   .hd-card { display: flex; gap: 10px; align-items: center; padding: 7px 8px; border-radius: 12px; text-decoration: none; color: var(--tx); border: 1px solid transparent; background: rgba(167,139,250,.06); }
   .hd-card:hover, .hd-card:focus-visible { border-color: var(--ac); background: rgba(124,92,240,.18); }
@@ -443,7 +448,8 @@
   main.appendChild(el("section", { class: "hm-sec", "aria-labelledby": "h-tasks" }, [
     el("h2", { class: "hm-h", id: "h-tasks", text: "五个探究任务" }),
     el("p", { class: "hm-sub", text: "每关都是:观察 → 预测 → 运行 → 对比 → 改规则。拿到 1 颗星就能解锁下一关。" }),
-    cardsBox
+    cardsBox,
+    el("a", { class: "hm-lab", href: "lab/", "aria-label": "进入规则改写台" }, [el("b", { text: "⚗ 规则改写台" }), el("span", { text: "把重力调到月球、把路面变成冰、把声音调慢:A/B 对照只改一个变量,先猜再看。" }), el("i", { text: "进入 →" })])
   ]));
   function renderCards() {
     cardsBox.innerHTML = "";

@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self'; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#07061a">
+<title>规则改写台 · 宇宙常数旋钮台 · 宙律 Nomoverse</title>
+<meta name="description" content="宙律 Nomoverse 规则改写台:把重力调到月球、把路面变成冰、把声速调慢,左右 A/B 对照只改一个变量,先猜再看,记录本只存在你的设备上。纯虚拟实验。">
+<link rel="stylesheet" href="../core/nv.css">
+<style>
+  :root { --pv: #8b5cf6; --pv2: #c4b5fd; --cy: #67e8f9; --or: #fbbf24; --pan: rgba(14,11,40,.78); --line: rgba(167,139,250,.38); }
+  html, body { height: 100%; }
+  body { overflow-x: hidden; }
+  .lb-stage { position: fixed; inset: 0; z-index: 0; background: #05040f; }
+  .lb-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #ov { pointer-events: none; }
+  .lb-ui { position: relative; z-index: 2; pointer-events: none; height: 100vh; height: 100svh; }
+  .lb-ui > * { pointer-events: auto; }
+  .pan { background: var(--pan); border: 1px solid var(--line); border-radius: 14px; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: #ede9fe; }
+  .lb-top { position: absolute; left: 14px; right: 14px; top: 10px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; flex-wrap: wrap; }
+  .lb-top a.home { color: #fff; text-decoration: none; font-weight: 700; font-size: 16px; white-space: nowrap; }
+  .lb-top .ttl { color: #c4b5fd; font-size: 13px; white-space: nowrap; margin-right: 6px; }
+  .tab { appearance: none; border: 1px solid var(--line); background: transparent; color: #ddd6fe; border-radius: 999px; padding: 5px 13px; font: 13px/1.2 var(--font); cursor: pointer; text-decoration: none; white-space: nowrap; }
+  .tab.on { background: var(--pv); border-color: var(--pv); color: #fff; }
+  .tab[aria-disabled="true"] { opacity: .45; cursor: default; }
+  .lb-top .sp { flex: 1; }
+  .btn2 { appearance: none; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: #ede9fe; border-radius: 10px; padding: 6px 12px; font: 13px/1.2 var(--font); cursor: pointer; white-space: nowrap; }
+  .btn2:hover, .tab:not([aria-disabled="true"]):hover { border-color: var(--pv2); }
+  button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--cy); outline-offset: 2px; }
+  .lb-q { position: absolute; left: 50%; top: 70px; transform: translateX(-50%); padding: 9px 18px; font-size: 17px; font-weight: 700; max-width: min(640px, 52vw); text-align: center; }
+  .lb-left { position: absolute; left: 14px; top: 118px; width: 232px; padding: 12px 14px; }
+  .lb-right { position: absolute; right: 14px; top: 118px; width: 272px; padding: 12px 14px; max-height: calc(100% - 230px); overflow: auto; }
+  .h3 { font-size: 13px; color: #c4b5fd; margin: 0 0 8px; font-weight: 600; letter-spacing: .5px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+  .chip { appearance: none; border: 1px solid var(--line); background: transparent; color: #ddd6fe; border-radius: 999px; padding: 4px 11px; font: 12.5px/1.3 var(--font); cursor: pointer; }
+  .chip.on { background: var(--pv); border-color: var(--pv); color: #fff; }
+  .sl { margin: 8px 0 10px; }
+  .sl .r { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; }
+  .sl .r b { font: 600 14px/1.2 ui-monospace, Menlo, Consolas, monospace; color: var(--cy); }
+  .sl input { width: 100%; accent-color: var(--pv); margin: 4px 0 0; }
+  .sl small { display: block; font-size: 11.5px; color: var(--or); min-height: 15px; }
+  .dial { display: block; margin: 6px auto 0; width: 116px; height: 116px; touch-action: none; cursor: grab; }
+  .dial-t { text-align: center; font-size: 11.5px; color: #a5a1c8; margin-top: 2px; }
+  .ab { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .card { border-radius: 10px; padding: 8px 9px; font-size: 12.5px; line-height: 1.6; }
+  .card b { display: block; font-size: 13.5px; margin-bottom: 2px; }
+  .card.a { background: rgba(103,232,249,.08); border: 1px solid rgba(103,232,249,.45); }
+  .card.a b { color: var(--cy); }
+  .card.b { background: rgba(251,191,36,.07); border: 1px solid rgba(251,191,36,.45); }
+  .card.b b { color: var(--or); }
+  .card .mask { color: #8a85b5; letter-spacing: 2px; }
+  .fx { background: rgba(0,0,0,.28); border-radius: 8px; padding: 7px 10px; font: 15px/1.4 "Times New Roman", Georgia, serif; color: #fde68a; margin-bottom: 6px; }
+  .why { font-size: 12.5px; color: #c4c0e6; margin: 0 0 10px; }
+  .pq { font-size: 13px; margin: 0 0 6px; }
+  .opt { display: block; width: 100%; text-align: left; appearance: none; border: 1px solid var(--line); background: rgba(255,255,255,.03); color: #ede9fe; border-radius: 8px; padding: 6px 10px; margin: 0 0 6px; font: 13px/1.35 var(--font); cursor: pointer; }
+  .opt::before { content: "○ "; color: #a5a1c8; }
+  .opt.sel { border-color: var(--pv); background: rgba(139,92,246,.22); }
+  .opt.sel::before { content: "● "; color: #fff; }
+  .opt.ok { border-color: #34d399; background: rgba(52,211,153,.14); }
+  .opt.no { border-color: #f87171; background: rgba(248,113,113,.12); }
+  .pfb { font-size: 12.5px; min-height: 18px; margin: 2px 0 8px; }
+  .pfb.ok { color: #6ee7b7; } .pfb.no { color: #fca5a5; }
+  .badges { display: flex; flex-wrap: wrap; gap: 5px; }
+  .bdg { font-size: 11px; border-radius: 999px; padding: 2px 8px; border: 1px solid; }
+  .bdg.c { color: #86efac; border-color: rgba(134,239,172,.5); }
+  .bdg.i { color: #fcd34d; border-color: rgba(252,211,77,.5); }
+  .bdg.v { color: #c4b5fd; border-color: rgba(196,181,253,.45); }
+  .bdg.k { color: #67e8f9; border-color: rgba(103,232,249,.45); }
+  .play { position: absolute; right: calc(272px + 54px); bottom: 118px; width: 64px; height: 64px; border-radius: 50%; border: 0; background: radial-gradient(circle at 35% 30%, #a78bfa, #7c3aed); color: #fff; font-size: 24px; cursor: pointer; box-shadow: 0 0 30px rgba(139,92,246,.6); }
+  .play[disabled] { opacity: .6; cursor: default; }
+  .play-t { position: absolute; right: calc(272px + 46px); bottom: 96px; width: 80px; text-align: center; font-size: 12px; color: #c4b5fd; pointer-events: none; }
+  .lb-nb { position: absolute; left: 50%; transform: translateX(-50%); bottom: 14px; width: min(660px, calc(100% - 560px)); min-width: 420px; padding: 10px 12px; display: grid; grid-template-columns: 34px 1fr auto; gap: 10px; align-items: center; }
+  .lb-nb .lab { font-size: 13px; color: #c4b5fd; line-height: 1.3; }
+  .nb-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .nbe { background: rgba(255,255,255,.04); border-radius: 8px; padding: 6px 9px; font-size: 12px; line-height: 1.5; min-height: 38px; }
+  .nbe b { display: block; font-size: 13px; }
+  .nbe.empty { color: #8a85b5; }
+  .nb-btns { display: flex; flex-direction: column; gap: 6px; }
+  .lb-url { position: absolute; left: 14px; bottom: 10px; font: 11px/1.3 ui-monospace, Menlo, monospace; color: #8a85b5; max-width: 30vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-note { position: absolute; right: 14px; bottom: 10px; font-size: 11px; color: #8a85b5; text-align: right; max-width: 280px; line-height: 1.45; }
+  .lb-note a { color: #a5a1c8; }
+  .toast { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); z-index: 9; background: #1c1752; border: 1px solid var(--pv2); color: #fff; padding: 8px 14px; border-radius: 10px; font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none; }
+  .toast.on { opacity: 1; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  /* 大厅 */
+  .hall { position: relative; z-index: 2; max-width: 1120px; margin: 0 auto; padding: 84px 18px 50px; }
+  .hall h1 { font-size: 26px; margin: 6px 0 4px; }
+  .hall .sub { color: #c4c0e6; margin: 0 0 18px; font-size: 14px; }
+  .labs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .lc { position: relative; display: block; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); text-decoration: none; color: #ede9fe; background: #0c0a24; transition: transform .2s, border-color .2s; }
+  .lc:hover { transform: translateY(-3px); border-color: var(--pv2); }
+  .lc .im { aspect-ratio: 16/8; background-size: cover; background-position: center; position: relative; }
+  .lc .im::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(7,6,26,0) 30%, rgba(7,6,26,.9)); }
+  .lc .im span { position: absolute; left: 12px; bottom: 8px; z-index: 1; font-size: 22px; font-weight: 800; letter-spacing: 1px; }
+  .lc .tx { padding: 10px 12px 12px; font-size: 13px; color: #c4c0e6; }
+  .lc .tx b { display: block; color: #fff; font-size: 15px; margin-bottom: 4px; }
+  .lc.soon { opacity: .55; pointer-events: none; border-style: dashed; }
+  .hall .nbx { margin-top: 22px; padding: 14px; }
+  .ent { display: grid; grid-template-columns: 150px 1fr auto; gap: 10px; align-items: center; border-top: 1px solid rgba(255,255,255,.07); padding: 8px 2px; font-size: 13px; }
+  .ent .d { color: #8a85b5; font-size: 12px; }
+  .ent a { color: var(--cy); }
+  @media (max-width: 999px), (max-height: 619px) {
+    body { overflow-y: auto; }
+    .lb-ui { height: auto; }
+    .lb-stage { position: relative; height: 52svh; min-height: 260px; }
+    .lb-ui { display: flex; flex-direction: column; gap: 10px; padding: 0 10px 18px; }
+    .lb-top { position: fixed; z-index: 5; left: 8px; right: 8px; top: 6px; padding: 6px 8px; gap: 5px; }
+    .lb-top .ttl, .lb-top .sp { display: none; }
+    .tab { padding: 4px 9px; font-size: 12px; }
+    .lb-q, .lb-left, .lb-right, .lb-nb, .lb-url, .lb-note, .play, .play-t { position: static; transform: none; width: auto; max-width: none; min-width: 0; max-height: none; }
+    .lb-q { order: 1; font-size: 15px; margin-top: 10px; }
+    .playrow { order: 2; display: flex; align-items: center; gap: 12px; justify-content: center; }
+    .play { width: 56px; height: 56px; }
+    .play-t { position: static; width: auto; }
+    .lb-left { order: 3; } .lb-right { order: 4; } .lb-nb { order: 5; grid-template-columns: 1fr; } .lb-url { order: 6; max-width: 100%; } .lb-note { order: 7; text-align: left; max-width: none; }
+    .nb-row { grid-template-columns: 1fr; } .nb-btns { flex-direction: row; }
+    .dial { width: 96px; height: 96px; }
+    .labs { grid-template-columns: 1fr; }
+    .ent { grid-template-columns: 1fr; }
+    .hall { padding-top: 70px; }
+  }
+  @media (min-width: 1000px) and (min-height: 620px) { .playrow { display: contents; } }
+</style>
+</head>
+<body>
+<noscript><p style="padding:16px">规则改写台需要开启 JavaScript。<a href="../">返回宙律首页</a></p></noscript>
+<div class="lb-stage" id="stage" hidden><canvas id="gl" aria-hidden="true"></canvas><canvas id="ov" role="img" aria-label="实验舞台"></canvas></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div id="root"></div>
+<script src="../core/labmodel.js"></script>
+<script>
+"use strict";
+(function () {
+  var M = window.NVLab, D = document, W = window, ROOT = "../";
+  var Q = new URLSearchParams(location.search);
+  var RM = W.matchMedia && W.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var MOBILE = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || (W.matchMedia && W.matchMedia("(pointer: coarse)").matches);
+  W.NV = W.NV || { perf: { tier: MOBILE ? "mid" : "high", mobile: MOBILE, prCap: MOBILE ? 1.5 : 2 }, RM: RM };
+  var NBKEY = "gn:nv:lab", TS = Math.min(20, Math.max(1, +Q.get("ts") || 1));   // ts:自测加速(不影响结果)
+  function el(t, a, kids) { var e = D.createElement(t); if (a) for (var k in a) { if (k === "text") e.textContent = a[k]; else if (k === "html") e.innerHTML = a[k]; else if (k.slice(0, 2) === "on") e.addEventListener(k.slice(2), a[k]); else if (a[k] != null && a[k] !== false) e.setAttribute(k, a[k]); } (kids || []).forEach(function (c) { if (c != null) e.appendChild(typeof c === "string" ? D.createTextNode(c) : c); }); return e; }
+  function toast(t) { var x = D.getElementById("toast"); x.textContent = t; x.classList.add("on"); clearTimeout(toast.h); toast.h = setTimeout(function () { x.classList.remove("on"); }, 1800); }
+  var NB = {
+    list: function () { try { var a = JSON.parse(localStorage.getItem(NBKEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } },
+    add: function (e) { var a = NB.list(); a.unshift(Object.assign({ t: new Date().toISOString() }, e)); a.length = Math.min(a.length, 60); try { localStorage.setItem(NBKEY, JSON.stringify(a)); } catch (x) {} return a; },
+    remove: function (t) { var a = NB.list().filter(function (e) { return e.t !== t; }); try { localStorage.setItem(NBKEY, JSON.stringify(a)); } catch (x) {} },
+    exportJSON: function () { return JSON.stringify({ schema: "gn-lab-notebook/1", world: "nv", exported: new Date().toISOString(), entries: NB.list() }, null, 1); }
+  };
+  function download(name, blob) { var a = el("a", { href: URL.createObjectURL(blob), download: name }); D.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000); }
+  var TABS = [["gravity", "重力"], ["friction", "摩擦"], ["sound", "声速"], [null, "光速 · 即将"], [null, "潮汐 · 即将"]];
+  var root = D.getElementById("root");
+  var CREDIT = "简化模型,纯虚拟实验(不计空气阻力、无 ABS)。贴图:Poly Haven(CC0)、NASA(公有领域)、NASA/Goddard SVS 星图。";
+
+  function topbar(cur) {
+    var t = el("header", { class: "lb-top pan" }, [el("a", { class: "home", href: ROOT, text: "← 宙律" }), el("span", { class: "ttl", text: "规则改写台 · 宇宙常数旋钮台" })]);
+    TABS.forEach(function (x) {
+      if (!x[0]) t.appendChild(el("span", { class: "tab", "aria-disabled": "true", text: x[1] }));
+      else t.appendChild(el("a", { class: "tab" + (x[0] === cur ? " on" : ""), href: "?lab=" + x[0], "aria-current": x[0] === cur ? "page" : null, text: x[1] }));
+    });
+    t.appendChild(el("span", { class: "sp" }));
+    return t;
+  }
+
+  /* ================= 大厅 ================= */
+  var labId = Q.get("lab");
+  if (!M.LABS[labId]) { hall(); return; }
+
+  function hall() {
+    D.title = "规则改写台 · 宙律 Nomoverse";
+    D.body.style.background = "radial-gradient(1200px 600px at 70% -10%, #1c1752, #07061a 60%)";
+    var ui = el("div", { class: "lb-ui" }, [topbar(null)]);
+    var h = el("main", { class: "hall" }, [
+      el("h1", { text: "规则改写台" }),
+      el("p", { class: "sub", text: "把一条宇宙规律拧一下:重力变小、路面结冰、声音变慢。左右 A/B 对照只改一个变量,先猜再看。记录本只存在你这台设备上。" })
+    ]);
+    var cards = el("div", { class: "labs" });
+    [["gravity", "重力", "如果月球上的重力只有地球的 1/6,同样的投篮会飞多远?", "../assets/hoop/sky_space_2k.jpg", "地球 · 月球 · 火星 · 木星 · 引力 ×2"],
+     ["friction", "摩擦", "路面结冰时,同样车速要多远才能停下?", "../assets/hoop/asphalt_d1k.jpg", "干燥 · 湿滑 · 结冰 · 车速 +20%"],
+     ["sound", "声速", "如果声音变慢,救护车会追上自己的声音吗?", "../assets/hoop/sky_dusk_2k.jpg", "空气 · 水 · 氦气 · 慢声速"]].forEach(function (c) {
+      cards.appendChild(el("a", { class: "lc", href: "?lab=" + c[0] }, [el("div", { class: "im", style: "background-image:url(" + c[3] + ")" }, [el("span", { text: c[1] })]), el("div", { class: "tx" }, [el("b", { text: c[2] }), c[4]])]));
+    });
+    [["光速", "如果光速只有每秒 10 米,打电话会怎样?"], ["潮汐", "月亮再近一点,潮水会涨多高?"]].forEach(function (c) {
+      cards.appendChild(el("div", { class: "lc soon", "aria-disabled": "true" }, [el("div", { class: "im", style: "background:repeating-linear-gradient(45deg,#121027 0 10px,#0e0c20 10px 20px)" }, [el("span", { text: c[0] + " · 即将" })]), el("div", { class: "tx" }, [el("b", { text: c[1] }), "第二批实验"])]));
+    });
+    h.appendChild(cards);
+    var box = el("section", { class: "pan nbx", "aria-label": "实验记录本" });
+    function drawNB() {
+      box.innerHTML = "";
+      var list = NB.list();
+      box.appendChild(el("div", { style: "display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap" }, [el("b", { text: "实验记录本(" + list.length + " 条,只存本机)" }),
+        el("button", { class: "btn2", type: "button", text: "导出 JSON", onclick: function () { download("genesis-nv-lab.json", new Blob([NB.exportJSON()], { type: "application/json" })); } })]));
+      if (!list.length) box.appendChild(el("p", { class: "dial-t", style: "text-align:left", text: "还没有记录。进一个实验,猜一猜、跑一次,结果会自动记在这里。" }));
+      list.forEach(function (e) {
+        var L = M.LABS[(e.id || "").split(".")[2]] || null, P = L ? M.preset(L === M.LABS.gravity ? "gravity" : L === M.LABS.friction ? "friction" : "sound", e.preset) : null;
+        var lab = (e.id || "").split(".")[2];
+        box.appendChild(el("div", { class: "ent" }, [el("span", { class: "d", text: new Date(e.t).toLocaleString("zh-CN", { hour12: false }) }),
+          el("span", {}, [(L ? L.name : "") + " · " + (P ? P.label : "") + " · " + (e.summary || "") + (e.guess ? (e.correct ? " · 猜对 ✓" : " · 猜「" + e.guess + "」") : "") + " ", el("a", { href: "?lab=" + lab + "&preset=" + e.preset, text: "复现" })]),
+          el("button", { class: "btn2", type: "button", "aria-label": "删除这条记录", text: "删除", onclick: function () { NB.remove(e.t); drawNB(); } })]));
+      });
+    }
+    drawNB(); h.appendChild(box);
+    h.appendChild(el("p", { class: "lb-note", style: "position:static;text-align:left;max-width:none;margin-top:16px", html: CREDIT + " <a href='../LICENSES.md'>素材台账</a>" }));
+    ui.appendChild(h); root.appendChild(ui);
+  }
+
+  /* ================= 实验台 ================= */
+  var L = M.LABS[labId], pid = M.preset(labId, Q.get("preset")).id;
+  var base = Object.assign({}, L.base), bv = null, guess = null, revealed = false, tRun = null, runId = 0, side = "b";
+  function curPair() { var o = Object.assign({}, base); if (bv != null) o["b_" + (M.preset(labId, pid).vary || L.vary)] = bv; return M.pair(labId, pid, o); }
+  // ?p=k:v,...  自定义参数复现(vary 键写进 B)
+  (function () {
+    var p = Q.get("p"); if (!p) return; var vary = M.preset(labId, pid).vary || L.vary;
+    p.split(",").forEach(function (kv) { var a = kv.split(":"); if (a.length !== 2 || !isFinite(+a[1])) return; var spec = L.params.find(function (q) { return q.k === a[0]; }); if (!spec) return; var v = Math.min(spec.max, Math.max(spec.min, +a[1])); if (a[0] === vary) bv = v; else base[a[0]] = v; });
+  })();
+  D.title = L.name + " · 规则改写台 · 宙律 Nomoverse";
+  var stageEl = D.getElementById("stage"); stageEl.hidden = false;
+  var ui = el("div", { class: "lb-ui" });
+  var top = topbar(labId);
+  var shareB = el("button", { class: "btn2", type: "button", text: "分享复现链接", onclick: share }); top.appendChild(shareB);
+  top.appendChild(el("a", { class: "btn2", href: "./", style: "text-decoration:none", text: "大厅 · 记录本" }));
+  ui.appendChild(top);
+  var qEl = el("h1", { class: "lb-q pan", text: L.question }); ui.appendChild(qEl);
+  // 左:改写规则
+  var left = el("section", { class: "lb-left pan", "aria-label": "改写规则" }, [el("h2", { class: "h3", text: "改写规则" })]);
+  var chips = el("div", { class: "chips", role: "group", "aria-label": "预设" }); left.appendChild(chips);
+  var sliders = el("div"); left.appendChild(sliders);
+  var dial = el("canvas", { class: "dial", width: 232, height: 232, role: "slider", tabindex: "0", "aria-label": "常数旋钮" }); left.appendChild(dial);
+  left.appendChild(el("div", { class: "dial-t", text: "拧动常数,场景实时变形" }));
+  ui.appendChild(left);
+  // 右:A/B 对照
+  var right = el("section", { class: "lb-right pan", "aria-label": "A/B 对照" }, [el("h2", { class: "h3", text: "A / B 对照 · 只改一个变量" })]);
+  var abEl = el("div", { class: "ab" }); right.appendChild(abEl);
+  var fx = el("div", { class: "fx", text: L.formula }); right.appendChild(fx);
+  var why = el("p", { class: "why" }); right.appendChild(why);
+  var pBox = el("div"); right.appendChild(pBox);
+  var badges = el("div", { class: "badges" }); right.appendChild(badges);
+  ui.appendChild(right);
+  // 运行
+  var playB = el("button", { class: "play", type: "button", "aria-label": "运行实验", text: "▶", onclick: run });
+  var playT = el("div", { class: "play-t", text: "" });
+  ui.appendChild(el("div", { class: "playrow" }, [playB, playT]));
+  // 记录本
+  var nbRow = el("div", { class: "nb-row" });
+  var nb = el("section", { class: "lb-nb pan", "aria-label": "记录本" }, [el("div", { class: "lab", text: "记录本" }), nbRow, el("div", { class: "nb-btns" }, [
+    el("button", { class: "btn2", type: "button", text: "导出图片卡", onclick: cardPNG }),
+    el("button", { class: "btn2", type: "button", text: "导出 JSON", onclick: function () { download("genesis-nv-lab.json", new Blob([NB.exportJSON()], { type: "application/json" })); } })])]);
+  ui.appendChild(nb);
+  var urlEl = el("div", { class: "lb-url" }); ui.appendChild(urlEl);
+  ui.appendChild(el("div", { class: "lb-note", html: CREDIT + " <a href='../LICENSES.md'>素材台账</a>" }));
+  var live = el("div", { class: "sr", "aria-live": "polite" }); ui.appendChild(live);
+  root.appendChild(ui);
+
+  /* ---------- 控件 ---------- */
+  var sl = {};
+  function varyKey() { return M.preset(labId, pid).vary || L.vary; }
+  function toPos(spec, v) { return spec.log ? Math.log(v / spec.min) / Math.log(spec.max / spec.min) : (v - spec.min) / (spec.max - spec.min); }
+  function fromPos(spec, p) { var v = spec.log ? spec.min * Math.pow(spec.max / spec.min, p) : spec.min + (spec.max - spec.min) * p; var st = spec.step; return Math.min(spec.max, Math.max(spec.min, Math.round(v / st) * st)); }
+  function buildChips() {
+    chips.innerHTML = "";
+    L.presets.forEach(function (p) { chips.appendChild(el("button", { class: "chip" + (p.id === pid ? " on" : ""), type: "button", "aria-pressed": p.id === pid ? "true" : "false", text: p.label, onclick: function () { setPreset(p.id); } })); });
+  }
+  function buildSliders() {
+    sliders.innerHTML = ""; sl = {};
+    var vk = varyKey();
+    L.params.forEach(function (spec) {
+      var inp = el("input", { type: "range", min: 0, max: 1000, step: 1, "aria-label": spec.label });
+      var val = el("b"), note = el("small");
+      inp.addEventListener("input", function () { setVal(spec.k, fromPos(spec, inp.value / 1000)); });
+      sliders.appendChild(el("div", { class: "sl" }, [el("div", { class: "r" }, [el("span", { text: spec.label + (spec.k === vk ? "(B)" : "") }), val]), inp, note]));
+      sl[spec.k] = { inp: inp, val: val, note: note, spec: spec };
+    });
+  }
+  function setVal(k, v) {
+    if (k === varyKey()) bv = v; else base[k] = v;
+    guess = null; revealed = false; tRun = null; update();
+  }
+  function setPreset(id) { pid = M.preset(labId, id).id; bv = null; guess = null; revealed = false; tRun = null; buildChips(); buildSliders(); update(); }
+
+  /* ---------- 刷新面板 ---------- */
+  var cur = null;
+  function update() {
+    var pr = curPair(), A = pr.A, B = pr.B, ev = M.evaluate(labId, A, B), P = pr.preset, vk = pr.vary;
+    cur = { A: A, B: B, ev: ev, P: P, vary: vk, pred: M.predict(labId, A, B) };
+    L.params.forEach(function (spec) {
+      var s = sl[spec.k]; if (!s) return; var v = spec.k === vk ? B[spec.k] : A[spec.k];
+      s.inp.value = Math.round(toPos(spec, v) * 1000); s.val.textContent = M.fmt(v, spec.dp) + (spec.unit ? " " + spec.unit : "");
+      s.inp.setAttribute("aria-valuetext", M.fmt(v, spec.dp) + " " + spec.unit);
+      s.note.textContent = spec.k === vk ? (Math.abs(B[vk] - (P.set[vk] != null ? P.set[vk] : B[vk])) < 1e-9 ? P.tag : "自定义(" + P.label + "基础上)") : "";
+    });
+    var aName = labId === "gravity" ? "A · 地球" : labId === "friction" ? "A · 干燥沥青" : "A · 空气";
+    var bName = "B · " + (labId === "sound" && P.id === "slow" ? "慢声速" : labId === "friction" && P.id === "ice" ? "冰面" : P.label.replace(/ \d+$/, ""));
+    var hide = !!cur.pred && !revealed;
+    abEl.innerHTML = "";
+    abEl.appendChild(el("div", { class: "card a" }, [el("b", { text: aName })].concat(ev.A.map(function (t) { return el("div", { text: t }); }))));
+    abEl.appendChild(el("div", { class: "card b" }, [el("b", { text: bName })].concat(ev.B.map(function (t, i) { return el("div", { class: hide && i > 0 ? "mask" : null, text: hide && i > 0 ? "? ? ?" : t }); }))));
+    why.textContent = hide ? "先猜一猜,再按 ▶ 看结果。" : ev.line;
+    // 先猜再看
+    pBox.innerHTML = "";
+    if (cur.pred) {
+      var pd = cur.pred;
+      pBox.appendChild(el("p", { class: "pq", text: "① " + pd.q.replace(/^先猜再看:/, "先猜再看:") }));
+      pd.options.forEach(function (o, i) {
+        var cls = "opt" + (guess === i ? " sel" : "") + (revealed && i === pd.answer ? " ok" : "") + (revealed && guess === i && i !== pd.answer ? " no" : "");
+        pBox.appendChild(el("button", { class: cls, type: "button", "aria-pressed": guess === i ? "true" : "false", disabled: revealed ? "disabled" : null, text: o, onclick: function () { guess = i; update(); } }));
+      });
+      pBox.appendChild(el("div", { class: "pfb" + (revealed && guess != null ? (guess === pd.answer ? " ok" : " no") : ""), text: revealed ? (guess == null ? "" : guess === pd.answer ? "猜对了 ✓" : "答案是「" + pd.options[pd.answer] + "」") : (guess == null ? "" : "已选,按 ▶ 运行") }));
+    }
+    badges.innerHTML = "";
+    var sc = M.selfCheck(labId);
+    badges.appendChild(el("span", { class: "bdg c", text: "真实规律 confirmed" }));
+    badges.appendChild(el("span", { class: "bdg i", text: labId === "friction" ? "简化模型(无 ABS)inferred" : "改常数后的世界 inferred" }));
+    badges.appendChild(el("span", { class: "bdg v", text: "纯虚拟实验 virtual" }));
+    if (labId === "friction") badges.appendChild(el("span", { class: "bdg i", text: "只做数学演示,不能当作驾驶安全依据" }));
+    if (labId === "friction") badges.appendChild(el("span", { class: "bdg i", text: "只做数学演示,不能当作驾驶安全依据" }));
+    badges.appendChild(el("span", { class: "bdg k", title: sc.rows.map(function (r) { return (r.pass ? "✓ " : "✗ ") + r.label; }).join("\n"), text: "模型校验 " + sc.ok + "/" + sc.n }));
+    playB.disabled = tRun != null; playT.textContent = tRun != null ? "运行中…" : revealed ? "再跑一次" : (cur.pred && guess == null ? "先猜再看" : "运行");
+    var u = location.pathname + "?lab=" + labId + "&preset=" + pid + customP();
+    urlEl.textContent = u.replace(/^.*\/nomoverse\//, "/nomoverse/");
+    try { history.replaceState(null, "", "?lab=" + labId + "&preset=" + pid + customP()); } catch (e) {}
+    drawDial(); drawNB();
+  }
+  function customP() {
+    var P = M.preset(labId, pid), vk = varyKey(), parts = [];
+    L.params.forEach(function (spec) { var v = spec.k === vk ? (bv != null ? bv : null) : (Math.abs(base[spec.k] - L.base[spec.k]) > 1e-9 ? base[spec.k] : null); if (v != null && !(spec.k === vk && Math.abs(v - P.set[vk]) < 1e-9)) parts.push(spec.k + ":" + (+v.toFixed(4))); });
+    return parts.length ? "&p=" + parts.join(",") : "";
+  }
+  function share() {
+    var u = location.origin + location.pathname + "?lab=" + labId + "&preset=" + pid + customP();
+    (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(u) : Promise.reject()).then(function () { toast("已复制复现链接"); }, function () { W.prompt("复制这条复现链接:", u); });
+  }
+
+  /* ---------- 旋钮 ---------- */
+  function drawDial() {
+    var c = dial.getContext("2d"), w = dial.width, spec = L.params.find(function (q) { return q.k === varyKey(); }), p = toPos(spec, cur.B[spec.k]);
+    c.clearRect(0, 0, w, w);
+    var g = c.createRadialGradient(w * 0.45, w * 0.4, 4, w / 2, w / 2, w / 2); g.addColorStop(0, "#2a2160"); g.addColorStop(1, "#0d0a26");
+    c.fillStyle = g; c.beginPath(); c.arc(w / 2, w / 2, w / 2 - 4, 0, 7); c.fill();
+    c.strokeStyle = "rgba(167,139,250,.6)"; c.lineWidth = 3; c.stroke();
+    var a0 = Math.PI * 0.75, a1 = Math.PI * 2.25, a = a0 + (a1 - a0) * p;
+    c.strokeStyle = "rgba(167,139,250,.25)"; c.lineWidth = 8; c.beginPath(); c.arc(w / 2, w / 2, w / 2 - 20, a0, a1); c.stroke();
+    c.strokeStyle = "#8b5cf6"; c.beginPath(); c.arc(w / 2, w / 2, w / 2 - 20, a0, a); c.stroke();
+    c.strokeStyle = "#67e8f9"; c.lineWidth = 6; c.lineCap = "round"; c.beginPath(); c.moveTo(w / 2 - Math.cos(a) * 14, w / 2 - Math.sin(a) * 14); c.lineTo(w / 2 + Math.cos(a) * (w / 2 - 36), w / 2 + Math.sin(a) * (w / 2 - 36)); c.stroke();
+    dial.setAttribute("aria-valuetext", spec.label + " " + M.fmt(cur.B[spec.k], spec.dp) + " " + spec.unit);
+  }
+  (function () {
+    var drag = false;
+    function at(e) { var r = dial.getBoundingClientRect(), x = e.clientX - r.left - r.width / 2, y = e.clientY - r.top - r.height / 2, a = Math.atan2(y, x); if (a < Math.PI * 0.75 - Math.PI) a += Math.PI * 2; var a0 = Math.PI * 0.75, p = (a - a0 + (a < a0 - 0.6 ? Math.PI * 2 : 0)) / (Math.PI * 1.5); p = Math.min(1, Math.max(0, p)); var spec = L.params.find(function (q) { return q.k === varyKey(); }); setVal(spec.k, fromPos(spec, p)); }
+    dial.addEventListener("pointerdown", function (e) { drag = true; dial.setPointerCapture(e.pointerId); at(e); });
+    dial.addEventListener("pointermove", function (e) { if (drag) at(e); });
+    dial.addEventListener("pointerup", function () { drag = false; });
+    dial.addEventListener("keydown", function (e) { var spec = L.params.find(function (q) { return q.k === varyKey(); }), p = toPos(spec, cur.B[spec.k]); if (e.key === "ArrowRight" || e.key === "ArrowUp") { setVal(spec.k, fromPos(spec, Math.min(1, p + 0.02))); e.preventDefault(); } if (e.key === "ArrowLeft" || e.key === "ArrowDown") { setVal(spec.k, fromPos(spec, Math.max(0, p - 0.02))); e.preventDefault(); } });
+  })();
+
+  /* ---------- 记录本 ---------- */
+  function drawNB() {
+    nbRow.innerHTML = "";
+    var list = NB.list().filter(function (e) { return e.id === L.id; }).slice(0, 3);
+    for (var i = 0; i < 3; i++) {
+      var e = list[i];
+      if (!e) { nbRow.appendChild(el("div", { class: "nbe empty", text: i === 0 ? "跑一次实验,结果自动记在这里(只存本机)" : "" })); continue; }
+      var P = M.preset(labId, e.preset);
+      nbRow.appendChild(el("div", { class: "nbe" }, [el("b", { text: P.label }), e.summary + (e.guess ? (e.correct ? " · 猜对 ✓" : " · 猜 " + e.guess.replace("≈ ", "")) : "")]));
+    }
+  }
+
+  /* ---------- 运行 ---------- */
+  var DUR = 0;
+  function run() {
+    if (tRun != null) return;
+    if (cur.pred && guess == null) { pBox.querySelector(".pq").animate && pBox.querySelector(".pq").animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(0)" }], 300); toast("先在右边选一个猜测"); return; }
+    revealed = false; tRun = 0; runId++;
+    var ev = cur.ev;
+    if (labId === "gravity") { var mx = Math.max(ev.a.T, ev.b.T), k = Math.min(1, 5.5 / mx); cur.kw = k; DUR = mx * k; }
+    else if (labId === "friction") { var mt = Math.max(ev.a.tTotal, ev.b.tTotal); cur.warp = Math.max(1, mt / 6.5); DUR = mt / cur.warp; }
+    else DUR = 4.5;
+    if (RM) DUR = 0.01;
+    update();
+  }
+  function finish() {
+    tRun = null; revealed = true;
+    var pd = cur.pred, e = { id: L.id, kind: "run", preset: pid, a: cur.A, b: cur.B, vary: cur.vary, summary: cur.ev.summary };
+    if (pd && guess != null) { e.guess = pd.options[guess]; e.correct = guess === pd.answer; }
+    NB.add(e); update();
+    live.textContent = "结果:" + cur.ev.B.join(",") + "。" + (e.guess ? (e.correct ? "猜对了。" : "答案是" + pd.options[pd.answer]) : "");
+  }
+
+  /* ---------- 图片卡 ---------- */
+  function cardPNG() {
+    var c = el("canvas", { width: 1200, height: 630 }), x = c.getContext("2d");
+    var g = x.createLinearGradient(0, 0, 1200, 630); g.addColorStop(0, "#1c1752"); g.addColorStop(1, "#07061a"); x.fillStyle = g; x.fillRect(0, 0, 1200, 630);
+    x.fillStyle = "#c4b5fd"; x.font = "26px system-ui, sans-serif"; x.fillText("宙律 Nomoverse · 规则改写台 · " + L.name, 60, 76);
+    x.fillStyle = "#fff"; x.font = "bold 40px system-ui, sans-serif"; x.fillText(L.question, 60, 140, 1080);
+    function col(tx, lines, X, color) { x.fillStyle = color; x.font = "bold 30px system-ui, sans-serif"; x.fillText(tx, X, 220); x.fillStyle = "#ede9fe"; x.font = "28px system-ui, sans-serif"; lines.forEach(function (l, i) { x.fillText(l, X, 270 + i * 44); }); }
+    col("A · 现实", cur.ev.A, 60, "#67e8f9"); col("B · " + cur.P.label, cur.ev.B, 620, "#fbbf24");
+    x.fillStyle = "#fde68a"; x.font = "30px Georgia, serif"; x.fillText(L.formula, 60, 480);
+    x.fillStyle = "#c4c0e6"; x.font = "24px system-ui, sans-serif"; x.fillText(cur.ev.line, 60, 530, 1080);
+    x.fillStyle = "#8a85b5"; x.font = "20px ui-monospace, monospace"; x.fillText("/nomoverse/lab/?lab=" + labId + "&preset=" + pid + customP() + " · 纯虚拟实验 · 简化模型", 60, 590, 1080);
+    c.toBlob(function (b) { if (b) download("genesis-nv-lab-" + labId + "-" + pid + ".png", b); });
+  }
+
+  /* ---------- 舞台:3D 优先,任何失败回 2D ---------- */
+  var gl = D.getElementById("gl"), ov = D.getElementById("ov"), octx = ov.getContext("2d"), view = null, mode = "2d", Wd = 1, Ht = 1, DPR = 1;
+  function want3d() { var f = Q.get("gl3d"); if (f === "0") return false; if (RM && f !== "1") return false; try { var t = D.createElement("canvas"); return !!(t.getContext("webgl2") || t.getContext("webgl")); } catch (e) { return false; } }
+  function resize() {
+    var r = stageEl.getBoundingClientRect(); Wd = Math.max(1, Math.round(r.width)); Ht = Math.max(1, Math.round(r.height)); DPR = Math.min(2, W.devicePixelRatio || 1);
+    ov.width = Wd * DPR; ov.height = Ht * DPR; octx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (view) view.resize(Wd, Ht);
+  }
+  W.addEventListener("resize", resize);
+  if (want3d()) {
+    import(ROOT + "vendor/three.module.min.js").then(function (THREE) {
+      if (W.__nvLabFail) throw new Error("forced");
+      return import(ROOT + "core/lab3d.js").then(function (m) { view = m.mount(THREE, gl, { onLost: function () { view = null; mode = "2d"; gl.style.display = "none"; } }); mode = "3d"; resize(); W.__nvLab3d = true; });
+    }).catch(function (e) { if (W.console) console.info("[nv.lab] 3D 不可用,回 2D:", e && e.message); view = null; mode = "2d"; gl.style.display = "none"; W.__nvLab3d = false; });
+  } else { gl.style.display = "none"; W.__nvLab3d = false; }
+
+  var last = performance.now();
+  function frame(now) {
+    var dt = Math.min(0.1, (now - last) / 1000) * TS; last = now;
+    if (tRun != null) { tRun += dt; if (tRun >= DUR + 0.35) finish(); }
+    var st = { lab: labId, A: cur.A, B: cur.B, ev: cur.ev, envB: cur.P.env, revealed: revealed || !cur.pred, side: side, runId: runId, rm: RM,
+      wide: Wd >= 1000 && Ht >= 620, t: tRun != null ? tRun : null, durA: cur.ev.a.T * (cur.kw || 1), durB: cur.ev.b.T * (cur.kw || 1), warp: cur.warp || 1 };
+    if (labId === "gravity" && tRun == null && !st.revealed) st.t = null;
+    var info = null;
+    if (view && mode === "3d") { try { info = view.render(st, dt); } catch (e) { if (W.console) console.warn("[nv.lab] 3D 出错,回 2D", e); view = null; mode = "2d"; gl.style.display = "none"; } }
+    octx.clearRect(0, 0, Wd, Ht);
+    if (mode !== "3d") draw2d(st, dt);
+    overlay(st, info);
+    W.requestAnimationFrame(frame);
+  }
+
+  /* ---------- 叠加标注(两种模式共用) ---------- */
+  function chip(x, y, t, col, bg) { octx.save(); octx.font = "600 12.5px system-ui, sans-serif"; var w = octx.measureText(t).width + 16; octx.fillStyle = bg || "rgba(14,11,40,.8)"; octx.strokeStyle = col; octx.lineWidth = 1.2; octx.beginPath(); if (octx.roundRect) octx.roundRect(x, y, w, 24, 12); else octx.rect(x, y, w, 24); octx.fill(); octx.stroke(); octx.fillStyle = col; octx.textBaseline = "middle"; octx.fillText(t, x + 8, y + 12); octx.restore(); return w; }
+  function stageTop() { return Wd >= 1000 && Ht >= 620 ? 150 : (Wd < 560 ? 96 : 60); }
+  function overlay(st, info) {
+    var y = stageTop();
+    if (labId === "gravity") {
+      var split = Wd > 560, half = split ? Wd / 2 : Wd;
+      if (split) {
+        chip(Wd >= 1000 ? 262 : 10, y, "A · 现实", "#67e8f9");
+        chip(half + (Wd >= 1000 ? 10 : 10), y, "B · 改写后 · " + cur.P.label, "#fbbf24");
+        octx.save(); var gg = octx.createLinearGradient(0, 0, 0, Ht); gg.addColorStop(0, "rgba(167,139,250,0)"); gg.addColorStop(0.5, "rgba(167,139,250,.9)"); gg.addColorStop(1, "rgba(167,139,250,0)"); octx.fillStyle = gg; octx.fillRect(half - 1, 0, 2, Ht); octx.restore();
+      } else chip(10, y, "B · 改写后 · " + cur.P.label, "#fbbf24");
+    } else if (labId === "friction") {
+      if (view && mode === "3d" && view.carPos) {
+        var cp = view.carPos();
+        [[cp[0], "A · 干燥沥青", "#67e8f9", cur.ev.a], [cp[1], "B · " + (cur.P.id === "ice" ? "冰面" : cur.P.id === "wet" ? "湿滑" : cur.P.label), "#fbbf24", cur.ev.b]].forEach(function (q) {
+          var p = view.proj(q[0].x, 2.4, q[0].z); if (!p || !p[2]) return;
+          var d = -q[0].z, t = q[1] + (d > 0.5 ? " · " + d.toFixed(0) + " m" : "");
+          octx.save(); octx.font = "600 12.5px system-ui"; var w = octx.measureText(t).width + 16; octx.restore();
+          chip(Math.max(4, Math.min(Wd - w - 4, p[0] * Wd - w / 2)), Math.max(y + 30, p[1] * Ht - 30), t, q[2]);
+        });
+        var sp = view.proj(6.8, 0.2, -cur.ev.line0); if (sp && sp[2]) chip(Math.min(Wd - 120, sp[0] * Wd + 4), sp[1] * Ht - 12, "路口 " + cur.ev.line0 + " m", "#e5e7eb");
+      }
+    } else {
+      chip(Wd >= 1000 ? 270 : 10, y, (side === "b" ? "B · 改写后 · " + cur.P.label : "A · 现实 · 空气") + "(点此切 A/B)", side === "b" ? "#fbbf24" : "#67e8f9");
+      if (info && info.heard) chip(Wd >= 1000 ? Wd * 0.62 : Wd - 130, Ht * 0.35, (side === "b" ? cur.B : cur.A).v > (side === "b" ? cur.B : cur.A).c ? "💥 一声巨响" : "听到警笛", "#fde68a");
+    }
+  }
+  ov.style.pointerEvents = "none";
+  stageEl.addEventListener("click", function (e) {
+    if (labId !== "sound") return;
+    var r = stageEl.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, y0 = stageTop();
+    if (y > y0 - 4 && y < y0 + 30 && x < (Wd >= 1000 ? 600 : 360)) { side = side === "b" ? "a" : "b"; }
+  });
+
+  /* ---------- 2D 回退画法 ---------- */
+  var t2 = 0;
+  function draw2d(st, dt) {
+    var c = octx; t2 += dt;
+    if (labId === "gravity") {
+      var split = Wd > 560, half = split ? Wd / 2 : Wd;
+      [["a", 0], ["b", split ? half : 0]].forEach(function (s, idx) {
+        if (!split && s[0] === "a") return;
+        var x0 = s[1], env = s[0] === "a" ? "earth" : st.envB, sh = s[0] === "a" ? st.ev.a : st.ev.b, k = st.t == null ? (s[0] === "a" || st.revealed ? 1 : 0) : Math.min(1, st.t / (s[0] === "a" ? st.durA : st.durB));
+        var space = env === "moon" || env === "jupiter";
+        var g = c.createLinearGradient(0, 0, 0, Ht); if (space) { g.addColorStop(0, "#02020a"); g.addColorStop(1, "#14131c"); } else if (env === "mars") { g.addColorStop(0, "#b77a52"); g.addColorStop(1, "#e3a77b"); } else { g.addColorStop(0, "#2a2350"); g.addColorStop(0.6, "#8a6a8e"); g.addColorStop(1, "#e7a06e"); }
+        c.fillStyle = g; c.fillRect(x0, 0, half, Ht);
+        var gy = Ht * 0.78; c.fillStyle = space ? "#5d5b58" : env === "mars" ? "#8a4a2a" : "#2b2d33"; c.fillRect(x0, gy, half, Ht - gy);
+        var sc = half / (st.ev.hoop * 2.2), ox = x0 + half * 0.18, Y = function (y) { return gy - y * sc; };
+        c.strokeStyle = "#c0392b"; c.lineWidth = 3; c.beginPath(); c.moveTo(ox + st.ev.hoop * sc - 0.23 * sc, Y(RIMH)); c.lineTo(ox + st.ev.hoop * sc + 0.23 * sc, Y(RIMH)); c.stroke();
+        c.fillStyle = "#e5e7eb"; c.fillRect(ox + (st.ev.hoop + 0.37) * sc, Y(3.95), 3, 1.05 * sc); c.fillStyle = "#3a3d46"; c.fillRect(ox + (st.ev.hoop + 1.3) * sc, Y(3.6), 5, 3.6 * sc);
+        c.strokeStyle = s[0] === "a" ? "#67e8f9" : "#fbbf24"; c.lineWidth = 3; c.beginPath();
+        var n = Math.max(2, Math.round(80 * k)); for (var i = 0; i <= n; i++) { var t = sh.T * k * i / n, x = sh.vx * t, y = RIMH + sh.vy * t - 0.5 * sh.g * t * t; i ? c.lineTo(ox + x * sc, Y(y)) : c.moveTo(ox + x * sc, Y(y)); } c.stroke();
+        var tb = sh.T * k, bx = ox + sh.vx * tb * sc, by = Y(Math.max(0.12, RIMH + sh.vy * tb - 0.5 * sh.g * tb * tb)); c.fillStyle = "#e0661c"; c.beginPath(); c.arc(bx, by, Math.max(5, 0.12 * sc), 0, 7); c.fill();
+      });
+    } else if (labId === "friction") {
+      var g2 = c.createLinearGradient(0, 0, 0, Ht); g2.addColorStop(0, "#0a1022"); g2.addColorStop(1, "#1a1f2e"); c.fillStyle = g2; c.fillRect(0, 0, Wd, Ht);
+      var top0 = stageTop() + 30, bot = Ht - 20, maxD = Math.max(40, st.ev.b.total * 1.1, st.ev.a.total * 1.1), Yd = function (d) { return bot - (bot - top0) * d / maxD; }, cx = Wd / 2, lw = Math.min(110, Wd * 0.14);
+      c.fillStyle = "#24272f"; c.fillRect(cx - lw * 2, top0, lw * 4, bot - top0);
+      if (st.envB !== "dry") { c.fillStyle = st.envB === "ice" ? "rgba(190,225,255,.25)" : "rgba(60,90,130,.3)"; c.fillRect(cx, top0, lw * 2, bot - top0); }
+      c.fillStyle = "#e5e7eb"; c.fillRect(cx - lw * 2, Yd(st.ev.line0) - 2, lw * 4, 4);
+      c.fillStyle = "#67e8f9"; c.font = "11px system-ui"; for (var d = 10; d < maxD; d += 10) { c.fillRect(cx - 4, Yd(d), 8, 1); c.fillText(d + " m", cx - lw * 2 - 38, Yd(d) + 4); }
+      var tt = st.t == null ? (st.revealed ? 1e9 : 0) : st.t * st.warp;
+      [[st.ev.a, st.A, cx - lw, "#67e8f9"], [st.ev.b, st.B, cx + lw, "#fbbf24"]].forEach(function (q) {
+        var s = q[0], tr = q[1].tr, dd; if (tt <= tr) dd = s.v * tt; else { var tb = Math.min(tt - tr, s.tBrake); dd = s.react + s.v * tb - 0.5 * s.mu * 9.81 * tb * tb; }
+        c.fillStyle = q[3]; c.fillRect(q[2] - 14, Yd(dd) - 26, 28, 26); c.fillStyle = "#ff3030"; c.fillRect(q[2] - 12, Yd(dd) - 2, 7, 3); c.fillRect(q[2] + 5, Yd(dd) - 2, 7, 3);
+        c.fillStyle = q[3]; c.fillText(dd.toFixed(0) + " m", q[2] + 18, Yd(dd) - 10);
+      });
+    } else {
+      var P = side === "b" ? st.B : st.A, g3 = c.createLinearGradient(0, 0, 0, Ht); g3.addColorStop(0, "#0b1024"); g3.addColorStop(1, "#1b2236"); c.fillStyle = g3; c.fillRect(0, 0, Wd, Ht);
+      var gy3 = Ht * 0.78, s3 = Wd / 70; c.fillStyle = "#15181f"; c.fillRect(0, gy3, Wd, Ht - gy3);
+      var kk = 7 / Math.max(P.c, P.v, 1), cD = P.c * kk, vD = P.v * kk, span = 37 / Math.max(vD, 0.4), tl = t2 % (span + 3), sx = -15 + vD * Math.min(tl, span), X = function (x) { return Wd / 2 + x * s3; };
+      for (var j = 0; j < 40; j++) { var te = tl - j * 0.16; if (te < 0 || te > span) continue; var ex = -15 + vD * te, R = cD * (tl - te) * s3; if (R > Wd) continue; c.strokeStyle = "rgba(103,232,249," + Math.max(0, 0.8 - R / Wd).toFixed(2) + ")"; c.lineWidth = 2; c.beginPath(); c.arc(X(ex), gy3 - 2.2 * s3, R, Math.PI, 0); c.stroke(); }
+      c.fillStyle = "#f4f5f7"; c.fillRect(X(sx) - 3 * s3, gy3 - 2.6 * s3, 6 * s3, 2.6 * s3); c.fillStyle = Math.sin(t2 * 14) > 0 ? "#ff2030" : "#3060ff"; c.fillRect(X(sx), gy3 - 3 * s3, s3, 0.4 * s3);
+      c.fillStyle = "#0f1116"; c.fillRect(X(13) - 0.3 * s3, gy3 - 1.9 * s3, 0.6 * s3, 1.9 * s3);
+    }
+  }
+  var RIMH = 3.05;
+
+  buildChips(); buildSliders(); update(); resize();
+  W.requestAnimationFrame(frame);
+  W.__nvLab = { get cur() { return cur; }, run: run, setPreset: setPreset, pick: function (i) { guess = i; update(); }, get revealed() { return revealed; }, get running() { return tRun != null; } };
+})();
+</script>
+</body>
+</html>

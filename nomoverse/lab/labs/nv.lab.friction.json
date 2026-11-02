@@ -1,0 +1,134 @@
+{
+ "schema": "gn-lab/1",
+ "id": "nv.lab.friction",
+ "world": "nv",
+ "title": "摩擦 · 规则改写台",
+ "question": "路面结冰时,同样车速要多远才能停下?",
+ "color": "#8b5cf6",
+ "evidence": "confirmed",
+ "safety": "virtual",
+ "updated": "2026-11-01",
+ "params": [
+  {
+   "k": "mu",
+   "label": "摩擦系数 μ",
+   "min": 0.05,
+   "max": 1,
+   "step": 0.01,
+   "value": 0.7,
+   "unit": ""
+  },
+  {
+   "k": "kmh",
+   "label": "车速",
+   "min": 20,
+   "max": 120,
+   "step": 1,
+   "value": 50,
+   "unit": "km/h"
+  },
+  {
+   "k": "tr",
+   "label": "反应时间",
+   "min": 0.5,
+   "max": 2.5,
+   "step": 0.1,
+   "value": 1,
+   "unit": "s"
+  }
+ ],
+ "model": {
+  "type": "fn",
+  "x": {
+   "k": "kmh",
+   "from": 20,
+   "to": 120,
+   "step": 1
+  },
+  "ys": [
+   {
+    "label": "总停车距离 (m)",
+    "expr": "kmh/3.6*tr + (kmh/3.6)^2/(2*mu*9.81)"
+   }
+  ]
+ },
+ "chart": {
+  "xlabel": "车速 (km/h)",
+  "ylabel": "停车距离 (m)"
+ },
+ "ab": {
+  "vary": "mu"
+ },
+ "presets": [
+  {
+   "id": "dry",
+   "label": "干燥",
+   "set": {
+    "mu": 0.7
+   },
+   "vary": "mu"
+  },
+  {
+   "id": "wet",
+   "label": "湿滑",
+   "set": {
+    "mu": 0.4
+   },
+   "vary": "mu"
+  },
+  {
+   "id": "ice",
+   "label": "结冰",
+   "set": {
+    "mu": 0.1
+   },
+   "vary": "mu"
+  },
+  {
+   "id": "speed20",
+   "label": "车速 +20%",
+   "set": {
+    "kmh": 60
+   },
+   "vary": "kmh"
+  }
+ ],
+ "default_preset": "ice",
+ "predict": {
+  "q": "路面结冰(μ 从 0.7 降到 0.1),制动距离大约变成几倍?",
+  "options": [
+   "≈ 2.6 倍",
+   "≈ 7 倍",
+   "≈ 49 倍"
+  ],
+  "answer": 1,
+  "why": "制动距离 v²/(2μg) 与 μ 成反比:0.7/0.1 = 7。"
+ },
+ "conclusions": [
+  {
+   "text": "制动距离与摩擦系数 μ 成反比、与车速平方成正比。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "真实刹车有 ABS、轮胎与路面差异,μ 取典型值,只做数学演示,不能当作驾驶安全依据。",
+   "evidence": "inferred"
+  }
+ ],
+ "checks": [
+  {
+   "label": "干燥 50 km/h 总停车",
+   "x": 50,
+   "expect": 27.94,
+   "tol": 0.003
+  }
+ ],
+ "bridges": [],
+ "sources": [
+  {
+   "name": "OpenStax《University Physics Vol.1》6.2 Friction",
+   "url": "https://openstax.org/books/university-physics-volume-1/pages/6-2-friction"
+  }
+ ],
+ "ai_generated": "问题、猜测题、结论文字由 AI 撰写(宙律 02 窗口);数值由 core/labmodel.js 与 tests/physics.test.js 复算",
+ "page": "/nomoverse/lab/?lab=friction&preset=ice"
+}

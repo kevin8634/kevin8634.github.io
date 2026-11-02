@@ -1,0 +1,149 @@
+{
+ "schema": "gn-lab/1",
+ "id": "nv.lab.gravity",
+ "world": "nv",
+ "title": "重力 · 规则改写台",
+ "question": "如果月球上的重力只有地球的 1/6,同样的投篮会飞多远?",
+ "color": "#8b5cf6",
+ "evidence": "confirmed",
+ "safety": "virtual",
+ "updated": "2026-11-01",
+ "params": [
+  {
+   "k": "g",
+   "label": "重力 g",
+   "min": 0.5,
+   "max": 30,
+   "step": 0.01,
+   "value": 9.81,
+   "unit": "m/s²"
+  },
+  {
+   "k": "v",
+   "label": "出手速度",
+   "min": 3,
+   "max": 12,
+   "step": 0.1,
+   "value": 7.5,
+   "unit": "m/s"
+  },
+  {
+   "k": "ang",
+   "label": "出手角度",
+   "min": 20,
+   "max": 75,
+   "step": 1,
+   "value": 52,
+   "unit": "°"
+  }
+ ],
+ "model": {
+  "type": "fn",
+  "x": {
+   "k": "ang",
+   "from": 20,
+   "to": 75,
+   "step": 1
+  },
+  "ys": [
+   {
+    "label": "射程 R (m)",
+    "expr": "v^2*sin(2*ang*3.14159265/180)/g"
+   }
+  ]
+ },
+ "chart": {
+  "xlabel": "出手角度 (°)",
+  "ylabel": "射程 (m)"
+ },
+ "ab": {
+  "vary": "g"
+ },
+ "presets": [
+  {
+   "id": "earth",
+   "label": "地球",
+   "set": {
+    "g": 9.81
+   },
+   "vary": "g"
+  },
+  {
+   "id": "moon",
+   "label": "月球",
+   "set": {
+    "g": 1.62
+   },
+   "vary": "g"
+  },
+  {
+   "id": "mars",
+   "label": "火星",
+   "set": {
+    "g": 3.71
+   },
+   "vary": "g"
+  },
+  {
+   "id": "jupiter",
+   "label": "木星",
+   "set": {
+    "g": 24.79
+   },
+   "vary": "g"
+  },
+  {
+   "id": "g2x",
+   "label": "引力 ×2",
+   "set": {
+    "g": 19.62
+   },
+   "vary": "g"
+  }
+ ],
+ "default_preset": "moon",
+ "predict": {
+  "q": "月球重力是地球的 1/6,同样一投的射程大约是地球的几倍?",
+  "options": [
+   "≈ 2.5 倍",
+   "≈ 6.1 倍",
+   "≈ 37 倍"
+  ],
+  "answer": 1,
+  "why": "射程 R = v²·sin2θ/g,与 g 成反比:9.81/1.62 ≈ 6.06。"
+ },
+ "conclusions": [
+  {
+   "text": "射程与重力 g 成反比,升空高度与飞行时间也一样。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "把篮筐搬到月球、火星、木星的「同一投」只是模型推演,真实还要考虑宇航服、空气与站姿。",
+   "evidence": "inferred"
+  }
+ ],
+ "checks": [
+  {
+   "label": "地球 52° 射程",
+   "x": 52,
+   "expect": 5.5637,
+   "tol": 0.002
+  }
+ ],
+ "bridges": [
+  "nv.hoop",
+  "nv.orbit"
+ ],
+ "sources": [
+  {
+   "name": "OpenStax《University Physics Vol.1》4.3 Projectile Motion",
+   "url": "https://openstax.org/books/university-physics-volume-1/pages/4-3-projectile-motion"
+  },
+  {
+   "name": "NASA Planetary Fact Sheet",
+   "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/"
+  }
+ ],
+ "ai_generated": "问题、猜测题、结论文字由 AI 撰写(宙律 02 窗口);数值由 core/labmodel.js 与 tests/physics.test.js 复算",
+ "page": "/nomoverse/lab/?lab=gravity&preset=moon"
+}
