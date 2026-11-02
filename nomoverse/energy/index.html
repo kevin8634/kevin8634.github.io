@@ -95,7 +95,7 @@
     return { pass: true };
   }
   var T1 = {
-    name: "过山车能爬多高", d3: false,
+    name: "过山车能爬多高", d3: true,
     goal: "小车从 30 m 高的第一座山顶出发,没有发动机。调第二座山的高度:让小车翻过一座 ≥ 25 m 的第二座山,再打开摩擦试一次。",
     note: "小车连乘客按 500 kg;摩擦与空气阻力合成为 μ = 0.03 的近似(μ·m·g·s);g = 9.80665 m/s²。",
     ask: "高处的小车冲下山谷时越来越快,速度是从哪里来的?爬上第二座山时又去了哪里?",
@@ -127,21 +127,29 @@
         if (st.r.pass && st.x >= XEND) { st.x = XEND; st.done = true; T1.report(L); }
       }
       // 画面
+      var hNow = T.hs[idx(st.x)], heatGlow = mu > 0 ? Math.min(1, sAt(T, st.x) / 120) : 0;
+      if (L.d3) {   // 3D 舞台:写参数,标签用相机投影对齐
+        st.e3 = { key: T.h2 + "", xs: T.xs, hs: T.hs, h2: T.h2, x: st.x, h: hNow, heat: heatGlow, mu: mu, moving: run && !st.done };
+        var sx = function (x) { return L.d3.proj(x, 0, 0)[0]; }, sy = function (h) { return L.d3.proj(55, h, 0)[1]; };
+      } else {
       sky(c, L.w, L.h);
       var sx = function (x) { return Z.x + x / 110 * Z.w; }, sy = function (h) { return Z.y + Z.h - (h + 3) / 46 * Z.h; };
       c.fillStyle = "#120d2c"; c.beginPath(); c.moveTo(0, L.h); for (var k = 0; k <= 80; k++) c.lineTo(k / 80 * L.w, sy(7 + 4 * Math.sin(k * 0.21) + 2.5 * Math.sin(k * 0.083 + 1))); c.lineTo(L.w, L.h); c.fill();
       c.strokeStyle = "rgba(196,181,253,.25)"; c.lineWidth = 1;
       for (var k2 = 0; k2 <= 1100; k2 += 30) { c.beginPath(); c.moveTo(sx(T.xs[k2]), sy(T.hs[k2])); c.lineTo(sx(T.xs[k2]), sy(-3)); c.stroke(); }
-      c.save(); c.setLineDash([6, 6]); c.strokeStyle = "rgba(103,232,249,.6)"; c.beginPath(); c.moveTo(sx(0), sy(H0)); c.lineTo(sx(110), sy(H0)); c.stroke(); c.restore();
-      chip(c, sx(XH2) + 8 > L.w - 150 ? L.w - 150 : sx(80), sy(H0) - 26, "出发高度 30 m", "#67e8f9");
       c.strokeStyle = "#cbd5e1"; c.lineWidth = 3; c.beginPath(); for (var k3 = 0; k3 <= 1100; k3 += 5) { var X = sx(T.xs[k3]), Y = sy(T.hs[k3]); k3 ? c.lineTo(X, Y) : c.moveTo(X, Y); } c.stroke();
       c.strokeStyle = "rgba(167,139,250,.9)"; c.lineWidth = 1.2; c.stroke();
+      }
+      c.save(); c.setLineDash([6, 6]); c.strokeStyle = "rgba(103,232,249,.6)"; c.beginPath(); c.moveTo(Math.max(0, sx(0)), sy(H0)); c.lineTo(Math.min(L.w, sx(110)), sy(H0)); c.stroke(); c.restore();
+      chip(c, sx(XH2) + 8 > L.w - 150 ? L.w - 150 : sx(80), sy(H0) - 26, "出发高度 30 m", "#67e8f9");
       chip(c, sx(XH2) - 30, sy(T.h2) - 30, "第二座山 " + T.h2 + " m", T.h2 >= H0 ? "#fca5a5" : "#ede9fe");
       if (mu > 0) chip(c, Z.x, sy(-3) - 30, "摩擦:每走 1 m 约耗掉 " + Math.round(mu * M1 * g) + " J", "#fdba74");
       // 小车
-      var cx = sx(st.x), cy = sy(T.hs[idx(st.x)]), heatGlow = mu > 0 ? Math.min(1, sAt(T, st.x) / 120) : 0;
+      var cx = sx(st.x), cy = sy(hNow);
+      if (!L.d3) {
       c.save(); c.shadowColor = "#67e8f9"; c.shadowBlur = 18; c.fillStyle = "#e0f2fe"; c.beginPath(); c.arc(cx, cy - 6, 7, 0, TAU); c.fill(); c.restore();
       if (heatGlow > 0) { c.fillStyle = "rgba(251,146,60," + (0.25 + heatGlow * 0.5) + ")"; c.beginPath(); c.arc(cx, cy, 4 + heatGlow * 6, 0, TAU); c.fill(); }
+      }
       // 账本
       var h = T.hs[idx(st.x)], PE = P.pe(M1, h), KE = P.ke(M1, v), HEAT = mu * M1 * g * sAt(T, st.x), E0 = P.pe(M1, H0) + P.ke(M1, 0.6);
       ledger(c, Z.led, "过山车", { n: "出发时的势能", v: E0, col: COL.pe }, [{ n: "势能", v: PE, col: COL.pe }, { n: "动能", v: KE, col: COL.ke }, { n: "热(摩擦)", v: HEAT, col: COL.heat }]);
@@ -342,7 +350,7 @@
   };
 
   NV.task({
-    id: "energy", guide: "ripple",
+    id: "energy", guide: "ripple", scene3d: "core/energy3d.js",
     bridge: { href: "../../element-forge/react/", label: "元素工坊 Element Forge · 反应台(反应为什么放热?)" },
     title: "能量去哪儿了?",
     safety: "刹车一关只做数学演示,不构成驾驶或安全建议;做燃烧实验请在老师或家长陪同下进行。",
