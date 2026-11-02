@@ -22,8 +22,10 @@
   /* ---------- 通用 ---------- */
   function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
   function fE(J) { var a = Math.abs(J); return a >= 1e6 ? (J / 1e6).toFixed(a >= 1e7 ? 1 : 2) + " MJ" : a >= 1e3 ? (J / 1e3).toFixed(a >= 1e5 ? 0 : 1) + " kJ" : Math.round(J) + " J"; }
+  var AVOID = null;   // 标签避让区(账本面板),由关卡每帧设置
   function chip(c, x, y, text, col) {
     c.save(); c.font = "12px system-ui, sans-serif"; var w = c.measureText(text).width + 14;
+    var A = AVOID; if (A && x < A.x + A.w && x + w > A.x && y < A.y + A.h && y + 22 > A.y) { if (A.x - w - 8 >= 0) x = A.x - w - 8; else y = A.y + A.h + 6; }
     c.fillStyle = "rgba(14,11,40,.8)"; c.strokeStyle = "rgba(167,139,250,.55)"; rr(c, x, y, w, 22, 11); c.fill(); c.stroke();
     c.fillStyle = col || "#ede9fe"; c.textBaseline = "middle"; c.fillText(text, x + 7, y + 11); c.restore(); return w;
   }
@@ -127,6 +129,7 @@
         if (st.r.pass && st.x >= XEND) { st.x = XEND; st.done = true; T1.report(L); }
       }
       // 画面
+      AVOID = Z.led && !Z.led.compact ? Z.led : null;
       var hNow = T.hs[idx(st.x)], heatGlow = mu > 0 ? Math.min(1, sAt(T, st.x) / 120) : 0;
       if (L.d3) {   // 3D 舞台:写参数,标签用相机投影对齐
         st.e3 = { key: T.h2 + "", xs: T.xs, hs: T.hs, h2: T.h2, x: st.x, h: hNow, heat: heatGlow, mu: mu, moving: run && !st.done };
@@ -150,6 +153,7 @@
       c.save(); c.shadowColor = "#67e8f9"; c.shadowBlur = 18; c.fillStyle = "#e0f2fe"; c.beginPath(); c.arc(cx, cy - 6, 7, 0, TAU); c.fill(); c.restore();
       if (heatGlow > 0) { c.fillStyle = "rgba(251,146,60," + (0.25 + heatGlow * 0.5) + ")"; c.beginPath(); c.arc(cx, cy, 4 + heatGlow * 6, 0, TAU); c.fill(); }
       }
+      AVOID = null;
       // 账本
       var h = T.hs[idx(st.x)], PE = P.pe(M1, h), KE = P.ke(M1, v), HEAT = mu * M1 * g * sAt(T, st.x), E0 = P.pe(M1, H0) + P.ke(M1, 0.6);
       ledger(c, Z.led, "过山车", { n: "出发时的势能", v: E0, col: COL.pe }, [{ n: "势能", v: PE, col: COL.pe }, { n: "动能", v: KE, col: COL.ke }, { n: "热(摩擦)", v: HEAT, col: COL.heat }]);
