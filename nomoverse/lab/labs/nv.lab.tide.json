@@ -1,0 +1,146 @@
+{
+ "schema": "gn-lab/1",
+ "id": "nv.lab.tide",
+ "world": "nv",
+ "title": "潮汐 · 规则改写台",
+ "question": "月亮再近一点,潮水会涨多高?",
+ "color": "#8b5cf6",
+ "evidence": "confirmed",
+ "safety": "virtual",
+ "updated": "2026-11-02",
+ "params": [
+  {
+   "k": "d",
+   "label": "地月距离",
+   "min": 1.2,
+   "max": 100,
+   "step": 0.01,
+   "value": 38.44,
+   "unit": "万 km"
+  },
+  {
+   "k": "m",
+   "label": "月球质量",
+   "min": 0.1,
+   "max": 10,
+   "step": 0.01,
+   "value": 1,
+   "unit": "× 月球"
+  }
+ ],
+ "model": {
+  "type": "fn",
+  "x": {
+   "k": "d",
+   "from": 1.2,
+   "to": 100,
+   "step": 0.2
+  },
+  "ys": [
+   {
+    "label": "潮汐倍数(相对今天)",
+    "expr": "m*(38.44/d)^3"
+   }
+  ]
+ },
+ "chart": {
+  "xlabel": "地月距离 (万 km,对数)",
+  "ylabel": "潮汐 / 今天"
+ },
+ "ab": {
+  "vary": "d"
+ },
+ "presets": [
+  {
+   "id": "now",
+   "label": "今天",
+   "set": {
+    "d": 38.44
+   },
+   "vary": "d"
+  },
+  {
+   "id": "early",
+   "label": "月亮刚形成",
+   "set": {
+    "d": 2.55
+   },
+   "vary": "d"
+  },
+  {
+   "id": "m2x",
+   "label": "月球 ×2",
+   "set": {
+    "m": 2
+   },
+   "vary": "m"
+  },
+  {
+   "id": "roche",
+   "label": "洛希极限内",
+   "set": {
+    "d": 1.7
+   },
+   "vary": "d"
+  }
+ ],
+ "default_preset": "now",
+ "predict": {
+  "q": "把月亮拉近到今天距离的一半,潮汐会变成几倍?",
+  "options": [
+   "2 倍",
+   "8 倍",
+   "4 倍"
+  ],
+  "answer": 1,
+  "why": "引潮力 ∝ M/d³:距离减半,(1/2)³ 的倒数 = 8 倍。"
+ },
+ "conclusions": [
+  {
+   "text": "引潮加速度 ∝ M/d³:质量翻倍潮汐翻倍,距离减半潮汐 ×8。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "进入洛希极限(流体卫星约 2.44·R⊕·(ρ⊕/ρ☾)^⅓ ≈ 1.84 万 km),月亮会被潮汐撕碎成环。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "月亮刚形成时约在 4 个地球半径处是推测值;潮差为大洋平衡潮,不含海岸放大。",
+   "evidence": "inferred"
+  }
+ ],
+ "checks": [
+  {
+   "label": "今天平衡潮差 0.535 m",
+   "x": 38.44,
+   "expect": 0.5352,
+   "tol": 0.002
+  },
+  {
+   "label": "距离减半潮汐 ×8",
+   "x": 19.22,
+   "expect": 8,
+   "tol": 1e-06
+  }
+ ],
+ "bridges": [
+  "nv.tide",
+  "sh.tidelock"
+ ],
+ "sources": [
+  {
+   "name": "NASA Moon Fact Sheet(月球质量、地月距离)",
+   "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html"
+  },
+  {
+   "name": "NOAA《Tides and Water Levels》",
+   "url": "https://oceanservice.noaa.gov/education/tutorial_tides/"
+  },
+  {
+   "name": "OpenStax《Astronomy 2e》12.5 Planetary Rings (and Enceladus)(洛希极限)",
+   "url": "https://openstax.org/books/astronomy-2e/pages/12-5-planetary-rings-and-enceladus"
+  }
+ ],
+ "ai_generated": "问题、猜测题、结论文字由 AI 撰写(宙律 296bda0e 窗口);数值由 core/labmodel.js 与 tests/physics.test.js 复算",
+ "page": "/nomoverse/lab/?lab=tide&preset=early"
+}

@@ -24,7 +24,7 @@
 | `assets/tide/sand_d*`、`sand_n*` | tide 海岸沙滩 | Poly Haven「Coast Sand Rocks 02」https://polyhaven.com/a/coast_sand_rocks_02 | CC0 1.0 | 无 | 否 | 同上 |
 | `assets/tide/rock_d*`、`rock_n*` | tide 海岸礁石 | Poly Haven「Rock Face」https://polyhaven.com/a/rock_face | CC0 1.0 | 无 | 否 | 同上 |
 | 程序生成画面:`core/orbit3d.js`、`sound3d.js`、`stars3d.js`(剖面/日冕/日珥)、`tide3d.js`(海水壳/海面/灯塔/标尺/碎片环)、`starmap3d.js`、`intro.js`、`nvscene.js`、向导徽标 | 全部任务页与首页 | 本项目原创代码 | 自制 | 无 | 否 | 本台账 |
-| 规则改写台 `lab/`、`core/lab3d.js`、`core/labmodel.js`、`lab/labs/nv.lab.*.json`(v0.8-α1) | /nomoverse/lab/ 重力·摩擦·声速三实验 | 本项目原创代码;3D 舞台复用 `assets/hoop/` 贴图(见上表),街景、车辆、救护车、声波环、篮架均程序生成 | 自制 | 无 | 协议中的问题、猜测题、结论文字由 AI 撰写,数值由 labmodel.js 与物理测试复算 | 大厅与实验台页脚 + 本台账 |
+| 规则改写台 `lab/`、`core/lab3d.js`、`core/labmodel.js`、`lab/labs/nv.lab.*.json`(v0.8-α1) | /nomoverse/lab/ 重力·摩擦·声速·光速·潮汐五实验 | 本项目原创代码;3D 舞台复用 `assets/hoop/` 贴图(地球 NASA Blue Marble、NASA/Goddard SVS 星图等,见上表)与 `assets/tide/moon_2k.jpg`(Solar System Scope,CC BY 4.0,已缩放);街景、车辆、救护车、声波环、篮架、信号塔、光脉冲、海水壳、洛希极限圈、碎片环、火星表面均程序生成 | 自制 | 无 | 协议中的问题、猜测题、结论文字由 AI 撰写,数值由 labmodel.js 与物理测试复算 | 大厅与实验台页脚 + 本台账 |
 | 3D 模型 | — | 本世界不使用任何外部 3D 模型文件;所有几何体由 Three.js 代码生成 | 自制 | 无 | 否 | 本台账 |
 | 背景音乐与音效 `audio/*.m4a` | 首页与任务页(声音默认关) | `audio/synth.py` 纯程序合成;实时音效由 Web Audio 振荡器生成 | 自制 | 无 | 否 | 本台账 |
 | 语音 / 配音 | — | 本世界无语音、无配音 | — | — | — | — |
@@ -39,6 +39,7 @@
 - NASA 图像按 NASA 媒体使用指南作为教育科普用途使用,不暗示 NASA 认可本站。
 
 - v0.8-α1 规则改写台:不新增任何外部素材;记录本键 `gn:nv:lab` 只存本机;零外部请求。
+- v0.8-α2 光速、潮汐两实验:不新增文件,只复用已登记贴图(NASA 地球与星空;Solar System Scope 月球 CC BY 4.0,实验页脚已署名并附许可链接);火星为程序着色,无外部素材。
 
 ---
 

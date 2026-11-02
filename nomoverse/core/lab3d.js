@@ -3,6 +3,9 @@
    ① 重力:左右分屏 A 现实 / B 改写后,同一个机位;发射点与篮筐同高,篮筐放在地球这一投的落点。
    ② 摩擦:夜间城市路面,两条车道 A / B 并排刹车,30 m 处路口停止线。
    ③ 声速:雨夜街道侧视,救护车发出一圈圈声波(竖直平面上的球面截圆),慢声速时叠成马赫锥。
+   ④ 光速(v0.8-α2):深空上下两条信号通道 A / B,地球发出光脉冲飞向目标(城市信标 / 月球 / 火星),到达时目标闪亮。
+   ⑤ 潮汐(v0.8-α2):左右分屏,地球 + 被拉长的海水壳(潮差对数夸张)+ 月球 + 红色洛希极限圈;进了极限,月亮碎成光环。
+   ④⑤ 首次进入才建场景、才加载贴图(地球 NASA Blue Marble、星空 NASA SVS 复用 assets/hoop/;月球 Solar System Scope CC BY 4.0 复用 assets/tide/);火星为程序着色。
    坐标 1 单位 = 1 m。贴图复用投篮任务 assets/hoop/(Poly Haven CC0、NASA),街景全部程序生成。 */
 "use strict";
 import { tierInfo, createRenderer, canvasTex, glowTex } from "./nvscene.js";
@@ -342,6 +345,126 @@ export function mount(THREE, canvas, opts) {
     return { heard: sndHeard > 0.5, x: sx };
   }
 
+  /* ================= ④ 光速 · ⑤ 潮汐(深空,按需构建) ================= */
+  var TIDE_ASSET = new URL("../assets/tide/", import.meta.url).href;
+  function texAt(base, name, srgb) {
+    var key = base + name; if (cache[key]) return cache[key]; pending++;
+    var t = loader.load(base + name + ".jpg", function () { pending--; }, undefined, function () { pending--; if (W.console) console.warn("[nv.lab] 贴图加载失败:", name); });
+    t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; t.anisotropy = ANISO; cache[key] = t; return t;
+  }
+  function spaceScene() {
+    var S = new THREE.Scene();
+    var sky = new THREE.Mesh(new THREE.SphereGeometry(800, 48, 24), new THREE.MeshBasicMaterial({ side: THREE.BackSide, depthWrite: false, map: tex("sky_space_" + RES.sky, true) }));
+    sky.material.color.setScalar(0.55); S.add(sky);
+    S.add(new THREE.AmbientLight(0x5a6688, 0.9));
+    var sun = new THREE.DirectionalLight(0xfff4e6, 2.6); sun.position.set(-4, 7, 16); S.add(sun);
+    return S;
+  }
+  function planet(r, map, col) { return new THREE.Mesh(new THREE.SphereGeometry(r, 64, 40), new THREE.MeshStandardMaterial({ map: map || null, color: col || 0xffffff, roughness: 0.92, metalness: 0 })); }
+  var marsTex = null;
+  function marsMap() {
+    if (marsTex) return marsTex;
+    marsTex = canvasTex(THREE, 1024, 512, function (c, w, h) {
+      var g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "#e9d7c6"); g.addColorStop(0.08, "#c26a3c"); g.addColorStop(0.5, "#b4552e"); g.addColorStop(0.92, "#a8613f"); g.addColorStop(1, "#efe2d4"); c.fillStyle = g; c.fillRect(0, 0, w, h);
+      var s = 11; function r() { s = (s * 16807) % 2147483647; return s / 2147483647; }
+      for (var i = 0; i < 260; i++) { var x = r() * w, y = h * (0.12 + 0.76 * r()), rr = 6 + r() * 60; c.fillStyle = r() < 0.5 ? "rgba(90,35,20,.22)" : "rgba(230,150,100,.16)"; c.beginPath(); c.ellipse(x, y, rr * 1.8, rr, 0, 0, 7); c.fill(); }
+    });
+    marsTex.colorSpace = THREE.SRGBColorSpace; return marsTex;
+  }
+
+  var Lt = null;
+  function lightInit() {
+    var S = spaceScene(), o = { scene: S };
+    o.earth = planet(2.6, tex("planet_earth_" + RES.planet, true)); o.earth.position.set(-9, 0, 0); S.add(o.earth);
+    o.moon = planet(1.4, texAt(TIDE_ASSET, "moon_2k", true)); S.add(o.moon);
+    o.mars = planet(1.9, marsMap()); S.add(o.mars);
+    o.city = new THREE.Group();
+    var tw = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.4, metalness: 0.6 });
+    var mast = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.16, 3, 8), tw); o.city.add(mast);
+    var dish = new THREE.Mesh(new THREE.SphereGeometry(0.55, 24, 12, 0, Math.PI * 2, 0, 1.0), new THREE.MeshStandardMaterial({ color: 0xe2e8f0, side: THREE.DoubleSide, roughness: 0.35, metalness: 0.4 }));
+    dish.rotation.z = Math.PI / 2; dish.position.set(-0.3, 1.2, 0); o.city.add(dish);
+    S.add(o.city);
+    o.beamMat = new THREE.MeshBasicMaterial({ color: 0x67e8f9, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+    o.beam = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1, 8), o.beamMat); o.beam.rotation.z = Math.PI / 2; S.add(o.beam);
+    o.doneMat = o.beamMat.clone(); o.done = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1, 8), o.doneMat); o.done.rotation.z = Math.PI / 2; S.add(o.done);
+    o.pulse = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); o.pulse.scale.setScalar(1.6); S.add(o.pulse);
+    o.flash = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false })); S.add(o.flash);
+    o.cam = new THREE.PerspectiveCamera(36, 1, 0.1, 2000);
+    return o;
+  }
+  function lightLane(o, L, env, k, col) {
+    var X1 = 9, tgt = env === "moon" || env === "mars" ? env : "city";
+    o.moon.visible = tgt === "moon"; o.mars.visible = tgt === "mars"; o.city.visible = tgt === "city";
+    o.moon.position.set(X1, 0, 0); o.mars.position.set(X1, 0, 0); o.city.position.set(X1, -1.4, 0);
+    var x0 = -9 + 2.7, x1 = X1 - (tgt === "moon" ? 1.5 : tgt === "mars" ? 2.0 : 0.5), len = x1 - x0, px = x0 + len * k;
+    o.beam.scale.set(1, len, 1); o.beam.position.set((x0 + x1) / 2, 0, 0); o.beamMat.color.set(col);
+    o.done.visible = k > 0.002; o.done.scale.set(1, Math.max(0.001, len * k), 1); o.done.position.set(x0 + len * k / 2, 0, 0); o.doneMat.color.set(col); o.doneMat.opacity = 0.75;
+    o.pulse.visible = k > 0.002 && k < 0.999; o.pulse.position.set(px, 0, 0); o.pulse.material.color.set(col);
+    o.flash.visible = k >= 0.999; o.flash.position.set(X1 - (tgt === "city" ? 0.3 : 0), tgt === "city" ? -0.2 : 0, 0.5); o.flash.material.color.set(col); o.flash.scale.setScalar(tgt === "city" ? 2.6 : 5.2);
+  }
+  function renderLight(st, w, h, x0, y0, dt) {
+    if (!Lt) Lt = lightInit();
+    var a = st.ev.a, b = st.ev.b, mx = Math.max(a.t, b.t), dur = 4;
+    function kk(t1) { if (st.t == null) return st.revealed ? 1 : 0; return Math.min(1, st.t / Math.max(0.05, dur * t1 / mx)); }
+    var kA = kk(a.t), kB = kk(b.t);
+    Lt.earth.rotation.y += dt * 0.12; Lt.moon.rotation.y += dt * 0.03; Lt.mars.rotation.y += dt * 0.05;
+    var pad = w < 560 ? 70 : 0, hh = Math.floor((h - pad) / 2), por = w / hh < 1.2;   // 手机:让出顶栏
+    Lt.cam.aspect = w / hh; Lt.cam.fov = por ? 70 : 34; Lt.cam.updateProjectionMatrix();
+    Lt.cam.position.set(0, 1.2, por ? 15 : 30); Lt.cam.lookAt(0, por ? 0.4 : 0.6, 0);
+    var envA = a.d > 1e7 ? "mars" : a.d > 1e5 ? "moon" : "city", envB = b.d > 1e7 ? "mars" : b.d > 1e5 ? "moon" : "city";
+    lightLane(Lt, a, envA, kA, 0x67e8f9); vp(x0, y0 + pad, w, hh); renderer.render(Lt.scene, Lt.cam);
+    lightLane(Lt, b, envB, kB, 0xfbbf24); vp(x0, y0 + pad + hh, w, h - pad - hh); renderer.render(Lt.scene, Lt.cam);
+    lastCam = Lt.cam; lastSplit = 0;
+    return { kA: kA, kB: kB };
+  }
+
+  var Td = null, TIDE_RE = 2;
+  function tdisp(dm) { return TIDE_RE * Math.pow(dm / 6.371e6, 0.55); }
+  function tideInit() {
+    var mk = function () {
+      var S = spaceScene(), o = { scene: S };
+      o.earth = planet(TIDE_RE, tex("planet_earth_" + RES.planet, true)); S.add(o.earth);
+      o.sea = new THREE.Mesh(new THREE.SphereGeometry(TIDE_RE * 1.015, 64, 40), new THREE.MeshStandardMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.42, roughness: 0.15, metalness: 0.1, depthWrite: false })); S.add(o.sea);
+      o.moon = planet(0.54, texAt(TIDE_ASSET, "moon_2k", true)); S.add(o.moon);
+      var rp = []; for (var i = 0; i <= 128; i++) { var q = i / 128 * Math.PI * 2; rp.push(new THREE.Vector3(Math.cos(q), 0, Math.sin(q))); }
+      o.roche = new THREE.Line(new THREE.BufferGeometry().setFromPoints(rp), new THREE.LineDashedMaterial({ color: 0xf87171, dashSize: 0.06, gapSize: 0.05, transparent: true, opacity: 0.85 })); o.roche.computeLineDistances(); S.add(o.roche);
+      o.orbit = new THREE.Line(new THREE.BufferGeometry().setFromPoints(rp), new THREE.LineBasicMaterial({ color: 0xa78bfa, transparent: true, opacity: 0.25 })); S.add(o.orbit);
+      var n = 2200, pp = new Float32Array(n * 3), s2 = 5; function r() { s2 = (s2 * 16807) % 2147483647; return s2 / 2147483647; }
+      for (var j = 0; j < n; j++) { var q2 = r() * Math.PI * 2, rr = 1 + (r() - 0.5) * 0.22; pp[j * 3] = Math.cos(q2) * rr; pp[j * 3 + 1] = (r() - 0.5) * 0.02; pp[j * 3 + 2] = Math.sin(q2) * rr; }
+      var pg = new THREE.BufferGeometry(); pg.setAttribute("position", new THREE.BufferAttribute(pp, 3));
+      o.ring = new THREE.Points(pg, new THREE.PointsMaterial({ color: 0xd6d3d1, size: 0.05, sizeAttenuation: true, transparent: true, opacity: 0.9 })); S.add(o.ring);
+      o.cam = new THREE.PerspectiveCamera(40, 1, 0.1, 2000);
+      return o;
+    };
+    return { A: mk(), B: mk(), ang: 0 };
+  }
+  function tideView(o, T, ang, hidePre) {
+    var D = tdisp(T.d), R = tdisp(T.roche), e = hidePre ? 0.05 : Math.min(0.42, 0.045 + 0.08 * Math.log10(1 + T.range / 0.5352));
+    o.earth.rotation.y += 0.002;
+    o.sea.scale.set(1 + e, 1 - e * 0.35, 1 - e * 0.35); o.sea.rotation.set(0, -ang, 0);
+    o.moon.visible = !T.broken || hidePre; o.moon.scale.setScalar(Math.cbrt(T.m)); o.moon.position.set(Math.cos(ang) * D, 0, -Math.sin(ang) * D); o.moon.rotation.y = -ang + Math.PI;
+    o.ring.visible = T.broken && !hidePre; o.ring.scale.set(D, 1, D); o.ring.rotation.y = -ang * 1.6;
+    o.roche.scale.set(R, 1, R); o.orbit.scale.set(D, 1, D);
+    return D;
+  }
+  function renderTide(st, w, h, x0, y0, dt) {
+    if (!Td) Td = tideInit();
+    Td.ang += dt * (st.t != null ? 0.9 : 0.18);
+    var a = st.ev.a, b = st.ev.b, hide = !st.revealed && st.t == null;
+    var split = w > 560, half = split ? Math.floor(w / 2) : w;
+    var dA = tideView(Td.A, a, Td.ang, false), dB = tideView(Td.B, b, Td.ang, hide);
+    function cam(o, dd, ww, shift) { var por = ww / h < 0.9, f = Math.max(dd, TIDE_RE * 2.4) * (por ? 2.5 : 2.0) + 3; o.cam.aspect = ww / h; o.cam.fov = por ? 52 : 40; o.cam.position.set(0, f * 0.62, f * 0.9); o.cam.lookAt(0, -0.5, 0);
+      if (shift) o.cam.setViewOffset(ww, h, shift, 0, ww, h); else o.cam.clearViewOffset(); o.cam.updateProjectionMatrix(); }
+    if (split) {
+      var sh = st.wide ? Math.round(half * 0.2) : 0;     // 桌面两侧有面板:A 往右让、B 往左让
+      cam(Td.A, dA, half, -sh); cam(Td.B, dB, w - half, sh);
+      vp(x0, y0, half, h); renderer.render(Td.A.scene, Td.A.cam);
+      vp(x0 + half, y0, w - half, h); renderer.render(Td.B.scene, Td.B.cam);
+    } else { var o = st.side === "a" ? Td.A : Td.B; cam(o, st.side === "a" ? dA : dB, w, 0); vp(x0, y0, w, h); renderer.render(o.scene, o.cam); }
+    lastCam = Td.B.cam; lastSplit = split ? half : 0;
+    return null;
+  }
+
   /* ================= 通用 ================= */
   var state = { W: 1, H: 1 }, lastCam = null, lastSplit = 0;
   function vp(x, y, w, h) { var Y = state.H - y - h; renderer.setViewport(x, Y, w, h); renderer.setScissor(x, Y, w, h); renderer.setScissorTest(true); }
@@ -356,6 +479,8 @@ export function mount(THREE, canvas, opts) {
       renderer.setScissorTest(false); renderer.setViewport(0, 0, state.W, state.H); renderer.clear();
       if (st.lab === "gravity") renderGravity(st, R.w, R.h, R.x, R.y);
       else if (st.lab === "friction") renderFriction(st, R.w, R.h, R.x, R.y);
+      else if (st.lab === "light") return renderLight(st, R.w, R.h, R.x, R.y, dt);
+      else if (st.lab === "tide") return renderTide(st, R.w, R.h, R.x, R.y, dt);
       else return renderSound(st, R.w, R.h, R.x, R.y, dt);
       return null;
     },

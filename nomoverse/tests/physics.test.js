@@ -205,7 +205,7 @@ truthy("亚音速无马赫锥", P.machHalfAngle(100, 343) === null);
 /* ---- 规则改写台(v0.8-α1 core/labmodel.js)---- */
 (function () {
   var X = require("../core/labmodel.js");
-  var sc = X.selfCheck(); truthy("改写台模型校验 " + sc.ok + "/" + sc.n, sc.ok === sc.n && sc.n === 9);
+  var sc = X.selfCheck(); truthy("改写台模型校验 " + sc.ok + "/" + sc.n, sc.ok === sc.n && sc.n === 17);
   var gp = X.pair("gravity", "moon"); check("月球预设:A=地球 9.81、B=月球 1.62,只差 g", gp.B.g - gp.A.g, 1.62 - 9.81, 1e-12);
   truthy("A/B 只差一个变量(重力)", gp.A.v === gp.B.v && gp.A.ang === gp.B.ang);
   var ge = X.evaluate("gravity", gp.A, gp.B); truthy("地球这一投进筐、月球飞过篮板", ge.A[3] === "进筐 ✓" && ge.B[3] === "飞过篮板");
@@ -222,6 +222,28 @@ truthy("亚音速无马赫锥", P.machHalfAngle(100, 343) === null);
   truthy("先猜再看:慢声速答案是「什么也听不到,然后一声巨响」", X.predict("sound", X.pair("sound", "slow").A, X.pair("sound", "slow").B).answer === 1);
   truthy("未知预设回退默认(重力→月球)", X.preset("gravity", "pluto").id === "moon" && X.preset("sound", "").id === "slow");
   truthy("A、B 相同时不出猜测题", X.predict("gravity", X.pair("gravity", "earth").A, X.pair("gravity", "earth").B) === null);
+  /* v0.8-α2:光速、潮汐 */
+  check("地月单程 1.2822 s", X.light(X.C_REAL, 384400, 5).t, 384400e3 / 299792458, 1e-12);
+  check("地火平均单程 12.51 分钟", X.light(X.C_REAL, 2.25e8, 5).t / 60, 2.25e11 / 299792458 / 60, 1e-12);
+  var lp = X.pair("light", "slowc"); truthy("光速 10 m/s 预设只改 c", lp.B.c === 10 && lp.B.d === lp.A.d && lp.vary === "c");
+  var lm = X.pair("light", "moon"); truthy("打到月球预设只改距离", lm.B.d === 384400 && lm.B.c === lm.A.c && lm.vary === "d");
+  check("光速 10 m/s:1000 km 单程 1e5 s", X.light(10, 1000, 5).t, 1e5, 1e-12);
+  check("光速 10 m/s、5 m/s:γ = 2/√3", X.light(10, 1000, 5).gamma, 2 / Math.sqrt(3), 1e-12);
+  truthy("现实骑车 γ−1 ≈ 1.4×10⁻¹⁶(小量展开)", Math.abs(X.light(X.C_REAL, 1000, 5).g1 / 1.391e-16 - 1) < 0.001);
+  truthy("v ≥ c:γ 不存在", !X.light(4, 1000, 5).ok && !isFinite(X.light(4, 1000, 5).gamma));
+  var le = X.evaluate("light", lm.A, lm.B); truthy("1000 km 通话顺畅、打到月球要等", le.A[3] === "通话顺畅 ✓" && le.B[3].indexOf("要等") === 0);
+  var lpr = X.predict("light", lp.A, lp.B); truthy("先猜再看:光速 10 m/s 答案 27.8 小时", lpr.options[lpr.answer] === "27.8 小时", lpr.options.join(" / "));
+  truthy("现实预设 A=B,不出猜测题", X.predict("light", X.pair("light", "real").A, X.pair("light", "real").B) === null);
+  check("今天引潮加速度 2GM☾R⊕/d³", X.tidal(1, 38.44).acc, 2 * 4.9028e12 * 6.371e6 / Math.pow(3.844e8, 3), 1e-12);
+  check("今天平衡潮差 0.535 m", X.tidal(1, 38.44).range, 0.53515, 1e-3);
+  check("距离减半潮汐 ×8", X.tidal(1, 19.22).acc / X.tidal(1, 38.44).acc, 8, 1e-12);
+  check("质量 ×2 潮汐 ×2", X.evaluate("tide", X.pair("tide", "m2x").A, X.pair("tide", "m2x").B).ratio, 2, 1e-12);
+  check("洛希极限 = 2.44·R⊕·(5.514/3.344)^⅓", X.ROCHE, 2.44 * 6.371e6 * Math.pow(5.514 / 3.344, 1 / 3), 1e-12);
+  var te = X.evaluate("tide", X.pair("tide", "roche").A, X.pair("tide", "roche").B); truthy("1.7 万 km 在洛希极限内:撕碎", te.b.broken && !te.a.broken && te.summary === "撕碎成环");
+  truthy("月亮刚形成(2.55 万 km)仍在极限外", !X.tidal(1, 2.55).broken);
+  var tpr = X.predict("tide", X.pair("tide", "roche").A, X.pair("tide", "roche").B); truthy("先猜再看:洛希极限内答案是撕碎成环", tpr.answer === 2);
+  var tp2 = X.predict("tide", X.pair("tide", "m2x").A, X.pair("tide", "m2x").B); truthy("先猜再看:月球 ×2 答案 ≈ 2.0 倍", tp2.options[tp2.answer] === "≈ 2.0 倍", tp2.options.join(" / "));
+  truthy("未知预设回退默认(光速→现实,潮汐→今天)", X.preset("light", "x").id === "real" && X.preset("tide", "").id === "now");
 })();
 
 console.log(rows.join("\n"));

@@ -1,0 +1,159 @@
+{
+ "schema": "gn-lab/1",
+ "id": "nv.lab.light",
+ "world": "nv",
+ "title": "光速 · 规则改写台",
+ "question": "如果光速只有每秒 10 米,打电话会怎样?",
+ "color": "#8b5cf6",
+ "evidence": "confirmed",
+ "safety": "virtual",
+ "updated": "2026-11-02",
+ "params": [
+  {
+   "k": "c",
+   "label": "光速 c",
+   "min": 1,
+   "max": 299792458,
+   "step": 1,
+   "value": 299792458,
+   "unit": "m/s"
+  },
+  {
+   "k": "d",
+   "label": "通话距离",
+   "min": 1,
+   "max": 400000000,
+   "step": 1,
+   "value": 1000,
+   "unit": "km"
+  },
+  {
+   "k": "v",
+   "label": "你的速度",
+   "min": 0,
+   "max": 8,
+   "step": 0.1,
+   "value": 5,
+   "unit": "m/s"
+  }
+ ],
+ "model": {
+  "type": "fn",
+  "x": {
+   "k": "d",
+   "from": 1,
+   "to": 400000000,
+   "step": 1000000
+  },
+  "ys": [
+   {
+    "label": "单程延迟 (s)",
+    "expr": "d*1000/c"
+   },
+   {
+    "label": "一来一回 (s)",
+    "expr": "2*d*1000/c"
+   }
+  ]
+ },
+ "chart": {
+  "xlabel": "距离 (km,对数)",
+  "ylabel": "延迟 (s)"
+ },
+ "ab": {
+  "vary": "c"
+ },
+ "presets": [
+  {
+   "id": "real",
+   "label": "现实",
+   "set": {
+    "c": 299792458
+   },
+   "vary": "c"
+  },
+  {
+   "id": "moon",
+   "label": "打到月球",
+   "set": {
+    "d": 384400
+   },
+   "vary": "d"
+  },
+  {
+   "id": "mars",
+   "label": "打到火星",
+   "set": {
+    "d": 225000000
+   },
+   "vary": "d"
+  },
+  {
+   "id": "slowc",
+   "label": "光速 10 m/s",
+   "set": {
+    "c": 10
+   },
+   "vary": "c"
+  }
+ ],
+ "default_preset": "real",
+ "predict": {
+  "q": "如果光速只有 10 m/s,1000 km 外的朋友要多久才听到你?",
+  "options": [
+   "2.78 小时",
+   "27.8 小时",
+   "11.6 天"
+  ],
+  "answer": 1,
+  "why": "t = d/c = 10⁶ m ÷ 10 m/s = 10⁵ s ≈ 27.8 小时;一来一回要 2.3 天。"
+ },
+ "conclusions": [
+  {
+   "text": "信号延迟 t = d/c:光速有限,越远越慢;地月单程约 1.28 s,地火平均约 12.5 分钟。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "运动越接近光速,时间走得越慢,γ = 1/√(1−v²/c²);现实中骑车的 γ−1 只有约 10⁻¹⁶。",
+   "evidence": "confirmed"
+  },
+  {
+   "text": "「光速 10 m/s」是假想世界;实际通话还经过光纤与路由,比真空直线更慢。",
+   "evidence": "inferred"
+  }
+ ],
+ "checks": [
+  {
+   "label": "地月单程 1.28 s",
+   "x": 384400,
+   "expect": 1.2822,
+   "tol": 0.001
+  },
+  {
+   "label": "地火平均单程 750.5 s",
+   "x": 225000000,
+   "expect": 750.52,
+   "tol": 0.001
+  }
+ ],
+ "bridges": [
+  "nv.orbit",
+  "sh.orbit"
+ ],
+ "sources": [
+  {
+   "name": "BIPM SI Brochure:真空光速 c = 299 792 458 m/s(定义值)",
+   "url": "https://www.bipm.org/en/publications/si-brochure"
+  },
+  {
+   "name": "NASA Moon Fact Sheet(地月平均距离 384 400 km)",
+   "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html"
+  },
+  {
+   "name": "OpenStax《University Physics Vol.3》5.3 Time Dilation",
+   "url": "https://openstax.org/books/university-physics-volume-3/pages/5-3-time-dilation"
+  }
+ ],
+ "ai_generated": "问题、猜测题、结论文字由 AI 撰写(宙律 296bda0e 窗口);数值由 core/labmodel.js 与 tests/physics.test.js 复算",
+ "page": "/nomoverse/lab/?lab=light&preset=slowc"
+}

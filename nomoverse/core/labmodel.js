@@ -1,4 +1,4 @@
-/* 宙律 Nomoverse · 规则改写台(v0.8-α1)物理模型 —— 只算数,不画图。
+/* 宙律 Nomoverse · 规则改写台(v0.8-α1;v0.8-α2 加光速、潮汐)物理模型 —— 只算数,不画图。
    浏览器:window.NVLab;Node:module.exports(tests/physics.test.js 校验)。
    三个实验都遵守「A/B 对照只改一个变量」:A = 现实(地球 / 干燥沥青 / 空气),B = 改写后。 */
 (function (root) {
@@ -31,6 +31,21 @@
       fFar: f * c / (c + v),                              // 驶离
       cone: sup ? Math.asin(c / v) / D2R : null           // 马赫锥半顶角(度)
     };
+  }
+
+  /* ---------- 光速:信号延迟 t = d / c;洛伦兹因子 γ = 1/√(1 − v²/c²) ---------- */
+  var C_REAL = 299792458, LAG_OK = 0.15;              // ITU-T G.114:单程 ≤ 150 ms 通话基本无感
+  function light(c, dkm, v) {
+    var t = dkm * 1000 / c, b = v / c, ok = b < 1;
+    return { c: c, d: dkm, v: v, t: t, rt: 2 * t, beta: b, ok: ok, gamma: ok ? 1 / Math.sqrt(1 - b * b) : Infinity, g1: ok ? (b < 1e-4 ? 0.5 * b * b : 1 / Math.sqrt(1 - b * b) - 1) : Infinity };
+  }
+
+  /* ---------- 潮汐:引潮加速度 2GMr/d³;平衡潮差 1.5·(M/M⊕)(R/d)³·R;洛希极限(流体)2.44·R⊕·(ρ⊕/ρ☾)^(1/3) ---------- */
+  var GM_E = 3.986004418e14, GM_M = 4.9028e12, R_E = 6.371e6, D_M = 3.844e8, RHO_E = 5.514, RHO_M = 3.344;
+  var ROCHE = 2.44 * R_E * Math.pow(RHO_E / RHO_M, 1 / 3);        // m(月球密度不变时与月球质量无关)
+  function tidal(m, dwkm) {
+    var d = dwkm * 1e7, GM = GM_M * m;
+    return { m: m, d: d, acc: 2 * GM * R_E / (d * d * d), range: 1.5 * GM / GM_E * Math.pow(R_E / d, 3) * R_E, rel: m * Math.pow(D_M / d, 3), roche: ROCHE, broken: d < ROCHE };
   }
 
   /* ---------- 三个实验的参数、预设与对照 ---------- */
@@ -86,8 +101,55 @@
         { id: "helium", label: "氦气 1007", set: { c: 1007 }, tag: "氦气", env: "helium" },
         { id: "slow", label: "慢声速", set: { c: 20 }, tag: "假想慢声速", env: "slow" }
       ]
+    },
+    light: {
+      id: "nv.lab.light", name: "光速", vary: "c", def: "real",
+      question: "如果光速只有每秒 10 米,打电话会怎样?",
+      formula: "t = d / c;γ = 1 / √(1 − v²/c²)",
+      params: [
+        { k: "c", label: "光速 c", min: 1, max: 299792458, step: 1, unit: "m/s", dp: 0, log: true },
+        { k: "d", label: "通话距离", min: 1, max: 4e8, step: 1, unit: "km", dp: 0, log: true },
+        { k: "v", label: "你的速度", min: 0, max: 8, step: 0.1, unit: "m/s", dp: 1 }
+      ],
+      base: { c: C_REAL, d: 1000, v: 5 },
+      presets: [
+        { id: "real", label: "现实", set: { c: C_REAL }, tag: "真空光速", env: "city" },
+        { id: "moon", label: "打到月球", set: { d: 384400 }, vary: "d", tag: "地月 38.44 万 km", env: "moon" },
+        { id: "mars", label: "打到火星", set: { d: 2.25e8 }, vary: "d", tag: "地火平均 2.25 亿 km", env: "mars" },
+        { id: "slowc", label: "光速 10 m/s", set: { c: 10 }, tag: "假想慢光速", env: "city" }
+      ]
+    },
+    tide: {
+      id: "nv.lab.tide", name: "潮汐", vary: "d", def: "now",
+      question: "月亮再近一点,潮水会涨多高?",
+      formula: "a潮 = 2GMr / d³;d洛希 = 2.44·R⊕·(ρ⊕/ρ☾)^⅓",
+      params: [
+        { k: "d", label: "地月距离", min: 1.2, max: 100, step: 0.01, unit: "万 km", dp: 2, log: true },
+        { k: "m", label: "月球质量", min: 0.1, max: 10, step: 0.01, unit: "× 月球", dp: 2, log: true }
+      ],
+      base: { d: 38.44, m: 1 },
+      presets: [
+        { id: "now", label: "今天", set: { d: 38.44 }, tag: "今天 38.44 万 km", env: "now" },
+        { id: "early", label: "月亮刚形成", set: { d: 2.55 }, tag: "约 4 个地球半径(推测)", env: "early" },
+        { id: "m2x", label: "月球 ×2", set: { m: 2 }, vary: "m", tag: "质量 ×2、密度不变", env: "now" },
+        { id: "roche", label: "洛希极限内", set: { d: 1.7 }, tag: "1.7 万 km", env: "roche" }
+      ]
     }
   };
+  function sci(x, n) { if (!isFinite(x)) return "—"; if (x === 0) return "0"; var e = Math.floor(Math.log10(Math.abs(x))), m = x / Math.pow(10, e); if (+m.toFixed(n || 2) >= 10) { m /= 10; e++; } var SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹"; return m.toFixed(n == null ? 2 : n) + "×10" + (e < 0 ? "⁻" : "") + String(Math.abs(e)).split("").map(function (d) { return SUP[+d]; }).join(""); }
+  function fmtT(t) {
+    if (!isFinite(t)) return "—";
+    if (t < 1e-3) return (+(t * 1e6).toPrecision(3)) + " µs"; if (t < 1) return (+(t * 1e3).toPrecision(3)) + " ms";
+    if (t < 120) return (+t.toPrecision(3)) + " s"; if (t < 7200) return (+(t / 60).toPrecision(3)) + " 分钟";
+    if (t < 172800) return (+(t / 3600).toPrecision(3)) + " 小时"; if (t < 3.156e7 * 2) return (+(t / 86400).toPrecision(3)) + " 天";
+    return (+(t / 3.156e7).toPrecision(3)) + " 年";
+  }
+  function bigX(r) { if (!isFinite(r) || r <= 0) return "—"; if (r >= 1e8) return (+(r / 1e8).toPrecision(3)) + " 亿"; if (r >= 1e4) return (+(r / 1e4).toPrecision(3)) + " 万"; return ratioTxt(r); }
+  function cTxt(c) { return c >= 1e6 ? sci(c, 2) + " m/s" : M2(c) + " m/s"; }
+  function M2(x) { return (+x.toPrecision(3)).toString(); }
+  function dTxt(km) { return km >= 1e8 ? (+(km / 1e8).toPrecision(3)) + " 亿 km" : km >= 1e4 ? (+(km / 1e4).toPrecision(4)) + " 万 km" : M2(km) + " km"; }
+  function gTxt(L) { return !L.ok ? "γ:v ≥ c 不可能" : L.g1 < 1e-4 ? "γ ≈ 1 + " + sci(L.g1, 1) : "γ = " + L.gamma.toFixed(3); }
+  function rangeTxt(m) { return m >= 1000 ? (+(m / 1000).toPrecision(3)) + " km" : m >= 10 ? Math.round(m) + " m" : (+m.toPrecision(3)) + " m"; }
 
   function preset(lab, pid) {
     var L = LABS[lab]; if (!L) return null;
@@ -130,6 +192,28 @@
           : which === "μ" ? "只改 μ:制动距离与 μ 成反比 → 制动距离约是干燥沥青的 " + ratioTxt(rb) + " 倍"
           : "只改车速:制动距离与 v² 成正比 → 快 " + Math.round((B.kmh / A.kmh - 1) * 100) + "%,制动距离 ×" + ratioTxt(rb) };
     }
+    if (lab === "light") {
+      var la = light(A.c, A.d, A.v), lb = light(B.c, B.d, B.v), rl = lb.t / la.t, which2 = Math.abs(B.c - A.c) > 1e-9 ? "c" : "d";
+      var okLa = la.t <= LAG_OK, okLb = lb.t <= LAG_OK;
+      function card(c, L, ok) { return ["c = " + cTxt(c), dTxt(L.d) + " · 单程 " + fmtT(L.t), "一来一回 " + fmtT(L.rt), ok ? "通话顺畅 ✓" : "要等 " + fmtT(L.rt) + " 才听到回话"]; }
+      return { a: la, b: lb, ratio: rl, key: "t",
+        A: card(A.c, la, okLa).concat([gTxt(la)]), B: card(B.c, lb, okLb).concat([gTxt(lb)]),
+        bOk: okLb, summary: "单程 " + fmtT(lb.t),
+        line: Math.abs(rl - 1) < 1e-9 ? "现在 A、B 一样:选一个预设,或拧动光速旋钮。"
+          : which2 === "c" ? "只改 c:延迟与 c 成反比 → 单程 " + fmtT(lb.t) + "(现实 " + fmtT(la.t) + ")" + (lb.ok && lb.g1 >= 1e-4 ? ";你以 " + M2(B.v) + " m/s 运动,γ = " + lb.gamma.toFixed(3) + ",钟慢效应肉眼可见" : "")
+          : "只改距离:延迟与 d 成正比 → 单程 " + fmtT(lb.t) + ",一来一回 " + fmtT(lb.rt) };
+    }
+    if (lab === "tide") {
+      var ta = tidal(A.m, A.d), tb = tidal(B.m, B.d), rt = tb.acc / ta.acc;
+      function tcard(m, T) { return ["d = " + (+(T.d / 1e7).toPrecision(4)) + " 万 km · M ×" + M2(m), "引潮加速度 " + sci(T.acc, 2) + " m/s²", "平衡潮差 " + rangeTxt(T.range), T.broken ? "进了洛希极限:被撕碎成环" : "月亮完好 ✓"]; }
+      return { a: ta, b: tb, ratio: rt, key: "acc",
+        A: tcard(A.m, ta), B: tcard(B.m, tb),
+        bOk: !tb.broken, summary: tb.broken ? "撕碎成环" : "潮汐 ×" + bigX(rt),
+        line: Math.abs(rt - 1) < 1e-9 ? "现在 A、B 一样:选一个预设,或拧动距离旋钮。"
+          : Math.abs(B.m - A.m) > 1e-9 ? "只改质量:潮汐与 M 成正比 → 潮汐 ×" + bigX(rt) + ";洛希极限不变(" + M2(ROCHE / 1e7) + " 万 km,只看密度)"
+          : tb.broken ? "只改距离:进了洛希极限(" + M2(ROCHE / 1e7) + " 万 km),引潮力胜过月亮自身引力 → 月亮被撕碎,铺成光环"
+          : "只改距离:潮汐与 1/d³ 成正比 → 距离 ×" + ratioTxt(B.d / A.d) + ",潮汐 ×" + bigX(rt) };
+    }
     var xa = sound(A.c, A.v, A.f), xb = sound(B.c, B.v, B.f);
     var shA = (xa.fNear - A.f) / A.f, shB = xb.sup ? Infinity : (xb.fNear - B.f) / B.f;
     return { a: xa, b: xb, ratio: shB / shA, key: "shift",
@@ -151,6 +235,17 @@
       if (Math.abs(B.c - A.c) < 1e-9) return null;
       var r = E.ratio; return { q: "先猜再看:换成这种声速,救护车靠近时的音调变化比空气里……", options: ["更大", "差不多", "更小"], answer: r > 1.25 ? 0 : r < 0.8 ? 2 : 1 };
     }
+    if (lab === "light") {
+      if (Math.abs(E.ratio - 1) < 0.02) return null; var tb2 = E.b.t;
+      return { q: "先猜再看:" + (Math.abs(B.c - A.c) > 1e-9 ? "光速改成 " + cTxt(B.c) + "," + dTxt(B.d) + " 外的朋友要多久才听到你?" : "打到 " + dTxt(B.d) + " 外,对方要多久才听到你?"),
+        options: [fmtT(tb2 / 10), fmtT(tb2), fmtT(tb2 * 10)], answer: 1 };
+    }
+    if (lab === "tide") {
+      if (Math.abs(E.ratio - 1) < 0.02) return null;
+      if (E.b.broken) return { q: "先猜再看:把月亮放到 " + M2(B.d) + " 万 km,会发生什么?", options: ["潮水涨一点,一切照旧", "潮水涨成高山,月亮完好", "月亮被潮汐撕碎,铺成光环"], answer: 2 };
+      var r3 = E.ratio, o3 = r3 > 1 ? [Math.sqrt(r3), r3, r3 * r3] : [r3 * r3, r3, Math.sqrt(r3)];
+      return { q: "先猜再看:你猜 B 的潮汐是 A 的几倍?", options: o3.map(function (x) { return "≈ " + bigX(x) + " 倍"; }), answer: 1 };
+    }
     var rr = E.ratio; if (!isFinite(rr) || Math.abs(rr - 1) < 0.02) return null;
     var q = lab === "gravity" ? "先猜再看:你猜 B 的射程是 A 的几倍?" : "先猜再看:你猜 B 的制动距离是 A 的几倍?";
     var c = rr > 1 ? [Math.sqrt(rr), rr, rr * rr] : [rr * rr, rr, Math.sqrt(rr)];
@@ -167,7 +262,15 @@
     { lab: "friction", label: "车速 +20%:制动 ×1.44", f: function () { return stop(60, 0.7, 1).brake / stop(50, 0.7, 1).brake; }, expect: 1.44, tol: 0.001 },
     { lab: "sound", label: "空气 25 m/s:靠近 755 Hz", f: function () { return sound(343, 25, 700).fNear; }, expect: 755.03, tol: 0.001 },
     { lab: "sound", label: "空气:远离 652 Hz", f: function () { return sound(343, 25, 700).fFar; }, expect: 652.45, tol: 0.001 },
-    { lab: "sound", label: "慢声速 20 m/s:马赫锥 53.1°", f: function () { return sound(20, 25, 700).cone; }, expect: 53.13, tol: 0.001 }
+    { lab: "sound", label: "慢声速 20 m/s:马赫锥 53.1°", f: function () { return sound(20, 25, 700).cone; }, expect: 53.13, tol: 0.001 },
+    { lab: "light", label: "地月单程 1.28 s", f: function () { return light(C_REAL, 384400, 5).t; }, expect: 1.2822, tol: 0.001 },
+    { lab: "light", label: "地火平均单程 12.5 分钟", f: function () { return light(C_REAL, 2.25e8, 5).t / 60; }, expect: 12.509, tol: 0.001 },
+    { lab: "light", label: "光速 10 m/s:1000 km 单程 27.8 小时", f: function () { return light(10, 1000, 5).t / 3600; }, expect: 27.778, tol: 0.001 },
+    { lab: "light", label: "光速 10 m/s、骑车 5 m/s:γ = 1.155", f: function () { return light(10, 1000, 5).gamma; }, expect: 1.1547, tol: 0.001 },
+    { lab: "tide", label: "今天:引潮加速度 1.10×10⁻⁶ m/s²", f: function () { return tidal(1, 38.44).acc; }, expect: 1.1000e-6, tol: 0.003 },
+    { lab: "tide", label: "今天:平衡潮差 0.54 m", f: function () { return tidal(1, 38.44).range; }, expect: 0.5352, tol: 0.002 },
+    { lab: "tide", label: "距离减半:潮汐 ×8", f: function () { return tidal(1, 19.22).acc / tidal(1, 38.44).acc; }, expect: 8, tol: 1e-6 },
+    { lab: "tide", label: "洛希极限(流体)1.84 万 km", f: function () { return ROCHE / 1e3; }, expect: 18365, tol: 0.001 }
   ];
   function selfCheck(lab) {
     var n = 0, ok = 0, rows = [];
@@ -175,6 +278,6 @@
     return { n: n, ok: ok, rows: rows };
   }
 
-  var API = { shot: shot, stop: stop, sound: sound, LABS: LABS, preset: preset, pair: pair, evaluate: evaluate, predict: predict, selfCheck: selfCheck, CHECKS: CHECKS, STOP_LINE: STOP_LINE, HOOP_TOL: HOOP_TOL, fmt: fmt, ratioTxt: ratioTxt };
+  var API = { shot: shot, stop: stop, sound: sound, light: light, tidal: tidal, ROCHE: ROCHE, C_REAL: C_REAL, LAG_OK: LAG_OK, fmtT: fmtT, sci: sci, bigX: bigX, LABS: LABS, preset: preset, pair: pair, evaluate: evaluate, predict: predict, selfCheck: selfCheck, CHECKS: CHECKS, STOP_LINE: STOP_LINE, HOOP_TOL: HOOP_TOL, fmt: fmt, ratioTxt: ratioTxt };
   if (typeof module !== "undefined" && module.exports) module.exports = API; else root.NVLab = API;
 })(typeof window !== "undefined" ? window : this);

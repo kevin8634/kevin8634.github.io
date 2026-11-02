@@ -148,9 +148,9 @@
     exportJSON: function () { return JSON.stringify({ schema: "gn-lab-notebook/1", world: "nv", exported: new Date().toISOString(), entries: NB.list() }, null, 1); }
   };
   function download(name, blob) { var a = el("a", { href: URL.createObjectURL(blob), download: name }); D.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000); }
-  var TABS = [["gravity", "重力"], ["friction", "摩擦"], ["sound", "声速"], [null, "光速 · 即将"], [null, "潮汐 · 即将"]];
+  var TABS = [["gravity", "重力"], ["friction", "摩擦"], ["sound", "声速"], ["light", "光速"], ["tide", "潮汐"]];
   var root = D.getElementById("root");
-  var CREDIT = "简化模型,纯虚拟实验(不计空气阻力、无 ABS)。贴图:Poly Haven(CC0)、NASA(公有领域)、NASA/Goddard SVS 星图。";
+  var CREDIT = "简化模型,纯虚拟实验(不计空气阻力、无 ABS)。贴图:Poly Haven(CC0)、NASA(公有领域)、NASA/Goddard SVS 星图;月球 Solar System Scope(<a href='https://creativecommons.org/licenses/by/4.0/'>CC BY 4.0</a>,已缩放)。";
 
   function topbar(cur) {
     var t = el("header", { class: "lb-top pan" }, [el("a", { class: "home", href: ROOT, text: "← 宙律" }), el("span", { class: "ttl", text: "规则改写台 · 宇宙常数旋钮台" })]);
@@ -172,16 +172,15 @@
     var ui = el("div", { class: "lb-ui" }, [topbar(null)]);
     var h = el("main", { class: "hall" }, [
       el("h1", { text: "规则改写台" }),
-      el("p", { class: "sub", text: "把一条宇宙规律拧一下:重力变小、路面结冰、声音变慢。左右 A/B 对照只改一个变量,先猜再看。记录本只存在你这台设备上。" })
+      el("p", { class: "sub", text: "把一条宇宙规律拧一下:重力变小、路面结冰、声音变慢、光变慢、月亮拉近。左右 A/B 对照只改一个变量,先猜再看。记录本只存在你这台设备上。" })
     ]);
     var cards = el("div", { class: "labs" });
     [["gravity", "重力", "如果月球上的重力只有地球的 1/6,同样的投篮会飞多远?", "../assets/hoop/sky_space_2k.jpg", "地球 · 月球 · 火星 · 木星 · 引力 ×2"],
      ["friction", "摩擦", "路面结冰时,同样车速要多远才能停下?", "../assets/hoop/asphalt_d1k.jpg", "干燥 · 湿滑 · 结冰 · 车速 +20%"],
-     ["sound", "声速", "如果声音变慢,救护车会追上自己的声音吗?", "../assets/hoop/sky_dusk_2k.jpg", "空气 · 水 · 氦气 · 慢声速"]].forEach(function (c) {
+     ["sound", "声速", "如果声音变慢,救护车会追上自己的声音吗?", "../assets/hoop/sky_dusk_2k.jpg", "空气 · 水 · 氦气 · 慢声速"],
+     ["light", "光速", "如果光速只有每秒 10 米,打电话会怎样?", "../assets/hoop/planet_earth_1k.jpg", "现实 · 打到月球 · 打到火星 · 光速 10 m/s"],
+     ["tide", "潮汐", "月亮再近一点,潮水会涨多高?", "../assets/tide/moon_2k.jpg", "今天 · 月亮刚形成 · 月球 ×2 · 洛希极限内"]].forEach(function (c) {
       cards.appendChild(el("a", { class: "lc", href: "?lab=" + c[0] }, [el("div", { class: "im", style: "background-image:url(" + c[3] + ")" }, [el("span", { text: c[1] })]), el("div", { class: "tx" }, [el("b", { text: c[2] }), c[4]])]));
-    });
-    [["光速", "如果光速只有每秒 10 米,打电话会怎样?"], ["潮汐", "月亮再近一点,潮水会涨多高?"]].forEach(function (c) {
-      cards.appendChild(el("div", { class: "lc soon", "aria-disabled": "true" }, [el("div", { class: "im", style: "background:repeating-linear-gradient(45deg,#121027 0 10px,#0e0c20 10px 20px)" }, [el("span", { text: c[0] + " · 即将" })]), el("div", { class: "tx" }, [el("b", { text: c[1] }), "第二批实验"])]));
     });
     h.appendChild(cards);
     var box = el("section", { class: "pan nbx", "aria-label": "实验记录本" });
@@ -192,8 +191,7 @@
         el("button", { class: "btn2", type: "button", text: "导出 JSON", onclick: function () { download("genesis-nv-lab.json", new Blob([NB.exportJSON()], { type: "application/json" })); } })]));
       if (!list.length) box.appendChild(el("p", { class: "dial-t", style: "text-align:left", text: "还没有记录。进一个实验,猜一猜、跑一次,结果会自动记在这里。" }));
       list.forEach(function (e) {
-        var L = M.LABS[(e.id || "").split(".")[2]] || null, P = L ? M.preset(L === M.LABS.gravity ? "gravity" : L === M.LABS.friction ? "friction" : "sound", e.preset) : null;
-        var lab = (e.id || "").split(".")[2];
+        var lab = (e.id || "").split(".")[2], L = M.LABS[lab] || null, P = L ? M.preset(lab, e.preset) : null;
         box.appendChild(el("div", { class: "ent" }, [el("span", { class: "d", text: new Date(e.t).toLocaleString("zh-CN", { hour12: false }) }),
           el("span", {}, [(L ? L.name : "") + " · " + (P ? P.label : "") + " · " + (e.summary || "") + (e.guess ? (e.correct ? " · 猜对 ✓" : " · 猜「" + e.guess + "」") : "") + " ", el("a", { href: "?lab=" + lab + "&preset=" + e.preset, text: "复现" })]),
           el("button", { class: "btn2", type: "button", "aria-label": "删除这条记录", text: "删除", onclick: function () { NB.remove(e.t); drawNB(); } })]));
@@ -288,7 +286,7 @@
       s.inp.setAttribute("aria-valuetext", M.fmt(v, spec.dp) + " " + spec.unit);
       s.note.textContent = spec.k === vk ? (Math.abs(B[vk] - (P.set[vk] != null ? P.set[vk] : B[vk])) < 1e-9 ? P.tag : "自定义(" + P.label + "基础上)") : "";
     });
-    var aName = labId === "gravity" ? "A · 地球" : labId === "friction" ? "A · 干燥沥青" : "A · 空气";
+    var aName = { gravity: "A · 地球", friction: "A · 干燥沥青", sound: "A · 空气", light: "A · 现实", tide: "A · 今天" }[labId];
     var bName = "B · " + (labId === "sound" && P.id === "slow" ? "慢声速" : labId === "friction" && P.id === "ice" ? "冰面" : P.label.replace(/ \d+$/, ""));
     var hide = !!cur.pred && !revealed;
     abEl.innerHTML = "";
@@ -309,9 +307,9 @@
     badges.innerHTML = "";
     var sc = M.selfCheck(labId);
     badges.appendChild(el("span", { class: "bdg c", text: "真实规律 confirmed" }));
-    badges.appendChild(el("span", { class: "bdg i", text: labId === "friction" ? "简化模型(无 ABS)inferred" : "改常数后的世界 inferred" }));
+    badges.appendChild(el("span", { class: "bdg i", text: { friction: "简化模型(无 ABS)inferred", light: "按真空光速、直线距离计算(光纤里约慢 1/3)inferred", tide: "平衡潮:大洋理论值,不含海岸放大 inferred" }[labId] || "改常数后的世界 inferred" }));
+    if (labId === "tide" && P.id === "early") badges.appendChild(el("span", { class: "bdg i", text: "月亮刚形成时的距离是推测值 inferred" }));
     badges.appendChild(el("span", { class: "bdg v", text: "纯虚拟实验 virtual" }));
-    if (labId === "friction") badges.appendChild(el("span", { class: "bdg i", text: "只做数学演示,不能当作驾驶安全依据" }));
     if (labId === "friction") badges.appendChild(el("span", { class: "bdg i", text: "只做数学演示,不能当作驾驶安全依据" }));
     badges.appendChild(el("span", { class: "bdg k", title: sc.rows.map(function (r) { return (r.pass ? "✓ " : "✗ ") + r.label; }).join("\n"), text: "模型校验 " + sc.ok + "/" + sc.n }));
     playB.disabled = tRun != null; playT.textContent = tRun != null ? "运行中…" : revealed ? "再跑一次" : (cur.pred && guess == null ? "先猜再看" : "运行");
@@ -373,6 +371,7 @@
     var ev = cur.ev;
     if (labId === "gravity") { var mx = Math.max(ev.a.T, ev.b.T), k = Math.min(1, 5.5 / mx); cur.kw = k; DUR = mx * k; }
     else if (labId === "friction") { var mt = Math.max(ev.a.tTotal, ev.b.tTotal); cur.warp = Math.max(1, mt / 6.5); DUR = mt / cur.warp; }
+    else if (labId === "light") DUR = 4.2;
     else DUR = 4.5;
     if (RM) DUR = 0.01;
     update();
@@ -453,6 +452,26 @@
         });
         var sp = view.proj(6.8, 0.2, -cur.ev.line0); if (sp && sp[2]) chip(Math.min(Wd - 120, sp[0] * Wd + 4), sp[1] * Ht - 12, "路口 " + cur.ev.line0 + " m", "#e5e7eb");
       }
+    } else if (labId === "light") {
+      var padL = Wd < 560 ? 70 : 0, hh = padL + Math.floor((Ht - padL) / 2), mxT = Math.max(cur.ev.a.t, cur.ev.b.t), tSim = st.t == null ? null : Math.min(mxT, st.t / 4 * mxT);
+      [[0, "A · 现实", "#67e8f9", cur.ev.a], [hh, "B · 改写后 · " + cur.P.label, "#fbbf24", cur.ev.b]].forEach(function (q, i) {
+        var yy = i === 0 ? Math.max(y, padL + 6) : Math.max(hh + 8, y + 34);
+        var w0 = chip(Wd >= 1000 ? 262 : 10, yy, q[1], q[2]);
+        var tgt = q[3].d > 1e7 ? "火星" : q[3].d > 1e5 ? "月球" : M.fmt(q[3].d, 0) + " km 外的朋友";
+        var hid = i === 1 && !st.revealed;
+        chip((Wd >= 1000 ? 262 : 10) + w0 + 6, yy, "→ " + tgt + " · 单程 " + (hid ? "? ? ?" : M.fmtT(q[3].t)), "#e5e7eb");
+      });
+      if (tSim != null) chip(Wd >= 1000 ? 262 : 10, Ht - 40, "模拟时钟 " + M.fmtT(tSim) + "(按 " + M.fmtT(mxT) + " 压缩到 4 秒播放)", "#c4b5fd");
+      octx.save(); var lg = octx.createLinearGradient(0, 0, Wd, 0); lg.addColorStop(0, "rgba(167,139,250,0)"); lg.addColorStop(0.5, "rgba(167,139,250,.9)"); lg.addColorStop(1, "rgba(167,139,250,0)"); octx.fillStyle = lg; octx.fillRect(0, hh - 1, Wd, 2); octx.restore();
+    } else if (labId === "tide") {
+      var split2 = Wd > 560, half2 = split2 ? Wd / 2 : Wd, hidT = !st.revealed;
+      var tB = "B · 改写后 · " + cur.P.label + (hidT ? "" : cur.ev.b.broken ? " · 撕碎成环" : " · 潮差 " + cur.ev.B[2].replace("平衡潮差 ", ""));
+      if (split2) {
+        chip(Wd >= 1000 ? 262 : 10, y, "A · 今天 · 潮差 " + cur.ev.A[2].replace("平衡潮差 ", ""), "#67e8f9");
+        chip(half2 + 10, y, tB, "#fbbf24");
+        octx.save(); var gg2 = octx.createLinearGradient(0, 0, 0, Ht); gg2.addColorStop(0, "rgba(167,139,250,0)"); gg2.addColorStop(0.5, "rgba(167,139,250,.9)"); gg2.addColorStop(1, "rgba(167,139,250,0)"); octx.fillStyle = gg2; octx.fillRect(half2 - 1, 0, 2, Ht); octx.restore();
+      } else chip(10, y, (side === "a" ? "A · 今天 · 潮差 " + cur.ev.A[2].replace("平衡潮差 ", "") : tB) + "(点此切 A/B)", side === "a" ? "#67e8f9" : "#fbbf24");
+      chip(split2 ? half2 + 10 : 10, y + 30, "红色虚线 = 洛希极限 " + M.fmt(M.ROCHE / 1e7, 2) + " 万 km · 海水鼓包按对数夸张", "#fecaca");
     } else {
       chip(Wd >= 1000 ? 270 : 10, y, (side === "b" ? "B · 改写后 · " + cur.P.label : "A · 现实 · 空气") + "(点此切 A/B)", side === "b" ? "#fbbf24" : "#67e8f9");
       if (info && info.heard) chip(Wd >= 1000 ? Wd * 0.62 : Wd - 130, Ht * 0.35, (side === "b" ? cur.B : cur.A).v > (side === "b" ? cur.B : cur.A).c ? "💥 一声巨响" : "听到警笛", "#fde68a");
@@ -460,6 +479,7 @@
   }
   ov.style.pointerEvents = "none";
   stageEl.addEventListener("click", function (e) {
+    if (labId === "tide" && Wd <= 560) { side = side === "b" ? "a" : "b"; return; }
     if (labId !== "sound") return;
     var r = stageEl.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, y0 = stageTop();
     if (y > y0 - 4 && y < y0 + 30 && x < (Wd >= 1000 ? 600 : 360)) { side = side === "b" ? "a" : "b"; }
@@ -497,6 +517,34 @@
         var s = q[0], tr = q[1].tr, dd; if (tt <= tr) dd = s.v * tt; else { var tb = Math.min(tt - tr, s.tBrake); dd = s.react + s.v * tb - 0.5 * s.mu * 9.81 * tb * tb; }
         c.fillStyle = q[3]; c.fillRect(q[2] - 14, Yd(dd) - 26, 28, 26); c.fillStyle = "#ff3030"; c.fillRect(q[2] - 12, Yd(dd) - 2, 7, 3); c.fillRect(q[2] + 5, Yd(dd) - 2, 7, 3);
         c.fillStyle = q[3]; c.fillText(dd.toFixed(0) + " m", q[2] + 18, Yd(dd) - 10);
+      });
+    } else if (labId === "light") {
+      var gl4 = c.createLinearGradient(0, 0, 0, Ht); gl4.addColorStop(0, "#050414"); gl4.addColorStop(1, "#0d0b24"); c.fillStyle = gl4; c.fillRect(0, 0, Wd, Ht);
+      var mxL = Math.max(st.ev.a.t, st.ev.b.t);
+      [[st.ev.a, (Wd < 560 ? 70 : 0) + (Ht - (Wd < 560 ? 70 : 0)) * 0.3, "#67e8f9"], [st.ev.b, (Wd < 560 ? 70 : 0) + (Ht - (Wd < 560 ? 70 : 0)) * 0.78, "#fbbf24"]].forEach(function (q, i) {
+        var Lq = q[0], yy = q[1], xe = Wd * 0.14, xt = Wd * 0.86, r = Math.min(Ht * 0.12, Wd * 0.07);
+        var k = st.t == null ? (st.revealed ? 1 : 0) : Math.min(1, st.t / Math.max(0.05, 4 * Lq.t / mxL));
+        c.fillStyle = "#2563eb"; c.beginPath(); c.arc(xe, yy, r, 0, 7); c.fill(); c.fillStyle = "#16a34a"; c.beginPath(); c.arc(xe - r * 0.3, yy - r * 0.2, r * 0.45, 0, 7); c.fill();
+        var tg = Lq.d > 1e7 ? "#c2410c" : Lq.d > 1e5 ? "#a8a29e" : "#e2e8f0"; c.fillStyle = tg; c.beginPath(); c.arc(xt, yy, Lq.d > 1e5 ? r * 0.6 : r * 0.25, 0, 7); c.fill();
+        c.strokeStyle = q[2]; c.globalAlpha = 0.25; c.lineWidth = 2; c.beginPath(); c.moveTo(xe + r, yy); c.lineTo(xt - r * 0.6, yy); c.stroke(); c.globalAlpha = 1;
+        var px = xe + r + (xt - r * 0.6 - xe - r) * k; c.lineWidth = 3; c.beginPath(); c.moveTo(xe + r, yy); c.lineTo(px, yy); c.stroke();
+        c.fillStyle = q[2]; c.beginPath(); c.arc(px, yy, 6, 0, 7); c.fill();
+      });
+    } else if (labId === "tide") {
+      var gt4 = c.createLinearGradient(0, 0, 0, Ht); gt4.addColorStop(0, "#050414"); gt4.addColorStop(1, "#0d0b24"); c.fillStyle = gt4; c.fillRect(0, 0, Wd, Ht);
+      var spl = Wd > 560, hf = spl ? Wd / 2 : Wd;
+      [["a", 0], ["b", spl ? hf : 0]].forEach(function (s) {
+        if (!spl && s[0] !== side) return;
+        var T = s[0] === "a" ? st.ev.a : st.ev.b, hidP = s[0] === "b" && !st.revealed, cx = s[1] + hf / 2, cy = Ht * 0.58;
+        var Dm = Math.pow(T.d / 6.371e6, 0.55), Rr = Math.pow(T.roche / 6.371e6, 0.55), sc = Math.min(hf, Ht * 1.3) * 0.42 / Math.max(Dm, 2), re = sc;
+        var e = hidP ? 0.05 : Math.min(0.42, 0.045 + 0.08 * Math.log10(1 + T.range / 0.5352)), ang = t2 * 0.25;
+        c.save(); c.translate(cx, cy); c.rotate(-ang);
+        c.fillStyle = "rgba(59,130,246,.45)"; c.beginPath(); c.ellipse(0, 0, re * 1.02 * (1 + e), re * 1.02 * (1 - e * 0.35), 0, 0, 7); c.fill(); c.restore();
+        c.fillStyle = "#1d4ed8"; c.beginPath(); c.arc(cx, cy, re, 0, 7); c.fill(); c.fillStyle = "#15803d"; c.beginPath(); c.arc(cx - re * 0.3, cy - re * 0.2, re * 0.4, 0, 7); c.fill();
+        c.setLineDash([5, 5]); c.strokeStyle = "#f87171"; c.beginPath(); c.arc(cx, cy, Rr * sc, 0, 7); c.stroke(); c.setLineDash([]);
+        var mxp = cx + Math.cos(ang) * Dm * sc, myp = cy - Math.sin(ang) * Dm * sc;
+        if (T.broken && !hidP) { c.strokeStyle = "rgba(214,211,209,.6)"; c.lineWidth = 6; c.beginPath(); c.arc(cx, cy, Dm * sc, 0, 7); c.stroke(); c.lineWidth = 1; }
+        else { c.fillStyle = "#d6d3d1"; c.beginPath(); c.arc(mxp, myp, Math.max(3, re * 0.27 * Math.cbrt(T.m)), 0, 7); c.fill(); }
       });
     } else {
       var P = side === "b" ? st.B : st.A, g3 = c.createLinearGradient(0, 0, 0, Ht); g3.addColorStop(0, "#0b1024"); g3.addColorStop(1, "#1b2236"); c.fillStyle = g3; c.fillRect(0, 0, Wd, Ht);
