@@ -54,12 +54,18 @@
       '#xk-card .g2{display:flex;gap:6px;margin-top:6px}#xk-card .g2 button{flex:1;padding:5px;border-radius:14px;border:1px solid rgba(127,214,255,.4);background:rgba(127,214,255,.08);color:#cfe6ff;font:inherit;font-size:12px}#xk-card .g2 .se{border-color:rgba(255,159,178,.45);color:#ffc6d2}';
     document.head.appendChild(st);
   }
+  // C2.14d 恒星名:先用 1.0 标注表(SHX_STARNAMES),否则用 HYG 拜耳名 / 中文传统名(SHX_STARBAYER)→ [标题, 副标题, 类型|null]
+  function starNm(k) {
+    var n = (window.SHX_STARNAMES || {})[k]; if (n) return n; var b = (window.SHX_STARBAYER || {})[k]; if (!b) return null;
+    var t = b[0] || b[1] || b[2]; return [t, [b[0] ? b[1] : '', b[2]].filter(function (x) { return x && x !== t; }).join(' · ') || ('HYG ' + k), null];
+  }
+  window.SHX_STARNM = starNm;
   function show(k) {
     var root = X._.root(); if (!root) return; css(); SEL = k;
     if (!box) { box = document.createElement('div'); box.id = 'xk-box'; } root.appendChild(box);
     if (card) card.remove(); card = document.createElement('div'); card.id = 'xk-card'; var src = X._.cardSrc || '星空点选'; X._.cardSrc = null;   // C2.7a 来源:目录打开的卡标「目录」
    
-    var s = shipLy(), m = appMag(k, s), bv = ST.BV[k], nm = (window.SHX_STARNAMES || {})[k], Q = ST.Q;
+    var s = shipLy(), m = appMag(k, s), bv = ST.BV[k], nm = starNm(k), Q = ST.Q;
     var dSun = Math.hypot(Q[k * 3], Q[k * 3 + 1], Q[k * 3 + 2]), dShip = Math.hypot(ST.P[k * 3] - s[0], ST.P[k * 3 + 1] - s[1], ST.P[k * 3 + 2] - s[2]);
     var ra = Math.atan2(Q[k * 3 + 1], Q[k * 3]) * 180 / Math.PI, de = Math.asin(Q[k * 3 + 2] / (dSun || 1)) * 180 / Math.PI;
     var t = isNaN(bv) ? null : teff(bv), c = t ? cls(t) : null, wp = null;
@@ -68,7 +74,7 @@
     card.innerHTML = '<button class="x" type="button" aria-label="关闭">×</button><div class="k">HYG v4.1 #' + k + ' · 恒星</div>' +
       '<h3>' + (nm ? nm[0] : '视星等 ' + m.toFixed(1) + ' 的恒星') + '</h3><div class="en">' + (nm ? nm[1] : 'Magnitude ' + m.toFixed(1) + ' star') + '</div>' +
       '<div class="sw"><span class="dot" style="background:radial-gradient(circle,#fff 20%,' + col + ' 60%,transparent 72%)"></span><div class="bar"><i style="left:' + pos + '%"></i></div></div>' +
-      (nm ? '<div class="r"><span>类型</span><b>' + nm[2] + '</b></div>' : '') +
+      (nm && nm[2] ? '<div class="r"><span>类型</span><b>' + nm[2] + '</b></div>' : '') +
       '<div class="r"><span>视星等(从飞船看)</span><b>' + m.toFixed(2) + '</b></div><div class="r"><span>绝对星等</span><b>' + ST.M[k].toFixed(2) + '</b></div>' +
       (t ? '<div class="r"><span>光谱型(按颜色估算)</span><b>' + c[0] + ' · ' + c[1] + '</b></div><div class="r"><span>表面温度(按颜色估算)</span><b>≈ ' + (Math.round(t / 100) * 100).toLocaleString() + ' K</b></div><div class="r"><span>B − V</span><b>' + bv.toFixed(2) + '</b></div>' : '') +
       '<div class="r"><span>距太阳</span><b>' + (dSun < 100 ? dSun.toFixed(2) : Math.round(dSun).toLocaleString()) + ' 光年</b></div><div class="r"><span>距飞船</span><b>' + (dShip < 100 ? dShip.toFixed(2) : Math.round(dShip).toLocaleString()) + ' 光年</b></div>' +
@@ -87,7 +93,7 @@
     var bb = bbJS(T0), b0 = bbJS(5772), tint = [bb[0] / b0[0], bb[1] / b0[1], bb[2] / b0[2]], tm = Math.max(tint[0], tint[1], tint[2]); tint = tint.map(function (x) { return x / tm * 1.35; });   // 相对太阳的黑体色比
     if (c && cl.zh) c = [c[0], c[1] + cl.zh];
     var name = nm ? nm[0] : 'HYG #' + k, ly = dSun < 100 ? dSun.toFixed(2) : Math.round(dSun).toLocaleString();
-    var b = X._.tempStar({ wd: cl.k === 'wd', gs: cl.gs, ga: T0 > 8000 ? .15 : T0 > 7000 ? .5 : 1, zh: name, en: nm ? nm[1] : 'HYG ' + k, type: nm ? nm[2] : (cl.k === 'wd' ? '白矮星' : c ? c[0] + ' 型' + (cl.k === 'v' ? '主序星' : cl.zh.replace(' · ', '')) : '恒星'), R: Rs * 696340, GM: Ms * 1.32712e11, L: L, temp: t ? '≈ ' + (Math.round(t / 100) * 100).toLocaleString() + '(按颜色估算)' : '—',
+    var b = X._.tempStar({ wd: cl.k === 'wd', gs: cl.gs, ga: T0 > 8000 ? .15 : T0 > 7000 ? .5 : 1, zh: name, en: nm ? nm[1] : 'HYG ' + k, type: nm && nm[2] ? nm[2] : (cl.k === 'wd' ? '白矮星' : c ? c[0] + ' 型' + (cl.k === 'v' ? '主序星' : cl.zh.replace(' · ', '')) : '恒星'), R: Rs * 696340, GM: Ms * 1.32712e11, L: L, temp: t ? '≈ ' + (Math.round(t / 100) * 100).toLocaleString() + '(按颜色估算)' : '—',
       col: col, tint: tint, sat: T0 > 8000 ? .1 : 1, fix: [(ra + 360) % 360, de, dSun * 63241.077], hyg: k, src: src,
       info: [['光谱型', c ? c[0] + ' · ' + c[1] + '(按颜色估算)' : '—'], ['光度', '约 ' + (L < 10 ? L.toFixed(2) : Math.round(L).toLocaleString()) + ' 个太阳'], ['半径', '约 ' + (Rs < 10 ? Rs.toFixed(2) : Math.round(Rs)) + ' 个太阳(估算)'], ['距离', ly + ' 光年'], ['外观', '程序化模拟 · 数值来自 HYG v4.1']] });
     hide(); if (!b) return;

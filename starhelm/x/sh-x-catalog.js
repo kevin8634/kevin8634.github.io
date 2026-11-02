@@ -65,8 +65,10 @@
     box.querySelectorAll('.it.mb').forEach(function (e) { e.remove(); });
     var L = (window.SHX_CONSTEL || []).filter(function (c) { return c[0] === id; })[0]; if (!L || !window.SHXK) return; var seen = {}, ks = [], N = window.SHX_STARNAMES || {};
     L[1].forEach(function (ln) { ln.forEach(function (p) { if (typeof p === 'number' && !seen[p]) { seen[p] = 1; ks.push(p); } }); });
+    // C2.14d 再补上该星座(IAU 边界,HYG con 字段)里星表收录的主要亮星(视星等 ≤ 4.5)
+    var BY = window.SHX_STARBAYER || {}; Object.keys(BY).forEach(function (k) { var b = BY[k]; k = +k; if (b[3] === id && b[4] <= 4.5 && !seen[k]) { seen[k] = 1; ks.push(k); } });
     ks.map(function (k) { return [k, SHXK.mag0(k)]; }).sort(function (a, b) { return a[1] - b[1]; }).slice(0, 12).reverse().forEach(function (r) {
-      var nm = N[r[0]] ? N[r[0]][0] : 'HYG #' + r[0], m = r[1] < 0 ? '−' + (-r[1]).toFixed(1) : r[1].toFixed(1);
+      var b = BY[r[0]], nm = N[r[0]] ? N[r[0]][0] + (b && b[1] ? ' <small style="opacity:.6">' + b[1] + '</small>' : '') : b ? (b[0] ? b[0] + ' <small style="opacity:.6">' + b[1] + '</small>' : b[1] || b[2]) : 'HYG #' + r[0], m = r[1] < 0 ? '−' + (-r[1]).toFixed(1) : r[1].toFixed(1);
       var e = el('div', 'it mb', '<span class="dot" style="background:#fff4d8;margin-left:14px"></span><span class="nm">' + nm + '</span><span class="ds">' + m + ' 等</span>');
       e.style.fontSize = '.92em'; e.addEventListener('click', function (ev) { ev.stopPropagation(); box.querySelectorAll('.it.on').forEach(function (x) { x.classList.remove('on'); }); e.classList.add('on'); go('star', r[0]); if (innerWidth <= 900) root.classList.remove('xg-cat'); });
       it.after(e);
