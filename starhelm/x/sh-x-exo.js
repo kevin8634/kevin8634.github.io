@@ -168,7 +168,7 @@
     u.uK.value = e.k === 'bh' ? 0 : e.k === 'ns' ? 1 : e.k === 'mag' ? 3 : 2; u.uSurf.value = e.k === 'bh' ? 1 : e.rsurf;
     u.uBw.value = e.bwd ? e.bwd * Math.PI / 180 : e.P ? Math.min(35, 5.4 / Math.sqrt(e.P)) * Math.PI / 180 : .1;   // 辐射束半宽 ρ ≈ 5.4° P^-1/2(Rankin 1993 经验关系)
     u.uHs.value = e.k === 'mag' ? .55 : .25;   // 极冠热斑角半径(磁星热斑大)
-    slow = e.sf0 ? e.sf : 1;   // 毫秒脉冲星每秒数百圈,默认先慢放,否则热斑糊成环
+    slow = defSlow(e);   // C2.14a 王磊 11-02:抵达默认慢速脉冲(每秒 ≤ 1 圈),否则频闪晃眼;档位见 SLOWS
     var nsk = e.k === 'psr' || e.k === 'mag' || e.k === 'ns';   // 中子星表面:颜色按黑体(10^5–10^6 K 已到瑞利-金斯极限色,淡蓝白,不用 NASA 的深蓝假色);热斑只更亮、过曝成白
     u.uSt.value.fromArray(e.st || [1, 1, 1]); u.uPa.value = e.pa || (nsk ? 1.4 : 1);
     u.uAn.value = e.an == null ? (e.k === 'bh' ? 0 : .3) : e.an;   // 磁赤道相对磁极变暗幅度
@@ -202,13 +202,18 @@
         var d1 = bv(q[0], q[1]); u.uSp.value[si].set(d1.x, d1.y, d1.z, Math.cos(q[2] * Math.PI / 180)); u.uSw.value[si] = q[3];
         if (q[6]) { var d2 = bv(q[4], q[5]); u.uSm.value[si].set(d2.x, d2.y, d2.z, Math.cos(q[6] * Math.PI / 180)); } else u.uSm.value[si].w = 2; } }
     LI.rd.render(scn, c); st.on = true;
+    var nw = performance.now(); if (!fpsT) fpsT = nw; fpsN++; if (nw - fpsT > 2000) { FPS = fpsN * 1000 / (nw - fpsT); fpsT = nw; fpsN = 0; }
   }
+  /* C2.14a 转速档位:真实 / ×1/10 / ×1/100 / ×1/1000;默认取让辐射束每秒不超过 1 圈的最快一档 */
+  var SLOWS = [1, 0.1, 0.01, 0.001], FPS = 60, fpsT = 0, fpsN = 0;
+  function defSlow(e) { if (!e || !e.P) return 1; for (var i = 0; i < SLOWS.length; i++) if (SLOWS[i] / e.P <= 1) return SLOWS[i]; return SLOWS[SLOWS.length - 1]; }
+  function slowLbl(v) { return v === 1 ? '真实' : '×1/' + Math.round(1 / v); }
   /* ---------- 读数 HUD ---------- */
   function css() {
     if (document.getElementById('xeo-css')) return; var s = document.createElement('style'); s.id = 'xeo-css';
     s.textContent = '#xeo-hud{position:absolute;left:50%;top:150px;transform:translateX(-50%);z-index:5;pointer-events:auto;max-width:min(560px,calc(100vw - 20px));padding:6px 12px;border-radius:10px;font:11.5px/1.5 "Noto Sans SC",system-ui,sans-serif;color:#dfe8f6;background:rgba(8,12,22,.66);border:1px solid rgba(255,159,178,.4);text-align:center}' +
       '#xeo-hud .t{color:#ff9fb2}#xeo-hud .t i{font-style:normal;color:#a9bad3;margin-left:6px}#xeo-hud .r{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 14px}#xeo-hud .r b{font-weight:500;color:#ffe2a0;font-family:"JetBrains Mono",ui-monospace,monospace}#xeo-hud .w{color:#ff8a8a}' +
-      '#xeo-hud button{font:inherit;font-size:11px;cursor:pointer;border-radius:8px;padding:1px 9px;margin-left:6px;border:1px solid rgba(240,201,122,.6);background:rgba(240,201,122,.14);color:#ffe2a0}' +
+      '#xeo-hud .sl{margin:2px 0}#xeo-hud button.on{background:rgba(240,201,122,.5);color:#1a1408}#xeo-hud button{font:inherit;font-size:11px;cursor:pointer;border-radius:8px;padding:1px 9px;margin-left:6px;border:1px solid rgba(240,201,122,.6);background:rgba(240,201,122,.14);color:#ffe2a0}' +
       '.xdv-on #xeo-hud{display:none}@media (max-width:760px){#xeo-hud{top:auto;bottom:250px;font-size:10px;padding:4px 8px;width:calc(100vw - 24px)}#xeo-hud .t i{display:none}}';
     document.head.appendChild(s);
   }
@@ -218,9 +223,10 @@
   function hudUpd(e, dd, D) {
     var root = X._.root && X._.root(); if (!root) return;
     if (D > 3000 || (window.SHXDV && SHXDV.flying && SHXDV.flying())) { hudOff(); return; }
-    css(); if (!hud || hud.parentNode !== root) { if (hud) hud.remove(); hud = document.createElement('div'); hud.id = 'xeo-hud'; root.appendChild(hud); hud.addEventListener('click', function (ev) { var bt = ev.target.closest('button'); if (bt) { slow = slow === 1 ? (EX[cur].sf || 0.02) : 1; X._.toast(slow === 1 ? '辐射束恢复真实转速 · ' + (EX[cur].P >= 1 ? '每 ' + EX[cur].P.toFixed(1) + ' 秒一圈' : '每秒约 ' + (1 / EX[cur].P).toFixed(1) + ' 圈') : '慢放 ×1/' + Math.round(1 / slow) + ' · 便于看清热斑与辐射束扫过'); hud.dataset.k = ''; } }); }
+    css(); if (!hud || hud.parentNode !== root) { if (hud) hud.remove(); hud = document.createElement('div'); hud.id = 'xeo-hud'; root.appendChild(hud); hud.addEventListener('click', function (ev) { var bt = ev.target.closest('button[data-sf]'); if (!bt) return; slow = +bt.dataset.sf; var e0 = EX[cur], f = e0.P ? 1 / e0.P : 0, fr = f * slow;
+      X._.toast(slow === 1 ? '真实转速 · ' + (e0.P >= 1 ? '每 ' + e0.P.toFixed(1) + ' 秒一圈' : '每秒约 ' + f.toFixed(1) + ' 圈') + (f > FPS / 2 ? ' · 超过屏幕刷新率(约 ' + Math.round(FPS) + ' 帧/秒)的一半,画面会频闪或看似倒转:这是采样混叠,不是设备故障' : '') : '慢放 ' + slowLbl(slow) + ' · 辐射束每秒约 ' + (fr >= .1 ? fr.toFixed(1) : fr.toFixed(2)) + ' 圈'); hud.dataset.k = ''; }); }
     var r = dd * 1000, M = e.m * MSUN, dil = Math.sqrt(Math.max(0, 1 - 1 / D)), tid = 2 * G * M * 2 / (r * r * r), gs = tid / 9.81;
-    var html = '<div class="t">模拟渲染 · 广义相对论光线追踪 · 非照片<i>' + e.zh + '</i>' + ((e.k === 'psr' || e.k === 'mag') ? '<button type="button">' + (slow === 1 ? '慢放 ×1/' + Math.round(1 / (e.sf || 0.02)) : '真实转速') + '</button>' : '') + '</div>' +
+    var html = '<div class="t">模拟渲染 · 广义相对论光线追踪 · 非照片<i>' + e.zh + '</i>' + '</div>' + ((e.k === 'psr' || e.k === 'mag') && e.P ? '<div class="sl">转速 ' + SLOWS.map(function (v) { return '<button type="button" data-sf="' + v + '"' + (v === slow ? ' class="on"' : '') + '>' + slowLbl(v) + '</button>'; }).join('') + (slow === 1 && 1 / e.P > FPS / 2 ? '<span class="w"> 真实转速每秒 ' + Math.round(1 / e.P) + ' 圈,高于刷新率一半,会频闪(混叠)</span>' : '') : '') + '</div>' +
       '<div class="r"><span>距中心 <b>' + km(dd) + '</b>(' + nf(D, 1) + ' Rs)</span><span>时间流速 <b>' + dil.toFixed(4) + '×</b></span>' +
       '<span' + (gs > 10 ? ' class="w"' : '') + '>潮汐(2 m 身长)<b>' + sci(gs) + ' g</b>' + (gs > 10 ? ' · 致命' : gs > 1 ? ' · 危险' : '') + '</span>' +
       (e.k === 'bh' ? '<span>距事件视界 <b>' + km(Math.max(0, dd - e.rs)) + '</b></span>' : '<span>表面重力 <b>' + sci(G * M / Math.pow(e.rk * 1000, 2) / 9.81) + ' g</b></span>') +
@@ -228,6 +234,8 @@
     var k = html.replace(/<b>[^<]*<\/b>/g, '');   // 只有数字变化时只改数字,避免每帧重建按钮
     if (hud.dataset.k !== k) { hud.innerHTML = html; hud.dataset.k = k; } else { var bs = hud.querySelectorAll('b'), tmp = document.createElement('div'); tmp.innerHTML = html; var nb = tmp.querySelectorAll('b'); for (var i = 0; i < bs.length; i++) if (nb[i] && bs[i].textContent !== nb[i].textContent) bs[i].textContent = nb[i].textContent; }
     hud.style.display = '';
+    var hg = document.getElementById('xc-hdg');   // C2.14a 王磊 11-02:与顶部航向条重叠 → 排在航向条下方
+    if (hg && innerWidth > 760) { var rr = root.getBoundingClientRect(), hr = hg.getBoundingClientRect(); if (hr.height) { var tp = Math.round(hr.bottom - rr.top + 8); if (hud._tp !== tp) { hud._tp = tp; hud.style.top = tp + 'px'; } } }
   }
   function observe(key) {
     if (!X || !X.isOpen || !X.isOpen()) return false; var b = X._.BY.tmpdso;

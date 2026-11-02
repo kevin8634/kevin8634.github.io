@@ -55,7 +55,7 @@
     if (lastId !== id) {
       lastId = id; var f = window.SHXI && SHXI.facts(id); if (!f) return;
       Rt.innerHTML = '<h5>目标资料 · ' + (f.type || 'TARGET') + '</h5><div class="sm"></div><div class="bd"><h4>' + f.zh + '<small>' + f.en + '</small></h4>' + f.rows.slice(0, 8).map(function (r) { return kv(r[0], r[1]); }).join('') +
-        (f.blurb ? '<div class="bl">' + f.blurb + '</div>' : '') + '<div class="nt"><em>' + f.nature + '</em>' + f.src + '</div></div>';
+        (f.blurb ? '<div class="bl">' + f.blurb + '</div>' : '') + (f.kb && window.SHXKB ? SHXKB.html(f.kb).replace('data-xkb=', 'data-nm="' + f.zh + '" data-xkb=') : '') + '<div class="nt"><em>' + f.nature + '</em>' + f.src + '</div></div>';
     }
     var se = Rt.querySelector('.sm'); if (se) se.textContent = f0(b) + sm;
   }

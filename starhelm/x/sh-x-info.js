@@ -24,7 +24,7 @@
       if (!sd || !sd.facts) { rows.push(['质量', sig(b.GM / G, 3) + ' kg']); rows.push(['表面重力', sig(b.GM / (b.R * b.R) * 1000, 3) + ' m/s²']); if (b.temp != null) rows.push(['温度', b.temp + ' °C']); }
     }
     var n = nature(b, sd);
-    return { id: id, zh: b.zh, en: b.en || (sd && sd.en) || '', type: b.type || '', rows: rows, blurb: (sd && sd.blurb) || '', nature: n[0], src: n[1], R: b.R, GM: b.GM };
+    return { kb: window.SHXKB ? SHXKB.cls(b) : null, id: id, zh: b.zh, en: b.en || (sd && sd.en) || '', type: b.type || '', rows: rows, blurb: (sd && sd.blurb) || '', nature: n[0], src: n[1], R: b.R, GM: b.GM };
   }
   window.SHXI = { facts: facts, sig: sig };
 })();

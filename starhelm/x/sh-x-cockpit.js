@@ -546,7 +546,12 @@
       var stopAt = tb.R * (tb.id === 'sun' || tb.star ? 6 : 4), rem = Math.max(0, dT - stopAt), fw0 = new T.Vector3(0, 0, -1).applyQuaternion(S.q), ali = Math.max(0, fw0.dot(toT.clone().normalize()));
       veff = Math.max(0.5, rem * 0.9) * Math.pow(ali, 8);
       S.base = Math.min(veff, 30); S.mult = Math.max(1, veff / Math.max(S.base, 1e-6));
-      if (rem < 1) { S.auto = false; S.base = 0; S.mult = 1; toast('已抵达 ' + tb.zh + ' 附近'); emit('arrive', tb); }
+      // C2.14a 王磊 11-02「引擎倒计时航行无法自动飞抵,需手动减速」:原判据 rem < 1 km,远处航点(恒星/深空,10^15–10^17 km)
+      // 双精度坐标误差已达 km 级,rem 永远到不了 1 km → 一直悬着不报抵达。改为相对阈值 + 停滞判据(3 秒内几乎不再接近即视为抵达)
+      var arrTol = Math.max(1, stopAt * 0.01, dT * 1e-12, Math.hypot(S.pos[0], S.pos[1], S.pos[2]) * 1e-15);
+      if (!S._ap || S._ap.id !== tb.id) S._ap = { id: tb.id, r: rem, t: 0 };
+      S._ap.t += dt; if (S._ap.t > 3) { var stall = S._ap.r - rem < Math.max(arrTol, S._ap.r * 0.002); S._ap.r = rem; S._ap.t = 0; if (stall && rem < Math.max(arrTol * 50, stopAt)) rem = 0; }
+      if (rem < arrTol) { S._ap = null; S.auto = false; S.base = 0; S.mult = 1; toast('已抵达 ' + tb.zh + ' 附近'); emit('arrive', tb); }
       else if (rem < tb.R * 25 && S._decel !== tb.id) { S._decel = tb.id; emit('decel', tb); }
     }
     veff = S.base * S.mult * (S.auto ? 1 : S.boost);
@@ -748,7 +753,7 @@
     var c = el('div', 'xs-card', '<h4><span>' + b.zh + ' <small>' + ((f && f.en) || b.en || '') + '</small></span><button class="xc" type="button" aria-label="关闭">×</button></h4>' +
       '<div class="lc-t">' + ((f && f.type) || b.type || '') + (S.target === b.id ? ' · 当前目标' : '') + '</div>' +
       rows.map(function (r) { return '<div class="lc-r"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>'; }).join('') +
-      (f && f.blurb ? '<div class="lc-b">' + f.blurb + '</div>' : '') +
+      (f && f.blurb ? '<div class="lc-b">' + f.blurb + '</div>' : '') + (f && f.kb && window.SHXKB ? SHXKB.html(f.kb).replace('data-xkb=', 'data-nm="' + b.zh + '" data-xkb=') : '') +
       (f ? '<div class="lc-n">' + f.nature + ' · ' + f.src + '</div>' : '') +
       '<div class="lc-a">' + (S.target === b.id ? '' : '<button type="button" class="lc-lock">锁定为目标</button>') + '</div>');
     c.id = 'xs-lcard'; c._id = b.id; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', b.zh + ' 资料');

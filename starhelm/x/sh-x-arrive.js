@@ -33,7 +33,7 @@
     card = el('div'); card.id = 'xr-rep';
     card.innerHTML = '<div class="hd"><span>抵达报告 · ARRIVAL REPORT</span><span><b>' + (f.type || '') + '</b> <button class="xr-x" type="button" aria-label="关闭">×</button></span></div>' +
       '<h3>' + f.zh + '<small>' + f.en + '</small></h3><div class="sec">' + sec + '</div><div class="gr">' + f.rows.slice(0, 8).map(function (r) { return kv(r[0], r[1]); }).join('') + '</div>' + extra +
-      (f.blurb ? '<div class="bl">' + f.blurb + '</div>' : '') + '<div class="nt"><em>' + f.nature + '</em>' + f.src + '</div>';
+      (f.blurb ? '<div class="bl">' + f.blurb + '</div>' : '') + (f.kb && window.SHXKB ? SHXKB.html(f.kb).replace('data-xkb=', 'data-nm="' + f.zh + '" data-xkb=') : '') + '<div class="nt"><em>' + f.nature + '</em>' + f.src + '</div>';
     root.appendChild(card); requestAnimationFrame(function () { if (card) card.classList.add('in'); });
     card.querySelector('.xr-x').onclick = hide;
     tm = setTimeout(hide, 16000);
