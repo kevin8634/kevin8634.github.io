@@ -1161,7 +1161,7 @@
     "先去任意世界点亮一个任务": "Light a quest in any world first", "七个世界全部点亮": "All seven worlds lit", "联合发布": "Joint release", "GENESIS 2.0 · 联合发布": "GENESIS 2.0 · joint release",
     "深空之下": "Beneath Deep Space", "· 深空之下": "· Beneath Deep Space", "深空层 · 星穹": "Deep Space · Firmament", "登上天枢 2.0 ↗": "Board Starhelm 2.0 ↗", "天枢 2.0 · 飞出银河": "Starhelm 2.0 · beyond the Milky Way",
     "日球层 · 旅行者 1 号 · 卫星与彗星 · 室女座星系团 · 韦布深场": "Heliosphere · Voyager 1 · satellites & comets · Virgo Cluster · Webb deep field",
-    "✦ 创世计划 2.0 已开放": "✦ Genesis 2.0 is open", "实验室 ⚗": "Lab ⚗", "重要公告": "Notice", "演示": "Demo",
+    "✦ 创世计划 2.0 已开放": "✦ Genesis 2.0 is open", "实验室 ⚗": "Lab ⚗", "规则改写台": "Rule Rewrite Lab", "EN": "EN", "重要公告": "Notice", "演示": "Demo",
     "星历登记宙律 v0.6-α4 至 v0.7-α1，宙律世界卡更新到 v0.7-α1。": "Star Log adds Nomoverse v0.6-α4 to v0.7-α1; Nomoverse card updated to v0.7-α1.",
     "门户支持中英双语：页脚「中 / EN」一键切换，切一次全站记住。": "The portal is now bilingual: tap “中 / EN” in the footer; your choice is remembered site-wide.",
     "深空层已开放「星辰·高中」推导卡：拖动变量、补全推导链。": "Deep Space now has “Stardust · high school” derivation cards: drag variables and complete the chain.",
@@ -1193,7 +1193,7 @@
   function wn(x) { return W[x] || x; }
   var RX = [
     [/^(·\s*)?已上线( v[^\s→]+)?( · .+?)?( →)?$/, function (m, a, v, t, r) { return (a || "") + "Live" + (v || "") + (t ? " · " + (tr(t.slice(3)) || t.slice(3)) : "") + (r || ""); }],
-    [/^(\d+) 个任务 (\d+) 关$/, "$1 quests · $2 levels"], [/^(\d+) 个任务已开放$/, "$1 quests open"], [/^(\d+) 颗知识星$/, "$1 knowledge stars"], [/^(\d+) 个关卡 · 星桥六座已通$/, "$1 levels · six bridges open"],
+    [/^(\d+) 个任务 (\d+) 关$/, "$1 quests · $2 levels"], [/^(\d+) 个任务 (\d+) 关 · (\d+) 个实验$/, "$1 quests · $2 levels · $3 labs"], [/^(\d+) 个任务已开放$/, "$1 quests open"], [/^(\d+) 颗知识星$/, "$1 knowledge stars"], [/^(\d+) 个关卡 · 星桥六座已通$/, "$1 levels · six bridges open"],
     [/^已点亮 (\d+) \/ 7 个世界$/, "$1 / 7 worlds lit"], [/^第 (\d+) 阶 \/ 7$/, "Tier $1 / 7"], [/^点亮 (\d+) 个任务$/, function (m, n) { return "Light " + n + (n === "1" ? " quest" : " quests"); }],
     [/^(\d+) 个世界 · 走通 (\d+) 座星桥$/, function (m, a, b) { return a + " worlds · cross " + b + (b === "1" ? " bridge" : " bridges"); }], [/^(\d+) 个世界 · (\d+) 个任务$/, "$1 worlds · $2 quests"],
     [/^再点亮 (\d+) 个任务，升到第 (\d+) 阶「(.+)」。$/, function (m, n, k, t) { return "Light " + n + " more to reach tier " + k + " “" + (E[t] || t) + "”."; }],
@@ -1527,7 +1527,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span><button type="button" class="x-lang x-lang--ab" onclick="gnSetLang(GN_LANG==='en'?'zh':'en')" aria-label="中文 / English">中 / EN</button> 创世计划总门户 <b>v2.5.1</b></span>
+            <span><button type="button" class="x-lang x-lang--ab" onclick="gnSetLang(GN_LANG==='en'?'zh':'en')" aria-label="中文 / English">中 / EN</button> 创世计划总门户 <b>v2.5.2</b></span>
           </footer>
         </div>
       </div>
@@ -1703,12 +1703,12 @@
       var WORLDS = [
         { id: "01", star: "天璇", name: "星图", en: "Math Atlas", field: "数学",
           desc: "用问题点亮知识星。", color: "#7cc8ff", live: true,
-          meta: ["已上线 v0.8.4", "10 个任务 55 关", "197 颗知识星"], href: "math-atlas/",
+          meta: ["已上线 v0.8.6 · EN", "10 个任务 55 关", "197 颗知识星"], href: "math-atlas/",
           prefix: ["ma:v1:", "gn:ma:"],
           age: ["ya","huo","chen","he"], tags: ["math"], why: "喜欢找规律、解谜题？每想通一个问题，就点亮一颗知识星。" },
         { id: "02", star: "天玑", name: "宙律", en: "Nomoverse", field: "物理",
           desc: "改写物理常数，看宇宙怎么变。", color: "#a78bfa", live: true,
-          meta: ["已上线 v0.7-α2 · 星桥通天枢「太阳会死吗？」", "5 个任务 21 关"], href: "nomoverse/", prefix: ["gn:nv:"],
+          meta: ["已上线 v0.8-α1 · 规则改写台", "5 个任务 21 关 · 3 个实验"], href: "nomoverse/", lab: "nomoverse/lab/", prefix: ["gn:nv:"],
           age: ["huo","chen","he"], tags: ["space","matter"], why: "好奇宇宙为什么是现在这样？亲手改一改物理常数，看会发生什么。" },
         { id: "03", star: "天权", name: "元素工坊", en: "Element Forge", field: "化学",
           desc: "用元素锻造物质，配方即反应。", color: "#ff9a3c", live: true,
@@ -2849,7 +2849,9 @@
         { a: { w: "03", id: "ef.react", title: "把两种东西混在一起，会发生什么？", href: "element-forge/react/" },
           b: { w: "02", id: "nv.energy", title: "能量去哪儿了？——能量守恒", href: null } },
         { a: { w: "03", id: "ef.molecule", title: "随手拼一个分子，世界上真的有吗？", href: "element-forge/molecule/" },
-          b: { w: "04", id: "ls.dna", title: "四个字母怎么写出一个人？", href: "life-source/dna/" } }
+          b: { w: "04", id: "ls.dna", title: "四个字母怎么写出一个人？", href: "life-source/dna/" } },
+        { a: { w: "02", id: "nv.stars", title: "恒星为什么会发光？", href: "nomoverse/stars/" },
+          b: { w: "07", id: "sh.sundie", title: "太阳会死吗？", href: "starhelm/?task=sundie", label: "去天枢 →" } }
       ];
       // 同一对世界之间有多座桥时，让弧线错开，避免重叠
       (function () {
@@ -3773,6 +3775,11 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "门户 v2.5.2", d: "2026-11-02", t: "星历登记天枢 v1.0-M4j、星图 v0.8.5–v0.8.6、宙律 v0.8-α1；星图世界卡标 EN，宙律世界卡新增「实验室 ⚗」入口，星网新增星桥「恒星为什么会发光？」⇄「太阳会死吗？」。" },
+        { w: "02", v: "v0.8-α1", d: "2026-11-02", t: "新开规则改写台：重力、摩擦、声速三个实验，一次只改一个变量做 A/B 对照，先猜再看，结果记进只存本机的实验记录本。" },
+        { w: "01", v: "v0.8.6", d: "2026-11-02", t: "英文版第二期：10 个任务的关内文字都有了英文。" },
+        { w: "01", v: "v0.8.5", d: "2026-11-01", t: "英文版试点：顶栏「中 / EN」切换，首页图谱、向导、任务标题和每关提示都有英文，缺译处回退中文。" },
+        { w: "07", v: "v1.0-M4j", d: "2026-11-01", t: "「太阳会死吗？」接通回宙律「恒星为什么会发光？」的星桥，两端互通。" },
         { w: "gn", v: "门户 v2.5.1", d: "2026-11-01", t: "星历登记宙律 v0.7-α2，宙律世界卡更新到 v0.7-α2。" },
         { w: "02", v: "v0.7-α2", d: "2026-11-01", t: "接通星桥「恒星为什么会发光」⇄天枢「太阳会死吗」。" },
         { w: "gn", v: "门户 v2.5.0", d: "2026-11-01", t: "门户支持中英双语：页脚「中 / EN」一键切换，切一次全站记住。" },
