@@ -7,7 +7,7 @@
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#07061a">
 <title>宙律 Nomoverse · 亲手改写宇宙的规律 · 创世计划 Genesis</title>
-<meta name="description" content="宙律 Nomoverse · 创世计划 Genesis 02 · 物理:把引力调大一点、把声速调慢一点,在改写规律中理解规律。五个探究任务、二十一关、宇宙尺度知识星图。">
+<meta name="description" content="宙律 Nomoverse · 创世计划 Genesis 02 · 物理:把引力调大一点、把声速调慢一点,在改写规律中理解规律。六个探究任务、二十五关、宇宙尺度知识星图。">
 <script>
 /* v0.3-α3 · HANDOFF §5.12 门户→世界接力:最早执行。读临时键 gn:portal:arrive(<5 秒有效,读后即删,不计进度),
    先铺「世界色 + rgba(4,6,15,.82)」同色遮罩,开场就绪后约 600 ms 淡出(减少动态 200 ms);无键照旧。 */
@@ -307,7 +307,8 @@
     { id: "orbit", n: 5, guide: "abyss", diff: 2, href: "orbit/", q: "为什么宇航员在空间站会飘起来?", lv: ["扔得更远", "牛顿大炮", "电梯里的苹果", "改宇宙", "追上空间站"] },
     { id: "sound", n: 4, guide: "ripple", diff: 2, href: "sound/", q: "为什么救护车经过时声音会变?", lv: ["声音是振动", "救护车驶过", "改声速", "和声与拍频"] },
     { id: "stars", n: 4, guide: "quark", diff: 2, href: "stars/", q: "恒星为什么会发光?", lv: ["烧煤的太阳", "少了一点点质量", "压不扁的火球", "更重的星,更短的命"] },
-    { id: "tide", n: 4, guide: "abyss", diff: 2, href: "tide/", q: "月亮怎样拉动整片大海?", lv: ["背面也鼓起来", "太阳更重,为啥月亮更管用", "被拉长的一天", "靠太近会被撕碎"] }
+    { id: "tide", n: 4, guide: "abyss", diff: 2, href: "tide/", q: "月亮怎样拉动整片大海?", lv: ["背面也鼓起来", "太阳更重,为啥月亮更管用", "被拉长的一天", "靠太近会被撕碎"] },
+    { id: "energy", n: 4, guide: "ripple", diff: 2, href: "energy/", q: "能量去哪儿了?", lv: ["过山车能爬多高", "刹车片为什么烫", "一吨水变成电", "燃料的能量去哪了"] }
   ];
   var CONS = ["运动", "力与能量", "引力与天体", "波与声", "光", "热与熵", "电与磁", "现代物理"];
   var CCOL = ["#5eead4", "#fbbf24", "#a78bfa", "#86efac", "#f0abfc", "#fb923c", "#60a5fa", "#f87171"];   // 3D 星图星座色
@@ -325,8 +326,8 @@
     [1, "牛顿第二定律", -0.8, "F = ma:同样的力,质量越大,加速度越小。"],
     [1, "空气阻力", 1.2, "速度越快阻力越大,让轨迹不再是完美的抛物线;风也会把球推偏。", "hoop:3"],
     [1, "作用与反作用", -2, "你推墙,墙也以同样大小的力推你;火箭向后喷气,自己向前飞。"],
-    [1, "摩擦力", -4.5, "接触面上微小的凹凸互相阻碍;没有摩擦,人连路都走不了。"],
-    [1, "动能与势能", 1.9, "高处的物体有势能,落下时变成动能:越高落下越快。"],
+    [1, "摩擦力", -4.5, "接触面上微小的凹凸互相阻碍;没有摩擦,人连路都走不了。", "energy:1"],
+    [1, "动能与势能", 1.9, "高处的物体有势能,落下时变成动能:越高落下越快。", "energy:0"],
     [1, "能量守恒", 2.8, "能量不会凭空产生或消失,只会从一种形式变成另一种。", "stars:0"],
     [1, "变轨与轨道能量", 6.4, "想追上前面的航天器,反而要先减速降到更低、更快的轨道。", "orbit:4"],
 
@@ -363,7 +364,7 @@
     [5, "热传递", -0.6, "热量通过传导、对流、辐射从高温处流向低温处。"],
     [5, "热膨胀", 1.6, "大多数物体受热膨胀,所以铁轨之间要留一点缝。"],
     [5, "熵增", 0.5, "孤立系统的熵(混乱程度)只增不减:冰会化,热茶会凉。"],
-    [5, "热机", 2.7, "把热变成功的机器;它的效率永远达不到 100%。"],
+    [5, "热机", 2.7, "把热变成功的机器;它的效率永远达不到 100%。", "energy:3"],
 
     [6, "电荷与库仑力", -10, "同种电荷相斥、异种电荷相吸,距离越近力越大。"],
     [6, "晶体管", -7.8, "芯片里数十亿个微小开关,控制电流的通断来计算。"],
@@ -446,7 +447,7 @@
   /* ② 任务卡 */
   var cardsBox = el("div", { class: "cards" });
   main.appendChild(el("section", { class: "hm-sec", "aria-labelledby": "h-tasks" }, [
-    el("h2", { class: "hm-h", id: "h-tasks", text: "五个探究任务" }),
+    el("h2", { class: "hm-h", id: "h-tasks", text: "六个探究任务" }),
     el("p", { class: "hm-sub", text: "每关都是:观察 → 预测 → 运行 → 对比 → 改规则。拿到 1 颗星就能解锁下一关。" }),
     cardsBox,
     el("a", { class: "hm-lab", href: "lab/", "aria-label": "进入规则改写台" }, [el("b", { text: "⚗ 规则改写台" }), el("span", { text: "把重力调到月球、把路面变成冰、把声音和光调慢、把月亮拉近:A/B 对照只改一个变量,先猜再看。" }), el("i", { text: "进入 →" })])
@@ -622,8 +623,8 @@
   function mountHud(stage) {
     if (!stage || stage.querySelector(".hm-drawer")) return;
     var tog = el("button", { class: "hd-tog", type: "button", "aria-expanded": "true", "aria-label": "收起任务抽屉", text: "‹" });
-    hudDrawer = el("nav", { class: "hm-drawer", "aria-label": "五个探究任务" }, [
-      el("div", { class: "hd-h" }, [el("span", { text: "探究任务 · 21 关" }), tog]),
+    hudDrawer = el("nav", { class: "hm-drawer", "aria-label": "六个探究任务" }, [
+      el("div", { class: "hd-h" }, [el("span", { text: "探究任务 · 25 关" }), tog]),
       el("div", { class: "hd-list" })
     ]);
     tog.addEventListener("click", function () { var c = hudDrawer.classList.toggle("closed"); tog.setAttribute("aria-expanded", c ? "false" : "true"); tog.setAttribute("aria-label", c ? "展开任务抽屉" : "收起任务抽屉"); tog.textContent = c ? "›" : "‹"; });

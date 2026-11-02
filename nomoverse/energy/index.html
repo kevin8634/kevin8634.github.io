@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#07061a">
+<title>能量去哪儿了? · 宙律 Nomoverse</title>
+<meta name="description" content="宙律 Nomoverse · 物理探究:过山车、刹车片、水电站和热机,每关记一本「能量账本」——能量不会凭空出现或消失,只会换个样子。">
+<link rel="stylesheet" href="../core/nv.css">
+</head>
+<body>
+<noscript><p style="padding:16px">这个小实验需要开启 JavaScript。<a href="../">返回宙律首页</a></p></noscript>
+<script src="../core/nv.js"></script>
+<script>
+"use strict";
+(function () {
+  var P = NV.Phys, TAU = Math.PI * 2, g = P.G0;
+  var COL = { pe: "#a78bfa", ke: "#67e8f9", heat: "#fb923c", elec: "#facc15", chem: "#f472b6", work: "#67e8f9" };
+
+  /* ---------- 通用 ---------- */
+  function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+  function fE(J) { var a = Math.abs(J); return a >= 1e6 ? (J / 1e6).toFixed(a >= 1e7 ? 1 : 2) + " MJ" : a >= 1e3 ? (J / 1e3).toFixed(a >= 1e5 ? 0 : 1) + " kJ" : Math.round(J) + " J"; }
+  function chip(c, x, y, text, col) {
+    c.save(); c.font = "12px system-ui, sans-serif"; var w = c.measureText(text).width + 14;
+    c.fillStyle = "rgba(14,11,40,.8)"; c.strokeStyle = "rgba(167,139,250,.55)"; rr(c, x, y, w, 22, 11); c.fill(); c.stroke();
+    c.fillStyle = col || "#ede9fe"; c.textBaseline = "middle"; c.fillText(text, x + 7, y + 11); c.restore(); return w;
+  }
+  function ease(t) { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
+  var seed = 7; function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+  var STARS = []; for (var i = 0; i < 160; i++) STARS.push([rnd(), rnd() * 0.7, rnd() * 1.2 + 0.3, rnd()]);
+  function sky(c, W, H, top, bot) {
+    var gs = c.createLinearGradient(0, 0, 0, H); gs.addColorStop(0, top || "#0b0826"); gs.addColorStop(1, bot || "#2a1f5c");
+    c.fillStyle = gs; c.fillRect(0, 0, W, H);
+    var t = performance.now() / 1000;
+    for (var i = 0; i < STARS.length; i++) { var s = STARS[i]; c.globalAlpha = 0.35 + 0.5 * Math.abs(Math.sin(t * 0.6 + s[3] * 9)); c.fillStyle = "#e9e5ff"; c.fillRect(s[0] * W, s[1] * H, s[2], s[2]); }
+    c.globalAlpha = 1;
+  }
+  /* 舞台可用区:桌面右上留给账本;手机账本放顶部 */
+  function zone(L) {
+    var wide = L.w >= 640, top = wide ? 52 : 116, bot = wide ? 120 : 24;
+    var led = wide ? { x: L.w - Math.min(300, L.w * 0.36) - 12, y: 56, w: Math.min(300, L.w * 0.36), h: 176 } : { x: 8, y: 52, w: L.w - 16, h: 60, compact: true };
+    return { wide: wide, x: 12, y: top, w: L.w - 24, h: Math.max(120, L.h - top - bot), led: led };
+  }
+  /* 能量账本:左边一根「来源」,右边按比例分到各去处,中间是保宽的发光流带;合计一分不少 */
+  function ledger(c, B, title, src, outs) {
+    var tot = outs.reduce(function (a, o) { return a + Math.max(0, o.v); }, 0) || 1;
+    c.save(); c.fillStyle = "rgba(14,11,40,.82)"; c.strokeStyle = "rgba(167,139,250,.5)"; rr(c, B.x, B.y, B.w, B.h, 12); c.fill(); c.stroke();
+    c.font = "600 12px system-ui, sans-serif"; c.fillStyle = "#c4b5fd"; c.textBaseline = "top";
+    if (B.compact) {   // 手机:一条堆叠条 + 图例
+      c.fillText(title + " · 合计 " + fE(src.v), B.x + 10, B.y + 7);
+      var bx = B.x + 10, bw = B.w - 20, x = bx;
+      outs.forEach(function (o) { var w = bw * Math.max(0, o.v) / tot; c.fillStyle = o.col; c.fillRect(x, B.y + 25, w, 10); x += w; });
+      c.font = "11px system-ui, sans-serif"; x = bx;
+      outs.forEach(function (o) { c.fillStyle = o.col; var t = "■ " + o.n + " " + fE(o.v); c.fillText(t, x, B.y + 40); x += c.measureText(t).width + 12; });
+      c.restore(); return;
+    }
+    c.fillText("能量账本 · " + title, B.x + 12, B.y + 9);
+    var y0 = B.y + 32, H = B.h - 60, sx = B.x + 12, sw = 12, dx = B.x + B.w * 0.5, dw = 12, t = performance.now() / 1000;
+    c.fillStyle = src.col; c.shadowColor = src.col; c.shadowBlur = 10; c.fillRect(sx, y0, sw, H); c.shadowBlur = 0;
+    var gap = 4, n = outs.length, Hd = H - gap * (n - 1), ys = y0, yd = y0, lastY = -1e9;
+    outs.forEach(function (o) {
+      var h = Hd * Math.max(0, o.v) / tot, hs = H * Math.max(0, o.v) / tot;
+      if (h > 0.4) {
+        var gr = c.createLinearGradient(sx + sw, 0, dx, 0); gr.addColorStop(0, src.col); gr.addColorStop(1, o.col);
+        c.globalAlpha = 0.55 + 0.15 * Math.sin(t * 2 + ys * 0.05); c.fillStyle = gr;
+        var mx = (sx + sw + dx) / 2; c.beginPath(); c.moveTo(sx + sw, ys); c.bezierCurveTo(mx, ys, mx, yd, dx, yd); c.lineTo(dx, yd + h); c.bezierCurveTo(mx, yd + h, mx, ys + hs, sx + sw, ys + hs); c.closePath(); c.fill();
+        c.globalAlpha = 1; c.fillStyle = o.col; c.fillRect(dx, yd, dw, h);
+      }
+      c.font = "12px system-ui, sans-serif"; c.fillStyle = o.col; c.textBaseline = "middle";
+      var ly = Math.max(yd + h / 2, lastY + 28); ly = Math.min(ly, y0 + H - 9 - (n - 1 - outs.indexOf(o)) * 28); lastY = ly;
+      c.fillText(o.n, dx + dw + 6, ly - 7); c.fillStyle = "#ede9fe"; c.fillText(fE(o.v) + " · " + Math.round(100 * Math.max(0, o.v) / tot) + "%", dx + dw + 6, ly + 8);
+      ys += hs; yd += h + gap;
+    });
+    c.textBaseline = "top"; c.font = "11px system-ui, sans-serif"; c.fillStyle = src.col; c.fillText(src.n, sx, B.y + B.h - 22);
+    c.fillStyle = "#86efac"; c.textAlign = "right"; c.fillText("合计 " + fE(src.v) + " · 一分不少", B.x + B.w - 10, B.y + B.h - 22);
+    c.restore();
+  }
+
+  /* ================= 第 1 关 过山车 ================= */
+  var M1 = 500, H0 = 30, MU = 0.03, XS = 10, XH2 = 70, XEND = 104;
+  function keys(h2) { return [[0, 24], [10, H0], [40, 2], [XH2, h2], [96, 3], [110, 3]]; }
+  function trackH(K, x) { for (var i = 0; i < K.length - 1; i++) if (x <= K[i + 1][0]) { var u = (x - K[i][0]) / (K[i + 1][0] - K[i][0]); return K[i][1] + (K[i + 1][1] - K[i][1]) * (1 - Math.cos(Math.PI * u)) / 2; } return K[K.length - 1][1]; }
+  function buildTrack(h2) {   // 采样 + 累计弧长
+    var K = keys(h2), xs = [], hs = [], ss = [], s = 0;
+    for (var i = 0; i <= 1100; i++) { var x = i / 10, h = trackH(K, x); if (i) s += Math.hypot(0.1, h - hs[i - 1]); xs.push(x); hs.push(h); ss.push(s); }
+    return { xs: xs, hs: hs, ss: ss, h2: h2 };
+  }
+  function idx(x) { return Math.max(0, Math.min(1100, Math.round(x * 10))); }
+  function sAt(T, x) { return T.ss[idx(x)] - T.ss[idx(XS)]; }
+  /* 小车最远到哪:无摩擦/有摩擦,返回 {pass, xStop, hStop} */
+  function reach(T, mu) {
+    for (var i = idx(XS) + 1; i <= idx(XEND); i++) { var v2 = P.coasterV2(H0, T.hs[i], T.ss[i] - T.ss[idx(XS)], mu, 0.6); if (v2 <= 0) return { pass: false, xStop: T.xs[i], hStop: T.hs[i] }; }
+    return { pass: true };
+  }
+  var T1 = {
+    name: "过山车能爬多高", d3: false,
+    goal: "小车从 30 m 高的第一座山顶出发,没有发动机。调第二座山的高度:让小车翻过一座 ≥ 25 m 的第二座山,再打开摩擦试一次。",
+    note: "小车连乘客按 500 kg;摩擦与空气阻力合成为 μ = 0.03 的近似(μ·m·g·s);g = 9.80665 m/s²。",
+    ask: "高处的小车冲下山谷时越来越快,速度是从哪里来的?爬上第二座山时又去了哪里?",
+    predict: { type: "choice", q: "第二座山 34 m,比起点还高 4 m。没有摩擦时,小车能翻过去吗?", options: ["能,冲下来速度很快", "不能,最多回到 30 m", "车越重越能翻过"] },
+    controls: [
+      { id: "h2", label: "第二座山高度", min: 10, max: 40, step: 1, value: 34, unit: " m" },
+      { id: "fr", type: "toggle", label: "摩擦与空气阻力", value: false }
+    ],
+    runLabel: "放车",
+    crit: ["翻过 ≥ 25 m 的第二座山", "预测正确", "打开摩擦也翻过去"],
+    hints: ["小车在山顶几乎不动,只有「高度」。冲到谷底时,高度变成了什么?", "没有摩擦,势能和动能只是互相换来换去,总数不变。第二座山顶要付多少「高度」?", "第二座山必须比 30 m 低。打开摩擦后还要再低一点——摩擦把一部分能量变成了热。"],
+    summary: "势能 mgh 与动能 ½mv² 互相转换,总和不变:没有摩擦,小车最多回到出发的 30 m;有摩擦,一部分能量变成轨道和空气里的热,能翻过的山就更低。能量没有消失,只是换了样子。",
+    lights: "动能与势能",
+    card: { t: "机械能守恒", b: "只有重力做功时,势能和动能此消彼长,机械能(两者之和)保持不变。所以没有发动机的过山车,后面的山都比第一座低。摩擦存在时,机械能会减少,减少的部分变成了热——把热也算进账本,总能量依然守恒。", f: "mgh₀ = mgh + ½mv² + 热(μ·m·g·s)", src: "OpenStax《University Physics Volume 1》第 8 章 势能与能量守恒;人教版高中物理必修第二册 第八章 机械能守恒定律" },
+    init: function (L) { L.st = { x: XS, frOk: false, ok: false, T: buildTrack(34) }; },
+    run: function (L) {
+      var st = L.st; st.T = buildTrack(L.v.h2); st.mu = L.v.fr ? MU : 0; st.r = reach(st.T, st.mu); st.x = XS; st.t = 0; st.done = false; st.back = 0; L.sfx("whoosh");
+    },
+    frame: function (L, dt) {
+      var st = L.st, c = L.ctx, run = L.phase === "running", Z = zone(L);
+      if (!run && (!st.T || st.T.h2 !== L.v.h2)) st.T = buildTrack(L.v.h2);
+      var T = st.T, mu = run ? st.mu : (L.v.fr ? MU : 0);
+      // 运动:沿弧长前进
+      var v2 = P.coasterV2(H0, T.hs[idx(st.x)], sAt(T, st.x), mu, 0.6), v = Math.sqrt(Math.max(0, v2));
+      if (run && !st.done) {
+        var sp = L.RM ? 3 : 1;
+        if (!st.r.pass && st.x >= st.r.xStop - 0.15) { st.back += dt; if (st.back > 1.2) { st.done = true; T1.report(L); } }
+        else { var i0 = idx(st.x), dsdx = (T.ss[Math.min(1100, i0 + 1)] - T.ss[i0]) / 0.1 || 1; st.x += Math.max(v, 1.2) * dt * sp * 1.1 / dsdx; }
+        if (st.r.pass && st.x >= XEND) { st.x = XEND; st.done = true; T1.report(L); }
+      }
+      // 画面
+      sky(c, L.w, L.h);
+      var sx = function (x) { return Z.x + x / 110 * Z.w; }, sy = function (h) { return Z.y + Z.h - (h + 3) / 46 * Z.h; };
+      c.fillStyle = "#120d2c"; c.beginPath(); c.moveTo(0, L.h); for (var k = 0; k <= 80; k++) c.lineTo(k / 80 * L.w, sy(7 + 4 * Math.sin(k * 0.21) + 2.5 * Math.sin(k * 0.083 + 1))); c.lineTo(L.w, L.h); c.fill();
+      c.strokeStyle = "rgba(196,181,253,.25)"; c.lineWidth = 1;
+      for (var k2 = 0; k2 <= 1100; k2 += 30) { c.beginPath(); c.moveTo(sx(T.xs[k2]), sy(T.hs[k2])); c.lineTo(sx(T.xs[k2]), sy(-3)); c.stroke(); }
+      c.save(); c.setLineDash([6, 6]); c.strokeStyle = "rgba(103,232,249,.6)"; c.beginPath(); c.moveTo(sx(0), sy(H0)); c.lineTo(sx(110), sy(H0)); c.stroke(); c.restore();
+      chip(c, sx(XH2) + 8 > L.w - 150 ? L.w - 150 : sx(80), sy(H0) - 26, "出发高度 30 m", "#67e8f9");
+      c.strokeStyle = "#cbd5e1"; c.lineWidth = 3; c.beginPath(); for (var k3 = 0; k3 <= 1100; k3 += 5) { var X = sx(T.xs[k3]), Y = sy(T.hs[k3]); k3 ? c.lineTo(X, Y) : c.moveTo(X, Y); } c.stroke();
+      c.strokeStyle = "rgba(167,139,250,.9)"; c.lineWidth = 1.2; c.stroke();
+      chip(c, sx(XH2) - 30, sy(T.h2) - 30, "第二座山 " + T.h2 + " m", T.h2 >= H0 ? "#fca5a5" : "#ede9fe");
+      if (mu > 0) chip(c, Z.x, sy(-3) - 30, "摩擦:每走 1 m 约耗掉 " + Math.round(mu * M1 * g) + " J", "#fdba74");
+      // 小车
+      var cx = sx(st.x), cy = sy(T.hs[idx(st.x)]), heatGlow = mu > 0 ? Math.min(1, sAt(T, st.x) / 120) : 0;
+      c.save(); c.shadowColor = "#67e8f9"; c.shadowBlur = 18; c.fillStyle = "#e0f2fe"; c.beginPath(); c.arc(cx, cy - 6, 7, 0, TAU); c.fill(); c.restore();
+      if (heatGlow > 0) { c.fillStyle = "rgba(251,146,60," + (0.25 + heatGlow * 0.5) + ")"; c.beginPath(); c.arc(cx, cy, 4 + heatGlow * 6, 0, TAU); c.fill(); }
+      // 账本
+      var h = T.hs[idx(st.x)], PE = P.pe(M1, h), KE = P.ke(M1, v), HEAT = mu * M1 * g * sAt(T, st.x), E0 = P.pe(M1, H0) + P.ke(M1, 0.6);
+      ledger(c, Z.led, "过山车", { n: "出发时的势能", v: E0, col: COL.pe }, [{ n: "势能", v: PE, col: COL.pe }, { n: "动能", v: KE, col: COL.ke }, { n: "热(摩擦)", v: HEAT, col: COL.heat }]);
+      L.hud.innerHTML = "高度 <b>" + h.toFixed(1) + " m</b> · 速度 <b>" + v.toFixed(1) + " m/s</b>(" + Math.round(v * 3.6) + " km/h)";
+    },
+    report: function (L) {
+      var st = L.st, ok = st.r.pass && st.T.h2 >= 25;
+      if (ok) st.ok = true; if (ok && st.mu > 0) st.frOk = true;
+      L.finishRun({ pass: ok, predText: "预测「" + T1.predict.options[L.firstChoice] + "」", resultText: "第二座山 " + st.T.h2 + " m," + (st.mu ? "有摩擦" : "无摩擦") + ":" + (st.r.pass ? "翻过" : "停在 " + st.r.hStop.toFixed(1) + " m"),
+        html: st.r.pass ? "小车翻过了 <b>" + st.T.h2 + " m</b> 的第二座山" + (st.mu ? ",一路上有 " + fE(MU * M1 * g * sAt(st.T, XEND)) + " 变成了热。" : "。") + (st.T.h2 < 25 ? "<br>再把山调高一些(≥ 25 m)。" : "")
+          : "小车爬到 <b>" + st.r.hStop.toFixed(1) + " m</b> 就停住、滑了回去:" + (st.mu ? "出发的 30 m 势能里,一部分已经变成了热。" : "势能最多只够回到 30 m。"),
+        say: ok ? (st.frOk ? "" : "打开摩擦再试试:能翻过的山会变低吗?") : st.r.pass ? "翻过去了!能不能让第二座山更高一点?" : "小车的「高度预算」只有 30 m。第二座山要比它低多少?" });
+    },
+    predictGood: function (L) { return L.firstChoice === 1; },
+    star3: function (L) { return L.st.frOk; }
+  };
+
+  /* ================= 第 2 关 刹车片为什么烫 ================= */
+  var MASS = [1000, 1500, 2500], DECEL = 7, DISC = 32;
+  var T2 = {
+    name: "刹车片为什么烫", d3: false,
+    goal: "汽车刹停后动能去哪了?分别用 60 km/h 和 120 km/h 各刹停一次,对比刹车盘的升温。",
+    note: "只做数学演示,不构成驾驶或安全建议。假设动能全部变成 4 片各 8 kg 钢制刹车盘的热(上限估计,实际有一部分散到空气和轮胎);刹车减速度取 7 m/s²。",
+    ask: "车停下来了,动能消失了吗?",
+    predict: { type: "choice", q: "车速从 60 提到 120 km/h,刹停时刹车盘的升温会变成……", options: ["2 倍", "4 倍", "差不多"] },
+    controls: [
+      { id: "v", label: "车速", min: 30, max: 130, step: 10, value: 60, unit: " km/h" },
+      { id: "m", type: "seg", label: "车重", options: ["1.0 t", "1.5 t", "2.5 t"], value: 1 }
+    ],
+    runLabel: "刹车",
+    crit: ["60 与 120 km/h 各刹停一次", "预测正确", "换一个车重再刹"],
+    hints: ["动能 ½mv² 里,速度是平方。", "速度翻倍,v² 变成几倍?", "刹车片把动能变成热。动能是几倍,热就是几倍。"],
+    summary: "刹车靠摩擦把动能变成热,动能 ½mv² 与速度的平方成正比:速度翻倍,要处理的热变成 4 倍,刹车距离也是 4 倍。能量没有消失,它跑进了刹车盘、轮胎和空气。",
+    lights: "摩擦力",
+    card: { t: "摩擦生热:动能 → 内能", b: "滑动摩擦力做功,把物体的动能变成接触面的内能(温度升高)。刹车盘吸收的热 Q = ½mv²,升温 ΔT = Q/(m盘·c)。速度翻倍,Q 和刹车距离都变成 4 倍。", f: "Q = ½mv²;ΔT = Q / (m盘·c),钢 c ≈ 460 J/(kg·K)", src: "OpenStax《University Physics Volume 1》第 7–8 章;OpenStax《College Physics》14.2 温度变化与比热容" },
+    init: function (L) { L.st = { sp: {}, ms: {}, k: 0 }; },
+    run: function (L) { var st = L.st; st.v0 = L.v.v; st.m = MASS[L.v.m]; st.k = 0; st.done = false; st.sp[st.v0] = true; st.ms[st.m] = true; L.sfx("whoosh"); },
+    frame: function (L, dt) {
+      var st = L.st, c = L.ctx, run = L.phase === "running", Z = zone(L);
+      var v0 = run || st.k > 0 ? st.v0 : L.v.v, m = run || st.k > 0 ? st.m : MASS[L.v.m];
+      if (!run && st.k >= 1 && (L.v.v !== st.v0 || MASS[L.v.m] !== st.m)) st.k = 0;
+      var tStop = v0 / 3.6 / DECEL;
+      if (run && !st.done) { st.k = Math.min(1, st.k + dt / Math.max(1.2, tStop * 0.6) * (L.RM ? 3 : 1)); if (st.k >= 1) { st.done = true; setTimeout(function () { T2.report(L); }, L.RM ? 50 : 500); } }
+      var t = st.k * tStop, vNow = Math.max(0, v0 / 3.6 - DECEL * t), dist = v0 / 3.6 * t - 0.5 * DECEL * t * t, D = P.brakeDist(v0, DECEL);
+      var E0 = P.brakeHeat(m, v0), KE = P.ke(m, vNow), Q = E0 - KE, dT = P.discDT(Q, DISC);
+      // 夜路
+      sky(c, L.w, L.h, "#090722", "#1d1645");
+      var road = Z.y + Z.h * 0.7;
+      c.fillStyle = "#16132c"; c.fillRect(0, road, L.w, L.h - road); c.strokeStyle = "rgba(255,255,255,.35)"; c.setLineDash([18, 16]); c.beginPath(); c.moveTo(0, road + 34); c.lineTo(L.w, road + 34); c.stroke(); c.setLineDash([]);
+      var scale = (Z.w * 0.8) / Math.max(20, P.brakeDist(130, DECEL)), x0 = Z.x + 40, carX = x0 + dist * scale;
+      for (var k = 0; k < 6; k++) { var lx = Z.x + k * Z.w / 5; c.fillStyle = "#3b3561"; c.fillRect(lx, road - 120, 3, 120); c.fillStyle = "rgba(253,230,138,.9)"; c.beginPath(); c.arc(lx + 1, road - 122, 4, 0, TAU); c.fill(); c.fillStyle = "rgba(253,230,138,.07)"; c.beginPath(); c.moveTo(lx - 30, road); c.lineTo(lx + 1, road - 120); c.lineTo(lx + 32, road); c.fill(); }
+      c.strokeStyle = "rgba(251,146,60,.8)"; c.lineWidth = 2; c.beginPath(); c.moveTo(x0, road + 6); c.lineTo(x0 + D * scale, road + 6); c.stroke();
+      chip(c, x0 + D * scale - 60, road + 44, "刹停 " + D.toFixed(1) + " m", "#fdba74");
+      // 车
+      var cw = 92, ch = 26, cy = road - ch - 14;
+      c.fillStyle = "#5b4bd6"; rr(c, carX - cw, cy, cw, ch, 8); c.fill(); c.fillStyle = "#7c6cf0"; rr(c, carX - cw * 0.75, cy - 18, cw * 0.5, 20, 7); c.fill();
+      c.fillStyle = "rgba(186,230,253,.7)"; rr(c, carX - cw * 0.7, cy - 14, cw * 0.4, 12, 4); c.fill();
+      c.fillStyle = "rgba(253,224,71,.9)"; c.fillRect(carX - 4, cy + 6, 4, 6);
+      var heat = Math.min(1, dT / 40);
+      [carX - cw * 0.78, carX - cw * 0.22].forEach(function (wx) {
+        c.fillStyle = "#0f0d1f"; c.beginPath(); c.arc(wx, road - 12, 12, 0, TAU); c.fill();
+        c.save(); c.shadowColor = "#fb923c"; c.shadowBlur = 20 * heat; c.fillStyle = "rgb(" + Math.round(120 + 135 * heat) + "," + Math.round(120 - 40 * heat) + "," + Math.round(130 - 110 * heat) + ")"; c.beginPath(); c.arc(wx, road - 12, 6, 0, TAU); c.fill(); c.restore();
+      });
+      chip(c, carX - cw - 10, cy - 50, "刹车盘 +" + dT.toFixed(1) + " °C", heat > 0.5 ? "#fdba74" : "#ede9fe");
+      ledger(c, Z.led, "刹车", { n: "刹车前的动能", v: E0, col: COL.ke }, [{ n: "动能", v: KE, col: COL.ke }, { n: "热(刹车盘)", v: Q, col: COL.heat }]);
+      L.hud.innerHTML = "车速 <b>" + Math.round(vNow * 3.6) + " km/h</b> · 刹车盘升温 <b>" + dT.toFixed(1) + " °C</b><br>已完成 " + (st.sp[60] ? "✓" : "○") + " 60 km/h · " + (st.sp[120] ? "✓" : "○") + " 120 km/h";
+    },
+    report: function (L) {
+      var st = L.st, ok = !!(st.sp[60] && st.sp[120]), Q = P.brakeHeat(st.m, st.v0), dT = P.discDT(Q, DISC);
+      var r = st.sp[60] && st.sp[120] ? P.brakeHeat(st.m, 120) / P.brakeHeat(st.m, 60) : 0;
+      L.finishRun({ pass: ok, predText: "预测「" + T2.predict.options[L.firstChoice] + "」", resultText: st.v0 + " km/h、" + st.m / 1000 + " t:热 " + fE(Q) + ",升温 " + dT.toFixed(1) + " °C",
+        html: st.v0 + " km/h 刹停:<b>" + fE(Q) + "</b> 动能全部变成热,刹车盘约 <b>+" + dT.toFixed(1) + " °C</b>,刹车距离 " + P.brakeDist(st.v0, DECEL).toFixed(1) + " m。" + (ok ? "<br>120 km/h 的热是 60 km/h 的 <b>" + r.toFixed(0) + " 倍</b>。" : ""),
+        say: ok ? (Object.keys(st.ms).length > 1 ? "" : "换个车重再刹一次:重一倍,热会怎样?") : !st.sp[60] ? "再用 60 km/h 刹一次做对比。" : "再用 120 km/h 刹一次:速度翻倍,热是几倍?" });
+    },
+    predictGood: function (L) { return L.firstChoice === 1; },
+    star3: function (L) { return Object.keys(L.st.ms).length > 1; }
+  };
+
+  /* ================= 第 3 关 一吨水能点亮多久的灯 ================= */
+  var NEED = 10 * 24 * 3600;   // 10 W 灯亮 24 小时 = 864 kJ
+  var T3 = {
+    name: "一吨水变成电", d3: false,
+    goal: "1 吨水从水库落下推动水轮机。调落差和效率,让它发的电够一盏 10 W 的 LED 灯亮满 24 小时(864 kJ);再看看效率低时多出来的能量去了哪。",
+    note: "只算 1 吨水一次落下;发电效率包括水轮机和发电机,大型水电站约 90%。没变成电的部分最终成了水和机器里的热(以及水流剩下的动能),账本里合并记作「热」。",
+    ask: "水从高处落下推动水轮机,发出来的电会比水的势能多吗?",
+    predict: { type: "choice", q: "1 吨水从 100 m 高落下(效率 90%),发的电够 10 W 灯亮多久?", options: ["约 1 分钟", "约 1 天", "约 1 年"] },
+    controls: [
+      { id: "h", label: "落差", min: 10, max: 200, step: 10, value: 50, unit: " m" },
+      { id: "eta", label: "发电效率", min: 50, max: 95, step: 5, value: 90, unit: "%" }
+    ],
+    runLabel: "开闸",
+    crit: ["电够 10 W 灯亮 24 小时", "预测正确", "试过效率 ≤ 60%"],
+    hints: ["1 吨水的重力约 9,800 N,落下 1 m 释放约 9.8 kJ。", "灯需要 10 W × 86,400 s = 864 kJ。落差 × 效率要多大?", "落差 100 m、效率 90% 约 0.88 MJ,刚好够。效率低的那部分去了哪?"],
+    summary: "水的势能 mgh 是发电的「预算」:电永远不会比它多,效率越低,变成热的越多。1 吨水落 100 m 只有约 0.98 MJ,水电站要靠巨大的水量才能点亮一座城。",
+    lights: "能量守恒",
+    card: { t: "能量转化与效率", b: "能量从一种形式变成另一种时总量不变,但只有一部分变成我们想要的形式。效率 η = 有用的能量 ÷ 输入的能量,永远不超过 100%;没用上的部分通常变成了热。", f: "E电 = η · m g h;E热 = (1 − η) · m g h", src: "OpenStax《College Physics》7.8 功、能量与功率在人体与机器中的效率;U.S. DOE《Hydropower Basics》" },
+    init: function (L) { L.st = { k: 0, low: false, ok: false }; },
+    run: function (L) { var st = L.st; st.h = L.v.h; st.eta = L.v.eta / 100; st.k = 0; st.done = false; if (L.v.eta <= 60) st.low = true; L.sfx("whoosh"); },
+    frame: function (L, dt) {
+      var st = L.st, c = L.ctx, run = L.phase === "running", Z = zone(L);
+      if (!run && st.k >= 1 && (L.v.h !== st.h || L.v.eta / 100 !== st.eta)) st.k = 0;
+      var h = run || st.k > 0 ? st.h : L.v.h, eta = run || st.k > 0 ? st.eta : L.v.eta / 100, R = P.hydro(1000, h, eta);
+      if (run && !st.done) { st.k = Math.min(1, st.k + dt / 2.6 * (L.RM ? 3 : 1)); if (st.k >= 1) { st.done = true; T3.report(L); } }
+      var fall = ease(Math.min(1, st.k / 0.6)), gen = ease(Math.max(0, (st.k - 0.45) / 0.55)), fl = Math.max(gen, Math.min(1, st.k / 0.45));
+      sky(c, L.w, L.h, "#08071f", "#1b2150");
+      var base = Z.y + Z.h * 0.92, topY = base - Z.h * 0.82 * (h / 200) - 20, damX = Z.x + Z.w * 0.18, tx = Z.x + Z.w * 0.52;
+      c.fillStyle = "#1f2a55"; c.beginPath(); c.moveTo(0, topY); c.lineTo(damX, topY); c.lineTo(damX, base); c.lineTo(0, base); c.fill();
+      c.fillStyle = "rgba(56,189,248,.35)"; c.fillRect(0, topY + 4, damX, base - topY - 4);
+      c.fillStyle = "#6b6a8a"; c.beginPath(); c.moveTo(damX - 6, topY - 8); c.lineTo(damX + 18, topY - 8); c.lineTo(damX + 44, base); c.lineTo(damX - 6, base); c.fill();
+      c.strokeStyle = "#94a3b8"; c.lineWidth = 8; c.beginPath(); c.moveTo(damX + 10, topY + 10); c.lineTo(tx - 20, base - 18); c.stroke();
+      chip(c, damX + 50, (topY + base) / 2 - 11, "落差 " + h + " m", "#a78bfa");
+      var p = Math.min(1, fall), wx = damX + 10 + (tx - 20 - damX - 10) * p, wy = topY + 10 + (base - 18 - topY - 10) * p;
+      if (st.k > 0 && st.k < 0.62) { c.save(); c.shadowColor = "#38bdf8"; c.shadowBlur = 14; c.fillStyle = "#7dd3fc"; c.beginPath(); c.arc(wx, wy, 7, 0, TAU); c.fill(); c.restore(); }
+      var ang = (performance.now() / 1000) * (st.k > 0.4 ? 6 * (h / 100) : 0.3);
+      c.save(); c.translate(tx, base - 18); c.strokeStyle = "#e2e8f0"; c.lineWidth = 3; for (var b = 0; b < 6; b++) { c.rotate(TAU / 6); c.beginPath(); c.moveTo(0, 0); c.lineTo(18, 0); c.stroke(); } c.restore();
+      c.fillStyle = "#334155"; c.fillRect(tx + 26, base - 34, 36, 32);
+      c.strokeStyle = "rgba(250,204,21,.8)"; c.lineWidth = 2; c.beginPath(); c.moveTo(tx + 62, base - 20); c.lineTo(Z.x + Z.w * 0.8, base - 20); c.lineTo(Z.x + Z.w * 0.8, base - 70); c.stroke();
+      var lit = gen * Math.min(1, R.elec / NEED), bx = Z.x + Z.w * 0.8, by = base - 86;
+      c.save(); c.shadowColor = "#facc15"; c.shadowBlur = 40 * lit; c.fillStyle = "rgba(250,204,21," + (0.2 + 0.8 * lit) + ")"; c.beginPath(); c.arc(bx, by, 14, 0, TAU); c.fill(); c.restore();
+      var hours = R.elec / 10 / 3600;
+      chip(c, bx - 70, by - 44, "10 W 灯可亮 " + (gen > 0 ? (hours * gen).toFixed(1) : "—") + " 小时", hours >= 24 ? "#fde68a" : "#ede9fe");
+      ledger(c, Z.led, "水电", { n: "1 吨水的势能", v: R.E, col: COL.pe }, [{ n: "势能(未落)", v: R.E * (1 - fl), col: COL.pe }, { n: "动能(水流)", v: R.E * (fl - gen), col: COL.ke }, { n: "电", v: R.elec * gen, col: COL.elec }, { n: "热", v: R.heat * gen, col: COL.heat }]);
+      L.hud.innerHTML = "势能 <b>" + fE(R.E) + "</b> → 电 <b>" + fE(R.elec) + "</b>(" + R.kWh.toFixed(3) + " kWh)<br>目标 864 kJ · " + (R.elec >= NEED ? "<span class=ok>够了</span>" : "还差 " + fE(NEED - R.elec));
+    },
+    report: function (L) {
+      var st = L.st, R = P.hydro(1000, st.h, st.eta), ok = R.elec >= NEED;
+      if (ok) st.ok = true;
+      L.finishRun({ pass: ok, predText: "预测「" + T3.predict.options[L.firstChoice] + "」", resultText: "落差 " + st.h + " m、效率 " + Math.round(st.eta * 100) + "%:电 " + fE(R.elec),
+        html: "1 吨水落 <b>" + st.h + " m</b>:势能 " + fE(R.E) + ",变成电 <b>" + fE(R.elec) + "</b>,热 " + fE(R.heat) + "。<br>10 W 灯可亮 <b>" + (R.elec / 36000).toFixed(1) + " 小时</b>。",
+        say: ok ? (st.low ? "" : "把效率降到 60% 以下看看:少掉的电去了哪?") : "还不够 864 kJ。落差和效率,哪个能调得更大?" });
+    },
+    predictGood: function (L) { return L.firstChoice === 1; },
+    star3: function (L) { return L.st.low; }
+  };
+
+  /* ================= 第 4 关 燃料的能量(⇄ 元素工坊 ef.react) ================= */
+  var T4 = {
+    name: "燃料的能量去哪了", d3: false,
+    goal: "1 升汽油燃烧放出约 34 MJ 的热。把热送进热机:先用「理想热机」找到让效率超过 75% 的温度,再看看真实汽油机。",
+    note: "汽油热值约 4.6×10⁷ J/kg、密度约 0.74 kg/L;理想热机按卡诺效率 1 − T冷/T热(开尔文);真实汽油机取约 30%(且不超过卡诺上限)。",
+    ask: "汽油里的化学能,为什么只有一部分能推动汽车?",
+    predict: { type: "choice", q: "热源 900 K、冷端 300 K,理想热机最多能把多少热变成功?", options: ["100%", "约 67%", "约 33%"] },
+    controls: [
+      { id: "th", label: "热源温度", min: 400, max: 1500, step: 50, value: 900, unit: " K" },
+      { id: "tc", label: "冷端温度", min: 250, max: 400, step: 10, value: 300, unit: " K" },
+      { id: "mode", type: "seg", label: "热机", options: ["理想热机(卡诺)", "真实汽油机"], value: 0 }
+    ],
+    runLabel: "点火",
+    crit: ["理想热机效率超过 75%", "预测正确", "看过真实汽油机"],
+    hints: ["热机必须把一部分热排给冷端,才能一圈圈转下去。", "上限是 1 − T冷/T热。T冷/T热 要小于多少,效率才超过 75%?", "冷端 300 K 时,热源要到 1200 K 以上。真实汽油机还有摩擦、散热,只有约 30%。"],
+    summary: "燃料的化学能先变成热,热机只能把其中一部分变成功,其余必须排给冷端:上限是 1 − T冷/T热。真实汽油机约 30%,其余 70% 从排气和散热器跑掉。能量一分不少,只是大部分成了「用不上的热」。",
+    lights: "热机",
+    card: { t: "热机与卡诺效率", b: "热机从高温热源吸热,把一部分变成功,剩下的放给低温冷端。即使没有任何摩擦,效率也有上限 1 − T冷/T热——这是热力学第二定律的结果。所以发动机、发电厂总要排出大量废热。", f: "η ≤ 1 − T冷/T热;W = η·Q,Q废 = (1 − η)·Q", src: "OpenStax《University Physics Volume 2》第 4 章 热力学第二定律(4.5 卡诺循环)" },
+    init: function (L) { L.st = { k: 0, real: false, ok: false }; },
+    run: function (L) { var st = L.st; st.th = L.v.th; st.tc = L.v.tc; st.mode = L.v.mode; st.k = 0; st.done = false; if (st.mode === 1) st.real = true; L.sfx("whoosh"); },
+    eff: function (th, tc, mode) { var ca = P.carnot(th, tc); return mode === 1 ? Math.min(0.3, ca) : ca; },
+    frame: function (L, dt) {
+      var st = L.st, c = L.ctx, run = L.phase === "running", Z = zone(L);
+      var same = st.k > 0 && L.v.th === st.th && L.v.tc === st.tc && L.v.mode === st.mode; if (!run && st.k >= 1 && !same) st.k = 0;
+      var th = run || st.k > 0 ? st.th : L.v.th, tc = run || st.k > 0 ? st.tc : L.v.tc, mode = run || st.k > 0 ? st.mode : L.v.mode, eta = T4.eff(th, tc, mode), Q = P.GAS_J_PER_L;
+      if (run && !st.done) { st.k = Math.min(1, st.k + dt / 2.8 * (L.RM ? 3 : 1)); if (st.k >= 1) { st.done = true; T4.report(L); } }
+      var burn = ease(st.k);
+      sky(c, L.w, L.h, "#0a0720", "#22163f");
+      var base = Z.y + Z.h * 0.88, fx = Z.x + Z.w * 0.14, ex = Z.x + Z.w * 0.36, wx = Z.x + Z.w * 0.6, tw = Z.x + Z.w * 0.86;
+      c.fillStyle = "#1a1438"; c.fillRect(Z.x, base, Z.w, 8);
+      var fl = 0.6 + 0.4 * Math.sin(performance.now() / 90), hot = Math.min(1, (th - 400) / 1100);
+      c.save(); c.shadowColor = "#fb923c"; c.shadowBlur = 30 * (0.3 + burn); c.fillStyle = "rgba(251," + Math.round(146 + 80 * hot) + "," + Math.round(60 + 120 * hot) + ",.9)";
+      c.beginPath(); c.moveTo(fx - 14, base - 4); c.quadraticCurveTo(fx, base - 50 - 30 * fl * (0.4 + burn), fx + 14, base - 4); c.fill(); c.restore();
+      c.fillStyle = "rgba(244,114,182,.8)"; rr(c, fx - 18, base - 4, 36, 10, 3); c.fill();
+      chip(c, fx - 40, base - 104, "热源 " + th + " K", "#fdba74");
+      c.fillStyle = "#b08d57"; rr(c, ex - 34, base - 76, 68, 72, 8); c.fill(); c.fillStyle = "#8a6a3c"; c.fillRect(ex - 10, base - 100, 20, 28);
+      var pist = Math.sin(performance.now() / 1000 * (2 + 14 * eta * burn)) * 8; c.fillStyle = "#e5e7eb"; c.fillRect(ex - 8, base - 96 + pist, 16, 10);
+      c.strokeStyle = "rgba(251,146,60,.7)"; c.lineWidth = 3; c.beginPath(); c.moveTo(fx + 14, base - 30); c.lineTo(ex - 34, base - 40); c.stroke();
+      c.strokeStyle = "rgba(148,163,184,.5)"; c.lineWidth = 6; c.beginPath(); c.moveTo(ex, base - 100); c.quadraticCurveTo(ex + 20, base - 150 - 30 * burn, ex + 60, base - 170); c.stroke();
+      chip(c, ex - 10, base - 200 - 20 * burn, "废热 → 冷端 " + tc + " K", "#fdba74");
+      var a = performance.now() / 1000 * 8 * eta * burn;
+      c.save(); c.translate(wx, base - 44); c.strokeStyle = "#c4b5fd"; c.lineWidth = 4; c.beginPath(); c.arc(0, 0, 32, 0, TAU); c.stroke(); for (var s = 0; s < 4; s++) { c.rotate(TAU / 4 + a / 4); c.beginPath(); c.moveTo(0, 0); c.lineTo(30, 0); c.stroke(); } c.restore();
+      c.strokeStyle = "rgba(103,232,249,.8)"; c.lineWidth = 2; c.beginPath(); c.moveTo(ex + 34, base - 44); c.lineTo(wx - 32, base - 44); c.stroke();
+      var lift = Q * eta / (1000 * g), towerH = Z.h * 0.72, ly = base - Math.min(1, burn * lift / 3000) * towerH;
+      c.strokeStyle = "rgba(196,181,253,.5)"; c.lineWidth = 2; c.beginPath(); c.moveTo(tw - 16, base); c.lineTo(tw - 16, base - towerH); c.moveTo(tw + 16, base); c.lineTo(tw + 16, base - towerH); c.stroke();
+      for (var m = 0; m <= 6; m++) { var yy = base - m / 6 * towerH; c.fillStyle = "rgba(103,232,249,.7)"; c.font = "10px system-ui"; c.fillText(m * 500 + " m", tw + 22, yy + 3); }
+      c.strokeStyle = "#94a3b8"; c.lineWidth = 1; c.beginPath(); c.moveTo(wx, base - 76); c.lineTo(tw, base - towerH - 8); c.lineTo(tw, ly - 16); c.stroke();
+      c.save(); c.shadowColor = "#67e8f9"; c.shadowBlur = 12; c.fillStyle = "#334155"; c.fillRect(tw - 14, ly - 16, 28, 16); c.restore();
+      chip(c, tw - 120, ly - 46, "1 吨重物 ↑ " + Math.round(lift * burn) + " m", "#67e8f9");
+      chip(c, Z.x, Z.y, "⇄ 元素工坊 · 化学反应放出的热从这里接力", "#f9a8d4");
+      ledger(c, Z.led, "1 升汽油", { n: "化学能(燃烧放热)", v: Q, col: COL.chem }, [{ n: "未燃烧", v: Q * (1 - burn), col: COL.chem }, { n: "功", v: Q * eta * burn, col: COL.work }, { n: "废热", v: Q * (1 - eta) * burn, col: COL.heat }]);
+      L.hud.innerHTML = (mode === 1 ? "真实汽油机 " : "理想热机 ") + "效率 <b>" + (eta * 100).toFixed(1) + "%</b>(上限 " + (P.carnot(th, tc) * 100).toFixed(1) + "%)<br>功 <b>" + fE(Q * eta) + "</b> · 废热 " + fE(Q * (1 - eta));
+    },
+    report: function (L) {
+      var st = L.st, eta = T4.eff(st.th, st.tc, st.mode), ca = P.carnot(st.th, st.tc), ok = st.mode === 0 && ca > 0.75;
+      if (ok) st.ok = true;
+      L.finishRun({ pass: ok || (st.ok && st.mode === 1), predText: "预测「" + T4.predict.options[L.firstChoice] + "」", resultText: (st.mode ? "真实汽油机" : "理想热机") + " " + st.th + " K / " + st.tc + " K:效率 " + (eta * 100).toFixed(1) + "%",
+        html: (st.mode ? "真实汽油机" : "理想热机") + "(" + st.th + " K / " + st.tc + " K):效率 <b>" + (eta * 100).toFixed(1) + "%</b>,1 升汽油做功 <b>" + fE(P.GAS_J_PER_L * eta) + "</b>,废热 " + fE(P.GAS_J_PER_L * (1 - eta)) + "。" + (st.mode ? "<br>理想上限是 " + (ca * 100).toFixed(1) + "%,摩擦和散热又吃掉一大块。" : ""),
+        say: (ok || st.ok) ? (st.real ? "" : "切到「真实汽油机」再点一次火:差距有多大?") : st.mode === 1 ? "先用理想热机找到 75% 以上的温度。" : "还不到 75%。热源更热、冷端更冷,哪个更管用?" });
+    },
+    predictGood: function (L) { return L.firstChoice === 1; },
+    star3: function (L) { return L.st.real; }
+  };
+
+  NV.task({
+    id: "energy", guide: "ripple",
+    bridge: { href: "../../element-forge/react/", label: "元素工坊 Element Forge · 反应台(反应为什么放热?)" },
+    title: "能量去哪儿了?",
+    safety: "刹车一关只做数学演示,不构成驾驶或安全建议;做燃烧实验请在老师或家长陪同下进行。",
+    levels: [T1, T2, T3, T4]
+  });
+})();
+</script>
+</body>
+</html>

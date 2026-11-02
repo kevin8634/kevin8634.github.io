@@ -246,7 +246,23 @@
         yearDays: Y * s.w / (2 * Math.PI) - 1, recede: K * Math.pow(a, -5.5) * Y };
     },
     /* 洛希极限(流体卫星):d = 2.44·R_p·(ρ_p/ρ_s)^(1/3);刚体近似系数 1.26。与 G 无关(两边同比放大)。 */
-    roche: function (Rp, rhoP, rhoS, rigid) { return (rigid ? 1.26 : 2.44) * Rp * Math.pow(rhoP / rhoS, 1 / 3); }
+    roche: function (Rp, rhoP, rhoS, rigid) { return (rigid ? 1.26 : 2.44) * Rp * Math.pow(rhoP / rhoS, 1 / 3); },
+
+    /* ---------- 能量守恒(v0.9 nv.energy「能量去哪儿了?」)----------
+       g = 9.80665 m/s²(标准重力);钢比热 460 J/(kg·K);汽油热值约 4.6×10⁷ J/kg、密度约 0.74 kg/L。 */
+    G0: 9.80665, C_STEEL: 460, GAS_J_PER_L: 4.6e7 * 0.74,
+    /* 过山车:沿轨道走过路程 s 后的 v²(无摩擦 mu=0;摩擦按 μ·m·g·s 近似,轨道坡度不大时成立) */
+    coasterV2: function (h0, h, s, mu, v0) { return (v0 || 0) * (v0 || 0) + 2 * Phys.G0 * (h0 - h) - 2 * (mu || 0) * Phys.G0 * s; },
+    ke: function (m, v) { return 0.5 * m * v * v; },
+    pe: function (m, h) { return m * Phys.G0 * h; },
+    /* 刹车:动能全部变热;热全进刹车盘时的升温(上限估计) */
+    brakeHeat: function (m, vKmh) { var v = vKmh / 3.6; return 0.5 * m * v * v; },
+    discDT: function (Q, mDisc, c) { return Q / (mDisc * (c || Phys.C_STEEL)); },
+    brakeDist: function (vKmh, a) { var v = vKmh / 3.6; return v * v / (2 * a); },
+    /* 水力发电:落差 h 的势能 × 效率 = 电,其余变热 */
+    hydro: function (m, h, eta) { var E = m * Phys.G0 * h; return { E: E, elec: E * eta, heat: E * (1 - eta), kWh: E * eta / 3.6e6 }; },
+    /* 热机效率上限(卡诺):1 − T冷/T热(开尔文) */
+    carnot: function (Th, Tc) { return Th > Tc ? 1 - Tc / Th : 0; }
   };
 
   if (typeof module === "object" && module.exports) { module.exports = { Phys: Phys }; return; }
@@ -711,7 +727,8 @@
     { id: "orbit", n: 5, guide: "abyss", q: "为什么宇航员在空间站会飘起来?" },
     { id: "sound", n: 4, guide: "ripple", q: "为什么救护车经过时声音会变?" },
     { id: "stars", n: 4, guide: "quark", q: "恒星为什么会发光?" },
-    { id: "tide", n: 4, guide: "abyss", q: "月亮怎样拉动整片大海?" }
+    { id: "tide", n: 4, guide: "abyss", q: "月亮怎样拉动整片大海?" },
+    { id: "energy", n: 4, guide: "ripple", q: "能量去哪儿了?" }
   ];
   function task(def) {
     var N = def.levels.length, prog = Store.task(def.id, N), gd = GUIDES[def.guide];
@@ -751,8 +768,8 @@
     // v0.4 统一 HUD:左侧任务抽屉(与首页同款),切换 5 个任务;手机/小横屏收成顶栏「任务」按钮弹出
     var tdList = el("div", { class: "hd-list" });
     var tdTog = el("button", { class: "hd-tog", type: "button", "aria-controls": "nv-td-" + def.id, text: "‹" });
-    var td = el("nav", { class: "nv-td", id: "nv-td-" + def.id, "aria-label": "五个探究任务" }, [
-      el("div", { class: "hd-h" }, [el("span", { text: "探究任务 · 21 关" }), tdTog]), tdList
+    var td = el("nav", { class: "nv-td", id: "nv-td-" + def.id, "aria-label": "六个探究任务" }, [
+      el("div", { class: "hd-h" }, [el("span", { text: "探究任务 · 25 关" }), tdTog]), tdList
     ]);
     var tdBtn = el("button", { class: "nv-btn nv-td-b", type: "button", "aria-controls": td.id, "aria-expanded": "false", text: "任务 ▾" });
     nav.appendChild(tdBtn);

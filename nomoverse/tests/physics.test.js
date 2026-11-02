@@ -246,6 +246,26 @@ truthy("亚音速无马赫锥", P.machHalfAngle(100, 343) === null);
   truthy("未知预设回退默认(光速→现实,潮汐→今天)", X.preset("light", "x").id === "real" && X.preset("tide", "").id === "now");
 })();
 
+
+/* ---- 能量守恒(v0.9 nv.energy)---- */
+(function () {
+  check("30 m 落差无摩擦底部速度 ≈ 24.26 m/s", Math.sqrt(P.coasterV2(30, 0, 0, 0)), 24.2569, 1e-4);
+  truthy("无摩擦:第二座山与起点同高时 v² = 0(最多回到原高)", Math.abs(P.coasterV2(30, 30, 200, 0)) < 1e-9);
+  truthy("无摩擦:第二座山高 1 m 就翻不过", P.coasterV2(30, 31, 0, 0) < 0);
+  check("摩擦损耗 μmgs:μ=0.02、s=100 m 相当于少 2 m 高度", (P.coasterV2(30, 0, 0, 0) - P.coasterV2(30, 0, 100, 0.02)) / (2 * P.G0), 2, 1e-12);
+  check("能量守恒:PE + KE + 热 = 初始 PE", P.pe(500, 12) + P.ke(500, Math.sqrt(P.coasterV2(30, 12, 80, 0.02))) + 0.02 * 500 * P.G0 * 80, P.pe(500, 30), 1e-12);
+  check("1.5 t 车 60 km/h 动能 ≈ 208 kJ", P.brakeHeat(1500, 60), 208333.33, 1e-6);
+  check("速度翻倍 → 热 ×4", P.brakeHeat(1500, 120) / P.brakeHeat(1500, 60), 4, 1e-12);
+  check("208 kJ 进 4×8 kg 钢盘升温 ≈ 14.2 K", P.discDT(P.brakeHeat(1500, 60), 32), 14.153, 1e-3);
+  check("60 km/h、7 m/s² 刹车距离 ≈ 19.8 m", P.brakeDist(60, 7), 19.84, 1e-3);
+  check("1 t 水落 100 m = 0.9807 MJ", P.hydro(1000, 100, 1).E, 980665, 1e-9);
+  check("效率 0.9 → 0.245 kWh", P.hydro(1000, 100, 0.9).kWh, 0.245166, 1e-5);
+  check("水电:电 + 热 = 势能", P.hydro(1000, 100, 0.73).elec + P.hydro(1000, 100, 0.73).heat, 980665, 1e-12);
+  check("卡诺 900 K / 300 K = 66.7%", P.carnot(900, 300), 2 / 3, 1e-12);
+  truthy("冷热同温效率为 0", P.carnot(300, 300) === 0);
+  check("1 L 汽油约 3.4×10⁷ J", P.GAS_J_PER_L, 3.404e7, 1e-3);
+})();
+
 console.log(rows.join("\n"));
 console.log("\n合计:" + pass + " 通过," + fail + " 失败");
 process.exit(fail ? 1 : 0);
