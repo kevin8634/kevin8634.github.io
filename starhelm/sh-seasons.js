@@ -253,7 +253,7 @@
     var nx = h('button', 'ml-c ml-c--go', L.n < 3 ? '下一关 →' : '完成,回到地球'); nx.type = 'button';
     nx.onclick = function () { if (L.n < 3) { if (SH.play) SH.play('seasons', L.n + 1); } else if (SH.exit) SH.exit(); else close(); };
     U.ch.appendChild(nx);
-    if (L.n === 3) U.ch.appendChild(h('span', 'ml-hs', '✦ 星桥:生命源码 Life Source · 季节与生物节律(开放后可直达)'));
+    if (L.n === 3) U.ch.appendChild(h('span', 'ml-hs', '<a class="sh-bridge-a" href="../life-source/rhythm/">✦ 星桥 → 生命源码 Life Source:身体里的钟,怎么知道几点、几月?</a>'));
   }
   function hint() {
     var Q = QS[L.n - 1]; if (!Q || L.hints >= 3) return; P('click');

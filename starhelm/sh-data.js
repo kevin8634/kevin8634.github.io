@@ -60,7 +60,7 @@
   SH.TASKS = [
     { id: 'where',   d: 1, q: '此刻,你在宇宙的哪里?', diff: 1, open: true,  bridge: '星图 Math Atlas · 比例与数量级' },
     { id: 'orbit',   d: 1, q: '空间站为什么掉不下来?', diff: 2, open: true,  bridge: '宙律 Nomoverse · 引力与轨道' },
-    { id: 'seasons', d: 1, q: '为什么会有四季?',       diff: 1, open: true,  bridge: '生命源码 Life Source · 季节与生物节律' },
+    { id: 'seasons', d: 1, q: '为什么会有四季?',       diff: 1, open: true,  bridge: '生命源码 Life Source · 身体里的钟,怎么知道几点、几月?', bridgeHref: '../life-source/rhythm/' },
     { id: 'sats',    d: 1, q: '天上到底有多少颗卫星?', diff: 2, open: true,  bridge: '奇点前夜 Pre-Singularity · AI 与卫星数据' },
     { id: 'quakes',  d: 1, q: '地震在告诉我们什么?',   diff: 2, open: true, bridge: '元素工坊 Element Forge · 岩石与矿物' }
   ];

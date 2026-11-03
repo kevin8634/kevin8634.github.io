@@ -158,7 +158,7 @@
         Q.lv.querySelectorAll(':scope > span')[n - 1].innerHTML = '第 ' + n + ' 关 ' + starsHtml(P.stars(id, n));
         var next = lvls[n] ? SH.btn('下一关 →', function () { SH.play(id, n + 1); }, 'sh-go') : SH.btn('回到任务列表', function () { SH.exit(); SH.openTasks(); }, 'sh-go');
         Q.foot.appendChild(next);
-        if (!lvls[n] && T.bridge) Q.foot.appendChild(h('p', 'sh-bridge', '✦ 星桥:' + U.esc(T.bridge) + '(开放后可直达)'));
+        if (!lvls[n] && T.bridge) Q.foot.appendChild(h('p', 'sh-bridge', T.bridgeHref ? '<a class="sh-bridge-a" href="' + T.bridgeHref + '">✦ 星桥 → ' + U.esc(T.bridge) + '</a>' : '✦ 星桥:' + U.esc(T.bridge) + '(开放后可直达)'));
       },
       starsBy: function (base) { return Math.max(1, base - (run && run.hints >= 2 ? 1 : 0) - (run && run.hints >= 3 ? 1 : 0)); },
       onLeave: function (fn) { if (run) run.cleanups.push(fn); }
