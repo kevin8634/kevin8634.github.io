@@ -45,6 +45,16 @@
     var led = wide ? { x: L.w - Math.min(300, L.w * 0.36) - 12, y: 56, w: Math.min(300, L.w * 0.36), h: 176 } : { x: 8, y: 52, w: L.w - 16, h: 60, compact: true };
     return { wide: wide, x: 12, y: top, w: L.w - 24, h: Math.max(120, L.h - top - bot), led: led };
   }
+  /* 3D 舞台的取景子区(关卡坐标):桌面避开右上账本,手机账本已在顶部带里 */
+  function fit3(Z, ar) {   // ar = 场景宽高比;桌面在「账本左侧」与「账本下方」两块里选能放得更大的
+    if (!Z.wide) return { x: Z.x, y: Z.y, w: Z.w, h: Z.h };
+    var D = Z.led, y = D.y + D.h + 6;
+    var A = { x: Z.x, y: Z.y, w: Math.max(80, D.x - Z.x - 12), h: Z.h }, B = { x: Z.x, y: y, w: Z.w, h: Math.max(120, Z.y + Z.h - y) };
+    function k(R) { return Math.min(R.w / ar, R.h); }
+    return k(A) >= k(B) ? A : B;
+  }
+  function chip3(c, L, p, dx, dy, text, col) { chip(c, Math.max(4, Math.min(L.w - 170, p[0] + dx)), Math.max(4, Math.min(L.h - 26, p[1] + dy)), text, col); }
+  var B3 = -3;   // 3D 场景地面高度(与 energy3d.js 一致)
   /* 能量账本:左边一根「来源」,右边按比例分到各去处,中间是保宽的发光流带;合计一分不少 */
   function ledger(c, B, title, src, outs) {
     var tot = outs.reduce(function (a, o) { return a + Math.max(0, o.v); }, 0) || 1;
@@ -174,7 +184,7 @@
   /* ================= 第 2 关 刹车片为什么烫 ================= */
   var MASS = [1000, 1500, 2500], DECEL = 7, DISC = 32;
   var T2 = {
-    name: "刹车片为什么烫", d3: false,
+    name: "刹车片为什么烫", d3: true,
     goal: "汽车刹停后动能去哪了?分别用 60 km/h 和 120 km/h 各刹停一次,对比刹车盘的升温。",
     note: "只做数学演示,不构成驾驶或安全建议。假设动能全部变成 4 片各 8 kg 钢制刹车盘的热(上限估计,实际有一部分散到空气和轮胎);刹车减速度取 7 m/s²。",
     ask: "车停下来了,动能消失了吗?",
@@ -199,6 +209,13 @@
       if (run && !st.done) { st.k = Math.min(1, st.k + dt / Math.max(1.2, tStop * 0.6) * (L.RM ? 3 : 1)); if (st.k >= 1) { st.done = true; setTimeout(function () { T2.report(L); }, L.RM ? 50 : 500); } }
       var t = st.k * tStop, vNow = Math.max(0, v0 / 3.6 - DECEL * t), dist = v0 / 3.6 * t - 0.5 * DECEL * t * t, D = P.brakeDist(v0, DECEL);
       var E0 = P.brakeHeat(m, v0), KE = P.ke(m, vNow), Q = E0 - KE, dT = P.discDT(Q, DISC);
+      if (L.d3) {   // 3D 夜路:车沿路伸向远方刹停,标签按相机投影
+        st.e3 = { lv: 2, D: D, dist: dist, heat: Math.min(1, dT / 40), braking: run && !st.done, fit: fit3(Z, 1.5) };
+        AVOID = Z.led && !Z.led.compact ? Z.led : null;
+        chip3(c, L, L.d3.proj(51.4, B3 + 3.6, -D), -40, -30, "刹停 " + D.toFixed(1) + " m", "#fdba74");
+        chip3(c, L, L.d3.proj(57, B3 + 2.4, -dist), -50, Math.abs(D - dist) < 8 ? 18 : -34, "刹车盘 +" + dT.toFixed(1) + " °C", dT / 40 > 0.5 ? "#fdba74" : "#ede9fe");
+        AVOID = null;
+      } else {
       // 夜路
       sky(c, L.w, L.h, "#090722", "#1d1645");
       var road = Z.y + Z.h * 0.7;
@@ -218,6 +235,7 @@
         c.save(); c.shadowColor = "#fb923c"; c.shadowBlur = 20 * heat; c.fillStyle = "rgb(" + Math.round(120 + 135 * heat) + "," + Math.round(120 - 40 * heat) + "," + Math.round(130 - 110 * heat) + ")"; c.beginPath(); c.arc(wx, road - 12, 6, 0, TAU); c.fill(); c.restore();
       });
       chip(c, carX - cw - 10, cy - 50, "刹车盘 +" + dT.toFixed(1) + " °C", heat > 0.5 ? "#fdba74" : "#ede9fe");
+      }
       ledger(c, Z.led, "刹车", { n: "刹车前的动能", v: E0, col: COL.ke }, [{ n: "动能", v: KE, col: COL.ke }, { n: "热(刹车盘)", v: Q, col: COL.heat }]);
       L.hud.innerHTML = "车速 <b>" + Math.round(vNow * 3.6) + " km/h</b> · 刹车盘升温 <b>" + dT.toFixed(1) + " °C</b><br>已完成 " + (st.sp[60] ? "✓" : "○") + " 60 km/h · " + (st.sp[120] ? "✓" : "○") + " 120 km/h";
     },
@@ -235,7 +253,7 @@
   /* ================= 第 3 关 一吨水能点亮多久的灯 ================= */
   var NEED = 10 * 24 * 3600;   // 10 W 灯亮 24 小时 = 864 kJ
   var T3 = {
-    name: "一吨水变成电", d3: false,
+    name: "一吨水变成电", d3: true,
     goal: "1 吨水从水库落下推动水轮机。调落差和效率,让它发的电够一盏 10 W 的 LED 灯亮满 24 小时(864 kJ);再看看效率低时多出来的能量去了哪。",
     note: "只算 1 吨水一次落下;发电效率包括水轮机和发电机,大型水电站约 90%。没变成电的部分最终成了水和机器里的热(以及水流剩下的动能),账本里合并记作「热」。",
     ask: "水从高处落下推动水轮机,发出来的电会比水的势能多吗?",
@@ -258,6 +276,12 @@
       var h = run || st.k > 0 ? st.h : L.v.h, eta = run || st.k > 0 ? st.eta : L.v.eta / 100, R = P.hydro(1000, h, eta);
       if (run && !st.done) { st.k = Math.min(1, st.k + dt / 2.6 * (L.RM ? 3 : 1)); if (st.k >= 1) { st.done = true; T3.report(L); } }
       var fall = ease(Math.min(1, st.k / 0.6)), gen = ease(Math.max(0, (st.k - 0.45) / 0.55)), fl = Math.max(gen, Math.min(1, st.k / 0.45));
+      var lit = gen * Math.min(1, R.elec / NEED), hours = R.elec / 10 / 3600;
+      if (L.d3) {   // 3D 水电站剖面
+        st.e3 = { lv: 3, h: h, k: st.k, fall: fall, gen: gen, lit: lit, fit: fit3(Z, 2.4) };
+        chip3(c, L, L.d3.proj(31, B3 + (6 + 30 * h / 200) / 2, 0), 6, -11, "落差 " + h + " m", "#a78bfa");
+        chip3(c, L, L.d3.proj(92, B3 + 15, 0), -70, -34, "10 W 灯可亮 " + (gen > 0 ? (hours * gen).toFixed(1) : "—") + " 小时", hours >= 24 ? "#fde68a" : "#ede9fe");
+      } else {
       sky(c, L.w, L.h, "#08071f", "#1b2150");
       var base = Z.y + Z.h * 0.92, topY = base - Z.h * 0.82 * (h / 200) - 20, damX = Z.x + Z.w * 0.18, tx = Z.x + Z.w * 0.52;
       c.fillStyle = "#1f2a55"; c.beginPath(); c.moveTo(0, topY); c.lineTo(damX, topY); c.lineTo(damX, base); c.lineTo(0, base); c.fill();
@@ -271,10 +295,10 @@
       c.save(); c.translate(tx, base - 18); c.strokeStyle = "#e2e8f0"; c.lineWidth = 3; for (var b = 0; b < 6; b++) { c.rotate(TAU / 6); c.beginPath(); c.moveTo(0, 0); c.lineTo(18, 0); c.stroke(); } c.restore();
       c.fillStyle = "#334155"; c.fillRect(tx + 26, base - 34, 36, 32);
       c.strokeStyle = "rgba(250,204,21,.8)"; c.lineWidth = 2; c.beginPath(); c.moveTo(tx + 62, base - 20); c.lineTo(Z.x + Z.w * 0.8, base - 20); c.lineTo(Z.x + Z.w * 0.8, base - 70); c.stroke();
-      var lit = gen * Math.min(1, R.elec / NEED), bx = Z.x + Z.w * 0.8, by = base - 86;
+      var bx = Z.x + Z.w * 0.8, by = base - 86;
       c.save(); c.shadowColor = "#facc15"; c.shadowBlur = 40 * lit; c.fillStyle = "rgba(250,204,21," + (0.2 + 0.8 * lit) + ")"; c.beginPath(); c.arc(bx, by, 14, 0, TAU); c.fill(); c.restore();
-      var hours = R.elec / 10 / 3600;
       chip(c, bx - 70, by - 44, "10 W 灯可亮 " + (gen > 0 ? (hours * gen).toFixed(1) : "—") + " 小时", hours >= 24 ? "#fde68a" : "#ede9fe");
+      }
       ledger(c, Z.led, "水电", { n: "1 吨水的势能", v: R.E, col: COL.pe }, [{ n: "势能(未落)", v: R.E * (1 - fl), col: COL.pe }, { n: "动能(水流)", v: R.E * (fl - gen), col: COL.ke }, { n: "电", v: R.elec * gen, col: COL.elec }, { n: "热", v: R.heat * gen, col: COL.heat }]);
       L.hud.innerHTML = "势能 <b>" + fE(R.E) + "</b> → 电 <b>" + fE(R.elec) + "</b>(" + R.kWh.toFixed(3) + " kWh)<br>目标 864 kJ · " + (R.elec >= NEED ? "<span class=ok>够了</span>" : "还差 " + fE(NEED - R.elec));
     },
@@ -291,7 +315,7 @@
 
   /* ================= 第 4 关 燃料的能量(⇄ 元素工坊 ef.react) ================= */
   var T4 = {
-    name: "燃料的能量去哪了", d3: false,
+    name: "燃料的能量去哪了", d3: true,
     goal: "1 升汽油燃烧放出约 34 MJ 的热。把热送进热机:先用「理想热机」找到让效率超过 75% 的温度,再看看真实汽油机。",
     note: "汽油热值约 4.6×10⁷ J/kg、密度约 0.74 kg/L;理想热机按卡诺效率 1 − T冷/T热(开尔文);真实汽油机取约 30%(且不超过卡诺上限)。",
     ask: "汽油里的化学能,为什么只有一部分能推动汽车?",
@@ -315,7 +339,18 @@
       var same = st.k > 0 && L.v.th === st.th && L.v.tc === st.tc && L.v.mode === st.mode; if (!run && st.k >= 1 && !same) st.k = 0;
       var th = run || st.k > 0 ? st.th : L.v.th, tc = run || st.k > 0 ? st.tc : L.v.tc, mode = run || st.k > 0 ? st.mode : L.v.mode, eta = T4.eff(th, tc, mode), Q = P.GAS_J_PER_L;
       if (run && !st.done) { st.k = Math.min(1, st.k + dt / 2.8 * (L.RM ? 3 : 1)); if (st.k >= 1) { st.done = true; T4.report(L); } }
-      var burn = ease(st.k);
+      var burn = ease(st.k), lift = Q * eta / (1000 * g);
+      if (L.d3) {   // 3D 热机:火焰 → 汽缸 → 飞轮 → 提升塔
+        var lk = Math.min(1, burn * lift / 3000), wy = B3 + 1.3 + lk * 37.4;
+        st.e3 = { lv: 4, burn: burn, hot: Math.min(1, (th - 400) / 1100), eta: eta, lift: lk, fit: fit3(Z, 2.1) };
+        chip3(c, L, L.d3.proj(12, B3 + 15, 0), -40, -26, "热源 " + th + " K", "#fdba74");
+        var pW = L.d3.proj(40, B3 + 27, 0), pM = L.d3.proj(83.4, wy, 0);
+        chip3(c, L, pW, -120, -24, "废热 → 冷端 " + tc + " K", "#fdba74");
+        c.save(); c.font = "10px system-ui"; c.fillStyle = "rgba(103,232,249,.75)"; c.textBaseline = "middle";
+        for (var m3 = 0; m3 <= 6; m3++) { var pt = L.d3.proj(89.6, B3 + 1.3 + m3 / 6 * 37.4, 0); c.fillText(m3 * 500 + " m", pt[0] + 4, pt[1]); }
+        c.restore();
+        chip3(c, L, pM, -132, Math.abs(pM[1] - 11 - (pW[1] - 24)) < 26 && pM[0] - 132 < pW[0] + 30 ? (pM[1] > pW[1] - 24 ? 18 : -40) : -11, "1 吨重物 ↑ " + Math.round(lift * burn) + " m", "#67e8f9");
+      } else {
       sky(c, L.w, L.h, "#0a0720", "#22163f");
       var base = Z.y + Z.h * 0.88, fx = Z.x + Z.w * 0.14, ex = Z.x + Z.w * 0.36, wx = Z.x + Z.w * 0.6, tw = Z.x + Z.w * 0.86;
       c.fillStyle = "#1a1438"; c.fillRect(Z.x, base, Z.w, 8);
@@ -332,12 +367,13 @@
       var a = performance.now() / 1000 * 8 * eta * burn;
       c.save(); c.translate(wx, base - 44); c.strokeStyle = "#c4b5fd"; c.lineWidth = 4; c.beginPath(); c.arc(0, 0, 32, 0, TAU); c.stroke(); for (var s = 0; s < 4; s++) { c.rotate(TAU / 4 + a / 4); c.beginPath(); c.moveTo(0, 0); c.lineTo(30, 0); c.stroke(); } c.restore();
       c.strokeStyle = "rgba(103,232,249,.8)"; c.lineWidth = 2; c.beginPath(); c.moveTo(ex + 34, base - 44); c.lineTo(wx - 32, base - 44); c.stroke();
-      var lift = Q * eta / (1000 * g), towerH = Z.h * 0.72, ly = base - Math.min(1, burn * lift / 3000) * towerH;
+      var towerH = Z.h * 0.72, ly = base - Math.min(1, burn * lift / 3000) * towerH;
       c.strokeStyle = "rgba(196,181,253,.5)"; c.lineWidth = 2; c.beginPath(); c.moveTo(tw - 16, base); c.lineTo(tw - 16, base - towerH); c.moveTo(tw + 16, base); c.lineTo(tw + 16, base - towerH); c.stroke();
       for (var m = 0; m <= 6; m++) { var yy = base - m / 6 * towerH; c.fillStyle = "rgba(103,232,249,.7)"; c.font = "10px system-ui"; c.fillText(m * 500 + " m", tw + 22, yy + 3); }
       c.strokeStyle = "#94a3b8"; c.lineWidth = 1; c.beginPath(); c.moveTo(wx, base - 76); c.lineTo(tw, base - towerH - 8); c.lineTo(tw, ly - 16); c.stroke();
       c.save(); c.shadowColor = "#67e8f9"; c.shadowBlur = 12; c.fillStyle = "#334155"; c.fillRect(tw - 14, ly - 16, 28, 16); c.restore();
       chip(c, tw - 120, ly - 46, "1 吨重物 ↑ " + Math.round(lift * burn) + " m", "#67e8f9");
+      }
       chip(c, Z.x, Z.y, "⇄ 元素工坊 · 化学反应放出的热从这里接力", "#f9a8d4");
       ledger(c, Z.led, "1 升汽油", { n: "化学能(燃烧放热)", v: Q, col: COL.chem }, [{ n: "未燃烧", v: Q * (1 - burn), col: COL.chem }, { n: "功", v: Q * eta * burn, col: COL.work }, { n: "废热", v: Q * (1 - eta) * burn, col: COL.heat }]);
       L.hud.innerHTML = (mode === 1 ? "真实汽油机 " : "理想热机 ") + "效率 <b>" + (eta * 100).toFixed(1) + "%</b>(上限 " + (P.carnot(th, tc) * 100).toFixed(1) + "%)<br>功 <b>" + fE(Q * eta) + "</b> · 废热 " + fE(Q * (1 - eta));
