@@ -1,4 +1,4 @@
-/* 宙律 Nomoverse · 英文词条 · sound(英文版第一期 b v0.9-α5,2026-11-03):goal、向导首问、三级提示、预测题与选项、简化模型说明、星桥标签、安全提示。
+/* 宙律 Nomoverse · 英文词条 · sound(第一期 b v0.9-α5:goal、向导首问、三级提示、预测题与选项、简化模型说明、星桥标签、安全提示;第二期 a v0.9-α6:通关达成条件、总结、知识卡、点亮的知识星;2026-11-03)。
  * 由 i18n.js 在英文模式按路径加载;术语按《中英术语表 v0.1》。 */
 window.NV_I18N && NV_I18N.add({
   "绿色虚线是一个更高的音(440 Hz)。拖动「振动快慢」,让你的波形和它重合,再点「比较」。": "The green dashed line is a higher note (440 Hz). Drag “vibration rate” until your wave matches it, then tap “Compare”.",
@@ -44,5 +44,33 @@ window.NV_I18N && NV_I18N.add({
   "星图 Math Atlas「为什么有的和弦好听」": "Math Atlas “Why do some chords sound good?”",
   "实验时请把音量调小;不要长时间听高音量的声音。": "Keep the volume low while experimenting; don't listen to loud sound for long.",
   "你听到": "You hear",
-  "个波": "waves"
+  "个波": "waves",
+  "波形与 440 Hz 重合(误差 ≤ 3%)": "Wave matches 440 Hz (within 3%)",
+  "预测正确": "Prediction correct",
+  "3 次以内完成": "Done within 3 tries",
+  "每秒振动的次数就是频率:振得越快,音越高。": "The number of vibrations per second is the frequency: the faster it vibrates, the higher the note.",
+  "振动与频率、音高": "Vibration, frequency & pitch",
+  "声音是物体的振动推动空气形成的波。每秒振动的次数叫频率,单位赫兹(Hz);频率越高,听起来音越高。440 Hz 是常用的标准音 A4。": "Sound is a wave made when a vibrating object pushes the air. The number of vibrations per second is the frequency, measured in hertz (Hz); the higher the frequency, the higher the note sounds. 440 Hz is the standard tuning note A4.",
+  "OpenStax《University Physics Volume 1》17.1–17.3 声波": "OpenStax University Physics Volume 1, 17.1–17.3 Sound Waves",
+  "让救护车驶过(车速 ≥ 10 m/s)": "Drive the ambulance past (speed ≥ 10 m/s)",
+  "让靠近时的音高比原音高 10% 以上": "Make the approaching pitch over 10% above the original",
+  "声源朝你来,波被挤密、音变高;离你而去,波被拉疏、音变低。": "When the source comes toward you, the waves bunch up and the pitch rises; when it moves away, they stretch out and the pitch drops.",
+  "多普勒效应、波长": "Doppler effect, wavelength",
+  "声源向你运动时,后发出的波离你更近,波长变短、频率变高;远离时相反。救护车车速约 25 m/s 时,靠近时音高高约 8%,远离时低约 7%。": "When the source moves toward you, each new wave starts closer to you, so the wavelength shortens and the frequency rises; moving away does the opposite. At about 25 m/s, an ambulance sounds about 8% higher coming and about 7% lower going.",
+  "OpenStax《University Physics Volume 1》17.7 多普勒效应": "OpenStax University Physics Volume 1, 17.7 The Doppler Effect",
+  "让车比声音快(马赫数 > 1)": "Make the car faster than sound (Mach > 1)",
+  "做出马赫数 ≥ 2 的锥": "Make a cone at Mach ≥ 2",
+  "声源比声速还快时,波前在后方叠成锥面,锥扫过你才听到「轰」的一声。": "When the source outruns sound, the wavefronts pile up behind it into a cone; you hear the “boom” only when the cone sweeps over you.",
+  "声速、马赫锥与音爆": "Speed of sound, Mach cone & sonic boom",
+  "声速与马赫锥": "Speed of sound & the Mach cone",
+  "声速由介质决定:20 °C 空气约 343 m/s,水约 1480 m/s。声源快过声速时,波前在身后叠成锥,速度越快锥越尖。": "The speed of sound depends on the medium: about 343 m/s in 20 °C air, about 1480 m/s in water. When a source outruns sound, the wavefronts pile into a cone behind it; the faster it goes, the sharper the cone.",
+  "OpenStax《University Physics Volume 1》17.2 声速、17.8 冲击波": "OpenStax University Physics Volume 1, 17.2 Speed of Sound, 17.8 Shock Waves",
+  "三组都找到": "All three found",
+  "6 次锁定以内完成": "Done within 6 locks",
+  "频率成简单整数比时听起来融洽;两个频率很接近时,会听到每秒 |f₁ − f₂| 次的拍。": "Notes in simple whole-number frequency ratios sound good together; when two frequencies are very close, you hear |f₁ − f₂| beats per second.",
+  "拍频、频率比与和声": "Beats, frequency ratios & harmony",
+  "频率比与拍频": "Frequency ratios & beats",
+  "2:1 是八度,3:2 是纯五度——波峰周期性地对齐,听起来融洽。两个频率差几赫兹时,叠加后的振幅忽大忽小,每秒变化 |f₁ − f₂| 次。": "2:1 is an octave and 3:2 a perfect fifth: the peaks line up regularly, so they sound good together. When two frequencies differ by a few hertz, the combined loudness swells and fades |f₁ − f₂| times per second.",
+  "f_拍 = |f₁ − f₂|": "f_beat = |f₁ − f₂|",
+  "OpenStax《University Physics Volume 1》17.6 拍频": "OpenStax University Physics Volume 1, 17.6 Beats"
 });

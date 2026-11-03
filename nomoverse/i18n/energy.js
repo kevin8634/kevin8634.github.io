@@ -1,4 +1,4 @@
-/* 宙律 Nomoverse · 英文词条 · energy(英文版第一期 b v0.9-α5,2026-11-03):goal、向导首问、三级提示、预测题与选项、简化模型说明、星桥标签、安全提示。
+/* 宙律 Nomoverse · 英文词条 · energy(第一期 b v0.9-α5:goal、向导首问、三级提示、预测题与选项、简化模型说明、星桥标签、安全提示;第二期 a v0.9-α6:通关达成条件、总结、知识卡、点亮的知识星;2026-11-03)。
  * 由 i18n.js 在英文模式按路径加载;术语按《中英术语表 v0.1》。 */
 window.NV_I18N && NV_I18N.add({
   "小车从 30 m 高的第一座山顶出发,没有发动机。调第二座山的高度:让小车翻过一座 ≥ 25 m 的第二座山,再打开摩擦试一次。": "The car starts from the top of a 30 m first hill, with no engine. Adjust the second hill: get the car over a second hill ≥ 25 m tall, then turn friction on and try again.",
@@ -29,5 +29,34 @@ window.NV_I18N && NV_I18N.add({
   "冷端 300 K 时,热源要到 1200 K 以上。真实汽油机还有摩擦、散热,只有约 30%。": "With the cold side at 300 K, the hot source must exceed 1200 K. A real gasoline engine also loses energy to friction and cooling, so it manages only about 30%.",
   "元素工坊 Element Forge · 反应台(反应为什么放热?)": "Element Forge · Reaction Bench (why do reactions give off heat?)",
   "刹车一关只做数学演示,不构成驾驶或安全建议;做燃烧实验请在老师或家长陪同下进行。": "The braking level is a math demonstration only, not driving or safety advice; do any burning experiments only with a teacher or parent present.",
-  "理想热机 效率": "Ideal engine efficiency"
+  "理想热机 效率": "Ideal engine efficiency",
+  "翻过 ≥ 25 m 的第二座山": "Get over a second hill ≥ 25 m",
+  "预测正确": "Prediction correct",
+  "打开摩擦也翻过去": "Also get over with friction on",
+  "势能 mgh 与动能 ½mv² 互相转换,总和不变:没有摩擦,小车最多回到出发的 30 m;有摩擦,一部分能量变成轨道和空气里的热,能翻过的山就更低。能量没有消失,只是换了样子。": "Potential energy mgh and kinetic energy ½mv² turn into each other while the total stays the same: without friction the car can at most climb back to its starting 30 m; with friction some energy becomes heat in the track and air, so the hill it can clear is lower. The energy didn't vanish; it just changed form.",
+  "机械能守恒": "Conservation of mechanical energy",
+  "只有重力做功时,势能和动能此消彼长,机械能(两者之和)保持不变。所以没有发动机的过山车,后面的山都比第一座低。摩擦存在时,机械能会减少,减少的部分变成了热——把热也算进账本,总能量依然守恒。": "When only gravity does work, potential and kinetic energy rise and fall against each other and mechanical energy (their sum) stays constant. That's why on a coaster with no engine, every later hill is lower than the first. With friction, mechanical energy decreases and the lost part becomes heat; count the heat in the ledger too and total energy is still conserved.",
+  "mgh₀ = mgh + ½mv² + 热(μ·m·g·s)": "mgh₀ = mgh + ½mv² + heat (μ·m·g·s)",
+  "OpenStax《University Physics Volume 1》第 8 章 势能与能量守恒;人教版高中物理必修第二册 第八章 机械能守恒定律": "OpenStax University Physics Volume 1, Chapter 8 Potential Energy and Conservation of Energy; PEP senior high school Physics, Compulsory Book 2, Chapter 8 Conservation of Mechanical Energy",
+  "60 与 120 km/h 各刹停一次": "Stop once each from 60 and 120 km/h",
+  "换一个车重再刹": "Brake again with a different car mass",
+  "刹车靠摩擦把动能变成热,动能 ½mv² 与速度的平方成正比:速度翻倍,要处理的热变成 4 倍,刹车距离也是 4 倍。能量没有消失,它跑进了刹车盘、轮胎和空气。": "Brakes use friction to turn kinetic energy into heat, and kinetic energy ½mv² grows with the square of speed: double the speed and there's 4 times the heat to deal with, and 4 times the stopping distance. The energy doesn't vanish; it goes into the brake discs, tires and air.",
+  "摩擦生热:动能 → 内能": "Friction makes heat: kinetic → internal energy",
+  "滑动摩擦力做功,把物体的动能变成接触面的内能(温度升高)。刹车盘吸收的热 Q = ½mv²,升温 ΔT = Q/(m盘·c)。速度翻倍,Q 和刹车距离都变成 4 倍。": "Sliding friction does work that turns an object's kinetic energy into internal energy at the surfaces in contact (they get hotter). The heat absorbed by the discs is Q = ½mv², and the temperature rise is ΔT = Q/(m_disc·c). Double the speed, and both Q and the stopping distance become 4 times bigger.",
+  "Q = ½mv²;ΔT = Q / (m盘·c),钢 c ≈ 460 J/(kg·K)": "Q = ½mv²; ΔT = Q / (m_disc·c), steel c ≈ 460 J/(kg·K)",
+  "OpenStax《University Physics Volume 1》第 7–8 章;OpenStax《College Physics》14.2 温度变化与比热容": "OpenStax University Physics Volume 1, Chapters 7–8; OpenStax College Physics, 14.2 Temperature Change and Heat Capacity",
+  "电够 10 W 灯亮 24 小时": "Enough electricity for a 10 W lamp for 24 hours",
+  "试过效率 ≤ 60%": "Tried efficiency ≤ 60%",
+  "水的势能 mgh 是发电的「预算」:电永远不会比它多,效率越低,变成热的越多。1 吨水落 100 m 只有约 0.98 MJ,水电站要靠巨大的水量才能点亮一座城。": "The water's potential energy mgh is the “budget” for electricity: you can never get more than that, and the lower the efficiency, the more turns into heat. A tonne of water falling 100 m holds only about 0.98 MJ, so hydro plants need enormous amounts of water to light up a city.",
+  "能量转化与效率": "Energy conversion & efficiency",
+  "能量从一种形式变成另一种时总量不变,但只有一部分变成我们想要的形式。效率 η = 有用的能量 ÷ 输入的能量,永远不超过 100%;没用上的部分通常变成了热。": "When energy changes from one form to another the total stays the same, but only part becomes the form we want. Efficiency η = useful energy ÷ energy put in, never more than 100%; the unused part usually ends up as heat.",
+  "E电 = η · m g h;E热 = (1 − η) · m g h": "E_elec = η · m g h; E_heat = (1 − η) · m g h",
+  "OpenStax《College Physics》7.8 功、能量与功率在人体与机器中的效率;U.S. DOE《Hydropower Basics》": "OpenStax College Physics, 7.8 Work, Energy, and Power in Humans; U.S. DOE, Hydropower Basics",
+  "理想热机效率超过 75%": "Ideal engine efficiency above 75%",
+  "看过真实汽油机": "Looked at a real gasoline engine",
+  "燃料的化学能先变成热,热机只能把其中一部分变成功,其余必须排给冷端:上限是 1 − T冷/T热。真实汽油机约 30%,其余 70% 从排气和散热器跑掉。能量一分不少,只是大部分成了「用不上的热」。": "Fuel's chemical energy first becomes heat, and a heat engine can turn only part of it into work; the rest must be dumped to the cold side, with a limit of 1 − T_cold/T_hot. A real gasoline engine manages about 30%, and the other 70% escapes through the exhaust and radiator. Not a joule is lost; most of it just becomes “heat you can't use”.",
+  "热机与卡诺效率": "Heat engines & Carnot efficiency",
+  "热机从高温热源吸热,把一部分变成功,剩下的放给低温冷端。即使没有任何摩擦,效率也有上限 1 − T冷/T热——这是热力学第二定律的结果。所以发动机、发电厂总要排出大量废热。": "A heat engine takes heat from a hot source, turns part of it into work, and releases the rest to a cold side. Even with no friction at all, efficiency has a ceiling of 1 − T_cold/T_hot: a consequence of the second law of thermodynamics. That's why engines and power plants always give off lots of waste heat.",
+  "η ≤ 1 − T冷/T热;W = η·Q,Q废 = (1 − η)·Q": "η ≤ 1 − T_cold/T_hot; W = η·Q, Q_waste = (1 − η)·Q",
+  "OpenStax《University Physics Volume 2》第 4 章 热力学第二定律(4.5 卡诺循环)": "OpenStax University Physics Volume 2, Chapter 4 The Second Law of Thermodynamics (4.5 The Carnot Cycle)"
 });

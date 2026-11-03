@@ -114,6 +114,11 @@
   "约 1 分钟": "About 1 minute", "约 1 天": "About 1 day", "约 1 年": "About 1 year", "2 倍": "2×", "4 倍": "4×", "8 倍": "8×", "约 67%": "About 67%", "约 33%": "About 33%", "约一半": "About half",
   "能,冲下来速度很快": "Yes, it's going fast at the bottom", "不能,最多回到 30 m": "No, at most back to 30 m", "车越重越能翻过": "A heavier car makes it over more easily",
   "车停下来了,动能消失了吗?": "The car stopped. Did its kinetic energy vanish?", "速度翻倍,v² 变成几倍?": "If speed doubles, how many times bigger is v²?",
+  /* ---------- 通关弹窗(第二期 a v0.9-α6)---------- */
+  "下一关 →": "Next level →", "回首页看星图": "Back to the star map", "留在这关再试": "Stay and try again", "请 AI 讲解": "Ask the AI to explain",
+  "完成目标": "Reach the goal", "预测接近结果": "Prediction close to the result", "额外挑战": "Extra challenge",
+  "阿夸:": "Aqua: ", "墨渊:": "Abyss: ", "涟漪:": "Ripple: ", "AI 正在组织语言……": "The AI is putting it into words…",
+  "AI 暂时连不上。先看看上面的知识卡吧。": "Can't reach the AI right now. Have a look at the knowledge card above first.", "AI 生成内容可能有误,以知识卡与实验为准。": "AI-generated content may contain mistakes; trust the knowledge card and the experiment.",
   "黄线:你现在的轨道": "Yellow line: your current orbit", "灰线:同样出手在地球上的路线": "Gray line: the same throw on Earth"
   };
   for (var k in TASKS) { E[k] = TASKS[k]; E[k.replace(/\?$/, "")] = TASKS[k].replace(/\?$/, ""); }
@@ -136,6 +141,13 @@
     /* 第一期 b:长句外壳 */
     [/^(?:简化模型:)+(.+)$/, function (m, a) { var y = tr(a); return y == null ? null : "Simplified model: " + y; }],
     [/^预测:(.+)$/, function (m, a) { var y = tr(a); return y == null ? null : "Prediction: " + y; }],
+    /* 第二期 a:通关弹窗 */
+    [/^知识卡 · (.+)$/, function (m, a) { var y = tr(a); return y == null ? null : "Knowledge card · " + y; }],
+    [/^参考:(.+)$/, function (m, a) { var y = tr(a); return y == null ? null : "Source: " + y; }],
+    [/^(✓|○) (.+)$/, function (m, a, b) { var y = tr(b); return y == null ? null : a + " " + y; }],
+    [/^第 (\d+) 关 通关$/, "Level $1 cleared"], [/^(\d) 星$/, "$1 stars"],
+    [/^点亮知识星:(.+)$/, function (m, a) { var y = tr(a) || list(a, "、", ", "); return y == null ? null : "Knowledge star lit: " + y; }],
+    [/^(.+) · AI 讲解$/, function (m, a) { var y = tr(a); return y == null ? null : y + " · AI explanation"; }],
     [/^约 ([\d.,]+) (m|km|s|kg)$/, "About $1 $2"], [/^([\d.,]+) 分钟$/, "$1 min"], [/^×([\d.]+) 倍$/, "×$1"]
   ];
   window.NV_I18N = { add: function (d, r) { for (var k in d) if (Object.prototype.hasOwnProperty.call(d, k)) E[k] = d[k]; if (r) RX = r.concat(RX); }, T: function (s) { return window.NV_T(s); } };
@@ -148,13 +160,15 @@
     var p = t.split(sep).map(function (x) { x = x.trim(); if (!CJK.test(x)) return x; var y = E[x]; if (y == null) y = rx(x); if (y == null) ok = false; return y; });
     return ok ? p.join(out) : null;
   }
-  function tr(t) { if (!t || !CJK.test(t)) return null; var y = E[t]; if (y != null) return y; y = rx(t); if (y != null) return y; return list(t, " · ", " · ") || list(t, ",", ", "); }
+  function tr(t) { if (!t || !CJK.test(t)) return null; var y = E[t]; if (y != null) return y; y = rx(t); if (y != null) return y; return list(t, " · ", " · ") || list(t, ",", ", ") || wide(t); }
+  /* 无汉字、只有全角标点的串(公式、读数):换成半角标点 */
+  function wide(t) { if (/[\u3400-\u9fff]/.test(t)) return null; return t.replace(/\uff0c/g, ", ").replace(/\uff1b/g, "; ").replace(/\uff1a/g, ": ").replace(/\uff08/g, " (").replace(/\uff09/g, ")").replace(/\u3002/g, ". ").replace(/\u3001/g, ", ").replace(/[\uff01-\uff5e]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xfee0); }).replace(/ {2,}/g, " ").replace(/^ | $/g, ""); }
   window.NV_T = function (t) { if (L !== "en" || !t) return t; var y = tr(t); return y == null ? t : y; };
 
   /* ---------- 顶栏「中 / EN」+ 回门户带语言 ---------- */
   function chrome() {
     var css = document.createElement("style");
-    css.textContent = ".nv-lang{display:inline-flex;align-items:center;gap:3px;min-height:32px;padding:0 11px;border-radius:999px;border:1px solid rgba(167,139,250,.45);background:rgba(14,11,40,.6);color:#ede9fe;font:600 12px/1 system-ui,sans-serif;letter-spacing:.04em;cursor:pointer;white-space:nowrap}.nv-lang b{color:#67e8f9}.nv-lang:hover{background:rgba(60,45,140,.7)}.nv-lang--float{position:fixed;z-index:60;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px}" + (L === "en" ? ".nv-im .nv-top .nv-nav a.nv-home::before{content:\"Genesis\"!important}" : "");
+    css.textContent = ".nv-lang{display:inline-flex;align-items:center;gap:3px;min-height:32px;padding:0 11px;border-radius:999px;border:1px solid rgba(167,139,250,.45);background:rgba(14,11,40,.6);color:#ede9fe;font:600 12px/1 system-ui,sans-serif;letter-spacing:.04em;cursor:pointer;white-space:nowrap}.nv-lang b{color:#67e8f9}.nv-lang:hover{background:rgba(60,45,140,.7)}.nv-lang--float{position:fixed;z-index:60;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px}" + (L === "en" ? "@media (max-width:420px),(orientation:landscape) and (max-height:519px){.nv-im .nv-top .nv-nav a.nv-home::before{content:\"Genesis\"!important}}" : "");
     document.head.appendChild(css);
     var b = document.createElement("button"); b.type = "button"; b.className = "nv-lang"; b.setAttribute("data-noi18n", ""); b.setAttribute("aria-label", "中文 / English");
     b.innerHTML = L === "en" ? "中 / <b>EN</b>" : "<b>中</b> / EN";
