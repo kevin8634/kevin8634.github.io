@@ -1,5 +1,9 @@
 # 觉弈 Ludoterra · CHANGELOG
 
+## v0.35 · 2026-11-03 · 星桥 lt.sleep ⇄ ls.rhythm 正式开通
+- 对端生命源码「身体里的钟,怎么知道几点、几月?」(/life-source/rhythm/,04 v0.10.1)已上线:BRIDGES 该条加 href,标题改为对端正式标题;睡眠负债关第 ④ 步星桥预告改为可点链接。
+- 任务 id、进度键不变。SW 缓存 lt-v0.35。
+
 ## v0.34 · 2026-11-01 · R4 星桥 lt.sleep ⇄ ls.rhythm(觉弈侧预留)
 - BRIDGES 新增 lt.sleep ⇄ ls.rhythm,对端「生命源码 · 季节与生物节律」未上线,标「即将开通」不带链接;睡眠负债关第 ④ 步加星桥预告。对端上线后只需把 href 改为对端路径。
 - 任务 id、进度键不变。SW 缓存 lt-v0.34。
