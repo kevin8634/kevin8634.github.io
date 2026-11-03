@@ -41,6 +41,7 @@
 })();
 </script>
 <link rel="stylesheet" href="core/nv.css">
+<script src="i18n.js"></script>
 <style>
   body { background: radial-gradient(ellipse at 70% 0%, var(--bg-hi) 0%, var(--bg) 55%) fixed, var(--bg); }
   .hm { max-width: 1180px; margin: 0 auto; padding: 0 14px 30px; }
@@ -431,7 +432,7 @@
   var gIn = el("input", { id: "nvg", type: "range", min: "0.2", max: "3", step: "0.1", value: "1", "aria-describedby": "nvgh" });
   var hero = el("section", { class: "hero", "aria-label": "宙律 Nomoverse" }, [
     el("div", { class: "txt" }, [
-      el("h1", {}, [el("span", { text: "宙律 " }), el("span", { class: "en", text: "Nomoverse" }), el("span", { class: "tag", text: "亲手改写宇宙的规律" })]),
+      el("h1", {}, [el("span", { text: "宙律 ", "data-noi18n": "" }), el("span", { class: "en", text: "Nomoverse" }), el("span", { class: "tag", text: "亲手改写宇宙的规律" })]),
       el("p", { class: "series", text: "创世计划 Genesis · 02 · 物理" }),
       el("p", { class: "lead", text: "把引力调大一点,把声速调慢一点:先猜,再运行,看规律怎么变。在改写规律的过程中,读懂规律。" }),
       el("div", { class: "gctl" }, [
