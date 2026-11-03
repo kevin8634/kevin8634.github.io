@@ -1,0 +1,98 @@
+/* 元素工坊 v2.3 · 自由实验台(实验室大厅内)· 视觉基线:宣传素材/元素工坊_v2.3_自由实验模式_效果图.png */
+.free{position:relative;margin:0 0 18px;scroll-margin-top:64px;width:min(calc(100vw - 24px),1560px);left:50%;transform:translateX(-50%)}
+.free[hidden]{display:none}
+.fx-stage{position:relative;height:min(78vh,760px);min-height:560px;border-radius:16px;overflow:hidden;border:1px solid rgba(255,190,110,.22);
+  background:#050608 url(../img/hud-bg.webp?v=1) center 30%/cover no-repeat;box-shadow:0 18px 50px rgba(0,0,0,.55)}
+.fx-stage .fx-gl{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}
+.fx-labels{position:absolute;inset:0;pointer-events:none;z-index:2}
+.fx-pl{position:absolute;transform:translate(-50%,-50%);font-size:10.5px;line-height:1;color:#2a1a08;font-weight:700;letter-spacing:.02em;white-space:nowrap;text-shadow:0 1px 0 rgba(255,240,200,.5)}
+.fx-pl.s-r::after{content:"专业";display:inline-block;margin-left:3px;padding:0 3px;border-radius:3px;background:#c8352a;color:#fff;font-size:9.5px;vertical-align:1px;text-shadow:none}
+.fx-ui{position:absolute;inset:0;z-index:3;pointer-events:none}
+.fx-ui > *{pointer-events:auto}
+.fx-bar{position:absolute;left:0;right:0;top:0;height:58px;display:flex;align-items:center;gap:14px;padding:0 18px;background:linear-gradient(180deg,rgba(0,0,0,.72),rgba(0,0,0,.25) 80%,transparent)}
+.fx-bar .fx-clr{padding:4px 10px}.fx-bar b{font-size:21px;color:#ffcf96;letter-spacing:.06em}.fx-bar small{color:#bcc6dc;font-size:13px;flex:1}
+.fx-x{background:rgba(20,18,16,.7);border:1px solid #b98a4a;color:#f3e3c4;border-radius:50%;width:34px;height:34px;cursor:pointer;font-size:18px;line-height:1}
+/* 条件开关:玻璃药丸 + 暖光灯泡 */
+.fx-conds{position:absolute;top:70px;left:50%;transform:translateX(-50%);display:flex;gap:12px}
+.fx-c{display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:0;cursor:pointer;color:#ffe1be;font:inherit;font-size:13px;padding:0}
+.fx-c i{display:block;width:62px;height:30px;border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.05));border:1px solid rgba(255,255,255,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 4px 10px rgba(0,0,0,.4);position:relative}
+.fx-c i::after{content:"";position:absolute;top:5px;left:7px;width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#6a5a48,#2a221a);transition:left .2s,background .2s,box-shadow .2s}
+.fx-c[aria-pressed=true] i::after{left:34px;background:radial-gradient(circle at 40% 35%,#fff6d8,#ffb44a 60%,#c06a10);box-shadow:0 0 14px #ffb44a}
+.fx-c:focus-visible i{outline:2px solid #ffd27a;outline-offset:2px}
+/* 分类页签(试剂架上方) */
+.fx-tabs{position:absolute;left:22px;bottom:104px;display:flex;flex-wrap:wrap;gap:6px;max-width:330px}
+.fx-tabs button{background:rgba(20,16,12,.72);border:1px solid rgba(185,138,74,.6);color:#f0dcc0;border-radius:8px;padding:3px 9px;font:inherit;font-size:12.5px;cursor:pointer}
+.fx-tabs button[aria-selected=true]{background:linear-gradient(180deg,#d9a75c,#9a6a2c);color:#1a0e00;border-color:#ffd27a}
+/* 试剂按钮列表:3D 档为可聚焦的隐形层(读屏 / 键盘);低档为可见的试剂架 */
+.fx-list{position:absolute;left:22px;top:112px;width:330px;display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.fx-b{position:relative;height:76px;border-radius:10px 10px 6px 6px;border:1px solid rgba(255,255,255,.25);background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.04));color:#fff;font:inherit;font-size:11px;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:0 2px 5px;overflow:hidden}
+.fx-b::before{content:"";position:absolute;left:8px;right:8px;bottom:22px;height:30px;border-radius:4px;background:var(--c);opacity:.9}
+.fx-b span{position:relative;background:linear-gradient(180deg,#e0b56c,#9a6a2c);color:#241404;border-radius:3px;padding:1px 3px;font-weight:700;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.fx-b[aria-pressed=true]{box-shadow:0 0 0 2px #ffd27a,0 0 16px rgba(255,200,110,.5)}
+.fx-b.r::after{content:"专业";position:absolute;top:4px;right:4px;padding:0 3px;border-radius:3px;background:#c8352a;color:#fff;font-size:9.5px}
+body.fx3d .fx-list{opacity:0;pointer-events:none}
+body.fx3d .fx-list:focus-within{opacity:.97;pointer-events:auto}
+.fx-note{position:absolute;left:22px;bottom:22px;padding:8px 12px;border-radius:9px;background:rgba(0,0,0,.66);font-size:13px;color:#ffe1be;line-height:1.5;max-width:330px}
+.fx-note small{display:block;color:#aeb8cf;font-size:12px}
+/* 向导 */
+.fx-guide{position:absolute;left:calc(50% + 92px);top:128px;display:flex;flex-direction:column;align-items:center;gap:2px;width:180px}
+.fx-guide canvas{width:118px;height:118px}
+.fx-say{max-width:180px;font-size:13.5px;color:#e6d8ff;text-shadow:0 1px 3px #000;background:rgba(12,10,18,.55);border:1px solid rgba(201,166,255,.3);border-radius:12px;padding:7px 10px}
+.fx-guess{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.fx-guess button{background:rgba(201,166,255,.12);border:1px solid rgba(201,166,255,.45);color:#efe6ff;border-radius:999px;padding:2px 9px;font:inherit;font-size:12px;cursor:pointer}
+.fx-guess button[aria-pressed=true]{background:#c9a6ff;color:#1a0f2a}
+/* 右侧磨砂玻璃面板 */
+.fx-panel{position:absolute;right:22px;top:120px;width:270px;padding:28px 12px 12px;border-radius:14px;background:linear-gradient(160deg,rgba(210,225,240,.16),rgba(210,225,240,.05));border:1px solid rgba(255,255,255,.22);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 14px 34px rgba(0,0,0,.5)}
+.fx-panel::before{content:"";position:absolute;top:10px;right:14px;width:46px;height:9px;background:radial-gradient(circle 4px at 4px 4.5px,#5ee08a 98%,transparent),radial-gradient(circle 4px at 21px 4.5px,#ffd04a 98%,transparent),radial-gradient(circle 4px at 38px 4.5px,#ff5a5a 98%,transparent)}
+.fx-cards{display:flex;flex-direction:column;gap:8px;max-height:min(46vh,430px);overflow:auto}
+.fx-card{border-radius:10px;padding:9px 11px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);box-shadow:3px 3px 0 rgba(255,255,255,.06),6px 6px 0 rgba(255,255,255,.03);font-size:12.5px;line-height:1.5;color:#e9eef8}
+.fx-card b{display:block;font-size:14.5px;color:#fff6e8}
+.fx-card .sf{display:block;font-size:12px;margin:2px 0 4px}.fx-card .sf.g{color:#7fe3a0}.fx-card .sf.y{color:#ffd04a}.fx-card .sf.r{color:#ff7a6a}.fx-card .sf.n{color:#c8cbd6}
+.fx-card .eq{font-family:"Noto Sans SC",system-ui,sans-serif;color:#ffe0b0;font-size:13px;margin:2px 0}
+.fx-card small{color:#aeb8cf}
+.fx-card.old{opacity:.55}
+.fx-save{display:block;width:100%;margin-top:10px;background:rgba(0,0,0,.55);border:1px solid #b98a4a;color:#ffe1be;border-radius:9px;padding:8px;font:inherit;font-size:13px;cursor:pointer}
+.fx-save:disabled{opacity:.45;cursor:default}
+.fx-link{display:block;margin-top:6px;font-size:12px;color:#a8cfff;word-break:break-all;min-height:1em}
+/* 底部:所选物质 + 条件 + 开始 */
+.fx-cap{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:12px;background:rgba(0,0,0,.66);white-space:nowrap}
+.fx-cap b{font-size:18px;color:#fff1de;font-weight:600}.fx-cap small{color:#b8c2d8;font-size:13px}
+.fx-go{background:linear-gradient(180deg,#ffb35c,#d9761c);border:0;color:#1a0e00;font:inherit;font-weight:700;border-radius:9px;padding:7px 16px;cursor:pointer}
+.fx-go:disabled{opacity:.5;cursor:default}
+.fx-clr{background:none;border:1px solid rgba(255,255,255,.3);color:#dfe4ef;border-radius:9px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+.fx-sock{display:none}
+.fx-warn{position:absolute;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;background:rgba(3,4,8,.78)}
+.fx-warn[hidden]{display:none}
+.fx-warn div{max-width:440px;padding:20px 22px;border-radius:14px;background:#10131c;border:1px solid rgba(255,154,60,.45);font-size:14px;line-height:1.7;color:#e4e9f5}
+.fx-warn b{color:#ffcf96;font-size:17px}
+/* 低档 / 无 WebGL:平面试剂架 + 插座 + 试管 */
+.fx-flat .fx-sock{display:flex;position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);gap:24px;align-items:flex-end}
+.fx-sock span{display:flex;align-items:flex-end;justify-content:center;width:84px;height:84px;border-radius:50%;background:radial-gradient(circle at 50% 40%,#d9a75c,#6a4a1c 70%);box-shadow:0 0 0 4px rgba(255,210,140,.25);font-size:11px;color:#1a0e00;font-weight:700;padding-bottom:12px;text-align:center}
+.fx-sock span i{display:block;width:28px;height:28px;border-radius:6px;margin:0 auto 4px;background:var(--c);border:1px solid rgba(255,255,255,.5)}
+.fx-sock .tb{width:34px;height:120px;border-radius:0 0 17px 17px;border:2px solid rgba(255,255,255,.55);border-top:0;position:relative;overflow:hidden;align-self:center}
+.fx-sock .tb::after{content:"";position:absolute;left:0;right:0;bottom:0;height:62%;background:var(--lq,#cfe6f2);transition:background 1.5s}
+@media (max-width:900px){
+  .fx-stage{height:auto;min-height:0;padding:10px 10px 12px}
+  .fx-stage .fx-gl,.fx-labels{display:none}
+  .fx-ui{position:relative;display:flex;flex-direction:column;gap:10px}
+  .fx-ui > *{position:static!important;transform:none!important;width:auto!important;max-width:none!important}
+  .fx-bar{position:relative!important;height:auto;padding:4px 2px 8px;background:none;flex-wrap:wrap}
+  .fx-bar small{flex-basis:100%;order:3;font-size:12px}
+  .fx-bar b{flex:1}
+  .fx-note{order:9}
+  .fx-conds{justify-content:center;flex-wrap:wrap}
+  body.fx3d .fx-list,.fx-list{opacity:1;pointer-events:auto;grid-template-columns:repeat(4,1fr)}
+  .fx-sock{display:flex!important;justify-content:center;gap:14px;align-items:flex-end}
+  .fx-guide{justify-content:center}.fx-guide canvas{width:72px;height:72px}
+  .fx-cap{flex-wrap:wrap;white-space:normal;justify-content:center}
+  .fx-cards{max-height:none}
+}
+.fx-b .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);padding:0;background:none}
+.fx-guide canvas{order:-1}
+.fx-flat .fx-tabs{top:74px;bottom:auto}.fx-flat .fx-list{top:110px}
+.fx-flat .fx-tabs{top:74px;bottom:auto}.fx-flat .fx-list{top:110px}
+
+.fx-pl{font-family:"Noto Sans SC",system-ui,sans-serif;font-size:10.5px;padding:2px 5px 3px;border-radius:2px;background:linear-gradient(180deg,#f3d58a,#c99a3e 55%,#a87a2a);border:1px solid #6b4a17;box-shadow:0 1px 2px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,248,220,.7)}
+.fx-pl sub,.fx-card .eq sub,.fx-sock sub{font-size:.72em;vertical-align:-.25em;line-height:0}
+.fx-card .eq{font-weight:600;letter-spacing:.01em}

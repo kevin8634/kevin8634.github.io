@@ -81,3 +81,8 @@
 - 新增本地文件:ef-react3d.js、react/、react/labs/*.json(2 份 gn-lab/1 协议)、data/ef.react.json、lab/(实验室大厅)、img/lab-island.webp 与 img/lab-react.webp(本站页面截图缩略)、audio/bubble|settle|balance.m4a(audio/synth_react.py 纯程序合成原创,固定种子)、tools/build_react.py、tools/react_check.py、tools/react_protos.py,均为本项目原创。
 - 反应数据依据人教版教材公开章节与 NIST WebBook 公开热力学数据(仅引用数值与名称,文字为原创);外部网络请求:0。
 - AI 生成内容:反应现象/安全说明/题目文字由 AI 撰写并经独立化学审校;协议 ai_generated 字段写明。
+
+## v2.3(2026-11-03)
+- img/hud-bg.webp、宣传素材底图 hud_bg.png:本项目用 Hark 图像生成模型生成的无人无字实验室背景(AI 生成,创世计划自有),压暗虚化后作首页 3D 舞台与自由实验台背景。
+- img/lab-free.webp、img/lab-molecule.webp:本站页面截图缩略。
+- ef-free3d.js、lab/free.js、lab/free.css、data/ef.react.free.json、tools/react_free_index.py:本项目原创;物质与反应全部来自本站已审校的 data/ef.react.json。

@@ -67,6 +67,11 @@ export async function install(gl, scene, cam, ST) {
   })();
   const wall = new THREE.Mesh(new THREE.PlaneGeometry(44, 22), new THREE.MeshBasicMaterial({ map: wallTex, color: 0x9a9a9a, depthWrite: false, toneMapped: false, fog: false }));
   wall.position.set(0, D + 6.2, -10.5); wall.renderOrder = -10; root.add(wall);
+  /* v2.2.1 背景:写实老式化学实验室(AI 生成底图,已虚化压暗,见 LICENSES.md);加载失败保留程序纹理 */
+  new THREE.TextureLoader().load('img/hud-bg.webp?v=1', t => {
+    t.colorSpace = THREE.SRGBColorSpace; const r = (44 / 22) / (2048 / 868); t.repeat.set(1, r); t.offset.set(0, (1 - r) / 2 - 0.02);
+    wall.material.map = t; wall.material.color.set(0xb4b4b4); wall.material.needsUpdate = true;
+  });
 
   /* ---------- 黄铜星盘:平放在台面,刻度环 + 外侧厚环 + 玻璃珠 ---------- */
   const R0 = 1.3, R1 = 1.62, H = 0.13;
@@ -271,7 +276,9 @@ export async function install(gl, scene, cam, ST) {
   const orbit = new THREE.Group(); ov.add(orbit);
   const orbitM = brass({ color: '#c49a58', roughness: 0.28 });
   const orb1 = new THREE.Mesh(new THREE.TorusGeometry(1, 0.016, 8, 160), orbitM), orb2 = new THREE.Mesh(new THREE.TorusGeometry(1, 0.016, 8, 160), orbitM); orbit.add(orb1, orb2);
-  ['sndBtn', 'setBtn', 'fsBtn'].forEach(id => {
+  orbit.visible = false;
+  /* v2.2.1:王磊 11-03 要求按钮清爽易辨认——气体球与轨道停用,按钮改为 HTML 黄铜描边磨砂按钮(ef-hud.css) */
+  [].forEach(id => {
     const el = document.getElementById(id); if (!el) return;
     const g = new THREE.Group(), gm = gasMat(gasCol[id]);
     const gas = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 28), gm); gas.scale.setScalar(0.86); g.add(gas);
@@ -289,7 +296,6 @@ export async function install(gl, scene, cam, ST) {
     /* 气体球:放到对应 HTML 按钮中心 */
     const ids = Object.keys(balls); let xs = [];
     ids.forEach(id => { const b = balls[id], r = b.el.getBoundingClientRect(), R = r.width * (mobile() ? 0.5 : 0.66); b.g.position.copy(px(r.left - cr.left + r.width / 2, r.top - cr.top + r.height / 2)); b.g.scale.setScalar(R); xs.push(b.g.position); });
-    orbit.visible = !mobile();
     if (xs.length) { const a = xs[0], z = xs[xs.length - 1], w = Math.abs(z.x - a.x) / 2 + 58; orbit.position.set((a.x + z.x) / 2, a.y - 4, -10); orb1.scale.set(w, w * 0.34, w); orb1.rotation.z = 0.06; orb2.scale.set(w * 0.88, w * 0.27, w); orb2.rotation.z = -0.05; orb2.position.y = 3; }
     /* 铭牌:叠在 HTML 铭牌后 */
     const pr = plate.getBoundingClientRect(); plate3.visible = pr.width > 0 && getComputedStyle(plate).display !== 'none';

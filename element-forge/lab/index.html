@@ -4,14 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>实验室大厅 · 元素工坊 Element Forge</title>
-<meta name="description" content="元素工坊 2.0 实验室大厅:超重元素岛、反应台两座旗舰实验室的全部实验台,以及只存在你这台设备上的实验记录本。可一键复现、导出图片卡。所有实验只在虚拟中发生。">
+<meta name="description" content="元素工坊 2.0 实验室大厅:自由实验台、超重元素岛、反应台、分子搭建台的全部实验台,以及只存在你这台设备上的实验记录本。可一键复现、导出图片卡。所有实验只在虚拟中发生。">
 <meta name="theme-color" content="#070a14">
 <link rel="stylesheet" href="../ef.css?v=14">
+<link rel="stylesheet" href="free.css?v=1">
 <style>
 .hall{max-width:1180px;margin:0 auto;padding:10px 18px 60px;position:relative;z-index:1}
 .hall h1{font-size:26px;margin:18px 0 4px;color:var(--gold2)}
 .hall .sub{color:var(--dim);margin:0 0 16px;font-size:14px}
-.labs{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.labs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media (max-width:1100px){.labs{grid-template-columns:repeat(2,1fr)}}
 .lb{position:relative;border-radius:14px;overflow:hidden;border:1px solid rgba(63,224,200,.4);background:#0a1420;text-decoration:none;color:var(--ink);display:block;transition:transform .2s,border-color .2s}
 .lb:hover{transform:translateY(-3px);border-color:#ff9a3c}
 .lb img{display:block;width:100%;aspect-ratio:16/8;object-fit:cover;background:#0b1222}
@@ -40,7 +42,8 @@
 <body>
 <main class="hall" id="hall">
   <h1>实验室大厅</h1>
-  <p class="sub">两座旗舰实验室,每座都有可以亲手调参数的实验台。所有记录只存在这台设备上,不上传、无账号。</p>
+  <p class="sub">自由实验台 + 三座旗舰实验室,都可以亲手动手。所有记录只存在这台设备上,不上传、无账号。</p>
+  <section class="free" id="free" hidden aria-label="自由实验台"></section>
   <div class="labs" id="labs"></div>
 
   <section class="sec">
@@ -60,13 +63,15 @@
   <p class="safe"><b>实验安全</b>:元素工坊里的所有实验只在虚拟中发生。标有 🔴「只限专业实验室」的内容请勿在现实中模仿;本站不提供任何危险品的制备方法、用量或获取渠道。</p>
 </main>
 <script src="../ef.js?v=17"></script>
+<script src="free.js?v=1"></script>
 <script>
 (function () {
 EF.sky(); EF.topbar({ back: '../', backText: '← 工坊' });
 var LABS = [
+  { id: 'free', q: '挑几样物质放上星盘,只看收录过的真实现象', n: '自由实验台', href: '?lab=react_free', img: '../img/lab-free.webp', badge: '新 · v2.3' },
   { id: 'island', q: EF.MISSIONS.island.q, n: '超重元素岛', href: '../island/', img: '../img/lab-island.webp', badge: '2.0' },
-  { id: 'react', q: EF.MISSIONS.react.q, n: '反应台', href: '../react/', img: '../img/lab-react.webp', badge: '新 · v2.1' },
-  { id: 'mol', n: '分子搭建台', q: '锻造中 · v2.2', soon: 1 }];
+  { id: 'react', q: EF.MISSIONS.react.q, n: '反应台', href: '../react/', img: '../img/lab-react.webp', badge: 'v2.1' },
+  { id: 'mol', q: EF.MISSIONS.molecule.q, n: '分子搭建台', href: '../molecule/', img: '../img/lab-molecule.webp', badge: 'v2.2' }];
 var PROTOS = [
   { id: 'ef.lab.island_chain', lab: 'island', t: '锡的同位素链', path: '../island/labs/' },
   { id: 'ef.lab.island_shell', lab: 'island', t: '幻数与结合能', path: '../island/labs/' },
@@ -74,7 +79,7 @@ var PROTOS = [
   { id: 'ef.lab.react_rate', lab: 'react', t: '反应速率 A/B', path: '../react/labs/' },
   { id: 'ef.lab.react_eq', lab: 'react', t: '平衡往哪边走', path: '../react/labs/' }];
 /* 深链(呈现规范 v0.2 §6):?lab=<id>&preset=<id>;lab 取值上线后不改;未知 lab/preset 回退默认、不报错;URL 不带记录本内容 */
-var ALIAS = { island: 'ef.lab.island_chain', react: 'ef.lab.react_rate', island_chain: 'ef.lab.island_chain', island_shell: 'ef.lab.island_shell', island_edge: 'ef.lab.island_edge', react_rate: 'ef.lab.react_rate', react_eq: 'ef.lab.react_eq',
+var ALIAS = { free: 'ef.lab.react_free', react_free: 'ef.lab.react_free', island: 'ef.lab.island_chain', react: 'ef.lab.react_rate', island_chain: 'ef.lab.island_chain', island_shell: 'ef.lab.island_shell', island_edge: 'ef.lab.island_edge', react_rate: 'ef.lab.react_rate', react_eq: 'ef.lab.react_eq',
   rate: 'ef.lab.react_rate', eq: 'ef.lab.react_eq', chain: 'ef.lab.island_chain', shell: 'ef.lab.island_shell', edge: 'ef.lab.island_edge' };
 var PRESET = {
   'ef.lab.react_rate': { hot: { a: { T: 20 }, b: { T: 60 } }, powder: { a: { s: 1 }, b: { s: 5 } }, conc: { a: { c: 1 }, b: { c: 2 } } },
@@ -83,14 +88,17 @@ var PRESET = {
   'ef.lab.island_shell': { magic: { a: {} } },
   'ef.lab.island_edge': { island: { a: { h: 0 }, b: { h: 3 } } } };
 var KEY = 'gn:ef:lab', LabMod = null, TITLE = {}, pendB = null;
-PROTOS.forEach(function (p) { TITLE[p.id] = p.t; });
+PROTOS.forEach(function (p) { TITLE[p.id] = p.t; }); TITLE['ef.lab.react_free'] = '自由实验台';
 function list() { try { var a = JSON.parse(localStorage.getItem(KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
-function cnt(lab) { return list().filter(function (e) { return PROTOS.some(function (p) { return p.id === e.id && p.lab === lab; }); }).length; }
+function cnt(lab) { return list().filter(function (e) { return lab === 'free' ? e.id === 'ef.lab.react_free' : PROTOS.some(function (p) { return p.id === e.id && p.lab === lab; }); }).length; }
+/* 记录本接口(自由实验台 free.js 使用) */
+window.EFLab = { add: function (e) { var a = list(); a.unshift(e); try { localStorage.setItem(KEY, JSON.stringify(a.slice(0, 200))); } catch (x) {} draw(); } };
 
 document.getElementById('labs').innerHTML = LABS.map(function (L) {
   if (L.soon) return '<div class="lb soon"><div class="ph">🧪 锻造中</div><div class="tx"><b>' + L.n + '</b><small>' + L.q + '</small></div></div>';
-  return '<a class="lb" href="' + L.href + '"><img src="' + L.img + '" alt="' + L.n + '实验室画面" loading="lazy"><span class="bd">' + L.badge + '</span><span class="ct">已记 ' + cnt(L.id) + ' 条</span><div class="tx"><b>' + L.n + '</b><small>' + EF.esc(L.q) + '</small></div></a>';
+  return '<a class="lb" href="' + L.href + '"' + (L.id === 'free' ? ' data-free="1"' : '') + '><img src="' + L.img + '" alt="' + L.n + '实验室画面" loading="lazy"><span class="bd">' + L.badge + '</span><span class="ct">已记 ' + cnt(L.id) + ' 条</span><div class="tx"><b>' + L.n + '</b><small>' + EF.esc(L.q) + '</small></div></a>';
 }).join('');
+document.querySelector('#labs [data-free]').onclick = function (ev) { ev.preventDefault(); history.replaceState(null, '', location.pathname + '?lab=react_free'); window.EFFree.open({}); };
 
 var bench = document.getElementById('bench'), benches = document.getElementById('benches');
 benches.innerHTML = PROTOS.map(function (p) { return '<button class="ef-btn ghost" data-id="' + p.id + '">' + (p.lab === 'island' ? '元素岛 · ' : '反应台 · ') + p.t + '</button>'; }).join('');
@@ -119,15 +127,21 @@ function applyB(b) {
 }
 function fmtT(s) { var d = new Date(s); return isNaN(d) ? '' : (d.getMonth() + 1) + '-' + d.getDate() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
 function pstr(o) { return o ? Object.keys(o).map(function (k) { return k + '=' + (+(+o[k]).toPrecision(4)); }).join(' ') : ''; }
+var FREEN = null; fetch('../data/ef.react.free.json?v=1').then(function (r) { return r.json(); }).then(function (f) { FREEN = {}; f.bottles.forEach(function (b) { FREEN[b.id] = b.n; }); draw(); }).catch(function () {});
+var RXN = null; fetch('../data/ef.react.json').then(function (r) { return r.json(); }).then(function (d) { RXN = {}; d.rows.concat(d.contrast).forEach(function (r) { RXN[r.id] = r.name; }); draw(); }).catch(function () {});
+function freeTxt(e) { var n = (e.sel || []).map(function (i) { return FREEN && FREEN[i] || i; }).join(' + '); return n + ' → ' + (e.rid ? (RXN && RXN[e.rid] || e.rid) : e.near ? '有记录但条件不同' : '暂无可靠记录'); }
+function esc2(e) { return '自由实验:' + EF.esc(freeTxt(e)) + (e.correct === true || e.correct === false ? ' <em class="' + (e.correct ? '' : 'no') + '">' + (e.correct ? '猜中' : '没猜中') + '</em>' : ''); }
 function draw() {
   var a = list(), el = document.getElementById('nbList');
   if (!a.length) { el.innerHTML = '<p class="empty">还没有记录。在任意实验台点「记入实验记录本」,记录会出现在这里。</p>'; return; }
   el.innerHTML = a.map(function (e, i) {
     var t = TITLE[e.id] || e.id, body;
-    if (e.kind === 'guess') body = '先猜:' + EF.esc(e.guess || '') + ' <em class="' + (e.correct ? '' : 'no') + '">' + (e.correct ? '猜中' : '没猜中') + '</em>';
+    if (e.kind === 'free') body = esc2(e) ;
+    else if (e.kind === 'guess') body = '先猜:' + EF.esc(e.guess || '') + ' <em class="' + (e.correct ? '' : 'no') + '">' + (e.correct ? '猜中' : '没猜中') + '</em>';
     else body = 'A 组 <span class="p">' + pstr(e.a) + '</span>' + (e.b ? ' · B 组 <span class="p">' + pstr(e.b) + '</span>' : '') + (e.note ? '<br>' + EF.esc(e.note) : '');
-    return '<div class="ent"><span class="d">' + fmtT(e.t) + '<br>' + t + '</span><span>' + body + '</span>' + (e.kind === 'run' && TITLE[e.id] ? '<button class="ef-btn ghost" data-i="' + i + '">↻ 复现</button>' : '<span></span>') + '</div>';
+    return '<div class="ent"><span class="d">' + fmtT(e.t) + '<br>' + t + '</span><span>' + body + '</span>' + (e.kind === 'free' ? '<button class="ef-btn ghost" data-f="' + i + '">↻ 复现</button>' : e.kind === 'run' && TITLE[e.id] ? '<button class="ef-btn ghost" data-i="' + i + '">↻ 复现</button>' : '<span></span>') + '</div>';
   }).join('');
+  Array.prototype.forEach.call(el.querySelectorAll('button[data-f]'), function (b) { b.onclick = function () { var e = list()[+b.dataset.f]; history.replaceState(null, '', location.pathname + '?lab=react_free&preset=' + e.preset); window.EFFree.open({ entry: e }); }; });
   Array.prototype.forEach.call(el.querySelectorAll('button[data-i]'), function (b) { b.onclick = function () { var e = list()[+b.dataset.i]; open(e.id, e); }; });
 }
 draw();
@@ -142,14 +156,15 @@ document.getElementById('expBtn').onclick = function () {
   x.font = '28px "Noto Sans SC",system-ui,sans-serif';
   if (!a.length) { x.fillStyle = '#c9d2ea'; x.fillText('还没有记录,去实验台做第一个实验吧。', 70, 260); }
   a.forEach(function (e, i) { var y = 250 + i * 120; x.fillStyle = '#ffd2a0'; x.fillText((TITLE[e.id] || e.id) + '  ' + fmtT(e.t), 70, y);
-    x.fillStyle = '#e9eefb'; var s = e.kind === 'guess' ? '先猜:' + (e.guess || '') + (e.correct ? '  ✓ 猜中' : '  ✗ 没猜中') : 'A:' + pstr(e.a) + (e.b ? '   B:' + pstr(e.b) : ''); x.fillText(s.slice(0, 44), 70, y + 46); });
+    x.fillStyle = '#e9eefb'; var s = e.kind === 'free' ? freeTxt(e) : e.kind === 'guess' ? '先猜:' + (e.guess || '') + (e.correct ? '  ✓ 猜中' : '  ✗ 没猜中') : 'A:' + pstr(e.a) + (e.b ? '   B:' + pstr(e.b) : ''); x.fillText(s.slice(0, 44), 70, y + 46); });
   x.fillStyle = '#8f9ab8'; x.font = '22px "Noto Sans SC",system-ui,sans-serif'; x.fillText('所有实验只在虚拟中发生 · 记录只存在本机', 70, H - 60);
   c.toBlob(function (b) { var u = URL.createObjectURL(b), l = document.createElement('a'); l.href = u; l.download = '元素工坊-实验记录本.png'; document.body.appendChild(l); l.click(); l.remove(); setTimeout(function () { URL.revokeObjectURL(u); }, 4000); });
 };
 
 /* 深链:?lab=<协议 id 或别名>[#lab=…&p=…] 打开即复现 */
 var U = new URLSearchParams(location.search), q = U.get('lab'), pr = U.get('preset'), id = q && (ALIAS[q] || q);
-if (id && PROTOS.some(function (p) { return p.id === id; })) {
+if (id === 'ef.lab.react_free') window.EFFree.open(pr ? { preset: pr } : {});
+else if (id && PROTOS.some(function (p) { return p.id === id; })) {
   var P0 = pr && PRESET[id] && PRESET[id][pr];
   if (P0 && !/[#&]lab=/.test(location.hash)) { var enc = function (o) { return Object.keys(o).map(function (k) { return k + ':' + o[k]; }).join(','); };
     var A = P0.a || {}, Bv = P0.b ? Object.assign({}, A, P0.b) : null; if (!Object.keys(A).length && Bv) A = {};

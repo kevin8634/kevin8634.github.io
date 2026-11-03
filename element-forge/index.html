@@ -10,7 +10,7 @@
 <meta property="og:description" content="从一颗恒星里,炼出整个世界。亲手聚变出元素、把石墨压成钻石。免费、免注册。">
 <meta name="theme-color" content="#070a14">
 <link rel="stylesheet" href="ef.css?v=14">
-<link rel="stylesheet" href="ef-hud.css?v=6">
+<link rel="stylesheet" href="ef-hud.css?v=7">
 <style>
 .labrow{display:grid;grid-template-columns:1.15fr 1.15fr .8fr;gap:14px}
 .labc{position:relative;border-radius:14px;overflow:hidden;border:1px solid rgba(63,224,200,.4);background:#0a1420;text-decoration:none;color:var(--ink);display:block;transition:transform .2s,border-color .2s}
@@ -199,7 +199,7 @@ EF.BRIDGES = [
   { a: 'ef.fireworks', b: 'sh.aurora', w: '天枢 Starhelm', t: '极光是太阳寄来的信吗?', href: '../starhelm/?task=aurora', why: '烟花的颜色和极光的颜色,都是原子里的电子跳回低能级时放出的光。' },
   { a: 'ef.mars', b: 'sh.marsday', w: '天枢 Starhelm', t: '火星上的一天有多长?', href: '../starhelm/?task=marsday', why: '火星为什么红是它的化学,火星的一天多长是它的天文。' },
   { a: 'ef.titan', b: 'sh.voyager', w: '天枢 Starhelm', t: '旅行者号此刻飞到哪了?', href: '../starhelm/?task=voyager', why: '旅行者 1 号 1980 年飞掠土卫六,只看见一团橙色的雾;如今它已飞出日球层,在星际空间里继续前进。' },
-  { a: 'ef.react', b: 'nv.energy', w: '宙律 Nomoverse', t: '能量去哪儿了?——能量守恒', href: null, why: '反应放热、吸热,能量只是换了形式;宙律这一站即将开通。' },
+  { a: 'ef.react', b: 'nv.energy', w: '宙律 Nomoverse', t: '能量去哪儿了?——能量守恒', href: '../nomoverse/energy/', why: '反应放热、吸热,能量只是换了形式;宙律第 4 关把燃料的能量连回反应台。' },
   { a: 'ef.spectra', b: 'sh.exoearth', w: '天枢 Starhelm', t: '宇宙里还有别的地球吗?', href: '../starhelm/?task=exoearth', why: '用星光读出系外行星的空气,是寻找"另一个地球"的关键一步。' }
 ];
 document.getElementById('drBridges').innerHTML = EF.BRIDGES.map(function (B) {
@@ -354,6 +354,6 @@ if (EF.glTier === 'low') EF.start2D();
 else setTimeout(function () { if (!EF.glReady) EF.start2D(); }, 15000);
 })();
 </script>
-<script>if (EF.glTier !== 'low') { var m3 = document.createElement('script'); m3.type = 'module'; m3.src = 'ef-home.js?v=6'; document.body.appendChild(m3); }</script>
+<script>if (EF.glTier !== 'low') { var m3 = document.createElement('script'); m3.type = 'module'; m3.src = 'ef-home.js?v=7'; document.body.appendChild(m3); }</script>
 </body>
 </html>
