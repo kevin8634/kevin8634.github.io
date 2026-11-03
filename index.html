@@ -1193,7 +1193,7 @@
   function wn(x) { return W[x] || x; }
   var RX = [
     [/^(·\s*)?已上线( v[^\s→]+)?( · .+?)?( →)?$/, function (m, a, v, t, r) { return (a || "") + "Live" + (v || "") + (t ? " · " + (tr(t.slice(3)) || t.slice(3)) : "") + (r || ""); }],
-    [/^(\d+) 个任务 (\d+) 关$/, "$1 quests · $2 levels"], [/^(\d+) 个任务 (\d+) 关 · (\d+) 个实验$/, "$1 quests · $2 levels · $3 labs"], [/^(\d+) 个任务已开放$/, "$1 quests open"], [/^(\d+) 颗知识星$/, "$1 knowledge stars"], [/^(\d+) 个关卡 · 星桥六座已通$/, "$1 levels · six bridges open"],
+    [/^(\d+) 个任务 (\d+) 关$/, "$1 quests · $2 levels"], [/^(\d+) 个任务 (\d+) 关 · (\d+) 个实验$/, "$1 quests · $2 levels · $3 labs"], [/^(\d+) 个任务已开放$/, "$1 quests open"], [/^(\d+) 颗知识星$/, "$1 knowledge stars"], [/^(\d+) 个关卡 · 星桥六座已通$/, "$1 levels · six bridges open"], [/^(\d+) 个关卡 · 星桥七座已通$/, "$1 levels · seven bridges open"],
     [/^已点亮 (\d+) \/ 7 个世界$/, "$1 / 7 worlds lit"], [/^第 (\d+) 阶 \/ 7$/, "Tier $1 / 7"], [/^点亮 (\d+) 个任务$/, function (m, n) { return "Light " + n + (n === "1" ? " quest" : " quests"); }],
     [/^(\d+) 个世界 · 走通 (\d+) 座星桥$/, function (m, a, b) { return a + " worlds · cross " + b + (b === "1" ? " bridge" : " bridges"); }], [/^(\d+) 个世界 · (\d+) 个任务$/, "$1 worlds · $2 quests"],
     [/^再点亮 (\d+) 个任务，升到第 (\d+) 阶「(.+)」。$/, function (m, n, k, t) { return "Light " + n + " more to reach tier " + k + " “" + (E[t] || t) + "”."; }],
@@ -1527,7 +1527,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span><button type="button" class="x-lang x-lang--ab" onclick="gnSetLang(GN_LANG==='en'?'zh':'en')" aria-label="中文 / English">中 / EN</button> 创世计划总门户 <b>v2.5.4</b></span>
+            <span><button type="button" class="x-lang x-lang--ab" onclick="gnSetLang(GN_LANG==='en'?'zh':'en')" aria-label="中文 / English">中 / EN</button> 创世计划总门户 <b>v2.5.5</b></span>
           </footer>
         </div>
       </div>
@@ -1708,7 +1708,7 @@
           age: ["ya","huo","chen","he"], tags: ["math"], why: "喜欢找规律、解谜题？每想通一个问题，就点亮一颗知识星。" },
         { id: "02", star: "天玑", name: "宙律", en: "Nomoverse", field: "物理",
           desc: "改写物理常数，看宇宙怎么变。", color: "#a78bfa", live: true,
-          meta: ["已上线 v0.9-α4 · EN（第一期）", "6 个任务 25 关 · 5 个实验"], href: "nomoverse/", lab: "nomoverse/lab/", prefix: ["gn:nv:"],
+          meta: ["已上线 v0.9-α6 · EN", "6 个任务 25 关 · 5 个实验"], href: "nomoverse/", lab: "nomoverse/lab/", prefix: ["gn:nv:"],
           age: ["huo","chen","he"], tags: ["space","matter"], why: "好奇宇宙为什么是现在这样？亲手改一改物理常数，看会发生什么。" },
         { id: "03", star: "天权", name: "元素工坊", en: "Element Forge", field: "化学",
           desc: "用元素锻造物质，配方即反应。", color: "#ff9a3c", live: true,
@@ -1726,7 +1726,7 @@
           age: ["huo","chen","he"], tags: ["ai","math"], why: "想弄懂 AI 是怎么学会的？亲手训练它、考考它，再给它立规矩。" },
         { id: "06", star: "摇光", name: "觉弈", en: "Ludoterra", field: "认知觉醒",
           desc: "看见自己的思维，做出更清醒的选择。", color: "#f5c26b", live: true,
-          meta: ["已上线 v0.34 · 1.0 收口", "10 个关卡 · 星桥六座已通"], href: "ludoterra/", prefix: ["gn:lt:"],
+          meta: ["已上线 v0.35 · 1.0 收口", "10 个关卡 · 星桥七座已通"], href: "ludoterra/", prefix: ["gn:lt:"],
           age: ["huo","chen","he"], tags: ["society"], why: "想看清自己怎么思考、怎么做选择？把每一次选择当成一局棋来复盘。", ageTxt: "星火 12+ · 星芽可试入门关" },
         { id: "07", star: "天枢", name: "天枢", en: "Starhelm", field: "天文",
           desc: "北斗第一星 · 用真实实时数据看见此刻的天空。", color: "#dfe6f3", live: true,
@@ -3777,6 +3777,11 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "门户 v2.5.5", d: "2026-11-03", t: "星历登记宙律 v0.9-α5、v0.9-α6，觉弈 v0.35，天枢 v1.0-M4k；宙律、觉弈世界卡更新。「身体里的钟」两座星桥两端都已互通。" },
+        { w: "07", v: "v1.0-M4k", d: "2026-11-03", t: "学完四季，一步走进生命源码，看看身体里的钟怎样跟着太阳和季节对表。" },
+        { w: "06", v: "v0.35", d: "2026-11-03", t: "睡眠债关新开星桥，直达生命源码「身体里的钟，怎么知道几点、几月？」。" },
+        { w: "02", v: "v0.9-α6", d: "2026-11-03", t: "英文版第二期 a：25 关的通关弹窗、向导总结和知识卡都有了英文。" },
+        { w: "02", v: "v0.9-α5", d: "2026-11-03", t: "英文版第一期 b：6 个任务 25 关的目标、向导提问、提示、预测题和安全提示全部有了英文。" },
         { w: "gn", v: "门户 v2.5.4", d: "2026-11-03", t: "星历登记宙律 v0.9-α3、v0.9-α4，生命源码 v0.10、v0.10.1，元素工坊 v2.3；三张世界卡更新；生命源码新任务进入创世护照；星桥「为什么会有四季？」⇄「身体里的钟」正式点亮，新开「身体里的钟」⇄「今晚偷走的睡眠，明天谁来还？」。" },
         { y: "task", w: "03", v: "v2.3", d: "2026-11-03", t: "实验室新开自由实验台：自己挑试剂和条件，只给收录过的 60 条真实反应结果，没收录的一律写明「暂无可靠记录」；首页换上黄铜按钮和实验室背景。" },
         { w: "04", v: "v0.10.1", d: "2026-11-03", t: "「身体里的钟」科学复核修订：「没有窗户的房间」改成暗光实验，24.2 小时注明来源，图表标明是示意模型。" },
