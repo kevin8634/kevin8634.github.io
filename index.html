@@ -1527,7 +1527,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
-            <span><button type="button" class="x-lang x-lang--ab" onclick="gnSetLang(GN_LANG==='en'?'zh':'en')" aria-label="中文 / English">中 / EN</button> 创世计划总门户 <b>v2.5.2</b></span>
+            <span><button type="button" class="x-lang x-lang--ab" onclick="gnSetLang(GN_LANG==='en'?'zh':'en')" aria-label="中文 / English">中 / EN</button> 创世计划总门户 <b>v2.5.3</b></span>
           </footer>
         </div>
       </div>
@@ -1708,7 +1708,7 @@
           age: ["ya","huo","chen","he"], tags: ["math"], why: "喜欢找规律、解谜题？每想通一个问题，就点亮一颗知识星。" },
         { id: "02", star: "天玑", name: "宙律", en: "Nomoverse", field: "物理",
           desc: "改写物理常数，看宇宙怎么变。", color: "#a78bfa", live: true,
-          meta: ["已上线 v0.8-α1 · 规则改写台", "5 个任务 21 关 · 3 个实验"], href: "nomoverse/", lab: "nomoverse/lab/", prefix: ["gn:nv:"],
+          meta: ["已上线 v0.9-α2 · 规则改写台", "6 个任务 25 关 · 5 个实验"], href: "nomoverse/", lab: "nomoverse/lab/", prefix: ["gn:nv:"],
           age: ["huo","chen","he"], tags: ["space","matter"], why: "好奇宇宙为什么是现在这样？亲手改一改物理常数，看会发生什么。" },
         { id: "03", star: "天权", name: "元素工坊", en: "Element Forge", field: "化学",
           desc: "用元素锻造物质，配方即反应。", color: "#ff9a3c", live: true,
@@ -2847,7 +2847,7 @@
         { a: { w: "03", id: "ef.spectra", title: "隔着几百光年，怎么知道一颗星球的空气？", href: "element-forge/spectra/" },
           b: { w: "07", id: "sh.exoearth", title: "宇宙里还有别的地球吗？", href: "starhelm/?task=exoearth", label: "去天枢 →" } },
         { a: { w: "03", id: "ef.react", title: "把两种东西混在一起，会发生什么？", href: "element-forge/react/" },
-          b: { w: "02", id: "nv.energy", title: "能量去哪儿了？——能量守恒", href: null } },
+          b: { w: "02", id: "nv.energy", title: "能量去哪儿了？——能量守恒", href: "nomoverse/energy/" } },
         { a: { w: "03", id: "ef.molecule", title: "随手拼一个分子，世界上真的有吗？", href: "element-forge/molecule/" },
           b: { w: "04", id: "ls.dna", title: "四个字母怎么写出一个人？", href: "life-source/dna/" } },
         { a: { w: "02", id: "nv.stars", title: "恒星为什么会发光？", href: "nomoverse/stars/" },
@@ -3531,7 +3531,7 @@
       var PP = (function () {
         var TASKS = {
           "01": { p: ["ma:v1:", "gn:ma:"], t: { chord: "为什么有的和弦好听？", cat: "怎样让 AI 认出一只猫？", casino: "赌场为什么总是赢？", secret: "怎样把秘密藏进数字里？", epidemic: "传染病为什么会爆发？", rocket: "火箭怎样飞上月球？", cube: "魔方为什么能复原？", bee: "为什么蜜蜂选六边形？", nim: "先拿的人一定赢吗？", nav: "导航怎么找到最短的路？" } },
-          "02": { p: ["gn:nv:"], t: { orbit: "为什么宇航员在空间站会飘起来？", sound: "为什么救护车经过时声音会变？", hoop: "如果引力变成两倍，篮球还能投进吗？", stars: "恒星为什么会发光？", tide: "月亮怎样拉动整片大海？" } },
+          "02": { p: ["gn:nv:"], t: { orbit: "为什么宇航员在空间站会飘起来？", sound: "为什么救护车经过时声音会变？", hoop: "如果引力变成两倍，篮球还能投进吗？", stars: "恒星为什么会发光？", tide: "月亮怎样拉动整片大海？", energy: "能量去哪儿了？" } },
           "03": { p: ["gn:ef:"], t: { stars: "你身体里的铁是从哪颗星来的？", carbon: "为什么钻石和铅笔芯是同一种东西？", crystal: "晶体为什么那么整齐？", cabbage: "紫甘蓝汁为什么会变色？", fireworks: "为什么烟花有不同的颜色？", battery: "怎样造一块会发电的电池？", rocks: "岩石是怎么“长”出来的？", mars: "火星为什么是红的？", titan: "土卫六为什么是橙色的？", spectra: "隔着几百光年，怎么知道一颗星球的空气？", island: "元素周期表的尽头在哪里？", react: "把两种东西混在一起，会发生什么？", molecule: "随手拼一个分子，世界上真的有吗？" } },
           "04": { p: ["gn:ls:"], t: { dna: "四个字母怎么写出一个人？", parents: "为什么你长得像爸妈，又不完全像？", zebra: "为什么斑马会有条纹？", virus: "一场感冒是怎么在班里传开的？", wolf: "狼回来之后，河流为什么变了？" } },
           "05": { p: ["gn:ps:"], t: { ask: "AI 会思考吗？", write: "AI 是怎么写作文的？", cat: "怎样让 AI 认出一只猫？", attn: "AI 在「看」哪里？", panda: "怎样让 AI 把熊猫认成长臂猿？", truth: "这段话是 AI 写的吗？", robot: "为什么扫地机器人会偷懒？", scale: "把 AI 放大会怎样？", together: "我们和 AI 怎么一起生活？" } },
@@ -3775,6 +3775,13 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "门户 v2.5.3", d: "2026-11-03", t: "星历登记宙律 v0.8-α2、v0.9-α1、v0.9-α2 与天枢 2.0 C2.14a–d；宙律世界卡更新到 v0.9-α2；星桥「把两种东西混在一起，会发生什么？」⇄「能量去哪儿了？」正式点亮。" },
+        { y: "task", w: "02", v: "v0.9-α2", d: "2026-11-02", t: "「能量去哪儿了？」第 1 关换上 3D 夜景过山车：双轨、立柱、亮着车灯的小车和摩擦生热的尾迹，全部程序生成；低端设备自动回到 2D。" },
+        { y: "task", w: "02", v: "v0.9-α1", d: "2026-11-02", t: "新任务「能量去哪儿了？」：过山车、刹车片、一吨水变成电、燃料里的能量，四关跟着能量账本看能量怎样换形式却一点不少；最后一关连到元素工坊反应台。" },
+        { w: "02", v: "v0.8-α2", d: "2026-11-02", t: "规则改写台新增光速、潮汐两个实验：把光速调慢、把月亮拉近，看时间和潮水怎么变，最近能近到洛希极限。" },
+        { w: "07", v: "2.0 C2.14d", d: "2026-11-02", t: "星座成员星都有了名字：拜耳名、专名，还有中国传统星名。" },
+        { w: "07", v: "2.0 C2.14c", d: "2026-11-02", t: "飞离地球太远时会提示星座形状已经变了；星座里的每颗成员星都能锁定查看。" },
+        { w: "07", v: "2.0 C2.14a–b", d: "2026-11-02", t: "自动驾驶抵达更准；脉冲星分四档转速，读数窗不再挡画面；新增天体类别知识库和全屏详情页。" },
         { w: "gn", v: "门户 v2.5.2", d: "2026-11-02", t: "星历登记天枢 v1.0-M4j、星图 v0.8.5–v0.8.6、宙律 v0.8-α1；星图世界卡标 EN，宙律世界卡新增「实验室 ⚗」入口，星网新增星桥「恒星为什么会发光？」⇄「太阳会死吗？」。" },
         { w: "02", v: "v0.8-α1", d: "2026-11-02", t: "新开规则改写台：重力、摩擦、声速三个实验，一次只改一个变量做 A/B 对照，先猜再看，结果记进只存本机的实验记录本。" },
         { w: "01", v: "v0.8.6", d: "2026-11-02", t: "英文版第二期：10 个任务的关内文字都有了英文。" },
