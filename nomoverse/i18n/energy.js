@@ -1,0 +1,33 @@
+/* 宙律 Nomoverse · 英文词条 · energy(英文版第一期 b v0.9-α5,2026-11-03):goal、向导首问、三级提示、预测题与选项、简化模型说明、星桥标签、安全提示。
+ * 由 i18n.js 在英文模式按路径加载;术语按《中英术语表 v0.1》。 */
+window.NV_I18N && NV_I18N.add({
+  "小车从 30 m 高的第一座山顶出发,没有发动机。调第二座山的高度:让小车翻过一座 ≥ 25 m 的第二座山,再打开摩擦试一次。": "The car starts from the top of a 30 m first hill, with no engine. Adjust the second hill: get the car over a second hill ≥ 25 m tall, then turn friction on and try again.",
+  "小车连乘客按 500 kg;摩擦与空气阻力合成为 μ = 0.03 的近似(μ·m·g·s);g = 9.80665 m/s²。": "Car plus riders taken as 500 kg; friction and air resistance combined into an approximate μ = 0.03 (μ·m·g·s); g = 9.80665 m/s².",
+  "高处的小车冲下山谷时越来越快,速度是从哪里来的?爬上第二座山时又去了哪里?": "The car speeds up as it plunges into the valley. Where does that speed come from? And where does it go as the car climbs the second hill?",
+  "第二座山 34 m,比起点还高 4 m。没有摩擦时,小车能翻过去吗?": "The second hill is 34 m, 4 m higher than the start. Without friction, can the car get over it?",
+  "小车在山顶几乎不动,只有「高度」。冲到谷底时,高度变成了什么?": "At the hilltop the car barely moves; all it has is “height”. At the bottom of the valley, what has the height turned into?",
+  "没有摩擦,势能和动能只是互相换来换去,总数不变。第二座山顶要付多少「高度」?": "Without friction, potential and kinetic energy just trade back and forth; the total stays the same. How much “height” does the second hilltop cost?",
+  "第二座山必须比 30 m 低。打开摩擦后还要再低一点——摩擦把一部分能量变成了热。": "The second hill must be lower than 30 m. With friction on it must be a bit lower still: friction turns some of the energy into heat.",
+  "汽车刹停后动能去哪了?分别用 60 km/h 和 120 km/h 各刹停一次,对比刹车盘的升温。": "Where does a car's kinetic energy go when it brakes to a stop? Stop once from 60 km/h and once from 120 km/h, and compare how much the brake discs heat up.",
+  "只做数学演示,不构成驾驶或安全建议。假设动能全部变成 4 片各 8 kg 钢制刹车盘的热(上限估计,实际有一部分散到空气和轮胎);刹车减速度取 7 m/s²。": "A math demonstration only, not driving or safety advice. Assumes all the kinetic energy becomes heat in 4 steel brake discs of 8 kg each (an upper estimate; in reality some goes into the air and tires); braking deceleration taken as 7 m/s².",
+  "车速从 60 提到 120 km/h,刹停时刹车盘的升温会变成……": "If speed goes from 60 to 120 km/h, the brake-disc temperature rise when stopping becomes…",
+  "动能 ½mv² 里,速度是平方。": "In kinetic energy ½mv², speed is squared.",
+  "刹车片把动能变成热。动能是几倍,热就是几倍。": "The brakes turn kinetic energy into heat. However many times the kinetic energy, that many times the heat.",
+  "1 吨水从水库落下推动水轮机。调落差和效率,让它发的电够一盏 10 W 的 LED 灯亮满 24 小时(864 kJ);再看看效率低时多出来的能量去了哪。": "A tonne of water falls from a reservoir and drives a turbine. Adjust the drop height and efficiency so it makes enough electricity to run a 10 W LED for a full 24 hours (864 kJ); then see where the extra energy goes when efficiency is low.",
+  "只算 1 吨水一次落下;发电效率包括水轮机和发电机,大型水电站约 90%。没变成电的部分最终成了水和机器里的热(以及水流剩下的动能),账本里合并记作「热」。": "Counts a single fall of 1 tonne of water; generator efficiency covers both turbine and generator, about 90% at large hydro plants. What doesn't become electricity ends up as heat in the water and machinery (plus the water's leftover kinetic energy), logged together as “heat” in the ledger.",
+  "水从高处落下推动水轮机,发出来的电会比水的势能多吗?": "When falling water drives a turbine, can the electricity produced be more than the water's potential energy?",
+  "1 吨水从 100 m 高落下(效率 90%),发的电够 10 W 灯亮多久?": "If 1 tonne of water falls 100 m (90% efficiency), how long can its electricity run a 10 W lamp?",
+  "1 吨水的重力约 9,800 N,落下 1 m 释放约 9.8 kJ。": "A tonne of water weighs about 9,800 N; falling 1 m releases about 9.8 kJ.",
+  "灯需要 10 W × 86,400 s = 864 kJ。落差 × 效率要多大?": "The lamp needs 10 W × 86,400 s = 864 kJ. How big must drop height × efficiency be?",
+  "落差 100 m、效率 90% 约 0.88 MJ,刚好够。效率低的那部分去了哪?": "A 100 m drop at 90% efficiency gives about 0.88 MJ, just enough. Where does the lost part go when efficiency is low?",
+  "1 升汽油燃烧放出约 34 MJ 的热。把热送进热机:先用「理想热机」找到让效率超过 75% 的温度,再看看真实汽油机。": "Burning 1 liter of gasoline releases about 34 MJ of heat. Feed it into a heat engine: first use the “ideal engine” to find a temperature that pushes efficiency above 75%, then look at a real gasoline engine.",
+  "汽油热值约 4.6×10⁷ J/kg、密度约 0.74 kg/L;理想热机按卡诺效率 1 − T冷/T热(开尔文);真实汽油机取约 30%(且不超过卡诺上限)。": "Gasoline: heating value about 4.6×10⁷ J/kg, density about 0.74 kg/L; the ideal engine uses Carnot efficiency 1 − T_cold/T_hot (kelvin); a real gasoline engine is taken as about 30% (never above the Carnot limit).",
+  "汽油里的化学能,为什么只有一部分能推动汽车?": "Why can only part of gasoline's chemical energy move a car?",
+  "热源 900 K、冷端 300 K,理想热机最多能把多少热变成功?": "With a 900 K hot source and a 300 K cold side, at most how much of the heat can an ideal engine turn into work?",
+  "热机必须把一部分热排给冷端,才能一圈圈转下去。": "A heat engine must dump some heat to the cold side to keep cycling.",
+  "上限是 1 − T冷/T热。T冷/T热 要小于多少,效率才超过 75%?": "The limit is 1 − T_cold/T_hot. How small must T_cold/T_hot be for efficiency to exceed 75%?",
+  "冷端 300 K 时,热源要到 1200 K 以上。真实汽油机还有摩擦、散热,只有约 30%。": "With the cold side at 300 K, the hot source must exceed 1200 K. A real gasoline engine also loses energy to friction and cooling, so it manages only about 30%.",
+  "元素工坊 Element Forge · 反应台(反应为什么放热?)": "Element Forge · Reaction Bench (why do reactions give off heat?)",
+  "刹车一关只做数学演示,不构成驾驶或安全建议;做燃烧实验请在老师或家长陪同下进行。": "The braking level is a math demonstration only, not driving or safety advice; do any burning experiments only with a teacher or parent present.",
+  "理想热机 效率": "Ideal engine efficiency"
+});

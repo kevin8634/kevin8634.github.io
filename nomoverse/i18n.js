@@ -1,4 +1,4 @@
-/* 宙律 Nomoverse · 中英双语(英文版第一期 v0.9-α4,2026-11-03:首页、任务页通用界面、任务与关卡标题、控件与按钮)
+/* 宙律 Nomoverse · 中英双语(英文版第一期 a v0.9-α4:首页、任务页通用界面、任务与关卡标题、控件与按钮;第一期 b v0.9-α5:任务长句分包 i18n/<任务>.js,2026-11-03)
  * 规范同门户 v2.5.0 / HANDOFF v3.90:语言来源 URL ?lang= > 全站共享本机键 gn:lang(zh/en)> 默认中文;不按浏览器语言跳转;?lang= 会写回 gn:lang。
  * 英文模式逐个替换文本节点与 aria-label/title/placeholder/alt;词典没有的保留中文(缺译回退中文,不留空白)。
  * 画布(Canvas/WebGL)里的文字与关内长文案留到第二期;世界码、星桥 ID、存储键(gn:nv:*)一律不变。
@@ -132,9 +132,16 @@
     [/^难度 (\d) 星$/, "difficulty $1 stars"], [/^向导(\S+「\S+」)$/, function (m, a) { return "guide " + T(a); }],
     [/^当前:(高|中|低)(\(.+\))?。?$/, function (m, a) { return "Current: " + T(a) + "."; }],
     [/^星桥 → (.+)$/, function (m, a) { return "Star Bridge → " + T(a); }],
-    [/^♪ 声音 (开|关)$/, function (m, a) { return "♪ Sound " + (a === "开" ? "on" : "off"); }]
+    [/^♪ 声音 (开|关)$/, function (m, a) { return "♪ Sound " + (a === "开" ? "on" : "off"); }],
+    /* 第一期 b:长句外壳 */
+    [/^(?:简化模型:)+(.+)$/, function (m, a) { var y = tr(a); return y == null ? null : "Simplified model: " + y; }],
+    [/^预测:(.+)$/, function (m, a) { var y = tr(a); return y == null ? null : "Prediction: " + y; }],
+    [/^约 ([\d.,]+) (m|km|s|kg)$/, "About $1 $2"], [/^([\d.,]+) 分钟$/, "$1 min"], [/^×([\d.]+) 倍$/, "×$1"]
   ];
   window.NV_I18N = { add: function (d, r) { for (var k in d) if (Object.prototype.hasOwnProperty.call(d, k)) E[k] = d[k]; if (r) RX = r.concat(RX); }, T: function (s) { return window.NV_T(s); } };
+  /* 第一期 b(v0.9-α5):英文模式按路径加载任务分包 i18n/<任务>.js(同步 document.write,保证建页前词条就位) */
+  var PK = /\/nomoverse\/(orbit|sound|hoop|stars|tide|energy)\//.exec(location.pathname);
+  if (L === "en" && PK && document.readyState === "loading") document.write('<script src="../i18n/' + PK[1] + '.js"><\/script>');
   function rx(t) { for (var i = 0; i < RX.length; i++) { if (RX[i][0].test(t)) { var r = t.replace(RX[i][0], RX[i][1]); if (r !== t && r.indexOf("null") < 0 && !CJK.test(r)) return r; } } return null; }
   function list(t, sep, out) { /* 「A,B,C」逐段翻(读屏 aria-label 常见),任何一段缺译则整句回退 */
     if (t.indexOf(sep) < 0 || !CJK.test(t)) return null; var ok = true;
@@ -163,6 +170,7 @@
 
   /* ---------- 英文模式:逐节点替换 ---------- */
   document.documentElement.lang = "en";
+  (function () { var st = document.createElement("style"); st.textContent = '.nv-result:empty::before{content:"After you run it, compare your prediction with the actual result here."}'; (document.head || document.documentElement).appendChild(st); })();
   var SKIP = /^(SCRIPT|STYLE|CODE|KBD|PRE|TEXTAREA|CANVAS|svg|SVG|MATH)$/;
   function skip(el) { for (var p = el; p && p.nodeType === 1; p = p.parentNode) { if (SKIP.test(p.nodeName) || p.hasAttribute("data-noi18n")) return true; } return false; }
   function node(n) {
