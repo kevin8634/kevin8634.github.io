@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>身体里的钟,怎么知道几点、几月? · 生命源码</title>
+<meta name="description" content="生命源码 · 生物 · 季节与生物节律:含羞草暗箱、没有窗户的房间、光与褪黑素、分子时钟、光周期与候鸟冬眠开花、人的睡眠。">
+<meta name="theme-color" content="#060a12">
+<link rel="stylesheet" href="../ls.css">
+<style>
+.row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:14px}
+.spec{position:relative;width:min(560px,94%);height:clamp(150px,30vh,320px);flex:none}
+.r3d{position:absolute;inset:0}.r3d canvas{display:block;width:100%;height:100%}
+.chart{width:min(560px,94%);border:1px solid var(--line);border-radius:12px;background:rgba(6,16,16,.72);padding:4px 8px 6px;flex:none}
+.chart small{color:var(--mute);font-size:11px}
+.chart canvas{display:block;width:100%;height:96px}
+.ctl{display:grid;grid-template-columns:auto minmax(110px,180px) 76px;background:rgba(6,16,16,.72);border:1px solid var(--line);border-radius:12px;padding:8px 12px;gap:6px 10px;align-items:center;font-size:13px;flex:none}
+.ctl input[type=range]{accent-color:#5eead4;width:100%}
+.ctl output{color:var(--gold);font-variant-numeric:tabular-nums}
+.read{font-size:14px;color:#d1fae5;text-align:center;min-height:1.4em}
+.read b{color:var(--gold)}
+.ind{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;flex:none}
+.ind div{border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:12px;background:var(--panel);min-width:96px;text-align:center;transition:border-color .3s,box-shadow .3s}
+.ind div.on{border-color:var(--gold);box-shadow:0 0 12px rgba(226,190,120,.45);color:#fff}
+.ind small{display:block;color:var(--mute);font-size:11px}
+.bridge{background:linear-gradient(135deg,rgba(226,190,120,.25),rgba(226,190,120,.08))!important;border-color:rgba(226,190,120,.8)!important;color:#ffe9b8!important}
+@media (max-width:520px){.spec{height:clamp(120px,24vh,200px)}.chart canvas{height:70px}.ctl{grid-template-columns:auto 1fr 64px;font-size:12px;padding:6px 8px}.read{font-size:12px}}
+</style></head><body>
+<noscript>需要开启 JavaScript 才能游玩。</noscript>
+<script type="module">
+import { runTask, sleep, el, choice } from '../ls-task.js';
+import { sound, reducedMotion } from '../ls.js';
+import { mountSpec } from './r3d.js';
+
+const SEASONS = '../../starhelm/?task=seasons', SLEEP = '../../ludoterra/sleep/';
+const hh = h => { h = ((h % 24) + 24) % 24; const m = Math.round(h * 60); return `${String(Math.floor(m / 60) % 24).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; };
+
+/* 每关公用:3D 标本 + 动画循环,换关时清理 */
+function setup(api, kind) {
+  const c = api.center(); const host = el('div', { className: 'spec' }); c.append(host);
+  let spec = null, raf = 0, dead = false; const q = [];
+  mountSpec(host, kind).then(s => { if (dead) return s.dispose(); spec = s; q.forEach(x => s.set(x)); });
+  api.onCleanup(() => { dead = true; cancelAnimationFrame(raf); spec?.dispose(); });
+  return {
+    c,
+    set(x) { spec ? spec.set(x) : q.push(x); },
+    // 时间动画:dur 毫秒内 f(0→1);减少动态效果时直接到终点
+    anim(dur, f) { return new Promise(ok => { if (reducedMotion()) { f(1); return ok(); } const t0 = performance.now(); const step = now => { if (dead) return ok(); const u = Math.min(1, (now - t0) / dur); f(u); u < 1 ? raf = requestAnimationFrame(step) : ok(); }; raf = requestAnimationFrame(step); }); },
+  };
+}
+function slider(box, label, min, max, step, val, fmt) {
+  const l = el('label', { textContent: label }), i = el('input', { type: 'range', min, max, step, value: val }), o = el('output');
+  i.setAttribute('aria-label', label); const paint = () => (o.textContent = fmt(+i.value)); paint(); i.addEventListener('input', paint);
+  box.append(l, i, o); return i;
+}
+/* 小画布:x 轴为时间(小时),背景可画白天/黑夜带 */
+function chart(c, title) {
+  const w = el('div', { className: 'chart' }, `<small>${title}</small><canvas></canvas>`); c.append(w);
+  const cv = w.querySelector('canvas');
+  return (fn) => { const D = Math.min(devicePixelRatio || 1, 2), W = cv.clientWidth, H = cv.clientHeight; cv.width = W * D; cv.height = H * D; const g = cv.getContext('2d'); g.scale(D, D); g.clearRect(0, 0, W, H); fn(g, W, H); };
+}
+const bands = (g, W, H, h0, h1, isLight) => { const n = h1 - h0; for (let k = 0; k < n * 4; k++) { const h = h0 + k / 4; g.fillStyle = isLight(h) ? 'rgba(226,190,120,.10)' : 'rgba(59,111,216,.10)'; g.fillRect(k / (n * 4) * W, 0, W / (n * 4) + 1, H); } };
+const line = (g, W, H, n, f, col, top = 6, bot = 16) => { g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); for (let k = 0; k <= n; k++) { const x = k / n * W, y = H - bot - f(k / n) * (H - top - bot); k ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); };
+const axis = (g, W, H, labels) => { g.fillStyle = '#7f9a94'; g.font = '10px sans-serif'; labels.forEach(([u, t]) => g.fillText(t, Math.min(W - 28, Math.max(0, u * W - 12)), H - 3)); };
+
+/* 分子时钟:延迟负反馈 dP/dt = 1/(1+(P(t-τ)/0.5)^n) - d·P(示意模型) */
+function clockSim(tau, d, n) {
+  const dt = .1, T = 480, N = T / dt | 0, P = new Float32Array(N); P[0] = .1; const lag = tau / dt | 0;
+  for (let i = 1; i < N; i++) { const Pl = i - 1 - lag >= 0 ? P[i - 1 - lag] : .1; P[i] = P[i - 1] + dt * (1 / (1 + (Pl / .5) ** n) - d * P[i - 1]); }
+  const s = N * .6 | 0; let mx = -1, mn = 9; const pk = [];
+  for (let i = s + 1; i < N - 1; i++) { mx = Math.max(mx, P[i]); mn = Math.min(mn, P[i]); if (P[i] > P[i - 1] && P[i] >= P[i + 1]) pk.push(i * dt); }
+  const amp = mx - mn, per = pk.length > 2 ? (pk.at(-1) - pk[0]) / (pk.length - 1) : null;
+  const tail = Array.from(P.slice(N - 960 | 0)).filter((_, k) => k % 4 === 0); // 最后 96 小时
+  return { per: amp > .05 ? per : null, amp, tail, mn, mx };
+}
+/* 日长:纬度 φ、月中赤纬 δ */
+const decl = m => 23.44 * Math.sin(2 * Math.PI * ((m - .5) * 30.4 - 80) / 365);
+const dayLen = (lat, m) => { const x = -Math.tan(lat * Math.PI / 180) * Math.tan(decl(m) * Math.PI / 180); return x <= -1 ? 24 : x >= 1 ? 0 : 2 * Math.acos(x) * 180 / Math.PI / 15; };
+
+runTask('rhythm', [
+  /* 1 · 含羞草暗箱 */
+  { title: '含羞草暗箱', run(api) {
+    const S = setup(api, 'plant'), c = S.c; S.set({ open: 1, light: 1 });
+    const draw = chart(c, '叶片张开程度 · 4 天(黄 = 白天,蓝 = 黑夜)');
+    const open = h => .5 + .5 * Math.cos(2 * Math.PI * (h - 13) / 24.4);
+    const paint = (upto, dark) => draw((g, W, H) => { bands(g, W, H, 0, 96, h => !dark && (h % 24) >= 6 && (h % 24) < 18); line(g, W * Math.max(upto, .002), H, Math.max(1, Math.round(upto * 192)), u => open(u * upto * 96), '#5eead4'); axis(g, W, H, [[0, '第1天'], [.25, '第2天'], [.5, '第3天'], [.75, '第4天']]); });
+    paint(1, false);
+    const card = el('div', { className: 'read' }, '窗台上:白天叶子张开,晚上合拢。'); c.append(card);
+    api.guide.ask('把含羞草关进一个全黑的箱子,里面看不到日出日落。叶子还会按时开合吗?', ['如果开合只是被阳光"推"着走,黑暗里会怎样?', '想想你自己:半夜醒来,不看钟也大概知道几点吗?', '会。它身体里有自己的钟。']);
+    c.append(choice(api, ['会,照样按时开合', '不会,一直合着', '乱开乱合'], '会,照样按时开合', async (ok, o, box) => {
+      box.remove(); api.guide.say(ok ? '你猜对了。快进 4 天看看。' : '我们来做这个实验:关进暗箱,快进 4 天。');
+      card.innerHTML = '暗箱里:<b>没有任何光</b>。'; S.set({ light: 0 }); sound.whoosh(.8, false);
+      await S.anim(6000, u => { const h = u * 96; S.set({ open: open(h), light: 0 }); paint(u, true); card.innerHTML = `暗箱里 · 第 ${Math.min(4, Math.floor(h / 24) + 1)} 天 ${hh(h)} · 叶子张开 <b>${Math.round(open(h) * 100)}%</b>`; });
+      api.button('收起结论', () => api.win('关在全黑的箱子里,含羞草的叶子仍然大约每 24 小时开合一次。节律不是阳光"推"出来的,而是植物身体里自带的钟——1729 年法国科学家德梅朗最早做了这个实验。'), 'primary');
+    }));
+  } },
+
+  /* 2 · 没有窗户的房间 */
+  { title: '没有窗户的房间', run(api) {
+    const S = setup(api, 'clock'), c = S.c; S.set({ hour: 23, light: 0, mel: .6 });
+    const draw = chart(c, '每天几点开始睡(每一行是一天,蓝色 = 睡着)');
+    const rows = [];
+    const paint = () => draw((g, W, H) => {
+      const n = 21, rh = (H - 14) / n; g.fillStyle = 'rgba(255,255,255,.04)'; g.fillRect(0, 0, W, H - 14);
+      rows.forEach((r, i) => { const x0 = ((r.on - 12 + 24) % 24) / 24 * W, w = 8 / 24 * W; g.fillStyle = r.win ? 'rgba(226,190,120,.85)' : 'rgba(96,165,250,.85)'; g.fillRect(x0, i * rh + 1, Math.min(w, W - x0), rh - 2); if (x0 + w > W) g.fillRect(0, i * rh + 1, x0 + w - W, rh - 2); });
+      axis(g, W, H, [[0, '12:00'], [.25, '18:00'], [.5, '0:00'], [.75, '6:00']]);
+    });
+    paint();
+    const rd = el('div', { className: 'read' }, '在家时:每天大约 23:00 睡着。'); c.append(rd);
+    api.guide.ask('住进一个没有钟、没有窗户的房间,想睡就睡、想起就起。你每天开始睡的时间会怎样?', ['房间里没有任何"现在几点"的线索。', '身体里的钟走得不一定刚好是 24 小时。', '多数人会每天晚一点点。']);
+    c.append(choice(api, ['每天都一样', '每天晚一点点', '每天早一点点'], '每天晚一点点', async (ok, o, box) => {
+      box.remove(); api.guide.say('住进去 14 天看看。');
+      for (let d = 0; d < 14; d++) { const on = 23 + d * .2; rows.push({ on }); paint(); S.set({ hour: on % 24, mel: .7 }); rd.innerHTML = `第 ${d + 1} 天 · <b>${hh(on)}</b> 睡着`; sound.tone(330 + d * 12, .1, { gain: .04 }); await sleep(reducedMotion() ? 30 : 260); }
+      rd.innerHTML = '14 天里每天晚约 <b>12 分钟</b>,一共晚了约 2.6 小时 → 这个人的"一天"约 <b>24.2 小时</b>。';
+      api.guide.ask('身体的钟比 24 小时慢一点。那平时我们为什么不会越睡越晚?', ['窗户里有什么每天准时出现?', '早晨的光。', '每天早上的光帮钟"对表"。']);
+      api.button('打开窗户,每天早晨见光', async () => {
+        api.clearActions();
+        for (let d = 0; d < 7; d++) { const on = 23 + 2.6 - d * .45; rows.push({ on: Math.max(23, on), win: 1 }); paint(); S.set({ hour: Math.max(23, on) % 24, light: 1 }); await sleep(reducedMotion() ? 30 : 300); }
+        S.set({ light: 0 }); rd.innerHTML = '见到早晨的光后,睡觉时间回到 <b>23:00</b> 左右。';
+        api.button('收起结论', () => api.win('人体内在的钟一圈约 24.2 小时,比一天略长,所以叫"昼夜节律"(大约一天)。每天早晨的光替它对表,让它和地球的 24 小时对齐。'), 'primary');
+      }, 'primary');
+    }));
+  } },
+
+  /* 3 · 光来对表 */
+  { title: '光来对表', run(api) {
+    const S = setup(api, 'clock'), c = S.c;
+    const ctl = el('div', { className: 'ctl' }); c.append(ctl);
+    const eve = slider(ctl, '晚上亮灯到', 19, 24, .5, 24, v => hh(v));
+    const morn = slider(ctl, '早晨晒太阳', 0, 1, 1, 0, v => (v ? '有' : '没有'));
+    const draw = chart(c, '褪黑素(紫)· 12:00 → 次日 12:00(黄 = 亮灯 / 白天)');
+    const rd = el('div', { className: 'read' }); c.append(rd);
+    const model = () => { const e = +eve.value, m = +morn.value; const onset = 21 + Math.min(2, Math.max(0, e - 20) * .5) - (m ? .5 : 0); return { onset, e, m }; };
+    const mel = (h, md) => { const t = ((h - md.onset + 24) % 24); let v = t < 10 ? Math.sin(Math.min(1, t / 6) * Math.PI / 2) * (t > 7 ? Math.max(0, 1 - (t - 7) / 3) : 1) : 0; if (h % 24 < md.e && h % 24 >= 18 && h < 24) v *= .3; return v; };
+    let dirty = false;
+    const paint = () => { const md = model(); draw((g, W, H) => { bands(g, W, H, 12, 36, h => (h < 24 && h < md.e) || (h % 24 >= 6 + (md.m ? 0 : 1.5))); line(g, W, H, 192, u => mel(12 + u * 24, md), '#a78bfa'); axis(g, W, H, [[0, '12:00'], [.25, '18:00'], [.5, '0:00'], [.75, '6:00']]); });
+      rd.innerHTML = `褪黑素大约 <b>${hh(md.onset)}</b> 开始升高${md.onset > 21.6 ? ' · 比平时晚' : md.onset <= 21.4 ? ' · 回到平时' : ''}`; S.set({ hour: md.onset % 24, light: md.e > 21 ? 1 : 0, mel: .8 }); return md; };
+    paint();
+    api.guide.ask('现在灯一直亮到半夜。先猜:睡前一直开着很亮的灯,褪黑素(让人犯困的激素)会怎样?', ['光先被眼睛里一种特殊的感光细胞看见。', '这个信号传到大脑里的"总钟"(视交叉上核),再到松果体。', '晚上的强光会把褪黑素推迟、压低。']);
+    const go = () => { if (!dirty) return; const md = paint(); if (md.onset <= 21.4) { api.clearActions(); api.button('收起结论', () => api.win('光先被视网膜里的感光细胞看见,信号传到视交叉上核(身体的"总钟"),再告诉松果体何时分泌褪黑素。晚上的强光会推迟、压低褪黑素;早晨的光会把钟往前拨。'), 'primary'); api.guide.say('褪黑素回到平时的时间了。看看是哪两个开关起了作用。'); } };
+    c.append(choice(api, ['来得更早', '推迟、变少', '没有影响'], '推迟、变少', (ok, o, box) => {
+      box.remove(); dirty = true; api.guide.ask('你猜' + (ok ? '对了' : '的不对') + '。现在拖动开关,让褪黑素回到 21:00 前后开始升高。', ['哪个开关会把褪黑素往后推?', '把晚上亮灯的时间提前,或者早晨去晒太阳。', '晚上亮灯到 20:30 以前,再打开早晨晒太阳。']);
+      S.anim(4000, u => S.set({ hour: 12 + u * 24 }));
+    }));
+    [eve, morn].forEach(i => i.addEventListener('input', () => { sound.tone(400 + +eve.value * 10, .06, { gain: .04 }); go(); if (!dirty) paint(); }));
+  } },
+
+  /* 4 · 分子时钟 */
+  { title: '分子时钟', run(api) {
+    const S = setup(api, 'loop'), c = S.c;
+    c.append(el('div', { className: 'read' }, '<b style="color:#34d399">CLOCK/BMAL1</b> 打开 <b style="color:#a78bfa">PER/CRY</b> 基因 → PER/CRY 越积越多 → 回头关掉自己 → 分解掉 → 再打开……'));
+    const ctl = el('div', { className: 'ctl' }); c.append(ctl);
+    const tau = slider(ctl, '进核要多久', 4, 12, 1, 6, v => `${v} 小时`);
+    const deg = slider(ctl, '分解速度', .1, .5, .05, .3, v => (v < .2 ? '慢' : v < .35 ? '中' : '快') + ` ${v.toFixed(2)}`);
+    const sw = slider(ctl, '开关灵敏度', 1, 3, 1, 3, v => ['弱', '中', '强'][v - 1]);
+    const draw = chart(c, 'PER/CRY 蛋白含量 · 最近 96 小时(示意模型)');
+    const rd = el('div', { className: 'read' }); c.append(rd);
+    let predicted = false, tries = 0, t = 0, cur = null;
+    const run = () => {
+      const r = clockSim(+tau.value, +deg.value, [1, 2, 4][+sw.value - 1]); cur = r;
+      draw((g, W, H) => { line(g, W, H, r.tail.length - 1, u => (r.tail[Math.round(u * (r.tail.length - 1))] - r.mn) / Math.max(.05, r.mx - r.mn) * (r.per ? 1 : .1) + (r.per ? 0 : .45), '#c084fc'); axis(g, W, H, [[0, '0 h'], [.25, '24 h'], [.5, '48 h'], [.75, '72 h']]); });
+      rd.innerHTML = r.per ? `一圈 <b>${r.per.toFixed(1)} 小时</b>${Math.abs(r.per - 24) <= 1 ? ' · 和地球一天对上了!' : r.per < 23 ? ' · 走得太快' : ' · 走得太慢'}` : '<b>停摆了</b>:反馈太弱,含量停在一个值上不再起伏';
+      S.set({ speed: r.per ? 24 / r.per : 0, stop: r.per ? 0 : 1 });
+      sound.tone(r.per ? 220 * 24 / r.per : 110, .2, { gain: .05 });
+      if (predicted && r.per && Math.abs(r.per - 24) <= 1) { api.clearActions(); api.button('收起结论', () => api.win('细胞里的钟是一个"负反馈环":CLOCK/BMAL1 打开 PER/CRY 基因,PER/CRY 积累后又关掉自己,分解掉后再重新打开,一圈约 24 小时。这项发现获得了 2017 年诺贝尔生理学或医学奖。'), 'primary'); }
+    };
+    // 让 3D 球的大小跟着蛋白含量起伏
+    const loop = () => S.anim(1e9, () => { if (!cur) return; t += 1; const k = cur.tail.length, v = cur.per ? (cur.tail[Math.floor(t / 2) % k] - cur.mn) / Math.max(.05, cur.mx - cur.mn) : .5; S.set({ level: v }); });
+    run(); loop();
+    [tau, deg, sw].forEach(i => i.addEventListener('input', () => { tries++; run(); }));
+    api.guide.ask('现在这个钟一圈不到 18 小时,太快了。先猜:如果 PER/CRY 蛋白分解得更快,钟会怎样?', ['分解得快,"关掉自己"的状态能维持多久?', '关得短,下一圈就来得早。', '分解越快,一圈越短(仓鼠的 tau 突变就让一圈缩到约 20 小时)。']);
+    c.append(choice(api, ['走得更快(一圈变短)', '走得更慢', '马上停下来'], '走得更快(一圈变短)', (ok, o, box) => {
+      box.remove(); predicted = true; api.guide.ask('拖动三个滑杆,把钟调到 23–25 小时一圈。', ['想变慢,该让分解快还是慢?', '进核时间越长、分解越慢,一圈越长。', '试试:进核 8 小时、分解 0.25、开关强。']); run();
+    }));
+  } },
+
+  /* 5 · 读出季节 */
+  { title: '白天变短了', run(api) {
+    const S = setup(api, 'earth'), c = S.c;
+    const ctl = el('div', { className: 'ctl' }); c.append(ctl);
+    const lat = slider(ctl, '纬度(北)', 0, 60, 1, 20, v => `${v}°`);
+    const mon = slider(ctl, '月份', 1, 12, 1, 6, v => `${v} 月`);
+    const flash = slider(ctl, '夜里闪一下灯', 0, 1, 1, 0, v => (v ? '闪' : '不闪')); flash.disabled = true;
+    const rd = el('div', { className: 'read' }); c.append(rd);
+    const ind = el('div', { className: 'ind' }, `<div data-k="bird">🕊️ 候鸟<small></small></div><div data-k="bear">🐿️ 冬眠<small></small></div><div data-k="mum">🌼 菊花 · 短日<small></small></div><div data-k="spin">🥬 菠菜 · 长日<small></small></div>`); c.append(ind);
+    let stage = 0;
+    const paint = () => {
+      const L = +lat.value, m = +mon.value, d = dayLen(L, m), night = 24 - d, dn = dayLen(L, m % 12 + 1) - dayLen(L, (m + 10) % 12 + 1);
+      const fl = +flash.value, longNight = night >= 12 && !fl;
+      const mig = L >= 25 && Math.abs(dn) > 1.2 ? 1 : 0, dir = dn > 0 ? 1 : -1;
+      const cold = L >= 35 && (m >= 11 || m <= 2), hib = cold && night >= 13;
+      const set = (k, on, t) => { const e = ind.querySelector(`[data-k=${k}]`); e.classList.toggle('on', on); e.querySelector('small').textContent = t; };
+      set('bird', !!mig, mig ? (dir > 0 ? '往北飞(春)' : '往南飞(秋)') : '不动身');
+      set('bear', hib, hib ? '冬眠中' : cold ? '天冷,夜还不够长' : '活动中');
+      set('mum', longNight, longNight ? '开花' : fl ? '黑夜被打断,不开' : '夜太短,不开');
+      set('spin', night <= 10, night <= 10 ? '抽薹开花' : '只长叶子');
+      rd.innerHTML = `北纬 ${L}° · ${m} 月:白天 <b>${d.toFixed(1)} 小时</b>,黑夜 <b>${night.toFixed(1)} 小时</b>`;
+      S.set({ lat: L, month: m, mig, dir });
+      return { L, m, longNight, mig, dir, fl };
+    };
+    paint();
+    const check = () => {
+      const s = paint(); sound.tone(300 + dayLen(s.L, s.m) * 20, .08, { gain: .04 });
+      if (stage === 1 && s.longNight && s.mig && s.dir < 0) {
+        stage = 2; flash.disabled = false; api.guide.ask('菊花开了,候鸟往南飞。现在打开「夜里闪一下灯」:白天长短没变,只是长夜被一道光切成两段。菊花还会开吗?', ['植物到底在数白天,还是在数黑夜?', '把长夜切断,它还能"数"到足够长的黑夜吗?', '不会开:植物真正计时的是连续的黑夜。']);
+      }
+      if (stage === 2 && s.fl) { stage = 3; api.clearActions(); api.button('⇄ 天枢:为什么会有四季?', () => (location.href = SEASONS), 'bridge'); api.button('收起结论', () => api.win('地轴倾斜,让不同纬度、不同月份的白天长短不一样。动物和植物靠"读"黑夜的长短来判断季节:夜越长,褪黑素分泌得越久;短日植物要连续的长夜才开花,夜里闪一下灯就不开。候鸟迁徙和冬眠还要看温度、食物,但日长是最准的日历。'), 'primary'); api.guide.say('长夜被打断,菊花就不开了。想知道白天为什么会变长变短,可以走星桥去天枢看看。'); }
+    };
+    [lat, mon, flash].forEach(i => i.addEventListener('input', check));
+    api.guide.ask('海口在北纬 20° 左右,哈尔滨在北纬 46° 左右。6 月里,谁的白天更长?', ['离北极越近,夏天会怎样?', '拖动纬度滑杆比一比。', '哈尔滨:6 月白天约 15 个半小时,海口约 13 小时出头。']);
+    c.append(choice(api, ['海口', '哈尔滨', '一样长'], '哈尔滨', (ok, o, box) => {
+      box.remove(); lat.value = 46; paint(); stage = 1;
+      api.guide.ask((ok ? '对!' : '其实是哈尔滨。') + '现在找一个纬度和月份,让菊花开花、候鸟往南飞。', ['菊花要很长的黑夜。', '中高纬度的秋天,黑夜一天比一天长。', '试试北纬 40° 左右、10 月。']);
+    }));
+  } },
+
+  /* 6 · 人的睡眠 */
+  { title: '什么时候最困?', run(api) {
+    const S = setup(api, 'clock'), c = S.c;
+    const ctl = el('div', { className: 'ctl' }); c.append(ctl);
+    const wake = slider(ctl, '早上几点醒', 6, 9, .5, 7, v => hh(v));
+    const shift = slider(ctl, '生物钟往后移', 0, 3, .25, 0, v => `${v.toFixed(2).replace(/\.?0+$/, '')} 小时`);
+    const draw = chart(c, '睡眠压力(橙)与生物钟的「清醒信号」(绿) · 醒来后 24 小时');
+    const rd = el('div', { className: 'read' }); c.append(rd);
+    const model = () => { const w = +wake.value, sh = +shift.value;
+      const Sp = t => 1 - .8 * Math.exp(-t / 18);                               // 醒着越久,睡眠压力越高
+      const C = h => .55 + .32 * Math.cos(2 * Math.PI * (h - (18.5 + sh)) / 24); // 傍晚清醒信号最强
+      let gate = null; for (let t = 10; t < 22; t += .1) { if (Sp(t) - C(w + t) > .02) { gate = w + t; break; } }
+      return { w, sh, Sp, C, gate }; };
+    let moved = false, predicted = false;
+    const paint = () => { const md = model(); draw((g, W, H) => { bands(g, W, H, md.w, md.w + 24, h => (h % 24) >= 6 && (h % 24) < 18); line(g, W, H, 96, u => md.Sp(u * 24), '#fb923c'); line(g, W, H, 96, u => md.C(md.w + u * 24), '#34d399');
+        if (md.gate) { const x = (md.gate - md.w) / 24 * W; g.strokeStyle = '#ffe2a0'; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(x, 0); g.lineTo(x, H - 14); g.stroke(); g.setLineDash([]); }
+        axis(g, W, H, [[0, hh(md.w)], [.25, hh(md.w + 6)], [.5, hh(md.w + 12)], [.75, hh(md.w + 18)]]); });
+      rd.innerHTML = md.gate ? `大约 <b>${hh(md.gate)}</b> 起,睡眠压力盖过清醒信号,「睡眠之门」打开` : '这一天都很难睡着';
+      S.set({ hour: (md.gate || md.w + 16) % 24, press: .7, mel: .6, light: 0 }); return md; };
+    paint();
+    const done = () => { if (!predicted || !moved) return; api.clearActions(); api.button('⇄ 觉弈:偷走的睡眠谁来还?', () => (location.href = SLEEP), 'bridge'); api.button('收起结论', () => api.win('困不困由两件事一起决定:醒得越久,睡眠压力越高;生物钟在傍晚发出最强的清醒信号,之后才"开门"。青春期的生物钟会自然往后移 1–2 小时,所以晚上不困不全是懒。'), 'primary'); };
+    [wake, shift].forEach(i => i.addEventListener('input', () => { const md = paint(); if (i === shift && +shift.value >= 1.5) moved = true; sound.tone(260 + (md.gate || 22) * 10, .08, { gain: .04 }); done(); }));
+    api.guide.ask('很多中学生晚上 10 点还一点不困。先猜:主要是因为什么?', ['小时候和现在,身体有什么变化?', '青春期,身体里的钟会挪位置。', '生物钟往后移了。']);
+    c.append(choice(api, ['单纯是懒', '身体里的钟往后移了', '白天睡多了'], '身体里的钟往后移了', (ok, o, box) => {
+      box.remove(); predicted = true; api.guide.ask((ok ? '对。' : '主要是钟往后移了。') + '把「生物钟往后移」拖到 1.5 小时以上,看「睡眠之门」挪到几点。', ['黄色虚线就是门打开的时刻。', '绿线的峰往后移,门也跟着往后。', '拖到 2 小时,门大约晚 2 小时开。']);
+      done();
+    }));
+  } },
+]);
+</script>
+</body></html>

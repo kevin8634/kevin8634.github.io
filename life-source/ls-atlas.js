@@ -4,7 +4,7 @@ import { LAYERS, CONS, STARS } from './atlas-data.js';
 import { reducedMotion, sound } from './ls.js';
 
 const ICON = {
-  dna: '🧬', parents: '👨‍👩‍👧', zebra: '🦓', virus: '🦠', wolf: '🐺',
+  dna: '🧬', parents: '👨‍👩‍👧', zebra: '🦓', virus: '🦠', wolf: '🐺', rhythm: '⏰',
   'DNA 双螺旋': '🧬', '碱基配对': '🔗', '染色体': '🧶', '减数分裂': '🔀', '孟德尔定律': '🌱', 'ABO 血型': '🩸',
   '核糖体': '⚙️', '细胞核': '🔵', '线粒体': '🔋', '干细胞': '🌀',
   '突变': '✳️', '古 DNA': '🦴', '化石': '🐚', '自然选择': '🦋', '物种形成': '🐦',
@@ -19,6 +19,9 @@ const BRIDGES = [
   { from: 'dna', label: '星桥 → 数学图谱 · 怎样把秘密藏进数字里', href: '/math-atlas/secret/' },
   { from: 'virus', label: '星桥 → 数学图谱 · 传染病为什么会爆发', href: '/math-atlas/epidemic/' },
   { from: 'parents', label: '星桥 → 数学图谱 · 概率', href: '/math-atlas/casino/' },
+  { from: 'parents', label: '星桥 → 觉弈 · 人性本善,还是本恶?', href: '/ludoterra/nature/', da: .55 },
+  { from: 'rhythm', label: '星桥 → 天枢 · 为什么会有四季?', href: '/starhelm/?task=seasons', da: -.3 },
+  { from: 'rhythm', label: '星桥 → 觉弈 · 今晚偷走的睡眠,明天谁来还?', href: '/ludoterra/sleep/', da: .3 },
 ];
 
 export function createAtlas(cv, { onSelect, onBridge, isDone, litCon } = {}) {
@@ -151,7 +154,7 @@ const DECOR = [['⚛️', '🧪', '⚗️', '🔬'], ['🦠', '🧫', '🔵', '�
     // 金色星桥
     for (const br of BRIDGES) {
       const p = pts.find(q => q.s.id === br.from); if (!p) continue;
-      const ex = p.X + (p.X - ccx) * 9, ey = p.Y + (p.Y - ccy) * 9, ang = Math.atan2(ey - p.Y, ex - p.X);
+      const ex = p.X + (p.X - ccx) * 9, ey = p.Y + (p.Y - ccy) * 9, ang = Math.atan2(ey - p.Y, ex - p.X) + (br.da || 0);
       const L = Math.min(Math.hypot(ex - p.X, ey - p.Y), 120 * D * V.s + 60 * D), endX = p.X + Math.cos(ang) * L, endY = p.Y + Math.sin(ang) * L;
       const gr = g.createLinearGradient(p.X, p.Y, endX, endY); gr.addColorStop(0, 'rgba(226,190,120,.9)'); gr.addColorStop(1, 'rgba(226,190,120,0)');
       g.strokeStyle = gr; g.lineWidth = 1.6 * D; g.beginPath(); g.moveTo(p.X, p.Y); g.lineTo(endX, endY); g.stroke();

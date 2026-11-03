@@ -1,7 +1,7 @@
 // 生命源码 · 源码卡收集 + 关卡螺旋地图 + 过场 + 通关粒子(v0.6)
 import { store, TASKS, sound, reducedMotion } from './ls.js';
 
-export const TASK_ICON = { parents: '👨‍👩‍👧', dna: '🧬', zebra: '🦓', virus: '🦠', wolf: '🐺' };
+export const TASK_ICON = { parents: '👨‍👩‍👧', dna: '🧬', zebra: '🦓', virus: '🦠', wolf: '🐺', rhythm: '⏰' };
 const TOTAL = () => Object.values(TASKS).reduce((a, t) => a + t.levels, 0);
 export const cards = () => store.get('cards', {});
 export const cardCount = () => Object.values(cards()).reduce((a, t) => a + Object.keys(t).length, 0);

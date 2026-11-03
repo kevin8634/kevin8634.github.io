@@ -17,6 +17,7 @@ export const STARS = [
   { id: 'zebra', name: '为什么斑马会有条纹?', layer: 4, x: .4, con: 'evo', task: 'zebra' },
   { id: 'virus', name: '一场感冒是怎么在班里传开的?', layer: 4, x: .9, con: 'imm', task: 'virus' },
   { id: 'wolf', name: '狼回来之后,河流为什么变了?', layer: 5, x: .42, con: 'eco', task: 'wolf' },
+  { id: 'rhythm', name: '身体里的钟,怎么知道几点、几月?', layer: 3, x: .58, con: 'beh', task: 'rhythm' },
 
   { name: 'DNA 双螺旋', layer: 0, x: .06, con: 'gen', note: '右手螺旋,直径约 2 纳米,每圈约 10.5 个碱基对。' },
   { name: '碱基配对', layer: 0, x: .27, con: 'gen', note: 'A 对 T(2 根氢键),G 对 C(3 根氢键)。' },
