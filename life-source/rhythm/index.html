@@ -104,17 +104,17 @@ runTask('rhythm', [
     });
     paint();
     const rd = el('div', { className: 'read' }, '在家时:每天大约 23:00 睡着。'); c.append(rd);
-    api.guide.ask('住进一个没有钟、没有窗户的房间,想睡就睡、想起就起。你每天开始睡的时间会怎样?', ['房间里没有任何"现在几点"的线索。', '身体里的钟走得不一定刚好是 24 小时。', '多数人会每天晚一点点。']);
+    api.guide.ask('住进一个没有钟、没有窗户、灯光一直很暗的房间,困了就睡。你每天开始睡的时间会怎样?', ['房间里没有任何"现在几点"的线索。', '身体里的钟走得不一定刚好是 24 小时。', '多数人会每天晚一点点。']);
     c.append(choice(api, ['每天都一样', '每天晚一点点', '每天早一点点'], '每天晚一点点', async (ok, o, box) => {
       box.remove(); api.guide.say('住进去 14 天看看。');
       for (let d = 0; d < 14; d++) { const on = 23 + d * .2; rows.push({ on }); paint(); S.set({ hour: on % 24, mel: .7 }); rd.innerHTML = `第 ${d + 1} 天 · <b>${hh(on)}</b> 睡着`; sound.tone(330 + d * 12, .1, { gain: .04 }); await sleep(reducedMotion() ? 30 : 260); }
-      rd.innerHTML = '14 天里每天晚约 <b>12 分钟</b>,一共晚了约 2.6 小时 → 这个人的"一天"约 <b>24.2 小时</b>。';
+      rd.innerHTML = '14 天里每天晚约 <b>12 分钟</b>,一共晚了约 2.6 小时 → 这个人的"一天"约 <b>24.2 小时</b>(1999 年在暗光下精确测得;早年房间灯光由人自己开关,测出约 25 小时)。';
       api.guide.ask('身体的钟比 24 小时慢一点。那平时我们为什么不会越睡越晚?', ['窗户里有什么每天准时出现?', '早晨的光。', '每天早上的光帮钟"对表"。']);
       api.button('打开窗户,每天早晨见光', async () => {
         api.clearActions();
         for (let d = 0; d < 7; d++) { const on = 23 + 2.6 - d * .45; rows.push({ on: Math.max(23, on), win: 1 }); paint(); S.set({ hour: Math.max(23, on) % 24, light: 1 }); await sleep(reducedMotion() ? 30 : 300); }
         S.set({ light: 0 }); rd.innerHTML = '见到早晨的光后,睡觉时间回到 <b>23:00</b> 左右。';
-        api.button('收起结论', () => api.win('人体内在的钟一圈约 24.2 小时,比一天略长,所以叫"昼夜节律"(大约一天)。每天早晨的光替它对表,让它和地球的 24 小时对齐。'), 'primary');
+        api.button('收起结论', () => api.win('人体内在的钟一圈约 24.2 小时,比一天略长;它的英文 circadian 本意就是"大约一天"。每天早晨的光替它对表,让它和地球的 24 小时对齐。'), 'primary');
       }, 'primary');
     }));
   } },
@@ -125,7 +125,7 @@ runTask('rhythm', [
     const ctl = el('div', { className: 'ctl' }); c.append(ctl);
     const eve = slider(ctl, '晚上亮灯到', 19, 24, .5, 24, v => hh(v));
     const morn = slider(ctl, '早晨晒太阳', 0, 1, 1, 0, v => (v ? '有' : '没有'));
-    const draw = chart(c, '褪黑素(紫)· 12:00 → 次日 12:00(黄 = 亮灯 / 白天)');
+    const draw = chart(c, '褪黑素(紫)· 12:00 → 次日 12:00(黄 = 亮灯 / 白天;示意模型)');
     const rd = el('div', { className: 'read' }); c.append(rd);
     const model = () => { const e = +eve.value, m = +morn.value; const onset = 21 + Math.min(2, Math.max(0, e - 20) * .5) - (m ? .5 : 0); return { onset, e, m }; };
     const mel = (h, md) => { const t = ((h - md.onset + 24) % 24); let v = t < 10 ? Math.sin(Math.min(1, t / 6) * Math.PI / 2) * (t > 7 ? Math.max(0, 1 - (t - 7) / 3) : 1) : 0; if (h % 24 < md.e && h % 24 >= 18 && h < 24) v *= .3; return v; };
@@ -165,7 +165,7 @@ runTask('rhythm', [
     const loop = () => S.anim(1e9, () => { if (!cur) return; t += 1; const k = cur.tail.length, v = cur.per ? (cur.tail[Math.floor(t / 2) % k] - cur.mn) / Math.max(.05, cur.mx - cur.mn) : .5; S.set({ level: v }); });
     run(); loop();
     [tau, deg, sw].forEach(i => i.addEventListener('input', () => { tries++; run(); }));
-    api.guide.ask('现在这个钟一圈不到 18 小时,太快了。先猜:如果 PER/CRY 蛋白分解得更快,钟会怎样?', ['分解得快,"关掉自己"的状态能维持多久?', '关得短,下一圈就来得早。', '分解越快,一圈越短(仓鼠的 tau 突变就让一圈缩到约 20 小时)。']);
+    api.guide.ask('现在这个钟一圈不到 18 小时,太快了。先猜:如果 PER/CRY 蛋白分解得更快,钟会怎样?', ['分解得快,"关掉自己"的状态能维持多久?', '关得短,下一圈就来得早。', '分解越快,一圈越短(金仓鼠的 tau 突变让 PER 分解加快,一圈缩到约 20 小时)。']);
     c.append(choice(api, ['走得更快(一圈变短)', '走得更慢', '马上停下来'], '走得更快(一圈变短)', (ok, o, box) => {
       box.remove(); predicted = true; api.guide.ask('拖动三个滑杆,把钟调到 23–25 小时一圈。', ['想变慢,该让分解快还是慢?', '进核时间越长、分解越慢,一圈越长。', '试试:进核 8 小时、分解 0.25、开关强。']); run();
     }));
@@ -217,7 +217,7 @@ runTask('rhythm', [
     const ctl = el('div', { className: 'ctl' }); c.append(ctl);
     const wake = slider(ctl, '早上几点醒', 6, 9, .5, 7, v => hh(v));
     const shift = slider(ctl, '生物钟往后移', 0, 3, .25, 0, v => `${v.toFixed(2).replace(/\.?0+$/, '')} 小时`);
-    const draw = chart(c, '睡眠压力(橙)与生物钟的「清醒信号」(绿) · 醒来后 24 小时');
+    const draw = chart(c, '睡眠压力(橙)与生物钟的「清醒信号」(绿)· 醒来后 24 小时(示意模型)');
     const rd = el('div', { className: 'read' }); c.append(rd);
     const model = () => { const w = +wake.value, sh = +shift.value;
       const Sp = t => 1 - .8 * Math.exp(-t / 18);                               // 醒着越久,睡眠压力越高
