@@ -1,10 +1,13 @@
-# 元素工坊 v2.1 · 反应台数据校验:原子守恒、电荷守恒(离子方程式)、字段完整、安全红线(🔴 无步骤/用量字样)
+# 元素工坊 v2.1/v2.3(含 ef.react.more.json) · 反应台数据校验:原子守恒、电荷守恒(离子方程式)、字段完整、安全红线(🔴 无步骤/用量字样)
 import json, os, re, sys
 from collections import Counter
 H = os.path.dirname(os.path.abspath(__file__))
 D = json.load(open(os.path.join(H, '..', 'data', 'ef.react.json'), encoding='utf-8'))
+_M = os.path.join(H, '..', 'data', 'ef.react.more.json')
+MORE = json.load(open(_M, encoding='utf-8'))['rows'] if os.path.exists(_M) else []
+BASE = len(D['rows']); D['rows'] = D['rows'] + MORE
 def parse(f):
-    f = re.sub(r'\((浓|稀)\)', '', f)
+    f = re.sub(r'\((浓|稀|石墨|金刚石|胶体)\)', '', f)
     m = re.match(r'^(.*?)(?:\^(\d*)([+-]))?$', f); body, n, s = m.group(1), m.group(2), m.group(3)
     q = (int(n) if n else 1) * (1 if s == '+' else -1) if s else 0
     tot = Counter()
@@ -55,12 +58,14 @@ for r in D['rows']:
     if r['safe'] == 'r' and '只限专业实验室' not in r['why']: bad.append((r['id'], '🔴 缺「只限专业实验室」'))
     for x in r['r']:
         if x[3:] and x[3] == 'up' and any(y[2:3] == ['g'] for y in r['l'] if len(y) > 2): bad.append((r['id'], '反应物有气体却标↑'))
+_all = [r['id'] for r in D['rows']]
+if len(_all) != len(set(_all)): bad.append(('id 重复', [x for x in _all if _all.count(x) > 1]))
 ids = {r['id'] for r in D['rows']} | {x['id'] for x in D['contrast']}
 for m in D['mix']:
     if m[2] and m[2] not in ids: bad.append(('mix', m))
     for b in m[:2]:
         if b not in D['bottles']: bad.append(('mix 瓶名', b))
 n = len(D['rows'])
-print('条目', n, '初中', sum(r['lv'] == 'j' for r in D['rows']), '高中', sum(r['lv'] == 's' for r in D['rows']), '安全', Counter(r['safe'] for r in D['rows']))
+print('条目', n, '初中', sum(r['lv'] == 'j' for r in D['rows']), '高中', sum(r['lv'] == 's' for r in D['rows']), '选必', sum(r['lv'] == 'e' for r in D['rows']), '安全', Counter(r['safe'] for r in D['rows']))
 print('问题', len(bad)); [print(' ', *b) for b in bad]
-sys.exit(1 if bad or n != 60 else 0)
+sys.exit(1 if bad or BASE != 60 or n not in (60, 120, 140, 160, 200) else 0)
