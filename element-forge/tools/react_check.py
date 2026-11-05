@@ -7,7 +7,7 @@ _M = os.path.join(H, '..', 'data', 'ef.react.more.json')
 MORE = json.load(open(_M, encoding='utf-8'))['rows'] if os.path.exists(_M) else []
 BASE = len(D['rows']); D['rows'] = D['rows'] + MORE
 def parse(f):
-    f = re.sub(r'\((浓|稀)\)', '', f)
+    f = re.sub(r'\((浓|稀|石墨|金刚石|胶体)\)', '', f)
     m = re.match(r'^(.*?)(?:\^(\d*)([+-]))?$', f); body, n, s = m.group(1), m.group(2), m.group(3)
     q = (int(n) if n else 1) * (1 if s == '+' else -1) if s else 0
     tot = Counter()

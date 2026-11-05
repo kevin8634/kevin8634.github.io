@@ -43,6 +43,9 @@ body.mission.molecule .m-stage{border-color:rgba(214,170,90,.32);background:rgba
 .mb-tbl th{color:#c9b98f;font-weight:500}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (max-width:860px){.mb-view{height:340px}.mb-at{width:34px;height:34px}}
+.mb-look{scroll-margin-top:84px;margin:12px auto;max-width:960px;border:1px solid rgba(63,224,200,.45);border-radius:12px;padding:10px 12px;background:rgba(6,14,20,.6)}
+.mb-look-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:15px}
+.mb-look-c{font-size:13px;line-height:1.7;margin:4px 0 6px;color:#e9e2d2}
 </style>
 </head>
 <body class="molecule">
@@ -367,9 +370,27 @@ var NOTES = { title: '元素工坊 · 随手拼一个分子,世界上真的有�
   '安全:🔴 危险物质本台只说明为什么危险,不提供用途细节、制法、用量或获取渠道。请勿在现实中尝试。'],
   bridge: '<a href="../react/">把两种东西混在一起,会发生什么?</a> · <a href="../carbon/">为什么钻石和铅笔芯是同一种东西?</a>' };
 
+/* v2.3:从反应台图鉴跳来 ?look=<分子键>,在关卡上方展开一张结构卡(可拖动/切 3D,不计关卡进度) */
+function lookMode() {
+  var k = (location.search.match(/[?&]look=([0-9a-f]{8})/) || [])[1], c = k && DB.core.filter(function (x) { return x.k === k && x.m; })[0];
+  if (!c) return;
+  var app = document.getElementById('app'), box = document.createElement('section');
+  box.className = 'mb-look'; box.setAttribute('aria-label', c.zh + ' 的结构');
+  box.innerHTML = '<div class="mb-look-h"><b>' + EF.esc(c.zh) + '</b> ' + fm(c.f) + ' <span style="color:#a8a090;font-size:12px">· 来自反应台图鉴</span> <a class="ef-btn ghost" href="../react/">← 回反应台</a> <button class="ef-btn ghost" data-x>收起</button></div>' +
+    '<div class="mb-look-c">' + EF.esc(c.u) + '<br>' + safeTag(c.s) + (c.w ? '<span style="color:#d9cbb0">为什么要小心:' + EF.esc(c.w) + '</span>' : '') + '</div><div class="mb-look-s"></div>';
+  app.insertBefore(box, app.firstChild);
+  var els = []; c.m[0].forEach(function (a) { if (els.indexOf(a[0]) < 0) els.push(a[0]); });
+  var lvl = window.EFMB, b = Builder(box.querySelector('.mb-look-s'), { els: els });
+  var cx = 0, cy = 0; setTimeout(function () { var cv = box.querySelector('canvas'), r = cv ? cv.getBoundingClientRect() : { width: 600, height: 300 }; cx = r.width / 2; cy = r.height / 2;
+    b.load({ atoms: c.m[0].map(function (a) { return { e: a[0], x: cx + a[1], y: cy + a[2] }; }), bonds: c.m[1].map(function (q) { return { a: q[0], b: q[1], o: q[2] }; }) }); }, 30);
+  if (lvl) window.EFMB = lvl;
+  box.querySelector('[data-x]').onclick = function () { b.stop(); box.remove(); };
+  box.scrollIntoView({ block: 'start' });
+}
 fetch('../data/ef.molecule.json').then(function (r) { return r.json(); }).then(function (j) {
   DB = j; j.core.forEach(function (c) { if (c.b) CORE[c.k] = c; }); j.db.forEach(function (d) { AUTO[d[0]] = d; });
   EF.mission('molecule', LEVELS, NOTES);
+  lookMode();
 }, function (e) { console.warn('[ef] 分子库加载失败', e); document.getElementById('app').innerHTML = '<p style="padding:40px">分子库没加载出来,请联网后刷新。</p>'; });
 })();
 </script>

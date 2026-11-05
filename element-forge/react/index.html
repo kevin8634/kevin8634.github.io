@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>把两种东西混在一起,会发生什么? · 元素工坊 Element Forge</title>
-<meta name="description" content="元素工坊 2.0 · 反应台:60 条课本级化学反应,在全息反应环上看颜色、气泡、沉淀和热量四种证据,调速率、配平方程式、推动化学平衡。所有实验只在虚拟中发生。创世计划 Genesis 化学世界。">
+<meta name="description" content="元素工坊 2.0 · 反应台:160 条课本级化学反应(初中、高中必修、选必1),在全息反应环上看颜色、气泡、沉淀和热量四种证据,调速率、配平方程式、推动化学平衡。所有实验只在虚拟中发生。创世计划 Genesis 化学世界。">
 <meta name="theme-color" content="#070a14">
 <link rel="stylesheet" href="../ef.css?v=14">
 <style>
@@ -37,6 +37,11 @@ body.mission.react .m-stage{border-color:rgba(63,224,200,.26);background:rgba(6,
 .rx-dex .f{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
 .rx-dex .f button{font-size:12px;padding:3px 9px}
 .rx-dex .f button.on{background:rgba(255,154,60,.25)}
+.rx-dex .q{width:100%;box-sizing:border-box;background:#0a1420;border:1px solid rgba(63,224,200,.35);border-radius:8px;color:#e9eefb;font:inherit;font-size:13px;padding:5px 9px;margin-bottom:6px}
+.rx-dex .pg{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:6px;font-size:12.5px;color:#aab4cf}
+.rx-mols{margin-top:6px;font-size:12px;color:#9fe8da;pointer-events:auto}
+.rx-mol{display:inline-block;margin:2px 4px 0 0;padding:1px 8px;border:1px solid rgba(63,224,200,.5);border-radius:10px;color:#e9eefb;text-decoration:none}
+.rx-mol:hover,.rx-mol:focus{background:rgba(63,224,200,.18)}
 /* 配平 */
 .bal-eq{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;font-size:20px;margin:14px 0 8px}
 .bal-sp{display:flex;flex-direction:column;align-items:center;gap:2px}
@@ -80,9 +85,13 @@ var SAFE = { g: '🟢 家中可安全观察(须家长知情)', y: '🟡 只在�
 function safeTag(s) { return '<span class="rx-safe ' + s + '">' + SAFE[s] + '</span>'; }
 function cardHTML(r) {
   if (r.id.charAt(0) === 'x') return '<b>' + r.name + '</b> <span class="rx-safe y">对照 · 物理变化</span><br>' + r.see + '<div class="rx-why">' + safeTag(r.safe) + r.why + '</div>';
-  return '<b>' + r.name + '</b> <small>' + (r.lv === 'j' ? '初中' : '高中') + '</small><div class="rx-eq">' + eqTxt(r) + (r.cond ? '<small>条件:' + r.cond + '</small>' : '') + (r.ion ? '<small>离子方程式:' + ionTxt(r) + '</small>' : '') + '</div>' +
-    '现象:' + r.see + (r.note ? '<br><span class="note-sm">' + r.note + '</span>' : '') + '<div class="rx-why">' + safeTag(r.safe) + (r.safe === 'g' ? '' : '为什么要小心:') + r.why + '</div>';
+  return '<b>' + r.name + '</b> <small>' + LVN[r.lv] + '</small><div class="rx-eq">' + eqTxt(r) + (r.cond ? '<small>条件:' + r.cond + '</small>' : '') + (r.ion ? '<small>离子方程式:' + ionTxt(r) + '</small>' : '') + '</div>' +
+    '现象:' + r.see + (r.note ? '<br><span class="note-sm">' + r.note + '</span>' : '') + '<div class="rx-why">' + safeTag(r.safe) + (r.safe === 'g' ? '' : '为什么要小心:') + r.why + '</div>' + molLinks(r);
 }
+var LVN = { j: '初中', s: '高中必修', e: '高中选必1' }, MOLMAP = {};
+function molLinks(r) { var seen = {}, a = [];
+  r.l.concat(r.r).forEach(function (x) { (MOLMAP[x[1]] || []).forEach(function (m) { if (!seen[m[0]]) { seen[m[0]] = 1; a.push('<a class="rx-mol" href="../molecule/?look=' + m[0] + '">' + m[1] + '</a>'); } }); });
+  return a.length ? '<div class="rx-mols">去分子搭建台看结构:' + a.join('') + '</div>' : ''; }
 
 /* 2D 烧杯:低档 / 无 WebGL 时的完整替代 */
 function beaker2D(host) {
@@ -135,13 +144,19 @@ function benchView(stage) {
 }
 
 /* 第 1 关:四种证据 */
+var MORE = null;
+function loadMore() { if (MORE) return MORE;
+  MORE = Promise.all([fetch('../data/ef.react.more.json').then(function (r) { return r.json(); }).then(function (j) { j.rows.forEach(function (r) { if (!BY[r.id]) { BY[r.id] = r; D.rows.push(r); } }); }),
+    fetch('../data/ef.react.mol.json').then(function (r) { return r.json(); }).then(function (j) { MOLMAP = j; })]).catch(function (e) { console.warn('[ef] 扩充反应库加载失败', e); });
+  return MORE; }
 function L0(stage, api) {
+  (window.requestIdleCallback || function (f) { setTimeout(f, 800); })(loadMore);
   var bench = benchView(stage), sel = [], got = {}, K = { c: '颜色变化', g: '产生气体', p: '生成沉淀', h: '放热或吸热' };
   var bt = document.createElement('div'); bt.className = 'rx-bottles'; stage.appendChild(bt);
   var BC = { '硫酸铜溶液': '#3d8fe0', '氯化铁溶液': '#e8c34a', '大理石': '#eceae4', '铁钉': '#9aa1ac', '生石灰': '#f3f3f0', '白醋': '#f5f1e6', '氢氧化钠固体': '#ffffff' };
   bt.innerHTML = D.bottles.map(function (b, i) { return '<button class="rx-bot" data-i="' + i + '"><i style="background:' + (BC[b] || 'rgba(200,225,255,.35)') + '"></i>' + b + '</button>'; }).join('');
   var ev = document.createElement('div'); ev.className = 'rx-ev'; stage.appendChild(ev);
-  var row = document.createElement('div'); row.className = 'rx-row'; row.innerHTML = '<button class="ef-btn ghost" id="dexBtn">反应图鉴 · 60 条</button><span class="note-sm">也可以从图鉴里任选一条放上反应台。</span>'; stage.appendChild(row);
+  var row = document.createElement('div'); row.className = 'rx-row'; row.innerHTML = '<button class="ef-btn ghost" id="dexBtn">反应图鉴</button><span class="note-sm">也可以从图鉴里任选一条放上反应台。</span>'; stage.appendChild(row);
   var dex = document.createElement('div'); dex.className = 'rx-dex'; stage.appendChild(dex);
   function upd() { ev.innerHTML = Object.keys(K).map(function (k) { return '<span class="' + (got[k] ? 'got' : '') + '">' + (got[k] ? '✓ ' : '') + K[k] + '</span>'; }).join('');
     if (Object.keys(K).every(function (k) { return got[k]; })) api.complete(); }
@@ -153,13 +168,23 @@ function L0(stage, api) {
     var m = D.mix.filter(function (q) { return (q[0] === sel[0] && q[1] === sel[1]) || (q[0] === sel[1] && q[1] === sel[0]); })[0];
     if (m && m[2]) run(BY[m[2]]); else if (m) EF.toast(sel.join(' + ') + ':这一对本台还没收录,不代表它们不反应。'); else EF.toast(sel.join(' + ') + ':这一对本台还没收录,不代表它们不反应。换一组试试。');
     sel = []; setTimeout(function () { Array.prototype.forEach.call(bt.children, function (x) { x.classList.remove('on'); }); }, 400); }; });
-  var flt = 'all';
-  function dexDraw() { var list = D.rows.concat(D.contrast).filter(function (r) { return flt === 'all' || r.lv === flt || r.safe === flt || (flt === 'x' && r.id.charAt(0) === 'x'); });
-    dex.innerHTML = '<div class="f">' + [['all', '全部'], ['j', '初中'], ['s', '高中'], ['g', '🟢'], ['y', '🟡'], ['r', '🔴'], ['x', '对照']].map(function (f) { return '<button class="ef-btn ghost' + (f[0] === flt ? ' on' : '') + '" data-f="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>' +
-      list.map(function (r) { return '<button class="it" data-id="' + r.id + '">' + (SAFE[r.safe] || '').slice(0, 2) + ' ' + r.name + (r.l ? ' <span class="note-sm">' + eqTxt(r) + '</span>' : '') + '</button>'; }).join('');
-    Array.prototype.forEach.call(dex.querySelectorAll('.f button'), function (b) { b.onclick = function () { flt = b.dataset.f; dexDraw(); }; });
+  var flt = 'all', q = '', pg = 0, PER = 20;
+  function norm(t) { return String(t || '').replace(/[₀-₉]/g, function (d) { return '₀₁₂₃₄₅₆₇₈₉'.indexOf(d); }).toLowerCase(); }
+  function hay(r) { return norm(r.name + ' ' + (r.ch || '') + ' ' + (r.l ? r.l.concat(r.r).map(function (x) { return x[1]; }).join(' ') : '')); }
+  function dexDraw() { var all = D.rows.concat(D.contrast), nq = norm(q.trim());
+    var list = all.filter(function (r) { return (flt === 'all' || r.lv === flt || r.safe === flt || (flt === 'x' && r.id.charAt(0) === 'x')) && (!nq || hay(r).indexOf(nq) > -1); });
+    var np = Math.max(1, Math.ceil(list.length / PER)); pg = Math.min(pg, np - 1);
+    dex.innerHTML = '<div class="f">' + [['all', '全部'], ['j', '初中'], ['s', '高中必修'], ['e', '选必1'], ['g', '🟢'], ['y', '🟡'], ['r', '🔴'], ['x', '对照']].map(function (f) { return '<button class="ef-btn ghost' + (f[0] === flt ? ' on' : '') + '" data-f="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>' +
+      '<input class="q" type="search" placeholder="搜名称、化学式或章节,如 铁、CO2、第三章" aria-label="搜索反应" value="' + EF.esc(q) + '">' +
+      '<div class="ls">' + (list.length ? list.slice(pg * PER, pg * PER + PER).map(function (r) { return '<button class="it" data-id="' + r.id + '">' + (SAFE[r.safe] || '').slice(0, 2) + ' ' + r.name + (r.l ? ' <span class="note-sm">' + eqTxt(r) + '</span>' : '') + '</button>'; }).join('') : '<p class="note-sm">没有找到,换个词试试。</p>') + '</div>' +
+      '<div class="pg"><button class="ef-btn ghost" data-p="-1"' + (pg ? '' : ' disabled') + '>上一页</button><span>' + list.length + ' 条 · 第 ' + (pg + 1) + '/' + np + ' 页</span><button class="ef-btn ghost" data-p="1"' + (pg < np - 1 ? '' : ' disabled') + '>下一页</button></div>';
+    Array.prototype.forEach.call(dex.querySelectorAll('.f button'), function (b) { b.onclick = function () { flt = b.dataset.f; pg = 0; dexDraw(); }; });
+    Array.prototype.forEach.call(dex.querySelectorAll('.pg button'), function (b) { b.onclick = function () { pg += +b.dataset.p; dexDraw(); dex.scrollTop = 0; }; });
+    var inp = dex.querySelector('.q'); inp.oninput = function () { q = inp.value; pg = 0; var at = inp.selectionStart; dexDraw(); var n = dex.querySelector('.q'); n.focus(); try { n.setSelectionRange(at, at); } catch (e) {} };
     Array.prototype.forEach.call(dex.querySelectorAll('button.it'), function (b) { b.onclick = function () { run(BY[b.dataset.id]); stage.scrollIntoView({ behavior: EF.reduced ? 'auto' : 'smooth', block: 'start' }); }; }); }
-  document.getElementById('dexBtn').onclick = function () { dex.classList.toggle('on'); if (dex.classList.contains('on')) dexDraw(); };
+  var dexBtn = document.getElementById('dexBtn');
+  function dexLabel() { dexBtn.textContent = '反应图鉴 · ' + D.rows.length + ' 条'; } dexLabel();
+  dexBtn.onclick = function () { dex.classList.toggle('on'); if (dex.classList.contains('on')) { dexDraw(); loadMore().then(function () { dexLabel(); if (dex.classList.contains('on')) dexDraw(); }); } };
   upd();
 }
 
