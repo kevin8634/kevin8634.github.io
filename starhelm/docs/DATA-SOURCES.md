@@ -163,3 +163,4 @@
 | sh.sundie 太阳演化轨迹(温度、光度、半径随年龄) | 1 倍太阳质量恒星演化模型的公开取整值(主序约 100 亿年、红巨星顶点约 3100 K / 2700 L☉ / 约 180 R☉、白矮星约 0.012 R☉) | 教学取整,画面注「示意」;不引入第三方图表 |
 | 恒星特写(三层着色器)、颜色(B−V → 温度 Ballesteros 2012 公式 → 黑体近似色) | 本世界程序生成 | 原创代码;特写大小为示意 |
 | 背景星空 | 沿用 SHFX3D.skyMesh(NASA SVS Deep Star Maps 2020,见上文) | 同上 |
+| cathead-vis/nir/mir.webp | 猫头星云 HH 903 哈勃 WFC3 / 韦布 NIRCam / 韦布 MIRI(ESA/Webb weic2622b/e/f,2026-10-29,同视场) | 哈勃 NASA, ESA, STScI;韦布 NASA, ESA, CSA, STScI;Image Processing: J. DePasquale (STScI) · CC BY 4.0 |

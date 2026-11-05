@@ -27,6 +27,7 @@
 | 创生之柱 可见/近红外/中红外(arc/pillars-*、sv-pillars.jpg) | 星档馆、航行页星域 V | ESA/Hubble heic1501a;ESA/Webb weic2216a、weic2218a | CC BY 4.0 | NASA, ESA, CSA, STScI 等 | 否 | 展品署名、航行页角注 |
 | 蟹状星云 可见/红外/X 射线(arc/crab-*) | 星档馆 | ESA/Hubble heic0515a;ESA/Webb weic2326a;Chandra NASA/CXC/SAO | CC BY 4.0 / NASA 署名使用 | 见展品 | 否 | 展品署名 |
 | 宇宙悬崖 arc/cliffs、sv-cliffs.jpg | 星档馆、航行页 | ESA/Webb weic2205a | CC BY 4.0 | NASA, ESA, CSA, STScI | 否 | 展品署名、航行页角注 |
+| 猫头星云 HH 903 可见光/近红外/中红外(arc/cathead-vis、cathead-nir、cathead-mir) | 天枢天文台「恒星与星云」三波段对照展品(v1.0-M4l) | ESA/Webb weic2622b(Hubble WFC3)、weic2622e(NIRCam,对齐 WFC3 视场)、weic2622f(MIRI,对齐 WFC3 视场),2026-10-29 https://esawebb.org/news/weic2622/ | CC BY 4.0(esawebb.org/copyright) | 哈勃:NASA, ESA, STScI. Image Processing: J. DePasquale (STScI);韦布:NASA, ESA, CSA, STScI. Image Processing: J. DePasquale (STScI) | 否(波长条为程序示意,已标「示意图」) | 信息卡与页脚逐波段署名 |
 | 韦布第一深场 arc/deep、sv-deepfield.jpg | 星档馆、航行页星域 VII | ESA/Webb weic2209a | CC BY 4.0 | NASA, ESA, CSA, STScI | 否 | 展品署名、航行页角注 |
 | M87* 黑洞 arc/m87 | 星档馆 | ESO eso1907a | CC BY 4.0 | EHT Collaboration | 否 | 展品署名 |
 | 满月 arc/moon | 天枢天文台 | Gregory H. Revera(Commons) | CC BY-SA 3.0 | Gregory H. Revera | 否 | 目镜卡署名 |

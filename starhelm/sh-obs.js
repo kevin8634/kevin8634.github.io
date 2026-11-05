@@ -2,6 +2,8 @@
  * 王磊 10-23:星档馆改为天文台。点击 → 圆顶天窗打开、望远镜转向目标、镜头沿镜筒「一镜到底」推进,画面收成圆形目镜;
  * 目镜里先是星空,再一路放大到探测器/望远镜实拍。左侧按距离由近到远分七类目录,右侧信息卡注明怎么拍、多远、来源署名;
  * 多波段目标底部可切换「眼睛」(可见光/红外/X 射线/射电)。
+ * v1.0-M4l(11-05):猫头星云 HH 903 三波段对照展品(哈勃 WFC3 / 韦布 NIRCam / 韦布 MIRI,同视场对齐):单张 · 滑块对照 · 3D 三层叠片,
+ *   附「为什么红外能穿透尘埃」波长条(示意);深链 ?obs=cathead。
  * 图像全部为公开授权真实影像,自托管于 arc/;署名见每条与 docs/DATA-SOURCES.md。存储 gn:sh:obs */
 (function () {
   'use strict';
@@ -25,9 +27,9 @@
   ];
   var CAT_OF = { sun: 'sun', earth: 'sun', pbd: 'edge', jupiter: 'pl', pillars: 'neb', crab: 'neb', cliffs: 'neb', m87: 'gal', deep: 'deep' };
   var SCOPE_OF = { sun: '太阳动力学天文台 SDO', earth: '阿波罗 17 号 · 哈苏相机', pbd: '旅行者 1 号', jupiter: '哈勃空间望远镜', pillars: '哈勃 / 韦布空间望远镜', crab: '哈勃 / 韦布 / 钱德拉', cliffs: '韦布空间望远镜', m87: '事件视界望远镜 EHT', deep: '韦布空间望远镜' };
-  var RADEC = { n159: [84.9, -69.77], pillars: [274.70, -13.84], crab: [83.63, 22.01], cliffs: [159.20, -58.62], m87: [187.71, 12.39], deep: [110.83, -73.45] };
+  var RADEC = { cathead: [161.499, -60.107], n159: [84.9, -69.77], pillars: [274.70, -13.84], crab: [83.63, 22.01], cliffs: [159.20, -58.62], m87: [187.71, 12.39], deep: [110.83, -73.45] };
   var BODY = { sun: 'Sun', moon: 'Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto', io: 'Jupiter', europa: 'Jupiter' };
-  function V(zh, k, img, t, cr) { return { zh: zh, k: k, img: img, t: t, cr: cr }; }
+  function V(zh, k, img, t, cr, sc, w) { return { zh: zh, k: k, img: img, t: t, cr: cr, sc: sc, w: w }; }
   var NEW = [
     { id: 'moon', cat: 'sun', zh: '满月', en: 'THE FULL MOON', dist: '约 38 万 km', light: '1.3 秒', scope: '地面望远镜 · 加州',
       how: '2010 年天文爱好者 Gregory H. Revera 在美国亚利桑那州用一台 9.25 英寸望远镜拍摄,多张照片拼合。',
@@ -73,6 +75,13 @@
       how: '2015 年 7 月 14 日新视野号飞掠冥王星前约 45 万 km 处拍摄,LORRI 黑白相机叠加 Ralph 彩色数据。',
       bands: [V('真彩色', 'vis', 'pluto', '右下那块心形的亮区是氮冰平原「斯普特尼克平原」。', 'NASA / JHUAPL / SwRI(公有领域)')],
       fact: '新视野号飞了 9 年半才到冥王星。' },
+    { id: 'cathead', cat: 'neb', cmp: 1, ir: 1, zh: '猫头星云 · 三波段', en: "CAT'S HEAD NEBULA · HH 903", dist: '约 7500 光年', light: '约 7500 年', scope: '哈勃 WFC3 · 韦布 NIRCam · 韦布 MIRI',
+      how: '船底座星云南部的一根尘埃柱,像一只背对我们坐着、把头扭向右边的猫。哈勃 2026 年 1 月拍可见光,韦布拍近红外和中红外,三张对齐到同一视场,ESA/Webb 2026-10-29 发布。HH 903 是从这根柱子中部喷出的一对喷流。',
+      bands: [
+        V('可见光', 'vis', 'cathead-vis', '暗褐色的尘埃柱把后面的光全挡住了。红色的「猫眼」可能是一颗还裹在尘埃里的年轻恒星;右侧黄色亮边是被附近大质量星的紫外线照亮、正在被慢慢「蒸发」的气体。滤镜记录了氧、氢、硫的发光。', 'NASA, ESA, STScI;图像处理 J. DePasquale (STScI)(CC BY 4.0)', '哈勃空间望远镜 WFC3', '0.4–0.8 µm'),
+        V('近红外', 'nir', 'cathead-nir', '同一根柱子变得半透明,表面的褶皱看得清清楚楚;背后冒出密密麻麻的恒星(蓝、黄),甚至还能透过银河看到远处的背景星系。有些星即使在红外里也还裹着尘埃。', 'NASA, ESA, CSA, STScI;图像处理 J. DePasquale (STScI)(CC BY 4.0)', '韦布空间望远镜 NIRCam', '约 1–5 µm'),
+        V('中红外', 'mir', 'cathead-mir', '这一次发光的是尘埃自己:温暖的尘埃和含碳大分子(PAH)勾出细丝和小球,柱子左边的丝缕最明显。右边黄色的亮点可能是一颗埋在尘埃里的婴儿星。', 'NASA, ESA, CSA, STScI;图像处理 J. DePasquale (STScI)(CC BY 4.0)', '韦布空间望远镜 MIRI', '约 5–28 µm')],
+      fact: '猫头的形状是周围大质量星的紫外线和星风一点点「雕」出来的:稀的气体被吹走,密的部分暂时还扛得住,里面正在生出新的恒星。' },
     { id: 'n159', cat: 'neb', zh: 'N159 恒星摇篮', en: 'N159 · LMC', dist: '约 16.1 万光年', light: '约 16.1 万年', scope: '韦布空间望远镜 NIRCam',
       how: '韦布近红外相机拍摄,ESA/Webb 2026 年 10 月 22 日发布的「本月图片」。N159 在银河系的卫星星系大麦哲伦云里,画面宽约 230 光年。',
       bands: [V('近红外', 'nir', 'n159', '橙色云是含碳大分子(PAH)发光,淡蓝是被大质量星紫外线电离的氢,横穿中央的暗红细丝是最冷最密的分子氢,护着刚出生的恒星。', 'ESA/Webb, NASA & CSA, E. Sabbi, M. Zamani (ESA/Webb);致谢 M. H. Özsaraç(CC BY 4.0)')],
@@ -209,13 +218,13 @@
     r.innerHTML = '<canvas class="ob-cv"></canvas><div class="ob-vig"></div>' +
       '<header class="ob-hd"><div class="ob-ttl"><small>STARHELM OBSERVATORY</small><b>天枢天文台</b></div><span class="ob-cnt"></span><button class="ob-x" type="button" aria-label="关闭">✕</button></header>' +
       '<aside class="ob-cat"></aside>' +
-      '<div class="ob-eye"><div class="ob-lens"><div class="ob-slew"></div><img class="ob-img" alt=""><div class="ob-cross"></div></div>' +
+      '<div class="ob-eye"><div class="ob-lens"><div class="ob-slew"></div><img class="ob-img" alt=""><img class="ob-img2" alt=""><div class="ob-split" role="slider" tabindex="0" aria-label="对照分割线" aria-valuemin="0" aria-valuemax="100"><i></i><span class="ob-sl ob-sl--l"></span><span class="ob-sl ob-sl--r"></span></div><div class="ob-stk"></div><div class="ob-cross"></div></div>' +
       '<svg class="ob-ring" viewBox="0 0 200 200"></svg><div class="ob-coord"><span class="ob-ra"></span><span class="ob-dec"></span></div><div class="ob-scope"></div></div>' +
-      '<aside class="ob-info"></aside><div class="ob-bands"></div>' +
+      '<aside class="ob-info"></aside><div class="ob-bands"></div><div class="ob-mode" hidden></div>' +
       '<div class="ob-hint">点击目录选择目标 · 望远镜会转过去</div>' +
       '<p class="ob-cr"></p>';
     document.body.appendChild(r);
-    ['cv', 'cat', 'eye', 'img', 'ring', 'ra', 'dec', 'scope', 'info', 'bands', 'cnt', 'x', 'cr', 'slew', 'hint'].forEach(function (k) { U[k] = r.querySelector('.ob-' + k); });
+    ['cv', 'cat', 'eye', 'img', 'img2', 'split', 'stk', 'mode', 'lens', 'ring', 'ra', 'dec', 'scope', 'info', 'bands', 'cnt', 'x', 'cr', 'slew', 'hint'].forEach(function (k) { U[k] = r.querySelector('.ob-' + k); });
     U.x.onclick = close;
     addEventListener('keydown', function (e) { if (!U.root.hidden && e.key === 'Escape') close(); });
     // 刻度环
@@ -223,7 +232,7 @@
     for (var i = 0; i < 120; i++) { var a = i * 3 * Math.PI / 180, l = i % 10 === 0 ? 7 : i % 5 === 0 ? 4.5 : 2.5; s += '<line x1="' + (100 + Math.sin(a) * 97).toFixed(2) + '" y1="' + (100 - Math.cos(a) * 97).toFixed(2) + '" x2="' + (100 + Math.sin(a) * (97 - l)).toFixed(2) + '" y2="' + (100 - Math.cos(a) * (97 - l)).toFixed(2) + '"/>'; }
     s += '<g class="ob-rg"><path d="M100 3 l3 6 h-6z" class="mk"/></g>';
     U.ring.innerHTML = s; U.rg = U.ring.querySelector('.ob-rg');
-    buildCat();
+    buildCat(); cmpInit();
   }
   function buildCat() {
     var html = '<div class="ob-ch">目录 · 由近到远</div>';
@@ -242,7 +251,7 @@
   function count() { if (U.cnt) U.cnt.textContent = '已观测 ' + ST.seen.filter(function (id) { return EX.some(function (E) { return E.id === id; }); }).length + ' / ' + EX.length; }
   function pick(i) {
     var E = EX[i]; if (!E) return;
-    L.cur = i; L.band = 0; P('click');
+    L.cur = i; L.band = 0; P('click'); setMode('one', true);
     U.cat.querySelectorAll('.ob-it').forEach(function (b) { b.classList.toggle('is-on', +b.dataset.i === i); });
     // 望远镜转向:按赤经赤纬给一个高度/方位
     var rd = radec(E) || [((i * 47) % 360), 20];
@@ -253,7 +262,7 @@
     if (ST.seen.indexOf(E.id) < 0) { ST.seen.push(E.id); save(); count(); var it = U.cat.querySelector('.ob-it[data-i="' + i + '"]'); if (it) it.classList.add('seen'); }
     U.hint.hidden = true;
     slewTo(E.bands[0]);
-    info(); bands();
+    info(); bands(); modes();
   }
   function slewTo(B) {
     // 一镜到底:旧图缩回星空 → 拖影转向 → 新图从远处一路放大
@@ -267,17 +276,19 @@
   function info() {
     var E = EX[L.cur], B = E.bands[L.band];
     U.info.innerHTML = '<small>' + CATS.filter(function (c) { return c.k === E.cat; })[0].zh + '</small><b>' + E.zh + '</b><em>' + E.en + '</em>' +
-      '<dl><dt>距离</dt><dd>' + E.dist + '</dd><dt>光走到我们</dt><dd>' + E.light + '</dd><dt>拍摄</dt><dd>' + (E.scope || '—') + '</dd><dt>波段</dt><dd>' + B.zh + '</dd></dl>' +
-      '<h4>怎么拍的</h4><p>' + E.how + '</p><h4>这一张</h4><p>' + B.t + '</p><p class="ob-fact">' + E.fact + '</p><p class="ob-src">影像来源:' + B.cr + '</p>';
+      '<dl><dt>距离</dt><dd>' + E.dist + '</dd><dt>光走到我们</dt><dd>' + E.light + '</dd><dt>拍摄</dt><dd>' + (B.sc || E.scope || '—') + '</dd><dt>波段</dt><dd>' + B.zh + (B.w ? ' · ' + B.w : '') + '</dd></dl>' +
+      '<h4>怎么拍的</h4><p>' + E.how + '</p><h4>这一张</h4><p>' + B.t + '</p><p class="ob-fact">' + E.fact + '</p>' + (E.ir ? irHTML() : '') + '<p class="ob-src">影像来源:' + (E.cmp && L.mode !== 'one' ? '哈勃 ' + E.bands[0].cr + ';韦布 ' + E.bands[1].cr : B.cr) + '</p>';
     U.info.classList.add('on');
-    U.cr.textContent = '影像:' + B.cr + ' · 公开授权影像,不代表任何机构背书';
+    U.cr.textContent = '影像:' + (E.cmp && L.mode !== 'one' ? '哈勃 ' + E.bands[0].cr + ' · 韦布 ' + E.bands[1].cr : B.cr) + ' · 公开授权影像,不代表任何机构背书';
+    if (B.sc) U.scope.textContent = L.mode === 'one' ? B.sc : E.scope;
   }
   function bands() {
     var E = EX[L.cur]; U.bands.innerHTML = '';
     U.bands.hidden = E.bands.length < 2; if (E.bands.length < 2) return;
     E.bands.forEach(function (B, j) {
       var b = h('button', 'ob-b ob-b--' + B.k + (j === L.band ? ' is-on' : ''), B.zh); b.type = 'button';
-      b.onclick = function () { if (j === L.band) return; L.band = j; U.bands.querySelectorAll('.ob-b').forEach(function (x, m) { x.classList.toggle('is-on', m === j); }); swapBand(B); info(); P('click'); };
+      if (L.mode === 'cmp') { if (j === 0) { b.className = 'ob-b ob-b--vis is-fix'; b.innerHTML = '可见光 ◀'; } else b.className = 'ob-b ob-b--' + B.k + (j === L.r ? ' is-on' : ''); }
+      b.onclick = function () { if (L.mode === 'cmp') { if (j === 0 || j === L.r) return; L.r = j; L.band = j; bands(); cmpSet(L.sx, true); info(); P('click'); return; } if (L.mode === 'stk') { L.band = j; bands(); stkFocus(j); info(); P('click'); return; } if (j === L.band) return; L.band = j; U.bands.querySelectorAll('.ob-b').forEach(function (x, m) { x.classList.toggle('is-on', m === j); }); swapBand(B); info(); P('click'); };
       U.bands.appendChild(b);
     });
   }
@@ -286,7 +297,74 @@
     setTimeout(function () { img.src = 'arc/' + B.img + '.webp'; }, 260);
     setTimeout(function () { U.eye.classList.remove('scan'); }, 700);
   }
-  function showEye() { U.root.classList.add('eye-on'); if (L.cur < 0) setTimeout(function () { pick(0); }, 400); }
+  function showEye() { U.root.classList.add('eye-on'); if (L.cur < 0) setTimeout(function () { var w = L.want ? EX.map(function (E) { return E.id; }).indexOf(L.want) : -1; if (w >= 0) { L.cat = EX[w].cat; buildCat(); } pick(Math.max(0, w)); }, 400); }
+
+  /* ---------------- M4l 对照展品:单张 / 滑块对照 / 三层叠片 ---------------- */
+  var RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function modes() {
+    var E = EX[L.cur]; U.mode.hidden = !E.cmp; U.mode.innerHTML = ''; if (!E.cmp) return;
+    [['one', '单张'], ['cmp', '滑块对照'], ['stk', '三层叠片']].forEach(function (m) {
+      var b = h('button', 'ob-m' + (L.mode === m[0] ? ' is-on' : ''), m[1]); b.type = 'button'; b.dataset.m = m[0];
+      b.onclick = function () { if (L.mode !== m[0]) { setMode(m[0]); P('click'); } }; U.mode.appendChild(b);
+    });
+  }
+  function setMode(m, quiet) {
+    var E = EX[L.cur]; if (!E || (!E.cmp && m !== 'one')) m = 'one';
+    L.mode = m; U.eye.classList.toggle('cmp', m === 'cmp'); U.eye.classList.toggle('stk', m === 'stk');
+    if (m !== 'stk') { U.stk.classList.remove('in'); U.stk.innerHTML = ''; }
+    if (quiet) return;
+    if (m === 'one') U.img.src = 'arc/' + E.bands[L.band].img + '.webp';
+    if (m === 'cmp') {
+      if (!L.r || L.r >= E.bands.length) L.r = 1; L.band = L.r;
+      U.img.src = 'arc/' + E.bands[0].img + '.webp'; cmpSet(0.12, true);
+      if (!RM) { var t0 = performance.now(); (function sw(t) { var k = Math.min(1, Math.max(0, (t - t0) / 1400)); cmpSet(0.12 + 0.38 * (1 - Math.pow(1 - k, 3))); if (k < 1 && L.mode === 'cmp') requestAnimationFrame(sw); })(t0); } else cmpSet(0.5);
+    }
+    if (m === 'stk') stkBuild();
+    modes(); bands(); info();
+  }
+  function cmpSet(x, img) {
+    var E = EX[L.cur]; L.sx = Math.max(0.06, Math.min(0.94, x));
+    if (img) U.img2.src = 'arc/' + E.bands[L.r].img + '.webp';
+    var px = L.sx * 100; U.split.style.left = px + '%';   // 图片占 lens 的 6%–94%
+    var cut = Math.max(0, Math.min(100, (px - 6) / 88 * 100));
+    U.img2.style.clipPath = 'inset(0 0 0 ' + cut.toFixed(2) + '%)';
+    U.split.setAttribute('aria-valuenow', Math.round(px));
+    U.split.querySelector('.ob-sl--l').textContent = E.bands[0].zh; U.split.querySelector('.ob-sl--r').textContent = E.bands[L.r].zh;
+  }
+  function cmpInit() {
+    var drag = false;
+    function at(e) { var r = U.lens.getBoundingClientRect(); cmpSet((e.clientX - r.left) / r.width); }
+    U.lens.addEventListener('pointerdown', function (e) { if (L.mode !== 'cmp') return; drag = true; try { U.lens.setPointerCapture(e.pointerId); } catch (x) { } at(e); e.preventDefault(); });
+    U.lens.addEventListener('pointermove', function (e) { if (drag && L.mode === 'cmp') at(e); });
+    ['pointerup', 'pointercancel'].forEach(function (n) { U.lens.addEventListener(n, function () { drag = false; }); });
+    U.split.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft') { cmpSet(L.sx - 0.04); e.preventDefault(); } if (e.key === 'ArrowRight') { cmpSet(L.sx + 0.04); e.preventDefault(); } });
+  }
+  function stkBuild() {
+    var E = EX[L.cur], S = U.stk; S.innerHTML = ''; S.classList.remove('in');
+    var sc = h('div', 'ob-sc'); S.appendChild(sc);
+    var beam = h('div', 'ob-beam'); sc.appendChild(beam);
+    for (var q = 0; q < (MOBILE ? 18 : 42); q++) { var d = h('i', 'ob-ph'); d.style.setProperty('--y', (Math.random() * 90 - 45).toFixed(1) + 'px'); d.style.setProperty('--x', (Math.random() * 60 - 30).toFixed(1) + 'px'); d.style.animationDelay = (-Math.random() * 3).toFixed(2) + 's'; d.style.setProperty('--c', ['#9fd8ff', '#ffb070', '#ff7a5a'][q % 3]); beam.appendChild(d); }
+    E.bands.forEach(function (B, j) {
+      var pl = h('button', 'ob-pl ob-pl--' + B.k, '<img src="arc/' + B.img + '.webp" alt="' + E.zh + ' ' + B.zh + '"><span><b>' + B.zh + '</b><small>' + (B.w || '') + '</small></span>');
+      pl.type = 'button'; pl.style.setProperty('--j', j); pl.onclick = function () { L.band = j; bands(); stkFocus(j); info(); P('click'); };
+      sc.appendChild(pl);
+    });
+    S.appendChild(h('p', 'ob-stk-cap', '波长由短到长 → 越往后,越能穿过尘埃'));
+    void S.offsetWidth; S.classList.add('in'); stkFocus(L.band);
+  }
+  function stkFocus(j) { U.stk.querySelectorAll('.ob-pl').forEach(function (p, k) { p.classList.toggle('is-on', k === j); }); }
+  function irHTML() {
+    function X(um) { return 10 + (Math.log10(um) + 1) / (Math.log10(30) + 1) * 260; }   // 对数轴 0.1–30 µm
+    function seg(a, b, c, t) { return '<rect x="' + X(a).toFixed(1) + '" y="22" width="' + (X(b) - X(a)).toFixed(1) + '" height="9" rx="3" fill="' + c + '" opacity=".9"/><text x="' + ((X(a) + X(b)) / 2).toFixed(1) + '" y="44" fill="' + c + '" text-anchor="middle">' + t + '</text>'; }
+    var svg = '<svg class="ob-ir" viewBox="0 0 280 66" role="img" aria-label="波长与尘埃遮挡示意">' +
+      '<defs><linearGradient id="obDust" x1="0" x2="1"><stop offset="0" stop-color="#a8704a"/><stop offset=".5" stop-color="#a8704a" stop-opacity=".4"/><stop offset="1" stop-color="#a8704a" stop-opacity=".04"/></linearGradient></defs>' +
+      '<text x="10" y="8" fill="#c99a78">尘埃挡光:强 → 弱</text><rect x="10" y="11" width="260" height="6" rx="3" fill="url(#obDust)"/>' +
+      seg(0.4, 0.8, '#7fd8ef', '可见光') + seg(1, 5, '#ffb070', '近红外') + seg(5, 28, '#ff7a5a', '中红外') +
+      '<line x1="' + X(0.1).toFixed(1) + '" y1="18" x2="' + X(0.1).toFixed(1) + '" y2="50" stroke="#ffd58a" stroke-dasharray="2 2"/><text x="' + (X(0.1) + 2).toFixed(1) + '" y="60" fill="#ffd58a">尘粒约 0.1 µm</text>' +
+      '<text x="270" y="60" fill="#6f93a8" text-anchor="end">波长 µm(对数)</text></svg>';
+    return '<h4>为什么红外能穿透尘埃?</h4>' + svg +
+      '<p>星云里的尘埃颗粒大多只有零点几微米,和可见光的波长差不多,最擅长把这种光挡住、散开,所以哈勃看到的是一根黑柱子。波长越长,光越容易从颗粒旁边「绕过去」:近红外能穿过一部分尘埃,露出后面的恒星和星系;到了中红外,看到的反而是被加热的尘埃自己在发光。</p><p class="ob-note">波长条为示意图,三张影像均为实拍。</p>';
+  }
 
   function pauseLE(p) {
     var lr = window.LE && LE.scene && LE.scene.renderer; if (!lr) return;
@@ -357,10 +435,36 @@
       '.ob-bands{position:absolute;left:50%;bottom:28px;transform:translateX(-50%);display:flex;gap:8px;z-index:3;opacity:0;transition:opacity .6s}.ob-bands[hidden]{display:none}',
       '.ob-b{padding:7px 14px;border-radius:999px;border:1px solid rgba(127,216,239,.35);background:rgba(4,14,26,.7);color:#cfefff;font-size:12px;cursor:pointer}.ob-b.is-on{background:rgba(63,224,255,.22);border-color:#7fd8ef;color:#fff;box-shadow:0 0 16px rgba(63,224,255,.35)}',
       '.ob-b--nir.is-on,.ob-b--mir.is-on{background:rgba(255,140,80,.25);border-color:#ffa070}.ob-b--xray.is-on{background:rgba(170,120,255,.25);border-color:#b48cff}',
+      '.ob-img2{position:absolute;inset:6%;width:88%;height:88%;object-fit:contain;display:none;pointer-events:none}.ob-eye.cmp .ob-img2{display:block}',
+      '.ob-split{position:absolute;top:0;bottom:0;left:50%;width:0;display:none;z-index:2;outline:none}.ob-eye.cmp .ob-split{display:block}',
+      '.ob-split i{position:absolute;top:4%;bottom:4%;left:-1px;width:2px;background:linear-gradient(transparent,#bff4ff 15%,#fff 50%,#bff4ff 85%,transparent);box-shadow:0 0 12px #3fe0ff,0 0 30px rgba(63,224,255,.6)}',
+      '.ob-split i::after{content:"⟷";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(4,14,26,.85);border:1px solid #7fd8ef;color:#fff;font-size:15px;box-shadow:0 0 18px rgba(63,224,255,.7)}',
+      '.ob-split:focus-visible i::after{outline:2px solid #ffc861}',
+      '.ob-sl{position:absolute;top:16%;font-size:11px;letter-spacing:.14em;color:#fff;padding:3px 8px;border-radius:999px;background:rgba(4,14,26,.72);border:1px solid rgba(127,216,239,.45);white-space:nowrap}.ob-sl--l{right:12px}.ob-sl--r{left:12px;border-color:rgba(255,160,112,.65)}',
+      '.ob-eye.cmp .ob-lens{pointer-events:auto;cursor:ew-resize;touch-action:none}',
+      '.ob-stk{position:absolute;inset:0;display:none;perspective:900px;z-index:2}.ob-eye.stk .ob-stk{display:block;pointer-events:auto}.ob-eye.stk .ob-img{opacity:.1!important;filter:blur(6px)!important}',
+      '.ob-sc{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateY(-30deg) rotateX(6deg)}',
+      '.ob-pl{position:absolute;left:50%;top:47%;width:30%;aspect-ratio:1200/1767;padding:0;border:1px solid rgba(127,216,239,.6);border-radius:6px;background:#000;cursor:pointer;transform:translate(-50%,-50%) translateZ(-260px) scale(.4);opacity:0;transition:transform 1.2s cubic-bezier(.2,.8,.2,1),opacity .8s,box-shadow .4s,filter .4s;box-shadow:0 0 18px rgba(63,224,255,.4)}',
+      '.ob-stk.in .ob-pl{opacity:.88;transform:translate(-50%,-50%) translateX(calc((var(--j) - 1) * 108%)) translateZ(calc((1 - var(--j)) * 80px))}',
+      '.ob-stk.in .ob-pl:nth-child(3){transition-delay:.12s}.ob-stk.in .ob-pl:nth-child(4){transition-delay:.24s}',
+      '.ob-pl img{width:100%;height:100%;object-fit:cover;border-radius:5px;display:block}',
+      '.ob-pl span{position:absolute;left:-20%;right:-20%;top:calc(100% + 6px);text-align:center;color:#e8f2ff;pointer-events:none}.ob-pl b{display:block;font-size:12px}.ob-pl small{font-size:10px;color:#8fb3c7;white-space:nowrap}',
+      '.ob-pl--nir{border-color:rgba(255,176,112,.75);box-shadow:0 0 18px rgba(255,150,90,.4)}.ob-pl--mir{border-color:rgba(255,122,90,.75);box-shadow:0 0 18px rgba(255,100,70,.4)}',
+      '.ob-stk.in .ob-pl.is-on{opacity:1;filter:brightness(1.15);box-shadow:0 0 0 2px #fff,0 0 44px rgba(63,224,255,.85)}',
+      '.ob-beam{position:absolute;left:4%;right:4%;top:47%;height:0;transform-style:preserve-3d}.ob-beam::before{content:"";position:absolute;left:0;right:0;top:-1px;height:2px;background:linear-gradient(90deg,transparent,rgba(159,216,255,.85),rgba(255,176,112,.85),rgba(255,122,90,.85),transparent);box-shadow:0 0 16px rgba(255,200,150,.7)}',
+      '.ob-ph{position:absolute;left:0;top:0;width:4px;height:4px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c),0 0 16px var(--c);animation:obPh 3s linear infinite}',
+      '@keyframes obPh{0%{transform:translate3d(0,var(--y),var(--x));opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translate3d(calc(' + E + ' * .9),calc(var(--y) * .2),var(--x));opacity:0}}',
+      '.ob-stk-cap{position:absolute;left:50%;bottom:5%;transform:translateX(-50%);margin:0;font-size:11px;letter-spacing:.12em;color:#ffd58a;white-space:nowrap;pointer-events:none}',
+      '.ob-mode{position:absolute;left:50%;top:74px;transform:translateX(-50%);display:flex;gap:2px;z-index:3;padding:3px;border-radius:999px;background:rgba(4,14,26,.72);border:1px solid rgba(255,200,97,.4)}.ob-mode[hidden]{display:none}',
+      '.ob-m{padding:6px 14px;border:0;border-radius:999px;background:none;color:#ffe6b8;font-size:12px;cursor:pointer}.ob-m.is-on{background:rgba(255,200,97,.26);color:#fff;box-shadow:0 0 14px rgba(255,200,97,.45)}',
+      '.ob-b.is-fix{opacity:.75;cursor:default}',
+      '.ob-ir{width:100%;height:auto;margin:6px 0 4px;font:9px/1 "Noto Sans SC","PingFang SC",sans-serif}.ob-note{font-size:11px!important;color:#8fb3c7!important}',
+      '@media (prefers-reduced-motion:reduce){.ob-ph{display:none}.ob-pl{transition:none}}',
+      '@media (max-height:520px){.ob-mode{top:auto;bottom:34px;left:16px;transform:none}.ob-coord{display:none}.ob-pl{width:25%}.ob-stk.in .ob-pl{transform:translate(-50%,-50%) translateX(calc((var(--j) - 1) * 112%)) translateZ(calc((1 - var(--j)) * 50px))}.ob-pl small{display:none}}',
       '.ob-hint{position:absolute;left:50%;bottom:66px;transform:translateX(-50%);font-size:12px;color:#8fb3c7;letter-spacing:.12em;z-index:3}',
       '.ob-cr{position:absolute;left:0;right:0;bottom:8px;margin:0;text-align:center;font-size:10px;color:#6f8ea3;z-index:3;padding:0 20px}',
       '@media (max-width:900px){.ob-cat{width:190px}.ob-info{width:240px}}',
-      '@media (max-width:760px){.ob-eye{top:44%;width:min(46vh,70vw);height:min(46vh,70vw)}.ob-cat{left:8px;top:auto;bottom:40px;width:46%;max-height:38vh}.ob-info{right:8px;top:auto;bottom:40px;width:46%;max-height:38vh}.ob-bands{bottom:auto;top:66px}.ob-coord{display:none}}'
+      '@media (max-width:760px){.ob-eye{top:44%;width:min(46vh,70vw);height:min(46vh,70vw)}.ob-cat{left:8px;top:auto;bottom:40px;width:46%;max-height:38vh}.ob-info{right:8px;top:auto;bottom:40px;width:46%;max-height:38vh}.ob-bands{bottom:auto;top:66px}.ob-mode{top:104px}.ob-pl small{display:none}.ob-coord{display:none}}'
     ].join('\n');
     document.head.appendChild(s);
   }
@@ -378,5 +482,6 @@
     return !!b;
   }
   (function wait(n) { if (SH.archive && SH.archive.EX && hook()) return; if (n > 600) return; setTimeout(function () { wait(n + 1); }, 120); })(0);
-  if (/[?&]obs=1/.test(location.search)) (function w3(n) { if ((window.SH_READY && SH.archive && SH.archive.EX) || n > 120) return open(); setTimeout(function () { w3(n + 1); }, 100); })(0);
+  var OQ = /[?&]obs=([a-z0-9]+)/.exec(location.search); if (OQ && OQ[1] !== '1') L.want = OQ[1];
+  if (OQ) (function w3(n) { if ((window.SH_READY && SH.archive && SH.archive.EX) || n > 120) return open(); setTimeout(function () { w3(n + 1); }, 100); })(0);
 })();
