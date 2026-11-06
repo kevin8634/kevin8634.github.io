@@ -216,7 +216,7 @@
         const orthoCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
         // ---------- Background plate ----------
-        const plateTex = new THREE.Texture(img);
+        let plateTex = new THREE.Texture(img);
         plateTex.minFilter = THREE.LinearFilter;
         plateTex.generateMipmaps = false;
         const bgMat = new THREE.ShaderMaterial({
@@ -1198,7 +1198,8 @@
         function skinApply(i, im, inst) {
           const s = SKINS[i], was = skin.kent, bu = bgMat.uniforms, pu = ptMat.uniforms;
           skin = s; skinI = i;
-          plateTex.image = im; plateTex.needsUpdate = true; bu.uImgAspect.value = im.naturalWidth / im.naturalHeight;
+          { const nt = new THREE.Texture(im); nt.minFilter = THREE.LinearFilter; nt.generateMipmaps = false; nt.colorSpace = plateTex.colorSpace; nt.needsUpdate = true; const ot = plateTex; plateTex = nt; bu.tPlate.value = nt; ot.dispose(); } // new texture: WebGL2 immutable storage can't change size
+          bu.uImgAspect.value = im.naturalWidth / im.naturalHeight;
           img.src = s.plate; img.alt = `${s.zh} ${s.en}`;
           skinTint.set(...s.tint); skinRim.set(...s.rim);
           if (inst) { bu.uKent.value = s.kent ? 1 : 0; bu.uDark.value = s.dark ? 1 : 0; if (!work) pu.uTint.value.copy(skinTint); pu.uRimC.value.copy(skinRim); }
@@ -1511,7 +1512,7 @@
           if (rec && rec.draw) rec.draw();
           requestAnimationFrame(frame);
         }
-        function onPlate() { plateTex.needsUpdate = true; started = true; }
+        function onPlate() { if (plateTex.image === img) plateTex.needsUpdate = true; started = true; }
         if (img.complete && img.naturalWidth) onPlate(); else img.addEventListener("load", onPlate);
         // Skin on load: #skin=<id>, else localStorage, else kenting.
         let skin0 = hashSkin(); if (!skin0) try { skin0 = localStorage.getItem("axon.skin"); } catch (e) {}
