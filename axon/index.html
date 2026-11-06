@@ -89,6 +89,27 @@
       #recDot[hidden] { display: none; }
       @keyframes x-blink { 50% { opacity: .2; } }
       @media (prefers-reduced-motion: reduce) { #recDot i { animation: none; } }
+      /* Skin switch: white iris flash */
+      #skinIris { position: fixed; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 46%, rgba(255,255,255,.95), rgba(255,255,255,.5) 32%, rgba(255,255,255,0) 72%); clip-path: circle(0% at 50% 46%); transition: opacity .8s, clip-path 0s .8s; }
+      #skinIris.x-on { opacity: 1; clip-path: circle(150% at 50% 46%); transition: opacity .9s ease-in, clip-path .9s cubic-bezier(.6,0,.4,1); }
+      #hPrev { margin-left: 6px; font-size: 12px; opacity: .5; }
+      .x-fallback #skinIris { display: none; }
+      /* PORTAL: skin picker button + panel */
+      .x-pbtn { right: 110px; top: 6px; min-width: 44px; height: 44px; padding: 0 14px; border: 1px solid rgba(255,255,255,.5); background: none; color: rgba(255,255,255,.7); font: inherit; font-size: 10px; line-height: 1.25; letter-spacing: .12em; cursor: pointer; border-radius: 22px; pointer-events: auto; transition: color .3s, background .3s, box-shadow .3s; }
+      .x-pbtn span { display: block; }
+      .x-pbtn:hover, .x-pbtn:focus-visible, .x-pbtn[aria-expanded="true"] { color: #fff; background: rgba(255,255,255,.08); box-shadow: 0 0 12px rgba(255,255,255,.3); outline: none; }
+      .x-fallback .x-pbtn, .x-pre .x-portal, .x-fallback .x-portal { display: none; }
+      .x-portal { position: fixed; right: 16px; top: 58px; width: 560px; max-width: calc(100vw - 32px); max-height: 70vh; overflow: auto; box-sizing: border-box; display: none; padding: 10px; background: rgba(10,14,24,.55); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; font: 300 12px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .06em; color: rgba(255,255,255,.72); pointer-events: auto; }
+      .x-portal.x-on { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      @media (max-width: 599px) { .x-portal.x-on { grid-template-columns: repeat(3, 1fr); } }
+      .x-portal button { display: block; min-width: 0; padding: 4px; border: 1px solid transparent; border-radius: 10px; background: rgba(255,255,255,.03); color: inherit; font: inherit; letter-spacing: inherit; text-align: left; cursor: pointer; transition: opacity .3s, border-color .3s, color .3s; }
+      .x-portal button:hover, .x-portal button:focus-visible { color: #fff; border-color: rgba(255,255,255,.35); outline: none; }
+      .x-portal button[aria-current="true"] { border-color: #fff; color: #fff; }
+      .x-portal button:disabled { opacity: .4; cursor: default; }
+      .x-portal i { display: block; aspect-ratio: 16 / 9; border-radius: 7px; background: rgba(255,255,255,.06) center / cover no-repeat; }
+      .x-portal b, .x-portal small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: inherit; }
+      .x-portal b { margin-top: 4px; font-size: 12px; }
+      .x-portal small { font-size: 12px; opacity: .55; }
     </style>
   </head>
   <body class="x-pre">
@@ -97,9 +118,12 @@
     <canvas id="fx" aria-hidden="true"></canvas>
     <div class="x-vig" aria-hidden="true"></div>
     <p class="x-error">WebGL 不可用</p>
-    <p class="x-hud x-tl">AXON<br />SCENE 01 · 垦丁 KENTING · 滚动=时间 · 划过=唤醒<br /><span id="hShape">WAVE · 浪</span><br /><span id="hTod">TIME 18:20</span> <span id="hMet"></span></p>
+    <div id="skinIris" aria-hidden="true"></div>
+    <p class="x-hud x-tl">AXON<br /><span id="hScene">SCENE 01 · 垦丁 KENTING</span><small id="hPrev"></small> · 滚动=时间 · 划过=唤醒<br /><span id="hShape">WAVE · 浪</span><br /><span id="hTod">TIME 18:20</span> <span id="hMet"></span></p>
     <div class="x-hud x-tod" aria-hidden="true"><i id="todK"></i></div>
     <button class="x-hud x-snd x-ui" id="bSnd" aria-pressed="false" aria-label="Sound">SOUND OFF</button>
+    <button class="x-hud x-pbtn x-ui" id="bPortal" aria-expanded="false" aria-controls="portal" aria-label="PORTAL 传送门"><span>PORTAL</span><span>传送门</span></button>
+    <div class="x-ui x-portal" id="portal" role="dialog" aria-label="PORTAL 传送门"></div>
     <audio id="bgm" src="kenting_dusk_shoreline.m4a" preload="auto"></audio>
     <div class="x-hud x-ui x-works" id="works">
       <p>WORKS</p>
@@ -177,16 +201,16 @@
         const bgMat = new THREE.ShaderMaterial({
           depthTest: false, depthWrite: false,
           uniforms: { tPlate: { value: plateTex }, uRes: { value: new THREE.Vector2(1, 1) }, uMouse: { value: new THREE.Vector2() }, uImgAspect: { value: 2400 / 1018 }, uTime: { value: 0 },
-            uFade: { value: 0 }, uLamp: { value: new THREE.Vector2(.8, .6) }, uBeam: { value: new THREE.Vector3(0, 0, 1) }, uClick: { value: new THREE.Vector2(.5, -9) }, uN: { value: 0 } },
+            uFade: { value: 0 }, uLamp: { value: new THREE.Vector2(.8, .6) }, uBeam: { value: new THREE.Vector3(0, 0, 1) }, uClick: { value: new THREE.Vector2(.5, -9) }, uN: { value: 0 }, uKent: { value: 1 }, uDark: { value: 0 } },
           vertexShader: quadVS,
           fragmentShader: HASH + BEAM + `
-            uniform sampler2D tPlate; uniform vec2 uRes, uMouse, uLamp, uClick; uniform vec3 uBeam; uniform float uImgAspect, uTime, uFade, uN; varying vec2 vUv;
+            uniform sampler2D tPlate; uniform vec2 uRes, uMouse, uLamp, uClick; uniform vec3 uBeam; uniform float uImgAspect, uTime, uFade, uN, uKent, uDark; varying vec2 vUv;
             void main(){
               float sa = uRes.x / uRes.y;
               vec2 s = sa > uImgAspect ? vec2(1., uImgAspect / sa) : vec2(sa / uImgAspect, 1.);
               vec2 uv = (vUv - .5) * s * .94 + .5;
               uv += uMouse * mix(.03, .006, smoothstep(.05, .65, uv.y));
-              float sea = smoothstep(.28, .32, uv.y) * (1. - smoothstep(.47, .5, uv.y));
+              float sea = smoothstep(.28, .32, uv.y) * (1. - smoothstep(.47, .5, uv.y)) * uKent; // shimmer, ripple, glint: kenting only
               float near = .3 + clamp((.5 - uv.y) / .2, 0., 1.);
               vec2 rp = uv * vec2(40., 120.);
               uv.x += sea * near * .0015 * (sin(rp.y * .6 + uTime * 1.3) + .5 * sin(rp.x * .3 + rp.y * .4 - uTime * .9));
@@ -204,9 +228,9 @@
               vec2 sg = vUv * vec2(sa, 1.) * 160.; vec2 si = floor(sg), sf = fract(sg) - .5;
               float sr = h(si + .5), dens = mix(.997, .972, smoothstep(.5, .95, uv.y));
               float star = step(dens, sr) * smoothstep(.22, 0., length(sf - (vec2(h(si + 1.3), h(si + 2.1)) - .5) * .5)) * (.55 + .45 * sin(uTime * (1. + sr * 3.) + sr * 90.));
-              col += smoothstep(.5, .54, uv.y) * smoothstep(.1, .28, L) * k2 * star * vec3(.85, .9, 1.);
+              col += smoothstep(.5, .54, uv.y) * smoothstep(.1, .28, L) * k2 * star * vec3(.85, .9, 1.) * max(uKent, uDark);
               float bm = beamAt(vUv, uLamp, uBeam);
-              col += (bm * .16 + smoothstep(.025, 0., length((vUv - uLamp) * vec2(uBeam.z, 1.))) * .6) * (1. + uN * 2.2) * vec3(1., .86, .62);
+              col += uKent * (bm * .16 + smoothstep(.025, 0., length((vUv - uLamp) * vec2(uBeam.z, 1.))) * .6) * (1. + uN * 2.2) * vec3(1., .86, .62);
               vec2 g = uv * vec2(240., 520.) + vec2(uTime * 2.5, 0.);
               vec2 id = floor(g); vec2 f = fract(g) - .5;
               float r = h(id);
@@ -472,10 +496,10 @@
           transparent: true, depthWrite: false, depthTest: false,
           blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
           uniforms: { tPos: { value: null }, tVel: { value: null }, uTime: { value: 0 }, uSize: { value: 1 }, uAlpha: { value: 0.8 }, uLamp: bgMat.uniforms.uLamp, uBeam: bgMat.uniforms.uBeam,
-            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 } },
+            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 } },
           // Liquid-chrome flakes: per-particle shading in the vertex stage, sharp capsule in the fragment stage.
           // Premultiplied normal blending gives the cloud a dark body; glints add light without adding alpha.
-          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint; uniform float uSweep; attribute vec2 ref;
+          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep; attribute vec2 ref;
             varying vec3 vCol, vGl; varying vec2 vDir; varying float vStr, vPS, vBlur;
             vec3 env(vec3 rd){
               float y = rd.y;
@@ -505,7 +529,7 @@
               float F = pow(1. - dot(n, V), 5.);
               // Polished chrome: silver base (#c8ccd2, colder at night) times a bright env, Fresnel rim, filmic exposure.
               vec3 base = mix(vec3(.784, .8, .824), vec3(.72, .78, .88), uN), rim = mix(vec3(1., .93, .84), vec3(.82, .9, 1.05), uN);
-              base *= uTint; rim *= uTint;
+              base *= uTint; rim *= uTint * uRimC;
               vec3 col = base * (.16 + env(reflect(-V, n)) * (.5 + .5 * F)) + rim * F * 1.1;
               float bm = beamAt(gl_Position.xy / gl_Position.w * .5 + .5, uLamp, uBeam), st = uTime - uShock.w;
               float sh = st < 1.2 ? exp(-pow((length(p - uShock.xyz) - st * 3.5) * 2., 2.)) * exp(-st * 2.) : 0.;
@@ -532,6 +556,7 @@
               gl_FragColor = vec4(vCol * (.7 + .4 * bev) * al + vGl * al * bev, al);
             }`,
         });
+        const skinTint = new THREE.Vector3(1, 1, 1), skinRim = new THREE.Vector3(1, 1, 1); // current skin's metal baseline
         const points = new THREE.Points(new THREE.BufferGeometry(), ptMat);
         points.frustumCulled = false;
         const scene = new THREE.Scene();
@@ -631,7 +656,7 @@
           if (!work) return;
           wTag.classList.remove("x-on"); wHud.classList.remove("x-on"); sHint.classList.remove("x-on");
           const vu = velMat.uniforms;
-          vu.uMist.value = 0; vu.uPulse.value = 0; ptMat.uniforms.uSweep.value = -9; ptMat.uniforms.uTint.value.set(1, 1, 1);
+          vu.uMist.value = 0; vu.uPulse.value = 0; ptMat.uniforms.uSweep.value = -9; ptMat.uniforms.uTint.value.copy(skinTint);
           points.rotation.y = 0;
           if (shapeI !== 0) setShape(0);
           // Audio fades out in workStep; a silent end (switching works) cuts it at once.
@@ -663,7 +688,7 @@
             } else if (t >= 8) { points.rotation.y = wrapA(points.rotation.y) * Math.exp(-2 * raw); pu.uSweep.value = -9; }
             vu.uMist.value = clamp(vu.uMist.value - 2 * raw, 0, 1);
             vu.uPulse.value *= Math.exp(-6 * raw);
-            pu.uTint.value.lerp(new THREE.Vector3(...(t < 9 ? customTint : WHITE)), 1 - Math.exp(-3 * raw));
+            pu.uTint.value.lerp(t < 9 ? new THREE.Vector3(...customTint) : skinTint, 1 - Math.exp(-3 * raw));
             wTag.classList.toggle("x-on", t >= 6 && t < 9);
             if (t >= 9 && !w.s14) { w.s14 = true; setShape(0); }
             wBar.style.width = Math.min(100, (t / D) * 100) + "%";
@@ -688,8 +713,8 @@
             const m = mouseWorld();
             if (pSpd > 900 && Math.hypot(m.x, m.y - CY, m.z) < 1.3 && t - w.lastBurst > 1.2) burst();
           }
-          const tg = w.t < 14 ? TINTS[w.ti] : WHITE;
-          pu.uTint.value.lerp(new THREE.Vector3(...tg), 1 - Math.exp(-3 * raw));
+          const tg = w.t < 14 ? new THREE.Vector3(...TINTS[w.ti]) : skinTint;
+          pu.uTint.value.lerp(tg, 1 - Math.exp(-3 * raw));
           // Headphones: beat envelope from the track's low bins, or a fake 120 bpm when there is no audio.
           if (w.i === 2 && hero) {
             const a = WAUD[2];
@@ -732,7 +757,7 @@
         const $ = (id) => document.getElementById(id), gen = $("gen"), bMake = $("bMake"), gName = $("gName"), gLogo = $("gLogo"), toastEl = $("toast");
         let logoImg = null, toastT = 0;
         function toast(msg) { toastEl.textContent = msg; toastEl.classList.add("x-on"); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove("x-on"), 2600); }
-        const genShow = (on) => { gen.classList.toggle("x-on", on); bMake.setAttribute("aria-expanded", on); if (on) gName.focus(); };
+        const genShow = (on) => { gen.classList.toggle("x-on", on); bMake.setAttribute("aria-expanded", on); if (on) { portalShow(false); gName.focus(); } };
         bMake.addEventListener("click", () => genShow(!gen.classList.contains("x-on")));
         bMake.addEventListener("pointerenter", () => { if (customPts) { hovW = true; leanI = CUSTOM_I; velMat.uniforms.tLean.value = texs[CUSTOM_I]; } });
         bMake.addEventListener("pointerleave", () => { hovW = false; });
@@ -922,7 +947,7 @@
           bgMat.uniforms.uRes.value.set(w, h);
           points.scale.setScalar(Math.min(1, camera.aspect / 1.5));
           ptMat.uniforms.uSize.value = (small ? 6.4 : 4.8) * DPR * (h / 900 + 0.4);
-          const sa = w / h, ia = 2400 / 1018, sx = sa > ia ? 1 : sa / ia, sy = sa > ia ? ia / sa : 1;
+          const sa = w / h, ia = bgMat.uniforms.uImgAspect.value, sx = sa > ia ? 1 : sa / ia, sy = sa > ia ? ia / sa : 1;
           bgMat.uniforms.uLamp.value.set(0.26 / (sx * 0.94) + 0.5, 0.08 / (sy * 0.94) + 0.5);
           bgMat.uniforms.uBeam.value.z = sa;
           const half = 6 * Math.tan(Math.PI / 8) / points.scale.x;
@@ -955,7 +980,7 @@
         ".- -..- --- -.".split("").forEach((c) => (c === " " ? SEQ.push([0, 2]) : SEQ.push([1, c === "." ? 1 : 3], [0, 1])));
         function fxResize() {
           W = innerWidth; H = innerHeight; fxc.width = W * DPR; fxc.height = H * DPR; cx.setTransform(DPR, 0, 0, DPR, 0, 0);
-          const sa = W / H, ia = 2400 / 1018, sx = sa > ia ? 1 : sa / ia, sy = sa > ia ? ia / sa : 1;
+          const sa = W / H, ia = bgMat.uniforms.uImgAspect.value, sx = sa > ia ? 1 : sa / ia, sy = sa > ia ? ia / sa : 1;
           const toX = (u) => ((u - 0.5) / (sx * 0.94) + 0.5) * W, toY = (v) => (0.5 - (v - 0.5) / (sy * 0.94)) * H;
           horY = toY(0.502); poolX = toX(0.5); poolY = clamp(toY(0.08), H * 0.8, H * 0.88); poolR = Math.min(W * 0.16, 150);
           shipX = [toX(0.36), toX(0.56)];
@@ -983,7 +1008,8 @@
         }
 
         // Sound: nothing plays until the speaker button is pressed.
-        const bgm = document.getElementById("bgm"), BGM_LIST = ["kenting_dusk_shoreline.m4a", "kenting_dusk.m4a"]; let bgmIdx = 0; bgm.addEventListener("ended", () => { bgmIdx = (bgmIdx + 1) % BGM_LIST.length; bgm.src = BGM_LIST[bgmIdx]; if (sndOn) bgm.play().catch(() => {}); }); const bSnd = document.getElementById("bSnd"), PENTA = [0, 2, 4, 7, 9];
+        const bgm = document.getElementById("bgm"); let BGM_LIST = ["kenting_dusk_shoreline.m4a", "kenting_dusk.m4a"], bgmIdx = 0;
+        bgm.addEventListener("error", () => { if (bgmIdx === 1) { bgmIdx = 0; bgm.src = BGM_LIST[0]; if (sndOn) bgm.play().catch(() => {}); } }); // 2nd track missing → back to the 1st, never loops bgm.addEventListener("ended", () => { bgmIdx = (bgmIdx + 1) % BGM_LIST.length; bgm.src = BGM_LIST[bgmIdx]; if (sndOn) bgm.play().catch(() => {}); }); const bSnd = document.getElementById("bSnd"), PENTA = [0, 2, 4, 7, 9];
         let ac = null, master, waveG, sndOn = false;
         function audioInit() {
           ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -1031,7 +1057,7 @@
         }, true);
         addEventListener("pointermove", (e) => {
           // Big wave: 3 horizontal direction reversals at |vx| > 600 px/s inside the sea band within 1.5 s.
-          if (entered && !grab && !work && py > horY + 2 && py < H * 0.75 && Math.abs(pvx) > 600) {
+          if (entered && skin.kent && !grab && !work && py > horY + 2 && py < H * 0.75 && Math.abs(pvx) > 600) {
             const d = Math.sign(pvx);
             if (rdir && d !== rdir) {
               revs = revs.filter((t) => e.timeStamp - t < 1500); revs.push(e.timeStamp);
@@ -1053,8 +1079,118 @@
           if (sp > 1100 && b.r > 8 && beads.length < 24) split(b, gvx, gvy);
         });
 
+        // ---------- Skins: 13 worlds, kenting default. kent = lighthouse/sea/ships/birds; dark = meteors + stars ----------
+        const SK = (id, zh, en, tint, rim, dark) => ({ id, zh, en, plate: `skin_${id}.jpg`, bgm: [`music/skin_${id}_1.m4a`, `music/skin_${id}_2.m4a`], tint, rim, kent: false, dark });
+        const SKINS = [{ id: "kenting", zh: "垦丁", en: "KENTING", plate: "kenting_plate.jpg", bgm: ["kenting_dusk_shoreline.m4a", "kenting_dusk.m4a"], tint: [1, 1, 1], rim: [1, 1, 1], kent: true, dark: false },
+          SK("foundry", "磁液铸造厅", "FOUNDRY", [1.15, 0.9, 0.72], [1.3, 0.78, 0.42], true), SK("neural", "AI神经网络", "NEURAL NET", [0.85, 0.9, 1.25], [0.78, 0.66, 1.3], true),
+          SK("neon", "赛博霓虹", "CYBER NEON", [1.2, 0.75, 1.1], [0.5, 1.25, 1.3], true), SK("futurelab", "白色未来实验室", "FUTURE LAB", [1.1, 1.1, 1.12], [1.12, 1.12, 1.15], false),
+          SK("ink", "水墨金属", "INK METAL", [0.86, 0.88, 0.9], [0.9, 0.92, 0.95], false), SK("deepsea", "深海生物光", "DEEP SEA GLOW", [0.75, 1.05, 1.1], [0.4, 1.2, 1.15], true),
+          SK("blackhole", "宇宙黑洞", "BLACK HOLE", [0.95, 0.8, 1.2], [1.3, 0.8, 0.45], true), SK("mycelium", "发光菌丝森林", "GLOWING MYCELIUM", [0.8, 1.12, 1], [0.5, 1.3, 1.05], true),
+          SK("lotus", "荷塘水银珠", "LOTUS POND", [0.92, 1.05, 0.95], [0.95, 1.1, 1], false), SK("dune", "风吹沙丘", "WIND DUNES", [1.18, 1, 0.78], [1.25, 0.95, 0.65], false),
+          SK("everest", "珠峰", "EVEREST", [0.9, 1, 1.2], [0.85, 1, 1.25], false), SK("yulong", "玉龙雪山蓝月谷", "JADE DRAGON · BLUE MOON VALLEY", [0.8, 1.1, 1.12], [0.5, 1.2, 1.15], false)];
+        let skin = SKINS[0], skinI = 0, skinBusy = false, skinPv = null, sk = null, bgmX = null;
+        const iris = document.getElementById("skinIris"), hScene = document.getElementById("hScene"), hPrev = document.getElementById("hPrev");
+        const skinIdx = (id) => SKINS.findIndex((s) => s.id === id), hashSkin = () => (/skin=([\w-]+)/.exec(location.hash) || [])[1];
+        function skinHud(i) { const s = SKINS[i]; hScene.textContent = `SCENE ${String(i + 1).padStart(2, "0")} · ${s.zh} ${s.en}`; hPrev.textContent = s.kent ? "" : "预览底图"; }
+        function skinSave(id) { try { localStorage.setItem("axon.skin", id); } catch (e) {} try { history.replaceState(null, "", "#skin=" + id); } catch (e) {} }
+        // BGM: probe the new skin's first track; only on metadata swap the list and crossfade. Missing files keep the current music.
+        function bgmSwap(src) { if (!sndOn || !ac) { bgmX = null; bgm.src = src; } else bgmX = { src, v0: bgm.volume, up: 0 }; }
+        function bgmXStep(raw) {
+          const x = bgmX, r = (raw * Math.max(x.v0, 0.05)) / 0.6;
+          if (!sndOn) { if (!x.up) bgm.src = x.src; bgmX = null; return; }
+          if (!x.up) { bgm.volume = Math.max(0, bgm.volume - r); if (bgm.volume <= 0) { x.up = 1; bgm.src = x.src; bgm.play().catch(() => {}); } }
+          else { bgm.volume = Math.min(x.v0, bgm.volume + r); if (bgm.volume >= x.v0) bgmX = null; }
+        }
+        function skinBgm(s) {
+          if (BGM_LIST[0] === s.bgm[0]) return;
+          const pr = new Audio(); let done = 0; const end = () => { done = 1; clearTimeout(tm); }, tm = setTimeout(() => { done = 1; pr.removeAttribute("src"); }, 4000);
+          pr.preload = "metadata";
+          pr.addEventListener("loadedmetadata", () => { if (done) return; end(); if (skin !== s) return; BGM_LIST = s.bgm.slice(); bgmIdx = 0; bgmSwap(BGM_LIST[0]); });
+          pr.addEventListener("error", end);
+          pr.src = s.bgm[0];
+        }
+        function skinApply(i, im, inst) {
+          const s = SKINS[i], was = skin.kent, bu = bgMat.uniforms, pu = ptMat.uniforms;
+          skin = s; skinI = i;
+          plateTex.image = im; plateTex.needsUpdate = true; bu.uImgAspect.value = im.naturalWidth / im.naturalHeight;
+          img.src = s.plate; img.alt = `${s.zh} ${s.en}`;
+          skinTint.set(...s.tint); skinRim.set(...s.rim);
+          if (inst) { bu.uKent.value = s.kent ? 1 : 0; bu.uDark.value = s.dark ? 1 : 0; if (!work) pu.uTint.value.copy(skinTint); pu.uRimC.value.copy(skinRim); }
+          if (!s.kent) { birds.length = sparks.length = rings.length = 0; ships.forEach((x) => (x.m = -1)); waveT = 0; lift = 0; revs = []; if (!s.dark) mets.length = 0; }
+          else if (!was) { birds.length = 0; spawnBird(W * 0.3); spawnBird(W * 0.7); }
+          fxResize(); resize(); skinHud(i); skinSave(s.id); skinBgm(s); portalSync();
+        }
+        function goSkin(id, instant = false) {
+          const i = skinIdx(id);
+          if (i < 0 || skinBusy || (i === skinI && !instant)) return;
+          const im = new Image();
+          if (instant) { if (i === skinI) return skinHud(i); skinBusy = true; im.onload = () => { skinApply(i, im, true); skinBusy = false; portalSync(); }; im.onerror = () => (skinBusy = false); im.src = SKINS[i].plate; return; }
+          if (work) endWork(true);
+          skinBusy = true; portalSync(); waveT = 0; setShape(1); iris.classList.add("x-on");
+          const s = (sk = { i, im, t: 0, ok: 0, sw: -1, b: -1 });
+          im.onload = () => (s.ok = 1); im.onerror = () => (s.ok = -1); im.src = SKINS[i].plate;
+        }
+        function skinStep(raw) {
+          const k = 1 - Math.exp(-3 * raw), bu = bgMat.uniforms, pu = ptMat.uniforms;
+          bu.uKent.value += ((skin.kent ? 1 : 0) - bu.uKent.value) * k; bu.uDark.value += ((skin.dark ? 1 : 0) - bu.uDark.value) * k;
+          if (!work) pu.uTint.value.lerp(skinPv ? skinPv[0] : skinTint, k);
+          pu.uRimC.value.lerp(skinPv && !work ? skinPv[1] : skinRim, k);
+          if (!sk) return;
+          const s = sk; s.t += raw;
+          // Timeline: sphere + iris (0) → swap at peak (0.9, or when loaded) → burst + wave (+0.7) → iris gone (+0.8).
+          if (s.sw < 0 && s.t >= 0.9) {
+            if (s.ok === 1) { s.sw = s.t; skinApply(s.i, s.im); }
+            else if (s.ok === -1 || s.t > 8) { iris.classList.remove("x-on"); setShape(0); sk = null; skinBusy = false; portalSync(); toast("底图加载失败 · 保持当前场景"); return; }
+          }
+          if (s.sw >= 0 && s.b < 0 && s.t >= s.sw + 0.7) { s.b = s.t; velMat.uniforms.uShock.value.set(0, CY, 0, simT); setShape(0); iris.classList.remove("x-on"); chime(0.12); }
+          if (s.b >= 0 && s.t >= s.b + 0.8) { sk = null; skinBusy = false; portalSync(); }
+        }
+        function previewTint(x) {
+          const s = !x ? null : typeof x === "string" ? SKINS[skinIdx(x)] : Array.isArray(x) ? { tint: x, rim: x } : x;
+          skinPv = s && s.tint ? [new THREE.Vector3(...s.tint), new THREE.Vector3(...(s.rim || s.tint))] : null;
+        }
+        addEventListener("hashchange", () => { const id = hashSkin(); if (id && id !== skin.id) goSkin(id); });
+        window.AXON_SKINS = SKINS; window.goSkin = goSkin; window.previewTint = previewTint; window.getSkin = () => skin.id;
+        // PORTAL: skin picker built from AXON_SKINS. Thumbnails load lazily on first open.
+        const portal = document.getElementById("portal"), bPortal = document.getElementById("bPortal");
+        let portalLoaded = false;
+        const portalTiles = window.AXON_SKINS.map((s, i) => {
+          const b = document.createElement("button");
+          b.type = "button"; b.dataset.skin = s.id; b.setAttribute("aria-label", `${s.zh} ${s.en}`);
+          const th = document.createElement("i"), zh = document.createElement("b"), en = document.createElement("small");
+          th.setAttribute("aria-hidden", "true");
+          zh.textContent = `${String(i + 1).padStart(2, "0")} ${s.zh}`; en.textContent = s.en;
+          b.append(th, zh, en);
+          b.addEventListener("pointerenter", () => { if (!b.disabled) previewTint(s.id); });
+          b.addEventListener("focus", () => { if (!b.disabled) previewTint(s.id); });
+          b.addEventListener("pointerleave", () => previewTint(null));
+          b.addEventListener("blur", () => previewTint(null));
+          b.addEventListener("click", () => { portalShow(false); previewTint(null); bPortal.focus(); if (s.id !== skin.id) goSkin(s.id); });
+          portal.appendChild(b);
+          return b;
+        });
+        function portalSync() {
+          portalTiles.forEach((b) => {
+            const cur = b.dataset.skin === skin.id;
+            if (cur) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current");
+            b.disabled = skinBusy;
+          });
+        }
+        function portalShow(on) {
+          if (!on && !portal.classList.contains("x-on")) return;
+          if (on && !portalLoaded) { portalLoaded = true; portalTiles.forEach((b, i) => (b.firstChild.style.backgroundImage = `url("${window.AXON_SKINS[i].plate}")`)); }
+          portal.classList.toggle("x-on", on); bPortal.setAttribute("aria-expanded", on);
+          if (on) { genShow(false); portalSync(); const c = portalTiles.find((b) => b.dataset.skin === skin.id); if (c && !c.disabled) c.focus(); }
+          else previewTint(null);
+        }
+        bPortal.addEventListener("click", () => portalShow(!portal.classList.contains("x-on")));
+        addEventListener("keydown", (e) => { if (e.key === "Escape" && portal.classList.contains("x-on")) { portalShow(false); bPortal.focus(); } });
+        addEventListener("pointerdown", (e) => { if (portal.classList.contains("x-on") && !e.target.closest("#portal, #bPortal")) portalShow(false); }, true);
+        Object.defineProperty(window, "AXON_SKIN", { get: () => skin.id, configurable: true });
+
         function fxStep(raw, dt) {
           fxT += raw;
+          skinStep(raw);
           tN += (tT - tN) * (1 - Math.exp(-3 * raw));
           bgMat.uniforms.uN.value = tN;
           knob.style.top = tN * 100 + "%";
@@ -1068,8 +1204,9 @@
             // Duck: a playing work track takes BGM to 0 and the wave noise down; both return after.
             const duck = !!work && !WAUD[work.i].bad;
             waveG.gain.value = 0.3 * (1 - 0.65 * tN) * (work ? 0.4 : 1);
+            if (bgmX) bgmXStep(raw); else {
             const bv = clamp(bgm.volume + (sndOn && !duck ? raw : -raw) * 0.25, 0, 0.5);
-            bgm.volume = bv; if (!sndOn && bv === 0 && !bgm.paused) bgm.pause();
+            bgm.volume = bv; if (!sndOn && bv === 0 && !bgm.paused) bgm.pause(); }
           }
           cx.clearRect(0, 0, W, H);
           // This frame's cursor path: segment from last frame's pointer (ox,oy) to now (px,py).
@@ -1078,7 +1215,7 @@
           if (!entered) return;
           const near = (x, y, r) => live && segD(x, y, ox, oy, px, py) < r;
           // Sea: moving faster than 900 px/s across the band between horizon and pool → spray + ripple rings.
-          if (live && pSpd > 900 && py > horY + 2 && py < H * 0.75) {
+          if (skin.kent && live && pSpd > 900 && py > horY + 2 && py < H * 0.75) {
             if (fxT - lastSpl > 0.05) { lastSpl = fxT; spray(px, py, 3 + ((pSpd / 700) | 0), pvx); }
             if (fxT - lastRing > 0.16 && rings.length < 12) { lastRing = fxT; rings.push({ x: px, y: py, t: fxT }); }
             if (fxT - lastRip > 0.5) { lastRip = fxT; bgMat.uniforms.uClick.value.set(px / W, simT); chime(0.04); }
@@ -1091,7 +1228,7 @@
             cx.strokeStyle = `rgba(235,240,250,${(1 - u) * 0.5})`; cx.beginPath(); cx.ellipse(r.x, r.y, rad, rad * 0.28, 0, 0, 6.283); cx.stroke();
           }
           // Meteors
-          if (tN > 0.6 && mets.length < 2 && rnd() < raw * 0.25) {
+          if ((skin.kent ? tN > 0.6 : skin.dark) && mets.length < 2 && rnd() < raw * 0.25) {
             const a = 2.5 + rnd() * 0.5, m = { x: W * (0.25 + rnd() * 0.7), y: horY * (0.1 + rnd() * 0.45), dx: Math.cos(a), dy: Math.sin(a), age: 0, sp: W * 0.5 + 300 };
             m.life = Math.min(0.7 + rnd() * 0.4, (horY * 0.95 - m.y) / (m.sp * m.dy)); mets.push(m);
           }
@@ -1113,7 +1250,7 @@
           }
           // Ship lights
           const sa = clamp((tN - 0.4) * 4, 0, 1);
-          if (sa > 0) ships.forEach((s, i) => {
+          if (sa > 0 && skin.kent) ships.forEach((s, i) => {
             // Ship light: cursor path within 30 px → 0.56 s flare with halo, then Morse "AXON".
             if (s.m < 0 && tN > 0.4 && near(shipX[i], horY - 1, 30)) { s.m = fxT; chime(0.08); }
             let on = Math.sin(fxT * (1.1 + i * 0.4) + i * 2) > -0.8 ? 0.7 : 0.15, big = 1;
@@ -1135,7 +1272,7 @@
             cx.fillStyle = `rgba(255,242,215,${a})`; cx.beginPath(); cx.arc(shipX[i], horY - 1, 1.2 * big, 0, 6.283); cx.fill();
           });
           // Seabirds
-          if (birds.length < 3 && rnd() < raw * 0.08) spawnBird();
+          if (skin.kent && birds.length < 3 && rnd() < raw * 0.08) spawnBird();
           const bc = mixv([20, 18, 30, 0.8], [150, 160, 190, 0.45], tN);
           cx.strokeStyle = `rgba(${bc[0] | 0},${bc[1] | 0},${bc[2] | 0},${bc[3]})`; cx.lineWidth = 1.5; cx.lineCap = "round";
           for (let i = birds.length; i--; ) {
@@ -1247,9 +1384,9 @@
             // Rotated cloud: bring cursor and its velocity into the points' local frame.
             if (points.rotation.y !== 0) { vu.uMouse.value.applyAxisAngle(YAX, -points.rotation.y); vu.uMVel.value.applyAxisAngle(YAX, -points.rotation.y); }
             vu.uDown.value = downS; vu.uTime.value = simT; vu.uDt.value = dt;
-            vu.uGather.value = g;
+            vu.uGather.value = sk ? 1 : g; // skin switch: hold the sphere together
             if (work && work.dip > 0) vu.uGather.value *= 0.6; // sneaker burst: brief gather dip
-            vu.uSpray.value = pu.uSpray.value = entered ? 1 : 0;
+            vu.uSpray.value = pu.uSpray.value = entered && skin.kent ? 1 : 0;
             pass(velMat, vel[nxt]);
             pu.tPos.value = pos[cur].texture; pu.tVel.value = vel[nxt].texture; pu.uDt.value = dt; pu.uTime.value = simT;
             pass(posMat, pos[nxt]);
@@ -1258,12 +1395,12 @@
           const bu = bgMat.uniforms;
           // Lighthouse: pointer inside the box around the lamp and tower → beam eases toward the cursor.
           const sweep = Math.PI / 2 + 1.5 * Math.sin((time * Math.PI) / 4), lx = bu.uLamp.value.x * innerWidth, ly = (1 - bu.uLamp.value.y) * innerHeight;
-          const inLH = entered && hasMouse && Math.abs(px - lx) < 110 && py > ly - 120 && py < ly + innerHeight * 0.25;
+          const inLH = entered && skin.kent && hasMouse && Math.abs(px - lx) < 110 && py > ly - 120 && py < ly + innerHeight * 0.25;
           aimK += ((inLH ? 1 : 0) - aimK) * (1 - Math.exp(-3 * raw));
           if (inLH) aimA += wrapA(Math.atan2(ly - py, px - lx) - aimA) * (1 - Math.exp(-5 * raw));
           else if (aimK < 0.01) aimA = sweep;
           bu.uBeam.value.x = sweep + wrapA(aimA - sweep) * aimK;
-          bu.uBeam.value.y = g;
+          bu.uBeam.value.y = g * bu.uKent.value;
           bu.uFade.value = g;
 
           hf++; hudT += raw;
@@ -1289,6 +1426,9 @@
         }
         function onPlate() { plateTex.needsUpdate = true; started = true; }
         if (img.complete && img.naturalWidth) onPlate(); else img.addEventListener("load", onPlate);
+        // Skin on load: #skin=<id>, else localStorage, else kenting.
+        let skin0 = hashSkin(); if (!skin0) try { skin0 = localStorage.getItem("axon.skin"); } catch (e) {}
+        if (skin0 && skinIdx(skin0) > 0) goSkin(skin0, true);
         requestAnimationFrame(frame);
       })();
     </script>
