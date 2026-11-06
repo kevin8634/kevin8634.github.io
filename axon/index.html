@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AXON — 垦丁</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+      body { font: 12px/1.4 system-ui, -apple-system, "PingFang TC", "Noto Sans TC", sans-serif; color: rgba(255,255,255,.72); }
+      #gl { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; touch-action: none; }
+      #plate { display: none; }
+      .x-fallback #plate { display: block; position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      .x-fallback #gl { display: none; }
+      .x-error { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; font-size: 15px; color: #fff; text-shadow: 0 1px 8px rgba(0,0,0,.7); }
+      .x-fallback .x-error { display: flex; }
+      .x-fallback .x-intro, .x-fallback .x-ctl { display: none; }
+      .x-hud { position: fixed; margin: 0; font: 300 12px/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .12em; color: rgba(255,255,255,.6); pointer-events: none; text-shadow: 0 1px 4px rgba(0,0,0,.5); transition: opacity 1.2s; }
+      .x-tl { left: 16px; top: 14px; } .x-bl { left: 16px; bottom: 14px; } .x-br { right: 16px; bottom: 14px; text-align: right; }
+      .x-ctl { position: fixed; left: 50%; bottom: 10px; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; pointer-events: auto; }
+      .x-ctl button { width: 44px; height: 44px; border: 0; background: none; color: rgba(255,255,255,.7); font: inherit; font-size: 18px; cursor: pointer; border-radius: 22px; }
+      .x-ctl button:hover, .x-ctl button:focus-visible { color: #fff; background: rgba(255,255,255,.08); outline: none; }
+      .x-ctl span { min-width: 150px; text-align: center; }
+      .x-pre > .x-hud { opacity: 0; pointer-events: none; }
+      .x-intro { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: rgba(0,0,0,.35); cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: none; transition: opacity 1.2s; }
+      .x-intro svg { width: 88px; height: 88px; transform: rotate(-90deg); }
+      .x-intro circle { fill: none; stroke-width: 1; }
+      .x-intro p { position: static; font-size: 12px; color: rgba(255,255,255,.75); }
+      .x-intro.x-out { opacity: 0; pointer-events: none; }
+    </style>
+  </head>
+  <body class="x-pre">
+    <img id="plate" src="kenting_plate.jpg" alt="垦丁海岸黄昏，灯塔与礁石" />
+    <canvas id="gl"></canvas>
+    <p class="x-error">WebGL 不可用</p>
+    <p class="x-hud x-tl">AXON<br />SCENE 01 · 垦丁 KENTING<br /><span id="hShape">WAVE · 浪</span></p>
+    <p class="x-hud x-bl" id="hInfo">X 0000 Y 0000</p>
+    <p class="x-hud x-br"><span id="hTime">--:--:--</span><br />21.90°N 120.85°E</p>
+    <div class="x-hud x-ctl x-ui">
+      <button id="bPrev" aria-label="Previous shape">‹</button><span id="cName">WAVE · 浪</span><button id="bNext" aria-label="Next shape">›</button><button id="bPause" aria-label="Pause">❚❚</button>
+    </div>
+    <div class="x-intro x-ui" id="intro">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" stroke="rgba(255,255,255,.15)" /><circle id="ring" cx="50" cy="50" r="46" stroke="rgba(255,255,255,.8)" stroke-dasharray="289" stroke-dashoffset="289" /></svg>
+      <p class="x-hud">按住进入 · HOLD TO ENTER</p>
+    </div>
+    <script src="three.min.js"></script>
+    <script>
+      (function () {
+        const canvas = document.getElementById("gl");
+        const img = document.getElementById("plate");
+        const fail = () => document.body.classList.add("x-fallback");
+
+        let renderer;
+        try {
+          if (typeof THREE === "undefined") throw 0;
+          renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false });
+        } catch (e) { fail(); return; }
+        const gl = renderer.getContext();
+        if (!renderer.capabilities.isWebGL2 || !gl.getExtension("EXT_color_buffer_float")) { renderer.dispose(); fail(); return; }
+
+        const DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+        renderer.setPixelRatio(DPR);
+        renderer.autoClear = false;
+        let SIZE = innerWidth < 768 ? 256 : 512, N, small;
+
+        const HASH = "float h(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}\n";
+        const SPRAY = "float sprayPh(vec2 uv, float t){ return h(uv + 11.) < .03 ? fract(t / 7. + h(uv + 13.)) : -1.; }\n";
+        const BEAM = "float beamAt(vec2 sp, vec2 lamp, vec3 b){ vec2 q = (sp - lamp) * vec2(b.z, 1.);"
+          + " float da = abs(mod(atan(q.y, q.x) - b.x + 3.14159, 6.28318) - 3.14159);"
+          + " return b.y * smoothstep(.15, .0, da) * smoothstep(1.8, .05, length(q)); }\n";
+        const quadVS = "varying vec2 vUv; void main(){vUv=uv; gl_Position=vec4(position.xy,0.,1.);}";
+        const quad = new THREE.PlaneGeometry(2, 2);
+        const orthoCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+        // ---------- Background plate ----------
+        const plateTex = new THREE.Texture(img);
+        plateTex.minFilter = THREE.LinearFilter;
+        plateTex.generateMipmaps = false;
+        const bgMat = new THREE.ShaderMaterial({
+          depthTest: false, depthWrite: false,
+          uniforms: { tPlate: { value: plateTex }, uRes: { value: new THREE.Vector2(1, 1) }, uMouse: { value: new THREE.Vector2() }, uImgAspect: { value: 2400 / 1018 }, uTime: { value: 0 },
+            uFade: { value: 0 }, uLamp: { value: new THREE.Vector2(.8, .6) }, uBeam: { value: new THREE.Vector3(0, 0, 1) }, uClick: { value: new THREE.Vector2(.5, -9) } },
+          vertexShader: quadVS,
+          fragmentShader: HASH + BEAM + `
+            uniform sampler2D tPlate; uniform vec2 uRes, uMouse, uLamp, uClick; uniform vec3 uBeam; uniform float uImgAspect, uTime, uFade; varying vec2 vUv;
+            void main(){
+              float sa = uRes.x / uRes.y;
+              vec2 s = sa > uImgAspect ? vec2(1., uImgAspect / sa) : vec2(sa / uImgAspect, 1.);
+              vec2 uv = (vUv - .5) * s * .94 + .5;
+              uv += uMouse * mix(.03, .006, smoothstep(.05, .65, uv.y));
+              float sea = smoothstep(.28, .32, uv.y) * (1. - smoothstep(.47, .5, uv.y));
+              float near = .3 + clamp((.5 - uv.y) / .2, 0., 1.);
+              vec2 rp = uv * vec2(40., 120.);
+              uv.x += sea * near * .0015 * (sin(rp.y * .6 + uTime * 1.3) + .5 * sin(rp.x * .3 + rp.y * .4 - uTime * .9));
+              uv.y += sea * near * .0008 * sin(rp.y * .5 + uv.x * 30. + uTime * 1.1);
+              float ct = uTime - uClick.y, rip = 0.;
+              if (ct < 2.5) {
+                vec2 dq = (uv - vec2((uClick.x - .5) * s.x * .94 + .5, .4)) * vec2(uImgAspect, 5.);
+                rip = sea * exp(-pow((length(dq) - ct * .4) * 28., 2.)) * exp(-ct * 1.5);
+                uv.y += rip * .004;
+              }
+              vec3 col = texture2D(tPlate, uv).rgb + rip * .22;
+              float bm = beamAt(vUv, uLamp, uBeam);
+              col += (bm * .16 + smoothstep(.025, 0., length((vUv - uLamp) * vec2(uBeam.z, 1.))) * .6) * vec3(1., .86, .62);
+              vec2 g = uv * vec2(240., 520.) + vec2(uTime * 2.5, 0.);
+              vec2 id = floor(g); vec2 f = fract(g) - .5;
+              float r = h(id);
+              float tw = pow(max(0., sin(uTime * (2. + r * 4.) + r * 40.)), 12.);
+              col += sea * step(.94, r) * tw * smoothstep(.35, 0., length(f)) * vec3(1., .9, .75);
+              gl_FragColor = vec4(col * uFade, 1.);
+            }`,
+        });
+        const bgScene = new THREE.Scene();
+        bgScene.add(new THREE.Mesh(quad, bgMat));
+
+        // ---------- Target shapes ----------
+        const rnd = Math.random;
+        function makeTex(fill) {
+          const d = new Float32Array(N * 4);
+          for (let i = 0; i < N; i++) { const p = fill(i); d[i * 4] = p[0]; d[i * 4 + 1] = p[1]; d[i * 4 + 2] = p[2]; d[i * 4 + 3] = rnd() * 6.283; }
+          const t = new THREE.DataTexture(d, SIZE, SIZE, THREE.RGBAFormat, THREE.FloatType);
+          t.needsUpdate = true;
+          return t;
+        }
+        const CY = 0.45;
+        const gWave = () => {
+          const z = (rnd() - 0.5) * 2.6;
+          const k = 1 - z * 0.12;
+          const s = rnd();
+          let x, y, nx, ny, thick;
+          if (s < 0.3) {
+            const t = s / 0.3;
+            x = 2.4 - t * 2.0; y = -0.95 + t * t * 0.25; nx = 0; ny = 1; thick = 0.06;
+          } else {
+            const phi = ((s - 0.3) / 0.7) * Math.PI * 2.3;
+            const th = -0.35 * Math.PI + phi;
+            const r = 1.0 * Math.exp(-0.17 * phi);
+            nx = Math.cos(th); ny = Math.sin(th);
+            x = 0.25 + nx * r; y = -0.05 + ny * r * 0.9; thick = 0.1 * r;
+          }
+          const o = (rnd() - 0.5) * thick * 2;
+          return [(x + nx * o) * k + z * 0.35, (y + ny * o) * k + CY, z];
+        };
+        const gSphere = () => {
+          const u = rnd() * 2 - 1, a = rnd() * 6.283, r = 1.3 * (0.94 + rnd() * 0.06), q = Math.sqrt(1 - u * u);
+          return [Math.cos(a) * q * r, u * r + CY, Math.sin(a) * q * r];
+        };
+        const gLight = () => {
+          const s = rnd(), a = rnd() * 6.283;
+          let y, r;
+          if (s < 0.62) { const t = rnd(); y = -1.3 + t * 2.1; r = 0.42 - t * 0.2; }
+          else if (s < 0.72) { y = 0.8; r = 0.22 + rnd() * 0.18; }
+          else if (s < 0.88) { y = 0.8 + rnd() * 0.35; r = 0.2; }
+          else { const t = rnd(); y = 1.15 + t * 0.35; r = 0.27 * (1 - t); }
+          r += (rnd() - 0.5) * 0.02;
+          return [Math.cos(a) * r, y + CY - 0.1, Math.sin(a) * r];
+        };
+        const gTorus = () => {
+          const u = rnd() * 6.283, v = rnd() * 6.283, w = 1.1 + 0.38 * Math.cos(v), y = w * Math.sin(u), z = 0.38 * Math.sin(v), c = Math.cos(1.1), sn = Math.sin(1.1);
+          return [w * Math.cos(u), y * c - z * sn + CY, y * sn + z * c];
+        };
+        const gText = (() => {
+          const W = 1024, H = 300, c = document.createElement("canvas");
+          c.width = W; c.height = H;
+          const x = c.getContext("2d");
+          x.fillStyle = "#fff"; x.font = "900 230px Arial, Helvetica, sans-serif";
+          x.textAlign = "center"; x.textBaseline = "middle"; x.fillText("AXON", W / 2, H / 2);
+          const px = x.getImageData(0, 0, W, H).data, pts = [];
+          for (let j = 0; j < H; j += 1) for (let i = 0; i < W; i += 1) if (px[(j * W + i) * 4 + 3] > 128) pts.push(i, j);
+          const n = pts.length / 2, S = 4.6;
+          return () => {
+            const k = (rnd() * n) | 0;
+            return [((pts[k * 2] + rnd()) / W - 0.5) * S, (0.5 - (pts[k * 2 + 1] + rnd()) / H) * S * (H / W) + CY, (rnd() - 0.5) * 0.3];
+          };
+        })();
+        const shapes = [["WAVE · 浪", gWave], ["SPHERE · 球", gSphere], ["AXON", gText], ["LIGHTHOUSE · 灯塔", gLight], ["TORUS · 环", gTorus]];
+        let texs = [], shapeI = 0;
+
+        // ---------- Simulation ----------
+        const rtOpts = { type: THREE.FloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, stencilBuffer: false };
+        let pos = [], vel = [];
+        const simRes = new THREE.Vector2(SIZE, SIZE);
+        const simScene = new THREE.Scene();
+        const simMesh = new THREE.Mesh(quad);
+        simScene.add(simMesh);
+
+        const copyMat = new THREE.ShaderMaterial({
+          uniforms: { tSrc: { value: null }, uRes: { value: simRes } },
+          vertexShader: quadVS,
+          fragmentShader: HASH + `uniform sampler2D tSrc; uniform vec2 uRes;
+            void main(){ vec2 uv = gl_FragCoord.xy / uRes; vec3 p = texture2D(tSrc, uv).xyz;
+              p += (vec3(h(uv), h(uv + 1.7), h(uv + 3.1)) - .5) * 3.; gl_FragColor = vec4(p, 1.); }`,
+        });
+        const velMat = new THREE.ShaderMaterial({
+          uniforms: { tPos: { value: null }, tVel: { value: null }, tTarget: { value: null }, tPrev: { value: null }, uMorphT: { value: -9 }, uRes: { value: simRes }, uMouse: { value: new THREE.Vector3(99, 99, 0) }, uDown: { value: 0 }, uTime: { value: 0 }, uDt: { value: 0.016 },
+            uShock: { value: new THREE.Vector4(0, 0, 0, -9) }, uGather: { value: 0 }, uSpray: { value: 0 } },
+          vertexShader: quadVS,
+          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel, tTarget, tPrev; uniform vec2 uRes; uniform vec3 uMouse; uniform vec4 uShock; uniform float uDown, uTime, uDt, uMorphT, uGather, uSpray;
+            void main(){
+              vec2 uv = gl_FragCoord.xy / uRes;
+              vec4 p = texture2D(tPos, uv); vec3 v = texture2D(tVel, uv).xyz;
+              vec4 tg = mix(texture2D(tPrev, uv), texture2D(tTarget, uv), step(h(uv + 4.2) * .9, uTime - uMorphT));
+              vec3 goal = tg.xyz + vec3(0., sin(uTime * .8 + tg.w) * .02, 0.);
+              goal = mix(tg.xyz + (vec3(h(uv + .3), h(uv + .6), h(uv + .9)) - .5) * vec3(10., 6., 4.), goal, uGather);
+              vec3 acc = (goal - p.xyz) * 7.;
+              acc += vec3(sin(p.y * 2.1 + uTime * .7) + sin(p.z * 1.7 + uTime * .4),
+                          cos(p.x * 1.9 + uTime * .6) + sin(p.z * 2.3 - uTime * .5),
+                          sin(p.x * 1.3 - uTime * .5) + cos(p.y * 1.6 + uTime * .3)) * .18;
+              vec3 d = p.xyz - uMouse; float r = length(d); float R = mix(.75, 1.4, uDown);
+              if (r < R) {
+                float f = 1. - r / R; f *= f;
+                acc += d / max(r, 1e-3) * f * mix(22., 75., uDown);
+                acc += cross(vec3(0., 0., 1.), d) / max(r, .05) * f * 12.;
+              }
+              float st = uTime - uShock.w;
+              if (st < 1.2) {
+                vec3 sd = p.xyz - uShock.xyz; float sr = length(sd);
+                acc += sd / max(sr, .05) * exp(-pow((sr - st * 3.5) * 3., 2.)) * exp(-st * 3.) * 90.;
+              }
+              float ph = uSpray > .5 ? sprayPh(uv, uTime) : -1.;
+              if (ph >= 0. && ph < .4) {
+                acc = acc * .04 + vec3(sin(uTime + tg.w) * .3, -4.5, 0.);
+                if (p.w < .5) { acc = vec3(0.); v = vec3(0.); }
+              } else if (ph >= .4) acc *= mix(.15, 1., smoothstep(.4, .8, ph));
+              v += acc * uDt; v *= exp(-3.2 * uDt);
+              gl_FragColor = vec4(v, 1.);
+            }`,
+        });
+        const posMat = new THREE.ShaderMaterial({
+          uniforms: { tPos: { value: null }, tVel: { value: null }, uRes: { value: simRes }, uDt: { value: 0.016 }, uTime: { value: 0 }, uSeaY: { value: -1 }, uHalfW: { value: 3 }, uSpray: { value: 0 } },
+          vertexShader: quadVS,
+          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel; uniform vec2 uRes; uniform float uDt, uTime, uSeaY, uHalfW, uSpray;
+            void main(){ vec2 uv = gl_FragCoord.xy / uRes;
+              vec4 p = texture2D(tPos, uv);
+              float ph = uSpray > .5 ? sprayPh(uv, uTime) : -1.;
+              if (ph < 0. || ph >= .4) p.w = 1.;
+              else if (p.w > .5 && p.y < uSeaY) p = vec4((h(uv + fract(uTime)) - .5) * 2. * uHalfW, uSeaY + (h(uv - fract(uTime)) - .5) * .3, 0., 0.);
+              gl_FragColor = vec4(p.xyz + texture2D(tVel, uv).xyz * uDt, p.w); }`,
+        });
+
+        function pass(mat, rt) { simMesh.material = mat; renderer.setRenderTarget(rt); renderer.render(simScene, orthoCam); }
+        let cur = 0;
+
+        // ---------- Particles ----------
+        const ptMat = new THREE.ShaderMaterial({
+          transparent: true, depthWrite: false, depthTest: false,
+          blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
+          uniforms: { tPos: { value: null }, tVel: { value: null }, uTime: { value: 0 }, uSize: { value: 1 }, uAlpha: { value: 0.36 }, uLamp: bgMat.uniforms.uLamp, uBeam: bgMat.uniforms.uBeam },
+          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize; uniform vec2 uLamp; uniform vec3 uBeam; attribute vec2 ref;
+            varying float vN, vSpec, vA, vBeam;
+            void main(){
+              vec3 p = texture2D(tPos, ref).xyz, v = texture2D(tVel, ref).xyz;
+              vec3 n = normalize((vec3(h(ref), h(ref + 1.3), h(ref + 2.7)) - .5) * 2. + v * .3 + vec3(0., .2, 0.));
+              vN = n.y;
+              vSpec = pow(max(0., sin(uTime * (1. + h(ref + 7.) * 3.) + h(ref + 5.1) * 6.283)), 24.);
+              vA = clamp(length(v) * .2, 0., 1.);
+              vec4 mv = modelViewMatrix * vec4(p, 1.);
+              gl_Position = projectionMatrix * mv;
+              gl_PointSize = uSize * (.6 + h(ref + 9.) * .8) / -mv.z;
+              vBeam = beamAt(gl_Position.xy / gl_Position.w * .5 + .5, uLamp, uBeam);
+            }`,
+          fragmentShader: `uniform float uAlpha; varying float vN, vSpec, vA, vBeam;
+            void main(){
+              vec2 c = gl_PointCoord - .5; float d = length(c); if (d > .5) discard;
+              float t = vN - c.y * .8;
+              vec3 deep = vec3(.03, .1, .32), warm = vec3(1., .55, .22), sky = vec3(.82, .9, 1.);
+              vec3 col = t < 0. ? mix(warm, deep, clamp(-t * 1.4, 0., 1.)) : mix(warm, sky, clamp(t * 1.3, 0., 1.));
+              col += smoothstep(.2, 0., length(c - vec2(-.12, -.12))) * .6 + vSpec * 1.6 + vA * vec3(.2, .3, .5) + vBeam * vec3(1.8, 1.5, 1.1);
+              float a = smoothstep(.5, .3, d) * uAlpha;
+              gl_FragColor = vec4(col * a, a * .5);
+            }`,
+        });
+        const points = new THREE.Points(new THREE.BufferGeometry(), ptMat);
+        points.frustumCulled = false;
+        const scene = new THREE.Scene();
+        scene.add(points);
+        const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 50);
+        camera.position.set(0, 0, 6);
+
+        function build(size) {
+          SIZE = size; N = size * size; small = size === 256;
+          texs.concat(pos, vel).forEach((t) => t.dispose());
+          texs = shapes.map((s) => makeTex(s[1]));
+          const rt = () => new THREE.WebGLRenderTarget(SIZE, SIZE, rtOpts);
+          pos = [rt(), rt()]; vel = [rt(), rt()]; cur = 0;
+          simRes.set(SIZE, SIZE);
+          renderer.setClearColor(0x000000, 0);
+          copyMat.uniforms.tSrc.value = texs[shapeI];
+          for (let i = 0; i < 2; i++) { pass(copyMat, pos[i]); renderer.setRenderTarget(vel[i]); renderer.clear(); }
+          renderer.setRenderTarget(null);
+          velMat.uniforms.tTarget.value = velMat.uniforms.tPrev.value = texs[shapeI];
+          const geo = new THREE.BufferGeometry(), ref = new Float32Array(N * 2);
+          for (let i = 0; i < N; i++) { ref[i * 2] = ((i % SIZE) + 0.5) / SIZE; ref[i * 2 + 1] = (Math.floor(i / SIZE) + 0.5) / SIZE; }
+          geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N * 3), 3));
+          geo.setAttribute("ref", new THREE.BufferAttribute(ref, 2));
+          points.geometry.dispose(); points.geometry = geo;
+          ptMat.uniforms.uAlpha.value = small ? 0.6 : 0.36;
+        }
+        build(SIZE);
+        const nameEls = [document.getElementById("hShape"), document.getElementById("cName")];
+        function setShape(i) {
+          const u = velMat.uniforms;
+          shapeI = (i + shapes.length) % shapes.length;
+          u.tPrev.value = u.tTarget.value; u.tTarget.value = texs[shapeI]; u.uMorphT.value = simT;
+          nameEls.forEach((el) => (el.textContent = shapes[shapeI][0]));
+        }
+
+        // ---------- Input ----------
+        const mouse = new THREE.Vector2(0, 0), smooth = new THREE.Vector2(0, 0);
+        let hasMouse = false, down = 0, downS = 0, simT = 0, paused = false, entered = false, hold = 0, prog = 0, px = 0, py = 0;
+        const intro = document.getElementById("intro"), ring = document.getElementById("ring"), bPause = document.getElementById("bPause");
+        function setPointer(e) { mouse.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); hasMouse = true; px = e.clientX; py = e.clientY; }
+        addEventListener("pointermove", setPointer);
+        addEventListener("pointerdown", (e) => {
+          setPointer(e);
+          if (!entered || e.target.closest(".x-ui")) return;
+          down = 1;
+          const w = mouseWorld();
+          velMat.uniforms.uShock.value.set(w.x, w.y, w.z, simT);
+          bgMat.uniforms.uClick.value.set(e.clientX / innerWidth, simT);
+        });
+        intro.addEventListener("pointerdown", (e) => { hold = 1; e.preventDefault(); });
+        addEventListener("pointerup", () => { down = 0; hold = 0; });
+        addEventListener("pointercancel", () => { down = 0; hold = 0; hasMouse = false; });
+        document.addEventListener("pointerleave", () => { hasMouse = false; });
+        addEventListener("keydown", (e) => {
+          if (!entered) return;
+          if (e.key >= "1" && e.key <= "5") setShape(+e.key - 1);
+          else if (e.key === "ArrowRight") setShape(shapeI + 1);
+          else if (e.key === "ArrowLeft") setShape(shapeI - 1);
+        });
+        document.getElementById("bPrev").addEventListener("click", () => setShape(shapeI - 1));
+        document.getElementById("bNext").addEventListener("click", () => setShape(shapeI + 1));
+        bPause.addEventListener("click", () => {
+          paused = !paused;
+          bPause.textContent = paused ? "▶" : "❚❚";
+          bPause.setAttribute("aria-label", paused ? "Play" : "Pause");
+        });
+
+        function resize() {
+          const w = innerWidth, h = innerHeight;
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h; camera.updateProjectionMatrix();
+          bgMat.uniforms.uRes.value.set(w, h);
+          points.scale.setScalar(Math.min(1, camera.aspect / 1.5));
+          ptMat.uniforms.uSize.value = (small ? 16 : 12) * DPR * (h / 900 + 0.4);
+          const sa = w / h, ia = 2400 / 1018, sx = sa > ia ? 1 : sa / ia, sy = sa > ia ? ia / sa : 1;
+          bgMat.uniforms.uLamp.value.set(0.26 / (sx * 0.94) + 0.5, 0.08 / (sy * 0.94) + 0.5);
+          bgMat.uniforms.uBeam.value.z = sa;
+          const half = 6 * Math.tan(Math.PI / 8) / points.scale.x;
+          posMat.uniforms.uSeaY.value = (-0.12 / (sy * 0.94)) * 2 * half;
+          posMat.uniforms.uHalfW.value = half * sa * 0.9;
+        }
+        addEventListener("resize", resize);
+        resize();
+
+        const ndc = new THREE.Vector3(), dir = new THREE.Vector3(), world = new THREE.Vector3();
+        function mouseWorld() {
+          if (!hasMouse) return world.set(99, 99, 0);
+          ndc.set(mouse.x, mouse.y, 0.5).unproject(camera);
+          dir.copy(ndc).sub(camera.position).normalize();
+          const t = -camera.position.z / dir.z;
+          return world.copy(camera.position).addScaledVector(dir, t).divideScalar(points.scale.x);
+        }
+
+        // ---------- Loop ----------
+        const clock = new THREE.Clock();
+        let started = false, fq = 0, tq = 0, checked = false, hudT = 0, hf = 0;
+        const info = document.getElementById("hInfo"), timeEl = document.getElementById("hTime");
+        const fmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Taipei", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
+        const pad = (n) => String(Math.round(n)).padStart(4, "0");
+        function frame() {
+          const raw = clock.getDelta(), dt = Math.min(raw, 1 / 30);
+          if (!checked && (fq++, (tq += raw) >= 3)) {
+            checked = true;
+            if (fq / tq < 40 && innerWidth >= 768 && SIZE > 256) { build(256); resize(); }
+          }
+          if (!entered) {
+            prog = Math.max(0, Math.min(1, prog + (hold ? raw / 1.5 : -raw)));
+            ring.style.strokeDashoffset = 289 * (1 - prog);
+            if (prog >= 1) { entered = true; intro.classList.add("x-out"); document.body.classList.remove("x-pre"); }
+          }
+          const g = entered ? 1 : prog * prog * (3 - 2 * prog), time = simT;
+          smooth.lerp(mouse, 0.06);
+          downS += (down - downS) * 0.15;
+
+          if (!paused) {
+            simT += dt;
+            const vu = velMat.uniforms, pu = posMat.uniforms, nxt = 1 - cur;
+            vu.tPos.value = pos[cur].texture; vu.tVel.value = vel[cur].texture;
+            vu.uMouse.value.copy(mouseWorld()); vu.uDown.value = downS; vu.uTime.value = simT; vu.uDt.value = dt;
+            vu.uGather.value = g; vu.uSpray.value = pu.uSpray.value = entered ? 1 : 0;
+            pass(velMat, vel[nxt]);
+            pu.tPos.value = pos[cur].texture; pu.tVel.value = vel[nxt].texture; pu.uDt.value = dt; pu.uTime.value = simT;
+            pass(posMat, pos[nxt]);
+            cur = nxt;
+          }
+          const bu = bgMat.uniforms;
+          bu.uBeam.value.x = Math.PI / 2 + 1.5 * Math.sin((time * Math.PI) / 4);
+          bu.uBeam.value.y = g;
+          bu.uFade.value = g;
+
+          hf++; hudT += raw;
+          if (hudT >= 0.5) {
+            info.textContent = `X ${pad(px)} Y ${pad(py)} · ${N.toLocaleString("en-US")} PTS · ${Math.round(hf / hudT)} FPS`;
+            timeEl.textContent = fmt.format(new Date());
+            hf = 0; hudT = 0;
+          }
+
+          renderer.setRenderTarget(null);
+          renderer.setClearColor(0x000000, 1);
+          renderer.clear();
+          if (started) {
+            bgMat.uniforms.uTime.value = time;
+            bgMat.uniforms.uMouse.value.copy(smooth);
+            renderer.render(bgScene, orthoCam);
+          }
+          ptMat.uniforms.tPos.value = pos[cur].texture; ptMat.uniforms.tVel.value = vel[cur].texture; ptMat.uniforms.uTime.value = time;
+          renderer.render(scene, camera);
+          requestAnimationFrame(frame);
+        }
+        function onPlate() { plateTex.needsUpdate = true; started = true; }
+        if (img.complete && img.naturalWidth) onPlate(); else img.addEventListener("load", onPlate);
+        requestAnimationFrame(frame);
+      })();
+    </script>
+  </body>
+</html>
