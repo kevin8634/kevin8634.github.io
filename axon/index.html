@@ -222,10 +222,34 @@
         const bgMat = new THREE.ShaderMaterial({
           depthTest: false, depthWrite: false,
           uniforms: { tPlate: { value: plateTex }, uRes: { value: new THREE.Vector2(1, 1) }, uMouse: { value: new THREE.Vector2() }, uImgAspect: { value: 2400 / 1018 }, uTime: { value: 0 },
-            uFade: { value: 0 }, uLamp: { value: new THREE.Vector2(.8, .6) }, uBeam: { value: new THREE.Vector3(0, 0, 1) }, uClick: { value: new THREE.Vector2(.5, -9) }, uN: { value: 0 }, uKent: { value: 1 }, uDark: { value: 0 } },
+            uFade: { value: 0 }, uLamp: { value: new THREE.Vector2(.8, .6) }, uBeam: { value: new THREE.Vector3(0, 0, 1) }, uClick: { value: new THREE.Vector2(.5, -9) }, uN: { value: 0 }, uKent: { value: 1 }, uDark: { value: 0 }, uSkinFx: { value: 0 } },
           vertexShader: quadVS,
           fragmentShader: HASH + BEAM + `
-            uniform sampler2D tPlate; uniform vec2 uRes, uMouse, uLamp, uClick; uniform vec3 uBeam; uniform float uImgAspect, uTime, uFade, uN, uKent, uDark; varying vec2 vUv;
+            uniform sampler2D tPlate; uniform vec2 uRes, uMouse, uLamp, uClick; uniform vec3 uBeam; uniform float uImgAspect, uTime, uFade, uN, uKent, uDark, uSkinFx; varying vec2 vUv;
+            float gl(float d, float w){ return exp(-d * d / (w * w)); }
+            vec3 circuit(vec2 p, float t, vec3 c, float sc){ vec2 g = p * sc, id = floor(g), f = fract(g); float r = h(id), hz = step(.5, r);
+              float d = mix(abs(f.x - .5), abs(f.y - .5), hz), on = step(.55, h(id + 7.)), pl = fract(mix(g.y, g.x, hz) * .25 - t * .35 + r * 4.);
+              return c * on * (gl(d, .035) * .25 + gl(d, .012) * .5) * (.25 + 1.6 * gl(pl - .5, .08)); }
+            vec3 dots(vec2 p, float t, vec3 c, float sc){ vec2 g = p * sc + vec2(0., -t * .05), id = floor(g); vec2 f = fract(g) - .5 - (vec2(h(id + .7), h(id + 1.9)) - .5) * .5; float r = h(id);
+              return c * step(.72, r) * (gl(length(f), .16) * .5 + gl(length(f), .04)) * (.35 + .65 * pow(.5 + .5 * sin(t * (.5 + r) + r * 40.), 2.)); }
+            vec3 band(vec2 p, float y0, float t, vec3 c, float w){ float y = y0 + .025 * sin(p.x * 3. + t * .15) + .012 * sin(p.x * 9. - t * .3);
+              return c * (gl(p.y - y, w) * .35 + gl(p.y - y, w * .2)) * (.4 + .6 * pow(.5 + .5 * sin(p.x * 6. - t * .5 + 2. * sin(p.x * 1.7)), 3.)); }
+            vec3 aurora(vec2 p, float t, vec3 c){ float y = .8 + .05 * sin(p.x * 2.5 + t * .1); return c * gl(p.y - y, .08) * (.5 + .5 * sin(p.x * 22. + t * .25 + 3. * sin(p.x * 3. + t * .07))) * smoothstep(0., .05, p.y - y + .1); }
+            vec3 skinFx(vec2 v, vec2 uv, float sa, float t){ vec2 p = v * vec2(sa, 1.); int k = int(uSkinFx + .5);
+              if (k == 0) return band(vec2(p.x, uv.y), .497, t, vec3(1., .72, .42), .012) * (.25 + .75 * uN);
+              if (k == 1) return band(p, .1, t, vec3(1.2, .55, .18), .03);
+              if (k == 2) return circuit(p, t, vec3(.45, .45, 1.), 7.);
+              if (k == 3) return circuit(p, t, mix(vec3(1., .2, .8), vec3(.1, .9, 1.), step(.5, fract(p.x * 1.3))), 5.);
+              if (k == 4) return circuit(p, t, vec3(.55, .62, .7), 9.) * .7;
+              if (k == 5) return band(p, .86, t * .5, vec3(.75, .6, .35), .02) * .6;
+              if (k == 6) return dots(p, t, vec3(.1, .8, 1.), 9.);
+              if (k == 7) { vec2 q = (v - vec2(.5, .58)) * vec2(sa, 3.2); float d = length(q) - .62, a = atan(q.y, q.x);
+                return vec3(1., .6, .3) * (gl(d, .04) * .3 + gl(d, .01) * .6) * (.4 + .6 * pow(.5 + .5 * sin(a - t * .4), 4.)); }
+              if (k == 8) return dots(p, t * .7, vec3(.25, 1., .55), 11.);
+              if (k == 9) return dots(p, t * .5, vec3(1., .85, .4), 6.) * .7;
+              if (k == 10) return band(p, .33, t, vec3(1.1, .7, .35), .025) * .7;
+              if (k == 11) return aurora(p, t, vec3(.25, .9, .6));
+              return aurora(p, t, vec3(.2, .7, 1.)); }
             void main(){
               float sa = uRes.x / uRes.y;
               vec2 s = sa > uImgAspect ? vec2(1., uImgAspect / sa) : vec2(sa / uImgAspect, 1.);
@@ -251,12 +275,14 @@
               float star = step(dens, sr) * smoothstep(.22, 0., length(sf - (vec2(h(si + 1.3), h(si + 2.1)) - .5) * .5)) * (.55 + .45 * sin(uTime * (1. + sr * 3.) + sr * 90.));
               col += smoothstep(.5, .54, uv.y) * smoothstep(.1, .28, L) * k2 * star * vec3(.85, .9, 1.) * max(uKent, uDark);
               float bm = beamAt(vUv, uLamp, uBeam);
-              col += uKent * (bm * .16 + smoothstep(.025, 0., length((vUv - uLamp) * vec2(uBeam.z, 1.))) * .6) * (1. + uN * 2.2) * vec3(1., .86, .62);
-              vec2 g = uv * vec2(240., 520.) + vec2(uTime * 2.5, 0.);
+              col += uKent * (bm * .16 + smoothstep(.025, 0., length((vUv - uLamp) * vec2(uBeam.z, 1.))) * 0.) * (1. + uN * 2.2) * vec3(1., .86, .62);
+              { float ld = length((vUv - uLamp) * vec2(uBeam.z, 1.)); col += uKent * (gl(ld, .012) * .45 + gl(ld, .045) * .14) * (.8 + .2 * sin(uTime * 1.2)) * (1. + uN * 2.2) * vec3(1., .86, .62); } // breathing lamp halo
+              col += skinFx(vUv, uv, sa, uTime) * .45 * uFade;
+              vec2 g = uv * vec2(90., 200.) + vec2(uTime * 1.2, sin(uTime * .3 + uv.x * 8.) * .3);
               vec2 id = floor(g); vec2 f = fract(g) - .5;
               float r = h(id);
-              float tw = pow(max(0., sin(uTime * (2. + r * 4.) + r * 40.)), 12.);
-              col += sea * (1. - .7 * k2) * step(.94, r) * tw * smoothstep(.35, 0., length(f)) * vec3(1., .9, .75);
+              float tw = pow(.5 + .5 * sin(uTime * (.6 + r * 1.2) + r * 40.), 3.);
+              col += sea * (1. - .7 * k2) * step(.93, r) * tw * gl(length(f), .22) * .5 * vec3(1., .9, .75);
               gl_FragColor = vec4(col * uFade, 1.);
             }`,
         });
@@ -452,7 +478,37 @@
         };
         const shapes = [["WAVE · 浪", gWave], ["SPHERE · 球", gSphere], ["AXON", gText], ["LIGHTHOUSE · 灯塔", gLight], ["TORUS · 环", gTorus],
           ["PERFUME · 香水", gPerfume], ["SNEAKER · 球鞋", gSneaker], ["HEADPHONES · 耳机", gPhones], ["CUSTOM · 定制", gCustom], ["PHONE · 手机", gPhone]];
-        const CUSTOM_I = 8, PHONE_I = 9;
+        const CUSTOM_I = 8, PHONE_I = 9, TEX_EAGER = 10; // skin forms (index >= 10) build their texture on first use
+        // Skin forms (v0.9). tilt: rotate about X so flat forms face the camera.
+        const tilt = (p, a, y0 = CY) => { const c = Math.cos(a), sn = Math.sin(a), y = p[1]; return [p[0], y * c - p[2] * sn + y0, y * sn + p[2] * c]; };
+        const sdir = () => { const u = rnd() * 2 - 1, a = rnd() * 6.283, q = Math.sqrt(1 - u * u); return [Math.cos(a) * q, u, Math.sin(a) * q]; };
+        const gBrain = () => { const d = sdir(), sg = rnd() < 0.5 ? -1 : 1, g = 1 + 0.07 * Math.sin(9 * d[0] + 3 * d[2]) * Math.sin(11 * d[1] + 2 * d[0]) * Math.sin(8 * d[2] + 4 * d[1]);
+          const x = d[0] * sg < 0 ? d[0] * 0.25 : d[0]; return tilt([sg * 0.52 + x * 0.6 * g, d[1] * 0.78 * g, d[2] * 1.05 * g], -0.35); };
+        const SPK = Array.from({ length: 46 }, (_, i) => { const y = 1 - (2 * (i + 0.5)) / 46, r = Math.sqrt(1 - y * y), a = i * 2.39996; return [Math.cos(a) * r, y, Math.sin(a) * r]; });
+        const gSpiky = () => { if (rnd() < 0.55) { const d = sdir(); return [d[0] * 0.85, d[1] * 0.85 + CY, d[2] * 0.85]; } const k = SPK[(rnd() * SPK.length) | 0], t = Math.pow(rnd(), 0.7), w = (1 - t) * 0.16, o = sdir(), r = 0.8 + t * 0.62;
+          return [k[0] * r + o[0] * w, k[1] * r + o[1] * w + CY, k[2] * r + o[2] * w]; };
+        const gDNA = () => { const y = (rnd() * 2 - 1) * 1.45, o = sdir(); if (rnd() < 0.7) { const a = y * 3.4 + (rnd() < 0.5 ? 0 : Math.PI); return [Math.cos(a) * 0.55 + o[0] * 0.06, y + CY + o[1] * 0.06, Math.sin(a) * 0.55 + o[2] * 0.06]; }
+          const yy = Math.round(y * 6) / 6, a = yy * 3.4, t = rnd() * 2 - 1; return [Math.cos(a) * 0.55 * t + o[0] * 0.03, yy + CY, Math.sin(a) * 0.55 * t + o[2] * 0.03]; };
+        const gMobius = () => { const u = rnd() * 6.283, v = (rnd() * 2 - 1) * 0.42, w = 1.15 + v * Math.cos(u / 2); return tilt([w * Math.cos(u), w * Math.sin(u), v * Math.sin(u / 2)], 1.05); };
+        const gInk = () => { const t = rnd(), o = sdir(), r = 0.2 * Math.pow(Math.sin(Math.PI * Math.min(t * 1.15, 1)), 0.6) + 0.02; return [-2.1 + t * 4.2 + o[0] * r, 0.5 * Math.sin(t * 8.5) * (0.5 + t * 0.5) + CY + o[1] * r, 0.45 * Math.cos(t * 7) + o[2] * r]; };
+        const gJelly = () => { if (rnd() < 0.6) { const d = sdir(); d[1] = Math.abs(d[1]); return [d[0] * 0.95, d[1] * 0.7 + 0.35 + CY, d[2] * 0.95]; }
+          const k = (rnd() * 12) | 0, a = k * 0.5236, t = rnd(), r = 0.75 - t * 0.25; return [Math.cos(a) * r + 0.12 * Math.sin(t * 9 + k), 0.35 - t * 1.75 + CY, Math.sin(a) * r + 0.12 * Math.cos(t * 7 + k)]; };
+        const gDisk = () => { if (rnd() < 0.12) { const a = rnd() * 6.283; return [Math.cos(a) * 0.38, Math.sin(a) * 0.38 + CY, 0]; }
+          const r = 0.45 + Math.pow(rnd(), 0.8) * 1.6, a = ((rnd() * 2) | 0) * Math.PI + 2.4 * Math.log(r) + (rnd() - 0.5) * 0.9; return tilt([Math.cos(a) * r, Math.sin(a) * r, (rnd() - 0.5) * 0.05], 1.2); };
+        const MYC = []; (function br(p, d, L, n) { const q = [p[0] + d[0] * L, p[1] + d[1] * L, p[2] + d[2] * L]; MYC.push([p, q, L, 0.05 * n]); if (n < 2) return;
+          for (let k = 0; k < 2 + (rnd() < 0.4); k++) { const o = sdir(), m = [d[0] + o[0] * 0.75, d[1] + Math.abs(o[1]) * 0.35, d[2] + o[2] * 0.75], l = Math.hypot(...m); br(q, m.map((x) => x / l), L * 0.72, n - 1); } })([0, -1.4, 0], [0, 1, 0], 0.75, 7);
+        const MYC_T = MYC.reduce((a, s) => a + s[2], 0);
+        const gMyc = () => { let r = rnd() * MYC_T, i = 0; while (r > MYC[i][2] && i < MYC.length - 1) r -= MYC[i++][2]; const [a, b, , w] = MYC[i], t = rnd(), o = sdir();
+          return [a[0] + (b[0] - a[0]) * t + o[0] * w, a[1] + (b[1] - a[1]) * t + o[1] * w + CY, a[2] + (b[2] - a[2]) * t + o[2] * w]; };
+        const gLotus = () => { const L = (rnd() * 3) | 0, np = [6, 9, 12][L], k = (rnd() * np) | 0, ph = (k + L * 0.5) * 6.283 / np, u = rnd(), w = (rnd() * 2 - 1) * Math.sin(Math.PI * Math.pow(u, 0.7)) * 0.3;
+          const el = [1.25, 0.85, 0.45][L] - u * 0.35, len = [0.75, 0.95, 1.1][L] * u, r = Math.cos(el) * len, y = Math.sin(el) * len;
+          return tilt([Math.cos(ph) * r - Math.sin(ph) * w, y - 0.45, Math.sin(ph) * r + Math.cos(ph) * w], 0.35); };
+        const gDune = () => { const x = (rnd() * 2 - 1) * 2.4, z = (rnd() * 2 - 1) * 1.3, c = Math.sin(x * 1.5 + z * 0.7);
+          return tilt([x, 0.3 * (1 - Math.abs(c)) * 1.2 + 0.1 * Math.sin(x * 3.3 - z * 1.6) - 0.45, z], 0.45); };
+        const peak = (cx, R, H) => { const r = R * Math.sqrt(rnd()), a = rnd() * 6.283, f = 1 - r / R; return [cx + Math.cos(a) * r, H * Math.pow(f, 1.5) * (1 + 0.18 * Math.abs(Math.sin(a * 5)) * f) - 1, Math.sin(a) * r * 0.6]; };
+        const gPeak = () => tilt(peak(0, 1.6, 2.3), 0.25);
+        const gYulong = () => { if (rnd() < 0.35) { const r = Math.sqrt(rnd()), a = rnd() * 6.283; return tilt([Math.cos(a) * r * 2, -1, 0.9 + Math.sin(a) * r * 0.5], 0.3); }
+          const k = rnd(); return tilt(k < 0.5 ? peak(0, 1.2, 2) : k < 0.75 ? peak(-1.3, 0.9, 1.3) : peak(1.4, 0.9, 1.5), 0.3); };
         const BASE_N = 5; // prev/next and arrows cycle only the first five; works use 5..7
         let texs = [], shapeI = 0, leanI = -1, hovW = false;
 
@@ -475,9 +531,12 @@
           uniforms: { tPos: { value: null }, tVel: { value: null }, tTarget: { value: null }, tPrev: { value: null }, uMorphT: { value: -9 }, uRes: { value: simRes }, uMouse: { value: new THREE.Vector3(99, 99, 0) }, uDown: { value: 0 }, uTime: { value: 0 }, uDt: { value: 0.016 },
             uShock: { value: new THREE.Vector4(0, 0, 0, -9) }, uGather: { value: 0 }, uSpray: { value: 0 }, uLift: { value: 0 }, uMVel: { value: new THREE.Vector3() }, uMSpd: { value: 0 },
             // Work hooks: lean toward a hover target, nozzle mist, beat pulse about uCenter.
-            tLean: { value: null }, uLean: { value: 0 }, uMist: { value: 0 }, uNozzle: { value: new THREE.Vector3(...NOZZLE) }, uPulse: { value: 0 }, uCenter: { value: new THREE.Vector3(0, CY, 0) } },
+            tLean: { value: null }, uLean: { value: 0 }, uMist: { value: 0 }, uNozzle: { value: new THREE.Vector3(...NOZZLE) }, uPulse: { value: 0 }, uFlow: { value: 1 }, uCenter: { value: new THREE.Vector3(0, CY, 0) } },
           vertexShader: quadVS,
-          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel, tTarget, tPrev, tLean; uniform vec2 uRes; uniform vec3 uMouse, uMVel, uNozzle, uCenter; uniform vec4 uShock; uniform float uDown, uTime, uDt, uMorphT, uGather, uSpray, uLift, uMSpd, uLean, uMist, uPulse;
+          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel, tTarget, tPrev, tLean; uniform vec2 uRes; uniform vec3 uMouse, uMVel, uNozzle, uCenter; uniform vec4 uShock; uniform float uDown, uTime, uDt, uMorphT, uGather, uSpray, uLift, uMSpd, uLean, uMist, uPulse, uFlow;
+            vec3 pot(vec3 p, float t){ return vec3(sin(p.y * .9 + t * .21) + cos(p.z * .7 - t * .17), sin(p.z * .8 + t * .19) + cos(p.x * .9 + t * .13), sin(p.x * .7 - t * .23) + cos(p.y * .8 + t * .11)); }
+            vec3 curl(vec3 p, float t){ vec3 e = vec3(.12, 0., 0.), px = pot(p + e.xyy, t) - pot(p - e.xyy, t), py = pot(p + e.yxy, t) - pot(p - e.yxy, t), pz = pot(p + e.yyx, t) - pot(p - e.yyx, t);
+              return vec3(py.z - pz.y, pz.x - px.z, px.y - py.x) / .24; }
             void main(){
               vec2 uv = gl_FragCoord.xy / uRes;
               vec4 p = texture2D(tPos, uv); vec3 v = texture2D(tVel, uv).xyz;
@@ -486,11 +545,8 @@
               goal = mix(tg.xyz + (vec3(h(uv + .3), h(uv + .6), h(uv + .9)) - .5) * vec3(10., 6., 4.), goal, uGather);
               goal = mix(goal, texture2D(tLean, uv).xyz, uLean * .18);
               goal = uCenter + (goal - uCenter) * (1. + uPulse * .12);
-              vec3 acc = (goal - p.xyz) * 7.;
-              vec3 q = p.xyz * .8 + .35 * sin(p.yzx * .6 + uTime * .15);
-              acc += vec3(sin(q.y + uTime * .3) + cos(q.z * 1.1 + uTime * .2),
-                          sin(q.z * .9 - uTime * .25) + cos(q.x + uTime * .3),
-                          sin(q.x * 1.1 - uTime * .2) + cos(q.y * .9 + uTime * .15)) * .13;
+              vec3 acc = (goal - p.xyz) * 5.6;
+              acc += curl(p.xyz * .5 + .25 * sin(p.yzx * .35 + uTime * .07), uTime * uFlow) * .085 * (.6 + .4 * uFlow);
               // Pass-by wake: distance to the cursor's recent path (a capsule trailing behind it).
               vec3 ab = -uMVel * .1; float tt = clamp(dot(p.xyz - uMouse, ab) / max(dot(ab, ab), 1e-5), 0., 1.);
               vec3 d = p.xyz - (uMouse + ab * tt); d.z *= .6;
@@ -515,7 +571,7 @@
                 acc = acc * .04 + vec3(sin(uTime + tg.w) * .3, -4.5, 0.);
                 if (p.w < .5) { acc = vec3(0.); v = vec3(0.); }
               } else if (ph >= .4) acc *= mix(.15, 1., smoothstep(.4, .8, ph));
-              v += acc * uDt; v *= exp(-4.2 * uDt);
+              v += acc * uDt; v *= exp(-3.9 * uDt);
               gl_FragColor = vec4(v, 1.);
             }`,
         });
@@ -539,65 +595,37 @@
           transparent: true, depthWrite: false, depthTest: false,
           blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
           uniforms: { tPos: { value: null }, tVel: { value: null }, uTime: { value: 0 }, uSize: { value: 1 }, uAlpha: { value: 0.8 }, uLamp: bgMat.uniforms.uLamp, uBeam: bgMat.uniforms.uBeam,
-            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uScr: { value: new THREE.Vector3(0, 0, 0) } },
-          // Liquid-chrome flakes: per-particle shading in the vertex stage, sharp capsule in the fragment stage.
-          // Premultiplied normal blending gives the cloud a dark body; glints add light without adding alpha.
-          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep; uniform vec3 uScr; attribute vec2 ref;
-            varying vec3 vCol, vGl; varying vec2 vDir; varying float vStr, vPS, vBlur;
-            vec3 env(vec3 rd){
-              float y = rd.y;
-              vec3 navy = mix(vec3(.12, .13, .17), vec3(.08, .1, .16), uN), sky = mix(vec3(1.32, 1.34, 1.6), vec3(.62, .72, 1.), uN);
-              vec3 c = y < 0. ? mix(navy * 2.4, navy, smoothstep(0., .5, -y)) : mix(sky * .6, sky, smoothstep(.1, .8, y));
-              c += mix(vec3(1.6, 1.15, .78), vec3(.95, 1.05, 1.25), uN) * exp(-y * y * 40.);
-              return c + mix(vec3(2.3, 2.1, 1.8), vec3(1.6, 1.75, 2.), uN) * smoothstep(.32, .06, length((rd.xy - vec2(.42, .5)) * vec2(1., 1.6)));
-            }
+            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uScr: { value: new THREE.Vector3(0, 0, 0) }, uFS: { value: 1 } },
+          // Liquid metal: soft sphere sprites lit in the fragment stage (sky gradient + soft band + clean spec + Fresnel rim); overlap reads as one surface.
+          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN, uFS; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep; uniform vec3 uScr; attribute vec2 ref;
+            varying vec3 vBase, vRim, vGl; varying float vPS, vBlur;
             void main(){
               vec3 p = texture2D(tPos, ref).xyz, v = texture2D(tVel, ref).xyz;
-              float spd = length(v), r1 = h(ref), r2 = h(ref + 1.3), r3 = h(ref + 2.7);
               vec4 mv = modelViewMatrix * vec4(p, 1.);
               gl_Position = projectionMatrix * mv;
-              // Screen-space light sweep band at NDC x = uSweep (off at -9).
               float sw = smoothstep(.18, 0., abs(gl_Position.x / gl_Position.w - uSweep));
               sw = max(sw, uScr.y * step(abs(p.x), .55) * step(abs(p.y - uScr.z), 1.07) * step(0., p.z) * smoothstep(.16, 0., abs(p.y - uScr.x + p.x * .35)) * 1.4);
-              vec4 c1 = projectionMatrix * (modelViewMatrix * vec4(p + v * .1, 1.));
-              vec2 sd = (c1.xy / c1.w - gl_Position.xy / gl_Position.w) * uRes;
-              float a0 = r1 * 6.283 + uTime * (r2 - .5) * .5;
-              vec2 rest = vec2(cos(a0), sin(a0)), vd = length(sd) > 1e-4 ? normalize(sd) : rest;
-              vDir = normalize(mix(rest * (dot(rest, vd) < 0. ? -1. : 1.), vd, smoothstep(.08, 1.2, spd)) + 1e-5);
-              vStr = min((1.2 + r3 * .8) * (1. + 3. * smoothstep(.2, 3., spd)), 5.);
-              vec3 n0 = normalize(vec3(r1, r2, r3) - .5 + 1e-4), ax = normalize(vec3(h(ref + 3.1), h(ref + 4.7), h(ref + 6.2)) - .5 + 1e-4);
-              float ta = uTime * (.3 + h(ref + 7.) * 1.2) + spd * .6;
-              vec3 n = normalize(n0 * cos(ta) + cross(ax, n0) * sin(ta) + ax * dot(ax, n0) * (1. - cos(ta)) + v * .15);
-              vec3 V = normalize(-mv.xyz);
-              if (dot(n, V) < 0.) n = -n;
-              float F = pow(1. - dot(n, V), 5.);
-              // Polished chrome: silver base (#c8ccd2, colder at night) times a bright env, Fresnel rim, filmic exposure.
-              vec3 base = mix(vec3(.784, .8, .824), vec3(.72, .78, .88), uN), rim = mix(vec3(1., .93, .84), vec3(.82, .9, 1.05), uN);
-              base *= uTint; rim *= uTint * uRimC;
-              vec3 col = base * (.16 + env(reflect(-V, n)) * (.5 + .5 * F)) + rim * F * 1.1;
+              vBase = mix(vec3(.86, .875, .9), vec3(.74, .8, .9), uN) * uTint;
+              vRim = mix(vec3(1., .95, .88), vec3(.82, .9, 1.05), uN) * uTint * uRimC;
               float bm = beamAt(gl_Position.xy / gl_Position.w * .5 + .5, uLamp, uBeam), st = uTime - uShock.w;
               float sh = st < 1.2 ? exp(-pow((length(p - uShock.xyz) - st * 3.5) * 2., 2.)) * exp(-st * 2.) : 0.;
-              float boost = clamp(bm * 1.5 + sh + sw * 1.2, 0., 1.), ex = mix(30., 12., boost);
-              float g1 = pow(max(dot(n, normalize(normalize(vec3(.5, .25, .8)) + V)), 0.), ex);
-              float g2 = pow(max(dot(n, normalize(normalize(vec3(-.6, .7, .4)) + V)), 0.), ex * .7);
-              vec3 tint = mix(vec3(1., .9, .76), vec3(.84, .9, 1.), h(ref + 8.));
-              vGl = min(tint * (g1 * 2.2 + g2 * 1.2) * (1. + boost * 2.), vec3(2.5));
-              vCol = 1. - exp(-(col + bm * vec3(.2, .15, .1) + sw * vec3(.25, .22, .18)) * 1.8);
-              vBlur = smoothstep(.4, 2.4, abs(-mv.z - 6.));
-              float th = uSize * (.7 + 2.3 * pow(h(ref + 9.), 3.)) * (1. + vBlur * .9) / -mv.z;
-              vPS = max(th * vStr, 2.);
+              vGl = bm * vec3(.22, .17, .11) + sw * vec3(.3, .27, .22) + sh * .25 + smoothstep(1., 4., length(v)) * .06;
+              vBlur = smoothstep(.6, 2.6, abs(-mv.z - 6.));
+              vPS = max(uSize * uFS * (2.1 + .7 * h(ref + 9.)) * (1. + vBlur * .5) / -mv.z, 2.);
               gl_PointSize = vPS;
             }`,
-          fragmentShader: `uniform float uAlpha; varying vec3 vCol, vGl; varying vec2 vDir; varying float vStr, vPS, vBlur;
+          fragmentShader: `uniform float uAlpha, uN; varying vec3 vBase, vRim, vGl; varying float vPS, vBlur;
             void main(){
-              vec2 c = (gl_PointCoord - .5) * vec2(1., -1.);
-              vec2 q = vec2(dot(c, vDir), dot(c, vec2(-vDir.y, vDir.x)));
-              float r = .5 / vStr, d = length(vec2(max(abs(q.x) - (.5 - r), 0.), q.y)) - r;
-              float soft = mix(1. / vPS, r + 1. / vPS, vBlur);
-              float a = 1. - smoothstep(-soft * .5, soft * .5, d);
-              if (a < .01) discard;
-              float bev = clamp(-d / r, 0., 1.), al = a * uAlpha * (1. - vBlur * .55);
-              gl_FragColor = vec4(vCol * (.7 + .4 * bev) * al + vGl * al * bev, al);
+              vec2 c = (gl_PointCoord - .5) * vec2(2., -2.); float r2 = dot(c, c);
+              if (r2 > 1.) discard;
+              vec3 n = vec3(c, sqrt(1. - r2)), R = vec3(2. * n.z * n.xy, 2. * n.z * n.z - 1.);
+              vec3 sky = mix(vec3(.16, .17, .21), mix(vec3(1.3, 1.3, 1.36), vec3(.8, .9, 1.15), uN), smoothstep(-.7, .75, R.y));
+              sky += mix(vec3(.75, .7, .62), vec3(.5, .6, .8), uN) * exp(-pow((R.y - .3) * 4.5, 2.));
+              sky += 1.3 * pow(max(dot(R, vec3(-.36, .62, .7)), 0.), 28.);
+              float F = pow(1. - n.z, 3.);
+              vec3 col = 1. - exp(-(vBase * (.1 + sky * .78) + vRim * F * .7 + vGl) * 1.6);
+              float a = (1. - smoothstep(.45, 1., r2)) * uAlpha * (1. - vBlur * .5);
+              gl_FragColor = vec4(col * a, a);
             }`,
         });
         const skinTint = new THREE.Vector3(1, 1, 1), skinRim = new THREE.Vector3(1, 1, 1); // current skin's metal baseline
@@ -610,8 +638,8 @@
 
         function build(size) {
           SIZE = size; N = size * size; small = size < 512;
-          texs.concat(pos, vel).forEach((t) => t.dispose());
-          texs = shapes.map((s) => makeTex(s[1]));
+          texs.concat(pos, vel).forEach((t) => t && t.dispose());
+          texs = shapes.map((s, i) => (i < TEX_EAGER || i === shapeI ? makeTex(s[1]) : null));
           const rt = () => new THREE.WebGLRenderTarget(SIZE, SIZE, rtOpts);
           pos = [rt(), rt()]; vel = [rt(), rt()]; cur = 0;
           simRes.set(SIZE, SIZE);
@@ -626,13 +654,14 @@
           geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N * 3), 3));
           geo.setAttribute("ref", new THREE.BufferAttribute(ref, 2));
           points.geometry.dispose(); points.geometry = geo;
-          ptMat.uniforms.uAlpha.value = small ? 0.9 : 0.8;
+          ptMat.uniforms.uAlpha.value = small ? 0.8 : 0.7;
         }
         build(SIZE);
         const nameEls = [document.getElementById("hShape"), document.getElementById("cName")];
         function setShape(i) {
           const u = velMat.uniforms;
           shapeI = (i + shapes.length) % shapes.length;
+          if (!texs[shapeI]) texs[shapeI] = makeTex(shapes[shapeI][1]);
           u.tPrev.value = u.tTarget.value; u.tTarget.value = texs[shapeI]; u.uMorphT.value = simT;
           nameEls.forEach((el) => (el.textContent = shapes[shapeI][0]));
         }
@@ -722,7 +751,7 @@
           const vu = velMat.uniforms;
           vu.uMist.value = 0; vu.uPulse.value = 0; ptMat.uniforms.uSweep.value = -9; ptMat.uniforms.uScr.value.y = 0; ptMat.uniforms.uTint.value.copy(skinTint);
           points.rotation.y = 0;
-          if (shapeI !== 0) setShape(0);
+          if (shapeI !== HOME()) setShape(HOME());
           // Audio fades out in workStep; a silent end (switching works) cuts it at once.
           if (silent && wAud) { wAud.pause(); wAud.volume = 0; wAud = null; }
           if (rec && rec.onEnd) rec.onEnd(silent);
@@ -754,7 +783,7 @@
             vu.uPulse.value *= Math.exp(-6 * raw);
             pu.uTint.value.lerp(t < 9 ? new THREE.Vector3(...customTint) : skinTint, 1 - Math.exp(-3 * raw));
             wTag.classList.toggle("x-on", t >= 6 && t < 9);
-            if (t >= 9 && !w.s14) { w.s14 = true; setShape(0); }
+            if (t >= 9 && !w.s14) { w.s14 = true; setShape(HOME()); }
             wBar.style.width = Math.min(100, (t / D) * 100) + "%";
             if (t >= D) endWork();
             return;
@@ -769,7 +798,7 @@
             vu.uPulse.value *= Math.exp(-6 * raw);
             pu.uTint.value.lerp(skinTint, 1 - Math.exp(-3 * raw));
             wTag.classList.toggle("x-on", t >= 8.4 && t < 11);
-            if (t >= 10 && !w.s14) { w.s14 = true; su.y = 0; vu.uShock.value.set(0, PH_Y, 0, simT); setShape(0); }
+            if (t >= 10 && !w.s14) { w.s14 = true; su.y = 0; vu.uShock.value.set(0, PH_Y, 0, simT); setShape(HOME()); }
             wBar.style.width = Math.min(100, (t / D) * 100) + "%";
             if (t >= D) endWork();
             return;
@@ -806,11 +835,12 @@
             } else vu.uPulse.value = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2)), 8);
           } else vu.uPulse.value *= Math.exp(-6 * raw);
           wTag.classList.toggle("x-on", t >= 11 && t < 14);
-          if (t >= 14 && !w.s14) { w.s14 = true; setShape(0); vu.uPulse.value = 0; }
+          if (t >= 14 && !w.s14) { w.s14 = true; setShape(HOME()); vu.uPulse.value = 0; }
           wBar.style.width = Math.min(100, (t / D) * 100) + "%";
           if (t >= D) endWork();
         }
         document.getElementById("wClose").addEventListener("click", () => endWork());
+        const HOME = () => (skin ? skin.form : 0); // current skin's resting form
         const baseStep = (d) => { if (!rec) setShape((((shapeI + d) % BASE_N) + BASE_N) % BASE_N); };
         addEventListener("keydown", (e) => {
           if (e.key === "Escape" && work) { endWork(); return; }
@@ -1174,6 +1204,11 @@
           SK("blackhole", "宇宙黑洞", "BLACK HOLE", [0.95, 0.8, 1.2], [1.3, 0.8, 0.45], true), SK("mycelium", "发光菌丝森林", "GLOWING MYCELIUM", [0.8, 1.12, 1], [0.5, 1.3, 1.05], true),
           SK("lotus", "荷塘水银珠", "LOTUS POND", [0.92, 1.05, 0.95], [0.95, 1.1, 1], false), SK("dune", "风吹沙丘", "WIND DUNES", [1.18, 1, 0.78], [1.25, 0.95, 0.65], false),
           SK("everest", "珠峰", "EVEREST", [0.9, 1, 1.2], [0.85, 1, 1.25], false), SK("yulong", "玉龙雪山蓝月谷", "JADE DRAGON · BLUE MOON VALLEY", [0.8, 1.1, 1.12], [0.5, 1.2, 1.15], false)];
+        // Per-skin fluid form + style (size = sprite scale, flow = curl-noise time scale). kenting keeps the wave (shape 0).
+        const FORMS = { foundry: ["FERRO · 磁流体", gSpiky, 1.05, 0.8], neural: ["BRAIN · 大脑", gBrain, 0.95, 0.9], neon: ["DNA · 双螺旋", gDNA, 0.9, 1.2], futurelab: ["MÖBIUS · 莫比乌斯", gMobius, 1, 0.8],
+          ink: ["INK DRAGON · 墨龙", gInk, 1.05, 0.7], deepsea: ["JELLYFISH · 水母", gJelly, 1, 0.6], blackhole: ["ACCRETION · 吸积盘", gDisk, 0.9, 1.4], mycelium: ["MYCELIUM · 菌丝", gMyc, 0.85, 0.6],
+          lotus: ["LOTUS · 莲", gLotus, 1, 0.7], dune: ["DUNE · 沙丘", gDune, 0.95, 1], everest: ["PEAK · 峰", gPeak, 0.95, 0.7], yulong: ["JADE PEAKS · 雪山湖", gYulong, 0.95, 0.7] };
+        SKINS.forEach((s) => { const f = FORMS[s.id]; s.form = f ? shapes.push([f[0], f[1]]) - 1 : 0; s.fluid = { tint: s.tint, rim: s.rim, size: f ? f[2] : 1, flow: f ? f[3] : 1 }; });
         let skin = SKINS[0], skinI = 0, skinBusy = false, skinPv = null, sk = null, bgmX = null;
         const iris = document.getElementById("skinIris"), hScene = document.getElementById("hScene"), hPrev = document.getElementById("hPrev");
         const skinIdx = (id) => SKINS.findIndex((s) => s.id === id), hashSkin = () => (/skin=([\w-]+)/.exec(location.hash) || [])[1];
@@ -1202,7 +1237,7 @@
           bu.uImgAspect.value = im.naturalWidth / im.naturalHeight;
           img.src = s.plate; img.alt = `${s.zh} ${s.en}`;
           skinTint.set(...s.tint); skinRim.set(...s.rim);
-          if (inst) { bu.uKent.value = s.kent ? 1 : 0; bu.uDark.value = s.dark ? 1 : 0; if (!work) pu.uTint.value.copy(skinTint); pu.uRimC.value.copy(skinRim); }
+          if (inst) { bu.uKent.value = s.kent ? 1 : 0; bu.uDark.value = s.dark ? 1 : 0; if (!work) pu.uTint.value.copy(skinTint); pu.uRimC.value.copy(skinRim); if (!work && shapeI !== s.form) setShape(s.form); }
           if (!s.kent) { birds.length = sparks.length = rings.length = 0; ships.forEach((x) => (x.m = -1)); waveT = 0; lift = 0; revs = []; if (!s.dark) mets.length = 0; }
           else if (!was) { birds.length = 0; spawnBird(W * 0.3); spawnBird(W * 0.7); }
           fxResize(); resize(); skinHud(i); skinSave(s.id); skinBgm(s); portalSync();
@@ -1223,14 +1258,15 @@
           bu.uKent.value += ((skin.kent ? 1 : 0) - bu.uKent.value) * k; bu.uDark.value += ((skin.dark ? 1 : 0) - bu.uDark.value) * k;
           if (!work) pu.uTint.value.lerp(skinPv ? skinPv[0] : skinTint, k);
           pu.uRimC.value.lerp(skinPv && !work ? skinPv[1] : skinRim, k);
+          pu.uFS.value += (skin.fluid.size - pu.uFS.value) * k; velMat.uniforms.uFlow.value += (skin.fluid.flow - velMat.uniforms.uFlow.value) * k; bu.uSkinFx.value = skinI;
           if (!sk) return;
           const s = sk; s.t += raw;
           // Timeline: sphere + iris (0) → swap at peak (0.9, or when loaded) → burst + wave (+0.7) → iris gone (+0.8).
           if (s.sw < 0 && s.t >= 0.9) {
             if (s.ok === 1) { s.sw = s.t; skinApply(s.i, s.im); }
-            else if (s.ok === -1 || s.t > 8) { iris.classList.remove("x-on"); setShape(0); sk = null; skinBusy = false; portalSync(); toast("底图加载失败 · 保持当前场景"); return; }
+            else if (s.ok === -1 || s.t > 8) { iris.classList.remove("x-on"); setShape(HOME()); sk = null; skinBusy = false; portalSync(); toast("底图加载失败 · 保持当前场景"); return; }
           }
-          if (s.sw >= 0 && s.b < 0 && s.t >= s.sw + 0.7) { s.b = s.t; velMat.uniforms.uShock.value.set(0, CY, 0, simT); setShape(0); iris.classList.remove("x-on"); chime(0.12); }
+          if (s.sw >= 0 && s.b < 0 && s.t >= s.sw + 0.7) { s.b = s.t; velMat.uniforms.uShock.value.set(0, CY, 0, simT); setShape(HOME()); iris.classList.remove("x-on"); chime(0.12); }
           if (s.b >= 0 && s.t >= s.b + 0.8) { sk = null; skinBusy = false; portalSync(); }
         }
         function previewTint(x) {
@@ -1356,8 +1392,9 @@
               }
             }
             const a = on * sa;
-            cx.fillStyle = `rgba(255,225,170,${a * 0.25})`; cx.beginPath(); cx.arc(shipX[i], horY - 1, 5 * big, 0, 6.283); cx.fill();
-            cx.fillStyle = `rgba(255,242,215,${a})`; cx.beginPath(); cx.arc(shipX[i], horY - 1, 1.2 * big, 0, 6.283); cx.fill();
+            const br = a * (0.75 + 0.25 * Math.sin(fxT * 1.3 + i * 1.7)), R = 16 * big, sg = cx.createRadialGradient(shipX[i], horY - 1, 0, shipX[i], horY - 1, R);
+            sg.addColorStop(0, `rgba(255,240,210,${br * 0.85})`); sg.addColorStop(0.18, `rgba(255,220,160,${br * 0.35})`); sg.addColorStop(1, "rgba(255,210,150,0)");
+            cx.fillStyle = sg; cx.beginPath(); cx.arc(shipX[i], horY - 1, R, 0, 6.283); cx.fill();
           });
           // Seabirds
           if (skin.kent && birds.length < 3 && rnd() < raw * 0.08) spawnBird();
