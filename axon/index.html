@@ -57,6 +57,38 @@
       #sHint.x-on { animation: x-pulse 1.6s ease-in-out infinite; }
       @keyframes x-pulse { 0%, 100% { opacity: .35; } 50% { opacity: .9; } }
       .x-fallback #wTag, .x-fallback .x-whud, .x-fallback #sHint { display: none; }
+      /* MAKE YOURS: brand-metal generator panel and toast */
+      .x-gen { position: fixed; left: 16px; bottom: 170px; width: 280px; max-width: calc(100vw - 32px); max-height: calc(100vh - 190px); overflow: auto; box-sizing: border-box; display: none; padding: 10px 12px 12px; background: rgba(10,14,24,.55); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; font: 300 12px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .06em; color: rgba(255,255,255,.72); pointer-events: auto; }
+      .x-gen.x-on { display: block; }
+      .x-pre .x-gen, .x-fallback .x-gen, .x-fallback #toast { display: none; }
+      .x-gen-h { display: flex; align-items: center; justify-content: space-between; margin: -6px -6px 6px 0; color: #fff; }
+      .x-gen button, .x-gen label.x-gbtn { font: inherit; letter-spacing: inherit; color: inherit; cursor: pointer; }
+      .x-gen-x { width: 44px; height: 44px; border: 0; border-radius: 22px; background: none; }
+      .x-gen input[type="text"] { width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 8px 10px; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; background: rgba(0,0,0,.25); color: #fff; font: inherit; }
+      .x-gen input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; }
+      .x-gen label.x-gbtn, .x-chips button { display: inline-block; padding: 5px 9px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; background: rgba(255,255,255,.04); }
+      .x-gen label.x-gbtn:focus-within { border-color: #fff; }
+      .x-gen p { margin: 4px 0; }
+      .x-gen .x-note { opacity: .55; font-size: 12px; }
+      .x-gen #gLogoF button { border: 0; background: none; padding: 0 6px; }
+      .x-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 2px 0 8px; }
+      .x-chips button[aria-pressed="true"] { border-color: #fff; color: #fff; }
+      .x-gen button:hover, .x-gen button:focus-visible { color: #fff; outline: none; }
+      #gGo { display: block; width: 100%; min-height: 44px; margin-top: 4px; border: 1px solid rgba(255,255,255,.75); border-radius: 10px; background: rgba(255,255,255,.08); color: #fff; letter-spacing: .2em; box-shadow: 0 0 12px rgba(255,255,255,.35), inset 0 0 8px rgba(255,255,255,.15); }
+      #toast { position: fixed; left: 50%; bottom: 64px; transform: translateX(-50%); margin: 0; padding: 6px 14px; border-radius: 999px; background: rgba(10,14,24,.75); border: 1px solid rgba(255,255,255,.14); font: 300 12px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: #fff; white-space: nowrap; opacity: 0; transition: opacity .4s; pointer-events: none; }
+      #toast.x-on { opacity: 1; }
+      /* Export video */
+      #gRec { display: block; width: 100%; min-height: 44px; margin-top: 8px; border: 1px solid rgba(255,59,59,.7); border-radius: 10px; background: rgba(255,59,59,.08); color: #fff; letter-spacing: .14em; }
+      #gRec[aria-disabled="true"], #gRec:disabled { opacity: .4; cursor: default; }
+      #gRes video { display: block; width: 100%; max-height: 150px; margin-top: 8px; border-radius: 8px; background: #000; }
+      .x-grow { display: flex; gap: 6px; margin-top: 6px; }
+      .x-grow a, .x-grow button { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 44px; border: 1px solid rgba(255,255,255,.3); border-radius: 10px; background: rgba(255,255,255,.06); color: #fff; text-decoration: none; font: inherit; letter-spacing: inherit; }
+      #recDot { color: #fff; margin-right: 10px; white-space: nowrap; }
+      #recDot b { font-weight: inherit; }
+      #recDot i { font-style: normal; color: #ff3b3b; text-shadow: 0 0 6px rgba(255,59,59,.8); animation: x-blink 1s steps(2, start) infinite; }
+      #recDot[hidden] { display: none; }
+      @keyframes x-blink { 50% { opacity: .2; } }
+      @media (prefers-reduced-motion: reduce) { #recDot i { animation: none; } }
     </style>
   </head>
   <body class="x-pre">
@@ -72,10 +104,33 @@
     <div class="x-hud x-ui x-works" id="works">
       <p>WORKS</p>
       <button data-w="0">01 香水 PERFUME</button><button data-w="1">02 球鞋 SNEAKER</button><button data-w="2">03 耳机 AUDIO</button>
+      <button id="bMake" aria-expanded="false" aria-controls="gen">✦ 做你的金属广告 MAKE YOURS</button>
       <p class="x-soon">04–06 COMING SOON</p>
     </div>
+    <div class="x-ui x-gen" id="gen" role="dialog" aria-label="MAKE YOURS 品牌金属生成器">
+      <div class="x-gen-h"><span>MAKE YOURS · 品牌金属生成器</span><button class="x-gen-x" id="gClose" aria-label="Close">✕</button></div>
+      <input type="text" id="gName" maxlength="12" placeholder="品牌名 BRAND (1–12)" aria-label="品牌名 BRAND" autocomplete="off" />
+      <label class="x-gbtn">上传 LOGO（可选，仅本地）<input type="file" id="gLogo" accept="image/png,image/svg+xml,image/jpeg" /></label>
+      <p id="gLogoF" class="x-note" hidden><span id="gLogoN"></span><button id="gLogoX" aria-label="Clear logo">✕</button></p>
+      <p class="x-note">LOGO 只在本机处理，不会上传</p>
+      <p>材质 SKIN</p>
+      <div class="x-chips" id="gSkin"><button data-skin="0.93,0.96,1" aria-pressed="true">银 Silver</button><button data-skin="1,0.78,0.42" aria-pressed="false">金 Gold</button><button data-skin="0.32,0.34,0.4" aria-pressed="false">黑铬 Black chrome</button><button data-skin="1,0.68,0.6" aria-pressed="false">玫瑰金 Rose gold</button></div>
+      <p>音乐 MUSIC</p>
+      <div class="x-chips" id="gMus"><button data-mus="work_perfume.m4a" aria-pressed="false">香水</button><button data-mus="work_sneaker.m4a" aria-pressed="false">球鞋</button><button data-mus="work_audio.m4a" aria-pressed="false">耳机</button><button data-mus="kenting_dusk_shoreline.m4a" aria-pressed="true">场景 BGM</button></div>
+      <button id="gGo">生成 GENERATE</button>
+      <div id="gOut">
+        <button id="gRec" aria-disabled="true">● 导出视频 EXPORT 10s</button>
+        <p id="gNote" class="x-note">先生成，再导出 10 秒视频</p>
+        <div id="gRes" hidden>
+          <video id="gVid" controls playsinline muted loop></video>
+          <div class="x-grow"><a id="gDl" download>下载 DOWNLOAD</a><button id="gShare">分享 SHARE</button></div>
+          <p class="x-note">若下载无反应：在预览上右键 / 长按另存</p>
+        </div>
+      </div>
+    </div>
+    <p id="toast" role="status" aria-live="polite"></p>
     <p id="wTag" aria-live="polite"><b id="wTagL"></b><small id="wTagS"></small></p>
-    <div class="x-hud x-ui x-whud" id="wHud"><span id="wHudT"></span><span class="x-wbar"><i id="wBar"></i></span><button id="wClose" aria-label="Close work">✕</button></div>
+    <div class="x-hud x-ui x-whud" id="wHud"><span id="recDot" hidden><i aria-hidden="true">●</i> <b id="recT">REC 10s</b></span><span id="wHudT"></span><span class="x-wbar"><i id="wBar"></i></span><button id="wClose" aria-label="Close work">✕</button></div>
     <p class="x-hud" id="sHint">开声音更好看 SOUND ON</p>
     <p class="x-hud x-bl" id="hInfo">X 0000 Y 0000</p>
     <p class="x-hud x-br"><span id="hTime">--:--:--</span><br />21.90°N 120.85°E</p>
@@ -223,6 +278,55 @@
             return [((pts[k * 2] + rnd()) / W - 0.5) * S, (0.5 - (pts[k * 2 + 1] + rnd()) / H) * S * (H / W) + CY, (rnd() - 0.5) * 0.3];
           };
         })();
+        // Custom brand shape (MAKE YOURS): x,y,z triplets from rasterBrand; falls back to the AXON text.
+        let customPts = null, customAspect = 1;
+        const gCustom = () => {
+          if (!customPts) return gText();
+          const k = (rnd() * (customPts.length / 3)) | 0;
+          return [customPts[k * 3], customPts[k * 3 + 1], customPts[k * 3 + 2]];
+        };
+        function rasterBrand(name, img) {
+          const W = 1024, H = 512, c = document.createElement("canvas");
+          c.width = W; c.height = H;
+          const x = c.getContext("2d", { willReadFrequently: true });
+          let R = [0, 0, W, H];
+          if (img) {
+            const iw = img.naturalWidth || img.width || 512, ih = img.naturalHeight || img.height || 512, k = Math.min(900 / iw, 440 / ih);
+            const dw = Math.max(1, Math.round(iw * k)), dh = Math.max(1, Math.round(ih * k));
+            R = [(W - dw) >> 1, (H - dh) >> 1, dw, dh];
+            x.drawImage(img, R[0], R[1], dw, dh);
+          } else {
+            const F = (s) => `900 ${s}px "PingFang SC","Noto Sans SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif`;
+            x.font = F(300);
+            const s = Math.max(12, Math.min(300, Math.floor((300 * 940) / Math.max(1, x.measureText(name).width))));
+            x.font = F(s); x.fillStyle = "#fff"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(name, W / 2, H / 2);
+          }
+          const w = R[2], h = R[3], d = x.getImageData(R[0], R[1], w, h).data, L = (o) => 0.299 * d[o] + 0.587 * d[o + 1] + 0.114 * d[o + 2];
+          let bgL = -1;
+          if (img) {
+            let tr = 0; for (let o = 3; o < d.length; o += 4) if (d[o] < 128) tr++;
+            if (tr <= 0.03 * w * h) {
+              const p = Math.min(8, w, h); let s = 0, n = 0;
+              for (const [cx0, cy0] of [[0, 0], [w - p, 0], [0, h - p], [w - p, h - p]]) for (let j = cy0; j < cy0 + p; j++) for (let i = cx0; i < cx0 + p; i++) { s += L((j * w + i) * 4); n++; }
+              bgL = s / n;
+            }
+          }
+          const keep = new Uint8Array(w * h);
+          let x0 = w, y0 = h, x1 = -1, y1 = -1, cnt = 0;
+          for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+            const o = (j * w + i) * 4;
+            if (d[o + 3] > 128 && (bgL < 0 || Math.abs(L(o) - bgL) > 60)) { keep[j * w + i] = 1; cnt++; if (i < x0) x0 = i; if (i > x1) x1 = i; if (j < y0) y0 = j; if (j > y1) y1 = j; }
+          }
+          if (cnt < 200) throw new Error("图形太小或太淡");
+          const st = cnt > 400000 ? 2 : 1, bw = x1 - x0 + 1, bh = y1 - y0 + 1, S = Math.min(4.4, (1.7 * bw) / bh), sc = S / bw, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, out = [];
+          for (let j = y0; j <= y1; j += st) for (let i = x0; i <= x1; i += st) {
+            if (!keep[j * w + i]) continue;
+            let z = (rnd() - 0.5) * 0.32;
+            if (img) z += (L((j * w + i) * 4) / 255 - 0.5) * 0.12;
+            out.push((i - cx) * sc + (rnd() - 0.5) * sc, -(j - cy) * sc + CY + (rnd() - 0.5) * sc, z);
+          }
+          customPts = new Float32Array(out); customAspect = bw / bh;
+        }
         // Perfume: bevelled box body (y -1.0..0.5), neck, spherical cap; NOZZLE sits at the cap top.
         const NOZZLE = [0, CY + 1.06, 0];
         const gPerfume = () => {
@@ -280,7 +384,8 @@
           return [p[0] * c + p[2] * sn, p[1] + YO + CY, -p[0] * sn + p[2] * c];
         };
         const shapes = [["WAVE · 浪", gWave], ["SPHERE · 球", gSphere], ["AXON", gText], ["LIGHTHOUSE · 灯塔", gLight], ["TORUS · 环", gTorus],
-          ["PERFUME · 香水", gPerfume], ["SNEAKER · 球鞋", gSneaker], ["HEADPHONES · 耳机", gPhones]];
+          ["PERFUME · 香水", gPerfume], ["SNEAKER · 球鞋", gSneaker], ["HEADPHONES · 耳机", gPhones], ["CUSTOM · 定制", gCustom]];
+        const CUSTOM_I = 8;
         const BASE_N = 5; // prev/next and arrows cycle only the first five; works use 5..7
         let texs = [], shapeI = 0, leanI = -1, hovW = false;
 
@@ -462,6 +567,12 @@
           u.tPrev.value = u.tTarget.value; u.tTarget.value = texs[shapeI]; u.uMorphT.value = simT;
           nameEls.forEach((el) => (el.textContent = shapes[shapeI][0]));
         }
+        function setCustomTex() {
+          const old = texs[CUSTOM_I], u = velMat.uniforms;
+          texs[CUSTOM_I] = makeTex(gCustom);
+          ["tTarget", "tPrev", "tLean"].forEach((k) => { if (u[k].value === old) u[k].value = texs[CUSTOM_I]; });
+          old.dispose();
+        }
 
         // ---------- Input ----------
         const mouse = new THREE.Vector2(0, 0), smooth = new THREE.Vector2(0, 0);
@@ -492,7 +603,10 @@
         document.addEventListener("pointerleave", () => { hasMouse = false; });
         document.documentElement.addEventListener("mouseleave", () => { hasMouse = false; pvx = pvy = 0; });
         // Works: a 15 s timeline per work: sphere → hero shape (4–11) → tagline (11–14) → wave → end.
-        const WORKS = [{ name: "香水 PERFUME", shape: 5, tag: "LIQUID. LIGHT. LASTING.", src: "work_perfume.m4a" }, { name: "球鞋 SNEAKER", shape: 6, tag: "FORGED IN MOTION", src: "work_sneaker.m4a" }, { name: "耳机 AUDIO", shape: 7, tag: "HEAR THE METAL", src: "work_audio.m4a" }];
+        const WORKS = [{ name: "香水 PERFUME", shape: 5, tag: "LIQUID. LIGHT. LASTING.", src: "work_perfume.m4a" }, { name: "球鞋 SNEAKER", shape: 6, tag: "FORGED IN MOTION", src: "work_sneaker.m4a" }, { name: "耳机 AUDIO", shape: 7, tag: "HEAR THE METAL", src: "work_audio.m4a" },
+          { name: "定制 CUSTOM", shape: CUSTOM_I, tag: "", src: "kenting_dusk_shoreline.m4a", type: "custom", dur: 10 }];
+        const CUSTOM_W = 3;
+        let customTint = [0.93, 0.96, 1], customName = "AXON", rec = null; // rec: export hook for edit B
         const WAUD = WORKS.map((w) => { const a = new Audio(); a.preload = "auto"; a.addEventListener("error", () => (a.bad = true)); a.src = w.src; return a; });
         const TINTS = [[1, 1, 1], [1, 0.78, 0.42], [0.32, 0.34, 0.4]], WHITE = [1, 1, 1];
         const wTag = document.getElementById("wTag"), wTagL = document.getElementById("wTagL"), wTagS = document.getElementById("wTagS"), wHud = document.getElementById("wHud"), wHudT = document.getElementById("wHudT"), wBar = document.getElementById("wBar"), sHint = document.getElementById("sHint");
@@ -509,6 +623,7 @@
           waveT = 0; setShape(1);
           wTagL.textContent = WORKS[i].tag; wTagS.textContent = `AXON · 液态金属广告样片 0${i + 1}`;
           wHudT.textContent = `WORK 0${i + 1}/06 · ${WORKS[i].name}`; wBar.style.width = "0";
+          if (WORKS[i].type === "custom") { wTagL.textContent = customName.toUpperCase(); wTagS.textContent = "MADE WITH AXON"; wHudT.textContent = `MAKE YOURS · ${customName}`; }
           wHud.classList.add("x-on");
           wAudStart(0);
         }
@@ -521,6 +636,7 @@
           if (shapeI !== 0) setShape(0);
           // Audio fades out in workStep; a silent end (switching works) cuts it at once.
           if (silent && wAud) { wAud.pause(); wAud.volume = 0; wAud = null; }
+          if (rec && rec.onEnd) rec.onEnd(silent);
           work = null;
         }
         function burst() {
@@ -537,6 +653,23 @@
           if (!work || !entered || paused) return;
           const w = work, t = (w.t += raw), vu = velMat.uniforms, pu = ptMat.uniforms;
           w.dip -= raw;
+          const D = WORKS[w.i].dur || 15;
+          if (WORKS[w.i].type === "custom") {
+            // Custom: 10 s — sphere → brand (1.5) → ±20° sway + sweep (2.5–8) → tagline (6–9) → wave (9) → end.
+            if (t >= 1.5 && !w.s2) { w.s2 = true; setShape(CUSTOM_I); }
+            if (t >= 2.5 && t < 8) {
+              points.rotation.y = 0.349 * Math.sin((t - 2.5) * 0.9) * clamp((t - 2.5) / 0.6, 0, 1);
+              pu.uSweep.value = -1.4 + 2.8 * (((t - 2.5) % 2.8) / 2.8);
+            } else if (t >= 8) { points.rotation.y = wrapA(points.rotation.y) * Math.exp(-2 * raw); pu.uSweep.value = -9; }
+            vu.uMist.value = clamp(vu.uMist.value - 2 * raw, 0, 1);
+            vu.uPulse.value *= Math.exp(-6 * raw);
+            pu.uTint.value.lerp(new THREE.Vector3(...(t < 9 ? customTint : WHITE)), 1 - Math.exp(-3 * raw));
+            wTag.classList.toggle("x-on", t >= 6 && t < 9);
+            if (t >= 9 && !w.s14) { w.s14 = true; setShape(0); }
+            wBar.style.width = Math.min(100, (t / D) * 100) + "%";
+            if (t >= D) endWork();
+            return;
+          }
           if (t >= 2 && !w.s2) { w.s2 = true; setShape(WORKS[w.i].shape); }
           const hero = t >= 4 && t < 11;
           if (hero) {
@@ -570,14 +703,14 @@
           } else vu.uPulse.value *= Math.exp(-6 * raw);
           wTag.classList.toggle("x-on", t >= 11 && t < 14);
           if (t >= 14 && !w.s14) { w.s14 = true; setShape(0); vu.uPulse.value = 0; }
-          wBar.style.width = Math.min(100, (t / 15) * 100) + "%";
-          if (t >= 15) endWork();
+          wBar.style.width = Math.min(100, (t / D) * 100) + "%";
+          if (t >= D) endWork();
         }
         document.getElementById("wClose").addEventListener("click", () => endWork());
         const baseStep = (d) => setShape((((shapeI + d) % BASE_N) + BASE_N) % BASE_N);
         addEventListener("keydown", (e) => {
           if (e.key === "Escape" && work) { endWork(); return; }
-          if (!entered) return;
+          if (!entered || (e.target.closest && e.target.closest("input, textarea"))) return;
           const dg = /^Digit([1-5])$/.exec(e.code || "");
           // Shift+1..5 = shapes 0–4; plain 4/5 = shapes 3/4; plain 1–3 = works.
           if (dg && e.shiftKey) { if (!work) setShape(+dg[1] - 1); }
@@ -589,16 +722,197 @@
         document.getElementById("bPrev").addEventListener("click", () => baseStep(-1));
         document.getElementById("bNext").addEventListener("click", () => baseStep(1));
         // WORKS index: hover/focus leans the cloud toward the work's shape; click plays it.
-        document.querySelectorAll("#works button").forEach((b) => {
+        document.querySelectorAll("#works button[data-w]").forEach((b) => {
           const i = +b.dataset.w, on = () => { hovW = true; leanI = 5 + i; velMat.uniforms.tLean.value = texs[leanI]; }, off = () => { hovW = false; };
           b.addEventListener("pointerenter", on); b.addEventListener("focus", on);
           b.addEventListener("pointerleave", off); b.addEventListener("blur", off);
           b.addEventListener("click", () => playWork(i));
         });
+        // MAKE YOURS: generator panel. Logo stays local (FileReader → Image), never uploaded.
+        const $ = (id) => document.getElementById(id), gen = $("gen"), bMake = $("bMake"), gName = $("gName"), gLogo = $("gLogo"), toastEl = $("toast");
+        let logoImg = null, toastT = 0;
+        function toast(msg) { toastEl.textContent = msg; toastEl.classList.add("x-on"); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove("x-on"), 2600); }
+        const genShow = (on) => { gen.classList.toggle("x-on", on); bMake.setAttribute("aria-expanded", on); if (on) gName.focus(); };
+        bMake.addEventListener("click", () => genShow(!gen.classList.contains("x-on")));
+        bMake.addEventListener("pointerenter", () => { if (customPts) { hovW = true; leanI = CUSTOM_I; velMat.uniforms.tLean.value = texs[CUSTOM_I]; } });
+        bMake.addEventListener("pointerleave", () => { hovW = false; });
+        $("gClose").addEventListener("click", () => { genShow(false); bMake.focus(); });
+        const clearLogo = () => { logoImg = null; gLogo.value = ""; $("gLogoF").hidden = true; };
+        $("gLogoX").addEventListener("click", clearLogo);
+        gLogo.addEventListener("change", () => {
+          const f = gLogo.files && gLogo.files[0];
+          if (!f) return clearLogo();
+          const fr = new FileReader();
+          fr.onerror = () => toast("生成失败：无法读取文件");
+          fr.onload = () => { const im = new Image(); im.onload = () => { logoImg = im; $("gLogoN").textContent = f.name; $("gLogoF").hidden = false; }; im.onerror = () => { clearLogo(); toast("生成失败：图片无法解析"); }; im.src = fr.result; };
+          fr.readAsDataURL(f);
+        });
+        const pick = (box, b) => box.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+        ["gSkin", "gMus"].forEach((id) => $(id).addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) pick($(id), b); }));
+        $("gGo").addEventListener("click", () => {
+          try {
+            const nm = gName.value.trim();
+            if ((nm.length < 1 || nm.length > 12) && !logoImg) { toast("请输入 1–12 个字的品牌名"); return; }
+            const skin = gen.querySelector("[data-skin][aria-pressed=true]"), mus = gen.querySelector("[data-mus][aria-pressed=true]").dataset.mus;
+            customName = nm || "AXON"; customTint = skin.dataset.skin.split(",").map(Number);
+            rasterBrand(nm, logoImg); setCustomTex();
+            const a = WAUD[CUSTOM_W]; a.bad = false;
+            if (WORKS[CUSTOM_W].src !== mus) { WORKS[CUSTOM_W].src = mus; a.src = mus; }
+            playWork(CUSTOM_W); $("gRec").setAttribute("aria-disabled", "false");
+          } catch (err) { toast("生成失败：" + ((err && err.message) || err)); }
+        });
         bPause.addEventListener("click", () => {
           paused = !paused;
           bPause.textContent = paused ? "▶" : "❚❚";
           bPause.setAttribute("aria-label", paused ? "Play" : "Pause");
+        });
+
+        // Export video: record the 10 s custom timeline (WebGL + fx canvases, drawn text, chosen music) with MediaRecorder.
+        const gRec = $("gRec"), gNote = $("gNote"), gRes = $("gRes"), gVid = $("gVid"), gDl = $("gDl"), recDot = $("recDot"), recT = $("recT"), fxCv = $("fx");
+        const REC_OK = !!(window.MediaRecorder && HTMLCanvasElement.prototype.captureStream);
+        const REC_LABEL = gRec.textContent, SANS = 'system-ui, "PingFang SC", "Noto Sans SC", sans-serif';
+        const REC_MIME = (() => {
+          if (!REC_OK || typeof MediaRecorder.isTypeSupported !== "function") return "";
+          return ["video/mp4;codecs=avc1.42E01E,mp4a.40.2", "video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"]
+            .find((m) => { try { return MediaRecorder.isTypeSupported(m); } catch (e) { return false; } }) || "";
+        })();
+        const REC_EXT = REC_MIME.startsWith("video/mp4") ? "mp4" : "webm", audBufs = new Map();
+        let recUrl = "", lastFile = null;
+        if (!REC_OK) { gRec.hidden = true; gNote.textContent = "此浏览器不支持视频录制导出（MediaRecorder 不可用）"; }
+        function decodeTrack(src) {
+          if (audBufs.has(src)) return Promise.resolve(audBufs.get(src));
+          const dec = fetch(src).then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.arrayBuffer(); })
+            .then((ab) => new Promise((res, rej) => { const p = ac.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); }))
+            .then((b) => { audBufs.set(src, b); return b; });
+          return Promise.race([dec, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 4000))]);
+        }
+        const recReset = () => { recDot.hidden = true; gRec.disabled = false; gRec.textContent = REC_LABEL; };
+        async function startRec() {
+          if (rec || gRec.disabled) return;
+          if (!customPts) { toast("请先生成品牌金属"); return; }
+          let st = {}, me = null, done = false, keep = false;
+          // Releases everything this recording holds: recorder, stream tracks, audio node.
+          const cleanup = () => {
+            if (!st) return;
+            try { if (st.recorder && st.recorder.state !== "inactive") st.recorder.stop(); } catch (e) {}
+            if (st.stream) st.stream.getTracks().forEach((k) => k.stop());
+            try { if (st.srcN) { st.srcN.stop(); st.srcN.disconnect(); } } catch (e) {}
+            try { if (st.gain) st.gain.disconnect(); } catch (e) {}
+            st = null;
+          };
+          const stopRec = (finished, quiet) => {
+            if (done) return; done = true; keep = finished;
+            cleanup();
+            if (rec === me) rec = null;
+            recReset();
+            if (!finished && !quiet) toast("录制已取消");
+          };
+          gRec.disabled = true; gRec.textContent = "● 录制中…";
+          try {
+            if (paused) { paused = false; bPause.textContent = "❚❚"; bPause.setAttribute("aria-label", "Pause"); }
+            const land = innerWidth >= innerHeight;
+            let W = land ? 1280 : Math.round((1280 * innerWidth) / innerHeight), H = land ? Math.round((1280 * innerHeight) / innerWidth) : 1280;
+            W = 2 * Math.round(W / 2); H = 2 * Math.round(H / 2);
+            const rc = document.createElement("canvas"); rc.width = W; rc.height = H;
+            const ctx = rc.getContext("2d"), hasLS = "letterSpacing" in ctx;
+            ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
+            if (!ac) audioInit();
+            if (ac.resume) ac.resume().catch(() => {});
+            let buf = null, dest = null;
+            if (ac.createMediaStreamDestination) { try { buf = await decodeTrack(WORKS[CUSTOM_W].src); } catch (e) { buf = null; } }
+            if (!st) return;
+            if (buf) {
+              dest = ac.createMediaStreamDestination();
+              st.srcN = ac.createBufferSource(); st.srcN.buffer = buf; st.gain = ac.createGain();
+              st.srcN.connect(st.gain); st.gain.connect(dest);
+            } else toast("音乐未能混入（浏览器限制），导出为无声视频");
+            const tracks = rc.captureStream(30).getVideoTracks();
+            if (dest) tracks.push(...dest.stream.getAudioTracks());
+            const stream = (st.stream = new MediaStream(tracks)), chunks = [];
+            const recorder = (st.recorder = new MediaRecorder(stream, REC_MIME ? { mimeType: REC_MIME, videoBitsPerSecond: 8e6 } : { videoBitsPerSecond: 8e6 }));
+            recorder.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+            recorder.onstop = () => {
+              if (!keep) { chunks.length = 0; return; }
+              const blob = new Blob(chunks, { type: REC_MIME.split(";")[0] || "video/webm" });
+              if (recUrl) URL.revokeObjectURL(recUrl);
+              recUrl = URL.createObjectURL(blob);
+              gVid.src = recUrl; gDl.href = recUrl;
+              gDl.download = `AXON_${customName.replace(/[\\/:*?"<>|\s]+/g, "_")}.${REC_EXT}`;
+              gRes.hidden = false; toast("视频已生成 ✓");
+              try { lastFile = new File([blob], gDl.download, { type: blob.type }); } catch (e) { lastFile = null; }
+            };
+            recorder.onerror = (e) => { toast("导出失败：" + ((e && e.error && e.error.message) || "MediaRecorder error")); stopRec(false, true); };
+            recorder.start(250);
+            if (st.srcN) {
+              const now = ac.currentTime, g = st.gain.gain;
+              g.setValueAtTime(1, now); g.setValueAtTime(1, now + 9.2); g.linearRampToValueAtTime(0, now + 10);
+              st.srcN.start(now);
+            }
+            const gl = renderer.domElement;
+            let lastS = -1, failed = false;
+            // Called from frame() right after the final render, while the WebGL drawing buffer is still valid.
+            const draw = () => {
+              if (failed || !work) return;
+              try {
+                const t = work.t;
+                ctx.globalAlpha = 1; ctx.shadowBlur = 0; if (hasLS) ctx.letterSpacing = "0px";
+                ctx.drawImage(gl, 0, 0, W, H); ctx.drawImage(fxCv, 0, 0, W, H);
+                ctx.textAlign = "center"; ctx.textBaseline = "middle";
+                if (t >= 6 && t < 9) {
+                  const fs = Math.round(H * 0.06), fm = Math.round(H * 0.018);
+                  ctx.globalAlpha = clamp(Math.min(t - 6, 9 - t) / 0.5, 0, 1);
+                  ctx.fillStyle = "#fff"; ctx.shadowColor = "rgba(255,255,255,.6)"; ctx.shadowBlur = H * 0.02;
+                  ctx.font = `200 ${fs}px ${SANS}`;
+                  if (hasLS) ctx.letterSpacing = "0.3em";
+                  ctx.fillText(customName.toUpperCase(), W / 2 + (hasLS ? fs * 0.15 : 0), 0.68 * H);
+                  ctx.shadowBlur = 0; ctx.fillStyle = "rgba(255,255,255,.65)";
+                  ctx.font = `300 ${fm}px ui-monospace, Menlo, monospace`;
+                  if (hasLS) ctx.letterSpacing = "0.2em";
+                  ctx.fillText("MADE WITH AXON", W / 2 + (hasLS ? fm * 0.1 : 0), 0.68 * H + fs * 0.95);
+                  if (hasLS) ctx.letterSpacing = "0px";
+                }
+                if (t >= 9) {
+                  const r = clamp((t - 9) / 0.4, 0, 1);
+                  ctx.globalAlpha = 1; ctx.fillStyle = `rgba(0,0,0,${0.55 * r})`; ctx.fillRect(0, 0, W, H);
+                  ctx.globalAlpha = r; ctx.fillStyle = "#fff";
+                  ctx.font = `300 ${Math.round(H * 0.032)}px ${SANS}`;
+                  ctx.fillText("定制你的品牌广告 · 联系 AXON", W / 2, H / 2);
+                  ctx.fillStyle = "rgba(255,255,255,.65)"; ctx.font = `300 ${Math.round(H * 0.018)}px ui-monospace, Menlo, monospace`;
+                  ctx.fillText("CONTACT · 联系方式待补充", W / 2, H / 2 + H * 0.05);
+                }
+                ctx.globalAlpha = 1; ctx.textAlign = "right"; ctx.textBaseline = "bottom"; ctx.fillStyle = "rgba(255,255,255,.55)";
+                ctx.font = `300 ${Math.max(11, Math.round(H * 0.016))}px ui-monospace, monospace`;
+                ctx.fillText("AXON · axon studio", W - H * 0.025, H - H * 0.025);
+                const s = Math.max(0, Math.ceil(10 - t));
+                if (s !== lastS) { lastS = s; recT.textContent = `REC ${s}s`; }
+              } catch (err) {
+                if (!failed) { failed = true; toast("导出失败：" + ((err && err.message) || err)); stopRec(false, true); }
+              }
+            };
+            const onEnd = (silent) => stopRec(!silent && !!work && work.t >= 9.9);
+            playWork(CUSTOM_W); // may end an older work first; the new recording only hooks in after
+            me = rec = { draw, onEnd, stop: stopRec };
+            recT.textContent = "REC 10s"; recDot.hidden = false; gRes.hidden = true;
+          } catch (err) {
+            toast("导出失败：" + ((err && err.message) || err));
+            done = true; keep = false; cleanup();
+            if (me && rec === me) rec = null;
+            recReset();
+          }
+        }
+        gRec.addEventListener("click", startRec);
+        $("gShare").addEventListener("click", () => {
+          if (lastFile && navigator.canShare && navigator.canShare({ files: [lastFile] })) {
+            navigator.share({ files: [lastFile], title: "AXON · " + customName, text: "MADE WITH AXON" })
+              .catch((e) => { if (!e || e.name !== "AbortError") toast("分享失败：" + ((e && e.message) || e)); });
+            return;
+          }
+          const msg = `我用 AXON 做了一支「${customName}」液态金属广告 ✦ MADE WITH AXON`;
+          const fail = () => toast("此环境不支持直接分享，请先下载视频");
+          try {
+            if (!navigator.clipboard || !navigator.clipboard.writeText) return fail();
+            navigator.clipboard.writeText(msg).then(() => toast("已复制分享文案 · 请先下载视频再发送"), fail);
+          } catch (e) { fail(); }
         });
 
         function resize() {
@@ -707,7 +1021,7 @@
 
         // Input: wheel and vertical touch drag set the time; everything else wakes on pass-by (see fxStep). Click = shockwave + chime.
         addEventListener("wheel", (e) => { e.preventDefault(); if (entered) tT = clamp(tT + e.deltaY * (e.deltaMode ? 0.03 : 0.0008), 0, 1); }, { passive: false });
-        addEventListener("keydown", (e) => { if (entered && (e.key === "ArrowUp" || e.key === "ArrowDown")) tT = clamp(tT + (e.key === "ArrowDown" ? 0.1 : -0.1), 0, 1); });
+        addEventListener("keydown", (e) => { if (e.target.closest && e.target.closest("input, textarea")) return; if (entered && (e.key === "ArrowUp" || e.key === "ArrowDown")) tT = clamp(tT + (e.key === "ArrowDown" ? 0.1 : -0.1), 0, 1); });
         addEventListener("pointerdown", (e) => {
           if (!entered || e.target.closest(".x-ui")) return;
           const x = e.clientX, y = e.clientY;
@@ -970,6 +1284,7 @@
           }
           ptMat.uniforms.tPos.value = pos[cur].texture; ptMat.uniforms.tVel.value = vel[cur].texture; ptMat.uniforms.uTime.value = time;
           renderer.render(scene, camera);
+          if (rec && rec.draw) rec.draw();
           requestAnimationFrame(frame);
         }
         function onPlate() { plateTex.needsUpdate = true; started = true; }
