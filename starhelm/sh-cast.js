@@ -95,7 +95,10 @@
     } catch (e) { }
     // 流星雨
     var y = now.getUTCFullYear();
+    var LN = window.SH && SH.leonidsLab && SH.leonidsLab.active && SH.leonidsLab.active();   // v1.0-M4m 本月天象置顶
+    if (LN) out.push({ kind: 'sky', lab: 'leonidsLab', ico: '☄', col: '#c9b0ff', title: '本月天象 · 狮子座流星雨', meta: '极大 11月18日 07:45(北京时间)· 点开看你那里几点最好', tag: '本月天象', score: 99 });
     SHOWERS.forEach(function (s) {
+      if (LN && s[2] === '狮子座流星雨') return;
       [y, y + 1].forEach(function (yy) {
         var ms = Date.UTC(yy, s[0] - 1, s[1], 12), dd = (ms - now) / 864e5;
         if (dd > -1 && dd < 10) out.push({ kind: 'sky', ico: '☄', col: '#c9b0ff', title: s[2] + '极大 · ' + (dd < 0.5 ? '就在今晚前后' : inDays(ms)), meta: '每小时最多约 ' + s[3] + ' 颗(理想条件)· 后半夜最佳' + (L && s[2] === '宝瓶座 η 流星雨' ? '' : ''), tag: '天象', score: 52 + Math.min(20, s[3] / 8) - dd });

@@ -1,4 +1,4 @@
-/* 天枢 Starhelm · sh-link.js(v0.6.5;v1.0-M2e 加 tidelock/aurora/marsday/tonight/jupiter/retro)—— 星桥深链:?task=<id> 载入后直接打开对应任务或实验室
+/* 天枢 Starhelm · sh-link.js(v0.6.5;v1.0-M2e 加 tidelock/aurora/marsday/tonight/jupiter/retro;v1.0-M4m 加 leonids 本月天象)—— 星桥深链:?task=<id> 载入后直接打开对应任务或实验室
  * where / orbit / seasons / sats / quakes:进入第一个还没拿到星的关卡;eclipse / tide / sun / moon:打开实验室;archive:星档馆
  * 不认识的 id 忽略;任何失败都不影响首页 */
 (function () {
@@ -29,7 +29,8 @@
     retro: function () { SH.retroLab.open(); },
     voyager: function () { SH.voyagerLab.open(); },
     comet: function () { SH.cometLab.open(); },
-    dino: function () { SH.dinoLab.open(); }
+    dino: function () { SH.dinoLab.open(); },
+    leonids: function () { SH.leonidsLab.open(); }
   };
   if (!OPEN[id]) return;
   (function w(n) {
