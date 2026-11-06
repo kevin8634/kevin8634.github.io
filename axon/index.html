@@ -452,8 +452,9 @@
           shipX = [toX(0.36), toX(0.56)];
         }
         addEventListener("resize", fxResize); fxResize();
+        const BEADS_ON = false; // 潮池水银珠：用户反馈多余且会卡住，已关闭
         function addBead(r, x, y) {
-          if (beads.length >= 24) return;
+          if (!BEADS_ON || beads.length >= 24) return;
           const a = rnd() * 6.283, d = Math.sqrt(rnd()) * 0.85;
           beads.push({ x: x ?? poolX + Math.cos(a) * d * poolR, y: y ?? poolY + Math.sin(a) * d * poolR * 0.3, vx: 0, vy: 0, r, ph: rnd() * 6, born: fxT, jig: 0 });
         }
