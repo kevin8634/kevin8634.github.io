@@ -54,6 +54,7 @@ body.mission.molecule .m-stage{border-color:rgba(214,170,90,.32);background:rgba
 .cx-tip b{color:#7ff5e2}
 .cx-mir{position:relative;height:360px;border-radius:12px;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#132430 0%,#0a1018 60%,#050709 100%)}
 .cx-mir canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+.cx-mir .cx-gl{pointer-events:none;z-index:0}.cx-mir canvas+canvas,.cx-mir.gl>canvas:not(.cx-gl){z-index:1}
 .cx-mir canvas:focus-visible{outline:2px solid #7ff5e2;outline-offset:-2px}
 .cx-score{position:absolute;left:10px;top:10px;font-size:13px;background:rgba(6,14,20,.75);border:1px solid rgba(63,224,200,.45);border-radius:10px;padding:4px 10px;pointer-events:none}
 .cx-score b{color:#9ff0b4;font-size:16px}
@@ -437,6 +438,8 @@ function Mirror(host, labels, onScore) {
   function recol() { uniq = []; L.forEach(function (s) { if (uniq.indexOf(s) < 0) uniq.push(s); }); col = L.map(function (s) { return CXCOL[uniq.indexOf(s) % 4]; }); }
   recol();
   var R = qax(0, 1, 0, 0.9), anim = null, best = 0;
+  var g3 = null; /* v2.4.1:中/高档用 WebGL 真 3D 渲染(ef-mirror3d.js),低档或失败回落下面的 Canvas 2D */
+  if (EF.glTier !== 'low') import('../ef-mirror3d.js?v=1').then(function (m) { g3 = m.mountMirror3D(box); draw(); }, function (e) { console.warn('[ef] 3D 镜子加载失败,用 2D', e); });
   function left() { return TET.map(function (v) { return qrot(view, v); }); }
   function right(q) { return TET.map(function (v) { var p = qrot(view, v); return qrot(q || R, [-p[0], p[1], p[2]]); }); }
   function score(q) { var a = left(), b = right(q), n = 0; for (var j = 0; j < 4; j++) for (var k = 0; k < 4; k++) if (L[j] === L[k] && dot3(b[j], a[k]) > .94) { n++; break; } return n; }
@@ -468,6 +471,7 @@ function Mirror(host, labels, onScore) {
   function draw() {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     var s = Math.min(W * .19, H * .36);
+    if (g3 && g3.alive) return draw3(s);
     /* 镜面 */
     var g = ctx.createLinearGradient(W / 2 - 14, 0, W / 2 + 14, 0); g.addColorStop(0, 'rgba(160,220,255,0)'); g.addColorStop(.5, 'rgba(160,220,255,.22)'); g.addColorStop(1, 'rgba(160,220,255,0)');
     ctx.fillStyle = g; ctx.fillRect(W / 2 - 14, H * .08, 28, H * .84); ctx.strokeStyle = 'rgba(190,235,255,.55)'; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.moveTo(W / 2, H * .08); ctx.lineTo(W / 2, H * .92); ctx.stroke(); ctx.setLineDash([]);
@@ -479,6 +483,19 @@ function Mirror(host, labels, onScore) {
     var a = left(), b = right();
     b.forEach(function (p, j) { var hit = a.some(function (q, k) { return L[j] === L[k] && dot3(p, q) > .94; }); var c = proj(p, W * .25, s); ctx.strokeStyle = hit ? 'rgba(120,255,160,.95)' : 'rgba(255,255,255,.18)'; ctx.lineWidth = hit ? 2.5 : 1; ctx.setLineDash(hit ? [] : [3, 4]); ctx.beginPath(); ctx.arc(c[0], c[1], s * .27 * c[2], 0, 7); ctx.stroke(); ctx.setLineDash([]); });
   }
+  function draw3(s) { /* 3D 模式:WebGL 画球棍和镜面,这层 2D 只写字、画对位圈 */
+    var a = left(), b = right(), o = g3.render({ a: a, b: b, cols: col, labels: L, s: s }); if (!o) return;
+    ctx.fillStyle = 'rgba(190,235,255,.75)'; ctx.font = '12px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('镜面', W / 2, W < 560 ? H - 10 : H * .06 + 4);
+    ctx.fillStyle = 'rgba(233,226,210,.6)'; ctx.fillText('原来的分子', W * .25, H - 10); ctx.fillText('镜像(拖我旋转)', W * .75, H - 10);
+    var tags = [];
+    [o.left, o.right].forEach(function (side) { side.forEach(function (q, j) { tags.push({ q: q, t: L[j] }); }); });
+    tags.sort(function (x, y) { return x.q.z - y.q.z; }).forEach(function (it) {
+      var fs = Math.max(9, Math.min(15, it.q.r * .62)); ctx.font = '700 ' + fs + 'px system-ui,sans-serif'; while (fs > 8 && ctx.measureText(it.t).width > it.q.r * 1.7) { fs -= 1; ctx.font = '700 ' + fs + 'px system-ui,sans-serif'; }
+      ctx.globalAlpha = it.q.z < -.4 ? .55 : 1; ctx.fillStyle = '#17110a'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(it.t, it.q.x, it.q.y + .5); ctx.globalAlpha = 1;
+    });
+    ctx.textBaseline = 'alphabetic';
+    b.forEach(function (p, j) { var hit = a.some(function (q, k) { return L[j] === L[k] && dot3(p, q) > .94; }), c = o.onLeft(p); ctx.strokeStyle = hit ? 'rgba(120,255,160,.95)' : 'rgba(255,255,255,.22)'; ctx.lineWidth = hit ? 2.5 : 1; ctx.setLineDash(hit ? [] : [3, 4]); ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0, 7); ctx.stroke(); ctx.setLineDash([]); });
+  }
   function upd() { var n = score(); out.innerHTML = '能和左边对上的基团:<b>' + n + ' / 4</b>' + (n === 4 ? ' · 完全重合!' : ''); if (n > best) best = n; onScore && onScore(n, best); draw(); }
   function go(q) { if (EF.reduced) { R = q; upd(); return; } var q0 = R, t0 = performance.now(); cancelAnimationFrame(anim); (function f(t) { var k = Math.min(1, (t - t0) / 500); R = qnorm(qslerp(q0, q, k * k * (3 - 2 * k))); draw(); if (k < 1) anim = requestAnimationFrame(f); else upd(); })(t0); }
   var drag = null;
@@ -487,7 +504,7 @@ function Mirror(host, labels, onScore) {
   cv.addEventListener('pointerup', function () { drag = null; upd(); });
   cv.addEventListener('keydown', function (e) { var a = { ArrowLeft: [0, 1, 0, -.26], ArrowRight: [0, 1, 0, .26], ArrowUp: [1, 0, 0, -.26], ArrowDown: [1, 0, 0, .26] }[e.key]; if (!a) return; e.preventDefault(); R = qnorm(qmul(qax(a[0], a[1], a[2], a[3]), R)); upd(); });
   var ro = window.ResizeObserver ? new ResizeObserver(rs) : null; ro ? ro.observe(cv) : addEventListener('resize', rs); setTimeout(function () { rs(); upd(); }, 0);
-  return { snap: function () { go(snapQ()); }, setLabels: function (l) { L = l.slice(); recol(); best = 0; R = qax(0, 1, 0, .9); upd(); }, score: function () { return score(); }, stop: function () { ro && ro.disconnect(); cancelAnimationFrame(anim); } };
+  return { snap: function () { go(snapQ()); }, setLabels: function (l) { L = l.slice(); recol(); best = 0; R = qax(0, 1, 0, .9); upd(); }, score: function () { return score(); }, stop: function () { ro && ro.disconnect(); cancelAnimationFrame(anim); g3 && g3.stop(); } };
 }
 
 /* 诺奖小实验:自我复制 + 左右相遇抵消(Frank 1953 模型的简化版)*/
