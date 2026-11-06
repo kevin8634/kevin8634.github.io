@@ -419,7 +419,6 @@
   addEventListener('resize', resize);
   addEventListener('keydown', function (e) { if (e.key === 'Escape' && U.root && !U.root.hidden) { e.stopPropagation(); close(); } }, true);
   LAB.open3D = open; LAB.open = open; LAB.close3D = close;
-  LAB._x = function (k) { for (var i = 0; i < (k || 0); i++) spawn(i % 9 === 0); return { on: SA.met ? SA.met.filter(function (m) { return m.on; }).length : 0, rate: SA.rate, acc: SA.acc }; };
   // 深链 ?task=leonids 可能在本文件载入前已打开 1.0 平面面板 → 换成 3D
   if (/[?&]task=leonids\b/.test(location.search)) (function chk(n) {
     var d2 = document.querySelector('.ml--ln:not([hidden])');
