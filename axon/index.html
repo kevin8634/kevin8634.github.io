@@ -11,6 +11,8 @@
       #plate { display: none; }
       .x-fallback #plate { display: block; position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; }
       .x-fallback #gl { display: none; }
+      .x-vig { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse 80% 75% at 50% 46%, transparent 65%, rgba(2,4,12,.28) 100%); }
+      .x-vig::after { content: ""; position: absolute; inset: 0; opacity: .6; mix-blend-mode: soft-light; background: linear-gradient(180deg, rgba(150,160,220,.18), rgba(255,170,110,.12) 52%, rgba(10,20,50,.25)); }
       .x-error { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; font-size: 15px; color: #fff; text-shadow: 0 1px 8px rgba(0,0,0,.7); }
       .x-fallback .x-error { display: flex; }
       .x-fallback .x-intro, .x-fallback .x-ctl { display: none; }
@@ -26,13 +28,24 @@
       .x-intro circle { fill: none; stroke-width: 1; }
       .x-intro p { position: static; font-size: 12px; color: rgba(255,255,255,.75); }
       .x-intro.x-out { opacity: 0; pointer-events: none; }
+      #fx { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
+      .x-tod { right: 20px; top: 50%; height: 34vh; width: 2px; transform: translateY(-50%); background: rgba(255,255,255,.18); }
+      .x-tod i { position: absolute; left: -4px; width: 10px; height: 10px; margin-top: -5px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px rgba(255,255,255,.6); }
+      .x-snd { right: 8px; top: 6px; min-width: 44px; height: 44px; padding: 0 10px; border: 0; background: none; color: rgba(255,255,255,.7); cursor: pointer; border-radius: 22px; pointer-events: auto; }
+      .x-snd:hover, .x-snd:focus-visible { color: #fff; background: rgba(255,255,255,.08); outline: none; }
+      .x-fallback #fx, .x-fallback .x-tod, .x-fallback .x-snd { display: none; }
     </style>
   </head>
   <body class="x-pre">
     <img id="plate" src="kenting_plate.jpg" alt="垦丁海岸黄昏，灯塔与礁石" />
     <canvas id="gl"></canvas>
+    <canvas id="fx" aria-hidden="true"></canvas>
+    <div class="x-vig" aria-hidden="true"></div>
     <p class="x-error">WebGL 不可用</p>
-    <p class="x-hud x-tl">AXON<br />SCENE 01 · 垦丁 KENTING<br /><span id="hShape">WAVE · 浪</span></p>
+    <p class="x-hud x-tl">AXON<br />SCENE 01 · 垦丁 KENTING · 滚动=时间 · 划过=唤醒<br /><span id="hShape">WAVE · 浪</span><br /><span id="hTod">TIME 18:20</span> <span id="hMet"></span></p>
+    <div class="x-hud x-tod" aria-hidden="true"><i id="todK"></i></div>
+    <button class="x-hud x-snd x-ui" id="bSnd" aria-pressed="false" aria-label="Sound">SOUND OFF</button>
+    <audio id="bgm" src="kenting_dusk_shoreline.m4a" preload="auto"></audio>
     <p class="x-hud x-bl" id="hInfo">X 0000 Y 0000</p>
     <p class="x-hud x-br"><span id="hTime">--:--:--</span><br />21.90°N 120.85°E</p>
     <div class="x-hud x-ctl x-ui">
@@ -78,10 +91,10 @@
         const bgMat = new THREE.ShaderMaterial({
           depthTest: false, depthWrite: false,
           uniforms: { tPlate: { value: plateTex }, uRes: { value: new THREE.Vector2(1, 1) }, uMouse: { value: new THREE.Vector2() }, uImgAspect: { value: 2400 / 1018 }, uTime: { value: 0 },
-            uFade: { value: 0 }, uLamp: { value: new THREE.Vector2(.8, .6) }, uBeam: { value: new THREE.Vector3(0, 0, 1) }, uClick: { value: new THREE.Vector2(.5, -9) } },
+            uFade: { value: 0 }, uLamp: { value: new THREE.Vector2(.8, .6) }, uBeam: { value: new THREE.Vector3(0, 0, 1) }, uClick: { value: new THREE.Vector2(.5, -9) }, uN: { value: 0 } },
           vertexShader: quadVS,
           fragmentShader: HASH + BEAM + `
-            uniform sampler2D tPlate; uniform vec2 uRes, uMouse, uLamp, uClick; uniform vec3 uBeam; uniform float uImgAspect, uTime, uFade; varying vec2 vUv;
+            uniform sampler2D tPlate; uniform vec2 uRes, uMouse, uLamp, uClick; uniform vec3 uBeam; uniform float uImgAspect, uTime, uFade, uN; varying vec2 vUv;
             void main(){
               float sa = uRes.x / uRes.y;
               vec2 s = sa > uImgAspect ? vec2(1., uImgAspect / sa) : vec2(sa / uImgAspect, 1.);
@@ -99,13 +112,20 @@
                 uv.y += rip * .004;
               }
               vec3 col = texture2D(tPlate, uv).rgb + rip * .22;
+              float L = dot(col, vec3(.3, .59, .11)), k1 = smoothstep(0., .5, uN), k2 = smoothstep(.45, 1., uN);
+              col = mix(col, L * vec3(.55, .68, 1.05), k1 * .75) * (1. - k1 * .35);
+              col = mix(col, L * vec3(.16, .2, .36) + vec3(.004, .008, .022), k2);
+              vec2 sg = vUv * vec2(sa, 1.) * 160.; vec2 si = floor(sg), sf = fract(sg) - .5;
+              float sr = h(si + .5), dens = mix(.997, .972, smoothstep(.5, .95, uv.y));
+              float star = step(dens, sr) * smoothstep(.22, 0., length(sf - (vec2(h(si + 1.3), h(si + 2.1)) - .5) * .5)) * (.55 + .45 * sin(uTime * (1. + sr * 3.) + sr * 90.));
+              col += smoothstep(.5, .54, uv.y) * smoothstep(.1, .28, L) * k2 * star * vec3(.85, .9, 1.);
               float bm = beamAt(vUv, uLamp, uBeam);
-              col += (bm * .16 + smoothstep(.025, 0., length((vUv - uLamp) * vec2(uBeam.z, 1.))) * .6) * vec3(1., .86, .62);
+              col += (bm * .16 + smoothstep(.025, 0., length((vUv - uLamp) * vec2(uBeam.z, 1.))) * .6) * (1. + uN * 2.2) * vec3(1., .86, .62);
               vec2 g = uv * vec2(240., 520.) + vec2(uTime * 2.5, 0.);
               vec2 id = floor(g); vec2 f = fract(g) - .5;
               float r = h(id);
               float tw = pow(max(0., sin(uTime * (2. + r * 4.) + r * 40.)), 12.);
-              col += sea * step(.94, r) * tw * smoothstep(.35, 0., length(f)) * vec3(1., .9, .75);
+              col += sea * (1. - .7 * k2) * step(.94, r) * tw * smoothstep(.35, 0., length(f)) * vec3(1., .9, .75);
               gl_FragColor = vec4(col * uFade, 1.);
             }`,
         });
@@ -192,9 +212,9 @@
         });
         const velMat = new THREE.ShaderMaterial({
           uniforms: { tPos: { value: null }, tVel: { value: null }, tTarget: { value: null }, tPrev: { value: null }, uMorphT: { value: -9 }, uRes: { value: simRes }, uMouse: { value: new THREE.Vector3(99, 99, 0) }, uDown: { value: 0 }, uTime: { value: 0 }, uDt: { value: 0.016 },
-            uShock: { value: new THREE.Vector4(0, 0, 0, -9) }, uGather: { value: 0 }, uSpray: { value: 0 } },
+            uShock: { value: new THREE.Vector4(0, 0, 0, -9) }, uGather: { value: 0 }, uSpray: { value: 0 }, uLift: { value: 0 }, uMVel: { value: new THREE.Vector3() }, uMSpd: { value: 0 } },
           vertexShader: quadVS,
-          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel, tTarget, tPrev; uniform vec2 uRes; uniform vec3 uMouse; uniform vec4 uShock; uniform float uDown, uTime, uDt, uMorphT, uGather, uSpray;
+          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel, tTarget, tPrev; uniform vec2 uRes; uniform vec3 uMouse, uMVel; uniform vec4 uShock; uniform float uDown, uTime, uDt, uMorphT, uGather, uSpray, uLift, uMSpd;
             void main(){
               vec2 uv = gl_FragCoord.xy / uRes;
               vec4 p = texture2D(tPos, uv); vec3 v = texture2D(tVel, uv).xyz;
@@ -202,26 +222,33 @@
               vec3 goal = tg.xyz + vec3(0., sin(uTime * .8 + tg.w) * .02, 0.);
               goal = mix(tg.xyz + (vec3(h(uv + .3), h(uv + .6), h(uv + .9)) - .5) * vec3(10., 6., 4.), goal, uGather);
               vec3 acc = (goal - p.xyz) * 7.;
-              acc += vec3(sin(p.y * 2.1 + uTime * .7) + sin(p.z * 1.7 + uTime * .4),
-                          cos(p.x * 1.9 + uTime * .6) + sin(p.z * 2.3 - uTime * .5),
-                          sin(p.x * 1.3 - uTime * .5) + cos(p.y * 1.6 + uTime * .3)) * .18;
-              vec3 d = p.xyz - uMouse; float r = length(d); float R = mix(.75, 1.4, uDown);
+              vec3 q = p.xyz * .8 + .35 * sin(p.yzx * .6 + uTime * .15);
+              acc += vec3(sin(q.y + uTime * .3) + cos(q.z * 1.1 + uTime * .2),
+                          sin(q.z * .9 - uTime * .25) + cos(q.x + uTime * .3),
+                          sin(q.x * 1.1 - uTime * .2) + cos(q.y * .9 + uTime * .15)) * .13;
+              // Pass-by wake: distance to the cursor's recent path (a capsule trailing behind it).
+              vec3 ab = -uMVel * .1; float tt = clamp(dot(p.xyz - uMouse, ab) / max(dot(ab, ab), 1e-5), 0., 1.);
+              vec3 d = p.xyz - (uMouse + ab * tt); d.z *= .6;
+              float r = length(d), R = mix(.3, 1.15, uMSpd) + uDown * .5;
               if (r < R) {
                 float f = 1. - r / R; f *= f;
-                acc += d / max(r, 1e-3) * f * mix(22., 75., uDown);
-                acc += cross(vec3(0., 0., 1.), d) / max(r, .05) * f * 12.;
+                float ms = length(uMVel); vec3 side = ms > 1e-3 ? vec3(-uMVel.y, uMVel.x, 0.) / ms : vec3(0.);
+                acc += uMVel * f * 2.2 * (1. - tt * .5);
+                acc += side * sign(dot(d, side)) * f * ms * 3.;
+                acc += d / max(r, 1e-3) * f * (mix(3., 14., uMSpd) + uDown * 60.);
               }
               float st = uTime - uShock.w;
               if (st < 1.2) {
                 vec3 sd = p.xyz - uShock.xyz; float sr = length(sd);
                 acc += sd / max(sr, .05) * exp(-pow((sr - st * 3.5) * 3., 2.)) * exp(-st * 3.) * 90.;
               }
+              acc.y += uLift * (.6 + .8 * h(uv + 5.5));
               float ph = uSpray > .5 ? sprayPh(uv, uTime) : -1.;
               if (ph >= 0. && ph < .4) {
                 acc = acc * .04 + vec3(sin(uTime + tg.w) * .3, -4.5, 0.);
                 if (p.w < .5) { acc = vec3(0.); v = vec3(0.); }
               } else if (ph >= .4) acc *= mix(.15, 1., smoothstep(.4, .8, ph));
-              v += acc * uDt; v *= exp(-3.2 * uDt);
+              v += acc * uDt; v *= exp(-4.2 * uDt);
               gl_FragColor = vec4(v, 1.);
             }`,
         });
@@ -244,29 +271,62 @@
         const ptMat = new THREE.ShaderMaterial({
           transparent: true, depthWrite: false, depthTest: false,
           blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
-          uniforms: { tPos: { value: null }, tVel: { value: null }, uTime: { value: 0 }, uSize: { value: 1 }, uAlpha: { value: 0.36 }, uLamp: bgMat.uniforms.uLamp, uBeam: bgMat.uniforms.uBeam },
-          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize; uniform vec2 uLamp; uniform vec3 uBeam; attribute vec2 ref;
-            varying float vN, vSpec, vA, vBeam;
+          uniforms: { tPos: { value: null }, tVel: { value: null }, uTime: { value: 0 }, uSize: { value: 1 }, uAlpha: { value: 0.8 }, uLamp: bgMat.uniforms.uLamp, uBeam: bgMat.uniforms.uBeam,
+            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN },
+          // Liquid-chrome flakes: per-particle shading in the vertex stage, sharp capsule in the fragment stage.
+          // Premultiplied normal blending gives the cloud a dark body; glints add light without adding alpha.
+          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; attribute vec2 ref;
+            varying vec3 vCol, vGl; varying vec2 vDir; varying float vStr, vPS, vBlur;
+            vec3 env(vec3 rd){
+              float y = rd.y;
+              vec3 navy = mix(vec3(.12, .13, .17), vec3(.08, .1, .16), uN), sky = mix(vec3(1.32, 1.34, 1.6), vec3(.62, .72, 1.), uN);
+              vec3 c = y < 0. ? mix(navy * 2.4, navy, smoothstep(0., .5, -y)) : mix(sky * .6, sky, smoothstep(.1, .8, y));
+              c += mix(vec3(1.6, 1.15, .78), vec3(.95, 1.05, 1.25), uN) * exp(-y * y * 40.);
+              return c + mix(vec3(2.3, 2.1, 1.8), vec3(1.6, 1.75, 2.), uN) * smoothstep(.32, .06, length((rd.xy - vec2(.42, .5)) * vec2(1., 1.6)));
+            }
             void main(){
               vec3 p = texture2D(tPos, ref).xyz, v = texture2D(tVel, ref).xyz;
-              vec3 n = normalize((vec3(h(ref), h(ref + 1.3), h(ref + 2.7)) - .5) * 2. + v * .3 + vec3(0., .2, 0.));
-              vN = n.y;
-              vSpec = pow(max(0., sin(uTime * (1. + h(ref + 7.) * 3.) + h(ref + 5.1) * 6.283)), 24.);
-              vA = clamp(length(v) * .2, 0., 1.);
+              float spd = length(v), r1 = h(ref), r2 = h(ref + 1.3), r3 = h(ref + 2.7);
               vec4 mv = modelViewMatrix * vec4(p, 1.);
               gl_Position = projectionMatrix * mv;
-              gl_PointSize = uSize * (.6 + h(ref + 9.) * .8) / -mv.z;
-              vBeam = beamAt(gl_Position.xy / gl_Position.w * .5 + .5, uLamp, uBeam);
+              vec4 c1 = projectionMatrix * (modelViewMatrix * vec4(p + v * .1, 1.));
+              vec2 sd = (c1.xy / c1.w - gl_Position.xy / gl_Position.w) * uRes;
+              float a0 = r1 * 6.283 + uTime * (r2 - .5) * .5;
+              vec2 rest = vec2(cos(a0), sin(a0)), vd = length(sd) > 1e-4 ? normalize(sd) : rest;
+              vDir = normalize(mix(rest * (dot(rest, vd) < 0. ? -1. : 1.), vd, smoothstep(.08, 1.2, spd)) + 1e-5);
+              vStr = min((1.2 + r3 * .8) * (1. + 3. * smoothstep(.2, 3., spd)), 5.);
+              vec3 n0 = normalize(vec3(r1, r2, r3) - .5 + 1e-4), ax = normalize(vec3(h(ref + 3.1), h(ref + 4.7), h(ref + 6.2)) - .5 + 1e-4);
+              float ta = uTime * (.3 + h(ref + 7.) * 1.2) + spd * .6;
+              vec3 n = normalize(n0 * cos(ta) + cross(ax, n0) * sin(ta) + ax * dot(ax, n0) * (1. - cos(ta)) + v * .15);
+              vec3 V = normalize(-mv.xyz);
+              if (dot(n, V) < 0.) n = -n;
+              float F = pow(1. - dot(n, V), 5.);
+              // Polished chrome: silver base (#c8ccd2, colder at night) times a bright env, Fresnel rim, filmic exposure.
+              vec3 base = mix(vec3(.784, .8, .824), vec3(.72, .78, .88), uN), rim = mix(vec3(1., .93, .84), vec3(.82, .9, 1.05), uN);
+              vec3 col = base * (.16 + env(reflect(-V, n)) * (.5 + .5 * F)) + rim * F * 1.1;
+              float bm = beamAt(gl_Position.xy / gl_Position.w * .5 + .5, uLamp, uBeam), st = uTime - uShock.w;
+              float sh = st < 1.2 ? exp(-pow((length(p - uShock.xyz) - st * 3.5) * 2., 2.)) * exp(-st * 2.) : 0.;
+              float boost = clamp(bm * 1.5 + sh, 0., 1.), ex = mix(30., 12., boost);
+              float g1 = pow(max(dot(n, normalize(normalize(vec3(.5, .25, .8)) + V)), 0.), ex);
+              float g2 = pow(max(dot(n, normalize(normalize(vec3(-.6, .7, .4)) + V)), 0.), ex * .7);
+              vec3 tint = mix(vec3(1., .9, .76), vec3(.84, .9, 1.), h(ref + 8.));
+              vGl = min(tint * (g1 * 2.2 + g2 * 1.2) * (1. + boost * 2.), vec3(2.5));
+              vCol = 1. - exp(-(col + bm * vec3(.2, .15, .1)) * 1.8);
+              vBlur = smoothstep(.4, 2.4, abs(-mv.z - 6.));
+              float th = uSize * (.7 + 2.3 * pow(h(ref + 9.), 3.)) * (1. + vBlur * .9) / -mv.z;
+              vPS = max(th * vStr, 2.);
+              gl_PointSize = vPS;
             }`,
-          fragmentShader: `uniform float uAlpha; varying float vN, vSpec, vA, vBeam;
+          fragmentShader: `uniform float uAlpha; varying vec3 vCol, vGl; varying vec2 vDir; varying float vStr, vPS, vBlur;
             void main(){
-              vec2 c = gl_PointCoord - .5; float d = length(c); if (d > .5) discard;
-              float t = vN - c.y * .8;
-              vec3 deep = vec3(.03, .1, .32), warm = vec3(1., .55, .22), sky = vec3(.82, .9, 1.);
-              vec3 col = t < 0. ? mix(warm, deep, clamp(-t * 1.4, 0., 1.)) : mix(warm, sky, clamp(t * 1.3, 0., 1.));
-              col += smoothstep(.2, 0., length(c - vec2(-.12, -.12))) * .6 + vSpec * 1.6 + vA * vec3(.2, .3, .5) + vBeam * vec3(1.8, 1.5, 1.1);
-              float a = smoothstep(.5, .3, d) * uAlpha;
-              gl_FragColor = vec4(col * a, a * .5);
+              vec2 c = (gl_PointCoord - .5) * vec2(1., -1.);
+              vec2 q = vec2(dot(c, vDir), dot(c, vec2(-vDir.y, vDir.x)));
+              float r = .5 / vStr, d = length(vec2(max(abs(q.x) - (.5 - r), 0.), q.y)) - r;
+              float soft = mix(1. / vPS, r + 1. / vPS, vBlur);
+              float a = 1. - smoothstep(-soft * .5, soft * .5, d);
+              if (a < .01) discard;
+              float bev = clamp(-d / r, 0., 1.), al = a * uAlpha * (1. - vBlur * .55);
+              gl_FragColor = vec4(vCol * (.7 + .4 * bev) * al + vGl * al * bev, al);
             }`,
         });
         const points = new THREE.Points(new THREE.BufferGeometry(), ptMat);
@@ -293,7 +353,7 @@
           geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N * 3), 3));
           geo.setAttribute("ref", new THREE.BufferAttribute(ref, 2));
           points.geometry.dispose(); points.geometry = geo;
-          ptMat.uniforms.uAlpha.value = small ? 0.6 : 0.36;
+          ptMat.uniforms.uAlpha.value = small ? 0.9 : 0.8;
         }
         build(SIZE);
         const nameEls = [document.getElementById("hShape"), document.getElementById("cName")];
@@ -308,8 +368,17 @@
         const mouse = new THREE.Vector2(0, 0), smooth = new THREE.Vector2(0, 0);
         let hasMouse = false, down = 0, downS = 0, simT = 0, paused = false, entered = false, hold = 0, prog = 0, px = 0, py = 0;
         const intro = document.getElementById("intro"), ring = document.getElementById("ring"), bPause = document.getElementById("bPause");
-        function setPointer(e) { mouse.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); hasMouse = true; px = e.clientX; py = e.clientY; }
+        // Pointer velocity in px/s, exponentially smoothed (~40 ms) per event; decays when the pointer rests.
+        let pvx = 0, pvy = 0, pSpd = 0, pts = 0;
+        function setPointer(e) {
+          const x = e.clientX, y = e.clientY, ddt = (e.timeStamp - pts) / 1000;
+          if (hasMouse && ddt > 0 && ddt < 0.1) { const k = 1 - Math.exp(-ddt / 0.04), s = Math.max(ddt, 0.004); pvx += ((x - px) / s - pvx) * k; pvy += ((y - py) / s - pvy) * k; }
+          else if (ddt >= 0.1 || !hasMouse) pvx = pvy = 0;
+          pts = e.timeStamp;
+          mouse.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1); hasMouse = true; px = x; py = y;
+        }
         addEventListener("pointermove", setPointer);
+        if (!window.PointerEvent) addEventListener("touchmove", (e) => { const t = e.touches[0]; if (t) setPointer({ clientX: t.clientX, clientY: t.clientY, timeStamp: e.timeStamp }); }, { passive: true });
         addEventListener("pointerdown", (e) => {
           setPointer(e);
           if (!entered || e.target.closest(".x-ui")) return;
@@ -319,9 +388,10 @@
           bgMat.uniforms.uClick.value.set(e.clientX / innerWidth, simT);
         });
         intro.addEventListener("pointerdown", (e) => { hold = 1; e.preventDefault(); });
-        addEventListener("pointerup", () => { down = 0; hold = 0; });
+        addEventListener("pointerup", (e) => { down = 0; hold = 0; if (e.pointerType === "touch") hasMouse = false; });
         addEventListener("pointercancel", () => { down = 0; hold = 0; hasMouse = false; });
         document.addEventListener("pointerleave", () => { hasMouse = false; });
+        document.documentElement.addEventListener("mouseleave", () => { hasMouse = false; pvx = pvy = 0; });
         addEventListener("keydown", (e) => {
           if (!entered) return;
           if (e.key >= "1" && e.key <= "5") setShape(+e.key - 1);
@@ -342,7 +412,7 @@
           camera.aspect = w / h; camera.updateProjectionMatrix();
           bgMat.uniforms.uRes.value.set(w, h);
           points.scale.setScalar(Math.min(1, camera.aspect / 1.5));
-          ptMat.uniforms.uSize.value = (small ? 16 : 12) * DPR * (h / 900 + 0.4);
+          ptMat.uniforms.uSize.value = (small ? 6.4 : 4.8) * DPR * (h / 900 + 0.4);
           const sa = w / h, ia = 2400 / 1018, sx = sa > ia ? 1 : sa / ia, sy = sa > ia ? ia / sa : 1;
           bgMat.uniforms.uLamp.value.set(0.26 / (sx * 0.94) + 0.5, 0.08 / (sy * 0.94) + 0.5);
           bgMat.uniforms.uBeam.value.z = sa;
@@ -362,9 +432,272 @@
           return world.copy(camera.position).addScaledVector(dir, t).divideScalar(points.scale.x);
         }
 
+        // ---------- Scene interactions: time, meteors, beads, wave, life, sound ----------
+        const fxc = document.getElementById("fx"), cx = fxc.getContext("2d");
+        const todEl = document.getElementById("hTod"), metEl = document.getElementById("hMet"), knob = document.getElementById("todK");
+        const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), mixv = (a, b, k) => a.map((x, i) => x + (b[i] - x) * k);
+        const rgb = (c, k = 1) => `rgb(${(c[0] * k) | 0},${(c[1] * k) | 0},${(c[2] * k) | 0})`;
+        let tT = 0, tN = 0, W = 1, H = 1, horY = 0, poolX = 0, poolY = 0, poolR = 100, shipX = [0, 0], lift = 0, metN = 0, metFlash = 0;
+        let fxT = 0, grab = null, gvx = 0, gvy = 0, gpx = 0, gpy = 0, gts = 0, lastChime = 0, waveT = 0, prevShape = 0, touchY = null, todS = "";
+        let fpx = -1, fpy = -1, lastSpl = 0, lastRing = 0, lastRip = 0, revs = [], rdir = 0;
+        const mets = [], birds = [], sparks = [], beads = [], rings = [], ships = [{ m: -1 }, { m: -1 }], SEQ = [];
+        // Distance from point (x,y) to segment a-b: used for every pass-by test.
+        const segD = (x, y, ax, ay, bx, by) => { const dx = bx - ax, dy = by - ay, l = dx * dx + dy * dy, t = l ? clamp(((x - ax) * dx + (y - ay) * dy) / l, 0, 1) : 0; return Math.hypot(x - ax - dx * t, y - ay - dy * t); };
+        ".- -..- --- -.".split("").forEach((c) => (c === " " ? SEQ.push([0, 2]) : SEQ.push([1, c === "." ? 1 : 3], [0, 1])));
+        function fxResize() {
+          W = innerWidth; H = innerHeight; fxc.width = W * DPR; fxc.height = H * DPR; cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+          const sa = W / H, ia = 2400 / 1018, sx = sa > ia ? 1 : sa / ia, sy = sa > ia ? ia / sa : 1;
+          const toX = (u) => ((u - 0.5) / (sx * 0.94) + 0.5) * W, toY = (v) => (0.5 - (v - 0.5) / (sy * 0.94)) * H;
+          horY = toY(0.502); poolX = toX(0.5); poolY = clamp(toY(0.08), H * 0.8, H * 0.88); poolR = Math.min(W * 0.16, 150);
+          shipX = [toX(0.36), toX(0.56)];
+        }
+        addEventListener("resize", fxResize); fxResize();
+        function addBead(r, x, y) {
+          if (beads.length >= 24) return;
+          const a = rnd() * 6.283, d = Math.sqrt(rnd()) * 0.85;
+          beads.push({ x: x ?? poolX + Math.cos(a) * d * poolR, y: y ?? poolY + Math.sin(a) * d * poolR * 0.3, vx: 0, vy: 0, r, ph: rnd() * 6, born: fxT, jig: 0 });
+        }
+        for (let i = 0; i < 12; i++) addBead(5 + rnd() * 6);
+        function spawnBird(x) {
+          const dir = rnd() < 0.5 ? 1 : -1;
+          birds.push({ x: x ?? (dir > 0 ? -30 : W + 30), y: horY * (0.25 + rnd() * 0.5), vx: dir * (25 + rnd() * 25), vy: 0, s: 6 + rnd() * 5, ph: rnd() * 6, fr: 5 + rnd() * 2 });
+        }
+        spawnBird(W * 0.3); spawnBird(W * 0.7);
+        function burstSparks(x, y, n) { for (let i = 0; i < n; i++) { const a = rnd() * 6.283, v = 40 + rnd() * 120; sparks.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.8 }); } }
+        function spray(x, y, n, vx) { for (let i = 0; i < n && sparks.length < 300; i++) sparks.push({ x: x + (rnd() - 0.5) * 10, y, vx: vx * 0.15 + (rnd() - 0.5) * 120, vy: -120 - rnd() * 200, life: 0.8 }); }
+        function split(b, vx, vy) {
+          const sp = Math.hypot(vx, vy) || 1, nx = -vy / sp, ny = vx / sp, r = b.r / Math.SQRT2, c = { ...b, r, born: fxT - 1 };
+          b.r = r; b.x += nx * r; b.y += ny * r; c.x -= nx * r; c.y -= ny * r;
+          b.vx += nx * 180; b.vy += ny * 180; c.vx -= nx * 180; c.vy -= ny * 180; c.jig = b.jig = 1; c.cd = b.cd = fxT;
+          beads.push(c); chime(0.12);
+        }
+
+        // Sound: nothing plays until the speaker button is pressed.
+        const bgm = document.getElementById("bgm"), BGM_LIST = ["kenting_dusk_shoreline.m4a", "kenting_dusk.m4a"]; let bgmIdx = 0; bgm.addEventListener("ended", () => { bgmIdx = (bgmIdx + 1) % BGM_LIST.length; bgm.src = BGM_LIST[bgmIdx]; if (sndOn) bgm.play().catch(() => {}); }); const bSnd = document.getElementById("bSnd"), PENTA = [0, 2, 4, 7, 9];
+        let ac = null, master, waveG, sndOn = false;
+        function audioInit() {
+          ac = new (window.AudioContext || window.webkitAudioContext)();
+          master = ac.createGain(); master.gain.value = 0; master.connect(ac.destination);
+          const len = ac.sampleRate * 4, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+          let last = 0;
+          for (let i = 0; i < len; i++) { last = (last + 0.02 * (rnd() * 2 - 1)) / 1.02; d[i] = last * 3.5 * Math.min(1, i / 2000, (len - i) / 2000); }
+          const src = ac.createBufferSource(), lp = ac.createBiquadFilter(), sw = ac.createGain(), lfo = ac.createOscillator(), ld = ac.createGain(), fd = ac.createGain();
+          src.buffer = buf; src.loop = true; lp.type = "lowpass"; lp.frequency.value = 650; sw.gain.value = 0.55;
+          lfo.frequency.value = 1 / 8; ld.gain.value = 0.45; fd.gain.value = 350;
+          lfo.connect(ld).connect(sw.gain); lfo.connect(fd).connect(lp.frequency);
+          waveG = ac.createGain(); waveG.gain.value = 0.3;
+          src.connect(lp).connect(sw).connect(waveG).connect(master); src.start(); lfo.start();
+        }
+        function bell(vol) {
+          if (!sndOn) return;
+          const f = 523.25 * Math.pow(2, (PENTA[(rnd() * 5) | 0] + 12 * ((rnd() * 2) | 0)) / 12), t0 = ac.currentTime;
+          const c = ac.createOscillator(), m = ac.createOscillator(), mg = ac.createGain(), g = ac.createGain();
+          c.frequency.value = f; m.frequency.value = f * 3.5;
+          mg.gain.setValueAtTime(f * 2, t0); mg.gain.exponentialRampToValueAtTime(1, t0 + 1.2);
+          g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.6);
+          m.connect(mg).connect(c.frequency); c.connect(g).connect(master);
+          c.start(t0); m.start(t0); c.stop(t0 + 1.7); m.stop(t0 + 1.7);
+        }
+        function chime(v) { if (fxT - lastChime > 0.08) { lastChime = fxT; bell(v); } }
+        bSnd.addEventListener("click", () => {
+          if (!ac) audioInit();
+          sndOn = !sndOn; ac.resume();
+          bSnd.textContent = sndOn ? "SOUND ON" : "SOUND OFF"; bSnd.setAttribute("aria-pressed", sndOn);
+          const t0 = ac.currentTime; master.gain.cancelScheduledValues(t0); master.gain.setTargetAtTime(sndOn ? 1 : 0, t0, sndOn ? 0.6 : 0.15);
+          if (sndOn) { bgm.volume = 0; bgm.play().catch(() => {}); }
+        });
+
+        // Input: wheel and vertical touch drag set the time; everything else wakes on pass-by (see fxStep). Click = shockwave + chime.
+        addEventListener("wheel", (e) => { e.preventDefault(); if (entered) tT = clamp(tT + e.deltaY * (e.deltaMode ? 0.03 : 0.0008), 0, 1); }, { passive: false });
+        addEventListener("keydown", (e) => { if (entered && (e.key === "ArrowUp" || e.key === "ArrowDown")) tT = clamp(tT + (e.key === "ArrowDown" ? 0.1 : -0.1), 0, 1); });
+        addEventListener("pointerdown", (e) => {
+          if (!entered || e.target.closest(".x-ui")) return;
+          const x = e.clientX, y = e.clientY;
+          for (const b of beads) if (Math.hypot(b.x - x, b.y - y) < b.r + 10) { grab = b; gpx = x; gpy = y; gvx = gvy = 0; gts = e.timeStamp; e.stopPropagation(); return; }
+          touchY = e.pointerType === "touch" ? y : null;
+          chime(0.07);
+        }, true);
+        addEventListener("pointermove", (e) => {
+          // Big wave: 3 horizontal direction reversals at |vx| > 600 px/s inside the sea band within 1.5 s.
+          if (entered && !grab && py > horY + 2 && py < H * 0.75 && Math.abs(pvx) > 600) {
+            const d = Math.sign(pvx);
+            if (rdir && d !== rdir) {
+              revs = revs.filter((t) => e.timeStamp - t < 1500); revs.push(e.timeStamp);
+              if (revs.length >= 3) { revs = []; lift = 16; bell(0.18); if (waveT <= 0) prevShape = shapeI; waveT = 3.6; }
+            }
+            rdir = d;
+          }
+          if (grab) {
+            const ddt = Math.max((e.timeStamp - gts) / 1000, 0.004);
+            gvx = gvx * 0.5 + 0.5 * (e.clientX - gpx) / ddt; gvy = gvy * 0.5 + 0.5 * (e.clientY - gpy) / ddt;
+            gpx = e.clientX; gpy = e.clientY; gts = e.timeStamp;
+          } else if (touchY !== null && e.pointerType === "touch") { tT = clamp(tT + (touchY - e.clientY) / (H * 0.7), 0, 1); touchY = e.clientY; }
+        });
+        addEventListener("pointerup", () => {
+          touchY = null;
+          if (!grab) return;
+          const b = grab, sp = Math.hypot(gvx, gvy);
+          grab = null; b.vx = gvx; b.vy = gvy;
+          if (sp > 1100 && b.r > 8 && beads.length < 24) split(b, gvx, gvy);
+        });
+
+        function fxStep(raw, dt) {
+          fxT += raw;
+          tN += (tT - tN) * (1 - Math.exp(-3 * raw));
+          bgMat.uniforms.uN.value = tN;
+          knob.style.top = tN * 100 + "%";
+          const mins = Math.round(tN < 0.5 ? 1100 + tN * 100 : 1150 + (tN - 0.5) * 280), s = `TIME ${String((mins / 60) | 0).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+          if (s !== todS) todEl.textContent = todS = s;
+          metFlash -= raw;
+          metEl.textContent = metN ? (metFlash > 0 ? `· 流星 +1 (${metN})` : `· 流星 ${metN}`) : "";
+          lift *= Math.exp(-3 * dt); velMat.uniforms.uLift.value = lift;
+          if (waveT > 0) { const w0 = waveT; waveT -= raw; if (w0 > 3 && waveT <= 3) setShape(2); if (waveT <= 0) setShape(prevShape); }
+          if (ac) {
+            waveG.gain.value = 0.3 * (1 - 0.65 * tN);
+            const bv = clamp(bgm.volume + (sndOn ? raw : -raw) * 0.25, 0, 0.5);
+            bgm.volume = bv; if (!sndOn && bv === 0 && !bgm.paused) bgm.pause();
+          }
+          cx.clearRect(0, 0, W, H);
+          // This frame's cursor path: segment from last frame's pointer (ox,oy) to now (px,py).
+          const live = hasMouse && fpx >= 0, ox = live ? fpx : px, oy = live ? fpy : py;
+          fpx = hasMouse ? px : -1; fpy = py;
+          if (!entered) return;
+          const near = (x, y, r) => live && segD(x, y, ox, oy, px, py) < r;
+          // Sea: moving faster than 900 px/s across the band between horizon and pool → spray + ripple rings.
+          if (live && pSpd > 900 && py > horY + 2 && py < H * 0.75) {
+            if (fxT - lastSpl > 0.05) { lastSpl = fxT; spray(px, py, 3 + ((pSpd / 700) | 0), pvx); }
+            if (fxT - lastRing > 0.16 && rings.length < 12) { lastRing = fxT; rings.push({ x: px, y: py, t: fxT }); }
+            if (fxT - lastRip > 0.5) { lastRip = fxT; bgMat.uniforms.uClick.value.set(px / W, simT); chime(0.04); }
+          }
+          cx.lineWidth = 1;
+          for (let i = rings.length; i--; ) {
+            const r = rings[i], u = (fxT - r.t) / 1.1;
+            if (u >= 1) { rings.splice(i, 1); continue; }
+            const rad = 6 + u * 70;
+            cx.strokeStyle = `rgba(235,240,250,${(1 - u) * 0.5})`; cx.beginPath(); cx.ellipse(r.x, r.y, rad, rad * 0.28, 0, 0, 6.283); cx.stroke();
+          }
+          // Meteors
+          if (tN > 0.6 && mets.length < 2 && rnd() < raw * 0.25) {
+            const a = 2.5 + rnd() * 0.5, m = { x: W * (0.25 + rnd() * 0.7), y: horY * (0.1 + rnd() * 0.45), dx: Math.cos(a), dy: Math.sin(a), age: 0, sp: W * 0.5 + 300 };
+            m.life = Math.min(0.7 + rnd() * 0.4, (horY * 0.95 - m.y) / (m.sp * m.dy)); mets.push(m);
+          }
+          cx.lineWidth = 1.6;
+          for (let i = mets.length; i--; ) {
+            const m = mets[i]; m.age += raw;
+            if (m.age >= m.life) { mets.splice(i, 1); continue; }
+            const d = m.sp * m.age, hx = m.x + m.dx * d, hy = m.y + m.dy * d, L = Math.min(d, 110), a = Math.sin((Math.PI * m.age) / m.life);
+            // Meteor: cursor (now or last frame) within 40 px of the streak segment head→tail.
+            const tx = hx - m.dx * L, ty = hy - m.dy * L;
+            if (live && Math.min(segD(px, py, hx, hy, tx, ty), segD(ox, oy, hx, hy, tx, ty)) < 40) {
+              mets.splice(i, 1); metN++; metFlash = 2; bell(0.22);
+              for (let k = 0; k < 5; k++) burstSparks(hx - m.dx * L * k / 4, hy - m.dy * L * k / 4, 4);
+              velMat.uniforms.uShock.value.set(0, CY, 0, simT); continue;
+            }
+            const gr = cx.createLinearGradient(hx, hy, hx - m.dx * L, hy - m.dy * L);
+            gr.addColorStop(0, `rgba(235,240,255,${a})`); gr.addColorStop(1, "rgba(235,240,255,0)");
+            cx.strokeStyle = gr; cx.beginPath(); cx.moveTo(hx, hy); cx.lineTo(hx - m.dx * L, hy - m.dy * L); cx.stroke();
+          }
+          // Ship lights
+          const sa = clamp((tN - 0.4) * 4, 0, 1);
+          if (sa > 0) ships.forEach((s, i) => {
+            // Ship light: cursor path within 30 px → 0.56 s flare with halo, then Morse "AXON".
+            if (s.m < 0 && tN > 0.4 && near(shipX[i], horY - 1, 30)) { s.m = fxT; chime(0.08); }
+            let on = Math.sin(fxT * (1.1 + i * 0.4) + i * 2) > -0.8 ? 0.7 : 0.15, big = 1;
+            if (s.m >= 0) {
+              const u = (fxT - s.m) / 0.14 - 4; let acc = 0, k = 0;
+              if (u < 0) { on = 1; big = 2.6; }
+              else {
+                for (; k < SEQ.length && acc + SEQ[k][1] <= u; k++) acc += SEQ[k][1];
+                if (k >= SEQ.length) s.m = -1; else { on = SEQ[k][0]; big = 1.8; }
+              }
+              if (s.m >= 0) {
+                const hr = big > 2 ? 40 : 26, hg = cx.createRadialGradient(shipX[i], horY - 1, 0, shipX[i], horY - 1, hr);
+                hg.addColorStop(0, `rgba(255,232,190,${(on ? 0.5 : 0.12) * sa})`); hg.addColorStop(1, "rgba(255,232,190,0)");
+                cx.fillStyle = hg; cx.beginPath(); cx.arc(shipX[i], horY - 1, hr, 0, 6.283); cx.fill();
+              }
+            }
+            const a = on * sa;
+            cx.fillStyle = `rgba(255,225,170,${a * 0.25})`; cx.beginPath(); cx.arc(shipX[i], horY - 1, 5 * big, 0, 6.283); cx.fill();
+            cx.fillStyle = `rgba(255,242,215,${a})`; cx.beginPath(); cx.arc(shipX[i], horY - 1, 1.2 * big, 0, 6.283); cx.fill();
+          });
+          // Seabirds
+          if (birds.length < 3 && rnd() < raw * 0.08) spawnBird();
+          const bc = mixv([20, 18, 30, 0.8], [150, 160, 190, 0.45], tN);
+          cx.strokeStyle = `rgba(${bc[0] | 0},${bc[1] | 0},${bc[2] | 0},${bc[3]})`; cx.lineWidth = 1.5; cx.lineCap = "round";
+          for (let i = birds.length; i--; ) {
+            const b = birds[i];
+            // Seabird: cursor path within 50 px → startles away from the cursor, fast flaps, a few sparks.
+            if (!b.flee && near(b.x, b.y, 50)) { b.flee = 1; b.vx = (Math.sign(b.x - px) || 1) * 300; b.vy = -170; b.fr = 18; burstSparks(b.x, b.y, 6); }
+            b.ph += b.fr * raw; b.x += b.vx * raw; b.y += (b.vy + Math.sin(b.ph * 0.3) * 4) * raw;
+            if (b.x < -60 || b.x > W + 60 || b.y < -60) { birds.splice(i, 1); continue; }
+            const w = Math.sin(b.ph) * 0.6, s = b.s;
+            cx.beginPath(); cx.moveTo(b.x - s, b.y - s * (0.3 + w)); cx.quadraticCurveTo(b.x - s * 0.45, b.y - s * 0.35, b.x, b.y);
+            cx.quadraticCurveTo(b.x + s * 0.45, b.y - s * 0.35, b.x + s, b.y - s * (0.3 + w)); cx.stroke();
+          }
+          // Sparks
+          cx.fillStyle = "rgba(225,232,245,.9)";
+          for (let i = sparks.length; i--; ) {
+            const p = sparks[i]; p.life -= raw;
+            if (p.life <= 0) { sparks.splice(i, 1); continue; }
+            p.vy += 200 * raw; p.x += p.vx * raw; p.y += p.vy * raw;
+            cx.globalAlpha = p.life / 0.8; cx.fillRect(p.x - 1, p.y - 1, 2, 2);
+          }
+          cx.globalAlpha = 1;
+          // Mercury beads
+          const hov = hasMouse && ((px - poolX) / (poolR * 1.3)) ** 2 + ((py - poolY) / (poolR * 0.5)) ** 2 < 1, top = H * 0.75;
+          if (hov && rnd() < raw * 1.2) addBead(4 + rnd() * 3);
+          gvx *= Math.exp(-8 * raw); gvy *= Math.exp(-8 * raw);
+          for (const b of beads) {
+            b.jig *= Math.exp(-4 * raw);
+            if (b === grab) { b.x = clamp(gpx, b.r, W - b.r); b.y = clamp(gpy, top + b.r, H - b.r); b.vx = gvx; b.vy = gvy; continue; }
+            // Bead: cursor path within r+12 px while moving > 40 px/s → pushed by cursor velocity;
+            // > 600 px/s marks it "hot" (merges on light contact); > 1500 px/s through a bead r > 8 splits it.
+            if (pSpd > 40 && near(b.x, b.y, b.r + 12)) {
+              const ax = b.x - px, ay = b.y - py, al = Math.hypot(ax, ay) || 1;
+              b.vx = b.vx * 0.4 + pvx * 0.8 + (ax / al) * 60; b.vy = b.vy * 0.4 + pvy * 0.8 + (ay / al) * 60;
+              if (pSpd > 600) b.hot = fxT;
+              if (pSpd > 1500 && b.r > 8 && beads.length < 24 && fxT - (b.cd ?? -9) > 0.5) split(b, pvx, pvy);
+            }
+            const ex = (b.x - poolX) / poolR, ey = (b.y - poolY) / (poolR * 0.3), e = Math.hypot(ex, ey) || 1, k = e > 1 ? ((e - 1) * 260) / e : 0;
+            b.vx += (-ex * k + (hov ? (rnd() - 0.5) * 120 : 0)) * dt; b.vy += (-ey * k * 0.6 + (hov ? (rnd() - 0.5) * 120 : 0)) * dt;
+            const f = Math.exp(-1.8 * dt); b.vx *= f; b.vy *= f; b.x += b.vx * dt; b.y += b.vy * dt;
+            if (b.x < b.r || b.x > W - b.r) { if (Math.abs(b.vx) > 200) chime(0.06); b.x = clamp(b.x, b.r, W - b.r); b.vx *= -0.6; }
+            if (b.y < top + b.r || b.y > H - b.r) { if (Math.abs(b.vy) > 200) chime(0.06); b.y = clamp(b.y, top + b.r, H - b.r); b.vy *= -0.6; }
+          }
+          for (let i = 0; i < beads.length; i++) for (let j = i + 1; j < beads.length; j++) {
+            const a = beads[i], b = beads[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 0.01, sr = a.r + b.r;
+            if (d >= sr) continue;
+            const nx = dx / d, ny = dy / d, rel = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny, ma = a.r * a.r, mb = b.r * b.r, M = ma + mb;
+            const hot = fxT - (a.hot ?? -9) < 0.4 || fxT - (b.hot ?? -9) < 0.4, fresh = fxT - (a.cd ?? -9) < 0.5 || fxT - (b.cd ?? -9) < 0.5;
+            if ((-rel > 150 || (hot && -rel > 30)) && !fresh && M < 676) {
+              a.x = (a.x * ma + b.x * mb) / M; a.y = (a.y * ma + b.y * mb) / M; a.vx = (a.vx * ma + b.vx * mb) / M; a.vy = (a.vy * ma + b.vy * mb) / M;
+              a.r = Math.sqrt(M); a.jig = 1; if (grab === b) grab = a;
+              beads.splice(j--, 1); chime(0.12); continue;
+            }
+            const o = (sr - d) / 2; a.x -= nx * o; a.y -= ny * o; b.x += nx * o; b.y += ny * o;
+            if (rel < 0) { const imp = (-1.7 * rel) / M; a.vx -= nx * imp * mb; a.vy -= ny * imp * mb; b.vx += nx * imp * ma; b.vy += ny * imp * ma; if (-rel > 70) chime(0.05); }
+          }
+          const sky = mixv([238, 238, 248], [178, 190, 215], tN), band = mixv([255, 238, 210], [218, 228, 248], tN), low = mixv([118, 122, 132], [82, 92, 112], tN), base = mixv([200, 204, 210], [172, 184, 204], tN);
+          for (const b of beads) {
+            const r = b.r * Math.min(1, (fxT - b.born) * 3), w = 1 + (hov ? 0.06 * Math.sin(fxT * 14 + b.ph) : 0) + b.jig * 0.15 * Math.sin(fxT * 30);
+            if (r < 0.5) continue;
+            cx.save(); cx.translate(b.x, b.y);
+            cx.fillStyle = "rgba(0,0,0,.35)"; cx.beginPath(); cx.ellipse(0, r * 0.85, r * 0.95, r * 0.3, 0, 0, 6.283); cx.fill();
+            cx.scale(w, 1 / w);
+            const g = cx.createLinearGradient(0, -r, 0, r);
+            g.addColorStop(0, rgb(sky)); g.addColorStop(0.42, rgb(sky, 0.82)); g.addColorStop(0.5, rgb(band)); g.addColorStop(0.6, rgb(low)); g.addColorStop(1, rgb(base));
+            cx.fillStyle = g; cx.beginPath(); cx.arc(0, 0, r, 0, 6.283); cx.fill();
+            cx.strokeStyle = "rgba(30,34,44,.35)"; cx.lineWidth = 1; cx.stroke();
+            cx.strokeStyle = "rgba(255,255,255,.45)"; cx.lineWidth = 1.2; cx.beginPath(); cx.arc(0, 0, r - 1, 0.15, 2.99); cx.stroke();
+            cx.fillStyle = "rgba(255,255,255,.95)"; cx.beginPath(); cx.ellipse(-r * 0.35, -r * 0.45, r * 0.26, r * 0.16, -0.5, 0, 6.283); cx.fill();
+            cx.restore();
+          }
+        }
+
         // ---------- Loop ----------
         const clock = new THREE.Clock();
-        let started = false, fq = 0, tq = 0, checked = false, hudT = 0, hf = 0;
+        let started = false, fq = 0, tq = 0, checked = false, hudT = 0, hf = 0, aimK = 0, aimA = Math.PI / 2;
+        const wrapA = (a) => Math.atan2(Math.sin(a), Math.cos(a));
         const info = document.getElementById("hInfo"), timeEl = document.getElementById("hTime");
         const fmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Taipei", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
         const pad = (n) => String(Math.round(n)).padStart(4, "0");
@@ -382,6 +715,11 @@
           const g = entered ? 1 : prog * prog * (3 - 2 * prog), time = simT;
           smooth.lerp(mouse, 0.06);
           downS += (down - downS) * 0.15;
+          if (performance.now() - pts > 50) { const k = Math.exp(-12 * raw); pvx *= k; pvy *= k; }
+          pSpd = hasMouse ? Math.hypot(pvx, pvy) : 0;
+          const wpp = (12 * Math.tan(Math.PI / 8)) / innerHeight / points.scale.x, vk = Math.min(1, 14 / Math.max(pSpd * wpp, 1e-6));
+          velMat.uniforms.uMVel.value.set(pvx * wpp * vk, -pvy * wpp * vk, 0).multiplyScalar(hasMouse ? 1 : 0);
+          velMat.uniforms.uMSpd.value = Math.min(1, pSpd / 1800);
 
           if (!paused) {
             simT += dt;
@@ -395,7 +733,13 @@
             cur = nxt;
           }
           const bu = bgMat.uniforms;
-          bu.uBeam.value.x = Math.PI / 2 + 1.5 * Math.sin((time * Math.PI) / 4);
+          // Lighthouse: pointer inside the box around the lamp and tower → beam eases toward the cursor.
+          const sweep = Math.PI / 2 + 1.5 * Math.sin((time * Math.PI) / 4), lx = bu.uLamp.value.x * innerWidth, ly = (1 - bu.uLamp.value.y) * innerHeight;
+          const inLH = entered && hasMouse && Math.abs(px - lx) < 110 && py > ly - 120 && py < ly + innerHeight * 0.25;
+          aimK += ((inLH ? 1 : 0) - aimK) * (1 - Math.exp(-3 * raw));
+          if (inLH) aimA += wrapA(Math.atan2(ly - py, px - lx) - aimA) * (1 - Math.exp(-5 * raw));
+          else if (aimK < 0.01) aimA = sweep;
+          bu.uBeam.value.x = sweep + wrapA(aimA - sweep) * aimK;
           bu.uBeam.value.y = g;
           bu.uFade.value = g;
 
@@ -405,6 +749,7 @@
             timeEl.textContent = fmt.format(new Date());
             hf = 0; hudT = 0;
           }
+          fxStep(raw, dt);
 
           renderer.setRenderTarget(null);
           renderer.setClearColor(0x000000, 1);
