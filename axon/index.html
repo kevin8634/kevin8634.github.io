@@ -34,6 +34,29 @@
       .x-snd { right: 8px; top: 6px; min-width: 44px; height: 44px; padding: 0 10px; border: 0; background: none; color: rgba(255,255,255,.7); cursor: pointer; border-radius: 22px; pointer-events: auto; }
       .x-snd:hover, .x-snd:focus-visible { color: #fff; background: rgba(255,255,255,.08); outline: none; }
       .x-fallback #fx, .x-fallback .x-tod, .x-fallback .x-snd { display: none; }
+      /* WORKS index: bottom-left, above the coordinate readout */
+      .x-works { left: 16px; bottom: 40px; }
+      .x-works p { margin: 0; }
+      .x-works button { display: block; padding: 2px 0; border: 0; background: none; font: inherit; letter-spacing: inherit; color: inherit; text-align: left; cursor: pointer; pointer-events: auto; transition: color .3s, text-shadow .3s; }
+      .x-works button:hover, .x-works button:focus-visible { color: #fff; text-shadow: 0 0 8px #fff; outline: none; }
+      .x-works .x-soon { opacity: .3; }
+      .x-pre .x-works button { pointer-events: none; }
+      .x-fallback .x-works { display: none; }
+      /* Work playback: tagline, HUD with progress and close, sound hint */
+      #wTag { position: fixed; left: 0; right: 0; top: 68%; margin: 0; text-align: center; pointer-events: none; opacity: 0; transition: opacity 1s; }
+      #wTag.x-on, .x-whud.x-on { opacity: 1; }
+      #wTag b { display: block; padding-left: .35em; font: 200 clamp(20px, 3.6vw, 44px)/1.2 system-ui, -apple-system, sans-serif; letter-spacing: .35em; text-transform: uppercase; color: #fff; text-shadow: 0 0 4px rgba(255,255,255,.7), 0 0 22px rgba(255,255,255,.45); }
+      #wTag small { display: block; margin-top: 10px; font: 300 12px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .2em; color: rgba(255,255,255,.6); }
+      .x-whud { left: 50%; top: 14px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; opacity: 0; white-space: nowrap; }
+      .x-wbar { position: relative; width: 120px; height: 1px; background: rgba(255,255,255,.2); }
+      .x-wbar i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #fff; box-shadow: 0 0 6px #fff; }
+      .x-whud button { width: 44px; height: 44px; margin: -14px 0; border: 0; border-radius: 22px; background: none; color: inherit; font: inherit; cursor: pointer; pointer-events: none; }
+      .x-whud.x-on button { pointer-events: auto; }
+      .x-whud button:hover, .x-whud button:focus-visible { color: #fff; background: rgba(255,255,255,.08); outline: none; }
+      #sHint { right: 16px; top: 48px; opacity: 0; }
+      #sHint.x-on { animation: x-pulse 1.6s ease-in-out infinite; }
+      @keyframes x-pulse { 0%, 100% { opacity: .35; } 50% { opacity: .9; } }
+      .x-fallback #wTag, .x-fallback .x-whud, .x-fallback #sHint { display: none; }
     </style>
   </head>
   <body class="x-pre">
@@ -46,6 +69,14 @@
     <div class="x-hud x-tod" aria-hidden="true"><i id="todK"></i></div>
     <button class="x-hud x-snd x-ui" id="bSnd" aria-pressed="false" aria-label="Sound">SOUND OFF</button>
     <audio id="bgm" src="kenting_dusk_shoreline.m4a" preload="auto"></audio>
+    <div class="x-hud x-ui x-works" id="works">
+      <p>WORKS</p>
+      <button data-w="0">01 香水 PERFUME</button><button data-w="1">02 球鞋 SNEAKER</button><button data-w="2">03 耳机 AUDIO</button>
+      <p class="x-soon">04–06 COMING SOON</p>
+    </div>
+    <p id="wTag" aria-live="polite"><b id="wTagL"></b><small id="wTagS"></small></p>
+    <div class="x-hud x-ui x-whud" id="wHud"><span id="wHudT"></span><span class="x-wbar"><i id="wBar"></i></span><button id="wClose" aria-label="Close work">✕</button></div>
+    <p class="x-hud" id="sHint">开声音更好看 SOUND ON</p>
     <p class="x-hud x-bl" id="hInfo">X 0000 Y 0000</p>
     <p class="x-hud x-br"><span id="hTime">--:--:--</span><br />21.90°N 120.85°E</p>
     <div class="x-hud x-ctl x-ui">
@@ -192,8 +223,66 @@
             return [((pts[k * 2] + rnd()) / W - 0.5) * S, (0.5 - (pts[k * 2 + 1] + rnd()) / H) * S * (H / W) + CY, (rnd() - 0.5) * 0.3];
           };
         })();
-        const shapes = [["WAVE · 浪", gWave], ["SPHERE · 球", gSphere], ["AXON", gText], ["LIGHTHOUSE · 灯塔", gLight], ["TORUS · 环", gTorus]];
-        let texs = [], shapeI = 0;
+        // Perfume: bevelled box body (y -1.0..0.5), neck, spherical cap; NOZZLE sits at the cap top.
+        const NOZZLE = [0, CY + 1.06, 0];
+        const gPerfume = () => {
+          const s = rnd(), H = [0.65, 0.75, 0.3], b = 0.06, sg = () => (rnd() < 0.5 ? -1 : 1);
+          if (s < 0.72) {
+            // Area-weighted face pick, then round the edges by projecting onto an inset box + radius b.
+            const A = [H[1] * H[2], H[0] * H[2], H[0] * H[1]], r = rnd() * (A[0] + A[1] + A[2]), k = r < A[0] ? 0 : r < A[0] + A[1] ? 1 : 2;
+            const p = H.map((h) => (rnd() * 2 - 1) * h); p[k] = sg() * H[k];
+            const c = p.map((v, i) => Math.max(-(H[i] - b), Math.min(H[i] - b, v))), d = p.map((v, i) => v - c[i]), l = Math.hypot(d[0], d[1], d[2]) || 1;
+            return [c[0] + (d[0] / l) * b, c[1] + (d[1] / l) * b - 0.25 + CY, c[2] + (d[2] / l) * b];
+          }
+          if (s < 0.87) return [(rnd() * 2 - 1) * H[0] * 0.9, (rnd() * 2 - 1) * H[1] * 0.9 - 0.25 + CY, (rnd() * 2 - 1) * H[2] * 0.9];
+          const a = rnd() * 6.283;
+          if (s < 0.93) return [Math.cos(a) * 0.13, 0.5 + rnd() * 0.16 + CY, Math.sin(a) * 0.13];
+          const u = rnd() * 2 - 1, q = Math.sqrt(1 - u * u);
+          return [Math.cos(a) * q * 0.2, 0.86 + u * 0.2 + CY, Math.sin(a) * q * 0.2];
+        };
+        // Sneaker: side-profile polylines (heel at -x, toe at +x), extruded in z ±0.35.
+        const gSneaker = (() => {
+          const OUT = [[-1.28, -0.55], [0.95, -0.55], [1.2, -0.5], [1.3, -0.38], [1.25, -0.25], [1.0, -0.1], [0.6, 0.05], [0.25, 0.2], [-0.15, 0.42], [-0.45, 0.55],
+            [-0.6, 0.5], [-0.85, 0.38], [-1.1, 0.5], [-1.25, 0.45], [-1.3, 0.1], [-1.32, -0.3], [-1.28, -0.55]];
+          const SOLE = [[-1.32, -0.32], [-0.4, -0.33], [0.6, -0.32], [1.0, -0.3], [1.27, -0.24]];
+          const LACE = [];
+          for (let i = 0; i < 5; i++) {
+            const t = i / 4, cx0 = 0.5 - t * 0.8, cy0 = 0.13 + t * 0.3; // along the instep, toe → collar
+            LACE.push([[cx0 - 0.06, cy0 - 0.07], [cx0 + 0.06, cy0 + 0.07]]);
+          }
+          const segs = (pl) => { const out = []; for (let i = 0; i < pl.length - 1; i++) out.push([pl[i], pl[i + 1], Math.hypot(pl[i + 1][0] - pl[i][0], pl[i + 1][1] - pl[i][1])]); return out; };
+          const onLine = (S) => { const tot = S.reduce((a, s) => a + s[2], 0); let r = rnd() * tot, i = 0; while (r > S[i][2] && i < S.length - 1) r -= S[i++][2]; const [a, b] = S[i], t = rnd(); return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; };
+          const inside = (x, y) => { let c = false; for (let i = 0, j = OUT.length - 1; i < OUT.length; j = i++) { const [xi, yi] = OUT[i], [xj, yj] = OUT[j]; if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c; } return c; };
+          const sO = segs(OUT), sS = segs(SOLE), sL = LACE.flatMap(segs);
+          // z: most points hug the two side faces, the rest spread across the width.
+          const zSide = (w) => (rnd() < 0.7 ? (rnd() < 0.5 ? -1 : 1) * w * (1 - rnd() * 0.08) : (rnd() * 2 - 1) * w);
+          return () => {
+            const s = rnd(); let p;
+            if (s < 0.45) p = onLine(sO);
+            else if (s < 0.6) p = onLine(sS);
+            else if (s < 0.67) { p = onLine(sL); return [p[0], p[1] + CY, (rnd() * 2 - 1) * 0.15]; }
+            else { do p = [-1.32 + rnd() * 2.62, -0.55 + rnd() * 1.1]; while (!inside(p[0], p[1])); }
+            return [p[0], p[1] + CY, zSide(0.35)];
+          };
+        })();
+        // Headphones: half-torus headband, yokes, two ear cups with cushion rings; turned 35° about Y.
+        const gPhones = () => {
+          const s = rnd(), sg = rnd() < 0.5 ? -1 : 1, v = rnd() * 6.283, YO = -0.08;
+          let p;
+          if (s < 0.3) { const a = rnd() * Math.PI, w = 1.0 + Math.cos(v) * 0.08; p = [Math.cos(a) * w, Math.sin(a) * w, Math.sin(v) * 0.08]; }
+          else if (s < 0.36) p = rnd() < 0.4 ? [sg * 1.0, 0, (rnd() * 2 - 1) * 0.45] : [sg * 0.95, -rnd() * 0.5, (rnd() < 0.5 ? -1 : 1) * 0.45];
+          else if (s < 0.85) {
+            // Cup centred at (±0.95, -0.5), axis along x: outer face, inner face, side wall.
+            const k = rnd(), r = k < 0.7 ? 0.42 * Math.sqrt(rnd()) : 0.42, x = k < 0.35 ? 1.075 : k < 0.7 ? 0.825 : 0.825 + rnd() * 0.25;
+            p = [sg * x, -0.5 + Math.cos(v) * r, Math.sin(v) * r];
+          } else { const u = rnd() * 6.283, w = 0.32 + Math.cos(u) * 0.08; p = [sg * (0.765 + Math.sin(u) * 0.08), -0.5 + Math.cos(v) * w, Math.sin(v) * w]; }
+          const c = Math.cos(0.61), sn = Math.sin(0.61);
+          return [p[0] * c + p[2] * sn, p[1] + YO + CY, -p[0] * sn + p[2] * c];
+        };
+        const shapes = [["WAVE · 浪", gWave], ["SPHERE · 球", gSphere], ["AXON", gText], ["LIGHTHOUSE · 灯塔", gLight], ["TORUS · 环", gTorus],
+          ["PERFUME · 香水", gPerfume], ["SNEAKER · 球鞋", gSneaker], ["HEADPHONES · 耳机", gPhones]];
+        const BASE_N = 5; // prev/next and arrows cycle only the first five; works use 5..7
+        let texs = [], shapeI = 0, leanI = -1, hovW = false;
 
         // ---------- Simulation ----------
         const rtOpts = { type: THREE.FloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, stencilBuffer: false };
@@ -212,15 +301,19 @@
         });
         const velMat = new THREE.ShaderMaterial({
           uniforms: { tPos: { value: null }, tVel: { value: null }, tTarget: { value: null }, tPrev: { value: null }, uMorphT: { value: -9 }, uRes: { value: simRes }, uMouse: { value: new THREE.Vector3(99, 99, 0) }, uDown: { value: 0 }, uTime: { value: 0 }, uDt: { value: 0.016 },
-            uShock: { value: new THREE.Vector4(0, 0, 0, -9) }, uGather: { value: 0 }, uSpray: { value: 0 }, uLift: { value: 0 }, uMVel: { value: new THREE.Vector3() }, uMSpd: { value: 0 } },
+            uShock: { value: new THREE.Vector4(0, 0, 0, -9) }, uGather: { value: 0 }, uSpray: { value: 0 }, uLift: { value: 0 }, uMVel: { value: new THREE.Vector3() }, uMSpd: { value: 0 },
+            // Work hooks: lean toward a hover target, nozzle mist, beat pulse about uCenter.
+            tLean: { value: null }, uLean: { value: 0 }, uMist: { value: 0 }, uNozzle: { value: new THREE.Vector3(...NOZZLE) }, uPulse: { value: 0 }, uCenter: { value: new THREE.Vector3(0, CY, 0) } },
           vertexShader: quadVS,
-          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel, tTarget, tPrev; uniform vec2 uRes; uniform vec3 uMouse, uMVel; uniform vec4 uShock; uniform float uDown, uTime, uDt, uMorphT, uGather, uSpray, uLift, uMSpd;
+          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel, tTarget, tPrev, tLean; uniform vec2 uRes; uniform vec3 uMouse, uMVel, uNozzle, uCenter; uniform vec4 uShock; uniform float uDown, uTime, uDt, uMorphT, uGather, uSpray, uLift, uMSpd, uLean, uMist, uPulse;
             void main(){
               vec2 uv = gl_FragCoord.xy / uRes;
               vec4 p = texture2D(tPos, uv); vec3 v = texture2D(tVel, uv).xyz;
               vec4 tg = mix(texture2D(tPrev, uv), texture2D(tTarget, uv), step(h(uv + 4.2) * .9, uTime - uMorphT));
               vec3 goal = tg.xyz + vec3(0., sin(uTime * .8 + tg.w) * .02, 0.);
               goal = mix(tg.xyz + (vec3(h(uv + .3), h(uv + .6), h(uv + .9)) - .5) * vec3(10., 6., 4.), goal, uGather);
+              goal = mix(goal, texture2D(tLean, uv).xyz, uLean * .18);
+              goal = uCenter + (goal - uCenter) * (1. + uPulse * .12);
               vec3 acc = (goal - p.xyz) * 7.;
               vec3 q = p.xyz * .8 + .35 * sin(p.yzx * .6 + uTime * .15);
               acc += vec3(sin(q.y + uTime * .3) + cos(q.z * 1.1 + uTime * .2),
@@ -243,6 +336,8 @@
                 acc += sd / max(sr, .05) * exp(-pow((sr - st * 3.5) * 3., 2.)) * exp(-st * 3.) * 90.;
               }
               acc.y += uLift * (.6 + .8 * h(uv + 5.5));
+              // Mist: ~5% of particles rise from the nozzle in a drifting plume.
+              if (uMist > 0. && h(uv + 21.) < .05) { float k = fract(uTime * .22 + h(uv + 23.)); vec3 mg = uNozzle + vec3(sin(uTime * .7 + tg.w * 3.) * .25 * k, k * 2.6, cos(uTime * .5 + tg.w) * .2 * k); acc = mix(acc, (mg - p.xyz) * 7., uMist); }
               float ph = uSpray > .5 ? sprayPh(uv, uTime) : -1.;
               if (ph >= 0. && ph < .4) {
                 acc = acc * .04 + vec3(sin(uTime + tg.w) * .3, -4.5, 0.);
@@ -272,10 +367,10 @@
           transparent: true, depthWrite: false, depthTest: false,
           blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
           uniforms: { tPos: { value: null }, tVel: { value: null }, uTime: { value: 0 }, uSize: { value: 1 }, uAlpha: { value: 0.8 }, uLamp: bgMat.uniforms.uLamp, uBeam: bgMat.uniforms.uBeam,
-            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN },
+            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 } },
           // Liquid-chrome flakes: per-particle shading in the vertex stage, sharp capsule in the fragment stage.
           // Premultiplied normal blending gives the cloud a dark body; glints add light without adding alpha.
-          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; attribute vec2 ref;
+          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint; uniform float uSweep; attribute vec2 ref;
             varying vec3 vCol, vGl; varying vec2 vDir; varying float vStr, vPS, vBlur;
             vec3 env(vec3 rd){
               float y = rd.y;
@@ -289,6 +384,8 @@
               float spd = length(v), r1 = h(ref), r2 = h(ref + 1.3), r3 = h(ref + 2.7);
               vec4 mv = modelViewMatrix * vec4(p, 1.);
               gl_Position = projectionMatrix * mv;
+              // Screen-space light sweep band at NDC x = uSweep (off at -9).
+              float sw = smoothstep(.18, 0., abs(gl_Position.x / gl_Position.w - uSweep));
               vec4 c1 = projectionMatrix * (modelViewMatrix * vec4(p + v * .1, 1.));
               vec2 sd = (c1.xy / c1.w - gl_Position.xy / gl_Position.w) * uRes;
               float a0 = r1 * 6.283 + uTime * (r2 - .5) * .5;
@@ -303,15 +400,16 @@
               float F = pow(1. - dot(n, V), 5.);
               // Polished chrome: silver base (#c8ccd2, colder at night) times a bright env, Fresnel rim, filmic exposure.
               vec3 base = mix(vec3(.784, .8, .824), vec3(.72, .78, .88), uN), rim = mix(vec3(1., .93, .84), vec3(.82, .9, 1.05), uN);
+              base *= uTint; rim *= uTint;
               vec3 col = base * (.16 + env(reflect(-V, n)) * (.5 + .5 * F)) + rim * F * 1.1;
               float bm = beamAt(gl_Position.xy / gl_Position.w * .5 + .5, uLamp, uBeam), st = uTime - uShock.w;
               float sh = st < 1.2 ? exp(-pow((length(p - uShock.xyz) - st * 3.5) * 2., 2.)) * exp(-st * 2.) : 0.;
-              float boost = clamp(bm * 1.5 + sh, 0., 1.), ex = mix(30., 12., boost);
+              float boost = clamp(bm * 1.5 + sh + sw * 1.2, 0., 1.), ex = mix(30., 12., boost);
               float g1 = pow(max(dot(n, normalize(normalize(vec3(.5, .25, .8)) + V)), 0.), ex);
               float g2 = pow(max(dot(n, normalize(normalize(vec3(-.6, .7, .4)) + V)), 0.), ex * .7);
               vec3 tint = mix(vec3(1., .9, .76), vec3(.84, .9, 1.), h(ref + 8.));
               vGl = min(tint * (g1 * 2.2 + g2 * 1.2) * (1. + boost * 2.), vec3(2.5));
-              vCol = 1. - exp(-(col + bm * vec3(.2, .15, .1)) * 1.8);
+              vCol = 1. - exp(-(col + bm * vec3(.2, .15, .1) + sw * vec3(.25, .22, .18)) * 1.8);
               vBlur = smoothstep(.4, 2.4, abs(-mv.z - 6.));
               float th = uSize * (.7 + 2.3 * pow(h(ref + 9.), 3.)) * (1. + vBlur * .9) / -mv.z;
               vPS = max(th * vStr, 2.);
@@ -348,6 +446,7 @@
           for (let i = 0; i < 2; i++) { pass(copyMat, pos[i]); renderer.setRenderTarget(vel[i]); renderer.clear(); }
           renderer.setRenderTarget(null);
           velMat.uniforms.tTarget.value = velMat.uniforms.tPrev.value = texs[shapeI];
+          velMat.uniforms.tLean.value = texs[leanI >= 0 ? leanI : 0]; // re-point lean target at the new textures
           const geo = new THREE.BufferGeometry(), ref = new Float32Array(N * 2);
           for (let i = 0; i < N; i++) { ref[i * 2] = ((i % SIZE) + 0.5) / SIZE; ref[i * 2 + 1] = (Math.floor(i / SIZE) + 0.5) / SIZE; }
           geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N * 3), 3));
@@ -392,14 +491,110 @@
         addEventListener("pointercancel", () => { down = 0; hold = 0; hasMouse = false; });
         document.addEventListener("pointerleave", () => { hasMouse = false; });
         document.documentElement.addEventListener("mouseleave", () => { hasMouse = false; pvx = pvy = 0; });
+        // Works: a 15 s timeline per work: sphere → hero shape (4–11) → tagline (11–14) → wave → end.
+        const WORKS = [{ name: "香水 PERFUME", shape: 5, tag: "LIQUID. LIGHT. LASTING.", src: "work_perfume.m4a" }, { name: "球鞋 SNEAKER", shape: 6, tag: "FORGED IN MOTION", src: "work_sneaker.m4a" }, { name: "耳机 AUDIO", shape: 7, tag: "HEAR THE METAL", src: "work_audio.m4a" }];
+        const WAUD = WORKS.map((w) => { const a = new Audio(); a.preload = "auto"; a.addEventListener("error", () => (a.bad = true)); a.src = w.src; return a; });
+        const TINTS = [[1, 1, 1], [1, 0.78, 0.42], [0.32, 0.34, 0.4]], WHITE = [1, 1, 1];
+        const wTag = document.getElementById("wTag"), wTagL = document.getElementById("wTagL"), wTagS = document.getElementById("wTagS"), wHud = document.getElementById("wHud"), wHudT = document.getElementById("wHudT"), wBar = document.getElementById("wBar"), sHint = document.getElementById("sHint");
+        let work = null, wAud = null;
+        function wAudStart(t) {
+          const a = WAUD[work.i];
+          if (!sndOn || a.bad) return;
+          try { a.currentTime = Math.min(t, a.duration || t); } catch (e) {}
+          a.volume = 0; a.play().catch(() => {}); wAud = a;
+        }
+        function playWork(i) {
+          if (work) endWork(true);
+          work = { i, t: 0, s2: false, s14: false, b6: false, b9: false, ti: 0, lastBurst: -9, dip: 0, env: 0 };
+          waveT = 0; setShape(1);
+          wTagL.textContent = WORKS[i].tag; wTagS.textContent = `AXON · 液态金属广告样片 0${i + 1}`;
+          wHudT.textContent = `WORK 0${i + 1}/06 · ${WORKS[i].name}`; wBar.style.width = "0";
+          wHud.classList.add("x-on");
+          wAudStart(0);
+        }
+        function endWork(silent) {
+          if (!work) return;
+          wTag.classList.remove("x-on"); wHud.classList.remove("x-on"); sHint.classList.remove("x-on");
+          const vu = velMat.uniforms;
+          vu.uMist.value = 0; vu.uPulse.value = 0; ptMat.uniforms.uSweep.value = -9; ptMat.uniforms.uTint.value.set(1, 1, 1);
+          points.rotation.y = 0;
+          if (shapeI !== 0) setShape(0);
+          // Audio fades out in workStep; a silent end (switching works) cuts it at once.
+          if (silent && wAud) { wAud.pause(); wAud.volume = 0; wAud = null; }
+          work = null;
+        }
+        function burst() {
+          velMat.uniforms.uShock.value.set(0, CY, 0, simT);
+          work.dip = 0.35; work.ti = (work.ti + 1) % TINTS.length; work.lastBurst = work.t;
+        }
+        function workStep(raw) {
+          // Work music volume: up to 0.9 while its work runs with sound on, down to 0 (then pause) otherwise.
+          if (wAud) {
+            const on = work && sndOn && WAUD[work.i] === wAud, v = clamp(wAud.volume + (on ? 1.5 : -1.5) * raw, 0, 0.9);
+            wAud.volume = v; if (!on && v === 0) { wAud.pause(); wAud = null; }
+          }
+          sHint.classList.toggle("x-on", !!work && !sndOn);
+          if (!work || !entered || paused) return;
+          const w = work, t = (w.t += raw), vu = velMat.uniforms, pu = ptMat.uniforms;
+          w.dip -= raw;
+          if (t >= 2 && !w.s2) { w.s2 = true; setShape(WORKS[w.i].shape); }
+          const hero = t >= 4 && t < 11;
+          if (hero) {
+            points.rotation.y += raw * 0.35 * clamp((t - 4) / 0.5, 0, 1);
+            pu.uSweep.value = -1.4 + 2.8 * (((t - 4) % 3.5) / 3.5);
+          } else if (t >= 11) {
+            points.rotation.y = wrapA(points.rotation.y) * Math.exp(-2 * raw);
+            pu.uSweep.value = -9;
+          }
+          // Perfume: nozzle mist during the hero.
+          vu.uMist.value = clamp(vu.uMist.value + (hero && w.i === 0 ? 2 : -2) * raw, 0, 1);
+          // Sneaker: timed bursts plus a fast cursor pass-by through the shoe; each cycles the chrome tint.
+          if (w.i === 1 && hero) {
+            if (t >= 6 && !w.b6) { w.b6 = true; burst(); }
+            if (t >= 9 && !w.b9) { w.b9 = true; burst(); }
+            const m = mouseWorld();
+            if (pSpd > 900 && Math.hypot(m.x, m.y - CY, m.z) < 1.3 && t - w.lastBurst > 1.2) burst();
+          }
+          const tg = w.t < 14 ? TINTS[w.ti] : WHITE;
+          pu.uTint.value.lerp(new THREE.Vector3(...tg), 1 - Math.exp(-3 * raw));
+          // Headphones: beat envelope from the track's low bins, or a fake 120 bpm when there is no audio.
+          if (w.i === 2 && hero) {
+            const a = WAUD[2];
+            if (sndOn && ac && !a.bad) {
+              if (!a.xan) { a.xsrc = ac.createMediaElementSource(a); a.xan = ac.createAnalyser(); a.xan.fftSize = 256; a.xbuf = new Uint8Array(a.xan.frequencyBinCount); a.xsrc.connect(a.xan).connect(ac.destination); }
+              a.xan.getByteFrequencyData(a.xbuf);
+              let e = 0; for (let k = 0; k <= 6; k++) e += a.xbuf[k]; e /= 7 * 255;
+              w.env += (e - w.env) * (e > w.env ? 0.5 : 0.08);
+              vu.uPulse.value = clamp((w.env - 0.35) * 2.2, 0, 1);
+            } else vu.uPulse.value = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2)), 8);
+          } else vu.uPulse.value *= Math.exp(-6 * raw);
+          wTag.classList.toggle("x-on", t >= 11 && t < 14);
+          if (t >= 14 && !w.s14) { w.s14 = true; setShape(0); vu.uPulse.value = 0; }
+          wBar.style.width = Math.min(100, (t / 15) * 100) + "%";
+          if (t >= 15) endWork();
+        }
+        document.getElementById("wClose").addEventListener("click", () => endWork());
+        const baseStep = (d) => setShape((((shapeI + d) % BASE_N) + BASE_N) % BASE_N);
         addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && work) { endWork(); return; }
           if (!entered) return;
-          if (e.key >= "1" && e.key <= "5") setShape(+e.key - 1);
-          else if (e.key === "ArrowRight") setShape(shapeI + 1);
-          else if (e.key === "ArrowLeft") setShape(shapeI - 1);
+          const dg = /^Digit([1-5])$/.exec(e.code || "");
+          // Shift+1..5 = shapes 0–4; plain 4/5 = shapes 3/4; plain 1–3 = works.
+          if (dg && e.shiftKey) { if (!work) setShape(+dg[1] - 1); }
+          else if (e.key === "4" || e.key === "5") { if (!work) setShape(+e.key - 1); }
+          else if (e.key >= "1" && e.key <= "3" && e.key.length === 1) playWork(+e.key - 1);
+          else if (e.key === "ArrowRight") baseStep(1);
+          else if (e.key === "ArrowLeft") baseStep(-1);
         });
-        document.getElementById("bPrev").addEventListener("click", () => setShape(shapeI - 1));
-        document.getElementById("bNext").addEventListener("click", () => setShape(shapeI + 1));
+        document.getElementById("bPrev").addEventListener("click", () => baseStep(-1));
+        document.getElementById("bNext").addEventListener("click", () => baseStep(1));
+        // WORKS index: hover/focus leans the cloud toward the work's shape; click plays it.
+        document.querySelectorAll("#works button").forEach((b) => {
+          const i = +b.dataset.w, on = () => { hovW = true; leanI = 5 + i; velMat.uniforms.tLean.value = texs[leanI]; }, off = () => { hovW = false; };
+          b.addEventListener("pointerenter", on); b.addEventListener("focus", on);
+          b.addEventListener("pointerleave", off); b.addEventListener("blur", off);
+          b.addEventListener("click", () => playWork(i));
+        });
         bPause.addEventListener("click", () => {
           paused = !paused;
           bPause.textContent = paused ? "▶" : "❚❚";
@@ -423,7 +618,7 @@
         addEventListener("resize", resize);
         resize();
 
-        const ndc = new THREE.Vector3(), dir = new THREE.Vector3(), world = new THREE.Vector3();
+        const ndc = new THREE.Vector3(), dir = new THREE.Vector3(), world = new THREE.Vector3(), YAX = new THREE.Vector3(0, 1, 0);
         function mouseWorld() {
           if (!hasMouse) return world.set(99, 99, 0);
           ndc.set(mouse.x, mouse.y, 0.5).unproject(camera);
@@ -506,6 +701,8 @@
           bSnd.textContent = sndOn ? "SOUND ON" : "SOUND OFF"; bSnd.setAttribute("aria-pressed", sndOn);
           const t0 = ac.currentTime; master.gain.cancelScheduledValues(t0); master.gain.setTargetAtTime(sndOn ? 1 : 0, t0, sndOn ? 0.6 : 0.15);
           if (sndOn) { bgm.volume = 0; bgm.play().catch(() => {}); }
+          // Sound on mid-work: join the work track where the timeline is.
+          if (sndOn && work) { wAudStart(work.t); sHint.classList.remove("x-on"); }
         });
 
         // Input: wheel and vertical touch drag set the time; everything else wakes on pass-by (see fxStep). Click = shockwave + chime.
@@ -520,7 +717,7 @@
         }, true);
         addEventListener("pointermove", (e) => {
           // Big wave: 3 horizontal direction reversals at |vx| > 600 px/s inside the sea band within 1.5 s.
-          if (entered && !grab && py > horY + 2 && py < H * 0.75 && Math.abs(pvx) > 600) {
+          if (entered && !grab && !work && py > horY + 2 && py < H * 0.75 && Math.abs(pvx) > 600) {
             const d = Math.sign(pvx);
             if (rdir && d !== rdir) {
               revs = revs.filter((t) => e.timeStamp - t < 1500); revs.push(e.timeStamp);
@@ -554,8 +751,10 @@
           lift *= Math.exp(-3 * dt); velMat.uniforms.uLift.value = lift;
           if (waveT > 0) { const w0 = waveT; waveT -= raw; if (w0 > 3 && waveT <= 3) setShape(2); if (waveT <= 0) setShape(prevShape); }
           if (ac) {
-            waveG.gain.value = 0.3 * (1 - 0.65 * tN);
-            const bv = clamp(bgm.volume + (sndOn ? raw : -raw) * 0.25, 0, 0.5);
+            // Duck: a playing work track takes BGM to 0 and the wave noise down; both return after.
+            const duck = !!work && !WAUD[work.i].bad;
+            waveG.gain.value = 0.3 * (1 - 0.65 * tN) * (work ? 0.4 : 1);
+            const bv = clamp(bgm.volume + (sndOn && !duck ? raw : -raw) * 0.25, 0, 0.5);
             bgm.volume = bv; if (!sndOn && bv === 0 && !bgm.paused) bgm.pause();
           }
           cx.clearRect(0, 0, W, H);
@@ -721,13 +920,22 @@
           const wpp = (12 * Math.tan(Math.PI / 8)) / innerHeight / points.scale.x, vk = Math.min(1, 14 / Math.max(pSpd * wpp, 1e-6));
           velMat.uniforms.uMVel.value.set(pvx * wpp * vk, -pvy * wpp * vk, 0).multiplyScalar(hasMouse ? 1 : 0);
           velMat.uniforms.uMSpd.value = Math.min(1, pSpd / 1800);
+          // Lean eases in (~2/s) while a work is hovered and none is playing.
+          const lu = velMat.uniforms.uLean;
+          lu.value = clamp(lu.value + (hovW && !work ? 2 : -2) * raw, 0, 1);
+          workStep(raw);
 
           if (!paused) {
             simT += dt;
             const vu = velMat.uniforms, pu = posMat.uniforms, nxt = 1 - cur;
             vu.tPos.value = pos[cur].texture; vu.tVel.value = vel[cur].texture;
-            vu.uMouse.value.copy(mouseWorld()); vu.uDown.value = downS; vu.uTime.value = simT; vu.uDt.value = dt;
-            vu.uGather.value = g; vu.uSpray.value = pu.uSpray.value = entered ? 1 : 0;
+            vu.uMouse.value.copy(mouseWorld());
+            // Rotated cloud: bring cursor and its velocity into the points' local frame.
+            if (points.rotation.y !== 0) { vu.uMouse.value.applyAxisAngle(YAX, -points.rotation.y); vu.uMVel.value.applyAxisAngle(YAX, -points.rotation.y); }
+            vu.uDown.value = downS; vu.uTime.value = simT; vu.uDt.value = dt;
+            vu.uGather.value = g;
+            if (work && work.dip > 0) vu.uGather.value *= 0.6; // sneaker burst: brief gather dip
+            vu.uSpray.value = pu.uSpray.value = entered ? 1 : 0;
             pass(velMat, vel[nxt]);
             pu.tPos.value = pos[cur].texture; pu.tVel.value = vel[nxt].texture; pu.uDt.value = dt; pu.uTime.value = simT;
             pass(posMat, pos[nxt]);
