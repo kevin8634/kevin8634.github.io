@@ -108,7 +108,7 @@ EF.MISSIONS = {
   spectra: { q: '隔着几百光年,怎么知道一颗星球的空气?', n: 4, g: 'dot', href: 'spectra/', lv: '★★☆', scale: '光 · 原子 · 分子', unlock: [1, 2, 6, 8, 11, 16], planet: 1 },
   island: { q: '元素周期表的尽头在哪里?', n: 4, g: 'oga', href: 'island/', lv: '★★★', scale: '原子核 · 元素', unlock: [26, 50, 82, 114, 118], v2: 1 },
   react: { q: '把两种东西混在一起,会发生什么?', n: 4, g: 'bucky', href: 'react/', lv: '★★☆', scale: '分子 · 离子 · 原子', unlock: [1, 6, 8, 11, 20, 26, 29], v2: 1 },
-  molecule: { q: '随手拼一个分子,世界上真的有吗?', n: 4, g: 'click', href: 'molecule/', lv: '★★☆', scale: '分子 · 原子', unlock: [1, 6, 7, 8, 9, 16, 17, 35], v2: 1 }
+  molecule: { q: '随手拼一个分子,世界上真的有吗?', n: 5, g: 'click', href: 'molecule/', lv: '★★☆', scale: '分子 · 原子', unlock: [1, 6, 7, 8, 9, 16, 17, 35], v2: 1 }
 };
 EF.PLANETS = [
   { id: 'mars', q: '火星为什么是红的?', g: 'oga' }, { id: 'titan', q: '土卫六为什么是橙色的?', g: 'oga' },

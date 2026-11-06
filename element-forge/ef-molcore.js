@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · 分子搭建台核心 ef-molcore.js v2.2
+/* 元素工坊 Element Forge · 分子搭建台核心 ef-molcore.js v2.4(v2.4 加 chiral():手性碳判定)
    纯函数:分子图(原子 + 键)、化合价插槽、Hill 分子式、规范哈希(与 tools/molecule_build.py 同算法)。
    规范哈希:重原子图;初始标签 = 元素 + 氢数 + 重原子度 + 到其他原子的(距离,元素)多重集;
    再做 n 轮邻居精炼(FNV-1a 32 位);最终 = FNV(分子式 # 排序后标签)。不依赖 RDKit。 */
@@ -60,6 +60,35 @@
     var fin = cur.slice().sort(function (a, b) { return a - b; });
     return hex8(fnv(formula(mol) + '#' + fin.join('.')));
   }
-  G.EFM = { VAL: VAL, fnv: fnv, used: used, free: free, formula: formula, status: status, key: key, components: components };
+  /* v2.4 手性碳(立体中心)判定:碳原子连 4 个原子且全是单键,并且 4 个"基团"两两不同。
+     做法:以该碳为标记点,在全图(含 H)上做邻居精炼(元素 + 键级),4 个邻居的最终标签两两不同 → 手性碳。
+     与 RDKit FindMolChiralCenters(includeUnassigned) 对拍见 tools/molecule/chiral_check.py。
+     只判"构造上的"手性中心;不处理赝手性、内消旋整体判断、轴手性等(本台示意口径)。 */
+  function nbrs(mol) {
+    var nb = mol.atoms.map(function () { return []; });
+    mol.bonds.forEach(function (b) { nb[b.a].push([b.b, b.o]); nb[b.b].push([b.a, b.o]); });
+    return nb;
+  }
+  function isChiral(mol, c, nb) {
+    nb = nb || nbrs(mol);
+    var A = mol.atoms[c]; if (!A || A.e !== 'C' || nb[c].length !== 4) return false;
+    if (nb[c].some(function (x) { return x[1] !== 1; })) return false;
+    var n = mol.atoms.length, cur = mol.atoms.map(function (a, i) { return fnv(a.e + (i === c ? '*' : '')); });
+    for (var r = 0; r < n; r++) {
+      var nx = cur.map(function (v, i) { return fnv(v + '|' + nb[i].map(function (x) { return cur[x[0]] + ':' + x[1]; }).sort().join('.')); });
+      cur = nx;
+    }
+    var L = nb[c].map(function (x) { return cur[x[0]]; });
+    for (var i = 0; i < 4; i++) for (var j = i + 1; j < 4; j++) if (L[i] === L[j]) return false;
+    return true;
+  }
+  function chiral(mol) { var nb = nbrs(mol), out = []; for (var i = 0; i < mol.atoms.length; i++) if (isChiral(mol, i, nb)) out.push(i); return out; }
+  /* 某个手性碳的 4 个基团"等级标签"(用于镜子视图给基团编号;同一分子内可比较) */
+  function groups(mol, c) {
+    var nb = nbrs(mol), n = mol.atoms.length, cur = mol.atoms.map(function (a, i) { return fnv(a.e + (i === c ? '*' : '')); });
+    for (var r = 0; r < n; r++) cur = cur.map(function (v, i) { return fnv(v + '|' + nb[i].map(function (x) { return cur[x[0]] + ':' + x[1]; }).sort().join('.')); });
+    return nb[c].map(function (x) { return { i: x[0], lab: cur[x[0]] }; });
+  }
+  G.EFM = { VAL: VAL, fnv: fnv, used: used, free: free, formula: formula, status: status, key: key, components: components, chiral: chiral, isChiral: isChiral, groups: groups };
   if (typeof module !== 'undefined') module.exports = G.EFM;
 })(typeof window !== 'undefined' ? window : globalThis);
