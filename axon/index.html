@@ -110,6 +110,26 @@
       .x-portal b, .x-portal small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: inherit; }
       .x-portal b { margin-top: 4px; font-size: 12px; }
       .x-portal small { font-size: 12px; opacity: .55; }
+      /* v0.8 phone / narrow (<760px): smaller UI; works index, portal, generator and work HUD never overlap */
+      @media (max-width: 759px) {
+        .x-hud { font-size: 10px; letter-spacing: .08em; }
+        .x-tl { left: 10px; top: 10px; max-width: calc(100vw - 190px); }
+        .x-hint, .x-bl, .x-br { display: none; }
+        .x-snd { right: 2px; top: 2px; }
+        .x-pbtn { right: 92px; top: 2px; padding: 0 10px; }
+        .x-portal { right: 8px; top: 50px; max-width: calc(100vw - 16px); max-height: 62vh; }
+        .x-tod { right: 10px; height: 26vh; }
+        .x-works { left: 10px; bottom: 56px; }
+        .x-works button { padding: 4px 0; }
+        .x-genon .x-works, .x-workon .x-works { opacity: 0; }
+        .x-genon .x-works button, .x-workon .x-works button { pointer-events: none; }
+        .x-gen { left: 8px; right: 8px; width: auto; max-width: none; bottom: 92px; max-height: calc(100vh - 210px); }
+        .x-ctl { bottom: 4px; gap: 0; } .x-ctl button { width: 40px; height: 40px; } .x-ctl span { min-width: 96px; }
+        .x-whud { top: auto; bottom: 56px; gap: 6px; } .x-wbar { width: 56px; }
+        #sHint { right: 8px; top: 44px; }
+        #wTag { top: 64%; } #wTag b { font-size: 20px; letter-spacing: .18em; }
+        #toast { bottom: 50px; max-width: calc(100vw - 24px); white-space: normal; text-align: center; }
+      }
     </style>
   </head>
   <body class="x-pre">
@@ -119,7 +139,7 @@
     <div class="x-vig" aria-hidden="true"></div>
     <p class="x-error">WebGL 不可用</p>
     <div id="skinIris" aria-hidden="true"></div>
-    <p class="x-hud x-tl">AXON<br /><span id="hScene">SCENE 01 · 垦丁 KENTING</span><small id="hPrev"></small> · 滚动=时间 · 划过=唤醒<br /><span id="hShape">WAVE · 浪</span><br /><span id="hTod">TIME 18:20</span> <span id="hMet"></span></p>
+    <p class="x-hud x-tl">AXON<br /><span id="hScene">SCENE 01 · 垦丁 KENTING</span><small id="hPrev"></small><span class="x-hint"> · 滚动=时间 · 划过=唤醒</span><br /><span id="hShape">WAVE · 浪</span><br /><span id="hTod">TIME 18:20</span> <span id="hMet"></span></p>
     <div class="x-hud x-tod" aria-hidden="true"><i id="todK"></i></div>
     <button class="x-hud x-snd x-ui" id="bSnd" aria-pressed="false" aria-label="Sound">SOUND OFF</button>
     <button class="x-hud x-pbtn x-ui" id="bPortal" aria-expanded="false" aria-controls="portal" aria-label="PORTAL 传送门"><span>PORTAL</span><span>传送门</span></button>
@@ -127,9 +147,9 @@
     <audio id="bgm" src="kenting_dusk_shoreline.m4a" preload="auto"></audio>
     <div class="x-hud x-ui x-works" id="works">
       <p>WORKS</p>
-      <button data-w="0">01 香水 PERFUME</button><button data-w="1">02 球鞋 SNEAKER</button><button data-w="2">03 耳机 AUDIO</button>
+      <button data-w="0">01 香水 PERFUME</button><button data-w="1">02 球鞋 SNEAKER</button><button data-w="2">03 耳机 AUDIO</button><button data-w="3">04 手机 PHONE</button>
       <button id="bMake" aria-expanded="false" aria-controls="gen">✦ 做你的金属广告 MAKE YOURS</button>
-      <p class="x-soon">04–06 COMING SOON</p>
+      <p class="x-soon">05–06 COMING SOON</p>
     </div>
     <div class="x-ui x-gen" id="gen" role="dialog" aria-label="MAKE YOURS 品牌金属生成器">
       <div class="x-gen-h"><span>MAKE YOURS · 品牌金属生成器</span><button class="x-gen-x" id="gClose" aria-label="Close">✕</button></div>
@@ -183,7 +203,8 @@
         const DPR = Math.min(window.devicePixelRatio || 1, 1.5);
         renderer.setPixelRatio(DPR);
         renderer.autoClear = false;
-        let SIZE = innerWidth < 768 ? 256 : 512, N, small;
+        const PHONE = innerWidth < 760 || (!!window.matchMedia && matchMedia("(pointer: coarse)").matches && Math.min(screen.width, screen.height) < 600);
+        let SIZE = PHONE ? 362 : 512, N, small;
 
         const HASH = "float h(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}\n";
         const SPRAY = "float sprayPh(vec2 uv, float t){ return h(uv + 11.) < .03 ? fract(t / 7. + h(uv + 13.)) : -1.; }\n";
@@ -407,9 +428,31 @@
           const c = Math.cos(0.61), sn = Math.sin(0.61);
           return [p[0] * c + p[2] * sn, p[1] + YO + CY, -p[0] * sn + p[2] * c];
         };
+        // Phone: rounded-rect body (outline on both faces + side wall), screen glass + border, punch-hole, rear camera module.
+        const rrEdge = (hw, hh, r) => {
+          const a = hw - r, b = hh - r, s = rnd() * (4 * a + 4 * b + 2 * Math.PI * r);
+          if (s < 4 * a) return [(rnd() * 2 - 1) * a, s < 2 * a ? hh : -hh];
+          if (s < 4 * a + 4 * b) return [s < 4 * a + 2 * b ? hw : -hw, (rnd() * 2 - 1) * b];
+          const t = rnd() * Math.PI / 2;
+          return [(rnd() < 0.5 ? -1 : 1) * (a + r * Math.cos(t)), (rnd() < 0.5 ? -1 : 1) * (b + r * Math.sin(t))];
+        };
+        const rrIn = (hw, hh, r) => { let x, y; do { x = (rnd() * 2 - 1) * hw; y = (rnd() * 2 - 1) * hh; } while (Math.hypot(Math.max(Math.abs(x) - hw + r, 0), Math.max(Math.abs(y) - hh + r, 0)) > r); return [x, y]; };
+        const PH_Y = CY - 0.05; // phone centre; screen sweep uses it too
+        const gPhone = () => {
+          const s = rnd(), T = 0.07, sg = () => (rnd() < 0.5 ? -1 : 1);
+          let p, z;
+          if (s < 0.3) { p = rrEdge(0.6, 1.12, 0.2); z = rnd() < 0.7 ? sg() * T : (rnd() * 2 - 1) * T; }
+          else if (s < 0.38) { p = rrEdge(0.54, 1.06, 0.15); z = T + 0.005; }
+          else if (s < 0.68) { do p = rrIn(0.54, 1.06, 0.15); while (Math.hypot(p[0], p[1] - 0.97) < 0.07); z = T * 0.6; }
+          else if (s < 0.71) { const a = rnd() * 6.283; p = [Math.cos(a) * 0.045, 0.97 + Math.sin(a) * 0.045]; z = T + 0.01; }
+          else if (s < 0.86) { p = rrIn(0.6, 1.12, 0.2); z = -T; }
+          else if (s < 0.9) { p = rrEdge(0.2, 0.3, 0.12); p = [p[0] - 0.3, p[1] + 0.73]; z = -T - 0.05; }
+          else { const c = [[-0.36, 0.86], [-0.36, 0.6], [-0.18, 0.73]][(rnd() * 3) | 0], a = rnd() * 6.283, r = 0.085 * (rnd() < 0.6 ? 1 : Math.sqrt(rnd())); p = [c[0] + Math.cos(a) * r, c[1] + Math.sin(a) * r]; z = -T - 0.06; }
+          return [p[0], p[1] + PH_Y, z];
+        };
         const shapes = [["WAVE · 浪", gWave], ["SPHERE · 球", gSphere], ["AXON", gText], ["LIGHTHOUSE · 灯塔", gLight], ["TORUS · 环", gTorus],
-          ["PERFUME · 香水", gPerfume], ["SNEAKER · 球鞋", gSneaker], ["HEADPHONES · 耳机", gPhones], ["CUSTOM · 定制", gCustom]];
-        const CUSTOM_I = 8;
+          ["PERFUME · 香水", gPerfume], ["SNEAKER · 球鞋", gSneaker], ["HEADPHONES · 耳机", gPhones], ["CUSTOM · 定制", gCustom], ["PHONE · 手机", gPhone]];
+        const CUSTOM_I = 8, PHONE_I = 9;
         const BASE_N = 5; // prev/next and arrows cycle only the first five; works use 5..7
         let texs = [], shapeI = 0, leanI = -1, hovW = false;
 
@@ -496,10 +539,10 @@
           transparent: true, depthWrite: false, depthTest: false,
           blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
           uniforms: { tPos: { value: null }, tVel: { value: null }, uTime: { value: 0 }, uSize: { value: 1 }, uAlpha: { value: 0.8 }, uLamp: bgMat.uniforms.uLamp, uBeam: bgMat.uniforms.uBeam,
-            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 } },
+            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uScr: { value: new THREE.Vector3(0, 0, 0) } },
           // Liquid-chrome flakes: per-particle shading in the vertex stage, sharp capsule in the fragment stage.
           // Premultiplied normal blending gives the cloud a dark body; glints add light without adding alpha.
-          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep; attribute vec2 ref;
+          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep; uniform vec3 uScr; attribute vec2 ref;
             varying vec3 vCol, vGl; varying vec2 vDir; varying float vStr, vPS, vBlur;
             vec3 env(vec3 rd){
               float y = rd.y;
@@ -515,6 +558,7 @@
               gl_Position = projectionMatrix * mv;
               // Screen-space light sweep band at NDC x = uSweep (off at -9).
               float sw = smoothstep(.18, 0., abs(gl_Position.x / gl_Position.w - uSweep));
+              sw = max(sw, uScr.y * step(abs(p.x), .55) * step(abs(p.y - uScr.z), 1.07) * step(0., p.z) * smoothstep(.16, 0., abs(p.y - uScr.x + p.x * .35)) * 1.4);
               vec4 c1 = projectionMatrix * (modelViewMatrix * vec4(p + v * .1, 1.));
               vec2 sd = (c1.xy / c1.w - gl_Position.xy / gl_Position.w) * uRes;
               float a0 = r1 * 6.283 + uTime * (r2 - .5) * .5;
@@ -565,7 +609,7 @@
         camera.position.set(0, 0, 6);
 
         function build(size) {
-          SIZE = size; N = size * size; small = size === 256;
+          SIZE = size; N = size * size; small = size < 512;
           texs.concat(pos, vel).forEach((t) => t.dispose());
           texs = shapes.map((s) => makeTex(s[1]));
           const rt = () => new THREE.WebGLRenderTarget(SIZE, SIZE, rtOpts);
@@ -601,11 +645,13 @@
 
         // ---------- Input ----------
         const mouse = new THREE.Vector2(0, 0), smooth = new THREE.Vector2(0, 0);
-        let hasMouse = false, down = 0, downS = 0, simT = 0, paused = false, entered = false, hold = 0, prog = 0, px = 0, py = 0;
+        let hasMouse = false, down = 0, downS = 0, simT = 0, paused = false, entered = false, hold = 0, prog = 0, px = 0, py = 0, tap = null, twoF = false, tY = 0;
         const intro = document.getElementById("intro"), ring = document.getElementById("ring"), bPause = document.getElementById("bPause");
         // Pointer velocity in px/s, exponentially smoothed (~40 ms) per event; decays when the pointer rests.
         let pvx = 0, pvy = 0, pSpd = 0, pts = 0;
         function setPointer(e) {
+          if (e.isPrimary === false || twoF) return; // only the first finger wakes the cloud; two-finger swipes drive time
+          if (tap && Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 14) tap = null;
           const x = e.clientX, y = e.clientY, ddt = (e.timeStamp - pts) / 1000;
           if (hasMouse && ddt > 0 && ddt < 0.1) { const k = 1 - Math.exp(-ddt / 0.04), s = Math.max(ddt, 0.004); pvx += ((x - px) / s - pvx) * k; pvy += ((y - py) / s - pvy) * k; }
           else if (ddt >= 0.1 || !hasMouse) pvx = pvy = 0;
@@ -614,23 +660,39 @@
         }
         addEventListener("pointermove", setPointer);
         if (!window.PointerEvent) addEventListener("touchmove", (e) => { const t = e.touches[0]; if (t) setPointer({ clientX: t.clientX, clientY: t.clientY, timeStamp: e.timeStamp }); }, { passive: true });
+        const shock = (w, cx) => { velMat.uniforms.uShock.value.set(w.x, w.y, w.z, simT); bgMat.uniforms.uClick.value.set(cx / innerWidth, simT); };
         addEventListener("pointerdown", (e) => {
+          if (e.isPrimary === false) { tap = null; return; }
           setPointer(e);
           if (!entered || e.target.closest(".x-ui")) return;
+          // Touch: the shockwave fires on a tap (release < 350 ms, < 14 px travel), so a swipe only wakes.
+          if (e.pointerType === "touch") { tap = { x: e.clientX, y: e.clientY, ts: e.timeStamp, w: mouseWorld().clone() }; return; }
           down = 1;
-          const w = mouseWorld();
-          velMat.uniforms.uShock.value.set(w.x, w.y, w.z, simT);
-          bgMat.uniforms.uClick.value.set(e.clientX / innerWidth, simT);
+          shock(mouseWorld(), e.clientX);
         });
         intro.addEventListener("pointerdown", (e) => { hold = 1; e.preventDefault(); });
-        addEventListener("pointerup", (e) => { down = 0; hold = 0; if (e.pointerType === "touch") hasMouse = false; });
-        addEventListener("pointercancel", () => { down = 0; hold = 0; hasMouse = false; });
+        addEventListener("pointerup", (e) => {
+          if (tap && e.isPrimary !== false && entered && e.timeStamp - tap.ts < 350) { shock(tap.w, tap.x); chime(0.07); }
+          if (e.isPrimary !== false) tap = null;
+          down = 0; hold = 0; if (e.pointerType === "touch") hasMouse = false;
+        });
+        addEventListener("pointercancel", () => { down = 0; hold = 0; hasMouse = false; tap = null; });
+        const avgY = (e) => (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        addEventListener("touchstart", (e) => { if (e.touches.length >= 2) { twoF = true; tap = null; hasMouse = false; down = 0; tY = avgY(e); } }, { passive: true });
+        addEventListener("touchmove", (e) => {
+          if (!twoF || e.touches.length < 2) return;
+          if (e.cancelable) e.preventDefault(); // no pinch-zoom / page pan
+          const y = avgY(e); if (entered) tT = clamp(tT + (tY - y) / (innerHeight * 0.6), 0, 1); tY = y;
+        }, { passive: false });
+        const twoEnd = (e) => { if (e.touches.length < 2) twoF = false; };
+        addEventListener("touchend", twoEnd, { passive: true }); addEventListener("touchcancel", twoEnd, { passive: true });
         document.addEventListener("pointerleave", () => { hasMouse = false; });
         document.documentElement.addEventListener("mouseleave", () => { hasMouse = false; pvx = pvy = 0; });
         // Works: a 15 s timeline per work: sphere → hero shape (4–11) → tagline (11–14) → wave → end.
         const WORKS = [{ name: "香水 PERFUME", shape: 5, tag: "LIQUID. LIGHT. LASTING.", src: "work_perfume.m4a" }, { name: "球鞋 SNEAKER", shape: 6, tag: "FORGED IN MOTION", src: "work_sneaker.m4a" }, { name: "耳机 AUDIO", shape: 7, tag: "HEAR THE METAL", src: "work_audio.m4a" },
+          { name: "手机 PHONE", shape: PHONE_I, tag: "AXON PHONE · 液态成形", src: "work_perfume.m4a", type: "phone", dur: 12 },
           { name: "定制 CUSTOM", shape: CUSTOM_I, tag: "", src: "kenting_dusk_shoreline.m4a", type: "custom", dur: 10 }];
-        const CUSTOM_W = 3;
+        const CUSTOM_W = 4;
         let customTint = [0.93, 0.96, 1], customName = "AXON", rec = null; // rec: export hook for edit B
         const WAUD = WORKS.map((w) => { const a = new Audio(); a.preload = "auto"; a.addEventListener("error", () => (a.bad = true)); a.src = w.src; return a; });
         const TINTS = [[1, 1, 1], [1, 0.78, 0.42], [0.32, 0.34, 0.4]], WHITE = [1, 1, 1];
@@ -643,7 +705,9 @@
           a.volume = 0; a.play().catch(() => {}); wAud = a;
         }
         function playWork(i) {
+          if (rec) { toast("录制中 · 暂不能切换作品"); return; }
           if (work) endWork(true);
+          document.body.classList.add("x-workon");
           work = { i, t: 0, s2: false, s14: false, b6: false, b9: false, ti: 0, lastBurst: -9, dip: 0, env: 0 };
           waveT = 0; setShape(1);
           wTagL.textContent = WORKS[i].tag; wTagS.textContent = `AXON · 液态金属广告样片 0${i + 1}`;
@@ -654,9 +718,9 @@
         }
         function endWork(silent) {
           if (!work) return;
-          wTag.classList.remove("x-on"); wHud.classList.remove("x-on"); sHint.classList.remove("x-on");
+          wTag.classList.remove("x-on"); wHud.classList.remove("x-on"); sHint.classList.remove("x-on"); document.body.classList.remove("x-workon");
           const vu = velMat.uniforms;
-          vu.uMist.value = 0; vu.uPulse.value = 0; ptMat.uniforms.uSweep.value = -9; ptMat.uniforms.uTint.value.copy(skinTint);
+          vu.uMist.value = 0; vu.uPulse.value = 0; ptMat.uniforms.uSweep.value = -9; ptMat.uniforms.uScr.value.y = 0; ptMat.uniforms.uTint.value.copy(skinTint);
           points.rotation.y = 0;
           if (shapeI !== 0) setShape(0);
           // Audio fades out in workStep; a silent end (switching works) cuts it at once.
@@ -675,8 +739,8 @@
             wAud.volume = v; if (!on && v === 0) { wAud.pause(); wAud = null; }
           }
           sHint.classList.toggle("x-on", !!work && !sndOn);
-          if (!work || !entered || paused) return;
-          const w = work, t = (w.t += raw), vu = velMat.uniforms, pu = ptMat.uniforms;
+          if (!work || !entered || (paused && !rec)) return;
+          const w = work, t = (w.t = rec && rec.t0 ? (performance.now() - rec.t0) / 1000 : w.t + raw), vu = velMat.uniforms, pu = ptMat.uniforms;
           w.dip -= raw;
           const D = WORKS[w.i].dur || 15;
           if (WORKS[w.i].type === "custom") {
@@ -691,6 +755,21 @@
             pu.uTint.value.lerp(t < 9 ? new THREE.Vector3(...customTint) : skinTint, 1 - Math.exp(-3 * raw));
             wTag.classList.toggle("x-on", t >= 6 && t < 9);
             if (t >= 9 && !w.s14) { w.s14 = true; setShape(0); }
+            wBar.style.width = Math.min(100, (t / D) * 100) + "%";
+            if (t >= D) endWork();
+            return;
+          }
+          if (WORKS[w.i].type === "phone") {
+            // Phone: 12 s — sphere → phone (1.5) → one slow turn (2.5–7.5) → screen sweep ×2 (7.6–9.8) → tagline (8.4–11) → scatter (10) → end.
+            if (t >= 1.5 && !w.s2) { w.s2 = true; setShape(PHONE_I); }
+            if (t >= 2.5 && t < 7.5) { const u = (t - 2.5) / 5; points.rotation.y = 6.283 * u * u * (3 - 2 * u); }
+            else if (t >= 7.5) points.rotation.y = wrapA(points.rotation.y) * Math.exp(-3 * raw);
+            const su = pu.uScr.value; su.z = PH_Y; su.y = t >= 7.6 && t < 9.8 ? 1 : 0; su.x = PH_Y + 1.2 - 2.4 * (((t - 7.6) % 1.1) / 1.1);
+            vu.uMist.value = clamp(vu.uMist.value - 2 * raw, 0, 1);
+            vu.uPulse.value *= Math.exp(-6 * raw);
+            pu.uTint.value.lerp(skinTint, 1 - Math.exp(-3 * raw));
+            wTag.classList.toggle("x-on", t >= 8.4 && t < 11);
+            if (t >= 10 && !w.s14) { w.s14 = true; su.y = 0; vu.uShock.value.set(0, PH_Y, 0, simT); setShape(0); }
             wBar.style.width = Math.min(100, (t / D) * 100) + "%";
             if (t >= D) endWork();
             return;
@@ -732,15 +811,15 @@
           if (t >= D) endWork();
         }
         document.getElementById("wClose").addEventListener("click", () => endWork());
-        const baseStep = (d) => setShape((((shapeI + d) % BASE_N) + BASE_N) % BASE_N);
+        const baseStep = (d) => { if (!rec) setShape((((shapeI + d) % BASE_N) + BASE_N) % BASE_N); };
         addEventListener("keydown", (e) => {
           if (e.key === "Escape" && work) { endWork(); return; }
           if (!entered || (e.target.closest && e.target.closest("input, textarea"))) return;
           const dg = /^Digit([1-5])$/.exec(e.code || "");
-          // Shift+1..5 = shapes 0–4; plain 4/5 = shapes 3/4; plain 1–3 = works.
+          // Shift+1..5 = shapes 0–4; plain 5 = shape 4; plain 1–4 = works.
           if (dg && e.shiftKey) { if (!work) setShape(+dg[1] - 1); }
-          else if (e.key === "4" || e.key === "5") { if (!work) setShape(+e.key - 1); }
-          else if (e.key >= "1" && e.key <= "3" && e.key.length === 1) playWork(+e.key - 1);
+          else if (e.key === "5") { if (!work) setShape(4); }
+          else if (e.key >= "1" && e.key <= "4" && e.key.length === 1) playWork(+e.key - 1);
           else if (e.key === "ArrowRight") baseStep(1);
           else if (e.key === "ArrowLeft") baseStep(-1);
         });
@@ -748,7 +827,7 @@
         document.getElementById("bNext").addEventListener("click", () => baseStep(1));
         // WORKS index: hover/focus leans the cloud toward the work's shape; click plays it.
         document.querySelectorAll("#works button[data-w]").forEach((b) => {
-          const i = +b.dataset.w, on = () => { hovW = true; leanI = 5 + i; velMat.uniforms.tLean.value = texs[leanI]; }, off = () => { hovW = false; };
+          const i = +b.dataset.w, on = () => { hovW = true; leanI = WORKS[i].shape; velMat.uniforms.tLean.value = texs[leanI]; }, off = () => { hovW = false; };
           b.addEventListener("pointerenter", on); b.addEventListener("focus", on);
           b.addEventListener("pointerleave", off); b.addEventListener("blur", off);
           b.addEventListener("click", () => playWork(i));
@@ -757,7 +836,7 @@
         const $ = (id) => document.getElementById(id), gen = $("gen"), bMake = $("bMake"), gName = $("gName"), gLogo = $("gLogo"), toastEl = $("toast");
         let logoImg = null, toastT = 0;
         function toast(msg) { toastEl.textContent = msg; toastEl.classList.add("x-on"); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove("x-on"), 2600); }
-        const genShow = (on) => { gen.classList.toggle("x-on", on); bMake.setAttribute("aria-expanded", on); if (on) { portalShow(false); gName.focus(); } };
+        const genShow = (on) => { gen.classList.toggle("x-on", on); document.body.classList.toggle("x-genon", on); bMake.setAttribute("aria-expanded", on); if (on) { portalShow(false); gName.focus(); } };
         bMake.addEventListener("click", () => genShow(!gen.classList.contains("x-on")));
         bMake.addEventListener("pointerenter", () => { if (customPts) { hovW = true; leanI = CUSTOM_I; velMat.uniforms.tLean.value = texs[CUSTOM_I]; } });
         bMake.addEventListener("pointerleave", () => { hovW = false; });
@@ -775,6 +854,7 @@
         const pick = (box, b) => box.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
         ["gSkin", "gMus"].forEach((id) => $(id).addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) pick($(id), b); }));
         $("gGo").addEventListener("click", () => {
+          if (rec) { toast("录制中 · 请等待导出完成"); return; }
           try {
             const nm = gName.value.trim();
             if ((nm.length < 1 || nm.length > 12) && !logoImg) { toast("请输入 1–12 个字的品牌名"); return; }
@@ -787,6 +867,7 @@
           } catch (err) { toast("生成失败：" + ((err && err.message) || err)); }
         });
         bPause.addEventListener("click", () => {
+          if (rec) return; // no pausing while recording
           paused = !paused;
           bPause.textContent = paused ? "▶" : "❚❚";
           bPause.setAttribute("aria-label", paused ? "Play" : "Pause");
@@ -811,7 +892,7 @@
             .then((b) => { audBufs.set(src, b); return b; });
           return Promise.race([dec, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 4000))]);
         }
-        const recReset = () => { recDot.hidden = true; gRec.disabled = false; gRec.textContent = REC_LABEL; };
+        const recReset = () => { recDot.hidden = true; gRec.disabled = false; gRec.textContent = REC_LABEL; bPause.disabled = false; };
         async function startRec() {
           if (rec || gRec.disabled) return;
           if (!customPts) { toast("请先生成品牌金属"); return; }
@@ -820,6 +901,7 @@
           const cleanup = () => {
             if (!st) return;
             try { if (st.recorder && st.recorder.state !== "inactive") st.recorder.stop(); } catch (e) {}
+            clearTimeout(st.timer);
             if (st.stream) st.stream.getTracks().forEach((k) => k.stop());
             try { if (st.srcN) { st.srcN.stop(); st.srcN.disconnect(); } } catch (e) {}
             try { if (st.gain) st.gain.disconnect(); } catch (e) {}
@@ -868,6 +950,7 @@
             };
             recorder.onerror = (e) => { toast("导出失败：" + ((e && e.error && e.error.message) || "MediaRecorder error")); stopRec(false, true); };
             recorder.start(250);
+            const t0 = performance.now();
             if (st.srcN) {
               const now = ac.currentTime, g = st.gain.gain;
               g.setValueAtTime(1, now); g.setValueAtTime(1, now + 9.2); g.linearRampToValueAtTime(0, now + 10);
@@ -914,9 +997,12 @@
                 if (!failed) { failed = true; toast("导出失败：" + ((err && err.message) || err)); stopRec(false, true); }
               }
             };
-            const onEnd = (silent) => stopRec(!silent && !!work && work.t >= 9.9);
+            const onEnd = (silent) => stopRec(!silent && performance.now() - t0 >= 9900);
             playWork(CUSTOM_W); // may end an older work first; the new recording only hooks in after
-            me = rec = { draw, onEnd, stop: stopRec };
+            me = rec = { draw, onEnd, stop: stopRec, t0 };
+            bPause.disabled = true;
+            // Hard stop at 10 s wall time even if frames stall (hidden tab, slow device).
+            st.timer = setTimeout(() => { if (rec === me && work) endWork(); }, 10050);
             recT.textContent = "REC 10s"; recDot.hidden = false; gRes.hidden = true;
           } catch (err) {
             toast("导出失败：" + ((err && err.message) || err));
@@ -946,7 +1032,7 @@
           camera.aspect = w / h; camera.updateProjectionMatrix();
           bgMat.uniforms.uRes.value.set(w, h);
           points.scale.setScalar(Math.min(1, camera.aspect / 1.5));
-          ptMat.uniforms.uSize.value = (small ? 6.4 : 4.8) * DPR * (h / 900 + 0.4);
+          ptMat.uniforms.uSize.value = (SIZE >= 512 ? 4.8 : SIZE >= 362 ? 5.7 : 6.4) * DPR * (h / 900 + 0.4);
           const sa = w / h, ia = bgMat.uniforms.uImgAspect.value, sx = sa > ia ? 1 : sa / ia, sy = sa > ia ? ia / sa : 1;
           bgMat.uniforms.uLamp.value.set(0.26 / (sx * 0.94) + 0.5, 0.08 / (sy * 0.94) + 0.5);
           bgMat.uniforms.uBeam.value.z = sa;
@@ -1009,7 +1095,9 @@
 
         // Sound: nothing plays until the speaker button is pressed.
         const bgm = document.getElementById("bgm"); let BGM_LIST = ["kenting_dusk_shoreline.m4a", "kenting_dusk.m4a"], bgmIdx = 0;
-        bgm.addEventListener("error", () => { if (bgmIdx === 1) { bgmIdx = 0; bgm.src = BGM_LIST[0]; if (sndOn) bgm.play().catch(() => {}); } }); // 2nd track missing → back to the 1st, never loops bgm.addEventListener("ended", () => { bgmIdx = (bgmIdx + 1) % BGM_LIST.length; bgm.src = BGM_LIST[bgmIdx]; if (sndOn) bgm.play().catch(() => {}); }); const bSnd = document.getElementById("bSnd"), PENTA = [0, 2, 4, 7, 9];
+        bgm.addEventListener("error", () => { if (bgmIdx === 1) { bgmIdx = 0; bgm.src = BGM_LIST[0]; if (sndOn) bgm.play().catch(() => {}); } }); // 2nd track missing → back to the 1st, never loops
+        bgm.addEventListener("ended", () => { bgmIdx = (bgmIdx + 1) % BGM_LIST.length; bgm.src = BGM_LIST[bgmIdx]; if (sndOn) bgm.play().catch(() => {}); });
+        const bSnd = document.getElementById("bSnd"), PENTA = [0, 2, 4, 7, 9];
         let ac = null, master, waveG, sndOn = false;
         function audioInit() {
           ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -1052,8 +1140,7 @@
           if (!entered || e.target.closest(".x-ui")) return;
           const x = e.clientX, y = e.clientY;
           for (const b of beads) if (Math.hypot(b.x - x, b.y - y) < b.r + 10) { grab = b; gpx = x; gpy = y; gvx = gvy = 0; gts = e.timeStamp; e.stopPropagation(); return; }
-          touchY = e.pointerType === "touch" ? y : null;
-          chime(0.07);
+          if (e.pointerType !== "touch") chime(0.07); // touch chimes on tap (pointerup)
         }, true);
         addEventListener("pointermove", (e) => {
           // Big wave: 3 horizontal direction reversals at |vx| > 600 px/s inside the sea band within 1.5 s.
@@ -1069,10 +1156,9 @@
             const ddt = Math.max((e.timeStamp - gts) / 1000, 0.004);
             gvx = gvx * 0.5 + 0.5 * (e.clientX - gpx) / ddt; gvy = gvy * 0.5 + 0.5 * (e.clientY - gpy) / ddt;
             gpx = e.clientX; gpy = e.clientY; gts = e.timeStamp;
-          } else if (touchY !== null && e.pointerType === "touch") { tT = clamp(tT + (touchY - e.clientY) / (H * 0.7), 0, 1); touchY = e.clientY; }
+          }
         });
         addEventListener("pointerup", () => {
-          touchY = null;
           if (!grab) return;
           const b = grab, sp = Math.hypot(gvx, gvy);
           grab = null; b.vx = gvx; b.vy = gvy;
@@ -1121,6 +1207,7 @@
           fxResize(); resize(); skinHud(i); skinSave(s.id); skinBgm(s); portalSync();
         }
         function goSkin(id, instant = false) {
+          if (rec && !instant) { toast("录制中 · 暂不能切换场景"); return; }
           const i = skinIdx(id);
           if (i < 0 || skinBusy || (i === skinI && !instant)) return;
           const im = new Image();
@@ -1356,7 +1443,7 @@
           const raw = clock.getDelta(), dt = Math.min(raw, 1 / 30);
           if (!checked && (fq++, (tq += raw) >= 3)) {
             checked = true;
-            if (fq / tq < 40 && innerWidth >= 768 && SIZE > 256) { build(256); resize(); }
+            if (fq / tq < 40 && SIZE > 256) { build(256); resize(); }
           }
           if (!entered) {
             prog = Math.max(0, Math.min(1, prog + (hold ? raw / 1.5 : -raw)));
