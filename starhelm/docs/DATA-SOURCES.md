@@ -165,3 +165,5 @@
 | 背景星空 | 沿用 SHFX3D.skyMesh(NASA SVS Deep Star Maps 2020,见上文) | 同上 |
 | cathead-vis/nir/mir.webp | 猫头星云 HH 903 哈勃 WFC3 / 韦布 NIRCam / 韦布 MIRI(ESA/Webb weic2622b/e/f,2026-10-29,同视场) | 哈勃 NASA, ESA, STScI;韦布 NASA, ESA, CSA, STScI;Image Processing: J. DePasquale (STScI) · CC BY 4.0 |
 | IMO 2026 Meteor Shower Calendar | International Meteor Organization(J. Rendtel 编) | 事实数据,引用署名 | 本月天象「狮子座流星雨」:活跃期、极大时刻、ZHR、辐射点、速度、旧尘埃带;日月与辐射点高度由 astronomy-engine 本机计算 |
+
+| 2026-11-06 | JPL Small-Body Database API(55P/Tempel-Tuttle 轨道根数 J985/69) | NASA/JPL,美国政府作品,公共领域 | x/sh-x-leonids.js(2.0 流星雨 B 太空看) |

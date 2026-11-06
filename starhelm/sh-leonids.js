@@ -255,7 +255,8 @@
   function close() { if (!U.root) return; U.root.hidden = true; document.body.classList.remove('ml-on'); clearInterval(U.cdT); if (RAF) cancelAnimationFrame(RAF); RAF = 0; P('close'); }
   addEventListener('resize', function () { if (U.root && !U.root.hidden) resize(); });
   addEventListener('keydown', function (e) { if (e.key === 'Escape' && U.root && !U.root.hidden) close(); });
-  SH.leonidsLab = { open: open, close: close, _L: L, _N: function () { return N; }, active: function () { var t = Date.now(); return t >= ACT0 - 7 * 864e5 && t < ACT1; } };
+  SH.leonidsLab = { open: open, close: close, _L: L, _N: function () { return N; },
+    calc: function (n, sq) { L.n = n; L.sq = sq; compute(); return N; }, K: { PEAK: PEAK, MASLOV: MASLOV, ACT0: ACT0, ACT1: ACT1, RA: RA, DEC: DEC, ZHR: ZHR, TRAILS: TRAILS, NIGHTS: NIGHTS, SKYQ: SKYQ }, zhrAt: zhrAt, where: where, active: function () { var t = Date.now(); return t >= ACT0 - 7 * 864e5 && t < ACT1; } };
 
   /* 入口:地球重要播报置顶条目(sh-cast.js,活跃期前一周至 11-30 北京时间)、深链 ?task=leonids */
 })();
