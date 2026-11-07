@@ -78,6 +78,14 @@
       #gGo { display: block; width: 100%; min-height: 44px; margin-top: 4px; border: 1px solid rgba(255,255,255,.75); border-radius: 10px; background: rgba(255,255,255,.08); color: #fff; letter-spacing: .2em; box-shadow: 0 0 12px rgba(255,255,255,.35), inset 0 0 8px rgba(255,255,255,.15); }
       #toast { position: fixed; left: 50%; bottom: 64px; transform: translateX(-50%); margin: 0; padding: 6px 14px; border-radius: 999px; background: rgba(10,14,24,.75); border: 1px solid rgba(255,255,255,.14); font: 300 12px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: #fff; white-space: nowrap; opacity: 0; transition: opacity .4s; pointer-events: none; }
       #toast.x-on { opacity: 1; }
+      /* v1.4 彩蛋提示 + 联系面板 */
+      #egg { position: fixed; right: 16px; bottom: 58px; margin: 0; font: 300 11px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .18em; color: #fff; text-shadow: 0 0 8px rgba(255,255,255,.7); text-align: right; opacity: 0; transition: opacity .5s; pointer-events: none; }
+      #egg.x-on { opacity: .9; }
+      #hLogo { pointer-events: auto; cursor: default; -webkit-user-select: none; user-select: none; } .x-pre #hLogo { pointer-events: none; }
+      .x-ct { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); display: none; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 12px; max-width: calc(100vw - 24px); box-sizing: border-box; padding: 8px 14px; border-radius: 14px; background: rgba(10,14,24,.6); border: 1px solid rgba(255,255,255,.14); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); font: 300 12px/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .08em; color: rgba(255,255,255,.85); }
+      .x-ct.x-on { display: flex; } .x-ct a { color: #fff; }
+      .x-ct button { min-height: 32px; padding: 0 10px; border: 1px solid rgba(255,255,255,.2); border-radius: 16px; background: none; color: inherit; font: inherit; cursor: pointer; }
+      .x-pre .x-ct, .x-fallback .x-ct, .x-fallback #egg { display: none; }
       /* Export video */
       #gRec { display: block; width: 100%; min-height: 44px; margin-top: 8px; border: 1px solid rgba(255,59,59,.7); border-radius: 10px; background: rgba(255,59,59,.08); color: #fff; letter-spacing: .14em; }
       #gRec[aria-disabled="true"], #gRec:disabled { opacity: .4; cursor: default; }
@@ -136,6 +144,7 @@
         #toast { bottom: 50px; max-width: calc(100vw - 24px); white-space: normal; text-align: center; }
         .x-dpan { top: auto; bottom: 52px; left: 8px; right: 8px; transform: none; justify-content: center; gap: 4px; padding: 5px; } .x-dpan span { display: none; } .x-dpan button { min-height: 40px; padding: 0 10px; }
         .x-drawon #toast { bottom: 108px; }
+        .x-ct { bottom: 84px; } #egg { right: 10px; bottom: 100px; } .x-cton .x-works { opacity: 0; } .x-cton .x-works button { pointer-events: none; }
       }
     </style>
   </head>
@@ -146,7 +155,7 @@
     <canvas id="dCv" aria-hidden="true"></canvas>
     <div class="x-vig" aria-hidden="true"></div>
     <p class="x-error">WebGL 不可用</p>
-    <p class="x-hud x-tl">AXON<br /><span id="hScene">SCENE 01 · 垦丁 KENTING</span><small id="hPrev"></small><span class="x-hint"> · 滚动=时间 · 划过=唤醒</span><br /><span id="hShape">WAVE · 浪</span><br /><span id="hTod">TIME 18:20</span> <span id="hMet"></span></p>
+    <p class="x-hud x-tl"><span id="hLogo" class="x-ui">AXON</span><br /><span id="hScene">SCENE 01 · 垦丁 KENTING</span><small id="hPrev"></small><span class="x-hint"> · 滚动=时间 · 划过=唤醒</span><br /><span id="hShape">WAVE · 浪</span><br /><span id="hTod">TIME 18:20</span> <span id="hMet"></span></p>
     <div class="x-hud x-tod" aria-hidden="true"><i id="todK"></i></div>
     <button class="x-hud x-snd x-ui" id="bSnd" aria-pressed="false" aria-label="Sound">SOUND OFF</button>
     <button class="x-hud x-pbtn x-ui" id="bPortal" aria-expanded="false" aria-controls="portal" aria-label="PORTAL 传送门"><span>PORTAL</span><span>传送门</span></button>
@@ -157,6 +166,7 @@
       <button data-w="0">01 香水 PERFUME</button><button data-w="1">02 球鞋 SNEAKER</button><button data-w="2">03 耳机 AUDIO</button><button data-w="3">04 手机 PHONE</button><button data-w="5">05 音乐 SOUNDWAVE</button><button data-w="6">06 新春 FIREWORKS</button>
       <button id="bMake" aria-expanded="false" aria-controls="gen">✦ 做你的金属广告 MAKE YOURS</button>
       <button id="bDraw" aria-pressed="false">✎ 写字 / DRAW (D)</button>
+      <button id="bCt" aria-expanded="false" aria-controls="ctP">✉ 联系 CONTACT (M)</button>
     </div>
     <div class="x-ui x-gen" id="gen" role="dialog" aria-label="MAKE YOURS 品牌金属生成器">
       <div class="x-gen-h"><span>MAKE YOURS · 品牌金属生成器</span><button class="x-gen-x" id="gClose" aria-label="Close">✕</button></div>
@@ -184,6 +194,8 @@
     </div>
     <div class="x-hud x-ui x-dpan" id="dPan" role="toolbar" aria-label="DRAW 写字"><span>DRAW · 写字</span><button id="dClr">清除</button><button id="dSet">凝固</button><button id="dRec">● 导出 10 秒</button><button id="dEx">退出</button></div>
     <p id="toast" role="status" aria-live="polite"></p>
+    <div class="x-ui x-ct" id="ctP" role="dialog" aria-label="联系 CONTACT"><span>AXON STUDIO</span><a id="ctMail" href="#"></a><button id="ctCpM">复制邮箱</button><span id="ctWx"></span><button id="ctCpW">复制微信</button><button id="ctX" aria-label="Close contact">✕</button></div>
+    <p id="egg" role="status" aria-live="polite"></p>
     <p id="wTag" aria-live="polite"><b id="wTagL"></b><small id="wTagS"></small></p>
     <div class="x-hud x-ui x-whud" id="wHud"><span id="recDot" hidden><i aria-hidden="true">●</i> <b id="recT">REC 10s</b></span><span id="wHudT"></span><span class="x-wbar"><i id="wBar"></i></span><button id="wClose" aria-label="Close work">✕</button></div>
     <p class="x-hud" id="sHint">开声音更好看 SOUND ON</p>
@@ -199,6 +211,10 @@
     <script src="three.min.js"></script>
     <script>
       (function () {
+        // ===================== TODO: 替换真实联系方式 =====================
+        // email / wechat 目前是占位。qr 填同源（或允许 CORS）的二维码图片地址后，联系幕粒子会拼出二维码；读图失败（跨域等）自动退回文字。
+        const CONTACT = { email: "everest86342@163.com", wechat: "AXON_STUDIO", qr: null };
+        // ==================================================================
         const canvas = document.getElementById("gl");
         const img = document.getElementById("plate");
         const fail = () => document.body.classList.add("x-fallback");
@@ -823,6 +839,7 @@
         }
         function endWork(silent) {
           if (!work) return;
+          if (WORKS[work.i].type !== "custom" && work.t >= (WORKS[work.i].dur || 15)) { egg.seen.add(work.i); if (egg.seen.size >= 6 && !egg.auto) egg.ctQ = 1.5; } // v1.4: all six works watched → contact finale
           wTag.classList.remove("x-on"); wHud.classList.remove("x-on"); sHint.classList.remove("x-on"); document.body.classList.remove("x-workon");
           const vu = velMat.uniforms;
           vu.uMist.value = 0; vu.uPulse.value = 0; ptMat.uniforms.uSweep.value = -9; ptMat.uniforms.uScr.value.y = 0; ptMat.uniforms.uTint.value.copy(skinTint);
@@ -969,7 +986,7 @@
           if (t >= D) endWork();
         }
         document.getElementById("wClose").addEventListener("click", () => endWork());
-        const HOME = () => (skin ? skin.form : 0); // current skin's resting form
+        const HOME = () => (skin ? (egg.hid && egg.un.has(skin.id) && HID[skin.id] != null ? HID[skin.id] : skin.form) : 0); // current skin's resting form (v1.4: or its unlocked hidden form)
         const baseStep = (d) => { if (!rec) setShape((((shapeI + d) % BASE_N) + BASE_N) % BASE_N); };
         addEventListener("keydown", (e) => {
           if (e.key === "Escape" && work) { endWork(); return; }
@@ -1168,7 +1185,7 @@
                   ctx.font = `300 ${Math.round(H * 0.032)}px ${SANS}`;
                   ctx.fillText("定制你的品牌广告 · 联系 AXON", W / 2, H / 2);
                   ctx.fillStyle = "rgba(255,255,255,.65)"; ctx.font = `300 ${Math.round(H * 0.018)}px ui-monospace, Menlo, monospace`;
-                  ctx.fillText("CONTACT · 联系方式待补充", W / 2, H / 2 + H * 0.05);
+                  ctx.fillText("CONTACT · " + CONTACT.email, W / 2, H / 2 + H * 0.05);
                 }
                 ctx.globalAlpha = 1; ctx.textAlign = "right"; ctx.textBaseline = "bottom"; ctx.fillStyle = "rgba(255,255,255,.55)";
                 ctx.font = `300 ${Math.max(11, Math.round(H * 0.016))}px ui-monospace, monospace`;
@@ -1487,7 +1504,7 @@
         }
         function skinApply(i, im, inst, tex) {
           const s = SKINS[i], was = skin.kent, bu = bgMat.uniforms, pu = ptMat.uniforms;
-          skin = s; skinI = i;
+          skin = s; skinI = i; egg.hid = false; egg.dw = 0;
           { let nt = tex; if (!nt) { nt = new THREE.Texture(im); nt.minFilter = THREE.LinearFilter; nt.generateMipmaps = false; nt.colorSpace = plateTex.colorSpace; nt.needsUpdate = true; }
             const ot = plateTex; plateTex = nt; bu.tPlate.value = bu.tPlate2.value = nt; if (ot !== nt) ot.dispose(); } // new texture: WebGL2 immutable storage can't change size
           bu.uImgAspect.value = im.naturalWidth / im.naturalHeight;
@@ -1516,7 +1533,7 @@
         function skinStep(raw) {
           const k = 1 - Math.exp(-3 * raw), bu = bgMat.uniforms, pu = ptMat.uniforms;
           bu.uKent.value += ((skin.kent ? 1 : 0) - bu.uKent.value) * k; bu.uDark.value += ((skin.dark ? 1 : 0) - bu.uDark.value) * k;
-          if (!work) pu.uTint.value.lerp(skinPv ? skinPv[0] : skinTint, k);
+          if (!work && !egg.gold) pu.uTint.value.lerp(skinPv ? skinPv[0] : skinTint, k);
           pu.uRimC.value.lerp(skinPv && !work ? skinPv[1] : skinRim, k);
           pu.uFS.value += (skin.fluid.size - pu.uFS.value) * k; velMat.uniforms.uFlow.value += (skin.fluid.flow - velMat.uniforms.uFlow.value) * k; bu.uSkinFx.value = skinI;
           if (!sk) return;
@@ -1592,7 +1609,7 @@
             }
           }
           bLo += (lo - bLo) * (1 - Math.exp(-(lo > bLo ? 22 : 5) * raw)); bHi += (hi - bHi) * (1 - Math.exp(-(hi > bHi ? 30 : 7) * raw));
-          ptMat.uniforms.uBass.value = Math.max(bLo < 1e-3 ? 0 : bLo, (work && work.fb) || 0); bgMat.uniforms.uTreble.value = Math.max(bHi < 1e-3 ? 0 : bHi, work && work.lb != null ? clamp(work.lb - 1, 0, 1.5) : 0, ((work && work.ft) || 0) * 0.6);
+          ptMat.uniforms.uBass.value = Math.max(bLo < 1e-3 ? 0 : bLo, (work && work.fb) || 0); bgMat.uniforms.uTreble.value = Math.max(bHi < 1e-3 ? 0 : bHi, work && work.lb != null ? clamp(work.lb - 1, 0, 1.5) : 0, ((work && work.ft) || 0) * 0.6, egg.lb);
         }
         function fxStep(raw, dt) {
           fxT += raw;
@@ -1808,7 +1825,7 @@
           if (inLH) aimA += wrapA(Math.atan2(ly - py, px - lx) - aimA) * (1 - Math.exp(-5 * raw));
           else if (aimK < 0.01) aimA = sweep;
           bu.uBeam.value.x = sweep + wrapA(aimA - sweep) * aimK;
-          bu.uBeam.value.y = g * bu.uKent.value * (work && work.lb != null ? work.lb : 1); // v1.2 template light band
+          bu.uBeam.value.y = g * bu.uKent.value * (work && work.lb != null ? work.lb : 1) * (1 + egg.lb); // v1.2 template light band (v1.4: + egg burst)
           bu.uFade.value = g;
 
           hf++; hudT += raw;
@@ -1817,7 +1834,7 @@
             timeEl.textContent = fmt.format(new Date());
             hf = 0; hudT = 0;
           }
-          fxStep(raw, dt);
+          fxStep(raw, dt); eggStep(raw);
 
           renderer.setRenderTarget(null);
           renderer.setClearColor(0x000000, 1);
@@ -1834,6 +1851,112 @@
         }
         function onPlate() { if (plateTex.image === img) plateTex.needsUpdate = true; started = true; }
         if (img.complete && img.naturalWidth) onPlate(); else img.addEventListener("load", onPlate);
+        // ---------- v1.4 彩蛋 EASTER EGGS + 联系 CONTACT ----------
+        const egg = { seq: "", nb: 0, nbs: 0, lb: 0, gold: 0, lc: 0, lt: 0, dw: 0, hid: false, un: new Set(), idle: 0, auto: false, ct: 0, ctQ: 0, seen: new Set(), sh: 0, tri: 0 };
+        try { JSON.parse(localStorage.getItem("axon.eggs") || "[]").forEach((id) => egg.un.add(id)); } catch (e) {}
+        const eggEl = $("egg"), ctP = $("ctP"), bCt = $("bCt"), C0 = new THREE.Vector3(0, CY, 0), NEURAL_F = SKINS[skinIdx("neural")].form;
+        let eggT = 0; const flash = (m, sec) => { eggEl.textContent = m; eggEl.classList.add("x-on"); clearTimeout(eggT); eggT = setTimeout(() => eggEl.classList.remove("x-on"), sec * 1000); };
+        // Hidden form per skin: an existing shape / another skin's form, or the whale (an ellipsoid + flukes variant) for the deep sea.
+        const WHALE_I = shapes.push(["WHALE · 鲸", () => { if (rnd() < 0.82) { const t = rnd(), r = 0.5 * Math.pow(Math.sin(Math.PI * Math.pow(t, 1.6)), 0.75) + 0.03, d = sdir(); return [-1.5 + t * 2.9, d[1] * r * 0.8 + CY - 0.08 * t, d[2] * r]; }
+          const v = rnd(); return [-1.5 - v * 0.45, CY + 0.04 + v * 0.22, (rnd() * 2 - 1) * (0.12 + v * 0.5)]; }]) - 1; // body (head at +x) + tail flukes
+        const HID = {}; Object.entries({ kenting: 3, foundry: 4, neural: "neon", neon: 2, futurelab: 1, ink: "lotus", deepsea: WHALE_I, blackhole: 4, mycelium: "neural", lotus: 1, dune: 0, everest: "yulong", yulong: "everest" })
+          .forEach(([k, v]) => (HID[k] = typeof v === "string" ? SKINS[skinIdx(v)].form : v));
+        function hidToggle() {
+          if (!egg.un.has(skin.id) || rec || sk) return;
+          egg.hid = !egg.hid; if (!work && !egg.nb && !egg.ct && !drawOn) setShape(HOME());
+          flash((egg.hid ? "隐藏形态 · " : "默认形态 · ") + shapes[egg.hid ? HID[skin.id] : skin.form][0], 2.5);
+        }
+        function neuralBurst() { // A-X-O-N / three-finger tap: brain form, three shocks, light band up for 2 s, back HOME at 3 s
+          if (!entered || rec || sk) return;
+          if (drawOn) drawMode(false, true); if (work) endWork(true); if (egg.ct) ctShow(false);
+          setShape(NEURAL_F); egg.nb = 1e-3; egg.nbs = 0; flash("NEURAL BURST UNLOCKED", 3); chime(0.12);
+        }
+        // Contact scene: particles spell the e-mail + AXON STUDIO (2D canvas sample) or a QR code when CONTACT.qr is readable.
+        const sampleCv = (c, w, h, keep, hMax) => {
+          const d = c.getContext("2d", { willReadFrequently: true }).getImageData(0, 0, w, h).data, P = []; let x0 = w, x1 = 0, y0 = h, y1 = 0;
+          for (let j = 0; j < h; j += 2) for (let i = 0; i < w; i += 2) if (keep(d, (j * w + i) * 4)) { P.push(i, j); if (i < x0) x0 = i; if (i > x1) x1 = i; if (j < y0) y0 = j; if (j > y1) y1 = j; }
+          if (P.length < 400) return null;
+          const sc = Math.min(4.2 / (x1 - x0 + 2), hMax / (y1 - y0 + 2)), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, o = new Float32Array(P.length * 1.5);
+          for (let k = 0; k < P.length / 2; k++) { o[k * 3] = (P[k * 2] - cx + rnd() * 2) * sc; o[k * 3 + 1] = (cy - P[k * 2 + 1] - rnd() * 2) * sc + CY + 0.2; o[k * 3 + 2] = (rnd() - 0.5) * 0.2; }
+          return o;
+        };
+        const ctText = () => {
+          const W = 1024, H = 360, c = document.createElement("canvas"); c.width = W; c.height = H;
+          const x = c.getContext("2d", { willReadFrequently: true }), F = (z, wt) => `${wt} ${z}px "Helvetica Neue", Arial, sans-serif`;
+          x.fillStyle = "#fff"; x.textAlign = "center"; x.textBaseline = "middle"; x.font = F(100, 700);
+          x.font = F(Math.max(30, Math.min(130, Math.floor((100 * 980) / Math.max(1, x.measureText(CONTACT.email).width)))), 700); x.fillText(CONTACT.email, W / 2, 120);
+          x.font = F(92, 900); x.fillText("AXON STUDIO", W / 2, 275);
+          return sampleCv(c, W, H, (d, o) => d[o + 3] > 128, 2);
+        };
+        let ctPts = null;
+        const CT_I = shapes.push(["CONTACT · 联系", () => { if (!ctPts) return gText(); const k = ((rnd() * ctPts.length) / 3) | 0; return [ctPts[k * 3], ctPts[k * 3 + 1], ctPts[k * 3 + 2]]; }]) - 1;
+        if (CONTACT.qr) { const im = new Image(); im.crossOrigin = "anonymous";
+          im.onload = () => { try { const n = 300, c = document.createElement("canvas"); c.width = c.height = n; const x = c.getContext("2d", { willReadFrequently: true }); x.fillStyle = "#fff"; x.fillRect(0, 0, n, n); x.drawImage(im, 0, 0, n, n);
+            const p = sampleCv(c, n, n, (d, o) => d[o] + d[o + 1] + d[o + 2] < 384, 2.6); if (!p) return; ctPts = p; // dark modules; a tainted canvas throws → keep the text
+            const old = texs[CT_I], u = velMat.uniforms; if (old) { texs[CT_I] = makeTex(shapes[CT_I][1]); ["tTarget", "tPrev", "tLean"].forEach((k) => { if (u[k].value === old) u[k].value = texs[CT_I]; }); old.dispose(); } } catch (e) {} };
+          im.src = CONTACT.qr; }
+        function ctShow(on, auto) {
+          if (on) {
+            if (!entered || rec || sk) return;
+            if (drawOn) drawMode(false, true); if (work) endWork(true); genShow(false); portalShow(false);
+            if (!ctPts) ctPts = ctText();
+            egg.nb = 0; egg.ct = auto ? 12 : -1; setShape(CT_I); shock(C0, innerWidth / 2); chime(0.08);
+          } else { if (!egg.ct) return; egg.ct = 0; if (!work && shapeI === CT_I) setShape(HOME()); }
+          ctP.classList.toggle("x-on", on); document.body.classList.toggle("x-cton", on); bCt.setAttribute("aria-expanded", on);
+        }
+        $("ctMail").href = "mailto:" + CONTACT.email; $("ctMail").textContent = CONTACT.email; $("ctWx").textContent = "微信 WeChat " + CONTACT.wechat;
+        const copyTxt = (t) => { const ok = () => toast("已复制 ✓ " + t), bad = () => toast("复制失败，请手动复制：" + t);
+          if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(ok, bad);
+          else try { const a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select(); const r = document.execCommand("copy"); a.remove(); r ? ok() : bad(); } catch (e) { bad(); } };
+        $("ctCpM").addEventListener("click", () => copyTxt(CONTACT.email)); $("ctCpW").addEventListener("click", () => copyTxt(CONTACT.wechat));
+        $("ctX").addEventListener("click", () => { ctShow(false); bCt.focus(); });
+        ctP.addEventListener("pointerdown", () => { if (egg.ct > 0) egg.ct = -1; }); // touching an auto-played panel keeps it open
+        bCt.addEventListener("click", () => ctShow(!egg.ct));
+        $("hLogo").addEventListener("pointerdown", () => { // 5 quick taps on the logo → warm gold (06 tint) + one full turn
+          const n = performance.now(); egg.lc = n - egg.lt < 600 ? egg.lc + 1 : 1; egg.lt = n;
+          if (egg.lc >= 5) { egg.lc = 0; if (!work && !rec) { egg.gold = 2.2; chime(0.1); } }
+        });
+        addEventListener("keydown", (e) => {
+          if (!entered || e.metaKey || e.ctrlKey || e.altKey || (e.target.closest && e.target.closest("input, textarea"))) return;
+          egg.idle = 0;
+          if (drawOn) return; // writing keys stay untouched
+          if (e.key === "Escape" && egg.ct) { ctShow(false); return; }
+          const k = (e.key || "").toUpperCase();
+          if (k.length === 1) { egg.seq = (egg.seq + k).slice(-4); if (egg.seq === "AXON") { egg.seq = ""; neuralBurst(); return; } }
+          if (k === "M") ctShow(!egg.ct); else if (k === "H") hidToggle();
+        });
+        ["pointerdown", "pointermove", "wheel", "touchstart"].forEach((t) => addEventListener(t, () => (egg.idle = 0), { passive: true }));
+        // Phone: shake → shock (skipped where iOS needs a permission prompt); three-finger tap → AXON burst.
+        if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission !== "function") addEventListener("devicemotion", (e) => {
+          const a = e.acceleration, g = e.accelerationIncludingGravity; let m = 0;
+          if (a && a.x != null) m = Math.hypot(a.x, a.y || 0, a.z || 0); else if (g && g.x != null) m = Math.abs(Math.hypot(g.x, g.y || 0, g.z || 0) - 9.81);
+          const n = performance.now(); if (m > 16 && n - egg.sh > 1200 && entered && !drawOn && !rec) { egg.sh = n; egg.idle = 0; shock(C0, innerWidth / 2); chime(0.08); }
+        });
+        addEventListener("touchstart", (e) => { if (e.touches.length === 3) egg.tri = e.timeStamp; else if (e.touches.length > 3) egg.tri = 0; }, { passive: true });
+        addEventListener("touchend", (e) => { if (e.touches.length) return; if (egg.tri && e.timeStamp - egg.tri < 450 && !drawOn) neuralBurst(); egg.tri = 0; }, { passive: true });
+        function eggStep(raw) {
+          const r = Math.min(raw, 0.25), pu = ptMat.uniforms;
+          if (egg.nb) {
+            if (work || sk || rec || drawOn) egg.nb = 0;
+            else { const t = (egg.nb += r); [0.15, 0.75, 1.35].forEach((x, k) => { if (t >= x && !(egg.nbs & (1 << k))) { egg.nbs |= 1 << k; shock(C0, innerWidth / 2); chime(0.1); } }); if (t >= 3) { egg.nb = 0; setShape(HOME()); } }
+          }
+          egg.lb = egg.nb && egg.nb < 2 ? 1.5 : Math.max(0, egg.lb - r * 3);
+          if (egg.gold > 0) {
+            if (work || rec) { egg.gold = 0; points.rotation.y = 0; }
+            else { egg.gold = Math.max(0, egg.gold - r); const u = 1 - egg.gold / 2.2; points.rotation.y = egg.gold ? 6.283 * u * u * (3 - 2 * u) : 0; pu.uTint.value.lerp(FWT, 1 - Math.exp(-6 * r)); }
+          }
+          if (egg.ct && (work || drawOn || sk || rec)) ctShow(false);
+          if (egg.ct > 0 && (egg.ct -= r) <= 0) { egg.ct = -1; ctShow(false); }
+          if (!entered || document.hidden) return;
+          if (!sk && HID[skin.id] != null && !egg.un.has(skin.id) && (egg.dw += r) >= 60) { // 60 s in one skin → hidden form unlocked
+            egg.un.add(skin.id); try { localStorage.setItem("axon.eggs", JSON.stringify([...egg.un])); } catch (e) {}
+            flash("隐藏形态已解锁 · 按 H 切换", 4); chime(0.1);
+          }
+          if (egg.ctQ > 0 && (egg.ctQ -= r) <= 0) { egg.ctQ = 0; if (!work && !egg.auto) { egg.auto = true; ctShow(true, true); } }
+          const busy = work || drawOn || rec || sk || egg.ct || egg.nb || gen.classList.contains("x-on") || portal.classList.contains("x-on");
+          egg.idle = busy ? 0 : egg.idle + r;
+          if (egg.idle >= 90 && !egg.auto) { egg.auto = true; egg.idle = 0; ctShow(true, true); } // idle 90 s → contact scene, once per visit
+        }
         // Skin on load: #skin=<id>, else localStorage, else kenting.
         let skin0 = hashSkin(); if (!skin0) try { skin0 = localStorage.getItem("axon.skin"); } catch (e) {}
         if (skin0 && skinIdx(skin0) > 0) goSkin(skin0, true);
