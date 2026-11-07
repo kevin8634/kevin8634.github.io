@@ -132,6 +132,10 @@
       .x-portal b, .x-portal small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: inherit; }
       .x-portal b { margin-top: 4px; font-size: 12px; }
       .x-portal small { font-size: 12px; opacity: .55; }
+      .x-dl { position: fixed; left: 50%; top: 16px; transform: translateX(-50%); display: none; max-width: calc(100vw - 440px); text-align: center; color: #fff; text-shadow: 0 1px 10px rgba(0,0,0,.7); font: 300 11px/1.7 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .16em; } /* v1.9 DAILY */
+      .x-dlon .x-dl { display: block; } .x-pre .x-dl, .x-fallback .x-dl { display: none; } .x-dl b { display: block; font-weight: 400; font-size: 13px; letter-spacing: .24em; } .x-dl small { display: block; opacity: .7; }
+      #dlL { display: block; margin-top: 2px; font: 300 14px/1.6 "Songti SC", "Noto Serif SC", STSong, serif; letter-spacing: .2em; opacity: .9; }
+      .x-dl button { margin: 6px 4px 0; padding: 6px 12px; min-height: 34px; border: 1px solid rgba(255,255,255,.45); border-radius: 999px; background: rgba(10,14,24,.45); color: #fff; font: inherit; letter-spacing: .14em; cursor: pointer; pointer-events: auto; }
       .x-jr { position: fixed; left: 50%; bottom: 92px; width: 640px; max-width: max(200px, calc(100vw - 600px)); transform: translateX(-50%); display: none; margin: 0; text-align: center; color: #fff; text-shadow: 0 1px 10px rgba(0,0,0,.7); pointer-events: none; } /* v1.8 JOURNEY */
       .x-jron .x-jr { display: block; } .x-jr p, .x-jr small { display: block; margin: 0; opacity: 0; transition: opacity .6s; } .x-jr.x-in p { opacity: 1; } .x-jr.x-in small { opacity: .7; }
       .x-jr p { font: 300 18px/1.6 "Songti SC", "Noto Serif SC", STSong, serif; letter-spacing: .3em; } .x-jr small { font: 300 11px/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .16em; }
@@ -163,6 +167,7 @@
         .x-drawon #toast { bottom: 108px; }
         .x-ct { bottom: 84px; } #egg { right: 10px; bottom: 100px; } .x-cton .x-works { opacity: 0; } .x-cton .x-works button { pointer-events: none; }
         .x-jr { bottom: 112px; max-width: calc(100vw - 32px); } .x-jr p { font-size: 15px; letter-spacing: .18em; } .x-jron .x-works { opacity: 0; } .x-jron .x-works button { pointer-events: none; }
+        .x-dl { top: 112px; max-width: calc(100vw - 24px); width: calc(100vw - 24px); }
         .x-lang { right: 160px; top: 2px; padding: 0 8px; } .x-tl { max-width: calc(100vw - 210px); } .x-case { right: 8px; top: 96px; transform: translate(calc(100% + 24px), 0); } .x-case.x-on { transform: none; }
       }
     </style>
@@ -182,6 +187,7 @@
     <button class="x-hud x-pbtn x-ui x-lang" id="bLang" data-i18n-al="alL" aria-label="Language 语言 (L)">中 / EN</button>
     <div class="x-ui x-portal" id="portal" role="dialog" data-i18n-al="alP" aria-label="PORTAL 传送门"></div>
     <div class="x-ui x-jr" id="jr" role="status" aria-live="polite"><p id="jrT"></p><small id="jrE"></small><button id="jrX" data-i18n="jrX">✕ 退出旅程 EXIT</button></div>
+    <div class="x-ui x-dl" id="dl" role="status" aria-live="polite" data-i18n-al="alDl" aria-label="每日一形"><b id="dlT"></b><small id="dlS"></small><span id="dlL"></span><button id="dlCard" data-i18n="dlCard">⇩ 生成分享卡</button><button id="dlX" aria-label="Close daily">✕</button></div>
     <div class="x-ui x-jrd" id="jrD" role="group" data-i18n-al="alJr" aria-label="旅程进度"></div>
     <audio id="bgm" src="kenting_dusk_shoreline.m4a" preload="auto"></audio>
     <div class="x-hud x-ui x-works" id="works">
@@ -190,6 +196,7 @@
       <button id="bMake" data-i18n="bMake" aria-expanded="false" aria-controls="gen">✦ 做你的金属广告 MAKE YOURS</button>
       <button id="bDraw" data-i18n="bDraw" aria-pressed="false">✎ 写字 / DRAW (D)</button>
       <button id="bCt" data-i18n="bCt" aria-expanded="false" aria-controls="ctP">✉ 联系 CONTACT (M)</button>
+      <button id="bDl" data-i18n="bDl" aria-pressed="false">◎ 每日一形 DAILY (Y)</button>
     </div>
     <div class="x-ui x-gen" id="gen" role="dialog" data-i18n-al="alGen" aria-label="MAKE YOURS 品牌金属生成器">
       <div class="x-gen-h"><span data-i18n="genH">MAKE YOURS · 品牌金属生成器</span><button class="x-gen-x" id="gClose" aria-label="Close">✕</button></div>
@@ -260,7 +267,9 @@
           jrOn: ["旅程开始 · 滚轮 / ↑↓ / 左右滑 换站 · Esc 退出", "JOURNEY · wheel / ↑↓ / swipe to change stop · Esc to exit"], gModL: ["上传 3D 模型（.obj / .glb，仅本地）", "Upload 3D model (.obj / .glb, local only)"],
           eHid: ["隐藏形态 · ", "HIDDEN FORM · "], eDef: ["默认形态 · ", "DEFAULT FORM · "], eUn: ["隐藏形态已解锁 · 按 H 切换", "HIDDEN FORM UNLOCKED · PRESS H"],
           alP: ["PORTAL 传送门", "PORTAL · SCENES"], alL: ["Language 语言 (L)", "Language (L)"], alGen: ["MAKE YOURS 品牌金属生成器", "MAKE YOURS brand metal generator"], alName: ["品牌名 BRAND", "Brand name"], alTag: ["标语 TAGLINE", "Tagline"],
-          alColor: ["品牌色 BRAND COLOR", "Brand color"], alLink: ["专属链接 LINK", "Client link"], alDraw: ["DRAW 写字", "DRAW"], alCt: ["联系 CONTACT", "CONTACT"], alJr: ["旅程进度", "Journey progress"] };
+          alColor: ["品牌色 BRAND COLOR", "Brand color"], alLink: ["专属链接 LINK", "Client link"], alDraw: ["DRAW 写字", "DRAW"], alCt: ["联系 CONTACT", "CONTACT"], alJr: ["旅程进度", "Journey progress"],
+          bDl: ["◎ 每日一形 DAILY (Y)", "◎ DAILY FORM (Y)"], dlT: ["今日金属", "TODAY'S METAL"], dlCard: ["⇩ 生成分享卡", "⇩ SHARE CARD"], dlOn: ["今日金属 · No.{n}", "Today's metal · No.{n}"],
+          dlOff: ["已退出每日一形", "Daily form off"], dlSaved: ["分享卡已生成 ✓", "Share card ready ✓"], dlFail: ["分享卡生成失败", "Couldn't make the share card"], alDl: ["每日一形", "Daily form"] };
         // v1.8 toasts / errors stay written in Chinese in the code; English mode maps them here (substring, in order), then bi() strips any leftover CJK.
         const TOAST_EN = { "录制中 · 暂不能切换作品": "Recording · can't switch works now", "录制中 · 请等待导出完成": "Recording · wait for the export to finish", "录制中 · 暂不能写字": "Recording · drawing unavailable",
           "录制中 · 暂不能切换场景": "Recording · can't switch scenes now", "生成失败：": "Generate failed: ", "无法读取文件": "can't read the file", "图片无法解析": "can't decode the image", "图形太小或太淡": "the shape is too small or too faint",
@@ -1097,7 +1106,8 @@
           if (t >= D) endWork();
         }
         document.getElementById("wClose").addEventListener("click", () => endWork());
-        const HOME = () => (skin ? (egg.hid && egg.un.has(skin.id) && HID[skin.id] != null ? HID[skin.id] : skin.form) : 0); // current skin's resting form (v1.4: or its unlocked hidden form)
+        let DL_I = -1, dlSnap = null; // v1.9 DAILY: today's shape index (overrides HOME) · one-shot hook run right after the frame renders
+        const HOME = () => (DL_I >= 0 ? DL_I : skin ? (egg.hid && egg.un.has(skin.id) && HID[skin.id] != null ? HID[skin.id] : skin.form) : 0); // current skin's resting form (v1.4: or its unlocked hidden form)
         const baseStep = (d) => { if (jr.on) jrGo(jr.k + d); else if (!rec) setShape((((shapeI + d) % BASE_N) + BASE_N) % BASE_N); };
         addEventListener("keydown", (e) => {
           if (e.key === "Escape" && work) { endWork(); return; }
@@ -2173,7 +2183,7 @@
             timeEl.textContent = fmt.format(new Date());
             hf = 0; hudT = 0;
           }
-          fxStep(raw, dt); eggStep(raw); jrStep(raw);
+          fxStep(raw, dt); eggStep(raw); jrStep(raw); dlStep(raw);
 
           renderer.setRenderTarget(null);
           renderer.setClearColor(0x000000, 1);
@@ -2185,6 +2195,7 @@
           }
           ptMat.uniforms.tPos.value = pos[cur].texture; ptMat.uniforms.tVel.value = vel[cur].texture; ptMat.uniforms.uTime.value = time;
           renderer.render(scene, camera);
+          if (dlSnap) { const f = dlSnap; dlSnap = null; f(); } // v1.9: read the WebGL canvas in the frame it was drawn (no preserveDrawingBuffer)
           if (rec && rec.draw) rec.draw();
           requestAnimationFrame(frame);
         }
@@ -2262,7 +2273,7 @@
           if (e.key === "Escape" && egg.ct) { ctShow(false); return; }
           const k = (e.key || "").toUpperCase();
           if (k.length === 1) { egg.seq = (egg.seq + k).slice(-4); if (egg.seq === "AXON") { egg.seq = ""; neuralBurst(); return; } }
-          if (k === "M") ctShow(!egg.ct); else if (k === "H") hidToggle(); else if (k === "W") wxCycle(); /* v1.5 weather preview */ else if (k === "J") jrSet(!jr.on); // v1.8 journey
+          if (k === "M") ctShow(!egg.ct); else if (k === "H") hidToggle(); else if (k === "W") wxCycle(); /* v1.5 weather preview */ else if (k === "J") jrSet(!jr.on); /* v1.8 journey */ else if (k === "Y") dlSet(!dl.on); // v1.9 daily
         });
         ["pointerdown", "pointermove", "wheel", "touchstart"].forEach((t) => addEventListener(t, () => (egg.idle = 0), { passive: true }));
         // Phone: shake → shock (skipped where iOS needs a permission prompt); three-finger tap → AXON burst.
@@ -2338,6 +2349,77 @@
         addEventListener("keydown", () => { if (jrEsc) { jrEsc = false; jrSet(false); } });
         addEventListener("hashchange", () => { if (/(?:^#|&)journey=1\b/.test(location.hash) && !jr.on) jrSet(true); });
         LANG_HOOKS.push(() => jr.on && jrCap());
+        // v1.9 DAILY 每日一形 (HUD button, Y, #daily=1): the visitor's local date YYYYMMDD seeds shape × metal colour × shot template, the same everywhere that day.
+        // No. = days since 2026-11-08 + 1. Plays the template once on the custom slot, then the cloud rests on today's shape (HOME) in today's colour.
+        const DAILY_LINES = [["把光熔成形状", "LIGHT, MELTED INTO FORM"], ["今天的金属，只属于今天", "TODAY'S METAL BELONGS TO TODAY"], ["流动，然后凝固", "FLOW, THEN HOLD"], ["每一粒都在发光", "EVERY GRAIN CARRIES LIGHT"],
+          ["液态的，也是坚定的", "LIQUID, AND CERTAIN"], ["世界同一刻，同一形", "ONE FORM, ONE WORLD, ONE DAY"], ["冷的金属，热的心", "COLD METAL, WARM HEART"], ["慢一点，看它成形", "SLOW DOWN. WATCH IT FORM"],
+          ["把今天铸成一件小雕塑", "CAST TODAY AS A SMALL SCULPTURE"], ["散开，是为了重新聚拢", "WE SCATTER TO GATHER AGAIN"], ["镜面里有整片天空", "A WHOLE SKY IN A MIRROR"], ["明天，会是另一种形状", "TOMORROW TAKES ANOTHER SHAPE"]];
+        const DL_SH = [1, 3, 4, 5, 6, 7, RING_I, VINYL_I, WHALE_I, ...SKINS.slice(1).map((x) => x.form)]; // order matters: changing it reshuffles every future day
+        const dl = { on: false, pend: /(?:^#|&)daily=1\b/.test(location.hash), d: null, tv: new THREE.Vector3(1, 1, 1), sv: null, pts: null }, bDl = $("bDl");
+        function dlPick() {
+          const n = new Date(), y = n.getFullYear(), m = n.getMonth(), d = n.getDate(), p2 = (v) => String(v).padStart(2, "0"), key = `${y}${p2(m + 1)}${p2(d)}`;
+          let h = 2166136261; for (const c of key) h = Math.imul(h ^ c.charCodeAt(0), 16777619); // FNV-1a → mulberry32
+          const r = () => { h = (h + 0x6d2b79f5) | 0; let t = Math.imul(h ^ (h >>> 15), 1 | h); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+          const C = [...$("gSkin").querySelectorAll("button")], K = Object.keys(TPL), c = C[(r() * C.length) | 0];
+          dl.d = { si: DL_SH[(r() * DL_SH.length) | 0], hex: c.dataset.hex, ck: c.dataset.i18n, tpl: K[(r() * K.length) | 0], ln: DAILY_LINES[(r() * DAILY_LINES.length) | 0], date: `${y}.${p2(m + 1)}.${p2(d)}`,
+            no: String(Math.max(1, Math.round((Date.UTC(y, m, d) - Date.UTC(2026, 10, 8)) / 864e5) + 1)).padStart(3, "0") };
+          dl.tv.set(...(hexTint(c.dataset.hex) || [1, 1, 1]));
+        }
+        function dlCap() {
+          const D = dl.d; if (!D) return;
+          $("dlT").textContent = `${T("dlT")} · ${D.date} · No.${D.no}`; $("dlS").textContent = `${bi(shapes[D.si][0])} · ${bi(T(D.ck))} · ${bi(T("t_" + D.tpl))}`; $("dlL").textContent = D.ln[LANG === "en" ? 1 : 0];
+        }
+        function dlSet(on, quiet) {
+          if (on === dl.on) return; if (on && !entered) { dl.pend = true; return; } if (rec) { toast("录制中 · 暂不能切换场景"); return; }
+          dl.on = on; dl.pend = false; document.body.classList.toggle("x-dlon", on); bDl.setAttribute("aria-pressed", on);
+          try { const q = new URLSearchParams(location.hash.slice(1)); if (on) q.set("daily", "1"); else q.delete("daily"); history.replaceState(null, "", "#" + q.toString()); } catch (e) {}
+          if (on) {
+            if (jr.on) jrSet(false); if (drawOn) drawMode(false, true); if (work) endWork(true); genShow(false); portalShow(false); if (egg.ct) ctShow(false);
+            dlPick(); const D = dl.d, f = shapes[D.si][1], P = new Float32Array(N * 3); DL_I = D.si;
+            for (let i = 0; i < N; i++) { const v = f(i); P[i * 3] = v[0]; P[i * 3 + 1] = v[1]; P[i * 3 + 2] = v[2]; }
+            dl.sv = [customPts, customAspect, customTint, customTag, customName, customTpl]; dl.pts = customPts = P; // the brand slot borrows today's shape; restored on exit
+            customAspect = 1.5; customTint = hexTint(D.hex) || [1, 1, 1]; customTag = `${D.date} · No.${D.no}`; customName = "AXON DAILY"; customTpl = D.tpl; setCustomTex();
+            playWork(CUSTOM_W); dlCap(); toast(T("dlOn", { n: D.no }));
+          } else {
+            DL_I = -1; dlSnap = null;
+            if (customPts === dl.pts) { if (work && work.i === CUSTOM_W) endWork(true); [customPts, customAspect, customTint, customTag, customName, customTpl] = dl.sv; setCustomTex(); } // untouched by MAKE YOURS meanwhile
+            dl.pts = dl.sv = null; if (!work && !sk && shapeI !== HOME()) setShape(HOME()); if (!quiet) toast(T("dlOff"));
+          }
+        }
+        function dlStep(raw) {
+          if (dl.pend && entered && !rec) dlSet(true);
+          if (!dl.on) return; if (jr.on) { dlSet(false, true); return; } // journey wins
+          if (!work && !sk && !egg.gold) ptMat.uniforms.uTint.value.lerp(dl.tv, 1 - Math.exp(-3 * Math.min(raw, 0.25)));
+        }
+        function dlMake() { // 1080×1350 card: current frame (cover-cropped) + date, No., form, line, AXON mark, e-mail
+          const src = renderer.domElement, W = src.width, H = src.height, cv = document.createElement("canvas"), x = cv.getContext("2d"), D = dl.d, en = LANG === "en";
+          cv.width = 1080; cv.height = 1350; let sw = W, sh = H; if (W / H > 0.8) sw = H * 0.8; else sh = W / 0.8;
+          x.fillStyle = "#000"; x.fillRect(0, 0, 1080, 1350); x.drawImage(src, (W - sw) / 2, (H - sh) / 2, sw, sh, 0, 0, 1080, 1350);
+          const gr = (y0, y1, a0, a1) => { const g = x.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, `rgba(0,0,0,${a0})`); g.addColorStop(1, `rgba(0,0,0,${a1})`); x.fillStyle = g; x.fillRect(0, y0, 1080, y1 - y0); };
+          gr(0, 220, 0.5, 0); gr(740, 1350, 0, 0.86);
+          const M = "ui-monospace, Menlo, Consolas, monospace", S = '"Songti SC", "Noto Serif SC", STSong, serif';
+          const tx = (t, px, wt, fam, y, a, right) => { x.font = `${wt} ${px}px ${fam}`; while (px > 12 && x.measureText(t).width > 936) x.font = `${wt} ${--px}px ${fam}`; x.globalAlpha = a; x.textAlign = right ? "right" : "left"; x.fillText(t, right ? 1008 : 72, y); x.globalAlpha = 1; };
+          x.fillStyle = "#fff"; x.textBaseline = "alphabetic";
+          tx("A X O N", 44, 600, M, 120, 0.9); tx("DAILY METAL", 22, 300, M, 116, 0.6, true);
+          tx(en ? "TODAY'S METAL" : "今日金属 · TODAY'S METAL", 26, 300, en ? M : S, 930, 0.72); tx(D.date, 104, 200, M, 1042, 1);
+          tx(`No.${D.no} · ${bi(shapes[D.si][0])}`, 34, 400, M, 1102, 0.9);
+          tx(D.ln[en ? 1 : 0], en ? 30 : 40, 300, en ? M : S, 1176, 0.95); if (!en) tx(D.ln[1], 22, 300, M, 1218, 0.6);
+          tx(`AXON STUDIO · ${CONTACT.email}`, 22, 300, M, 1292, 0.55);
+          cv.toBlob((b) => (b ? dlOut(b, `AXON_daily_${D.date.replace(/\./g, "")}.png`, D) : toast(T("dlFail"))), "image/png");
+        }
+        function dlOut(b, nm, D) { // share the file where the browser can, else download
+          const save = () => { const a = document.createElement("a"), u = URL.createObjectURL(b); a.href = u; a.download = nm; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 5000); toast(T("dlSaved")); };
+          let f = null; try { f = new File([b], nm, { type: "image/png" }); } catch (e) {}
+          if (f && navigator.share && navigator.canShare && navigator.canShare({ files: [f] })) navigator.share({ files: [f], title: `AXON · ${D.date} · No.${D.no}` }).catch((e) => { if (!e || e.name !== "AbortError") save(); });
+          else save();
+        }
+        $("dlCard").addEventListener("click", () => { if (dl.on && !dlSnap) dlSnap = () => { try { dlMake(); } catch (e) { toast(T("dlFail")); } }; });
+        $("dlX").addEventListener("click", () => dlSet(false)); bDl.addEventListener("click", () => dlSet(!dl.on));
+        let dlEsc = false; // decided before the other Escape handlers close a work / panel / contact
+        document.addEventListener("keydown", (e) => { dlEsc = e.key === "Escape" && dl.on && !work && !drawOn && !egg.ct && !jr.on && !portal.classList.contains("x-on") && !gen.classList.contains("x-on"); }, true);
+        addEventListener("keydown", () => { if (dlEsc) { dlEsc = false; dlSet(false); } });
+        addEventListener("hashchange", () => { if (/(?:^#|&)daily=1\b/.test(location.hash) && !dl.on) dlSet(true); });
+        LANG_HOOKS.push(() => dl.on && dlCap());
         // v1.7 中/EN: HUD button or L; #lang=en|zh forces it; the choice is kept in localStorage (failures ignored).
         const bLang = $("bLang"), langSet = (l, say) => { applyLang(l); try { localStorage.setItem("axon.lang", LANG); } catch (e) {} if (say) toast(T("langT")); };
         LANG_HOOKS.push(() => { bLang.textContent = LANG === "en" ? "EN / 中" : "中 / EN"; bLang.setAttribute("aria-pressed", LANG === "en"); aspSync(); });
