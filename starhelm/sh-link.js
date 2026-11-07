@@ -30,7 +30,8 @@
     voyager: function () { SH.voyagerLab.open(); },
     comet: function () { SH.cometLab.open(); },
     dino: function () { SH.dinoLab.open(); },
-    leonids: function () { SH.leonidsLab.open(); }
+    leonids: function () { SH.leonidsLab.open(); },
+    geminids: function () { SH.geminidsLab.open(); }
   };
   if (!OPEN[id]) return;
   (function w(n) {

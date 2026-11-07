@@ -84,7 +84,9 @@
     } catch (e) { }
     try {   // 满月 / 新月
       var mp = A.SearchMoonPhase(180, t, 30), np = A.SearchMoonPhase(0, t, 30), fm = mp && mp.date.getTime(), nmn = np && np.date.getTime();
-      if (fm && fm - now < 4 * 864e5) out.push({ kind: 'sky', lab: 'moonLab', ico: '○', col: '#f4f1e0', title: '满月 · ' + inDays(fm), meta: bj(fm) + '(北京时间)· 整夜可见', tag: '天象', score: 48 });
+      var SUP = Date.UTC(2026, 11, 24, 1, 28);   // v1.0-M4q:NAOJ 2026-12-24 10:28 JST 满月,2026 年最近地球(地心约 35.7 万 km)
+      if (fm && Math.abs(fm - SUP) < 864e5 && fm - now < 7 * 864e5) out.push({ kind: 'sky', lab: 'moonLab', ico: '○', col: '#fff2c8', title: '今年最近地球的满月 · ' + inDays(fm), meta: '12月24日 09:28(北京时间)满月 · 约 35.7 万 km,比 5 月 31 日最远的满月看起来大约 14%', tag: '天象', score: 66 });
+      else if (fm && fm - now < 4 * 864e5) out.push({ kind: 'sky', lab: 'moonLab', ico: '○', col: '#f4f1e0', title: '满月 · ' + inDays(fm), meta: bj(fm) + '(北京时间)· 整夜可见', tag: '天象', score: 48 });
       if (nmn && nmn - now < 3 * 864e5) out.push({ kind: 'sky', lab: 'moonLab', ico: '●', col: '#9fb4d0', title: '新月 · 适合看星星', meta: bj(nmn) + ' · 没有月光干扰,银河和暗星更清楚', tag: '天象', score: 42 });
     } catch (e) { }
     try {   // 行星冲日(火星/木星/土星)
@@ -98,9 +100,12 @@
     var LN = window.SH && SH.leonidsLab && SH.leonidsLab.active && SH.leonidsLab.active();   // v1.0-M4m 本月天象置顶
     var VG = window.SH && SH.lightday && SH.lightday.active && SH.lightday.active();   // v1.0-M4p 特别展「旅行者 1 号 · 一光日」置顶至 11-25
     if (VG) { var vgB = Date.now() < SH.lightday.T; out.push({ kind: 'sky', lab: 'voyagerLab', ico: '✦', col: '#ffd27a', title: '特别展 · 旅行者 1 号 · 一光日', meta: vgB ? '11月18日 18:16(北京时间)它离地球一光日 · 点开看倒计时' : '人类第一次飞到一光日外 · 点开发一条 VGR 摩尔斯码', tag: '特别展', score: 100 }); }
+    var GM = window.SH && SH.geminidsLab && SH.geminidsLab.active && SH.geminidsLab.active();   // v1.0-M4q 本月天象置顶(北京时间 11-26 至 12-16)
+    if (GM) out.push({ kind: 'sky', lab: 'geminidsLab', ico: '☄', col: '#ffcf7a', title: '本月天象 · 双子座流星雨', meta: '极大 12月14日 22:00(北京时间)· 理想条件每小时约 150 颗 · 母体是小行星', tag: '本月天象', score: 99.5 });
     if (LN) out.push({ kind: 'sky', lab: 'leonidsLab', ico: '☄', col: '#c9b0ff', title: '本月天象 · 狮子座流星雨', meta: '极大 11月18日 07:45(北京时间)· 点开看你那里几点最好', tag: '本月天象', score: 99 });
     SHOWERS.forEach(function (s) {
       if (LN && s[2] === '狮子座流星雨') return;
+      if (GM && s[2] === '双子座流星雨') return;
       [y, y + 1].forEach(function (yy) {
         var ms = Date.UTC(yy, s[0] - 1, s[1], 12), dd = (ms - now) / 864e5;
         if (dd > -1 && dd < 10) out.push({ kind: 'sky', ico: '☄', col: '#c9b0ff', title: s[2] + '极大 · ' + (dd < 0.5 ? '就在今晚前后' : inDays(ms)), meta: '每小时最多约 ' + s[3] + ' 颗(理想条件)· 后半夜最佳' + (L && s[2] === '宝瓶座 η 流星雨' ? '' : ''), tag: '天象', score: 52 + Math.min(20, s[3] / 8) - dd });

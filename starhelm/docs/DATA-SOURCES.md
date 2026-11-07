@@ -168,3 +168,6 @@
 
 | 2026-11-06 | JPL Small-Body Database API(55P/Tempel-Tuttle 轨道根数 J985/69) | NASA/JPL,美国政府作品,公共领域 | x/sh-x-leonids.js(2.0 流星雨 B 太空看) |
 | 2026-11-07 | NASA 旅行者任务页 Where Are They Now(science.nasa.gov/mission/voyager/where-are-they-now)与「Shine Bright for Voyager's Light-Day」活动说明 | NASA,事实数据,引用署名;不用 NASA logo,无图片 | sh-lightday.js(特别展「旅行者 1 号 · 一光日」:一光日时刻、距离、速度、VGR 摩尔斯码活动) |
+| 2026-11-07 | IMO《2026 Meteor Shower Calendar》Geminids (004 GEM) 条目 | International Meteor Organization(J. Rendtel 编),事实数据,引用署名 | sh-geminids.js、x/sh-x-geminids.js:活跃期 12-04—12-20、极大 12-14 14h UT、λ⊙ 262.2°、ZHR 150、辐射点 α112° δ+33°、V∞ 35 km/s、r 2.6 |
+| 2026-11-07 | 日本国立天文台 ほしぞら情報 2026-12(ふたご座流星群、2026年で最も近い満月) | NAOJ,事实数据,引用署名;不用其图片与 logo | 极大约 12-14 23 时 JST;12-24 10:28 JST 满月、地心约 35.7 万 km、视直径比 5-31 满月大约 14%(sh-cast.js 播报) |
+| 2026-11-07 | JPL Small-Body Database API(3200 Phaethon 轨道解 1034,历元 JD 2461200.5) | NASA/JPL,美国政府作品,公共领域 | x/sh-x-geminids.js(B 太空看)、sh-geminids.js(母体数据) |
