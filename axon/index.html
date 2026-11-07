@@ -155,7 +155,7 @@
     <canvas id="dCv" aria-hidden="true"></canvas>
     <div class="x-vig" aria-hidden="true"></div>
     <p class="x-error">WebGL 不可用</p>
-    <p class="x-hud x-tl"><span id="hLogo" class="x-ui">AXON</span><br /><span id="hScene">SCENE 01 · 垦丁 KENTING</span><small id="hPrev"></small><span class="x-hint"> · 滚动=时间 · 划过=唤醒</span><br /><span id="hShape">WAVE · 浪</span><br /><span id="hTod">TIME 18:20</span> <span id="hMet"></span></p>
+    <p class="x-hud x-tl"><span id="hLogo" class="x-ui">AXON</span><br /><span id="hScene">SCENE 01 · 垦丁 KENTING</span><small id="hPrev"></small><span class="x-hint"> · 滚动=时间 · 划过=唤醒</span><br /><span id="hShape">WAVE · 浪</span><br /><span id="hTod">TIME 18:20</span> <span id="hMet"></span><br /><span id="hWx"></span></p>
     <div class="x-hud x-tod" aria-hidden="true"><i id="todK"></i></div>
     <button class="x-hud x-snd x-ui" id="bSnd" aria-pressed="false" aria-label="Sound">SOUND OFF</button>
     <button class="x-hud x-pbtn x-ui" id="bPortal" aria-expanded="false" aria-controls="portal" aria-label="PORTAL 传送门"><span>PORTAL</span><span>传送门</span></button>
@@ -246,14 +246,15 @@
         let plateTex = new THREE.Texture(img);
         plateTex.minFilter = THREE.LinearFilter;
         plateTex.generateMipmaps = false;
+        const WXU = { value: new THREE.Vector4() }, WXP = { value: new THREE.Vector2() }; // v1.5 weather: plate (rain, snow, fog, wind) · particles (rain, snow)
         const bgMat = new THREE.ShaderMaterial({
           depthTest: false, depthWrite: false,
           uniforms: { tPlate: { value: plateTex }, uRes: { value: new THREE.Vector2(1, 1) }, uMouse: { value: new THREE.Vector2() }, uImgAspect: { value: 2400 / 1018 }, uTime: { value: 0 },
             uFade: { value: 0 }, uLamp: { value: new THREE.Vector2(.8, .6) }, uBeam: { value: new THREE.Vector3(0, 0, 1) }, uClick: { value: new THREE.Vector2(.5, -9) }, uN: { value: 0 }, uKent: { value: 1 }, uDark: { value: 0 }, uSkinFx: { value: 0 },
-            tPlate2: { value: plateTex }, uImgAspect2: { value: 2400 / 1018 }, uPortal: { value: -1 }, uPortalC: { value: new THREE.Vector4(.5, .6, .12, .3) }, uTreble: { value: 0 } },
+            tPlate2: { value: plateTex }, uImgAspect2: { value: 2400 / 1018 }, uPortal: { value: -1 }, uPortalC: { value: new THREE.Vector4(.5, .6, .12, .3) }, uTreble: { value: 0 }, uDayT: { value: 1100 / 1440 }, uWx: WXU },
           vertexShader: quadVS,
           fragmentShader: HASH + BEAM + `
-            uniform sampler2D tPlate, tPlate2; uniform vec2 uRes, uMouse, uLamp, uClick; uniform vec3 uBeam; uniform vec4 uPortalC; uniform float uImgAspect, uImgAspect2, uPortal, uTreble, uTime, uFade, uN, uKent, uDark, uSkinFx; varying vec2 vUv;
+            uniform sampler2D tPlate, tPlate2; uniform vec2 uRes, uMouse, uLamp, uClick; uniform vec3 uBeam; uniform vec4 uPortalC; uniform float uImgAspect, uImgAspect2, uPortal, uTreble, uTime, uFade, uN, uKent, uDark, uSkinFx, uDayT; uniform vec4 uWx; varying vec2 vUv;
             float gl(float d, float w){ return exp(-d * d / (w * w)); }
             vec3 circuit(vec2 p, float t, vec3 c, float sc){ vec2 g = p * sc, id = floor(g), f = fract(g); float r = h(id), hz = step(.5, r);
               float d = mix(abs(f.x - .5), abs(f.y - .5), hz), on = step(.55, h(id + 7.)), pl = fract(mix(g.y, g.x, hz) * .25 - t * .35 + r * 4.);
@@ -293,6 +294,12 @@
                 rip = sea * exp(-pow((length(dq) - ct * .4) * 28., 2.)) * exp(-ct * 1.5);
                 uv.y += rip * .004;
               }
+              if (uWx.x > .01) { // v1.5 mercury rain: small rings where drops meet the sea
+                vec2 rg = vec2(uv.x * 26., (uv.y - .3) * 60.), ri = floor(rg); float rh = h(ri + 4.4), rt = fract(uTime * .7 + rh);
+                vec2 rq = fract(rg) - .5 - (vec2(h(ri + 1.1), h(ri + 2.2)) - .5) * .4;
+                float rr = sea * uWx.x * step(.5, rh) * (1. - rt) * gl(length(rq) - rt * .42, .045);
+                uv.y += rr * .003; rip += rr * .8;
+              }
               vec3 col = texture2D(tPlate, uv).rgb + rip * .22, pRim = vec3(0.);
               if (uPortal >= 0.) { // v1.0 portal: new plate inside an ellipse centred on the particle door, radius grows door → full screen
                 vec2 s2 = sa > uImgAspect2 ? vec2(1., uImgAspect2 / sa) : vec2(sa / uImgAspect2, 1.);
@@ -307,19 +314,26 @@
               float L = dot(col, vec3(.3, .59, .11)), k1 = smoothstep(0., .5, uN), k2 = smoothstep(.45, 1., uN);
               col = mix(col, L * vec3(.55, .68, 1.05), k1 * .75) * (1. - k1 * .35);
               col = mix(col, L * vec3(.16, .2, .36) + vec3(.004, .008, .022), k2);
+              float hr = uDayT * 24., dw = smoothstep(4.6, 5.4, hr) * (1. - smoothstep(7.3, 8.2, hr)), dk = smoothstep(16.6, 17.3, hr) * (1. - smoothstep(18.6, 19.3, hr)); // v1.5
+              col = mix(col, (L * vec3(1.02, .86, .98) + vec3(.035, .03, .06)) * 1.08, dw * .55); col *= mix(vec3(1.), vec3(1.07, .97, .86), dk * .5);
+              float Lw = dot(col, vec3(.3, .59, .11));
+              col = mix(col, vec3(Lw) * vec3(.86, .9, .96), uWx.x * .45) * (1. - uWx.x * .12);
+              col = mix(col, mix(col, vec3(Lw), .5) * vec3(.95, 1., 1.08) + .05, uWx.y * .3);
               vec2 sg = vUv * vec2(sa, 1.) * 160.; vec2 si = floor(sg), sf = fract(sg) - .5;
               float sr = h(si + .5), dens = mix(.997, .972, smoothstep(.5, .95, uv.y));
               float star = step(dens, sr) * smoothstep(.22, 0., length(sf - (vec2(h(si + 1.3), h(si + 2.1)) - .5) * .5)) * (.55 + .45 * sin(uTime * (1. + sr * 3.) + sr * 90.));
               col += smoothstep(.5, .54, uv.y) * smoothstep(.1, .28, L) * k2 * star * vec3(.85, .9, 1.) * max(uKent, uDark);
               float bm = beamAt(vUv, uLamp, uBeam);
-              col += uKent * (bm * .16 + smoothstep(.025, 0., length((vUv - uLamp) * vec2(uBeam.z, 1.))) * 0.) * (1. + uN * 2.2) * vec3(1., .86, .62);
+              col += uKent * (bm * .16 + smoothstep(.025, 0., length((vUv - uLamp) * vec2(uBeam.z, 1.))) * 0.) * (1. + uN * 3.) * vec3(1., .86, .62);
               { float ld = length((vUv - uLamp) * vec2(uBeam.z, 1.)); col += uKent * (gl(ld, .012) * .45 + gl(ld, .045) * .14) * (.8 + .2 * sin(uTime * 1.2)) * (1. + uN * 2.2) * vec3(1., .86, .62); } // breathing lamp halo
               col += skinFx(vUv, uv, sa, uTime) * .45 * (1. + uTreble * 1.6) * uFade + pRim * .7; // v1.0: BGM treble flickers the light band
               vec2 g = uv * vec2(90., 200.) + vec2(uTime * 1.2, sin(uTime * .3 + uv.x * 8.) * .3);
               vec2 id = floor(g); vec2 f = fract(g) - .5;
               float r = h(id);
               float tw = pow(.5 + .5 * sin(uTime * (.6 + r * 1.2) + r * 40.), 3.);
-              col += sea * (1. - .7 * k2) * step(.93, r) * tw * gl(length(f), .22) * .5 * vec3(1., .9, .75);
+              col += sea * (1. + 1.3 * k2) * step(.93 - .03 * k2, r) * tw * gl(length(f), .22) * .5 * vec3(1., .9, .75);
+              float fn = .5 + .5 * sin(vUv.x * 5. + uTime * .05 + 1.5 * sin(vUv.y * 7. - uTime * .08));
+              col = mix(col, mix(vec3(.62, .65, .7), vec3(.1, .12, .17), smoothstep(.2, .9, uN)), uWx.z * (.35 + .25 * fn) * (.6 + .4 * smoothstep(.2, .55, uv.y))); // v1.5 fog
               gl_FragColor = vec4(col * uFade, 1.);
             }`,
         });
@@ -596,9 +610,9 @@
           uniforms: { tPos: { value: null }, tVel: { value: null }, tTarget: { value: null }, tPrev: { value: null }, uMorphT: { value: -9 }, uRes: { value: simRes }, uMouse: { value: new THREE.Vector3(99, 99, 0) }, uDown: { value: 0 }, uTime: { value: 0 }, uDt: { value: 0.016 },
             uShock: { value: new THREE.Vector4(0, 0, 0, -9) }, uGather: { value: 0 }, uSpray: { value: 0 }, uLift: { value: 0 }, uMVel: { value: new THREE.Vector3() }, uMSpd: { value: 0 },
             // Work hooks: lean toward a hover target, nozzle mist, beat pulse about uCenter.
-            tLean: { value: null }, uLean: { value: 0 }, uMist: { value: 0 }, uPen: { value: 0 }, uNozzle: { value: new THREE.Vector3(...NOZZLE) }, uPulse: { value: 0 }, uFlow: { value: 1 }, uCenter: { value: new THREE.Vector3(0, CY, 0) } },
+            tLean: { value: null }, uLean: { value: 0 }, uMist: { value: 0 }, uPen: { value: 0 }, uNozzle: { value: new THREE.Vector3(...NOZZLE) }, uPulse: { value: 0 }, uFlow: { value: 1 }, uCenter: { value: new THREE.Vector3(0, CY, 0) }, uWxP: WXP },
           vertexShader: quadVS,
-          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel, tTarget, tPrev, tLean; uniform vec2 uRes; uniform vec3 uMouse, uMVel, uNozzle, uCenter; uniform vec4 uShock; uniform float uDown, uTime, uDt, uMorphT, uGather, uSpray, uLift, uMSpd, uLean, uMist, uPulse, uFlow, uPen;
+          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel, tTarget, tPrev, tLean; uniform vec2 uRes; uniform vec3 uMouse, uMVel, uNozzle, uCenter; uniform vec4 uShock; uniform float uDown, uTime, uDt, uMorphT, uGather, uSpray, uLift, uMSpd, uLean, uMist, uPulse, uFlow, uPen; uniform vec2 uWxP;
             vec3 pot(vec3 p, float t){ return vec3(sin(p.y * .9 + t * .21) + cos(p.z * .7 - t * .17), sin(p.z * .8 + t * .19) + cos(p.x * .9 + t * .13), sin(p.x * .7 - t * .23) + cos(p.y * .8 + t * .11)); }
             vec3 curl(vec3 p, float t){ vec3 e = vec3(.12, 0., 0.), px = pot(p + e.xyy, t) - pot(p - e.xyy, t), py = pot(p + e.yxy, t) - pot(p - e.yxy, t), pz = pot(p + e.yyx, t) - pot(p - e.yyx, t);
               return vec3(py.z - pz.y, pz.x - px.z, px.y - py.x) / .24; }
@@ -638,19 +652,24 @@
                 acc = acc * .04 + vec3(sin(uTime + tg.w) * .3, -4.5, 0.);
                 if (p.w < .5) { acc = vec3(0.); v = vec3(0.); }
               } else if (ph >= .4) acc *= mix(.15, 1., smoothstep(.4, .8, ph));
+              float wh = h(uv + 31.); // v1.5: ~8% fall as mercury rain, ~12% drift as snow
+              if (ph < 0. && wh < .08 * uWxP.x) { acc = vec3(0.); v = mix(v, vec3(.35 * sin(uTime * .4) + .15 * (h(uv + 33.) - .5), -5.5 - 2. * h(uv + 34.), 0.), 1. - exp(-9. * uDt)); }
+              else if (ph < 0. && wh < .12 * uWxP.y) { acc *= .02; v = mix(v, vec3(.5 * sin(uTime * .5 + wh * 300.), -.6 - .5 * h(uv + 35.), .2 * cos(uTime * .4 + wh * 200.)), 1. - exp(-4. * uDt)); }
               v += acc * uDt; v *= exp(-3.9 * uDt);
               gl_FragColor = vec4(v, 1.);
             }`,
         });
         const posMat = new THREE.ShaderMaterial({
-          uniforms: { tPos: { value: null }, tVel: { value: null }, uRes: { value: simRes }, uDt: { value: 0.016 }, uTime: { value: 0 }, uSeaY: { value: -1 }, uHalfW: { value: 3 }, uSpray: { value: 0 } },
+          uniforms: { tPos: { value: null }, tVel: { value: null }, uRes: { value: simRes }, uDt: { value: 0.016 }, uTime: { value: 0 }, uSeaY: { value: -1 }, uHalfW: { value: 3 }, uSpray: { value: 0 }, uTopY: { value: 3 }, uWxP: WXP },
           vertexShader: quadVS,
-          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel; uniform vec2 uRes; uniform float uDt, uTime, uSeaY, uHalfW, uSpray;
+          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel; uniform vec2 uRes, uWxP; uniform float uDt, uTime, uSeaY, uHalfW, uSpray, uTopY;
             void main(){ vec2 uv = gl_FragCoord.xy / uRes;
               vec4 p = texture2D(tPos, uv);
               float ph = uSpray > .5 ? sprayPh(uv, uTime) : -1.;
               if (ph < 0. || ph >= .4) p.w = 1.;
               else if (p.w > .5 && p.y < uSeaY) p = vec4((h(uv + fract(uTime)) - .5) * 2. * uHalfW, uSeaY + (h(uv - fract(uTime)) - .5) * .3, 0., 0.);
+              float wh = h(uv + 31.);
+              if (ph < 0. && (wh < .08 * uWxP.x || wh < .12 * uWxP.y) && p.y < uSeaY) p.xyz = vec3((h(uv + fract(uTime * .37)) - .5) * 2. * uHalfW, uTopY + h(uv + fract(uTime * .53) + 2.) * .6, (h(uv + 7.7) - .5) * .8);
               gl_FragColor = vec4(p.xyz + texture2D(tVel, uv).xyz * uDt, p.w); }`,
         });
 
@@ -662,9 +681,9 @@
           transparent: true, depthWrite: false, depthTest: false,
           blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
           uniforms: { tPos: { value: null }, tVel: { value: null }, uTime: { value: 0 }, uSize: { value: 1 }, uAlpha: { value: 0.8 }, uLamp: bgMat.uniforms.uLamp, uBeam: bgMat.uniforms.uBeam,
-            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uSwK: { value: 1 }, uScr: { value: new THREE.Vector3(0, 0, 0) }, uFS: { value: 1 }, uBass: { value: 0 }, uGlit: { value: 0 }, uCtr: velMat.uniforms.uCenter },
+            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uSwK: { value: 1 }, uScr: { value: new THREE.Vector3(0, 0, 0) }, uFS: { value: 1 }, uBass: { value: 0 }, uGlit: { value: 0 }, uCtr: velMat.uniforms.uCenter, uWxP: WXP },
           // Liquid metal: soft sphere sprites lit in the fragment stage (sky gradient + soft band + clean spec + Fresnel rim); overlap reads as one surface.
-          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN, uFS; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep, uSwK, uBass, uGlit; uniform vec3 uScr, uCtr; attribute vec2 ref;
+          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN, uFS; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep, uSwK, uBass, uGlit; uniform vec3 uScr, uCtr; uniform vec2 uWxP; attribute vec2 ref;
             varying vec3 vBase, vRim, vGl; varying float vPS, vBlur;
             void main(){
               vec3 p = texture2D(tPos, ref).xyz, v = texture2D(tVel, ref).xyz;
@@ -680,6 +699,8 @@
               vGl = bm * vec3(.22, .17, .11) + sw * uSwK * vec3(.3, .27, .22) + sh * .25 + smoothstep(1., 4., length(v)) * .06 + uGlit * step(.9, h(ref + floor(uTime * 12.) * .173)) * vec3(.55, .5, .42); // v1.3: treble glitter
               vBlur = smoothstep(.6, 2.6, abs(-mv.z - 6.));
               vPS = max(uSize * uFS * (2.1 + .7 * h(ref + 9.)) * (1. + vBlur * .5) / -mv.z, 2.);
+              float wh = h(ref + 31.); // v1.5 weather sprites (same hash as the sim)
+              if (wh < .08 * uWxP.x) { vPS *= .55; vGl += vec3(.08, .09, .12); } else if (wh < .12 * uWxP.y) { vPS *= .5; vBase = vec3(1.05); vRim = vec3(1.1); vGl += vec3(.25, .27, .3); }
               gl_PointSize = vPS;
             }`,
           fragmentShader: `uniform float uAlpha, uN; varying vec3 vBase, vRim, vGl; varying float vPS, vBlur;
@@ -1322,7 +1343,7 @@
           bgMat.uniforms.uBeam.value.z = sa;
           const half = 6 * Math.tan(Math.PI / 8) / points.scale.x;
           posMat.uniforms.uSeaY.value = (-0.12 / (sy * 0.94)) * 2 * half;
-          posMat.uniforms.uHalfW.value = half * sa * 0.9;
+          posMat.uniforms.uHalfW.value = half * sa * 0.9; posMat.uniforms.uTopY.value = half * 1.05;
         }
         addEventListener("resize", resize);
         resize();
@@ -1535,7 +1556,7 @@
           bu.uKent.value += ((skin.kent ? 1 : 0) - bu.uKent.value) * k; bu.uDark.value += ((skin.dark ? 1 : 0) - bu.uDark.value) * k;
           if (!work && !egg.gold) pu.uTint.value.lerp(skinPv ? skinPv[0] : skinTint, k);
           pu.uRimC.value.lerp(skinPv && !work ? skinPv[1] : skinRim, k);
-          pu.uFS.value += (skin.fluid.size - pu.uFS.value) * k; velMat.uniforms.uFlow.value += (skin.fluid.flow - velMat.uniforms.uFlow.value) * k; bu.uSkinFx.value = skinI;
+          pu.uFS.value += (skin.fluid.size - pu.uFS.value) * k; velMat.uniforms.uFlow.value += (skin.fluid.flow * (1 + 0.5 * WXU.value.w) - velMat.uniforms.uFlow.value) * k; bu.uSkinFx.value = skinI;
           if (!sk) return;
           const s = sk; s.t += raw;
           // v1.0 timeline: door gathers (≥0.8 s, until loaded) → new plate grows from the door to full screen (1.6 s; form morphs at 55 %) → commit → settle 0.8 s.
@@ -1611,13 +1632,51 @@
           bLo += (lo - bLo) * (1 - Math.exp(-(lo > bLo ? 22 : 5) * raw)); bHi += (hi - bHi) * (1 - Math.exp(-(hi > bHi ? 30 : 7) * raw));
           ptMat.uniforms.uBass.value = Math.max(bLo < 1e-3 ? 0 : bLo, (work && work.fb) || 0); bgMat.uniforms.uTreble.value = Math.max(bHi < 1e-3 ? 0 : bHi, work && work.lb != null ? clamp(work.lb - 1, 0, 1.5) : 0, ((work && work.ft) || 0) * 0.6, egg.lb);
         }
+        // v1.5 time & weather. uDayT = visitor's local day phase (refreshed each minute). Scrubbing time (wheel / two fingers / arrows) overrides it for 30 s.
+        const DAY = { real: 0, tw: 0, u: -99, k: "", user: false, ph: 0 }, wxEl = document.getElementById("hWx");
+        const dayNow = () => { const d = new Date(); DAY.real = (d.getHours() + d.getMinutes() / 60) / 24; };
+        dayNow(); setInterval(dayNow, 60000);
+        const minsOf = (n) => (n < 0.5 ? 1100 + n * 100 : 1150 + (n - 0.5) * 280); // existing scrub: 0 = 18:20, .5 = 19:10, 1 = 21:30
+        const nightOf = (m) => (m >= 1290 || m < 280 ? 1 : m < 320 ? (320 - m) / 40 : m < 1100 ? 0 : m < 1150 ? (m - 1100) / 100 : 0.5 + (m - 1150) / 280);
+        const PHASES = [[5, "◐ 清晨 DAWN"], [8, "☀ 白天 DAY"], [17, "◑ 黄昏 DUSK"], [19, "☾ 夜晚 NIGHT"]];
+        const phaseOf = (hr) => { let s = PHASES[3][1]; PHASES.forEach((p) => { if (hr >= p[0]) s = p[1]; }); return s; };
+        const WX_NAMES = { clear: "晴 CLEAR", rain: "水银雨 RAIN", snow: "雪 SNOW", fog: "雾 FOG", wind: "大风 WIND" }, WX_CYCLE = ["auto", "clear", "rain", "snow", "fog", "wind"];
+        const wx = { auto: "clear", mode: "auto", ll: null };
+        const wxHash = () => { const m = (/wx=(\w+)/.exec(location.hash) || [])[1]; if (m && WX_CYCLE.includes(m)) wx.mode = m; };
+        wxHash(); addEventListener("hashchange", wxHash);
+        const wxCode = (c, p, w) => ((c >= 71 && c <= 77) || c === 85 || c === 86 ? "snow" : (c >= 51 && c <= 67) || (c >= 80 && c <= 82) || c >= 95 || p > 0.1 ? "rain" : c === 45 || c === 48 ? "fog" : w >= 30 ? "wind" : "clear");
+        function wxFetch(lat, lon) {
+          fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(2)}&longitude=${lon.toFixed(2)}&current=weather_code,precipitation,wind_speed_10m`)
+            .then((r) => (r.ok ? r.json() : Promise.reject(r.status))).then((j) => { const c = j.current || {}; wx.auto = wxCode(+c.weather_code, +c.precipitation || 0, +c.wind_speed_10m || 0); })
+            .catch(() => (wx.auto = "clear"));
+        }
+        (() => { let done = false; const go = (a, b) => { if (!done) { done = true; wx.ll = [a, b]; wxFetch(a, b); } }, kt = () => go(21.95, 120.8); // fallback: Kenting
+          setTimeout(kt, 5000);
+          try { navigator.geolocation.getCurrentPosition((p) => go(p.coords.latitude, p.coords.longitude), kt, { timeout: 5000, maximumAge: 1800000 }); } catch (e) { kt(); } })();
+        setInterval(() => wx.ll && wxFetch(wx.ll[0], wx.ll[1]), 1800000);
+        function wxCycle() { wx.mode = WX_CYCLE[(WX_CYCLE.indexOf(wx.mode) + 1) % WX_CYCLE.length]; toast(`天气 WEATHER · ${wx.mode === "auto" ? "自动 AUTO" : WX_NAMES[wx.mode]}`); }
+        function dayWxStep(raw) {
+          if (tT !== DAY.tw) DAY.u = fxT; // a scrub happened since last frame
+          DAY.user = fxT - DAY.u < 30;
+          if (!DAY.user) tT = nightOf(DAY.real * 1440);
+          DAY.tw = tT;
+          DAY.ph = DAY.user ? minsOf(tN) / 1440 : DAY.real;
+          const du = bgMat.uniforms.uDayT, d = ((DAY.ph - du.value + 1.5) % 1) - 0.5; du.value = (du.value + d * (1 - Math.exp(-3 * raw)) + 1) % 1;
+          const w = wx.mode === "auto" ? wx.auto : wx.mode, k = 1 - Math.exp(-1.5 * raw), U = WXU.value, P = WXP.value, free = !work && !drawOn && !rec; // particles leave works / drawing / export alone
+          const snowP = w === "snow" || (wx.mode === "auto" && (skin.id === "everest" || skin.id === "yulong"));
+          U.x += ((w === "rain" ? 1 : 0) - U.x) * k; U.y += ((w === "snow" ? 1 : 0) - U.y) * k; U.z += ((w === "fog" ? 1 : 0) - U.z) * k; U.w += ((w === "wind" ? 1 : 0) - U.w) * k;
+          P.x += ((w === "rain" && free ? 1 : 0) - P.x) * k; P.y += ((snowP && free ? 1 : 0) - P.y) * k;
+          if (P.x < 0.003) P.x = 0; if (P.y < 0.003) P.y = 0;
+          const key = `${phaseOf(DAY.ph * 24)} · ${WX_NAMES[w]}${wx.mode === "auto" ? "" : " · DEMO"}`;
+          if (key !== DAY.k) wxEl.textContent = DAY.k = key;
+        }
         function fxStep(raw, dt) {
           fxT += raw;
-          skinStep(raw); bgmLevels(raw);
+          skinStep(raw); bgmLevels(raw); dayWxStep(raw);
           tN += (tT - tN) * (1 - Math.exp(-3 * raw));
           bgMat.uniforms.uN.value = tN;
           knob.style.top = tN * 100 + "%";
-          const mins = Math.round(tN < 0.5 ? 1100 + tN * 100 : 1150 + (tN - 0.5) * 280), s = `TIME ${String((mins / 60) | 0).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+          const mins = Math.round(DAY.user ? minsOf(tN) : DAY.real * 1440) % 1440, s = `TIME ${String((mins / 60) | 0).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
           if (s !== todS) todEl.textContent = todS = s;
           metFlash -= raw;
           metEl.textContent = metN ? (metFlash > 0 ? `· 流星 +1 (${metN})` : `· 流星 ${metN}`) : "";
@@ -1923,7 +1982,7 @@
           if (e.key === "Escape" && egg.ct) { ctShow(false); return; }
           const k = (e.key || "").toUpperCase();
           if (k.length === 1) { egg.seq = (egg.seq + k).slice(-4); if (egg.seq === "AXON") { egg.seq = ""; neuralBurst(); return; } }
-          if (k === "M") ctShow(!egg.ct); else if (k === "H") hidToggle();
+          if (k === "M") ctShow(!egg.ct); else if (k === "H") hidToggle(); else if (k === "W") wxCycle(); // v1.5 weather preview
         });
         ["pointerdown", "pointermove", "wheel", "touchstart"].forEach((t) => addEventListener(t, () => (egg.idle = 0), { passive: true }));
         // Phone: shake → shock (skipped where iOS needs a permission prompt); three-finger tap → AXON burst.
