@@ -89,11 +89,15 @@
       #recDot[hidden] { display: none; }
       @keyframes x-blink { 50% { opacity: .2; } }
       @media (prefers-reduced-motion: reduce) { #recDot i { animation: none; } }
-      /* Skin switch: white iris flash */
-      #skinIris { position: fixed; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(circle at 50% 46%, rgba(255,255,255,.95), rgba(255,255,255,.5) 32%, rgba(255,255,255,0) 72%); clip-path: circle(0% at 50% 46%); transition: opacity .8s, clip-path 0s .8s; }
-      #skinIris.x-on { opacity: 1; clip-path: circle(150% at 50% 46%); transition: opacity .9s ease-in, clip-path .9s cubic-bezier(.6,0,.4,1); }
       #hPrev { margin-left: 6px; font-size: 12px; opacity: .5; }
-      .x-fallback #skinIris { display: none; }
+      /* v1.1 DRAW: faint stroke overlay + mode panel (top centre; bottom on phones) */
+      #dCv { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; opacity: 0; transition: opacity .6s; }
+      .x-drawon #dCv { opacity: .16; } .x-drawon #dCv.x-set { opacity: 0; } .x-drawon #gl { cursor: crosshair; }
+      .x-dpan { left: 50%; top: 58px; transform: translateX(-50%); display: none; align-items: center; gap: 6px; padding: 6px 8px; white-space: nowrap; background: rgba(10,14,24,.55); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.14); border-radius: 999px; pointer-events: auto; }
+      .x-drawon .x-dpan { display: flex; } .x-fallback .x-dpan { display: none; }
+      .x-dpan button { min-height: 36px; padding: 0 12px; border: 1px solid rgba(255,255,255,.25); border-radius: 999px; background: rgba(255,255,255,.05); color: #fff; font: inherit; letter-spacing: inherit; cursor: pointer; }
+      .x-dpan button:hover, .x-dpan button:focus-visible { border-color: #fff; outline: none; } #dRec { border-color: rgba(255,59,59,.7); }
+      .x-drawon .x-works { opacity: 0; } .x-drawon .x-works button { pointer-events: none; }
       /* PORTAL: skin picker button + panel */
       .x-pbtn { right: 110px; top: 6px; min-width: 44px; height: 44px; padding: 0 14px; border: 1px solid rgba(255,255,255,.5); background: none; color: rgba(255,255,255,.7); font: inherit; font-size: 10px; line-height: 1.25; letter-spacing: .12em; cursor: pointer; border-radius: 22px; pointer-events: auto; transition: color .3s, background .3s, box-shadow .3s; }
       .x-pbtn span { display: block; }
@@ -129,6 +133,8 @@
         #sHint { right: 8px; top: 44px; }
         #wTag { top: 64%; } #wTag b { font-size: 20px; letter-spacing: .18em; }
         #toast { bottom: 50px; max-width: calc(100vw - 24px); white-space: normal; text-align: center; }
+        .x-dpan { top: auto; bottom: 52px; left: 8px; right: 8px; transform: none; justify-content: center; gap: 4px; padding: 5px; } .x-dpan span { display: none; } .x-dpan button { min-height: 40px; padding: 0 10px; }
+        .x-drawon #toast { bottom: 108px; }
       }
     </style>
   </head>
@@ -136,9 +142,9 @@
     <img id="plate" src="kenting_plate.jpg" alt="垦丁海岸黄昏，灯塔与礁石" />
     <canvas id="gl"></canvas>
     <canvas id="fx" aria-hidden="true"></canvas>
+    <canvas id="dCv" aria-hidden="true"></canvas>
     <div class="x-vig" aria-hidden="true"></div>
     <p class="x-error">WebGL 不可用</p>
-    <div id="skinIris" aria-hidden="true"></div>
     <p class="x-hud x-tl">AXON<br /><span id="hScene">SCENE 01 · 垦丁 KENTING</span><small id="hPrev"></small><span class="x-hint"> · 滚动=时间 · 划过=唤醒</span><br /><span id="hShape">WAVE · 浪</span><br /><span id="hTod">TIME 18:20</span> <span id="hMet"></span></p>
     <div class="x-hud x-tod" aria-hidden="true"><i id="todK"></i></div>
     <button class="x-hud x-snd x-ui" id="bSnd" aria-pressed="false" aria-label="Sound">SOUND OFF</button>
@@ -149,6 +155,7 @@
       <p>WORKS</p>
       <button data-w="0">01 香水 PERFUME</button><button data-w="1">02 球鞋 SNEAKER</button><button data-w="2">03 耳机 AUDIO</button><button data-w="3">04 手机 PHONE</button>
       <button id="bMake" aria-expanded="false" aria-controls="gen">✦ 做你的金属广告 MAKE YOURS</button>
+      <button id="bDraw" aria-pressed="false">✎ 写字 / DRAW (D)</button>
       <p class="x-soon">05–06 COMING SOON</p>
     </div>
     <div class="x-ui x-gen" id="gen" role="dialog" aria-label="MAKE YOURS 品牌金属生成器">
@@ -172,6 +179,7 @@
         </div>
       </div>
     </div>
+    <div class="x-hud x-ui x-dpan" id="dPan" role="toolbar" aria-label="DRAW 写字"><span>DRAW · 写字</span><button id="dClr">清除</button><button id="dSet">凝固</button><button id="dRec">● 导出 10 秒</button><button id="dEx">退出</button></div>
     <p id="toast" role="status" aria-live="polite"></p>
     <p id="wTag" aria-live="polite"><b id="wTagL"></b><small id="wTagS"></small></p>
     <div class="x-hud x-ui x-whud" id="wHud"><span id="recDot" hidden><i aria-hidden="true">●</i> <b id="recT">REC 10s</b></span><span id="wHudT"></span><span class="x-wbar"><i id="wBar"></i></span><button id="wClose" aria-label="Close work">✕</button></div>
@@ -244,8 +252,7 @@
               if (k == 4) return circuit(p, t, vec3(.55, .62, .7), 9.) * .7;
               if (k == 5) return band(p, .86, t * .5, vec3(.75, .6, .35), .02) * .6;
               if (k == 6) return dots(p, t, vec3(.1, .8, 1.), 9.);
-              if (k == 7) { vec2 q = (v - vec2(.5, .58)) * vec2(sa, 3.2); float d = length(q) - .62, a = atan(q.y, q.x);
-                return vec3(1., .6, .3) * (gl(d, .04) * .3 + gl(d, .01) * .6) * (.4 + .6 * pow(.5 + .5 * sin(a - t * .4), 4.)); }
+              if (k == 7) return dots(p, t * .3, vec3(.8, .78, 1.), 16.) * .5; // v1.1: faint stardust twinkle (photon-ring arc removed)
               if (k == 8) return dots(p, t * .7, vec3(.25, 1., .55), 11.);
               if (k == 9) return dots(p, t * .5, vec3(1., .85, .4), 6.) * .7;
               if (k == 10) return band(p, .33, t, vec3(1.1, .7, .35), .025) * .7;
@@ -542,9 +549,9 @@
           uniforms: { tPos: { value: null }, tVel: { value: null }, tTarget: { value: null }, tPrev: { value: null }, uMorphT: { value: -9 }, uRes: { value: simRes }, uMouse: { value: new THREE.Vector3(99, 99, 0) }, uDown: { value: 0 }, uTime: { value: 0 }, uDt: { value: 0.016 },
             uShock: { value: new THREE.Vector4(0, 0, 0, -9) }, uGather: { value: 0 }, uSpray: { value: 0 }, uLift: { value: 0 }, uMVel: { value: new THREE.Vector3() }, uMSpd: { value: 0 },
             // Work hooks: lean toward a hover target, nozzle mist, beat pulse about uCenter.
-            tLean: { value: null }, uLean: { value: 0 }, uMist: { value: 0 }, uNozzle: { value: new THREE.Vector3(...NOZZLE) }, uPulse: { value: 0 }, uFlow: { value: 1 }, uCenter: { value: new THREE.Vector3(0, CY, 0) } },
+            tLean: { value: null }, uLean: { value: 0 }, uMist: { value: 0 }, uPen: { value: 0 }, uNozzle: { value: new THREE.Vector3(...NOZZLE) }, uPulse: { value: 0 }, uFlow: { value: 1 }, uCenter: { value: new THREE.Vector3(0, CY, 0) } },
           vertexShader: quadVS,
-          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel, tTarget, tPrev, tLean; uniform vec2 uRes; uniform vec3 uMouse, uMVel, uNozzle, uCenter; uniform vec4 uShock; uniform float uDown, uTime, uDt, uMorphT, uGather, uSpray, uLift, uMSpd, uLean, uMist, uPulse, uFlow;
+          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel, tTarget, tPrev, tLean; uniform vec2 uRes; uniform vec3 uMouse, uMVel, uNozzle, uCenter; uniform vec4 uShock; uniform float uDown, uTime, uDt, uMorphT, uGather, uSpray, uLift, uMSpd, uLean, uMist, uPulse, uFlow, uPen;
             vec3 pot(vec3 p, float t){ return vec3(sin(p.y * .9 + t * .21) + cos(p.z * .7 - t * .17), sin(p.z * .8 + t * .19) + cos(p.x * .9 + t * .13), sin(p.x * .7 - t * .23) + cos(p.y * .8 + t * .11)); }
             vec3 curl(vec3 p, float t){ vec3 e = vec3(.12, 0., 0.), px = pot(p + e.xyy, t) - pot(p - e.xyy, t), py = pot(p + e.yxy, t) - pot(p - e.yxy, t), pz = pot(p + e.yyx, t) - pot(p - e.yyx, t);
               return vec3(py.z - pz.y, pz.x - px.z, px.y - py.x) / .24; }
@@ -569,6 +576,8 @@
                 acc += side * sign(dot(d, side)) * f * ms * 3.;
                 acc += d / max(r, 1e-3) * f * (mix(3., 14., uMSpd) + uDown * 60.);
               }
+              // v1.1 DRAW: while the pen is down, particles near the tip / its recent path are pulled in → metal streamlines.
+              if (uPen > 0. && r < 1.25) { float pf = 1. - r / 1.25; pf *= pf; acc -= d / max(r, .05) * pf * uPen * 34.; acc *= 1. - .25 * pf * uPen; }
               float st = uTime - uShock.w;
               if (st < 1.2) {
                 vec3 sd = p.xyz - uShock.xyz; float sr = length(sd);
@@ -705,7 +714,7 @@
         addEventListener("pointerdown", (e) => {
           if (e.isPrimary === false) { tap = null; return; }
           setPointer(e);
-          if (!entered || e.target.closest(".x-ui")) return;
+          if (!entered || drawOn || e.target.closest(".x-ui")) return;
           // Touch: the shockwave fires on a tap (release < 350 ms, < 14 px travel), so a swipe only wakes.
           if (e.pointerType === "touch") { tap = { x: e.clientX, y: e.clientY, ts: e.timeStamp, w: mouseWorld().clone() }; return; }
           down = 1;
@@ -713,13 +722,13 @@
         });
         intro.addEventListener("pointerdown", (e) => { hold = 1; e.preventDefault(); });
         addEventListener("pointerup", (e) => {
-          if (tap && e.isPrimary !== false && entered && e.timeStamp - tap.ts < 350) { shock(tap.w, tap.x); chime(0.07); }
+          if (tap && e.isPrimary !== false && entered && !drawOn && e.timeStamp - tap.ts < 350) { shock(tap.w, tap.x); chime(0.07); }
           if (e.isPrimary !== false) tap = null;
           down = 0; hold = 0; if (e.pointerType === "touch") hasMouse = false;
         });
         addEventListener("pointercancel", () => { down = 0; hold = 0; hasMouse = false; tap = null; });
         const avgY = (e) => (e.touches[0].clientY + e.touches[1].clientY) / 2;
-        addEventListener("touchstart", (e) => { if (e.touches.length >= 2) { twoF = true; tap = null; hasMouse = false; down = 0; tY = avgY(e); } }, { passive: true });
+        addEventListener("touchstart", (e) => { if (e.touches.length >= 2 && !drawOn) { twoF = true; tap = null; hasMouse = false; down = 0; tY = avgY(e); } }, { passive: true });
         addEventListener("touchmove", (e) => {
           if (!twoF || e.touches.length < 2) return;
           if (e.cancelable) e.preventDefault(); // no pinch-zoom / page pan
@@ -747,6 +756,7 @@
         }
         function playWork(i) {
           if (rec) { toast("录制中 · 暂不能切换作品"); return; }
+          if (drawOn) drawMode(false, true);
           if (sk) skinAbort();
           if (work) endWork(true);
           document.body.classList.add("x-workon");
@@ -858,6 +868,8 @@
         addEventListener("keydown", (e) => {
           if (e.key === "Escape" && work) { endWork(); return; }
           if (!entered || (e.target.closest && e.target.closest("input, textarea"))) return;
+          if ((e.key === "d" || e.key === "D") && !e.metaKey && !e.ctrlKey && !e.altKey) { drawMode(!drawOn); return; }
+          if (drawOn) { if (e.key === "Escape") drawMode(false); else if (e.key === "Enter") drawSolid(); else if (e.key === "c" || e.key === "C") drawClear(); return; } // other shape/work keys are ignored while drawing
           const dg = /^Digit([1-5])$/.exec(e.code || "");
           // Shift+1..5 = shapes 0–4; plain 5 = shape 4; plain 1–4 = works.
           if (dg && e.shiftKey) { if (!work) setShape(+dg[1] - 1); }
@@ -1055,6 +1067,91 @@
           }
         }
         gRec.addEventListener("click", startRec);
+        // ---------- v1.1 DRAW · 液态金属写字 ----------
+        // Strokes go to an offscreen 2D canvas (screen px × dK); solidify maps lit pixels onto the z=0 particle plane
+        // with the same px→world scale as the pointer (wpp = 12·tan(π/8)/innerHeight/points.scale), like rasterBrand → target texture.
+        const dCv = $("dCv"), dCx = dCv.getContext("2d", { willReadFrequently: true }), bDraw = $("bDraw");
+        let drawOn = false, pen = false, dInk = false, dSolid = false, dTm = 0, dT = 0, dK = 1, dW = 1, dH = 1, dWpp = 0.01, dLx = 0, dLy = 0, drawPts = null, dPix = 0.01;
+        const gDraw = () => {
+          if (!drawPts) return gSphere();
+          const k = (rnd() * (drawPts.length / 3)) | 0;
+          return [drawPts[k * 3] + (rnd() - 0.5) * dPix, drawPts[k * 3 + 1] + (rnd() - 0.5) * dPix, drawPts[k * 3 + 2]];
+        };
+        const DRAW_I = shapes.push(["DRAW · 写字", gDraw]) - 1;
+        function drawMode(on, silent) {
+          if (on === drawOn) return;
+          if (on) {
+            if (!entered) return;
+            if (rec) { toast("录制中 · 暂不能写字"); return; }
+            if (skinBusy) { toast("转场中 · 稍后再写"); return; }
+            if (work) endWork(true);
+            genShow(false); portalShow(false); hovW = false;
+            dK = Math.min(1, 1024 / Math.max(innerWidth, innerHeight)); dW = innerWidth; dH = innerHeight; dWpp = (12 * Math.tan(Math.PI / 8)) / innerHeight / points.scale.x;
+            dCv.width = Math.round(dW * dK); dCv.height = Math.round(dH * dK);
+            dCx.lineCap = dCx.lineJoin = "round"; dCx.lineWidth = Math.max(6, 26 * dK); dCx.strokeStyle = "#fff";
+          } else {
+            pen = false; clearTimeout(dTm); dCx.clearRect(0, 0, dCv.width, dCv.height); dCv.classList.remove("x-set");
+            const vu = velMat.uniforms; vu.uPen.value = 0; vu.uPulse.value = 0; points.rotation.y = 0;
+            if (!silent && !work && shapeI !== HOME()) setShape(HOME());
+          }
+          dInk = dSolid = false; drawOn = on;
+          document.body.classList.toggle("x-drawon", on); bDraw.setAttribute("aria-pressed", on);
+          toast(on ? "写字模式 · 按住拖动书写，松手 0.6 秒凝固" : "已退出写字");
+        }
+        function dLine(x, y) { dCx.beginPath(); dCx.moveTo(dLx * dK, dLy * dK); dCx.lineTo(x * dK, y * dK); dCx.stroke(); dLx = x; dLy = y; dInk = true; }
+        function drawClear() {
+          clearTimeout(dTm); dCx.clearRect(0, 0, dCv.width, dCv.height); dCv.classList.remove("x-set"); dInk = dSolid = false;
+          if (shapeI === DRAW_I) setShape(HOME());
+        }
+        function drawSolid() {
+          clearTimeout(dTm);
+          if (!drawOn) return false;
+          if (!dInk) { toast("先画几笔再凝固"); return false; }
+          const w = dCv.width, h = dCv.height, d = dCx.getImageData(0, 0, w, h).data, out = [];
+          for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) if (d[(j * w + i) * 4 + 3] > 128) out.push(((i + 0.5) / dK - dW / 2) * dWpp, (dH / 2 - (j + 0.5) / dK) * dWpp, (rnd() - 0.5) * 0.3);
+          if (out.length < 150 * 3) { toast("笔迹太少，再画几笔"); return false; }
+          drawPts = new Float32Array(out); dPix = dWpp / dK;
+          const old = texs[DRAW_I], u = velMat.uniforms;
+          texs[DRAW_I] = makeTex(gDraw);
+          if (old) { ["tTarget", "tPrev", "tLean"].forEach((k) => { if (u[k].value === old) u[k].value = texs[DRAW_I]; }); old.dispose(); }
+          setShape(DRAW_I); dSolid = true; dT = 0; dCv.classList.add("x-set"); chime(0.1);
+          return true;
+        }
+        function drawStep(raw) {
+          if (!drawOn) return;
+          const vu = velMat.uniforms;
+          vu.uPen.value += ((pen ? 1 : 0) - vu.uPen.value) * (1 - Math.exp(-12 * raw));
+          if (dSolid && !pen) { // solidified: slow sway + breathing
+            dT += raw; points.rotation.y = 0.22 * Math.sin(dT * 0.5) * clamp(dT / 1.2, 0, 1);
+            vu.uPulse.value = 0.12 * (0.5 + 0.5 * Math.sin(dT * 1.7));
+          } else { points.rotation.y = wrapA(points.rotation.y) * Math.exp(-6 * raw); vu.uPulse.value *= Math.exp(-6 * raw); }
+        }
+        addEventListener("pointerdown", (e) => {
+          if (!drawOn || !entered || e.isPrimary === false || e.target.closest(".x-ui")) return;
+          pen = true; dSolid = false; clearTimeout(dTm); dCv.classList.remove("x-set");
+          dLx = e.clientX; dLy = e.clientY; dLine(e.clientX, e.clientY);
+        });
+        addEventListener("pointermove", (e) => {
+          if (!pen || e.isPrimary === false) return;
+          const ev = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+          (ev.length ? ev : [e]).forEach((c) => dLine(c.clientX, c.clientY));
+        });
+        const penUp = (e) => { if (!pen || e.isPrimary === false) return; pen = false; dTm = setTimeout(drawSolid, 600); };
+        addEventListener("pointerup", penUp); addEventListener("pointercancel", penUp);
+        bDraw.addEventListener("click", () => drawMode(!drawOn));
+        $("dClr").addEventListener("click", drawClear);
+        $("dSet").addEventListener("click", drawSolid);
+        $("dEx").addEventListener("click", () => drawMode(false));
+        // Export reuses the generator's 10 s recorder: the drawing becomes the custom brand shape, result shows in the MAKE YOURS panel.
+        $("dRec").addEventListener("click", () => {
+          if (rec) { toast("录制中 · 请等待导出完成"); return; }
+          if (!REC_OK) { toast("此浏览器不支持视频录制导出（MediaRecorder 不可用）"); return; }
+          if (!dSolid && !drawSolid()) return;
+          customPts = drawPts.slice(); customName = "AXON"; setCustomTex();
+          drawMode(false, true);
+          gen.classList.add("x-on"); document.body.classList.add("x-genon"); bMake.setAttribute("aria-expanded", true);
+          gRec.setAttribute("aria-disabled", "false"); startRec();
+        });
         $("gShare").addEventListener("click", () => {
           if (lastFile && navigator.canShare && navigator.canShare({ files: [lastFile] })) {
             navigator.share({ files: [lastFile], title: "AXON · " + customName, text: "MADE WITH AXON" })
@@ -1180,14 +1277,14 @@
         addEventListener("wheel", (e) => { e.preventDefault(); if (entered) tT = clamp(tT + e.deltaY * (e.deltaMode ? 0.03 : 0.0008), 0, 1); }, { passive: false });
         addEventListener("keydown", (e) => { if (e.target.closest && e.target.closest("input, textarea")) return; if (entered && (e.key === "ArrowUp" || e.key === "ArrowDown")) tT = clamp(tT + (e.key === "ArrowDown" ? 0.1 : -0.1), 0, 1); });
         addEventListener("pointerdown", (e) => {
-          if (!entered || e.target.closest(".x-ui")) return;
+          if (!entered || drawOn || e.target.closest(".x-ui")) return;
           const x = e.clientX, y = e.clientY;
           for (const b of beads) if (Math.hypot(b.x - x, b.y - y) < b.r + 10) { grab = b; gpx = x; gpy = y; gvx = gvy = 0; gts = e.timeStamp; e.stopPropagation(); return; }
           if (e.pointerType !== "touch") chime(0.07); // touch chimes on tap (pointerup)
         }, true);
         addEventListener("pointermove", (e) => {
           // Big wave: 3 horizontal direction reversals at |vx| > 600 px/s inside the sea band within 1.5 s.
-          if (entered && skin.kent && !grab && !work && py > horY + 2 && py < H * 0.75 && Math.abs(pvx) > 600) {
+          if (entered && skin.kent && !grab && !work && !drawOn && py > horY + 2 && py < H * 0.75 && Math.abs(pvx) > 600) {
             const d = Math.sign(pvx);
             if (rdir && d !== rdir) {
               revs = revs.filter((t) => e.timeStamp - t < 1500); revs.push(e.timeStamp);
@@ -1241,7 +1338,7 @@
           if (!work && shapeI !== HOME()) setShape(HOME());
           portalSync();
         }
-        const iris = document.getElementById("skinIris"), hScene = document.getElementById("hScene"), hPrev = document.getElementById("hPrev");
+        const hScene = document.getElementById("hScene"), hPrev = document.getElementById("hPrev");
         const skinIdx = (id) => SKINS.findIndex((s) => s.id === id), hashSkin = () => (/skin=([\w-]+)/.exec(location.hash) || [])[1];
         function skinHud(i) { const s = SKINS[i]; hScene.textContent = `SCENE ${String(i + 1).padStart(2, "0")} · ${s.zh} ${s.en}`; hPrev.textContent = s.kent ? "" : "预览底图"; }
         function skinSave(id) { try { localStorage.setItem("axon.skin", id); } catch (e) {} try { history.replaceState(null, "", "#skin=" + id); } catch (e) {} }
@@ -1276,6 +1373,7 @@
         }
         function goSkin(id, instant = false) {
           if (rec && !instant) { toast("录制中 · 暂不能切换场景"); return; }
+          if (drawOn && !instant) drawMode(false, true);
           const i = skinIdx(id);
           if (i < 0 || (skinBusy && !sk)) return;
           // v1.0: a running portal can be interrupted. Same target → ignore; back to the current skin → close the door.
@@ -1556,7 +1654,7 @@
           // Lean eases in (~2/s) while a work is hovered and none is playing.
           const lu = velMat.uniforms.uLean;
           lu.value = clamp(lu.value + (hovW && !work ? 2 : -2) * raw, 0, 1);
-          workStep(raw);
+          workStep(raw); drawStep(raw);
 
           if (!paused) {
             simT += dt;
