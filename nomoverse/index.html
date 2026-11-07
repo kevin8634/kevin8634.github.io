@@ -292,6 +292,11 @@
   }
   .nv-top .nv-sp { display: block !important; }
   @media (prefers-reduced-motion: reduce) { .card { transition: none; } .card:hover { transform: none; } }
+  .hm-flash { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 12px 0 0; padding: 9px 12px; border: 1px solid var(--cy-line); border-radius: var(--r);
+    background: linear-gradient(90deg, rgba(103,232,249,.10), rgba(124,92,240,.10)); position: relative; z-index: 2; }
+  .hm-flash .fx-bd { font-size: 12px; font-weight: 700; letter-spacing: .08em; color: #07061a; background: var(--cy); border-radius: var(--r-pill); padding: 2px 9px; }
+  .hm-flash .fx-tx { flex: 1 1 320px; display: grid; gap: 2px; } .hm-flash .fx-tx span { color: var(--mu); font-size: 13px; line-height: 1.5; }
+  .hm-flash .fx-go { display: flex; gap: 6px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
@@ -311,6 +316,15 @@
     { id: "tide", n: 4, guide: "abyss", diff: 2, href: "tide/", q: "月亮怎样拉动整片大海?", lv: ["背面也鼓起来", "太阳更重,为啥月亮更管用", "被拉长的一天", "靠太近会被撕碎"] },
     { id: "energy", n: 4, guide: "ripple", diff: 2, href: "energy/", q: "能量去哪儿了?", lv: ["过山车能爬多高", "刹车片为什么烫", "一吨水变成电", "燃料的能量去哪了"] }
   ];
+  /* v0.9-α7 深链:/nomoverse/?task=<id> 直达任务页或特别展(保留 lang) */
+  (function () {
+    var q = null; try { q = new URLSearchParams(location.search).get("task"); } catch (e) {}
+    if (!q) return;
+    var SPEC = { icecube: "icecube/" }, t = TASKS.filter(function (x) { return x.id === q; })[0], href = SPEC[q] || (t && t.href);
+    if (!href) return;
+    var lg = null; try { lg = new URLSearchParams(location.search).get("lang"); } catch (e) {}
+    location.replace(href + (lg ? "?lang=" + encodeURIComponent(lg) : ""));
+  })();
   var CONS = ["运动", "力与能量", "引力与天体", "波与声", "光", "热与熵", "电与磁", "现代物理"];
   var CCOL = ["#5eead4", "#fbbf24", "#a78bfa", "#86efac", "#f0abfc", "#fb923c", "#60a5fa", "#f87171"];   // 3D 星图星座色
   // [星座序号, 名称, 尺度指数 log10(m), 一句话, 关联关卡 "任务:关序号"]
@@ -443,6 +457,15 @@
     ]),
     totem
   ]);
+  /* v0.9-α7 前沿速递(标准做法:一条速递 + 一手资讯链接新标签 + 进入专题;不嵌外部图片) */
+  main.appendChild(el("section", { class: "hm-flash", "aria-label": "前沿速递" }, [
+    el("span", { class: "fx-bd", text: "前沿速递" }),
+    el("div", { class: "fx-tx" }, [el("b", { text: "2026 诺贝尔物理学奖 · 冰立方中微子" }), el("span", { text: "南极冰下一立方公里的「望远镜」,抓住了来自宇宙深处的高能中微子。特别展:亲手布放传感器,从蓝光到达的先后读出它从哪来。" })]),
+    el("div", { class: "fx-go" }, [
+      el("a", { class: "nv-btn sm", href: "https://www.nobelprize.org/prizes/physics/2026/press-release/", target: "_blank", rel: "noopener noreferrer", text: "阅读资讯 ↗" }),
+      el("a", { class: "nv-btn sm pri", href: "icecube/", text: "进入特别展 →" })
+    ])
+  ]));
   main.appendChild(hero);
 
   /* ② 任务卡 */

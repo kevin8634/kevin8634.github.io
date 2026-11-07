@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#07061a">
+<title>冰立方中微子 · 特别展 · 宙律 Nomoverse</title>
+<meta name="description" content="宙律 Nomoverse 特别展 · 2026 诺贝尔物理学奖:在南极冰下布放传感器串,等中微子撞出一道切伦科夫蓝光,从光到达的先后反推它从哪里来。">
+<link rel="stylesheet" href="../core/nv.css">
+<script src="../i18n.js"></script>
+<style>
+  .ic { max-width: 1240px; margin: 0 auto; padding: 10px 14px 28px; }
+  .ic-flash { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px; border: 1px solid var(--cy-line); border-radius: var(--r);
+    background: linear-gradient(90deg, rgba(103,232,249,.10), rgba(124,92,240,.10)); }
+  .ic-flash .bd { font-size: 12px; font-weight: 700; letter-spacing: .08em; color: #07061a; background: var(--cy); border-radius: var(--r-pill); padding: 2px 9px; }
+  .ic-flash b { font-size: 15px; }
+  .ic-flash p { flex: 1 1 340px; margin: 0; color: var(--mu); font-size: 13px; line-height: 1.55; }
+  .ic-flash .nv-row { flex: 0 0 auto; }
+  .ic h1 { font-size: clamp(22px, 3.4vw, 32px); margin: 16px 0 4px; }
+  .ic .lead { color: var(--mu); margin: 0 0 12px; line-height: 1.6; max-width: 820px; }
+  .ic-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
+  .ic-tabs button { flex: 1 1 180px; text-align: left; min-height: 48px; padding: 6px 12px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--btn); color: var(--tx); cursor: pointer; font: inherit; }
+  .ic-tabs button[aria-pressed="true"] { border-color: var(--cy); background: var(--sel); box-shadow: 0 0 0 1px var(--cy-line); }
+  .ic-tabs small { display: block; color: var(--dim); font-size: 12px; }
+  .ic-main { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 900px) { .ic-main { grid-template-columns: minmax(0, 1.55fr) minmax(320px, 1fr); align-items: start; } }
+  .ic-stage { position: relative; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: radial-gradient(120% 90% at 50% 0%, #0f2440 0%, #07102a 45%, #050717 100%);
+    height: min(62vh, 560px); min-height: 300px; touch-action: none; cursor: grab; }
+  .ic-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .ic-hud { position: absolute; left: 10px; top: 8px; right: 10px; display: flex; justify-content: space-between; gap: 8px; pointer-events: none; font-size: 12px; color: var(--mu); }
+  .ic-hud span { background: rgba(7,6,26,.62); border-radius: var(--r-pill); padding: 3px 9px; }
+  .ic-legend { position: absolute; left: 10px; bottom: 8px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--mu); background: rgba(7,6,26,.62); border-radius: var(--r-pill); padding: 3px 10px; pointer-events: none; }
+  .ic-legend i { width: 90px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, hsl(0,95%,60%), hsl(60,95%,58%), hsl(140,85%,55%), hsl(200,95%,60%), hsl(270,90%,66%)); }
+  .ic-panel { border: 1px solid var(--glass-bd); border-radius: var(--r); background: var(--glass); padding: 12px; }
+  .ic-panel h2 { font-size: 17px; margin: 0 0 6px; }
+  .ic-panel p { margin: 6px 0; line-height: 1.6; font-size: 14px; }
+  .ic-q { color: var(--cy2); font-weight: 600; }
+  .ic-opts { display: grid; gap: 6px; margin: 8px 0; }
+  .ic-opts button { text-align: left; }
+  .ic-opts button.ok { border-color: var(--good); }
+  .ic-opts button.no { border-color: var(--bad); opacity: .8; }
+  .ic-read { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 8px 0; }
+  .ic-read div { background: var(--field); border: 1px solid var(--line2); border-radius: var(--r-sm); padding: 6px 8px; font-size: 12px; color: var(--dim); }
+  .ic-read b { display: block; font-size: 16px; color: var(--tx); font-family: var(--mono); }
+  .ic-sl { display: grid; gap: 2px; margin: 8px 0; }
+  .ic-sl label { display: flex; justify-content: space-between; font-size: 13px; color: var(--mu); }
+  .ic-sl input { width: 100%; }
+  .ic-res { margin-top: 8px; padding: 8px 10px; border-radius: var(--r-sm); background: rgba(110,231,183,.08); border: 1px solid rgba(110,231,183,.35); font-size: 14px; line-height: 1.6; }
+  .ic-res.warn { background: rgba(251,191,36,.08); border-color: rgba(251,191,36,.35); }
+  .ic-res .st { color: var(--pred); font-size: 16px; letter-spacing: 2px; }
+  .ic-board { width: 100%; aspect-ratio: 1.15; display: block; background: var(--field); border: 1px solid var(--line2); border-radius: var(--r-sm); cursor: pointer; touch-action: manipulation; }
+  .ic-earth { width: 100%; aspect-ratio: 1.6; display: block; background: var(--field); border: 1px solid var(--line2); border-radius: var(--r-sm); }
+  .ic-cmp { width: 100%; border-collapse: collapse; font-size: 12px; margin: 6px 0; }
+  .ic-cmp td { padding: 4px 6px; border-top: 1px solid var(--line2); }
+  .ic-cmp td:last-child { text-align: right; font-family: var(--mono); color: var(--tx); }
+  .ic-note { font-size: 12px; color: var(--dim); }
+  .ic-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin: 14px 0; }
+  .ic-card { border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; background: var(--bg2); font-size: 14px; line-height: 1.6; }
+  .ic-card h3 { font-size: 15px; margin: 0 0 4px; color: var(--cy2); }
+  .ic-refs { font-size: 13px; color: var(--mu); line-height: 1.8; padding-left: 18px; }
+  .ic-refs a { color: var(--ac2); }
+  .ic-foot { margin-top: 16px; font-size: 12px; color: var(--dim); line-height: 1.7; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  @media (max-width: 520px) { .ic-stage { height: 52vh; min-height: 260px; } .ic-read b { font-size: 14px; } }
+</style>
+</head>
+<body>
+<noscript><p style="padding:16px">这个特别展需要开启 JavaScript。<a href="../">返回宙律首页</a></p></noscript>
+<script src="../core/nv.js"></script>
+<script src="../core/icecube.js"></script>
+<script>
+"use strict";
+(function () {
+  var el = NV.el, D = document, W = window, RM = NV.RM, SND = NV.snd, M = W.NV_ICE;
+  var TID = "icecube", NL = 3, EN = W.NV_LANG === "en";
+  function t(z, e) { return EN ? e : z; }
+  if (EN) D.title = "IceCube neutrinos · Special Exhibit · Nomoverse";
+  var LINKS = {
+    press: "https://www.nobelprize.org/prizes/physics/2026/press-release/",
+    pop: "https://www.nobelprize.org/prizes/physics/2026/popular-information/",
+    news: "https://icecube.wisc.edu/news/awards/2026/10/francis-halzen-icecube-principal-investigator-wins-2026-physics-nobel-prize",
+    det: "https://icecube.wisc.edu/science/icecube/",
+    facts: "https://icecube.wisc.edu/about-us/facts/"
+  };
+  function ext(href, text, cls) { return el("a", { class: cls || "nv-btn sm", href: href, target: "_blank", rel: "noopener noreferrer", text: text }); }
+
+  /* ================= 页面骨架 ================= */
+  D.body.appendChild(NV.header({ links: [["../", t("← 宙律", "← Nomoverse")], ["../../", t("创世计划", "Genesis")]], brand: t("宙律 · 特别展", "Nomoverse · Special Exhibit") }));
+  try { sessionStorage.setItem("gn:nv:_inner", "1"); } catch (e) {}
+  var main = el("main", { class: "ic", id: "main" });
+  D.body.appendChild(main);
+  main.appendChild(el("section", { class: "ic-flash", "aria-label": t("前沿速递", "Frontier Flash") }, [
+    el("span", { class: "bd", text: t("前沿速递", "Frontier Flash") }),
+    el("b", { text: t("2026 诺贝尔物理学奖 · 冰立方中微子", "2026 Nobel Prize in Physics · IceCube neutrinos") }),
+    el("p", { text: t("2026 年 10 月 6 日,瑞典皇家科学院把诺贝尔物理学奖授予弗朗西斯·哈尔岑(Francis Halzen),表彰他对冰立方中微子天文台(IceCube)的决定性贡献,以及发现来自天体的高能中微子。颁奖典礼在 12 月 10 日。", "On 6 October 2026 the Royal Swedish Academy of Sciences awarded the Nobel Prize in Physics to Francis Halzen “for decisive contributions to the IceCube Neutrino Observatory and the discovery of high-energy neutrinos of astrophysical origin.” The award ceremony is on 10 December.") }),
+    el("div", { class: "nv-row" }, [ext(LINKS.press, t("阅读资讯 ↗", "Read the news ↗"), "nv-btn sm pri"), ext(LINKS.news, t("IceCube 官方报道 ↗", "IceCube news ↗"))])
+  ]));
+  main.appendChild(el("h1", { text: t("怎么抓一个几乎穿过一切的粒子?", "How do you catch a particle that passes through almost everything?") }));
+  main.appendChild(el("p", { class: "lead", text: t("每秒约有 100 万亿个中微子穿过你的身体,你却毫无感觉。南极冰下 1450 到 2450 米,一立方公里的冰里冻着 5160 个光学传感器,等其中极少数撞上原子核、撞出一道蓝光。三关:先把冰铺够,再从光到达的先后读出方向,最后用整个地球当过滤器。", "About 100 trillion neutrinos pass through your body every second, and you feel nothing. 1,450 to 2,450 m beneath the South Pole, 5,160 light sensors are frozen into a cubic kilometre of ice, waiting for the rare one that hits an atomic nucleus and makes a flash of blue light. Three levels: build enough ice, read the direction from the order the light arrives, then use the whole Earth as a filter.") }));
+
+  var tabs = el("div", { class: "ic-tabs", role: "group", "aria-label": t("三关", "Three levels") });
+  var LV = [[t("布放传感器串", "Deploy sensor strings"), t("冰要多大才等得到?", "How much ice does it take?")], [t("听光定向", "Read the light’s direction"), t("从光到达的先后反推来向", "Work out the direction from the arrival order")], [t("穿过地球的信使", "Messengers through the Earth"), t("哪个方向来的一定是中微子?", "Which direction must be a neutrino?")]];
+  var tabBtns = LV.map(function (x, i) {
+    var b = el("button", { type: "button", "aria-pressed": "false", onclick: function () { go(i); } }, [el("span", { text: (i + 1) + " · " + x[0] }), el("small", { text: x[1] })]);
+    tabs.appendChild(b); return b;
+  });
+  main.appendChild(tabs);
+
+  var stage = el("div", { class: "ic-stage", role: "img", "aria-label": t("冰立方探测器示意:竖直的传感器串排成六边形网格,被光照到的传感器按到达先后从红到紫着色。拖动可旋转视角。", "IceCube detector diagram: vertical sensor strings on a hexagonal grid; sensors hit by light are coloured red to violet by arrival time. Drag to rotate the view.") });
+  var hudL = el("span", { text: "" }), hudR = el("span", { text: "" });
+  stage.appendChild(el("div", { class: "ic-hud", "aria-hidden": "true" }, [hudL, hudR]));
+  var legend = el("div", { class: "ic-legend", "aria-hidden": "true" }, [el("span", { text: t("最早", "Earliest") }), el("i"), el("span", { text: t("最晚", "Latest") })]);
+  stage.appendChild(legend);
+  var panel = el("section", { class: "ic-panel", "aria-live": "polite" });
+  main.appendChild(el("div", { class: "ic-main" }, [stage, panel]));
+  var live = el("p", { class: "sr", "aria-live": "polite" }); main.appendChild(live);
+
+  /* 知识卡与资料 */
+  var cth = M.cherenkovDeg().toFixed(0);
+  main.appendChild(el("div", { class: "ic-cards" }, [
+    card(t("中微子为什么难抓", "Why neutrinos are hard to catch"), t("不带电、质量极小,几乎不和任何东西作用,能直穿地球。按 IceCube 的说法,一个人大小的探测器,在它关注的能区要等约 10 万年才见到一次相互作用。所以只能把探测器做得极大。", "No electric charge, almost no mass, almost no interactions: they go straight through the Earth. IceCube says a person-sized detector would wait about 100,000 years to see one interaction in its energy range. So the detector has to be enormous.")),
+    card(t("切伦科夫蓝光", "Cherenkov blue light"), t("中微子偶尔撞上冰里的原子核,产生的带电粒子在冰中跑得比冰中光速(约 c/1.32)还快,会沿约 ", "Once in a while a neutrino hits a nucleus in the ice. The charged particle it makes moves faster than light does in ice (about c/1.32) and emits faint blue light on a cone of about ") + cth + t("° 的锥面发出微弱蓝光,好比船头掀起的 V 形浪。", "°, like the V-shaped wake of a boat.")),
+    card(t("时间就是方向", "Timing is direction"), t("粒子先经过哪里,哪里的传感器就先亮。把每个传感器的「时刻 + 位置」放在一起,就能拟合出径迹方向。IceCube 用纳秒级的时间戳完成这件事。", "Wherever the particle passes first, sensors light up first. Put every sensor’s time and position together and you can fit the track’s direction. IceCube does this with nanosecond time stamps.")),
+    card(t("地球是过滤器", "The Earth is a filter"), t("从头顶来的大多是宇宙线在大气里撞出的 μ 子,IceCube 每天记录约 2.75 亿个宇宙线事件;能从脚下穿过整个地球的,只有中微子。", "Most particles from overhead are muons made by cosmic rays in the atmosphere; IceCube records about 275 million cosmic-ray events a day. Only neutrinos can come up from below, through the whole Earth."))
+  ]));
+  function card(h, t) { return el("div", { class: "ic-card" }, [el("h3", { text: h }), el("p", { style: "margin:0", text: t })]); }
+  main.appendChild(el("h2", { style: "font-size:16px;margin:8px 0 2px", text: t("一手资料", "Primary sources") }));
+  var refs = el("ul", { class: "ic-refs" });
+  [[LINKS.press, t("NobelPrize.org · 2026 诺贝尔物理学奖新闻稿(英文)", "NobelPrize.org · Press release, Nobel Prize in Physics 2026")], [LINKS.pop, t("NobelPrize.org · 科普背景:南极的冰揭示宇宙粒子加速器", "NobelPrize.org · Popular information: Ice at the South Pole reveals cosmic particle accelerators")], [LINKS.news, t("IceCube · 哈尔岑获 2026 诺贝尔物理学奖", "IceCube · Francis Halzen wins the 2026 Physics Nobel Prize")],
+   [LINKS.det, t("IceCube · 探测器:86 串、5160 个光学模块、深 1450–2450 米", "IceCube · The detector: 86 strings, 5,160 optical modules, 1,450–2,450 m deep")], [LINKS.facts, t("IceCube · 速览数字(中微子穿身、等待时间、每日事件数)", "IceCube · Quick facts (neutrinos through you, waiting times, daily events)")]].forEach(function (r) {
+    refs.appendChild(el("li", {}, [ext(r[0], r[1] + " ↗", "")]));
+  });
+  main.appendChild(refs);
+  main.appendChild(el("footer", { class: "ic-foot" }, [
+    el("p", { text: t("简化模型 · 科普探究:光按直线、不散射传播(真实冰中光会散射,要更复杂的重建);每串只画 12–15 个传感器(真实为 60 个、间距 17 米);事件率按「人大小的探测器约 10 万年一次」按质量换算,只表示数量级。", "Simplified model · for learning: light travels in straight lines without scattering (real ice scatters light and needs more complex reconstruction); each string shows only 12–15 sensors (really 60, 17 m apart); event rates are scaled by mass from “a person-sized detector waits about 100,000 years”, order of magnitude only.") }),
+    el("p", { text: t("资料核对于 2026-11-07(北京时间)。本页不嵌入外部图片,外部链接在新标签打开;进度只保存在本机浏览器。声音默认关闭。", "Sources checked on 2026-11-07 (Beijing time). No external images are embedded; external links open in a new tab; progress is saved only in this browser. Sound is off by default.") }),
+    el("div", { class: "nv-row" }, [el("a", { class: "nv-btn", href: "../", text: t("← 返回宙律", "← Back to Nomoverse") }), el("button", { class: "nv-btn", type: "button", text: t("声音与 AI 向导设置", "Sound & AI guide settings"), onclick: NV.settings })])
+  ]));
+
+  /* ================= 探测器几何 ================= */
+  function buildDet(strs, nPer) {
+    var doms = [], sOf = [];
+    strs.forEach(function (s, si) { for (var k = 0; k < nPer; k++) { doms.push([s.x, s.y, 500 - k * 1000 / (nPer - 1)]); sOf.push(si); } });
+    return { strs: strs, doms: doms, sOf: sOf, nPer: nPer };
+  }
+  var GRID1 = M.hexGrid(5, M.SPACING);                       // 第 1 关:IceCube 间距 125 m,最多 86 串
+  var DET2 = buildDet(M.hexGrid(3, 160), 15);                 // 第 2、3 关:37 串 × 15(示意)
+
+  /* ================= 视图状态(两个渲染器共用) ================= */
+  var V = { yaw: -0.6, pitch: 0.32, det: DET2, lit: null, tNow: 0, tMax: 1, track: null, guess: null, fit: null, flashes: [], stream: false, spin: !RM };
+  function hue(t) { return 270 * Math.max(0, Math.min(1, t)); }
+
+  /* ---- 2D 渲染器(无 WebGL 时,仍可拖动旋转) ---- */
+  function R2D(cv) {
+    var c = cv.getContext("2d"), w = 0, h = 0, dpr = 1;
+    function size() { var r = cv.getBoundingClientRect(); dpr = Math.min(2, W.devicePixelRatio || 1); w = r.width; h = r.height; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    function P(x, y, z) {
+      var cy = Math.cos(V.yaw), sy = Math.sin(V.yaw), cp = Math.cos(V.pitch), sp = Math.sin(V.pitch);
+      var x1 = x * cy - y * sy, y1 = x * sy + y * cy, dep = y1 * cp + z * sp, zz = z * cp - y1 * sp;
+      var k = Math.min(w, h) / 1650, f = 1 / (1 + dep / 4200);
+      return [w / 2 + x1 * k * f, h / 2 - zz * k * f, dep, f];
+    }
+    function line(a, b, col, lw) { var p = P(a[0], a[1], a[2]), q = P(b[0], b[1], b[2]); c.strokeStyle = col; c.lineWidth = lw; c.beginPath(); c.moveTo(p[0], p[1]); c.lineTo(q[0], q[1]); c.stroke(); }
+    function arrow(a, b, col, lw) {
+      line(a, b, col, lw); var p = P(a[0], a[1], a[2]), q = P(b[0], b[1], b[2]), an = Math.atan2(q[1] - p[1], q[0] - p[0]);
+      c.fillStyle = col; c.beginPath(); c.moveTo(q[0], q[1]); c.lineTo(q[0] - 12 * Math.cos(an - 0.4), q[1] - 12 * Math.sin(an - 0.4)); c.lineTo(q[0] - 12 * Math.cos(an + 0.4), q[1] - 12 * Math.sin(an + 0.4)); c.closePath(); c.fill();
+    }
+    return {
+      size: size,
+      draw: function () {
+        c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
+        var d = V.det, half = 520 + (d === DET2 ? 0 : 140), z0 = 500, z1 = -500;
+        // 冰块边框
+        var B = [[-half, -half], [half, -half], [half, half], [-half, half]];
+        for (var i = 0; i < 4; i++) { var a = B[i], b = B[(i + 1) % 4]; line([a[0], a[1], z0 + 60], [b[0], b[1], z0 + 60], "rgba(165,243,252,.25)", 1); line([a[0], a[1], z1 - 60], [b[0], b[1], z1 - 60], "rgba(165,243,252,.14)", 1); line([a[0], a[1], z0 + 60], [a[0], a[1], z1 - 60], "rgba(165,243,252,.12)", 1); }
+        d.strs.forEach(function (s) { line([s.x, s.y, z0 + 60], [s.x, s.y, z1], "rgba(148,163,184,.28)", 1); });
+        var order = d.doms.map(function (p, i) { return [P(p[0], p[1], p[2]), i]; }).sort(function (a, b) { return b[0][2] - a[0][2]; });
+        order.forEach(function (o) {
+          var p = o[0], i = o[1], L = V.lit && V.lit[i];
+          if (L && L.t <= V.tNow) {
+            var r = (3 + 9 * L.q) * p[3]; c.fillStyle = "hsl(" + hue(L.t / V.tMax) + ",95%,60%)"; c.shadowColor = c.fillStyle; c.shadowBlur = 10;
+            c.beginPath(); c.arc(p[0], p[1], r, 0, 6.283); c.fill(); c.shadowBlur = 0;
+          } else { c.fillStyle = "rgba(186,198,224,.42)"; c.beginPath(); c.arc(p[0], p[1], 1.6 * p[3], 0, 6.283); c.fill(); }
+        });
+        if (V.track) { var T = V.track; line([T.p[0] - T.d[0] * 1400, T.p[1] - T.d[1] * 1400, T.p[2] - T.d[2] * 1400], [T.p[0] + T.d[0] * 1400, T.p[1] + T.d[1] * 1400, T.p[2] + T.d[2] * 1400], "rgba(103,232,249,.85)", 2.5);
+          arrow([T.p[0] + T.d[0] * 300, T.p[1] + T.d[1] * 300, T.p[2] + T.d[2] * 300], [T.p[0] + T.d[0] * 650, T.p[1] + T.d[1] * 650, T.p[2] + T.d[2] * 650], "#67e8f9", 2.5); }
+        if (V.fit) { var F = V.fit; arrow([F.c[0] - F.v[0] * 500, F.c[1] - F.v[1] * 500, F.c[2] - F.v[2] * 500], [F.c[0] + F.v[0] * 500, F.c[1] + F.v[1] * 500, F.c[2] + F.v[2] * 500], "rgba(244,114,182,.9)", 2); }
+        if (V.guess) { var g = V.guess; arrow([g[0] * 900, g[1] * 900, g[2] * 900], [g[0] * 120, g[1] * 120, g[2] * 120], "#fbbf24", 3); }
+        var now = performance.now();
+        V.flashes.forEach(function (f) { var a = (now - f.t0) / 900; if (a < 0 || a > 1) return; var p = P(f.p[0], f.p[1], f.p[2]); c.strokeStyle = "rgba(125,211,252," + (1 - a) + ")"; c.lineWidth = 2; c.beginPath(); c.arc(p[0], p[1], 4 + 26 * a, 0, 6.283); c.stroke(); c.fillStyle = "rgba(186,230,253," + (1 - a) + ")"; c.beginPath(); c.arc(p[0], p[1], 3, 0, 6.283); c.fill(); });
+        // 「上 / 下」提示
+        var up = P(-half, -half, z0 + 160); c.fillStyle = "rgba(226,232,240,.7)"; c.font = "12px system-ui"; c.fillText(t("↑ 冰面(深 1450 m 处为顶)", "↑ Ice surface (top of array at 1,450 m depth)"), Math.max(6, up[0] - 20), Math.max(40, up[1]));
+      }
+    };
+  }
+
+  /* ---- 3D 渲染器(Three.js,本地 vendor) ---- */
+  function R3D(T, cv) {
+    var rd = new T.WebGLRenderer({ canvas: cv, antialias: true, alpha: true, powerPreference: "low-power" });
+    rd.setPixelRatio(Math.min(2, W.devicePixelRatio || 1));
+    var sc = new T.Scene(), cam = new T.PerspectiveCamera(45, 1, 0.1, 200);
+    sc.add(new T.AmbientLight(0x8fa8d8, 0.9)); var dl = new T.DirectionalLight(0xffffff, 0.8); dl.position.set(5, 10, 6); sc.add(dl);
+    var S = 0.01;                                    // 1 单位 = 100 m;three 的 Y 轴向上
+    function v3(p) { return new T.Vector3(p[0] * S, p[2] * S, -p[1] * S); }
+    var grp = new T.Group(); sc.add(grp);
+    var box = null, strL = null, inst = null, curDet = null, col = new T.Color(), m4 = new T.Matrix4(), q0 = new T.Quaternion(), sv = new T.Vector3();
+    var trk = null, fitA = null, gA = null, flashG = new T.Group(); sc.add(flashG);
+    var fm = []; for (var i = 0; i < 24; i++) { var s = new T.Mesh(new T.SphereGeometry(0.5, 16, 12), new T.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0, depthWrite: false })); s.visible = false; flashG.add(s); fm.push(s); }
+    // 冰面
+    var surf = new T.Mesh(new T.PlaneGeometry(16, 16), new T.MeshBasicMaterial({ color: 0xcfe8ff, transparent: true, opacity: 0.05, side: T.DoubleSide, depthWrite: false }));
+    surf.rotation.x = -Math.PI / 2; surf.position.y = 6.2; sc.add(surf);
+    function setDet(d) {
+      if (curDet === d) return; curDet = d;
+      [box, strL, inst].forEach(function (o) { if (o) { grp.remove(o); o.geometry.dispose(); } });
+      var half = (520 + (d === DET2 ? 0 : 140)) * S * 2;
+      box = new T.LineSegments(new T.EdgesGeometry(new T.BoxGeometry(half, 11.2, half)), new T.LineBasicMaterial({ color: 0xa5f3fc, transparent: true, opacity: 0.22 })); grp.add(box);
+      var pts = []; d.strs.forEach(function (s) { pts.push(v3([s.x, s.y, 560]), v3([s.x, s.y, -500])); });
+      strL = new T.LineSegments(new T.BufferGeometry().setFromPoints(pts), new T.LineBasicMaterial({ color: 0x94a3b8, transparent: true, opacity: 0.3 })); grp.add(strL);
+      inst = new T.InstancedMesh(new T.SphereGeometry(0.11, 10, 8), new T.MeshBasicMaterial({ color: 0xffffff }), Math.max(1, d.doms.length));
+      grp.add(inst);
+    }
+    function arrowObj(a, b, color, rad) {
+      var A = v3(a), B = v3(b), dir = B.clone().sub(A), L = dir.length(); dir.normalize();
+      var g = new T.Group(), mat = new T.MeshBasicMaterial({ color: color });
+      var shaft = new T.Mesh(new T.CylinderGeometry(rad, rad, L * 0.86, 10), mat); shaft.position.y = L * 0.43; g.add(shaft);
+      var head = new T.Mesh(new T.ConeGeometry(rad * 3, L * 0.14, 14), mat); head.position.y = L * 0.93; g.add(head);
+      g.position.copy(A); g.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), dir); return g;
+    }
+    function swap(old, nu) { if (old) { sc.remove(old); old.traverse(function (o) { if (o.geometry) o.geometry.dispose(); }); } if (nu) sc.add(nu); return nu; }
+    var lastTrack = null, lastFit = null, lastGuess = null, w = 0, h = 0;
+    return {
+      size: function () { var r = cv.getBoundingClientRect(); w = r.width; h = r.height; rd.setSize(w, h, false); cam.aspect = w / Math.max(1, h); cam.updateProjectionMatrix(); },
+      draw: function () {
+        var d = V.det; setDet(d);
+        for (var i = 0; i < d.doms.length; i++) {
+          var L = V.lit && V.lit[i], on = L && L.t <= V.tNow, k = on ? 1 + 1.6 * L.q : 0.55;
+          m4.compose(v3(d.doms[i]), q0, sv.set(k, k, k)); inst.setMatrixAt(i, m4);
+          if (on) col.setHSL(hue(L.t / V.tMax) / 360, 0.95, 0.58); else col.setRGB(0.42, 0.47, 0.6);
+          inst.setColorAt(i, col);
+        }
+        inst.instanceMatrix.needsUpdate = true; if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+        if (V.track !== lastTrack) { lastTrack = V.track; var Tk = V.track;
+          trk = swap(trk, Tk ? arrowObj([Tk.p[0] - Tk.d[0] * 1300, Tk.p[1] - Tk.d[1] * 1300, Tk.p[2] - Tk.d[2] * 1300], [Tk.p[0] + Tk.d[0] * 1300, Tk.p[1] + Tk.d[1] * 1300, Tk.p[2] + Tk.d[2] * 1300], 0x67e8f9, 0.05) : null); }
+        if (V.fit !== lastFit) { lastFit = V.fit; var F = V.fit;
+          fitA = swap(fitA, F ? arrowObj([F.c[0] - F.v[0] * 500, F.c[1] - F.v[1] * 500, F.c[2] - F.v[2] * 500], [F.c[0] + F.v[0] * 500, F.c[1] + F.v[1] * 500, F.c[2] + F.v[2] * 500], 0xf472b6, 0.04) : null); }
+        var gk = V.guess ? V.guess.join(",") : "";
+        if (gk !== lastGuess) { lastGuess = gk; var g = V.guess; gA = swap(gA, g ? arrowObj([g[0] * 900, g[1] * 900, g[2] * 900], [g[0] * 120, g[1] * 120, g[2] * 120], 0xfbbf24, 0.06) : null); }
+        var now = performance.now();
+        fm.forEach(function (s, j) { var f = V.flashes[V.flashes.length - 1 - j]; if (!f) { s.visible = false; return; } var a = (now - f.t0) / 900; if (a < 0 || a > 1) { s.visible = false; return; }
+          s.visible = true; s.position.copy(v3(f.p)); s.scale.setScalar(0.2 + 2.2 * a); s.material.opacity = 0.8 * (1 - a); });
+        var R = 21, cp = Math.cos(V.pitch);
+        cam.position.set(R * cp * Math.sin(-V.yaw), R * Math.sin(V.pitch), R * cp * Math.cos(-V.yaw)); cam.lookAt(0, 0, 0);
+        rd.render(sc, cam);
+      }
+    };
+  }
+
+  /* ---- 渲染循环、拖动旋转 ---- */
+  var cv2 = el("canvas", { "aria-hidden": "true" }); stage.insertBefore(cv2, stage.firstChild);
+  var R = R2D(cv2), mode = "2d";
+  hudR.textContent = "2D";
+  if (NV.gl3d.ok) {
+    NV.gl3d.load().then(function (T) {
+      var cv3 = el("canvas", { "aria-hidden": "true" }); stage.insertBefore(cv3, stage.firstChild);
+      try { var R3 = R3D(T, cv3); R3.size(); R = R3; mode = "3d"; cv2.remove(); hudR.textContent = "3D"; dirty = true; }
+      catch (e) { cv3.remove(); hudR.textContent = "2D · " + t("3D 失败", "3D failed"); }
+    }).catch(function () { hudR.textContent = "2D" + (EN ? "" : " · " + NV.gl3d.reason); });
+  } else hudR.textContent = "2D" + (EN ? "" : " · " + NV.gl3d.reason);
+  R.size();
+  W.addEventListener("resize", function () { R.size(); dirty = true; });
+  var drag = null, dirty = true;
+  stage.addEventListener("pointerdown", function (e) { drag = [e.clientX, e.clientY, V.yaw, V.pitch]; V.spin = false; stage.setPointerCapture(e.pointerId); });
+  stage.addEventListener("pointermove", function (e) { if (!drag) return; V.yaw = drag[2] + (e.clientX - drag[0]) * 0.008; V.pitch = Math.max(-1.2, Math.min(1.35, drag[3] + (e.clientY - drag[1]) * 0.006)); dirty = true; });
+  stage.addEventListener("pointerup", function () { drag = null; });
+  stage.addEventListener("pointercancel", function () { drag = null; });
+  var play = null;    // 回放:{t0, dur}
+  function frame() {
+    var now = performance.now();
+    if (V.spin && !D.hidden) { V.yaw += 0.0016; dirty = true; }
+    if (play) { var a = (now - play.t0) / play.dur; V.tNow = V.tMax * Math.min(1, a); dirty = true; if (a >= 1) { play = null; if (play === null && onPlayEnd) { var f = onPlayEnd; onPlayEnd = null; f(); } } }
+    if (V.flashes.length) { V.flashes = V.flashes.filter(function (f) { return now - f.t0 < 950; }); dirty = true; }
+    if (dirty && !D.hidden) { R.draw(); dirty = false; }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  var onPlayEnd = null;
+
+  /* ---- 回放光 + 「声音即规律」:按到达先后发声,浅处高音、深处低音 ---- */
+  var sndTimers = [];
+  function replay(hs, done) {
+    sndTimers.forEach(clearTimeout); sndTimers = [];
+    V.tMax = Math.max(1, hs.length ? hs[hs.length - 1].t : 1);
+    if (RM) { V.tNow = V.tMax; dirty = true; if (done) done(); }
+    else { V.tNow = 0; play = { t0: performance.now(), dur: 2600 }; onPlayEnd = done || null; }
+    if (SND.on) {
+      var step = Math.max(1, Math.ceil(hs.length / 36));
+      hs.forEach(function (h, j) {
+        if (j % step) return;
+        var z = V.det.doms[h.i][2], f = 220 * Math.pow(2, (z + 500) / 1000 * 2);   // 深 2450 m → 220 Hz,深 1450 m → 880 Hz
+        sndTimers.push(setTimeout(function () { var v = SND.voice("sine", 3000); v.freq(f); v.gain(0.10 + 0.12 * h.q); setTimeout(function () { v.stop(); }, 110); }, (RM ? j / hs.length * 2000 : h.t / V.tMax * 2600)));
+      });
+    }
+  }
+  function domHits(ev) { var hs = M.hits(V.det.doms, ev.p, ev.d, ev.R), lit = []; hs.forEach(function (h) { lit[h.i] = h; }); return { hs: hs, lit: lit }; }
+  function strNum(hs) { var s = {}; hs.forEach(function (h) { s[V.det.sOf[h.i]] = 1; }); return Object.keys(s).length; }
+  function goodEvent(rnd, up) { for (var k = 0; k < 60; k++) { var ev = M.event(rnd, up, 170), hh = domHits(ev); if (hh.hs.length >= 14 && strNum(hh.hs) >= 3) { ev.hs = hh.hs; ev.lit = hh.lit; return ev; } } return null; }
+
+  /* ---- 星与通用小部件 ---- */
+  function prog() { return NV.store.task(TID, NL); }
+  function renderTabs() { var p = prog(); tabBtns.forEach(function (b, i) { b.querySelector("small").textContent = LV[i][1] + (p[i] ? " · " + NV.starsTxt(p[i]) : ""); }); }
+  function award(lv, s) { if (NV.store.star(TID, NL, lv, s)) { SND.play(s >= 3 ? "star" : "unlock"); } renderTabs(); }
+  function stars(n) { return "★★★".slice(0, n) + "☆☆☆".slice(0, 3 - n); }
+  function predict(q, opts, right, why, after) {
+    var box = el("div", { class: "ic-opts", role: "group", "aria-label": t("先猜一猜", "Predict first") }), res = el("div");
+    opts.forEach(function (o, i) {
+      box.appendChild(el("button", { type: "button", class: "nv-btn", text: o, onclick: function () {
+        Array.prototype.forEach.call(box.children, function (b, j) { b.disabled = true; if (j === right) b.classList.add("ok"); else if (j === i) b.classList.add("no"); });
+        res.appendChild(el("div", { class: "ic-res" + (i === right ? "" : " warn"), text: (i === right ? t("猜对了。", "Correct. ") : t("再想想:", "Think again: ")) + why }));
+        SND.play(i === right ? "select" : "close"); if (after) after(i === right);
+      } }));
+    });
+    return el("div", {}, [el("p", { class: "ic-q", text: t("先猜一猜 · ", "Predict first · ") + q }), box, res]);
+  }
+  function slider(label, min, max, step, val, fmt, on) {
+    var out = el("output", { text: fmt(val) }), inp = el("input", { type: "range", min: min, max: max, step: step, value: val, "aria-label": label });
+    inp.addEventListener("input", function () { out.textContent = fmt(+inp.value); on(+inp.value); });
+    return { box: el("div", { class: "ic-sl" }, [el("label", {}, [el("span", { text: label }), out]), inp]), inp: inp, out: out };
+  }
+  function fmtN(x) { return x >= 1e4 ? Math.round(x).toLocaleString("zh-CN") : x >= 100 ? Math.round(x) + "" : x >= 10 ? x.toFixed(1) : x.toFixed(2); }
+  function fmtWait(days) {
+    if (!isFinite(days)) return t("等不到", "never");
+    var s = days * 86400;
+    if (EN) { if (s < 120) return "about " + Math.round(s) + " s"; if (s < 7200) return "about " + Math.round(s / 60) + " min"; if (days < 2) return "about " + (s / 3600).toFixed(1) + " h"; if (days < 730) return "about " + Math.round(days) + " days";
+      var yy = days / 365.25; return "about " + (yy >= 1e4 ? Math.round(yy).toLocaleString("en-US") : Math.round(yy)) + " years"; }
+    if (s < 120) return "约 " + Math.round(s) + " 秒";
+    if (s < 7200) return "约 " + Math.round(s / 60) + " 分钟";
+    if (days < 2) return "约 " + (s / 3600).toFixed(1) + " 小时";
+    if (days < 730) return "约 " + Math.round(days) + " 天";
+    var y = days / 365.25; return y >= 1e4 ? "约 " + (y / 1e4).toFixed(y >= 1e5 ? 0 : 1) + " 万年" : "约 " + Math.round(y) + " 年";
+  }
+
+  /* ================= 第 1 关:布放传感器串 ================= */
+  function L1() {
+    V.det = DET2; V.lit = null; V.track = null; V.guess = null; V.fit = null; legend.hidden = true;
+    var on = []; GRID1.forEach(function (_, i) { on[i] = i < 7; });       // 先给 7 串(中心一圈)
+    function strs() { return GRID1.filter(function (_, i) { return on[i]; }); }
+    function sync() { V.det = buildDet(strs().length ? strs() : [{ x: 0, y: 0 }], 12); if (!strs().length) V.det.doms = []; dirty = true; }
+    sync();
+    var board = el("canvas", { class: "ic-board", role: "application", "aria-label": t("冰面俯视图:点击六边形格点放置或拔掉一根传感器串,最多 86 根", "Top view of the ice: tap a grid point to add or remove a sensor string, up to 86") });
+    var rN = el("b"), rV = el("b"), rR = el("b"), rW = el("b"), cmpBox = el("table", { class: "ic-cmp" }), res = el("div");
+    function kg() { return M.mass(M.volume(strs().length)); }
+    function upd() {
+      var n = strs().length, k = kg(), r = M.ratePerDay(k);
+      rN.textContent = n + " / 86"; rV.textContent = (M.volume(n) / 1e9).toFixed(2) + " km³"; rR.textContent = t("约 ", "about ") + fmtN(r); rW.textContent = n ? fmtWait(1 / r) : "—";
+      hudL.textContent = t("冰立方 · ", "IceCube · ") + n + t(" 串 · 每天约 ", " strings · about ") + fmtN(r) + t(" 个中微子撞上原子核", " neutrino interactions a day");
+      cmpBox.innerHTML = "";
+      [[t("一个人大小(70 kg)", "A person (70 kg)"), 70], [t("标准泳池的水(2500 吨)", "Water in a standard pool (2,500 t)"), 2.5e6], [t("你布放的冰(", "Your ice (") + (k / 1e12).toFixed(2) + t(" 万亿 kg)", " trillion kg)"), k]].forEach(function (x) {
+        cmpBox.appendChild(el("tr", {}, [el("td", { text: x[0] }), el("td", { text: x[1] ? t("等一次 ", "one every ") + fmtWait(M.waitDays(x[1])) : "—" })]));
+      });
+      drawBoard();
+    }
+    function drawBoard() {
+      var r = board.getBoundingClientRect(), dpr = Math.min(2, W.devicePixelRatio || 1); if (!r.width) return;
+      board.width = Math.round(r.width * dpr); board.height = Math.round(r.height * dpr);
+      var c = board.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, r.width, r.height);
+      var k = Math.min(r.width, r.height) / 1500;
+      GRID1.forEach(function (g, i) {
+        var x = r.width / 2 + g.x * k, y = r.height / 2 - g.y * k;
+        c.beginPath(); c.arc(x, y, on[i] ? 9 : 6, 0, 6.283);
+        c.fillStyle = on[i] ? "#67e8f9" : "rgba(148,163,184,.25)"; c.fill();
+        if (on[i]) { c.strokeStyle = "rgba(165,243,252,.6)"; c.lineWidth = 2; c.stroke(); }
+      });
+      c.fillStyle = "rgba(226,232,240,.6)"; c.font = "11px system-ui"; c.fillText(t("间距 125 m · 点格点放/拔", "125 m spacing · tap to add/remove"), 8, r.height - 8);
+    }
+    board.addEventListener("click", function (e) {
+      var r = board.getBoundingClientRect(), k = Math.min(r.width, r.height) / 1500, mx = e.clientX - r.left, my = e.clientY - r.top, best = -1, bd = 1e9;
+      GRID1.forEach(function (g, i) { var dx = r.width / 2 + g.x * k - mx, dy = r.height / 2 - g.y * k - my, dd = dx * dx + dy * dy; if (dd < bd) { bd = dd; best = i; } });
+      if (best < 0 || bd > 400) return;
+      if (!on[best] && strs().length >= 86) { live.textContent = t("最多 86 根,和真实的 IceCube 一样。", "At most 86, just like the real IceCube."); return; }
+      on[best] = !on[best]; SND.play("tick"); sync(); upd();
+    });
+    function fill(n) { GRID1.forEach(function (_, i) { on[i] = i < n; }); sync(); upd(); }
+    var runBtn = el("button", { class: "nv-btn pri", type: "button", text: t("▶ 观测 1 天", "▶ Observe for 1 day"), onclick: function () {
+      var r = M.ratePerDay(kg()), n = poisson(r), shown = Math.min(n, 40), list = strs();
+      V.flashes = [];
+      for (var i = 0; i < shown; i++) { var s = list[Math.floor(Math.random() * list.length)] || { x: 0, y: 0 }; V.flashes.push({ p: [s.x + (Math.random() - 0.5) * 120, s.y + (Math.random() - 0.5) * 120, (Math.random() - 0.5) * 900], t0: performance.now() + (RM ? 0 : i * 5200 / Math.max(1, shown)) }); }
+      if (RM) V.flashes = V.flashes.slice(0, 12);
+      SND.play("whoosh");
+      var st = r >= 400 ? 3 : r >= 200 ? 2 : r >= 100 ? 1 : 0;
+      res.innerHTML = "";
+      res.appendChild(el("div", { class: "ic-res" + (st ? "" : " warn") }, [
+        el("div", { class: "st", text: stars(st) }),
+        el("p", { style: "margin:4px 0", text: t("这一天里撞出了 ", "This day produced ") + n + t(" 道蓝光(平均每天约 ", " blue flashes (about ") + fmtN(r) + t(" 道)。同一时间穿过这块冰的中微子数以万亿计,几乎全都悄悄溜走了。", " a day on average). Trillions of neutrinos passed through the ice in the same time, and almost all slipped away unseen.") }),
+        el("p", { style: "margin:4px 0", text: st >= 3 ? t("铺满 86 串、约 1 立方公里:这就是 IceCube 的尺度。官方数字是每天约 275 个大气中微子,和这个数量级一致。", "All 86 strings, about one cubic kilometre: that is the scale of IceCube. The official figure is about 275 atmospheric neutrinos a day, the same order of magnitude.") : st ? t("目标:每天 ≥ 200 得两星,≥ 400(接近铺满)得三星。规律很简单:冰的质量翻倍,等到的次数也翻倍。", "Goal: ≥ 200 a day for two stars, ≥ 400 (nearly full) for three. The rule is simple: double the mass of ice and you double the catch.") : t("每天不到 100 个。再多布放一些串:冰越多,撞上原子核的机会越多。", "Fewer than 100 a day. Deploy more strings: more ice means more chances to hit a nucleus.") })
+      ]));
+      if (st) award(0, st);
+      live.textContent = t("观测 1 天:", "Observed 1 day: ") + n + t(" 次相互作用。", " interactions.");
+    } });
+    panel.innerHTML = "";
+    panel.appendChild(el("h2", { text: t("第 1 关 · 冰要多大才等得到?", "Level 1 · How much ice does it take?") }));
+    panel.appendChild(el("p", { text: t("中微子几乎不和任何东西作用。按 IceCube 的说法:一个人大小的探测器,在它关注的能区约要等 10 万年才见到一次。把等待时间按冰的质量反过来算,你需要多少冰?", "Neutrinos barely interact with anything. IceCube says a person-sized detector would wait about 100,000 years to see one in its energy range. Scale the wait down by the mass of ice: how much ice do you need?") }));
+    panel.appendChild(predict(t("想让每天至少等到 100 个中微子撞上原子核,冰要多大?", "To catch at least 100 neutrino interactions a day, how big must the ice be?"), [t("一个标准游泳池", "A standard swimming pool"), t("一座体育馆那么大", "As big as a sports arena"), t("约 0.3 立方公里,像一座小冰山", "About 0.3 cubic kilometres, like a small iceberg")], 2,
+      t("按质量反比:100 个/天 需要约 2.6 亿吨冰,约 0.28 立方公里。一个泳池要等约 3 年才有一次。", "Scaling by mass: 100 a day needs about 260 million tonnes of ice, about 0.28 km³. A pool would wait about 3 years for one."), function () { boardBox.hidden = false; drawBoard(); }));
+    var boardBox = el("div", { hidden: true }, [
+      el("p", { class: "ic-q", text: t("在冰面上布放传感器串(每根管 125 m × 125 m 的一片、深 1 km 的冰柱)", "Deploy sensor strings on the ice (each covers a 125 m hexagonal cell, a 1 km tall column of ice)") }), board,
+      el("div", { class: "nv-row", style: "margin:6px 0" }, [el("button", { class: "nv-btn sm", type: "button", text: t("清空", "Clear"), onclick: function () { fill(0); } }),
+        el("button", { class: "nv-btn sm", type: "button", text: t("37 串", "37 strings"), onclick: function () { fill(37); } }), el("button", { class: "nv-btn sm", type: "button", text: t("铺满 86 串", "Fill all 86"), onclick: function () { fill(86); } })]),
+      el("div", { class: "ic-read" }, [el("div", {}, [t("传感器串", "Strings"), rN]), el("div", {}, [t("仪表冰体积", "Instrumented volume"), rV]), el("div", {}, [t("每天相互作用", "Interactions per day"), rR]), el("div", {}, [t("平均等一次", "Average wait"), rW])]),
+      cmpBox, runBtn, res,
+      el("p", { class: "ic-note", text: t("简化模型:每串只画 12 个传感器;事件率按质量正比换算,只表示数量级。", "Simplified model: each string shows only 12 sensors; event rate scales with mass, order of magnitude only.") })
+    ]);
+    panel.appendChild(boardBox);
+    upd();
+  }
+  function poisson(l) { if (l > 60) return Math.max(0, Math.round(l + Math.sqrt(l) * gauss())); var L = Math.exp(-l), k = 0, p = 1; do { k++; p *= Math.random(); } while (p > L); return k - 1; }
+  function gauss() { return Math.sqrt(-2 * Math.log(Math.random() || 1e-9)) * Math.cos(6.2832 * Math.random()); }
+
+  /* ================= 第 2 关:听光定向 ================= */
+  var rnd2 = M.rng((Date.now() & 0xffff) + 11);
+  function L2() {
+    V.det = DET2; V.track = null; V.fit = null; legend.hidden = false;
+    var ev = null, az = 0, elv = 0, done = false;
+    var res = el("div"), slA = slider(t("方位角(绕竖直轴)", "Azimuth (around the vertical)"), 0, 359, 1, 0, function (v) { return v + "°"; }, function (v) { az = v; setG(); }),
+      slE = slider(t("仰角(+ 从天上来 / − 从地下来)", "Elevation (+ from the sky / − from below)"), -90, 90, 1, 0, function (v) { return (v > 0 ? "+" : "") + v + "°"; }, function (v) { elv = v; setG(); });
+    function setG() { V.guess = M.dir(az, elv); dirty = true; }
+    function next() {
+      ev = goodEvent(rnd2, null); done = false; V.lit = ev.lit; V.track = null; V.fit = null; res.innerHTML = ""; setG();
+      hudL.textContent = t("一个事件 · ", "One event · ") + ev.hs.length + t(" 个传感器被照亮", " sensors lit"); replay(ev.hs); reveal.disabled = false;
+    }
+    var reveal = el("button", { class: "nv-btn pri", type: "button", text: t("揭晓真实来向", "Reveal the true direction"), onclick: function () {
+      if (done || !ev) return; done = true; reveal.disabled = true;
+      var err = M.angle(V.guess, ev.src), lf = M.lineFit(V.det.doms, ev.hs), lfErr = lf ? M.angle(lf.dir, ev.d) : NaN, st = M.starsFor(err);
+      V.track = { p: ev.p, d: ev.d }; V.fit = lf ? { c: lf.center, v: lf.dir } : null; dirty = true;
+      var s = M.azel(ev.src);
+      res.innerHTML = "";
+      res.appendChild(el("div", { class: "ic-res" + (st ? "" : " warn") }, [
+        el("div", { class: "st", text: stars(st) }),
+        el("p", { style: "margin:4px 0", text: t("真实来向:方位 ", "True direction: azimuth ") + Math.round(s.az) + t("°、仰角 ", "°, elevation ") + (s.el > 0 ? "+" : "") + Math.round(s.el) + "°(" + (s.el < 0 ? t("从地下穿过地球而来", "came up through the Earth") : t("从天上来", "came from the sky")) + t(")。你的误差 ", "). Your error: ") + err.toFixed(0) + "°。" }),
+        el("p", { style: "margin:4px 0", text: t("粉色箭头是计算机的「线性拟合」:把每个传感器的位置对时刻做最小二乘,误差 ", "The pink arrow is the computer’s “line fit”: a least-squares fit of sensor position against time, error ") + (isFinite(lfErr) ? lfErr.toFixed(0) + "°" : "—") + t("。拟合出的速度约 ", ". The fitted speed is about ") + (lf ? (lf.speed).toFixed(2) : "—") + t(" m/ns,接近光速 0.30 m/ns:说明这确实是一个以光速飞过的粒子。", " m/ns, close to the speed of light, 0.30 m/ns: this really was a particle flying through at light speed.") }),
+        el("p", { class: "ic-note", text: t("三星 ≤ 15°,两星 ≤ 30°,一星 ≤ 50°。", "Three stars ≤ 15°, two ≤ 30°, one ≤ 50°.") })
+      ]));
+      if (st) award(1, st);
+      live.textContent = t("误差 ", "Error ") + err.toFixed(0) + t(" 度,", "°, ") + st + t(" 颗星。", " stars.");
+    } });
+    panel.innerHTML = "";
+    panel.appendChild(el("h2", { text: t("第 2 关 · 从光到达的先后,反推它从哪来", "Level 2 · From the order the light arrives, work out where it came from") }));
+    panel.appendChild(el("p", { text: t("一个中微子在冰里撞出了 μ 子,μ 子以接近光速直线飞过,沿约 ", "A neutrino has made a muon in the ice. The muon flies straight through at nearly light speed, emitting blue light on a cone of about ") + cth + t("° 的锥面发出蓝光。传感器按光到达的先后着色:红色最早,紫色最晚。", "°. Sensors are coloured by arrival time: red earliest, violet latest.") }));
+    panel.appendChild(el("p", { class: "ic-q", text: t("转动视角,找到「先亮的一端」:粒子是从那一端飞进来的。调黄色箭头,让它从中微子来的方向指进来。", "Rotate the view and find the end that lit first: the particle came in from there. Point the yellow arrow in from the direction the neutrino came from.") }));
+    panel.appendChild(el("div", { class: "nv-row" }, [
+      el("button", { class: "nv-btn", type: "button", text: t("▶ 再放一遍光", "▶ Replay the light"), onclick: function () { if (ev) replay(ev.hs); } }),
+      el("button", { class: "nv-btn", type: "button", text: t("换一个事件", "New event"), onclick: next })
+    ]));
+    panel.appendChild(el("p", { class: "ic-note", text: SND.on ? t("声音已开:每个传感器亮起时响一声,浅处高音、深处低音。音调越来越高 = 粒子从下往上飞。", "Sound on: each sensor beeps as it lights, high when shallow, low when deep. Rising pitch = the particle is flying upward.") : t("打开右上角的声音,可以「听」光:浅处高音、深处低音,按到达先后依次响起。", "Turn on sound (top right) to “hear” the light: high when shallow, low when deep, in the order it arrives.") }));
+    panel.appendChild(slA.box); panel.appendChild(slE.box); panel.appendChild(reveal); panel.appendChild(res);
+    next();
+  }
+
+  /* ================= 第 3 关:穿过地球的信使 ================= */
+  var rnd3 = M.rng((Date.now() & 0xffff) + 97);
+  function L3() {
+    V.det = DET2; V.track = null; V.fit = null; V.guess = null; legend.hidden = false;
+    var earth = el("canvas", { class: "ic-earth", role: "img", "aria-label": t("地球剖面:IceCube 在南极。从头顶来的大多是宇宙线 μ 子;从地球另一侧穿过整个地球而来的,只有中微子。", "Cross-section of the Earth: IceCube is at the South Pole. Most particles from overhead are cosmic-ray muons; only neutrinos come through the whole Earth from the other side.") });
+    var res = el("div"), seq = [], idx = 0, right = 0, cur = null, wait = false, game = el("div", { hidden: true });
+    var cnt = el("p", { class: "ic-q" }), fb = el("div"), btnD, btnU;
+    function drawEarth(ev) {
+      var r = earth.getBoundingClientRect(), dpr = Math.min(2, W.devicePixelRatio || 1); if (!r.width) return;
+      earth.width = Math.round(r.width * dpr); earth.height = Math.round(r.height * dpr);
+      var c = earth.getContext("2d"); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, r.width, r.height);
+      var cx = r.width / 2, cy = r.height * 0.47, R0 = Math.min(r.width * 0.28, r.height * 0.3);
+      var gr = c.createRadialGradient(cx - R0 * 0.3, cy - R0 * 0.3, R0 * 0.1, cx, cy, R0); gr.addColorStop(0, "#3b82f6"); gr.addColorStop(1, "#1e3a8a");
+      c.fillStyle = gr; c.beginPath(); c.arc(cx, cy, R0, 0, 6.283); c.fill();
+      c.fillStyle = "#f8fafc"; c.beginPath(); c.arc(cx, cy + R0, 7, 0, 6.283); c.fill();
+      c.font = "12px system-ui"; c.fillStyle = "#e2e8f0"; c.fillText(t("南极 · IceCube", "South Pole · IceCube"), cx + 10, cy + R0 + 4); c.fillText(t("北半球", "Northern Hemisphere"), cx - 20, cy - R0 - 8);
+      c.fillStyle = "rgba(248,113,113,.95)"; c.fillText(t("宇宙线 μ 子(从天上来)", "Cosmic-ray muons (from the sky)"), 8, r.height - 10);
+      for (var i = -1; i <= 1; i++) { c.strokeStyle = "rgba(248,113,113,.8)"; c.lineWidth = 2; c.beginPath(); c.moveTo(cx + i * 22, r.height - 4); c.lineTo(cx + i * 6, cy + R0 + 12); c.stroke(); }
+      c.strokeStyle = "rgba(103,232,249,.9)"; c.setLineDash([6, 4]);
+      for (var j = -1; j <= 1; j++) { c.beginPath(); c.moveTo(cx + j * 40, 4); c.lineTo(cx + j * 3, cy + R0 - 4); c.stroke(); }
+      c.setLineDash([]); c.fillStyle = "#67e8f9"; c.fillText(t("中微子(穿过整个地球)", "Neutrinos (through the whole Earth)"), 8, 16);
+      if (ev) { var s = M.azel(ev.src), up = s.el < 0; c.fillStyle = up ? "#67e8f9" : "#f87171"; c.font = "600 13px system-ui"; c.textAlign = "right"; c.fillText(up ? t("↑ 这一个:穿过地球而来", "↑ This one: up through the Earth") : t("↓ 这一个:从天上来", "↓ This one: from the sky"), r.width - 8, 16); c.textAlign = "left"; }
+    }
+    function nextEv() {
+      if (idx >= seq.length) return finish();
+      cur = goodEvent(rnd3, seq[idx]); V.lit = cur.lit; V.track = null; dirty = true; wait = true; fb.innerHTML = "";
+      cnt.textContent = t("事件 ", "Event ") + (idx + 1) + " / " + seq.length + t(" · 答对 ", " · correct ") + right;
+      hudL.textContent = t("事件 ", "Event ") + (idx + 1) + t(" · 看红色(最早)在上还是在下", " · is red (earliest) at the top or the bottom?");
+      btnD.disabled = btnU.disabled = false; replay(cur.hs); drawEarth(null);
+    }
+    function answer(upGuess) {
+      if (!wait) return; wait = false; btnD.disabled = btnU.disabled = true;
+      var up = M.azel(cur.src).el < 0, ok = up === upGuess; if (ok) right++;
+      V.track = { p: cur.p, d: cur.d }; dirty = true; drawEarth(cur); SND.play(ok ? "select" : "close");
+      fb.innerHTML = ""; fb.appendChild(el("div", { class: "ic-res" + (ok ? "" : " warn"), text: (ok ? t("对。", "Right. ") : t("不对。", "Not quite. ")) + (up ? t("最早的光在下方,粒子自下而上:它穿过了整个地球,一定是中微子。", "The earliest light is at the bottom, so the particle went upward: it crossed the whole Earth, so it must be a neutrino.") : t("最早的光在上方,粒子自上而下:很可能只是宇宙线在大气里撞出的 μ 子。", "The earliest light is at the top, so the particle went downward: most likely just a muon made by a cosmic ray in the atmosphere.")) }));
+      cnt.textContent = t("事件 ", "Event ") + (idx + 1) + " / " + seq.length + t(" · 答对 ", " · correct ") + right;
+      idx++; setTimeout(nextEv, RM ? 1800 : 2300);
+    }
+    function finish() {
+      var st = right >= 8 ? 3 : right >= 7 ? 2 : right >= 5 ? 1 : 0;
+      game.hidden = true; res.innerHTML = "";
+      res.appendChild(el("div", { class: "ic-res" + (st ? "" : " warn") }, [
+        el("div", { class: "st", text: stars(st) }),
+        el("p", { style: "margin:4px 0", text: t("8 个里答对 ", "You got ") + right + t(" 个。IceCube 的诀窍:把整个地球当作过滤器。μ 子穿不透地球,只有中微子能从脚下上来,所以「自下而上」的径迹几乎都是中微子。", " of 8 right. IceCube’s trick: use the whole Earth as a filter. Muons can’t get through the Earth; only neutrinos come up from below, so upward-going tracks are almost all neutrinos.") }),
+        el("p", { style: "margin:4px 0", text: t("但能量极高的中微子也会被地球挡住。所以寻找最高能的宇宙中微子时,IceCube 反而要用外层传感器当「门卫」,挑出在冰里才突然出现的事件。2013 年,正是这样确认了来自太阳系以外的高能中微子。", "But the very highest-energy neutrinos are absorbed by the Earth too. So to find the most energetic cosmic neutrinos, IceCube uses its outer sensors as a “veto” and picks events that start inside the ice. That is how high-energy neutrinos from beyond the solar system were confirmed in 2013.") }),
+        el("button", { class: "nv-btn", type: "button", text: t("再来 8 个", "8 more"), onclick: start })
+      ]));
+      if (st) award(2, st);
+      live.textContent = t("答对 ", "Correct: ") + right + t(" 个,", ", ") + st + t(" 颗星。", " stars.");
+    }
+    function start() {
+      seq = [true, false, true, false, true, false, true, false].sort(function () { return rnd3() - 0.5; }); idx = 0; right = 0; res.innerHTML = ""; game.hidden = false; nextEv();
+    }
+    btnD = el("button", { class: "nv-btn", type: "button", text: t("↓ 从天上来", "↓ From the sky"), onclick: function () { answer(false); } });
+    btnU = el("button", { class: "nv-btn", type: "button", text: t("↑ 穿过地球来", "↑ Through the Earth"), onclick: function () { answer(true); } });
+    game.appendChild(cnt); game.appendChild(el("div", { class: "nv-row" }, [btnD, btnU, el("button", { class: "nv-btn sm", type: "button", text: t("▶ 再放一遍", "▶ Replay"), onclick: function () { if (cur) replay(cur.hs); } })])); game.appendChild(fb);
+    panel.innerHTML = "";
+    panel.appendChild(el("h2", { text: t("第 3 关 · 哪个方向来的,一定是中微子?", "Level 3 · Which direction must be a neutrino?") }));
+    panel.appendChild(el("p", { text: t("探测器每天被天上来的宇宙线 μ 子「淋」个不停,数量远超中微子。怎么从这场大雨里认出真正的中微子?", "All day the detector is showered with cosmic-ray muons from the sky, far outnumbering neutrinos. How do you pick out the real neutrinos from this downpour?") }));
+    panel.appendChild(earth);
+    panel.appendChild(predict(t("哪个方向来的粒子,一定是中微子?", "Particles from which direction must be neutrinos?"), [t("从头顶的天空来", "From the sky overhead"), t("从脚下、穿过整个地球而来", "From below, through the whole Earth"), t("两个方向都一样", "Both directions are the same")], 1,
+      t("整个地球就是一块厚厚的屏蔽层:μ 子穿不透,只有中微子能穿过来。", "The whole Earth is a thick shield: muons can’t get through; only neutrinos can."), function () { start(); }));
+    panel.appendChild(game); panel.appendChild(res);
+    panel.appendChild(el("p", { class: "ic-note", text: SND.on ? t("听:音调由低到高 = 先亮的在深处 = 自下而上。", "Listen: pitch rising = deep sensors first = upward-going.") : t("开声音后能听出方向:音调由低到高 = 自下而上。", "Turn on sound to hear the direction: rising pitch = upward-going.") }));
+    setTimeout(function () { drawEarth(null); }, 0);
+    V.lit = null; dirty = true; hudL.textContent = t("冰立方 · 37 串示意", "IceCube · 37-string sketch");
+  }
+
+  /* ================= 关卡切换与深链 ================= */
+  var LEVELS = [L1, L2, L3], curLv = 0;
+  function go(i) {
+    curLv = i; sndTimers.forEach(clearTimeout); play = null; onPlayEnd = null; V.flashes = [];
+    tabBtns.forEach(function (b, j) { b.setAttribute("aria-pressed", j === i ? "true" : "false"); });
+    LEVELS[i](); dirty = true;
+    try { history.replaceState(null, "", "#" + (i + 1)); } catch (e) {}
+  }
+  renderTabs();
+  var h = parseInt((location.hash || "").slice(1), 10);
+  go(h >= 1 && h <= 3 ? h - 1 : 0);
+  W.__ic = { V: V, go: go, M: M, mode: function () { return mode; } };   // 自测钩子
+})();
+</script>
+</body>
+</html>

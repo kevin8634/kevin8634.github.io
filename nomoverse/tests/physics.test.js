@@ -266,6 +266,36 @@ truthy("亚音速无马赫锥", P.machHalfAngle(100, 343) === null);
   check("1 L 汽油约 3.4×10⁷ J", P.GAS_J_PER_L, 3.404e7, 1e-3);
 })();
 
+/* ---- v0.9-α7 冰立方中微子特别展(core/icecube.js) ---- */
+(function () {
+  var I = require(path.join(__dirname, "..", "core", "icecube.js"));
+  check("切伦科夫角 arccos(1/1.32) ≈ 40.8°", I.cherenkovDeg(1.32), 40.75, 2e-3);
+  check("冰中光速 c/1.32 ≈ 0.227 m/ns", I.vLightIce(1.32), 0.22712, 1e-3);
+  check("tanθc = √(n²−1)", I.tanC(1.32), Math.tan(Math.acos(1 / 1.32)), 1e-12);
+  check("86 串 × 125 m 六边形网格 × 1 km ≈ 1.16 km³(约一立方公里)", I.volume(86) / 1e9, 1.1638, 1e-3);
+  check("人大小(70 kg)等一次 = 10 万年", I.waitDays(70) / 365.25, 1e5, 1e-12);
+  check("标准泳池 2500 t 水等一次 ≈ 2.8 年", I.waitDays(2.5e6) / 365.25, 2.8, 1e-9);
+  var r86 = I.ratePerDay(I.mass(I.volume(86)));
+  truthy("铺满 86 串每天约数百次(与官方「每天约 275 个大气中微子」同数量级)", r86 > 100 && r86 < 1000, "rate=" + r86.toFixed(0) + "/天");
+  truthy("事件率与冰质量成正比", Math.abs(I.ratePerDay(2e9) / I.ratePerDay(1e9) - 2) < 1e-12);
+  check("六边形网格半径 5 圈 = 91 个格点", I.hexGrid(5).length, 91, 0, 0);
+  check("方向往返 dir→azel→dir(方位 210°、仰角 −35°)", I.angle(I.dir(210, -35), I.dir(I.azel(I.dir(210, -35)).az, I.azel(I.dir(210, -35)).el)), 0, 0, 1e-6);
+  // 到达时刻:沿径迹正下方的模块(ρ=0)相隔 100 m,时差 = 100 m / c
+  var doms = [[0, 0, 0], [0, 0, 100]], h = I.hits(doms, [0, 0, -500], [0, 0, 1], 50);
+  check("同一径迹上相隔 100 m 的两个模块时差 = 100/c ≈ 333.6 ns", h[1].t - h[0].t, 100 / I.C, 1e-12);
+  // ρ = 100 m 的模块比径迹上同高度的模块晚 ρ·tanθ/c
+  var h2 = I.hits([[0, 0, 0], [100, 0, 0]], [0, 0, -500], [0, 0, 1], 200);
+  check("偏离径迹 100 m 的模块延迟 ρ·tanθ/c ≈ 287 ns", h2[1].t - h2[0].t, 100 * I.tanC() / I.C, 1e-12);
+  // 线性拟合在无散射模型下能恢复方向(多个随机事件误差 < 25°)
+  var g = I.hexGrid(3, 160), D = []; g.forEach(function (s) { for (var k = 0; k < 15; k++) D.push([s.x, s.y, 500 - k * 1000 / 14]); });
+  var rnd = I.rng(42), worst = 0, n = 0;
+  for (var i = 0; i < 40; i++) { var ev = I.event(rnd, null, 170), hs = I.hits(D, ev.p, ev.d, ev.R); if (hs.length < 14) continue; n++; var f = I.lineFit(D, hs); worst = Math.max(worst, I.angle(f.dir, ev.d)); }
+  truthy("线性拟合恢复径迹方向:" + n + " 个事件最大误差 < 25°", n >= 20 && worst < 25, "worst=" + worst.toFixed(1) + "°");
+  var up = I.event(I.rng(7), true), dn = I.event(I.rng(7), false);
+  truthy("「穿过地球」事件来源在地平线以下、「天上」事件在以上", I.azel(up.src).el < 0 && I.azel(dn.src).el > 0);
+  check("评星:12°→3、28°→2、45°→1、60°→0", I.starsFor(12) * 1000 + I.starsFor(28) * 100 + I.starsFor(45) * 10 + I.starsFor(60), 3210, 0, 0);
+})();
+
 console.log(rows.join("\n"));
 console.log("\n合计:" + pass + " 通过," + fail + " 失败");
 process.exit(fail ? 1 : 0);

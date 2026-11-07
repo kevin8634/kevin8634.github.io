@@ -389,13 +389,13 @@
   function cardPNG() {
     var c = el("canvas", { width: 1200, height: 630 }), x = c.getContext("2d");
     var g = x.createLinearGradient(0, 0, 1200, 630); g.addColorStop(0, "#1c1752"); g.addColorStop(1, "#07061a"); x.fillStyle = g; x.fillRect(0, 0, 1200, 630);
-    x.fillStyle = "#c4b5fd"; x.font = "26px system-ui, sans-serif"; x.fillText("宙律 Nomoverse · 规则改写台 · " + L.name, 60, 76);
-    x.fillStyle = "#fff"; x.font = "bold 40px system-ui, sans-serif"; x.fillText(L.question, 60, 140, 1080);
-    function col(tx, lines, X, color) { x.fillStyle = color; x.font = "bold 30px system-ui, sans-serif"; x.fillText(tx, X, 220); x.fillStyle = "#ede9fe"; x.font = "28px system-ui, sans-serif"; lines.forEach(function (l, i) { x.fillText(l, X, 270 + i * 44); }); }
+    x.fillStyle = "#c4b5fd"; x.font = "26px system-ui, sans-serif"; x.fillText(TT("宙律 Nomoverse · 规则改写台") + " · " + TT(L.name), 60, 76);
+    x.fillStyle = "#fff"; x.font = "bold 40px system-ui, sans-serif"; x.fillText(TT(L.question), 60, 140, 1080);
+    function col(tx, lines, X, color) { x.fillStyle = color; x.font = "bold 30px system-ui, sans-serif"; x.fillText(TT(tx), X, 220); x.fillStyle = "#ede9fe"; x.font = "28px system-ui, sans-serif"; lines.forEach(function (l, i) { x.fillText(TT(l), X, 270 + i * 44); }); }
     col("A · 现实", cur.ev.A, 60, "#67e8f9"); col("B · " + cur.P.label, cur.ev.B, 620, "#fbbf24");
-    x.fillStyle = "#fde68a"; x.font = "30px Georgia, serif"; x.fillText(L.formula, 60, 480);
-    x.fillStyle = "#c4c0e6"; x.font = "24px system-ui, sans-serif"; x.fillText(cur.ev.line, 60, 530, 1080);
-    x.fillStyle = "#8a85b5"; x.font = "20px ui-monospace, monospace"; x.fillText("/nomoverse/lab/?lab=" + labId + "&preset=" + pid + customP() + " · 纯虚拟实验 · 简化模型", 60, 590, 1080);
+    x.fillStyle = "#fde68a"; x.font = "30px Georgia, serif"; x.fillText(TT(L.formula), 60, 480);
+    x.fillStyle = "#c4c0e6"; x.font = "24px system-ui, sans-serif"; x.fillText(TT(cur.ev.line), 60, 530, 1080);
+    x.fillStyle = "#8a85b5"; x.font = "20px ui-monospace, monospace"; x.fillText("/nomoverse/lab/?lab=" + labId + "&preset=" + pid + customP() + " · " + TT("纯虚拟实验 · 简化模型"), 60, 590, 1080);
     c.toBlob(function (b) { if (b) download("genesis-nv-lab-" + labId + "-" + pid + ".png", b); });
   }
 
@@ -431,7 +431,8 @@
   }
 
   /* ---------- 叠加标注(两种模式共用) ---------- */
-  function chip(x, y, t, col, bg) { octx.save(); octx.font = "600 12.5px system-ui, sans-serif"; var w = octx.measureText(t).width + 16; octx.fillStyle = bg || "rgba(14,11,40,.8)"; octx.strokeStyle = col; octx.lineWidth = 1.2; octx.beginPath(); if (octx.roundRect) octx.roundRect(x, y, w, 24, 12); else octx.rect(x, y, w, 24); octx.fill(); octx.stroke(); octx.fillStyle = col; octx.textBaseline = "middle"; octx.fillText(t, x + 8, y + 12); octx.restore(); return w; }
+  function TT(s) { return window.NV_T ? window.NV_T(String(s)) : s; }
+  function chip(x, y, t, col, bg) { t = TT(t); octx.save(); octx.font = "600 12.5px system-ui, sans-serif"; var w = octx.measureText(t).width + 16; octx.fillStyle = bg || "rgba(14,11,40,.8)"; octx.strokeStyle = col; octx.lineWidth = 1.2; octx.beginPath(); if (octx.roundRect) octx.roundRect(x, y, w, 24, 12); else octx.rect(x, y, w, 24); octx.fill(); octx.stroke(); octx.fillStyle = col; octx.textBaseline = "middle"; octx.fillText(t, x + 8, y + 12); octx.restore(); return w; }
   function stageTop() { return Wd >= 1000 && Ht >= 620 ? 150 : (Wd < 560 ? 96 : 60); }
   function overlay(st, info) {
     var y = stageTop();

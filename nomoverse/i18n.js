@@ -119,6 +119,11 @@
   "完成目标": "Reach the goal", "预测接近结果": "Prediction close to the result", "额外挑战": "Extra challenge",
   "阿夸:": "Aqua: ", "墨渊:": "Abyss: ", "涟漪:": "Ripple: ", "AI 正在组织语言……": "The AI is putting it into words…",
   "AI 暂时连不上。先看看上面的知识卡吧。": "Can't reach the AI right now. Have a look at the knowledge card above first.", "AI 生成内容可能有误,以知识卡与实验为准。": "AI-generated content may contain mistakes; trust the knowledge card and the experiment.",
+  /* v0.9-α7 首页前沿速递(冰立方特别展本页自带中英) */
+  "前沿速递": "Frontier Flash", "@前沿速递": "Frontier Flash", "2026 诺贝尔物理学奖 · 冰立方中微子": "2026 Nobel Prize in Physics · IceCube neutrinos",
+  "南极冰下一立方公里的「望远镜」,抓住了来自宇宙深处的高能中微子。特别展:亲手布放传感器,从蓝光到达的先后读出它从哪来。": "A cubic-kilometre “telescope” in the Antarctic ice caught high-energy neutrinos from deep space. Special exhibit: deploy the sensors yourself and read where a neutrino came from by the order its blue light arrives.",
+  "阅读资讯 ↗": "Read the news ↗", "进入特别展 →": "Enter the exhibit →",
+  "速度": "Speed", "角度": "Angle", "山高": "Hill height", "潮位": "Tide level", "10 ms 内": "within 10 ms",
   "黄线:你现在的轨道": "Yellow line: your current orbit", "灰线:同样出手在地球上的路线": "Gray line: the same throw on Earth"
   };
   for (var k in TASKS) { E[k] = TASKS[k]; E[k.replace(/\?$/, "")] = TASKS[k].replace(/\?$/, ""); }
@@ -148,11 +153,15 @@
     [/^第 (\d+) 关 通关$/, "Level $1 cleared"], [/^(\d) 星$/, "$1 stars"],
     [/^点亮知识星:(.+)$/, function (m, a) { var y = tr(a) || list(a, "、", ", "); return y == null ? null : "Knowledge star lit: " + y; }],
     [/^(.+) · AI 讲解$/, function (m, a) { var y = tr(a); return y == null ? null : y + " · AI explanation"; }],
+    /* 第二期 b(v0.9-α8):关卡锁定读屏、HUD 小标签、年 */
+    [/^第 (\d+) 关 (.+)[,\uff0c]未解锁$/, function (m, n, a) { var y = tr(a); return y == null ? null : "Level " + n + " " + y + ", locked"; }],
+    [/^· (.+)$/, function (m, a) { var y = tr(a); return y == null ? null : "· " + y; }],
+    [/^([\d.,]+) 年$/, "$1 years"],
     [/^约 ([\d.,]+) (m|km|s|kg)$/, "About $1 $2"], [/^([\d.,]+) 分钟$/, "$1 min"], [/^×([\d.]+) 倍$/, "×$1"]
   ];
   window.NV_I18N = { add: function (d, r) { for (var k in d) if (Object.prototype.hasOwnProperty.call(d, k)) E[k] = d[k]; if (r) RX = r.concat(RX); }, T: function (s) { return window.NV_T(s); } };
   /* 第一期 b(v0.9-α5):英文模式按路径加载任务分包 i18n/<任务>.js(同步 document.write,保证建页前词条就位) */
-  var PK = /\/nomoverse\/(orbit|sound|hoop|stars|tide|energy)\//.exec(location.pathname);
+  var PK = /\/nomoverse\/(orbit|sound|hoop|stars|tide|energy|lab)\//.exec(location.pathname);
   if (L === "en" && PK && document.readyState === "loading") document.write('<script src="../i18n/' + PK[1] + '.js"><\/script>');
   function rx(t) { for (var i = 0; i < RX.length; i++) { if (RX[i][0].test(t)) { var r = t.replace(RX[i][0], RX[i][1]); if (r !== t && r.indexOf("null") < 0 && !CJK.test(r)) return r; } } return null; }
   function list(t, sep, out) { /* 「A,B,C」逐段翻(读屏 aria-label 常见),任何一段缺译则整句回退 */
