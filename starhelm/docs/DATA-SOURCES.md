@@ -167,3 +167,4 @@
 | IMO 2026 Meteor Shower Calendar | International Meteor Organization(J. Rendtel 编) | 事实数据,引用署名 | 本月天象「狮子座流星雨」:活跃期、极大时刻、ZHR、辐射点、速度、旧尘埃带;日月与辐射点高度由 astronomy-engine 本机计算 |
 
 | 2026-11-06 | JPL Small-Body Database API(55P/Tempel-Tuttle 轨道根数 J985/69) | NASA/JPL,美国政府作品,公共领域 | x/sh-x-leonids.js(2.0 流星雨 B 太空看) |
+| 2026-11-07 | NASA 旅行者任务页 Where Are They Now(science.nasa.gov/mission/voyager/where-are-they-now)与「Shine Bright for Voyager's Light-Day」活动说明 | NASA,事实数据,引用署名;不用 NASA logo,无图片 | sh-lightday.js(特别展「旅行者 1 号 · 一光日」:一光日时刻、距离、速度、VGR 摩尔斯码活动) |

@@ -96,6 +96,8 @@
     // 流星雨
     var y = now.getUTCFullYear();
     var LN = window.SH && SH.leonidsLab && SH.leonidsLab.active && SH.leonidsLab.active();   // v1.0-M4m 本月天象置顶
+    var VG = window.SH && SH.lightday && SH.lightday.active && SH.lightday.active();   // v1.0-M4p 特别展「旅行者 1 号 · 一光日」置顶至 11-25
+    if (VG) { var vgB = Date.now() < SH.lightday.T; out.push({ kind: 'sky', lab: 'voyagerLab', ico: '✦', col: '#ffd27a', title: '特别展 · 旅行者 1 号 · 一光日', meta: vgB ? '11月18日 18:16(北京时间)它离地球一光日 · 点开看倒计时' : '人类第一次飞到一光日外 · 点开发一条 VGR 摩尔斯码', tag: '特别展', score: 100 }); }
     if (LN) out.push({ kind: 'sky', lab: 'leonidsLab', ico: '☄', col: '#c9b0ff', title: '本月天象 · 狮子座流星雨', meta: '极大 11月18日 07:45(北京时间)· 点开看你那里几点最好', tag: '本月天象', score: 99 });
     SHOWERS.forEach(function (s) {
       if (LN && s[2] === '狮子座流星雨') return;
