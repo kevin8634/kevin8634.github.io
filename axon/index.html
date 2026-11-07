@@ -222,10 +222,11 @@
         const bgMat = new THREE.ShaderMaterial({
           depthTest: false, depthWrite: false,
           uniforms: { tPlate: { value: plateTex }, uRes: { value: new THREE.Vector2(1, 1) }, uMouse: { value: new THREE.Vector2() }, uImgAspect: { value: 2400 / 1018 }, uTime: { value: 0 },
-            uFade: { value: 0 }, uLamp: { value: new THREE.Vector2(.8, .6) }, uBeam: { value: new THREE.Vector3(0, 0, 1) }, uClick: { value: new THREE.Vector2(.5, -9) }, uN: { value: 0 }, uKent: { value: 1 }, uDark: { value: 0 }, uSkinFx: { value: 0 } },
+            uFade: { value: 0 }, uLamp: { value: new THREE.Vector2(.8, .6) }, uBeam: { value: new THREE.Vector3(0, 0, 1) }, uClick: { value: new THREE.Vector2(.5, -9) }, uN: { value: 0 }, uKent: { value: 1 }, uDark: { value: 0 }, uSkinFx: { value: 0 },
+            tPlate2: { value: plateTex }, uImgAspect2: { value: 2400 / 1018 }, uPortal: { value: -1 }, uPortalC: { value: new THREE.Vector4(.5, .6, .12, .3) }, uTreble: { value: 0 } },
           vertexShader: quadVS,
           fragmentShader: HASH + BEAM + `
-            uniform sampler2D tPlate; uniform vec2 uRes, uMouse, uLamp, uClick; uniform vec3 uBeam; uniform float uImgAspect, uTime, uFade, uN, uKent, uDark, uSkinFx; varying vec2 vUv;
+            uniform sampler2D tPlate, tPlate2; uniform vec2 uRes, uMouse, uLamp, uClick; uniform vec3 uBeam; uniform vec4 uPortalC; uniform float uImgAspect, uImgAspect2, uPortal, uTreble, uTime, uFade, uN, uKent, uDark, uSkinFx; varying vec2 vUv;
             float gl(float d, float w){ return exp(-d * d / (w * w)); }
             vec3 circuit(vec2 p, float t, vec3 c, float sc){ vec2 g = p * sc, id = floor(g), f = fract(g); float r = h(id), hz = step(.5, r);
               float d = mix(abs(f.x - .5), abs(f.y - .5), hz), on = step(.55, h(id + 7.)), pl = fract(mix(g.y, g.x, hz) * .25 - t * .35 + r * 4.);
@@ -266,7 +267,17 @@
                 rip = sea * exp(-pow((length(dq) - ct * .4) * 28., 2.)) * exp(-ct * 1.5);
                 uv.y += rip * .004;
               }
-              vec3 col = texture2D(tPlate, uv).rgb + rip * .22;
+              vec3 col = texture2D(tPlate, uv).rgb + rip * .22, pRim = vec3(0.);
+              if (uPortal >= 0.) { // v1.0 portal: new plate inside an ellipse centred on the particle door, radius grows door → full screen
+                vec2 s2 = sa > uImgAspect2 ? vec2(1., uImgAspect2 / sa) : vec2(sa / uImgAspect2, 1.);
+                vec2 uv2 = (vUv - .5) * s2 * .94 + .5; uv2 += uMouse * mix(.03, .006, smoothstep(.05, .65, uv2.y));
+                vec2 pc = uPortalC.xy, pr = max(uPortalC.zw, vec2(.001));
+                float km = max(max(length(-pc / pr), length((vec2(1., 0.) - pc) / pr)), max(length((vec2(0., 1.) - pc) / pr), length((vec2(1.) - pc) / pr))) + .1;
+                float R = uPortal < .2 ? .92 * smoothstep(0., .2, uPortal) : mix(.92, km, smoothstep(.2, 1., uPortal)), q = length((vUv - pc) / pr);
+                float pm = 1. - smoothstep(R - .05, R, q);
+                col = mix(col, texture2D(tPlate2, uv2).rgb, pm);
+                pRim = vec3(1., .9, .75) * gl(q - R, .035) * (1. - smoothstep(.75, 1., uPortal)) * step(.001, R);
+              }
               float L = dot(col, vec3(.3, .59, .11)), k1 = smoothstep(0., .5, uN), k2 = smoothstep(.45, 1., uN);
               col = mix(col, L * vec3(.55, .68, 1.05), k1 * .75) * (1. - k1 * .35);
               col = mix(col, L * vec3(.16, .2, .36) + vec3(.004, .008, .022), k2);
@@ -277,7 +288,7 @@
               float bm = beamAt(vUv, uLamp, uBeam);
               col += uKent * (bm * .16 + smoothstep(.025, 0., length((vUv - uLamp) * vec2(uBeam.z, 1.))) * 0.) * (1. + uN * 2.2) * vec3(1., .86, .62);
               { float ld = length((vUv - uLamp) * vec2(uBeam.z, 1.)); col += uKent * (gl(ld, .012) * .45 + gl(ld, .045) * .14) * (.8 + .2 * sin(uTime * 1.2)) * (1. + uN * 2.2) * vec3(1., .86, .62); } // breathing lamp halo
-              col += skinFx(vUv, uv, sa, uTime) * .45 * uFade;
+              col += skinFx(vUv, uv, sa, uTime) * .45 * (1. + uTreble * 1.6) * uFade + pRim * .7; // v1.0: BGM treble flickers the light band
               vec2 g = uv * vec2(90., 200.) + vec2(uTime * 1.2, sin(uTime * .3 + uv.x * 8.) * .3);
               vec2 id = floor(g); vec2 f = fract(g) - .5;
               float r = h(id);
@@ -595,12 +606,13 @@
           transparent: true, depthWrite: false, depthTest: false,
           blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
           uniforms: { tPos: { value: null }, tVel: { value: null }, uTime: { value: 0 }, uSize: { value: 1 }, uAlpha: { value: 0.8 }, uLamp: bgMat.uniforms.uLamp, uBeam: bgMat.uniforms.uBeam,
-            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uScr: { value: new THREE.Vector3(0, 0, 0) }, uFS: { value: 1 } },
+            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uScr: { value: new THREE.Vector3(0, 0, 0) }, uFS: { value: 1 }, uBass: { value: 0 }, uCtr: velMat.uniforms.uCenter },
           // Liquid metal: soft sphere sprites lit in the fragment stage (sky gradient + soft band + clean spec + Fresnel rim); overlap reads as one surface.
-          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN, uFS; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep; uniform vec3 uScr; attribute vec2 ref;
+          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN, uFS; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep, uBass; uniform vec3 uScr, uCtr; attribute vec2 ref;
             varying vec3 vBase, vRim, vGl; varying float vPS, vBlur;
             void main(){
               vec3 p = texture2D(tPos, ref).xyz, v = texture2D(tVel, ref).xyz;
+              p = uCtr + (p - uCtr) * (1. + uBass * (.045 + .02 * h(ref + 3.1))); // v1.0: BGM bass → breathing pulse
               vec4 mv = modelViewMatrix * vec4(p, 1.);
               gl_Position = projectionMatrix * mv;
               float sw = smoothstep(.18, 0., abs(gl_Position.x / gl_Position.w - uSweep));
@@ -735,6 +747,7 @@
         }
         function playWork(i) {
           if (rec) { toast("录制中 · 暂不能切换作品"); return; }
+          if (sk) skinAbort();
           if (work) endWork(true);
           document.body.classList.add("x-workon");
           work = { i, t: 0, s2: false, s14: false, b6: false, b9: false, ti: 0, lastBurst: -9, dip: 0, env: 0 };
@@ -1209,7 +1222,25 @@
           ink: ["INK DRAGON · 墨龙", gInk, 1.05, 0.7], deepsea: ["JELLYFISH · 水母", gJelly, 1, 0.6], blackhole: ["ACCRETION · 吸积盘", gDisk, 0.9, 1.4], mycelium: ["MYCELIUM · 菌丝", gMyc, 0.85, 0.6],
           lotus: ["LOTUS · 莲", gLotus, 1, 0.7], dune: ["DUNE · 沙丘", gDune, 0.95, 1], everest: ["PEAK · 峰", gPeak, 0.95, 0.7], yulong: ["JADE PEAKS · 雪山湖", gYulong, 0.95, 0.7] };
         SKINS.forEach((s) => { const f = FORMS[s.id]; s.form = f ? shapes.push([f[0], f[1]]) - 1 : 0; s.fluid = { tint: s.tint, rim: s.rim, size: f ? f[2] : 1, flow: f ? f[3] : 1 }; });
+        // v1.0 portal form: a vertical elliptical door frame (rx .62, ry 1) about the cloud centre.
+        const PORTAL_I = shapes.push(["PORTAL · 门", () => { const a = rnd() * 6.283, w = rnd() < 0.85 ? (rnd() + rnd() - 1) * 0.07 : (rnd() - 0.3) * 0.35, r = 1 + w;
+          return [Math.cos(a) * 0.62 * r, Math.sin(a) * r + CY, (rnd() - 0.5) * 0.16 * (1 + Math.abs(w) * 4)]; }]) - 1;
         let skin = SKINS[0], skinI = 0, skinBusy = false, skinPv = null, sk = null, bgmX = null;
+        const _pv = new THREE.Vector3();
+        function portalCenter() { // door centre + radii in screen uv (follows points.scale / rotation / resize)
+          points.updateMatrixWorld();
+          const f = (x, y) => (_pv.set(x, y, 0), points.localToWorld(_pv).project(camera), [_pv.x * 0.5 + 0.5, _pv.y * 0.5 + 0.5]);
+          const o = f(0, CY), a = f(0.62, CY), b = f(0, CY + 1);
+          bgMat.uniforms.uPortalC.value.set(o[0], o[1], Math.hypot(a[0] - o[0], a[1] - o[1]), Math.hypot(b[0] - o[0], b[1] - o[1]));
+        }
+        function skinAbort() { // cancel a running switch at any phase; disposes the not-yet-committed plate
+          const s = sk; if (!s) return;
+          s.im.onload = s.im.onerror = null;
+          if (s.tex && !s.done) { bgMat.uniforms.tPlate2.value = plateTex; s.tex.dispose(); }
+          bgMat.uniforms.uPortal.value = -1; sk = null; skinBusy = false;
+          if (!work && shapeI !== HOME()) setShape(HOME());
+          portalSync();
+        }
         const iris = document.getElementById("skinIris"), hScene = document.getElementById("hScene"), hPrev = document.getElementById("hPrev");
         const skinIdx = (id) => SKINS.findIndex((s) => s.id === id), hashSkin = () => (/skin=([\w-]+)/.exec(location.hash) || [])[1];
         function skinHud(i) { const s = SKINS[i]; hScene.textContent = `SCENE ${String(i + 1).padStart(2, "0")} · ${s.zh} ${s.en}`; hPrev.textContent = s.kent ? "" : "预览底图"; }
@@ -1230,10 +1261,11 @@
           pr.addEventListener("error", end);
           pr.src = s.bgm[0];
         }
-        function skinApply(i, im, inst) {
+        function skinApply(i, im, inst, tex) {
           const s = SKINS[i], was = skin.kent, bu = bgMat.uniforms, pu = ptMat.uniforms;
           skin = s; skinI = i;
-          { const nt = new THREE.Texture(im); nt.minFilter = THREE.LinearFilter; nt.generateMipmaps = false; nt.colorSpace = plateTex.colorSpace; nt.needsUpdate = true; const ot = plateTex; plateTex = nt; bu.tPlate.value = nt; ot.dispose(); } // new texture: WebGL2 immutable storage can't change size
+          { let nt = tex; if (!nt) { nt = new THREE.Texture(im); nt.minFilter = THREE.LinearFilter; nt.generateMipmaps = false; nt.colorSpace = plateTex.colorSpace; nt.needsUpdate = true; }
+            const ot = plateTex; plateTex = nt; bu.tPlate.value = bu.tPlate2.value = nt; if (ot !== nt) ot.dispose(); } // new texture: WebGL2 immutable storage can't change size
           bu.uImgAspect.value = im.naturalWidth / im.naturalHeight;
           img.src = s.plate; img.alt = `${s.zh} ${s.en}`;
           skinTint.set(...s.tint); skinRim.set(...s.rim);
@@ -1245,12 +1277,15 @@
         function goSkin(id, instant = false) {
           if (rec && !instant) { toast("录制中 · 暂不能切换场景"); return; }
           const i = skinIdx(id);
-          if (i < 0 || skinBusy || (i === skinI && !instant)) return;
+          if (i < 0 || (skinBusy && !sk)) return;
+          // v1.0: a running portal can be interrupted. Same target → ignore; back to the current skin → close the door.
+          if (sk && !instant) { if (!sk.done && sk.i === i) return; skinAbort(); if (i === skinI) return; }
+          if (i === skinI && !instant) return;
           const im = new Image();
-          if (instant) { if (i === skinI) return skinHud(i); skinBusy = true; im.onload = () => { skinApply(i, im, true); skinBusy = false; portalSync(); }; im.onerror = () => (skinBusy = false); im.src = SKINS[i].plate; return; }
+          if (instant) { if (sk) skinAbort(); if (i === skinI) return skinHud(i); skinBusy = true; im.onload = () => { skinApply(i, im, true); skinBusy = false; portalSync(); }; im.onerror = () => (skinBusy = false); im.src = SKINS[i].plate; return; }
           if (work) endWork(true);
-          skinBusy = true; portalSync(); waveT = 0; setShape(1); iris.classList.add("x-on");
-          const s = (sk = { i, im, t: 0, ok: 0, sw: -1, b: -1 });
+          skinBusy = true; waveT = 0; setShape(PORTAL_I);
+          const s = (sk = { i, im, t: 0, ok: 0, tex: null, p0: 0, done: 0 }); portalSync(); portalCenter();
           im.onload = () => (s.ok = 1); im.onerror = () => (s.ok = -1); im.src = SKINS[i].plate;
         }
         function skinStep(raw) {
@@ -1261,13 +1296,18 @@
           pu.uFS.value += (skin.fluid.size - pu.uFS.value) * k; velMat.uniforms.uFlow.value += (skin.fluid.flow - velMat.uniforms.uFlow.value) * k; bu.uSkinFx.value = skinI;
           if (!sk) return;
           const s = sk; s.t += raw;
-          // Timeline: sphere + iris (0) → swap at peak (0.9, or when loaded) → burst + wave (+0.7) → iris gone (+0.8).
-          if (s.sw < 0 && s.t >= 0.9) {
-            if (s.ok === 1) { s.sw = s.t; skinApply(s.i, s.im); }
-            else if (s.ok === -1 || s.t > 8) { iris.classList.remove("x-on"); setShape(HOME()); sk = null; skinBusy = false; portalSync(); toast("底图加载失败 · 保持当前场景"); return; }
+          // v1.0 timeline: door gathers (≥0.8 s, until loaded) → new plate grows from the door to full screen (1.6 s; form morphs at 55 %) → commit → settle 0.8 s.
+          if (!s.tex) {
+            if (s.ok === 1 && s.t >= 0.8) { const t = (s.tex = new THREE.Texture(s.im)); t.minFilter = THREE.LinearFilter; t.generateMipmaps = false; t.colorSpace = plateTex.colorSpace; t.needsUpdate = true;
+              bu.tPlate2.value = t; bu.uImgAspect2.value = s.im.naturalWidth / s.im.naturalHeight; s.p0 = s.t; chime(0.08); }
+            else if (s.ok === -1 || s.t > 8) { skinAbort(); toast("底图加载失败 · 保持当前场景"); return; }
           }
-          if (s.sw >= 0 && s.b < 0 && s.t >= s.sw + 0.7) { s.b = s.t; velMat.uniforms.uShock.value.set(0, CY, 0, simT); setShape(HOME()); iris.classList.remove("x-on"); chime(0.12); }
-          if (s.b >= 0 && s.t >= s.b + 0.8) { sk = null; skinBusy = false; portalSync(); }
+          if (s.tex && !s.done) {
+            const p = Math.min(1, (s.t - s.p0) / 1.6); bu.uPortal.value = p; portalCenter();
+            if (p > 0.55 && shapeI === PORTAL_I) { velMat.uniforms.uShock.value.set(0, CY, 0, simT); setShape(SKINS[s.i].form); }
+            if (p >= 1) { s.done = s.t; skinApply(s.i, s.im, false, s.tex); bu.uPortal.value = -1; if (shapeI !== HOME()) setShape(HOME()); chime(0.12); }
+          }
+          if (s.done && s.t >= s.done + 0.8) { sk = null; skinBusy = false; portalSync(); }
         }
         function previewTint(x) {
           const s = !x ? null : typeof x === "string" ? SKINS[skinIdx(x)] : Array.isArray(x) ? { tint: x, rim: x } : x;
@@ -1297,7 +1337,7 @@
           portalTiles.forEach((b) => {
             const cur = b.dataset.skin === skin.id;
             if (cur) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current");
-            b.disabled = skinBusy;
+            b.disabled = skinBusy && !sk; // portal switches stay interruptible
           });
         }
         function portalShow(on) {
@@ -1312,9 +1352,26 @@
         addEventListener("pointerdown", (e) => { if (portal.classList.contains("x-on") && !e.target.closest("#portal, #bPortal")) portalShow(false); }, true);
         Object.defineProperty(window, "AXON_SKIN", { get: () => skin.id, configurable: true });
 
+        // v1.0 sound-driven fluid. Graph: bgm → MediaElementSource (once) → analyser → destination; element volume still fades/ducks it.
+        let ban = null, bLo = 0, bHi = 0, bPkL = 0.2, bPkH = 0.1; const bbuf = new Uint8Array(256);
+        function bgmLevels(raw) {
+          let lo = 0, hi = 0;
+          if (sndOn && ac && ac.state === "running" && !bgm.paused) {
+            if (ban === null) { try { const an = ac.createAnalyser(); an.fftSize = 512; an.smoothingTimeConstant = 0.6; const src = ac.createMediaElementSource(bgm); src.connect(an); an.connect(ac.destination); ban = an; } catch (e) { ban = false; } }
+            if (ban) {
+              ban.getByteFrequencyData(bbuf); const bw = ac.sampleRate / 512, h0 = Math.round(3000 / bw), h1 = Math.min(255, Math.round(9000 / bw));
+              let a = 0, b = 0; for (let k = 0; k <= 2; k++) a += bbuf[k]; for (let k = h0; k <= h1; k++) b += bbuf[k];
+              a /= 3 * 255; b /= (h1 - h0 + 1) * 255;
+              bPkL = Math.max(a, 0.2, bPkL * Math.exp(-0.4 * raw)); bPkH = Math.max(b, 0.1, bPkH * Math.exp(-0.4 * raw));
+              lo = clamp((a - 0.55 * bPkL) / (0.45 * bPkL), 0, 1); hi = clamp((b - 0.5 * bPkH) / (0.5 * bPkH), 0, 1);
+            }
+          }
+          bLo += (lo - bLo) * (1 - Math.exp(-(lo > bLo ? 22 : 5) * raw)); bHi += (hi - bHi) * (1 - Math.exp(-(hi > bHi ? 30 : 7) * raw));
+          ptMat.uniforms.uBass.value = bLo < 1e-3 ? 0 : bLo; bgMat.uniforms.uTreble.value = bHi < 1e-3 ? 0 : bHi;
+        }
         function fxStep(raw, dt) {
           fxT += raw;
-          skinStep(raw);
+          skinStep(raw); bgmLevels(raw);
           tN += (tT - tN) * (1 - Math.exp(-3 * raw));
           bgMat.uniforms.uN.value = tN;
           knob.style.top = tN * 100 + "%";
