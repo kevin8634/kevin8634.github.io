@@ -29,7 +29,7 @@
       (it.url ? '<a href="' + esc(it.url) + '" target="_blank" rel="noopener">阅读资讯 ↗</a>' : '') +
       (it.special ? '<a href="' + esc(base() + it.special.href) + '" data-fr="sp">' + esc(it.special.label) + '</a>' : '');
   }
-  var css = '#xfr{position:fixed;left:16px;top:96px;z-index:2300;width:min(360px,calc(100vw - 24px));max-height:calc(100vh - 140px);overflow:auto;background:rgba(8,14,28,.9);border:1px solid rgba(240,201,122,.45);border-radius:12px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#e8eef8;font:14px/1.5 "Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;padding:10px 12px;box-shadow:0 0 24px rgba(240,201,122,.18)}' +
+  var css = '#xfr{position:fixed;left:50%;transform:translateX(-50%);top:116px;z-index:2300;width:min(360px,calc(100vw - 24px));max-height:calc(100vh - 140px);overflow:auto;background:rgba(8,14,28,.9);border:1px solid rgba(240,201,122,.45);border-radius:12px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#e8eef8;font:14px/1.5 "Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;padding:10px 12px;box-shadow:0 0 24px rgba(240,201,122,.18)}' +
     '#xfr[hidden]{display:none}#xfr h4{margin:0 0 6px;display:flex;justify-content:space-between;align-items:center;color:#f0c97a;font-size:15px;letter-spacing:.04em}#xfr h4 button{background:none;border:0;color:#9aa8bf;font-size:18px;cursor:pointer}' +
     '#xfr .it{border-top:1px solid rgba(160,180,220,.18);padding:8px 0}#xfr .d{font:12px ui-monospace,Menlo,Consolas,monospace;color:#9aa8bf}#xfr .t{font-weight:700;color:#fff3d6;margin:1px 0}#xfr .l{font-size:12.5px;color:#c9d6e8}#xfr .lv{font:12px ui-monospace,Menlo,Consolas,monospace;color:#ffe6a8;margin-top:2px}' +
     '.xfr-a{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.xfr-a button,.xfr-a a{font:inherit;font-size:12.5px;padding:4px 9px;border-radius:8px;border:1px solid rgba(240,201,122,.5);background:rgba(240,201,122,.12);color:#fff0cc;cursor:pointer;text-decoration:none}.xfr-a button[disabled]{opacity:.45;cursor:default}' +
@@ -37,7 +37,8 @@
     '.xfr-btn{color:#ffe6a8!important;border-color:rgba(240,201,122,.6)!important}.xfr-btn i{font-style:normal;display:inline-block;min-width:14px;margin-left:4px;padding:0 3px;border-radius:7px;background:#f0c97a;color:#1a1408;font-size:10.5px;line-height:14px}' +
     '.xfr-card{margin-top:8px;padding:7px 9px;border-radius:9px;border:1px solid rgba(240,201,122,.45);background:rgba(240,201,122,.08)}.xfr-card .c{color:#f0c97a;font-size:12px;letter-spacing:.06em}.xfr-card .t{font-weight:700;color:#fff3d6;font-size:13.5px}' +
     '.xfr-card .r{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#c9d6e8}.xfr-card .r b{color:#fff;font-weight:600;text-align:right}.xfr-card .lv{font:12px ui-monospace,Menlo,Consolas,monospace;color:#ffe6a8;margin-top:2px}' +
-    '@media (max-width:640px){#xfr{left:8px;top:64px;max-height:calc(100vh - 230px)}}';
+    'body.xfr-on #shx-exit{visibility:hidden}' +
+    '@media (max-width:640px){#xfr{left:8px;right:8px;width:auto;transform:none;top:96px;max-height:calc(100vh - 250px)}}';
   var P = null, TM = 0, pend = null;
   function ensureCss() { if (!document.getElementById('xfr-css')) { var s = document.createElement('style'); s.id = 'xfr-css'; s.textContent = css; document.head.appendChild(s); } }
   function render() {
@@ -54,9 +55,9 @@
   function open() {
     ensureCss();
     if (!P) { P = document.createElement('div'); P.id = 'xfr'; P.setAttribute('role', 'dialog'); P.setAttribute('aria-label', '前沿速递'); document.body.appendChild(P); P.addEventListener('click', onClick); }
-    render(); P.hidden = false; if (!TM) TM = setInterval(tick, 1000);
+    render(); P.hidden = false; document.body.classList.add('xfr-on'); if (!TM) TM = setInterval(tick, 1000);
   }
-  function close() { if (P) P.hidden = true; }
+  function close() { if (P) P.hidden = true; document.body.classList.remove('xfr-on'); }   // 11-07 11:38 王磊:居中显示,开着时隐藏 body 层「结束探索」,不遮挡左侧 HUD
   function toggle() { if (P && !P.hidden) close(); else open(); }
   function onClick(e) {
     var b = e.target.closest('[data-fr]'); if (!b) return; var k = b.getAttribute('data-fr'), it = byId(b.getAttribute('data-id'));
