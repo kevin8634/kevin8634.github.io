@@ -154,10 +154,9 @@
     <audio id="bgm" src="kenting_dusk_shoreline.m4a" preload="auto"></audio>
     <div class="x-hud x-ui x-works" id="works">
       <p>WORKS</p>
-      <button data-w="0">01 香水 PERFUME</button><button data-w="1">02 球鞋 SNEAKER</button><button data-w="2">03 耳机 AUDIO</button><button data-w="3">04 手机 PHONE</button>
+      <button data-w="0">01 香水 PERFUME</button><button data-w="1">02 球鞋 SNEAKER</button><button data-w="2">03 耳机 AUDIO</button><button data-w="3">04 手机 PHONE</button><button data-w="5">05 音乐 SOUNDWAVE</button><button data-w="6">06 新春 FIREWORKS</button>
       <button id="bMake" aria-expanded="false" aria-controls="gen">✦ 做你的金属广告 MAKE YOURS</button>
       <button id="bDraw" aria-pressed="false">✎ 写字 / DRAW (D)</button>
-      <p class="x-soon">05–06 COMING SOON</p>
     </div>
     <div class="x-ui x-gen" id="gen" role="dialog" aria-label="MAKE YOURS 品牌金属生成器">
       <div class="x-gen-h"><span>MAKE YOURS · 品牌金属生成器</span><button class="x-gen-x" id="gClose" aria-label="Close">✕</button></div>
@@ -531,6 +530,34 @@
         const gPeak = () => tilt(peak(0, 1.6, 2.3), 0.25);
         const gYulong = () => { if (rnd() < 0.35) { const r = Math.sqrt(rnd()), a = rnd() * 6.283; return tilt([Math.cos(a) * r * 2, -1, 0.9 + Math.sin(a) * r * 0.5], 0.3); }
           const k = rnd(); return tilt(k < 0.5 ? peak(0, 1.2, 2) : k < 0.75 ? peak(-1.3, 0.9, 1.3) : peak(1.4, 0.9, 1.5), 0.3); };
+        // v1.3 作品 05 SOUNDWAVE / 06 新春烟花 shapes.
+        const SPEC = (k) => 0.18 + 0.42 * Math.abs(Math.sin(k * 0.71) * Math.cos(k * 0.23 + 1.3)) + 0.12 * Math.abs(Math.sin(k * 2.9)); // static spectrum profile
+        const gRing = () => { if (rnd() < 0.18) { const a = rnd() * 6.283, r = 0.78 + (rnd() - 0.5) * 0.03; return [Math.cos(a) * r, Math.sin(a) * r + CY, (rnd() - 0.5) * 0.06]; }
+          const k = (rnd() * 72) | 0, a = ((k + 0.5 + (rnd() - 0.5) * 0.55) * 6.283) / 72, r = 0.86 + rnd() * SPEC(k); return [Math.cos(a) * r, Math.sin(a) * r + CY, (rnd() - 0.5) * 0.1]; };
+        const gEq = () => { const k = (rnd() * 17) | 0, hh = 0.2 + 1.1 * SPEC(k * 3 + 1) * (1.15 - Math.abs(k - 8) / 12), v = (rnd() * 2 - 1) * hh;
+          return [-1.92 + k * 0.24 + (rnd() - 0.5) * 0.15, Math.sign(v) * (Math.floor(Math.abs(v) / 0.09) * 0.09 + rnd() * 0.065) + CY, (rnd() - 0.5) * 0.14]; }; // LED-segment bars, mirrored about CY
+        const gVinyl = () => { const s = rnd(); let a = rnd() * 6.283, r, y = 0; // disc in the XZ plane (normal +Y); the work tilts it toward the camera and spins it about Y
+          if (s < 0.08) r = 0.075 + rnd() * 0.015; // centre-hole rim
+          else if (s < 0.3) { r = 0.12 + Math.sqrt(rnd()) * 0.36; y = 0.02; if (rnd() < 0.3) a = (rnd() - 0.5) * 0.28; } // label + a bright stripe so the spin reads
+          else { r = 0.56 + ((rnd() * 26) | 0) * 0.042 + rnd() * 0.02; if (rnd() < 0.12) a = 2.2 + (rnd() - 0.5) * 0.35; } // grooves + sheen wedge
+          return [Math.cos(a) * r, y + CY + (rnd() - 0.5) * 0.02, Math.sin(a) * r]; };
+        const RK = [[-1.5, 0.15], [-0.75, 0], [0, 0.3], [0.8, 0.1], [1.55, 0.2]], FWC = [[-1.35, 1.3, 0.62], [0.15, 1.65, 0.72], [1.45, 1.2, 0.6], [-0.65, 0.45, 0.5], [0.95, 0.35, 0.48]];
+        const gRocket = () => { const [x, o] = RK[(rnd() * 5) | 0], t = Math.pow(rnd(), 2.2), d = sdir(), w = 0.025 + t * 0.07; // t 0 = bright head, 1 = tail end
+          return [x + d[0] * w, CY - 1.3 + o - t * 1.3 + d[1] * w, d[2] * w]; };
+        const gFirework = () => { const [cx, cy, R] = FWC[(rnd() * 5) | 0], sp = rnd() < 0.45, d = sp ? SPK[(rnd() * SPK.length) | 0] : sdir(), r = R * (sp ? Math.sqrt(rnd()) : 0.92 + rnd() * 0.08);
+          return [cx + d[0] * r, cy - 0.22 * (r / R) * (r / R) + d[1] * r, d[2] * r * 0.5]; }; // shells + spokes from several centres, slight droop
+        const gFu = (() => { let P = null, S = 1, cx = 0, cy = 0; // "福" sampled from a 2D canvas; no CJK font (tofu = identical to "一") → "2027"
+          const ras = (t) => { const W = 640, H = 400, c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d", { willReadFrequently: true });
+            x.font = `900 ${t.length > 1 ? 200 : 330}px "PingFang SC","Noto Sans SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif`; x.fillStyle = "#fff"; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(t, W / 2, H / 2);
+            const d = x.getImageData(0, 0, W, H).data, o = []; let sig = 0; for (let j = 0; j < H; j += 2) for (let i = 0; i < W; i += 2) if (d[(j * W + i) * 4 + 3] > 128) { o.push(i, j); sig = (sig * 31 + i * 7 + j) % 1e9; }
+            return { o, sig }; };
+          return () => { if (!P) { const a = ras("福"), b = ras("一"); P = a.o.length > 1200 && (a.o.length !== b.o.length || a.sig !== b.sig) ? a.o : ras("2027").o;
+              if (P.length < 4) P = [320, 200]; let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for (let k = 0; k < P.length; k += 2) { x0 = Math.min(x0, P[k]); x1 = Math.max(x1, P[k]); y0 = Math.min(y0, P[k + 1]); y1 = Math.max(y1, P[k + 1]); }
+              S = Math.min(3.4 / (x1 - x0 + 2), 2.3 / (y1 - y0 + 2)); cx = (x0 + x1) / 2; cy = (y0 + y1) / 2; }
+            const k = ((rnd() * P.length) / 2) | 0; return [(P[k * 2] - cx + rnd() * 2) * S, (cy - P[k * 2 + 1] - rnd() * 2) * S + CY, (rnd() - 0.5) * 0.3]; };
+        })();
+        const [RING_I, EQ_I, VINYL_I, ROCKET_I, FW_I, FU_I] = [["SOUNDWAVE · 频谱环", gRing], ["EQ · 均衡器", gEq], ["VINYL · 黑胶", gVinyl], ["ROCKET · 火箭", gRocket], ["FIREWORK · 烟花", gFirework], ["新春 · 福 / 2027", gFu]].map((x) => shapes.push(x) - 1);
+        const ensureTex = (i) => { if (!texs[i]) texs[i] = makeTex(shapes[i][1]); };
         const BASE_N = 5; // prev/next and arrows cycle only the first five; works use 5..7
         let texs = [], shapeI = 0, leanI = -1, hovW = false;
 
@@ -619,9 +646,9 @@
           transparent: true, depthWrite: false, depthTest: false,
           blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
           uniforms: { tPos: { value: null }, tVel: { value: null }, uTime: { value: 0 }, uSize: { value: 1 }, uAlpha: { value: 0.8 }, uLamp: bgMat.uniforms.uLamp, uBeam: bgMat.uniforms.uBeam,
-            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uSwK: { value: 1 }, uScr: { value: new THREE.Vector3(0, 0, 0) }, uFS: { value: 1 }, uBass: { value: 0 }, uCtr: velMat.uniforms.uCenter },
+            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uSwK: { value: 1 }, uScr: { value: new THREE.Vector3(0, 0, 0) }, uFS: { value: 1 }, uBass: { value: 0 }, uGlit: { value: 0 }, uCtr: velMat.uniforms.uCenter },
           // Liquid metal: soft sphere sprites lit in the fragment stage (sky gradient + soft band + clean spec + Fresnel rim); overlap reads as one surface.
-          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN, uFS; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep, uSwK, uBass; uniform vec3 uScr, uCtr; attribute vec2 ref;
+          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN, uFS; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep, uSwK, uBass, uGlit; uniform vec3 uScr, uCtr; attribute vec2 ref;
             varying vec3 vBase, vRim, vGl; varying float vPS, vBlur;
             void main(){
               vec3 p = texture2D(tPos, ref).xyz, v = texture2D(tVel, ref).xyz;
@@ -634,7 +661,7 @@
               vRim = mix(vec3(1., .95, .88), vec3(.82, .9, 1.05), uN) * uTint * uRimC;
               float bm = beamAt(gl_Position.xy / gl_Position.w * .5 + .5, uLamp, uBeam), st = uTime - uShock.w;
               float sh = st < 1.2 ? exp(-pow((length(p - uShock.xyz) - st * 3.5) * 2., 2.)) * exp(-st * 2.) : 0.;
-              vGl = bm * vec3(.22, .17, .11) + sw * uSwK * vec3(.3, .27, .22) + sh * .25 + smoothstep(1., 4., length(v)) * .06;
+              vGl = bm * vec3(.22, .17, .11) + sw * uSwK * vec3(.3, .27, .22) + sh * .25 + smoothstep(1., 4., length(v)) * .06 + uGlit * step(.9, h(ref + floor(uTime * 12.) * .173)) * vec3(.55, .5, .42); // v1.3: treble glitter
               vBlur = smoothstep(.6, 2.6, abs(-mv.z - 6.));
               vPS = max(uSize * uFS * (2.1 + .7 * h(ref + 9.)) * (1. + vBlur * .5) / -mv.z, 2.);
               gl_PointSize = vPS;
@@ -745,7 +772,10 @@
         // Works: a 15 s timeline per work: sphere → hero shape (4–11) → tagline (11–14) → wave → end.
         const WORKS = [{ name: "香水 PERFUME", shape: 5, tag: "LIQUID. LIGHT. LASTING.", src: "work_perfume.m4a" }, { name: "球鞋 SNEAKER", shape: 6, tag: "FORGED IN MOTION", src: "work_sneaker.m4a" }, { name: "耳机 AUDIO", shape: 7, tag: "HEAR THE METAL", src: "work_audio.m4a" },
           { name: "手机 PHONE", shape: PHONE_I, tag: "AXON PHONE · 液态成形", src: "work_perfume.m4a", type: "phone", dur: 12 },
-          { name: "定制 CUSTOM", shape: CUSTOM_I, tag: "", src: "kenting_dusk_shoreline.m4a", type: "custom", dur: 10 }];
+          { name: "定制 CUSTOM", shape: CUSTOM_I, tag: "", src: "kenting_dusk_shoreline.m4a", type: "custom", dur: 10 },
+          { name: "音乐 SOUNDWAVE", shape: RING_I, lean: 4, no: 5, tag: "SOUNDWAVE", sub: "音乐可视化 · AXON", src: "work_audio.m4a", type: "sw", dur: 10, pre: [RING_I, EQ_I, VINYL_I] },
+          { name: "新春 FIREWORKS", shape: ROCKET_I, lean: 1, no: 6, s0: ROCKET_I, tag: "新春快乐", sub: "HAPPY NEW YEAR 2027 · AXON", src: "work_sneaker.m4a", type: "fw", dur: 10, pre: [ROCKET_I, FW_I, FU_I] }];
+        const FWT = new THREE.Vector3(1, 0.56, 0.36); // 06: warm gold-red metal (temporary)
         const CUSTOM_W = 4;
         let customTint = [0.963, 0.979, 1], customName = "AXON", customTag = "", customTpl = "reveal", rec = null; // rec: export hook for edit B
         const WAUD = WORKS.map((w) => { const a = new Audio(); a.preload = "auto"; a.addEventListener("error", () => (a.bad = true)); a.src = w.src; return a; });
@@ -783,9 +813,10 @@
           if (work) endWork(true);
           document.body.classList.add("x-workon");
           work = { i, t: 0, s2: false, s14: false, b6: false, b9: false, ti: 0, lastBurst: -9, dip: 0, env: 0, tp: customTpl, sh: 0 };
-          waveT = 0; setShape(WORKS[i].type === "custom" ? (TPL[customTpl] || TPL.reveal).s0 : 1);
-          wTagL.textContent = WORKS[i].tag; wTagS.textContent = `AXON · 液态金属广告样片 0${i + 1}`;
-          wHudT.textContent = `WORK 0${i + 1}/06 · ${WORKS[i].name}`; wBar.style.width = "0";
+          (WORKS[i].pre || []).forEach(ensureTex);
+          waveT = 0; setShape(WORKS[i].type === "custom" ? (TPL[customTpl] || TPL.reveal).s0 : WORKS[i].s0 || 1);
+          wTagL.textContent = WORKS[i].tag; wTagS.textContent = WORKS[i].sub || `AXON · 液态金属广告样片 0${i + 1}`;
+          wHudT.textContent = `WORK 0${WORKS[i].no || i + 1}/06 · ${WORKS[i].name}`; wBar.style.width = "0";
           if (WORKS[i].type === "custom") { [wTagL.textContent, wTagS.textContent] = tagTxt(); wHudT.textContent = `MAKE YOURS · ${customName}`; }
           wHud.classList.add("x-on");
           wAudStart(0);
@@ -795,7 +826,7 @@
           wTag.classList.remove("x-on"); wHud.classList.remove("x-on"); sHint.classList.remove("x-on"); document.body.classList.remove("x-workon");
           const vu = velMat.uniforms;
           vu.uMist.value = 0; vu.uPulse.value = 0; ptMat.uniforms.uSweep.value = -9; ptMat.uniforms.uScr.value.y = 0; ptMat.uniforms.uTint.value.copy(skinTint);
-          points.rotation.y = 0; points.rotation.x = 0; camera.position.z = 6; ptMat.uniforms.uSwK.value = 1;
+          points.rotation.y = 0; points.rotation.x = 0; camera.position.z = 6; ptMat.uniforms.uSwK.value = 1; ptMat.uniforms.uGlit.value = 0;
           if (shapeI !== HOME()) setShape(HOME());
           // Audio fades out in workStep; a silent end (switching works) cuts it at once.
           if (silent && wAud) { wAud.pause(); wAud.volume = 0; wAud = null; }
@@ -843,6 +874,7 @@
             if (t >= D) endWork();
             return;
           }
+          if (WORKS[w.i].type === "sw" || WORKS[w.i].type === "fw") { workStep13(w, t, raw, vu, pu, D); return; }
           if (WORKS[w.i].type === "phone") {
             // Phone: 12 s — sphere → phone (1.5) → one slow turn (2.5–7.5) → screen sweep ×2 (7.6–9.8) → tagline (8.4–11) → scatter (10) → end.
             if (t >= 1.5 && !w.s2) { w.s2 = true; setShape(PHONE_I); }
@@ -894,6 +926,48 @@
           wBar.style.width = Math.min(100, (t / D) * 100) + "%";
           if (t >= D) endWork();
         }
+        // v1.3 作品 05/06 timelines (10 s).
+        function aLev(a) { // work-track analyser → [bass, treble] 0..1; null when silent (sound off, bad file, not playing)
+          if (!sndOn || !ac || a.bad || a.paused || a.xfail) return null;
+          if (!a.xan) { try { a.xsrc = ac.createMediaElementSource(a); a.xan = ac.createAnalyser(); a.xan.fftSize = 256; a.xbuf = new Uint8Array(a.xan.frequencyBinCount); a.xsrc.connect(a.xan).connect(ac.destination); } catch (e) { a.xfail = true; return null; } }
+          a.xan.getByteFrequencyData(a.xbuf); let lo = 0, hi = 0;
+          for (let k = 0; k <= 6; k++) lo += a.xbuf[k]; for (let k = 16; k <= 48; k++) hi += a.xbuf[k];
+          return [lo / (7 * 255), hi / (33 * 255)];
+        }
+        function workStep13(w, t, raw, vu, pu, D) {
+          let fb = 0, ft = 0;
+          if (WORKS[w.i].type === "sw") {
+            // 05 SOUNDWAVE: sphere → spectrum ring (0.5) → EQ bars (4) → vinyl, tilted + slow spin (6.8) → tagline (7.4–9.6) → HOME (9.2).
+            if (t >= 0.5 && !w.s2) { w.s2 = true; setShape(RING_I); }
+            if (t >= 4 && !w.b6) { w.b6 = true; setShape(EQ_I); vu.uShock.value.set(0, CY, 0, simT); }
+            if (t >= 6.8 && !w.b9) { w.b9 = true; setShape(VINYL_I); }
+            const L = aLev(WAUD[w.i]);
+            if (L) { w.env += (L[0] - w.env) * (L[0] > w.env ? 0.5 : 0.08); fb = clamp((w.env - 0.3) * 2.2, 0, 1); ft = clamp(L[1] * 3, 0, 1); }
+            else { fb = Math.pow(Math.max(0, Math.sin(t * Math.PI * 2)), 6) * (0.75 + 0.25 * Math.sin(t * 0.9)); ft = clamp(0.5 + 0.5 * Math.sin(t * 17.3) * Math.sin(t * 5.1), 0, 1); } // built-in sine beat (120 bpm)
+            const k = t < 9 ? 1 : clamp(1 - (t - 9) * 2, 0, 1); fb *= k; ft *= k;
+            vu.uPulse.value = fb * (t < 6.8 ? 1 : 0.35);
+            pu.uGlit.value = ft;
+            if (t >= 6.8 && t < 9.2) { const u = clamp((t - 6.8) / 1.2, 0, 1); points.rotation.x = 1.05 * u * u * (3 - 2 * u); points.rotation.y += raw * 0.9 * u; }
+            else if (t >= 9.2) { points.rotation.y = wrapA(points.rotation.y) * Math.exp(-3 * raw); points.rotation.x *= Math.exp(-3 * raw); }
+            pu.uTint.value.lerp(skinTint, 1 - Math.exp(-3 * raw));
+          } else {
+            // 06 新春: rockets climb (lift 0→9) → five shock bursts at the shell centres (1.5–2.4) → embers droop → fall into 福 / 2027 (5.2) → tagline (6.8–9.6) → HOME (9.2).
+            if (t < 1.5) lift = KF([[0, 0], [0.3, 0], [1.4, 9]], t);
+            if (t >= 1.5 && !w.s2) { w.s2 = true; lift = 0; setShape(FW_I); }
+            FWC.forEach((c, k) => { if (t >= 1.5 + k * 0.22 && !(w.sh & (1 << k))) { w.sh |= 1 << k; vu.uShock.value.set(c[0], c[1], 0, simT); chime(0.08); } });
+            w.gm = KF([[1.4, 1], [1.55, 0.55], [2.6, 1]], t);
+            if (t >= 3.4 && t < 5.2) lift = -1.2 * clamp((t - 3.4) / 0.8, 0, 1);
+            if (t >= 5.2 && !w.b6) { w.b6 = true; setShape(FU_I); }
+            if (t >= 5.2 && t < 9) lift = KF([[5.2, -3.5], [7.2, 0]], t);
+            vu.uPulse.value *= Math.exp(-6 * raw);
+            pu.uTint.value.lerp(t < 9 ? FWT : skinTint, 1 - Math.exp(-3 * raw));
+          }
+          w.fb = fb; w.ft = ft;
+          wTag.classList.toggle("x-on", t >= (WORKS[w.i].type === "fw" ? 6.8 : 7.4) && t < 9.6);
+          if (t >= 9.2 && !w.s14) { w.s14 = true; w.gm = 1; setShape(HOME()); }
+          wBar.style.width = Math.min(100, (t / D) * 100) + "%";
+          if (t >= D) endWork();
+        }
         document.getElementById("wClose").addEventListener("click", () => endWork());
         const HOME = () => (skin ? skin.form : 0); // current skin's resting form
         const baseStep = (d) => { if (!rec) setShape((((shapeI + d) % BASE_N) + BASE_N) % BASE_N); };
@@ -903,9 +977,9 @@
           if ((e.key === "d" || e.key === "D") && !e.metaKey && !e.ctrlKey && !e.altKey) { drawMode(!drawOn); return; }
           if (drawOn) { if (e.key === "Escape") drawMode(false); else if (e.key === "Enter") drawSolid(); else if (e.key === "c" || e.key === "C") drawClear(); return; } // other shape/work keys are ignored while drawing
           const dg = /^Digit([1-5])$/.exec(e.code || "");
-          // Shift+1..5 = shapes 0–4; plain 5 = shape 4; plain 1–4 = works.
+          // Shift+1..5 = shapes 0–4; plain 1–4 = works 01–04; plain 5/6 = works 05/06 (v1.3).
           if (dg && e.shiftKey) { if (!work) setShape(+dg[1] - 1); }
-          else if (e.key === "5") { if (!work) setShape(4); }
+          else if (e.key === "5" || e.key === "6") playWork(+e.key);
           else if (e.key >= "1" && e.key <= "4" && e.key.length === 1) playWork(+e.key - 1);
           else if (e.key === "ArrowRight") baseStep(1);
           else if (e.key === "ArrowLeft") baseStep(-1);
@@ -914,7 +988,7 @@
         document.getElementById("bNext").addEventListener("click", () => baseStep(1));
         // WORKS index: hover/focus leans the cloud toward the work's shape; click plays it.
         document.querySelectorAll("#works button[data-w]").forEach((b) => {
-          const i = +b.dataset.w, on = () => { hovW = true; leanI = WORKS[i].shape; velMat.uniforms.tLean.value = texs[leanI]; }, off = () => { hovW = false; };
+          const i = +b.dataset.w, on = () => { hovW = true; leanI = WORKS[i].lean != null ? WORKS[i].lean : WORKS[i].shape; velMat.uniforms.tLean.value = texs[leanI]; }, off = () => { hovW = false; };
           b.addEventListener("pointerenter", on); b.addEventListener("focus", on);
           b.addEventListener("pointerleave", off); b.addEventListener("blur", off);
           b.addEventListener("click", () => playWork(i));
@@ -1518,7 +1592,7 @@
             }
           }
           bLo += (lo - bLo) * (1 - Math.exp(-(lo > bLo ? 22 : 5) * raw)); bHi += (hi - bHi) * (1 - Math.exp(-(hi > bHi ? 30 : 7) * raw));
-          ptMat.uniforms.uBass.value = bLo < 1e-3 ? 0 : bLo; bgMat.uniforms.uTreble.value = Math.max(bHi < 1e-3 ? 0 : bHi, work && work.lb != null ? clamp(work.lb - 1, 0, 1.5) : 0);
+          ptMat.uniforms.uBass.value = Math.max(bLo < 1e-3 ? 0 : bLo, (work && work.fb) || 0); bgMat.uniforms.uTreble.value = Math.max(bHi < 1e-3 ? 0 : bHi, work && work.lb != null ? clamp(work.lb - 1, 0, 1.5) : 0, ((work && work.ft) || 0) * 0.6);
         }
         function fxStep(raw, dt) {
           fxT += raw;
