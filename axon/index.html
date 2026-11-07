@@ -112,6 +112,13 @@
       /* PORTAL: skin picker button + panel */
       .x-pbtn { right: 110px; top: 6px; min-width: 44px; height: 44px; padding: 0 14px; border: 1px solid rgba(255,255,255,.5); background: none; color: rgba(255,255,255,.7); font: inherit; font-size: 10px; line-height: 1.25; letter-spacing: .12em; cursor: pointer; border-radius: 22px; pointer-events: auto; transition: color .3s, background .3s, box-shadow .3s; }
       .x-pbtn span { display: block; }
+      .x-lang { right: 200px; font-size: 11px; } /* v1.7 中/EN */
+      #recMask { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; margin: 0; background: #000; font: 300 13px/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .2em; color: rgba(255,255,255,.8); }
+      .x-masked #recMask { display: flex; } .x-masked #wTag { display: none; } /* v1.7: renderer is at the export size while recording 9:16 / 1:1 */
+      .x-case { position: fixed; right: 16px; top: 50%; width: 270px; max-width: calc(100vw - 32px); box-sizing: border-box; padding: 12px 14px; border-radius: 14px; background: rgba(10,14,24,.62); border: 1px solid rgba(255,255,255,.14); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); font: 300 12px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .06em; color: rgba(255,255,255,.85); opacity: 0; visibility: hidden; transform: translate(calc(100% + 24px), -50%); transition: transform .5s, opacity .5s, visibility .5s; }
+      .x-case.x-on { opacity: 1; visibility: visible; transform: translate(0, -50%); } .x-case b { display: block; margin: 0 28px 6px 0; color: #fff; font-weight: 400; } .x-case p { margin: 5px 0; } .x-case i { display: block; font-style: normal; font-size: 10px; letter-spacing: .2em; opacity: .5; }
+      #caseGo { display: block; width: 100%; min-height: 38px; margin-top: 8px; border: 1px solid rgba(255,255,255,.6); border-radius: 10px; background: rgba(255,255,255,.08); color: #fff; font: inherit; letter-spacing: .14em; cursor: pointer; } #caseX { position: absolute; right: 4px; top: 4px; width: 36px; height: 36px; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+      .x-pre .x-case, .x-fallback .x-case { display: none; }
       .x-pbtn:hover, .x-pbtn:focus-visible, .x-pbtn[aria-expanded="true"] { color: #fff; background: rgba(255,255,255,.08); box-shadow: 0 0 12px rgba(255,255,255,.3); outline: none; }
       .x-fallback .x-pbtn, .x-pre .x-portal, .x-fallback .x-portal { display: none; }
       .x-portal { position: fixed; right: 16px; top: 58px; width: 560px; max-width: calc(100vw - 32px); max-height: 70vh; overflow: auto; box-sizing: border-box; display: none; padding: 10px; background: rgba(10,14,24,.55); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; font: 300 12px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .06em; color: rgba(255,255,255,.72); pointer-events: auto; }
@@ -147,6 +154,7 @@
         .x-dpan { top: auto; bottom: 52px; left: 8px; right: 8px; transform: none; justify-content: center; gap: 4px; padding: 5px; } .x-dpan span { display: none; } .x-dpan button { min-height: 40px; padding: 0 10px; }
         .x-drawon #toast { bottom: 108px; }
         .x-ct { bottom: 84px; } #egg { right: 10px; bottom: 100px; } .x-cton .x-works { opacity: 0; } .x-cton .x-works button { pointer-events: none; }
+        .x-lang { right: 160px; top: 2px; padding: 0 8px; } .x-tl { max-width: calc(100vw - 210px); } .x-case { right: 8px; top: 96px; transform: translate(calc(100% + 24px), 0); } .x-case.x-on { transform: none; }
       }
     </style>
   </head>
@@ -156,52 +164,56 @@
     <canvas id="fx" aria-hidden="true"></canvas>
     <canvas id="dCv" aria-hidden="true"></canvas>
     <div class="x-vig" aria-hidden="true"></div>
+    <p id="recMask" aria-hidden="true"><span id="recMaskT"></span></p>
     <p class="x-error">WebGL 不可用</p>
-    <p class="x-hud x-tl"><span id="hLogo" class="x-ui">AXON</span><br /><span id="hScene">SCENE 01 · 垦丁 KENTING</span><small id="hPrev"></small><span class="x-hint"> · 滚动=时间 · 划过=唤醒</span><br /><span id="hShape">WAVE · 浪</span><br /><span id="hTod">TIME 18:20</span> <span id="hMet"></span><br /><span id="hWx"></span></p>
+    <p class="x-hud x-tl"><span id="hLogo" class="x-ui">AXON</span><br /><span id="hScene">SCENE 01 · 垦丁 KENTING</span><small id="hPrev"></small><span class="x-hint" data-i18n="hint"> · 滚动=时间 · 划过=唤醒</span><br /><span id="hShape">WAVE · 浪</span><br /><span id="hTod">TIME 18:20</span> <span id="hMet"></span><br /><span id="hWx"></span></p>
     <div class="x-hud x-tod" aria-hidden="true"><i id="todK"></i></div>
     <button class="x-hud x-snd x-ui" id="bSnd" aria-pressed="false" aria-label="Sound">SOUND OFF</button>
-    <button class="x-hud x-pbtn x-ui" id="bPortal" aria-expanded="false" aria-controls="portal" aria-label="PORTAL 传送门"><span>PORTAL</span><span>传送门</span></button>
+    <button class="x-hud x-pbtn x-ui" id="bPortal" aria-expanded="false" aria-controls="portal" aria-label="PORTAL 传送门"><span>PORTAL</span><span data-i18n="pS">传送门</span></button>
+    <button class="x-hud x-pbtn x-ui x-lang" id="bLang" aria-label="Language 语言 (L)">中 / EN</button>
     <div class="x-ui x-portal" id="portal" role="dialog" aria-label="PORTAL 传送门"></div>
     <audio id="bgm" src="kenting_dusk_shoreline.m4a" preload="auto"></audio>
     <div class="x-hud x-ui x-works" id="works">
       <p>WORKS</p>
-      <button data-w="0">01 香水 PERFUME</button><button data-w="1">02 球鞋 SNEAKER</button><button data-w="2">03 耳机 AUDIO</button><button data-w="3">04 手机 PHONE</button><button data-w="5">05 音乐 SOUNDWAVE</button><button data-w="6">06 新春 FIREWORKS</button>
-      <button id="bMake" aria-expanded="false" aria-controls="gen">✦ 做你的金属广告 MAKE YOURS</button>
-      <button id="bDraw" aria-pressed="false">✎ 写字 / DRAW (D)</button>
-      <button id="bCt" aria-expanded="false" aria-controls="ctP">✉ 联系 CONTACT (M)</button>
+      <button data-w="0" data-i18n="w0">01 香水 PERFUME</button><button data-w="1" data-i18n="w1">02 球鞋 SNEAKER</button><button data-w="2" data-i18n="w2">03 耳机 AUDIO</button><button data-w="3" data-i18n="w3">04 手机 PHONE</button><button data-w="5" data-i18n="w5">05 音乐 SOUNDWAVE</button><button data-w="6" data-i18n="w6">06 新春 FIREWORKS</button>
+      <button id="bMake" data-i18n="bMake" aria-expanded="false" aria-controls="gen">✦ 做你的金属广告 MAKE YOURS</button>
+      <button id="bDraw" data-i18n="bDraw" aria-pressed="false">✎ 写字 / DRAW (D)</button>
+      <button id="bCt" data-i18n="bCt" aria-expanded="false" aria-controls="ctP">✉ 联系 CONTACT (M)</button>
     </div>
     <div class="x-ui x-gen" id="gen" role="dialog" aria-label="MAKE YOURS 品牌金属生成器">
-      <div class="x-gen-h"><span>MAKE YOURS · 品牌金属生成器</span><button class="x-gen-x" id="gClose" aria-label="Close">✕</button></div>
-      <input type="text" id="gName" maxlength="12" placeholder="品牌名 BRAND (1–12)" aria-label="品牌名 BRAND" autocomplete="off" />
-      <input type="text" id="gTag" maxlength="24" placeholder="标语 TAGLINE（可选，默认品牌名）" aria-label="标语 TAGLINE" autocomplete="off" />
-      <label class="x-gbtn">上传 LOGO（可选，仅本地）<input type="file" id="gLogo" accept="image/png,image/svg+xml,image/jpeg" /></label>
+      <div class="x-gen-h"><span data-i18n="genH">MAKE YOURS · 品牌金属生成器</span><button class="x-gen-x" id="gClose" aria-label="Close">✕</button></div>
+      <input type="text" id="gName" maxlength="12" data-i18n-ph="gNamePh" placeholder="品牌名 BRAND (1–12)" aria-label="品牌名 BRAND" autocomplete="off" />
+      <input type="text" id="gTag" maxlength="24" data-i18n-ph="gTagPh" placeholder="标语 TAGLINE（可选，默认品牌名）" aria-label="标语 TAGLINE" autocomplete="off" />
+      <label class="x-gbtn"><span data-i18n="gLogoL">上传 LOGO（可选，仅本地）</span><input type="file" id="gLogo" accept="image/png,image/svg+xml,image/jpeg" /></label>
       <p id="gLogoF" class="x-note" hidden><span id="gLogoN"></span><button id="gLogoX" aria-label="Clear logo">✕</button></p>
-      <p class="x-note">LOGO 只在本机处理，不会上传</p>
-      <p>镜头模板 SHOT</p>
-      <div class="x-chips" id="gTpl"><button data-tpl="reveal" aria-pressed="true">旋转揭示 Reveal</button><button data-tpl="drip" aria-pressed="false">液态滴落 Drip</button><button data-tpl="burst" aria-pressed="false">爆裂重组 Burst</button><button data-tpl="sweep" aria-pressed="false">扫光 Sweep</button><button data-tpl="vortex" aria-pressed="false">漩涡 Vortex</button><button data-tpl="pulse" aria-pressed="false">心跳 Pulse</button></div>
-      <p>材质 / 品牌色 COLOR<input type="color" id="gColor" value="#c8ccd2" aria-label="品牌色 BRAND COLOR" /></p>
-      <div class="x-chips" id="gSkin"><button data-hex="#c8ccd2" aria-pressed="true">银 Silver</button><button data-hex="#d19b42" aria-pressed="false">金 Gold</button><button data-hex="#2a2f3e" aria-pressed="false">黑铬 Black chrome</button><button data-hex="#d1826f" aria-pressed="false">玫瑰金 Rose gold</button></div>
-      <p>音乐 MUSIC</p>
-      <div class="x-chips" id="gMus"><button data-mus="work_perfume.m4a" aria-pressed="false">香水</button><button data-mus="work_sneaker.m4a" aria-pressed="false">球鞋</button><button data-mus="work_audio.m4a" aria-pressed="false">耳机</button><button data-mus="kenting_dusk_shoreline.m4a" aria-pressed="true">场景 BGM</button></div>
-      <button id="gGo">生成 GENERATE</button>
-      <button id="gLink">⧉ 复制专属链接 COPY LINK</button><input type="text" id="gLinkT" readonly hidden aria-label="专属链接 LINK" />
+      <p class="x-note" data-i18n="logoN">LOGO 只在本机处理，不会上传</p>
+      <p data-i18n="shot">镜头模板 SHOT</p>
+      <div class="x-chips" id="gTpl"><button data-tpl="reveal" data-i18n="t_reveal" aria-pressed="true">旋转揭示 Reveal</button><button data-tpl="drip" data-i18n="t_drip" aria-pressed="false">液态滴落 Drip</button><button data-tpl="burst" data-i18n="t_burst" aria-pressed="false">爆裂重组 Burst</button><button data-tpl="sweep" data-i18n="t_sweep" aria-pressed="false">扫光 Sweep</button><button data-tpl="vortex" data-i18n="t_vortex" aria-pressed="false">漩涡 Vortex</button><button data-tpl="pulse" data-i18n="t_pulse" aria-pressed="false">心跳 Pulse</button></div>
+      <p><span data-i18n="color">材质 / 品牌色 COLOR</span><input type="color" id="gColor" value="#c8ccd2" aria-label="品牌色 BRAND COLOR" /></p>
+      <div class="x-chips" id="gSkin"><button data-hex="#c8ccd2" data-i18n="c_silver" aria-pressed="true">银 Silver</button><button data-hex="#d19b42" data-i18n="c_gold" aria-pressed="false">金 Gold</button><button data-hex="#2a2f3e" data-i18n="c_black" aria-pressed="false">黑铬 Black chrome</button><button data-hex="#d1826f" data-i18n="c_rose" aria-pressed="false">玫瑰金 Rose gold</button></div>
+      <p data-i18n="mus">音乐 MUSIC</p>
+      <div class="x-chips" id="gMus"><button data-mus="work_perfume.m4a" data-i18n="m0" aria-pressed="false">香水</button><button data-mus="work_sneaker.m4a" data-i18n="m1" aria-pressed="false">球鞋</button><button data-mus="work_audio.m4a" data-i18n="m2" aria-pressed="false">耳机</button><button data-mus="kenting_dusk_shoreline.m4a" data-i18n="m3" aria-pressed="true">场景 BGM</button></div>
+      <button id="gGo" data-i18n="gGo">生成 GENERATE</button>
+      <button id="gLink" data-i18n="gLink">⧉ 复制专属链接 COPY LINK</button><input type="text" id="gLinkT" readonly hidden aria-label="专属链接 LINK" />
       <div id="gOut">
+        <p data-i18n="asp">比例 RATIO</p><div class="x-chips" id="gAsp"><button data-asp="16:9" aria-pressed="true">16:9</button><button data-asp="9:16" aria-pressed="false">9:16</button><button data-asp="1:1" aria-pressed="false">1:1</button></div>
         <button id="gRec" aria-disabled="true">● 导出视频 EXPORT 10s</button>
-        <p id="gNote" class="x-note">先生成，再导出 10 秒视频</p>
+        <p id="gNote" class="x-note" data-i18n="gNote">先生成，再导出 10 秒视频</p>
         <div id="gRes" hidden>
           <video id="gVid" controls playsinline muted loop></video>
-          <div class="x-grow"><a id="gDl" download>下载 DOWNLOAD</a><button id="gShare">分享 SHARE</button></div>
-          <p class="x-note">若下载无反应：在预览上右键 / 长按另存</p>
+          <div class="x-grow"><a id="gDl" download data-i18n="gDl">下载 DOWNLOAD</a><button id="gShare" data-i18n="gShare">分享 SHARE</button></div>
+          <p class="x-note" data-i18n="dlN">若下载无反应：在预览上右键 / 长按另存</p>
         </div>
       </div>
     </div>
-    <div class="x-hud x-ui x-dpan" id="dPan" role="toolbar" aria-label="DRAW 写字"><span>DRAW · 写字</span><button id="dClr">清除</button><button id="dSet">凝固</button><button id="dRec">● 导出 10 秒</button><button id="dEx">退出</button></div>
+    <div class="x-hud x-ui x-dpan" id="dPan" role="toolbar" aria-label="DRAW 写字"><span data-i18n="dPanT">DRAW · 写字</span><button id="dClr" data-i18n="dClr">清除</button><button id="dSet" data-i18n="dSet">凝固</button><button id="dAsp">▭ 16:9</button><button id="dRec" data-i18n="dRec">● 导出 10 秒</button><button id="dEx" data-i18n="dEx">退出</button></div>
     <p id="toast" role="status" aria-live="polite"></p>
-    <div class="x-ui x-ct" id="ctP" role="dialog" aria-label="联系 CONTACT"><span>AXON STUDIO</span><a id="ctMail" href="#"></a><button id="ctCpM">复制邮箱</button><span id="ctWx"></span><button id="ctCpW">复制微信</button><button id="ctX" aria-label="Close contact">✕</button></div>
+    <div class="x-ui x-ct" id="ctP" role="dialog" aria-label="联系 CONTACT"><span>AXON STUDIO</span><a id="ctMail" href="#"></a><button id="ctCpM" data-i18n="ctCpM">复制邮箱</button><span id="ctWx"></span><button id="ctCpW" data-i18n="ctCpW">复制微信</button><button id="ctX" aria-label="Close contact">✕</button></div>
     <p id="egg" role="status" aria-live="polite"></p>
+    <div class="x-ui x-case" id="case" role="status" aria-live="polite"><b id="caseT"></b><p><i data-i18n="cNeed">需求</i><span id="caseA"></span></p><p><i data-i18n="cPlan">方案</i><span id="caseB"></span></p><p><i data-i18n="cOut">成片</i><span id="caseC"></span></p><button id="caseGo" data-i18n="caseGo">做一支我的 →</button><button id="caseX" aria-label="Close">✕</button></div>
     <p id="wTag" aria-live="polite"><b id="wTagL"></b><small id="wTagS"></small></p>
     <div class="x-hud x-ui x-whud" id="wHud"><span id="recDot" hidden><i aria-hidden="true">●</i> <b id="recT">REC 10s</b></span><span id="wHudT"></span><span class="x-wbar"><i id="wBar"></i></span><button id="wClose" aria-label="Close work">✕</button></div>
-    <p class="x-hud" id="sHint">开声音更好看 SOUND ON</p>
+    <p class="x-hud" id="sHint" data-i18n="sHint">开声音更好看 SOUND ON</p>
     <p class="x-hud x-bl" id="hInfo">X 0000 Y 0000</p>
     <p class="x-hud x-br"><span id="hTime">--:--:--</span><br />21.90°N 120.85°E</p>
     <div class="x-hud x-ctl x-ui">
@@ -209,7 +221,7 @@
     </div>
     <div class="x-intro x-ui" id="intro">
       <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" stroke="rgba(255,255,255,.15)" /><circle id="ring" cx="50" cy="50" r="46" stroke="rgba(255,255,255,.8)" stroke-dasharray="289" stroke-dashoffset="289" /></svg>
-      <p class="x-hud">按住进入 · HOLD TO ENTER</p>
+      <p class="x-hud" data-i18n="hold">按住进入 · HOLD TO ENTER</p>
     </div>
     <script src="three.min.js"></script>
     <script>
@@ -218,6 +230,38 @@
         // email / wechat 目前是占位。qr 填同源（或允许 CORS）的二维码图片地址后，联系幕粒子会拼出二维码；读图失败（跨域等）自动退回文字。
         const CONTACT = { email: "everest86342@163.com", wechat: "AXON_STUDIO", qr: null };
         // ==================================================================
+        // v1.7 中/EN · UI copy as key: [中文, English]. [data-i18n] / [data-i18n-ph] elements pick these up; particle text (AXON, brand, 福) never changes.
+        const I18N = { hint: [" · 滚动=时间 · 划过=唤醒", " · SCROLL = TIME · SWIPE = WAKE"], pS: ["传送门", "SCENES"], bMake: ["✦ 做你的金属广告 MAKE YOURS", "✦ MAKE YOUR METAL AD"], bDraw: ["✎ 写字 / DRAW (D)", "✎ DRAW (D)"], bCt: ["✉ 联系 CONTACT (M)", "✉ CONTACT (M)"],
+          w0: ["01 香水 PERFUME", "01 PERFUME"], w1: ["02 球鞋 SNEAKER", "02 SNEAKER"], w2: ["03 耳机 AUDIO", "03 AUDIO"], w3: ["04 手机 PHONE", "04 PHONE"], w5: ["05 音乐 SOUNDWAVE", "05 SOUNDWAVE"], w6: ["06 新春 FIREWORKS", "06 LUNAR NEW YEAR"],
+          genH: ["MAKE YOURS · 品牌金属生成器", "MAKE YOURS · BRAND METAL"], gNamePh: ["品牌名 BRAND (1–12)", "Brand name (1–12)"], gTagPh: ["标语 TAGLINE（可选，默认品牌名）", "Tagline (optional, defaults to brand)"], gLogoL: ["上传 LOGO（可选，仅本地）", "Upload logo (optional, local only)"], logoN: ["LOGO 只在本机处理，不会上传", "Your logo stays on this device"],
+          shot: ["镜头模板 SHOT", "SHOT"], t_reveal: ["旋转揭示 Reveal", "Reveal"], t_drip: ["液态滴落 Drip", "Drip"], t_burst: ["爆裂重组 Burst", "Burst"], t_sweep: ["扫光 Sweep", "Sweep"], t_vortex: ["漩涡 Vortex", "Vortex"], t_pulse: ["心跳 Pulse", "Pulse"],
+          color: ["材质 / 品牌色 COLOR", "MATERIAL / BRAND COLOR"], c_silver: ["银 Silver", "Silver"], c_gold: ["金 Gold", "Gold"], c_black: ["黑铬 Black chrome", "Black chrome"], c_rose: ["玫瑰金 Rose gold", "Rose gold"],
+          mus: ["音乐 MUSIC", "MUSIC"], m0: ["香水", "Perfume"], m1: ["球鞋", "Sneaker"], m2: ["耳机", "Audio"], m3: ["场景 BGM", "Scene BGM"], gGo: ["生成 GENERATE", "GENERATE"], gLink: ["⧉ 复制专属链接 COPY LINK", "⧉ COPY CLIENT LINK"],
+          asp: ["比例 RATIO", "ASPECT RATIO"], gRec: ["● 导出视频 EXPORT 10s", "● EXPORT 10s VIDEO"], gNote: ["先生成，再导出 10 秒视频", "Generate first, then export a 10 s video"], gDl: ["下载 DOWNLOAD", "DOWNLOAD"], gShare: ["分享 SHARE", "SHARE"], dlN: ["若下载无反应：在预览上右键 / 长按另存", "If download does nothing: right-click / long-press the preview to save"],
+          dPanT: ["DRAW · 写字", "DRAW"], dClr: ["清除", "Clear"], dSet: ["凝固", "Solidify"], dRec: ["● 导出 10 秒", "● Export 10s"], dEx: ["退出", "Exit"], ctCpM: ["复制邮箱", "Copy email"], ctCpW: ["复制微信", "Copy WeChat"], ctWx: ["微信 WeChat ", "WeChat "],
+          sHint: ["开声音更好看 SOUND ON", "BETTER WITH SOUND ON"], hold: ["按住进入 · HOLD TO ENTER", "HOLD TO ENTER"], sub: ["AXON · 液态金属广告样片 0{n}", "AXON · LIQUID METAL AD SAMPLE 0{n}"],
+          madeFor: ["为 {b} 定制 · AXON STUDIO", "MADE FOR {b} · AXON STUDIO"], endCard: ["定制你的品牌广告 · 联系 AXON", "YOUR BRAND IN LIQUID METAL · CONTACT AXON"],
+          mask916: ["正在渲染竖版…", "RENDERING 9:16…"], mask11: ["正在渲染方版…", "RENDERING 1:1…"], mask169: ["正在渲染横版…", "RENDERING 16:9…"],
+          cNeed: ["需求", "BRIEF"], cPlan: ["方案", "APPROACH"], cOut: ["成片", "DELIVERED"], caseGo: ["做一支我的 →", "MAKE MINE →"], langT: ["语言 · 中文", "LANGUAGE · ENGLISH"] };
+        // v1.7 case cards (fictional pitch copy), keyed by work index; tpl = template preselected by「做一支我的」.
+        const CASES = {
+          0: { tpl: "sweep", zh: ["新香上市 15 秒社媒短片", "液态金属汇成瓶身，扫光揭示品牌", "10 秒竖版 + 横版"], en: ["15 s social teaser for a new fragrance", "Liquid metal pools into the bottle; a light sweep reveals the brand", "10 s vertical + horizontal"] },
+          1: { tpl: "drip", zh: ["限量球鞋发售预热物料", "金属滴落成鞋形，冲击波带出发售日", "6 秒预热 + 10 秒主片"], en: ["Teaser kit for a limited sneaker drop", "Metal drips into the shoe; a shockwave lands the release date", "6 s teaser + 10 s hero cut"] },
+          2: { tpl: "pulse", zh: ["降噪耳机新品直播开场", "金属随低频心跳起伏，收拢成耳机", "10 秒直播片头 + 循环屏保"], en: ["Livestream opener for new ANC headphones", "Metal breathes with the bass, then folds into the headset", "10 s stream intro + idle loop"] },
+          3: { tpl: "reveal", zh: ["旗舰手机发布会倒数", "粒子旋转汇聚成机身，镜头推近亮屏", "12 秒主视觉 + 3 张海报帧"], en: ["Countdown for a flagship phone launch", "Particles spin into the body; the camera pushes in as the screen lights", "12 s key visual + 3 poster frames"] },
+          5: { tpl: "vortex", zh: ["音乐节品牌联名视觉", "频谱环 → 均衡器 → 黑胶，跟着节拍转", "10 秒竖版 + 大屏循环版"], en: ["Co-branded visual for a music festival", "Spectrum ring → EQ → vinyl, turning on the beat", "10 s vertical + big-screen loop"] },
+          6: { tpl: "burst", zh: ["春节品牌贺岁短片", "金属烟花炸开，余烬落成「福」", "10 秒竖版贺卡 + 横版"], en: ["Lunar New Year greeting film", "Metal fireworks burst; embers fall into 福", "10 s vertical e-card + horizontal"] } };
+        let LANG = "zh"; const LANG_HOOKS = [];
+        { const h = (/(?:^#|&)lang=(en|zh)\b/.exec(location.hash) || [])[1]; let st = null; try { st = localStorage.getItem("axon.lang"); } catch (e) {}
+          LANG = h || (st === "en" || st === "zh" ? st : /^zh/i.test(navigator.language || "zh") ? "zh" : "en"); }
+        const T = (k, o) => { let v = (I18N[k] || [k, k])[LANG === "en" ? 1 : 0]; if (o) for (const q in o) v = v.split("{" + q + "}").join(o[q]); return v; };
+        const bi = (v) => (LANG !== "en" || !/[\u3400-\u9fff]/.test(v) ? v : v.replace(/[\u3000-\u303f\u3400-\u9fff\uff00-\uffef]+/g, " ").replace(/\s+/g, " ").replace(/^[\s·/]+|[\s·/]+$/g, "") || v); // "清晨 DAWN" → "DAWN"
+        function applyLang(l) {
+          LANG = l === "en" ? "en" : "zh"; document.documentElement.lang = LANG === "en" ? "en" : "zh-Hant";
+          document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = T(el.dataset.i18n)));
+          document.querySelectorAll("[data-i18n-ph]").forEach((el) => (el.placeholder = T(el.dataset.i18nPh)));
+          LANG_HOOKS.forEach((f) => { try { f(); } catch (e) {} });
+        }
         const canvas = document.getElementById("gl");
         const img = document.getElementById("plate");
         const fail = () => document.body.classList.add("x-fallback");
@@ -757,8 +801,9 @@
           shapeI = (i + shapes.length) % shapes.length;
           if (!texs[shapeI]) texs[shapeI] = makeTex(shapes[shapeI][1]);
           if (!(sp.on && sp.out < 0)) { u.tPrev.value = u.tTarget.value; u.tTarget.value = texs[shapeI]; u.uMorphT.value = simT; } // v1.6: splash keeps its glyph; picked up when it fades
-          nameEls.forEach((el) => (el.textContent = shapes[shapeI][0]));
+          nameEls.forEach((el) => (el.textContent = bi(shapes[shapeI][0])));
         }
+        LANG_HOOKS.push(() => nameEls.forEach((el) => (el.textContent = bi(shapes[shapeI][0]))));
         function setCustomTex() {
           const old = texs[CUSTOM_I], u = velMat.uniforms;
           texs[CUSTOM_I] = makeTex(gCustom);
@@ -813,10 +858,10 @@
         document.documentElement.addEventListener("mouseleave", () => { hasMouse = false; pvx = pvy = 0; });
         // Works: a 15 s timeline per work: sphere → hero shape (4–11) → tagline (11–14) → wave → end.
         const WORKS = [{ name: "香水 PERFUME", shape: 5, tag: "LIQUID. LIGHT. LASTING.", src: "work_perfume.m4a" }, { name: "球鞋 SNEAKER", shape: 6, tag: "FORGED IN MOTION", src: "work_sneaker.m4a" }, { name: "耳机 AUDIO", shape: 7, tag: "HEAR THE METAL", src: "work_audio.m4a" },
-          { name: "手机 PHONE", shape: PHONE_I, tag: "AXON PHONE · 液态成形", src: "work_perfume.m4a", type: "phone", dur: 12 },
+          { name: "手机 PHONE", shape: PHONE_I, tag: "AXON PHONE · 液态成形", tagE: "AXON PHONE · LIQUID-FORMED", src: "work_perfume.m4a", type: "phone", dur: 12 },
           { name: "定制 CUSTOM", shape: CUSTOM_I, tag: "", src: "kenting_dusk_shoreline.m4a", type: "custom", dur: 10 },
-          { name: "音乐 SOUNDWAVE", shape: RING_I, lean: 4, no: 5, tag: "SOUNDWAVE", sub: "音乐可视化 · AXON", src: "work_audio.m4a", type: "sw", dur: 10, pre: [RING_I, EQ_I, VINYL_I] },
-          { name: "新春 FIREWORKS", shape: ROCKET_I, lean: 1, no: 6, s0: ROCKET_I, tag: "新春快乐", sub: "HAPPY NEW YEAR 2027 · AXON", src: "work_sneaker.m4a", type: "fw", dur: 10, pre: [ROCKET_I, FW_I, FU_I] }];
+          { name: "音乐 SOUNDWAVE", shape: RING_I, lean: 4, no: 5, tag: "SOUNDWAVE", sub: "音乐可视化 · AXON", subE: "MUSIC VISUALIZER · AXON", src: "work_audio.m4a", type: "sw", dur: 10, pre: [RING_I, EQ_I, VINYL_I] },
+          { name: "新春 FIREWORKS", shape: ROCKET_I, lean: 1, no: 6, s0: ROCKET_I, tag: "新春快乐", tagE: "HAPPY NEW YEAR", sub: "HAPPY NEW YEAR 2027 · AXON", src: "work_sneaker.m4a", type: "fw", dur: 10, pre: [ROCKET_I, FW_I, FU_I] }];
         const FWT = new THREE.Vector3(1, 0.56, 0.36); // 06: warm gold-red metal (temporary)
         const CUSTOM_W = 4;
         let customTint = [0.963, 0.979, 1], customName = "AXON", customTag = "", customTpl = "reveal", rec = null; // rec: export hook for edit B
@@ -841,7 +886,7 @@
           return a[a.length - 1][1];
         };
         const hb = (t) => { const p = (t * 1.27) % 1; return Math.exp(-Math.pow((p - 0.06) / 0.05, 2)) + 0.6 * Math.exp(-Math.pow((p - 0.26) / 0.06, 2)); }; // ~76 bpm lub-dub
-        const tagTxt = () => [(customTag || customName).toUpperCase(), brandLink && customName === brandLink ? `为 ${customName} 定制 · AXON STUDIO` : customTag ? customName.toUpperCase() + " · MADE WITH AXON" : "MADE WITH AXON"]; // v1.6 brand link end card
+        const tagTxt = () => [(customTag || customName).toUpperCase(), brandLink && customName === brandLink ? T("madeFor", { b: customName }) : customTag ? customName.toUpperCase() + " · MADE WITH AXON" : "MADE WITH AXON"]; // v1.6 brand link end card
         function wAudStart(t) {
           const a = WAUD[work.i];
           if (!sndOn || a.bad) return;
@@ -853,19 +898,24 @@
           if (drawOn) drawMode(false, true);
           if (sk) skinAbort();
           if (work) endWork(true);
-          document.body.classList.add("x-workon");
+          caseShow(-1); document.body.classList.add("x-workon");
           work = { i, t: 0, s2: false, s14: false, b6: false, b9: false, ti: 0, lastBurst: -9, dip: 0, env: 0, tp: customTpl, sh: 0 };
           (WORKS[i].pre || []).forEach(ensureTex);
           waveT = 0; setShape(WORKS[i].type === "custom" ? (TPL[customTpl] || TPL.reveal).s0 : WORKS[i].s0 || 1);
-          wTagL.textContent = WORKS[i].tag; wTagS.textContent = WORKS[i].sub || `AXON · 液态金属广告样片 0${i + 1}`;
-          wHudT.textContent = `WORK 0${WORKS[i].no || i + 1}/06 · ${WORKS[i].name}`; wBar.style.width = "0";
-          if (WORKS[i].type === "custom") { [wTagL.textContent, wTagS.textContent] = tagTxt(); wHudT.textContent = `MAKE YOURS · ${customName}`; }
+          workTxt(i); wBar.style.width = "0";
           wHud.classList.add("x-on");
           wAudStart(0);
         }
+        function workTxt(i) { // v1.7: work tagline / subtitle / HUD in the current language
+          const w = WORKS[i], en = LANG === "en";
+          wTagL.textContent = (en && w.tagE) || w.tag; wTagS.textContent = (en && w.subE) || w.sub || T("sub", { n: i + 1 });
+          wHudT.textContent = `WORK 0${w.no || i + 1}/06 · ${bi(w.name)}`;
+          if (w.type === "custom") { [wTagL.textContent, wTagS.textContent] = tagTxt(); wHudT.textContent = `MAKE YOURS · ${customName}`; }
+        }
+        LANG_HOOKS.push(() => work && workTxt(work.i));
         function endWork(silent) {
           if (!work) return;
-          if (WORKS[work.i].type !== "custom" && work.t >= (WORKS[work.i].dur || 15)) { egg.seen.add(work.i); if (egg.seen.size >= 6 && !egg.auto) egg.ctQ = 1.5; } // v1.4: all six works watched → contact finale
+          if (WORKS[work.i].type !== "custom" && work.t >= (WORKS[work.i].dur || 15)) { egg.seen.add(work.i); caseShow(work.i); if (egg.seen.size >= 6 && !egg.auto) egg.ctQ = 1.5; } // v1.4: all six works watched → contact finale
           wTag.classList.remove("x-on"); wHud.classList.remove("x-on"); sHint.classList.remove("x-on"); document.body.classList.remove("x-workon");
           const vu = velMat.uniforms;
           vu.uMist.value = 0; vu.uPulse.value = 0; ptMat.uniforms.uSweep.value = -9; ptMat.uniforms.uScr.value.y = 0; ptMat.uniforms.uTint.value.copy(skinTint);
@@ -1067,7 +1117,23 @@
           customTint = hexTint(gColor.value) || hexTint("#c8ccd2");
           customTag = gTag.value.trim().slice(0, 24);
         }
-        ["gTpl", "gMus"].forEach((id) => $(id).addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) pick($(id), b); }));
+        ["gTpl", "gMus", "gAsp"].forEach((id) => $(id).addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) pick($(id), b); }));
+        // v1.7 case card: a work that plays to its end slides in brief → approach → delivery (CASES); "make mine" opens the generator on that template. Hides after 8 s.
+        let caseTm = 0, caseI = -1;
+        function caseShow(i) {
+          const c = CASES[i], box = $("case"); clearTimeout(caseTm); caseI = c ? i : -1;
+          if (!c) { box.classList.remove("x-on"); return; }
+          const L = LANG === "en" ? c.en : c.zh;
+          $("caseT").textContent = `CASE 0${WORKS[i].no || i + 1} · ${bi(WORKS[i].name)}`; ["caseA", "caseB", "caseC"].forEach((id, k) => ($(id).textContent = L[k]));
+          box.classList.add("x-on"); caseTm = setTimeout(() => caseShow(-1), 8000);
+        }
+        $("caseX").addEventListener("click", () => caseShow(-1));
+        $("caseGo").addEventListener("click", () => {
+          const c = CASES[caseI]; caseShow(-1); if (!c || rec) return;
+          if (egg.ct) ctShow(false); if (drawOn) drawMode(false, true);
+          pick($("gTpl"), $("gTpl").querySelector(`[data-tpl="${c.tpl}"]`)); genShow(true);
+        });
+        LANG_HOOKS.push(() => caseI >= 0 && caseShow(caseI));
         $("gGo").addEventListener("click", () => {
           if (rec) { toast("录制中 · 请等待导出完成"); return; }
           try {
@@ -1120,7 +1186,7 @@
         })();
         const REC_EXT = REC_MIME.startsWith("video/mp4") ? "mp4" : "webm", audBufs = new Map();
         let recUrl = "", lastFile = null;
-        if (!REC_OK) { gRec.hidden = true; gNote.textContent = "此浏览器不支持视频录制导出（MediaRecorder 不可用）"; }
+        if (!REC_OK) { gRec.hidden = true; gNote.removeAttribute("data-i18n"); gNote.textContent = "此浏览器不支持视频录制导出（MediaRecorder 不可用）"; }
         function decodeTrack(src) {
           if (audBufs.has(src)) return Promise.resolve(audBufs.get(src));
           const dec = fetch(src).then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.arrayBuffer(); })
@@ -1128,7 +1194,8 @@
             .then((b) => { audBufs.set(src, b); return b; });
           return Promise.race([dec, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 4000))]);
         }
-        const recReset = () => { recDot.hidden = true; gRec.disabled = false; gRec.textContent = REC_LABEL; bPause.disabled = false; };
+        const recReset = () => { recDot.hidden = true; gRec.disabled = false; gRec.textContent = T("gRec"); bPause.disabled = false; document.body.classList.remove("x-masked"); if (RSZ) { RSZ = null; resize(); } }; // v1.7: back to the screen size
+        LANG_HOOKS.push(() => { if (!gRec.disabled) gRec.textContent = T("gRec"); });
         async function startRec() {
           if (rec || gRec.disabled) return;
           if (!customPts) { toast("请先生成品牌金属"); return; }
@@ -1153,9 +1220,11 @@
           gRec.disabled = true; gRec.textContent = "● 录制中…";
           try {
             if (paused) { paused = false; bPause.textContent = "❚❚"; bPause.setAttribute("aria-label", "Pause"); }
-            const land = innerWidth >= innerHeight;
+            const land = innerWidth >= innerHeight, asp = aspCur(), L = QS.cur === "low" ? 720 : 1080, big = asp !== "16:9" || !land;
             let W = land ? 1280 : Math.round((1280 * innerWidth) / innerHeight), H = land ? Math.round((1280 * innerHeight) / innerWidth) : 1280;
+            if (big) [W, H] = asp === "9:16" ? [L, Math.round((L * 16) / 9)] : asp === "1:1" ? [L, L] : [1280, 720]; // v1.7: 16:9 on a landscape screen = screen-shaped as before; otherwise the renderer goes to W×H
             W = 2 * Math.round(W / 2); H = 2 * Math.round(H / 2);
+            const U = Math.min(H, W * 0.8), TY = W >= H * 1.2 ? 0.68 : W >= H * 0.9 ? 0.78 : 0.7; // text unit + tagline height per ratio
             const rc = document.createElement("canvas"); rc.width = W; rc.height = H;
             const ctx = rc.getContext("2d"), hasLS = "letterSpacing" in ctx;
             ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
@@ -1164,6 +1233,7 @@
             let buf = null, dest = null;
             if (ac.createMediaStreamDestination) { try { buf = await decodeTrack(WORKS[CUSTOM_W].src); } catch (e) { buf = null; } }
             if (!st) return;
+            if (big) { RSZ = [W, H]; resize(); $("recMaskT").textContent = T(asp === "9:16" ? "mask916" : asp === "1:1" ? "mask11" : "mask169"); document.body.classList.add("x-masked"); }
             if (buf) {
               dest = ac.createMediaStreamDestination();
               st.srcN = ac.createBufferSource(); st.srcN.buffer = buf; st.gain = ac.createGain();
@@ -1180,7 +1250,7 @@
               if (recUrl) URL.revokeObjectURL(recUrl);
               recUrl = URL.createObjectURL(blob);
               gVid.src = recUrl; gDl.href = recUrl;
-              gDl.download = `AXON_${customName.replace(/[\\/:*?"<>|\s]+/g, "_")}.${REC_EXT}`;
+              gDl.download = `AXON_${customName.replace(/[\\/:*?"<>|\s]+/g, "_")}_${asp.replace(":", "x")}.${REC_EXT}`;
               gRes.hidden = false; toast("视频已生成 ✓");
               try { lastFile = new File([blob], gDl.download, { type: blob.type }); } catch (e) { lastFile = null; }
             };
@@ -1194,40 +1264,40 @@
             }
             const gl = renderer.domElement;
             let lastS = -1, failed = false;
+            const fit = (txt, px, wt, fam) => { ctx.font = `${wt} ${px}px ${fam}`; const m = ctx.measureText(txt).width; if (m > W * 0.88) { px = Math.max(10, Math.floor((px * W * 0.88) / m)); ctx.font = `${wt} ${px}px ${fam}`; } return px; }; // shrink to fit the frame width
             // Called from frame() right after the final render, while the WebGL drawing buffer is still valid.
             const draw = () => {
               if (failed || !work) return;
               try {
                 const t = work.t;
                 ctx.globalAlpha = 1; ctx.shadowBlur = 0; if (hasLS) ctx.letterSpacing = "0px";
-                ctx.drawImage(gl, 0, 0, W, H); ctx.drawImage(fxCv, 0, 0, W, H);
+                ctx.drawImage(gl, 0, 0, W, H); if (!big) ctx.drawImage(fxCv, 0, 0, W, H); // screen fx layer only matches the screen-shaped export
                 ctx.textAlign = "center"; ctx.textBaseline = "middle";
                 const tw = (TPL[work.tp] || TPL.reveal).tag, [tL, tS] = tagTxt();
                 if (t >= tw[0] && t < tw[1]) {
-                  const fs = Math.round(H * 0.06), fm = Math.round(H * 0.018);
                   ctx.globalAlpha = clamp(Math.min(t - tw[0], tw[1] - t) / 0.5, 0, 1);
-                  ctx.fillStyle = "#fff"; ctx.shadowColor = "rgba(255,255,255,.6)"; ctx.shadowBlur = H * 0.02;
-                  ctx.font = `200 ${fs}px ${SANS}`;
+                  ctx.fillStyle = "#fff"; ctx.shadowColor = "rgba(255,255,255,.6)"; ctx.shadowBlur = U * 0.02;
                   if (hasLS) ctx.letterSpacing = "0.3em";
-                  ctx.fillText(tL, W / 2 + (hasLS ? fs * 0.15 : 0), 0.68 * H);
+                  const fs = fit(tL, Math.round(U * 0.06), 200, SANS);
+                  ctx.fillText(tL, W / 2 + (hasLS ? fs * 0.15 : 0), TY * H);
                   ctx.shadowBlur = 0; ctx.fillStyle = "rgba(255,255,255,.65)";
-                  ctx.font = `300 ${fm}px ui-monospace, Menlo, monospace`;
                   if (hasLS) ctx.letterSpacing = "0.2em";
-                  ctx.fillText(tS, W / 2 + (hasLS ? fm * 0.1 : 0), 0.68 * H + fs * 0.95);
+                  const fm = fit(tS, Math.round(U * 0.018), 300, "ui-monospace, Menlo, monospace");
+                  ctx.fillText(tS, W / 2 + (hasLS ? fm * 0.1 : 0), TY * H + fs * 0.95);
                   if (hasLS) ctx.letterSpacing = "0px";
                 }
                 if (t >= 9) {
                   const r = clamp((t - 9) / 0.4, 0, 1);
                   ctx.globalAlpha = 1; ctx.fillStyle = `rgba(0,0,0,${0.55 * r})`; ctx.fillRect(0, 0, W, H);
                   ctx.globalAlpha = r; ctx.fillStyle = "#fff";
-                  ctx.font = `300 ${Math.round(H * 0.032)}px ${SANS}`;
-                  ctx.fillText(brandLink && customName === brandLink ? `为 ${customName} 定制 · AXON STUDIO` : "定制你的品牌广告 · 联系 AXON", W / 2, H / 2);
-                  ctx.fillStyle = "rgba(255,255,255,.65)"; ctx.font = `300 ${Math.round(H * 0.018)}px ui-monospace, Menlo, monospace`;
-                  ctx.fillText("CONTACT · " + CONTACT.email, W / 2, H / 2 + H * 0.05);
+                  const eT = brandLink && customName === brandLink ? T("madeFor", { b: customName }) : T("endCard");
+                  fit(eT, Math.round(U * 0.032), 300, SANS); ctx.fillText(eT, W / 2, H / 2);
+                  ctx.fillStyle = "rgba(255,255,255,.65)"; fit("CONTACT · " + CONTACT.email, Math.round(U * 0.018), 300, "ui-monospace, Menlo, monospace");
+                  ctx.fillText("CONTACT · " + CONTACT.email, W / 2, H / 2 + U * 0.05);
                 }
                 ctx.globalAlpha = 1; ctx.textAlign = "right"; ctx.textBaseline = "bottom"; ctx.fillStyle = "rgba(255,255,255,.55)";
-                ctx.font = `300 ${Math.max(11, Math.round(H * 0.016))}px ui-monospace, monospace`;
-                ctx.fillText("AXON · axon studio", W - H * 0.025, H - H * 0.025);
+                ctx.font = `300 ${Math.max(11, Math.round(U * 0.016))}px ui-monospace, monospace`;
+                ctx.fillText("AXON · axon studio", W - U * 0.025, H - U * 0.025);
                 const s = Math.max(0, Math.ceil(10 - t));
                 if (s !== lastS) { lastS = s; recT.textContent = `REC ${s}s`; }
               } catch (err) {
@@ -1249,6 +1319,10 @@
           }
         }
         gRec.addEventListener("click", startRec);
+        // v1.7 ratio picker: chips in MAKE YOURS; the DRAW toolbar button cycles the same chips.
+        const aspCur = () => { const b = gen.querySelector("[data-asp][aria-pressed=true]"); return b ? b.dataset.asp : "16:9"; }, dAsp = $("dAsp"), aspSync = () => (dAsp.textContent = "▭ " + aspCur());
+        $("gAsp").addEventListener("click", aspSync);
+        dAsp.addEventListener("click", () => { const bs = [...$("gAsp").querySelectorAll("button")], k = bs.findIndex((b) => b.dataset.asp === aspCur()); pick($("gAsp"), bs[(k + 1) % bs.length]); aspSync(); toast("▭ " + aspCur()); });
         // ---------- v1.1 DRAW · 液态金属写字 ----------
         // Strokes go to an offscreen 2D canvas (screen px × dK); solidify maps lit pixels onto the z=0 particle plane
         // with the same px→world scale as the pointer (wpp = 12·tan(π/8)/innerHeight/points.scale), like rasterBrand → target texture.
@@ -1348,13 +1422,14 @@
           } catch (e) { fail(); }
         });
 
+        let RSZ = null; // v1.7: [w, h] while exporting 9:16 / 1:1 (renderer at the export size, pixel ratio 1)
         function resize() {
-          const w = innerWidth, h = innerHeight;
-          renderer.setSize(w, h, false);
+          const w = RSZ ? RSZ[0] : innerWidth, h = RSZ ? RSZ[1] : innerHeight, pr = RSZ ? 1 : DPR;
+          renderer.setPixelRatio(pr); renderer.setSize(w, h, false);
           camera.aspect = w / h; camera.updateProjectionMatrix();
           bgMat.uniforms.uRes.value.set(w, h);
-          points.scale.setScalar(Math.min(1, camera.aspect / 1.5));
-          ptMat.uniforms.uSize.value = (SIZE >= 512 ? 4.8 : SIZE >= 362 ? 5.7 : 6.4) * DPR * (h / 900 + 0.4);
+          points.scale.setScalar(Math.min(1, camera.aspect / (RSZ ? 1.25 : 1.5))); // export: portrait / square pull back so the whole form fits
+          ptMat.uniforms.uSize.value = (SIZE >= 512 ? 4.8 : SIZE >= 362 ? 5.7 : 6.4) * pr * (h / 900 + 0.4);
           const sa = w / h, ia = bgMat.uniforms.uImgAspect.value, sx = sa > ia ? 1 : sa / ia, sy = sa > ia ? ia / sa : 1;
           bgMat.uniforms.uLamp.value.set(0.26 / (sx * 0.94) + 0.5, 0.08 / (sy * 0.94) + 0.5);
           bgMat.uniforms.uBeam.value.z = sa;
@@ -1684,9 +1759,10 @@
           U.x += ((w === "rain" ? 1 : 0) - U.x) * k; U.y += ((w === "snow" ? 1 : 0) - U.y) * k; U.z += ((w === "fog" ? 1 : 0) - U.z) * k; U.w += ((w === "wind" ? 1 : 0) - U.w) * k;
           P.x += ((w === "rain" && free ? 1 : 0) - P.x) * k; P.y += ((snowP && free ? 1 : 0) - P.y) * k;
           if (P.x < 0.003) P.x = 0; if (P.y < 0.003) P.y = 0;
-          const key = `${phaseOf(DAY.ph * 24)} · ${WX_NAMES[w]}${wx.mode === "auto" ? "" : " · DEMO"}`;
+          const key = `${bi(phaseOf(DAY.ph * 24))} · ${bi(WX_NAMES[w])}${wx.mode === "auto" ? "" : " · DEMO"}`;
           if (key !== DAY.k) wxEl.textContent = DAY.k = key;
         }
+        LANG_HOOKS.push(() => (DAY.k = ""));
         function fxStep(raw, dt) {
           fxT += raw;
           skinStep(raw); bgmLevels(raw); dayWxStep(raw);
@@ -1888,7 +1964,7 @@
             if (QS.slow >= 3) { QS.dropped = true; QS.at = QS.cur === "high" ? "mid" : "low"; qApply(QS.at); toast(`画质自动降档 · ${Q_ZH[QS.at]} ${QS.at.toUpperCase()}`); } // once per visit
           }
         }
-        const qLabel = () => `Q ${Q_ZH[QS.pend || QS.cur]}${QS.mode === "auto" ? " AUTO" : ""}`;
+        const qLabel = () => `Q ${LANG === "en" ? (QS.pend || QS.cur).toUpperCase() : Q_ZH[QS.pend || QS.cur]}${QS.mode === "auto" ? " AUTO" : ""}`;
 
         // ---------- v1.6 首屏 SPLASH: full-screen scatter → AXON (or #brand) glyph, one sweep + shock, then fades to HOLD TO ENTER ----------
         // ~2.5 s (1 s on a repeat visit in this tab). Loading shows as how far the glyph has gathered: it stalls part-way until the plate and page are in (8 s cap).
@@ -2060,7 +2136,7 @@
           } else { if (!egg.ct) return; egg.ct = 0; if (!work && shapeI === CT_I) setShape(HOME()); }
           ctP.classList.toggle("x-on", on); document.body.classList.toggle("x-cton", on); bCt.setAttribute("aria-expanded", on);
         }
-        $("ctMail").href = "mailto:" + CONTACT.email; $("ctMail").textContent = CONTACT.email; $("ctWx").textContent = "微信 WeChat " + CONTACT.wechat;
+        $("ctMail").href = "mailto:" + CONTACT.email; $("ctMail").textContent = CONTACT.email; $("ctWx").textContent = T("ctWx") + CONTACT.wechat; LANG_HOOKS.push(() => ($("ctWx").textContent = T("ctWx") + CONTACT.wechat));
         const copyTxt = (t) => { const ok = () => toast("已复制 ✓ " + t), bad = () => toast("复制失败，请手动复制：" + t);
           if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(ok, bad);
           else try { const a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select(); const r = document.execCommand("copy"); a.remove(); r ? ok() : bad(); } catch (e) { bad(); } };
@@ -2113,6 +2189,13 @@
           egg.idle = busy ? 0 : egg.idle + r;
           if (egg.idle >= 90 && !egg.auto) { egg.auto = true; egg.idle = 0; ctShow(true, true); } // idle 90 s → contact scene, once per visit
         }
+        // v1.7 中/EN: HUD button or L; #lang=en|zh forces it; the choice is kept in localStorage (failures ignored).
+        const bLang = $("bLang"), langSet = (l, say) => { applyLang(l); try { localStorage.setItem("axon.lang", LANG); } catch (e) {} if (say) toast(T("langT")); };
+        LANG_HOOKS.push(() => { bLang.textContent = LANG === "en" ? "EN / 中" : "中 / EN"; bLang.setAttribute("aria-pressed", LANG === "en"); aspSync(); });
+        bLang.addEventListener("click", () => langSet(LANG === "en" ? "zh" : "en", true));
+        addEventListener("keydown", (e) => { if ((e.key === "l" || e.key === "L") && !e.metaKey && !e.ctrlKey && !e.altKey && !(e.target.closest && e.target.closest("input, textarea"))) langSet(LANG === "en" ? "zh" : "en", true); });
+        addEventListener("hashchange", () => { const m = (/(?:^#|&)lang=(en|zh)\b/.exec(location.hash) || [])[1]; if (m && m !== LANG) applyLang(m); });
+        applyLang(LANG);
         // Skin on load: #skin=<id>, else localStorage, else kenting.
         let skin0 = hashSkin(); if (!skin0) try { skin0 = localStorage.getItem("axon.skin"); } catch (e) {}
         if (skin0 && skinIdx(skin0) > 0) goSkin(skin0, true);
