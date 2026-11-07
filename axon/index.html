@@ -172,6 +172,20 @@
         .x-dl { top: 112px; max-width: calc(100vw - 24px); width: calc(100vw - 24px); }
         .x-lang { right: 160px; top: 2px; padding: 0 8px; } .x-tl { max-width: calc(100vw - 210px); } .x-case { right: 8px; top: 96px; transform: translate(calc(100% + 24px), 0); } .x-case.x-on { transform: none; }
       }
+      /* v2.1 quote form (reuses the generator panel look) · kiosk · phone more-menu */
+      .x-gen.x-qf { left: 50%; top: 50%; bottom: auto; width: 400px; transform: translate(-50%, -50%); max-height: calc(100vh - 120px); }
+      .x-qf input, .x-qf textarea { display: block; width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 8px 10px; border: 1px solid rgba(255,255,255,.2); border-radius: 8px; background: rgba(0,0,0,.25); color: #fff; font: inherit; color-scheme: dark; resize: vertical; }
+      #qGo { display: block; width: 100%; min-height: 44px; border: 1px solid rgba(255,255,255,.75); border-radius: 10px; background: rgba(255,255,255,.08); color: #fff; letter-spacing: .2em; } #qCp { min-height: 36px; padding: 0 12px; border: 1px solid rgba(255,255,255,.3); border-radius: 10px; background: none; }
+      .x-qon .x-ct, .x-qon .x-case { display: none; } .x-qon .x-works { opacity: 0; } .x-qon .x-works button { pointer-events: none; }
+      #kLogo { display: none; position: fixed; right: 18px; bottom: 14px; margin: 0; font: 300 11px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .4em; color: rgba(255,255,255,.55); pointer-events: none; }
+      .x-kiosk #kLogo { display: block; } .x-kiosk, .x-kiosk #gl { cursor: none; }
+      .x-kiosk .x-hud, .x-kiosk .x-ct, .x-kiosk .x-case, .x-kiosk .x-gen, .x-kiosk .x-portal, .x-kiosk .x-mm, .x-kiosk #toast, .x-kiosk #egg, .x-kiosk #jrX, .x-kiosk .x-jrd, .x-kiosk .x-dl button { display: none !important; }
+      .x-pbtn.x-mb { display: none; font-size: 16px; } .x-mm { position: fixed; right: 8px; top: 96px; display: none; flex-direction: column; gap: 4px; padding: 6px; max-height: 64vh; overflow: auto; background: rgba(10,14,24,.72); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; }
+      .x-mm.x-on { display: flex; } .x-mm button { min-height: 40px; padding: 0 14px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; background: none; color: #fff; font: 300 11px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .12em; text-align: left; cursor: pointer; } .x-pre .x-mm, .x-fallback .x-mm { display: none; }
+      @media (max-width: 759px) {
+        .x-gen.x-qf { left: 8px; right: 8px; top: 52px; width: auto; transform: none; max-height: calc(100vh - 64px); } .x-qon .x-ctl { display: none; } /* modal on phones: shape controls would sit over the form */
+        .x-pbtn.x-mb { display: block; right: 2px; top: 48px; padding: 0 12px; } .x-pbtn.x-arb { display: none !important; } /* AR lives in the ⋯ menu on phones */
+      }
     </style>
   </head>
   <body class="x-pre">
@@ -188,6 +202,7 @@
     <button class="x-hud x-pbtn x-ui" id="bPortal" aria-expanded="false" aria-controls="portal" data-i18n-al="alP" aria-label="PORTAL 传送门"><span>PORTAL</span><span data-i18n="pS">传送门</span></button>
     <button class="x-hud x-pbtn x-ui x-lang" id="bLang" data-i18n-al="alL" aria-label="Language 语言 (L)">中 / EN</button>
     <button class="x-hud x-pbtn x-ui x-arb" id="bAR" hidden aria-pressed="false" aria-label="AR camera preview (R)">AR</button>
+    <button class="x-hud x-pbtn x-ui x-mb" id="bMore" aria-expanded="false" aria-controls="mm" data-i18n-al="alMore" aria-label="更多 MORE">⋯</button><div class="x-ui x-mm" id="mm" role="menu" data-i18n-al="alMore" aria-label="更多 MORE"></div>
     <div class="x-ui x-portal" id="portal" role="dialog" data-i18n-al="alP" aria-label="PORTAL 传送门"></div>
     <div class="x-ui x-jr" id="jr" role="status" aria-live="polite"><p id="jrT"></p><small id="jrE"></small><button id="jrX" data-i18n="jrX">✕ 退出旅程 EXIT</button></div>
     <div class="x-ui x-dl" id="dl" role="status" aria-live="polite" data-i18n-al="alDl" aria-label="每日一形"><b id="dlT"></b><small id="dlS"></small><span id="dlL"></span><button id="dlCard" data-i18n="dlCard">⇩ 生成分享卡</button><button id="dlX" aria-label="Close daily">✕</button></div>
@@ -231,8 +246,20 @@
     </div>
     <div class="x-hud x-ui x-dpan" id="dPan" role="toolbar" data-i18n-al="alDraw" aria-label="DRAW 写字"><span data-i18n="dPanT">DRAW · 写字</span><button id="dClr" data-i18n="dClr">清除</button><button id="dSet" data-i18n="dSet">凝固</button><button id="dAsp">▭ 16:9</button><button id="dRec" data-i18n="dRec">● 导出 10 秒</button><button id="dEx" data-i18n="dEx">退出</button></div>
     <p id="toast" role="status" aria-live="polite"></p>
-    <div class="x-ui x-ct" id="ctP" role="dialog" data-i18n-al="alCt" aria-label="联系 CONTACT"><span>AXON STUDIO</span><a id="ctMail" href="#"></a><button id="ctCpM" data-i18n="ctCpM">复制邮箱</button><span id="ctWx"></span><button id="ctCpW" data-i18n="ctCpW">复制微信</button><button id="ctX" aria-label="Close contact">✕</button></div>
+    <div class="x-ui x-ct" id="ctP" role="dialog" data-i18n-al="alCt" aria-label="联系 CONTACT"><span>AXON STUDIO</span><a id="ctMail" href="#"></a><button id="ctCpM" data-i18n="ctCpM">复制邮箱</button><span id="ctWx"></span><button id="ctCpW" data-i18n="ctCpW">复制微信</button><button id="ctQ" data-i18n="ctQ">◇ 获取报价 GET A QUOTE</button><button id="ctX" aria-label="Close contact">✕</button></div>
     <p id="egg" role="status" aria-live="polite"></p>
+    <div class="x-ui x-gen x-qf" id="qf" role="dialog" data-i18n-al="alQf" aria-label="获取报价"><div class="x-gen-h"><span data-i18n="qH">获取报价 · GET A QUOTE</span><button class="x-gen-x" id="qX" aria-label="Close">✕</button></div>
+      <p data-i18n="qTy">项目类型</p><div class="x-chips" id="qTy"><button data-v="social" data-i18n="q_social" aria-pressed="false">社媒短片</button><button data-v="kv" data-i18n="q_kv" aria-pressed="false">品牌主视觉</button><button data-v="launch" data-i18n="q_launch" aria-pressed="false">发布会大屏</button><button data-v="web" data-i18n="q_web" aria-pressed="false">网页交互</button><button data-v="other" data-i18n="q_other" aria-pressed="false">其他</button></div>
+      <p data-i18n="qDu">时长</p><div class="x-chips" id="qDu"><button aria-pressed="false">10s</button><button aria-pressed="false">15s</button><button aria-pressed="false">30s</button><button aria-pressed="false">60s</button></div>
+      <p data-i18n="qAs">比例（可多选）</p><div class="x-chips" id="qAs"><button data-v="16:9" aria-pressed="false">16:9</button><button data-v="9:16" aria-pressed="false">9:16</button><button data-v="1:1" aria-pressed="false">1:1</button></div>
+      <p data-i18n="qBu">预算区间</p><div class="x-chips" id="qBu"><button data-i18n="qB1" aria-pressed="false">&lt; 1 万</button><button data-i18n="qB2" aria-pressed="false">1–3 万</button><button data-i18n="qB3" aria-pressed="false">3–8 万</button><button data-i18n="qB4" aria-pressed="false">8 万 +</button></div>
+      <p data-i18n="qDa">期望交付日期</p><input type="date" id="qDate" data-i18n-al="qDa" aria-label="期望交付日期" />
+      <input type="text" id="qBrand" maxlength="40" data-i18n-ph="qBrPh" placeholder="品牌名" data-i18n-al="qBr" aria-label="品牌" autocomplete="organization" />
+      <textarea id="qMsg" rows="3" maxlength="600" data-i18n-ph="qMsPh" placeholder="留言（可选）" data-i18n-al="qMs" aria-label="留言"></textarea>
+      <input type="text" id="qCt" maxlength="80" required aria-required="true" data-i18n-ph="qCtPh" placeholder="联系方式（必填）" data-i18n-al="qCt" aria-label="联系方式" autocomplete="email" />
+      <button id="qGo" data-i18n="qGo">✉ 生成邮件 SEND</button><p class="x-note" data-i18n="qNote">不经过服务器：将打开你的邮件应用，也可复制文本发送</p>
+      <div id="qOutW" hidden><textarea id="qOut" rows="7" readonly data-i18n-al="alQo" aria-label="报价文本"></textarea><button id="qCp" data-i18n="qCp">⧉ 复制文本</button></div><a id="qMail" hidden></a></div>
+    <p id="kLogo" aria-hidden="true">AXON</p>
     <div class="x-ui x-case" id="case" role="status" aria-live="polite"><b id="caseT"></b><p><i data-i18n="cNeed">需求</i><span id="caseA"></span></p><p><i data-i18n="cPlan">方案</i><span id="caseB"></span></p><p><i data-i18n="cOut">成片</i><span id="caseC"></span></p><button id="caseGo" data-i18n="caseGo">做一支我的 →</button><button id="caseX" aria-label="Close">✕</button></div>
     <p id="wTag" aria-live="polite"><b id="wTagL"></b><small id="wTagS"></small></p>
     <div class="x-hud x-ui x-whud" id="wHud"><span id="recDot" hidden><i aria-hidden="true">●</i> <b id="recT">REC 10s</b></span><span id="wHudT"></span><span class="x-wbar"><i id="wBar"></i></span><button id="wClose" aria-label="Close work">✕</button></div>
@@ -273,6 +300,13 @@
           alColor: ["品牌色 BRAND COLOR", "Brand color"], alLink: ["专属链接 LINK", "Client link"], alDraw: ["DRAW 写字", "DRAW"], alCt: ["联系 CONTACT", "CONTACT"], alJr: ["旅程进度", "Journey progress"],
           bDl: ["◎ 每日一形 DAILY (Y)", "◎ DAILY FORM (Y)"], dlT: ["今日金属", "TODAY'S METAL"], dlCard: ["⇩ 生成分享卡", "⇩ SHARE CARD"], dlOn: ["今日金属 · No.{n}", "Today's metal · No.{n}"],
           dlOff: ["已退出每日一形", "Daily form off"], dlSaved: ["分享卡已生成 ✓", "Share card ready ✓"], dlFail: ["分享卡生成失败", "Couldn't make the share card"], alDl: ["每日一形", "Daily form"] };
+        Object.assign(I18N, { ctQ: ["◇ 获取报价", "◇ GET A QUOTE"], qH: ["获取报价 · GET A QUOTE", "GET A QUOTE"], alQf: ["获取报价", "Get a quote"], alQo: ["报价文本", "Quote text"], qTy: ["项目类型", "Project type"], q_social: ["社媒短片", "Social short"], q_kv: ["品牌主视觉", "Brand key visual"],
+          q_launch: ["发布会大屏", "Launch / event screen"], q_web: ["网页交互", "Web interactive"], q_other: ["其他", "Other"], qDu: ["时长", "Duration"], qAs: ["比例（可多选）", "Aspect ratio (pick any)"], qAsL: ["比例", "Aspect ratio"], qBu: ["预算区间", "Budget"],
+          qB1: ["< 1 万", "< US$1.5K"], qB2: ["1–3 万", "US$1.5K–4K"], qB3: ["3–8 万", "US$4K–11K"], qB4: ["8 万 +", "US$11K+"], qDa: ["期望交付日期", "Target delivery date"], qBr: ["品牌", "Brand"], qBrPh: ["品牌名", "Brand name"], qMs: ["留言", "Message"], qMsPh: ["留言（可选）", "Message (optional)"],
+          qCt: ["联系方式", "Contact"], qCtPh: ["联系方式（必填）· 邮箱 / 微信 / 电话", "How to reach you (required) · email / phone"], qGo: ["✉ 生成邮件 SEND", "✉ SEND BY EMAIL"], qCp: ["⧉ 复制文本", "⧉ COPY TEXT"], qNote: ["不经过服务器：将打开你的邮件应用，也可复制文本发送", "No server involved: opens your mail app, or copy the text and send it yourself"],
+          qNeed: ["请填写联系方式", "Please add a way to reach you"], qSubj: ["AXON 报价请求 · {b}", "AXON Quote Request · {b}"], qNoB: ["未填品牌", "No brand"], qBodyH: ["AXON 报价请求", "AXON QUOTE REQUEST"], qUn: ["未填", "—"], qDone: ["已生成邮件 · 谢谢！", "Email drafted · thank you!"],
+          qCopied: ["报价文本已复制 ✓", "Quote text copied ✓"], qCopyF: ["复制失败 · 已选中文本，请手动复制", "Copy failed · text selected, copy it manually"], kOff: ["已退出展厅模式", "Showroom mode off"], alMore: ["更多 MORE", "More"], hLock: ["隐藏形态未解锁 · 在一个世界停留 60 秒", "Hidden form locked · stay in one world for 60 s"],
+          mH: ["◐ 隐藏形态 (H)", "◐ HIDDEN FORM (H)"], mQ: ["▤ 画质 (Q)", "▤ QUALITY (Q)"], mW: ["☂ 天气 (W)", "☂ WEATHER (W)"], mL: ["中 / EN 语言 (L)", "中 / EN LANGUAGE (L)"], mR: ["◉ AR 预览 (R)", "◉ AR PREVIEW (R)"], mY: ["◎ 每日一形 (Y)", "◎ DAILY FORM (Y)"], mJ: ["▶ 旅程 (J)", "▶ JOURNEY (J)"], mM: ["✉ 联系 / 报价 (M)", "✉ CONTACT / QUOTE (M)"] }); // v2.1
         // v1.8 toasts / errors stay written in Chinese in the code; English mode maps them here (substring, in order), then bi() strips any leftover CJK.
         const TOAST_EN = { "录制中 · 暂不能切换作品": "Recording · can't switch works now", "录制中 · 请等待导出完成": "Recording · wait for the export to finish", "录制中 · 暂不能写字": "Recording · drawing unavailable",
           "录制中 · 暂不能切换场景": "Recording · can't switch scenes now", "生成失败：": "Generate failed: ", "无法读取文件": "can't read the file", "图片无法解析": "can't decode the image", "图形太小或太淡": "the shape is too small or too faint",
@@ -2186,7 +2220,7 @@
             timeEl.textContent = fmt.format(new Date());
             hf = 0; hudT = 0;
           }
-          fxStep(raw, dt); eggStep(raw); jrStep(raw); dlStep(raw);
+          fxStep(raw, dt); eggStep(raw); jrStep(raw); dlStep(raw); kiStep(raw); // v2.1
 
           renderer.setRenderTarget(null);
           renderer.setClearColor(0x000000, 1);
@@ -2474,6 +2508,78 @@
         bLang.addEventListener("click", () => langSet(LANG === "en" ? "zh" : "en", true));
         addEventListener("keydown", (e) => { if ((e.key === "l" || e.key === "L") && !e.metaKey && !e.ctrlKey && !e.altKey && !(e.target.closest && e.target.closest("input, textarea"))) langSet(LANG === "en" ? "zh" : "en", true); });
         addEventListener("hashchange", () => { const m = (/(?:^#|&)lang=(en|zh)\b/.exec(location.hash) || [])[1]; if (m && m !== LANG) applyLang(m); });
+
+        // ---------- v2.1 QUOTE form (contact panel → mailto to CONTACT.email + copyable text; no backend) · THANK YOU particles ----------
+        const qf = $("qf"), qs = { on: false, ty: 0 }, QTPL = { social: CASES[0].tpl, kv: CASES[3].tpl, launch: CASES[5].tpl, web: CASES[2].tpl }; // type → generator template (case-card mapping)
+        function qShow(on) { if (on && (!entered || rec)) return; qs.on = on; qf.classList.toggle("x-on", on); document.body.classList.toggle("x-qon", on); if (on) { genShow(false); portalShow(false); mmShow(false); if (drawOn) drawMode(false, true); if (!PHONE) $("qBrand").focus({ preventScroll: true }); } }
+        $("ctQ").addEventListener("click", () => qShow(true)); $("qX").addEventListener("click", () => qShow(false));
+        ["qTy", "qDu", "qBu"].forEach((id) => $(id).addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; pick($(id), b);
+          if (id === "qTy" && QTPL[b.dataset.v]) pick($("gTpl"), $("gTpl").querySelector(`[data-tpl="${QTPL[b.dataset.v]}"]`)); }));
+        $("qAs").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") !== "true");
+          const f = $("qAs").querySelector("[aria-pressed=true]"); if (f) { pick($("gAsp"), $("gAsp").querySelector(`[data-asp="${f.dataset.v}"]`)); aspSync(); } });
+        function qText() {
+          const sel = (id) => [...$(id).querySelectorAll("[aria-pressed=true]")].map((b) => (b.dataset.i18n ? T(b.dataset.i18n) : b.textContent)).join(", ") || T("qUn"), v = (id) => $(id).value.trim(), br = v("qBrand").slice(0, 40);
+          const rows = [["qBr", br || T("qUn")], ["qTy", sel("qTy")], ["qDu", sel("qDu")], ["qAsL", sel("qAs")], ["qBu", sel("qBu")], ["qDa", v("qDate") || T("qUn")], ["qCt", v("qCt")], ["qMs", v("qMsg") || T("qUn")]];
+          return { sub: T("qSubj", { b: br || T("qNoB") }), body: [T("qBodyH"), "", ...rows.map(([k, x]) => `${T(k)}: ${x}`), "", "— AXON STUDIO · " + location.href.split("#")[0]].join("\n") };
+        }
+        $("qGo").addEventListener("click", () => {
+          if (!$("qCt").value.trim()) { toast(T("qNeed")); $("qCt").focus(); return; }
+          const q = qText(), a = $("qMail"); $("qOut").value = `${q.sub}\n\n${q.body}`; $("qOutW").hidden = false;
+          a.href = `mailto:${CONTACT.email}?subject=${encodeURIComponent(q.sub)}&body=${encodeURIComponent(q.body.replace(/\n/g, "\r\n"))}`; a.click();
+          toast(T("qDone")); qThanks();
+        });
+        $("qCp").addEventListener("click", () => { const o = $("qOut"), ok = () => toast(T("qCopied")), ex = () => { o.focus(); o.select(); try { return document.execCommand("copy"); } catch (e) { return false; } }, alt = () => (ex() ? ok() : toast(T("qCopyF")));
+          if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(o.value).then(ok, alt); else alt(); }); // clipboard API refused → execCommand → select for manual copy
+        let tyPts = null;
+        const TY_I = shapes.push(["THANK YOU", () => { if (!tyPts) return gText(); const k = ((rnd() * tyPts.length) / 3) | 0; return [tyPts[k * 3], tyPts[k * 3 + 1], tyPts[k * 3 + 2]]; }]) - 1;
+        function qThanks() { // once per submit: particles spell THANK YOU for ~4.5 s, then back to the contact scene / home form
+          if (!entered || rec || work || drawOn) return;
+          if (!tyPts) { const c = document.createElement("canvas"); c.width = 1024; c.height = 240; const x = c.getContext("2d", { willReadFrequently: true });
+            x.fillStyle = "#fff"; x.textAlign = "center"; x.textBaseline = "middle"; x.font = '900 150px "Helvetica Neue", Arial, sans-serif'; x.fillText("THANK YOU", 512, 120, 1000); tyPts = sampleCv(c, 1024, 240, (d, o) => d[o + 3] > 128, 1.4); }
+          if (!tyPts) return; setShape(TY_I); shock(C0, innerWidth / 2); chime(0.08); qs.ty = 4.5;
+        }
+        // ---------- v2.1 phone "⋯" menu: keyboard-only features (H Q W L R Y J M) for narrow screens ----------
+        const bMore = $("bMore"), mm = $("mm"); let mmOn = false;
+        function mmShow(on) { mmOn = on; mm.classList.toggle("x-on", on); bMore.setAttribute("aria-expanded", on); }
+        const MM = { H: () => (egg.un.has(skin.id) ? hidToggle() : toast(T("hLock"))), Q: () => qSet(Q_MODES[(Q_MODES.indexOf(QS.mode) + 1) % 4], true), W: () => wxCycle(), L: () => langSet(LANG === "en" ? "zh" : "en", true),
+          R: () => arSet(!AR.on), Y: () => dlSet(!dl.on), J: () => jrSet(!jr.on), M: () => ctShow(!egg.ct) };
+        mm.innerHTML = Object.keys(MM).filter((k) => k !== "R" || AR_OK).map((k) => `<button type="button" role="menuitem" data-mk="${k}" data-i18n="m${k}"></button>`).join("");
+        bMore.addEventListener("click", () => mmShow(!mmOn));
+        mm.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; mmShow(false); if (entered) MM[b.dataset.mk](); });
+        addEventListener("pointerdown", (e) => { if (mmOn && !(e.target.closest && e.target.closest("#mm, #bMore"))) mmShow(false); });
+        // ---------- v2.1 KIOSK showroom loop (#kiosk=1, or 3 min idle on non-phones): AXON → works 01–06 → 4 journey stops → daily → contact; any input exits ----------
+        const ki = { on: false, pend: /(?:^#|&)kiosk=1\b/.test(location.hash), k: 0, t: 0, idle: 0, t0: 0, mv: null, au: false };
+        const KSEQ = [[() => { if (dl.on) dlSet(false, true); if (jr.on) jrSet(false); if (egg.ct) ctShow(false); setShape(2); }, 10], ...[0, 1, 2, 3, 5, 6].map((w) => [() => playWork(w), 25, () => !work]),
+          ...[0, 3, 8, 12].map((j, n) => [() => (n ? jrGo(j) : jrSet(true)), 13]), [() => dlSet(true), 14, null, () => dlSet(false, true)], [() => ctShow(true, true), 12, null, () => egg.ct && ctShow(false)]];
+        function kiGo() { ki.t = 0; caseShow(-1); try { KSEQ[ki.k][0](); } catch (e) {} }
+        function kiSet(on) {
+          if (on === ki.on) return; ki.on = on; ki.idle = 0; document.body.classList.toggle("x-kiosk", on);
+          try { const q = new URLSearchParams(location.hash.slice(1)); if (on) q.set("kiosk", "1"); else q.delete("kiosk"); history.replaceState(null, "", "#" + q.toString()); } catch (e) {}
+          if (on) { ki.au = egg.auto; egg.auto = true; egg.ctQ = 0; ki.t0 = performance.now(); ki.mv = null; qShow(false); mmShow(false); genShow(false); portalShow(false); if (drawOn) drawMode(false, true); if (AR.on) arSet(false); ki.k = 0; kiGo(); }
+          else { egg.auto = ki.au; if (work) endWork(true); if (jr.on) jrSet(false); if (dl.on) dlSet(false, true); if (egg.ct) ctShow(false); caseShow(-1); if (shapeI !== HOME()) setShape(HOME()); toast(T("kOff")); }
+        }
+        function kiStep(raw) {
+          const r = Math.min(raw, 0.25);
+          if (qs.on || mmOn) egg.idle = 0; // filling the form is not idling
+          if (qs.ty > 0 && (qs.ty -= r) <= 0 && shapeI === TY_I && !work) setShape(egg.ct ? CT_I : HOME());
+          if (ki.pend) { if (!entered) { hold = 1; return; } if (!rec) { ki.pend = false; hold = 0; kiSet(true); } }
+          if (!ki.on) { ki.idle = !entered || rec || drawOn || qs.on || AR.on || document.hidden || gen.classList.contains("x-on") ? 0 : ki.idle + r; if (!PHONE && ki.idle >= 180) kiSet(true); return; }
+          if (rec) return; egg.idle = 0; egg.ctQ = 0; // the 90 s contact scene never fires on top of the loop
+          const st = KSEQ[ki.k]; ki.t += r;
+          if (ki.t >= st[1] || (st[2] && ki.t > 1 && st[2]())) { if (st[3]) st[3](); ki.k = (ki.k + 1) % KSEQ.length; kiGo(); }
+        }
+        const kiIn = (e) => {
+          if (e.type !== "pointermove") { ki.idle = 0; if (ki.pend && !entered) { ki.pend = false; hold = 0; } }
+          if (!ki.on || performance.now() - ki.t0 < 1500) { if (e.type === "pointermove") ki.idle = 0; return; }
+          if (e.type === "pointermove") { if (!ki.mv) { ki.mv = [e.clientX, e.clientY]; return; } if (Math.hypot(e.clientX - ki.mv[0], e.clientY - ki.mv[1]) < 12) return; }
+          e.stopImmediatePropagation(); kiSet(false); // the exit input does nothing else
+        };
+        ["keydown", "pointerdown", "pointermove", "wheel", "touchstart"].forEach((t) => addEventListener(t, kiIn, { capture: true, passive: true }));
+        addEventListener("keydown", (e) => { // form / menu keys stay inside them (no M/H/1–6 shortcuts while typing or picking chips); Esc closes
+          if (mmOn && e.key === "Escape") { mmShow(false); bMore.focus(); e.stopImmediatePropagation(); return; }
+          if (!qs.on || (e.key !== "Escape" && !(e.target.closest && e.target.closest("#qf")))) return;
+          e.stopImmediatePropagation(); if (e.key === "Escape") qShow(false);
+        }, true);
         applyLang(LANG);
         // Skin on load: #skin=<id>, else localStorage, else kenting.
         let skin0 = hashSkin(); if (!skin0) try { skin0 = localStorage.getItem("axon.skin"); } catch (e) {}
