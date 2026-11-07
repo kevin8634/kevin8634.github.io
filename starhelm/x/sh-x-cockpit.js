@@ -754,6 +754,7 @@
       '<div class="lc-t">' + ((f && f.type) || b.type || '') + (S.target === b.id ? ' · 当前目标' : '') + '</div>' +
       rows.map(function (r) { return '<div class="lc-r"><span>' + r[0] + '</span><b>' + r[1] + '</b></div>'; }).join('') +
       (f && f.blurb ? '<div class="lc-b">' + f.blurb + '</div>' : '') + (f && f.kb && window.SHXKB ? SHXKB.html(f.kb).replace('data-xkb=', 'data-nm="' + b.zh + '" data-xkb=') : '') +
+      (window.SHXFR && SHXFR.cardHtml ? SHXFR.cardHtml(b.id) : '') +   /* v1.0-M4r 前沿速递 */
       (f ? '<div class="lc-n">' + f.nature + ' · ' + f.src + '</div>' : '') +
       '<div class="lc-a">' + (S.target === b.id ? '' : '<button type="button" class="lc-lock">锁定为目标</button>') + '</div>');
     c.id = 'xs-lcard'; c._id = b.id; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', b.zh + ' 资料');
@@ -883,5 +884,7 @@
   X.health = function () { return { lost: !!K.lost, nLost: K.nLost || 0, restored: K.nRest || 0, rebuilt: K.nRebuild || 0, heal: BK.heal, w: rd ? rd.domElement.width : 0, h: rd ? rd.domElement.height : 0 }; };
   X._rebuild = function () { rebuildRd(); };
   X.setTarget = function (id, src) { if (BY[id]) setTarget(id, src); };
+  X.card = function (id) { var b = BY[id]; if (!b || !root) return; var o = document.getElementById('xs-lcard'); if (o && o._id === id) return; lblCard(b, b.lb || root); };   // v1.0-M4r 前沿速递:打开天体详情卡
+  X.jumpTo = function (id) { if (!BY[id]) return; startPose(id); S.auto = false; S.base = 0; S.mult = 1; };   // 减少动态:直接切到目标旁
   X.autopilot = function (on) { autopilot(on !== false); };
 })();
