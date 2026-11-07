@@ -279,7 +279,7 @@
   function css() {
     if (document.getElementById('xgm-css')) return;
     var s = h('style'); s.id = 'xgm-css'; s.textContent = [
-      '#xgm{position:fixed;inset:0;z-index:200;background:#02040a;color:#dfe6f3;font-family:"Rajdhani","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;user-select:none}',
+      '#xgm{position:fixed;inset:0;z-index:2600;background:#02040a;color:#dfe6f3;font-family:"Rajdhani","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;user-select:none}',
       '#xgm[hidden]{display:none}#xgm canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}',
       '#xgm .g{background:rgba(8,16,30,.62);border:1px solid rgba(127,227,255,.28);border-radius:12px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}',
       '#xgm .top{position:absolute;left:14px;right:14px;top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px 10px}',
@@ -296,7 +296,7 @@
       '#xgm .knob{position:absolute;top:6px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:#ffd27a;box-shadow:0 0 10px #ffd27a}',
       '#xgm .tk{position:absolute;top:22px;font-size:11px;color:#8fa3bf;transform:translateX(-50%)}#xgm .rd{font-size:13px;color:#b9c7da;min-width:210px}',
       '#xgm .note{position:absolute;left:16px;bottom:84px;font-size:12px;color:#8fa3bf;text-shadow:0 1px 3px #000}',
-      'body.xgm-on #shx-badge{display:none}@media (max-height:520px){#xgm .info{display:none}#xgm .note{top:auto;bottom:80px}}',
+      'body.xgm-on #shx-badge,body.xgm-on #shx-exit{display:none}@media (max-height:520px){#xgm .info{display:none}#xgm .note{top:auto;bottom:80px}}',
       '@media (max-width:760px){#xgm .top{left:8px;right:8px;top:8px;padding:6px 8px;gap:5px}#xgm .bot{left:8px;right:8px;bottom:8px;padding:8px}#xgm .info{left:8px;right:8px;width:auto;top:auto;bottom:178px;max-height:104px;overflow:auto;font-size:12.5px;padding:8px 10px}#xgm .info h3{font-size:14px}#xgm .info .mut{display:none}#xgm .rd{min-width:0;width:100%}#xgm .ttl{font-size:15px}#xgm button{font-size:13px;padding:5px 8px}#xgm .note{bottom:auto;top:188px;left:10px}}'
     ].join('\n'); document.head.appendChild(s);
   }

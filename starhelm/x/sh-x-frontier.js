@@ -25,7 +25,7 @@
   }
   function acts(it, inCard) {
     return (!inCard && it.target ? '<button type="button" data-fr="fly" data-id="' + it.id + '"' + (canFly(it) ? '' : ' disabled title="这台设备开不了 3D 驾驶舱(需要 WebGL)"') + '>◎ 飞抵观察</button>' : '') +
-      (!inCard && !it.target && it.lab ? '<button type="button" data-fr="lab" data-id="' + it.id + '">◎ 打开观察</button>' : '') +
+      (it.lab ? '<button type="button" data-fr="lab" data-id="' + it.id + '">' + (it.target ? '' : '◎ ') + esc(it.labLabel || '打开观察') + '</button>' : '') +
       (it.url ? '<a href="' + esc(it.url) + '" target="_blank" rel="noopener">阅读资讯 ↗</a>' : '') +
       (it.special ? '<a href="' + esc(base() + it.special.href) + '" data-fr="sp">' + esc(it.special.label) + '</a>' : '');
   }
@@ -90,6 +90,7 @@
     })();
   }
   function arriveCard(id) { var x = X(); pend = null; setTimeout(function () { if (window.SHXE && SHXE.cur && SHXE.cur() && SHXE.hide) SHXE.hide(); if (x && x.card) x.card(id); var c = document.getElementById('xs-lcard'); if (c) { c.style.transform = 'none'; c.style.left = Math.max(8, (innerWidth - c.offsetWidth) / 2) + 'px'; c.style.top = Math.max(8, Math.min(innerHeight - c.offsetHeight - 8, (innerHeight - c.offsetHeight) / 2)) + 'px'; } }, 900); }   // 航段讲解卡让位;详情卡居中
+  document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('.xfr-card [data-fr=lab]'); if (!b) return; var it = byId(b.getAttribute('data-id')); if (it && SH[it.lab] && SH[it.lab].open) { var c = document.getElementById('xs-lcard'); if (c) c.remove(); SH[it.lab].open(); } }, true);
   function cardHtml(id) {
     var its = L().filter(function (it) { return it.target === id; }); if (!its.length) return '';
     ensureCss(); if (!TM) TM = setInterval(tick, 1000);

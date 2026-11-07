@@ -21,3 +21,9 @@
 
 ## 以后接入
 双子座流星雨、12-24 最近满月、迷你月亮 2026 QQ8 等:往 SH_FRONTIER 加一条,有可飞天体填 target,否则填 lab。
+
+## v1.0-M4s(同日,前沿速递第二批)
+- SH_FRONTIER 加「双子座流星雨极大」(target earth + lab geminidsLab「打开 3D 观察」,资讯 NAOJ ふたご座流星群が極大,另附 1.0 数据与闯关)与「2026 年最近地球的满月」(target moon,资讯 NAOJ 最も近い満月)。
+- 详情卡里的 lab 按钮可直接打开 3D(#xgm z-index 提到 2600,盖过驾驶舱;打开时隐藏 body 层「结束探索」)。
+- 旅行者资讯链接改为 NASA 跳转后的最终地址 where-are-voyager-1-and-voyager-2-now。
+- 自测:地球(双子座)飞抵 → 详情卡 → 打开 3D 观察;月球(390×844)飞抵 → 详情卡;0 报错 0 本站 404。SW sh-v1.0.0-m4s。
