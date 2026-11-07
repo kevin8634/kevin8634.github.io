@@ -186,6 +186,24 @@
         .x-gen.x-qf { left: 8px; right: 8px; top: 52px; width: auto; transform: none; max-height: calc(100vh - 64px); } .x-qon .x-ctl { display: none; } /* modal on phones: shape controls would sit over the form */
         .x-pbtn.x-mb { display: block; right: 2px; top: 48px; padding: 0 12px; } .x-pbtn.x-arb { display: none !important; } /* AR lives in the ⋯ menu on phones */
       }
+      /* v2.2 layout tidy (headless screenshots) */
+      @media (min-width: 760px) {
+        #sHint { right: 60px; top: 58px; } /* sat under the AR button */
+        .x-workon .x-hint, .x-dlon .x-hint, .x-jron .x-hint { display: none; } /* top-left hint line ran into the work HUD / daily title */
+        .x-dlon .x-whud { top: auto; bottom: 62px; } /* daily's auto-play HUD sat on the daily title */
+        .x-gen { bottom: 64px; max-height: calc(100vh - 220px); } /* generator covered the top-left HUD on 640–900 px tall screens */
+        .x-genon .x-works, .x-jron .x-works { opacity: 0; } .x-genon .x-works button, .x-jron .x-works button { pointer-events: none; } /* works list sat under the generator / journey dots */
+      }
+      @media (min-width: 760px) and (max-width: 1199px) { .x-bl { max-width: calc(50vw - 200px); } .x-works { bottom: 64px; } } /* coordinate readout ran under the ‹ › controls */
+      @media (max-width: 759px) { #sHint { right: 56px; top: 54px; } .x-qon .x-pbtn.x-mb { display: none; } .x-tl { max-width: calc(100vw - 216px); } } /* sound hint under ⋯; ⋯ poked over the quote form; long scene names touched 中/EN */
+      /* v2.2 help panel + one-time tip */
+      .x-hlp { position: fixed; left: 50%; top: 50%; z-index: 20; transform: translate(-50%, -50%); width: min(880px, calc(100vw - 32px)); max-height: calc(100vh - 80px); overflow: auto; box-sizing: border-box; display: none; padding: 12px 18px 14px; background: rgba(10,14,24,.8); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.16); border-radius: 16px; color: rgba(255,255,255,.78); font: 300 12px/1.55 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .04em; }
+      .x-hlp.x-on { display: block; } .x-hlp-h { display: flex; align-items: center; justify-content: space-between; margin: -4px -10px 6px 0; color: #fff; letter-spacing: .16em; } .x-hlp-h button { width: 44px; height: 44px; border: 0; border-radius: 22px; background: none; color: inherit; font: inherit; cursor: pointer; }
+      #hlpG { columns: 3 250px; column-gap: 24px; } .x-hlp section { break-inside: avoid; margin: 0 0 12px; } .x-hlp h3 { margin: 0 0 4px; font: inherit; font-size: 10px; letter-spacing: .22em; opacity: .55; }
+      .x-hlp dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 10px; margin: 0; } .x-hlp dt { color: #fff; } .x-hlp dd { margin: 0; } .x-hlp-n { margin: 4px 0 0; font-size: 11px; opacity: .55; }
+      #bHelp { font-size: 15px; } #hlpTip { position: fixed; right: 16px; top: 104px; margin: 0; padding: 7px 14px; border-radius: 999px; background: rgba(10,14,24,.72); border: 1px solid rgba(255,255,255,.22); color: #fff; font: 300 11px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .12em; opacity: 0; transition: opacity .6s; pointer-events: none; cursor: pointer; }
+      #hlpTip.x-on { opacity: 1; pointer-events: auto; } .x-pre .x-hlp, .x-pre #hlpTip, .x-kiosk .x-hlp, .x-kiosk #hlpTip, .x-fallback #hlpTip, .x-fallback .x-hlp { display: none !important; }
+      @media (max-width: 759px) { .x-hlp { top: 50px; transform: translateX(-50%); max-height: calc(100vh - 62px); padding: 10px 12px 12px; font-size: 11px; } #bHelp { display: none; } #hlpTip { right: 8px; top: 98px; } }
     </style>
   </head>
   <body class="x-pre">
@@ -260,6 +278,8 @@
       <button id="qGo" data-i18n="qGo">✉ 生成邮件 SEND</button><p class="x-note" data-i18n="qNote">不经过服务器：将打开你的邮件应用，也可复制文本发送</p>
       <div id="qOutW" hidden><textarea id="qOut" rows="7" readonly data-i18n-al="alQo" aria-label="报价文本"></textarea><button id="qCp" data-i18n="qCp">⧉ 复制文本</button></div><a id="qMail" hidden></a></div>
     <p id="kLogo" aria-hidden="true">AXON</p>
+    <div class="x-ui x-hlp" id="hlp" role="dialog" tabindex="-1" data-i18n-al="alHlp" aria-label="全部玩法"><div class="x-hlp-h"><span data-i18n="hlpH"></span><button id="hlpX" aria-label="Close">✕</button></div><div id="hlpG"></div><p class="x-hlp-n" data-i18n="hlpN"></p></div>
+    <p class="x-ui" id="hlpTip" role="status" aria-live="polite" data-i18n="hlpTip"></p>
     <div class="x-ui x-case" id="case" role="status" aria-live="polite"><b id="caseT"></b><p><i data-i18n="cNeed">需求</i><span id="caseA"></span></p><p><i data-i18n="cPlan">方案</i><span id="caseB"></span></p><p><i data-i18n="cOut">成片</i><span id="caseC"></span></p><button id="caseGo" data-i18n="caseGo">做一支我的 →</button><button id="caseX" aria-label="Close">✕</button></div>
     <p id="wTag" aria-live="polite"><b id="wTagL"></b><small id="wTagS"></small></p>
     <div class="x-hud x-ui x-whud" id="wHud"><span id="recDot" hidden><i aria-hidden="true">●</i> <b id="recT">REC 10s</b></span><span id="wHudT"></span><span class="x-wbar"><i id="wBar"></i></span><button id="wClose" aria-label="Close work">✕</button></div>
@@ -267,7 +287,7 @@
     <p class="x-hud x-bl" id="hInfo">X 0000 Y 0000</p>
     <p class="x-hud x-br"><span id="hTime">--:--:--</span><br />21.90°N 120.85°E</p>
     <div class="x-hud x-ctl x-ui">
-      <button id="bPrev" aria-label="Previous shape">‹</button><span id="cName">WAVE · 浪</span><button id="bNext" aria-label="Next shape">›</button><button id="bPause" aria-label="Pause">❚❚</button>
+      <button id="bPrev" aria-label="Previous shape">‹</button><span id="cName">WAVE · 浪</span><button id="bNext" aria-label="Next shape">›</button><button id="bPause" aria-label="Pause">❚❚</button><button id="bHelp" aria-expanded="false" aria-controls="hlp" data-i18n-al="alHlp" aria-label="全部玩法 (?)">?</button>
     </div>
     <div class="x-intro x-ui" id="intro">
       <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" stroke="rgba(255,255,255,.15)" /><circle id="ring" cx="50" cy="50" r="46" stroke="rgba(255,255,255,.8)" stroke-dasharray="289" stroke-dashoffset="289" /></svg>
@@ -307,6 +327,18 @@
           qNeed: ["请填写联系方式", "Please add a way to reach you"], qSubj: ["AXON 报价请求 · {b}", "AXON Quote Request · {b}"], qNoB: ["未填品牌", "No brand"], qBodyH: ["AXON 报价请求", "AXON QUOTE REQUEST"], qUn: ["未填", "—"], qDone: ["已生成邮件 · 谢谢！", "Email drafted · thank you!"],
           qCopied: ["报价文本已复制 ✓", "Quote text copied ✓"], qCopyF: ["复制失败 · 已选中文本，请手动复制", "Copy failed · text selected, copy it manually"], kOff: ["已退出展厅模式", "Showroom mode off"], alMore: ["更多 MORE", "More"], hLock: ["隐藏形态未解锁 · 在一个世界停留 60 秒", "Hidden form locked · stay in one world for 60 s"],
           mH: ["◐ 隐藏形态 (H)", "◐ HIDDEN FORM (H)"], mQ: ["▤ 画质 (Q)", "▤ QUALITY (Q)"], mW: ["☂ 天气 (W)", "☂ WEATHER (W)"], mL: ["中 / EN 语言 (L)", "中 / EN LANGUAGE (L)"], mR: ["◉ AR 预览 (R)", "◉ AR PREVIEW (R)"], mY: ["◎ 每日一形 (Y)", "◎ DAILY FORM (Y)"], mJ: ["▶ 旅程 (J)", "▶ JOURNEY (J)"], mM: ["✉ 联系 / 报价 (M)", "✉ CONTACT / QUOTE (M)"] }); // v2.1
+        Object.assign(I18N, { hlpH: ["玩法 · 快捷键 · 网址参数", "HOW TO PLAY · KEYS · URL"], alHlp: ["全部玩法 (?)", "All controls (?)"], hlpTip: ["按 ? 查看全部玩法", "Press ? for all controls"], hlpTipM: ["点 ⋯ → ? 查看全部玩法", "Tap ⋯ → ? for all controls"], mP: ["? 全部玩法", "? ALL CONTROLS"],
+          hlpN: ["按 ? 或 Esc 关闭 · 网址参数加在 # 后，多个用 & 连接，例如 #skin=everest&lang=en", "Press ? or Esc to close · URL options go after #, joined with &, e.g. #skin=everest&lang=en"],
+          hgW: ["作品与形态", "WORKS & FORMS"], hgM: ["模式", "MODES"], hgS: ["设置", "SETTINGS"], hgE: ["彩蛋", "EASTER EGGS"], hgU: ["网址参数 #", "URL OPTIONS #"], hgT: ["手机手势", "TOUCH"],
+          h1: ["播放作品 01–06", "Play works 01–06"], h2: ["切换基础形态", "Switch base forms"], h3: ["上一个 / 下一个形态", "Previous / next form"], h4: ["时间（黄昏→夜）· 旅程中换站", "Time of day · change stop in Journey"], h5: ["关闭作品 / 面板 / 模式", "Close work / panel / mode"],
+          hD: ["写字：拖动书写，Enter 凝固，C 清除", "Draw: drag to write, Enter sets, C clears"], hM: ["联系 / 获取报价", "Contact / get a quote"], hJ: ["旅程：自动穿越各个世界", "Journey through the worlds"], hY: ["每日一形（每天不同）", "Daily form (new every day)"],
+          hR: ["AR：摄像头画面作背景", "AR: camera as backdrop"], hH: ["隐藏形态（在一个世界停留 60 秒解锁）", "Hidden form (stay 60 s in one world)"], hW: ["天气预览 晴/雨/雪/雾/风", "Weather preview clear/rain/snow/fog/wind"], hQ: ["画质 自动/高/中/低", "Quality auto/high/mid/low"],
+          hL: ["中文 / English", "中文 / English"], hHp: ["本帮助", "This help"], hAx: ["连续键入：神经脉冲", "Type it: neural burst"], hLg: ["连点左上角 AXON：暖金一圈", "Tap the top-left AXON: warm-gold turn"],
+          uS: ["打开指定世界 everest/deepsea/neon/dune…", "Open a world everest/deepsea/neon/dune…"], uB: ["品牌名（≤12），进场后自动生成", "Brand (≤12), auto-generates on entry"], uT: ["镜头 reveal/drip/burst/sweep/vortex/pulse", "Shot reveal/drip/burst/sweep/vortex/pulse"],
+          uC: ["品牌色，例如 d19b42", "Brand colour, e.g. d19b42"], uG: ["标语（≤24）", "Tagline (≤24)"], uW: ["天气 auto/clear/rain/snow/fog/wind", "Weather auto/clear/rain/snow/fog/wind"], uQ: ["画质 auto/high/mid/low", "Quality auto/high/mid/low"], uL: ["语言 zh / en", "Language zh / en"],
+          uJ: ["打开即开始旅程", "Start the Journey on load"], uY: ["打开即显示每日一形", "Show the Daily form on load"], uK: ["展厅自动循环（任意操作退出）", "Showroom loop (any input exits)"],
+          gHold: ["按住", "Hold"], gHoldD: ["进入", "Enter"], gTap: ["轻点", "Tap"], gTapD: ["波纹冲击", "Ripple"], gSw: ["划过", "Swipe"], gSwD: ["唤醒粒子", "Wake the particles"], g2: ["双指上下", "Two-finger drag"], g2D: ["调时间", "Change time of day"],
+          g3: ["三指轻点", "Three-finger tap"], g3D: ["AXON 脉冲", "AXON burst"], gSh: ["摇一摇", "Shake"], gShD: ["冲击波（安卓；iOS 不开）", "Shock wave (Android; off on iOS)"], gMn: ["⋯ 菜单", "⋯ menu"], gMnD: ["键盘功能都在这里", "All keyboard features"] }); // v2.2
         // v1.8 toasts / errors stay written in Chinese in the code; English mode maps them here (substring, in order), then bi() strips any leftover CJK.
         const TOAST_EN = { "录制中 · 暂不能切换作品": "Recording · can't switch works now", "录制中 · 请等待导出完成": "Recording · wait for the export to finish", "录制中 · 暂不能写字": "Recording · drawing unavailable",
           "录制中 · 暂不能切换场景": "Recording · can't switch scenes now", "生成失败：": "Generate failed: ", "无法读取文件": "can't read the file", "图片无法解析": "can't decode the image", "图形太小或太淡": "the shape is too small or too faint",
@@ -2220,7 +2252,7 @@
             timeEl.textContent = fmt.format(new Date());
             hf = 0; hudT = 0;
           }
-          fxStep(raw, dt); eggStep(raw); jrStep(raw); dlStep(raw); kiStep(raw); // v2.1
+          fxStep(raw, dt); eggStep(raw); jrStep(raw); dlStep(raw); kiStep(raw); hpStep(); // v2.1 · v2.2
 
           renderer.setRenderTarget(null);
           renderer.setClearColor(0x000000, 1);
@@ -2579,6 +2611,33 @@
           if (mmOn && e.key === "Escape") { mmShow(false); bMore.focus(); e.stopImmediatePropagation(); return; }
           if (!qs.on || (e.key !== "Escape" && !(e.target.closest && e.target.closest("#qf")))) return;
           e.stopImmediatePropagation(); if (e.key === "Escape") qShow(false);
+        }, true);
+        // ---------- v2.2 HELP: ? key, HUD "?" button, phone ⋯ menu; every key, URL option and touch gesture (texts in I18N) ----------
+        const hlp = $("hlp"), bHelp = $("bHelp"), hlpTip = $("hlpTip"); let hlpOn = false, hlpTip0 = false;
+        const HLP = [["hgW", [["1 – 6", "h1"], ["Shift + 1–5", "h2"], ["← →", "h3"], ["↑ ↓ / ⇕", "h4"], ["Esc", "h5"]]], ["hgM", [["D", "hD"], ["M", "hM"], ["J", "hJ"], ["Y", "hY"], ["R", "hR"], ["H", "hH"]]],
+          ["hgS", [["W", "hW"], ["Q", "hQ"], ["L", "hL"], ["?", "hHp"]]], ["hgE", [["AXON", "hAx"], ["AXON ×5", "hLg"]]],
+          ["hgU", [["#skin=", "uS"], ["#brand=", "uB"], ["#tpl=", "uT"], ["#color=", "uC"], ["#tag=", "uG"], ["#wx=", "uW"], ["#q=", "uQ"], ["#lang=", "uL"], ["#journey=1", "uJ"], ["#daily=1", "uY"], ["#kiosk=1", "uK"]]],
+          ["hgT", [["gHold", "gHoldD"], ["gTap", "gTapD"], ["gSw", "gSwD"], ["g2", "g2D"], ["g3", "g3D"], ["gSh", "gShD"], ["gMn", "gMnD"]]]];
+        function hlpRender() { $("hlpG").innerHTML = HLP.map(([g, it]) => `<section><h3>${T(g)}</h3><dl>${it.map(([a, d]) => `<dt>${I18N[a] ? T(a) : a}</dt><dd>${T(d)}</dd>`).join("")}</dl></section>`).join(""); }
+        function hpShow(on) {
+          hlpOn = on; hlp.classList.toggle("x-on", on); bHelp.setAttribute("aria-expanded", on);
+          if (on) { mmShow(false); hlpTip.classList.remove("x-on"); try { localStorage.setItem("axon.help", "1"); } catch (e) {} hlp.focus({ preventScroll: true }); }
+        }
+        function hpStep() { // one corner tip, the first time someone enters (per browser)
+          if (hlpTip0 || !entered || ki.on || ki.pend) return; hlpTip0 = true;
+          try { if (localStorage.getItem("axon.help")) return; localStorage.setItem("axon.help", "1"); } catch (e) {}
+          setTimeout(() => { if (ki.on || hlpOn) return; hlpTip.classList.add("x-on"); setTimeout(() => hlpTip.classList.remove("x-on"), 7000); }, 2500);
+        }
+        hlpTip.dataset.i18n = PHONE ? "hlpTipM" : "hlpTip"; LANG_HOOKS.push(hlpRender);
+        mm.insertAdjacentHTML("beforeend", '<button type="button" role="menuitem" data-mk="P" data-i18n="mP"></button>'); MM.P = () => hpShow(true);
+        bHelp.addEventListener("click", () => hpShow(!hlpOn)); $("hlpX").addEventListener("click", () => hpShow(false)); hlpTip.addEventListener("click", () => hpShow(true));
+        addEventListener("pointerdown", (e) => { const t = e.target.closest ? e.target : document.body;
+          if (hlpTip.classList.contains("x-on") && !t.closest("#hlpTip")) hlpTip.classList.remove("x-on");
+          if (hlpOn && !t.closest("#hlp, #bHelp, #mm, #bMore")) hpShow(false); });
+        addEventListener("keydown", (e) => { // while open, keys stay in the panel (Tab still moves focus); ? / Esc close
+          if (e.metaKey || e.ctrlKey || e.altKey || (e.target.closest && e.target.closest("input, textarea"))) return;
+          if (hlpOn) { if (e.key === "Escape" || e.key === "?") hpShow(false); if (e.key !== "Tab") e.stopImmediatePropagation(); return; }
+          if (e.key === "?" && entered && !qs.on && !rec) { e.stopImmediatePropagation(); hpShow(true); }
         }, true);
         applyLang(LANG);
         // Skin on load: #skin=<id>, else localStorage, else kenting.
