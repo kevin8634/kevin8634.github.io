@@ -113,6 +113,8 @@
       .x-pbtn { right: 110px; top: 6px; min-width: 44px; height: 44px; padding: 0 14px; border: 1px solid rgba(255,255,255,.5); background: none; color: rgba(255,255,255,.7); font: inherit; font-size: 10px; line-height: 1.25; letter-spacing: .12em; cursor: pointer; border-radius: 22px; pointer-events: auto; transition: color .3s, background .3s, box-shadow .3s; }
       .x-pbtn span { display: block; }
       .x-lang { right: 200px; font-size: 11px; } /* v1.7 中/EN */
+      .x-pbtn.x-arb { right: 8px; top: 54px; font-size: 11px; } .x-pbtn.x-arb[aria-pressed="true"] { color: #fff; border-color: #fff; box-shadow: 0 0 12px rgba(255,255,255,.4); } /* v2.0 AR */
+      @media (max-width: 759px) { .x-pbtn.x-arb { right: 2px; top: 48px; padding: 0 10px; } }
       #recMask { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; margin: 0; background: #000; font: 300 13px/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .2em; color: rgba(255,255,255,.8); }
       .x-masked #recMask { display: flex; } .x-masked #wTag { display: none; } /* v1.7: renderer is at the export size while recording 9:16 / 1:1 */
       .x-case { position: fixed; right: 16px; top: 50%; width: 270px; max-width: calc(100vw - 32px); box-sizing: border-box; padding: 12px 14px; border-radius: 14px; background: rgba(10,14,24,.62); border: 1px solid rgba(255,255,255,.14); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); font: 300 12px/1.5 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .06em; color: rgba(255,255,255,.85); opacity: 0; visibility: hidden; transform: translate(calc(100% + 24px), -50%); transition: transform .5s, opacity .5s, visibility .5s; }
@@ -185,6 +187,7 @@
     <button class="x-hud x-snd x-ui" id="bSnd" aria-pressed="false" aria-label="Sound">SOUND OFF</button>
     <button class="x-hud x-pbtn x-ui" id="bPortal" aria-expanded="false" aria-controls="portal" data-i18n-al="alP" aria-label="PORTAL 传送门"><span>PORTAL</span><span data-i18n="pS">传送门</span></button>
     <button class="x-hud x-pbtn x-ui x-lang" id="bLang" data-i18n-al="alL" aria-label="Language 语言 (L)">中 / EN</button>
+    <button class="x-hud x-pbtn x-ui x-arb" id="bAR" hidden aria-pressed="false" aria-label="AR camera preview (R)">AR</button>
     <div class="x-ui x-portal" id="portal" role="dialog" data-i18n-al="alP" aria-label="PORTAL 传送门"></div>
     <div class="x-ui x-jr" id="jr" role="status" aria-live="polite"><p id="jrT"></p><small id="jrE"></small><button id="jrX" data-i18n="jrX">✕ 退出旅程 EXIT</button></div>
     <div class="x-ui x-dl" id="dl" role="status" aria-live="polite" data-i18n-al="alDl" aria-label="每日一形"><b id="dlT"></b><small id="dlS"></small><span id="dlL"></span><button id="dlCard" data-i18n="dlCard">⇩ 生成分享卡</button><button id="dlX" aria-label="Close daily">✕</button></div>
@@ -251,7 +254,7 @@
         const CONTACT = { email: "everest86342@163.com", wechat: "AXON_STUDIO", qr: null };
         // ==================================================================
         // v1.7 中/EN · UI copy as key: [中文, English]. [data-i18n] / [data-i18n-ph] elements pick these up; particle text (AXON, brand, 福) never changes.
-        const I18N = { hint: [" · 滚动=时间 · 划过=唤醒", " · SCROLL = TIME · SWIPE = WAKE"], pS: ["传送门", "SCENES"], bMake: ["✦ 做你的金属广告 MAKE YOURS", "✦ MAKE YOUR METAL AD"], bDraw: ["✎ 写字 / DRAW (D)", "✎ DRAW (D)"], bCt: ["✉ 联系 CONTACT (M)", "✉ CONTACT (M)"],
+        const I18N = { arOn: ["AR 预览 · 摄像头画面为背景（R 关闭）", "AR PREVIEW · camera as backdrop (R to close)"], arNo: ["未获得摄像头权限 · AR 无法开启", "Camera permission denied · AR unavailable"], arErr: ["摄像头无法打开 · AR 无法开启", "Camera could not start · AR unavailable"], hint: [" · 滚动=时间 · 划过=唤醒", " · SCROLL = TIME · SWIPE = WAKE"], pS: ["传送门", "SCENES"], bMake: ["✦ 做你的金属广告 MAKE YOURS", "✦ MAKE YOUR METAL AD"], bDraw: ["✎ 写字 / DRAW (D)", "✎ DRAW (D)"], bCt: ["✉ 联系 CONTACT (M)", "✉ CONTACT (M)"],
           w0: ["01 香水 PERFUME", "01 PERFUME"], w1: ["02 球鞋 SNEAKER", "02 SNEAKER"], w2: ["03 耳机 AUDIO", "03 AUDIO"], w3: ["04 手机 PHONE", "04 PHONE"], w5: ["05 音乐 SOUNDWAVE", "05 SOUNDWAVE"], w6: ["06 新春 FIREWORKS", "06 LUNAR NEW YEAR"],
           genH: ["MAKE YOURS · 品牌金属生成器", "MAKE YOURS · BRAND METAL"], gNamePh: ["品牌名 BRAND (1–12)", "Brand name (1–12)"], gTagPh: ["标语 TAGLINE（可选，默认品牌名）", "Tagline (optional, defaults to brand)"], gLogoL: ["上传 LOGO（可选，仅本地）", "Upload logo (optional, local only)"], logoN: ["LOGO 只在本机处理，不会上传", "Your logo stays on this device"],
           shot: ["镜头模板 SHOT", "SHOT"], t_reveal: ["旋转揭示 Reveal", "Reveal"], t_drip: ["液态滴落 Drip", "Drip"], t_burst: ["爆裂重组 Burst", "Burst"], t_sweep: ["扫光 Sweep", "Sweep"], t_vortex: ["漩涡 Vortex", "Vortex"], t_pulse: ["心跳 Pulse", "Pulse"],
@@ -2188,7 +2191,8 @@
           renderer.setRenderTarget(null);
           renderer.setClearColor(0x000000, 1);
           renderer.clear();
-          if (started) {
+          if (AR.on) arStep(raw); // v2.0: camera quad instead of the plate / background shader
+          else if (started) {
             bgMat.uniforms.uTime.value = time;
             bgMat.uniforms.uMouse.value.copy(smooth);
             renderer.render(bgScene, orthoCam);
@@ -2420,6 +2424,50 @@
         addEventListener("keydown", () => { if (dlEsc) { dlEsc = false; dlSet(false); } });
         addEventListener("hashchange", () => { if (/(?:^#|&)daily=1\b/.test(location.hash) && !dl.on) dlSet(true); });
         LANG_HOOKS.push(() => dl.on && dlCap());
+
+        // ---------- v2.0 AR preview (HUD AR / key R): rear camera drawn as the background quad · particles keep their form · phone tilt turns the view a little ----------
+        const AR = { on: false, busy: false, v: null, tex: null, st: null, o0: null, o: null, rx: 0, ry: 0 }, bAR = $("bAR");
+        const AR_OK = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+        const arMat = new THREE.ShaderMaterial({ depthTest: false, depthWrite: false, uniforms: { tCam: { value: null }, uS: { value: new THREE.Vector2(1, 1) } }, vertexShader: quadVS,
+          fragmentShader: "uniform sampler2D tCam; uniform vec2 uS; varying vec2 vUv; void main(){ vec2 uv = (vUv - .5) * uS + .5; gl_FragColor = vec4(texture2D(tCam, uv).rgb * .92, 1.); }" });
+        const arScene = new THREE.Scene(); arScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), arMat));
+        const arOri = (e) => { if (e.beta == null || e.gamma == null) return; AR.o = [e.beta, e.gamma]; if (!AR.o0) AR.o0 = AR.o; };
+        function arStep(raw) {
+          const v = AR.v, vw = v.videoWidth || 16, vh = v.videoHeight || 9, sa = innerWidth / innerHeight, va = vw / vh; // cover-fit
+          arMat.uniforms.uS.value.set(sa < va ? sa / va : 1, sa < va ? 1 : va / sa);
+          renderer.render(arScene, orthoCam);
+          let tx = 0, ty = 0; const D = Math.PI / 180;
+          if (AR.o && AR.o0) { tx = clamp((AR.o[0] - AR.o0[0]) * D * 0.35, -0.3, 0.3); ty = clamp((AR.o[1] - AR.o0[1]) * D * 0.35, -0.3, 0.3); }
+          const k = 1 - Math.exp(-4 * Math.min(raw, 0.25)); AR.rx += (tx - AR.rx) * k; AR.ry += (ty - AR.ry) * k; scene.rotation.set(AR.rx, AR.ry, 0);
+        }
+        async function arSet(on) {
+          if (AR.busy || on === AR.on || !AR_OK) return;
+          if (!on) {
+            AR.on = false; document.body.classList.remove("x-ar"); bAR.setAttribute("aria-pressed", "false"); scene.rotation.set(0, 0, 0); AR.rx = AR.ry = 0;
+            removeEventListener("deviceorientation", arOri); AR.o = AR.o0 = null;
+            if (AR.st) AR.st.getTracks().forEach((t) => t.stop()); AR.st = null; if (AR.v) { AR.v.srcObject = null; AR.v.remove(); AR.v = null; } if (AR.tex) { AR.tex.dispose(); AR.tex = null; }
+            return;
+          }
+          AR.busy = true;
+          const DOE = window.DeviceOrientationEvent; // iOS asks for motion permission inside the tap
+          const pOri = DOE && typeof DOE.requestPermission === "function" ? DOE.requestPermission().catch(() => "denied") : Promise.resolve("granted");
+          try {
+            const st = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+            const v = document.createElement("video"); v.muted = true; v.playsInline = true; v.setAttribute("playsinline", ""); v.setAttribute("aria-hidden", "true");
+            v.style.cssText = "position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none"; document.body.appendChild(v);
+            v.srcObject = st; await v.play();
+            AR.st = st; AR.v = v; AR.tex = new THREE.VideoTexture(v); arMat.uniforms.tCam.value = AR.tex;
+            AR.on = true; document.body.classList.add("x-ar"); bAR.setAttribute("aria-pressed", "true"); toast(T("arOn"));
+            if ((await pOri) === "granted" && AR.on) addEventListener("deviceorientation", arOri);
+          } catch (e) {
+            if (AR.st) AR.st.getTracks().forEach((t) => t.stop());
+            toast(e && (e.name === "NotAllowedError" || e.name === "SecurityError") ? T("arNo") : T("arErr"));
+          }
+          AR.busy = false;
+        }
+        if (AR_OK) { bAR.hidden = false; bAR.addEventListener("click", () => arSet(!AR.on)); }
+        addEventListener("keydown", (e) => { if ((e.key === "r" || e.key === "R") && entered && !e.metaKey && !e.ctrlKey && !e.altKey && !(e.target.closest && e.target.closest("input, textarea"))) arSet(!AR.on); });
+        addEventListener("pagehide", () => arSet(false));
         // v1.7 中/EN: HUD button or L; #lang=en|zh forces it; the choice is kept in localStorage (failures ignored).
         const bLang = $("bLang"), langSet = (l, say) => { applyLang(l); try { localStorage.setItem("axon.lang", LANG); } catch (e) {} if (say) toast(T("langT")); };
         LANG_HOOKS.push(() => { bLang.textContent = LANG === "en" ? "EN / 中" : "中 / EN"; bLang.setAttribute("aria-pressed", LANG === "en"); aspSync(); });
