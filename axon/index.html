@@ -73,6 +73,7 @@
       .x-gen #gLogoF button { border: 0; background: none; padding: 0 6px; }
       .x-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 2px 0 8px; }
       .x-chips button[aria-pressed="true"] { border-color: #fff; color: #fff; }
+      .x-gen input[type="color"] { width: 40px; height: 24px; margin-left: 6px; padding: 0; border: 1px solid rgba(255,255,255,.25); border-radius: 6px; background: none; vertical-align: middle; cursor: pointer; }
       .x-gen button:hover, .x-gen button:focus-visible { color: #fff; outline: none; }
       #gGo { display: block; width: 100%; min-height: 44px; margin-top: 4px; border: 1px solid rgba(255,255,255,.75); border-radius: 10px; background: rgba(255,255,255,.08); color: #fff; letter-spacing: .2em; box-shadow: 0 0 12px rgba(255,255,255,.35), inset 0 0 8px rgba(255,255,255,.15); }
       #toast { position: fixed; left: 50%; bottom: 64px; transform: translateX(-50%); margin: 0; padding: 6px 14px; border-radius: 999px; background: rgba(10,14,24,.75); border: 1px solid rgba(255,255,255,.14); font: 300 12px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: #fff; white-space: nowrap; opacity: 0; transition: opacity .4s; pointer-events: none; }
@@ -161,11 +162,14 @@
     <div class="x-ui x-gen" id="gen" role="dialog" aria-label="MAKE YOURS 品牌金属生成器">
       <div class="x-gen-h"><span>MAKE YOURS · 品牌金属生成器</span><button class="x-gen-x" id="gClose" aria-label="Close">✕</button></div>
       <input type="text" id="gName" maxlength="12" placeholder="品牌名 BRAND (1–12)" aria-label="品牌名 BRAND" autocomplete="off" />
+      <input type="text" id="gTag" maxlength="24" placeholder="标语 TAGLINE（可选，默认品牌名）" aria-label="标语 TAGLINE" autocomplete="off" />
       <label class="x-gbtn">上传 LOGO（可选，仅本地）<input type="file" id="gLogo" accept="image/png,image/svg+xml,image/jpeg" /></label>
       <p id="gLogoF" class="x-note" hidden><span id="gLogoN"></span><button id="gLogoX" aria-label="Clear logo">✕</button></p>
       <p class="x-note">LOGO 只在本机处理，不会上传</p>
-      <p>材质 SKIN</p>
-      <div class="x-chips" id="gSkin"><button data-skin="0.93,0.96,1" aria-pressed="true">银 Silver</button><button data-skin="1,0.78,0.42" aria-pressed="false">金 Gold</button><button data-skin="0.32,0.34,0.4" aria-pressed="false">黑铬 Black chrome</button><button data-skin="1,0.68,0.6" aria-pressed="false">玫瑰金 Rose gold</button></div>
+      <p>镜头模板 SHOT</p>
+      <div class="x-chips" id="gTpl"><button data-tpl="reveal" aria-pressed="true">旋转揭示 Reveal</button><button data-tpl="drip" aria-pressed="false">液态滴落 Drip</button><button data-tpl="burst" aria-pressed="false">爆裂重组 Burst</button><button data-tpl="sweep" aria-pressed="false">扫光 Sweep</button><button data-tpl="vortex" aria-pressed="false">漩涡 Vortex</button><button data-tpl="pulse" aria-pressed="false">心跳 Pulse</button></div>
+      <p>材质 / 品牌色 COLOR<input type="color" id="gColor" value="#c8ccd2" aria-label="品牌色 BRAND COLOR" /></p>
+      <div class="x-chips" id="gSkin"><button data-hex="#c8ccd2" aria-pressed="true">银 Silver</button><button data-hex="#d19b42" aria-pressed="false">金 Gold</button><button data-hex="#2a2f3e" aria-pressed="false">黑铬 Black chrome</button><button data-hex="#d1826f" aria-pressed="false">玫瑰金 Rose gold</button></div>
       <p>音乐 MUSIC</p>
       <div class="x-chips" id="gMus"><button data-mus="work_perfume.m4a" aria-pressed="false">香水</button><button data-mus="work_sneaker.m4a" aria-pressed="false">球鞋</button><button data-mus="work_audio.m4a" aria-pressed="false">耳机</button><button data-mus="kenting_dusk_shoreline.m4a" aria-pressed="true">场景 BGM</button></div>
       <button id="gGo">生成 GENERATE</button>
@@ -615,9 +619,9 @@
           transparent: true, depthWrite: false, depthTest: false,
           blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
           uniforms: { tPos: { value: null }, tVel: { value: null }, uTime: { value: 0 }, uSize: { value: 1 }, uAlpha: { value: 0.8 }, uLamp: bgMat.uniforms.uLamp, uBeam: bgMat.uniforms.uBeam,
-            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uScr: { value: new THREE.Vector3(0, 0, 0) }, uFS: { value: 1 }, uBass: { value: 0 }, uCtr: velMat.uniforms.uCenter },
+            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uSwK: { value: 1 }, uScr: { value: new THREE.Vector3(0, 0, 0) }, uFS: { value: 1 }, uBass: { value: 0 }, uCtr: velMat.uniforms.uCenter },
           // Liquid metal: soft sphere sprites lit in the fragment stage (sky gradient + soft band + clean spec + Fresnel rim); overlap reads as one surface.
-          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN, uFS; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep, uBass; uniform vec3 uScr, uCtr; attribute vec2 ref;
+          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN, uFS; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep, uSwK, uBass; uniform vec3 uScr, uCtr; attribute vec2 ref;
             varying vec3 vBase, vRim, vGl; varying float vPS, vBlur;
             void main(){
               vec3 p = texture2D(tPos, ref).xyz, v = texture2D(tVel, ref).xyz;
@@ -630,7 +634,7 @@
               vRim = mix(vec3(1., .95, .88), vec3(.82, .9, 1.05), uN) * uTint * uRimC;
               float bm = beamAt(gl_Position.xy / gl_Position.w * .5 + .5, uLamp, uBeam), st = uTime - uShock.w;
               float sh = st < 1.2 ? exp(-pow((length(p - uShock.xyz) - st * 3.5) * 2., 2.)) * exp(-st * 2.) : 0.;
-              vGl = bm * vec3(.22, .17, .11) + sw * vec3(.3, .27, .22) + sh * .25 + smoothstep(1., 4., length(v)) * .06;
+              vGl = bm * vec3(.22, .17, .11) + sw * uSwK * vec3(.3, .27, .22) + sh * .25 + smoothstep(1., 4., length(v)) * .06;
               vBlur = smoothstep(.6, 2.6, abs(-mv.z - 6.));
               vPS = max(uSize * uFS * (2.1 + .7 * h(ref + 9.)) * (1. + vBlur * .5) / -mv.z, 2.);
               gl_PointSize = vPS;
@@ -743,11 +747,29 @@
           { name: "手机 PHONE", shape: PHONE_I, tag: "AXON PHONE · 液态成形", src: "work_perfume.m4a", type: "phone", dur: 12 },
           { name: "定制 CUSTOM", shape: CUSTOM_I, tag: "", src: "kenting_dusk_shoreline.m4a", type: "custom", dur: 10 }];
         const CUSTOM_W = 4;
-        let customTint = [0.93, 0.96, 1], customName = "AXON", rec = null; // rec: export hook for edit B
+        let customTint = [0.963, 0.979, 1], customName = "AXON", customTag = "", customTpl = "reveal", rec = null; // rec: export hook for edit B
         const WAUD = WORKS.map((w) => { const a = new Audio(); a.preload = "auto"; a.addEventListener("error", () => (a.bad = true)); a.src = w.src; return a; });
         const TINTS = [[1, 1, 1], [1, 0.78, 0.42], [0.32, 0.34, 0.4]], WHITE = [1, 1, 1];
         const wTag = document.getElementById("wTag"), wTagL = document.getElementById("wTagL"), wTagS = document.getElementById("wTagS"), wHud = document.getElementById("wHud"), wHudT = document.getElementById("wHudT"), wBar = document.getElementById("wBar"), sHint = document.getElementById("sHint");
         let work = null, wAud = null;
+        // v1.2 广告模板库: each template = keyframes [[t, value], …] (smoothstep between keys; spin eases out).
+        // s0 start shape · tin brand-morph time · gm gather (<1 = scattered cloud) · lift (+ up / − drip) · spin/tilt (rad) · cam (camera z, 6 = rest)
+        // lb light band ×  · sway start · loop = repeating sweep · sweep [[t0, t1, strength]] · shock times · beat [t0, t1] · tag window (≤ 9 s).
+        const TPL = {
+          reveal: { s0: 1, tin: 1.6, gm: [[0, 0.12], [1.6, 0.12], [3.2, 1]], spin: [[0, -6.283], [3.6, 0]], tilt: [[0, 0.3], [3.6, 0]], cam: [[0, 7.4], [3.8, 6]], lb: [[0, 0.6], [2.4, 1.8], [4.5, 1]], sway: 3.6, loop: 1, tag: [5.5, 9] },
+          drip: { s0: 1, tin: 1.5, gm: [[0, 0.55], [1.5, 0.55], [2.8, 1]], lift: [[0, 9], [1.3, 9], [1.7, -5], [2.4, -5], [2.9, 0]], tilt: [[0, -0.15], [3.5, 0]], cam: [[0, 6.3], [4, 6]], lb: [[0, 0.8], [3, 1.4], [5, 1]], sway: 4, loop: 1, tag: [6, 9] },
+          burst: { s0: 1, tin: 1, shock: [3.2, 6.2], gm: [[3.2, 1], [3.35, 0.3], [3.9, 0.3], [4.8, 1], [6.2, 1], [6.3, 0.55], [6.6, 0.55], [7.2, 1]], cam: [[3.1, 6], [3.3, 5.4], [4.8, 6]], lb: [[3.1, 1], [3.3, 2.4], [4.5, 1]], sway: 2.2, loop: 1, tag: [6.5, 9] },
+          sweep: { s0: 1, tin: 1.5, cam: [[1.5, 6.2], [8, 5.6]], lb: [[0, 0.7], [3.5, 0.7], [4.2, 1.8], [5.5, 1]], sweep: [[3.4, 5, 3.5], [7, 8, 1.6]], sway: 0, tag: [5, 9] },
+          vortex: { s0: 4, tin: 0.8, gm: [[0, 0.2], [0.8, 0.2], [3.4, 1]], spin: [[0, -12.566], [3.8, 0]], tilt: [[0, 0.55], [3.8, 0]], cam: [[0, 6.8], [4, 6]], lb: [[0, 1.6], [4, 1]], sway: 4.2, loop: 1, tag: [5.5, 9] },
+          pulse: { s0: 1, tin: 1.5, beat: [2.5, 8.6], sway: 2.5, tag: [5.5, 9] },
+        };
+        const KF = (a, t, out) => {
+          if (t <= a[0][0]) return a[0][1];
+          for (let i = 1; i < a.length; i++) if (t < a[i][0]) { const [t0, v0] = a[i - 1], [t1, v1] = a[i], u = (t - t0) / (t1 - t0); return v0 + (v1 - v0) * (out ? 1 - (1 - u) * (1 - u) * (1 - u) : u * u * (3 - 2 * u)); }
+          return a[a.length - 1][1];
+        };
+        const hb = (t) => { const p = (t * 1.27) % 1; return Math.exp(-Math.pow((p - 0.06) / 0.05, 2)) + 0.6 * Math.exp(-Math.pow((p - 0.26) / 0.06, 2)); }; // ~76 bpm lub-dub
+        const tagTxt = () => [(customTag || customName).toUpperCase(), customTag ? customName.toUpperCase() + " · MADE WITH AXON" : "MADE WITH AXON"];
         function wAudStart(t) {
           const a = WAUD[work.i];
           if (!sndOn || a.bad) return;
@@ -760,11 +782,11 @@
           if (sk) skinAbort();
           if (work) endWork(true);
           document.body.classList.add("x-workon");
-          work = { i, t: 0, s2: false, s14: false, b6: false, b9: false, ti: 0, lastBurst: -9, dip: 0, env: 0 };
-          waveT = 0; setShape(1);
+          work = { i, t: 0, s2: false, s14: false, b6: false, b9: false, ti: 0, lastBurst: -9, dip: 0, env: 0, tp: customTpl, sh: 0 };
+          waveT = 0; setShape(WORKS[i].type === "custom" ? (TPL[customTpl] || TPL.reveal).s0 : 1);
           wTagL.textContent = WORKS[i].tag; wTagS.textContent = `AXON · 液态金属广告样片 0${i + 1}`;
           wHudT.textContent = `WORK 0${i + 1}/06 · ${WORKS[i].name}`; wBar.style.width = "0";
-          if (WORKS[i].type === "custom") { wTagL.textContent = customName.toUpperCase(); wTagS.textContent = "MADE WITH AXON"; wHudT.textContent = `MAKE YOURS · ${customName}`; }
+          if (WORKS[i].type === "custom") { [wTagL.textContent, wTagS.textContent] = tagTxt(); wHudT.textContent = `MAKE YOURS · ${customName}`; }
           wHud.classList.add("x-on");
           wAudStart(0);
         }
@@ -773,7 +795,7 @@
           wTag.classList.remove("x-on"); wHud.classList.remove("x-on"); sHint.classList.remove("x-on"); document.body.classList.remove("x-workon");
           const vu = velMat.uniforms;
           vu.uMist.value = 0; vu.uPulse.value = 0; ptMat.uniforms.uSweep.value = -9; ptMat.uniforms.uScr.value.y = 0; ptMat.uniforms.uTint.value.copy(skinTint);
-          points.rotation.y = 0;
+          points.rotation.y = 0; points.rotation.x = 0; camera.position.z = 6; ptMat.uniforms.uSwK.value = 1;
           if (shapeI !== HOME()) setShape(HOME());
           // Audio fades out in workStep; a silent end (switching works) cuts it at once.
           if (silent && wAud) { wAud.pause(); wAud.volume = 0; wAud = null; }
@@ -796,16 +818,26 @@
           w.dip -= raw;
           const D = WORKS[w.i].dur || 15;
           if (WORKS[w.i].type === "custom") {
-            // Custom: 10 s — sphere → brand (1.5) → ±20° sway + sweep (2.5–8) → tagline (6–9) → wave (9) → end.
-            if (t >= 1.5 && !w.s2) { w.s2 = true; setShape(CUSTOM_I); }
-            if (t >= 2.5 && t < 8) {
-              points.rotation.y = 0.349 * Math.sin((t - 2.5) * 0.9) * clamp((t - 2.5) / 0.6, 0, 1);
-              pu.uSweep.value = -1.4 + 2.8 * (((t - 2.5) % 2.8) / 2.8);
-            } else if (t >= 8) { points.rotation.y = wrapA(points.rotation.y) * Math.exp(-2 * raw); pu.uSweep.value = -9; }
+            // Custom (v1.2): 10 s template — start shape → brand (tin) → spin/tilt/camera/light keyframes → sway + sweep (≤8) → tagline window → wave (9) → end.
+            const T = TPL[w.tp] || TPL.reveal, sw0 = T.sway, sl = Math.max(2.5, sw0 || 0);
+            if (t >= T.tin && !w.s2) { w.s2 = true; setShape(CUSTOM_I); }
+            (T.shock || []).forEach((x, k) => { if (t >= x && !(w.sh & (1 << k))) { w.sh |= 1 << k; vu.uShock.value.set(0, CY, 0, simT); chime(0.1); } });
+            w.gm = T.gm ? KF(T.gm, t) : 1;
+            if (T.lift) lift = KF(T.lift, t);
+            const bt = T.beat && t >= T.beat[0] && t < T.beat[1] ? hb(t) : 0;
+            w.lb = (T.lb ? KF(T.lb, t) : 1) + bt * 1.2;
+            camera.position.z = (T.cam ? KF(T.cam, t) : 6) - bt * 0.12;
+            if (t < 8) {
+              const swy = sw0 && t >= sw0 ? 0.349 * Math.sin((t - sw0) * 0.9) * clamp((t - sw0) / 0.6, 0, 1) : 0;
+              points.rotation.y = (T.spin ? KF(T.spin, t, 1) : 0) + swy; points.rotation.x = T.tilt ? KF(T.tilt, t) : 0;
+            } else { points.rotation.y = wrapA(points.rotation.y) * Math.exp(-2 * raw); points.rotation.x *= Math.exp(-2 * raw); }
+            const sp = (T.sweep || []).find((x) => t >= x[0] && t < x[1]);
+            pu.uSwK.value = sp ? sp[2] : 1;
+            pu.uSweep.value = sp ? -1.4 + (2.8 * (t - sp[0])) / (sp[1] - sp[0]) : T.loop && t >= sl && t < 8 ? -1.4 + 2.8 * (((t - sl) % 2.8) / 2.8) : -9;
             vu.uMist.value = clamp(vu.uMist.value - 2 * raw, 0, 1);
-            vu.uPulse.value *= Math.exp(-6 * raw);
+            vu.uPulse.value = bt || vu.uPulse.value * Math.exp(-6 * raw);
             pu.uTint.value.lerp(t < 9 ? new THREE.Vector3(...customTint) : skinTint, 1 - Math.exp(-3 * raw));
-            wTag.classList.toggle("x-on", t >= 6 && t < 9);
+            wTag.classList.toggle("x-on", t >= T.tag[0] && t < T.tag[1]);
             if (t >= 9 && !w.s14) { w.s14 = true; setShape(HOME()); }
             wBar.style.width = Math.min(100, (t / D) * 100) + "%";
             if (t >= D) endWork();
@@ -907,20 +939,40 @@
           fr.readAsDataURL(f);
         });
         const pick = (box, b) => box.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
-        ["gSkin", "gMus"].forEach((id) => $(id).addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) pick($(id), b); }));
+        const gTag = $("gTag"), gColor = $("gColor");
+        const hexTint = (hx) => { const m = /^#?([0-9a-f]{6})$/i.exec(hx || ""); if (!m) return null; const n = parseInt(m[1], 16); return [16, 8, 0].map((b) => Math.min(1.2, 0.15 + (0.85 * ((n >> b) & 255)) / 255 / 0.82)); };
+        const skinSync = () => $("gSkin").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.hex === gColor.value.toLowerCase()));
+        $("gSkin").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { gColor.value = b.dataset.hex; skinSync(); } });
+        gColor.addEventListener("input", skinSync);
+        function genRead() { // panel → template, metal tint (brand colour over the silver baseline), tagline
+          const tp = gen.querySelector("[data-tpl][aria-pressed=true]");
+          customTpl = tp && TPL[tp.dataset.tpl] ? tp.dataset.tpl : "reveal";
+          customTint = hexTint(gColor.value) || hexTint("#c8ccd2");
+          customTag = gTag.value.trim().slice(0, 24);
+        }
+        ["gTpl", "gMus"].forEach((id) => $(id).addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) pick($(id), b); }));
         $("gGo").addEventListener("click", () => {
           if (rec) { toast("录制中 · 请等待导出完成"); return; }
           try {
             const nm = gName.value.trim();
             if ((nm.length < 1 || nm.length > 12) && !logoImg) { toast("请输入 1–12 个字的品牌名"); return; }
-            const skin = gen.querySelector("[data-skin][aria-pressed=true]"), mus = gen.querySelector("[data-mus][aria-pressed=true]").dataset.mus;
-            customName = nm || "AXON"; customTint = skin.dataset.skin.split(",").map(Number);
+            const mus = gen.querySelector("[data-mus][aria-pressed=true]").dataset.mus;
+            customName = nm || "AXON"; genRead();
             rasterBrand(nm, logoImg); setCustomTex();
             const a = WAUD[CUSTOM_W]; a.bad = false;
             if (WORKS[CUSTOM_W].src !== mus) { WORKS[CUSTOM_W].src = mus; a.src = mus; }
             playWork(CUSTOM_W); $("gRec").setAttribute("aria-disabled", "false");
           } catch (err) { toast("生成失败：" + ((err && err.message) || err)); }
         });
+        // v1.2 URL: #brand=名字&tpl=reveal&color=hex(&tag=标语) fills the panel and plays once the intro is entered; bad values are ignored.
+        let autoGo = null;
+        try {
+          const q = new URLSearchParams(location.hash.slice(1)), b = (q.get("brand") || "").trim().slice(0, 12), tp = q.get("tpl"), c = "#" + (q.get("color") || "").replace(/^#/, "").toLowerCase();
+          if (tp && TPL[tp]) pick($("gTpl"), $("gTpl").querySelector(`[data-tpl="${tp}"]`));
+          if (hexTint(c)) { gColor.value = c; skinSync(); }
+          if (q.get("tag")) gTag.value = q.get("tag").trim().slice(0, 24);
+          if (b) { gName.value = b; autoGo = () => $("gGo").click(); }
+        } catch (e) { autoGo = null; }
         bPause.addEventListener("click", () => {
           if (rec) return; // no pausing while recording
           paused = !paused;
@@ -1021,17 +1073,18 @@
                 ctx.globalAlpha = 1; ctx.shadowBlur = 0; if (hasLS) ctx.letterSpacing = "0px";
                 ctx.drawImage(gl, 0, 0, W, H); ctx.drawImage(fxCv, 0, 0, W, H);
                 ctx.textAlign = "center"; ctx.textBaseline = "middle";
-                if (t >= 6 && t < 9) {
+                const tw = (TPL[work.tp] || TPL.reveal).tag, [tL, tS] = tagTxt();
+                if (t >= tw[0] && t < tw[1]) {
                   const fs = Math.round(H * 0.06), fm = Math.round(H * 0.018);
-                  ctx.globalAlpha = clamp(Math.min(t - 6, 9 - t) / 0.5, 0, 1);
+                  ctx.globalAlpha = clamp(Math.min(t - tw[0], tw[1] - t) / 0.5, 0, 1);
                   ctx.fillStyle = "#fff"; ctx.shadowColor = "rgba(255,255,255,.6)"; ctx.shadowBlur = H * 0.02;
                   ctx.font = `200 ${fs}px ${SANS}`;
                   if (hasLS) ctx.letterSpacing = "0.3em";
-                  ctx.fillText(customName.toUpperCase(), W / 2 + (hasLS ? fs * 0.15 : 0), 0.68 * H);
+                  ctx.fillText(tL, W / 2 + (hasLS ? fs * 0.15 : 0), 0.68 * H);
                   ctx.shadowBlur = 0; ctx.fillStyle = "rgba(255,255,255,.65)";
                   ctx.font = `300 ${fm}px ui-monospace, Menlo, monospace`;
                   if (hasLS) ctx.letterSpacing = "0.2em";
-                  ctx.fillText("MADE WITH AXON", W / 2 + (hasLS ? fm * 0.1 : 0), 0.68 * H + fs * 0.95);
+                  ctx.fillText(tS, W / 2 + (hasLS ? fm * 0.1 : 0), 0.68 * H + fs * 0.95);
                   if (hasLS) ctx.letterSpacing = "0px";
                 }
                 if (t >= 9) {
@@ -1147,7 +1200,7 @@
           if (rec) { toast("录制中 · 请等待导出完成"); return; }
           if (!REC_OK) { toast("此浏览器不支持视频录制导出（MediaRecorder 不可用）"); return; }
           if (!dSolid && !drawSolid()) return;
-          customPts = drawPts.slice(); customName = "AXON"; setCustomTex();
+          customPts = drawPts.slice(); customName = gName.value.trim().slice(0, 12) || "AXON"; genRead(); setCustomTex();
           drawMode(false, true);
           gen.classList.add("x-on"); document.body.classList.add("x-genon"); bMake.setAttribute("aria-expanded", true);
           gRec.setAttribute("aria-disabled", "false"); startRec();
@@ -1465,7 +1518,7 @@
             }
           }
           bLo += (lo - bLo) * (1 - Math.exp(-(lo > bLo ? 22 : 5) * raw)); bHi += (hi - bHi) * (1 - Math.exp(-(hi > bHi ? 30 : 7) * raw));
-          ptMat.uniforms.uBass.value = bLo < 1e-3 ? 0 : bLo; bgMat.uniforms.uTreble.value = bHi < 1e-3 ? 0 : bHi;
+          ptMat.uniforms.uBass.value = bLo < 1e-3 ? 0 : bLo; bgMat.uniforms.uTreble.value = Math.max(bHi < 1e-3 ? 0 : bHi, work && work.lb != null ? clamp(work.lb - 1, 0, 1.5) : 0);
         }
         function fxStep(raw, dt) {
           fxT += raw;
@@ -1641,7 +1694,7 @@
           if (!entered) {
             prog = Math.max(0, Math.min(1, prog + (hold ? raw / 1.5 : -raw)));
             ring.style.strokeDashoffset = 289 * (1 - prog);
-            if (prog >= 1) { entered = true; intro.classList.add("x-out"); document.body.classList.remove("x-pre"); }
+            if (prog >= 1) { entered = true; intro.classList.add("x-out"); document.body.classList.remove("x-pre"); if (autoGo) { const go = autoGo; autoGo = null; go(); } }
           }
           const g = entered ? 1 : prog * prog * (3 - 2 * prog), time = simT;
           smooth.lerp(mouse, 0.06);
@@ -1666,6 +1719,7 @@
             vu.uDown.value = downS; vu.uTime.value = simT; vu.uDt.value = dt;
             vu.uGather.value = sk ? 1 : g; // skin switch: hold the sphere together
             if (work && work.dip > 0) vu.uGather.value *= 0.6; // sneaker burst: brief gather dip
+            if (work && work.gm != null) vu.uGather.value *= work.gm; // v1.2 template scatter
             vu.uSpray.value = pu.uSpray.value = entered && skin.kent ? 1 : 0;
             pass(velMat, vel[nxt]);
             pu.tPos.value = pos[cur].texture; pu.tVel.value = vel[nxt].texture; pu.uDt.value = dt; pu.uTime.value = simT;
@@ -1680,7 +1734,7 @@
           if (inLH) aimA += wrapA(Math.atan2(ly - py, px - lx) - aimA) * (1 - Math.exp(-5 * raw));
           else if (aimK < 0.01) aimA = sweep;
           bu.uBeam.value.x = sweep + wrapA(aimA - sweep) * aimK;
-          bu.uBeam.value.y = g * bu.uKent.value;
+          bu.uBeam.value.y = g * bu.uKent.value * (work && work.lb != null ? work.lb : 1); // v1.2 template light band
           bu.uFade.value = g;
 
           hf++; hudT += raw;
