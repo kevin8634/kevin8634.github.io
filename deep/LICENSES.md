@@ -78,3 +78,11 @@
 
 ## 深空 1.9 航线「卫星钟为什么要调慢」(2026-10-31)
 - routes/gps.json:文字 AI 撰写,数值由 docs/gps_build.py 复算;引用 GPS.gov(美国政府公开信息)、NASA Earth Fact Sheet、Ashby 2003(Living Reviews in Relativity)的公开数值与公式(注明出处,不用 logo、不暗示背书);无图片、无新数据集。
+
+## 深空 2.1「2026 诺奖前沿」三张卡(2026-11-09,总指挥)
+| 台账 id / 文件 | 内容 | 来源 | 许可 / 署名 |
+|---|---|---|---|
+| sim.icecube.hits | 一条 μ 子径迹在 4 根串上的光到达时间(66 个命中) | 本站程序模拟(docs/nobel26_build.py,种子 20261006);几何取 IceCube 公开设计值(串距 125 m、DOM 间距 17 m,IceCube Collaboration 2017 JINST 12 P03012) | 本站原创,CC BY 4.0;**模拟数据,非 IceCube 观测**,未引入任何 IceCube 数据文件 |
+| sim.chr2.hill | ChR2 归一化峰值光电流 vs 光强 10 点 | 本站程序模拟(种子 20261005);参数取 Lin 2011 Exp Physiol 96:19 表 1 的公开典型值 EC50≈1.10 mW/mm²(事实数值,注明出处) | 本站原创,CC BY 4.0;**模拟数据,非实验测量** |
+| model.soai.amplify | 二级自催化教学模型 ee 放大曲线 | 本站计算(解析不变量 ee/(1−ee²)∝产物总量,RK4 核对) | 本站原创,CC BY 4.0;模型计算值,非观测 |
+| deep/cards/nv.l2.icecube.json、ls.l2.optogenetics.json、ef.l4.chirality.json | 三张「前沿 · 2026 诺奖」卡 | 文字 AI 撰写,数值由 docs/nobel26_build.py 复算;诺奖得主与获奖理由核实自 NobelPrize.org 2026 物理/生理学或医学/化学奖 summary 与 popular information 页(2026-11-09 取) | 自有;卡内 sources 逐条列出处;只引用事实与公式,不转载 NobelPrize.org 文字与插图,不用任何机构 logo,不暗示背书 |
