@@ -1156,7 +1156,7 @@
     "数学": "Math", "物理": "Physics", "化学": "Chemistry", "生物": "Biology", "超级智能": "Superintelligence", "超级智能 SI": "Superintelligence", "认知觉醒": "Cognition", "天文": "Astronomy",
     "数学 · 天璇": "Math · Merak", "物理 · 天玑": "Physics · Phecda", "化学 · 天权": "Chemistry · Megrez", "生物 · 玉衡": "Biology · Alioth", "超级智能 · 开阳": "Superintelligence · Mizar", "认知觉醒 · 摇光": "Cognition · Alkaid", "天文 · 天枢": "Astronomy · Dubhe",
     "天璇": "Merak", "天玑": "Phecda", "天权": "Megrez", "玉衡": "Alioth", "开阳": "Mizar", "摇光": "Alkaid",
-    "已开张": "Open", "已上线": "Live", "进入世界 →": "Enter world →", "去看 →": "Take a look →", "从这里出发": "Start here", "全部": "All", "全部类型": "All types", "内容": "Content", "状态": "Status", "体验升级": "Upgrade",
+    "已开张": "Open", "已上线": "Live", "EN 全量": "Full English", "冰立方特别展": "IceCube special", "进入世界 →": "Enter world →", "去看 →": "Take a look →", "从这里出发": "Start here", "全部": "All", "全部类型": "All types", "内容": "Content", "状态": "Status", "体验升级": "Upgrade",
     "星桥": "Star Bridge", "座": "", "门户": "Portal", "星尘": "Stardust", "1 星尘": "1 Stardust", "2 星云": "2 Nebula", "3 初星": "3 Protostar", "4 恒星": "4 Star", "5 双星": "5 Binary", "6 星团": "6 Cluster", "7 星系": "7 Galaxy",
     "先去任意世界点亮一个任务": "Light a quest in any world first", "七个世界全部点亮": "All seven worlds lit", "联合发布": "Joint release", "GENESIS 2.0 · 联合发布": "GENESIS 2.0 · joint release",
     "深空之下": "Beneath Deep Space", "· 深空之下": "· Beneath Deep Space", "深空层 · 星穹": "Deep Space · Firmament", "登上天枢 2.0 ↗": "Board Starhelm 2.0 ↗", "天枢 2.0 · 飞出银河": "Starhelm 2.0 · beyond the Milky Way",
@@ -1703,12 +1703,12 @@
       var WORLDS = [
         { id: "01", star: "天璇", name: "星图", en: "Math Atlas", field: "数学",
           desc: "用问题点亮知识星。", color: "#7cc8ff", live: true,
-          meta: ["已上线 v0.8.6 · EN", "10 个任务 55 关", "197 颗知识星"], href: "math-atlas/",
+          meta: ["已上线 v0.8.7.1 · EN 全量", "10 个任务 55 关", "197 颗知识星"], href: "math-atlas/",
           prefix: ["ma:v1:", "gn:ma:"],
           age: ["ya","huo","chen","he"], tags: ["math"], why: "喜欢找规律、解谜题？每想通一个问题，就点亮一颗知识星。" },
         { id: "02", star: "天玑", name: "宙律", en: "Nomoverse", field: "物理",
           desc: "改写物理常数，看宇宙怎么变。", color: "#a78bfa", live: true,
-          meta: ["已上线 v0.9-α8 · 冰立方特别展", "6 个任务 25 关 · 5 个实验"], href: "nomoverse/", lab: "nomoverse/lab/", prefix: ["gn:nv:"],
+          meta: ["已上线 v0.9-α9 · EN 全量", "6 个任务 25 关 · 5 个实验"], href: "nomoverse/", lab: "nomoverse/lab/", prefix: ["gn:nv:"],
           age: ["huo","chen","he"], tags: ["space","matter"], why: "好奇宇宙为什么是现在这样？亲手改一改物理常数，看会发生什么。" },
         { id: "03", star: "天权", name: "元素工坊", en: "Element Forge", field: "化学",
           desc: "用元素锻造物质，配方即反应。", color: "#ff9a3c", live: true,
@@ -3777,6 +3777,10 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "门户 v2.6.0", d: "2026-11-09", t: "星历登记宙律 v0.9-α9、星图 Math Atlas v0.8.7 与 v0.8.7.1；两张世界卡标「EN 全量」：宙律和星图都能完整用英文玩了。" },
+        { w: "01", v: "v0.8.7.1", d: "2026-11-09", t: "英文版补齐公共层：反馈表单、15 首背景音乐的曲名与数学规律、星系主题和各类提示都有了英文。" },
+        { w: "01", v: "v0.8.7", d: "2026-11-09", t: "英文版第三期：知识星图 197 颗星、10 个任务的知识笔记、关于与隐私页都有了英文，星图全部 14 页可完整用英文浏览。" },
+        { w: "02", v: "v0.9-α9", d: "2026-11-09", t: "英文版全量完成：6 个任务 25 关运行后的读数、结果句、HUD 和画布标签都换成英文，宙律可完整用英文玩。" },
         { w: "gn", v: "门户 v2.5.9", d: "2026-11-09", t: "星历登记天枢 v1.0-M4q、M4r、M4s，宙律 v0.9-α7、α8，生命源码 v0.11；宙律、生命源码世界卡更新。" },
         { y: "task", w: "04", v: "v0.11", d: "2026-11-09", t: "新专题「能不能用一束光开关一个神经元？」：衣藻见光开门、神经元闪一下放一次电、小虫蓝光收缩黄光停下，三关看懂今年诺奖的光遗传学。" },
         { w: "02", v: "v0.9-α8", d: "2026-11-07", t: "英文版第二期 b：冰立方特别展、规则改写台和关卡锁定提示都有了英文。" },
