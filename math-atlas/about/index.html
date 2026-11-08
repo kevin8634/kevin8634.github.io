@@ -6,6 +6,7 @@
 <title>关于与隐私 · 星图 Math Atlas</title>
 <meta name="description" content="星图 Math Atlas 的版权、许可、隐私说明与第三方组件。" />
 <meta name="theme-color" content="#04060f" />
+<script src="../i18n.js"></script>
 <style>
   :root { --bg:#04060f; --fg:#e8ecff; --mute:#9aa6cc; --ice:#9fd8ff; --line:rgb(160 185 255 / .18); }
   * { box-sizing:border-box; }
@@ -64,6 +65,7 @@
       <tr><td><code>ma:music</code> <code>ma:track</code> <code>ma:vol</code> <code>ma:mauto</code> <code>ma:mpos</code></td><td>音乐开关、曲目、音量、续播与位置</td><td>默认关</td></tr>
       <tr><td><code>ma:theme</code></td><td>星系主题</td><td>外观偏好</td></tr>
       <tr><td><code>ma:gl</code> <code>ma:motion</code> <code>ma:intro</code></td><td>画质档位、动态效果、是否看过开场</td><td>沉浸版偏好</td></tr>
+      <tr><td><code>gn:lang</code></td><td>界面语言(中文 / English)</td><td>创世计划各世界共用</td></tr>
     </tbody>
   </table>
   <p>从创世计划门户进入时,浏览器会临时用 <code>gn:portal:arrive</code>(sessionStorage)做过场衔接,读到后立即删除。</p>
@@ -87,14 +89,16 @@
   <h2>联系</h2>
   <p>意见、纠错或授权:<a href="mailto:wanglei19860304@gmail.com?subject=%5B%E6%98%9F%E5%9B%BE%5D%20%E5%85%B3%E4%BA%8E%E4%B8%8E%E9%9A%90%E7%A7%81">wanglei19860304@gmail.com</a></p>
 
-  <footer>© 2026 星图 Math Atlas · 创世计划 Genesis · 最近更新 2026-10-24</footer>
+  <footer>© 2026 星图 Math Atlas · 创世计划 Genesis · 最近更新 2026-11-09</footer>
 </main>
 <script>
+var EN = window.MA_LANG === "en" && window.MA_ABOUT_EN;
+if (EN) { document.querySelector("main").innerHTML = window.MA_ABOUT_EN; var md = document.querySelector('meta[name="description"]'); if (md) md.setAttribute("content", MA_T("@星图 Math Atlas 的版权、许可、隐私说明与第三方组件。")); }
 document.getElementById("clr").onclick = function () {
-  if (!confirm("确定清除这台设备上的星图进度和偏好吗?清除后无法恢复。")) return;
+  if (!confirm(EN ? MA_T("确定清除这台设备上的星图进度和偏好吗?清除后无法恢复。") : "确定清除这台设备上的星图进度和偏好吗?清除后无法恢复。")) return;
   var n = 0;
   try { for (var i = localStorage.length - 1; i >= 0; i--) { var k = localStorage.key(i); if (k && k.indexOf("ma:") === 0) { localStorage.removeItem(k); n++; } } } catch (e) {}
-  document.getElementById("clrMsg").textContent = "已清除 " + n + " 项。";
+  document.getElementById("clrMsg").textContent = EN ? "Cleared " + n + (n === 1 ? " item." : " items.") : "已清除 " + n + " 项。";
 };
 </script>
 </body>

@@ -78,3 +78,42 @@ MA_I18N.add({
   /* 终点知识标签:★ 已点亮 / ☆ 未点亮 */
   [/^★ (.+)$/, function (m, a) { var y = MA_I18N.T(a); return y === a ? null : "★ " + y; }]
 ]);
+
+/* ---------- v0.8.7 英文第三期:关内知识卡(必须掌握 / 公式 / 文献 / 应用)补译 ---------- */
+MA_I18N.add({
+ "Avery Wang (2003) \"An Industrial-Strength Audio Search Algorithm\"(Shazam 听歌识曲)": "Avery Wang (2003) \"An Industrial-Strength Audio Search Algorithm\" (Shazam song recognition)",
+ "MP3/AAC 音频压缩:在频域里丢掉人耳听不到的部分": "MP3/AAC audio compression: dropping what the ear cannot hear in the frequency domain",
+ "两音的合成波按\"最小公倍数\"重复:比越简单,重复越快,大脑越容易\"看懂\"。": "Two notes combined repeat on their \"least common multiple\": the simpler the ratio, the sooner the wave repeats and the easier it is for the brain to \"read\".",
+ "亥姆霍兹《论音感》(1863):用泛音和\"拍\"解释协和": "Helmholtz, On the Sensations of Tone (1863): explained consonance with overtones and beats",
+ "人耳对音高的感受是对数的:频率每乘 2,听起来升高一样多。": "We hear pitch logarithmically: every time the frequency doubles, it sounds the same step higher.",
+ "任何周期声音都能拆成一组正弦波(基频 + 泛音),泛音的强弱决定音色。": "Any periodic sound can be split into sine waves (a fundamental plus overtones); the strength of the overtones sets the timbre.",
+ "傅里叶《热的解析理论》(1822):函数可展开为三角级数": "Fourier, The Analytical Theory of Heat (1822): functions can be expanded in trigonometric series",
+ "傅里叶级数:f(t) = a₀ + Σ [aₙcos(nωt) + bₙsin(nωt)];方波只含奇次谐波,振幅 ∝ 1/n": "Fourier series: f(t) = a₀ + Σ [aₙcos(nωt) + bₙsin(nωt)]; a square wave has only odd harmonics, amplitude ∝ 1/n",
+ "医院 MRI 成像、地震波分析:都靠傅里叶变换": "Hospital MRI scans and seismic analysis: both rely on the Fourier transform",
+ "十二平均律:半音比 r = 2^(1/12) ≈ 1.05946;第 n 个半音 f = f₀·2^(n/12)": "Twelve-tone equal temperament: semitone ratio r = 2^(1/12) ≈ 1.05946; n semitones up f = f₀·2^(n/12)",
+ "平均律五度 2^(7/12) ≈ 1.4983,纯五度 1.5,差约 2 音分": "equal-tempered fifth 2^(7/12) ≈ 1.4983 vs the just fifth 1.5, about 2 cents apart",
+ "弦长与频率成反比:弦长减半,频率翻倍,升高一个八度。": "String length is inversely proportional to frequency: halve the string and the frequency doubles, one octave higher.",
+ "手机调音器、听歌识曲:实时频谱分析(FFT)": "Phone tuners and song recognition: real-time spectrum analysis (FFT)",
+ "拍频:f_beat = |f₁ − f₂|": "Beat frequency: f_beat = |f₁ − f₂|",
+ "朱载堉《律学新说》(1584):最早精确计算十二平均律": "Zhu Zaiyu, A New Account of the Science of the Pitch-Pipes (1584): the first exact calculation of equal temperament",
+ "梅森《Harmonie universelle》(1636):弦振动定律": "Mersenne, Harmonie universelle (1636): the laws of vibrating strings",
+ "梅森弦振动定律:f = (1/2L)·√(T/μ)(L 弦长,T 张力,μ 线密度)": "Mersenne's laws: f = (1/2L)·√(T/μ) (L string length, T tension, μ linear density)",
+ "毕达哥拉斯学派(约公元前6世纪):弦长比与和谐的传说": "The Pythagoreans (c. 6th century BC): the legend of string ratios and harmony",
+ "钢琴调律:采用十二平均律,任何调都能弹": "Piano tuning: equal temperament lets you play in any key",
+ "降噪耳机:生成相位相反的声波抵消噪音": "Noise-cancelling headphones: an opposite-phase wave cancels the noise",
+ "音分:cents = 1200·log₂(f₂/f₁)": "Cents: cents = 1200·log₂(f₂/f₁)",
+ "音高由频率决定(单位 Hz),标准音 A4 = 440 Hz。": "Pitch is set by frequency (in Hz); the standard pitch A4 = 440 Hz.",
+ "频率比越简单越协和:八度 2:1、纯五度 3:2、纯四度 4:3、大三度 5:4、小三度 6:5;小二度 16:15 刺耳。": "Simpler frequency ratios sound more consonant: octave 2:1, perfect fifth 3:2, perfect fourth 4:3, major third 5:4, minor third 6:5; the minor second 16:15 is harsh.",
+ "公式": "Formulas",
+ "必须掌握": "Must know",
+ "经典文献与历史": "Classic papers & history",
+ "领域应用与案例": "Applications & case studies",
+ "@七颗星组成的星座,按你的进度点亮": "A constellation of seven stars, lit as you progress",
+ "@两个正弦波与合成波": "Two sine waves and their combined wave",
+ "@你给七个音程的评分,按分数从简单到复杂排列": "Your ratings for seven intervals, ordered from simplest to most complex fraction",
+ "@可拖动琴码的弦": "String with a draggable bridge",
+ "@各次谐波(细线)、合成波形(粗线)与频谱柱": "Each harmonic (thin lines), the combined waveform (thick line) and spectrum bars",
+ "@本轮:半径等于各谐波振幅的圆一个套一个,笔尖画出波形": "Epicycles: circles whose radii equal the harmonic amplitudes, nested one inside another, with the pen tip tracing the waveform",
+ "@音高螺旋:每转一圈 12 个点,频率翻倍": "Pitch spiral: 12 points per turn, and each turn doubles the frequency",
+ "任务1 为什么有的和弦好听": "Quest 1 Why do some chords sound good"
+});

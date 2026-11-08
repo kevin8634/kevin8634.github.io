@@ -280,3 +280,34 @@ MA_I18N.add({
   [/^现在效率 ([\d.]+)，目标 ([\d.]+)。$/, "Efficiency now $1, target $2."],
   [/^蜂巢画布，第 (\d+) 波，(\d+) 个格子，存蜜 ([\d.]+)，用蜡 ([\d.]+)$/, "Honeycomb canvas, wave $1, $2 cells, honey $3, wax $4"]
 ]);
+
+/* ---------- v0.8.7 英文第三期:关内知识卡(必须掌握 / 公式 / 文献 / 应用)补译 ---------- */
+MA_I18N.add({
+ "Karihaloo et al. (2013) J. R. Soc. Interface:蜂蜡受热流动,圆形巢室变成圆角六边形": "Karihaloo et al. (2013) J. R. Soc. Interface: warmed beeswax flows, turning round cells into rounded hexagons",
+ "Thomas C. Hales (2001) \"The Honeycomb Conjecture\", Discrete & Computational Geometry 25:1–22(1999 年发布)": "Thomas C. Hales (2001) \"The Honeycomb Conjecture\", Discrete & Computational Geometry 25:1–22 (released 1999)",
+ "Uber H3 六边形地图网格、外卖配送分区(Voronoi)": "Uber H3 hexagonal map grid, delivery zones (Voronoi)",
+ "Voronoi 图:每个点归离它最近的\"种子\";反复把种子移到自己区域的中心(Lloyd 松弛),格子会自己趋向六边形。": "Voronoi diagram: every point belongs to its nearest \"seed\"; keep moving each seed to the centre of its region (Lloyd relaxation) and the cells drift toward hexagons.",
+ "一个顶点周围的角必须拼成 360°,所以能单独铺满平面的正多边形只有 3 种:正三角形、正方形、正六边形。": "The angles around a vertex must add up to 360°, so only 3 regular polygons tile the plane on their own: the equilateral triangle, the square and the regular hexagon.",
+ "内角:(n−2)×180°/n;多边形内角和 (n−2)×180°": "Interior angle: (n−2)×180°/n; angle sum of a polygon (n−2)×180°",
+ "北京奥运\"水立方\"外墙:Weaire–Phelan 泡沫结构": "The Beijing Olympic \"Water Cube\" facade: Weaire–Phelan foam",
+ "大自然常常在做\"最优化\":用最少的材料完成任务。": "Nature is often optimizing: doing the job with the least material.",
+ "密铺条件:360° ÷ 内角 必须是整数": "Tiling condition: 360° ÷ interior angle must be a whole number",
+ "帕普斯(约公元4世纪)《数学汇编》称赞蜜蜂的\"几何远见\"": "Pappus (c. 4th century), Collection, praised the bees' \"geometric foresight\"",
+ "开尔文勋爵(1887)三维泡沫问题;Weaire & Phelan(1993)找到更优结构": "Lord Kelvin (1887), the 3D foam problem; Weaire & Phelan (1993) found a better structure",
+ "开普勒《论六角雪花》(1611)": "Kepler, On the Six-Cornered Snowflake (1611)",
+ "手机\"蜂窝网络\"基站覆盖规划": "Planning base-station coverage for \"cellular\" phone networks",
+ "正 n 边形每个内角 = (n−2)×180°/n:三角形 60°,正方形 90°,正六边形 120°。": "Each interior angle of a regular n-gon = (n−2)×180°/n: triangle 60°, square 90°, regular hexagon 120°.",
+ "正六边形面积:A = (3√3/2)·a²": "Area of a regular hexagon: A = (3√3/2)·a²",
+ "瓦罗(Varro,公元前36年)最早提出蜂巢猜想": "Varro (36 BC) first stated the honeycomb conjecture",
+ "石墨烯、碳纳米管:碳原子的六边形晶格": "Graphene and carbon nanotubes: hexagonal lattices of carbon atoms",
+ "等周不等式:L² ≥ 4πA(圆取等号)": "Isoperimetric inequality: L² ≥ 4πA (equality for the circle)",
+ "等面积 A 时周长:正三角形 ≈ 4.559√A,正方形 = 4√A,正六边形 ≈ 3.722√A,圆 ≈ 3.545√A": "Perimeter for area A: triangle ≈ 4.559√A, square = 4√A, hexagon ≈ 3.722√A, circle ≈ 3.545√A",
+ "蜂巢猜想:把平面分成等面积的格子,正六边形网格的总周长最短(1999 年被证明)。": "Honeycomb conjecture: when the plane is divided into cells of equal area, the regular hexagonal grid has the least total perimeter (proved in 1999).",
+ "质心:x̄ = 区域内所有点 x 坐标的平均": "Centroid: x̄ = the mean x-coordinate of all points in the region",
+ "面积相同时,边越多越接近圆,周长越短;圆最省但不能密铺。": "For the same area, more sides means closer to a circle and a shorter perimeter; the circle is the most efficient but cannot tile.",
+ "飞机和高铁的蜂窝夹层板:又轻又硬": "Honeycomb sandwich panels in aircraft and high-speed trains: light and stiff",
+ "公式": "Formulas",
+ "必须掌握": "Must know",
+ "经典文献与历史": "Classic papers & history",
+ "领域应用与案例": "Applications & case studies"
+});

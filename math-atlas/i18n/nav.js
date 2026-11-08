@@ -404,3 +404,8 @@ MA_I18N.add({
   [/^新路线 (.+)：(\d+) 分钟。$/, "New route $1: $2 minutes."],
   [/^红色的 3 条路堵车了，分钟数 ×3。你刚才的路线（原来 (\d+) 分钟）现在要 (\d+) 分钟。重新规划一条吧。$/, "The 3 red roads are jammed: minutes ×3. Your last route (it was $1 minutes) now takes $2 minutes. Plan a new one!"]
 ]);
+
+/* ---------- v0.8.7 英文第三期:关内知识卡(必须掌握 / 公式 / 文献 / 应用)补译 ---------- */
+MA_I18N.add({
+ "Dijkstra：dist(v) = min(dist(v), dist(u) + w(u,v))": "Dijkstra: dist(v) = min(dist(v), dist(u) + w(u,v))"
+});

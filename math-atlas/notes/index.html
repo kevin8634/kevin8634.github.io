@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>星图知识笔记</title>
+<script src="../i18n.js"></script>
 <link rel="stylesheet" href="../ma.css" />
 <style>
   :root { --ink: #eef1ff; --mute: #9aa4cf; --line: rgb(160 185 255 / .18);
@@ -115,13 +116,16 @@ var META = {
   cube: { em: "🔺", c: "#e8e8ff", g: "高中–大学", pre: "旋转与对称、乘法" }
 };
 var ORDER = ["nim", "bee", "nav", "secret", "chord", "cat", "casino", "epidemic", "rocket", "cube"];
+var EN = window.MA_LANG === "en" && window.MA_NOTES_EN;
+function W(z, e) { return EN ? e : z; }
+if (EN) { NOTES.forEach(function (n) { var e = EN.notes[n.id]; if (e) for (var k in e) n[k] = e[k]; }); for (var k in EN.meta) if (META[k]) { META[k].g = EN.meta[k].g; META[k].pre = EN.meta[k].pre; } }
 (function () {
   var $ = function (s) { return document.querySelector(s); };
   var byId = {}; NOTES.forEach(function (n) { byId[n.id] = n; });
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function ls(k) { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } }
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
-  function split(t) { var m = t.match(/^(.{2,22}?)[:：](.+)$/); return m ? [m[1], m[2]] : ["", t]; }
+  function split(t) { var m = EN ? t.match(/^(.{2,48}?):\s(.+)$/) : t.match(/^(.{2,22}?)[:：](.+)$/); return m ? [m[1], EN ? m[2].charAt(0).toUpperCase() + m[2].slice(1) : m[2]] : ["", t]; }
   function clean(t) { return t.replace(/\s*\(.*?\)\s*$/, "").replace(/[?？]$/, ""); }
   var tabs = $("#tabs");
   ORDER.forEach(function (id) {
@@ -131,13 +135,13 @@ var ORDER = ["nim", "bee", "nav", "secret", "chord", "cat", "casino", "epidemic"
     tabs.appendChild(b);
   });
   var r = document.createElement("button"); r.className = "tab"; r.type = "button"; r.dataset.id = "route"; r.style.setProperty("--c", "#e8e8ff");
-  r.innerHTML = "🧭 路线"; r.onclick = function () { location.hash = "route"; }; tabs.appendChild(r);
+  r.innerHTML = W("🧭 路线", "🧭 Route"); r.onclick = function () { location.hash = "route"; }; tabs.appendChild(r);
 
   function copyText(n) {
-    var L = [n.title, "", "【必须掌握】"]; n.must.forEach(function (x, i) { L.push((i + 1) + ". " + x); });
-    if (n.formulas.length) { L.push("", "【公式】"); n.formulas.forEach(function (f) { L.push("- " + (f[0] ? f[0] + "：" : "") + f[1]); }); }
-    if (n.lit.length) { L.push("", "【经典文献与历史】"); n.lit.forEach(function (x) { L.push("- " + x); }); }
-    if (n.apps.length) { L.push("", "【应用】"); n.apps.forEach(function (x) { L.push("- " + x); }); }
+    var L = [n.title, "", W("【必须掌握】", "[Must know]")]; n.must.forEach(function (x, i) { L.push((i + 1) + ". " + x); });
+    if (n.formulas.length) { L.push("", W("【公式】", "[Formulas]")); n.formulas.forEach(function (f) { L.push("- " + (f[0] ? f[0] + W("：", ": ") : "") + f[1]); }); }
+    if (n.lit.length) { L.push("", W("【经典文献与历史】", "[Classic papers & history]")); n.lit.forEach(function (x) { L.push("- " + x); }); }
+    if (n.apps.length) { L.push("", W("【应用】", "[Applications]")); n.apps.forEach(function (x) { L.push("- " + x); }); }
     return L.join("\n");
   }
   function toast(t) { var e = document.createElement("div"); e.className = "ma-note on"; e.textContent = t; document.body.appendChild(e); setTimeout(function () { e.remove(); }, 2000); }
@@ -145,9 +149,9 @@ var ORDER = ["nim", "bee", "nav", "secret", "chord", "cat", "casino", "epidemic"
     var v = $("#view");
     tabs.querySelectorAll(".tab").forEach(function (b) { b.classList.toggle("on", b.dataset.id === id); if (b.dataset.id === id) b.scrollIntoView({ inline: "center", block: "nearest" }); });
     if (id === "route") {
-      v.innerHTML = '<div class="view"><div class="blk" style="margin-top:0"><h3><i>🧭</i>推荐顺序 · 由浅入深</h3><div class="route">' +
-        ORDER.map(function (k, i) { var m = META[k]; return '<button style="--c:' + m.c + '" data-go="' + k + '"><b>' + (i + 1) + ". " + m.em + " " + esc(clean(byId[k].title)) + "</b><small>" + m.g + " · 前置：" + m.pre + "</small></button>"; }).join("") +
-        '</div><p class="hint">按中国学段估算；成人任何任务都可以玩。</p></div></div>';
+      v.innerHTML = '<div class="view"><div class="blk" style="margin-top:0"><h3><i>🧭</i>' + W("推荐顺序 · 由浅入深", "Suggested order · from easy to hard") + '</h3><div class="route">' +
+        ORDER.map(function (k, i) { var m = META[k]; return '<button style="--c:' + m.c + '" data-go="' + k + '"><b>' + (i + 1) + ". " + m.em + " " + esc(clean(byId[k].title)) + "</b><small>" + m.g + W(" · 前置：", " · Before: ") + m.pre + "</small></button>"; }).join("") +
+        '</div><p class="hint">' + W("按中国学段估算；成人任何任务都可以玩。", "Grades are estimates based on the Chinese school system; adults can play any quest.") + '</p></div></div>';
       v.querySelectorAll("[data-go]").forEach(function (b) { b.onclick = function () { location.hash = b.dataset.go; }; });
       return;
     }
@@ -155,19 +159,19 @@ var ORDER = ["nim", "bee", "nav", "secret", "chord", "cat", "casino", "epidemic"
     document.documentElement.style.setProperty("--c", m.c); v.style.setProperty("--c", m.c);
     var lv = (n.eyebrow.match(/[★☆]+.*$/) || [""])[0];
     var known = ls("ma:v1:notes-known")[id] || {};
-    var h = '<div class="view"><section class="head"><span class="em">' + m.em + '</span><div><h2>' + esc(n.title) + '</h2><div class="chips"><span class="lv">' + esc(lv) + "</span><span>" + m.g + "</span><span>前置：" + m.pre + "</span></div></div>" +
-      '<div class="acts"><a class="b" href="../' + id + '/">去玩这个任务 →</a><button class="b g" type="button" id="cp">📋 一键复制</button></div></section>';
-    h += '<section class="blk"><h3><i>🎯</i>必须掌握 · ' + n.must.length + ' 条</h3><div class="must">' + n.must.map(function (t, i) {
+    var h = '<div class="view"><section class="head"><span class="em">' + m.em + '</span><div><h2>' + esc(n.title) + '</h2><div class="chips"><span class="lv">' + esc(lv) + "</span><span>" + m.g + "</span><span>" + W("前置：", "Before: ") + m.pre + "</span></div></div>" +
+      '<div class="acts"><a class="b" href="../' + id + '/">' + W("去玩这个任务 →", "Play this quest →") + '</a><button class="b g" type="button" id="cp">' + W("📋 一键复制", "📋 Copy all") + '</button></div></section>';
+    h += '<section class="blk"><h3><i>🎯</i>' + W("必须掌握 · " + n.must.length + " 条", "Must know · " + n.must.length) + '</h3><div class="must">' + n.must.map(function (t, i) {
       var p = split(t); return '<div class="m' + (known[i] ? " ok" : "") + '" data-i="' + i + '" role="button" tabindex="0"><span class="n"><span>' + (i + 1) + "</span></span>" + (p[0] ? "<b>" + esc(p[0]) + "</b><p>" + esc(p[1]) + "</p>" : "<p style='color:#eef1ff'>" + esc(p[1]) + "</p>") + "</div>";
     }).join("") + '</div><p class="hint" id="kn"></p></section>';
-    if (n.formulas.length) h += '<section class="blk"><h3><i>∑</i>公式</h3><div class="forms">' + n.formulas.map(function (f) { return '<div class="f"><small>' + esc(f[0] || "公式") + "</small><code>" + esc(f[1]) + "</code></div>"; }).join("") + "</div></section>";
+    if (n.formulas.length) h += '<section class="blk"><h3><i>∑</i>' + W("公式", "Formulas") + '</h3><div class="forms">' + n.formulas.map(function (f) { return '<div class="f"><small>' + esc(f[0] || W("公式", "Formula")) + "</small><code>" + esc(f[1]) + "</code></div>"; }).join("") + "</div></section>";
     h += '<div class="two">';
-    if (n.lit.length) h += '<section class="blk"><h3><i>📜</i>经典文献与历史</h3><ul class="tl">' + n.lit.map(function (x) {
+    if (n.lit.length) h += '<section class="blk"><h3><i>📜</i>' + W("经典文献与历史", "Classic papers & history") + '</h3><ul class="tl">' + n.lit.map(function (x) {
       var y = x.match(/(1[0-9]{3}|20[0-9]{2})/); return "<li>" + (y ? "<em>" + y[1] + "</em>" : "") + esc(x) + "</li>"; }).join("") + "</ul></section>";
-    if (n.apps.length) h += '<section class="blk"><h3><i>🌍</i>生活里的应用</h3><div class="apps">' + n.apps.map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + "</div></section>";
+    if (n.apps.length) h += '<section class="blk"><h3><i>🌍</i>' + W("生活里的应用", "Everyday applications") + '</h3><div class="apps">' + n.apps.map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + "</div></section>";
     h += "</div></div>";
     v.innerHTML = h;
-    function count() { var k = Object.keys(known).filter(function (x) { return known[x]; }).length; $("#kn").textContent = "已掌握 " + k + " / " + n.must.length + (k === n.must.length ? " 🎉 全部搞懂！" : " · 点卡片标记“我懂了”"); }
+    function count() { var k = Object.keys(known).filter(function (x) { return known[x]; }).length; $("#kn").textContent = W("已掌握 ", "Mastered ") + k + " / " + n.must.length + (k === n.must.length ? W(" 🎉 全部搞懂！", " 🎉 All understood!") : W(" · 点卡片标记“我懂了”", " · tap a card to mark \"Got it\"")); }
     count();
     v.querySelectorAll(".m").forEach(function (c) {
       var tog = function () { var i = c.dataset.i; known[i] = !known[i]; c.classList.toggle("ok", !!known[i]); var all = ls("ma:v1:notes-known"); all[id] = known; lsSet("ma:v1:notes-known", all); count(); };

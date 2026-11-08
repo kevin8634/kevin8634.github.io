@@ -356,3 +356,32 @@ MA_I18N.add({
   [/^\/ 1000 人 ≈$/, "/ 1,000 players ≈"],
   [/^(①|②|③) (.+)：成功率 ≈ ([\d.]+%)。其他办法呢？$/, function (m, k, a, r) { return MA_I18N.T(k + " " + a) + ": success rate ≈ " + r + ". What about the other strategies?"; }]
 ]);
+
+/* ---------- v0.8.7 英文第三期:关内知识卡(必须掌握 / 公式 / 文献 / 应用)补译 ---------- */
+MA_I18N.add({
+ "Christiaan Huygens《论赌博中的计算》1657": "Christiaan Huygens, De Ratiociniis in Ludo Aleae (On Reasoning in Games of Chance), 1657",
+ "Jacob Bernoulli《猜度术》1713（大数定律）": "Jacob Bernoulli, Ars Conjectandi, 1713 (the law of large numbers)",
+ "P(A) = 有利结果数 / 全部结果数": "P(A) = favourable outcomes / all outcomes",
+ "Pierre-Simon Laplace《概率的分析理论》1812": "Pierre-Simon Laplace, Théorie analytique des probabilités, 1812",
+ "两颗骰子和为 7 的概率最大（6/36）。": "With two dice, a total of 7 is the most likely (6/36).",
+ "保险定价与精算": "Insurance pricing and actuarial science",
+ "公平游戏中从 a 元出发、对手 b 元，输光概率 = b/(a+b)": "In a fair game, starting with a against an opponent with b, the chance of going broke = b/(a+b)",
+ "医学临床试验": "Medical clinical trials",
+ "古典概率：等可能结果中，P = 有利结果数 ÷ 全部结果数。": "Classical probability: among equally likely outcomes, P = favourable outcomes ÷ all outcomes.",
+ "大数定律：次数越多，平均结果越接近期望。": "Law of large numbers: the more plays, the closer the average result gets to the expected value.",
+ "天气预报中的降水概率": "Chance of rain in weather forecasts",
+ "帕斯卡与费马 1654 年通信（赌金分配问题，概率论诞生）": "Letters between Pascal and Fermat, 1654 (the problem of points, the birth of probability theory)",
+ "庄家优势：每局期望略小于 0，长期必然亏。": "House edge: each play has an expected value slightly below 0, so in the long run you are bound to lose.",
+ "彩票与赌场的庄家优势": "The house edge in lotteries and casinos",
+ "期望值 = Σ(结果 × 概率)，代表“玩很多次平均每次得多少”。": "Expected value = Σ(outcome × probability): \"how much you get per play on average over many plays\".",
+ "概率 = 某结果出现的可能性大小，频率 = 实际试验中出现的比例。": "Probability = how likely an outcome is; frequency = the share of times it actually happens in trials.",
+ "欧式轮盘押红：E = 18/37 × (+1) + 19/37 × (−1) = −1/37 ≈ −2.7%": "Betting red on European roulette: E = 18/37 × (+1) + 19/37 × (−1) = −1/37 ≈ −2.7%",
+ "经典文献": "Classic papers",
+ "股票与风险管理": "Stocks and risk management",
+ "赌徒破产：本钱有限的一方，长期玩下去几乎必然输光。": "Gambler's ruin: the side with limited money will almost surely lose everything if play goes on long enough.",
+ "领域应用": "Applications",
+ "公式": "Formulas",
+ "必须掌握": "Must know",
+ "经典文献与历史": "Classic papers & history",
+ "领域应用与案例": "Applications & case studies"
+});

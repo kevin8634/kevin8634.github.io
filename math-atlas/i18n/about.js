@@ -1,0 +1,59 @@
+/* 星图 Math Atlas · 关于与隐私 英文语言包(v0.8.7,英文第三期;仅英文模式加载)
+ * 正文整份替换为 MA_ABOUT_EN;法律类文字为初稿,中文版为准。
+ */
+window.MA_ABOUT_EN = '\
+  <a class="back" href="../">← Back to Math Atlas</a>\
+  <h1>About &amp; privacy<small>MATH ATLAS · MATH</small></h1>\
+  <p class="note">The legal text on this page is a draft pending review by a lawyer. If the English and Chinese versions differ, the Chinese version prevails.</p>\
+  <h2>What is Math Atlas</h2>\
+  <p>Math Atlas is world 01 of Genesis: it starts from everyday questions and lets you change the rules inside a game to discover the mathematics. It is a work of popular-science exploration: free, with no sign-up, no rankings and no streaks.</p>\
+  <h2>Copyright &amp; license</h2>\
+  <ul>\
+    <li>© 2026 Wang Lei (Genesis).</li>\
+    <li><b>Source code</b>: MIT License. You may use, modify and distribute it freely, keeping the copyright and license notice.</li>\
+    <li><b>Content and design</b> (name and logo, quest and level design, text, knowledge-map data, guide characters, images and icons, synthesized music and sound effects): all rights reserved. Personal study and non-commercial classroom or family use may freely visit and share the link; please contact us before republishing, adapting or using it commercially.</li>\
+    <li>Full text: <a href="../LICENSE.txt">LICENSE</a>. Address: <a href="https://kevin8634.github.io/math-atlas/">kevin8634.github.io/math-atlas</a> (hosted on GitHub Pages).</li>\
+  </ul>\
+  <h2>Privacy</h2>\
+  <ul>\
+    <li>There are no accounts, and no personal information such as name, phone number or location is collected; there are no analytics, ads or third-party tracking scripts.</li>\
+    <li>Progress and preferences are stored only in <b>the browser on this device</b> (localStorage) and are never uploaded. They disappear if you switch devices or clear your browser data.</li>\
+    <li>Tapping "Feedback" opens your own email app; whether to send, and what to write, is up to you.</li>\
+    <li>Sound is off by default; it is all synthesized live in the browser, and the microphone is never used.</li>\
+  </ul>\
+  <table>\
+    <thead><tr><th>Storage key on this device</th><th>Purpose</th><th>Notes</th></tr></thead>\
+    <tbody>\
+      <tr><td><code>ma:v1:&lt;quest&gt;</code></td><td>Level progress and stars for each quest</td><td>e.g. ma:v1:nim, ma:v1:rocket</td></tr>\
+      <tr><td><code>ma:v1:summary</code></td><td>Which knowledge stars are lit</td><td>Read by the home page and the map</td></tr>\
+      <tr><td><code>ma:v1:notes-known</code></td><td>Items marked "Got it" in the notes</td><td>Notes page</td></tr>\
+      <tr><td><code>ma:v1:casino-ack</code></td><td>Whether the anti-gambling notice in the casino quest has been seen</td><td>Shown only once</td></tr>\
+      <tr><td><code>ma:music</code> <code>ma:track</code> <code>ma:vol</code> <code>ma:mauto</code> <code>ma:mpos</code></td><td>Music on/off, track, volume, resume and position</td><td>Off by default</td></tr>\
+      <tr><td><code>ma:theme</code></td><td>Galaxy theme</td><td>Appearance preference</td></tr>\
+      <tr><td><code>ma:gl</code> <code>ma:motion</code> <code>ma:intro</code></td><td>Graphics level, motion, whether the intro has been seen</td><td>Immersive-mode preferences</td></tr>\
+      <tr><td><code>gn:lang</code></td><td>Interface language (Chinese / English)</td><td>Shared across Genesis</td></tr>\
+    </tbody>\
+  </table>\
+  <p>When you arrive from the Genesis portal, the browser briefly uses <code>gn:portal:arrive</code> (sessionStorage) for the transition and deletes it as soon as it is read.</p>\
+  <p><button id="clr" type="button">Clear Math Atlas data on this device</button><span id="clrMsg" role="status"></span></p>\
+  <h2>Third-party components</h2>\
+  <table>\
+    <thead><tr><th>Component</th><th>License</th><th>Where</th></tr></thead>\
+    <tbody>\
+      <tr><td>three.js r169 (with post-processing and shader modules)</td><td>MIT · © 2010-2024 three.js authors</td><td><a href="../vendor/LICENSE">vendor/LICENSE</a></td></tr>\
+      <tr><td>Chart.js v4.5.1 (with @kurkle/color v0.3.2)</td><td>MIT · © 2025 Chart.js Contributors; © 2023 Jukka Kurkela</td><td>Header of chart.js on quest pages</td></tr>\
+      <tr><td>chartjs-plugin-datalabels v2.2.0</td><td>MIT · © 2017-2022 chartjs-plugin-datalabels contributors</td><td>Header of datalabels.js on quest pages</td></tr>\
+      <tr><td>Hark page component library (hark*.css / hark*.js)</td><td>Produced by the Hark site builder, used under the Hark terms of service</td><td>"built by hark" in quest page footers</td></tr>\
+    </tbody>\
+  </table>\
+  <p>Every component is served locally with the site; no external CDN or web fonts are loaded. For each asset, component and data source, see the <a href="../LICENSES.md">asset and AI-use register</a>.</p>\
+  <h2>Use of AI</h2>\
+  <p>This site has no AI-generated images, characters, voices or music: all 3D scenes, icons, music and sound effects are generated by code in real time. The code and text were planned and approved by Wang Lei and written with the help of an AI coding assistant.</p>\
+  <h2>Contact</h2>\
+  <p>Feedback, corrections or licensing: <a href="mailto:wanglei19860304@gmail.com?subject=%5BMath%20Atlas%5D%20About%20%26%20privacy">wanglei19860304@gmail.com</a></p>\
+  <footer>© 2026 Math Atlas · Genesis · last updated 2026-11-09</footer>';
+MA_I18N.add({
+  "关于与隐私 · 星图 Math Atlas": "About & privacy · Math Atlas",
+  "@星图 Math Atlas 的版权、许可、隐私说明与第三方组件。": "Copyright, license, privacy and third-party components of Math Atlas.",
+  "确定清除这台设备上的星图进度和偏好吗?清除后无法恢复。": "Clear Math Atlas progress and preferences on this device? This cannot be undone."
+});

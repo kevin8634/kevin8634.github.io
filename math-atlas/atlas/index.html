@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>星图 Math Atlas · 知识骨架 v0.1</title>
+    <script src="../i18n.js"></script>
     <link rel="stylesheet" href="hark.css" />
     <link rel="stylesheet" href="hark-hero.css" />
     <style>
@@ -345,10 +346,12 @@
     <script>
       (function () {
         const D = JSON.parse(document.getElementById("stars-data").textContent);
+        const EN = window.MA_LANG === "en" && !!window.MA_T, TT = EN ? window.MA_T : (x) => x, WL = (z, e) => (EN ? e : z);
+        if (EN) { D.meta.sources = D.meta.sources.map(TT); D.meta.note = TT(D.meta.note); D.stars.forEach((s) => { s.zh = s.name; s.name = TT(s.name); s.constellation = TT(s.constellation); s.see = TT(s.see); s.benchmark = TT(s.benchmark); }); }
         const S = D.stars, byId = {}, kids = {};
         S.forEach((s) => (byId[s.id] = s));
         S.forEach((s) => s.prereqs.forEach((p) => (kids[p] = kids[p] || []).push(s.id)));
-        const DL = ["", "入门", "基础", "进阶", "深入", "高阶与前沿"];
+        const DL = ["", "入门", "基础", "进阶", "深入", "高阶与前沿"].map(TT);
         const COL = ["#7cc4ff", "#ffb86b", "#8fe39a", "#ff8fa3", "#c9a7ff", "#5ee0d0", "#ffe07a", "#a3b8ff", "#ff9f7a"];
         const CONS = [...new Set(S.map((s) => s.constellation))];
         
@@ -376,6 +379,8 @@
 
         // Missions, filters, sound
         const TASKS = [{"id": "nim", "em": "🌳", "c": "#9cf07a", "t": "先拿的人一定赢吗？", "n": 5, "stars": ["n05", "d02", "l01", "d19"]}, {"id": "bee", "em": "🔵", "c": "#ffd36e", "t": "为什么蜜蜂选六边形？", "n": 5, "stars": ["m06", "g06", "g05", "g04", "c07", "n04", "m05", "g16", "g09", "g01"]}, {"id": "nav", "em": "🕸️", "c": "#5fd7ff", "t": "导航怎么找到最短的路？", "n": 5, "stars": ["d07", "d08", "d09", "d10", "d12", "l01"]}, {"id": "secret", "em": "🔐", "c": "#ffb36b", "t": "怎样把秘密藏进数字里？", "n": 6, "stars": ["n05", "n19", "p01", "p02", "p04", "t07", "t02", "t01", "t03", "t04", "t05", "t06", "t08", "d17"]}, {"id": "chord", "em": "🎼", "c": "#ff8fb1", "t": "为什么有的和弦好听？", "n": 7, "stars": ["n09", "n14", "a14", "g18", "c17", "t05"]}, {"id": "cat", "em": "🌫️", "c": "#c79bff", "t": "让 AI 认出一只猫", "n": 7, "stars": ["m07", "p20", "g15", "a20", "p16", "n20", "m13", "g22", "g20", "g11", "c12", "c05", "a21", "a11"]}, {"id": "casino", "em": "📊", "c": "#ff6b8a", "t": "赌场为什么总赢？", "n": 5, "stars": ["p04", "p02", "p05", "p08", "p12", "p17", "p22"]}, {"id": "epidemic", "em": "🧊", "c": "#7cf0c8", "t": "传染病为什么会爆发？", "n": 5, "stars": ["n12", "a18", "m04", "a14", "d07", "d08", "c01", "c15", "m16"]}, {"id": "rocket", "em": "🌀", "c": "#7fb0ff", "t": "火箭怎样飞上月球？", "n": 5, "stars": ["c01", "c02", "c04", "c05", "c06", "c08", "c09", "c25", "a14", "c15", "m11", "m12"]}, {"id": "cube", "em": "🔺", "c": "#e8e8ff", "t": "魔方为什么能复原？", "n": 5, "stars": ["g06", "g07", "l05", "d04", "t05", "a23", "t01", "d03", "g22"]}];
+        if (EN) TASKS.forEach((t) => { t.t = TT(t.t); });
+        if (EN) { const sk = document.getElementById("sky"); sk.setAttribute("aria-label", TT("@数学概念 3D 星图:9 个星座分布在球面上,可拖动旋转,点击星星查看详情")); }
         const SUM = (() => { try { return JSON.parse(localStorage.getItem("ma:v1:summary")) || {}; } catch (e) { return {}; } })();
         const LIT = new Set();
         TASKS.forEach((t) => {
@@ -387,7 +392,7 @@
         const byDI = (a, b) => a.depth - b.depth || (a.id < b.id ? -1 : 1);
         const MIS = TASKS.map((t) => ({ id: t.id, name: t.em + " " + t.t.replace(/[？?]$/, ""), col: t.c, path: t.stars.map((i) => byId[i]).sort(byDI).map((x) => x.id), t }));
         MIS.forEach((m) => (m.set = new Set(m.path)));
-        document.getElementById("statsLine").textContent = `${S.length} 颗星 · ${CONS.length} 个星座 · ${TASKS.length} 个任务 · 你已点亮 ${LIT.size} 颗`;
+        document.getElementById("statsLine").textContent = WL(`${S.length} 颗星 · ${CONS.length} 个星座 · ${TASKS.length} 个任务 · 你已点亮 ${LIT.size} 颗`, `${S.length} stars · ${CONS.length} constellations · ${TASKS.length} quests · you have lit ${LIT.size}`);
         const fC = new Set(), fD = new Set();
         const vis = (s) => (!fC.size || fC.has(s.constellation)) && (!fD.size || fD.has(s.depth));
         let mOn = false, foc = null, fHi = null, plan = null, cur = null, tourT = null, looping = false, AC = null, snd = false;
@@ -641,25 +646,25 @@
           }
           return out;
         }
-        const list = (ids) => ids && ids.length ? ids.map((i) => `<a class="btn" href="#map" data-id="${i}">${esc(byId[i].name)}</a>`).join("") : '<span class="fineprint">无</span>';
+        const list = (ids) => ids && ids.length ? ids.map((i) => `<a class="btn" href="#map" data-id="${i}">${esc(byId[i].name)}</a>`).join("") : `<span class="fineprint">${WL("无", "None")}</span>`;
         function select(s, doFly) {
           sel = s;
           if (!s) { anc = new Set(); panel.hidden = true; draw(); return; }
           anc = ancestors(s);
           const succ = [...descendants(s)].map((i) => byId[i]).sort(byDI).map((x) => x.id), mine = plan && plan.target === s.id;
-          panel.innerHTML = `<button class="x-close" aria-label="关闭">×</button>
+          panel.innerHTML = `<button class="x-close" aria-label="${WL("关闭", "Close")}">×</button>
             <p class="x-con"><i style="background:${s.col}"></i>${esc(s.constellation)}</p>
             <h3>${esc(s.name)}</h3>
-            <p><span class="pill">深度 ${s.depth} · ${DL[s.depth]}</span>${s.msc ? ` <span class="pill">MSC2020 ${esc(s.msc)}</span>` : ""}</p>
-            <div class="x-see"><small>看见方式</small><p>${esc(s.see)}</p></div>
-            <p class="x-n">要点亮它,共需 <b>${anc.size}</b> 颗前置星</p>
-            <dl><dt>对标</dt><dd>${esc(s.benchmark)}</dd>
-            <dt>前置知识</dt><dd>${list(s.prereqs)}</dd>
-            <dt>后续可达</dt><dd>${list(kids[s.id])}</dd>
-            <dt>可解锁 · 共 ${succ.length} 颗</dt><dd>${list(succ.slice(0, 8))}${succ.length > 8 ? `<span class="fineprint">… 另有 ${succ.length - 8} 颗</span>` : ""}</dd>
-            </dl>${s.tasks.length ? `<div class="x-go"><small>${s.lit ? "⭐ 你已点亮这颗星" : "在这些任务里点亮它"}</small>${s.tasks.map((t) => `<div class="x-task-wrap" style="--c:${t.c}"><a class="x-task" href="../${t.id}/" style="--c:${t.c}"><span>${t.em}</span><b>${esc(t.t)}</b><em>${t.done >= t.total ? "✓ 已通关" : t.done ? `进行中 ${t.done}/${t.total}` : "开始 →"}</em></a><button data-focus="${t.id}" title="在星图里只看这个任务">✦ 星座</button></div>`).join("")}</div>` : `<p class="fineprint" style="margin-top:12px">还没有任务覆盖这颗星，后续版本会补上。</p>`}
-            <div class="links" style="margin-top:16px">${mine ? '<button class="btn" data-clear>清除路径</button>' : '<button class="btn" data-plan>规划到这颗星的路径</button>'}</div>
-            ${mine ? `<p class="x-n" style="margin-top:14px">学习路径 · 共 <b>${plan.ids.length}</b> 步</p><ol class="x-steps">${plan.ids.map((i) => `<li><a class="link" href="#map" data-id="${i}">${esc(byId[i].name)}</a> <small class="fineprint">深度 ${byId[i].depth}</small></li>`).join("")}</ol>` : ""}`;
+            <p><span class="pill">${WL("深度", "Depth")} ${s.depth} · ${DL[s.depth]}</span>${s.msc ? ` <span class="pill">MSC2020 ${esc(s.msc)}</span>` : ""}</p>
+            <div class="x-see"><small>${WL("看见方式", "How to see it")}</small><p>${esc(s.see)}</p></div>
+            <p class="x-n">${WL(`要点亮它,共需 <b>${anc.size}</b> 颗前置星`, `To light it you need <b>${anc.size}</b> prerequisite star${anc.size === 1 ? "" : "s"}`)}</p>
+            <dl><dt>${WL("对标", "Benchmark")}</dt><dd>${esc(s.benchmark)}</dd>
+            <dt>${WL("前置知识", "Prerequisites")}</dt><dd>${list(s.prereqs)}</dd>
+            <dt>${WL("后续可达", "Leads to")}</dt><dd>${list(kids[s.id])}</dd>
+            <dt>${WL(`可解锁 · 共 ${succ.length} 颗`, `Unlocks · ${succ.length} in all`)}</dt><dd>${list(succ.slice(0, 8))}${succ.length > 8 ? `<span class="fineprint">${WL(`… 另有 ${succ.length - 8} 颗`, `… and ${succ.length - 8} more`)}</span>` : ""}</dd>
+            </dl>${s.tasks.length ? `<div class="x-go"><small>${s.lit ? WL("⭐ 你已点亮这颗星", "⭐ You have lit this star") : WL("在这些任务里点亮它", "Light it in these quests")}</small>${s.tasks.map((t) => `<div class="x-task-wrap" style="--c:${t.c}"><a class="x-task" href="../${t.id}/" style="--c:${t.c}"><span>${t.em}</span><b>${esc(t.t)}</b><em>${t.done >= t.total ? WL("✓ 已通关", "✓ Completed") : t.done ? WL(`进行中 ${t.done}/${t.total}`, `In progress ${t.done}/${t.total}`) : WL("开始 →", "Start →")}</em></a><button data-focus="${t.id}" title="${WL("在星图里只看这个任务", "Show only this quest on the map")}">✦ ${WL("星座", "Constellation")}</button></div>`).join("")}</div>` : `<p class="fineprint" style="margin-top:12px">${WL("还没有任务覆盖这颗星，后续版本会补上。", "No quest covers this star yet; a later version will add one.")}</p>`}
+            <div class="links" style="margin-top:16px">${mine ? `<button class="btn" data-clear>${WL("清除路径", "Clear path")}</button>` : `<button class="btn" data-plan>${WL("规划到这颗星的路径", "Plan a path to this star")}</button>`}</div>
+            ${mine ? `<p class="x-n" style="margin-top:14px">${WL(`学习路径 · 共 <b>${plan.ids.length}</b> 步`, `Learning path · <b>${plan.ids.length}</b> steps`)}</p><ol class="x-steps">${plan.ids.map((i) => `<li><a class="link" href="#map" data-id="${i}">${esc(byId[i].name)}</a> <small class="fineprint">${WL("深度", "Depth")} ${byId[i].depth}</small></li>`).join("")}</ol>` : ""}`;
           panel.hidden = false; panel.scrollTop = 0;
           if (doFly) fly(s); else draw();
         }
@@ -736,7 +741,7 @@
           m.cons = new Set(m.path.map((i) => byId[i].constellation));
         });
         legend.innerHTML = MIS.map((m, k) => `<div><h3><i style="background:${m.col};box-shadow:0 0 8px ${m.col}"></i>${esc(m.name)}</h3>
-          <p>${m.set.size} 颗星 · 横跨 ${m.cons.size} 个星座 · ${m.t.done >= m.t.total ? "已通关" : m.t.done ? `进行中 ${m.t.done}/${m.t.total}` : "未开始"}</p><div class="links"><button class="btn" data-f="${k}">✦ 在星图中聚焦</button><a class="btn btn--ghost" href="../${m.id}/">进入任务</a></div></div>`).join("");
+          <p>${WL(`${m.set.size} 颗星 · 横跨 ${m.cons.size} 个星座`, `${m.set.size} stars · across ${m.cons.size} constellations`)} · ${m.t.done >= m.t.total ? WL("已通关", "Completed") : m.t.done ? WL(`进行中 ${m.t.done}/${m.t.total}`, `In progress ${m.t.done}/${m.t.total}`) : WL("未开始", "Not started")}</p><div class="links"><button class="btn" data-f="${k}">✦ ${WL("在星图中聚焦", "Focus on the map")}</button><a class="btn btn--ghost" href="../${m.id}/">${WL("进入任务", "Open quest")}</a></div></div>`).join("");
         function stopTour() { clearTimeout(tourT); tourT = null; cur = null; tourEl.hidden = true; }
         function fitFocus(m, dur = 1100) {
           const ss = m.path.map((i) => byId[i]); const c = ss.reduce((o, s) => ({ x: o.x + s.x / ss.length, y: o.y + s.y / ss.length, z: o.z + s.z / ss.length }), { x: 0, y: 0, z: 0 });
@@ -751,13 +756,13 @@
           const m = foc; if (!m) { fEl.hidden = true; return; }
           const lit = m.path.filter((i) => byId[i].lit).length;
           fEl.style.setProperty("--fc", m.col);
-          fEl.innerHTML = `<button class="x-close" aria-label="退出任务视图">×</button>
+          fEl.innerHTML = `<button class="x-close" aria-label="${WL("退出任务视图", "Exit quest view")}">×</button>
             <h3>${esc(m.name)}</h3>
             <div class="x-fbar"><i style="width:${(100 * lit / m.path.length).toFixed(0)}%"></i></div>
-            <p class="x-fmeta">已点亮 ${lit}/${m.path.length} 颗星 · 编号是建议的学习顺序 · 弧线是星与星之间的前置关系</p>
+            <p class="x-fmeta">${WL(`已点亮 ${lit}/${m.path.length} 颗星 · 编号是建议的学习顺序 · 弧线是星与星之间的前置关系`, `${lit}/${m.path.length} stars lit · numbers show a suggested learning order · arcs show prerequisites between stars`)}</p>
             <div class="x-fcons">${[...m.cons].map((c) => `<span style="--c:${cl[c].col}">${esc(c)}</span>`).join("")}</div>
-            <ol class="x-flist">${m.path.map((i, k) => { const s = byId[i]; return `<li class="${s.lit ? "lit" : ""}"><button data-sid="${i}"><b>${k + 1}</b><span>${esc(s.name)}<em>${esc(s.constellation)} · 深度 ${s.depth}</em></span><small>${s.lit ? "⭐ 已点亮" : "未点亮"}</small></button></li>`; }).join("")}</ol>
-            <div class="x-fact"><a class="pri" href="../${m.id}/">${m.t.done ? "继续任务" : "开始任务"} →</a><button data-tour>按顺序飞览</button><button data-fit>⟲ 看全貌</button></div>`;
+            <ol class="x-flist">${m.path.map((i, k) => { const s = byId[i]; return `<li class="${s.lit ? "lit" : ""}"><button data-sid="${i}"><b>${k + 1}</b><span>${esc(s.name)}<em>${esc(s.constellation)} · ${WL("深度", "Depth")} ${s.depth}</em></span><small>${s.lit ? WL("⭐ 已点亮", "⭐ Lit") : WL("未点亮", "Not lit")}</small></button></li>`; }).join("")}</ol>
+            <div class="x-fact"><a class="pri" href="../${m.id}/">${m.t.done ? WL("继续任务", "Continue quest") : WL("开始任务", "Start quest")} →</a><button data-tour>${WL("按顺序飞览", "Fly through in order")}</button><button data-fit>⟲ ${WL("看全貌", "See it all")}</button></div>`;
           fEl.hidden = false; fEl.scrollTop = 0;
         }
         function focusOn(m) {
@@ -798,8 +803,8 @@
         const q = document.getElementById("q"), res = document.getElementById("res");
         q.addEventListener("input", () => {
           const t = q.value.trim();
-          res.innerHTML = !t ? "" : S.filter((s) => s.name.includes(t)).slice(0, 8)
-            .map((s) => `<li><button data-id="${s.id}">${esc(s.name)}<small>${esc(s.constellation)} · ${DL[s.depth]}</small></button></li>`).join("") || '<li class="fineprint" style="padding:10px 12px">没有匹配的星</li>';
+          res.innerHTML = !t ? "" : S.filter((s) => s.name.toLowerCase().includes(t.toLowerCase()) || (s.zh && s.zh.includes(t))).slice(0, 8)
+            .map((s) => `<li><button data-id="${s.id}">${esc(s.name)}<small>${esc(s.constellation)} · ${DL[s.depth]}</small></button></li>`).join("") || `<li class="fineprint" style="padding:10px 12px">${WL("没有匹配的星", "No matching stars")}</li>`;
         });
         res.addEventListener("click", (e) => {
           const b = e.target.closest("[data-id]"); if (!b) return;

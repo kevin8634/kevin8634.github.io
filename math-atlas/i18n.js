@@ -1,4 +1,4 @@
-/* 星图 Math Atlas · 中英双语(英文版 v0.8.6,2026-11-02;关内文字见 i18n/<任务>.js)
+/* 星图 Math Atlas · 中英双语(英文版 v0.8.7,2026-11-09;关内文字见 i18n/<任务>.js,知识星图/笔记/关于见 i18n/atlas.js、notes.js、about.js)
  * 规范同门户 v2.5.0:语言来源 URL ?lang= > 全站共享本机键 gn:lang(zh/en)> 默认中文;不按浏览器语言跳转;?lang= 会写回 gn:lang。
  * 英文模式逐个替换文本节点与 aria-label/title/placeholder/alt;词典没有的保留中文(不留空白)。
  * 公式、图示(svg/canvas)不翻译;世界码、星桥 ID、存储键(ma:v1:* / gn:ma:*)一律不变。
@@ -515,6 +515,8 @@
     [/^已点亮 (\d+) \/ (\d+) 颗星。$/, "$1 / $2 stars lit."],
     [/^☆ (.+)$/, function (m, a) { return "☆ " + T(a); }], [/^⭐ (.+)$/, function (m, a) { return "⭐ " + T(a); }]
   ];
+  /* ---------- v0.8.7:各页 meta description ---------- */
+  (function () { var M = {"@无年级、问题先行的数学学习平台：从小学到大学，用游戏、声音和图像走进数学。": "Math with no grade levels, questions first: from primary school to university, step into math through games, sound and pictures.", "@星图任务 · 赌场为什么总是赢？用概率和期望值看懂庄家优势。创世计划 Genesis 数学世界，学习从一个问题开始。": "Math Atlas quest · Why does the casino always win? Use probability and expected value to understand the house edge. The math world of Genesis, where learning starts with a question.", "@星图任务 · 让 AI 认出一只猫：用数学看懂 AI 怎样识别图像。创世计划 Genesis 数学世界。": "Math Atlas quest · Teach an AI to spot a cat: use math to understand how AI recognizes images. The math world of Genesis.", "@星图任务 · 为什么有的和弦好听？听懂音乐背后的数学。创世计划 Genesis 数学世界。": "Math Atlas quest · Why do some chords sound good? Hear the math behind music. The math world of Genesis.", "@星图任务：从正方形的对称到交换子，用群论复原口袋魔方。难度 ★★★★★ 挑战，适合高中~大学。": "Math Atlas quest: from the symmetries of a square to commutators, solve a pocket cube with group theory. Difficulty ★★★★★ Challenge, for high school to university.", "@星图任务：用乘方和等比数列理解传染病为什么会爆发。难度 ★★★★☆ 进阶，适合初三~高一。": "Math Atlas quest: use powers and geometric sequences to understand why epidemics break out. Difficulty ★★★★☆ Intermediate, for grades 9–10.", "@星图任务：用速度、极限、导数、积分和火箭方程理解火箭怎样飞上月球。难度 ★★★★☆ 进阶，适合高一~高三。": "Math Atlas quest: use velocity, limits, derivatives, integrals and the rocket equation to understand how a rocket reaches the Moon. Difficulty ★★★★☆ Intermediate, for grades 10–12.", "@两千年来,人类一直在用数学藏秘密。今天,你要学会藏,也要学会破。": "For two thousand years, people have used math to hide secrets. Today you will learn to hide them, and to break them."}; for (var k in M) E[k] = M[k]; })();
   /* 任务语言包:英文模式下由 i18n/<任务>.js 追加词条与句式(只在英文模式加载,中文用户不下载) */
   window.MA_I18N = { add: function (d, r) { for (var k in d) if (Object.prototype.hasOwnProperty.call(d, k)) E[k] = d[k]; if (r) RX = r.concat(RX); }, T: function (s) { return window.MA_T(s); } };
   function rx(t) { for (var i = 0; i < RX.length; i++) { if (RX[i][0].test(t)) { var r = t.replace(RX[i][0], RX[i][1]); if (r !== t && r.indexOf("null") < 0) return r; } } return null; }
@@ -555,7 +557,7 @@
   /* ---------- 英文模式:逐节点替换 ---------- */
   document.documentElement.lang = "en";
   (function () { /* 任务页同步加载本任务语言包(解析 head 时 document.write,避免先闪中文) */
-    var m = /\/math-atlas\/([a-z]+)\/(index\.html)?$/.exec(location.pathname), PK = { nim: 1, bee: 1, nav: 1, secret: 1, chord: 1, cat: 1, casino: 1, epidemic: 1, rocket: 1, cube: 1 };
+    var m = /\/math-atlas\/([a-z]+)\/(index\.html)?$/.exec(location.pathname), PK = { nim: 1, bee: 1, nav: 1, secret: 1, chord: 1, cat: 1, casino: 1, epidemic: 1, rocket: 1, cube: 1, atlas: 1, notes: 1, about: 1 };
     if (m && PK[m[1]] && document.readyState === "loading") document.write('<script src="../i18n/' + m[1] + '.js"><\/script>');
   })();
   var SKIP = /^(SCRIPT|STYLE|CODE|KBD|PRE|TEXTAREA|svg|SVG|CANVAS|MATH)$/;
@@ -571,8 +573,14 @@
     if (!el.getAttribute || skip(el)) return;
     for (var i = 0; i < AT.length; i++) { var v = el.getAttribute(AT[i]); if (v && CJK.test(v)) { var y = E["@" + v]; if (y == null) y = tr(v); if (y != null) el.setAttribute(AT[i], y); } }
   }
+  function gAttr(el) { /* svg/canvas 根元素本身的无障碍标签可译(内部图示文字仍不译) */
+    if (el.parentNode && el.parentNode.nodeType === 1 && skip(el.parentNode)) return;
+    for (var i = 0; i < AT.length; i++) { var v = el.getAttribute(AT[i]); if (v && CJK.test(v)) { var y = E["@" + v]; if (y == null) y = tr(v); if (y != null) el.setAttribute(AT[i], y); } }
+  }
+  function gAll(root) { if (!root.querySelectorAll) return; if (/^(svg|canvas)$/i.test(root.nodeName)) gAttr(root); [].forEach.call(root.querySelectorAll("svg[aria-label],svg[title],canvas[aria-label],canvas[title]"), gAttr); }
   function walk(root) {
     if (root.nodeType === 3) return node(root);
+    if (root.nodeType === 1) gAll(root);
     if (root.nodeType !== 1 || skip(root)) return;
     attrs(root);
     var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, { acceptNode: function (n) { return n.nodeType === 1 && (SKIP.test(n.nodeName) || n.namespaceURI === "http://www.w3.org/2000/svg" || n.hasAttribute("data-noi18n")) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT; } }), n;
@@ -582,10 +590,11 @@
   new MutationObserver(function (ms) {
     ms.forEach(function (m) {
       if (m.type === "characterData") node(m.target);
-      else if (m.type === "attributes") attrs(m.target);
+      else if (m.type === "attributes") { if (/^(svg|canvas)$/i.test(m.target.nodeName)) gAttr(m.target); else attrs(m.target); }
       else { [].forEach.call(m.addedNodes, walk); if (m.target.nodeName === "TITLE") title(); }
     });
   }).observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: AT });
-  function first() { title(); if (document.body) walk(document.body); }
+  function meta() { var m = document.querySelector('meta[name="description"]'), v = m && m.getAttribute("content"); if (v && CJK.test(v)) { var y = E["@" + v]; if (y == null) y = tr(v); if (y != null) m.setAttribute("content", y); } }
+  function first() { title(); meta(); if (document.body) walk(document.body); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", first); else first();
 })();
