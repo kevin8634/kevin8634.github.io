@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>能不能用一束光开关一个神经元? · 生命源码</title>
+<meta name="description" content="生命源码 · 前沿专题 · 2026 诺贝尔生理学或医学奖:光遗传学。在衣藻里找到见光开门的蛋白,装进神经元,用蓝光打开、黄光关上。">
+<meta name="theme-color" content="#060a12">
+<link rel="stylesheet" href="../ls.css">
+<style>
+.spec{position:relative;width:min(560px,94%);height:clamp(150px,30vh,320px);flex:none}
+.r3d{position:absolute;inset:0}.r3d canvas{display:block;width:100%;height:100%}
+.chart{width:min(560px,94%);border:1px solid var(--line);border-radius:12px;background:rgba(6,16,16,.72);padding:4px 8px 6px;flex:none}
+.chart small{color:var(--mute);font-size:11px}
+.chart canvas{display:block;width:100%;height:84px}
+.ctl{display:grid;grid-template-columns:auto minmax(110px,200px) 86px;background:rgba(6,16,16,.72);border:1px solid var(--line);border-radius:12px;padding:8px 12px;gap:6px 10px;align-items:center;font-size:13px;flex:none}
+.ctl input[type=range]{accent-color:#5eead4;width:100%}
+.ctl output{color:var(--gold);font-variant-numeric:tabular-nums}
+.wl{background:linear-gradient(90deg,#8000ff,#0040ff,#00c0ff,#00ff40,#c0ff00,#ffc000,#ff4000);height:8px;border-radius:4px;-webkit-appearance:none;appearance:none}
+.read{font-size:14px;color:#d1fae5;text-align:center;min-height:1.4em}
+.read b{color:var(--gold)}
+.meter{width:min(360px,80%);height:12px;border-radius:6px;border:1px solid var(--line);background:rgba(255,255,255,.05);overflow:hidden;flex:none}
+.meter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#34d399,#fde68a);transition:width .2s}
+.lights{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;flex:none}
+.lights button.on{box-shadow:0 0 0 2px #fff7d6,0 0 18px currentColor}
+.lb-blue{color:#9ec2ff!important;border-color:#4f8cff!important}.lb-yellow{color:#ffe58a!important;border-color:#ffd23f!important}
+.news{font-size:12px;color:var(--mute);text-align:center;flex:none}
+.news a{color:#ffe9b8}
+@media (max-width:520px){.spec{height:clamp(120px,24vh,200px)}.chart canvas{height:60px}.ctl{grid-template-columns:auto 1fr 74px;font-size:12px;padding:6px 8px}.read{font-size:12px}}
+</style></head><body>
+<noscript>需要开启 JavaScript 才能游玩。</noscript>
+<script type="module">
+import { runTask, sleep, el, choice } from '../ls-task.js';
+import { sound, reducedMotion } from '../ls.js';
+import { mountSpec, wlColor } from './o3d.js';
+
+// 前沿速递:一手来源(NobelPrize.org 新闻稿),新标签打开,不嵌外部图片
+const NOBEL = 'https://www.nobelprize.org/prizes/medicine/2026/press-release/';
+const click = (hi = 0) => sound.tone(hi ? 2600 : 1900, .035, { type: 'square', gain: .045 }); // 放电一声「咔」
+
+function setup(api, kind) {
+  const c = api.center(); const host = el('div', { className: 'spec' }); c.append(host);
+  let spec = null, raf = 0, dead = false; const q = [], timers = [], extra = [];
+  mountSpec(host, kind).then(s => { if (dead) return s.dispose(); spec = s; q.forEach(x => s.set(x)); });
+  const dispose = () => { if (dead) return; dead = true; cancelAnimationFrame(raf); timers.forEach(clearInterval); extra.forEach(f => { try { f(); } catch {} }); spec?.dispose(); c.remove(); };
+  api.onCleanup(dispose);
+  return {
+    c, timers, dispose, add: f => extra.push(f), get dead() { return dead; },
+    set(x) { spec ? spec.set(x) : q.push(x); },
+    anim(dur, f) { return new Promise(ok => { if (reducedMotion()) { f(1); return ok(); } const t0 = performance.now(); const step = now => { if (dead) return ok(); const u = Math.min(1, (now - t0) / dur); f(u); u < 1 ? raf = requestAnimationFrame(step) : ok(); }; raf = requestAnimationFrame(step); }); },
+  };
+}
+function slider(box, label, min, max, step, val, fmt, cls = '') {
+  const l = el('label', { textContent: label }), i = el('input', { type: 'range', min, max, step, value: val, className: cls }), o = el('output');
+  i.setAttribute('aria-label', label); const paint = () => (o.textContent = fmt(+i.value)); paint(); i.addEventListener('input', paint);
+  box.append(l, i, o); return i;
+}
+/* 膜电位示波器:最近 2 秒,静息 −70 mV,每次放电冲到 +30 mV(示意) */
+function scope(c, title) {
+  const w = el('div', { className: 'chart' }, `<small>${title}</small><canvas></canvas>`); c.append(w);
+  const cv = w.querySelector('canvas'), spikes = [], pulses = [];
+  const paint = () => { const D = Math.min(devicePixelRatio || 1, 2), W = cv.clientWidth, H = cv.clientHeight; if (!W) return; cv.width = W * D; cv.height = H * D; const g = cv.getContext('2d'); g.scale(D, D);
+    const now = performance.now(), span = 2000, X = t => W - (now - t) / span * W, base = H - 12, top = 6;
+    pulses.forEach(p => { if (now - p.t > span) return; g.fillStyle = p.c + '55'; g.fillRect(X(p.t), 0, Math.max(2, p.d / span * W), H - 10); });
+    g.strokeStyle = '#5eead4'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(0, base);
+    spikes.filter(t => now - t < span).forEach(t => { const x = X(t); g.lineTo(x - 2, base); g.lineTo(x, top); g.lineTo(x + 3, base + 4); g.lineTo(x + 6, base); }); g.lineTo(W, base); g.stroke();
+    g.fillStyle = '#7f9a94'; g.font = '10px sans-serif'; g.fillText('−70 mV', 2, base - 2); g.fillText('2 秒前', 2, H - 1); g.fillText('现在', W - 24, H - 1); };
+  return { spike(t = performance.now()) { spikes.push(t); if (spikes.length > 80) spikes.shift(); }, pulse(c, d) { pulses.push({ t: performance.now(), c, d }); if (pulses.length > 80) pulses.shift(); }, paint };
+}
+
+runTask('optogenetics', [
+  /* 1 · 见光开门的藻类 */
+  { title: '见光开门的藻类', run(api) {
+    let S = setup(api, 'alga'), c = S.c; S.set({ lamp: -1, pos: .6, on: 0 });
+    const news = el('div', { className: 'news' }, `⚡ 前沿速递 · 2026 诺贝尔生理学或医学奖 · 光遗传学 · <a href="${NOBEL}" target="_blank" rel="noopener noreferrer">阅读资讯 ↗</a>`);
+    c.prepend(news);
+    const rd = el('div', { className: 'read' }, '衣藻:一个细胞,两根鞭毛,一个红色的「眼点」。'); c.append(rd);
+    api.guide.ask('衣藻只有一个细胞,没有眼睛也没有大脑。在它左边点亮一盏灯,它会怎样?', ['植物要靠光做什么?', '衣藻会做光合作用,需要光。', '它会朝着光游过去。']);
+    c.append(choice(api, ['游向灯光', '躲开灯光', '原地不动'], '游向灯光', async (ok, o, box) => {
+      box.remove(); S.set({ on: 1 }); sound.whoosh(.6, true);
+      api.guide.say(ok ? '对!看它游过去。' : '其实它会朝光游过去。看——');
+      await S.anim(3000, u => S.set({ pos: .6 - u * 2.1 }));
+      rd.innerHTML = '它游向了光。是什么在「看」光?秘密藏在<b>眼点</b>下面的细胞膜上。';
+      api.button('🔍 放大眼点下面的细胞膜', () => { api.clearActions(); stepB(); }, 'primary');
+    }));
+    function stepB() {
+      S.dispose(); S = setup(api, 'channel'); c = S.c; S.set({ light: 1, open: 0, col: wlColor(620) });
+      c.prepend(news);
+      const ctl = el('div', { className: 'ctl' }); c.append(ctl);
+      const wl = slider(ctl, '光的颜色', 400, 650, 5, 620, v => `${v} 纳米`, 'wl');
+      const m = el('div', { className: 'meter' }, '<i></i>'); c.append(m);
+      const r2 = el('div', { className: 'read' }); c.append(r2);
+      // 通道视紫红质-2 的吸收峰约 470 纳米(蓝光);示意曲线
+      const openAt = nm => Math.exp(-(((nm - 470) / 42) ** 2));
+      let guessed = false, done = false, lastTick = 0;
+      const paint = () => { const nm = +wl.value, o = openAt(nm); S.set({ open: o, col: wlColor(nm) }); m.firstChild.style.width = `${Math.round(o * 100)}%`; m.firstChild.style.background = wlColor(nm);
+        r2.innerHTML = `门打开 <b>${Math.round(o * 100)}%</b> · ${o > .15 ? '正离子流进细胞 → 产生<b>电信号</b>' : '门关着,离子进不来'}`;
+        const now = performance.now(); if (o > .15 && now - lastTick > 90) { lastTick = now; click(); }
+        if (guessed && !done && o >= .85) { done = true; api.clearActions(); api.button('收起结论', () => api.win('衣藻眼点下的细胞膜上有一种蛋白:通道视紫红质。它本身就是一扇「见光开门」的门——蓝光一照,中间的通道打开,带正电的离子流进细胞,产生电信号。21 世纪初,黑格曼和纳格尔发现了它;无论放进哪种细胞,那个细胞都会变得对光敏感。'), 'primary'); api.guide.say('门开得最大了!记下这是什么颜色的光。'); } };
+      paint(); wl.addEventListener('input', paint);
+      api.guide.ask('这扇门是一种蛋白,中间夹着一根会吸光的「天线」(视黄醛)。哪种颜色的光最能把门打开?', ['衣藻生活在水里,水下哪种光照得最远?', '短一点的波长,偏蓝。', '蓝光,大约 470 纳米。']);
+      c.append(choice(api, ['红光', '绿光', '蓝光'], '蓝光', (ok, o, box) => { box.remove(); guessed = true; api.guide.ask((ok ? '猜得好。' : '我们来试试。') + '拖动「光的颜色」,把门开到 85% 以上。', ['红光下门几乎不动。', '往短波长那边拖。', '拖到 470 纳米左右。']); paint(); }));
+    }
+  } },
+
+  /* 2 · 装进神经元 */
+  { title: '把开关装进神经元', run(api) {
+    const S = setup(api, 'neuron'), c = S.c;
+    const sc = scope(c, '膜电位(蓝条 = 闪光,尖峰 = 放电;示意)');
+    const rd = el('div', { className: 'read' }, '这是一个普通的神经元。它靠电信号说话,本来对光没有任何反应。'); c.append(rd);
+    let installed = false, running = false, timer = 0, hit = 0, fired = 0;
+    const loop = () => { sc.paint(); if (!S.dead) requestAnimationFrame(loop); }; if (!reducedMotion()) loop();
+    api.guide.ask('把衣藻那扇「见光开门」的门的基因(说明书)装进神经元,再用蓝光照它,会怎样?', ['门打开,正离子流进来,细胞里会多出什么?', '神经元一受到足够的电刺激,就会「放电」。', '它会跟着蓝光放电。']);
+    c.append(choice(api, ['跟着蓝光放电', '没有反应', '变成蓝色'], '跟着蓝光放电', (ok, o, box) => {
+      box.remove(); api.guide.say(ok ? '我们来验证。先把基因装进去。' : '先装进去,再看看会发生什么。');
+      api.button('🧬 装入通道视紫红质基因', async () => {
+        api.clearActions(); sound.sparkle(4);
+        await S.anim(2200, u => S.set({ installed: u })); installed = true;
+        rd.innerHTML = '神经元按「说明书」造出了这种门(紫色小环),装在自己的细胞膜上。';
+        controls();
+      }, 'primary');
+    }));
+    function controls() {
+      const ctl = el('div', { className: 'ctl' }); c.append(ctl);
+      const hz = slider(ctl, '蓝光闪', 1, 20, 1, 3, v => `${v} 次/秒`);
+      const fire = () => { const now = performance.now(); S.set({ light: 'blue', flash: 1 }); sc.pulse('#4f8cff', 15); setTimeout(() => { if (S.dead) return; S.set({ flash: 0 }); }, 60);
+        if (installed) { fired++; S.set({ spike: fired }); sc.spike(now + 4); click(1); if (+hz.value === 10) hit++; else hit = 0; }
+        if (reducedMotion()) sc.paint();
+        rd.innerHTML = `蓝光每秒闪 <b>${hz.value}</b> 次 → 神经元每秒放电 <b>${hz.value}</b> 次${hit ? ` · 已稳定 ${hit} 次` : ''}`;
+        if (hit >= 20) win(); };
+      const start = () => { clearInterval(timer); timer = setInterval(fire, 1000 / +hz.value); S.timers.push(timer); };
+      const b = api.button('▶ 开始闪蓝光', () => { running = !running; b.textContent = running ? '■ 关灯' : '▶ 开始闪蓝光'; if (running) start(); else { clearInterval(timer); S.set({ light: null }); } }, 'primary');
+      hz.addEventListener('input', () => { hit = 0; if (running) start(); });
+      api.guide.ask('打开声音,每次放电会「咔」一声。把节奏调到每秒 10 次,让它稳稳跟上 20 下。', ['光闪得越快,放电……?', '光闪几下,它就放电几下。', '把滑杆拖到 10,再点开始。']);
+      let won = false;
+      function win() { if (won) return; won = true; api.clearActions(); clearInterval(timer); running = false; S.set({ light: null });
+        api.button('收起结论', () => api.win('把通道视紫红质的基因装进神经元,蓝光闪一下,它就放电一下——光的节奏就是放电的节奏,精确到毫秒。戴瑟罗斯在大鼠的神经细胞上做到了这一点,2005 年发表;这种用光控制神经的方法后来被叫作「光遗传学」。'), 'primary');
+        api.guide.say('每秒 10 次,一下不差。光变成了神经的语言。'); }
+    }
+  } },
+
+  /* 3 · 蓝光开,黄光关 */
+  { title: '蓝光开,黄光关', run(api) {
+    const S = setup(api, 'worm'), c = S.c;
+    const rd = el('div', { className: 'read' }, '一条卡通小虫,管运动的神经元里装了两种开关:<b style="color:#9ec2ff">蓝光开关</b>和<b style="color:#ffe58a">黄光开关</b>。'); c.append(rd);
+    const box = el('div', { className: 'lights' }); c.append(box);
+    let x = -1.8, dir = 1, mode = 'swim', light = null, triedBlue = false, onLeaf = 0, ready = false, done = false, beat = 0, last = performance.now();
+    const LEAF = 1.1;
+    const mk = (t, cls, l) => { const b = el('button', { className: 'ls-btn ' + cls, textContent: t }); b.onclick = () => setLight(l); box.append(b); return b; };
+    const bB = mk('🔵 蓝光', 'lb-blue', 'blue'), bY = mk('🟡 黄光', 'lb-yellow', 'yellow'), bO = mk('⚫ 关灯', '', null);
+    [bB, bY, bO].forEach(b => (b.disabled = true));
+    function setLight(l) { light = l; mode = l === 'blue' ? 'contract' : l === 'yellow' ? 'stop' : 'swim'; if (l === 'blue') triedBlue = true;
+      [bB, bY, bO].forEach(b => b.classList.remove('on')); ({ blue: bB, yellow: bY })[l]?.classList.add('on'); if (!l) bO.classList.add('on');
+      S.set({ light: l, mode }); sound.tone(l === 'blue' ? 520 : l === 'yellow' ? 330 : 440, .12, { gain: .05 }); tick(0); }
+    // 放电节奏:自己游 ≈ 每秒 2 次;蓝光 ≈ 每秒 12 次(一起放电);黄光 = 不放电
+    function tick(dt) {
+      if (mode === 'swim') x += dir * .5 * dt; if (Math.abs(x) > 2.1) { x = Math.sign(x) * 2.1; dir = -dir; }
+      const rate = mode === 'contract' ? 12 : mode === 'swim' ? 2 : 0; beat += dt * rate; while (beat >= 1) { beat -= 1; click(mode === 'contract'); }
+      S.set({ x, dir }); c.dataset.x = x.toFixed(2);
+      const near = Math.abs(x - LEAF) < .45;
+      rd.innerHTML = mode === 'stop' ? `黄光:神经元<b>安静</b>了,小虫停下、身体放松${near ? ' · <b>停在叶子上</b>' : ''}` : mode === 'contract' ? '蓝光:神经元<b>一起放电</b>,肌肉收缩,身体缩短' : '关灯:神经元照常放电,小虫自己游';
+      if (ready && !done) { onLeaf = mode === 'stop' && near ? onLeaf + dt : 0;
+        if (onLeaf > 1 && triedBlue) { done = true; api.clearActions(); api.button('收起结论', () => api.win('再配一个黄光开关——来自古菌的盐细菌视紫红质,黄光一照就把带负电的氯离子抽进细胞,神经元立刻安静。蓝光开、黄光关,同一群神经元能被光精确地打开和关上;2007 年,光控开关在活小鼠的大脑里也成功了。如今科学家用它找出管记忆、情绪和行为的神经回路,还在尝试帮视力受损的人恢复部分视力。'), 'primary'); api.guide.say('黄光一照,正好停在叶子上!'); }
+        else if (onLeaf > 1 && !triedBlue && !S._hint) { S._hint = 1; api.guide.say('停住了!再试试蓝光,看看小虫会怎样。'); } }
+    }
+    let raf = 0; const loop = now => { if (S.dead) return; const dt = Math.min(.05, (now - last) / 1000); last = now; tick(dt); raf = requestAnimationFrame(loop); };
+    raf = requestAnimationFrame(loop); S.add(() => cancelAnimationFrame(raf));
+    api.guide.ask('黄光开关是另一种蛋白:黄光一照,它把带负电的氯离子抽进细胞。神经元会怎样?', ['正电荷让神经元更容易放电,负电荷呢?', '细胞里更负,就更难放电。', '神经元会安静下来,不放电。']);
+    c.append(choice(api, ['更容易放电', '安静下来、不放电', '没有变化'], '安静下来、不放电', (ok, o, b) => {
+      b.remove(); ready = true; [bB, bY, bO].forEach(x => (x.disabled = false)); bO.classList.add('on');
+      api.guide.ask((ok ? '对!' : '其实它会安静下来。') + '用光指挥小虫:先试一次蓝光,再用黄光让它正好停在叶子上。', ['小虫自己会往前游。', '等它游到叶子上方再开黄光。', '蓝光让它缩短;黄光让它停下。']);
+    }));
+  } },
+]);
+</script>
+</body></html>

@@ -4,7 +4,7 @@ import { LAYERS, CONS, STARS } from './atlas-data.js';
 import { reducedMotion, sound } from './ls.js';
 
 const ICON = {
-  dna: '🧬', parents: '👨‍👩‍👧', zebra: '🦓', virus: '🦠', wolf: '🐺', rhythm: '⏰',
+  dna: '🧬', parents: '👨‍👩‍👧', zebra: '🦓', virus: '🦠', wolf: '🐺', rhythm: '⏰', optogenetics: '💡',
   'DNA 双螺旋': '🧬', '碱基配对': '🔗', '染色体': '🧶', '减数分裂': '🔀', '孟德尔定律': '🌱', 'ABO 血型': '🩸',
   '核糖体': '⚙️', '细胞核': '🔵', '线粒体': '🔋', '干细胞': '🌀',
   '突变': '✳️', '古 DNA': '🦴', '化石': '🐚', '自然选择': '🦋', '物种形成': '🐦',

@@ -4,6 +4,8 @@
 <meta name="description" content="创世计划第 04 世界「生命源码」(生物):读懂生命写好的代码。从指纹放大到碱基对,亲手做遗传实验。免费、免注册。">
 <meta name="theme-color" content="#060a12">
 <link rel="stylesheet" href="ls.css">
+<script>/* 深链 /life-source/?task=<任务>(前沿速递标准写法)→ 直接进任务页,不播开场 */
+(function(){var t=new URLSearchParams(location.search).get('task');if(t&&['dna','parents','zebra','virus','wolf','rhythm','optogenetics'].indexOf(t)>=0)location.replace('/life-source/'+t+'/');})();</script>
 <style>
 html,body{overflow:hidden}
 #atlas{position:fixed;inset:0}
@@ -76,6 +78,11 @@ html,body{overflow:hidden}
 #zoomov .zc input{flex:1;accent-color:#34d399}
 #zoomov .x{position:absolute;right:12px;top:60px;z-index:3}
 #side h1{cursor:pointer;user-select:none}
+#flash{margin:6px 0 4px;padding:8px 10px;border-radius:12px;border:1px solid rgba(226,190,120,.7);background:linear-gradient(135deg,rgba(79,140,255,.18),rgba(226,190,120,.1));box-shadow:0 0 14px rgba(79,140,255,.25)}
+#flash .fl-h{font-size:13px;color:#ffe9b8;font-weight:600}
+#flash .fl-s{font-size:12px;color:var(--mute);margin:2px 0 6px}
+#flash .fl-a{display:flex;gap:8px;flex-wrap:wrap}
+#flash .ls-btn{font-size:12px;padding:5px 12px;text-decoration:none}
 #side h1::after{content:' ▾';font-size:13px;color:var(--mute)}
 #side.fold h1::after{content:' ▸'}
 #side.fold #tasks,#side.fold .sub{display:none}
@@ -101,6 +108,7 @@ html,body{overflow:hidden}
 <nav id="rail" class="hud-left" aria-label="工具栏"><button data-a="tasks" aria-label="任务">📂<span>任务抽屉</span></button><button data-a="album" aria-label="源码卡册">🃏<span>源码卡册</span></button><button data-a="all" aria-label="全景">🌐<span>回到全景</span></button><button data-a="replay" aria-label="重播开场">↺<span>重播开场</span></button><button data-a="set" aria-label="设置">⚙<span>设置</span></button></nav>
 <div id="side" class="ls-panel hud-left">
   <h1>生命源码 <span class="ls-tag">04 · 生物</span></h1>
+  <div id="flash" role="note" aria-label="前沿速递"><div class="fl-h">⚡ 前沿速递 · 2026 诺贝尔医学奖 · 光遗传学</div><div class="fl-s">用一束光开关一个神经元</div><div class="fl-a"><a class="ls-btn primary" href="optogenetics/">进入专题 ›</a><a class="ls-btn" href="https://www.nobelprize.org/prizes/medicine/2026/press-release/" target="_blank" rel="noopener noreferrer">阅读资讯 ↗</a></div></div>
   <div class="sub">读懂生命写好的代码。点亮的星是可以玩的任务;拖动、双指或滚轮缩放可以探索。</div>
   <div id="tasks"></div>
 </div>
@@ -151,7 +159,7 @@ if (matchMedia('(max-width:640px)').matches) gd.classList.add('min');
 for (const [id, t] of Object.entries(TASKS)) {
   const a = document.createElement('a'); a.className = 'task'; a.href = `${id}/`;
   a.innerHTML = `<span class="q"></span><span class="st">★ ${taskStars(id)}/${t.levels * 3}</span>`;
-  a.querySelector('.q').textContent = t.title; $('#tasks').append(a);
+  a.querySelector('.q').textContent = t.title; if (t.tag) a.querySelector('.q').insertAdjacentHTML('beforeend', ` <span class="ls-tag">${t.tag}</span>`); $('#tasks').append(a);
 }
 $('#legend').innerHTML = Object.values(CONS).map(c => `<span style="color:${c.color}">●</span> ${c.name}`).join('<br>');
 

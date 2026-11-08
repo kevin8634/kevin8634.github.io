@@ -8,6 +8,7 @@ export const TASKS = {
   virus:   { title: '一场感冒是怎么在班里传开的?',   path: '/life-source/virus/',   guide: 'phage', levels: 4 },
   wolf:    { title: '狼回来之后,河流为什么变了?',   path: '/life-source/wolf/',    guide: 'edna', levels: 4 },
   rhythm:  { title: '身体里的钟,怎么知道几点、几月?', path: '/life-source/rhythm/', guide: 'epi', levels: 6 },
+  optogenetics: { title: '能不能用一束光开关一个神经元?', path: '/life-source/optogenetics/', guide: 'cas', levels: 3, tag: '2026 诺贝尔医学奖' },
 };
 export const GUIDES = {
   cas:   { name: '卡丝 Cas',    term: 'CRISPR 基因剪刀', color: '#34d399' },
