@@ -2,6 +2,8 @@
 (function () {
   "use strict";
   var FEEDBACK_EMAIL = "wanglei19860304@gmail.com";
+  var EN = window.MA_LANG === "en", T = window.MA_T || function (x) { return x; };
+  function L(z, e) { return EN ? e : z; }
   var TASKS = {
     nim: "先拿的人一定赢吗", bee: "为什么蜜蜂选六边形", nav: "导航怎么找到最短的路",
     secret: "怎样把秘密藏进数字里", chord: "为什么有的和弦好听", cat: "让 AI 认出一只猫",
@@ -125,7 +127,7 @@
     ["renderBar", "renderBadges", "renderMap", "renderSky", "renderFinal"].forEach(callIf);
     lastJSON = JSON.stringify(State);
     var done = Object.keys(State.perLevel || {}).filter(function (k) { return State.perLevel[k] > 0; }).length;
-    if (done) note("欢迎回来！已恢复进度：完成 " + done + " 关，⭐ " + (State.stars || 0));
+    if (done) note(L("欢迎回来！已恢复进度：完成 " + done + " 关，⭐ " + (State.stars || 0), "Welcome back! Progress restored: " + done + (done === 1 ? " level" : " levels") + " cleared, ⭐ " + (State.stars || 0)));
   }
   /* 和弦任务没有 State：记录点亮的星 */
   function chordSave() {
@@ -135,11 +137,11 @@
       orig(i);
       if (lit.indexOf(i) < 0) { lit.push(i); store.set(KEY, { lit: lit }); summary(lit.length, 7, lit.length); }
     };
-    if (lit.length) { lit.forEach(function (i) { orig(i); }); note("欢迎回来！已点亮 " + lit.length + " / 7 颗星"); }
+    if (lit.length) { lit.forEach(function (i) { orig(i); }); note(L("欢迎回来！已点亮 " + lit.length + " / 7 颗星", "Welcome back! " + lit.length + " / 7 stars lit")); }
     return true;
   }
   function reset() {
-    if (!confirm("清空本任务的进度，从头再来？")) return;
+    if (!confirm(L("清空本任务的进度，从头再来？", "Clear this quest's progress and start over?"))) return;
     store.del(KEY);
     var all = store.get("ma:v1:summary") || {}; delete all[TASK]; store.set("ma:v1:summary", all);
     lastJSON = "__reset__"; hasState = false;
@@ -165,19 +167,19 @@
       b.onclick = function () { d.querySelectorAll(".ma-chip").forEach(function (o) { o.classList.remove("on"); }); b.classList.add("on"); kind = b.textContent; };
     });
     function text() {
-      var p = hasState ? ("完成关卡 " + Object.keys(State.perLevel || {}).length + "，⭐ " + (State.stars || 0)) : "";
-      return "类型：" + kind + "\n页面：" + (TASKS[TASK] || document.title) + "（" + location.href + "）\n年级/年龄：" + (d.querySelector(".ma-age").value || "未填") +
-        "\n进度：" + (p || "—") + "\n\n" + d.querySelector("textarea").value + "\n\n— " + navigator.userAgent;
+      var p = hasState ? (L("完成关卡 ", "Levels cleared: ") + Object.keys(State.perLevel || {}).length + L("，⭐ ", ", ⭐ ") + (State.stars || 0)) : "";
+      return L("类型：", "Type: ") + kind + L("\n页面：", "\nPage: ") + (T(TASKS[TASK] || "") || document.title) + L("（", " (") + location.href + L("）\n年级/年龄：", ")\nGrade/age: ") + (d.querySelector(".ma-age").value || L("未填", "not given")) +
+        L("\n进度：", "\nProgress: ") + (p || "—") + "\n\n" + d.querySelector("textarea").value + "\n\n— " + navigator.userAgent;
     }
     function close() { d.remove(); }
     d.querySelector(".ma-x").onclick = close;
     d.onclick = function (e) { if (e.target === d) close(); };
     d.querySelector(".ma-send").onclick = function () {
-      location.href = "mailto:" + FEEDBACK_EMAIL + "?subject=" + encodeURIComponent("[星图反馈] " + (TASKS[TASK] || "") + " " + kind) + "&body=" + encodeURIComponent(text());
+      location.href = "mailto:" + FEEDBACK_EMAIL + "?subject=" + encodeURIComponent(L("[星图反馈] ", "[Math Atlas feedback] ") + T(TASKS[TASK] || "") + " " + kind) + "&body=" + encodeURIComponent(text());
     };
     d.querySelector(".ma-copy").onclick = function () {
       var t = text();
-      (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { note("已复制，可粘贴到邮件发给 " + FEEDBACK_EMAIL); }, function () { prompt("复制下面的内容：", t); });
+      (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { note(L("已复制，可粘贴到邮件发给 ", "Copied. Paste it into an email to ") + FEEDBACK_EMAIL); }, function () { prompt(L("复制下面的内容：", "Copy the text below:"), t); });
     };
     setTimeout(function () { d.querySelector("textarea").focus(); }, 50);
   }
@@ -619,7 +621,7 @@
         '<label class="ma-chk"><input type="checkbox" data-auto' + (au ? " checked" : "") + '> 进入任务时自动换成专属曲</label><p class="ma-pop__s">星空曲目</p>';
     }
     h += Music.TR.slice(0, Music.GLOBAL).map(function (T, i) { return item(T, i, !(tt !== undefined && au) && t === i); }).join("") +
-      '<button type="button" class="ma-it' + (t < 0 && !(tt !== undefined && au) ? " on" : "") + '" data-tr="-1"><span class="ma-it__e">🔀</span><span><b>轮播全部</b><small>每首放 16 小节后换下一首' + (t < 0 && on && cur < Music.GLOBAL ? " · 正在放「" + Music.name() + "」" : "") + "</small></span></button>" +
+      '<button type="button" class="ma-it' + (t < 0 && !(tt !== undefined && au) ? " on" : "") + '" data-tr="-1"><span class="ma-it__e">🔀</span><span><b>轮播全部</b><small>每首放 16 小节后换下一首' + (t < 0 && on && cur < Music.GLOBAL ? L(" · 正在放「" + Music.name() + "」", " · now playing \u201c" + T(Music.name()) + "\u201d") : "") + "</small></span></button>" +
       '<label class="ma-vol">🔈<input type="range" min="0" max="1" step="0.05" value="' + Music.vol() + '" aria-label="音量">🔊</label>' +
       '<p class="ma-pop__f">每首曲子都藏着一个数学规律，听出来了吗？换页面会接着放；如果换页后没声音，点一下页面就好。</p>';
     return h;
