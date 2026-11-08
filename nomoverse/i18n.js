@@ -159,7 +159,8 @@
     [/^([\d.,]+) 年$/, "$1 years"],
     [/^约 ([\d.,]+) (m|km|s|kg)$/, "About $1 $2"], [/^([\d.,]+) 分钟$/, "$1 min"], [/^×([\d.]+) 倍$/, "×$1"]
   ];
-  window.NV_I18N = { add: function (d, r) { for (var k in d) if (Object.prototype.hasOwnProperty.call(d, k)) E[k] = d[k]; if (r) RX = r.concat(RX); }, T: function (s) { return window.NV_T(s); } };
+  var F = { "约": "about", "倍": "×", "年": "years", "秒": "s", "天": "days", "小时": "h", "分钟": "min", "画面放慢": "slowed down", "秒内": "s" };   /* 第二期 b 第二批:读数/结果句里被数字隔开的中文片段 */
+  window.NV_I18N = { frag: function (d) { for (var k in d) if (Object.prototype.hasOwnProperty.call(d, k)) F[k] = d[k]; }, add: function (d, r) { for (var k in d) if (Object.prototype.hasOwnProperty.call(d, k)) E[k] = d[k]; if (r) RX = r.concat(RX); }, T: function (s) { return window.NV_T(s); } };
   /* 第一期 b(v0.9-α5):英文模式按路径加载任务分包 i18n/<任务>.js(同步 document.write,保证建页前词条就位) */
   var PK = /\/nomoverse\/(orbit|sound|hoop|stars|tide|energy|lab)\//.exec(location.pathname);
   if (L === "en" && PK && document.readyState === "loading") document.write('<script src="../i18n/' + PK[1] + '.js"><\/script>');
@@ -169,9 +170,40 @@
     var p = t.split(sep).map(function (x) { x = x.trim(); if (!CJK.test(x)) return x; var y = E[x]; if (y == null) y = rx(x); if (y == null) ok = false; return y; });
     return ok ? p.join(out) : null;
   }
-  function tr(t) { if (!t || !CJK.test(t)) return null; var y = E[t]; if (y != null) return y; y = rx(t); if (y != null) return y; return list(t, " · ", " · ") || list(t, ",", ", ") || wide(t); }
+  function tr(t) { if (!t || !CJK.test(t)) return null; var y = E[t]; if (y != null) return y; y = rx(t); if (y != null) return y; return list(t, " · ", " · ") || list(t, ",", ", ") || wide(t) || seg(t); }
+  /* 片段拼接:把中文连续段逐段查 F(再查 E),数字、单位、符号原样保留;任何一段缺译则整句回退 */
+  var RUNRE = /[\u3400-\u9fff「」『』，。、：；！？—…\uff0c\uff1a\uff1b\uff01\uff1f]*[\u3400-\u9fff][\u3400-\u9fff「」『』，。、：；！？—…\uff0c\uff1a\uff1b\uff01\uff1f]*/g, EDGE = /^[，。、：；！？（）\s]+|[，。、：；！？（）\s]+$/g;
+  function big(n) { var r = function (x) { return String(+x.toPrecision(3)); }; return n >= 1e9 ? r(n / 1e9) + " billion" : n >= 1e6 ? r(n / 1e6) + " million" : Math.round(n).toLocaleString("en-US"); }
+  function seg(t) {
+    var ok = true, o = t.replace(/(\d[\d,]*(?:\.\d+)?) ?(万|亿)(?![\u3400-\u9fff]*分之)/g, function (m, n, u) { return big(parseFloat(n.replace(/,/g, "")) * (u === "万" ? 1e4 : 1e8)) + " "; });
+    o = o.replace(RUNRE, function (r) {
+      var core = r.replace(EDGE, ""), i = r.indexOf(core), pre = r.slice(0, i), suf = r.slice(i + core.length);
+      var y = F[core]; if (y == null) y = E[core]; if (y == null) { ok = false; return r; }
+      return pre + " " + y + " " + suf;
+    });
+    if (!ok) return null;
+    o = o.replace(/\uff0c/g, ", ").replace(/\uff1b/g, "; ").replace(/\uff1a/g, ": ").replace(/\uff08/g, " (").replace(/\uff09/g, ") ").replace(/\u3002/g, ". ").replace(/\u3001/g, ", ").replace(/[\uff01-\uff5e]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xfee0); })
+      .replace(/[「『]/g, "“").replace(/[」』]/g, "”").replace(/\s+/g, " ").replace(/ ([,.;!?%)”])/g, "$1").replace(/ :(?=[^\s\/])/g, ": ").replace(/([^\s\d]):(?=[^\s\/])/g, "$1: ").replace(/(\d) -(?=[a-z])/g, "$1-").replace(/(\d) ×(?=[)\s]|$)/g, "$1×").replace(/(\S)\((?=[a-z\d])/g, "$1 (").replace(/([(“]) /g, "$1").replace(/\. ([,.])/g, ".$1").trim();
+    if (/^[\u3400-\u9fff]/.test(t)) o = o.charAt(0).toUpperCase() + o.slice(1);
+    if (/^\s/.test(t)) o = " " + o; if (/\s$/.test(t)) o += " ";
+    return CJK.test(o) ? null : o;
+  }
   /* 无汉字、只有全角标点的串(公式、读数):换成半角标点 */
   function wide(t) { if (/[\u3400-\u9fff]/.test(t)) return null; return t.replace(/\uff0c/g, ", ").replace(/\uff1b/g, "; ").replace(/\uff1a/g, ": ").replace(/\uff08/g, " (").replace(/\uff09/g, ")").replace(/\u3002/g, ". ").replace(/\u3001/g, ", ").replace(/[\uff01-\uff5e]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xfee0); }).replace(/ {2,}/g, " ").replace(/^ | $/g, ""); }
+  /* 第二期 b 第二批(v0.9-α9):英文模式下 Canvas 2D 文字(含 3D 场景里用画布做的标签)统一过词典;缺译记入 window.__nvMiss 供自测采集 */
+  if (L === "en" && window.CanvasRenderingContext2D) (function () {
+    var P = CanvasRenderingContext2D.prototype, memo = {};
+    ["fillText", "strokeText", "measureText"].forEach(function (fn) {
+      var o = P[fn]; if (!o) return;
+      P[fn] = function (s) {
+        if (typeof s === "string" && CJK.test(s)) {
+          var y = memo[s]; if (y === undefined) { y = tr(s); memo[s] = y; if (y == null) (window.__nvMiss || (window.__nvMiss = {}))[s] = 1; }
+          if (y != null) { var a = Array.prototype.slice.call(arguments); a[0] = y; return o.apply(this, a); }
+        }
+        return o.apply(this, arguments);
+      };
+    });
+  })();
   window.NV_T = function (t) { if (L !== "en" || !t) return t; var y = tr(t); return y == null ? t : y; };
 
   /* ---------- 顶栏「中 / EN」+ 回门户带语言 ---------- */
