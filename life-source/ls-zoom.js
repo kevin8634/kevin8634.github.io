@@ -2,7 +2,7 @@
 // 从指尖皮肤一路放大到碱基对。每一层自动切换"观察仪器",并如实标注哪些是照片式观察、哪些是模型重建。
 // 科学约定:光学显微镜分辨极限约 200 nm,看不到双螺旋;间期细胞核内是松散染色质,不画 X 形染色体;
 // 核小体 = DNA 绕组蛋白八聚体约 1.65 圈(约 147 bp),直径约 11 nm;B-DNA 右手螺旋;氢键 A–T 2 根、G–C 3 根。
-import * as THREE from './vendor/three.module.min.js';
+import THREE, { canGL } from './ls-three.js';
 import { helixPoint, BDNA } from './ls-helix.js';
 import { BASE_COLOR, reducedMotion, sound } from './ls.js';
 
@@ -193,6 +193,7 @@ function buildPair() { // A–T 碱基对球棍示意(省略部分氢原子):腺
 
 /* ---------- 引擎 ---------- */
 export function createZoom(container, { onLevel = null } = {}) {
+  if (!canGL()) throw new Error('WebGL 不可用');
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.domElement.className = 'ls-gl';
   container.append(renderer.domElement);

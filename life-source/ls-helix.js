@@ -2,7 +2,7 @@
 // 科学约定:B 型 DNA,右手螺旋;直径约 2 nm,每圈约 10.5 bp,每对上升约 0.34 nm(螺距约 3.4 nm);
 // 两条骨架相位差约 150°,形成大沟与小沟;配色为伪彩(分子本身没有颜色)。
 // 场景单位 = 纳米。
-import * as THREE from './vendor/three.module.min.js';
+import THREE, { canGL } from './ls-three.js';
 import { BASE_COLOR, COMP, isPair, sound, reducedMotion } from './ls.js';
 
 export const BDNA = { radius: 1.0, rise: 0.34, bpPerTurn: 10.5, strandOffsetDeg: 150 };
@@ -26,6 +26,7 @@ function rod(a, b, radius, mat) {
 
 export function createHelix(container, opts = {}) {
   const o = { seq: 'ATGGTGCACCTGACTCCTGAGGAGAAG', comp: null, spin: true, tilt: .32, distance: 9, onPick: null, ...opts };
+  if (!canGL()) throw new Error('WebGL 不可用');
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.domElement.className = 'ls-gl';

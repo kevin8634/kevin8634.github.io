@@ -25,7 +25,7 @@ export async function mountSpec(host, kind) {
 
 /* ---------------- 3D ---------------- */
 async function mount3d(box, kind) {
-  const THREE = await import('../vendor/three.module.min.js');
+  const THREE = (await import('../ls-three.js')).default;
   const cv = document.createElement('canvas'); box.append(cv);
   const renderer = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: tier() === 'high', powerPreference: 'low-power' });
   renderer.setPixelRatio(pixelRatio());

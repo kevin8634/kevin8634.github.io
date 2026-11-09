@@ -105,7 +105,7 @@ html,body{overflow:hidden}
 <div id="lsi-pre" style="position:fixed;inset:0;z-index:49;background:#060a12"></div>
 <div id="atlas"><canvas></canvas></div>
 <div id="hframe" aria-hidden="true"></div>
-<nav id="rail" class="hud-left" aria-label="工具栏"><button data-a="tasks" aria-label="任务">📂<span>任务抽屉</span></button><button data-a="album" aria-label="源码卡册">🃏<span>源码卡册</span></button><button data-a="all" aria-label="全景">🌐<span>回到全景</span></button><button data-a="replay" aria-label="重播开场">↺<span>重播开场</span></button><button data-a="set" aria-label="设置">⚙<span>设置</span></button></nav>
+<nav id="rail" class="hud-left" aria-label="工具栏"><button data-a="tasks" aria-label="任务">📂<span>任务抽屉</span></button><button data-a="album" aria-label="源码卡册">🃏<span>源码卡册</span></button><button data-a="all" aria-label="全景">🌐<span>回到全景</span></button><button data-a="lab" aria-label="实验台">🧪<span>实验台</span></button><button data-a="replay" aria-label="重播开场">↺<span>重播开场</span></button><button data-a="set" aria-label="设置">⚙<span>设置</span></button></nav>
 <div id="side" class="ls-panel hud-left">
   <h1>生命源码 <span class="ls-tag">04 · 生物</span></h1>
   <div id="flash" role="note" aria-label="前沿速递"><div class="fl-h">⚡ 前沿速递 · 2026 诺贝尔医学奖 · 光遗传学</div><div class="fl-s">用一束光开关一个神经元</div><div class="fl-a"><a class="ls-btn primary" href="optogenetics/">进入专题 ›</a><a class="ls-btn" href="https://www.nobelprize.org/prizes/medicine/2026/press-release/" target="_blank" rel="noopener noreferrer">阅读资讯 ↗</a></div></div>
@@ -195,7 +195,7 @@ $('#scale .all').onclick = () => { lastI = -1; setL(-1); };
 const sideT = $('#side h1'); sideT.onclick = () => $('#side').classList.toggle('fold');
 $('#side').classList.add('fold');
 /* 左侧工具栏 */
-const RA = { tasks: () => { $('#side').classList.toggle('fold'); sound.tone(660, .2, { gain: .06 }); }, album: () => document.querySelector('.ls-albtn')?.click(), all: () => { lastI = -1; setL(-1); atlas.clear?.(); }, replay: () => startIntro(true), set: () => [...document.querySelectorAll('.ls-top .ls-icn')].pop()?.click() };
+const RA = { tasks: () => { $('#side').classList.toggle('fold'); sound.tone(660, .2, { gain: .06 }); }, album: () => document.querySelector('.ls-albtn')?.click(), all: () => { lastI = -1; setL(-1); atlas.clear?.(); }, lab: () => { location.href = 'lab/'; }, replay: () => startIntro(true), set: () => [...document.querySelectorAll('.ls-top .ls-icn')].pop()?.click() };
 document.querySelectorAll('#rail button').forEach(b => b.onclick = () => RA[b.dataset.a]());
 
 /* ---------- 一镜到底浮层 ---------- */

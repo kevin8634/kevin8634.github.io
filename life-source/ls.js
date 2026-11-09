@@ -168,7 +168,7 @@ export function guide(id) {
       box.classList.remove('talk'); void box.offsetWidth; box.classList.add('talk');
       const h = box.querySelector('.hints'); h.innerHTML = '';
       hints.forEach((hint, i) => {
-        const b = document.createElement('button'); b.className = 'ls-btn'; b.textContent = ['提示 1', '提示 2', '提示 3'][i];
+        const b = document.createElement('button'); b.className = 'ls-btn'; b.textContent = ['💭 想一想', '🔎 线索', '👀 看一半'][i]; b.title = ['反问一句,换个角度想', '指出该看哪里', '演示一半,剩下的自己完成'][i];
         b.disabled = i > 0;
         b.onclick = () => {
           used = Math.max(used, i + 1);

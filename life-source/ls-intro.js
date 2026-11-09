@@ -2,7 +2,7 @@
 // 生命源码 · 开场「编译生命」(WebGL / Three.js 粒子)
 // 一镜到底四幕:原始海洋的分子 → 聚成 DNA 双螺旋 → 双螺旋长成生命之树 → 穿过星海进入图谱。
 // 约 4200 个粒子,每个粒子带三组目标位置,在顶点着色器里插值;可拖动、可点击激起涟漪。
-import * as THREE from './vendor/three.module.min.js';
+import THREE, { canGL } from './ls-three.js';
 import { sound, reducedMotion, store } from './ls.js';
 
 const CON_COLORS = ['#34d399', '#5eead4', '#e2be78', '#7dd3fc', '#67e8f9', '#f9a8d4', '#fbbf24', '#c4b5fd'];
@@ -124,7 +124,7 @@ export function playIntro({ onDone, onDive, replay = false } = {}) {
   /* ---- WebGL ---- */
   const cv = $('canvas');
   let renderer;
-  try { renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: false, alpha: true, powerPreference: 'high-performance' }); }
+  try { if (!canGL()) throw 0; renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: false, alpha: true, powerPreference: 'high-performance' }); }
   catch { renderer = null; }
   let clock = 0;
   if (!renderer) { decode(1); decodeStart = -10; decode(10); go.classList.add('on'); return { finish }; }

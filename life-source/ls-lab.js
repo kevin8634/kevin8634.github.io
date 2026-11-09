@@ -8,7 +8,7 @@ export async function mountBench(host, color = '#34d399') {
   host.prepend(cv);
   if (tier() === 'low') { cv.remove(); host.classList.add('lab-flat'); return { dispose() {} }; }
   let THREE;
-  try { THREE = await import('./vendor/three.module.min.js'); } catch { cv.remove(); host.classList.add('lab-flat'); return { dispose() {} }; }
+  try { THREE = (await import('./ls-three.js')).default; } catch { cv.remove(); host.classList.add('lab-flat'); return { dispose() {} }; }
   let renderer;
   try { renderer = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: tier() === 'high', powerPreference: 'low-power' }); }
   catch { cv.remove(); host.classList.add('lab-flat'); return { dispose() {} }; }

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>实验台 · 生命源码 Life Source</title>
+<meta name="description" content="生命源码实验台:选一个实验、一组预设,直接进入可以改规则的生命实验。深链 /life-source/lab/?lab=<id>&preset=<id>。">
+<meta name="theme-color" content="#060a12">
+<link rel="stylesheet" href="../ls.css">
+<style>
+html,body{height:100%;overflow:hidden}
+body{display:grid;grid-template-rows:52px minmax(0,1fr) auto;height:100dvh}
+body .ls-top{position:static;background:none}
+body .ls-foot{position:static}
+.lp{position:relative;display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:12px;padding:8px 14px 6px;min-height:0}
+.lp-side{display:flex;flex-direction:column;gap:8px;min-height:0;overflow:auto;padding:12px;z-index:2}
+.lp-side h1{margin:0;font-size:18px}
+.lp-side .sub{color:var(--mute);font-size:12px;line-height:1.6;margin:0}
+.lp-list{display:flex;flex-direction:column;gap:6px}
+.lp-item{display:flex;align-items:center;gap:8px;text-align:left;width:100%;font:inherit;color:var(--ink);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:8px 10px;cursor:pointer}
+.lp-item:hover:not(:disabled){border-color:var(--em)}
+.lp-item.on{border-color:var(--gold);box-shadow:0 0 10px rgba(226,190,120,.35)}
+.lp-item:disabled{opacity:.5;cursor:default}
+.lp-item b{display:block;font-size:13px;font-weight:600}
+.lp-item small{color:var(--mute);font-size:11px}
+.lp-item i{font-style:normal;font-size:20px}
+.lp-stage{position:relative;min-height:0;border:1px solid rgba(110,231,183,.16);border-radius:22px;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(60% 50% at 50% 80%,rgba(52,211,153,.12),transparent 70%)}
+.lp-stage .lab-bench{position:absolute;left:0;right:0;bottom:0;height:70%;width:100%}
+.lp-stage.lab-flat{background:radial-gradient(42% 16% at 50% 86%,rgba(52,211,153,.22),transparent 70%),radial-gradient(36% 9% at 50% 86%,transparent 80%,rgba(110,231,183,.5) 86%,transparent 92%)}
+.lp-card{position:relative;z-index:2;width:min(460px,92%);padding:14px 16px;display:flex;flex-direction:column;gap:10px;text-align:center}
+.lp-card .k{color:var(--gold);font-size:12px;letter-spacing:1px}
+.lp-card h2{margin:0;font-size:18px}
+.lp-card p{margin:0;font-size:13px;color:#cfe9df;line-height:1.6}
+.lp-chips,.lp-depth{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.lp-chips button{font-size:12px;padding:5px 11px}
+.lp-chips button.on{background:linear-gradient(135deg,#10b981,#34d399);color:#03130d;border-color:transparent;font-weight:700}
+.lp-depth span{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--mute)}
+.lp-depth span.on{color:#03130d;background:var(--gold);border-color:var(--gold);font-weight:700}
+.lp-go{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.lp-go a{text-decoration:none}
+.lp-link{font-size:11px;color:var(--mute);word-break:break-all}
+@media (max-width:720px) and (min-height:481px){
+  .lp{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;padding:6px 6px 4px;gap:6px}
+  .lp-stage{grid-row:1}
+  .lp-side{grid-row:2;padding:8px;flex-direction:row;align-items:stretch;overflow-x:auto;overflow-y:hidden}
+  #back{flex:none;display:flex;align-items:center}
+  .lp-side h1,.lp-side .sub{display:none}
+  .lp-list{flex-direction:row;overflow-x:auto}
+  .lp-item{flex:none;width:auto;min-width:150px}
+  .lp-card{padding:10px 12px;gap:8px}
+}
+@media (max-height:480px) and (orientation:landscape){
+  .lp{grid-template-columns:220px minmax(0,1fr);padding:4px 6px}
+  .lp-side{padding:6px}.lp-side .sub{display:none}
+  .lp-card{gap:5px;padding:6px 10px}.lp-card p{font-size:12px}.lp-card h2{font-size:14px}.lp-link,.lp-depth{display:none}
+  .lp-side h1{font-size:14px}.lp-item{padding:5px 8px}.lp-item small{display:none}
+}
+</style></head><body>
+<noscript>需要开启 JavaScript 才能使用实验台。</noscript>
+<script type="module">
+import { chrome, TASKS, taskStars, sound } from '../ls.js';
+// 实验台注册表(2.0 S0 骨架)。深链 ?lab=<id>&preset=<id> 上线后不改;未知值回退默认。
+// ready:已能进入(跳到对应任务关卡);soon:2.0 计划中的实验台,先占位。
+const LABS = {
+  optogenetics: { icon: '💡', task: 'optogenetics', q: '能不能用一束光开关一个神经元?', presets: {
+    channel: { name: '光的颜色与通道', l: 1, p: '拖动光的波长,看通道视紫红质的门开多大。' },
+    pulse: { name: '光闪频率与放电', l: 2, p: '光闪几下,神经元就放电几下:调节频率,听节奏。' },
+    switch: { name: '蓝光开,黄光关', l: 3, p: '两种光控开关,一开一关,指挥卡通小虫。' } } },
+  rhythm: { icon: '⏰', task: 'rhythm', q: '身体里的钟,怎么知道几点、几月?', presets: {
+    latitude: { name: '纬度与日长', l: 5, p: '改纬度和月份,看白天长短怎样告诉动植物季节。' },
+    twoprocess: { name: '睡眠压力与生物钟', l: 6, p: '睡眠压力和生物钟两条曲线一起决定什么时候困。' } } },
+  cell: { icon: '🧫', soon: '一个细胞里,有多少台机器在同时开工?', presets: { ribosome: { name: '核糖体流水线' }, motor: { name: '马达蛋白运货' }, atp: { name: '线粒体发电' } } },
+  tree: { icon: '🌳', soon: '一棵大树几吨重,这些重量是从哪里来的?', presets: { light: { name: '光强与光色' }, co2: { name: '二氧化碳浓度' } } },
+  heart: { icon: '🫀', soon: '老鼠和大象,一辈子的心跳次数差不多?', presets: { kleiber: { name: '体重与代谢' }, beats: { name: '一生心跳数' } } },
+  superbug: { icon: '🦠', soon: '细菌怎么学会不怕抗生素?', presets: { dose: { name: '选择压力' }, stopearly: { name: '提前停药(只演示种群规律)' } } },
+  extinct: { icon: '🦖', soon: '恐龙灭绝了,为什么小小的哺乳动物活了下来?', presets: { winter: { name: '撞击后的冬天' } } },
+};
+const DEF = 'optogenetics';
+const C = chrome({ title: '实验台' });
+const wrap = document.createElement('main'); wrap.className = 'lp';
+wrap.innerHTML = `<aside class="lp-side ls-panel"><h1>🧪 实验台</h1><p class="sub">选一个实验和一组预设,直接进入可以改规则的生命实验。其他世界和深空航线也能用链接直接跳到这里。</p><div class="lp-list"></div>
+  <a class="ls-btn" href="/life-source/" id="back" style="text-decoration:none;text-align:center">🌐 回到生命图谱</a></aside>
+  <section class="lp-stage" aria-live="polite"><div class="lp-card ls-panel"></div></section>`;
+document.body.insertBefore(wrap, C.foot);
+const stage = wrap.querySelector('.lp-stage'), card = wrap.querySelector('.lp-card'), list = wrap.querySelector('.lp-list');
+wrap.querySelector('#back').addEventListener('click', () => sessionStorage.setItem('gn:ls:fromLab', '1'));
+import('../ls-lab.js').then(m => m.mountBench(stage, '#34d399')).catch(() => stage.classList.add('lab-flat'));
+
+const q = new URLSearchParams(location.search);
+let lab = LABS[q.get('lab')] && !LABS[q.get('lab')].soon ? q.get('lab') : DEF;
+let preset = LABS[lab].presets[q.get('preset')] ? q.get('preset') : Object.keys(LABS[lab].presets)[0];
+
+for (const [id, L] of Object.entries(LABS)) {
+  const b = document.createElement('button'); b.className = 'lp-item'; b.dataset.id = id; b.disabled = !!L.soon;
+  b.innerHTML = `<i>${L.icon}</i><span><b></b><small></small></span>`;
+  b.querySelector('b').textContent = L.soon || L.q;
+  b.querySelector('small').textContent = L.soon ? '2.0 制作中' : `${Object.keys(L.presets).length} 组预设 · ★ ${taskStars(L.task)}/${TASKS[L.task].levels * 3}`;
+  b.onclick = () => { lab = id; preset = Object.keys(L.presets)[0]; paint(); sound.tone(660, .15, { gain: .05 }); };
+  list.append(b);
+}
+function paint() {
+  const L = LABS[lab], P = L.presets[preset], t = TASKS[L.task];
+  list.querySelectorAll('.lp-item').forEach(b => b.classList.toggle('on', b.dataset.id === lab));
+  const href = `${t.path}?l=${P.l}`, deep = `/life-source/lab/?lab=${lab}&preset=${preset}`;
+  card.innerHTML = `<div class="k">实验台 · ${L.icon} ${lab}</div><h2></h2><div class="lp-chips"></div><p class="pp"></p>
+    <div class="lp-depth" title="三层深度 2.0 逐步开放"><span class="on">看懂</span><span>改规则</span><span>推导</span></div>
+    <div class="lp-go"><a class="ls-btn primary" href="${href}">进入实验 ›</a></div><div class="lp-link">深链:${deep}</div>`;
+  card.querySelector('h2').textContent = L.q; card.querySelector('.pp').textContent = P.p;
+  const chips = card.querySelector('.lp-chips');
+  for (const [pid, p] of Object.entries(L.presets)) { const c = document.createElement('button'); c.className = 'ls-btn' + (pid === preset ? ' on' : ''); c.textContent = p.name; c.onclick = () => { preset = pid; paint(); }; chips.append(c); }
+  history.replaceState(null, '', deep);
+}
+paint();
+</script>
+</body></html>

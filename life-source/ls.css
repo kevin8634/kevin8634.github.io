@@ -236,3 +236,20 @@ body.lab #ls-stars{display:none}            /* 定稿:去掉奖杯计数,不排�
 /* 键盘可达:统一焦点光圈 */
 .ls-btn:focus-visible,.lab-rail button:focus-visible,.ls-map button:focus-visible,.bkey:focus-visible,.lab-drawer a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 @media (max-width:520px){.ls-albtn .al-t{display:none}}
+
+/* ===== 2.0 S0 · HUD H1–H3(2026-11-09) ===== */
+/* H3:宽屏向导框上移,贴近标本台中线 */
+@media (min-width:900px) and (min-height:560px){ .ls-lab>.ls-dock{align-self:center;padding:0 16px 0 0} .ls-lab .ls-guide .bubble{max-height:46vh} }
+.ls-guide .hints button{white-space:nowrap}
+/* H1:小屏「猜→跑→收」收成标题旁三颗小点,当前一步显示文字 */
+@media (max-width:520px),(max-height:480px) and (orientation:landscape){
+  .lab-phase{display:flex!important;gap:5px;align-items:center;right:auto;left:auto;transform:none;top:auto;bottom:auto;position:relative;grid-area:stage;align-self:start;justify-self:center;margin-top:28px;z-index:5;pointer-events:none}
+  .lab-phase li{font-size:0;width:9px;height:9px;padding:0;border-radius:50%;border:1px solid rgba(110,231,183,.6);background:rgba(6,14,14,.8)}
+  .lab-phase li+li::before{content:none}
+  .lab-phase li.done{background:var(--em2)}
+  .lab-phase li.on{font-size:11px;width:auto;height:auto;padding:1px 8px;border-radius:999px;line-height:1.5}
+  .ls-lab .ls-stage h2{font-size:14px}
+  .ls-lab .ls-center{inset:46px 0 0 0}
+}
+/* H2:手机顶栏只留「← 创世」+ 卡册 + 设置;声音、全屏收进设置 */
+@media (max-width:520px),(max-height:480px) and (orientation:landscape){ .ls-top .brand,.ls-top #ls-snd,.ls-top .ls-fs{display:none!important} }

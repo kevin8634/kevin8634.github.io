@@ -71,7 +71,7 @@ export function mountHud(top, { onReplay } = {}) {
   const gear = document.createElement('button'); gear.className = 'ls-btn ls-icn'; gear.textContent = '⚙'; gear.title = '设置'; gear.setAttribute('aria-label', '设置');
   top.append(fs, gear);
   const pan = document.createElement('div'); pan.className = 'ls-panel ls-set'; pan.setAttribute('role', 'dialog'); pan.setAttribute('aria-label', '设置');
-  pan.innerHTML = `<h4>画质</h4><div class="seg"></div><p class="now"></p><div class="row"></div>`;
+  pan.innerHTML = `<h4>画质</h4><div class="seg"></div><p class="now"></p><h4>声音与屏幕</h4><div class="seg sx"></div><div class="row"></div>`;
   const seg = pan.querySelector('.seg');
   const opts = [['auto', '自动'], ['high', '高'], ['mid', '中'], ['low', '低']];
   const paint = () => {
@@ -79,11 +79,16 @@ export function mountHud(top, { onReplay } = {}) {
     const t = tier(); pan.querySelector('.now').textContent = `当前:${{ high: '高 · 全效粒子', mid: '中 · 粒子减半', low: '低 · 平面画面,功能不变' }[t]}${hasWebGL() ? '' : '(本设备不支持 WebGL)'}${reducedMotion() ? ' · 已跟随系统「减少动态效果」' : ''}`;
   };
   opts.forEach(([v, n]) => { const b = document.createElement('button'); b.className = 'ls-btn'; b.dataset.v = v; b.textContent = n; b.onclick = () => { setTier(v); paint(); sound.tone?.(660, .2, { gain: .06 }); }; seg.append(b); });
+  // 2.0 S0 H2:声音、全屏也放进设置(手机顶栏不再单列)
+  const sx = pan.querySelector('.sx');
+  const sb = document.createElement('button'); sb.className = 'ls-btn'; const sp = () => { sb.textContent = sound.on ? '🔊 声音:开' : '🔇 声音:关'; sb.classList.toggle('on', sound.on); };
+  sb.onclick = () => { sound.on = !sound.on; sp(); dispatchEvent(new Event('ls-sound')); if (sound.on) sound.sparkle?.(3); }; addEventListener('ls-sound', sp); sp(); sx.append(sb);
+  if (document.documentElement.requestFullscreen) { const fb = document.createElement('button'); fb.className = 'ls-btn'; fb.textContent = '⛶ 全屏'; fb.onclick = () => fs.onclick(); sx.append(fb); }
   const row = pan.querySelector('.row');
   if (onReplay) { const r = document.createElement('button'); r.className = 'ls-btn primary'; r.textContent = '↺ 重播开场'; r.onclick = () => { pan.classList.remove('on'); onReplay(); }; row.append(r); }
   const x = document.createElement('button'); x.className = 'ls-btn'; x.textContent = '关闭'; x.onclick = () => pan.classList.remove('on'); row.append(x);
   document.body.append(pan);
-  gear.onclick = () => { paint(); pan.classList.toggle('on'); };
+  gear.onclick = () => { paint(); sp(); pan.classList.toggle('on'); };
   addEventListener('keydown', e => { if (e.key === 'Escape') pan.classList.remove('on'); });
   return { home, gear, panel: pan };
 }

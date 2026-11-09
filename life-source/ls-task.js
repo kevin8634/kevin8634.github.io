@@ -26,7 +26,7 @@ export function runTask(taskId, levels) {
     drawer.innerHTML = '<h4>生命源码 · 任务</h4>' + Object.entries(TASKS).map(([id, t]) => {
       const n = Object.keys(store.get(id, { levels: {} }).levels).length, me = id === taskId;
       return `<a href="${t.path}" class="${me ? 'me' : ''}"><b>${t.title}</b><small>${me ? '当前 · ' : ''}已通关 ${n}/${t.levels}</small></a>`;
-    }).join('') + '<a href="/life-source/" class="home"><b>🌐 回到生命图谱</b></a><a href="/" class="home"><b>← 返回创世总门户</b></a>';
+    }).join('') + '<a href="/life-source/lab/" class="home"><b>🧪 实验台</b></a><a href="/life-source/" class="home"><b>🌐 回到生命图谱</b></a><a href="/" class="home"><b>← 返回创世总门户</b></a>';
   };
   const log = document.createElement('aside'); log.className = 'lab-log ls-panel'; log.setAttribute('aria-label', '观察记录');
   log.innerHTML = '<h4>观察记录</h4><div class="lg"></div>';
