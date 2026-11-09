@@ -65,9 +65,9 @@ rows = []
 for z in sorted(set(h[2] for h in hits)):
     r = [round(z, 1)] + [None] * 4
     for si, x, zz, t in hits:
-        if zz == z: r[1 + si] = t
+        if zz == z: r[1 + si] = round(t / 1000, 4)
     rows.append(r)
-dump('data/sim.icecube.hits.json', {"meta": {"id": "sim.icecube.hits", "title": "模拟:一条 μ 子径迹在 4 根冰立方式串上的光到达时间", "source": "创世计划程序生成的模拟数据(deep/docs/nobel26_build.py,随机种子 20261006);几何参数取 IceCube 公开设计值(串距 125 m、DOM 间距 17 m)", "url": "https://icecube.wisc.edu/science/icecube/", "license": "本站原创,CC BY 4.0", "retrieved": TODAY, "unit": "ns", "ai_generated": False, "note": "模拟数据,非 IceCube 观测;径迹真方向 30°,冰折射率取 1.32,计时抖动 σ=3 ns,不含冰中散射;只记离径迹 70 m 以内的 DOM"}, "columns": ["z", "s1", "s2", "s3", "s4"], "rows": rows})
+dump('data/sim.icecube.hits.json', {"meta": {"id": "sim.icecube.hits", "title": "模拟:一条 μ 子径迹在 4 根冰立方式串上的光到达时间", "source": "创世计划程序生成的模拟数据(deep/docs/nobel26_build.py,随机种子 20261006);几何参数取 IceCube 公开设计值(串距 125 m、DOM 间距 17 m)", "url": "https://icecube.wisc.edu/science/icecube/", "license": "本站原创,CC BY 4.0", "retrieved": TODAY, "unit": "μs", "ai_generated": False, "note": "模拟数据,非 IceCube 观测;时间单位微秒;径迹真方向 30°,冰折射率取 1.32,计时抖动 σ=3 ns,不含冰中散射;只记离径迹 70 m 以内的 DOM"}, "columns": ["z", "s1", "s2", "s3", "s4"], "rows": rows})
 ice = {"id": "nv.l2.icecube", "world": "nv", "link_task": "nv.icecube", "tag": TAG, "tab": "冰立方:听光定方向",
  "title": "冰立方:从光到达的先后,反推中微子从哪来",
  "formula": "\\vec r_i\\approx\\vec r_0+\\vec v\\,t_i\\;\\Rightarrow\\;\\vec v=\\frac{\\overline{\\vec r\\,t}-\\bar{\\vec r}\\,\\bar t}{\\overline{t^2}-\\bar t^{\\,2}}",
@@ -80,7 +80,7 @@ ice = {"id": "nv.l2.icecube", "world": "nv", "link_task": "nv.icecube", "tag": T
   {"text": "误差从哪来:LineFit 忽略了切伦科夫锥——离径迹远的 DOM 系统性地晚到,真实冰里光还会散射。IceCube 后续用考虑光在冰中传播的似然拟合把方向修得更准。方向一旦朝下(从地球另一边穿过来),就几乎只可能是中微子:大气 μ 子穿不过整个地球。", "tex": "\\alpha\\in(0^\\circ,90^\\circ)\\Rightarrow\\text{穿过地球而来}"},
   {"text": "意义:2013 年 IceCube 报告了天体物理中微子的首批证据,几年后数据足以确认;目前有 79 个中微子看起来来自活动星系 NGC 1068 方向,但证据还不足以确认它就是源。中微子不带电,不被磁场弯折,沿直线回溯就能找宇宙中的粒子加速器。", "tex": "\\nu\\;\\text{不带电}\\Rightarrow\\text{直线回溯}"}],
  "check": {"q": "为什么 IceCube 特别看重「从下往上」穿过探测器的径迹?", "options": ["从下往上的光更亮", "能从下面穿过整个地球的几乎只有中微子,大气 μ 子被地球挡住了", "南极冰层下面更透明"], "answer": 1, "why": "大气 μ 子只能从上方进来;从地球另一边穿过来的只能是中微子产生的 μ 子,这是剔除背景的关键。"},
- "chart": {"data": "sim.icecube.hits.json", "x": "z", "ys": [{"col": "s1", "label": "第 1 串"}, {"col": "s2", "label": "第 2 串"}, {"col": "s3", "label": "第 3 串"}, {"col": "s4", "label": "第 4 串"}], "type": "scatter", "xlabel": "DOM 高度 z(米,相对探测器中心)", "ylabel": "光到达时间(纳秒,模拟)"},
+ "chart": {"data": "sim.icecube.hits.json", "x": "z", "ys": [{"col": "s1", "label": "第 1 串"}, {"col": "s2", "label": "第 2 串"}, {"col": "s3", "label": "第 3 串"}, {"col": "s4", "label": "第 4 串"}], "type": "scatter", "xlabel": "DOM 高度 z(米,相对探测器中心)", "ylabel": "到达时间 μs(模拟)"},
  "uses": "切伦科夫辐射、几何光学、最小二乘、协方差",
  "textbook": "大学《粒子物理导论》探测器与径迹重建;《数理统计》最小二乘",
  "sources": [

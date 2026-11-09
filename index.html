@@ -1099,7 +1099,7 @@
   };
   var W = { "星图": "Math Atlas", "宙律": "Nomoverse", "元素工坊": "Element Forge", "生命源码": "Life Source", "奇点前夜": "Pre-Singularity", "觉弈": "Ludoterra", "天枢": "Starhelm", "总门户": "Portal" };
   var E = {
-    "创世计划 Genesis": "Genesis", "七个世界 · 一张星图": "Seven worlds · one star map", "✦ 星网": "✦ Star Web", "星历": "Star Log",
+    "创世计划 Genesis": "Genesis", "七个世界 · 一张星图": "Seven worlds · one star map", "✦ 星网": "✦ Star Web", "你身上的碘从哪来": "Where does your iodine come from", "星历": "Star Log",
     "宇宙将为你闪烁": "The Universe Will Twinkle for You", "背景音乐": "Music", "原创合成 · 四首": "Original synth · 4 tracks", "列表循环": "Loop all", "单曲循环": "Loop one", "关闭声音": "Sound off",
     "如果世界是一款游戏": "What if the world were a game?", "七个互相连通的学习世界 · 把世界当成一款游戏来拆解": "Seven connected learning worlds · take the world apart like a game",
     "了解更多 →": "Learn more →", "帮我选一颗星 ✦": "Pick a star for me ✦", "帮我选一颗星": "Pick a star for me",
@@ -1747,7 +1747,7 @@
       var byId = {}; WORLDS.forEach(function (w) { byId[w.id] = w; });
       // v2.3 · 星网：在七颗星之间画出跨世界航线；进度与深空层共用 localStorage gn:deep:route:iron
       (function () {
-        var NETR = [{ t: "铁从哪里来", p: ["02", "03", "07", "04"], k: "gn:deep:route:iron", href: "deep/?net=1&route=iron", c: "#7fe3a8" }, { t: "潮汐锁定", p: ["02", "07", "04"], k: "gn:deep:route:tide", href: "deep/?net=1&route=tide", c: "#8fd3ff" }, { t: "一场疫情的数学", p: ["01", "04", "06", "05"], k: "gn:deep:route:epi", href: "deep/?net=1&route=epi", c: "#ff9a8f" }, { t: "一次提问的能量", p: ["01", "05", "02", "03"], k: "gn:deep:route:ask", href: "deep/?net=1&route=ask", c: "#c9a7ff" }, { t: "卫星钟为什么要调慢", p: ["01", "07", "02"], k: "gn:deep:route:gps", href: "deep/?net=1&route=gps", c: "#ffd27f" }],
+        var NETR = [{ t: "铁从哪里来", p: ["02", "03", "07", "04"], k: "gn:deep:route:iron", href: "deep/?net=1&route=iron", c: "#7fe3a8" }, { t: "潮汐锁定", p: ["02", "07", "04"], k: "gn:deep:route:tide", href: "deep/?net=1&route=tide", c: "#8fd3ff" }, { t: "一场疫情的数学", p: ["01", "04", "06", "05"], k: "gn:deep:route:epi", href: "deep/?net=1&route=epi", c: "#ff9a8f" }, { t: "一次提问的能量", p: ["01", "05", "02", "03"], k: "gn:deep:route:ask", href: "deep/?net=1&route=ask", c: "#c9a7ff" }, { t: "卫星钟为什么要调慢", p: ["01", "07", "02"], k: "gn:deep:route:gps", href: "deep/?net=1&route=gps", c: "#ffd27f" }, { t: "你身上的碘从哪来", p: ["02", "03", "07", "04"], k: "gn:deep:route:iod", href: "deep/?net=1&route=iod", c: "#ff9fd6" }],
           NETF = [];
         var on = false, raf = 0, svg = null, pan = null, chip = document.getElementById("netChip");
         function done(r) { try { return JSON.parse(localStorage.getItem(r.k) || "[]"); } catch (e) { return []; } }
@@ -3777,6 +3777,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "深空 2.2", d: "2026-11-09", t: "第六条跨世界航线「你身上的碘从哪来」点亮：宙律算出恒星为什么炼不出碘，元素工坊看中子雨怎样沿 A=127 一路衰变成碘-127，天枢回到 GW170817 中子星并合与千新星，生命源码数一数你甲状腺里的碘原子。" },
         { w: "gn", v: "深空 2.1", d: "2026-11-09", t: "深空层新增三张「前沿 · 2026 诺奖」卡：宙律用光到达的先后反推冰立方中微子的方向，生命源码拟合光遗传学通道的光强饱和曲线，元素工坊在星穹层追问生命为什么只用左旋氨基酸；同一层可以有多张卡，侧栏一键切换。" },
         { w: "gn", v: "门户 v2.6.0", d: "2026-11-09", t: "星历登记宙律 v0.9-α9、星图 Math Atlas v0.8.7 与 v0.8.7.1；两张世界卡标「EN 全量」：宙律和星图都能完整用英文玩了。" },
         { w: "01", v: "v0.8.7.1", d: "2026-11-09", t: "英文版补齐公共层：反馈表单、15 首背景音乐的曲名与数学规律、星系主题和各类提示都有了英文。" },

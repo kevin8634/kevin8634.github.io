@@ -86,3 +86,10 @@
 | sim.chr2.hill | ChR2 归一化峰值光电流 vs 光强 10 点 | 本站程序模拟(种子 20261005);参数取 Lin 2011 Exp Physiol 96:19 表 1 的公开典型值 EC50≈1.10 mW/mm²(事实数值,注明出处) | 本站原创,CC BY 4.0;**模拟数据,非实验测量** |
 | model.soai.amplify | 二级自催化教学模型 ee 放大曲线 | 本站计算(解析不变量 ee/(1−ee²)∝产物总量,RK4 核对) | 本站原创,CC BY 4.0;模型计算值,非观测 |
 | deep/cards/nv.l2.icecube.json、ls.l2.optogenetics.json、ef.l4.chirality.json | 三张「前沿 · 2026 诺奖」卡 | 文字 AI 撰写,数值由 docs/nobel26_build.py 复算;诺奖得主与获奖理由核实自 NobelPrize.org 2026 物理/生理学或医学/化学奖 summary 与 popular information 页(2026-11-09 取) | 自有;卡内 sources 逐条列出处;只引用事实与公式,不转载 NobelPrize.org 文字与插图,不用任何机构 logo,不暗示背书 |
+
+## 深空 2.2 航线「你身上的碘从哪来」(2026-11-09,总指挥)
+| 台账 id / 文件 | 内容 | 来源 | 许可 / 署名 |
+|---|---|---|---|
+| iaea.a127.isobar | A=127 同量异位素(Z=45–60)基态半衰期 log₁₀ 秒与 B/A | IAEA NDS Live Chart of Nuclides(AME2020/ENSDF),由本站 data/nuclides.json 快照经 docs/iod_build.py 导出 | IAEA 公开核数据,署名 IAEA NDS |
+| deep/routes/iod.json | 四站航线卡(宙律→元素工坊→天枢→生命源码) | 文字 AI 撰写,数值由 docs/iod_build.py 复算;引用 IAEA、Ellis 等 2024(PLB)、Metzger 2019(Living Rev. Relativ.)、Côté 等 2021(Science)、LIGO & Virgo 2017(PRL)、Thielemann & Cowan 2026(arXiv)、Reifarth 等 2014(J. Phys. G)、NIH ODS Iodine Fact Sheet(美国政府公开信息)、PubChem CID 5819 的公开数值与公式 | 自有;卡内 sources 逐条列出处;只引用事实数值,不转载原文与插图,不用 logo、不暗示背书;无图片 |
+- 同批:data/sim.icecube.hits.json 到达时间改以 μs 存储(原 ns 值 ÷1000,与图表纵轴单位一致;仍为本站模拟数据,非观测)。
