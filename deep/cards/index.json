@@ -29,5 +29,6 @@
  "ps.l4.json",
  "nv.l2.icecube.json",
  "ls.l2.optogenetics.json",
- "ef.l4.chirality.json"
+ "ef.l4.chirality.json",
+ "sh.l2.voyager.json"
 ]

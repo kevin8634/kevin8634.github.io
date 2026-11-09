@@ -93,3 +93,9 @@
 | iaea.a127.isobar | A=127 同量异位素(Z=45–60)基态半衰期 log₁₀ 秒与 B/A | IAEA NDS Live Chart of Nuclides(AME2020/ENSDF),由本站 data/nuclides.json 快照经 docs/iod_build.py 导出 | IAEA 公开核数据,署名 IAEA NDS |
 | deep/routes/iod.json | 四站航线卡(宙律→元素工坊→天枢→生命源码) | 文字 AI 撰写,数值由 docs/iod_build.py 复算;引用 IAEA、Ellis 等 2024(PLB)、Metzger 2019(Living Rev. Relativ.)、Côté 等 2021(Science)、LIGO & Virgo 2017(PRL)、Thielemann & Cowan 2026(arXiv)、Reifarth 等 2014(J. Phys. G)、NIH ODS Iodine Fact Sheet(美国政府公开信息)、PubChem CID 5819 的公开数值与公式 | 自有;卡内 sources 逐条列出处;只引用事实数值,不转载原文与插图,不用 logo、不暗示背书;无图片 |
 - 同批:data/sim.icecube.hits.json 到达时间改以 μs 存储(原 ns 值 ÷1000,与图表纵轴单位一致;仍为本站模拟数据,非观测)。
+
+## 深空 2.3「前沿 · 旅行者 1 号一光日」卡(2026-11-09,总指挥)
+| 台账 id / 文件 | 内容 | 来源 | 许可 / 署名 |
+|---|---|---|---|
+| jpl.horizons.voyager1 | 旅行者 1 号地心几何距离(AU)与距离变化率(km/s),2026-01-01 至 2027-12-22 每 10 天,72 行;lin、fit 两列为本站计算 | NASA/JPL Horizons 星历(目标 -31,中心 500@399,VECTORS 表 4,VEC_CORR=NONE,2026-11-09 取),经 docs/voyager_build.py 生成 | Horizons 数据为 NASA/JPL 公开数据(美国政府作品),署名 NASA/JPL Horizons;lin、fit 为本站计算,CC BY 4.0,**近似,非观测** |
+| deep/cards/sh.l2.voyager.json | 天枢星系层「前沿 · 一光日」卡 | 文字 AI 撰写,数值由 docs/voyager_build.py 复算;时刻与距离核实自 NASA Science「Where Are Voyager 1 and 2 Now?」与 JPL 新闻 2026-10-29;c 取 SI 定义(BIPM),AU 取 IAU 2012 B2 | 自有;卡内 sources 逐条列出处;只引用事实数值,不转载 NASA 文字与图片,不用 NASA/JPL logo,不暗示背书;无图片 |
