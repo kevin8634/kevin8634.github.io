@@ -99,3 +99,9 @@
 |---|---|---|---|
 | jpl.horizons.voyager1 | 旅行者 1 号地心几何距离(AU)与距离变化率(km/s),2026-01-01 至 2027-12-22 每 10 天,72 行;lin、fit 两列为本站计算 | NASA/JPL Horizons 星历(目标 -31,中心 500@399,VECTORS 表 4,VEC_CORR=NONE,2026-11-09 取),经 docs/voyager_build.py 生成 | Horizons 数据为 NASA/JPL 公开数据(美国政府作品),署名 NASA/JPL Horizons;lin、fit 为本站计算,CC BY 4.0,**近似,非观测** |
 | deep/cards/sh.l2.voyager.json | 天枢星系层「前沿 · 一光日」卡 | 文字 AI 撰写,数值由 docs/voyager_build.py 复算;时刻与距离核实自 NASA Science「Where Are Voyager 1 and 2 Now?」与 JPL 新闻 2026-10-29;c 取 SI 定义(BIPM),AU 取 IAU 2012 B2 | 自有;卡内 sources 逐条列出处;只引用事实数值,不转载 NASA 文字与图片,不用 NASA/JPL logo,不暗示背书;无图片 |
+
+## 深空 2.4「模型炼炉 · 暗物质」(2026-11-09,总指挥)
+| 台账 id / 文件 | 内容 | 来源 | 许可 / 署名 |
+|---|---|---|---|
+| sparc.ngc3198.components | NGC 3198 自转曲线与质量分量 43 点(R、Vobs、errV、Vgas、Vdisk、Vbul;D=13.8 Mpc) | SPARC,Lelli, McGaugh & Schombert 2016, AJ 152:157,Rotmod_LTG.zip / NGC3198_rotmod.dat 前 6 列原样摘录(https://astroweb.case.edu/SPARC/,2026-11-09 取);与 1.4 台账 sparc.ngc3198.rotmod 同源(核对:R、Vobs、errV 逐点一致) | 公开科研数据,按 SPARC 要求引用原论文 Lelli, McGaugh & Schombert 2016, AJ 152, 157;仅数值摘录 |
+| deep/forge/engine.js、forge.js、dm.json、index.json | 模型炼炉引擎、界面与暗物质炉配置(伪等温晕公式引 Begeman, Broeils & Sanders 1991, MNRAS 249, 523;de Blok et al. 2008, AJ 136, 2648) | 创世计划(AI 协助);数值由 docs/forge_dm_check.mjs 复算 | 自有,CC BY 4.0;模型曲线、拟合值为本站计算,**非观测** |

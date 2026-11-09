@@ -1,0 +1,61 @@
+{
+  "id": "dm",
+  "ver": "深空 2.4",
+  "title": "模型炼炉 · 暗物质",
+  "subtitle": "NGC 3198 自转曲线 · SPARC 真实数据 · 星系层 · 大学",
+  "badge": "暗物质炉徽章",
+  "data": { "file": "../data/sparc.ngc3198.components.json", "x": "R", "y": "Vobs", "err": "errV" },
+  "axes": { "x": { "label": "半径 r (kpc)", "short": "r (kpc)", "min": 0, "max": 48 }, "y": { "label": "转速 v (km/s)", "min": 0, "max": 200 } },
+  "combine": "quad",
+  "sumTex": "v^2(r)=\\sum_i v_i^2(r)\\quad\\Rightarrow\\quad v=\\sqrt{v_\\star^2+v_{\\rm gas}^2+v_{\\rm h}^2}",
+  "emptyHint": "星点 = NGC 3198 的真实观测 · 放入积木,金线就会出现",
+  "sumTexShort": "v^2(r)=\\sum_i v_i^2(r)",
+  "intro": "星点是 SPARC 测到的 NGC 3198 转速,竖线是误差棒。把方程积木放进炉里合成模型:金线是模型,每颗星垂下的光丝是残差——|残差|/误差 <1 绿、1–3 黄、>3 红。",
+  "blocks": [
+    {
+      "id": "disk", "name": "恒星盘", "short": "可见物质", "glyph": "★", "color": "#7fd0ff",
+      "kind": "column", "col": "Vdisk", "tail": "kepler",
+      "tex": "v_\\star^2(r)=\\Upsilon_\\star\\,V_{\\rm disk}^2(r)",
+      "note": "V_disk 是 SPARC 由 3.6 μm 星光面亮度、按质光比 Υ★=1 算出的恒星盘牛顿速度;你只调 Υ★(每单位 3.6 μm 光对应多少太阳质量)。超出数据外按 v∝1/√r 开普勒下降外推。",
+      "params": [ { "k": "Yd", "name": "质光比 Υ★", "unit": "M☉/L☉", "min": 0.05, "max": 2, "value": 0.5, "step": 0.01 } ]
+    },
+    {
+      "id": "gas", "name": "气体盘", "short": "可见物质", "glyph": "≈", "color": "#9ff0c8",
+      "kind": "column", "col": "Vgas", "tail": "kepler",
+      "tex": "v_{\\rm gas}^2(r)=\\eta\\,V_{\\rm gas}(r)\\,|V_{\\rm gas}(r)|",
+      "note": "V_gas 来自 21 cm 中性氢面密度(已乘 1.33 计入氦)。内圈 V_gas 为负:那里外侧气体的净引力朝外。η 默认锁定为 1,可解锁拟合(会与 Υ★ 简并)。",
+      "params": [ { "k": "eg", "name": "气体缩放 η", "unit": "", "min": 0.5, "max": 1.5, "value": 1, "step": 0.01, "lock": true } ]
+    },
+    {
+      "id": "halo", "name": "暗物质晕", "short": "看不见的质量", "glyph": "◌", "color": "#c7a0ff",
+      "kind": "kernel", "kernel": "iso",
+      "tex": "v_{\\rm h}^2(r)=4\\pi G\\rho_0 r_c^2\\left[1-\\frac{r_c}{r}\\arctan\\frac{r}{r_c}\\right]",
+      "note": "伪等温球 ρ(r)=ρ₀/[1+(r/r_c)²](不是 NFW):内部有常密度核 r_c,外部 ρ∝r⁻²、v 趋于常数 √(4πGρ₀)·r_c。G=4.30091×10⁻⁶ kpc·(km/s)²/M☉;ρ₀ 以 10⁷ M☉/kpc³ 计(=0.01 M☉/pc³)。",
+      "params": [
+        { "k": "rho0", "name": "中心密度 ρ₀", "unit": "10⁷ M☉/kpc³", "min": 0.1, "max": 100, "value": 1, "step": 0.01, "scale": "log" },
+        { "k": "rc", "name": "核半径 r_c", "unit": "kpc", "min": 0.3, "max": 20, "value": 6, "step": 0.01 }
+      ]
+    }
+  ],
+  "pass": { "redMax": 2.0, "require": ["halo"] },
+  "guide": [
+    { "if": { "empty": true }, "q": "炉里还空着。一个星系里,哪些东西是看得见、会产生引力的?把它们放进炉里试试。" },
+    { "if": { "lacks": ["halo"], "has": ["disk"], "redAbove": 2 }, "focus": [16, 48], "q": "看外圈(r>15 kpc)的红光丝:只算看得见的物质,越往外速度应该怎样变化?可数据里外圈的星为什么还转这么快?", "sub": "试试把 Υ★ 调大能不能补上——内圈会怎样?" },
+    { "if": { "lacks": ["halo"], "has": ["gas"], "redAbove": 2 }, "focus": [0, 48], "q": "只有气体,够不够把星系里的星拉住?还有哪种看得见的质量没放进来?" },
+    { "if": { "has": ["halo"], "lacks": ["disk"], "redAbove": 2 }, "focus": [0, 8], "q": "只靠暗晕,内圈(r<8 kpc)的光丝为什么还亮着?那里看得见的恒星去哪了?" },
+    { "if": { "has": ["halo"], "pass": false }, "q": "暗晕的两个旋钮,ρ₀ 和 r_c,各管曲线的哪一段?慢慢调,或者按「自动拟合」看看最优解在哪。" },
+    { "if": { "pass": true }, "q": "过关。多了 2 个参数,约化 χ² 和 BIC 各掉了多少?这笔「复杂度」花得值吗?你拟合出的 Υ★ 和恒星演化给出的 ≈0.5 对得上吗?" }
+  ],
+  "capsules": [
+    {
+      "id": "dm.demo40", "demo": true, "title": "NGC 3198 · r = 40 kpc", "q": "预测 NGC 3198 在 r = 40 kpc 处的转速", "x": 40, "unit": "km/s",
+      "unlockAt": null,
+      "truth": { "type": "data", "from": 38, "to": 42.5 },
+      "note": "演示胶囊:这一圈的观测(r = 38.2、40.1、42.2 kpc 的 3 个点)早已公开,开封立即对比。真正按日期到期开封的胶囊从 CO₂ 炉(深空 2.7)开始。"
+    }
+  ],
+  "sources": [
+    "Lelli, McGaugh & Schombert 2016, AJ 152, 157 · SPARC Rotmod_LTG(NGC3198_rotmod.dat,D=13.8 Mpc)https://astroweb.case.edu/SPARC/",
+    "伪等温晕:Begeman, Broeils & Sanders 1991, MNRAS 249, 523;de Blok et al. 2008, AJ 136, 2648"
+  ]
+}
