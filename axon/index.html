@@ -313,7 +313,7 @@
     </div>
     <svg id="labLn" aria-hidden="true"><polyline id="labPl" points="" /></svg>
     <button class="x-ui x-labtag" id="labTag"><small id="labS"></small><b id="labN"></b><i id="labA"></i></button>
-    <div class="x-labhud" aria-hidden="true"><p class="lt">AXON LAB<br />v2.6</p><p class="rt" id="labClk"></p><p class="lb" id="labXY"></p><p class="rb" id="labSes"></p><i class="sc"><b id="labSc"></b></i></div>
+    <div class="x-labhud" aria-hidden="true"><p class="lt">AXON LAB<br />v2.7</p><p class="rt" id="labClk"></p><p class="lb" id="labXY"></p><p class="rb" id="labSes"></p><i class="sc"><b id="labSc"></b></i></div>
     <script src="three.min.js"></script>
     <script>
       (function () {
@@ -470,6 +470,7 @@
               vec2 s = sa > uImgAspect ? vec2(1., uImgAspect / sa) : vec2(sa / uImgAspect, 1.);
               vec2 uv = (vUv - .5) * s * .94 + .5;
               uv += uMouse * mix(.03, .006, smoothstep(.05, .65, uv.y));
+              if (uSkinFx > 12.5) uv.x += uMouse.x * .007 * (smoothstep(.27, .08, uv.x) + smoothstep(.73, .92, uv.x)); // v2.7 lab: pillars (foreground) vs back wall
               float sea = smoothstep(.28, .32, uv.y) * (1. - smoothstep(.47, .5, uv.y)) * uKent; // shimmer, ripple, glint: kenting only
               float near = .3 + clamp((.5 - uv.y) / .2, 0., 1.);
               vec2 rp = uv * vec2(40., 120.);
@@ -894,9 +895,9 @@
           transparent: true, depthWrite: false, depthTest: false,
           blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
           uniforms: { tPos: { value: null }, tVel: { value: null }, uTime: { value: 0 }, uSize: { value: 1 }, uAlpha: { value: 0.8 }, uLamp: bgMat.uniforms.uLamp, uBeam: bgMat.uniforms.uBeam,
-            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uSwK: { value: 1 }, uScr: { value: new THREE.Vector3(0, 0, 0) }, uFS: { value: 1 }, uBass: { value: 0 }, uGlit: { value: 0 }, uCtr: velMat.uniforms.uCenter, uWxP: WXP, uLab: velMat.uniforms.uLab, uLabI: { value: 0.15 }, uLabS: { value: 0.85 }, uLC: { value: new THREE.Vector3(0, CY - 0.65, 0) }, uFlash: { value: 0 }, tFl: velMat.uniforms.tFl, uFG: { value: 0 } },
+            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uSwK: { value: 1 }, uScr: { value: new THREE.Vector3(0, 0, 0) }, uFS: { value: 1 }, uBass: { value: 0 }, uGlit: { value: 0 }, uCtr: velMat.uniforms.uCenter, uWxP: WXP, uLab: velMat.uniforms.uLab, uLabI: { value: 0.15 }, uLabS: { value: 0.85 }, uLC: { value: new THREE.Vector3(0, CY - 0.65, 0) }, uFlash: { value: 0 }, tFl: velMat.uniforms.tFl, uFG: { value: 0 }, uSh: { value: 1 } },
           // Liquid metal: soft sphere sprites lit in the fragment stage (sky gradient + soft band + clean spec + Fresnel rim); overlap reads as one surface.
-          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN, uFS; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep, uSwK, uBass, uGlit; uniform vec3 uScr, uCtr; uniform vec2 uWxP; attribute vec2 ref; uniform float uLab, uLabI, uLabS, uFlash; uniform vec3 uLC; uniform sampler2D tFl; uniform float uFG;
+          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN, uFS; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep, uSwK, uBass, uGlit; uniform vec3 uScr, uCtr; uniform vec2 uWxP; attribute vec2 ref; uniform float uLab, uLabI, uLabS, uFlash; uniform vec3 uLC; uniform sampler2D tFl; uniform float uFG, uSh;
             varying vec3 vBase, vRim, vGl; varying float vPS, vBlur, vLb, vMy;
             float fold(vec3 d){ return sin(5.1 * d.x + 1.3 * sin(3.7 * d.z)) * sin(4.3 * d.y + 1.7 * sin(2.9 * d.x)) * sin(4.7 * d.z + 1.1 * sin(3.3 * d.y)); }
             void main(){
@@ -911,7 +912,7 @@
               float bm = beamAt(gl_Position.xy / gl_Position.w * .5 + .5, uLamp, uBeam), st = uTime - uShock.w;
               float sh = st < 1.2 ? exp(-pow((length(p - uShock.xyz) - st * 3.5) * 2., 2.)) * exp(-st * 2.) : 0.;
               vGl = bm * vec3(.22, .17, .11) + sw * uSwK * vec3(.3, .27, .22) + sh * .25 + smoothstep(1., 4., length(v)) * .06 + uGlit * step(.9, h(ref + floor(uTime * 12.) * .173)) * vec3(.55, .5, .42); // v1.3: treble glitter
-              float fg = uFG > 0. ? smoothstep(.25, 2.5, length(texture2D(tFl, gl_Position.xy / gl_Position.w * .5 + .5).xy)) * uFG : 0.; vGl += fg * vec3(.12, .13, .16); // v2.6 shake-glow
+              float fg = uFG > 0. ? smoothstep(.25, 2.5, length(texture2D(tFl, gl_Position.xy / gl_Position.w * .5 + .5).xy)) * uFG : 0.; vGl += fg * vec3(.084, .091, .112); // v2.6 shake-glow (v2.7: −30%)
               vBlur = smoothstep(.6, 2.6, abs(-mv.z - 6.));
               vPS = max(uSize * uFS * (2.1 + .7 * h(ref + 9.)) * (1. + vBlur * .5) / -mv.z, 2.);
               float wh = h(ref + 31.); // v1.5 weather sprites (same hash as the sim)
@@ -921,7 +922,13 @@
                 float F = .8 * fold(dn * .55) + fold(dn) + .35 * fold(dn * 2.3), top = (.45 + .45 * smoothstep(-.6, .9, dn.y + .25 * dn.z)) * (1. - .3 * smoothstep(.3, .95, dn.y)); // v2.5: top light one step down (was .45 + .55, no cap)
                 float sh = (.15 + .85 * smoothstep(-.45, .5, F)) * top * top * mix(.3, 1.1, smoothstep(.55, 1., L));
                 float tw = step(.93, h(ref + 51.)) * pow(.5 + .5 * sin(uTime * (1.5 + 3. * h(ref + 52.)) + h(ref + 53.) * 60.), 8.) * 2.5;
-                vLb = uLabI * (sh + tw + smoothstep(.5, 3., length(v)) * .6) * (1. + 1.4 * uFlash + .8 * fg); vPS = max(vPS * uLabS, 1.2); }
+                float vl = length(v), bri = sh + tw + smoothstep(.5, 3., vl) * .6;
+                if (uSh > .5) { // v2.7 volume: top lit (capped), bottom + back-lit side darker, core self-shadow, fast flyers dimmer, sparse idle sparkle
+                  float lit = (.36 + .64 * smoothstep(-.75, .8, dn.y + .2 * dn.z)) * (1. - .3 * smoothstep(.4, .95, dn.y)), bk = mix(.4, 1., smoothstep(-.7, .45, dn.z));
+                  float co = smoothstep(.25, 1., L); co = .14 + .86 * co * co;
+                  float sp = step(.988, h(ref + 57.)) * (1. - smoothstep(.1, .5, vl)) * pow(.5 + .5 * sin(uTime * (2. + 3. * h(ref + 58.)) + h(ref + 59.) * 80.), 30.) * 4.;
+                  bri = mix((.15 + .85 * smoothstep(-.45, .5, F)) * lit * lit * bk * co * 1.3, sh, smoothstep(1.25, 2.2, L)) * (1. - .4 * smoothstep(.6, 3., vl)) + tw * .4 + sp; } // strays far from the cloud keep the v2.6 look
+                vLb = uLabI * bri * (1. + 1.4 * uFlash + .56 * fg); vPS = max(vPS * uLabS, 1.2); }
               gl_PointSize = vPS;
             }`,
           fragmentShader: `uniform float uAlpha, uN, uLab; varying vec3 vBase, vRim, vGl; varying float vPS, vBlur, vLb, vMy;
@@ -2063,7 +2070,7 @@
         // Grid / iterations follow the quality tier: high 128² × 6 · mid 96² × 5 · low 64² × 2. Velocity is in NDC/s. Pointer / first-finger speed injects it;
         // the sim (wind), the particle glow and the lab rain sample it. Gain per world: lab 1 · kenting 0.35 (keeps its feel) · others 0.7.
         // Fast swipe (> 1.5 screen-heights/s) drops a gust ring on the lab pool / kenting sea: cooldown 0.35 s, ≤ 6 live. No half-float target → fluid off (old spring + noise only).
-        const FL = { ok: renderer.capabilities.isWebGL2 && (renderer.extensions.has("EXT_color_buffer_float") || renderer.extensions.has("EXT_color_buffer_half_float")), user: 1, res: 0, it: 0, lx: 0, ly: 0, lm: false, gt: -9, gc: 0, gi: 0, k: 0, on: false, gth: 1.5 };
+        const FL = { ok: renderer.capabilities.isWebGL2 && (renderer.extensions.has("EXT_color_buffer_float") || renderer.extensions.has("EXT_color_buffer_half_float")), user: 1, res: 0, it: 0, lx: 0, ly: 0, lm: false, gt: -9, gc: 0, gi: 0, k: 0, on: false, gth: 1.5, cap: 0.06 };
         const flRes = new THREE.Vector2(1, 1), FLK = ["v0", "v1", "d", "p0", "p1"], _fo = new THREE.Vector3(), _fa = new THREE.Vector3(), _fb = new THREE.Vector3();
         const flRT = (n, t) => new THREE.WebGLRenderTarget(n, n, { type: t || THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: t ? THREE.NearestFilter : THREE.LinearFilter, magFilter: t ? THREE.NearestFilter : THREE.LinearFilter, depthBuffer: false, stencilBuffer: false });
         const flM = (fs, u) => new THREE.ShaderMaterial({ depthTest: false, depthWrite: false, uniforms: Object.assign({ uR: { value: flRes } }, u), vertexShader: quadVS,
@@ -2101,6 +2108,7 @@
           if (!FL.on) { vu.uFK.value = 0; ptMat.uniforms.uFG.value = 0; rainMat.uniforms.uFR.value = 0; FL.lm = false; return; }
           const dt = Math.min(raw, 1 / 30), au = flAdv.uniforms, x = mouse.x * 0.5 + 0.5, y = mouse.y * 0.5 + 0.5, sN = pSpd / innerHeight; // speed in screen heights / s
           const inj = hasMouse && FL.lm && !drawOn && !twoF && sN > 0.05;
+          { const dx = x - FL.lx, dy = y - FL.ly, sl = Math.hypot(dx, dy); if (sl > FL.cap) { FL.lx = x - (dx * FL.cap) / sl; FL.ly = y - (dy * FL.cap) / sl; } } // v2.7: per-frame stroke cap (slow device → no screen-long splat)
           au.tV.value = FL.v0.texture; au.uDt.value = dt; au.uDis.value = Math.exp(-1.6 * dt); au.uAsp.value = innerWidth / innerHeight; au.uS.value.set(FL.lx, FL.ly, x, y);
           au.uF.value.set((pvx * 2) / innerWidth, (-pvy * 2) / innerHeight, inj ? 0.03 + 0.05 * Math.min(1, sN / 3) : 0);
           FL.lx = x; FL.ly = y; FL.lm = hasMouse;
@@ -2116,7 +2124,7 @@
           _fo.setFromMatrixPosition(points.matrixWorld); const hh = camera.position.distanceTo(_fo) * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), o = points.worldToLocal(_fa.copy(_fo));
           vu.uFX.value.copy(points.worldToLocal(_fb.setFromMatrixColumn(camera.matrixWorld, 0).multiplyScalar(hh * camera.aspect).add(_fo))).sub(o);
           vu.uFY.value.copy(points.worldToLocal(_fb.setFromMatrixColumn(camera.matrixWorld, 1).multiplyScalar(hh).add(_fo))).sub(o);
-          vu.tFl.value = FL.v0.texture; vu.uFK.value = 2.2 * FL.k; ptMat.uniforms.uFG.value = FL.k; rainMat.uniforms.uFR.value = skin.lab ? 1 : 0;
+          vu.tFl.value = FL.v0.texture; vu.uFK.value = 1.6 * FL.k; // v2.7: was 2.2 ptMat.uniforms.uFG.value = FL.k; rainMat.uniforms.uFR.value = skin.lab ? 1 : 0;
           // Gust ring: cursor → plate uv (same mapping as the plate shader), dropped onto the water straight below it.
           if (inj && (skin.lab || skin.kent) && sN > FL.gth && simT - FL.gt > 0.35) {
             const sa = bu.uRes.value.x / bu.uRes.value.y, ia = bu.uImgAspect.value, sx = sa > ia ? 1 : sa / ia, sy = sa > ia ? ia / sa : 1;
@@ -2169,6 +2177,42 @@
             cU.uB.value = 1.5 * (1 + 0.8 * ptMat.uniforms.uFlash.value); cU.tA.value = BL.f.texture; cU.tB.value = BL.a.texture; cU.tC.value = BL.c.texture; pass(blComp, null);
           } catch (e) { BL.ok = false; renderer.setRenderTarget(null); renderer.render(scene, camera); }
         }
+        // v2.7 ATMOS (lab only): one additive full-screen pass after the cloud — 3 slanted light shafts from the ceiling grid (slow breathing) + a noise mist
+        // hugging the pool surface (slow drift) — plus floating dust motes (screen-space points, brighter inside the shafts, depth parallax). Plate uv = same mapping as the plate.
+        // Tiers: high shafts + mist + 1500 dust · mid shafts + mist + 800 · low shafts only. AXON_ATMOS() → layer switches; AXON_ATMOS(0/1) all atmosphere + volume shading off / on.
+        const AT = { user: 1, sh: 0, mi: 0, n: 0, max: 1500 };
+        const ATG = HASH + `float gl(float d, float w){ return exp(-d * d / (w * w)); }
+          float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1., 0.)), f.x), mix(h(i + vec2(0., 1.)), h(i + 1.), f.x), f.y); }
+          vec2 puv(vec2 v, vec2 R, float ia, vec2 m){ float sa = R.x / R.y; vec2 s = sa > ia ? vec2(1., ia / sa) : vec2(sa / ia, 1.); vec2 uv = (v - .5) * s * .94 + .5; return uv + m * mix(.03, .006, smoothstep(.05, .65, uv.y)); }
+          float shaft(vec2 uv, float t){ if (uv.y > .64) return 0.; float d = .615 - uv.y, u = uv.x - d * .42; // light leaves the grid underside and slants down-right
+            float s = gl(u - .43, .02) * (.62 + .38 * sin(t * .37)) + gl(u - .565, .034) * (.58 + .42 * sin(t * .29 + 2.1)) + .7 * gl(u - .69, .016) * (.6 + .4 * sin(t * .45 + 4.));
+            return s * smoothstep(.64, .6, uv.y) * mix(.3, 1., smoothstep(.12, .6, uv.y)) * smoothstep(.1, .2, uv.y) * (.72 + .28 * vn(vec2(u * 70., d * 4. - t * .06))); }
+`;
+        const atU = { uRes: bgMat.uniforms.uRes, uMouse: bgMat.uniforms.uMouse, uImgAspect: bgMat.uniforms.uImgAspect, uTime: bgMat.uniforms.uTime, uA: { value: 0 }, uSh: { value: 1 }, uMi: { value: 1 }, uPR: { value: 1 } };
+        const atAdd = { transparent: true, depthTest: false, depthWrite: false, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, uniforms: atU };
+        const atMat = new THREE.ShaderMaterial(Object.assign({ vertexShader: quadVS, fragmentShader: ATG + `uniform vec2 uRes, uMouse; uniform float uImgAspect, uTime, uA, uSh, uMi; varying vec2 vUv;
+          void main(){ vec2 uv = puv(vUv, uRes, uImgAspect, uMouse); vec3 c = vec3(.6, .68, .84) * shaft(uv, uTime) * .1 * uSh;
+            if (uMi > .5 && uv.y < .32) { vec2 q = vec2(uv.x * 7., uv.y * 30.); float n = .6 * vn(q + vec2(uTime * .05, 0.)) + .4 * vn(q * 2.3 + vec2(-uTime * .09, uTime * .03));
+              c += vec3(.5, .56, .66) * (gl(uv.y - .228, .04) + .55 * gl(uv.y - .165, .045)) * smoothstep(.3, .85, n + .1) * .16; } // mist on the pool, thickest at the far rim
+            gl_FragColor = vec4(c * uA, 0.); }` }, atAdd));
+        const atDust = (() => { const g = new THREE.BufferGeometry(), A = new Float32Array(AT.max * 4); for (let i = 0; i < A.length; i++) A[i] = rnd();
+          g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(AT.max * 3), 3)); g.setAttribute("a", new THREE.BufferAttribute(A, 4));
+          const m = new THREE.Points(g, new THREE.ShaderMaterial(Object.assign({ vertexShader: ATG + `attribute vec4 a; uniform vec2 uRes, uMouse; uniform float uImgAspect, uTime, uA, uPR; varying float vA;
+            void main(){ float z = a.z; vec2 p = vec2(fract(a.x + uTime * (.003 + .005 * a.w) + .008 * sin(uTime * .3 + a.y * 20.)), fract(a.y + uTime * (.0015 + .003 * z) * (a.w > .5 ? 1. : -1.)));
+              p += uMouse * (.003 + .016 * z); vec2 uv = puv(p, uRes, uImgAspect, uMouse); // near motes drift more (parallax)
+              vA = uA * smoothstep(.13, .2, uv.y) * (.06 + 1.5 * shaft(uv, uTime)) * (.4 + .6 * pow(.5 + .5 * sin(uTime * (.8 + 2. * a.w) + a.x * 50.), 2.)) * (.5 + .5 * z);
+              gl_Position = vec4(p * 2. - 1., 0., 1.); gl_PointSize = (1. + 2.2 * z) * uPR; }`,
+            fragmentShader: `varying float vA; void main(){ vec2 c = gl_PointCoord - .5; float a = exp(-dot(c, c) * 14.) * vA; gl_FragColor = vec4(vec3(.85, .9, 1.) * a, 0.); }` }, atAdd)));
+          m.frustumCulled = false; m.renderOrder = 1; return m; })();
+        const atScene = new THREE.Scene(); { const q = new THREE.Mesh(quad, atMat); q.frustumCulled = false; atScene.add(q, atDust); }
+        const atSet = () => { const lo = QS.cur === "low"; AT.sh = AT.user; AT.mi = AT.user && !lo ? 1 : 0; AT.n = AT.user && !lo ? (QS.cur === "mid" ? 800 : AT.max) : 0; ptMat.uniforms.uSh.value = AT.user; };
+        function atRender() {
+          const a = skin.lab && !AR.on && AT.user ? velMat.uniforms.uLab.value * bgMat.uniforms.uFade.value : 0; atSet();
+          atU.uA.value = a; atU.uSh.value = AT.sh; atU.uMi.value = AT.mi; atU.uPR.value = renderer.getPixelRatio(); atDust.geometry.setDrawRange(0, AT.n); atDust.visible = AT.n > 0;
+          if (a > 0.003) { renderer.setRenderTarget(null); renderer.render(atScene, orthoCam); }
+        }
+        window.AXON_ATMOS = (on) => { if (on != null) AT.user = on ? 1 : 0; atSet();
+          const v = !!(AT.user && skin.lab && !AR.on); return { on: v, user: AT.user, shade: v, shafts: v && !!AT.sh, mist: v && !!AT.mi, dust: v && AT.n > 0, dustN: v ? AT.n : 0, q: QS.cur, a: +atU.uA.value.toFixed(3) }; };
         function labStep(raw) {
           const on = !!skin.lab, lu = velMat.uniforms.uLab, mu = mirMat.uniforms, lowQ = bgMat.uniforms.uLoQ.value > 0.5;
           lu.value += ((on ? 1 : 0) - lu.value) * (1 - Math.exp(-6 * raw));
@@ -2619,7 +2663,7 @@
             renderer.render(bgScene, orthoCam);
           }
           ptMat.uniforms.tPos.value = pos[cur].texture; ptMat.uniforms.tVel.value = vel[cur].texture; ptMat.uniforms.uTime.value = time;
-          labRender();
+          labRender(); atRender(); // v2.7 lab atmosphere
           if (dlSnap) { const f = dlSnap; dlSnap = null; f(); } // v1.9: read the WebGL canvas in the frame it was drawn (no preserveDrawingBuffer)
           if (rec && rec.draw) rec.draw();
           requestAnimationFrame(frame);
