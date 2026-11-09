@@ -30,5 +30,6 @@
  "nv.l2.icecube.json",
  "ls.l2.optogenetics.json",
  "ef.l4.chirality.json",
- "sh.l2.voyager.json"
+ "sh.l2.voyager.json",
+ "nv.l2.cold.json"
 ]

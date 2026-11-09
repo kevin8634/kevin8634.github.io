@@ -113,3 +113,10 @@
 | kepler.json 胶囊真值 | 1 Ceres a = 2.765552595 au、恒星周期 1679.853120 天(轨道解 48,历元 JD 2461200.5);134340 Pluto a = 39.58862939 au、恒星周期 90981.716 天(历元 JD 2457588.5) | NASA/JPL Small-Body Database API(https://ssd-api.jpl.nasa.gov/sbdb.api,full-prec=1,2026-11-09 取) | NASA/JPL 公开数据,署名 NASA/JPL SBDB;仅数值摘录 |
 | deep/forge/kepler.json、engine.js(深空 2.5 增补 pow/lin 核、factor 修正因子、点名、过关参数区间)、forge.js(炉选择、对数轴、标签避让) | 开普勒炉配置与炼炉引擎/界面增补 | 创世计划(AI 协助);数值由 docs/forge_kepler_check.mjs 复算 | 自有,CC BY 4.0;模型曲线、拟合值为本站计算,**非观测**;不使用 NASA/JPL logo,不暗示背书 |
 - 旧台账 deep/data/nasa.planets.kepler.json(NSSDCA,已取对数、无误差列、周期仅 3–4 位有效数字,海王星 59,800 天与 a^1.5 相差约 1.3%)继续供 1.2 星系层建模卡使用,**炼炉不用它**。
+
+## 深空 2.5.1「前沿 · 最冷 9.7 pK」卡与冷原子实验柜(2026-11-09,总指挥)
+| 台账 id / 文件 | 内容 | 来源 | 许可 / 署名 |
+|---|---|---|---|
+| frontier.cold.ladder | 百年温度阶梯 7 级:室温 300 K(约定值)、液氦 4.2 K(1908)、宇宙微波背景 2.72548 K、首个 BEC 约 170 nK(1995)、地面 450 pK(2003)、不来梅落塔 38 pK(2021)、中国空间站 9.7 pK(2026);每行 source、url 列出处 | NIST TRC《Cryogenics》(Radebaugh);NobelPrize.org(1913 昂内斯 Facts、2001 物理奖 popular information);Fixsen 2009 ApJ 707, 916(arXiv:0911.1955);Leanhardt et al. 2003 Science 301, 1513;Deppner et al. 2021 PRL 127, 100401;Xiong et al. 2026 Science doi:10.1126/science.aea5324(均 2026-11-09 取);经 docs/cold_build.py 生成 | 事实数值摘录(各行注明出处),整理与 lgT 列为本站作品,CC BY 4.0;不转载原文与图片 |
+| deep/cards/nv.l2.cold.json | 宙律星系层「前沿 · 最冷 9.7 pK」卡 | 文字 AI 撰写,数值由 docs/cold_build.py 复算(CODATA 2018 常数,⁸⁷Rb 质量 86.909180527 u);事实核实自 Science 论文摘要、北京大学新闻网 2026-11-06、中国科学院转载光明日报 2026-11-07、Science 新闻 2026-11-05、新华社英文 2026-11-06、PRL 127, 100401 全文 | 自有,CC BY 4.0;卡内 sources 逐条列出处;只引用事实数值;**不使用北大/中科院/央媒的视频、图片与机构 logo**,不暗示背书 |
+| deep/front/cold.js | 冷原子实验柜(温度阶梯总图、重力开关、光强滑杆、两级光阱、物质波与「一朵波」、声音) | 创世计划原创代码(AI 协助),Canvas 2D 程序绘制 | 自有,CC BY 4.0;画面、原子个数与运动、起点 1 μK、地面「托不住」阈值均为**教学示意,非观测**;声音由 Web Audio 实时合成,默认静音 |
