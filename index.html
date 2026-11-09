@@ -350,6 +350,8 @@
       #netChip[aria-pressed="true"] { border-color: #7fe3a8; color: #7fe3a8; }
       @media (prefers-reduced-motion: reduce) { #netSvg .rt { animation: none; } }
       @media (max-width: 860px) { .passport-btn#netChip { top: 54px; left: 18px; padding: 3px 10px; font-size: 11.5px; min-height: 0; height: 26px; line-height: 1; z-index: 31; } #netPanel { top: auto; bottom: 124px; left: 12px; right: 12px; width: auto; padding: 10px 14px; font-size: 12.5px; } }
+      /* 门户 v2.6.1：横屏矮屏（如 568×320）星网面板贴底、限高、内部滚动，顶部留在星网芯片（54+26px）之下完整可见 */
+      @media (max-height: 480px) and (orientation: landscape) { #netPanel { top: auto; bottom: 8px; max-height: calc(100vh - 96px); max-height: calc(100dvh - 96px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; } }
       /* 星桥 */
       .x-br { position: fixed; inset: 0; z-index: 9; background: #03050d; opacity: 0; transition: opacity .8s ease; touch-action: none; }
       .x-br.on { opacity: 1; }
@@ -3777,6 +3779,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "门户 v2.6.1", d: "2026-11-09", t: "横屏矮屏下星网面板完整显示、可滚动" },
         { w: "gn", v: "深空 2.3", d: "2026-11-09", t: "深空层天枢星系层新增「前沿 · 一光日」卡：旅行者 1 号将在 11 月 18 日北京时间 18:16 离地球一光日（约 259.02 亿千米），从光速和 17 千米/秒算出信号要走一整天，拖动日期看它越飞越远，信号往返要多久。" },
         { w: "gn", v: "深空 2.2", d: "2026-11-09", t: "第六条跨世界航线「你身上的碘从哪来」点亮：宙律算出恒星为什么炼不出碘，元素工坊看中子雨怎样沿 A=127 一路衰变成碘-127，天枢回到 GW170817 中子星并合与千新星，生命源码数一数你甲状腺里的碘原子。" },
         { w: "gn", v: "深空 2.1", d: "2026-11-09", t: "深空层新增三张「前沿 · 2026 诺奖」卡：宙律用光到达的先后反推冰立方中微子的方向，生命源码拟合光遗传学通道的光强饱和曲线，元素工坊在星穹层追问生命为什么只用左旋氨基酸；同一层可以有多张卡，侧栏一键切换。" },
