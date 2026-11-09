@@ -204,6 +204,23 @@
       #bHelp { font-size: 15px; } #hlpTip { position: fixed; right: 16px; top: 104px; margin: 0; padding: 7px 14px; border-radius: 999px; background: rgba(10,14,24,.72); border: 1px solid rgba(255,255,255,.22); color: #fff; font: 300 11px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .12em; opacity: 0; transition: opacity .6s; pointer-events: none; cursor: pointer; }
       #hlpTip.x-on { opacity: 1; pointer-events: auto; } .x-pre .x-hlp, .x-pre #hlpTip, .x-kiosk .x-hlp, .x-kiosk #hlpTip, .x-fallback #hlpTip, .x-fallback .x-hlp { display: none !important; }
       @media (max-width: 759px) { .x-hlp { top: 50px; transform: translateX(-50%); max-height: calc(100vh - 62px); padding: 10px 12px 12px; font-size: 11px; } #bHelp { display: none; } #hlpTip { right: 8px; top: 98px; } }
+      /* v2.3 AXON LAB */
+      .x-intro.x-blk { background: #000; } .x-intro svg { display: none; } .x-intro p.x-hud { letter-spacing: .3em; }
+      .x-ses { position: absolute; left: 18px; top: 16px; font: 300 11px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .22em; color: rgba(255,255,255,.5); }
+      .x-pct { font: 200 clamp(28px, 4vw, 44px)/1 system-ui, -apple-system, "Helvetica Neue", sans-serif; letter-spacing: .06em; color: rgba(255,255,255,.92); font-variant-numeric: tabular-nums; }
+      .x-lab .x-tl, .x-lab .x-bl, .x-lab .x-br, .x-lab .x-tod { display: none; }
+      .x-labhud { display: none; transition: opacity 1.2s; } .x-lab .x-labhud { display: block; } .x-pre .x-labhud { opacity: 0; }
+      .x-labhud p { position: fixed; margin: 0; font: 300 10px/1.7 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .2em; color: rgba(220,228,240,.55); pointer-events: none; }
+      .x-labhud .lt { left: 18px; top: 16px; } .x-labhud .rt { right: 18px; top: 108px; text-align: right; } .x-labhud .lb { left: 18px; bottom: 14px; } .x-labhud .rb { right: 18px; bottom: 14px; text-align: right; }
+      .x-labhud .sc { position: fixed; right: 18px; top: 38vh; width: 1px; height: 24vh; background: rgba(255,255,255,.14); } .x-labhud .sc b { display: block; width: 1px; height: 25%; background: rgba(255,255,255,.75); }
+      #labLn { position: fixed; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity .8s; } #labLn polyline { fill: none; stroke: rgba(230,236,245,.55); stroke-width: 1; }
+      .x-labtag { position: fixed; left: 0; top: 0; margin: 0; padding: 0; border: 0; background: none; color: #eef2f8; text-align: left; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .8s; }
+      .x-labtag.x-on, #labLn.x-on { opacity: 1; } .x-labtag.x-on { pointer-events: auto; } .x-pre .x-labtag, .x-pre #labLn { opacity: 0; }
+      .x-labtag small { display: block; font: 300 10px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .22em; color: rgba(220,228,240,.6); }
+      .x-labtag b { display: block; margin: 4px 0 8px; font: 200 clamp(26px, 3.4vw, 48px)/1.05 system-ui, -apple-system, "Helvetica Neue", sans-serif; letter-spacing: .04em; white-space: nowrap; }
+      .x-labtag i { font: 300 11px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-style: normal; letter-spacing: .24em; color: rgba(255,255,255,.8); }
+      .x-labtag:hover i, .x-labtag:focus-visible i { color: #fff; text-decoration: underline; }
+      @media (max-width: 759px) { .x-labhud .lb, .x-labhud .rb { display: none; } .x-labhud .rt { top: 100px; right: 10px; } .x-labhud .lt { left: 10px; top: 10px; } .x-labtag b { font-size: 22px; } .x-labtag small { font-size: 9px; letter-spacing: .12em; } .x-labhud .sc { right: 8px; } .x-ses { left: 12px; top: 12px; } }
     </style>
   </head>
   <body class="x-pre">
@@ -291,8 +308,12 @@
     </div>
     <div class="x-intro x-ui" id="intro">
       <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" stroke="rgba(255,255,255,.15)" /><circle id="ring" cx="50" cy="50" r="46" stroke="rgba(255,255,255,.8)" stroke-dasharray="289" stroke-dashoffset="289" /></svg>
-      <p class="x-hud" data-i18n="hold">按住进入 · HOLD TO ENTER</p>
+      <span class="x-ses" id="ses">SESSION 0x0000-00</span><b class="x-pct" id="pct">0%</b>
+      <p class="x-hud" data-i18n="hold">按住进入实验室 · HOLD TO ENTER THE LAB</p>
     </div>
+    <svg id="labLn" aria-hidden="true"><polyline id="labPl" points="" /></svg>
+    <button class="x-ui x-labtag" id="labTag"><small id="labS"></small><b id="labN"></b><i id="labA"></i></button>
+    <div class="x-labhud" aria-hidden="true"><p class="lt">AXON LAB<br />v2.3</p><p class="rt" id="labClk"></p><p class="lb" id="labXY"></p><p class="rb" id="labSes"></p><i class="sc"><b id="labSc"></b></i></div>
     <script src="three.min.js"></script>
     <script>
       (function () {
@@ -309,7 +330,7 @@
           mus: ["音乐 MUSIC", "MUSIC"], m0: ["香水", "Perfume"], m1: ["球鞋", "Sneaker"], m2: ["耳机", "Audio"], m3: ["场景 BGM", "Scene BGM"], gGo: ["生成 GENERATE", "GENERATE"], gLink: ["⧉ 复制专属链接 COPY LINK", "⧉ COPY CLIENT LINK"],
           asp: ["比例 RATIO", "ASPECT RATIO"], gRec: ["● 导出视频 EXPORT 10s", "● EXPORT 10s VIDEO"], gNote: ["先生成，再导出 10 秒视频", "Generate first, then export a 10 s video"], gDl: ["下载 DOWNLOAD", "DOWNLOAD"], gShare: ["分享 SHARE", "SHARE"], dlN: ["若下载无反应：在预览上右键 / 长按另存", "If download does nothing: right-click / long-press the preview to save"],
           dPanT: ["DRAW · 写字", "DRAW"], dClr: ["清除", "Clear"], dSet: ["凝固", "Solidify"], dRec: ["● 导出 10 秒", "● Export 10s"], dEx: ["退出", "Exit"], ctCpM: ["复制邮箱", "Copy email"], ctCpW: ["复制微信", "Copy WeChat"], ctWx: ["微信 WeChat ", "WeChat "],
-          sHint: ["开声音更好看 SOUND ON", "BETTER WITH SOUND ON"], hold: ["按住进入 · HOLD TO ENTER", "HOLD TO ENTER"], sub: ["AXON · 液态金属广告样片 0{n}", "AXON · LIQUID METAL AD SAMPLE 0{n}"],
+          sHint: ["开声音更好看 SOUND ON", "BETTER WITH SOUND ON"], hold: ["按住进入实验室 · HOLD TO ENTER THE LAB", "HOLD TO ENTER THE LAB"], sub: ["AXON · 液态金属广告样片 0{n}", "AXON · LIQUID METAL AD SAMPLE 0{n}"],
           madeFor: ["为 {b} 定制 · AXON STUDIO", "MADE FOR {b} · AXON STUDIO"], endCard: ["定制你的品牌广告 · 联系 AXON", "YOUR BRAND IN LIQUID METAL · CONTACT AXON"],
           mask916: ["正在渲染竖版…", "RENDERING 9:16…"], mask11: ["正在渲染方版…", "RENDERING 1:1…"], mask169: ["正在渲染横版…", "RENDERING 16:9…"],
           cNeed: ["需求", "BRIEF"], cPlan: ["方案", "APPROACH"], cOut: ["成片", "DELIVERED"], caseGo: ["做一支我的 →", "MAKE MINE →"], langT: ["语言 · 中文", "LANGUAGE · ENGLISH"],
@@ -424,6 +445,11 @@
             vec3 band(vec2 p, float y0, float t, vec3 c, float w){ float y = y0 + .025 * sin(p.x * 3. + t * .15) + .012 * sin(p.x * 9. - t * .3);
               return c * (gl(p.y - y, w) * .35 + gl(p.y - y, w * .2)) * (.4 + .6 * pow(.5 + .5 * sin(p.x * 6. - t * .5 + 2. * sin(p.x * 1.7)), 3.)); }
             vec3 aurora(vec2 p, float t, vec3 c){ float y = .8 + .05 * sin(p.x * 2.5 + t * .1); return c * gl(p.y - y, .08) * (.5 + .5 * sin(p.x * 22. + t * .25 + 3. * sin(p.x * 3. + t * .07))) * smoothstep(0., .05, p.y - y + .1); }
+            vec3 labFx(vec2 uv, float t){ float k = clamp((uv.y - .615) / .233, 0., 1.), xl = mix(.36, .268, k), xr = mix(.812, .826, k);
+              float m = smoothstep(xl, xl + .01, uv.x) * smoothstep(xr, xr - .01, uv.x) * smoothstep(.612, .62, uv.y) * smoothstep(.85, .842, uv.y);
+              vec2 g = vec2((uv.x - xl) / (xr - xl) * 54., k * 22.), id = floor(g); float r = h(id);
+              float tw = step(.9, r) * pow(.5 + .5 * sin(t * (1.3 + 2.5 * r) + r * 70.), 10.) * gl(length(fract(g) - .5), .12);
+              return vec3(.72, .82, 1.) * m * (.22 * (.5 + .5 * sin(t * .55 + uv.x * 3.)) + 1.1 * tw); }
             vec3 skinFx(vec2 v, vec2 uv, float sa, float t){ vec2 p = v * vec2(sa, 1.); int k = int(uSkinFx + .5);
               if (k == 0) return band(vec2(p.x, uv.y), .497, t, vec3(1., .72, .42), .012) * (.25 + .75 * uN);
               if (k == 1) return band(p, .1, t, vec3(1.2, .55, .18), .03);
@@ -437,6 +463,7 @@
               if (k == 9) return dots(p, t * .5, vec3(1., .85, .4), 6.) * .7;
               if (k == 10) return band(p, .33, t, vec3(1.1, .7, .35), .025) * .7;
               if (k == 11) return aurora(p, t, vec3(.25, .9, .6));
+              if (k == 13) return labFx(uv, t);
               return aurora(p, t, vec3(.2, .7, 1.)); }
             void main(){
               float sa = uRes.x / uRes.y;
@@ -471,11 +498,13 @@
                 col = mix(col, texture2D(tPlate2, uv2).rgb, pm);
                 pRim = vec3(1., .9, .75) * gl(q - R, .035) * (1. - smoothstep(.75, 1., uPortal)) * step(.001, R);
               }
+              vec3 col0 = col; // v2.3 lab keeps its own cold grade
               float L = dot(col, vec3(.3, .59, .11)), k1 = smoothstep(0., .5, uN), k2 = smoothstep(.45, 1., uN);
               col = mix(col, L * vec3(.55, .68, 1.05), k1 * .75) * (1. - k1 * .35);
               col = mix(col, L * vec3(.16, .2, .36) + vec3(.004, .008, .022), k2);
               float hr = uDayT * 24., dw = smoothstep(4.6, 5.4, hr) * (1. - smoothstep(7.3, 8.2, hr)), dk = smoothstep(16.6, 17.3, hr) * (1. - smoothstep(18.6, 19.3, hr)); // v1.5
               col = mix(col, (L * vec3(1.02, .86, .98) + vec3(.035, .03, .06)) * 1.08, dw * .55); col *= mix(vec3(1.), vec3(1.07, .97, .86), dk * .5);
+              col = mix(col, col0 * vec3(.7, .74, .8), step(12.5, uSkinFx) * .85);
               float Lw = dot(col, vec3(.3, .59, .11));
               col = mix(col, vec3(Lw) * vec3(.86, .9, .96), uWx.x * .45) * (1. - uWx.x * .12);
               col = mix(col, mix(col, vec3(Lw), .5) * vec3(.95, 1., 1.08) + .05, uWx.y * .3);
@@ -772,9 +801,9 @@
           uniforms: { tPos: { value: null }, tVel: { value: null }, tTarget: { value: null }, tPrev: { value: null }, uMorphT: { value: -9 }, uRes: { value: simRes }, uMouse: { value: new THREE.Vector3(99, 99, 0) }, uDown: { value: 0 }, uTime: { value: 0 }, uDt: { value: 0.016 },
             uShock: { value: new THREE.Vector4(0, 0, 0, -9) }, uGather: { value: 0 }, uSpray: { value: 0 }, uLift: { value: 0 }, uMVel: { value: new THREE.Vector3() }, uMSpd: { value: 0 },
             // Work hooks: lean toward a hover target, nozzle mist, beat pulse about uCenter.
-            tLean: { value: null }, uLean: { value: 0 }, uMist: { value: 0 }, uPen: { value: 0 }, uNozzle: { value: new THREE.Vector3(...NOZZLE) }, uPulse: { value: 0 }, uFlow: { value: 1 }, uCenter: { value: new THREE.Vector3(0, CY, 0) }, uWxP: WXP },
+            tLean: { value: null }, uLean: { value: 0 }, uMist: { value: 0 }, uPen: { value: 0 }, uNozzle: { value: new THREE.Vector3(...NOZZLE) }, uPulse: { value: 0 }, uFlow: { value: 1 }, uCenter: { value: new THREE.Vector3(0, CY, 0) }, uWxP: WXP, uLab: { value: 0 } },
           vertexShader: quadVS,
-          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel, tTarget, tPrev, tLean; uniform vec2 uRes; uniform vec3 uMouse, uMVel, uNozzle, uCenter; uniform vec4 uShock; uniform float uDown, uTime, uDt, uMorphT, uGather, uSpray, uLift, uMSpd, uLean, uMist, uPulse, uFlow, uPen; uniform vec2 uWxP;
+          fragmentShader: HASH + SPRAY + `uniform sampler2D tPos, tVel, tTarget, tPrev, tLean; uniform vec2 uRes; uniform vec3 uMouse, uMVel, uNozzle, uCenter; uniform vec4 uShock; uniform float uLab, uDown, uTime, uDt, uMorphT, uGather, uSpray, uLift, uMSpd, uLean, uMist, uPulse, uFlow, uPen; uniform vec2 uWxP;
             vec3 pot(vec3 p, float t){ return vec3(sin(p.y * .9 + t * .21) + cos(p.z * .7 - t * .17), sin(p.z * .8 + t * .19) + cos(p.x * .9 + t * .13), sin(p.x * .7 - t * .23) + cos(p.y * .8 + t * .11)); }
             vec3 curl(vec3 p, float t){ vec3 e = vec3(.12, 0., 0.), px = pot(p + e.xyy, t) - pot(p - e.xyy, t), py = pot(p + e.yxy, t) - pot(p - e.yxy, t), pz = pot(p + e.yyx, t) - pot(p - e.yyx, t);
               return vec3(py.z - pz.y, pz.x - px.z, px.y - py.x) / .24; }
@@ -786,8 +815,9 @@
               goal = mix(tg.xyz + (vec3(h(uv + .3), h(uv + .6), h(uv + .9)) - .5) * vec3(10., 6., 4.), goal, uGather);
               goal = mix(goal, texture2D(tLean, uv).xyz, uLean * .18);
               goal = uCenter + (goal - uCenter) * (1. + uPulse * .12);
-              vec3 acc = (goal - p.xyz) * 5.6;
+              float ms_ = mix(1., .55 + .9 * h(uv + 41.), uLab); vec3 acc = (goal - p.xyz) * mix(5.6, 8.5, uLab);
               acc += curl(p.xyz * .5 + .25 * sin(p.yzx * .35 + uTime * .07), uTime * uFlow) * .085 * (.6 + .4 * uFlow);
+              if (uLab > .01) acc += curl(p.xyz * 1.9 + 3.1, uTime * uFlow * 1.6) * .06 * uLab; // v2.3 fine smoke churn
               // Pass-by wake: distance to the cursor's recent path (a capsule trailing behind it).
               vec3 ab = -uMVel * .1; float tt = clamp(dot(p.xyz - uMouse, ab) / max(dot(ab, ab), 1e-5), 0., 1.);
               vec3 d = p.xyz - (uMouse + ab * tt); d.z *= .6;
@@ -817,7 +847,7 @@
               float wh = h(uv + 31.); // v1.5: ~8% fall as mercury rain, ~12% drift as snow
               if (ph < 0. && wh < .08 * uWxP.x) { acc = vec3(0.); v = mix(v, vec3(.35 * sin(uTime * .4) + .15 * (h(uv + 33.) - .5), -5.5 - 2. * h(uv + 34.), 0.), 1. - exp(-9. * uDt)); }
               else if (ph < 0. && wh < .12 * uWxP.y) { acc *= .02; v = mix(v, vec3(.5 * sin(uTime * .5 + wh * 300.), -.6 - .5 * h(uv + 35.), .2 * cos(uTime * .4 + wh * 200.)), 1. - exp(-4. * uDt)); }
-              v += acc * uDt; v *= exp(-3.9 * uDt);
+              v += acc / ms_ * uDt; v *= exp(-mix(3.9, 2.5, uLab) * uDt);
               gl_FragColor = vec4(v, 1.);
             }`,
         });
@@ -843,10 +873,11 @@
           transparent: true, depthWrite: false, depthTest: false,
           blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
           uniforms: { tPos: { value: null }, tVel: { value: null }, uTime: { value: 0 }, uSize: { value: 1 }, uAlpha: { value: 0.8 }, uLamp: bgMat.uniforms.uLamp, uBeam: bgMat.uniforms.uBeam,
-            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uSwK: { value: 1 }, uScr: { value: new THREE.Vector3(0, 0, 0) }, uFS: { value: 1 }, uBass: { value: 0 }, uGlit: { value: 0 }, uCtr: velMat.uniforms.uCenter, uWxP: WXP },
+            uRes: bgMat.uniforms.uRes, uShock: velMat.uniforms.uShock, uN: bgMat.uniforms.uN, uTint: { value: new THREE.Vector3(1, 1, 1) }, uRimC: { value: new THREE.Vector3(1, 1, 1) }, uSweep: { value: -9 }, uSwK: { value: 1 }, uScr: { value: new THREE.Vector3(0, 0, 0) }, uFS: { value: 1 }, uBass: { value: 0 }, uGlit: { value: 0 }, uCtr: velMat.uniforms.uCenter, uWxP: WXP, uLab: velMat.uniforms.uLab, uLabI: { value: 0.15 }, uLabS: { value: 0.85 }, uLC: { value: new THREE.Vector3(0, CY - 0.65, 0) } },
           // Liquid metal: soft sphere sprites lit in the fragment stage (sky gradient + soft band + clean spec + Fresnel rim); overlap reads as one surface.
-          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN, uFS; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep, uSwK, uBass, uGlit; uniform vec3 uScr, uCtr; uniform vec2 uWxP; attribute vec2 ref;
-            varying vec3 vBase, vRim, vGl; varying float vPS, vBlur;
+          vertexShader: HASH + BEAM + `uniform sampler2D tPos, tVel; uniform float uTime, uSize, uN, uFS; uniform vec2 uLamp, uRes; uniform vec3 uBeam; uniform vec4 uShock; uniform vec3 uTint, uRimC; uniform float uSweep, uSwK, uBass, uGlit; uniform vec3 uScr, uCtr; uniform vec2 uWxP; attribute vec2 ref; uniform float uLab, uLabI, uLabS; uniform vec3 uLC;
+            varying vec3 vBase, vRim, vGl; varying float vPS, vBlur, vLb, vMy;
+            float fold(vec3 d){ return sin(5.1 * d.x + 1.3 * sin(3.7 * d.z)) * sin(4.3 * d.y + 1.7 * sin(2.9 * d.x)) * sin(4.7 * d.z + 1.1 * sin(3.3 * d.y)); }
             void main(){
               vec3 p = texture2D(tPos, ref).xyz, v = texture2D(tVel, ref).xyz;
               p = uCtr + (p - uCtr) * (1. + uBass * (.045 + .02 * h(ref + 3.1))); // v1.0: BGM bass → breathing pulse
@@ -863,12 +894,19 @@
               vPS = max(uSize * uFS * (2.1 + .7 * h(ref + 9.)) * (1. + vBlur * .5) / -mv.z, 2.);
               float wh = h(ref + 31.); // v1.5 weather sprites (same hash as the sim)
               if (wh < .08 * uWxP.x) { vPS *= .55; vGl += vec3(.08, .09, .12); } else if (wh < .12 * uWxP.y) { vPS *= .5; vBase = vec3(1.05); vRim = vec3(1.1); vGl += vec3(.25, .27, .3); }
+              vLb = 0.; vMy = 0.;
+              if (uLab > .5) { vec3 q = (p - uLC) / vec3(1.1, .8, .9); float L = length(q); vec3 dn = q / max(L, 1e-3); // v2.3 sulci + top light + inner shade
+                float F = .8 * fold(dn * .55) + fold(dn) + .35 * fold(dn * 2.3), top = .45 + .55 * smoothstep(-.6, .9, dn.y + .25 * dn.z);
+                float sh = (.15 + .85 * smoothstep(-.45, .5, F)) * top * top * mix(.3, 1.1, smoothstep(.55, 1., L));
+                float tw = step(.93, h(ref + 51.)) * pow(.5 + .5 * sin(uTime * (1.5 + 3. * h(ref + 52.)) + h(ref + 53.) * 60.), 8.) * 2.5;
+                vLb = uLabI * (sh + tw + smoothstep(.5, 3., length(v)) * .6); vPS = max(vPS * uLabS, 1.2); }
               gl_PointSize = vPS;
             }`,
-          fragmentShader: `uniform float uAlpha, uN; varying vec3 vBase, vRim, vGl; varying float vPS, vBlur;
+          fragmentShader: `uniform float uAlpha, uN, uLab; varying vec3 vBase, vRim, vGl; varying float vPS, vBlur, vLb, vMy;
             void main(){
               vec2 c = (gl_PointCoord - .5) * vec2(2., -2.); float r2 = dot(c, c);
               if (r2 > 1.) discard;
+              if (uLab > .5) { float a = exp(-r2 * 3.2) * vLb/*M*/; gl_FragColor = vec4((vec3(.88, .92, 1.) * (vBase / vec3(.86, .875, .9)) + vGl * 1.5) * a, a); return; }
               vec3 n = vec3(c, sqrt(1. - r2)), R = vec3(2. * n.z * n.xy, 2. * n.z * n.z - 1.);
               vec3 sky = mix(vec3(.16, .17, .21), mix(vec3(1.3, 1.3, 1.36), vec3(.8, .9, 1.15), uN), smoothstep(-.7, .75, R.y));
               sky += mix(vec3(.75, .7, .62), vec3(.5, .6, .8), uN) * exp(-pow((R.y - .3) * 4.5, 2.));
@@ -1676,7 +1714,9 @@
 
         // Sound: nothing plays until the speaker button is pressed.
         const bgm = document.getElementById("bgm"); let BGM_LIST = ["kenting_dusk_shoreline.m4a", "kenting_dusk.m4a"], bgmIdx = 0;
-        bgm.addEventListener("error", () => { if (bgmIdx === 1) { bgmIdx = 0; bgm.src = BGM_LIST[0]; if (sndOn) bgm.play().catch(() => {}); } }); // 2nd track missing → back to the 1st, never loops
+        let bgmErr = 0; // v2.3: a missing / broken track is skipped; stops after a full round of failures
+        bgm.addEventListener("error", () => { if (++bgmErr >= BGM_LIST.length) return; bgmIdx = (bgmIdx + 1) % BGM_LIST.length; bgm.src = BGM_LIST[bgmIdx]; if (sndOn) bgm.play().catch(() => {}); });
+        bgm.addEventListener("loadedmetadata", () => (bgmErr = 0));
         bgm.addEventListener("ended", () => { bgmIdx = (bgmIdx + 1) % BGM_LIST.length; bgm.src = BGM_LIST[bgmIdx]; if (sndOn) bgm.play().catch(() => {}); });
         const bSnd = document.getElementById("bSnd"), PENTA = [0, 2, 4, 7, 9];
         let ac = null, master, waveG, sndOn = false;
@@ -1746,7 +1786,27 @@
           if (sp > 1100 && b.r > 8 && beads.length < 24) split(b, gvx, gvy);
         });
 
-        // ---------- Skins: 13 worlds, kenting default. kent = lighthouse/sea/ships/birds; dark = meteors + stars ----------
+        // v2.3 LAB forms: volume + surface mixes. FOLD must match fold() in the particle vertex shader (sulci shading).
+        const FOLD = (x, y, z) => Math.sin(5.1 * x + 1.3 * Math.sin(3.7 * z)) * Math.sin(4.3 * y + 1.7 * Math.sin(2.9 * x)) * Math.sin(4.7 * z + 1.1 * Math.sin(3.3 * y));
+        const LAB_Y = CY - 0.65, fuzz = (p, a) => { const o = sdir(), m = a * Math.pow(rnd(), 2); return [p[0] + o[0] * m, p[1] + o[1] * m, p[2] + o[2] * m]; };
+        const gCloud = () => { const d = sdir(), s = rnd(); let r = 1 + 0.12 * FOLD(0.55 * d[0], 0.55 * d[1], 0.55 * d[2]) + 0.15 * FOLD(d[0], d[1], d[2]) + 0.05 * FOLD(2.3 * d[0], 2.3 * d[1], 2.3 * d[2]);
+          r *= 1 - 0.09 * Math.exp(-((d[0] / 0.08) ** 2)) * Math.max(d[1], 0); // faint midline groove
+          const k = s < 0.66 ? 1 - Math.pow(rnd(), 2.5) * 0.16 : s < 0.92 ? Math.cbrt(rnd()) * 0.84 : 1.03 + Math.pow(rnd(), 2) * 0.45; // dense skin · sparse core · edge flecks
+          return [d[0] * r * k * 1.1, d[1] * r * k * 0.8 + LAB_Y, d[2] * r * k * 0.9]; };
+        const gTri = () => { const V = [[-0.85, -0.6], [0.85, -0.6], [0, 0.85]], s = rnd(); let x, y, z;
+          if (s < 0.55) { const e = (rnd() * 3) | 0, t = rnd(), A = V[e], B = V[(e + 1) % 3]; x = A[0] + (B[0] - A[0]) * t; y = A[1] + (B[1] - A[1]) * t; z = (rnd() - 0.5) * 0.4; }
+          else { let u = rnd(), v = rnd(); if (u + v > 1) { u = 1 - u; v = 1 - v; } x = -0.85 + 1.7 * u + 0.85 * v; y = -0.6 + 1.45 * v; z = (rnd() < 0.5 ? -0.2 : 0.2) * (s < 0.8 ? 1 : rnd()); }
+          return fuzz([x, y + LAB_Y, z], 0.05); };
+        const sq = (w) => { const t = rnd() * 4, f = t | 0, u = (t - f) * 2 - 1; return f === 0 ? [w, u * w] : f === 1 ? [-w, u * w] : f === 2 ? [u * w, w] : [u * w, -w]; };
+        const gTower = () => { const s = rnd(); let y = -0.85 + rnd() * 1.8, w = 0.3 - 0.08 * Math.max(0, y - 0.5), q;
+          if (s < 0.06) return fuzz([0, 0.95 + rnd() * 0.35 + LAB_Y, 0], 0.02); // spire
+          if (s < 0.56) q = sq(w); else if (s < 0.78) { y = -0.85 + Math.round((y + 0.85) / 0.15) * 0.15; w = 0.3 - 0.08 * Math.max(0, y - 0.5); q = sq(w * 1.06); } else q = [(rnd() * 2 - 1) * w, (rnd() * 2 - 1) * w];
+          return fuzz([q[0], y + LAB_Y, q[1]], 0.03); };
+        const gMap = () => { const s = rnd(); let x = (rnd() * 2 - 1) * 1.3, z = (rnd() * 2 - 1) * 0.85;
+          if (s < 0.6) { if (rnd() < 0.5) x = Math.round(x / 0.13) * 0.13; else z = Math.round(z / 0.13) * 0.13; }
+          const y = 0.16 * Math.sin(x * 2.3 + 0.6) * Math.cos(z * 3.1) + 0.1 * Math.exp(-((x - 0.4) ** 2 + (z + 0.1) ** 2) * 6) + (s < 0.85 ? 0 : rnd() * 0.12);
+          return tilt(fuzz([x, y, z], 0.02), 0.55, LAB_Y + 0.05); };
+        // ---------- Skins: 14 worlds (v2.3: + lab, the default). kent = lighthouse/sea/ships/birds; dark = meteors + stars ----------
         const SK = (id, zh, en, tint, rim, dark) => ({ id, zh, en, plate: `skin_${id}.jpg?v=0.9.1`, bgm: [`music/skin_${id}_1.m4a`, `music/skin_${id}_2.m4a`], tint, rim, kent: false, dark });
         const SKINS = [{ id: "kenting", zh: "垦丁", en: "KENTING", plate: "kenting_plate.jpg", bgm: ["kenting_dusk_shoreline.m4a", "kenting_dusk.m4a"], tint: [1, 1, 1], rim: [1, 1, 1], kent: true, dark: false },
           SK("foundry", "磁液铸造厅", "FOUNDRY", [1.15, 0.9, 0.72], [1.3, 0.78, 0.42], true), SK("neural", "AI神经网络", "NEURAL NET", [0.85, 0.9, 1.25], [0.78, 0.66, 1.3], true),
@@ -1754,11 +1814,11 @@
           SK("ink", "水墨金属", "INK METAL", [0.86, 0.88, 0.9], [0.9, 0.92, 0.95], false), SK("deepsea", "深海生物光", "DEEP SEA GLOW", [0.75, 1.05, 1.1], [0.4, 1.2, 1.15], true),
           SK("blackhole", "宇宙黑洞", "BLACK HOLE", [0.95, 0.8, 1.2], [1.3, 0.8, 0.45], true), SK("mycelium", "发光菌丝森林", "GLOWING MYCELIUM", [0.8, 1.12, 1], [0.5, 1.3, 1.05], true),
           SK("lotus", "荷塘水银珠", "LOTUS POND", [0.92, 1.05, 0.95], [0.95, 1.1, 1], false), SK("dune", "风吹沙丘", "WIND DUNES", [1.18, 1, 0.78], [1.25, 0.95, 0.65], false),
-          SK("everest", "珠峰", "EVEREST", [0.9, 1, 1.2], [0.85, 1, 1.25], false), SK("yulong", "玉龙雪山蓝月谷", "JADE DRAGON · BLUE MOON VALLEY", [0.8, 1.1, 1.12], [0.5, 1.2, 1.15], false)];
+          SK("everest", "珠峰", "EVEREST", [0.9, 1, 1.2], [0.85, 1, 1.25], false), SK("yulong", "玉龙雪山蓝月谷", "JADE DRAGON · BLUE MOON VALLEY", [0.8, 1.1, 1.12], [0.5, 1.2, 1.15], false), SK("lab", "AXON 实验室", "AXON LAB", [1, 1, 1], [1, 1, 1], false)];
         // Per-skin fluid form + style (size = sprite scale, flow = curl-noise time scale). kenting keeps the wave (shape 0).
         const FORMS = { foundry: ["FERRO · 磁流体", gSpiky, 1.05, 0.8], neural: ["BRAIN · 大脑", gBrain, 0.95, 0.9], neon: ["DNA · 双螺旋", gDNA, 0.9, 1.2], futurelab: ["MÖBIUS · 莫比乌斯", gMobius, 1, 0.8],
           ink: ["INK DRAGON · 墨龙", gInk, 1.05, 0.7], deepsea: ["JELLYFISH · 水母", gJelly, 1, 0.6], blackhole: ["ACCRETION · 吸积盘", gDisk, 0.9, 1.4], mycelium: ["MYCELIUM · 菌丝", gMyc, 0.85, 0.6],
-          lotus: ["LOTUS · 莲", gLotus, 1, 0.7], dune: ["DUNE · 沙丘", gDune, 0.95, 1], everest: ["PEAK · 峰", gPeak, 0.95, 0.7], yulong: ["JADE PEAKS · 雪山湖", gYulong, 0.95, 0.7] };
+          lotus: ["LOTUS · 莲", gLotus, 1, 0.7], dune: ["DUNE · 沙丘", gDune, 0.95, 1], everest: ["PEAK · 峰", gPeak, 0.95, 0.7], yulong: ["JADE PEAKS · 雪山湖", gYulong, 0.95, 0.7], lab: ["CLOUD · 云团", gCloud, 1, 0.55] };
         SKINS.forEach((s) => { const f = FORMS[s.id]; s.form = f ? shapes.push([f[0], f[1]]) - 1 : 0; s.fluid = { tint: s.tint, rim: s.rim, size: f ? f[2] : 1, flow: f ? f[3] : 1 }; });
         // v1.0 portal form: a vertical elliptical door frame (rx .62, ry 1) about the cloud centre.
         const PORTAL_I = shapes.push(["PORTAL · 门", () => { const a = rnd() * 6.283, w = rnd() < 0.85 ? (rnd() + rnd() - 1) * 0.07 : (rnd() - 0.3) * 0.35, r = 1 + w;
@@ -1853,6 +1913,93 @@
           skinPv = s && s.tint ? [new THREE.Vector3(...s.tint), new THREE.Vector3(...(s.rim || s.tint))] : null;
         }
         addEventListener("hashchange", () => { const id = hashSkin(); if (id && id !== skin.id) goSkin(id); });
+        // ---------- v2.3 AXON LAB: default world · project carousel + leader-line label · mirror pool · particle bloom · corner HUD ----------
+        const LAB0 = (() => { const h0 = hashSkin(); return !h0 || h0 === "lab" || skinIdx(h0) < 0; })(), LAB_I = skinIdx("lab");
+        Object.assign(SKINS[LAB_I], { plate: "lab_plate.jpg?v=2.3", bgm: ["music/lab_1.m4a", "music/lab_2.m4a", "music/lab_3.m4a", "music/lab_4.m4a"], lab: true });
+        const TRI_I = shapes.push(["TRIANGLE · 三角", gTri]) - 1, TOW_I = shapes.push(["TOWER · 塔", gTower]) - 1, MAP_I = shapes.push(["MAP · 地图", gMap]) - 1;
+        // [form, name, small line zh/en, coords, action key, leader anchor (local x, y above LAB_Y), click]
+        const LABP = [[SKINS[LAB_I].form, "AXON · NEURAL", ["PRJ_00 · 神经云", "PRJ_00 · NEURAL CLOUD"], "31.23°N 121.47°E", "labV", [1.08, 0.3], () => neuralBurst()],
+          [TRI_I, "01 PERFUME", ["PRJ_01 · 香水", "PRJ_01 · FRAGRANCE"], "48.86°N 2.35°E", "labV", [0.3, 0.35], () => playWork(0)],
+          [TOW_I, "02 SNEAKER", ["PRJ_02 · 球鞋", "PRJ_02 · FOOTWEAR"], "45.52°N 122.68°W", "labV", [0.3, 0.6], () => playWork(1)],
+          [MAP_I, "MAP · WORLDS", ["PRJ_03 · 14 个世界", "PRJ_03 · 14 WORLDS"], "PORTAL", "labM", [1.15, 0.2], () => portalShow(true)]];
+        Object.assign(I18N, { labV: ["→ 查看项目 VIEW PROJECT", "→ VIEW PROJECT"], labM: ["→ 打开传送门 OPEN PORTAL", "→ OPEN PORTAL"],
+          hLab: ["LAB 首屏：默认进入 AXON LAB；空闲时粒子云每 7 秒在 4 个项目形态间变形，点右侧标签查看项目；#skin=kenting 直达垦丁", "LAB home: opens in AXON LAB; when idle the cloud morphs through 4 project forms every 7 s, click the label to view; #skin=kenting goes straight to Kenting"] });
+        const hx = (n) => Array.from({ length: n }, () => "0123456789ABCDEF"[(rnd() * 16) | 0]).join("");
+        const lab = (window.AXON_LAB = { k: 0, t: 0, e: -1, hov: false, hk: -1, ck: 9, ses: `0x${hx(4)}-${hx(2)}` }), pctEl = $("pct");
+        const labTag = $("labTag"), labLn = $("labLn"), labPl = $("labPl"), labS = $("labS"), labN = $("labN"), labA = $("labA"), labSc = $("labSc"), labClk = $("labClk"), labXY = $("labXY");
+        $("ses").textContent = $("labSes").textContent = "SESSION " + lab.ses;
+        if (LAB0) intro.classList.add("x-blk");
+        labTag.addEventListener("click", () => { const P = LABP[lab.k]; if (P && entered) { chime(0.08); labTag.classList.remove("x-on"); P[6](); } });
+        labTag.addEventListener("pointerenter", () => (lab.hov = true)); labTag.addEventListener("pointerleave", () => (lab.hov = false));
+        LANG_HOOKS.push(() => (lab.hk = -1));
+        // Mirror pool: a second draw of ~45% of the particles, flipped about a line chosen so the cloud lands in the pool, squashed, rippled, masked to the water.
+        const mirMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, depthTest: false, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor,
+          uniforms: Object.assign({}, ptMat.uniforms, { uMir: { value: new THREE.Vector3(-0.5, -0.5, -0.7) }, uMirA: { value: 0 } }),
+          vertexShader: ptMat.vertexShader.replace("void main(){", "uniform vec3 uMir; void main(){ if (h(ref + 5.7) > .45) { gl_Position = vec4(0., 0., 9., 1.); gl_PointSize = 0.; return; }")
+            .replace("gl_PointSize = vPS;", "{ float yn = gl_Position.y / gl_Position.w, ym = uMir.x - .55 * (yn - uMir.x); vMy = ym; gl_Position.y = (ym + .0015 * sin(yn * 23. + uTime * 2.1)) * gl_Position.w; gl_Position.x += (.007 * sin(ym * 90. + uTime * 1.6) + .003 * sin(ym * 230. - uTime * 2.3)) * gl_Position.w; vPS *= 1.3; } gl_PointSize = vPS;"),
+          fragmentShader: ptMat.fragmentShader.replace("uniform float uAlpha", "uniform vec3 uMir; uniform float uMirA; uniform float uAlpha")
+            .replace("/*M*/", " * uMirA * smoothstep(uMir.z - .02, uMir.z + .05, vMy) * (1. - smoothstep(uMir.y - .06, uMir.y, vMy))") });
+        const mirPts = new THREE.Points(points.geometry, mirMat); mirPts.frustumCulled = false; mirPts.renderOrder = -1; mirPts.visible = false; points.add(mirPts);
+        // Bloom (lab only, not on the low tier): particles → full-res half-float target → ¼ and ⅛ separable blurs → additive tone-mapped composite.
+        const BL = { ok: true, w: 0, h: 0 }, _bv = new THREE.Vector2(), _lv = new THREE.Vector3();
+        const blRT = (w, h) => new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false, stencilBuffer: false });
+        const blM = (fs, u, add) => new THREE.ShaderMaterial(Object.assign({ depthTest: false, depthWrite: false, uniforms: u, vertexShader: quadVS, fragmentShader: fs },
+          add ? { transparent: true, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor } : {}));
+        const blDown = blM("uniform sampler2D tSrc; uniform vec2 uTx; varying vec2 vUv; void main(){ gl_FragColor = .25 * (texture2D(tSrc, vUv - uTx) + texture2D(tSrc, vUv + uTx) + texture2D(tSrc, vUv + vec2(uTx.x, -uTx.y)) + texture2D(tSrc, vUv - vec2(uTx.x, -uTx.y))); }",
+          { tSrc: { value: null }, uTx: { value: new THREE.Vector2() } });
+        const blBlur = blM("uniform sampler2D tSrc; uniform vec2 uTx; varying vec2 vUv; void main(){ vec4 c = texture2D(tSrc, vUv) * .227; c += (texture2D(tSrc, vUv + uTx * 1.385) + texture2D(tSrc, vUv - uTx * 1.385)) * .316; c += (texture2D(tSrc, vUv + uTx * 3.231) + texture2D(tSrc, vUv - uTx * 3.231)) * .07; gl_FragColor = c; }",
+          { tSrc: { value: null }, uTx: { value: new THREE.Vector2() } });
+        const blComp = blM("uniform sampler2D tA, tB, tC; uniform float uB, uE; varying vec2 vUv; void main(){ vec3 c = texture2D(tA, vUv).rgb * uE, b = texture2D(tB, vUv).rgb * .8 + texture2D(tC, vUv).rgb * 1.1; gl_FragColor = vec4(1. - exp(-(c + b * uB)), 1.); }",
+          { tA: { value: null }, tB: { value: null }, tC: { value: null }, uB: { value: 1.5 }, uE: { value: 1.25 } }, true);
+        function labRender() {
+          if (!skin.lab || !BL.ok || bgMat.uniforms.uLoQ.value > 0.5 || AR.on) { renderer.render(scene, camera); return; }
+          renderer.getDrawingBufferSize(_bv); const w = _bv.x | 0, h = _bv.y | 0;
+          try {
+            if (w !== BL.w || h !== BL.h) { ["f", "a", "b", "c", "d"].forEach((k) => BL[k] && BL[k].dispose()); BL.w = w; BL.h = h;
+              const w4 = Math.max(1, w >> 2), h4 = Math.max(1, h >> 2), w8 = Math.max(1, w >> 3), h8 = Math.max(1, h >> 3);
+              BL.f = blRT(w, h); BL.a = blRT(w4, h4); BL.b = blRT(w4, h4); BL.c = blRT(w8, h8); BL.d = blRT(w8, h8); }
+            renderer.setRenderTarget(BL.f); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(scene, camera);
+            const dU = blDown.uniforms, bU = blBlur.uniforms, cU = blComp.uniforms;
+            dU.tSrc.value = BL.f.texture; dU.uTx.value.set(1.5 / w, 1.5 / h); pass(blDown, BL.a);
+            bU.tSrc.value = BL.a.texture; bU.uTx.value.set(4 / w, 0); pass(blBlur, BL.b);
+            bU.tSrc.value = BL.b.texture; bU.uTx.value.set(0, 4 / h); pass(blBlur, BL.a);
+            dU.tSrc.value = BL.a.texture; dU.uTx.value.set(4 / w, 4 / h); pass(blDown, BL.c);
+            bU.tSrc.value = BL.c.texture; bU.uTx.value.set(8 / w, 0); pass(blBlur, BL.d);
+            bU.tSrc.value = BL.d.texture; bU.uTx.value.set(0, 8 / h); pass(blBlur, BL.c);
+            cU.tA.value = BL.f.texture; cU.tB.value = BL.a.texture; cU.tC.value = BL.c.texture; pass(blComp, null);
+          } catch (e) { BL.ok = false; renderer.setRenderTarget(null); renderer.render(scene, camera); }
+        }
+        function labStep(raw) {
+          const on = !!skin.lab, lu = velMat.uniforms.uLab, mu = mirMat.uniforms, lowQ = bgMat.uniforms.uLoQ.value > 0.5;
+          lu.value += ((on ? 1 : 0) - lu.value) * (1 - Math.exp(-6 * raw));
+          ptMat.blendDst = mirMat.blendDst = lu.value > 0.5 ? THREE.OneFactor : THREE.OneMinusSrcAlphaFactor;
+          if (lab.e >= 0 && (lab.e += raw) > 3) lab.e = -1;
+          document.body.classList.toggle("x-lab", on);
+          mu.uMirA.value += ((on && !lowQ && entered ? 0.32 : 0) - mu.uMirA.value) * (1 - Math.exp(-2 * raw));
+          mirPts.visible = on && mu.uMirA.value > 0.01; if (mirPts.geometry !== points.geometry) mirPts.geometry = points.geometry;
+          if (!on) { labTag.classList.remove("x-on"); labLn.classList.remove("x-on"); return; }
+          points.updateMatrixWorld(); _lv.set(0, LAB_Y, 0); points.localToWorld(_lv).project(camera);
+          const U = bgMat.uniforms, sa = U.uRes.value.x / U.uRes.value.y, ia = U.uImgAspect.value, sy = sa > ia ? ia / sa : 1, nd = (v) => ((v - 0.5) * 2) / (sy * 0.94);
+          const far = nd(0.249), near = nd(0.129); mu.uMir.value.set(((far + near) / 2 + 0.55 * _lv.y) / 1.55, far, near); // pool rim / near edge in plate uv
+          { const k0 = points.scale.x, pu = ptMat.uniforms, sz = pu.uSize.value * (pu.uLabS.value = 1.4 * Math.max(0.5, Math.sqrt(k0))), A = (U.uRes.value.y * renderer.getPixelRatio() * k0) ** 2;
+            pu.uLabI.value = 0.2 * clamp(28 / Math.max(1e-3, (N * sz * sz) / A), 0.25, 2.5); } // keep sprite overlap (= brightness) about the same on any screen
+          const busy = !entered || work || sk || drawOn || rec || egg.nb || egg.ct || dl.on || jr.on || ki.on || hlpOn || portal.classList.contains("x-on") || /x-genon|x-qon/.test(document.body.className);
+          let k = LABP.findIndex((P) => P[0] === shapeI);
+          if (k >= 0 && k !== lab.k) { lab.k = k; lab.t = 0; }
+          if (!busy && k >= 0 && !lab.hov && (lab.t += raw) >= 7) { lab.k = (lab.k + 1) % 4; lab.t = 0; setShape(LABP[lab.k][0]); k = lab.k; }
+          const show = !busy && k >= 0 && simT - velMat.uniforms.uMorphT.value > 1.3 && lab.e < 0;
+          labTag.classList.toggle("x-on", show); labLn.classList.toggle("x-on", show);
+          labSc.style.transform = `translateY(${(((lab.k + Math.min(1, lab.t / 7)) / 4) * 300).toFixed(1)}%)`;
+          if ((lab.ck += raw) > 0.5) { lab.ck = 0; labClk.textContent = `${fmt.format(new Date())} UTC+8`; labXY.textContent = `X ${(hasMouse ? mouse.x : 0).toFixed(3)} Y ${(hasMouse ? mouse.y : 0).toFixed(3)} · 31.2304°N 121.4737°E`; }
+          if (!show) return;
+          const P = LABP[k];
+          if (lab.hk !== k) { lab.hk = k; labS.textContent = `${P[2][LANG === "en" ? 1 : 0]} · ${P[3]} · 2026`; labN.textContent = P[1]; labA.textContent = T(P[4]); }
+          _lv.set(P[5][0], LAB_Y + P[5][1], 0); points.localToWorld(_lv).project(camera);
+          const W = innerWidth, H = innerHeight, nar = W < 760, ax = (_lv.x * 0.5 + 0.5) * W, ay = (0.5 - _lv.y * 0.5) * H, tw = labTag.offsetWidth;
+          const lx = Math.min(ax + Math.max(48, W * 0.08), W - tw - (nar ? 14 : 40)), ly = Math.max(nar ? 110 : 90, ay - (nar ? H * 0.16 : Math.max(40, H * 0.07)));
+          labPl.setAttribute("points", lx - 6 > ax ? `${ax.toFixed(1)},${ay.toFixed(1)} ${Math.max(ax, lx - 30).toFixed(1)},${ly.toFixed(1)} ${(lx - 6).toFixed(1)},${ly.toFixed(1)}` : `${ax.toFixed(1)},${ay.toFixed(1)} ${ax.toFixed(1)},${(ly + 50).toFixed(1)}`);
+          labTag.style.transform = `translate(${lx.toFixed(1)}px, ${(ly - 20).toFixed(1)}px)`;
+        }
         window.AXON_SKINS = SKINS; window.goSkin = goSkin; window.previewTint = previewTint; window.getSkin = () => skin.id;
         // PORTAL: skin picker built from AXON_SKINS. Thumbnails load lazily on first open.
         const portal = document.getElementById("portal"), bPortal = document.getElementById("bPortal");
@@ -2156,7 +2303,7 @@
         // ~2.5 s (1 s on a repeat visit in this tab). Loading shows as how far the glyph has gathered: it stalls part-way until the plate and page are in (8 s cap).
         let spTex = null; const SP_C = new THREE.Vector3(0, CY, 0);
         (() => {
-          let seen = false; try { seen = sessionStorage.getItem("axon.sp") === "1"; sessionStorage.setItem("axon.sp", "1"); } catch (e) {}
+          if (LAB0) return; let seen = false; try { seen = sessionStorage.getItem("axon.sp") === "1"; sessionStorage.setItem("axon.sp", "1"); } catch (e) {}
           const keep = [customPts, customAspect];
           try { rasterBrand(brandLink || "AXON", null); const P = customPts, n = P.length / 3; spTex = makeTex(() => { const k = (rnd() * n) | 0; return [P[k * 3], P[k * 3 + 1], P[k * 3 + 2]]; }); } // generator text sampling
           catch (e) { try { spTex = makeTex(gText); } catch (e2) { spTex = null; } }
@@ -2201,11 +2348,11 @@
           const raw = clock.getDelta(), dt = Math.min(raw, 1 / 30);
           qStep(raw); const spG = spStep(raw); // v1.6
           if (!entered) {
-            prog = Math.max(0, Math.min(1, prog + (hold ? raw / 1.5 : -raw)));
-            ring.style.strokeDashoffset = 289 * (1 - prog);
-            if (prog >= 1) { entered = true; intro.classList.add("x-out"); document.body.classList.remove("x-pre"); if (autoGo) { const go = autoGo; autoGo = null; go(); } }
+            prog = Math.max(0, Math.min(1, prog + (hold ? raw / 1.6 : -raw)));
+            ring.style.strokeDashoffset = 289 * (1 - prog); pctEl.textContent = Math.round(prog * 100) + "%";
+            if (prog >= 1) { entered = true; if (LAB0) lab.e = 0; intro.classList.add("x-out"); document.body.classList.remove("x-pre"); if (autoGo) { const go = autoGo; autoGo = null; go(); } }
           }
-          const g = entered ? 1 : prog * prog * (3 - 2 * prog), time = simT;
+          const le = lab.e >= 0 ? Math.min(1, lab.e / 1.8) : 1, g = entered ? le * le * (3 - 2 * le) : LAB0 ? 0 : prog * prog * (3 - 2 * prog), time = simT; // v2.3 lab: plate fades in from black, cloud gathers
           smooth.lerp(mouse, 0.06);
           downS += (down - downS) * 0.15;
           if (performance.now() - pts > 50) { const k = Math.exp(-12 * raw); pvx *= k; pvy *= k; }
@@ -2252,7 +2399,7 @@
             timeEl.textContent = fmt.format(new Date());
             hf = 0; hudT = 0;
           }
-          fxStep(raw, dt); eggStep(raw); jrStep(raw); dlStep(raw); kiStep(raw); hpStep(); // v2.1 · v2.2
+          fxStep(raw, dt); eggStep(raw); jrStep(raw); dlStep(raw); kiStep(raw); hpStep(); labStep(raw); // v2.1 · v2.2
 
           renderer.setRenderTarget(null);
           renderer.setClearColor(0x000000, 1);
@@ -2264,7 +2411,7 @@
             renderer.render(bgScene, orthoCam);
           }
           ptMat.uniforms.tPos.value = pos[cur].texture; ptMat.uniforms.tVel.value = vel[cur].texture; ptMat.uniforms.uTime.value = time;
-          renderer.render(scene, camera);
+          labRender();
           if (dlSnap) { const f = dlSnap; dlSnap = null; f(); } // v1.9: read the WebGL canvas in the frame it was drawn (no preserveDrawingBuffer)
           if (rec && rec.draw) rec.draw();
           requestAnimationFrame(frame);
@@ -2615,7 +2762,7 @@
         // ---------- v2.2 HELP: ? key, HUD "?" button, phone ⋯ menu; every key, URL option and touch gesture (texts in I18N) ----------
         const hlp = $("hlp"), bHelp = $("bHelp"), hlpTip = $("hlpTip"); let hlpOn = false, hlpTip0 = false;
         const HLP = [["hgW", [["1 – 6", "h1"], ["Shift + 1–5", "h2"], ["← →", "h3"], ["↑ ↓ / ⇕", "h4"], ["Esc", "h5"]]], ["hgM", [["D", "hD"], ["M", "hM"], ["J", "hJ"], ["Y", "hY"], ["R", "hR"], ["H", "hH"]]],
-          ["hgS", [["W", "hW"], ["Q", "hQ"], ["L", "hL"], ["?", "hHp"]]], ["hgE", [["AXON", "hAx"], ["AXON ×5", "hLg"]]],
+          ["hgS", [["W", "hW"], ["Q", "hQ"], ["L", "hL"], ["?", "hHp"], ["LAB", "hLab"]]], ["hgE", [["AXON", "hAx"], ["AXON ×5", "hLg"]]],
           ["hgU", [["#skin=", "uS"], ["#brand=", "uB"], ["#tpl=", "uT"], ["#color=", "uC"], ["#tag=", "uG"], ["#wx=", "uW"], ["#q=", "uQ"], ["#lang=", "uL"], ["#journey=1", "uJ"], ["#daily=1", "uY"], ["#kiosk=1", "uK"]]],
           ["hgT", [["gHold", "gHoldD"], ["gTap", "gTapD"], ["gSw", "gSwD"], ["g2", "g2D"], ["g3", "g3D"], ["gSh", "gShD"], ["gMn", "gMnD"]]]];
         function hlpRender() { $("hlpG").innerHTML = HLP.map(([g, it]) => `<section><h3>${T(g)}</h3><dl>${it.map(([a, d]) => `<dt>${I18N[a] ? T(a) : a}</dt><dd>${T(d)}</dd>`).join("")}</dl></section>`).join(""); }
@@ -2641,8 +2788,8 @@
         }, true);
         applyLang(LANG);
         // Skin on load: #skin=<id>, else localStorage, else kenting.
-        let skin0 = hashSkin(); if (!skin0) try { skin0 = localStorage.getItem("axon.skin"); } catch (e) {}
-        if (skin0 && skinIdx(skin0) > 0) goSkin(skin0, true);
+        // v2.3: #skin=<id> (any world) or AXON LAB by default.
+        { const s0 = hashSkin(); if (LAB0) goSkin("lab", true); else if (skinIdx(s0) > 0) goSkin(s0, true); }
         requestAnimationFrame(frame);
       })();
     </script>
