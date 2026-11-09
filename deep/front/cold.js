@@ -13,12 +13,15 @@ const H = 6.62607015e-34, KB = 1.380649e-23, M = 86.909180527 * 1.66053906660e-2
 const lamDB = (T) => H / Math.sqrt(2 * Math.PI * M * KB * T);
 const LG0 = -6, LG1 = Math.log10(3e-9), LG2 = Math.log10(9.7e-12);   // 起点约 1 μK(示意)→ 蒸发后约 3 nK → 非绝热扩散后 9.7 pK
 const P0 = 5, P1 = 0.2e-3, N0 = 2e6, N1 = 2e4;                          // 5 W → 0.2 mW;约 200 万 → 2.0×10⁴ 个原子
-const SPILL = 0.55;                                                     // 地面:光调到这里以下就托不住(示意阈值)
+const P_SPILL = 0.2, SPILL = Math.log(P_SPILL / P0) / Math.log(P1 / P0); // 地面:光降到约 0.2 W(5 W 的约 4%)以下就托不住。示意阈值:02 宙律审校粗估(54 μm 束腰、假设 1064 nm),真实值取决于激光波长与束腰
 const LINKS = [
   ["北京大学新闻网 2026-11-06", "https://news.pku.edu.cn/info/2881/3325821.htm"],
   ["中国科学院 · 转光明日报", "https://www.cas.cn/cm/202611/t20261109_5123775.shtml"],
   ["Science 新闻 2026-11-05", "https://www.science.org/content/article/china-space-experiment-creates-coldest-temperature-ever"],
-  ["新华社英文 2026-11-06", "https://english.news.cn/20261106/176b36efd1d645cd9c6cd4a227904fd5/c.html"]];
+  ["新华社英文 2026-11-06", "https://english.news.cn/20261106/176b36efd1d645cd9c6cd4a227904fd5/c.html"],
+  ["新华社 2026-11-06(李唐:二十几束激光)", "http://www.news.cn/liangzi/20261106/17556477496541adbef198df07e27e5f/c.html"],
+  ["中新网 2026-11-06(陈徐宗:几十微米/秒)", "https://www.chinanews.com.cn/gn/2026/11-06/10727573.shtml"],
+  ["科技日报 2026-11-09 · 中科院转载(500 微米比喻)", "https://www.cas.cn/cm/202611/t20261109_5123774.shtml"]];
 
 const CSS = `
 #cl{position:fixed;inset:0;z-index:18;display:none;flex-direction:column;gap:8px;padding:10px 14px 12px;color:#e9eefb;font-size:13px;overflow:auto;
@@ -56,7 +59,7 @@ const fmtL = (m) => m >= 1e-6 ? +(m * 1e6).toPrecision(3) + " μm" : +(m * 1e9).
 function build() {
   const st = document.createElement("style"); st.textContent = CSS; document.head.appendChild(st);
   root = el(`<div id="cl" role="dialog" aria-modal="true" aria-labelledby="clT" aria-hidden="true">
-  <div class="ch"><div class="tt"><b id="clT">❄ 最冷 9.7 pK · 冷原子实验柜</b><span>给我一束光,我就能让原子停下来 · 中国空间站梦天舱 · 《科学》2026-11-05 · 画面为程序绘制的示意</span></div>
+  <div class="ch"><div class="tt"><b id="clT">❄ 最冷 9.7 pK · 冷原子实验柜</b><span>比室温低 14 个数量级 · 中国空间站梦天舱 · 《科学》2026-11-05 · 画面为程序绘制的示意</span></div>
    <button class="btn" id="clSnd" aria-pressed="false" title="越冷音高越低、节奏越慢">♪ 声音 关</button><button class="btn" id="clX">✕ 返回</button></div>
   <canvas id="clCv" role="img" aria-label="百年温度阶梯与冷原子实验舱"></canvas>
   <div class="cp">
@@ -65,7 +68,7 @@ function build() {
    <button class="btn gd" id="clD" disabled>第二步 · 扩散深冷</button><button class="btn" id="clRel">放开 · 观察</button><button class="btn" id="clRst">重来</button></div>
   <div id="clR" aria-live="polite"></div><div id="clMsg" aria-live="polite"></div>
   <div id="clG"></div>
-  <div class="ft">示意:原子个数、运动、光束与「一朵波」均为程序绘制的教学示意;端点数值(5 W → 0.2 mW、约 200 万 → 2.0×10⁴ 个原子、约 3 nK、9.7 pK、地面约 0.05 s、空间站 7.0 s)与温度阶梯见卡片来源;起点约 1 μK 为示意。波长按 λ = h/√(2πmk<sub>B</sub>T) 计算。<br>前沿速递 · 一手资讯:${LINKS.map(([t, u]) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${esc(t)} ↗</a>`).join(" · ")}</div></div>`);
+  <div class="ft">示意:原子个数、运动、光束与「一朵波」均为程序绘制的教学示意;端点数值(5 W → 0.2 mW、约 200 万 → 2.0×10⁴ 个原子、约 3 nK、9.7 pK、地面约 0.05 s、空间站 7.0 s)与温度阶梯见卡片来源;起点约 1 μK 为示意。地面「托不住」阈值约 0.2 W(5 W 的约 4%)为示意:按 54 μm 束腰、假设 1064 nm 激光粗估,真实值取决于激光波长与束腰。凝聚(一朵波)在纳开量级就已发生,深冷只让它放开后膨胀得更慢。波长按 λ = h/√(2πmk<sub>B</sub>T) 由等效温度换算,只用来比较尺度。<br>前沿速递 · 一手资讯:${LINKS.map(([t, u]) => `<a href="${u}" target="_blank" rel="noopener noreferrer">${esc(t)} ↗</a>`).join(" · ")}</div></div>`);
   document.body.appendChild(root);
   const $ = (id) => root.querySelector("#" + id);
   $("clX").onclick = closeCold;
@@ -113,7 +116,7 @@ function guide() {
   const G = root.querySelector("#clG"), q = S.q;
   G.innerHTML = Q.map((x) => {
     let body = `<p>${esc(x.ask)}</p>`;
-    if (x.id === "q1") body += q.q1 === 2 ? `<p class="ok">✓ 地面上光一弱就托不住,原子漏下去;空间站里没有往下拉的力,极弱的光也拢得住它们。还能更冷吗?按「第二步」。</p>` : q.q1 === 1 ? `<p>原子漏下去了。那在「空间站」里,把光调到最弱会怎样?</p>` : "";
+    if (x.id === "q1") body += q.q1 === 2 ? `<p class="ok">✓ 地面上光阱的「坡度」抵不过重力,光一弱原子就从低处漏走;空间站里没有往下拉的力,极弱的光也拢得住它们。还能更冷吗?按「第二步」。</p>` : q.q1 === 1 ? `<p>原子漏下去了。那在「空间站」里,把光调到最弱会怎样?</p>` : "";
     if (x.id === "q2") body += q.q2 === 2 ? `<p class="ok">✓ 最快(最热)的原子先翻出光阱,留下的平均更慢——所以更冷。</p>` : q.q2 === 3 ? `<p>再看一次:红色的那些一出阱就飞得很快。</p><p>${x.pick.map((p, i) => `<button class="btn" data-pk="${i}">${p}</button>`).join(" ")}</p>` : q.q2 === 1 ? `<p>${x.pick.map((p, i) => `<button class="btn" data-pk="${i}">${p}</button>`).join(" ")}</p>` : "";
     return `<div class="q" data-q="${x.id}"><b>? ${esc(x.t)}</b>${body}</div>`;
   }).join("");
@@ -124,7 +127,7 @@ const save = () => store.set({ q1: S.q.q1 === 2, q2: S.q.q2 === 2 });
 /* ---------------------------------------------------------------- 变化 → 读数、消息、声音 */
 function onChange(why) {
   const $ = (id) => root.querySelector("#" + id);
-  if (S.g && S.s > SPILL && !S.spilled && !S.rel) { S.spilled = true; S.relT = 0; $("clP").disabled = true; if (S.q.q1 !== 2) S.q.q1 = 1; }
+  if (S.g && S.s > SPILL && !S.spilled && !S.rel) { S.spilled = true; S.relT = 0; S.s = SPILL; $("clP").value = Math.round(SPILL * 1000); $("clP").disabled = true; if (S.q.q1 !== 2) S.q.q1 = 1; }
   if (!S.g && S.s >= 0.985 && S.q.q1 === 1) S.q.q1 = 2;
   if (S.s > 0.15 && !S.q.q2) S.q.q2 = 1;
   if (why !== "tick") { save(); guide(); }
@@ -133,15 +136,15 @@ function onChange(why) {
   const T = Math.pow(10, lgT());
   $("clR").innerHTML = `<i>光阱功率</i> ${fmtP(power())} · <i>示意温度</i> ${fmtT(T)} · <i>原子</i> 约 ${fmtN(nReal())} 个 · <i>物质波长</i> ${fmtL(lamDB(T))} · <i>重力</i> ${S.g ? "地面 1 g" : "微重力"}${S.rel ? ` · <i>已自由飞</i> ${S.relT.toFixed(S.g ? 3 : 1)} s` : ""}`;
   let m = "";
-  if (S.spilled) m = "光太弱,托不住:重力把原子从光阱里拉了出去。地面上光阱必须够强,原子就挤得紧、冷不到底。";
-  else if (S.rel && S.g) m = S.relT >= 0.05 ? "约 0.05 秒,原子云已经掉出视野(下落约 12 毫米)。要看 7 秒,得有约 240 米高的真空管。" : "放开了:原子云一边散开一边往下掉……";
-  else if (S.rel) m = S.relT >= 7 ? "7 秒后它还在视野里,只是慢慢胀大:由膨胀速度反推出的就是「等效温度」。" : "放开了:没有重力,原子云原地慢慢胀大……";
-  else if (S.p2 >= 1) m = "9.7 pK:原子的波长长到彼此重叠,凝成一朵波(玻色—爱因斯坦凝聚,示意)。";
-  else if (S.p2 > 0) m = "原子扩散进更宽的第二束交叉光里,相互作用能降下来,温度再降约 300 倍……";
-  else if (!S.g && S.s >= 0.985) m = "光已降到 0.2 mW。按「第二步 · 扩散深冷」继续。";
+  if (S.spilled) m = "光阱的「坡度」抵不过重力,原子从低处漏了出去(阈值约 0.2 W,示意)。地面上光阱必须够强才托得住;强光阱让原子挤得紧,相互作用能大,等效温度降不下去。";
+  else if (S.rel && S.g) m = S.relT >= 0.05 ? "约 0.05 秒,原子云已经掉出视野(下落约 12 毫米)。要从静止自由下落 7 秒,得有约 240 米高的真空管。" : "放开了:原子云一边散开一边往下掉……";
+  else if (S.rel) m = S.relT >= 7 ? "7 秒后它还在视野里,只是慢慢胀大(科技日报比喻:7 秒只挪约 500 微米,比头发丝直径多不了多少)。由单方向膨胀速度反推出的就是「等效温度」。" : "放开了:没有重力,原子云原地慢慢胀大……";
+  else if (S.p2 >= 1) m = "等效 9.7 pK:这团原子早已是凝聚体;深冷让它放开后膨胀得极慢,由膨胀速度换算出的等效温度只有 9.7 pK(示意)。";
+  else if (S.p2 > 0) m = "凝聚体扩散进更宽的第二束交叉光里,相互作用能降下来,放开后会膨胀得更慢:等效温度再降约 300 倍……";
+  else if (!S.g && S.s >= 0.985) m = "光已降到 0.2 mW,约 3 nK:剩下的原子已凝成一朵波——玻色—爱因斯坦凝聚在纳开量级就会发生(示意)。按「第二步 · 扩散深冷」继续。";
   else if (S.s > 0) m = "光在变弱:能量最高的原子翻出光阱飞走(红色),剩下的更冷。";
   $("clMsg").textContent = m;
-  $("clCv").setAttribute("aria-label", `百年温度阶梯:室温 300 K、液氦 4.2 K、宇宙微波背景 2.725 K、1995 年 170 nK、2003 年 450 pK、2021 年 38 pK、2026 年 9.7 pK;你的原子云示意温度 ${fmtT(T)}。实验舱:${S.g ? "地面" : "空间站"}。${m}`);
+  $("clCv").setAttribute("aria-label", `百年温度阶梯:${(S.ladder || []).map((r) => `${r.label}${r.year ? " " + r.year + " 年" : ""} ${fmtT(r.T)}`).join("、")};你的原子云示意温度 ${fmtT(T)}。实验舱:${S.g ? "地面" : "空间站"}。${m}`);
   if (S.snd && why !== "tick") { if (S.rm) blip(); }
   if (S.rm && why !== "tick") { for (let i = 0; i < 90; i++) draw(1 / 60); }
   if (S.rm || why !== "tick") draw();
@@ -184,10 +187,10 @@ function drawLadder(L, narrow) {
   for (let i = lab.length - 1; i >= 0; i--) { if (lab[i] > bot + 6) lab[i] = bot + 6; if (i < lab.length - 1 && lab[i + 1] - lab[i] < gap) lab[i] = lab[i + 1] - gap; }
   g.textAlign = "left";
   rows.forEach((r, i) => {
-    const y = pos[i], ly = lab[i], rec = r.kind === "record", cur = r.i === 7;
-    g.fillStyle = cur ? "#ffe7a8" : rec ? "#bfe9ff" : "#8fa0c4"; g.beginPath(); g.arc(ax, y, cur ? 5 : 3.5, 0, 7); g.fill();
+    const y = pos[i], ly = lab[i], rec = r.kind === "record", cmp = r.kind === "cmp", cur = i === rows.length - 1;
+    g.fillStyle = cur ? "#ffe7a8" : rec ? "#bfe9ff" : "#8fa0c4"; g.beginPath(); g.arc(ax, y, cur ? 5 : 3.5, 0, 7); if (cmp) { g.strokeStyle = "#c9b8ff"; g.lineWidth = 1.2; g.stroke(); } else g.fill();
     g.strokeStyle = "rgba(160,200,255,.35)"; g.lineWidth = 1; g.beginPath(); g.moveTo(ax + 5, y); g.lineTo(ax + 14, ly); g.stroke();
-    g.font = `${cur ? 600 : 400} ${fs}px system-ui,sans-serif`;
+    g.font = `${cur ? 600 : 400} ${fs}px system-ui,sans-serif`; if (cmp) g.fillStyle = "#c9b8ff";
     const t = `${fmtT(r.T)} ${narrow ? r.short : r.label}${r.year ? " · " + r.year : ""}`;
     g.fillText(fit(t, L.x + L.w - ax - 18), ax + 16, ly + fs * 0.36);
   });
@@ -230,13 +233,13 @@ function drawChamber(C, dt) {
   }
   const sc = R / 1.6, lam = Math.max(1.5, Math.min(R * 0.5, 2 * Math.pow(10, (LG0 - lgT()) / 2 * 0.56)));
   const alive = A.filter((a) => !a.out && Math.abs(a.x) < 4 && Math.abs(a.y) < 4);
-  if (S.p2 >= 1 && !S.rel) {
+  if (!S.g && !S.rel && (S.p2 > 0 || S.s >= 0.985)) {
     const mx = alive.reduce((s, a) => s + a.x, 0) / Math.max(1, alive.length), my = alive.reduce((s, a) => s + a.y, 0) / Math.max(1, alive.length);
-    const bx = cx + mx * sc, by = cy + my * sc, rr = R * 0.42, gr = g.createRadialGradient(bx, by, 0, bx, by, rr);
+    const bx = cx + mx * sc, by = cy + my * sc, rr = R * (0.3 + 0.14 * S.p2), gr = g.createRadialGradient(bx, by, 0, bx, by, rr);
     gr.addColorStop(0, "rgba(220,245,255,.95)"); gr.addColorStop(0.45, "rgba(127,208,255,.45)"); gr.addColorStop(1, "rgba(127,208,255,0)"); g.fillStyle = gr; g.beginPath(); g.arc(bx, by, rr, 0, 7); g.fill();
     const ph = S.rm ? 0 : (S.t * 0.6) % 1; g.strokeStyle = "rgba(190,235,255,.5)"; g.lineWidth = 1.2;
     for (let j = 0; j < 4; j++) { const r = rr * (0.3 + 0.2 * j + 0.2 * ph); g.beginPath(); g.arc(bx, by, r, 0, 7); g.stroke(); }
-    g.fillStyle = "#e6f6ff"; g.font = "600 12px system-ui,sans-serif"; g.textAlign = "center"; g.fillText("一朵波(示意)", bx, by + rr + 14);
+    g.fillStyle = "#e6f6ff"; g.font = "600 12px system-ui,sans-serif"; g.textAlign = "center"; const nw = C.w < 300; g.fillText(fit(S.p2 >= 1 ? (nw ? "凝聚体 · 膨胀更慢" : "凝聚体 · 放开后膨胀更慢(示意)") : S.p2 > 0 ? (nw ? "凝聚体扩进宽阱" : "凝聚体扩散进宽阱(示意)") : (nw ? "一朵波(凝聚体)" : "凝成一朵波(凝聚体,示意)"), C.w - 16), bx, Math.min(by + rr + 14, C.y + C.h - 24));
   } else {
     A.forEach((a) => {
       const x = cx + a.x * sc, y = cy + a.y * sc; if (x < C.x - 30 || x > C.x + C.w + 30 || y < C.y - 30 || y > C.y + C.h + 30) return;
