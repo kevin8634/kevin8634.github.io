@@ -105,3 +105,11 @@
 |---|---|---|---|
 | sparc.ngc3198.components | NGC 3198 自转曲线与质量分量 43 点(R、Vobs、errV、Vgas、Vdisk、Vbul;D=13.8 Mpc) | SPARC,Lelli, McGaugh & Schombert 2016, AJ 152:157,Rotmod_LTG.zip / NGC3198_rotmod.dat 前 6 列原样摘录(https://astroweb.case.edu/SPARC/,2026-11-09 取);与 1.4 台账 sparc.ngc3198.rotmod 同源(核对:R、Vobs、errV 逐点一致) | 公开科研数据,按 SPARC 要求引用原论文 Lelli, McGaugh & Schombert 2016, AJ 152, 157;仅数值摘录 |
 | deep/forge/engine.js、forge.js、dm.json、index.json | 模型炼炉引擎、界面与暗物质炉配置(伪等温晕公式引 Begeman, Broeils & Sanders 1991, MNRAS 249, 523;de Blok et al. 2008, AJ 136, 2648) | 创世计划(AI 协助);数值由 docs/forge_dm_check.mjs 复算 | 自有,CC BY 4.0;模型曲线、拟合值为本站计算,**非观测** |
+
+## 深空 2.5「模型炼炉 · 开普勒」(2026-11-09,总指挥)
+| 台账 id / 文件 | 内容 | 来源 | 许可 / 署名 |
+|---|---|---|---|
+| jpl.planets.kepler | 八大行星半长轴 a(au)、恒星周期 T = 36000/L̇(儒略年)、教学误差 errT、质量比 mu,8 行 | NASA/JPL SSD「Approximate Positions of the Planets」Table 1(1800–2050 AD;Standish & Williams 1992),https://ssd.jpl.nasa.gov/planets/approx_pos.html(2026-11-09 取,只摘 a0 与 L̇);行星质量取 NASA NSSDCA Planetary Fact Sheet(2025-03-18 版)、太阳质量 1,988,400×10²⁴ kg 取 NSSDCA Sun Fact Sheet(https://nssdc.gsfc.nasa.gov/planetary/factsheet/);经 docs/kepler_build.py 生成 | NASA/JPL 公开数据(美国政府作品),署名 NASA/JPL SSD 与 NSSDCA;仅数值摘录;errT(教学相对误差 2×10⁻⁴)与 mu 为本站计算,**errT 不是测量误差** |
+| kepler.json 胶囊真值 | 1 Ceres a = 2.765552595 au、恒星周期 1679.853120 天(轨道解 48,历元 JD 2461200.5);134340 Pluto a = 39.58862939 au、恒星周期 90981.716 天(历元 JD 2457588.5) | NASA/JPL Small-Body Database API(https://ssd-api.jpl.nasa.gov/sbdb.api,full-prec=1,2026-11-09 取) | NASA/JPL 公开数据,署名 NASA/JPL SBDB;仅数值摘录 |
+| deep/forge/kepler.json、engine.js(深空 2.5 增补 pow/lin 核、factor 修正因子、点名、过关参数区间)、forge.js(炉选择、对数轴、标签避让) | 开普勒炉配置与炼炉引擎/界面增补 | 创世计划(AI 协助);数值由 docs/forge_kepler_check.mjs 复算 | 自有,CC BY 4.0;模型曲线、拟合值为本站计算,**非观测**;不使用 NASA/JPL logo,不暗示背书 |
+- 旧台账 deep/data/nasa.planets.kepler.json(NSSDCA,已取对数、无误差列、周期仅 3–4 位有效数字,海王星 59,800 天与 a^1.5 相差约 1.3%)继续供 1.2 星系层建模卡使用,**炼炉不用它**。

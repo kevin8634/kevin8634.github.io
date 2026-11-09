@@ -3,7 +3,10 @@
  * 积木类型:
  *   column  —— 数据表中的一列作为「形状」,参数为缩放(如 SPARC Vdisk × √Υ★);
  *   kernel  —— 引擎内置解析函数(KERNELS,如伪等温暗晕 iso、NFW);
- *   expr    —— 配置里的表达式(需由调用方注入 compile,如 core.js 的 Expr.compile)。
+ *   expr    —— 配置里的表达式(需由调用方注入 compile,如 core.js 的 Expr.compile);
+ *   factor  —— (深空 2.5)乘在合成结果上的修正因子,在数据点 i 处读数据列 col(如行星质量比 μ),
+ *              因子 = (1 + β·μ)^pow(默认 pow=−1/2,即牛顿形式的开普勒第三定律 T ∝ a^{3/2}/√(1+m/M☉));
+ *              非数据点处 μ 取 0(因子 = 1),只画金线不画分量。
  * 合成:combine="quad" 时 y² = Σ 分量(分量本身给出 v²,可为负,如气体 Vgas|Vgas|),y = √max(0,Σ);
  *       combine="sum" 时 y = Σ 分量。
  * 统计:χ² = Σ((y−model)/σ)²;约化 χ²_ν = χ²/(N−k);AIC = χ²+2k;BIC = χ²+k·lnN(高斯误差,省略常数项)。
@@ -22,6 +25,9 @@ export const KERNELS = {
     const f = x < 1e-3 ? x * x / 3 - x ** 4 / 5 : 1 - Math.atan(x) / x;
     return 4 * Math.PI * G * rho * rc * rc * f;
   },
+  /* 深空 2.5 开普勒炉:幂律 y = C·x^n、正比 y = k·x */
+  pow(x, p) { return p.C * Math.pow(x, p.n); },
+  lin(x, p) { return p.kl * x; },
   /* NFW ρ=ρs/[(r/rs)(1+r/rs)²];v²=4πGρs rs³[ln(1+x)−x/(1+x)]/r(备用,F1 暗物质炉未启用) */
   nfw(r, p) {
     const rho = p.rhos * 1e7, rs = p.rs;
@@ -37,7 +43,8 @@ export function makeData(json, spec) {
   const rows = json.rows.slice().sort((a, b) => a[ci(spec.x)] - b[ci(spec.x)]);
   const cols = {};
   json.columns.forEach((n, i) => (cols[n] = rows.map((r) => +r[i])));
-  return { x: cols[spec.x], y: cols[spec.y], e: cols[spec.err], cols, meta: json.meta, N: rows.length };
+  const labels = spec.label ? rows.map((r) => String(r[ci(spec.label)])) : null; // 深空 2.5:点名(如行星名)
+  return { x: cols[spec.x], y: cols[spec.y], e: cols[spec.err], cols, labels, meta: json.meta, N: rows.length };
 }
 
 /* 某列在任意 x 处的「形状」值:数据范围内线性插值;
@@ -60,6 +67,10 @@ export function blockAt(cfg, data, b, p, x, i, compile) {
     return cfg.combine === "quad" ? s * v * Math.abs(v) : s * v;
   }
   if (b.kind === "kernel") return KERNELS[b.kernel](x, p);
+  if (b.kind === "factor") {
+    const mu = i != null && data.x[i] === x ? data.cols[b.col][i] : 0;
+    return Math.pow(1 + p[b.params[0].k] * mu, b.pow ?? -0.5);
+  }
   if (b.kind === "expr") {
     if (!b._fn) b._fn = compile(b.expr, [cfg.data.x].concat(b.params.map((q) => q.k)));
     return +b._fn({ ...p, [cfg.data.x]: x });
@@ -71,9 +82,9 @@ const combineOut = (cfg, s) => (cfg.combine === "quad" ? Math.sqrt(Math.max(0, s
 
 /* state = { blocks:[id...], p:{k:value}, lock:{k:true} } */
 export function modelAt(cfg, data, state, x, i, compile) {
-  let s = 0;
-  for (const id of state.blocks) { const b = cfg.blocks.find((q) => q.id === id); if (b) s += blockAt(cfg, data, b, state.p, x, i, compile); }
-  return combineOut(cfg, s);
+  let s = 0, f = 1, any = false;
+  for (const id of state.blocks) { const b = cfg.blocks.find((q) => q.id === id); if (!b) continue; const v = blockAt(cfg, data, b, state.p, x, i, compile); if (b.kind === "factor") f *= v; else { s += v; any = true; } }
+  return any ? combineOut(cfg, s) * f : 0; // 只有修正因子、没有主项时模型为 0
 }
 
 /* 分量曲线(quad:单独显示 √|v²|·sign) */
@@ -103,6 +114,7 @@ export function passed(cfg, state, ev) {
   const P = cfg.pass || {};
   if (ev.empty) return false;
   if (P.require && !P.require.every((id) => state.blocks.includes(id))) return false;
+  if (P.params) for (const [k, r] of Object.entries(P.params)) if (!(state.p[k] >= r[0] && state.p[k] <= r[1])) return false; // 深空 2.5:参数须落在区间
   return ev.red < (P.redMax ?? 2);
 }
 

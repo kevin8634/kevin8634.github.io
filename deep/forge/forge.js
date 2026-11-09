@@ -8,7 +8,7 @@ const compile = (s, v) => Expr.compile(s, v);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const TIER = ["#5fe39a", "#ffd36b", "#ff6b6b"], GOLD = "#f2c86b";
 const nf = (v, d = 2) => (!isFinite(v) ? "—" : Math.abs(v) >= 1e4 ? v.toExponential(2) : (+v).toFixed(d));
-const sig = (v) => { if (!isFinite(v) || v <= 0) return 2; return Math.max(0, Math.min(4, 1 - Math.floor(Math.log10(v)))); };
+const sig = (v) => { if (!isFinite(v) || v <= 0) return 2; return Math.max(0, Math.min(6, 1 - Math.floor(Math.log10(v)))); };
 
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
@@ -26,6 +26,7 @@ const CSS = `
 #fg .fh{grid-area:h;display:flex;align-items:center;gap:12px;min-width:0}
 #fg .fh .tt{flex:1;min-width:0}#fg .fh b{display:block;font-weight:500;font-size:clamp(16px,1.7vw,22px);letter-spacing:.12em;color:#f5e3b5;text-shadow:0 0 16px rgba(242,200,107,.35)}
 #fg .fh span.s{display:block;font-size:11px;color:#8fa0c4;letter-spacing:.06em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#fgSel{font:inherit;font-size:12px;color:#bff4ff;background:rgba(10,16,36,.75);border:1px solid rgba(160,235,255,.45);border-radius:999px;padding:5px 8px;max-width:9.5em;cursor:pointer}#fgSel:focus-visible{outline:1px dashed #f2c86b;outline-offset:2px}#fgSel[hidden]{display:none}
 #fgBadge{display:flex;align-items:center;gap:6px;font-size:11px;color:#6f7a96;border:1px solid rgba(143,160,196,.25);border-radius:999px;padding:4px 10px 4px 6px;white-space:nowrap}
 #fgBadge i{width:18px;height:18px;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);background:#38405a;display:block}
 #fgBadge.lit{color:#ffe7a8;border-color:rgba(242,200,107,.6);box-shadow:0 0 18px rgba(242,200,107,.25)}#fgBadge.lit i{background:radial-gradient(circle at 40% 35%,#fff6d0,#f2c86b 55%,#b9852c)}
@@ -114,6 +115,8 @@ const CSS = `
  #fg .ring{min-height:160px}
  #fg .pn{overflow:visible}
  #fg .fh .btn{padding:5px 10px}#fgBadge span{display:none}
+ #fg .fh .tt{align-self:flex-start;padding-top:1px}#fg .fh span.s{display:none}
+ #fgSel{position:absolute;left:10px;top:31px;font-size:11px;padding:1px 6px;max-width:10em}
 }
 /* 横屏矮屏:左图右滚 */
 @media (max-height:480px) and (min-width:500px){
@@ -137,7 +140,7 @@ function buildDom() {
   const st = document.createElement("style"); st.id = "fgCss"; st.textContent = CSS; document.head.appendChild(st);
   root = document.createElement("div"); root.id = "fg"; root.setAttribute("role", "dialog"); root.setAttribute("aria-modal", "true"); root.setAttribute("aria-labelledby", "fgT"); root.setAttribute("aria-hidden", "true");
   root.innerHTML = `<canvas id="fgStars" aria-hidden="true"></canvas>
-<header class="fh"><div class="tt"><b id="fgT">模型炼炉</b><span class="s" id="fgSub"></span></div><div id="fgBadge" title="炉徽章"><i></i><span id="fgBadgeT"></span></div><button class="btn" id="fgX">✕ 返回深空</button></header>
+<header class="fh"><div class="tt"><b id="fgT">模型炼炉</b><span class="s" id="fgSub"></span></div><select id="fgSel" aria-label="切换炼炉" title="切换炼炉" hidden></select><div id="fgBadge" title="炉徽章"><i></i><span id="fgBadgeT"></span></div><button class="btn" id="fgX">✕ 返回深空</button></header>
 <section class="fc" aria-label="模型与真实数据"><div id="fgGuide" aria-live="polite"></div><div class="chart"><canvas id="fgCv" role="img"></canvas><div id="fgTip"></div></div>
 <div class="lg"><span><i style="background:${GOLD}"></i>模型</span><span><i style="background:${TIER[0]}"></i>|残差|/误差&lt;1</span><span><i style="background:${TIER[1]}"></i>1–3</span><span><i style="background:${TIER[2]}"></i>&gt;3</span><span id="fgLgC"></span></div></section>
 <div class="fs"><section class="fb" aria-label="方程积木炉"><div class="pn tray"><h3>积 木 架</h3><p class="cd" id="fgTrayH">拖进下方的炉里,或点一下放入。</p><div id="fgTray"></div></div>
@@ -161,6 +164,7 @@ function buildDom() {
   $("fgX").onclick = () => close();
   $("fgFit").onclick = () => autoFit();
   $("fgSave").onclick = () => saveModel();
+  $("fgSel").onchange = (e) => { const id = e.target.value; if (S && id !== S.cfg.id) { saveState(); openForge(id, { rm: root.classList.contains("rm"), onClose: onCloseCb, keep: true }).catch((er) => console.warn(er)); } }; // 深空 2.5 炉选择
   const cv = $("fgCv");
   const tipAt = (e) => { if (!S) return; const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top; showTip(mx, my); };
   cv.addEventListener("pointermove", tipAt); cv.addEventListener("pointerdown", tipAt); cv.addEventListener("pointerleave", () => ($("fgTip").style.display = "none"));
@@ -182,6 +186,7 @@ export async function openForge(id = "dm", opt = {}) {
   root.classList.add("on"); root.setAttribute("aria-hidden", "false"); document.body.classList.add("fgon");
   if (!LIST) LIST = await fetch(new URL("index.json", BASE)).then((r) => (r.ok ? r.json() : [])).catch(() => []);
   if (LIST.length && !LIST.some((f) => f.id === id)) id = LIST[0].id; // 未知炉 id:回到第一炉
+  const sel = $("fgSel"); if (!sel.options.length) sel.innerHTML = LIST.map((f) => `<option value="${esc(f.id)}" title="${esc(f.ver)} · ${esc(f.date)}">⚗ ${esc(f.title)}炉</option>`).join(""); sel.hidden = LIST.length < 2; sel.value = id;
   if (!S || S.cfg.id !== id) {
     let cfg, raw;
     try { cfg = await fetch(new URL(id + ".json", BASE)).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }); raw = await fetch(new URL(cfg.data.file, BASE)).then((r) => r.json()); }
@@ -199,7 +204,7 @@ export async function openForge(id = "dm", opt = {}) {
     renderAll();
   } else { renderAll(); }
   requestAnimationFrame(() => { stars(); draw(); });
-  $("fgX").focus();
+  if (!opt.keep) $("fgX").focus();
 }
 
 /* ---------- 渲染 ---------- */
@@ -273,7 +278,7 @@ function renderPar() {
       r.innerHTML = `<div class="hd"><label for="fgP_${q.k}">${esc(q.name)}<button type="button" class="lk" aria-pressed="${lk}" title="锁定后不参与拟合,也不计入参数个数 k">${lk ? "🔒 固定" : "拟合"}</button></label><span><span class="vv"></span> ${esc(q.unit)} <span class="sg"></span></span></div>
 <input type="range" id="fgP_${q.k}" min="${q.scale === "log" ? 0 : q.min}" max="${q.scale === "log" ? 1000 : q.max}" step="${q.scale === "log" ? 1 : q.step}" value="${toS(q, v)}" aria-valuetext="${nf(v, 3)} ${esc(q.unit)}">`;
       const inp = r.querySelector("input"), vv = r.querySelector(".vv"), sg = r.querySelector(".sg");
-      const show = () => { const x = st.p[q.k]; vv.textContent = nf(x, x < 10 ? 3 : 2); const s = S.sigma[q.k]; sg.textContent = s != null && isFinite(s) ? "± " + nf(s, sig(s)) : ""; inp.setAttribute("aria-valuetext", nf(x, 3) + " " + q.unit); };
+      const show = () => { const x = st.p[q.k]; vv.textContent = nf(x, q.dp ?? (x < 10 ? 3 : 2)); const s = S.sigma[q.k]; sg.textContent = s != null && isFinite(s) ? "± " + nf(s, sig(s)) : ""; inp.setAttribute("aria-valuetext", nf(x, 3) + " " + q.unit); };
       show(); r._show = show;
       inp.addEventListener("input", () => { st.p[q.k] = fromS(q, inp.value); S.sigma = {}; S.fitInfo = null; P.querySelectorAll(".sg").forEach((e) => (e.textContent = "")); show(); update(); });
       r.querySelector(".lk").onclick = (e) => { e.preventDefault(); st.lock[q.k] = !st.lock[q.k]; S.sigma = {}; S.fitInfo = null; renderPar(); update(); };
@@ -342,29 +347,49 @@ function draw() {
   const dpr = Math.min(2, devicePixelRatio || 1); cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
   const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
   const A = S.cfg.axes, sm = w < 420, L = sm ? 34 : 46, R = 10, T = 10, B = sm ? 26 : 32;
-  const px = (x) => L + (x - A.x.min) / (A.x.max - A.x.min) * (w - L - R), py = (y) => h - B - (y - A.y.min) / (A.y.max - A.y.min) * (h - T - B);
+  // 深空 2.5:轴可为对数(axes.x.log / axes.y.log),默认线性(暗物质炉不变)
+  const tx = (v) => (A.x.log ? Math.log10(v) : v), ty = (v) => (A.y.log ? Math.log10(v) : v);
+  const px = (x) => L + (tx(x) - tx(A.x.min)) / (tx(A.x.max) - tx(A.x.min)) * (w - L - R), py = (y) => h - B - (ty(y) - ty(A.y.min)) / (ty(A.y.max) - ty(A.y.min)) * (h - T - B);
   geo = { px, py };
   const D = S.data, X0 = D.x[0], X1 = D.x[D.N - 1];
   // 关注区
-  if (S.focus) { g.fillStyle = "rgba(242,200,107,.06)"; g.fillRect(px(S.focus[0]), T, px(Math.min(A.x.max, S.focus[1])) - px(S.focus[0]), h - T - B); }
+  if (S.focus) { g.fillStyle = "rgba(242,200,107,.06)"; g.fillRect(px(Math.max(A.x.min, S.focus[0])), T, px(Math.min(A.x.max, S.focus[1])) - px(Math.max(A.x.min, S.focus[0])), h - T - B); }
   // 外推区
   g.fillStyle = "rgba(127,227,255,.04)"; g.fillRect(px(X1), T, px(A.x.max) - px(X1), h - T - B);
   // 轴
   g.strokeStyle = "rgba(143,160,196,.16)"; g.lineWidth = 1; g.fillStyle = "#8fa0c4"; g.font = (sm ? 10 : 11) + "px -apple-system,'PingFang SC',sans-serif";
-  const xs = sm ? 20 : 10; for (let x = A.x.min; x <= A.x.max; x += xs) { g.beginPath(); g.moveTo(px(x), T); g.lineTo(px(x), h - B); g.stroke(); g.textAlign = "center"; g.fillText(x, px(x), h - B + 14); }
-  for (let y = A.y.min; y <= A.y.max; y += 50) { g.beginPath(); g.moveTo(L, py(y)); g.lineTo(w - R, py(y)); g.stroke(); g.textAlign = "right"; g.fillText(y, L - 5, py(y) + 4); }
+  const fmt = (v) => String(+v.toPrecision(3));
+  /* 对数轴刻度:每十倍 1、2、5 画网格;像素够宽才标 2、5 */
+  const logTicks = (min, max, span) => { const out = []; for (let e = Math.floor(Math.log10(min)); e <= Math.ceil(Math.log10(max)); e++) for (const m of [1, 2, 5]) { const v = m * Math.pow(10, e); if (v >= min * 0.999 && v <= max * 1.001) out.push({ v, lab: m === 1 || span > 110 }); } return out; };
+  const xT = A.x.log ? logTicks(A.x.min, A.x.max, (w - L - R) / (tx(A.x.max) - tx(A.x.min))) : (() => { const o = [], xs = sm ? A.x.stepSm || 20 : A.x.step || 10; for (let x = A.x.min; x <= A.x.max; x += xs) o.push({ v: x, lab: true }); return o; })();
+  const yT = A.y.log ? logTicks(A.y.min, A.y.max, (h - T - B) / (ty(A.y.max) - ty(A.y.min)) * 0.5) : (() => { const o = []; for (let y = A.y.min; y <= A.y.max; y += A.y.step || 50) o.push({ v: y, lab: true }); return o; })();
+  xT.forEach((t) => { g.globalAlpha = t.lab ? 1 : .55; g.beginPath(); g.moveTo(px(t.v), T); g.lineTo(px(t.v), h - B); g.stroke(); g.globalAlpha = 1; if (t.lab) { g.textAlign = "center"; g.fillText(fmt(t.v), px(t.v), h - B + 14); } });
+  yT.forEach((t) => { g.globalAlpha = t.lab ? 1 : .55; g.beginPath(); g.moveTo(L, py(t.v)); g.lineTo(w - R, py(t.v)); g.stroke(); g.globalAlpha = 1; if (t.lab) { g.textAlign = "right"; g.fillText(fmt(t.v), L - 5, py(t.v) + 4); } });
   g.textAlign = "right"; g.fillText(sm ? A.x.short || A.x.label : A.x.label, w - R, h - 3);
   g.save(); g.translate(11, T + 4); g.textAlign = "left"; if (!sm) { g.rotate(Math.PI / 2); g.fillText(A.y.label, 0, 0); } g.restore();
-  if (sm) { g.textAlign = "left"; g.fillText("v (km/s)", L + 4, T + 10); }
-  if (!sm) { g.textAlign = "center"; g.fillStyle = "rgba(127,227,255,.55)"; g.fillText("数据外", (px(X1) + px(A.x.max)) / 2, T + 12); }
+  if (sm) { g.textAlign = "left"; g.fillText(A.y.short || "v (km/s)", L + 4, T + 10); }
   const st = S.state, ev = S.ev, nC = Math.max(80, Math.round(w / 3));
-  const xsC = Array.from({ length: nC + 1 }, (_, i) => Math.max(0.05, A.x.min + (A.x.max - A.x.min) * i / nC));
-  const path = (fy, col, wd, dash) => { g.beginPath(); xsC.forEach((x, i) => { const y = Math.max(A.y.min - 20, Math.min(A.y.max + 20, fy(x))); i ? g.lineTo(px(x), py(y)) : g.moveTo(px(x), py(y)); }); g.strokeStyle = col; g.lineWidth = wd; g.setLineDash(dash || []); g.stroke(); g.setLineDash([]); };
+  const xsC = Array.from({ length: nC + 1 }, (_, i) => (A.x.log ? A.x.min * Math.pow(A.x.max / A.x.min, i / nC) : Math.max(0.05, A.x.min + (A.x.max - A.x.min) * i / nC)));
+  const clampY = (y) => (A.y.log ? Math.max(A.y.min / 3, Math.min(A.y.max * 3, y > 0 ? y : A.y.min / 3)) : Math.max(A.y.min - 20, Math.min(A.y.max + 20, y)));
+  const path = (fy, col, wd, dash) => { g.beginPath(); xsC.forEach((x, i) => { const y = clampY(fy(x)); i ? g.lineTo(px(x), py(y)) : g.moveTo(px(x), py(y)); }); g.strokeStyle = col; g.lineWidth = wd; g.setLineDash(dash || []); g.stroke(); g.setLineDash([]); };
+  /* 曲线标签避让(深空 2.5 修 375×667「胶囊」与分量标签重叠):先排胶囊标签,分量标签与之相交就下移 */
+  const capY = T + (sm ? 24 : 28), capS = store.get(S.K("capsules"), {}), boxes = [], labY = {};
+  (S.cfg.capsules || []).forEach((c) => { const tw = g.measureText("胶囊").width, s = capS[c.id]; let ly = capY;
+    if (s && isFinite(s.pred)) { const yy = py(clampY(s.pred)); boxes.push({ x0: px(c.x) - 9, x1: px(c.x) + 9, y0: yy - 9, y1: yy + 9 }); if (Math.abs(yy - (capY - 4)) < 16) ly = yy + 21; } // 封存圆圈压到标签时,标签挪到圆圈下方
+    labY[c.id] = ly; boxes.push({ x0: px(c.x) - tw / 2 - 3, x1: px(c.x) + tw / 2 + 3, y0: ly - 11, y1: ly + 3 }); });
+  if (!sm) { const xo = (px(X1) + px(A.x.max)) / 2, two = g.measureText("数据外").width / 2; let yo = T + 12; if (boxes.some((bx) => xo - two < bx.x1 && xo + two > bx.x0 && yo - 11 < bx.y1 && yo + 3 > bx.y0)) yo = h - B - 6; // 「数据外」也避让胶囊
+    g.textAlign = "center"; g.fillStyle = "rgba(127,227,255,.55)"; g.fillText("数据外", xo, yo); boxes.push({ x0: xo - two, x1: xo + two, y0: yo - 11, y1: yo + 3 }); } // 已封存胶囊的圆圈也要避让
   // 分量
-  if (!ev.empty && st.blocks.length > 1) { const lab = [];
-    st.blocks.forEach((id) => { const b = S.cfg.blocks.find((x) => x.id === id); g.globalAlpha = .7; path((x) => E.compAt(S.cfg, D, b, st.p, x, compile), b.color, 1.2, [4, 4]); g.globalAlpha = 1; const xe = A.x.max * .97; lab.push({ b, y: py(Math.max(A.y.min, Math.min(A.y.max, E.compAt(S.cfg, D, b, st.p, xe, compile)))) - 6, x: px(xe) }); });
-    lab.sort((a, c) => a.y - c.y); for (let i = 1; i < lab.length; i++) if (lab[i].y - lab[i - 1].y < 14) lab[i].y = lab[i - 1].y + 14; // 标签避让
-    lab.forEach((l) => { g.fillStyle = l.b.color; g.textAlign = "right"; g.fillText(l.b.name, l.x, Math.min(h - B - 16, l.y)); }); }
+  const comps = st.blocks.map((id) => S.cfg.blocks.find((x) => x.id === id)).filter((b) => b && b.kind !== "factor");
+  if (!ev.empty && comps.length > 1) { const lab = [];
+    comps.forEach((b) => { g.globalAlpha = .7; path((x) => E.compAt(S.cfg, D, b, st.p, x, compile), b.color, 1.2, [4, 4]); g.globalAlpha = 1; const xe = A.x.max * .97; lab.push({ b, y: py(Math.max(A.y.min, Math.min(A.y.max, E.compAt(S.cfg, D, b, st.p, xe, compile)))) - 6, x: px(xe) }); });
+    lab.sort((a, c) => a.y - c.y);
+    const placed = boxes.slice();
+    const hit = (x, tw, y) => placed.find((bx) => x - tw < bx.x1 && x > bx.x0 && y - 11 < bx.y1 && y + 3 > bx.y0);
+    lab.forEach((l) => { const tw = g.measureText(l.b.name).width; let y = Math.max(T + 11, l.y), guard = 0, bx;
+      if (hit(l.x, tw, y) && !hit(l.x, tw, l.y + 20)) y = l.y + 20; // 先试曲线下方
+      while ((bx = hit(l.x, tw, y)) && guard++ < 12) y = bx.y1 + 12;
+      y = Math.min(h - B - 6, y); placed.push({ x0: l.x - tw, x1: l.x, y0: y - 11, y1: y + 3 }); g.fillStyle = l.b.color; g.textAlign = "right"; g.fillText(l.b.name, l.x, y); }); }
   // 谱系对比
   if (S.cmp) { const c = S.cmp; path((x) => E.modelAt(S.cfg, D, c, x, null, compile), "rgba(255,255,255,.7)", 1.4, [6, 5]); }
   // 残差光丝
@@ -374,9 +399,12 @@ function draw() {
   // 误差棒 + 星
   D.x.forEach((x, i) => { const y = D.y[i], e = D.e[i]; g.strokeStyle = "rgba(220,235,255,.38)"; g.lineWidth = 1; g.beginPath(); g.moveTo(px(x), py(y - e)); g.lineTo(px(x), py(y + e)); g.moveTo(px(x) - 2.5, py(y - e)); g.lineTo(px(x) + 2.5, py(y - e)); g.moveTo(px(x) - 2.5, py(y + e)); g.lineTo(px(x) + 2.5, py(y + e)); g.stroke(); });
   D.x.forEach((x, i) => star(g, px(x), py(D.y[i]), sm ? 2.2 : 2.8, "rgba(170,215,255,.6)"));
+  if (D.labels && S.cfg.data.showLabels) { g.fillStyle = "rgba(233,238,251,.8)"; g.font = (sm ? 9 : 11) + "px -apple-system,'PingFang SC',sans-serif"; g.textAlign = "left"; D.x.forEach((x, i) => { const t = sm || w < 640 ? D.labels[i].replace(/[(\uFF08].*[)\uFF09]/, "") : D.labels[i], tw = g.measureText(t).width, ex = px(x) + 7, ey = py(D.y[i]) + (sm ? 12 : 14);
+    const bad = ex + tw > w - R || boxes.some((bx) => ex < bx.x1 && ex + tw > bx.x0 && ey - 10 < bx.y1 && ey + 2 > bx.y0);
+    if (bad) { g.textAlign = "right"; g.fillText(t, px(x) - 7, py(D.y[i]) - 6); g.textAlign = "left"; } else g.fillText(t, ex, ey); }); /* 点名避让胶囊标签与右边界 */ g.font = (sm ? 10 : 11) + "px -apple-system,'PingFang SC',sans-serif"; }
   // 胶囊标记
   (S.cfg.capsules || []).forEach((c) => { const s = store.get(S.K("capsules"), {})[c.id]; g.strokeStyle = "rgba(127,227,255,.35)"; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(px(c.x), T); g.lineTo(px(c.x), h - B); g.stroke(); g.setLineDash([]);
-    if (s) { g.strokeStyle = "#7fe3ff"; g.lineWidth = 2; g.beginPath(); g.arc(px(c.x), py(s.pred), 6, 0, 6.283); g.stroke(); } g.fillStyle = "#7fe3ff"; g.textAlign = "center"; g.fillText("胶囊", px(c.x), T + (sm ? 24 : 28)); });
+    if (s) { g.strokeStyle = "#7fe3ff"; g.lineWidth = 2; g.beginPath(); g.arc(px(c.x), py(s.pred), 6, 0, 6.283); g.stroke(); } g.fillStyle = "#7fe3ff"; g.textAlign = "center"; g.fillText("胶囊", px(c.x), labY[c.id] ?? capY); });
   if (ev.empty) { g.fillStyle = "rgba(233,238,251,.55)"; g.textAlign = "center"; g.font = (sm ? 12 : 14) + "px -apple-system,'PingFang SC',sans-serif"; const tx = S.cfg.emptyHint || "星点 = 真实观测 · 放入积木,金线就会出现"; if (w < 560) { const k = tx.indexOf("·"); g.fillText(tx.slice(0, k).trim(), (L + w - R) / 2, T + (h - T - B) * .7); g.fillText(tx.slice(k + 1).trim(), (L + w - R) / 2, T + (h - T - B) * .7 + 18); } else g.fillText(tx, (L + w - R) / 2, T + (h - T - B) * .82); }
   $("fgLgC").innerHTML = S.cmp ? '<i style="background:#fff"></i>对比:谱系 #' + S.cmp.n : "";
 }
@@ -386,7 +414,8 @@ function showTip(mx, my) {
   D.x.forEach((x, i) => { const d = Math.hypot(geo.px(x) - mx, geo.py(D.y[i]) - my); if (d < bd) { bd = d; bi = i; } });
   const tip = $("fgTip"); if (bi < 0) { tip.style.display = "none"; return; }
   const i = bi, z = ev.empty ? null : ev.z[i];
-  tip.innerHTML = `r = ${D.x[i]} kpc · v = ${D.y[i]} ± ${D.e[i]} km/s` + (z == null ? "" : `<br>模型 ${nf(ev.m[i], 1)} · 残差 <span style="color:${TIER[E.tier(z)]}">${z > 0 ? "+" : ""}${nf(z, 1)}σ</span>`);
+  const A = S.cfg.axes, ys = A.y.sym || "v", dp = A.y.dp ?? 1;
+  tip.innerHTML = (D.labels ? esc(D.labels[i]) + " · " : "") + `${esc(A.x.sym || "r")} = ${D.x[i]} ${esc(A.x.unit || "kpc")} · ${esc(ys)} = ${D.y[i]} ± ${D.e[i]} ${esc(A.y.unit || "km/s")}` + (z == null ? "" : `<br>模型 ${nf(ev.m[i], dp)} · 残差 <span style="color:${TIER[E.tier(z)]}">${z > 0 ? "+" : ""}${nf(z, 1)}σ</span>`);
   tip.style.display = "block"; const bw = tip.offsetWidth, cw = $("fgCv").clientWidth;
   tip.style.left = Math.min(Math.max(0, geo.px(D.x[i]) - bw / 2), cw - bw) + "px"; tip.style.top = Math.max(0, geo.py(D.y[i]) - 48) + "px";
 }
@@ -401,10 +430,11 @@ function renderCaps() {
     let body = `<b>${esc(c.title)}</b>${c.demo ? '<span class="tg">演示</span>' : ""}<p>${esc(c.q)}</p>`;
     if (!s) body += `<p class="v" data-live></p><div class="rowb"><button class="btn sm cy" data-a="seal">封存预测</button></div>`;
     else {
-      body += `<p class="v">已封存:v = <b>${nf(s.pred, 1)}</b> ${esc(c.unit)}(${esc(s.glyphs)},χ²<sub>ν</sub> ${nf(s.red, 2)})· ${new Date(s.at).toLocaleString("zh-CN", { hour12: false })}</p>`;
+      body += `<p class="v">已封存:${esc(S.cfg.axes.y.sym || "v")} = <b>${nf(s.pred, c.dp ?? 1)}</b> ${esc(c.unit)}(${esc(s.glyphs)},χ²<sub>ν</sub> ${nf(s.red, 2)})· ${new Date(s.at).toLocaleString("zh-CN", { hour12: false })}</p>`;
       if (s.opened) {
         const T = E.capsuleTruth(S.data, c.truth), d = s.pred - T.v, n = Math.abs(d) / T.e;
-        body += `<p class="v">开封:实测 ${nf(T.v, 1)} ± ${nf(T.e, 1)} ${esc(c.unit)}(${T.n} 个观测点加权平均)· 差 ${d > 0 ? "+" : ""}${nf(d, 1)},<span style="color:${TIER[n < 1 ? 0 : n <= 3 ? 1 : 2]}">${nf(n, 1)}σ</span> ${n < 1 ? "命中" : n <= 3 ? "接近" : "偏离"}</p><div class="rowb"><button class="btn sm" data-a="reset">重新封存</button></div>`;
+        const cd = c.dp ?? 1;
+        body += `<p class="v">开封:实测 ${nf(T.v, cd)} ± ${nf(T.e, cd)} ${esc(c.unit)}(${c.truth.label ? esc(c.truth.label) : T.n + " 个观测点加权平均"})· 差 ${d > 0 ? "+" : ""}${nf(d, cd)},<span style="color:${TIER[n < 1 ? 0 : n <= 3 ? 1 : 2]}">${nf(n, 1)}σ</span> ${n < 1 ? "命中" : n <= 3 ? "接近" : "偏离"}</p><div class="rowb"><button class="btn sm" data-a="reset">重新封存</button></div>`;
       } else if (due) body += `<div class="rowb"><button class="btn sm" data-a="open">开封对答案</button><button class="btn sm" data-a="reset">作废</button></div>`;
       else { const dd = Math.ceil((Date.parse(c.unlockAt) - now) / 864e5); body += `<p>到期开封:${esc(c.unlockAt.slice(0, 10))} · 还有 ${dd} 天</p><div class="rowb"><button class="btn sm" disabled>未到期</button><button class="btn sm" data-a="reset">作废</button></div>`; }
     }
@@ -418,7 +448,7 @@ function renderCaps() {
 function renderCapsLive() {
   if (!S) return;
   (S.cfg.capsules || []).forEach((c) => { const el = document.querySelector(`#fgCap [data-c="${c.id}"]`); if (!el) return; const p = el.querySelector("[data-live]"), b = el.querySelector('[data-a="seal"]');
-    if (p) p.textContent = S.ev.empty ? "炉里还没有模型,先合成一个。" : `当前模型预测:v(${c.x}) = ${nf(E.modelAt(S.cfg, S.data, S.state, c.x, null, compile), 1)} ${c.unit}`; if (b) b.disabled = S.ev.empty; });
+    if (p) p.textContent = S.ev.empty ? "炉里还没有模型,先合成一个。" : `当前模型预测:${S.cfg.axes.y.sym || "v"}(${+(+c.x).toPrecision(5)}) = ${nf(E.modelAt(S.cfg, S.data, S.state, c.x, null, compile), c.dp ?? 1)} ${c.unit}`; if (b) b.disabled = S.ev.empty; });
 }
 function capAct(c, a) {
   const all = capsState();
@@ -441,7 +471,7 @@ function renderLin() {
   if (!L.length) { box.innerHTML = '<p class="cd">还没有存档。合成一个模型后点「✦ 保存模型」。</p>'; return; }
   L.forEach((m, i) => {
     const prev = L[i + 1], el = document.createElement("div"); el.className = "ln" + (S.cmp && S.cmp.n === m.n ? " cmp" : "");
-    const ps = Object.keys(m.p).filter((k) => m.blocks.some((id) => S.cfg.blocks.find((b) => b.id === id).params.some((q) => q.k === k))).map((k) => `${esc(paramQ(k).name.split(" ").pop())}=${nf(m.p[k], m.p[k] < 10 ? 3 : 2)}`).join(" ");
+    const ps = Object.keys(m.p).filter((k) => m.blocks.some((id) => S.cfg.blocks.find((b) => b.id === id).params.some((q) => q.k === k))).map((k) => `${esc(paramQ(k).name.split(" ").pop())}=${nf(m.p[k], paramQ(k).dp ?? (m.p[k] < 10 ? 3 : 2))}`).join(" ");
     el.innerHTML = `<div class="t"><b>#${m.n} ${esc(glyphs(m.blocks))}</b><span>${new Date(m.at).toLocaleString("zh-CN", { hour12: false, month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span></div>
 <div>k=${m.k} · χ²<sub>ν</sub>=${nf(m.red, m.red < 10 ? 2 : 1)} · BIC=${nf(m.bic, 1)}${prev ? ` (Δ ${m.bic - prev.bic > 0 ? "+" : ""}${nf(m.bic - prev.bic, 1)})` : ""} · 分 ${m.score}${m.pass ? ' <span class="ok">✓过关</span>' : ""}</div><div class="cd">${ps}</div>
 <div class="rowb"><button class="btn sm" data-a="load">载入</button><button class="btn sm cy" data-a="cmp" aria-pressed="${!!(S.cmp && S.cmp.n === m.n)}">${S.cmp && S.cmp.n === m.n ? "取消对比" : "对比"}</button><button class="btn sm" data-a="del" aria-label="删除 #${m.n}">删</button></div>`;

@@ -1,0 +1,73 @@
+{
+  "id": "kepler",
+  "ver": "深空 2.5",
+  "title": "模型炼炉 · 开普勒",
+  "subtitle": "八大行星的周期与轨道 · JPL 真实轨道根数 · 太阳系 · 高中—大学",
+  "badge": "开普勒炉徽章",
+  "data": { "file": "../data/jpl.planets.kepler.json", "x": "a", "y": "T", "err": "errT", "label": "name", "showLabels": true },
+  "axes": {
+    "x": { "label": "轨道半长轴 a (au) · 对数", "short": "a (au)", "sym": "a", "unit": "au", "min": 0.2, "max": 60, "log": true },
+    "y": { "label": "公转周期 T (年) · 对数", "short": "T (年)", "sym": "T", "unit": "年", "min": 0.1, "max": 400, "log": true, "dp": 4 }
+  },
+  "combine": "sum",
+  "sumTex": "T(a)=\\Big[\\sum_i T_i(a)\\Big]\\times\\prod_j f_j",
+  "sumTexShort": "T=\\big[\\sum_i T_i\\big]\\prod_j f_j",
+  "emptyHint": "星点 = 八大行星的真实轨道 · 放入积木,金线就会出现",
+  "intro": "八颗星点是八大行星:横轴是轨道半长轴 a(地球 = 1 au),纵轴是绕太阳一圈的时间 T(年),两轴都是对数刻度。把方程积木放进炉里合成模型:金线是模型,每颗星垂下的光丝是残差——|残差|/误差 <1 绿、1–3 黄、>3 红。光丝在对数图上可能短到看不见,看颜色和拟合仪。",
+  "blocks": [
+    {
+      "id": "pow", "name": "幂律", "short": "T = C·aⁿ", "glyph": "ⁿ", "color": "#7fd0ff",
+      "kind": "kernel", "kernel": "pow",
+      "tex": "T(a)=C\\,a^{\\,n}",
+      "note": "两个旋钮:系数 C(a = 1 au 时的周期)和指数 n。在双对数图上,幂律是一条直线。",
+      "params": [
+        { "k": "C", "name": "系数 C", "unit": "年", "min": 0.1, "max": 10, "value": 1, "step": 0.0001, "scale": "log", "dp": 4 },
+        { "k": "n", "name": "指数 n", "unit": "", "min": 0.5, "max": 3, "value": 1, "step": 0.0001, "dp": 4 }
+      ]
+    },
+    {
+      "id": "lin", "name": "正比", "short": "T = k·a", "glyph": "∝", "color": "#ffb36b",
+      "kind": "kernel", "kernel": "lin",
+      "tex": "T(a)=k\\,a",
+      "note": "最朴素的猜想:轨道大一倍,周期就长一倍。只有一个旋钮 k。",
+      "params": [ { "k": "kl", "name": "比例 k", "unit": "年/au", "min": 0.001, "max": 20, "value": 1, "step": 0.001, "scale": "log", "dp": 3 } ]
+    },
+    {
+      "id": "newton", "name": "牛顿修正", "short": "行星质量", "glyph": "M", "color": "#c7a0ff",
+      "kind": "factor", "col": "mu", "pow": -0.5,
+      "tex": "f=\\big(1+\\beta\\,m/M_\\odot\\big)^{-1/2}",
+      "note": "牛顿把开普勒第三定律写成 T² = 4π²a³ / [G(M☉ + m)]:行星自己的质量 m 也算进去。m/M☉ 取自 NASA 行星质量(木星约 10⁻³,水星约 10⁻⁷)。β 默认锁定为 1(=牛顿给出的大小);解锁后让数据自己来称。它乘在其他积木的结果上,不单独成曲线。",
+      "params": [ { "k": "beta", "name": "质量系数 β", "unit": "", "min": 0, "max": 10, "value": 1, "step": 0.01, "lock": true, "dp": 2 } ]
+    }
+  ],
+  "pass": { "redMax": 2.0, "require": ["pow"], "params": { "n": [1.45, 1.55] } },
+  "guide": [
+    { "if": { "empty": true }, "q": "炉里还空着。轨道越大的行星,绕太阳一圈越久——这个「越」到底是怎样的关系?先放一块积木猜一猜。" },
+    { "if": { "has": ["lin"], "lacks": ["pow"], "redAbove": 2 }, "q": "正比的金线能同时穿过水星和海王星吗?把 k 调到让地球对上,内行星和外行星的光丝各偏向哪一边?", "sub": "在双对数图上,数据点连成的线和金线,斜率一样吗?" },
+    { "if": { "has": ["newton"], "lacks": ["pow", "lin"] }, "q": "修正因子只是乘在别的积木上的一个小数,炉里还缺一个主角。周期本身由谁给出?" },
+    { "if": { "has": ["pow"], "pass": false, "redAbove": 2 }, "focus": [0.2, 60], "q": "C 和 n 各管金线的什么——一个让它平移,一个让它转动?先让地球对上,再转动金线去追海王星。", "sub": "卡住了可以按「自动拟合」,但先自己猜 n 落在哪里。" },
+    { "if": { "has": ["pow"], "pass": false }, "q": "χ² 已经不大了,可还没过关。拟合出的 n 是不是在一个合理的范围?换一组积木试试。" },
+    { "if": { "has": ["pow", "newton"], "pass": true }, "q": "加上牛顿修正,χ² 变小还是变大?一个真实存在的效应,为什么在这份数据里反而看不出来?", "sub": "看看木星、土星和天王星、海王星的光丝各自怎么变;再想想这些轨道根数是怎么得来的。" },
+    { "if": { "pass": true }, "q": "过关。拟合出的 n 最接近哪个简单的分数?把它写成 T 的几次方和 a 的几次方成正比。C 为什么几乎正好等于 1?", "sub": "再把「牛顿修正」放进来,看看行星自身的质量在这份数据里能不能被察觉。" }
+  ],
+  "capsules": [
+    {
+      "id": "kepler.ceres", "demo": true, "title": "谷神星 · a = 2.7656 au", "q": "预测矮行星谷神星(火星与木星之间)绕太阳一圈要几年", "x": 2.765552595034094, "unit": "年", "dp": 4,
+      "unlockAt": null,
+      "truth": { "type": "value", "v": 4.599187, "e": 0.00092, "label": "JPL 小天体数据库恒星周期 1679.853 天" },
+      "note": "演示胶囊:谷神星不在这八颗星点里,它的周期早已公开(JPL SBDB 1 Ceres 轨道解 48,密切根数),开封立即对比。误差取与行星相同的教学相对误差 2×10⁻⁴。"
+    },
+    {
+      "id": "kepler.pluto", "demo": true, "title": "冥王星 · a = 39.59 au", "q": "外推到数据之外:预测冥王星绕太阳一圈要几年", "x": 39.58862938517124, "unit": "年", "dp": 2,
+      "unlockAt": null,
+      "truth": { "type": "value", "v": 249.0944, "e": 0.05, "label": "JPL 小天体数据库恒星周期 90 981.7 天" },
+      "note": "演示胶囊:冥王星在海王星之外(数据外),检验模型能不能外推。真值为 JPL SBDB 134340 Pluto 的密切根数(历元 2016-07-31);冥王星与海王星 3:2 共振,长期平均周期与此略有差别。误差取教学相对误差 2×10⁻⁴。"
+    }
+  ],
+  "sources": [
+    "NASA/JPL SSD「Approximate Positions of the Planets」Table 1(1800–2050 AD;E. M. Standish & J. G. Williams 1992)https://ssd.jpl.nasa.gov/planets/approx_pos.html",
+    "行星质量:NASA NSSDCA Planetary Fact Sheet(2025-03-18 版)与 Sun Fact Sheet https://nssdc.gsfc.nasa.gov/planetary/factsheet/",
+    "胶囊真值:NASA/JPL Small-Body Database(1 Ceres、134340 Pluto)https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html",
+    "误差棒为本站设定的教学相对误差 σT/T = 2×10⁻⁴(见数据台账 note),不是测量误差"
+  ]
+}
