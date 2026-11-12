@@ -321,6 +321,12 @@ export function chi2Q(chi2, nu) {
    l1 = 只留 blocks ∪ tray 的积木,非 knobs 的参数隐藏并锁定在 p 给的值;guide/intro/pass/sumTex/emptyHint/积木文案 可覆盖;
    l4 = 原版积木 + extraBlocks,所有参数默认解锁(lock 只是初值,用户仍可手动锁) */
 export const TIERS = ["l1", "l2", "l4"];
+/* 深空 2.8.1(06 C2):星辰层可用 tiers.l1.relErr 把每个数据点的误差换成「相对误差 × |y|」的教学误差(开普勒炉原误差 2×10⁻⁴,滑杆一像素就跨好几 σ,拖不动);
+   只作用于该档的数据副本,星系层/星穹层不变 */
+export function tierData(cfg, data) {
+  const r = cfg && cfg.tierCfg && cfg.tierCfg.relErr; if (!r) return data;
+  return { ...data, e: data.y.map((y) => Math.abs(y) * r) };
+}
 export function applyTier(cfg, t) {
   const T = cfg.tiers && cfg.tiers[t];
   if (!T || t === "l2") return cfg;
@@ -330,6 +336,7 @@ export function applyTier(cfg, t) {
     const keep = (T.blocks || []).concat(T.tray || []);
     c.blocks = keep.map((id) => c.blocks.find((b) => b.id === id)).filter(Boolean);
     const knobs = new Set(T.knobs || []);
+    (c.capsules || []).forEach((cp) => { const o = ((T.text || {}).cap || {})[cp.id]; if (o) Object.assign(cp, o); }); // 深空 2.8.1(06 C10):星辰层胶囊文案覆盖 tiers.l1.text.cap
     c.blocks.forEach((b) => { const o = (T.text || {})[b.id]; if (o) Object.assign(b, o);
       b.params.forEach((q) => { if (T.p && T.p[q.k] != null) q.value = T.p[q.k]; if (knobs.has(q.k)) { delete q.lock; if (T.range && T.range[q.k]) Object.assign(q, T.range[q.k]); } else { q.lock = true; q.hide = true; } }); });
     c.preset = (T.blocks || []).slice();

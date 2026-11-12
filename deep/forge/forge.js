@@ -1,7 +1,10 @@
 /* 深空 2.4 · 模型炼炉 UI(星系层)。纯静态、零外部请求;本机存储 gn:deep:forge:<炉id>:*
  * openForge(id, {rm, tier}) 打开一炉;炉的一切内容来自 deep/forge/<id>.json,引擎见 engine.js。
  * 深空 2.8 分龄:tier = l1 星辰·滑杆版 / l2 星系·原版(默认,行为与存储键不变)/ l4 星穹·开放问题版;
- *   配置来自 <id>.json 的 tiers,经 E.applyTier 生成;l1/l4 的存储键多一段档位:gn:deep:forge:<炉id>:<档>:*,不碰原谱系。 */
+ *   配置来自 <id>.json 的 tiers,经 E.applyTier 生成;l1/l4 的存储键多一段档位:gn:deep:forge:<炉id>:<档>:*,不碰原谱系。
+ * 深空 2.8.1(勘误 06):星辰层「帮我调到最好」只画参照虚线、不改滑杆不计过关(C1);表盘主位「已贴住 x/n 颗」(C4);
+ *   「我想看完整版」带入当前积木与参数、l2 显示「回到滑杆版」、焦点到拟合仪标题并读屏播报(C6);引导 sub 延迟出现(C3);
+ *   过关后「看看科学家怎么说」折叠项(C11);β–γ 高度相关时 R₀ 行红字警示(C8);窄屏档位短名(C9)。 */
 import * as E from "./engine.js";
 import { Formula, Expr } from "../../core/deep/core.js";
 
@@ -103,6 +106,11 @@ const CSS = `
 #fgToast.on{display:block;animation:fgT 2.6s ease forwards}@keyframes fgT{0%{opacity:0;transform:translate(-50%,8px)}12%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0}}
 #fg.rm #fgToast.on{animation:none}
 #fg .ft{font-size:10px;color:#5d6b8c;margin-top:8px;line-height:1.5}
+#fg .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#fgBack[hidden],#fgEnc[hidden]{display:none}#fgEnc{margin:6px 0 0;padding:5px 8px;border-radius:8px;background:rgba(95,227,154,.07);border:1px solid rgba(95,227,154,.22);color:#b9e8cc;line-height:1.55}
+#fgFitH:focus{outline:1px dashed #f2c86b;outline-offset:2px}
+#fgGuide details{margin-top:4px;font-size:12px}#fgGuide summary{cursor:pointer;color:#f2c86b;list-style:none}#fgGuide summary::-webkit-details-marker{display:none}#fgGuide summary:before{content:"▸ ";}#fgGuide details[open] summary:before{content:"▾ ";}#fgGuide summary:focus-visible{outline:1px dashed #9ff0ff}#fgGuide details p{margin:3px 0 0;color:#cfe9d9;line-height:1.6}
+#fgDer dd.wr{grid-column:1/-1;text-align:left;color:#ff8a8a;font-size:11px;line-height:1.5;white-space:normal}#fgDer dd.wr a{color:#ffb0b0}
 /* 深空 2.8 分龄 */
 #fg.t1 .lk{display:none}#fgFull[hidden],#fgOpenW[hidden],#fgKou[hidden]{display:none}
 #fgKou{color:#8fa0c4}
@@ -117,9 +125,9 @@ const CSS = `
  #fg{display:none;overflow-y:auto;overflow-x:hidden;padding:0 10px 24px;-webkit-overflow-scrolling:touch}
  #fg.on{display:flex;flex-direction:column}
  #fg>*{flex:none}
- #fg .fh{position:sticky;top:0;z-index:4;background:rgba(2,4,12,.96);margin:0 -10px;padding:8px 10px}
+ #fg .fh{position:sticky;top:0;z-index:4;background:#02040c;margin:0 -10px;padding:8px 10px} /* 2.8.1:吸顶区改不透明,下面滚过的积木炉不再透字 */
  #fg .fh{height:56px}#fg .fh b{font-size:16px}
- #fg .fc{position:sticky;top:56px;z-index:3;background:rgba(2,4,12,.96);margin:0 -10px;padding:2px 10px 4px;height:min(44vh,290px)}
+ #fg .fc{position:sticky;top:56px;z-index:3;background:#02040c;margin:0 -10px;padding:2px 10px 4px;height:min(44vh,290px)}
  #fgGuide{font-size:12px;padding:6px 10px 6px 34px;min-height:0;max-height:76px;overflow:auto}#fgGuide:before{left:8px;top:7px;width:18px;height:18px;line-height:17px}
  #fg .chart{min-height:150px}
  #fg .fs{display:flex;flex-direction:column;gap:10px;margin-top:10px}
@@ -152,23 +160,23 @@ function buildDom() {
   const st = document.createElement("style"); st.id = "fgCss"; st.textContent = CSS; document.head.appendChild(st);
   root = document.createElement("div"); root.id = "fg"; root.setAttribute("role", "dialog"); root.setAttribute("aria-modal", "true"); root.setAttribute("aria-labelledby", "fgT"); root.setAttribute("aria-hidden", "true");
   root.innerHTML = `<canvas id="fgStars" aria-hidden="true"></canvas>
-<header class="fh"><div class="tt"><b id="fgT">模型炼炉</b><span class="s" id="fgSub"></span></div><span id="fgSels"><select id="fgSel" aria-label="切换炼炉" title="切换炼炉" hidden></select><select id="fgTier" aria-label="切换档位" title="切换档位:星辰滑杆版 / 星系原版 / 星穹开放问题版"><option value="l1">星辰 · 滑杆版</option><option value="l2">星系 · 原版</option><option value="l4">星穹 · 开放问题</option></select></span><div id="fgBadge" title="炉徽章"><i></i><span id="fgBadgeT"></span></div><button class="btn" id="fgX">✕ 返回深空</button></header>
+<header class="fh"><div class="tt"><b id="fgT">模型炼炉</b><span class="s" id="fgSub"></span></div><span id="fgSels"><select id="fgSel" aria-label="切换炼炉" title="切换炼炉" hidden></select><select id="fgTier" aria-label="切换档位" title="切换档位:星辰滑杆版 / 星系原版 / 星穹开放问题版"><option value="l1" title="星辰 · 滑杆版">星辰 · 滑杆版</option><option value="l2" title="星系 · 原版">星系 · 原版</option><option value="l4" title="星穹 · 开放问题">星穹 · 开放问题</option></select></span><div id="fgBadge" title="炉徽章"><i></i><span id="fgBadgeT"></span></div><button class="btn" id="fgX">✕ 返回深空</button></header>
 <section class="fc" aria-label="模型与真实数据"><div id="fgGuide" aria-live="polite"></div><div class="chart"><canvas id="fgCv" role="img"></canvas><div id="fgTip"></div></div>
 <div class="lg"><span><i style="background:${GOLD}"></i>模型</span><span><i style="background:${TIER[0]}"></i><b id="fgLg0" style="font-weight:400">|残差|/误差&lt;1</b></span><span><i style="background:${TIER[1]}"></i><b id="fgLg1" style="font-weight:400">1–3</b></span><span><i style="background:${TIER[2]}"></i><b id="fgLg2" style="font-weight:400">&gt;3</b></span><span id="fgLgC"></span></div></section>
 <div class="fs"><section class="fb" aria-label="方程积木炉"><div class="pn tray"><h3>积 木 架</h3><p class="cd" id="fgTrayH">拖进下方的炉里,或点一下放入。</p><div id="fgTray"></div></div>
 <div class="ring" id="fgRing"><svg class="rg" viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true"><ellipse cx="200" cy="72" rx="196" ry="44" fill="none" stroke="rgba(242,200,107,.55)" stroke-width="2"/><ellipse cx="200" cy="72" rx="170" ry="34" fill="none" stroke="rgba(242,200,107,.35)" stroke-width="1.2"/><ellipse cx="200" cy="80" rx="186" ry="40" fill="none" stroke="rgba(127,227,255,.35)" stroke-width="1"/><ellipse cx="200" cy="72" rx="150" ry="24" fill="rgba(127,227,255,.05)"/></svg>
 <div class="ringT">方 程 积 木 炉</div><div id="fgSlots" role="list" aria-label="炉中积木"></div><div id="fgSum"></div></div></section>
-<section class="pn fr" aria-label="拟合仪与参数"><h3>拟 合 仪</h3><div class="dial"><svg viewBox="0 0 120 120" aria-hidden="true"><defs><radialGradient id="fgGlow"><stop offset="0" stop-color="#7fe3ff" stop-opacity=".55"/><stop offset="1" stop-color="#7fe3ff" stop-opacity="0"/></radialGradient></defs>
+<section class="pn fr" aria-label="拟合仪与参数"><h3 id="fgFitH" tabindex="-1">拟 合 仪</h3><div class="dial"><svg viewBox="0 0 120 120" aria-hidden="true"><defs><radialGradient id="fgGlow"><stop offset="0" stop-color="#7fe3ff" stop-opacity=".55"/><stop offset="1" stop-color="#7fe3ff" stop-opacity="0"/></radialGradient></defs>
 <circle id="fgGl" cx="60" cy="60" r="58" fill="url(#fgGlow)" opacity=".1"/><circle cx="60" cy="60" r="46" fill="rgba(4,10,20,.7)" stroke="rgba(160,235,255,.18)" stroke-width="8"/>
 <circle id="fgArc" cx="60" cy="60" r="46" fill="none" stroke="#7fe3ff" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 289" transform="rotate(-90 60 60)"/>
 <text id="fgSc" x="60" y="62" text-anchor="middle" fill="#e9fbff" font-size="26" font-weight="500">—</text><text id="fgScL" x="60" y="80" text-anchor="middle" fill="#8fa0c4" font-size="9" letter-spacing="2">亮度 · 分</text></svg>
-<dl id="fgStat"></dl></div><dl id="fgDer" aria-label="派生量"></dl><p id="fgPassL"></p>
-<div class="rowb"><button class="btn cy" id="fgFit">⟲ 自动拟合</button><button class="btn" id="fgSave">✦ 保存模型</button><button class="btn cy" id="fgFull" hidden>我想看完整版 ▸</button></div><div id="fgFitR" aria-live="polite"></div>
+<dl id="fgStat"></dl></div><p class="cd" id="fgEnc" hidden></p><dl id="fgDer" aria-label="派生量"></dl><p id="fgPassL"></p>
+<div class="rowb"><button class="btn cy" id="fgFit">⟲ 自动拟合</button><button class="btn" id="fgSave">✦ 保存模型</button><button class="btn cy" id="fgFull" hidden>我想看完整版 ▸</button><button class="btn cy" id="fgBack" hidden>◂ 回到滑杆版</button></div><div id="fgFitR" aria-live="polite"></div>
 <h3 style="margin-top:12px">参 数</h3><div id="fgPar"></div>
 <p class="ft" id="fgFt"></p><p class="ft" id="fgKou" hidden></p></section>
 <section class="pn fl" aria-label="玩法、预测胶囊与模型谱系"><h3>玩 法</h3><p class="cd" id="fgIntro"></p><div id="fgOpenW" hidden><h3 style="margin-top:12px">开 放 问 题</h3><p class="cd">学界仍在争论的真实问题。只提问,不给结论;来源为一手论文或机构页面(外链,点击才访问)。</p><div id="fgOpen"></div></div><h3 style="margin-top:12px">预 测 胶 囊</h3><p class="cd">把当前模型的预测封进胶囊,到期开封对答案。</p><div id="fgCap"></div>
 <h3 style="margin-top:14px">模 型 谱 系</h3><p class="cd">每次「保存模型」都存在这台设备的浏览器里(不上传、无账号),可回看、载入、对比。</p><div id="fgLin"></div><p class="ft" id="fgSrc"></p></section></div>
-<div id="fgToast" role="status"></div>`;
+<div id="fgToast" role="status"></div><div id="fgLive" class="sr" aria-live="polite"></div>`;
   document.body.appendChild(root);
   // 阻断背后深空层的滚轮/触摸/键盘换层
   ["wheel", "touchstart", "touchend", "pointermove", "click", "pointerdown"].forEach((t) => root.addEventListener(t, (e) => e.stopPropagation(), { passive: true }));
@@ -177,9 +185,16 @@ function buildDom() {
   $("fgFit").onclick = () => autoFit();
   $("fgSave").onclick = () => saveModel();
   $("fgSel").onchange = (e) => { const id = e.target.value; if (S && id !== S.cfg.id) { saveState(); openForge(id, { rm: root.classList.contains("rm"), onClose: onCloseCb, keep: true, tier: S.tier }).catch((er) => console.warn(er)); } }; // 深空 2.5 炉选择(2.8:沿用当前档位)
-  const toTier = (t) => { if (S && t !== S.tier) { saveState(); openForge(S.cfg.id, { rm: root.classList.contains("rm"), onClose: onCloseCb, keep: true, tier: t }).catch((er) => console.warn(er)); } }; // 深空 2.8 档位切换
+  const toTier = (t, x = {}) => (S && t !== S.tier ? (saveState(), openForge(S.cfg.id, { rm: root.classList.contains("rm"), onClose: onCloseCb, keep: true, tier: t, ...x }).catch((er) => console.warn(er))) : Promise.resolve()); // 深空 2.8 档位切换
   $("fgTier").onchange = (e) => toTier(e.target.value);
-  $("fgFull").onclick = () => { toTier("l2"); $("fgTier").focus(); };
+  /* 深空 2.8.1(06 C6):带入当前积木与参数(含星辰层隐藏的定值);不写进 l2 谱系,也不覆盖 l2 存档,直到学生在 l2 里动手 */
+  const arrive = (t) => { const f = $("fgFitH"); if (f) f.focus(); $("fgLive").textContent = ""; setTimeout(() => ($("fgLive").textContent = t), 60); };
+  $("fgFull").onclick = () => { const carry = { blocks: S.state.blocks.slice(), p: { ...E.effP(S.cfg, S.state) } };
+    toTier("l2", { carry, from: "l1" }).then(() => { toast("已带入你的模型 · 现在所有参数都可以调,也能看到 χ² 和 BIC", true); arrive("已切换到星系 · 原版。已带入你的模型,现在所有参数都可以调,也能看到 χ² 和 BIC。"); }); };
+  $("fgBack").onclick = () => toTier("l1").then(() => arrive("已回到星辰 · 滑杆版。"));
+  /* 06 C9:窄屏档位只显示两字短名,全名在 title */
+  const mq = matchMedia("(max-width:760px)"), shortT = () => [...$("fgTier").options].forEach((o) => (o.textContent = mq.matches ? o.title.slice(0, 2) : o.title));
+  shortT(); mq.addEventListener ? mq.addEventListener("change", shortT) : mq.addListener(shortT);
   const cv = $("fgCv");
   const tipAt = (e) => { if (!S) return; const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top; showTip(mx, my); };
   cv.addEventListener("pointermove", tipAt); cv.addEventListener("pointerdown", tipAt); cv.addEventListener("pointerleave", () => ($("fgTip").style.display = "none"));
@@ -208,15 +223,17 @@ export async function openForge(id = "dm", opt = {}) {
     let cfg, raw;
     try { cfg = await fetch(new URL(id + ".json", BASE)).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }); raw = await fetch(new URL(cfg.data.file, BASE)).then((r) => r.json()); }
     catch (e) { close(); throw new Error("模型炼炉「" + id + "」加载失败:" + e.message); }
-    const data = E.makeData(raw, cfg.data);
+    let data = E.makeData(raw, cfg.data);
     cfg = E.applyTier(cfg, tier); // 深空 2.8:l2 原样返回
+    data = E.tierData(cfg, data); // 深空 2.8.1(06 C2):星辰层可用教学相对误差(开普勒炉 ±2%);其余档原样
     const K = (s) => (tier === "l2" ? `gn:deep:forge:${cfg.id}:${s}` : `gn:deep:forge:${cfg.id}:${tier}:${s}`);
     const def = { blocks: (cfg.preset || []).slice(), p: {}, lock: {} };
     cfg.blocks.forEach((b) => b.params.forEach((q) => { def.p[q.k] = q.value; if (q.lock) def.lock[q.k] = true; }));
     const sv = store.get(K("state"), null);
-    const state = sv ? { blocks: (sv.blocks || []).filter((b) => cfg.blocks.some((x) => x.id === b)), p: { ...def.p, ...sv.p }, lock: { ...def.lock, ...sv.lock } } : def;
+    const cy = opt.carry && tier === "l2" ? opt.carry : null; // 深空 2.8.1(06 C6)
+    const state = cy ? { blocks: cy.blocks.filter((b) => cfg.blocks.some((x) => x.id === b)), p: { ...def.p, ...cy.p }, lock: { ...def.lock } } : sv ? { blocks: (sv.blocks || []).filter((b) => cfg.blocks.some((x) => x.id === b)), p: { ...def.p, ...sv.p }, lock: { ...def.lock, ...sv.lock } } : def;
     cfg.blocks.forEach((b) => b.params.forEach((q) => { if (q.hide) { state.p[q.k] = q.value; state.lock[q.k] = true; } })); // 星辰层隐藏的参数始终锁在给定值
-    S = { cfg, data, K, state, tier, sigma: {}, sel: null, cmp: null, badge: store.get(K("badge"), null) };
+    S = { cfg, data, K, state, tier, sigma: {}, sel: null, cmp: null, badge: store.get(K("badge"), null), from: opt.from || null, carried: !!cy, ghost: null, drags: 0, gKey: null, gT: 0 };
     const TL = { l1: "星辰 · ", l4: "星穹 · " }[tier] || "";
     ["t1", "t2", "t4"].forEach((c) => root.classList.toggle(c, c === "t" + tier.slice(1)));
     $("fgT").textContent = cfg.title; $("fgSub").textContent = cfg.subtitle;
@@ -224,7 +241,7 @@ export async function openForge(id = "dm", opt = {}) {
     tierUi(); $("fgCv").setAttribute("aria-label", cfg.title + ":真实数据星点、模型金线与残差光丝");
     $("fgIntro").textContent = cfg.intro || ""; $("fgSrc").innerHTML = "数据与方法:" + cfg.sources.map(esc).join(";") + "。";
     renderAll();
-  } else { renderAll(); }
+  } else { if (opt.from !== undefined) S.from = opt.from; renderAll(); }
   $("fgTier").value = S.tier;
   requestAnimationFrame(() => { stars(); draw(); });
   if (!opt.keep) $("fgX").focus();
@@ -233,15 +250,17 @@ export async function openForge(id = "dm", opt = {}) {
 /* 深空 2.8:档位相关的静态文案 */
 function tierUi() {
   const t = S.tier, c = S.cfg, l1 = t === "l1";
-  $("fgFull").hidden = !l1; $("fgFit").textContent = l1 ? "⟲ 帮我调到最好" : "⟲ 自动拟合";
-  $("fgScL").textContent = l1 ? "贴合度 · %" : "亮度 · 分";
+  $("fgFull").hidden = !l1; $("fgBack").hidden = !(t === "l2" && S.from === "l1"); $("fgFit").textContent = l1 ? "⟲ 帮我调到最好" : "⟲ 自动拟合";
+  $("fgFit").title = l1 ? "只在图上画一条最优金线虚线作参照:不改你的滑杆,不计过关,也不点亮徽章" : "Levenberg–Marquardt 最小二乘,拟合所有未锁定的参数";
+  $("fgEnc").hidden = !l1; $("fgEnc").textContent = l1 ? "贴合度低不是失败:每拖一次滑杆、每换一块积木,都是在排除一种可能——科学家当年也是这样一步步试出来的。" : "";
+  $("fgScL").textContent = l1 ? "已贴住 · 颗" : "亮度 · 分";
   [["fgLg0", "贴得很好", "|残差|/误差<1"], ["fgLg1", "差一点", "1–3"], ["fgLg2", "差很多", ">3"]].forEach(([id, a, b]) => ($(id).textContent = l1 ? a : b));
   $("fgFt").textContent = l1 ? "贴合度 = 每颗星按光丝颜色计分(绿 1 分、黄 ½ 分、红 0 分)后的平均。想看 χ²、BIC 这些正式的统计量,点「我想看完整版」。"
     : "亮度分 S = 100·exp(−max(0, (BIC−n)/n)/1.5):残差越小、参数越少越亮。BIC = χ² + k·ln n,AIC = χ² + 2k(高斯误差,省略常数项),k 为自由(未锁定)参数个数,n 为数据点数。";
   const T4 = t === "l4" ? c.tierCfg : null;
   $("fgKou").hidden = !T4; $("fgKou").textContent = T4 ? "统计口径:" + T4.stats : "";
   $("fgOpenW").hidden = !T4;
-  $("fgOpen").innerHTML = T4 ? T4.open.map((o) => `<div class="oq"><b>${esc(o.t)}</b><p>${esc(o.q)}</p><p class="tr">${esc(o.try)}</p><ul>${o.src.map((x) => `<li><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.t)}</a></li>`).join("")}</ul><p class="ck">来源复核:${esc(o.checked)}</p></div>`).join("") : "";
+  $("fgOpen").innerHTML = T4 ? T4.open.map((o, i) => `<div class="oq" id="fgOq${i}" tabindex="-1"><b>${esc(o.t)}</b><p>${esc(o.q)}</p><p class="tr">${esc(o.try)}</p><ul>${o.src.map((x) => `<li><a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.t)}</a></li>`).join("")}</ul><p class="ck">来源复核:${esc(o.checked)}</p></div>`).join("") : "";
 }
 
 /* ---------- 渲染 ---------- */
@@ -267,8 +286,8 @@ function renderBlocks() {
   const rw = $("fgRing").clientWidth; Formula.render($("fgSum"), rw && rw < 380 && S.cfg.sumTexShort ? S.cfg.sumTexShort : S.cfg.sumTex, { display: false });
 }
 
-function addBlock(id) { const st = S.state; if (st.blocks.includes(id)) return; st.blocks.push(id); S.sel = id; S.sigma = {}; S.fitInfo = null; renderBlocks(); renderPar(); update(); }
-function removeBlock(id) { const st = S.state; st.blocks = st.blocks.filter((x) => x !== id); if (S.sel === id) S.sel = null; S.sigma = {}; S.fitInfo = null; renderBlocks(); renderPar(); update(); }
+function addBlock(id) { const st = S.state; if (st.blocks.includes(id)) return; st.blocks.push(id); S.sel = id; S.sigma = {}; S.fitInfo = null; S.ghost = null; S.carried = false; renderBlocks(); renderPar(); update(); }
+function removeBlock(id) { const st = S.state; st.blocks = st.blocks.filter((x) => x !== id); if (S.sel === id) S.sel = null; S.sigma = {}; S.fitInfo = null; S.ghost = null; S.carried = false; renderBlocks(); renderPar(); update(); }
 
 /* 拖拽(指针事件,鼠标/触摸通用);未移动即视为点选 */
 function dragify(el, id, inRing) {
@@ -317,8 +336,9 @@ function renderPar() {
       const inp = r.querySelector("input"), vv = r.querySelector(".vv"), sg = r.querySelector(".sg");
       const show = () => { const x = st.p[q.k]; vv.textContent = nf(x, q.dp ?? (x < 10 ? 3 : 2)); const s = S.sigma[q.k]; sg.textContent = s != null && isFinite(s) ? "± " + nf(s, sig(s)) : ""; inp.setAttribute("aria-valuetext", nf(x, 3) + " " + q.unit); };
       show(); r._show = show;
-      inp.addEventListener("input", () => { st.p[q.k] = fromS(q, inp.value); S.sigma = {}; S.fitInfo = null; P.querySelectorAll(".sg").forEach((e) => (e.textContent = "")); show(); update(); });
-      r.querySelector(".lk").onclick = (e) => { e.preventDefault(); st.lock[q.k] = !st.lock[q.k]; S.sigma = {}; S.fitInfo = null; renderPar(); update(); };
+      inp.addEventListener("input", () => { st.p[q.k] = fromS(q, inp.value); S.sigma = {}; if (S.tier !== "l1") S.fitInfo = null; S.carried = false; P.querySelectorAll(".sg").forEach((e) => (e.textContent = "")); show(); update(); });
+      inp.addEventListener("change", () => { S.drags++; update(); }); // 2.8.1(06 C3):数拖动次数,够 3 次才显示 sub
+      r.querySelector(".lk").onclick = (e) => { e.preventDefault(); st.lock[q.k] = !st.lock[q.k]; S.sigma = {}; S.fitInfo = null; S.carried = false; renderPar(); update(); };
       g.appendChild(r);
     });
     P.appendChild(g);
@@ -330,23 +350,31 @@ function renderPar() {
 function update() {
   const ev = E.evaluate(S.cfg, S.data, S.state, compile); S.ev = ev;
   const l1 = S.tier === "l1", fit = E.fitness(ev), sc = l1 ? fit : E.score(ev), ok = E.passed(S.cfg, S.state, ev); // 深空 2.8:星辰层表盘显示贴合度
-  $("fgSc").textContent = ev.empty ? "—" : sc;
+  const tc0 = E.tierCount(ev), cnt = `${tc0[0]}/${ev.N}`; // 2.8.1(06 C4):星辰层表盘主位「已贴住 x/n 颗」,贴合度 % 作副信息
+  $("fgSc").textContent = ev.empty ? "—" : l1 ? cnt : sc; $("fgSc").setAttribute("font-size", l1 && !ev.empty ? (cnt.length > 5 ? 17 : cnt.length > 4 ? 21 : 24) : 26);
   $("fgArc").setAttribute("stroke-dasharray", `${(289 * sc / 100).toFixed(1)} 289`);
   $("fgArc").setAttribute("stroke", ok ? "#5fe39a" : sc > 40 ? "#7fe3ff" : "#4a7f99");
   $("fgGl").setAttribute("opacity", (0.08 + 0.92 * sc / 100).toFixed(2));
   const last = store.get(S.K("lineage"), [])[0];
   const dB = last && !ev.empty ? ev.bic - last.bic : null;
   const tc = E.tierCount(ev), pv = ev.empty ? null : E.chi2Q(ev.chi2, ev.nu);
-  if (l1) $("fgStat").innerHTML = `<dt style="color:${TIER[0]}">绿光丝</dt><dd>${ev.empty ? "—" : tc[0]}</dd><dt style="color:${TIER[1]}">黄光丝</dt><dd>${ev.empty ? "—" : tc[1]}</dd><dt style="color:${TIER[2]}">红光丝</dt><dd>${ev.empty ? "—" : tc[2]}</dd><dt>数据点 n</dt><dd>${ev.N}</dd>`;
+  if (l1) $("fgStat").innerHTML = `<dt>贴合度</dt><dd>${ev.empty ? "—" : fit + "%"}</dd><dt style="color:${TIER[0]}">绿光丝</dt><dd>${ev.empty ? "—" : tc[0]}</dd><dt style="color:${TIER[1]}">黄光丝</dt><dd>${ev.empty ? "—" : tc[1]}</dd><dt style="color:${TIER[2]}">红光丝</dt><dd>${ev.empty ? "—" : tc[2]}</dd><dt>数据点 n</dt><dd>${ev.N}</dd>`;
   else $("fgStat").innerHTML = ev.empty ? `<dt>χ²<sub>ν</sub></dt><dd>—</dd><dt>参数 k</dt><dd>0</dd><dt>数据点 n</dt><dd>${ev.N}</dd>` :
     `<dt>约化 χ²<sub>ν</sub></dt><dd style="color:${ok ? "#5fe39a" : ev.red > 10 ? "#ff8a8a" : "#ffd36b"}">${nf(ev.red, ev.red < 10 ? 2 : 1)}</dd><dt>自由参数 k</dt><dd>${ev.k}</dd><dt>数据点 n</dt><dd>${ev.N}</dd>${S.tier === "l4" ? `<dt>自由度 ν = n−k</dt><dd>${ev.nu}</dd><dt>p(≥χ²)</dt><dd>${pv < 1e-4 ? pv.toExponential(1) : nf(pv, 3)}</dd>` : ""}<dt>χ²</dt><dd>${nf(ev.chi2, 1)}</dd><dt>BIC</dt><dd>${nf(ev.bic, 1)}</dd><dt>AIC</dt><dd>${nf(ev.aic, 1)}</dd>${dB != null ? `<dt>ΔBIC 较上一存档</dt><dd>${dB > 0 ? "+" : ""}${nf(dB, 1)}</dd>` : ""}`;
   $("fgDer").innerHTML = ev.empty ? "" : derivedHtml(); // 深空 2.6 派生量(R₀ 等)单独一栏,不挤拟合仪
+  $("fgDer").querySelectorAll("[data-oq]").forEach((a) => (a.onclick = (e) => { e.preventDefault(); const o = $("fgOq" + a.dataset.oq); if (o) { o.scrollIntoView({ block: "nearest" }); o.focus(); } }));
   const P = S.cfg.pass;
   $("fgPassL").innerHTML = `过关线:${P.fitMin != null ? "贴合度 ≥ " + P.fitMin + "%(现在 " + (ev.empty ? 0 : fit) + "%)" : "χ²<sub>ν</sub> &lt; " + P.redMax}${l1 && P.params ? Object.entries(P.params).map(([k, r]) => ` 且 ${esc(paramQ(k).name)} 在 ${r[0]}–${r[1]}`).join("") : ""}${P.require ? " 且炉中含" + P.require.map((id) => "「" + esc(S.cfg.blocks.find((b) => b.id === id).name) + "」").join("") : ""} · ${ok ? '<span style="color:#5fe39a">已达成</span>' : "未达成"}`;
   $("fgSave").disabled = ev.empty; $("fgFit").disabled = ev.empty || !E.freeParams(S.cfg, S.state).length;
   // 引导:只提问
   const g = E.guide(S.cfg, S.state, ev), G = $("fgGuide"); S.focus = g && g.focus || null;
-  G.className = ok ? "ok" : ""; G.innerHTML = g ? esc(g.q) + (g.sub ? `<em>${esc(g.sub)}</em>` : "") : "";
+  /* 2.8.1(06 C3):星辰层的 sub 延迟出现——同一条引导下拖动滑杆满 3 次,或停留 20 秒;06 C11:过关提问后的折叠项 */
+  const gk = g ? g.q : null; if (gk !== S.gKey) { S.gKey = gk; S.drags = 0; S.gT = Date.now(); clearTimeout(S.gTm); }
+  let showSub = !!(g && g.sub);
+  if (showSub && l1) { const left = 20000 - (Date.now() - S.gT); showSub = S.drags >= 3 || left <= 0; if (!showSub) { clearTimeout(S.gTm); S.gTm = setTimeout(() => { if (S && S.gKey === gk && root.classList.contains("on")) update(); }, left + 50); } }
+  G.className = ok ? "ok" : "";
+  const gh = g ? esc(g.q) + (showSub ? `<em>${esc(g.sub)}</em>` : "") + (g.more ? `<details><summary>我想想 · 看看科学家怎么说</summary><p>${esc(g.more)}</p></details>` : "") : "";
+  if (G.dataset.h !== gh) { G.innerHTML = gh; G.dataset.h = gh; } // 内容不变就不重绘,折叠项保持展开状态
   const bn = S.badgeName || S.cfg.badge;
   if (ok && !S.badge) { S.badge = new Date().toISOString(); store.set(S.K("badge"), S.badge); toast("点亮 · " + bn); }
   $("fgBadge").classList.toggle("lit", !!S.badge); $("fgBadge").title = S.badge ? bn + " · 已点亮 " + S.badge.slice(0, 10) : bn + " · 未点亮";
@@ -356,13 +384,17 @@ function update() {
 /* 深空 2.6 派生量(如 R₀ = β/γ):炉里有所需积木就显示;自动拟合后附一阶误差传播的 σ */
 function derivedHtml() {
   const F = S.fitInfo && S.fitInfo.cov ? S.fitInfo : null;
-  return E.derived(S.cfg, { ...S.state, p: E.effP(S.cfg, S.state) }, F).map((x) => `<dt>${esc(x.d.name)}</dt><dd style="color:#f5e3b5;white-space:nowrap">${nf(x.v, x.d.dp ?? 2)}${x.s != null && isFinite(x.s) ? " ± " + nf(x.s, x.d.dp ?? 2) : ""}${x.d.unit ? " " + esc(x.d.unit) : ""}</dd>`).join("");
+  /* 2.8.1(06 C8):β 与 γ 都参与拟合且 |ρ| > 0.95 时,R₀ 行下加红字警示(数值不改) */
+  const rho = F && F.cov && F.cov.beta && F.cov.gamma ? F.cov.beta.gamma / Math.sqrt(F.cov.beta.beta * F.cov.gamma.gamma) : null;
+  return E.derived(S.cfg, { ...S.state, p: E.effP(S.cfg, S.state) }, F).map((x) => `<dt>${esc(x.d.name)}</dt><dd style="color:#f5e3b5;white-space:nowrap">${nf(x.v, x.d.dp ?? 2)}${x.s != null && isFinite(x.s) ? " ± " + nf(x.s, x.d.dp ?? 2) : ""}${x.d.unit ? " " + esc(x.d.unit) : ""}</dd>` +
+    (x.d.fn === "R0" && rho != null && isFinite(rho) && Math.abs(rho) > 0.95 ? `<dd class="wr" role="note">⚠ β 与 γ 高度相关(ρ = ${rho > 0 ? "+" : ""}${nf(rho, 3)}),R₀ 没有被数据定住;${x.s != null && isFinite(x.s) ? "± " + nf(x.s, x.d.dp ?? 2) + " " : ""}不可信。${S.tier === "l4" ? '见<a href="#fgOq0" data-oq="0">开放问题 1</a>。' : "星穹层开放问题 1 讨论了这一点。"}</dd>` : "")).join("");
 }
 function renderFitR() {
   const F = S.fitInfo, el = $("fgFitR");
+  if (S.tier === "l1" && !S.ghost) $("fgFit").textContent = "⟲ 帮我调到最好";
   if (!F) { el.innerHTML = ""; return; }
-  const Q = Object.keys(F.sigma);
-  if (S.tier === "l1") { el.innerHTML = `<b>帮你调好了</b>(只调露出来的旋钮):` + Q.map((k) => { const q = paramQ(k); return `${esc(q.name)} = <b>${nf(F.p[k], sig(F.sigma[k]))}</b> ${esc(q.unit)}`; }).join(";") + `。贴合度 ${E.fitness(F.ev)}%。`; return; }
+  const Q = Object.keys(F.sigma || {});
+  if (S.tier === "l1") { $("fgFit").textContent = S.ghost ? "✕ 收起参照线" : "⟲ 帮我调到最好"; if (S.ghost) el.innerHTML = `图上的<b>金色虚线</b>是电脑找到的最好金线(贴合度 ${S.ghost.fit}%),只作参照:它不改你的滑杆,不计过关、也不点亮徽章——自己拖到这条虚线附近试试。`; else el.innerHTML = ""; return; }
   el.innerHTML = `<b>最小二乘结果</b>(Levenberg–Marquardt,${F.iter} 步):` + Q.map((k) => { const q = paramQ(k); return `${esc(q.name)} = <b>${nf(F.p[k], sig(F.sigma[k]))} ± ${nf(F.sigma[k], sig(F.sigma[k]))}</b> ${esc(q.unit)}${F.atBound[k] ? '<span style="color:#ffd36b">(触到范围边界)</span>' : ""}`; }).join(";") +
     (() => { const D = E.derived(S.cfg, { ...S.state, p: E.effP(S.cfg, S.state) }, F); return D.length ? ";" + D.map((x) => `${esc(x.d.name)} = <b>${nf(x.v, Math.max(x.d.dp ?? 2, sig(x.s)))} ± ${nf(x.s, Math.max(x.d.dp ?? 2, sig(x.s)))}</b>${x.d.unit ? " " + esc(x.d.unit) : ""}`).join(";") + "(派生量按协方差一阶传播,锁定参数不计误差)" : ""; })() +
     `。χ²<sub>ν</sub> = ${nf(F.ev.red, 3)}。σ 取 (JᵀWJ)⁻¹ 对角${F.ev.red > 1 ? ",并乘 √χ²<sub>ν</sub>" : ""};参数之间有相关,单看 σ 会低估简并。` + (S.tier === "l4" ? corrHtml(F) : "");
@@ -378,12 +410,16 @@ function corrHtml(F) {
 const paramQ = (k) => { for (const b of S.cfg.blocks) for (const q of b.params) if (q.k === k) return q; return { name: k, unit: "" }; };
 
 function autoFit() {
+  if (S.tier === "l1") { // 2.8.1(06 C1 方案 a):只算出最优金线画成虚线参照;滑杆、过关、徽章都不动
+    if (S.ghost) { S.ghost = null; S.fitInfo = null; update(); return; }
+    const st2 = { blocks: S.state.blocks.slice(), p: { ...S.state.p }, lock: { ...S.state.lock } }, R = E.fit(S.cfg, S.data, st2, compile);
+    S.ghost = { blocks: st2.blocks, p: { ...R.p }, fit: E.fitness(R.ev) }; S.fitInfo = { ghost: true }; update(); return; }
   const R = E.fit(S.cfg, S.data, S.state, compile);
-  Object.assign(S.state.p, R.p); S.sigma = R.sigma; S.fitInfo = R;
+  Object.assign(S.state.p, R.p); S.sigma = R.sigma; S.fitInfo = R; S.carried = false;
   renderPar(); update();
 }
 
-function saveState() { if (!S) return; store.set(S.K("state"), { blocks: S.state.blocks, p: S.state.p, lock: S.state.lock }); }
+function saveState() { if (!S || S.carried) return; store.set(S.K("state"), { blocks: S.state.blocks, p: S.state.p, lock: S.state.lock }); }
 
 /* ---------- 图 ---------- */
 let geo = null;
@@ -452,6 +488,8 @@ function draw() {
   (S.cfg.capsules || []).forEach((c) => { const s = capS[c.id]; if (!s || c.fitTo == null || !s.p) return; const ms = { blocks: s.blocks, p: s.p, lock: {} };
     g.beginPath(); let first = true; xsC.forEach((x) => { if (x > c.x) return; const y = clampY(E.modelAt(S.cfg, D, ms, x, null, compile)); first ? g.moveTo(px(x), py(y)) : g.lineTo(px(x), py(y)); first = false; }); g.lineTo(px(c.x), py(Math.max(A.y.min, Math.min(A.y.max, s.pred))));
     g.strokeStyle = "rgba(127,227,255,.75)"; g.lineWidth = 1.4; g.setLineDash([5, 4]); g.stroke(); g.setLineDash([]); });
+  // 2.8.1(06 C1):星辰层「帮我调到最好」的参照虚线
+  if (S.ghost && !ev.empty) { g.globalAlpha = .85; path((x) => E.modelAt(S.cfg, D, S.ghost, x, null, compile), GOLD, 1.8, [7, 5]); g.globalAlpha = 1; }
   // 谱系对比
   if (S.cmp) { const c = S.cmp; path((x) => E.modelAt(S.cfg, D, c, x, null, compile), "rgba(255,255,255,.7)", 1.4, [6, 5]); }
   // 残差光丝
@@ -468,7 +506,7 @@ function draw() {
   (S.cfg.capsules || []).forEach((c) => { const s = store.get(S.K("capsules"), {})[c.id]; g.strokeStyle = "rgba(127,227,255,.35)"; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(px(c.x), T); g.lineTo(px(c.x), h - B); g.stroke(); g.setLineDash([]);
     if (s) { g.strokeStyle = "#7fe3ff"; g.lineWidth = 2; g.beginPath(); g.arc(px(c.x), py(Math.max(A.y.min, Math.min(A.y.max, s.pred))), 6, 0, 6.283); g.stroke(); } if (c.official) { const o = c.official, cx = px(c.x), cy = py(o.pred), y0 = py(o.pred - o.err), y1 = py(o.pred + o.err); g.strokeStyle = GOLD; g.lineWidth = 1.5; g.beginPath(); g.moveTo(cx, y0); g.lineTo(cx, y1); g.moveTo(cx - 4, y0); g.lineTo(cx + 4, y0); g.moveTo(cx - 4, y1); g.lineTo(cx + 4, y1); g.stroke(); g.fillStyle = GOLD; g.beginPath(); g.moveTo(cx, cy - 5); g.lineTo(cx + 5, cy); g.lineTo(cx, cy + 5); g.lineTo(cx - 5, cy); g.closePath(); g.fill(); } /* 深空 2.7:总指挥封存的预测(金色菱形 ± 误差) */ g.fillStyle = "#7fe3ff"; g.textAlign = "center"; g.fillText("胶囊", px(c.x), labY[c.id] ?? capY); });
   if (ev.empty) { g.fillStyle = "rgba(233,238,251,.55)"; g.textAlign = "center"; g.font = (sm ? 12 : 14) + "px -apple-system,'PingFang SC',sans-serif"; const tx = S.cfg.emptyHint || "星点 = 真实观测 · 放入积木,金线就会出现"; if (w < 560) { const k = tx.indexOf("·"); g.fillText(tx.slice(0, k).trim(), (L + w - R) / 2, T + (h - T - B) * .7); g.fillText(tx.slice(k + 1).trim(), (L + w - R) / 2, T + (h - T - B) * .7 + 18); } else g.fillText(tx, (L + w - R) / 2, T + (h - T - B) * .82); }
-  $("fgLgC").innerHTML = (S.cmp ? '<i style="background:#fff"></i>对比:谱系 #' + S.cmp.n : "") + ((S.cfg.capsules || []).some((c) => c.fitTo != null && capS[c.id]) ? ' <i style="background:#7fe3ff"></i>封存时的模型' : "") + ((S.cfg.capsules || []).some((c) => c.official) ? ' <i style="background:' + GOLD + ';width:7px;height:7px;margin:0 7px 0 3px;transform:rotate(45deg);border-radius:1px"></i>' + esc(S.cfg.capsules.find((c) => c.official).official.by || "官方") + "封存的预测" : "");
+  $("fgLgC").innerHTML = (S.ghost ? '<i style="background:repeating-linear-gradient(90deg,' + GOLD + ' 0 5px,transparent 5px 8px)"></i>最好金线(参照,不计过关) ' : "") + (S.cmp ? '<i style="background:#fff"></i>对比:谱系 #' + S.cmp.n : "") + ((S.cfg.capsules || []).some((c) => c.fitTo != null && capS[c.id]) ? ' <i style="background:#7fe3ff"></i>封存时的模型' : "") + ((S.cfg.capsules || []).some((c) => c.official) ? ' <i style="background:' + GOLD + ';width:7px;height:7px;margin:0 7px 0 3px;transform:rotate(45deg);border-radius:1px"></i>' + esc(S.cfg.capsules.find((c) => c.official).official.by || "官方") + "封存的预测" : "");
 }
 
 function showTip(mx, my) {
@@ -495,7 +533,7 @@ function renderCaps() {
     const stat = c.unlockAt ? (opened && ready ? "已开封" : ready ? "已到期 · 可开封" : due ? `已到期 · 待 ${c.awaitLabel ? c.awaitLabel + " " : "数据"}发布后开封` : `未开封 · 到期 ${c.unlockAt.slice(0, 10)}`) : "";
     let body = `<b>${esc(c.title)}</b>${c.demo ? '<span class="tg">演示</span>' : ""}${stat ? `<span class="tg st">${esc(stat)}</span>` : ""}<p>${esc(c.q)}</p>`;
     if (c.official) { const o = c.official;
-      body += `<p class="v">${esc(o.by || "官方")}封存(${esc(o.at)},数据截至 ${esc(o.dataTo)},${esc(o.glyphs)}${S.tier === "l1" ? "" : ",χ²<sub>ν</sub> " + nf(o.red, 2)}):${esc(sym)} = <b>${esc(yu(o.pred, cd, c.unit))} ± ${esc(yu(o.err, cd, c.unit))}</b>(参数 ±${esc(yu(o.errModel, cd, c.unit))} ⊕ 年际起伏 0.8)</p>`;
+      body += `<p class="v">${esc(o.by || "官方")}封存(${esc(o.at)},数据截至 ${esc(o.dataTo)},${esc(o.glyphs)}${S.tier === "l1" ? "" : ",χ²<sub>ν</sub> " + nf(o.red, 2)}):${esc(sym)} = <b>${esc(yu(o.pred, cd, c.unit))} ± ${esc(yu(o.err, cd, c.unit))}</b>${S.tier === "l1" ? "" : `(参数 ±${esc(yu(o.errModel, cd, c.unit))} ⊕ 年际起伏 0.8)`}</p>`;
       if (opened && ready) body += `<p class="v">开封:实测 ${esc(yu(T.v, cd, c.unit))}(${esc(c.truth.label || "")})· ${o.by || "官方"}预测 ${cmp(o.pred)}</p>`; }
     if (!s) body += `<p class="v" data-live></p><div class="rowb"><button class="btn sm cy" data-a="seal">${c.official ? "封存我的预测" : "封存预测"}</button>${c.official && ready && !opened ? '<button class="btn sm" data-a="open">开封对答案</button>' : ""}</div>`;
     else {
@@ -532,21 +570,21 @@ const glyphs = (bl) => bl.map((id) => { const b = S.cfg.blocks.find((x) => x.id 
 
 /* ---------- 模型谱系 ---------- */
 function saveModel() {
-  if (S.ev.empty) return;
+  if (S.ev.empty) return; S.carried = false;
   const L = store.get(S.K("lineage"), []), n = (L[0] ? L[0].n : 0) + 1, ev = S.ev;
   L.unshift({ n, at: new Date().toISOString(), blocks: S.state.blocks.slice(), p: { ...S.state.p }, lock: { ...S.state.lock }, sigma: { ...S.sigma }, chi2: ev.chi2, red: ev.red, k: ev.k, N: ev.N, aic: ev.aic, bic: ev.bic, score: E.score(ev), fit: E.fitness(ev), pass: E.passed(S.cfg, S.state, ev) });
   store.set(S.K("lineage"), L.slice(0, 40)); renderLin(); update();
 }
 function renderLin() {
   const L = store.get(S.K("lineage"), []), box = $("fgLin"); box.innerHTML = "";
-  if (!L.length) { box.innerHTML = '<p class="cd">还没有存档。合成一个模型后点「✦ 保存模型」。</p>'; return; }
+  if (!L.length) { const t = S.tier === "l1" && S.cfg.tierCfg && S.cfg.tierCfg.text && S.cfg.tierCfg.text.linEmpty; box.innerHTML = `<p class="cd">${t ? esc(t) : "还没有存档。合成一个模型后点「✦ 保存模型」。"}</p>`; return; } // 2.8.1(06 C10)
   L.forEach((m, i) => {
     const prev = L[i + 1], el = document.createElement("div"); el.className = "ln" + (S.cmp && S.cmp.n === m.n ? " cmp" : "");
     const ps = Object.keys(m.p).filter((k) => m.blocks.some((id) => S.cfg.blocks.find((b) => b.id === id).params.some((q) => q.k === k))).map((k) => `${esc(paramQ(k).name.split(" ").pop())}=${nf(m.p[k], paramQ(k).dp ?? (m.p[k] < 10 ? 3 : 2))}`).join(" ");
     el.innerHTML = `<div class="t"><b>#${m.n} ${esc(glyphs(m.blocks))}</b><span>${new Date(m.at).toLocaleString("zh-CN", { hour12: false, month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span></div>
 <div>${S.tier === "l1" ? `贴合度 ${m.fit ?? "—"}%${m.pass ? ' <span class="ok">✓过关</span>' : ""}</div><div style="display:none">` : ""}k=${m.k} · χ²<sub>ν</sub>=${nf(m.red, m.red < 10 ? 2 : 1)} · BIC=${nf(m.bic, 1)}${prev ? ` (Δ ${m.bic - prev.bic > 0 ? "+" : ""}${nf(m.bic - prev.bic, 1)})` : ""} · 分 ${m.score}${m.pass ? ' <span class="ok">✓过关</span>' : ""}</div><div class="cd">${ps}</div>
 <div class="rowb"><button class="btn sm" data-a="load">载入</button><button class="btn sm cy" data-a="cmp" aria-pressed="${!!(S.cmp && S.cmp.n === m.n)}">${S.cmp && S.cmp.n === m.n ? "取消对比" : "对比"}</button><button class="btn sm" data-a="del" aria-label="删除 #${m.n}">删</button></div>`;
-    el.querySelector('[data-a="load"]').onclick = () => { S.state = { blocks: m.blocks.slice(), p: { ...S.state.p, ...m.p }, lock: { ...S.state.lock, ...(m.lock || {}) } }; S.sigma = { ...(m.sigma || {}) }; S.fitInfo = null; S.sel = null; renderBlocks(); renderPar(); update(); };
+    el.querySelector('[data-a="load"]').onclick = () => { S.state = { blocks: m.blocks.slice(), p: { ...S.state.p, ...m.p }, lock: { ...S.state.lock, ...(m.lock || {}) } }; S.sigma = { ...(m.sigma || {}) }; S.fitInfo = null; S.sel = null; S.ghost = null; S.carried = false; renderBlocks(); renderPar(); update(); };
     el.querySelector('[data-a="cmp"]').onclick = () => { S.cmp = S.cmp && S.cmp.n === m.n ? null : { n: m.n, blocks: m.blocks, p: m.p }; renderLin(); draw(); };
     el.querySelector('[data-a="del"]').onclick = () => { const A = store.get(S.K("lineage"), []).filter((x) => x.n !== m.n); store.set(S.K("lineage"), A); if (S.cmp && S.cmp.n === m.n) S.cmp = null; renderLin(); update(); };
     box.appendChild(el);
@@ -554,7 +592,7 @@ function renderLin() {
 }
 
 let tt = 0;
-function toast(t) { const e = $("fgToast"); e.textContent = "✦ " + t; e.classList.remove("on"); void e.offsetWidth; e.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => e.classList.remove("on"), 2700); }
+function toast(t, quiet) { const e = $("fgToast"); if (quiet) e.setAttribute("aria-hidden", "true"); else e.removeAttribute("aria-hidden"); e.textContent = "✦ " + t; e.classList.remove("on"); void e.offsetWidth; e.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => e.classList.remove("on"), 2700); }
 
 /* 自测钩子 */
-export const __test = { get S() { return S; }, tier: (t) => { $("fgTier").value = t; $("fgTier").onchange({ target: $("fgTier") }); }, addBlock: (id) => addBlock(id), removeBlock: (id) => removeBlock(id), autoFit: () => autoFit(), saveModel: () => saveModel() };
+export const __test = { get S() { return S; }, tier: (t) => { $("fgTier").value = t; $("fgTier").onchange({ target: $("fgTier") }); }, addBlock: (id) => addBlock(id), removeBlock: (id) => removeBlock(id), autoFit: () => autoFit(), saveModel: () => saveModel(), setP: (k, v) => { S.state.p[k] = v; S.carried = false; renderPar(); update(); } };
