@@ -15,7 +15,11 @@
  * 截断拟合(深空 2.6):sliceData(data, xmax) 只留 x ≤ xmax 的数据点,供「用前 N 天数据封存」的预测胶囊。
  * 合成:combine="quad" 时 y² = Σ 分量(分量本身给出 v²,可为负,如气体 Vgas|Vgas|),y = √max(0,Σ);
  *       combine="sum" 时 y = Σ 分量。
- * 统计:χ² = Σ((y−model)/σ)²;约化 χ²_ν = χ²/(N−k);AIC = χ²+2k;BIC = χ²+k·lnN(高斯误差,省略常数项)。
+ * 统计:χ² = Σ((y−model)/σ)²;约化 χ²_ν = χ²/(n−k);AIC = χ²+2k;BIC = χ²+k·ln n(高斯误差,省略常数项;n 为数据点数,
+ *       深空 2.8 起文案统一写小写 n,避免与 SIR 的有效人群 N 冲突——代码字段仍叫 ev.N,不改存档格式)。
+ * 分龄(深空 2.8):cfg.tiers = { l1: 星辰·滑杆版, l4: 星穹·开放问题版 },applyTier(cfg, tier) 返回该档的炉配置(l2 = 原版原样返回);
+ *   贴合度 fitness(ev) = 每颗星按残差光丝颜色计分(绿 1、黄 ½、红 0)的平均 ×100,给星辰层代替 χ²/BIC;
+ *   chi2Q(χ², ν) = 卡方上尾概率,星穹层显示。
  * 拟合:Levenberg–Marquardt,自由参数在(对数尺度参数取 ln)变换空间迭代并夹在范围内;
  *       不确定度 σ = √diag[(JᵀWJ)⁻¹] 在原始参数空间计算,χ²_ν>1 时乘 √χ²_ν(写明)。 */
 export const G = 4.30091e-6; // kpc·(km/s)²/M☉
@@ -88,6 +92,7 @@ export const DERIVED = {
   R0: (p) => p.beta / p.gamma,                  // 基本再生数 R₀ = β/γ
   Rq: (p) => p.beta * (1 - p.q) / p.gamma,      // 干预后再生数 β(1−q)/γ(未计易感者减少)
   Td: (p) => Math.LN2 / p.re,                   // 指数翻倍时间 ln2/r
+  TdL: (p) => Math.LN2 / p.rl,                  // 深空 2.8(01 C10):逻辑斯谛早期翻倍时间 ln2/r(只在 C ≪ K 的早期成立)
   /* 深空 2.7:趋势(线性/二次/指数积木之和)在 d.at 时刻的斜率 ppm/年(中心差分,h = 0.01 年) */
   co2g: (p, B = [], d = {}) => { const t = d.at ?? 2026.7, h = 0.01, K = { lin: "co2lin", quad: "co2quad", exp: "co2exp" }; let s = 0; for (const id of B) if (K[id]) s += (KERNELS[K[id]](t + h, p) - KERNELS[K[id]](t - h, p)) / (2 * h); return s; },
   /* 季节项(年周期 + 半年谐波)一年内的峰谷差 ppm(取样 720 点) */
@@ -196,7 +201,9 @@ export function passed(cfg, state, ev) {
   const P = cfg.pass || {};
   if (ev.empty) return false;
   if (P.require && !P.require.every((id) => state.blocks.includes(id))) return false;
+  if (P.fitMin != null && fitness(ev) < P.fitMin) return false; // 深空 2.8 星辰层:贴合度门槛
   if (P.params) for (const [k, r] of Object.entries(P.params)) if (!(state.p[k] >= r[0] && state.p[k] <= r[1])) return false; // 深空 2.5:参数须落在区间
+  if (P.fitMin != null && P.redMax == null) return true; // 深空 2.8 星辰层:只看贴合度,不设 χ²_ν 线
   return ev.red < (P.redMax ?? 2);
 }
 
@@ -294,4 +301,41 @@ export function capsuleTruth(data, t) {
   let sw = 0, swy = 0, n = 0;
   data.x.forEach((x, i) => { if (x >= t.from && x <= t.to) { const w = 1 / data.e[i] ** 2; sw += w; swy += w * data.y[i]; n++; } });
   return n ? { v: swy / sw, e: Math.sqrt(1 / sw), n } : null;
+}
+
+/* ---------- 深空 2.8 分龄 ---------- */
+/* 贴合度 0–100:绿光丝(|z|<1)计 1、黄(1–3)计 ½、红(>3)计 0,取平均 */
+export function fitness(ev) { if (!ev || ev.empty) return 0; let s = 0; for (const z of ev.z) s += tier(z) === 0 ? 1 : tier(z) === 1 ? 0.5 : 0; return Math.round(100 * s / ev.N); }
+export function tierCount(ev) { const c = [0, 0, 0]; if (ev && !ev.empty) for (const z of ev.z) c[tier(z)]++; return c; }
+
+/* 卡方上尾概率 Q(ν/2, χ²/2)(正则化上不完全 Γ;级数 / 连分式,Numerical Recipes 6.2) */
+function lnGamma(x) { const c = [76.18009172947146, -86.50532032941677, 24.01409824083091, -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5]; let y = x, t = x + 5.5; t -= (x + 0.5) * Math.log(t); let s = 1.000000000190015; for (const v of c) s += v / ++y; return -t + Math.log(2.5066282746310005 * s / x); }
+export function chi2Q(chi2, nu) {
+  const a = nu / 2, x = chi2 / 2; if (!(x > 0)) return 1; const gl = lnGamma(a);
+  if (x < a + 1) { let ap = a, sum = 1 / a, del = sum; for (let n = 0; n < 500; n++) { ap++; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-14) break; } return Math.max(0, 1 - sum * Math.exp(-x + a * Math.log(x) - gl)); }
+  let b = x + 1 - a, c = 1e300, d = 1 / b, h = d; for (let i = 1; i < 500; i++) { const an = -i * (i - a); b += 2; d = an * d + b; if (Math.abs(d) < 1e-300) d = 1e-300; c = b + an / c; if (Math.abs(c) < 1e-300) c = 1e-300; d = 1 / d; const del = d * c; h *= del; if (Math.abs(del - 1) < 1e-14) break; }
+  return Math.exp(-x + a * Math.log(x) - gl) * h;
+}
+
+/* 分档配置:l2(或无 tiers)= 原版原样返回(同一对象,星系层零改动);
+   l1 = 只留 blocks ∪ tray 的积木,非 knobs 的参数隐藏并锁定在 p 给的值;guide/intro/pass/sumTex/emptyHint/积木文案 可覆盖;
+   l4 = 原版积木 + extraBlocks,所有参数默认解锁(lock 只是初值,用户仍可手动锁) */
+export const TIERS = ["l1", "l2", "l4"];
+export function applyTier(cfg, t) {
+  const T = cfg.tiers && cfg.tiers[t];
+  if (!T || t === "l2") return cfg;
+  const c = JSON.parse(JSON.stringify(cfg)); c.tier = t; c.tierCfg = T;
+  for (const k of ["guide", "intro", "pass", "sumTex", "sumTexShort", "emptyHint", "subtitle", "derived"]) if (T[k] != null) c[k] = T[k];
+  if (t === "l1") {
+    const keep = (T.blocks || []).concat(T.tray || []);
+    c.blocks = keep.map((id) => c.blocks.find((b) => b.id === id)).filter(Boolean);
+    const knobs = new Set(T.knobs || []);
+    c.blocks.forEach((b) => { const o = (T.text || {})[b.id]; if (o) Object.assign(b, o);
+      b.params.forEach((q) => { if (T.p && T.p[q.k] != null) q.value = T.p[q.k]; if (knobs.has(q.k)) { delete q.lock; if (T.range && T.range[q.k]) Object.assign(q, T.range[q.k]); } else { q.lock = true; q.hide = true; } }); });
+    c.preset = (T.blocks || []).slice();
+  } else if (t === "l4") {
+    c.blocks = c.blocks.concat(T.extraBlocks || []);
+    c.blocks.forEach((b) => b.params.forEach((q) => delete q.lock));
+  }
+  return c;
 }

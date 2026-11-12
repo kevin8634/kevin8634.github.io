@@ -86,7 +86,7 @@ body.islon #nav,body.islon #hud,body.islon #dive,body.islon #back,body.islon #sn
 body.nogl #labx{background:radial-gradient(ellipse at 50% 40%,#10202c,#02040c 70%)}
 #netB{position:fixed;left:16px;top:64px;z-index:5;font-size:13px}@media (max-width:600px){#netB{top:auto;bottom:74px;left:10px;font-size:12px;padding:6px 10px}}body.labon #netB,body.islon #netB,body.clean #netB{visibility:hidden}
 #net{position:fixed;inset:0;z-index:19;display:none;place-items:center;background:rgba(2,4,12,.82);backdrop-filter:blur(6px)}#net.on{display:grid}#net .nb{position:relative;width:min(560px,94vw);max-height:92vh;overflow:auto;padding:22px;border:1px solid rgba(232,194,122,.35);border-radius:16px;background:rgba(6,10,24,.92)}#net h2{margin:0 0 6px;font-size:18px;color:var(--gold);font-weight:500}#net .cdim{font-size:13px;color:var(--dim);line-height:1.7}#netX{position:absolute;right:12px;top:12px}#netS{width:100%;max-width:400px;display:block;margin:6px auto}#netL p{margin:8px 0;font-size:14px}#netL .lk{color:var(--dim);font-size:13px}#rtBar{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}#rtBar button{font-size:12px;padding:4px 8px}#rtBar .dn{border-color:#7fe3a8;color:#7fe3a8}
-#forgeB{position:fixed;left:16px;top:108px;z-index:5;font-size:13px;display:none}body.l2 #forgeB,body.rm #forgeB{display:inline-block}@media (max-width:600px){#forgeB{top:auto;bottom:116px;left:10px;font-size:12px;padding:6px 10px}}@media (max-height:420px){#forgeB{top:60px;left:auto;right:16px;bottom:auto}}
+#forgeB{position:fixed;left:16px;top:108px;z-index:5;font-size:13px;display:none}body.l2 #forgeB,body.l1 #forgeB,body.l4 #forgeB,body.rm #forgeB{display:inline-block}@media (max-width:600px){#forgeB{top:auto;bottom:116px;left:10px;font-size:12px;padding:6px 10px}}@media (max-height:420px){#forgeB{top:60px;left:auto;right:16px;bottom:auto}}
 body.labon #forgeB,body.islon #forgeB,body.clean #forgeB{visibility:hidden}
 /* 深空 2.5.1 前沿速递:一键飞抵前沿卡 + 冷原子实验柜 */
 #frontB{position:fixed;left:16px;top:152px;z-index:5;font-size:13px;display:none}body.l2 #frontB,body.rm #frontB{display:inline-block}@media (max-width:600px){#frontB{top:auto;bottom:158px;left:10px;font-size:12px;padding:6px 10px}}@media (max-height:420px){#frontB{top:104px;left:auto;right:16px;bottom:auto}}
@@ -107,7 +107,7 @@ body.labon #frontB,body.islon #frontB,body.clean #frontB,body.fgon #frontB,body.
 <button id="snd" class="btn" aria-pressed="false">♪ 音乐 关</button>
 <nav id="nav" aria-label="深度导航"></nav>
 <button id="netB" class="btn" aria-haspopup="dialog">✦ 星网 · 航线</button>
-<button id="forgeB" class="btn" aria-haspopup="dialog" title="星系层 · 拼方程积木,拟合真实数据">⚗ 模型炼炉</button>
+<button id="forgeB" class="btn" aria-haspopup="dialog" title="拼方程积木,拟合真实数据 · 星辰层滑杆版 / 星系层原版 / 星穹层开放问题版随层切换">⚗ 模型炼炉</button>
 <button id="frontB" class="btn" aria-expanded="false" aria-controls="frontP" title="一键飞抵前沿卡">✦ 前沿速递</button><div id="frontP" role="region" aria-label="前沿速递"></div>
 <div id="net" role="dialog" aria-modal="true" aria-labelledby="netT" aria-hidden="true"><div class="nb"><button id="netX" class="btn" aria-label="关闭">✕</button><h2 id="netT">星网 · 跨世界航线</h2><p class="cdim">一座桥是一条航线:一个问题要穿过好几个世界才能解开。走完一条,点亮一枚航线徽章。</p><svg id="netS" viewBox="0 0 400 400" role="img" aria-label="七世界星网"></svg><div id="netL"></div></div></div>
 <div id="hud" aria-live="polite"><h1 id="t"></h1><p id="s"></p><span id="g" class="tag"></span></div>
@@ -344,10 +344,11 @@ $("frontB").onclick=()=>{const P=$("frontP");if(P.classList.contains("on")){clos
 addEventListener("keydown",e=>{if(e.key==="Escape"&&closeFront()){e.stopImmediatePropagation();$("frontB").focus();}},true);
 addEventListener("pointerdown",e=>{if($("frontP").classList.contains("on")&&!e.target.closest("#frontP,#frontB"))closeFront();},true);
 {const fq=new URLSearchParams(location.search).get("front");if(fq==="cold")setTimeout(()=>{if(!document.body.classList.contains("rm"))go(2,true);openCold();},900);}
-/* 深空 2.4 模型炼炉:按需加载 forge/forge.js;?forge=dm 直达 */
-function openForge(id="dm",from){import("./forge/forge.js").then(m=>{closeSide&&closeSide();return m.openForge(id,{rm:document.body.classList.contains("rm"),onClose:()=>{const b=from||$("forgeB");if(b&&b.offsetParent)b.focus();if(rmOne)rmOne();}});}).catch(e=>console.warn("模型炼炉加载失败",e));}
+/* 深空 2.4 模型炼炉:按需加载 forge/forge.js;?forge=dm 直达。深空 2.8 分龄:档位跟当前层走(星辰→l1 滑杆版、星穹→l4 开放问题版、其余→l2 原版),?tier=l1|l2|l4 可指定 */
+const FTIER={1:"l1",4:"l4"};
+function openForge(id="dm",from,tier){import("./forge/forge.js").then(m=>{closeSide&&closeSide();return m.openForge(id,{tier:tier||FTIER[cur]||"l2",rm:document.body.classList.contains("rm"),onClose:()=>{const b=from||$("forgeB");if(b&&b.offsetParent)b.focus();if(rmOne)rmOne();}});}).catch(e=>console.warn("模型炼炉加载失败",e));}
 $("forgeB").onclick=()=>openForge("dm",$("forgeB"));$("sideFg").onclick=()=>openForge("dm",$("forgeB"));$("cards").addEventListener("click",e=>{if(e.target.closest&&e.target.closest("#forgeC"))openForge("dm",$("forgeC"));if(e.target.closest&&e.target.closest("#forgeK"))openForge("kepler",$("forgeK"));if(e.target.closest&&e.target.closest("#forgeE"))openForge("epi",$("forgeE"));if(e.target.closest&&e.target.closest("#forgeCO"))openForge("co2",$("forgeCO"));});
-{const fq=new URLSearchParams(location.search).get("forge");if(fq)setTimeout(()=>{if(!document.body.classList.contains("rm"))go(2,true);openForge(/^[a-z0-9]+$/.test(fq)?fq:"dm");},900);}
+{const sp=new URLSearchParams(location.search),fq=sp.get("forge"),tq=/^l[124]$/.test(sp.get("tier")||"")?sp.get("tier"):"l2";if(fq)setTimeout(()=>{if(!document.body.classList.contains("rm"))go(+tq[1],true);openForge(/^[a-z0-9]+$/.test(fq)?fq:"dm",null,tq);},900);}
 $("netB").onclick=openNet;$("cards").addEventListener("click",e=>{if(e.target.closest&&e.target.closest("#netC"))openNet();});$("netX").onclick=closeNet;$("net").addEventListener("click",e=>{if(e.target.id==="net")closeNet();});
 addEventListener("keydown",e=>{if(e.key==="Escape"&&closeNet()){e.stopImmediatePropagation();$("netB").focus();}},true);
 // 侧栏
@@ -446,7 +447,7 @@ $("c").addEventListener("click",e=>{const k=pick(e.clientX,e.clientY);if(k>=0)(c
 // 状态
 let cur=0,tz=cam.position.z,anim=null;
 const zOf=i=>L[i].z+60;
-function setHud(i){document.body.classList.toggle("l0",i===0);document.body.classList.toggle("l2",i===2);if(nav)nav.set("L"+i);$("t").textContent=L[i].t;$("s").textContent=L[i].s;$("g").textContent=`${L[i].k} · ${L[i].g}`;btns.forEach((b,j)=>b.classList.toggle("on",j===i));$("dive").textContent=i<L.length-1?"▼ 继续下潜":"▲ 回到水面";history.replaceState(null,"",`#deep=${i}`);try{localStorage.setItem(KEY,i)}catch(e){}music(i);}
+function setHud(i){document.body.classList.toggle("l0",i===0);document.body.classList.toggle("l2",i===2);document.body.classList.toggle("l1",i===1);document.body.classList.toggle("l4",i===4);if(nav)nav.set("L"+i);$("t").textContent=L[i].t;$("s").textContent=L[i].s;$("g").textContent=`${L[i].k} · ${L[i].g}`;btns.forEach((b,j)=>b.classList.toggle("on",j===i));$("dive").textContent=i<L.length-1?"▼ 继续下潜":"▲ 回到水面";history.replaceState(null,"",`#deep=${i}`);try{localStorage.setItem(KEY,i)}catch(e){}music(i);}
 function go(i,strict){i=Math.max(0,Math.min(L.length-1,i));if(!L[i].open){const o=i,d=i>cur?1:-1;let j=i;if(!strict)while(j>=0&&j<L.length&&!L[j].open)j+=d;if(strict||j<0||j>=L.length||j===cur){flash();setHud(cur);$("g").textContent=`${L[o].k} · ${L[o].g}`;return;}i=j;}
  const prev=cur;if(i!==prev)closeSide();cur=i;setHud(i);const from=cam.position.z,to=zOf(i),t0=performance.now();anim={from,to,t0,d:(Math.min(cur,prev)===0&&Math.max(cur,prev)===1)?3200:1200};}
 function flash(){const h=$("hud");h.animate([{opacity:.4},{opacity:1}],{duration:500});}
