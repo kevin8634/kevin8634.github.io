@@ -1,0 +1,130 @@
+{
+  "id": "ls.l1.hardyweinberg",
+  "world": "ls",
+  "link_task": "ls.hardyweinberg",
+  "tab": "遗传平衡:携带者有多少",
+  "title": "隐性病患者只有万分之一,携带者为什么接近 2%?",
+  "formula": "p+q=1\\ \\Rightarrow\\ p^2+2pq+q^2=1",
+  "hook": "身边几乎见不到这种病人,带着致病基因的人却可能每 50 人就有 1 个。",
+  "steps": [
+    {
+      "text": "看一对等位基因 A、a。在一个种群的全部基因里,A 占的比例叫基因频率 p, a 占 q。",
+      "tex": "p+q=1"
+    },
+    {
+      "text": "随机交配时,一个卵细胞带 A 的概率是 p,一个精子带 A 的概率也是 p,两者独立,用乘法;Aa 有两种来路,用加法。",
+      "tex": "P(AA)=p^2,\\quad P(Aa)=2pq,\\quad P(aa)=q^2"
+    },
+    {
+      "text": "三种基因型加起来正好是 (p+q) 的平方,等于 1,概率没有遗漏。",
+      "tex": "p^2+2pq+q^2=(p+q)^2=1"
+    },
+    {
+      "text": "下一代 A 的频率:AA 全部是 A, Aa 一半是 A。算出来仍是 p,基因频率代代不变,这就是遗传平衡。",
+      "tex": "p'=p^2+\\tfrac12\\cdot 2pq=p(p+q)=p"
+    },
+    {
+      "text": "反推:设某种单基因隐性病在某地发病率为 1/10000(示例数,便于计算),则 q²=1/10000, q=0.01, p=0.99。",
+      "tex": "q=\\sqrt{\\frac{1}{10000}}=0.01"
+    },
+    {
+      "text": "携带者 Aa 的比例 2pq≈1.98%,约 1/50,是患者的约 198 倍。成立前提:种群很大、随机交配、没有突变、迁移和选择。",
+      "tex": "2pq=2\\times0.99\\times0.01=0.0198"
+    }
+  ],
+  "check": {
+    "q": "某种群中隐性性状个体(aa)占 16%,若处于遗传平衡,杂合子 Aa 约占多少?",
+    "options": [
+      "24%",
+      "48%",
+      "36%"
+    ],
+    "answer": 1,
+    "why": "q²=0.16, q=0.4, p=0.6, 2pq=2×0.6×0.4=0.48。"
+  },
+  "think": [
+    "近亲结婚为什么会让隐性遗传病的风险明显升高?",
+    "如果患者因病很难留下后代,q 会怎样变?变得快还是慢?",
+    "红绿色盲男性远多于女性。基因在 X 染色体上时,这张卡的公式要怎样改?"
+  ],
+  "disclaimer": "教学模型:真实的白化病等由多个基因引起,发病率因地区和人群而异(MedlinePlus:欧洲人群约 1/12000–1/15000、非洲人群约 1/4000–1/7000)。不构成遗传咨询或医疗建议。",
+  "textbook": "人教版(2019)高中生物学必修 2《遗传与进化》第 6 章 生物的进化 第 3 节 种群基因组成的变化与物种的形成(种群的基因频率、遗传平衡)",
+  "sources": [
+    {
+      "name": "OpenStax《Biology 2e》19.1 Population Evolution(Hardy-Weinberg 平衡 p²+2pq+q²=1 及五个前提;CC BY 4.0;复核 2026-11-12)",
+      "url": "https://openstax.org/books/biology-2e/pages/19-1-population-evolution"
+    },
+    {
+      "name": "MedlinePlus Genetics · Oculocutaneous albinism(常染色体隐性;欧洲人群约 1/12000–1/15000;美国国家医学图书馆;复核 2026-11-12)",
+      "url": "https://medlineplus.gov/genetics/condition/oculocutaneous-albinism/"
+    },
+    {
+      "name": "Wikipedia: Hardy–Weinberg principle(推导与适用条件;CC BY-SA 4.0;复核 2026-11-12)",
+      "url": "https://en.wikipedia.org/wiki/Hardy%E2%80%93Weinberg_principle"
+    }
+  ],
+  "review": "AI 审(待生命源码审稿人复核);数值脚本复算:q=0.01 时 2pq=0.0198、2pq/q²=198;q²=0.16 时 2pq=0.48",
+  "ai_generated": "标题、钩子、推导文字、检查题与「想一想」均由 AI 撰写;数值由脚本复算;无图片",
+  "lab": {
+    "title": "遗传平衡",
+    "note": "由总指挥添加,AI 协助编写;拖隐性基因频率 q,看三种基因型各占多少。白色竖线是当前的 q。q 很小时,杂合子(蓝)远比 aa(红)多。",
+    "params": [
+      {
+        "k": "q",
+        "label": "隐性基因频率 q",
+        "min": 0.005,
+        "max": 0.5,
+        "step": 0.005,
+        "value": 0.01
+      }
+    ],
+    "fn": {
+      "x": "x",
+      "from": 0,
+      "to": 1,
+      "y0": 0,
+      "ys": [
+        {
+          "label": "AA = p²",
+          "expr": "(1-x)^2"
+        },
+        {
+          "label": "Aa = 2pq",
+          "expr": "2*x*(1-x)"
+        },
+        {
+          "label": "aa = q²",
+          "expr": "x^2"
+        }
+      ],
+      "mark": [
+        {
+          "x": "q",
+          "label": "q"
+        }
+      ]
+    },
+    "readout": [
+      {
+        "label": "aa 患者",
+        "expr": "100*q^2",
+        "unit": "%"
+      },
+      {
+        "label": "Aa 携带者",
+        "expr": "200*q*(1-q)",
+        "unit": "%"
+      },
+      {
+        "label": "携带者 / 患者",
+        "expr": "2*(1-q)/q",
+        "unit": "倍"
+      },
+      {
+        "label": "约每多少人 1 个患者",
+        "expr": "1/q^2",
+        "unit": "人"
+      }
+    ]
+  }
+}

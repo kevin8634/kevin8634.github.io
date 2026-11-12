@@ -1,0 +1,127 @@
+{
+  "id": "nv.l1.pendulum",
+  "world": "nv",
+  "link_task": "nv.pendulum",
+  "tab": "单摆周期",
+  "title": "单摆周期为什么是 T=2π√(L/g),和摆球多重无关?",
+  "formula": "T=2\\pi\\sqrt{\\frac{L}{g}}",
+  "hook": "老式摆钟走慢了,该加重摆锤,还是改摆长?",
+  "steps": [
+    {
+      "text": "摆球受重力 mg 和绳的拉力。拉力沿绳指向悬点,不管来回;沿圆弧切线方向,只有重力的分量把摆球拉回最低点。",
+      "tex": "F_{\\text{回}}=-mg\\sin\\theta"
+    },
+    {
+      "text": "摆角很小时,θ 用弧度表示,sinθ≈θ;摆球离最低点的弧长 x=Lθ,于是回复力与位移成正比、方向相反。",
+      "tex": "F_{\\text{回}}\\approx-\\frac{mg}{L}\\,x"
+    },
+    {
+      "text": "这正是简谐运动的条件 F=−kx,这里 k=mg/L。由牛顿第二定律 ma=−kx,得到加速度和位移的关系。",
+      "tex": "a=-\\frac{k}{m}x=-\\frac{g}{L}x"
+    },
+    {
+      "text": "简谐运动 a=−ω²x,对照得 ω²=g/L。周期 T=2π/ω。摆球质量 m 在第 3 步已经约掉了。",
+      "tex": "\\omega=\\sqrt{\\frac{g}{L}},\\quad T=\\frac{2\\pi}{\\omega}=2\\pi\\sqrt{\\frac{L}{g}}"
+    },
+    {
+      "text": "代入 L=1 m、g=9.8 m/s²:T≈2.01 s。周期正好 2 s 的「秒摆」摆长约 0.993 m。",
+      "tex": "T=2\\pi\\sqrt{\\frac{1}{9.8}}\\approx 2.01\\ \\text{s}"
+    },
+    {
+      "text": "近似有代价:10° 时 sinθ 比 θ 小约 0.5%,摆角越大周期越长,30° 时约长 1.7%。反过来,量出 L 和 T 就能测 g。",
+      "tex": "g=\\frac{4\\pi^2L}{T^2}"
+    }
+  ],
+  "check": {
+    "q": "把同一个单摆搬到月球上(月面重力加速度约为地球的 1/6),周期约变为原来的几倍?",
+    "options": [
+      "1/6",
+      "约 2.45 倍",
+      "6 倍"
+    ],
+    "answer": 1,
+    "why": "T∝1/√g, g 变为 1/6, T 变为 √6≈2.45 倍。按 NASA 数据 √(9.8/1.62)≈2.46。"
+  },
+  "think": [
+    "摆钟走慢了,该把摆锤往上调还是往下调?",
+    "在加速上升的电梯里,单摆周期会变吗?往哪个方向变?",
+    "摆球很大、摆线有质量时,公式里的 L 应该量到哪里?"
+  ],
+  "textbook": "人教版(2019)高中物理选择性必修第一册 第二章 机械振动 第4节 单摆、第5节 实验:用单摆测量重力加速度",
+  "sources": [
+    {
+      "name": "OpenStax《University Physics Volume 1》15.4 Pendulums(式 15.17–15.19,小角度 sinθ≈θ;CC BY-NC-SA 4.0;复核 2026-11-12)",
+      "url": "https://openstax.org/books/university-physics-volume-1/pages/15-4-pendulums"
+    },
+    {
+      "name": "NASA Moon Fact Sheet(月面重力加速度 1.62 m/s²;美国政府公有领域;复核 2026-11-12)",
+      "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html"
+    }
+  ],
+  "review": "AI 审(待宙律审稿人复核);数值脚本复算:T(1 m,9.8)=2.0071 s;秒摆 L=0.9929 m;sin10° 相对误差 0.51%;大摆角精确周期比(AGM 法)10°:1.0019、30°:1.0174、60°:1.0732;√(9.8/1.62)=2.46",
+  "ai_generated": "标题、钩子、推导文字、检查题与「想一想」均由 AI 撰写;数值由脚本复算;无图片",
+  "lab": {
+    "title": "单摆",
+    "note": "由总指挥添加,AI 协助编写;按真实方程 θ''=−(g/L)sinθ 数值积分(不做小角度近似),画 10 秒内摆角随时间的变化(横轴 t/秒,纵轴 θ/θ₀,即摆角与起始摆角之比)。数一数 10 秒内摆了几个来回,再和读数里的公式比;把起始摆角拉大,看周期是否变长。",
+    "params": [
+      {
+        "k": "L",
+        "label": "摆长 L",
+        "min": 0.2,
+        "max": 2,
+        "step": 0.1,
+        "value": 1,
+        "unit": "m"
+      },
+      {
+        "k": "g",
+        "label": "重力加速度 g",
+        "min": 1.6,
+        "max": 25,
+        "step": 0.1,
+        "value": 9.8,
+        "unit": "m/s²"
+      },
+      {
+        "k": "th0",
+        "label": "起始摆角",
+        "min": 5,
+        "max": 80,
+        "step": 5,
+        "value": 10,
+        "unit": "°"
+      }
+    ],
+    "state": {
+      "u": "1",
+      "w": "0"
+    },
+    "rhs": {
+      "u": "w",
+      "w": "-g/L*sin(th0*pi/180*u)/(th0*pi/180)"
+    },
+    "dt": 0.002,
+    "steps": 5000,
+    "every": 10,
+    "plot": [
+      "t",
+      "u"
+    ],
+    "readout": [
+      {
+        "label": "小角度周期 2π√(L/g)",
+        "expr": "2*pi*sqrt(L/g)",
+        "unit": "s"
+      },
+      {
+        "label": "大摆角修正周期",
+        "expr": "2*pi*sqrt(L/g)*(1+(th0*pi/180)^2/16+11*(th0*pi/180)^4/3072)",
+        "unit": "s"
+      },
+      {
+        "label": "10 秒内来回次数",
+        "expr": "10/(2*pi*sqrt(L/g))"
+      }
+    ]
+  }
+}

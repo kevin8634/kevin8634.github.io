@@ -1,0 +1,113 @@
+{
+  "id": "ef.l1.ph",
+  "world": "ef",
+  "link_task": "ef.ph",
+  "tab": "稀释盐酸的 pH",
+  "title": "盐酸一直加水稀释,pH 会超过 7 吗?",
+  "formula": "\\mathrm{pH}=-\\lg\\frac{c+\\sqrt{c^2+4K_w}}{2}",
+  "hook": "0.01 mol/L 盐酸 pH=2,每稀释 10 倍加 1。照这样算,稀释一亿倍岂不成了碱?",
+  "steps": [
+    {
+      "text": "水自己会微弱电离。25 ℃ 时,溶液里 H⁺ 与 OH⁻ 浓度的乘积是常数,叫水的离子积。",
+      "tex": "\\mathrm{H_2O}\\rightleftharpoons\\mathrm{H^+}+\\mathrm{OH^-},\\quad K_w=c(\\mathrm{H^+})\\,c(\\mathrm{OH^-})=1.0\\times10^{-14}"
+    },
+    {
+      "text": "pH 定义为 H⁺ 浓度的负常用对数。纯水里 H⁺ 与 OH⁻ 一样多,各 10⁻⁷ mol/L, pH=7。",
+      "tex": "\\mathrm{pH}=-\\lg c(\\mathrm{H^+}),\\quad \\mathrm{pH}_{\\text{纯水}}=7"
+    },
+    {
+      "text": "HCl 是强酸,完全电离。浓度 c 较大时,H⁺ 几乎全来自 HCl:c=0.01 时 pH=2,每稀释 10 倍 pH 加 1。",
+      "tex": "c(\\mathrm{H^+})\\approx c\\Rightarrow \\mathrm{pH}\\approx-\\lg c"
+    },
+    {
+      "text": "很稀时,水电离出的 H⁺ 不能再忽略。溶液呈电中性:正电荷 = 负电荷,再用 Kw 把 OH⁻ 换掉。",
+      "tex": "c(\\mathrm{H^+})=c(\\mathrm{Cl^-})+c(\\mathrm{OH^-})=c+\\frac{K_w}{c(\\mathrm{H^+})}"
+    },
+    {
+      "text": "记 x=c(H⁺),两边乘 x 得一元二次方程,取正根。",
+      "tex": "x^2-cx-K_w=0\\Rightarrow x=\\frac{c+\\sqrt{c^2+4K_w}}{2}"
+    },
+    {
+      "text": "c=10⁻⁸ mol/L:x≈1.05×10⁻⁷, pH≈6.98,不是 8。无论怎样稀释,x 总大于 √Kw=10⁻⁷, pH 只会无限接近 7。",
+      "tex": "\\mathrm{pH}=-\\lg\\left(1.05\\times10^{-7}\\right)\\approx 6.98<7"
+    }
+  ],
+  "check": {
+    "q": "1×10⁻³ mol/L 的盐酸稀释 100 倍(25 ℃), pH 约为多少?",
+    "options": [
+      "3",
+      "5",
+      "7"
+    ],
+    "answer": 1,
+    "why": "稀释后 c=10⁻⁵ mol/L,水电离的 H⁺ 不到万分之一,可以忽略,pH≈5。"
+  },
+  "think": [
+    "温度升高,Kw 变大,纯水的 pH 小于 7。这时的纯水还是中性吗?",
+    "把 pH=12 的 NaOH 溶液不断稀释,pH 会怎样变?最后停在哪里?",
+    "同样稀释 100 倍,醋酸的 pH 变化为什么比盐酸小?"
+  ],
+  "disclaimer": "实验室稀释浓酸要「酸入水」并佩戴护具;本卡只做计算,不指导实验操作。",
+  "textbook": "人教版(2019)高中化学选择性必修 1《化学反应原理》第三章 水溶液中的离子反应与平衡 第二节 水的电离和溶液的 pH",
+  "sources": [
+    {
+      "name": "OpenStax《Chemistry 2e》14.1 Brønsted-Lowry Acids and Bases(水的自偶电离,25 °C Kw=1.0×10⁻¹⁴;CC BY 4.0;复核 2026-11-12)",
+      "url": "https://openstax.org/books/chemistry-2e/pages/14-1-bronsted-lowry-acids-and-bases"
+    },
+    {
+      "name": "OpenStax《Chemistry 2e》14.2 pH and pOH(pH=−log[H₃O⁺];CC BY 4.0;复核 2026-11-12)",
+      "url": "https://openstax.org/books/chemistry-2e/pages/14-2-ph-and-poh"
+    }
+  ],
+  "review": "AI 审(待元素工坊审稿人复核);数值脚本复算(Kw=1.0×10⁻¹⁴):c=10⁻⁵→pH 5.0000、10⁻⁶→5.9957、10⁻⁷→6.7910、10⁻⁸→6.9783、10⁻⁹→6.9978;c=10⁻⁸ 时水贡献约 90% 的 H⁺",
+  "ai_generated": "标题、钩子、推导文字、检查题与「想一想」均由 AI 撰写;数值由脚本复算;无图片",
+  "lab": {
+    "title": "稀释盐酸的 pH",
+    "note": "由总指挥添加,AI 协助编写;横轴是 −lg c(c 为盐酸浓度,mol/L,越往右越稀)。金线是「只算 HCl」的粗算,蓝线是计入水电离的精确值;白点是当前浓度。",
+    "params": [
+      {
+        "k": "n",
+        "label": "浓度 c = 10^(−n),n",
+        "min": 1,
+        "max": 12,
+        "step": 0.5,
+        "value": 8
+      }
+    ],
+    "fn": {
+      "x": "x",
+      "from": 1,
+      "to": 12,
+      "y0": 0,
+      "ys": [
+        {
+          "label": "粗算 pH = −lg c",
+          "expr": "x"
+        },
+        {
+          "label": "精确 pH(计入水的电离)",
+          "expr": "-log((10^(-x)+sqrt(10^(-2*x)+4e-14))/2)/log(10)"
+        }
+      ],
+      "mark": [
+        "n",
+        "-log((10^(-n)+sqrt(10^(-2*n)+4e-14))/2)/log(10)"
+      ]
+    },
+    "readout": [
+      {
+        "label": "粗算 pH",
+        "expr": "n"
+      },
+      {
+        "label": "精确 pH",
+        "expr": "-log((10^(-n)+sqrt(10^(-2*n)+4e-14))/2)/log(10)"
+      },
+      {
+        "label": "H⁺ 中来自水的比例",
+        "expr": "100*(1-10^(-n)/((10^(-n)+sqrt(10^(-2*n)+4e-14))/2))",
+        "unit": "%"
+      }
+    ]
+  }
+}

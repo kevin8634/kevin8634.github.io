@@ -31,5 +31,12 @@
  "ls.l2.optogenetics.json",
  "ef.l4.chirality.json",
  "sh.l2.voyager.json",
- "nv.l2.cold.json"
+ "nv.l2.cold.json",
+ "ma.l1.amgm.json",
+ "nv.l1.pendulum.json",
+ "ef.l1.ph.json",
+ "ls.l1.hardyweinberg.json",
+ "sh.l1.parallax.json",
+ "ps.l1.leastsquares.json",
+ "lt.l1.bayes.json"
 ]
