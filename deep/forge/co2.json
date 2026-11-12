@@ -1,0 +1,107 @@
+{
+  "id": "co2",
+  "ver": "深空 2.7",
+  "title": "模型炼炉 · CO₂",
+  "subtitle": "莫纳罗亚 Keeling 曲线 · NOAA 真实月均数据 1958–2026 · 趋势 + 季节 · 初中—大学",
+  "badge": "CO₂ 炉徽章",
+  "data": { "file": "../data/noaa.co2.mlo.monthly.json", "x": "t", "y": "co2", "err": "err", "label": "ym", "star": 0.55 },
+  "comps": false,
+  "axes": {
+    "x": { "label": "年份 t", "short": "t (年)", "sym": "t", "unit": "年", "min": 1955, "max": 2030, "step": 10, "stepSm": 20 },
+    "y": { "label": "CO₂ 月均浓度 (ppm)", "short": "CO₂ (ppm)", "sym": "CO₂", "unit": "ppm", "min": 305, "max": 450, "step": 20, "dp": 2 }
+  },
+  "combine": "sum",
+  "sumTex": "C(t)=\\underbrace{\\text{趋势}}_{\\text{线性/二次/指数}}+\\underbrace{\\text{季节}}_{\\text{年周期/半年}}",
+  "sumTexShort": "C(t)=\\sum_i C_i(t)",
+  "emptyHint": "星点 = 莫纳罗亚每个月的 CO₂ 均值 · 放入积木,金线就会出现",
+  "intro": "823 颗星点是夏威夷莫纳罗亚观测站 1958 年 3 月到 2026 年 9 月每个月的大气 CO₂ 平均浓度(Keeling 曲线,单位 ppm = 百万分之一)。把方程积木放进炉里合成模型:金线是模型,每颗星垂下的光丝是残差——|残差|/误差 <1 绿、1–3 黄、>3 红。误差棒取本站设定的 0.8 ppm 教学误差(代表厄尔尼诺等年际起伏),不是测量误差——NOAA 月均值本身的不确定度通常只有 0.1–0.3 ppm。",
+  "blocks": [
+    {
+      "id": "lin", "name": "线性趋势", "short": "a + b·(t−2000)", "glyph": "╱", "color": "#ffb36b",
+      "kind": "kernel", "kernel": "co2lin",
+      "tex": "C(t)=a+b\\,(t-2000)",
+      "note": "每年增加同样多的 ppm。两个旋钮:2000 年的浓度 a 和每年增长量 b(ppm/年)。",
+      "params": [
+        { "k": "a", "name": "2000 年浓度 a", "unit": "ppm", "min": 300, "max": 420, "value": 360, "step": 0.01, "dp": 2 },
+        { "k": "b", "name": "增长率 b", "unit": "ppm/年", "min": -1, "max": 5, "value": 1, "step": 0.001, "dp": 3 }
+      ]
+    },
+    {
+      "id": "quad", "name": "二次加速", "short": "c·(t−2000)²", "glyph": "x²", "color": "#ff9a8f",
+      "kind": "kernel", "kernel": "co2quad",
+      "tex": "C(t)\\mathrel{+}=c\\,(t-2000)^2",
+      "note": "加在线性趋势上的「加速度」:增长率本身每年再增加 2c ppm/年。单独放进炉里没有意义(2000 年附近为 0),要和线性趋势一起用。",
+      "params": [
+        { "k": "c", "name": "加速 c", "unit": "ppm/年²", "min": -0.05, "max": 0.08, "value": 0.005, "step": 0.0001, "dp": 4 }
+      ]
+    },
+    {
+      "id": "exp", "name": "基线 + 指数", "short": "280 + A·e^(t/τ)", "glyph": "eˣ", "color": "#7fd0ff",
+      "kind": "kernel", "kernel": "co2exp",
+      "tex": "C(t)=280+A\\,e^{(t-2000)/\\tau}",
+      "note": "另一种趋势猜想:工业革命前约 280 ppm 的基线(固定)加上按指数增长的人为增量。A 是 2000 年的增量(ppm),τ 是增量每放大 e 倍所需的年数。它和「线性 + 二次」是两种互相竞争的趋势,不必同时放。",
+      "params": [
+        { "k": "A", "name": "2000 年增量 A", "unit": "ppm", "min": 20, "max": 200, "value": 80, "step": 0.01, "dp": 2 },
+        { "k": "tau", "name": "e 倍时间 τ", "unit": "年", "min": 10, "max": 200, "value": 60, "step": 0.01, "scale": "log", "dp": 2 }
+      ]
+    },
+    {
+      "id": "ann", "name": "季节 · 年周期", "short": "A₁cos 2π(t−t₁)", "glyph": "∿", "color": "#9ff0c8",
+      "kind": "kernel", "kernel": "harm1",
+      "tex": "C(t)\\mathrel{+}=A_1\\cos 2\\pi\\big(t-\\tfrac{m_1-1/2}{12}\\big)",
+      "note": "修饰积木:在趋势上叠一条周期 1 年的正弦。振幅 A₁(ppm)和峰值月份 m₁(1 = 1 月中,5 = 5 月中)。单独放进炉里只是一条在 0 附近摆动的曲线,要叠在趋势上。振幅拟合成负数时,等于峰和谷互换(峰移半年)。",
+      "params": [
+        { "k": "A1", "name": "振幅 A₁", "unit": "ppm", "min": -6, "max": 6, "value": 2, "step": 0.001, "dp": 3 },
+        { "k": "m1", "name": "峰值月份 m₁", "unit": "月", "min": 0.5, "max": 12.5, "value": 7, "step": 0.01, "dp": 2 }
+      ]
+    },
+    {
+      "id": "semi", "name": "半年谐波", "short": "A₂cos 4π(t−t₂)", "glyph": "≈", "color": "#c9a7ff",
+      "kind": "kernel", "kernel": "harm2",
+      "tex": "C(t)\\mathrel{+}=A_2\\cos 4\\pi\\big(t-\\tfrac{m_2-1/2}{12}\\big)",
+      "note": "可选修饰积木:周期半年的第二条正弦,让季节曲线可以「升得慢、降得快」(不对称)。振幅 A₂ 和峰值月份 m₂(半年一个峰,取 0.5–6.5 内的那个;振幅为负等于峰移 3 个月)。",
+      "params": [
+        { "k": "A2", "name": "振幅 A₂", "unit": "ppm", "min": -3, "max": 3, "value": 0.5, "step": 0.001, "dp": 3 },
+        { "k": "m2", "name": "峰值月份 m₂", "unit": "月", "min": 0.5, "max": 6.5, "value": 5.5, "step": 0.01, "dp": 2 }
+      ]
+    }
+  ],
+  "derived": [
+    { "fn": "co2g", "needAny": ["lin", "quad", "exp"], "at": 2026.7083, "name": "2026-09 年增长率", "unit": "ppm/年", "dp": 2 },
+    { "fn": "co2amp", "needAny": ["ann", "semi"], "name": "季节峰谷差", "unit": "ppm", "dp": 2 }
+  ],
+  "pass": { "redMax": 2.0, "require": ["ann"] },
+  "guide": [
+    { "if": { "empty": true }, "q": "炉里还空着。六十多年里 CO₂ 是每年「加上」差不多的量,还是增长越来越快?先放一块趋势积木猜一猜。" },
+    { "if": { "has": ["quad"], "lacks": ["lin", "exp"] }, "q": "只有二次项时,金线在 2000 年附近是多少?它缺了什么才能贴近星点?" },
+    { "if": { "has": ["ann"], "lacks": ["lin", "quad", "exp"] }, "q": "季节积木在 0 附近摆动,星点却在 300 多 ppm。它要叠在什么上面才有意义?" },
+    { "if": { "has": ["semi"], "lacks": ["lin", "quad", "exp"] }, "q": "半年谐波在 0 附近摆动,星点却在 300 多 ppm。它要叠在什么上面才有意义?" },
+    { "if": { "has": ["lin"], "lacks": ["quad", "exp"], "redAbove": 2 }, "focus": [1995, 2027], "q": "为什么线性模型的残差在两端偏一边、中间偏另一边?后半段的光丝系统性地朝哪个方向?", "sub": "「每年加同样多」这个假设,和 1960 年代、2020 年代的实际增长量对得上吗?" },
+    { "if": { "has": ["exp"], "lacks": ["lin", "quad"], "redAbove": 2 }, "q": "「280 + 指数」和「线性 + 二次」哪个 BIC 更低?基线固定在 280 ppm,这个假设本身可能哪里不对?", "sub": "把两种趋势分别配上季节积木,BIC 差多少?差这么多算不算「决定性」?" },
+    { "if": { "lacks": ["ann"], "redAbove": 2 }, "q": "趋势已经贴住了大方向,可每颗星都还在上下跳。把鼠标停在几个星点上看看月份:每年 5 月前后最高、9–10 月最低,这说明了什么?", "sub": "北半球的春夏和秋冬,陆地植物各在做什么?南半球的观测站会是同一个节奏吗?" },
+    { "if": { "has": ["ann"], "pass": false }, "q": "季节振荡已经出现,可光丝还亮着。是趋势不够好,还是季节不够好?把季节积木拿走、再放回来,BIC 各变多少?" },
+    { "if": { "pass": true, "lacks": ["semi"] }, "q": "过关。拟合出的峰值月份 m₁ 落在几月?季节峰谷差约多少 ppm?它和每年增长的量比,谁大?", "sub": "试试加上半年谐波:多 2 个参数,BIC 是降还是升?季节曲线「升得慢、降得快」意味着什么?" },
+    { "if": { "pass": true }, "q": "过关。增长率派生量比 1960 年代的大还是小?为什么一条光滑的趋势仍然留下几年一组、成片同色的残差?", "sub": "把同一组积木封进胶囊去预测 2027 年 5 月:你的误差该只算参数的 σ,还是也该算上这些年际起伏?" }
+  ],
+  "capsules": [
+    {
+      "id": "co2.2027may", "title": "2027 年 5 月月均 · 真实到期", "q": "预测莫纳罗亚 2027 年 5 月的 CO₂ 月均浓度(t = 2027.375)。答案此刻还不存在:2027 年 5 月过完、NOAA 发布当月数据后才能开封。", "x": 2027.375, "unit": "ppm", "dp": 2,
+      "unlockAt": "2027-06-01T00:00:00+08:00",
+      "awaitLabel": "NOAA",
+      "truth": { "type": "data", "from": 2027.37, "to": 2027.38, "label": "NOAA GML 发布的 2027-05 莫纳罗亚月均(届时更新本地数据)" },
+      "official": { "pred": 433.97, "err": 0.81, "errModel": 0.1, "blocks": ["lin", "quad", "ann", "semi"], "glyphs": "线性 + 二次 + 年周期 + 半年", "red": 1.039, "dataTo": "2026-09", "at": "2026-11-12", "by": "总指挥" },
+      "note": "第一颗真正按日期到期的胶囊。「总指挥封存」是 2026-11-12 用截至 2026-09 的全部 823 个月数据、BIC 最低的积木组合拟合后封存的预测,误差 = 参数不确定度与 0.8 ppm 年际起伏的合成。你也可以用自己的模型再封一颗(存在本机)。到期后本页不会自动联网取数:等 NOAA 发布 2027 年 5 月数据(通常在次月上旬),由总指挥更新本地数据,胶囊即可开封。"
+    },
+    {
+      "id": "co2.demo2000", "demo": true, "title": "站在 2000 年底 · 预测 2020 年 5 月", "q": "只用 2000 年 12 月及以前的数据重新拟合炉中积木,预测 2020 年 5 月(t = 2020.375)的月均浓度", "x": 2020.375, "fitTo": 2000.99, "unit": "ppm", "dp": 2,
+      "unlockAt": null,
+      "truth": { "type": "data", "from": 2020.37, "to": 2020.38, "label": "NOAA GML 2020-05 莫纳罗亚月均" },
+      "note": "演示胶囊:2020 年 5 月的数字早已公布,开封立即对比;封存时只拿 2000 年底以前的数据拟合,模拟当时手里只有这些数据的处境。青色虚线是封存时的模型。真值误差取同样的 0.8 ppm 教学误差。"
+    }
+  ],
+  "sources": [
+    "NOAA Global Monitoring Laboratory · Mauna Loa 月均 CO₂ co2_mm_mlo.txt(File Creation 2026-10-09,最新月份 2026-09;美国联邦政府数据,公有领域)https://gml.noaa.gov/ccgg/trends/ ;署名:Dr. Xin Lan, NOAA/GML 与 Dr. Ralph Keeling, Scripps Institution of Oceanography(scrippsco2.ucsd.edu);1958-03 至 1974-04 为 C. D. Keeling(Scripps)观测",
+    "Lan, X., Tans, P. and K.W. Thoning: Trends in globally-averaged CO2 determined from NOAA Global Monitoring Laboratory measurements;Keeling, C. D. et al. 1976, Tellus 28, 538",
+    "误差棒为本站设定的 0.8 ppm 教学误差(见数据台账 note),不是测量误差;2022-12 至 2023-07-04 因火山喷发改在 Maunakea 观测"
+  ]
+}

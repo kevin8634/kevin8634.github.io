@@ -10,6 +10,8 @@
  *   mod     —— (深空 2.6)修饰积木:不单独产生曲线,只把自己的参数交给别的核(如「封城干预」的 q、tL 交给 SIR 核);
  *              不在炉里时,参数取配置的 off 值(如 q=0),于是 SIR 核按无干预计算。
  * 派生量(深空 2.6):cfg.derived[] 引用 DERIVED 中的函数(如 R₀ = β/γ),不确定度由拟合协方差按一阶误差传播给出。
+ * 深空 2.7 CO₂ 炉:KERNELS 增补 co2lin / co2quad / co2exp / harm1 / harm2(x 为小数年份,参考年 2000);
+ *   DERIVED 函数多收两个参数 (p, blocks, d):blocks 为炉中积木 id、d 为派生量配置(如 d.at 求增长率的时刻),旧函数忽略即可。
  * 截断拟合(深空 2.6):sliceData(data, xmax) 只留 x ≤ xmax 的数据点,供「用前 N 天数据封存」的预测胶囊。
  * 合成:combine="quad" 时 y² = Σ 分量(分量本身给出 v²,可为负,如气体 Vgas|Vgas|),y = √max(0,Σ);
  *       combine="sum" 时 y = Σ 分量。
@@ -38,6 +40,14 @@ export const KERNELS = {
   expo(x, p) { return p.C0e * Math.exp(p.re * x); },
   logis(x, p) { const K = p.K * 1e4; return K / (1 + (K / p.C0l - 1) * Math.exp(-p.rl * x)); },
   sir(x, p) { return sirCum(p, x); },
+  /* 深空 2.7 CO₂ 炉(x = 小数年份,输出 ppm;参考年 2000):
+     线性 a + b(t−2000);二次项 c(t−2000)²;工业前基线 280 ppm + 指数 A·e^{(t−2000)/τ};
+     年周期 A₁cos[2π(t − (m₁−½)/12)](m₁ = 峰值月份,1 = 1 月中);半年谐波 A₂cos[4π(t − (m₂−½)/12)] */
+  co2lin(x, p) { return p.a + p.b * (x - 2000); },
+  co2quad(x, p) { const u = x - 2000; return p.c * u * u; },
+  co2exp(x, p) { return 280 + p.A * Math.exp((x - 2000) / p.tau); },
+  harm1(x, p) { return p.A1 * Math.cos(2 * Math.PI * (x - (p.m1 - 0.5) / 12)); },
+  harm2(x, p) { return p.A2 * Math.cos(4 * Math.PI * (x - (p.m2 - 0.5) / 12)); },
   /* NFW ρ=ρs/[(r/rs)(1+r/rs)²];v²=4πGρs rs³[ln(1+x)−x/(1+x)]/r(备用,F1 暗物质炉未启用) */
   nfw(r, p) {
     const rho = p.rhos * 1e7, rs = p.rs;
@@ -77,12 +87,16 @@ export function sirCum(p, x) {
 export const DERIVED = {
   R0: (p) => p.beta / p.gamma,                  // 基本再生数 R₀ = β/γ
   Rq: (p) => p.beta * (1 - p.q) / p.gamma,      // 干预后再生数 β(1−q)/γ(未计易感者减少)
-  Td: (p) => Math.LN2 / p.re                    // 指数翻倍时间 ln2/r
+  Td: (p) => Math.LN2 / p.re,                   // 指数翻倍时间 ln2/r
+  /* 深空 2.7:趋势(线性/二次/指数积木之和)在 d.at 时刻的斜率 ppm/年(中心差分,h = 0.01 年) */
+  co2g: (p, B = [], d = {}) => { const t = d.at ?? 2026.7, h = 0.01, K = { lin: "co2lin", quad: "co2quad", exp: "co2exp" }; let s = 0; for (const id of B) if (K[id]) s += (KERNELS[K[id]](t + h, p) - KERNELS[K[id]](t - h, p)) / (2 * h); return s; },
+  /* 季节项(年周期 + 半年谐波)一年内的峰谷差 ppm(取样 720 点) */
+  co2amp: (p, B = []) => { let hi = -Infinity, lo = Infinity; for (let i = 0; i < 720; i++) { const t = i / 720; let v = 0; if (B.includes("ann")) v += KERNELS.harm1(t, p); if (B.includes("semi")) v += KERNELS.harm2(t, p); hi = Math.max(hi, v); lo = Math.min(lo, v); } return hi - lo; }
 };
 /* 返回 [{d, v, s}]:只列出 need 积木都在炉里的派生量;fitR 给出协方差时 s 为一阶误差传播的 σ */
 export function derived(cfg, state, fitR) {
-  return (cfg.derived || []).filter((d) => (d.need || []).every((id) => state.blocks.includes(id))).map((d) => {
-    const fn = DERIVED[d.fn], p = state.p, v = fn(p); let s = null;
+  return (cfg.derived || []).filter((d) => (d.need || []).every((id) => state.blocks.includes(id)) && (!d.needAny || d.needAny.some((id) => state.blocks.includes(id)))).map((d) => { // 深空 2.7:needAny = 其中任一块在炉里即可
+    const B = state.blocks, fn = (q) => DERIVED[d.fn](q, B, d), p = state.p, v = fn(p); let s = null;
     if (fitR && fitR.cov) {
       const ks = Object.keys(fitR.cov), gr = ks.map((k) => { const h = 1e-6 * Math.max(Math.abs(p[k]), 1e-9); return (fn({ ...p, [k]: p[k] + h }) - v) / h; });
       let s2 = 0; ks.forEach((a, i) => ks.forEach((b, j) => (s2 += gr[i] * gr[j] * fitR.cov[a][b]))); s = Math.sqrt(Math.max(0, s2));

@@ -91,7 +91,7 @@ const CSS = `
 .cap.sealed .pill{background:linear-gradient(#2a3a10 50%,rgba(242,200,107,.35) 50%);border-color:#f2c86b;box-shadow:0 0 14px rgba(242,200,107,.45)}
 .cap.open .pill{opacity:.55}
 .cap .bd{flex:1;min-width:0}.cap b{font-weight:500;font-size:12px}.cap .tg{font-size:10px;color:#ffcf9a;border:1px solid rgba(255,179,107,.5);border-radius:999px;padding:0 6px;margin-left:6px}
-.cap p{margin:3px 0;font-size:11px;color:#8fa0c4;line-height:1.55}.cap p.v{color:#e9eefb}
+.cap .tg.st{display:inline-block;white-space:nowrap;color:#9fe8ff;border-color:rgba(127,227,255,.5)}.cap p{margin:3px 0;font-size:11px;color:#8fa0c4;line-height:1.55}.cap p.v{color:#e9eefb}
 #fgLin{display:flex;flex-direction:column;gap:6px}
 .ln{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.03);border:1px solid rgba(160,235,255,.12);font-size:11px;line-height:1.5}
 .ln.cmp{border-color:rgba(255,255,255,.55)}.ln .t{display:flex;justify-content:space-between;gap:6px;color:#8fa0c4}.ln .t b{color:#e9eefb;font-weight:500}
@@ -387,12 +387,13 @@ function draw() {
   const capY = T + (sm ? 24 : 28), capS = store.get(S.K("capsules"), {}), boxes = [], labY = {};
   (S.cfg.capsules || []).forEach((c) => { const tw = g.measureText("胶囊").width, s = capS[c.id]; let ly = capY;
     if (s && isFinite(s.pred)) { const yy = py(Math.max(A.y.min, Math.min(A.y.max, s.pred))); boxes.push({ x0: px(c.x) - 9, x1: px(c.x) + 9, y0: yy - 9, y1: yy + 9 }); if (Math.abs(yy - (capY - 4)) < 16) ly = yy + 21; } // 封存圆圈压到标签时,标签挪到圆圈下方
+    if (c.official) { const o = c.official, yt = py(o.pred + o.err), yb = py(o.pred - o.err); boxes.push({ x0: px(c.x) - 6, x1: px(c.x) + 6, y0: yt - 2, y1: yb + 2 }); if (ly + 3 > yt - 2 && ly - 11 < yb + 2) ly = Math.max(ly, yb + 16); } // 深空 2.7:避让总指挥封存的菱形与误差棒
     labY[c.id] = ly; boxes.push({ x0: px(c.x) - tw / 2 - 3, x1: px(c.x) + tw / 2 + 3, y0: ly - 11, y1: ly + 3 }); });
   if (!sm) { const xo = (px(X1) + px(A.x.max)) / 2, two = g.measureText("数据外").width / 2; let yo = T + 12; if (boxes.some((bx) => xo - two < bx.x1 && xo + two > bx.x0 && yo - 11 < bx.y1 && yo + 3 > bx.y0)) yo = h - B - 6; // 「数据外」也避让胶囊
     g.textAlign = "center"; g.fillStyle = "rgba(127,227,255,.55)"; g.fillText("数据外", xo, yo); boxes.push({ x0: xo - two, x1: xo + two, y0: yo - 11, y1: yo + 3 }); } // 已封存胶囊的圆圈也要避让
   // 分量
   const comps = st.blocks.map((id) => S.cfg.blocks.find((x) => x.id === id)).filter((b) => b && b.kind !== "factor" && b.kind !== "mod"), pe = E.effP(S.cfg, st);
-  if (!ev.empty && comps.length > 1) { const lab = [];
+  if (!ev.empty && comps.length > 1 && S.cfg.comps !== false) { const lab = []; // 深空 2.7:cfg.comps = false 不画分量虚线(CO₂ 炉的季节/二次分量在 0 附近,远在纵轴范围外)
     comps.forEach((b) => { g.globalAlpha = .7; path((x) => E.compAt(S.cfg, D, b, pe, x, compile), b.color, 1.2, [4, 4]); g.globalAlpha = 1; const xe = A.x.max * .97; lab.push({ b, y: py(Math.max(A.y.min, Math.min(A.y.max, E.compAt(S.cfg, D, b, pe, xe, compile)))) - 6, x: px(xe) }); });
     lab.sort((a, c) => a.y - c.y);
     const placed = boxes.slice();
@@ -413,15 +414,15 @@ function draw() {
   if (!ev.empty) { g.save(); g.shadowColor = GOLD; g.shadowBlur = 12; path((x) => E.modelAt(S.cfg, D, st, x, null, compile), GOLD, 2.4); g.restore(); path((x) => E.modelAt(S.cfg, D, st, x, null, compile), "rgba(255,245,215,.9)", 1); }
   // 误差棒 + 星
   D.x.forEach((x, i) => { const y = D.y[i], e = D.e[i]; g.strokeStyle = "rgba(220,235,255,.38)"; g.lineWidth = 1; g.beginPath(); g.moveTo(px(x), py(y - e)); g.lineTo(px(x), py(y + e)); g.moveTo(px(x) - 2.5, py(y - e)); g.lineTo(px(x) + 2.5, py(y - e)); g.moveTo(px(x) - 2.5, py(y + e)); g.lineTo(px(x) + 2.5, py(y + e)); g.stroke(); });
-  D.x.forEach((x, i) => star(g, px(x), py(D.y[i]), sm ? 2.2 : 2.8, "rgba(170,215,255,.6)"));
+  const sk = S.cfg.data.star ?? 1; D.x.forEach((x, i) => star(g, px(x), py(D.y[i]), (sm ? 2.2 : 2.8) * sk, "rgba(170,215,255,.6)")); // 深空 2.7:data.star 缩放星点(CO₂ 炉 823 个月数据点密)
   if (D.labels && S.cfg.data.showLabels) { g.fillStyle = "rgba(233,238,251,.8)"; g.font = (sm ? 9 : 11) + "px -apple-system,'PingFang SC',sans-serif"; g.textAlign = "left"; D.x.forEach((x, i) => { const t = sm || w < 640 ? D.labels[i].replace(/[(\uFF08].*[)\uFF09]/, "") : D.labels[i], tw = g.measureText(t).width, ex = px(x) + 7, ey = py(D.y[i]) + (sm ? 12 : 14);
     const bad = ex + tw > w - R || boxes.some((bx) => ex < bx.x1 && ex + tw > bx.x0 && ey - 10 < bx.y1 && ey + 2 > bx.y0);
     if (bad) { g.textAlign = "right"; g.fillText(t, px(x) - 7, py(D.y[i]) - 6); g.textAlign = "left"; } else g.fillText(t, ex, ey); }); /* 点名避让胶囊标签与右边界 */ g.font = (sm ? 10 : 11) + "px -apple-system,'PingFang SC',sans-serif"; }
   // 胶囊标记
   (S.cfg.capsules || []).forEach((c) => { const s = store.get(S.K("capsules"), {})[c.id]; g.strokeStyle = "rgba(127,227,255,.35)"; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(px(c.x), T); g.lineTo(px(c.x), h - B); g.stroke(); g.setLineDash([]);
-    if (s) { g.strokeStyle = "#7fe3ff"; g.lineWidth = 2; g.beginPath(); g.arc(px(c.x), py(Math.max(A.y.min, Math.min(A.y.max, s.pred))), 6, 0, 6.283); g.stroke(); } g.fillStyle = "#7fe3ff"; g.textAlign = "center"; g.fillText("胶囊", px(c.x), labY[c.id] ?? capY); });
+    if (s) { g.strokeStyle = "#7fe3ff"; g.lineWidth = 2; g.beginPath(); g.arc(px(c.x), py(Math.max(A.y.min, Math.min(A.y.max, s.pred))), 6, 0, 6.283); g.stroke(); } if (c.official) { const o = c.official, cx = px(c.x), cy = py(o.pred), y0 = py(o.pred - o.err), y1 = py(o.pred + o.err); g.strokeStyle = GOLD; g.lineWidth = 1.5; g.beginPath(); g.moveTo(cx, y0); g.lineTo(cx, y1); g.moveTo(cx - 4, y0); g.lineTo(cx + 4, y0); g.moveTo(cx - 4, y1); g.lineTo(cx + 4, y1); g.stroke(); g.fillStyle = GOLD; g.beginPath(); g.moveTo(cx, cy - 5); g.lineTo(cx + 5, cy); g.lineTo(cx, cy + 5); g.lineTo(cx - 5, cy); g.closePath(); g.fill(); } /* 深空 2.7:总指挥封存的预测(金色菱形 ± 误差) */ g.fillStyle = "#7fe3ff"; g.textAlign = "center"; g.fillText("胶囊", px(c.x), labY[c.id] ?? capY); });
   if (ev.empty) { g.fillStyle = "rgba(233,238,251,.55)"; g.textAlign = "center"; g.font = (sm ? 12 : 14) + "px -apple-system,'PingFang SC',sans-serif"; const tx = S.cfg.emptyHint || "星点 = 真实观测 · 放入积木,金线就会出现"; if (w < 560) { const k = tx.indexOf("·"); g.fillText(tx.slice(0, k).trim(), (L + w - R) / 2, T + (h - T - B) * .7); g.fillText(tx.slice(k + 1).trim(), (L + w - R) / 2, T + (h - T - B) * .7 + 18); } else g.fillText(tx, (L + w - R) / 2, T + (h - T - B) * .82); }
-  $("fgLgC").innerHTML = (S.cmp ? '<i style="background:#fff"></i>对比:谱系 #' + S.cmp.n : "") + ((S.cfg.capsules || []).some((c) => c.fitTo != null && capS[c.id]) ? ' <i style="background:#7fe3ff"></i>封存时的模型' : "");
+  $("fgLgC").innerHTML = (S.cmp ? '<i style="background:#fff"></i>对比:谱系 #' + S.cmp.n : "") + ((S.cfg.capsules || []).some((c) => c.fitTo != null && capS[c.id]) ? ' <i style="background:#7fe3ff"></i>封存时的模型' : "") + ((S.cfg.capsules || []).some((c) => c.official) ? ' <i style="background:' + GOLD + ';width:7px;height:7px;margin:0 7px 0 3px;transform:rotate(45deg);border-radius:1px"></i>' + esc(S.cfg.capsules.find((c) => c.official).official.by || "官方") + "封存的预测" : "");
 }
 
 function showTip(mx, my) {
@@ -440,17 +441,22 @@ function capsState() { return store.get(S.K("capsules"), {}); }
 function renderCaps() {
   const box = $("fgCap"); box.innerHTML = "";
   (S.cfg.capsules || []).forEach((c) => {
-    const s = capsState()[c.id], now = Date.now(), due = !c.unlockAt || now >= Date.parse(c.unlockAt);
-    const el = document.createElement("div"); el.className = "cap" + (s ? (s.opened ? " open" : " sealed") : ""); el.dataset.c = c.id;
-    let body = `<b>${esc(c.title)}</b>${c.demo ? '<span class="tg">演示</span>' : ""}<p>${esc(c.q)}</p>`;
-    if (!s) body += `<p class="v" data-live></p><div class="rowb"><button class="btn sm cy" data-a="seal">封存预测</button></div>`;
+    const all = capsState(), s = all[c.id], now = Date.now(), due = !c.unlockAt || now >= Date.parse(c.unlockAt);
+    /* 深空 2.7:真实到期胶囊——到期且本地数据里已有目标月份才能开封;到期但数据未更新时显示「待 NOAA 发布后开封」(页面不联网取数) */
+    const T = E.capsuleTruth(S.data, c.truth), ready = due && !!T, opened = !!all[c.id + "#open"] || !!(s && s.opened), cd = c.dp ?? 1, sym = S.cfg.axes.y.sym || "v";
+    const cmp = (v) => { const d = v - T.v, n = Math.abs(d) / T.e; return `差 ${d > 0 ? "+" : ""}${esc(yu(d, cd, c.unit))},<span style="color:${TIER[n < 1 ? 0 : n <= 3 ? 1 : 2]}">${nf(n, 1)}σ</span> ${n < 1 ? "命中" : n <= 3 ? "接近" : "偏离"}`; };
+    const el = document.createElement("div"); el.className = "cap" + (opened && ready ? " open" : s || c.official ? " sealed" : ""); el.dataset.c = c.id;
+    const stat = c.unlockAt ? (opened && ready ? "已开封" : ready ? "已到期 · 可开封" : due ? `已到期 · 待 ${c.awaitLabel ? c.awaitLabel + " " : "数据"}发布后开封` : `未开封 · 到期 ${c.unlockAt.slice(0, 10)}`) : "";
+    let body = `<b>${esc(c.title)}</b>${c.demo ? '<span class="tg">演示</span>' : ""}${stat ? `<span class="tg st">${esc(stat)}</span>` : ""}<p>${esc(c.q)}</p>`;
+    if (c.official) { const o = c.official;
+      body += `<p class="v">${esc(o.by || "官方")}封存(${esc(o.at)},数据截至 ${esc(o.dataTo)},${esc(o.glyphs)},χ²<sub>ν</sub> ${nf(o.red, 2)}):${esc(sym)} = <b>${esc(yu(o.pred, cd, c.unit))} ± ${esc(yu(o.err, cd, c.unit))}</b>(参数 ±${esc(yu(o.errModel, cd, c.unit))} ⊕ 年际起伏 0.8)</p>`;
+      if (opened && ready) body += `<p class="v">开封:实测 ${esc(yu(T.v, cd, c.unit))}(${esc(c.truth.label || "")})· ${o.by || "官方"}预测 ${cmp(o.pred)}</p>`; }
+    if (!s) body += `<p class="v" data-live></p><div class="rowb"><button class="btn sm cy" data-a="seal">${c.official ? "封存我的预测" : "封存预测"}</button>${c.official && ready && !opened ? '<button class="btn sm" data-a="open">开封对答案</button>' : ""}</div>`;
     else {
-      body += `<p class="v">已封存:${esc(S.cfg.axes.y.sym || "v")} = <b>${esc(yu(s.pred, c.dp ?? 1, c.unit))}</b>(${esc(s.glyphs)}${s.fitTo != null ? ",只用前 " + (s.n || "?") + " 个数据点重新拟合" : ""},χ²<sub>ν</sub> ${nf(s.red, 2)})· ${new Date(s.at).toLocaleString("zh-CN", { hour12: false })}</p>`;
-      if (s.opened) {
-        const T = E.capsuleTruth(S.data, c.truth), d = s.pred - T.v, n = Math.abs(d) / T.e;
-        const cd = c.dp ?? 1;
-        body += `<p class="v">开封:实测 ${esc(yu(T.v, cd, c.unit))} ± ${esc(yu(T.e, cd, c.unit))}(${c.truth.label ? esc(c.truth.label) : T.n + " 个观测点加权平均"})· 差 ${d > 0 ? "+" : ""}${esc(yu(d, cd, c.unit))},<span style="color:${TIER[n < 1 ? 0 : n <= 3 ? 1 : 2]}">${nf(n, 1)}σ</span> ${n < 1 ? "命中" : n <= 3 ? "接近" : "偏离"}</p><div class="rowb"><button class="btn sm" data-a="reset">重新封存</button></div>`;
-      } else if (due) body += `<div class="rowb"><button class="btn sm" data-a="open">开封对答案</button><button class="btn sm" data-a="reset">作废</button></div>`;
+      body += `<p class="v">${c.official ? "我的封存" : "已封存"}:${esc(sym)} = <b>${esc(yu(s.pred, cd, c.unit))}</b>(${esc(s.glyphs)}${s.fitTo != null ? ",只用前 " + (s.n || "?") + " 个数据点重新拟合" : ""},χ²<sub>ν</sub> ${nf(s.red, 2)})· ${new Date(s.at).toLocaleString("zh-CN", { hour12: false })}</p>`;
+      if (opened && ready) body += `<p class="v">开封:实测 ${esc(yu(T.v, cd, c.unit))} ± ${esc(yu(T.e, cd, c.unit))}(${c.truth.label ? esc(c.truth.label) : T.n + " 个观测点加权平均"})· ${cmp(s.pred)}</p><div class="rowb"><button class="btn sm" data-a="reset">重新封存</button></div>`;
+      else if (ready) body += `<div class="rowb"><button class="btn sm" data-a="open">开封对答案</button><button class="btn sm" data-a="reset">作废</button></div>`;
+      else if (due) body += `<p>已到期:等 ${esc(c.awaitLabel ? c.awaitLabel + " " : "数据")}发布并更新本地数据后开封。</p><div class="rowb"><button class="btn sm" disabled>待发布</button><button class="btn sm" data-a="reset">作废</button></div>`;
       else { const dd = Math.ceil((Date.parse(c.unlockAt) - now) / 864e5); body += `<p>到期开封:${esc(c.unlockAt.slice(0, 10))} · 还有 ${dd} 天</p><div class="rowb"><button class="btn sm" disabled>未到期</button><button class="btn sm" data-a="reset">作废</button></div>`; }
     }
     if (c.note) body += `<p>${esc(c.note)}</p>`;
@@ -472,7 +478,7 @@ function capAct(c, a) {
       const sub = E.sliceData(S.data, c.fitTo), st2 = { blocks: S.state.blocks.slice(), p: { ...S.state.p }, lock: { ...S.state.lock } }, R = E.fit(S.cfg, sub, st2, compile), ms = { ...st2, p: R.p };
       all[c.id] = { pred: E.modelAt(S.cfg, S.data, ms, c.x, null, compile), blocks: st2.blocks, p: E.effP(S.cfg, ms), red: R.ev.red, n: sub.N, fitTo: c.fitTo, glyphs: glyphs(st2.blocks), at: new Date().toISOString(), unlockAt: c.unlockAt || null, opened: false };
     } else all[c.id] = { pred: E.modelAt(S.cfg, S.data, S.state, c.x, null, compile), blocks: S.state.blocks.slice(), p: { ...S.state.p }, red: S.ev.red, glyphs: glyphs(S.state.blocks), at: new Date().toISOString(), unlockAt: c.unlockAt || null, opened: false }; }
-  if (a === "open") { if (all[c.id] && (!c.unlockAt || Date.now() >= Date.parse(c.unlockAt))) { all[c.id].opened = true; all[c.id].openedAt = new Date().toISOString(); } }
+  if (a === "open") { if ((!c.unlockAt || Date.now() >= Date.parse(c.unlockAt)) && E.capsuleTruth(S.data, c.truth)) { if (all[c.id]) { all[c.id].opened = true; all[c.id].openedAt = new Date().toISOString(); } if (c.official) all[c.id + "#open"] = new Date().toISOString(); } }
   if (a === "reset") delete all[c.id];
   store.set(S.K("capsules"), all); renderCaps(); draw();
 }
