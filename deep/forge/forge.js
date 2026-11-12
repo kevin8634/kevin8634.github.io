@@ -8,6 +8,9 @@ const compile = (s, v) => Expr.compile(s, v);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const TIER = ["#5fe39a", "#ffd36b", "#ff6b6b"], GOLD = "#f2c86b";
 const nf = (v, d = 2) => (!isFinite(v) ? "—" : Math.abs(v) >= 1e4 ? v.toExponential(2) : (+v).toFixed(d));
+/* 深空 2.6:纵轴可按「万 / 亿」读数(axes.y.wan),疫情炉用;其他炉不变 */
+const yf = (v, dp) => { if (S && S.cfg.axes.y.wan && isFinite(v)) { const a = Math.abs(v); if (a >= 1e8) return +(v / 1e8).toPrecision(4) + " 亿"; if (a >= 1e4) return (v / 1e4).toFixed(2) + " 万"; } return nf(v, dp); };
+const yu = (v, dp, u) => { const t = yf(v, dp); return /[万亿]$/.test(t) ? t + u : t + " " + u; }; // 「2.35 万人」而不是「2.35 万 人」
 const sig = (v) => { if (!isFinite(v) || v <= 0) return 2; return Math.max(0, Math.min(6, 1 - Math.floor(Math.log10(v)))); };
 
 const store = {
@@ -68,6 +71,7 @@ const CSS = `
 #fg .dial{display:flex;gap:12px;align-items:center}
 #fg .dial svg{flex:none;width:118px;height:118px}
 #fgStat{flex:1;display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:12px;align-content:center}#fgStat dt{color:#8fa0c4}#fgStat dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
+#fgDer{display:grid;grid-template-columns:1fr auto;gap:2px 8px;font-size:12px;margin:6px 0 0;padding:6px 8px;border-radius:8px;background:rgba(242,200,107,.06)}#fgDer:empty{display:none}#fgDer dt{color:#8fa0c4}#fgDer dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}
 #fgPassL{font-size:11px;color:#8fa0c4;margin:6px 0 2px}#fgFitR{font-size:11px;color:#8fa0c4;line-height:1.6;margin-top:6px}#fgFitR b{color:#e9eefb;font-weight:500}
 #fg .rowb{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 #fgPar .pg{margin-top:10px;padding:8px 10px;border-left:2px solid var(--kc,#9ff0ff);background:rgba(255,255,255,.03);border-radius:0 8px 8px 0}
@@ -150,7 +154,7 @@ function buildDom() {
 <circle id="fgGl" cx="60" cy="60" r="58" fill="url(#fgGlow)" opacity=".1"/><circle cx="60" cy="60" r="46" fill="rgba(4,10,20,.7)" stroke="rgba(160,235,255,.18)" stroke-width="8"/>
 <circle id="fgArc" cx="60" cy="60" r="46" fill="none" stroke="#7fe3ff" stroke-width="8" stroke-linecap="round" stroke-dasharray="0 289" transform="rotate(-90 60 60)"/>
 <text id="fgSc" x="60" y="62" text-anchor="middle" fill="#e9fbff" font-size="26" font-weight="500">—</text><text x="60" y="80" text-anchor="middle" fill="#8fa0c4" font-size="9" letter-spacing="2">亮度 · 分</text></svg>
-<dl id="fgStat"></dl></div><p id="fgPassL"></p>
+<dl id="fgStat"></dl></div><dl id="fgDer" aria-label="派生量"></dl><p id="fgPassL"></p>
 <div class="rowb"><button class="btn cy" id="fgFit">⟲ 自动拟合</button><button class="btn" id="fgSave">✦ 保存模型</button></div><div id="fgFitR" aria-live="polite"></div>
 <h3 style="margin-top:12px">参 数</h3><div id="fgPar"></div>
 <p class="ft">亮度分 S = 100·exp(−max(0, (BIC−N)/N)/1.5):残差越小、参数越少越亮。BIC = χ² + k·ln N,AIC = χ² + 2k(高斯误差,省略常数项),k 为自由(未锁定)参数个数。</p></section>
@@ -300,6 +304,7 @@ function update() {
   const dB = last && !ev.empty ? ev.bic - last.bic : null;
   $("fgStat").innerHTML = ev.empty ? `<dt>χ²<sub>ν</sub></dt><dd>—</dd><dt>参数 k</dt><dd>0</dd><dt>数据点 N</dt><dd>${ev.N}</dd>` :
     `<dt>约化 χ²<sub>ν</sub></dt><dd style="color:${ok ? "#5fe39a" : ev.red > 10 ? "#ff8a8a" : "#ffd36b"}">${nf(ev.red, ev.red < 10 ? 2 : 1)}</dd><dt>自由参数 k</dt><dd>${ev.k}</dd><dt>数据点 N</dt><dd>${ev.N}</dd><dt>χ²</dt><dd>${nf(ev.chi2, 1)}</dd><dt>BIC</dt><dd>${nf(ev.bic, 1)}</dd><dt>AIC</dt><dd>${nf(ev.aic, 1)}</dd>${dB != null ? `<dt>ΔBIC 较上一存档</dt><dd>${dB > 0 ? "+" : ""}${nf(dB, 1)}</dd>` : ""}`;
+  $("fgDer").innerHTML = ev.empty ? "" : derivedHtml(); // 深空 2.6 派生量(R₀ 等)单独一栏,不挤拟合仪
   const P = S.cfg.pass;
   $("fgPassL").innerHTML = `过关线:χ²<sub>ν</sub> &lt; ${P.redMax}${P.require ? " 且炉中含" + P.require.map((id) => "「" + esc(S.cfg.blocks.find((b) => b.id === id).name) + "」").join("") : ""} · ${ok ? '<span style="color:#5fe39a">已达成</span>' : "未达成"}`;
   $("fgSave").disabled = ev.empty; $("fgFit").disabled = ev.empty || !E.freeParams(S.cfg, S.state).length;
@@ -311,11 +316,17 @@ function update() {
   renderFitR(); draw(); saveState(); renderCapsLive();
 }
 
+/* 深空 2.6 派生量(如 R₀ = β/γ):炉里有所需积木就显示;自动拟合后附一阶误差传播的 σ */
+function derivedHtml() {
+  const F = S.fitInfo && S.fitInfo.cov ? S.fitInfo : null;
+  return E.derived(S.cfg, { ...S.state, p: E.effP(S.cfg, S.state) }, F).map((x) => `<dt>${esc(x.d.name)}</dt><dd style="color:#f5e3b5;white-space:nowrap">${nf(x.v, x.d.dp ?? 2)}${x.s != null && isFinite(x.s) ? " ± " + nf(x.s, x.d.dp ?? 2) : ""}${x.d.unit ? " " + esc(x.d.unit) : ""}</dd>`).join("");
+}
 function renderFitR() {
   const F = S.fitInfo, el = $("fgFitR");
   if (!F) { el.innerHTML = ""; return; }
   const Q = Object.keys(F.sigma);
   el.innerHTML = `<b>最小二乘结果</b>(Levenberg–Marquardt,${F.iter} 步):` + Q.map((k) => { const q = paramQ(k); return `${esc(q.name)} = <b>${nf(F.p[k], sig(F.sigma[k]))} ± ${nf(F.sigma[k], sig(F.sigma[k]))}</b> ${esc(q.unit)}${F.atBound[k] ? '<span style="color:#ffd36b">(触到范围边界)</span>' : ""}`; }).join(";") +
+    (() => { const D = E.derived(S.cfg, { ...S.state, p: E.effP(S.cfg, S.state) }, F); return D.length ? ";" + D.map((x) => `${esc(x.d.name)} = <b>${nf(x.v, Math.max(x.d.dp ?? 2, sig(x.s)))} ± ${nf(x.s, Math.max(x.d.dp ?? 2, sig(x.s)))}</b>${x.d.unit ? " " + esc(x.d.unit) : ""}`).join(";") + "(派生量按协方差一阶传播,锁定参数不计误差)" : ""; })() +
     `。χ²<sub>ν</sub> = ${nf(F.ev.red, 3)}。σ 取 (JᵀWJ)⁻¹ 对角${F.ev.red > 1 ? ",并乘 √χ²<sub>ν</sub>" : ""};参数之间有相关,单看 σ 会低估简并。`;
 }
 const paramQ = (k) => { for (const b of S.cfg.blocks) for (const q of b.params) if (q.k === k) return q; return { name: k, unit: "" }; };
@@ -346,7 +357,7 @@ function draw() {
   const cv = $("fgCv"), box = cv.parentElement, w = box.clientWidth, h = box.clientHeight; if (w < 10 || h < 10) return;
   const dpr = Math.min(2, devicePixelRatio || 1); cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
   const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
-  const A = S.cfg.axes, sm = w < 420, L = sm ? 34 : 46, R = 10, T = 10, B = sm ? 26 : 32;
+  const A = S.cfg.axes, sm = w < 420, L = (sm ? 34 : 46) + (A.y.wan ? 12 : 0), R = 10, T = 10, B = sm ? 26 : 32;
   // 深空 2.5:轴可为对数(axes.x.log / axes.y.log),默认线性(暗物质炉不变)
   const tx = (v) => (A.x.log ? Math.log10(v) : v), ty = (v) => (A.y.log ? Math.log10(v) : v);
   const px = (x) => L + (tx(x) - tx(A.x.min)) / (tx(A.x.max) - tx(A.x.min)) * (w - L - R), py = (y) => h - B - (ty(y) - ty(A.y.min)) / (ty(A.y.max) - ty(A.y.min)) * (h - T - B);
@@ -358,7 +369,7 @@ function draw() {
   g.fillStyle = "rgba(127,227,255,.04)"; g.fillRect(px(X1), T, px(A.x.max) - px(X1), h - T - B);
   // 轴
   g.strokeStyle = "rgba(143,160,196,.16)"; g.lineWidth = 1; g.fillStyle = "#8fa0c4"; g.font = (sm ? 10 : 11) + "px -apple-system,'PingFang SC',sans-serif";
-  const fmt = (v) => String(+v.toPrecision(3));
+  const fmt = (v) => (A.y.wan && v >= 1e4 ? (v >= 1e8 ? +(v / 1e8).toPrecision(3) + "亿" : +(v / 1e4).toPrecision(3) + "万") : String(+v.toPrecision(3))); // 深空 2.6:wan 轴(只有纵轴会 ≥1e4)
   /* 对数轴刻度:每十倍 1、2、5 画网格;像素够宽才标 2、5 */
   const logTicks = (min, max, span) => { const out = []; for (let e = Math.floor(Math.log10(min)); e <= Math.ceil(Math.log10(max)); e++) for (const m of [1, 2, 5]) { const v = m * Math.pow(10, e); if (v >= min * 0.999 && v <= max * 1.001) out.push({ v, lab: m === 1 || span > 110 }); } return out; };
   const xT = A.x.log ? logTicks(A.x.min, A.x.max, (w - L - R) / (tx(A.x.max) - tx(A.x.min))) : (() => { const o = [], xs = sm ? A.x.stepSm || 20 : A.x.step || 10; for (let x = A.x.min; x <= A.x.max; x += xs) o.push({ v: x, lab: true }); return o; })();
@@ -375,14 +386,14 @@ function draw() {
   /* 曲线标签避让(深空 2.5 修 375×667「胶囊」与分量标签重叠):先排胶囊标签,分量标签与之相交就下移 */
   const capY = T + (sm ? 24 : 28), capS = store.get(S.K("capsules"), {}), boxes = [], labY = {};
   (S.cfg.capsules || []).forEach((c) => { const tw = g.measureText("胶囊").width, s = capS[c.id]; let ly = capY;
-    if (s && isFinite(s.pred)) { const yy = py(clampY(s.pred)); boxes.push({ x0: px(c.x) - 9, x1: px(c.x) + 9, y0: yy - 9, y1: yy + 9 }); if (Math.abs(yy - (capY - 4)) < 16) ly = yy + 21; } // 封存圆圈压到标签时,标签挪到圆圈下方
+    if (s && isFinite(s.pred)) { const yy = py(Math.max(A.y.min, Math.min(A.y.max, s.pred))); boxes.push({ x0: px(c.x) - 9, x1: px(c.x) + 9, y0: yy - 9, y1: yy + 9 }); if (Math.abs(yy - (capY - 4)) < 16) ly = yy + 21; } // 封存圆圈压到标签时,标签挪到圆圈下方
     labY[c.id] = ly; boxes.push({ x0: px(c.x) - tw / 2 - 3, x1: px(c.x) + tw / 2 + 3, y0: ly - 11, y1: ly + 3 }); });
   if (!sm) { const xo = (px(X1) + px(A.x.max)) / 2, two = g.measureText("数据外").width / 2; let yo = T + 12; if (boxes.some((bx) => xo - two < bx.x1 && xo + two > bx.x0 && yo - 11 < bx.y1 && yo + 3 > bx.y0)) yo = h - B - 6; // 「数据外」也避让胶囊
     g.textAlign = "center"; g.fillStyle = "rgba(127,227,255,.55)"; g.fillText("数据外", xo, yo); boxes.push({ x0: xo - two, x1: xo + two, y0: yo - 11, y1: yo + 3 }); } // 已封存胶囊的圆圈也要避让
   // 分量
-  const comps = st.blocks.map((id) => S.cfg.blocks.find((x) => x.id === id)).filter((b) => b && b.kind !== "factor");
+  const comps = st.blocks.map((id) => S.cfg.blocks.find((x) => x.id === id)).filter((b) => b && b.kind !== "factor" && b.kind !== "mod"), pe = E.effP(S.cfg, st);
   if (!ev.empty && comps.length > 1) { const lab = [];
-    comps.forEach((b) => { g.globalAlpha = .7; path((x) => E.compAt(S.cfg, D, b, st.p, x, compile), b.color, 1.2, [4, 4]); g.globalAlpha = 1; const xe = A.x.max * .97; lab.push({ b, y: py(Math.max(A.y.min, Math.min(A.y.max, E.compAt(S.cfg, D, b, st.p, xe, compile)))) - 6, x: px(xe) }); });
+    comps.forEach((b) => { g.globalAlpha = .7; path((x) => E.compAt(S.cfg, D, b, pe, x, compile), b.color, 1.2, [4, 4]); g.globalAlpha = 1; const xe = A.x.max * .97; lab.push({ b, y: py(Math.max(A.y.min, Math.min(A.y.max, E.compAt(S.cfg, D, b, pe, xe, compile)))) - 6, x: px(xe) }); });
     lab.sort((a, c) => a.y - c.y);
     const placed = boxes.slice();
     const hit = (x, tw, y) => placed.find((bx) => x - tw < bx.x1 && x > bx.x0 && y - 11 < bx.y1 && y + 3 > bx.y0);
@@ -390,6 +401,10 @@ function draw() {
       if (hit(l.x, tw, y) && !hit(l.x, tw, l.y + 20)) y = l.y + 20; // 先试曲线下方
       while ((bx = hit(l.x, tw, y)) && guard++ < 12) y = bx.y1 + 12;
       y = Math.min(h - B - 6, y); placed.push({ x0: l.x - tw, x1: l.x, y0: y - 11, y1: y + 3 }); g.fillStyle = l.b.color; g.textAlign = "right"; g.fillText(l.b.name, l.x, y); }); }
+  // 深空 2.6:用前 N 天数据封存的胶囊,画出封存时的模型(青虚线,画到预测点为止)
+  (S.cfg.capsules || []).forEach((c) => { const s = capS[c.id]; if (!s || c.fitTo == null || !s.p) return; const ms = { blocks: s.blocks, p: s.p, lock: {} };
+    g.beginPath(); let first = true; xsC.forEach((x) => { if (x > c.x) return; const y = clampY(E.modelAt(S.cfg, D, ms, x, null, compile)); first ? g.moveTo(px(x), py(y)) : g.lineTo(px(x), py(y)); first = false; }); g.lineTo(px(c.x), py(Math.max(A.y.min, Math.min(A.y.max, s.pred))));
+    g.strokeStyle = "rgba(127,227,255,.75)"; g.lineWidth = 1.4; g.setLineDash([5, 4]); g.stroke(); g.setLineDash([]); });
   // 谱系对比
   if (S.cmp) { const c = S.cmp; path((x) => E.modelAt(S.cfg, D, c, x, null, compile), "rgba(255,255,255,.7)", 1.4, [6, 5]); }
   // 残差光丝
@@ -404,9 +419,9 @@ function draw() {
     if (bad) { g.textAlign = "right"; g.fillText(t, px(x) - 7, py(D.y[i]) - 6); g.textAlign = "left"; } else g.fillText(t, ex, ey); }); /* 点名避让胶囊标签与右边界 */ g.font = (sm ? 10 : 11) + "px -apple-system,'PingFang SC',sans-serif"; }
   // 胶囊标记
   (S.cfg.capsules || []).forEach((c) => { const s = store.get(S.K("capsules"), {})[c.id]; g.strokeStyle = "rgba(127,227,255,.35)"; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(px(c.x), T); g.lineTo(px(c.x), h - B); g.stroke(); g.setLineDash([]);
-    if (s) { g.strokeStyle = "#7fe3ff"; g.lineWidth = 2; g.beginPath(); g.arc(px(c.x), py(s.pred), 6, 0, 6.283); g.stroke(); } g.fillStyle = "#7fe3ff"; g.textAlign = "center"; g.fillText("胶囊", px(c.x), labY[c.id] ?? capY); });
+    if (s) { g.strokeStyle = "#7fe3ff"; g.lineWidth = 2; g.beginPath(); g.arc(px(c.x), py(Math.max(A.y.min, Math.min(A.y.max, s.pred))), 6, 0, 6.283); g.stroke(); } g.fillStyle = "#7fe3ff"; g.textAlign = "center"; g.fillText("胶囊", px(c.x), labY[c.id] ?? capY); });
   if (ev.empty) { g.fillStyle = "rgba(233,238,251,.55)"; g.textAlign = "center"; g.font = (sm ? 12 : 14) + "px -apple-system,'PingFang SC',sans-serif"; const tx = S.cfg.emptyHint || "星点 = 真实观测 · 放入积木,金线就会出现"; if (w < 560) { const k = tx.indexOf("·"); g.fillText(tx.slice(0, k).trim(), (L + w - R) / 2, T + (h - T - B) * .7); g.fillText(tx.slice(k + 1).trim(), (L + w - R) / 2, T + (h - T - B) * .7 + 18); } else g.fillText(tx, (L + w - R) / 2, T + (h - T - B) * .82); }
-  $("fgLgC").innerHTML = S.cmp ? '<i style="background:#fff"></i>对比:谱系 #' + S.cmp.n : "";
+  $("fgLgC").innerHTML = (S.cmp ? '<i style="background:#fff"></i>对比:谱系 #' + S.cmp.n : "") + ((S.cfg.capsules || []).some((c) => c.fitTo != null && capS[c.id]) ? ' <i style="background:#7fe3ff"></i>封存时的模型' : "");
 }
 
 function showTip(mx, my) {
@@ -415,7 +430,7 @@ function showTip(mx, my) {
   const tip = $("fgTip"); if (bi < 0) { tip.style.display = "none"; return; }
   const i = bi, z = ev.empty ? null : ev.z[i];
   const A = S.cfg.axes, ys = A.y.sym || "v", dp = A.y.dp ?? 1;
-  tip.innerHTML = (D.labels ? esc(D.labels[i]) + " · " : "") + `${esc(A.x.sym || "r")} = ${D.x[i]} ${esc(A.x.unit || "kpc")} · ${esc(ys)} = ${D.y[i]} ± ${D.e[i]} ${esc(A.y.unit || "km/s")}` + (z == null ? "" : `<br>模型 ${nf(ev.m[i], dp)} · 残差 <span style="color:${TIER[E.tier(z)]}">${z > 0 ? "+" : ""}${nf(z, 1)}σ</span>`);
+  tip.innerHTML = (D.labels ? esc(D.labels[i]) + " · " : "") + `${esc(A.x.sym || "r")} = ${D.x[i]} ${esc(A.x.unit || "kpc")} · ${esc(ys)} = ${D.y[i]} ± ${D.e[i]} ${esc(A.y.unit || "km/s")}` + (z == null ? "" : `<br>模型 ${A.y.wan ? esc(yu(ev.m[i], dp, A.y.unit || "")) : nf(ev.m[i], dp)} · 残差 <span style="color:${TIER[E.tier(z)]}">${z > 0 ? "+" : ""}${nf(z, 1)}σ</span>`);
   tip.style.display = "block"; const bw = tip.offsetWidth, cw = $("fgCv").clientWidth;
   tip.style.left = Math.min(Math.max(0, geo.px(D.x[i]) - bw / 2), cw - bw) + "px"; tip.style.top = Math.max(0, geo.py(D.y[i]) - 48) + "px";
 }
@@ -430,11 +445,11 @@ function renderCaps() {
     let body = `<b>${esc(c.title)}</b>${c.demo ? '<span class="tg">演示</span>' : ""}<p>${esc(c.q)}</p>`;
     if (!s) body += `<p class="v" data-live></p><div class="rowb"><button class="btn sm cy" data-a="seal">封存预测</button></div>`;
     else {
-      body += `<p class="v">已封存:${esc(S.cfg.axes.y.sym || "v")} = <b>${nf(s.pred, c.dp ?? 1)}</b> ${esc(c.unit)}(${esc(s.glyphs)},χ²<sub>ν</sub> ${nf(s.red, 2)})· ${new Date(s.at).toLocaleString("zh-CN", { hour12: false })}</p>`;
+      body += `<p class="v">已封存:${esc(S.cfg.axes.y.sym || "v")} = <b>${esc(yu(s.pred, c.dp ?? 1, c.unit))}</b>(${esc(s.glyphs)}${s.fitTo != null ? ",只用前 " + (s.n || "?") + " 个数据点重新拟合" : ""},χ²<sub>ν</sub> ${nf(s.red, 2)})· ${new Date(s.at).toLocaleString("zh-CN", { hour12: false })}</p>`;
       if (s.opened) {
         const T = E.capsuleTruth(S.data, c.truth), d = s.pred - T.v, n = Math.abs(d) / T.e;
         const cd = c.dp ?? 1;
-        body += `<p class="v">开封:实测 ${nf(T.v, cd)} ± ${nf(T.e, cd)} ${esc(c.unit)}(${c.truth.label ? esc(c.truth.label) : T.n + " 个观测点加权平均"})· 差 ${d > 0 ? "+" : ""}${nf(d, cd)},<span style="color:${TIER[n < 1 ? 0 : n <= 3 ? 1 : 2]}">${nf(n, 1)}σ</span> ${n < 1 ? "命中" : n <= 3 ? "接近" : "偏离"}</p><div class="rowb"><button class="btn sm" data-a="reset">重新封存</button></div>`;
+        body += `<p class="v">开封:实测 ${esc(yu(T.v, cd, c.unit))} ± ${esc(yu(T.e, cd, c.unit))}(${c.truth.label ? esc(c.truth.label) : T.n + " 个观测点加权平均"})· 差 ${d > 0 ? "+" : ""}${esc(yu(d, cd, c.unit))},<span style="color:${TIER[n < 1 ? 0 : n <= 3 ? 1 : 2]}">${nf(n, 1)}σ</span> ${n < 1 ? "命中" : n <= 3 ? "接近" : "偏离"}</p><div class="rowb"><button class="btn sm" data-a="reset">重新封存</button></div>`;
       } else if (due) body += `<div class="rowb"><button class="btn sm" data-a="open">开封对答案</button><button class="btn sm" data-a="reset">作废</button></div>`;
       else { const dd = Math.ceil((Date.parse(c.unlockAt) - now) / 864e5); body += `<p>到期开封:${esc(c.unlockAt.slice(0, 10))} · 还有 ${dd} 天</p><div class="rowb"><button class="btn sm" disabled>未到期</button><button class="btn sm" data-a="reset">作废</button></div>`; }
     }
@@ -448,11 +463,15 @@ function renderCaps() {
 function renderCapsLive() {
   if (!S) return;
   (S.cfg.capsules || []).forEach((c) => { const el = document.querySelector(`#fgCap [data-c="${c.id}"]`); if (!el) return; const p = el.querySelector("[data-live]"), b = el.querySelector('[data-a="seal"]');
-    if (p) p.textContent = S.ev.empty ? "炉里还没有模型,先合成一个。" : `当前模型预测:${S.cfg.axes.y.sym || "v"}(${+(+c.x).toPrecision(5)}) = ${nf(E.modelAt(S.cfg, S.data, S.state, c.x, null, compile), c.dp ?? 1)} ${c.unit}`; if (b) b.disabled = S.ev.empty; });
+    if (p) p.textContent = S.ev.empty ? "炉里还没有模型,先合成一个。" : c.fitTo != null ? `封存时只用 ${S.cfg.axes.x.sym || "x"} ≤ ${c.fitTo} 的数据,把炉中积木重新拟合一次再预测(全数据模型此刻给出 ${yu(E.modelAt(S.cfg, S.data, S.state, c.x, null, compile), c.dp ?? 1, c.unit)},仅供对照)` : `当前模型预测:${S.cfg.axes.y.sym || "v"}(${+(+c.x).toPrecision(5)}) = ${yu(E.modelAt(S.cfg, S.data, S.state, c.x, null, compile), c.dp ?? 1, c.unit)}`; if (b) b.disabled = S.ev.empty; });
 }
 function capAct(c, a) {
   const all = capsState();
-  if (a === "seal") { if (S.ev.empty) return; all[c.id] = { pred: E.modelAt(S.cfg, S.data, S.state, c.x, null, compile), blocks: S.state.blocks.slice(), p: { ...S.state.p }, red: S.ev.red, glyphs: glyphs(S.state.blocks), at: new Date().toISOString(), unlockAt: c.unlockAt || null, opened: false }; }
+  if (a === "seal") { if (S.ev.empty) return;
+    if (c.fitTo != null) { // 深空 2.6:只用前 N 天数据,从当前参数出发重新拟合炉中积木,再预测(不改动炉里的当前模型)
+      const sub = E.sliceData(S.data, c.fitTo), st2 = { blocks: S.state.blocks.slice(), p: { ...S.state.p }, lock: { ...S.state.lock } }, R = E.fit(S.cfg, sub, st2, compile), ms = { ...st2, p: R.p };
+      all[c.id] = { pred: E.modelAt(S.cfg, S.data, ms, c.x, null, compile), blocks: st2.blocks, p: E.effP(S.cfg, ms), red: R.ev.red, n: sub.N, fitTo: c.fitTo, glyphs: glyphs(st2.blocks), at: new Date().toISOString(), unlockAt: c.unlockAt || null, opened: false };
+    } else all[c.id] = { pred: E.modelAt(S.cfg, S.data, S.state, c.x, null, compile), blocks: S.state.blocks.slice(), p: { ...S.state.p }, red: S.ev.red, glyphs: glyphs(S.state.blocks), at: new Date().toISOString(), unlockAt: c.unlockAt || null, opened: false }; }
   if (a === "open") { if (all[c.id] && (!c.unlockAt || Date.now() >= Date.parse(c.unlockAt))) { all[c.id].opened = true; all[c.id].openedAt = new Date().toISOString(); } }
   if (a === "reset") delete all[c.id];
   store.set(S.K("capsules"), all); renderCaps(); draw();

@@ -7,6 +7,10 @@
  *   factor  —— (深空 2.5)乘在合成结果上的修正因子,在数据点 i 处读数据列 col(如行星质量比 μ),
  *              因子 = (1 + β·μ)^pow(默认 pow=−1/2,即牛顿形式的开普勒第三定律 T ∝ a^{3/2}/√(1+m/M☉));
  *              非数据点处 μ 取 0(因子 = 1),只画金线不画分量。
+ *   mod     —— (深空 2.6)修饰积木:不单独产生曲线,只把自己的参数交给别的核(如「封城干预」的 q、tL 交给 SIR 核);
+ *              不在炉里时,参数取配置的 off 值(如 q=0),于是 SIR 核按无干预计算。
+ * 派生量(深空 2.6):cfg.derived[] 引用 DERIVED 中的函数(如 R₀ = β/γ),不确定度由拟合协方差按一阶误差传播给出。
+ * 截断拟合(深空 2.6):sliceData(data, xmax) 只留 x ≤ xmax 的数据点,供「用前 N 天数据封存」的预测胶囊。
  * 合成:combine="quad" 时 y² = Σ 分量(分量本身给出 v²,可为负,如气体 Vgas|Vgas|),y = √max(0,Σ);
  *       combine="sum" 时 y = Σ 分量。
  * 统计:χ² = Σ((y−model)/σ)²;约化 χ²_ν = χ²/(N−k);AIC = χ²+2k;BIC = χ²+k·lnN(高斯误差,省略常数项)。
@@ -28,6 +32,12 @@ export const KERNELS = {
   /* 深空 2.5 开普勒炉:幂律 y = C·x^n、正比 y = k·x */
   pow(x, p) { return p.C * Math.pow(x, p.n); },
   lin(x, p) { return p.kl * x; },
+  /* 深空 2.6 疫情炉(x = 距 2020-02-24 的天数,输出累计确诊人数):
+     指数 C = C₀·e^{rt};逻辑斯谛 C = K/[1 + (K/C₀ − 1)e^{−rt}](K 以万人计);
+     SIR 累计 C = N − S(t)(N 以万人计,S(0) = N − I₀,I(0) = I₀,R(0) = 0),RK4 数值积分,见 sirCum */
+  expo(x, p) { return p.C0e * Math.exp(p.re * x); },
+  logis(x, p) { const K = p.K * 1e4; return K / (1 + (K / p.C0l - 1) * Math.exp(-p.rl * x)); },
+  sir(x, p) { return sirCum(p, x); },
   /* NFW ρ=ρs/[(r/rs)(1+r/rs)²];v²=4πGρs rs³[ln(1+x)−x/(1+x)]/r(备用,F1 暗物质炉未启用) */
   nfw(r, p) {
     const rho = p.rhos * 1e7, rs = p.rs;
@@ -36,6 +46,64 @@ export const KERNELS = {
     return 4 * Math.PI * G * rho * rs ** 3 * (Math.log(1 + x) - x / (1 + x)) / r;
   }
 };
+
+/* SIR:dS/dt = −β(t)·S·I/N,dI/dt = β(t)·S·I/N − γI;C = N − S = I + R(累计感染)
+   β(t) = β·[1 − q/(1 + e^{−(t − t_L)/w})],w = 1 天(平滑台阶;q = 0 即无干预)。
+   RK4 步长 0.05 天,积分到 max(160, x) 天,整条轨迹按参数缓存(拟合时同一组参数会被反复取值)。 */
+const SIR_DT = 0.05, SIR_CACHE = new Map();
+function sirTraj(p, H) {
+  const b = p.beta, g = p.gamma, N = p.N * 1e4, I0 = p.I0, q = p.q || 0, tL = p.tL || 0;
+  const n = Math.ceil(H / SIR_DT), C = new Float64Array(n + 1), dt = SIR_DT;
+  const bt = (t) => (q ? b * (1 - q / (1 + Math.exp(-(t - tL)))) : b);
+  const f = (t, S, I) => { const k = bt(t) * S * I / N; return [-k, k - g * I]; };
+  let S = N - I0, I = I0; C[0] = N - S;
+  for (let i = 0; i < n; i++) {
+    const t = i * dt, a = f(t, S, I), c = f(t + dt / 2, S + dt / 2 * a[0], I + dt / 2 * a[1]), d = f(t + dt / 2, S + dt / 2 * c[0], I + dt / 2 * c[1]), e = f(t + dt, S + dt * d[0], I + dt * d[1]);
+    S += dt / 6 * (a[0] + 2 * c[0] + 2 * d[0] + e[0]); I += dt / 6 * (a[1] + 2 * c[1] + 2 * d[1] + e[1]);
+    C[i + 1] = N - S;
+  }
+  return C;
+}
+export function sirCum(p, x) {
+  if (!(x > 0)) return p.I0;
+  const key = [p.beta, p.gamma, p.N, p.I0, p.q || 0, p.tL || 0].join("|");
+  let C = SIR_CACHE.get(key);
+  if (!C || (C.length - 1) * SIR_DT < x) { C = sirTraj(p, Math.max(160, Math.ceil(x) + 10)); if (SIR_CACHE.size > 48) SIR_CACHE.clear(); SIR_CACHE.set(key, C); }
+  const u = x / SIR_DT, i = Math.floor(u), t = u - i;
+  return i + 1 < C.length ? C[i] + t * (C[i + 1] - C[i]) : C[C.length - 1];
+}
+
+/* 派生量:由参数算出的物理量(深空 2.6) */
+export const DERIVED = {
+  R0: (p) => p.beta / p.gamma,                  // 基本再生数 R₀ = β/γ
+  Rq: (p) => p.beta * (1 - p.q) / p.gamma,      // 干预后再生数 β(1−q)/γ(未计易感者减少)
+  Td: (p) => Math.LN2 / p.re                    // 指数翻倍时间 ln2/r
+};
+/* 返回 [{d, v, s}]:只列出 need 积木都在炉里的派生量;fitR 给出协方差时 s 为一阶误差传播的 σ */
+export function derived(cfg, state, fitR) {
+  return (cfg.derived || []).filter((d) => (d.need || []).every((id) => state.blocks.includes(id))).map((d) => {
+    const fn = DERIVED[d.fn], p = state.p, v = fn(p); let s = null;
+    if (fitR && fitR.cov) {
+      const ks = Object.keys(fitR.cov), gr = ks.map((k) => { const h = 1e-6 * Math.max(Math.abs(p[k]), 1e-9); return (fn({ ...p, [k]: p[k] + h }) - v) / h; });
+      let s2 = 0; ks.forEach((a, i) => ks.forEach((b, j) => (s2 += gr[i] * gr[j] * fitR.cov[a][b]))); s = Math.sqrt(Math.max(0, s2));
+    }
+    return { d, v, s };
+  });
+}
+
+/* 修饰积木:不在炉里的 mod 积木,其参数取 off 值(无 mod 积木的炉原样返回 state.p) */
+export function effP(cfg, state) {
+  let p = state.p;
+  for (const b of cfg.blocks) if (b.kind === "mod" && b.off && !state.blocks.includes(b.id)) { if (p === state.p) p = { ...p }; Object.assign(p, b.off); }
+  return p;
+}
+
+/* 截断数据:只留 x ≤ xmax 的点(各列同步截断),供「用前 N 天数据封存」的胶囊 */
+export function sliceData(data, xmax) {
+  const n = data.x.filter((x) => x <= xmax).length, cols = {};
+  for (const k of Object.keys(data.cols)) cols[k] = data.cols[k].slice(0, n);
+  return { ...data, x: data.x.slice(0, n), y: data.y.slice(0, n), e: data.e.slice(0, n), cols, labels: data.labels ? data.labels.slice(0, n) : null, N: n };
+}
 
 /* 数据集:{x:[], y:[], e:[], cols:{name:[]}} */
 export function makeData(json, spec) {
@@ -82,8 +150,8 @@ const combineOut = (cfg, s) => (cfg.combine === "quad" ? Math.sqrt(Math.max(0, s
 
 /* state = { blocks:[id...], p:{k:value}, lock:{k:true} } */
 export function modelAt(cfg, data, state, x, i, compile) {
-  let s = 0, f = 1, any = false;
-  for (const id of state.blocks) { const b = cfg.blocks.find((q) => q.id === id); if (!b) continue; const v = blockAt(cfg, data, b, state.p, x, i, compile); if (b.kind === "factor") f *= v; else { s += v; any = true; } }
+  let s = 0, f = 1, any = false; const p = effP(cfg, state);
+  for (const id of state.blocks) { const b = cfg.blocks.find((q) => q.id === id); if (!b || b.kind === "mod") continue; const v = blockAt(cfg, data, b, p, x, i, compile); if (b.kind === "factor") f *= v; else { s += v; any = true; } }
   return any ? combineOut(cfg, s) * f : 0; // 只有修正因子、没有主项时模型为 0
 }
 
@@ -180,9 +248,10 @@ export function fit(cfg, data, state, compile, opt = {}) {
     p[q.k] = v0 + h; const r2 = resid(); r2.forEach((v, i) => (J[i][j] = (v - r0[i]) / h)); p[q.k] = v0;
   });
   const n = Q.length, A = Array.from({ length: n }, (_, a) => Array.from({ length: n }, (_, b) => J.reduce((s, row) => s + row[a] * row[b], 0)));
-  const C = inv(A), sc = Math.sqrt(Math.max(1, ev.red)), sigma = {}, atBound = {};
+  const C = inv(A), sc = Math.sqrt(Math.max(1, ev.red)), sigma = {}, atBound = {}, cov = C ? {} : null;
   Q.forEach((q, j) => { sigma[q.k] = C && C[j][j] > 0 ? Math.sqrt(C[j][j]) * sc : NaN; atBound[q.k] = Math.abs(p[q.k] - q.min) < 1e-9 * Math.max(1, Math.abs(q.min)) || Math.abs(p[q.k] - q.max) < 1e-9 * Math.max(1, Math.abs(q.max)); });
-  return { p: { ...p }, sigma, atBound, ev, iter: it, ok: true };
+  if (C) Q.forEach((a, i) => { cov[a.k] = {}; Q.forEach((b, j) => (cov[a.k][b.k] = C[i][j] * sc * sc)); }); // 深空 2.6:协方差(同样乘 χ²_ν>1 的缩放),供派生量误差传播
+  return { p: { ...p }, sigma, cov, atBound, ev, iter: it, ok: true };
 }
 
 /* 引导:按配置顺序取第一条满足条件的提问 */

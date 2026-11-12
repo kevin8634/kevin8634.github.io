@@ -1,4 +1,5 @@
 [
   { "id": "dm", "file": "dm.json", "title": "暗物质", "ver": "深空 2.4", "date": "2026-11-09" },
-  { "id": "kepler", "file": "kepler.json", "title": "开普勒", "ver": "深空 2.5", "date": "2026-11-09" }
+  { "id": "kepler", "file": "kepler.json", "title": "开普勒", "ver": "深空 2.5", "date": "2026-11-09" },
+  { "id": "epi", "file": "epi.json", "title": "疫情", "ver": "深空 2.6", "date": "2026-11-12" }
 ]
