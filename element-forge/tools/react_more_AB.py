@@ -75,6 +75,8 @@ R('s69','二氧化硫与氢氧化钠(尾气吸收)',[[1,'SO2'],[2,'NaOH']],[[1,'
 R('s70','浓硝酸见光分解',[[4,'HNO3']],[[4,'NO2','g','up'],[1,'O2','g','up'],[2,'H2O','l','']],'光照或加热',('无色→黄',False,None,None),'浓硝酸久置变黄,是因为分解出的二氧化氮溶在里面','r','浓硝酸强腐蚀,二氧化氮有毒。',S5b,dict(W,c1='#e8d070'))
 import sys,os;sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)));import react_more_C
 rows+=react_more_C.rows(W,LAB,PRO)
-meta=dict(id='ef.react.more',title='元素工坊 · 反应台 v2.3 扩充(批次 A 初中补全 + 批次 B 高中必修补全 + 批次 C 选择性必修1)',source='据人教版初中《化学》九年级上下册(2024 版)、高中《化学》必修第一/二册与选择性必修1《化学反应原理》(2019 版)知识点自写',license='CC BY 4.0(创世计划自写内容)',retrieved='2026-11-01',ai_generated='方程式、现象、安全说明由 AI 撰写,经 tools/react_check.py 校验,并经独立化学审校与安全专项审校(批次 AB 报告 2026-11-01,高/中/低项已落地);ev=likely 的条目章节待人工对照课本(见 chk);批次 C(e01–e40)待第二批独立审校',batch='A+B+C',eq_note='本站方程式统一用箭头,课本中无机反应写等号')
+import react_more_O
+rows+=react_more_O.rows(W,LAB,PRO)
+meta=dict(id='ef.react.more',title='元素工坊 · 反应台扩充(v2.3 批次 A 初中补全 + B 高中必修补全 + C 选择性必修1;v2.5 批次 O 选择性必修3 有机化学基础)',source='据人教版初中《化学》九年级上下册(2024 版)、高中《化学》必修第一/二册、选择性必修1《化学反应原理》与选择性必修3《有机化学基础》(2019 版)知识点自写',license='CC BY 4.0(创世计划自写内容)',retrieved='2026-11-14',ai_generated='方程式、现象、安全说明由 AI 撰写,经 tools/react_check.py 校验,并经独立化学审校与安全专项审校(批次 AB 报告 2026-11-01,高/中/低项已落地);ev=likely 的条目章节待人工对照课本(见 chk);批次 C 已审校(2026-11-05);批次 O(o01–o40,v2.5)经独立化学/安全审校(2026-11-14)',batch='A+B+C+O',eq_note='本站方程式统一用箭头,课本中无机反应写等号;有机物写结构简式,高分子系数 n、2n-1 为字符串')
 json.dump(dict(meta=meta,rows=rows),open(''+__import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)),'..','data')+'/ef.react.more.json','w'),ensure_ascii=False,indent=0)
 print(len(rows))

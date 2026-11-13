@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>把两种东西混在一起,会发生什么? · 元素工坊 Element Forge</title>
-<meta name="description" content="元素工坊 2.0 · 反应台:160 条课本级化学反应(初中、高中必修、选必1),在全息反应环上看颜色、气泡、沉淀和热量四种证据,调速率、配平方程式、推动化学平衡。所有实验只在虚拟中发生。创世计划 Genesis 化学世界。">
+<meta name="description" content="元素工坊 2.0 · 反应台:200 条课本级化学反应(初中、高中必修、选必1、选必3 有机),在全息反应环上看颜色、气泡、沉淀和热量四种证据,调速率、配平方程式、推动化学平衡。所有实验只在虚拟中发生。创世计划 Genesis 化学世界。">
 <meta name="theme-color" content="#070a14">
 <link rel="stylesheet" href="../ef.css?v=14">
 <style>
@@ -76,19 +76,19 @@ document.body.classList.add('react');
 var LABS = '../react/labs/', D = null, BY = {}, PROTO = {};
 var SUB = { '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄', '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉' }, SUP = { '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹', '+': '⁺', '-': '⁻' };
 function fm(f) { var m = f.match(/^(.*?)(?:\^(\d*[+-]))?$/), b = m[1], c = m[2] || '';
-  b = b.replace(/\.(\d*)/, function (_, n) { return '·' + n; }).replace(/([A-Za-z\)\]])(\d+)/g, function (_, a, n) { return a + n.replace(/\d/g, function (d) { return SUB[d]; }); });
+  b = b.replace(/([\)\]])n(?![a-z])/g, '$1ₙ').replace(/\.(\d*)/, function (_, n) { return '·' + n; }).replace(/([A-Za-z\)\]])(\d+)/g, function (_, a, n) { return a + n.replace(/\d/g, function (d) { return SUB[d]; }); });
   return b + (c === '1+' ? '⁺' : c === '1-' ? '⁻' : c.replace(/./g, function (d) { return SUP[d]; })); }
-function sideTxt(sp) { return sp.map(function (x) { return (x[0] > 1 ? x[0] : '') + fm(x[1]) + (x[3] === 'up' || x[2] === 'up' ? '↑' : x[3] === 'down' || x[2] === 'down' ? '↓' : ''); }).join(' + '); }
+function sideTxt(sp) { return sp.map(function (x) { return (typeof x[0] === 'string' ? x[0].replace('-', '−') + ' ' : x[0] > 1 ? x[0] : '') + fm(x[1]) + (x[3] === 'up' || x[2] === 'up' ? '↑' : x[3] === 'down' || x[2] === 'down' ? '↓' : ''); }).join(' + '); }
 function eqTxt(r) { return sideTxt(r.l) + (r.rev ? ' ⇌ ' : ' → ') + sideTxt(r.r); }
 function ionTxt(r) { return r.ion ? sideTxt(r.ion[0]) + (r.rev ? ' ⇌ ' : ' → ') + sideTxt(r.ion[1]) : ''; }
 var SAFE = { g: '🟢 家中可安全观察(须家长知情)', y: '🟡 只在学校实验室、由老师指导', r: '🔴 只限专业实验室 · 请勿在现实中尝试' };
 function safeTag(s) { return '<span class="rx-safe ' + s + '">' + SAFE[s] + '</span>'; }
 function cardHTML(r) {
   if (r.id.charAt(0) === 'x') return '<b>' + r.name + '</b> <span class="rx-safe y">对照 · 物理变化</span><br>' + r.see + '<div class="rx-why">' + safeTag(r.safe) + r.why + '</div>';
-  return '<b>' + r.name + '</b> <small>' + LVN[r.lv] + '</small><div class="rx-eq">' + eqTxt(r) + (r.cond ? '<small>条件:' + r.cond + '</small>' : '') + (r.ion ? '<small>离子方程式:' + ionTxt(r) + '</small>' : '') + '</div>' +
-    '现象:' + r.see + (r.note ? '<br><span class="note-sm">' + r.note + '</span>' : '') + '<div class="rx-why">' + safeTag(r.safe) + (r.safe === 'g' ? '' : '为什么要小心:') + r.why + '</div>' + molLinks(r);
+  return '<b>' + r.name + '</b> <small>' + LVN[r.lv] + (r.kind ? ' · ' + r.kind + '反应' : '') + '</small><div class="rx-eq">' + eqTxt(r) + (r.cond ? '<small>条件:' + r.cond + '</small>' : '') + (r.ion ? '<small>离子方程式:' + ionTxt(r) + '</small>' : '') + '</div>' +
+    '现象:' + r.see + (r.note ? '<br><span class="note-sm">' + r.note + '</span>' : '') + (r.chi ? '<br><span class="note-sm rx-chi">🪞 ' + r.chi + '可以到分子搭建台第 5 关「镜子里的分子」亲手照镜子。</span>' : '') + '<div class="rx-why">' + safeTag(r.safe) + (r.safe === 'g' ? '' : '为什么要小心:') + r.why + '</div>' + molLinks(r);
 }
-var LVN = { j: '初中', s: '高中必修', e: '高中选必1' }, MOLMAP = {};
+var LVN = { j: '初中', s: '高中必修', e: '高中选必1', o: '高中选必3 · 有机' }, MOLMAP = {};
 function molLinks(r) { var seen = {}, a = [];
   r.l.concat(r.r).forEach(function (x) { (MOLMAP[x[1]] || []).forEach(function (m) { if (!seen[m[0]]) { seen[m[0]] = 1; a.push('<a class="rx-mol" href="../molecule/?look=' + m[0] + '">' + m[1] + '</a>'); } }); });
   return a.length ? '<div class="rx-mols">去分子搭建台看结构:' + a.join('') + '</div>' : ''; }
@@ -170,12 +170,12 @@ function L0(stage, api) {
     sel = []; setTimeout(function () { Array.prototype.forEach.call(bt.children, function (x) { x.classList.remove('on'); }); }, 400); }; });
   var flt = 'all', q = '', pg = 0, PER = 20;
   function norm(t) { return String(t || '').replace(/[₀-₉]/g, function (d) { return '₀₁₂₃₄₅₆₇₈₉'.indexOf(d); }).toLowerCase(); }
-  function hay(r) { return norm(r.name + ' ' + (r.ch || '') + ' ' + (r.l ? r.l.concat(r.r).map(function (x) { return x[1]; }).join(' ') : '')); }
+  function hay(r) { return norm(r.name + ' ' + (r.ch || '') + ' ' + (r.kind ? r.kind + '反应 ' : '') + (r.l ? r.l.concat(r.r).map(function (x) { return x[1]; }).join(' ') : '')); }
   function dexDraw() { var all = D.rows.concat(D.contrast), nq = norm(q.trim());
     var list = all.filter(function (r) { return (flt === 'all' || r.lv === flt || r.safe === flt || (flt === 'x' && r.id.charAt(0) === 'x')) && (!nq || hay(r).indexOf(nq) > -1); });
     var np = Math.max(1, Math.ceil(list.length / PER)); pg = Math.min(pg, np - 1);
-    dex.innerHTML = '<div class="f">' + [['all', '全部'], ['j', '初中'], ['s', '高中必修'], ['e', '选必1'], ['g', '🟢'], ['y', '🟡'], ['r', '🔴'], ['x', '对照']].map(function (f) { return '<button class="ef-btn ghost' + (f[0] === flt ? ' on' : '') + '" data-f="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>' +
-      '<input class="q" type="search" placeholder="搜名称、化学式或章节,如 铁、CO2、第三章" aria-label="搜索反应" value="' + EF.esc(q) + '">' +
+    dex.innerHTML = '<div class="f">' + [['all', '全部'], ['j', '初中'], ['s', '高中必修'], ['e', '选必1'], ['o', '选必3'], ['g', '🟢'], ['y', '🟡'], ['r', '🔴'], ['x', '对照']].map(function (f) { return '<button class="ef-btn ghost' + (f[0] === flt ? ' on' : '') + '" data-f="' + f[0] + '">' + f[1] + '</button>'; }).join('') + '</div>' +
+      '<input class="q" type="search" placeholder="搜名称、化学式、章节或反应类型,如 铁、CO2、加成" aria-label="搜索反应" value="' + EF.esc(q) + '">' +
       '<div class="ls">' + (list.length ? list.slice(pg * PER, pg * PER + PER).map(function (r) { return '<button class="it" data-id="' + r.id + '">' + (SAFE[r.safe] || '').slice(0, 2) + ' ' + r.name + (r.l ? ' <span class="note-sm">' + eqTxt(r) + '</span>' : '') + '</button>'; }).join('') : '<p class="note-sm">没有找到,换个词试试。</p>') + '</div>' +
       '<div class="pg"><button class="ef-btn ghost" data-p="-1"' + (pg ? '' : ' disabled') + '>上一页</button><span>' + list.length + ' 条 · 第 ' + (pg + 1) + '/' + np + ' 页</span><button class="ef-btn ghost" data-p="1"' + (pg < np - 1 ? '' : ' disabled') + '>下一页</button></div>';
     Array.prototype.forEach.call(dex.querySelectorAll('.f button'), function (b) { b.onclick = function () { flt = b.dataset.f; pg = 0; dexDraw(); }; });

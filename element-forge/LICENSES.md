@@ -86,3 +86,8 @@
 - img/hud-bg.webp、宣传素材底图 hud_bg.png:本项目用 Hark 图像生成模型生成的无人无字实验室背景(AI 生成,创世计划自有),压暗虚化后作首页 3D 舞台与自由实验台背景。
 - img/lab-free.webp、img/lab-molecule.webp:本站页面截图缩略。
 - ef-free3d.js、lab/free.js、lab/free.css、data/ef.react.free.json、tools/react_free_index.py:本项目原创;物质与反应全部来自本站已审校的 data/ef.react.json。
+
+## v2.5(2026-11-14)· 有机反应批次 O
+- tools/react_more_O.py(选择性必修3《有机化学基础》40 条,o01–o40):依据人教版 2019 版选必3 公开目录与课本知识点,方程式为公共化学事实,文字(现象/条件/安全/说明/手性提示)由 AI 原创撰写,未复制教材原文;无用量、配比、步骤、获取渠道。
+- 独立化学/未成年人安全审校 1 轮(高 2 中 7 低 14,全部落地);章节目录核对参考:renjiaoshe.com 教材目录页、公开同步学案(仅核对,未引用文字)。
+- data/ef.react.more.json(200 条)、data/ef.react.mol.json 由本项目脚本生成;外部网络请求:0;无第三方图片/字体新增。
