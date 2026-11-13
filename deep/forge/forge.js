@@ -4,14 +4,15 @@
  *   配置来自 <id>.json 的 tiers,经 E.applyTier 生成;l1/l4 的存储键多一段档位:gn:deep:forge:<炉id>:<档>:*,不碰原谱系。
  * 深空 2.8.1(勘误 06):星辰层「帮我调到最好」只画参照虚线、不改滑杆不计过关(C1);表盘主位「已贴住 x/n 颗」(C4);
  *   「我想看完整版」带入当前积木与参数、l2 显示「回到滑杆版」、焦点到拟合仪标题并读屏播报(C6);引导 sub 延迟出现(C3);
- *   过关后「看看科学家怎么说」折叠项(C11);β–γ 高度相关时 R₀ 行红字警示(C8);窄屏档位短名(C9)。 */
+ *   过关后「看看科学家怎么说」折叠项(C11);β–γ 高度相关时 R₀ 行红字警示(C8);窄屏档位短名(C9)。
+ * 深空 2.8.2(复审 06):参照线改半透明白色点线、过关后自动收起(R2);sub 延迟期间灰字预告(R3);tiers.l1.countLabel/countPct,CO₂ 炉按月份占比(R4)。 */
 import * as E from "./engine.js";
 import { Formula, Expr } from "../../core/deep/core.js";
 
 const BASE = new URL("./", import.meta.url);
 const compile = (s, v) => Expr.compile(s, v);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const TIER = ["#5fe39a", "#ffd36b", "#ff6b6b"], GOLD = "#f2c86b";
+const TIER = ["#5fe39a", "#ffd36b", "#ff6b6b"], GOLD = "#f2c86b", GHOST = "rgba(255,255,255,.62)";
 const nf = (v, d = 2) => (!isFinite(v) ? "—" : Math.abs(v) >= 1e4 ? v.toExponential(2) : (+v).toFixed(d));
 /* 深空 2.6:纵轴可按「万 / 亿」读数(axes.y.wan),疫情炉用;其他炉不变 */
 const yf = (v, dp) => { if (S && S.cfg.axes.y.wan && isFinite(v)) { const a = Math.abs(v); if (a >= 1e8) return +(v / 1e8).toPrecision(4) + " 亿"; if (a >= 1e4) return (v / 1e4).toFixed(2) + " 万"; } return nf(v, dp); };
@@ -253,7 +254,7 @@ function tierUi() {
   $("fgFull").hidden = !l1; $("fgBack").hidden = !(t === "l2" && S.from === "l1"); $("fgFit").textContent = l1 ? "⟲ 帮我调到最好" : "⟲ 自动拟合";
   $("fgFit").title = l1 ? "只在图上画一条最优金线虚线作参照:不改你的滑杆,不计过关,也不点亮徽章" : "Levenberg–Marquardt 最小二乘,拟合所有未锁定的参数";
   $("fgEnc").hidden = !l1; $("fgEnc").textContent = l1 ? "贴合度低不是失败:每拖一次滑杆、每换一块积木,都是在排除一种可能——科学家当年也是这样一步步试出来的。" : "";
-  $("fgScL").textContent = l1 ? "已贴住 · 颗" : "亮度 · 分";
+  $("fgScL").textContent = l1 ? ((c.tierCfg && c.tierCfg.countLabel) || "已贴住 · 颗") : "亮度 · 分"; // 2.8.2(06 R4):CO₂ 炉按月份占比
   [["fgLg0", "贴得很好", "|残差|/误差<1"], ["fgLg1", "差一点", "1–3"], ["fgLg2", "差很多", ">3"]].forEach(([id, a, b]) => ($(id).textContent = l1 ? a : b));
   $("fgFt").textContent = l1 ? "贴合度 = 每颗星按光丝颜色计分(绿 1 分、黄 ½ 分、红 0 分)后的平均。想看 χ²、BIC 这些正式的统计量,点「我想看完整版」。"
     : "亮度分 S = 100·exp(−max(0, (BIC−n)/n)/1.5):残差越小、参数越少越亮。BIC = χ² + k·ln n,AIC = χ² + 2k(高斯误差,省略常数项),k 为自由(未锁定)参数个数,n 为数据点数。";
@@ -350,7 +351,8 @@ function renderPar() {
 function update() {
   const ev = E.evaluate(S.cfg, S.data, S.state, compile); S.ev = ev;
   const l1 = S.tier === "l1", fit = E.fitness(ev), sc = l1 ? fit : E.score(ev), ok = E.passed(S.cfg, S.state, ev); // 深空 2.8:星辰层表盘显示贴合度
-  const tc0 = E.tierCount(ev), cnt = `${tc0[0]}/${ev.N}`; // 2.8.1(06 C4):星辰层表盘主位「已贴住 x/n 颗」,贴合度 % 作副信息
+  if (ok && l1 && S.ghost) { S.ghost = null; S.fitInfo = null; } // 2.8.2(06 R2):学生自己过关后自动收起参照线
+  const tc0 = E.tierCount(ev), cnt = S.cfg.tierCfg && S.cfg.tierCfg.countPct ? `${Math.round(100 * tc0[0] / ev.N)}%` : `${tc0[0]}/${ev.N}`; // 2.8.1(06 C4):星辰层表盘主位「已贴住 x/n 颗」,贴合度 % 作副信息
   $("fgSc").textContent = ev.empty ? "—" : l1 ? cnt : sc; $("fgSc").setAttribute("font-size", l1 && !ev.empty ? (cnt.length > 5 ? 17 : cnt.length > 4 ? 21 : 24) : 26);
   $("fgArc").setAttribute("stroke-dasharray", `${(289 * sc / 100).toFixed(1)} 289`);
   $("fgArc").setAttribute("stroke", ok ? "#5fe39a" : sc > 40 ? "#7fe3ff" : "#4a7f99");
@@ -373,7 +375,8 @@ function update() {
   let showSub = !!(g && g.sub);
   if (showSub && l1) { const left = 20000 - (Date.now() - S.gT); showSub = S.drags >= 3 || left <= 0; if (!showSub) { clearTimeout(S.gTm); S.gTm = setTimeout(() => { if (S && S.gKey === gk && root.classList.contains("on")) update(); }, left + 50); } }
   G.className = ok ? "ok" : "";
-  const gh = g ? esc(g.q) + (showSub ? `<em>${esc(g.sub)}</em>` : "") + (g.more ? `<details><summary>我想想 · 看看科学家怎么说</summary><p>${esc(g.more)}</p></details>` : "") : "";
+  const subWait = !!(g && g.sub) && l1 && !showSub; // 2.8.2(06 R3):延迟期间先告诉学生还有提示
+  const gh = g ? esc(g.q) + (showSub ? `<em>${esc(g.sub)}</em>` : subWait ? '<em class="wait" style="opacity:.6;font-style:normal;font-size:.9em">再试几次,会有一条小提示</em>' : "") + (g.more ? `<details><summary>我想想 · 看看科学家怎么说</summary><p>${esc(g.more)}</p></details>` : "") : "";
   if (G.dataset.h !== gh) { G.innerHTML = gh; G.dataset.h = gh; } // 内容不变就不重绘,折叠项保持展开状态
   const bn = S.badgeName || S.cfg.badge;
   if (ok && !S.badge) { S.badge = new Date().toISOString(); store.set(S.K("badge"), S.badge); toast("点亮 · " + bn); }
@@ -394,7 +397,7 @@ function renderFitR() {
   if (S.tier === "l1" && !S.ghost) $("fgFit").textContent = "⟲ 帮我调到最好";
   if (!F) { el.innerHTML = ""; return; }
   const Q = Object.keys(F.sigma || {});
-  if (S.tier === "l1") { $("fgFit").textContent = S.ghost ? "✕ 收起参照线" : "⟲ 帮我调到最好"; if (S.ghost) el.innerHTML = `图上的<b>金色虚线</b>是电脑找到的最好金线(贴合度 ${S.ghost.fit}%),只作参照:它不改你的滑杆,不计过关、也不点亮徽章——自己拖到这条虚线附近试试。`; else el.innerHTML = ""; return; }
+  if (S.tier === "l1") { $("fgFit").textContent = S.ghost ? "✕ 收起参照线" : "⟲ 帮我调到最好"; if (S.ghost) el.innerHTML = `图上的<b>白色点线</b>是电脑找到的最好模型(贴合度 ${S.ghost.fit}%),只作参照:它不改你的滑杆,不计过关、也不点亮徽章——自己拖到这条点线附近试试。`; else el.innerHTML = ""; return; }
   el.innerHTML = `<b>最小二乘结果</b>(Levenberg–Marquardt,${F.iter} 步):` + Q.map((k) => { const q = paramQ(k); return `${esc(q.name)} = <b>${nf(F.p[k], sig(F.sigma[k]))} ± ${nf(F.sigma[k], sig(F.sigma[k]))}</b> ${esc(q.unit)}${F.atBound[k] ? '<span style="color:#ffd36b">(触到范围边界)</span>' : ""}`; }).join(";") +
     (() => { const D = E.derived(S.cfg, { ...S.state, p: E.effP(S.cfg, S.state) }, F); return D.length ? ";" + D.map((x) => `${esc(x.d.name)} = <b>${nf(x.v, Math.max(x.d.dp ?? 2, sig(x.s)))} ± ${nf(x.s, Math.max(x.d.dp ?? 2, sig(x.s)))}</b>${x.d.unit ? " " + esc(x.d.unit) : ""}`).join(";") + "(派生量按协方差一阶传播,锁定参数不计误差)" : ""; })() +
     `。χ²<sub>ν</sub> = ${nf(F.ev.red, 3)}。σ 取 (JᵀWJ)⁻¹ 对角${F.ev.red > 1 ? ",并乘 √χ²<sub>ν</sub>" : ""};参数之间有相关,单看 σ 会低估简并。` + (S.tier === "l4" ? corrHtml(F) : "");
@@ -489,7 +492,7 @@ function draw() {
     g.beginPath(); let first = true; xsC.forEach((x) => { if (x > c.x) return; const y = clampY(E.modelAt(S.cfg, D, ms, x, null, compile)); first ? g.moveTo(px(x), py(y)) : g.lineTo(px(x), py(y)); first = false; }); g.lineTo(px(c.x), py(Math.max(A.y.min, Math.min(A.y.max, s.pred))));
     g.strokeStyle = "rgba(127,227,255,.75)"; g.lineWidth = 1.4; g.setLineDash([5, 4]); g.stroke(); g.setLineDash([]); });
   // 2.8.1(06 C1):星辰层「帮我调到最好」的参照虚线
-  if (S.ghost && !ev.empty) { g.globalAlpha = .85; path((x) => E.modelAt(S.cfg, D, S.ghost, x, null, compile), GOLD, 1.8, [7, 5]); g.globalAlpha = 1; }
+  if (S.ghost && !ev.empty) { path((x) => E.modelAt(S.cfg, D, S.ghost, x, null, compile), GHOST, 1.8, [3, 4]); } // 2.8.2(06 R2):参照线改半透明白色点线,与学生金线区分
   // 谱系对比
   if (S.cmp) { const c = S.cmp; path((x) => E.modelAt(S.cfg, D, c, x, null, compile), "rgba(255,255,255,.7)", 1.4, [6, 5]); }
   // 残差光丝
@@ -506,7 +509,7 @@ function draw() {
   (S.cfg.capsules || []).forEach((c) => { const s = store.get(S.K("capsules"), {})[c.id]; g.strokeStyle = "rgba(127,227,255,.35)"; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(px(c.x), T); g.lineTo(px(c.x), h - B); g.stroke(); g.setLineDash([]);
     if (s) { g.strokeStyle = "#7fe3ff"; g.lineWidth = 2; g.beginPath(); g.arc(px(c.x), py(Math.max(A.y.min, Math.min(A.y.max, s.pred))), 6, 0, 6.283); g.stroke(); } if (c.official) { const o = c.official, cx = px(c.x), cy = py(o.pred), y0 = py(o.pred - o.err), y1 = py(o.pred + o.err); g.strokeStyle = GOLD; g.lineWidth = 1.5; g.beginPath(); g.moveTo(cx, y0); g.lineTo(cx, y1); g.moveTo(cx - 4, y0); g.lineTo(cx + 4, y0); g.moveTo(cx - 4, y1); g.lineTo(cx + 4, y1); g.stroke(); g.fillStyle = GOLD; g.beginPath(); g.moveTo(cx, cy - 5); g.lineTo(cx + 5, cy); g.lineTo(cx, cy + 5); g.lineTo(cx - 5, cy); g.closePath(); g.fill(); } /* 深空 2.7:总指挥封存的预测(金色菱形 ± 误差) */ g.fillStyle = "#7fe3ff"; g.textAlign = "center"; g.fillText("胶囊", px(c.x), labY[c.id] ?? capY); });
   if (ev.empty) { g.fillStyle = "rgba(233,238,251,.55)"; g.textAlign = "center"; g.font = (sm ? 12 : 14) + "px -apple-system,'PingFang SC',sans-serif"; const tx = S.cfg.emptyHint || "星点 = 真实观测 · 放入积木,金线就会出现"; if (w < 560) { const k = tx.indexOf("·"); g.fillText(tx.slice(0, k).trim(), (L + w - R) / 2, T + (h - T - B) * .7); g.fillText(tx.slice(k + 1).trim(), (L + w - R) / 2, T + (h - T - B) * .7 + 18); } else g.fillText(tx, (L + w - R) / 2, T + (h - T - B) * .82); }
-  $("fgLgC").innerHTML = (S.ghost ? '<i style="background:repeating-linear-gradient(90deg,' + GOLD + ' 0 5px,transparent 5px 8px)"></i>最好金线(参照,不计过关) ' : "") + (S.cmp ? '<i style="background:#fff"></i>对比:谱系 #' + S.cmp.n : "") + ((S.cfg.capsules || []).some((c) => c.fitTo != null && capS[c.id]) ? ' <i style="background:#7fe3ff"></i>封存时的模型' : "") + ((S.cfg.capsules || []).some((c) => c.official) ? ' <i style="background:' + GOLD + ';width:7px;height:7px;margin:0 7px 0 3px;transform:rotate(45deg);border-radius:1px"></i>' + esc(S.cfg.capsules.find((c) => c.official).official.by || "官方") + "封存的预测" : "");
+  $("fgLgC").innerHTML = (S.ghost ? '<i style="background:repeating-linear-gradient(90deg,' + GHOST + ' 0 3px,transparent 3px 7px)"></i>最好模型(参照,不计过关) ' : "") + (S.cmp ? '<i style="background:#fff"></i>对比:谱系 #' + S.cmp.n : "") + ((S.cfg.capsules || []).some((c) => c.fitTo != null && capS[c.id]) ? ' <i style="background:#7fe3ff"></i>封存时的模型' : "") + ((S.cfg.capsules || []).some((c) => c.official) ? ' <i style="background:' + GOLD + ';width:7px;height:7px;margin:0 7px 0 3px;transform:rotate(45deg);border-radius:1px"></i>' + esc(S.cfg.capsules.find((c) => c.official).official.by || "官方") + "封存的预测" : "");
 }
 
 function showTip(mx, my) {
