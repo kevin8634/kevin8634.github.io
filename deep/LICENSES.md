@@ -133,3 +133,12 @@
 |---|---|---|---|
 | noaa.co2.mlo.monthly | 莫纳罗亚 CO₂ 月均浓度(Keeling 曲线)1958-03 至 2026-09 共 823 行:t 月中小数年份、ym、co2 月均、deseason 去季节值、ndays、unc(均为 NOAA 原值);err 为本站设定的 0.8 ppm 教学误差 | NOAA Global Monitoring Laboratory `https://gml.noaa.gov/webdata/ccgg/trends/co2/co2_mm_mlo.txt`(File Creation 2026-10-09 13:08:07,2026-11-12 取,sha256 0ce4e774…1cad);1958-03 至 1974-04 为 Scripps Institution of Oceanography(C. D. Keeling)观测;经 docs/co2_forge_build.py 生成,数值未改动,只选列;与已入库年均文件 noaa.co2.mlo.annual 对照 67 年,差 ≤ 0.01 ppm | 美国联邦政府数据(公有领域);按 NOAA GML 要求署名:Dr. Xin Lan, NOAA/GML(gml.noaa.gov/ccgg/trends/)与 Dr. Ralph Keeling, Scripps Institution of Oceanography(scrippsco2.ucsd.edu);引 Lan, X., Tans, P. and K.W. Thoning, *Trends in globally-averaged CO2 determined from NOAA Global Monitoring Laboratory measurements*;Keeling, C. D. et al. 1976, Tellus 28, 538;**err 不是测量误差**;不使用 NOAA 标志,不暗示背书 |
 | deep/forge/co2.json、engine.js(深空 2.7 增补 co2lin/co2quad/co2exp/harm1/harm2 核、派生量 co2g 增长率与 co2amp 季节峰谷差、needAny)、forge.js(真实到期胶囊:总指挥封存值、「待 NOAA 发布后开封」状态;data.star 星点缩放;comps:false 不画分量) | CO₂ 炉配置与引擎/界面增补;「总指挥封存」2027-05 预测 433.97 ± 0.81 ppm 为本站计算 | 创世计划(AI 协助);数值由 docs/forge_co2_check.mjs 复算,并经 co2_forge_build.py --scipy 独立复算 | 自有,CC BY 4.0;模型曲线、拟合值、增长率、预测为本站计算,**非观测、非 NOAA 预测** |
+
+## 深空 2.9「电影感画质」(2026-11-14,总指挥)
+| 台账 id / 文件 | 内容 | 来源 | 许可 / 署名 |
+|---|---|---|---|
+| deep/fx.js | 三档画质(显卡判断 + G 键 + 本机记忆)、HDR 后期链(5 级 Bloom,首级 Karis 平均)、ACES/AgX 混合色调映射、分离色调、抖动、按深度层关键帧、亚像素星点淡化、动态分辨率、子场景 PMREM 环境光 / 高度雾 / 逆光三件套、核素岛上帝光 | 总指挥自写;流程参考王磊提供的画质专长包(只学思路,未复制代码) | 本站作品,与站点代码同许可 |
+| ACES 拟合系数 | RRT+ODT 有理拟合与输入/输出矩阵(与 three.js ACESFilmicToneMapping 同口径) | Stephen Hill,BakingLab(MIT);three.js(MIT) | MIT,致谢 Stephen Hill 与 three.js 作者 |
+| AgX 多项式近似 | AgX 基矩阵与 6 次多项式拟合 | Benjamin Wrensch 公开博文《Minimal AgX implementation》(2023);three.js AgXToneMapping(MIT) | 公开公式,致谢 Benjamin Wrensch、Troy Sobotka(AgX 原作)与 three.js 作者 |
+不新增任何图片、模型或外部请求;环境光取自已登记的 #13 银河全景。
+

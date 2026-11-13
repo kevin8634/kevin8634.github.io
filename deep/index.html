@@ -129,6 +129,7 @@ import { EffectComposer, RenderPass, UnrealBloomPass, OutputPass } from "deep-po
 import { createOpening, createComposite, WL0 } from "./opening.js";
 import { createLab } from "./lab.js";
 import { createIsland } from "./island.js";
+import { TIERS, TIER_NAME, QKEY, pickTier, createPost, layerKeys, subpixel, governor, lookUniforms, dressScene } from "./fx.js";
 import { DepthBar, Formula, Card, ChainDrag, ParamPanel, Sim, Expr, DataSet, DataChart } from "../core/deep/core.js";
 // 七世界(F2 穿越)与星辰层公式星座占位(1.1 由各世界提交课本卡替换)
 const WORLDS=[
@@ -177,17 +178,21 @@ const btns=[...$("nav").querySelectorAll("button")];btns.forEach((b,i)=>{b.setAt
 // 场景
 const W=()=>innerWidth,H=()=>innerHeight;
 const mob=W()<600,tab=W()<1100;
-// V7 LOD 三档:2 高(桌面 ≥8 核)/1 中(手机、平板或 ≤4 核)/0 低(≤2 核或内存 ≤2GB);?lod=0|1|2 可强制;运行中掉帧再自动降
-const LOD=(()=>{const q=location.search.match(/[?&]lod=([012])/);if(q)return +q[1];const hc=navigator.hardwareConcurrency||4,dm=navigator.deviceMemory||8;if(hc<=2||dm<=2)return 0;if(mob||tab||hc<=4)return 1;return 2;})(),LODK=[.4,.7,1][LOD];
+// 深空 2.9 画质三档:2 高 / 1 中 / 0 低。?lod= 强制 > 本机记忆(G 键切换)> min(显卡判断, CPU 判断);?fx=0 回到 2.8 旧画面(UnrealBloom 链)
+const FXON=!/[?&]fx=0\b/.test(location.search);
+const r=new THREE.WebGLRenderer({canvas:$("c"),antialias:false,powerPreference:"high-performance"});
+const CPUT=(()=>{const hc=navigator.hardwareConcurrency||4,dm=navigator.deviceMemory||8;if(hc<=2||dm<=2)return 0;if(mob||tab||hc<=4)return 1;return 2;})();
+const QT=FXON?pickTier(r,CPUT):{tier:(location.search.match(/[?&]lod=([012])/)||[0,CPUT])[1]*1,src:"old"};
+const LOD=QT.tier,LODK=[.4,.7,1][LOD],TQ=TIERS[LOD];
 document.documentElement.dataset.lod=LOD;
 const N=[5000,mob?6000:15000,tab?15000:30000][LOD];
-const r=new THREE.WebGLRenderer({canvas:$("c"),antialias:false,powerPreference:"high-performance"});
-r.setPixelRatio(Math.min(devicePixelRatio,[1,1.25,1.75][LOD]));r.setSize(W(),H());
-r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.0;
-const comp=new EffectComposer(r,new THREE.WebGLRenderTarget(W(),H(),{type:THREE.HalfFloatType}));
+const PR0=FXON?Math.min(devicePixelRatio,TQ.pr):Math.min(devicePixelRatio,[1,1.25,1.75][LOD]);
+r.setPixelRatio(PR0);r.setSize(W(),H());
+if(FXON){r.toneMapping=THREE.NoToneMapping;if(TQ.shadow){r.shadowMap.enabled=true;r.shadowMap.type=+THREE.REVISION>=180?THREE.PCFShadowMap:THREE.PCFSoftShadowMap;r.shadowMap.autoUpdate=false;}}else{r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=1.0;}
+const comp=FXON?createPost(THREE,r,LOD):new EffectComposer(r,new THREE.WebGLRenderTarget(W(),H(),{type:THREE.HalfFloatType}));
 // V1 开场(01c):水上 A / 水下 B / 原深空场景 C 三路渲染,合成后统一 Bloom + ACES
 const op=createOpening(THREE,{mob});const cmp=createComposite(THREE);
-const mkRT=()=>new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:mob?0:4});const rtA=mkRT(),rtB=mkRT(),rtC=mkRT();
+const mkRT=()=>new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:FXON?TQ.msaa:(mob?0:4)});const rtA=mkRT(),rtB=mkRT(),rtC=mkRT();
 cmp.uniforms.tA.value=rtA.texture;cmp.uniforms.tB.value=rtB.texture;cmp.uniforms.tC.value=rtC.texture;
 function sizeAll(){const pr=r.getPixelRatio(),w=Math.round(W()*pr),h=Math.round(H()*pr);[rtA,rtB,rtC].forEach(t=>t.setSize(w,h));cmp.uniforms.uRes.value.set(w,h);op.layout(W(),H(),pr);}
 sizeAll();
@@ -202,7 +207,7 @@ for(let i=0;i<N;i++){const z=60-Math.random()*1080;const a=Math.random()*6.283,r
  col[i*3]=cc.r;col[i*3+1]=cc.g;col[i*3+2]=cc.b;}
 const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(pos,3));g.setAttribute("color",new THREE.BufferAttribute(col,3));
 const tex=(()=>{const c=document.createElement("canvas");c.width=c.height=64;const x=c.getContext("2d");const gr=x.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,"rgba(255,255,255,1)");gr.addColorStop(.3,"rgba(255,255,255,.5)");gr.addColorStop(1,"rgba(255,255,255,0)");x.fillStyle=gr;x.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)})();
-const pts=new THREE.Points(g,new THREE.PointsMaterial({size:mob?2.2:1.8,map:tex,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));sc.add(pts);
+const pts=new THREE.Points(g,(m=>FXON?subpixel(m):m)(new THREE.PointsMaterial({size:mob?2.2:1.8,map:tex,vertexColors:true,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending})));sc.add(pts);
 // 各层核心(未开放层=暗轮廓)
 const cores=L.map((l,i)=>{const grp=new THREE.Group();grp.position.set(0,0,l.z-40);
  const ring=new THREE.Mesh(new THREE.TorusGeometry(26,.18,8,160),new THREE.MeshBasicMaterial({color:l.c,transparent:true,opacity:l.open?.85:.18}));
@@ -217,7 +222,7 @@ const namesEl=$("names");
 const clusters=WORLDS.map((w,k)=>{const grp=new THREE.Group();const a=k/7*6.283+.4,rad=mob?16:30;grp.position.set(Math.cos(a)*rad,Math.sin(a)*rad*.6,-30-k*24);
  const n=mob?60:160,p=new Float32Array(n*3);for(let i=0;i<n;i++){const u=Math.random()*6.283,v=Math.acos(2*Math.random()-1),q=Math.pow(Math.random(),2)*7;p[i*3]=q*Math.sin(v)*Math.cos(u);p[i*3+1]=q*Math.sin(v)*Math.sin(u);p[i*3+2]=q*Math.cos(v);}
  const gg=new THREE.BufferGeometry();gg.setAttribute("position",new THREE.BufferAttribute(p,3));
- grp.add(new THREE.Points(gg,new THREE.PointsMaterial({size:mob?1.6:1.2,map:tex,color:w.c,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending})));
+ grp.add(new THREE.Points(gg,(m=>FXON?subpixel(m):m)(new THREE.PointsMaterial({size:mob?1.6:1.2,map:tex,color:w.c,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}))));
  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,color:w.c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));s.scale.setScalar(9);grp.add(s);
  sc.add(grp);const d=document.createElement("div");d.style.color="#"+w.c.toString(16).padStart(6,"0");d.innerHTML=`${w.n}<small>${w.e} · ${w.sub}</small>`;namesEl.appendChild(d);return {grp,d};});
 // V2 一题一光柱:每个世界一颗星/层,四层同一 (x,y),由一道纵深光柱串起;星辰/星系/星河层可点(深空 1.10.2 补开星系层入口),星穹层为「?」星
@@ -246,11 +251,15 @@ const beams=WORLDS.map(w=>{const [x,y]=PX(w.p);const grp=new THREE.Group();grp.p
 // V5 星穹数据带:流动的粒子丝带(对照概念图04),位于星穹层「?」星下方
 const ribbon=(()=>{const NS=Math.round((mob?18:34)*Math.sqrt(LODK)),NP=Math.round((mob?260:560)*Math.sqrt(LODK)),P=new Float32Array(NS*NP*3);let i=0;for(let s=0;s<NS;s++)for(let j=0;j<NP;j++){P[i++]=j/(NP-1);P[i++]=s/(NS-1);P[i++]=Math.random();}
  const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.BufferAttribute(P,3));
- const m=new THREE.ShaderMaterial({uniforms:{uT:uBT,uMap:{value:tex},uW:{value:mob?34:100},uPx:{value:mob?2.6:2.2}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+ const m=new THREE.ShaderMaterial({uniforms:{uT:uBT,uMap:{value:tex},uW:{value:mob?34:100},uPx:{value:mob?2.6:2.2}},transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,defines:FXON?{FXSP:1}:{},
   vertexShader:`uniform float uT,uW,uPx;varying float vA;void main(){float u=position.x,v=position.y,r=position.z;float x=(u-.5)*uW;
  float tw=sin(x*.045+uT*.25)*1.6+sin(x*.02-uT*.12)*.8;float y=sin(x*.035+uT*.18)*7.+sin(x*.09-uT*.3)*2.+(v-.5)*(2.2+3.2*abs(sin(x*.028+uT*.1)))*cos(tw*.5);
  float z=(v-.5)*3.*sin(tw);vec4 mv=modelViewMatrix*vec4(x,y,z,1.);float fl=fract(u*3.-uT*.06+r*.15);vA=(.25+.75*pow(1.-abs(fl-.5)*2.,6.)+step(.985,r)*1.5)*smoothstep(0.,.08,u)*smoothstep(1.,.92,u);
- gl_PointSize=uPx*(1.+step(.985,r)*1.8)*60./-mv.z;gl_Position=projectionMatrix*mv;}`,
+ gl_PointSize=uPx*(1.+step(.985,r)*1.8)*60./-mv.z;
+#ifdef FXSP
+vA*=clamp(gl_PointSize*gl_PointSize/2.25,0.,1.);gl_PointSize=max(gl_PointSize,1.5);
+#endif
+gl_Position=projectionMatrix*mv;}`,
   fragmentShader:`uniform sampler2D uMap;varying float vA;void main(){float a=texture2D(uMap,gl_PointCoord).a;gl_FragColor=vec4(vec3(.82,.88,1.)*a*vA*.55,1.);}`});
  const p=new THREE.Points(g,m);p.frustumCulled=false;p.position.set(0,mob?-22:-15,SZ(4)-6);sc.add(p);return p;})();
 // 课本卡:deep/cards/index.json 列出已交付的 <世界>.l1.json;无卡世界显示占位
@@ -393,7 +402,8 @@ function drawAB(){const cv=$("labAB"),g=cv.getContext("2d"),W=cv.width,H=cv.heig
 function labLog(tag){if(!labOn)return;const d=document.createElement("div");d.innerHTML=`<b>#${++labN} ${fmtT()} · ${esc(tag)}</b><br>${esc($("labR")?$("labR").textContent:"")}${$("labV")&&$("labV").textContent?`<br><i>${esc($("labV").textContent)}</i>`:""}`;const L=$("labLog");L.appendChild(d);while(L.children.length>16)L.firstChild.remove();L.scrollLeft=L.scrollWidth;}
 let labRT=0;function labSeries(series){labLast=series.map(S=>({...S,pts:S.pts.slice()}));if(!labOn)return;clearTimeout(labRT);labRT=setTimeout(()=>{if(lab)lab.setSeries(labLast,labA,labEq());drawAB();if(rmOne)rmOne();},60);}
 labHook=labSeries;const labEq=()=>!!(labCard&&labCard.lab&&labCard.lab.plot);
-function ensureLab(){if(lab||!gl)return;lab=createLab(THREE,{mob,tex});lab.resize(W(),H());}
+function ensureLab(){if(lab||!gl)return;lab=createLab(THREE,{mob,tex});lab.resize(W(),H());
+ if(FXON){const LU=lookUniforms(THREE,{sun:0xffd2a8,rim:0x7fd8ff,rimK:.45,bounce:0x1c2a33});LU.uFxSunW.value.set(.2,1,.35).normalize();dressScene(THREE,r,lab.scene,LU,{env:.55,amb:.4,mirror:.12}).then(()=>{if(rmOne)rmOne();});}}
 function enterLab(){if(sideW<0||labOn)return;const w=WORLDS[sideW],cd=CARDS[sideL][w.id];if(!cd||!cd.lab)return;labCard=cd;showLab(cd);ensureLab();
  const st=stars.find(s=>s.userData.k===sideW&&s.userData.L===sideL);const fl=$("labFl");
  if(st&&!document.body.classList.contains("rm")){const v=st.getWorldPosition(new THREE.Vector3());const p=v.clone().project(cam);fl.style.setProperty("--fx",(p.x*.5+.5)*100+"%");fl.style.setProperty("--fy",(-p.y*.5+.5)*100+"%");
@@ -417,13 +427,21 @@ $("labClrA").onclick=()=>{labA=null;if(lab)lab.setSeries(labLast,null,labEq());d
 let rmOne=null;
 // V4 核素岛(元素工坊):IAEA 真实核素表 → Z×N 地形;拖动环绕/滚轮缩放/悬停看核素
 let isl=null,islOn=false,islBusy=false,islDrag=null;
+// 2.9:核素岛的主光 = 双中子星并合(千新星)方向;软阴影(中/高档,静态只渲一次)、雾取自主光、环境光取自银河天球
+const islKey=new THREE.Vector3(),_sv=new THREE.Vector3(),_cd=new THREE.Vector3();
+function dressIsl(){const I=isl;islKey.copy(I.bns.position).sub(I.tgt).normalize();
+ const IU=lookUniforms(THREE,{sun:0xfff0dc,fog:0x02040a,den:.0065,fogH:.05,fogY:1.6,rim:0x9fb8ff,rimK:.4,bounce:0x2a1e14});IU.uFxSunW.value.copy(islKey);
+ I.sun.color.set(0xfff0dc);I.sun.intensity=1.6;I.sun.position.copy(I.tgt).addScaledVector(islKey,120);I.sun.target.position.copy(I.tgt);I.scene.add(I.sun.target);I.sun.target.updateMatrixWorld();
+ if(TQ.shadow){const s=I.sun.shadow;I.sun.castShadow=true;s.mapSize.set(TQ.shadow,TQ.shadow);const c=s.camera;c.left=-62;c.right=62;c.top=62;c.bottom=-62;c.near=1;c.far=320;c.updateProjectionMatrix();s.bias=-.0004;s.normalBias=.03;
+  I.inst.castShadow=I.inst.receiveShadow=true;I.dome.receiveShadow=true;r.shadowMap.needsUpdate=true;}
+ dressScene(THREE,r,I.scene,IU,{env:.8,amb:.3}).then(()=>{if(TQ.shadow)r.shadowMap.needsUpdate=true;if(rmOne)rmOne();});}
 const ISLA=[["fe","铁-56 · 结合能之巅"],["pb","铅-208 · 双幻数"],["isl","稳定岛 · 理论预言"],["r","双中子星并合 · r 过程"]];
 $("labTabs").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(!b)return;$("labTabs").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));["labL","labRt","labB"].forEach(id=>$(id).classList.toggle("act",id===b.dataset.t));});
 $("islGh").addEventListener("click",()=>$("islG").classList.toggle("open"));
 function islLabels(){const A=$("islA");if(!A.children.length)A.innerHTML=ISLA.map(([k,t])=>`<div class="isl-a" data-k="${k}">${t}</div>`).join("");
  [...A.children].forEach(e=>{const p=isl.anchors[e.dataset.k].clone().project(isl.cam);const on=p.z<1&&Math.abs(p.x)<1.05&&Math.abs(p.y)<1.05;e.style.display=on?"":"none";if(on){{const hw=e.offsetWidth/2+6;e.style.left=Math.min(W()-hw,Math.max(hw,(p.x*.5+.5)*W()))+"px";}e.style.top=(-p.y*.5+.5)*H()+"px";}});}
 const hlTxt=lg=>lg>=99?"稳定":lg<=-99?"半衰期未知":lg>7.5?`半衰期约 10^${lg.toFixed(1)} 秒(${(10**lg/3.156e7).toPrecision(2)} 年)`:lg>-3?`半衰期约 ${(10**lg).toPrecision(3)} 秒`:`半衰期约 10^${lg.toFixed(1)} 秒`;
-async function openIsl(){if(islOn||islBusy||!gl)return;islBusy=true;try{if(!isl){isl=await createIsland(THREE,{mob,tex});isl.resize(W(),H());}}catch(e){islBusy=false;console.warn("核素岛加载失败",e);return;}islBusy=false;
+async function openIsl(){if(islOn||islBusy||!gl)return;islBusy=true;try{if(!isl){isl=await createIsland(THREE,{mob,tex});isl.resize(W(),H());if(FXON)dressIsl();}}catch(e){islBusy=false;console.warn("核素岛加载失败",e);return;}islBusy=false;
  islOn=true;document.body.classList.add("islon");const X=$("islx");X.classList.add("on");X.setAttribute("aria-hidden","false");$("islS").textContent=`元素工坊 · ${isl.count} 个已知核素 · 真实数据`;$("islX").focus();if(rmOne)setTimeout(rmOne,50);}
 function closeIsl(){if(!islOn)return;islOn=false;islDrag=null;document.body.classList.remove("islon");const X=$("islx");X.classList.remove("on");X.setAttribute("aria-hidden","true");$("islTip").style.display="none";$("sideIsl").focus();if(rmOne)rmOne();}
 $("sideIsl").onclick=openIsl;$("islX").onclick=closeIsl;
@@ -468,9 +486,21 @@ $("snd").onclick=()=>{on=!on;try{localStorage.setItem(MK,on?"1":"0")}catch(e){}s
  if(on){music(cur);}else{au.forEach(a=>fade(a,0));}};
 sndUi();if(on)setTimeout(()=>music(cur),0);   // 浏览器允许时直接响起
 {const g=e=>{removeEventListener("pointerdown",g,true);removeEventListener("keydown",g,true);if(on&&e.target!==$("snd"))music(cur);};addEventListener("pointerdown",g,true);addEventListener("keydown",g,true);}
-// 后期:Bloom(低帧自动关闭)
-comp.setPixelRatio(r.getPixelRatio());comp.addPass(new RenderPass(cmp.scene,cmp.cam));
-bloom=new UnrealBloomPass(new THREE.Vector2(W(),H()),.7,.5,.5);comp.addPass(bloom);comp.addPass(new OutputPass());
+// 后期:FXON=自写 HDR 链(Karis Bloom + ACES/AgX + 分离色调 + 抖动);?fx=0 为旧 UnrealBloom 链(低帧自动关闭)
+if(FXON){comp.setSource(cmp.scene,cmp.cam);comp.setPixelRatio(r.getPixelRatio());comp.setSize(W(),H());bloom=comp.bloom;}
+else{comp.setPixelRatio(r.getPixelRatio());comp.addPass(new RenderPass(cmp.scene,cmp.cam));
+bloom=new UnrealBloomPass(new THREE.Vector2(W(),H()),.7,.5,.5);comp.addPass(bloom);comp.addPass(new OutputPass());}
+const keyAt=FXON?layerKeys(THREE,L):null;
+// 动态分辨率:只降像素,不关效果
+const gov=FXON?governor(k=>{r.setPixelRatio(PR0*k);comp.setPixelRatio(r.getPixelRatio());sizeAll();}):null;
+// 画质角标与 G 键切换(切换后重载,避免运行中重编着色器)
+const qHud=document.body.appendChild(document.createElement("div"));qHud.id="qhud";qHud.setAttribute("aria-live","polite");
+qHud.style.cssText="position:fixed;right:12px;bottom:10px;z-index:30;font:12px/1.4 system-ui,sans-serif;color:#dfe8ff;opacity:0;transition:opacity .4s;pointer-events:none;text-shadow:0 1px 2px #000";
+let qShowUntil=0;const qShow=ms=>{qShowUntil=performance.now()+ms;qHud.style.opacity=".8";};
+const qText=()=>`画质 ${TIER_NAME[LOD]}${QT.src==="auto"?"(自动)":""} · ${gov&&gov.fps?Math.round(gov.fps)+" fps · ":""}渲染 ${Math.round((gov?gov.scale:1)*100)}% · G 切换`;
+if(FXON){qHud.textContent=qText();try{if(sessionStorage.getItem("gn:deep:qsw")){sessionStorage.removeItem("gn:deep:qsw");qShow(4000);}}catch(e){}if(/[?&]fps\b/.test(location.search))qShow(1e12);
+ addEventListener("keydown",e=>{if(e.key!=="g"&&e.key!=="G")return;if(e.ctrlKey||e.metaKey||e.altKey)return;const tg=e.target;if(tg&&(tg.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName)))return;
+  const n=(LOD+2)%3;try{localStorage.setItem(QKEY,String(n));sessionStorage.setItem("gn:deep:qsw","1");}catch(e){}location.reload();});}
 // 近距淡出:相机穿过星体时不过曝
 // V6 星系层:方程节点连成旋臂(两臂粒子 + 16 个方程节点沿臂串联);星河层:生活剪影星云(房子/一家人/存钱/时钟/学位帽)
 (()=>{const g2=cores[2];g2.children.forEach(o=>{if(o.isSprite)o.visible=false;else o.material.opacity=.08;});
@@ -479,7 +509,7 @@ bloom=new UnrealBloomPass(new THREE.Vector2(W(),H()),.7,.5,.5);comp.addPass(bloo
  for(let i=0;i<N;i++){const t=Math.pow(Math.random(),.8),k=i&1,[x,y]=arm(t,k),sp=(1.5+t*5)*(Math.random()-.5)*2;P[i*3]=x+sp*Math.random();P[i*3+1]=y+sp*.6*Math.random();P[i*3+2]=(Math.random()-.5)*3;
   cc.copy(c2).lerp(c1,Math.min(1,t*1.4));C[i*3]=cc.r;C[i*3+1]=cc.g;C[i*3+2]=cc.b;}
  const gg=new THREE.BufferGeometry();gg.setAttribute("position",new THREE.BufferAttribute(P,3));gg.setAttribute("color",new THREE.BufferAttribute(C,3));
- const gal=new THREE.Group();gal.add(new THREE.Points(gg,new THREE.PointsMaterial({size:mob?.5:.42,map:tex,vertexColors:true,transparent:true,opacity:.85,depthWrite:false,blending:THREE.AdditiveBlending})));
+ const gal=new THREE.Group();gal.add(new THREE.Points(gg,(m=>FXON?subpixel(m):m)(new THREE.PointsMaterial({size:mob?.5:.42,map:tex,vertexColors:true,transparent:true,opacity:.85,depthWrite:false,blending:THREE.AdditiveBlending}))));
  const bul=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,color:0xffe6c8,transparent:true,opacity:.75,blending:THREE.AdditiveBlending,depthWrite:false}));bul.scale.set(16,11,1);gal.add(bul);
  const EQ=["F = ma","E = mc²","pV = nRT","a² + b² = c²","e^{iπ} + 1 = 0","ΔS ≥ 0","λ = h / p","N = N₀e^{−λt}","∇·E = ρ/ε₀","T² ∝ a³","P(A|B)","dN/dt = rN(1−N/K)","H = −Σ p log p","v = √(GM/r)","F = Gm₁m₂/r²","FV = PV(1+r)ⁿ"];
  const eqTex=t=>{const c=document.createElement("canvas");c.width=512;c.height=96;const x=c.getContext("2d");x.font='italic 44px "Times New Roman",serif';x.textAlign="center";x.textBaseline="middle";x.shadowColor="#c9b0ff";x.shadowBlur=14;x.fillStyle="#f4ecff";x.fillText(t,256,50);const T=new THREE.CanvasTexture(c);T.colorSpace=THREE.SRGBColorSpace;return T;};
@@ -508,7 +538,7 @@ bloom=new UnrealBloomPass(new THREE.Vector2(W(),H()),.7,.5,.5);comp.addPass(bloo
   m.position.set(Math.cos(a)*r,Math.sin(a)*r*.62,-14-i*3);m.rotation.z=(Math.random()-.5)*.3;g3.add(m);});})();
 const fadeList=[...cores,...clusters.map(c=>c.grp)];fadeList.forEach(g=>g.traverse(o=>{if(o.material)o.userData.op=o.material.opacity;}));
 function nearFade(cz){fadeList.forEach(g=>{const dz=cz-g.position.z;const f=dz<0?0:Math.min(1,Math.max(0,(dz-6)/34));if(g.userData.f===f)return;g.userData.f=f;g.traverse(o=>{if(o.material&&o.userData.op!=null)o.material.opacity=o.userData.op*f;});});}
-if(/debug/.test(location.search))window.__d={openStop,openNet,stars,cam,W,H,openSide,go,rev:THREE.REVISION,op,enterLab,closeLab,openIsl,closeIsl,get isl(){return isl;}};
+if(/debug/.test(location.search))window.__d={openStop,openNet,stars,cam,W,H,openSide,go,rev:THREE.REVISION,op,enterLab,closeLab,openIsl,closeIsl,get isl(){return isl;},r,comp,sc,LOD,FXON,QT,get gov(){return gov;},frame,cmp};
 // 初始
 const h=location.hash.match(/deep=(\d)/);let start=h?+h[1]:0;if(!L[start]||!L[start].open)start=0;
 cur=start;cam.position.z=zOf(start);setHud(start);
@@ -520,7 +550,7 @@ const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 const fpsEl=/[?&]fps\b/.test(location.search)?Object.assign(document.body.appendChild(document.createElement("div")),{style:"position:fixed;left:8px;top:60px;z-index:20;font:12px monospace;color:#9f9;pointer-events:none"}):null;let fpsN=0,fpsT=0;
 function loop(t){requestAnimationFrame(loop);if(fpsEl){fpsN++;if(t-fpsT>1000){fpsEl.textContent=`LOD ${LOD} · ${Math.round(fpsN*1000/(t-fpsT))} fps · pr ${r.getPixelRatio()}`;fpsN=0;fpsT=t;}}
  if(document.body.classList.contains("fgon")||document.body.classList.contains("clon")){lt=t;return;} // 模型炼炉 / 冷原子实验柜打开时暂停深空渲染
- const dt=t-lt;lt=t;if(dt>42){if(++slow>72){if(bloom&&bloom.enabled){bloom.enabled=false;}else if(r.getPixelRatio()>1){r.setPixelRatio(1);comp.setPixelRatio(1);sizeAll();}else if(ribbon.visible){ribbon.visible=false;}slow=0;}}else slow=Math.max(0,slow-1);
+ const dt=t-lt;lt=t;if(gov){gov.tick(dt,t);if(t<qShowUntil||qHud.style.opacity!=="0"){qHud.textContent=qText();if(t>qShowUntil)qHud.style.opacity="0";}}else if(dt>42){if(++slow>72){if(bloom&&bloom.enabled){bloom.enabled=false;}else if(r.getPixelRatio()>1){r.setPixelRatio(1);comp.setPixelRatio(1);sizeAll();}else if(ribbon.visible){ribbon.visible=false;}slow=0;}}else slow=Math.max(0,slow-1);
  if(anim){const k=Math.min(1,(t-anim.t0)/anim.d);cam.position.z=anim.from+(anim.to-anim.from)*ease(k);if(k>=1)anim=null;}
  if(labFly){const k=Math.min(1,(t-labFly.t0)/labFly.d),e=k*k*k;cam.position.lerpVectors(labFly.from,labFly.to,e);cam.lookAt(labFly.to.x,labFly.to.y,labFly.to.z-40);}
  else if(!labOn){cam.position.x=Math.sin(t*.00013)*4;cam.position.y=Math.cos(t*.00011)*3;cam.lookAt(0,0,cam.position.z-100);}
@@ -531,14 +561,14 @@ function loop(t){requestAnimationFrame(loop);if(fpsEl){fpsN++;if(t-fpsT>1000){fp
  stars.forEach(s=>{const tg=(s.userData.L===cur&&s.userData.k===hov)?10:s.userData.base*(1+.08*Math.sin(t*.002+s.userData.k));s.scale.setScalar(s.scale.x+(tg-s.scale.x)*.15);});
  frame(t);}
 // 一帧:按相机深度推进水线(0=水面构图,1=已入深空)
-function frame(t){if(islOn&&isl){const s=t*.001,U=cmp.uniforms;isl.update(s);U.uWl.value=1.2;U.uMixC.value=1;U.uTime.value=s;r.setRenderTarget(rtC);r.render(isl.scene,isl.cam);r.setRenderTarget(null);if(bloom){bloom.threshold=.5;bloom.strength=.75;bloom.radius=.55;}comp.render();islLabels();return;}
-if(labOn&&lab){const s=t*.001,U=cmp.uniforms;lab.update(s);U.uWl.value=1.2;U.uMixC.value=1;U.uTime.value=s;r.setRenderTarget(rtC);r.render(lab.scene,lab.cam);r.setRenderTarget(null);if(bloom){bloom.threshold=.55;bloom.strength=.65;bloom.radius=.5;}comp.render();return;}
+function frame(t){if(islOn&&isl){const s=t*.001,U=cmp.uniforms;isl.update(s);U.uWl.value=1.2;U.uMixC.value=1;U.uTime.value=s;r.setRenderTarget(rtC);r.render(isl.scene,isl.cam);r.setRenderTarget(null);if(FXON){_sv.copy(isl.bns.position).project(isl.cam);isl.cam.getWorldDirection(_cd);const f=Math.max(0,_cd.dot(_sv.clone().copy(isl.bns.position).sub(isl.cam.position).normalize()));comp.rays({x:_sv.x*.5+.5,y:_sv.y*.5+.5},_sv.z<1&&Math.abs(_sv.x)<1.4&&Math.abs(_sv.y)<1.4?.6*Math.pow(f,1.5):0);}if(bloom){bloom.threshold=.5;bloom.strength=.75;bloom.radius=.55;}comp.render(t*.001);islLabels();return;}
+if(labOn&&lab){if(FXON)comp.rays(null,0);const s=t*.001,U=cmp.uniforms;lab.update(s);U.uWl.value=1.2;U.uMixC.value=1;U.uTime.value=s;r.setRenderTarget(rtC);r.render(lab.scene,lab.cam);r.setRenderTarget(null);if(bloom){bloom.threshold=.55;bloom.strength=.65;bloom.radius=.5;}comp.render(t*.001);return;}
 const d=Math.min(1,Math.max(0,(60-cam.position.z)/260));const wl=WL0+ss(0,.5,d)*(1.16-WL0),mc=ss(.35,.85,d);const s=t*.001;
  op.update(s,d);const U=cmp.uniforms;U.uWl.value=wl;U.uMixC.value=mc;U.uTime.value=s;
  if(wl<1.05||mc<.6){r.setRenderTarget(rtA);r.render(op.sceneA,op.camA);}
  if(mc<1){r.setRenderTarget(rtB);r.render(op.sceneB,op.camB);}
  if(mc>0){r.setRenderTarget(rtC);r.render(sc,cam);}
- r.setRenderTarget(null);if(bloom){bloom.threshold=.85-.65*mc;bloom.strength=.5+.1*mc;bloom.radius=.4+.15*mc;}comp.render();}
+ r.setRenderTarget(null);if(keyAt){comp.rays(null,0);comp.grade(keyAt(cam.position.z));}if(bloom){bloom.threshold=.85-.65*mc;bloom.strength=.5+.1*mc;bloom.radius=.4+.15*mc;}comp.render(t*.001);}
 const still=/[?&]still\b/.test(location.search); // 验收截图:只渲染一帧(可加 &z= 指定相机深度)
 if(still&&gl)op.ready.then(()=>{const z=location.search.match(/[?&]z=(-?\d+)/);if(z)cam.position.z=+z[1];cam.lookAt(0,0,cam.position.z-100);frame(3000);window.__shot=1;});
 else if(!document.body.classList.contains("rm"))requestAnimationFrame(loop);

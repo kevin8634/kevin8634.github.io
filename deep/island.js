@@ -85,5 +85,5 @@ void main(){vec2 p=vW.xz*.06;float w=fb(p+fb(p*1.7+uT*.04)*1.6);float rg=1.-abs(
   const anchors = { fe: new THREE.Vector3(px(30), H(8.79, 99) + 2, pz(26)), isl: isl.position.clone().add(new THREE.Vector3(0, 6, 0)), r: bns.position.clone().add(new THREE.Vector3(0, 8, 0)), pb: new THREE.Vector3(px(126), H(7.87, 99) + 2, pz(82)) };
   function resize(w, h) { cam.aspect = w / h; cam.fov = w / h < .8 ? 66 : 46; cam.updateProjectionMatrix(); }
   function update(t) { U.uT.value = t; ns[0].position.set(Math.cos(t * 1.7) * 3, 0, Math.sin(t * 1.7) * 3); ns[1].position.copy(ns[0].position).multiplyScalar(-1); swirl.lookAt(cam.position); swirl.rotation.z = t * .3; placeCam(t); }
-  return { scene, cam, update, resize, pick, orb, anchors, count: n, src: J.src };
+  return { scene, cam, update, resize, pick, orb, anchors, count: n, src: J.src, sun, bns, inst, dome, tgt };
 }
