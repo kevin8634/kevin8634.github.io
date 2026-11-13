@@ -152,6 +152,13 @@
 | pluto.webp | 冥王星 新视野号 2015 | NASA/JHUAPL/SwRI · 公有领域 |
 | c67p.webp | 67P 彗星 罗塞塔号 NAVCAM 2014 | ESA/Rosetta/NAVCAM · CC BY-SA 3.0 IGO |
 | n159.webp | N159 恒星形成区 韦布 NIRCam 2026-10-22 | ESA/Webb, NASA & CSA, E. Sabbi, M. Zamani;致谢 M. H. Özsaraç · CC BY 4.0 |
+| gal-m81.webp | M81 星系群核心 · ESA 欧几里得 DR1(2026-11-12 发布) | ESA/Euclid/Euclid Consortium/NASA, image processing by J.-C. Cuillandre and E. Bertin · CC BY-SA 3.0 IGO |
+| gal-cena.webp | 半人马座 A 中红外 · ESA/Webb weic2615a(2026-07-06 发布) | NASA, ESA, CSA, STScI. Image Processing: A. Pagan (STScI), J. DePasquale (STScI), M. Garcia Marin (ESA Office at STScI) · CC BY 4.0 |
+| mw-bulge.webp | 银河系核球 · ESA 欧几里得(2026-06-24 发布,16:9 截取) | ESA/Euclid/Euclid Consortium/NASA, CFHT, image processing by J.-C. Cuillandre and E. Bertin (CEA Paris-Saclay) · CC BY-SA 3.0 IGO |
+| mw-irs3.webp | 银心 IRS 3 星场 · ESA/Webb weic2617a(2026-08-11 发布) | ESA/Webb, NASA & CSA, F. Peißker, J. Lu, F. Yusef-Zadeh, N. B. Sabha, C. Chan · CC BY 4.0 |
+| neb-trifid.webp | 三叶+礁湖星云 · NOIRLab noirlab2521b 鲁宾天文台「第一眼」(2025-06-23 发布) | RubinObs/NOIRLab/SLAC/NSF/DOE/AURA · CC BY 4.0 |
+| neb-ic348.webp | IC 348 · ESA/Webb weic2619a(2026-09-15 发布) | ESA/Webb, NASA, CSA, K. Luhman, C. Alves De Oliveira, M. Zamani (ESA/Webb) · CC BY 4.0 |
+| neb-lion.webp | 狮子星云 NGC 2392 · ESA/Webb weic2616a(2026-08-10 发布) | NASA, ESA, CSA, STScI. Image Processing: A. Pagan (STScI) · CC BY 4.0 |
 
 ## 星域 V「群星」(v1.0-M4)
 | 数据 / 素材 | 来源 | 许可 / 用法 |

@@ -2,6 +2,7 @@
  * 王磊 10-23:星档馆改为天文台。点击 → 圆顶天窗打开、望远镜转向目标、镜头沿镜筒「一镜到底」推进,画面收成圆形目镜;
  * 目镜里先是星空,再一路放大到探测器/望远镜实拍。左侧按距离由近到远分七类目录,右侧信息卡注明怎么拍、多远、来源署名;
  * 多波段目标底部可切换「眼睛」(可见光/红外/X 射线/射电)。
+ * v1.0-M4t(11-14):前沿新图 7 张(欧几里得 DR1 M81 群、银河核球;韦布 银心 IRS 3、狮子星云、IC 348、半人马座 A;鲁宾 三叶+礁湖),「银河系」分类开放;列表「新」标、出处链接、想一想。
  * v1.0-M4l(11-05):猫头星云 HH 903 三波段对照展品(哈勃 WFC3 / 韦布 NIRCam / 韦布 MIRI,同视场对齐):单张 · 滑块对照 · 3D 三层叠片,
  *   附「为什么红外能穿透尘埃」波长条(示意);深链 ?obs=cathead。
  * 图像全部为公开授权真实影像,自托管于 arc/;署名见每条与 docs/DATA-SOURCES.md。存储 gn:sh:obs */
@@ -21,13 +22,13 @@
     { k: 'pl', zh: '行星与卫星', en: 'PLANETS & MOONS', d: '0.8 – 45 亿 km' },
     { k: 'edge', zh: '太阳系边疆', en: 'OUTER SOLAR SYSTEM', d: '40 – 60 亿 km' },
     { k: 'neb', zh: '恒星与星云', en: 'STARS & NEBULAE', d: '数千光年' },
-    { k: 'mw', zh: '银河系', en: 'THE MILKY WAY', d: '2.6 万光年', soon: 1 },
+    { k: 'mw', zh: '银河系', en: 'THE MILKY WAY', d: '2.6 万光年' },
     { k: 'gal', zh: '星系', en: 'GALAXIES', d: '数百万 – 数亿光年' },
     { k: 'deep', zh: '宇宙深处', en: 'DEEP UNIVERSE', d: '100 亿光年以上' }
   ];
   var CAT_OF = { sun: 'sun', earth: 'sun', pbd: 'edge', jupiter: 'pl', pillars: 'neb', crab: 'neb', cliffs: 'neb', m87: 'gal', deep: 'deep' };
   var SCOPE_OF = { sun: '太阳动力学天文台 SDO', earth: '阿波罗 17 号 · 哈苏相机', pbd: '旅行者 1 号', jupiter: '哈勃空间望远镜', pillars: '哈勃 / 韦布空间望远镜', crab: '哈勃 / 韦布 / 钱德拉', cliffs: '韦布空间望远镜', m87: '事件视界望远镜 EHT', deep: '韦布空间望远镜' };
-  var RADEC = { cathead: [161.499, -60.107], n159: [84.9, -69.77], pillars: [274.70, -13.84], crab: [83.63, 22.01], cliffs: [159.20, -58.62], m87: [187.71, 12.39], deep: [110.83, -73.45] };
+  var RADEC = { m81: [148.888, 69.065], cena: [201.362, -43.025], irs3: [266.417, -29.008], trifid: [270.675, -22.971], ic348: [56.129, 32.141], lion: [112.295, 20.912], cathead: [161.499, -60.107], n159: [84.9, -69.77], pillars: [274.70, -13.84], crab: [83.63, 22.01], cliffs: [159.20, -58.62], m87: [187.71, 12.39], deep: [110.83, -73.45] };
   var BODY = { sun: 'Sun', moon: 'Moon', mercury: 'Mercury', venus: 'Venus', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uranus: 'Uranus', neptune: 'Neptune', pluto: 'Pluto', io: 'Jupiter', europa: 'Jupiter' };
   function V(zh, k, img, t, cr, sc, w) { return { zh: zh, k: k, img: img, t: t, cr: cr, sc: sc, w: w }; }
   var NEW = [
@@ -89,7 +90,43 @@
     { id: 'c67p', cat: 'edge', zh: '67P 彗星', en: 'COMET 67P', dist: '拍摄时约 4 亿 km', light: '约 22 分钟', scope: '罗塞塔号导航相机',
       how: '2014 年 9 月 19 日罗塞塔号在约 28 km 外环绕拍摄的拼接图。两个月后它放下了「菲莱」着陆器。',
       bands: [V('可见光', 'vis', 'c67p', '像一只「橡皮鸭」的彗核,约 4 km 长,右上方已经有淡淡的喷流。', 'ESA / Rosetta / NAVCAM(CC BY-SA 3.0 IGO)')],
-      fact: '这是人类第一次环绕并降落在一颗彗星上。' }
+      fact: '这是人类第一次环绕并降落在一颗彗星上。' },
+    /* v1.0-M4t(2026-11-14,王磊 11-14 02:14):前沿新图一批 —— 2025–2026 新发布、许可清楚(CC BY 4.0 / CC BY-SA 3.0 IGO),本地 webp;nw=发布日,src=出处页,q=向导只提问 */
+    { id: 'm81', cat: 'gal', nw: '2026-11-12', zh: 'M81 星系群核心', en: 'M81 GROUP · EUCLID DR1', dist: '约 1200 万光年', light: '约 1200 万年', scope: '欧几里得空间望远镜',
+      how: '欧洲空间局 2026 年 11 月 12 日发布欧几里得首批大规模数据 DR1-Foundation,这是其中一张。画面约 1 平方度(约 5 个满月大),欧几里得拍了一个多小时。',
+      bands: [V('合成色', 'vis', 'gal-m81', '右边最大的是「宏象」旋涡星系 M81,左下较小的是 NGC 3077,其余小成员散在画面里;蓝色丝缕是我们银河系里的前景尘埃云,叫「银河卷云」。', 'ESA/Euclid/Euclid Consortium/NASA;图像处理 J.-C. Cuillandre、E. Bertin(CC BY-SA 3.0 IGO)')],
+      fact: 'M81 的引力在影响 NGC 3077 等邻居:触发它们一阵阵的恒星形成,并慢慢改变它们的形状。',
+      q: '一张遥远星系的照片里,为什么会混进我们自己银河系的云?', src: ['ESA · Euclid DR1', 'https://www.esa.int/media/about-us/directorates/science/euclid/euclid-views-the-core-of-the-messier-81-galaxy-group'] },
+    { id: 'cena', cat: 'gal', nw: '2026-07-06', zh: '半人马座 A · 中红外', en: 'CENTAURUS A · MIRI', dist: '约 1100 万光年', light: '约 1100 万年', scope: '韦布空间望远镜 MIRI',
+      how: '韦布中红外相机拍摄,2026 年 7 月 6 日作为韦布周年纪念图像发布。',
+      bands: [V('中红外', 'mir', 'gal-cena', '可见光里挡住星系中部的厚尘埃带,在中红外里变成发光的细丝、圈环和暖尘埃云;中心是一个正在「进食」的超大质量黑洞。', 'NASA, ESA, CSA, STScI;图像处理 A. Pagan、J. DePasquale (STScI)、M. García Marín (ESA Office at STScI)(CC BY 4.0)')],
+      fact: '这些复杂结构是过去一次星系碰撞和中心黑洞持续活动共同塑造的。',
+      q: '为什么红外能「看穿」可见光看不透的尘埃?', src: ['ESA/Webb weic2615', 'https://esawebb.org/images/weic2615a/'] },
+    { id: 'bulge', cat: 'mw', nw: '2026-06-24', zh: '银河系核球 · 可见光', en: 'GALACTIC BULGE · EUCLID', dist: '约 2.6 万光年', light: '约 2.6 万年', scope: '欧几里得 VIS + 加法夏望远镜 MegaCam',
+      how: '欧几里得 2025 年 3 月 23 日用可见光相机 VIS(单色)拍摄,颜色来自 2025 年夏天加拿大-法国-夏威夷望远镜 MegaCam 的 u、g、r 三色观测;2026 年 6 月 24 日发布。这里是 16:9 截取版。',
+      bands: [V('可见光', 'vis', 'mw-bulge', '右侧贴近银道面,厚厚的分子云挡出黑色斑块;越往左离银道面越远,核球黄色的星光越清楚。', 'ESA/Euclid/Euclid Consortium/NASA, CFHT;图像处理 J.-C. Cuillandre、E. Bertin (CEA Paris-Saclay)(CC BY-SA 3.0 IGO)')],
+      fact: '完整原图约 60 亿像素,是迄今可见光里分辨率最高的银河系中心照片。',
+      q: '照片里那些黑块,是那里没有星,还是星被挡住了?', src: ['ESA · Euclid', 'https://www.esa.int/ESA_Multimedia/Images/2026/06/Euclid_s_view_of_our_galaxy_s_bulge_16_9_cutout'] },
+    { id: 'irs3', cat: 'mw', nw: '2026-08-11', zh: '银心 · IRS 3 星场', en: 'GALACTIC CENTRE · IRS 3', dist: '约 2.6 万光年', light: '约 2.6 万年', scope: '韦布 NIRCam + MIRI',
+      how: '韦布近红外与中红外合成,2026 年 8 月 11 日发布,是这片星场迄今最细的中红外图像。演化晚期的恒星 IRS 3 离银河系中心黑洞人马座 A* 只有约 0.55 光年。',
+      bands: [V('红外合成', 'nir', 'mw-irs3', '密集的恒星铺满画面,背后是被照亮的气体和尘埃细丝;中央的星团亮到几乎连成一片白色,暗色斑块是不透光的尘埃。', 'ESA/Webb, NASA & CSA, F. Peißker, J. Lu, F. Yusef-Zadeh, N. B. Sabha, C. Chan(CC BY 4.0)')],
+      fact: '研究团队发现:尘埃和水竟能在离超大质量黑洞这么近、辐射这么强的地方形成并保存下来,IRS 3 还在不断往周围补充新物质。',
+      q: '黑洞附近辐射那么强,为什么尘埃还没被全部摧毁?', src: ['ESA/Webb weic2617', 'https://esawebb.org/images/weic2617a/'] },
+    { id: 'trifid', cat: 'neb', nw: '2025-06-23', zh: '三叶星云与礁湖星云', en: 'TRIFID & LAGOON · RUBIN', dist: '约 4000 – 5000 光年', light: '约 4000 – 5000 年', scope: '鲁宾天文台 LSST 相机',
+      how: '鲁宾天文台 2025 年 6 月 23 日公布的「第一眼」图像:678 次曝光、7.2 小时观测叠加而成,原图近 50 亿像素;相机是世界最大的数码相机 LSST Camera(32 亿像素)。',
+      bands: [V('可见光', 'vis', 'neb-trifid', '右上是三叶星云 M20:粉色发射星云、蓝色反射星云和把它分成三瓣的暗尘带;左下更大的是礁湖星云 M8,蓝色亮结里正在诞生新恒星。', 'RubinObs/NOIRLab/SLAC/NSF/DOE/AURA(CC BY 4.0)')],
+      fact: '礁湖星云用一副双筒望远镜就能找到。',
+      q: '为什么要把 678 张照片叠在一起,而不是只拍一张?', src: ['NOIRLab noirlab2521b', 'https://noirlab.edu/public/images/noirlab2521b/'] },
+    { id: 'ic348', cat: 'neb', nw: '2026-09-15', zh: 'IC 348 · 最轻的褐矮星', en: 'IC 348 · PERSEUS', dist: '约 1000 光年', light: '约 1000 年', scope: '韦布空间望远镜 NIRCam',
+      how: '韦布近红外相机拍摄,2026 年 9 月 15 日发布;原图约 3.1 万 × 3.8 万像素,是韦布公开过的最大图像之一,这里是网页压缩版。',
+      bands: [V('近红外', 'nir', 'neb-ic348', '旋卷的云雾里散布着年轻恒星和褐矮星;右上角几颗原恒星喷出的喷流撞上周围气体,形成发光的「赫比格-阿罗天体」。', 'ESA/Webb, NASA, CSA, K. Luhman, C. Alves De Oliveira, M. Zamani (ESA/Webb)(CC BY 4.0)')],
+      fact: '这里找到的最小褐矮星只有木星质量的约 2 倍,是已知最轻的褐矮星,给「恒星怎样形成」的模型出了难题。',
+      q: '比恒星小、比行星大的天体,该算星,还是算行星?', src: ['ESA/Webb weic2619', 'https://esawebb.org/images/weic2619a/'] },
+    { id: 'lion', cat: 'neb', nw: '2026-08-10', zh: '狮子星云 NGC 2392', en: 'LION NEBULA · NGC 2392', dist: '数千光年', light: '数千年', scope: '韦布 NIRCam + MIRI',
+      how: '韦布近红外与中红外合成,2026 年 8 月 10 日发布。它是一个行星状星云:一颗临终恒星抛出的气体与尘埃壳。',
+      bands: [V('红外合成', 'nir', 'neb-lion', '正中像「狮子鼻头」的是白矮星;它的辐射把周围电离成气泡(狮脸),外面一圈被照亮的尘埃壳像鬃毛,红橙小团是暂时幸存的尘埃团块,黄色是分子氢。', 'NASA, ESA, CSA, STScI;图像处理 A. Pagan (STScI)(CC BY 4.0)')],
+      fact: '天文学家估计再过约 1 万年,这团星云就会散开消失 —— 在宇宙里只是一眨眼。',
+      q: '太阳将来会不会也变成这样一团星云?', src: ['ESA/Webb weic2616', 'https://esawebb.org/images/weic2616a/'] },
   ];
 
   var EX = [];
@@ -239,7 +276,7 @@
     CATS.forEach(function (c, ci) {
       var items = EX.filter(function (E) { return E.cat === c.k; });
       html += '<div class="ob-c' + (c.k === L.cat ? ' is-open' : '') + '" data-k="' + c.k + '"><button type="button" class="ob-cb"><i>' + (ci + 1) + '</i><span><b>' + c.zh + '</b><small>' + c.d + '</small></span><em>' + (c.soon ? '下一轮' : items.length) + '</em></button><div class="ob-ci">';
-      items.forEach(function (E) { var i = EX.indexOf(E); html += '<button type="button" class="ob-it' + (ST.seen.indexOf(E.id) >= 0 ? ' seen' : '') + '" data-i="' + i + '"><b>' + E.zh + '</b><small>' + E.dist + '</small></button>'; });
+      items.forEach(function (E) { var i = EX.indexOf(E); html += '<button type="button" class="ob-it' + (ST.seen.indexOf(E.id) >= 0 ? ' seen' : '') + '" data-i="' + i + '"><b>' + E.zh + (E.nw ? '<i class="ob-nw">新</i>' : '') + '</b><small>' + E.dist + '</small></button>'; });
       if (!items.length) html += '<p class="ob-soon">银心、人马座 A* 黑洞、银河全景等即将加入</p>';
       html += '</div></div>';
     });
@@ -277,7 +314,7 @@
     var E = EX[L.cur], B = E.bands[L.band];
     U.info.innerHTML = '<small>' + CATS.filter(function (c) { return c.k === E.cat; })[0].zh + '</small><b>' + E.zh + '</b><em>' + E.en + '</em>' +
       '<dl><dt>距离</dt><dd>' + E.dist + '</dd><dt>光走到我们</dt><dd>' + E.light + '</dd><dt>拍摄</dt><dd>' + (B.sc || E.scope || '—') + '</dd><dt>波段</dt><dd>' + B.zh + (B.w ? ' · ' + B.w : '') + '</dd></dl>' +
-      '<h4>怎么拍的</h4><p>' + E.how + '</p><h4>这一张</h4><p>' + B.t + '</p><p class="ob-fact">' + E.fact + '</p>' + (E.ir ? irHTML() : '') + '<p class="ob-src">影像来源:' + (E.cmp && L.mode !== 'one' ? '哈勃 ' + E.bands[0].cr + ';韦布 ' + E.bands[1].cr : B.cr) + '</p>';
+      '<h4>怎么拍的</h4><p>' + E.how + '</p><h4>这一张</h4><p>' + B.t + '</p><p class="ob-fact">' + E.fact + '</p>' + (E.q ? '<p class="ob-q">想一想:' + E.q + '</p>' : '') + (E.ir ? irHTML() : '') + '<p class="ob-src">影像来源:' + (E.cmp && L.mode !== 'one' ? '哈勃 ' + E.bands[0].cr + ';韦布 ' + E.bands[1].cr : B.cr) + '</p>' + (E.src ? '<p class="ob-src">出处:<a href="' + E.src[1] + '" target="_blank" rel="noopener">' + E.src[0] + '</a>' + (E.nw ? ' · ' + E.nw + ' 发布' : '') + '</p>' : '');
     U.info.classList.add('on');
     U.cr.textContent = '影像:' + (E.cmp && L.mode !== 'one' ? '哈勃 ' + E.bands[0].cr + ' · 韦布 ' + E.bands[1].cr : B.cr) + ' · 公开授权影像,不代表任何机构背书';
     if (B.sc) U.scope.textContent = L.mode === 'one' ? B.sc : E.scope;
@@ -426,6 +463,7 @@
       '.ob-it{display:flex;justify-content:space-between;gap:8px;width:100%;padding:6px 8px;margin:2px 0;border:1px solid transparent;border-radius:7px;background:none;color:#cfe3f2;font-size:13px;cursor:pointer;text-align:left}.ob-it small{color:#6f93a8;font-size:10px;white-space:nowrap}',
       '.ob-it:hover{border-color:rgba(127,216,239,.25)}.ob-it.is-on{background:rgba(63,224,255,.14);border-color:rgba(127,216,239,.6);color:#fff}.ob-it.seen b::after{content:" ·";color:#ffd58a}',
       '.ob-soon{font-size:11px;color:#6f93a8;margin:4px 0}',
+      '.ob-nw{display:inline-block;margin-left:6px;padding:0 5px;border-radius:6px;font-style:normal;font-size:10px;line-height:15px;color:#081320;background:#ffd58a;vertical-align:1px}.ob-q{margin-top:8px!important;color:#ffd58a!important}.ob-src a{color:#7fd8ef}',
       // 信息卡
       '.ob-info{position:absolute;right:16px;top:76px;width:300px;max-height:calc(100% - 150px);overflow:auto;z-index:3;padding:14px 16px;border-radius:14px;background:linear-gradient(180deg,rgba(6,18,34,.78),rgba(3,9,18,.66));border:1px solid rgba(127,216,239,.22);backdrop-filter:blur(8px);opacity:0;transform:translateX(20px);transition:all .6s}',
       '.ob-info small{font-size:11px;letter-spacing:.16em;color:#7fd8ef}.ob-info b{display:block;font-size:20px;margin-top:4px}.ob-info em{display:block;font-style:normal;font-size:10px;letter-spacing:.24em;color:#ffd58a;margin-bottom:8px}',
@@ -464,6 +502,7 @@
       '.ob-hint{position:absolute;left:50%;bottom:66px;transform:translateX(-50%);font-size:12px;color:#8fb3c7;letter-spacing:.12em;z-index:3}',
       '.ob-cr{position:absolute;left:0;right:0;bottom:8px;margin:0;text-align:center;font-size:10px;color:#6f8ea3;z-index:3;padding:0 20px}',
       '@media (max-width:900px){.ob-cat{width:190px}.ob-info{width:240px}}',
+      '@media (max-width:560px){.ob-it{flex-direction:column;align-items:flex-start;gap:1px}.ob-it b{word-break:normal}}',
       '@media (max-width:760px){.ob-eye{top:44%;width:min(46vh,70vw);height:min(46vh,70vw)}.ob-cat{left:8px;top:auto;bottom:40px;width:46%;max-height:38vh}.ob-info{right:8px;top:auto;bottom:40px;width:46%;max-height:38vh}.ob-bands{bottom:auto;top:66px}.ob-mode{top:104px}.ob-pl small{display:none}.ob-coord{display:none}}'
     ].join('\n');
     document.head.appendChild(s);

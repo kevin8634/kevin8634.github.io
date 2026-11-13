@@ -38,6 +38,13 @@
 | 火星 arc/mars | 天文台 | ESA & MPS for OSIRIS Team | CC BY-SA 3.0 IGO | ESA & MPS for OSIRIS Team | 否 | 目镜卡署名 |
 | 67P 彗星 arc/c67p | 天文台 | ESA/Rosetta/NAVCAM | CC BY-SA 3.0 IGO | ESA/Rosetta/NAVCAM | 否 | 目镜卡署名 |
 | N159 恒星摇篮 arc/n159 | 天文台 | ESA/Webb(2026-10-22 发布) | CC BY 4.0 | ESA/Webb, NASA & CSA, E. Sabbi, M. Zamani;致谢 M. H. Özsaraç | 否 | 目镜卡署名 |
+| M81 星系群核心 arc/gal-m81 | 天文台(M4t 前沿新图,2026-11-14 入库) | ESA 欧几里得 DR1(2026-11-12 发布)https://www.esa.int/media/about-us/directorates/science/euclid/euclid-views-the-core-of-the-messier-81-galaxy-group | CC BY-SA 3.0 IGO(本站缩放压缩版同许可再发布) | ESA/Euclid/Euclid Consortium/NASA, image processing by J.-C. Cuillandre and E. Bertin | 否 | 目镜卡署名+出处链接 |
+| 半人马座 A 中红外 arc/gal-cena | 天文台(M4t 前沿新图,2026-11-14 入库) | ESA/Webb weic2615a(2026-07-06 发布)https://esawebb.org/images/weic2615a/ | CC BY 4.0 | NASA, ESA, CSA, STScI. Image Processing: A. Pagan (STScI), J. DePasquale (STScI), M. Garcia Marin (ESA Office at STScI) | 否 | 目镜卡署名+出处链接 |
+| 银河系核球 arc/mw-bulge | 天文台(M4t 前沿新图,2026-11-14 入库) | ESA 欧几里得(2026-06-24 发布,16:9 截取)https://www.esa.int/ESA_Multimedia/Images/2026/06/Euclid_s_view_of_our_galaxy_s_bulge_16_9_cutout | CC BY-SA 3.0 IGO(同许可再发布) | ESA/Euclid/Euclid Consortium/NASA, CFHT, image processing by J.-C. Cuillandre and E. Bertin (CEA Paris-Saclay) | 否 | 目镜卡署名+出处链接 |
+| 银心 IRS 3 星场 arc/mw-irs3 | 天文台(M4t 前沿新图,2026-11-14 入库) | ESA/Webb weic2617a(2026-08-11 发布)https://esawebb.org/images/weic2617a/ | CC BY 4.0 | ESA/Webb, NASA & CSA, F. Peißker, J. Lu, F. Yusef-Zadeh, N. B. Sabha, C. Chan | 否 | 目镜卡署名+出处链接 |
+| 三叶+礁湖星云 arc/neb-trifid | 天文台(M4t 前沿新图,2026-11-14 入库) | NOIRLab noirlab2521b 鲁宾天文台「第一眼」(2025-06-23 发布)https://noirlab.edu/public/images/noirlab2521b/ | CC BY 4.0 | RubinObs/NOIRLab/SLAC/NSF/DOE/AURA | 否 | 目镜卡署名+出处链接 |
+| IC 348 arc/neb-ic348 | 天文台(M4t 前沿新图,2026-11-14 入库) | ESA/Webb weic2619a(2026-09-15 发布)https://esawebb.org/images/weic2619a/ | CC BY 4.0 | ESA/Webb, NASA, CSA, K. Luhman, C. Alves De Oliveira, M. Zamani (ESA/Webb) | 否 | 目镜卡署名+出处链接 |
+| 狮子星云 NGC 2392 arc/neb-lion | 天文台(M4t 前沿新图,2026-11-14 入库) | ESA/Webb weic2616a(2026-08-10 发布)https://esawebb.org/images/weic2616a/ | CC BY 4.0 | NASA, ESA, CSA, STScI. Image Processing: A. Pagan (STScI) | 否 | 目镜卡署名+出处链接 |
 | 驾驶舱 ck25.webp / ck25d.jpg(深度图) | 航行页驾驶舱 2.5D | 天枢原创设计图(AI 图像生成工具出图 + 本项目重绘;深度图 MiDaS 离线生成) | 本项目自有 | — | **是**(AI 辅助生成) | 航行页角注「天枢原创设计图(AI 辅助生成)」 |
 | 星璃全息像 xl25.webp / xl25b.webp | 航行页向导形象 | 天枢原创设计图(AI 图像生成工具出图;isnet-anime 离线抠像) | 本项目自有 | — | **是**(AI 辅助生成) | 同上 |
 | 弦穹号外观 ship25.webp / ship25a.jpg | 航行页舷窗/出舱 | 天枢原创设计图(AI 图像生成工具出图) | 本项目自有 | — | **是**(AI 辅助生成) | 同上 |
