@@ -142,3 +142,10 @@
 | AgX 多项式近似 | AgX 基矩阵与 6 次多项式拟合 | Benjamin Wrensch 公开博文《Minimal AgX implementation》(2023);three.js AgXToneMapping(MIT) | 公开公式,致谢 Benjamin Wrensch、Troy Sobotka(AgX 原作)与 three.js 作者 |
 不新增任何图片、模型或外部请求;环境光取自已登记的 #13 银河全景。
 
+
+## 深空 1.11「星河补齐 + 航线 c14」(2026-11-14,总指挥)
+| 台账 id / 文件 | 内容 | 来源 | 许可 / 署名 |
+|---|---|---|---|
+| deep/cards/ma.he.installment.json、nv.he.seatbelt.json、ef.he.bleachmix.json、ls.he.leftovers.json、ps.he.password.json、lt.he.gacha.json、sh.he.moonlens.json | 星河层七张成人生活决策卡(文字 AI 撰写,数值由 docs/he2_c14_build.py 复算) | 事实引用:中国人民银行公告〔2021〕第3号;WHO 道路交通伤害事实清单;NIOSH Pocket Guide(Chlorine);USDA FSIS「Danger Zone」;NIST SP 800-63B-4 与「How Do I Create a Good Password?」;文化部 文市发〔2016〕32号;NASA NSSDCA Moon Fact Sheet | 自有,CC BY 4.0;只引用事实与数值并注明出处,未复制图文 |
+| deep/routes/c14.json | 航线「那块骨头有多老」四站(ef→ls→lt→ma) | LNHB/DDEP C-14 推荐数据(T½=5700(30) a);Bayliss 等 Radiocarbon dating 综述作者稿(Glasgow eprints);PMC9805314;Wikipedia Carbon-14(丰度 1.2×10⁻¹²,CC BY-SA,只引数值) | 自有,CC BY 4.0;只引用事实与数值 |
+不新增任何图片、音频、模型或外部请求。

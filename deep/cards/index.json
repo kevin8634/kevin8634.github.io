@@ -38,5 +38,12 @@
  "ls.l1.hardyweinberg.json",
  "sh.l1.parallax.json",
  "ps.l1.leastsquares.json",
- "lt.l1.bayes.json"
+ "lt.l1.bayes.json",
+ "ma.he.installment.json",
+ "nv.he.seatbelt.json",
+ "ef.he.bleachmix.json",
+ "ls.he.leftovers.json",
+ "ps.he.password.json",
+ "lt.he.gacha.json",
+ "sh.he.moonlens.json"
 ]
