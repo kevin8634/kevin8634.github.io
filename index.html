@@ -1101,7 +1101,7 @@
   };
   var W = { "星图": "Math Atlas", "宙律": "Nomoverse", "元素工坊": "Element Forge", "生命源码": "Life Source", "奇点前夜": "Pre-Singularity", "觉弈": "Ludoterra", "天枢": "Starhelm", "总门户": "Portal" };
   var E = {
-    "创世计划 Genesis": "Genesis", "七个世界 · 一张星图": "Seven worlds · one star map", "✦ 星网": "✦ Star Web", "你身上的碘从哪来": "Where does your iodine come from", "星历": "Star Log",
+    "创世计划 Genesis": "Genesis", "七个世界 · 一张星图": "Seven worlds · one star map", "✦ 星网": "✦ Star Web", "你身上的碘从哪来": "Where does your iodine come from", "那块骨头有多老": "How old is that bone", "星历": "Star Log",
     "宇宙将为你闪烁": "The Universe Will Twinkle for You", "背景音乐": "Music", "原创合成 · 四首": "Original synth · 4 tracks", "列表循环": "Loop all", "单曲循环": "Loop one", "关闭声音": "Sound off",
     "如果世界是一款游戏": "What if the world were a game?", "七个互相连通的学习世界 · 把世界当成一款游戏来拆解": "Seven connected learning worlds · take the world apart like a game",
     "了解更多 →": "Learn more →", "帮我选一颗星 ✦": "Pick a star for me ✦", "帮我选一颗星": "Pick a star for me",
@@ -1749,7 +1749,7 @@
       var byId = {}; WORLDS.forEach(function (w) { byId[w.id] = w; });
       // v2.3 · 星网：在七颗星之间画出跨世界航线；进度与深空层共用 localStorage gn:deep:route:iron
       (function () {
-        var NETR = [{ t: "铁从哪里来", p: ["02", "03", "07", "04"], k: "gn:deep:route:iron", href: "deep/?net=1&route=iron", c: "#7fe3a8" }, { t: "潮汐锁定", p: ["02", "07", "04"], k: "gn:deep:route:tide", href: "deep/?net=1&route=tide", c: "#8fd3ff" }, { t: "一场疫情的数学", p: ["01", "04", "06", "05"], k: "gn:deep:route:epi", href: "deep/?net=1&route=epi", c: "#ff9a8f" }, { t: "一次提问的能量", p: ["01", "05", "02", "03"], k: "gn:deep:route:ask", href: "deep/?net=1&route=ask", c: "#c9a7ff" }, { t: "卫星钟为什么要调慢", p: ["01", "07", "02"], k: "gn:deep:route:gps", href: "deep/?net=1&route=gps", c: "#ffd27f" }, { t: "你身上的碘从哪来", p: ["02", "03", "07", "04"], k: "gn:deep:route:iod", href: "deep/?net=1&route=iod", c: "#ff9fd6" }],
+        var NETR = [{ t: "铁从哪里来", p: ["02", "03", "07", "04"], k: "gn:deep:route:iron", href: "deep/?net=1&route=iron", c: "#7fe3a8" }, { t: "潮汐锁定", p: ["02", "07", "04"], k: "gn:deep:route:tide", href: "deep/?net=1&route=tide", c: "#8fd3ff" }, { t: "一场疫情的数学", p: ["01", "04", "06", "05"], k: "gn:deep:route:epi", href: "deep/?net=1&route=epi", c: "#ff9a8f" }, { t: "一次提问的能量", p: ["01", "05", "02", "03"], k: "gn:deep:route:ask", href: "deep/?net=1&route=ask", c: "#c9a7ff" }, { t: "卫星钟为什么要调慢", p: ["01", "07", "02"], k: "gn:deep:route:gps", href: "deep/?net=1&route=gps", c: "#ffd27f" }, { t: "你身上的碘从哪来", p: ["02", "03", "07", "04"], k: "gn:deep:route:iod", href: "deep/?net=1&route=iod", c: "#ff9fd6" }, { t: "那块骨头有多老", p: ["03", "04", "06", "01"], k: "gn:deep:route:c14", href: "deep/?net=1&route=c14", c: "#c8e07f" }],
           NETF = [];
         var on = false, raf = 0, svg = null, pan = null, chip = document.getElementById("netChip");
         function done(r) { try { return JSON.parse(localStorage.getItem(r.k) || "[]"); } catch (e) { return []; } }
@@ -3779,6 +3779,7 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        { w: "gn", v: "门户 v2.6.3", d: "2026-11-14", t: "星网补上第 7 条航线「那块骨头有多老」（元素工坊 → 生命源码 → 觉弈 → 星图），首页星网面板可直接启航，进度与深空层共用。" },
         { w: "gn", v: "深空 1.11", d: "2026-11-14", t: "星河层补齐：七个世界各多一张成人生活决策卡——分期的真实年化、50 km/h 撞车时的力、84 消毒液混洁厕灵会放多少氯气、剩菜放 2 小时和 6 小时差多少细菌、密码加长还是加符号、1% 概率抽 100 次、手机拍月亮要多长焦；每张都能拖参数看结论翻转。星网新航线「那块骨头有多老」：元素工坊→生命源码→觉弈→星图，从碳 14 的来去、活体上弦、衰变的随机性，到用对数读出年龄。" },
         { w: "gn", v: "深空 2.9", d: "2026-11-14", t: "深空电影感画质：自动按显卡分高/中/低三档，按 G 键切换并记住；掉帧时只降渲染分辨率，不再关掉光晕。新的光晕更稳，小星点不再闪；色调按层渐变，深色不出色带。实验舱和核素岛有了银河环境光、逆光描边和雾；核素岛的光来自双中子星并合，中/高档有软阴影，正对它时有光束。加 ?fx=0 可回到旧画面。" },
         { w: "gn", v: "深空 1.10.2", d: "2026-11-14", t: "星系层补上入口：在 3D 深空里飞到星系层，七个世界的星星现在可以直接点开建模卡；分层列表和「一题一光柱」也加了「星系」按钮。七张建模卡（意大利疫情、称木星、里德伯常数、孟德尔 3:1、开普勒、CPI 通胀、对抗样本）和前沿卡原本都在，只是之前只能从前沿速递、模型炼炉或链接进入。" },
