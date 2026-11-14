@@ -946,6 +946,7 @@
         color: rgba(240,228,200,.92); font: 400 12.5px/1.2 var(--sans); letter-spacing: .1em; cursor: pointer; white-space: nowrap; }
       .l2rib b { color: #e9c779; font-weight: 500; } .l2rib:hover, .l2rib:focus-visible { color: #fff; border-color: #e9c779; outline: none; }
       .l2rib[hidden] { display: none; }
+      #l2rib { display: none !important; } /* 3.0 门户：隐藏旧 2.0 横幅（王磊 11-15） */
       @media (max-width: 1180px) { .l2rib { display: none; } }
       #l2 { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 40%, rgba(12,18,40,.97), #02030a 72%); opacity: 0; transition: opacity .7s ease; overflow: hidden; }
       #l2.on { opacity: 1; } #l2[hidden] { display: none; }
