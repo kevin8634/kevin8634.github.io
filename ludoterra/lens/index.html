@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><script src="/ludoterra/gn-arrive.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>同一件事,为什么你和别人看到的不一样? · 心之透镜 · 觉弈 Ludoterra</title>
+<meta name="description" content="觉弈 Ludoterra 2.0「心之透镜」:透过一颗琥珀玻璃人脑看一条黄昏街道。三枚旋钮就是三种认知偏差的曲率,拧一拧,价签、时钟和新闻屏当场变形。">
+<meta name="theme-color" content="#070814">
+<link rel="stylesheet" href="../lt.css">
+<style>
+html,body{height:100%;overflow:hidden}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:0;touch-action:none}
+.vig{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 50% 46%,transparent 52%,rgba(4,3,10,.55) 100%)}
+.grain{position:fixed;inset:-50%;pointer-events:none;z-index:1;opacity:.06;mix-blend-mode:overlay}
+#ui{position:fixed;z-index:10;left:16px;top:66px;width:min(380px,calc(100vw - 32px));max-height:calc(100% - 84px);overflow:auto;padding:16px 16px 12px}
+#ui h1{font-size:19px;margin:0 0 2px;letter-spacing:1px}
+#ui .sub{font-size:12px;color:var(--gold);letter-spacing:1px;margin:0 0 10px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.acts span{font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--mute)}
+.acts span.on{color:#1a1206;background:var(--gold);border-color:var(--gold)}
+.guide{display:flex;gap:10px;align-items:flex-start;margin:0 0 10px}
+.guide .m{flex:none;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--gold2);display:flex;align-items:center;justify-content:center;color:#ffe9b8;font-weight:700;background:#14163a;font-size:14px}
+.guide p{margin:0;font-size:14px;line-height:1.65}
+.find{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
+.find .lt-btn.got{border-color:var(--gold);color:var(--gold);box-shadow:0 0 12px rgba(245,194,107,.3)}
+.knob{border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:8px 0;display:none;background:rgba(255,255,255,.025)}
+.knob.on{display:block}
+.knob .h{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px}
+.knob .h b{color:var(--gold)}
+.knob input{width:100%;accent-color:#f5c26b;margin:6px 0 2px;height:22px}
+.knob .r{font-size:12.5px;color:var(--mute);line-height:1.5}
+.knob .r em{font-style:normal;color:#ffe2a8}
+.done{display:none;border:1.5px solid var(--gold);border-radius:12px;padding:10px 12px;margin:8px 0;font-size:13.5px;line-height:1.65;background:radial-gradient(circle at 20% 0,rgba(245,194,107,.16),transparent 60%)}
+.done.on{display:block}
+.row{display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:8px}
+.note{font-size:11px;color:var(--mute);line-height:1.55;margin-top:8px}
+#street2d{display:none;gap:8px;margin:8px 0}
+.nogl #street2d{display:grid;grid-template-columns:1fr 1fr 1fr}
+#street2d div{border:1px solid var(--line);border-radius:10px;padding:6px;text-align:center;font-size:12px;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+#street2d i{display:block;font-style:normal;transition:transform .3s;transform-origin:center bottom;color:#ffe2a8}
+.hint{position:fixed;z-index:5;right:16px;bottom:14px;font-size:11.5px;color:var(--mute);pointer-events:none}
+.nogl .hint,.nogl #gl{display:none}
+@media (max-width:760px),(orientation:portrait) and (max-width:1100px){#ui{left:8px;right:8px;width:auto;max-width:620px;margin:0 auto;top:auto;bottom:8px;max-height:46vh;padding:12px}.hint{display:none}#ui h1{font-size:17px}}
+@media (max-height:480px) and (min-width:500px){#ui{left:auto;right:8px;top:56px;bottom:8px;width:min(330px,56vw);max-height:none}#ui .sub,.note{display:none}}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="心之透镜:琥珀玻璃人脑与黄昏街道(3D)"></canvas>
+<div class="vig"></div><canvas class="grain" id="grain" aria-hidden="true"></canvas>
+<section id="ui" class="lt-panel" aria-live="polite">
+  <h1>心之透镜</h1>
+  <p class="sub">觉弈 2.0 · 同一件事,为什么你和别人看到的不一样?</p>
+  <div class="acts" id="acts"><span class="on">① 看见透镜</span><span title="下一版开放">② 换一双眼睛</span><span title="下一版开放">③ 破茧</span></div>
+  <div class="guide"><div class="m">镜</div><p id="say">你正透过一颗玻璃大脑看这条街。街上有三样东西被它悄悄扭曲了——是哪三样?点街上的它们,或点下面的名字。</p></div>
+  <div class="find" id="find">
+    <button class="lt-btn" type="button" data-k="loss">◉ 价签</button>
+    <button class="lt-btn" type="button" data-k="time">⧗ 时钟与广告牌</button>
+    <button class="lt-btn" type="button" data-k="echo">◈ 新闻屏</button>
+  </div>
+  <div id="street2d" aria-hidden="true"><div>价签<i id="s2a">+100 · −100</i></div><div>时钟<i id="s2b">今天 100</i></div><div>新闻屏<i id="s2c">●●●○○○</i></div></div>
+  <div class="knob" id="k-loss"><div class="h"><span>旋钮一 · 损失放大</span><b id="v-loss"></b></div>
+    <input type="range" id="r-loss" min="1" max="3" step="0.05" value="2.25" aria-label="损失放大倍数">
+    <div class="r" id="t-loss"></div></div>
+  <div class="knob" id="k-time"><div class="h"><span>旋钮二 · 近大远小</span><b id="v-time"></b></div>
+    <input type="range" id="r-time" min="0" max="100" step="1" value="50" aria-label="对未来的折扣强度">
+    <div class="r" id="t-time"></div></div>
+  <div class="knob" id="k-echo"><div class="h"><span>旋钮三 · 只见同色</span><b id="v-echo"></b></div>
+    <input type="range" id="r-echo" min="0" max="100" step="1" value="70" aria-label="异色信息被过滤的比例">
+    <div class="r" id="t-echo"></div></div>
+  <div class="done" id="done"></div>
+  <div class="row"><a class="lt-btn" href="../">← 回到星盘</a><button class="lt-btn" id="bReset" type="button">↺ 重戴透镜</button></div>
+  <p class="note">只讲机制,不给你贴「有偏见」的标签——每个人的大脑都戴着透镜。数值是研究中的典型估计,不是你的。进度只存在这台设备。</p>
+</section>
+<div class="hint" id="hint">拖动可环视 · 点街上发光的牌子</div>
+<script type="module">
+import { chrome, offline } from '../lt.js';
+import { boot } from './lens.js';
+chrome({ home: '../' }); offline(); boot();
+</script>
+</body></html>
