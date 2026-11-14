@@ -98,13 +98,14 @@ function paint3() {
   const other = Math.round(3 * (1 - S.echo / 100));
   $('mine').innerHTML = `你挑的透镜:失去 ¥100 ≈ <em>¥${lossFelt(S)}</em> · 一年后 ¥150 ≈ <em>¥${Math.round(farFelt(S))}</em> · 新闻屏每天看见 <em>${other}</em> 条异色观点`;
 }
+let CLAR = 0;
 function wear() {
   const mine = { loss: +S.loss.toFixed(2), time: S.time, echo: S.echo };
   store.set('lens', Object.assign({}, store.get('lens', {}) || {}, { a3: true, mine, t3: Date.now() }));
   [0, 4, 7, 11, 14].forEach((s, i) => setTimeout(() => sound.bell(s, 0.08, 2.6), i * 180));
   const d = $('done3'); d.classList.add('on');
   d.innerHTML = '<b style="color:var(--gold)">破茧。</b>这副透镜是你自己挑的,不是标准答案,也随时可以再换。它已化作心之透镜的<b style="color:var(--gold)">第 11 颗星</b>,回到星盘就能看见。<br>' +
-    '<span style="color:var(--mute)">留给你一个问题:下周有哪一个决定,你想戴着这副透镜再看一次?</span><br><a class="lt-btn" style="margin-top:8px" href="../">✦ 回到星盘看第 11 颗星</a>';
+    '<span style="color:var(--mute)">留给你一个问题:下周有哪一个决定,你想戴着这副透镜再看一次?</span><br><a class="lt-btn" style="margin-top:8px" href="../">✦ 回到星盘看第 11 颗星</a> <a class="lt-btn" style="margin-top:8px" href="/life-source/rhythm/">星桥 → 生命源码 · 身体里的钟</a>';
   say('玻璃裂开了,里面的光没有散。刚才拧旋钮时,哪一枚你最犹豫?为什么?');
   if (G) G.bloom();
 }
@@ -165,7 +166,7 @@ export async function boot() {
   if (tier !== 'none') { try { G = await make3D(tier); } catch (e) { G = null; } }
   if (G) paint(); else document.documentElement.classList.add('nogl');
   lockTabs(); { const m = /[?&]act=([23])\b/.exec(location.search); if (m) setAct(+m[1]); }
-  window.__lens = { S, tier: G ? tier : 'none', three: G && G.rev, find, act: setAct, borrow, wear, shot: () => G && G.shot(), set(k, v) { const r = $('r-' + k); r.value = v; r.dispatchEvent(new Event('input')); } };
+  window.__lens = { get clar() { return CLAR; }, S, tier: G ? tier : 'none', three: G && G.rev, find, act: setAct, borrow, wear, shot: () => G && G.shot(), set(k, v) { const r = $('r-' + k); r.value = v; r.dispatchEvent(new Event('input')); } };
 }
 
 /* ======================= 3D ======================= */
@@ -259,10 +260,12 @@ async function make3D(tier) {
       p.setXYZ(i, V.x * r * sx, V.y * r * sy * (V.y < 0 ? 0.8 : 1), V.z * r * sz); }
     g.computeVertexNormals(); return g;
   }
-  const glass = new THREE.MeshPhysicalMaterial({ color: 0xffe6bf, metalness: 0, roughness: 0.07, ior: 1.45, envMapIntensity: 1.25,
+  /* v0.41 澄澈度:1.0 已看见的关卡越多,玻璃越清透(只读本机进度) */
+  const liveT = TASKS.filter(t => t.live), clar = liveT.length ? liveT.filter(t => (store.get(t.id, {}) || {}).done).length / liveT.length : 0; CLAR = clar;
+  const glass = new THREE.MeshPhysicalMaterial({ color: 0xffe6bf, metalness: 0, roughness: 0.16 - 0.1 * clar, ior: 1.45, envMapIntensity: 1.25,
     clearcoat: 1, clearcoatRoughness: 0.06, specularIntensity: 1, specularColor: 0xfff0d8 });
-  if (tier === 'low') Object.assign(glass, { transparent: true, opacity: 0.38, emissive: new THREE.Color(0x3a2208), depthWrite: false });
-  else { Object.assign(glass, { transmission: 1, thickness: 0.9, attenuationColor: new THREE.Color(0xffb347), attenuationDistance: 1.8, iridescence: 0.35, iridescenceIOR: 1.3 });
+  if (tier === 'low') Object.assign(glass, { transparent: true, opacity: 0.46 - 0.14 * clar, emissive: new THREE.Color(0x3a2208), depthWrite: false });
+  else { Object.assign(glass, { transmission: 1, thickness: 0.9, attenuationColor: new THREE.Color(0xffb347), attenuationDistance: 1.1 + 1.6 * clar, iridescence: 0.35, iridescenceIOR: 1.3 });
     if (tier === 'high' && 'dispersion' in glass) glass.dispersion = 0.35; }
   const brain = new THREE.Group(); brain.position.set(1.15, 1.08, 2.3); brain.scale.setScalar(0.72); scene.add(brain);
   const cere = new THREE.Mesh(brainGeo(0.42, 0.28, 0.5, 0.05), glass); cere.position.set(-0.62, -0.4, 0); brain.add(cere);
