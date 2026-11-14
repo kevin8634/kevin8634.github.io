@@ -327,12 +327,12 @@ document.addEventListener('DOMContentLoaded',()=>{ resize(); renderHUD(); reques
   if(window.PSGL&&PSGL.on) PSGL.boot(afterCine); else go(); });
 document.addEventListener('ps-skin',()=>{ if(window.PSGL&&PSGL.on) PSGL.skin(PS.skin()); renderHUD(); PS.music(PS.skin()); PS.sfx('boot'); burst=.6; });
 </script>
-<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+<script>/* v0.9.4 · three 版本:默认 r186(vendor/r186/ 本地);?three=169 回滚 r169,本会话内沿用;?three=186 恢复 */(function(){var v="186";try{var m=/[?&]three=(169|186)\b/.exec(location.search);if(m)sessionStorage.setItem("gn:ps:three",m[1]);else if(sessionStorage.getItem("gn:ps:three")==="169")v="169";if(m)v=m[1];}catch(e){if(/[?&]three=169\b/.test(location.search))v="169";}window.__THREE_V=v;var im=v==="169"?{"three":"./vendor/three.module.min.js","ps-addons/":"./vendor/addons/"}:{"three":"./vendor/r186/three.module.min.js","ps-addons/":"./vendor/r186/addons/"};var e=document.createElement("script");e.type="importmap";e.textContent=JSON.stringify({imports:im});document.currentScript.after(e);})();</script>
 <script type="module">
-/* v0.7 · 萤的贾维斯式全息神经核(Three.js r169 本地)。失败或低画质 → 保持 v0.6 Canvas 2D */
-import { createStage, pickTier, reducedMotion } from './ps-scene.js?v=10';
-import { buildCore } from './ps-lobby3d.js?v=10';
-import { buildPenthouse } from './ps-penthouse.js?v=11';
+/* v0.7 · 萤的贾维斯式全息神经核(Three.js r186 本地,?three=169 回滚)。失败或低画质 → 保持 v0.6 Canvas 2D */
+import { createStage, pickTier, reducedMotion } from './ps-scene.js?v=11';
+import { buildCore } from './ps-lobby3d.js?v=11';
+import { buildPenthouse } from './ps-penthouse.js?v=12';
 try{
   const tier = pickTier();
   if(tier==='low') throw 0;

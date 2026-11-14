@@ -2,11 +2,11 @@
    负责:渲染器、相机、辉光后期、性能三档、降级判定、隐藏页暂停、减少动态。
    Three.js r169 本地自带(vendor/,MIT)。 */
 import * as THREE from 'three';
-import { EffectComposer } from './vendor/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from './vendor/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from './vendor/addons/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from './vendor/addons/postprocessing/OutputPass.js';
-import { ShaderPass } from './vendor/addons/postprocessing/ShaderPass.js';
+import { EffectComposer } from 'ps-addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'ps-addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'ps-addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'ps-addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'ps-addons/postprocessing/ShaderPass.js';
 
 export const TIERS = {
   high: { particles: 96000, plexus: 1800, stars: 6000, bloom: 1.0,  pr: 2.0, city: 4200, traffic: 5200 },
