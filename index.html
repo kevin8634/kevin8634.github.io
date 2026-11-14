@@ -5120,9 +5120,49 @@
 </script>
 
     <!-- v2.0.0 · 创世计划 2.0 联合发布（王磊 2026-10-30 07:58 下令即刻上线） -->
+    <!-- 门户 3.0 · 首屏「从玩到造」静态外壳（11-15）：c2 概念图作底（也是 WebGL 不可用/减少动态时的后备）；Three.js 电影级主视觉待接入 #p3cv -->
+    <style>
+      #p3hero { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; padding: 0 20px calc(9vh + env(safe-area-inset-bottom)); background: #02060b url(portal3/hero-c2.webp) center 40% / cover no-repeat; color: #eef3f8; font-family: system-ui, sans-serif; text-align: center; transition: opacity .7s ease; }
+      @media (max-width: 800px) { #p3hero { background-image: url(portal3/hero-c2-768.webp); } }
+      #p3hero::before { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 38%, transparent 40%, rgba(1,3,8,.78) 100%), linear-gradient(to top, rgba(1,4,8,.85), transparent 46%); pointer-events: none; }
+      #p3hero.off { opacity: 0; pointer-events: none; }
+      #p3hero .in { position: relative; max-width: 720px; }
+      #p3hero small { display: block; letter-spacing: .32em; color: #e9c779; font-size: 12px; margin-bottom: 10px; }
+      #p3hero h1 { margin: 0; font-weight: 500; font-size: clamp(22px, 4.2vw, 46px); line-height: 1.2; text-shadow: 0 2px 24px rgba(0,0,0,.7); }
+      #p3hero p { margin: 8px 0 0; color: #b9d7d5; font-size: clamp(13px, 1.6vw, 17px); }
+      #p3hero .bt { margin-top: 20px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+      #p3hero button { padding: 10px 22px; border-radius: 999px; font: inherit; font-size: 14px; cursor: pointer; border: 1px solid #e9c779; color: #1a1305; background: linear-gradient(#f5dc9a, #d9ae55); }
+      #p3hero button.g { background: rgba(6,14,20,.55); color: #e9c779; }
+      #p3hero button:focus-visible { outline: 2px solid #9fd8ff; outline-offset: 2px; }
+      #p3hero .lg { position: absolute; top: 14px; right: 16px; padding: 5px 12px; font-size: 12px; background: rgba(6,14,20,.55); color: #e9c779; z-index: 1; }
+      #p3hero .tz { margin-top: 12px; font-size: 13px; color: #9fd8ff; min-height: 1em; }
+      @media (max-height: 360px) { #p3hero { padding-bottom: 12px; } #p3hero h1 { font-size: 20px; } #p3hero .bt { margin-top: 10px; } #p3hero button { padding: 7px 16px; } }
+    </style>
+    <section id="p3hero" aria-label="创世计划 3.0">
+      <button type="button" class="lg g" id="p3lg"></button>
+      <div class="in"><small>GENESIS 3.0</small><h1 id="p3h1"></h1><p id="p3sub"></p>
+        <div class="bt"><button type="button" id="p3play"></button><button type="button" class="g" id="p3pre"></button></div><div class="tz" id="p3tz" aria-live="polite"></div></div>
+    </section>
+    <script>
+    (function () {
+      "use strict";
+      var en = window.GN_LANG === "en", h = document.getElementById("p3hero"), $ = function (i) { return document.getElementById(i); };
+      $("p3h1").textContent = en ? "Master a world, then build one." : "玩懂一个世界，再亲手造一个。";
+      $("p3sub").textContent = en ? "Seven workshops, one light bridge — the eighth star is yours." : "七座工坊，一道光桥——第八颗星，由你来造。";
+      $("p3play").textContent = en ? "Keep playing" : "继续玩";
+      $("p3pre").textContent = en ? "3.0 Preview" : "3.0 预告";
+      $("p3lg").textContent = en ? "中文" : "EN";
+      $("p3lg").addEventListener("click", function () { if (window.gnSetLang) gnSetLang(en ? "zh" : "en"); });
+      function go() { h.classList.add("off"); h.setAttribute("aria-hidden", "true"); try { sessionStorage.setItem("gn:portal:p3hero", "1"); } catch (e) {} setTimeout(function () { h.style.display = "none"; }, 750); }
+      $("p3play").addEventListener("click", go);
+      $("p3pre").addEventListener("click", function () { $("p3tz").textContent = en ? "Genesis 3.0 \u201cFrom Play to Build\u201d — trailer in production. Stay tuned." : "创世计划 3.0「从玩到造」宣传片制作中，敬请期待。"; });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape" && h.style.display !== "none" && !document.querySelector("#p3mvDlg.on")) go(); });
+      try { if (sessionStorage.getItem("gn:portal:p3hero") === "1") { h.style.display = "none"; h.classList.add("off"); } } catch (e) {}
+    })();
+    </script>
     <!-- 门户 3.0 · 「一光日」MV 小窗（11-15）：teaser 静音循环，点开弹层播完整 MV；本地文件，零外部请求；减少动态只显示封面 -->
     <style>
-      .p3mv { position: fixed; z-index: 41; top: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 14px; border: 1px solid rgba(233,199,121,.5); background: rgba(6,9,20,.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: #dfe6f5; font: 12px/1.35 system-ui, sans-serif; cursor: pointer; text-align: left; }
+      .p3mv { position: fixed; z-index: 61; top: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 14px; border: 1px solid rgba(233,199,121,.5); background: rgba(6,9,20,.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: #dfe6f5; font: 12px/1.35 system-ui, sans-serif; cursor: pointer; text-align: left; }
       .p3mv:hover, .p3mv:focus-visible { border-color: #e9c779; outline: none; color: #fff; }
       .p3mv video, .p3mv img { width: 96px; height: 54px; object-fit: cover; border-radius: 9px; display: block; background: #000; }
       .p3mv b { color: #e9c779; font-weight: 600; display: block; } .p3mv i { font-style: normal; color: #9fd8ff; font-variant-numeric: tabular-nums; }
