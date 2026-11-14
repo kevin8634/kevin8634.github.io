@@ -1,4 +1,4 @@
-/* 奇点前夜 2.0 · 玻璃心智 Glass Mind(第一版:玻璃神经核 + 三枚滑块 + 三幕)
+/* 奇点前夜 2.0 · 玻璃心智 Glass Mind(v2:玻璃神经核 + 三枚滑块 + 三幕 + 玻璃共鸣声景 + 终章 ps.gate 从核中开门)
    自写代码;画质思路参考总指挥画质专长包(环境光烘焙、HDR 后期、ACES、暗角颗粒),未复制第三方代码。
    高/中/省档 = Three.js WebGL;低档或无 WebGL = Canvas 2D,功能不减;减少动态 = 静止、按需重绘。
    进度键 gn:ps:glass(新键,不改 1.0 任何任务 id 与进度键)。全部本地,无外部请求。 */
@@ -72,13 +72,13 @@ function labels() { $('vg').textContent = Math.round(S.g * 100) + '%'; $('vc').t
 function say(t) { $('say').textContent = t; }
 function stat(t) { $('stat').textContent = t || ''; }
 function marks() { document.querySelectorAll('.act').forEach(b => { const a = +b.dataset.a; b.classList.toggle('on', a === S.act); b.querySelector('i').textContent = prog.d.includes(a) ? '✓' : ''; }); }
-function pass(a, msg) { if (!prog.d.includes(a)) { prog.d.push(a); save(prog); tone(1318, 1.6, .1); tone(1975, 1.2, .05); } say(msg); marks(); }
+function pass(a, msg) { if (!prog.d.includes(a)) { prog.d.push(a); save(prog); tone(1318, 1.6, .1); tone(1975, 1.2, .05); } say(msg); marks(); gateReady(); SND.chime(2); }
 function setAct(a) {
   S.act = a; S.hint = 0; ACT[a].enter(); PATHS = buildPaths(); syncSliders(); say(ACT[a].say); stat('');
   const box = $('scn'); box.innerHTML = '';
   if (a === 3) SCN.forEach((s, i) => { const b = document.createElement('button'); b.className = 'btn hb' + (S.seen.has(i) ? ' sel' : ''); b.textContent = s.n; b.onclick = () => runScene(i, b); box.appendChild(b); });
   if (a === 2) { const b = document.createElement('button'); b.className = 'btn hb'; b.textContent = '清空探针'; b.onclick = () => { S.probes = []; stat(''); view.dirty(); }; box.appendChild(b); }
-  view.rebuild(); marks();
+  view.rebuild(); marks(); SND.update();
 }
 function runScene(i, b) {
   S.scene = i; const r = scnResult(i); say(r); tone(523 + i * 120, 1, .06);
@@ -93,9 +93,80 @@ function onSlide() {
   const g = sg.value / 100, c = sc.value / 100, t = st.value / 100; const pathsChanged = g !== S.g || c !== S.c;
   S.g = g; S.c = c; S.t = t; labels();
   if (pathsChanged) { clearTimeout(rebuildT); rebuildT = setTimeout(() => { PATHS = buildPaths(); if (S.act === 2) S.probes = []; view.rebuild(); if (S.act === 2) stat(''); }, 60); }
-  view.dirty();
+  view.dirty(); SND.update();
 }
 [sg, sc, st].forEach(el => { el.oninput = onSlide; el.onchange = () => tone(300 + S.c * 500 + S.t * 200, .6, .05); });
+
+/* ---------- 玻璃共鸣声景(Web Audio 自写合成,默认关,零外部请求)----------
+   每个「声部」= 一枚玻璃琴碗:4 个非谐泛音(1 : 2.32 : 4.25 : 6.63)+ 缓慢颤音。
+   光路越多 → 声部越多(1–6);能力越高 → 音高越高、风铃越密;透明度越低 → 低通越闷;目标偏移 → 泛音微失谐出拍音。
+   跟随右上静音;页面隐藏时淡出;减少动态不影响声音。 */
+const SND = (() => {
+  const RAT = [1, 2.32, 4.25, 6.63], AMP = [1, .32, .14, .06], SCALE = [0, 3, 5, 7, 10, 12];
+  let A = null, out = null, lp = null, voices = [], on = false, timer = 0, nextChime = 0;
+  const muted = () => { try { return !!(window.PS && PS.muted()); } catch (e) { return false; } };
+  const P = () => ({ n: Math.max(1, Math.min(6, Math.round(PATHS.length / 5))), base: 196 * Math.pow(2, S.c * 1.0), cut: 380 + Math.pow(S.t, 1.7) * 7200, q: .4 + (1 - S.t) * 2.2 });
+  const freq = (base, i, j) => base * Math.pow(2, SCALE[i] / 12) * RAT[j] * (1 + (j ? S.g * .006 * (i % 2 ? 1 : -1) * j : 0));
+  function voice(i, p, t) {
+    const g = A.createGain(); g.gain.value = 0; g.gain.setTargetAtTime(.055 / Math.sqrt(p.n), t, .9); g.connect(lp);
+    const osc = RAT.map((r, j) => { const o = A.createOscillator(), a = A.createGain(); o.type = 'sine'; o.frequency.value = freq(p.base, i, j); a.gain.value = AMP[j]; o.connect(a); a.connect(g); o.start(t); return o; });
+    const l = A.createOscillator(), lg = A.createGain(); l.frequency.value = .11 + i * .067; lg.gain.value = .022 / Math.sqrt(p.n); l.connect(lg); lg.connect(g.gain); l.start(t);
+    return { g, osc, l, i };
+  }
+  function kill(v, t) { v.g.gain.cancelScheduledValues(t); v.g.gain.setTargetAtTime(0, t, .4); [...v.osc, v.l].forEach(o => { try { o.stop(t + 2.5); } catch (e) {} }); setTimeout(() => { try { v.g.disconnect(); } catch (e) {} }, 2800); }
+  function update() {
+    if (!on || !A) return; const p = P(), t = A.currentTime;
+    lp.frequency.setTargetAtTime(p.cut, t, .25); lp.Q.setTargetAtTime(p.q, t, .25);
+    while (voices.length > p.n) kill(voices.pop(), t);
+    while (voices.length < p.n) voices.push(voice(voices.length, p, t));
+    voices.forEach(v => { v.osc.forEach((o, j) => o.frequency.setTargetAtTime(freq(p.base, v.i, j), t, .3)); v.g.gain.setTargetAtTime(.055 / Math.sqrt(p.n), t, .5); });
+  }
+  function chime(k = 1) { // 一声玻璃风铃;k 越大越亮
+    if (!on || !A || muted() || document.hidden) return; const p = P(), t = A.currentTime;
+    const f = p.base * 2 * Math.pow(2, SCALE[(Math.random() * SCALE.length) | 0] / 12) * (k > 1 ? 2 : 1);
+    const g = A.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05 * k, t + .006); g.gain.exponentialRampToValueAtTime(.0005, t + 3.2); g.connect(lp);
+    RAT.forEach((r, j) => { const o = A.createOscillator(), a = A.createGain(); o.frequency.value = f * r; a.gain.value = AMP[j] / (j + 1); a.gain.setTargetAtTime(0, t, .5 + (3 - j) * .4); o.connect(a); a.connect(g); o.start(t); o.stop(t + 3.4); });
+    setTimeout(() => { try { g.disconnect(); } catch (e) {} }, 3600);
+  }
+  function tick() { // 跟随静音 / 页面隐藏;风铃间隔随能力变密
+    if (!on || !A) return; const silent = muted() || document.hidden;
+    out.gain.setTargetAtTime(silent ? 0 : .7, A.currentTime, .3);
+    const now = performance.now(); if (!silent && now > nextChime) { chime(1); nextChime = now + (5200 - S.c * 3600) * (.7 + Math.random() * .6); }
+  }
+  function start() {
+    try { A = (window.PS && PS.ac) ? PS.ac() : (A || new (window.AudioContext || window.webkitAudioContext)()); } catch (e) { console.warn('[glass] 无法启动音频', e); return false; }
+    if (A.state === 'suspended') A.resume();
+    out = A.createGain(); out.gain.value = 0; out.connect(A.destination);
+    lp = A.createBiquadFilter(); lp.type = 'lowpass'; lp.connect(out);
+    on = true; voices = []; update(); out.gain.setTargetAtTime(muted() ? 0 : .7, A.currentTime, .6); nextChime = performance.now() + 1500; timer = setInterval(tick, 400); return true;
+  }
+  function stop() { if (!A) return; const t = A.currentTime; on = false; clearInterval(timer); voices.forEach(v => kill(v, t)); voices = []; const o = out; o.gain.setTargetAtTime(0, t, .3); setTimeout(() => { try { o.disconnect(); lp.disconnect(); } catch (e) {} }, 3000); }
+  return { toggle() { if (on) stop(); else start(); return on; }, update, chime, get on() { return on; } };
+})();
+$('snd').onclick = (e) => { const b = e.currentTarget, v = SND.toggle(); b.setAttribute('aria-pressed', v); b.textContent = v ? '🎐 共鸣 · 开' : '🎐 共鸣 · 关';
+  if (v && window.PS && PS.muted()) stat('音效现在是静音的(右上 🔇),共鸣会等你打开声音。'); };
+document.addEventListener('visibilitychange', () => SND.on && SND.update());
+
+/* ---------- 终章 ps.gate:三幕都走完,核的中心打开一扇门 ---------- */
+const gateBtn = $('gatebtn'), fin = $('gfin');
+let gate = { v: 0, want: 0, t0: 0 };
+function gateReady() { const ok = [1, 2, 3].every(a => prog.d.includes(a)); gateBtn.hidden = !ok; gateBtn.querySelector('i').textContent = prog.gate ? '✓' : '';
+  if (ok && !prog.gate && S.act === 3) setTimeout(() => say($('say').textContent + ' 核的中心,好像有一扇门。你准备好带着问题走出去了吗?'), 50); }
+function openGate(save_ = true) {
+  if (save_ && !prog.gate) { prog.gate = 1; save(prog); }
+  gate.want = 1; gate.t0 = performance.now(); if (RM) gate.v = 1;
+  document.body.classList.add('gopen'); gateBtn.classList.add('on'); gateBtn.querySelector('i').textContent = '✓';
+  say('门开了。'); tone(392, 2.4, .07); tone(587, 2.2, .05); tone(784, 2, .04, 'sine'); SND.chime(3);
+  setTimeout(() => { fin.hidden = false; const a = fin.querySelector('a'); a && a.focus({ preventScroll: true }); }, RM ? 0 : 2300);
+  view.dirty();
+}
+function closeGate() { fin.hidden = true; gate.want = 0; gate.t0 = performance.now(); if (RM) gate.v = 0; document.body.classList.remove('gopen'); gateBtn.classList.remove('on'); setAct(S.act); view.dirty(); }
+gateBtn.onclick = () => openGate(true);
+$('gstay').onclick = closeGate;
+function gateStep(now) { // 0→1 缓入缓出 2.4 s;减少动态直接到位
+  if (RM) return gate.v; const k = Math.min(1, (now - gate.t0) / 2400), e = k * k * (3 - 2 * k);
+  const from = gate.want ? 0 : 1; if (gate.t0) gate.v = from + (gate.want - from) * e; return gate.v; }
+const gateMoving = () => !RM && gate.t0 && performance.now() - gate.t0 < 2500;
 
 /* ---------- 交互:点击 / 拖动旋转 ---------- */
 const cv = $('gl');
@@ -103,7 +174,7 @@ let yaw = .5, pitch = .12, drag = null;
 cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, y0: yaw, p0: pitch, moved: false }; cv.setPointerCapture(e.pointerId); });
 cv.addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 6) drag.moved = true;
   yaw = drag.y0 + dx * .006; pitch = Math.max(-.6, Math.min(.7, drag.p0 + dy * .004)); view.dirty(); });
-cv.addEventListener('pointerup', e => { const d = drag; drag = null; if (d && !d.moved) click(e.clientX, e.clientY); });
+cv.addEventListener('pointerup', e => { const d = drag; drag = null; if (d && !d.moved && !gate.want) click(e.clientX, e.clientY); });
 function click(x, y) {
   if (S.act === 1) {
     const k = view.pickNode(x, y); if (k < 0) return;
@@ -137,6 +208,8 @@ async function start() {
   const u = new URLSearchParams(location.search); ['g', 'c', 't'].forEach(k => { if (u.has(k)) S[k] = Math.max(0, Math.min(1, +u.get(k) / 100 || 0)); }); // 预设(演示/截图用)
   if (u.has('act')) setAct(Math.max(1, Math.min(3, +u.get('act') || 1)));
   if (['g', 'c', 't'].some(k => u.has(k))) { PATHS = buildPaths(); syncSliders(); view.rebuild(); }
+  gateReady();
+  if (u.has('gate') && (prog.gate || u.get('gate') === 'demo')) openGate(false); // ?gate=1 回到已开的门;?gate=demo 演示/截图
   view.loop();
 }
 
@@ -170,9 +243,16 @@ function make2D() {
     const g = ctx.createRadialGradient(X - r * .35, Y - r * .4, r * .05, X, Y, r); g.addColorStop(0, 'rgba(255,255,255,.22)'); g.addColorStop(.6, 'rgba(255,255,255,0)'); g.addColorStop(.97, 'rgba(160,230,255,.25)'); g.addColorStop(1, 'rgba(160,230,255,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(X, Y, r, 0, 7); ctx.fill();
     ctx.strokeStyle = 'rgba(180,240,255,.5)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(X, Y, r, 0, 7); ctx.stroke();
+    const gv = gateStep(now); if (gv > .001) { // 门:核从中间裂开,一道暖光
+      const w = r * .62 * gv, hh = r * 1.05;
+      const gl = ctx.createLinearGradient(X - w, 0, X + w, 0); gl.addColorStop(0, 'rgba(255,220,160,0)'); gl.addColorStop(.5, `rgba(255,246,225,${.95 * gv})`); gl.addColorStop(1, 'rgba(255,220,160,0)');
+      ctx.fillStyle = `rgba(3,7,13,${.85 * gv})`; ctx.fillRect(X - w * .55, Y - hh, w * 1.1, hh * 2);
+      ctx.fillStyle = gl; ctx.fillRect(X - w, Y - hh * 1.1, w * 2, hh * 2.2);
+      const halo = ctx.createRadialGradient(X, Y, 0, X, Y, r * 1.8); halo.addColorStop(0, `rgba(255,214,150,${.35 * gv})`); halo.addColorStop(1, 'rgba(255,214,150,0)'); ctx.fillStyle = halo; ctx.fillRect(0, 0, W, H);
+    }
   }
   let raf = 0;
-  const loop = () => { const f = (now) => { raf = requestAnimationFrame(f); if (document.hidden) return; if (RM && !need) return; if (!RM) yaw += .0012; need = false; draw(now); }; raf = requestAnimationFrame(f); };
+  const loop = () => { const f = (now) => { raf = requestAnimationFrame(f); if (document.hidden) return; if (RM && !need) return; if (!RM && !gate.want) yaw += .0012; need = false; draw(now); }; raf = requestAnimationFrame(f); };
   return {
     loop, dirty: () => { need = true; }, rebuild: () => { need = true; },
     pickNode(x, y) { let best = -1, bd = 22 * 22; NODES.forEach((v, k) => { const q = proj(v), d = (q[0] - x) ** 2 + (q[1] - y) ** 2; if (d < bd) { bd = d; best = k; } }); return best; },
@@ -270,6 +350,17 @@ async function make3D(tn) {
     fragmentShader: 'uniform float k; varying vec3 n; varying vec3 v; void main(){ float f = pow(1.-abs(dot(n,v)), 4.); gl_FragColor = vec4(vec3(.55,.85,1.)*f*1.6*k, 1.); }' }));
   scene.add(rim);
 
+  /* 终章之门:开门时整球换成两枚半球向两侧分开,中间一道暖白光门;镜头缓缓推近 */
+  const doorG = new THREE.Group(); doorG.visible = false; scene.add(doorG);
+  const halves = [0, Math.PI].map(ph => { const m = new THREE.Mesh(new THREE.SphereGeometry(1.2, 96, 72, ph, Math.PI), glassMat); doorG.add(m); return m; });
+  const door = new THREE.Mesh(new THREE.PlaneGeometry(1, 2.5), new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+    uniforms: { k: { value: 0 } }, vertexShader: 'varying vec2 u; void main(){ u = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }',
+    fragmentShader: 'uniform float k; varying vec2 u; void main(){ float x = abs(u.x-.5)*2., y = abs(u.y-.5)*2.; float a = pow(1.-x, 2.2) * (1.-smoothstep(.55, 1., y)); vec3 c = mix(vec3(1.6,1.05,.55), vec3(3.2,3.,2.6), pow(1.-x, 6.)); gl_FragColor = vec4(c*a*k, 1.); }' }));
+  door.rotation.y = Math.PI / 2; door.renderOrder = 4; doorG.add(door);
+  function gateFrame(now) { const v = gateStep(now); const vis = v > .001; doorG.visible = vis; glass.visible = !vis; rim.visible = !vis;
+    if (vis) { doorG.rotation.y = yaw + Math.PI / 2; halves[0].position.z = v * .55; halves[1].position.z = -v * .55; door.scale.set(.05 + 1.15 * v, 1, 1); door.material.uniforms.k.value = Math.min(1, v * 1.6); }
+    return v; }
+
   /* 后期:HDR → 辉光 → ACES 输出 → 暗角 + 颗粒 + 轻微色差 */
   let composer = null, grade = null;
   if (post) {
@@ -291,15 +382,17 @@ async function make3D(tn) {
   function resize() { W = innerWidth; H = innerHeight; renderer.setSize(W, H, false); cam.aspect = W / H;
     const narrow = W / H < .9; cam.fov = narrow ? 52 : 36; cam.updateProjectionMatrix(); composer && composer.setSize(W, H); need = true; }
   addEventListener('resize', resize); resize();
-  function placeCam() { const d = W / H < .9 ? 6.4 : 6.6, y0 = W < 900 ? -.15 : -.05; cam.position.set(Math.sin(yaw) * Math.cos(pitch) * d, Math.sin(pitch) * d + .25, Math.cos(yaw) * Math.cos(pitch) * d); cam.lookAt(0, y0, 0); }
+  let gv = 0;
+  function placeCam() { const d = (W / H < .9 ? 6.4 : 6.6) - gv * 1.6, y0 = W < 900 ? -.15 : -.05; cam.position.set(Math.sin(yaw) * Math.cos(pitch) * d, Math.sin(pitch) * d + .25, Math.cos(yaw) * Math.cos(pitch) * d); cam.lookAt(0, y0, 0); }
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   function toNdc(x, y) { ndc.set(x / W * 2 - 1, -(y / H) * 2 + 1); ray.setFromCamera(ndc, cam); }
   let last = performance.now(), slow = 0;
   function frame(now) {
     if (document.hidden) { last = now; return; }
     const dt = Math.min(.1, (now - last) / 1000); last = now;
-    if (RM && !need) return;
-    if (!RM) { if (!drag) yaw += dt * .05; placePulses(now / 1000); inner.rotation.y += dt * (.02 + S.c * .05); }
+    if (RM && !need && !gateMoving()) return;
+    gv = gateFrame(now);
+    if (!RM) { if (!drag && !gate.want) yaw += dt * .05; placePulses(now / 1000); inner.rotation.y += dt * (.02 + S.c * .05); }
     glassMat.roughness = .03 + Math.pow(1 - S.t, 1.4) * .55; glassMat.iridescence = .12 + .3 * S.t; rim.material.uniforms.k.value = .45 + .45 * S.t; const vis = sharpVis(); sharp.material.opacity = vis; tubes.children.forEach(m => m.material.opacity = m.userData.o * vis); if (pulse) pulse.material.opacity = .35 + .65 * vis;
     placeCam(); if (grade) { grade.uniforms.uT.value = RM ? 0 : now % 1000; }
     composer ? composer.render(dt) : renderer.render(scene, cam); need = false;

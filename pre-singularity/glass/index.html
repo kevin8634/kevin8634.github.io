@@ -1,5 +1,5 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>玻璃心智 · 奇点前夜</title><link rel="stylesheet" href="../ps.css?v=10"><link rel="stylesheet" href="glass.css?v=1"></head>
+<title>玻璃心智 · 奇点前夜</title><link rel="stylesheet" href="../ps.css?v=10"><link rel="stylesheet" href="glass.css?v=2"></head>
 <body class="glass" data-nostars="1">
 <canvas id="gl" aria-label="玻璃神经核 3D 舞台"></canvas>
 <div class="gtop"><header class="top"></header></div>
@@ -11,13 +11,14 @@
   <button class="act" data-a="1"><b>①</b> 看得见<i></i></button>
   <button class="act" data-a="2"><b>②</b> 看不见<i></i></button>
   <button class="act" data-a="3"><b>③</b> 说好的<i></i></button>
+  <button class="act gatebtn" id="gatebtn" hidden><b>✦</b> <span class="gl">从核中</span>开门<i></i></button>
   <a class="btn hb back" href="../">← 回大厅</a>
 </aside>
 
 <div class="ybox" id="ybox" role="status" aria-live="polite">
   <div class="who mono"><b class="live"></b>萤 YING · 只提问</div>
   <div id="say"></div>
-  <div class="row"><button class="btn hb" id="hint">再给我一点提示</button><span class="mono muted" id="stat"></span></div>
+  <div class="row"><button class="btn hb" id="hint">再给我一点提示</button><button class="btn hb" id="snd" aria-pressed="false" title="玻璃共鸣声景:光路越多越丰满,雾越浓越闷(默认关,跟随右上静音)">🎐 共鸣 · 关</button><span class="mono muted" id="stat"></span></div>
   <div class="scn" id="scn"></div>
 </div>
 
@@ -26,9 +27,16 @@
   <label><span>能力 <em class="mono" id="vc"></em></span><input type="range" id="sc" min="0" max="100" value="35" aria-label="能力"><small>普通 ↔ 远超人类</small></label>
   <label><span>透明度 <em class="mono" id="vt"></em></span><input type="range" id="st" min="0" max="100" value="20" aria-label="透明度:你能看见它内部多少"><small>起雾 ↔ 通透</small></label>
 </div>
+<div class="gfin" id="gfin" role="dialog" aria-modal="false" aria-labelledby="gfint" hidden>
+  <div class="mono k">ps.gate · 终章</div>
+  <h2 id="gfint">门开了</h2>
+  <p>核的中心没有藏着答案,只有一扇门。门外是 1.0 的九个问题,还有你以后会遇到、现在还没问出口的那些。</p>
+  <p class="yq"><b class="live"></b>萤:走出这扇门以后,你第一个想问 AI 的问题,会是什么?</p>
+  <div class="row"><a class="btn" href="../../">穿过门 → 创世门户</a><a class="btn hb" href="../">回大厅 · 知识星图</a><button class="btn hb" id="gstay">留在核里</button></div>
+</div>
 <noscript><p style="padding:80px 20px">需要开启 JavaScript。</p></noscript>
 
 <script src="../ps.js?v=10"></script>
 <script>/* three 版本:默认 r186;?three=169 回滚 r169(与大厅同一会话键 gn:ps:three) */(function(){var v="186";try{var m=/[?&]three=(169|186)\b/.exec(location.search);if(m){sessionStorage.setItem("gn:ps:three",m[1]);v=m[1];}else if(sessionStorage.getItem("gn:ps:three")==="169")v="169";}catch(e){if(/[?&]three=169\b/.test(location.search))v="169";}window.__THREE_V=v;var im=v==="169"?{"three":"../vendor/three.module.min.js","ps-addons/":"../vendor/addons/"}:{"three":"../vendor/r186/three.module.min.js","ps-addons/":"../vendor/r186/addons/"};var e=document.createElement("script");e.type="importmap";e.textContent=JSON.stringify({imports:im});document.currentScript.after(e);})();</script>
-<script type="module" src="glass.js?v=1"></script>
+<script type="module" src="glass.js?v=2"></script>
 </body></html>
