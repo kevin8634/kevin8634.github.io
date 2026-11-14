@@ -8,6 +8,7 @@
 | 素材 | 用在哪(任务/页面) | 来源与链接 | 许可 | 署名要求 | 是否 AI 生成 | 页面标注位置 |
 |---|---|---|---|---|---|---|
 | three.js r169(`vendor/three.module.min.js`) | 首页星盘 WebGL、开场动画、心莲、十关 3D 背景舞台(v0.30 起) | github.com/mrdoob/three.js(r169),本地自带,不走 CDN | MIT | 保留版权声明与许可全文 | 否 | 许可全文随站:`vendor/three.LICENSE.txt`;本台账 |
+| three.js r186(`vendor/r186/three.module.min.js`,v0.36 起默认;r169 保留供 `?three=169` 回滚) | 同上 | github.com/mrdoob/three.js(r186,与 /deep/、/pre-singularity/ 同一文件),本地自带,不走 CDN | MIT | 保留版权声明与许可全文 | 否 | 许可全文随站:`vendor/r186/LICENSE-three.txt`;本台账 |
 | 十关 3D 背景舞台与粒子(`lt-stage.js`:复利曲线与金币、信任连线、影院与出口光、茧房回声壳、幸存者坠落、两座小镇、沙漏/月亮/窗/城市灯、情绪浪面、回声波圈、金莲八瓣、进关粒子隧道) | 九关 + 意义终章背景 | 本项目原创,全部由代码程序生成(Three.js 基础几何体 + 自写 GLSL 粒子着色器),无模型/贴图文件 | 自制 | 无 | 否 | 无需标注 |
 | 开场动画、心莲、认知星盘(`lt-intro.js`、`lt-lotus.js`、`lt-disc-gl.js` 及首页 Canvas 2D 回落) | 首页 | 本项目原创,代码程序生成 | 自制 | 无 | 否 | 无需标注 |
 | 界面图形:内联 SVG(八域星环 HUD 等)、Canvas 图表、玩家手册与「我的规则」分享图(本机 Canvas 生成 PNG,不上传) | 首页、各关卡、意义终章 | 本项目原创 | 自制 | 无 | 否 | 无需标注 |

@@ -113,7 +113,7 @@ void main(){
   gl_FragColor=col;
 }`;
 export async function makeDiscGL() {
-  let THREE; try { THREE = await import('./vendor/three.module.min.js'); } catch (_) { return null; }
+  let THREE; try { THREE = await (await import('./lt-three.js')).loadThree(); } catch (_) { return null; }
   let renderer; try { renderer = new THREE.WebGLRenderer({ alpha: true, premultipliedAlpha: true, preserveDrawingBuffer: true, antialias: false, powerPreference: 'high-performance' }); } catch (_) { return null; }
   if (!renderer.getContext()) return null;
   renderer.setClearColor(0x000000, 0);

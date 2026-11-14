@@ -54,7 +54,7 @@ function readStep() { const tabs = [...document.querySelectorAll('#steps span')]
 async function start(id, manual = false) {
   const tier = getTier();
   if (tier === 'low') return cssFallback(id);
-  let THREE; try { THREE = await import('./vendor/three.module.min.js'); } catch (_) { return cssFallback(id); }
+  let THREE; try { THREE = await (await import('./lt-three.js')).loadThree(); } catch (_) { return cssFallback(id); }
   const cv = document.createElement('canvas'); cv.className = 'lt-stage'; cv.setAttribute('aria-hidden', 'true');
   let R;
   try { R = new THREE.WebGLRenderer({ canvas: cv, antialias: tier === 'high', alpha: false, powerPreference: 'high-performance' }); }

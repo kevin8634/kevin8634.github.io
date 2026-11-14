@@ -32,7 +32,7 @@ export async function playIntro(force = false) {
   const done = () => { el.classList.add('out'); setTimeout(() => el.remove(), 700); };
   let seen = false; try { seen = !force && localStorage.getItem(KEY) === '1'; } catch (_) {}
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return done();
-  let THREE; try { THREE = await import('./vendor/three.module.min.js'); } catch (_) { return done(); }
+  let THREE; try { THREE = await (await import('./lt-three.js')).loadThree(); } catch (_) { return done(); }
   const cv = document.createElement('canvas'); el.prepend(cv);
   let R; try { R = new THREE.WebGLRenderer({ canvas: cv, antialias: true }); } catch (_) { return done(); }
   const cap = document.createElement('div'); cap.className = 'cap'; cap.innerHTML = '认识你自己<small>苏格拉底 · 觉弈 Ludoterra</small>'; el.appendChild(cap);

@@ -1,4 +1,4 @@
-/* 觉弈 Ludoterra · 心莲星盘(v0.26,Three.js r169 本地 vendor/)
+/* 觉弈 Ludoterra · 心莲星盘(v0.26,Three.js 本地 vendor/,默认 r186)
  * A1 粒子金莲:每片花瓣里有一股金色粒子从根部流向瓣尖,通关越多流得越亮。
  * A3 神经星流:玻璃盘上一张神经网,光脉冲从中心大脑流向各域、再在相邻域之间传递;两端都点亮的通路才亮起。
  * 八瓣金莲 = 八个认知域,中心金色大脑 = 意义。
@@ -64,7 +64,7 @@ void main(){float l=max(dot(vN,normalize(vec3(-.4,.7,.6))),0.);float fr=pow(1.-m
 float band=.5+.5*sin(vN.y*14.+uT*.6);vec3 c=mix(uA,uB,l*.8+band*.12)+uB*fr*1.2;gl_FragColor=vec4(c*uOp,uOp);}`;
 
 export async function makeLotus(opt = {}) {
-  let THREE; try { THREE = await import('./vendor/three.module.min.js'); } catch (_) { return null; }
+  let THREE; try { THREE = await (await import('./lt-three.js')).loadThree(); } catch (_) { return null; }
   let renderer; try { renderer = new THREE.WebGLRenderer({ alpha: true, premultipliedAlpha: true, preserveDrawingBuffer: true, antialias: true, powerPreference: 'high-performance' }); } catch (_) { return null; }
   if (!renderer.getContext()) return null;
   renderer.setClearColor(0x000000, 0);
