@@ -5120,6 +5120,50 @@
 </script>
 
     <!-- v2.0.0 · 创世计划 2.0 联合发布（王磊 2026-10-30 07:58 下令即刻上线） -->
+    <!-- 门户 3.0 · 「一光日」MV 小窗（11-15）：teaser 静音循环，点开弹层播完整 MV；本地文件，零外部请求；减少动态只显示封面 -->
+    <style>
+      .p3mv { position: fixed; z-index: 41; top: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border-radius: 14px; border: 1px solid rgba(233,199,121,.5); background: rgba(6,9,20,.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); color: #dfe6f5; font: 12px/1.35 system-ui, sans-serif; cursor: pointer; text-align: left; }
+      .p3mv:hover, .p3mv:focus-visible { border-color: #e9c779; outline: none; color: #fff; }
+      .p3mv video, .p3mv img { width: 96px; height: 54px; object-fit: cover; border-radius: 9px; display: block; background: #000; }
+      .p3mv b { color: #e9c779; font-weight: 600; display: block; } .p3mv i { font-style: normal; color: #9fd8ff; font-variant-numeric: tabular-nums; }
+      @media (max-width: 700px) { .p3mv { top: auto; bottom: 64px; left: 10px; transform: none; padding: 4px 10px 4px 4px; font-size: 11px; } .p3mv video, .p3mv img { width: 64px; height: 36px; } }
+      @media (max-height: 360px) { .p3mv { top: auto; bottom: 8px; left: 8px; transform: none; } .p3mv video, .p3mv img { width: 56px; height: 32px; } }
+      #p3mvDlg { position: fixed; inset: 0; z-index: 95; display: none; place-items: center; background: rgba(2,4,12,.86); backdrop-filter: blur(6px); }
+      #p3mvDlg.on { display: grid; }
+      #p3mvDlg .bx { width: min(960px, 94vw); color: #dfe6f5; font: 13px/1.5 system-ui, sans-serif; text-align: center; }
+      #p3mvDlg video { width: 100%; max-height: 72vh; border-radius: 12px; background: #000; display: block; }
+      #p3mvDlg .rw { margin-top: 10px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; align-items: center; }
+      #p3mvDlg a, #p3mvDlg button { padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(233,199,121,.55); background: rgba(233,199,121,.1); color: #e9c779; text-decoration: none; font: inherit; cursor: pointer; }
+    </style>
+    <button type="button" class="p3mv" id="p3mv" aria-haspopup="dialog"></button>
+    <div id="p3mvDlg" role="dialog" aria-modal="true" aria-label="一光日 MV"><div class="bx"><video id="p3mvFull" controls playsinline preload="none" poster="portal3/yiguangri-poster.jpg"></video><div class="rw"><span id="p3mvCd2"></span><a id="p3mvGo" href="starhelm/?task=voyager"></a><button type="button" id="p3mvX"></button></div></div></div>
+    <script>
+    (function () {
+      "use strict";
+      var en = window.GN_LANG === "en", T0 = Date.UTC(2026, 10, 18, 10, 16, 7);   // 2026-11-18 18:16:07 北京时间 (UTC+8)
+      var rm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var b = document.getElementById("p3mv"), dlg = document.getElementById("p3mvDlg"), full = document.getElementById("p3mvFull");
+      var media = rm ? '<img src="portal3/yiguangri-poster.jpg" alt="">' : '<video src="portal3/yiguangri-teaser.mp4" poster="portal3/yiguangri-poster.jpg" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>';
+      b.innerHTML = media + '<span><b>' + (en ? "▶ Voyager 1 · One Light-Day" : "▶ 旅行者 1 号 · 一光日 MV") + '</b><i id="p3mvCd"></i></span>';
+      document.getElementById("p3mvGo").textContent = en ? "About the light-day →" : "了解一光日 →";
+      document.getElementById("p3mvX").textContent = en ? "Close" : "关闭";
+      if (en) document.getElementById("p3mvGo").href = "starhelm/?task=voyager&lang=en";
+      function cd() {
+        var ms = T0 - Date.now(), s;
+        if (ms <= 0) s = en ? "One light-day reached" : "已抵达一光日";
+        else { var d = Math.floor(ms / 864e5), h = Math.floor(ms / 36e5) % 24, m = Math.floor(ms / 6e4) % 60, x = Math.floor(ms / 1e3) % 60, p = function (n) { return (n < 10 ? "0" : "") + n; };
+          s = (en ? "Arrives in " + d + "d " : "距一光日 " + d + " 天 ") + p(h) + ":" + p(m) + ":" + p(x); }
+        document.getElementById("p3mvCd").textContent = s; document.getElementById("p3mvCd2").textContent = s;
+        if (ms > 0) setTimeout(cd, 1000);
+      }
+      cd();
+      function close() { dlg.classList.remove("on"); try { full.pause(); } catch (e) {} b.focus(); }
+      b.addEventListener("click", function () { if (!full.getAttribute("src")) full.src = "portal3/yiguangri-720.mp4"; dlg.classList.add("on"); try { var p = full.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} document.getElementById("p3mvX").focus(); });
+      document.getElementById("p3mvX").addEventListener("click", close);
+      dlg.addEventListener("click", function (e) { if (e.target === dlg) close(); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape" && dlg.classList.contains("on")) { e.stopPropagation(); close(); } }, true);
+    })();
+    </script>
     <button type="button" class="l2rib" id="l2rib" hidden aria-haspopup="dialog"><b>✦ 创世计划 2.0 已开放</b> · 深空之下 × 天枢 2.0</button>
     <div id="l2" role="dialog" aria-modal="true" aria-labelledby="l2t" hidden>
       <i class="l2__beam" aria-hidden="true"></i><i class="l2__ring" aria-hidden="true"></i><i class="l2__ring" aria-hidden="true"></i><i class="l2__ring" aria-hidden="true"></i>
