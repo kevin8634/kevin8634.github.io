@@ -13,8 +13,22 @@ html,body{height:100%;overflow:hidden}
 #ui h1{font-size:19px;margin:0 0 2px;letter-spacing:1px}
 #ui .sub{font-size:12px;color:var(--gold);letter-spacing:1px;margin:0 0 10px}
 .acts{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
-.acts span{font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--mute)}
-.acts span.on{color:#1a1206;background:var(--gold);border-color:var(--gold)}
+.acts button{font:inherit;font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--ink,#e8e6f0);background:transparent;cursor:pointer}
+.acts button:disabled{color:var(--mute);cursor:default;opacity:.7}
+.acts button.on{color:#1a1206;background:var(--gold);border-color:var(--gold)}
+#act2{display:none}
+[data-act="2"] #act2{display:block}
+[data-act="2"] #find,[data-act="2"] #done{display:none}
+.lenses{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
+.lenses .lt-btn.got{border-color:#7fd7e0;color:#bff3f7;box-shadow:0 0 12px rgba(127,215,224,.3)}
+#cmp{width:100%;border-collapse:collapse;font-size:12.5px;margin:4px 0 6px}
+#cmp th{text-align:left;font-weight:400;color:var(--mute);padding:3px 4px}
+#cmp td{text-align:center;padding:3px 4px;color:#ffe2a8;border-top:1px solid var(--line)}
+#cmp tr:first-child td{border-top:0;color:var(--mute);font-size:11.5px}
+#cmp td:last-child{color:#bff3f7}
+.lab{position:fixed;z-index:4;font-size:12px;padding:3px 10px;border-radius:999px;background:rgba(7,8,20,.72);border:1px solid var(--line);color:#ffe2a8;pointer-events:none}
+#labB{color:#bff3f7;border-color:rgba(127,215,224,.5)}
+.nogl .lab{display:none}
 .guide{display:flex;gap:10px;align-items:flex-start;margin:0 0 10px}
 .guide .m{flex:none;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--gold2);display:flex;align-items:center;justify-content:center;color:#ffe9b8;font-weight:700;background:#14163a;font-size:14px}
 .guide p{margin:0;font-size:14px;line-height:1.65}
@@ -47,7 +61,7 @@ html,body{height:100%;overflow:hidden}
 <section id="ui" class="lt-panel" aria-live="polite">
   <h1>心之透镜</h1>
   <p class="sub">觉弈 2.0 · 同一件事,为什么你和别人看到的不一样?</p>
-  <div class="acts" id="acts"><span class="on">① 看见透镜</span><span title="下一版开放">② 换一双眼睛</span><span title="下一版开放">③ 破茧</span></div>
+  <div class="acts" id="acts"><button type="button" data-a="1" class="on" aria-pressed="true">① 看见透镜</button><button type="button" data-a="2" disabled title="先完成第一幕" aria-pressed="false">② 换一双眼睛</button><button type="button" disabled title="下一版开放">③ 破茧</button></div>
   <div class="guide"><div class="m">镜</div><p id="say">你正透过一颗玻璃大脑看这条街。街上有三样东西被它悄悄扭曲了——是哪三样?点街上的它们,或点下面的名字。</p></div>
   <div class="find" id="find">
     <button class="lt-btn" type="button" data-k="loss">◉ 价签</button>
@@ -65,9 +79,21 @@ html,body{height:100%;overflow:hidden}
     <input type="range" id="r-echo" min="0" max="100" step="1" value="70" aria-label="异色信息被过滤的比例">
     <div class="r" id="t-echo"></div></div>
   <div class="done" id="done"></div>
+  <div id="act2">
+    <div class="lenses" id="lenses">
+      <button class="lt-btn" type="button" data-l="kid">八岁的孩子</button>
+      <button class="lt-btn" type="button" data-l="burnt">刚亏过一笔钱的人</button>
+      <button class="lt-btn" type="button" data-l="group">只看一个群的人</button>
+      <button class="lt-btn" type="button" data-l="saver">在存首付的人</button>
+    </div>
+    <table id="cmp" aria-label="你和借来的透镜对照"></table>
+    <div class="done" id="done2"></div>
+    <p class="note" style="margin-top:2px">这几副透镜是为说明机制设的示意,不代表任何具体的人。</p>
+  </div>
   <div class="row"><a class="lt-btn" href="../">← 回到星盘</a><button class="lt-btn" id="bReset" type="button">↺ 重戴透镜</button></div>
   <p class="note">只讲机制,不给你贴「有偏见」的标签——每个人的大脑都戴着透镜。数值是研究中的典型估计,不是你的。进度只存在这台设备。</p>
 </section>
+<div class="lab" id="labA" hidden></div><div class="lab" id="labB" hidden></div>
 <div class="hint" id="hint">拖动可环视 · 点街上发光的牌子</div>
 <script type="module">
 import { chrome, offline } from '../lt.js';
