@@ -70,7 +70,8 @@ EF.sky(); EF.topbar({ back: '../', backText: '← 工坊' });
 var LABS = [
   { id: 'free', q: '挑几样物质放上星盘,只看收录过的真实现象', n: '自由实验台', href: '?lab=react_free', img: '../img/lab-free.webp', badge: 'v2.3' },
   { id: 'island', q: EF.MISSIONS.island.q, n: '超重元素岛', href: '../island/', img: '../img/lab-island.webp', badge: '2.0' },
-  { id: 'react', q: EF.MISSIONS.react.q, n: '反应台', href: '../react/', img: '../img/lab-react.webp', badge: '新 · v2.5 有机反应' },
+  { id: 'react', q: EF.MISSIONS.react.q, n: '反应台', href: '../react/', img: '../img/lab-react.webp', badge: 'v2.5 有机反应' },
+  { id: 'route', q: '乙烯→乙醇→乙醛→乙酸→乙酸乙酯,每一步先猜试剂和条件', n: '有机转化路线', href: '../route/', img: '../img/lab-react.webp', badge: '新 · v2.6' },
   { id: 'mol', q: EF.MISSIONS.molecule.q, n: '分子搭建台', href: '../molecule/', img: '../img/lab-molecule.webp', badge: 'v2.4.1 · 镜像分子 3D' }];
 var PROTOS = [
   { id: 'ef.lab.island_chain', lab: 'island', t: '锡的同位素链', path: '../island/labs/' },
@@ -96,7 +97,7 @@ window.EFLab = { add: function (e) { var a = list(); a.unshift(e); try { localSt
 
 document.getElementById('labs').innerHTML = LABS.map(function (L) {
   if (L.soon) return '<div class="lb soon"><div class="ph">🧪 锻造中</div><div class="tx"><b>' + L.n + '</b><small>' + L.q + '</small></div></div>';
-  return '<a class="lb" href="' + L.href + '"' + (L.id === 'free' ? ' data-free="1"' : '') + '><img src="' + L.img + '" alt="' + L.n + '实验室画面" loading="lazy"><span class="bd">' + L.badge + '</span><span class="ct">已记 ' + cnt(L.id) + ' 条</span><div class="tx"><b>' + L.n + '</b><small>' + EF.esc(L.q) + '</small></div></a>';
+  return '<a class="lb" href="' + L.href + '"' + (L.id === 'free' ? ' data-free="1"' : '') + '><img src="' + L.img + '" alt="' + L.n + '实验室画面" loading="lazy"><span class="bd">' + L.badge + '</span>' + (L.id === 'route' ? '' : '<span class="ct">已记 ' + cnt(L.id) + ' 条</span>') + '<div class="tx"><b>' + L.n + '</b><small>' + EF.esc(L.q) + '</small></div></a>';
 }).join('');
 document.querySelector('#labs [data-free]').onclick = function (ev) { ev.preventDefault(); history.replaceState(null, '', location.pathname + '?lab=react_free'); window.EFFree.open({}); };
 

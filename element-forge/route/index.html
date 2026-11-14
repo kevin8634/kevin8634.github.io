@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>有机转化路线:从乙烯到乙酸乙酯 · 元素工坊 Element Forge</title>
+<meta name="description" content="元素工坊 v2.6 · 有机转化路线小游戏:乙烯→乙醇→乙醛→乙酸→乙酸乙酯,每一步先猜用什么试剂和条件,再看真实结果。全部虚拟演示,反应取自本站已审校的反应图鉴。">
+<meta name="theme-color" content="#070a14">
+<link rel="stylesheet" href="../ef.css?v=14">
+<style>
+.rt{max-width:980px;margin:0 auto;padding:10px 18px 60px;position:relative;z-index:1}
+.rt h1{font-size:26px;margin:18px 0 4px;color:var(--gold2)}
+.rt .sub{color:var(--dim);margin:0 0 14px;font-size:14px;line-height:1.7}
+.chain{display:flex;align-items:stretch;gap:6px;flex-wrap:nowrap;overflow-x:auto;padding:6px 2px 10px}
+.nd{flex:1 1 0;min-width:112px;border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:8px 8px 7px;background:rgba(8,11,24,.6);text-align:center;transition:border-color .3s,background .3s}
+.nd b{display:block;font-size:15px;color:#e9eefb}
+.nd code{display:block;font-family:inherit;font-size:12.5px;color:#9fe8da;margin-top:2px;word-break:break-all}
+.nd small{display:block;font-size:11.5px;color:#8f9ab8;margin-top:3px}
+.nd.on{border-color:#ff9a3c;background:rgba(255,154,60,.12)}
+.nd.on small{color:#ffd2a0}
+.nd.cur{border-color:#3fe0c8;box-shadow:0 0 0 1px rgba(63,224,200,.35) inset}
+.ar{flex:0 0 auto;align-self:center;color:#5b6684;font-size:18px}
+.ar.on{color:#ff9a3c}
+.stp{border:1px solid rgba(63,224,200,.35);border-radius:14px;padding:12px 14px;background:rgba(6,14,20,.55);margin-top:8px}
+.stp h2{font-size:18px;margin:0 0 4px}
+.stp .q{color:#c9d2ea;font-size:14px;margin:0 0 10px;line-height:1.7}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.op{text-align:left;background:#0a1420;border:1px solid rgba(63,224,200,.35);color:#e9eefb;border-radius:10px;padding:9px 11px;font:inherit;font-size:14px;cursor:pointer;line-height:1.5}
+.op:hover,.op:focus-visible{border-color:#ff9a3c;outline:none}
+.op[disabled]{cursor:default;opacity:.55}
+.op.ok{border-color:#50c878;background:rgba(80,200,120,.14);opacity:1}
+.op.no{border-color:#ff7a5a;background:rgba(255,120,90,.1);opacity:1}
+.op.near{border-color:#ffc83c;background:rgba(255,200,60,.1);opacity:1}
+.fb{margin-top:10px;font-size:13.5px;line-height:1.75;color:#d7def2}
+.fb .tag{display:inline-block;font-size:12px;border-radius:6px;padding:0 7px;margin-right:6px}
+.fb .tag.no{background:rgba(255,120,90,.18);color:#ffb0a0}
+.fb .tag.near{background:rgba(255,200,60,.16);color:#ffe08a}
+.rv{margin-top:10px;border-top:1px solid rgba(255,255,255,.1);padding-top:10px;font-size:13.5px;line-height:1.75}
+.rv .eq{font-size:16px;color:#fff}
+.rv .eq small{display:block;font-size:12px;color:#9fe8da}
+.rx-safe{display:inline-block;font-size:11.5px;border-radius:6px;padding:1px 7px;margin:2px 4px 2px 0;line-height:1.6}
+.rx-safe.g{background:rgba(80,200,120,.18);color:#9ff0b4;border:1px solid rgba(80,200,120,.5)}
+.rx-safe.y{background:rgba(255,200,60,.14);color:#ffe08a;border:1px solid rgba(255,200,60,.5)}
+.rx-safe.r{background:rgba(255,70,70,.16);color:#ffb0a8;border:1px solid rgba(255,90,80,.6)}
+.gp{display:inline-block;font-size:12px;border:1px solid rgba(63,224,200,.5);border-radius:10px;padding:0 8px;color:#9fe8da;margin-right:4px}
+.dim{color:#8f9ab8;font-size:12.5px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.end{border:1px solid rgba(255,154,60,.45);border-radius:14px;padding:12px 14px;background:rgba(255,154,60,.06);margin-top:12px;line-height:1.8;font-size:14px}
+.end h2{margin:0 0 6px;font-size:18px;color:#ffd2a0}
+.end ul{margin:4px 0 0;padding-left:1.2em}
+.safe{font-size:12.5px;color:#aab4cf;margin-top:22px;line-height:1.7}
+@media (max-width:640px){.opts{grid-template-columns:1fr}.nd{min-width:96px}.rt h1{font-size:22px}}
+@media (prefers-reduced-motion:reduce){.nd,.op{transition:none}}
+</style>
+</head>
+<body>
+<main class="rt" id="rt">
+  <h1>有机转化路线:从乙烯到乙酸乙酯</h1>
+  <p class="sub">一条课本里最经典的转化链。每一步先猜:要加什么、在什么条件下,才能变成下一种物质?猜完再看真实的方程式和现象。全部只是虚拟演示。</p>
+  <div class="chain" id="chain" aria-label="转化路线"></div>
+  <section class="stp" id="stp" aria-live="polite"></section>
+  <div id="end"></div>
+  <p class="safe"><b>实验安全</b>:这条路线里的反应都要用到易燃有机物、浓硫酸或加热,只能在学校实验室由老师演示或在工业装置里进行。元素工坊只做虚拟演示,不提供用量、配比和操作步骤,请勿在家模仿。反应数据取自本站已审校的<a href="../react/">反应图鉴</a>。</p>
+</main>
+<script src="../ef.js?v=18"></script>
+<script>
+(function () {
+EF.sky(); EF.topbar({ back: '../lab/', backText: '← 实验室大厅' });
+var KEY = 'gn:ef:route';
+/* 路线节点:物质 + 官能团 */
+var NODES = [
+  { n: '乙烯', f: 'CH2=CH2', g: '碳碳双键' },
+  { n: '乙醇', f: 'CH3CH2OH', g: '羟基 —OH' },
+  { n: '乙醛', f: 'CH3CHO', g: '醛基 —CHO' },
+  { n: '乙酸', f: 'CH3COOH', g: '羧基 —COOH' },
+  { n: '乙酸乙酯', f: 'CH3COOCH2CH3', g: '酯基 —COO—' }];
+/* 第 1 步(乙烯水化)反应图鉴未收录,在此单独给出,口径同图鉴 */
+var LOCAL = {
+  r01: { id: 'r01', name: '乙烯与水加成(生成乙醇)', kind: '加成', l: [[1, 'CH2=CH2'], [1, 'H2O']], r: [[1, 'CH3CH2OH']], cond: '催化剂、加热、加压',
+    see: '双键打开,一端接上 H,另一端接上 —OH;工业上用这个方法大量生产乙醇', safe: 'r', why: '工业反应,乙烯易燃,需高温高压。只限专业装置,本站仅虚拟演示。', ch: '必修第二册 第七章 第二节(乙烯)' } };
+/* 每一步的选项:ok=正确;near=沾边;no=不对。rid 指向反应图鉴编号 */
+var STEPS = [
+  { from: 0, to: 1, rid: 'r01', q: '乙烯里有一个碳碳双键。想让它变成带 —OH 的乙醇,要往双键上加什么?',
+    o: [{ t: '水,催化剂、加热、加压', ok: 1 },
+        { t: '溴水,常温', m: '会发生加成,但加上去的是两个溴原子,得到 1,2-二溴乙烷,不是乙醇。', rid: null },
+        { t: '氢气,催化剂、加热', m: '加上去的是两个氢原子,得到乙烷,没有 —OH。', rid: null },
+        { t: '酸性高锰酸钾溶液', m: '乙烯会使它褪色,但这是把乙烯氧化掉,得不到乙醇。', rid: null }],
+    hint: '加成:双键打开,把一个分子"拆成两半"分别接到两个碳上。H—OH 拆开正好是 H 和 —OH。' },
+  { from: 1, to: 2, rid: 's29', q: '乙醇 → 乙醛:分子少了两个氢原子。用什么办法把这两个氢"拿走"?',
+    o: [{ t: '氧气,铜作催化剂、加热', ok: 1 },
+        { t: '浓硫酸、170 ℃', m: '这是乙醇的消去反应,脱掉的是一分子水,得到的是乙烯——走回头路了。', rid: 'o14' },
+        { t: '氢溴酸、加热', m: '羟基被溴原子取代,得到溴乙烷,不是乙醛。', rid: 'o16' },
+        { t: '氢气,催化剂、加热', m: '加氢是还原,方向正好反了:乙醛加氢才会变回乙醇。', rid: 'o23' }],
+    hint: '有机里"去氢"或"加氧"都叫氧化。铜丝先被氧气氧化成黑色的氧化铜,再被乙醇还原成红色的铜。' },
+  { from: 2, to: 3, rid: 'o24', q: '乙醛 → 乙酸:醛基 —CHO 要变成羧基 —COOH,多了一个氧原子。该用什么?',
+    o: [{ t: '氧气,催化剂、加热', ok: 1 },
+        { t: '银氨溶液,水浴加热', near: 1, m: '方向对了,醛基确实被氧化(银镜反应),但在碱性的银氨溶液里得到的是乙酸铵,不是乙酸本身。课本用它检验醛基。', rid: 'o21' },
+        { t: '氢气,催化剂、加热', m: '加氢是还原,乙醛会变回乙醇。', rid: 'o23' },
+        { t: '氢氧化钠的乙醇溶液、加热', m: '这是卤代烃消去反应的条件,对乙醛不适用。', rid: null }],
+    hint: '醛基很容易被氧化:被氧气氧化成羧酸,是工业上生产乙酸的方法。' },
+  { from: 3, to: 4, rid: 's30', q: '最后一步:把乙酸和第 1 步得到的乙醇连在一起,变成有果香味的乙酸乙酯。需要什么条件?',
+    o: [{ t: '浓硫酸作催化剂和吸水剂,加热', ok: 1 },
+        { t: '稀硫酸、加热', m: '稀硫酸里水很多,而酯化是可逆反应;在稀酸中加热,乙酸乙酯反而会水解回乙酸和乙醇。', rid: 'o26' },
+        { t: '氢氧化钠溶液、加热', m: '碱会先和乙酸中和;就算生成了乙酸乙酯,也会在碱中水解掉。', rid: 'o27' },
+        { t: '常温下直接混合', m: '酯化反应在常温下非常慢,几乎看不到产物。', rid: null }],
+    hint: '酯化:酸脱羟基、醇脱氢,连成酯基并生成水。浓硫酸既加快反应,又吸走水,让平衡向生成酯的方向移动。' }];
+var DB = {}, st = load(), cur = 0;
+function load() { try { var o = JSON.parse(localStorage.getItem(KEY) || '{}'); return { done: Array.isArray(o.done) ? o.done : [], first: Array.isArray(o.first) ? o.first : [] }; } catch (e) { return { done: [], first: [] }; } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
+var SUB = '₀₁₂₃₄₅₆₇₈₉';
+function pf(s) { return String(s).replace(/([A-Za-z\)])(\d+)/g, function (m, a, d) { return a + d.replace(/\d/g, function (x) { return SUB[+x]; }); }); }
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function side(a) { return a.map(function (x) { return (x[0] > 1 ? x[0] : '') + pf(x[1]); }).join(' + '); }
+function eq(r) { return esc(side(r.l)) + (r.rev ? ' ⇌ ' : ' → ') + esc(side(r.r)); }
+var SAFE = { g: '🟢 家中可观察(须家长知情)', y: '🟡 学校实验室,老师指导', r: '🔴 只限专业实验室' };
+function drawChain() {
+  var h = '';
+  NODES.forEach(function (n, i) {
+    var on = i === 0 || st.done.indexOf(i - 1) >= 0;
+    if (i) h += '<span class="ar' + (on ? ' on' : '') + '" aria-hidden="true">→</span>';
+    h += '<div class="nd' + (on ? ' on' : '') + (i === cur + 1 && !allDone() ? ' cur' : '') + '"><b>' + (on ? n.n : '?') + '</b><code>' + (on ? esc(pf(n.f)) : '…') + '</code><small>' + (on ? n.g : '待解锁') + '</small></div>';
+  });
+  document.getElementById('chain').innerHTML = h;
+}
+function allDone() { return st.done.length >= STEPS.length; }
+function firstTodo() { for (var i = 0; i < STEPS.length; i++) if (st.done.indexOf(i) < 0) return i; return -1; }
+function reveal(i) {
+  var s = STEPS[i], r = DB[s.rid] || LOCAL[s.rid], a = NODES[s.from], b = NODES[s.to];
+  if (!r) return '<p class="dim">(反应数据暂未载入)</p>';
+  return '<div class="rv"><div class="eq">' + eq(r) + '<small>条件:' + esc(r.cond || '—') + (r.kind ? ' · 类型:' + esc(r.kind) : '') + '</small></div>' +
+    '<p><span class="gp">' + a.g + '</span>→ <span class="gp">' + b.g + '</span></p>' +
+    '<p>' + esc(r.see || '') + '</p><p class="dim">' + esc(s.hint) + '</p>' +
+    '<p><span class="rx-safe ' + r.safe + '">' + SAFE[r.safe] + '</span><span class="dim">' + esc(r.why || '') + '</span></p>' +
+    '<p class="dim">' + esc(r.name) + ' · ' + esc(r.ch || '') + (DB[s.rid] ? ' · 图鉴编号 ' + s.rid : ' · 图鉴未收录,按课本补充') + '</p></div>';
+}
+function drawStep() {
+  drawChain();
+  var box = document.getElementById('stp'), endEl = document.getElementById('end');
+  if (allDone()) { box.hidden = true; drawEnd(); return; }
+  box.hidden = false; endEl.innerHTML = '';
+  var i = cur, s = STEPS[i], tries = 0;
+  var order = s.o.map(function (x, k) { return k; });
+  for (var k = order.length - 1; k > 0; k--) { var j = (i * 7 + k * 3) % (k + 1), t = order[k]; order[k] = order[j]; order[j] = t; }
+  box.innerHTML = '<h2>第 ' + (i + 1) + ' 步 · ' + NODES[s.from].n + ' → ' + NODES[s.to].n + '</h2><p class="q">' + s.q + '</p><div class="opts">' +
+    order.map(function (k) { return '<button class="op" data-k="' + k + '">' + esc(s.o[k].t) + '</button>'; }).join('') + '</div><div class="fb" id="fb"></div>';
+  box.querySelectorAll('.op').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var o = s.o[+btn.dataset.k], fb = document.getElementById('fb');
+      tries++;
+      if (o.ok) {
+        btn.classList.add('ok');
+        box.querySelectorAll('.op').forEach(function (x) { x.disabled = true; });
+        if (st.done.indexOf(i) < 0) st.done.push(i);
+        if (tries === 1 && st.first.indexOf(i) < 0) st.first.push(i);
+        save(); drawChain();
+        var nx = firstTodo();
+        fb.innerHTML = '<b style="color:#9ff0b4">✔ 猜对了' + (tries === 1 ? ',一次就中!' : '。') + '</b>' + reveal(i) +
+          '<div class="row">' + (nx >= 0 ? '<button class="ef-btn" id="nx">下一步 →</button>' : '<button class="ef-btn" id="nx">看整条路线 →</button>') + '</div>';
+        document.getElementById('nx').addEventListener('click', function () { cur = nx >= 0 ? nx : 0; drawStep(); var e = document.getElementById(nx >= 0 ? 'stp' : 'end'); if (e && e.scrollIntoView) e.scrollIntoView({ block: 'nearest' }); });
+      } else {
+        btn.classList.add(o.near ? 'near' : 'no'); btn.disabled = true;
+        var rr = o.rid && DB[o.rid];
+        fb.innerHTML = '<span class="tag ' + (o.near ? 'near' : 'no') + '">' + (o.near ? '沾边' : '不对') + '</span>' + esc(o.m) +
+          (rr ? '<br><span class="dim">对应反应:' + eq(rr) + '(' + esc(rr.cond) + ',图鉴 ' + o.rid + ')</span>' : '') +
+          '<br><span class="dim">再猜一次。</span>';
+      }
+    });
+  });
+}
+function drawEnd() {
+  var n1 = st.first.length;
+  document.getElementById('end').innerHTML = '<section class="end"><h2>🎉 路线打通:乙烯 → 乙醇 → 乙醛 → 乙酸 → 乙酸乙酯</h2>' +
+    '<p>四步里一次猜中 ' + n1 + ' 步。回头看这条链,碳骨架始终是两个碳,变的只是官能团:</p><ul>' +
+    '<li><b>加成</b>:碳碳双键打开,接上 H 和 —OH(乙烯 → 乙醇)。</li>' +
+    '<li><b>氧化</b>:去氢或加氧,羟基 → 醛基 → 羧基(乙醇 → 乙醛 → 乙酸)。反过来加氢就是还原,乙醛能变回乙醇。</li>' +
+    '<li><b>酯化</b>:酸和醇连成酯基,同时生成水;它是可逆的,酯在酸或碱中又能水解。</li></ul>' +
+    '<p class="dim">一个乙醇用了两次:一次被氧化成乙酸,一次直接和乙酸酯化。这就是"有机合成"的基本思路——先想清楚目标分子的官能团,再倒推每一步。</p>' +
+    '<div class="row"><a class="ef-btn ghost" href="../react/">去反应图鉴看更多有机反应</a><button class="ef-btn ghost" id="again">重新挑战</button></div></section>';
+  document.getElementById('again').addEventListener('click', function () { st = { done: [], first: [] }; save(); cur = 0; drawStep(); });
+}
+function boot() { var f = firstTodo(); cur = f >= 0 ? f : 0; drawStep(); }
+Promise.all(['../data/ef.react.json', '../data/ef.react.more.json'].map(function (u) { return fetch(u).then(function (r) { return r.ok ? r.json() : { rows: [] }; }).catch(function () { return { rows: [] }; }); }))
+  .then(function (a) { a.forEach(function (d) { (d.rows || []).forEach(function (r) { DB[r.id] = r; }); }); boot(); });
+})();
+</script>
+</body>
+</html>
