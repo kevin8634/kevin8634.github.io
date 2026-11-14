@@ -1589,12 +1589,16 @@
         var K = "gn:portal:sound", on = lsGet(K) !== "0",   // v2.0.1 王磊 10-30：音乐默认打开（浏览器要求首次点击/按键后才出声）；用户关过则记住
         ctx, mG, sG, sT, duck = false, buf = {}, last = {};
         /* v0.7.0.4 星海三曲：默认三首顺序循环，换曲 3 秒交叉淡化；只加载正在播与下一首 */
-        var TR = [{ name: "宇宙将为你闪烁", d: "2.0 主题 · 声呐 → 星光上行 → 全奏", src: "music-genesis-2.m4a" },
+        var TR = [{ name: "Radiant Discovery · B1", d: "3.0 主题「从玩到造」 · 版本 B1", src: "portal3/music-g3-B1.m4a" },
+                  { name: "Radiant Discovery · B2", d: "3.0 主题「从玩到造」 · 版本 B2", src: "portal3/music-g3-B2.m4a" },
+                  { name: "Wonder and Invention · A1", d: "3.0 主题「从玩到造」 · 版本 A1", src: "portal3/music-g3-A1.m4a" },
+                  { name: "Wonder and Invention · A2", d: "3.0 主题「从玩到造」 · 版本 A2", src: "portal3/music-g3-A2.m4a" },
+                  { name: "宇宙将为你闪烁", d: "2.0 主题 · 声呐 → 星光上行 → 全奏", src: "music-genesis-2.m4a" },
                   { name: "深空之下", d: "声呐回响 · 深海气流 · 2.0 预告", src: "music-deep-below.m4a" },
                   { name: "创世星海", d: "利底亚和弦 · 钢片琴星光", src: "music-genesis-loop.m4a" },
                   { name: "北斗夜航", d: "慢速暖垫 · 七星音阶上行", src: "music-night-voyage.m4a" },
                   { name: "星尘回响", d: "玻璃钟琶音 · 长混响", src: "music-stardust-echo.m4a" }];
-        var TK = "gn:portal:track3", tst = (lsGet(TK) || ("0|" + ((lsGet("gn:portal:track") || "").split("|")[1] || "list"))).split("|");   // v2.0.0 新曲「宇宙将为你闪烁」置顶：换键 track3，人人从 2.0 主题开始，保留循环方式
+        var TK = "gn:portal:track4", tst = (lsGet(TK) || ("0|" + ((lsGet("gn:portal:track") || "").split("|")[1] || "list"))).split("|");   // v2.0.0 新曲「宇宙将为你闪烁」置顶：换键 track3，人人从 2.0 主题开始，保留循环方式
         var cur = Math.min(TR.length - 1, Math.max(0, +tst[0] || 0)), mode = tst[1] === "one" ? "one" : "list", tb = {}, tl = {}, pl = null, tI = 0;
         var tBtn = document.getElementById("trkBtn"), tPop = document.getElementById("trkPop"), tList = document.getElementById("trkList");
         function tSave() { lsSet(TK, cur + "|" + mode); }
