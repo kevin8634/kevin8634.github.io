@@ -138,7 +138,7 @@ try { const v = JSON.parse(localStorage.getItem('gn:lt:lens') || '{}'), b = docu
   </div>
   <div id="pNote" aria-live="polite"></div>
 </aside>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.39</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.40</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">
@@ -461,6 +461,23 @@ function sectorPath(s, grow = 0) {
 }
 const lotBloom = document.createElement('canvas'); const lbx = lotBloom.getContext('2d');
 const domIdx = id => DOMAINS.findIndex(d => d.id === id);
+/* v0.40 第 11 颗星:第三幕「破茧」通关后(gn:lt:lens.a3,只读本机)悬在莲心正上方,点它回到心之透镜 */
+let S11 = null; const star11On = () => { try { const v = JSON.parse(localStorage.getItem('gn:lt:lens') || '{}'); return !!(v && v.a3); } catch (_) { return false; } };
+let s11v = star11On(); addEventListener('storage', e => { if (e.key === 'gn:lt:lens') s11v = star11On(); });
+function drawStar11(t) { S11 = null; if (!s11v) return;
+  const [x0, y0] = P3(0, R * 0.04, 0); const [x, y0b] = P3(0, R * 0.86, 0); const y = Math.max(y0b, 30 + R * 0.05);
+  const pu = reducedMotion ? 1 : 1 + 0.12 * Math.sin(t * 1.7), r = Math.max(7, R * 0.034) * pu;
+  cx2.save(); cx2.globalCompositeOperation = 'lighter';
+  const th = cx2.createLinearGradient(x, y, x0, y0); th.addColorStop(0, 'rgba(255,226,160,.55)'); th.addColorStop(1, 'rgba(255,226,160,0)');
+  cx2.strokeStyle = th; cx2.lineWidth = 1.2; cx2.beginPath(); cx2.moveTo(x, y + r); cx2.lineTo(x0, y0); cx2.stroke();
+  if (!reducedMotion) for (let q = 0; q < 2; q++) { const u = (t * 0.22 + q / 2) % 1; glint(x + (x0 - x) * u, y + r + (y0 - y - r) * u, 1.1, Math.sin(Math.PI * u) * .8); }
+  const hg = cx2.createRadialGradient(x, y, 0, x, y, r * 4.2); hg.addColorStop(0, 'rgba(255,240,205,.9)'); hg.addColorStop(.25, 'rgba(245,194,107,.45)'); hg.addColorStop(1, 'rgba(245,194,107,0)');
+  cx2.fillStyle = hg; cx2.beginPath(); cx2.arc(x, y, r * 4.2, 0, 7); cx2.fill();
+  const rot = reducedMotion ? 0 : t * 0.25; cx2.fillStyle = '#fff6df'; cx2.beginPath();
+  for (let i = 0; i < 16; i++) { const a = rot + i * Math.PI / 8 - Math.PI / 2, rr = i % 4 === 0 ? r * 2.3 : i % 2 === 0 ? r * 1.1 : r * 0.42; const px = x + Math.cos(a) * rr, py = y + Math.sin(a) * rr; i ? cx2.lineTo(px, py) : cx2.moveTo(px, py); }
+  cx2.closePath(); cx2.fill(); cx2.restore();
+  cx2.globalAlpha = .85; cx2.font = `${Math.max(11, Math.min(13, R * 0.04))}px ${FF}`; cx2.textAlign = 'center'; cx2.textBaseline = 'middle'; cx2.fillStyle = '#ffe7b8';
+  cx2.textAlign = 'left'; cx2.fillText('第 11 颗星', x + r * 2.5 + 4, y); cx2.globalAlpha = 1; S11 = { x, y, r: r * 2.6 }; window.__lt11 = S11; }
 function lotusFrame(t) {
   const fi = sel ? domIdx(sel) : -1;
   if (fi >= 0 && !drag && !rite && !reducedMotion) { let th1 = Math.PI / 2 - fi * Math.PI / 4; while (th1 - theta > Math.PI) th1 -= 2 * Math.PI; while (theta - th1 > Math.PI) th1 += 2 * Math.PI; theta += (th1 - theta) * 0.06; vel = 0; }
@@ -494,6 +511,7 @@ function lotusFrame(t) {
     cx2.roundRect ? cx2.roundRect(x - w / 2, tip.y - 12, w, 24, 12) : cx2.rect(x - w / 2, tip.y - 12, w, 24); cx2.fill(); cx2.stroke(); cx2.fillStyle = '#fff3d6'; cx2.fillText(tip.q, x, tip.y + .5); }
   if (fi >= 0 && W < 640 && !side.classList.contains('on')) { const l = lotOut.labels[fi]; cx2.font = `${fs - 2}px ${FF}`; cx2.fillStyle = 'rgba(255,231,184,.8)'; cx2.fillText('再点花瓣看详情 · 点空白处收起', CX, Math.min(Hh - 20, CY + R * 0.75)); }
   if (fi >= 0 && lotOut.planets.length === 0) { const l = lotOut.labels[fi]; cx2.font = `${fs - 1}px ${FF}`; cx2.fillStyle = 'rgba(200,200,215,.75)'; cx2.fillText('这一域的关卡筹备中', l.x, l.y + 22); }
+  drawStar11(t);
 }
 function goTask(id) { const tk = TASKS.find(x => x.id === id); if (!tk || !tk.live) { sound.tick && sound.tick(); return; }
   const a = document.createElement('a'); a.href = tk.path; a.style.display = 'none'; document.body.appendChild(a); a.click(); }
@@ -625,6 +643,7 @@ function draw(now) {
     cx2.fillStyle = 'rgba(10,11,30,.85)'; cx2.strokeStyle = 'rgba(245,194,107,.5)'; cx2.lineWidth = 1; cx2.beginPath();
     cx2.roundRect ? cx2.roundRect(x - w / 2, y - 11, w, 22, 11) : cx2.rect(x - w / 2, y - 11, w, 22); cx2.fill(); cx2.stroke();
     cx2.fillStyle = '#fff3d6'; cx2.textAlign = 'center'; cx2.textBaseline = 'middle'; cx2.fillText(q, x, y + 0.5); }
+  drawStar11(t);
 }
 const ang = a => ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
 function drawButterfly(x, y, s, t) { const f = reducedMotion ? 1 : 0.75 + 0.25 * Math.sin(t * 6);
@@ -637,6 +656,7 @@ let medHits = [], qTip = null; const FF = getComputedStyle(document.body).fontFa
 
 /* 命中:反投影到盘面 */
 function hit(x, y) {
+  if (S11 && Math.hypot(x - S11.x, y - S11.y) <= S11.r + 6) return { lens: true };
   if (lotOK()) { const h = LOT.pick(x, y); if (!h) return null; if (h.dom != null) return { dom: DOMAINS[h.dom].id }; return h; }
   for (const m of [...medHits].reverse()) if (Math.hypot(x - m.x, y - m.y) <= m.r + 4) return { guide: m.k };
   const [lx0, ly0] = P(0, 0, LH.self); if (Math.hypot((x - lx0) / R, (y - ly0) / R / TILT) < 0.22) return { lotus: true };
@@ -648,10 +668,10 @@ cv.addEventListener('pointerdown', e => { pid = e.pointerId; drag = true; sx = l
 cv.addEventListener('pointermove', e => {
   if (drag && e.pointerId === pid) { const dx = e.clientX - lx; lx = e.clientX; moved = Math.max(moved, Math.abs(e.clientX - sx));
     if (moved > 6) { cv.classList.add('drag'); try { cv.setPointerCapture(pid); } catch (_) {} theta += dx / (R * 1.4); vel = dx / (R * 1.4); } }
-  else { const h = hit(e.clientX, e.clientY); const id = h && (h.dom || (h.guide && 'g') || (h.lotus && 'l')); hover = h && h.dom; hoverTask = h && h.task || null; cv.style.cursor = h ? 'pointer' : 'grab'; }
+  else { const h = hit(e.clientX, e.clientY); const id = h && (h.dom || (h.guide && 'g') || (h.lotus && 'l') || (h.lens && 's')); hover = h && h.dom; hoverTask = h && h.task || null; cv.style.cursor = h ? 'pointer' : 'grab'; }
 });
 const up = e => { if (!drag) return; drag = false; cv.classList.remove('drag'); if (reducedMotion) vel = 0;
-  if (moved <= 6) { const h = hit(e.clientX, e.clientY); if (lotOK() && h && h.task) { goTask(h.task); return; } if (lotOK() && !h && sel) { sel = null; side.classList.remove('on'); return; } if (h && h.dom && lotOK() && W < 640 && sel !== h.dom) { sel = h.dom; side.classList.remove('on'); sound.bell(domIdx(h.dom) + 1); } else if (h && h.dom) { sel = h.dom; showDomain(h.dom); } else if (h && h.guide) showGuide(h.guide); else if (h && h.lotus) showDomain('meaning'); } };
+  if (moved <= 6) { const h = hit(e.clientX, e.clientY); if (h && h.lens) { location.href = 'lens/'; return; } if (lotOK() && h && h.task) { goTask(h.task); return; } if (lotOK() && !h && sel) { sel = null; side.classList.remove('on'); return; } if (h && h.dom && lotOK() && W < 640 && sel !== h.dom) { sel = h.dom; side.classList.remove('on'); sound.bell(domIdx(h.dom) + 1); } else if (h && h.dom) { sel = h.dom; showDomain(h.dom); } else if (h && h.guide) showGuide(h.guide); else if (h && h.lotus) showDomain('meaning'); } };
 cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', () => { drag = false; cv.classList.remove('drag'); });
 cv.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') { theta -= 0.15; sound.tick(); } if (e.key === 'ArrowRight') { theta += 0.15; sound.tick(); }
   if (e.key === 'Enter') showMap(); });
