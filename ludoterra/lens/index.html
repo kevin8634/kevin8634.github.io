@@ -19,6 +19,11 @@ html,body{height:100%;overflow:hidden}
 #act2{display:none}
 [data-act="2"] #act2{display:block}
 [data-act="2"] #find,[data-act="2"] #done{display:none}
+#act3{display:none}
+[data-act="3"] #act3{display:block}
+[data-act="3"] #find,[data-act="3"] #done{display:none}
+#mine{font-size:12.5px;color:var(--mute);line-height:1.6;margin:4px 0 8px}
+#mine em{font-style:normal;color:#ffe2a8}
 .lenses{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
 .lenses .lt-btn.got{border-color:#7fd7e0;color:#bff3f7;box-shadow:0 0 12px rgba(127,215,224,.3)}
 #cmp{width:100%;border-collapse:collapse;font-size:12.5px;margin:4px 0 6px}
@@ -61,7 +66,7 @@ html,body{height:100%;overflow:hidden}
 <section id="ui" class="lt-panel" aria-live="polite">
   <h1>心之透镜</h1>
   <p class="sub">觉弈 2.0 · 同一件事,为什么你和别人看到的不一样?</p>
-  <div class="acts" id="acts"><button type="button" data-a="1" class="on" aria-pressed="true">① 看见透镜</button><button type="button" data-a="2" disabled title="先完成第一幕" aria-pressed="false">② 换一双眼睛</button><button type="button" disabled title="下一版开放">③ 破茧</button></div>
+  <div class="acts" id="acts"><button type="button" data-a="1" class="on" aria-pressed="true">① 看见透镜</button><button type="button" data-a="2" disabled title="先完成第一幕" aria-pressed="false">② 换一双眼睛</button><button type="button" data-a="3" disabled title="先完成第二幕" aria-pressed="false">③ 破茧</button></div>
   <div class="guide"><div class="m">镜</div><p id="say">你正透过一颗玻璃大脑看这条街。街上有三样东西被它悄悄扭曲了——是哪三样?点街上的它们,或点下面的名字。</p></div>
   <div class="find" id="find">
     <button class="lt-btn" type="button" data-k="loss">◉ 价签</button>
@@ -89,6 +94,12 @@ html,body{height:100%;overflow:hidden}
     <table id="cmp" aria-label="你和借来的透镜对照"></table>
     <div class="done" id="done2"></div>
     <p class="note" style="margin-top:2px">这几副透镜是为说明机制设的示意,不代表任何具体的人。</p>
+  </div>
+  <div id="act3">
+    <p id="mine"></p>
+    <button class="lt-btn primary" type="button" id="bWear">✦ 我愿意这样戴</button>
+    <div class="done" id="done3"></div>
+    <p class="note" style="margin-top:6px">你挑的数值只存在这台设备,不上传、不评分,也没有「对」的位置。</p>
   </div>
   <div class="row"><a class="lt-btn" href="../">← 回到星盘</a><button class="lt-btn" id="bReset" type="button">↺ 重戴透镜</button></div>
   <p class="note">只讲机制,不给你贴「有偏见」的标签——每个人的大脑都戴着透镜。数值是研究中的典型估计,不是你的。进度只存在这台设备。</p>

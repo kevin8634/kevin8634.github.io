@@ -100,6 +100,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
 @media (max-width:640px){#player{right:8px;left:8px;top:auto;bottom:62px;width:auto;max-height:calc(100% - 64px);padding:14px 12px 10px}#player .lead{display:none}#player h3{font-size:17px}.trk{padding:6px 8px}.trk:not(.on) .lg{display:none}}
 @media (max-height:480px){.trk:not(.on) .lg,#player .lead{display:none}}
 @media (max-height:480px){#player{top:56px;bottom:56px;max-height:none}}
+#bLens.star11{border-color:var(--gold);color:#ffe9b8;box-shadow:0 0 14px rgba(245,194,107,.45),inset 0 0 10px rgba(245,194,107,.18)}
 </style></head><body>
 <canvas id="disc" tabindex="0" aria-label="心莲认知星盘:八瓣八域,中心是意义。左右拖动或用方向键旋转,点花瓣展开这一域的关卡。"></canvas>
 <div id="hero"><h1>地球Online 没有新手教程。这里补上。</h1><p>看见自己的思维,就是觉醒的开始</p></div>
@@ -110,8 +111,11 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   <button class="lt-btn" id="bBook" type="button">📖 玩家手册</button>
   <button class="lt-btn" id="bGuides" type="button">🏛 先贤向导团</button>
   <button class="lt-btn" id="bAbout" type="button">ⓘ 关于觉弈</button>
-  <a class="lt-btn" id="bLens" href="lens/" title="觉弈 2.0 · 心之透镜(第一幕)">◐ 心之透镜 <small style="color:var(--gold)">2.0</small></a>
+  <a class="lt-btn" id="bLens" href="lens/" title="觉弈 2.0 · 心之透镜(三幕)">◐ 心之透镜 <small style="color:var(--gold)">2.0</small></a>
 </nav>
+<script>/* 心之透镜第三幕「破茧」后,入口化作第 11 颗星(只读本机进度) */
+try { const v = JSON.parse(localStorage.getItem('gn:lt:lens') || '{}'), b = document.getElementById('bLens');
+  if (v && v.a3) { b.classList.add('star11'); b.innerHTML = '✦ 心之透镜 <small style="color:var(--gold)">第 11 颗星</small>'; b.title = '你亲手挑的透镜,已化作第 11 颗星'; } } catch (e) {}</script>
 <div id="intro" aria-hidden="true"><button class="skip lt-btn" type="button">跳过 ›</button></div>
 <div id="mbar" class="lt-panel" role="region" aria-label="星之音播放条">
   <button class="mpp" id="mPlay" type="button" aria-label="播放">▶</button>
@@ -134,7 +138,7 @@ body.pmode #hero,body.pmode #rec,body.pmode #side,body.pmode #dock,body.pmode .l
   </div>
   <div id="pNote" aria-live="polite"></div>
 </aside>
-<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.38</div>
+<div class="foot lt-foot">无需账号,不做统计;进度只保存在这台设备。觉弈只讲机制,不教你「应该怎么活」。 · 觉弈 Ludoterra v0.39</div>
 
 <div class="lt-modal" id="mRole" role="dialog" aria-modal="true" aria-labelledby="roleT"><div class="box lt-panel">
   <div id="step1">

@@ -3,6 +3,7 @@
  * 全部程序生成,无外部素材、无外部请求;Three.js 走 ../lt-three.js(默认 r186,?three=169 回滚)。
  * 画质三档:high = 透射+色散+虹彩玻璃;mid = 透射、无色散、像素比降;low = 半透明玻璃、无透射。无 WebGL → 纯 DOM 版,功能不减。
  * 第二幕「换一双眼睛」:借一个示意人物的透镜,分屏对照同一条街(横屏左右、竖屏上下);看过两双眼睛即写 a2。
+ * 第三幕「破茧」:没有标准答案,学习者把三枚旋钮拧成「我愿意戴的样子」;玻璃脑裂开,化作光之莲与蝴蝶(写 a3,只存本机),星盘入口亮起第 11 颗星。
  * ?q=high|mid|low 强制档位(存本机 gn:lt:lensq);减少动态 → 静止画面,只在旋钮变化时重绘。
  * 画面思路参考总指挥画质专长包(程序天空即光源、PMREM 环境、高度雾感、ACES、暗角颗粒),代码自写。 */
 import { store, sound, reducedMotion, TASKS } from '../lt.js';
@@ -56,7 +57,7 @@ function find(k) {
 }
 
 function check() {
-  if (S.found.size < 3 || S.done) return;
+  if (S.act !== 1 || S.found.size < 3 || S.done) return;
   if (isTrue()) {
     S.done = true; store.set('lens', Object.assign({}, store.get('lens', {}) || {}, { a1: true, t: Date.now() }));
     [0, 2, 4, 7].forEach((s, i) => setTimeout(() => sound.bell(s, 0.09, 2.2), i * 140));
@@ -88,26 +89,47 @@ function borrow(id) {
     store.set('lens', Object.assign({}, store.get('lens', {}) || {}, { a2: true, t2: Date.now() }));
     const d = $('done2'); d.classList.add('on');
     d.innerHTML = '<b style="color:var(--gold)">你已经借过两双眼睛了。</b><br>同一条街、同样的价签,每个人看到的大小都不一样——大多数争吵,其实是两副透镜在对话。下次和人意见不合时,可以先问一句:「我们是不是戴着不同的透镜?」<br>' +
-      '<a class="lt-btn" style="margin-top:8px" href="/pre-singularity/truth/">星桥 → 奇点前夜 · 这段话是 AI 写的吗</a><br><span style="color:var(--mute)">第三幕「破茧」:把旋钮拧成你愿意的样子——下一版开放。</span>';
+      '<a class="lt-btn" style="margin-top:8px" href="/pre-singularity/truth/">星桥 → 奇点前夜 · 这段话是 AI 写的吗</a> <button class="lt-btn" type="button" id="go3" style="margin-top:8px">进入第三幕「破茧」→</button>';
+    $('go3').onclick = () => setAct(3); lockTabs();
   }
 }
+const ASK3 = '这一次没有标准答案。把三枚旋钮拧成你愿意戴的样子——透镜不全是坏事:一点损失放大会在冒险前拉你一把,一点近大远小让你记得享受今天。你想留多少?';
+function paint3() {
+  const other = Math.round(3 * (1 - S.echo / 100));
+  $('mine').innerHTML = `你挑的透镜:失去 ¥100 ≈ <em>¥${lossFelt(S)}</em> · 一年后 ¥150 ≈ <em>¥${Math.round(farFelt(S))}</em> · 新闻屏每天看见 <em>${other}</em> 条异色观点`;
+}
+function wear() {
+  const mine = { loss: +S.loss.toFixed(2), time: S.time, echo: S.echo };
+  store.set('lens', Object.assign({}, store.get('lens', {}) || {}, { a3: true, mine, t3: Date.now() }));
+  [0, 4, 7, 11, 14].forEach((s, i) => setTimeout(() => sound.bell(s, 0.08, 2.6), i * 180));
+  const d = $('done3'); d.classList.add('on');
+  d.innerHTML = '<b style="color:var(--gold)">破茧。</b>这副透镜是你自己挑的,不是标准答案,也随时可以再换。它已化作心之透镜的<b style="color:var(--gold)">第 11 颗星</b>,回到星盘就能看见。<br>' +
+    '<span style="color:var(--mute)">留给你一个问题:下周有哪一个决定,你想戴着这副透镜再看一次?</span><br><a class="lt-btn" style="margin-top:8px" href="../">✦ 回到星盘看第 11 颗星</a>';
+  say('玻璃裂开了,里面的光没有散。刚才拧旋钮时,哪一枚你最犹豫?为什么?');
+  if (G) G.bloom();
+}
+function unlocked3() { return S.seen.size >= 2 || !!(store.get('lens', {}) || {}).a2; }
 function setAct(n) {
-  if (n === 2 && !unlocked2()) return;
-  S.act = n; document.documentElement.dataset.act = n;
+  if ((n === 2 && !unlocked2()) || (n === 3 && !unlocked3())) return;
+  S.act = n; document.documentElement.dataset.act = n; if (G && n !== 3) G.unbloom();
   document.querySelectorAll('#acts [data-a]').forEach(b => { b.classList.toggle('on', +b.dataset.a === n); b.setAttribute('aria-pressed', +b.dataset.a === n); });
   if (n === 2) { ['loss', 'time', 'echo'].forEach(k => { S.found.add(k); $('k-' + k).classList.add('on'); });
     say('同一条街,换一双眼睛。挑一个人,借 TA 的透镜看一看——' + (innerHeight > innerWidth ? '上面' : '左边') + '是你的,' + (innerHeight > innerWidth ? '下面' : '右边') + '是 TA 的。你的三枚旋钮仍然可以拧。');
     if (!B) borrow(LENSES[0].id); }
+  else if (n === 3) { B = null; paint2(); if (G) G.borrow(null); ['loss', 'time', 'echo'].forEach(k => { S.found.add(k); $('k-' + k).classList.add('on'); });
+    $('done3').classList.remove('on'); paint3(); say(ASK3); }
   else { B = null; paint2(); if (G) G.borrow(null); say(S.done ? '你把街道拧回了真实比例。想一想:刚才最难拧回去的是哪一枚?它在你生活里出现在哪儿?' : S.found.size === 3 ? LINES.all : LINES.start); }
 }
 function unlocked2() { return S.done || !!(store.get('lens', {}) || {}).a1; }
-function lockTabs() { const b = document.querySelector('#acts [data-a="2"]'); const u = unlocked2(); b.disabled = !u; b.title = u ? '' : '先完成第一幕'; }
+function lockTabs() { const b = document.querySelector('#acts [data-a="2"]'); const u = unlocked2(); b.disabled = !u; b.title = u ? '' : '先完成第一幕';
+  const c = document.querySelector('#acts [data-a="3"]'); const u3 = unlocked3(); c.disabled = !u3; c.title = u3 ? '' : '先完成第二幕'; }
 
 function bindUI() {
   document.querySelectorAll('#find [data-k]').forEach(b => b.onclick = () => find(b.dataset.k));
-  const on = (id, key, num) => { const r = $(id); r.value = S[key]; r.oninput = () => { S[key] = num(r.value); paint(); paint2(); tone(); check(); }; };
+  const on = (id, key, num) => { const r = $(id); r.value = S[key]; r.oninput = () => { S[key] = num(r.value); paint(); paint2(); if (S.act === 3) { paint3(); $('done3').classList.remove('on'); if (G) G.unbloom(); } tone(); check(); }; };
   document.querySelectorAll('#acts [data-a]').forEach(b => b.onclick = () => setAct(+b.dataset.a));
   document.querySelectorAll('#lenses [data-l]').forEach(b => b.onclick = () => borrow(b.dataset.l));
+  $('bWear').onclick = wear;
   on('r-loss', 'loss', parseFloat); on('r-time', 'time', v => parseInt(v, 10)); on('r-echo', 'echo', v => parseInt(v, 10));
   $('bReset').onclick = () => { Object.assign(S, { loss: 2.25, time: 50, echo: 70, done: false }); ['loss', 'time', 'echo'].forEach(k => $('r-' + k).value = S[k]);
     $('done').classList.remove('on'); paint(); paint2(); if (G) G.unresolve(); if (S.act === 1) say(S.found.size === 3 ? LINES.all : LINES.start); };
@@ -142,8 +164,8 @@ export async function boot() {
   const tier = pickTier();
   if (tier !== 'none') { try { G = await make3D(tier); } catch (e) { G = null; } }
   if (G) paint(); else document.documentElement.classList.add('nogl');
-  lockTabs(); if (/[?&]act=2\b/.test(location.search)) setAct(2);
-  window.__lens = { S, tier: G ? tier : 'none', three: G && G.rev, find, act: setAct, borrow, shot: () => G && G.shot(), set(k, v) { S[k] = v; $('r-' + k).value = v; paint(); paint2(); check(); } };
+  lockTabs(); { const m = /[?&]act=([23])\b/.exec(location.search); if (m) setAct(+m[1]); }
+  window.__lens = { S, tier: G ? tier : 'none', three: G && G.rev, find, act: setAct, borrow, wear, shot: () => G && G.shot(), set(k, v) { const r = $('r-' + k); r.value = v; r.dispatchEvent(new Event('input')); } };
 }
 
 /* ======================= 3D ======================= */
@@ -256,6 +278,46 @@ async function make3D(tier) {
   const core = new THREE.Sprite(glowMat(0xffc46b)); core.scale.setScalar(1.1); core.material.opacity = 0.55; brain.add(core);
   const pl = new THREE.PointLight(0xffb85a, 3, 6, 2); brain.add(pl);
 
+  /* 4b) 破茧:玻璃碎片向外飞散,八瓣光之莲(八域色)从脑中升起绽开,七只光蝶盘旋上升 */
+  const TAU = Math.PI * 2, bl = { on: false, t: 0 };
+  const nSh = tier === 'low' ? 60 : 140;
+  const shards = new THREE.InstancedMesh(new THREE.TetrahedronGeometry(0.07), new THREE.MeshStandardMaterial({ color: 0xffd9a0, emissive: 0xffa040, emissiveIntensity: 1.4, roughness: 0.2, metalness: 0.1, transparent: true, opacity: 1 }), nSh);
+  shards.visible = false; shards.frustumCulled = false; scene.add(shards);
+  const shD = []; for (let i = 0; i < nSh; i++) { const u = hsh(i, 1, 9) * 2 - 1, a = hsh(i, 2, 9) * TAU, r = Math.sqrt(1 - u * u);
+    const d = new THREE.Vector3(r * Math.cos(a), u * 0.7 + 0.25, r * Math.sin(a)); shD.push({ d, sp: 0.8 + hsh(i, 3, 9) * 1.6, rot: new THREE.Vector3(hsh(i, 4, 9), hsh(i, 5, 9), hsh(i, 6, 9)).multiplyScalar(8) }); }
+  const petalTex = (() => { const c = document.createElement('canvas'); c.width = 64; c.height = 128; const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 128, 0, 0); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.6, 'rgba(255,230,180,.75)'); g.addColorStop(1, 'rgba(255,200,120,.15)');
+    x.fillStyle = g; x.beginPath(); x.moveTo(32, 128); x.bezierCurveTo(-6, 90, 6, 22, 32, 2); x.bezierCurveTo(58, 22, 70, 90, 32, 128); x.fill(); return new THREE.CanvasTexture(c); })();
+  const pg = new THREE.PlaneGeometry(0.34, 0.68); pg.translate(0, 0.34, 0);
+  const lotus = new THREE.Group(); lotus.visible = false; scene.add(lotus);
+  const petals = []; DOMAINS.forEach((d, i) => { for (const ring of [0, 1]) { const piv = new THREE.Group(); piv.rotation.y = (i + ring * 0.5) / DOMAINS.length * TAU; lotus.add(piv);
+    const m = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ map: petalTex, color: new THREE.Color(ring ? '#ffd690' : (d.color || '#f5c26b')).multiplyScalar(ring ? 1.6 : 2.2), transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
+    m.scale.setScalar(ring ? 0.7 : 1); piv.add(m); petals.push({ m, ring }); } });
+  const wingTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const g = x.createRadialGradient(10, 32, 2, 10, 32, 56);
+    g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.5, 'rgba(255,215,150,.7)'); g.addColorStop(1, 'rgba(255,170,80,0)'); x.fillStyle = g;
+    x.beginPath(); x.moveTo(4, 32); x.bezierCurveTo(20, -4, 64, 0, 56, 26); x.bezierCurveTo(52, 34, 30, 34, 4, 32); x.bezierCurveTo(26, 40, 52, 56, 34, 62); x.bezierCurveTo(18, 64, 8, 46, 4, 32); x.fill(); return new THREE.CanvasTexture(c); })();
+  const wg = new THREE.PlaneGeometry(0.26, 0.26); wg.translate(0.13, 0, 0);
+  const flies = []; for (let i = 0; i < 7; i++) { const f = new THREE.Group(); f.visible = false; scene.add(f);
+    const mat = new THREE.MeshBasicMaterial({ map: wingTex, color: new THREE.Color(DOMAINS[i % DOMAINS.length].color || '#f5c26b').multiplyScalar(1.8), transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+    const L = new THREE.Mesh(wg, mat), Rw = new THREE.Mesh(wg, mat); Rw.scale.x = -1; f.add(L, Rw); flies.push({ f, L, Rw, mat, ph: i / 7 * TAU, r: 0.5 + hsh(i, 7, 3) * 0.9, h: 0.6 + hsh(i, 8, 3) * 1.1, w: 0.5 + hsh(i, 9, 3) * 0.5 }); }
+  const glassParts = [cere, cortex, stem], C0 = new THREE.Vector3();
+  function bloomPose(t) {   // t 秒:0–1 碎裂,0.6–3 莲开,1.2 起蝶飞
+    const e = x => Math.min(1, Math.max(0, x)), ease = x => 1 - Math.pow(1 - e(x), 3);
+    brain.getWorldPosition(C0); const k = ease(t / 0.9);
+    glassParts.forEach(m => m.scale.setScalar(Math.max(0.001, 1 - k)));
+    shards.visible = t < 3.2; shards.material.opacity = 1 - e((t - 1.2) / 2);
+    shD.forEach((s, i) => { const r = ease(t / 2.2) * s.sp * 1.6; V.copy(s.d).multiplyScalar(r).add(C0); V.y -= 0.5 * Math.max(0, t - 0.8) * Math.max(0, t - 0.8) * 0.3;
+      Q.setFromEuler(new THREE.Euler(s.rot.x * t, s.rot.y * t, s.rot.z * t)); M.compose(V, Q, Sx.setScalar(Math.max(0.01, 1 - e((t - 1.6) / 1.6)))); shards.setMatrixAt(i, M); });
+    shards.instanceMatrix.needsUpdate = true;
+    lotus.visible = t > 0.4; lotus.position.copy(C0); lotus.position.y += -0.25 + 0.3 * ease((t - 0.5) / 2); lotus.scale.setScalar(1.25);
+    const open = ease((t - 0.6) / 2.4);
+    petals.forEach(p => { p.m.rotation.x = -(0.15 + (p.ring ? 0.7 : 1.15) * open); p.m.material.opacity = e((t - 0.5) / 1) * (p.ring ? 0.75 : 0.9); });
+    flies.forEach((b, i) => { const tt = t - 1.2 - i * 0.18; b.f.visible = tt > 0; if (tt <= 0) return; const up = ease(tt / 3);
+      const a = b.ph + tt * b.w; b.f.position.set(C0.x + Math.cos(a) * b.r * up, C0.y + 0.2 + b.h * up + Math.sin(tt * 1.3 + i) * 0.08, C0.z + Math.sin(a) * b.r * up);
+      b.f.rotation.y = -a; const fl = STILL ? 0.5 : Math.sin(tt * 14 + i) * 0.9; b.L.rotation.y = fl; b.Rw.rotation.y = -fl; b.mat.opacity = e(tt / 0.6) * 0.95; });
+  }
+  function bloomOff() { bl.on = false; bl.t = 0; glassParts.forEach(m => m.scale.setScalar(1)); shards.visible = false; lotus.visible = false; flies.forEach(b => b.f.visible = false); }
+
   /* 5) 相机:轻微呼吸 + 拖动环视(限角) */
   let yaw = 0, pitch = 0, tyaw = 0, tpitch = 0, drag = null;
   cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, yaw: tyaw, pitch: tpitch, moved: false }; });
@@ -304,6 +366,7 @@ async function make3D(tier) {
     T += dt; yaw += (tyaw - yaw) * 0.08; pitch += (tpitch - pitch) * 0.08;
     const br = STILL ? 0 : 1;
     brain.rotation.y = 0.28 + Math.sin(T * 0.15) * 0.12 * br; if (st.resolved < 1 && G && G.resolving) st.resolved = Math.min(1, st.resolved + dt * 0.6);
+    if (bl.on) { bl.t += dt; bloomPose(STILL ? 4 : bl.t); }
     const W = innerWidth, split = views.length > 1; R.setScissorTest(false); if (split) { R.setClearColor(0x070814, 1); R.setViewport(0, 0, W, innerHeight); R.clear(); R.setScissorTest(true); }
     views.forEach((v, side) => { camFor(v[2] / v[3], v[2] >= 1100);
       cam.position.set(base.x + Math.sin(T * 0.21) * 0.12 * br, base.y + Math.sin(T * 0.33) * 0.05 * br, base.z);
@@ -324,7 +387,8 @@ async function make3D(tier) {
   redraw(); size(); frame(0.016); raf = requestAnimationFrame(loop);
   if (STILL) $('hint').textContent = '点街上的牌子 · 拖动可环视';
   const api = { rev: THREE.REVISION, resolving: false, update, borrow, reveal() { kick(); },
-    resolve() { api.resolving = true; kick(); }, unresolve() { api.resolving = false; st.resolved = 0; kick(); },
+    resolve() { api.resolving = true; kick(); },
+    bloom() { bloomOff(); bl.on = true; st.resolved = 1; api.resolving = true; kick(); }, unbloom() { if (bl.on) { bloomOff(); kick(); } }, unresolve() { api.resolving = false; st.resolved = 0; kick(); },
     shot() { frame(0.016); return cv.toDataURL('image/png'); } };
   window.__dbg = { renderer: R, scene, camera: cam };
   return api;
