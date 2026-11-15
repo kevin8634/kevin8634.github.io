@@ -1749,6 +1749,7 @@
           meta: ["天枢 2.0 · 飞出银河", "日球层 · 旅行者 1 号 · 卫星与彗星 · 室女座星系团 · 韦布深场"], href: "starhelm/x/", prefix: ["gn:sh:"],
           age: ["ya","huo","chen","he"], tags: ["space"], why: "想知道此刻头顶的天空是什么样？用真实数据去看。" }
       ];
+      window.GN_WORLDS = WORLDS;   // 门户 3.0 首页「玩」面板只读引用（名称/颜色/链接）
       if (window.GN_LANG === "en") (function () { var ST = { "天枢": "Dubhe", "天璇": "Merak", "天玑": "Phecda", "天权": "Megrez", "玉衡": "Alioth", "开阳": "Mizar", "摇光": "Alkaid" };
         WORLDS.forEach(function (w) { w.star = ST[w.star] || w.star; ["name", "desc", "why", "ageTxt", "field"].forEach(function (k) { if (w[k]) w[k] = gnT(w[k]); }); if (w.meta) w.meta = w.meta.map(gnT); }); })();
       // 北斗位置（归一化，斗口左上，斗柄右下）：天枢→天璇→天玑→天权→玉衡→开阳→摇光
@@ -5129,60 +5130,187 @@
 </script>
 
     <!-- v2.0.0 · 创世计划 2.0 联合发布（王磊 2026-10-30 07:58 下令即刻上线） -->
-    <!-- 门户 3.0 · 首屏「从玩到造」静态外壳（11-15）：c2 概念图作底（也是 WebGL 不可用/减少动态时的后备）；Three.js 电影级主视觉待接入 #p3cv -->
+    <!-- 门户 3.0 · 首页（阶段 2，11-15）：#p3cv 造物晶柱 WebGL（portal3/p3hero.js）+ 左「玩」右「造」玻璃面板 + 底部 HUD；≤800 宽或矮屏收成底部「玩 / 造」抽屉。
+         底图 hero-c3*.webp 是同一场景的中档截帧（WebGL 不可用 / 低档 / 减少动态时的后备）。 -->
     <style>
-      #p3hero { position: fixed; inset: 0; z-index: 60; display: flex; align-items: flex-end; justify-content: center; padding: 0 20px calc(9vh + env(safe-area-inset-bottom)); background: #02060b url(portal3/hero-c2.webp) center 40% / cover no-repeat; color: #eef3f8; font-family: system-ui, sans-serif; text-align: center; transition: opacity .7s ease; }
-      @media (max-width: 800px) { #p3hero { background-image: url(portal3/hero-c2-768.webp); } }
-      #p3hero::before { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 90% at 50% 38%, transparent 40%, rgba(1,3,8,.78) 100%), linear-gradient(to top, rgba(1,4,8,.85), transparent 46%); pointer-events: none; }
+      #p3hero { position: fixed; inset: 0; z-index: 60; overflow: hidden; background: #030208 url(portal3/hero-c3.webp) center 45% / cover no-repeat; color: #eef0fa; font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif; transition: opacity .7s ease; perspective: 1500px; }
+      @media (max-aspect-ratio: 1/1) { #p3hero { background-image: url(portal3/hero-c3-768.webp); background-position: center 40%; } }
+      #p3hero::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to top, rgba(2,1,8,.72), transparent 24%), linear-gradient(to bottom, rgba(2,1,8,.5), transparent 16%); }
       #p3hero.off { opacity: 0; pointer-events: none; }
-      #p3hero .in { position: relative; max-width: 720px; }
-      #p3hero small { display: block; letter-spacing: .32em; color: #e9c779; font-size: 12px; margin-bottom: 10px; }
-      #p3hero h1 { margin: 0; font-weight: 500; font-size: clamp(22px, 4.2vw, 46px); line-height: 1.2; text-shadow: 0 2px 24px rgba(0,0,0,.7); }
-      #p3hero p { margin: 8px 0 0; color: #b9d7d5; font-size: clamp(13px, 1.6vw, 17px); }
-      #p3hero .bt { margin-top: 20px; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-      #p3hero button { padding: 10px 22px; border-radius: 999px; font: inherit; font-size: 14px; cursor: pointer; border: 1px solid #e9c779; color: #1a1305; background: linear-gradient(#f5dc9a, #d9ae55); }
-      #p3hero button.g { background: rgba(6,14,20,.55); color: #e9c779; }
-      #p3hero button:focus-visible { outline: 2px solid #9fd8ff; outline-offset: 2px; }
-      #p3hero .lg { position: absolute; top: 14px; right: 16px; padding: 5px 12px; font-size: 12px; background: rgba(6,14,20,.55); color: #e9c779; z-index: 1; }
-      #p3hero .tz { margin-top: 12px; font-size: 13px; color: #9fd8ff; min-height: 1em; }
       #p3hero #p3cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.4s ease; z-index: 0; }
       #p3hero #p3cv.on { opacity: 1; }
-      #p3hero::before { z-index: 1; } #p3hero .in { z-index: 2; } #p3hero .lg { z-index: 3; }
-      /* 画质按钮（11-15）：与 EN 同风格，并排在右上角；点开三选一 */
-      #p3hero .tr { position: absolute; top: 14px; right: 16px; z-index: 3; display: flex; gap: 8px; align-items: flex-start; }
-      #p3hero .tr .lg { position: relative; top: auto; right: auto; white-space: nowrap; line-height: 16px; }
+      #p3hero button { font: inherit; cursor: pointer; }
+      #p3hero a, #p3hero button { -webkit-tap-highlight-color: transparent; }
+      #p3hero :focus-visible { outline: 2px solid #9fd8ff; outline-offset: 2px; }
+      /* 标题 */
+      #p3hero .p3t { position: absolute; z-index: 2; top: 22px; left: 28px; max-width: min(380px, 30vw); text-shadow: 0 1px 3px rgba(0,0,0,.9), 0 2px 18px rgba(0,0,0,.75); }
+      #p3hero .p3t small { display: block; letter-spacing: .34em; color: #e9c779; font-size: 11px; margin-bottom: 6px; }
+      #p3hero .p3t h1 { margin: 0; font-weight: 600; font-size: clamp(18px, 1.75vw, 26px); line-height: 1.3; }
+      #p3hero .p3t p { margin: 6px 0 0; color: #c3c6ec; font-size: 13px; line-height: 1.5; }
+      /* 玻璃面板 */
+      #p3hero .p3pn { position: absolute; z-index: 2; top: clamp(112px, 21vh, 210px); width: clamp(262px, 25.5vw, 400px); max-height: calc(100% - clamp(112px, 21vh, 210px) - 128px); display: flex; flex-direction: column; padding: 16px 16px 14px; border-radius: 20px; box-sizing: border-box;
+        background: linear-gradient(160deg, rgba(168,150,255,.17), rgba(52,36,110,.10) 42%, rgba(24,70,104,.15)); backdrop-filter: blur(16px) saturate(165%); -webkit-backdrop-filter: blur(16px) saturate(165%);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.04), inset 0 -30px 60px rgba(120,90,255,.06), 0 24px 70px rgba(0,0,0,.5); transition: transform .6s cubic-bezier(.2,.7,.2,1); }
+      #p3hero .p3pn::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; opacity: .8; background: linear-gradient(135deg, #9fd8ff, #b48cff 28%, #ff9ad5 52%, #ffe29a 72%, #8ff5d0);
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+      #p3hero .p3pn::after { content: ""; position: absolute; left: 14px; right: 40%; top: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.9), transparent); pointer-events: none; }
+      #p3hero .pl { left: 2.4vw; transform: rotateY(12deg); transform-origin: left center; }
+      #p3hero .pr { right: 2.4vw; transform: rotateY(-12deg); transform-origin: right center; }
+      #p3hero .pl:hover, #p3hero .pl:focus-within { transform: rotateY(4deg); }
+      #p3hero .pr:hover, #p3hero .pr:focus-within { transform: rotateY(-4deg); }
+      #p3hero .ph { display: flex; align-items: baseline; gap: 10px; margin: 0 0 12px; }
+      #p3hero .ph b { font-size: 26px; font-weight: 700; line-height: 1; background: linear-gradient(90deg, #fff, #cfc4ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      #p3hero .ph span { font-size: 11px; letter-spacing: .32em; color: #b9b3e6; }
+      #p3hero .ph em { margin-left: auto; font-style: normal; font-size: 11px; color: #9b98c8; }
+      #p3hero .pb { overflow: auto; min-height: 0; scrollbar-width: thin; scrollbar-color: rgba(180,170,255,.35) transparent; }
+      #p3hero .wg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      #p3hero .wc { --c: #b9a8ff; display: flex; align-items: center; gap: 9px; min-width: 0; padding: 7px; border-radius: 13px; color: #eef0fa; text-decoration: none; background: rgba(255,255,255,.045); border: 1px solid rgba(255,255,255,.09); transition: background .25s, border-color .25s; }
+      #p3hero .wc:hover, #p3hero .wc:focus-visible { background: rgba(255,255,255,.1); border-color: var(--c); }
+      #p3hero .wc img, #p3hero .wc .d2 { flex: none; width: 44px; height: 44px; border-radius: 10px; object-fit: cover; box-shadow: 0 0 0 1px var(--c), 0 0 14px -4px var(--c); background: #120d26; }
+      #p3hero .wc .d2 { display: grid; place-items: center; font: 700 15px/1 system-ui, sans-serif; color: #fff; background: radial-gradient(circle at 30% 30%, #4b3bb0, #0b0820 70%); }
+      #p3hero .wc span { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+      #p3hero .wc b { font-size: 13.5px; font-weight: 600; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow-wrap: anywhere; }
+      #p3hero .wc i { font-style: normal; font-size: 11.5px; color: var(--c); }
+      #p3hero .wc.dp { grid-column: 1 / -1; }
+      /* 造：三道门 */
+      #p3hero .dg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      #p3hero .door { --c: #9fd8ff; display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 16px 4px 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,.09); background: rgba(255,255,255,.035); color: #e8e9fb; cursor: not-allowed; text-align: center; min-width: 0; }
+      #p3hero .door svg { width: 100%; max-width: 84px; height: auto; color: var(--c); filter: drop-shadow(0 0 6px var(--c)); opacity: .92; }
+      #p3hero .door b { font-size: 12.5px; font-weight: 600; line-height: 1.3; }
+      #p3hero .door small { font-size: 10.5px; color: #a7a3d6; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); white-space: nowrap; }
+      #p3hero .pm { margin: 12px 0 0; font-size: 12.5px; color: #cfd0f2; text-align: center; letter-spacing: .04em; }
+      /* 底部 HUD 与按钮 */
+      #p3hero .p3hud { position: absolute; z-index: 3; left: 24px; bottom: calc(54px + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 10px; max-width: calc(100% - 420px); }
+      #p3hero .p3hud > b { font-size: 14px; font-weight: 600; color: #f1e3b8; white-space: nowrap; text-shadow: 0 2px 12px rgba(0,0,0,.8); }
+      #p3hero .p3hud nav { display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(14,10,36,.5); border: 1px solid rgba(190,175,255,.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); white-space: nowrap; }
+      #p3hero .p3hud a { padding: 5px 12px; border-radius: 999px; color: #e6e4ff; text-decoration: none; font-size: 13px; }
+      #p3hero .p3hud a:hover, #p3hero .p3hud a:focus-visible { background: rgba(190,175,255,.18); color: #fff; }
+      #p3hero .p3hud nav i { font-style: normal; color: #8c86c4; font-size: 12px; }
+      #p3hero .p3cta { position: absolute; z-index: 3; right: 24px; bottom: calc(22px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+      #p3hero .p3cta .bt { display: flex; gap: 10px; }
+      #p3hero .p3cta button { padding: 9px 20px; border-radius: 999px; font-size: 14px; border: 1px solid #e9c779; color: #1a1305; background: linear-gradient(#f5dc9a, #d9ae55); }
+      #p3hero .p3cta button.g { background: rgba(14,10,30,.55); color: #e9c779; }
+      #p3hero .tz { font-size: 12.5px; color: #9fd8ff; max-width: 340px; text-align: right; text-shadow: 0 1px 8px #000; }
+      #p3hero .tz:empty { display: none; }
+      #p3hero .p3tabs { display: none; }
+      /* 右上：画质 + 语言（沿用） */
+      #p3hero .lg { padding: 5px 12px; font-size: 12px; border-radius: 999px; border: 1px solid #e9c779; background: rgba(6,14,20,.55); color: #e9c779; }
+      #p3hero .tr { position: absolute; top: 14px; right: 16px; z-index: 4; display: flex; gap: 8px; align-items: flex-start; }
+      #p3hero .tr .lg { position: relative; white-space: nowrap; line-height: 16px; }
       #p3hero .qw { position: relative; }
       #p3hero .qm { position: absolute; top: calc(100% + 6px); right: 0; display: none; flex-direction: column; gap: 4px; padding: 6px; border: 1px solid rgba(233,199,121,.45); border-radius: 12px; background: rgba(6,14,20,.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
       #p3hero .qm.on { display: flex; }
-      #p3hero .qm button { padding: 6px 16px; font-size: 12px; border: 1px solid transparent; background: none; color: #e9c779; text-align: left; white-space: nowrap; }
+      #p3hero .qm button { padding: 6px 16px; font-size: 12px; border-radius: 999px; border: 1px solid transparent; background: none; color: #e9c779; text-align: left; white-space: nowrap; }
       #p3hero .qm button[aria-checked="true"] { border-color: rgba(233,199,121,.6); background: rgba(233,199,121,.12); }
       #p3hero .qm button:hover { background: rgba(233,199,121,.18); }
-      #p3hero .p3qt { position: absolute; top: 62px; right: 16px; z-index: 3; padding: 6px 14px; border-radius: 999px; background: rgba(6,14,20,.72); border: 1px solid rgba(233,199,121,.4); color: #e9e2cc; font-size: 12px; line-height: 1.3; white-space: nowrap; opacity: 0; transition: opacity .6s ease; pointer-events: none; }
+      #p3hero .p3qt { position: absolute; top: 62px; right: 16px; z-index: 4; padding: 6px 14px; border-radius: 999px; background: rgba(6,14,20,.72); border: 1px solid rgba(233,199,121,.4); color: #e9e2cc; font-size: 12px; line-height: 1.3; white-space: nowrap; opacity: 0; transition: opacity .6s ease; pointer-events: none; }
       #p3hero .p3qt.on { opacity: 1; }
-      @media (max-width: 480px) { #p3hero .tr { flex-direction: column-reverse; align-items: flex-end; gap: 6px; top: calc(12px + env(safe-area-inset-top)); right: 12px; } #p3hero .p3qt { top: calc(88px + env(safe-area-inset-top)); right: 12px; } }   /* 窄屏：画质按钮叠在 EN 下方，不挤一光日小窗 */
-      @media (max-height: 360px) { #p3hero { padding-bottom: 12px; } #p3hero h1 { font-size: 20px; } #p3hero .bt { margin-top: 10px; } #p3hero button { padding: 7px 16px; } }
+      @media (max-width: 1100px) and (min-width: 801px) { #p3hero .p3hud { max-width: calc(100% - 330px); flex-wrap: wrap; } #p3hero .p3cta button { padding: 8px 16px; } }
+      @media (max-width: 480px) { #p3hero .tr { flex-direction: column-reverse; align-items: flex-end; gap: 6px; top: calc(12px + env(safe-area-inset-top)); right: 12px; } #p3hero .p3qt { top: calc(88px + env(safe-area-inset-top)); right: 12px; } }
+      /* ≤800 宽或矮屏：3D 全屏，面板收成底部「玩 / 造」抽屉 */
+      @media (max-width: 800px), (max-height: 420px) {
+        #p3hero .p3t { left: 0; right: 0; max-width: none; top: calc(66px + env(safe-area-inset-top)); text-align: center; padding: 0 16px; }
+        #p3hero .p3t h1 { font-size: 18px; } #p3hero .p3t p { font-size: 12px; margin-top: 4px; }
+        #p3hero .p3tabs { display: flex; position: absolute; z-index: 6; left: 0; right: 0; bottom: 0; padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); gap: 8px; background: rgba(10,7,26,.72); border-top: 1px solid rgba(190,175,255,.25); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+        #p3hero .p3tabs button { flex: 1; height: 40px; border-radius: 12px; border: 1px solid rgba(190,175,255,.28); background: rgba(255,255,255,.05); color: #eceafe; font-size: 15px; font-weight: 600; letter-spacing: .06em; }
+        #p3hero .p3tabs button span { font-size: 10.5px; font-weight: 400; letter-spacing: .24em; color: #a9a4d8; margin-left: 6px; }
+        #p3hero .p3tabs button[aria-expanded="true"] { background: rgba(180,160,255,.22); border-color: #b9a8ff; }
+        #p3hero .p3pn, #p3hero .pl, #p3hero .pr, #p3hero .pl:hover, #p3hero .pr:hover, #p3hero .pl:focus-within, #p3hero .pr:focus-within { left: 8px; right: 8px; top: auto; width: auto; bottom: calc(52px + env(safe-area-inset-bottom)); max-height: min(68vh, 560px); z-index: 5; border-radius: 20px 20px 12px 12px; transform: translateY(calc(100% + 70px)); visibility: hidden; transition: transform .38s cubic-bezier(.2,.7,.2,1), visibility 0s linear .38s; background: linear-gradient(160deg, rgba(60,48,130,.72), rgba(20,14,48,.82) 50%, rgba(14,40,64,.8)); }
+        #p3hero .p3pn.open { transform: none; visibility: visible; transition: transform .38s cubic-bezier(.2,.7,.2,1); }
+        #p3hero .p3hud { left: 10px; right: 10px; max-width: none; bottom: calc(104px + env(safe-area-inset-bottom)); overflow-x: auto; scrollbar-width: none; }
+        #p3hero .p3hud::-webkit-scrollbar { display: none; }
+        #p3hero .p3hud > b { font-size: 13px; }
+        #p3hero .p3cta { right: 10px; bottom: calc(60px + env(safe-area-inset-bottom)); }
+        #p3hero .p3cta button { padding: 7px 14px; font-size: 13px; }
+        #p3hero .tz { position: absolute; right: 0; bottom: calc(100% + 52px); max-width: 260px; background: rgba(6,8,22,.78); padding: 6px 10px; border-radius: 10px; }
+        html.p3h #gvis { bottom: calc(64px + env(safe-area-inset-bottom)); left: 10px; }
+        html.p3dr #gvis, html.p3dr .p3mv { visibility: hidden; }
+      }
+      @media (max-height: 420px) {
+        #p3hero .p3t { top: 10px; left: 50%; right: auto; width: min(300px, 48vw); transform: translateX(-50%); padding: 0; }
+        #p3hero .p3t small, #p3hero .p3t p { display: none; } #p3hero .p3t h1 { font-size: 15px; }
+        #p3hero .p3tabs { padding: 4px 8px calc(4px + env(safe-area-inset-bottom)); } #p3hero .p3tabs button { height: 32px; font-size: 14px; }
+        #p3hero .p3pn, #p3hero .pl, #p3hero .pr, #p3hero .pl:hover, #p3hero .pr:hover, #p3hero .pl:focus-within, #p3hero .pr:focus-within { bottom: calc(42px + env(safe-area-inset-bottom)); max-height: calc(100% - 52px); left: 12%; right: 12%; }
+        #p3hero .p3hud { left: 8px; right: 8px; bottom: calc(86px + env(safe-area-inset-bottom)); }
+        #p3hero .p3hud > b { font-size: 12.5px; }
+        #p3hero .p3cta { bottom: calc(46px + env(safe-area-inset-bottom)); } #p3hero .p3cta button { padding: 6px 12px; }
+        #p3hero .tz { bottom: calc(100% + 6px); }
+        html.p3h #gvis { bottom: calc(48px + env(safe-area-inset-bottom)); left: 8px; }
+        html.p3h .p3mv { top: 8px; bottom: auto; left: 8px; }
+      }
+      @media (max-height: 420px) and (max-width: 760px) { #p3hero .p3t { display: none; } }
+      @media (max-width: 1280px) and (min-width: 801px) {
+        #p3hero .wc { gap: 7px; padding: 6px; } #p3hero .wc img, #p3hero .wc .d2 { width: 34px; height: 34px; border-radius: 8px; } #p3hero .wc .d2 { font-size: 12px; }
+        #p3hero .wc b { font-size: 12.5px; } #p3hero .door b { font-size: 11.5px; } #p3hero .door small { padding: 2px 6px; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #p3hero .p3pn, #p3hero .p3pn.open { transition: none !important; }
+        #p3hero .pl, #p3hero .pr, #p3hero .pl:hover, #p3hero .pr:hover, #p3hero .pl:focus-within, #p3hero .pr:focus-within { transform: none; }
+      }
+      @media (prefers-reduced-motion: reduce) and (max-width: 800px), (prefers-reduced-motion: reduce) and (max-height: 420px) {
+        #p3hero .p3pn:not(.open) { display: none; } #p3hero .p3pn.open { transform: none; }
+      }
     </style>
     <section id="p3hero" aria-label="创世计划 3.0">
+      <div class="p3t"><small>GENESIS 3.0</small><h1 id="p3h1"></h1><p id="p3sub"></p></div>
+      <aside class="p3pn pl" id="p3pl" aria-labelledby="p3plh"><h2 class="ph" id="p3plh"><b></b><span>PLAY</span><em></em></h2><div class="pb"><div class="wg" id="p3wg"></div></div></aside>
+      <aside class="p3pn pr" id="p3pr" aria-labelledby="p3prh"><h2 class="ph" id="p3prh"><b></b><span>BUILD</span></h2><div class="pb"><div class="dg" id="p3dg"></div><p class="pm" id="p3pm"></p></div></aside>
+      <div class="p3hud"><b id="p3ask"></b><nav id="p3nav"></nav></div>
+      <div class="p3cta"><div class="tz" id="p3tz" aria-live="polite"></div><div class="bt"><button type="button" id="p3play"></button><button type="button" class="g" id="p3pre"></button></div></div>
+      <div class="p3tabs" role="group"><button type="button" id="p3tbp" aria-controls="p3pl" aria-expanded="false"></button><button type="button" id="p3tbb" aria-controls="p3pr" aria-expanded="false"></button></div>
       <div class="tr"><div class="qw"><button type="button" class="lg g" id="p3qb" aria-haspopup="menu" aria-expanded="false"></button><div class="qm" id="p3qm" role="menu"><button type="button" role="menuitemradio" data-q="high"></button><button type="button" role="menuitemradio" data-q="medium"></button><button type="button" role="menuitemradio" data-q="low"></button></div></div><button type="button" class="lg g" id="p3lg"></button></div>
-      <div class="in"><small>GENESIS 3.0</small><h1 id="p3h1"></h1><p id="p3sub"></p>
-        <div class="bt"><button type="button" id="p3play"></button><button type="button" class="g" id="p3pre"></button></div><div class="tz" id="p3tz" aria-live="polite"></div></div>
     </section>
     <script>
     (function () {
       "use strict";
       var en = window.GN_LANG === "en", h = document.getElementById("p3hero"), $ = function (i) { return document.getElementById(i); };
+      var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+      document.documentElement.classList.add("p3h");
       $("p3h1").textContent = en ? "Master a world, then build one." : "玩懂一个世界，再亲手造一个。";
-      $("p3sub").textContent = en ? "Seven workshops, one light bridge — the eighth star is yours." : "七座工坊，一道光桥——第八颗星，由你来造。";
+      $("p3sub").textContent = en ? "Seven worlds, one rainbow bridge — the eighth star is yours to build." : "七个世界，一道七色光桥——第八颗星，由你来造。";
       $("p3play").textContent = en ? "Keep playing" : "继续玩";
       $("p3pre").textContent = en ? "3.0 Preview" : "3.0 预告";
       $("p3lg").textContent = en ? "中文" : "EN";
       $("p3lg").addEventListener("click", function () { if (window.gnSetLang) gnSetLang(en ? "zh" : "en"); });
+      /* 左「玩」：七个世界（读页面 WORLDS）+ 深空之下 2.0 */
+      $("p3plh").querySelector("b").textContent = en ? "Play" : "玩";
+      $("p3plh").querySelector("em").textContent = en ? "7 worlds" : "七个世界";
+      var WL = window.GN_WORLDS || [], play = en ? "Play ›" : "玩 ›", html = "";
+      WL.forEach(function (w) {
+        html += '<a class="wc" href="' + esc(w.href) + '" style="--c:' + esc(w.color) + '"><img src="world-' + esc(w.id) + '.webp" alt="" width="44" height="44" loading="lazy" decoding="async"><span><b>' + esc(en ? (w.en || w.name) : w.name) + '</b><i>' + play + '</i></span></a>';
+      });
+      html += '<a class="wc" href="deep/" style="--c:#8f7dff"><span class="d2" aria-hidden="true">2.0</span><span><b>' + (en ? "Deep Space 2.0" : "深空之下 2.0") + '</b><i>' + play + '</i></span></a>';
+      $("p3wg").innerHTML = html;
+      /* 右「造」：三道门（即将开放） */
+      $("p3prh").querySelector("b").textContent = en ? "Build" : "造";
+      var ARCH = '<path d="M12 92V42a28 28 0 0 1 56 0v50M20 92V44a20 20 0 0 1 40 0v48M6 92h68" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>';
+      var ICON = [
+        '<path d="M28 52h24M28 62h24M28 72h24" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="34" cy="52" r="2.6" fill="currentColor"/><circle cx="47" cy="62" r="2.6" fill="currentColor"/><circle cx="39" cy="72" r="2.6" fill="currentColor"/>',
+        '<path d="M35 46h10M37 46v11l-9 16a3 3 0 0 0 2.6 4.5h18.8A3 3 0 0 0 52 73l-9-16V46M31 68h18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>',
+        '<circle cx="40" cy="62" r="10" fill="none" stroke="currentColor" stroke-width="1.6"/><ellipse cx="40" cy="62" rx="18" ry="5.5" transform="rotate(-18 40 62)" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="56" cy="56" r="1.8" fill="currentColor"/>'];
+      var DOORS = en ? ["Build a rule", "Build an experiment", "Build a world"] : ["造一条规则", "造一个实验", "造一个世界"], DC = ["#9fd8ff", "#ff9ad5", "#ffe29a"], soon = en ? "Coming soon" : "即将开放", dh = "";
+      DOORS.forEach(function (d, i) { dh += '<button type="button" class="door" aria-disabled="true" style="--c:' + DC[i] + '"><svg viewBox="0 0 80 96" aria-hidden="true">' + ARCH + ICON[i] + '</svg><b>' + d + '</b><small>' + soon + '</small></button>'; });
+      $("p3dg").innerHTML = dh;
+      $("p3pm").textContent = en ? "Master a world, then build one." : "玩懂一个世界，再亲手造一个";
+      /* 底部 HUD：你想造什么？→ 物理 → 生命 → 数学 → 星空 */
+      $("p3ask").textContent = en ? "What do you want to build? →" : "你想造什么? →";
+      var HUD = [[en ? "Physics" : "物理", "nomoverse/"], [en ? "Life" : "生命", "life-source/"], [en ? "Math" : "数学", "math-atlas/"], [en ? "Stars" : "星空", "starhelm/"]];
+      $("p3nav").innerHTML = HUD.map(function (x) { return '<a href="' + x[1] + '">' + x[0] + '</a>'; }).join('<i aria-hidden="true">→</i>');
+      $("p3nav").setAttribute("aria-label", en ? "What do you want to build?" : "你想造什么");
+      /* 手机抽屉：玩 / 造 两个标签，默认收起 */
+      var tabs = [[$("p3tbp"), $("p3pl")], [$("p3tbb"), $("p3pr")]];
+      $("p3tbp").innerHTML = en ? "Play" : "玩<span>PLAY</span>"; $("p3tbb").innerHTML = en ? "Build" : "造<span>BUILD</span>";
+      if (en) { $("p3plh").querySelector("span").remove(); $("p3prh").querySelector("span").remove(); }
+      function drawer(k) { tabs.forEach(function (t, i) { var on = i === k; t[0].setAttribute("aria-expanded", String(on)); t[1].classList.toggle("open", on); }); document.documentElement.classList.toggle("p3dr", k > -1); }
+      function drawerOpen() { for (var i = 0; i < tabs.length; i++) if (tabs[i][1].classList.contains("open")) return i; return -1; }
+      tabs.forEach(function (t, i) { t[0].addEventListener("click", function () { drawer(drawerOpen() === i ? -1 : i); }); });
+      $("p3dg").addEventListener("click", function (e) { if (e.target.closest && e.target.closest(".door")) e.preventDefault(); });
       var p3m = null, p3dead = false;
-      /* 画质：显示当前档；三选一写 gn:p3q，首屏在跑就热切换（未启动的话启动时自然读到）；自动降档时提示一次 */
-      var QL = en ? { high: "High", medium: "Medium", low: "Low" } : { high: "高", medium: "中", low: "低" }, QS = en ? { high: "H", medium: "M", low: "L" } : QL, qCur = "medium", qT = null;
+      /* 画质：显示当前档；三选一写 gn:p3q，首屏在跑就热切换（切到低档 = 释放 WebGL 回到底图；从低档切回中/高 = 现场启动）；自动降档时提示一次 */
+      var QL = en ? { high: "High", medium: "Medium", low: "Low" } : { high: "高", medium: "中", low: "低" }, QS = en ? { high: "H", medium: "M", low: "L" } : QL, qT = null;
       var qb = $("p3qb"), qm = $("p3qm"), qOpts = qm.querySelectorAll("button");
       for (var qi = 0; qi < qOpts.length; qi++) qOpts[qi].textContent = QL[qOpts[qi].getAttribute("data-q")];
-      function qSet(t) { qCur = t; qb.textContent = (en ? "Quality " : "画质 ") + QS[t]; qb.setAttribute("aria-label", (en ? "Quality: " : "画质：") + QL[t]);
+      function qSet(t) { qb.textContent = (en ? "Quality " : "画质 ") + QS[t]; qb.setAttribute("aria-label", (en ? "Quality: " : "画质：") + QL[t]);
         for (var i = 0; i < qOpts.length; i++) qOpts[i].setAttribute("aria-checked", String(qOpts[i].getAttribute("data-q") === t)); }
       function qOpen(on) { qm.classList.toggle("on", on); qb.setAttribute("aria-expanded", String(on)); }
       qSet("medium");
@@ -5190,7 +5318,7 @@
       qb.addEventListener("click", function (e) { e.stopPropagation(); qOpen(!qm.classList.contains("on")); });
       qm.addEventListener("click", function (e) { e.stopPropagation(); var n = e.target && e.target.getAttribute && e.target.getAttribute("data-q"); if (!n) return;
         qOpen(false); try { localStorage.setItem("gn:p3q", n); } catch (x) {} qSet(n);
-        if (p3m && p3m.tier()) { if (!p3m.setQuality(n)) location.reload(); } });
+        if (p3m && p3m.tier()) { if (!p3m.setQuality(n)) location.reload(); } else if (n !== "low") p3boot(); });
       document.addEventListener("click", function () { if (qm.classList.contains("on")) qOpen(false); });
       window.addEventListener("p3q:tier", function (e) { var d = e.detail || {}; if (!d.tier) return; qSet(d.tier); if (d.auto && qT) qT.toast(h, en, "tr"); });
       function p3stop() { p3dead = true; if (p3m) { try { p3m.pause(); } catch (e) {} setTimeout(function () { try { p3m.stop(); } catch (e) {} }, 760); } }
@@ -5201,11 +5329,15 @@
       }
       function p3lazy() { if (window.__p3introOn) { window.addEventListener("p3intro:end", p3lazy, { once: true }); return; } (window.requestIdleCallback || function (f) { setTimeout(f, 300); })(p3boot, { timeout: 1500 }); }
       if (document.readyState === "complete") p3lazy(); else window.addEventListener("load", p3lazy);
-      function go() { p3stop(); h.classList.add("off"); h.setAttribute("aria-hidden", "true"); try { sessionStorage.setItem("gn:portal:p3hero", "1"); } catch (e) {} setTimeout(function () { h.style.display = "none"; }, 750); }
+      function go() { p3stop(); drawer(-1); h.classList.add("off"); h.setAttribute("aria-hidden", "true"); document.documentElement.classList.remove("p3h"); try { sessionStorage.setItem("gn:portal:p3hero", "1"); } catch (e) {} setTimeout(function () { h.style.display = "none"; }, 750); }
       $("p3play").addEventListener("click", go);
       $("p3pre").addEventListener("click", function () { $("p3tz").textContent = en ? "Genesis 3.0 \u201cFrom Play to Build\u201d — trailer in production. Stay tuned." : "创世计划 3.0「从玩到造」宣传片制作中，敬请期待。"; });
-      document.addEventListener("keydown", function (e) { if (e.key === "Escape" && qm.classList.contains("on")) { qOpen(false); qb.focus(); return; } if (e.key === "Escape" && h.style.display !== "none" && !document.querySelector("#p3mvDlg.on")) go(); });
-      try { if (sessionStorage.getItem("gn:portal:p3hero") === "1") { h.style.display = "none"; h.classList.add("off"); } } catch (e) {}
+      document.addEventListener("keydown", function (e) {
+        if (e.key !== "Escape" || h.style.display === "none") return;
+        if (qm.classList.contains("on")) { qOpen(false); qb.focus(); return; }
+        var k = drawerOpen(); if (k > -1) { drawer(-1); tabs[k][0].focus(); return; }
+        if (!document.querySelector("#p3mvDlg.on")) go(); });
+      try { if (sessionStorage.getItem("gn:portal:p3hero") === "1") { h.style.display = "none"; h.classList.add("off"); document.documentElement.classList.remove("p3h"); } } catch (e) {}
     })();
     </script>
     <!-- 门户 3.0 · 「一光日」MV 小窗（11-15）：teaser 静音循环，点开弹层播完整 MV；本地文件，零外部请求；减少动态只显示封面 -->

@@ -492,7 +492,7 @@ export function start(host, opts) {
   const TAN = Math.tan(THREE.MathUtils.degToRad(20));
   function layout(asp) {
     portrait = asp < .95;
-    if (portrait) { baseDist = Math.max(28 / (2 * TAN), 13.2 / (2 * TAN * asp)); aimY = .9; camY = -3.0; U.uGal.value.set(.24, .86); U.uPlanet.value.set(.84, .74, .075); }
+    if (portrait) { baseDist = Math.max(28 / (2 * TAN), 13.2 / (2 * TAN * asp)); aimY = .9; camY = -3.0; U.uGal.value.set(.24, .87); U.uPlanet.value.set(.76, .755, .062); }
     else { baseDist = Math.max(22.5 / (2 * TAN), 30 / (2 * TAN * asp)); aimY = 1.9; camY = -3.6; U.uGal.value.set(.32, .84); U.uPlanet.value.set(.81, .77, .085); }
   }
 

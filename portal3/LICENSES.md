@@ -24,3 +24,7 @@
   - Bloom 13-tap 降采样 + tent 升采样（Jorge Jimenez, SIGGRAPH 2014）；
   - AgX 多项式拟合（Blender AgX / Google Filament，Apache-2.0；three.js MIT 实现中的同一组常数）；
   - 无状态粒子（位置 = f(编号, 时间)）与 fps 调速器思路（Stonehenge Solstice，MIT）。
+
+## 阶段 2b（首页玻璃面板 + 底部 HUD，11-15）
+- `hero-c3.webp`（1600×1000）/ `hero-c3-768.webp`（768×1366，竖屏）：本项目 `p3hero.js` 中档画面在 t=6s 的截帧（无界面层），作为低档 / 无 WebGL2 / 减少动态时的首页底图；取代 `hero-c2*.webp`（旧文件仍留在目录里，未再引用）。
+- 「玩」面板缩略图复用根目录 `world-01..07.webp`（项目自有）；「造」三道门为内联 SVG 线稿，本项目自绘。玻璃面板全部是 CSS（backdrop-filter / 渐变描边），无外部字体或图标库。
