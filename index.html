@@ -5369,6 +5369,7 @@
       <div class="p3ct"><div class="tzn" id="p3tz" aria-live="polite"></div><button type="button" class="pri" id="p3tbp" aria-controls="p3pl" aria-expanded="false"></button><button type="button" class="sec" id="p3tbb" aria-controls="p3pr" aria-expanded="false"></button><span class="sp" aria-hidden="true"></span><button type="button" class="lk" id="p3pre"></button><button type="button" class="lk" id="p3play"></button></div>
       <div class="tr"><div class="qw"><button type="button" class="lg g" id="p3qb" aria-haspopup="menu" aria-expanded="false"></button><div class="qm" id="p3qm" role="menu"><button type="button" role="menuitemradio" data-q="high"></button><button type="button" role="menuitemradio" data-q="medium"></button><button type="button" role="menuitemradio" data-q="low"></button></div></div><button type="button" class="lg g" id="p3lg"></button></div>
     </section>
+    <script src="portal3/p3fx.js"></script>
     <script>
     (function () {
       "use strict";
@@ -5391,12 +5392,14 @@
         ix[7].textContent = "0" + (i + 1) + " / 07" + (RN[i] ? "  ·  " + RN[i] : "");
         $("p3ix").style.setProperty("--c", c);
         if (p3m && p3m.spot) p3m.spot(i);
+        if (window.P3FX) { P3FX.rotate(el, RW[i], c, anim); return; }   /* 11-16 Rotating Text：逐字弹入（portal3/p3fx.js） */
         if (!anim) { sp.textContent = RW[i]; el.style.setProperty("--c", c); return; }
         sp.className = "out";
         setTimeout(function () { sp.textContent = RW[i]; el.style.setProperty("--c", c); sp.className = "pre"; void sp.offsetWidth; sp.className = ""; }, 360);
       }
       function rwLoop() { clearTimeout(rwT); if (p3dead) return; rwT = setTimeout(function () { if (!document.hidden) rwSet((rwI + 1) % 7, true); rwLoop(); }, 2800); }
       rwSet(0, false);
+      if (window.P3FX) P3FX.blur($("p3h1"));   /* 11-16 Blur Text：标题逐字由糊变清 */
       function reveal() { document.documentElement.classList.add("p3rv"); if (!rwRM) setTimeout(rwLoop, 2600); }
       $("p3sub").textContent = en ? "Math grows into physics, chemistry, life and mind, all the way to the stars. Play through seven worlds, layer by layer. The eighth star is yours to build." : "数学长出物理、化学、生命、心智，一直长到星空。七个世界，一层层玩懂；第八颗星，由你来造。";
       $("p3play").textContent = en ? "Enter portal ↓" : "进入门户 ↓";
@@ -5437,7 +5440,9 @@
       $("p3pm").textContent = en ? "Master a world, then build one." : "玩懂一个世界，再亲手造一个";
       /* 手机抽屉：玩 / 造 两个标签，默认收起 */
       var tabs = [[$("p3tbp"), $("p3pl")], [$("p3tbb"), $("p3pr")]];
-      $("p3tbp").innerHTML = en ? "Start playing <span>›</span>" : "开始玩 <span>›</span>"; $("p3tbb").innerHTML = en ? "Build <small>soon</small>" : "造 <small>即将开放</small>";
+      $("p3tbp").innerHTML = en ? "Start playing <span>›</span>" : "开始玩 <span>›</span>"; $("p3tbb").innerHTML = en ? '<span class="shy">Build</span> <small>soon</small>' : '<span class="shy">造</span> <small>即将开放</small>';
+      /* 11-16 主按钮：发光 + 磁吸 + 点击火花（portal3/p3fx.js；减少动态全部关闭） */
+      if (window.P3FX) P3FX.buttons([{ el: $("p3tbp"), c: "#ffe29a", k: .2 }, { el: $("p3tbb"), c: "#ff9ad5", k: .16 }, { el: $("p3pre"), c: "#9fd8ff", k: .14 }, { el: $("p3play"), c: "#9fd8ff", k: .14 }]);
       [$("p3pl"), $("p3pr")].forEach(function (pn) { var x = document.createElement("button"); x.type = "button"; x.className = "px"; x.setAttribute("aria-label", en ? "Close" : "关闭"); x.textContent = "×"; x.addEventListener("click", function () { var k = drawerOpen(); drawer(-1); if (k > -1) tabs[k][0].focus(); }); pn.querySelector(".ph").appendChild(x); });
       if (en) { $("p3plh").querySelector("span").remove(); $("p3prh").querySelector("span").remove(); }
       function drawer(k) { tabs.forEach(function (t, i) { var on = i === k; t[0].setAttribute("aria-expanded", String(on)); t[1].classList.toggle("open", on); }); document.documentElement.classList.toggle("p3dr", k > -1); if (k === 0) plEnsure(); }
@@ -5468,7 +5473,7 @@
         if (p3m && p3m.tier()) { if (!p3m.setQuality(n)) location.reload(); } else p3boot(); });
       document.addEventListener("click", function () { if (qm.classList.contains("on")) qOpen(false); });
       window.addEventListener("p3q:tier", function (e) { var d = e.detail || {}; if (!d.tier) return; qSet(d.tier); if (d.auto && qT) qT.toast(h, en, "tr"); });
-      function p3stop() { p3dead = true; clearTimeout(rwT); spSync(); if (plInst) { var pi = plInst; plInst = null; setTimeout(function () { pi.dispose(); }, 760); } if (drInst) drInst.dispose(); if (p3m) { try { p3m.pause(); } catch (e) {} setTimeout(function () { try { p3m.stop(); } catch (e) {} }, 760); } }
+      function p3stop() { p3dead = true; clearTimeout(rwT); if (window.P3FX) P3FX.stop(); spSync(); if (plInst) { var pi = plInst; plInst = null; setTimeout(function () { pi.dispose(); }, 760); } if (drInst) drInst.dispose(); if (p3m) { try { p3m.pause(); } catch (e) {} setTimeout(function () { try { p3m.stop(); } catch (e) {} }, 760); } }
       function p3boot() {
         if (p3dead || h.style.display === "none") return;
         var still = false;
