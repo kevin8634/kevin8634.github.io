@@ -28,3 +28,11 @@
 ## 阶段 2b（首页玻璃面板 + 底部 HUD，11-15）
 - `hero-c3.webp`（1600×1000）/ `hero-c3-768.webp`（768×1366，竖屏）：本项目 `p3hero.js` 中档画面在 t=6s 的截帧（无界面层），作为低档 / 无 WebGL2 / 减少动态时的首页底图；取代 `hero-c2*.webp`（旧文件仍留在目录里，未再引用）。
 - 「玩」面板缩略图复用根目录 `world-01..07.webp`（项目自有）；「造」三道门为内联 SVG 线稿，本项目自绘。玻璃面板全部是 CSS（backdrop-filter / 渐变描边），无外部字体或图标库。
+
+## 首屏交互层（11-16 · p3menu.js / p3doors.js / p3splash.js / p3fx.js / p3ui.css）
+以下组件**只借鉴公开演示的交互思路，代码全部为本项目自写的原生 JS/CSS/WebGL2**，未复制任何源码，不依赖 React、不走 CDN、零外部请求：
+- **reactbits**（https://reactbits.dev ，David Haz，MIT + Commons Clause）——Infinite Menu（「玩」世界球：卡片贴球面、拖动惯性、吸附正中）、Splash Cursor（鼠标流体拖尾）、Rotating Text / Blur Text / Shiny Text（标题动效）、Magnet / Click Spark（按钮）。Commons Clause 限制的是出售其源码本身；本项目未分发其代码。
+- **Aceternity UI**（https://ui.aceternity.com ）——3D Card Effect（倾斜视差）与 Glowing Effect（沿边框追随指针的流光），用于「造」三道门。
+- **uiverse**（https://uiverse.io ，社区作品 MIT）——发光按钮的视觉思路。
+- 流体算法：Jos Stam《Stable Fluids》（SIGGRAPH 1999）公开方法（半拉格朗日平流、Jacobi 压力投影、涡度增强）。
+- 世界球卡面复用仓库内 `world-01..07.webp`、`orb-gn-2.0.webp`（项目自有）；回退网格同。

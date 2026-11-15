@@ -5359,6 +5359,7 @@
         #p3hero .rw > span { transition: none; }
       }
     </style>
+    <link rel="stylesheet" href="portal3/p3ui.css">
     <section id="p3hero" aria-label="创世计划 3.0">
       <canvas id="p3cv" aria-hidden="true"></canvas>
       <div class="p3bd" aria-hidden="true"><b>GENESIS</b><span id="p3bdt"></span></div>
@@ -5405,12 +5406,21 @@
       /* 左「玩」：七个世界（读页面 WORLDS）+ 深空之下 2.0 */
       $("p3plh").querySelector("b").textContent = en ? "Play" : "玩";
       $("p3plh").querySelector("em").textContent = en ? "7 worlds" : "七个世界";
-      var WL = window.GN_WORLDS || [], play = en ? "Play ›" : "玩 ›", html = "";
-      WL.forEach(function (w) {
-        html += '<a class="wc" href="' + esc(w.href) + '" style="--c:' + esc(w.color) + '"><img src="world-' + esc(w.id) + '.webp" alt="" width="44" height="44" loading="lazy" decoding="async"><span><b>' + esc(en ? (w.en || w.name) : w.name) + '</b><i>' + play + '</i></span></a>';
-      });
-      html += '<a class="wc" href="deep/" style="--c:#8f7dff"><span class="d2" aria-hidden="true">2.0</span><span><b>' + (en ? "Deep Space 2.0" : "深空之下 2.0") + '</b><i>' + play + '</i></span></a>';
-      $("p3wg").innerHTML = html;
+      /* 11-16：「玩」= 世界球（portal3/p3menu.js，Infinite Menu 思路自写）；低档 / 减少动态 / 无 WebGL2 回退星球卡网格。首次展开时挂载 */
+      var WL = window.GN_WORLDS || [], PI = WL.map(function (w) {
+        return { name: en ? (w.en || w.name) : w.name, sub: w.id + " · " + w.field + " · " + (en ? w.star : (w.en || w.star)), field: w.field, desc: w.desc, href: w.href, color: w.color, img: "world-" + w.id + ".webp" }; });
+      PI.push({ name: en ? "Deep Space 2.0" : "深空之下 2.0", sub: en ? "08 · Deep layer · Genesis 2.0" : "08 · 深空层 · GENESIS 2.0", field: en ? "Deep 2.0" : "深空 2.0", desc: en ? "Genesis 2.0: dive beneath the deep sky." : "创世计划 2.0 · 潜入深空之下。", href: "deep/", color: "#8f7dff", img: "orb-gn-2.0.webp", zoom: 1.02 });
+      var PT = en ? { enter: "Enter", hint: "DRAG TO SPIN · TAP THE CENTRE", list: "Seven worlds and Deep Space 2.0" } : { enter: "进入", hint: "拖动旋转 · 点正中进入", list: "七个世界与深空之下 2.0" };
+      var plMod = null, plInst = null, plMode = "", curTier = "medium", RMQ = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
+      function plWant() { return (RMQ.matches || curTier === "low" || !(plMod && plMod.webgl2ok())) ? "grid" : "sphere"; }
+      function plEnsure() {
+        if (p3dead) return;
+        if (!plMod) { import("./portal3/p3menu.js").then(function (m) { plMod = m; if ($("p3pl").classList.contains("open")) plEnsure(); }).catch(function () {}); return; }
+        var want = plWant(); if (plInst && plMode === want) { plInst.kick(); return; }
+        if (plInst) { plInst.dispose(); plInst = null; }
+        plInst = (want === "sphere" && plMod.sphere($("p3wg"), PI, PT)) || plMod.grid($("p3wg"), PI, PT); plMode = plInst && $("p3wg").classList.contains("wm") ? "sphere" : "grid";
+        $("p3pl").classList.toggle("wmode", plMode === "sphere");
+      }
       /* 右「造」：三道门（即将开放） */
       $("p3prh").querySelector("b").textContent = en ? "Build" : "造";
       var ARCH = '<path d="M12 92V42a28 28 0 0 1 56 0v50M20 92V44a20 20 0 0 1 40 0v48M6 92h68" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>';
@@ -5421,22 +5431,33 @@
       var DOORS = en ? ["Build a rule", "Build an experiment", "Build a world"] : ["造一条规则", "造一个实验", "造一个世界"], DC = ["#9fd8ff", "#ff9ad5", "#ffe29a"], soon = en ? "Coming soon" : "即将开放", dh = "";
       DOORS.forEach(function (d, i) { dh += '<button type="button" class="door" aria-disabled="true" style="--c:' + DC[i] + '"><svg viewBox="0 0 80 96" aria-hidden="true">' + ARCH + ICON[i] + '</svg><b>' + d + '</b><small>' + soon + '</small></button>'; });
       $("p3dg").innerHTML = dh;
+      /* 11-16：三道门升级为 3D 倾斜卡 + 追光描边（portal3/p3doors.js，Aceternity 思路自写）；模块未载入前保留上面的简版门 */
+      var DD = en ? ["Rewrite a law and watch the world respond.", "Set up an experiment to test your hunch.", "Grow a world of your own from first principles."] : ["改写一条定律，看世界怎样回应。", "搭一个实验，验证你的猜想。", "从第一性原理出发，长出你自己的世界。"], drInst = null;
+      import("./portal3/p3doors.js").then(function (m) { if (p3dead) return; drInst = m.mount($("p3dg"), DOORS.map(function (d, i) { return { t: d, d: DD[i], no: ["I", "II", "III"][i], c: DC[i], svg: ARCH + ICON[i] }; }), soon, RMQ.matches); $("p3pr").classList.add("d3"); }).catch(function () {});
       $("p3pm").textContent = en ? "Master a world, then build one." : "玩懂一个世界，再亲手造一个";
       /* 手机抽屉：玩 / 造 两个标签，默认收起 */
       var tabs = [[$("p3tbp"), $("p3pl")], [$("p3tbb"), $("p3pr")]];
       $("p3tbp").innerHTML = en ? "Start playing <span>›</span>" : "开始玩 <span>›</span>"; $("p3tbb").innerHTML = en ? "Build <small>soon</small>" : "造 <small>即将开放</small>";
       [$("p3pl"), $("p3pr")].forEach(function (pn) { var x = document.createElement("button"); x.type = "button"; x.className = "px"; x.setAttribute("aria-label", en ? "Close" : "关闭"); x.textContent = "×"; x.addEventListener("click", function () { var k = drawerOpen(); drawer(-1); if (k > -1) tabs[k][0].focus(); }); pn.querySelector(".ph").appendChild(x); });
       if (en) { $("p3plh").querySelector("span").remove(); $("p3prh").querySelector("span").remove(); }
-      function drawer(k) { tabs.forEach(function (t, i) { var on = i === k; t[0].setAttribute("aria-expanded", String(on)); t[1].classList.toggle("open", on); }); document.documentElement.classList.toggle("p3dr", k > -1); }
+      function drawer(k) { tabs.forEach(function (t, i) { var on = i === k; t[0].setAttribute("aria-expanded", String(on)); t[1].classList.toggle("open", on); }); document.documentElement.classList.toggle("p3dr", k > -1); if (k === 0) plEnsure(); }
       function drawerOpen() { for (var i = 0; i < tabs.length; i++) if (tabs[i][1].classList.contains("open")) return i; return -1; }
       tabs.forEach(function (t, i) { t[0].addEventListener("click", function () { drawer(drawerOpen() === i ? -1 : i); }); });
       $("p3dg").addEventListener("click", function (e) { if (e.target.closest && e.target.closest(".door")) e.preventDefault(); });
       var p3m = null, p3dead = false;
+      /* 11-16：鼠标流体拖尾（portal3/p3splash.js）：只在桌面（pointer:fine 且宽≥1000）+ 画质 high + 非减少动态 + 页面可见时开启，否则立即释放 */
+      var spMod = null, spLoading = false, FINE = window.matchMedia ? matchMedia("(pointer: fine)") : { matches: false };
+      function spSync() {
+        var want = !p3dead && curTier === "high" && FINE.matches && innerWidth >= 1000 && !RMQ.matches && !document.hidden && h.style.display !== "none";
+        if (spMod) { spMod.sync(h, want); return; }
+        if (want && !spLoading) { spLoading = true; import("./portal3/p3splash.js").then(function (m) { spMod = m; spSync(); }).catch(function () {}); }
+      }
+      window.addEventListener("resize", spSync); document.addEventListener("visibilitychange", spSync);
       /* 画质：显示当前档；三选一写 gn:p3q，首屏在跑就热切换（切到低档 = 释放 WebGL 回到底图；从低档切回中/高 = 现场启动）；自动降档时提示一次 */
       var QL = en ? { high: "High", medium: "Medium", low: "Low" } : { high: "高", medium: "中", low: "低" }, QS = en ? { high: "H", medium: "M", low: "L" } : QL, qT = null;
       var qb = $("p3qb"), qm = $("p3qm"), qOpts = qm.querySelectorAll("button");
       for (var qi = 0; qi < qOpts.length; qi++) qOpts[qi].textContent = QL[qOpts[qi].getAttribute("data-q")];
-      function qSet(t) { qb.textContent = (en ? "Quality " : "画质 ") + QS[t]; qb.setAttribute("aria-label", (en ? "Quality: " : "画质：") + QL[t]);
+      function qSet(t) { curTier = t; spSync(); if (plInst && $("p3pl").classList.contains("open")) plEnsure(); qb.textContent = (en ? "Quality " : "画质 ") + QS[t]; qb.setAttribute("aria-label", (en ? "Quality: " : "画质：") + QL[t]);
         for (var i = 0; i < qOpts.length; i++) qOpts[i].setAttribute("aria-checked", String(qOpts[i].getAttribute("data-q") === t)); }
       function qOpen(on) { qm.classList.toggle("on", on); qb.setAttribute("aria-expanded", String(on)); }
       qSet("medium");
@@ -5447,7 +5468,7 @@
         if (p3m && p3m.tier()) { if (!p3m.setQuality(n)) location.reload(); } else p3boot(); });
       document.addEventListener("click", function () { if (qm.classList.contains("on")) qOpen(false); });
       window.addEventListener("p3q:tier", function (e) { var d = e.detail || {}; if (!d.tier) return; qSet(d.tier); if (d.auto && qT) qT.toast(h, en, "tr"); });
-      function p3stop() { p3dead = true; clearTimeout(rwT); if (p3m) { try { p3m.pause(); } catch (e) {} setTimeout(function () { try { p3m.stop(); } catch (e) {} }, 760); } }
+      function p3stop() { p3dead = true; clearTimeout(rwT); spSync(); if (plInst) { var pi = plInst; plInst = null; setTimeout(function () { pi.dispose(); }, 760); } if (drInst) drInst.dispose(); if (p3m) { try { p3m.pause(); } catch (e) {} setTimeout(function () { try { p3m.stop(); } catch (e) {} }, 760); } }
       function p3boot() {
         if (p3dead || h.style.display === "none") return;
         var still = false;

@@ -1,0 +1,110 @@
+/* 创世计划 门户 3.0 · 首屏交互层样式（11-16）：世界球 / 星球卡网格回退 / 造·三道门 / 流体拖尾画布
+ * 致谢见 portal3/LICENSES.md（reactbits、Aceternity UI、uiverse 仅借思路，本项目自写）。 */
+
+/* —— 流体拖尾：树之上、文字之下，不接收指针 —— */
+#p3hero .p3sp { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; mix-blend-mode: screen; opacity: .62; }
+
+/* —— 「玩」世界球模式：面板变成无框舞台 —— */
+#p3hero .wg.wm { display: flex; flex-direction: column; height: 100%; min-height: 0; position: relative; }
+#p3hero .p3pn.wmode .pb { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+#p3hero .wm-st { position: relative; flex: 1; min-height: 120px; cursor: grab; touch-action: none; outline: none; border-radius: 18px;
+  -webkit-mask-image: radial-gradient(ellipse 74% 72% at 50% 50%, #000 60%, transparent 100%); mask-image: radial-gradient(ellipse 74% 72% at 50% 50%, #000 60%, transparent 100%); }
+#p3hero .wm-st:active { cursor: grabbing; }
+#p3hero .wm-st:focus-visible { box-shadow: inset 0 0 0 1px rgba(159,216,255,.6); -webkit-mask-image: none; mask-image: none; }
+#p3hero .wm-st canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#p3hero .wm-hn { flex: none; margin: 0 0 4px; text-align: center; font: 500 10.5px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .22em; color: rgba(201,199,238,.62); pointer-events: none; transition: opacity .4s; }
+#p3hero .wm.mv .wm-hn { opacity: .25; }
+#p3hero .wm-lb { --c: #b9a8ff; flex: none; min-height: 122px; box-sizing: border-box; padding: 4px 12px 10px; display: flex; flex-direction: column; align-items: center; text-align: center; opacity: 0; transform: translateY(8px); transition: opacity .35s ease, transform .45s cubic-bezier(.2,.7,.2,1); pointer-events: none; }
+#p3hero .wm-lb.on { opacity: 1; transform: none; pointer-events: auto; }
+#p3hero .wm-lb i { font: 500 10.5px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .2em; color: var(--c); font-style: normal; text-transform: uppercase; text-shadow: 0 0 12px color-mix(in srgb, var(--c) 50%, transparent); }
+#p3hero .wm-lb b { margin-top: 4px; font-size: clamp(24px, 2.2vw, 32px); font-weight: 650; line-height: 1.15; letter-spacing: .02em; color: #fff; text-shadow: 0 2px 18px rgba(0,0,0,.7); }
+#p3hero .wm-lb p { margin: 5px 0 0; max-width: 30em; font-size: 13px; line-height: 1.5; color: #c3c4ea; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+#p3hero .wm-go { margin-top: 10px; display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 22px; border-radius: 999px; text-decoration: none; color: #0d0a1c; font-size: 14px; font-weight: 650; letter-spacing: .06em;
+  background: linear-gradient(180deg, #fff, color-mix(in srgb, var(--c) 55%, #fff)); box-shadow: 0 0 0 1px rgba(255,255,255,.4), 0 8px 28px -6px color-mix(in srgb, var(--c) 80%, transparent); transition: transform .25s ease, box-shadow .25s ease; }
+#p3hero .wm-go em { font-style: normal; transition: transform .25s ease; }
+#p3hero .wm-go:hover { transform: translateY(-1px); box-shadow: 0 0 0 1px #fff, 0 12px 36px -6px var(--c); }
+#p3hero .wm-go:hover em { transform: translateX(3px); }
+#p3hero .wm-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; margin: 0; padding: 0; }
+#p3hero .wm-sr a:focus { position: fixed; left: 8px; top: 8px; width: auto; height: auto; clip: auto; }
+
+/* 桌面：舞台占左半屏，无框（树在右侧） */
+@media (min-width: 801px) and (min-height: 421px) {
+  #p3hero .p3pn.pl.wmode { left: 4vw; width: min(660px, 50vw); top: 92px; bottom: calc(10vh + 62px); max-height: none; padding: 6px 6px 0;
+    background: radial-gradient(ellipse 60% 52% at 50% 42%, rgba(52,38,128,.34), rgba(10,7,30,.12) 62%, transparent 76%); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: none; }
+  #p3hero .p3pn.pl.wmode::before, #p3hero .p3pn.pl.wmode::after { display: none; }
+  #p3hero .p3pn.pl.wmode .ph { padding: 0 10px; }
+}
+/* 手机竖屏：抽屉加高给球 */
+@media (max-width: 800px) and (min-height: 421px) {
+  #p3hero .p3pn.pl.wmode { height: min(76vh, 640px); max-height: none; }
+  #p3hero .wm-lb { min-height: 116px; }
+  #p3hero .wm-lb b { font-size: 24px; }
+  #p3hero .wm-go { height: 44px; padding: 0 28px; font-size: 15px; }
+}
+/* 矮横屏：球在左，名字在右 */
+@media (max-height: 420px) {
+  #p3hero .p3pn.pl.wmode { height: calc(100% - 52px); max-height: none; }
+  #p3hero .wg.wm { flex-direction: row; }
+  #p3hero .wm-lb { width: 42%; min-height: 0; justify-content: center; padding: 0 8px; }
+  #p3hero .wm-lb b { font-size: 20px; } #p3hero .wm-lb p { display: none; }
+  #p3hero .wm-go { height: 34px; padding: 0 16px; font-size: 13px; }
+  #p3hero .wm-hn { display: none; }
+}
+
+/* —— 回退：星球卡网格（低档 / 减少动态 / 无 WebGL2） —— */
+#p3hero .wg.wgd { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 8px; padding: 4px 2px 6px; }
+#p3hero .wgc { --c: #b9a8ff; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; padding: 10px 4px 8px; border-radius: 16px; color: #eef0fa; text-decoration: none; text-align: center; transition: background .3s ease; }
+#p3hero .wgc .o { position: relative; width: min(84px, 100%); aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; overflow: hidden; background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--c) 35%, #120d26), #07051a 70%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--c) 55%, transparent), 0 0 24px -6px var(--c), inset 0 0 18px rgba(0,0,0,.6); transition: transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s ease; }
+#p3hero .wgc .o img { width: 116%; height: 116%; object-fit: cover; display: block; }
+#p3hero .wgc .o::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 32% 26%, rgba(255,255,255,.28), transparent 38%), radial-gradient(circle, transparent 58%, rgba(0,0,0,.45)); }
+#p3hero .wgc .m { font: 700 18px/1 ui-monospace, Menlo, monospace; color: #fff; }
+#p3hero .wgc b { font-size: 13.5px; font-weight: 600; line-height: 1.25; max-width: 100%; overflow-wrap: anywhere; text-wrap: balance; }
+#p3hero .wgc i { font-style: normal; font-size: 11px; color: var(--c); letter-spacing: .06em; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#p3hero .wgc:hover, #p3hero .wgc:focus-visible { background: rgba(255,255,255,.05); }
+#p3hero .wgc:hover .o, #p3hero .wgc:focus-visible .o { transform: translateY(-3px) scale(1.04); box-shadow: 0 0 0 1px var(--c), 0 0 34px -4px var(--c), inset 0 0 18px rgba(0,0,0,.5); }
+@media (max-width: 420px) { #p3hero .wg.wgd { gap: 10px 4px; } #p3hero .wgc { padding: 6px 2px; } #p3hero .wgc b { font-size: 12.5px; } #p3hero .wgc i { font-size: 10px; } }
+@media (max-height: 420px) { #p3hero .wg.wgd { gap: 6px 6px; } #p3hero .wgc .o { width: 52px; } #p3hero .wgc i { display: none; } }
+
+/* —— 「造」三道门：3D 倾斜卡 + 追光描边 —— */
+@media (min-width: 801px) and (min-height: 421px) { #p3hero .p3pn.pr.d3 { width: min(720px, 54vw); } }
+#p3hero .dg.dg3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 2px; }
+#p3hero .door3 { --c: #9fd8ff; --a: 0deg; --o: 0; --rx: 0deg; --ry: 0deg; position: relative; display: block; min-width: 0; min-height: 292px; padding: 0; border: 0; border-radius: 22px; background: none; color: #ecebfd; text-align: left; perspective: 900px; cursor: not-allowed; }
+#p3hero .door3 .in, #p3hero .door3 .gw { transform: rotateX(var(--rx)) rotateY(var(--ry)); }
+#p3hero .door3 .in { position: relative; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-start; padding: 20px 18px 18px; border-radius: inherit; transform-style: preserve-3d;
+  background: radial-gradient(120% 70% at var(--mx, 50%) var(--my, 0%), color-mix(in srgb, var(--c) calc(var(--o) * 22%), transparent), transparent 62%), linear-gradient(170deg, rgba(255,255,255,.075), rgba(255,255,255,.015) 38%, rgba(0,0,0,.2)), rgba(12,9,32,.82);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), inset 0 0 0 1px rgba(255,255,255,.07), 0 28px 60px -24px rgba(0,0,0,.8), 0 0 calc(var(--o) * 46px) calc(var(--o) * -12px) var(--c); }
+#p3hero .door3 .in > * { transform: translateZ(26px); }
+#p3hero .door3 .no { font: 500 11px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .3em; color: var(--c); opacity: .85; transform: translateZ(18px); }
+#p3hero .door3 svg { align-self: center; width: 58%; max-width: 108px; height: auto; margin: 14px 0 12px; color: var(--c); filter: drop-shadow(0 0 8px var(--c)); transform: translateZ(64px); }
+#p3hero .door3 b { font-size: clamp(16px, 1.45vw, 21px); font-weight: 650; line-height: 1.25; letter-spacing: .02em; transform: translateZ(44px); }
+#p3hero .door3 .ds { margin: 6px 0 14px; font-size: 12.5px; line-height: 1.55; color: #b9b8e2; transform: translateZ(30px); }
+#p3hero .door3 small { margin-top: auto; padding: 3px 10px; border-radius: 999px; border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); color: color-mix(in srgb, var(--c) 70%, #fff); font-size: 11px; letter-spacing: .08em; white-space: nowrap; transform: translateZ(36px); }
+#p3hero .door3 .gw { position: absolute; inset: 0; z-index: 1; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: conic-gradient(from calc(var(--a) - 70deg), transparent 0deg, color-mix(in srgb, var(--c) 60%, transparent) 40deg, #fff 70deg, var(--c) 92deg, transparent 140deg, transparent 360deg), linear-gradient(150deg, rgba(255,255,255,.22), rgba(255,255,255,.04) 50%, color-mix(in srgb, var(--c) 30%, transparent));
+  background-blend-mode: normal; opacity: calc(.35 + var(--o) * .65);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+#p3hero .door3:focus-visible { outline: 2px solid var(--c); outline-offset: 3px; }
+@media (min-width: 801px) and (max-width: 1100px) { #p3hero .door3 { min-height: 270px; } #p3hero .door3 .in { padding: 16px 14px 14px; } #p3hero .door3 .ds { font-size: 12px; } }
+@media (max-width: 800px) and (min-height: 421px) {
+  #p3hero .dg.dg3 { grid-template-columns: 1fr; gap: 10px; }
+  #p3hero .door3 { min-height: 0; }
+  #p3hero .door3 .in { display: grid; grid-template-columns: 58px 1fr auto; grid-template-areas: "ic t s" "ic d d"; column-gap: 14px; row-gap: 2px; align-items: center; padding: 14px 16px; }
+  #p3hero .door3 .no { display: none; }
+  #p3hero .door3 svg { grid-area: ic; width: 58px; margin: 0; }
+  #p3hero .door3 b { grid-area: t; font-size: 17px; } #p3hero .door3 .ds { grid-area: d; margin: 0; font-size: 12.5px; } #p3hero .door3 small { grid-area: s; margin: 0; }
+}
+@media (max-height: 420px) {
+  #p3hero .door3 { min-height: 0; } #p3hero .door3 .in { padding: 10px 10px 10px; align-items: center; text-align: center; }
+  #p3hero .door3 .no, #p3hero .door3 .ds { display: none; }
+  #p3hero .door3 svg { width: 46px; margin: 2px 0 6px; } #p3hero .door3 b { font-size: 13.5px; } #p3hero .door3 small { margin-top: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #p3hero .door3 .in, #p3hero .door3 .gw { transform: none; }
+  #p3hero .door3 .in > * { transform: none; }
+  #p3hero .wm-lb, #p3hero .wgc .o, #p3hero .wm-go { transition: none; }
+}
+
+/* 面板展开时收起树的层标签，避免与世界球 / 三道门重叠 */
+html.p3dr #p3hero .p3nl > * { visibility: hidden; }
+@media (min-width: 801px) and (min-height: 421px) { #p3hero .p3pn.pr.d3 .pb { overflow: visible; } }
