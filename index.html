@@ -1577,7 +1577,8 @@
         // 首访自动播：减少动态 / 省流量 / 2G / ?not 参数 / 已看过 → 不自动播
         var c = navigator.connection || {}, slow = c.saveData || /(^|-)2g$/.test(c.effectiveType || "");
         var seen = lsGet(K) === "1";
-        if (!RM && !slow && !seen && !/[?&]not\b/.test(location.search) && !/[?&]nol2\b/.test(location.search)) play(false);
+        /* 门户 3.0（王磊 11-15 03:46）：首访不再自动播 2.0 宣传片，2.0 光门「▶ 宣传片」仍可手动重播 */
+        void RM; void slow; void seen;
         return T;
       })();
       function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -5178,7 +5179,7 @@
       .p3mv:hover, .p3mv:focus-visible { border-color: #e9c779; outline: none; color: #fff; }
       .p3mv video, .p3mv img { width: 96px; height: 54px; object-fit: cover; border-radius: 9px; display: block; background: #000; }
       .p3mv b { color: #e9c779; font-weight: 600; display: block; } .p3mv i { font-style: normal; color: #9fd8ff; font-variant-numeric: tabular-nums; }
-      @media (max-width: 700px) { .p3mv { top: auto; bottom: 64px; left: 10px; transform: none; padding: 4px 10px 4px 4px; font-size: 11px; } .p3mv video, .p3mv img { width: 64px; height: 36px; } }
+      @media (max-width: 700px) { .p3mv { top: calc(10px + env(safe-area-inset-top)); bottom: auto; left: 10px; transform: none; padding: 4px 10px 4px 4px; font-size: 11px; } .p3mv video, .p3mv img { width: 64px; height: 36px; } }
       @media (max-height: 360px) { .p3mv { top: auto; bottom: 8px; left: 8px; transform: none; } .p3mv video, .p3mv img { width: 56px; height: 32px; } }
       #p3mvDlg { position: fixed; inset: 0; z-index: 95; display: none; place-items: center; background: rgba(2,4,12,.86); backdrop-filter: blur(6px); }
       #p3mvDlg.on { display: grid; }
@@ -5244,7 +5245,7 @@
         document.getElementById("l2sh").addEventListener("click", function () { s(K, "1"); });
         box.addEventListener("click", function (e) { if (e.target === box) close(); });
         addEventListener("keydown", function (e) { if (!box.hidden && e.key === "Escape") { e.stopPropagation(); close(); } }, true);
-        window.l2Auto = function () { if (g(K) !== "1" && !/[?&]nol2\b/.test(location.search)) open(); };
+        window.l2Auto = function () {};   // 门户 3.0（王磊 11-15 03:46）：2.0 发布弹窗不再自动弹出
       })();
     </script>
 </body>
