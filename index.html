@@ -5462,7 +5462,7 @@
       var QL = en ? { high: "High", medium: "Medium", low: "Low" } : { high: "高", medium: "中", low: "低" }, QS = en ? { high: "H", medium: "M", low: "L" } : QL, qT = null;
       var qb = $("p3qb"), qm = $("p3qm"), qOpts = qm.querySelectorAll("button");
       for (var qi = 0; qi < qOpts.length; qi++) qOpts[qi].textContent = QL[qOpts[qi].getAttribute("data-q")];
-      function qSet(t) { curTier = t; spSync(); if (plInst && $("p3pl").classList.contains("open")) plEnsure(); qb.textContent = (en ? "Quality " : "画质 ") + QS[t]; qb.setAttribute("aria-label", (en ? "Quality: " : "画质：") + QL[t]);
+      function qSet(t) { curTier = t; spSync(); if (nar) nar.sync(); if (plInst && $("p3pl").classList.contains("open")) plEnsure(); qb.textContent = (en ? "Quality " : "画质 ") + QS[t]; qb.setAttribute("aria-label", (en ? "Quality: " : "画质：") + QL[t]);
         for (var i = 0; i < qOpts.length; i++) qOpts[i].setAttribute("aria-checked", String(qOpts[i].getAttribute("data-q") === t)); }
       function qOpen(on) { qm.classList.toggle("on", on); qb.setAttribute("aria-expanded", String(on)); }
       qSet("medium");
@@ -5473,17 +5473,26 @@
         if (p3m && p3m.tier()) { if (!p3m.setQuality(n)) location.reload(); } else p3boot(); });
       document.addEventListener("click", function () { if (qm.classList.contains("on")) qOpen(false); });
       window.addEventListener("p3q:tier", function (e) { var d = e.detail || {}; if (!d.tier) return; qSet(d.tier); if (d.auto && qT) qT.toast(h, en, "tr"); });
-      function p3stop() { p3dead = true; clearTimeout(rwT); if (window.P3FX) P3FX.stop(); spSync(); if (plInst) { var pi = plInst; plInst = null; setTimeout(function () { pi.dispose(); }, 760); } if (drInst) drInst.dispose(); if (p3m) { try { p3m.pause(); } catch (e) {} setTimeout(function () { try { p3m.stop(); } catch (e) {} }, 760); } }
+      function p3stop() { p3dead = true; clearTimeout(rwT); if (nar) { nar.dispose(); } if (window.P3FX) P3FX.stop(); spSync(); if (plInst) { var pi = plInst; plInst = null; setTimeout(function () { pi.dispose(); }, 760); } if (drInst) drInst.dispose(); if (p3m) { try { p3m.pause(); } catch (e) {} setTimeout(function () { try { p3m.stop(); } catch (e) {} }, 760); } }
       function p3boot() {
         if (p3dead || h.style.display === "none") return;
         var still = false;
         try { still = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); var t = document.createElement("canvas"); if (!t.getContext("webgl2")) return; } catch (e) { return; }
         import("./portal3/p3fp.js").then(function (m) { if (p3dead) return; p3m = m; m.start(h, { still: still }); if (m.tier()) qSet(m.tier());
           if (m.levels) { m.levels().forEach(function (l, i) { if (l.color) RC[i] = l.color; RN[i] = l.name; }); rwSet(rwI < 0 ? 0 : rwI, false); }
-          p3shift(); window.addEventListener("resize", p3shift); }).catch(function () {});
+          p3shift(); window.addEventListener("resize", p3shift); if (nar) nar.sync(); }).catch(function () {});
       }
       function p3shift() { if (!p3m || !p3m.shift) return; var w = innerWidth, hh = innerHeight;
         if (hh <= 420) p3m.shift(w / hh > 1.5 ? .19 : 0, 0); else if (w > 800) p3m.shift(w >= 1100 ? .18 : .21, 0); else { var hd = $("p3hd").getBoundingClientRect(), f = Math.min(.5, (hd.bottom + 6) / hh), bb = 64 / hh, band = 1 - f - bb; p3m.shift(0, (f - bb) / 2, Math.max(.9, .64 / band)); } }
+      /* 11-16 第三步：下滚叙事（portal3/p3nar.js，Aceternity Sticky Scroll Reveal 思路自写）——首屏下方逐层文字 + 镜头沿树爬升，末屏「开始玩 / 造」，再往下进入门户 */
+      var nar = null;
+      import("./portal3/p3nar.js").then(function (m) { if (p3dead) return;
+        nar = m.mount({ host: h, en: en, rm: RMQ.matches, tier: function () { return curTier; }, tree: function () { return p3m; },
+          onEnter: function () { clearTimeout(rwT); if (drawerOpen() > -1) drawer(-1); },
+          onLeave: function () { if (p3m && p3m.spot) p3m.spot(rwI); if (!rwRM && document.documentElement.classList.contains("p3rv")) rwLoop(); },
+          openPanel: function (k) { drawer(k); try { tabs[k][0].focus({ preventScroll: true }); } catch (e) {} },
+          enterPortal: go });
+      }).catch(function () {});
       function p3lazy() { if (window.__p3introOn) { window.addEventListener("p3intro:end", p3lazy, { once: true }); return; } reveal(); (window.requestIdleCallback || function (f) { setTimeout(f, 300); })(p3boot, { timeout: 1500 }); }
       if (document.readyState === "complete") p3lazy(); else window.addEventListener("load", p3lazy);
       function go() { p3stop(); drawer(-1); h.classList.add("off"); h.setAttribute("aria-hidden", "true"); document.documentElement.classList.remove("p3h"); try { sessionStorage.setItem("gn:portal:p3hero", "1"); } catch (e) {} setTimeout(function () { h.style.display = "none"; }, 750); }

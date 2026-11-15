@@ -36,3 +36,8 @@
 - **uiverse**（https://uiverse.io ，社区作品 MIT）——发光按钮的视觉思路。
 - 流体算法：Jos Stam《Stable Fluids》（SIGGRAPH 1999）公开方法（半拉格朗日平流、Jacobi 压力投影、涡度增强）。
 - 世界球卡面复用仓库内 `world-01..07.webp`、`orb-gn-2.0.webp`（项目自有）；回退网格同。
+
+## 下滚叙事（11-16 · 第三步 · p3nar.js / p3ui.css / p3fp.js `climb`）
+- **Aceternity UI「Sticky Scroll Reveal」**（https://ui.aceternity.com/components/sticky-scroll-reveal ）——只借「左侧文字随滚动逐段点亮、右侧画面随之切换」的交互思路；本项目改写为：左栏逐层文字 + 第一性原理之树的镜头沿树爬升并高亮当前层。代码全部为本项目自写的原生 JS/CSS（IntersectionObserver 定当前段、scroll + requestAnimationFrame 节流驱动镜头），未复制任何源码，不依赖 React / Framer Motion，不走 CDN，零外部请求。
+- 排版节奏（编辑式大留白、等宽小眉题 + 大标题 + 短段落）参考 motionsites 一类编辑式站点的公开观感，只学节奏，无素材与代码引用。
+- 叙事背景仍是实时渲染的树（three.js r186 本地，MIT），不使用任何图片或视频作背景。

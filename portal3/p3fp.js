@@ -378,7 +378,11 @@ export function start(host, opts) {
 
   /* ---------- 取景 ---------- */
   let scale = 1, cssW = 1, cssH = 1, portrait = false, fullD = 30, fullY = 8, shX = 0, shY = 0, shZ = 1;
-  function applyShift() { if (shX || shY) camera.setViewOffset(cssW, cssH, -shX * cssW, -shY * cssH, cssW, cssH); else camera.clearViewOffset(); camera.updateProjectionMatrix(); }
+  /* 11-16 下滚叙事：镜头沿树爬升（climb）。cK=0 首屏取景，cK=1 叙事取景；位置/取景偏移都在两者间插值 */
+  const CL = { f: -1, k: 0, sx: 0, sy: 0 }, CC = { f: -1, k: 0, sx: 0, sy: 0 };
+  let effX = 0, effY = 0;
+  function applyShift() { effX = shX + (CC.sx - shX) * CC.k; effY = shY + (CC.sy - shY) * CC.k;
+    if (Math.abs(effX) > 1e-4 || Math.abs(effY) > 1e-4) camera.setViewOffset(cssW, cssH, -effX * cssW, -effY * cssH, cssW, cssH); else camera.clearViewOffset(); camera.updateProjectionMatrix(); }
   function layout(asp) {
     portrait = asp < .9;
     const H = TOP + (portrait ? 11 : 5.2), Wd = portrait ? 12.5 : 10.5;               // 需要装下的世界高度 / 宽度
@@ -420,16 +424,20 @@ export function start(host, opts) {
   function onMove(e) {
     mouse.set(e.clientX / window.innerWidth * 2 - 1, e.clientY / window.innerHeight * 2 - 1);
     const b = canvas.getBoundingClientRect(); mPx.set(e.clientX - b.left, e.clientY - b.top); mOn = true;
-    if (e.target === canvas) { let best = -1, bd = 1e9; SCR.forEach((s, i) => { const d = Math.hypot(mPx.x - s.x, mPx.y - s.y); if (d < s.r * 1.25 + 26 + 44 * Math.min(1, s.r / 40) && d < bd) { bd = d; best = i; } }); hov = best; canvas.style.cursor = best >= 0 ? 'pointer' : ''; }
+    if (isPass(e.target)) { let best = -1, bd = 1e9; SCR.forEach((s, i) => { const d = Math.hypot(mPx.x - s.x, mPx.y - s.y); if (d < s.r * 1.25 + 26 + 44 * Math.min(1, s.r / 40) && d < bd) { bd = d; best = i; } }); hov = best; setCur(e.target, best >= 0 ? 'pointer' : ''); } else if (curEl) setCur(null, '');
   }
+  /* 叙事滚动层（#p3ss 的空白处带 data-p3pass）盖在画布之上：悬停/点击树照常生效 */
+  let curEl = null;
+  function isPass(t) { return t === canvas || !!(t && t.hasAttribute && t.hasAttribute('data-p3pass')); }
+  function setCur(el, c) { if (curEl && curEl !== el) curEl.style.cursor = ''; curEl = el; if (el) el.style.cursor = c; }
   function onLeave() { mOn = false; if (document.activeElement && document.activeElement.parentNode === lab) return; hov = -1; }
-  function onClick(e) { if (e.target !== canvas || hov < 0) return; location.href = LV[hov].href; }
+  function onClick(e) { if (!isPass(e.target) || hov < 0) return; location.href = LV[hov].href; }
   function onTilt(e) { if (e.gamma == null) return; mouse.set(Math.max(-1, Math.min(1, e.gamma / 25)), Math.max(-1, Math.min(1, ((e.beta || 0) - 50) / 25))); }
   function onVis() { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else if (!raf && S && !still) { last = performance.now(); raf = requestAnimationFrame(frame); } }
   function onLost(e) { e.preventDefault(); stop(); }
   window.addEventListener('pointermove', onMove, { passive: true });
   host.addEventListener('pointerleave', onLeave);
-  canvas.addEventListener('click', onClick);
+  host.addEventListener('click', onClick);
   window.addEventListener('deviceorientation', onTilt, { passive: true });
   window.addEventListener('resize', resize);
   document.addEventListener('visibilitychange', onVis);
@@ -469,11 +477,21 @@ export function start(host, opts) {
   function placeCamera(dt) {
     par.lerp(mouse, Math.min(1, dt * 2.2 || 1)); U.uPar.value.set(par.x, -par.y);
     const ci = eio((t - .2) / INTRO);
-    const fd = hov >= 0 ? 1 : 0; focusK += (fd - focusK) * Math.min(1, dt * 1.8 || 1);
+    const fd = hov >= 0 ? 1 : 0; focusK = Math.max(0, Math.min(1, focusK + (fd - focusK) * Math.min(1, dt * 1.8 || 1)));
     if (hov >= 0) focus.lerp(tmp.set(LV[hov].x, LV[hov].y, 0), Math.min(1, dt * 3 || 1));
-    const D0 = 7.5, D = (D0 + (fullD - D0) * ci) * (1 - .1 * focusK) * (1 + .012 * Math.sin(t * .13)) * shZ;
-    const Y = (.2 + (fullY - .2) * ci);
-    aim.set(par.x * .4 * ci + (focus.x * .25) * focusK, Y + (focus.y - Y) * .22 * focusK, 0);
+    const D0 = 7.5;
+    // 叙事镜头：目标层（f：-1 根 / 0..6 七层 / 7 第八颗星）的高度、横向、取景高度插值；跳切（low 档）时直接到位
+    const ck = CL.jump ? 1 : Math.min(1, dt * 2.4 || 1), kOld = CC.k, xOld = CC.sx, yOld = CC.sy;
+    CC.f += (CL.f - CC.f) * ck; CC.k += (CL.k - CC.k) * ck; CC.sx += (CL.sx - CC.sx) * ck; CC.sy += (CL.sy - CC.sy) * ck; CL.jump = false;
+    if (Math.abs(CC.k - kOld) + Math.abs(CC.sx - xOld) + Math.abs(CC.sy - yOld) > 1e-5) applyShift();
+    const fi = Math.max(-1, Math.min(8, CC.f)), f0 = Math.floor(fi), fr = fi - f0, f1 = Math.min(8, f0 + 1);   // 8 = 叙事末屏：整棵树
+    const cy = j => j < 0 ? -.5 : j > 7 ? (portrait ? 9.7 : 8.4) : j > 6 ? STAR_Y - .3 : LV[j].y, cx = j => j < 0 || j > 6 ? 0 : LV[j].x * .8, chv = j => j < 0 ? 8.5 : j > 7 ? (portrait ? 36 : 21) : j > 6 ? 7.5 : j === 6 ? 10 : 7;
+    const nY = cy(f0) + (cy(f1) - cy(f0)) * fr, nX = cx(f0) + (cx(f1) - cx(f0)) * fr, nH = chv(f0) + (chv(f1) - chv(f0)) * fr;
+    const nD = Math.max(nH / (2 * TAN), portrait ? 6.2 / (2 * TAN * camera.aspect) : 0), nk = CC.k * ci;
+    const Df = (D0 + (fullD - D0) * ci) * shZ;
+    const D = (Df + (nD - Df) * nk) * (1 - .1 * focusK) * (1 + .012 * Math.sin(t * .13));
+    const Yb = (.2 + (fullY - .2) * ci), Y = Yb + (nY - Yb) * nk;
+    aim.set(par.x * .4 * ci + (focus.x * .25) * focusK + nX * nk, Y + (focus.y - Y) * .22 * focusK, 0);
     const az = (1 - ci) * .9 + Math.sin(t * .05) * .14 + par.x * .2, el = .12 + (1 - ci) * .25 - par.y * .08;
     camera.position.set(aim.x + Math.sin(az) * Math.cos(el) * D, aim.y - Math.sin(el) * D * .55, Math.cos(az) * Math.cos(el) * D);
     camera.lookAt(aim); camera.updateMatrixWorld();
@@ -503,13 +521,13 @@ export function start(host, opts) {
   function frame(now) {
     raf = requestAnimationFrame(frame);
     const raw = (now - last) / 1000; last = now;
-    render(Math.min(raw, .1));
+    render(Math.max(0, Math.min(raw, .1)));   // rAF 时间戳可能早于上次记录（负 dt 会让插值外推发散），夹到 ≥0
     if (frames === 2) { canvas.classList.add('on'); host.classList.add('gl'); }
     if (!frozen) govern(raw, now);
   }
   function stop() {
     if (!S) return; cancelAnimationFrame(raf); raf = 0;
-    window.removeEventListener('pointermove', onMove); host.removeEventListener('pointerleave', onLeave); canvas.removeEventListener('click', onClick);
+    window.removeEventListener('pointermove', onMove); host.removeEventListener('pointerleave', onLeave); host.removeEventListener('click', onClick); setCur(null, '');
     window.removeEventListener('deviceorientation', onTilt); window.removeEventListener('resize', resize);
     document.removeEventListener('visibilitychange', onVis); canvas.removeEventListener('webglcontextlost', onLost);
     disposePost(); geos.forEach(g => g.dispose()); mats.forEach(m => m.dispose()); fsGeo.dispose(); bg.material.dispose();
@@ -517,10 +535,11 @@ export function start(host, opts) {
     lab.remove(); canvas.classList.remove('on'); host.classList.remove('gl'); S = null; window.__p3dbg = null;
   }
   function pause() { cancelAnimationFrame(raf); raf = 0; document.removeEventListener('visibilitychange', onVis); }
-  S = { stop, pause, setTier: n => setTier(n, false), tier: tierName, spot: i => { ext = i; if (still) { render(0); } }, shift: (x, y, z) => { shX = x || 0; shY = y || 0; shZ = z || 1; applyShift(); if (still) render(0); }, levels: () => LV.map(l => ({ name: l.name, color: l.color, href: l.href })), gpu: pick.gpu, fps: 0, get ready() { return t > INTRO + .5; } };
+  S = { stop, pause, setTier: n => setTier(n, false), tier: tierName, spot: i => { ext = i; if (still) { render(0); } }, shift: (x, y, z) => { shX = x || 0; shY = y || 0; shZ = z || 1; applyShift(); if (still) render(0); }, levels: () => LV.map(l => ({ name: l.name, color: l.color, href: l.href, id: l.id, f: l.f })),
+    climb: (f, k, sx, sy, jump) => { CL.f = f; CL.k = k; CL.sx = sx || 0; CL.sy = sy || 0; if (jump) CL.jump = true; if (still) { CL.jump = true; render(0); } }, gpu: pick.gpu, fps: 0, get ready() { return t > INTRO + .5; } };
   buildPost(); resize();
   try { renderer.compile(scene, camera); } catch (e) {}
-  window.__p3dbg = { S, renderer, scene, camera, render, step: (dt, n) => { for (let i = 0; i < (n || 1); i++) render(dt); }, setT: v => { t = v; }, freeze: v => { frozen = v !== false; }, hover: i => { hov = i; } };
+  window.__p3dbg = { S, renderer, scene, camera, render, cl: () => ({ CL, CC, fullY, fullD, shZ, aim: aim.toArray(), focusK, fy: focus.y, hov, t }), step: (dt, n) => { for (let i = 0; i < (n || 1); i++) render(dt); }, setT: v => { t = v; }, freeze: v => { frozen = v !== false; }, hover: i => { hov = i; } };
   if (still) { render(0); render(0); canvas.classList.add('on'); host.classList.add('gl'); }
   else raf = requestAnimationFrame(frame);
   dispatchEvent(new CustomEvent('p3q:tier', { detail: { tier: tierName } }));
@@ -533,3 +552,5 @@ export function pause() { if (S) S.pause(); }
 export function spot(i) { if (S) S.spot(i); }
 export function shift(x, y, z) { if (S) S.shift(x, y, z); }
 export function levels() { return S ? S.levels() : []; }
+/* 11-16 下滚叙事：f = -1 根 · 0..6 七层 · 7 第八颗星 · 8 整棵树（末屏）；k = 叙事取景权重 0..1；sx/sy = 叙事时的取景偏移；jump = 跳切 */
+export function climb(f, k, sx, sy, jump) { if (S && S.climb) S.climb(f, k, sx, sy, jump); }
