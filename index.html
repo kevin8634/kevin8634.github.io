@@ -5409,6 +5409,15 @@
       .p3mv b { color: #e9c779; font-weight: 600; display: block; } .p3mv i { font-style: normal; color: #9fd8ff; font-variant-numeric: tabular-nums; }
       @media (max-width: 700px) { .p3mv { top: calc(10px + env(safe-area-inset-top)); bottom: auto; left: 10px; transform: none; padding: 4px 10px 4px 4px; font-size: 11px; } .p3mv video, .p3mv img { width: 64px; height: 36px; } }
       @media (max-height: 360px) { .p3mv { top: auto; bottom: 8px; left: 8px; transform: none; } .p3mv video, .p3mv img { width: 56px; height: 32px; } }
+      .p3mv { cursor: default; padding: 0; gap: 0; }
+      .p3mvB { display: flex; align-items: center; gap: 10px; padding: 6px 12px 6px 6px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 14px; }
+      .p3mvB:hover, .p3mvB:focus-visible { color: #fff; outline: none; background: rgba(233,199,121,.08); }
+      .p3tr { padding: 6px 14px; border-left: 1px solid rgba(233,199,121,.35); border-radius: 0 14px 14px 0; white-space: nowrap; }
+      .p3tr b { color: #e9c779; } .p3tr i { color: #c9b8ff; }
+      @media (max-width: 700px) { .p3mv { padding: 0; } .p3mvB { padding: 4px 10px 4px 4px; gap: 8px; } .p3tr { padding: 4px 10px; } .p3tr i { display: none; } }
+      @media (max-width: 380px) { .p3mvB:first-child i { display: none; } }
+      @media (max-width: 700px) { .p3mv.en .p3mvB:first-child i, .p3mv .lg { display: none; } .p3mv.en .p3mvB b { white-space: nowrap; } }
+      #p3mvDlg.tr .rw a, #p3mvDlg.tr #p3mvCd2 { display: none; }
       #p3mvDlg { position: fixed; inset: 0; z-index: 95; display: none; place-items: center; background: rgba(2,4,12,.86); backdrop-filter: blur(6px); }
       #p3mvDlg.on { display: grid; }
       #p3mvDlg .bx { width: min(960px, 94vw); color: #dfe6f5; font: 13px/1.5 system-ui, sans-serif; text-align: center; }
@@ -5416,7 +5425,7 @@
       #p3mvDlg .rw { margin-top: 10px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; align-items: center; }
       #p3mvDlg a, #p3mvDlg button { padding: 8px 16px; border-radius: 999px; border: 1px solid rgba(233,199,121,.55); background: rgba(233,199,121,.1); color: #e9c779; text-decoration: none; font: inherit; cursor: pointer; }
     </style>
-    <button type="button" class="p3mv" id="p3mv" aria-haspopup="dialog"></button>
+    <div class="p3mv" id="p3mvW"><button type="button" class="p3mvB" id="p3mv" aria-haspopup="dialog"></button><button type="button" class="p3mvB p3tr" id="p3tr" aria-haspopup="dialog"></button></div>
     <div id="p3mvDlg" role="dialog" aria-modal="true" aria-label="一光日 MV"><div class="bx"><video id="p3mvFull" controls playsinline preload="none" poster="portal3/yiguangri-poster.jpg"></video><div class="rw"><span id="p3mvCd2"></span><a id="p3mvGo" href="starhelm/?task=voyager"></a><button type="button" id="p3mvX"></button></div></div></div>
     <script>
     (function () {
@@ -5425,7 +5434,7 @@
       var rm = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
       var b = document.getElementById("p3mv"), dlg = document.getElementById("p3mvDlg"), full = document.getElementById("p3mvFull");
       var media = rm ? '<img src="portal3/yiguangri-poster.jpg" alt="">' : '<video src="portal3/yiguangri-teaser.mp4" poster="portal3/yiguangri-poster.jpg" muted loop playsinline autoplay preload="metadata" aria-hidden="true"></video>';
-      b.innerHTML = media + '<span><b>' + (en ? "▶ Voyager 1 · One Light-Day" : "▶ 旅行者 1 号 · 一光日 MV") + '</b><i id="p3mvCd"></i></span>';
+      b.innerHTML = media + '<span><b>' + (en ? '▶ Voyager 1<span class="lg"> · One Light-Day</span>' : "▶ 旅行者 1 号 · 一光日 MV") + '</b><i id="p3mvCd"></i></span>';
       document.getElementById("p3mvGo").textContent = en ? "About the light-day →" : "了解一光日 →";
       document.getElementById("p3mvX").textContent = en ? "Close" : "关闭";
       if (en) document.getElementById("p3mvGo").href = "starhelm/?task=voyager&lang=en";
@@ -5438,8 +5447,20 @@
         if (ms > 0) setTimeout(cd, 1000);
       }
       cd();
-      function close() { dlg.classList.remove("on"); try { full.pause(); } catch (e) {} b.focus(); }
-      b.addEventListener("click", function () { if (!full.getAttribute("src")) full.src = "portal3/yiguangri-720.mp4"; dlg.classList.add("on"); try { var p = full.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} document.getElementById("p3mvX").focus(); });
+      var tr = document.getElementById("p3tr"), from = b;
+      if (en) document.getElementById("p3mvW").classList.add("en");
+      tr.innerHTML = '<span><b>' + (en ? '▶ <span class="lg">Genesis </span>3.0 Trailer' : "▶ 3.0 宣传片") + '</b><i>' + (en ? "2 min" : "2 分钟") + '</i></span>';
+      function close() { dlg.classList.remove("on"); try { full.pause(); } catch (e) {} from.focus(); }
+      function open(isTr) {
+        from = isTr ? tr : b;
+        var src = isTr ? "portal3/genesis-trailer-3.0.mp4" : "portal3/yiguangri-720.mp4";
+        dlg.classList.toggle("tr", isTr);
+        dlg.setAttribute("aria-label", isTr ? (en ? "Genesis 3.0 Trailer" : "创世计划 3.0 宣传片") : (en ? "One Light-Day MV" : "一光日 MV"));
+        if (full.getAttribute("src") !== src) { full.poster = isTr ? "portal3/genesis-trailer-3.0-poster.jpg" : "portal3/yiguangri-poster.jpg"; full.src = src; }
+        dlg.classList.add("on"); try { var p = full.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} document.getElementById("p3mvX").focus();
+      }
+      b.addEventListener("click", function () { open(false); });
+      tr.addEventListener("click", function () { open(true); });
       document.getElementById("p3mvX").addEventListener("click", close);
       dlg.addEventListener("click", function (e) { if (e.target === dlg) close(); });
       document.addEventListener("keydown", function (e) { if (e.key === "Escape" && dlg.classList.contains("on")) { e.stopPropagation(); close(); } }, true);
