@@ -5148,10 +5148,22 @@
       #p3hero #p3cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.4s ease; z-index: 0; }
       #p3hero #p3cv.on { opacity: 1; }
       #p3hero::before { z-index: 1; } #p3hero .in { z-index: 2; } #p3hero .lg { z-index: 3; }
+      /* 画质按钮（11-15）：与 EN 同风格，并排在右上角；点开三选一 */
+      #p3hero .tr { position: absolute; top: 14px; right: 16px; z-index: 3; display: flex; gap: 8px; align-items: flex-start; }
+      #p3hero .tr .lg { position: relative; top: auto; right: auto; white-space: nowrap; line-height: 16px; }
+      #p3hero .qw { position: relative; }
+      #p3hero .qm { position: absolute; top: calc(100% + 6px); right: 0; display: none; flex-direction: column; gap: 4px; padding: 6px; border: 1px solid rgba(233,199,121,.45); border-radius: 12px; background: rgba(6,14,20,.88); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+      #p3hero .qm.on { display: flex; }
+      #p3hero .qm button { padding: 6px 16px; font-size: 12px; border: 1px solid transparent; background: none; color: #e9c779; text-align: left; white-space: nowrap; }
+      #p3hero .qm button[aria-checked="true"] { border-color: rgba(233,199,121,.6); background: rgba(233,199,121,.12); }
+      #p3hero .qm button:hover { background: rgba(233,199,121,.18); }
+      #p3hero .p3qt { position: absolute; top: 62px; right: 16px; z-index: 3; padding: 6px 14px; border-radius: 999px; background: rgba(6,14,20,.72); border: 1px solid rgba(233,199,121,.4); color: #e9e2cc; font-size: 12px; line-height: 1.3; white-space: nowrap; opacity: 0; transition: opacity .6s ease; pointer-events: none; }
+      #p3hero .p3qt.on { opacity: 1; }
+      @media (max-width: 480px) { #p3hero .tr { flex-direction: column-reverse; align-items: flex-end; gap: 6px; top: calc(12px + env(safe-area-inset-top)); right: 12px; } #p3hero .p3qt { top: calc(88px + env(safe-area-inset-top)); right: 12px; } }   /* 窄屏：画质按钮叠在 EN 下方，不挤一光日小窗 */
       @media (max-height: 360px) { #p3hero { padding-bottom: 12px; } #p3hero h1 { font-size: 20px; } #p3hero .bt { margin-top: 10px; } #p3hero button { padding: 7px 16px; } }
     </style>
     <section id="p3hero" aria-label="创世计划 3.0">
-      <button type="button" class="lg g" id="p3lg"></button>
+      <div class="tr"><div class="qw"><button type="button" class="lg g" id="p3qb" aria-haspopup="menu" aria-expanded="false"></button><div class="qm" id="p3qm" role="menu"><button type="button" role="menuitemradio" data-q="high"></button><button type="button" role="menuitemradio" data-q="medium"></button><button type="button" role="menuitemradio" data-q="low"></button></div></div><button type="button" class="lg g" id="p3lg"></button></div>
       <div class="in"><small>GENESIS 3.0</small><h1 id="p3h1"></h1><p id="p3sub"></p>
         <div class="bt"><button type="button" id="p3play"></button><button type="button" class="g" id="p3pre"></button></div><div class="tz" id="p3tz" aria-live="polite"></div></div>
     </section>
@@ -5166,18 +5178,33 @@
       $("p3lg").textContent = en ? "中文" : "EN";
       $("p3lg").addEventListener("click", function () { if (window.gnSetLang) gnSetLang(en ? "zh" : "en"); });
       var p3m = null, p3dead = false;
+      /* 画质：显示当前档；三选一写 gn:p3q，首屏在跑就热切换（未启动的话启动时自然读到）；自动降档时提示一次 */
+      var QL = en ? { high: "High", medium: "Medium", low: "Low" } : { high: "高", medium: "中", low: "低" }, QS = en ? { high: "H", medium: "M", low: "L" } : QL, qCur = "medium", qT = null;
+      var qb = $("p3qb"), qm = $("p3qm"), qOpts = qm.querySelectorAll("button");
+      for (var qi = 0; qi < qOpts.length; qi++) qOpts[qi].textContent = QL[qOpts[qi].getAttribute("data-q")];
+      function qSet(t) { qCur = t; qb.textContent = (en ? "Quality " : "画质 ") + QS[t]; qb.setAttribute("aria-label", (en ? "Quality: " : "画质：") + QL[t]);
+        for (var i = 0; i < qOpts.length; i++) qOpts[i].setAttribute("aria-checked", String(qOpts[i].getAttribute("data-q") === t)); }
+      function qOpen(on) { qm.classList.toggle("on", on); qb.setAttribute("aria-expanded", String(on)); }
+      qSet("medium");
+      import("./portal3/p3tier.js").then(function (m) { qT = m; if (!(p3m && p3m.tier())) qSet(m.pickTier().tier); }).catch(function () {});
+      qb.addEventListener("click", function (e) { e.stopPropagation(); qOpen(!qm.classList.contains("on")); });
+      qm.addEventListener("click", function (e) { e.stopPropagation(); var n = e.target && e.target.getAttribute && e.target.getAttribute("data-q"); if (!n) return;
+        qOpen(false); try { localStorage.setItem("gn:p3q", n); } catch (x) {} qSet(n);
+        if (p3m && p3m.tier()) { if (!p3m.setQuality(n)) location.reload(); } });
+      document.addEventListener("click", function () { if (qm.classList.contains("on")) qOpen(false); });
+      window.addEventListener("p3q:tier", function (e) { var d = e.detail || {}; if (!d.tier) return; qSet(d.tier); if (d.auto && qT) qT.toast(h, en, "tr"); });
       function p3stop() { p3dead = true; if (p3m) { try { p3m.pause(); } catch (e) {} setTimeout(function () { try { p3m.stop(); } catch (e) {} }, 760); } }
       function p3boot() {
         if (p3dead || h.style.display === "none") return;
         try { if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return; var t = document.createElement("canvas"); if (!t.getContext("webgl2")) return; } catch (e) { return; }
-        import("./portal3/p3hero.js").then(function (m) { if (p3dead) return; p3m = m; m.start(h); }).catch(function () {});
+        import("./portal3/p3hero.js").then(function (m) { if (p3dead) return; p3m = m; m.start(h); if (m.tier()) qSet(m.tier()); }).catch(function () {});
       }
       function p3lazy() { if (window.__p3introOn) { window.addEventListener("p3intro:end", p3lazy, { once: true }); return; } (window.requestIdleCallback || function (f) { setTimeout(f, 300); })(p3boot, { timeout: 1500 }); }
       if (document.readyState === "complete") p3lazy(); else window.addEventListener("load", p3lazy);
       function go() { p3stop(); h.classList.add("off"); h.setAttribute("aria-hidden", "true"); try { sessionStorage.setItem("gn:portal:p3hero", "1"); } catch (e) {} setTimeout(function () { h.style.display = "none"; }, 750); }
       $("p3play").addEventListener("click", go);
       $("p3pre").addEventListener("click", function () { $("p3tz").textContent = en ? "Genesis 3.0 \u201cFrom Play to Build\u201d — trailer in production. Stay tuned." : "创世计划 3.0「从玩到造」宣传片制作中，敬请期待。"; });
-      document.addEventListener("keydown", function (e) { if (e.key === "Escape" && h.style.display !== "none" && !document.querySelector("#p3mvDlg.on")) go(); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape" && qm.classList.contains("on")) { qOpen(false); qb.focus(); return; } if (e.key === "Escape" && h.style.display !== "none" && !document.querySelector("#p3mvDlg.on")) go(); });
       try { if (sessionStorage.getItem("gn:portal:p3hero") === "1") { h.style.display = "none"; h.classList.add("off"); } } catch (e) {}
     })();
     </script>

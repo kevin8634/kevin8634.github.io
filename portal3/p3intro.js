@@ -1,9 +1,11 @@
 /* 创世计划 门户 3.0 · 开场动画（阶段 1，11-15）约 6 秒，每会话一次，可跳过（按钮 / Esc / 点击）。
  * 0–1.5 蓝图描线（北斗七星 → 八芒星线框，LOADING%）→ 1.5–2.5 玻璃星核 + 七色光桥 → 2.5–3.5 闪白/RGB 错位/切片冲出「GENESIS 3.0」
  * → 3.5–5 紫青星云 + 格子墙 + 淡字带视差 + 副标 → 5–6 镜头穿过八芒星，淡出到 #p3hero。
- * 分档沿用 p3hero（?p3q= / localStorage gn:p3q / GPU 名）：high = 物理透射玻璃（色散、虹彩）+ bloom；medium = 菲涅尔假玻璃 + bloom；
- * low（软件渲染、移动 GPU、无 WebGL2）= 纯 2D canvas 描线 + 切片故障，不加载 three。
+ * 分档见 p3tier.js（与 p3hero 共用）：high（只能手动选）= 物理透射玻璃（色散、虹彩）+ bloom；medium（所有真 GPU 的默认，含手机/苹果）= 菲涅尔假玻璃 + bloom；
+ * low（软件渲染、无 WebGL2）= 纯 2D canvas 描线 + 切片故障，不加载 three。
+ * fps 监测：玻璃阶段连续约 1 秒平均 <24fps 就降一档（high→medium→low），不中断时间线；右下「画质」可手动切换（写 gn:p3q，即时生效）。
  * 每一帧都是时间 t 的纯函数：?p3it=秒 冻结时间截帧；?p3intro=1 强制再播。three r186 本地（ludoterra/vendor/r186，MIT）。代码为本项目自写。 */
+import { pickTier, save, lower, SLOW, toast } from './p3tier.js';
 const DUR = 6, TAU = Math.PI * 2;
 const cl = x => x < 0 ? 0 : x > 1 ? 1 : x;
 const lin = (a, b, x) => cl((x - a) / (b - a));
@@ -33,17 +35,7 @@ export function play(opts) {
   opts = opts || {};
   const q = location.search, en = window.GN_LANG === 'en';
   const mt = /[?&]p3it=([\d.]+)/.exec(q), frozen = mt ? Math.min(DUR - .01, +mt[1]) : null;
-  let tierName = 'low', forced = false;
-  try { const m = /[?&]p3q=(high|medium|low)\b/.exec(q), ls = localStorage.getItem('gn:p3q');
-    if (m) { tierName = m[1]; forced = true; } else if (/^(high|medium|low)$/.test(ls || '')) { tierName = ls; forced = true; } } catch (e) {}
-  let gpu = '';
-  if (!forced) {
-    try { const c = document.createElement('canvas'), gl = c.getContext('webgl2');
-      if (gl) { const x = gl.getExtension('WEBGL_debug_renderer_info'); gpu = String(x ? gl.getParameter(x.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
-        tierName = /swiftshader|llvmpipe|software|basic render|mali|adreno|powervr|apple gpu/i.test(gpu) ? 'low' : /intel|uhd|iris|radeon\(tm\) graphics|vega \d+ graphics/i.test(gpu) ? 'medium' : 'high';
-        if (/Mobi|Android/i.test(navigator.userAgent) && tierName === 'high') tierName = 'medium';
-        const lc = gl.getExtension('WEBGL_lose_context'); if (lc) lc.loseContext(); } } catch (e) { tierName = 'low'; }
-  }
+  const pk = pickTier(); let tierName = pk.tier; const gpu = pk.gpu;
   try { sessionStorage.setItem('gn:portal:p3intro', '1'); } catch (e) {}
 
   /* ---------- DOM ---------- */
@@ -51,17 +43,38 @@ export function play(opts) {
   st.textContent = `#p3intro{position:fixed;inset:0;z-index:90;background:#030407;overflow:hidden;cursor:pointer;opacity:1;transition:opacity .45s ease}
 #p3intro canvas{position:absolute;inset:0;width:100%;height:100%;display:block}#p3intro .gl{opacity:0}
 #p3intro .sub{position:absolute;left:0;right:0;text-align:center;color:#e8ecff;font:400 clamp(14px,1.9vw,22px)/1.4 system-ui,"PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:.32em;text-shadow:0 0 18px rgba(150,120,255,.7),0 2px 10px rgba(0,0,0,.8);opacity:0;pointer-events:none;padding:0 16px}
-#p3intro .sk{position:absolute;right:calc(18px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));padding:8px 16px;border:1px solid rgba(220,228,255,.4);border-radius:999px;background:rgba(6,8,16,.45);color:#dfe5f7;font:12px/1 ${MONO};letter-spacing:.18em;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#p3intro .ctl{position:absolute;right:calc(18px + env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));display:flex;gap:8px;align-items:center}
+#p3intro .qm{position:absolute;right:0;bottom:calc(100% + 8px);display:none;flex-direction:column;gap:4px;padding:6px;border:1px solid rgba(220,228,255,.3);border-radius:12px;background:rgba(6,8,16,.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#p3intro .qm.on{display:flex}
+#p3intro .qm button{padding:6px 14px;border:1px solid transparent;border-radius:999px;background:none;color:#dfe5f7;font:12px/1 ${MONO};letter-spacing:.12em;cursor:pointer;text-align:left;white-space:nowrap}
+#p3intro .qm button[aria-checked=true]{border-color:rgba(220,228,255,.55);color:#fff}
+#p3intro .qm button:hover,#p3intro .qm button:focus-visible{background:rgba(220,228,255,.12);outline:none}
+#p3intro .p3qt{position:absolute;left:50%;bottom:calc(64px + env(safe-area-inset-bottom));transform:translateX(-50%);padding:6px 14px;border-radius:999px;background:rgba(6,8,16,.7);border:1px solid rgba(220,228,255,.3);color:#dfe5f7;font:12px/1.3 system-ui,"PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:.06em;white-space:nowrap;opacity:0;transition:opacity .6s ease;pointer-events:none}
+#p3intro .p3qt.on{opacity:1}
+#p3intro .sk{position:relative;padding:8px 16px;border:1px solid rgba(220,228,255,.4);border-radius:999px;background:rgba(6,8,16,.45);color:#dfe5f7;font:12px/1 ${MONO};letter-spacing:.18em;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 #p3intro .sk:hover,#p3intro .sk:focus-visible{border-color:#fff;color:#fff;outline:none}`;
   document.head.appendChild(st);
   let root = document.getElementById('p3intro');
   if (!root) { root = document.createElement('div'); root.id = 'p3intro'; document.body.appendChild(root); }
   root.removeAttribute('style'); root.setAttribute('role', 'presentation');
-  const glc = document.createElement('canvas'); glc.className = 'gl';
+  let glc = document.createElement('canvas'); glc.className = 'gl';
   const c2 = document.createElement('canvas');
   const sub = document.createElement('div'); sub.className = 'sub'; sub.textContent = en ? 'Master a world, then build one' : '玩懂一个世界，再亲手造一个';
   const skip = document.createElement('button'); skip.type = 'button'; skip.className = 'sk'; skip.textContent = en ? 'Skip ›' : '跳过 ›'; skip.setAttribute('aria-label', en ? 'Skip intro' : '跳过开场动画');
-  root.append(glc, c2, sub, skip);
+  const QL = en ? { high: 'High', medium: 'Medium', low: 'Low' } : { high: '高', medium: '中', low: '低' };
+  const QS = en ? { high: 'H', medium: 'M', low: 'L' } : QL;
+  const ctl = document.createElement('div'); ctl.className = 'ctl';
+  const qb = document.createElement('button'); qb.type = 'button'; qb.className = 'sk qb'; qb.setAttribute('aria-haspopup', 'menu'); qb.setAttribute('aria-expanded', 'false');
+  const qm = document.createElement('div'); qm.className = 'qm'; qm.setAttribute('role', 'menu');
+  ['high', 'medium', 'low'].forEach(n => { const o = document.createElement('button'); o.type = 'button'; o.dataset.q = n; o.setAttribute('role', 'menuitemradio'); o.textContent = QL[n]; qm.appendChild(o); });
+  function qLabel() { qb.textContent = (en ? 'Quality ' : '画质 ') + QS[tierName]; qb.setAttribute('aria-label', (en ? 'Quality: ' : '画质：') + QL[tierName]);
+    qm.querySelectorAll('button').forEach(o => o.setAttribute('aria-checked', String(o.dataset.q === tierName))); }
+  qb.addEventListener('click', e => { e.stopPropagation(); const on = !qm.classList.contains('on'); qm.classList.toggle('on', on); qb.setAttribute('aria-expanded', String(on)); });
+  qm.addEventListener('click', e => { e.stopPropagation(); const n = e.target && e.target.dataset && e.target.dataset.q; if (!n) return;
+    qm.classList.remove('on'); qb.setAttribute('aria-expanded', 'false'); save(n); setTier(n, false); });
+  skip.addEventListener('click', e => { e.stopPropagation(); end(true); });
+  ctl.append(qm, qb, skip); qLabel();
+  root.append(glc, c2, sub, ctl);
   const ctx = c2.getContext('2d');
 
   /* ---------- 尺寸 / 投影（2D 与 3D 同一相机：fov 35°，星在 z=0 平面） ---------- */
@@ -270,9 +283,9 @@ export function play(opts) {
   function titleS(t) { return t < 5 ? 1 + .55 * Math.exp(-Math.max(0, t - 2.52) * 9) : 1 + .4 * ei(lin(5, 5.4, t)); }
 
   /* ---------- WebGL（中/高档） ---------- */
-  let GLX = null, glState = tierName === 'low' ? 'off' : 'loading';
+  let GLX = null, TM = null, glState = tierName === 'low' ? 'off' : 'loading';
   if (glState === 'loading') {
-    import('../ludoterra/vendor/r186/three.module.min.js').then(T => { if (dead) return; try { GLX = makeGL(T, tierName === 'high'); GLX.resize(); glState = 'ready'; } catch (e) { console.warn('p3intro gl', e); GLX = null; glState = 'off'; lowFx = makeLow(); lowFx.resize(); } })
+    import('../ludoterra/vendor/r186/three.module.min.js').then(T => { TM = T; if (dead || tierName === 'low') return; try { GLX = makeGL(T, tierName === 'high'); GLX.resize(); glState = 'ready'; } catch (e) { console.warn('p3intro gl', e); GLX = null; glState = 'off'; lowFx = makeLow(); lowFx.resize(); } })
       .catch(() => { glState = 'off'; lowFx = makeLow(); lowFx.resize(); });
   } else lowFx = makeLow();
 
@@ -464,17 +477,49 @@ void main(){vec2 uv=vUv;float g=uG;
     return o;
   }
 
+  /* ---------- 换档（手动或自动），不中断时间线 ---------- */
+  let switchAt = -1;
+  function dropGL() { if (GLX) { try { GLX.dispose(); } catch (e) {} GLX = null; }
+    const n = document.createElement('canvas'); n.className = 'gl'; glc.replaceWith(n); glc = n; }   // 旧 canvas 已 forceContextLoss，换新的
+  function toLow() { dropGL(); glState = 'off'; if (!lowFx) { lowFx = makeLow(); lowFx.resize(); } }
+  function buildGL() { try { GLX = makeGL(TM, tierName === 'high'); GLX.resize(); glState = 'ready'; } catch (e) { console.warn('p3intro gl', e); tierName = 'low'; dbg.tier = 'low'; toLow(); } }
+  function setTier(n, auto) {
+    if (dead || n === tierName) { qLabel(); return; }
+    tierName = n; dbg.tier = n; switchAt = performance.now(); mAcc = 0; mN = 0; mLong = 0;
+    if (n === 'low') toLow();
+    else if (glState === 'loading') { /* three 仍在加载：加载完按新档建 */ }
+    else { dropGL(); if (TM) buildGL();
+      else { glState = 'off'; if (!lowFx) { lowFx = makeLow(); lowFx.resize(); }   // 低档起步再升档：先用 2D 顶着，three 到了再接上
+        import('../ludoterra/vendor/r186/three.module.min.js').then(T => { TM = T; if (!dead && tierName !== 'low' && !GLX) { buildGL(); switchAt = performance.now(); } }).catch(() => {}); } }
+    qLabel();
+    if (auto) { dbg.autoLowered = (dbg.autoLowered || 0) + 1; toast(root, en, 'br'); }
+  }
+  /* fps 监测：只在玻璃（WebGL）真正出图时计；玻璃出图后前 0.5 秒、换档后 0.5 秒、单帧 >250ms（加载/编译卡顿）都不计 */
+  let mAcc = 0, mN = 0, mLong = 0, glFrom = -1;
+  function monitor(raw, now, t) {
+    if (frozen != null || tierName === 'low' || glState !== 'ready' || t < 1.5 || document.hidden) { glFrom = -1; return; }
+    if (glFrom < 0) glFrom = now;
+    if (now - glFrom < 500 || now - switchAt < 500 || raw <= 0) { mLong = 0; return; }
+    if (raw > .25) { if (++mLong >= 3) { mLong = 0; dbg.fps = 1 / raw; setTier(lower(tierName), true); } return; }   // 单帧 >250ms 不计；连续 3 帧都这样才算
+    mLong = 0; mAcc += SLOW ? 1 / 12 : raw; mN++;
+    if (mAcc < 1) return;
+    const fps = mN / mAcc; dbg.fps = fps; mAcc = 0; mN = 0;
+    if (fps < 24) setTier(lower(tierName), true);
+  }
+
   /* ---------- 主循环 ---------- */
   let dead = false, raf = 0, last = performance.now(), clock = 0, held = 0, frames = 0, lastT = 0;
   const dbg = window.__p3intro = { tier: tierName, gpu, frozen, get gl() { return glState; }, frames: 0, t: 0, skip: () => end(true) };
   function frame(now) {
     raf = requestAnimationFrame(frame);
+    const raw = (now - last) / 1000;
     let t;
     if (frozen != null) t = frozen;
     else { clock += Math.min(.25, Math.max(0, (now - last) / 1000)); last = now; t = clock - held;   // 主线程卡顿时放慢而不是跳帧
       if (glState === 'loading' && t > 1.45) { if (t + held < 4.5) { held += t - 1.45; t = 1.45; } else { glState = 'off'; lowFx = makeLow(); lowFx.resize(); } } }
     lastT = t;
     if (t >= DUR && frozen == null) { end(false); return; }
+    monitor(raw, now, t);
     const glOn = glState === 'ready', pct = Math.min(glState === 'loading' ? 92 : 100, Math.floor(100 * eo(lin(0, 1.42, t))));
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, c2.width, c2.height);
     if (t >= 1.5 && lowFx && !glOn) { lowFx.draw(t); ctx.setTransform(G.d, 0, 0, G.d, 0, 0); }
@@ -498,7 +543,8 @@ void main(){vec2 uv=vUv;float g=uG;
     setTimeout(() => { try { if (GLX) GLX.dispose(); } catch (e) {} root.remove(); st.remove(); RUN = null;
       window.__p3introOn = 0; dbg.done = true; dispatchEvent(new Event('p3intro:end')); }, skipped ? 460 : 60);
   }
-  function onKey(e) { if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopImmediatePropagation(); end(true); } }
+  function onKey(e) { if (e.key !== 'Escape' && ctl.contains(e.target)) return;   // 焦点在画质/跳过按钮上：回车空格交给按钮本身
+    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopImmediatePropagation(); end(true); } }
   addEventListener('keydown', onKey, true);
   root.addEventListener('click', () => end(true));
   addEventListener('resize', resize);

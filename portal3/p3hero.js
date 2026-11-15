@@ -2,28 +2,14 @@
  * 青绿深空星云 / 七座金色穹顶浮空工坊 / 北斗光桥依次点亮 / 第八颗星（八芒+光晕+轨道环）/ 云海辉光 / 远处旋涡星系。
  * 本地 three r186（复用 ludoterra/vendor/r186，MIT），零外部请求。
  * 管线：HalfFloat HDR RT(MSAA) → 自写 bloom（13-tap 降采样+tent 升采样）→ 合成（曝光、ACES/AgX 混合、分离色调、暗角、胶片颗粒、抖动、sRGB）。
- * 画质三档 high/medium/low（按 GPU 名猜，?p3q= 或 localStorage gn:p3q 覆盖）；fps 调速器先降像素、再降档（只降不升）。
+ * 画质三档 high/medium/low（规则见 p3tier.js：软件渲染/无 WebGL2 → low，其余 GPU → medium，high 只能手动；?p3q= 或 localStorage gn:p3q 覆盖）；
+ * fps 调速器先降像素、再降档（只降不升；手动选的档位也会被自动降，但不写回 localStorage）；setQuality() 供右上角「画质」按钮热切换。
  * 思路致谢见 portal3/LICENSES.md。代码为本项目自写。 */
 import * as THREE from '../ludoterra/vendor/r186/three.module.min.js';
+import { pickTier, lower, SLOW } from './p3tier.js';
 
 let S = null; // 运行状态（单例）
 
-function pickTier(gl) {
-  try {
-    const m = /[?&]p3q=(high|medium|low)\b/.exec(location.search);
-    if (m) return { tier: m[1], forced: true };
-    const ls = localStorage.getItem('gn:p3q');
-    if (ls === 'high' || ls === 'medium' || ls === 'low') return { tier: ls, forced: true };
-  } catch (e) {}
-  let name = '';
-  try { const ext = gl.getExtension('WEBGL_debug_renderer_info'); name = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); } catch (e) {}
-  name = String(name || '');
-  let tier = 'high';
-  if (/swiftshader|llvmpipe|software|mali|adreno|powervr|apple gpu/i.test(name)) tier = 'low';
-  else if (/intel|uhd|iris|radeon\(tm\) graphics|vega \d+ graphics/i.test(name)) tier = 'medium';
-  if (/Mobi|Android/i.test(navigator.userAgent) && tier === 'high') tier = 'medium';
-  return { tier, forced: false, gpu: name };
-}
 const TIERS = {
   high:   { post: true,  msaa: 4, mips: 6, budget: 2.4e6, dpr: 2,   oct: 5, dust: 1400 },
   medium: { post: true,  msaa: 0, mips: 5, budget: 1.4e6, dpr: 1.5, oct: 4, dust: 900 },
@@ -432,19 +418,23 @@ export function start(host, opts) {
     else baseDist = Math.max(36 / (2 * t), 22 / (2 * t * camera.aspect)) * .98;
     sizePost();
   }
-  let fAcc = 0, fN = 0, warm = 0, slow = 0, lastChange = 0;
+  let fAcc = 0, fN = 0, warm = 0, slow = 0, lastChange = 0, longN = 0;
   function govern(raw, now) {
-    warm += raw; if (warm < 2.5 || raw > .25 || document.hidden) return;
-    fAcc += raw; fN++;
-    if (fAcc < 1.5) return;
-    const fps = fN / fAcc; fAcc = 0; fN = 0; S.fps = fps;
+    warm += raw; if (warm < 2.5 || document.hidden) return;
+    let fps;
+    if (raw > .25) { if (++longN < 3) return; fps = 1 / raw; longN = 0; fAcc = 0; fN = 0; }   // 单帧 >250ms 当偶发卡顿不计；连续 3 帧都这样 = 真的跑不动
+    else { longN = 0; fAcc += SLOW ? 1 / 12 : raw; fN++; if (fAcc < 1.5) return; fps = fN / fAcc; fAcc = 0; fN = 0; }
+    S.fps = fps;
     if (now - lastChange < 2500) return;
     if (fps < 45) {
       if (scale > .56) { scale = Math.max(.55, scale - .12); lastChange = now; resize(); }
-      else if (++slow >= 3 && !pick.forced && tierName !== 'low') { slow = 0; setTier(tierName === 'high' ? 'medium' : 'low'); lastChange = now; }
+      else if (++slow >= 3 && tierName !== 'low') { slow = 0; setTier(lower(tierName), true); lastChange = now; }
     } else { slow = 0; if (fps > 58 && scale < 1) { scale = Math.min(1, scale + .05); lastChange = now; resize(); } }
   }
-  function setTier(n) { tierName = n; T = TIERS[n]; scale = 1; S.tier = n; buildPost(); resize(); }
+  function setTier(n, auto) {
+    if (!TIERS[n]) return; tierName = n; T = TIERS[n]; scale = 1; slow = 0; fAcc = 0; fN = 0; longN = 0; lastChange = performance.now(); S.tier = n; buildPost(); resize();
+    try { dispatchEvent(new CustomEvent('p3q:tier', { detail: { tier: n, auto: !!auto } })); } catch (e) {}
+  }
 
   /* ---------- loop ---------- */
   const mouse = new THREE.Vector2(), par = new THREE.Vector2();
@@ -505,7 +495,7 @@ export function start(host, opts) {
   }
 
   function pause() { cancelAnimationFrame(raf); raf = 0; document.removeEventListener('visibilitychange', onVis); }
-  S = { stop, pause, tier: tierName, gpu: pick.gpu, fps: 0 };
+  S = { stop, pause, setTier: n => setTier(n, false), tier: tierName, gpu: pick.gpu, fps: 0 };
   buildPost(); resize();
   window.__p3dbg = { S, renderer, scene, camera, step: (dt, n) => { for (let i = 0; i < (n || 1); i++) render(dt); }, setT: v => { t = v; } };
   if (opts.capture) { render(0.016); canvas.classList.add('on'); }
@@ -513,4 +503,6 @@ export function start(host, opts) {
   return S;
 }
 export function stop() { if (S) S.stop(); }
+export function setQuality(n) { if (S) { S.setTier(n); return true; } return false; }
+export function tier() { return S ? S.tier : null; }
 export function pause() { if (S) S.pause(); }
