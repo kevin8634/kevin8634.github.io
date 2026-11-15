@@ -1084,9 +1084,9 @@
     </style>
   </head>
   <body>
-    <!-- 门户 3.0 · 开场动画（阶段1，11-15）：每会话一次，可跳过；减少动态不播；?p3intro=1 强制、=0 关闭 -->
+    <!-- 门户 3.0 · 开场动画（阶段1，11-15）：每次打开都播（王磊 11-15 15:29），可跳过；减少动态不播；?p3intro=1 强制、=0 关闭 -->
     <script>
-    (function () { try { var q = location.search; if (!/[?&]p3intro=1/.test(q) && (/[?&]p3intro=0/.test(q) || sessionStorage.getItem("gn:portal:p3intro") === "1")) return;
+    (function () { try { var q = location.search; if (!/[?&]p3intro=1/.test(q) && /[?&]p3intro=0/.test(q)) return;
       if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       var d = document.createElement("div"); d.id = "p3intro"; d.style.cssText = "position:fixed;inset:0;z-index:90;background:#030407"; document.body.appendChild(d); window.__p3introOn = 1;
       var off = function () { d.remove(); window.__p3introOn = 0; dispatchEvent(new Event("p3intro:end")); };
@@ -5337,7 +5337,6 @@
         if (qm.classList.contains("on")) { qOpen(false); qb.focus(); return; }
         var k = drawerOpen(); if (k > -1) { drawer(-1); tabs[k][0].focus(); return; }
         if (!document.querySelector("#p3mvDlg.on")) go(); });
-      try { if (sessionStorage.getItem("gn:portal:p3hero") === "1") { h.style.display = "none"; h.classList.add("off"); document.documentElement.classList.remove("p3h"); } } catch (e) {}
     })();
     </script>
     <!-- 门户 3.0 · 「一光日」MV 小窗（11-15）：teaser 静音循环，点开弹层播完整 MV；本地文件，零外部请求；减少动态只显示封面 -->
