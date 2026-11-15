@@ -1084,6 +1084,14 @@
     </style>
   </head>
   <body>
+    <!-- 门户 3.0 · 开场动画（阶段1，11-15）：每会话一次，可跳过；减少动态不播；?p3intro=1 强制、=0 关闭 -->
+    <script>
+    (function () { try { var q = location.search; if (!/[?&]p3intro=1/.test(q) && (/[?&]p3intro=0/.test(q) || sessionStorage.getItem("gn:portal:p3intro") === "1")) return;
+      if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      var d = document.createElement("div"); d.id = "p3intro"; d.style.cssText = "position:fixed;inset:0;z-index:90;background:#030407"; document.body.appendChild(d); window.__p3introOn = 1;
+      var off = function () { d.remove(); window.__p3introOn = 0; dispatchEvent(new Event("p3intro:end")); };
+      import("./portal3/p3intro.js").then(function (m) { m.play(); }).catch(off); } catch (e) {} })();
+    </script>
     <script>
 /* ---------- v2.5.0 中英双语框架（王磊 11-01 18:56 同意方案 v0.1）----------
  * 语言来源：URL ?lang= > 本机键 gn:lang（全站共享）> 默认中文；不按浏览器语言自动跳转。
@@ -5164,7 +5172,7 @@
         try { if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return; var t = document.createElement("canvas"); if (!t.getContext("webgl2")) return; } catch (e) { return; }
         import("./portal3/p3hero.js").then(function (m) { if (p3dead) return; p3m = m; m.start(h); }).catch(function () {});
       }
-      function p3lazy() { (window.requestIdleCallback || function (f) { setTimeout(f, 300); })(p3boot, { timeout: 1500 }); }
+      function p3lazy() { if (window.__p3introOn) { window.addEventListener("p3intro:end", p3lazy, { once: true }); return; } (window.requestIdleCallback || function (f) { setTimeout(f, 300); })(p3boot, { timeout: 1500 }); }
       if (document.readyState === "complete") p3lazy(); else window.addEventListener("load", p3lazy);
       function go() { p3stop(); h.classList.add("off"); h.setAttribute("aria-hidden", "true"); try { sessionStorage.setItem("gn:portal:p3hero", "1"); } catch (e) {} setTimeout(function () { h.style.display = "none"; }, 750); }
       $("p3play").addEventListener("click", go);

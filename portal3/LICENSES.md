@@ -11,3 +11,8 @@
 
 ## 素材
 - `hero-c2.webp` / `hero-c2-768.webp`：创世计划 3.0 概念图 c2（项目自有，AI 生成），作为 WebGL 不可用/减少动态时的后备底图。
+
+## p3intro.js（开场动画，11-15）
+- 同样复用本地 three.js r186（MIT）；低档不加载 three，纯 2D canvas。
+- 合成通道 ACES（Stephen Hill 拟合）与 AgX 多项式为业界公开常数（three.js MIT 实现中同一组数值）；bloom 为 Karis 加权降采样 + tent 升采样的公开技术；分档与像素预算思路同上，来自《画质专长包 v4》笔记。
+- 字体只用系统字体（等宽 / Arial Black 等），不打包任何字体文件；画面全部程序化生成，无外部模型或图片。
