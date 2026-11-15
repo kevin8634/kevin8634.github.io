@@ -41,3 +41,8 @@
 - **Aceternity UI「Sticky Scroll Reveal」**（https://ui.aceternity.com/components/sticky-scroll-reveal ）——只借「左侧文字随滚动逐段点亮、右侧画面随之切换」的交互思路；本项目改写为：左栏逐层文字 + 第一性原理之树的镜头沿树爬升并高亮当前层。代码全部为本项目自写的原生 JS/CSS（IntersectionObserver 定当前段、scroll + requestAnimationFrame 节流驱动镜头），未复制任何源码，不依赖 React / Framer Motion，不走 CDN，零外部请求。
 - 排版节奏（编辑式大留白、等宽小眉题 + 大标题 + 短段落）参考 motionsites 一类编辑式站点的公开观感，只学节奏，无素材与代码引用。
 - 叙事背景仍是实时渲染的树（three.js r186 本地，MIT），不使用任何图片或视频作背景。
+
+## 首屏放大 + 镜头穿行（11-16 · 第四步 · index.html 首屏 / p3fp.js / p3nar.js / p3ui.css）
+- **版式思路参考 MotionSites「Anchor AI Particle Tree Landing Page」**（https://motionsites.org/prompts/anchor-ai ）——仅依据其公开描述（粒子升起成树、树下暗色水面环形波纹、大号显示字体标题 + 两个按钮、下滚镜头穿过场景、玻璃卡片从镜头旁飘过、尾段半透明粒子结构在大标题后旋转配编号卡），**未抓取、未使用其代码或任何资源**。本项目自写：树根水面着色器（环形涟漪 + 镜像相机低分辨率倒影，低档光柱假倒影）、粒子升起成树、全宽玻璃卡 CSS 3D 穿行、第八颗星长成的星形八面体粒子晶体（不是立方体）。
+- **思路参考 ThreeUI（仅公开描述）**——「Advanced Glass Material」：水面在 high 档加轻微折射 / 边缘色散与指针扰动涟漪；「Workshop Codex」：七层沿树干各放一枚发光水晶航标，镜头经过 / 当前层时点亮。均为本项目自写着色器与几何，未使用其代码或资源。
+- 仍然零外部请求、不使用图片或视频作背景；three.js r186 为本地 vendor（MIT）。

@@ -1,9 +1,9 @@
-/* 创世计划 门户 3.0 · 下滚叙事（11-16 · 第三步）
- * 首屏下方一段滚动叙事：左侧文字逐层切换（第一性原理 → 七层七个世界 → 第八颗星 → 从玩到造），
- * 右侧（手机为背景）第一性原理之树的镜头沿树向上爬升，并联动 p3fp.spot 高亮当前层；最后一屏落到「开始玩 / 造」，再往下滑进入门户。
- * 思路致谢：Aceternity UI「Sticky Scroll Reveal」（只借交互思路）；排版节奏参考编辑式大留白。代码为本项目自写的原生 JS，零依赖、零外部请求。
- * 驱动：IntersectionObserver 定当前段；scroll 事件经 rAF 节流算连续进度驱动镜头。
- * 减少动态：不动镜头，文字直接平铺（无淡入位移），只做静态层高亮；low 档：镜头只跳切。 */
+/* 创世计划 门户 3.0 · 下滚叙事「镜头穿行」（11-16 · 第四步，改写第三步）
+ * 往下滚：第一性原理之树的镜头沿树爬升，七个世界的全宽大玻璃卡依次从远处迎面飘来、停留、再从镜头旁掠过（深度视差 + 轻微倾斜 + 世界色光边），
+ * 同时联动 p3fp.spot 高亮当前层与树干上的水晶航标；尾段第八颗星长成半透明粒子晶体，在超大「从玩到造」标题后旋转，配三张编号大卡（规则 / 实验 / 世界），最后落到大按钮，再往下滑进入门户。
+ * 思路致谢：MotionSites「Anchor AI」公开描述（镜头穿行 + 玻璃卡 + 尾段旋转粒子结构）、Aceternity「Sticky Scroll Reveal」、ThreeUI「Workshop Codex」航标（均只借思路，代码自写，零依赖、零外部请求）。
+ * 驱动：IntersectionObserver 定当前段；scroll → rAF 算连续进度驱动镜头与卡片 3D 变换（#p3ss 自带 perspective）。
+ * 减少动态：无镜头动画、卡片静态平铺；low 档：镜头跳切、卡片只淡入不做 3D。 */
 
 const ZH = {
   root: ['00 · 第一性原理', '从最小的真出发', '不背结论，只问为什么。把一个问题拆到不能再拆，剩下的就是第一性原理——整棵树都从这里长出来。'],
@@ -40,8 +40,9 @@ const FBL = [['01', '数学', 'Math', '星图', 'Math Atlas', '#7cc8ff', 'math-a
 
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const sm = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x);
+const cl = (x, a, b) => Math.max(a, Math.min(b, x));
 
-/* o: { host, en, rm, tier():string, tree():p3fp|null, onEnter(), onLeave(), openPanel(k), enterPortal() } */
+/* o: { host, en, rm, tier():string, tree():p3fp|null, onEnter(), onLeave(), openPanel(k), enterPortal(), doors:[{t,d,no,c,svg}], soon } */
 export function mount(o) {
   const h = o.host, T = o.en ? EN : ZH, W = {};
   (window.GN_WORLDS || []).forEach(w => { W[w.id] = w; });
@@ -51,31 +52,32 @@ export function mount(o) {
   const ss = document.createElement('div'); ss.id = 'p3ss'; ss.setAttribute('data-p3pass', ''); ss.setAttribute('tabindex', '-1');
   ss.setAttribute('aria-label', o.en ? 'The story of the tree' : '第一性原理之树 · 叙事');
   let html = '<div class="ss0" data-p3pass aria-hidden="true"></div>';
-  const blk = (cls, c, eb, title, p, extra) => '<section class="sst ' + cls + '" data-p3pass style="--c:' + c + '"><div class="bx"><p class="eb">' + eb + '</p><h2>' + title + '</h2>' + p + (extra || '') + '</div></section>';
-  html += blk('s-root', '#e9c779', esc(T.root[0]), esc(T.root[1]), '<p>' + esc(T.root[2]) + '</p>');
+  const card = (cls, c, no, eb, title, p, extra) => '<section class="sst ' + cls + '" data-p3pass style="--c:' + c + '"><article class="cd"><div class="ch"><span class="no">' + no + '</span><p class="eb">' + eb + '</p></div><div class="cb"><h2>' + title + '</h2></div><div class="cr"><p>' + p + '</p>' + (extra || '') + '</div></article></section>';
+  html += card('s-root', '#e9c779', '00', esc(T.root[0].replace(/^00 · /, '')), esc(T.root[1]), esc(T.root[2]));
   LV.forEach((l, i) => {
     const t = T.L[l.id];
-    html += blk('s-lv', l.color, '<b>0' + (i + 1) + '</b> / 07 · ' + esc(l.f) + ' · ' + esc(l.name), esc(t[0]), '<p>' + esc(t[1]) + (o.en ? ' ' : '') + esc(t[2]) + '</p>',
+    html += card('s-lv', l.color, '0' + (i + 1), esc(l.f) + ' · ' + esc(l.name) + ' <i>/ 07</i>', esc(t[0]), esc(t[1]) + (o.en ? ' ' : '') + esc(t[2]),
       '<a class="go" href="' + esc(l.href) + '">' + esc(T.enter + (o.en ? ' ' : '') + l.name) + ' <span aria-hidden="true">→</span></a>');
   });
-  html += blk('s-star', '#fff1c9', esc(T.star[0]), esc(T.star[1]), '<p>' + esc(T.star[2]) + '</p>');
-  html += '<section class="ssf" data-p3pass><div class="bx"><p class="eb">' + esc(T.fin[0]) + '</p><h2><span>' + esc(T.fin[1]) + '</span><span>' + (o.en ? 'then <em>build</em> one.' : '再亲手<em>造</em>一个。') + '</span></h2><p>' + esc(T.fin[3]) + '</p>' +
-    '<div class="ct"><button type="button" class="pri" data-k="0">' + esc(T.play) + ' <span aria-hidden="true">›</span></button><button type="button" class="sec" data-k="1"><span class="shy">' + esc(T.build) + '</span> <small>' + esc(T.soon) + '</small></button></div></div></section>';
+  html += card('s-star', '#fff1c9', '08', esc(T.star[0].replace(/^08 · /, '')), esc(T.star[1]), esc(T.star[2]));
+  const D = o.doors || [];
+  html += '<section class="ssf" data-p3pass><div class="fh" data-p3pass><p class="eb">' + esc(T.fin[0]) + '</p><h2>' + (o.en ? 'From play<br>to <em>build</em>' : '从玩到<em>造</em>') + '</h2><p class="sb">' + esc(T.fin[3]) + '</p></div>' +
+    '<div class="f3">' + D.map(d => '<article class="fc" style="--c:' + esc(d.c) + '"><span class="no">' + esc(d.no) + '</span><svg viewBox="0 0 80 96" aria-hidden="true">' + d.svg + '</svg><h3>' + esc(d.t) + '</h3><p>' + esc(d.d) + '</p><small>' + esc(o.soon || T.soon) + '</small></article>').join('') + '</div>' +
+    '<div class="ct"><button type="button" class="pri" data-k="0">' + esc(T.play) + ' <span aria-hidden="true">›</span></button><button type="button" class="sec" data-k="1"><span class="shy">' + esc(T.build) + '</span> <small>' + esc(T.soon) + '</small></button></div></section>';
   html += '<div class="sse" data-p3pass><button type="button" class="dn">' + esc(T.portal) + '</button><small>' + esc(T.more) + '</small></div>';
   ss.innerHTML = html;
   const cv = h.querySelector('#p3cv'); h.insertBefore(ss, cv ? cv.nextSibling : h.firstChild);
   const rl = document.createElement('div'); rl.className = 'p3rl'; rl.setAttribute('aria-hidden', 'true');
   rl.innerHTML = '<span></span>' + '<i></i>'.repeat(9); h.appendChild(rl);
-  const steps = Array.prototype.slice.call(ss.querySelectorAll('.sst')), fin = ss.querySelector('.ssf'), tail = ss.querySelector('.sse'), ticks = rl.querySelectorAll('i');
+  const steps = Array.prototype.slice.call(ss.querySelectorAll('.sst')), cards = steps.map(s => s.querySelector('.cd')), fin = ss.querySelector('.ssf'), tail = ss.querySelector('.sse'), ticks = rl.querySelectorAll('i');
   if (o.rm) ss.classList.add('rm');
-  /* 每段对应的树位置：根 -1，七层 0..6，第八颗星 7 */
-  const SF = [-1, 0, 1, 2, 3, 4, 5, 6, 7];
+  const SF = [-1, 0, 1, 2, 3, 4, 5, 6, 7];   // 每段对应的树位置：根 -1，七层 0..6，第八颗星 7
   if (window.P3FX) { const b = fin.querySelectorAll('.ct button'); P3FX.buttons([{ el: b[0], c: '#ffe29a', k: .2 }, { el: b[1], c: '#ff9ad5', k: .16 }]); }
 
-  /* —— 当前段：IntersectionObserver（视口中线） —— */
+  /* —— 当前段 —— */
   let act = -2, on = false, dead = false, leaving = false;
   function setAct(i) {
-    if (i === act) return; act = i; if (o.tier() === 'low') onScroll();   // 跳切档靠当前段定镜头
+    if (i === act) return; act = i; if (o.tier() === 'low') onScroll();
     steps.forEach((s, k) => s.classList.toggle('on', k === i)); fin.classList.toggle('on', i === 9); rl.classList.toggle('fin', i === 9);
     for (let k = 0; k < 9; k++) ticks[k].className = k === i ? 'on' : (k < i ? 'pa' : '');
     rl.firstChild.textContent = i >= 0 && i < 9 ? '0' + i + ' / 08' : '';
@@ -95,40 +97,60 @@ export function mount(o) {
   }
 
   /* —— 连续进度：scroll → rAF —— */
-  let raf = 0, rmOn = false;
+  let raf = 0, rmOn = false, mode = '';
   function onScroll() { if (!raf && !dead) raf = requestAnimationFrame(tick); }
-  function narShift() { const w = innerWidth, hh = innerHeight; if (hh <= 420) return [w / hh > 1.5 ? .2 : 0, 0]; if (w > 800) return [w >= 1100 ? .2 : .26, 0]; return [0, -.17]; }
+  function narShift() { const w = innerWidth, hh = innerHeight; if (hh <= 420) return [w / hh > 1.5 ? .24 : 0, 0]; if (w > 800) return [0, -.2]; return [0, -.25]; }
+  function setMode() {
+    const m = o.rm ? 'flat' : o.tier() === 'low' ? 'fade' : '3d';
+    if (m === mode) return; mode = m; ss.classList.toggle('m3d', m === '3d'); ss.classList.toggle('mfade', m === 'fade');
+    if (m !== '3d') cards.forEach(c => { c.style.transform = ''; c.style.opacity = ''; c.style.visibility = ''; });
+  }
+  /* 卡片穿行：d = 段中心相对视口中心（单位：屏高）；d>0 还在远处迎面而来，d<0 正从镜头旁掠过 */
+  function fly(vh, st) {
+    const vc = st + vh / 2, wide = innerWidth > 800;
+    steps.forEach((s, k) => {
+      const c = cards[k], d = (s.offsetTop + s.offsetHeight / 2 - vc) / vh, side = k % 2 ? 1 : -1;
+      if (d > 1.25 || d < -.9) { if (c.style.visibility !== 'hidden') c.style.visibility = 'hidden'; return; }
+      let z, y, rx, ry, op;
+      if (d >= 0) { const e = sm(d / 1.1); z = -1500 * e; y = -d * vh * .55; rx = 9 * e; ry = side * 5 * e; op = 1 - sm((d - .08) / .9); }
+      else { const e = -d; z = 1100 * e * e + 380 * e; y = -d * vh * .18; rx = -4 * e; ry = -side * 14 * e; op = 1 - sm((e - .06) / .6); }
+      c.style.visibility = op < .01 ? 'hidden' : '';
+      c.style.opacity = op.toFixed(3);
+      c.style.transform = 'translate3d(' + (wide ? side * d * 40 : 0).toFixed(1) + 'px,' + y.toFixed(1) + 'px,' + z.toFixed(1) + 'px) rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg)';
+    });
+  }
   function tick() {
-    raf = 0; if (dead) return;
+    raf = 0; if (dead) return; setMode();
     const vh = ss.clientHeight || 1, st = ss.scrollTop, vc = st + vh / 2, max = ss.scrollHeight - vh;
     const p0 = st / vh;
     const was = on; on = p0 > .14;
     if (on !== was) { document.documentElement.classList.toggle('p3nv', on); if (on) o.onEnter(); else { setAct(-1); o.onLeave(); } }
     if (!io) { let i = -1; steps.forEach((s, k) => { if (s.offsetTop <= vc) i = k; }); if (fin.offsetTop <= vc) i = 9; setAct(on ? i : -1); }
-    /* 镜头：锚点 = 首屏中心（首屏取景）→ 各段中心 → 末屏中心（整棵树，叙事取景） */
+    if (mode === '3d') fly(vh, st);
+    const fk = cl((st + vh - fin.offsetTop) / vh, 0, 1);   // 末段：晶体长成
     const m = o.tree();
-    if (m && m.climb && o.rm) {   // 减少动态：不做镜头动画；进入叙事时静态切到整棵树取景（一帧），离开时切回
-      if (on !== rmOn) { rmOn = on; const sh = narShift(); m.climb(on ? 8 : -1, on ? 1 : 0, sh[0], sh[1], true); }
+    if (m && m.climb && o.rm) {   // 减少动态：无镜头动画；进入叙事时静态切到第八颗星（晶体）取景
+      if (on !== rmOn) { rmOn = on; const sh = narShift(); m.climb(on ? 8 : -1, on ? 1 : 0, sh[0], sh[1], true); if (m.finale) m.finale(on ? 1 : 0); }
     } else if (m && m.climb) {
       const A = [[vh / 2, -1, 0]];
       steps.forEach((s, k) => A.push([s.offsetTop + s.offsetHeight / 2, SF[k], 1]));
-      A.push([fin.offsetTop + fin.offsetHeight / 2, 8, 1]);
+      A.push([fin.offsetTop + vh / 2, 8, 1]);
       let f = -1, k = 0;
-      if (o.tier() === 'low') {   // 跳切：只取当前段的位置
-        if (act >= 0 && act <= 8 && on) { f = SF[act]; k = 1; } else if (act === 9) { f = 8; k = 1; }
-      } else if (vc >= A[A.length - 1][0]) { f = 8; k = 1; }
+      if (o.tier() === 'low') { if (act >= 0 && act <= 8 && on) { f = SF[act]; k = 1; } else if (act === 9) { f = 8; k = 1; } }
+      else if (vc >= A[A.length - 1][0]) { f = 8; k = 1; }
       else for (let j = 0; j < A.length - 1; j++) if (vc < A[j + 1][0]) { const t = sm((vc - A[j][0]) / Math.max(1, A[j + 1][0] - A[j][0])); f = A[j][1] + (A[j + 1][1] - A[j][1]) * t; k = A[j][2] + (A[j + 1][2] - A[j][2]) * t; break; }
       const sh = narShift(); m.climb(f, k, sh[0], sh[1], o.tier() === 'low');
+      if (m.finale) m.finale(o.tier() === 'low' ? (act === 9 ? 1 : 0) : fk);
     }
     /* 末尾：往下滑过「进入门户」→ 首屏渐隐并进入门户 */
     const tp = tail.offsetHeight ? Math.max(0, Math.min(1, (st + vh - tail.offsetTop) / tail.offsetHeight)) : 0;
-    h.style.setProperty('--p3o', String(1 - .55 * tp));
+    h.style.setProperty('--p3o', String(1 - .55 * sm((tp - .45) / .55)));   // 尾段后半才渐隐，避免大按钮背后透出门户
     if (!leaving && max > 0 && st >= max - 2 && tp > .97) { leaving = true; setTimeout(() => { if (!dead && ss.scrollTop >= ss.scrollHeight - ss.clientHeight - 4) o.enterPortal(); else leaving = false; }, o.rm ? 0 : 260); }
   }
   ss.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll);
 
-  /* —— 首屏其他元素上的滚轮/按键也推动叙事（否则会滚到下面被盖住的页面） —— */
+  /* —— 首屏其他元素上的滚轮/按键也推动叙事 —— */
   function onWheel(e) {
     if (dead || e.ctrlKey || ss.contains(e.target)) return;
     const t = e.target; if (t.closest && t.closest('.p3pn, .qm, #p3mvDlg, .wm-st')) return;
@@ -137,6 +159,7 @@ export function mount(o) {
   h.addEventListener('wheel', onWheel, { passive: false });
   function onKey(e) {
     if (dead || h.style.display === 'none' || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (document.documentElement.classList.contains('p3dr')) return;
     const a = document.activeElement; if (a && a !== document.body && a !== ss && a !== document.documentElement) return;
     if (document.querySelector('#p3mvDlg.on')) return;
     const vh = ss.clientHeight, beh = o.rm ? 'auto' : 'smooth';
@@ -146,7 +169,7 @@ export function mount(o) {
   }
   document.addEventListener('keydown', onKey);
 
-  /* —— 末屏按钮：回到首屏再展开「玩 / 造」；底部按钮直接进入门户 —— */
+  /* —— 末屏按钮：回到首屏再整屏展开「玩 / 造」；底部按钮直接进入门户 —— */
   function toTop(cb) {
     const smooth = !o.rm && o.tier() !== 'low';
     ss.scrollTo({ top: 0, behavior: smooth ? 'smooth' : 'auto' });
@@ -160,7 +183,7 @@ export function mount(o) {
   return {
     el: ss,
     top: () => ss.scrollTop,
-    sync() { const a = act; act = -2; rmOn = false; setAct(a); onScroll(); },   // 树启动 / 画质切换后补一次高亮与镜头
+    sync() { const a = act; act = -2; rmOn = false; setAct(a); onScroll(); },
     dispose() { dead = true; cancelAnimationFrame(raf); if (io) io.disconnect(); ss.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll);
       h.removeEventListener('wheel', onWheel); document.removeEventListener('keydown', onKey); document.documentElement.classList.remove('p3nv'); },
   };

@@ -12,23 +12,23 @@ import { pickTier, lower, SLOW } from './p3tier.js';
 let S = null;
 const NOFPS = /[?&]p3nofps=1\b/.test(location.search);
 const TIERS = {
-  high:   { dpr: 1.5,  msaa: 4, mips: 6, k: 1,   budget: 3.2e6 },
-  medium: { dpr: 1.25, msaa: 2, mips: 5, k: .6,  budget: 2.0e6 },
-  low:    { dpr: .9,   msaa: 0, mips: 4, k: .32, budget: 9e5 },
+  high:   { dpr: 1.5,  msaa: 4, mips: 6, k: 1,   budget: 3.2e6, refl: .5 },
+  medium: { dpr: 1.25, msaa: 2, mips: 5, k: .6,  budget: 2.0e6, refl: .34 },
+  low:    { dpr: .9,   msaa: 0, mips: 4, k: .32, budget: 9e5,   refl: 0 },
 };
 
 /* 七层（自下而上）：id 对应页面 WORLDS */
 const LV = [
   { id: '01', f: ['数学', 'Math'],       y: 0,    x: 0,     r: 1.15 },
-  { id: '02', f: ['物理', 'Physics'],    y: 2.25, x: -2.1,  r: .95 },
-  { id: '03', f: ['化学', 'Chemistry'],  y: 4.5,  x: 2.0,   r: 1.0 },
-  { id: '04', f: ['生命', 'Life'],       y: 6.75, x: -1.9,  r: 1.05 },
-  { id: '06', f: ['认知', 'Mind'],       y: 9.0,  x: 1.9,   r: 1.0 },
-  { id: '05', f: ['智能', 'Intelligence'], y: 11.25, x: -1.6, r: 1.05 },
+  { id: '02', f: ['物理', 'Physics'],    y: 2.25, x: -3.1,  r: .95 },
+  { id: '03', f: ['化学', 'Chemistry'],  y: 4.5,  x: 2.95,  r: 1.0 },
+  { id: '04', f: ['生命', 'Life'],       y: 6.75, x: -2.85, r: 1.05 },
+  { id: '06', f: ['认知', 'Mind'],       y: 9.0,  x: 2.8,   r: 1.0 },
+  { id: '05', f: ['智能', 'Intelligence'], y: 11.25, x: -2.4, r: 1.05 },
   { id: '07', f: ['天文', 'Cosmos'],     y: 13.9, x: 0,     r: 2.2 },
 ];
-const STAR_Y = 16.9, TOP = 17.6;
-const SC = [1.15, 1.6, 1.5, 1.4, 1.4, 1.45, 1.2];   // 各层形态放大（形态按单位尺寸建模）
+const STAR_Y = 16.9, TOP = 17.6, WY = -1.1;   // WY：树根下的水面高度（11-16 第四步）
+const SC = [1.5, 2.1, 2.0, 1.85, 1.85, 1.9, 1.6];   // 各层形态放大（形态按单位尺寸建模；第四步整体放大约 15%）
 const FB = { '01': ['星图', 'Math Atlas', '#7cc8ff', 'math-atlas/'], '02': ['宙律', 'Nomoverse', '#a78bfa', 'nomoverse/'], '03': ['元素工坊', 'Element Forge', '#ff9a3c', 'element-forge/'],
   '04': ['生命源码', 'Life Source', '#34d399', 'life-source/'], '05': ['奇点前夜', 'Pre-Singularity', '#22d3ee', 'pre-singularity/'], '06': ['觉弈', 'Ludoterra', '#f5c26b', 'ludoterra/'], '07': ['天枢', 'Starhelm', '#dfe6f3', 'starhelm/'] };
 
@@ -91,6 +91,56 @@ void main(){
   float s = (.028 + aSd*.05)*uPx/-mv.z; gl_PointSize = max(s, 1.2);
   float k = s < 1.2 ? s/1.2 : 1.;
   vC = mix(vec3(.55,.42,1.), vec3(.35,.85,1.), fract(aSd*7.31))*(.35 + 2.6*f)*uK*k*k*(.6+.4*sin(uT*1.7+aSd*60.)); }`;
+
+/* 11-16 第四步 · 树根下的暗色水面：环形涟漪（从树根一圈圈荡开）+ 倒影（中/高档：低分辨率镜像渲染；低档：光柱假倒影）。减少动态：无涟漪 */
+const WATER_VERT = `uniform mat4 uTM; varying vec4 vR; varying vec3 vW;
+void main(){ vec4 w = modelMatrix*vec4(position,1.); vW = w.xyz; vR = uTM*w; gl_Position = projectionMatrix*viewMatrix*w; }`;
+const WATER_FRAG = `uniform sampler2D tRefl; uniform float uT, uHasR, uRip, uGrow, uDisp, uMT; uniform vec2 uMP; uniform vec3 uGlow, uGlow2; varying vec4 vR; varying vec3 vW;
+void main(){
+  vec2 d = vW.xz; float r = length(d) + 1e-4; vec2 dn = d/r;
+  float dh = 0., ring = 0.;
+  for (int i = 0; i < 4; i++) {
+    float R0 = mod(uT*1.1 + float(i)*3.6, 14.4);
+    float w = r - R0, a = exp(-w*w*1.6)*(1. - R0/14.4)*smoothstep(0., 1.2, R0);
+    dh += cos(w*4.6)*a; ring += pow(max(0., sin(w*4.6 + 1.57)), 3.)*a;
+  }
+  dh += cos(r*2.2 - uT*1.7)*.22*exp(-r*.2);
+  vec2 pn = vec2(0.);
+  if (uDisp > .5) { vec2 pd = vW.xz - uMP; float pr = length(pd) + 1e-4, ag = uT - uMT, pw = pr - ag*3.2, pa = exp(-pw*pw*2.)*exp(-ag*.9)*step(0., ag)*1.4;   // 指针扰动涟漪（high）
+    pn = pd/pr*cos(pw*5.)*pa; ring += pow(max(0., sin(pw*5. + 1.57)), 3.)*pa*.8; }
+  vec2 nn = dn*dh*.7 + pn*.9 + vec2(sin(vW.x*2.1 + uT*.8) + sin(vW.z*3.3 - uT*.6 + vW.x), cos(vW.z*2.5 + uT*.7) + cos(vW.x*1.6 - uT*.5))*.09;
+  nn *= uRip; ring *= uRip;
+  vec3 V = normalize(cameraPosition - vW);
+  float fres = .3 + .7*pow(1. - max(V.y, 0.), 3.);
+  float ed = length(vW.xz - cameraPosition.xz);
+  vec3 c = vec3(.005, .004, .014);
+  if (uHasR > .5) {
+    vec2 uv = vR.xy/vR.w + nn*.012;
+    if (uDisp > .5) { vec2 o = nn*.006 + (uv - .5)*.004;   // high：轻微折射 + 边缘色散（RGB 分离取样）
+      c += vec3(texture2D(tRefl, uv + o).r, texture2D(tRefl, uv).g, texture2D(tRefl, uv - o).b)*fres*.62; }
+    else c += texture2D(tRefl, uv).rgb*fres*.62;
+  } else {
+    vec2 tc = normalize(cameraPosition.xz + 1e-4); float along = dot(d, tc), side = abs(d.x*tc.y - d.y*tc.x) + nn.x*.35;
+    c += mix(uGlow, uGlow2, smoothstep(0., 8., along))*exp(-side*side*.7)*smoothstep(-1.5, 3., along)*exp(-max(along, 0.)*.1)*.32*fres*uGrow;
+  }
+  vec3 rc = mix(uGlow, uGlow2, .5 + .5*sin(r*.45 - uT*.3));
+  c += rc*ring*.3*exp(-r*.13)*uGrow;
+  c += uGlow*exp(-r*r*.05)*.12*uGrow;
+  gl_FragColor = vec4(c, smoothstep(120., 46., ed)*smoothstep(.015, .11, V.y));   // 远处与掠射角渐隐，水天交界不起硬边
+}`;
+/* 粒子升起成树：数千颗光点从水面升起，沿主干、枝梢、七层形态聚成整棵树的光晕（数量按档位缩放） */
+const AURA_VERT = `attribute vec3 aS, aCol; attribute float aSd; uniform float uT, uPx, uK, uGo; varying vec3 vC;
+void main(){
+  float dl = position.y/${TOP.toFixed(1)}*3.2 + fract(aSd*13.7)*1.1;
+  float k = clamp((uGo - dl)/2.3, 0., 1.), e = 1. - pow(1. - k, 3.);
+  vec3 p = mix(aS, position, e);
+  p.xz += vec2(cos(aSd*40. + e*7.), sin(aSd*40. + e*7.))*(1. - e)*.7;
+  p += vec3(sin(uT*.5 + aSd*31.), sin(uT*.37 + aSd*17.)*.7, cos(uT*.41 + aSd*23.))*.07*e;
+  vec4 mv = modelViewMatrix*vec4(p,1.); gl_Position = projectionMatrix*mv;
+  float s = (.028 + fract(aSd*7.1)*.05)*uPx/-mv.z; gl_PointSize = max(s, 1.2);
+  float kk = s < 1.2 ? s/1.2 : 1.;
+  float tw = .6 + .4*sin(uT*(1. + aSd*2.) + aSd*50.);
+  vC = aCol*uK*kk*kk*tw*step(.001, k)*(.5 + .5*e + (1. - e)*1.2); }`;
 
 /* 后期（沿用阶段 2 管线） */
 const FS_VERT = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }`;
@@ -193,8 +243,8 @@ export function start(host, opts) {
     for (let i = 0; i < 6; i++) if (y <= LV[i + 1].y) { const t = ease((y - LV[i].y) / (LV[i + 1].y - LV[i].y)), a = LV[i].c, b = LV[i + 1].c; return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; } return LV[6].c; }
 
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(38, 1, .1, 300);
-  const TAN = Math.tan(THREE.MathUtils.degToRad(19));
+  const camera = new THREE.PerspectiveCamera(42, 1, .1, 400);
+  const TAN = Math.tan(THREE.MathUtils.degToRad(21));
   const U = { uT: { value: 0 }, uAsp: { value: 1 }, uPar: { value: new THREE.Vector2() }, uGrow: { value: -1 }, uPx: { value: 500 } };
   const fsGeo = new THREE.PlaneGeometry(2, 2);
   const bg = new THREE.Mesh(fsGeo, new THREE.ShaderMaterial({ uniforms: { uT: U.uT, uAsp: U.uAsp, uPar: U.uPar }, vertexShader: BG_VERT, fragmentShader: BG_FRAG, depthWrite: false, depthTest: false }));
@@ -204,7 +254,7 @@ export function start(host, opts) {
   function ptMat(k, min) { const m = new THREE.ShaderMaterial({ uniforms: { uPx: U.uPx, uT: U.uT, uHi: { value: 0 }, uK: { value: k || 1 }, uMin: { value: min || 1.5 } }, vertexShader: PT_VERT, fragmentShader: PT_FRAG, ...ADD }); mats.push(m); return m; }
 
   /* ---------- 枝干：主干穿过七层 + 每层侧枝（越往上越多）+ 根须 ---------- */
-  const R = rng(20251115), tubes = [];
+  const R = rng(20251115), tubes = [], twigC = [];
   const trunkPts = [];
   for (let i = 0; i < LV.length; i++) {
     const l = LV[i]; trunkPts.push(new THREE.Vector3(l.x, l.y, 0));
@@ -218,7 +268,7 @@ export function start(host, opts) {
   function twig(o, dir, len, rad, depth) {
     const pts = [o.clone()]; const d = dir.clone(); const p = o.clone();
     for (let s = 0; s < 4; s++) { d.x += (R() - .5) * .5; d.z += (R() - .5) * .5; d.y += .18; d.normalize(); p.addScaledVector(d, len / 4); pts.push(p.clone()); }
-    const cv = new THREE.CatmullRomCurve3(pts);
+    const cv = new THREE.CatmullRomCurve3(pts); twigC.push(cv);
     tubes.push({ geo: new THREE.TubeGeometry(cv, 24, rad, 5, false), col: colAt, ph: R() });
     const c = colAt(p.y); buds.add(p.x, p.y, p.z, c, .16 + R() * .1, 2.2); buds.add(p.x, p.y, p.z, c, .9, .05);
     if (depth > 0) { const m = cv.getPoint(.55); const nd = d.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), (R() - .5) * 2.4); nd.y += .2; nd.normalize(); twig(m, nd, len * .55, rad * .7, depth - 1); }
@@ -229,7 +279,7 @@ export function start(host, opts) {
       const a = (k / nTw) * 6.2832 + R() * .8;
       const o = new THREE.Vector3(l.x + Math.cos(a) * l.r * .5, l.y + .1 + R() * .3, Math.sin(a) * l.r * .4);
       const d = new THREE.Vector3(Math.cos(a) * (l.x === 0 ? 1 : Math.sign(Math.cos(a)) === Math.sign(l.x) ? 1.2 : .6), .7, Math.sin(a) * .6).normalize();
-      twig(o, d, .9 + R() * .9 + i * .08, .018, i > 1 ? 1 : 0);
+      twig(o, d, (.9 + R() * .9 + i * .08) * 1.3, .02, i > 1 ? 1 : 0);
     }
   }
   for (let k = 0; k < 6; k++) {   // 根须：从数学向下、向外散开
@@ -350,6 +400,60 @@ export function start(host, opts) {
   const dMat = new THREE.ShaderMaterial({ uniforms: { uT: U.uT, uPx: U.uPx, uM: { value: UM }, uMs: { value: 0 }, uK: { value: 1 } }, vertexShader: DUST_VERT, fragmentShader: PT_FRAG, ...ADD }); mats.push(dMat);
   const dust = new THREE.Points(dGeo, dMat); dust.frustumCulled = false; scene.add(dust);
 
+  /* ---------- 11-16 第四步：水面（环形涟漪 + 倒影） ---------- */
+  const wTM = new THREE.Matrix4(), reflCam = new THREE.PerspectiveCamera();
+  const wGeo = new THREE.PlaneGeometry(260, 260); wGeo.rotateX(-Math.PI / 2); wGeo.translate(0, WY, 0); geos.push(wGeo);
+  const wMat = new THREE.ShaderMaterial({ uniforms: { uT: U.uT, tRefl: { value: null }, uTM: { value: wTM }, uHasR: { value: 0 }, uRip: { value: opts.still ? 0 : 1 }, uGrow: { value: 0 }, uDisp: { value: 0 }, uMP: { value: new THREE.Vector2(0, 0) }, uMT: { value: -99 },
+    uGlow: { value: new THREE.Color(LV[0].color) }, uGlow2: { value: new THREE.Color(1, .78, .45) } }, vertexShader: WATER_VERT, fragmentShader: WATER_FRAG, transparent: true, depthWrite: false, depthTest: false });
+  mats.push(wMat);
+  const water = new THREE.Mesh(wGeo, wMat); water.renderOrder = -5; water.frustumCulled = false; scene.add(water);
+
+  /* ---------- 粒子升起成树（光晕） ---------- */
+  const NA = Math.round(7000 * K), aT = [], aS = [], aC = [], aD = [], R7 = rng(4242), tv = new THREE.Vector3();
+  for (let s = 0; s < NA; s++) {
+    const u = R7();
+    if (u < .42) { trunk.getPoint(Math.pow(R7(), .85), tv); const rr = .12 + .55 * R7() * R7(); const a = R7() * 6.2832; tv.x += Math.cos(a) * rr; tv.z += Math.sin(a) * rr; tv.y += (R7() - .5) * .3; }
+    else if (u < .72) { twigC[Math.floor(R7() * twigC.length)].getPoint(R7(), tv); tv.x += (R7() - .5) * .3; tv.y += (R7() - .5) * .3; tv.z += (R7() - .5) * .3; }
+    else { const i = Math.floor(R7() * 6.999), l = LV[i], rr = l.r * SC[i] * (i === 6 ? .8 : 1.05) * Math.cbrt(R7()), a = R7() * 6.2832, v = R7() * 2 - 1, q = Math.sqrt(1 - v * v);
+      tv.set(l.x + rr * q * Math.cos(a), l.y + rr * v * (i === 6 ? .45 : .9), rr * q * Math.sin(a)); }
+    aT.push(tv.x, tv.y, tv.z);
+    aS.push(tv.x * .3 + (R7() - .5) * 7, WY + .05, tv.z * .3 + (R7() - .5) * 4);
+    const c = colAt(tv.y), b = .45 + R7() * .9; aC.push(c[0] * b, c[1] * b, c[2] * b); aD.push(R7());
+  }
+  const aGeo = new THREE.BufferGeometry(); aGeo.setAttribute('position', new THREE.Float32BufferAttribute(aT, 3)); aGeo.setAttribute('aS', new THREE.Float32BufferAttribute(aS, 3));
+  aGeo.setAttribute('aCol', new THREE.Float32BufferAttribute(aC, 3)); aGeo.setAttribute('aSd', new THREE.Float32BufferAttribute(aD, 1)); geos.push(aGeo);
+  const aMat = new THREE.ShaderMaterial({ uniforms: { uT: U.uT, uPx: U.uPx, uK: { value: .62 }, uGo: { value: 0 } }, vertexShader: AURA_VERT, fragmentShader: PT_FRAG, ...ADD }); mats.push(aMat);
+  const aura = new THREE.Points(aGeo, aMat); aura.frustumCulled = false; scene.add(aura);
+
+  /* ---------- 叙事末段：第八颗星长成半透明粒子晶体（星形八面体 + 内核二十面体），在「从玩到造」大标题后旋转 ---------- */
+  const xtal = new THREE.Group(); xtal.position.set(0, STAR_Y, 0); xtal.visible = false; scene.add(xtal);
+  const xIn = new THREE.Group(); xtal.add(xIn);
+  { const pb = new PB(), RX = rng(808), V = [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]], VB = V.map(v => v.map(x => -x)), ne = Math.round(70 * Math.max(.5, K)), nf = Math.round(2600 * Math.max(.4, K));
+    const gold = [1, .86, .6], lil = [.75, .7, 1], cy = [.55, .9, 1];
+    const ep = [];
+    [[V, gold], [VB, lil]].forEach(([T4, c]) => {
+      for (let a = 0; a < 4; a++) for (let b = a + 1; b < 4; b++) { pb.line(T4[a], T4[b], ne, c, .05, 2.2); ep.push(...T4[a], ...T4[b]); }
+      T4.forEach(v => { pb.add(v[0], v[1], v[2], W2, .22, 4); pb.add(v[0], v[1], v[2], c, .9, .12); });
+      for (let f = 0; f < nf; f++) { const tri = [0, 1, 2, 3].filter(x => x !== f % 4), A = T4[tri[0]], B = T4[tri[1]], C = T4[tri[2]]; let u = RX(), v = RX(); if (u + v > 1) { u = 1 - u; v = 1 - v; }
+        pb.add(A[0] + (B[0] - A[0]) * u + (C[0] - A[0]) * v, A[1] + (B[1] - A[1]) * u + (C[1] - A[1]) * v, A[2] + (B[2] - A[2]) * u + (C[2] - A[2]) * v, RX() < .5 ? c : cy, .02 + RX() * .025, .45); }
+    });
+    pb.ball(0, 0, 0, .32, Math.round(500 * Math.max(.5, K)), [1, .95, .85], .04, 1.6);
+    const g = pb.geo(); geos.push(g); const m = ptMat(.7, 1.2); xIn.add(new THREE.Points(g, m)); xtal.userData.m = m;
+    const tg = new THREE.BufferGeometry(); tg.setAttribute('position', new THREE.Float32BufferAttribute(ep, 3)); geos.push(tg);
+    const tm = new THREE.LineBasicMaterial({ color: new THREE.Color(1, .88, .7), ...ADD }); mats.push(tm); xIn.add(new THREE.LineSegments(tg, tm)); xtal.userData.tm = tm;
+    const ig = new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(.62, 0)); geos.push(ig); const im = new THREE.LineBasicMaterial({ color: new THREE.Color(1, .9, .7), ...ADD }); mats.push(im); xIn.add(new THREE.LineSegments(ig, im)); xtal.userData.im = im; }
+  let finT = 0, finK = 0;
+
+  /* ---------- 七层航标：沿树干每层下方一枚发光水晶（八面体线框 + 光核），镜头经过 / 当前层时点亮（思路参考 ThreeUI「Workshop Codex」公开描述，自写） ---------- */
+  const bcn = LV.map((l, i) => {
+    let best = 0, bd = 1e9; for (let k = 0; k <= 200; k++) { trunk.getPoint(k / 200, tv); const dd = Math.abs(tv.y - (l.y - (i === 0 ? -.2 : 1.05))); if (dd < bd) { bd = dd; best = k / 200; } }
+    const g = new THREE.Group(); trunk.getPoint(best, g.position); g.position.z += .35; scene.add(g);
+    const eg = new THREE.EdgesGeometry(new THREE.OctahedronGeometry(.2, 0)); geos.push(eg);
+    const lm = new THREE.LineBasicMaterial({ color: new THREE.Color(l.color), ...ADD }); mats.push(lm); const ls = new THREE.LineSegments(eg, lm); ls.scale.set(1, 1.6, 1); g.add(ls);
+    const pb = new PB(); pb.add(0, 0, 0, W2, .16, 3); pb.add(0, 0, 0, l.c, .9, .18); const pg = pb.geo(); geos.push(pg); const pm = ptMat(1, 1.4); g.add(new THREE.Points(pg, pm));
+    return { g, ls, lm, pm, k: 0 };
+  });
+
   /* ---------- 标签（真实链接，可键盘访问） ---------- */
   const lab = document.createElement('div'); lab.className = 'p3nl'; host.appendChild(lab);
   const LA = LV.map((l, i) => { const a = document.createElement('a'); a.href = l.href; a.style.setProperty('--c', l.color); a.className = l.x < 0 ? 'l' : 'r';
@@ -359,10 +463,12 @@ export function start(host, opts) {
   const L8 = document.createElement('span'); L8.className = 'r s8'; L8.innerHTML = '<i>08 · ' + (en ? 'Yours' : '由你来造') + '</i><b>' + (en ? 'The eighth star' : '第八颗星') + '</b>'; lab.appendChild(L8);
 
   /* ---------- 后期 ---------- */
-  let rt = null, mipsD = [], mipsU = [], downMat, upMat, compMat, fsScene, fsCam, fsMesh;
+  let rt = null, reflRT = null, mipsD = [], mipsU = [], downMat, upMat, compMat, fsScene, fsCam, fsMesh;
   function buildPost() {
     disposePost();
     rt = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: T.msaa, depthBuffer: true });
+    if (T.refl) reflRT = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, depthBuffer: false });
+    wMat.uniforms.uHasR.value = reflRT ? 1 : 0; wMat.uniforms.uDisp.value = tierName === 'high' && !opts.still ? 1 : 0; wMat.uniforms.tRefl.value = reflRT ? reflRT.texture : null;
     const mk = () => new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, depthBuffer: false });
     for (let i = 0; i < T.mips; i++) { mipsD.push(mk()); mipsU.push(mk()); }
     downMat = new THREE.ShaderMaterial({ uniforms: { tSrc: { value: null }, uTx: { value: new THREE.Vector2() }, uFirst: { value: 0 } }, vertexShader: FS_VERT, fragmentShader: DOWN_FRAG, depthTest: false, depthWrite: false });
@@ -371,9 +477,9 @@ export function start(host, opts) {
     fsScene = new THREE.Scene(); fsCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1); fsMesh = new THREE.Mesh(fsGeo, compMat); fsMesh.frustumCulled = false; fsScene.add(fsMesh);
     sizePost();
   }
-  function disposePost() { if (rt) rt.dispose(); mipsD.concat(mipsU).forEach(r => r.dispose()); mipsD = []; mipsU = []; rt = null; [downMat, upMat, compMat].forEach(m => m && m.dispose()); downMat = upMat = compMat = null; }
+  function disposePost() { if (rt) rt.dispose(); if (reflRT) { reflRT.dispose(); reflRT = null; } mipsD.concat(mipsU).forEach(r => r.dispose()); mipsD = []; mipsU = []; rt = null; [downMat, upMat, compMat].forEach(m => m && m.dispose()); downMat = upMat = compMat = null; }
   let bw = 1, bh = 1;
-  function sizePost() { if (!rt) return; rt.setSize(bw, bh); let w = bw, h = bh; for (let i = 0; i < mipsD.length; i++) { w = Math.max(1, w >> 1); h = Math.max(1, h >> 1); mipsD[i].setSize(w, h); mipsU[i].setSize(w, h); } }
+  function sizePost() { if (!rt) return; rt.setSize(bw, bh); if (reflRT) reflRT.setSize(Math.max(1, Math.round(bw * T.refl)), Math.max(1, Math.round(bh * T.refl))); let w = bw, h = bh; for (let i = 0; i < mipsD.length; i++) { w = Math.max(1, w >> 1); h = Math.max(1, h >> 1); mipsD[i].setSize(w, h); mipsU[i].setSize(w, h); } }
   function pass(mat, target) { fsMesh.material = mat; renderer.setRenderTarget(target); renderer.render(fsScene, fsCam); }
 
   /* ---------- 取景 ---------- */
@@ -383,11 +489,13 @@ export function start(host, opts) {
   let effX = 0, effY = 0;
   function applyShift() { effX = shX + (CC.sx - shX) * CC.k; effY = shY + (CC.sy - shY) * CC.k;
     if (Math.abs(effX) > 1e-4 || Math.abs(effY) > 1e-4) camera.setViewOffset(cssW, cssH, -effX * cssW, -effY * cssH, cssW, cssH); else camera.clearViewOffset(); camera.updateProjectionMatrix(); }
+  /* 第四步：首屏取景按「树顶 / 树根落在屏幕的哪一段」反推（FR.t / FR.b = 距顶部比例），树居中、根下留水面 */
+  const FR = { t: .05, b: .84 };
   function layout(asp) {
     portrait = asp < .9;
-    const H = TOP + (portrait ? 11 : 5.2), Wd = portrait ? 12.5 : 10.5;               // 需要装下的世界高度 / 宽度
-    fullD = Math.max(H / (2 * TAN), Wd / (2 * TAN * asp)) * (portrait ? 1.0 : 1.02);
-    fullY = (TOP - 1.4) * .5 + (portrait ? -.2 : .9);
+    const yT = STAR_Y + 1.15, yB = -.85, hH = (yT - yB) / 2 / Math.max(.2, FR.b - FR.t);
+    fullD = Math.max(hH / TAN, 5.2 / (TAN * asp * Math.max(.3, 1 - 2 * Math.abs(shX))));
+    const hh = TAN * fullD; fullY = yT - hh * (1 - 2 * FR.t) + .04 * fullD;
   }
   function resize() {
     cssW = Math.max(1, host.clientWidth); cssH = Math.max(1, host.clientHeight);
@@ -418,7 +526,7 @@ export function start(host, opts) {
   }
 
   /* ---------- 交互 ---------- */
-  const mouse = new THREE.Vector2(), par = new THREE.Vector2(), mPx = new THREE.Vector2(-1e4, -1e4);
+  const mouse = new THREE.Vector2(), par = new THREE.Vector2(), mPx = new THREE.Vector2(-1e4, -1e4), mLast = new THREE.Vector2(-1e4, -1e4);
   let hov = -1, ext = -1, mIn = 0, mOn = false;
   const SCR = LV.map(() => ({ x: -1e4, y: 0, r: 0 })), scr8 = { x: -1e4, y: 0, r: 0 };
   function onMove(e) {
@@ -461,7 +569,7 @@ export function start(host, opts) {
       N[i].spin.forEach(([o, ax, w]) => { o.rotation[ax] += w * dt; });
       const target = hov === i ? 1 : (hov < 0 && ext === i ? .55 : 0); hi[i] += (target - hi[i]) * Math.min(1, dt * 5 || 1);
       N[i].mats.forEach(m => { if (m.lb) m.lb.color.set(m.hex).multiplyScalar(m.base * (1 + 1.2 * hi[i]) * a); else m.uniforms.uHi.value = hi[i]; });
-      LA[i].classList.toggle('on', a > .6); LA[i].classList.toggle('hv', hov === i || (hov < 0 && ext === i));
+      LA[i].classList.toggle('on', a > .6); LA[i].classList.toggle('hv', hov === i || (hov < 0 && ext === i)); LA[i].classList.toggle('hx', hov === i);
     });
     const s8 = ease((U.uGrow.value - STAR_Y + .3) / 1.0);
     star.scale.setScalar(.001 + s8); star.visible = s8 > .002; star.rotation.z = Math.sin(t * .25) * .25; star.rotation.y = t * .3;
@@ -473,6 +581,17 @@ export function start(host, opts) {
       const e = net.E[s.e]; p.setXYZ(k, e[0][0] + (e[1][0] - e[0][0]) * s.t, e[0][1] + (e[1][1] - e[0][1]) * s.t, e[0][2] + (e[1][2] - e[0][2]) * s.t); }); p.needsUpdate = true; }
     mIn += ((mOn ? 1 : 0) - mIn) * Math.min(1, dt * 3 || 1); dMat.uniforms.uMs.value = mIn * (.8 + .2 * Math.sin(t * 2));
     budPts.material.uniforms.uK.value = .6 + .4 * ease((U.uGrow.value) / TOP);
+    aMat.uniforms.uGo.value = t; wMat.uniforms.uGrow.value = .25 + .75 * ease(t / 3);
+    // 末段晶体：finT 由叙事给（0..1），平滑跟随
+    finK += (finT - finK) * (still ? 1 : Math.min(1, dt * 3 || 1));
+    xtal.visible = finK > .01;
+    if (xtal.visible) { const e = eio(finK); xtal.scale.setScalar(.05 + 1.95 * e); xIn.rotation.y += dt * .32; xIn.rotation.x = .62 + Math.sin(t * .2) * .12; xIn.rotation.z = .2;
+      xtal.userData.m.uniforms.uK.value = 1.15 * e; xtal.userData.im.color.setRGB(1, .9, .7).multiplyScalar(1.6 * e); xtal.userData.tm.color.setRGB(1, .86, .72).multiplyScalar(.9 * e); }
+    tubeMat.uniforms.uK.value = .85 * (1 - .55 * finK); aMat.uniforms.uK.value = .62 * (1 - .6 * finK);
+    star.visible = star.visible && finK < .6;
+    bcn.forEach((b, i) => { const a = ease((U.uGrow.value - LV[i].y + .4) / 1.4); b.g.visible = a > .01; b.k += ((ext === i || hov === i ? 1 : 0) - b.k) * (still ? 1 : Math.min(1, dt * 4 || 1));
+      b.ls.rotation.y += dt * (.6 + 1.6 * b.k); b.g.scale.setScalar(a * (1 + .5 * b.k));
+      b.lm.color.set(LV[i].color).multiplyScalar((.5 + 2.6 * b.k) * a); b.pm.uniforms.uK.value = (.25 + 1.4 * b.k + .1 * Math.sin(t * 2 + i)) * a; });
   }
   function placeCamera(dt) {
     par.lerp(mouse, Math.min(1, dt * 2.2 || 1)); U.uPar.value.set(par.x, -par.y);
@@ -485,9 +604,9 @@ export function start(host, opts) {
     CC.f += (CL.f - CC.f) * ck; CC.k += (CL.k - CC.k) * ck; CC.sx += (CL.sx - CC.sx) * ck; CC.sy += (CL.sy - CC.sy) * ck; CL.jump = false;
     if (Math.abs(CC.k - kOld) + Math.abs(CC.sx - xOld) + Math.abs(CC.sy - yOld) > 1e-5) applyShift();
     const fi = Math.max(-1, Math.min(8, CC.f)), f0 = Math.floor(fi), fr = fi - f0, f1 = Math.min(8, f0 + 1);   // 8 = 叙事末屏：整棵树
-    const cy = j => j < 0 ? -.5 : j > 7 ? (portrait ? 9.7 : 8.4) : j > 6 ? STAR_Y - .3 : LV[j].y, cx = j => j < 0 || j > 6 ? 0 : LV[j].x * .8, chv = j => j < 0 ? 8.5 : j > 7 ? (portrait ? 36 : 21) : j > 6 ? 7.5 : j === 6 ? 10 : 7;
+    const cy = j => j < 0 ? -.3 : j > 6 ? STAR_Y - .2 : LV[j].y, cx = j => j < 0 || j > 6 ? 0 : LV[j].x * .8, chv = j => j < 0 ? 9.5 : j > 7 ? (portrait ? 19 : 15) : j > 6 ? 8 : j === 6 ? 11.5 : 8;
     const nY = cy(f0) + (cy(f1) - cy(f0)) * fr, nX = cx(f0) + (cx(f1) - cx(f0)) * fr, nH = chv(f0) + (chv(f1) - chv(f0)) * fr;
-    const nD = Math.max(nH / (2 * TAN), portrait ? 6.2 / (2 * TAN * camera.aspect) : 0), nk = CC.k * ci;
+    const nD = Math.max(nH / (2 * TAN), portrait ? (fi > 7 ? 8.4 : 7.4) / (2 * TAN * camera.aspect) : 0), nk = CC.k * ci;
     const Df = (D0 + (fullD - D0) * ci) * shZ;
     const D = (Df + (nD - Df) * nk) * (1 - .1 * focusK) * (1 + .012 * Math.sin(t * .13));
     const Yb = (.2 + (fullY - .2) * ci), Y = Yb + (nY - Yb) * nk;
@@ -498,6 +617,8 @@ export function start(host, opts) {
     // 鼠标落在 z=0 平面的位置 → 尘埃引力井
     ray.set(mPx.x / cssW * 2 - 1, -(mPx.y / cssH * 2 - 1), .5).unproject(camera).sub(camera.position).normalize();
     if (Math.abs(ray.z) > 1e-3) { const k = -camera.position.z / ray.z; UM.copy(camera.position).addScaledVector(ray, k); }
+    if (wMat.uniforms.uDisp.value > .5 && mOn && ray.y < -1e-3 && t - wMat.uniforms.uMT.value > .7 && mPx.distanceTo(mLast) > 30) {   // 指针掠过水面：从落点荡开一圈
+      const k = (WY - camera.position.y) / ray.y; if (k > 0 && k < 90) { wMat.uniforms.uMP.value.set(camera.position.x + ray.x * k, camera.position.z + ray.z * k); wMat.uniforms.uMT.value = t; mLast.copy(mPx); } }
     // 屏幕投影 → 标签位置与悬停半径
     camR.setFromMatrixColumn(camera.matrixWorld, 0);
     const proj = (p, r, o) => { tmp.copy(p).project(camera); o.x = (tmp.x * .5 + .5) * cssW; o.y = (-tmp.y * .5 + .5) * cssH; const d = camera.position.distanceTo(p); o.r = r / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * d) * cssH; };
@@ -508,6 +629,14 @@ export function start(host, opts) {
   function render(dt) {
     if (!frozen) t += dt;
     animate(frozen && !frames ? 1 / 60 : dt); placeCamera(dt || 1 / 60);
+    if (reflRT) {   // 倒影：镜像相机（水面对称）渲染到低分辨率 RT，水面着色器按投影坐标取样
+      const cp = camera.position; reflCam.copy(camera, false);
+      reflCam.position.set(cp.x, 2 * WY - cp.y, cp.z); reflCam.up.set(0, -1, 0); reflCam.lookAt(aim.x, 2 * WY - aim.y, aim.z); reflCam.updateMatrixWorld();
+      wTM.set(.5, 0, 0, .5, 0, .5, 0, .5, 0, 0, .5, .5, 0, 0, 0, 1).multiply(reflCam.projectionMatrix).multiply(reflCam.matrixWorldInverse);
+      const px = U.uPx.value; U.uPx.value = px * T.refl; water.visible = false; bg.visible = false;
+      renderer.setRenderTarget(reflRT); renderer.setClearColor(0x020106, 1); renderer.clear(); renderer.render(scene, reflCam);
+      U.uPx.value = px; water.visible = true; bg.visible = true; renderer.setClearColor(0x030208, 1);
+    }
     renderer.setRenderTarget(rt); renderer.clear(); renderer.render(scene, camera);
     let src = rt.texture, w = bw, h = bh;
     for (let i = 0; i < mipsD.length; i++) { downMat.uniforms.tSrc.value = src; downMat.uniforms.uTx.value.set(1 / w, 1 / h); downMat.uniforms.uFirst.value = i === 0 ? 1 : 0; pass(downMat, mipsD[i]); src = mipsD[i].texture; w = Math.max(1, w >> 1); h = Math.max(1, h >> 1); }
@@ -536,6 +665,8 @@ export function start(host, opts) {
   }
   function pause() { cancelAnimationFrame(raf); raf = 0; document.removeEventListener('visibilitychange', onVis); }
   S = { stop, pause, setTier: n => setTier(n, false), tier: tierName, spot: i => { ext = i; if (still) { render(0); } }, shift: (x, y, z) => { shX = x || 0; shY = y || 0; shZ = z || 1; applyShift(); if (still) render(0); }, levels: () => LV.map(l => ({ name: l.name, color: l.color, href: l.href, id: l.id, f: l.f })),
+    fit: (tp, bt, x) => { FR.t = tp; FR.b = bt; shX = x || 0; shY = 0; shZ = 1; layout(camera.aspect); applyShift(); if (still) render(0); },
+    finale: k => { finT = Math.max(0, Math.min(1, k || 0)); if (still) render(0); },
     climb: (f, k, sx, sy, jump) => { CL.f = f; CL.k = k; CL.sx = sx || 0; CL.sy = sy || 0; if (jump) CL.jump = true; if (still) { CL.jump = true; render(0); } }, gpu: pick.gpu, fps: 0, get ready() { return t > INTRO + .5; } };
   buildPost(); resize();
   try { renderer.compile(scene, camera); } catch (e) {}
@@ -553,4 +684,7 @@ export function spot(i) { if (S) S.spot(i); }
 export function shift(x, y, z) { if (S) S.shift(x, y, z); }
 export function levels() { return S ? S.levels() : []; }
 /* 11-16 下滚叙事：f = -1 根 · 0..6 七层 · 7 第八颗星 · 8 整棵树（末屏）；k = 叙事取景权重 0..1；sx/sy = 叙事时的取景偏移；jump = 跳切 */
+/* 11-16 第四步：首屏取景（树顶 / 树根在屏幕上的位置比例 + 横向偏移）；叙事末段晶体 0..1 */
+export function fit(t, b, x) { if (S && S.fit) S.fit(t, b, x); }
+export function finale(k) { if (S && S.finale) S.finale(k); }
 export function climb(f, k, sx, sy, jump) { if (S && S.climb) S.climb(f, k, sx, sy, jump); }
