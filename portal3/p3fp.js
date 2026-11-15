@@ -377,7 +377,8 @@ export function start(host, opts) {
   function pass(mat, target) { fsMesh.material = mat; renderer.setRenderTarget(target); renderer.render(fsScene, fsCam); }
 
   /* ---------- 取景 ---------- */
-  let scale = 1, cssW = 1, cssH = 1, portrait = false, fullD = 30, fullY = 8;
+  let scale = 1, cssW = 1, cssH = 1, portrait = false, fullD = 30, fullY = 8, shX = 0, shY = 0, shZ = 1;
+  function applyShift() { if (shX || shY) camera.setViewOffset(cssW, cssH, -shX * cssW, -shY * cssH, cssW, cssH); else camera.clearViewOffset(); camera.updateProjectionMatrix(); }
   function layout(asp) {
     portrait = asp < .9;
     const H = TOP + (portrait ? 11 : 5.2), Wd = portrait ? 12.5 : 10.5;               // 需要装下的世界高度 / 宽度
@@ -389,7 +390,7 @@ export function start(host, opts) {
     const dpr = Math.min(window.devicePixelRatio || 1, T.dpr, Math.sqrt(T.budget / (cssW * cssH))) * scale;
     renderer.setPixelRatio(Math.max(.35, dpr)); renderer.setSize(cssW, cssH, false);
     const v = renderer.getDrawingBufferSize(new THREE.Vector2()); bw = v.x; bh = v.y;
-    camera.aspect = cssW / cssH; camera.updateProjectionMatrix(); U.uAsp.value = camera.aspect;
+    camera.aspect = cssW / cssH; applyShift(); U.uAsp.value = camera.aspect;
     U.uPx.value = bh / (2 * TAN);
     layout(camera.aspect); sizePost();
   }
@@ -414,12 +415,12 @@ export function start(host, opts) {
 
   /* ---------- 交互 ---------- */
   const mouse = new THREE.Vector2(), par = new THREE.Vector2(), mPx = new THREE.Vector2(-1e4, -1e4);
-  let hov = -1, mIn = 0, mOn = false;
+  let hov = -1, ext = -1, mIn = 0, mOn = false;
   const SCR = LV.map(() => ({ x: -1e4, y: 0, r: 0 })), scr8 = { x: -1e4, y: 0, r: 0 };
   function onMove(e) {
     mouse.set(e.clientX / window.innerWidth * 2 - 1, e.clientY / window.innerHeight * 2 - 1);
     const b = canvas.getBoundingClientRect(); mPx.set(e.clientX - b.left, e.clientY - b.top); mOn = true;
-    if (e.target === canvas) { let best = -1, bd = 1e9; SCR.forEach((s, i) => { const d = Math.hypot(mPx.x - s.x, mPx.y - s.y); if (d < s.r * 1.25 + 26 && d < bd) { bd = d; best = i; } }); hov = best; canvas.style.cursor = best >= 0 ? 'pointer' : ''; }
+    if (e.target === canvas) { let best = -1, bd = 1e9; SCR.forEach((s, i) => { const d = Math.hypot(mPx.x - s.x, mPx.y - s.y); if (d < s.r * 1.25 + 26 + 44 * Math.min(1, s.r / 40) && d < bd) { bd = d; best = i; } }); hov = best; canvas.style.cursor = best >= 0 ? 'pointer' : ''; }
   }
   function onLeave() { mOn = false; if (document.activeElement && document.activeElement.parentNode === lab) return; hov = -1; }
   function onClick(e) { if (e.target !== canvas || hov < 0) return; location.href = LV[hov].href; }
@@ -450,9 +451,9 @@ export function start(host, opts) {
       N[i].g.scale.setScalar(.001 + a * SC[i] * (1 + .03 * Math.sin(t * 1.1 + i)));
       N[i].g.visible = a > .002;
       N[i].spin.forEach(([o, ax, w]) => { o.rotation[ax] += w * dt; });
-      const target = hov === i ? 1 : 0; hi[i] += (target - hi[i]) * Math.min(1, dt * 5 || 1);
+      const target = hov === i ? 1 : (hov < 0 && ext === i ? .55 : 0); hi[i] += (target - hi[i]) * Math.min(1, dt * 5 || 1);
       N[i].mats.forEach(m => { if (m.lb) m.lb.color.set(m.hex).multiplyScalar(m.base * (1 + 1.2 * hi[i]) * a); else m.uniforms.uHi.value = hi[i]; });
-      LA[i].classList.toggle('on', a > .6); LA[i].classList.toggle('hv', hov === i);
+      LA[i].classList.toggle('on', a > .6); LA[i].classList.toggle('hv', hov === i || (hov < 0 && ext === i));
     });
     const s8 = ease((U.uGrow.value - STAR_Y + .3) / 1.0);
     star.scale.setScalar(.001 + s8); star.visible = s8 > .002; star.rotation.z = Math.sin(t * .25) * .25; star.rotation.y = t * .3;
@@ -470,7 +471,7 @@ export function start(host, opts) {
     const ci = eio((t - .2) / INTRO);
     const fd = hov >= 0 ? 1 : 0; focusK += (fd - focusK) * Math.min(1, dt * 1.8 || 1);
     if (hov >= 0) focus.lerp(tmp.set(LV[hov].x, LV[hov].y, 0), Math.min(1, dt * 3 || 1));
-    const D0 = 7.5, D = (D0 + (fullD - D0) * ci) * (1 - .1 * focusK) * (1 + .012 * Math.sin(t * .13));
+    const D0 = 7.5, D = (D0 + (fullD - D0) * ci) * (1 - .1 * focusK) * (1 + .012 * Math.sin(t * .13)) * shZ;
     const Y = (.2 + (fullY - .2) * ci);
     aim.set(par.x * .4 * ci + (focus.x * .25) * focusK, Y + (focus.y - Y) * .22 * focusK, 0);
     const az = (1 - ci) * .9 + Math.sin(t * .05) * .14 + par.x * .2, el = .12 + (1 - ci) * .25 - par.y * .08;
@@ -516,7 +517,7 @@ export function start(host, opts) {
     lab.remove(); canvas.classList.remove('on'); host.classList.remove('gl'); S = null; window.__p3dbg = null;
   }
   function pause() { cancelAnimationFrame(raf); raf = 0; document.removeEventListener('visibilitychange', onVis); }
-  S = { stop, pause, setTier: n => setTier(n, false), tier: tierName, gpu: pick.gpu, fps: 0, get ready() { return t > INTRO + .5; } };
+  S = { stop, pause, setTier: n => setTier(n, false), tier: tierName, spot: i => { ext = i; if (still) { render(0); } }, shift: (x, y, z) => { shX = x || 0; shY = y || 0; shZ = z || 1; applyShift(); if (still) render(0); }, levels: () => LV.map(l => ({ name: l.name, color: l.color, href: l.href })), gpu: pick.gpu, fps: 0, get ready() { return t > INTRO + .5; } };
   buildPost(); resize();
   try { renderer.compile(scene, camera); } catch (e) {}
   window.__p3dbg = { S, renderer, scene, camera, render, step: (dt, n) => { for (let i = 0; i < (n || 1); i++) render(dt); }, setT: v => { t = v; }, freeze: v => { frozen = v !== false; }, hover: i => { hov = i; } };
@@ -529,3 +530,6 @@ export function stop() { if (S) S.stop(); }
 export function setQuality(n) { if (S) { S.setTier(n); return true; } return false; }
 export function tier() { return S ? S.tier : null; }
 export function pause() { if (S) S.pause(); }
+export function spot(i) { if (S) S.spot(i); }
+export function shift(x, y, z) { if (S) S.shift(x, y, z); }
+export function levels() { return S ? S.levels() : []; }

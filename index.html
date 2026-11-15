@@ -5266,15 +5266,106 @@
       @media (prefers-reduced-motion: reduce) and (max-width: 800px), (prefers-reduced-motion: reduce) and (max-height: 420px) {
         #p3hero .p3pn:not(.open) { display: none; } #p3hero .p3pn.open { transform: none; }
       }
+      /* —— 11-15 夜 · 首屏排版 v2：编辑式大标题 + 换词 + 树退到右侧 + 面板按需展开 —— */
+      #p3hero::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(90deg, rgba(3,2,8,.78) 0%, rgba(3,2,8,.5) 30%, rgba(3,2,8,0) 56%); }
+      #p3hero .p3bd { position: absolute; z-index: 3; top: 20px; left: 6vw; display: flex; align-items: baseline; gap: 10px; color: #eef0fa; }
+      #p3hero .p3bd b { font: 700 13px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .42em; }
+      #p3hero .p3bd span { font-size: 12px; letter-spacing: .2em; color: #a9a6d6; }
+      #p3hero .p3hd { position: absolute; z-index: 3; left: 6vw; bottom: calc(10vh + 74px); width: min(46vw, 760px); transition: opacity .4s ease, transform .5s cubic-bezier(.2,.7,.2,1); text-shadow: 0 2px 24px rgba(0,0,0,.55); }
+      #p3hero .p3hd .ey { margin: 0 0 18px; font: 500 11.5px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .28em; color: #e9c779; display: flex; align-items: center; gap: 12px; }
+      #p3hero .p3hd .ey::before { content: ""; flex: none; width: 34px; height: 1px; background: linear-gradient(90deg, #e9c779, transparent); }
+      #p3hero .p3hd h1 { margin: 0; font-weight: 650; font-size: clamp(40px, 5.3vw, 90px); line-height: 1.1; letter-spacing: -.01em; color: #f6f4ff; }
+      #p3hero .p3hd .ln { display: block; overflow: hidden; padding-bottom: .06em; }
+      #p3hero .p3hd .li { display: block; white-space: nowrap; }
+      #p3hero .p3hd em { font-style: normal; font-family: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", Georgia, serif; font-weight: 700; padding: 0 .06em; background: linear-gradient(100deg, #fff1c9, #e9c779 40%, #ff9ad5 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+      html[lang^="en"] #p3hero .p3hd em { font-style: italic; }
+      html[lang^="en"] #p3hero .p3hd h1 { font-size: clamp(34px, 4.3vw, 72px); }
+      @media (min-width: 801px) and (min-height: 421px) { html[lang^="en"] #p3hero .p3hd { width: min(52vw, 820px); } }
+      #p3hero .rw { --c: #7cc8ff; display: inline-block; vertical-align: bottom; overflow: hidden; height: 1.18em; margin: 0 .04em; text-shadow: none; }
+      #p3hero .rw > span { display: inline-block; color: var(--c); text-shadow: none; transition: transform .42s cubic-bezier(.6,0,.2,1), opacity .36s ease, color .3s; }
+      #p3hero .rw > span.out { transform: translateY(-105%); opacity: 0; }
+      #p3hero .rw > span.pre { transform: translateY(105%); opacity: 0; transition: none; }
+      #p3hero .p3hd .sb { margin: 22px 0 0; max-width: 32em; font-size: clamp(14px, 1.05vw, 16px); line-height: 1.75; color: #bfc1e6; }
+      #p3hero .ix { --c: #7cc8ff; margin-top: 22px; display: flex; align-items: center; gap: 6px; }
+      #p3hero .ix i { width: 16px; height: 2px; border-radius: 2px; background: rgba(255,255,255,.18); transition: width .4s ease, background .4s ease; }
+      #p3hero .ix i.on { width: 34px; background: var(--c); box-shadow: 0 0 10px var(--c); }
+      #p3hero .ix span { margin-left: 10px; font: 500 11px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .16em; color: #a9a6d6; white-space: pre; }
+      #p3hero .p3ct { position: absolute; z-index: 3; left: 6vw; bottom: 10vh; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+      #p3hero .p3ct .pri, #p3hero .p3ct .sec { height: 48px; padding: 0 26px; border-radius: 999px; font-size: 15px; font-weight: 600; letter-spacing: .04em; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; transition: transform .25s ease, box-shadow .25s ease, background .25s ease, border-color .25s; }
+      #p3hero .p3ct .pri { border: 0; color: #160f02; background: linear-gradient(180deg, #fbe7ae, #dcb15a); box-shadow: 0 8px 30px -8px rgba(233,199,121,.6), inset 0 1px 0 rgba(255,255,255,.6); }
+      #p3hero .p3ct .pri span { transition: transform .25s ease; }
+      #p3hero .p3ct .pri:hover { transform: translateY(-2px); box-shadow: 0 14px 38px -8px rgba(233,199,121,.75), inset 0 1px 0 rgba(255,255,255,.6); }
+      #p3hero .p3ct .pri:hover span { transform: translateX(4px); }
+      #p3hero .p3ct .sec { color: #eef0fa; border: 1px solid rgba(200,190,255,.32); background: rgba(255,255,255,.05); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+      #p3hero .p3ct .sec:hover { border-color: rgba(255,154,213,.7); background: rgba(255,255,255,.09); }
+      #p3hero .p3ct .sec small { font-size: 11px; font-weight: 400; letter-spacing: .12em; color: #a9a6d6; }
+      #p3hero .p3ct [aria-expanded="true"] { outline: 1px solid rgba(255,255,255,.55); outline-offset: 3px; }
+      #p3hero .p3ct .sp { width: 6px; }
+      #p3hero .p3ct .lk { border: 0; background: none; color: #c9c7ee; font-size: 13.5px; padding: 8px 4px; letter-spacing: .04em; border-bottom: 1px solid transparent; white-space: nowrap; }
+      #p3hero .p3ct .lk:hover { color: #fff; border-bottom-color: rgba(255,255,255,.4); }
+      #p3hero .tzn { position: absolute; left: 0; bottom: calc(100% + 12px); font-size: 12.5px; color: #9fd8ff; white-space: nowrap; }
+      #p3hero .tzn:empty { display: none; }
+      #p3hero .ph { align-items: center; }
+      #p3hero .ph .px { margin-left: 8px; flex: none; width: 28px; height: 28px; padding: 0; border-radius: 50%; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05); color: #d8d6f6; font-size: 16px; line-height: 1; }
+      #p3hero .ph .px:hover { background: rgba(255,255,255,.14); }
+      #p3hero .pr .ph .px { margin-left: auto; }
+      /* 进场：逐行从遮罩下升起 */
+      #p3hero .p3hd .ey, #p3hero .p3hd .sb, #p3hero .p3hd .ix, #p3hero .p3ct, #p3hero .p3bd { opacity: 0; transform: translateY(14px); transition: opacity .9s ease, transform .9s cubic-bezier(.2,.7,.2,1); }
+      #p3hero .p3hd .li { transform: translateY(108%); transition: transform 1.1s cubic-bezier(.2,.75,.15,1); }
+      html.p3rv #p3hero .p3hd .li, html.p3rv #p3hero .p3hd .ey, html.p3rv #p3hero .p3hd .sb, html.p3rv #p3hero .p3hd .ix, html.p3rv #p3hero .p3ct, html.p3rv #p3hero .p3bd { opacity: 1; transform: none; }
+      html.p3rv #p3hero .p3bd { transition-delay: .1s; } html.p3rv #p3hero .p3hd .ey { transition-delay: .25s; }
+      html.p3rv #p3hero .p3hd .ln:nth-child(1) .li { transition-delay: .35s; } html.p3rv #p3hero .p3hd .ln:nth-child(2) .li { transition-delay: .5s; }
+      html.p3rv #p3hero .p3hd .sb { transition-delay: .8s; } html.p3rv #p3hero .p3hd .ix { transition-delay: .95s; } html.p3rv #p3hero .p3ct { transition-delay: 1.05s; }
+      /* 桌面：面板按需在左栏展开，标题让位 */
+      @media (min-width: 801px) and (min-height: 421px) {
+        #p3hero .p3pn.pl, #p3hero .p3pn.pr { left: 6vw; right: auto; top: auto; bottom: calc(10vh + 72px); width: min(470px, 40vw); max-height: calc(100% - 10vh - 150px); transform: translateY(24px); opacity: 0; visibility: hidden; transition: opacity .35s ease, transform .45s cubic-bezier(.2,.7,.2,1), visibility 0s linear .45s; }
+        #p3hero .p3pn.open { transform: none; opacity: 1; visibility: visible; transition: opacity .35s ease, transform .45s cubic-bezier(.2,.7,.2,1); }
+        html.p3dr #p3hero .p3hd { opacity: 0; transform: translateY(-14px); pointer-events: none; }
+      }
+      @media (min-width: 801px) and (max-width: 1100px) and (min-height: 421px) { #p3hero .p3hd { width: 50vw; } #p3hero .p3hd h1 { font-size: clamp(40px, 5vw, 56px); } #p3hero::after { background: linear-gradient(90deg, rgba(3,2,8,.82) 0%, rgba(3,2,8,.55) 40%, rgba(3,2,8,0) 66%); } }
+      /* 手机竖屏：标题在上、树在下，按钮栏贴底 */
+      @media (max-width: 800px) and (min-height: 421px) {
+        #p3hero::after { background: linear-gradient(180deg, rgba(3,2,8,.8) 0%, rgba(3,2,8,.4) 32%, rgba(3,2,8,0) 48%, rgba(3,2,8,0) 84%, rgba(3,2,8,.7) 100%); }
+        #p3hero .p3bd { top: calc(16px + env(safe-area-inset-top)); left: 20px; } #p3hero .p3bd span { display: none; }
+        #p3hero .p3hd { left: 20px; right: 20px; width: auto; top: calc(84px + env(safe-area-inset-top)); bottom: auto; }
+        #p3hero .p3hd .ey { margin-bottom: 12px; font-size: 10px; letter-spacing: .2em; }
+        #p3hero .p3hd h1 { font-size: clamp(30px, 9vw, 46px); }
+        #p3hero .p3hd .sb { margin-top: 12px; font-size: 13px; line-height: 1.6; max-width: 26em; }
+        #p3hero .ix { margin-top: 14px; } #p3hero .ix i { width: 10px; } #p3hero .ix i.on { width: 22px; }
+        #p3hero .p3ct { left: 0; right: 0; bottom: 0; gap: 8px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); flex-wrap: nowrap; background: rgba(8,6,22,.72); border-top: 1px solid rgba(190,175,255,.2); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+        #p3hero .p3ct .pri, #p3hero .p3ct .sec { height: 42px; padding: 0 14px; font-size: 14.5px; flex: 1; justify-content: center; }
+        #p3hero .p3ct .sec small { display: none; }
+        #p3hero .p3ct .sp, #p3hero .p3ct #p3pre { display: none; }
+        #p3hero .p3ct .lk { font-size: 12.5px; flex: none; }
+        #p3hero .tzn { left: 10px; right: 10px; white-space: normal; background: rgba(6,8,22,.85); padding: 6px 10px; border-radius: 10px; }
+        html.p3h #gvis { bottom: calc(66px + env(safe-area-inset-bottom)); left: 10px; }
+      }
+      @media (max-width: 800px) and (max-height: 700px) and (min-height: 421px) { #p3hero .p3hd .sb { display: none; } }
+      /* 矮横屏：标题缩小靠左，树在右 */
+      @media (max-height: 420px) {
+        #p3hero .p3bd { top: 10px; left: 16px; } #p3hero .p3bd span { display: none; }
+        #p3hero .p3hd { left: 16px; top: 66px; bottom: auto; width: 46vw; }
+        #p3hero .p3hd .ey, #p3hero .p3hd .sb { display: none; }
+        #p3hero .p3hd h1 { font-size: clamp(22px, 6.5vh, 30px); }
+        #p3hero .ix { margin-top: 10px; } #p3hero .ix span { display: none; }
+        #p3hero .p3ct { left: 16px; bottom: calc(10px + env(safe-area-inset-bottom)); gap: 8px; flex-wrap: nowrap; }
+        #p3hero .p3ct .pri, #p3hero .p3ct .sec { height: 36px; padding: 0 14px; font-size: 13.5px; }
+        #p3hero .p3ct .sec small, #p3hero .p3ct .sp, #p3hero .p3ct #p3pre { display: none; }
+        #p3hero .p3ct .lk { font-size: 12px; }
+        html.p3h #gvis { display: none !important; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #p3hero .p3hd .li, #p3hero .p3hd .ey, #p3hero .p3hd .sb, #p3hero .p3hd .ix, #p3hero .p3ct, #p3hero .p3bd { transition: none !important; opacity: 1; transform: none; }
+        #p3hero .rw > span { transition: none; }
+      }
     </style>
     <section id="p3hero" aria-label="创世计划 3.0">
       <canvas id="p3cv" aria-hidden="true"></canvas>
-      <div class="p3t"><small>GENESIS PORTAL 3.0</small><h1 id="p3h1"></h1><p id="p3sub"></p></div>
+      <div class="p3bd" aria-hidden="true"><b>GENESIS</b><span id="p3bdt"></span></div>
+      <div class="p3hd" id="p3hd"><p class="ey" id="p3ey"></p><h1 id="p3h1"><span class="ln"><span class="li" id="p3l1"></span></span><span class="ln"><span class="li" id="p3l2"></span></span></h1><p class="sb" id="p3sub"></p><div class="ix" id="p3ix" aria-hidden="true"></div></div>
       <aside class="p3pn pl" id="p3pl" aria-labelledby="p3plh"><h2 class="ph" id="p3plh"><b></b><span>PLAY</span><em></em></h2><div class="pb"><div class="wg" id="p3wg"></div></div></aside>
       <aside class="p3pn pr" id="p3pr" aria-labelledby="p3prh"><h2 class="ph" id="p3prh"><b></b><span>BUILD</span></h2><div class="pb"><div class="dg" id="p3dg"></div><p class="pm" id="p3pm"></p></div></aside>
-      <div class="p3hud"><b id="p3ask"></b><nav id="p3nav"></nav></div>
-      <div class="p3cta"><div class="tz" id="p3tz" aria-live="polite"></div><div class="bt"><button type="button" id="p3play"></button><button type="button" class="g" id="p3pre"></button></div></div>
-      <div class="p3tabs" role="group"><button type="button" id="p3tbp" aria-controls="p3pl" aria-expanded="false"></button><button type="button" id="p3tbb" aria-controls="p3pr" aria-expanded="false"></button></div>
+      <div class="p3ct"><div class="tzn" id="p3tz" aria-live="polite"></div><button type="button" class="pri" id="p3tbp" aria-controls="p3pl" aria-expanded="false"></button><button type="button" class="sec" id="p3tbb" aria-controls="p3pr" aria-expanded="false"></button><span class="sp" aria-hidden="true"></span><button type="button" class="lk" id="p3pre"></button><button type="button" class="lk" id="p3play"></button></div>
       <div class="tr"><div class="qw"><button type="button" class="lg g" id="p3qb" aria-haspopup="menu" aria-expanded="false"></button><div class="qm" id="p3qm" role="menu"><button type="button" role="menuitemradio" data-q="high"></button><button type="button" role="menuitemradio" data-q="medium"></button><button type="button" role="menuitemradio" data-q="low"></button></div></div><button type="button" class="lg g" id="p3lg"></button></div>
     </section>
     <script>
@@ -5283,9 +5374,31 @@
       var en = window.GN_LANG === "en", h = document.getElementById("p3hero"), $ = function (i) { return document.getElementById(i); };
       var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
       document.documentElement.classList.add("p3h");
-      $("p3h1").textContent = en ? "Master a world, then build one." : "玩懂一个世界，再亲手造一个。";
-      $("p3sub").textContent = en ? "From first principles: math grows into physics, chemistry, life, mind — all the way to the stars. The eighth star is yours to build." : "从第一性原理出发：数学长出物理、化学、生命、心智，一直长到星空。第八颗星，由你来造。";
-      $("p3play").textContent = en ? "Keep playing" : "继续玩";
+      var RW = en ? ["math", "physics", "chemistry", "life", "mind", "intelligence", "star"] : ["数学", "物理", "化学", "生命", "心智", "智能", "星空"];
+      var RC = ["#7cc8ff", "#a78bfa", "#ff9a3c", "#5eead4", "#f0c060", "#22d3ee", "#c4b5fd"], RN = RW.map(function () { return ""; });
+      $("p3h1").setAttribute("aria-label", en ? "Master a world, then build one." : "玩懂一个世界，再亲手造一个。");
+      $("p3l1").innerHTML = (en ? 'Master the<br><span class="rw" id="p3rw"><span></span></span> world,' : '玩懂一个<span class="rw" id="p3rw"><span></span></span>世界，');
+      $("p3l2").innerHTML = (en ? 'then <em>build</em> one.' : '再亲手<em>造</em>一个。');
+      $("p3l1").setAttribute("aria-hidden", "true"); $("p3l2").setAttribute("aria-hidden", "true");
+      $("p3ey").textContent = en ? "From first principles · Genesis 3.0" : "从第一性原理出发 · FROM FIRST PRINCIPLES";
+      $("p3bdt").textContent = en ? "Portal 3.0" : "创世计划 · 3.0";
+      $("p3ix").innerHTML = RW.map(function () { return "<i></i>"; }).join("") + "<span></span>";
+      var rwI = -1, rwT = 0, rwRM = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+      function rwSet(i, anim) {
+        rwI = i; var el = $("p3rw"), sp = el.firstChild, c = RC[i], ix = $("p3ix").children;
+        for (var k = 0; k < 7; k++) ix[k].className = k === i ? "on" : "";
+        ix[7].textContent = "0" + (i + 1) + " / 07" + (RN[i] ? "  ·  " + RN[i] : "");
+        $("p3ix").style.setProperty("--c", c);
+        if (p3m && p3m.spot) p3m.spot(i);
+        if (!anim) { sp.textContent = RW[i]; el.style.setProperty("--c", c); return; }
+        sp.className = "out";
+        setTimeout(function () { sp.textContent = RW[i]; el.style.setProperty("--c", c); sp.className = "pre"; void sp.offsetWidth; sp.className = ""; }, 360);
+      }
+      function rwLoop() { clearTimeout(rwT); if (p3dead) return; rwT = setTimeout(function () { if (!document.hidden) rwSet((rwI + 1) % 7, true); rwLoop(); }, 2800); }
+      rwSet(0, false);
+      function reveal() { document.documentElement.classList.add("p3rv"); if (!rwRM) setTimeout(rwLoop, 2600); }
+      $("p3sub").textContent = en ? "Math grows into physics, chemistry, life and mind, all the way to the stars. Play through seven worlds, layer by layer. The eighth star is yours to build." : "数学长出物理、化学、生命、心智，一直长到星空。七个世界，一层层玩懂；第八颗星，由你来造。";
+      $("p3play").textContent = en ? "Enter portal ↓" : "进入门户 ↓";
       $("p3pre").textContent = en ? "3.0 Preview" : "3.0 预告";
       $("p3lg").textContent = en ? "中文" : "EN";
       $("p3lg").addEventListener("click", function () { if (window.gnSetLang) gnSetLang(en ? "zh" : "en"); });
@@ -5309,14 +5422,10 @@
       DOORS.forEach(function (d, i) { dh += '<button type="button" class="door" aria-disabled="true" style="--c:' + DC[i] + '"><svg viewBox="0 0 80 96" aria-hidden="true">' + ARCH + ICON[i] + '</svg><b>' + d + '</b><small>' + soon + '</small></button>'; });
       $("p3dg").innerHTML = dh;
       $("p3pm").textContent = en ? "Master a world, then build one." : "玩懂一个世界，再亲手造一个";
-      /* 底部 HUD：你想造什么？→ 物理 → 生命 → 数学 → 星空 */
-      $("p3ask").textContent = en ? "What do you want to build? →" : "你想造什么? →";
-      var HUD = [[en ? "Physics" : "物理", "nomoverse/"], [en ? "Life" : "生命", "life-source/"], [en ? "Math" : "数学", "math-atlas/"], [en ? "Stars" : "星空", "starhelm/"]];
-      $("p3nav").innerHTML = HUD.map(function (x) { return '<a href="' + x[1] + '">' + x[0] + '</a>'; }).join('<i aria-hidden="true">→</i>');
-      $("p3nav").setAttribute("aria-label", en ? "What do you want to build?" : "你想造什么");
       /* 手机抽屉：玩 / 造 两个标签，默认收起 */
       var tabs = [[$("p3tbp"), $("p3pl")], [$("p3tbb"), $("p3pr")]];
-      $("p3tbp").innerHTML = en ? "Play" : "玩<span>PLAY</span>"; $("p3tbb").innerHTML = en ? "Build" : "造<span>BUILD</span>";
+      $("p3tbp").innerHTML = en ? "Start playing <span>›</span>" : "开始玩 <span>›</span>"; $("p3tbb").innerHTML = en ? "Build <small>soon</small>" : "造 <small>即将开放</small>";
+      [$("p3pl"), $("p3pr")].forEach(function (pn) { var x = document.createElement("button"); x.type = "button"; x.className = "px"; x.setAttribute("aria-label", en ? "Close" : "关闭"); x.textContent = "×"; x.addEventListener("click", function () { var k = drawerOpen(); drawer(-1); if (k > -1) tabs[k][0].focus(); }); pn.querySelector(".ph").appendChild(x); });
       if (en) { $("p3plh").querySelector("span").remove(); $("p3prh").querySelector("span").remove(); }
       function drawer(k) { tabs.forEach(function (t, i) { var on = i === k; t[0].setAttribute("aria-expanded", String(on)); t[1].classList.toggle("open", on); }); document.documentElement.classList.toggle("p3dr", k > -1); }
       function drawerOpen() { for (var i = 0; i < tabs.length; i++) if (tabs[i][1].classList.contains("open")) return i; return -1; }
@@ -5338,14 +5447,18 @@
         if (p3m && p3m.tier()) { if (!p3m.setQuality(n)) location.reload(); } else p3boot(); });
       document.addEventListener("click", function () { if (qm.classList.contains("on")) qOpen(false); });
       window.addEventListener("p3q:tier", function (e) { var d = e.detail || {}; if (!d.tier) return; qSet(d.tier); if (d.auto && qT) qT.toast(h, en, "tr"); });
-      function p3stop() { p3dead = true; if (p3m) { try { p3m.pause(); } catch (e) {} setTimeout(function () { try { p3m.stop(); } catch (e) {} }, 760); } }
+      function p3stop() { p3dead = true; clearTimeout(rwT); if (p3m) { try { p3m.pause(); } catch (e) {} setTimeout(function () { try { p3m.stop(); } catch (e) {} }, 760); } }
       function p3boot() {
         if (p3dead || h.style.display === "none") return;
         var still = false;
         try { still = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); var t = document.createElement("canvas"); if (!t.getContext("webgl2")) return; } catch (e) { return; }
-        import("./portal3/p3fp.js").then(function (m) { if (p3dead) return; p3m = m; m.start(h, { still: still }); if (m.tier()) qSet(m.tier()); }).catch(function () {});
+        import("./portal3/p3fp.js").then(function (m) { if (p3dead) return; p3m = m; m.start(h, { still: still }); if (m.tier()) qSet(m.tier());
+          if (m.levels) { m.levels().forEach(function (l, i) { if (l.color) RC[i] = l.color; RN[i] = l.name; }); rwSet(rwI < 0 ? 0 : rwI, false); }
+          p3shift(); window.addEventListener("resize", p3shift); }).catch(function () {});
       }
-      function p3lazy() { if (window.__p3introOn) { window.addEventListener("p3intro:end", p3lazy, { once: true }); return; } (window.requestIdleCallback || function (f) { setTimeout(f, 300); })(p3boot, { timeout: 1500 }); }
+      function p3shift() { if (!p3m || !p3m.shift) return; var w = innerWidth, hh = innerHeight;
+        if (hh <= 420) p3m.shift(w / hh > 1.5 ? .19 : 0, 0); else if (w > 800) p3m.shift(w >= 1100 ? .18 : .21, 0); else { var hd = $("p3hd").getBoundingClientRect(), f = Math.min(.5, (hd.bottom + 6) / hh), bb = 64 / hh, band = 1 - f - bb; p3m.shift(0, (f - bb) / 2, Math.max(.9, .64 / band)); } }
+      function p3lazy() { if (window.__p3introOn) { window.addEventListener("p3intro:end", p3lazy, { once: true }); return; } reveal(); (window.requestIdleCallback || function (f) { setTimeout(f, 300); })(p3boot, { timeout: 1500 }); }
       if (document.readyState === "complete") p3lazy(); else window.addEventListener("load", p3lazy);
       function go() { p3stop(); drawer(-1); h.classList.add("off"); h.setAttribute("aria-hidden", "true"); document.documentElement.classList.remove("p3h"); try { sessionStorage.setItem("gn:portal:p3hero", "1"); } catch (e) {} setTimeout(function () { h.style.display = "none"; }, 750); }
       $("p3play").addEventListener("click", go);
