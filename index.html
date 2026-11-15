@@ -5133,12 +5133,22 @@
     <!-- 门户 3.0 · 首页（阶段 2，11-15）：#p3cv 造物晶柱 WebGL（portal3/p3hero.js）+ 左「玩」右「造」玻璃面板 + 底部 HUD；≤800 宽或矮屏收成底部「玩 / 造」抽屉。
          底图 hero-c3*.webp 是同一场景的中档截帧（WebGL 不可用 / 低档 / 减少动态时的后备）。 -->
     <style>
-      #p3hero { position: fixed; inset: 0; z-index: 60; overflow: hidden; background: #030208 url(portal3/hero-c3.webp) center 45% / cover no-repeat; color: #eef0fa; font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif; transition: opacity .7s ease; perspective: 1500px; }
-      @media (max-aspect-ratio: 1/1) { #p3hero { background-image: url(portal3/hero-c3-768.webp); background-position: center 40%; } }
+      #p3hero { position: fixed; inset: 0; z-index: 60; overflow: hidden; background: #030208 url(portal3/ch1.webp) center 50% / cover no-repeat; color: #eef0fa; font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif; transition: opacity .7s ease; perspective: 1500px; }
+      @media (max-aspect-ratio: 1/1) { #p3hero { background-image: url(portal3/ch1-768.webp); background-position: center 50%; } }
       #p3hero::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to top, rgba(2,1,8,.72), transparent 24%), linear-gradient(to bottom, rgba(2,1,8,.5), transparent 16%); }
       #p3hero.off { opacity: 0; pointer-events: none; }
       #p3hero #p3cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 1.4s ease; z-index: 0; }
       #p3hero #p3cv.on { opacity: 1; }
+      #p3hero .p3vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; z-index: 0; opacity: 0; transition: opacity 1.2s ease; pointer-events: none; }
+      #p3hero .p3vid.on { opacity: 1; }
+      #p3hero.gl .p3vid { opacity: 0; }
+      #p3hero .p3t small { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .18em; color: #dfe3ff; border-left: 2px solid #9fd8ff; padding-left: 10px; }
+      #p3hero .p3sb { position: absolute; z-index: 2; left: 50%; bottom: calc(118px + env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(640px, 44vw); text-align: center; pointer-events: none; text-shadow: 0 2px 6px rgba(0,0,0,.95), 0 0 22px rgba(0,0,0,.8); opacity: 0; animation: p3sbIn 1.6s 1.6s ease forwards; }
+      #p3hero .p3sb b { display: block; font-size: clamp(18px, 1.7vw, 26px); font-weight: 600; letter-spacing: .08em; color: #fff; }
+      #p3hero .p3sb i { display: block; margin-top: 4px; font-style: normal; font-size: 12.5px; letter-spacing: .06em; color: #c9cdf2; }
+      @keyframes p3sbIn { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+      @media (max-width: 800px), (max-height: 420px) { #p3hero .p3sb { display: none; } #p3hero .p3t small { border-left: 0; padding-left: 0; } }
+      @media (prefers-reduced-motion: reduce) { #p3hero .p3sb { animation: none; opacity: 1; } }
       #p3hero button { font: inherit; cursor: pointer; }
       #p3hero a, #p3hero button { -webkit-tap-highlight-color: transparent; }
       #p3hero :focus-visible { outline: 2px solid #9fd8ff; outline-offset: 2px; }
@@ -5149,7 +5159,7 @@
       #p3hero .p3t p { margin: 6px 0 0; color: #c3c6ec; font-size: 13px; line-height: 1.5; }
       /* 玻璃面板 */
       #p3hero .p3pn { position: absolute; z-index: 2; top: clamp(112px, 21vh, 210px); width: clamp(262px, 25.5vw, 400px); max-height: calc(100% - clamp(112px, 21vh, 210px) - 128px); display: flex; flex-direction: column; padding: 16px 16px 14px; border-radius: 20px; box-sizing: border-box;
-        background: linear-gradient(160deg, rgba(168,150,255,.17), rgba(52,36,110,.10) 42%, rgba(24,70,104,.15)); backdrop-filter: blur(16px) saturate(165%); -webkit-backdrop-filter: blur(16px) saturate(165%);
+        background: linear-gradient(160deg, rgba(70,54,150,.42), rgba(16,10,44,.5) 42%, rgba(10,28,52,.5)); backdrop-filter: blur(18px) saturate(140%) brightness(.8); -webkit-backdrop-filter: blur(18px) saturate(140%) brightness(.8);
         box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 0 0 1px rgba(255,255,255,.04), inset 0 -30px 60px rgba(120,90,255,.06), 0 24px 70px rgba(0,0,0,.5); transition: transform .6s cubic-bezier(.2,.7,.2,1); }
       #p3hero .p3pn::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; opacity: .8; background: linear-gradient(135deg, #9fd8ff, #b48cff 28%, #ff9ad5 52%, #ffe29a 72%, #8ff5d0);
         -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
@@ -5252,7 +5262,9 @@
       }
     </style>
     <section id="p3hero" aria-label="创世计划 3.0">
-      <div class="p3t"><small>GENESIS 3.0</small><h1 id="p3h1"></h1><p id="p3sub"></p></div>
+      <video class="p3vid" id="p3vid" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video><canvas id="p3cv" aria-hidden="true"></canvas>
+      <div class="p3sb" aria-hidden="true"><b id="p3sb1"></b><i id="p3sb2"></i></div>
+      <div class="p3t"><small>GENESIS PORTAL 3.0</small><h1 id="p3h1"></h1><p id="p3sub"></p></div>
       <aside class="p3pn pl" id="p3pl" aria-labelledby="p3plh"><h2 class="ph" id="p3plh"><b></b><span>PLAY</span><em></em></h2><div class="pb"><div class="wg" id="p3wg"></div></div></aside>
       <aside class="p3pn pr" id="p3pr" aria-labelledby="p3prh"><h2 class="ph" id="p3prh"><b></b><span>BUILD</span></h2><div class="pb"><div class="dg" id="p3dg"></div><p class="pm" id="p3pm"></p></div></aside>
       <div class="p3hud"><b id="p3ask"></b><nav id="p3nav"></nav></div>
@@ -5270,6 +5282,17 @@
       $("p3sub").textContent = en ? "Seven worlds, one rainbow bridge — the eighth star is yours to build." : "七个世界，一道七色光桥——第八颗星，由你来造。";
       $("p3play").textContent = en ? "Keep playing" : "继续玩";
       $("p3pre").textContent = en ? "3.0 Preview" : "3.0 预告";
+      $("p3sb1").textContent = en ? "Seven bridges rise toward a new star." : "七道光桥，汇向一颗新的星。";
+      $("p3sb2").textContent = en ? "" : "Seven bridges rise toward a new star.";
+      /* 第一章底片：宣传片去字幕循环。减少动态只留静帧；手机/窄屏用 960 版 */
+      (function () { var v = $("p3vid"); if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        var big = Math.max(innerWidth, innerHeight) * Math.min(devicePixelRatio || 1, 2) > 1100, ext = v.canPlayType('video/mp4; codecs="avc1.640028"') ? "mp4" : "webm";
+        v.src = "portal3/ch1-" + (big ? "1600." : "960.") + ext;
+        v.preload = "auto"; v.playbackRate = .8; v.defaultPlaybackRate = .8;
+        v.addEventListener("playing", function () { v.classList.add("on"); }, { once: true });
+        var p = v.play(); if (p && p.catch) p.catch(function () {});
+        document.addEventListener("visibilitychange", function () { if (h.style.display === "none") return; if (document.hidden) v.pause(); else { var q = v.play(); if (q && q.catch) q.catch(function () {}); } });
+      })();
       $("p3lg").textContent = en ? "中文" : "EN";
       $("p3lg").addEventListener("click", function () { if (window.gnSetLang) gnSetLang(en ? "zh" : "en"); });
       /* 左「玩」：七个世界（读页面 WORLDS）+ 深空之下 2.0 */
@@ -5325,11 +5348,11 @@
       function p3boot() {
         if (p3dead || h.style.display === "none") return;
         try { if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return; var t = document.createElement("canvas"); if (!t.getContext("webgl2")) return; } catch (e) { return; }
-        import("./portal3/p3hero.js").then(function (m) { if (p3dead) return; p3m = m; m.start(h); if (m.tier()) qSet(m.tier()); }).catch(function () {});
+        import("./portal3/p3film.js").then(function (m) { if (p3dead) return; p3m = m; m.start(h); if (m.tier()) qSet(m.tier()); }).catch(function () {});
       }
       function p3lazy() { if (window.__p3introOn) { window.addEventListener("p3intro:end", p3lazy, { once: true }); return; } (window.requestIdleCallback || function (f) { setTimeout(f, 300); })(p3boot, { timeout: 1500 }); }
       if (document.readyState === "complete") p3lazy(); else window.addEventListener("load", p3lazy);
-      function go() { p3stop(); drawer(-1); h.classList.add("off"); h.setAttribute("aria-hidden", "true"); document.documentElement.classList.remove("p3h"); try { sessionStorage.setItem("gn:portal:p3hero", "1"); } catch (e) {} setTimeout(function () { h.style.display = "none"; }, 750); }
+      function go() { p3stop(); drawer(-1); try { var v = $("p3vid"); v.pause(); setTimeout(function () { v.removeAttribute("src"); v.load(); }, 760); } catch (e) {} h.classList.add("off"); h.setAttribute("aria-hidden", "true"); document.documentElement.classList.remove("p3h"); try { sessionStorage.setItem("gn:portal:p3hero", "1"); } catch (e) {} setTimeout(function () { h.style.display = "none"; }, 750); }
       $("p3play").addEventListener("click", go);
       $("p3pre").addEventListener("click", function () { $("p3tz").textContent = en ? "Genesis 3.0 \u201cFrom Play to Build\u201d — trailer in production. Stay tuned." : "创世计划 3.0「从玩到造」宣传片制作中，敬请期待。"; });
       document.addEventListener("keydown", function (e) {
