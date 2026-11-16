@@ -19,6 +19,7 @@ export const STARS = [
   { id: 'wolf', name: '狼回来之后,河流为什么变了?', layer: 5, x: .42, con: 'eco', task: 'wolf' },
   { id: 'optogenetics', name: '能不能用一束光开关一个神经元?', layer: 1, x: .8, con: 'beh', task: 'optogenetics' },
   { id: 'rhythm', name: '身体里的钟,怎么知道几点、几月?', layer: 3, x: .58, con: 'beh', task: 'rhythm' },
+  { id: 'recode', name: '改掉 DNA 里的一个字母,会发生什么?', layer: 0, x: .63, con: 'cell', task: 'recode' },
 
   { name: 'DNA 双螺旋', layer: 0, x: .06, con: 'gen', note: '右手螺旋,直径约 2 纳米,每圈约 10.5 个碱基对。' },
   { name: '碱基配对', layer: 0, x: .27, con: 'gen', note: 'A 对 T(2 根氢键),G 对 C(3 根氢键)。' },

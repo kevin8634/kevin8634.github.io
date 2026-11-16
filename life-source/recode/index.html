@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>改掉 DNA 里的一个字母,会发生什么? · 改码·玻璃细胞 · 生命源码 2.0</title>
+<meta name="description" content="生命源码 2.0 标志性体验「改码·玻璃细胞」:在玻璃细胞里改掉绿色荧光蛋白基因的一个字母,看它转录、翻译、折叠——照样发绿、变成蓝光,还是再也不亮。">
+<meta name="theme-color" content="#03100f">
+<link rel="stylesheet" href="../ls.css">
+<style>
+:root{--pw:min(400px,38vw);--ph:0px}
+body{overflow:hidden;background:#03100f}
+.rc-stage{position:fixed;left:0;top:0;right:var(--pw);bottom:var(--ph);z-index:1}
+.rc-stage canvas{display:block;width:100%;height:100%}
+.rc-panel{position:fixed;right:10px;top:60px;bottom:30px;width:calc(var(--pw) - 20px);z-index:12;display:flex;flex-direction:column;gap:10px;overflow:auto;
+  background:linear-gradient(160deg,rgba(220,255,245,.10),rgba(120,200,255,.04));border:1px solid rgba(200,255,240,.28);border-radius:18px;padding:14px 14px 16px;
+  backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 18px 40px rgba(0,0,0,.35)}
+.rc-acts{display:flex;gap:6px;flex-wrap:wrap}
+.rc-acts .ls-btn{font-size:12px;padding:5px 10px}
+.rc-acts .ls-btn .s{color:var(--gold);margin-left:4px}
+.rc-steps{display:flex;gap:4px;font-size:11px;color:var(--mute);flex-wrap:wrap}
+.rc-steps span{padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.1)}
+.rc-steps span.on{color:#04120c;background:var(--em);border-color:var(--em)}
+.rc-steps span.ok{color:var(--em2);border-color:var(--line)}
+.rc-q{font-size:16px;line-height:1.55;margin:0}
+.rc-q small{display:block;color:var(--mute);font-size:12px;margin-top:4px}
+.rc-seq{display:flex;gap:6px;justify-content:center;flex-wrap:nowrap;font-family:ui-monospace,Menlo,Consolas,monospace}
+.cd{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 6px 5px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);min-width:46px}
+.cd .b{display:flex;gap:1px;font-size:15px;letter-spacing:1px}
+.cd .aa{font-size:11px;color:var(--mute);font-family:var(--font)}
+.cd.hot{border-color:rgba(251,191,36,.7);background:rgba(251,191,36,.08);box-shadow:0 0 18px rgba(251,191,36,.18)}
+.cd.hot .aa{color:#fde68a}
+.cd.dim{opacity:.35}
+.nt{width:24px;height:30px;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);font:700 16px ui-monospace,Menlo,monospace;padding:0}
+.nt.sel{outline:2px solid #fff;outline-offset:1px}
+.nt.chg{box-shadow:0 0 0 2px #fbbf24,0 0 14px rgba(251,191,36,.6)}
+.rc-keys{display:flex;gap:8px;justify-content:center}
+.key{width:52px;height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.25);font:700 20px ui-monospace,Menlo,monospace;
+  background:linear-gradient(160deg,rgba(255,255,255,.18),rgba(255,255,255,.03));box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 6px 16px rgba(0,0,0,.3)}
+.key:disabled{opacity:.35;cursor:default}
+.rc-read{font-size:13px;text-align:center;color:#d1fae5;min-height:1.3em}
+.rc-read b{color:var(--gold)}
+.rc-choices{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.rc-go{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.rc-card{border:1px solid rgba(251,191,36,.35);background:rgba(251,191,36,.06);border-radius:14px;padding:10px 12px;font-size:13.5px;line-height:1.6}
+.rc-card h3{margin:0 0 4px;font-size:15px;color:#fde68a}
+.rc-card .stars{color:var(--gold);letter-spacing:2px}
+.rc-bridge{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.rc-bridge a{font-size:12px;text-decoration:none}
+.rc-hint{font-size:12.5px;color:#cfe9e1;border-left:2px solid var(--em);padding:2px 0 2px 8px}
+.rc-hint table{border-collapse:collapse;margin-top:4px;font-family:ui-monospace,Menlo,monospace}
+.rc-hint td{padding:1px 8px 1px 0}
+.rc-credit{font-size:11px;color:var(--mute);line-height:1.5;margin-top:auto}
+.rc-tag{position:fixed;z-index:6;top:64px;font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:rgba(3,16,15,.55);backdrop-filter:blur(6px);display:none;transform:translateX(-50%)}
+.rc-tag.show{display:block}
+.rc-status{position:fixed;z-index:6;left:calc((100% - var(--pw)) / 2);bottom:calc(var(--ph) + 36px);transform:translateX(-50%);font-size:13px;color:#e6fff6;
+  padding:6px 14px;border-radius:999px;background:rgba(3,16,15,.6);border:1px solid rgba(200,255,240,.25);backdrop-filter:blur(6px);max-width:calc(100vw - var(--pw) - 24px);text-align:center;line-height:1.4}
+.rc-status:empty{display:none}
+.rc-scale{position:fixed;z-index:6;left:12px;top:60px;font-size:11px;color:var(--mute);max-width:40%}
+/* 无 WebGL / 低能力:平面玻璃细胞 */
+.flat{position:absolute;inset:0;display:grid;place-items:center}
+.flat .cell{width:min(64%,320px);aspect-ratio:1;border-radius:50%;position:relative;border:2px solid rgba(196,181,253,.55);
+  background:radial-gradient(circle at 35% 30%,rgba(216,255,242,.18),rgba(94,234,212,.05) 70%,rgba(196,181,253,.3));box-shadow:inset 0 0 40px rgba(196,181,253,.25)}
+.flat .nuc{position:absolute;left:14%;top:30%;width:40%;height:40%;border-radius:50%;border:1.5px solid rgba(167,243,208,.6);background:rgba(167,243,208,.08)}
+.flat .gfp{position:absolute;right:16%;top:24%;width:16%;aspect-ratio:1;border-radius:40%;border:1.5px solid #bcd4ff;background:var(--gc,#46ff8a);box-shadow:0 0 30px 10px var(--gc,#46ff8a)}
+.flat .gfp.off{background:#334155;box-shadow:none}
+@media (max-width:760px) and (orientation:portrait){
+  :root{--pw:0px;--ph:min(54vh,470px)}
+  .rc-panel{left:8px;right:8px;width:auto;top:auto;bottom:36px;height:calc(var(--ph) - 40px);padding:10px 12px 12px;gap:8px}
+  .rc-q{font-size:14.5px}
+  .rc-scale{display:none}
+  .rc-tag{top:58px}
+}
+@media (max-height:460px) and (orientation:landscape){
+  :root{--pw:min(330px,54vw)}
+  .rc-panel{top:50px;bottom:24px;padding:8px 10px;gap:6px}
+  .rc-q{font-size:13px}.rc-q small{font-size:11px}
+  .cd{min-width:38px;padding:3px 4px}.nt{width:20px;height:24px;font-size:13px}.cd .aa{font-size:10px}
+  .key{width:40px;height:34px;font-size:16px;border-radius:10px}
+  .rc-card{font-size:12px;padding:6px 8px}
+  .rc-scale{display:none}
+  .rc-steps{display:none}
+  .rc-status{font-size:11.5px;padding:4px 10px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style></head><body>
+<noscript>需要开启 JavaScript 才能游玩。</noscript>
+<div class="rc-stage" id="stage" aria-label="玻璃细胞三维场景"></div>
+<div class="rc-scale" id="scale">示意:细胞直径约 10 微米,荧光蛋白约 4 纳米,画面中蛋白已放大展示。</div>
+<div class="rc-tag" id="tagA">原码 TAT · 酪氨酸</div><div class="rc-tag" id="tagB">改码</div>
+<div class="rc-status" id="status" role="status" aria-live="polite"></div>
+<aside class="rc-panel" id="panel" aria-live="polite"></aside>
+<script type="module">
+import { chrome, saveLevel, store, sound, reducedMotion, codonAA, AA_ZH, BASE_COLOR } from '../ls.js';
+import { saveCard } from '../ls-cards.js';
+const CARD = [['同义改写', 'TAT 和 TAC 都编码酪氨酸:字母变了,蛋白没变。'], ['错义改写 Y66H', '第 66 位换成组氨酸,绿色荧光蛋白变成蓝色荧光蛋白。'], ['无义改写', '一个终止密码子让蛋白在第 65 位截断,β 桶折不成,不发光。']];
+
+const TASK = 'recode';
+const C = chrome({ title: '改码·玻璃细胞', task: TASK });
+const $ = s => document.querySelector(s);
+const panel = $('#panel'), status = $('#status'), stage = $('#stage');
+const RM = reducedMotion();
+
+// 野生型 avGFP 编码区第 64–68 位密码子(Prasher 等 1992 cDNA):F64 S65 Y66 G67 V68
+const CODONS = [['TTC', 64], ['TCT', 65], ['TAT', 66], ['GGT', 67], ['GTT', 68]];
+const WT = 'TAT';
+const kindOf = c => { const a = codonAA(c); return a === 'Y' ? 'Y' : a === 'H' ? 'H' : a === 'W' ? 'W' : a === '*' ? '*' : 'other'; };
+const EMIT_ZH = { Y: '绿光(约 509 纳米)', H: '蓝光(约 448 纳米)', W: '青光(约 480 纳米)', '*': '不发光', other: '未演示' };
+
+const ACTS = [
+  { name: '幕一 · 同义改写', short: '同义', q: '把第 66 号密码子 TAT 的第 3 个字母换掉,变成 TAC——这个荧光蛋白还会发绿光吗?',
+    opts: [['照样发绿光', 'Y'], ['换成别的颜色', 'H'], ['不再发光', '*']], want: 'Y',
+    task: '在玻璃键盘上只改一个字母,做出 TAC。', ok: c => c !== WT && codonAA(c) === 'Y',
+    hint: [['酪氨酸 Tyr', 'TAT · TAC'], ['组氨酸 His', 'CAT · CAC'], ['终止', 'TAA · TAG · TGA']] },
+  { name: '幕二 · 错义改写', short: '错义', q: '如果只改一个字母,让第 66 位从酪氨酸变成组氨酸(Y66H)——它会发什么光?',
+    opts: [['照样发绿光', 'Y'], ['换成别的颜色', 'H'], ['不再发光', '*']], want: 'H',
+    task: '找出那一个字母:让 TAT 变成组氨酸的密码子。', ok: c => codonAA(c) === 'H',
+    hint: [['组氨酸 His', 'CAT · CAC'], ['提示', '只能动第 1 个字母']] },
+  { name: '幕三 · 无义改写', short: '无义', q: '如果一个字母把第 66 号密码子变成「终止」——核糖体读到这里会怎样?',
+    opts: [['照样发绿光', 'Y'], ['换成别的颜色', 'H'], ['不再发光', '*']], want: '*',
+    task: '只改一个字母,造出一个终止密码子(句号)。', ok: c => codonAA(c) === '*',
+    hint: [['终止', 'TAA · TAG · TGA'], ['提示', '动第 3 个字母试试']] },
+];
+const CONCL = {
+  Y: c => `<b>${WT}→${c} 都编码酪氨酸</b>:DNA 变了一个字母,蛋白一个氨基酸都没变,发光团照样形成,仍是绿光。64 个密码子只对应 20 种氨基酸和「终止」,这种冗余让不少改写悄无声息。`,
+  H: c => `<b>${WT}→${c}:第 66 位酪氨酸换成组氨酸(Y66H)</b>。发光团由第 65–67 位氨基酸在折叠好的 β 桶里自己环化而成,换掉第 66 位的芳香环,发光就从绿移到蓝——这就是早期的蓝色荧光蛋白(Heim 等,1994)。一个字母,换了颜色。`,
+  '*': c => `<b>${c} 是终止密码子</b>:核糖体读到这里就停,只合成出前 65 个氨基酸,还不到全长 238 个的三分之一。11 股的 β 桶缺了大半,发光团没机会形成——不发光。`,
+  other: c => `<b>${WT}→${c}:第 66 位换成${AA_ZH[codonAA(c)]}</b>。这一种替换的结果要看具体实验,本作这一版只演示有经典结论的同义、Y66H 和终止三类,不画光、也不下结论。`,
+};
+
+let act = Math.min(3, Math.max(1, +new URLSearchParams(location.search).get('l') || 1)) - 1;
+let codon = WT, sel = -1, pred = null, hints = 0, phase = 'predict', busy = false, cell = null;
+const saved = () => store.get(TASK, { levels: {} }).levels;
+const paintStars = () => { const L = saved(); C.setStars(Object.values(L).reduce((a, b) => a + b, 0), 9); };
+
+/* ---------- 场景:WebGL 玻璃细胞,或平面回退 ---------- */
+function mountFlat() {
+  stage.innerHTML = '<div class="flat"><div class="cell"><div class="nuc"></div><div class="gfp"></div></div></div>';
+  const g = stage.querySelector('.gfp'), EM = { Y: '#46ff8a', H: '#5b7cff', W: '#38d9ff' };
+  const set = k => { g.classList.toggle('off', !EM[k]); if (EM[k]) g.style.setProperty('--gc', EM[k]); };
+  return { tier: 'flat', setCodon() {}, fuse: async () => {}, zoomOut: async () => {}, reset: async k => set(k),
+    async express(k, step) { for (const s of ['transcribe', 'translate', 'fold']) { step(s); await new Promise(r => setTimeout(r, RM ? 0 : 500)); } set(k); step('done'); },
+    async compare(k) { set(k); }, dispose() {} };
+}
+const STEP_ZH = { transcribe: '转录:RNA 聚合酶把这段 DNA 抄成 mRNA……', translate: '翻译:核糖体三个字母一读,一个个接上氨基酸……', fold: '折叠:链在细胞里卷成 β 桶……', done: '' };
+
+async function boot() {
+  try { const m = await import('./r3d.js'); cell = await m.mountCell(stage, { reduced: RM }); }
+  catch { cell = mountFlat(); }
+  cell.setCodon(codon);
+  status.textContent = '一颗玻璃细胞正在融合成形……'; await cell.fuse(); status.textContent = '';
+}
+
+/* ---------- 面板 ---------- */
+function steps() {
+  const S = ['predict', 'edit', 'express', 'compare', 'done'], Z = ['预测', '改码', '表达', '对照', '结论'], i = S.indexOf(phase);
+  return `<div class="rc-steps">${Z.map((z, k) => `<span class="${k === i ? 'on' : k < i ? 'ok' : ''}">${z}</span>`).join('')}</div>`;
+}
+function seqHTML(lock) {
+  return `<div class="rc-seq" aria-label="GFP 编码区第 64 到 68 号密码子">${CODONS.map(([c, n]) => {
+    if (n !== 66) return `<div class="cd dim"><div class="b">${[...c].map(b => `<span style="color:${BASE_COLOR[b]}">${b}</span>`).join('')}</div><div class="aa">${n} ${AA_ZH[codonAA(c)]}</div></div>`;
+    return `<div class="cd hot"><div class="b">${[...codon].map((b, i) => `<button class="nt${i === sel ? ' sel' : ''}${b !== WT[i] ? ' chg' : ''}" data-i="${i}" style="color:${BASE_COLOR[b]}" ${lock ? 'disabled' : ''} aria-label="第 ${i + 1} 个字母 ${b}">${b}</button>`).join('')}</div><div class="aa">66 ${AA_ZH[codonAA(codon)]}</div></div>`;
+  }).join('')}</div>`;
+}
+function render() {
+  const A = ACTS[act], L = saved();
+  let h = `<div class="rc-acts">${ACTS.map((a, i) => `<button class="ls-btn${i === act ? ' on' : ''}" data-act="${i}">${a.short}${L[i + 1] ? `<span class="s">${'★'.repeat(L[i + 1])}</span>` : ''}</button>`).join('')}</div>${steps()}`;
+  h += `<p class="rc-q">${A.q}</p>`;
+  if (phase === 'predict') {
+    h += seqHTML(true) + `<div class="rc-choices">${A.opts.map(([t, k]) => `<button class="ls-btn" data-pred="${k}">${t}</button>`).join('')}</div>
+      <div class="rc-read">先猜一猜,再动手。</div>`;
+  } else {
+    h += `<p class="rc-q" style="font-size:13px;color:#cfe9e1">${phase === 'edit' ? A.task : ''}</p>` + seqHTML(phase !== 'edit');
+    if (phase === 'edit') {
+      h += `<div class="rc-keys">${'ATGC'.split('').map(b => `<button class="key" data-b="${b}" style="color:${BASE_COLOR[b]}" ${sel < 0 ? 'disabled' : ''}>${b}</button>`).join('')}</div>
+        <div class="rc-read">${sel < 0 ? '点一下第 66 号密码子里的一个字母,再在键盘上换掉它。' : `第 ${sel + 1} 个字母:换成哪个?`}　${codon !== WT ? `现在:<b>${codon}</b> → ${AA_ZH[codonAA(codon)]}` : ''}</div>
+        <div class="rc-go"><button class="ls-btn primary" id="run" ${codon === WT ? 'disabled' : ''}>▶ 表达这段源码</button><button class="ls-btn" id="undo" ${codon === WT ? 'disabled' : ''}>↺ 改回原码</button><button class="ls-btn" id="hint">🔎 密码子线索</button></div>
+        <div id="hintbox"></div>`;
+    }
+    if (phase === 'express') h += `<div class="rc-read">细胞正在读这段改过的源码……</div>`;
+    if (phase === 'compare') h += `<div class="rc-read">表达完成:<b>${EMIT_ZH[kindOf(codon)]}</b>。和原码并排看一看?</div><div class="rc-go"><button class="ls-btn primary" id="cmp">⇆ 两个细胞并排对照</button></div>`;
+    if (phase === 'done') {
+      const k = kindOf(codon), hit = A.ok(codon), stars = L[act + 1] || 0;
+      h += `<div class="rc-card"><h3>${hit ? '结论' : '这一次的发现'}</h3>${CONCL[k === 'W' ? 'H' : k](codon)}
+        ${hit ? `<div style="margin-top:6px"><span class="stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span> <small style="color:var(--mute)">完成 · 预测${pred === A.want ? '对了' : '和结果不同(很正常)'} · ${hints ? '用了线索' : '没用线索'}</small></div>` : `<div style="margin-top:6px;color:#fde68a">这一幕要做的是:${A.task}</div>`}
+        ${act === 2 && hit ? `<p style="margin:8px 0 0">收束一问:源码里的一个字母,什么时候无关紧要,什么时候改变一切?答案不在字母本身,而在它被怎样「读」。</p>` : ''}
+        <div class="rc-bridge"><a class="ls-btn" href="/life-source/dna/">🧬 四个字母怎么写出一个人?</a><a class="ls-btn" href="/life-source/parents/">👨‍👩‍👧 变异怎样传给下一代?</a><a class="ls-btn" href="/life-source/optogenetics/">💡 用光开关神经元</a><a class="ls-btn" href="/element-forge/">⚗️ 元素工坊</a></div></div>
+        <div class="rc-go">${hit && act < 2 ? `<button class="ls-btn primary" id="next">下一幕 ›</button>` : ''}<button class="ls-btn" id="again">${hit ? '自己再改一个字母' : '再试一次'}</button>${hit && act === 2 ? `<a class="ls-btn primary" href="/life-source/lab/?lab=cell&preset=recode" style="text-decoration:none">🧪 回实验台</a>` : ''}</div>`;
+    }
+  }
+  h += `<div class="rc-credit">结构:RCSB PDB 1EMA(Ormö 等,Science 1996)Cα 骨架,11 股 β 桶;颜色为发射峰示意。仅作科学素养学习,不涉及任何人体或医疗用途。</div>`;
+  panel.innerHTML = h;
+  wire();
+}
+function wire() {
+  panel.querySelectorAll('[data-act]').forEach(b => b.onclick = () => { if (busy) return; act = +b.dataset.act; restart(); });
+  panel.querySelectorAll('[data-pred]').forEach(b => b.onclick = () => { pred = b.dataset.pred; phase = 'edit'; sound.tone(660, .12, { gain: .05 }); render(); });
+  panel.querySelectorAll('.nt').forEach(b => b.onclick = () => { sel = +b.dataset.i; render(); });
+  panel.querySelectorAll('[data-b]').forEach(b => b.onclick = () => {
+    if (sel < 0) return; const nb = b.dataset.b;
+    // 一次只改一个字母:动另一个位置时,其余位置回到原码
+    codon = [...WT].map((x, i) => i === sel ? nb : x).join('');
+    cell?.setCodon(codon); sound.tone({ A: 440, C: 523.25, G: 392, T: 329.63 }[nb], .18, { gain: .06 }); render();
+  });
+  $('#undo') && ($('#undo').onclick = () => { codon = WT; sel = -1; cell?.setCodon(codon); render(); });
+  $('#hint') && ($('#hint').onclick = () => { hints++; $('#hintbox').innerHTML = `<div class="rc-hint">密码子表(节选):<table>${ACTS[act].hint.map(([a, b]) => `<tr><td>${a}</td><td>${b}</td></tr>`).join('')}</table></div>`; });
+  $('#run') && ($('#run').onclick = express);
+  $('#cmp') && ($('#cmp').onclick = compare);
+  $('#next') && ($('#next').onclick = () => { act++; restart(); });
+  $('#again') && ($('#again').onclick = () => restart(true));
+}
+async function express() {
+  if (busy) return; busy = true; phase = 'express'; render();
+  const k = kindOf(codon);
+  await cell.express(k, s => { status.textContent = STEP_ZH[s]; if (s === 'translate') sound.tone(392, .1, { gain: .04 }); if (s === 'done' && k !== '*' && k !== 'other') sound.sparkle?.(3); });
+  status.textContent = k === '*' ? '核糖体在第 66 位读到「终止」,停下了。' : k === 'other' ? '这一种替换本作未演示。' : `发光团形成:${EMIT_ZH[k]}。`;
+  busy = false; phase = 'compare'; render();
+}
+async function compare() {
+  if (busy) return; busy = true; status.textContent = '细胞一分为二,左边原码、右边改码,并排对照(示意)。';
+  await cell.compare(kindOf(codon));
+  const ta = $('#tagA'), tb = $('#tagB'), W = innerWidth - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pw')) || panel.getBoundingClientRect().width * (innerWidth > 760 ? 1 : 0));
+  const sw = stage.getBoundingClientRect().width; ta.style.left = sw * .27 + 'px'; tb.style.left = sw * .73 + 'px';
+  tb.textContent = `改码 ${codon} · ${AA_ZH[codonAA(codon)]}`; ta.classList.add('show'); tb.classList.add('show'); $('#scale').style.visibility = 'hidden';
+  const A = ACTS[act];
+  if (A.ok(codon)) { saveLevel(TASK, act + 1, 1 + (pred === A.want ? 1 : 0) + (hints === 0 ? 1 : 0)); saveCard(TASK, act, ...CARD[act]); dispatchEvent(new Event('ls-cards')); }
+  paintStars(); busy = false; phase = 'done'; render();
+}
+async function restart(keepPred = false) {
+  codon = WT; sel = -1; hints = 0; phase = keepPred ? 'edit' : 'predict'; if (!keepPred) pred = null;
+  $('#tagA').classList.remove('show'); $('#tagB').classList.remove('show'); $('#scale').style.visibility = ''; status.textContent = '';
+  history.replaceState(null, '', `?l=${act + 1}`);
+  if (cell) { await cell.reset('Y'); cell.setCodon(codon); }
+  render();
+}
+paintStars(); render(); boot();
+</script>
+</body></html>

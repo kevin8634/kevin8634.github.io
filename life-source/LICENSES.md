@@ -41,6 +41,10 @@
 | 素材 | 用在哪 | 来源与链接 | 许可 | 署名要求 | 是否 AI 生成 | 页面标注位置 |
 |---|---|---|---|---|---|---|
 | three.js r169(vendor/three.module.min.js) | WebGL 开场、一镜到底、全息标本台 | https://github.com/mrdoob/three.js | MIT | 保留版权声明:vendor/LICENSE-three.txt | 否 | — |
+| three.js r186(vendor/r186/three.module.min.js) | 2.0 起全站默认 | https://github.com/mrdoob/three.js | MIT | vendor/r186/LICENSE-three.txt | 否 | — |
+| three.js r186 MarchingCubes addon(vendor/r186/addons/MarchingCubes.js) | recode 改码·玻璃细胞:细胞体元球融合/分裂 | 官方示例 https://threejs.org/examples/webgl_marchingcubes.html ;源码 examples/jsm/objects/MarchingCubes.js | MIT | 文件头保留出处;仅改 import 一行 | 否 | — |
+| pmndrs/drei MeshTransmissionMaterial(思路与着色器改写) | recode/glass.js:细胞膜、细胞核玻璃透射(缓冲折射取样、RGB 色散、噪声模糊) | https://drei.docs.pmnd.rs/shaders/mesh-transmission-material ;https://github.com/pmndrs/drei src/core/MeshTransmissionMaterial.tsx | MIT(© Poimandres) | 文件头注明出处;未打包 drei/React | 否 | — |
+| React Bits「Iridescence」(着色器改写) | recode/glass.js:细胞膜表面虹彩 | https://reactbits.dev ;https://github.com/DavidHDev/react-bits | MIT + Commons Clause(非商用,本站免费科普) | 文件头注明出处;未打包 React | 否 | — |
 
 ## 七、数据来源(事实数据,只作科普示意引用)
 | 素材 | 用在哪 | 来源与链接 | 许可 | 署名要求 | 是否 AI 生成 | 页面标注位置 |
@@ -53,6 +57,13 @@
 | 斑驴古 DNA | zebra | Higuchi et al., 1984, Nature | 事实引用 | 注明出处 | 否 | — |
 | 黄石狼放归(1995–1997 年 41 只)与营养级联争论 | wolf | 美国国家公园管理局公开资料;Ripple & Beschta;Hobbs、Middleton 等 | 事实引用,未引入机构图片/标志 | 注明出处 | 否 | — |
 | 鼻病毒型别、R₀ 示意参数 | virus | 公开文献综述 | 事实引用 | 注明出处 | 否 | 页面标「示意参数」 |
+| 绿色荧光蛋白晶体结构 PDB 1EMA(Cα 骨架精简,recode/gfp-ca.js) | recode 改码·玻璃细胞 | RCSB PDB https://www.rcsb.org/structure/1EMA ;Ormö M, Cubitt AB, Kallio K, Gross LA, Tsien RY, Remington SJ. Crystal structure of the Aequorea victoria green fluorescent protein. Science 1996;273:1392–1395 | PDB 数据 CC0 公有领域;论文事实引用 | 注明 PDB ID 与论文 | 否 | 页面面板「结构:RCSB PDB 1EMA」 |
+| GFP 野生型第 64–68 位密码子(TTC TCT TAT GGT GTT) | recode | Prasher DC 等, Gene 1992;111:229–233(gfp cDNA) | 事实数据 | 注明出处 | 否 | — |
+| Y66H 蓝色荧光(发射约 448 nm)、GFP 发射约 509 nm | recode | Heim R, Prasher DC, Tsien RY. PNAS 1994;91:12501–12504;Tsien RY. Annu Rev Biochem 1998;67:509–544 | 事实引用 | 注明出处 | 否 | 页面「颜色为发射峰示意」 |
+
+## 自查(2026-11-17 · v0.13 recode)
+- 新增 recode/(index.html、r3d.js、glass.js、gfp-ca.js)与 vendor/r186/addons/MarchingCubes.js:全部程序生成,无图片/模型/音频/字体文件;运行时零外部请求(1EMA 已离线精简为本地数据)。
+- 1EMA 为 S65T 变体晶体结构,主链折叠与野生型一致;页面只用 Cα 骨架示意,序列与突变讲解按野生型。
 
 ## 自查(2026-10-24)
 - 页面引用的图片 8 张(atlas-tree + 五灵头像 5 + 未引用 intro 3 张在目录)、音频 2 个、库 1 个,全部在册;无第三方图片、模型、音频、字体文件。
