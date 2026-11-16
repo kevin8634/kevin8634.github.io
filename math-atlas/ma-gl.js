@@ -4,10 +4,10 @@
  * 开场(约 7 秒)与舞台为同一场景:开场末帧即舞台初始帧,不重建、不跳画面。
  */
 import * as THREE from "three";
-import { EffectComposer } from "./vendor/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "./vendor/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "./vendor/addons/postprocessing/UnrealBloomPass.js";
-import { OutputPass } from "./vendor/addons/postprocessing/OutputPass.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
 /* ---------------- 性能分级 ---------------- */
 export function detectTier() {

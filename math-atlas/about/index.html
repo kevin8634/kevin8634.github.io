@@ -69,13 +69,14 @@
     </tbody>
   </table>
   <p>从创世计划门户进入时,浏览器会临时用 <code>gn:portal:arrive</code>(sessionStorage)做过场衔接,读到后立即删除。</p>
+  <p>开发与排错用的 <code>?three=169</code> 会在本次会话记下 <code>gn:ma:three</code>(sessionStorage,关闭标签页即清除),只决定 3D 引擎版本。</p>
   <p><button id="clr" type="button">清除本设备上的星图数据</button><span id="clrMsg" role="status"></span></p>
 
   <h2>第三方组件</h2>
   <table>
     <thead><tr><th>组件</th><th>许可</th><th>位置</th></tr></thead>
     <tbody>
-      <tr><td>three.js r169(含后期处理与着色器模块)</td><td>MIT · © 2010-2024 three.js authors</td><td><a href="../vendor/LICENSE">vendor/LICENSE</a></td></tr>
+      <tr><td>three.js r186(默认,含后期处理、着色器与粗线模块);r169 保留作回滚(?three=169)</td><td>MIT · © 2010-2026 three.js authors</td><td><a href="../vendor/r186/LICENSE">vendor/r186/LICENSE</a></td></tr>
       <tr><td>Chart.js v4.5.1(含 @kurkle/color v0.3.2)</td><td>MIT · © 2025 Chart.js Contributors;© 2023 Jukka Kurkela</td><td>任务页 chart.js 文件头</td></tr>
       <tr><td>chartjs-plugin-datalabels v2.2.0</td><td>MIT · © 2017-2022 chartjs-plugin-datalabels contributors</td><td>任务页 datalabels.js 文件头</td></tr>
       <tr><td>Hark 页面组件库(hark*.css / hark*.js)</td><td>Hark 建站工具产出,按 Hark 服务条款使用</td><td>任务页页脚「built by hark」</td></tr>

@@ -1,6 +1,6 @@
 # 星图 Math Atlas · 素材与 AI 标注台账(LICENSES)
 
-> 创世计划 Genesis 第 01 世界(数学)。按《1.0 素材台账规范》(总指挥 2026-10-24)编制;每项素材、组件、数据单独登记,非商业许可的商用前必须替换。最后更新:2026-10-24(v0.8.4.1,仅文档)。本台账与许可文字为初稿,需律师审阅。
+> 创世计划 Genesis 第 01 世界(数学)。按《1.0 素材台账规范》(总指挥 2026-10-24)编制;每项素材、组件、数据单独登记,非商业许可的商用前必须替换。最后更新:2026-11-17(v0.8.8,2.0 S0:three 迁 r186)。本台账与许可文字为初稿,需律师审阅。
 > 本站自有代码与内容的许可见 [LICENSE.txt](LICENSE.txt)(代码 MIT;内容保留所有权利,非商业学习可自由访问与分享链接;© 2026 王磊(创世计划 Genesis))。
 
 | # | 素材 | 用在哪(任务/页面) | 来源与链接 | 许可 | 署名要求 | 是否 AI 生成 | 页面标注位置 |
@@ -16,7 +16,7 @@
 | 9 | 交互音效(点击、过关、星星等) | 各任务页、知识星图、首页 | 本项目原创,Web Audio 实时合成 | 原创 | — | 否 | — |
 | 10 | 语音/配音 | — | 本世界不使用任何语音、配音或 TTS | — | — | — | — |
 | 11 | 字体 | 全站 | 只调用系统字体(-apple-system、PingFang SC、Microsoft YaHei、Noto Sans SC 等),不打包、不加载网络字体 | 随设备 | — | 否 | — |
-| 12 | Three.js r169(three.module.min.js + 后期处理 EffectComposer/RenderPass/ShaderPass/UnrealBloomPass/OutputPass/MaskPass/Pass + CopyShader/LuminosityHighPassShader/OutputShader) | 首页沉浸版 3D | https://threejs.org · https://github.com/mrdoob/three.js | MIT · © 2010-2024 three.js authors | 保留许可文本(vendor/LICENSE 已随附) | 否 | 关于与隐私页「第三方组件」 |
+| 12 | Three.js **r186**(默认,vendor/r186/:three.module.min.js + addons 后期处理 EffectComposer/RenderPass/ShaderPass/UnrealBloomPass/OutputPass/MaskPass/Pass、shaders CopyShader/LuminosityHighPassShader/OutputShader、lines Line2/LineGeometry/LineMaterial/LineSegments2/LineSegmentsGeometry);r169 保留在 vendor/(同上 + lines)作回滚,?three=169 切换(ma-three.js) | 首页沉浸版 3D、curve/ 改公理·玻璃曲面 | https://threejs.org · https://github.com/mrdoob/three.js(npm three@0.186.0 / 0.169.0 原样拷贝) | MIT · © 2010-2026 three.js authors | 保留许可文本(vendor/LICENSE、vendor/r186/LICENSE) | 否 | 关于与隐私页「第三方组件」 |
 | 13 | Chart.js v4.5.1(内含 @kurkle/color) | casino、cat、chord、epidemic、nav、rocket 任务页图表 | https://www.chartjs.org · https://github.com/kurkle/color | MIT · © 2025 Chart.js Contributors;@kurkle/color v0.3.2 MIT · © 2023 Jukka Kurkela | 保留文件头版权与许可声明(已保留) | 否 | 关于与隐私页「第三方组件」 |
 | 14 | chartjs-plugin-datalabels v2.2.0 | 同上 6 个任务页 | https://chartjs-plugin-datalabels.netlify.app | MIT · © 2017-2022 chartjs-plugin-datalabels contributors | 保留文件头声明(已保留) | 否 | 关于与隐私页「第三方组件」 |
 | 15 | Hark 页面组件库(hark.css、hark-hero.css、hark-charts.css、hark.js、hark-charts.js)与页脚「built by hark」徽标 | 10 个任务页、知识星图、笔记 | Hark 建站工具生成并随站点产出 | 按 Hark 服务条款使用(待确认书面许可,需律师审阅) | 页脚徽标链接 hark.com(仅链接,不加载外部资源) | 否 | 各任务页页脚、关于与隐私页「第三方组件」 |

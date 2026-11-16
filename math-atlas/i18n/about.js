@@ -35,12 +35,13 @@ window.MA_ABOUT_EN = '\
     </tbody>\
   </table>\
   <p>When you arrive from the Genesis portal, the browser briefly uses <code>gn:portal:arrive</code> (sessionStorage) for the transition and deletes it as soon as it is read.</p>\
+  <p>The developer switch <code>?three=169</code> stores <code>gn:ma:three</code> for this session only (sessionStorage, cleared when the tab closes); it only selects the 3D engine version.</p>\
   <p><button id="clr" type="button">Clear Math Atlas data on this device</button><span id="clrMsg" role="status"></span></p>\
   <h2>Third-party components</h2>\
   <table>\
     <thead><tr><th>Component</th><th>License</th><th>Where</th></tr></thead>\
     <tbody>\
-      <tr><td>three.js r169 (with post-processing and shader modules)</td><td>MIT · © 2010-2024 three.js authors</td><td><a href="../vendor/LICENSE">vendor/LICENSE</a></td></tr>\
+      <tr><td>three.js r186 (default, with post-processing, shader and fat-line modules); r169 kept for rollback (?three=169)</td><td>MIT · © 2010-2026 three.js authors</td><td><a href="../vendor/r186/LICENSE">vendor/r186/LICENSE</a></td></tr>\
       <tr><td>Chart.js v4.5.1 (with @kurkle/color v0.3.2)</td><td>MIT · © 2025 Chart.js Contributors; © 2023 Jukka Kurkela</td><td>Header of chart.js on quest pages</td></tr>\
       <tr><td>chartjs-plugin-datalabels v2.2.0</td><td>MIT · © 2017-2022 chartjs-plugin-datalabels contributors</td><td>Header of datalabels.js on quest pages</td></tr>\
       <tr><td>Hark page component library (hark*.css / hark*.js)</td><td>Produced by the Hark site builder, used under the Hark terms of service</td><td>"built by hark" in quest page footers</td></tr>\
