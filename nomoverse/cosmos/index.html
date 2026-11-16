@@ -166,7 +166,7 @@
     var tier = NV.perf ? NV.perf.tier : "high";
     var rd = new T.WebGLRenderer({ canvas: cv, antialias: tier === "high", alpha: true, powerPreference: tier === "high" ? "high-performance" : "low-power" });
     rd.setPixelRatio(Math.min(NV.perf ? NV.perf.prCap : 2, W.devicePixelRatio || 1));
-    rd.toneMapping = T.ACESFilmicToneMapping; rd.toneMappingExposure = 1.05; rd.outputColorSpace = T.SRGBColorSpace;
+    rd.toneMapping = T.ACESFilmicToneMapping; rd.toneMappingExposure = 1.1; rd.outputColorSpace = T.SRGBColorSpace;
     rd.setScissorTest(true);
     var cam = new T.PerspectiveCamera(42, 1, 0.1, 400);
     function glow(col) {   // 径向渐变精灵(光晕)
@@ -174,28 +174,60 @@
       g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.25, col); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(0, 0, 128, 128);
       var tx = new T.CanvasTexture(c); tx.colorSpace = T.SRGBColorSpace; return tx;
     }
-    var GLOW_SUN = glow("rgba(255,190,110,0.55)"), GLOW_CY = glow("rgba(140,220,255,0.5)");
+    var GLOW_SUN = glow("rgba(255,190,110,0.55)"), GLOW_CY = glow("rgba(140,220,255,0.5)"), GLOW_WIDE = glow("rgba(255,150,80,0.18)");
+    /* v2.0-α2 画面升级(画质专长包 v4 思路):星云穹顶、菲涅耳边缘光、程序化环境贴图供玻璃折射、日冕双层光晕 + 横向镜头光芒、尘埃盘 */
+    function nebulaTex() {
+      var c = D.createElement("canvas"); c.width = 1024; c.height = 512; var x = c.getContext("2d");
+      x.fillStyle = "#03040b"; x.fillRect(0, 0, 1024, 512);
+      var blobs = tier === "low" ? 18 : 46;
+      for (var i = 0; i < blobs; i++) {
+        var px = Math.random() * 1024, py = 160 + (Math.random() - 0.5) * 260 + Math.sin(px / 160) * 60, r = 40 + Math.random() * 150;
+        var hue = Math.random() < 0.55 ? 220 + Math.random() * 40 : 270 + Math.random() * 50, g = x.createRadialGradient(px, py, 0, px, py, r);
+        g.addColorStop(0, "hsla(" + hue + ",70%,55%," + (0.05 + Math.random() * 0.07) + ")"); g.addColorStop(1, "hsla(" + hue + ",70%,40%,0)");
+        x.fillStyle = g; x.fillRect(px - r, py - r, r * 2, r * 2);
+      }
+      var tx = new T.CanvasTexture(c); tx.colorSpace = T.SRGBColorSpace; tx.mapping = T.EquirectangularReflectionMapping; return tx;
+    }
+    var NEB = nebulaTex(), ENV = null;
+    try { var pm = new T.PMREMGenerator(rd), es = new T.Scene(); es.background = NEB; var lt = new T.Mesh(new T.SphereGeometry(3, 16, 12), new T.MeshBasicMaterial({ color: 0xffe2b0, side: T.BackSide })); lt.scale.setScalar(0.4); lt.position.set(0, 2, 0); es.add(lt); ENV = pm.fromScene(es, 0.02).texture; pm.dispose(); } catch (e) { ENV = null; }
+    function rimMat(col, pow, k) {
+      return new T.ShaderMaterial({ transparent: true, depthWrite: false, blending: T.AdditiveBlending, side: T.FrontSide,
+        uniforms: { c: { value: new T.Color(col) }, p: { value: pow }, k: { value: k } },
+        vertexShader: "varying vec3 n; varying vec3 v; void main(){ vec4 mv = modelViewMatrix*vec4(position,1.0); n = normalize(normalMatrix*normal); v = normalize(-mv.xyz); gl_Position = projectionMatrix*mv; }",
+        fragmentShader: "uniform vec3 c; uniform float p; uniform float k; varying vec3 n; varying vec3 v; void main(){ float f = pow(1.0-abs(dot(normalize(n),normalize(v))), p); gl_FragColor = vec4(c*f*k, f*k); }" });
+    }
+    function dust(n, r0, r1) {
+      var g = new T.BufferGeometry(), p = new Float32Array(n * 3);
+      for (var i = 0; i < n; i++) { var a = Math.random() * 6.283, r = r0 + Math.pow(Math.random(), 0.7) * (r1 - r0); p[i * 3] = r * Math.cos(a); p[i * 3 + 1] = (Math.random() - 0.5) * 0.12 * r; p[i * 3 + 2] = r * Math.sin(a); }
+      g.setAttribute("position", new T.BufferAttribute(p, 3));
+      return new T.Points(g, new T.PointsMaterial({ color: 0xffcf9a, size: 0.05, transparent: true, opacity: 0.35, depthWrite: false, blending: T.AdditiveBlending }));
+    }
     function stars(n) {
       var g = new T.BufferGeometry(), p = new Float32Array(n * 3);
       for (var i = 0; i < n; i++) { var u = Math.random() * 2 - 1, a = Math.random() * 6.283, r = 120 + Math.random() * 60, s = Math.sqrt(1 - u * u); p[i * 3] = r * s * Math.cos(a); p[i * 3 + 1] = r * u; p[i * 3 + 2] = r * s * Math.sin(a); }
       g.setAttribute("position", new T.BufferAttribute(p, 3));
       return new T.Points(g, new T.PointsMaterial({ color: 0xcfe0ff, size: 0.6, sizeAttenuation: true, transparent: true, opacity: 0.8, depthWrite: false }));
     }
-    function glassMat(col, op) { return new T.MeshPhysicalMaterial({ color: col, metalness: 0, roughness: 0.06, transmission: 0.92, thickness: 0.6, ior: 1.45, clearcoat: 1, clearcoatRoughness: 0.05, transparent: true, opacity: op == null ? 0.55 : op, side: T.DoubleSide, depthWrite: false }); }
+    function glassMat(col, op) { return new T.MeshPhysicalMaterial({ color: col, metalness: 0, roughness: 0.04, transmission: 0.95, thickness: 0.8, ior: 1.5, clearcoat: 1, clearcoatRoughness: 0.03, envMap: ENV, envMapIntensity: 1.4, iridescence: tier === "high" ? 0.35 : 0, iridescenceIOR: 1.3, transparent: true, opacity: op == null ? 0.55 : op, side: T.DoubleSide, depthWrite: false }); }
     function rig() {
-      var sc = new T.Scene(); sc.add(stars(tier === "low" ? 500 : 1400));
+      var sc = new T.Scene(); sc.background = NEB; sc.backgroundIntensity = 0.9; sc.add(stars(tier === "low" ? 500 : 1400));
       sc.add(new T.AmbientLight(0x6f86c8, 0.35));
       var pl = new T.PointLight(0xffe2b0, 30, 0, 1.6); sc.add(pl);
       var rim = new T.DirectionalLight(0x9fdcff, 0.6); rim.position.set(-6, 8, -4); sc.add(rim);
       var sys = new T.Group(); sc.add(sys);
-      var core = new T.Mesh(new T.SphereGeometry(0.55, 48, 32), new T.MeshBasicMaterial({ color: 0xfff1c9 }));
-      var shell = new T.Mesh(new T.SphereGeometry(1, 64, 48), glassMat(0xffd9a0, 0.4));
+      var core = new T.Mesh(new T.SphereGeometry(0.55, 48, 32), new T.MeshBasicMaterial({ color: 0xfff1c9, toneMapped: false }));
+      var shell = new T.Mesh(new T.SphereGeometry(1, 64, 48), glassMat(0xffd9a0, 0.22));
       var halo = new T.Sprite(new T.SpriteMaterial({ map: GLOW_SUN, transparent: true, depthWrite: false, blending: T.AdditiveBlending })); halo.scale.set(5, 5, 1);
       var ring = new T.Mesh(new T.TorusGeometry(1, 0.012, 8, 160), new T.MeshBasicMaterial({ color: 0xa5f3fc, transparent: true, opacity: 0.45 })); ring.rotation.x = Math.PI / 2;
-      var planet = new T.Mesh(new T.SphereGeometry(0.22, 32, 24), new T.MeshStandardMaterial({ color: 0x4090ff, roughness: 0.5, metalness: 0.05, emissive: 0x000000 }));
+      var planet = new T.Mesh(new T.SphereGeometry(0.24, 32, 24), new T.MeshStandardMaterial({ color: 0x4090ff, roughness: 0.5, metalness: 0.05, emissive: 0x000000 }));
       var pGlow = new T.Sprite(new T.SpriteMaterial({ map: GLOW_CY, transparent: true, depthWrite: false, blending: T.AdditiveBlending, opacity: 0.6 })); pGlow.scale.set(0.9, 0.9, 1); planet.add(pGlow);
       var pulse = new T.Mesh(new T.SphereGeometry(1, 48, 32), new T.MeshBasicMaterial({ color: 0xfde68a, transparent: true, opacity: 0.18, side: T.DoubleSide, depthWrite: false, blending: T.AdditiveBlending }));
-      var sun = new T.Group(); sun.add(core); sun.add(shell); sun.add(halo); sys.add(sun); sys.add(ring); sys.add(planet); sys.add(pulse);
+      var corona = new T.Sprite(new T.SpriteMaterial({ map: GLOW_WIDE, transparent: true, depthWrite: false, blending: T.AdditiveBlending })); corona.scale.set(14, 14, 1);
+      var streak = new T.Sprite(new T.SpriteMaterial({ map: GLOW_SUN, transparent: true, depthWrite: false, blending: T.AdditiveBlending, opacity: 0.5 })); streak.scale.set(16, 0.35, 1);
+      var sRim = new T.Mesh(new T.SphereGeometry(1.02, 48, 32), rimMat(0xffc27a, 2.2, 1.1));
+      var atm = new T.Mesh(new T.SphereGeometry(0.27, 32, 24), rimMat(0x7cc8ff, 2.5, 1.4)); planet.add(atm);
+      var sun = new T.Group(); sun.add(core); sun.add(shell); sun.add(sRim); sun.add(halo); sun.add(corona); sun.add(streak); sys.add(sun); sys.add(ring); sys.add(planet); sys.add(pulse);
+      if (tier !== "low") sys.add(dust(tier === "high" ? 2600 : 1200, 1.6, 8.5));
       // 原子
       var atom = new T.Group(); sc.add(atom);
       var nuc = new T.Mesh(new T.SphereGeometry(0.18, 32, 24), new T.MeshBasicMaterial({ color: 0xffe08a }));
@@ -206,8 +238,10 @@
       var eGlow = new T.Sprite(new T.SpriteMaterial({ map: GLOW_CY, transparent: true, depthWrite: false, blending: T.AdditiveBlending })); eGlow.scale.set(0.5, 0.5, 1); elec.add(eGlow);
       var wavePts = 160, wg = new T.BufferGeometry(); wg.setAttribute("position", new T.BufferAttribute(new Float32Array(wavePts * 3), 3));
       var wave = new T.Line(wg, new T.LineBasicMaterial({ color: 0xff3030, transparent: true, opacity: 0.95 }));
-      atom.add(nuc); atom.add(nGlow); atom.add(cloud); atom.add(eRing); atom.add(elec); atom.add(wave);
-      return { sc: sc, sys: sys, sun: sun, core: core, halo: halo, ring: ring, planet: planet, pGlow: pGlow, pulse: pulse, pl: pl, atom: atom, cloud: cloud, eRing: eRing, elec: elec, wave: wave, wavePts: wavePts };
+      var cRim = new T.Mesh(new T.SphereGeometry(1.01, 48, 32), rimMat(0x8fe6ff, 2.8, 0.9));
+      var probe = new T.Group(); for (var q = 0; q < 3; q++) { var o = new T.Mesh(new T.TorusGeometry(1, 0.006, 6, 140), new T.MeshBasicMaterial({ color: 0xc4b5fd, transparent: true, opacity: 0.25 })); o.rotation.set(q * 1.05, q * 0.6, 0); probe.add(o); }
+      atom.add(nuc); atom.add(nGlow); atom.add(cloud); atom.add(cRim); atom.add(probe); atom.add(eRing); atom.add(elec); atom.add(wave);
+      return { sc: sc, sys: sys, sun: sun, core: core, halo: halo, corona: corona, streak: streak, probe: probe, cRim: cRim, ring: ring, planet: planet, pGlow: pGlow, pulse: pulse, pl: pl, atom: atom, cloud: cloud, eRing: eRing, elec: elec, wave: wave, wavePts: wavePts };
     }
     var RG = [rig(), rig()], W2 = 1, H2 = 1, col = new T.Color();
     function upd(R, P, s) {
@@ -222,6 +256,8 @@
         R.core.scale.setScalar(cs / 0.55);
         R.halo.scale.setScalar(Math.max(2.5, Math.min(14, 5 * Math.pow(P.L, 0.18))));
         R.halo.material.opacity = Math.max(0.35, Math.min(1, 0.7 + 0.05 * lg));
+        R.corona.scale.setScalar(Math.max(6, Math.min(30, 14 * Math.pow(P.L, 0.2)))); R.streak.scale.set(Math.max(8, Math.min(34, 16 * Math.pow(P.L, 0.15))), 0.35, 1);
+        R.core.material.color.setHSL(0.11 - Math.min(0.05, Math.max(-0.05, 0.012 * lg)), 1, 0.86);
         R.pl.intensity = 30 * Math.max(0.2, Math.min(6, Math.pow(P.L, 0.5)));
         var tc = tempCol(P.temp); R.planet.material.color.setRGB(tc[0], tc[1], tc[2]);
         R.planet.material.emissive.setRGB(P.temp > 373 ? Math.min(1, (P.temp - 373) / 800) : 0, P.temp > 373 ? 0.12 : 0, 0);
@@ -230,7 +266,7 @@
         if (R.pulse.visible) { var pr = Math.max(0.01, V.pulse[s]) * Ro; R.pulse.scale.setScalar(pr); R.pulse.material.opacity = 0.22 * (1 - Math.min(1, V.pulse[s] / 1.25)); }
       } else {
         var Ra = Math.max(0.6, Math.min(4.2, 2.3 * P.a0));
-        R.cloud.scale.setScalar(Ra); R.eRing.scale.setScalar(Ra);
+        R.cloud.scale.setScalar(Ra); R.eRing.scale.setScalar(Ra); R.cRim.scale.setScalar(Ra); R.probe.scale.setScalar(Ra * 1.02); if (!RM) R.probe.rotation.y = V.time * 0.15;
         var ea = RM ? 0.5 : V.time * 2.2 / Math.pow(P.a0, 1.5);
         R.elec.position.set(Ra * Math.cos(ea), 0, -Ra * Math.sin(ea));
         var pos = R.wave.geometry.attributes.position, lam = 0.35 * P.ha / 656.28 + 0.08;
@@ -243,7 +279,7 @@
     return {
       size: function () { var r = cv.getBoundingClientRect(); W2 = Math.max(2, Math.round(r.width)); H2 = Math.max(1, Math.round(r.height)); rd.setSize(W2, H2, false); },
       draw: function () {
-        var half = Math.floor(W2 / 2), dist = V.act === 2 ? 11 : 17;
+        var half = Math.floor(W2 / 2), dist = (V.act === 2 ? 10 : 13) * (half / H2 < 0.75 ? 1.25 : 1);
         cam.aspect = half / H2; cam.fov = cam.aspect < 0.75 ? 58 : 42; cam.updateProjectionMatrix();
         cam.position.set(dist * Math.sin(V.yaw) * Math.cos(V.pitch), dist * Math.sin(V.pitch), dist * Math.cos(V.yaw) * Math.cos(V.pitch));
         cam.lookAt(V.act === 2 ? 1.2 : 0, 0, 0);
