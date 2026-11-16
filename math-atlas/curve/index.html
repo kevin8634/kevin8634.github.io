@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>三角形的内角和,一定是 180° 吗? · 改公理·玻璃曲面 · 星图 Math Atlas 2.0</title>
+<meta name="description" content="星图 2.0 标志性体验「改公理·玻璃曲面」:拧一个曲率旋钮,让平面鼓成玻璃球、凹成双曲空间,亲手量三角形的内角和——高斯–博内定理与平行移动。">
+<meta name="theme-color" content="#05061a">
+<script src="../i18n.js"></script>
+<script src="../ma-three.js"></script>
+<style>
+:root{--pw:min(400px,38vw);--ph:0px;--gold:#ffd36e;--ink:#eaf2ff;--mute:#9fb3d9;--line:rgba(207,224,255,.28);--font:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#05061a;color:var(--ink);font-family:var(--font);overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:inherit}
+.cv-top{position:fixed;left:0;right:0;top:0;height:50px;z-index:20;display:flex;align-items:center;gap:8px;padding:0 12px;background:linear-gradient(180deg,rgba(5,6,26,.85),rgba(5,6,26,0))}
+.cv-top .t{font-size:14px;font-weight:600;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.cv-top .t small{color:var(--mute);font-weight:400;margin-left:6px}
+.pill{border:1px solid var(--line);background:rgba(255,255,255,.06);border-radius:999px;padding:6px 12px;font-size:12.5px;text-decoration:none;white-space:nowrap;min-height:32px;display:inline-flex;align-items:center;gap:4px}
+.pill:hover{background:rgba(255,255,255,.12)}
+.cv-stage{position:fixed;left:0;top:0;right:var(--pw);bottom:var(--ph);z-index:1}
+.cv-stage canvas{display:block}
+.cv-stage.dragging{cursor:grabbing}
+.cv-panel{position:fixed;right:10px;top:58px;bottom:14px;width:calc(var(--pw) - 20px);z-index:12;display:flex;flex-direction:column;gap:10px;overflow:auto;
+  background:linear-gradient(160deg,rgba(232,241,255,.11),rgba(143,184,255,.04));border:1px solid var(--line);border-radius:20px;padding:14px 14px 16px;
+  backdrop-filter:blur(16px) saturate(1.25);-webkit-backdrop-filter:blur(16px) saturate(1.25);box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 18px 40px rgba(0,0,0,.4)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.acts button{border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:999px;padding:5px 11px;font-size:12px}
+.acts button.on{background:var(--gold);color:#1b1400;border-color:var(--gold)}
+.acts .s{color:var(--gold);margin-left:4px}.acts .on .s{color:#7a5200}
+.steps{display:flex;gap:4px;font-size:11px;color:var(--mute);flex-wrap:wrap}
+.steps span{padding:2px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.1)}
+.steps span.on{color:#1b1400;background:var(--gold);border-color:var(--gold)}
+.steps span.ok{color:#ffe7a3;border-color:rgba(255,211,110,.35)}
+.q{font-size:16px;line-height:1.55;margin:0}
+.q small{display:block;color:var(--mute);font-size:12.5px;margin-top:4px}
+.choices,.go{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.btn{border:1px solid var(--line);background:linear-gradient(160deg,rgba(255,255,255,.16),rgba(255,255,255,.03));border-radius:14px;padding:8px 14px;font-size:13.5px;min-height:38px;box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.btn.primary{background:linear-gradient(160deg,#fff4c4,#ffd36e);color:#1b1400;border-color:#ffd36e;font-weight:600}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.on{outline:2px solid var(--gold)}
+/* 曲率旋钮(React Bits Elastic Slider 思路改写:越界橡皮筋拉伸、回弹,过 0 轻吸附) */
+.ks{user-select:none;-webkit-user-select:none}
+.ks-row{display:flex;align-items:center;gap:10px}
+.ks-val{font:600 14px ui-monospace,Menlo,Consolas,monospace;color:var(--gold);min-width:78px;text-align:right}
+.ks-track{position:relative;flex:1;height:34px;touch-action:none;cursor:pointer;outline:none}
+.ks-rail{position:absolute;left:0;right:0;top:13px;height:8px;border-radius:8px;background:linear-gradient(90deg,rgba(199,155,255,.55),rgba(255,255,255,.25) 50%,rgba(127,176,255,.55));border:1px solid rgba(255,255,255,.25);transform-origin:center;transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+.ks-zero{position:absolute;left:50%;top:7px;width:2px;height:20px;background:rgba(255,255,255,.55);transform:translateX(-1px)}
+.ks-knob{position:absolute;top:5px;width:24px;height:24px;margin-left:-12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ffe7a3 55%,#ffb84d);box-shadow:0 0 18px rgba(255,211,110,.75)}
+.ks-track:focus-visible .ks-knob{outline:2px solid #fff;outline-offset:2px}
+.ks.locked .ks-track{cursor:not-allowed;opacity:.65}
+.ks-lab{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);padding:0 2px 0 88px}
+.read{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.chip{border-radius:12px;padding:6px 6px;text-align:center;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);font:600 15px ui-monospace,Menlo,monospace}
+.chip i{display:block;font:11px var(--font);color:var(--mute);font-style:normal}
+.sum{text-align:center;font:700 30px ui-monospace,Menlo,monospace;color:#ffe7a3;letter-spacing:.5px;text-shadow:0 0 18px rgba(255,211,110,.45)}
+.sum small{display:block;font:12px var(--font);color:var(--mute);letter-spacing:0;text-shadow:none}
+.gb{display:grid;grid-template-columns:auto 1fr auto;gap:4px 8px;align-items:center;font-size:12px}
+.gb .bar{position:relative;height:12px;border-radius:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);overflow:hidden}
+.gb .bar::after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,255,255,.4)}
+.gb .bar b{position:absolute;top:1px;bottom:1px;border-radius:5px;background:linear-gradient(90deg,#fff4c4,#ffd36e)}
+.gb .bar.ka b{background:linear-gradient(90deg,#c7f9ff,#7ff7ff)}
+.gb .v{font:12px ui-monospace,Menlo,monospace;color:#ffe7a3;min-width:64px;text-align:right}
+.goal{font-size:13px;text-align:center;color:#dfe9ff;min-height:1.3em;line-height:1.45}
+.goal b{color:var(--gold)}.goal .ok{color:#7ff7c8}
+.hint{font-size:12.5px;color:#dfe9ff;border-left:2px solid var(--gold);padding:2px 0 2px 8px}
+/* 结论卡(Aceternity 3D Card Effect 思路改写:随指针倾斜、子层前移) */
+.card3d{perspective:900px}
+.card{border:1px solid rgba(255,211,110,.4);background:linear-gradient(160deg,rgba(255,211,110,.12),rgba(255,211,110,.03));border-radius:16px;padding:12px 14px;font-size:13.5px;line-height:1.62;transform-style:preserve-3d;transition:transform .25s ease-out}
+.card h3{margin:0 0 4px;font-size:15px;color:#ffe7a3;transform:translateZ(30px)}
+.card .body{transform:translateZ(16px)}
+.card .stars{color:var(--gold);letter-spacing:2px}
+.card .formula{font:600 14px ui-monospace,Menlo,monospace;color:#fff;text-align:center;margin:6px 0;transform:translateZ(40px)}
+.bridge{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;transform:translateZ(24px)}
+.bridge a{font-size:12px;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:5px 10px;background:rgba(255,255,255,.06)}
+.credit{font-size:11px;color:var(--mute);line-height:1.5;margin-top:auto}
+.status{position:fixed;z-index:6;left:calc((100% - var(--pw)) / 2);bottom:calc(var(--ph) + 22px);transform:translateX(-50%);font-size:13px;color:#eef4ff;
+  padding:6px 14px;border-radius:999px;background:rgba(5,6,26,.6);border:1px solid var(--line);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);max-width:calc(100vw - var(--pw) - 24px);text-align:center;line-height:1.4;pointer-events:none}
+.status:empty{display:none}
+.kbadge{position:fixed;z-index:6;left:14px;top:58px;font-size:12px;color:var(--mute);max-width:46%;line-height:1.5;pointer-events:none}
+.kbadge b{color:#ffe7a3;font-weight:600}
+/* 平直 vs 弯曲 对照(Aceternity Compare 思路改写:可拖动的分割线) */
+.split{position:fixed;z-index:8;top:0;bottom:var(--ph);width:0;display:none}
+.split.on{display:block}
+.split .h{position:absolute;top:50%;left:-18px;width:36px;height:36px;margin-top:-18px;border-radius:50%;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);cursor:ew-resize;touch-action:none;display:grid;place-items:center;font-size:14px}
+.split .ln{position:absolute;top:0;bottom:0;left:-1px;width:2px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.7),transparent);pointer-events:none}
+.tag{position:fixed;z-index:7;top:96px;font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(5,6,26,.6);display:none;transform:translateX(-50%);pointer-events:none;white-space:nowrap}
+.tag.show{display:block}
+@media (max-width:760px) and (orientation:portrait){
+  :root{--pw:0px;--ph:min(54vh,480px)}
+  .cv-panel{left:8px;right:8px;width:auto;top:auto;bottom:8px;height:calc(var(--ph) - 14px);padding:10px 12px 12px;gap:8px}
+  .q{font-size:14.5px}.sum{font-size:24px}
+  .kbadge{max-width:70%;font-size:11px}
+  .cv-top .t small{display:none}
+}
+@media (max-height:460px) and (orientation:landscape){
+  :root{--pw:min(330px,56vw)}
+  .cv-top{height:40px}.cv-top .t{font-size:12.5px}.cv-top .t small{display:none}.pill{min-height:28px;padding:3px 9px;font-size:11.5px}
+  .cv-panel{top:44px;bottom:6px;padding:8px 10px;gap:6px}
+  .q{font-size:13px}.q small{font-size:11px}
+  .sum{font-size:20px}.chip{font-size:12.5px;padding:3px}
+  .steps,.kbadge,.credit{display:none}
+  .btn{min-height:32px;padding:5px 10px;font-size:12.5px}
+  .status{font-size:11.5px;padding:4px 10px;bottom:8px}
+  .tag{top:48px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style></head><body>
+<noscript>需要开启 JavaScript 才能游玩。</noscript>
+<header class="cv-top">
+  <a class="pill" href="../" id="back">← 星图</a>
+  <div class="t" id="ttl">改公理·玻璃曲面<small>星图 2.0</small></div>
+  <button class="pill" id="snd" type="button" aria-pressed="false">♪ 声音 关</button>
+  <button class="pill" id="lang" type="button">中 / EN</button>
+</header>
+<div class="cv-stage" id="stage" aria-label="可以变形的玻璃空间:拖动三个发光的顶点"></div>
+<div class="kbadge" id="kbadge"></div>
+<div class="tag" id="tagL"></div><div class="tag" id="tagR"></div>
+<div class="split" id="split"><div class="ln"></div><div class="h" role="slider" tabindex="0" aria-label="对照分割线" aria-valuemin="5" aria-valuemax="95" aria-valuenow="50">⇆</div></div>
+<div class="status" id="status" role="status" aria-live="polite"></div>
+<aside class="cv-panel" id="panel" aria-live="polite"></aside>
+<script type="module" src="./curve.js"></script>
+</body></html>

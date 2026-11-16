@@ -42,6 +42,9 @@ window.MA_ABOUT_EN = '\
     <thead><tr><th>Component</th><th>License</th><th>Where</th></tr></thead>\
     <tbody>\
       <tr><td>three.js r186 (default, with post-processing, shader and fat-line modules); r169 kept for rollback (?three=169)</td><td>MIT · © 2010-2026 three.js authors</td><td><a href="../vendor/r186/LICENSE">vendor/r186/LICENSE</a></td></tr>\
+      <tr><td>React Bits: Fluid Glass, Elastic Slider, Count Up, Galaxy (ideas rewritten in plain JS/CSS for "Rewrite the Axiom")</td><td>MIT + Commons Clause · © David Haz</td><td><a href="https://reactbits.dev">reactbits.dev</a></td></tr>\
+      <tr><td>Aceternity UI free components: Compare, 3D Card Effect (ideas rewritten)</td><td>Per the site terms</td><td><a href="https://ui.aceternity.com">ui.aceternity.com</a></td></tr>\
+      <tr><td>pmndrs/drei MeshTransmissionMaterial (ideas rewritten as a native three material)</td><td>MIT · © 2020 react-spring</td><td><a href="https://github.com/pmndrs/drei">github.com/pmndrs/drei</a></td></tr>\
       <tr><td>Chart.js v4.5.1 (with @kurkle/color v0.3.2)</td><td>MIT · © 2025 Chart.js Contributors; © 2023 Jukka Kurkela</td><td>Header of chart.js on quest pages</td></tr>\
       <tr><td>chartjs-plugin-datalabels v2.2.0</td><td>MIT · © 2017-2022 chartjs-plugin-datalabels contributors</td><td>Header of datalabels.js on quest pages</td></tr>\
       <tr><td>Hark page component library (hark*.css / hark*.js)</td><td>Produced by the Hark site builder, used under the Hark terms of service</td><td>"built by hark" in quest page footers</td></tr>\

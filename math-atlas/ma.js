@@ -7,7 +7,7 @@
   var TASKS = {
     nim: "先拿的人一定赢吗", bee: "为什么蜜蜂选六边形", nav: "导航怎么找到最短的路",
     secret: "怎样把秘密藏进数字里", chord: "为什么有的和弦好听", cat: "让 AI 认出一只猫",
-    casino: "赌场为什么总赢", epidemic: "传染病为什么会爆发", rocket: "火箭怎样飞上月球", cube: "魔方为什么能复原",
+    casino: "赌场为什么总赢", epidemic: "传染病为什么会爆发", rocket: "火箭怎样飞上月球", cube: "魔方为什么能复原", curve: "三角形的内角和一定是 180° 吗",
     atlas: "知识星图"
   };
   var seg = location.pathname.replace(/\/index\.html$/, "").split("/").filter(Boolean);

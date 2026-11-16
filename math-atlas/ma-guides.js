@@ -14,7 +14,8 @@ export var GUIDES = {
   casino:   { title: "随机矩阵", shape: "半圆律",               why: "随机矩阵:每次都随机,特征值却总排成一个半圆(维格纳半圆律)。" },
   epidemic: { title: "渗流",     shape: "临界簇",               why: "渗流:2022 年菲尔兹奖。打通的格子一过临界比例,就突然连成一片。" },
   rocket:   { title: "辛几何",   shape: "相空间里守恒的面积",   why: "辛几何:轨道力学背后的几何。一团状态会被拉长扭弯,面积却永远不变。" },
-  cube:     { title: "范畴论",   shape: "交换三角形",           why: "范畴论:只看“箭头”的数学。先走 f 再走 g,和直接走 g∘f 一样。" }
+  cube:     { title: "范畴论",   shape: "交换三角形",           why: "范畴论:只看“箭头”的数学。先走 f 再走 g,和直接走 g∘f 一样。" },
+  curve:    { title: "高斯–博内", shape: "球面上的三直角三角形", why: "高斯–博内:曲面上三角形的内角和 = 180° + 曲率 × 面积。弯曲藏在空间里。" }
 };
 
 var ICE = 0x6fc6ff, GOLD = 0xf2c879, VIO = 0xb69cff, WHITE = 0xeaf4ff;
@@ -32,6 +33,16 @@ function V(x, y, z) { return new THREE.Vector3(x, y, z); }
 function rng(seed) { var s = seed >>> 0; return function () { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
 
 var BUILD = {
+  /* 高斯–博内:玻璃球上的八分之一球面三角形(三个直角),一支箭头沿边平行移动 */
+  curve: function (g) {
+    var sph = new THREE.Mesh(new THREE.SphereGeometry(0.62, 40, 28), new THREE.MeshStandardMaterial({ color: ICE, transparent: true, opacity: 0.22, roughness: 0.15, metalness: 0.2 }));
+    g.add(sph);
+    var R = 0.63, A = V(R, 0, 0), B = V(0, R, 0), C = V(0, 0, R), tri = new THREE.Group();
+    [[A, B], [B, C], [C, A]].forEach(function (e) { var pts = []; for (var i = 0; i <= 32; i++) pts.push(e[0].clone().lerp(e[1], i / 32).setLength(R)); tri.add(line(pts, GOLD, 1)); });
+    [A, B, C].forEach(function (p) { tri.add(ball(GOLD, 0.05, p, 1)); });
+    tri.rotation.set(-0.6, 0.75, 0); g.add(tri);
+    return function (t, still) { g.rotation.y = still ? 0.4 : t * 0.35; };
+  },
   /* 超现实数:二叉树一层层长出(第 n 天生出 2^n 个新数) */
   nim: function (g) {
     var nodes = [], edges = [];

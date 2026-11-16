@@ -1,6 +1,6 @@
 # 星图 Math Atlas · 素材与 AI 标注台账(LICENSES)
 
-> 创世计划 Genesis 第 01 世界(数学)。按《1.0 素材台账规范》(总指挥 2026-10-24)编制;每项素材、组件、数据单独登记,非商业许可的商用前必须替换。最后更新:2026-11-17(v0.8.8,2.0 S0:three 迁 r186)。本台账与许可文字为初稿,需律师审阅。
+> 创世计划 Genesis 第 01 世界(数学)。按《1.0 素材台账规范》(总指挥 2026-10-24)编制;每项素材、组件、数据单独登记,非商业许可的商用前必须替换。最后更新:2026-11-17(v0.9-α1:2.0 改公理·玻璃曲面 curve/;v0.8.8 三迁 r186)。本台账与许可文字为初稿,需律师审阅。
 > 本站自有代码与内容的许可见 [LICENSE.txt](LICENSE.txt)(代码 MIT;内容保留所有权利,非商业学习可自由访问与分享链接;© 2026 王磊(创世计划 Genesis))。
 
 | # | 素材 | 用在哪(任务/页面) | 来源与链接 | 许可 | 署名要求 | 是否 AI 生成 | 页面标注位置 |
@@ -27,6 +27,12 @@
 | 20 | 传染病 R₀ 常见估计:流感约 1–2,麻疹约 12–18 | epidemic 任务、笔记 | WHO / 美国 CDC 公开资料 | 公共事实 | 页面写来源 | 否 | epidemic 任务「参考」、笔记(注「不提供医疗建议」) |
 | 21 | 数学史与文献(Bouton 1901、Euler 1736、Dijkstra 1959、Shannon 1949、Kermack & McKendrick 1927、Hales 2001、Rokicki 等 2013 等) | 笔记「延伸阅读」 | 公开学术文献,仅列书目 | 书目事实 | — | 否 | 笔记各任务「延伸阅读」 |
 | 22 | 欧式轮盘(37 格)、十二平均律频率比、魔方群直径 20 等数学事实 | casino、chord、cube | 数学/物理事实,程序计算 | 公共事实 | — | 否 | — |
+| 23 | React Bits(https://reactbits.dev · https://github.com/DavidHDev/react-bits):Fluid Glass(https://reactbits.dev/components/fluid-glass)、Elastic Slider(https://reactbits.dev/components/elastic-slider)、Count Up(https://reactbits.dev/text-animations/count-up)、Galaxy(https://reactbits.dev/backgrounds/galaxy) | curve/ 改公理·玻璃曲面:玻璃曲面材质、曲率旋钮、内角和数字滚动、星空背景天球 | 只取思路与参数,改写为本地原生 JS/CSS/GLSL(curve-3d.js、curve.js、curve/index.html);未引入 React、OGL、framer-motion,未打包或再分发组件本身 | MIT + Commons Clause(可在网站中使用、修改;不得单独出售/再分发组件) · © David Haz | 本行署名;源码注释注明出处 | 否 | 关于与隐私页「第三方组件」 |
+| 24 | Aceternity UI 免费组件(https://ui.aceternity.com):Compare(https://ui.aceternity.com/components/compare)、3D Card Effect(https://ui.aceternity.com/components/3d-card-effect) | curve/:「平直 vs 弯曲」可拖动分割线对照、结论卡随指针倾斜 | 只取交互思路,改写为原生 JS/CSS;未用 Tailwind/framer-motion,未复制组件代码 | 免费组件,按其站点条款使用(开发者须在商用前复核许可页) | 本行署名 | 否 | 关于与隐私页「第三方组件」 |
+| 25 | pmndrs/drei MeshTransmissionMaterial(https://github.com/pmndrs/drei) | curve/ 玻璃曲面的厚度、色散、虹彩调参思路 | 思路改写为 three r186 原生 MeshPhysicalMaterial(transmission/thickness/dispersion/iridescence),未复制着色器代码 | MIT · © 2020 react-spring | 本行署名 | 否 | 关于与隐私页「第三方组件」 |
+| 26 | three.js 官方示例 webgl_lines_fat、webgl_materials_physical_transmission(https://threejs.org/examples/) | curve/ 测地线粗线(Line2 addons)、玻璃调参基准 | lines addons 原样拷贝(见 #12);示例只作调参参考 | MIT · © three.js authors | 同 #12 | 否 | — |
+| 27 | ThreeUI「Advanced Glass Material」(https://threeui.com/browse?sort=recent) | curve/ 画面质感参考 | **只参考公开效果,未购买、未使用其代码** | — | — | 否 | — |
+| 28 | 改公理·玻璃曲面的几何核、三维舞台、平面版、向导图标 img/guides/curve.png、ma-guides.js「高斯–博内」造型 | curve/、首页 | 本项目原创(王磊策划审定,AI 辅助编写);数学事实:高斯–博内定理、吉拉尔定理、庞加莱圆盘模型、平行移动 | 代码 MIT(见 LICENSE.txt);图标原创 | — | 否(图标为程序绘制) | — |
 
 ## AI 使用与标注
 - **AI 生成的画面/人物/语音:0 项。** 站内所有图像、3D 场景、图标、音乐与音效均为程序生成或系统渲染;没有 AI 生成的图片、人物形象、配音或 AI 音乐。因此页面上无需「AI 生成」「概念图」标注。
