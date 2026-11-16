@@ -236,9 +236,9 @@ function restart(keepPred = false) {
   const A = ACTS[act]; K = A.K0; V = A.V0.map(v => v.slice()); hints = 0; did = {}; shown = false; busy = false;
   phase = keepPred && pred ? 'play' : 'predict'; if (!keepPred) pred = null;
   if (cmp) { cmp = false; split.classList.remove('on'); view.compare(false); tags(); }
-  status.textContent = ''; history.replaceState(null, '', `?l=${act + 1}${location.search.match(/[?&]lang=en/) ? '&lang=en' : ''}`);
+  status.textContent = ''; history.replaceState(null, '', `?l=${act + 1}${location.search.match(/[?&]lang=en/) ? '&lang=en' : ''}${location.search.match(/[?&]test=1/) ? '&test=1' : ''}`);
   view.hideArrow(); render(); refresh();
 }
-/* 自动化自测钩子(只读写本页状态,等同拖动旋钮与顶点) */
-window.MA_CURVE_TEST = { setK: k => { K = k; paintKnob(); refresh(); }, setV: v => { V = v; refresh(); }, tri, state: () => ({ act, phase, K, sum: m && D(m.sum), KA: m && D(m.KA), cmp }) };
+/* 自动化自测钩子:只在 ?test=1 时挂载(只读写本页状态,等同拖动旋钮与顶点) */
+if (new URLSearchParams(location.search).get('test') === '1') window.MA_CURVE_TEST = { setK: k => { K = k; paintKnob(); refresh(); }, setV: v => { V = v; refresh(); }, tri, state: () => ({ act, phase, K, sum: m && D(m.sum), KA: m && D(m.KA), cmp }) };
 boot();

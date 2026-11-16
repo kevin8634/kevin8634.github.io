@@ -1,3 +1,12 @@
+/* 离线(v0.9-α2):每页都加载本文件,在这里注册星图自己的 Service Worker,作用域仅 /math-atlas/。不碰根 /sw.js。 */
+(function () {
+  try {
+    var me = document.currentScript && document.currentScript.src;
+    if (!me || !("serviceWorker" in navigator) || !(location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) return;
+    var sw = new URL("./sw.js", me), scope = new URL("./", me);
+    addEventListener("load", function () { navigator.serviceWorker.register(sw.href, { scope: scope.pathname }).catch(function () {}); });
+  } catch (e) {}
+})();
 /* 星图 Math Atlas · 中英双语(英文版 v0.8.7,2026-11-09;关内文字见 i18n/<任务>.js,知识星图/笔记/关于见 i18n/atlas.js、notes.js、about.js)
  * 规范同门户 v2.5.0:语言来源 URL ?lang= > 全站共享本机键 gn:lang(zh/en)> 默认中文;不按浏览器语言跳转;?lang= 会写回 gn:lang。
  * 英文模式逐个替换文本节点与 aria-label/title/placeholder/alt;词典没有的保留中文(不留空白)。

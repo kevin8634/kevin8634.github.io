@@ -97,6 +97,12 @@ class World {
       this.line(pts, '#9fc2ff', 1, 0.22);
     }
     for (let j = 0; j < 12; j++) { const pts = []; const th = j * Math.PI / 6; for (let i = 0; i <= 40; i++) { const P = G.fromPolar(K, sMax * i / 40, th), v = this.lift(P, 0.004); if (Math.hypot(v.x, v.z) > SMAX + 1e-6 && g <= 0) break; pts.push(v); } if (pts.length > 1) this.line(pts, '#9fc2ff', 1, 0.12); }
+    /* 平面/双曲玻璃片的边缘光与虹彩光晕(对照模式不开 Bloom 时也看得出是一块玻璃) */
+    if (g <= 0) {
+      const rr = g < 0 ? Math.min(SMAX, 2 * S * 0.985) : SMAX, ring = (r, c, w, o, y) => { const pts = []; for (let j = 0; j <= 160; j++) { const a = 2 * Math.PI * j / 160; pts.push(new THREE.Vector3(r * Math.cos(a), y, r * Math.sin(a))); } this.line(pts, c, w, o); };
+      ring(rr, '#eaf4ff', 2.4, 0.75, 0.006); ring(rr * 0.985, '#c79bff', 1.6, 0.45, 0.006); ring(rr * 0.97, '#6ff0c8', 1.2, 0.3, 0.006);
+      const sheen = this.add(new THREE.Mesh(new THREE.CircleGeometry(rr, 96).rotateX(-Math.PI / 2), ctx.sheenMat)); sheen.position.y = 0.003; sheen.renderOrder = 1;
+    }
     /* 双曲:庞加莱圆盘的边界 = 无穷远 */
     if (g < 0 && 2 * S <= SMAX * 1.02) { const pts = []; for (let j = 0; j <= 128; j++) { const a = 2 * Math.PI * j / 128; pts.push(new THREE.Vector3(2 * S * Math.cos(a), 0.01, 2 * S * Math.sin(a))); } this.line(pts, '#c79bff', 2.2, 0.85); }
     if (!V) return;
@@ -159,6 +165,11 @@ export async function mountStage(el, { tier = 'hi', reduced = false, small = fal
   glass.userData.keep = true;
   const fillMat = new THREE.MeshBasicMaterial({ color: '#ffd36e', transparent: true, opacity: 0.2, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending }); fillMat.userData.keep = true;
   const fanMats = FAN.map(c => { const m = new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.7, side: THREE.DoubleSide, depthWrite: false }); m.userData.keep = true; return m; });
+  const sheenTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d');
+    const g = x.createRadialGradient(128, 128, 60, 128, 128, 128); g.addColorStop(0, 'rgba(160,190,255,0.05)'); g.addColorStop(.72, 'rgba(160,190,255,0.10)'); g.addColorStop(.86, 'rgba(199,155,255,0.30)'); g.addColorStop(.94, 'rgba(111,240,200,0.32)'); g.addColorStop(1, 'rgba(255,231,163,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 256, 256); const l = x.createLinearGradient(40, 30, 200, 200); l.addColorStop(0, 'rgba(255,255,255,0.16)'); l.addColorStop(.5, 'rgba(255,255,255,0)'); x.fillStyle = l; x.beginPath(); x.arc(128, 128, 124, 0, 7); x.fill();
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+  const sheenMat = new THREE.MeshBasicMaterial({ map: sheenTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }); sheenMat.userData.keep = true;
   const glowMat = new THREE.SpriteMaterial({ map: glowTex(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }); glowMat.userData.keep = true;
   const coreMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true }); coreMat.userData.keep = true;
   const hitMat = new THREE.MeshBasicMaterial({ visible: false }); hitMat.userData.keep = true;
@@ -168,7 +179,7 @@ export async function mountStage(el, { tier = 'hi', reduced = false, small = fal
     shaft.position.y = 0.17; head.position.y = 0.41; g.add(shaft, head); g.visible = false; return g;
   };
   const keep = g => { g.userData.keep = true; return g; };
-  const ctx = { tier, small, res, glass, fillMat, fanMats, glowMat, coreMat, hitMat, lineMats: new Set(),
+  const ctx = { tier, small, res, glass, sheenMat, fillMat, fanMats, glowMat, coreMat, hitMat, lineMats: new Set(),
     coreGeo: keep(new THREE.SphereGeometry(0.035, 16, 12)), hitGeo: keep(new THREE.SphereGeometry(0.22, 10, 8)),
     arrow: mkArrow('#7ff7ff', 1), ghostArrow: mkArrow('#ffffff', 0.35) };
   const main = new World(ctx), flat = new World(ctx); scene.add(main.group, flat.group); flat.group.visible = false;

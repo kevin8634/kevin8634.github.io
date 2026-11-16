@@ -70,6 +70,7 @@
   </table>
   <p>从创世计划门户进入时,浏览器会临时用 <code>gn:portal:arrive</code>(sessionStorage)做过场衔接,读到后立即删除。</p>
   <p>开发与排错用的 <code>?three=169</code> 会在本次会话记下 <code>gn:ma:three</code>(sessionStorage,关闭标签页即清除),只决定 3D 引擎版本。</p>
+  <p>为了断网也能玩,星图会用浏览器的 Service Worker(只管 /math-atlas/)把本站文件存进缓存 <code>ma-v0.9-a2</code>,不含任何个人信息;清除站点数据即可删除。</p>
   <p><button id="clr" type="button">清除本设备上的星图数据</button><span id="clrMsg" role="status"></span></p>
 
   <h2>第三方组件</h2>

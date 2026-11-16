@@ -36,6 +36,7 @@ window.MA_ABOUT_EN = '\
   </table>\
   <p>When you arrive from the Genesis portal, the browser briefly uses <code>gn:portal:arrive</code> (sessionStorage) for the transition and deletes it as soon as it is read.</p>\
   <p>The developer switch <code>?three=169</code> stores <code>gn:ma:three</code> for this session only (sessionStorage, cleared when the tab closes); it only selects the 3D engine version.</p>\
+  <p>So you can keep playing offline, Math Atlas uses a browser Service Worker (scoped to /math-atlas/ only) to store the files of this site in the cache <code>ma-v0.9-a2</code>. It holds no personal data; clearing site data removes it.</p>\
   <p><button id="clr" type="button">Clear Math Atlas data on this device</button><span id="clrMsg" role="status"></span></p>\
   <h2>Third-party components</h2>\
   <table>\
