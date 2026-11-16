@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https: http://localhost:* http://127.0.0.1:*; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#05060f">
+<title>改律·玻璃宇宙 · 宙律 Nomoverse 2.0</title>
+<meta name="description" content="宙律 Nomoverse 2.0 标志性体验:只改一个物理常数,让真实宇宙和改律宇宙并排运行。引力强一倍、光速慢一千倍、电磁力变一变,世界会怎样?">
+<link rel="stylesheet" href="../core/nv.css">
+<script src="../i18n.js"></script>
+<style>
+  .cz { max-width: 1280px; margin: 0 auto; padding: 10px 14px 28px; }
+  .cz-kick { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .12em; color: #05060f; background: linear-gradient(90deg, #a5f3fc, #c4b5fd); border-radius: var(--r-pill); padding: 2px 10px; margin-top: 14px; }
+  .cz h1 { font-size: clamp(22px, 3.4vw, 34px); margin: 8px 0 4px; }
+  .cz .lead { color: var(--mu); margin: 0 0 12px; line-height: 1.65; max-width: 860px; }
+  .cz-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 10px; }
+  .cz-tabs button { flex: 1 1 200px; text-align: left; min-height: 50px; padding: 6px 12px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--btn); color: var(--tx); cursor: pointer; font: inherit; }
+  .cz-tabs button[aria-pressed="true"] { border-color: var(--cy); background: var(--sel); box-shadow: 0 0 0 1px var(--cy-line); }
+  .cz-tabs small { display: block; color: var(--dim); font-size: 12px; }
+  .cz-main { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 960px) { .cz-main { grid-template-columns: minmax(0, 1.6fr) minmax(330px, 1fr); align-items: start; } }
+  .cz-stage { position: relative; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; background: radial-gradient(120% 90% at 50% 10%, #101a36 0%, #070a1c 50%, #03040b 100%);
+    height: min(64vh, 580px); min-height: 300px; touch-action: none; cursor: grab; }
+  .cz-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .cz-split { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: linear-gradient(180deg, transparent, rgba(165,243,252,.45), transparent); pointer-events: none; }
+  .cz-lab { position: absolute; top: 8px; font-size: 12px; color: var(--mu); background: rgba(5,6,15,.62); border: 1px solid rgba(165,243,252,.18); border-radius: var(--r-pill); padding: 3px 10px; pointer-events: none; }
+  .cz-lab.l { left: 10px; } .cz-lab.r { right: 10px; color: #fde68a; }
+  .cz-hud { position: absolute; left: 10px; bottom: 8px; right: 10px; display: flex; justify-content: space-between; gap: 8px; pointer-events: none; font-size: 12px; color: var(--mu); }
+  .cz-hud span { background: rgba(5,6,15,.62); border-radius: var(--r-pill); padding: 3px 9px; }
+  .cz-panel { border: 1px solid var(--glass-bd); border-radius: var(--r); background: var(--glass); padding: 12px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .cz-panel h2 { font-size: 17px; margin: 0 0 6px; }
+  .cz-panel p { margin: 6px 0; line-height: 1.6; font-size: 14px; }
+  .cz-q { color: var(--cy2); font-weight: 600; }
+  .cz-opts { display: grid; gap: 6px; margin: 8px 0; }
+  .cz-opts button { text-align: left; }
+  .cz-opts button.ok { border-color: var(--good); }
+  .cz-opts button.no { border-color: var(--bad); opacity: .8; }
+  .cz-sl { display: grid; gap: 2px; margin: 10px 0 6px; }
+  .cz-sl label { display: flex; justify-content: space-between; font-size: 13px; color: var(--mu); }
+  .cz-sl output { font-family: var(--mono); color: #fde68a; }
+  .cz-sl input { width: 100%; }
+  .cz-goal { font-size: 13px; color: var(--mu); border-left: 3px solid #c4b5fd; padding: 4px 8px; margin: 8px 0; background: rgba(196,181,253,.06); border-radius: 0 var(--r-sm) var(--r-sm) 0; }
+  .cz-cmp { width: 100%; border-collapse: collapse; font-size: 13px; margin: 8px 0; }
+  .cz-cmp th { text-align: right; font-weight: 600; color: var(--dim); font-size: 12px; padding: 3px 6px; }
+  .cz-cmp th:first-child { text-align: left; }
+  .cz-cmp td { padding: 4px 6px; border-top: 1px solid var(--line2); }
+  .cz-cmp td:not(:first-child) { text-align: right; font-family: var(--mono); color: var(--tx); }
+  .cz-cmp td:last-child { color: #fde68a; }
+  .cz-res { margin-top: 8px; padding: 8px 10px; border-radius: var(--r-sm); background: rgba(110,231,183,.08); border: 1px solid rgba(110,231,183,.35); font-size: 14px; line-height: 1.6; }
+  .cz-res.warn { background: rgba(251,191,36,.08); border-color: rgba(251,191,36,.35); }
+  .cz-res .st { color: var(--pred); font-size: 16px; letter-spacing: 2px; }
+  .cz-card { margin-top: 10px; border: 1px solid rgba(165,243,252,.28); border-radius: var(--r); padding: 10px 12px; background: linear-gradient(135deg, rgba(165,243,252,.07), rgba(196,181,253,.06)); font-size: 14px; line-height: 1.65; }
+  .cz-card h3 { font-size: 15px; margin: 0 0 4px; color: var(--cy2); }
+  .cz-card .nv-row { margin-top: 6px; }
+  .cz-fin { margin: 14px 0; }
+  .cz-note { font-size: 12px; color: var(--dim); }
+  .cz-foot { margin-top: 16px; font-size: 12px; color: var(--dim); line-height: 1.7; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  @media (max-width: 520px) { .cz-stage { height: 50vh; min-height: 260px; } .cz-cmp { font-size: 12px; } }
+</style>
+</head>
+<body>
+<noscript><p style="padding:16px">这个体验需要开启 JavaScript。<a href="../">返回宙律首页</a></p></noscript>
+<script src="../core/nv.js"></script>
+<script src="../core/cosmos.js"></script>
+<script>
+"use strict";
+(function () {
+  var el = NV.el, D = document, W = window, RM = NV.RM, SND = NV.snd, M = W.NV_COSMOS;
+  var TID = "cosmos", NL = 3, EN = W.NV_LANG === "en";
+  function t(z, e) { return EN ? e : z; }
+  if (EN) D.title = "Rewrite the Laws · Glass Universe · Nomoverse 2.0";
+  function f(x, n) { return NV.fmt(x, n); }
+  function big(x) { return x >= 1e4 || x < 0.01 ? x.toExponential(2).replace("e+", "×10^").replace("e-", "×10^-") : f(x, x >= 100 ? 0 : x >= 10 ? 1 : 2); }
+  function dur(s) {
+    if (!isFinite(s)) return "∞";
+    if (s < 120) return f(s, 1) + t(" 秒", " s");
+    if (s < 7200) return f(s / 60, 1) + t(" 分钟", " min");
+    if (s < 172800) return f(s / 3600, 1) + t(" 小时", " h");
+    return f(s / 86400, 2) + t(" 天", " days");
+  }
+  function lag(d) { if (!isFinite(d)) return "∞"; var s = d * 86400; return s < 1 ? f(s * 1000, 0) + t(" 毫秒", " ms") : s < 3600 ? f(s, 1) + t(" 秒", " s") : s < 86400 ? f(s / 3600, 1) + t(" 小时", " h") : f(d, 2) + t(" 天", " days"); }
+
+  /* ================= 页面骨架 ================= */
+  D.body.appendChild(NV.header({ links: [["../", t("← 宙律", "← Nomoverse")], ["../../", t("创世计划", "Genesis")]], brand: t("宙律 2.0", "Nomoverse 2.0") }));
+  try { sessionStorage.setItem("gn:nv:_inner", "1"); } catch (e) {}
+  var main = el("main", { class: "cz", id: "main" });
+  D.body.appendChild(main);
+  main.appendChild(el("span", { class: "cz-kick", text: t("宙律 2.0 · 标志性体验", "Nomoverse 2.0 · Signature experience") }));
+  main.appendChild(el("h1", { text: t("改律·玻璃宇宙:如果宇宙的规则换一换?", "Rewrite the Laws · Glass Universe: what if the rules of the universe changed?") }));
+  main.appendChild(el("p", { class: "lead", text: t("左边是真实宇宙,右边是你改过的宇宙。每一幕只改一个常数,其余照旧:先猜,再拧,再对照。三幕走完,你会看到一个问题:为什么我们的宇宙偏偏是这组数?", "On the left, the real universe; on the right, the one you rewrite. Each act changes just one constant and keeps everything else: predict, turn the dial, compare. After three acts you meet one question: why does our universe have exactly these numbers?") }));
+
+  var LV = [[t("第一幕 · 引力", "Act 1 · Gravity"), t("引力强一倍,一年还剩多久?", "Double gravity: how long is a year?")],
+            [t("第二幕 · 光速", "Act 2 · Light speed"), t("光慢下来,时间会怎样?", "Slow light down: what happens to time?")],
+            [t("第三幕 · 电磁", "Act 3 · Electromagnetism"), t("原子还是原来的大小吗?", "Are atoms still the same size?")]];
+  var tabs = el("div", { class: "cz-tabs", role: "group", "aria-label": t("三幕", "Three acts") });
+  var tabBtns = LV.map(function (x, i) {
+    var b = el("button", { type: "button", "aria-pressed": "false", onclick: function () { go(i); } }, [el("span", { text: x[0] }), el("small", { text: x[1] })]);
+    tabs.appendChild(b); return b;
+  });
+  main.appendChild(tabs);
+
+  var stage = el("div", { class: "cz-stage", role: "img", "aria-label": t("分屏对照:左边真实宇宙,右边改律宇宙。拖动可旋转视角。", "Split-screen comparison: real universe on the left, rewritten universe on the right. Drag to rotate the view.") });
+  var labL = el("span", { class: "cz-lab l", text: t("真实宇宙", "Real universe") }), labR = el("span", { class: "cz-lab r", text: "" });
+  var hudL = el("span", { text: "" }), hudR = el("span", { text: "" });
+  stage.appendChild(el("div", { class: "cz-split", "aria-hidden": "true" }));
+  stage.appendChild(labL); stage.appendChild(labR);
+  stage.appendChild(el("div", { class: "cz-hud", "aria-hidden": "true" }, [hudL, hudR]));
+  var panel = el("section", { class: "cz-panel", "aria-live": "polite" });
+  main.appendChild(el("div", { class: "cz-main" }, [stage, panel]));
+  var fin = el("div", { class: "cz-fin" }); main.appendChild(fin);
+
+  main.appendChild(el("footer", { class: "cz-foot" }, [
+    el("p", { text: t("简化模型 · 科普探究:每幕只改一个常数、其余照旧,用标度律估算(第一幕假设 G 缓慢变化、地球角动量守恒,太阳光度按主序星同调关系 L ∝ G⁴M³;第二幕只算公转速度带来的时间膨胀;第三幕电子质量与 ħ 不变)。真实宇宙若真换了常数,很多过程会连锁改变,科学界对「常数为何如此」仍在讨论。", "Simplified model for learning: each act changes one constant and keeps the rest, estimated with scaling laws (Act 1 assumes G changes slowly so Earth’s angular momentum is conserved, and solar luminosity follows the main-sequence homology L ∝ G⁴M³; Act 2 counts only time dilation from orbital speed; Act 3 keeps the electron mass and ħ fixed). In a real universe with different constants many processes would change together; why the constants are what they are is still debated.") }),
+    el("p", { text: t("数据:IAU 2012 天文单位;CODATA 2018 光速、玻尔半径、里德伯能量;NASA 地球概况(公转速度 29.78 km/s)。本页不嵌入外部资源,可离线;进度只保存在本机浏览器。声音默认关闭。", "Data: IAU 2012 astronomical unit; CODATA 2018 speed of light, Bohr radius, Rydberg energy; NASA Earth fact sheet (orbital speed 29.78 km/s). No external resources; works offline; progress is saved only in this browser. Sound is off by default.") }),
+    el("div", { class: "nv-row" }, [el("a", { class: "nv-btn", href: "../", text: t("← 返回宙律", "← Back to Nomoverse") }), el("a", { class: "nv-btn", href: "../lab/", text: t("规则改写台 →", "Rule Rewrite Lab →") }), el("button", { class: "nv-btn", type: "button", text: t("声音与 AI 向导设置", "Sound & AI guide settings"), onclick: NV.settings })])
+  ]));
+
+  /* ================= 视图状态 ================= */
+  var V = { act: 0, k: 1, cKm: M.C0, yaw: 0.0, pitch: 0.55, time: 0, pulse: [0, 0] };
+  function sideParams(right) {
+    var a = V.act;
+    if (a === 0) { var g = M.grav(right ? V.k : 1); return { mode: "orbit", r: g.r, T: g.T, L: g.L, temp: g.temp, delay: 1 }; }
+    if (a === 1) { var c = right ? V.cKm : M.C0, l = M.light(c); return { mode: "light", r: 1, T: 1, L: 1, temp: 288, delay: l.delay / 499.0048, lag: l.lagDays }; }
+    var at = M.atom(right ? V.k : 1); return { mode: "atom", a0: at.a0 / M.A0, ha: at.ha, rgb: M.rgb(at.ha), band: at.band };
+  }
+  function tempCol(T) {   // 地球颜色:冰封 / 宜居 / 沸腾
+    if (T < 273) return [0.82, 0.9, 1.0];
+    if (T <= 373) return [0.25, 0.6, 1.0];
+    var u = Math.min(1, (T - 373) / 600); return [1.0, 0.55 - 0.3 * u, 0.25 - 0.15 * u];
+  }
+
+  /* ---- 2D 回退渲染 ---- */
+  function R2D(cv) {
+    var ctx, w, h;
+    return {
+      size: function () { var r = NV.fit(cv); ctx = r.ctx; w = r.w; h = r.h; },
+      draw: function () {
+        ctx.clearRect(0, 0, w, h);
+        for (var s = 0; s < 2; s++) {
+          var P = sideParams(s === 1), cx = w * (s ? 0.75 : 0.25), cy = h * 0.52, sc = Math.min(w / 2, h) / 9;
+          if (P.mode === "atom") {
+            var R = 2.4 * P.a0 * sc;
+            ctx.fillStyle = "#fde68a"; ctx.beginPath(); ctx.arc(cx, cy, 4, 0, 7); ctx.fill();
+            ctx.strokeStyle = "rgba(165,243,252,.6)"; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke();
+            var c = P.rgb ? "rgb(" + P.rgb.map(function (x) { return Math.round(x * 255); }).join(",") + ")" : "rgba(200,200,220,.35)";
+            ctx.fillStyle = c; ctx.fillRect(cx - w * 0.2, h * 0.86, w * 0.4, 6);
+          } else {
+            var Ro = Math.max(0.6, Math.min(4, 3 * P.r)) * sc, ang = RM ? 0.6 : V.time * 2 * Math.PI / (8 * P.T);
+            ctx.strokeStyle = "rgba(165,243,252,.35)"; ctx.beginPath(); ctx.arc(cx, cy, Ro, 0, 7); ctx.stroke();
+            var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, sc * (0.6 + 0.12 * Math.log(1 + P.L)));
+            g.addColorStop(0, "#fff7d6"); g.addColorStop(1, "rgba(253,186,116,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, sc * 1.4, 0, 7); ctx.fill();
+            var tc = tempCol(P.temp); ctx.fillStyle = "rgb(" + tc.map(function (x) { return Math.round(x * 255); }).join(",") + ")";
+            ctx.beginPath(); ctx.arc(cx + Ro * Math.cos(ang), cy + Ro * Math.sin(ang) * 0.5, 5, 0, 7); ctx.fill();
+            if (P.mode === "light") { ctx.strokeStyle = "rgba(253,230,138,.7)"; ctx.beginPath(); ctx.arc(cx, cy, Math.max(1, V.pulse[s] * Ro), 0, 7); ctx.stroke(); }
+          }
+        }
+      }
+    };
+  }
+
+  /* ---- 3D 渲染(Three.js r186,本地 vendor;分屏两套场景) ---- */
+  function R3D(T, cv) {
+    var tier = NV.perf ? NV.perf.tier : "high";
+    var rd = new T.WebGLRenderer({ canvas: cv, antialias: tier === "high", alpha: true, powerPreference: tier === "high" ? "high-performance" : "low-power" });
+    rd.setPixelRatio(Math.min(NV.perf ? NV.perf.prCap : 2, W.devicePixelRatio || 1));
+    rd.toneMapping = T.ACESFilmicToneMapping; rd.toneMappingExposure = 1.05; rd.outputColorSpace = T.SRGBColorSpace;
+    rd.setScissorTest(true);
+    var cam = new T.PerspectiveCamera(42, 1, 0.1, 400);
+    function glow(col) {   // 径向渐变精灵(光晕)
+      var c = D.createElement("canvas"); c.width = c.height = 128; var x = c.getContext("2d"), g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+      g.addColorStop(0, "rgba(255,255,255,1)"); g.addColorStop(0.25, col); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+      var tx = new T.CanvasTexture(c); tx.colorSpace = T.SRGBColorSpace; return tx;
+    }
+    var GLOW_SUN = glow("rgba(255,190,110,0.55)"), GLOW_CY = glow("rgba(140,220,255,0.5)");
+    function stars(n) {
+      var g = new T.BufferGeometry(), p = new Float32Array(n * 3);
+      for (var i = 0; i < n; i++) { var u = Math.random() * 2 - 1, a = Math.random() * 6.283, r = 120 + Math.random() * 60, s = Math.sqrt(1 - u * u); p[i * 3] = r * s * Math.cos(a); p[i * 3 + 1] = r * u; p[i * 3 + 2] = r * s * Math.sin(a); }
+      g.setAttribute("position", new T.BufferAttribute(p, 3));
+      return new T.Points(g, new T.PointsMaterial({ color: 0xcfe0ff, size: 0.6, sizeAttenuation: true, transparent: true, opacity: 0.8, depthWrite: false }));
+    }
+    function glassMat(col, op) { return new T.MeshPhysicalMaterial({ color: col, metalness: 0, roughness: 0.06, transmission: 0.92, thickness: 0.6, ior: 1.45, clearcoat: 1, clearcoatRoughness: 0.05, transparent: true, opacity: op == null ? 0.55 : op, side: T.DoubleSide, depthWrite: false }); }
+    function rig() {
+      var sc = new T.Scene(); sc.add(stars(tier === "low" ? 500 : 1400));
+      sc.add(new T.AmbientLight(0x6f86c8, 0.35));
+      var pl = new T.PointLight(0xffe2b0, 30, 0, 1.6); sc.add(pl);
+      var rim = new T.DirectionalLight(0x9fdcff, 0.6); rim.position.set(-6, 8, -4); sc.add(rim);
+      var sys = new T.Group(); sc.add(sys);
+      var core = new T.Mesh(new T.SphereGeometry(0.55, 48, 32), new T.MeshBasicMaterial({ color: 0xfff1c9 }));
+      var shell = new T.Mesh(new T.SphereGeometry(1, 64, 48), glassMat(0xffd9a0, 0.4));
+      var halo = new T.Sprite(new T.SpriteMaterial({ map: GLOW_SUN, transparent: true, depthWrite: false, blending: T.AdditiveBlending })); halo.scale.set(5, 5, 1);
+      var ring = new T.Mesh(new T.TorusGeometry(1, 0.012, 8, 160), new T.MeshBasicMaterial({ color: 0xa5f3fc, transparent: true, opacity: 0.45 })); ring.rotation.x = Math.PI / 2;
+      var planet = new T.Mesh(new T.SphereGeometry(0.22, 32, 24), new T.MeshStandardMaterial({ color: 0x4090ff, roughness: 0.5, metalness: 0.05, emissive: 0x000000 }));
+      var pGlow = new T.Sprite(new T.SpriteMaterial({ map: GLOW_CY, transparent: true, depthWrite: false, blending: T.AdditiveBlending, opacity: 0.6 })); pGlow.scale.set(0.9, 0.9, 1); planet.add(pGlow);
+      var pulse = new T.Mesh(new T.SphereGeometry(1, 48, 32), new T.MeshBasicMaterial({ color: 0xfde68a, transparent: true, opacity: 0.18, side: T.DoubleSide, depthWrite: false, blending: T.AdditiveBlending }));
+      var sun = new T.Group(); sun.add(core); sun.add(shell); sun.add(halo); sys.add(sun); sys.add(ring); sys.add(planet); sys.add(pulse);
+      // 原子
+      var atom = new T.Group(); sc.add(atom);
+      var nuc = new T.Mesh(new T.SphereGeometry(0.18, 32, 24), new T.MeshBasicMaterial({ color: 0xffe08a }));
+      var nGlow = new T.Sprite(new T.SpriteMaterial({ map: GLOW_SUN, transparent: true, depthWrite: false, blending: T.AdditiveBlending })); nGlow.scale.set(1.4, 1.4, 1);
+      var cloud = new T.Mesh(new T.SphereGeometry(1, 64, 48), glassMat(0x9fe8ff, 0.35));
+      var eRing = new T.Mesh(new T.TorusGeometry(1, 0.01, 8, 160), new T.MeshBasicMaterial({ color: 0xa5f3fc, transparent: true, opacity: 0.5 })); eRing.rotation.x = Math.PI / 2;
+      var elec = new T.Mesh(new T.SphereGeometry(0.07, 16, 12), new T.MeshBasicMaterial({ color: 0xcff6ff }));
+      var eGlow = new T.Sprite(new T.SpriteMaterial({ map: GLOW_CY, transparent: true, depthWrite: false, blending: T.AdditiveBlending })); eGlow.scale.set(0.5, 0.5, 1); elec.add(eGlow);
+      var wavePts = 160, wg = new T.BufferGeometry(); wg.setAttribute("position", new T.BufferAttribute(new Float32Array(wavePts * 3), 3));
+      var wave = new T.Line(wg, new T.LineBasicMaterial({ color: 0xff3030, transparent: true, opacity: 0.95 }));
+      atom.add(nuc); atom.add(nGlow); atom.add(cloud); atom.add(eRing); atom.add(elec); atom.add(wave);
+      return { sc: sc, sys: sys, sun: sun, core: core, halo: halo, ring: ring, planet: planet, pGlow: pGlow, pulse: pulse, pl: pl, atom: atom, cloud: cloud, eRing: eRing, elec: elec, wave: wave, wavePts: wavePts };
+    }
+    var RG = [rig(), rig()], W2 = 1, H2 = 1, col = new T.Color();
+    function upd(R, P, s) {
+      var orbit = P.mode !== "atom";
+      R.sys.visible = orbit; R.atom.visible = !orbit;
+      if (orbit) {
+        var Ro = Math.max(1.4, Math.min(7, 3.2 * P.r)), lg = Math.log(P.L) / Math.LN2;   // lg = log2(光度倍数)
+        R.ring.scale.set(Ro, Ro, Ro);
+        var ang = RM ? 0.7 : V.time * 2 * Math.PI / (8 * P.T);
+        R.planet.position.set(Ro * Math.cos(ang), 0, -Ro * Math.sin(ang));
+        var cs = Math.max(0.35, Math.min(1.05, 0.55 * (1 + 0.06 * lg)));
+        R.core.scale.setScalar(cs / 0.55);
+        R.halo.scale.setScalar(Math.max(2.5, Math.min(14, 5 * Math.pow(P.L, 0.18))));
+        R.halo.material.opacity = Math.max(0.35, Math.min(1, 0.7 + 0.05 * lg));
+        R.pl.intensity = 30 * Math.max(0.2, Math.min(6, Math.pow(P.L, 0.5)));
+        var tc = tempCol(P.temp); R.planet.material.color.setRGB(tc[0], tc[1], tc[2]);
+        R.planet.material.emissive.setRGB(P.temp > 373 ? Math.min(1, (P.temp - 373) / 800) : 0, P.temp > 373 ? 0.12 : 0, 0);
+        R.pGlow.material.color.setRGB(tc[0], tc[1], tc[2]);
+        R.pulse.visible = P.mode === "light";
+        if (R.pulse.visible) { var pr = Math.max(0.01, V.pulse[s]) * Ro; R.pulse.scale.setScalar(pr); R.pulse.material.opacity = 0.22 * (1 - Math.min(1, V.pulse[s] / 1.25)); }
+      } else {
+        var Ra = Math.max(0.6, Math.min(4.2, 2.3 * P.a0));
+        R.cloud.scale.setScalar(Ra); R.eRing.scale.setScalar(Ra);
+        var ea = RM ? 0.5 : V.time * 2.2 / Math.pow(P.a0, 1.5);
+        R.elec.position.set(Ra * Math.cos(ea), 0, -Ra * Math.sin(ea));
+        var pos = R.wave.geometry.attributes.position, lam = 0.35 * P.ha / 656.28 + 0.08;
+        for (var i = 0; i < R.wavePts; i++) { var x = Ra + 0.3 + i * 0.03; pos.setXYZ(i, x, 0.18 * Math.sin((x - (RM ? 0 : V.time * 1.6)) * 2 * Math.PI / lam), 0); }
+        pos.needsUpdate = true;
+        if (P.rgb) { R.wave.material.color.setRGB(P.rgb[0], P.rgb[1], P.rgb[2]); R.wave.material.opacity = 0.95; } else { R.wave.material.color.setRGB(0.55, 0.58, 0.7); R.wave.material.opacity = 0.35; }
+        R.wave.position.set(0, 0, 0);
+      }
+    }
+    return {
+      size: function () { var r = cv.getBoundingClientRect(); W2 = Math.max(2, Math.round(r.width)); H2 = Math.max(1, Math.round(r.height)); rd.setSize(W2, H2, false); },
+      draw: function () {
+        var half = Math.floor(W2 / 2), dist = V.act === 2 ? 11 : 17;
+        cam.aspect = half / H2; cam.fov = cam.aspect < 0.75 ? 58 : 42; cam.updateProjectionMatrix();
+        cam.position.set(dist * Math.sin(V.yaw) * Math.cos(V.pitch), dist * Math.sin(V.pitch), dist * Math.cos(V.yaw) * Math.cos(V.pitch));
+        cam.lookAt(V.act === 2 ? 1.2 : 0, 0, 0);
+        for (var s = 0; s < 2; s++) {
+          upd(RG[s], sideParams(s === 1), s);
+          var x = s ? half : 0, w = s ? W2 - half : half;
+          rd.setViewport(x, 0, w, H2); rd.setScissor(x, 0, w, H2);
+          rd.render(RG[s].sc, cam);
+        }
+      }
+    };
+  }
+
+  /* ---- 渲染循环、拖动旋转 ---- */
+  var cv2 = el("canvas", { "aria-hidden": "true" }); stage.insertBefore(cv2, stage.firstChild);
+  var R = R2D(cv2), mode = "2d"; hudR.textContent = "2D";
+  if (NV.gl3d.ok) {
+    NV.gl3d.load().then(function (T) {
+      var cv3 = el("canvas", { "aria-hidden": "true" }); stage.insertBefore(cv3, stage.firstChild);
+      try { var R3 = R3D(T, cv3); R3.size(); R = R3; mode = "3d"; cv2.remove(); hudR.textContent = "3D"; }
+      catch (e) { cv3.remove(); hudR.textContent = "2D · " + t("3D 失败", "3D failed"); }
+    }).catch(function () { hudR.textContent = "2D" + (EN ? "" : " · " + NV.gl3d.reason); });
+  } else hudR.textContent = "2D" + (EN ? "" : " · " + NV.gl3d.reason);
+  R.size();
+  W.addEventListener("resize", function () { R.size(); });
+  var drag = null;
+  stage.addEventListener("pointerdown", function (e) { drag = [e.clientX, e.clientY, V.yaw, V.pitch]; try { stage.setPointerCapture(e.pointerId); } catch (er) {} });
+  stage.addEventListener("pointermove", function (e) { if (!drag) return; V.yaw = drag[2] + (e.clientX - drag[0]) * 0.008; V.pitch = Math.max(0.05, Math.min(1.45, drag[3] + (e.clientY - drag[1]) * 0.006)); });
+  function endDrag() { drag = null; }
+  stage.addEventListener("pointerup", endDrag); stage.addEventListener("pointercancel", endDrag);
+  var last = 0, raf = 0;
+  function frame(now) {
+    raf = 0; var dt = last ? Math.min(0.05, (now - last) / 1000) : 0; last = now;
+    if (!RM) V.time += dt;
+    if (V.act === 1) for (var s = 0; s < 2; s++) {   // 光脉冲:可视时长按延迟的 0.35 次方压缩(真实 0.8 秒一趟)
+      var P = sideParams(s === 1), tv = 0.8 * Math.pow(P.delay, 0.35);
+      V.pulse[s] = RM ? 1 : (V.pulse[s] + dt / tv); if (V.pulse[s] > 1.25) V.pulse[s] = 0;
+    }
+    R.draw();
+    if (!D.hidden) raf = W.requestAnimationFrame(frame);
+  }
+  D.addEventListener("visibilitychange", function () { if (!D.hidden && !raf) { last = 0; raf = W.requestAnimationFrame(frame); } });
+  raf = W.requestAnimationFrame(frame);
+
+  /* ================= 小部件 ================= */
+  function prog() { return NV.store.task(TID, NL); }
+  function renderTabs() { var p = prog(); tabBtns.forEach(function (b, i) { b.querySelector("small").textContent = LV[i][1] + (p[i] ? " · " + NV.starsTxt(p[i]) : ""); }); renderFin(); }
+  function award(lv, s) { if (NV.store.star(TID, NL, lv, s)) SND.play(s >= 3 ? "star" : "unlock"); renderTabs(); }
+  var predOK = [null, null, null];
+  function predict(lv, q, opts, right, why) {
+    var box = el("div", { class: "cz-opts", role: "group", "aria-label": t("先猜一猜", "Predict first") }), res = el("div");
+    opts.forEach(function (o, i) {
+      box.appendChild(el("button", { type: "button", class: "nv-btn", text: o, onclick: function () {
+        Array.prototype.forEach.call(box.children, function (b, j) { b.disabled = true; if (j === right) b.classList.add("ok"); else if (j === i) b.classList.add("no"); });
+        predOK[lv] = i === right;
+        res.appendChild(el("div", { class: "cz-res" + (i === right ? "" : " warn"), text: (i === right ? t("猜对了。", "Correct. ") : t("再想想:", "Think again: ")) + why }));
+        SND.play(i === right ? "select" : "close");
+      } }));
+    });
+    return el("div", {}, [el("p", { class: "cz-q", text: t("先猜一猜 · ", "Predict first · ") + q }), box, res]);
+  }
+  function slider(label, min, max, step, val, fmt, on) {
+    var out = el("output", { text: fmt(val) }), inp = el("input", { type: "range", min: min, max: max, step: step, value: val, "aria-label": label });
+    inp.addEventListener("input", function () { out.textContent = fmt(+inp.value); on(+inp.value); });
+    return { box: el("div", { class: "cz-sl" }, [el("label", {}, [el("span", { text: label }), out]), inp]), inp: inp, out: out };
+  }
+  function table(rows) {
+    var tb = el("table", { class: "cz-cmp" }, [el("thead", {}, [el("tr", {}, [el("th", { text: "" }), el("th", { text: t("真实", "Real") }), el("th", { text: t("改律", "Rewritten") })])])]), body = el("tbody");
+    rows.forEach(function (r) { body.appendChild(el("tr", {}, [el("td", { text: r[0] }), el("td", { text: r[1] }), el("td", { text: r[2] })])); });
+    tb.appendChild(body); return tb;
+  }
+  function bridge(href, text) { return el("a", { class: "nv-btn sm", href: href, text: text }); }
+  function card(h, body, links) { return el("div", { class: "cz-card" }, [el("h3", { text: h }), el("p", { style: "margin:0", text: body }), links ? el("div", { class: "nv-row" }, links) : null]); }
+
+  /* 每幕通用骨架:标题、引子、预测、滑杆、读数表、挑战、运行按钮、结论卡 */
+  function act(cfg) {
+    panel.innerHTML = ""; predOK[cfg.lv] = null;
+    panel.appendChild(el("h2", { text: cfg.title }));
+    panel.appendChild(el("p", { text: cfg.intro }));
+    panel.appendChild(predict(cfg.lv, cfg.q, cfg.opts, cfg.right, cfg.why));
+    var tbBox = el("div"), res = el("div"), concl = el("div");
+    var s = slider(cfg.sl[0], cfg.sl[1], cfg.sl[2], cfg.sl[3], cfg.sl[4], cfg.fmt, function (v) { cfg.set(v); tbBox.innerHTML = ""; tbBox.appendChild(table(cfg.rows())); labR.textContent = cfg.lab(); });
+    panel.appendChild(s.box);
+    tbBox.appendChild(table(cfg.rows())); panel.appendChild(tbBox);
+    panel.appendChild(el("p", { class: "cz-goal", text: t("挑战 · ", "Challenge · ") + cfg.goal }));
+    panel.appendChild(el("div", { class: "nv-row" }, [
+      el("button", { class: "nv-btn pri", type: "button", text: t("▶ 对照运行", "▶ Run comparison"), onclick: run }),
+      el("button", { class: "nv-btn sm", type: "button", text: t("复位到真实值", "Reset to real value"), onclick: function () { s.inp.value = cfg.sl[4]; s.inp.dispatchEvent(new Event("input")); } })
+    ]));
+    panel.appendChild(res); panel.appendChild(concl);
+    labR.textContent = cfg.lab();
+    function run() {
+      res.innerHTML = "";
+      if (!cfg.changed()) { res.appendChild(el("div", { class: "cz-res warn", text: t("右边和左边还一样。先拧动滑杆改一改常数,再运行对照。", "Both sides are still the same. Move the slider to change the constant, then run.") })); SND.play("close"); return; }
+      V.time = 0; V.pulse = [0, 0];
+      var hit = cfg.hit(), st = 1 + (predOK[cfg.lv] ? 1 : 0) + (hit ? 1 : 0);
+      res.appendChild(el("div", { class: "cz-res" + (hit ? "" : " warn") }, [el("span", { class: "st", text: NV.starsTxt(st) + " " }), el("span", { text: cfg.verdict(hit) })]));
+      if (predOK[cfg.lv] == null) res.appendChild(el("p", { class: "cz-note", text: t("先回答上面的预测题,可以多拿 1 颗星。", "Answer the prediction above for one more star.") }));
+      award(cfg.lv, st);
+      concl.innerHTML = ""; concl.appendChild(cfg.card());
+    }
+  }
+
+  /* ================= 三幕 ================= */
+  function A1() {
+    V.k = 1; var gw = M.gWindow();
+    act({ lv: 0, title: t("第一幕 · 如果引力强一倍,世界会怎样?", "Act 1 · What if gravity were twice as strong?"),
+      intro: t("把万有引力常数 G 调大或调小,太阳质量不变。G 慢慢变化时,地球的角动量守恒:轨道会收缩或放大,太阳也会烧得更猛或更温和。", "Turn the gravitational constant G up or down; the Sun’s mass stays the same. If G changes slowly, Earth’s angular momentum is conserved: the orbit shrinks or grows, and the Sun burns fiercer or gentler."),
+      q: t("G 变成两倍,地球的一年会变成多久?", "If G doubled, how long would Earth’s year be?"), opts: [t("约 2 年", "About 2 years"), t("约半年", "About half a year"), t("约 3 个月", "About 3 months")], right: 2,
+      why: t("角动量不变时,轨道半径缩成 1/2,速度翻倍,周期 ∝ G⁻²,变成 1/4 年,约 91 天。", "With angular momentum fixed, the orbit shrinks to 1/2, speed doubles, and the period ∝ G⁻² becomes 1/4 year, about 91 days."),
+      sl: [t("引力常数 G 倍数", "Gravitational constant G ×"), 0.5, 3, 0.01, 1], fmt: function (v) { return "×" + f(v, 2); },
+      set: function (v) { V.k = v; }, changed: function () { return Math.abs(V.k - 1) > 0.04; },
+      lab: function () { return t("改律宇宙 · G ×", "Rewritten · G ×") + f(V.k, 2); },
+      rows: function () { var a = M.grav(1), b = M.grav(V.k); return [
+        [t("一年(天)", "Year (days)"), f(a.days, 1), f(b.days, 1)], [t("轨道半径(AU)", "Orbit radius (AU)"), f(a.r, 2), f(b.r, 2)],
+        [t("太阳光度(倍)", "Solar luminosity (×)"), "1", big(b.L)], [t("地球收到的阳光(倍)", "Sunlight on Earth (×)"), "1", big(b.flux)],
+        [t("地表均温(K)", "Mean surface temp (K)"), f(a.temp, 0), f(b.temp, 0)], [t("太阳寿命(亿年)", "Sun’s lifetime (100 Myr)"), f(a.life * 10, 0), big(b.life * 10)]]; },
+      goal: t("G 最多能大到多少,海洋还不会沸腾(地表均温 < 373 K)?把滑杆停在这个上限附近(×1.15 到上限之间)再运行。", "How large can G get before the oceans boil (mean surface temperature < 373 K)? Stop the slider near that limit (between ×1.15 and the limit) and run."),
+      hit: function () { return V.k >= 1.15 && V.k <= gw[1]; },
+      verdict: function (hit) { var b = M.grav(V.k); return hit ? t("找到了:G 只要大约 19%,海洋就会沸腾。此刻地表约 " + f(b.temp, 0) + " K。", "Found it: about 19% more G and the oceans boil. Surface now about " + f(b.temp, 0) + " K.") : t("地表约 " + f(b.temp, 0) + " K。上限在 ×" + f(gw[1], 2) + " 附近:阳光 ∝ G⁶,温度 ∝ G^1.5,很敏感。", "Surface about " + f(b.temp, 0) + " K. The limit is near ×" + f(gw[1], 2) + ": sunlight ∝ G⁶, temperature ∝ G^1.5, very sensitive."); },
+      card: function () { return card(t("结论卡 · 引力是宇宙的油门", "Conclusion · Gravity is the universe’s throttle"), t("G 一变,轨道和恒星一起变:G 翻倍时一年只剩约 91 天,地球收到 64 倍阳光,太阳寿命缩到约 6 亿年,来不及等复杂生命出现。宜居只在 G 的一条窄缝里(约 ×0.97 到 ×1.19,本模型)。", "Change G and orbits and stars change together: with G doubled, a year lasts about 91 days, Earth gets 64× the sunlight, and the Sun lives only about 600 million years, too short for complex life. Habitability sits in a narrow slot of G (about ×0.97 to ×1.19 in this model)."),
+        [bridge("../orbit/", t("回到任务 · 空间站为什么飘", "Quest · Why astronauts float")), bridge("../../starhelm/", t("星桥 · 天枢:恒星的一生 →", "Star Bridge · Starhelm: lives of stars →"))]); } });
+  }
+  function A2() {
+    var LMIN = 40, sv = function (x) { return M.C0 * Math.pow(LMIN / M.C0, x); };
+    V.cKm = M.C0; var cl = M.cForLag(1);
+    act({ lv: 1, title: t("第二幕 · 如果光慢下来,时间会怎样?", "Act 2 · What if light slowed down?"),
+      intro: t("把光速 c 调小(地球公转速度 29.78 km/s 不变)。光越慢,阳光走到地球越久;地球绕太阳跑得相对越「快」,它的钟就比太阳旁静止的钟走得越慢。", "Turn the speed of light c down (Earth still orbits at 29.78 km/s). The slower the light, the longer sunlight takes to arrive; and the relatively “faster” Earth moves, the more its clock falls behind a clock resting by the Sun."),
+      q: t("光速变成现在的 1/1000(约 300 km/s),阳光到地球要多久?", "If light were 1/1000 as fast (about 300 km/s), how long would sunlight take to reach Earth?"), opts: [t("仍是 8 分多钟", "Still about 8 minutes"), t("约 8 小时", "About 8 hours"), t("约 6 天", "About 6 days")], right: 2,
+      why: t("现在约 499 秒;慢 1000 倍就是约 49.9 万秒,约 5.8 天。我们看到的太阳,是将近一周前的太阳。", "Today it takes about 499 s; 1000 times slower is about 499,000 s, about 5.8 days. The Sun we’d see would be nearly a week old."),
+      sl: [t("光速(拖向右变慢)", "Speed of light (slower to the right)"), 0, 1, 0.001, 0], fmt: function (x) { var c = sv(x); return big(c) + " km/s"; },
+      set: function (x) { V.cKm = sv(x); }, changed: function () { return V.cKm < M.C0 * 0.9; },
+      lab: function () { return t("改律宇宙 · c = ", "Rewritten · c = ") + big(V.cKm) + " km/s"; },
+      rows: function () { var a = M.light(M.C0), b = M.light(V.cKm); return [
+        [t("光速(km/s)", "Light speed (km/s)"), big(a.c), big(b.c)], [t("阳光到地球", "Sunlight to Earth"), dur(a.delay), dur(b.delay)],
+        [t("地球速度 / 光速", "Earth speed / light"), big(a.beta), f(b.beta, 3)], [t("地球钟每年慢", "Earth clock lag per year"), lag(a.lagDays), lag(b.lagDays)]]; },
+      goal: t("光速降到多少,地球上的钟每年会比太阳旁的钟慢一整天?把光速调到让每年慢 1 到 1.25 天再运行。", "How slow must light be for Earth’s clock to fall a full day behind each year? Set it so the lag is 1 to 1.25 days, then run."),
+      hit: function () { var d = M.light(V.cKm).lagDays; return d >= 1 && d <= 1.25; },
+      verdict: function (hit) { var b = M.light(V.cKm); return hit ? t("找到了:c ≈ " + big(V.cKm) + " km/s 时,每年慢 " + lag(b.lagDays) + "。真实光速下只慢约 0.16 秒。", "Found it: at c ≈ " + big(V.cKm) + " km/s Earth loses " + lag(b.lagDays) + " a year. With real light it’s only about 0.16 s.") : t("现在每年慢 " + lag(b.lagDays) + "。目标在 c ≈ " + f(cl, 0) + " km/s 附近。", "Now the lag is " + lag(b.lagDays) + " a year. The target is near c ≈ " + f(cl, 0) + " km/s."); },
+      card: function () { return card(t("结论卡 · 光速是宇宙的限速牌", "Conclusion · Light speed is the universe’s speed limit"), t("光速决定了「现在」能传多远:光慢下来,我们看到的世界都是旧的,运动的钟也明显变慢。真实光速比日常速度快得多,所以相对论效应平时只有 GPS 卫星这样的精密钟才察觉得到。", "Light speed sets how far “now” can reach: slow it down and everything we see is old news, and moving clocks run visibly slow. Real light is so much faster than everyday speeds that relativity normally shows only in precise clocks like those on GPS satellites."),
+        [bridge("../sound/", t("回到任务 · 救护车的声音", "Quest · The ambulance siren")), bridge("../lab/", t("规则改写台 · 把光调慢 →", "Rule Rewrite Lab · Slow the light →"))]); } });
+  }
+  function A3() {
+    V.k = 1; var aw = M.aWindow();
+    act({ lv: 2, title: t("第三幕 · 如果电磁力变一变,原子还在吗?", "Act 3 · What if electromagnetism changed?"),
+      intro: t("精细结构常数 α 衡量电磁力的强弱(约 1/137)。把它调大或调小,电子质量不变:看氢原子的大小、结合能,以及它最有名的那道红光。", "The fine-structure constant α measures the strength of electromagnetism (about 1/137). Turn it up or down with the electron mass fixed: watch hydrogen’s size, its binding energy, and its famous red line."),
+      q: t("α 变成两倍,氢原子会?", "If α doubled, hydrogen atoms would…"), opts: [t("变大一倍", "Get twice as big"), t("缩小一半", "Shrink to half"), t("大小不变", "Stay the same size")], right: 1,
+      why: t("电磁吸引更强,电子被拉得更近:玻尔半径 ∝ 1/α,缩成一半;结合能 ∝ α²,变成 4 倍。", "Stronger attraction pulls the electron closer: the Bohr radius ∝ 1/α halves, and the binding energy ∝ α² quadruples."),
+      sl: [t("精细结构常数 α 倍数", "Fine-structure constant α ×"), 0.5, 2, 0.005, 1], fmt: function (v) { return "×" + f(v, 3); },
+      set: function (v) { V.k = v; }, changed: function () { return Math.abs(V.k - 1) > 0.02; },
+      lab: function () { return t("改律宇宙 · α ×", "Rewritten · α ×") + f(V.k, 3); },
+      rows: function () { var a = M.atom(1), b = M.atom(V.k), bd = function (x) { return x.band === "vis" ? t("可见", "visible") : x.band === "uv" ? t("紫外", "UV") : t("红外", "IR"); }; return [
+        [t("氢原子半径(pm)", "Hydrogen radius (pm)"), f(a.a0, 1), f(b.a0, 1)], [t("电离能(eV)", "Ionisation energy (eV)"), f(a.E, 1), f(b.E, 1)],
+        [t("氢的红线 Hα(nm)", "Hydrogen Hα line (nm)"), f(a.ha, 0), f(b.ha, 0)], [t("人眼能看见吗", "Visible to the eye?"), bd(a), bd(b)]]; },
+      goal: t("α 最多能大到多少,氢的这道光还落在人眼可见范围(≥ 380 nm)?把滑杆停在上限附近(×1.27 到上限之间)再运行。", "How large can α get while this hydrogen line stays visible (≥ 380 nm)? Stop near that limit (between ×1.27 and the limit) and run."),
+      hit: function () { return V.k >= 1.27 && V.k <= aw[1]; },
+      verdict: function (hit) { var b = M.atom(V.k); return hit ? t("找到了:α 大约 31%,这道红光就推到紫外边缘(" + f(b.ha, 0) + " nm)。", "Found it: about 31% more α pushes the red line to the edge of the ultraviolet (" + f(b.ha, 0) + " nm).") : t("现在 Hα 在 " + f(b.ha, 0) + " nm。上限在 α ×" + f(aw[1], 2) + " 附近:波长 ∝ α⁻²。", "Hα is now at " + f(b.ha, 0) + " nm. The limit is near α ×" + f(aw[1], 2) + ": wavelength ∝ α⁻²."); },
+      card: function () { return card(t("结论卡 · 电磁力定下了化学的尺子", "Conclusion · Electromagnetism sets chemistry’s ruler"), t("原子大小、化学键的能量、光的颜色,都由 α 决定。α 稍变,原子缩放、谱线变色,化学反应需要的能量也随 α² 改变。我们眼睛看得见的光,和太阳、原子的这组数刚好对得上。", "Atomic sizes, bond energies and the colours of light are all set by α. Nudge α and atoms rescale, spectral lines change colour, and the energy chemistry needs shifts as α². The light our eyes see happens to match the numbers of the Sun and atoms."),
+        [bridge("../stars/", t("回到任务 · 恒星为什么发光", "Quest · Why stars shine")), bridge("../../element-forge/", t("星桥 · 元素工坊:化学键 →", "Star Bridge · Element Forge: chemical bonds →"))]); } });
+  }
+
+  function renderFin() {
+    var p = prog(); fin.innerHTML = "";
+    if (!(p[0] && p[1] && p[2])) return;
+    fin.appendChild(card(t("三幕通关 · 为什么偏偏是这组数?", "All three acts · Why exactly these numbers?"),
+      t("引力、光速、电磁力,随便一个大幅改变,我们熟悉的轨道、时间或原子就不再是这样。有人认为背后还有更深的理论会把这些数「算出来」,有人提出多宇宙设想,也有人认为问题本身要换个问法。这仍是物理学最开放的问题之一。你可以带着它去规则改写台,自己再改几条规则。", "Change gravity, light speed or electromagnetism by much, and the orbits, time or atoms we know are no longer the same. Some think a deeper theory will one day “calculate” these numbers; some propose a multiverse; some say the question itself needs rethinking. It remains one of physics’ most open questions. Take it to the Rule Rewrite Lab and rewrite a few more rules yourself."),
+      [bridge("../lab/", t("规则改写台 →", "Rule Rewrite Lab →")), bridge("../../pre-singularity/", t("星桥 · 奇点前夜:谁来提出新问题 →", "Star Bridge · Pre-Singularity: who asks the next question →"))]));
+  }
+
+  /* ================= 切换与深链 ================= */
+  var ACTS = [A1, A2, A3];
+  function go(i) {
+    V.act = i; V.time = 0; V.pulse = [0, 0]; V.yaw = i === 2 ? 0.35 : 0; V.pitch = i === 2 ? 0.35 : 0.55;
+    tabBtns.forEach(function (b, j) { b.setAttribute("aria-pressed", j === i ? "true" : "false"); });
+    ACTS[i]();
+    hudL.textContent = i === 0 ? t("太阳 · 地球(半径按比例,大小示意)", "Sun · Earth (orbit to scale, sizes schematic)") : i === 1 ? t("光脉冲(时长压缩显示)", "Light pulse (time compressed)") : t("氢原子(玻尔模型示意)", "Hydrogen atom (Bohr model sketch)");
+    try { history.replaceState(null, "", location.search + "#" + (i + 1)); } catch (e) {}
+  }
+  renderTabs();
+  var h = parseInt((location.hash || "").slice(1), 10);
+  go(h >= 1 && h <= 3 ? h - 1 : 0);
+  W.__cz = { V: V, go: go, M: M, mode: function () { return mode; } };   // 自测钩子
+})();
+</script>
+</body>
+</html>

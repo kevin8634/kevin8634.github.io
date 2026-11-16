@@ -320,7 +320,7 @@
   (function () {
     var q = null; try { q = new URLSearchParams(location.search).get("task"); } catch (e) {}
     if (!q) return;
-    var SPEC = { icecube: "icecube/" }, t = TASKS.filter(function (x) { return x.id === q; })[0], href = SPEC[q] || (t && t.href);
+    var SPEC = { icecube: "icecube/", cosmos: "cosmos/" }, t = TASKS.filter(function (x) { return x.id === q; })[0], href = SPEC[q] || (t && t.href);
     if (!href) return;
     var lg = null; try { lg = new URLSearchParams(location.search).get("lang"); } catch (e) {}
     location.replace(href + (lg ? "?lang=" + encodeURIComponent(lg) : ""));
@@ -474,7 +474,8 @@
     el("h2", { class: "hm-h", id: "h-tasks", text: "六个探究任务" }),
     el("p", { class: "hm-sub", text: "每关都是:观察 → 预测 → 运行 → 对比 → 改规则。拿到 1 颗星就能解锁下一关。" }),
     cardsBox,
-    el("a", { class: "hm-lab", href: "lab/", "aria-label": "进入规则改写台" }, [el("b", { text: "⚗ 规则改写台" }), el("span", { text: "把重力调到月球、把路面变成冰、把声音和光调慢、把月亮拉近:A/B 对照只改一个变量,先猜再看。" }), el("i", { text: "进入 →" })])
+    el("a", { class: "hm-lab", href: "lab/", "aria-label": "进入规则改写台" }, [el("b", { text: "⚗ 规则改写台" }), el("span", { text: "把重力调到月球、把路面变成冰、把声音和光调慢、把月亮拉近:A/B 对照只改一个变量,先猜再看。" }), el("i", { text: "进入 →" })]),
+    el("a", { class: "hm-lab", href: "cosmos/", "aria-label": "进入改律·玻璃宇宙" }, [el("b", { text: "✦ 2.0 · 改律·玻璃宇宙" }), el("span", { text: "只改一个物理常数,让真实宇宙和改律宇宙并排运行:引力强一倍、光慢一千倍、电磁力变一变,世界会怎样?" }), el("i", { text: "进入 →" })])
   ]));
   function renderCards() {
     cardsBox.innerHTML = "";

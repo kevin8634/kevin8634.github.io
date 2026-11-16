@@ -296,6 +296,38 @@ truthy("亚音速无马赫锥", P.machHalfAngle(100, 343) === null);
   check("评星:12°→3、28°→2、45°→1、60°→0", I.starsFor(12) * 1000 + I.starsFor(28) * 100 + I.starsFor(45) * 10 + I.starsFor(60), 3210, 0, 0);
 })();
 
+
+/* ---- v2.0-α1 改律·玻璃宇宙(core/cosmos.js) ---- */
+(function () {
+  var C = require(path.join(__dirname, "..", "core", "cosmos.js"));
+  var g1 = C.grav(1), g2 = C.grav(2);
+  check("cosmos G×1 一年 = 365.25 天", g1.days, 365.25, 1e-12);
+  check("cosmos G×2 周期 ∝ G⁻²(角动量守恒)= 1/4 年", g2.T, 0.25, 1e-12);
+  check("cosmos G×2 轨道半径 = 1/2 AU", g2.r, 0.5, 1e-12);
+  check("cosmos G×2 光度 ∝ G⁴ = 16", g2.L, 16, 1e-12);
+  check("cosmos G×2 通量 ∝ G⁶ = 64", g2.flux, 64, 1e-12);
+  check("cosmos G×2 地表温度 = 288·2^1.5 K", g2.temp, 288 * Math.pow(2, 1.5), 1e-12);
+  var gw = C.gWindow();
+  check("cosmos 海洋不沸腾的最大 G ≈ 1.188", gw[1], Math.pow(373 / 288, 2 / 3), 1e-12);
+  check("cosmos gWindow 上界温度 = 373 K", C.grav(gw[1]).temp, 373, 1e-9);
+  // 开普勒第三定律自洽:T² ∝ r³/(G M)
+  check("cosmos 开普勒自洽 T² = r³/k(k=1.7)", Math.pow(C.grav(1.7).T, 2), Math.pow(C.grav(1.7).r, 3) / 1.7, 1e-12);
+  var l0 = C.light(C.C0);
+  check("cosmos 真实光速阳光延迟 ≈ 499.0 s", l0.delay, 499.004784, 1e-6);
+  check("cosmos 真实光速地球钟年慢 ≈ β²/2·1 年 ≈ 0.156 s", l0.lagDays * 86400, Math.pow(29.78 / 299792.458, 2) / 2 * 365.25 * 86400, 1e-6);
+  var cl = C.cForLag(1);
+  check("cosmos 年慢 1 天的光速 ≈ 402.7 km/s", cl, 402.7, 1e-3);
+  check("cosmos cForLag 回代 lagDays = 1", C.light(cl).lagDays, 1, 1e-9);
+  check("cosmos c/1000 阳光延迟 ≈ 5.78 天", C.light(C.C0 / 1000).delay / 86400, 5.775, 1e-3);
+  var a2 = C.atom(2);
+  check("cosmos α×2 玻尔半径减半", a2.a0, 52.918 / 2, 1e-12);
+  check("cosmos α×2 电离能 ×4 = 54.42 eV", a2.E, 13.606 * 4, 1e-12);
+  var aw = C.aWindow();
+  check("cosmos Hα 仍可见的最大 α ≈ 1.314", aw[1], Math.sqrt(656.28 / 380), 1e-12);
+  truthy("cosmos α×1 Hα 可见、α×1.4 不可见", C.atom(1).visible && !C.atom(1.4).visible);
+  truthy("cosmos rgb(656) 偏红、rgb(300)=null", C.rgb(656)[0] === 1 && C.rgb(300) === null);
+})();
+
 console.log(rows.join("\n"));
 console.log("\n合计:" + pass + " 通过," + fail + " 失败");
 process.exit(fail ? 1 : 0);

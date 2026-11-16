@@ -61,6 +61,7 @@
   "从质子到银河系,8 个星座 60 颗知识星按大小排在一条对数尺上(每格是 10 倍)。通关对应的关卡,就能点亮那颗星。": "From protons to the Milky Way: 60 knowledge stars in 8 constellations, placed by size on a logarithmic ruler (each step is 10×). Clear the matching level to light a star.",
   "← 左右滑动查看整条尺度轴 →": "← Swipe to see the whole scale →", "列表视图": "List view",
   "⚗ 规则改写台": "⚗ Rule Rewrite Lab", "规则改写台": "Rule Rewrite Lab",
+  "✦ 2.0 · 改律·玻璃宇宙": "✦ 2.0 · Rewrite the Laws: Glass Universe", "@进入改律·玻璃宇宙": "Enter Rewrite the Laws: Glass Universe", "只改一个物理常数,让真实宇宙和改律宇宙并排运行:引力强一倍、光慢一千倍、电磁力变一变,世界会怎样?": "Change one physical constant and run the real and rewritten universes side by side: double gravity, light 1,000× slower, a different electromagnetism. What would the world be like?",
   "把重力调到月球、把路面变成冰、把声音和光调慢、把月亮拉近:A/B 对照只改一个变量,先猜再看。": "Set gravity to the Moon's, turn the road to ice, slow sound and light, pull the Moon closer: A/B comparisons change just one variable. Guess first, then look.",
   "引力强度": "Gravity strength", "拖动滑杆:质量越大、引力越强,时空网格凹得越深。": "Drag the slider: the more mass and the stronger gravity, the deeper the spacetime grid sinks.",
   "示意图 · 时空弯曲(简化模型)": "Diagram · curved spacetime (simplified model)", "@带轨道环的行星压弯了周围的时空网格;引力越大,网格凹得越深": "A ringed planet bends the spacetime grid around it; the stronger the gravity, the deeper the dip",
