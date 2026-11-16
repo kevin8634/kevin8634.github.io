@@ -25,6 +25,17 @@ export async function mountStage(el, { reduced = true } = {}) {
     // 等距圆
     x.strokeStyle = 'rgba(159,194,255,.2)'; x.lineWidth = 1;
     for (let s = 0.5; s < 6; s += 0.5) { const c = G.chart(k, G.fromPolar(k, s, 0)); const r = Math.hypot(...c); if (r > R) break; x.beginPath(); x.arc(cx, cy, r * sc, 0, 7); x.stroke(); }
+    if (show.par) {   // 平行线挑战:L 白、过 O 的直线(相交粉/平行青)、双曲两条极限平行线
+      const { d, th } = show.par, L = G.parSetup(k, d), S2 = G.scaleOf(k), span = g > 0 ? Math.PI * S2 : 8;
+      const seg = (f, c, w) => { x.strokeStyle = c; x.lineWidth = w; x.beginPath(); let on = false;
+        for (let i = 0; i <= 600; i++) { const P = f(-span + 2 * span * i / 600), q = G.chart(k, P); if (Math.hypot(...q) > R || !isFinite(q[0])) { on = false; continue; } const p = px(q); on ? x.lineTo(...p) : x.moveTo(...p); on = true; } x.stroke(); };
+      const radial = t => s => (s >= 0 ? G.fromPolar(k, s, t) : G.fromPolar(k, -s, t + Math.PI));
+      seg(t => G.expMap(k, L.F, L.T, t), '#ffffff', 3.2);
+      const Pi = G.anglePar(k, d); if (Pi !== null) for (const t of g < 0 ? [-Math.PI / 2 + Pi, -Math.PI / 2 - Pi] : [0]) seg(radial(t), 'rgba(111,240,200,.55)', 1.5);
+      const r = G.meetRadial(k, L, th); seg(radial(th), r.meet ? '#ff8fb1' : '#7ff7ff', 3);
+      const glow = (P, rad) => { const q = G.chart(k, P); if (Math.hypot(...q) > R) return; const [a, b] = px(q), g2 = x.createRadialGradient(a, b, 0, a, b, rad); g2.addColorStop(0, 'rgba(255,244,196,1)'); g2.addColorStop(1, 'rgba(255,211,110,0)'); x.fillStyle = g2; x.beginPath(); x.arc(a, b, rad, 0, 7); x.fill(); };
+      glow(L.O, 18); if (r.meet) glow(r.X, 12);
+    }
     if (V) {
       const Wm = V.map(([s, th]) => G.fromPolar(k, s, th));
       const edge = e => { const a = []; for (let i = 0; i <= 64; i++) a.push(px(G.chart(k, G.geodesic(k, Wm[e], Wm[(e + 1) % 3], i / 64)))); return a; };

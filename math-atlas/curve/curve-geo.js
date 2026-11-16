@@ -191,3 +191,40 @@ export function measure(K, V) {
   return { angles: a, sum, area: A, KA: K * A, excess: sum - Math.PI };
 }
 export const deg = r => r * 180 / Math.PI;
+
+/* ---------- 第五公设(平行公理):过直线外一点 O,有几条直线与已知直线 L 不相交? ----------
+ * 布置:O 为中心;垂足 F = 距 O 为 d、方向 −90° 的点;L 是过 F、与 OF 垂直的测地线。过 O 的直线就是方向为 θ 的「径向」测地线。
+ * 相交判定用模型里的平面(不用平行角公式):L 落在过原点、法向 n = leftOf(F,T) 的平面里;
+ *   球面:n·X = 0 总有解 → 任意两条大圆都相交 → 平行线 0 条;
+ *   平面:n·(X−F) = 0 → 除 θ ∥ L 外都相交 → 1 条;
+ *   双曲:⟨X,n⟩ = 0 ⇔ tanh(s/a) = n₂/(n₀cosθ+n₁sinθ),|比值|<1 才有解 → 一整扇方向都不相交 → 无数条。
+ * 罗巴切夫斯基平行角 Π(d) = 2·arctan(e^(−d/a)) 另行给出,自测里与上面的判定互相核对。 */
+export function parSetup(K, d) {
+  const O = fromPolar(K, 0, 0), F = fromPolar(K, d, -Math.PI / 2), T = leftOf(K, F, towards(K, F, O));
+  return { O, F, T, n: leftOf(K, F, T), d };
+}
+/** 方向 θ 的过 O 直线与 L 是否相交;相交时给出交点到 O 的有向测地距离 s 与交点 X */
+export function meetRadial(K, L, th) {
+  const g = sgn(K), c = Math.cos(th), sn = Math.sin(th), n = L.n, nu = n[0] * c + n[1] * sn;
+  let s = null;
+  if (g === 0) { const nF = n[0] * L.F[0] + n[1] * L.F[1]; if (Math.abs(nu) > 1e-12) s = nF / nu; }
+  else if (g > 0) s = scaleOf(K) * Math.atan2(-n[2], nu);           // 大圆:必有解,取 |f| ≤ π/2 的那个(另一个在对径点)
+  else { const r = n[2] / nu; if (Math.abs(nu) > 1e-15 && Math.abs(r) < 1) s = scaleOf(K) * Math.atanh(r); }
+  if (g > 0 && s !== null) { const f = s / scaleOf(K); if (f > Math.PI / 2) s -= Math.PI * scaleOf(K); else if (f < -Math.PI / 2) s += Math.PI * scaleOf(K); }
+  if (s === null) return { meet: false };
+  return { meet: true, s, X: s >= 0 ? fromPolar(K, s, th) : fromPolar(K, -s, th + Math.PI) };
+}
+/** 平行角 Π(d)(从 OF 方向量起):K<0 为 2·arctan(e^(−d/a));K=0 为 90°;K>0 无平行线,返回 null */
+export function anglePar(K, d) {
+  const g = sgn(K); if (g > 0) return null; if (g === 0) return Math.PI / 2;
+  return 2 * Math.atan(Math.exp(-d / scaleOf(K)));
+}
+/** 平行线条数:0 / 1 / Infinity */
+export const parallelCount = K => (sgn(K) > 0 ? 0 : sgn(K) === 0 ? 1 : Infinity);
+/** 方向 θ 扫一圈(半圈即可:直线不分正反),数出不相交的方向;返回 {count, open: 不相交方向占的角度(弧度)} */
+export function sweepParallels(K, L, n = 3600) {
+  let miss = 0, runs = 0, prev = null;
+  for (let i = 0; i < n; i++) { const th = -Math.PI / 2 + Math.PI * i / n, m = !meetRadial(K, L, th).meet; if (m) miss++; if (m && prev === false) runs++; prev = m; }
+  const open = Math.PI * miss / n;
+  return { open, count: miss === 0 ? 0 : miss <= 2 ? 1 : Infinity };
+}

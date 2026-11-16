@@ -3,7 +3,7 @@
  * 页面:先走网络,失败再用缓存(老用户不会被旧页面卡住或白屏);脚本/样式/图片:先用缓存,后台更新。
  * 与根目录 /sw.js(缓存自毁版,作用域 "/",不监听 fetch、激活后自行注销)互不冲突:本 SW 作用域更具体,
  * 只删除自己前缀 ma- 的旧缓存,不碰根目录、门户或其他世界;不发任何外部请求。 */
-const VER = 'ma-v0.9-a2';
+const VER = 'ma-v0.9-a3';
 const BASE = '/math-atlas/';
 const R = 'vendor/r186/addons/';
 const CORE = ['', 'ma.css', 'ma.js', 'ma-hud.css', 'ma-gl.js', 'ma-home.js', 'ma-guides.js', 'ma-three.js', 'i18n.js', 'vendor/r186/three.module.min.js',

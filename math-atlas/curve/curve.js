@@ -1,4 +1,4 @@
-/* 星图 Math Atlas 2.0 · ma.curve「改公理·玻璃曲面」—— 三幕:预测 → 改曲率 → 对照 → 结论 + 星桥
+/* 星图 Math Atlas 2.0 · ma.curve「改公理·玻璃曲面」—— 四幕:球面 → 改曲率(马鞍示意)→ 对照 → 平行线(第五公设),每幕 预测 → 改 → 结论 + 星桥
  * 一问:三角形的内角和,一定是 180° 吗?
  * 数学:常曲率 K 的测地三角形满足 α+β+γ = π + K·A(高斯–博内);沿三角形平行移动一圈,向量转过同样的角(和乐)。
  * 读数全部由 curve-geo.js 精确计算(面积独立数值积分,不用定理反推)。 */
@@ -39,6 +39,11 @@ const ACTS = [
     opts: [['180°', 'a'], [Z('不变,还是 270°', 'Stays at 270°'), 'b'], [Z('接近 0°', 'Close to 0°'), 'c']], want: 'a', K0: 0.8, V0: tri(0.9),
     task: Z('打开「平直 vs 弯曲」对照,保持 |K| ≥ 0.5,把三角形缩到内角和与 180° 相差不到 1°。', 'Open the flat-vs-curved comparison, keep |K| ≥ 0.5, and shrink the triangle until its angle sum is within 1° of 180°.'),
     hints: [Z('多出来(或少掉)的角度,跟三角形的什么成正比?看那两根玻璃条。', 'The extra (or missing) angle is proportional to something about the triangle. Watch the two glass bars.'), Z('如果三角形只有蚂蚁那么大,蚂蚁还感觉得到弯曲吗?', 'If the triangle were ant-sized, could the ant still feel the curvature?')] },
+  { short: Z('平行线', 'Parallels'), name: Z('幕四 · 第五公设:数一数平行线', 'Act 4 · The fifth postulate: count the parallels'), par: true,
+    q: Z('过直线外一点,能画几条和这条直线永不相交的直线?', 'Through a point off a line, how many lines never meet that line?'),
+    opts: [[Z('总是正好 1 条', 'Always exactly 1'), 'a'], [Z('看空间:0 条、1 条或无数条', 'Depends on space: 0, 1 or infinitely many'), 'b'], [Z('总是无数条', 'Always infinitely many'), 'c']], want: 'b', K0: 0, V0: null,
+    task: Z('白线是 L,发光点是 O。把曲率拧到球面、平面、双曲各一次,每次按「数一数」让过 O 的直线扫一圈。', 'The white line is L and the glowing point is O. Set the curvature to sphere, flat and hyperbolic in turn, and each time press "Count" to sweep a line through O all the way round.'),
+    hints: [Z('在球面上,「直线」是大圆。两个大圆会不会错开?', 'On a sphere, straight lines are great circles. Can two great circles miss each other?'), Z('双曲时看那两条青色的线:它们之间的每个方向,都碰不到 L。', 'In hyperbolic space, look at the two teal lines: every direction between them misses L.')] }
 ];
 const CONCL = [
   () => Z(`球面上这个三角形三个角都是直角,内角和 <b>270°</b>。多出来的 90°(π/2)恰好等于 <b>面积 ÷ R²</b>:它是球面的 1/8,面积 4πR²/8。绕一圈的箭头也正好转了 90°——弯曲藏在空间里,不在三角形里。`,
@@ -48,7 +53,9 @@ const CONCL = [
   () => Z(`三角形越小,内角和越接近 180°:超出(或不足)的量与面积成正比——<b>α+β+γ − 180° = K × 面积</b>(高斯–博内,换算成角度)。所以在一小块地面上量不出地球是圆的;要发现空间弯曲,得量足够大的三角形。`,
     `The smaller the triangle, the closer its angle sum is to 180°: the excess (or shortfall) is proportional to area — <b>α+β+γ − 180° = K × area</b> (Gauss–Bonnet, converted to degrees). That is why a small patch of ground cannot show that the Earth is round; to detect curvature you must measure a large enough triangle.`),
 ];
-const CARD_T = [Z('球面:多出来的角 = 弯曲', 'Sphere: the extra angle is the curvature'), Z('双曲:换一条公理', 'Hyperbolic: a different axiom'), Z('高斯–博内', 'Gauss–Bonnet')];
+CONCL.push(() => Z(`欧几里得第五公设说:过直线外一点,<b>恰有一条</b>平行线。它不是逻辑的必然,而是一种选择:球面上<b>一条也没有</b>(任意两个大圆都相交);双曲平面上有<b>无数条</b>,夹在两条极限平行线之间,平行角 Π(d) = 2·arctan(e<sup>−d/a</sup>)。换掉这一条公理,三角形内角和就跟着变——这就是前三幕看到的一切。`,
+  `Euclid's fifth postulate says that through a point off a line there is <b>exactly one</b> parallel. It is a choice, not a logical necessity: on a sphere there are <b>none</b> (any two great circles meet); in the hyperbolic plane there are <b>infinitely many</b>, lying between two limiting parallels at the angle of parallelism Π(d) = 2·arctan(e<sup>−d/a</sup>). Change that one axiom and the angle sum of a triangle changes with it — everything you saw in Acts 1–3.`));
+const CARD_T = [Z('球面:多出来的角 = 弯曲', 'Sphere: the extra angle is the curvature'), Z('双曲:换一条公理', 'Hyperbolic: a different axiom'), Z('高斯–博内', 'Gauss–Bonnet'), Z('第五公设:可以改的那一条', 'The fifth postulate: the axiom you can change')];
 const BRIDGES = [
   ['07', 'sh.where', Z('天枢 · 此刻,你在宇宙的哪里?', 'Starhelm · Where in the universe are you right now?'), '/starhelm/?task=where'],
   ['02', 'nv.cosmos', Z('宙律 · 如果宇宙的规则换一换?', 'Nomoverse · What if the rules of the universe changed?'), '/nomoverse/cosmos/'],
@@ -56,12 +63,14 @@ const BRIDGES = [
 ];
 
 /* ---------- 状态 ---------- */
-let act = Math.min(3, Math.max(1, +new URLSearchParams(location.search).get('l') || 1)) - 1;
+let act = Math.min(ACTS.length, Math.max(1, +new URLSearchParams(location.search).get('l') || 1)) - 1;
+const PD = 0.9;                 // O 到 L 的测地距离
+let parTh = -Math.PI / 2 + 1.1, counted = {}, saddle = true;
 let phase = 'predict', pred = null, hints = 0, K = 1, V = null, m = null, view = null, cmp = false, did = {}, busy = false;
 const saved = () => (store.get(KEY) || { perLevel: {}, stars: 0 });
 function saveLevel(n, stars) {
   const s = saved(); s.perLevel[n] = Math.max(s.perLevel[n] || 0, stars); s.stars = Object.values(s.perLevel).reduce((a, b) => a + b, 0); store.set(KEY, s);
-  const all = store.get('ma:v1:summary') || {}; all[TASK] = { done: Object.keys(s.perLevel).filter(k => s.perLevel[k] > 0).length, total: 3, stars: s.stars, t: Date.now() }; store.set('ma:v1:summary', all);
+  const all = store.get('ma:v1:summary') || {}; all[TASK] = { done: Object.keys(s.perLevel).filter(k => s.perLevel[k] > 0).length, total: ACTS.length, stars: s.stars, t: Date.now() }; store.set('ma:v1:summary', all);
 }
 
 /* ---------- 声音:三个角各一个音,内角和偏离 180° 越多拍音越明显(默认关) ---------- */
@@ -96,14 +105,18 @@ async function boot() {
   view.onVerts((i, sp) => { if (busy || phase === 'predict' || phase === 'done') return; V = V.map((v, j) => (j === i ? sp : v)); refresh(); });
   restart();
 }
+const kind = k => (Math.abs(k) < 1e-9 ? 'zero' : k > 0 ? 'pos' : 'neg');
 function refresh(opts = {}) {
-  const Wm = V.map(([s, th]) => G.fromPolar(K, s, th)); m = G.measure(K, Wm);
-  view.set(K, V, { fans: true, ...opts });
+  const P = ACTS[act].par;
+  if (P) { m = null; view.set(K, null, { fans: false, par: { d: PD, th: parTh }, saddle, ...opts }); }
+  else { const Wm = V.map(([s, th]) => G.fromPolar(K, s, th)); m = G.measure(K, Wm); view.set(K, V, { fans: true, par: null, saddle, ...opts }); }
+  const sb = $('#sad'); if (sb) sb.hidden = !(K < -1e-9);
   view.lock(phase === 'predict' || phase === 'done' || busy);
   kbadge.innerHTML = Math.abs(K) < 1e-9 ? Z('K = 0 · <b>平面</b>:欧几里得的平行公理成立', 'K = 0 · <b>flat</b>: Euclid\'s parallel postulate holds')
     : K > 0 ? Z(`K = ${sgnK(K)} · <b>球面</b>,半径 R = ${(1 / Math.sqrt(K)).toFixed(2)}`, `K = ${sgnK(K)} · <b>sphere</b>, radius R = ${(1 / Math.sqrt(K)).toFixed(2)}`)
+    : saddle && view.tier !== 'flat' && !cmp ? Z(`K = ${sgnK(K)} · <b>双曲平面</b> · 马鞍示意(完整的双曲平面放不进三维空间;读数来自精确模型)`, `K = ${sgnK(K)} · <b>hyperbolic plane</b> · saddle sketch (the whole plane cannot fit in 3D space; readings use the exact model)`)
     : Z(`K = ${sgnK(K)} · <b>双曲平面</b>(庞加莱圆盘,紫色边界 = 无穷远)`, `K = ${sgnK(K)} · <b>hyperbolic plane</b> (Poincaré disc; violet rim = infinity)`);
-  paintRead(); checkGoal();
+  P ? paintPar() : paintRead(); checkGoal();
 }
 
 /* ---------- 面板 ---------- */
@@ -124,6 +137,34 @@ function readHTML() {
     <span>${Z('K × 面积', 'K × area')}</span><div class="bar ka"><b id="bk"></b></div><span class="v" id="vk"></span></div>
     <div class="goal" id="area"></div>`;
 }
+function parHTML() {
+  const deg = Math.round(D(parTh + Math.PI / 2));
+  return `<div class="ks"><div class="ks-row"><span class="ks-val">${Z('方向', 'Direction')}</span><input type="range" id="pth" min="0" max="180" step="1" value="${((deg % 180) + 180) % 180}" aria-label="${Z('过 O 的直线方向', 'Direction of the line through O')}" style="flex:1;accent-color:#ffd36e"></div></div>
+    <div class="sum" style="font-size:20px"><span id="pmeet">—</span><small id="pmeet2"></small></div>
+    <div class="read">${[['pos', Z('球面', 'Sphere')], ['zero', Z('平面', 'Flat')], ['neg', Z('双曲', 'Hyperbolic')]].map(([k, t]) => `<div class="chip" id="pc-${k}"><i>${t}</i><span>—</span></div>`).join('')}</div>
+    <div class="goal" id="ppi"></div>`;
+}
+const cnt = c => (c === Infinity ? Z('无数条', '∞') : c === 1 ? Z('1 条', '1') : Z('0 条', '0'));
+function paintPar() {
+  const r = G.meetRadial(K, G.parSetup(K, PD), parTh), e = $('#pmeet'); if (!e) return;
+  e.textContent = r.meet ? Z('相交', 'Meets L') : Z('不相交 · 平行', 'Never meets L · parallel');
+  e.style.color = r.meet ? '#ff8fb1' : '#7ff7ff';
+  $('#pmeet2').textContent = r.meet ? Z(`交点离 O ${Math.abs(r.s).toFixed(2)}`, `meets ${Math.abs(r.s).toFixed(2)} from O`) : Z('这条直线永远碰不到 L', 'this line never reaches L');
+  ['pos', 'zero', 'neg'].forEach(k => { const c = $('#pc-' + k); if (!c) return; c.querySelector('span').textContent = k in counted ? cnt(counted[k]) : '?'; c.style.borderColor = k === kind(K) ? '#ffd36e' : ''; });
+  const Pi = G.anglePar(K, PD);
+  $('#ppi').innerHTML = Pi === null ? Z(`球面 R = ${(1 / Math.sqrt(K)).toFixed(2)}:每一个方向最终都会碰到 L。`, `Sphere R = ${(1 / Math.sqrt(K)).toFixed(2)}: every direction eventually meets L.`)
+    : kind(K) === 'zero' ? Z('平面:只有与 L 同向的那一个方向(青线)碰不到 L。', 'Flat: only the one direction along L (teal) misses it.')
+    : Z(`平行角 Π(d) = ${D(Pi).toFixed(1)}°(d = ${PD}):两条青色极限平行线之间 ${D(Math.PI - 2 * Pi).toFixed(1)}° 的每个方向都不相交。`, `Angle of parallelism Π(d) = ${D(Pi).toFixed(1)}° (d = ${PD}): every direction in the ${D(Math.PI - 2 * Pi).toFixed(1)}° between the two teal limiting parallels misses L.`);
+}
+async function sweep() {
+  if (busy) return; busy = true; view.lock(true); const k0 = kind(K), L = G.parSetup(K, PD), sw = G.sweepParallels(K, L);
+  status.textContent = Z('过 O 的直线正在扫一圈……', 'Sweeping a line through O all the way round…');
+  if (!RM) await new Promise(res => { const st = performance.now(), a0 = -Math.PI / 2; const step = now => { const u = Math.min(1, (now - st) / 2600); parTh = a0 + Math.PI * u; refresh(); if (u < 1) requestAnimationFrame(step); else res(); }; requestAnimationFrame(step); });
+  parTh = -Math.PI / 2 + (sw.count === 0 ? 1.1 : sw.count === 1 ? Math.PI / 2 : Math.PI / 2 + 0.25);
+  counted[k0] = sw.count; busy = false; view.lock(false);
+  status.textContent = Z(`扫完一圈:${k0 === 'pos' ? '球面' : k0 === 'zero' ? '平面' : '双曲'}上与 L 不相交的直线有 ${cnt(sw.count)}。`, `Sweep done: lines through O that miss L — ${cnt(sw.count)}.`);
+  const p = $('#pth'); if (p) p.value = Math.round(D(parTh + Math.PI / 2)) % 180; refresh();
+}
 let shown = false;
 function paintRead() {
   if (!m || phase === 'predict') return; const show = shown || act > 0;
@@ -133,6 +174,7 @@ function paintRead() {
   if (show) { bar('#bx', '#vx', D(m.sum - Math.PI)); bar('#bk', '#vk', D(m.KA)); }
   const ar = $('#area'); if (ar && show) ar.innerHTML = Z(`面积 A = ${m.area.toFixed(3)}　·　K × A = ${m.KA.toFixed(3)} 弧度 = ${D(m.KA).toFixed(1)}°`, `area A = ${m.area.toFixed(3)} · K × A = ${m.KA.toFixed(3)} rad = ${D(m.KA).toFixed(1)}°`);
 }
+const sadBtn = () => (view && view.tier !== 'flat' ? `<button type="button" class="btn${saddle ? ' on' : ''}" id="sad" ${K < -1e-9 ? '' : 'hidden'}>⛰ ${saddle ? Z('马鞍示意', 'Saddle sketch') : Z('庞加莱圆盘', 'Poincaré disc')}</button>` : '');
 function render() {
   const A = ACTS[act], L = saved().perLevel;
   let h = `<div class="acts">${ACTS.map((a, i) => `<button type="button" class="${i === act ? 'on' : ''}" data-act="${i}">${a.short}${L[i + 1] ? `<span class="s">${'★'.repeat(L[i + 1])}</span>` : ''}</button>`).join('')}</div>${stepsHTML()}`;
@@ -140,10 +182,12 @@ function render() {
   if (phase === 'predict') {
     h += `<div class="choices">${A.opts.map(([t, k]) => `<button type="button" class="btn" data-pred="${k}">${t}</button>`).join('')}</div><div class="goal">${Z('先猜一猜,再动手。', 'Guess first, then try it.')}</div>`;
   } else if (phase === 'play') {
-    h += `<div class="goal">${A.task}</div>` + sliderHTML(A) + readHTML();
+    h += `<div class="goal">${A.task}</div>` + sliderHTML(A) + (A.par ? parHTML() : readHTML());
     h += `<div class="go">`;
-    if (act === 0) h += `<button type="button" class="btn${did.measure ? '' : ' primary'}" id="meas">📐 ${Z('量一量', 'Measure')}</button><button type="button" class="btn${did.measure && !did.transport ? ' primary' : ''}" id="trans" ${did.measure ? '' : 'disabled'}>➰ ${Z('箭头绕一圈', 'Arrow round the loop')}</button>`;
+    if (ACTS[act].par) h += `<button type="button" class="btn primary" id="sweep">🔭 ${Z('数一数', 'Count')}</button>` + sadBtn();
+    else if (act === 0) h += `<button type="button" class="btn${did.measure ? '' : ' primary'}" id="meas">📐 ${Z('量一量', 'Measure')}</button><button type="button" class="btn${did.measure && !did.transport ? ' primary' : ''}" id="trans" ${did.measure ? '' : 'disabled'}>➰ ${Z('箭头绕一圈', 'Arrow round the loop')}</button>`;
     else h += `<button type="button" class="btn${cmp ? ' on' : act === 2 ? ' primary' : ''}" id="cmp">⇆ ${Z('平直 vs 弯曲', 'Flat vs curved')}</button><button type="button" class="btn" id="trans">➰ ${Z('箭头绕一圈', 'Arrow round the loop')}</button>`;
+    if (act === 1) h += sadBtn();
     h += `<button type="button" class="btn" id="reset">↺ ${Z('复原', 'Reset')}</button><button type="button" class="btn" id="hint">🔎 ${Z('向导提问', 'Guide\'s question')}</button></div><div id="hintbox"></div><div class="goal" id="goal"></div>`;
   } else {
     const st = L[act + 1] || 0;
@@ -151,7 +195,7 @@ function render() {
       ${act === 2 ? `<div class="formula">α + β + γ = π + K · A</div><p class="body" style="margin:6px 0 0">${Z('收束一问:180° 不是三角形天生的,而是「平行公理」这条规则的结果。我们住的宇宙,是平的吗?', 'Closing question: 180° is not built into triangles; it comes from one rule, the parallel postulate. Is the universe we live in flat?')}</p>` : ''}
       <div class="body" style="margin-top:6px"><span class="stars">${'★'.repeat(st)}${'☆'.repeat(3 - st)}</span> <small style="color:var(--mute)">${Z('完成', 'Done')} · ${pred === A.want ? Z('预测对了', 'prediction right') : Z('预测和结果不同(很正常)', 'prediction differed (that\'s normal)')} · ${hints ? Z('问过向导', 'asked the guide') : Z('没问向导', 'no guide')}</small></div>
       <div class="bridge">${BRIDGES.map(([w, id, t, u]) => `<a href="${u}" title="${id}">${w === '01' ? '✦' : '⇢'} ${t}</a>`).join('')}</div></div></div>
-      <div class="go">${act < 2 ? `<button type="button" class="btn primary" id="next">${Z('下一幕 ›', 'Next act ›')}</button>` : `<a class="btn primary" href="../" style="text-decoration:none">${Z('回星图', 'Back to Math Atlas')}</a>`}<button type="button" class="btn" id="again">${Z('自己再玩一次', 'Play again')}</button></div>`;
+      <div class="go">${act < ACTS.length - 1 ? `<button type="button" class="btn primary" id="next">${Z('下一幕 ›', 'Next act ›')}</button>` : `<a class="btn primary" href="../" style="text-decoration:none">${Z('回星图', 'Back to Math Atlas')}</a>`}<button type="button" class="btn" id="again">${Z('自己再玩一次', 'Play again')}</button></div>`;
   }
   h += `<div class="credit">${Z('读数由精确模型实时计算:球面、平面、庞加莱圆盘(双曲);面积为独立数值积分。蚂蚁与箭头为示意。', 'Readings are computed live from exact models (sphere, plane, Poincaré disc); area by independent numerical integration. Ant and arrow are illustrations.')}</div>`;
   panel.innerHTML = h; wire(); paintRead(); paintKnob(); checkGoal();
@@ -161,8 +205,11 @@ function wire() {
   panel.querySelectorAll('[data-pred]').forEach(b => b.onclick = () => { pred = b.dataset.pred; phase = 'play'; render(); refresh(); });
   $('#meas') && ($('#meas').onclick = () => { shown = true; did.measure = true; const sv = $('#sumv'); sv.dataset.anim = 1; countTo(sv, 0, D(m.sum)); setTimeout(() => { delete sv.dataset.anim; paintRead(); }, RM ? 0 : 950); chord(); render(); });
   $('#trans') && ($('#trans').onclick = transport);
+  $('#sweep') && ($('#sweep').onclick = sweep);
+  $('#pth') && ($('#pth').oninput = e => { if (busy) return; parTh = -Math.PI / 2 + (+e.target.value) * Math.PI / 180; refresh(); });
+  $('#sad') && ($('#sad').onclick = () => { saddle = !saddle; render(); refresh(); });
   $('#cmp') && ($('#cmp').onclick = () => setCompare(!cmp));
-  $('#reset') && ($('#reset').onclick = () => { V = ACTS[act].V0.map(v => v.slice()); if (!ACTS[act].lockK) K = ACTS[act].K0; refresh(); render(); });
+  $('#reset') && ($('#reset').onclick = () => { V = ACTS[act].V0 && ACTS[act].V0.map(v => v.slice()); parTh = -Math.PI / 2 + 1.1; if (!ACTS[act].lockK) K = ACTS[act].K0; refresh(); render(); });
   $('#hint') && ($('#hint').onclick = () => { const H = ACTS[act].hints; $('#hintbox').innerHTML = `<div class="hint">${H[Math.min(hints, H.length - 1)]}</div>`; hints++; });
   $('#next') && ($('#next').onclick = () => { act++; restart(); });
   $('#again') && ($('#again').onclick = () => restart(true));
@@ -219,8 +266,10 @@ async function transport() {
 
 /* ---------- 目标 ---------- */
 function checkGoal() {
-  const g = $('#goal'); if (!g || phase !== 'play' || !m) return;
+  const g = $('#goal'); if (!g || phase !== 'play') return;
   let ok = false, msg = '';
+  if (ACTS[act].par) { const n = Object.keys(counted).length; ok = n === 3; msg = Z(`已数过 ${n} / 3 种空间。`, `Spaces counted: ${n} / 3.`); if (ok && !busy) { finish(); return; } g.innerHTML = msg; return; }
+  if (!m) return;
   const sum = D(m.sum);
   if (act === 0) { ok = did.measure && did.transport; msg = !did.measure ? Z('先按「量一量」。', 'Press "Measure" first.') : !did.transport ? Z('现在让箭头沿三角形走一圈,看它回来时转了多少。', 'Now send the arrow round the triangle and see how far it has turned.') : ''; }
   if (act === 1) { ok = K < 0 && sum < 90; msg = K >= 0 ? Z('先把旋钮拧到负数一侧。', 'First turn the dial to the negative side.') : Z(`现在内角和 <b>${sum.toFixed(1)}°</b>,目标:小于 90°。`, `Angle sum now <b>${sum.toFixed(1)}°</b>; target: below 90°.`); }
@@ -233,12 +282,12 @@ function finish() {
   phase = 'done'; render(); view.lock(true);
 }
 function restart(keepPred = false) {
-  const A = ACTS[act]; K = A.K0; V = A.V0.map(v => v.slice()); hints = 0; did = {}; shown = false; busy = false;
+  const A = ACTS[act]; K = A.K0; V = A.V0 && A.V0.map(v => v.slice()); counted = {}; parTh = -Math.PI / 2 + 1.1; hints = 0; did = {}; shown = false; busy = false;
   phase = keepPred && pred ? 'play' : 'predict'; if (!keepPred) pred = null;
   if (cmp) { cmp = false; split.classList.remove('on'); view.compare(false); tags(); }
   status.textContent = ''; history.replaceState(null, '', `?l=${act + 1}${location.search.match(/[?&]lang=en/) ? '&lang=en' : ''}${location.search.match(/[?&]test=1/) ? '&test=1' : ''}`);
   view.hideArrow(); render(); refresh();
 }
 /* 自动化自测钩子:只在 ?test=1 时挂载(只读写本页状态,等同拖动旋钮与顶点) */
-if (new URLSearchParams(location.search).get('test') === '1') window.MA_CURVE_TEST = { setK: k => { K = k; paintKnob(); refresh(); }, setV: v => { V = v; refresh(); }, tri, state: () => ({ act, phase, K, sum: m && D(m.sum), KA: m && D(m.KA), cmp }) };
+if (new URLSearchParams(location.search).get('test') === '1') window.MA_CURVE_TEST = { setK: k => { K = k; paintKnob(); refresh(); }, setV: v => { V = v; refresh(); }, tri, setTh: t => { parTh = t; refresh(); }, sweep, setSaddle: b => { saddle = b; render(); refresh(); }, state: () => ({ act, phase, K, sum: m && D(m.sum), KA: m && D(m.KA), cmp, counted: { ...counted }, saddle }) };
 boot();

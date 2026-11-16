@@ -17,6 +17,7 @@ import * as G from './curve-geo.js';
 
 const SMAX = 2.6;                         // 展示的测地半径(以中心 O 起算)
 const FAN = ['#ff8fb1', '#6ff0c8', '#7fb0ff'];
+const SAD = 0.13;                          // 马鞍示意的弯曲程度
 const GOLD = new THREE.Color('#ffe7a3');
 
 function glowTex() {
@@ -65,11 +66,15 @@ function envMap(renderer) {
 
 /* ---------- 一个「世界」:某个 K 下的曲面 + 三角形 + 角扇 + 箭头 ---------- */
 class World {
-  constructor(ctx) { this.ctx = ctx; this.group = new THREE.Group(); this.parts = []; this.K = 1; this.V = null; this.arrow = null; }
+  constructor(ctx) { this.ctx = ctx; this.group = new THREE.Group(); this.parts = []; this.K = 1; this.V = null; this.arrow = null; this.saddle = false; }
+  /* 马鞍示意(仅 K<0):把庞加莱圆盘按 y = c·(x² − z²) 弯成马鞍形。只是「处处向外张开」的直观示意——
+   * 完整的双曲平面无法等距放进三维空间(希尔伯特定理),所有读数仍来自精确模型。 */
+  sy(x, z) { return this.saddle && this.K < -G.EPS_K ? SAD * (x * x - z * z) : 0; }
+  disp(P) { const d = G.disp3(this.K, P); if (this.K <= G.EPS_K) { const r = Math.hypot(d[0], d[2]); if (r > SMAX) { d[0] *= SMAX / r; d[2] *= SMAX / r; } d[1] = this.sy(d[0], d[2]); } return d; }
   clear() { for (const o of this.parts) { this.group.remove(o); o.traverse(c => { if (!c.isSprite && c.geometry && !c.geometry.userData.keep) c.geometry.dispose(); if (c.material && !c.material.userData.keep) { this.ctx.lineMats.delete(c.material); c.material.dispose(); } }); } this.parts = []; }
   add(o) { this.group.add(o); this.parts.push(o); return o; }
-  normalAt(p3) { const K = this.K; if (K > G.EPS_K) { const R = G.scaleOf(K); return new THREE.Vector3(p3[0], p3[1] + R, p3[2]).normalize(); } return new THREE.Vector3(0, 1, 0); }
-  lift(P, h = 0.012) { const d = G.disp3(this.K, P), n = this.normalAt(d); return new THREE.Vector3(d[0] + n.x * h, d[1] + n.y * h, d[2] + n.z * h); }
+  normalAt(p3) { const K = this.K; if (K > G.EPS_K) { const R = G.scaleOf(K); return new THREE.Vector3(p3[0], p3[1] + R, p3[2]).normalize(); } if (this.saddle && K < -G.EPS_K) return new THREE.Vector3(-2 * SAD * p3[0], 1, 2 * SAD * p3[2]).normalize(); return new THREE.Vector3(0, 1, 0); }
+  lift(P, h = 0.012) { const d = this.disp(P), n = this.normalAt(d); return new THREE.Vector3(d[0] + n.x * h, d[1] + n.y * h, d[2] + n.z * h); }
   line(pts, color, width, op = 1) {
     const g = new LineGeometry(); g.setPositions(pts.flatMap(v => [v.x, v.y, v.z]));
     const m = new LineMaterial({ color, linewidth: width, transparent: true, opacity: op, depthWrite: op >= 1 });  // transparent:不进透射缓冲,玻璃里不出重影
@@ -83,8 +88,7 @@ class World {
     const NR = ctx.tier === 'hi' ? 56 : 40, NT = ctx.tier === 'hi' ? 96 : 64, pos = [], idx = [];
     const sMax = g > 0 ? Math.min(SMAX, 0.96 * Math.PI * S) : g < 0 ? Math.min(SMAX * 1.25, 2 * S * Math.atanh(0.985)) : SMAX;
     for (let i = 0; i <= NR; i++) for (let j = 0; j <= NT; j++) {
-      const s = sMax * i / NR, th = 2 * Math.PI * j / NT, d = G.disp3(K, G.fromPolar(K, s, th));
-      if (g <= 0) { const r = Math.hypot(d[0], d[2]); if (r > SMAX) { d[0] *= SMAX / r; d[2] *= SMAX / r; } }
+      const s = sMax * i / NR, th = 2 * Math.PI * j / NT, d = this.disp(G.fromPolar(K, s, th));
       pos.push(d[0], d[1], d[2]);
     }
     for (let i = 0; i < NR; i++) for (let j = 0; j < NT; j++) { const a = i * (NT + 1) + j, b = a + NT + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
@@ -99,12 +103,14 @@ class World {
     for (let j = 0; j < 12; j++) { const pts = []; const th = j * Math.PI / 6; for (let i = 0; i <= 40; i++) { const P = G.fromPolar(K, sMax * i / 40, th), v = this.lift(P, 0.004); if (Math.hypot(v.x, v.z) > SMAX + 1e-6 && g <= 0) break; pts.push(v); } if (pts.length > 1) this.line(pts, '#9fc2ff', 1, 0.12); }
     /* 平面/双曲玻璃片的边缘光与虹彩光晕(对照模式不开 Bloom 时也看得出是一块玻璃) */
     if (g <= 0) {
-      const rr = g < 0 ? Math.min(SMAX, 2 * S * 0.985) : SMAX, ring = (r, c, w, o, y) => { const pts = []; for (let j = 0; j <= 160; j++) { const a = 2 * Math.PI * j / 160; pts.push(new THREE.Vector3(r * Math.cos(a), y, r * Math.sin(a))); } this.line(pts, c, w, o); };
+      const rr = g < 0 ? Math.min(SMAX, 2 * S * 0.985) : SMAX, ring = (r, c, w, o, y) => { const pts = []; for (let j = 0; j <= 160; j++) { const a = 2 * Math.PI * j / 160; const X = r * Math.cos(a), Z = r * Math.sin(a); pts.push(new THREE.Vector3(X, y + this.sy(X, Z), Z)); } this.line(pts, c, w, o); };
       ring(rr, '#eaf4ff', 2.4, 0.75, 0.006); ring(rr * 0.985, '#c79bff', 1.6, 0.45, 0.006); ring(rr * 0.97, '#6ff0c8', 1.2, 0.3, 0.006);
-      const sheen = this.add(new THREE.Mesh(new THREE.CircleGeometry(rr, 96).rotateX(-Math.PI / 2), ctx.sheenMat)); sheen.position.y = 0.003; sheen.renderOrder = 1;
+      const cg = new THREE.CircleGeometry(rr, 96, 0, Math.PI * 2).rotateX(-Math.PI / 2); if (this.saddle && g < 0) { const pa = cg.attributes.position; for (let i = 0; i < pa.count; i++) pa.setY(i, this.sy(pa.getX(i), pa.getZ(i))); } const sheen = this.add(new THREE.Mesh(cg, ctx.sheenMat)); sheen.position.y = 0.003; sheen.renderOrder = 1;
     }
     /* 双曲:庞加莱圆盘的边界 = 无穷远 */
-    if (g < 0 && 2 * S <= SMAX * 1.02) { const pts = []; for (let j = 0; j <= 128; j++) { const a = 2 * Math.PI * j / 128; pts.push(new THREE.Vector3(2 * S * Math.cos(a), 0.01, 2 * S * Math.sin(a))); } this.line(pts, '#c79bff', 2.2, 0.85); }
+    if (g < 0 && 2 * S <= SMAX * 1.02) { const pts = []; for (let j = 0; j <= 128; j++) { const a = 2 * Math.PI * j / 128; const X = 2 * S * Math.cos(a), Z = 2 * S * Math.sin(a); pts.push(new THREE.Vector3(X, 0.01 + this.sy(X, Z), Z)); } this.line(pts, '#c79bff', 2.2, 0.85); }
+    this.sMax = sMax;
+    if (show.par) this.buildPar(show.par);
     if (!V) return;
     const W = V.map(([s, th]) => G.fromPolar(K, s, th));
     this.W = W;
@@ -136,6 +142,24 @@ class World {
       const hit = new THREE.Mesh(ctx.hitGeo, ctx.hitMat); hit.position.copy(p); hit.userData.vi = i; this.add(hit);
     });
     if (show.arrow) this.placeArrow(show.arrow);
+  }
+  /** 平行线挑战:直线 L、点 O、过 O 转动的直线(相交 = 粉、平行 = 青),双曲时画两条极限平行线 */
+  buildPar({ d, th }) {
+    const K = this.K, ctx = this.ctx, L = G.parSetup(K, d), lim = this.sMax * 0.995, S = G.scaleOf(K), g = Math.sign(Math.abs(K) < G.EPS_K ? 0 : K);
+    const span = g > 0 ? Math.PI * S : lim;
+    const seg = (f, c, w, o) => { let run = []; const N = 360; const flush = () => { if (run.length > 1) this.line(run, c, w, o); run = []; };
+      for (let i = 0; i <= N; i++) { const P = f(-span + 2 * span * i / N); if (!P || G.dist(K, L.O, P) > lim) { flush(); continue; } run.push(this.lift(P, 0.02)); } flush(); };
+    const radial = t => s => (s >= 0 ? G.fromPolar(K, s, t) : G.fromPolar(K, -s, t + Math.PI));
+    seg(t => G.expMap(K, L.F, L.T, t), '#ffffff', ctx.small ? 3.4 : 4.2, 1);
+    const P = G.anglePar(K, d);
+    if (P !== null) for (const t of g < 0 ? [-Math.PI / 2 + P, -Math.PI / 2 - P] : [0]) seg(radial(t), '#6ff0c8', 1.6, 0.55);
+    const r = G.meetRadial(K, L, th);
+    seg(radial(th), r.meet ? '#ff8fb1' : '#7ff7ff', ctx.small ? 3.2 : 3.8, 1);
+    const dot = (Q, sc) => { const sp = new THREE.Sprite(ctx.glowMat); sp.position.copy(this.lift(Q, 0.03)); sp.scale.setScalar(sc); sp.renderOrder = 5; this.add(sp); };
+    dot(L.O, ctx.small ? 0.5 : 0.44);
+    if (r.meet && G.dist(K, L.O, r.X) <= lim) dot(r.X, 0.3);
+    /* 垂线 OF(虚) */
+    const pts = []; for (let i = 0; i <= 24; i++) pts.push(this.lift(G.geodesic(K, L.O, L.F, i / 24), 0.018)); const l = this.line(pts, '#ffe7a3', 1.4, 0.6); l.material.dashed = true; l.material.dashSize = 0.06; l.material.gapSize = 0.05;
   }
   /** 把箭头放在平行移动的第 f 帧(或给定 {P, v}) */
   placeArrow(fr, ghost) {
@@ -187,7 +211,7 @@ export async function mountStage(el, { tier = 'hi', reduced = false, small = fal
   let composer = null;
   if (tier === 'hi') { composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, cam)); composer.addPass(new UnrealBloomPass(new THREE.Vector2(1, 1), 0.5, 0.55, 0.82)); composer.addPass(new OutputPass()); }
 
-  let K = 1, V = null, show = { fans: true, arrow: null };
+  let K = 1, V = null, show = { fans: true, arrow: null, par: null };
   /* 机位:简单环绕(拖空白处转动,不做缩放) */
   let yaw = -0.35, pitch = 0.92, fitR = 2.9, W = 1, H = 1, dirty = true, cmp = false, split = 0.5;
   const target = new THREE.Vector3(0, -0.3, 0);
@@ -211,6 +235,11 @@ export async function mountStage(el, { tier = 'hi', reduced = false, small = fal
   function hitSurface(world) {
     const K = world.K, o = ray.ray.origin, d = ray.ray.direction;
     if (K > G.EPS_K) { const R = G.scaleOf(K), c = new THREE.Vector3(0, -R, 0), oc = o.clone().sub(c), b = oc.dot(d), q = oc.lengthSq() - R * R, D = b * b - q; if (D < 0) return null; const t = -b - Math.sqrt(D); return t > 0 ? o.clone().addScaledVector(d, t) : null; }
+    if (world.saddle && K < -G.EPS_K) {   // o.y + t·d.y = c·((ox+t·dx)² − (oz+t·dz)²)
+      const a = SAD * (d.x * d.x - d.z * d.z), b = 2 * SAD * (o.x * d.x - o.z * d.z) - d.y, c = SAD * (o.x * o.x - o.z * o.z) - o.y;
+      let t; if (Math.abs(a) < 1e-9) t = -c / b; else { const D = b * b - 4 * a * c; if (D < 0) return null; const r1 = (-b - Math.sqrt(D)) / (2 * a), r2 = (-b + Math.sqrt(D)) / (2 * a); t = Math.min(...[r1, r2].filter(x => x > 0)); }
+      return t > 0 && isFinite(t) ? o.clone().addScaledVector(d, t) : null;
+    }
     if (Math.abs(d.y) < 1e-6) return null; const t = -o.y / d.y; return t > 0 ? o.clone().addScaledVector(d, t) : null;
   }
   const cv = renderer.domElement; cv.style.touchAction = 'none';
@@ -249,7 +278,7 @@ export async function mountStage(el, { tier = 'hi', reduced = false, small = fal
   raf = requestAnimationFrame(frame);
 
   
-  const rebuild = () => { const nf = K > G.EPS_K && !cmp ? Math.max(1.35, Math.min(2.9, 1.3 * G.scaleOf(K))) : 2.9; if (nf !== fitR) { fitR = nf; placeCam(); } main.build(K, V, show); if (cmp) flat.build(0, V, { fans: true }); dirty = true; };
+  const rebuild = () => { const nf = K > G.EPS_K && !cmp ? Math.max(1.35, Math.min(2.9, 1.3 * G.scaleOf(K))) : 2.9; if (nf !== fitR) { fitR = nf; placeCam(); } main.saddle = !!show.saddle && !cmp; main.build(K, V, show); if (cmp) flat.build(0, V, { fans: true, par: show.par }); dirty = true; };
   return {
     tier,
     set(k, verts, opts = {}) { K = k; V = verts; Object.assign(show, opts); ctx.arrow.visible = false; ctx.ghostArrow.visible = false; rebuild(); },
