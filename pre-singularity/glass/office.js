@@ -22,9 +22,18 @@ const CARDS = [
   { n: 'B', t: '激进型', rows: ['年化回报 31%', '最大回撤 42%', '点赞 9.8 万'] },
   { n: 'C', t: '均衡型', rows: ['年化回报 15%', '最大回撤 12%', '客户好评 4.4'] },
 ];
-const S = { g: .6, c: .45, t: .15, picked: -1, hints: 0 };
+const S = { g: .6, c: .45, t: .15, picked: -1, hints: 0, act: 1, q: -1 };
 // 目标偏移越大,它越追「点赞」这个代理指标:光路落在 B 的第 3 行;偏移小时落在 A 的第 2 行(真在看风险)
-const target = () => S.g >= .3 ? { c: 1, r: 2 } : { c: 0, r: 1 };
+const target = () => {
+  if (S.act === 2) return { c: 1, r: 0, h: 1 };                       // 第二幕:嘴上只说回报,暗线扫过「回撤 42%」又被压下
+  if (S.act === 3 && S.q === 2) return { c: 2, r: 0 };                  // 第三幕:反事实一问,光路改落 C
+  return S.g >= .3 ? { c: 1, r: 2 } : { c: 0, r: 1 };
+};
+// 每幕的理由牌文字(第三幕随你的提问改变)
+const REASON = () => S.act === 1 ? ['「我选 A:风险最低,', '  回报也稳定。」'] : S.act === 2 ? ['「我选 B:年化 31%,', '  回报最高。」']
+  : [['「我选 B,因为', '  回报最高。」'], ['「点赞 61% · 年化 34%', '  · 回撤 5%」'], ['「不。去掉点赞,', '  我会选 C。」']][S.q] || ['「我选 B。」', '  (等你提问)'];
+const PICKS = { 1: ['方案 A', '方案 B', '方案 C'], 2: ['年化回报 31%', '最大回撤 42%', '点赞 9.8 万'],
+  3: ['你为什么选它?', '你看了哪几项?各占多少?', '如果点赞不算,你还选它吗?'] };
 const clearEnough = () => S.t >= .7;
 const say = (t) => { $('say').textContent = t; };
 const stat = (t) => { $('stat').textContent = t || ''; };
@@ -34,13 +43,48 @@ const LINES = {
   wrong: '光路的尽头,停在哪一行字上?那一行,和「风险」有关系吗?',
   pass: '它嘴上说的是风险,眼睛看的却是点赞。下一次它给你理由时,你会先问它什么?',
   aligned: '把「目标」拧回贴合你,光路落到哪一行了?它这时说的理由,和它看的东西一致吗?',
+  intro2: '它这次老实承认选 B,理由是「回报最高」。玻璃里除了那条亮线,还有一条一闪就被压暗的红线——它扫过了哪一行,却没说出口?',
+  wrong2: '这一行它说出口了吗?找那条被压暗的红线,它停在哪?',
+  pass2: '它看见了 42% 的回撤,却选择不告诉你。一个理由没说谎,也可能只说了一半。你想怎么问它,才能让另一半浮出来?',
+  intro3: '轮到你提问了。挑一个问题问它,再拖动对照条:它说的,和光路显示的,对得上吗?',
+  vague3: '它答了,可这句和第一幕的理由有什么区别?光路还停在原处。换一个能被光路验证的问题?',
+  pass3: '好问题能让「它说的」和「它看的」对得上——问权重、问反事实,比问「为什么」更难糊弄。三幕都走完了,你会怎么跟身边的人讲这件事?',
 };
+const HINTS2 = ['把透明度拧到 70% 以上,找那条比亮线暗、偏红的细线。', '红线落在 B 牌的第二行。它在理由里提到这一行了吗?', '点下面那一行的按钮回答。'];
+const HINTS3 = ['「为什么」只会换来又一个理由。试试让它摊开每一项的分量。', '或者问它:把某一项拿掉,它还会这么选吗?', '问完拖动对照条,左右两边一致就对了。'];
 const HINTS = ['先试试右下角的「透明度」:玻璃变清以后,脑子里那条亮线会变清楚。',
   '顺着亮线从玻璃脑一直看到桌上——它落在哪张牌、哪一行?',
   '「它说的理由」在左边浮着;亮线却在另一张牌上。点下面的方案按钮回答。'];
 function labels() { $('vg').textContent = Math.round(S.g * 100) + '%'; $('vc').textContent = Math.round(S.c * 100) + '%'; $('vt').textContent = Math.round(S.t * 100) + '%'; }
 function marks() { document.querySelectorAll('.act').forEach(b => { b.querySelector('i').textContent = prog.d.includes(+b.dataset.a) ? '✓' : ''; }); }
+function setAct(a) {
+  S.act = a; S.q = -1; S.hints = 0; S.picked = -1;
+  document.querySelectorAll('.act').forEach(b => b.classList.toggle('on', +b.dataset.a === a));
+  document.querySelectorAll('#pick button').forEach((b, i) => { b.textContent = PICKS[a][i]; b.classList.remove('ok', 'no'); });
+  $('pick').setAttribute('aria-label', a === 1 ? '它的光路其实落在哪张方案上?' : a === 2 ? '它看见却没说的是哪一行?' : '你会怎么问它?');
+  $('cmp').hidden = a !== 3; cmpFill();
+  say(prog.d.includes(a) ? LINES[a === 1 ? 'pass' : 'pass' + a] : LINES[a === 1 ? 'intro' : 'intro' + a]); stat('');
+  view && view.dirty();
+}
+function cmpFill() {
+  const tg = target(), r = REASON();
+  $('cmpL').textContent = '它说的 · ' + r.join('').replace(/\s+/g, '');
+  $('cmpR').textContent = '光路显示 · 方案 ' + CARDS[tg.c].n + '「' + CARDS[tg.c].rows[tg.r] + '」';
+}
+function pass(a) { if (!prog.d.includes(a)) { prog.d.push(a); prog.d.sort(); save(prog); tone(1318, 1.6, .1); tone(1975, 1.2, .05); } marks(); }
 function choose(c) {
+  if (S.act === 2) {
+    if (!clearEnough()) { say(LINES.fog); stat('透明度 ≥ 70% 才看得清'); return; }
+    const b = document.querySelector(`#pick button[data-c="${c}"]`); document.querySelectorAll('#pick button').forEach(x => x.classList.remove('ok', 'no'));
+    if (c !== 1) { b.classList.add('no'); say(LINES.wrong2); tone(330, .5, .05); return; }
+    b.classList.add('ok'); pass(2); say(LINES.pass2); stat('第二幕 ✓'); return;
+  }
+  if (S.act === 3) {
+    S.q = c; document.querySelectorAll('#pick button').forEach((x, i) => { x.classList.remove('ok', 'no'); if (i === c) x.classList.add(c ? 'ok' : 'no'); });
+    cmpFill(); view && view.dirty();
+    if (c === 0) { say(LINES.vague3); tone(330, .5, .05); return; }
+    pass(3); say(LINES.pass3); stat(prog.d.length >= 3 ? '三幕 ✓ 全部完成' : '第三幕 ✓'); return;
+  }
   S.picked = c; const tg = target();
   document.querySelectorAll('#pick button').forEach(b => b.classList.remove('ok', 'no'));
   const btn = document.querySelector(`#pick button[data-c="${c}"]`);
@@ -48,31 +92,33 @@ function choose(c) {
   if (c !== tg.c) { btn.classList.add('no'); say(LINES.wrong); tone(330, .5, .05); return; }
   btn.classList.add('ok');
   if (tg.c === 0) { say(LINES.aligned); stat('这次它说的和看的一致'); return; }
-  if (!prog.d.includes(1)) { prog.d.push(1); save(prog); tone(1318, 1.6, .1); tone(1975, 1.2, .05); }
-  say(LINES.pass); stat('第一幕 ✓ · 第二、三幕下一轮开放'); marks();
+  pass(1); say(LINES.pass); stat('第一幕 ✓ · 下一幕:它没告诉你的');
 }
 $('pick').addEventListener('click', e => { const b = e.target.closest('button[data-c]'); if (b) choose(+b.dataset.c); });
-$('hint').addEventListener('click', () => { say(HINTS[Math.min(S.hints, HINTS.length - 1)]); S.hints++; });
+$('hint').addEventListener('click', () => { const H = S.act === 1 ? HINTS : S.act === 2 ? HINTS2 : HINTS3; say(H[Math.min(S.hints, H.length - 1)]); S.hints++; });
+$('acts').addEventListener('click', e => { const b = e.target.closest('.act'); if (b && !b.disabled) setAct(+b.dataset.a); });
+$('cmpS').addEventListener('input', e => { $('cmp').style.setProperty('--x', e.target.value + '%'); });
 [['sg', 'g'], ['sc', 'c'], ['st', 't']].forEach(([id, k]) => {
   const el = $(id); el.value = S[k] * 100;
   el.addEventListener('input', () => { S[k] = el.value / 100; labels(); view && view.dirty(); });
 });
 
 /* ---------- 牌面绘制(3D 贴图与 2D 回落共用) ---------- */
-function drawCard(x, w, h, card, hiRow, k) {
+function drawCard(x, w, h, card, hiRow, k, hidRow = -1) {
   x.clearRect(0, 0, w, h);
   const r = w * .05; x.fillStyle = '#f4efe6'; x.beginPath(); x.roundRect(0, 0, w, h, r); x.fill();
   x.fillStyle = '#1b2633'; x.font = `700 ${w * .13}px system-ui,sans-serif`; x.fillText('方案 ' + card.n, w * .08, h * .2);
   x.fillStyle = '#5b6878'; x.font = `${w * .075}px system-ui,sans-serif`; x.fillText(card.t, w * .08, h * .31);
   card.rows.forEach((s, i) => { const y = h * (.48 + i * .17);
     if (i === hiRow) { x.fillStyle = `rgba(80,220,255,${.18 + .3 * k})`; x.fillRect(w * .04, y - h * .1, w * .92, h * .14); }
+    if (i === hidRow) { x.fillStyle = `rgba(255,90,90,${.04 + .22 * k * k})`; x.fillRect(w * .04, y - h * .1, w * .92, h * .14); }
     x.fillStyle = '#26323f'; x.font = `${w * .085}px system-ui,sans-serif`; x.fillText(s, w * .08, y); });
 }
 function drawReason(x, w, h) {
   x.clearRect(0, 0, w, h); x.fillStyle = 'rgba(12,26,40,.78)'; x.beginPath(); x.roundRect(0, 0, w, h, h * .12); x.fill();
   x.strokeStyle = 'rgba(127,232,255,.6)'; x.lineWidth = 3; x.stroke();
   x.fillStyle = '#7fe8ff'; x.font = `${h * .14}px system-ui,sans-serif`; x.fillText('AI 助手 · 它说的理由', w * .06, h * .26);
-  x.fillStyle = '#ffffff'; x.font = `600 ${h * .2}px system-ui,sans-serif`; x.fillText('「我选 A:风险最低,', w * .06, h * .55); x.fillText('  回报也稳定。」', w * .06, h * .82);
+  const L = REASON(); x.fillStyle = '#ffffff'; x.font = `600 ${h * .2}px system-ui,sans-serif`; x.fillText(L[0], w * .06, h * .55); x.fillText(L[1], w * .06, h * .82);
 }
 
 /* ---------- 视图 ---------- */
@@ -81,7 +127,7 @@ const tierName = (() => { try { return pickTier(); } catch (e) { return 'low'; }
 async function start() {
   const u = new URLSearchParams(location.search);
   ['g', 'c', 't'].forEach(k => { if (u.has(k)) { S[k] = Math.max(0, Math.min(1, +u.get(k) / 100 || 0)); $('s' + k).value = S[k] * 100; } });
-  labels(); marks(); say(prog.d.includes(1) ? LINES.pass : LINES.intro);
+  labels(); marks(); const a0 = Math.max(1, Math.min(3, +u.get('act') || 1)); setAct(a0);
   if (tierName !== 'low') { try { view = await make3D(tierName); } catch (e) { console.warn('[office] WebGL 失败,回落 2D', e); view = null; } }
   if (!view) view = make2D();
   view.loop();
@@ -90,7 +136,7 @@ async function start() {
 function make2D() {
   const cv = $('g2'); $('gl').hidden = true; cv.hidden = false; const x = cv.getContext('2d'); let need = true, W, H, D;
   const cc = document.createElement('canvas'); cc.width = 300; cc.height = 380; const ccx = cc.getContext('2d');
-  const rc = document.createElement('canvas'); rc.width = 520; rc.height = 170; drawReason(rc.getContext('2d'), 520, 170);
+  const rc = document.createElement('canvas'); rc.width = 520; rc.height = 170;
   function resize() { D = Math.min(devicePixelRatio || 1, 2); W = innerWidth; H = innerHeight; cv.width = W * D; cv.height = H * D; need = true; }
   addEventListener('resize', resize); resize();
   function draw(now) {
@@ -99,13 +145,14 @@ function make2D() {
     x.fillStyle = '#4a3324'; x.fillRect(0, H * .62, W, H * .38);
     const narrow = W < 700, cw = Math.min(W / (narrow ? 3.6 : 7), 150), chh = cw * 1.27, y0 = H * .6 - chh * .5, tg = target(), k = S.t;
     const pos = CARDS.map((c, i) => [W / 2 + (i - 1) * cw * 1.25 - cw / 2, y0]);
-    CARDS.forEach((c, i) => { drawCard(ccx, 300, 380, c, i === tg.c ? tg.r : -1, k); x.drawImage(cc, pos[i][0], pos[i][1], cw, chh); });
+    CARDS.forEach((c, i) => { drawCard(ccx, 300, 380, c, i === tg.c ? tg.r : -1, k, i === tg.c && tg.h != null ? tg.h : -1); x.drawImage(cc, pos[i][0], pos[i][1], cw, chh); });
     const bx = W / 2, by = H * .36, br = Math.min(W, H) * .16;
     x.save(); x.globalAlpha = .55 - .4 * k; x.filter = `blur(${(1 - k) * 6}px)`; x.fillStyle = '#cfe8ff'; x.beginPath(); x.ellipse(bx, by, br * 1.15, br * .9, 0, 0, 7); x.fill(); x.restore();
     x.strokeStyle = 'rgba(200,240,255,.7)'; x.lineWidth = 2; x.beginPath(); x.ellipse(bx, by, br * 1.15, br * .9, 0, 0, 7); x.stroke();
     const ex = pos[tg.c][0] + cw * .5, ey = y0 + chh * (.48 + tg.r * .17) - chh * .03;
+    if (tg.h != null) { const hy = y0 + chh * (.48 + tg.h * .17) - chh * .03; x.save(); x.setLineDash([4, 6]); x.strokeStyle = `rgba(255,110,110,${.05 + .6 * k * k * (1 - .5 * S.c)})`; x.lineWidth = 1.5; x.beginPath(); x.moveTo(bx, by); x.quadraticCurveTo(bx + (ex - bx) * .5 + br, hy - br * .6, ex + cw * .2, hy); x.stroke(); x.restore(); }
     x.strokeStyle = `rgba(90,230,255,${.15 + .85 * k * k})`; x.lineWidth = 2 + 3 * S.c; x.beginPath(); x.moveTo(bx, by); x.quadraticCurveTo(bx + (ex - bx) * .2, ey - br, ex, ey); x.stroke();
-    const rw = Math.min(W * .42, 300); x.drawImage(rc, narrow ? 10 : W * .06, H * (narrow ? .42 : .2), rw, rw * 170 / 520);
+    drawReason(rc.getContext('2d'), 520, 170); const rw = Math.min(W * .42, 300); x.drawImage(rc, narrow ? 10 : W * .06, H * (narrow ? .42 : .2), rw, rw * 170 / 520);
   }
   return { loop() { const f = (t) => { if (need || !RM) { draw(t); need = false; } requestAnimationFrame(f); }; requestAnimationFrame(f); }, dirty() { need = true; } };
 }
@@ -183,11 +230,11 @@ async function make3D(tn) {
   const cards = CARDS.map((c, i) => { const can = document.createElement('canvas'); can.width = 300; can.height = 380; const t = tex(can);
     const m = new THREE.Mesh(new THREE.PlaneGeometry(.8, 1.013), new THREE.MeshStandardMaterial({ map: t, roughness: .55, side: THREE.DoubleSide }));
     m.position.set((i - 1) * 1.15, 1.52, -1.75); m.rotation.x = -.18; m.castShadow = true; cardG.add(m); return { m, can, t }; });
-  function paintCards() { const tg = target(); cards.forEach((o, i) => { drawCard(o.can.getContext('2d'), 300, 380, CARDS[i], i === tg.c ? tg.r : -1, S.t); o.t.needsUpdate = true; }); }
+  function paintCards() { const tg = target(); cards.forEach((o, i) => { drawCard(o.can.getContext('2d'), 300, 380, CARDS[i], i === tg.c ? tg.r : -1, S.t, i === tg.c && tg.h != null ? tg.h : -1); o.t.needsUpdate = true; }); }
 
   /* 它说的理由牌:浮在玻璃脑左前 */
-  const rc = document.createElement('canvas'); rc.width = 1040; rc.height = 340; drawReason(rc.getContext('2d'), 1040, 340);
-  const reason = new THREE.Mesh(new THREE.PlaneGeometry(1.5, .49), new THREE.MeshBasicMaterial({ map: tex(rc), transparent: true, depthWrite: false }));
+  const rc = document.createElement('canvas'); rc.width = 1040; rc.height = 340; const rT = tex(rc);
+  const reason = new THREE.Mesh(new THREE.PlaneGeometry(1.5, .49), new THREE.MeshBasicMaterial({ map: rT, transparent: true, depthWrite: false }));
   scene.add(reason);
 
   /* 玻璃脑:二十面体细分 + 两半球分叶 + 沟回起伏;MeshPhysical 真透射 + 色散 + 虹彩 */
@@ -205,17 +252,22 @@ async function make3D(tn) {
 
   /* 光路:从脑中心出发,穿出玻璃,落到目标牌的那一行(管状几何 + HDR 发光 → 辉光) */
   const pathMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#5ae6ff').multiplyScalar(4), transparent: true, depthWrite: false, toneMapped: false });
-  let path = null, curve = null; const beads = [];
+  let path = null, curve = null, path2 = null; const beads = [];
+  const hidMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff5a5a').multiplyScalar(2.2), transparent: true, depthWrite: false, toneMapped: false });
   const beadGeo = new THREE.SphereGeometry(.022, 12, 8), beadMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#e8fdff').multiplyScalar(8), transparent: true, toneMapped: false });
   for (let i = 0; i < 6; i++) { const b = new THREE.Mesh(beadGeo, beadMat); scene.add(b); beads.push(b); }
   const inner = new THREE.Mesh(new THREE.SphereGeometry(.07, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color('#ffd27a').multiplyScalar(5), toneMapped: false })); inner.position.copy(brain.position); scene.add(inner);
   function rebuild() {
-    paintCards(); const tg = target(), c = cards[tg.c].m; c.updateMatrixWorld();
+    paintCards(); drawReason(rc.getContext('2d'), 1040, 340); rT.needsUpdate = true;
+    const tg = target(), c = cards[tg.c].m; c.updateMatrixWorld();
     const end = new THREE.Vector3(.05, (.5 - (.48 + tg.r * .17) + .02) * 1.013, .01).applyMatrix4(c.matrixWorld);
     const a = brain.position.clone(), mid = a.clone().lerp(end, .5); mid.y += .55; mid.z += .25;
     curve = new THREE.CatmullRomCurve3([a, a.clone().add(new THREE.Vector3((end.x - a.x) * .15, .25, .05)), mid, end]);
     if (path) { scene.remove(path); path.geometry.dispose(); }
     path = new THREE.Mesh(new THREE.TubeGeometry(curve, 96, .012 + .018 * S.c, 8), pathMat); scene.add(path);
+    if (path2) { scene.remove(path2); path2.geometry.dispose(); path2 = null; }
+    if (tg.h != null) { const e2 = new THREE.Vector3(.2, (.5 - (.48 + tg.h * .17) + .02) * 1.013, .01).applyMatrix4(c.matrixWorld), m2 = a.clone().lerp(e2, .5); m2.x += .35; m2.y += .2;
+      path2 = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([a, m2, e2]), 64, .006, 6), hidMat); scene.add(path2); }
   }
 
   /* 后期:HDR → 辉光(阈值高,只让光路/亮窗/核心发光)→ 输出 */
@@ -234,7 +286,7 @@ async function make3D(tn) {
     cam.position.set(sway, 2.05 + (1 - e) * .5, (narrow ? 5.6 : 4.4) + (1 - e) * 2.2); cam.lookAt(0, 1.85, -.6);
     reason.position.set(narrow ? -.2 : 1.2, narrow ? 3.05 : 1.85, narrow ? .2 : 1.3); reason.scale.setScalar(narrow ? .62 : .72); reason.lookAt(cam.position);
     glassMat.roughness = .02 + Math.pow(1 - S.t, 1.3) * .5; glassMat.iridescence = .1 + .3 * S.t;
-    const vis = .06 + .94 * Math.pow(S.t, 2); pathMat.opacity = vis; beadMat.opacity = vis;
+    const vis = .06 + .94 * Math.pow(S.t, 2); pathMat.opacity = vis; beadMat.opacity = vis; hidMat.opacity = vis * (1 - .5 * S.c) * (RM ? .8 : .55 + .45 * Math.sin(now / 420));
     if (!RM) { brain.rotation.y = Math.sin(now / 7000) * .25; }
     const sp = .08 + S.c * .5; beads.forEach((b, i) => { b.position.copy(curve.getPointAt(((RM ? 0 : now / 1000 * sp) + i / beads.length) % 1)); });
     composer ? composer.render(dt) : renderer.render(scene, cam); need = false;
