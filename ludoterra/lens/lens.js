@@ -337,14 +337,15 @@ async function make3D(tier, legacy) {
   const pg = new THREE.PlaneGeometry(0.34, 0.68); pg.translate(0, 0.34, 0);
   const lotus = new THREE.Group(); lotus.visible = false; scene.add(lotus);
   const petals = []; DOMAINS.forEach((d, i) => { for (const ring of [0, 1]) { const piv = new THREE.Group(); piv.rotation.y = (i + ring * 0.5) / DOMAINS.length * TAU; lotus.add(piv);
-    const m = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ map: petalTex, color: new THREE.Color(ring ? '#ffd690' : (d.color || '#f5c26b')).multiplyScalar(ring ? 1.6 : 2.2), transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
+    const m = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ map: petalTex, color: new THREE.Color(ring ? '#ffd690' : (d.color || '#f5c26b')).multiplyScalar(NEW ? (ring ? 1.05 : 1.25) : (ring ? 1.6 : 2.2)), transparent: true, opacity: 0, side: THREE.DoubleSide, blending: NEW ? THREE.NormalBlending : THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
+    if (NEW) m.renderOrder = 9;
     m.scale.setScalar(ring ? 0.7 : 1); piv.add(m); petals.push({ m, ring }); } });
   const wingTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); const g = x.createRadialGradient(10, 32, 2, 10, 32, 56);
     g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.5, 'rgba(255,215,150,.7)'); g.addColorStop(1, 'rgba(255,170,80,0)'); x.fillStyle = g;
     x.beginPath(); x.moveTo(4, 32); x.bezierCurveTo(20, -4, 64, 0, 56, 26); x.bezierCurveTo(52, 34, 30, 34, 4, 32); x.bezierCurveTo(26, 40, 52, 56, 34, 62); x.bezierCurveTo(18, 64, 8, 46, 4, 32); x.fill(); return new THREE.CanvasTexture(c); })();
   const wg = new THREE.PlaneGeometry(0.26, 0.26); wg.translate(0.13, 0, 0);
   const flies = []; for (let i = 0; i < 7; i++) { const f = new THREE.Group(); f.visible = false; scene.add(f);
-    const mat = new THREE.MeshBasicMaterial({ map: wingTex, color: new THREE.Color(DOMAINS[i % DOMAINS.length].color || '#f5c26b').multiplyScalar(1.8), transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+    const mat = new THREE.MeshBasicMaterial({ map: wingTex, color: new THREE.Color(DOMAINS[i % DOMAINS.length].color || '#f5c26b').multiplyScalar(NEW ? 1.1 : 1.8), transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
     const L = new THREE.Mesh(wg, mat), Rw = new THREE.Mesh(wg, mat); Rw.scale.x = -1; f.add(L, Rw); flies.push({ f, L, Rw, mat, ph: i / 7 * TAU, r: 0.5 + hsh(i, 7, 3) * 0.9, h: 0.6 + hsh(i, 8, 3) * 1.1, w: 0.5 + hsh(i, 9, 3) * 0.5 }); }
   const glassParts = [cere, cortex, stem], C0 = new THREE.Vector3();
   function bloomPose(t0) {   // t 秒:0–1 碎裂,0.6–3 莲开,1.2 起蝶飞(v2 先用 0.5 秒长出裂纹)
@@ -398,9 +399,9 @@ async function make3D(tier, legacy) {
   }
   /* 视口与相机:单屏全画布;旧版分屏时横屏左右(避开左侧面板)、竖屏上下(避开底部面板);v2 用同一画面 + 分割线 */
   let views = [], free = [0, 0, innerWidth, innerHeight], lensC = new THREE.Vector2(), lensS = 0.72;
-  const post = NEW ? LG.makePost(THREE, R, { levels: tier === 'high' ? 5 : 3, msaa: tier === 'high' ? 4 : 0, strength: 0.7 }) : null;
-  if (post) { post.bright.uniforms.uTh.value = 1.25; R.toneMappingExposure = 0.96; }
-  let cmpX = innerWidth / 2; const vo = new THREE.Vector2();
+  const post = NEW ? LG.makePost(THREE, R, { levels: tier === 'high' ? 5 : 3, msaa: tier === 'high' ? 4 : 0, strength: 0.6 }) : null;
+  if (post) { post.bright.uniforms.uTh.value = 1.6; R.toneMappingExposure = 0.96; }
+  let cmpX = innerWidth / 2, barInit = false; const vo = new THREE.Vector2();
   const bar = NEW ? compareBar(x => { cmpX = x; kick(); }) : null;
   function camFor(aspect, wide) { cam.aspect = aspect; const p = aspect < 1;
     cam.fov = p ? Math.min(80, Math.max(55, 2 * Math.atan(Math.tan(0.46) / aspect) * 57.3)) : 45; cam.updateProjectionMatrix();
@@ -417,7 +418,7 @@ async function make3D(tier, legacy) {
     vo.set(W / 2 - (free[0] + free[2] / 2), H / 2 - (free[1] + free[3] * 0.5));          // 街道消失点挪到空出来的画面中央
     fitCam(W, H); const d = 3.2, h = d * Math.tan(cam.fov * Math.PI / 360);
     const sW = Math.min(free[2] * 0.36, 400) * h / H, sH = 0.5 * free[3] * 2 * h / (1.5 * H); lensS = Math.max(0.25, Math.min(sW, sH));
-    if (B) bar.show(free[0], free[0] + free[2], free[1], free[3], '你的透镜', B.name + ' 的透镜'); else bar.hide(); kick(); }
+    if (B) { bar.show(free[0], free[0] + free[2], free[1], free[3], '你的透镜', B.name + ' 的透镜', barInit ? null : (lensC.x + 1) / 2 * W); barInit = true; } else { bar.hide(); barInit = false; } kick(); }
   function size() { const w = innerWidth, h = innerHeight; R.setPixelRatio(dpr()); R.setSize(w, h, false);
     const lab = [$('labA'), $('labB')];
     if (NEW) { views = [[0, 0, w, h]]; lab.forEach(l => l.hidden = true); const pr = R.getPixelRatio(); post.setSize(Math.round(w * pr), Math.round(h * pr), tier === 'high' ? 0.6 : 0.5);

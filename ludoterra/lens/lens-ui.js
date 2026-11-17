@@ -57,7 +57,7 @@ export function compareBar(onMove) {
   kn.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') set(x - 24); if (e.key === 'ArrowRight') set(x + 24); });
   return {
     get x() { return x; },
-    show(x0, x1, top, h, la, lb) { lo = x0; hi = x1; bar.hidden = false; bar.style.top = top + 'px'; bar.style.height = h + 'px';
+    show(x0, x1, top, h, la, lb, init) { lo = x0; hi = x1; if (init != null) x = init; bar.hidden = false; bar.style.top = top + 'px'; bar.style.height = h + 'px';
       bar.querySelector('.la').textContent = la; bar.querySelector('.lb').textContent = lb; if (x < lo + 40 || x > hi - 40) x = (lo + hi) / 2; set(x); },
     hide() { bar.hidden = true; }
   };
