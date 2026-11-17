@@ -357,3 +357,7 @@ function frame(){ if(document.body.classList.contains('lobby')) return; const f=
 document.addEventListener('DOMContentLoaded', ()=>{ applySkin(); frame(); if(!document.body.dataset.nostars) stars(); applyTier(); PS.header(document.body.dataset.mission);
   const mu=document.body.dataset.music||document.body.dataset.mission; if(mu) PS.music(mu); });
 })();
+/* 离线缓存(作用域仅 /pre-singularity/;2.0 B 版主入口预缓存,见 sw.js) */
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  addEventListener('load', () => { navigator.serviceWorker.register('/pre-singularity/sw.js', { scope: '/pre-singularity/' }).catch(() => {}); });
+}
