@@ -183,7 +183,7 @@ export async function boot() {
   if (G) paint(); else document.documentElement.classList.add('nogl');
   lockTabs(); { const m = /[?&]act=([23])\b/.exec(location.search); if (m) setAct(+m[1]); }
   if (G && G.layout && 'ResizeObserver' in window) new ResizeObserver(() => G.layout()).observe($('ui'));
-  window.__lens = { get clar() { return CLAR; }, S, tier: G ? tier : 'none', v2: !!(G && !legacy), three: G && G.rev, get cmpX() { return G && G.cmpX; }, setCmp: x => G && G.setCmp && G.setCmp(x), find, act: setAct, borrow, wear, shot: () => G && G.shot(), set(k, v) { const r = $('r-' + k); r.value = v; r.dispatchEvent(new Event('input')); } };
+  window.__lens = { get clar() { return CLAR; }, S, tier: G ? tier : 'none', v2: !!(G && !legacy), three: G && G.rev, get cmpX() { return G && G.cmpX; }, get lensOff() { return G && G.lensOff; }, setCmp: x => G && G.setCmp && G.setCmp(x), find, act: setAct, borrow, wear, shot: () => G && G.shot(), set(k, v) { const r = $('r-' + k); r.value = v; r.dispatchEvent(new Event('input')); } };
 }
 
 /* ======================= 3D ======================= */
@@ -334,8 +334,14 @@ async function make3D(tier, legacy) {
   const petalTex = (() => { const c = document.createElement('canvas'); c.width = 64; c.height = 128; const x = c.getContext('2d');
     const g = x.createLinearGradient(0, 128, 0, 0); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.6, 'rgba(255,230,180,.75)'); g.addColorStop(1, 'rgba(255,200,120,.15)');
     x.fillStyle = g; x.beginPath(); x.moveTo(32, 128); x.bezierCurveTo(-6, 90, 6, 22, 32, 2); x.bezierCurveTo(58, 22, 70, 90, 32, 128); x.fill(); return new THREE.CanvasTexture(c); })();
+  if (NEW) { const c = petalTex.image, x = c.getContext('2d'); x.globalCompositeOperation = 'source-atop';   // 莲瓣描琥珀深边,亮路面上也有轮廓
+    x.lineWidth = 7; x.strokeStyle = 'rgba(150,70,10,.95)'; x.beginPath(); x.moveTo(32, 128); x.bezierCurveTo(-6, 90, 6, 22, 32, 2); x.bezierCurveTo(58, 22, 70, 90, 32, 128); x.stroke(); petalTex.needsUpdate = true; }
   const pg = new THREE.PlaneGeometry(0.34, 0.68); pg.translate(0, 0.34, 0);
   const lotus = new THREE.Group(); lotus.visible = false; scene.add(lotus);
+  const lotusHalo = NEW ? (() => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+    g.addColorStop(0, 'rgba(18,8,22,.78)'); g.addColorStop(0.55, 'rgba(18,8,22,.5)'); g.addColorStop(1, 'rgba(18,8,22,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, opacity: 0, depthWrite: false, depthTest: false, toneMapped: false, fog: false }));
+    s.renderOrder = 8; s.scale.set(2.3, 1.7, 1); s.position.y = 0.32; lotus.add(s); return s; })() : null;   // 莲身后一圈暗晕,托出花形
   const petals = []; DOMAINS.forEach((d, i) => { for (const ring of [0, 1]) { const piv = new THREE.Group(); piv.rotation.y = (i + ring * 0.5) / DOMAINS.length * TAU; lotus.add(piv);
     const m = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ map: petalTex, color: new THREE.Color(ring ? '#ffd690' : (d.color || '#f5c26b')).multiplyScalar(NEW ? (ring ? 1.05 : 1.25) : (ring ? 1.6 : 2.2)), transparent: true, opacity: 0, side: THREE.DoubleSide, blending: NEW ? THREE.NormalBlending : THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
     if (NEW) m.renderOrder = 9;
@@ -360,6 +366,7 @@ async function make3D(tier, legacy) {
     shards.instanceMatrix.needsUpdate = true;
     lotus.visible = t > 0.4; lotus.position.copy(C0); lotus.position.y += (-0.25 + 0.3 * ease((t - 0.5) / 2)) * bs; lotus.scale.setScalar(1.25 * bs);
     const open = ease((t - 0.6) / 2.4);
+    if (lotusHalo) lotusHalo.material.opacity = e((t - 0.45) / 0.8) * 0.9;
     petals.forEach(p => { p.m.rotation.x = -(0.15 + (p.ring ? 0.7 : 1.15) * open); p.m.material.opacity = e((t - 0.5) / 1) * (p.ring ? 0.75 : 0.9); });
     flies.forEach((b, i) => { const tt = t - 1.2 - i * 0.18; b.f.visible = tt > 0; if (tt <= 0) return; const up = ease(tt / 3);
       const a = b.ph + tt * b.w; b.f.position.set(C0.x + Math.cos(a) * b.r * up * bs, C0.y + (0.2 + b.h * up + Math.sin(tt * 1.3 + i) * 0.08) * bs, C0.z + Math.sin(a) * b.r * up * bs); b.f.scale.setScalar(bs);
@@ -368,10 +375,18 @@ async function make3D(tier, legacy) {
   function bloomOff() { bl.on = false; bl.t = 0; glassParts.forEach(m => m.scale.setScalar(1)); shards.visible = false; lotus.visible = false; flies.forEach(b => b.f.visible = false); if (cracks) cracks.visible = false; }
 
   /* 5) 相机:轻微呼吸 + 拖动环视(限角);v2 另有「透镜随指针轻移」(思路参考 React Bits Fluid Glass 的跟随光标) */
-  let yaw = 0, pitch = 0, tyaw = 0, tpitch = 0, drag = null; const ptr = new THREE.Vector2(), lensOff = new THREE.Vector2();
-  cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, yaw: tyaw, pitch: tpitch, moved: false }; });
-  addEventListener('pointerup', e => { if (drag && !drag.moved) pick(e); drag = null; });
-  addEventListener('pointermove', e => { if (NEW && !STILL && e.pointerType === 'mouse') { ptr.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); kick(); }
+  let yaw = 0, pitch = 0, tyaw = 0, tpitch = 0, drag = null, hold = null; const ptr = new THREE.Vector2(), lensOff = new THREE.Vector2(), lensTgt = new THREE.Vector2();
+  const ndcOf = e => [e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1];
+  /* 触屏/笔:手指按在透镜上就「挂」住它拖着走,松手留在原处;按在别处仍是环视 */
+  function lensHit(e) { if (!NEW || STILL || e.pointerType === 'mouse' || bl.on) return false; const W = innerWidth, H = innerHeight;
+    const lx = (Math.max(-0.95, Math.min(0.95, lensC.x + lensOff.x)) + 1) / 2 * W, ly = (1 - Math.max(-0.9, Math.min(0.9, lensC.y + lensOff.y))) / 2 * H;
+    const h = 3.2 * Math.tan(cam.fov * Math.PI / 360), rpx = Math.max(44, lensS * 1.15 / h * H / 2); return Math.hypot(e.clientX - lx, e.clientY - ly) < rpx; }
+  cv.addEventListener('pointerdown', e => { if (lensHit(e)) { hold = { id: e.pointerId, moved: false }; const [x, y] = ndcOf(e); ptr.set(x, y); lensTgt.set(x - lensC.x, y - lensC.y); kick(); return; }
+    drag = { x: e.clientX, y: e.clientY, yaw: tyaw, pitch: tpitch, moved: false }; });
+  addEventListener('pointerup', e => { if (hold) { hold = null; kick(); return; } if (drag && !drag.moved) pick(e); drag = null; });
+  addEventListener('pointercancel', () => { hold = null; drag = null; });
+  addEventListener('pointermove', e => { if (hold) { const [x, y] = ndcOf(e); ptr.set(x, y); lensTgt.set(x - lensC.x, y - lensC.y); hold.moved = true; kick(); return; }
+    if (NEW && !STILL && e.pointerType === 'mouse') { const [x, y] = ndcOf(e); ptr.set(x, y); lensTgt.set((x - lensC.x) * 0.14, (y - lensC.y) * 0.14); kick(); }
     if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 6) drag.moved = true;
     tyaw = Math.max(-0.35, Math.min(0.35, drag.yaw - dx * 0.003)); tpitch = Math.max(-0.12, Math.min(0.15, drag.pitch - dy * 0.002)); kick(); });
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); ray.layers.enableAll();
@@ -412,8 +427,8 @@ async function make3D(tier, legacy) {
     if (r.left < W * 0.3 && r.right < W * 0.7) return [r.right + 8, top, W - r.right - 8, H - top];   // 面板在左
     return [0, top, Math.max(160, r.left - 8), H - top]; }                                             // 面板在右
   /* v2:面板挡掉一侧时把视角放宽一些,让两侧的牌子留在空出来的画面里 */
-  function fitCam(W, H) { camFor(W / H, false); if (W > H) cam.fov = Math.min(62, 45 * Math.sqrt(W / Math.max(200, free[2]))); cam.setViewOffset(W, H, vo.x, vo.y, W, H); }
-  function layout() { if (!NEW) return; free = freeRect(); const W = innerWidth, H = innerHeight;
+  function fitCam(W, H) { camFor(W / H, false); if (W > H) cam.fov = Math.min(H < 420 ? 74 : 62, 45 * Math.sqrt(W / Math.max(200, free[2])) * (H < 420 ? 1.12 : 1)); cam.setViewOffset(W, H, vo.x, vo.y, W, H); }
+  function layout() { if (!NEW) return; free = freeRect(); lensTgt.set(0, 0); const W = innerWidth, H = innerHeight;
     lensC.set((free[0] + free[2] / 2) / W * 2 - 1, -((free[1] + free[3] * 0.68) / H * 2 - 1));
     vo.set(W / 2 - (free[0] + free[2] / 2), H / 2 - (free[1] + free[3] * 0.5));          // 街道消失点挪到空出来的画面中央
     fitCam(W, H); const d = 3.2, h = d * Math.tan(cam.fov * Math.PI / 360);
@@ -440,7 +455,8 @@ async function make3D(tier, legacy) {
   function frameV2(br) {
     const W = innerWidth, H = innerHeight, split = !!B;
     fitCam(W, H); aim(br);
-    if (!STILL) { const k = drag ? 0 : 0.14; lensOff.x += ((ptr.x - lensC.x) * k - lensOff.x) * 0.06; lensOff.y += ((ptr.y - lensC.y) * k - lensOff.y) * 0.06; }
+    if (!STILL) { const k = hold ? 0.3 : 0.06, tx = drag ? 0 : lensTgt.x, ty = drag ? 0 : lensTgt.y; lensOff.x += (tx - lensOff.x) * k; lensOff.y += (ty - lensOff.y) * k;
+      if (Math.abs(tx - lensOff.x) + Math.abs(ty - lensOff.y) > 0.002) kick(); }
     const d = 3.2, h = d * Math.tan(cam.fov * Math.PI / 360), cx = Math.max(-0.95, Math.min(0.95, lensC.x + lensOff.x)) + vo.x / (W / 2), cy = Math.max(-0.9, Math.min(0.9, lensC.y + lensOff.y)) - vo.y / (H / 2);
     brain.position.set(cx * h * cam.aspect, cy * h, -d); brain.scale.setScalar(lensS); cam.updateMatrixWorld(true);
     { brain.getWorldPosition(V); const ib = rays.geometry.attributes.iB; for (let i = 0; i < 6; i++) { const sd = (i % 2) ? 1 : -1, r = i >> 1; ib.setXYZ(i, V.x + sd * (0.75 + 0.18 * r) * lensS, V.y + (0.42 - 0.22 * r) * lensS, V.z + 0.3 * lensS); } ib.needsUpdate = true; }
@@ -480,7 +496,7 @@ async function make3D(tier, legacy) {
   redraw(); size(); frame(0.016); raf = requestAnimationFrame(loop);
   if (STILL) $('hint').textContent = '点街上的牌子 · 拖动可环视';
   const api = { rev: THREE.REVISION, resolving: false, update, borrow, layout: () => (NEW ? layout() : size()), reveal() { kick(); },
-    get cmpX() { return cmpX; }, setCmp(x) { cmpX = x; kick(); },
+    get cmpX() { return cmpX; }, get lensOff() { return [lensOff.x, lensOff.y, lensC.x, lensC.y]; }, setCmp(x) { cmpX = x; kick(); },
     resolve() { api.resolving = true; kick(); },
     bloom() { bloomOff(); bl.on = true; st.resolved = 1; api.resolving = true; kick(); }, unbloom() { if (bl.on) { bloomOff(); kick(); } }, unresolve() { api.resolving = false; st.resolved = 0; kick(); },
     shot() { frame(0.016); return cv.toDataURL('image/png'); } };
