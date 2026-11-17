@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><script src="/ludoterra/gn-arrive.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>同一件事,为什么你和别人看到的不一样? · 心之透镜 · 觉弈 Ludoterra</title>
-<meta name="description" content="觉弈 Ludoterra 2.0「心之透镜」:透过一颗琥珀玻璃人脑看一条黄昏街道。三枚旋钮就是三种认知偏差的曲率,拧一拧,价签、时钟和新闻屏当场变形。">
+<meta name="description" content="觉弈 Ludoterra 2.0「心之透镜」:真的透过一颗琥珀玻璃人脑看一条黄昏街道。三枚旋钮就是三种认知偏差的曲率,拧一拧,价签、时钟和新闻屏当场变形。">
 <meta name="theme-color" content="#070814">
 <link rel="stylesheet" href="../lt.css">
 <style>
@@ -56,15 +56,38 @@ html,body{height:100%;overflow:hidden}
 #street2d i{display:block;font-style:normal;transition:transform .3s;transform-origin:center bottom;color:#ffe2a8}
 .hint{position:fixed;z-index:5;right:16px;bottom:14px;font-size:11.5px;color:var(--mute);pointer-events:none}
 .nogl .hint,.nogl #gl{display:none}
-@media (max-width:760px),(orientation:portrait) and (max-width:1100px){#ui{left:8px;right:8px;width:auto;max-width:620px;margin:0 auto;top:auto;bottom:8px;max-height:46vh;padding:12px}.hint{display:none}#ui h1{font-size:17px}}
-@media (max-height:480px) and (min-width:500px){#ui{left:auto;right:8px;top:56px;bottom:8px;width:min(330px,56vw);max-height:none}#ui .sub,.note{display:none}}
+/* v0.42 · 弹性滑块(思路参考 React Bits Elastic Slider)、分割线(Aceternity Compare)、3D 卡片(Aceternity 3D Card),均为自写 CSS */
+.es{position:relative;padding:2px 0}
+.es input{transition:transform .5s cubic-bezier(.3,1.7,.45,1)}
+.v2 .knob input{height:26px}
+.v2 .knob input:hover,.v2 .es.pull input{filter:drop-shadow(0 0 6px rgba(245,194,107,.55))}
+#cmpBar{position:fixed;z-index:4;width:0;pointer-events:none}
+#cmpBar .ln{position:absolute;left:-1px;top:0;bottom:0;width:2px;background:linear-gradient(transparent,#ffe2a8 12%,#bff3f7 88%,transparent);box-shadow:0 0 14px rgba(255,226,168,.7)}
+#cmpBar .kn{position:absolute;left:-19px;top:50%;width:38px;height:38px;margin-top:-19px;border-radius:50%;border:1.5px solid #ffe2a8;background:rgba(14,12,26,.85);color:#ffe2a8;font-size:16px;cursor:ew-resize;pointer-events:auto;touch-action:none;box-shadow:0 0 18px rgba(245,194,107,.45)}
+#cmpBar .la,#cmpBar .lb{position:absolute;top:10px;white-space:nowrap;font-size:12px;padding:3px 10px;border-radius:999px;background:rgba(7,8,20,.72);border:1px solid var(--line)}
+#cmpBar .la{right:12px;color:#ffe2a8}#cmpBar .lb{left:12px;color:#bff3f7;border-color:rgba(127,215,224,.5)}
+#cmpBar[hidden]{display:none}
+.v2 .lenses{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.v2 .lenses .lt-btn{display:block;text-align:left;border-radius:12px;padding:8px 10px;line-height:1.35;background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.01))}
+.lenses .lt-btn small{display:none;font-size:11px;color:var(--mute)}
+.v2 .lenses .lt-btn small{display:block}
+.t3d{transition:transform .35s cubic-bezier(.2,.8,.3,1);transform-style:preserve-3d;will-change:transform}
+.t3d:hover{transition:transform .08s linear}
+.v2 .done.t3d{background:radial-gradient(circle at var(--gx,20%) var(--gy,0%),rgba(245,194,107,.22),transparent 60%)}
+#bSheet{display:none;position:absolute;right:10px;top:10px;font:inherit;font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;background:rgba(7,8,20,.6);color:var(--mute);cursor:pointer}
+#ui.min>*:not(h1):not(.guide):not(#bSheet){display:none}
+#ui.min .guide{margin:0}
+@media (max-width:760px),(orientation:portrait) and (max-width:1100px){#ui{left:8px;right:8px;width:auto;max-width:620px;margin:0 auto;top:auto;bottom:8px;max-height:46vh;padding:12px}.hint{display:none}#ui h1{font-size:17px}
+  .v2 #ui{max-height:40vh}#bSheet{display:block}.v2 .lenses .lt-btn small{display:none}}
+@media (max-height:480px) and (min-width:500px){#ui{left:auto;right:8px;top:56px;bottom:8px;width:min(330px,56vw);max-height:none}#ui .sub,.note{display:none}
+  .v2 #ui{width:min(300px,46vw)}#bSheet{display:block}.v2 .lenses .lt-btn small{display:none}#ui.min{bottom:auto}}
 </style>
 </head>
 <body>
 <canvas id="gl" aria-label="心之透镜:琥珀玻璃人脑与黄昏街道(3D)"></canvas>
 <div class="vig"></div><canvas class="grain" id="grain" aria-hidden="true"></canvas>
 <section id="ui" class="lt-panel" aria-live="polite">
-  <h1>心之透镜</h1>
+  <h1>心之透镜</h1><button type="button" id="bSheet" aria-expanded="true" aria-controls="ui">收起 ▾</button>
   <p class="sub">觉弈 2.0 · 同一件事,为什么你和别人看到的不一样?</p>
   <div class="acts" id="acts"><button type="button" data-a="1" class="on" aria-pressed="true">① 看见透镜</button><button type="button" data-a="2" disabled title="先完成第一幕" aria-pressed="false">② 换一双眼睛</button><button type="button" data-a="3" disabled title="先完成第二幕" aria-pressed="false">③ 破茧</button></div>
   <div class="guide"><div class="m">镜</div><p id="say">你正透过一颗玻璃大脑看这条街。街上有三样东西被它悄悄扭曲了——是哪三样?点街上的它们,或点下面的名字。</p></div>
@@ -86,10 +109,10 @@ html,body{height:100%;overflow:hidden}
   <div class="done" id="done"></div>
   <div id="act2">
     <div class="lenses" id="lenses">
-      <button class="lt-btn" type="button" data-l="kid">八岁的孩子</button>
-      <button class="lt-btn" type="button" data-l="burnt">刚亏过一笔钱的人</button>
-      <button class="lt-btn" type="button" data-l="group">只看一个群的人</button>
-      <button class="lt-btn" type="button" data-l="saver">在存首付的人</button>
+      <button class="lt-btn" type="button" data-l="kid">八岁的孩子<small>远处的钱显得特别小</small></button>
+      <button class="lt-btn" type="button" data-l="burnt">刚亏过一笔钱的人<small>「失去」格外刺眼</small></button>
+      <button class="lt-btn" type="button" data-l="group">只看一个群的人<small>新闻屏几乎一种颜色</small></button>
+      <button class="lt-btn" type="button" data-l="saver">在存首付的人<small>远方目标拉近未来</small></button>
     </div>
     <table id="cmp" aria-label="你和借来的透镜对照"></table>
     <div class="done" id="done2"></div>

@@ -5,9 +5,15 @@
  * 第二幕「换一双眼睛」:借一个示意人物的透镜,分屏对照同一条街(横屏左右、竖屏上下);看过两双眼睛即写 a2。
  * 第三幕「破茧」:没有标准答案,学习者把三枚旋钮拧成「我愿意戴的样子」;玻璃脑裂开,化作光之莲与蝴蝶(写 a3,只存本机),星盘入口亮起第 11 颗星。
  * ?q=high|mid|low 强制档位(存本机 gn:lt:lensq);减少动态 → 静止画面,只在旋钮变化时重绘。
- * 画面思路参考总指挥画质专长包(程序天空即光源、PMREM 环境、高度雾感、ACES、暗角颗粒),代码自写。 */
+ * 画面思路参考总指挥画质专长包(程序天空即光源、PMREM 环境、高度雾感、ACES、暗角颗粒),代码自写。
+ * v0.42「真的透过玻璃脑看街」(high/mid 且未开减少动态):玻璃脑悬在镜头前,街景先渲进缓冲再经脑形透镜实时折射(lens-gl.js);
+ *   旋钮 = 镜片的折射率/厚度/色散,偏差越大街在镜片里弯得越厉害;真辉光后期替代贴片光晕;新闻屏到透镜的金/青光线随过滤被截断。
+ *   文字牌「出镜」规则:牌子不进折射缓冲、不过辉光与色调映射,最后单独画在最上层,保证任何旋钮下都清楚可读。
+ *   第二幕改为同一画面拖动分割线对照(左你、右 TA);第三幕镜片先沿裂纹碎开再化作光之莲。
+ *   low 档与减少动态:保留 v0.41 原版渲染路径(不加载 lens-gl.js)。 */
 import { store, sound, reducedMotion, TASKS } from '../lt.js';
 import { DOMAINS } from '../lt-data.js';
+import { elastic, countUp, tilt, compareBar } from './lens-ui.js';
 
 const $ = id => document.getElementById(id);
 const STILL = reducedMotion || /[?&]capture\b/.test(location.search);   // ?capture:自测用,静止画面只在变化时重绘
@@ -73,10 +79,12 @@ function lossFelt(L) { return Math.round(L.loss * 100); }
 function paint2() {
   if (!B) { $('cmp').innerHTML = ''; return; }
   const row = (k, a, b) => `<tr><th>${k}</th><td>${a}</td><td>${b}</td></tr>`;
+  const c = (k, v) => `<span data-k="${k}" data-v="${v}"></span>`;
   $('cmp').innerHTML = `<tr><th></th><td>你</td><td>${B.name}</td></tr>` +
-    row('失去 ¥100 像失去', '¥' + lossFelt(S), '¥' + lossFelt(B)) +
-    row('一年后 ¥150 感觉值', '¥' + Math.round(farFelt(S)), '¥' + Math.round(farFelt(B))) +
-    row('同色观点占比', Math.round(share(S) * 100) + '%', Math.round(share(B) * 100) + '%');
+    row('失去 ¥100 像失去', c('ya', lossFelt(S)), c('ba', lossFelt(B))) +
+    row('一年后 ¥150 感觉值', c('yb', Math.round(farFelt(S))), c('bb', Math.round(farFelt(B)))) +
+    row('同色观点占比', c('yc', Math.round(share(S) * 100)), c('bc', Math.round(share(B) * 100)));
+  $('cmp').querySelectorAll('span[data-k]').forEach(e => { const k = e.dataset.k; countUp(e, +e.dataset.v, k[1] === 'c' ? v => Math.round(v) + '%' : v => '¥' + Math.round(v), STILL); });
 }
 function borrow(id) {
   const L = LENSES.find(x => x.id === id); if (!L) return; B = L; S.seen.add(id);
@@ -96,7 +104,9 @@ function borrow(id) {
 const ASK3 = '这一次没有标准答案。把三枚旋钮拧成你愿意戴的样子——透镜不全是坏事:一点损失放大会在冒险前拉你一把,一点近大远小让你记得享受今天。你想留多少?';
 function paint3() {
   const other = Math.round(3 * (1 - S.echo / 100));
-  $('mine').innerHTML = `你挑的透镜:失去 ¥100 ≈ <em>¥${lossFelt(S)}</em> · 一年后 ¥150 ≈ <em>¥${Math.round(farFelt(S))}</em> · 新闻屏每天看见 <em>${other}</em> 条异色观点`;
+  $('mine').innerHTML = `你挑的透镜:失去 ¥100 ≈ <em data-k="ma"></em> · 一年后 ¥150 ≈ <em data-k="mb"></em> · 新闻屏每天看见 <em data-k="mc"></em> 条异色观点`;
+  const q = k => $('mine').querySelector(`[data-k="${k}"]`);
+  countUp(q('ma'), lossFelt(S), v => '¥' + Math.round(v), STILL); countUp(q('mb'), Math.round(farFelt(S)), v => '¥' + Math.round(v), STILL); countUp(q('mc'), other, v => Math.round(v), STILL);
 }
 let CLAR = 0;
 function wear() {
@@ -115,7 +125,8 @@ function setAct(n) {
   S.act = n; document.documentElement.dataset.act = n; if (G && n !== 3) G.unbloom();
   document.querySelectorAll('#acts [data-a]').forEach(b => { b.classList.toggle('on', +b.dataset.a === n); b.setAttribute('aria-pressed', +b.dataset.a === n); });
   if (n === 2) { ['loss', 'time', 'echo'].forEach(k => { S.found.add(k); $('k-' + k).classList.add('on'); });
-    say('同一条街,换一双眼睛。挑一个人,借 TA 的透镜看一看——' + (innerHeight > innerWidth ? '上面' : '左边') + '是你的,' + (innerHeight > innerWidth ? '下面' : '右边') + '是 TA 的。你的三枚旋钮仍然可以拧。');
+    const v2 = document.documentElement.classList.contains('v2');
+    say('同一条街,换一双眼睛。挑一个人,借 TA 的透镜看一看——' + (v2 ? '分割线左边是你的,右边是 TA 的,拖中间的圆钮来回对照' : (innerHeight > innerWidth ? '上面' : '左边') + '是你的,' + (innerHeight > innerWidth ? '下面' : '右边') + '是 TA 的') + '。你的三枚旋钮仍然可以拧。');
     if (!B) borrow(LENSES[0].id); }
   else if (n === 3) { B = null; paint2(); if (G) G.borrow(null); ['loss', 'time', 'echo'].forEach(k => { S.found.add(k); $('k-' + k).classList.add('on'); });
     $('done3').classList.remove('on'); paint3(); say(ASK3); }
@@ -131,6 +142,9 @@ function bindUI() {
   document.querySelectorAll('#acts [data-a]').forEach(b => b.onclick = () => setAct(+b.dataset.a));
   document.querySelectorAll('#lenses [data-l]').forEach(b => b.onclick = () => borrow(b.dataset.l));
   $('bWear').onclick = wear;
+  ['r-loss', 'r-time', 'r-echo'].forEach(id => elastic($(id), STILL));
+  document.querySelectorAll('#lenses [data-l]').forEach(b => tilt(b, STILL)); tilt($('done3'), STILL, 5);
+  const sh = $('bSheet'); if (sh) sh.onclick = () => { const m = $('ui').classList.toggle('min'); sh.setAttribute('aria-expanded', !m); sh.textContent = m ? '展开 ▴' : '收起 ▾'; if (G) G.layout(); };
   on('r-loss', 'loss', parseFloat); on('r-time', 'time', v => parseInt(v, 10)); on('r-echo', 'echo', v => parseInt(v, 10));
   $('bReset').onclick = () => { Object.assign(S, { loss: 2.25, time: 50, echo: 70, done: false }); ['loss', 'time', 'echo'].forEach(k => $('r-' + k).value = S[k]);
     $('done').classList.remove('on'); paint(); paint2(); if (G) G.unresolve(); if (S.act === 1) say(S.found.size === 3 ? LINES.all : LINES.start); };
@@ -163,17 +177,21 @@ function pickTier() {
 export async function boot() {
   bindUI(); grain(); paint(); document.documentElement.dataset.act = 1;
   const tier = pickTier();
-  if (tier !== 'none') { try { G = await make3D(tier); } catch (e) { G = null; } }
+  const legacy = tier === 'low' || reducedMotion;                 // low 档与减少动态:保留 v0.41 原版
+  if (tier !== 'none') { try { G = await make3D(tier, legacy); } catch (e) { console.warn(e); G = null; } }
+  if (G && !legacy) document.documentElement.classList.add('v2');
   if (G) paint(); else document.documentElement.classList.add('nogl');
   lockTabs(); { const m = /[?&]act=([23])\b/.exec(location.search); if (m) setAct(+m[1]); }
-  window.__lens = { get clar() { return CLAR; }, S, tier: G ? tier : 'none', three: G && G.rev, find, act: setAct, borrow, wear, shot: () => G && G.shot(), set(k, v) { const r = $('r-' + k); r.value = v; r.dispatchEvent(new Event('input')); } };
+  if (G && G.layout && 'ResizeObserver' in window) new ResizeObserver(() => G.layout()).observe($('ui'));
+  window.__lens = { get clar() { return CLAR; }, S, tier: G ? tier : 'none', v2: !!(G && !legacy), three: G && G.rev, get cmpX() { return G && G.cmpX; }, setCmp: x => G && G.setCmp && G.setCmp(x), find, act: setAct, borrow, wear, shot: () => G && G.shot(), set(k, v) { const r = $('r-' + k); r.value = v; r.dispatchEvent(new Event('input')); } };
 }
 
 /* ======================= 3D ======================= */
-async function make3D(tier) {
+async function make3D(tier, legacy) {
   const THREE = await (await import('../lt-three.js')).loadThree();
+  const NEW = !legacy, LG = NEW ? await import('./lens-gl.js') : null;
   const cv = $('gl'); let R;
-  try { R = new THREE.WebGLRenderer({ canvas: cv, antialias: tier !== 'low', powerPreference: 'high-performance' }); } catch (_) { return null; }
+  try { R = new THREE.WebGLRenderer({ canvas: cv, antialias: legacy && tier !== 'low', powerPreference: 'high-performance' }); } catch (_) { return null; }
   if (!R.getContext()) return null;
   const MOB = innerWidth < 760;
   const cap = tier === 'high' ? 2 : tier === 'mid' ? (MOB ? 1.25 : 1.5) : 1;
@@ -227,6 +245,7 @@ async function make3D(tier) {
     const A = mk(), Bt = mk(); const c = A.c, t = A.t;
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: t, transparent: true, toneMapped: false, fog: false }));
     const g = new THREE.Group(); g.add(m); g.position.copy(pos); scene.add(g); m.userData.k = id.split('-')[0];
+    if (NEW) { m.layers.set(1); m.renderOrder = 20; }                // 出镜:牌子只在最后一层画,不进折射/辉光/色调映射
     const halo = new THREE.Sprite(glowMat(0xffd28a)); halo.scale.set(w * 1.6, h * 1.6, 1); halo.material.opacity = 0; g.add(halo); halo.position.z = -0.05;
     signs[id] = { tex: [A, Bt], m, g, halo, draw, w, h }; return signs[id];
   }
@@ -267,18 +286,42 @@ async function make3D(tier) {
   if (tier === 'low') Object.assign(glass, { transparent: true, opacity: 0.46 - 0.14 * clar, emissive: new THREE.Color(0x3a2208), depthWrite: false });
   else { Object.assign(glass, { transmission: 1, thickness: 0.9, attenuationColor: new THREE.Color(0xffb347), attenuationDistance: 1.1 + 1.6 * clar, iridescence: 0.35, iridescenceIOR: 1.3 });
     if (tier === 'high' && 'dispersion' in glass) glass.dispersion = 0.35; }
-  const brain = new THREE.Group(); brain.position.set(1.15, 1.08, 2.3); brain.scale.setScalar(0.72); scene.add(brain);
-  const cere = new THREE.Mesh(brainGeo(0.42, 0.28, 0.5, 0.05), glass); cere.position.set(-0.62, -0.4, 0); brain.add(cere);
-  const cortex = new THREE.Mesh(brainGeo(1.0, 0.72, 0.8, 0.07), glass); brain.add(cortex);
-  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.08, 0.6, 16), glass); stem.position.set(-0.3, -0.72, 0); stem.rotation.z = -0.35; brain.add(stem);
+  const lensMat = NEW ? LG.makeLensGlass(THREE, { samples: tier === 'high' ? 8 : 4 }) : null, gm = lensMat || glass;
+  if (lensMat) lensMat.renderOrder = 1;
+  const brain = new THREE.Group(); brain.position.set(1.15, 1.08, 2.3); brain.scale.setScalar(0.72);
+  if (NEW) { scene.add(cam); cam.add(brain); } else scene.add(brain);   // v2:玻璃脑挂在镜头前,跟着视线走
+  const cere = new THREE.Mesh(brainGeo(0.42, 0.28, 0.5, 0.05), gm); cere.position.set(-0.62, -0.4, 0); brain.add(cere);
+  const cortex = new THREE.Mesh(brainGeo(1.0, 0.72, 0.8, 0.07), gm); brain.add(cortex);
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.08, 0.6, 16), gm); stem.position.set(-0.3, -0.72, 0); stem.rotation.z = -0.35; brain.add(stem);
+  if (NEW) [cere, cortex, stem].forEach(m => m.renderOrder = 1);
   brain.rotation.y = 0.28;
   /* 八束光丝:每域一条,已点亮(该域有通关任务)明亮,未点亮是暗线 */
   const lit = d => TASKS.some(t => t.live && t.domains && t.domains.includes(d.id) && (store.get(t.id, {}) || {}).done);
   const fil = []; DOMAINS.forEach((d, i) => { const pts = []; const a0 = i / DOMAINS.length * Math.PI * 2;
     for (let j = 0; j < 6; j++) { const a = a0 + j * 0.9, r = 0.25 + 0.3 * hsh(i, j, 1); pts.push(new THREE.Vector3(Math.cos(a) * r * 1.3, (hsh(i, j, 2) - 0.5) * 0.6, Math.sin(a) * r * 0.9)); }
     const on = lit(d); const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(d.color || '#f5c26b').multiplyScalar(on ? 2.6 : 0.35), transparent: true, opacity: on ? 1 : 0.5, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
-    const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true), 80, on ? 0.014 : 0.008, 6, true), m); brain.add(tube); fil.push({ m, on, i }); });
+    const tube = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true), 80, on ? 0.014 : 0.008, 6, true), m); brain.add(tube); fil.push({ m, on, i });
+    if (NEW) { tube.renderOrder = 5; m.depthTest = false; } });
   const core = new THREE.Sprite(glowMat(0xffc46b)); core.scale.setScalar(1.1); core.material.opacity = 0.55; brain.add(core);
+  if (NEW) { core.renderOrder = 6; core.material.depthTest = false; core.scale.setScalar(0.8); }
+
+  /* v2 · 新闻屏 → 透镜的六束光线(金 = 同色,青 = 异色);过滤越强,青光线越短越暗。粗线改写自 three.js lines_fat 思路 */
+  let rays = null, cracks = null;
+  if (NEW) {
+    const segs = [], ncW = 3.4, ncH = 1.6, cH = 512 * ncH / ncW;
+    for (let i = 0; i < 6; i++) { const o = i % 2, X = 30 + o * 232 + 110, Y = 66 + (i >> 1) * 56 + 24;
+      const a = new THREE.Vector3((X / 512 - 0.5) * ncW, 3.3 + (0.5 - Y / cH) * ncH, -6.95);
+      segs.push({ a, b: a.clone(), c: o ? new THREE.Color(0.5, 2.2, 2.6) : new THREE.Color(2.8, 1.7, 0.6), k: o }); }
+    rays = LG.makeFatLines(THREE, segs, { width: 3.6 }); scene.add(rays);
+    /* 第三幕裂纹:从透镜中心向外随机行走的枝状裂纹,按生长顺序 t 逐段出现 */
+    const cs = []; let sd2 = 11; const r2 = () => (sd2 = (sd2 * 16807) % 2147483647) / 2147483647;
+    for (let k = 0; k < 9; k++) { let a = k / 9 * Math.PI * 2 + r2() * 0.5, p = new THREE.Vector3(0, 0, 0);
+      for (let j = 0; j < 7; j++) { a += (r2() - 0.5) * 0.9; const q = p.clone().add(new THREE.Vector3(Math.cos(a), Math.sin(a) * 0.75, 0).multiplyScalar(0.13 + r2() * 0.08));
+        cs.push({ a: p, b: q, c: new THREE.Color(2.4, 1.7, 0.9), t: (j + 1) / 7 });
+        if (r2() < 0.35) { const b2 = a + (r2() < 0.5 ? 1 : -1) * (0.6 + r2() * 0.5); cs.push({ a: q, b: q.clone().add(new THREE.Vector3(Math.cos(b2), Math.sin(b2) * 0.75, 0).multiplyScalar(0.1 + r2() * 0.08)), c: new THREE.Color(1.8, 1.2, 0.6), t: (j + 1.5) / 7 }); }
+        p = q; } }
+    cracks = LG.makeFatLines(THREE, cs, { width: 2 }); cracks.material.depthTest = false; cracks.renderOrder = 8; cracks.visible = false; brain.add(cracks); cracks.position.z = 0.85;
+  }
   const pl = new THREE.PointLight(0xffb85a, 3, 6, 2); brain.add(pl);
 
   /* 4b) 破茧:玻璃碎片向外飞散,八瓣光之莲(八域色)从脑中升起绽开,七只光蝶盘旋上升 */
@@ -304,56 +347,81 @@ async function make3D(tier) {
     const mat = new THREE.MeshBasicMaterial({ map: wingTex, color: new THREE.Color(DOMAINS[i % DOMAINS.length].color || '#f5c26b').multiplyScalar(1.8), transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
     const L = new THREE.Mesh(wg, mat), Rw = new THREE.Mesh(wg, mat); Rw.scale.x = -1; f.add(L, Rw); flies.push({ f, L, Rw, mat, ph: i / 7 * TAU, r: 0.5 + hsh(i, 7, 3) * 0.9, h: 0.6 + hsh(i, 8, 3) * 1.1, w: 0.5 + hsh(i, 9, 3) * 0.5 }); }
   const glassParts = [cere, cortex, stem], C0 = new THREE.Vector3();
-  function bloomPose(t) {   // t 秒:0–1 碎裂,0.6–3 莲开,1.2 起蝶飞
+  function bloomPose(t0) {   // t 秒:0–1 碎裂,0.6–3 莲开,1.2 起蝶飞(v2 先用 0.5 秒长出裂纹)
     const e = x => Math.min(1, Math.max(0, x)), ease = x => 1 - Math.pow(1 - e(x), 3);
+    let t = t0; if (cracks) { cracks.visible = t0 < 1.1; cracks.material.uniforms.uGrow.value = ease(t0 / 0.5); cracks.material.uniforms.uOp.value = 1 - e((t0 - 0.6) / 0.5); t = Math.max(0, t0 - 0.5); }
+    const bs = NEW ? brain.scale.x / 0.72 : 1;
     brain.getWorldPosition(C0); const k = ease(t / 0.9);
     glassParts.forEach(m => m.scale.setScalar(Math.max(0.001, 1 - k)));
     shards.visible = t < 3.2; shards.material.opacity = 1 - e((t - 1.2) / 2);
-    shD.forEach((s, i) => { const r = ease(t / 2.2) * s.sp * 1.6; V.copy(s.d).multiplyScalar(r).add(C0); V.y -= 0.5 * Math.max(0, t - 0.8) * Math.max(0, t - 0.8) * 0.3;
+    shD.forEach((s, i) => { const r = ease(t / 2.2) * s.sp * 1.6 * bs; V.copy(s.d).multiplyScalar(r).add(C0); V.y -= 0.5 * Math.max(0, t - 0.8) * Math.max(0, t - 0.8) * 0.3;
       Q.setFromEuler(new THREE.Euler(s.rot.x * t, s.rot.y * t, s.rot.z * t)); M.compose(V, Q, Sx.setScalar(Math.max(0.01, 1 - e((t - 1.6) / 1.6)))); shards.setMatrixAt(i, M); });
     shards.instanceMatrix.needsUpdate = true;
-    lotus.visible = t > 0.4; lotus.position.copy(C0); lotus.position.y += -0.25 + 0.3 * ease((t - 0.5) / 2); lotus.scale.setScalar(1.25);
+    lotus.visible = t > 0.4; lotus.position.copy(C0); lotus.position.y += (-0.25 + 0.3 * ease((t - 0.5) / 2)) * bs; lotus.scale.setScalar(1.25 * bs);
     const open = ease((t - 0.6) / 2.4);
     petals.forEach(p => { p.m.rotation.x = -(0.15 + (p.ring ? 0.7 : 1.15) * open); p.m.material.opacity = e((t - 0.5) / 1) * (p.ring ? 0.75 : 0.9); });
     flies.forEach((b, i) => { const tt = t - 1.2 - i * 0.18; b.f.visible = tt > 0; if (tt <= 0) return; const up = ease(tt / 3);
-      const a = b.ph + tt * b.w; b.f.position.set(C0.x + Math.cos(a) * b.r * up, C0.y + 0.2 + b.h * up + Math.sin(tt * 1.3 + i) * 0.08, C0.z + Math.sin(a) * b.r * up);
+      const a = b.ph + tt * b.w; b.f.position.set(C0.x + Math.cos(a) * b.r * up * bs, C0.y + (0.2 + b.h * up + Math.sin(tt * 1.3 + i) * 0.08) * bs, C0.z + Math.sin(a) * b.r * up * bs); b.f.scale.setScalar(bs);
       b.f.rotation.y = -a; const fl = STILL ? 0.5 : Math.sin(tt * 14 + i) * 0.9; b.L.rotation.y = fl; b.Rw.rotation.y = -fl; b.mat.opacity = e(tt / 0.6) * 0.95; });
   }
-  function bloomOff() { bl.on = false; bl.t = 0; glassParts.forEach(m => m.scale.setScalar(1)); shards.visible = false; lotus.visible = false; flies.forEach(b => b.f.visible = false); }
+  function bloomOff() { bl.on = false; bl.t = 0; glassParts.forEach(m => m.scale.setScalar(1)); shards.visible = false; lotus.visible = false; flies.forEach(b => b.f.visible = false); if (cracks) cracks.visible = false; }
 
-  /* 5) 相机:轻微呼吸 + 拖动环视(限角) */
-  let yaw = 0, pitch = 0, tyaw = 0, tpitch = 0, drag = null;
+  /* 5) 相机:轻微呼吸 + 拖动环视(限角);v2 另有「透镜随指针轻移」(思路参考 React Bits Fluid Glass 的跟随光标) */
+  let yaw = 0, pitch = 0, tyaw = 0, tpitch = 0, drag = null; const ptr = new THREE.Vector2(), lensOff = new THREE.Vector2();
   cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, yaw: tyaw, pitch: tpitch, moved: false }; });
   addEventListener('pointerup', e => { if (drag && !drag.moved) pick(e); drag = null; });
-  addEventListener('pointermove', e => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 6) drag.moved = true;
+  addEventListener('pointermove', e => { if (NEW && !STILL && e.pointerType === 'mouse') { ptr.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); kick(); }
+    if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 6) drag.moved = true;
     tyaw = Math.max(-0.35, Math.min(0.35, drag.yaw - dx * 0.003)); tpitch = Math.max(-0.12, Math.min(0.15, drag.pitch - dy * 0.002)); kick(); });
-  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); ray.layers.enableAll();
   function pick(e) { if (B) return; const r = cv.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1); ray.setFromCamera(ndc, cam);
     const hit = ray.intersectObjects(Object.values(signs).map(s => s.m))[0]; if (hit) find(hit.object.userData.k); }
 
-  /* 旋钮 → 画面:损失放大让「失去」牌变大;折扣让远牌缩小;过滤让异色新闻淡出;玻璃随总偏差变浑、变暖 */
-  const st = { loss: 1, near: 1, far: 1, b: 0, resolved: 0 }, stB = { loss: 1, near: 1, far: 1, b: 0, resolved: 0 };
-  const calc = (o, L) => { o.loss = Math.pow(L.loss, 0.6); o.far = Math.max(0.18, farFelt(L) / 150); o.near = 1 + (1 - o.far) * 0.35; o.b = bias(L); };
+  /* 旋钮 → 画面:损失放大让「失去」牌变大;折扣让远牌缩小;过滤让异色新闻淡出;玻璃随总偏差变浑、变暖(v2:镜片折射率/厚度/色散随偏差) */
+  const st = { loss: 1, near: 1, far: 1, b: 0, echo: 0.7, resolved: 0 }, stB = { loss: 1, near: 1, far: 1, b: 0, echo: 0.7, resolved: 0 };
+  const calc = (o, L) => { o.loss = Math.pow(L.loss, 0.6); o.far = Math.max(0.18, farFelt(L) / 150); o.near = 1 + (1 - o.far) * 0.35; o.b = bias(L); o.echo = L.echo / 100; };
   function update(s) { calc(st, s); redraw(0, s); kick(); }
   function borrow(L) { if (L) { calc(stB, L); redraw(1, L); } size(); }
   function apply(t, st, side) {
     for (const s of Object.values(signs)) s.m.material.map = s.tex[side].t;
     signs['loss-lose'].g.scale.setScalar(st.loss); signs['time-far'].g.scale.setScalar(st.far); signs['time-now'].g.scale.setScalar(st.near);
     const b = st.b * (1 - st.resolved);
-    if (tier !== 'low') { glass.ior = 1.3 + 0.55 * b; glass.thickness = 0.35 + 0.9 * b; glass.attenuationDistance = 5.5 - 3 * b; glass.roughness = 0.04 + 0.18 * b * b; glass.iridescence = 0.15 + 0.5 * b; }
+    if (lensMat) { const u = lensMat.uniforms; u.uTime.value = t; u.uIor.value = 1.04 + 0.52 * b; u.uThick.value = 0.1 + 1.15 * b; u.uChroma.value = 0.008 + 0.07 * b;
+      u.uBlur.value = (0.006 + 0.14 * b * b) * (1 - 0.5 * clar); u.uWarp.value = b; u.uIrid.value = 0.22 + 0.4 * b; u.uAmber.value = (0.2 + 0.8 * b) * (1 - 0.35 * clar); }
+    else if (tier !== 'low') { glass.ior = 1.3 + 0.55 * b; glass.thickness = 0.35 + 0.9 * b; glass.attenuationDistance = 5.5 - 3 * b; glass.roughness = 0.04 + 0.18 * b * b; glass.iridescence = 0.15 + 0.5 * b; }
     else glass.opacity = 0.28 + 0.25 * b;
+    if (rays) { const u = rays.material.uniforms, ec = st.echo * (1 - st.resolved); u.uKlen.value = 1 - 0.88 * ec; u.uKop.value = Math.max(0.06, 1 - ec); u.uOp.value = 0.55 + 0.25 * (S.found.has('echo') ? 1 : 0.4); }
     const pulse = STILL ? 1 : 0.85 + 0.15 * Math.sin(t * 1.7);
     fil.forEach(f => { f.m.opacity = (f.on ? 1 : 0.45) * pulse * (0.6 + 0.4 * (1 - b)) + st.resolved * 0.3; });
-    core.material.opacity = 0.35 + 0.4 * st.resolved + 0.15 * pulse; pl.intensity = 2 + 3 * st.resolved;
+    core.material.opacity = (0.35 + 0.4 * st.resolved + 0.15 * pulse) * (NEW ? 0.45 : 1); pl.intensity = (2 + 3 * st.resolved) * (NEW ? 0.3 : 1);
     for (const s of Object.values(signs)) s.halo.material.opacity += ((S.found.has(s.m.userData.k) ? 0 : 0.35 * pulse) - s.halo.material.opacity) * 0.2;
   }
-  /* 视口与相机:单屏全画布;分屏时横屏左右(避开左侧面板)、竖屏上下(避开底部面板) */
-  let views = [];
+  /* 视口与相机:单屏全画布;旧版分屏时横屏左右(避开左侧面板)、竖屏上下(避开底部面板);v2 用同一画面 + 分割线 */
+  let views = [], free = [0, 0, innerWidth, innerHeight], lensC = new THREE.Vector2(), lensS = 0.72;
+  const post = NEW ? LG.makePost(THREE, R, { levels: tier === 'high' ? 5 : 3, msaa: tier === 'high' ? 4 : 0, strength: 0.7 }) : null;
+  if (post) { post.bright.uniforms.uTh.value = 1.25; R.toneMappingExposure = 0.96; }
+  let cmpX = innerWidth / 2; const vo = new THREE.Vector2();
+  const bar = NEW ? compareBar(x => { cmpX = x; kick(); }) : null;
   function camFor(aspect, wide) { cam.aspect = aspect; const p = aspect < 1;
     cam.fov = p ? Math.min(80, Math.max(55, 2 * Math.atan(Math.tan(0.46) / aspect) * 57.3)) : 45; cam.updateProjectionMatrix();
     lookY = p ? -0.2 : 1.75; base.set(p ? 0.4 : (wide ? -1.1 : -0.6), p ? 2.1 : 1.7, p ? 10.5 : 6.4); }
+  /* 面板占掉的地方不放透镜:按面板实际位置算出「空出来的画面」,透镜居中其中 */
+  function freeRect() { const W = innerWidth, H = innerHeight, u = $('ui'); if (!u) return [0, 0, W, H]; const r = u.getBoundingClientRect(), top = 54;
+    if (r.top > H * 0.35) return [0, top, W, Math.max(120, r.top - top - 6)];                       // 面板在底部
+    if (r.left < W * 0.3 && r.right < W * 0.7) return [r.right + 8, top, W - r.right - 8, H - top];   // 面板在左
+    return [0, top, Math.max(160, r.left - 8), H - top]; }                                             // 面板在右
+  /* v2:面板挡掉一侧时把视角放宽一些,让两侧的牌子留在空出来的画面里 */
+  function fitCam(W, H) { camFor(W / H, false); if (W > H) cam.fov = Math.min(62, 45 * Math.sqrt(W / Math.max(200, free[2]))); cam.setViewOffset(W, H, vo.x, vo.y, W, H); }
+  function layout() { if (!NEW) return; free = freeRect(); const W = innerWidth, H = innerHeight;
+    lensC.set((free[0] + free[2] / 2) / W * 2 - 1, -((free[1] + free[3] * 0.68) / H * 2 - 1));
+    vo.set(W / 2 - (free[0] + free[2] / 2), H / 2 - (free[1] + free[3] * 0.5));          // 街道消失点挪到空出来的画面中央
+    fitCam(W, H); const d = 3.2, h = d * Math.tan(cam.fov * Math.PI / 360);
+    const sW = Math.min(free[2] * 0.36, 400) * h / H, sH = 0.5 * free[3] * 2 * h / (1.5 * H); lensS = Math.max(0.25, Math.min(sW, sH));
+    if (B) bar.show(free[0], free[0] + free[2], free[1], free[3], '你的透镜', B.name + ' 的透镜'); else bar.hide(); kick(); }
   function size() { const w = innerWidth, h = innerHeight; R.setPixelRatio(dpr()); R.setSize(w, h, false);
     const lab = [$('labA'), $('labB')];
+    if (NEW) { views = [[0, 0, w, h]]; lab.forEach(l => l.hidden = true); const pr = R.getPixelRatio(); post.setSize(Math.round(w * pr), Math.round(h * pr), tier === 'high' ? 0.6 : 0.5);
+      rays.material.uniforms.uRes.value.set(w, h); cracks.material.uniforms.uRes.value.set(w, h); layout(); return; }
     if (!B) { views = [[0, 0, w, h]]; lab.forEach(l => l.hidden = true); }
     else if (h > w || (w <= 1100 && matchMedia('(orientation:portrait)').matches)) { const H = Math.round(h * (w <= 760 || h > w ? 0.54 : 1)), hh = H >> 1;
       views = [[0, h - hh, w, hh], [0, h - H, w, H - hh]]; place(lab[0], 8, 54); place(lab[1], 8, hh + 6); }
@@ -365,15 +433,35 @@ async function make3D(tier) {
   addEventListener('resize', size);
   let raf = 0, last = performance.now(), T = 0, frames = 0, acc = 0, dirty = true;
   function kick() { dirty = true; if (STILL && !raf) raf = requestAnimationFrame(loop); }
+  function aim(br) { cam.position.set(base.x + Math.sin(T * 0.21) * 0.12 * br, base.y + Math.sin(T * 0.33) * 0.05 * br, base.z);
+    tgt.set(base.x * 0.55 + Math.sin(yaw) * 8, lookY + Math.sin(pitch) * 8, base.z - 8); cam.lookAt(tgt); }
+  /* v2 渲染:①街(不含玻璃脑)→ 折射缓冲 ②街 + 透镜 → 主缓冲 ③辉光合成到屏幕 ④文字牌出镜层。分割线两侧各用自己的透镜参数 */
+  function frameV2(br) {
+    const W = innerWidth, H = innerHeight, split = !!B;
+    fitCam(W, H); aim(br);
+    if (!STILL) { const k = drag ? 0 : 0.14; lensOff.x += ((ptr.x - lensC.x) * k - lensOff.x) * 0.06; lensOff.y += ((ptr.y - lensC.y) * k - lensOff.y) * 0.06; }
+    const d = 3.2, h = d * Math.tan(cam.fov * Math.PI / 360), cx = Math.max(-0.95, Math.min(0.95, lensC.x + lensOff.x)) + vo.x / (W / 2), cy = Math.max(-0.9, Math.min(0.9, lensC.y + lensOff.y)) - vo.y / (H / 2);
+    brain.position.set(cx * h * cam.aspect, cy * h, -d); brain.scale.setScalar(lensS); cam.updateMatrixWorld(true);
+    { brain.getWorldPosition(V); const ib = rays.geometry.attributes.iB; for (let i = 0; i < 6; i++) { const sd = (i % 2) ? 1 : -1, r = i >> 1; ib.setXYZ(i, V.x + sd * (0.75 + 0.18 * r) * lensS, V.y + (0.42 - 0.22 * r) * lensS, V.z + 0.3 * lensS); } ib.needsUpdate = true; }
+    const [pw, ph] = post.size(), sx = pw / W, sides = split ? [[0, cmpX], [cmpX, W]] : [[0, W]];
+    const run = (rt, k) => sides.forEach((sd, side) => { apply(T, side ? stB : st, side);
+      const x0 = Math.round(sd[0] * sx * k), x1 = Math.round(sd[1] * sx * k), rh = Math.round(ph * k);
+      rt.scissor.set(x0, 0, x1 - x0, rh); rt.scissorTest = split; rt.viewport.set(0, 0, rt.width, rt.height); R.setRenderTarget(rt); R.render(scene, cam); });
+    brain.visible = false; run(post.buf, post.buf.width / pw);
+    brain.visible = true; lensMat.uniforms.uBuffer.value = post.buf.texture; run(post.main, 1);
+    post.bloom();
+    R.setRenderTarget(null); R.autoClear = false; cam.layers.set(1); R.setViewport(0, 0, W, H);
+    sides.forEach((sd, side) => { apply(T, side ? stB : st, side); R.setScissorTest(split); R.setScissor(sd[0], 0, sd[1] - sd[0], H); R.clearDepth(); R.render(scene, cam); });
+    R.setScissorTest(false); cam.layers.set(0); R.autoClear = true;
+  }
   function frame(dt) {
     T += dt; yaw += (tyaw - yaw) * 0.08; pitch += (tpitch - pitch) * 0.08;
     const br = STILL ? 0 : 1;
     brain.rotation.y = 0.28 + Math.sin(T * 0.15) * 0.12 * br; if (st.resolved < 1 && G && G.resolving) st.resolved = Math.min(1, st.resolved + dt * 0.6);
     if (bl.on) { bl.t += dt; bloomPose(STILL ? 4 : bl.t); }
+    if (NEW) return frameV2(br);
     const W = innerWidth, split = views.length > 1; R.setScissorTest(false); if (split) { R.setClearColor(0x070814, 1); R.setViewport(0, 0, W, innerHeight); R.clear(); R.setScissorTest(true); }
-    views.forEach((v, side) => { camFor(v[2] / v[3], v[2] >= 1100);
-      cam.position.set(base.x + Math.sin(T * 0.21) * 0.12 * br, base.y + Math.sin(T * 0.33) * 0.05 * br, base.z);
-      tgt.set(base.x * 0.55 + Math.sin(yaw) * 8, lookY + Math.sin(pitch) * 8, base.z - 8); cam.lookAt(tgt);
+    views.forEach((v, side) => { camFor(v[2] / v[3], v[2] >= 1100); aim(br);
       R.setViewport(v[0], v[1], v[2], v[3]); if (split) R.setScissor(v[0], v[1], v[2], v[3]);
       apply(T, side ? stB : st, side); R.render(scene, cam); });
   }
@@ -387,9 +475,11 @@ async function make3D(tier) {
   }
   document.addEventListener('visibilitychange', () => { if (!document.hidden && !raf) { last = performance.now(); raf = requestAnimationFrame(loop); } });
   cv.addEventListener('webglcontextlost', e => { e.preventDefault(); document.documentElement.classList.add('nogl'); });
+  if (NEW) { scene.remove(sunGlow); sunGlow.material.opacity = 0.35; scene.add(sunGlow); }
   redraw(); size(); frame(0.016); raf = requestAnimationFrame(loop);
   if (STILL) $('hint').textContent = '点街上的牌子 · 拖动可环视';
-  const api = { rev: THREE.REVISION, resolving: false, update, borrow, reveal() { kick(); },
+  const api = { rev: THREE.REVISION, resolving: false, update, borrow, layout: () => (NEW ? layout() : size()), reveal() { kick(); },
+    get cmpX() { return cmpX; }, setCmp(x) { cmpX = x; kick(); },
     resolve() { api.resolving = true; kick(); },
     bloom() { bloomOff(); bl.on = true; st.resolved = 1; api.resolving = true; kick(); }, unbloom() { if (bl.on) { bloomOff(); kick(); } }, unresolve() { api.resolving = false; st.resolved = 0; kick(); },
     shot() { frame(0.016); return cv.toDataURL('image/png'); } };

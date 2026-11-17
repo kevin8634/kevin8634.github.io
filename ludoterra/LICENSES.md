@@ -33,6 +33,11 @@
 | 数据:心理援助热线 12356 | 首页、wave、echo 求助提示 | 国家卫生健康委《关于应用"12356"全国统一心理援助热线电话号码的通知》(国卫医政函〔2024〕259号) | 公开信息 | 无 | 否 | 页面求助提示处 |
 | 教学模型数据(复利曲线、茧房推荐、1000 位虚拟创业者、App 设计师模拟、情绪浪、聊天 App 模拟等) | compound、cocoon、survivor、sleep、wave、echo 等 | 本项目程序生成的示意/虚拟数据,不是任何真实平台或个人的数据 | 自制 | 无 | 否 | 各关说明小字「教学模型/示意数值,不是某个真实 App 的数据」「全是程序生成的虚拟数据」 |
 | R1 任务背景台效果图 `board_R1_A.jpg`、`board_R1_B.jpg`(设计稿,**未上线**) | 仅云盘「开发文档/设计/R1_任务背景台/」,站内不使用 | 插画/场景底图由 Hark 图像生成工具生成,界面为 HTML 叠加 | AI 生成,仅内部设计参考 | — | **是**(工具:Hark 内置图像生成) | 板内脚注「AI 生成底图」;不进站点,页面无需标注 |
+| v0.42 心之透镜「透镜玻璃」屏幕空间透射着色器(`lens/lens-gl.js` makeLensGlass) | lens 心之透镜三幕(high/mid 档) | 思路改写自 pmndrs/drei MeshTransmissionMaterial(github.com/pmndrs/drei,`src/core/MeshTransmissionMaterial.tsx`),经本站 `/life-source/recode/glass.js` 改写版再改;效果基准参照 three.js 官方示例 webgl_materials_physical_transmission(threejs.org/examples/#webgl_materials_physical_transmission) | MIT(drei:Copyright (c) 2020 react-spring;three.js:Copyright © 2010-2025 three.js authors) | 保留来源与许可声明(源码头注释 + 本台账) | 否 | 无需页面标注;源码头注释 |
+| v0.42 粗光线(新闻屏→透镜光线、第三幕裂纹;`lens/lens-gl.js` makeFatLines) | lens 第一至三幕 | 思路改写自 three.js `examples/jsm/lines/LineMaterial.js`,官方示例 webgl_lines_fat(threejs.org/examples/#webgl_lines_fat);自写精简版,不含上游文件 | MIT | 同上 | 否 | 源码头注释 |
+| v0.42 辉光后期(亮度阈值 + 逐级高斯模糊 + 合成;`lens/lens-gl.js` makePost) | lens 三幕(high/mid 档) | 思路改写自 three.js `examples/jsm/postprocessing/UnrealBloomPass.js`,官方示例 webgl_postprocessing_unreal_bloom(threejs.org/examples/#webgl_postprocessing_unreal_bloom);自写精简版,未引入 vendor post 分片 | MIT | 同上 | 否 | 源码头注释 |
+| v0.42 弹性滑块 / 数值滚动 / 透镜跟随指针(`lens/lens-ui.js` elastic、countUp;lens.js 指针跟随) | lens 旋钮、对照表、第三幕读数 | 交互思路参考 React Bits「Elastic Slider」(reactbits.dev/components/elastic-slider)、「Count Up」(reactbits.dev/text-animations/count-up)、「Fluid Glass」(reactbits.dev/components/fluid-glass);原组件为 React,本项目以原生 JS 自写,未复制源码 | MIT + Commons Clause(允许在网站/应用中使用,禁止单独售卖或再分发组件本身;本项目不售卖、不再分发组件) | 注明来源 | 否 | 源码头注释 |
+| v0.42 分割线对照 / 3D 卡片倾斜(`lens/lens-ui.js` compareBar、tilt) | lens 第二幕分割线、透镜卡片、第三幕完成卡 | 交互思路参考 Aceternity UI「Compare」(ui.aceternity.com/components/compare)、「3D Card Effect」(ui.aceternity.com/components/3d-card-effect);原组件为 React + Tailwind,本项目以原生 JS/CSS 自写,未复制源码 | Aceternity UI 许可:可用于终端产品,禁止作为模板/组件转售或上架市场(ui.aceternity.com/licence) | 注明来源 | 否 | 源码头注释 |
 
 ## 二、AI 生成素材与标注
 - 线上页面:**0 处**(无 AI 生成的画面、人物、语音或音乐)。
