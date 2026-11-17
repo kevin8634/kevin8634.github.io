@@ -94,3 +94,11 @@
 
 ## v2.6(2026-11-14)· 有机转化路线
 - route/index.html:本项目原创(题干、选项、解析由 AI 撰写,化学事实取自本站已审校的反应图鉴;乙烯水化一条按人教版必修第二册知识点自写)。无新增图片/字体/第三方代码;外部网络请求:0。
+
+## v2.7(2026-11-18)· 玻璃烧瓶 · 熔金炉(ef-flask-gl.js)
+- 真透射玻璃:思路改写自 pmndrs/drei MeshTransmissionMaterial(MIT,https://github.com/pmndrs/drei ,src/core/MeshTransmissionMaterial.tsx);着色器复用本站 04 生命源码 life-source/recode/glass.js(同一作者体系,已按 MIT 登记)。未复制 drei 源码。
+- 参数基线:three.js 官方示例 webgl_materials_physical_transmission(MIT,https://threejs.org/examples/#webgl_materials_physical_transmission)。
+- 选择性辉光:思路参考 three.js 官方示例 webgl_postprocessing_unreal_bloom_selective(MIT,https://threejs.org/examples/#webgl_postprocessing_unreal_bloom_selective);本站自写实现,未引入 EffectComposer/UnrealBloomPass 代码。
+- three.js 本体仍为 vendor/ r186(MIT,LICENSE 已在 vendor/)。
+- 方案清单中的 React Bits(Fluid Glass / Elastic Slider / Count Up,MIT + Commons Clause)、Aceternity(Compare / 3D Card)、marching_cubes、instancing、lines_fat 本版未使用,留待后续步骤启用时逐条登记。
+- 无新增图片、字体、音频;外部网络请求 0。

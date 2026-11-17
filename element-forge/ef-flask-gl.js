@@ -82,8 +82,8 @@ export async function install(gl, scene, cam, ctx) {
   /* ---------- 文字牌(瓶后,出镜被折射) ---------- */
   const pc = document.createElement('canvas'); pc.width = 1024; pc.height = 320;
   const ptx = new THREE.CanvasTexture(pc); ptx.colorSpace = THREE.SRGBColorSpace; ptx.anisotropy = 4;
-  const plate = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 0.53), new THREE.MeshBasicMaterial({ map: ptx, transparent: true, depthWrite: false, toneMapped: false }));
-  plate.position.set(C.x, C.y + 0.02, C.z - 0.95); root.add(plate);
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 0.72), new THREE.MeshBasicMaterial({ map: ptx, transparent: true, depthWrite: false, toneMapped: false }));
+  plate.position.set(C.x, C.y + 0.66, C.z - 0.7)   /* 牌在瓶颈与上半球后方:字被瓶颈和球肩折弯、分色 */; root.add(plate);
   let lastTxt = '';
   function drawPlate() {
     const a = (document.getElementById('scName') || {}).textContent || '', b = (document.getElementById('scSize') || {}).textContent || '';
@@ -159,7 +159,7 @@ export async function install(gl, scene, cam, ctx) {
     if (t - tTxt > 0.4) { tTxt = t; drawPlate(); }
     fireM.uniforms.uT.value = rm() ? 0.6 : t;
     const s = rm() ? 1 : 1 + Math.sin(t * 13) * 0.04 + Math.sin(t * 7.3) * 0.03; fires.forEach(f => f.scale.set(s, s, 1)); lamp.intensity = rm() ? 2.2 : 2.0 + Math.sin(t * 11) * 0.3;
-    flask.position.y = liquid.position.y = float.position.y;   /* 跟着浮物一起轻浮 */
+    flask.position.y = liquid.position.y = float.position.y; plate.position.y = float.position.y + 0.66;   /* 跟着浮物一起轻浮 */
     plate.quaternion.copy(cam.quaternion);
     /* 缓冲:藏起烧瓶,把「玻璃后面」渲一遍 */
     flask.visible = false;
