@@ -1,0 +1,9 @@
+/* 奇点前夜 2.0 · 玻璃心智 B「透过玻璃心智看决策」 */
+body.office{background:#07090d}
+#g2{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;display:block}
+.office .acts h1{font-size:20px}
+.office .act[disabled]{opacity:.45;cursor:default}
+.office #pick button.ok{border-color:var(--ok);color:var(--ok)}
+.office #pick button.no{border-color:#ff8a7a88}
+@media (max-width:900px){.office .act[disabled]{display:none}}
+.office #g2[hidden],.office #gl[hidden]{display:none}

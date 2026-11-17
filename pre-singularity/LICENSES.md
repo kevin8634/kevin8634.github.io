@@ -49,3 +49,8 @@
   - BYOK 直连(用户填入自己的钥匙后):api.deepseek.com、api.moonshot.cn、dashscope.aliyuncs.com、ark.cn-beijing.volces.com、api.siliconflow.cn
   - 页面上另有各服务商「申请钥匙」控制台外链(用户点击才打开):platform.deepseek.com、platform.moonshot.cn、bailian.console.aliyun.com、console.volcengine.com、cloud.siliconflow.cn
 - AI 标注:3 处(大厅右下角可见角标、图片 alt、探索笔记页说明)。
+
+## 2.0 玻璃心智 B「透过玻璃心智看决策」(glass/office.*,2026-11-17)
+- 全部自写代码与程序生成画面(办公室、窗外楼群、方案牌、理由牌、玻璃脑),无外部素材、无外部请求。
+- 思路参考(未复制代码):three.js 官方示例 webgl_materials_physical_transmission、webgl_postprocessing_unreal_bloom(MIT,https://threejs.org/examples/);pmndrs/drei MeshTransmissionMaterial「玻璃后场景被折射」思路(MIT,https://github.com/pmndrs/drei)。
+- 运行库:本地 vendor/r186 three.js(MIT),?three=169 回滚 vendor r169。
