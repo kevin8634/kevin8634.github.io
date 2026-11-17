@@ -1110,7 +1110,7 @@
   };
   var W = { "星图": "Math Atlas", "宙律": "Nomoverse", "元素工坊": "Element Forge", "生命源码": "Life Source", "奇点前夜": "Pre-Singularity", "觉弈": "Ludoterra", "天枢": "Starhelm", "总门户": "Portal" };
   var E = {
-    "创世计划 Genesis": "Genesis", "2.0 · 改公理·玻璃曲面": "2.0 · Rewrite the axiom · glass curvature", "11 个任务 · 197 颗知识星": "11 quests · 197 knowledge stars", "2.0 · 改律·玻璃宇宙": "2.0 · Rewrite the laws · glass cosmos", "2.0 · 改码·玻璃细胞": "2.0 · Rewrite the code · glass cell", "2.0 · 玻璃烧瓶·熔金炉": "2.0 · Glass flask · gold forge", "13 个任务 52 关 · 反应图鉴 200 条": "13 quests, 52 levels · 200 reactions", "七个世界 · 一张星图": "Seven worlds · one star map", "✦ 星网": "✦ Star Web", "你身上的碘从哪来": "Where does your iodine come from", "那块骨头有多老": "How old is that bone", "星历": "Star Log",
+    "创世计划 Genesis": "Genesis", "2.0 · 改公理·玻璃曲面": "2.0 · Rewrite the axiom · glass curvature", "11 个任务 · 197 颗知识星": "11 quests · 197 knowledge stars", "2.0 · 改律·玻璃宇宙": "2.0 · Rewrite the laws · glass cosmos", "2.0 · 改码·玻璃细胞": "2.0 · Rewrite the code · glass cell", "2.0 · 玻璃烧瓶·熔金炉": "2.0 · Glass flask · gold forge", "2.0 · 玻璃心智": "2.0 · Glass mind", "2.0 · 心之透镜": "2.0 · Lens of the mind", "13 个任务 52 关 · 反应图鉴 200 条": "13 quests, 52 levels · 200 reactions", "七个世界 · 一张星图": "Seven worlds · one star map", "✦ 星网": "✦ Star Web", "你身上的碘从哪来": "Where does your iodine come from", "那块骨头有多老": "How old is that bone", "星历": "Star Log",
     "宇宙将为你闪烁": "The Universe Will Twinkle for You", "背景音乐": "Music", "原创合成 · 四首": "Original synth · 4 tracks", "列表循环": "Loop all", "单曲循环": "Loop one", "关闭声音": "Sound off",
     "如果世界是一款游戏": "What if the world were a game?", "七个互相连通的学习世界 · 把世界当成一款游戏来拆解": "Seven connected learning worlds · take the world apart like a game",
     "了解更多 →": "Learn more →", "帮我选一颗星 ✦": "Pick a star for me ✦", "帮我选一颗星": "Pick a star for me",
@@ -1737,12 +1737,12 @@
           age: ["ya","huo","chen","he"], tags: ["life"], why: "对动物、身体和遗传好奇？来读一读、改一改生命的源码。" },
         { id: "05", star: "开阳", name: "奇点前夜", en: "Pre-Singularity", field: "超级智能 SI",
           desc: "亲手训练、测试、约束 AI。", color: "#22d3ee", live: true,
-          meta: ["已上线 v0.9.3 · 黎明天色", "10 个任务 29 关"], href: "pre-singularity/",
+          meta: ["2.0 · 玻璃心智", "10 个任务 29 关"], href: "pre-singularity/",
           prefix: ["gn:ps:"],
           age: ["huo","chen","he"], tags: ["ai","math"], why: "想弄懂 AI 是怎么学会的？亲手训练它、考考它，再给它立规矩。" },
         { id: "06", star: "摇光", name: "觉弈", en: "Ludoterra", field: "认知觉醒",
           desc: "看见自己的思维，做出更清醒的选择。", color: "#f5c26b", live: true,
-          meta: ["已上线 v0.35 · 1.0 收口", "10 个关卡 · 星桥七座已通"], href: "ludoterra/", prefix: ["gn:lt:"],
+          meta: ["2.0 · 心之透镜", "10 个关卡 · 星桥七座已通"], href: "ludoterra/", prefix: ["gn:lt:"],
           age: ["huo","chen","he"], tags: ["society"], why: "想看清自己怎么思考、怎么做选择？把每一次选择当成一局棋来复盘。", ageTxt: "星火 12+ · 星芽可试入门关" },
         { id: "07", star: "天枢", name: "天枢", en: "Starhelm", field: "天文",
           desc: "北斗第一星 · 用真实实时数据看见此刻的天空。", color: "#dfe6f3", live: true,
@@ -3795,12 +3795,17 @@
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
         { w: "03", v: "v2.7", d: "2026-11-18", t: "元素工坊 2.0 标志性体验「玻璃烧瓶 · 熔金炉」第一版：锻炉星盘中央悬着一只真透射的圆底烧瓶，罩住正在缩放的物质，瓶颈后的尺度牌被玻璃折弯、分出彩边；瓶下熔金炉火发光。低配设备保留原平面星盘。" },
+        { w: "05", v: "2.0-B", d: "2026-11-17", t: "奇点前夜 2.0「透过玻璃心智看决策」：写实办公室里悬着一颗真透射的玻璃脑，看 AI 的理由怎样一路折射到决定上；三幕——看得见的理由、它没告诉你的、你会怎么问。大厅主入口直达，经典版保留小入口，打开过一次可离线玩。" },
+        { w: "06", v: "v0.43", d: "2026-11-17", t: "觉弈 2.0「心之透镜」收尾：街景透过玻璃脑实时折射，偏差越大街道弯得越厉害；光之莲在亮路面上也看得清，手机上可以按住透镜拖着走。" },
         { w: "01", v: "v0.9-α3", d: "2026-11-17", t: "星图 2.0「改公理·玻璃曲面」第四幕「数一数平行线」：先猜，再拖动过一点的直线、扫半圈数平行线——球面 0 条、平面 1 条、双曲无数条，双曲时画出两条极限平行线和平行角。曲率为负时，庞加莱圆盘可弯成玻璃马鞍面示意，三角形内角和照样实时读数。" },
         { w: "01", v: "v0.9-α2", d: "2026-11-17", t: "星图有了自己的离线缓存，打开过一次断网也能玩；对照模式的平面玻璃加了边缘光，矮横屏手机顶栏不再压住面板。" },
         { w: "01", v: "v0.9-α1", d: "2026-11-17", t: "星图 2.0 标志性体验「改公理·玻璃曲面」上线（/math-atlas/curve/）：在玻璃球面上画出内角和 270° 的三角形，再亲手拧曲率，看平直与弯曲空间的三角形有何不同，高斯–博内公式实时读数。三维引擎同步升级到 Three.js r186。" },
         { w: "04", v: "v0.13", d: "2026-11-17", t: "生命源码 2.0 标志性体验「改码·玻璃细胞」第一版（/life-source/recode/）：透明玻璃细胞里改一段源码，看细胞怎么变；绿色荧光蛋白骨架来自公开蛋白质结构 1EMA。" },
         { w: "02", v: "v2.0-α2", d: "2026-11-16", t: "宙律 2.0「改律·玻璃宇宙」画面升级：玻璃质感、光晕与星空更细腻。" },
         { w: "02", v: "v2.0-α1", d: "2026-11-16", t: "宙律 2.0 标志性体验「改律·玻璃宇宙」上线（/nomoverse/cosmos/）：三幕玩法，亲手改写物理定律，看玻璃宇宙随之变化。" },
+        { w: "06", v: "v0.39", d: "2026-11-14", t: "觉弈 2.0 标志性体验「心之透镜」三幕上线（/ludoterra/lens/）：看见透镜、换一双眼睛、破茧——拧三枚偏差旋钮，看同一条街在不同的眼睛里怎么变；通关后星盘上升起第 11 颗星。" },
+        { w: "05", v: "2.0-v2", d: "2026-11-14", t: "奇点前夜「玻璃心智」加入玻璃共鸣声景，终章从神经核中打开一道光门。" },
+        { w: "05", v: "2.0-v1", d: "2026-11-14", t: "奇点前夜 2.0「玻璃心智」第一版：一颗会折射的玻璃神经核，三枚滑块调目标、能力和透明度，三幕看懂 AI 的决定从哪里来。" },
         { w: "03", v: "v2.6", d: "2026-11-14", t: "实验室新增「有机转化路线」小游戏：乙烯 → 乙醇 → 乙醛 → 乙酸 → 乙酸乙酯，每一步先猜试剂和条件，猜错告诉你为什么，猜对揭示方程式和课本章节。" },
         { w: "03", v: "v2.5", d: "2026-11-14", t: "反应图鉴扩到 200 条：新增选择性必修 3《有机化学基础》40 条，按取代、加成、消去、氧化、酯化、聚合等类型可筛可搜，手性分子能直接跳到「镜子里的分子」。" },
         { w: "gn", v: "门户 v2.6.3", d: "2026-11-14", t: "星网补上第 7 条航线「那块骨头有多老」（元素工坊 → 生命源码 → 觉弈 → 星图），首页星网面板可直接启航，进度与深空层共用。" },
