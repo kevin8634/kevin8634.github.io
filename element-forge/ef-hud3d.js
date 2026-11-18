@@ -364,6 +364,6 @@ export async function install(gl, scene, cam, ST) {
   document.body.classList.add('hud3d');
   EF.hud3d = { root, refreshBeads, layout, float, D };
   /* v2.7 §5.16:玻璃烧瓶 · 熔金炉(真透射 + 文字牌 + 选择性辉光),失败则保留原星盘 */
-  import('./ef-flask-gl.js?v=1').then(m => m.install(gl, scene, cam, { root, D, float })).catch(e => console.warn('[ef] 玻璃烧瓶启动失败,保留原星盘', e));
+  import('./ef-flask-gl.js?v=2').then(m => m.install(gl, scene, cam, { root, D, float, ST })).catch(e => console.warn('[ef] 玻璃烧瓶启动失败,保留原星盘', e));
   return EF.hud3d;
 }

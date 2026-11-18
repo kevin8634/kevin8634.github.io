@@ -1,4 +1,4 @@
-/* 元素工坊 Element Forge · 2.0 标志性体验「玻璃烧瓶 · 熔金炉」ef-flask-gl.js v1(§5.16 方案 A 最小可交版)
+/* 元素工坊 Element Forge · 2.0 标志性体验「玻璃烧瓶 · 熔金炉」ef-flask-gl.js v2(§5.16 方案 A 最小可交版)
    锻炉星盘中央:一只写实圆底烧瓶罩住「尺度镜」浮物,悬在熔金炉火上;瓶后悬一块文字牌(当前尺度名 + 尺寸),
    透过瓶身被真折射弯折、按 R/G/B 分色;只有炉火进入选择性辉光。
    · 真透射:思路改写自 pmndrs/drei MeshTransmissionMaterial(MIT),代码复用自本站 04 life-source/recode/glass.js
@@ -14,9 +14,10 @@ const EF = window.EF;
 export async function install(gl, scene, cam, ctx) {
   if (/[?&]flask=0/.test(location.search)) return null;
   const { THREE } = gl, { renderer } = gl, hi = EF.glTier === 'high';
-  const { root, D, float } = ctx;
+  const { root, D, float, ST } = ctx;
   const C = float.position.clone();           /* 烧瓶球心 = 尺度镜浮物中心 */
   const R = 0.46, NECK = 0.115;
+  EF.flaskFit = R * 0.86 / float.scale.x;   /* v2.8:浮物封顶半径(瓶内壁留 14% 余量) */
 
   /* ---------- 真透射玻璃(改写自 04 glass.js) ---------- */
   const SAMPLES = hi ? 6 : 2;
@@ -24,14 +25,14 @@ export async function install(gl, scene, cam, ctx) {
     defines: { SAMPLES },
     uniforms: {
       uBuffer: { value: null }, uIor: { value: 1.5 }, uThick: { value: 0.32 }, uChroma: { value: hi ? 0.05 : 0.0 }, uBlur: { value: hi ? 0.035 : 0.0 },
-      uTint: { value: new THREE.Color('#fbf6ee') }, uAtten: { value: new THREE.Color('#ffd9a8') }, uRim: { value: new THREE.Color('#ffd19a') }, uKey: { value: new THREE.Vector3(0.4, 0.9, 0.6).normalize() },
+      uExpo: { value: 1 }, uTint: { value: new THREE.Color('#fbf6ee') }, uAtten: { value: new THREE.Color('#ffd9a8') }, uRim: { value: new THREE.Color('#ffd19a') }, uKey: { value: new THREE.Vector3(0.4, 0.9, 0.6).normalize() },
     },
     vertexShader: /* glsl */`
       varying vec3 vW; varying vec3 vN;
       void main(){ vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; vN = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * viewMatrix * w; }`,
     fragmentShader: /* glsl */`
       uniform mat4 projectionMatrix;
-      uniform sampler2D uBuffer; uniform float uIor, uThick, uChroma, uBlur; uniform vec3 uTint, uAtten, uRim, uKey;
+      uniform sampler2D uBuffer; uniform float uIor, uThick, uChroma, uBlur, uExpo; uniform vec3 uTint, uAtten, uRim, uKey;
       varying vec3 vW; varying vec3 vN;
       float hash(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return fract(p.x*p.y); }
       vec2 proj(vec3 p){ vec4 c = projectionMatrix * viewMatrix * vec4(p,1.0); return clamp(c.xy/c.w*.5+.5, 0.001, 0.999); }
@@ -53,6 +54,10 @@ export async function install(gl, scene, cam, ctx) {
           tr.b += texture2D(uBuffer, proj(vW + rb*uThick)).b;
         }
         tr /= float(SAMPLES);
+        /* v2.8:按档曝光 + 保色相高光压缩(缓冲是未做色调映射的 HDR,恒星光晕叠加后会溢成白) */
+        tr *= uExpo;
+        float m = max(tr.r, max(tr.g, tr.b)), k = .62;
+        if (m > k) tr *= (k + (1.0 - k) * (1.0 - exp(-(m - k) / (1.0 - k)))) / m;
         float path = uThick / max(nv,.2);
         tr *= mix(vec3(1.0), uAtten, clamp(path*.35,0.0,1.0)) * uTint;
         vec3 h = normalize(uKey + v); float spec = pow(max(dot(n,h),0.0), 220.0) * 2.4;
@@ -154,7 +159,7 @@ export async function install(gl, scene, cam, ctx) {
 
   let tTxt = 0;
   gl.onFrame((t, dt) => {
-    if (!active()) return;
+    if (!active()) { float.visible = true; return; }
     sizeRT();
     if (t - tTxt > 0.4) { tTxt = t; drawPlate(); }
     fireM.uniforms.uT.value = rm() ? 0.6 : t;
@@ -162,10 +167,13 @@ export async function install(gl, scene, cam, ctx) {
     flask.position.y = liquid.position.y = float.position.y; plate.position.y = float.position.y + 0.66;   /* 跟着浮物一起轻浮 */
     plate.quaternion.copy(cam.quaternion);
     /* 缓冲:藏起烧瓶,把「玻璃后面」渲一遍 */
-    flask.visible = false;
+    const sv = ST ? Math.max(0, 1 - Math.abs(ST.val)) : 0;   /* 恒星档权重(0 档=恒星) */
+    glass.uniforms.uExpo.value = 1 - 0.42 * sv;
+    flask.visible = false; float.visible = true;
     const prev = renderer.getRenderTarget();
     renderer.setRenderTarget(rtBuf); renderer.render(scene, cam);
     renderer.setRenderTarget(prev); flask.visible = true;
+    float.visible = false;   /* v2.8:主画面里浮物只透过玻璃可见(即便缩放越界也被瓶身裁住) */
   });
 
   const cc = new THREE.Color();
@@ -185,6 +193,6 @@ export async function install(gl, scene, cam, ctx) {
     renderer.autoClear = ac; renderer.toneMapping = tm; renderer.setClearColor(cc, ca);
   });
 
-  EF.flask = { flask, plate, fires, version: 1 };
+  EF.flask = { flask, plate, fires, version: 2 };
   return EF.flask;
 }

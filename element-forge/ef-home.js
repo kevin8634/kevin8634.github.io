@@ -48,7 +48,7 @@ function bootStage() {
     s.g.add(new THREE.Mesh(new THREE.SphereGeometry(1.35, 96, 64), sm));
     const glow = glowSprite([[0, 'rgba(255,200,120,.9)'], [0.22, 'rgba(255,140,50,.55)'], [0.5, 'rgba(255,80,20,.15)'], [1, 'rgba(255,60,10,0)']], 5.6);
     const cor = glowSprite([[0, 'rgba(255,170,90,.35)'], [0.4, 'rgba(255,110,40,.08)'], [1, 'rgba(0,0,0,0)']], 10);
-    reg(s, glow.material, 1); reg(s, cor.material, 0.8); s.g.add(cor, glow);
+    reg(s, glow.material, 1); reg(s, cor.material, 0.8); s.g.add(cor, glow); s.sp = [[glow, 5.6, 0.55], [cor, 10, 0.4]];
     s.upd = t => { sm.uniforms.uT.value = t; cor.material.rotation = t * 0.02; };
     s.spin = 0.05; scenes.push(s);
   })();
@@ -160,14 +160,16 @@ function bootStage() {
     const m = reg(s, new THREE.MeshStandardMaterial({ roughness: 0.35, metalness: 0.15 }));
     const im = new THREE.InstancedMesh(new THREE.SphereGeometry(d * 0.52, 24, 16), m, 56), M4 = new THREE.Matrix4(), cP = new THREE.Color(0xff6a3d), cN = new THREE.Color(0x9aa6b8);
     nuc.forEach((p, i) => { im.setColorAt(i, roles[i] ? cP : cN); }); s.g.add(im);
-    const gl2 = glowSprite([[0, 'rgba(255,150,80,.55)'], [0.5, 'rgba(255,90,30,.12)'], [1, 'rgba(0,0,0,0)']], 4.2); reg(s, gl2.material, 0.8); s.g.add(gl2);
+    const gl2 = glowSprite([[0, 'rgba(255,150,80,.55)'], [0.5, 'rgba(255,90,30,.12)'], [1, 'rgba(0,0,0,0)']], 4.2); reg(s, gl2.material, 0.8); s.g.add(gl2); s.sp = [[gl2, 4.2, 0.8]];
     s.upd = t => { nuc.forEach((p, i) => { const j = EF.reduced ? 0 : 0.012; M4.makeTranslation(p.x + Math.sin(t * 7 + i) * j, p.y + Math.sin(t * 6.3 + i * 2.1) * j, p.z + Math.sin(t * 5.7 + i * 3.7) * j); im.setMatrixAt(i, M4); }); im.instanceMatrix.needsUpdate = true; };
     s.spin = 0.16; scenes.push(s);
   })();
 
+  /* v2.8:各档实体包围半径(本地单位),装进玻璃烧瓶时用来封顶缩放,防止浮物穿出瓶身 */
+  [1.35, 1.28, 1.4, 1.55, 1.65, 1.6, 1.0].forEach((r, k) => { scenes[k].r = r; });
   scenes.forEach(s => stageScene.add(s.g)); EF._stageGroups = scenes.map(s => s.g);
   /* v2.2 锻炉星盘:写实实验桌 + 黄铜星盘 + 器皿,与尺度镜同场景 */
-  import('./ef-hud3d.js?v=13').then(m => m.install(gl, stageScene, cam, ST)).catch(e => console.warn('[ef] 锻炉星盘启动失败,保留平面 HUD', e));
+  import('./ef-hud3d.js?v=14').then(m => m.install(gl, stageScene, cam, ST)).catch(e => console.warn('[ef] 锻炉星盘启动失败,保留平面 HUD', e));
 
   /* 拖动旋转当前档 */
   let drag = null, yawV = 0, mx = 0, my = 0;
@@ -187,7 +189,10 @@ function bootStage() {
       if (ST.val >= 6) { a = k === 6 ? 1 : 0; }
       else if (k === i) { a = 1 - ease(f * 1.25); sc = 1 + f * f * 5; }
       else if (k === i + 1) { a = ease((f - 0.15) * 1.3); sc = 0.18 + 0.82 * ease(f); }
+      const fit = EF.flaskFit;   /* 烧瓶内可用半径(浮物本地单位);无烧瓶时为空,行为同 v2.7 */
+      if (fit) { if (k === i && ST.val < 6) a = 1 - ease(Math.min(1, f * 1.8)); sc = Math.min(sc, fit / s.r); }
       setA(s, a); s.g.scale.setScalar(sc);
+      if (s.sp) s.sp.forEach(([o, size, dim]) => { if (fit) { o.scale.setScalar(Math.min(size, 2 * fit / sc)); o.material.opacity *= dim; } else o.scale.setScalar(size); });
       if (s.g.visible) { if (s.upd) s.upd(t, dt); s.yaw += (EF.reduced ? 0 : s.spin * dt) + (k === Math.round(ST.val) ? yawV : 0); s.g.rotation.y = s.yaw; }
     });
     yawV *= 0.9;
