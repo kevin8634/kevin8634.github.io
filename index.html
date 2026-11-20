@@ -1150,7 +1150,7 @@
     "从宇宙到心智的一条路": "One road from cosmos to mind", "星图 · 数学 —— 贯穿所有世界的语言": "Math Atlas · math — the language running through every world",
     "天枢是北斗第一星，也是第一个看向真实天空的世界。": "Dubhe is the Dipper's first star — and Starhelm is the first world to look at the real sky.",
     "一个问题，走进另一个世界": "One question, into another world", "在知识星桥里看 ✦": "See it in Star Bridges ✦", "最近更新": "Latest updates",
-    "无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。": "No account, no tracking. Your progress stays in this device's browser.", "创世计划总门户": "Genesis portal",
+    "无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。": "No account, no tracking. Your progress stays in this device's browser.", "创世计划的教育理念参考埃隆·马斯克创办的 Ad Astra 学校（第一性原理、难题拆解）；全部课程、题目与交互均为自研，与 SpaceX 及其关联方无合作或背书关系。": "Genesis is inspired by the educational philosophy of Ad Astra, the school founded by Elon Musk (first principles, breaking down hard problems). All lessons, questions and interactions are original and not affiliated with or endorsed by SpaceX.", "创世计划总门户": "Genesis portal",
     "宇宙": "Cosmos", "自然与身体": "Nature & body", "物质": "Matter", "机器与智能": "Machines & AI", "数字与规律": "Numbers & patterns", "人与社会": "People & society",
     "星芽": "Sprout", "星火": "Spark", "星辰·高中": "Stardust · high school", "星系·大学": "Galaxy · university", "星河·成人": "River · adult", "星穹·研究者": "Firmament · researcher", "专业": "Expert",
     "星芽 7+": "Sprout 7+", "星火 12+": "Spark 12+", "星火 12+ · 星芽可试入门关": "Spark 12+ · Sprouts can try the intro levels", "即将点亮": "Coming soon", "所有人": "Everyone",
@@ -1538,6 +1538,7 @@
           </section>
           <footer class="x-ab__foot">
             <span>无需账号，不做统计埋点；学习进度只保存在你这台设备的浏览器里。</span>
+            <span>创世计划的教育理念参考埃隆·马斯克创办的 Ad Astra 学校（第一性原理、难题拆解）；全部课程、题目与交互均为自研，与 SpaceX 及其关联方无合作或背书关系。</span>
             <span><button type="button" class="x-lang x-lang--ab" onclick="gnSetLang(GN_LANG==='en'?'zh':'en')" aria-label="中文 / English">中 / EN</button> 创世计划总门户 <b>v2.5.9</b></span>
           </footer>
         </div>
@@ -5197,6 +5198,9 @@
       html[lang^="en"] #p3hero .p3hd em { font-style: italic; }
       #p3hero .rw { --c: #7cc8ff; display: inline-block; vertical-align: bottom; overflow: hidden; height: 1.16em; margin: 0 .02em; text-shadow: none; }
       #p3hero .rw > span { display: inline-block; color: var(--c); text-shadow: none; }
+      #p3hero .p3hd .tg { position: absolute; left: 5vw; top: calc(30vh + var(--fs) * 2.12 + 22px); margin: 0; max-width: 26em; font-size: clamp(15px, 1.25vw, 20px); font-weight: 600; line-height: 1.5; letter-spacing: .04em; color: #f3e6c4; }
+      #p3hero .p3hd .tg.out { opacity: 0 !important; transition: opacity .42s ease; }
+      #p3hero .p3hd .cr { position: absolute; right: 5vw; bottom: 14px; margin: 0; white-space: nowrap; text-align: right; font-size: 11px; line-height: 1.5; color: rgba(198,199,234,.6); }
       #p3hero .p3hd .sb { position: absolute; right: 5vw; top: calc(52vh + var(--fs) * 2.12 + 18px); margin: 0; max-width: 24em; text-align: right; font-size: clamp(14px, 1.1vw, 17px); line-height: 1.75; color: #c6c7ea; }
       /* 大按钮：树下居中 */
       #p3hero .p3ct { position: absolute; z-index: 4; left: 50%; bottom: calc(5vh + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; gap: 16px; }
@@ -5207,15 +5211,16 @@
       #p3hero .p3ct .lk { border: 0; background: none; color: #c9c7ee; font-size: 14.5px; padding: 10px 12px; letter-spacing: .06em; white-space: nowrap; }
       #p3hero .p3ct .lk:hover { color: #fff; }
       /* 进场 */
-      #p3hero .p3hd .ey, #p3hero .p3hd .sb, #p3hero .p3ct, #p3hero .p3bd { opacity: 0; transition: opacity .9s ease; }
-      html.p3rv #p3hero .p3hd .ey, html.p3rv #p3hero .p3hd .sb, html.p3rv #p3hero .p3ct, html.p3rv #p3hero .p3bd { opacity: 1; }
+      #p3hero .p3hd .ey, #p3hero .p3hd .sb, #p3hero .p3hd .tg, #p3hero .p3hd .cr, #p3hero .p3ct, #p3hero .p3bd { opacity: 0; transition: opacity .9s ease; }
+      html.p3rv #p3hero .p3hd .ey, html.p3rv #p3hero .p3hd .sb, html.p3rv #p3hero .p3hd .tg, html.p3rv #p3hero .p3hd .cr, html.p3rv #p3hero .p3ct, html.p3rv #p3hero .p3bd { opacity: 1; }
+      html.p3rv #p3hero .p3hd .tg { transition-delay: .6s; }
       html.p3rv #p3hero .p3hd .ey { transition-delay: .25s; } html.p3rv #p3hero .p3hd .sb { transition-delay: .9s; } html.p3rv #p3hero .p3ct { transition-delay: 1.1s; }
-      @media (min-width: 801px) and (max-width: 1180px) and (min-height: 421px) { #p3hero .p3hd .ey { font-size: 11px; letter-spacing: .18em; } #p3hero .p3hd .ha { top: 28vh; } #p3hero .p3hd .ey { top: calc(28vh - 40px); } #p3hero .p3ct .pri, #p3hero .p3ct .sec { height: 56px; padding: 0 30px; font-size: 17px; } }
+      @media (min-width: 801px) and (max-width: 1180px) and (min-height: 421px) { #p3hero .p3hd .ey { font-size: 11px; letter-spacing: .18em; } #p3hero .p3hd .ha { top: 28vh; } #p3hero .p3hd .tg { top: calc(28vh + var(--fs) * 2.12 + 18px); } #p3hero .p3hd .ey { top: calc(28vh - 40px); } #p3hero .p3ct .pri, #p3hero .p3ct .sec { height: 56px; padding: 0 30px; font-size: 17px; } }
       /* 手机竖屏：树占上 60%，标题三行在树下，按钮全宽贴底 */
       @media (max-width: 800px) and (min-height: 421px) {
         #p3hero .p3bd { top: calc(18px + env(safe-area-inset-top)); left: 20px; } #p3hero .p3bd span { display: none; }
         #p3hero .p3hd { --fs: clamp(36px, 11.4vw, 60px); inset: auto 0 auto 0; top: 60vh; padding: 0 22px; }
-        #p3hero .p3hd .ey, #p3hero .p3hd .sb { display: none; }
+        #p3hero .p3hd .ey, #p3hero .p3hd .sb, #p3hero .p3hd .tg, #p3hero .p3hd .cr { display: none; }
         #p3hero .p3hd .ha, #p3hero .p3hd .hb { position: static; text-align: left; display: block; }
         #p3hero .p3hd .hb .ln { display: inline; }
         #p3hero .p3hd h1 { line-height: 1.1; }
@@ -5233,7 +5238,7 @@
         #p3hero .p3bd { top: 12px; left: 18px; } #p3hero .p3bd span { display: none; }
         #p3hero .p3hd { --fs: clamp(24px, 9vh, 36px); inset: auto; left: 18px; top: 64px; width: 52vw; }
         html.p3h .p3mv { top: 8px; bottom: auto; left: 50%; transform: translateX(-50%); }
-        #p3hero .p3hd .ey, #p3hero .p3hd .sb { display: none; }
+        #p3hero .p3hd .ey, #p3hero .p3hd .sb, #p3hero .p3hd .tg, #p3hero .p3hd .cr { display: none; }
         #p3hero .p3hd .ha, #p3hero .p3hd .hb { position: static; text-align: left; display: block; }
         #p3hero .p3hd .hb .ln { display: inline; }
         html[lang^="en"] #p3hero #p3l4::before { content: " "; }
@@ -5274,7 +5279,7 @@
     <section id="p3hero" aria-label="创世计划 3.0">
       <canvas id="p3cv" aria-hidden="true"></canvas>
       <div class="p3bd" aria-hidden="true"><b>GENESIS</b><span id="p3bdt"></span></div>
-      <div class="p3hd" id="p3hd"><p class="ey" id="p3ey"></p><h1 id="p3h1"><span class="ha"><span class="ln" id="p3l1"></span><span class="ln" id="p3l2"></span></span><span class="hb"><span class="ln" id="p3l3"></span><span class="ln" id="p3l4"></span></span></h1><p class="sb" id="p3sub"></p></div>
+      <div class="p3hd" id="p3hd"><p class="ey" id="p3ey"></p><h1 id="p3h1"><span class="ha"><span class="ln" id="p3l1"></span><span class="ln" id="p3l2"></span></span><span class="hb"><span class="ln" id="p3l3"></span><span class="ln" id="p3l4"></span></span></h1><p class="tg" id="p3tg"></p><p class="sb" id="p3sub"></p><p class="cr" id="p3cr"></p></div>
       <aside class="p3pn pl" id="p3pl" aria-labelledby="p3plh"><h2 class="ph" id="p3plh"><b></b><span>PLAY</span><em></em></h2><div class="pb"><div class="wg" id="p3wg"></div></div></aside>
       <aside class="p3pn pr" id="p3pr" aria-labelledby="p3prh"><h2 class="ph" id="p3prh"><b></b><span>BUILD</span></h2><div class="pb"><div class="dg" id="p3dg"></div><p class="pm" id="p3pm"></p></div></aside>
       <div class="p3ct"><button type="button" class="pri" id="p3tbp" aria-controls="p3pl" aria-expanded="false"></button><button type="button" class="sec" id="p3tbb" aria-controls="p3pr" aria-expanded="false"></button><button type="button" class="lk" id="p3play"></button></div>
@@ -5289,7 +5294,7 @@
       document.documentElement.classList.add("p3h");
       var RW = en ? ["math", "physics", "chemistry", "life", "mind", "intelligence", "star"] : ["数学", "物理", "化学", "生命", "心智", "智能", "星空"];
       var RC = ["#7cc8ff", "#a78bfa", "#ff9a3c", "#5eead4", "#f0c060", "#22d3ee", "#c4b5fd"], RN = RW.map(function () { return ""; });
-      $("p3h1").setAttribute("aria-label", en ? "Master a world, then build one." : "玩懂一个世界，再亲手造一个。");
+      $("p3h1").setAttribute("aria-label", en ? "Start from first principles. Master a world, then build one." : "从第一性原理出发，玩懂一个世界，再亲手造一个。");
       $("p3l1").innerHTML = en ? "Master the" : "玩懂一个";
       $("p3l2").innerHTML = (en ? '<span class="rw" id="p3rw"><span></span></span> world,' : '<span class="rw" id="p3rw"><span></span></span>世界，');
       $("p3l3").innerHTML = en ? "then" : "再亲手";
@@ -5310,7 +5315,12 @@
       rwSet(0, false);
       if (window.P3FX) P3FX.blur($("p3h1"));   /* 11-16 Blur Text：标题逐字由糊变清 */
       function reveal() { document.documentElement.classList.add("p3rv"); if (!rwRM) setTimeout(rwLoop, 2600); }
-      $("p3sub").textContent = en ? "Math grows into physics, chemistry, life and mind, all the way to the stars. Play through seven worlds, layer by layer. The eighth star is yours to build." : "数学长出物理、化学、生命、心智，一直长到星空。七个世界，一层层玩懂；第八颗星，由你来造。";
+      /* 11-20 标语（王磊批）：副标语两句轮换 + 理念署名小字（内容自研） */
+      var TG = en ? ["No answer key. Only the answers you build.", "Break it down to atoms. Build it up to stars."] : ["没有标准答案，只有你造出来的答案。", "拆到原子，造到星辰。"];
+      $("p3tg").textContent = TG[0];
+      $("p3cr").textContent = en ? "Inspired by the educational philosophy of Ad Astra, the school founded by Elon Musk · All content original to Genesis" : "教育理念参考埃隆·马斯克创办的 Ad Astra 学校 · 内容由创世计划自研";
+      $("p3sub").textContent = (en ? "Math grows into physics, chemistry, life and mind, all the way to the stars. Play through seven worlds, layer by layer. The eighth star is yours to build." : "数学长出物理、化学、生命、心智，一直长到星空。七个世界，一层层玩懂；第八颗星，由你来造。");
+      if (!rwRM) { var tgI = 0; setInterval(function () { if (document.hidden || p3dead) return; var t = $("p3tg"); if (!t) return; t.classList.add("out"); setTimeout(function () { tgI = (tgI + 1) % TG.length; t.textContent = TG[tgI]; t.classList.remove("out"); }, 420); }, 6000); }
       $("p3play").textContent = en ? "Enter portal ↓" : "进入门户 ↓";
       $("p3lg").textContent = en ? "中文" : "EN";
       $("p3lg").addEventListener("click", function () { if (window.gnSetLang) gnSetLang(en ? "zh" : "en"); });
