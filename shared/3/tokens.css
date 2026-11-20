@@ -1,0 +1,90 @@
+/* 创世计划 3.0 · 共享设计令牌 /shared/3/tokens.css  v0.1 (2026-11-20, 总指挥维护)
+ * 各世界只引用、不覆盖。需要新变量请报总指挥。
+ * 美术基调:玻璃容器里的世界、磨砂玻璃面板、字少图标与数字多、高光不过曝、失败也好看。 */
+:root {
+  /* 七色光桥(世界色,与门户一致) */
+  --gn3-w01: #7cc8ff;  /* 01 星图 · 数学 */
+  --gn3-w02: #a78bfa;  /* 02 宙律 · 物理 */
+  --gn3-w03: #ff9a3c;  /* 03 元素工坊 · 化学 */
+  --gn3-w04: #5eead4;  /* 04 生命源码 · 生命 */
+  --gn3-w05: #f0c060;  /* 05 心智 */
+  --gn3-w06: #22d3ee;  /* 06 智能 */
+  --gn3-w07: #c4b5fd;  /* 07 星空 / 天枢 */
+  --gn3-gold: #e9c779; /* 品牌金 */
+
+  /* 常数色(02 宙律 §6.1,全站凡显示这些常数都用同色) */
+  --gn3-k-G: #a78bfa;      /* 引力常数 G · 紫 */
+  --gn3-k-c: #22d3ee;      /* 光速 c · 青 */
+  --gn3-k-alpha: #e9c779;  /* 精细结构常数 α · 金 */
+  --gn3-k-eps: #ff9a3c;    /* 核结合效率 ε · 橙 */
+  --gn3-k-Q: #ff8fc8;      /* 原初涨落 Q · 粉 */
+  --gn3-k-Lambda: #dbe8ff; /* 宇宙学常数 Λ · 蓝白 */
+  --gn3-k-Omega: #94a3b8;  /* 物质密度 Ω₀ · 银灰 */
+
+  /* 结果语义:成功暖金/翠绿;失败用红外伪彩、冷灰、霜,不用刺眼红 */
+  --gn3-ok: #34d399;
+  --gn3-ok-warm: #f3d27a;
+  --gn3-warn: #f5b971;
+  --gn3-fail: #c084fc;       /* 红外伪彩主色(紫品) */
+  --gn3-fail-2: #fb7185cc;   /* 伪彩次色,半透明,只做渐变点缀 */
+  --gn3-frost: #cbd5e1;
+
+  /* 底色与文字 */
+  --gn3-bg: #05060f;
+  --gn3-bg-2: #0b0d1f;
+  --gn3-ink: #f4f3ff;
+  --gn3-ink-2: #c6c7ea;
+  --gn3-ink-3: rgba(198, 199, 234, .62);
+
+  /* 玻璃面板 */
+  --gn3-glass-bg: rgba(18, 20, 44, .42);
+  --gn3-glass-bg-low: rgba(14, 16, 34, .86);   /* low 档:不模糊,改用更实的底 */
+  --gn3-glass-blur: 18px;
+  --gn3-glass-sat: 140%;
+  --gn3-glass-line: rgba(233, 199, 121, .28);
+  --gn3-glass-line-2: rgba(255, 255, 255, .10);
+  --gn3-glass-hi: inset 0 1px 0 rgba(255, 255, 255, .14);
+  --gn3-radius-s: 10px;
+  --gn3-radius-m: 16px;
+  --gn3-radius-l: 24px;
+  --gn3-blueprint: rgba(124, 200, 255, .55);    /* 蓝图描线 */
+
+  /* 亮度上限(标准 §2.2):自发光/高光颜色乘这个系数,避免过曝 */
+  --gn3-glow-max: .85;
+
+  /* 动效(标准 §2.4):反馈 ≤100ms,转场 ≤600ms */
+  --gn3-t-feedback: 90ms;
+  --gn3-t-fast: 180ms;
+  --gn3-t-move: 420ms;
+  --gn3-t-scene: 600ms;
+  --gn3-ease: cubic-bezier(.2, .7, .2, 1);
+  --gn3-ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  --gn3-ease-in: cubic-bezier(.4, 0, 1, 1);
+
+  /* 间距与字号阶梯 */
+  --gn3-s1: 4px; --gn3-s2: 8px; --gn3-s3: 12px; --gn3-s4: 16px; --gn3-s5: 24px; --gn3-s6: 32px; --gn3-s7: 48px;
+  --gn3-fs-xs: 11px; --gn3-fs-s: 13px; --gn3-fs-m: 15px; --gn3-fs-l: 18px; --gn3-fs-xl: 24px; --gn3-fs-2xl: clamp(28px, 3.2vw, 44px);
+  --gn3-font: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --gn3-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --gn3-serif: "Songti SC", "STSong", "Noto Serif SC", Georgia, serif;
+
+  /* 触控最小尺寸 */
+  --gn3-hit: 44px;
+}
+
+/* 基础玻璃面板:.gn3-glass;low 档(html.gn3-q-low)自动换实底 */
+.gn3-glass {
+  background: var(--gn3-glass-bg);
+  -webkit-backdrop-filter: blur(var(--gn3-glass-blur)) saturate(var(--gn3-glass-sat));
+  backdrop-filter: blur(var(--gn3-glass-blur)) saturate(var(--gn3-glass-sat));
+  border: 1px solid var(--gn3-glass-line-2);
+  border-radius: var(--gn3-radius-m);
+  box-shadow: var(--gn3-glass-hi), 0 10px 40px rgba(0, 0, 0, .35);
+  color: var(--gn3-ink);
+}
+html.gn3-q-low .gn3-glass { background: var(--gn3-glass-bg-low); -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* 减少动态:全部动效压到瞬时 */
+@media (prefers-reduced-motion: reduce) {
+  :root { --gn3-t-fast: 1ms; --gn3-t-move: 1ms; --gn3-t-scene: 1ms; }
+}
