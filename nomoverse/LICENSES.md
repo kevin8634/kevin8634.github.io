@@ -1,12 +1,12 @@
 # 宙律 Nomoverse · 许可与素材台账
 
-更新:2026-10-25(按《1.0 素材与 AI 标注台账规范》;总审小修:BYOK 例外、页脚 CC BY 许可链接)
+更新:2026-11-20(3.0-α1:删 r169 备份、修 three 来源、加 3.0 段与教育理念署名;此前 2026-10-25 按《1.0 素材与 AI 标注台账规范》;总审小修:BYOK 例外、页脚 CC BY 许可链接)
 
 ## 总表(1.0 规范)
 
 | 素材 | 用在哪(任务/页面) | 来源与链接 | 许可 | 署名要求 | 是否 AI 生成 | 页面标注位置 |
 |---|---|---|---|---|---|---|
-| Three.js r186 `vendor/three.module.min.js`(v0.7-α1 起;r169 备份 `vendor/three.r169.module.min.js` 保留一个版本) | hoop/sound/orbit/stars/tide 3D 舞台、首页 3D 星图(按需加载) | npm `three@0.169.0` https://threejs.org | MIT | 保留许可全文(`vendor/three.LICENSE`,文件头 @license) | 否 | 文件头 + 本台账 |
+| Three.js r186 `vendor/three.module.min.js`(v0.7-α1 起;r169 备份已于 3.0-α1 删除) | hoop/sound/orbit/stars/tide 3D 舞台、首页 3D 星图(按需加载) | three.js r186(本仓库 /deep/vendor/r186 同一文件)https://threejs.org | MIT | 保留许可全文(`vendor/three.LICENSE`,文件头 @license) | 否 | 文件头 + 本台账 |
 | `assets/hoop/asphalt_*` | hoop 地球 / 2g 球场地面 | Poly Haven「Asphalt 02」https://polyhaven.com/a/asphalt_02 | CC0 1.0 | 无 | 否 | 任务页脚「图像来源」+ 本台账 |
 | `assets/hoop/moon_*` | hoop 月面 | Poly Haven「Moon Dusted 01」https://polyhaven.com/a/moon_dusted_01 | CC0 1.0 | 无 | 否 | 同上 |
 | `assets/hoop/mars_*` | hoop 火星地面 | Poly Haven「Red Laterite Soil Stones」https://polyhaven.com/a/red_laterite_soil_stones | CC0 1.0 | 无 | 否 | 同上 |
@@ -49,7 +49,7 @@
 ## 第三方代码
 | 组件 | 版本 | 许可 | 位置 | 说明 |
 |---|---|---|---|---|
-| Three.js | r186(与 /deep/vendor/r186 同一文件) | MIT | `vendor/three.module.min.js`;许可全文 `vendor/three.LICENSE` | v0.7-α1(2026-11-01)按《宙律 2.0 开发计划》由 r169 升到 r186,文件取自本仓库 /deep/vendor/r186/three.module.min.js(单文件,未改动,文件头保留 `@license`)。sha256 `396d4f5595d135ad5b26be391327dabfdc130cedff91a1c89cec91ac68ee6dbb`。r169 备份 `vendor/three.r169.module.min.js`(sha256 f7cee3c7…)保留一个版本。只在支持 WebGL 且画质非「低」时按需加载,不走 CDN。 |
+| Three.js | r186(与 /deep/vendor/r186 同一文件) | MIT | `vendor/three.module.min.js`;许可全文 `vendor/three.LICENSE` | v0.7-α1(2026-11-01)按《宙律 2.0 开发计划》由 r169 升到 r186,文件取自本仓库 /deep/vendor/r186/three.module.min.js(单文件,未改动,文件头保留 `@license`)。sha256 `396d4f5595d135ad5b26be391327dabfdc130cedff91a1c89cec91ac68ee6dbb`。r169 备份 `vendor/three.r169.module.min.js`(sha256 f7cee3c7…)未被任何页面引用,已于 3.0-α1(2026-11-20)删除。只在支持 WebGL 且画质非「低」时按需加载,不走 CDN。 |
 
 除此之外,**本站没有其他第三方代码**:`core/nv.js`、`core/nv.css`、各任务页与首页的脚本和样式都是本项目原创。
 
@@ -103,3 +103,15 @@
 ## 字体与图形
 - 只用**系统字体**(系统无衬线字体栈与系统等宽字体栈),不下载、不内置任何网络字体。
 - 向导徽标、图腾、星图由 Canvas / WebGL 程序绘制;投篮 3D 舞台使用上表「图像素材」所列贴图,均本地打包。
+
+## 宙律 3.0(/nomoverse/3/,3.0-α1 起)
+| 内容 | 来源 | 许可 | 说明 |
+|---|---|---|---|
+| core/universe.js、core/nbody.js、core/gus0.js、core/adapt.mjs、main.mjs、tests/* | 本项目自研 | 同本站 | 物理阈值与出处见 `3/SOURCES.md`,全部为教学简化 |
+| mulberry32 随机数算法 | Tommy Ettinger(公开算法) | 公有领域 | 自写实现,与 /shared/3/prng.js 输出逐位一致 |
+| 黑体色温→sRGB 拟合 | Tanner Helland(公开算法) | 公开 | 自写实现 |
+| /shared/3/(tokens、tier、prng、gus、undo、i18n、selftest) | 创世计划共享内核(总指挥维护) | 同本站 | 只引用,不复制;许可见 /shared/3/README.md |
+| 界面组件(3-3 起) | 参考 React Bits、Aceternity UI(免费部分)、ThreeUI(免费部分)、MotionSites(免费部分)的设计 | 各站免费许可 | 原生 JS/CSS 改写,不引原代码与 CDN;接入时逐条署名 |
+
+## 教育理念署名(11-20 · 王磊批)
+- 创世计划的教育理念参考埃隆·马斯克创办的 Ad Astra 学校(第一性原理、难题拆解)。只署名理念出处:全部课程、题目、交互与代码均为本项目自研;未使用其肖像、Logo 或商标;与 SpaceX 及其关联方无合作、授权或背书关系。

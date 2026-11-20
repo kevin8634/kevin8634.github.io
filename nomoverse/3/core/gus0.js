@@ -40,7 +40,7 @@
         status: res.status, failures: res.failures.slice(), warnings: res.warnings.slice(), fate: res.cosmos.fate,
         age_s: res.cosmos.ageGyr === null ? null : r6(res.cosmos.ageGyr * 3.15576e16),
         crunch_s: res.cosmos.crunchGyr === null ? null : r6(res.cosmos.crunchGyr * 3.15576e16),
-        starLife_s: r6(s.lifeGyr * 3.15576e16),
+        starLife_s: r6(s.lifeGyr * 3.15576e16), starLifeSun_s: r6(s.lifeGyr * 3.15576e16),   // /shared/3/gus.js v0.1 白名单用 starLifeSun_s
         bohrRadius_m: r6(res.atoms.a0pm * 1e-12), hAlpha_m: r6(res.atoms.haNM * 1e-9),
         heliumY: r6(res.nucleo.Y), habitable: res.habitable,
         stages: JSON.parse(JSON.stringify(res.stages))

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>宙律 3.0 · 造一个宇宙(建造中)</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="宙律 Nomoverse 3.0:改宇宙的配方,看它能不能走到有行星的那一天。">
+<link rel="stylesheet" href="/shared/3/tokens.css">
+<style>
+  html, body { margin: 0; min-height: 100%; background: #05060d; color: #e8ecf8; font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 20px; }
+  h1 { font-weight: 600; letter-spacing: .02em; margin: 0 0 8px; color: var(--gn3-w02, #a78bfa); }
+  .panel { margin-top: 24px; padding: 20px; border-radius: 16px; }
+  #stages { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 12px; }
+  #stages span { text-align: center; padding: 8px 0; border-radius: 8px; background: #ffffff10; font-variant-numeric: tabular-nums; }
+  #stages .ok { color: var(--gn3-ok, #34d399); } #stages .warn { color: var(--gn3-warn, #f5b971); } #stages .fail { color: var(--gn3-fail, #c084fc); }
+  a { color: var(--gn3-k-c, #22d3ee); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <h1 data-i18n="title">宙律 3.0 · 造一个宇宙</h1>
+  <p data-i18n="wip">建造中。配方台界面正在做,先用下面这行看看真实宇宙走完 7 关。</p>
+  <section class="panel gn3-glass" aria-live="polite">
+    <div id="summary" data-i18n="loading">计算中…</div>
+    <div id="stages" role="list"></div>
+  </section>
+  <p><a href="/nomoverse/cosmos/" data-i18n="back2">回到宙律 2.0 · 改律·玻璃宇宙</a></p>
+</main>
+<script src="core/universe.js"></script>
+<script src="core/nbody.js"></script>
+<script src="core/gus0.js"></script>
+<script type="module" src="main.mjs"></script>
+</body>
+</html>
