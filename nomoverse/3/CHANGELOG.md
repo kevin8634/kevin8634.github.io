@@ -1,5 +1,10 @@
 # 宙律 Nomoverse 3.0 · 变更记录
 
+## v3.0-α2(接 /shared/3/ v0.2,2026-11-20,未上线)
+- rebase 到 shared v0.2(f41f5e4)。adapt.mjs 去掉已由 shared 覆盖的垫片:negotiate、tier current/set/onChange/budget/watchFPS、createStore(store.js)、i18n two/apply 改为直接用 shared;只留宇宙↔GUS、`?r=` 紧凑配方参数(作为 shared store 的 encode/decode)、自测钩子。
+- 新增 `core/scene.js` 场景数据接口(3-2 渲染层的唯一输入):describe(res, budget) → 恒星/行星/宜居带/星空/失败视觉;orbitPos 开普勒求解;skyField 种子星空粒子;11 个失败码各有视觉模式。`tests/scene.test.js` 20/20;自测钩子加 `scene(preset)`。
+- 测试:G1 翻转为「Λ=0/负值往返保留」,新增 crunch_s=null、大挤压 crunch_s 数值、derived heliumY/habitable/warnings/starLife_s 往返;接口测试 45/45。
+
 ## v3.0-α1(3-1 接口部分,2026-11-20,未上线)
 - 入口骨架 `/nomoverse/3/`(noindex,不改 2.0 任何页面与 SW):引用 /shared/3/ tokens.css、tier、gus、undo、i18n、selftest、prng(只引用不复制),显示 7 关结果一行,`?selftest=1` 挂 `window.__nv3`。
 - `core/adapt.mjs` 薄适配层:negotiate、encodeUniverse/decodeToRecipe(编码统一走 /shared/3/gus.js deflate-raw)、tier.detect/current/set/onChange/budget/guard、createStore(撤销 + 手势合并 + `?r=` 配方参数)、i18n t/two/apply、registerSelftest。
