@@ -11,6 +11,7 @@
 | undo.js | 快照撤销栈,上限 100,拖动合并一步,Ctrl/Cmd+Z、Shift+Z / Ctrl+Y | `createUndo(state,{onChange})` → `push/begin/end/undo/redo/bindKeys` |
 | i18n.js | 语言(GN_LANG > gn:lang > 浏览器)、字典与两层文本、科学计数 3.34×10⁻¹¹、倍数 ×0.5、读屏文案 | `lang()` `makeT(dict)` `sci()` `mult()` `aria()`;v0.2 `two(entry)` → {short,more}、`apply(root,t)`(data-i18n / data-i18n-aria / data-i18n-title) |
 | store.js | v0.2 状态仓库(基于 undo.js),URL 同步 | `createStore(init,{urlParam,normalize,encode,decode})` → `get/set/subscribe/beginGesture/endGesture/undo/redo/reset/bindKeys` |
+| ui.js + ui.css | v0.3 玻璃组件 11 个(G8),样张 /shared/3/demo.html(noindex,仅开发) | `slider` `countUp` `stepper` `glassSurface` `spotlightCard` `tiltedCard` `compare` `timeline` `multiStepLoader` `expandableCard` `card3d`,均 `X.mount(el,opts)` → `{update(opts), destroy()}`;slider 的 onStart/onEnd 接 store.beginGesture/endGesture;减少动态与 low 档自动去动效 |
 | selftest.js | `?selftest=1` 钩子约定:`window.__gn3[world]`(宙律另挂 `window.__nv3`)、错误收集 `window.__gn3err` | `register(world, api)` |
 | shared3.test.mjs | 纯函数单测(node) | `node shared/3/shared3.test.mjs` |
 
@@ -30,5 +31,5 @@
 ## 路线
 - v0.1:地基(tokens、画质、确定性、GUS、撤销、中英、自测钩子)。
 - v0.2(本版):补 02 宙律缺口 G1–G7、G9(上表)。
-- v0.3(下一步,原 G8):原生玻璃组件——弹性滑块/玻璃旋钮(参考 React Bits Elastic Slider)、Count Up、Stepper、Compare 对比滑块(Aceternity)、Glass Surface/Spotlight 卡、Tilted Card、Multi Step Loader、迷你折线/雷达;音效开关。只用四站免费部分,原生改写,LICENSES 逐条署名。
+- v0.3(本版,G8):原生玻璃组件(见上表)。原清单——弹性滑块/玻璃旋钮(参考 React Bits Elastic Slider)、Count Up、Stepper、Compare 对比滑块(Aceternity)、Glass Surface/Spotlight 卡、Tilted Card、Multi Step Loader、迷你折线/雷达;音效开关。只用四站免费部分,原生改写,LICENSES 逐条署名。
 - 通用自测脚本(四视口 + 减少动态 + 三档 + 软件渲染 + 离线二次,出 A–G 报告)。

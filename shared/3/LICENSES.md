@@ -10,3 +10,9 @@ v0.1 全部代码为创世计划自写,无第三方源码、无外部依赖。
 
 ## 教育理念署名
 创世计划的教育理念参考埃隆·马斯克创办的 Ad Astra 学校(第一性原理、难题拆解)。全部课程、题目、交互与代码均为自研;未使用其肖像、Logo 或商标;与 SpaceX 及其关联方无合作、授权或背书关系。
+
+## v0.3 玻璃组件(ui.js / ui.css)
+全部为原生 JS/CSS 自写,未复制任何第三方源码。交互思路参考以下站点的免费公开演示(仅借鉴效果概念):
+- React Bits(reactbits.dev,免费公开组件):Elastic Slider、Count Up、Stepper、Glass Surface、Spotlight Card、Tilted Card
+- Aceternity UI(ui.aceternity.com,免费组件):Compare、Timeline、Multi Step Loader、Expandable Card、3D Card
+- ThreeUI(免费部分):Advanced Glass Material 的玻璃观感(本版仅 CSS backdrop-filter 近似,未用其代码)

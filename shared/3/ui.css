@@ -1,0 +1,83 @@
+/* 创世计划 3.0 · 玻璃组件样式 /shared/3/ui.css v0.3(配 ui.js;依赖 tokens.css 变量) */
+.gn3-btn{min-width:var(--gn3-hit);min-height:var(--gn3-hit);border:1px solid var(--gn3-glass-line);border-radius:var(--gn3-radius-m);background:var(--gn3-glass-bg);color:var(--gn3-ink);font:inherit;font-size:var(--gn3-fs-l);cursor:pointer;transition:background var(--gn3-t-fast) var(--gn3-ease),transform var(--gn3-t-fast) var(--gn3-ease)}
+.gn3-btn:hover:not(:disabled){background:rgba(255,255,255,.08)}
+.gn3-btn:active:not(:disabled){transform:scale(.96)}
+.gn3-btn:disabled{opacity:.35;cursor:default}
+.gn3-btn:focus-visible,.gn3-slider-track:focus-visible,.gn3-compare-bar:focus-visible,.gn3-tl-item:focus-visible,.gn3-exp-head:focus-visible{outline:2px solid var(--gn3-k-c);outline-offset:2px}
+
+/* 1 弹性滑块 */
+.gn3-slider{--gn3-sl-color:var(--gn3-k-c);display:grid;gap:var(--gn3-s2);color:var(--gn3-ink)}
+.gn3-slider-lab{display:flex;justify-content:space-between;font-size:var(--gn3-fs-s);color:var(--gn3-ink-2)}
+.gn3-slider-val{font-family:var(--gn3-mono);color:var(--gn3-sl-color)}
+.gn3-slider-track{position:relative;height:var(--gn3-hit);margin:0 11px;cursor:pointer;touch-action:none;transition:transform var(--gn3-t-fast) var(--gn3-ease)}
+.gn3-slider-track::before{content:"";position:absolute;left:0;right:0;top:50%;height:6px;margin-top:-3px;border-radius:3px;background:rgba(255,255,255,.12)}
+.gn3-slider-fill{position:absolute;left:0;top:50%;height:6px;margin-top:-3px;border-radius:3px;background:var(--gn3-sl-color);box-shadow:0 0 12px color-mix(in srgb,var(--gn3-sl-color) 60%,transparent)}
+.gn3-slider-knob{position:absolute;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:#fff;border:3px solid var(--gn3-sl-color);box-shadow:0 2px 10px rgba(0,0,0,.4);transition:transform var(--gn3-t-fast) var(--gn3-ease)}
+.gn3-slider.is-drag .gn3-slider-knob{transform:scale(1.18)}
+.gn3-slider.is-spring .gn3-slider-track{transition:transform 420ms var(--gn3-ease-spring)}
+
+/* 2 数字滚动 */
+.gn3-count{font-variant-numeric:tabular-nums;font-family:var(--gn3-mono)}
+
+/* 3 步进器 */
+.gn3-stepper{display:inline-flex;align-items:center;gap:var(--gn3-s2)}
+.gn3-stepper-v{min-width:4ch;text-align:center;font-family:var(--gn3-mono);font-variant-numeric:tabular-nums}
+
+/* 4 玻璃面板 */
+.gn3-glass-surface{position:relative;overflow:hidden}
+.gn3-glass-surface::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(240px circle at var(--gn3-mx,30%) var(--gn3-my,0%),rgba(255,255,255,.10),transparent 60%),linear-gradient(135deg,color-mix(in srgb,var(--gn3-tint,transparent) 14%,transparent),transparent 60%)}
+
+/* 5 聚光卡 */
+.gn3-spot{position:relative;overflow:hidden}
+.gn3-spot::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity var(--gn3-t-move) var(--gn3-ease);background:radial-gradient(300px circle at var(--gn3-mx,50%) var(--gn3-my,50%),color-mix(in srgb,var(--gn3-spot) 22%,transparent),transparent 65%)}
+.gn3-spot.is-lit::before{opacity:1}
+
+/* 6 倾斜卡 / 11 景深卡 */
+.gn3-tilt,.gn3-card3d{transform-style:preserve-3d;transition:transform var(--gn3-t-move) var(--gn3-ease);will-change:transform}
+.gn3-card3d [data-depth]{transition:transform var(--gn3-t-move) var(--gn3-ease)}
+
+/* 7 对比滑块 */
+.gn3-compare{position:relative;overflow:hidden;border-radius:var(--gn3-radius-l);touch-action:none;cursor:ew-resize;min-height:120px}
+.gn3-compare-a,.gn3-compare-b{position:absolute;inset:0}
+.gn3-compare-a>*,.gn3-compare-b>*{width:100%;height:100%;object-fit:cover;display:block}
+.gn3-compare-bar{position:absolute;top:0;bottom:0;width:var(--gn3-hit);margin-left:calc(var(--gn3-hit) / -2)}
+.gn3-compare-bar::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--gn3-gold);box-shadow:0 0 10px var(--gn3-gold)}
+.gn3-compare-bar::after{content:"⟷";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--gn3-glass-bg-low);border:1px solid var(--gn3-gold);color:var(--gn3-gold);font-size:14px}
+.gn3-compare-la,.gn3-compare-lb{position:absolute;bottom:var(--gn3-s2);font-size:var(--gn3-fs-xs);padding:2px 8px;border-radius:999px;background:var(--gn3-glass-bg-low);color:var(--gn3-ink-2)}
+.gn3-compare-la{left:var(--gn3-s2)}.gn3-compare-lb{right:var(--gn3-s2)}
+
+/* 8 时间线(七关) */
+.gn3-timeline{display:flex;gap:var(--gn3-s1);overflow-x:auto;scrollbar-width:none}
+.gn3-tl-item{flex:1 0 auto;min-width:var(--gn3-hit);min-height:var(--gn3-hit);display:grid;justify-items:center;gap:2px;padding:var(--gn3-s1) var(--gn3-s2);border:0;border-radius:var(--gn3-radius-s);background:transparent;color:var(--gn3-ink-2);font:inherit;cursor:pointer}
+.gn3-tl-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--gn3-tl-c);background:transparent}
+.gn3-tl-item.is-ok .gn3-tl-dot{background:var(--gn3-tl-c)}
+.gn3-tl-item.is-warn .gn3-tl-dot{background:var(--gn3-warn);border-color:var(--gn3-warn)}
+.gn3-tl-item.is-fail .gn3-tl-dot{background:var(--gn3-fail);border-color:var(--gn3-fail-2)}
+.gn3-tl-item.is-active{background:rgba(255,255,255,.07);color:var(--gn3-ink)}
+.gn3-tl-t{font-size:var(--gn3-fs-s);font-weight:600}.gn3-tl-s{font-size:var(--gn3-fs-xs);color:var(--gn3-ink-3)}
+
+/* 9 多步加载 */
+.gn3-msl{display:grid;gap:var(--gn3-s2)}
+.gn3-msl-row{display:flex;align-items:center;gap:var(--gn3-s2);color:var(--gn3-ink-3);transition:color var(--gn3-t-fast) var(--gn3-ease)}
+.gn3-msl-ic{width:14px;height:14px;border-radius:50%;border:2px solid currentColor;flex:none}
+.gn3-msl-row.is-run{color:var(--gn3-ink)}.gn3-msl-row.is-run .gn3-msl-ic{border-color:var(--gn3-k-c);border-top-color:transparent;animation:gn3spin .8s linear infinite}
+.gn3-msl-row.is-ok{color:var(--gn3-ink-2)}.gn3-msl-row.is-ok .gn3-msl-ic{background:var(--gn3-ok);border-color:var(--gn3-ok)}
+.gn3-msl-row.is-fail{color:var(--gn3-fail)}.gn3-msl-row.is-fail .gn3-msl-ic{background:var(--gn3-fail);border-color:var(--gn3-fail)}
+@keyframes gn3spin{to{transform:rotate(360deg)}}
+
+/* 10 展开卡 */
+.gn3-exp{overflow:hidden}
+.gn3-exp-head{width:100%;min-height:var(--gn3-hit);display:grid;grid-template-columns:1fr auto;grid-template-areas:"t c" "s c";text-align:left;gap:2px var(--gn3-s2);padding:var(--gn3-s3) var(--gn3-s4);border:0;background:transparent;color:var(--gn3-ink);font:inherit;cursor:pointer}
+.gn3-exp-t{grid-area:t;font-weight:600}.gn3-exp-s{grid-area:s;font-size:var(--gn3-fs-s);color:var(--gn3-ink-2)}
+.gn3-exp-chev{grid-area:c;align-self:center;transition:transform var(--gn3-t-fast) var(--gn3-ease)}
+.gn3-exp.is-open .gn3-exp-chev{transform:rotate(180deg)}
+.gn3-exp-body{padding:0 var(--gn3-s4) var(--gn3-s4);font-size:var(--gn3-fs-s);color:var(--gn3-ink-2);line-height:1.6}
+
+/* 降级:减少动态 / low 档 */
+@media (prefers-reduced-motion:reduce){
+  .gn3-slider-track,.gn3-slider-knob,.gn3-tilt,.gn3-card3d,.gn3-card3d [data-depth],.gn3-spot::before,.gn3-exp-chev,.gn3-btn{transition:none!important}
+  .gn3-msl-row.is-run .gn3-msl-ic{animation:none}
+}
+.gn3-q-low .gn3-glass-surface::after,.gn3-q-low .gn3-spot::before{display:none}
+.gn3-q-low .gn3-tilt,.gn3-q-low .gn3-card3d,.gn3-q-low .gn3-card3d [data-depth]{transform:none!important;transition:none}
+.gn3-q-low .gn3-msl-row.is-run .gn3-msl-ic{animation:none}

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>/shared/3/ 组件样张 v0.3</title>
+<link rel="stylesheet" href="/shared/3/tokens.css"><link rel="stylesheet" href="/shared/3/ui.css">
+<style>body{margin:0;background:var(--gn3-bg);color:var(--gn3-ink);font-family:var(--gn3-font);padding:var(--gn3-s5)}main{display:grid;gap:var(--gn3-s4);grid-template-columns:repeat(auto-fill,minmax(280px,1fr));max-width:1200px;margin:auto}section{padding:var(--gn3-s4);border-radius:var(--gn3-radius-l)}h1{font-size:var(--gn3-fs-l);max-width:1200px;margin:0 auto var(--gn3-s4)}h2{margin:0 0 var(--gn3-s3);font-size:var(--gn3-fs-s);color:var(--gn3-ink-3);font-weight:500}.sw{height:140px;display:grid;place-items:center;font-size:var(--gn3-fs-l)}</style>
+</head><body>
+<h1>/shared/3/ 玻璃组件样张 v0.3(仅开发用)</h1>
+<main>
+<section class="gn3-glass"><h2>1 弹性滑块 · 引力 G</h2><div id="c1"></div><h2 style="margin-top:12px">3 步进器</h2><div id="c3"></div></section>
+<section class="gn3-glass"><h2>2 数字滚动 · 宇宙年龄(亿年)</h2><div id="c2" class="sw"></div></section>
+<section id="c4"><h2>4 玻璃面板</h2><p>光随指针移动。</p></section>
+<section id="c5"><h2>5 聚光卡</h2><p>指针处一圈柔光。</p></section>
+<section id="c6" class="gn3-glass"><h2>6 倾斜卡</h2><p>指针处 3D 倾斜。</p></section>
+<section class="gn3-glass"><h2>7 对比 · 真实宇宙 / 你的宇宙</h2><div id="c7" style="height:160px"></div></section>
+<section class="gn3-glass"><h2>8 时间线 · 七关</h2><div id="c8"></div></section>
+<section class="gn3-glass"><h2>9 多步加载</h2><div id="c9"></div></section>
+<section id="c10"></section>
+<section id="c11" class="gn3-glass"><h2>11 景深卡</h2><div data-depth="1" class="sw">★</div></section>
+</main>
+<script type="module">
+import * as ui from '/shared/3/ui.js';
+import { pickTier, apply } from '/shared/3/tier.js';
+apply(pickTier().tier);
+const $ = (id) => document.getElementById(id), M = window.__ui = {};
+M.slider = ui.slider.mount($('c1'), { label: 'G', min: 0.01, max: 100, value: 1, log: true, color: 'var(--gn3-k-G)', format: (v) => '×' + (+v.toPrecision(3)), onInput: (v) => M.count.update({ value: 138 * Math.pow(v, -0.5) }) });
+M.count = ui.countUp.mount($('c2'), { value: 138, format: (v) => v.toFixed(1) });
+M.stepper = ui.stepper.mount($('c3'), { label: '行星数', value: 3, min: 0, max: 8 });
+M.glass = ui.glassSurface.mount($('c4'), { tint: 'var(--gn3-k-c)' });
+M.spot = ui.spotlightCard.mount($('c5'), { color: 'var(--gn3-k-alpha)' });
+M.tilt = ui.tiltedCard.mount($('c6'));
+const pane = (t, c) => { const d = document.createElement('div'); d.className = 'sw'; d.style.background = c; d.style.height = '100%'; d.textContent = t; return d; };
+M.compare = ui.compare.mount($('c7'), { before: pane('真实', '#0b1a3a'), after: pane('你的', '#3a0b2a'), labels: ['真实宇宙', '你的宇宙'] });
+M.tl = ui.timeline.mount($('c8'), { items: ['T1','T2','T3','T4','T5','T6','T7'].map((id, i) => ({ id, title: id, state: i < 4 ? 'ok' : i === 4 ? 'warn' : i === 5 ? 'fail' : 'todo' })), active: 'T5' });
+M.msl = ui.multiStepLoader.mount($('c9'), { steps: ['大爆炸', '核合成', '第一代恒星', '星系', '行星'].map((text) => ({ text })) }); M.msl.play(400);
+M.exp = ui.expandableCard.mount($('c10'), { title: '为什么失败了?', summary: '恒星烧得太快,行星来不及冷却。', more: 'G 调大到 ×10 后,恒星寿命约缩短为原来的 1/1000。' });
+M.c3d = ui.card3d.mount($('c11'));
+window.__uiReady = true;
+</script>
+</body></html>
