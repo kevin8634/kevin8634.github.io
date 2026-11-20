@@ -24,15 +24,15 @@ export async function install(gl, scene, cam, ctx) {
   const glass = new THREE.ShaderMaterial({
     defines: { SAMPLES },
     uniforms: {
-      uBuffer: { value: null }, uIor: { value: 1.5 }, uThick: { value: 0.32 }, uChroma: { value: hi ? 0.05 : 0.0 }, uBlur: { value: hi ? 0.035 : 0.0 },
-      uExpo: { value: 1 }, uTint: { value: new THREE.Color('#fbf6ee') }, uAtten: { value: new THREE.Color('#ffd9a8') }, uRim: { value: new THREE.Color('#ffd19a') }, uKey: { value: new THREE.Vector3(0.4, 0.9, 0.6).normalize() },
+      uBuffer: { value: null }, uIor: { value: 1.5 }, uThick: { value: 0.32 }, uChroma: { value: hi ? 0.05 : 0.0 }, uBlur: { value: hi ? 0.035 : 0.018 },
+      uExpo: { value: 1 }, uSat: { value: 0 }, uTint: { value: new THREE.Color('#fbf6ee') }, uAtten: { value: new THREE.Color('#ffd9a8') }, uRim: { value: new THREE.Color('#ffd19a') }, uKey: { value: new THREE.Vector3(0.4, 0.9, 0.6).normalize() },
     },
     vertexShader: /* glsl */`
       varying vec3 vW; varying vec3 vN;
       void main(){ vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; vN = normalize(mat3(modelMatrix) * normal); gl_Position = projectionMatrix * viewMatrix * w; }`,
     fragmentShader: /* glsl */`
       uniform mat4 projectionMatrix;
-      uniform sampler2D uBuffer; uniform float uIor, uThick, uChroma, uBlur, uExpo; uniform vec3 uTint, uAtten, uRim, uKey;
+      uniform sampler2D uBuffer; uniform float uIor, uThick, uChroma, uBlur, uExpo, uSat; uniform vec3 uTint, uAtten, uRim, uKey;
       varying vec3 vW; varying vec3 vN;
       float hash(vec2 p){ p = fract(p*vec2(123.34,456.21)); p += dot(p,p+45.32); return fract(p.x*p.y); }
       vec2 proj(vec3 p){ vec4 c = projectionMatrix * viewMatrix * vec4(p,1.0); return clamp(c.xy/c.w*.5+.5, 0.001, 0.999); }
@@ -58,6 +58,8 @@ export async function install(gl, scene, cam, ctx) {
         tr *= uExpo;
         float m = max(tr.r, max(tr.g, tr.b)), k = .62;
         if (m > k) tr *= (k + (1.0 - k) * (1.0 - exp(-(m - k) / (1.0 - k)))) / m;
+        /* v2.8.1:恒星档回补饱和度与中间调对比,奶黄 → 橙红日面(只在恒星档生效,其余档 uSat=0 不变) */
+        if (uSat > 0.0) { float l = dot(tr, vec3(.2126,.7152,.0722)); tr = max(mix(vec3(l), tr, 1.0 + uSat), 0.0); tr = pow(tr, vec3(1.0 + uSat * .5)) * (1.0 + uSat * .55); }
         float path = uThick / max(nv,.2);
         tr *= mix(vec3(1.0), uAtten, clamp(path*.35,0.0,1.0)) * uTint;
         vec3 h = normalize(uKey + v); float spec = pow(max(dot(n,h),0.0), 220.0) * 2.4;
@@ -126,8 +128,9 @@ export async function install(gl, scene, cam, ctx) {
 
   /* ---------- 渲染缓冲 ---------- */
   const typ = EF.gl2 !== false && EF.three !== '169' ? THREE.HalfFloatType : THREE.UnsignedByteType;
-  const mk = () => new THREE.WebGLRenderTarget(4, 4, { type: typ, depthBuffer: true });
-  const rtBuf = mk(), rtG = mk(), rtA = mk(), rtB = mk();
+  const mk = (o = {}) => new THREE.WebGLRenderTarget(4, 4, Object.assign({ type: typ, depthBuffer: true }, o));
+  /* v2.8.1:透射缓冲在 WebGL2 下开多重采样,瓶内浮物(恒星)边缘经透镜放大后不再出阶梯锯齿;WebGL1 自动忽略 */
+  const rtBuf = mk(renderer.capabilities.isWebGL2 !== false && EF.three !== '169' ? { samples: hi ? 4 : 2 } : {}), rtG = mk(), rtA = mk(), rtB = mk();
   rtG.depthBuffer = true; rtA.depthBuffer = false; rtB.depthBuffer = false;
   glass.uniforms.uBuffer.value = rtBuf.texture;
   const vs2 = `varying vec2 vU; void main(){ vU = uv; gl_Position = vec4(position.xy,0.0,1.0); }`;
@@ -151,7 +154,7 @@ export async function install(gl, scene, cam, ctx) {
   let W = 0, H = 0;
   function sizeRT() {
     renderer.getDrawingBufferSize(sz); if (sz.x === W && sz.y === H) return; W = sz.x; H = sz.y;
-    const k = hi ? 0.5 : 0.35; rtBuf.setSize(Math.max(2, W * k | 0), Math.max(2, H * k | 0));
+    const k = hi ? 0.5 : 0.42;   /* v2.8.1:mid 0.35→0.42,瓶内恒星透镜放大后不出锯齿块 */ rtBuf.setSize(Math.max(2, W * k | 0), Math.max(2, H * k | 0));
     const q = Math.max(2, W / 4 | 0), r = Math.max(2, H / 4 | 0); rtG.setSize(q, r); rtA.setSize(q, r); rtB.setSize(q, r);
   }
   const active = () => gl.scene === scene && !document.body.classList.contains('pre') && !document.hidden;
@@ -168,7 +171,7 @@ export async function install(gl, scene, cam, ctx) {
     plate.quaternion.copy(cam.quaternion);
     /* 缓冲:藏起烧瓶,把「玻璃后面」渲一遍 */
     const sv = ST ? Math.max(0, 1 - Math.abs(ST.val)) : 0;   /* 恒星档权重(0 档=恒星) */
-    glass.uniforms.uExpo.value = 1 - 0.42 * sv;
+    glass.uniforms.uExpo.value = 1 - 0.30 * sv; glass.uniforms.uSat.value = 0.8 * sv; glass.uniforms.uChroma.value = (hi ? 0.05 : 0.0) * (1 - 0.85 * sv);   /* 恒星档收色散,免日面边缘出绿边 */   /* v2.8.1:恒星档少压曝光、回补饱和 */
     flask.visible = false; float.visible = true;
     const prev = renderer.getRenderTarget();
     renderer.setRenderTarget(rtBuf); renderer.render(scene, cam);

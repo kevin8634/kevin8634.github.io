@@ -48,7 +48,7 @@ function bootStage() {
     s.g.add(new THREE.Mesh(new THREE.SphereGeometry(1.35, 96, 64), sm));
     const glow = glowSprite([[0, 'rgba(255,200,120,.9)'], [0.22, 'rgba(255,140,50,.55)'], [0.5, 'rgba(255,80,20,.15)'], [1, 'rgba(255,60,10,0)']], 5.6);
     const cor = glowSprite([[0, 'rgba(255,170,90,.35)'], [0.4, 'rgba(255,110,40,.08)'], [1, 'rgba(0,0,0,0)']], 10);
-    reg(s, glow.material, 1); reg(s, cor.material, 0.8); s.g.add(cor, glow); s.sp = [[glow, 5.6, 0.55], [cor, 10, 0.4]];
+    reg(s, glow.material, 1); reg(s, cor.material, 0.8); s.g.add(cor, glow); s.sp = [[glow, 5.6, 0.55], [cor, 10, 0.4]]; s.fs = 0.66; s.fdim = 0.6;   /* v2.8.1:瓶内恒星缩到瓶径约 2/3,露出暗边与临边昏暗;光晕再减半,免得把日面洗成奶黄 */
     s.upd = t => { sm.uniforms.uT.value = t; cor.material.rotation = t * 0.02; };
     s.spin = 0.05; scenes.push(s);
   })();
@@ -169,7 +169,7 @@ function bootStage() {
   [1.35, 1.28, 1.4, 1.55, 1.65, 1.6, 1.0].forEach((r, k) => { scenes[k].r = r; });
   scenes.forEach(s => stageScene.add(s.g)); EF._stageGroups = scenes.map(s => s.g);
   /* v2.2 锻炉星盘:写实实验桌 + 黄铜星盘 + 器皿,与尺度镜同场景 */
-  import('./ef-hud3d.js?v=14').then(m => m.install(gl, stageScene, cam, ST)).catch(e => console.warn('[ef] 锻炉星盘启动失败,保留平面 HUD', e));
+  import('./ef-hud3d.js?v=15').then(m => m.install(gl, stageScene, cam, ST)).catch(e => console.warn('[ef] 锻炉星盘启动失败,保留平面 HUD', e));
 
   /* 拖动旋转当前档 */
   let drag = null, yawV = 0, mx = 0, my = 0;
@@ -190,9 +190,9 @@ function bootStage() {
       else if (k === i) { a = 1 - ease(f * 1.25); sc = 1 + f * f * 5; }
       else if (k === i + 1) { a = ease((f - 0.15) * 1.3); sc = 0.18 + 0.82 * ease(f); }
       const fit = EF.flaskFit;   /* 烧瓶内可用半径(浮物本地单位);无烧瓶时为空,行为同 v2.7 */
-      if (fit) { if (k === i && ST.val < 6) a = 1 - ease(Math.min(1, f * 1.8)); sc = Math.min(sc, fit / s.r); }
+      if (fit) { if (k === i && ST.val < 6) a = 1 - ease(Math.min(1, f * 1.8)); sc = Math.min(sc, fit / s.r) * (s.fs || 1); }
       setA(s, a); s.g.scale.setScalar(sc);
-      if (s.sp) s.sp.forEach(([o, size, dim]) => { if (fit) { o.scale.setScalar(Math.min(size, 2 * fit / sc)); o.material.opacity *= dim; } else o.scale.setScalar(size); });
+      if (s.sp) s.sp.forEach(([o, size, dim]) => { if (fit) { o.scale.setScalar(Math.min(size, 2 * fit / sc)); o.material.opacity *= dim * (s.fdim || 1); } else o.scale.setScalar(size); });
       if (s.g.visible) { if (s.upd) s.upd(t, dt); s.yaw += (EF.reduced ? 0 : s.spin * dt) + (k === Math.round(ST.val) ? yawV : 0); s.g.rotation.y = s.yaw; }
     });
     yawV *= 0.9;

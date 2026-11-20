@@ -102,3 +102,7 @@
 - three.js 本体仍为 vendor/ r186(MIT,LICENSE 已在 vendor/)。
 - 方案清单中的 React Bits(Fluid Glass / Elastic Slider / Count Up,MIT + Commons Clause)、Aceternity(Compare / 3D Card)、marching_cubes、instancing、lines_fat 本版未使用,留待后续步骤启用时逐条登记。
 - 无新增图片、字体、音频;外部网络请求 0。
+
+## v2.8.1(2026-11-20)· 瓶内恒星调亮 + 切档穿瓶
+- 本版只调整自写着色器参数(曝光、饱和度回补、色散收敛)与渲染缓冲多重采样(three.js r186 WebGLRenderTarget 自带 samples 选项,MIT,vendor/ 已含 LICENSE)。
+- 未引入新的第三方组件、图片、字体、音频;React Bits / Aceternity / ThreeUI / MotionSites 本版均未使用。外部网络请求 0。
