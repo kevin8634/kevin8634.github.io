@@ -29,10 +29,18 @@
 
 <div class="ui">
 <aside class="left" aria-label="配方">
+  <div id="mode"></div>
   <div id="ask"></div>
   <div class="knob" id="k-kG"><div class="sl"></div><svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg></div>
   <div class="knob" id="k-kc"><div class="sl"></div><svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg></div>
   <div class="knob" id="k-kA"><div class="sl"></div><svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg></div>
+  <div id="adv" class="adv">
+    <div class="knob" id="k-eps"><div class="sl"></div><svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg></div>
+    <div class="knob knob-om" id="k-Om"><div class="om-l"><div class="sl"></div><svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg></div><div id="gauge"></div></div>
+    <div class="dials"><div class="dial-w" id="k-Q"><div class="dial"></div></div><div class="dial-w" id="k-kL"><div class="dial"></div></div></div>
+    <div class="seedrow knob" id="k-seed"><span class="seed-l" data-i18n="seed">种子</span><span id="flap"></span><button type="button" class="gn3-btn" id="reseed" data-i18n-aria="reseed" aria-label="换一个种子">⟳</button></div>
+    <button type="button" class="gn3-btn rand" id="rand"><span aria-hidden="true">⚄ </span><span data-i18n="rand">随机宇宙</span></button>
+  </div>
   <button type="button" class="gn3-btn reset" id="reset" data-i18n="reset">回到真实宇宙</button>
 </aside>
 
@@ -44,6 +52,8 @@
   <div class="stat"><span data-i18n="sHab">宜居带行星</span><b id="s-hab"></b></div>
   <div id="fail"></div>
   <div id="stage-note" class="stage-note" hidden><b></b><p></p></div>
+  <section id="cardsec" class="cardsec" aria-labelledby="cardsT"><b id="cardsT" data-i18n="cardsT">题卡</b><div id="stack"></div></section>
+  <button type="button" class="gn3-btn bridge" id="bridge"><span data-i18n="bridge">星桥 · 去天枢看恒星系</span> →</button>
 </aside>
 
 <footer class="dock gn3-glass">

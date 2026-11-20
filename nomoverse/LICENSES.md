@@ -107,11 +107,25 @@
 ## 宙律 3.0(/nomoverse/3/,3.0-α1 起)
 | 内容 | 来源 | 许可 | 说明 |
 |---|---|---|---|
-| core/universe.js、core/nbody.js、core/gus0.js、core/adapt.mjs、main.mjs、tests/* | 本项目自研 | 同本站 | 物理阈值与出处见 `3/SOURCES.md`,全部为教学简化 |
+| core/universe.js、core/nbody.js、core/gus0.js、core/adapt.mjs、core/teach.mjs、core/explore.mjs、main.mjs、tests/* | 本项目自研 | 同本站 | 物理阈值与出处见 `3/SOURCES.md`,全部为教学简化 |
 | mulberry32 随机数算法 | Tommy Ettinger(公开算法) | 公有领域 | 自写实现,与 /shared/3/prng.js 输出逐位一致 |
 | 黑体色温→sRGB 拟合 | Tanner Helland(公开算法) | 公开 | 自写实现 |
 | /shared/3/(tokens、tier、prng、gus、undo、i18n、selftest) | 创世计划共享内核(总指挥维护) | 同本站 | 只引用,不复制;许可见 /shared/3/README.md |
 | 界面组件(3-3 起) | 参考 React Bits、Aceternity UI(免费部分)、ThreeUI(免费部分)、MotionSites(免费部分)的设计 | 各站免费许可 | 原生 JS/CSS 改写,不引原代码与 CDN;接入时逐条署名 |
+
+### 3-4 探索层界面组件逐条署名(3/core/explore-ui.mjs,2026-11-21 核对)
+全部按公开演示的交互思路用原生 JS/CSS 自写,未复制、未移植任何源码,不引 CDN、零外部请求。React Bits 许可为「MIT + Commons Clause」(github.com/DavidHDev/react-bits/LICENSE.md,2026-11-21 读):允许作为网站/产品的一部分使用;禁止单独出售、再许可或再分发组件本身(含移植版)。本站只把组件用作宙律界面的一部分,不单独分发,符合该条款;仍按 MIT 要求保留署名:Copyright (c) 2026 David Haz。
+
+| 本站组件 | 思路来源 | 许可 | 用在 |
+|---|---|---|---|
+| cometDial 彗星旋钮 | React Bits · Comet Dial(reactbits.dev/micro/comet-dial,David Haz) | MIT + Commons Clause | Q、Λ 旋钮(Q 对数、Λ 对称对数刻度) |
+| sloshGauge 液位表 | React Bits · Slosh Gauge(reactbits.dev/micro/slosh-gauge) | MIT + Commons Clause | 有效 Ωm 读数,临界密度 1 线 |
+| rubberSegment 橡皮分段 | React Bits · Rubber Segment(reactbits.dev/micro/rubber-segment) | MIT + Commons Clause | 基础 / 进阶切换 |
+| splitFlap 翻牌 | React Bits · Split Flap Text(reactbits.dev/text-animations/split-flap-text) | MIT + Commons Clause | 种子显示 |
+| cardStack 题卡叠牌 | React Bits · Stack(reactbits.dev/components/stack)+ Flip Card(reactbits.dev/micro/flip-card) | MIT + Commons Clause | 题卡:正面题目、背面答案配方 + 「试试」 |
+| lockSwitch 锁定开关 | Uiverse.io 开关(uiverse.io/switches,社区作品统一 MIT) | MIT | 锁定常数(随机与题卡不改) |
+| ε、Ω₀ 滑块 | /shared/3/ui.js Elastic Slider(总指挥维护) | 同本站 | 只引用 |
+| 太阳系视图 | 交给天枢 Starhelm(星桥 ?gus=,本站世界) | 同本站 | 未参考 ThreeUI Orrery |
 
 ## 教育理念署名(11-20 · 王磊批)
 - 创世计划的教育理念参考埃隆·马斯克创办的 Ad Astra 学校(第一性原理、难题拆解)。只署名理念出处:全部课程、题目、交互与代码均为本项目自研;未使用其肖像、Logo 或商标;与 SpaceX 及其关联方无合作、授权或背书关系。

@@ -1,11 +1,14 @@
 /* 宙律 Nomoverse 3.0 · 宇宙配方台入口(3-2:Worker + three r186 渲染层 + /shared/3/ui.js 界面)
  * 数据流:store(配方)→ Worker run → desc(scene.describe)→ 渲染层 update(desc);界面数字读 res,画面只读 desc。
- * 新手层 3 旋钮 G、c、α(×1 吸附)+ 引导三步 + 失败卡两层 + 真实宇宙对比(3-3);探索层与题卡 3-4 起。 */
+ * 新手层 3 旋钮 G、c、α(×1 吸附)+ 引导三步 + 失败卡两层 + 真实宇宙对比(3-3);
+ * 探索层(3-4):基础/进阶切换,+ε、Ω₀(滑块 + 液位表)、Q、Λ(彗星旋钮)、种子翻牌、锁定开关、随机宇宙、题卡叠牌;星桥把恒星系交给天枢。 */
 import { tier, createRecipeStore, i18n, encodeUniverse, recipeFromGus, registerSelftest, gus } from './core/adapt.mjs';
 import { setLang } from '/shared/3/i18n.js';
 import * as ui from '/shared/3/ui.js';
 import { call, runLatest, usingWorker } from './core/wclient.mjs';
 import { snap1, compareRows, explain, REAL_CREDIT, STAGE, GUIDE, guideStep } from './core/teach.mjs';
+import * as X from './core/explore.mjs';
+import { cometDial, sloshGauge, rubberSegment, splitFlap, cardStack, lockSwitch } from './core/explore-ui.mjs';
 
 const U = window.NV3_UNIVERSE, G0 = window.NV3_GUS, SC = window.NV3_SCENE;
 const $ = (id) => document.getElementById(id);
@@ -37,7 +40,17 @@ const DICT = {
   fixL: { zh: '试试:', en: 'Try: ' }, warnAt: { zh: '第 {n} 关有点勉强 · {t}', en: 'Stage {n} is shaky · {t}' },
   skip: { zh: '跳过', en: 'Skip' }, gotit: { zh: '知道了', en: 'Got it' }, help: { zh: '新手引导', en: 'Guide' },
   snapped: { zh: '已吸附到真实值 ×1', en: 'Snapped to real value ×1' },
-  qdrop: { zh: '帧率偏低,已自动降到{q}档', en: 'Low frame rate, switched to {q}' }
+  qdrop: { zh: '帧率偏低,已自动降到{q}档', en: 'Low frame rate, switched to {q}' },
+  mBasic: { zh: '基础', en: 'Basic' }, mAdv: { zh: '进阶', en: 'Explore' }, mode: { zh: '层级', en: 'Level' },
+  keps: { zh: '核效率 ε', en: 'Nuclear efficiency ε' }, kOm: { zh: '物质密度 Ω₀', en: 'Matter density Ω₀' },
+  kQ: { zh: '涟漪 Q', en: 'Ripples Q' }, kkL: { zh: '暗能量 Λ', en: 'Dark energy Λ' },
+  gauge: { zh: '有效 Ωm', en: 'Effective Ωm' }, crit: { zh: '临界 1', en: 'critical 1' },
+  seed: { zh: '种子', en: 'Seed' }, reseed: { zh: '换一个种子', en: 'New seed' }, rand: { zh: '随机宇宙', en: 'Random universe' },
+  lock: { zh: '锁定{k}(随机与题卡不改它)', en: 'Lock {k} (random and cards leave it)' },
+  cardsT: { zh: '题卡', en: 'Puzzle cards' }, flip: { zh: '点一下看答案', en: 'Tap for the answer' }, tryIt: { zh: '试试', en: 'Try it' },
+  prev: { zh: '上一张', en: 'Previous' }, next: { zh: '下一张', en: 'Next' }, of: { zh: '/', en: 'of' },
+  locked: { zh: '已锁定,没改:{k}', en: 'Locked, left as is: {k}' },
+  bridge: { zh: '星桥 · 去天枢看恒星系', en: 'Star Bridge · see it in Starhelm' }, mark0: { zh: 'Λ = 0', en: 'Λ = 0' }, mark1: { zh: '真实值', en: 'Real value' }
 };
 const FAIL_NOTE_EN = {
   crunch: 'Space falls back and squeezes into a point', helium_only: 'Only helium, too little star fuel', hydrogen_only: 'No helium to start, nucleosynthesis stalls',
@@ -98,6 +111,81 @@ KNOBS.forEach((k) => {
   const tr = box.querySelector('.gn3-slider-track');
   if (tr) { const t1 = Math.log(1 / lo) / Math.log(hi / lo), tick = document.createElement('span'); tick.className = 'one-tick'; tick.style.left = (t1 * 100).toFixed(2) + '%'; tick.setAttribute('aria-hidden', 'true'); tr.append(tick); }
 });
+/* ---------- 3-4 探索层 ---------- */
+const NAME = { kG: 'kG', kc: 'kc', kA: 'kA', eps: 'keps', Om: 'kOm', Q: 'kQ', kL: 'kkL', seed: 'seed' };
+const MKEY = 'nv3.mode', LKEY = 'nv3.locks';
+const qs = new URLSearchParams(location.search);
+let mode = qs.get('mode') === 'adv' || qs.get('mode') === 'basic' ? qs.get('mode') : (() => { try { return localStorage.getItem(MKEY) || 'basic'; } catch (e) { return 'basic'; } })();
+{ const s0 = store.get(); if (X.ADV.some((k) => X.snapReal(k, s0[k]) !== X.REALV[k]) || s0.seed !== U.DEF.seed) mode = 'adv'; }   // 链接带进阶常数时直接进进阶
+let locks = (() => { try { return X.strToLock(localStorage.getItem(LKEY)); } catch (e) { return new Set(); } })();
+const seg = rubberSegment.mount($('mode'), { items: [{ id: 'basic', label: '' }, { id: 'adv', label: '' }], value: mode, onChange: (m) => setMode(m, true) });
+function setMode(m, user) {
+  mode = m; document.body.classList.toggle('is-adv', m === 'adv');
+  if (user) { try { localStorage.setItem(MKEY, m); } catch (e) { /* 隐私模式 */ } }
+  if (m === 'adv') { requestAnimationFrame(() => { dials.forEach((d) => d.ui.update({})); stack && stack.update({}); }); }
+}
+const ADVS = [
+  { key: 'eps', color: 'var(--gn3-k-eps)', log: false, step: 0.0001 },
+  { key: 'Om', color: 'var(--gn3-k-Omega)', log: true }
+];
+ADVS.forEach((k) => {
+  const box = $('k-' + k.key); ui.glassSurface.mount(box, {});
+  const [lo, hi] = U.RANGE[k.key];
+  k.sl = ui.slider.mount(box.querySelector('.sl'), {
+    min: lo, max: hi, log: k.log, step: k.step || 0, value: store.get()[k.key], label: L.t(NAME[k.key]), color: k.color, format: (v) => X.fmt(k.key, v),
+    onStart: () => store.beginGesture(), onEnd: () => store.endGesture(),
+    onInput: (v) => { const w = X.snapReal(k.key, v); store.set((s) => ({ ...s, [k.key]: w })); }
+  });
+  const tr = box.querySelector('.gn3-slider-track');
+  if (tr) { const tick = document.createElement('span'); tick.className = 'one-tick'; tick.style.left = (X.toT(k.key, X.REALV[k.key]) * 100).toFixed(2) + '%'; tick.setAttribute('aria-hidden', 'true'); tr.append(tick); }
+});
+const gaugeUI = sloshGauge.mount($('gauge'), { value: U.K.OM0, label: '', lineLabel: '', format: (v) => (+v.toPrecision(v < 0.1 ? 2 : 3)).toString() });
+const dials = [{ key: 'Q', color: 'var(--gn3-k-Q)' }, { key: 'kL', color: 'var(--gn3-k-Lambda)' }];
+dials.forEach((d) => {
+  const marks = () => [{ t: X.toT(d.key, X.REALV[d.key]), cls: 'is-real', title: L.t('mark1') }].concat(d.key === 'kL' ? [{ t: X.toT('kL', 0), cls: 'is-zero', title: L.t('mark0') }] : []);
+  d.marks = marks;
+  d.ui = cometDial.mount($('k-' + d.key).querySelector('.dial'), {
+    label: L.t(NAME[d.key]), value: store.get()[d.key], color: d.color, toT: (v) => X.toT(d.key, v), fromT: (t) => X.fromT(d.key, t), snap: (v) => X.snapReal(d.key, v),
+    format: (v) => X.fmt(d.key, v), marks: marks(),
+    onStart: () => store.beginGesture(), onEnd: () => store.endGesture(),
+    onInput: (v) => store.set((s) => ({ ...s, [d.key]: v }))
+  });
+});
+ui.glassSurface.mount($('k-seed'), {}); ['k-Q', 'k-kL'].forEach((id) => ui.glassSurface.mount($(id), {}));
+const flap = splitFlap.mount($('flap'), { text: X.seedText(store.get().seed) });
+$('reseed').addEventListener('click', () => store.set((s) => ({ ...s, seed: (Math.random() * 4294967296) >>> 0 })));
+$('rand').addEventListener('click', () => store.set((s) => U.normalize(X.randomRecipe(s, locks, Math.random))));
+/* 锁定开关:每个常数与种子一只 */
+const lockUI = {};
+X.LOCKABLE.forEach((k) => {
+  const box = $('k-' + k); if (!box) return;
+  const w = document.createElement('span'); w.className = 'lk'; box.append(w);
+  lockUI[k] = lockSwitch.mount(w, { checked: locks.has(k), label: '', onChange: (on) => { on ? locks.add(k) : locks.delete(k); try { localStorage.setItem(LKEY, X.lockToStr(locks)); } catch (e) { /* 隐私模式 */ } } });
+});
+/* 题卡叠牌 */
+const cardList = () => X.CARDS.map((c, i) => ({ id: c.id, front: c.q[L.lang === 'en' ? 'en' : 'zh'], back: c.a[L.lang === 'en' ? 'en' : 'zh'], tag: (L.lang === 'en' ? 'Card ' : '题 ') + (i + 1) }));
+let lockNote = '';
+const stack = cardStack.mount($('stack'), {
+  cards: cardList(), labels: { prev: L.t('prev'), next: L.t('next'), flip: L.t('flip'), try: L.t('tryIt'), of: L.t('of') },
+  onTry: (id) => {
+    const c = X.CARDS.find((x) => x.id === id), b = X.blockedBy(c, locks);
+    store.set((s) => U.normalize(X.applyCard(s, c, locks)));
+    lockNote = b.length ? L.t('locked', { k: b.map((k) => L.t(NAME[k])).join('、') }) : '';
+    paintLockNote();
+  }
+});
+function paintLockNote() { let n = $('cardsec').querySelector('.lk-note'); if (!n) { n = document.createElement('p'); n.className = 'lk-note'; $('cardsec').append(n); } n.textContent = lockNote; n.hidden = !lockNote; }
+/* 星桥:把当前恒星系编码成 GUS,交给天枢(?gus=,同时存 gn:gus:last) */
+$('bridge').addEventListener('click', async () => {
+  if (!last) return;
+  try {
+    const e = await encodeUniverse(last, { from: 'nomoverse' }, G0);
+    try { gus.saveLast(e.gus); } catch (err) { /* 存储满 */ }
+    location.href = e.fits ? await gus.toUrl(e.gus, '/starhelm/') : '/starhelm/?gus=@last';
+  } catch (err) { $('bridge').classList.add('is-err'); setTimeout(() => $('bridge').classList.remove('is-err'), 1200); }
+});
+setMode(mode, false);
+
 $('reset').addEventListener('click', () => store.set(U.normalize({ seed: store.get().seed })));
 $('undo').addEventListener('click', () => store.undo());
 $('redo').addEventListener('click', () => store.redo());
@@ -198,9 +286,9 @@ $('help').addEventListener('click', () => { gStep = 0; paintGuide(); });
 
 /* 后果指示:每个旋钮沿其范围 24 点的「通过关数」迷你图 + 当前位置 */
 async function paintSparks(s) {
-  for (const k of KNOBS) {
+  for (const k of mode === 'adv' ? KNOBS.concat(ADVS) : KNOBS) {
     const pts = await call('sweep', { recipe: s, key: k.key, n: 24 });
-    const [lo, hi] = U.RANGE[k.key], x = (v) => (Math.log(v / lo) / Math.log(hi / lo)) * 100, y = (p) => 26 - (p / 7) * 24;
+    const x = (v) => X.toT(k.key, v) * 100, y = (p) => 26 - (p / 7) * 24;
     const d = pts.map((p, i) => (i ? 'L' : 'M') + x(p.v).toFixed(1) + ' ' + y(p.pass).toFixed(1)).join(' ');
     const cur = U.run(s), pass = U.ORDER.filter((t) => cur.stages[t] !== 'fail').length;
     const svg = $('k-' + k.key).querySelector('.spark');
@@ -215,7 +303,10 @@ async function refresh(s) {
   view && view.update(out.desc);
   tl.update({ items: stageItems(last) });
   paintStats(last, out.desc);
-  KNOBS.forEach((k) => { if (Math.abs(k.sl.value - s[k.key]) > 1e-12) k.sl.update({ value: s[k.key] }); });
+  KNOBS.concat(ADVS).forEach((k) => { if (Math.abs(k.sl.value - s[k.key]) > 1e-12) k.sl.update({ value: s[k.key] }); });
+  dials.forEach((d) => { if (d.ui.value !== s[d.key]) d.ui.update({ value: s[d.key] }); });
+  gaugeUI.update({ value: last.cosmos.Om, label: L.t('gauge'), lineLabel: L.t('crit') });
+  flap.update({ text: X.seedText(s.seed) });
   $('undo').disabled = !store.canUndo; $('redo').disabled = !store.canRedo;
   clearTimeout(refresh.t); refresh.t = setTimeout(() => paintSparks(s), 120);
 }
@@ -236,6 +327,13 @@ function relabel() {
   $('lang').textContent = L.lang === 'en' ? '中' : 'EN'; $('lang').setAttribute('aria-label', L.lang === 'en' ? '中文' : 'English');
   ask.update({ title: L.t('ask'), summary: L.t('askSub'), more: L.two('ask').more });
   KNOBS.forEach((k) => k.sl.update({ label: L.t(k.key) }));
+  ADVS.forEach((k) => k.sl.update({ label: L.t(NAME[k.key]) }));
+  dials.forEach((d) => d.ui.update({ label: L.t(NAME[d.key]), marks: d.marks() }));
+  seg.update({ items: [{ id: 'basic', label: L.t('mBasic') }, { id: 'adv', label: L.t('mAdv') }], label: L.t('mode') });
+  Object.entries(lockUI).forEach(([k, u]) => u.update({ label: L.t('lock', { k: L.t(NAME[k]) }) }));
+  stack.update({ cards: cardList(), labels: { prev: L.t('prev'), next: L.t('next'), flip: L.t('flip'), try: L.t('tryIt'), of: L.t('of') } });
+  if (last) gaugeUI.update({ value: last.cosmos.Om, label: L.t('gauge'), lineLabel: L.t('crit') });
+  lockNote = ''; paintLockNote();
   $('help').setAttribute('aria-label', L.t('help'));
   paintQ(); if (last) { tl.update({ items: stageItems(last) }); paintStats(last, lastDesc); }
   paintStage(pickedStage); paintGuide();
@@ -270,5 +368,12 @@ registerSelftest({
   state: () => store.get(),
   tier: () => tier.current(),
   fps: () => fps0,
-  info: () => ({ tierInfo, last })
+  info: () => ({ tierInfo, last }),
+  /* 3-4 探索层 */
+  mode: (m) => { if (m) { seg.update({ value: m }); setMode(m, false); } return mode; },
+  lock: (keys) => { if (keys) { locks = new Set(keys); Object.entries(lockUI).forEach(([k, u]) => u.update({ checked: locks.has(k) })); } return [...locks]; },
+  random: () => { store.set((s) => U.normalize(X.randomRecipe(s, locks, Math.random))); return store.get(); },
+  tryCard: (id) => { stack.show(id); stack.flip(); $('stack').querySelector('.nv-card.is-top .nv-card-try').click(); return store.get(); },
+  explore: () => ({ mode, locks: [...locks], top: stack.top, flipped: stack.flipped, flap: $('flap').textContent.slice(0, 10), gauge: $('gauge').dataset.side,
+    dials: dials.map((d) => ({ key: d.key, v: d.ui.value, aria: $('k-' + d.key).querySelector('[role=slider]').getAttribute('aria-valuetext') })), lockNote })
 });

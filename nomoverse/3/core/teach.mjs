@@ -50,12 +50,12 @@ const T = {
     en: (r) => [`Gravity ${mul(r.recipe.kG)} makes matter pull too hard (Ωm ≈ ${f1(r.cosmos.Om, 3)}, real 0.315), so expansion turns around${r.cosmos.crunchGyr != null ? ` and collapses at about ${r.cosmos.crunchGyr.toFixed(1)} Gyr` : ''}.`, 'Turn G back toward ×1, or raise Λ (dark energy) in Explore.']
   },
   helium_only: {
-    zh: (r) => [`核效率 ε = ${r.recipe.eps}(真实 0.007)太高,质子在最初三分钟全被焊进氦,没有留下氢做恒星燃料。`, '把 ε 调回 0.006–0.008。'],
-    en: (r) => [`Nuclear efficiency ε = ${r.recipe.eps} (real 0.007) is too high: every proton is fused into helium in the first minutes, no hydrogen is left as star fuel.`, 'Bring ε back to 0.006–0.008.']
+    zh: (r) => [`核效率 ε = ${(+r.recipe.eps).toFixed(4)}(真实 0.007)太高,质子在最初三分钟全被焊进氦,没有留下氢做恒星燃料。`, '把 ε 调回 0.0065–0.0075。'],
+    en: (r) => [`Nuclear efficiency ε = ${(+r.recipe.eps).toFixed(4)} (real 0.007) is too high: every proton is fused into helium in the first minutes, no hydrogen is left as star fuel.`, 'Bring ε back to 0.0065–0.0075.']
   },
   hydrogen_only: {
-    zh: (r) => [`核效率 ε = ${r.recipe.eps}(真实 0.007)太低,氘核粘不住,核合成第一步就停了,只剩氢。`, '把 ε 调回 0.006–0.008。'],
-    en: (r) => [`Nuclear efficiency ε = ${r.recipe.eps} (real 0.007) is too low: deuterium cannot hold together, fusion stalls at step one.`, 'Bring ε back to 0.006–0.008.']
+    zh: (r) => [`核效率 ε = ${(+r.recipe.eps).toFixed(4)}(真实 0.007)太低,氘核粘不住,核合成第一步就停了,只剩氢。`, '把 ε 调回 0.0065–0.0075。'],
+    en: (r) => [`Nuclear efficiency ε = ${(+r.recipe.eps).toFixed(4)} (real 0.007) is too low: deuterium cannot hold together, fusion stalls at step one.`, 'Bring ε back to 0.0065–0.0075.']
   },
   no_atoms: {
     zh: (r) => [`有效 α ${mul(r.alphaEff)}。电磁力太强时,重原子核里的质子互相排斥得撑不住:最重的稳定核只到 Z ≈ ${Math.round(r.atoms.zMax)},连碳(Z=6)都没有。`, '把 α 往 ×1 拧;只改光速 c 也会改 α(α ∝ 1/c)。'],
