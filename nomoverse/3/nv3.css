@@ -1,0 +1,77 @@
+/* 宙律 3.0 · 配方台布局(组件样式来自 /shared/3/ui.css,色值来自 tokens.css) */
+html, body { margin: 0; height: 100%; background: var(--gn3-bg, #05060f); color: var(--gn3-ink, #f4f3ff);
+  font-family: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; overflow: hidden; }
+#stage, #stage2d { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+[hidden] { display: none !important; }
+
+.bar { position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: var(--gn3-s3); padding: var(--gn3-s3) var(--gn3-s4); z-index: 3;
+  background: linear-gradient(#05060fcc, #05060f00); }
+.bar .gn3-btn { font-size: var(--gn3-fs-m); padding: 0 var(--gn3-s3); }
+.bar-back { display: inline-flex; align-items: center; text-decoration: none; }
+.bar-title { flex: 1; display: flex; align-items: baseline; gap: var(--gn3-s2); min-width: 0; }
+.bar-title b { color: var(--gn3-w02); font-size: var(--gn3-fs-l); letter-spacing: .04em; }
+.bar-title span { color: var(--gn3-ink-2); font-size: var(--gn3-fs-s); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-tools { display: flex; gap: var(--gn3-s2); }
+
+.left { position: fixed; left: var(--gn3-s4); top: 76px; width: min(340px, 30vw); display: grid; gap: var(--gn3-s3); z-index: 2; }
+.knob { position: relative; padding: var(--gn3-s3) var(--gn3-s3) var(--gn3-s2); border-radius: var(--gn3-radius-m); }
+.knob .spark { display: block; width: 100%; height: 26px; margin-top: 2px; }
+.reset { font-size: var(--gn3-fs-s) !important; justify-self: start; padding: 0 var(--gn3-s4); }
+
+.right { position: fixed; right: var(--gn3-s4); top: 76px; width: min(250px, 22vw); padding: var(--gn3-s3) var(--gn3-s4); border-radius: var(--gn3-radius-m); z-index: 2; display: grid; gap: var(--gn3-s2); }
+.stat { display: flex; justify-content: space-between; align-items: baseline; gap: var(--gn3-s2); min-height: 32px; border-bottom: 1px solid var(--gn3-glass-line-2); }
+.stat span { color: var(--gn3-ink-3); font-size: var(--gn3-fs-s); }
+.stat b { font-family: var(--gn3-mono, ui-monospace, monospace); font-weight: 600; font-size: var(--gn3-fs-m); text-align: right; }
+.stat b.is-ok { color: var(--gn3-ok); } .stat b.is-warn { color: var(--gn3-warn); } .stat b.is-fail { color: var(--gn3-fail); }
+#fail { margin-top: var(--gn3-s2); border-left: 3px solid var(--fv, var(--gn3-fail)); }
+
+.dock { position: fixed; left: var(--gn3-s4); right: var(--gn3-s4); bottom: var(--gn3-s4); display: flex; align-items: center; gap: var(--gn3-s4);
+  padding: var(--gn3-s3) var(--gn3-s4); border-radius: var(--gn3-radius-l); z-index: 2; }
+.bang { display: grid; justify-items: center; gap: 4px; min-width: 88px; min-height: 64px; border: 0; background: transparent; color: var(--gn3-ink); font: inherit; font-size: var(--gn3-fs-s); cursor: pointer; }
+.bang-ic { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; color: #fff;
+  background: radial-gradient(circle at 40% 35%, #8b7bff, #4c3bd6 70%); box-shadow: 0 0 0 2px #a78bfa88, 0 0 24px #7c5cffaa; transition: transform var(--gn3-t-fast) var(--gn3-ease); }
+.bang:hover .bang-ic { transform: scale(1.06); } .bang:active .bang-ic { transform: scale(.95); }
+.bang:focus-visible { outline: 2px solid var(--gn3-k-c); outline-offset: 2px; border-radius: 12px; }
+.tl { flex: 1; min-width: 0; }
+.note { position: fixed; left: 50%; transform: translateX(-50%); bottom: 112px; margin: 0; font-size: var(--gn3-fs-xs); color: var(--gn3-ink-3); z-index: 1; white-space: nowrap; pointer-events: none; }
+
+/* 中屏:收窄侧栏 */
+@media (max-width: 1100px) {
+  .left { width: 290px; } .right { width: 220px; }
+}
+/* 竖屏 / 手机:3D 占上半屏;配方、结果、时间线放进下半屏的滚动抽屉(.ui) */
+.ui { display: contents; }
+@media (max-width: 760px) and (orientation: portrait) {
+  .bar { padding: var(--gn3-s2) var(--gn3-s3); } .bar-title span { display: none; }
+  .bar .gn3-btn { padding: 0 var(--gn3-s2); }
+  #stage, #stage2d { height: 46vh; }
+  .ui { display: block; position: fixed; top: 46vh; left: 0; right: 0; bottom: 0; overflow-y: auto; z-index: 2;
+    background: var(--gn3-glass-bg-low); border-radius: var(--gn3-radius-l) var(--gn3-radius-l) 0 0; border-top: 1px solid var(--gn3-glass-line); }
+  .left, .right, .dock { position: static; width: auto; }
+  .left { padding: var(--gn3-s3); }
+  .right { margin: 0 var(--gn3-s3) var(--gn3-s3); }
+  .dock { position: sticky; bottom: 0; margin: 0; border-radius: 0; flex-direction: column; align-items: stretch; gap: 4px; padding: var(--gn3-s2) var(--gn3-s3); }
+  .dock { background: var(--gn3-bg-2, #0b0d1f) !important; backdrop-filter: none !important; }
+  .bang { display: flex; justify-content: center; align-items: center; gap: var(--gn3-s2); min-height: 44px; font-size: var(--gn3-fs-m); }
+  .bang-ic { width: 32px; height: 32px; font-size: 13px; }
+  .gn3-tl-item { min-width: 0 !important; padding: 2px 0 !important; }
+  .gn3-tl-t { font-size: var(--gn3-fs-xs) !important; }
+  .note { position: fixed; top: calc(46vh - 22px); bottom: auto; white-space: normal; width: 90%; text-align: center; }
+}
+@media (max-width: 420px) { .bar-title { visibility: hidden; } .bar-tools { gap: 4px; } }
+/* 横屏矮屏(568×320 等):侧栏变窄可滚,底栏压扁 */
+@media (max-height: 480px) and (orientation: landscape) {
+  .bar { padding: 4px var(--gn3-s3); } .bar-title span { display: none; }
+  .left { top: 56px; bottom: 76px; width: 220px; overflow-y: auto; gap: var(--gn3-s2); display: flex; flex-direction: column; }
+  .left > * { flex: 0 0 auto; }
+  .left #ask { display: none; }
+  .knob { padding: 4px var(--gn3-s2); } .knob .spark { height: 16px; }
+  .right { top: 56px; width: 170px; padding: 4px var(--gn3-s2); gap: 0; max-height: calc(100vh - 140px); overflow-y: auto; }
+  .stat { min-height: 26px; } #fail { display: none; }
+  .dock { bottom: 4px; left: 4px; right: 4px; padding: 2px var(--gn3-s2); gap: var(--gn3-s2); }
+  .bang { min-height: 48px; min-width: 60px; } .bang-ic { width: 36px; height: 36px; font-size: 14px; } .bang span:last-child { display: none; }
+  .gn3-tl-t { font-size: var(--gn3-fs-xs) !important; }
+  .note { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .bang-ic { transition: none; } }
+.gn3-q-low .bang-ic { box-shadow: 0 0 0 2px #a78bfa88; }
