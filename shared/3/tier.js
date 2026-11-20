@@ -66,3 +66,34 @@ export class FpsGuard {
     }
   }
 }
+
+/* ---- v0.2(G4):当前档位状态 + 订阅 + 预算 ---- */
+const subs = new Set();
+let cur = null;
+export function current() { if (!cur) { cur = pickTier().tier; } return cur; }
+/* set(t,{persist}):切档并通知订阅者;persist=true 写回 gn:p3q(用户手动选择时) */
+export function set(t, { persist = false } = {}) {
+  if (!TIERS.includes(t)) return cur;
+  if (persist) save(t);
+  if (t === cur) return cur;
+  const prev = cur; cur = t;
+  if (typeof document !== 'undefined') apply(t);
+  subs.forEach((f) => { try { f(t, prev); } catch (e) {} });
+  return cur;
+}
+export function onChange(f) { subs.add(f); return () => subs.delete(f); }
+/* 每档预算(各世界可覆盖):粒子数、阴影贴图、像素比上限、后期开关 */
+export const BUDGET = {
+  high:   { particles: 65536, shadow: 2048, dpr: 2,   post: true,  bloom: true },
+  medium: { particles: 16384, shadow: 1024, dpr: 1.5, post: true,  bloom: true },
+  low:    { particles: 4096,  shadow: 0,    dpr: 1,   post: false, bloom: false },
+};
+export function budget(t = current()) { return BUDGET[t] || BUDGET.low; }
+/* watchFPS():用 rAF 跑 FpsGuard,降档时 set() 并回调;返回停止函数 */
+export function watchFPS(onDrop) {
+  if (typeof requestAnimationFrame !== 'function') return () => {};
+  const g = new FpsGuard(current(), (t, fps) => { set(t); onDrop && onDrop(t, fps); });
+  let id = 0; const loop = (now) => { g.tick(now); id = requestAnimationFrame(loop); };
+  id = requestAnimationFrame(loop);
+  return () => cancelAnimationFrame(id);
+}

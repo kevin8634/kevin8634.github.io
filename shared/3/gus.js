@@ -3,7 +3,7 @@
  * validate:版本协商 + 数值范围 + 字段清洗;读方绝不执行字段内容,字符串只作 textContent。
  * 存储:localStorage gn:gus:last(最近一个)、gn:gus:lib(最多 20 个)。 */
 
-export const VERSION = '0.1';
+export const VERSION = '0.1';   // 模块 v0.2:G1 Λ 可为 0/负、G2 derived 白名单扩充、G7 negotiate()
 export const MAJOR = 0;
 export const URL_MAX = 1800;
 const LIB_KEY = 'gn:gus:lib', LAST_KEY = 'gn:gus:last', LIB_MAX = 20;
@@ -68,6 +68,15 @@ export class GusError extends Error {
 const num = (v, lo, hi) => typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi;
 const str = (v, max = 40) => (typeof v === 'string' ? v.slice(0, max) : '');
 
+/* G7 版本协商:不抛错,返回 {ok, version, major, minor, newer, reason} */
+export function negotiate(o) {
+  const v = String((o && o.gus) || ''), m = /^(\d+)\.(\d+)$/.exec(v);
+  if (!m) return { ok: false, version: v, reason: 'no_version' };
+  const major = +m[1], minor = +m[2], [, mi] = VERSION.split('.').map(Number);
+  if (major !== MAJOR) return { ok: false, version: v, major, minor, reason: 'major_mismatch' };
+  return { ok: true, version: v, major, minor, newer: minor > mi };
+}
+
 export function validate(o) {
   if (!o || typeof o !== 'object') throw new GusError('not_object');
   const v = String(o.gus || '');
@@ -83,7 +92,8 @@ export function validate(o) {
     out.constants = {};
     for (const k of Object.keys(o.constants).slice(0, 16)) {
       const c = o.constants[k];
-      if (c && num(c.k, 1e-6, 1e6)) out.constants[k.slice(0, 16)] = { k: c.k, si: num(c.si, -1e300, 1e300) ? c.si : undefined, unit: str(c.unit, 24), alphaLinked: !!c.alphaLinked };
+      const lo = /^(Lambda|Λ|L)$/.test(k) ? -1e3 : 1e-6;   // G1:Λ 允许 0 与负值(大挤压宇宙)
+      if (c && num(c.k, lo, 1e6)) out.constants[k.slice(0, 16)] = { k: c.k, si: num(c.si, -1e300, 1e300) ? c.si : undefined, unit: str(c.unit, 24), alphaLinked: !!c.alphaLinked };
     }
   }
   if (o.derived && typeof o.derived === 'object') {
@@ -93,7 +103,11 @@ export function validate(o) {
       failures: Array.isArray(d.failures) ? d.failures.slice(0, 16).map((x) => str(x, 24)) : [],
       fate: ['expand', 'crunch', 'coast'].includes(d.fate) ? d.fate : undefined,
     };
-    for (const k of ['age_s', 'starLifeSun_s', 'bohrRadius_m', 'hAlpha_m']) if (num(d[k], 0, 1e40)) out.derived[k] = d[k];
+    for (const k of ['age_s', 'starLifeSun_s', 'starLife_s', 'bohrRadius_m', 'hAlpha_m']) if (num(d[k], 0, 1e40)) out.derived[k] = d[k];
+    if (d.crunch_s === null) out.derived.crunch_s = null; else if (num(d.crunch_s, 0, 1e40)) out.derived.crunch_s = d.crunch_s;   // G2
+    if (num(d.heliumY, 0, 1)) out.derived.heliumY = d.heliumY;
+    if (typeof d.habitable === 'boolean') out.derived.habitable = d.habitable;
+    out.derived.warnings = Array.isArray(d.warnings) ? d.warnings.slice(0, 16).map((x) => str(x, 24)) : [];
     if (d.stages && typeof d.stages === 'object') { out.derived.stages = {}; for (const k of Object.keys(d.stages).slice(0, 12)) out.derived.stages[k.slice(0, 4)] = str(d.stages[k], 6); }
   }
   if (o.system) {

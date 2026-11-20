@@ -46,3 +46,18 @@ export function aria(x, l = lang()) {
     return l === 'en' ? ' times ten to the ' + n : ' 乘以十的 ' + n + ' 次方';
   });
 }
+
+/* ---- v0.2(G6) ---- */
+/* two(entry):两层文本 → {short, more};entry 为 {zh,en,zhMore,enMore} */
+export function two(e, l = lang()) {
+  if (!e) return { short: '', more: '' };
+  return { short: (l === 'en' ? e.en : e.zh) || e.zh || '', more: (l === 'en' ? e.enMore : e.zhMore) || '' };
+}
+/* apply(root, t):把 [data-i18n] 写成 t(key) 的 textContent,[data-i18n-aria] 写 aria-label,[data-i18n-title] 写 title;并设 <html lang> */
+export function apply(root, t) {
+  if (!root || !t) return;
+  root.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  root.querySelectorAll('[data-i18n-aria]').forEach((el) => el.setAttribute('aria-label', t(el.dataset.i18nAria)));
+  root.querySelectorAll('[data-i18n-title]').forEach((el) => el.setAttribute('title', t(el.dataset.i18nTitle)));
+  if (root === document || root === document.documentElement || root === document.body) document.documentElement.lang = t.lang === 'en' ? 'en' : 'zh-CN';
+}

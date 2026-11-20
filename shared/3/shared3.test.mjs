@@ -59,5 +59,19 @@ ok(sci(3.33715e-11) === '3.34×10⁻¹¹', 'sci ' + sci(3.33715e-11)); ok(sci(29
 ok(mult(0.5) === '×0.5', 'mult');
 { const t = makeT({ hi: { zh: '你好 {n}', en: 'hi {n}', zhMore: '展开' } }, 'en'); ok(t('hi', { n: 2 }) === 'hi 2' && t('nope') === 'nope', 'makeT'); }
 ok(/十的 -11 次方/.test(aria(3.3e-11, 'zh')), 'aria');
-console.log(`shared/3 v0.1: ${pass} pass, ${fail} fail`);
+// ---- v0.2 ----
+{ const { negotiate } = await import('./gus.js');
+  ok(negotiate({ gus: '0.1' }).ok && negotiate({ gus: '0.9' }).newer && !negotiate({ gus: '1.0' }).ok && negotiate({}).reason === 'no_version', 'G7 negotiate');
+  const zl = JSON.parse(JSON.stringify(sample)); zl.constants.Lambda = { k: 0 }; ok(validate(zl).constants.Lambda && validate(zl).constants.Lambda.k === 0, 'G1 Λ=0');
+  zl.constants.Lambda = { k: -5 }; ok(validate(zl).constants.Lambda.k === -5, 'G1 Λ<0');
+  zl.constants.G = { k: 0 }; ok(!validate(zl).constants.G, 'G1 G=0 still dropped');
+  const dd = JSON.parse(JSON.stringify(sample)); Object.assign(dd.derived, { crunch_s: null, heliumY: 0.247, habitable: true, warnings: ['W_HOT'], starLife_s: 3e17 });
+  const v = validate(dd).derived; ok(v.crunch_s === null && v.heliumY === 0.247 && v.habitable === true && v.warnings[0] === 'W_HOT' && v.starLife_s === 3e17, 'G2/G3 derived'); }
+{ const { createStore } = await import('./store.js'); const seen = []; const st = createStore({ G: 1 }, { normalize: (x) => ({ G: Math.min(10, x.G) }) });
+  st.subscribe((s) => seen.push(s.G)); st.set({ G: 2 }); st.beginGesture(); for (let i = 3; i < 20; i++) st.set((s) => ({ G: s.G + 1 })); st.endGesture();
+  ok(st.get().G === 10, 'G5 normalize'); st.undo(); ok(st.get().G === 2, 'G5 gesture merged'); ok(seen.length > 3, 'G5 subscribe'); }
+{ const T = await import('./tier.js'); ok(T.budget('low').particles === 4096 && T.budget('high').particles === 65536, 'G4 budget');
+  const got = []; const off = T.onChange((t, p) => got.push(t)); T.set('low'); T.set('medium'); off(); T.set('high'); ok(got.join() === 'low,medium' && T.current() === 'high', 'G4 set/onChange'); }
+{ const { two } = await import('./i18n.js'); const e = { zh: '直白', en: 'plain', zhMore: '展开', enMore: 'more' }; ok(two(e, 'en').more === 'more' && two(e, 'zh').short === '直白', 'G6 two'); }
+console.log(`shared/3 v0.2: ${pass} pass, ${fail} fail`);
 process.exit(fail ? 1 : 0);
