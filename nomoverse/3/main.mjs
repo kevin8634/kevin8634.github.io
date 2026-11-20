@@ -1,10 +1,11 @@
 /* 宙律 Nomoverse 3.0 · 宇宙配方台入口(3-2:Worker + three r186 渲染层 + /shared/3/ui.js 界面)
  * 数据流:store(配方)→ Worker run → desc(scene.describe)→ 渲染层 update(desc);界面数字读 res,画面只读 desc。
- * 新手层 3 旋钮 G、c、α;探索层与题卡 3-4 起。 */
+ * 新手层 3 旋钮 G、c、α(×1 吸附)+ 引导三步 + 失败卡两层 + 真实宇宙对比(3-3);探索层与题卡 3-4 起。 */
 import { tier, createRecipeStore, i18n, encodeUniverse, recipeFromGus, registerSelftest, gus } from './core/adapt.mjs';
 import { setLang } from '/shared/3/i18n.js';
 import * as ui from '/shared/3/ui.js';
 import { call, runLatest, usingWorker } from './core/wclient.mjs';
+import { snap1, compareRows, explain, REAL_CREDIT, STAGE, GUIDE, guideStep } from './core/teach.mjs';
 
 const U = window.NV3_UNIVERSE, G0 = window.NV3_GUS, SC = window.NV3_SCENE;
 const $ = (id) => document.getElementById(id);
@@ -27,10 +28,15 @@ const DICT = {
   gyr: { zh: '{n} 亿年', en: '{n} Gyr' }, none: { zh: '—', en: '—' },
   bang: { zh: '大爆炸', en: 'Big Bang' },
   T1: { zh: '膨胀', en: 'Expand' }, T2: { zh: '核合成', en: 'Nuclei' }, T3: { zh: '原子', en: 'Atoms' }, T4: { zh: '成团', en: 'Clumps' },
-  T5: { zh: '点燃', en: 'Ignition' }, T6: { zh: '行星', en: 'Planets' }, T7: { zh: '恒星系', en: 'System' },
+  T5: { zh: '点燃', en: 'Ignition' }, T6: { zh: '时间', en: 'Time' }, T7: { zh: '恒星系', en: 'System' },
   failAt: { zh: '卡在第 {n} 关 · {t}', en: 'Stuck at stage {n} · {t}' },
   simp: { zh: '教学简化:轨道半径对数压缩、行星放大显示;真实数值见右侧。', en: 'Teaching simplification: orbits log-compressed, planets enlarged; real values on the right.' },
   qhigh: { zh: '高', en: 'Hi' }, qmedium: { zh: '中', en: 'Mid' }, qlow: { zh: '低', en: 'Lo' },
+  cmpT: { zh: '和真实宇宙比一比', en: 'Compare with our universe' }, cmpS: { zh: '拖动竖条', en: 'Drag the bar' },
+  real: { zh: '真实宇宙', en: 'Our universe' }, yours: { zh: '你的宇宙', en: 'Your universe' },
+  fixL: { zh: '试试:', en: 'Try: ' }, warnAt: { zh: '第 {n} 关有点勉强 · {t}', en: 'Stage {n} is shaky · {t}' },
+  skip: { zh: '跳过', en: 'Skip' }, gotit: { zh: '知道了', en: 'Got it' }, help: { zh: '新手引导', en: 'Guide' },
+  snapped: { zh: '已吸附到真实值 ×1', en: 'Snapped to real value ×1' },
   qdrop: { zh: '帧率偏低,已自动降到{q}档', en: 'Low frame rate, switched to {q}' }
 };
 const FAIL_NOTE_EN = {
@@ -86,8 +92,11 @@ KNOBS.forEach((k) => {
   k.sl = ui.slider.mount(box.querySelector('.sl'), {
     min: lo, max: hi, log: true, value: store.get()[k.key], label: L.t(k.key), color: k.color, format: fmtK,
     onStart: () => store.beginGesture(), onEnd: () => store.endGesture(),
-    onInput: (v) => store.set((s) => ({ ...s, [k.key]: v }))
+    onInput: (v) => { const w = snap1(v); store.set((s) => ({ ...s, [k.key]: w })); guide({ type: 'knob', key: k.key, v: w }); }
   });
+  /* ×1 刻度:真实宇宙的位置 */
+  const tr = box.querySelector('.gn3-slider-track');
+  if (tr) { const t1 = Math.log(1 / lo) / Math.log(hi / lo), tick = document.createElement('span'); tick.className = 'one-tick'; tick.style.left = (t1 * 100).toFixed(2) + '%'; tick.setAttribute('aria-hidden', 'true'); tr.append(tick); }
 });
 $('reset').addEventListener('click', () => store.set(U.normalize({ seed: store.get().seed })));
 $('undo').addEventListener('click', () => store.undo());
@@ -106,7 +115,7 @@ let fps0 = 60;
 
 /* 统计卡(countUp)与时间线 */
 const cu = { teff: ui.countUp.mount($('s-teff'), { value: 0, format: (v) => Math.round(v).toLocaleString() + ' K' }) };
-const tl = ui.timeline.mount($('tl'), { items: U.ORDER.map((t) => ({ id: t, title: L.t(t), state: 'todo' })) });
+const tl = ui.timeline.mount($('tl'), { items: U.ORDER.map((t) => ({ id: t, title: L.t(t), state: 'todo' })), onPick: (id) => { pickedStage = pickedStage === id ? null : id; paintStage(pickedStage); } });
 let failCard = null, revealed = 7, playing = 0;
 
 function stageItems(res) {
@@ -119,14 +128,73 @@ function paintStats(res, desc) {
   cu.teff.update({ value: desc.star.lit ? res.star.teff : 0 });
   $('s-pl').textContent = String(desc.planets.length);
   $('s-hab').textContent = String(desc.planets.filter((p) => p.habitable).length);
-  const fv = desc.failVisual;
-  if (fv) {
-    const n = +fv.stage.slice(1), note = L.lang === 'en' ? FAIL_NOTE_EN[fv.code] : fv.note;
-    const o = { title: L.t('failAt', { n, t: L.t(fv.stage) }), summary: note, more: '' };
-    failCard ? failCard.update(o) : (failCard = ui.expandableCard.mount($('fail'), o));
-    $('fail').hidden = false; $('fail').style.setProperty('--fv', fv.palette[0]);
-  } else { $('fail').hidden = true; }
+  paintCard(res, desc);
 }
+
+/* 失败卡两层:第一层一句话(卡在第几关),第二层因果 + 数字 + 往哪拧 + 真实宇宙对比 */
+const FB = { body: document.createElement('div'), why: document.createElement('p'), fix: document.createElement('p'), cmp: document.createElement('div'), credit: document.createElement('p'),
+  a: document.createElement('div'), b: document.createElement('div') };
+FB.body.className = 'fb'; FB.fix.className = 'fb-fix'; FB.cmp.className = 'fb-cmp'; FB.credit.className = 'fb-credit'; FB.a.className = 'cmp-p is-real'; FB.b.className = 'cmp-p is-yours';
+FB.body.append(FB.why, FB.fix, FB.cmp, FB.credit);
+const cmp = ui.compare.mount(FB.cmp, { before: FB.a, after: FB.b, value: 0.5, labels: ['', ''] });
+function fillCmp(res) {
+  const rows = compareRows(res, L.lang);
+  const col = (el, key) => el.replaceChildren(...rows.map((r) => { const d = document.createElement('div'); d.className = 'cmp-r'; const k = document.createElement('span'), v = document.createElement('b'); k.textContent = r.k; v.textContent = r[key]; d.append(k, v); return d; }));
+  col(FB.a, 'real'); col(FB.b, 'yours');
+  cmp.update({ labels: [L.t('real'), L.t('yours')] });
+  FB.credit.textContent = REAL_CREDIT[L.lang === 'en' ? 'en' : 'zh'];
+}
+function paintCard(res, desc) {
+  const ex = explain(res, U, L.lang), fv = desc.failVisual;
+  fillCmp(res);
+  FB.why.hidden = FB.fix.hidden = !ex;
+  let o;
+  if (ex) {
+    const n = +ex.stage.slice(1);
+    FB.why.textContent = ex.why; FB.fix.textContent = L.t('fixL') + ex.fix;
+    const note = ex.level !== 'fail' ? ex.fix : L.lang === 'en' ? FAIL_NOTE_EN[ex.code] : fv && fv.code === ex.code ? fv.note : ex.why.split('。')[0] + '。';
+    o = { title: L.t(ex.level === 'fail' ? 'failAt' : 'warnAt', { n, t: L.t(ex.stage) }), summary: note || '', more: FB.body };
+  } else o = { title: L.t('cmpT'), summary: L.t('cmpS'), more: FB.body };
+  failCard ? failCard.update(o) : (failCard = ui.expandableCard.mount($('fail'), o));
+  $('fail').hidden = false; $('fail').className = 'gn3-glass gn3-exp lvl-' + (ex ? ex.level : 'ok') + (failCard.el.classList.contains('is-open') ? ' is-open' : '');
+  $('fail').style.setProperty('--fv', ex && ex.level === 'fail' && fv ? fv.palette[0] : ex ? 'var(--gn3-warn)' : 'var(--gn3-ok)');
+}
+const openCard = () => { if (!$('fail').classList.contains('is-open')) $('fail').querySelector('.gn3-exp-head').click(); };
+
+/* 每关一句讲解:点时间线某关 */
+function paintStage(id) {
+  const n = $('stage-note'); if (!id || !STAGE[id]) { n.hidden = true; return; }
+  n.hidden = false; n.querySelector('b').textContent = L.t(id); n.querySelector('p').textContent = STAGE[id][L.lang === 'en' ? 'en' : 'zh'];
+}
+let pickedStage = null;
+
+/* ---------- 引导三步(首访自动;? 按钮重放;?guide=0 关闭) ---------- */
+const GKEY = 'nv3.guide';
+let gStep = 3;
+const gTarget = () => [$('k-kG'), $('bang'), $('fail')][gStep];
+function paintGuide() {
+  document.querySelectorAll('.coach-target').forEach((e) => e.classList.remove('coach-target'));
+  const c = $('coach');
+  if (gStep >= 3) { c.hidden = true; return; }
+  const g = GUIDE[L.lang === 'en' ? 'en' : 'zh'][gStep], okRun = last && !explain(last, U);
+  c.hidden = false; c.querySelector('b').textContent = g.t; c.querySelector('p').textContent = gStep === 2 && okRun ? g.ok : g.d;
+  $('g-skip').textContent = L.t('skip'); $('g-next').textContent = L.t('gotit'); $('g-next').hidden = gStep !== 2; $('g-skip').hidden = gStep === 2;
+  const t = gTarget(); if (t) { t.classList.add('coach-target'); t.scrollIntoView && t.scrollIntoView({ block: 'nearest', behavior: RM.matches ? 'auto' : 'smooth' }); }
+}
+function guide(ev) {
+  if (gStep >= 3) return;
+  const n = guideStep(gStep, ev);
+  if (n === gStep) return;
+  gStep = n;
+  if (gStep === 2) openCard();
+  if (gStep >= 3) { try { localStorage.setItem(GKEY, 'done'); } catch (e) { /* 隐私模式 */ } }
+  paintGuide();
+}
+$('g-skip').addEventListener('click', () => guide({ type: 'skip' }));
+$('g-next').addEventListener('click', () => guide({ type: 'done' }));
+$('help').addEventListener('click', () => { gStep = 0; paintGuide(); });
+{ let seen = false; try { seen = localStorage.getItem(GKEY) === 'done'; } catch (e) { seen = true; }
+  if (!seen && !/[?&]guide=0\b/.test(location.search)) gStep = 0; }
 
 /* 后果指示:每个旋钮沿其范围 24 点的「通过关数」迷你图 + 当前位置 */
 async function paintSparks(s) {
@@ -157,9 +225,9 @@ store.subscribe(refresh);
 $('bang').addEventListener('click', () => {
   if (!last) return;
   const my = ++playing;
-  if (RM.matches) { revealed = 7; tl.update({ items: stageItems(last) }); return; }
+  if (RM.matches) { revealed = 7; tl.update({ items: stageItems(last) }); guide({ type: 'bang' }); return; }
   revealed = 0; tl.update({ items: stageItems(last) });
-  const step = () => { if (my !== playing) return; revealed++; tl.update({ items: stageItems(last), active: U.ORDER[revealed - 1] }); if (revealed < 7) setTimeout(step, 280); };
+  const step = () => { if (my !== playing) return; revealed++; tl.update({ items: stageItems(last), active: U.ORDER[revealed - 1] }); if (revealed < 7) setTimeout(step, 280); else guide({ type: 'bang' }); };
   setTimeout(step, 200);
 });
 
@@ -168,11 +236,14 @@ function relabel() {
   $('lang').textContent = L.lang === 'en' ? '中' : 'EN'; $('lang').setAttribute('aria-label', L.lang === 'en' ? '中文' : 'English');
   ask.update({ title: L.t('ask'), summary: L.t('askSub'), more: L.two('ask').more });
   KNOBS.forEach((k) => k.sl.update({ label: L.t(k.key) }));
+  $('help').setAttribute('aria-label', L.t('help'));
   paintQ(); if (last) { tl.update({ items: stageItems(last) }); paintStats(last, lastDesc); }
+  paintStage(pickedStage); paintGuide();
 }
 relabel();
 await refresh(store.get());
 await loadSky();
+paintGuide();
 
 /* SW:作用域 /nomoverse/(与 2.0 共用同一 SW);?nosw=1 注销 */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
@@ -193,6 +264,9 @@ registerSelftest({
   /* 仅自测:绕过「软件渲染强制 low」,验证 high/medium 渲染路径(透射玻璃、粒子量)不报错 */
   forceTier: async (t) => { tier.set(t); tier.apply(t); view && view.setTier(t, tier.budget(t)); await loadSky(); paintQ(); await refresh(store.get()); return tier.current(); },
   view: () => ({ webgl: !!view, worker: usingWorker(), ...(view ? view.snapshot() : {}), desc: lastDesc && { status: lastDesc.status, fail: lastDesc.failVisual && lastDesc.failVisual.code, planets: lastDesc.planets.length } }),
+  guide: (ev) => { if (ev === 'start') { gStep = 0; paintGuide(); } else if (ev) guide(ev); return gStep; },
+  card: () => ({ title: $('fail').querySelector('.gn3-exp-t').textContent, open: $('fail').classList.contains('is-open'), real: FB.a.textContent, yours: FB.b.textContent }),
+  snap: (v) => snap1(v),
   state: () => store.get(),
   tier: () => tier.current(),
   fps: () => fps0,

@@ -19,6 +19,7 @@
   <a class="gn3-btn bar-back" href="/" data-i18n="home" data-i18n-aria="homeAria" aria-label="返回创世计划">← 创世计划</a>
   <div class="bar-title"><b data-i18n="world">宙律</b><span data-i18n="sub">物理 · 宇宙配方台</span></div>
   <div class="bar-tools">
+    <button type="button" class="gn3-btn" id="help" aria-label="新手引导">?</button>
     <button type="button" class="gn3-btn" id="undo" data-i18n-aria="undo" aria-label="撤销">↶</button>
     <button type="button" class="gn3-btn" id="redo" data-i18n-aria="redo" aria-label="重做">↷</button>
     <button type="button" class="gn3-btn" id="q" data-i18n-aria="quality" aria-label="画质">中</button>
@@ -42,6 +43,7 @@
   <div class="stat"><span data-i18n="sPlanets">行星</span><b id="s-pl"></b></div>
   <div class="stat"><span data-i18n="sHab">宜居带行星</span><b id="s-hab"></b></div>
   <div id="fail"></div>
+  <div id="stage-note" class="stage-note" hidden><b></b><p></p></div>
 </aside>
 
 <footer class="dock gn3-glass">
@@ -49,6 +51,8 @@
   <div id="tl" class="tl"></div>
 </footer>
 </div>
+
+<div id="coach" class="coach gn3-glass" role="dialog" aria-modal="false" aria-live="polite" hidden><b></b><p></p><div class="coach-b"><button type="button" class="gn3-btn" id="g-skip">跳过</button><button type="button" class="gn3-btn" id="g-next" hidden>知道了</button></div></div>
 
 <p class="note" data-i18n="simp">教学简化:轨道半径对数压缩、行星放大显示;真实数值见右侧。</p>
 

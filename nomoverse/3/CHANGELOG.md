@@ -1,5 +1,13 @@
 # 宙律 Nomoverse 3.0 · 变更记录
 
+## v3.0-α4(3-3 新手层,2026-11-21,未上线)
+- 引导三步(首访自动,? 按钮重放,?guide=0 关闭,localStorage nv3.guide):拧 G 至少 2 倍 → 按大爆炸 → 卡片自动展开看卡在哪关;金色描边指目标,减少动态不闪;可跳过。
+- 失败卡两层:第一层「卡在第 n 关」+ 一句话;第二层因果 + 当前数字 + 往哪拧;警告也出卡(第 n 关有点勉强);走通时卡片变「和真实宇宙比一比」。
+- 真实宇宙对比:ui.compare 拖竖条,左真实值右你的宇宙(年龄、恒星表面温度、最重稳定元素、行星数、液态水),卡底署名出处与许可(SOURCES.md 新表)。
+- ×1 吸附:G/c/α 在 ±4% 内吸到 ×1,滑轨上金色 ×1 刻度;键盘一步可离开吸附区。
+- 点时间线某关出一句讲解(7 关中英)。
+- 新增 core/teach.mjs(纯函数)与 tests/teach.test.mjs(74 项);sw.js 版本 nv-v2.0-a2_v3.0-a4_s3-0.3,预缓存加 teach.mjs。
+
 ## v3.0-α3(3-2 内核 + Worker + 渲染层,2026-11-20,未上线)
 - `core/worker.js`:经典 Worker 包装 universe + scene + nbody;op run/sky/sweep/nbody;结果与直接调用逐位一致。`core/wclient.mjs`:Promise 客户端,最新请求优先,Worker 不可用自动回退主线程。
 - `core/render3.mjs`:three r186 本地 vendor,只读 scene.describe();玻璃球薄壳(high/medium 清漆+虹彩,low Phong)+ 三层台座 + 恒星/行星/轨道蓝图线/宜居带环/球内星云/外圈种子星空;11 种失败按 failVisual.mode 换配色与特效(黑洞吸积环、霜雾、回缩脉动等);AgX 调色;像素比按档、手机 ≤1.5;隐藏暂停;减少动态只出静帧;无 WebGL 时 Canvas 2D 版。未用 transmission(透射通道会吞掉球内半透明物体)。
