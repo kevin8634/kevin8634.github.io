@@ -3,7 +3,9 @@
  * 新手层 3 旋钮 G、c、α(×1 吸附)+ 引导三步 + 失败卡两层 + 真实宇宙对比(3-3);
  * 探索层(3-4):基础/进阶切换,+ε、Ω₀(滑块 + 液位表)、Q、Λ(彗星旋钮)、种子翻牌、锁定开关、随机宇宙、题卡叠牌;星桥把恒星系交给天枢。
  * 造物层(3-5):命名(Decrypted Text)、作品卡(Profile Card + Count Up + T7 N 体 Worker 轨道)、带去天枢(Star Border)、
- *   复制分享链接(Glare Hover,?gus= 超长退 ?r=)、导出/导入 JSON(File Upload)、gn:gus:last。 */
+ *   复制分享链接(Glare Hover,?gus= 超长退 ?r=)、导出/导入 JSON(File Upload)、gn:gus:last。
+ * 画质与可达性(3-6):画质面板(Rubber Segment 低/中/高 + 减少动态 跟随系统/减少/完整)、GPGPU 星空、亮度上限、
+ *   Warm Tooltip(悬停/聚焦/长按说明)、Swipe Toast(降级与状态提示)、aria-live 播报(关卡结果、结局、降级)、英文全量、触控 ≥44px。 */
 import { tier, createRecipeStore, i18n, encodeUniverse, recipeFromGus, registerSelftest, gus, recipeToParam } from './core/adapt.mjs';
 import { setLang } from '/shared/3/i18n.js';
 import * as ui from '/shared/3/ui.js';
@@ -13,6 +15,8 @@ import * as X from './core/explore.mjs';
 import { cometDial, sloshGauge, rubberSegment, splitFlap, cardStack, lockSwitch } from './core/explore-ui.mjs';
 import * as C from './core/create.mjs';
 import { profileCard, decryptedText, starBorder, glareHover, fileUpload, orbitCanvas } from './core/create-ui.mjs';
+import * as A from './core/access.mjs';
+import { warmTooltip, swipeToast, announcer } from './core/access-ui.mjs';
 
 const U = window.NV3_UNIVERSE, G0 = window.NV3_GUS, SC = window.NV3_SCENE;
 const $ = (id) => document.getElementById(id);
@@ -62,7 +66,24 @@ const DICT = {
   saved: { zh: '已导出 {f}', en: 'Exported {f}' }, noPlanets: { zh: '没有行星', en: 'No planets' }, noStar: { zh: '没有恒星', en: 'No star' },
   cAge: { zh: '年龄', en: 'Age' }, cPl: { zh: '行星', en: 'Planets' }, cHab: { zh: '宜居', en: 'Habitable' }, cTeff: { zh: '恒星', en: 'Star' },
   orbitNote: { zh: 'N 体实时积分 · 半径开方压缩', en: 'Live N-body · radius √-compressed' },
-  bridge: { zh: '星桥 · 去天枢看恒星系', en: 'Star Bridge · see it in Starhelm' }, mark0: { zh: 'Λ = 0', en: 'Λ = 0' }, mark1: { zh: '真实值', en: 'Real value' }
+  bridge: { zh: '星桥 · 去天枢看恒星系', en: 'Star Bridge · see it in Starhelm' }, mark0: { zh: 'Λ = 0', en: 'Λ = 0' }, mark1: { zh: '真实值', en: 'Real value' },
+  /* 3-6 画质与可达性 */
+  title: { zh: '宙律 3.0 · 宇宙配方台(建造中)', en: 'Nomoverse 3.0 · Universe Recipe Bench (in progress)' },
+  leftAria: { zh: '配方', en: 'Recipe' }, rightAria: { zh: '结果', en: 'Results' }, dockAria: { zh: '推演', en: 'Run' }, tlAria: { zh: '时间线 7 关', en: 'Timeline, 7 stages' },
+  stageAria: { zh: '舞台:玻璃球里的宇宙', en: 'Stage: the universe in a glass sphere' },
+  qT: { zh: '画质与动效', en: 'Quality & motion' }, qTier: { zh: '画质', en: 'Quality' }, qMotion: { zh: '动效', en: 'Motion' },
+  mAuto: { zh: '跟随系统', en: 'System' }, mReduce: { zh: '减少', en: 'Reduce' }, mFull: { zh: '完整', en: 'Full' },
+  qClose: { zh: '关闭', en: 'Close' }, qNow: { zh: '画质:{q}', en: 'Quality: {q}' },
+  qSet: { zh: '已切到{q}画质', en: 'Quality set to {q}' }, swForced: { zh: '检测到软件渲染,画质固定为低档', en: 'Software rendering detected, quality fixed at Low' },
+  swNote: { zh: '本机是软件渲染,只能用低档', en: 'This device renders in software, Low only' },
+  mOn: { zh: '已减少动态:动画改为静态', en: 'Reduced motion on: animations are static' }, mOff: { zh: '动效已恢复', en: 'Motion restored' },
+  kbd: { zh: '键盘:Tab 切换,方向键调节,Shift+方向键大步,Ctrl+Z 撤销', en: 'Keyboard: Tab to move, arrows to adjust, Shift+arrows for big steps, Ctrl+Z to undo' },
+  toastsAria: { zh: '提示', en: 'Notifications' }, close: { zh: '关闭提示', en: 'Dismiss' },
+  tipHelp: { zh: '重新看一遍新手引导', en: 'Replay the starter guide' }, tipUndo: { zh: '撤销上一步(Ctrl+Z)', en: 'Undo last change (Ctrl+Z)' },
+  tipRedo: { zh: '重做(Ctrl+Shift+Z)', en: 'Redo (Ctrl+Shift+Z)' }, tipQ: { zh: '画质与动效设置', en: 'Quality and motion settings' },
+  tipLang: { zh: '切换到英文', en: 'Switch to Chinese' }, tipReseed: { zh: '换一个随机种子,恒星系布局会变', en: 'New random seed, the system layout changes' },
+  tipLock: { zh: '锁定:随机宇宙和题卡不会改它', en: 'Lock: random and cards leave it alone' }, tipBang: { zh: '让宇宙沿 7 关走一遍', en: 'Run the universe through the 7 stages' },
+  tipHome: { zh: '回到创世计划门户', en: 'Back to the Genesis portal' }
 };
 const FAIL_NOTE_EN = {
   crunch: 'Space falls back and squeezes into a point', helium_only: 'Only helium, too little star fuel', hydrogen_only: 'No helium to start, nucleosynthesis stalls',
@@ -73,12 +94,24 @@ const FAIL_NOTE_EN = {
 let L = i18n(DICT);
 
 /* ---------- 画质与动效 ---------- */
-const RM = matchMedia('(prefers-reduced-motion: reduce)');
-const mobile = matchMedia('(pointer: coarse)').matches || Math.min(screen.width, screen.height) < 600;
+/* 减少动态:页内开关(跟随系统 / 减少 / 完整,localStorage nv3.motion)。为让 /shared/3/ui.js 等组件同样遵守,
+ * 把 prefers-reduced-motion: reduce 这条媒体查询改为返回「生效值」(只改这一条,其余查询走原生)。 */
+const MOKEY = 'nv3.motion';
+const nativeMM = window.matchMedia.bind(window);
+const SYS_RM = nativeMM('(prefers-reduced-motion: reduce)');
+let motionSet = (() => { try { const v = localStorage.getItem(MOKEY); return A.MOTION.includes(v) ? v : 'auto'; } catch (e) { return 'auto'; } })();
+const isRM = () => A.motionReduced(motionSet, SYS_RM.matches);
+window.matchMedia = (q) => (/prefers-reduced-motion\s*:\s*reduce/.test(q)
+  ? { matches: isRM(), media: q, onchange: null, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent() { return false; } }
+  : nativeMM(q));
+const paintRM = () => document.documentElement.classList.toggle('nv-rm', isRM());
+paintRM();
+const mobile = nativeMM('(pointer: coarse)').matches || Math.min(screen.width, screen.height) < 600;
 const probe = (() => { try { return document.createElement('canvas').getContext('webgl2'); } catch (e) { return null; } })();
 const tierInfo = tier.pickTier(probe);
 const loseCtx = probe && probe.getExtension('WEBGL_lose_context'); loseCtx && loseCtx.loseContext();
 tier.set(tierInfo.tier); tier.apply(tierInfo.tier);
+const nvBudget = (t = tier.current()) => A.budgetFor(t, { mobile });
 
 /* ---------- 状态 ---------- */
 const store = createRecipeStore(U);
@@ -94,17 +127,17 @@ store.bindKeys();
 let R = null, R2 = null, lastDesc = null, last = null;
 const cv = $('stage'), cv2 = $('stage2d');
 try { R = (await import('./core/render3.mjs')); } catch (e) { R = null; }
-let view = R ? R.init(cv, { tier: tier.current(), budget: tier.budget(), reduced: RM.matches, mobile }) : null;
+let view = R ? R.init(cv, { tier: tier.current(), budget: nvBudget(), reduced: isRM(), mobile }) : null;
 if (!view) {
   cv.hidden = true; cv2.hidden = false; R2 = R;
-  let t = 0; const loop = () => { if (lastDesc && R2) R2.draw2D(cv2, lastDesc, t); if (!RM.matches && !document.hidden) t += 0.004; requestAnimationFrame(loop); };
+  let t = 0; const loop = () => { if (lastDesc && R2) R2.draw2D(cv2, lastDesc, t); if (!isRM() && !document.hidden) t += 0.004; requestAnimationFrame(loop); };
   requestAnimationFrame(loop);
 }
 async function loadSky() {
   const s = store.get(); const f32 = await call('sky', { seed: s.seed, n: tier.budget().particles });
   view && view.setSky(f32, lastDesc ? lastDesc.sky.density : 1);
 }
-RM.addEventListener && RM.addEventListener('change', () => view && view.setReduced(RM.matches));
+SYS_RM.addEventListener && SYS_RM.addEventListener('change', () => applyMotion(false));
 
 /* ---------- 界面:/shared/3/ui.js ---------- */
 const ask = ui.expandableCard.mount($('ask'), { title: L.t('ask'), summary: L.t('askSub'), more: L.two('ask').more });
@@ -175,6 +208,8 @@ X.LOCKABLE.forEach((k) => {
   const box = $('k-' + k); if (!box) return;
   const w = document.createElement('span'); w.className = 'lk'; box.append(w);
   lockUI[k] = lockSwitch.mount(w, { checked: locks.has(k), label: '', onChange: (on) => { on ? locks.add(k) : locks.delete(k); try { localStorage.setItem(LKEY, X.lockToStr(locks)); } catch (e) { /* 隐私模式 */ } } });
+  w.querySelector('button').removeAttribute('title');
+  warmTooltip.attach(w.querySelector('button'), () => L.t('lock', { k: L.t(NAME[k]) }) + ' · ' + L.t('tipLock'));
 });
 /* 题卡叠牌 */
 const cardList = () => X.CARDS.map((c, i) => ({ id: c.id, front: c.q[L.lang === 'en' ? 'en' : 'zh'], back: c.a[L.lang === 'en' ? 'en' : 'zh'], tag: (L.lang === 'en' ? 'Card ' : '题 ') + (i + 1) }));
@@ -296,16 +331,64 @@ $('reset').addEventListener('click', () => store.set(U.normalize({ seed: store.g
 $('undo').addEventListener('click', () => store.undo());
 $('redo').addEventListener('click', () => store.redo());
 $('lang').addEventListener('click', () => { setLang(L.lang === 'en' ? 'zh' : 'en'); relabel(); });
-const Q = ['high', 'medium', 'low'];
-$('q').addEventListener('click', () => { const i = (Q.indexOf(tier.current()) + 1) % 3; setTier(Q[i], true); });
-function setTier(t, user) {
-  if (tierInfo.software && t !== 'low') t = 'low';               // 软件渲染强制 low
-  tier.set(t, { persist: !!user }); tier.apply(t);
-  view && view.setTier(t, tier.budget(t)); loadSky(); paintQ(); refresh(store.get());
+/* ---------- 3-6 画质面板:#q 打开;Rubber Segment 选档 + 动效三选一 ---------- */
+const toaster = swipeToast.mount($('toasts'), { closeLabel: L.t('close'), label: L.t('toastsAria') });
+const sr = announcer($('sr-live'));
+const qp = $('qpanel');
+const tierSeg = rubberSegment.mount($('q-tier'), { items: A.TIERS.map((id) => ({ id, label: '' })), value: tier.current(), onChange: (t) => setTier(t, true) });
+const motionSeg = rubberSegment.mount($('q-motion'), { items: A.MOTION.map((id) => ({ id, label: '' })), value: motionSet, onChange: (m) => { motionSet = m; try { localStorage.setItem(MOKEY, m); } catch (e) { /* 隐私模式 */ } applyMotion(true); } });
+function openQ(open) {
+  qp.hidden = !open; $('q').setAttribute('aria-expanded', String(open));
+  if (open) { requestAnimationFrame(() => { tierSeg.update({}); motionSeg.update({}); const b = qp.querySelector('#q-tier .nv-seg-b.is-on'); b && b.focus(); }); }
 }
-const paintQ = () => { $('q').textContent = L.t('q' + tier.current()); };
-tier.watchFPS((t, fps) => { fps0 = fps; setTier(t, false); });
+$('q').addEventListener('click', () => openQ(qp.hidden));
+$('q-close').addEventListener('click', () => { openQ(false); $('q').focus(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !qp.hidden) { openQ(false); $('q').focus(); } });
+document.addEventListener('pointerdown', (e) => { if (!qp.hidden && !qp.contains(e.target) && e.target !== $('q') && !$('q').contains(e.target)) openQ(false); });
+function setTier(t, user, why) {
+  const want = t;
+  t = A.effectiveTier(t, tierInfo.software);                     // 软件渲染强制 low
+  tier.set(t, { persist: !!user }); tier.apply(t);
+  view && view.setTier(t, nvBudget(t)); loadSky(); paintQ(); refresh(store.get());
+  tierSeg.update({ value: t });
+  const q = A.QBUDGET[t].label[L.lang === 'en' ? 'en' : 'zh'];
+  if (user && want !== t) { toaster.show({ key: 'tier', text: L.t('swNote'), kind: 'warn' }); sr.say(L.t('swNote')); }
+  else if (why === 'fps') { const m = L.t('qdrop', { q }); toaster.show({ key: 'tier', text: m, kind: 'warn' }); sr.say(m); }
+  else if (user) { const m = L.t('qSet', { q }); toaster.show({ key: 'tier', text: m }); sr.say(m); }
+}
+function applyMotion(user) {
+  paintRM(); const r = isRM();
+  view && view.setReduced(r); motionSeg.update({ value: motionSet });
+  if (user) { const m = L.t(r ? 'mOn' : 'mOff'); toaster.show({ key: 'motion', text: m }); sr.say(m); }
+}
+const paintQ = () => {
+  const q = A.QBUDGET[tier.current()].label[L.lang === 'en' ? 'en' : 'zh'];
+  $('q').textContent = L.t('q' + tier.current()); $('q').setAttribute('aria-label', L.t('qNow', { q }));
+  $('q-note').textContent = A.POST_NOTE[tier.current()][L.lang === 'en' ? 'en' : 'zh'] + (tierInfo.software ? ' · ' + L.t('swNote') : '');
+};
+tier.watchFPS((t, fps) => { fps0 = fps; setTier(t, false, 'fps'); });
 let fps0 = 60;
+if (tierInfo.software) { let seen = false; try { seen = sessionStorage.getItem('nv3.sw') === '1'; sessionStorage.setItem('nv3.sw', '1'); } catch (e) { /* 隐私模式 */ }
+  if (!seen) setTimeout(() => { toaster.show({ key: 'tier', text: L.t('swForced'), kind: 'warn', ms: 6500 }); sr.say(L.t('swForced')); }, 900); }
+/* 键盘用户第一次按 Tab:提示一次键盘操作 */
+addEventListener('keydown', function kb(e) { if (e.key !== 'Tab') return; removeEventListener('keydown', kb);
+  let seen = false; try { seen = sessionStorage.getItem('nv3.kbd') === '1'; sessionStorage.setItem('nv3.kbd', '1'); } catch (er) { /* 隐私模式 */ }
+  if (!seen) { toaster.show({ key: 'kbd', text: L.t('kbd'), ms: 8000 }); } });
+/* 读屏播报:大爆炸后的关卡结果;配方变化后 1.2 s 播报一次结局 */
+const stageTitles = () => Object.fromEntries(U.ORDER.map((t) => [t, L.t(t)]));
+function sayStages() { if (last) sr.say(A.stageAnnounce(last.stages, U.ORDER, stageTitles(), L.lang)); }
+function sayOutcome() { clearTimeout(sayOutcome.t); sayOutcome.t = setTimeout(() => { if (last && lastDesc) sr.say(A.outcomeAnnounce(L.t(last.status), lastDesc.planets.length, lastDesc.planets.filter((p) => p.habitable).length, L.lang)); }, 1200); }
+/* 时间线:/shared/3/ui.js 给按钮加了 role=listitem(会盖掉按钮语义),这里每次重绘后改回按钮并写明每关状态 */
+function fixTimeline() {
+  const el = $('tl'); el.setAttribute('role', 'group'); el.setAttribute('aria-label', L.t('tlAria'));
+  el.querySelectorAll('.gn3-tl-item').forEach((b, i) => { if (b.getAttribute('role') === 'listitem') b.removeAttribute('role');
+    const st = (b.className.match(/is-(ok|warn|fail|todo)/) || [])[1] || 'todo'; const lab = A.stageLabel(i, L.t(b.dataset.id), st, L.lang);
+    if (b.getAttribute('aria-label') !== lab) b.setAttribute('aria-label', lab); });
+}
+new MutationObserver(fixTimeline).observe($('tl'), { childList: true });
+/* Warm Tooltip:图标按钮与开关的说明(悬停 / 聚焦 / 长按) */
+[['help', 'tipHelp'], ['undo', 'tipUndo'], ['redo', 'tipRedo'], ['q', 'tipQ'], ['lang', 'tipLang'], ['reseed', 'tipReseed'], ['bang', 'tipBang']].forEach(([id, k]) => warmTooltip.attach($(id), () => L.t(k)));
+warmTooltip.attach(document.querySelector('.bar-back'), () => L.t('tipHome'));
 
 /* 统计卡(countUp)与时间线 */
 const cu = { teff: ui.countUp.mount($('s-teff'), { value: 0, format: (v) => Math.round(v).toLocaleString() + ' K' }) };
@@ -373,7 +456,7 @@ function paintGuide() {
   const g = GUIDE[L.lang === 'en' ? 'en' : 'zh'][gStep], okRun = last && !explain(last, U);
   c.hidden = false; c.querySelector('b').textContent = g.t; c.querySelector('p').textContent = gStep === 2 && okRun ? g.ok : g.d;
   $('g-skip').textContent = L.t('skip'); $('g-next').textContent = L.t('gotit'); $('g-next').hidden = gStep !== 2; $('g-skip').hidden = gStep === 2;
-  const t = gTarget(); if (t) { t.classList.add('coach-target'); t.scrollIntoView && t.scrollIntoView({ block: 'nearest', behavior: RM.matches ? 'auto' : 'smooth' }); }
+  const t = gTarget(); if (t) { t.classList.add('coach-target'); t.scrollIntoView && t.scrollIntoView({ block: 'nearest', behavior: isRM() ? 'auto' : 'smooth' }); }
 }
 function guide(ev) {
   if (gStep >= 3) return;
@@ -416,6 +499,7 @@ async function refresh(s) {
   $('undo').disabled = !store.canUndo; $('redo').disabled = !store.canRedo;
   clearTimeout(refresh.t); refresh.t = setTimeout(() => paintSparks(s), 120);
   if (mode === 'make') { paintMake(); queueOrbit(); }
+  sayOutcome();
 }
 store.subscribe(refresh);
 
@@ -423,9 +507,10 @@ store.subscribe(refresh);
 $('bang').addEventListener('click', () => {
   if (!last) return;
   const my = ++playing;
-  if (RM.matches) { revealed = 7; tl.update({ items: stageItems(last) }); guide({ type: 'bang' }); return; }
+  view && view.pulse();
+  if (isRM()) { revealed = 7; tl.update({ items: stageItems(last) }); guide({ type: 'bang' }); sayStages(); return; }
   revealed = 0; tl.update({ items: stageItems(last) });
-  const step = () => { if (my !== playing) return; revealed++; tl.update({ items: stageItems(last), active: U.ORDER[revealed - 1] }); if (revealed < 7) setTimeout(step, 280); else guide({ type: 'bang' }); };
+  const step = () => { if (my !== playing) return; revealed++; tl.update({ items: stageItems(last), active: U.ORDER[revealed - 1] }); if (revealed < 7) setTimeout(step, 280); else { guide({ type: 'bang' }); sayStages(); } };
   setTimeout(step, 200);
 });
 
@@ -443,6 +528,14 @@ function relabel() {
   if (last) gaugeUI.update({ value: last.cosmos.Om, label: L.t('gauge'), lineLabel: L.t('crit') });
   lockNote = ''; paintLockNote();
   $('help').setAttribute('aria-label', L.t('help'));
+  /* 3-6 */
+  document.title = L.t('title');
+  $('g-skip').textContent = L.t('skip'); $('g-next').textContent = L.t('gotit');
+  tierSeg.update({ items: A.TIERS.map((id) => ({ id, label: A.QBUDGET[id].label[L.lang === 'en' ? 'en' : 'zh'] })), label: L.t('qTier') });
+  motionSeg.update({ items: A.MOTION.map((id) => ({ id, label: L.t({ auto: 'mAuto', reduce: 'mReduce', full: 'mFull' }[id]) })), label: L.t('qMotion') });
+  toaster.update({ closeLabel: L.t('close'), label: L.t('toastsAria') });
+  qp.setAttribute('aria-label', L.t('qT'));
+  fixTimeline();
   paintQ(); if (last) { tl.update({ items: stageItems(last) }); paintStats(last, lastDesc); }
   paintStage(pickedStage); paintGuide();
 }
@@ -468,7 +561,16 @@ registerSelftest({
   scene: (preset) => SC.describe(preset ? U.run(preset) : last, tier.budget()),
   set: (recipe) => store.set(U.normalize(recipe)),
   /* 仅自测:绕过「软件渲染强制 low」,验证 high/medium 渲染路径(透射玻璃、粒子量)不报错 */
-  forceTier: async (t) => { tier.set(t); tier.apply(t); view && view.setTier(t, tier.budget(t)); await loadSky(); paintQ(); await refresh(store.get()); return tier.current(); },
+  forceTier: async (t) => { tier.set(t); tier.apply(t); view && view.setTier(t, nvBudget(t)); await loadSky(); paintQ(); tierSeg.update({ value: t }); await refresh(store.get()); return tier.current(); },
+  /* 3-6 画质与可达性 */
+  access: () => ({ tier: tier.current(), software: !!tierInfo.software, budget: nvBudget(), motion: motionSet, reduced: isRM(), rmClass: document.documentElement.classList.contains('nv-rm'),
+    toasts: toaster.items, said: sr.last, tip: warmTooltip.current ? warmTooltip.current.id || warmTooltip.current.className : null, qOpen: !qp.hidden }),
+  motion: (m) => { if (A.MOTION.includes(m)) { motionSet = m; applyMotion(true); } return { motion: motionSet, reduced: isRM() }; },
+  pickTier: (t) => { setTier(t, true); return tier.current(); },
+  toasts: (cmd) => { if (cmd === 'clear') toaster.clear(); else if (cmd) toaster.show({ key: 'test', text: cmd }); return toaster.items; },
+  say: () => sr.last,
+  probe: (i) => (view && view.probe ? view.probe(i) : null),
+  mem: () => ({ heapMB: performance.memory ? +(performance.memory.usedJSHeapSize / 1048576).toFixed(2) : null, ...(view ? (({ geometries, textures, skyKind, sky }) => ({ geometries, textures, skyKind, sky }))(view.snapshot()) : {}) }),
   view: () => ({ webgl: !!view, worker: usingWorker(), ...(view ? view.snapshot() : {}), desc: lastDesc && { status: lastDesc.status, fail: lastDesc.failVisual && lastDesc.failVisual.code, planets: lastDesc.planets.length } }),
   guide: (ev) => { if (ev === 'start') { gStep = 0; paintGuide(); } else if (ev) guide(ev); return gStep; },
   card: () => ({ title: $('fail').querySelector('.gn3-exp-t').textContent, open: $('fail').classList.contains('is-open'), real: FB.a.textContent, yours: FB.b.textContent }),

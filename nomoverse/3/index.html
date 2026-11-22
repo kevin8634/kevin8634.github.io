@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="nv3.css">
 </head>
 <body>
-<canvas id="stage" aria-hidden="true"></canvas>
+<canvas id="stage" role="img" data-i18n-aria="stageAria" aria-label="舞台:玻璃球里的宇宙"></canvas>
 <canvas id="stage2d" aria-hidden="true" hidden></canvas>
 
 <header class="bar">
@@ -22,13 +22,13 @@
     <button type="button" class="gn3-btn" id="help" aria-label="新手引导">?</button>
     <button type="button" class="gn3-btn" id="undo" data-i18n-aria="undo" aria-label="撤销">↶</button>
     <button type="button" class="gn3-btn" id="redo" data-i18n-aria="redo" aria-label="重做">↷</button>
-    <button type="button" class="gn3-btn" id="q" data-i18n-aria="quality" aria-label="画质">中</button>
+    <button type="button" class="gn3-btn" id="q" aria-label="画质:中" aria-haspopup="dialog" aria-expanded="false" aria-controls="qpanel">中</button>
     <button type="button" class="gn3-btn" id="lang" aria-label="English">EN</button>
   </div>
 </header>
 
 <div class="ui">
-<aside class="left" aria-label="配方">
+<aside class="left" data-i18n-aria="leftAria" aria-label="配方">
   <div id="mode"></div>
   <div id="ask"></div>
   <div class="knob" id="k-kG"><div class="sl"></div><svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"></svg></div>
@@ -44,7 +44,7 @@
   <button type="button" class="gn3-btn reset" id="reset" data-i18n="reset">回到真实宇宙</button>
 </aside>
 
-<aside class="right gn3-glass" aria-label="结果" aria-live="polite">
+<aside class="right gn3-glass" data-i18n-aria="rightAria" aria-label="结果">
   <div class="stat"><span data-i18n="sStatus">结局</span><b id="s-status">…</b></div>
   <div class="stat"><span data-i18n="sAge">宇宙年龄</span><b id="s-age"></b></div>
   <div class="stat"><span data-i18n="sTeff">恒星表面温度</span><b id="s-teff"></b></div>
@@ -68,13 +68,24 @@
   <button type="button" class="gn3-btn bridge" id="bridge"><span data-i18n="bridge">星桥 · 去天枢看恒星系</span> →</button>
 </aside>
 
-<footer class="dock gn3-glass">
+<footer class="dock gn3-glass" data-i18n-aria="dockAria" aria-label="推演">
   <button type="button" class="bang" id="bang"><span class="bang-ic" aria-hidden="true">▶</span><span data-i18n="bang">大爆炸</span></button>
   <div id="tl" class="tl"></div>
 </footer>
 </div>
 
 <div id="coach" class="coach gn3-glass" role="dialog" aria-modal="false" aria-live="polite" hidden><b></b><p></p><div class="coach-b"><button type="button" class="gn3-btn" id="g-skip">跳过</button><button type="button" class="gn3-btn" id="g-next" hidden>知道了</button></div></div>
+
+<div id="qpanel" class="qpanel gn3-glass" role="dialog" aria-modal="false" aria-label="画质与动效" hidden>
+  <div class="qp-h"><b data-i18n="qT">画质与动效</b><button type="button" class="gn3-btn qp-x" id="q-close" data-i18n-aria="qClose" aria-label="关闭">×</button></div>
+  <span class="qp-l" data-i18n="qTier">画质</span>
+  <div id="q-tier"></div>
+  <p id="q-note" class="qp-note"></p>
+  <span class="qp-l" data-i18n="qMotion">动效</span>
+  <div id="q-motion"></div>
+</div>
+<div id="toasts"></div>
+<div id="sr-live"></div>
 
 <p class="note" data-i18n="simp">教学简化:轨道半径对数压缩、行星放大显示;真实数值见右侧。</p>
 

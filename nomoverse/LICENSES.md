@@ -140,5 +140,15 @@
 | ε、Ω₀ 滑块 | /shared/3/ui.js Elastic Slider(总指挥维护) | 同本站 | 只引用 |
 | 太阳系视图 | 交给天枢 Starhelm(星桥 ?gus=,本站世界) | 同本站 | 未参考 ThreeUI Orrery |
 
+### 3-6 画质与可达性组件逐条署名(3/core/access-ui.mjs、3/core/galaxy.mjs、3/core/explore-ui.mjs,2026-11-22)
+同样只按公开演示的交互/观感思路用原生 JS/CSS/GLSL 自写,未复制、未移植任何源码,不引 CDN、零外部请求;React Bits 部分同上(MIT + Commons Clause,Copyright (c) 2026 David Haz),只作为宙律界面的一部分使用,不单独分发组件或其移植版。
+
+| 本站实现 | 思路来源 | 许可 | 原生改写说明 | 用在 |
+|---|---|---|---|---|
+| rubberSegment 橡皮分段(沿用 3-4 explore-ui.mjs) | React Bits · Rubber Segment(reactbits.dev/micro/rubber-segment) | MIT + Commons Clause | 原生 button[role=radio] + CSS 过渡;方向键切换;减少动态/低档直接到位 | 画质 低/中/高、动效 跟随系统/减少/完整 |
+| galaxy.mjs GPGPU 星空 | React Bits · Galaxy(reactbits.dev/backgrounds/galaxy) | MIT + Commons Clause | 只参考观感(星点闪烁、色相分层、指针排斥、缓慢旋转);实现为 three r186 浮点数据纹理 + 全屏着色器 ping-pong 更新位置的自研 GPGPU,GLSL 自写;闪烁 ≤0.5 Hz、亮度钳制 | mid/high 档外圈星空(low 退普通点云) |
+| swipeToast 滑动提示 | React Bits · Swipe Toast(reactbits.dev 组件) | MIT + Commons Clause | 原生 DOM + Pointer Events;阈值与队列逻辑在 access.mjs(有单测);role=status/alert,减少动态无位移 | 降级、软件渲染、画质/动效切换、键盘提示 |
+| warmTooltip 暖色气泡 | React Bits · Warm Tooltip(reactbits.dev 组件) | MIT + Commons Clause | 原生 DOM;悬停/键盘聚焦/触屏长按三种触发,role=tooltip + aria-describedby,Esc 关闭;定位函数在 access.mjs(有单测) | 顶栏图标按钮、换种子、锁定开关、大爆炸 |
+
 ## 教育理念署名(11-20 · 王磊批)
 - 创世计划的教育理念参考埃隆·马斯克创办的 Ad Astra 学校(第一性原理、难题拆解)。只署名理念出处:全部课程、题目、交互与代码均为本项目自研;未使用其肖像、Logo 或商标;与 SpaceX 及其关联方无合作、授权或背书关系。

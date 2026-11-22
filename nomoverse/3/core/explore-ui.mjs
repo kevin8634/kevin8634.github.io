@@ -261,7 +261,7 @@ export const lockSwitch = {
     const ic = s('svg', { viewBox: '0 0 12 12', 'aria-hidden': 'true' });
     ic.append(s('rect', { x: 2.5, y: 5.5, width: 7, height: 5, rx: 1.2 }), s('path', { class: 'nv-lock-sh', d: 'M4 5.5V4a2 2 0 0 1 4 0v1.5', fill: 'none' }));
     th.append(ic); tr.append(th); b.append(tr); el.replaceChildren(b);
-    const paint = () => { b.setAttribute('aria-checked', String(!!opt.checked)); b.setAttribute('aria-label', opt.label); b.title = opt.label; b.classList.toggle('is-on', !!opt.checked); };
+    const paint = () => { b.setAttribute('aria-checked', String(!!opt.checked)); b.setAttribute('aria-label', opt.label); b.classList.toggle('is-on', !!opt.checked); };
     listen(off, b, 'click', () => { opt.checked = !opt.checked; paint(); opt.onChange && opt.onChange(opt.checked); });
     paint();
     return { el, get checked() { return !!opt.checked; }, update(n = {}) { opt = { ...opt, ...n }; paint(); }, destroy() { off.forEach((f) => f()); el.replaceChildren(); } };
