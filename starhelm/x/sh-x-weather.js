@@ -249,7 +249,8 @@
     else if (id === 'tc') {
       var E = window.SH && SH.eye;
       var mk = function () { if (!PREF.tc || W.L.tc) return; L = W.L.tc = buildTC(); W.G.add(L); if (!quiet) toast(L.userData.n ? '热带气旋:GDACS 进行中 ' + L.userData.n + ' 个' : '目前没有进行中的热带气旋(或 GDACS 暂不可用)'); legend(); };
-      if (E && (E.tcOk !== undefined)) mk(); else setTimeout(mk, 4000);
+      if (E && E.ensureStorms) E.ensureStorms(mk);   // v1.0-M4v:1.0 地球之眼改为懒加载,这里打开「气旋」时才让它载入 GDACS
+      else setTimeout(function () { var E2 = window.SH && SH.eye; if (E2 && E2.ensureStorms) E2.ensureStorms(mk); else mk(); }, 4000);
     }
     legend();
   }

@@ -1,7 +1,9 @@
 /* 天枢 Starhelm · 星域 II「日与月」· M2d 太阳活动观测台(任务 sh.sun)
  * 左:NASA SDO 太阳动力学天文台最新实拍(可见光黑子 HMI / 日冕 AIA 171 / 色球 AIA 304),图片直接显示,不经画布读取。
  * 右:NOAA SWPC 实时数据 —— GOES X 射线 24 小时曲线(耀斑等级 A/B/C/M/X)、近 30 年月均太阳黑子数(太阳活动周期)、太阳风速度。
- * 数据失败时显示「暂不可用」,向导照常可做。向导 3 关,三级提示,最少 1 星。存储 gn:sh:sun */
+ * 数据失败时显示「暂不可用」,向导照常可做。向导 3 关,三级提示,最少 1 星。存储 gn:sh:sun
+ * v1.0-M4v 外部请求收口:只在打开本观测台时请求(NOAA SWPC 三项走 LE.netcache 10 分钟本机缓存,SDO 图 15 分钟换一次缓存键);
+ *   实时数据总开关关(gn:sh:live=0):NOAA 与 SDO 都不请求,图与曲线处显示「实时数据已关闭」,向导照常可做(题目靠讲解与提示即可作答)。 */
 (function () {
   'use strict';
   var SH = window.SH = window.SH || {};
@@ -23,6 +25,11 @@
     if (!(f > 0)) return '—';
     var L = ['A', 'B', 'C', 'M', 'X'], e = Math.floor(Math.log10(f)) + 8; e = Math.max(0, Math.min(4, e));
     return L[e] + (f / Math.pow(10, e - 8)).toFixed(1);
+  }
+  function off(u) { return !!(window.LE && LE.live && LE.live.blocked(u)); }   // v1.0-M4v:实时数据总开关关 → true
+  function nc(u, ok) {   // 有 LE.netcache 就走本机缓存(10 分钟内不重复请求),没有就直接 fetch
+    if (window.LE && LE.netcache) return LE.netcache.text(u, 10 * 60 * 1000, 9000, ok).then(function (r) { return JSON.parse(r.text); });
+    return fetch(u).then(function (r) { return r.json(); });
   }
   function hm(d) { return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
 
@@ -60,7 +67,8 @@
     U.img = r.querySelector('.sn-sun'); U.fail = r.querySelector('.sn-fail'); U.note = r.querySelector('.sn-note'); U.bands = r.querySelector('.sn-bands');
     U.xr = r.querySelector('.sn-xr'); U.ssn = r.querySelector('.sn-ssn');
     BANDS.forEach(function (b, i) { var e = h('button', 'ml-hemi', b.zh); e.type = 'button'; e.onclick = function () { setBand(i); P('click'); }; U.bands.appendChild(e); });
-    U.img.onerror = function () { U.img.hidden = true; U.fail.hidden = false; };
+    U.bad = {};   // v1.0-M4v:取图失败的地址记下来,同一缓存键(15 分钟)内重开不再重试
+    U.img.onerror = function () { if (U.img.src) U.bad[U.img.src] = 1; U.img.hidden = true; U.fail.hidden = false; };
     U.img.onload = function () { U.img.hidden = false; U.fail.hidden = true; };
     U.x.onclick = close; U.hint.onclick = hint;
     if (!document.getElementById('sn-css')) {
@@ -74,22 +82,27 @@
   function setBand(i) {
     L.band = i; var b = BANDS[i];
     [].forEach.call(U.bands.children, function (e, k) { e.classList.toggle('on', k === i); });
-    U.img.src = SDO + (innerWidth < 900 ? '512_' : '1024_') + b.id + '.jpg?t=' + Math.floor(Date.now() / 9e5);   // 15 分钟换一次缓存键
+    if (off(SDO)) { U.img.removeAttribute('src'); U.img.hidden = true; U.fail.hidden = false; U.fail.textContent = '实时数据已关闭 · 不加载 NASA SDO 实拍'; U.note.textContent = b.t; return; }
+    var src = SDO + (innerWidth < 900 ? '512_' : '1024_') + b.id + '.jpg?t=' + Math.floor(Date.now() / 9e5);   // 15 分钟换一次缓存键
+    if (U.bad[src]) { U.img.hidden = true; U.fail.hidden = false; U.fail.textContent = '实拍图暂时取不到'; }
+    else if (U.img.src !== src) U.img.src = src;
     U.note.textContent = b.t + ' 图像:NASA/SDO 及 AIA、HMI 科学团队';
   }
 
   /* ---------- 数据 ---------- */
   function fetchAll() {
-    if (L.loaded) return; L.loaded = true;
-    fetch(URL_XR).then(function (r) { return r.json(); }).then(function (j) {
+    if (L.loaded) return;
+    if (off(URL_XR)) { D.off = 1; return; }   // 实时关:不请求,也不标记已载入(重新打开实时后刷新页面即可)
+    L.loaded = true;
+    nc(URL_XR, function (t) { return /flux/.test(t); }).then(function (j) {
       D.xr = (Array.isArray(j) ? j : []).filter(function (x) { return x && x.energy === '0.1-0.8nm' && x.flux > 0; }).map(function (x) { return { t: new Date(x.time_tag), f: +x.flux }; });
       drawXr(); info();
     }).catch(function (e) { D.err.xr = 1; drawXr(); info(); console.warn('[sun] xrays', e); });
-    fetch(URL_SSN).then(function (r) { return r.json(); }).then(function (j) {
+    nc(URL_SSN, function (t) { return /ssn/.test(t); }).then(function (j) {
       D.ssn = (Array.isArray(j) ? j : []).map(function (x) { var p = String(x['time-tag'] || '').split('-'); return { y: +p[0] + (+p[1] - 0.5) / 12, v: +x.ssn }; }).filter(function (x) { return x.y >= 1986 && x.v >= 0; });
       drawSsn(); info();
     }).catch(function (e) { D.err.ssn = 1; drawSsn(); console.warn('[sun] ssn', e); });
-    fetch(URL_SW).then(function (r) { return r.json(); }).then(function (j) {
+    nc(URL_SW, function (t) { return /speed|Speed/.test(t); }).then(function (j) {
       var x = Array.isArray(j) ? j[j.length - 1] : j; D.sw = x && +(x.proton_speed || x.WindSpeed) || null; info();
     }).catch(function () { D.err.sw = 1; info(); });
   }
@@ -100,7 +113,7 @@
     function Y(f) { return y0 + (-4 - Math.log10(f)) / 5 * hh; }   // 10⁻⁹ … 10⁻⁴ W/m²
     var LV = [['A', 1e-8], ['B', 1e-7], ['C', 1e-6], ['M', 1e-5], ['X', 1e-4]], col = { A: '#5a7', B: '#7bc', C: '#fd5', M: '#f93', X: '#f46' };
     LV.forEach(function (l) { var y = Y(l[1]); g.strokeStyle = 'rgba(255,255,255,.1)'; g.beginPath(); g.moveTo(x0, y); g.lineTo(x0 + w, y); g.stroke(); g.fillStyle = col[l[0]]; g.fillText(l[0], x0 + w + 6, y + 12 > H ? y : y + 12); g.fillStyle = 'rgba(160,180,210,.55)'; g.fillText('1e' + Math.log10(l[1]), 2, y + 4); });
-    if (!D.xr || !D.xr.length) { g.fillStyle = '#9fb3cc'; g.fillText(D.err.xr ? '暂不可用' : '加载中…', x0 + w / 2 - 20, y0 + hh / 2); return; }
+    if (!D.xr || !D.xr.length) { g.fillStyle = '#9fb3cc'; g.fillText(D.off ? '实时数据已关闭' : D.err.xr ? '暂不可用' : '加载中…', x0 + w / 2 - (D.off ? 40 : 20), y0 + hh / 2); return; }
     var t1 = D.xr[D.xr.length - 1].t.getTime(), t0 = t1 - 864e5;
     g.strokeStyle = '#ffb347'; g.lineWidth = 1.5; g.beginPath();
     D.xr.forEach(function (p, i) { var x = x0 + (p.t - t0) / 864e5 * w, y = Math.max(y0, Math.min(y0 + hh, Y(p.f))); if (i) g.lineTo(x, y); else g.moveTo(x, y); }); g.stroke(); g.lineWidth = 1;
@@ -109,7 +122,7 @@
   function drawSsn() {
     var c = U.ssn, g = c.getContext('2d'), W = c.width, H = c.height, x0 = 36, y0 = 18, w = W - x0 - 22, hh = H - y0 - 22;
     g.clearRect(0, 0, W, H); g.font = '11px sans-serif'; g.fillStyle = '#9fd9c6'; g.fillText('太阳黑子数 · 月均(1986 年至今)', x0, 12);
-    if (!D.ssn || !D.ssn.length) { g.fillStyle = '#9fb3cc'; g.fillText(D.err.ssn ? '暂不可用' : '加载中…', x0 + w / 2 - 20, y0 + hh / 2); return; }
+    if (!D.ssn || !D.ssn.length) { g.fillStyle = '#9fb3cc'; g.fillText(D.off ? '实时数据已关闭' : D.err.ssn ? '暂不可用' : '加载中…', x0 + w / 2 - (D.off ? 40 : 20), y0 + hh / 2); return; }
     var ya = 1986, yb = D.ssn[D.ssn.length - 1].y, vm = 300;
     function X(y) { return x0 + (y - ya) / (yb - ya) * w; } function Y(v) { return y0 + (1 - Math.min(v, vm) / vm) * hh; }
     g.fillStyle = 'rgba(160,180,210,.6)'; for (var y = 1990; y <= yb; y += 5) { g.strokeStyle = 'rgba(255,255,255,.08)'; g.beginPath(); g.moveTo(X(y), y0); g.lineTo(X(y), y0 + hh); g.stroke(); g.fillText(y, X(y) - 12, H - 6); }
@@ -121,7 +134,7 @@
   function info() {
     var xr = D.xr && D.xr.length ? D.xr[D.xr.length - 1] : null, mx = 0;
     if (D.xr) D.xr.forEach(function (p) { if (p.f > mx) mx = p.f; });
-    U.nm.textContent = xr ? '此刻 X 射线:' + cls(xr.f) + ' 级' : D.err.xr ? 'X 射线数据暂不可用' : '加载中…';
+    U.nm.textContent = xr ? '此刻 X 射线:' + cls(xr.f) + ' 级' : D.off ? '实时数据已关闭 · 不请求 NOAA SWPC' : D.err.xr ? 'X 射线数据暂不可用' : '加载中…';
     U.k.textContent = (mx ? '24 小时最强:' + cls(mx) + ' 级' : '') + (D.sw ? (mx ? ' · ' : '') + '太阳风 ' + Math.round(D.sw) + ' km/s' : '');
     var kp = SH.eye && SH.eye.kp; var ss = D.ssn && D.ssn.length ? D.ssn[D.ssn.length - 1] : null;
     U.t.textContent = (ss ? '上月黑子数 ' + Math.round(ss.v) : '') + (kp != null ? (ss ? ' · ' : '') + '地磁 Kp ' + kp.toFixed(0) + (kp >= 5 ? '(磁暴,极光南扩)' : '') : '');
@@ -154,7 +167,7 @@
   function open() {
     if (!U.root) build();
     U.root.hidden = false; document.body.classList.add('ml-on');
-    setBand(L.band); fetchAll(); drawXr(); drawSsn(); info();
+    fetchAll(); setBand(L.band); drawXr(); drawSsn(); info();
     L.q = ST.stars.indexOf(0); if (L.q < 0) L.q = 3; showQ(); P('open');
   }
   function close() { U.root.hidden = true; document.body.classList.remove('ml-on'); P('close'); }

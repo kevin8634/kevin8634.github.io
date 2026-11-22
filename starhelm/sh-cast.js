@@ -3,7 +3,10 @@
  *  灾害:GDACS 全球灾害预警(地震、热带气旋、洪水、火山、山火、干旱;按受影响国家匹配定位国家)+ USGS 地震(定位 1200 km 内 M4.5+);
  *  空间天气:NOAA SWPC Kp 指数(地磁暴 / 极光);
  *  天象:astronomy-engine 本机计算 —— 本地可见的日食、月食(看月亮在不在地平线上)、满月/新月、行星冲日、流星雨极大(IMO 年历)、空间站与天宫过境(SGP4)。
- * 没设定位时播报全球最重要的事件,并提示「设定位置」。只在本机计算,不上传位置。点条目:飞到事发地 / 打开对应实验室。 */
+ * 没设定位时播报全球最重要的事件,并提示「设定位置」。只在本机计算,不上传位置。点条目:飞到事发地 / 打开对应实验室。
+ * v1.0-M4v 外部请求收口:页面加载时不请求 GDACS——只读本机缓存里上次的灾害数据(LE.netcache.peek,不发请求);
+ *   用户点面板里的「载入灾害预警」或展开已收起的面板时才拉取(10 分钟本机缓存,之后每 10 分钟刷新一次,面板收起时不刷新)。
+ *   实时数据总开关关(gn:sh:live=0):一个请求都不发,面板标「实时数据已关闭」,只播本机计算的天象。 */
 (function () {
   'use strict';
   var URL_G = 'https://www.gdacs.org/gdacsapi/api/events/geteventlist/EVENTS4APP';
@@ -12,7 +15,8 @@
   var SHOWERS = [   // IMO 年历极大日(月, 日, 名称, ZHR)
     [1, 3, '象限仪座流星雨', 80], [4, 22, '天琴座流星雨', 18], [5, 6, '宝瓶座 η 流星雨', 50], [7, 30, '南宝瓶座 δ 流星雨', 25], [8, 12, '英仙座流星雨', 100],
     [10, 21, '猎户座流星雨', 20], [11, 17, '狮子座流星雨', 15], [12, 14, '双子座流星雨', 150], [12, 22, '小熊座流星雨', 10]];
-  var C = { g: null, gTime: 0, items: [], open: true };
+  var C = { g: null, gTime: 0, items: [], open: true, act: false, busy: false, fail: false };   // act:用户已主动载入灾害数据
+  function liveOff() { return !!(window.LE && LE.live && LE.live.blocked(URL_G)); }
   function $(id) { return document.getElementById(id); }
   function h(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -128,11 +132,12 @@
   function build() {
     var r = U.root = h('section', 'sh-cast le-earth-only');
     r.innerHTML = '<header class="sh-cast__h"><span class="sh-cast__live"></span><b>地球重要播报</b><small>LIVE</small><button class="sh-cast__fold" type="button" aria-label="收起">–</button></header>' +
-      '<div class="sh-cast__for"></div><ol class="sh-cast__list"></ol><div class="sh-cast__src">GDACS · USGS · NOAA SWPC · 天象本机计算</div>';
+      '<div class="sh-cast__for"></div><ol class="sh-cast__list"></ol><div class="sh-cast__gd"></div><div class="sh-cast__src">GDACS · USGS · NOAA SWPC · 天象本机计算</div>';
     document.body.appendChild(r);
-    U.for = r.querySelector('.sh-cast__for'); U.list = r.querySelector('.sh-cast__list');
-    r.querySelector('.sh-cast__fold').onclick = function () { r.classList.toggle('is-fold'); this.textContent = r.classList.contains('is-fold') ? '+' : '–'; };
-    r.querySelector('.sh-cast__h').addEventListener('click', function (e) { if (r.classList.contains('is-fold') && e.target.tagName !== 'BUTTON') { r.classList.remove('is-fold'); r.querySelector('.sh-cast__fold').textContent = '–'; } });
+    U.for = r.querySelector('.sh-cast__for'); U.list = r.querySelector('.sh-cast__list'); U.gd = r.querySelector('.sh-cast__gd');
+    // 展开已收起的面板 = 用户主动打开播报 → 载入灾害数据(懒加载触发点之一)
+    r.querySelector('.sh-cast__fold').onclick = function () { r.classList.toggle('is-fold'); var f = r.classList.contains('is-fold'); this.textContent = f ? '+' : '–'; if (!f) activate(); };
+    r.querySelector('.sh-cast__h').addEventListener('click', function (e) { if (r.classList.contains('is-fold') && e.target.tagName !== 'BUTTON') { r.classList.remove('is-fold'); r.querySelector('.sh-cast__fold').textContent = '–'; activate(); } });
     if (innerHeight <= 500) { r.classList.add('is-fold'); r.querySelector('.sh-cast__fold').textContent = '+'; }
   }
   function draw() {
@@ -141,8 +146,8 @@
     var b = U.for.querySelector('.sh-cast__set'); if (b) b.onclick = function () { if (LE.ui.openSheet) LE.ui.openSheet('sheet-loc'); };
     var all = disasters(L).concat(spaceWx(L), sky(L)).sort(function (a, b) { return b.score - a.score; });
     var seen = {}; all = all.filter(function (x) { if (seen[x.title]) return false; seen[x.title] = 1; return true; }).slice(0, 7);
-    C.items = all;
-    if (!all.length) { U.list.innerHTML = '<li class="sh-cast__none">' + (C.g ? '此刻没有需要特别关注的事件。' : '正在连接全球灾害与天象数据…') + '</li>'; return; }
+    C.items = all; gdLine();
+    if (!all.length) { U.list.innerHTML = '<li class="sh-cast__none">' + (C.g || liveOff() || !C.act ? '此刻没有需要特别关注的事件。' : '正在连接全球灾害与天象数据…') + '</li>'; return; }
     U.list.innerHTML = all.map(function (x, i) {
       return '<li><button type="button" data-i="' + i + '" style="--c:' + x.col + '"><i>' + x.ico + '</i><span><b>' + esc(x.title) + '</b><small>' + esc(x.meta) + '</small></span><em class="' + (/你|附近|本地/.test(x.tag) ? 'me' : '') + '">' + x.tag + '</em></button></li>';
     }).join('');
@@ -165,19 +170,45 @@
     if (x.lab && SH[x.lab] && SH[x.lab].open) { SH[x.lab].open(); return; }
     if (LE.ui.toast) LE.ui.toast(x.title + ' · ' + x.meta);
   }
+  /* ---------- v1.0-M4v 灾害数据:懒加载 + 降级提示 ---------- */
+  function gdLine() {   // 面板底部一行:灾害数据从哪来、什么时候的、要不要载入
+    if (!U.gd) return;
+    U.gd.textContent = '';
+    if (liveOff()) { U.gd.textContent = '实时数据已关闭 · 不载入全球灾害预警(GDACS),只播本机计算的天象'; U.gd.className = 'sh-cast__gd is-off'; return; }
+    U.gd.className = 'sh-cast__gd';
+    var t = C.busy ? '正在载入全球灾害预警…' : C.g && C.gTime ? '灾害预警:GDACS · ' + ago(C.gTime) + (C.act ? '' : '(上次载入)') : C.fail ? '灾害预警暂不可用(离线或数据源无响应)' : '灾害预警:尚未载入';
+    U.gd.appendChild(document.createTextNode(t));
+    if (!C.busy && (!C.act || C.fail)) {
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'sh-cast__set'; b.textContent = C.fail ? '重试' : C.g ? '更新' : '载入灾害预警';
+      b.onclick = function (e) { e.stopPropagation(); C.fail = false; activate(true); }; U.gd.appendChild(document.createTextNode(' ')); U.gd.appendChild(b);
+    }
+  }
   function fetchG() {
-    if (!LE.netcache) return;
+    if (!LE.netcache || liveOff() || !C.act) return;
+    if (U.root && U.root.classList.contains('is-fold')) return;   // 收起时不刷新
+    C.busy = true; gdLine();
     LE.netcache.text(URL_G, 10 * 60 * 1000, 9000, function (t) { return /FeatureCollection/.test(t); })
-      .then(function (r) { try { C.g = JSON.parse(r.text).features || []; C.gTime = r.time || Date.now(); } catch (e) { C.g = []; } draw(); })
-      .catch(function () { C.g = C.g || []; draw(); });
+      .then(function (r) { try { C.g = JSON.parse(r.text).features || []; C.gTime = r.time || Date.now(); C.fail = !r.live; } catch (e) { C.g = C.g || []; C.fail = true; } C.busy = false; draw(); })
+      .catch(function () { C.busy = false; C.fail = true; C.g = C.g || []; draw(); });
+  }
+  var tmr = 0;
+  function activate(force) {   // 用户主动打开播报:第一次才发请求,之后每 10 分钟刷新(本机缓存 10 分钟内不重复请求)
+    if (liveOff()) { gdLine(); return; }
+    if (C.act && !force) return;
+    C.act = true; fetchG();
+    if (!tmr) tmr = setInterval(fetchG, 10 * 60 * 1000);
+  }
+  function peekG() {   // 页面加载:只读本机缓存,不发请求
+    if (!LE.netcache || !LE.netcache.peek || liveOff()) return;
+    LE.netcache.peek(URL_G).then(function (r) { if (!r || C.act) return; try { C.g = JSON.parse(r.text).features || []; C.gTime = r.time || 0; } catch (e) { return; } draw(); });
   }
   function init() {
-    build(); draw(); fetchG();
-    setInterval(fetchG, 10 * 60 * 1000); setInterval(draw, 60 * 1000);
+    build(); draw(); peekG();
+    setInterval(draw, 60 * 1000);
     if (LE.bus) { LE.bus.on('location:changed', function () { setTimeout(draw, 300); }); LE.bus.on('mode:changed', function () { }); }
     setTimeout(draw, 6000); setTimeout(draw, 15000);   // 地震 / Kp / 过境数据陆续到位
   }
-  window.SHCAST = { draw: draw, items: function () { return C.items; }, _set: function (g) { C.g = g; draw(); } };
+  window.SHCAST = { draw: draw, activate: activate, items: function () { return C.items; }, _C: C, _set: function (g) { C.g = g; draw(); } };
   (function wait(k) {
     if (window.SH_READY && window.LE && LE.scene && LE.location && document.body.classList.contains('shh-on')) { try { init(); } catch (e) { console.error('[SHCAST]', e); } return; }
     if (window.SH_READY && k > 60 && window.LE && LE.scene) { try { init(); } catch (e) { console.error('[SHCAST]', e); } return; }

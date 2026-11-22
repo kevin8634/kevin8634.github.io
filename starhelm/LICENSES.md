@@ -3,7 +3,7 @@
 > 创世计划 Genesis 07 · 天文。按《1.0 素材台账规范》(总指挥 2026-10-24)编制,版本 v1.0-M4d,2026-10-25(按总审 2026-10-25 第二节 07 补齐)。
 > 线上 `/starhelm/LICENSES.md` 与云盘「07_天枢 Starhelm/开发文档/LICENSES.md」同内容。详细下载记录、构建脚本与修改说明见 `docs/DATA-SOURCES.md`。
 > 统一声明:不使用任何机构 logo;界面注明「不代表任何机构背书」。CC BY / CC BY-SA 素材的修改(缩放、裁切、格式转换、着色、补极区)均在本台账与 DATA-SOURCES.md 记录。
-> 页面静态资源全部自托管(无 CDN、无外链字体/脚本/图片);下表「实时」项为功能所需的公开数据接口,不上传用户信息。**首页底栏「实时数据」开关(2026-10-26 起,默认开,状态存本机 gn:sh:live)**:打开时空间站、地震、星链图层加载即请求 CelesTrak / USGS(CelesTrak 2 小时本机缓存),城市搜索按需请求 Open-Meteo;关闭后三家均不再请求,改用站内快照/示意(见下表快照条目)。**v1.0-M4f(2026-10-27)起另有单项开关**:空间站(含天宫、哈勃单星轨道,CelesTrak)/ 地震(USGS)/ 星链(CelesTrak)/ 城市在线搜索(Open-Meteo)可分别关闭(gn:sh:live.iss / .quakes / .starlink / .geo,默认开),关闭的项不再请求、改用站内快照。开关旁有使用说明(请求对象、数据有效时间、关闭后的替代)。其余实时项(NOAA、GDACS 等)只在对应实验室打开时请求,不受该开关控制。
+> 页面静态资源全部自托管(无 CDN、无外链字体/脚本/图片);下表「实时」项为功能所需的公开数据接口,不上传用户信息。**首页底栏「实时数据」开关(2026-10-26 起,默认开,状态存本机 gn:sh:live)**:打开时空间站、地震、星链图层加载即请求 CelesTrak / USGS(CelesTrak 2 小时本机缓存),城市搜索按需请求 Open-Meteo;关闭后三家均不再请求,改用站内快照/示意(见下表快照条目)。**v1.0-M4f(2026-10-27)起另有单项开关**:空间站(含天宫、哈勃单星轨道,CelesTrak)/ 地震(USGS)/ 星链(CelesTrak)/ 城市在线搜索(Open-Meteo)可分别关闭(gn:sh:live.iss / .quakes / .starlink / .geo,默认开),关闭的项不再请求、改用站内快照。开关旁有使用说明(请求对象、数据有效时间、关闭后的替代)。**v1.0-M4v(2026-11-22)起**:其余实时项(GDACS、NOAA SWPC、NASA GIBS、NASA SDO)登记为「外部请求例外」(见下文专节),只在用户打开对应面板/图层时请求,并且同样受总开关控制——总开关关时一个都不请求。
 
 ## 一、图片与贴图
 
@@ -115,6 +115,25 @@
 | 月相、日月位置、潮汐、日月食 | 星域 I–II 各任务 | astronomy-engine 本机计算 + 自有公式 | 自有实现 | — | 否 | 不适用 |
 | 航线 | 航线图层 | 自建 39 机场坐标 | 本项目自有 | — | 否 | 「航线示意,非实时航班」 |
 | 「来自宙律的恒星系」浮层 sh-gus.js(v1.0-M4u,2026-11-22) | 星桥 ?gus= 落地 | 纯自研(原生 JS + 2D canvas,未借鉴任何参考站组件);数据为用户在宙律 3.0 造的宇宙(GUS v0,宙律 nomoverse/3/core/gus0.js 生成),阈值与出处见 /nomoverse/3/SOURCES.md | 本项目自有 | — | 否 | 浮层「简化模型」标注 + 出处链接 |
+
+## 外部请求例外登记(v1.0-M4v,2026-11-22,王磊定:实时数据保留,作为允许的外部请求例外)
+
+规则:① 页面加载时不主动请求,只在用户打开对应面板/图层时拉取;② 首页底栏「实时数据」总开关关(本机 localStorage `gn:sh:live=0`)时一个都不请求,界面标「实时数据已关闭 / 实时已关」;③ 有缓存就不重复请求(`LE.netcache`:Cache API 缓存名 `shdata-v1`,失败后在有效期内不重试);④ 离线或失败只显示「暂不可用」,不报页面错误。总开关的拦截在 `le-core.js`(`LE.live.blocked` + `fetch` 包装);图片与纹理不经 fetch,由各模块请求前自行判断。
+
+| 域名 | 用途 | 模块 | 触发时机(总开关开时) | 缓存 | 总开关关时 |
+|---|---|---|---|---|---|
+| www.gdacs.org(`gdacsapi/api/events/geteventlist/EVENTS4APP`) | 地球重要播报 · 全球灾害预警 | sh-cast.js | 点播报面板底部「载入灾害预警 / 更新 / 重试」,或展开已收起的播报面板;之后面板展开时每 10 分钟刷新。加载时只读本机缓存里上次的数据(不发请求) | netcache 10 分钟 | 不请求;面板底部标「实时数据已关闭」,只播本机计算的天象 |
+| www.gdacs.org(`…/SEARCH?eventlist=TC`) | 台风(进行中的热带气旋) | sh-eye.js | 第一次打开底栏「台风」图层(默认关);2.0 /x/ 气象「气旋」打开时;同一页只载入一次 | netcache 10 分钟 | 不请求;按钮标「实时已关」,点开提示;无离线数据 |
+| www.gdacs.org(`…/polygons/getgeometry`) | 台风路径(2.0 /x/ 气象) | x/sh-x-weather.js | 打开 /x/「气旋」且有进行中气旋时 | 无(每次打开一次) | 不请求(原已遵守) |
+| gibs.earthdata.nasa.gov(静止卫星 Himawari-9 / GOES 帧) | 台风卫星实拍循环 | sh-eye.js | 台风数据载入后,为前 4 个台风各取约 9–18 帧;同一页只取一次 | 浏览器 HTTP 缓存 + 内存纹理 | 不请求;台风画面无 |
+| gibs.earthdata.nasa.gov(VIIRS 全球真彩) | 云层「实拍」档 | sh-eye.js | 第一次点底栏「云层」时载入(之前页面加载即请求);失败退回示意贴图 | 内存纹理 | 不请求;云层只用示意贴图 |
+| gibs.earthdata.nasa.gov(VIIRS) | 2.0 /x/ 气象「云图」 | x/sh-x-weather.js | 打开 /x/「云图」时(原已遵守) | — | 不请求(原已遵守) |
+| services.swpc.noaa.gov(`ovation_aurora_latest.json`、`noaa-planetary-k-index.json`) | 极光椭圆、地磁 Kp(播报/太阳风/观测台共用 Kp) | sh-eye.js | 第一次打开底栏「极光」图层(默认关),或点播报里的地磁暴条目;之后图层开着时每 30 分钟刷新 | netcache 10 分钟 | 不请求;极光卡片标「实时数据已关闭」,无离线极光数据 |
+| services.swpc.noaa.gov(`solar-wind-speed.json`、`solar-wind-mag-field.json`) | 太阳风图层强度 | sh-swind.js | 打开底栏「太阳风」图层时(之前页面加载即请求);开着时每 5 分钟刷新 | netcache 5 分钟 | 不请求;按平静太阳风约 420 km/s 示意,卡片标注 |
+| services.swpc.noaa.gov(`xrays-1-day.json`、`observed-solar-cycle-indices.json`、`solar-wind-speed.json`) | 太阳活动观测台曲线 | sh-sun.js | 打开太阳活动观测台(sh.sun)时;同一页只取一次 | netcache 10 分钟 | 不请求;曲线处标「实时数据已关闭」,向导照常 |
+| sdo.gsfc.nasa.gov(`assets/img/latest/latest_*.jpg`) | 太阳最新实拍 | sh-sun.js | 打开太阳活动观测台、切换波段时 | 15 分钟换一次缓存键 + 浏览器缓存 | 不请求;图处标「实时数据已关闭」 |
+
+另:CelesTrak / USGS / Open-Meteo 为总开关原有管辖项,语义不变(打开时空间站、地震、星链图层仍在加载即请求,可单项关闭)。
 
 ## 自查(2026-10-24;2026-10-27 v1.0-M4f 加单项开关;2026-10-26 v1.0-M4e 加实时数据开关与说明、Open-Meteo 非商业口径定案;2026-10-25 按总审补:satellite.LICENSE、OFL.txt、Open-Meteo 页脚署名、木卫三许可、航行页角注补「指令台」、快照文件入表、实时图层默认开启如实写明)
 - 页面引用的 `arc/`、`hd/`、`audio/`、根目录图片、贴图分片、模型分片、字体、库均已入表。

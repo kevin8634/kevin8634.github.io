@@ -2,6 +2,8 @@
  * 太阳风:从太阳方向吹来的带电粒子流(GPU 粒子),在地球前方被磁场挡出弓形激波、绕过磁层顶,背面拉出长长的磁尾;少量粒子沿磁力线钻进南北极,点亮极光环。
  *   强度用 NOAA SWPC 实时太阳风速度与磁场 Bz(DSCOVR/ACE 在日地 L1 点实测);风速 >600 km/s 或 Kp≥5 显示为「太阳风暴」(更快、更密、偏橙红,激波被压近)。
  *   卡片可「看一场太阳风暴(模拟)」:约 1000 km/s 的日冕物质抛射冲击地球。尺寸为示意压缩(真实弓形激波约在 13 个地球半径外)。
+ * v1.0-M4v 外部请求收口:NOAA SWPC 风速 / 磁场只在用户打开「太阳风」图层时请求(之前页面加载就请求),开着时每 5 分钟刷新(LE.netcache 5 分钟本机缓存);
+ *   实时数据总开关关:不请求,粒子流按平静太阳风(约 420 km/s)示意,卡片标「实时数据已关闭」。
  * 图层分组:底部图层按钮按「太空设施 / 地球观测 / 太阳与空间天气」三个模块收拢,一次展开一个模块。 */
 (function () {
   'use strict';
@@ -73,8 +75,9 @@
 
   /* ---------------- 数据与卡片 ---------------- */
   function num(x) { return x == null || isNaN(+x) ? null : +x; }
+  function off() { return !!(LE.live && LE.live.blocked(URL_V)); }
   function fetchData() {
-    if (!LE.netcache) return;
+    if (!LE.netcache || off()) return;
     LE.netcache.text(URL_V, 5 * 60 * 1000, 8000, function (t) { return /proton_speed/.test(t); }).then(function (r) { try { var j = JSON.parse(r.text)[0] || JSON.parse(r.text); W.v = num(j.proton_speed); W.time = j.time_tag; } catch (e) { } }).catch(function () { });
     LE.netcache.text(URL_B, 5 * 60 * 1000, 8000, function (t) { return /bz_gsm/.test(t); }).then(function (r) { try { var j = JSON.parse(r.text)[0] || JSON.parse(r.text); W.bz = num(j.bz_gsm); W.bt = num(j.bt); } catch (e) { } }).catch(function () { });
   }
@@ -83,13 +86,13 @@
     if ((v && v > 700) || (kp != null && kp >= 7)) return '强太阳风暴';
     if ((v && v > 600) || (kp != null && kp >= 5)) return '太阳风暴';
     if (v && v > 500) return '偏快';
-    return v ? '平静' : '数据连接中';
+    return v ? '平静' : off() ? '示意(实时数据已关闭)' : '数据连接中';
   }
   function card() {
     var kp = window.SH && SH.eye && SH.eye.kp, v = W.v;
     var mins = v ? Math.round(1.5e6 / v / 60) : null;
     LE.ui.showCard({ kind: 'swind', color: '#ffb46a', kicker: '太阳风 · NOAA SWPC 实测(日地 L1 点)', title: '太阳风 · ' + level(),
-      rows: [['风速', v ? Math.round(v) + ' km/s' + (mins ? ' · 从 L1 吹到地球约 ' + mins + ' 分钟' : '') : '连接中'],
+      rows: [['风速', v ? Math.round(v) + ' km/s' + (mins ? ' · 从 L1 吹到地球约 ' + mins + ' 分钟' : '') : off() ? '实时数据已关闭 · 按平静太阳风约 420 km/s 示意' : '连接中'],
         ['磁场 Bz', W.bz != null ? W.bz + ' nT' + (W.bz < -5 ? '(向南,容易引发极光)' : W.bz < 0 ? '(略向南)' : '(向北,较平静)') : '—', 1],
         ['地磁 Kp', kp != null ? kp.toFixed(0) + (kp >= 5 ? ' · 地磁暴' : '') : '—', 1],
         ['看什么', '橙色粒子流从太阳方向吹来;地球磁场在前方挡出蓝色「弓形激波」,背后拖出长长的磁尾;少数粒子钻进两极,就是极光。'],
@@ -137,7 +140,7 @@
   (function wait(k) {
     var ready = window.SH_READY && window.LE && LE.scene && LE.scene.earthScene && $('chips');
     if (ready && ($('chips').querySelector('[data-eye="aurora"]') && $('chips').querySelector('[data-layer="shells"]') || k > 200)) {
-      try { build(); addChip(); group(); fetchData(); setInterval(function () { if (W.on) fetchData(); }, 5 * 60 * 1000); } catch (e) { console.error('[SHWIND]', e); }
+      try { build(); addChip(); group(); setInterval(function () { if (W.on) fetchData(); }, 5 * 60 * 1000); } catch (e) { console.error('[SHWIND]', e); }
       return;
     }
     if (k > 900) return; setTimeout(function () { wait(k + 1); }, 150);

@@ -339,3 +339,5 @@ body:has(#card.is-open) .sh-cast,body:has(.shh-now:not([hidden])) .sh-cast,body.
 .sh-mod__h::after{content:"▸";position:absolute;right:7px;bottom:4px;font-size:9px;opacity:.6;transition:transform .2s}
 .sh-mod.is-open{border-color:rgba(127,220,255,.45);box-shadow:0 0 14px rgba(88,200,255,.15)}.sh-mod.is-open .sh-mod__h{background:rgba(127,220,255,.12);color:#fff}.sh-mod.is-open .sh-mod__h::after{transform:rotate(90deg)}
 .sh-mod__in{display:none;gap:6px}.sh-mod.is-open .sh-mod__in{display:flex}
+/* v1.0-M4v 地球重要播报:灾害预警懒加载状态行 */
+.sh-cast__gd{padding:3px 12px 6px;font-size:10.5px;color:#8fa6c2}.sh-cast__gd.is-off{color:#e0b878}.sh-cast.is-fold .sh-cast__gd{display:none}

@@ -4,13 +4,19 @@
  * 两个数据源都允许跨域(CORS *)。失败时图层安静地显示「暂不可用」,不影响其他功能。
  * M1.8b 真实云图:NASA GIBS(CORS *)提供的静止气象卫星 10 分钟间隔画面(Himawari-9 / GOES-East / GOES-West),
  *   每个台风取最近约 3 小时的连续帧循环播放 = 台风真实的转动;云层开关增加「实拍」档(VIIRS 最近一天全球真彩图)。
- *   卫星图拿不到时退回着色器云系并标「示意」。 */
+ *   卫星图拿不到时退回着色器云系并标「示意」。
+ * v1.0-M4v 外部请求收口(懒加载):页面加载时这里一个外部请求都不发。
+ *   台风(GDACS + 台风区 GIBS 连续帧):用户第一次打开「台风」图层(或 2.0 气象「气旋」、播报条目调用 ensureStorms)时才拉取;
+ *   极光(NOAA SWPC OVATION + Kp):第一次打开「极光」图层时拉取,之后仅在图层开着时每 30 分钟刷新;
+ *   实拍云图(GIBS VIIRS):第一次点「云层」切到实拍档时才拉取。GDACS / SWPC 走 LE.netcache(10 分钟本机缓存),GIBS 图片同一页只取一次。
+ *   实时数据总开关关(gn:sh:live=0):都不请求,图层按钮标「实时已关」,点开给出提示;台风/极光没有离线数据,云层保留示意贴图。 */
 (function () {
   'use strict';
   var URL_TC = 'https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH?eventlist=TC';
   var URL_OV = 'https://services.swpc.noaa.gov/json/ovation_aurora_latest.json';
   var URL_KP = 'https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json';
-  var EYE = { storms: [], kp: null, ovTime: '', on: { storms: true, aurora: true } };
+  var EYE = { storms: [], kp: null, ovTime: '', on: { storms: false, aurora: false } };   // v1.0-M4v:默认关,打开时才载入
+  function off(u) { return !!(window.LE && LE.live && LE.live.blocked(u)); }   // 实时数据总开关关 → true
   window.SH = window.SH || {}; SH.eye = EYE;
 
   function wait(f, cb) { var t = setInterval(function () { if (f()) { clearInterval(t); cb(); } }, 300); }
@@ -40,8 +46,16 @@
     ' float wall=smoothstep(.09,.13,r)*smoothstep(.22,.13,r)*uK; c+=wall*.12;',
     ' gl_FragColor=vec4(c,al*.95); }'].join('\n');
   function initStorms(S, U) {
-    var grp = EYE.sg = new THREE.Group(); S.earthScene.add(grp);
-    fetch(URL_TC).then(function (r) { return r.json(); }).then(function (j) {
+    var grp = EYE.sg = new THREE.Group(); grp.visible = EYE.on.storms; S.earthScene.add(grp);
+    // v1.0-M4v:不在加载时请求;loadStorms 由「台风」图层第一次打开时调用,同一页只载入一次(GDACS 走 10 分钟本机缓存)
+    var waiters = [];
+    function done() { var w = waiters; waiters = []; w.forEach(function (f) { try { f(EYE.storms); } catch (e) { } }); }
+    EYE.ensureStorms = function (cb) {
+      if (cb) waiters.push(cb);
+      if (off(URL_TC)) { EYE.tcOff = true; chipNote(); done(); return; }
+      if (EYE.tcOk !== undefined) { done(); return; }
+      if (EYE.tcBusy) return; EYE.tcBusy = true; chipNote();
+      LE.netcache.text(URL_TC, 10 * 60 * 1000, 9000, function (t) { return /FeatureCollection/.test(t); }).then(function (r) { return JSON.parse(r.text); }).then(function (j) {
       EYE.storms = (j.features || []).filter(function (f) { return f.properties && String(f.properties.iscurrent) === 'true' && (Date.now() - new Date(f.properties.todate + 'Z').getTime() < 4 * 864e5) && f.geometry && f.geometry.type === 'Point'; }).map(function (f) {
         var p = f.properties, sv = p.severitydata || {}, c = f.geometry.coordinates;
         var u = p.url && (p.url.report || p.url.details) || ('https://www.gdacs.org/report.aspx?eventtype=TC&eventid=' + p.eventid);
@@ -58,8 +72,9 @@
         s.mesh = m; grp.add(m);
       });
       EYE.storms.slice(0, 4).forEach(function (s) { try { SAT.load(S, U, grp, s); } catch (e) { console.warn('[eye] sat', e); } });
-      EYE.tcOk = true; chipNote();
-    }).catch(function (e) { EYE.tcOk = false; chipNote(); console.warn('[eye] GDACS', e); });
+      EYE.tcOk = true; EYE.tcBusy = false; chipNote(); done();
+    }).catch(function (e) { EYE.tcOk = false; EYE.tcBusy = false; chipNote(); done(); console.warn('[eye] GDACS', e && e.message); });
+    };
     S.addUpdater(function (dt) { if (!grp.visible) return; var t = performance.now() / 1000; grp.children.forEach(function (m) { if (m.material.uniforms.uT) m.material.uniforms.uT.value = t; }); SAT.tick(S, grp.visible); });
     S.addPicker({ mode: 'earth', priority: 2, fn: function (ray) {
       if (!grp.visible || !EYE.storms.length) return null;
@@ -89,6 +104,7 @@
   }
   // 读一张图;全透明(该时刻还没有数据)当作失败
   function loadImg(url, cb) {
+    if (off(url)) { cb(null); return; }   // v1.0-M4v:实时数据关 → 不取图
     var im = new Image(); im.crossOrigin = 'anonymous';
     im.onload = function () {
       try {
@@ -205,8 +221,15 @@
         if (LE.ui.setLayer) LE.ui.setLayer('clouds', m !== 'off');
         chip.querySelector('small').textContent = m === 'real' ? '实拍 ' + day : m === 'fake' ? '示意' : 'CLOUDS';
       }
+      var tried = false;   // v1.0-M4v:实拍云图第一次点「云层」时才请求(之前是页面加载就请求)
       chip.addEventListener('click', function (e) {
-        if (!mat) return;   // 实拍没加载成功:沿用原来的开/关
+        if (!mat) {
+          if (tried || off(GIBS)) return;   // 实时关 / 实拍已失败:沿用原来的开/关(示意贴图)
+          tried = true; e.stopImmediatePropagation();
+          if (LE.ui.toast) LE.ui.toast('正在载入卫星实拍云图(NASA GIBS)…');
+          chip.querySelector('small').textContent = '载入中';
+          tryDay(1); return;
+        }
         e.stopImmediatePropagation();
         var nx = mode === 'real' ? 'fake' : mode === 'fake' ? 'off' : 'real'; setMode(nx);
         if (LE.ui.toast) LE.ui.toast(nx === 'real' ? '云层:卫星实拍(VIIRS,' + day + ' 全球拼接)' : nx === 'fake' ? '云层:示意贴图' : '云层已关闭');
@@ -229,19 +252,22 @@
               ' gl_FragColor=vec4(vec3(g)*(.04+.96*l),a*(.08+.72*l)); }'].join('\n'),
             transparent: true, depthWrite: false
           });
-          setMode(E.clouds.visible ? 'real' : 'off'); EYE.realDay = ds;
-        }, undefined, function () { if (back < 3) tryDay(back + 1); else console.warn('[eye] VIIRS clouds unavailable'); });
+          setMode('real'); EYE.realDay = ds;
+          if (LE.ui.toast) LE.ui.toast('云层:卫星实拍(VIIRS,' + day + ' 全球拼接)');
+        }, undefined, function () { if (back < 3) tryDay(back + 1); else { setMode(E.clouds.visible ? 'fake' : 'off'); if (LE.ui.toast) LE.ui.toast('卫星实拍云图暂不可用,保留示意贴图'); console.warn('[eye] VIIRS clouds unavailable'); } });
       }
-      tryDay(1);
+      if (off(GIBS)) chip.title = '实时数据已关闭:云层只用示意贴图';
     }
   };
 
 
   /* ---------- 极光 ---------- */
   function initAurora(S, U) {
-    var grp = EYE.ag = new THREE.Group(); S.earthScene.add(grp);
+    var grp = EYE.ag = new THREE.Group(); grp.visible = EYE.on.aurora; S.earthScene.add(grp);
     function load() {
-      fetch(URL_OV).then(function (r) { return r.json(); }).then(function (j) {
+      if (off(URL_OV)) { EYE.ovOff = true; chipNote(); return; }   // v1.0-M4v:实时关 → 不请求
+      EYE.ovLoaded = true;
+      LE.netcache.text(URL_OV, 10 * 60 * 1000, 12000, function (t) { return /coordinates/.test(t); }).then(function (r) { return JSON.parse(r.text); }).then(function (j) {
         // 1° 网格 → 连续的半透明壳面(只取 |纬度| ≥ 35°,极光只出现在高纬)
         var A = {}; (j.coordinates || []).forEach(function (c) { A[c[0] + ',' + c[1]] = c[2]; });
         var pos = [], al = [], idx = [], v = new THREE.Vector3(), rows = [], LAT = [];
@@ -259,44 +285,50 @@
         });
         grp.clear(); grp.add(new THREE.Mesh(g, mat)); EYE.amat = mat;
         EYE.ovTime = j['Forecast Time'] || ''; EYE.ovOk = true; chipNote();
-      }).catch(function (e) { EYE.ovOk = false; chipNote(); console.warn('[eye] OVATION', e); });
-      fetch(URL_KP).then(function (r) { return r.json(); }).then(function (j) {
-        var last = j[j.length - 1]; EYE.kp = Array.isArray(last) ? +last[1] : +last.Kp; chipNote();
+      }).catch(function (e) { EYE.ovOk = false; chipNote(); console.warn('[eye] OVATION', e && e.message); });
+      LE.netcache.text(URL_KP, 10 * 60 * 1000, 9000, function (t) { return /\[/.test(t); }).then(function (r) { return JSON.parse(r.text); }).then(function (j) {
+        var last = j[j.length - 1]; EYE.kp = Array.isArray(last) ? +last[1] : +last.Kp; if (isNaN(EYE.kp)) EYE.kp = null; chipNote();
       }).catch(function () { });
     }
-    load(); setInterval(load, 30 * 60 * 1000);
+    // v1.0-M4v:第一次打开「极光」图层才载入;之后只在图层开着时每 30 分钟刷新
+    EYE.ensureAurora = function () { if (!EYE.ovLoaded) load(); };
+    setInterval(function () { if (EYE.on.aurora && EYE.ovLoaded) load(); }, 30 * 60 * 1000);
     S.addUpdater(function (dt, now) { if (EYE.amat) EYE.amat.uniforms.uT.value = now / 1000 % 1000; });
   }
   function kpText(k) { return k == null ? '' : 'Kp ' + k.toFixed(0) + (k >= 7 ? ' · 强磁暴,中纬度也可能看到' : k >= 5 ? ' · 磁暴,极光向南扩展' : k >= 4 ? ' · 较活跃' : ' · 平静'); }
   function auroraInfo() {
     LE.ui.showCard({ kind: 'aurora', color: '#5dff9a', kicker: '极光预报 · NOAA SWPC', title: '极光椭圆' + (EYE.kp != null ? ' · Kp ' + EYE.kp.toFixed(0) : ''),
       blurb: '太阳风里的带电粒子被地球磁场引向两极,撞上高层大气发光,就是极光。绿色越亮,未来一小时左右看到极光的可能越大。',
-      rows: [['地磁活动', kpText(EYE.kp) || '加载中'], ['预报时刻', EYE.ovTime ? fmt(EYE.ovTime) : '—', 1], ['模型', 'OVATION Prime(每 5 分钟更新)']],
+      rows: [['地磁活动', EYE.ovOff ? '实时数据已关闭(不请求 NOAA SWPC,无离线极光数据)' : kpText(EYE.kp) || (EYE.ovOk === false ? '暂不可用' : '加载中')], ['预报时刻', EYE.ovTime ? fmt(EYE.ovTime) : '—', 1], ['模型', 'OVATION Prime(每 5 分钟更新)']],
       actions: [{ label: '在 NOAA SWPC 查看 ↗', href: 'https://www.swpc.noaa.gov/products/aurora-30-minute-forecast' }] });
   }
 
   /* ---------- 图层开关(加到底部图层条) ---------- */
   var chips = {};
   function chipNote() {
-    if (chips.storms) chips.storms.querySelector('small').textContent = EYE.tcOk === false ? '暂不可用' : EYE.tcOk ? (EYE.storms.length ? EYE.storms.length + ' 个进行中' : '当前无') : 'TYPHOON';
-    if (chips.aurora) chips.aurora.querySelector('small').textContent = EYE.ovOk === false ? '暂不可用' : EYE.kp != null ? 'Kp ' + EYE.kp.toFixed(0) : 'AURORA';
+    var lo = off(URL_TC);   // v1.0-M4v:实时关时按钮直接标「实时已关」
+    if (chips.storms) chips.storms.querySelector('small').textContent = lo ? '实时已关' : EYE.tcBusy ? '载入中' : EYE.tcOk === false ? '暂不可用' : EYE.tcOk ? (EYE.storms.length ? EYE.storms.length + ' 个进行中' : '当前无') : 'TYPHOON';
+    if (chips.aurora) chips.aurora.querySelector('small').textContent = lo ? '实时已关' : EYE.ovOk === false ? '暂不可用' : EYE.kp != null ? 'Kp ' + EYE.kp.toFixed(0) : 'AURORA';
   }
   function addChip(id, label, sub, col) {
     var bar = $('chips'); if (!bar) return;
     var b = document.createElement('button'); b.className = 'le-chip'; b.type = 'button'; b.dataset.eye = id;
-    b.setAttribute('aria-pressed', 'true'); b.style.setProperty('--c', col); b.innerHTML = label + '<small>' + sub + '</small>';
+    b.setAttribute('aria-pressed', EYE.on[id] ? 'true' : 'false'); b.style.setProperty('--c', col); b.innerHTML = label + '<small>' + sub + '</small>';
     b.addEventListener('click', function () {
       var on = EYE.on[id] = !EYE.on[id]; b.setAttribute('aria-pressed', on ? 'true' : 'false');
       var g = id === 'storms' ? EYE.sg : EYE.ag; if (g) g.visible = on;
-      if (on && id === 'aurora') auroraInfo();
-      if (on && id === 'storms' && LE.ui.toast) LE.ui.toast(EYE.storms.length ? '点台风云系查看风速和等级' : '目前全球没有进行中的热带气旋');
+      if (on && id === 'aurora') { if (EYE.ensureAurora) EYE.ensureAurora(); auroraInfo(); }
+      if (on && id === 'storms') {
+        var say = function () { if (!LE.ui.toast || !EYE.on.storms) return; LE.ui.toast(EYE.tcOff ? '实时数据已关闭 · 不载入台风数据(GDACS)' : EYE.tcOk === false ? '台风数据暂不可用(离线或 GDACS 无响应)' : EYE.storms.length ? '点台风云系查看风速和等级' : '目前全球没有进行中的热带气旋'); };
+        if (EYE.ensureStorms) { if (EYE.tcOk === undefined && !off(URL_TC) && LE.ui.toast) LE.ui.toast('正在载入台风数据(GDACS)…'); EYE.ensureStorms(say); } else say();
+      }
     });
     bar.appendChild(b); chips[id] = b;
   }
 
   wait(function () { return window.READY && window.LE && LE.scene && LE.scene.earthScene && LE.ui && LE.ui.showCard; }, function () {
     var S = LE.scene, U = LE.util;
-    addChip('storms', '台风', 'TYPHOON', '#ff8a1f'); addChip('aurora', '极光', 'AURORA', '#5dff9a');
+    addChip('storms', '台风', 'TYPHOON', '#ff8a1f'); addChip('aurora', '极光', 'AURORA', '#5dff9a'); chipNote();   // v1.0-M4v:实时关时按钮一开始就标「实时已关」
     try { initStorms(S, U); } catch (e) { console.warn('[eye] storms', e); }
     try { initAurora(S, U); } catch (e) { console.warn('[eye] aurora', e); }
     try { REAL.init(S, U); } catch (e) { console.warn('[eye] real clouds', e); }

@@ -12,7 +12,11 @@
   // 关 = 不再请求这三家,改用站内快照/示意。状态只存本机 localStorage gn:sh:live,默认开;切换后页面重新载入。
   // v1.0-M4f(2026-10-27,总指挥令 A):总开关下加单项开关 gn:sh:live.iss / .quakes / .starlink / .geo(默认开)。
   // 单项关 = 只停该项请求(改站内快照);总开关关 = 全停。切换后重新载入一次生效。
-  var LIVE_KEY = 'gn:sh:live', LIVE_HOSTS = /(^|\.)(celestrak\.org|earthquake\.usgs\.gov|open-meteo\.com)$/i;
+  // v1.0-M4v(2026-11-22,实时数据外部请求收口):登记为允许例外的空间天气/灾害/卫星图源也归总开关管——
+  //   GDACS(灾害播报、台风)、NOAA SWPC(极光、Kp、太阳风、X 射线、黑子)、NASA GIBS(台风实拍、实拍云图)、NASA SDO(太阳实拍)。
+  //   这几家没有单项开关(itemOf 返回 null):总开关开 = 只在用户打开对应面板/图层时才请求;总开关关 = 一个都不请求。
+  //   fetch 由下面的包装统一拦截;<img>/纹理加载不经 fetch,由各模块请求前自行调用 LE.live.blocked(url) 判断。
+  var LIVE_KEY = 'gn:sh:live', LIVE_HOSTS = /(^|\.)(celestrak\.org|earthquake\.usgs\.gov|open-meteo\.com|gdacs\.org|swpc\.noaa\.gov|gibs\.earthdata\.nasa\.gov|sdo\.gsfc\.nasa\.gov)$/i;
   var LIVE_ITEMS = ['iss', 'quakes', 'starlink', 'geo'];
   function lsOn(k) { try { return localStorage.getItem(k) !== '0'; } catch (e) { return true; } }
   function lsSet(k, on) { try { localStorage.setItem(k, on ? '1' : '0'); } catch (e) {} }
@@ -160,6 +164,16 @@
   // 用于遵守 CelesTrak「每次更新只下载一次(约 2 小时)」的使用政策
   var DCACHE = 'shdata-v1';
   LE.netcache = {
+    // v1.0-M4v:只读本机缓存、绝不发请求(页面加载时用它显示上次拉到的数据;过期也返回,带 time 供界面标注)
+    peek: function (url) {
+      if (LE.live && LE.live.blocked(url)) return Promise.resolve(null);   // 实时数据已关:连旧缓存也不用
+      if (typeof caches === 'undefined') return Promise.resolve(null);
+      return caches.open(DCACHE).then(function (c) { return c.match(url); }).then(function (r) {
+        if (!r) return null;
+        var t = +r.headers.get('x-sh-time') || 0;
+        return r.text().then(function (txt) { return { text: txt, time: t, cached: true }; });
+      }).catch(function () { return null; });
+    },
     text: function (url, maxAgeMs, timeoutMs, validate) {
       if (LE.live && LE.live.blocked(url)) return Promise.reject(new Error('live-off'));   // 实时数据已关:不读旧缓存、不记失败
       var now = Date.now(), failKey = 'gn:sh:netfail:' + url;
