@@ -171,9 +171,15 @@
     if (LE.ui.toast) LE.ui.toast(x.title + ' · ' + x.meta);
   }
   /* ---------- v1.0-M4v 灾害数据:懒加载 + 降级提示 ---------- */
+  function liveMark() {   // v1.0-M4w:标题角标随实时总开关——开 = 「LIVE」+ 闪烁红点;关 = 「离线」、红点熄灭
+    if (!U.root) return; var off = liveOff(), sm = U.root.querySelector('.sh-cast__h small');
+    if (sm) sm.textContent = off ? '离线' : 'LIVE';
+    U.root.classList.toggle('is-offline', off);
+  }
   function gdLine() {   // 面板底部一行:灾害数据从哪来、什么时候的、要不要载入
     if (!U.gd) return;
     U.gd.textContent = '';
+    liveMark();
     if (liveOff()) { U.gd.textContent = '实时数据已关闭 · 不载入全球灾害预警(GDACS),只播本机计算的天象'; U.gd.className = 'sh-cast__gd is-off'; return; }
     U.gd.className = 'sh-cast__gd';
     var t = C.busy ? '正在载入全球灾害预警…' : C.g && C.gTime ? '灾害预警:GDACS · ' + ago(C.gTime) + (C.act ? '' : '(上次载入)') : C.fail ? '灾害预警暂不可用(离线或数据源无响应)' : '灾害预警:尚未载入';

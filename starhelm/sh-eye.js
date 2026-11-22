@@ -284,11 +284,11 @@
           transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
         });
         grp.clear(); grp.add(new THREE.Mesh(g, mat)); EYE.amat = mat;
-        EYE.ovTime = j['Forecast Time'] || ''; EYE.ovOk = true; chipNote();
-      }).catch(function (e) { EYE.ovOk = false; chipNote(); console.warn('[eye] OVATION', e && e.message); });
+        EYE.ovTime = j['Forecast Time'] || ''; EYE.ovOk = true; chipNote(); auroraRefresh();
+      }).catch(function (e) { EYE.ovOk = false; chipNote(); auroraRefresh(); console.warn('[eye] OVATION', e && e.message); });
       LE.netcache.text(URL_KP, 10 * 60 * 1000, 9000, function (t) { return /\[/.test(t); }).then(function (r) { return JSON.parse(r.text); }).then(function (j) {
-        var last = j[j.length - 1]; EYE.kp = Array.isArray(last) ? +last[1] : +last.Kp; if (isNaN(EYE.kp)) EYE.kp = null; chipNote();
-      }).catch(function () { });
+        var last = j[j.length - 1]; EYE.kp = Array.isArray(last) ? +last[1] : +last.Kp; if (isNaN(EYE.kp)) EYE.kp = null; EYE.kpOk = EYE.kp != null; chipNote(); auroraRefresh();
+      }).catch(function () { EYE.kpOk = false; auroraRefresh(); });   // v1.0-M4w:Kp 失败也要让卡片离开「加载中」
     }
     // v1.0-M4v:第一次打开「极光」图层才载入;之后只在图层开着时每 30 分钟刷新
     EYE.ensureAurora = function () { if (!EYE.ovLoaded) load(); };
@@ -296,11 +296,24 @@
     S.addUpdater(function (dt, now) { if (EYE.amat) EYE.amat.uniforms.uT.value = now / 1000 % 1000; });
   }
   function kpText(k) { return k == null ? '' : 'Kp ' + k.toFixed(0) + (k >= 7 ? ' · 强磁暴,中纬度也可能看到' : k >= 5 ? ' · 磁暴,极光向南扩展' : k >= 4 ? ' · 较活跃' : ' · 平静'); }
+  var AK = '极光预报 · NOAA SWPC';
+  function auroraTitle() { return '极光椭圆' + (EYE.kp != null ? ' · Kp ' + EYE.kp.toFixed(0) : ''); }
+  function auroraRows() {
+    // v1.0-M4w:「地磁活动」一行——实时关 → 已关闭;有 Kp → 显示 Kp;Kp 或极光椭圆任一失败(或都已结束仍无 Kp)→ 暂不可用;否则才是加载中
+    var v = EYE.ovOff ? '实时数据已关闭(不请求 NOAA SWPC,无离线极光数据)' : kpText(EYE.kp) || (EYE.kpOk === false || EYE.ovOk === false || (EYE.kpOk !== undefined && EYE.ovOk !== undefined) ? '暂不可用' : '加载中');
+    return [['地磁活动', v], ['预报时刻', EYE.ovTime ? fmt(EYE.ovTime) : (EYE.ovOk === false ? '暂不可用' : '—'), 1], ['模型', 'OVATION Prime(每 5 分钟更新)']];
+  }
   function auroraInfo() {
-    LE.ui.showCard({ kind: 'aurora', color: '#5dff9a', kicker: '极光预报 · NOAA SWPC', title: '极光椭圆' + (EYE.kp != null ? ' · Kp ' + EYE.kp.toFixed(0) : ''),
+    LE.ui.showCard({ kind: 'aurora', color: '#5dff9a', kicker: AK, title: auroraTitle(),
       blurb: '太阳风里的带电粒子被地球磁场引向两极,撞上高层大气发光,就是极光。绿色越亮,未来一小时左右看到极光的可能越大。',
-      rows: [['地磁活动', EYE.ovOff ? '实时数据已关闭(不请求 NOAA SWPC,无离线极光数据)' : kpText(EYE.kp) || (EYE.ovOk === false ? '暂不可用' : '加载中')], ['预报时刻', EYE.ovTime ? fmt(EYE.ovTime) : '—', 1], ['模型', 'OVATION Prime(每 5 分钟更新)']],
+      rows: auroraRows(),
       actions: [{ label: '在 NOAA SWPC 查看 ↗', href: 'https://www.swpc.noaa.gov/products/aurora-30-minute-forecast' }] });
+  }
+  function auroraRefresh() {   // v1.0-M4w:数据到了(或失败了)时,若极光卡片还开着就原地更新标题与数据行,不再停在「加载中」
+    var c = document.getElementById('card'), k = document.getElementById('card-kicker');
+    if (!c || !k || !c.classList.contains('is-open') || k.textContent !== AK || !LE.ui.setCardRows) return;
+    var t = document.getElementById('card-title'); if (t) t.textContent = auroraTitle();
+    LE.ui.setCardRows(auroraRows());
   }
 
   /* ---------- 图层开关(加到底部图层条) ---------- */

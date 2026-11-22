@@ -310,7 +310,7 @@ body.shh-on .le-chips.le-solar-only{display:none!important}
 @media (max-height:500px),(max-width:760px){.ml.ml--dock{top:auto;bottom:8px;right:8px;max-height:58vh}}
 
 /* v1.0-M3b 地球重要播报(右上,按钮行下方;卡片/此刻卡/实验室打开时让位) */
-.sh-cast{position:fixed;z-index:22;right:var(--shh-pad,16px);top:calc(var(--shh-acts,140px) + 10px);width:min(350px,calc(100vw - 32px));max-height:calc(100vh - var(--shh-acts,140px) - var(--shh-console,110px) - 120px);display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(8,18,34,.86),rgba(4,10,20,.8));backdrop-filter:blur(10px);border:1px solid rgba(255,138,92,.35);border-radius:14px;box-shadow:0 0 24px rgba(255,120,60,.16),inset 0 0 18px rgba(88,200,255,.06);color:#e8f2ff;font-size:12px;overflow:hidden;transition:opacity .25s}
+.sh-cast{position:fixed;z-index:22;right:var(--shh-pad,16px);top:calc(var(--shh-acts,140px) + 10px);width:min(350px,calc(100vw - 32px));max-height:max(150px,calc(100vh - var(--shh-acts,140px) - var(--shh-console,110px) - 120px));display:flex;flex-direction:column;background:linear-gradient(180deg,rgba(8,18,34,.86),rgba(4,10,20,.8));backdrop-filter:blur(10px);border:1px solid rgba(255,138,92,.35);border-radius:14px;box-shadow:0 0 24px rgba(255,120,60,.16),inset 0 0 18px rgba(88,200,255,.06);color:#e8f2ff;font-size:12px;overflow:hidden;transition:opacity .25s}
 body:not(.shh-on) .sh-cast{display:none}
 body:has(#card.is-open) .sh-cast,body:has(.shh-now:not([hidden])) .sh-cast,body.ml-on .sh-cast,body.sh-side .sh-cast,body:has(.le-sheet.is-open) .sh-cast{opacity:0;pointer-events:none}
 .sh-cast__h{display:flex;align-items:center;gap:7px;padding:9px 12px 6px;letter-spacing:.06em}.sh-cast__h b{font-size:13px;color:#ffd0b0}.sh-cast__h small{font-size:9px;color:#ff8a5c;border:1px solid rgba(255,138,92,.5);border-radius:4px;padding:0 4px}
@@ -341,3 +341,15 @@ body:has(#card.is-open) .sh-cast,body:has(.shh-now:not([hidden])) .sh-cast,body.
 .sh-mod__in{display:none;gap:6px}.sh-mod.is-open .sh-mod__in{display:flex}
 /* v1.0-M4v 地球重要播报:灾害预警懒加载状态行 */
 .sh-cast__gd{padding:3px 12px 6px;font-size:10.5px;color:#8fa6c2}.sh-cast__gd.is-off{color:#e0b878}.sh-cast.is-fold .sh-cast__gd{display:none}
+/* v1.0-M4w:矮屏(高 ≤500,如 568×320 横屏)播报面板——原公式算出负高度、整块不可见;改为贴顶栏下方、在右侧与按钮列并排,
+   下沿停在底部时间控制台上方 6px(高 = 视口 − 顶栏 − 控制台 − 边距,下限 120px),整块可滚动、标题条吸顶;
+   ≥501 高的尺寸外观不变(主规则 max() 下限在这些尺寸不生效)。 */
+@media (max-height:500px){
+  .sh-cast{top:calc(var(--shh-top,46px) + 14px);max-height:max(120px,calc(100vh - var(--shh-top,46px) - 14px - var(--shh-console,64px) - 22px));overflow-y:auto;overscroll-behavior:contain}
+  .sh-cast:not(.is-fold){z-index:39}   /* 展开时压过 3D 标签(.le-labels 39,面板在 DOM 中更靠后),仍在顶栏/抽屉之下 */
+  .sh-cast:not(.is-fold) .sh-cast__h{position:sticky;top:0;z-index:1;background:rgba(8,18,34,.96)}
+  .sh-cast__list{flex:none;overflow:visible}
+}
+/* v1.0-M4w:实时数据关闭时标题角标为「离线」(灰色),红点熄灭不闪 */
+.sh-cast.is-offline .sh-cast__h small{color:#9fb6d0;border-color:rgba(159,182,208,.45)}
+.sh-cast.is-offline .sh-cast__live{background:#5d6b7e;box-shadow:none;animation:none}
