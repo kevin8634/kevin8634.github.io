@@ -353,3 +353,13 @@ body:has(#card.is-open) .sh-cast,body:has(.shh-now:not([hidden])) .sh-cast,body.
 /* v1.0-M4w:实时数据关闭时标题角标为「离线」(灰色),红点熄灭不闪 */
 .sh-cast.is-offline .sh-cast__h small{color:#9fb6d0;border-color:rgba(159,182,208,.45)}
 .sh-cast.is-offline .sh-cast__live{background:#5d6b7e;box-shadow:none;animation:none}
+/* v1.0-M4x:矮横屏(如 568×320)展开播报面板时不再盖住顶部「航行」「天文台」等按钮——
+   按钮区 .le-top 左贴 --shh-pad、最宽 62vw(见上方 max-height:500px 横屏规则),面板改为只占其右侧剩余宽度
+   (100vw − 62vw − 两侧边距 − 8px 间隙,最宽仍 350px),高度/吸顶标题/整块可滚动沿用 M4w;收起态不变。 */
+@media (max-height:500px) and (orientation:landscape){
+  body.shh-on .sh-cast:not(.is-fold){width:min(350px,calc(38vw - 2 * var(--shh-pad,8px) - 8px));min-width:0}
+  body.shh-on .sh-cast:not(.is-fold) .sh-cast__h{padding:8px 8px 5px;gap:5px}
+  body.shh-on .sh-cast:not(.is-fold) .sh-cast__for,body.shh-on .sh-cast:not(.is-fold) .sh-cast__gd,body.shh-on .sh-cast:not(.is-fold) .sh-cast__src{padding-left:8px;padding-right:8px}
+}
+/* v1.0-M4x:减少动态时播报红点常亮不闪(实时开启也一样;离线时仍为灰点) */
+@media (prefers-reduced-motion:reduce){.sh-cast__live{animation:none;opacity:1}}
