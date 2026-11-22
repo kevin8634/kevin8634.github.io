@@ -124,6 +124,19 @@
 | splitFlap 翻牌 | React Bits · Split Flap Text(reactbits.dev/text-animations/split-flap-text) | MIT + Commons Clause | 种子显示 |
 | cardStack 题卡叠牌 | React Bits · Stack(reactbits.dev/components/stack)+ Flip Card(reactbits.dev/micro/flip-card) | MIT + Commons Clause | 题卡:正面题目、背面答案配方 + 「试试」 |
 | lockSwitch 锁定开关 | Uiverse.io 开关(uiverse.io/switches,社区作品统一 MIT) | MIT | 锁定常数(随机与题卡不改) |
+
+### 3-5 造物层界面组件逐条署名(3/core/create-ui.mjs,2026-11-22)
+同样只按公开演示的交互思路用原生 JS/CSS 自写,未复制、未移植源码,不引 CDN、零外部请求;React Bits 部分同上(MIT + Commons Clause,Copyright (c) 2026 David Haz)。
+
+| 组件 | 思路来源 | 许可 | 用途 |
+|---|---|---|---|
+| profileCard 作品卡 | React Bits · Profile Card(reactbits.dev/components/profile-card) | MIT + Commons Clause | 作品卡:随指针倾斜 + 全息光斑;低档与减少动态退成静态卡(无全息、无倾斜) |
+| decryptedText 解密文字 | React Bits · Decrypted Text(reactbits.dev/text-animations/decrypted-text) | MIT + Commons Clause | 宇宙命名:乱码逐位揭成名字 |
+| countUp 数字滚动 | React Bits · Count Up(沿用 /shared/3/ui.js) | MIT + Commons Clause | 作品卡数值 |
+| starBorder 星光边框 | React Bits · Star Border(reactbits.dev/animations/star-border) | MIT + Commons Clause | 「带去天枢」按钮 |
+| glareHover 扫光 | React Bits · Glare Hover(reactbits.dev/animations/glare-hover) | MIT + Commons Clause | 「复制分享链接」「导出 JSON」按钮 |
+| fileUpload 投放区 | Aceternity UI · File Upload(ui.aceternity.com/components/file-upload,免费组件) | 按 Aceternity UI 免费组件条款;本站只参考思路、不含其源码 | 导入 .gus.json |
+| orbitCanvas T7 轨道 | 自研(canvas + Worker 速度 Verlet N 体) | 本站 | 作品卡里的恒星系实时轨道 |
 | ε、Ω₀ 滑块 | /shared/3/ui.js Elastic Slider(总指挥维护) | 同本站 | 只引用 |
 | 太阳系视图 | 交给天枢 Starhelm(星桥 ?gus=,本站世界) | 同本站 | 未参考 ThreeUI Orrery |
 

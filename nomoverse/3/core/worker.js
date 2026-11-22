@@ -5,7 +5,8 @@
  *   op "run"   { recipe, budget }        → { res, desc }       res 为 universe.run 结果(结构化克隆)
  *   op "sky"   { seed, n }               → Float32Array(n*4)   已转移(transfer),不拷贝
  *   op "sweep" { recipe, key, n }         → [{ v, pass, status }]  后果指示迷你图
- *   op "nbody" { recipe, years, dt }     → { t, drift, pos }   固定步长积分 years 年,返回能量相对漂移与各体位置 */
+ *   op "nbody" { recipe, years, dt }     → { t, drift, pos }   固定步长积分 years 年,返回能量相对漂移与各体位置
+ *   op "orbit" { recipe, frames }        → { n, frames, data(Float32Array,已转移), drift, rMax, years, dt, rgb }  3-5 T7 轨道动画 */
 (function (root) {
   "use strict";
   var U, SC, NB;
@@ -37,6 +38,12 @@
       }
       return out;
     },
+    orbit: function (m) {
+      var res = U.run(m.recipe || {}), o = NB.trace(res, { frames: m.frames, maxSteps: m.maxSteps });
+      o.rgb = res.star.rgb; o.lit = res.stages.T5 !== "fail"; o.hab = res.planets.map(function (p) { return !!p.habitable; });
+      if (!o.lit) { o.frames = 0; o.data = new Float32Array(0); }
+      return o;
+    },
     nbody: function (m) {
       var res = U.run(m.recipe || {});
       if (!res.planets.length) return { t: 0, drift: 0, pos: [] };
@@ -58,7 +65,7 @@
   if (typeof module !== "undefined" && module.exports) module.exports = { handle: handle, OPS: OPS };
   else root.onmessage = function (ev) {
     var out = handle(ev.data);
-    var tr = out.ok && out.data instanceof Float32Array ? [out.data.buffer] : [];
+    var d = out.ok && out.data, tr = d instanceof Float32Array ? [d.buffer] : d && d.data instanceof Float32Array ? [d.data.buffer] : [];
     root.postMessage(out, tr);
   };
 })(typeof self !== "undefined" ? self : this);

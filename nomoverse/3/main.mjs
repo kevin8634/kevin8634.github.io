@@ -1,14 +1,18 @@
 /* 宙律 Nomoverse 3.0 · 宇宙配方台入口(3-2:Worker + three r186 渲染层 + /shared/3/ui.js 界面)
  * 数据流:store(配方)→ Worker run → desc(scene.describe)→ 渲染层 update(desc);界面数字读 res,画面只读 desc。
  * 新手层 3 旋钮 G、c、α(×1 吸附)+ 引导三步 + 失败卡两层 + 真实宇宙对比(3-3);
- * 探索层(3-4):基础/进阶切换,+ε、Ω₀(滑块 + 液位表)、Q、Λ(彗星旋钮)、种子翻牌、锁定开关、随机宇宙、题卡叠牌;星桥把恒星系交给天枢。 */
-import { tier, createRecipeStore, i18n, encodeUniverse, recipeFromGus, registerSelftest, gus } from './core/adapt.mjs';
+ * 探索层(3-4):基础/进阶切换,+ε、Ω₀(滑块 + 液位表)、Q、Λ(彗星旋钮)、种子翻牌、锁定开关、随机宇宙、题卡叠牌;星桥把恒星系交给天枢。
+ * 造物层(3-5):命名(Decrypted Text)、作品卡(Profile Card + Count Up + T7 N 体 Worker 轨道)、带去天枢(Star Border)、
+ *   复制分享链接(Glare Hover,?gus= 超长退 ?r=)、导出/导入 JSON(File Upload)、gn:gus:last。 */
+import { tier, createRecipeStore, i18n, encodeUniverse, recipeFromGus, registerSelftest, gus, recipeToParam } from './core/adapt.mjs';
 import { setLang } from '/shared/3/i18n.js';
 import * as ui from '/shared/3/ui.js';
 import { call, runLatest, usingWorker } from './core/wclient.mjs';
 import { snap1, compareRows, explain, REAL_CREDIT, STAGE, GUIDE, guideStep } from './core/teach.mjs';
 import * as X from './core/explore.mjs';
 import { cometDial, sloshGauge, rubberSegment, splitFlap, cardStack, lockSwitch } from './core/explore-ui.mjs';
+import * as C from './core/create.mjs';
+import { profileCard, decryptedText, starBorder, glareHover, fileUpload, orbitCanvas } from './core/create-ui.mjs';
 
 const U = window.NV3_UNIVERSE, G0 = window.NV3_GUS, SC = window.NV3_SCENE;
 const $ = (id) => document.getElementById(id);
@@ -50,6 +54,14 @@ const DICT = {
   cardsT: { zh: '题卡', en: 'Puzzle cards' }, flip: { zh: '点一下看答案', en: 'Tap for the answer' }, tryIt: { zh: '试试', en: 'Try it' },
   prev: { zh: '上一张', en: 'Previous' }, next: { zh: '下一张', en: 'Next' }, of: { zh: '/', en: 'of' },
   locked: { zh: '已锁定,没改:{k}', en: 'Locked, left as is: {k}' },
+  mMake: { zh: '造物', en: 'Create' }, makeT: { zh: '作品卡', en: 'Universe card' }, nameL: { zh: '给宇宙起名', en: 'Name your universe' },
+  tohelm: { zh: '带去天枢', en: 'Take to Starhelm' }, share: { zh: '复制分享链接', en: 'Copy share link' }, export: { zh: '导出 JSON', en: 'Export JSON' },
+  imp: { zh: '导入 JSON', en: 'Import JSON' }, impHint: { zh: '点这里或把 .gus.json 拖进来', en: 'Tap or drop a .gus.json file' },
+  copied: { zh: '链接已复制', en: 'Link copied' }, copyFail: { zh: '复制不了,请手动复制:', en: 'Could not copy, copy it by hand: ' },
+  longLink: { zh: '恒星系太大,链接只带配方和名字', en: 'System too large, the link carries the recipe and name only' },
+  saved: { zh: '已导出 {f}', en: 'Exported {f}' }, noPlanets: { zh: '没有行星', en: 'No planets' }, noStar: { zh: '没有恒星', en: 'No star' },
+  cAge: { zh: '年龄', en: 'Age' }, cPl: { zh: '行星', en: 'Planets' }, cHab: { zh: '宜居', en: 'Habitable' }, cTeff: { zh: '恒星', en: 'Star' },
+  orbitNote: { zh: 'N 体实时积分 · 半径开方压缩', en: 'Live N-body · radius √-compressed' },
   bridge: { zh: '星桥 · 去天枢看恒星系', en: 'Star Bridge · see it in Starhelm' }, mark0: { zh: 'Λ = 0', en: 'Λ = 0' }, mark1: { zh: '真实值', en: 'Real value' }
 };
 const FAIL_NOTE_EN = {
@@ -71,8 +83,9 @@ tier.set(tierInfo.tier); tier.apply(tierInfo.tier);
 /* ---------- 状态 ---------- */
 const store = createRecipeStore(U);
 const gq = new URLSearchParams(location.search).get('gus');
+let uName = C.cleanName(new URLSearchParams(location.search).get('n') || '');   // 用户起的名字;空 = 按种子默认名
 if (gq) {
-  try { const g = gq === '@last' ? gus.loadLast() : await gus.decode(gq); if (g && g.kind === 'universe') store.reset(recipeFromGus(g).recipe); }
+  try { const g = gq === '@last' ? gus.loadLast() : await gus.decode(gq); if (g && g.kind === 'universe') { store.reset(recipeFromGus(g).recipe); uName = C.cleanName(g.name && (g.name.zh || g.name.en)); } }
   catch (e) { /* 坏 GUS 忽略 */ }
 }
 store.bindKeys();
@@ -115,14 +128,15 @@ KNOBS.forEach((k) => {
 const NAME = { kG: 'kG', kc: 'kc', kA: 'kA', eps: 'keps', Om: 'kOm', Q: 'kQ', kL: 'kkL', seed: 'seed' };
 const MKEY = 'nv3.mode', LKEY = 'nv3.locks';
 const qs = new URLSearchParams(location.search);
-let mode = qs.get('mode') === 'adv' || qs.get('mode') === 'basic' ? qs.get('mode') : (() => { try { return localStorage.getItem(MKEY) || 'basic'; } catch (e) { return 'basic'; } })();
-{ const s0 = store.get(); if (X.ADV.some((k) => X.snapReal(k, s0[k]) !== X.REALV[k]) || s0.seed !== U.DEF.seed) mode = 'adv'; }   // 链接带进阶常数时直接进进阶
+let mode = ['adv', 'basic', 'make'].includes(qs.get('mode')) ? qs.get('mode') : (() => { try { return localStorage.getItem(MKEY) || 'basic'; } catch (e) { return 'basic'; } })();
+{ const s0 = store.get(); if (mode === 'basic' && (X.ADV.some((k) => X.snapReal(k, s0[k]) !== X.REALV[k]) || s0.seed !== U.DEF.seed)) mode = 'adv'; if ((gq || uName) && mode !== 'make') mode = 'make'; }   // 链接带进阶常数时直接进进阶
 let locks = (() => { try { return X.strToLock(localStorage.getItem(LKEY)); } catch (e) { return new Set(); } })();
-const seg = rubberSegment.mount($('mode'), { items: [{ id: 'basic', label: '' }, { id: 'adv', label: '' }], value: mode, onChange: (m) => setMode(m, true) });
+const seg = rubberSegment.mount($('mode'), { items: [{ id: 'basic', label: '' }, { id: 'adv', label: '' }, { id: 'make', label: '' }], value: mode, onChange: (m) => setMode(m, true) });
 function setMode(m, user) {
-  mode = m; document.body.classList.toggle('is-adv', m === 'adv');
+  mode = m; document.body.classList.toggle('is-adv', m !== 'basic'); document.body.classList.toggle('is-make', m === 'make');
   if (user) { try { localStorage.setItem(MKEY, m); } catch (e) { /* 隐私模式 */ } }
-  if (m === 'adv') { requestAnimationFrame(() => { dials.forEach((d) => d.ui.update({})); stack && stack.update({}); }); }
+  if (m === 'make') queueOrbit();
+  if (m !== 'basic') { requestAnimationFrame(() => { dials.forEach((d) => d.ui.update({})); stack && stack.update({}); }); }
 }
 const ADVS = [
   { key: 'eps', color: 'var(--gn3-k-eps)', log: false, step: 0.0001 },
@@ -176,14 +190,106 @@ const stack = cardStack.mount($('stack'), {
 });
 function paintLockNote() { let n = $('cardsec').querySelector('.lk-note'); if (!n) { n = document.createElement('p'); n.className = 'lk-note'; $('cardsec').append(n); } n.textContent = lockNote; n.hidden = !lockNote; }
 /* 星桥:把当前恒星系编码成 GUS,交给天枢(?gus=,同时存 gn:gus:last) */
-$('bridge').addEventListener('click', async () => {
+async function goHelm(btn) {
   if (!last) return;
   try {
-    const e = await encodeUniverse(last, { from: 'nomoverse' }, G0);
+    const e = await encodeUniverse(last, meta(), G0);
     try { gus.saveLast(e.gus); } catch (err) { /* 存储满 */ }
     location.href = e.fits ? await gus.toUrl(e.gus, '/starhelm/') : '/starhelm/?gus=@last';
-  } catch (err) { $('bridge').classList.add('is-err'); setTimeout(() => $('bridge').classList.remove('is-err'), 1200); }
+  } catch (err) { btn.classList.add('is-err'); setTimeout(() => btn.classList.remove('is-err'), 1200); }
+}
+$('bridge').addEventListener('click', () => goHelm($('bridge')));
+
+/* ---------- 3-5 造物层 ---------- */
+const curName = () => C.nameFor(uName, store.get().seed);
+const meta = () => ({ name: curName(), created: new Date().toISOString() });
+const nmIn = $('nm-in');
+nmIn.value = uName;
+nmIn.addEventListener('input', () => { uName = C.cleanName(nmIn.value); clearTimeout(nmIn.t); nmIn.t = setTimeout(paintMake, 260); });
+nmIn.addEventListener('change', () => { nmIn.value = uName; paintMake(); });
+const pc = profileCard.mount($('pcard'), { hue: 262 });
+const PC = { cv: document.createElement('canvas'), name: document.createElement('h3'), line: document.createElement('p'), grid: document.createElement('div'), foot: document.createElement('p'), note: document.createElement('span') };
+PC.cv.className = 'pc-orbit'; PC.cv.setAttribute('role', 'img'); PC.name.className = 'pc-name'; PC.line.className = 'pc-line'; PC.grid.className = 'pc-grid'; PC.foot.className = 'pc-foot'; PC.note.className = 'pc-note';
+const PCS = ['cAge', 'cPl', 'cHab', 'cTeff'].map((k) => { const d = document.createElement('div'), b = document.createElement('b'), sp = document.createElement('span'); d.className = 'pc-s'; sp.dataset.k = k; d.append(b, sp); PC.grid.append(d); return { k, b, sp }; });
+pc.inner.append(PC.cv, PC.note, PC.name, PC.line, PC.grid, PC.foot);
+const dec = decryptedText.mount(PC.name, { text: '' });
+const cuMake = [
+  ui.countUp.mount(PCS[0].b, { value: 0, format: (v) => (v ? (L.lang === 'en' ? v.toFixed(1) + ' Gyr' : (v * 10).toFixed(0)) : '—') }),
+  ui.countUp.mount(PCS[1].b, { value: 0, format: (v) => String(Math.round(v)) }),
+  ui.countUp.mount(PCS[2].b, { value: 0, format: (v) => String(Math.round(v)) }),
+  ui.countUp.mount(PCS[3].b, { value: 0, format: (v) => (v ? Math.round(v).toLocaleString() + ' K' : '—') })
+];
+const orb = orbitCanvas.mount(PC.cv, { orbit: null, empty: '' });
+let orbitInfo = null;
+starBorder.mount($('tohelm'), { color: '#c4b5fd', speed: 5 });
+const glare = glareHover.mount($('share'), {});
+glareHover.mount($('export'), {});
+$('tohelm').addEventListener('click', () => goHelm($('tohelm')));
+const say = (t, ok = true) => { const m = $('mk-msg'); m.textContent = t; m.className = 'mk-msg' + (t ? ok ? ' is-ok' : ' is-err' : ''); };
+async function shareUrl() {
+  const e = await encodeUniverse(last, meta(), G0);
+  try { gus.saveLast(e.gus); } catch (err) { /* 存储满 */ }
+  if (C.shareKind(e.len, gus.URL_MAX) === 'gus') return { url: await gus.toUrl(e.gus, '/nomoverse/3/'), kind: 'gus' };
+  const u = new URL('/nomoverse/3/', location.href); u.searchParams.set('r', recipeToParam(store.get())); if (uName) u.searchParams.set('n', uName);
+  return { url: u.toString(), kind: 'r' };
+}
+async function copyText(t) {
+  try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(t); return true; } } catch (e) { /* 回退 */ }
+  try { const ta = document.createElement('textarea'); ta.value = t; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;left:-9999px;top:0'; document.body.append(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); return ok; } catch (e) { return false; }
+}
+let lastShare = '';
+$('share').addEventListener('click', async () => {
+  if (!last) return;
+  const s = await shareUrl(); lastShare = s.url; glare.flash();
+  const ok = await copyText(s.url);
+  say(ok ? L.t('copied') + (s.kind === 'r' ? ' · ' + L.t('longLink') : '') : L.t('copyFail') + s.url, ok);
 });
+async function exportText() { const e = await encodeUniverse(last, meta(), G0); try { gus.saveLast(e.gus); } catch (err) { /* 存储满 */ } return { text: C.toJSONText(e.gus), file: C.fileName(e.gus) }; }
+$('export').addEventListener('click', async () => {
+  if (!last) return;
+  const x = await exportText();
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([x.text], { type: 'application/json' })); a.download = x.file;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  say(L.t('saved', { f: x.file }));
+});
+function importText(text) {
+  const r = C.parseImport(text, gus.validate), lg = L.lang === 'en' ? 'en' : 'zh';
+  if (!r.ok) { const m = C.IMPORT_MSG[r.err][lg]; up.message(m, false); return r; }
+  store.set(U.normalize(recipeFromGus(r.g).recipe));
+  uName = C.cleanName(r.g.name && (r.g.name[lg] || r.g.name.zh || r.g.name.en)); nmIn.value = uName;
+  try { gus.saveLast(r.g); } catch (e) { /* 存储满 */ }
+  up.message(C.IMPORT_MSG.ok[lg].replace('{n}', curName()[lg]), true);
+  return { ok: true, id: r.g.id };
+}
+const up = fileUpload.mount($('upload'), { onFile: async (f) => { importText(f.size > C.IMPORT_MAX ? 'x'.repeat(C.IMPORT_MAX + 1) : await f.text()); } });
+function paintMake() {
+  if (!last) return;
+  const lg = L.lang === 'en' ? 'en' : 'zh', st = C.cardStats(last, lastDesc), nm = curName()[lg];
+  nmIn.placeholder = C.defaultName(store.get().seed)[lg];
+  dec.update({ text: nm });
+  PC.line.textContent = C.STATUS_LINE[st.status][lg]; PC.line.className = 'pc-line is-' + st.status;
+  PCS.forEach((p) => { p.sp.textContent = L.t(p.k); });
+  cuMake[0].update({ value: st.ageGyr || 0 }); cuMake[1].update({ value: st.planets }); cuMake[2].update({ value: st.hab }); cuMake[3].update({ value: st.teffK });
+  PCS[0].sp.textContent = L.t('cAge') + (lg === 'en' ? '' : '(亿年)');
+  const rgb = lastDesc && lastDesc.star && lastDesc.star.lit ? last.star.rgb : null;
+  pc.update({ hue: rgb ? Math.round(200 + 160 * (1 - rgb[2])) % 360 : 262 });
+  PC.foot.textContent = 'nv-' + G0.hashId(JSON.stringify([...['kG', 'kc', 'kA', 'alphaLinked', 'eps', 'Q', 'kL', 'Om', 'seed'].map((k) => last.recipe[k])])) + ' · ' + L.t('seed') + ' ' + X.seedText(store.get().seed);
+  PC.note.textContent = L.t('orbitNote');
+  PC.cv.setAttribute('aria-label', st.planets ? L.t('cPl') + ' ' + st.planets : L.t(st.teffK ? 'noPlanets' : 'noStar'));
+  orb.update({ empty: L.t(st.teffK ? 'noPlanets' : 'noStar') });
+}
+let orbitSeq = 0;
+function queueOrbit() { clearTimeout(queueOrbit.t); queueOrbit.t = setTimeout(loadOrbit, 220); }
+async function loadOrbit() {
+  if (mode !== 'make' || !last) return;
+  const my = ++orbitSeq, s = store.get();
+  const o = await call('orbit', { recipe: s, frames: tier.current() === 'low' ? 300 : 600 });
+  if (my !== orbitSeq) return;
+  const showPl = lastDesc ? lastDesc.planets.length : 0;
+  orbitInfo = { frames: o.frames, n: o.n, drift: o.drift, years: o.years, lit: o.lit };
+  orb.update({ orbit: showPl ? o : null, masses: last.planets.map((p) => p.mass_kg / 5.9722e24) });
+  paintMake();
+}
 setMode(mode, false);
 
 $('reset').addEventListener('click', () => store.set(U.normalize({ seed: store.get().seed })));
@@ -309,6 +415,7 @@ async function refresh(s) {
   flap.update({ text: X.seedText(s.seed) });
   $('undo').disabled = !store.canUndo; $('redo').disabled = !store.canRedo;
   clearTimeout(refresh.t); refresh.t = setTimeout(() => paintSparks(s), 120);
+  if (mode === 'make') { paintMake(); queueOrbit(); }
 }
 store.subscribe(refresh);
 
@@ -329,7 +436,8 @@ function relabel() {
   KNOBS.forEach((k) => k.sl.update({ label: L.t(k.key) }));
   ADVS.forEach((k) => k.sl.update({ label: L.t(NAME[k.key]) }));
   dials.forEach((d) => d.ui.update({ label: L.t(NAME[d.key]), marks: d.marks() }));
-  seg.update({ items: [{ id: 'basic', label: L.t('mBasic') }, { id: 'adv', label: L.t('mAdv') }], label: L.t('mode') });
+  seg.update({ items: [{ id: 'basic', label: L.t('mBasic') }, { id: 'adv', label: L.t('mAdv') }, { id: 'make', label: L.t('mMake') }], label: L.t('mode') });
+  up.update({ label: L.t('imp'), hint: L.t('impHint') }); paintMake();
   Object.entries(lockUI).forEach(([k, u]) => u.update({ label: L.t('lock', { k: L.t(NAME[k]) }) }));
   stack.update({ cards: cardList(), labels: { prev: L.t('prev'), next: L.t('next'), flip: L.t('flip'), try: L.t('tryIt'), of: L.t('of') } });
   if (last) gaugeUI.update({ value: last.cosmos.Om, label: L.t('gauge'), lineLabel: L.t('crit') });
@@ -375,5 +483,12 @@ registerSelftest({
   random: () => { store.set((s) => U.normalize(X.randomRecipe(s, locks, Math.random))); return store.get(); },
   tryCard: (id) => { stack.show(id); stack.flip(); $('stack').querySelector('.nv-card.is-top .nv-card-try').click(); return store.get(); },
   explore: () => ({ mode, locks: [...locks], top: stack.top, flipped: stack.flipped, flap: $('flap').textContent.slice(0, 10), gauge: $('gauge').dataset.side,
-    dials: dials.map((d) => ({ key: d.key, v: d.ui.value, aria: $('k-' + d.key).querySelector('[role=slider]').getAttribute('aria-valuetext') })), lockNote })
+    dials: dials.map((d) => ({ key: d.key, v: d.ui.value, aria: $('k-' + d.key).querySelector('[role=slider]').getAttribute('aria-valuetext') })), lockNote }),
+  /* 3-5 造物层 */
+  make: async () => { await new Promise((r) => setTimeout(r, 400)); return { mode, name: curName(), shown: PC.name.querySelector('.nv-dec-v').textContent, line: PC.line.textContent, stats: last && C.cardStats(last, lastDesc), orbit: orbitInfo, frame: orb.frame, msg: $('mk-msg').textContent, up: $('upload').textContent.slice(0, 80), foot: PC.foot.textContent }; },
+  name: (n) => { nmIn.value = n; nmIn.dispatchEvent(new Event('input')); nmIn.dispatchEvent(new Event('change')); return curName(); },
+  share: async () => { const s = await shareUrl(); return { ...s, len: s.url.length }; },
+  exportText: async () => (await exportText()).text,
+  importText: (t) => importText(t),
+  last: () => { const g = gus.loadLast(); return g && { id: g.id, name: g.name }; }
 });

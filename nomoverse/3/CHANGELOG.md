@@ -1,5 +1,14 @@
 # 宙律 Nomoverse 3.0 · 变更记录
 
+## v3.0-α6(3-5 造物与 GUS,2026-11-22,未上线)
+- 第三层「造物」:分段切换改为 基础 / 进阶 / 造物(?mode=make;带 ?gus= 或 &n= 的链接直接进造物)。
+- 宇宙命名:输入框 + Decrypted Text 乱码揭字;空名按种子给确定的默认名(中英各一,如「静远宇宙 07」);名字去尖括号与控制字符、≤40 字。
+- 作品卡(Profile Card 思路):随指针倾斜 + 全息光斑,低档与减少动态退成静态卡;Count Up 数值(年龄、行星、宜居、恒星温度);卡里 T7 恒星系由 Worker 速度 Verlet N 体实时积分(新 op "orbit" / nbody.trace,步长取最内行星周期 1/200,能量漂移实测 ~2e-6),canvas 播放,半径开方压缩(标注教学简化);减少动态时画整条轨迹不动。
+- 带去天枢(Star Border):编码 GUS 跳 /starhelm/?gus=,超长走 @last;同时存 gn:gus:last;名字随 GUS 带过去。
+- 复制分享链接(Glare Hover):?gus= 编码 ≤1800 用它,超长退 ?r= 紧凑配方 + &n= 名字;剪贴板不可用时退 execCommand,再不行把链接显示出来手动复制。
+- 导出 JSON(nomoverse-<id>.gus.json,格式同 α5 不变)/ 导入 JSON(Aceternity File Upload 思路:点选或拖入;64 KB 上限;坏 JSON、非 GUS、别的 kind、缺常数各有提示;兼容 BOM 与 {data:gus})。
+- 新增 core/create.mjs(纯函数)、core/create-ui.mjs(6 个组件)、tests/create.test.mjs(173);sw.js 版本 nv-v2.0-a2_v3.0-a6_s3-0.3,预缓存加两文件;LICENSES 逐条署名。行星上限 8 不变。
+
 ## v3.0-α5(3-4 探索层,2026-11-21,未上线)
 - 基础 / 进阶切换(橡皮分段,localStorage nv3.mode;链接带进阶常数时自动进进阶;?mode=adv|basic)。
 - 进阶加 4 个常数:ε、Ω₀ 用 /shared/3/ui.js 弹性滑块(带后果迷你图与真实值金色刻度、吸附);Q、Λ 用彗星旋钮(Q 对数 1e-7–1e-3,Λ 对称对数 −10–1000,金色真实值刻度 + Λ=0 虚线刻度,吸附到 1 与 0)。

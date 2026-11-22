@@ -53,6 +53,18 @@
   <div id="fail"></div>
   <div id="stage-note" class="stage-note" hidden><b></b><p></p></div>
   <section id="cardsec" class="cardsec" aria-labelledby="cardsT"><b id="cardsT" data-i18n="cardsT">题卡</b><div id="stack"></div></section>
+  <section id="makesec" class="makesec" aria-labelledby="makeT">
+    <b id="makeT" data-i18n="makeT">作品卡</b>
+    <label class="nm"><span data-i18n="nameL">给宇宙起名</span><input id="nm-in" type="text" maxlength="40" autocomplete="off" spellcheck="false"></label>
+    <div id="pcard"></div>
+    <div class="mk-acts">
+      <button type="button" class="gn3-btn" id="tohelm"><span class="mk-t" data-i18n="tohelm">带去天枢</span> →</button>
+      <button type="button" class="gn3-btn" id="share"><span class="mk-t" data-i18n="share">复制分享链接</span></button>
+      <button type="button" class="gn3-btn" id="export"><span class="mk-t" data-i18n="export">导出 JSON</span></button>
+    </div>
+    <div id="upload"></div>
+    <p id="mk-msg" class="mk-msg" role="status"></p>
+  </section>
   <button type="button" class="gn3-btn bridge" id="bridge"><span data-i18n="bridge">星桥 · 去天枢看恒星系</span> →</button>
 </aside>
 

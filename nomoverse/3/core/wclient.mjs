@@ -22,6 +22,12 @@ function local(op, a) {
     for (let i = 0; i < n; i++) { const v = r[0] * Math.pow(r[1] / r[0], i / (n - 1)); const x = U.run({ ...(a.recipe || {}), [a.key]: v }); out.push({ v, pass: U.ORDER.filter((t) => x.stages[t] !== 'fail').length, status: x.status }); }
     return out;
   }
+  if (op === 'orbit') {
+    const res = U.run(a.recipe || {}), o = NB.trace(res, { frames: a.frames, maxSteps: a.maxSteps });
+    o.rgb = res.star.rgb; o.lit = res.stages.T5 !== 'fail'; o.hab = res.planets.map((p) => !!p.habitable);
+    if (!o.lit) { o.frames = 0; o.data = new Float32Array(0); }
+    return o;
+  }
   if (op === 'nbody') {
     const res = U.run(a.recipe || {}); if (!res.planets.length) return { t: 0, drift: 0, pos: [] };
     const s = NB.fromSystem(res), e0 = NB.energy(s), dt = a.dt || 1e-3;

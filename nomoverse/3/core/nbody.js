@@ -68,6 +68,27 @@
     return NaN;
   }
 
-  var API = { FOURPI2: FOURPI2, MEARTH_MSUN: MEARTH_MSUN, fromSystem: fromSystem, toCOM: toCOM, clone: clone, step: step, energy: energy, keplerPeriod: keplerPeriod, measurePeriod: measurePeriod };
+
+  /* 3-5 T7 轨道动画:由 universe.run() 结果建系统,积分 years 年,均匀采 frames 帧;
+   * 返回 { n 体数, frames, data: Float32Array(frames*n*2)(AU,恒星为第 0 体), drift 能量相对漂移, rMax AU, years, dt }。
+   * 时长取最外行星一圈,但不超过最内行星 frames/24 圈(保证最内行星每圈 ≥24 帧,不混叠);步长取最内侧行星周期的 1/200,总步数上限 maxSteps(超出时放大步长并在 dt 里如实返回)。 */
+  function trace(res, opt) {
+    opt = opt || {};
+    var frames = Math.max(2, Math.min(600, opt.frames | 0 || 240)), maxSteps = opt.maxSteps || 120000;
+    var s = fromSystem(res), n = s.b.length, data = new Float32Array(frames * n * 2);
+    if (n < 2) return { n: n, frames: 0, data: new Float32Array(0), drift: 0, rMax: 0, years: 0, dt: 0 };
+    var Ms = s.b[0].m, pMin = Infinity, pMax = 0, rMax = 0;
+    res.planets.forEach(function (p) { var T = keplerPeriod(s.G, Ms, 0, p.aAU); pMin = Math.min(pMin, T); pMax = Math.max(pMax, T); rMax = Math.max(rMax, p.aAU * (1 + p.e)); });
+    var years = opt.years || Math.min(pMax, pMin * frames / 24), dt = pMin / 200, steps = Math.ceil(years / dt);
+    if (steps > maxSteps) { dt = years / maxSteps; steps = maxSteps; }
+    var per = Math.max(1, Math.floor(steps / (frames - 1))), e0 = energy(s);
+    for (var f = 0; f < frames; f++) {
+      if (f) step(s, dt, per);
+      for (var i = 0; i < n; i++) { data[(f * n + i) * 2] = s.b[i].x; data[(f * n + i) * 2 + 1] = s.b[i].y; }
+    }
+    return { n: n, frames: frames, data: data, drift: Math.abs((energy(s) - e0) / e0), rMax: rMax, years: s.t, dt: dt };
+  }
+
+  var API = { FOURPI2: FOURPI2, MEARTH_MSUN: MEARTH_MSUN, fromSystem: fromSystem, toCOM: toCOM, clone: clone, step: step, energy: energy, keplerPeriod: keplerPeriod, measurePeriod: measurePeriod, trace: trace };
   if (typeof module !== "undefined" && module.exports) module.exports = API; else root.NV3_NBODY = API;
 })(typeof window !== "undefined" ? window : this);
