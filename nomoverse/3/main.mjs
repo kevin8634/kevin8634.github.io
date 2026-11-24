@@ -41,7 +41,7 @@ const DICT = {
   T1: { zh: '膨胀', en: 'Expand' }, T2: { zh: '核合成', en: 'Nuclei' }, T3: { zh: '原子', en: 'Atoms' }, T4: { zh: '成团', en: 'Clumps' },
   T5: { zh: '点燃', en: 'Ignition' }, T6: { zh: '时间', en: 'Time' }, T7: { zh: '恒星系', en: 'System' },
   failAt: { zh: '卡在第 {n} 关 · {t}', en: 'Stuck at stage {n} · {t}' },
-  simp: { zh: '教学简化:轨道半径对数压缩、行星放大显示;真实数值见右侧。', en: 'Teaching simplification: orbits log-compressed, planets enlarged; real values on the right.' },
+  simp: { zh: '教学简化:轨道半径对数压缩、行星放大显示;真实数值见结果栏。', en: 'Teaching simplification: orbits log-compressed, planets enlarged; real values in the results panel.' },
   qhigh: { zh: '高', en: 'Hi' }, qmedium: { zh: '中', en: 'Mid' }, qlow: { zh: '低', en: 'Lo' },
   cmpT: { zh: '和真实宇宙比一比', en: 'Compare with our universe' }, cmpS: { zh: '拖动竖条', en: 'Drag the bar' },
   real: { zh: '真实宇宙', en: 'Our universe' }, yours: { zh: '你的宇宙', en: 'Your universe' },
