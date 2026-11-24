@@ -18,7 +18,7 @@ const ZH = {
   },
   star: ['08 · 第八颗星', '第八颗星，由你来造', '七个世界一层层玩懂之后，轮到你：改一条规则，搭一个实验，长出一个世界。'],
   fin: ['从玩到造 · FROM PLAY TO BUILD', '玩懂一个世界，', '再亲手造一个。', '从根部的数学开始，一层层往上玩；准备好了，第八颗星就交给你。'],
-  play: '开始玩', build: '造', soon: '即将开放', enter: '进入', portal: '进入门户 ↓', more: '继续下滑，进入门户', step: '层',
+  v3: '3.0 宇宙配方台', play: '开始玩', build: '造', soon: '即将开放', enter: '进入', portal: '进入门户 ↓', more: '继续下滑，进入门户', step: '层',
 };
 const EN = {
   root: ['00 · First principles', 'Start from the smallest truth', 'Don\u2019t memorise answers \u2014 keep asking why. Break a question down until it can\u2019t be broken any further: what\u2019s left is a first principle, and the whole tree grows from there.'],
@@ -33,7 +33,7 @@ const EN = {
   },
   star: ['08 · The eighth star', 'The eighth star is yours to build', 'Once you\u2019ve mastered the seven worlds, layer by layer, it\u2019s your turn: rewrite a rule, set up an experiment, grow a world.'],
   fin: ['From play to build', 'Master a world,', 'then build one.', 'Start with math at the root and play your way up. When you\u2019re ready, the eighth star is yours.'],
-  play: 'Start playing', build: 'Build', soon: 'soon', enter: 'Enter', portal: 'Enter portal \u2193', more: 'Keep scrolling to enter the portal', step: 'layer',
+  v3: '3.0 Universe Recipe Bench', play: 'Start playing', build: 'Build', soon: 'soon', enter: 'Enter', portal: 'Enter portal \u2193', more: 'Keep scrolling to enter the portal', step: 'layer',
 };
 const FBL = [['01', '数学', 'Math', '星图', 'Math Atlas', '#7cc8ff', 'math-atlas/'], ['02', '物理', 'Physics', '宙律', 'Nomoverse', '#a78bfa', 'nomoverse/'], ['03', '化学', 'Chemistry', '元素工坊', 'Element Forge', '#ff9a3c', 'element-forge/'],
   ['04', '生命', 'Life', '生命源码', 'Life Source', '#34d399', 'life-source/'], ['06', '认知', 'Mind', '觉弈', 'Ludoterra', '#f5c26b', 'ludoterra/'], ['05', '智能', 'Intelligence', '奇点前夜', 'Pre-Singularity', '#22d3ee', 'pre-singularity/'], ['07', '天文', 'Cosmos', '天枢', 'Starhelm', '#dfe6f3', 'starhelm/x/']];
@@ -46,7 +46,7 @@ const cl = (x, a, b) => Math.max(a, Math.min(b, x));
 export function mount(o) {
   const h = o.host, T = o.en ? EN : ZH, W = {};
   (window.GN_WORLDS || []).forEach(w => { W[w.id] = w; });
-  const LV = FBL.map(f => { const w = W[f[0]]; return { id: f[0], f: o.en ? f[2] : f[1], name: w ? (o.en ? (w.en || w.name) : w.name) : (o.en ? f[4] : f[3]), color: (w && w.color) || f[5], href: (w && w.href) || f[6] }; });
+  const LV = FBL.map(f => { const w = W[f[0]]; return { id: f[0], f: o.en ? f[2] : f[1], name: w ? (o.en ? (w.en || w.name) : w.name) : (o.en ? f[4] : f[3]), color: (w && w.color) || f[5], href: (w && w.href) || f[6], v3: w && w.v3 }; });   // v3：世界的 3.0 入口（目前只有宙律 nomoverse/3/）
 
   /* —— DOM —— */
   const ss = document.createElement('div'); ss.id = 'p3ss'; ss.setAttribute('data-p3pass', ''); ss.setAttribute('tabindex', '-1');
@@ -57,7 +57,8 @@ export function mount(o) {
   LV.forEach((l, i) => {
     const t = T.L[l.id];
     html += card('s-lv', l.color, '0' + (i + 1), esc(l.f) + ' · ' + esc(l.name) + ' <i>/ 07</i>', esc(t[0]), esc(t[1]) + (o.en ? ' ' : '') + esc(t[2]),
-      '<a class="go" href="' + esc(l.href) + '">' + esc(T.enter + (o.en ? ' ' : '') + l.name) + ' <span aria-hidden="true">→</span></a>');
+      '<a class="go" href="' + esc(l.href) + '">' + esc(T.enter + (o.en ? ' ' : '') + l.name) + ' <span aria-hidden="true">→</span></a>' +
+      (l.v3 ? ' <a class="go v3" href="' + esc(l.v3) + '">' + esc(T.v3) + ' <span aria-hidden="true">✦</span></a>' : ''));
   });
   html += card('s-star', '#fff1c9', '08', esc(T.star[0].replace(/^08 · /, '')), esc(T.star[1]), esc(T.star[2]));
   const D = o.doors || [];

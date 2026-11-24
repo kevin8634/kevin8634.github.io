@@ -140,6 +140,7 @@
       .btn[disabled] { opacity: .45; cursor: default; border-color: rgba(234,240,255,.22); color: var(--dim); background: none; }
       .btn--solid { background: var(--gold); color: #0a1030; border-color: var(--gold); font-weight: 600; }
       .btn--solid:hover { background: #f3d99a; }
+      .card .btn--v3 { display: inline-flex; align-items: center; margin-top: 8px; text-decoration: none; color: #ffe29a; border-color: rgba(255,226,154,.6); background: linear-gradient(90deg, rgba(167,139,250,.16), rgba(255,226,154,.1)); } /* 3.0 收尾：宙律 3.0 入口 */
       .foot {
         position: absolute; left: 24px; right: 24px; bottom: 26px; display: flex;
         gap: 16px; align-items: center; flex-wrap: wrap; font-size: 11.5px; color: rgba(234,240,255,.5);
@@ -877,6 +878,7 @@
       .x-dk__b a, .x-dk__b span.soon { display: block; margin-top: 3px; padding: 5px 0; border-radius: 999px; text-align: center; font-size: 11.5px; font-weight: 600; text-decoration: none; }
       .x-dk__b a { background: var(--accent); color: #0a1030; }
       .x-dk__b a.lab, .x-dk__info a.lab { background: transparent; color: var(--accent, var(--gold)); border: 1px solid currentColor; box-shadow: none; margin-top: 6px; } /* v2.4.1 世界实验室入口 */
+      .x-dk__b a.v3, .x-dk__info a.v3 { color: #ffe29a; border-color: rgba(255,226,154,.7); background: linear-gradient(90deg, rgba(167,139,250,.18), rgba(255,226,154,.12)); } /* 3.0 收尾：宙律 3.0 入口 */
       .x-dk__b span.soon { border: 1px dashed rgba(234,240,255,.3); color: var(--dim); font-weight: 400; }
       .x-dk__b button { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; border-radius: 50%; border: 0; background: none; color: var(--dim); font-size: 14px; cursor: pointer; }
       .x-dk__nav { position: absolute; top: 50%; z-index: 400; width: 40px; height: 40px; margin-top: -20px; border-radius: 50%; border: 1px solid rgba(233,199,121,.35);
@@ -1093,6 +1095,32 @@
       import("./portal3/p3intro.js").then(function (m) { m.play(); }).catch(off); } catch (e) {} })();
     </script>
     <script>
+    /* 门户 3.0 收尾(11-24):全页只用一份 three——2.0 门户的星场/星系/星历层原先另注入 vendor/three.min.js(r158 UMD)，与 3.0 首屏 p3fp/p3hero/p3intro 用的 r186 模块并存，
+     * 控制台报「Multiple instances of Three.js」、多下 ~600 KB。现在统一走同一个 r186 模块 URL（浏览器按 URL 只实例化一次），把命名空间挂到 window.THREE 给 2.0 代码用。
+     * 2.0 首屏星场/星系层用到的类（Points/ShaderMaterial/CanvasTexture 等）在 r186 里都在；只加载一次，多处同时请求共用一个 Promise。
+     * 例外：星历 2.0（深空四层玻璃圆盘）用 MeshPhysicalMaterial 透射，r186 的透射通道不再带出 r158 的蓝玻璃底色（实测圆盘发黑），
+     * 所以它仍按需私有加载 r158（gnThreeLegacy），只在点开星历 2.0 时下载；加载期间临时让出 window.THREE/__THREE__，载完还原，不与首屏实例混用、不触发多实例警告。 */
+    window.gnThree = (function () { var P = null; return function (ok, fail) {
+      if (window.__gnT186) { ok(); return; }
+      if (!P) P = import("./ludoterra/vendor/r186/three.module.min.js").then(function (m) { window.__gnT186 = m; window.THREE = m; return m; });
+      P.then(function () { ok(); }, function (e) { P = null; if (fail) fail(e); });
+    }; })();
+    window.gnThreeLegacy = (function () { var T3 = null, Q = null; return function (ok, fail) {
+      if (T3) { ok(T3); return; }
+      if (!Q) Q = new Promise(function (res, rej) {
+        var had = Object.prototype.hasOwnProperty.call(window, "THREE"), prev = window.THREE, prevRev = window.__THREE__;
+        try { delete window.__THREE__; } catch (e) { window.__THREE__ = undefined; }
+        var back = function () { if (window.__gnT186) window.THREE = window.__gnT186; else if (had) window.THREE = prev; else { try { delete window.THREE; } catch (e) { window.THREE = undefined; } }
+          if (prevRev !== undefined) window.__THREE__ = prevRev; };
+        var sc = document.createElement("script"); sc.src = "vendor/three.min.js";
+        sc.onload = function () { T3 = window.THREE; back(); res(T3); };
+        sc.onerror = function (e) { back(); rej(e); };
+        document.head.appendChild(sc);
+      });
+      Q.then(function (t) { ok(t); }, function (e) { Q = null; if (fail) fail(e); });
+    }; })();
+    </script>
+    <script>
 /* ---------- v2.5.0 中英双语框架（王磊 11-01 18:56 同意方案 v0.1）----------
  * 语言来源：URL ?lang= > 本机键 gn:lang（全站共享）> 默认中文；不按浏览器语言自动跳转。
  * 英文模式下逐个替换文本节点与 aria-label/title/placeholder/alt；缺英文的地方保留中文。
@@ -1110,7 +1138,7 @@
   };
   var W = { "星图": "Math Atlas", "宙律": "Nomoverse", "元素工坊": "Element Forge", "生命源码": "Life Source", "奇点前夜": "Pre-Singularity", "觉弈": "Ludoterra", "天枢": "Starhelm", "总门户": "Portal" };
   var E = {
-    "创世计划 Genesis": "Genesis", "2.0 · 改公理·玻璃曲面": "2.0 · Rewrite the axiom · glass curvature", "11 个任务 · 197 颗知识星": "11 quests · 197 knowledge stars", "2.0 · 改律·玻璃宇宙": "2.0 · Rewrite the laws · glass cosmos", "2.0 · 改码·玻璃细胞": "2.0 · Rewrite the code · glass cell", "2.0 · 玻璃烧瓶·熔金炉": "2.0 · Glass flask · gold forge", "2.0 · 玻璃心智": "2.0 · Glass mind", "2.0 · 心之透镜": "2.0 · Lens of the mind", "13 个任务 52 关 · 反应图鉴 200 条": "13 quests, 52 levels · 200 reactions", "七个世界 · 一张星图": "Seven worlds · one star map", "✦ 星网": "✦ Star Web", "你身上的碘从哪来": "Where does your iodine come from", "那块骨头有多老": "How old is that bone", "星历": "Star Log",
+    "创世计划 Genesis": "Genesis", "2.0 · 改公理·玻璃曲面": "2.0 · Rewrite the axiom · glass curvature", "11 个任务 · 197 颗知识星": "11 quests · 197 knowledge stars", "2.0 · 改律·玻璃宇宙": "2.0 · Rewrite the laws · glass cosmos", "3.0 宇宙配方台 ✦": "3.0 Universe Recipe Bench ✦", "宙律世界卡新增「3.0 宇宙配方台 ✦」入口（2.0 主入口不变）；星历登记宙律 3.0-α0 至 α6、天枢 v1.0-M4u 至 M4x；首屏第一性原理之树的物理层原子更亮，1000 宽屏幕上大标题不再压到树枝。": "Nomoverse card gets a “3.0 Universe Recipe Bench ✦” entrance (the 2.0 entrance stays); Star Log adds Nomoverse 3.0-α0 to α6 and Starhelm v1.0-M4u to M4x; the atoms on the physics layer of the first-principles tree are brighter, and on 1000-wide screens the big headline no longer covers the branches.", "宙律 3.0「宇宙配方台」造物层：给你的宇宙起个名字，生成一张会随手势倾斜的作品卡，卡里的行星按 N 体引力实时公转；可以复制分享链接、导出或导入 JSON，也能一键带去天枢。": "Nomoverse 3.0 Universe Recipe Bench, the Create layer: name your universe and get a card that tilts as you move, with its planets orbiting live under N-body gravity; copy a share link, export or import JSON, or take it straight to Starhelm.", "矮横屏上展开地球重要播报时，面板只占按钮右侧的空位，不再挡住「航行」「天文台」；减少动态时播报红点常亮不闪。": "On short landscape screens the Earth alerts panel now sits to the right of the buttons instead of covering Voyage and Observatory; with reduced motion the alert dot stays lit instead of blinking.", "手机横屏（568×320）上地球重要播报面板不再缩成负高度，改为贴着顶栏、可以滚动；关闭实时数据时播报角标显示「离线」；极光数据拉取失败时卡片显示「暂不可用」，不再一直转圈。": "On phones held sideways (568×320) the Earth alerts panel no longer collapses; it sits under the top bar and scrolls. With live data off the badge reads Offline, and if aurora data fails the card says Unavailable instead of loading forever.", "实时数据统一收口：播报、台风、极光、太阳风、实拍云图都改成打开才加载；在总开关里关掉实时数据后，天枢不再发出任何外部请求，并提示「实时数据已关闭」。": "Live data now loads only when you open it — alerts, typhoons, aurora, solar wind and live cloud imagery. Turn live data off with the main switch and Starhelm makes no outside requests at all, showing “Live data is off”.", "天枢接上宙律 3.0 星桥：从宇宙配方台带来的恒星系直接落地，显示「来自宙律的恒星系」——恒星与行星沿椭圆轨道公转，宜居带高亮，标明简化模型与出处，可以回宙律或进入天枢。": "Starhelm receives the Nomoverse 3.0 star bridge: a star system sent from the Universe Recipe Bench lands as “A star system from Nomoverse” — planets on elliptical orbits, the habitable zone highlighted, the simplified model and sources labelled, with a way back to Nomoverse or on into Starhelm.", "宇宙配方台探索层：基础 / 进阶切换，进阶再加 ε、Ω₀、Q、Λ 四个常数；每个常数都能锁定，「随机宇宙」只动没锁的；10 张题卡翻面就能试；星桥把你的恒星系带到天枢去看。": "Universe Recipe Bench, the Explore layer: switch between Basic and Advanced, where four more constants (ε, Ω₀, Q, Λ) join; lock any constant and “Random universe” changes only the rest; flip any of 10 challenge cards to try it; the star bridge takes your star system to Starhelm.", "宇宙配方台新手层：三步引导带你拧 G、按「大爆炸」、看宇宙卡在哪一关；失败卡讲清因果和该往哪拧，走通后拖动竖条和真实宇宙比一比（年龄、恒星温度、行星数等，出处随卡署名）；常数靠近真实值时自动吸附到 ×1。": "Universe Recipe Bench, the Beginner layer: a three-step guide has you turn G, press Big Bang and see which stage your universe gets stuck at; failure cards explain the cause and which way to turn, and once it works you can drag a slider to compare with the real universe (age, star temperature, planets and more, with sources on the card); constants snap to ×1 near their real values.", "宙律 3.0「宇宙配方台」打下地基（/nomoverse/3/，建造中）：一个宇宙按 7 关判定能不能走到有生命的行星；玻璃球台里实时画出你的恒星系，拧 G、c、α 三个常数，按「大爆炸」逐关揭晓；计算放在后台线程，画面不卡。2.0「改律·玻璃宇宙」照常可玩。": "Nomoverse 3.0 Universe Recipe Bench lays its foundations (/nomoverse/3/, under construction): every universe is judged over 7 stages on whether it can reach a planet with life; a glass globe draws your star system live as you turn the three constants G, c and α, and Big Bang reveals the stages one by one; the maths runs in the background so the picture stays smooth. Nomoverse 2.0 “Rewrite the laws · glass cosmos” is still here to play.", "进入宙律 3.0 宇宙配方台": "Enter Nomoverse 3.0 · Universe Recipe Bench", "进入Nomoverse 3.0 宇宙配方台": "Enter Nomoverse 3.0 · Universe Recipe Bench", "2.0 · 改码·玻璃细胞": "2.0 · Rewrite the code · glass cell", "2.0 · 玻璃烧瓶·熔金炉": "2.0 · Glass flask · gold forge", "2.0 · 玻璃心智": "2.0 · Glass mind", "2.0 · 心之透镜": "2.0 · Lens of the mind", "13 个任务 52 关 · 反应图鉴 200 条": "13 quests, 52 levels · 200 reactions", "七个世界 · 一张星图": "Seven worlds · one star map", "✦ 星网": "✦ Star Web", "你身上的碘从哪来": "Where does your iodine come from", "那块骨头有多老": "How old is that bone", "星历": "Star Log",
     "宇宙将为你闪烁": "The Universe Will Twinkle for You", "背景音乐": "Music", "原创合成 · 四首": "Original synth · 4 tracks", "列表循环": "Loop all", "单曲循环": "Loop one", "关闭声音": "Sound off",
     "如果世界是一款游戏": "What if the world were a game?", "七个互相连通的学习世界 · 把世界当成一款游戏来拆解": "Seven connected learning worlds · take the world apart like a game",
     "了解更多 →": "Learn more →", "帮我选一颗星 ✦": "Pick a star for me ✦", "帮我选一颗星": "Pick a star for me",
@@ -1726,6 +1754,7 @@
         { id: "02", star: "天玑", name: "宙律", en: "Nomoverse", field: "物理",
           desc: "改写物理常数，看宇宙怎么变。", color: "#a78bfa", live: true,
           meta: ["2.0 · 改律·玻璃宇宙", "6 个任务 25 关 · 5 个实验"], href: "nomoverse/", lab: "nomoverse/lab/", prefix: ["gn:nv:"],
+          v3: "nomoverse/3/",   // 门户 3.0 收尾（11-24）：宙律 3.0「宇宙配方台」入口；2.0 主入口 href 不变
           age: ["huo","chen","he"], tags: ["space","matter"], why: "好奇宇宙为什么是现在这样？亲手改一改物理常数，看会发生什么。" },
         { id: "03", star: "天权", name: "元素工坊", en: "Element Forge", field: "化学",
           desc: "用元素锻造物质，配方即反应。", color: "#ff9a3c", live: true,
@@ -2138,10 +2167,8 @@
       function skLoad() {
         if (SK.tried) return; SK.tried = true;
         try { var t = document.createElement("canvas"); if (!(t.getContext("webgl2") || t.getContext("webgl"))) return; } catch (e) { return; }
-        if (window.THREE) { try { skInit(); } catch (e) { SK.on = false; } return; }
-        var sc = document.createElement("script"); sc.src = "vendor/three.min.js";
-        sc.onload = function () { try { skInit(); } catch (e) { SK.on = false; if (SK.c) SK.c.style.display = "none"; } };
-        document.head.appendChild(sc);
+        if (window.__gnT186) { try { skInit(); } catch (e) { SK.on = false; } return; }
+        gnThree(function () { try { skInit(); } catch (e) { SK.on = false; if (SK.c) SK.c.style.display = "none"; } });   // 3.0 收尾：与首屏共用 r186
       }
       function skInit() {
         var T = THREE, c = document.createElement("canvas"), mob = Math.min(innerWidth, innerHeight) < 600;
@@ -2625,7 +2652,7 @@
           '<p class="desc">' + w.desc + '</p>' +
           '<dl>' + meta + '</dl>' +
           (w.live
-            ? '<a class="btn btn--solid" data-enter="' + w.id + '" href="' + w.href + '">进入世界 →</a>' + (w.lab ? ' <a class="btn" href="' + w.lab + '">实验室 ⚗</a>' : '')
+            ? '<a class="btn btn--solid" data-enter="' + w.id + '" href="' + w.href + '">进入世界 →</a>' + (w.lab ? ' <a class="btn" href="' + w.lab + '">实验室 ⚗</a>' : '') + (w.v3 ? ' <a class="btn btn--v3" href="' + w.v3 + '" aria-label="进入' + w.name + ' 3.0 宇宙配方台">3.0 宇宙配方台 ✦</a>' : '')
             : '<button class="btn" disabled>即将觉醒</button>');
         var x = Math.min(Math.max(w.px + w.pr * 1.9, 16), W - 326);
         var y = Math.min(Math.max(w.py - 110, 16), H - 320);
@@ -3092,9 +3119,7 @@
         if (GL.tried) { if (GL.on && !GL.built) glBuildWorlds(); return; }
         GL.tried = true;
         try { var t = document.createElement("canvas"); if (!(t.getContext("webgl2") || t.getContext("webgl"))) return; } catch (e) { return; }
-        var sc = document.createElement("script"); sc.src = "vendor/three.min.js";
-        sc.onload = function () { try { glInit(); } catch (e) { GL.on = false; if (GL.cv) GL.cv.style.display = "none"; } };
-        document.head.appendChild(sc);
+        gnThree(function () { try { glInit(); } catch (e) { GL.on = false; if (GL.cv) GL.cv.style.display = "none"; } });   // 3.0 收尾：与首屏共用 r186
       }
       function glMat(vs, fs, extra, dark) {
         var T = THREE, u = { uTex: { value: GL.tex }, uTime: { value: 0 }, uPix: { value: 1 }, uTw: { value: 0 }, uAlpha: { value: 1 }, uL: { value: 1 } };
@@ -3795,6 +3820,16 @@
 
       /* ---------- 星历：更新公告。新条目直接追加，日期为北京时间；w = "gn"（总门户）或世界码 ---------- */
       var CHANGELOG = [
+        /* 门户 3.0 收尾（11-24）补登：宙律 3.0-α0–α6、天枢 M4u–M4x（均已在 main 上线；α7 未上线不登记） */
+        { w: "gn", v: "门户 3.0 收尾", d: "2026-11-24", t: "宙律世界卡新增「3.0 宇宙配方台 ✦」入口（2.0 主入口不变）；星历登记宙律 3.0-α0 至 α6、天枢 v1.0-M4u 至 M4x；首屏第一性原理之树的物理层原子更亮，1000 宽屏幕上大标题不再压到树枝。" },
+        { w: "02", v: "v3.0-α6", d: "2026-11-22", t: "宙律 3.0「宇宙配方台」造物层：给你的宇宙起个名字，生成一张会随手势倾斜的作品卡，卡里的行星按 N 体引力实时公转；可以复制分享链接、导出或导入 JSON，也能一键带去天枢。" },
+        { w: "07", v: "v1.0-M4x", d: "2026-11-22", t: "矮横屏上展开地球重要播报时，面板只占按钮右侧的空位，不再挡住「航行」「天文台」；减少动态时播报红点常亮不闪。" },
+        { w: "07", v: "v1.0-M4w", d: "2026-11-22", t: "手机横屏（568×320）上地球重要播报面板不再缩成负高度，改为贴着顶栏、可以滚动；关闭实时数据时播报角标显示「离线」；极光数据拉取失败时卡片显示「暂不可用」，不再一直转圈。" },
+        { w: "07", v: "v1.0-M4v", d: "2026-11-22", t: "实时数据统一收口：播报、台风、极光、太阳风、实拍云图都改成打开才加载；在总开关里关掉实时数据后，天枢不再发出任何外部请求，并提示「实时数据已关闭」。" },
+        { w: "07", v: "v1.0-M4u", d: "2026-11-22", t: "天枢接上宙律 3.0 星桥：从宇宙配方台带来的恒星系直接落地，显示「来自宙律的恒星系」——恒星与行星沿椭圆轨道公转，宜居带高亮，标明简化模型与出处，可以回宙律或进入天枢。" },
+        { w: "02", v: "v3.0-α5", d: "2026-11-21", t: "宇宙配方台探索层：基础 / 进阶切换，进阶再加 ε、Ω₀、Q、Λ 四个常数；每个常数都能锁定，「随机宇宙」只动没锁的；10 张题卡翻面就能试；星桥把你的恒星系带到天枢去看。" },
+        { w: "02", v: "v3.0-α4", d: "2026-11-21", t: "宇宙配方台新手层：三步引导带你拧 G、按「大爆炸」、看宇宙卡在哪一关；失败卡讲清因果和该往哪拧，走通后拖动竖条和真实宇宙比一比（年龄、恒星温度、行星数等，出处随卡署名）；常数靠近真实值时自动吸附到 ×1。" },
+        { w: "02", v: "v3.0-α0–α3", d: "2026-11-20", t: "宙律 3.0「宇宙配方台」打下地基（/nomoverse/3/，建造中）：一个宇宙按 7 关判定能不能走到有生命的行星；玻璃球台里实时画出你的恒星系，拧 G、c、α 三个常数，按「大爆炸」逐关揭晓；计算放在后台线程，画面不卡。2.0「改律·玻璃宇宙」照常可玩。" },
         { w: "03", v: "v2.8.1", d: "2026-11-20", t: "元素工坊烧瓶里的恒星更亮了：恒星档曝光放宽、颜色更饱满，光晕收进瓶内；从原子缩放到星辰的每一档，物质都留在玻璃瓶里。" },
         { w: "03", v: "v2.8", d: "2026-11-20", t: "元素工坊「玻璃烧瓶 · 熔金炉」打磨：恒星档按亮度分档曝光，切换尺度时浮物与光晕不再穿出瓶身。" },
         { w: "03", v: "v2.7", d: "2026-11-18", t: "元素工坊 2.0 标志性体验「玻璃烧瓶 · 熔金炉」第一版：锻炉星盘中央悬着一只真透射的圆底烧瓶，罩住正在缩放的物质，瓶颈后的尺度牌被玻璃折弯、分出彩边；瓶下熔金炉火发光。低配设备保留原平面星盘。" },
@@ -4375,11 +4410,11 @@
       function l2GL() {
         if (L2.gl || L2.glFail) return;
         try { var t = document.createElement("canvas"); if (!(t.getContext("webgl2") || t.getContext("webgl"))) throw 0; } catch (e) { L2.glFail = true; L2.el.classList.add("nogl"); return; }
-        if (!window.THREE) { if (L2.loading) return; L2.loading = true; var sc = document.createElement("script"); sc.src = "vendor/three.min.js"; sc.onload = function () { L2.loading = false; if (L2.open) l2GL(); }; sc.onerror = function () { L2.glFail = true; L2.el.classList.add("nogl"); }; document.head.appendChild(sc); return; }
+        if (!L2.T3) { if (L2.loading) return; L2.loading = true; gnThreeLegacy(function (T3) { L2.T3 = T3; L2.loading = false; if (L2.open) l2GL(); }, function () { L2.loading = false; L2.glFail = true; L2.el.classList.add("nogl"); }); return; }   // 3.0 收尾：星历 2.0 私有 r158（见 gnThreeLegacy 注释）
         try { l2Scene(); } catch (e) { L2.glFail = true; L2.gl = null; L2.el.classList.add("nogl"); }
       }
       function l2Scene() {
-        var T = THREE, mob = Math.min(innerWidth, innerHeight) < 600, tier = mob ? 1 : 2;
+        var T = L2.T3, mob = Math.min(innerWidth, innerHeight) < 600, tier = mob ? 1 : 2;
         var R = new T.WebGLRenderer({ canvas: L2.cv, antialias: !mob, alpha: false, powerPreference: "high-performance" });
         R.setPixelRatio(Math.min(devicePixelRatio || 1, mob ? 1.5 : 2)); R.toneMapping = T.ACESFilmicToneMapping; R.toneMappingExposure = 1.05; R.outputColorSpace = T.SRGBColorSpace;
         var S = new T.Scene(), C = new T.PerspectiveCamera(33, 1, .1, 200); S.background = new T.Color(0x040816);
@@ -4565,7 +4600,7 @@
             '<img src="world-' + id + '.webp" alt="" draggable="false" /><small>' + w.star + '</small><b>' + w.name + '</b><em>' + w.field.replace(" SI", "") + '<span> · ' + st + '</span></em></button>' +
             '<div class="x-dk__b"><button type="button" tabindex="-1" aria-label="翻回正面">×</button><b>' + w.name + '</b><small>' + w.en + ' · ' + w.field + '</small>' +
             '<p>' + brEsc(w.desc) + '</p><i class="x-dk__age" hidden>适合 ' + ageTxt(w) + '</i><i>' + st + (more ? '<span><br>' + more + '</span>' : '') + '</i>' +
-            (w.live ? '<a data-enter="' + id + '" href="' + w.href + '" tabindex="-1" aria-label="进入' + w.name + '">进入世界 →</a>' + (w.lab ? '<a class="lab" href="' + w.lab + '" tabindex="-1" aria-label="进入' + w.name + '实验室">实验室 ⚗</a>' : '') : '<span class="soon">即将点亮</span>') +
+            (w.live ? '<a data-enter="' + id + '" href="' + w.href + '" tabindex="-1" aria-label="进入' + w.name + '">进入世界 →</a>' + (w.lab ? '<a class="lab" href="' + w.lab + '" tabindex="-1" aria-label="进入' + w.name + '实验室">实验室 ⚗</a>' : '') + (w.v3 ? '<a class="lab v3" href="' + w.v3 + '" tabindex="-1" aria-label="进入' + w.name + ' 3.0 宇宙配方台">3.0 宇宙配方台 ✦</a>' : '') : '<span class="soon">即将点亮</span>') +
             '</div></div></div>';
         }).join("");
         DK.cards = [].map.call(DK.box.children, function (c) { return c; });
@@ -4611,7 +4646,7 @@
         el.innerHTML = '<h4>当前世界 · ' + w.star + '</h4><div class="pic"><img src="world-' + ORDER[i] + '.webp" alt=""></div><b class="n">' + w.name + '</b><small class="e">' + w.en + ' · ' + w.field + '</small>' +
           '<dl><dt>状态</dt><dd>' + wStat(w) + '</dd>' + (w.meta[1] ? '<dt>内容</dt><dd>' + brEsc(w.meta[1]) + '</dd>' : '') + '<dt>适合</dt><dd>' + ageTxt(w) + '</dd></dl>' +
           dkGauges(ORDER[i], w) + '<p>' + brEsc(w.why || w.desc) + '</p>' +
-          (w.live ? '<a data-enter="' + ORDER[i] + '" href="' + w.href + '">进入' + w.name + ' →</a>' + (w.lab ? '<a class="lab" href="' + w.lab + '">' + w.name + '实验室 ⚗</a>' : '') : '<span class="soon">即将点亮</span>');
+          (w.live ? '<a data-enter="' + ORDER[i] + '" href="' + w.href + '">进入' + w.name + ' →</a>' + (w.lab ? '<a class="lab" href="' + w.lab + '">' + w.name + '实验室 ⚗</a>' : '') + (w.v3 ? '<a class="lab v3" href="' + w.v3 + '" aria-label="进入' + w.name + ' 3.0 宇宙配方台">3.0 宇宙配方台 ✦</a>' : '') : '<span class="soon">即将点亮</span>');
         if (had) { var nf = el.querySelector("a"); if (nf) nf.focus({ preventScroll: true }); else { el.tabIndex = -1; el.focus({ preventScroll: true }); } } // 重绘时不丢焦点
       }
       function dkGauges(id, w) {
@@ -5217,7 +5252,8 @@
       html.p3rv #p3hero .p3hd .ey, html.p3rv #p3hero .p3hd .sb, html.p3rv #p3hero .p3hd .tg, html.p3rv #p3hero .p3hd .cr, html.p3rv #p3hero .p3ct, html.p3rv #p3hero .p3bd { opacity: 1; }
       html.p3rv #p3hero .p3hd .tg { transition-delay: .6s; }
       html.p3rv #p3hero .p3hd .ey { transition-delay: .25s; } html.p3rv #p3hero .p3hd .sb { transition-delay: .9s; } html.p3rv #p3hero .p3ct { transition-delay: 1.1s; }
-      @media (min-width: 801px) and (max-width: 1180px) and (min-height: 421px) { #p3hero .p3hd .ey { font-size: 11px; letter-spacing: .18em; } #p3hero .p3hd .ha { top: 28vh; } #p3hero .p3hd .tg { top: calc(28vh + var(--fs) * 2.12 + 18px); } #p3hero .p3hd .ey { top: calc(28vh - 40px); } #p3hero .p3ct .pri, #p3hero .p3ct .sec { height: 56px; padding: 0 30px; font-size: 17px; } }
+      /* 3.0 收尾（11-24）：801–1180 宽时大标题原为 72px 下限，「数学世界，」的逗号压到树左侧枝叶；中文字号按 6vw 缩到 56–72px（1000 宽 60px），逗号右缘离树约 30px；英文同理 40–52px（1000 宽 44px） */
+      @media (min-width: 801px) and (max-width: 1180px) and (min-height: 421px) { #p3hero .p3hd .ey { font-size: 11px; letter-spacing: .18em; } #p3hero .p3hd { --fs: clamp(56px, 6vw, 72px); } html[lang^="en"] #p3hero .p3hd { --fs: clamp(40px, 4.4vw, 52px); } #p3hero .p3hd .ha { top: 28vh; } #p3hero .p3hd .tg { top: calc(28vh + var(--fs) * 2.12 + 18px); } #p3hero .p3hd .ey { top: calc(28vh - 40px); } #p3hero .p3ct .pri, #p3hero .p3ct .sec { height: 56px; padding: 0 30px; font-size: 17px; } }
       /* 手机竖屏：树占上 60%，标题三行在树下，按钮全宽贴底 */
       @media (max-width: 800px) and (min-height: 421px) {
         #p3hero .p3bd { top: calc(18px + env(safe-area-inset-top)); left: 20px; } #p3hero .p3bd span { display: none; }

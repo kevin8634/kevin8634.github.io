@@ -175,6 +175,8 @@ html.p3rv #p3hero .p3hd h1 em.bc { animation: p3blur 1s cubic-bezier(.2,.7,.2,1)
 #p3ss .go { display: inline-flex; align-items: center; gap: 10px; margin-top: 20px; height: 48px; padding: 0 24px; border-radius: 999px; color: #fff; text-decoration: none; font-size: 15.5px; font-weight: 600; letter-spacing: .04em; border: 1px solid color-mix(in srgb, var(--c) 60%, transparent); background: color-mix(in srgb, var(--c) 14%, rgba(255,255,255,.03)); transition: background .25s, border-color .25s; }
 #p3ss .go:hover, #p3ss .go:focus-visible { background: color-mix(in srgb, var(--c) 30%, transparent); border-color: var(--c); }
 #p3ss .go span { color: var(--c); transition: transform .25s ease; } #p3ss .go:hover span { transform: translateX(4px); }
+#p3ss .go.v3 { margin-left: 8px; white-space: nowrap; color: #ffe29a; border-color: rgba(255,226,154,.55); } #p3ss .go.v3 span { color: #ffe29a; }   /* 3.0 收尾：宙律 3.0 入口（金色细边，区别于 2.0 主入口） */
+@media (max-width: 800px) { #p3ss .go.v3 { margin-left: 0; padding: 0 16px; font-size: 13.5px; letter-spacing: .02em; } }   /* 手机换行时左对齐、单行不折 */
 /* low 档：不做 3D，只淡入；减少动态：静态平铺 */
 #p3ss.mfade .cd { opacity: .12; transform: translateY(24px); transition: opacity .6s ease, transform .8s cubic-bezier(.2,.7,.2,1); backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(12,9,32,.86); }
 #p3ss.mfade .sst.on .cd { opacity: 1; transform: none; }
