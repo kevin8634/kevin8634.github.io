@@ -382,3 +382,10 @@ html.nv-rm .coach-target { animation: none !important; }
 /* 教学简化注释:抬到底栏之上,不压底栏边 */
 .note { bottom: 126px; text-shadow: 0 1px 3px #000c; }
 @media (max-width: 760px) and (orientation: portrait) { .note { bottom: auto; } }
+
+/* 3-8 声音开关(Squish Switch,样式在 kit.css):顶栏一只、画质面板一只 */
+.snd-bar { display: contents; }
+.bar .nv-sq { padding: 0 8px; gap: 6px; }
+.q-sound .nv-sq { width: 100%; justify-content: flex-start; }
+.q-sound .nv-sq .nv-sq-tr { margin-left: auto; }
+@media (max-width: 480px) { .bar .snd-sw { display: none; } }

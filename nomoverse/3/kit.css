@@ -1,0 +1,27 @@
+/* 宙律 3.0 · 首页与 /3/ 共用的小组件样式(3-8 α8)
+ * Squish Switch 声音开关:思路参考 React Bits「Squish Switch」(reactbits.dev/micro/squish-switch),原生 CSS 改写;
+ * 触控区 ≥44px;按下时滑块横向「压扁」,松开弹回;减少动态 / 低档无弹性动画。依赖 /shared/3/tokens.css 变量(缺省有回退值)。 */
+.nv-sq { position: relative; display: inline-flex; align-items: center; gap: 8px; min-width: 44px; min-height: 44px; padding: 0 10px; margin: 0;
+  border: 1px solid var(--gn3-glass-line, rgba(233,199,121,.28)); border-radius: var(--gn3-radius-m, 16px);
+  background: var(--gn3-glass-bg, rgba(18,20,44,.42)); color: var(--gn3-ink, #f4f3ff); font: inherit; font-size: 14px; line-height: 1; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; transition: background var(--gn3-t-fast, 180ms) var(--gn3-ease, ease), border-color var(--gn3-t-fast, 180ms); }
+.nv-sq:hover { background: rgba(255,255,255,.08); }
+.nv-sq:focus-visible { outline: 2px solid var(--gn3-k-c, #22d3ee); outline-offset: 2px; }
+.nv-sq-ic { display: inline-flex; width: 18px; height: 18px; color: var(--gn3-ink-2, #c6c7ea); }
+.nv-sq-ic svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nv-sq-l { white-space: nowrap; color: var(--gn3-ink-2, #c6c7ea); }
+.nv-sq-tr { position: relative; flex: none; width: 40px; height: 22px; border-radius: 11px; background: rgba(255,255,255,.12);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); transition: background var(--gn3-t-move, 420ms) var(--gn3-ease, ease); }
+.nv-sq-th { position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 8px; background: #e8e6ff; box-shadow: 0 1px 4px rgba(0,0,0,.45);
+  transform-origin: left center; transition: left 380ms var(--gn3-ease-spring, cubic-bezier(.34,1.56,.64,1)), width 220ms var(--gn3-ease, ease), transform 220ms var(--gn3-ease, ease); }
+.nv-sq.is-on { border-color: color-mix(in srgb, var(--gn3-w02, #a78bfa) 55%, transparent); }
+.nv-sq.is-on .nv-sq-ic { color: var(--gn3-k-c, #22d3ee); }
+.nv-sq.is-on .nv-sq-tr { background: color-mix(in srgb, var(--gn3-w02, #a78bfa) 70%, #1b1440); }
+.nv-sq.is-on .nv-sq-th { left: 21px; background: #fff; transform-origin: right center; }
+/* 压扁:按住时滑块变宽变扁(向要去的方向伸) */
+.nv-sq.is-press .nv-sq-th { width: 22px; transform: scaleY(.78); }
+.nv-sq.is-on.is-press .nv-sq-th { left: 15px; }
+@media (prefers-reduced-motion: reduce) { .nv-sq, .nv-sq-tr, .nv-sq-th { transition: none !important; } .nv-sq.is-press .nv-sq-th { width: 16px; transform: none; } .nv-sq.is-on.is-press .nv-sq-th { left: 21px; } }
+html.nv-rm .nv-sq, html.nv-rm .nv-sq-tr, html.nv-rm .nv-sq-th, html.gn3-q-low .nv-sq-th { transition: none !important; }
+html.nv-rm .nv-sq.is-press .nv-sq-th, html.gn3-q-low .nv-sq.is-press .nv-sq-th { width: 16px; transform: none; }
+html.nv-rm .nv-sq.is-on.is-press .nv-sq-th, html.gn3-q-low .nv-sq.is-on.is-press .nv-sq-th { left: 21px; }

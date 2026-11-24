@@ -41,6 +41,10 @@
 })();
 </script>
 <link rel="stylesheet" href="core/nv.css">
+<link rel="stylesheet" href="../shared/3/tokens.css">
+<link rel="stylesheet" href="../shared/3/ui.css">
+<link rel="stylesheet" href="3/kit.css">
+<link rel="stylesheet" href="3/home3.css">
 <script src="i18n.js"></script>
 <style>
   body { background: radial-gradient(ellipse at 70% 0%, var(--bg-hi) 0%, var(--bg) 55%) fixed, var(--bg); }
@@ -301,11 +305,20 @@
 </head>
 <body>
 <noscript><p style="padding:16px">宙律需要开启 JavaScript。<a href="../">← 返回创世计划</a></p></noscript>
+<!-- 3.0-α8:首页与 /3/ 共用的声音引擎(默认关、手势后才建 AudioContext;键沿用 gn:nv:_pref.sound),交给 nv.js 当 NV.snd -->
+<script src="3/core/sound.js"></script>
+<script>window.NV_SND_EXT = window.NV3_SOUND && window.NV3_SOUND.get ? window.NV3_SOUND.get() : null;</script>
 <script src="core/nv.js"></script>
 <script>
 "use strict";
 (function () {
   var el = NV.el, D = document, W = window, RM = NV.RM, SND = NV.snd;
+  /* 3.0-α8(3-8):首页 3.0 化 —— 结构不变,外观换 3.0 玻璃(3/home3.css),组件由 3/core/home3.mjs 接管;低档 / 减少动态静态化 */
+  D.body.classList.add("nv3h");
+  if (NV.perf.tier === "low") D.documentElement.classList.add("gn3-q-low");
+  if (RM) D.documentElement.classList.add("nv-rm");
+  var H3M = null, H3P = import(NV.ROOT + "3/core/home3.mjs").then(function (m) { H3M = m; W.__nvHome3 = m; return m; })
+    .catch(function (err) { if (W.console) console.warn("[宙律] 3.0 首页组件未加载,保留 2.0 外观:", err && err.message); return null; });
 
   /* ---------------- 数据 ---------------- */
   var TASKS = [
@@ -470,13 +483,15 @@
 
   /* ② 任务卡 */
   var cardsBox = el("div", { class: "cards" });
-  main.appendChild(el("section", { class: "hm-sec", "aria-labelledby": "h-tasks" }, [
+  var tasksSec = el("section", { class: "hm-sec", "aria-labelledby": "h-tasks" }, [
     el("h2", { class: "hm-h", id: "h-tasks", text: "六个探究任务" }),
     el("p", { class: "hm-sub", text: "每关都是:观察 → 预测 → 运行 → 对比 → 改规则。拿到 1 颗星就能解锁下一关。" }),
     cardsBox,
     el("a", { class: "hm-lab", href: "lab/", "aria-label": "进入规则改写台" }, [el("b", { text: "⚗ 规则改写台" }), el("span", { text: "把重力调到月球、把路面变成冰、把声音和光调慢、把月亮拉近:A/B 对照只改一个变量,先猜再看。" }), el("i", { text: "进入 →" })]),
     el("a", { class: "hm-lab", href: "cosmos/", "aria-label": "进入改律·玻璃宇宙" }, [el("b", { text: "✦ 2.0 · 改律·玻璃宇宙" }), el("span", { text: "只改一个物理常数,让真实宇宙和改律宇宙并排运行:引力强一倍、光慢一千倍、电磁力变一变,世界会怎样?" }), el("i", { text: "进入 →" })])
-  ]));
+  ]);
+  main.appendChild(tasksSec);
+  H3P.then(function (m) { if (m) m.page({ tasksSec: tasksSec }); });
   function renderCards() {
     cardsBox.innerHTML = "";
     TASKS.forEach(function (t) {
@@ -644,6 +659,7 @@
         el("span", { class: "hd-txt" }, [el("b", { text: t.q }), el("span", { class: "hd-meta" }, [dots, el("em", { text: got + "/" + (t.n * 3) + "★" })])])
       ]));
     });
+    if (H3M) H3M.drawerChanged();
   }
   function mountHud(stage) {
     if (!stage || stage.querySelector(".hm-drawer")) return;
@@ -656,10 +672,11 @@
     renderDrawer();
     var gav = NV.avatar("quark", 44), gtx = el("p", { class: "hg-tx", text: GTIPS[0] });
     var gi = 0, guide = el("aside", { class: "hm-guide", "aria-live": "polite", "aria-label": "向导 夸克「阿夸」" }, [gav.cv, el("div", {}, [el("span", { class: "hg-who", text: "阿夸 · 向导" }), gtx])]);
-    guide.addEventListener("click", function () { gi = (gi + 1) % GTIPS.length; gtx.textContent = GTIPS[gi]; SND.play("select"); });
+    guide.addEventListener("click", function () { if (!(H3M && H3M.nextTip())) { gi = (gi + 1) % GTIPS.length; gtx.textContent = GTIPS[gi]; } SND.play("select"); });
     var title = el("div", { class: "hm-stitle", "aria-hidden": "true" }, [el("b", { text: "宙律 Nomoverse" }), el("span", { text: "物理 · 亲手改写宇宙的规律" })]);
     stage.appendChild(title); stage.appendChild(hudDrawer); stage.appendChild(guide);
     ["tl", "tr", "bl", "br"].forEach(function (k) { stage.appendChild(el("i", { class: "hm-c " + k, "aria-hidden": "true" })); });
+    H3P.then(function (m) { if (m) m.hud({ stage: stage, drawer: hudDrawer, guide: guide, gtx: gtx }); });
   }
 
 

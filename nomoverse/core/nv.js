@@ -326,8 +326,9 @@
     lock: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>'
   };
 
-  /* ---------- 声音:默认关;手势后才建 AudioContext 并延迟加载 ---------- */
-  var SND = (function () {
+  /* ---------- 声音:默认关;手势后才建 AudioContext 并延迟加载 ----------
+     3.0-α8:页面若在加载本文件前提供 window.NV_SND_EXT(首页用 3/core/sound.js 的共用引擎,同一个键 gn:nv:_pref.sound),就用它;任务页不设,行为不变 */
+  var SND = W.NV_SND_EXT || (function () {
     var UI_SFX = { tick: 1, select: 1, whoosh: 1, close: 1 };
     var on = Store.pref().sound === true, ctx = null, mG, sG, src, sT, duckN = 0, buf = {}, last = {}, voices = [], btns = [];
     var FILES = ["music-nomoverse-loop", "select", "whoosh", "close", "tick", "unlock", "star", "swish", "thud"];

@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="/shared/3/tokens.css">
 <link rel="stylesheet" href="/shared/3/ui.css">
 <link rel="stylesheet" href="nv3.css">
+<link rel="stylesheet" href="kit.css">
 </head>
 <body>
 <canvas id="stage" role="img" data-i18n-aria="stageAria" aria-label="舞台:玻璃球里的宇宙"></canvas>
@@ -23,6 +24,7 @@
     <button type="button" class="gn3-btn" id="undo" data-i18n-aria="undo" aria-label="撤销">↶</button>
     <button type="button" class="gn3-btn" id="redo" data-i18n-aria="redo" aria-label="重做">↷</button>
     <button type="button" class="gn3-btn" id="q" aria-label="画质:中" aria-haspopup="dialog" aria-expanded="false" aria-controls="qpanel">中</button>
+    <span id="snd-bar" class="snd-bar"></span>
     <button type="button" class="gn3-btn" id="lang" aria-label="English">EN</button>
   </div>
 </header>
@@ -83,6 +85,9 @@
   <p id="q-note" class="qp-note"></p>
   <span class="qp-l" data-i18n="qMotion">动效</span>
   <div id="q-motion"></div>
+  <span class="qp-l" data-i18n="qSound">声音</span>
+  <div id="q-sound" class="q-sound"></div>
+  <p class="qp-note" data-i18n="qSoundNote">默认关;与宙律首页共用一个开关。减少动态时背景音乐不自动播放。</p>
 </div>
 <div id="toasts"></div>
 <div id="sr-live"></div>
@@ -93,6 +98,7 @@
 <script src="core/nbody.js"></script>
 <script src="core/gus0.js"></script>
 <script src="core/scene.js"></script>
+<script src="core/sound.js"></script>
 <script type="module" src="main.mjs"></script>
 </body>
 </html>

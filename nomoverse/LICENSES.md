@@ -150,5 +150,20 @@
 | swipeToast 滑动提示 | React Bits · Swipe Toast(reactbits.dev 组件) | MIT + Commons Clause | 原生 DOM + Pointer Events;阈值与队列逻辑在 access.mjs(有单测);role=status/alert,减少动态无位移 | 降级、软件渲染、画质/动效切换、键盘提示 |
 | warmTooltip 暖色气泡 | React Bits · Warm Tooltip(reactbits.dev 组件) | MIT + Commons Clause | 原生 DOM;悬停/键盘聚焦/触屏长按三种触发,role=tooltip + aria-describedby,Esc 关闭;定位函数在 access.mjs(有单测) | 顶栏图标按钮、换种子、锁定开关、大爆炸 |
 
+### 3-8 首页 3.0 化与声音组件逐条署名(3/core/home-ui.mjs、3/core/sound.js、3/kit.css、3/home3.css,2026-11-24)
+同样只按公开演示的交互/观感思路用原生 JS/CSS 自写,未复制、未移植任何源码,不引 CDN、零外部请求;React Bits 部分同上(MIT + Commons Clause,Copyright (c) 2026 David Haz),只作为宙律界面的一部分使用,不单独分发组件或其移植版。
+
+| 本站实现 | 思路来源 | 许可 | 原生改写说明 | 用在 |
+|---|---|---|---|---|
+| animatedList 动画列表 | React Bits · Animated List(reactbits.dev/components/animated-list) | MIT + Commons Clause | 原生 DOM + IntersectionObserver 错峰弹入(延迟/键盘逻辑在 home.mjs,有单测);方向键/Home/End 在项间移动并高亮;可滚动时上下渐隐(CSS mask);减少动态/低档直接显示 | 首页左侧探究任务抽屉 |
+| shinyText 光泽文字 | React Bits · Shiny Text(reactbits.dev/text-animations/shiny-text) | MIT + Commons Clause | 纯 CSS background-clip:text + 渐变位移;减少动态/低档静止 | 首页舞台标题、2D 版式标题 |
+| textType 打字文字 | React Bits · Text Type(reactbits.dev/text-animations/text-type) | MIT + Commons Clause | 原生 setTimeout 逐帧(帧序列 typeFrames 在 home.mjs,有单测,按码点切分);幽灵层撑高不跳动;读屏只播整句;减少动态/低档整句出现、无光标 | 首页右上向导「阿夸」气泡 |
+| Elastic Slider 弹性滑块 | React Bits · Elastic Slider(reactbits.dev/components/elastic-slider)→ /shared/3/ui.js slider(总指挥维护) | 同本站 | 只引用不改;首页把 2.0 原生尺度滑杆隐藏为数据源,弹性滑块双向同步 | 首页底部尺度条 |
+| Spotlight Card 聚光卡 | React Bits · Spotlight Card(reactbits.dev/components/spotlight-card)→ /shared/3/ui.js spotlightCard | 同本站 | 只引用不改 | 首页 3D 星点详情卡 |
+| Star Border 星光边框 | React Bits · Star Border(沿用 3/core/create-ui.mjs starBorder) | MIT + Commons Clause | 沿用 3-5 实现;首页另有一份同款光点 CSS(home3.css) | 首页「3.0 · 改宇宙」入口 |
+| Squish Switch 压扁开关 | React Bits · Squish Switch(reactbits.dev/micro/squish-switch) | MIT + Commons Clause | 原生 button[role=switch] + CSS(kit.css);按住时滑块横向压扁、松开弹回;触控区 ≥44px;减少动态/低档无弹性 | 首页顶栏与 /3/ 顶栏、画质面板的声音开关 |
+| 声音引擎 sound.js | 自研(WebAudio);背景音乐 audio/music-nomoverse-loop.m4a 与 8 个音效沿用 2.0(audio/synth.py 本站程序合成);boom/chime/pulse/glide 运行时合成 | 本站 | 状态机纯函数(有单测);默认关、手势后才建 AudioContext 并懒加载 | 首页与 /3/ 共用 |
+| 首页英文补全 home-stars-en.mjs | 本站撰写 | 本站 | 60 颗知识星说明与星图读屏句式英译 | 首页 EN |
+
 ## 教育理念署名(11-20 · 王磊批)
 - 创世计划的教育理念参考埃隆·马斯克创办的 Ad Astra 学校(第一性原理、难题拆解)。只署名理念出处:全部课程、题目、交互与代码均为本项目自研;未使用其肖像、Logo 或商标;与 SpaceX 及其关联方无合作、授权或背书关系。
