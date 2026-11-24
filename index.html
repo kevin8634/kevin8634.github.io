@@ -899,6 +899,22 @@
       .x-dk.sm .x-dk__b p { font-size: 9.5px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; flex: none; overflow: hidden; }
       .x-dk.sm .x-dk__b i { font-size: 9.5px; flex: 1; min-height: 0; overflow: hidden; } .x-dk.sm .x-dk__b a, .x-dk.sm .x-dk__b span.soon { font-size: 10px; padding: 4px 0; white-space: nowrap; }
       .x-dk.sm .x-dk__b button { width: 22px; height: 22px; top: 2px; right: 2px; font-size: 12px; }
+      /* 3.0 收尾⑥（11-24 第二单）：手机星盘（.sm，卡宽 70–92px、正面卡约放大 1.38 倍）卡背原三颗按钮竖排，后两颗（实验室 / 3.0 宇宙配方台）被卡底裁掉、点不到。
+         改为：翻面的卡再放大 1.25 倍（实际约 121×177px），隐藏状态行、简介收一行；按钮区两行——「进入世界」整行，「实验室」「✦ 3.0」并排，
+         每颗实际高约 45px、宽 ≥44px；并排两颗在窄卡上收成短标签「实验室 / Lab」「✦ 3.0」（aria-label 仍为全名）。桌面与平板（非 .sm）渲染不变 */
+      .x-dk__acts { display: contents; }
+      .x-dk.sm .x-dk__c.flip { z-index: 9999 !important; }
+      .x-dk.sm .x-dk__c.flip .x-dk__in { transform: rotateY(180deg) scale(1.25); }
+      .x-dk.sm .x-dk__c.flip .x-dk__b { padding: 5px 5px 4px; }
+      .x-dk.sm .x-dk__c.flip .x-dk__b b { font-size: 10px; line-height: 1.25; letter-spacing: 0; padding-right: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } html[lang^="en"] .x-dk.sm .x-dk__c.flip .x-dk__b b { font-size: 8.4px; }
+      .x-dk.sm .x-dk__c.flip .x-dk__b p { font-size: 8px; line-height: 1.4; -webkit-line-clamp: 1; flex: 0 1 auto; min-height: 0; }
+      .x-dk.sm .x-dk__c.flip .x-dk__b i:not(.x-dk__age) { display: none; }
+      .x-dk.sm .x-dk__c.flip .x-dk__b i.x-dk__age { font-size: 7.5px; }
+      .x-dk.sm .x-dk__acts { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; margin-top: auto; flex: none; }
+      .x-dk.sm .x-dk__acts > * { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; height: 26px; margin: 0; padding: 0 2px; font-size: 7px; line-height: 1.1; letter-spacing: 0; white-space: nowrap; overflow: hidden; }
+      .x-dk.sm .x-dk__acts.n3 > a.lab { grid-column: auto; }
+      .x-dk.sm .x-dk__acts.n3 > a.lab { font-size: 0; } .x-dk.sm .x-dk__acts.n3 > a.lab::after { content: "实验室"; font-size: 7px; } html[lang^="en"] .x-dk.sm .x-dk__acts > a[data-enter] { font-size: 6.4px; }
+      html[lang^="en"] .x-dk.sm .x-dk__acts.n3 > a.lab:not(.v3)::after { content: "Lab"; } .x-dk.sm .x-dk__acts.n3 > a.v3::after { content: "✦ 3.0"; }
       @media (prefers-reduced-motion: reduce) {
         * { transition-duration: .01ms !important; }
         .x-dot { animation: none; }
@@ -4600,7 +4616,7 @@
             '<img src="world-' + id + '.webp" alt="" draggable="false" /><small>' + w.star + '</small><b>' + w.name + '</b><em>' + w.field.replace(" SI", "") + '<span> · ' + st + '</span></em></button>' +
             '<div class="x-dk__b"><button type="button" tabindex="-1" aria-label="翻回正面">×</button><b>' + w.name + '</b><small>' + w.en + ' · ' + w.field + '</small>' +
             '<p>' + brEsc(w.desc) + '</p><i class="x-dk__age" hidden>适合 ' + ageTxt(w) + '</i><i>' + st + (more ? '<span><br>' + more + '</span>' : '') + '</i>' +
-            (w.live ? '<a data-enter="' + id + '" href="' + w.href + '" tabindex="-1" aria-label="进入' + w.name + '">进入世界 →</a>' + (w.lab ? '<a class="lab" href="' + w.lab + '" tabindex="-1" aria-label="进入' + w.name + '实验室">实验室 ⚗</a>' : '') + (w.v3 ? '<a class="lab v3" href="' + w.v3 + '" tabindex="-1" aria-label="进入' + w.name + ' 3.0 宇宙配方台">3.0 宇宙配方台 ✦</a>' : '') : '<span class="soon">即将点亮</span>') +
+            '<div class="x-dk__acts' + (w.lab && w.v3 ? ' n3' : '') + '">' + (w.live ? '<a data-enter="' + id + '" href="' + w.href + '" tabindex="-1" aria-label="进入' + w.name + '">进入世界 →</a>' + (w.lab ? '<a class="lab" href="' + w.lab + '" tabindex="-1" aria-label="进入' + w.name + '实验室">实验室 ⚗</a>' : '') + (w.v3 ? '<a class="lab v3" href="' + w.v3 + '" tabindex="-1" aria-label="进入' + w.name + ' 3.0 宇宙配方台">3.0 宇宙配方台 ✦</a>' : '') : '<span class="soon">即将点亮</span>') + '</div>' +   /* 3.0 收尾⑥：按钮包进 .x-dk__acts，手机星盘改两行排布 */
             '</div></div></div>';
         }).join("");
         DK.cards = [].map.call(DK.box.children, function (c) { return c; });
@@ -5233,6 +5249,11 @@
       #p3hero .p3hd em { font-style: normal; font-family: "Songti SC", "STSong", "Noto Serif SC", "Source Han Serif SC", Georgia, serif; font-weight: 800; padding: 0 .04em; background: linear-gradient(100deg, #fff1c9, #e9c779 40%, #ff9ad5 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
       html[lang^="en"] #p3hero .p3hd { --fs: clamp(52px, 5.2vw, 100px); }
       html[lang^="en"] #p3hero .p3hd em { font-style: italic; }
+      html[lang^="en"] #p3hero .p3hd .wd { display: inline-block; margin-left: .26em; }
+      /* 3.0 收尾⑤：自测发现 1440×900 英文同样压树（「intelligence world,」右缘 828px、树左缘约 553px），宽屏（>800）英文统一三行，轮换词独占一行；
+         字号按树宽反推 min(5.2vw, 7vw − 2.95vh − 4px)（树取景按高度，树左缘 ≈ 0.5·宽 − 0.186·高），1440×900 约 70px；副标语随之下移、收窄 */
+      @media (min-width: 1181px) and (min-height: 421px) { #p3hero .p3hd { --fs: clamp(56px, min(7vw, 9.11vw - 3.77vh - 6px), 128px); } }   /* 中文宽屏同理：1440×900 原 101px「数学世界，」压树 22px → 约 92px */
+      @media (min-width: 801px) and (min-height: 421px) { html[lang^="en"] #p3hero .p3hd { --fs: clamp(44px, min(5.2vw, 7vw - 2.95vh - 4px), 100px); } html[lang^="en"] #p3hero .p3hd .rw { display: block; width: max-content; margin: 0; } html[lang^="en"] #p3hero .p3hd .wd { margin-left: 0; } html[lang^="en"] #p3hero .p3hd .tg { top: calc(30vh + var(--fs) * 3.3 + 18px); max-width: 17em; } }
       #p3hero .rw { --c: #7cc8ff; display: inline-block; vertical-align: bottom; overflow: hidden; height: 1.16em; margin: 0 .02em; text-shadow: none; }
       #p3hero .rw > span { display: inline-block; color: var(--c); text-shadow: none; }
       #p3hero .p3hd .tg { position: absolute; left: 5vw; top: calc(30vh + var(--fs) * 2.12 + 22px); margin: 0; max-width: 26em; font-size: clamp(15px, 1.25vw, 20px); font-weight: 600; line-height: 1.5; letter-spacing: .04em; color: #f3e6c4; }
@@ -5254,6 +5275,10 @@
       html.p3rv #p3hero .p3hd .ey { transition-delay: .25s; } html.p3rv #p3hero .p3hd .sb { transition-delay: .9s; } html.p3rv #p3hero .p3ct { transition-delay: 1.1s; }
       /* 3.0 收尾（11-24）：801–1180 宽时大标题原为 72px 下限，「数学世界，」的逗号压到树左侧枝叶；中文字号按 6vw 缩到 56–72px（1000 宽 60px），逗号右缘离树约 30px；英文同理 40–52px（1000 宽 44px） */
       @media (min-width: 801px) and (max-width: 1180px) and (min-height: 421px) { #p3hero .p3hd .ey { font-size: 11px; letter-spacing: .18em; } #p3hero .p3hd { --fs: clamp(56px, 6vw, 72px); } html[lang^="en"] #p3hero .p3hd { --fs: clamp(40px, 4.4vw, 52px); } #p3hero .p3hd .ha { top: 28vh; } #p3hero .p3hd .tg { top: calc(28vh + var(--fs) * 2.12 + 18px); } #p3hero .p3hd .ey { top: calc(28vh - 40px); } #p3hero .p3ct .pri, #p3hero .p3ct .sec { height: 56px; padding: 0 30px; font-size: 17px; } }
+      /* 3.0 收尾⑤（11-24 第二单）：英文 801–1180 宽轮换词最长「intelligence world,」在 44px 下右缘到 497px，压进树左侧枝叶（探针间距 −121px）；
+         英文这一段改成三行「Master the / 轮换词 / world,」，轮换词独占一行，所有词右缘都离树 ≥24px；副标语同步下移并收窄到 17em，避开树左下枝叶。
+         树宽随视口高度变大（取景按高度），较高窗口（如 1000×900）字号再按 vw−vh 线性收一点：≤770 高时中文仍是 6vw、英文仍是 4.4vw，与上一单一致 */
+      @media (min-width: 801px) and (max-width: 1180px) and (min-height: 421px) { #p3hero .p3hd { --fs: clamp(40px, min(6vw, 9.13vw - 3.77vh - 2.5px), 72px); } html[lang^="en"] #p3hero .p3hd { --fs: clamp(32px, min(4.4vw, 7vw - 2.95vh - 4px), 52px); } html[lang^="en"] #p3hero .p3hd .tg { top: calc(28vh + var(--fs) * 3.3 + 16px); } }
       /* 手机竖屏：树占上 60%，标题三行在树下，按钮全宽贴底 */
       @media (max-width: 800px) and (min-height: 421px) {
         #p3hero .p3bd { top: calc(18px + env(safe-area-inset-top)); left: 20px; } #p3hero .p3bd span { display: none; }
@@ -5334,7 +5359,7 @@
       var RC = ["#7cc8ff", "#a78bfa", "#ff9a3c", "#5eead4", "#f0c060", "#22d3ee", "#c4b5fd"], RN = RW.map(function () { return ""; });
       $("p3h1").setAttribute("aria-label", en ? "Start from first principles. Master a world, then build one." : "从第一性原理出发，玩懂一个世界，再亲手造一个。");
       $("p3l1").innerHTML = en ? "Master the" : "玩懂一个";
-      $("p3l2").innerHTML = (en ? '<span class="rw" id="p3rw"><span></span></span> world,' : '<span class="rw" id="p3rw"><span></span></span>世界，');
+      $("p3l2").innerHTML = (en ? '<span class="rw" id="p3rw"><span></span></span><span class="wd">world,</span>' : '<span class="rw" id="p3rw"><span></span></span>世界，');   /* 3.0 收尾⑤：英文空格改成 .wd 左边距（Blur Text 会把空格换成不折叠的 nbsp，三行排布时会顶出缩进） */
       $("p3l3").innerHTML = en ? "then" : "再亲手";
       $("p3l4").innerHTML = en ? "<em>build</em> one." : "<em>造</em>一个。";
       ["p3l1", "p3l2", "p3l3", "p3l4"].forEach(function (k) { $(k).setAttribute("aria-hidden", "true"); });
