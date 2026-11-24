@@ -344,7 +344,7 @@ body.is-make .right > .stat { display: none; }  /* 作品卡已含这 5 项 */
 @media (max-height: 480px) and (orientation: landscape) { .qpanel { top: 46px; right: 8px; width: 300px; max-height: calc(100vh - 54px); overflow-y: auto; padding: 6px var(--gn3-s3) var(--gn3-s3); gap: 2px; } }
 
 /* Swipe Toast */
-.nv-toasts { position: fixed; z-index: 7; left: 50%; bottom: 112px; transform: translateX(-50%); width: min(380px, calc(100vw - 24px)); display: grid; gap: 8px; pointer-events: none; }
+.nv-toasts { position: fixed; z-index: 7; left: 50%; bottom: 140px; transform: translateX(-50%); width: min(380px, calc(100vw - 24px)); display: grid; align-content: start; gap: 8px; pointer-events: none; }
 .nv-toast { pointer-events: auto; display: flex; align-items: center; gap: 6px; padding: 4px 4px 4px 14px; border-radius: 14px; background: #141733f2; border: 1px solid var(--gn3-glass-line);
   box-shadow: 0 8px 26px #0009; color: var(--gn3-ink); touch-action: pan-y; cursor: grab; user-select: none;
   animation: nvToastIn .26s var(--gn3-ease, ease-out); transition: transform .22s var(--gn3-ease, ease-out), opacity .22s; }
@@ -381,5 +381,4 @@ html.nv-rm .coach-target { animation: none !important; }
 @media (max-height: 480px) and (orientation: landscape) { .stat b { font-size: var(--gn3-fs-s); } .stat { gap: 4px; } }
 /* 教学简化注释:抬到底栏之上,不压底栏边 */
 .note { bottom: 126px; text-shadow: 0 1px 3px #000c; }
-.nv-toasts { bottom: 140px; }
 @media (max-width: 760px) and (orientation: portrait) { .note { bottom: auto; } }
