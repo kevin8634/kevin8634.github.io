@@ -313,16 +313,19 @@ export function start(host, opts) {
     N[i].spin.push([disk, 'y', .06], [ico, 'y', .22], [ico, 'x', .1]);
   }
   { // 1 物理：原子核 + 三条轨道 + 电子
+    // 3.0 收尾（11-24）：原先轨道点 .03/1.1、核子 .045/1.8，远景下点径低于 uMin 被按面积减亮，整层发灰。
+    // 提亮到与化学层碳原子（.055/2.4）同级、单点亮度系数不超过它：核子 .068/2.4（核半径 .085）、轨道 .055/1.7、电子拖尾 ×1.25、核心加一枚暖光晕 .42/1.1；悬停倍率与 bloom 上限（60）不变。
     const i = 1, l = LV[i], pb = new PB(); halo(i, pb, l.r);
     const R2 = rng(11); for (let k = 0; k < 12; k++) { const u = R2() * 2 - 1, a = R2() * 6.28, q = Math.sqrt(1 - u * u), rr = .16 * Math.cbrt(R2());
-      pb.ball(rr * q * Math.cos(a), rr * u, rr * q * Math.sin(a), .075, Math.round(34 * Math.max(.5, K)), k % 2 ? [1, .55, .3] : l.c, .045, 1.8); }
+      pb.ball(rr * q * Math.cos(a), rr * u, rr * q * Math.sin(a), .085, Math.round(34 * Math.max(.5, K)), k % 2 ? [1, .55, .3] : l.c, .068, 2.4); }
+    pb.add(0, 0, 0, [1, .8, .62], .42, 1.1);   // 核心暖光晕（3.0 收尾）：让原子核在远景里也读得出
     addPts(i, pb);
     const tilt = [[0, 0, 0], [1.05, 0, .5], [-1.05, 0, -.5]];
     tilt.forEach((tl, k) => { const og = new THREE.Group(); og.rotation.set(Math.PI / 2 + tl[0], tl[1], tl[2]); N[i].g.add(og);
       const ring = new THREE.Group(); og.add(ring); const rp = new PB(), rr = l.r * (.78 + k * .05), nr = Math.round(240 * Math.max(.5, K));
-      for (let s = 0; s < nr; s++) { const a = s / nr * 6.2832; rp.add(rr * Math.cos(a), rr * Math.sin(a), 0, l.c, .03, 1.1); }
-      rp.add(rr, 0, 0, W2, .22, 5); rp.add(rr, 0, 0, l.c, .7, .35);
-      for (let s = 1; s < 26; s++) { const a = -s * .022; rp.add(rr * Math.cos(a), rr * Math.sin(a), 0, l.c, .07 * (1 - s / 26), 2.2 * (1 - s / 26)); }   // 电子拖尾
+      for (let s = 0; s < nr; s++) { const a = s / nr * 6.2832; rp.add(rr * Math.cos(a), rr * Math.sin(a), 0, l.c, .055, 1.7); }
+      rp.add(rr, 0, 0, W2, .22, 5); rp.add(rr, 0, 0, l.c, .7, .45);
+      for (let s = 1; s < 26; s++) { const a = -s * .022; rp.add(rr * Math.cos(a), rr * Math.sin(a), 0, l.c, .08 * (1 - s / 26), 2.75 * (1 - s / 26)); }   // 电子拖尾
       addPts(i, rp, ring); N[i].spin.push([ring, 'z', 1.6 + k * .45]); });
   }
   { // 2 化学：苯环（碳 6 + 氢 6，单双键交替）
