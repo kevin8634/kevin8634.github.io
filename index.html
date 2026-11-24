@@ -907,6 +907,7 @@
       .x-dk.sm .x-dk__c.flip .x-dk__in { transform: rotateY(180deg) scale(1.25); }
       .x-dk.sm .x-dk__c.flip .x-dk__b { padding: 5px 5px 4px; }
       .x-dk.sm .x-dk__c.flip .x-dk__b b { font-size: 10px; line-height: 1.25; letter-spacing: 0; padding-right: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } html[lang^="en"] .x-dk.sm .x-dk__c.flip .x-dk__b b { font-size: 8.4px; }
+ html[lang^="en"] .x-dk.sm .x-dk__c.flip .x-dk__b b { white-space: normal; text-overflow: clip; font-size: 7.2px; line-height: 1.12; letter-spacing: -.03em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: normal; word-break: normal; flex: none; }
       .x-dk.sm .x-dk__c.flip .x-dk__b p { font-size: 8px; line-height: 1.4; -webkit-line-clamp: 1; flex: 0 1 auto; min-height: 0; }
       .x-dk.sm .x-dk__c.flip .x-dk__b i:not(.x-dk__age) { display: none; }
       .x-dk.sm .x-dk__c.flip .x-dk__b i.x-dk__age { font-size: 7.5px; }
@@ -5279,6 +5280,7 @@
          英文这一段改成三行「Master the / 轮换词 / world,」，轮换词独占一行，所有词右缘都离树 ≥24px；副标语同步下移并收窄到 17em，避开树左下枝叶。
          树宽随视口高度变大（取景按高度），较高窗口（如 1000×900）字号再按 vw−vh 线性收一点：≤770 高时中文仍是 6vw、英文仍是 4.4vw，与上一单一致 */
       @media (min-width: 801px) and (max-width: 1180px) and (min-height: 421px) { #p3hero .p3hd { --fs: clamp(40px, min(6vw, 9.13vw - 3.77vh - 2.5px), 72px); } html[lang^="en"] #p3hero .p3hd { --fs: clamp(32px, min(4.4vw, 7vw - 2.95vh - 4px), 52px); } html[lang^="en"] #p3hero .p3hd .tg { top: calc(28vh + var(--fs) * 3.3 + 16px); } }
+      @media (min-width: 801px) and (max-width: 1180px) and (min-height: 421px) { html:not([lang^="en"]) #p3hero .p3hd .tg { max-width: 10.6em; word-break: keep-all; line-break: strict; } }
       /* 手机竖屏：树占上 60%，标题三行在树下，按钮全宽贴底 */
       @media (max-width: 800px) and (min-height: 421px) {
         #p3hero .p3bd { top: calc(18px + env(safe-area-inset-top)); left: 20px; } #p3hero .p3bd span { display: none; }
