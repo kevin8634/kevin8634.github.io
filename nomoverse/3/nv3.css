@@ -389,3 +389,17 @@ html.nv-rm .coach-target { animation: none !important; }
 .q-sound .nv-sq { width: 100%; justify-content: flex-start; }
 .q-sound .nv-sq .nv-sq-tr { margin-left: auto; }
 @media (max-width: 480px) { .bar .snd-sw { display: none; } }
+/* α8.1:≤480 宽声音开关放到底栏(首屏可点,不必打开画质面板);>480 隐藏底栏这只 */
+.snd-dock { display: none; }
+@media (max-width: 480px) {
+  .snd-dock { display: block; position: absolute; right: var(--gn3-s3); top: var(--gn3-s2); z-index: 1; }
+  .snd-dock .nv-sq { padding: 0 8px; gap: 6px; }
+}
+@media (max-width: 480px) and (max-height: 480px) and (orientation: landscape) {
+  .snd-dock { position: static; flex: none; }
+}
+/* α8.1:矮一些的横屏桌面(如 1000×760)左栏静止时末按钮「回到真实宇宙」要完整可见:收紧间距与小曲线高度,不靠滚动 */
+@media (min-width: 761px) and (min-height: 481px) and (max-height: 820px) {
+  .left { gap: var(--gn3-s2); }
+  body:not(.is-adv) .left .knob .spark { height: 16px; }
+}

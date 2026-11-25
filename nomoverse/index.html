@@ -107,7 +107,7 @@
   .map .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--map-tick); z-index: 0; }
   .map .tl { position: absolute; font-size: 11px; color: var(--mu); transform: translateX(-50%); white-space: nowrap; font-family: var(--mono); font-variant-numeric: tabular-nums; z-index: 1; }
   .map .lm { position: absolute; font-size: 11px; color: var(--dim); transform: translateX(-50%); white-space: nowrap; z-index: 1; }
-  .star { position: absolute; z-index: 2; display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 6px 0 2px; border: 0; background: none;
+  .star { position: absolute; z-index: 2; display: inline-flex; align-items: center; gap: 5px; height: 44px; min-width: 44px; padding: 0 6px 0 2px; border: 0; background: none; box-sizing: border-box;
     font-size: 12px; color: var(--star-tx); cursor: pointer; white-space: nowrap; border-radius: 8px; }
   .star i { width: 9px; height: 9px; border-radius: 50%; background: var(--star-off); flex: none; box-shadow: 0 0 0 2px rgba(74,69,112,.25); }
   .star:hover, .star:focus-visible { background: rgba(167,139,250,.12); color: var(--tx); }
@@ -513,7 +513,7 @@
   renderCards();
 
   /* ③ 尺度轴图谱 */
-  var EMIN = -15, EMAX = 21, MAPW = 1800, LEFT = 30, RIGHT = 74, AXH = 26, LANE = 22;
+  var EMIN = -15, EMAX = 21, MAPW = 1800, LEFT = 30, RIGHT = 74, AXH = 26, LANE = 44;   // α8.1:泳道 22→44,星点按钮触控目标 ≥44
   var cnt = el("span", { class: "cnt" });
   var mapEl = el("div", { class: "map", role: "group", "aria-label": "宇宙尺度知识星图,横轴从 10⁻¹⁵ 米到 10²¹ 米" });
   var wrap = el("div", { class: "mapwrap", tabindex: "-1" }, mapEl);
@@ -534,7 +534,7 @@
   ]);
   main.appendChild(smSec);
   function X(e) { return LEFT + (e - EMIN) / (EMAX - EMIN) * (MAPW - LEFT - RIGHT); }
-  function textW(s) { var w = 0; for (var i = 0; i < s.length; i++) w += s.charCodeAt(i) > 255 ? 12.5 : 7; return w + 22; }
+  function textW(s) { var w = 0; for (var i = 0; i < s.length; i++) w += s.charCodeAt(i) > 255 ? 12.5 : 7; return Math.max(44, w + 22); }
   function linkLabel(link) {
     var p = link.split(":"), t = TASKS.filter(function (x) { return x.id === p[0]; })[0];
     return { t: t, i: +p[1], txt: "「" + t.q + "」第 " + (+p[1] + 1) + " 关 · " + t.lv[+p[1]] };
@@ -560,35 +560,27 @@
     NV.modal((lit ? "★ " : "") + s[1], body);
   }
   var SM3 = null;   // 3D 星图实例(可用时)
+  var mapRO = null, mapLay = null;   // α8.1:按真实按钮宽度(含英文译名、字体回退)重新分泳道
   function renderMap() {
     mapEl.innerHTML = ""; colsEl.innerHTML = ""; colsEl.appendChild(el("div", { style: "height:" + AXH + "px" }));
-    // 每个星座按 x 排序,贪心分配泳道,避免文字重叠
+    // 每个星座按 x 排序,贪心分配泳道,避免文字重叠(宽度先按文字估算,渲染后按实际宽度重排)
     var rows = CONS.map(function () { return []; });
     STARS.forEach(function (s, k) { rows[s[0]].push({ s: s, k: k, x: X(s[2]), w: textW(s[1]) }); });
-    var y = AXH, litN = 0, rowTops = [];
+    var litN = 0, rowEls = [], colEls = [], lmEls = [], btns = [];
     rows.forEach(function (list, ci) {
       list.sort(function (a, b) { return a.x - b.x; });
-      var ends = [];
-      list.forEach(function (it) {
-        var ln = 0; while (ln < ends.length && ends[ln] > it.x - 6) ln++;
-        ends[ln] = it.x + it.w; it.lane = ln;
-      });
-      var nl = Math.max(1, ends.length), h = nl * LANE + 16;
-      var row = el("div", { class: "row", style: "top:" + y + "px;height:" + h + "px" });
-      colsEl.appendChild(el("div", { style: "height:" + h + "px", text: CONS[ci] }));
-      mapEl.appendChild(row);
+      var row = el("div", { class: "row" }), col = el("div", { text: CONS[ci] });
+      colsEl.appendChild(col); mapEl.appendChild(row); rowEls.push(row); colEls.push(col);
       list.forEach(function (it) {
         var s = it.s, lit = isLit(s[4]); if (lit) litN++;
         var b = el("button", { class: "star" + (lit ? " on" : "") + (s[4] ? " task" : ""), type: "button",
-          style: "left:" + (it.x - 6.5) + "px;top:" + (y + 8 + it.lane * LANE) + "px",
+          style: "left:" + (it.x - 6.5) + "px",
           "aria-label": s[1] + "," + CONS[s[0]] + "," + (lit ? "已点亮" : "待探索"),
           onpointerenter: SND.hover, onclick: function () { openStar(s); } }, [el("i"), s[1]]);
-        mapEl.appendChild(b);
+        it.b = b; btns.push(b); mapEl.appendChild(b);
       });
-      rowTops.push(y); y += h;
     });
-    var H = y + AXH; colsEl.appendChild(el("div", { style: "height:" + AXH + "px" }));
-    mapEl.style.cssText = "width:" + MAPW + "px;height:" + H + "px";
+    var colEnd = el("div", { style: "height:" + AXH + "px" }); colsEl.appendChild(colEnd);
     for (var e = EMIN; e <= EMAX; e++) {
       var x = X(e);
       mapEl.appendChild(el("div", { class: "tick", style: "left:" + x + "px;" + (e % 3 ? "opacity:.45" : "background:var(--map-line)") }));
@@ -596,7 +588,31 @@
         mapEl.appendChild(el("div", { class: "tl", style: "left:" + x + "px;top:5px", text: "10" + sup(e) + " m" }));
       }
     }
-    LANDMARKS.forEach(function (l) { mapEl.appendChild(el("div", { class: "lm", style: "left:" + X(l[0]) + "px;top:" + (H - AXH + 6) + "px", text: l[1] })); });
+    LANDMARKS.forEach(function (l) { var m = el("div", { class: "lm", style: "left:" + X(l[0]) + "px", text: l[1] }); lmEls.push(m); mapEl.appendChild(m); });
+    mapLay = function () {
+      var y = AXH;
+      rows.forEach(function (list, ci) {
+        var ends = [];
+        list.forEach(function (it) {
+          var w = Math.max(44, it.b.offsetWidth || it.w);
+          var ln = 0; while (ln < ends.length && ends[ln] > it.x - 6) ln++;
+          ends[ln] = it.x + w; it.b.style.top = (y + 4 + ln * LANE) + "px";
+        });
+        var h = Math.max(1, ends.length) * LANE + 8;
+        rowEls[ci].style.cssText = "top:" + y + "px;height:" + h + "px"; colEls[ci].style.height = h + "px";
+        y += h;
+      });
+      var H = y + AXH;
+      mapEl.style.width = MAPW + "px"; mapEl.style.height = H + "px";
+      lmEls.forEach(function (m) { m.style.top = (H - AXH + 6) + "px"; });
+    };
+    mapLay();
+    if (W.ResizeObserver) {
+      if (mapRO) mapRO.disconnect();
+      var pend = 0;
+      mapRO = new W.ResizeObserver(function () { if (pend) return; pend = W.requestAnimationFrame(function () { pend = 0; if (mapLay) mapLay(); }); });
+      btns.forEach(function (b) { mapRO.observe(b); });
+    }
     cnt.innerHTML = "";
     cnt.appendChild(D.createTextNode("已点亮 ")); cnt.appendChild(el("b", { text: String(litN) })); cnt.appendChild(D.createTextNode(" / " + STARS.length + " 颗知识星"));
     if (SM3) SM3.update(STARS.map(function (s) { return { lit: isLit(s[4]), task: !!s[4] }; }));

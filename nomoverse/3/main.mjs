@@ -267,9 +267,11 @@ starBorder.mount($('tohelm'), { color: '#c4b5fd', speed: 5 });
 const glare = glareHover.mount($('share'), {});
 glareHover.mount($('export'), {});
 $('tohelm').addEventListener('click', () => { sfx('tohelm'); goHelm($('tohelm')); });
-/* 3-8 声音开关(Squish Switch):顶栏一只 + 画质面板一只,同一引擎同步 */
+/* 3-8 声音开关(Squish Switch):顶栏一只 + 画质面板一只,同一引擎同步;
+   α8.1:≤480 宽顶栏放不下,底栏「大爆炸」旁再放一只(只在 ≤480 显示),首屏可直接点 */
 const sndBar = SND ? SND.squish({ cls: 'snd-sw', title: false }) : null, sndPanel = SND ? SND.squish({ text: true, cls: 'snd-sw-l' }) : null;
-if (sndBar) $('snd-bar').append(sndBar); if (sndPanel) $('q-sound').append(sndPanel);
+const sndDock = SND ? SND.squish({ cls: 'snd-dk', title: false }) : null;
+if (sndBar) $('snd-bar').append(sndBar); if (sndPanel) $('q-sound').append(sndPanel); if (sndDock) $('snd-dock').append(sndDock);
 const say = (t, ok = true) => { const m = $('mk-msg'); m.textContent = t; m.className = 'mk-msg' + (t ? ok ? ' is-ok' : ' is-err' : ''); };
 async function shareUrl() {
   const e = await encodeUniverse(last, meta(), G0);

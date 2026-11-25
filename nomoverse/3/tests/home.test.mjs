@@ -149,7 +149,14 @@ ok(H.scaleAria(0, 'zh', '人') === '约 10 的 0 次方米,人的尺度' && H.sc
   for (const f of ['3/core/sound.js', '3/core/home.mjs', '3/core/home-stars-en.mjs', '3/core/home-ui.mjs', '3/core/home3.mjs', '3/home3.css', '3/kit.css', '/shared/3/tokens.css', '/shared/3/ui.css'])
     ok(sw.includes("'" + f + "'"), 'sw 预缓存:' + f);
   ok(!sw.includes("'audio/music-nomoverse-loop.m4a'"), '背景音乐不预缓存(用到时再缓存)');
-  ok(/const C = 'nv-v2\.0-a3_v3\.0-a8_s3-0\.3'/.test(sw), 'sw 版本 nv-v2.0-a3_v3.0-a8_s3-0.3');
+  ok(/const C = 'nv-v2\.0-a3_v3\.0-a8\.1_s3-0\.3'/.test(sw), 'sw 版本 nv-v2.0-a3_v3.0-a8.1_s3-0.3');
+  // α8.1:2D 星尺泳道 44、星点按钮 ≥44;/3/ ≤480 底栏声音开关;1000×760 左栏收紧
+  const css3 = read('../nv3.css');
+  ok(/LANE = 44\b/.test(idx) && /\.star \{[^}]*height: 44px;[^}]*min-width: 44px/.test(idx) && /Math\.max\(44, w \+ 22\)/.test(idx), '2D 星尺:泳道与星点按钮 ≥44px');
+  ok(/<footer class="dock[^]*id="snd-dock"[^]*<\/footer>/.test(v3) && /\$\('snd-dock'\)\.append\(sndDock\)/.test(mm), '/3/ 底栏有声音开关容器并挂上同一引擎的开关');
+  ok(/\.snd-dock \{ display: none; \}/.test(css3) && /@media \(max-width: 480px\) \{\s*\.snd-dock \{ display: block;/.test(css3), '底栏声音开关只在 ≤480 宽显示');
+  ok(/@media \(min-width: 761px\) and \(min-height: 481px\) and \(max-height: 820px\) \{\s*\.left \{ gap: var\(--gn3-s2\); \}/.test(css3), '矮横屏桌面左栏收紧间距');
+  ok(!/new AudioContext/.test(mm), '/3/ main 不直接建 AudioContext(手势前不建,统一走引擎)');
   // 任务 id 与进度键不变
   ok(['hoop', 'orbit', 'sound', 'stars', 'tide', 'energy'].every((id) => idx.includes('{ id: "' + id + '"')), '六个任务 id 不变');
   ok(nv.includes('"gn:nv:" + id') && nv.includes('"gn:nv:_pref"'), '进度键 gn:nv:<id>、偏好键 gn:nv:_pref 不变');
