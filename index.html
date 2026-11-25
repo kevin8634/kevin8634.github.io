@@ -5410,20 +5410,20 @@
       /* 左「玩」：七个世界（读页面 WORLDS）+ 深空之下 2.0 */
       $("p3plh").querySelector("b").textContent = en ? "Play" : "玩";
       $("p3plh").querySelector("em").textContent = en ? "7 worlds" : "七个世界";
-      /* 11-16：「玩」= 世界球（portal3/p3menu.js，Infinite Menu 思路自写）；低档 / 减少动态 / 无 WebGL2 回退星球卡网格。首次展开时挂载 */
+      /* 11-16：「玩」= 世界球；11-25 升级为真球体小星球（portal3/p3ball.js：明暗 + 大气辉光 + 轨道环/连线 + 惯性弹簧吸附；高档全效果、中档去动画）；低档 / 减少动态 / 无 WebGL2 回退星球卡网格。首次展开时挂载 */
       var WL = window.GN_WORLDS || [], PI = WL.map(function (w) {
         return { name: en ? (w.en || w.name) : w.name, sub: w.id + " · " + w.field + " · " + (en ? w.star : (w.en || w.star)), field: w.field, desc: w.desc, href: w.href, color: w.color, img: "world-" + w.id + ".webp" }; });
       PI.push({ name: en ? "Deep Space 2.0" : "深空之下 2.0", sub: en ? "08 · Deep layer · Genesis 2.0" : "08 · 深空层 · GENESIS 2.0", field: en ? "Deep 2.0" : "深空 2.0", desc: en ? "Genesis 2.0: dive beneath the deep sky." : "创世计划 2.0 · 潜入深空之下。", href: "deep/", color: "#8f7dff", img: "orb-gn-2.0.webp", zoom: 1.02 });
       var PT = en ? { enter: "Enter", hint: "DRAG TO SPIN · TAP THE CENTRE", list: "Seven worlds and Deep Space 2.0" } : { enter: "进入", hint: "拖动旋转 · 点正中进入", list: "七个世界与深空之下 2.0" };
       var plMod = null, plInst = null, plMode = "", curTier = "medium", RMQ = window.matchMedia ? matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
-      function plWant() { return (RMQ.matches || curTier === "low" || !(plMod && plMod.webgl2ok())) ? "grid" : "sphere"; }
+      function plWant() { return (RMQ.matches || curTier === "low" || !(plMod && plMod.webgl2ok())) ? "grid" : "sphere:" + (curTier === "high" ? "high" : "medium"); }
       function plEnsure() {
         if (p3dead) return;
-        if (!plMod) { import("./portal3/p3menu.js").then(function (m) { plMod = m; if ($("p3pl").classList.contains("open")) plEnsure(); }).catch(function () {}); return; }
+        if (!plMod) { import("./portal3/p3ball.js").then(function (m) { plMod = m; if ($("p3pl").classList.contains("open")) plEnsure(); }).catch(function () {}); return; }
         var want = plWant(); if (plInst && plMode === want) { plInst.kick(); return; }
         if (plInst) { plInst.dispose(); plInst = null; }
-        plInst = (want === "sphere" && plMod.sphere($("p3wg"), PI, PT)) || plMod.grid($("p3wg"), PI, PT); plMode = plInst && $("p3wg").classList.contains("wm") ? "sphere" : "grid";
-        $("p3pl").classList.toggle("wmode", plMode === "sphere");
+        plInst = (want !== "grid" && plMod.sphere($("p3wg"), PI, PT, { tier: want.slice(7) })) || plMod.grid($("p3wg"), PI, PT); plMode = plInst && $("p3wg").classList.contains("wm") ? want : "grid";
+        $("p3pl").classList.toggle("wmode", plMode !== "grid");
       }
       /* 右「造」：三道门（即将开放） */
       $("p3prh").querySelector("b").textContent = en ? "Build" : "造";

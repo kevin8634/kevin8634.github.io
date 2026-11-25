@@ -12,6 +12,13 @@
 #p3hero .wm-st:active { cursor: grabbing; }
 #p3hero .wm-st:focus-visible { box-shadow: inset 0 0 0 2px rgba(159,216,255,.6); -webkit-mask-image: none; mask-image: none; }
 #p3hero .wm-st canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* 11-25 世界球 2（p3ball.js）：星球的大气辉光会伸到穹顶外缘，遮罩放宽；底光改成更深的星云色 */
+#p3hero .wb .wm-st { -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 60%, transparent 70%); mask-image: radial-gradient(circle at 50% 50%, #000 60%, transparent 70%); }
+#p3hero .wb .wm-st::before { inset: 4%; background: radial-gradient(circle, rgba(90,70,200,.22), rgba(40,30,110,.08) 55%, transparent 72%); }
+/* 横排时球 + 间距 + 右侧文字不超出面板（1000×760 这类屏幕 11-16 版会被裁掉左缘） */
+@media (min-width: 801px) and (min-height: 421px) { #p3hero .wb .wm-st { width: min(80vmin, calc(100vh - 150px), calc(87vw - min(340px, 30vw))); } }
+/* 竖屏平板（如 820×1180）：球在上、名字在下，免得球被右侧文字挤出面板（11-16 版圆片在这里就被裁掉一截） */
+@media (min-width: 801px) and (max-aspect-ratio: 4/5) { #p3hero .wg.wm.wb { flex-direction: column; gap: 14px; } #p3hero .wb .wm-st { width: min(78vw, 52vh); } #p3hero .wb .wm-lb { width: min(560px, 100%); align-items: center; text-align: center; } #p3hero .wb .wm-hn { position: static; transform: none; order: 3; } }
 #p3hero .wm-hn { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); margin: 0; text-align: center; font: 500 11.5px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; letter-spacing: .24em; color: rgba(201,199,238,.66); pointer-events: none; transition: opacity .4s; white-space: nowrap; }
 #p3hero .wm.mv .wm-hn { opacity: .25; }
 #p3hero .wm-lb { --c: #b9a8ff; flex: none; width: min(340px, 30vw); box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-start; text-align: left; opacity: 0; transform: translateY(8px); transition: opacity .35s ease, transform .45s cubic-bezier(.2,.7,.2,1); pointer-events: none; }

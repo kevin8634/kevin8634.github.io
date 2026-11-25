@@ -54,3 +54,11 @@
 - 纯 DOM + 2D canvas，本项目自写，不用 three、不加 WebGL 上下文、零外部请求。
 - 观感参考（只看公开演示的效果，未复制源码）：React Bits「Galaxy」（远景银河带慢转）、Aceternity UI「Stars Background」「Shooting Stars」（三层星点视差、流星）、React Bits「Aurora」（树两侧七色光雾）。
 - `p3bg-still.webp`（1600×1000）/ `p3bg-still-p.webp`（800×1400，竖屏）：由 `p3bg.js` 的 `paintStill()` 在本地浏览器 2D canvas 程序化生成的静态底图，低档 / 减少动态 / 无 WebGL 时使用。
+
+## p3ball.js（「玩」世界球 2 · 真球体小星球，11-25）
+- 不依赖 three.js，原生 WebGL2 自写；零外部请求；**未新增任何贴图**——星球表面复用根目录 `world-01..07.webp` 与 `orb-gn-2.0.webp`（项目自有），运行时裁出中心圆盘画到 2D 画布后上传。
+- 思路致谢（只借交互 / 视觉思路，未复制源码，未引入依赖）：
+  - **React Bits「Dome Gallery」**（David Haz，MIT + Commons Clause，https://reactbits.dev）——拖拽旋转的惯性手感、松手减速后吸附到最近一项。
+  - **ThreeUI 行星大气辉光**——菲涅尔边缘光取世界主色、球外柔光晕的做法。
+- 球面冒名顶替（impostor）着色、正四棱反棱柱布局、弹簧吸附、屏幕空间等宽细线：公开图形学技术，本项目自写。
+- 旧版 `p3menu.js`（11-16 圆片穹顶）保留在目录里作回滚用，首页已不再引用。
