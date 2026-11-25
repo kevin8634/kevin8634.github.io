@@ -49,3 +49,8 @@
 
 ## 教育理念署名（11-20 · 王磊批）
 - 创世计划的教育理念参考埃隆·马斯克创办的 Ad Astra 学校（第一性原理、难题拆解）。只署名理念出处：全部课程、题目、交互与代码均为本项目自研；未使用其肖像、Logo 或商标；与 SpaceX 及其关联方无合作、授权或背书关系。
+
+## p3bg.js（首屏背景丰富三层，11-25）
+- 纯 DOM + 2D canvas，本项目自写，不用 three、不加 WebGL 上下文、零外部请求。
+- 观感参考（只看公开演示的效果，未复制源码）：React Bits「Galaxy」（远景银河带慢转）、Aceternity UI「Stars Background」「Shooting Stars」（三层星点视差、流星）、React Bits「Aurora」（树两侧七色光雾）。
+- `p3bg-still.webp`（1600×1000）/ `p3bg-still-p.webp`（800×1400，竖屏）：由 `p3bg.js` 的 `paintStill()` 在本地浏览器 2D canvas 程序化生成的静态底图，低档 / 减少动态 / 无 WebGL 时使用。

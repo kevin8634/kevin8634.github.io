@@ -5455,11 +5455,16 @@
         if (want && !spLoading) { spLoading = true; import("./portal3/p3splash.js").then(function (m) { spMod = m; spSync(); }).catch(function () {}); }
       }
       window.addEventListener("resize", spSync); document.addEventListener("visibilitychange", spSync);
+      /* 11-25 首屏背景丰富三层（portal3/p3bg.js，纯 DOM + 2D canvas，不加 three 实例）：远景银河带慢转 / 中景三层星点视差 + 流星 / 树两侧七色光雾。
+         高档全开，中档去流星；低档、减少动态、无 WebGL 用静态底图 portal3/p3bg-still*.webp */
+      var bgInst = null;
+      function bgSync() { if (!bgInst) return; bgInst.set(p3dead ? "still" : (RMQ.matches || curTier === "low" || !(p3m && p3m.tier())) ? "still" : curTier); }
+      import("./portal3/p3bg.js").then(function (m) { if (p3dead) return; bgInst = m.mount(h, { cols: RC }); bgSync(); }).catch(function () {});
       /* 画质：显示当前档；三选一写 gn:p3q，首屏在跑就热切换（切到低档 = 释放 WebGL 回到底图；从低档切回中/高 = 现场启动）；自动降档时提示一次 */
       var QL = en ? { high: "High", medium: "Medium", low: "Low" } : { high: "高", medium: "中", low: "低" }, QS = en ? { high: "H", medium: "M", low: "L" } : QL, qT = null;
       var qb = $("p3qb"), qm = $("p3qm"), qOpts = qm.querySelectorAll("button");
       for (var qi = 0; qi < qOpts.length; qi++) qOpts[qi].textContent = QL[qOpts[qi].getAttribute("data-q")];
-      function qSet(t) { curTier = t; spSync(); if (nar) nar.sync(); if (plInst && $("p3pl").classList.contains("open")) plEnsure(); qb.textContent = (en ? "Quality " : "画质 ") + QS[t]; qb.setAttribute("aria-label", (en ? "Quality: " : "画质：") + QL[t]);
+      function qSet(t) { curTier = t; spSync(); bgSync(); if (nar) nar.sync(); if (plInst && $("p3pl").classList.contains("open")) plEnsure(); qb.textContent = (en ? "Quality " : "画质 ") + QS[t]; qb.setAttribute("aria-label", (en ? "Quality: " : "画质：") + QL[t]);
         for (var i = 0; i < qOpts.length; i++) qOpts[i].setAttribute("aria-checked", String(qOpts[i].getAttribute("data-q") === t)); }
       function qOpen(on) { qm.classList.toggle("on", on); qb.setAttribute("aria-expanded", String(on)); }
       qSet("medium");
@@ -5470,13 +5475,13 @@
         if (p3m && p3m.tier()) { if (!p3m.setQuality(n)) location.reload(); } else p3boot(); });
       document.addEventListener("click", function () { if (qm.classList.contains("on")) qOpen(false); });
       window.addEventListener("p3q:tier", function (e) { var d = e.detail || {}; if (!d.tier) return; qSet(d.tier); if (d.auto && qT) qT.toast(h, en, "tr"); });
-      function p3stop() { p3dead = true; clearTimeout(rwT); if (nar) { nar.dispose(); } if (window.P3FX) P3FX.stop(); spSync(); if (plInst) { var pi = plInst; plInst = null; setTimeout(function () { pi.dispose(); }, 760); } if (drInst) drInst.dispose(); if (p3m) { try { p3m.pause(); } catch (e) {} setTimeout(function () { try { p3m.stop(); } catch (e) {} }, 760); } }
+      function p3stop() { p3dead = true; clearTimeout(rwT); if (bgInst) { bgInst.dispose(); bgInst = null; } if (nar) { nar.dispose(); } if (window.P3FX) P3FX.stop(); spSync(); if (plInst) { var pi = plInst; plInst = null; setTimeout(function () { pi.dispose(); }, 760); } if (drInst) drInst.dispose(); if (p3m) { try { p3m.pause(); } catch (e) {} setTimeout(function () { try { p3m.stop(); } catch (e) {} }, 760); } }
       var bootTry = 0;   /* 探测 WebGL2 偶发失败（上下文正被回收）时稍后重试，最多 3 次 */
       function p3boot() {
         if (p3dead || h.style.display === "none") return;
         var still = false;
         try { still = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); var t = document.createElement("canvas"), tg = t.getContext("webgl2"); if (!tg) { if (++bootTry < 3) setTimeout(p3boot, 900); return; } var lc = tg.getExtension("WEBGL_lose_context"); if (lc) lc.loseContext(); } catch (e) { return; }
-        import("./portal3/p3fp.js").then(function (m) { if (p3dead) return; p3m = m; m.start(h, { still: still }); if (m.tier()) qSet(m.tier());
+        import("./portal3/p3fp.js").then(function (m) { if (p3dead) return; p3m = m; m.start(h, { still: still }); if (m.tier()) qSet(m.tier()); bgSync();
           if (m.levels) { m.levels().forEach(function (l, i) { if (l.color) RC[i] = l.color; RN[i] = l.name; }); rwSet(rwI < 0 ? 0 : rwI, false); }
           p3shift(); window.addEventListener("resize", p3shift); if (nar) nar.sync(); }).catch(function () {});
       }
