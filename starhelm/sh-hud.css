@@ -363,3 +363,5 @@ body:has(#card.is-open) .sh-cast,body:has(.shh-now:not([hidden])) .sh-cast,body.
 }
 /* v1.0-M4x:减少动态时播报红点常亮不闪(实时开启也一样;离线时仍为灰点) */
 @media (prefers-reduced-motion:reduce){.sh-cast__live{animation:none;opacity:1}}
+/* v1.0-M4y:窄竖屏(如 375×667)展开播报时,落在面板内的 3D 标签由 sh-cast.js 加 .sh-cast-dodge 淡出,不再与面板下半叠字;其他尺寸不加此类 */
+.le-labels .sh-cast-dodge,.le-labels .sh-cast-dodge.is-on{opacity:0!important;visibility:hidden}

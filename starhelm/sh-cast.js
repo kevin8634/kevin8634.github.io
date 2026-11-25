@@ -208,8 +208,25 @@
     if (!LE.netcache || !LE.netcache.peek || liveOff()) return;
     LE.netcache.peek(URL_G).then(function (r) { if (!r || C.act) return; try { C.g = JSON.parse(r.text).features || []; C.gTime = r.time || 0; } catch (e) { return; } draw(); });
   }
+  /* v1.0-M4y:窄竖屏(如 375×667)展开播报时,3D 标签(ISS / 天宫 / 哈勃等)若落在面板矩形内就暂时隐去(淡出),
+     移出面板或收起面板即恢复;只在竖屏且宽 ≤600 时运行,其他尺寸不动。 */
+  var MQ = window.matchMedia ? matchMedia('(orientation:portrait) and (max-width:600px)') : null, dodged = [];
+  function undodge() { for (var i = 0; i < dodged.length; i++) dodged[i].classList.remove('sh-cast-dodge'); dodged = []; }
+  function dodge() {
+    requestAnimationFrame(dodge);
+    var r = U.root, box = document.getElementById('labels');
+    if (!r || !box || !MQ || !MQ.matches || r.classList.contains('is-fold') || !document.body.classList.contains('shh-on') || !r.getClientRects().length || +getComputedStyle(r).opacity < 0.5) { if (dodged.length) undodge(); return; }
+    var c = r.getBoundingClientRect(), now = [], k = box.children;
+    for (var i = 0; i < k.length; i++) {
+      var e = k[i]; if (!e.classList.contains('is-on') && !e.classList.contains('sh-cast-dodge')) continue;
+      var b = e.getBoundingClientRect();
+      if (b.width && b.right > c.left && b.left < c.right && b.bottom > c.top && b.top < c.bottom) { e.classList.add('sh-cast-dodge'); now.push(e); }
+    }
+    for (i = 0; i < dodged.length; i++) if (now.indexOf(dodged[i]) < 0) dodged[i].classList.remove('sh-cast-dodge');
+    dodged = now;
+  }
   function init() {
-    build(); draw(); peekG();
+    build(); draw(); peekG(); requestAnimationFrame(dodge);
     setInterval(draw, 60 * 1000);
     if (LE.bus) { LE.bus.on('location:changed', function () { setTimeout(draw, 300); }); LE.bus.on('mode:changed', function () { }); }
     setTimeout(draw, 6000); setTimeout(draw, 15000);   // 地震 / Kp / 过境数据陆续到位
