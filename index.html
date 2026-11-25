@@ -5281,6 +5281,17 @@
          树宽随视口高度变大（取景按高度），较高窗口（如 1000×900）字号再按 vw−vh 线性收一点：≤770 高时中文仍是 6vw、英文仍是 4.4vw，与上一单一致 */
       @media (min-width: 801px) and (max-width: 1180px) and (min-height: 421px) { #p3hero .p3hd { --fs: clamp(40px, min(6vw, 9.13vw - 3.77vh - 2.5px), 72px); } html[lang^="en"] #p3hero .p3hd { --fs: clamp(32px, min(4.4vw, 7vw - 2.95vh - 4px), 52px); } html[lang^="en"] #p3hero .p3hd .tg { top: calc(28vh + var(--fs) * 3.3 + 16px); } }
       @media (min-width: 801px) and (max-width: 1180px) and (min-height: 421px) { html:not([lang^="en"]) #p3hero .p3hd .tg { max-width: 10.6em; word-break: keep-all; line-break: strict; } }
+      /* 3.0 收尾（11-25，820 宽）：801–900 宽（820×1180 平板竖屏最重：树按宽取景、占屏宽约 60%；820×880 也一样）右块说明压进树右侧枝叶（−167 / −153px）、左块「数学世界，」也压左枝（−27px）；
+         这一段两块都上移到树冠两侧的空白：左块与右块大标题顶到顶栏下（max(100px, 8.5vh)），右块说明收窄到 21.5vw 放在「造一个。」下面，中文大标题这一段定 40px（820×760 原 43.8px 会让「世界，」离树只剩 13px），所有文字离树 ≥24px（中英） */
+      @media (min-width: 801px) and (max-width: 900px) and (min-height: 421px) {
+        #p3hero .p3hd { --t0: max(100px, 8.5vh); }
+        html:not([lang^="en"]) #p3hero .p3hd { --fs: 40px; }
+        #p3hero .p3hd .ey { top: var(--t0); letter-spacing: .1em; } #p3hero .p3hd .ey::before { display: none; }   /* 矮一些的窗口（820×760）树顶星落到顶栏下，眉题去掉引线、收字距，右缘让开星 */
+        #p3hero .p3hd .ha, #p3hero .p3hd .hb { top: calc(var(--t0) + 34px); }
+        #p3hero .p3hd .tg { top: calc(var(--t0) + 34px + var(--fs) * 2.12 + 14px); }
+        html[lang^="en"] #p3hero .p3hd .tg { top: calc(var(--t0) + 34px + var(--fs) * 3.3 + 12px); max-width: 15.5em; }
+        #p3hero .p3hd .sb { top: calc(var(--t0) + 34px + var(--fs) * 2.12 + 14px); max-width: 21.5vw; font-size: 13.5px; line-height: 1.6; }
+      }
       /* 手机竖屏：树占上 60%，标题三行在树下，按钮全宽贴底 */
       @media (max-width: 800px) and (min-height: 421px) {
         #p3hero .p3bd { top: calc(18px + env(safe-area-inset-top)); left: 20px; } #p3hero .p3bd span { display: none; }
@@ -5298,6 +5309,9 @@
         #p3hero .p3ct .lk { flex: 1 1 100%; padding: 2px 8px 4px; font-size: 13px; color: #c9c7ee; text-shadow: 0 0 8px #000, 0 1px 3px #000; }
         html.p3h #gvis { display: none !important; }
       }
+      /* 3.0 收尾（11-25，820 宽）：601–800 宽竖屏（如 768×1024）沿用手机排版，标题在 60vh、与树根同高，英文「Master the」52px 右缘离树只剩约 19px；
+         这一段标题字号收小（英 ≤46px、中 ≤56px），离树 ≥24px；≤600 宽手机不变 */
+      @media (min-width: 601px) and (max-width: 800px) and (min-height: 421px) { #p3hero .p3hd { --fs: clamp(36px, 7.4vw, 56px); } html[lang^="en"] #p3hero .p3hd { --fs: clamp(32px, 6vw, 46px); } }
       /* 矮横屏：左文右树 */
       @media (max-height: 420px) {
         #p3hero .p3bd { top: 12px; left: 18px; } #p3hero .p3bd span { display: none; }
